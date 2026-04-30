@@ -46,6 +46,50 @@ axiom neg_one_le_cos (x : Real) : -1 ≤ cos x
 axiom sin_periodic (x : Real) : sin (x + (1 + 1) * pi) = sin x
 axiom cos_periodic (x : Real) : cos (x + (1 + 1) * pi) = cos x
 
+/-! ### Additional analytic primitives
+
+The forge's industry verticals reach for these names through the
+emitted `Real.tanh`, `Real.sqrt`, etc. references. We axiomatise
+each with the minimal property set the downstream theorems use;
+contributors can add more when a specific theorem needs them. -/
+
+axiom tanh   : Real → Real
+axiom sqrt   : Real → Real
+axiom atan2  : Real → Real → Real
+axiom arcsin : Real → Real
+axiom arccos : Real → Real
+
+/-! ### Defining properties (minimal set) -/
+
+-- tanh: bounded in (-1, 1), zero at zero, odd.
+axiom tanh_zero     : tanh 0 = 0
+axiom tanh_lt_one   (x : Real) : tanh x < 1
+axiom neg_one_lt_tanh (x : Real) : -1 < tanh x
+axiom tanh_neg      (x : Real) : tanh (-x) = -(tanh x)
+
+-- sqrt: non-negative, fixed at 0 and 1, multiplicative on
+-- non-negatives. We follow the GNU/IEEE convention of returning 0
+-- on negative input rather than NaN.
+axiom sqrt_zero       : sqrt 0 = 0
+axiom sqrt_one        : sqrt 1 = 1
+axiom sqrt_nonneg     (x : Real) : 0 ≤ sqrt x
+axiom sqrt_sq_nonneg  (x : Real) : 0 ≤ x → sqrt x * sqrt x = x
+axiom sqrt_neg_zero   (x : Real) : x < 0 → sqrt x = 0
+
+-- arcsin / arccos: principal-value inverses, bounded.
+axiom arcsin_zero  : arcsin 0 = 0
+axiom arccos_zero  : arccos 0 = pi / (1 + 1)
+axiom arcsin_one   : arcsin 1 = pi / (1 + 1)
+axiom arccos_one   : arccos 1 = 0
+axiom sin_arcsin   (x : Real) : -1 ≤ x → x ≤ 1 → sin (arcsin x) = x
+axiom cos_arccos   (x : Real) : -1 ≤ x → x ≤ 1 → cos (arccos x) = x
+
+-- atan2: the principal-value angle of the point (x, y), in (-π, π].
+axiom atan2_zero_one : atan2 0 1 = 0
+axiom atan2_one_zero : atan2 1 0 = pi / (1 + 1)
+axiom atan2_le_pi    (y x : Real) : atan2 y x ≤ pi
+axiom neg_pi_lt_atan2 (y x : Real) : -pi < atan2 y x
+
 /-! ### Derived lemmas -/
 
 theorem sin_sq_add_cos_sq (x : Real) :
