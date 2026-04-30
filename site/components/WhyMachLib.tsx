@@ -10,7 +10,7 @@ const MATHLIB: string[] = [
 
 const MACHLIB: string[] = [
   "4.77 second cold build",
-  "491 lines of foundations, axiomatic ℝ",
+  "~500 lines of foundations, axiomatic ℝ",
   "Chain-order annotations on every record",
   "6 difficulty lanes (foundations → open problems)",
   "Tactic trace + success rate per tactic",

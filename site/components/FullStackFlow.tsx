@@ -23,7 +23,7 @@ const STEPS: Step[] = [
   {
     num: "04",
     text: "MachLib builds in 4.77 seconds",
-    sub: "491 lines of axiomatic foundations. Cold build. Laptop. Every time.",
+    sub: "~500 lines of axiomatic foundations. Cold build. Laptop. Every time.",
     highlight: true,
   },
   {

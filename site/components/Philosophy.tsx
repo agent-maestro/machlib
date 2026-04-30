@@ -18,7 +18,7 @@ export default function Philosophy() {
               An agent that needs to verify a single equation does not need
               that. It needs an axiomatic real number, four arithmetic
               operations, exp, log, sin, cos, and a small number of identities.
-              That fits in 491 lines.
+              That fits in ~500 lines.
             </p>
             <p>
               MachLib is what you get when you put metadata first and history
