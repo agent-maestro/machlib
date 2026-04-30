@@ -15,11 +15,11 @@ only the axioms below, so a constructive replacement is a drop-in.
 -/
 
 namespace MachLib
-namespace R
+namespace Real
 
 /-- The real exponential. Defined opaquely; properties below pin
 down its behaviour. -/
-axiom exp : R → R
+axiom exp : Real → Real
 
 /-! ### Defining axioms
 
@@ -28,10 +28,10 @@ real-valued functions on `R`. Together with the field axioms in
 `Basic`, they imply everything MachLib needs about `exp`. -/
 
 axiom exp_zero    : exp 0 = 1
-axiom exp_add     (x y : R) : exp (x + y) = exp x * exp y
-axiom exp_pos     (x : R)   : 0 < exp x
-axiom exp_lt      {x y : R} : x < y → exp x < exp y
-axiom exp_surj    : ∀ y : R, 0 < y → ∃ x : R, exp x = y
+axiom exp_add     (x y : Real) : exp (x + y) = exp x * exp y
+axiom exp_pos     (x : Real)   : 0 < exp x
+axiom exp_lt      {x y : Real} : x < y → exp x < exp y
+axiom exp_surj    : ∀ y : Real, 0 < y → ∃ x : Real, exp x = y
 
 /-! ### Derived lemmas
 
@@ -39,15 +39,15 @@ Algebraic consequences of the axioms. None of these reach for
 analytic content (continuity, differentiability); they are pure
 algebra over the field `R`. -/
 
-theorem exp_ne_zero (x : R) : exp x ≠ 0 :=
+theorem exp_ne_zero (x : Real) : exp x ≠ 0 :=
   ne_of_gt (exp_pos x)
 
-theorem exp_neg_self_mul (x : R) : exp (-x) * exp x = 1 := by
+theorem exp_neg_self_mul (x : Real) : exp (-x) * exp x = 1 := by
   have h : exp (-x + x) = exp (-x) * exp x := exp_add (-x) x
   rw [neg_add_self, exp_zero] at h
   exact h.symm
 
-theorem exp_neg_inv (x : R) : exp (-x) = 1 / exp x := by
+theorem exp_neg_inv (x : Real) : exp (-x) = 1 / exp x := by
   have hpos : exp x ≠ 0 := exp_ne_zero x
   have step : exp (-x) * exp x = 1 := exp_neg_self_mul x
   -- multiply both sides on the right by 1/(exp x)
@@ -61,17 +61,17 @@ theorem exp_neg_inv (x : R) : exp (-x) = 1 / exp x := by
     _ = 1 * (1 / exp x) := by rw [step]
     _ = 1 / exp x := one_mul_thm _
 
-theorem exp_monotone {x y : R} (h : x ≤ y) : exp x ≤ exp y := by
+theorem exp_monotone {x y : Real} (h : x ≤ y) : exp x ≤ exp y := by
   rcases (le_iff_lt_or_eq x y).mp h with hlt | heq
   · exact (le_iff_lt_or_eq _ _).mpr (Or.inl (exp_lt hlt))
   · rw [heq]
     exact (le_iff_lt_or_eq _ _).mpr (Or.inr rfl)
 
-theorem exp_injective {x y : R} (h : exp x = exp y) : x = y := by
+theorem exp_injective {x y : Real} (h : exp x = exp y) : x = y := by
   rcases lt_total x y with hlt | heq | hgt
   · exact (ne_of_lt (exp_lt hlt) h).elim
   · exact heq
   · exact (ne_of_gt (exp_lt hgt) h).elim
 
-end R
+end Real
 end MachLib

@@ -138,8 +138,7 @@ def _to_machlib_record(
     }
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
+def add_arguments(ap: argparse.ArgumentParser) -> None:
     ap.add_argument(
         "--petal-seed",
         default="D:/monogate-research/petal/seed_v1/data/petal_eml.json",
@@ -156,7 +155,15 @@ def main() -> int:
         choices=tuple(PHASE2_VARIANT_COUNTS),
         help="Run only one strategy (default: all five).",
     )
-    args = ap.parse_args()
+    ap.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Cap total written variants (across all strategies).",
+    )
+
+
+def run(args: argparse.Namespace) -> int:
 
     petal_records = _load_petal_records(Path(args.petal_seed))
 
@@ -176,7 +183,10 @@ def main() -> int:
     by_strategy: dict[str, int] = {}
     by_petal: dict[str, dict] = {r["theorem_id"]: r for r in petal_records}
 
+    written = 0
     for variant in gen.generate_all():
+        if args.limit is not None and written >= args.limit:
+            break
         v_dict = variant.to_dict()
         parent = by_petal.get(v_dict["base_theorem_id"], {})
         record = _to_machlib_record(v_dict, parent)
@@ -189,12 +199,21 @@ def main() -> int:
             encoding="utf-8",
         )
         by_strategy[strategy] = by_strategy.get(strategy, 0) + 1
+        written += 1
+        if args.limit is not None:
+            print(f"  + {record['theorem']['id']}")
 
     total = sum(by_strategy.values())
     print(f"wrote {total} variants:")
     for k, v in sorted(by_strategy.items()):
         print(f"  {k:20s} {v}")
     return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    add_arguments(ap)
+    return run(ap.parse_args())
 
 
 if __name__ == "__main__":

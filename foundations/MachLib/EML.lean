@@ -29,38 +29,38 @@ which we do not yet have in MachLib).
 -/
 
 namespace MachLib
-namespace R
+namespace Real
 
 /-- The core EML primitive: `eml(x, y) = exp(x) - log(y)`. -/
-noncomputable def eml (x y : R) : R := exp x - log y
+noncomputable def eml (x y : Real) : Real := exp x - log y
 
 /-! ### Helper: `-0 = 0` -/
 
-theorem neg_zero : -(0 : R) = 0 := by
-  have h1 : -(0 : R) + 0 = 0 := by
+theorem neg_zero : -(0 : Real) = 0 := by
+  have h1 : -(0 : Real) + 0 = 0 := by
     rw [add_comm]; exact add_neg 0
-  have h2 : -(0 : R) + 0 = -(0 : R) := add_zero _
+  have h2 : -(0 : Real) + 0 = -(0 : Real) := add_zero _
   rw [h2] at h1
   exact h1
 
-theorem sub_zero (x : R) : x - 0 = x := by
+theorem sub_zero (x : Real) : x - 0 = x := by
   rw [sub_def, neg_zero, add_zero]
 
 /-! ### Specialisations -/
 
 /-- `eml(x, 1) = exp(x)`. The "exp branch" of EML. -/
-theorem eml_arg2_one (x : R) : eml x 1 = exp x := by
+theorem eml_arg2_one (x : Real) : eml x 1 = exp x := by
   unfold eml
   rw [log_one, sub_zero]
 
 /-- `eml(0, y) = 1 - log(y)`. The "log branch" of EML. -/
-theorem eml_arg1_zero (y : R) : eml 0 y = 1 - log y := by
+theorem eml_arg1_zero (y : Real) : eml 0 y = 1 - log y := by
   unfold eml
   rw [exp_zero]
 
 /-! ### Basic algebraic rearrangements -/
 
-theorem eml_def_unfold (x y : R) : eml x y = exp x - log y := rfl
+theorem eml_def_unfold (x y : Real) : eml x y = exp x - log y := rfl
 
-end R
+end Real
 end MachLib

@@ -13,11 +13,11 @@ downstream theorem.
 -/
 
 namespace MachLib
-namespace R
+namespace Real
 
-axiom sin : R → R
-axiom cos : R → R
-axiom pi  : R
+axiom sin : Real → Real
+axiom cos : Real → Real
+axiom pi  : Real
 
 /-! ### Defining axioms -/
 
@@ -26,29 +26,29 @@ axiom cos_zero       : cos 0 = 1
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
 axiom pi_pos         : 0 < pi
-axiom pythagorean (x : R) : sin x * sin x + cos x * cos x = 1
-axiom sin_neg        (x : R) : sin (-x) = -(sin x)
-axiom cos_neg        (x : R) : cos (-x) = cos x
-axiom sin_add        (x y : R) :
+axiom pythagorean (x : Real) : sin x * sin x + cos x * cos x = 1
+axiom sin_neg        (x : Real) : sin (-x) = -(sin x)
+axiom cos_neg        (x : Real) : cos (-x) = cos x
+axiom sin_add        (x y : Real) :
   sin (x + y) = sin x * cos y + cos x * sin y
-axiom cos_add        (x y : R) :
+axiom cos_add        (x y : Real) :
   cos (x + y) = cos x * cos y - sin x * sin y
 
 /-! ### Boundedness -/
 
-axiom sin_le_one     (x : R) : sin x ≤ 1
-axiom neg_one_le_sin (x : R) : -1 ≤ sin x
-axiom cos_le_one     (x : R) : cos x ≤ 1
-axiom neg_one_le_cos (x : R) : -1 ≤ cos x
+axiom sin_le_one     (x : Real) : sin x ≤ 1
+axiom neg_one_le_sin (x : Real) : -1 ≤ sin x
+axiom cos_le_one     (x : Real) : cos x ≤ 1
+axiom neg_one_le_cos (x : Real) : -1 ≤ cos x
 
 /-! ### Periodicity (period 2π) -/
 
-axiom sin_periodic (x : R) : sin (x + (1 + 1) * pi) = sin x
-axiom cos_periodic (x : R) : cos (x + (1 + 1) * pi) = cos x
+axiom sin_periodic (x : Real) : sin (x + (1 + 1) * pi) = sin x
+axiom cos_periodic (x : Real) : cos (x + (1 + 1) * pi) = cos x
 
 /-! ### Derived lemmas -/
 
-theorem sin_sq_add_cos_sq (x : R) :
+theorem sin_sq_add_cos_sq (x : Real) :
     sin x * sin x + cos x * cos x = 1 :=
   pythagorean x
 
@@ -65,5 +65,5 @@ theorem cos_two_pi : cos ((1 + 1) * pi) = 1 := by
   rw [zero_add] at h
   rw [h, cos_zero]
 
-end R
+end Real
 end MachLib

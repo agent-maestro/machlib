@@ -19,11 +19,11 @@ introduce `-∞`).
 -/
 
 namespace MachLib
-namespace R
+namespace Real
 
 /-- `log x` is the real natural logarithm of `x` for `x > 0`, and
 `0` otherwise. -/
-noncomputable def log (x : R) : R :=
+noncomputable def log (x : Real) : Real :=
   if h : 0 < x then
     Classical.choose (exp_surj x h)
   else
@@ -31,12 +31,12 @@ noncomputable def log (x : R) : R :=
 
 /-! ### Specification lemmas: what `log` returns on positive inputs -/
 
-theorem exp_log {x : R} (hx : 0 < x) : exp (log x) = x := by
+theorem exp_log {x : Real} (hx : 0 < x) : exp (log x) = x := by
   unfold log
   simp [hx]
   exact Classical.choose_spec (exp_surj x hx)
 
-theorem log_exp (x : R) : log (exp x) = x := by
+theorem log_exp (x : Real) : log (exp x) = x := by
   have hpos : 0 < exp x := exp_pos x
   have key : exp (log (exp x)) = exp x := exp_log hpos
   exact exp_injective key
@@ -46,7 +46,7 @@ theorem log_one : log 1 = 0 := by
   rw [exp_zero] at this
   exact this
 
-theorem log_pos_def {x : R} (hx : 0 < x) :
+theorem log_pos_def {x : Real} (hx : 0 < x) :
     exp (log x) = x ∧ log x = Classical.choose (exp_surj x hx) := by
   refine ⟨exp_log hx, ?_⟩
   unfold log
@@ -54,7 +54,7 @@ theorem log_pos_def {x : R} (hx : 0 < x) :
 
 /-! ### log_mul -/
 
-theorem log_mul {x y : R} (hx : 0 < x) (hy : 0 < y) :
+theorem log_mul {x y : Real} (hx : 0 < x) (hy : 0 < y) :
     log (x * y) = log x + log y := by
   have step : exp (log x + log y) = x * y := by
     rw [exp_add, exp_log hx, exp_log hy]
@@ -67,7 +67,7 @@ theorem log_mul {x y : R} (hx : 0 < x) (hy : 0 < y) :
 
 /-! ### Monotonicity -/
 
-theorem log_lt_log {x y : R} (hx : 0 < x) (hxy : x < y) :
+theorem log_lt_log {x y : Real} (hx : 0 < x) (hxy : x < y) :
     log x < log y := by
   have hy : 0 < y := lt_trans_ax hx hxy
   -- log is the inverse of exp on positives; exp is strictly monotone;
@@ -87,5 +87,5 @@ theorem log_lt_log {x y : R} (hx : 0 < x) (hxy : x < y) :
       rw [exp_log hy, exp_log hx] at step
       exact (lt_irrefl_ax x (lt_trans_ax hxy step)).elim
 
-end R
+end Real
 end MachLib
