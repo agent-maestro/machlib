@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "SB_div_ge_three_full",
+    "base_id": "SB_div_ge_three_full",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Conditional statement of the SuperBEST division lower bound at 3 nodes (the full general-domain claim). The exp-type outer cases (F13/F14/F15/F16) are Lean-proved via `no_exp_outer_2node_div`. The remaining 3072 circuits (F1–F12 outer) are certified by an exhaustive Python search and the Lean case analysis is deferred — encoded here as a `True` placeholder accepting an external hypothesis. **Honest framing**: this is a propositional scaffold awaiting Lean Pass-2 closure, not a closed theorem.",
+      "formal_lean": "theorem SB_div_ge_three_full (g h : ℝ → ℝ → ℝ)\n    (_houter : ∀ op ∈ d_f16_ops, ¬ (∀ x y : ℝ, op (g x y) (h x y) = x / y)) :\n    True := by\n  trivial",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 4,
+    "tags": [
+      "lower-bound",
+      "scaffold",
+      "external-certification",
+      "lane-4"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "trivial"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "div_two_node_pos_domain"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Reading the `True` and assuming the SuperBEST bound is closed — it is not. The full closure requires the F1–F12 outer 12 cases × 256 inner pairs = 3072 circuit checks.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "div_two_node_pos_domain"
+    ],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

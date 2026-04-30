@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "SB_sub_ge_two",
+    "base_id": "SB_sub_ge_two",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "SuperBEST lower bound for subtraction: SB(−) ≥ 2 nodes. No single F16 operator computes subtraction over all real x, y — established by destructuring an existential and citing the omnibus 16-case lemma.",
+      "formal_lean": "theorem SB_sub_ge_two : ¬ one_node_computable_sub (· - ·) := by\n  intro ⟨op, hmem, heq⟩\n  exact no_f16_computes_sub op hmem (fun x y => (heq x y).symm)",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 4,
+    "tags": [
+      "superbest",
+      "lower-bound",
+      "anonymous-constructor",
+      "lane-4"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "intro ⟨op, hmem, heq⟩",
+        "exact no_f16_computes_sub op hmem (fun x y => (heq x y).symm)"
+      ],
+      "tactic_count": 2,
+      "eml_node_cost": 2,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "S_F1_ne_sub"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Forgetting the `.symm` flip — the omnibus lemma rejects the un-flipped form.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "S_F1_ne_sub"
+    ],
+    "structural_siblings": [
+      "sub_not_one_node_computable"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

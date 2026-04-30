@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "superbest_v53_positive_total",
+    "base_id": "superbest_v53_positive_total",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Mechanised arithmetic check: the v5.2 SuperBEST positive-domain cost table sums to 14. Per-op costs are 1 (exp) + 1 (mul) + 1 (recip) + 1 (sqrt) + 1 (ln) + 2 (neg) + 2 (sub) + 2 (add) + 2 (div) + 1 (pow) = 14. A trivial-but-load-bearing theorem: the public 80.8% savings headline is computed off this exact sum.",
+      "formal_lean": "theorem superbest_v53_positive_total : 1 + 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 1 = 14 := by\n  norm_num",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "arithmetic",
+      "cost-table",
+      "norm_num",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "norm_num"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "mul_one_node_positive",
+      "recip_is_one_node_positive",
+      "sqrt_is_one_node_positive",
+      "pow_is_one_node_positive",
+      "ln_is_one_node_via_exl"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying to break this into step-wise associativity rewrites — pure waste; the tactic exists for exactly this case.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "mul_one_node_positive",
+      "recip_is_one_node_positive",
+      "sqrt_is_one_node_positive",
+      "pow_is_one_node_positive",
+      "ln_is_one_node_via_exl"
+    ],
+    "structural_siblings": [
+      "superbest_v53_savings_fraction"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

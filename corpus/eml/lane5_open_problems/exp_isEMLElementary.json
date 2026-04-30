@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "exp_isEMLElementary",
+    "base_id": "exp_isEMLElementary",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "The complex exponential is EML-elementary: it is realised by an EML routing tree of depth 1 (specifically, the `eulerTree` witness `ceml(var, const 1)`).",
+      "formal_lean": "theorem exp_isEMLElementary :\n    IsEMLElementary (fun x : ℂ => Complex.exp x) :=\n  ⟨1, exp_in_EML_one⟩",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "universality",
+      "exp",
+      "term-mode",
+      "anonymous-constructor",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "⟨1, exp_in_EML_one⟩"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "expTree_depth",
+      "complex_exp_zero_eq_one"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying to use `refine ⟨1, ?_⟩` and then re-prove `exp_in_EML_one` inline — works but wastes the existing lemma.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": "p1-d1-w0-c0",
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "expTree_depth",
+      "complex_exp_zero_eq_one"
+    ],
+    "structural_siblings": [
+      "exp_exp_isEMLElementary",
+      "eml_universality"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

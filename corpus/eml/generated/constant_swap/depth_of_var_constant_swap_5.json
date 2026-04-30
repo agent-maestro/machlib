@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "depth_of_var_constant_swap_5",
+    "base_id": "depth_of_var",
+    "variant_strategy": "constant_swap",
+    "statement": {
+      "informal": "The depth of the variable-leaf EML tree is zero. Like a constant, the variable node has no `ceml` operations. (with constant 0 promoted to a parameter k5)",
+      "formal_lean": "theorem depth_of_var (k5 : ℕ) : EMLTree.var.depth = k5",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 1,
+    "tags": [
+      "constant_swap",
+      "generated",
+      "lane-1"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem depth_of_var : EMLTree.var.depth = 0 := rfl"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 1,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "depth_of_var",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

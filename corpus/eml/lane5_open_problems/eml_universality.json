@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "eml_universality",
+    "base_id": "eml_universality",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Universality of EML: every EML-elementary function is computed by some EML routing tree. The `IsEMLElementary` predicate guarantees a tree witness exists; this theorem extracts it.",
+      "formal_lean": "theorem eml_universality :\n    ∀ f : ℂ → ℂ, IsEMLElementary f → ∃ t : EMLTree, ∀ x, f x = t.eval x := by\n  intro f hf\n  obtain ⟨_, t, _hd, ht⟩ := hf\n  exact ⟨t, ht⟩",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "universality",
+      "obtain",
+      "destructuring",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "intro f hf",
+        "obtain ⟨_, t, _hd, ht⟩ := hf",
+        "exact ⟨t, ht⟩"
+      ],
+      "tactic_count": 3,
+      "eml_node_cost": 3,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "exp_isEMLElementary"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying `cases hf` — works but produces less ergonomic names.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Naming all four fields and then ignoring some — Lean issues an `unused variable` warning.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying `use t; exact ht` — works but is two tactics where one suffices.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "exp_isEMLElementary"
+    ],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

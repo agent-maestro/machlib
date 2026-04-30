@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "mul_one_node_positive",
+    "base_id": "mul_one_node_positive",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Multiplication on the positive reals is a single F16 node: F16fn(x, y) = exp(log(x) + log(y)) = x · y for x, y > 0. The headline 'mul_pos = 1n' result that drops the SuperBEST positive-domain headline from 16n to 14n.",
+      "formal_lean": "theorem mul_one_node_positive (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :\n    Real.exp (Real.log x + Real.log y) = x * y := by\n  rw [Real.exp_add, Real.exp_log hx, Real.exp_log hy]",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "upper-bound",
+      "multiplication",
+      "one-node",
+      "rw",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "rw [Real.exp_add, Real.exp_log hx, Real.exp_log hy]"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "exp_one_node"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Dropping the positivity hypotheses — the entire construction depends on log being well-defined.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Using simp instead — works, but rw makes each step legible to a learner.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": "p1-d1-w0-c0",
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "exp_one_node"
+    ],
+    "structural_siblings": [
+      "mul_of_negatives_one_node",
+      "div_two_node_pos_domain",
+      "superbest_positive_one_node_ops"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

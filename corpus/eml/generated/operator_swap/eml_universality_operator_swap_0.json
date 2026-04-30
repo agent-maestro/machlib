@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "eml_universality_operator_swap_0",
+    "base_id": "eml_universality",
+    "variant_strategy": "operator_swap",
+    "statement": {
+      "informal": "Universality of EML: every EML-elementary function is computed by some EML routing tree. The `IsEMLElementary` predicate guarantees a tree witness exists; this theorem extracts it. (with ceml replaced by eal)",
+      "formal_lean": "theorem eml_universality :\n    ∀ f : ℂ → ℂ, IsEMLElementary f → ∃ t : EMLTree, ∀ x, f x = t.eval x",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "operator_swap",
+      "generated",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem eml_universality :\n    ∀ f : ℂ → ℂ, IsEMLElementary f → ∃ t : EMLTree, ∀ x, f x = t.eval x := by\n  intro f hf\n  obtain ⟨_, t, _hd, ht⟩ := hf\n  exact ⟨t, ht⟩"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "eml_universality",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

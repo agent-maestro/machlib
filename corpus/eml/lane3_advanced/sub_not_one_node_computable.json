@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "sub_not_one_node_computable",
+    "base_id": "sub_not_one_node_computable",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Subtraction is not 1-node computable in the F16 family — equivalently, no single F16 operator equals subtraction pointwise. Stated as the alias for SB_sub_ge_two.",
+      "formal_lean": "theorem sub_not_one_node_computable : ¬ one_node_computable_sub (· - ·) :=\n  SB_sub_ge_two",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 3,
+    "tags": [
+      "lower-bound",
+      "alias",
+      "term-mode",
+      "lane-3"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "SB_sub_ge_two"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "SB_sub_ge_two"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Re-deriving SB_sub_ge_two inline — wastes effort; the existing proof is already in scope.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "SB_sub_ge_two"
+    ],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

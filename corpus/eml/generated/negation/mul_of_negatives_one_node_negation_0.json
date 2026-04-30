@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "mul_of_negatives_one_node_negation_0",
+    "base_id": "mul_of_negatives_one_node",
+    "variant_strategy": "negation",
+    "statement": {
+      "informal": "NEGATION of: Multiplication of two negative reals is a single F16 node by absorbing the sign: exp(log(−x) + log(−y)) = (−x)·(−y) = x·y when x, y < 0. Extends mul_one_node_positive to the negative quadrant.",
+      "formal_lean": "theorem mul_of_negatives_one_node (x y : ℝ) (hx : x < 0) (hy : y < 0) : ¬ (Real.exp (Real.log (-x) + Real.log (-y)) = x * y)",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "negation",
+      "generated",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "by sorry"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "mul_of_negatives_one_node",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

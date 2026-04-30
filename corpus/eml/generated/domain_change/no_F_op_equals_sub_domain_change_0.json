@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "no_F_op_equals_sub_domain_change_0",
+    "base_id": "no_F_op_equals_sub",
+    "variant_strategy": "domain_change",
+    "statement": {
+      "informal": "Existential restatement of the subtraction lower bound: every F16 operator has at least one input pair where it disagrees with subtraction. Useful when downstream consumers need a witness rather than a propositional negation. (over ℂ instead of ℝ)",
+      "formal_lean": "theorem no_F_op_equals_sub :\n    ∀ op ∈ s_f16_ops, ∃ x y : ℂ, op x y ≠ x - y",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 4,
+    "tags": [
+      "domain_change",
+      "generated",
+      "lane-4"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem no_F_op_equals_sub :\n    ∀ op ∈ s_f16_ops, ∃ x y : ℂ, op x y ≠ x - y := by\n  intro op hmem\n  by_contra hall\n  push_neg at hall\n  exact no_f16_computes_sub op hmem hall"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "no_F_op_equals_sub",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "div_two_node_pos_domain_constant_swap_4",
+    "base_id": "div_two_node_pos_domain",
+    "variant_strategy": "constant_swap",
+    "statement": {
+      "informal": "Division of two positive reals is computable in 2 F16 nodes via the chain D_F16(x, D_F13(−1, y)). The inner D_F13(−1, y) computes y⁻¹; the outer D_F16 computes x · y⁻¹ = x/y. (with constant 0 promoted to a parameter k4)",
+      "formal_lean": "theorem div_two_node_pos_domain (k4 : ℕ) (x y : ℝ) (hx : k4 < x) (hy : 0 < y) :\n    D_F16 x (D_F13 (-1) y) = x / y",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 4,
+    "tags": [
+      "constant_swap",
+      "generated",
+      "lane-4"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem div_two_node_pos_domain (x y : ℝ) (hx : 0 < x) (hy : 0 < y) :\n    D_F16 x (D_F13 (-1) y) = x / y := by\n  have hinv : D_F13 (-1 : ℝ) y = y⁻¹ := by\n    unfold D_F13\n    rw [show (-1 : ℝ) * Real.log y = -(Real.log y) from by ring]\n    rw [Real.exp_neg, Real.exp_log hy]\n  rw [hinv]\n  unfold D_F16\n  rw [show Real.log y⁻¹ = -(Real.log y) from Real.log_inv y]\n  rw [Real.exp_add, Real.exp_log hx, Real.exp_neg, Real.exp_log hy]\n  field_simp"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "div_two_node_pos_domain",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

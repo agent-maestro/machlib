@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "superbest_v53_positive_total_constant_swap_9",
+    "base_id": "superbest_v53_positive_total",
+    "variant_strategy": "constant_swap",
+    "statement": {
+      "informal": "Mechanised arithmetic check: the v5.2 SuperBEST positive-domain cost table sums to 14. Per-op costs are 1 (exp) + 1 (mul) + 1 (recip) + 1 (sqrt) + 1 (ln) + 2 (neg) + 2 (sub) + 2 (add) + 2 (div) + 1 (pow) = 14. A trivial-but-load-bearing theorem: the public 80.8% savings headline is computed off this exact sum. (with constant 1 promoted to a parameter k9)",
+      "formal_lean": "theorem superbest_v53_positive_total (k9 : ℕ) : k9 + 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 1 = 14",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "constant_swap",
+      "generated",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem superbest_v53_positive_total : 1 + 1 + 1 + 1 + 1 + 2 + 2 + 2 + 2 + 1 = 14 := by\n  norm_num"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "superbest_v53_positive_total",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

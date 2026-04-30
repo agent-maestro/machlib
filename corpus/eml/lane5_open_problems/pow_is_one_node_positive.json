@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "pow_is_one_node_positive",
+    "base_id": "pow_is_one_node_positive",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "Real power on positive base is a single F16 node: EPL(n, x) = exp(n · log x) = x^n for x > 0. The X20 audit recognised EPL/ELMl as a primitive in the F16 census, dropping pow from the v4 cost of 3n to 1n positive.",
+      "formal_lean": "theorem pow_is_one_node_positive (n x : ℝ) (hx : 0 < x) :\n    Real.exp (n * Real.log x) = x ^ n := by\n  rw [Real.rpow_def_of_pos hx]; ring_nf",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "upper-bound",
+      "power",
+      "one-node",
+      "EPL",
+      "rpow",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "rw [Real.rpow_def_of_pos hx]",
+        "ring_nf"
+      ],
+      "tactic_count": 2,
+      "eml_node_cost": 2,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "recip_is_one_node_positive"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Dropping `hx` — the definition of `rpow` branches on positivity; without hx the rewrite fails.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Using `rfl` — usually fails because the two sides differ syntactically even after the rewrite.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": "p1-d1-w0-c0",
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "recip_is_one_node_positive"
+    ],
+    "structural_siblings": [
+      "sqrt_is_one_node_positive",
+      "superbest_positive_one_node_ops"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

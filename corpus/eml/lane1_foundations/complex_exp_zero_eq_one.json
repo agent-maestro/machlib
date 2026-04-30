@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "complex_exp_zero_eq_one",
+    "base_id": "complex_exp_zero_eq_one",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "The complex exponential at zero equals one: exp(0) = 1.",
+      "formal_lean": "theorem complex_exp_zero_eq_one : Complex.exp 0 = 1 := Complex.exp_zero",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 1,
+    "tags": [
+      "exp",
+      "mathlib-wrapper",
+      "term-mode",
+      "lane-1"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "Complex.exp_zero"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 1,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Re-deriving the fact from the power-series definition — slow and fragile when Mathlib already has it.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Writing `by exact Complex.exp_zero` works but is one needless layer of indirection compared to direct term-mode.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": "p1-d1-w0-c0",
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": [
+      "exp_isEMLElementary",
+      "complex_exp_pi_I"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

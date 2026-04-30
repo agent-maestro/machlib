@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "infinite_zeros_barrier__research_frontier_constant_swap_7",
+    "base_id": "infinite_zeros_barrier__research_frontier",
+    "variant_strategy": "constant_swap",
+    "statement": {
+      "informal": "INFORMATIONAL RECORD — research frontier. The Infinite Zeros Barrier (T01) states that real EML trees have finitely many zeros on any closed bounded interval, while sin(x) has infinitely many. This implies sin ∉ EML(ℝ). Parts A, B, C, C′ are established in the Lean source with zero `sorry`s. Parts D (sin_not_in_eml and sin_not_in_real_EML_k) carry 2 remaining `sorry`s — both require quantitative o-minimal zero-count bounds and are genuine open mathematical challenges. This record exists so a learner reaching Lane 6 sees where the research frontier actually is. (with constant 2 promoted to a parameter k7)",
+      "formal_lean": "-- See InfiniteZerosBarrier.lean for the partial formalization.\n-- Part A (sin has infinitely many zeros): proven (sin_inf_zeros).\n-- Part B (analytic_finite_zeros_compact): proven.\n-- Part C, C': proven (eml_tree_analytic, eml_tree_analytic_depth_le_1).\n-- Part D (sin_not_in_eml, sin_not_in_real_EML_k): k7 sorrys remain.\n-- These are open research questions, not closeable with current tactics.",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 6,
+    "tags": [
+      "constant_swap",
+      "generated",
+      "lane-6"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "-- This is an INFORMATIONAL record, not a proven theorem.\n-- The shipped Lean source contains 2 honest `sorry`s on Part D.\n-- See InfiniteZerosBarrier.lean lines marked sorry (~327, ~340)."
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 6,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "infinite_zeros_barrier__research_frontier",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

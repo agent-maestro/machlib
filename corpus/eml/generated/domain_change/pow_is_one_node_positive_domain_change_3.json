@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "pow_is_one_node_positive_domain_change_3",
+    "base_id": "pow_is_one_node_positive",
+    "variant_strategy": "domain_change",
+    "statement": {
+      "informal": "Real power on positive base is a single F16 node: EPL(n, x) = exp(n · log x) = x^n for x > 0. The X20 audit recognised EPL/ELMl as a primitive in the F16 census, dropping pow from the v4 cost of 3n to 1n positive. (over ℂ instead of ℝ)",
+      "formal_lean": "theorem pow_is_one_node_positive (n x : ℂ) (hx : 0 < x) :\n    Real.exp (n * Real.log x) = x ^ n",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 5,
+    "tags": [
+      "domain_change",
+      "generated",
+      "lane-5"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem pow_is_one_node_positive (n x : ℂ) (hx : 0 < x) :\n    Real.exp (n * Real.log x) = x ^ n := by\n  rw [Real.rpow_def_of_pos hx]; ring_nf"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 5,
+    "label": "expert",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "pow_is_one_node_positive",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

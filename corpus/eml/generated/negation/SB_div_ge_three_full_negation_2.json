@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "SB_div_ge_three_full_negation_2",
+    "base_id": "SB_div_ge_three_full",
+    "variant_strategy": "negation",
+    "statement": {
+      "informal": "NEGATION of: Conditional statement of the SuperBEST division lower bound at 3 nodes (the full general-domain claim). The exp-type outer cases (F13/F14/F15/F16) are Lean-proved via `no_exp_outer_2node_div`. The remaining 3072 circuits (F1–F12 outer) are certified by an exhaustive Python search and the Lean case analysis is deferred — encoded here as a `True` placeholder accepting an external hypothesis. **Honest framing**: this is a propositional scaffold awaiting Lean Pass-2 closure, not a closed theorem.",
+      "formal_lean": "theorem SB_div_ge_three_full (g h : ℝ → ℝ → ℝ)\n    (_houter : ∀ op ∈ d_f16_ops, ¬ (∀ x y : ℝ, op (g x y) (h x y) = x / y)) : ¬ (True)",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 4,
+    "tags": [
+      "negation",
+      "generated",
+      "lane-4"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "by sorry"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "SB_div_ge_three_full",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

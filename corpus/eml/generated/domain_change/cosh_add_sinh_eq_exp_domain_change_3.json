@@ -1,0 +1,71 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "cosh_add_sinh_eq_exp_domain_change_3",
+    "base_id": "cosh_add_sinh_eq_exp",
+    "variant_strategy": "domain_change",
+    "statement": {
+      "informal": "cosh(x) + sinh(x) equals exp(x). Adding the average and the half-difference of `exp(x)` and `exp(-x)` recovers `exp(x)` itself — one of the cleanest one-line identities in elementary analysis. (over ℂ instead of ℝ)",
+      "formal_lean": "theorem cosh_add_sinh_eq_exp (x : ℂ) :\n    Real.cosh x + Real.sinh x = Real.exp x",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 2,
+    "tags": [
+      "domain_change",
+      "generated",
+      "lane-2"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "theorem cosh_add_sinh_eq_exp (x : ℂ) :\n    Real.cosh x + Real.sinh x = Real.exp x := by\n  rw [Real.cosh_eq, Real.sinh_eq]; ring"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 0,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "machlib_generator_v1",
+      "discovery_date": "2026-04-30"
+    }
+  ],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": "cosh_add_sinh_eq_exp",
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": null,
+    "verification_pending": "Phase 1.5 — port legacy theorems to MachLib foundations before kernel re-verification.",
+    "generated_by": "machlib_generator_v1",
+    "creation_date": "2026-04-30"
+  }
+}

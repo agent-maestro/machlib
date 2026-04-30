@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "D_F1_ne_div",
+    "base_id": "D_F1_ne_div",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "The base F-family operator D_F1(x,y) = exp(x) - log(y), restated for the division test, is not pointwise equal to division. Witness (1,1): D_F1 evaluates to exp(1), which is greater than 1 = 1/1.",
+      "formal_lean": "theorem D_F1_ne_div : ¬ (∀ x y : ℝ, D_F1 x y = x / y) := by\n  intro h; have := h 1 1; simp [D_F1, Real.log_one] at this",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 3,
+    "tags": [
+      "lower-bound",
+      "F-family",
+      "division",
+      "lane-3"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "intro h; have := h 1 1; simp [D_F1, Real.log_one] at this"
+      ],
+      "tactic_count": 1,
+      "eml_node_cost": 1,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "F1_ne_add"
+    ]
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying to use exp_neg_one_lt_one as a hypothesis here — wrong direction; the contradiction here is exp(1) ≠ 1, which simp handles via `Real.exp_eq_one_iff`.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": "p1-d1-w0-c0",
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [
+      "F1_ne_add"
+    ],
+    "structural_siblings": [
+      "div_not_one_node_computable_general"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}

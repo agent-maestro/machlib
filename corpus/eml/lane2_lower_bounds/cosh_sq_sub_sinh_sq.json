@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "cosh_sq_sub_sinh_sq",
+    "base_id": "cosh_sq_sub_sinh_sq",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "The hyperbolic Pythagorean identity: cosh squared minus sinh squared equals one. The hyperbolic analogue of `sin^2 + cos^2 = 1`, but with a sign flip.",
+      "formal_lean": "theorem cosh_sq_sub_sinh_sq (x : ℝ) :\n    Real.cosh x ^ 2 - Real.sinh x ^ 2 = 1 := by\n  rw [Real.cosh_sq, Real.sinh_sq]\n  ring",
+      "formal_eml_lang": null
+    },
+    "domain": "eml",
+    "lane": 2,
+    "tags": [
+      "hyperbolic",
+      "identity",
+      "rw",
+      "ring",
+      "lane-2"
+    ]
+  },
+  "proofs": [
+    {
+      "id": "p1",
+      "tactics": [
+        "rw [Real.cosh_sq, Real.sinh_sq]",
+        "ring"
+      ],
+      "tactic_count": 2,
+      "eml_node_cost": 2,
+      "style": "definitional",
+      "is_optimal": true,
+      "discovered_by": "human",
+      "discovery_date": "2026-04-26"
+    }
+  ],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": []
+  },
+  "common_mistakes": [
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Trying to expand only `cosh_sq` and leaving `sinh^2` — `ring` later cannot reconcile the asymmetric form.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Using `simp [Real.cosh_sq, Real.sinh_sq]` works too but `simp` may rewrite past what we want; `rw` is more deliberate.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Using `linarith` instead — fails because the equation involves multiplications, not just linear combinations.",
+      "frequency": 0
+    },
+    {
+      "tactic": "(see why_fails)",
+      "why_fails": "Using `nlinarith` — would work but is a heavier tactic; `ring` is the idiomatic choice for pure polynomial identities.",
+      "frequency": 0
+    }
+  ],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": null
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": [
+      "pythagorean_triple_at_log_two",
+      "three_four_five_from_hyperbolic"
+    ]
+  },
+  "metadata": {
+    "verified": true,
+    "verification_method": "lean4_kernel",
+    "generated_by": "from_petal_importer_v1",
+    "creation_date": "2026-04-26"
+  }
+}
