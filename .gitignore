@@ -6,3 +6,12 @@ __pycache__/
 *.hash
 *.trace
 .DS_Store
+
+# Next.js (site/)
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.vercel/
+.env.local
+.env.*.local
