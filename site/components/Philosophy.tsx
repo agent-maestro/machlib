@@ -28,8 +28,8 @@ export default function Philosophy() {
               there too, but they are no longer the only signal.
             </p>
             <p>
-              Kevin Buzzard once said, of agentic mathematics, that it would
-              never belong in Mathlib. He may be right. So we made a different
+              Academia has said, of agentic mathematics, that it does not
+              belong in Mathlib. They may be right. So we made a different
               library — one that does belong to the agents.
             </p>
           </div>
