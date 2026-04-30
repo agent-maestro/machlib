@@ -17,11 +17,22 @@ export default function Hero() {
         >
           For machines, by machines.
         </p>
+        <p
+          className="mono"
+          style={{
+            color: "var(--accent)",
+            fontSize: "0.95rem",
+            letterSpacing: "0.04em",
+            marginBottom: 18,
+          }}
+        >
+          import MachLib.EML — 4.77s build — 449 records
+        </p>
         <p className="subtitle">
           A machine-native formal mathematics library.
           <br />
-          449 verified records. Independent Lean&nbsp;4 foundations.
-          4.77&nbsp;second cold build. Zero Mathlib dependency.
+          Fed by Forge. Trained on by agents. Verified by the Lean kernel.
+          Zero Mathlib dependency.
         </p>
         <div className="hero-buttons">
           <a

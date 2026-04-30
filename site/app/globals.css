@@ -558,6 +558,80 @@ p {
   color: var(--muted);
 }
 
+/* ── Full-stack flow ───────────────────────────────────────── */
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 48px;
+  max-width: 720px;
+}
+
+.flow-step {
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  padding: 18px 22px;
+  font-family: var(--font-mono);
+  font-size: 0.94rem;
+  color: var(--text-strong);
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  min-width: 0;
+}
+
+.flow-step.highlight {
+  border-color: var(--accent-soft);
+  background: var(--accent-dim);
+}
+
+.flow-step .flow-num {
+  color: var(--accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  flex: 0 0 auto;
+}
+
+.flow-step .flow-text {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.flow-step .flow-text em {
+  color: var(--muted);
+  font-style: normal;
+  font-size: 0.84rem;
+  display: block;
+  margin-top: 4px;
+}
+
+.flow-arrow {
+  text-align: center;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  padding: 8px 0;
+  line-height: 1;
+}
+
+.flow-coda {
+  margin-top: 36px;
+  padding: 22px 24px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-soft);
+  font-family: var(--font-mono);
+  font-size: 0.94rem;
+  color: var(--text-strong);
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.flow-coda strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* ── Footer ────────────────────────────────────────────────── */
 
 footer {

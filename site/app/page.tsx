@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import Numbers from "@/components/Numbers";
+import FullStackFlow from "@/components/FullStackFlow";
 import WhyMachLib from "@/components/WhyMachLib";
 import RecordViewer from "@/components/RecordViewer";
 import Engines from "@/components/Engines";
@@ -14,6 +15,7 @@ export default function Page() {
       <main>
         <Hero />
         <Numbers />
+        <FullStackFlow />
         <WhyMachLib />
         <RecordViewer />
         <Engines />
