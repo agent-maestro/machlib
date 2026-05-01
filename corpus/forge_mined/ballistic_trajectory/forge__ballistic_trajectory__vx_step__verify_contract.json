@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__ballistic_trajectory__vx_step__verify_contract",
+    "base_id": "forge__ballistic_trajectory__vx_step__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`vx_step` satisfies its @verify contract: under preconditions (abs(vx_prev) <= VEL_MAX ∧ drag_k >= 0.0 ∧ drag_k <= KD_MAX ∧ dt >= 0.0 ∧ dt <= DT_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from ballistic_trajectory.eml\n-- theorem vx_step_decays_with_drag : \\u2200 args, (abs(vx_prev) <= VEL_MAX ∧ drag_k >= 0.0 ∧ drag_k <= KD_MAX ∧ dt >= 0.0 ∧ dt <= DT_MAX) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::ballistic_trajectory",
+      "function::vx_step",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::vx_step_decays_with_drag"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/defense/fire_control/ballistic_trajectory.eml",
+    "source_function": "vx_step"
+  }
+}

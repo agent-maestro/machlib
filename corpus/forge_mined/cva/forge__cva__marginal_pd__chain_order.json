@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__cva__marginal_pd__chain_order",
+    "base_id": "forge__cva__marginal_pd__chain_order",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`marginal_pd` (from `cva.eml`) has EML chain order 2. Chain order is the depth of nested transcendental operators in the function's EML routing tree; chain 2 means the function is oscillatory in structure.",
+      "formal_lean": "-- Pending MachLib infrastructure for forge function imports.\n-- theorem marginal_pd_chain_order : chain_order marginal_pd = 2 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::cva",
+      "function::marginal_pd",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::chain_order"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 8,
+      "mac_units": 4,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/finance/risk/cva.eml",
+    "source_function": "marginal_pd"
+  }
+}

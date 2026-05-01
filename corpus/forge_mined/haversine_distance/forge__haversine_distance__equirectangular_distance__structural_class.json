@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__haversine_distance__equirectangular_distance__structural_class",
+    "base_id": "forge__haversine_distance__equirectangular_distance__structural_class",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`equirectangular_distance` is structurally higher_order: chain order 3 implies the function lives in the higher_order regime of the EML hierarchy. This is a definitional consequence of `equirectangular_distance_chain_order`.",
+      "formal_lean": "-- theorem equirectangular_distance_is_higher_order : is_higher_order equirectangular_distance := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::haversine_distance",
+      "function::equirectangular_distance",
+      "chain_order::3",
+      "class::higher_order",
+      "property::structural_class"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 3,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 20,
+      "mac_units": 10,
+      "trig_units": 1
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/geospatial/haversine_distance.eml",
+    "source_function": "equirectangular_distance"
+  }
+}

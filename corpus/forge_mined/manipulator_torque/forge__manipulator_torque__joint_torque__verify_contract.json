@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__manipulator_torque__joint_torque__verify_contract",
+    "base_id": "forge__manipulator_torque__joint_torque__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`joint_torque` satisfies its @verify contract: under preconditions (inertia >= I_MIN ∧ inertia <= I_MAX ∧ damping >= 0.0 ∧ damping <= 1.0e3 ∧ mass >= 0.0 ∧ mass <= 1.0e3 ∧ com_offset >= 0.0 ∧ com_offset <= 5.0 ∧ abs(q) <= Q_MAX ∧ abs(q_dot) <= QDOT_MAX ∧ abs(q_ddot) <= QDDOT_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from manipulator_torque.eml\n-- theorem joint_torque_inertia_dominant_at_high_accel : \\u2200 args, (inertia >= I_MIN ∧ inertia <= I_MAX ∧ damping >= 0.0 ∧ damping <= 1.0e3 ∧ mass >= 0.0 ∧ mass <= 1.0e3 ∧ com_offset >= 0.0 ∧ com_offset <= 5.0 ∧ abs(q) <= Q_MAX ∧ abs(q_dot) <= QDOT_MAX ∧ abs(q_ddot) <= QDDOT_MAX) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::manipulator_torque",
+      "function::joint_torque",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::contract",
+      "contract::joint_torque_inertia_dominant_at_high_accel"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 10,
+      "mac_units": 5,
+      "trig_units": 1
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/robotics/dynamics/manipulator_torque.eml",
+    "source_function": "joint_torque"
+  }
+}

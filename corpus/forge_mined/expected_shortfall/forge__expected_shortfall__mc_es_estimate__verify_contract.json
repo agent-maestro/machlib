@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__expected_shortfall__mc_es_estimate__verify_contract",
+    "base_id": "forge__expected_shortfall__mc_es_estimate__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`mc_es_estimate` satisfies its @verify contract: under preconditions (tail_loss_sum >= 0.0 ∧ tail_loss_sum <= 1.0e12 ∧ tail_count >= 1.0 ∧ tail_count <= 1.0e9), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from expected_shortfall.eml\n-- theorem mc_es_zero_at_zero_count : \\u2200 args, (tail_loss_sum >= 0.0 ∧ tail_loss_sum <= 1.0e12 ∧ tail_count >= 1.0 ∧ tail_count <= 1.0e9) \\u2192 (result >= 0.0) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::expected_shortfall",
+      "function::mc_es_estimate",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::mc_es_zero_at_zero_count"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/finance/risk/expected_shortfall.eml",
+    "source_function": "mc_es_estimate"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__biquad_lowpass__biquad_lowpass_step__verify_contract",
+    "base_id": "forge__biquad_lowpass__biquad_lowpass_step__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`biquad_lowpass_step` satisfies its @verify contract: under preconditions (abs(x) <= 1.0 ∧ abs(x1) <= 1.0 ∧ abs(x2) <= 1.0 ∧ abs(y1) <= 4.0 ∧ abs(y2) <= 4.0), the function's result satisfies (abs(result) <= 8.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from biquad_lowpass.eml\n-- theorem biquad_step_bounded_under_normalized_coeffs : \\u2200 args, (abs(x) <= 1.0 ∧ abs(x1) <= 1.0 ∧ abs(x2) <= 1.0 ∧ abs(y1) <= 4.0 ∧ abs(y2) <= 4.0) \\u2192 (abs(result) <= 8.0) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::biquad_lowpass",
+      "function::biquad_lowpass_step",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::biquad_step_bounded_under_normalized_coeffs"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 2,
+      "mac_units": 1,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/audio/dsp/biquad_lowpass.eml",
+    "source_function": "biquad_lowpass_step"
+  }
+}

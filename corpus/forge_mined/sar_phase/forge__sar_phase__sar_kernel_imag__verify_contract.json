@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__sar_phase__sar_kernel_imag__verify_contract",
+    "base_id": "forge__sar_phase__sar_kernel_imag__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`sar_kernel_imag` satisfies its @verify contract: under preconditions (True), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from sar_phase.eml\n-- theorem sar_kernel_imag_zero_at_zero_arg : \\u2200 args, (True) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::sar_phase",
+      "function::sar_kernel_imag",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::contract",
+      "contract::sar_kernel_imag_zero_at_zero_arg"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 6,
+      "mac_units": 3,
+      "trig_units": 1
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/radar/imaging/sar_phase.eml",
+    "source_function": "sar_kernel_imag"
+  }
+}

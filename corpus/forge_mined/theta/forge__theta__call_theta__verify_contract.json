@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__theta__call_theta__verify_contract",
+    "base_id": "forge__theta__call_theta__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`call_theta` satisfies its @verify contract: under preconditions (spot > 0.0 ∧ strike > 0.0 ∧ vol > 0.0 ∧ time_to_expiry > TINY_T), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from theta.eml\n-- theorem bs_call_theta_negative_in_money : \\u2200 args, (spot > 0.0 ∧ strike > 0.0 ∧ vol > 0.0 ∧ time_to_expiry > TINY_T) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::theta",
+      "function::call_theta",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::contract",
+      "contract::bs_call_theta_negative_in_money"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 8,
+      "mac_units": 4,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/finance/greeks/theta.eml",
+    "source_function": "call_theta"
+  }
+}

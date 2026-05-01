@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__arrhenius__effective_activation_energy__fpga_cycles",
+    "base_id": "forge__arrhenius__effective_activation_energy__fpga_cycles",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`effective_activation_energy` is implementable in 10 FPGA pipeline cycles using 5 MAC units (Forge's FPGA allocator estimate). This bounds the latency of the hardware-emitted Verilog.",
+      "formal_lean": "-- theorem effective_activation_energy_fpga_cycles : fpga_cycles effective_activation_energy ≤ 10 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::arrhenius",
+      "function::effective_activation_energy",
+      "chain_order::0",
+      "class::polynomial",
+      "property::fpga_cycles"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 10,
+      "mac_units": 5,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/chemistry/kinetics/arrhenius.eml",
+    "source_function": "effective_activation_energy"
+  }
+}

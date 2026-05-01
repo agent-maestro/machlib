@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__q8_dequantize__q8_dequantize__verify_contract",
+    "base_id": "forge__q8_dequantize__q8_dequantize__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`q8_dequantize` satisfies its @verify contract: under preconditions (scale >= SCALE_MIN ∧ scale <= SCALE_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from q8_dequantize.eml\n-- theorem q8_dequantize_inverse_of_quantize : \\u2200 args, (scale >= SCALE_MIN ∧ scale <= SCALE_MAX) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::q8_dequantize",
+      "function::q8_dequantize",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::q8_dequantize_inverse_of_quantize"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 2,
+      "mac_units": 1,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/ml/quantization/q8_dequantize.eml",
+    "source_function": "q8_dequantize"
+  }
+}

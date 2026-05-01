@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__op_amp_inverting__inverting_output_with_rails__verify_contract",
+    "base_id": "forge__op_amp_inverting__inverting_output_with_rails__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`inverting_output_with_rails` satisfies its @verify contract: under preconditions (abs(v_in) <= V_IN_MAX ∧ r_feedback >= RES_MIN ∧ r_feedback <= RES_MAX ∧ r_input >= RES_MIN ∧ r_input <= RES_MAX ∧ v_pos_rail >= V_RAIL_MIN ∧ v_pos_rail <= V_RAIL_MAX ∧ v_neg_rail >= -V_RAIL_MAX ∧ v_neg_rail <= -V_RAIL_MIN), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from op_amp_inverting.eml\n-- theorem rail_clipped_within_supplies : \\u2200 args, (abs(v_in) <= V_IN_MAX ∧ r_feedback >= RES_MIN ∧ r_feedback <= RES_MAX ∧ r_input >= RES_MIN ∧ r_input <= RES_MAX ∧ v_pos_rail >= V_RAIL_MIN ∧ v_pos_rail <= V_RAIL_MAX ∧ v_neg_rail >= -V_RAIL_MAX ∧ v_neg_rail <= -V_RAIL_MIN) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::op_amp_inverting",
+      "function::inverting_output_with_rails",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::rail_clipped_within_supplies"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 8,
+      "mac_units": 4,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/semiconductor/op_amp_inverting.eml",
+    "source_function": "inverting_output_with_rails"
+  }
+}

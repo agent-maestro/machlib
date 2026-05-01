@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__haversine_distance__initial_bearing__fpga_cycles",
+    "base_id": "forge__haversine_distance__initial_bearing__fpga_cycles",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`initial_bearing` is implementable in 16 FPGA pipeline cycles using 8 MAC units (Forge's FPGA allocator estimate). This bounds the latency of the hardware-emitted Verilog.",
+      "formal_lean": "-- theorem initial_bearing_fpga_cycles : fpga_cycles initial_bearing ≤ 16 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 4,
+    "tags": [
+      "forge_mined",
+      "file::haversine_distance",
+      "function::initial_bearing",
+      "chain_order::6",
+      "class::higher_order",
+      "property::fpga_cycles"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 6,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 16,
+      "mac_units": 8,
+      "trig_units": 7
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/geospatial/haversine_distance.eml",
+    "source_function": "initial_bearing"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__mti_filter__improvement_factor__verify_contract",
+    "base_id": "forge__mti_filter__improvement_factor__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`improvement_factor` satisfies its @verify contract: under preconditions (clutter_in_power >= 0.0 ∧ clutter_in_power <= 1.0e12 ∧ clutter_out_power >= 1.0e-12 ∧ clutter_out_power <= 1.0e12), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from mti_filter.eml\n-- theorem improvement_factor_nonneg : \\u2200 args, (clutter_in_power >= 0.0 ∧ clutter_in_power <= 1.0e12 ∧ clutter_out_power >= 1.0e-12 ∧ clutter_out_power <= 1.0e12) \\u2192 (result >= 0.0) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::mti_filter",
+      "function::improvement_factor",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::improvement_factor_nonneg"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/radar/doppler/mti_filter.eml",
+    "source_function": "improvement_factor"
+  }
+}

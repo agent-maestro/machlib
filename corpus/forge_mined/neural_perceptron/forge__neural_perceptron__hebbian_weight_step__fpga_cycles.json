@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__neural_perceptron__hebbian_weight_step__fpga_cycles",
+    "base_id": "forge__neural_perceptron__hebbian_weight_step__fpga_cycles",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`hebbian_weight_step` is implementable in 4 FPGA pipeline cycles using 2 MAC units (Forge's FPGA allocator estimate). This bounds the latency of the hardware-emitted Verilog.",
+      "formal_lean": "-- theorem hebbian_weight_step_fpga_cycles : fpga_cycles hebbian_weight_step ≤ 4 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::neural_perceptron",
+      "function::hebbian_weight_step",
+      "chain_order::0",
+      "class::polynomial",
+      "property::fpga_cycles"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/scientific/biology/neural_perceptron.eml",
+    "source_function": "hebbian_weight_step"
+  }
+}

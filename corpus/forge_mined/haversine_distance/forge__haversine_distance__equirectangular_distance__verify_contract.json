@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__haversine_distance__equirectangular_distance__verify_contract",
+    "base_id": "forge__haversine_distance__equirectangular_distance__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`equirectangular_distance` satisfies its @verify contract: under preconditions (abs(lat1) <= PI_HALF ∧ abs(lat2) <= PI_HALF ∧ abs(lon1) <= 6.2832 ∧ abs(lon2) <= 6.2832), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from haversine_distance.eml\n-- theorem equirectangular_zero_at_same_point : \\u2200 args, (abs(lat1) <= PI_HALF ∧ abs(lat2) <= PI_HALF ∧ abs(lon1) <= 6.2832 ∧ abs(lon2) <= 6.2832) \\u2192 (result >= 0.0) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::haversine_distance",
+      "function::equirectangular_distance",
+      "chain_order::3",
+      "class::higher_order",
+      "property::contract",
+      "contract::equirectangular_zero_at_same_point"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 3,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 20,
+      "mac_units": 10,
+      "trig_units": 1
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/geospatial/haversine_distance.eml",
+    "source_function": "equirectangular_distance"
+  }
+}

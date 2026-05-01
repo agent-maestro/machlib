@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__magnetometer_heading__magnetic_heading__verify_contract",
+    "base_id": "forge__magnetometer_heading__magnetic_heading__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`magnetic_heading` satisfies its @verify contract: under preconditions (abs(mag_x_h) <= MAG_COMPONENT_MAX ∧ abs(mag_y_h) <= MAG_COMPONENT_MAX), the function's result satisfies (result >= -3.1416 ∧ result <= 3.1416). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from magnetometer_heading.eml\n-- theorem heading_zero_due_north : \\u2200 args, (abs(mag_x_h) <= MAG_COMPONENT_MAX ∧ abs(mag_y_h) <= MAG_COMPONENT_MAX) \\u2192 (result >= -3.1416 ∧ result <= 3.1416) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::magnetometer_heading",
+      "function::magnetic_heading",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::heading_zero_due_north"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/aerospace/sensors/magnetometer_heading.eml",
+    "source_function": "magnetic_heading"
+  }
+}

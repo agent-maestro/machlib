@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__pitot_airspeed__indicated_airspeed__fpga_cycles",
+    "base_id": "forge__pitot_airspeed__indicated_airspeed__fpga_cycles",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`indicated_airspeed` is implementable in 8 FPGA pipeline cycles using 4 MAC units (Forge's FPGA allocator estimate). This bounds the latency of the hardware-emitted Verilog.",
+      "formal_lean": "-- theorem indicated_airspeed_fpga_cycles : fpga_cycles indicated_airspeed ≤ 8 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::pitot_airspeed",
+      "function::indicated_airspeed",
+      "chain_order::1",
+      "class::exponential",
+      "property::fpga_cycles"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 1,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 1
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 8,
+      "mac_units": 4,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/aerospace/sensors/pitot_airspeed.eml",
+    "source_function": "indicated_airspeed"
+  }
+}

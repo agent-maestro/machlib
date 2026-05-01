@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__chirp_jammer__chirp_sample__structural_class",
+    "base_id": "forge__chirp_jammer__chirp_sample__structural_class",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`chirp_sample` is structurally oscillatory: chain order 2 implies the function lives in the oscillatory regime of the EML hierarchy. This is a definitional consequence of `chirp_sample_chain_order`.",
+      "formal_lean": "-- theorem chirp_sample_is_oscillatory : is_oscillatory chirp_sample := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::chirp_jammer",
+      "function::chirp_sample",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::structural_class"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 14,
+      "mac_units": 7,
+      "trig_units": 1
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/defense/electronic_warfare/chirp_jammer.eml",
+    "source_function": "chirp_sample"
+  }
+}

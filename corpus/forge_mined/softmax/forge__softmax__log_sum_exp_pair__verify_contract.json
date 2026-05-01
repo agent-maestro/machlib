@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__softmax__log_sum_exp_pair__verify_contract",
+    "base_id": "forge__softmax__log_sum_exp_pair__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`log_sum_exp_pair` satisfies its @verify contract: under preconditions (abs(a) < SOFTMAX_X_MAX ∧ abs(b) < SOFTMAX_X_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from softmax.eml\n-- theorem log_sum_exp_pair_associative : \\u2200 args, (abs(a) < SOFTMAX_X_MAX ∧ abs(b) < SOFTMAX_X_MAX) \\u2192 (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::softmax",
+      "function::log_sum_exp_pair",
+      "chain_order::3",
+      "class::higher_order",
+      "property::contract",
+      "contract::log_sum_exp_pair_associative"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 3,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 16,
+      "mac_units": 8,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/ml/activations/softmax.eml",
+    "source_function": "log_sum_exp_pair"
+  }
+}
