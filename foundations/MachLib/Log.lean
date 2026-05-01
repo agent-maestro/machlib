@@ -87,5 +87,16 @@ theorem log_lt_log {x y : Real} (hx : 0 < x) (hxy : x < y) :
       rw [exp_log hy, exp_log hx] at step
       exact (lt_irrefl_ax x (lt_trans_ax hxy step)).elim
 
+/-- On the positive reals minus the singleton {1}, `log` is non-zero.
+This guards EDL self-map definitions where dividing by `log x` must
+be meaningful. -/
+theorem log_ne_zero_of_pos_of_ne_one {x : Real}
+    (hx : 0 < x) (hx1 : x ≠ 1) : log x ≠ 0 := by
+  intro h
+  -- log x = 0 ⇒ exp(log x) = exp 0 ⇒ x = 1, contradicting hx1.
+  have hpair : exp (log x) = exp 0 := by rw [h]
+  rw [exp_log hx, exp_zero] at hpair
+  exact hx1 hpair
+
 end Real
 end MachLib

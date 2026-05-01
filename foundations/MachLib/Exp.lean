@@ -73,5 +73,11 @@ theorem exp_injective {x y : Real} (h : exp x = exp y) : x = y := by
   · exact heq
   · exact (ne_of_gt (exp_lt hgt) h).elim
 
+/-- `exp(x - y) = exp(x) / exp(y)`. The subtraction analogue of
+`exp_add`, used in the self-map conjugacy lemmas. -/
+theorem exp_sub (x y : Real) : exp (x - y) = exp x / exp y := by
+  rw [sub_def, exp_add, exp_neg_inv]
+  exact (div_def (exp x) (exp y) (exp_ne_zero y)).symm
+
 end Real
 end MachLib
