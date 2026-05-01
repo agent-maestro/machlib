@@ -13,7 +13,7 @@ after the first triage pass.
 | `Universality.lean` | 133 | 0 (imports `MonogateEML.EMLDepth`, `UpperBounds`) | 0 | 10 | **blocked**: requires `EMLTree` AST type that MachLib does not yet have |
 | `Gamma.lean` | 90 | 3 | 0 | 6 | medium — needs `Gamma` axiomatisation in MachLib |
 | `EMLDuality.lean` | 129 | 3 | 0 | 18 | medium — uses Complex, MachLib is real-only today |
-| `SelfMapConjugacy.lean` | 150 | 2 | 0 | 12 | **easiest theorem-bearing candidate** — all Real, only needs 2 helpers added to MachLib |
+| ~~`SelfMapConjugacy.lean`~~ | ~~150~~ | ~~2~~ | ~~0~~ | ~~12~~ | ✅ **PORTED 2026-05-01** — see `MachLib.SelfMapConjugacy` |
 | `ModelAudit.lean` | 187 | 2 | 0 | 13 | medium — uses `Real.rpow` which MachLib lacks |
 | `Runtime.lean` | 296 | 5 | 0 | 19 | medium — heavy Mathlib `Float` dependence |
 | `HyperbolicPreservation.lean` | 224 | 4 | 0 | 34 | medium-high — `sinh`/`cosh` not yet in MachLib |
@@ -29,9 +29,9 @@ after the first triage pass.
 
 ## Recommended port order (first 5)
 
-1. **`SelfMapConjugacy.lean`** — 12 theorems, only 2 Mathlib facts not yet in MachLib (`exp_sub`, `log_ne_zero_of_pos_of_ne_one`). Add the helpers to `MachLib/Exp.lean` and `MachLib/Log.lean`, then port. **First port to attempt.**
+1. ~~**`SelfMapConjugacy.lean`** — 12 theorems, only 2 Mathlib facts not yet in MachLib (`exp_sub`, `log_ne_zero_of_pos_of_ne_one`). Add the helpers to `MachLib/Exp.lean` and `MachLib/Log.lean`, then port. **First port to attempt.**~~ ✅ **DONE 2026-05-01** — `exp_sub` + `log_ne_zero_of_pos_of_ne_one` shipped to `MachLib/Exp.lean` + `MachLib/Log.lean`; 12 theorems live in `MachLib/SelfMapConjugacy.lean`. Built clean in 3.2s, 0 sorries, 0 Mathlib.
 
-2. **`HyperbolicPreservation.lean`** — adds `sinh`/`cosh`/`tanh` axioms to a new `MachLib/Hyperbolic.lean`, then ports the 34 theorems. Establishes the pattern for adding new function families to MachLib's axiomatic regime.
+2. **`HyperbolicPreservation.lean`** — adds `sinh`/`cosh`/`tanh` axioms to a new `MachLib/Hyperbolic.lean`, then ports the 34 theorems. Establishes the pattern for adding new function families to MachLib's axiomatic regime. **Next up.**
 
 3. **`Gamma.lean`** — adds a `MachLib/Gamma.lean` with the 6 Gamma facts the corpus actually uses (the analytic construction is not needed). Small, isolated, clean.
 

@@ -1,9 +1,14 @@
 # `legacy_eml/` — transitional Mathlib-dependent corpus (v0.1)
 
-These 18 Lean files are imported from the original `monogate-lean`
+These 17 Lean files are imported from the original `monogate-lean`
 repository as the seed for MachLib's theorem corpus. They depend
 on Mathlib for `Real`, `Real.exp`, `Real.log`, and the special-
 function machinery.
+
+Files ported up into `foundations/MachLib/` (deleted from here):
+
+  * `SelfMapConjugacy.lean` → `MachLib.SelfMapConjugacy`
+    (12 theorems on F16 self-map conjugacies, ported 2026-05-01)
 
 **This is intentional and temporary.** Phase 1 of the MachLib
 roadmap (Sessions I-001 through I-004) builds independent
