@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://machlib.org/schema/v1.0.0.json",
+  "title": "MachLib record v1.0.0",
+  "description": "Top-level record for a single MachLib theorem + its proofs + metadata. Validated by `machlib validate`.",
+  "type": "object",
+  "required": ["schema_version", "theorem", "proofs", "metadata"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "theorem": {
+      "type": "object",
+      "required": ["id", "statement", "domain", "lane", "tags"],
+      "additionalProperties": true,
+      "properties": {
+        "id":                {"type": "string", "pattern": "^[A-Za-z0-9_]+(__[A-Za-z0-9_]+)*$"},
+        "base_id":           {"type": ["string", "null"]},
+        "variant_strategy":  {"type": ["string", "null"]},
+        "statement": {
+          "type": "object",
+          "required": ["informal"],
+          "properties": {
+            "informal":         {"type": "string", "minLength": 1},
+            "formal_lean":      {"type": ["string", "null"]},
+            "formal_eml_lang":  {"type": ["string", "null"]}
+          }
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1,
+          "description": "free-text domain tag, e.g. 'eml', 'forge_mined', 'physics'"
+        },
+        "lane":  {"type": "integer", "minimum": 1, "maximum": 9},
+        "tags":  {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "proofs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "tactics", "style", "discovered_by"],
+        "properties": {
+          "id":              {"type": "string"},
+          "tactics":         {"type": "array", "items": {"type": "string"}},
+          "tactic_count":    {"type": "integer", "minimum": 0},
+          "eml_node_cost":   {"type": ["integer", "null"], "minimum": 0},
+          "style":           {"type": "string"},
+          "is_optimal":      {"type": "boolean"},
+          "discovered_by":   {"type": "string"},
+          "discovery_date":  {"type": "string", "format": "date"}
+        }
+      }
+    },
+    "difficulty": {
+      "type": "object",
+      "properties": {
+        "lane":  {"type": "integer", "minimum": 1, "maximum": 9},
+        "label": {"enum": ["beginner", "intermediate", "advanced", "expert", "open"]},
+        "calibrated_from_attempts":      {"type": "integer", "minimum": 0},
+        "average_hint_level_at_solve":   {"type": "number", "minimum": 0},
+        "prerequisite_skills":           {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "common_mistakes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["why_fails"],
+        "properties": {
+          "tactic":     {"type": ["string", "null"]},
+          "why_fails":  {"type": "string"},
+          "frequency":  {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "tactic_trace": {
+      "type": "object",
+      "properties": {
+        "successful":             {"type": "object"},
+        "failed":                 {"type": "object"},
+        "success_rate_by_tactic": {"type": "object"}
+      }
+    },
+    "structural_profile": {
+      "type": "object",
+      "properties": {
+        "chain_order":     {"type": ["integer", "null"]},
+        "cost_class":      {"type": ["string", "null"]},
+        "eml_depth":       {"type": ["integer", "null"]},
+        "dynamics": {
+          "type": "object",
+          "properties": {
+            "oscillations":  {"type": "integer"},
+            "decays":        {"type": "integer"}
+          }
+        },
+        "drift_risk":      {"enum": ["LOW", "MEDIUM", "HIGH", null]},
+        "fpga_estimate":   {"type": ["object", "null"]}
+      }
+    },
+    "relationships": {
+      "type": "object",
+      "properties": {
+        "parent":               {"type": ["string", "null"]},
+        "siblings":             {"type": "array", "items": {"type": "string"}},
+        "depends_on":           {"type": "array", "items": {"type": "string"}},
+        "structural_siblings":  {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["generated_by", "creation_date"],
+      "properties": {
+        "verified":              {"type": "boolean"},
+        "verification_method":   {"type": ["string", "null"]},
+        "generated_by":          {"type": "string", "minLength": 1},
+        "creation_date":         {"type": "string", "format": "date"},
+        "source_eml_file":       {"type": ["string", "null"]},
+        "source_function":       {"type": ["string", "null"]}
+      }
+    }
+  }
+}

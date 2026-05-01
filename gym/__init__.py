@@ -35,6 +35,8 @@ from __future__ import annotations
 from .tactics import TACTIC_VOCABULARY, EML_SPECIFIC_TACTICS
 from .rewards import RewardConfig, RewardSignal, compute_reward
 from .observation import ObservationEncoder
+from .multi_proof import MultiProofSearch, ProofRecord, classify_style
+from .verifiers import HeuristicVerifier, LeanKernelVerifier, Verifier
 
 # Soft import for the Gymnasium-using class. Importing gymnasium
 # pulls in numpy + a slow import chain, so we delay it. The wrapper
@@ -65,4 +67,11 @@ __all__ = [
     "EML_SPECIFIC_TACTICS",
     "ObservationEncoder",
     "compute_reward",
+    # Phase B-001 multi-proof BFS engine.
+    "MultiProofSearch",
+    "ProofRecord",
+    "classify_style",
+    "Verifier",
+    "HeuristicVerifier",
+    "LeanKernelVerifier",
 ]

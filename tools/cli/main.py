@@ -38,6 +38,7 @@ for stream in (sys.stdout, sys.stderr):
 from tools.cli import stats as stats_cmd  # noqa: E402
 from tools.cli import generate as generate_cmd  # noqa: E402
 from tools.cli import search as search_cmd  # noqa: E402
+from tools.cli import community as community_cmd  # noqa: E402
 
 
 def _make_parser() -> argparse.ArgumentParser:
@@ -63,6 +64,19 @@ def _make_parser() -> argparse.ArgumentParser:
 
     s_gen = sub.add_parser("generate", help="Generate synthetic variants")
     generate_cmd.add_arguments(s_gen)
+
+    s_new = sub.add_parser(
+        "new",
+        help="Generate a community record skeleton",
+    )
+    community_cmd.add_new_arguments(s_new)
+
+    s_validate = sub.add_parser(
+        "validate",
+        help="Validate a record against the v1.0.0 schema",
+    )
+    community_cmd.add_validate_arguments(s_validate)
+
     sub.add_parser("verify", help="Lean-kernel verify (stub)")
     sub.add_parser("rank", help="Rank proofs by cost (stub)")
     sub.add_parser("export", help="Export to HF / parquet (stub)")
@@ -79,6 +93,10 @@ def main(argv: list[str] | None = None) -> int:
         return search_cmd.run(args)
     if args.cmd == "generate":
         return generate_cmd.run(args)
+    if args.cmd == "new":
+        return community_cmd.run_new(args)
+    if args.cmd == "validate":
+        return community_cmd.run_validate(args)
     print(f"`machlib {args.cmd}` is not implemented in Phase 0.")
     return 0
 
