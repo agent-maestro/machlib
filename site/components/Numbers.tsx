@@ -1,8 +1,22 @@
+// Single source of truth for the marketing tiles. Update these
+// values, not the JSX below. `live_counts.py` (in monogate-forge)
+// is the authority -- run it to read the live derivation:
+//
+//   cd D:/monogate-forge && python tools/cli/live_counts.py --pretty --slow
+//
+// Then bump any field whose value moved.
+const MACHLIB = {
+  records: 449,
+  tests: 2704,
+  build_seconds: 4.77,
+  mathlib_imports: 0,
+} as const;
+
 const TILES: { value: string; label: string }[] = [
-  { value: "449",   label: "Records" },
-  { value: "2,704", label: "Tests" },
-  { value: "4.77s", label: "Cold Build" },
-  { value: "0",     label: "Mathlib Imports" },
+  { value: MACHLIB.records.toString(),                  label: "Records" },
+  { value: MACHLIB.tests.toLocaleString("en-US"),       label: "Tests" },
+  { value: `${MACHLIB.build_seconds.toFixed(2)}s`,      label: "Cold Build" },
+  { value: MACHLIB.mathlib_imports.toString(),          label: "Mathlib Imports" },
 ];
 
 export default function Numbers() {
