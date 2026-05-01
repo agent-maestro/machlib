@@ -98,5 +98,23 @@ theorem log_ne_zero_of_pos_of_ne_one {x : Real}
   rw [exp_log hx, exp_zero] at hpair
   exact hx1 hpair
 
+/-! ### Common-log / common-anti-log axioms
+
+`log10 x = log x / log 10` and `exp10 x = exp (x * log 10)` on
+positive inputs. We axiomatise rather than define here because
+the downstream Forge kernels (pH chemistry, Tafel electro-
+chemistry, distillation) only need the *symbol* and the linking
+identity, not the analytic construction. -/
+
+axiom log10 : Real → Real
+axiom exp10 : Real → Real
+
+axiom log10_zero : log10 1 = 0
+axiom exp10_zero : exp10 0 = 1
+axiom log10_def  (x : Real) :
+    0 < x → exp (log10 x * log (natCast 10)) = x
+axiom exp10_def  (x : Real) : exp10 x = exp (x * log (natCast 10))
+axiom exp10_log10_inverse (x : Real) : 0 < x → exp10 (log10 x) = x
+
 end Real
 end MachLib

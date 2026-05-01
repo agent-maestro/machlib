@@ -17,12 +17,15 @@ namespace Real
 
 axiom sin : Real → Real
 axiom cos : Real → Real
+axiom tan : Real → Real
 axiom pi  : Real
 
 /-! ### Defining axioms -/
 
 axiom sin_zero       : sin 0 = 0
 axiom cos_zero       : cos 0 = 1
+axiom tan_zero       : tan 0 = 0
+axiom tan_def        (x : Real) : cos x ≠ 0 → tan x = sin x / cos x
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
 axiom pi_pos         : 0 < pi

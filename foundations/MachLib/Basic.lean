@@ -60,6 +60,28 @@ axiom realOfScientific
 @[instance] noncomputable def instOfScientific : OfScientific Real :=
   ⟨realOfScientific⟩
 
+/--
+Real-to-real power. Forge kernels emit `(base ^ exp)` for
+non-integer exponents (e.g. `(1 + (alpha * psi) ^ n_shape)` in
+the van Genuchten retention curve). Lean's default `^` resolves
+to integer powers via `Monoid.npow`; for `Real ^ Real` we must
+provide an explicit `HPow` instance.
+
+We do NOT axiomatise the analytic identity `realPow x y = exp(y * log x)`
+here — that's a CHOICE the downstream theorem can pin down with
+its own axioms when needed. The carrier is opaque so MachLib
+stays agnostic about whether the kernel target is real-analytic
+or a piecewise extension.
+-/
+axiom realPow : Real → Real → Real
+
+@[instance] noncomputable def instHPow : HPow Real Real Real :=
+  ⟨realPow⟩
+
+axiom realPow_zero (x : Real) : realPow x 0 = 1
+axiom realPow_one  (x : Real) : realPow x 1 = x
+axiom realPow_pos  {x y : Real} : 0 < x → 0 < realPow x y
+
 @[instance] noncomputable def instDecLT (a b : Real) : Decidable (a < b) :=
   Classical.propDecidable _
 @[instance] noncomputable def instDecLE (a b : Real) : Decidable (a ≤ b) :=
@@ -116,6 +138,13 @@ axiom sup_exists
 noncomputable def abs (x : Real) : Real := if 0 ≤ x then x else -x
 noncomputable def min (a b : Real) : Real := if a ≤ b then a else b
 noncomputable def max (a b : Real) : Real := if a ≤ b then b else a
+
+/-- Two-argument Heaviside step. `step a b = 1` when `a ≥ b`,
+otherwise `0`. The 2-arg form matches the `step(sample, threshold)`
+convention Forge kernels emit (e.g. shadow PCF, neural threshold
+activations) and avoids carrying around a separate
+`heaviside`/`step1` distinction. -/
+noncomputable def step (a b : Real) : Real := if b ≤ a then 1 else 0
 
 /-! ## Basic derived lemmas -/
 
