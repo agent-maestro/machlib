@@ -39,6 +39,27 @@ axiom leR : Real → Real → Prop
 @[instance] noncomputable def instOfNatOne  : OfNat Real (nat_lit 1) := ⟨oneR⟩
 @[instance] noncomputable def instInhabited : Inhabited Real := ⟨zeroR⟩
 
+/--
+Scientific-notation literal carrier. Forge-emitted Lean files
+contain decimal constants like `(0.0 : Real)`, `(0.001 : Real)`,
+`(2.99792458e8 : Real)`. Lean's elaborator desugars each one to
+`OfScientific.ofScientific mantissa expSign decExp`; without this
+instance the elaborator reports `failed to synthesize OfScientific
+Real` and refuses to type-check the file.
+
+The carrier `realOfScientific` is opaque — `MachLib.Basic` does
+not commit to a concrete real-number representation, so we treat
+the decimal-to-Real conversion the same way we treat `exp`, `log`,
+and friends: as an axiom that downstream files may further
+constrain. The instance is `noncomputable` to match the rest of
+the field.
+-/
+axiom realOfScientific
+    (mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) : Real
+
+@[instance] noncomputable def instOfScientific : OfScientific Real :=
+  ⟨realOfScientific⟩
+
 @[instance] noncomputable def instDecLT (a b : Real) : Decidable (a < b) :=
   Classical.propDecidable _
 @[instance] noncomputable def instDecLE (a b : Real) : Decidable (a ≤ b) :=
