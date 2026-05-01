@@ -10,7 +10,7 @@ const PATHS: Path[] = [
   {
     audience: "ML researchers",
     body:
-      "Pull the corpus from Hugging Face. 449 records, schema v1.0.0, one " +
+      "Pull the corpus from Hugging Face. 2,786 records, schema v1.0.0, one " +
       "JSON file per theorem. Drop it into your training loop.",
     cmd:
       "from datasets import load_dataset\nds = load_dataset(\"Monogate/machlib\")",

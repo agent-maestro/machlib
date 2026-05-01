@@ -8,14 +8,14 @@
 const MACHLIB = {
   records: 2786,
   tests: 2704,
-  build_seconds: 4.77,
+  build_label: "<5 min",
   mathlib_imports: 0,
 } as const;
 
 const TILES: { value: string; label: string }[] = [
   { value: MACHLIB.records.toString(),                  label: "Records" },
   { value: MACHLIB.tests.toLocaleString("en-US"),       label: "Tests" },
-  { value: `${MACHLIB.build_seconds.toFixed(2)}s`,      label: "Cold Build" },
+  { value: MACHLIB.build_label,                         label: "Cold Build" },
   { value: MACHLIB.mathlib_imports.toString(),          label: "Mathlib Imports" },
 ];
 

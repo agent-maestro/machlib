@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "MachLib — For machines, by machines",
   description:
-    "Machine-native formal mathematics. 449 records. 4.77s build. Zero Mathlib dependency.",
+    "Machine-native formal mathematics. 2,786 records. Sub-5-minute cold core build. Zero Mathlib dependency.",
   applicationName: "MachLib",
   authors: [{ name: "Mosa Creates LLC" }],
   keywords: [
@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "MachLib — For machines, by machines",
     description:
-      "Machine-native formal mathematics. 449 records. 4.77s build. Zero Mathlib dependency.",
+      "Machine-native formal mathematics. 2,786 records. Sub-5-minute cold core build. Zero Mathlib dependency.",
     siteName: "MachLib",
   },
   twitter: {
     card: "summary_large_image",
     title: "MachLib — For machines, by machines",
     description:
-      "Machine-native formal mathematics. 449 records. 4.77s build. Zero Mathlib dependency.",
+      "Machine-native formal mathematics. 2,786 records. Sub-5-minute cold core build. Zero Mathlib dependency.",
   },
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },

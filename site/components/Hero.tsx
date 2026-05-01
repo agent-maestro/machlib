@@ -26,7 +26,7 @@ export default function Hero() {
             marginBottom: 18,
           }}
         >
-          import MachLib.EML — 4.77s build — 449 records
+          import MachLib.EML — &lt;5 min core build — 2,786 records
         </p>
         <p className="subtitle">
           A machine-native formal mathematics library.
