@@ -6,6 +6,7 @@ import MachLib.EML
 import MachLib.SelfMapConjugacy
 import MachLib.Hyperbolic
 import MachLib.HyperbolicPreservation
+import MachLib.Forge
 
 /-!
 # MachLib — top-level aggregator
@@ -25,6 +26,11 @@ The independent foundations for machine-native formal mathematics.
                                   EML/EDL) ported from legacy_eml
   * `MachLib.Hyperbolic`        — sinh, cosh + ELC-form decomposition
                                   axioms (`tanh` lives in `Trig`)
+  * `MachLib.Forge`             — derived lemmas for Forge-emitted
+                                  kernel proofs (order, nonneg
+                                  combinators); shipped 2026-05-01
+                                  to ground the @verify(lean)
+                                  binding chain identified in C-127
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
