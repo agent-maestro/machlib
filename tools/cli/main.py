@@ -3,14 +3,15 @@
 Usage:
 
     python -m tools.cli.main stats
+    python -m tools.cli.main search "exp_log" --domain eml --limit 10
     python -m tools.cli.main generate --strategy constant_swap
     python -m tools.cli.main verify --batch corpus/eml
     python -m tools.cli.main rank   --by cost
     python -m tools.cli.main export --format jsonl
     python -m tools.cli.main serve
 
-Phase 0 ships `stats` only with a real implementation; the others
-are stubs that print "not implemented in Phase 0".
+Phase 0 ships `stats` and `search` with real implementations; the
+others are stubs that print "not implemented in Phase 0".
 """
 from __future__ import annotations
 
@@ -23,8 +24,20 @@ from pathlib import Path
 # root on sys.path before the `tools.*` import resolves).
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+# Corpus records contain Unicode (Greek letters, ↔, ε, etc.); on
+# Windows the default cp1252 stdout chokes when the search command
+# prints them. Reconfigure to utf-8 with errors=replace so non-
+# encodable characters degrade gracefully instead of crashing.
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, "reconfigure"):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+
 from tools.cli import stats as stats_cmd  # noqa: E402
 from tools.cli import generate as generate_cmd  # noqa: E402
+from tools.cli import search as search_cmd  # noqa: E402
 
 
 def _make_parser() -> argparse.ArgumentParser:
@@ -43,6 +56,11 @@ def _make_parser() -> argparse.ArgumentParser:
         default="text",
     )
 
+    s_search = sub.add_parser(
+        "search", help="Keyword + facet search across the corpus",
+    )
+    search_cmd.add_arguments(s_search)
+
     s_gen = sub.add_parser("generate", help="Generate synthetic variants")
     generate_cmd.add_arguments(s_gen)
     sub.add_parser("verify", help="Lean-kernel verify (stub)")
@@ -57,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
     args = _make_parser().parse_args(argv)
     if args.cmd == "stats":
         return stats_cmd.run(corpus=args.corpus, fmt=args.format)
+    if args.cmd == "search":
+        return search_cmd.run(args)
     if args.cmd == "generate":
         return generate_cmd.run(args)
     print(f"`machlib {args.cmd}` is not implemented in Phase 0.")

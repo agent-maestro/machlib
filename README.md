@@ -1,5 +1,7 @@
 # MachLib — for machines, by machines
 
+[![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
+
 A self-contained formal mathematics library built for machine
 consumption. Independent foundations. Multi-proof corpus. Verified
 by the Lean 4 kernel.

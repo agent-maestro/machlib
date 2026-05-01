@@ -1,0 +1,91 @@
+name: build-time
+
+# Times a clean `lake build` of MachLib foundations on every push to
+# master, writes the wall-time to `.github/build-time.json`, and
+# commits the JSON back to master so the README badge reads from raw.
+# githubusercontent.com without manual intervention.
+#
+# The headline "X-second cold build" claim on machlib.org is the
+# value this workflow stamps. Re-anchoring it requires no human in
+# the loop -- only that the workflow run succeed.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "foundations/**"
+      - "lean-toolchain"
+      - ".github/workflows/build-time.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch full history so the auto-commit step can push.
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve toolchain pin
+        working-directory: foundations
+        run: |
+          cat lean-toolchain
+          lake --version || true
+          lean --version
+
+      - name: Cold lake build (timed)
+        id: cold_build
+        working-directory: foundations
+        run: |
+          rm -rf .lake
+          # /usr/bin/time -f produces "elapsed=X.XX" on a single line
+          # we then parse to seconds. `lake build` exit code is what
+          # decides workflow success/failure.
+          start=$(date +%s.%N)
+          lake build
+          end=$(date +%s.%N)
+          seconds=$(awk "BEGIN { printf \"%.2f\", $end - $start }")
+          echo "seconds=$seconds" >> "$GITHUB_OUTPUT"
+          echo "Cold build wall-time: ${seconds}s"
+
+      - name: Write build-time badge JSON
+        env:
+          SECONDS: ${{ steps.cold_build.outputs.seconds }}
+        run: |
+          mkdir -p .github
+          # shields.io endpoint badge schema:
+          # https://shields.io/badges/endpoint-badge
+          # color is "brightgreen" up to 6s, "yellow" 6-15s, "red" beyond.
+          color=$(awk -v s="$SECONDS" \
+            'BEGIN { if (s <= 6.0) print "brightgreen"; \
+                     else if (s <= 15.0) print "yellow"; \
+                     else print "red" }')
+          export COLOR="$color"
+          python3 -c "import json,os; print(json.dumps({'schemaVersion':1,'label':'cold build','message':f\"{os.environ['SECONDS']}s\",'color':os.environ['COLOR'],'cacheSeconds':300}, indent=2))" \
+            > .github/build-time.json
+          cat .github/build-time.json
+
+      - name: Commit + push the badge JSON
+        env:
+          SECONDS: ${{ steps.cold_build.outputs.seconds }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet .github/build-time.json; then
+            echo "build-time.json unchanged; skipping commit."
+            exit 0
+          fi
+          git add .github/build-time.json
+          git commit -m "ci(build-time): refresh cold-build badge to ${SECONDS}s [skip ci]"
+          git push
