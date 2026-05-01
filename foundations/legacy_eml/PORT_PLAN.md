@@ -31,7 +31,7 @@ after the first triage pass.
 
 1. ~~**`SelfMapConjugacy.lean`** — 12 theorems, only 2 Mathlib facts not yet in MachLib (`exp_sub`, `log_ne_zero_of_pos_of_ne_one`). Add the helpers to `MachLib/Exp.lean` and `MachLib/Log.lean`, then port. **First port to attempt.**~~ ✅ **DONE 2026-05-01** — `exp_sub` + `log_ne_zero_of_pos_of_ne_one` shipped to `MachLib/Exp.lean` + `MachLib/Log.lean`; 12 theorems live in `MachLib/SelfMapConjugacy.lean`. Built clean in 3.2s, 0 sorries, 0 Mathlib.
 
-2. **`HyperbolicPreservation.lean`** — adds `sinh`/`cosh`/`tanh` axioms to a new `MachLib/Hyperbolic.lean`, then ports the 34 theorems. Establishes the pattern for adding new function families to MachLib's axiomatic regime. **Next up.**
+2. ⚠️ **`HyperbolicPreservation.lean`** — **PARTIAL 2026-05-01** — 23 of 34 theorems ported to `MachLib/HyperbolicPreservation.lean` against new `MachLib/Hyperbolic.lean` axioms (sinh, cosh + addition / subtraction / double-angle / Pythagorean / ELC-form decomposition / link to existing Trig.tanh). 11 theorems deferred — they need a `norm_num`-equivalent (numeric witnesses like `sinh(log 2) = 3/4`) or a `ring` tactic (Pythagorean rearrangements, alt double-angle forms, squared half-angle). The unported theorems are documented inline in the legacy file. Foundations grew 658 → 952 lines.
 
 3. **`Gamma.lean`** — adds a `MachLib/Gamma.lean` with the 6 Gamma facts the corpus actually uses (the analytic construction is not needed). Small, isolated, clean.
 
@@ -46,6 +46,8 @@ after the first triage pass.
 - **`rpow`.** Several legacy files use `Real.rpow x y = Real.exp (y * Real.log x)`. Adding `MachLib/RPow.lean` that defines this from existing axioms is straightforward — about 20-30 lines.
 
 - **EMLTree AST.** The chain-order / depth / universality cluster all depend on the inductive `EMLTree` and the depth-indexed `EML_k k` family. None of MachLib's current foundations have this. Bringing it in is a one-time ~150-line addition to `MachLib/AST.lean`; everything downstream then ports cleanly.
+
+- **`ring` and `norm_num` tactics.** The Hyperbolic port surfaced this clearly: 11 of 34 theorems need ring algebra (cosh²+sinh² rearrangements, double-angle alt forms) or numeric simplification (sinh(log 2) = 3/4). Without these tactics MachLib has to either axiomatize each identity (heavy) or skip it (incomplete port). A small ring tactic (decision procedure for commutative semirings, ~few hundred lines) and a basic `norm_num` (rational arithmetic on `OfNat` literals) would unblock most of the remaining legacy_eml ports plus future numeric work in industry verticals. **Highest leverage future addition to MachLib.**
 
 ## What's NOT in this plan
 

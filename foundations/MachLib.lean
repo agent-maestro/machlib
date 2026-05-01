@@ -4,6 +4,8 @@ import MachLib.Log
 import MachLib.Trig
 import MachLib.EML
 import MachLib.SelfMapConjugacy
+import MachLib.Hyperbolic
+import MachLib.HyperbolicPreservation
 
 /-!
 # MachLib — top-level aggregator
@@ -21,6 +23,8 @@ The independent foundations for machine-native formal mathematics.
                                   primitive
   * `MachLib.SelfMapConjugacy`  — F16 self-map conjugacies (EAL/EXL,
                                   EML/EDL) ported from legacy_eml
+  * `MachLib.Hyperbolic`        — sinh, cosh + ELC-form decomposition
+                                  axioms (`tanh` lives in `Trig`)
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
