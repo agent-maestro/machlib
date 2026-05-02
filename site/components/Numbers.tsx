@@ -6,7 +6,7 @@
 //
 // Then bump any field whose value moved.
 const MACHLIB = {
-  records: 2786,
+  records: 3316,
   tests: 2704,
   build_label: "<5 min",
   mathlib_imports: 0,
