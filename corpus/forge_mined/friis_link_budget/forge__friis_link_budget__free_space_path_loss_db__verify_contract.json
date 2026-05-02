@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`free_space_path_loss_db` satisfies its @verify contract: under preconditions (distance_km >= D_MIN / 1000.0 ∧ distance_km <= D_MAX / 1000.0 ∧ frequency_mhz >= F_MHZ_MIN ∧ frequency_mhz <= F_MHZ_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from friis_link_budget.eml\n-- theorem fspl_db_increases_with_log_distance : \\u2200 args, (distance_km >= D_MIN / 1000.0 ∧ distance_km <= D_MAX / 1000.0 ∧ frequency_mhz >= F_MHZ_MIN ∧ frequency_mhz <= F_MHZ_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from friis_link_budget.eml\n-- theorem fspl_db_increases_with_log_distance : ∀ args, (distance_km >= D_MIN / 1000.0 ∧ distance_km <= D_MAX / 1000.0 ∧ frequency_mhz >= F_MHZ_MIN ∧ frequency_mhz <= F_MHZ_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

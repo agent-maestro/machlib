@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__penman_monteith__reference_et0__verify_contract",
+    "base_id": "forge__penman_monteith__reference_et0__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`reference_et0` satisfies its @verify contract: under preconditions (delta_slope >= 0.0 ∧ delta_slope <= DELTA_MAX ∧ net_radiation >= -RN_MAX ∧ net_radiation <= RN_MAX ∧ soil_heat_flux >= -RN_MAX ∧ soil_heat_flux <= RN_MAX ∧ air_density >= 0.5 ∧ air_density <= RHO_A_MAX ∧ specific_heat > 0.0 ∧ specific_heat <= CP_MAX ∧ sat_vapor_pressure >= 0.0 ∧ sat_vapor_pressure <= E_MAX ∧ actual_vapor_pressure >= 0.0 ∧ actual_vapor_pressure <= sat_vapor_pressure ∧ aero_resistance > 1.0 ∧ aero_resistance <= R_MAX ∧ surface_resistance >= 0.0 ∧ surface_resistance <= R_MAX ∧ psychrometric >= 0.0 ∧ psychrometric <= GAMMA_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from penman_monteith.eml\n-- theorem penman_monteith_et0_nonneg_when_radiation_above_g : ∀ args, (delta_slope >= 0.0 ∧ delta_slope <= DELTA_MAX ∧ net_radiation >= -RN_MAX ∧ net_radiation <= RN_MAX ∧ soil_heat_flux >= -RN_MAX ∧ soil_heat_flux <= RN_MAX ∧ air_density >= 0.5 ∧ air_density <= RHO_A_MAX ∧ specific_heat > 0.0 ∧ specific_heat <= CP_MAX ∧ sat_vapor_pressure >= 0.0 ∧ sat_vapor_pressure <= E_MAX ∧ actual_vapor_pressure >= 0.0 ∧ actual_vapor_pressure <= sat_vapor_pressure ∧ aero_resistance > 1.0 ∧ aero_resistance <= R_MAX ∧ surface_resistance >= 0.0 ∧ surface_resistance <= R_MAX ∧ psychrometric >= 0.0 ∧ psychrometric <= GAMMA_MAX) → (True) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::penman_monteith",
+      "function::reference_et0",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::penman_monteith_et0_nonneg_when_radiation_above_g"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 14,
+      "mac_units": 7,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/agriculture/irrigation/penman_monteith.eml",
+    "source_function": "reference_et0"
+  }
+}

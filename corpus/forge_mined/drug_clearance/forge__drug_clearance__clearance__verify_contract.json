@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`clearance` satisfies its @verify contract: under preconditions (dose >= 0.0 ∧ dose <= D_MAX ∧ bioavailability >= 0.0 ∧ bioavailability <= 1.0 ∧ auc >= AUC_MIN), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from drug_clearance.eml\n-- theorem clearance_proportional_to_dose : \\u2200 args, (dose >= 0.0 ∧ dose <= D_MAX ∧ bioavailability >= 0.0 ∧ bioavailability <= 1.0 ∧ auc >= AUC_MIN) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from drug_clearance.eml\n-- theorem clearance_proportional_to_dose : ∀ args, (dose >= 0.0 ∧ dose <= D_MAX ∧ bioavailability >= 0.0 ∧ bioavailability <= 1.0 ∧ auc >= AUC_MIN) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

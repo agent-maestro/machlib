@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`gamma_correct` satisfies its @verify contract: under preconditions (x >= 0.0 ∧ x <= 1.0 ∧ gamma > 0.0), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from gamma_correct.eml\n-- theorem gamma_correct_monotone_in_x : \\u2200 args, (x >= 0.0 ∧ x <= 1.0 ∧ gamma > 0.0) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from gamma_correct.eml\n-- theorem gamma_correct_monotone_in_x : ∀ args, (x >= 0.0 ∧ x <= 1.0 ∧ gamma > 0.0) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

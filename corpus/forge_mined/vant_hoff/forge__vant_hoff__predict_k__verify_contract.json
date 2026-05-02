@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`predict_k` satisfies its @verify contract: under preconditions (k1 > 0.0 ∧ delta_h >= -DH_MAX ∧ delta_h <=  DH_MAX ∧ t1 >= T_MIN ∧ t1 <= T_MAX ∧ t2 >= T_MIN ∧ t2 <= T_MAX), the function's result satisfies (result > 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from vant_hoff.eml\n-- theorem vant_hoff_predict_k : \\u2200 args, (k1 > 0.0 ∧ delta_h >= -DH_MAX ∧ delta_h <=  DH_MAX ∧ t1 >= T_MIN ∧ t1 <= T_MAX ∧ t2 >= T_MIN ∧ t2 <= T_MAX) \\u2192 (result > 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from vant_hoff.eml\n-- theorem vant_hoff_predict_k : ∀ args, (k1 > 0.0 ∧ delta_h >= -DH_MAX ∧ delta_h <=  DH_MAX ∧ t1 >= T_MIN ∧ t1 <= T_MAX ∧ t2 >= T_MIN ∧ t2 <= T_MAX) → (result > 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

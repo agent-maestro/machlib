@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`true_pn_gain` satisfies its @verify contract: under preconditions (n_base >= 2.0 ∧ n_base <= N_TERM_MAX ∧ time_to_go >= 0.0 ∧ time_to_go <= TGO_MAX ∧ total_time >= TGO_MIN ∧ total_time <= TGO_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from terminal_homing.eml\n-- theorem true_pn_gain_increases_at_late_phase : \\u2200 args, (n_base >= 2.0 ∧ n_base <= N_TERM_MAX ∧ time_to_go >= 0.0 ∧ time_to_go <= TGO_MAX ∧ total_time >= TGO_MIN ∧ total_time <= TGO_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from terminal_homing.eml\n-- theorem true_pn_gain_increases_at_late_phase : ∀ args, (n_base >= 2.0 ∧ n_base <= N_TERM_MAX ∧ time_to_go >= 0.0 ∧ time_to_go <= TGO_MAX ∧ total_time >= TGO_MIN ∧ total_time <= TGO_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

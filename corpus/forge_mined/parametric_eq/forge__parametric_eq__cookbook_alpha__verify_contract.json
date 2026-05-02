@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`cookbook_alpha` satisfies its @verify contract: under preconditions (omega >= 0.0 ∧ omega <= 6.2832 ∧ q >= Q_MIN ∧ q <= Q_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from parametric_eq.eml\n-- theorem alpha_inverse_proportional_to_q : \\u2200 args, (omega >= 0.0 ∧ omega <= 6.2832 ∧ q >= Q_MIN ∧ q <= Q_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from parametric_eq.eml\n-- theorem alpha_inverse_proportional_to_q : ∀ args, (omega >= 0.0 ∧ omega <= 6.2832 ∧ q >= Q_MIN ∧ q <= Q_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

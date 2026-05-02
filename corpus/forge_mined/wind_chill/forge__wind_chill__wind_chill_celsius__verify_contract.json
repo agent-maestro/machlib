@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`wind_chill_celsius` satisfies its @verify contract: under preconditions (temperature_c >= T_MIN_C ∧ temperature_c <= T_MAX_C ∧ wind_speed_kmh >= V_MIN_KMH ∧ wind_speed_kmh <= V_MAX_KMH), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from wind_chill.eml\n-- theorem wind_chill_below_air_temperature : \\u2200 args, (temperature_c >= T_MIN_C ∧ temperature_c <= T_MAX_C ∧ wind_speed_kmh >= V_MIN_KMH ∧ wind_speed_kmh <= V_MAX_KMH) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from wind_chill.eml\n-- theorem wind_chill_below_air_temperature : ∀ args, (temperature_c >= T_MIN_C ∧ temperature_c <= T_MAX_C ∧ wind_speed_kmh >= V_MIN_KMH ∧ wind_speed_kmh <= V_MAX_KMH) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

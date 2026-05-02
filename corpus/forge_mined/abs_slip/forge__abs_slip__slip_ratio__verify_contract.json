@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`slip_ratio` satisfies its @verify contract: under preconditions (vehicle_speed >= V_MIN ∧ vehicle_speed <= V_MAX ∧ wheel_omega >= 0.0 ∧ wheel_omega <= OMEGA_MAX ∧ wheel_radius >= R_MIN ∧ wheel_radius <= R_MAX), the function's result satisfies (result >= 0.0 ∧ result <= SLIP_MAX). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from abs_slip.eml\n-- theorem slip_in_unit_interval_under_braking : \\u2200 args, (vehicle_speed >= V_MIN ∧ vehicle_speed <= V_MAX ∧ wheel_omega >= 0.0 ∧ wheel_omega <= OMEGA_MAX ∧ wheel_radius >= R_MIN ∧ wheel_radius <= R_MAX) \\u2192 (result >= 0.0 ∧ result <= SLIP_MAX) := sorry",
+      "formal_lean": "-- @verify obligation pulled from abs_slip.eml\n-- theorem slip_in_unit_interval_under_braking : ∀ args, (vehicle_speed >= V_MIN ∧ vehicle_speed <= V_MAX ∧ wheel_omega >= 0.0 ∧ wheel_omega <= OMEGA_MAX ∧ wheel_radius >= R_MIN ∧ wheel_radius <= R_MAX) → (result >= 0.0 ∧ result <= SLIP_MAX) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`power_law_growth_rate` satisfies its @verify contract: under preconditions (growth_constant >= 0.0 ∧ growth_constant <= KG_MAX ∧ concentration >= 0.0 ∧ saturation_concentration > 0.0 ∧ growth_exponent > 0.0 ∧ growth_exponent <= G_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from crystallization.eml\n-- theorem growth_rate_nonneg_above_solubility : \\u2200 args, (growth_constant >= 0.0 ∧ growth_constant <= KG_MAX ∧ concentration >= 0.0 ∧ saturation_concentration > 0.0 ∧ growth_exponent > 0.0 ∧ growth_exponent <= G_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from crystallization.eml\n-- theorem growth_rate_nonneg_above_solubility : ∀ args, (growth_constant >= 0.0 ∧ growth_constant <= KG_MAX ∧ concentration >= 0.0 ∧ saturation_concentration > 0.0 ∧ growth_exponent > 0.0 ∧ growth_exponent <= G_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`diffusion_current` satisfies its @verify contract: under preconditions (n_electrons > 0.0 ∧ electrode_area > 0.0 ∧ bulk_concentration >= 0.0 ∧ diffusion_coefficient > 0.0 ∧ time >= T_MIN ∧ time <= T_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from cottrell.eml\n-- theorem cottrell_decays_with_time : \\u2200 args, (n_electrons > 0.0 ∧ electrode_area > 0.0 ∧ bulk_concentration >= 0.0 ∧ diffusion_coefficient > 0.0 ∧ time >= T_MIN ∧ time <= T_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from cottrell.eml\n-- theorem cottrell_decays_with_time : ∀ args, (n_electrons > 0.0 ∧ electrode_area > 0.0 ∧ bulk_concentration >= 0.0 ∧ diffusion_coefficient > 0.0 ∧ time >= T_MIN ∧ time <= T_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

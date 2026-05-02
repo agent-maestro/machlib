@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`gaussian_density` satisfies its @verify contract: under preconditions (sigma > 0.0 ∧ sigma <= SIGMA_MAX), the function's result satisfies (result > 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from gaussian_peak.eml\n-- theorem gaussian_peak_at_centre : \\u2200 args, (sigma > 0.0 ∧ sigma <= SIGMA_MAX) \\u2192 (result > 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from gaussian_peak.eml\n-- theorem gaussian_peak_at_centre : ∀ args, (sigma > 0.0 ∧ sigma <= SIGMA_MAX) → (result > 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

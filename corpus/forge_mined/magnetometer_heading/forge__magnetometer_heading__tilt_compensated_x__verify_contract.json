@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`tilt_compensated_x` satisfies its @verify contract: under preconditions (abs(mag_x) <= MAG_COMPONENT_MAX ∧ abs(mag_z) <= MAG_COMPONENT_MAX ∧ abs(pitch) <= PITCH_ROLL_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from magnetometer_heading.eml\n-- theorem tilt_x_unchanged_at_level : \\u2200 args, (abs(mag_x) <= MAG_COMPONENT_MAX ∧ abs(mag_z) <= MAG_COMPONENT_MAX ∧ abs(pitch) <= PITCH_ROLL_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from magnetometer_heading.eml\n-- theorem tilt_x_unchanged_at_level : ∀ args, (abs(mag_x) <= MAG_COMPONENT_MAX ∧ abs(mag_z) <= MAG_COMPONENT_MAX ∧ abs(pitch) <= PITCH_ROLL_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

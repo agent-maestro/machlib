@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`antoine_pressure` satisfies its @verify contract: under preconditions (temperature >= T_MIN ∧ temperature <= T_MAX ∧ b_const >= 0.0 ∧ c_const + temperature != 0.0), the function's result satisfies (result > 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from distillation.eml\n-- theorem antoine_increases_with_temperature : \\u2200 args, (temperature >= T_MIN ∧ temperature <= T_MAX ∧ b_const >= 0.0 ∧ c_const + temperature != 0.0) \\u2192 (result > 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from distillation.eml\n-- theorem antoine_increases_with_temperature : ∀ args, (temperature >= T_MIN ∧ temperature <= T_MAX ∧ b_const >= 0.0 ∧ c_const + temperature != 0.0) → (result > 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

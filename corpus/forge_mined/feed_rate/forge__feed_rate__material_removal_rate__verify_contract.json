@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`material_removal_rate` satisfies its @verify contract: under preconditions (feed_mm_per_min >= 0.0 ∧ feed_mm_per_min <= 1.0e5 ∧ radial_engagement >= 0.0 ∧ radial_engagement <= D_MAX ∧ axial_depth >= 0.0 ∧ axial_depth <= D_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from feed_rate.eml\n-- theorem mrr_nonneg : \\u2200 args, (feed_mm_per_min >= 0.0 ∧ feed_mm_per_min <= 1.0e5 ∧ radial_engagement >= 0.0 ∧ radial_engagement <= D_MAX ∧ axial_depth >= 0.0 ∧ axial_depth <= D_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from feed_rate.eml\n-- theorem mrr_nonneg : ∀ args, (feed_mm_per_min >= 0.0 ∧ feed_mm_per_min <= 1.0e5 ∧ radial_engagement >= 0.0 ∧ radial_engagement <= D_MAX ∧ axial_depth >= 0.0 ∧ axial_depth <= D_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

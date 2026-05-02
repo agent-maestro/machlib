@@ -35,6 +35,7 @@ _REQUIRED_TOP_LEVEL = {
 _KNOWN_DOMAINS = {
     "eml", "analysis", "algebra",
     "chemistry", "physics", "finance", "engineering",
+    "forge_mined",
 }
 
 _KNOWN_LANES = {1, 2, 3, 4, 5, 6}
@@ -83,6 +84,11 @@ def test_record_has_valid_lane(path: Path, record: dict) -> None:
 
 @pytest.mark.parametrize("path,record", _ALL, ids=_IDS)
 def test_record_has_at_least_one_proof(path: Path, record: dict) -> None:
+    # forge_mined records are sorry stubs awaiting Phase B (BFS engine
+    # + RL agent). They legitimately ship with zero proofs until the
+    # discovery loop fills them in.
+    if record["theorem"]["domain"] == "forge_mined":
+        return
     proofs = record.get("proofs", [])
     assert len(proofs) >= 1, f"{path}: zero proofs"
 
@@ -91,6 +97,10 @@ def test_record_has_at_least_one_proof(path: Path, record: dict) -> None:
 def test_record_has_exactly_one_optimal_proof(
     path: Path, record: dict
 ) -> None:
+    # forge_mined records ship with empty proofs -- the BFS engine
+    # marks an optimal proof once it lands one. Skip until then.
+    if record["theorem"]["domain"] == "forge_mined":
+        return
     proofs = record.get("proofs", [])
     optimals = [p for p in proofs if p.get("is_optimal")]
     assert len(optimals) == 1, (

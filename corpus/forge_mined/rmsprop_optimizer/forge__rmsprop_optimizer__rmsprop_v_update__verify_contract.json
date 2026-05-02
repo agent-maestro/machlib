@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__rmsprop_optimizer__rmsprop_v_update__verify_contract",
+    "base_id": "forge__rmsprop_optimizer__rmsprop_v_update__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`rmsprop_v_update` satisfies its @verify contract: under preconditions (prev_v >= 0.0 ∧ prev_v <= VAL_MAX ∧ abs(gradient) <= VAL_MAX ∧ rho >= 0.0 ∧ rho <= RHO_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from rmsprop.eml\n-- theorem rmsprop_v_nonneg : ∀ args, (prev_v >= 0.0 ∧ prev_v <= VAL_MAX ∧ abs(gradient) <= VAL_MAX ∧ rho >= 0.0 ∧ rho <= RHO_MAX) → (result >= 0.0) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::rmsprop_optimizer",
+      "function::rmsprop_v_update",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::rmsprop_v_nonneg"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 8,
+      "mac_units": 4,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/ml/optimizers/rmsprop.eml",
+    "source_function": "rmsprop_v_update"
+  }
+}

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`pseudorange_residual` satisfies its @verify contract: under preconditions (pseudorange_obs >= 0.0 ∧ pseudorange_obs <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX ∧ abs(clock_bias) <= CLOCK_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from gnss_pseudorange.eml\n-- theorem pseudorange_residual_zero_at_truth : \\u2200 args, (pseudorange_obs >= 0.0 ∧ pseudorange_obs <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX ∧ abs(clock_bias) <= CLOCK_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from gnss_pseudorange.eml\n-- theorem pseudorange_residual_zero_at_truth : ∀ args, (pseudorange_obs >= 0.0 ∧ pseudorange_obs <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX ∧ abs(clock_bias) <= CLOCK_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`velocity_from_shift` satisfies its @verify contract: under preconditions (abs(doppler_hz) <= FREQ_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from doppler_velocity.eml\n-- theorem velocity_from_shift_signed : \\u2200 args, (abs(doppler_hz) <= FREQ_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from doppler_velocity.eml\n-- theorem velocity_from_shift_signed : ∀ args, (abs(doppler_hz) <= FREQ_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

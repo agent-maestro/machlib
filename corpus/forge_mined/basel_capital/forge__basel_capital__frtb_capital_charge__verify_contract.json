@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`frtb_capital_charge` satisfies its @verify contract: under preconditions (var_average >= 0.0 ∧ var_average <= CAP_MAX ∧ var_max >= 0.0 ∧ var_max <= CAP_MAX ∧ multiplier >= MC_MIN ∧ multiplier <= MC_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from basel_capital.eml\n-- theorem capital_max_dominates_average : \\u2200 args, (var_average >= 0.0 ∧ var_average <= CAP_MAX ∧ var_max >= 0.0 ∧ var_max <= CAP_MAX ∧ multiplier >= MC_MIN ∧ multiplier <= MC_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from basel_capital.eml\n-- theorem capital_max_dominates_average : ∀ args, (var_average >= 0.0 ∧ var_average <= CAP_MAX ∧ var_max >= 0.0 ∧ var_max <= CAP_MAX ∧ multiplier >= MC_MIN ∧ multiplier <= MC_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

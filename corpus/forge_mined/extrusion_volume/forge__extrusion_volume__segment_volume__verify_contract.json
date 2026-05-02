@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`segment_volume` satisfies its @verify contract: under preconditions (layer_height >= H_MIN ∧ layer_height <= H_MAX ∧ line_width >= W_MIN ∧ line_width <= W_MAX ∧ length_mm >= 0.0 ∧ length_mm <= L_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from extrusion_volume.eml\n-- theorem extrusion_volume_nonneg : \\u2200 args, (layer_height >= H_MIN ∧ layer_height <= H_MAX ∧ line_width >= W_MIN ∧ line_width <= W_MAX ∧ length_mm >= 0.0 ∧ length_mm <= L_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from extrusion_volume.eml\n-- theorem extrusion_volume_nonneg : ∀ args, (layer_height >= H_MIN ∧ layer_height <= H_MAX ∧ line_width >= W_MIN ∧ line_width <= W_MAX ∧ length_mm >= 0.0 ∧ length_mm <= L_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

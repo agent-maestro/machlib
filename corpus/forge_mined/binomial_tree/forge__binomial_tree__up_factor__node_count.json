@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__binomial_tree__up_factor__node_count",
+    "base_id": "forge__binomial_tree__up_factor__node_count",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`up_factor` compiles to 6 EML routing nodes after SuperBEST optimization. This is the canonical, minimal node count Forge produces for the function as written.",
+      "formal_lean": "-- Pending MachLib infrastructure for forge function imports.\n-- theorem up_factor_node_count : node_count up_factor = 6 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 3,
+    "tags": [
+      "forge_mined",
+      "file::binomial_tree",
+      "function::up_factor",
+      "chain_order::2",
+      "class::oscillatory",
+      "property::node_count"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 3,
+    "label": "intermediate",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 2,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 6,
+      "mac_units": 3,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/finance/pricing/binomial_tree.eml",
+    "source_function": "up_factor"
+  }
+}

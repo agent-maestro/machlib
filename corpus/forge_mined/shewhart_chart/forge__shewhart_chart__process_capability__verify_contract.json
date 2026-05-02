@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`process_capability` satisfies its @verify contract: under preconditions (sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX ∧ lower_spec_limit < upper_spec_limit ∧ mean >= lower_spec_limit ∧ mean <= upper_spec_limit), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from shewhart_chart.eml\n-- theorem cpk_zero_when_at_spec_boundary : \\u2200 args, (sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX ∧ lower_spec_limit < upper_spec_limit ∧ mean >= lower_spec_limit ∧ mean <= upper_spec_limit) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from shewhart_chart.eml\n-- theorem cpk_zero_when_at_spec_boundary : ∀ args, (sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX ∧ lower_spec_limit < upper_spec_limit ∧ mean >= lower_spec_limit ∧ mean <= upper_spec_limit) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

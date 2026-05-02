@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`equilibrium_temperature` satisfies its @verify contract: under preconditions (solar_flux > 0.0 ∧ solar_flux <= 4.0 * SOLAR_CONSTANT ∧ albedo >= ALBEDO_MIN ∧ albedo <= ALBEDO_MAX ∧ emissivity >= EPS_MIN ∧ emissivity <= EPS_MAX), the function's result satisfies (result > 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from energy_budget.eml\n-- theorem equilibrium_temperature_decreasing_in_albedo : \\u2200 args, (solar_flux > 0.0 ∧ solar_flux <= 4.0 * SOLAR_CONSTANT ∧ albedo >= ALBEDO_MIN ∧ albedo <= ALBEDO_MAX ∧ emissivity >= EPS_MIN ∧ emissivity <= EPS_MAX) \\u2192 (result > 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from energy_budget.eml\n-- theorem equilibrium_temperature_decreasing_in_albedo : ∀ args, (solar_flux > 0.0 ∧ solar_flux <= 4.0 * SOLAR_CONSTANT ∧ albedo >= ALBEDO_MIN ∧ albedo <= ALBEDO_MAX ∧ emissivity >= EPS_MIN ∧ emissivity <= EPS_MAX) → (result > 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

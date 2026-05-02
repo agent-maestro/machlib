@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`collector_current_with_early` satisfies its @verify contract: under preconditions (saturation_current >= IS_MIN ∧ saturation_current <= IS_MAX ∧ base_emitter_voltage >= VBE_MIN ∧ base_emitter_voltage <= VBE_MAX ∧ collector_emitter_voltage >= 0.0 ∧ collector_emitter_voltage <= 50.0 ∧ thermal_voltage > 0.0 ∧ thermal_voltage <= 0.1 ∧ early_voltage >= VA_MIN ∧ early_voltage <= VA_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from bjt_collector_current.eml\n-- theorem ic_with_early_increases_with_vce : \\u2200 args, (saturation_current >= IS_MIN ∧ saturation_current <= IS_MAX ∧ base_emitter_voltage >= VBE_MIN ∧ base_emitter_voltage <= VBE_MAX ∧ collector_emitter_voltage >= 0.0 ∧ collector_emitter_voltage <= 50.0 ∧ thermal_voltage > 0.0 ∧ thermal_voltage <= 0.1 ∧ early_voltage >= VA_MIN ∧ early_voltage <= VA_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from bjt_collector_current.eml\n-- theorem ic_with_early_increases_with_vce : ∀ args, (saturation_current >= IS_MIN ∧ saturation_current <= IS_MAX ∧ base_emitter_voltage >= VBE_MIN ∧ base_emitter_voltage <= VBE_MAX ∧ collector_emitter_voltage >= 0.0 ∧ collector_emitter_voltage <= 50.0 ∧ thermal_voltage > 0.0 ∧ thermal_voltage <= 0.1 ∧ early_voltage >= VA_MIN ∧ early_voltage <= VA_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`arm_endpoint_x` satisfies its @verify contract: under preconditions (abs(theta_1) < 3.14159 ∧ abs(theta_2) < 3.14159), the function's result satisfies (abs(result) < 1.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from arm_6dof.eml\n-- theorem arm_endpoint_within_workspace : \\u2200 args, (abs(theta_1) < 3.14159 ∧ abs(theta_2) < 3.14159) \\u2192 (abs(result) < 1.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from arm_6dof.eml\n-- theorem arm_endpoint_within_workspace : ∀ args, (abs(theta_1) < 3.14159 ∧ abs(theta_2) < 3.14159) → (abs(result) < 1.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

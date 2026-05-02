@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`synthetic_power_command` satisfies its @verify contract: under preconditions (abs(df_dt) <= DF_DT_MAX ∧ frequency_meas >= F_MIN ∧ frequency_meas <= F_MAX ∧ frequency_nominal >= F_MIN ∧ frequency_nominal <= F_MAX ∧ k_inertia >= K_INERTIA_MIN ∧ k_inertia <= K_INERTIA_MAX ∧ k_droop >= K_DROOP_MIN ∧ k_droop <= K_DROOP_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from inertia_emulation.eml\n-- theorem synthetic_inertia_response_signed : \\u2200 args, (abs(df_dt) <= DF_DT_MAX ∧ frequency_meas >= F_MIN ∧ frequency_meas <= F_MAX ∧ frequency_nominal >= F_MIN ∧ frequency_nominal <= F_MAX ∧ k_inertia >= K_INERTIA_MIN ∧ k_inertia <= K_INERTIA_MAX ∧ k_droop >= K_DROOP_MIN ∧ k_droop <= K_DROOP_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from inertia_emulation.eml\n-- theorem synthetic_inertia_response_signed : ∀ args, (abs(df_dt) <= DF_DT_MAX ∧ frequency_meas >= F_MIN ∧ frequency_meas <= F_MAX ∧ frequency_nominal >= F_MIN ∧ frequency_nominal <= F_MAX ∧ k_inertia >= K_INERTIA_MIN ∧ k_inertia <= K_INERTIA_MAX ∧ k_droop >= K_DROOP_MIN ∧ k_droop <= K_DROOP_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

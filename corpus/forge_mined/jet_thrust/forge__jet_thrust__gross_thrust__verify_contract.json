@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`gross_thrust` satisfies its @verify contract: under preconditions (mass_flow >= MDOT_MIN ∧ mass_flow <= MDOT_MAX ∧ exhaust_velocity >= 0.0 ∧ exhaust_velocity <= VEL_MAX ∧ exit_pressure >= P_MIN ∧ exit_pressure <= P_MAX ∧ ambient_pressure >= P_MIN ∧ ambient_pressure <= P_MAX ∧ exit_area >= AREA_MIN ∧ exit_area <= AREA_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from jet_thrust.eml\n-- theorem gross_thrust_nonneg_for_positive_mass_flow : \\u2200 args, (mass_flow >= MDOT_MIN ∧ mass_flow <= MDOT_MAX ∧ exhaust_velocity >= 0.0 ∧ exhaust_velocity <= VEL_MAX ∧ exit_pressure >= P_MIN ∧ exit_pressure <= P_MAX ∧ ambient_pressure >= P_MIN ∧ ambient_pressure <= P_MAX ∧ exit_area >= AREA_MIN ∧ exit_area <= AREA_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from jet_thrust.eml\n-- theorem gross_thrust_nonneg_for_positive_mass_flow : ∀ args, (mass_flow >= MDOT_MIN ∧ mass_flow <= MDOT_MAX ∧ exhaust_velocity >= 0.0 ∧ exhaust_velocity <= VEL_MAX ∧ exit_pressure >= P_MIN ∧ exit_pressure <= P_MAX ∧ ambient_pressure >= P_MIN ∧ ambient_pressure <= P_MAX ∧ exit_area >= AREA_MIN ∧ exit_area <= AREA_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

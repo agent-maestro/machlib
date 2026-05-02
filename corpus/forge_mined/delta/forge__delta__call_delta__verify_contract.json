@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`call_delta` satisfies its @verify contract: under preconditions (spot > 0.0 ∧ strike > 0.0 ∧ vol > 0.0 ∧ time_to_expiry > TINY_T), the function's result satisfies (result >= 0.0 ∧ result <= 1.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from delta.eml\n-- theorem bs_call_delta_in_zero_one : \\u2200 args, (spot > 0.0 ∧ strike > 0.0 ∧ vol > 0.0 ∧ time_to_expiry > TINY_T) \\u2192 (result >= 0.0 ∧ result <= 1.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from delta.eml\n-- theorem bs_call_delta_in_zero_one : ∀ args, (spot > 0.0 ∧ strike > 0.0 ∧ vol > 0.0 ∧ time_to_expiry > TINY_T) → (result >= 0.0 ∧ result <= 1.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

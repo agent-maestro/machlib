@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`spatial_gaussian_weight` satisfies its @verify contract: under preconditions (abs(dx) <= COORD_MAX ∧ abs(dy) <= COORD_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX), the function's result satisfies (result >= 0.0 ∧ result <= 1.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from bilateral_filter.eml\n-- theorem spatial_gaussian_weight_in_unit_interval : \\u2200 args, (abs(dx) <= COORD_MAX ∧ abs(dy) <= COORD_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX) \\u2192 (result >= 0.0 ∧ result <= 1.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from bilateral_filter.eml\n-- theorem spatial_gaussian_weight_in_unit_interval : ∀ args, (abs(dx) <= COORD_MAX ∧ abs(dy) <= COORD_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX) → (result >= 0.0 ∧ result <= 1.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

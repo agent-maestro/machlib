@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__euler_bernoulli__deflection_cantilever_end__chain_order",
+    "base_id": "forge__euler_bernoulli__deflection_cantilever_end__chain_order",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`deflection_cantilever_end` (from `euler_bernoulli.eml`) has EML chain order 0. Chain order is the depth of nested transcendental operators in the function's EML routing tree; chain 0 means the function is polynomial in structure.",
+      "formal_lean": "-- Pending MachLib infrastructure for forge function imports.\n-- theorem deflection_cantilever_end_chain_order : chain_order deflection_cantilever_end = 0 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::euler_bernoulli",
+      "function::deflection_cantilever_end",
+      "chain_order::0",
+      "class::polynomial",
+      "property::chain_order"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 4,
+      "mac_units": 2,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/construction/beam/euler_bernoulli.eml",
+    "source_function": "deflection_cantilever_end"
+  }
+}

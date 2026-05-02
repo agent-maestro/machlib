@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`crcl_male` satisfies its @verify contract: under preconditions (age_years >= AGE_MIN ∧ age_years <= AGE_MAX ∧ weight_kg >= WT_MIN ∧ weight_kg <= WT_MAX ∧ serum_creatinine >= SCR_MIN), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from drug_clearance.eml\n-- theorem cockcroft_gault_decreases_with_age : \\u2200 args, (age_years >= AGE_MIN ∧ age_years <= AGE_MAX ∧ weight_kg >= WT_MIN ∧ weight_kg <= WT_MAX ∧ serum_creatinine >= SCR_MIN) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from drug_clearance.eml\n-- theorem cockcroft_gault_decreases_with_age : ∀ args, (age_years >= AGE_MIN ∧ age_years <= AGE_MAX ∧ weight_kg >= WT_MIN ∧ weight_kg <= WT_MAX ∧ serum_creatinine >= SCR_MIN) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`line_of_sight_x` satisfies its @verify contract: under preconditions (abs(sat_x) <= POS_MAX ∧ abs(user_x) <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX), the function's result satisfies (result >= -1.0 ∧ result <= 1.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from gnss_pseudorange.eml\n-- theorem los_component_in_unit_interval : \\u2200 args, (abs(sat_x) <= POS_MAX ∧ abs(user_x) <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX) \\u2192 (result >= -1.0 ∧ result <= 1.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from gnss_pseudorange.eml\n-- theorem los_component_in_unit_interval : ∀ args, (abs(sat_x) <= POS_MAX ∧ abs(user_x) <= POS_MAX ∧ geometric_range >= RANGE_MIN ∧ geometric_range <= POS_MAX) → (result >= -1.0 ∧ result <= 1.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

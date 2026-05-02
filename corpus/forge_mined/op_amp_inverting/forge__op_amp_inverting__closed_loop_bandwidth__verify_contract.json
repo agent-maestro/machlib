@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`closed_loop_bandwidth` satisfies its @verify contract: under preconditions (gbw >= GBW_MIN ∧ gbw <= GBW_MAX ∧ r_feedback >= RES_MIN ∧ r_feedback <= RES_MAX ∧ r_input >= RES_MIN ∧ r_input <= RES_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from op_amp_inverting.eml\n-- theorem bandwidth_decreases_with_gain : \\u2200 args, (gbw >= GBW_MIN ∧ gbw <= GBW_MAX ∧ r_feedback >= RES_MIN ∧ r_feedback <= RES_MAX ∧ r_input >= RES_MIN ∧ r_input <= RES_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from op_amp_inverting.eml\n-- theorem bandwidth_decreases_with_gain : ∀ args, (gbw >= GBW_MIN ∧ gbw <= GBW_MAX ∧ r_feedback >= RES_MIN ∧ r_feedback <= RES_MAX ∧ r_input >= RES_MIN ∧ r_input <= RES_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__shadow_pcf__pcf_4tap__verify_contract",
+    "base_id": "forge__shadow_pcf__pcf_4tap__verify_contract",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`pcf_4tap` satisfies its @verify contract: under preconditions (query_depth >= 0.0 ∧ query_depth <= DEPTH_MAX ∧ sample0 >= 0.0 ∧ sample0 <= DEPTH_MAX ∧ sample1 >= 0.0 ∧ sample1 <= DEPTH_MAX ∧ sample2 >= 0.0 ∧ sample2 <= DEPTH_MAX ∧ sample3 >= 0.0 ∧ sample3 <= DEPTH_MAX ∧ bias >= 0.0 ∧ bias <= BIAS_MAX), the function's result satisfies (result >= 0.0 ∧ result <= ONE). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
+      "formal_lean": "-- @verify obligation pulled from shadow_pcf.eml\n-- theorem shadow_pcf4_in_unit_interval : ∀ args, (query_depth >= 0.0 ∧ query_depth <= DEPTH_MAX ∧ sample0 >= 0.0 ∧ sample0 <= DEPTH_MAX ∧ sample1 >= 0.0 ∧ sample1 <= DEPTH_MAX ∧ sample2 >= 0.0 ∧ sample2 <= DEPTH_MAX ∧ sample3 >= 0.0 ∧ sample3 <= DEPTH_MAX ∧ bias >= 0.0 ∧ bias <= BIAS_MAX) → (result >= 0.0 ∧ result <= ONE) := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 2,
+    "tags": [
+      "forge_mined",
+      "file::shadow_pcf",
+      "function::pcf_4tap",
+      "chain_order::0",
+      "class::polynomial",
+      "property::contract",
+      "contract::shadow_pcf4_in_unit_interval"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 2,
+    "label": "beginner",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "hoare_contract_reasoning"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 0,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 0,
+      "decays": 0
+    },
+    "drift_risk": "LOW",
+    "fpga_estimate": {
+      "cycles": 10,
+      "mac_units": 5,
+      "trig_units": 0
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/graphics/shadow/shadow_pcf.eml",
+    "source_function": "pcf_4tap"
+  }
+}

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`rear_left_omega` satisfies its @verify contract: under preconditions (abs(vx) <= VEL_MAX ∧ abs(vy) <= VEL_MAX ∧ abs(omega) <= OMEGA_MAX ∧ half_base >= 0.0 ∧ half_base <= HALF_BASE_MAX ∧ half_track >= 0.0 ∧ half_track <= HALF_BASE_MAX ∧ wheel_radius >= WHEEL_R_MIN ∧ wheel_radius <= WHEEL_R_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from mecanum_wheel.eml\n-- theorem mecanum_rl_swap_pattern : \\u2200 args, (abs(vx) <= VEL_MAX ∧ abs(vy) <= VEL_MAX ∧ abs(omega) <= OMEGA_MAX ∧ half_base >= 0.0 ∧ half_base <= HALF_BASE_MAX ∧ half_track >= 0.0 ∧ half_track <= HALF_BASE_MAX ∧ wheel_radius >= WHEEL_R_MIN ∧ wheel_radius <= WHEEL_R_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from mecanum_wheel.eml\n-- theorem mecanum_rl_swap_pattern : ∀ args, (abs(vx) <= VEL_MAX ∧ abs(vy) <= VEL_MAX ∧ abs(omega) <= OMEGA_MAX ∧ half_base >= 0.0 ∧ half_base <= HALF_BASE_MAX ∧ half_track >= 0.0 ∧ half_track <= HALF_BASE_MAX ∧ wheel_radius >= WHEEL_R_MIN ∧ wheel_radius <= WHEEL_R_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

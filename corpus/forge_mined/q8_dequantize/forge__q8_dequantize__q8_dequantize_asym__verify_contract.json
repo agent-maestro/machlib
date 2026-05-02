@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`q8_dequantize_asym` satisfies its @verify contract: under preconditions (scale >= SCALE_MIN ∧ scale <= SCALE_MAX ∧ zero_point >= -128.0 ∧ zero_point <= 127.0), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from q8_dequantize.eml\n-- theorem q8_dequantize_asym_inverse : \\u2200 args, (scale >= SCALE_MIN ∧ scale <= SCALE_MAX ∧ zero_point >= -128.0 ∧ zero_point <= 127.0) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from q8_dequantize.eml\n-- theorem q8_dequantize_asym_inverse : ∀ args, (scale >= SCALE_MIN ∧ scale <= SCALE_MAX ∧ zero_point >= -128.0 ∧ zero_point <= 127.0) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

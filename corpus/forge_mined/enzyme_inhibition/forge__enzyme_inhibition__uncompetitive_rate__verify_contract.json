@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`uncompetitive_rate` satisfies its @verify contract: under preconditions (vmax > 0.0 ∧ vmax <= VMAX_MAX ∧ substrate >= 0.0 ∧ substrate <= S_MAX ∧ km >= KM_MIN ∧ km <= KM_MAX ∧ inhibitor >= 0.0 ∧ inhibitor <= I_MAX ∧ ki >= KI_MIN ∧ ki <= KI_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from enzyme_inhibition.eml\n-- theorem uncompetitive_scales_both : \\u2200 args, (vmax > 0.0 ∧ vmax <= VMAX_MAX ∧ substrate >= 0.0 ∧ substrate <= S_MAX ∧ km >= KM_MIN ∧ km <= KM_MAX ∧ inhibitor >= 0.0 ∧ inhibitor <= I_MAX ∧ ki >= KI_MIN ∧ ki <= KI_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from enzyme_inhibition.eml\n-- theorem uncompetitive_scales_both : ∀ args, (vmax > 0.0 ∧ vmax <= VMAX_MAX ∧ substrate >= 0.0 ∧ substrate <= S_MAX ∧ km >= KM_MIN ∧ km <= KM_MAX ∧ inhibitor >= 0.0 ∧ inhibitor <= I_MAX ∧ ki >= KI_MIN ∧ ki <= KI_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

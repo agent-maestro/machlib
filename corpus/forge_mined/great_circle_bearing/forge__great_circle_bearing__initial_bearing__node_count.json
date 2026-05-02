@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "theorem": {
+    "id": "forge__great_circle_bearing__initial_bearing__node_count",
+    "base_id": "forge__great_circle_bearing__initial_bearing__node_count",
+    "variant_strategy": null,
+    "statement": {
+      "informal": "`initial_bearing` compiles to 29 EML routing nodes after SuperBEST optimization. This is the canonical, minimal node count Forge produces for the function as written.",
+      "formal_lean": "-- Pending MachLib infrastructure for forge function imports.\n-- theorem initial_bearing_node_count : node_count initial_bearing = 29 := sorry",
+      "formal_eml_lang": null
+    },
+    "domain": "forge_mined",
+    "lane": 4,
+    "tags": [
+      "forge_mined",
+      "file::great_circle_bearing",
+      "function::initial_bearing",
+      "chain_order::6",
+      "class::higher_order",
+      "property::node_count"
+    ]
+  },
+  "proofs": [],
+  "difficulty": {
+    "lane": 4,
+    "label": "advanced",
+    "calibrated_from_attempts": 0,
+    "average_hint_level_at_solve": 0.0,
+    "prerequisite_skills": [
+      "chain_order_definition",
+      "exp_log_axioms",
+      "trig_axioms"
+    ]
+  },
+  "common_mistakes": [],
+  "tactic_trace": {
+    "successful": {},
+    "failed": {},
+    "success_rate_by_tactic": {}
+  },
+  "structural_profile": {
+    "chain_order": 6,
+    "cost_class": null,
+    "eml_depth": null,
+    "dynamics": {
+      "oscillations": 1,
+      "decays": 0
+    },
+    "drift_risk": "MEDIUM",
+    "fpga_estimate": {
+      "cycles": 16,
+      "mac_units": 8,
+      "trig_units": 7
+    }
+  },
+  "relationships": {
+    "parent": null,
+    "siblings": [],
+    "depends_on": [],
+    "structural_siblings": []
+  },
+  "metadata": {
+    "verified": false,
+    "verification_method": "pending",
+    "generated_by": "from_forge_importer_v1",
+    "creation_date": "2026-05-01",
+    "source_eml_file": "D:/monogate-forge/industries/geospatial/great_circle_bearing.eml",
+    "source_function": "initial_bearing"
+  }
+}

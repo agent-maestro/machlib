@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`cyclic_prefix_min_samples` satisfies its @verify contract: under preconditions (delay_spread_s >= 0.0 ∧ delay_spread_s <= SPREAD_MAX ∧ sample_rate_hz >= 1.0 ∧ sample_rate_hz <= FS_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from ofdm_subcarrier.eml\n-- theorem cp_length_proportional_to_delay_spread : \\u2200 args, (delay_spread_s >= 0.0 ∧ delay_spread_s <= SPREAD_MAX ∧ sample_rate_hz >= 1.0 ∧ sample_rate_hz <= FS_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from ofdm_subcarrier.eml\n-- theorem cp_length_proportional_to_delay_spread : ∀ args, (delay_spread_s >= 0.0 ∧ delay_spread_s <= SPREAD_MAX ∧ sample_rate_hz >= 1.0 ∧ sample_rate_hz <= FS_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

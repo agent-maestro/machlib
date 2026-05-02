@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`rosenthal_delta_t` satisfies its @verify contract: under preconditions (laser_power >= P_MIN ∧ laser_power <= P_MAX ∧ conductivity >= K_MIN ∧ conductivity <= K_MAX ∧ diffusivity >= ALPHA_MIN ∧ diffusivity <= ALPHA_MAX ∧ scan_velocity >= V_MIN ∧ scan_velocity <= V_MAX ∧ radial_distance >= R_MIN ∧ radial_distance <= R_MAX ∧ abs(streamwise_offset) <= R_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from powder_bed_thermal.eml\n-- theorem rosenthal_decreases_with_radius : \\u2200 args, (laser_power >= P_MIN ∧ laser_power <= P_MAX ∧ conductivity >= K_MIN ∧ conductivity <= K_MAX ∧ diffusivity >= ALPHA_MIN ∧ diffusivity <= ALPHA_MAX ∧ scan_velocity >= V_MIN ∧ scan_velocity <= V_MAX ∧ radial_distance >= R_MIN ∧ radial_distance <= R_MAX ∧ abs(streamwise_offset) <= R_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from powder_bed_thermal.eml\n-- theorem rosenthal_decreases_with_radius : ∀ args, (laser_power >= P_MIN ∧ laser_power <= P_MAX ∧ conductivity >= K_MIN ∧ conductivity <= K_MAX ∧ diffusivity >= ALPHA_MIN ∧ diffusivity <= ALPHA_MAX ∧ scan_velocity >= V_MIN ∧ scan_velocity <= V_MAX ∧ radial_distance >= R_MIN ∧ radial_distance <= R_MAX ∧ abs(streamwise_offset) <= R_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

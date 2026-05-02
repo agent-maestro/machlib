@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`easting_central` satisfies its @verify contract: under preconditions (abs(latitude_rad) <= PI_HALF ∧ abs(longitude_offset_rad) <= 0.06), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from utm_projection.eml\n-- theorem easting_at_central_equals_false_easting : \\u2200 args, (abs(latitude_rad) <= PI_HALF ∧ abs(longitude_offset_rad) <= 0.06) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from utm_projection.eml\n-- theorem easting_at_central_equals_false_easting : ∀ args, (abs(latitude_rad) <= PI_HALF ∧ abs(longitude_offset_rad) <= 0.06) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`bit_llr` satisfies its @verify contract: under preconditions (abs(sample) <= COMPONENT_MAX ∧ abs(boundary) <= AMP_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from qam_demod.eml\n-- theorem bit_llr_zero_on_boundary : \\u2200 args, (abs(sample) <= COMPONENT_MAX ∧ abs(boundary) <= AMP_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from qam_demod.eml\n-- theorem bit_llr_zero_on_boundary : ∀ args, (abs(sample) <= COMPONENT_MAX ∧ abs(boundary) <= AMP_MAX ∧ sigma >= SIGMA_MIN ∧ sigma <= SIGMA_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

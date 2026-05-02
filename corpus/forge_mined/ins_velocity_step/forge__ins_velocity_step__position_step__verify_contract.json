@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`position_step` satisfies its @verify contract: under preconditions (abs(pos_prev) <= 1.0e7 ∧ abs(v_prev) <= VEL_MAX ∧ abs(v_curr) <= VEL_MAX ∧ dt >= 0.0 ∧ dt <= DT_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from ins_velocity_step.eml\n-- theorem position_step_trapezoidal : \\u2200 args, (abs(pos_prev) <= 1.0e7 ∧ abs(v_prev) <= VEL_MAX ∧ abs(v_curr) <= VEL_MAX ∧ dt >= 0.0 ∧ dt <= DT_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from ins_velocity_step.eml\n-- theorem position_step_trapezoidal : ∀ args, (abs(pos_prev) <= 1.0e7 ∧ abs(v_prev) <= VEL_MAX ∧ abs(v_curr) <= VEL_MAX ∧ dt >= 0.0 ∧ dt <= DT_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`distance_error` satisfies its @verify contract: under preconditions (distance_meas >= 0.0 ∧ distance_meas <= D_MAX ∧ distance_target >= 0.0 ∧ distance_target <= D_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from acc_step.eml\n-- theorem distance_error_zero_at_target : \\u2200 args, (distance_meas >= 0.0 ∧ distance_meas <= D_MAX ∧ distance_target >= 0.0 ∧ distance_target <= D_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from acc_step.eml\n-- theorem distance_error_zero_at_target : ∀ args, (distance_meas >= 0.0 ∧ distance_meas <= D_MAX ∧ distance_target >= 0.0 ∧ distance_target <= D_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

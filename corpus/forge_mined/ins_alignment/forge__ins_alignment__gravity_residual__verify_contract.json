@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`gravity_residual` satisfies its @verify contract: under preconditions (abs(accel_x) <= A_MAX ∧ abs(accel_y) <= A_MAX ∧ abs(accel_z) <= A_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from ins_alignment.eml\n-- theorem gravity_residual_zero_at_level_stationary : \\u2200 args, (abs(accel_x) <= A_MAX ∧ abs(accel_y) <= A_MAX ∧ abs(accel_z) <= A_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from ins_alignment.eml\n-- theorem gravity_residual_zero_at_level_stationary : ∀ args, (abs(accel_x) <= A_MAX ∧ abs(accel_y) <= A_MAX ∧ abs(accel_z) <= A_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

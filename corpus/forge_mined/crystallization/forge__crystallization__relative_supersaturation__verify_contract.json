@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`relative_supersaturation` satisfies its @verify contract: under preconditions (concentration >= 0.0 ∧ saturation_concentration > 0.0), the function's result satisfies (result >= 0.0 || concentration < saturation_concentration). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from crystallization.eml\n-- theorem supersaturation_zero_at_solubility : \\u2200 args, (concentration >= 0.0 ∧ saturation_concentration > 0.0) \\u2192 (result >= 0.0 || concentration < saturation_concentration) := sorry",
+      "formal_lean": "-- @verify obligation pulled from crystallization.eml\n-- theorem supersaturation_zero_at_solubility : ∀ args, (concentration >= 0.0 ∧ saturation_concentration > 0.0) → (result >= 0.0 || concentration < saturation_concentration) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

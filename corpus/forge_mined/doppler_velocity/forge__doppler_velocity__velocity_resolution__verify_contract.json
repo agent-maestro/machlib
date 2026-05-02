@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`velocity_resolution` satisfies its @verify contract: under preconditions (n_pulses >= 1.0 ∧ n_pulses <= 1.0e6 ∧ pulse_repetition_freq >= PRF_MIN ∧ pulse_repetition_freq <= PRF_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from doppler_velocity.eml\n-- theorem velocity_resolution_inverse_to_dwell : \\u2200 args, (n_pulses >= 1.0 ∧ n_pulses <= 1.0e6 ∧ pulse_repetition_freq >= PRF_MIN ∧ pulse_repetition_freq <= PRF_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from doppler_velocity.eml\n-- theorem velocity_resolution_inverse_to_dwell : ∀ args, (n_pulses >= 1.0 ∧ n_pulses <= 1.0e6 ∧ pulse_repetition_freq >= PRF_MIN ∧ pulse_repetition_freq <= PRF_MAX ∧ wavelength >= LAMBDA_MIN ∧ wavelength <= LAMBDA_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

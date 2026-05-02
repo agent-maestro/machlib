@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`adsorbed_amount` satisfies its @verify contract: under preconditions (freundlich_k >= 0.0 ∧ freundlich_k <= K_MAX ∧ concentration >= 0.0 ∧ concentration <= C_MAX ∧ heterogeneity_index > 0.0 ∧ heterogeneity_index <= N_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from freundlich.eml\n-- theorem freundlich_monotone_in_concentration : \\u2200 args, (freundlich_k >= 0.0 ∧ freundlich_k <= K_MAX ∧ concentration >= 0.0 ∧ concentration <= C_MAX ∧ heterogeneity_index > 0.0 ∧ heterogeneity_index <= N_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from freundlich.eml\n-- theorem freundlich_monotone_in_concentration : ∀ args, (freundlich_k >= 0.0 ∧ freundlich_k <= K_MAX ∧ concentration >= 0.0 ∧ concentration <= C_MAX ∧ heterogeneity_index > 0.0 ∧ heterogeneity_index <= N_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`point_to_point_residual_sq` satisfies its @verify contract: under preconditions (abs(src_x) <= COORD_MAX ∧ abs(src_y) <= COORD_MAX ∧ abs(src_z) <= COORD_MAX ∧ abs(tgt_x) <= COORD_MAX ∧ abs(tgt_y) <= COORD_MAX ∧ abs(tgt_z) <= COORD_MAX), the function's result satisfies (result >= 0.0). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from icp_iteration.eml\n-- theorem icp_residual_sq_nonnegative : \\u2200 args, (abs(src_x) <= COORD_MAX ∧ abs(src_y) <= COORD_MAX ∧ abs(src_z) <= COORD_MAX ∧ abs(tgt_x) <= COORD_MAX ∧ abs(tgt_y) <= COORD_MAX ∧ abs(tgt_z) <= COORD_MAX) \\u2192 (result >= 0.0) := sorry",
+      "formal_lean": "-- @verify obligation pulled from icp_iteration.eml\n-- theorem icp_residual_sq_nonnegative : ∀ args, (abs(src_x) <= COORD_MAX ∧ abs(src_y) <= COORD_MAX ∧ abs(src_z) <= COORD_MAX ∧ abs(tgt_x) <= COORD_MAX ∧ abs(tgt_y) <= COORD_MAX ∧ abs(tgt_z) <= COORD_MAX) → (result >= 0.0) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",

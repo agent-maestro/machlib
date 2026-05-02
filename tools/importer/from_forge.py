@@ -69,13 +69,56 @@ def _load_baseline(path: Path) -> dict[str, dict[str, int]]:
     return raw
 
 
-def _build_eml_index(industries_root: Path) -> dict[str, Path]:
-    """Map .eml file stems → absolute paths under industries/."""
-    out: dict[str, Path] = {}
+_MODULE_DECL = re.compile(r"^\s*module\s+([A-Za-z_][A-Za-z0-9_]*)\s*;", re.MULTILINE)
+_FN_DECL = re.compile(r"^\s*(?:@\w+[^\n]*\n\s*)*fn\s+([A-Za-z_][A-Za-z0-9_]*)", re.MULTILINE)
+
+
+def _build_eml_index(industries_root: Path) -> dict[str, list[Path]]:
+    """Map .eml module names → list of paths declaring that module.
+
+    Forge baseline keys are ``<module_name>::<fn>``, where ``module_name``
+    comes from the ``module foo;`` declaration at the top of the .eml
+    file -- NOT from the file stem (e.g. ``gamma.eml`` declares
+    ``module gamma_greek;`` and the baseline keys it as
+    ``gamma_greek::*``). Multiple files can declare the same module
+    (e.g. ``chemistry/thermodynamics/clausius_clapeyron.eml`` and
+    ``scientific/climate/clausius_clapeyron.eml`` both declare
+    ``module clausius_clapeyron;``); the per-function lookup picks
+    the file that actually defines the function. Falls back to the
+    file stem when no module declaration is found.
+    """
+    out: dict[str, list[Path]] = {}
     for p in industries_root.rglob("*.eml"):
-        if p.is_file():
-            out.setdefault(p.stem, p)
+        if not p.is_file():
+            continue
+        try:
+            head = p.read_text(encoding="utf-8", errors="replace")[:4096]
+        except OSError:
+            head = ""
+        m = _MODULE_DECL.search(head)
+        key = m.group(1) if m else p.stem
+        out.setdefault(key, []).append(p)
     return out
+
+
+def _resolve_eml_path(
+    candidates: list[Path], fn_name: str, _fn_cache: dict[Path, set[str]],
+) -> Path | None:
+    """Return the .eml file from ``candidates`` that defines ``fn_name``.
+
+    Caches the per-file function name set across calls so a module with
+    many functions only parses each candidate once.
+    """
+    for p in candidates:
+        if p not in _fn_cache:
+            try:
+                src = p.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                src = ""
+            _fn_cache[p] = set(_FN_DECL.findall(src))
+        if fn_name in _fn_cache[p]:
+            return p
+    return candidates[0] if candidates else None
 
 
 # ─── @verify block parsing ─────────────────────────────────────────
@@ -366,7 +409,7 @@ def _build_verify_contract_theorem(
     formal = (
         f"-- @verify obligation pulled from {eml_path.name}\n"
         f"-- theorem {verify_block['theorem_name']} : "
-        f"\\u2200 args, ({requires_str}) \\u2192 ({ensures_str}) := sorry"
+        f"∀ args, ({requires_str}) → ({ensures_str}) := sorry"
     )
     return _make_record(
         theorem_id=f"forge__{file_stem}__{fn_name}__verify_contract",
@@ -404,7 +447,7 @@ def _records_for_function(
 
 def _process_baseline(
     baseline: dict[str, dict[str, int]],
-    eml_index: dict[str, Path],
+    eml_index: dict[str, list[Path]],
     output_root: Path,
     *,
     limit: int | None,
@@ -413,7 +456,10 @@ def _process_baseline(
     """Walk the baseline, emit records, return a stats dict."""
     written = Counter()
     skipped: list[str] = []
-    verify_cache: dict[str, dict[str, list[dict[str, Any]]]] = {}
+    # verify_cache key is the resolved .eml Path -- two files declaring
+    # the same module mustn't collide on a stem-only key.
+    verify_cache: dict[Path, dict[str, list[dict[str, Any]]]] = {}
+    fn_name_cache: dict[Path, set[str]] = {}
 
     items = list(baseline.items())
     if limit is not None:
@@ -424,12 +470,16 @@ def _process_baseline(
             skipped.append(f"malformed key: {key}")
             continue
         file_stem, fn_name = key.split("::", 1)
-        eml_path = eml_index.get(file_stem)
+        candidates = eml_index.get(file_stem) or []
+        if not candidates:
+            skipped.append(f"no .eml for {file_stem}")
+            continue
+        eml_path = _resolve_eml_path(candidates, fn_name, fn_name_cache)
         if eml_path is None:
             skipped.append(f"no .eml for {file_stem}")
             continue
 
-        if file_stem not in verify_cache:
+        if eml_path not in verify_cache:
             try:
                 src = eml_path.read_text(encoding="utf-8", errors="replace")
                 blocks = _parse_verify_blocks(src)
@@ -438,10 +488,10 @@ def _process_baseline(
             by_fn: dict[str, list[dict[str, Any]]] = defaultdict(list)
             for b in blocks:
                 by_fn[b["fn_name"]].append(b)
-            verify_cache[file_stem] = by_fn
+            verify_cache[eml_path] = by_fn
 
         records = _records_for_function(
-            file_stem, fn_name, profile, verify_cache[file_stem], eml_path,
+            file_stem, fn_name, profile, verify_cache[eml_path], eml_path,
         )
 
         if not dry_run:

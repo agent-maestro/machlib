@@ -6,7 +6,7 @@
     "variant_strategy": null,
     "statement": {
       "informal": "`yaw_moment_from_split` satisfies its @verify contract: under preconditions (abs(left_torque) <= TORQUE_MAX ∧ abs(right_torque) <= TORQUE_MAX ∧ track_width >= TRACK_MIN ∧ track_width <= TRACK_MAX ∧ rolling_radius >= RADIUS_MIN ∧ rolling_radius <= RADIUS_MAX), the function's result satisfies (True). This is the obligation Forge ships to a Lean target for DO-178C / IEC-61508 / ISO-26262 certification evidence.",
-      "formal_lean": "-- @verify obligation pulled from torque_vectoring.eml\n-- theorem yaw_moment_zero_at_balanced_split : \\u2200 args, (abs(left_torque) <= TORQUE_MAX ∧ abs(right_torque) <= TORQUE_MAX ∧ track_width >= TRACK_MIN ∧ track_width <= TRACK_MAX ∧ rolling_radius >= RADIUS_MIN ∧ rolling_radius <= RADIUS_MAX) \\u2192 (True) := sorry",
+      "formal_lean": "-- @verify obligation pulled from torque_vectoring.eml\n-- theorem yaw_moment_zero_at_balanced_split : ∀ args, (abs(left_torque) <= TORQUE_MAX ∧ abs(right_torque) <= TORQUE_MAX ∧ track_width >= TRACK_MIN ∧ track_width <= TRACK_MAX ∧ rolling_radius >= RADIUS_MIN ∧ rolling_radius <= RADIUS_MAX) → (True) := sorry",
       "formal_eml_lang": null
     },
     "domain": "forge_mined",
