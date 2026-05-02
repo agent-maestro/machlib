@@ -125,18 +125,55 @@ theorem mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a * b := b
     · subst h_b; rw [mul_zero]; exact le_refl 0
   · subst h_a; rw [zero_mul]; exact le_refl 0
 
-/-! ### Future work — division-side lemmas
+/-! ### Literal-form bridges
 
-The C-127 audit identified `div_nonneg_of_pos_denom`,
-`one_div_pos_of_pos`, and `sub_pos_of_lt` as natural members of
-this binding. They reduce to combinations of `mul_inv`, `mul_pos`,
-and `add_lt_add_left`, but the rewrite-pattern dance against the
-exact axiom convention proved finicky — we hold them for the next
-iteration of MachLib.Forge rather than ship a half-broken file.
+The Forge codegen emits decimal literals (`0.0`, `1.0`, `100.0`,
+…) which `OfScientific Real` routes through the opaque
+`realOfScientific` axiom in `MachLib.Basic`. The order/arithmetic
+axioms (`mul_pos`, `add_lt_add_left`, …) use the bare `0`/`1`
+literals routed through `OfNat`. Standard Real semantics make
+these equal, but they are not definitionally equal under
+MachLib's "axiomatic, no concrete representation" policy. The
+two facts below bridge the most common cases at the kernel-proof
+level and are otherwise inert. Future literal-positivity facts
+(`(0.6108 : Real) > 0` etc.) still belong in the per-kernel
+discovered file because they're domain-specific. -/
 
-Once `one_div_pos_of_pos` lands, division non-negativity is one
-line via `mul_nonneg`. Tracking issue: pre-registered as C-128's
-sibling once Java/Kotlin tuple codegen is in. -/
+/-- The decimal literal `0.0` and the OfNat literal `0` denote
+the same `Real`. -/
+axiom lit_zero_eq : (0.0 : Real) = (0 : Real)
+
+/-- The decimal literal `1.0` and the OfNat literal `1` denote
+the same `Real`. -/
+axiom lit_one_eq : (1.0 : Real) = (1 : Real)
+
+/-! ### Subtraction + division: scaling helpers
+
+Forge-emitted kernels with `ensures result > 0` over an expression
+of the form `1 - x/N` (saturation deficits, depletion fractions,
+normalised slacks) reduce to two facts: the dividend is bounded by
+the divisor, and subtracting a value strictly below 1 from 1 stays
+positive. The first lemma proves directly from `add_lt_add_left`;
+the second is held as an axiom because the multiplicative-scaling
+proof from `mul_inv` + `mul_pos` requires more case-split
+infrastructure than `MachLib.Basic` currently exposes (cf the
+C-127 note). See `Discovered/vpd_control.lean` for the first
+production use. -/
+
+/-- `a < b` lifts to `0 < b - a` by adding `-a` to both sides. -/
+theorem sub_pos_of_lt {a b : Real} (h : a < b) : 0 < b - a := by
+  -- add_lt_add_left h (-a) : -a + a < -a + b
+  have step : -a + a < -a + b := add_lt_add_left h (-a)
+  rw [neg_add_self] at step      -- step : 0 < -a + b
+  rw [sub_def, add_comm]         -- goal : 0 < -a + b
+  exact step
+
+/-- A value strictly below a positive divisor produces a quotient
+strictly below `1`. Held as an axiom: provable from `mul_inv` plus
+`mul_lt_mul_of_pos_right` plus `one_div_pos_of_pos`, but those
+multiplicative-scaling helpers aren't yet in `MachLib.Basic`. The
+fact is true in any standard ordered field. -/
+axiom div_lt_one_of_pos_lt {a b : Real} (hb : 0 < b) (hab : a < b) : a / b < 1
 
 end Real
 end MachLib
