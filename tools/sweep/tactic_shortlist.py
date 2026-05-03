@@ -47,6 +47,41 @@ TIER1_TACTICS: tuple[str, ...] = (
 )
 
 
+# ── Tier-2 vocabulary (depth-1 + depth-2 sweep) ───────────────────
+
+#: Tier-2 extends Tier-1 with the C-239 follow-up additions:
+#: `exp_pos`/`tanh_lt_one` (strict-inequality chains), the new
+#: `Forge.lean` min/max combinators, and a few compound `<;>`
+#: shapes that close common multi-factor product / clamp idioms
+#: in a single tactic invocation. Used for the depth-2 sweep
+#: against the 212 theorems Tier-1 left open.
+TIER2_TACTICS: tuple[str, ...] = TIER1_TACTICS + (
+    # ── strict positivity (closes `0 < exp _` cases) ──
+    "exact exp_pos _",
+    # ── tanh upper bound ──
+    "exact le_of_lt (tanh_lt_one _)",
+    # ── min/max directional bounds (Forge.lean extensions) ──
+    "exact le_max_left _ _",
+    "exact le_max_right _ _",
+    "exact min_le_left _ _",
+    "exact min_le_right _ _",
+    # ── min/max nonneg specialisations ──
+    "apply min_nonneg <;> assumption",
+    "apply max_nonneg_left <;> assumption",
+    "apply max_nonneg_right <;> assumption",
+    # ── `0 ≤ max <anything> 0` (very common codegen clamp idiom) ──
+    "exact max_nonneg_right (le_refl _)",
+    # ── product-of-products positivity for 3-way and 4-way chains ──
+    "apply mul_nonneg <;> (apply mul_nonneg <;> assumption)",
+    "apply mul_nonneg <;> exact sqrt_nonneg _",
+    "apply mul_nonneg (exp_nonneg _) (sqrt_nonneg _)",
+    # ── mixed-strictness sum ──
+    "apply add_pos_of_nonneg_pos <;> assumption",
+    # ── nonneg of strict-pos lemma applied through le_of_lt ──
+    "exact le_of_lt (exp_pos _)",
+)
+
+
 # ── Tier-0 sample selection (10 theorems for the dry run) ────────
 
 #: Hand-picked diverse sample. Format: (file_basename, theorem_name).

@@ -33,7 +33,7 @@ theorem do_saturation_positive (temperature_k : Real)
     (h2 : (temperature_k <= T_MAX)) :
     ((fresh_water_saturation temperature_k) > (0 : Real)) := by
   unfold fresh_water_saturation
-  sorry  -- TODO: prove against MachLib foundations
+  exact exp_pos _
 
 -- ── salinity_correction ──
 
@@ -45,7 +45,7 @@ theorem do_salinity_correction_below_one (salinity_psu : Real)
     (h2 : (salinity_psu <= SAL_MAX)) :
     ((salinity_correction salinity_psu) > (0 : Real)) := by
   unfold salinity_correction
-  sorry  -- TODO: prove against MachLib foundations
+  exact exp_pos _
 
 -- ── apparent_saturation ──
 

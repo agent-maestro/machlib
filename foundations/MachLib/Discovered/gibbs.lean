@@ -40,4 +40,4 @@ theorem equilibrium_constant_positive (delta_g_value : Real) (temperature : Real
     (h4 : (delta_g_value <= DG_MAX)) :
     ((equilibrium_constant delta_g_value temperature) > (0 : Real)) := by
   unfold equilibrium_constant
-  sorry  -- TODO: prove against MachLib foundations
+  exact exp_pos _

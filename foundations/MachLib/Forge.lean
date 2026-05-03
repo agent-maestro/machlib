@@ -175,5 +175,74 @@ multiplicative-scaling helpers aren't yet in `MachLib.Basic`. The
 fact is true in any standard ordered field. -/
 axiom div_lt_one_of_pos_lt {a b : Real} (hb : 0 < b) (hab : a < b) : a / b < 1
 
+/-! ### Min / max combinators (C-239 follow-up)
+
+`MachLib.Basic` defines `min` / `max` as `if a ≤ b then ... else ...`
+and proves `min_self` / `max_self`; the directional bounds and the
+nonneg specialisations live here so `Forge.lean` is the single
+`import` Forge-emitted Lean files reach for. All proven from
+`MachLib.Basic` axioms — no Mathlib, no new core axioms. -/
+
+theorem le_max_left (a b : Real) : a ≤ max a b := by
+  unfold max
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact h
+  · rw [if_neg h]; exact le_refl a
+
+theorem le_max_right (a b : Real) : b ≤ max a b := by
+  unfold max
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact le_refl b
+  · rw [if_neg h]
+    have hba : b < a := by
+      cases lt_total a b with
+      | inl hab => exact absurd (le_of_lt hab) h
+      | inr h2 => cases h2 with
+        | inl heq => exact absurd (heq ▸ le_refl a) h
+        | inr hba => exact hba
+    exact le_of_lt hba
+
+theorem min_le_left (a b : Real) : min a b ≤ a := by
+  unfold min
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact le_refl a
+  · rw [if_neg h]
+    have hba : b < a := by
+      cases lt_total a b with
+      | inl hab => exact absurd (le_of_lt hab) h
+      | inr h2 => cases h2 with
+        | inl heq => exact absurd (heq ▸ le_refl a) h
+        | inr hba => exact hba
+    exact le_of_lt hba
+
+theorem min_le_right (a b : Real) : min a b ≤ b := by
+  unfold min
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact h
+  · rw [if_neg h]; exact le_refl b
+
+/-- Both branches nonneg ⇒ `min` nonneg. -/
+theorem min_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ min a b := by
+  unfold min
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact ha
+  · rw [if_neg h]; exact hb
+
+/-- Left witness suffices for `max` nonneg (max ≥ a ≥ 0). -/
+theorem max_nonneg_left {a b : Real} (ha : 0 ≤ a) : 0 ≤ max a b :=
+  le_trans ha (le_max_left a b)
+
+/-- Right witness suffices for `max` nonneg (max ≥ b ≥ 0). Closes
+the very common `0 ≤ max <expr> 0` codegen idiom. -/
+theorem max_nonneg_right {a b : Real} (hb : 0 ≤ b) : 0 ≤ max a b :=
+  le_trans hb (le_max_right a b)
+
+/-- Mixed-strictness sum. Useful for goals where one operand is a
+literal bound (`0 ≤ ZERO`) and the other is strictly positive. -/
+theorem add_pos_of_nonneg_pos {a b : Real} (ha : 0 ≤ a) (hb : 0 < b) : 0 < a + b := by
+  rcases (le_iff_lt_or_eq 0 a).mp ha with h_a | h_a
+  · exact add_pos h_a hb
+  · subst h_a; rw [zero_add]; exact hb
+
 end Real
 end MachLib
