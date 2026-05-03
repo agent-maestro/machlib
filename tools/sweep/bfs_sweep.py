@@ -227,6 +227,8 @@ def _tier2_worker_d1(theorem: ExtractedTheorem) -> dict:
 
 
 def _tier2_worker_d2(theorem: ExtractedTheorem) -> dict:
+    # 600s per-theorem cap so a 209-theorem sweep at 12-way parallel
+    # stays under ~3h wall (what the user authorised).
     return _attempt_one(
         theorem,
         tier=2,
@@ -234,7 +236,7 @@ def _tier2_worker_d2(theorem: ExtractedTheorem) -> dict:
         max_depth=2,
         max_proofs=1,
         per_tactic_timeout=30.0,
-        per_theorem_budget=900.0,
+        per_theorem_budget=600.0,
     )
 
 
