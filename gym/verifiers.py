@@ -151,25 +151,90 @@ class HeuristicVerifier:
 
 
 class LeanKernelVerifier:
-    """Real Lean-kernel verification — pluggable backend, stubbed today.
+    """Real Lean-kernel verification via local lake build.
 
-    Two backends are anticipated:
+    Wired up in C-239 (2026-05-03). Backend = local; delegates to
+    the vendored ``gym._lean_worker.LeanWorker``, which:
 
-      * **Local** — synthesise a .lean file in a tmp dir, run
-        ``lake env lean <file>`` from a MachLib project root, parse
-        return code + stderr.
+      1. writes a unique scratch .lean inside the MachLib lake project
+         (``foundations/MachLib/_SweepScratch_<n>.lean``),
+      2. runs ``lake build MachLib._SweepScratch_<n>`` (cache-friendly —
+         core MachLib oleans are reused),
+      3. parses elaborator output via ``parse_lake_output``,
+      4. cleans up the scratch file in ``finally``.
 
-      * **Remote** — POST to PETAL's ``/api/lean/verify`` endpoint.
+    Verifier protocol contract: ``verify(theorem_statement, tactic_sequence)``
+    returns True iff substituting the tactic sequence for the unique
+    target sorry sentinel results in a clean ``lake build`` AND the
+    sorry count of the synthesised source equals
+    ``count(theorem_statement) - 1`` (i.e. exactly one sorry — the
+    target — was discharged, no new ones introduced, sibling sorries
+    in the same file are tolerated).
 
-    Phase B-002 chooses which backend to wire up first; both follow
-    the same ``Verifier`` contract here.
+    The driver MUST mark the target sorry with the
+    :attr:`TARGET_SORRY_MARKER` sentinel before calling ``verify``.
+    The synthesiser then string-replaces only that marker, so multi-
+    theorem Discovered/ files can be verified per-theorem.
+
+    Remote backend is not implemented in C-239.
     """
 
     name = "lean_kernel_v1"
 
-    def __init__(self, *, backend: str = "local", project_root: str | None = None):
+    #: Sentinel string the driver inserts at the target sorry's
+    #: position. The verifier substitutes the joined tactic sequence
+    #: in place of this exact substring. Includes a Lean block
+    #: comment so it remains a syntactically valid sorry while
+    #: serving as a unique replacement marker.
+    TARGET_SORRY_MARKER = "sorry /-TARGET-/"
+
+    def __init__(
+        self,
+        *,
+        backend: str = "local",
+        project_root: str | None = None,
+        default_timeout: float = 30.0,
+    ) -> None:
+        if backend != "local":
+            raise NotImplementedError(
+                f"backend={backend!r} not implemented; "
+                "only 'local' is wired up in C-239."
+            )
         self.backend = backend
         self.project_root = project_root
+        self.default_timeout = default_timeout
+
+        # Lazy import keeps test collection working when the lake
+        # toolchain isn't on PATH. Construction proceeds; the
+        # NotAvailable check fires only on the first verify() call.
+        from pathlib import Path as _Path
+        from ._lean_worker import LeanWorker
+
+        if project_root is None:
+            # Default: this file lives at machlib/gym/verifiers.py;
+            # foundations/ is two parents up + "foundations".
+            here = _Path(__file__).resolve()
+            default_root = here.parent.parent / "foundations"
+            root = default_root
+        else:
+            root = _Path(project_root)
+
+        # Scratch basename includes the process PID so concurrent
+        # worker processes don't collide on the same scratch file
+        # path (the vendored ``_scratch_counter`` is per-process,
+        # so without a PID suffix, worker A and worker B both
+        # write ``_SweepScratch_1.lean`` and clobber each other).
+        # C-239 parallelism fix.
+        import os as _os
+        self._worker = LeanWorker(
+            lean_repo=root,
+            scratch_namespace="MachLib",
+            scratch_basename=f"_SweepScratch_p{_os.getpid()}",
+            # Target source already imports MachLib.{Basic,EML,Trig,Forge}.
+            # Pass empty default_imports so we don't double-import.
+            default_imports=(),
+            default_timeout=default_timeout,
+        )
 
     def verify(
         self,
@@ -178,8 +243,44 @@ class LeanKernelVerifier:
         *,
         timeout_seconds: float = 30.0,
     ) -> bool:
-        raise NotImplementedError(
-            "LeanKernelVerifier is scaffolded but not wired up. "
-            "Phase B-002 picks local-vs-remote and implements `_run_lean`. "
-            "Use HeuristicVerifier for end-to-end pipeline tests."
+        # Pre-flight: the driver MUST mark the target sorry with the
+        # sentinel. If the marker isn't present, fail closed — a
+        # successful build wouldn't tell us whether the candidate
+        # closed THIS theorem or some other coincidentally-resolved
+        # one.
+        if self.TARGET_SORRY_MARKER not in theorem_statement:
+            return False
+
+        # Synthesise: replace ONLY the sentinel (occurrence 1) with
+        # the tactic sequence joined by newlines, indented to match
+        # the existing `unfold X` line in the Discovered/ shape
+        # (2-space indentation under `:= by`).
+        replacement = "\n  ".join(tactic_sequence) if tactic_sequence else ""
+        synthesised = theorem_statement.replace(
+            self.TARGET_SORRY_MARKER,
+            replacement,
+            1,
         )
+
+        # Defensive: if the synthesised source still contains the
+        # marker (multiple sentinels would mean a driver bug), reject.
+        if self.TARGET_SORRY_MARKER in synthesised:
+            return False
+
+        # Compute expected post-substitution sorry count. The
+        # vendored worker counts sorries via `\bsorry\b`, which
+        # matches both the target marker (``sorry /-TARGET-/``) and
+        # ordinary sibling sorries (``sorry  -- TODO: ...``). After
+        # substitution, the count must drop by exactly one.
+        from ._lean_worker import _count_sorries  # internal helper
+        n_before = _count_sorries(theorem_statement)
+        n_expected = n_before - 1
+
+        # Run lake build on the synthesised source.
+        result = self._worker.verify(synthesised, timeout=timeout_seconds)
+
+        if result.status != "success":
+            return False
+        if result.sorry_count != n_expected:
+            return False
+        return True
