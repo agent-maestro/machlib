@@ -26,7 +26,7 @@ theorem saturation_pressure_monotone_in_temperature (temperature_c : Real)
     (h2 : (temperature_c <= T_MAX_C)) :
     ((saturation_vapor_pressure temperature_c) >= (0 : Real)) := by
   unfold saturation_vapor_pressure
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | exact exp_nonneg _ | lit_pos
 
 -- ── relative_humidity ──
 

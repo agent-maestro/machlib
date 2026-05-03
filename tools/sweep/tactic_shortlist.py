@@ -82,6 +82,31 @@ TIER2_TACTICS: tuple[str, ...] = TIER1_TACTICS + (
 )
 
 
+# ── Tier-3 vocabulary (literal-positivity, C-240) ────────────────
+
+#: Tier-3 extends Tier-2 with the C-240 `lit_pos` macro and a small
+#: set of compound shapes that lift literal positivity through the
+#: pre-existing `mul_nonneg` / `add_pos_of_nonneg_pos` combinators.
+#: Used for the BFS sweep on the 209 theorems Tier-2 left open.
+#: Goal: pick up codegen idioms of the form
+#:   `0 ≤ <literal> * <var-pos>` and `0 < <literal> + <var-pos>`
+#: that need both a literal-positivity step AND a structural
+#: combinator in the same tactic.
+TIER3_TACTICS: tuple[str, ...] = TIER2_TACTICS + (
+    # ── direct literal positivity (C-240) ──
+    "lit_pos",
+    "exact ofScientific_pos _ (by decide)",
+    "exact ofScientific_nonneg _ (by decide)",
+    # ── literal × var product (closes `0 ≤ LIT * x` when `0 ≤ x` is hyp) ──
+    "apply mul_nonneg <;> first | assumption | lit_pos",
+    "apply mul_nonneg <;> first | exact exp_nonneg _ | lit_pos",
+    "apply mul_nonneg <;> first | exact sqrt_nonneg _ | lit_pos",
+    # ── literal + var-pos sum ──
+    "apply add_pos_of_nonneg_pos <;> first | assumption | lit_pos",
+    "apply add_nonneg <;> first | assumption | lit_pos",
+)
+
+
 # ── Tier-0 sample selection (10 theorems for the dry run) ────────
 
 #: Hand-picked diverse sample. Format: (file_basename, theorem_name).

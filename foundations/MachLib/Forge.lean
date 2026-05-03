@@ -244,5 +244,31 @@ theorem add_pos_of_nonneg_pos {a b : Real} (ha : 0 ≤ a) (hb : 0 < b) : 0 < a +
   · exact add_pos h_a hb
   · subst h_a; rw [zero_add]; exact hb
 
+/-! ### OfScientific literal positivity (C-240, 2026-05-03)
+
+`realOfScientific_pos` is the underlying axiom in `MachLib.Basic`.
+The two derived theorems below are the user-facing forms — Lean's
+elaborator desugars `(0.5 : Real)` to `OfScientific.ofScientific 5
+true 1`, which (via `instOfScientific`) reduces to `realOfScientific
+5 true 1`. The bridge proof is therefore `rfl`-shaped. -/
+
+theorem ofScientific_pos {m e : Nat} (s : Bool) (hm : 0 < m) :
+    0 < (OfScientific.ofScientific m s e : Real) :=
+  realOfScientific_pos m s e hm
+
+theorem ofScientific_nonneg {m e : Nat} (s : Bool) (hm : 0 < m) :
+    0 ≤ (OfScientific.ofScientific m s e : Real) :=
+  le_of_lt (ofScientific_pos s hm)
+
 end Real
 end MachLib
+
+/-- `lit_pos` — closes `0 < c` / `0 ≤ c` when `c` is a fractional
+literal whose mantissa is concretely positive. The `decide`
+discharges the `Nat` precondition `0 < m` after unification fixes `m`.
+Falls through cleanly if the goal isn't a literal-shaped positivity
+goal — the BFS sweep can then mark the candidate rejected. -/
+macro "lit_pos" : tactic => `(tactic|
+  first
+  | exact MachLib.Real.ofScientific_pos _ (by decide)
+  | exact MachLib.Real.ofScientific_nonneg _ (by decide))

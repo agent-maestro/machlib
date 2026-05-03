@@ -60,6 +60,15 @@ axiom realOfScientific
 @[instance] noncomputable def instOfScientific : OfScientific Real :=
   ⟨realOfScientific⟩
 
+/-- Mantissa-positive scientific literals are positive in `Real`.
+Consistent with the standard `OfScientific` interpretation
+(`m × 10^±e > 0 ⟺ m > 0`). Required for any goal of the form
+`0 < (0.5 : Real)` etc. since `realOfScientific` is otherwise opaque.
+C-240 (2026-05-03). -/
+axiom realOfScientific_pos
+    (m : Nat) (s : Bool) (e : Nat) (hm : 0 < m) :
+    0 < realOfScientific m s e
+
 /--
 Real-to-real power. Forge kernels emit `(base ^ exp)` for
 non-integer exponents (e.g. `(1 + (alpha * psi) ^ n_shape)` in

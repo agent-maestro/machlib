@@ -96,3 +96,61 @@ def test_missing_target_marker_rejects(verifier: LeanKernelVerifier) -> None:
     no_marker = _TEMPLATE.replace("sorry /-TARGET-/", "exact exp_nonneg _")
     closed = verifier.verify(no_marker, tactic_sequence=["rfl"])
     assert closed is False
+
+
+# C-240: literal-positivity macro tests. The macro `lit_pos` should
+# close `0 < (literal : Real)` for mantissa-positive scientific
+# literals via the `realOfScientific_pos` axiom in `MachLib.Basic`,
+# and refuse `0 < (0.0 : Real)` (mantissa zero fails `decide`).
+_LIT_POS_TEMPLATE = """\
+import MachLib.Basic
+import MachLib.EML
+import MachLib.Trig
+import MachLib.Forge
+
+open MachLib
+open MachLib.Real
+
+theorem _test_lit_pos : (0 : Real) < (0.5 : Real) := by
+  sorry /-TARGET-/
+"""
+
+_LIT_POS_NEG_TEMPLATE = """\
+import MachLib.Basic
+import MachLib.EML
+import MachLib.Trig
+import MachLib.Forge
+
+open MachLib
+open MachLib.Real
+
+theorem _test_lit_pos_neg : (0 : Real) < (0.0 : Real) := by
+  sorry /-TARGET-/
+"""
+
+
+def test_literal_positivity_pos_control(verifier: LeanKernelVerifier) -> None:
+    """`lit_pos` should close `0 < (0.5 : Real)` (C-240)."""
+    closed = verifier.verify(
+        _LIT_POS_TEMPLATE,
+        tactic_sequence=["lit_pos"],
+        timeout_seconds=30.0,
+    )
+    assert closed is True, (
+        "C-240 positive control failed — `lit_pos` should close "
+        "`(0 : Real) < (0.5 : Real)` via realOfScientific_pos. "
+        "Likely cause: macro definition or axiom mis-wired."
+    )
+
+
+def test_literal_positivity_neg_control(verifier: LeanKernelVerifier) -> None:
+    """`lit_pos` must NOT close `0 < (0.0 : Real)` — mantissa = 0 (C-240)."""
+    closed = verifier.verify(
+        _LIT_POS_NEG_TEMPLATE,
+        tactic_sequence=["lit_pos"],
+        timeout_seconds=30.0,
+    )
+    assert closed is False, (
+        "C-240 negative control failed — `lit_pos` MUST refuse "
+        "`(0 : Real) < (0.0 : Real)` (mantissa = 0 ⇒ `decide` fails)."
+    )

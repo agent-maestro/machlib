@@ -52,6 +52,7 @@ from .tactic_shortlist import (  # noqa: E402
     TIER0_SAMPLE,
     TIER1_TACTICS,
     TIER2_TACTICS,
+    TIER3_TACTICS,
 )
 
 
@@ -240,6 +241,26 @@ def _tier2_worker_d2(theorem: ExtractedTheorem) -> dict:
     )
 
 
+# ── Tier-3 worker (literal-positivity vocab, C-240) ────────────────
+
+
+def _tier3_worker_d1(theorem: ExtractedTheorem) -> dict:
+    """Tier-3 depth-1 worker. Vocab includes `lit_pos` macro plus
+    compound `<;>` shapes that lift literal positivity through the
+    pre-existing `mul_nonneg` / `add_pos_of_nonneg_pos` combinators.
+    Same per-theorem budget as Tier-2 d1 (300s, 30s per tactic).
+    """
+    return _attempt_one(
+        theorem,
+        tier=3,
+        tactics=TIER3_TACTICS,
+        max_depth=1,
+        max_proofs=1,
+        per_tactic_timeout=30.0,
+        per_theorem_budget=300.0,
+    )
+
+
 def run_tier2(
     *,
     output_path: Path,
@@ -290,6 +311,57 @@ def run_tier2(
     return closures, len(theorems)
 
 
+def run_tier3(
+    *,
+    output_path: Path,
+    workers: int = 12,
+    only_open: Path | None = None,
+) -> tuple[int, int]:
+    """Run Tier-3 sweep (literal-positivity, C-240).
+
+    Mirrors :func:`run_tier2` but with the C-240 vocab (`lit_pos` +
+    compound `<;>` literal shapes). Always depth-1 — the compound
+    tactics already do depth-2 work in one application, so a
+    depth-2 BFS would just churn. If ``only_open`` is given,
+    restrict to theorems whose status in that JSONL is not
+    'closed' (the typical use is `--only-open-from results_tier2.jsonl`).
+    """
+    theorems = list(extract_all(_discovered_dir(), repo_root=_machlib_root()))
+    if only_open is not None and only_open.is_file():
+        already_closed: set[str] = set()
+        for line in only_open.open(encoding="utf-8"):
+            r = json.loads(line)
+            if r.get("status") == "closed":
+                already_closed.add(r["theorem_id"])
+        before = len(theorems)
+        theorems = [
+            t for t in theorems
+            if f"{Path(t.source_file).stem}.{t.theorem_name}" not in already_closed
+        ]
+        print(f"Filtering: {before} -> {len(theorems)} theorems "
+              f"(skipped {len(already_closed)} already-closed)")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    closures = 0
+    print(f"Running Tier-3 on {len(theorems)} theorems "
+          f"(vocab: {len(TIER3_TACTICS)} tactics, depth=1, "
+          f"workers={workers}) -> {output_path}")
+    print("-" * 78)
+    with output_path.open("w", encoding="utf-8") as out, \
+            ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_tier3_worker_d1, t): t for t in theorems}
+        for i, fut in enumerate(as_completed(futures), 1):
+            rec = fut.result()
+            out.write(json.dumps(rec) + "\n")
+            out.flush()
+            marker = "OK" if rec["status"] == "closed" else "  "
+            tag = rec["status"][:8]
+            print(f"  [{i:3d}/{len(theorems)}] {marker} {tag:8s} "
+                  f"{rec['theorem_id']}")
+            if rec["status"] == "closed":
+                closures += 1
+    return closures, len(theorems)
+
+
 def run_tier1(
     *,
     output_path: Path,
@@ -324,17 +396,17 @@ def run_tier1(
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--mode", choices=("tier0", "tier1", "tier2"), required=True)
+    p.add_argument("--mode", choices=("tier0", "tier1", "tier2", "tier3"), required=True)
     p.add_argument("--output", type=Path, default=None,
                    help="JSONL output path (default: exploration/C239.../results_<mode>.jsonl)")
     p.add_argument("--workers", type=int, default=12,
-                   help="parallel worker processes (tier1/tier2 only)")
+                   help="parallel worker processes (tier1/tier2/tier3 only)")
     p.add_argument("--approved", action="store_true",
-                   help="required to run tier1/tier2; signals user has reviewed prior tier")
+                   help="required to run tier1/tier2/tier3; signals user has reviewed prior tier")
     p.add_argument("--max-depth", type=int, default=1,
-                   help="BFS depth for tier2 (default 1; 2 ≈ 30-60min wall)")
+                   help="BFS depth for tier2 (default 1; 2 ≈ 30-60min wall). tier3 ignores this (always 1).")
     p.add_argument("--only-open-from", type=Path, default=None,
-                   help="tier2 only: skip theorems already marked closed in this JSONL")
+                   help="tier2/tier3 only: skip theorems already marked closed in this JSONL")
     args = p.parse_args(argv)
 
     output = args.output or _default_output_path(args.mode)
@@ -345,7 +417,7 @@ def main(argv: list[str] | None = None) -> int:
             print("Tier-1 requires --approved (PLAN §14 gate).", file=sys.stderr)
             return 2
         closures, total = run_tier1(output_path=output, workers=args.workers)
-    else:  # tier2
+    elif args.mode == "tier2":
         if not args.approved:
             print("Tier-2 requires --approved.", file=sys.stderr)
             return 2
@@ -353,6 +425,15 @@ def main(argv: list[str] | None = None) -> int:
             output_path=output,
             workers=args.workers,
             max_depth=args.max_depth,
+            only_open=args.only_open_from,
+        )
+    else:  # tier3
+        if not args.approved:
+            print("Tier-3 requires --approved.", file=sys.stderr)
+            return 2
+        closures, total = run_tier3(
+            output_path=output,
+            workers=args.workers,
             only_open=args.only_open_from,
         )
 

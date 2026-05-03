@@ -69,4 +69,4 @@ theorem photon_sphere_above_horizon (schwarzschild_r : Real)
     (h2 : (schwarzschild_r <= R_MAX)) :
     ((photon_sphere_radius schwarzschild_r) >= (0 : Real)) := by
   unfold photon_sphere_radius
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | lit_pos
