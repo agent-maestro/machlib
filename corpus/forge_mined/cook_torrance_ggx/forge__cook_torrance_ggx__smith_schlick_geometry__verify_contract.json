@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/graphics/shading/cook_torrance_ggx.eml",
+    "source_eml_file": "<private>/cook_torrance_ggx.eml",
     "source_function": "smith_schlick_geometry"
   }
 }

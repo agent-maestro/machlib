@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/manufacturing/process_control/plc_setpoint.eml",
+    "source_eml_file": "<private>/plc_setpoint.eml",
     "source_function": "actuator_command"
   }
 }

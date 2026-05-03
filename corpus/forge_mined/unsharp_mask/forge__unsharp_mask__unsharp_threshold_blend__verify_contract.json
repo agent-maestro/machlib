@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/imaging/unsharp_mask.eml",
+    "source_eml_file": "<private>/unsharp_mask.eml",
     "source_function": "unsharp_threshold_blend"
   }
 }

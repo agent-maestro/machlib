@@ -62,7 +62,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/finance/risk/basel_capital.eml",
+    "source_eml_file": "<private>/basel_capital.eml",
     "source_function": "frtb_capital_charge"
   }
 }

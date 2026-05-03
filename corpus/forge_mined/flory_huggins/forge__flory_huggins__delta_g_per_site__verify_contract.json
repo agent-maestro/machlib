@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/chemistry/polymer/flory_huggins.eml",
+    "source_eml_file": "<private>/flory_huggins.eml",
     "source_function": "delta_g_per_site"
   }
 }

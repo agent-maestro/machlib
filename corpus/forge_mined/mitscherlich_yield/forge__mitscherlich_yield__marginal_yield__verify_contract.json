@@ -65,7 +65,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/agriculture/crop/mitscherlich_yield.eml",
+    "source_eml_file": "<private>/mitscherlich_yield.eml",
     "source_function": "marginal_yield"
   }
 }

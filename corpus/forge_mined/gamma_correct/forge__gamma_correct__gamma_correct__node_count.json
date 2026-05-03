@@ -63,7 +63,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/imaging/gamma_correct.eml",
+    "source_eml_file": "<private>/gamma_correct.eml",
     "source_function": "gamma_correct"
   }
 }

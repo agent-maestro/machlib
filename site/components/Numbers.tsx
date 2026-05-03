@@ -1,8 +1,8 @@
 // Single source of truth for the marketing tiles. Update these
-// values, not the JSX below. `live_counts.py` (in monogate-forge)
+// values, not the JSX below. `live_counts.py` (in the forge repo)
 // is the authority -- run it to read the live derivation:
 //
-//   cd D:/monogate-forge && python tools/cli/live_counts.py --pretty --slow
+//   python tools/cli/live_counts.py --pretty --slow
 //
 // Then bump any field whose value moved.
 const MACHLIB = {

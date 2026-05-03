@@ -1,9 +1,9 @@
 """from_forge -- mine MachLib theorem records from the Forge corpus.
 
-Every .eml file in monogate-forge/industries/ has been profiled by the
-Forge optimizer; the per-function profile (chain_order, node_count,
-fpga_cycles, mac_units, trig_units) lives in
-``tools/benchmarks/vertical_baseline.json``. Each property + each
+Every .eml file under the Forge proprietary kernel library has been
+profiled by the Forge optimizer; the per-function profile
+(chain_order, node_count, fpga_cycles, mac_units, trig_units) lives
+in ``tools/benchmarks/vertical_baseline.json``. Each property + each
 ``@verify`` contract on the .eml source becomes a MachLib theorem.
 
 This is the Phase A-001 deliverable from
@@ -20,9 +20,9 @@ Usage:
     # Smoke test on a few entries
     python tools/importer/from_forge.py --limit 5 --dry-run
 
-    # Custom roots
+    # Custom forge checkout root (override via env or flag)
     python tools/importer/from_forge.py \\
-        --forge-root D:/monogate-forge \\
+        --forge-root /path/to/forge \\
         --output corpus/forge_mined
 
 The script is idempotent — re-running overwrites existing output files
@@ -527,8 +527,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--forge-root",
-        default="D:/monogate-forge",
-        help="path to monogate-forge clone",
+        default=None,
+        help="path to forge clone (or set FORGE_ROOT env var)",
     )
     parser.add_argument(
         "--output",
@@ -541,7 +541,19 @@ def main(argv: list[str] | None = None) -> int:
                         help="walk and report stats; write nothing")
     args = parser.parse_args(argv)
 
-    forge_root = Path(args.forge_root)
+    # Resolve forge root: --forge-root flag > FORGE_ROOT env > error.
+    # No hard-coded default so this script doesn't leak the
+    # maintainer's local checkout layout into a public-repo log.
+    import os
+    root_str = args.forge_root or os.environ.get("FORGE_ROOT")
+    if not root_str:
+        print(
+            "forge root not set. Use --forge-root or set "
+            "FORGE_ROOT env var.",
+            file=sys.stderr,
+        )
+        return 1
+    forge_root = Path(root_str)
     baseline_path = forge_root / "tools" / "benchmarks" / "vertical_baseline.json"
     industries_root = forge_root / "industries"
 

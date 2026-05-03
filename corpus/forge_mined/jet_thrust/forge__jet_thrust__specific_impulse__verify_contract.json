@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/aerospace/propulsion/jet_thrust.eml",
+    "source_eml_file": "<private>/jet_thrust.eml",
     "source_function": "specific_impulse"
   }
 }

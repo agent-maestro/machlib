@@ -64,7 +64,7 @@
     "verification_method": "pending",
     "generated_by": "from_forge_importer_v1",
     "creation_date": "2026-05-01",
-    "source_eml_file": "D:/monogate-forge/industries/chemistry/kinetics/second_order.eml",
+    "source_eml_file": "<private>/second_order.eml",
     "source_function": "concentration_at"
   }
 }

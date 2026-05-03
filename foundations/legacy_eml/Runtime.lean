@@ -1,7 +1,7 @@
 -- MonogateEML/Runtime.lean
 --
 -- Lean correspondence for the C / Rust libmonogate runtime
--- (D:/monogate-forge/software/runtime/c/libmonogate.h).
+-- (forge: software/runtime/c/libmonogate.h).
 --
 -- For each `mg_*` operator emitted by the Forge backends, this
 -- file declares the mathematical Lean function it computes, and
