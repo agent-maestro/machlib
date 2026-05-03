@@ -107,6 +107,52 @@ TIER3_TACTICS: tuple[str, ...] = TIER2_TACTICS + (
 )
 
 
+# ── Tier-4 vocabulary (3-arm alternations + clamp chains, C-241) ──
+
+#: Tier-4 extends Tier-3 with the 3-arm `first | A | B | C`
+#: compounds that were missing from prior tiers. Empirically
+#: verified (this session, scratch smoke test):
+#: `apply mul_nonneg <;> first | assumption | exact exp_nonneg _`
+#: closes `0 ≤ a * exp(-k*x)` with `h : a ≥ 0`. That shape was
+#: in NONE of TIER1, TIER2, TIER3.
+#:
+#: The codegen-emitted `unfold <fn>` already runs as `pre_tactic`
+#: (verified in `extract.py` and `Discovered/abrams_strength.lean`),
+#: so post-unfold goals expose the literal-and-hypothesis shape
+#: that the existing combinators can discharge — the BFS just
+#: lacked the right joiner. C-241 is vocab-only, no new core or
+#: Forge axioms.
+TIER4_TACTICS: tuple[str, ...] = TIER3_TACTICS + (
+    # ── 3-arm alternations on mul_nonneg (the C-241 fix) ──
+    "apply mul_nonneg <;> first | assumption | exact exp_nonneg _",
+    "apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _",
+    "apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | lit_pos",
+    "apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _ | lit_pos",
+    "apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | exact sqrt_nonneg _",
+    "apply mul_nonneg <;> first | exact exp_nonneg _ | exact sqrt_nonneg _ | lit_pos",
+    # ── strict-positivity 3-arm (mul_pos) ──
+    "apply mul_pos <;> first | assumption | exact exp_pos _",
+    "apply mul_pos <;> first | assumption | exact one_pos",
+    # ── add-nonneg / add-pos 3-arm ──
+    "apply add_nonneg <;> first | assumption | exact exp_nonneg _ | lit_pos",
+    "apply add_pos_of_nonneg_pos <;> first | assumption | exact exp_pos _ | lit_pos",
+    # ── 3-way nested product (a * b * c, all factor-nonneg).
+    # Lean parses `a*b*c` as `(a*b)*c`, so `apply mul_nonneg` gives
+    # two subgoals: `0 ≤ a*b` (needs nested mul_nonneg) and `0 ≤ c`
+    # (needs assumption / exp_nonneg / sqrt_nonneg at the LEAF).
+    # Both leaf tactics MUST appear at the top-level alternation
+    # alongside the nested handler. ──
+    "apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _)",
+    "apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _ | (apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _)",
+    "apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | exact sqrt_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | exact sqrt_nonneg _)",
+    # ── min/max + transitivity for clamp goals ──
+    "exact le_trans (le_max_left _ _) (le_refl _)",
+    "exact le_trans (le_max_right _ _) (le_refl _)",
+    "exact le_trans (min_le_left _ _) (le_refl _)",
+    "exact le_trans (min_le_right _ _) (le_refl _)",
+)
+
+
 # ── Tier-0 sample selection (10 theorems for the dry run) ────────
 
 #: Hand-picked diverse sample. Format: (file_basename, theorem_name).

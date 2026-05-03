@@ -48,4 +48,4 @@ theorem mitscherlich_marginal_yield_nonneg (y_max : Real) (k_coefficient : Real)
     (h7 : (input_baseline >= (0 : Real))) :
     ((marginal_yield y_max k_coefficient input_applied input_baseline) >= (0 : Real)) := by
   unfold marginal_yield
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _)

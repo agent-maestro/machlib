@@ -33,4 +33,4 @@ theorem particle_weight_nonnegative (prior_weight : Real) (observation : Real) (
     (h6 : (sigma <= SIGMA_MAX)) :
     ((particle_weight_update prior_weight observation predicted sigma) >= (0 : Real)) := by
   unfold particle_weight_update
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact exp_nonneg _

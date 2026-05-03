@@ -32,4 +32,4 @@ theorem vant_hoff_predict_k (k1 : Real) (delta_h : Real) (t1 : Real) (t2 : Real)
     (h7 : (t2 <= T_MAX)) :
     ((predict_k k1 delta_h t1 t2) > (0 : Real)) := by
   unfold predict_k
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_pos <;> first | assumption | exact exp_pos _

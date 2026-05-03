@@ -51,7 +51,7 @@ theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_r
     (h4 : (doppler_ratio <= (1000000.0 : Real))) :
     ((observed_frequency source_frequency doppler_ratio) > (0 : Real)) := by
   unfold observed_frequency
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_pos <;> first | assumption | exact exp_pos _
 
 -- ── lorentz_factor ──
 

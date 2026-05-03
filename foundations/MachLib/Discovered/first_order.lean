@@ -30,4 +30,4 @@ theorem first_order_decay_monotone (initial_concentration : Real) (rate_constant
     (h5 : (time <= T_MAX)) :
     ((concentration_at initial_concentration rate_constant time) >= (0 : Real)) := by
   unfold concentration_at
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact exp_nonneg _

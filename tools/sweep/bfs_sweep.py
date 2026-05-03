@@ -53,6 +53,7 @@ from .tactic_shortlist import (  # noqa: E402
     TIER1_TACTICS,
     TIER2_TACTICS,
     TIER3_TACTICS,
+    TIER4_TACTICS,
 )
 
 
@@ -261,6 +262,27 @@ def _tier3_worker_d1(theorem: ExtractedTheorem) -> dict:
     )
 
 
+# ── Tier-4 worker (3-arm alternations + clamp chains, C-241) ───────
+
+
+def _tier4_worker_d1(theorem: ExtractedTheorem) -> dict:
+    """Tier-4 depth-1 worker. Vocab extends Tier-3 with 3-arm
+    `first | A | B | C` compounds and min/max transitivity chains
+    that close the dominant Discovered/ goal shape:
+    `0 ≤ a * exp(-k*x)` with `h : a ≥ 0` (and similar). Same per-
+    theorem budget as Tier-3 (300s, 30s per tactic).
+    """
+    return _attempt_one(
+        theorem,
+        tier=4,
+        tactics=TIER4_TACTICS,
+        max_depth=1,
+        max_proofs=1,
+        per_tactic_timeout=30.0,
+        per_theorem_budget=300.0,
+    )
+
+
 def run_tier2(
     *,
     output_path: Path,
@@ -298,6 +320,55 @@ def run_tier2(
     with output_path.open("w", encoding="utf-8") as out, \
             ProcessPoolExecutor(max_workers=workers) as pool:
         futures = {pool.submit(worker, t): t for t in theorems}
+        for i, fut in enumerate(as_completed(futures), 1):
+            rec = fut.result()
+            out.write(json.dumps(rec) + "\n")
+            out.flush()
+            marker = "OK" if rec["status"] == "closed" else "  "
+            tag = rec["status"][:8]
+            print(f"  [{i:3d}/{len(theorems)}] {marker} {tag:8s} "
+                  f"{rec['theorem_id']}")
+            if rec["status"] == "closed":
+                closures += 1
+    return closures, len(theorems)
+
+
+def run_tier4(
+    *,
+    output_path: Path,
+    workers: int = 12,
+    only_open: Path | None = None,
+) -> tuple[int, int]:
+    """Run Tier-4 sweep (3-arm alternations + clamp chains, C-241).
+
+    Mirrors :func:`run_tier3` but with the C-241 vocab. Always
+    depth-1. If ``only_open`` is given, restrict to theorems whose
+    status in that JSONL is not 'closed' (typical use:
+    `--only-open-from results_tier3.jsonl`).
+    """
+    theorems = list(extract_all(_discovered_dir(), repo_root=_machlib_root()))
+    if only_open is not None and only_open.is_file():
+        already_closed: set[str] = set()
+        for line in only_open.open(encoding="utf-8"):
+            r = json.loads(line)
+            if r.get("status") == "closed":
+                already_closed.add(r["theorem_id"])
+        before = len(theorems)
+        theorems = [
+            t for t in theorems
+            if f"{Path(t.source_file).stem}.{t.theorem_name}" not in already_closed
+        ]
+        print(f"Filtering: {before} -> {len(theorems)} theorems "
+              f"(skipped {len(already_closed)} already-closed)")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    closures = 0
+    print(f"Running Tier-4 on {len(theorems)} theorems "
+          f"(vocab: {len(TIER4_TACTICS)} tactics, depth=1, "
+          f"workers={workers}) -> {output_path}")
+    print("-" * 78)
+    with output_path.open("w", encoding="utf-8") as out, \
+            ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {pool.submit(_tier4_worker_d1, t): t for t in theorems}
         for i, fut in enumerate(as_completed(futures), 1):
             rec = fut.result()
             out.write(json.dumps(rec) + "\n")
@@ -396,7 +467,7 @@ def run_tier1(
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--mode", choices=("tier0", "tier1", "tier2", "tier3"), required=True)
+    p.add_argument("--mode", choices=("tier0", "tier1", "tier2", "tier3", "tier4"), required=True)
     p.add_argument("--output", type=Path, default=None,
                    help="JSONL output path (default: exploration/C239.../results_<mode>.jsonl)")
     p.add_argument("--workers", type=int, default=12,
@@ -427,11 +498,20 @@ def main(argv: list[str] | None = None) -> int:
             max_depth=args.max_depth,
             only_open=args.only_open_from,
         )
-    else:  # tier3
+    elif args.mode == "tier3":
         if not args.approved:
             print("Tier-3 requires --approved.", file=sys.stderr)
             return 2
         closures, total = run_tier3(
+            output_path=output,
+            workers=args.workers,
+            only_open=args.only_open_from,
+        )
+    else:  # tier4
+        if not args.approved:
+            print("Tier-4 requires --approved.", file=sys.stderr)
+            return 2
+        closures, total = run_tier4(
             output_path=output,
             workers=args.workers,
             only_open=args.only_open_from,

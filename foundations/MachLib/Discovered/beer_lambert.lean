@@ -31,7 +31,7 @@ theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_l
     (h5 : (concentration <= C_MAX)) :
     ((absorbance molar_absorptivity path_length concentration) >= (0 : Real)) := by
   unfold absorbance
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _)
 
 -- ── transmittance ──
 

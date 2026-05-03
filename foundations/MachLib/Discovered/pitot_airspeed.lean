@@ -40,7 +40,7 @@ theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
     (h4 : (local_density <= RHO_MAX)) :
     ((true_airspeed ias local_density) >= (0 : Real)) := by
   unfold true_airspeed
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _
 
 -- ── calibrated_airspeed ──
 

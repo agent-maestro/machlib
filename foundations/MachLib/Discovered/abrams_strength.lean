@@ -34,7 +34,7 @@ theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) 
     (h6 : (water_cement_ratio <= WC_MAX)) :
     ((compressive_strength a_intercept k_decay water_cement_ratio) >= (0 : Real)) := by
   unfold compressive_strength
-  sorry  -- TODO: prove against MachLib foundations
+  apply mul_nonneg <;> first | assumption | exact exp_nonneg _
 
 -- ── nurse_saul_step ──
 
