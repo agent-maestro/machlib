@@ -60,4 +60,4 @@ theorem do_apparent_in_unit_interval (do_observed : Real) (do_at_equilibrium : R
     (h5 : (do_observed <= do_at_equilibrium)) :
     ((apparent_saturation do_observed do_at_equilibrium) >= (0 : Real)) := by
   unfold apparent_saturation
-  sorry  -- TODO: prove against MachLib foundations
+  apply div_nonneg_of_nonneg_pos <;> assumption

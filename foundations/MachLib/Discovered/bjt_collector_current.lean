@@ -64,4 +64,4 @@ theorem transconductance_proportional_to_ic (collector_current : Real) (thermal_
     (h4 : (thermal_voltage <= (0.1 : Real))) :
     ((transconductance collector_current thermal_voltage) >= (0 : Real)) := by
   unfold transconductance
-  sorry  -- TODO: prove against MachLib foundations
+  apply div_nonneg_of_nonneg_pos <;> assumption

@@ -244,6 +244,143 @@ theorem add_pos_of_nonneg_pos {a b : Real} (ha : 0 ≤ a) (hb : 0 < b) : 0 < a +
   · exact add_pos h_a hb
   · subst h_a; rw [zero_add]; exact hb
 
+/-! ### ≤-monotonicity substrate (C-242, 2026-05-03)
+
+`MachLib.Basic` exposes only the strict `<` versions of additive
+and multiplicative monotonicity (`add_lt_add_left`, `mul_pos`).
+Forge-emitted kernel proofs need the `≤` versions for goals like
+`a ≤ b → a + c ≤ b + c` and `a ≤ b → 0 ≤ c → a*c ≤ b*c`. The
+substrate below derives the `≤` forms from the `<` axioms via
+`le_iff_lt_or_eq` case-splits.
+
+The strict `<` multiplicative-right form is held as an axiom in
+the same spirit as `div_lt_one_of_pos_lt` — provable from
+`mul_pos` + a `mul_neg` distributivity lemma we haven't yet
+landed. Adding it as an axiom keeps C-242 scoped to this session;
+the converse derivation goes into a future Basic.lean cleanup. -/
+
+/-- `a < b → 0 < c → a * c < b * c`. Strict multiplicative
+right-monotonicity. Held as axiom (true in any ordered field;
+proof from existing axioms requires `mul_neg` + distributive over
+subtraction, currently absent from `MachLib.Basic`). -/
+axiom mul_lt_mul_of_pos_right
+    {a b c : Real} (h : a < b) (hc : 0 < c) : a * c < b * c
+
+/-- `a ≤ b → c + a ≤ c + b`. -/
+theorem add_le_add_left
+    {a b : Real} (h : a ≤ b) (c : Real) : c + a ≤ c + b := by
+  rcases (le_iff_lt_or_eq a b).mp h with h_lt | h_eq
+  · exact le_of_lt (add_lt_add_left h_lt c)
+  · subst h_eq; exact le_refl _
+
+/-- `a ≤ b → 0 ≤ c → a * c ≤ b * c`. -/
+theorem mul_le_mul_of_nonneg_right
+    {a b c : Real} (h : a ≤ b) (hc : 0 ≤ c) : a * c ≤ b * c := by
+  rcases (le_iff_lt_or_eq 0 c).mp hc with h_c_pos | h_c_zero
+  · rcases (le_iff_lt_or_eq a b).mp h with h_ab | h_ab
+    · exact le_of_lt (mul_lt_mul_of_pos_right h_ab h_c_pos)
+    · subst h_ab; exact le_refl _
+  · subst h_c_zero; rw [mul_zero, mul_zero]; exact le_refl _
+
+/-- `a ≤ b → 0 ≤ c → c * a ≤ c * b`. (Left version, by `mul_comm`.) -/
+theorem mul_le_mul_of_nonneg_left
+    {a b c : Real} (h : a ≤ b) (hc : 0 ≤ c) : c * a ≤ c * b := by
+  rw [mul_comm c a, mul_comm c b]
+  exact mul_le_mul_of_nonneg_right h hc
+
+/-! ### Subtraction / saturation lemmas (C-242, 2026-05-03)
+
+The patterns Forge-emitted kernels reach for: `0 ≤ a - b` from
+`b ≤ a`, `0 < 1 - x` from `x < 1`, `0 ≤ 1 - x` from `x ≤ 1`. -/
+
+/-- `b ≤ a → 0 ≤ a - b`. (≤-version of `sub_pos_of_lt`.) -/
+theorem sub_nonneg_of_le {a b : Real} (h : b ≤ a) : 0 ≤ a - b := by
+  rcases (le_iff_lt_or_eq b a).mp h with h_lt | h_eq
+  · exact le_of_lt (sub_pos_of_lt h_lt)
+  · subst h_eq; rw [sub_def, add_neg]; exact le_refl 0
+
+/-- `x < 1 → 0 < 1 - x`. -/
+theorem one_sub_pos_of_lt_one {x : Real} (h : x < 1) : 0 < 1 - x :=
+  sub_pos_of_lt h
+
+/-- `x ≤ 1 → 0 ≤ 1 - x`. -/
+theorem one_sub_nonneg_of_le_one {x : Real} (h : x ≤ 1) : 0 ≤ 1 - x :=
+  sub_nonneg_of_le h
+
+/-! ### Division ≤ 1 (C-242, 2026-05-03)
+
+`a / b ≤ 1` from `0 < b` and `a ≤ b`. The proof uses
+`a / b = a * (1/b)`, then bounds `a * (1/b) ≤ b * (1/b) = 1`
+via `mul_le_mul_of_nonneg_right` and `mul_inv`. The `1 / b ≥ 0`
+sub-fact is held as a lemma below.
+
+The strict-positivity form (`div_lt_one_of_pos_lt`) is already
+in Forge.lean as an axiom; this is the ≤-version, derivable
+from `mul_le_mul_of_nonneg_right`. -/
+
+/-- `0 < b → 0 ≤ 1 / b`. (Strict positivity of inverse — held
+as a small axiom rather than derived from a `div_pos` chain we
+don't yet have.) -/
+axiom one_div_nonneg_of_pos {b : Real} (hb : 0 < b) : 0 ≤ 1 / b
+
+/-- `0 < b → a ≤ b → a / b ≤ 1`. -/
+theorem div_le_one_of_le_of_pos
+    {a b : Real} (hb : 0 < b) (h : a ≤ b) : a / b ≤ 1 := by
+  have hb_ne : b ≠ 0 := ne_of_gt hb
+  have eq_div : a / b = a * (1 / b) := div_def a b hb_ne
+  rw [eq_div]
+  have hinv : 0 ≤ 1 / b := one_div_nonneg_of_pos hb
+  have step1 : a * (1 / b) ≤ b * (1 / b) :=
+    mul_le_mul_of_nonneg_right h hinv
+  have step2 : b * (1 / b) = 1 := mul_inv b hb_ne
+  rw [step2] at step1
+  exact step1
+
+/-- `0 ≤ a → 0 < b → 0 ≤ a / b`. The dominant Bucket-B pattern in
+the C-242 sweep — the post-unfold goal of physical-formula
+kernels (aragonite saturation, ksp ratios, photon orbit ratios)
+is `0 ≤ (numerator)/(positive denominator)`. -/
+theorem div_nonneg_of_nonneg_pos
+    {a b : Real} (ha : 0 ≤ a) (hb : 0 < b) : 0 ≤ a / b := by
+  rw [div_def a b (ne_of_gt hb)]
+  exact mul_nonneg ha (one_div_nonneg_of_pos hb)
+
+/-! ### `≤ 1` products (C-242, 2026-05-03)
+
+A product of two non-negative ≤-1 values is itself ≤ 1. -/
+
+/-- `0 ≤ a → 0 ≤ b → a ≤ 1 → b ≤ 1 → a * b ≤ 1`. -/
+theorem mul_le_one_of_le_one
+    {a b : Real} (ha : 0 ≤ a) (_hb : 0 ≤ b)
+    (ha1 : a ≤ 1) (hb1 : b ≤ 1) : a * b ≤ 1 := by
+  -- a * b ≤ a * 1 = a ≤ 1.
+  have step1 : a * b ≤ a * 1 := mul_le_mul_of_nonneg_left hb1 ha
+  rw [mul_one_ax] at step1
+  exact le_trans step1 ha1
+
+/-! ### Clamp-chain combinators (C-244, 2026-05-03)
+
+Forge-emitted kernels with `min/max` clamps reach for goals of the
+shape `a ≤ max b c` where `a` is bounded by ONE of `b` or `c` only.
+The four lemmas below close those in one tactic via `le_trans` from
+the existing `min_le_left/right` and `le_max_left/right`. -/
+
+/-- `a ≤ b → a ≤ max b c`. -/
+theorem le_max_of_le_left {a b : Real} (h : a ≤ b) (c : Real) : a ≤ max b c :=
+  le_trans h (le_max_left b c)
+
+/-- `a ≤ c → a ≤ max b c`. -/
+theorem le_max_of_le_right {a c : Real} (h : a ≤ c) (b : Real) : a ≤ max b c :=
+  le_trans h (le_max_right b c)
+
+/-- `a ≤ c → min a b ≤ c`. -/
+theorem min_le_of_left_le {a c : Real} (h : a ≤ c) (b : Real) : min a b ≤ c :=
+  le_trans (min_le_left a b) h
+
+/-- `b ≤ c → min a b ≤ c`. -/
+theorem min_le_of_right_le {b c : Real} (h : b ≤ c) (a : Real) : min a b ≤ c :=
+  le_trans (min_le_right a b) h
+
 /-! ### OfScientific literal positivity (C-240, 2026-05-03)
 
 `realOfScientific_pos` is the underlying axiom in `MachLib.Basic`.

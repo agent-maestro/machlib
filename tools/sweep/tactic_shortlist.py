@@ -153,6 +153,51 @@ TIER4_TACTICS: tuple[str, ...] = TIER3_TACTICS + (
 )
 
 
+# ── Tier-5 vocabulary (C-242 div/sub + C-244 clamp combinators) ──
+
+#: Tier-5 extends Tier-4 with the C-242 + C-244 lemmas added to
+#: `MachLib.Forge` this session:
+#: - `sub_nonneg_of_le`, `one_sub_pos_of_lt_one`,
+#:   `one_sub_nonneg_of_le_one`: subtraction-from-bound shapes.
+#: - `div_le_one_of_le_of_pos`: division-≤-1 saturation.
+#: - `mul_le_one_of_le_one`: product-of-bounded values.
+#: - `le_max_of_le_left/right`, `min_le_of_left_le/right`:
+#:   1-step clamp-chain combinators.
+TIER5_TACTICS: tuple[str, ...] = TIER4_TACTICS + (
+    # ── C-242 sub/div/saturation atoms ──
+    "exact sub_nonneg_of_le (by assumption)",
+    "exact one_sub_pos_of_lt_one (by assumption)",
+    "exact one_sub_nonneg_of_le_one (by assumption)",
+    "exact div_le_one_of_le_of_pos (by assumption) (by assumption)",
+    "apply div_le_one_of_le_of_pos <;> assumption",
+    "apply mul_le_one_of_le_one <;> assumption",
+    # ── C-244 clamp-chain combinators ──
+    "exact le_max_of_le_left (by assumption) _",
+    "exact le_max_of_le_right (by assumption) _",
+    "exact min_le_of_left_le (by assumption) _",
+    "exact min_le_of_right_le (by assumption) _",
+    "apply le_max_of_le_left <;> assumption",
+    "apply le_max_of_le_right <;> assumption",
+    "apply min_le_of_left_le <;> assumption",
+    "apply min_le_of_right_le <;> assumption",
+    # ── compound shapes that mix C-242 and TIER4 atoms ──
+    # `0 ≤ a * (1 - x)` with `0 ≤ a, x ≤ 1` in scope
+    "apply mul_nonneg <;> first | assumption | exact one_sub_nonneg_of_le_one (by assumption)",
+    # `0 ≤ a - b` chained through assumption
+    "apply mul_nonneg <;> first | assumption | exact sub_nonneg_of_le (by assumption)",
+    # ── div_nonneg (the dominant Bucket-B shape — added after
+    # diagnosing 45/80 open theorems with division in the body) ──
+    "apply div_nonneg_of_nonneg_pos <;> assumption",
+    "apply div_nonneg_of_nonneg_pos <;> first | assumption | apply mul_nonneg <;> assumption",
+    "apply div_nonneg_of_nonneg_pos <;> first | apply mul_nonneg <;> assumption | assumption",
+    # ── add of two products (mul_add_combo): a*b + c*d ──
+    "apply add_nonneg <;> apply mul_nonneg <;> assumption",
+    "apply add_nonneg <;> first | (apply mul_nonneg <;> assumption) | exact exp_nonneg _",
+    # ── div + power ──
+    "exact le_of_lt (realPow_pos (by assumption))",
+)
+
+
 # ── Tier-0 sample selection (10 theorems for the dry run) ────────
 
 #: Hand-picked diverse sample. Format: (file_basename, theorem_name).

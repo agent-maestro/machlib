@@ -36,7 +36,7 @@ theorem softmax_value_in_unit_interval (numer : Real) (denom_sum : Real)
     (h3 : (numer <= denom_sum)) :
     ((softmax_normalize numer denom_sum) >= (0 : Real)) := by
   unfold softmax_normalize
-  sorry  -- TODO: prove against MachLib foundations
+  apply div_nonneg_of_nonneg_pos <;> assumption
 
 -- ── softmax_two_logit ──
 
