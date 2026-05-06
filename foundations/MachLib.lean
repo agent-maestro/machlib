@@ -7,6 +7,7 @@ import MachLib.SelfMapConjugacy
 import MachLib.Hyperbolic
 import MachLib.HyperbolicPreservation
 import MachLib.Forge
+import MachLib.ForgeTest
 
 /-!
 # MachLib — top-level aggregator

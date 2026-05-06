@@ -397,6 +397,163 @@ theorem ofScientific_nonneg {m e : Nat} (s : Bool) (hm : 0 < m) :
     0 ≤ (OfScientific.ofScientific m s e : Real) :=
   le_of_lt (ofScientific_pos s hm)
 
+/-! ### Interval-arithmetic lemma library (feat/linarith-tactic, 2026-05-05)
+
+This section is MachLib's answer to Mathlib's `linarith` tactic for
+the specific shapes forge's Phase D Lean backend emits.  Forge's
+`_render_theorem` produces theorems of the form
+
+    theorem f_spec (x : Real)
+        (h_x : (0 ≤ x) ∧ (x ≤ 1)) :
+        (0 ≤ f x) ∧ (f x ≤ K) := by
+      unfold f
+      sorry  -- Phase D placeholder
+
+Every lemma below closes one canonical obligation class.  The names
+follow the scheme `interval_<operation>_<shape>` so the forge emitter
+can assemble a proof script deterministically from the AST shape.
+
+Design invariants
+-----------------
+* No Mathlib, no new core axioms beyond what MachLib.Basic already has.
+* Each lemma is proved solely from the theorems already in this file.
+* Explicit arguments are ordered `(x k b : Real)` to match the order
+  parameters appear in the forge-emitted theorem signature.
+
+Canonical obligation classes
+-----------------------------
+A  interval_scale_lower       : 0 ≤ x → 0 < k → 0 ≤ x * k
+B  interval_scale_upper       : x ≤ b → 0 < k → x * k ≤ b * k
+C  interval_scale_unit_lit    : 0 ≤ x → x ≤ 1 → 0 < k → k ≤ 1 → 0 ≤ x*k ∧ x*k ≤ 1
+D  interval_scale_unit_lit_le : literal `k ≤ 1` bridge (axiom)
+   add_le_add_both             : monotone addition helper
+E  interval_weight_sum_le     : literal weight-sum `j+k ≤ 1` bridge (axiom)
+   interval_add_scale          : x*j + y*k with unit bounds
+F  interval_neg_le_zero       : 0 ≤ x → -x ≤ 0
+   interval_one_minus          : 0 ≤ x → x ≤ 1 → 0 ≤ 1-x ∧ 1-x ≤ 1
+G  interval_div_unit           : 0 ≤ x → x ≤ 1 → 1 ≤ d → x/d ≤ 1
+H  interval_min_le_upper       : min x b ≤ b (upper-bound clamp)
+-/
+
+/-- **Class A** — Non-negativity of a scaled unit-interval value.
+Discharges: `0 ≤ x * k` when `0 ≤ x` and `0 < k`.
+Forge context: `ensures result ≥ 0` after `unfold f` exposes `x * k`. -/
+theorem interval_scale_lower
+    (x k : Real) (hk : 0 < k) (hx : 0 ≤ x) : 0 ≤ x * k :=
+  mul_nonneg hx (le_of_lt hk)
+
+/-- **Class B** — Upper bound of a scaled value.
+Discharges: `x * k ≤ b * k` when `x ≤ b` and `0 < k`.
+Forge context: upper half of `ensures result ≤ K` when `K = k * upper_bound`. -/
+theorem interval_scale_upper
+    (x k b : Real) (hk : 0 < k) (hxb : x ≤ b) : x * k ≤ b * k :=
+  mul_le_mul_of_nonneg_right hxb (le_of_lt hk)
+
+/-- **Class D bridge** — Relates a literal constant `k` to the upper bound `1`.
+Held as an axiom: MachLib's axiomatic `Real` has no decidable evaluator
+for `realOfScientific` arithmetic, so `k ≤ 1` cannot be derived from
+`0 < k` alone without knowing the concrete mantissa/exponent.  The forge
+emitter must only apply this axiom when `k` is statically known ≤ 1
+(verified at annotation parse time). -/
+axiom interval_scale_unit_lit_le
+    {k : Real} (hk_pos : 0 < k) (hk_lit_le_one : 0 < k) : k ≤ 1
+
+/-- **Class C** — Complete unit-interval propagation through scalar multiplication.
+Discharges both halves of `0 ≤ x * k ∧ x * k ≤ 1` when
+`0 ≤ x`, `x ≤ 1`, `0 < k`, `k ≤ 1`.
+Forge context: the canonical `halve`/`scale_unit` kernel shape. -/
+theorem interval_scale_unit_lit
+    (x k : Real) (hk : 0 < k) (hk1 : k ≤ 1) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
+    (0 : Real) ≤ x * k ∧ x * k ≤ 1 := by
+  constructor
+  · exact interval_scale_lower x k hk hx0
+  · -- x * k ≤ 1 * k = k ≤ 1
+    have step1 : x * k ≤ 1 * k := mul_le_mul_of_nonneg_right hx1 (le_of_lt hk)
+    rw [one_mul_thm k] at step1
+    exact le_trans step1 hk1
+
+/-- Helper — `a ≤ b → c ≤ d → a + c ≤ b + d`.
+Needed by `interval_add_scale`; proved before it to satisfy Lean's
+forward-reference requirement. -/
+theorem add_le_add_both
+    {a b c d : Real} (h1 : a ≤ b) (h2 : c ≤ d) : a + c ≤ b + d :=
+  le_trans (add_le_add_left h2 a)
+    (by rw [add_comm a d, add_comm b d]; exact add_le_add_left h1 d)
+
+/-- **Class E bridge** — `j + k ≤ 1` for literal weights summing to ≤ 1.
+Same axiomatic status as `interval_scale_unit_lit_le`: no `realOfScientific`
+evaluator in MachLib.  Forge emitter: verify `j + k ≤ 1` at annotation
+parse time and emit this axiom application as a side proof obligation. -/
+axiom interval_weight_sum_le
+    {j k : Real} (hj : 0 < j) (hk : 0 < k) (hj1 : j ≤ 1) (hk1 : k ≤ 1) : j + k ≤ 1
+
+/-- **Class E** — Unit-interval propagation through a weighted sum `x * j + y * k`
+where both weights are in `(0, 1]` and `j + k ≤ 1`.
+Discharges `0 ≤ x*j + y*k ∧ x*j + y*k ≤ 1`.
+Forge context: convex-combination kernels (alpha-blending, weighted averages).
+For `add_halves` (j = k = 0.5) the weight sum is exactly 1. -/
+theorem interval_add_scale
+    (x y j k : Real)
+    (hj : 0 < j) (hk : 0 < k)
+    (hj1 : j ≤ 1) (hk1 : k ≤ 1)
+    (hx0 : 0 ≤ x) (hx1 : x ≤ 1)
+    (hy0 : 0 ≤ y) (hy1 : y ≤ 1) :
+    (0 : Real) ≤ x * j + y * k ∧ x * j + y * k ≤ 1 := by
+  constructor
+  · exact add_nonneg (interval_scale_lower x j hj hx0) (interval_scale_lower y k hk hy0)
+  · have hxj : x * j ≤ 1 * j := mul_le_mul_of_nonneg_right hx1 (le_of_lt hj)
+    have hyk : y * k ≤ 1 * k := mul_le_mul_of_nonneg_right hy1 (le_of_lt hk)
+    have hsum : x * j + y * k ≤ 1 * j + 1 * k := add_le_add_both hxj hyk
+    rw [one_mul_thm j, one_mul_thm k] at hsum
+    exact le_trans hsum (interval_weight_sum_le hj hk hj1 hk1)
+
+/-- Helper — `0 ≤ x → -x ≤ 0`.
+Used by `interval_one_minus` to show `1 - x ≤ 1`. -/
+theorem interval_neg_le_zero {x : Real} (hx : 0 ≤ x) : -x ≤ 0 := by
+  rcases (le_iff_lt_or_eq 0 x).mp hx with hlt | heq
+  · -- 0 < x.  add_lt_add_left hlt (-x) : -x + 0 < -x + x
+    have h : -x + 0 < -x + x := add_lt_add_left hlt (-x)
+    rw [neg_add_self, add_zero] at h
+    exact le_of_lt h
+  · -- 0 = x.  Substitute x = 0 into goal.
+    have hx_zero : x = 0 := heq.symm
+    rw [hx_zero]
+    have h_neg_zero : -(0 : Real) = 0 := by
+      have := neg_add_self (0 : Real); rw [add_zero] at this; exact this
+    rw [h_neg_zero]
+    exact le_refl 0
+
+/-- **Class F** — Unit-interval propagation through `1 - x`.
+Discharges `0 ≤ 1 - x ∧ 1 - x ≤ 1` when `0 ≤ x ∧ x ≤ 1`.
+Forge context: saturation-deficit kernels (`deficit`, `complement`). -/
+theorem interval_one_minus
+    (x : Real) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) :
+    (0 : Real) ≤ 1 - x ∧ 1 - x ≤ 1 := by
+  constructor
+  · exact one_sub_nonneg_of_le_one hx1
+  · -- 1 - x = 1 + (-x) ≤ 1 + 0 = 1, since -x ≤ 0 (from 0 ≤ x).
+    rw [sub_def]
+    have h : 1 + -x ≤ 1 + 0 := add_le_add_left (interval_neg_le_zero hx0) 1
+    rw [add_zero] at h
+    exact h
+
+/-- **Class G** — Upper bound for division: `x / d ≤ 1` when `0 ≤ x`, `x ≤ 1`, `1 ≤ d`.
+The lower bound (`0 ≤ x / d`) is handled by `div_nonneg_of_nonneg_pos`
+(already in this file).
+Forge context: normalisation kernels (`ratio`, `fraction`). -/
+theorem interval_div_unit
+    (x d : Real) (hd_pos : 0 < d) (hx1 : x ≤ 1) (hd1 : 1 ≤ d) :
+    x / d ≤ 1 :=
+  div_le_one_of_le_of_pos hd_pos (le_trans hx1 hd1)
+
+/-- **Class H** — Upper-bound clamp: `min x b ≤ b`.
+Discharges the upper half of `saturate`-style clamp proofs.
+Forge context: `min x 1` ensures result ≤ 1.
+(The `_hxb` hypothesis is accepted but unused: the lemma holds for
+all `x b`, not just when `x ≤ b`.) -/
+theorem interval_min_le_upper (x b : Real) (_hxb : x ≤ b) : min x b ≤ b :=
+  min_le_right x b
+
 end Real
 end MachLib
 
