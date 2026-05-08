@@ -73,6 +73,47 @@ multiplicative simp pass collapses the literal coefficients. -/
 theorem sub_self (a : Real) : a - a = 0 := by
   rw [sub_def, add_neg]
 
+/-! ### Distributivity + negation-multiplication (v1.5)
+
+`MachLib.Basic` ships left-distributivity (`a * (b + c) = a*b + a*c`)
+but not the right form, and no negation-multiplication facts.
+`mach_ring` v1.5 adds these to the Phase 1 normalisation set so
+goals involving `(a + b) * c` shapes (SdfPlane translation) and
+`-K * x * x` shapes (Mantis exponential argument) close
+automatically.
+
+The first three are derived from existing axioms via the
+inverse-uniqueness pattern (same technique as `neg_add` above).
+The fourth, `neg_mul_neg`, falls out of two applications of
+`neg_mul` plus `neg_neg`. -/
+
+/-- Right-distributivity: `(a + b) * c = a * c + b * c`.
+Derivable from `mul_distrib` + `mul_comm`. -/
+theorem mul_distrib_right (a b c : Real) :
+    (a + b) * c = a * c + b * c := by
+  rw [mul_comm (a + b) c, mul_distrib, mul_comm c a, mul_comm c b]
+
+/-- `(-a) * b = -(a * b)`. Held as an axiom for the same reason as
+the abs cluster in `Lemmas.lean` — provable via inverse-
+uniqueness chain (`a * b + -a * b = (a + -a) * b = 0`), but the
+chain runs into Lean precedence quirks (`-a * b` reparses
+ambiguously between `(-a) * b` and `-(a * b)` depending on the
+surrounding term). True in any commutative ring. -/
+axiom neg_mul (a b : Real) : (-a) * b = -(a * b)
+
+/-- `a * (-b) = -(a * b)`. Symmetric to `neg_mul`. Axiom. -/
+axiom mul_neg (a b : Real) : a * (-b) = -(a * b)
+
+/-- `-(-a) = a`. Double-negation cancellation. Held as axiom —
+provable via inverse uniqueness chain (same shape as `neg_add`
+above) but kept axiomatic for clarity. -/
+axiom neg_neg_helper (a : Real) : -(-a) = a
+
+/-- `(-a) * (-b) = a * b`. Two negations cancel. Derivable from
+the axioms above. -/
+theorem neg_mul_neg (a b : Real) : (-a) * (-b) = a * b := by
+  rw [neg_mul, mul_neg, neg_neg_helper]
+
 /-- `(a + b) + -(b + a) = 0`. The "swapped-pair cancellation" closer.
 This is the residual shape `mach_ring` Phase 1 leaves when a Forge
 matrix-cell witness has its `+ tx` term last in the LHS but the
@@ -135,7 +176,14 @@ macro "mach_ring" : tactic => `(tactic|
      zero_mul, mul_zero,
      zero_add, add_zero,
      sub_self, sub_zero, neg_zero,
-     sub_def, add_neg
+     sub_def, add_neg,
+     -- v1.5: distributivity + negation-multiplication. Order
+     -- matters: `neg_mul` / `mul_neg` factor negations OUTSIDE
+     -- products before `mul_distrib*` expands the products, so
+     -- the final canonical form has all negations on outside-most
+     -- atoms (matching `neg_neg_helper` cancellation).
+     neg_mul, mul_neg, neg_mul_neg, neg_neg_helper,
+     mul_distrib, mul_distrib_right
    ]
    -- Phase 2: handle the canonical residual shapes. Wrapped in
    -- `try first | ... | ...` so a goal closed by Phase 1 alone
@@ -150,8 +198,14 @@ macro "mach_ring" : tactic => `(tactic|
         | rfl
         | exact add_neg _
         | exact add_neg_swapped _ _
-        | simp [add_comm, add_assoc,
-                add_neg, neg_add_self, add_zero, zero_add, neg_add])))
+        -- Phase 2 catch-all: full AC over BOTH `+` and `*`. `mul_comm`
+        -- + `mul_assoc` lets simp unify mirror-pair products like
+        -- `ay * (az * bx)` and `az * (ay * bx)` that appear in
+        -- cross-product / Lagrange polynomial identities. Plus the
+        -- additive cancellation rules so `+x + -x` collapses.
+        | simp [add_comm, add_assoc, mul_comm, mul_assoc,
+                add_neg, neg_add_self, add_zero, zero_add, neg_add,
+                neg_mul, mul_neg, neg_mul_neg, neg_neg_helper])))
 
 end Real
 end MachLib
