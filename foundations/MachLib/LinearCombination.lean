@@ -64,16 +64,18 @@ syntax (name := machLinearCombination)
 
 macro_rules
   | `(tactic| mach_linear_combination $h:term) => `(tactic|
-      (-- Step 1: expand `let` bindings AND collapse zero/identity
-       -- terms (`0 * x`, `x + 0`, `1 * x`, etc.) so the rewrite
-       -- can see the polynomial pattern in `h`. Forge-emitted
-       -- quaternion-norm witnesses inject `0 * 0` terms between
-       -- the cos² and sin² that would otherwise block the
-       -- pattern match.
+      (-- Step 1: expand `let` bindings AND normalise the goal
+       -- with the same lemma set `mach_ring` uses (zero / one
+       -- collapse + distributivity + negation-multiplication).
+       -- This puts the goal in a polynomial canonical form so the
+       -- forward rewrite of `h` can see its pattern even when
+       -- the engine's kernel uses `(a+b)*c` or `-K*x*x` shapes.
        try simp (config := { zeta := true }) only [
          one_mul_thm, mul_one_ax,
          zero_mul, mul_zero,
-         zero_add, add_zero
+         zero_add, add_zero,
+         neg_mul, mul_neg, neg_mul_neg, neg_neg_helper,
+         mul_distrib, mul_distrib_right
        ]
        -- Step 2: rewrite the goal using the hypothesis.
        rw [$h:term]
