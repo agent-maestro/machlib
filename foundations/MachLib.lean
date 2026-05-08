@@ -8,6 +8,8 @@ import MachLib.Hyperbolic
 import MachLib.HyperbolicPreservation
 import MachLib.Forge
 import MachLib.ForgeTest
+import MachLib.Ring
+import MachLib.RingTest
 
 /-!
 # MachLib — top-level aggregator
@@ -32,6 +34,13 @@ The independent foundations for machine-native formal mathematics.
                                   combinators); shipped 2026-05-01
                                   to ground the @verify(lean)
                                   binding chain identified in C-127
+  * `MachLib.Ring`              — `mach_ring` tactic v1: closes
+                                  the "linear-in-zeros" polynomial
+                                  identities Forge emits for matrix
+                                  cells, vector components, and lerp
+                                  endpoints. Full polynomial
+                                  reflection (Lagrange, four-square)
+                                  is v2.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
