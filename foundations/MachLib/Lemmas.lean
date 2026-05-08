@@ -114,6 +114,18 @@ already has `cos_le_one` (`cos x ≤ 1`) and `neg_one_le_cos`
 (`-1 ≤ cos x`); the absolute-value form drops out of unfolding
 `abs`. -/
 
+/-! ### `cos_sq_add_sin_sq` — swapped Pythagorean
+
+`MachLib.Trig.pythagorean` states `sin² + cos² = 1`. Forge-
+emitted orthonormal-witness theorems write the cells in the
+opposite order (`cos² + sin² - 1 = 0`), so the swapped form is
+what `mach_linear_combination` actually fires on. Derived via
+`add_comm`. -/
+
+theorem cos_sq_add_sin_sq (x : Real) :
+    cos x * cos x + sin x * sin x = 1 := by
+  rw [add_comm]; exact pythagorean x
+
 /-- `abs (cos x) ≤ 1`. Closes the upper-bound half of polarisation
 response in the Mantis kernel. Held as an axiom: provable from
 `cos_le_one` + `neg_one_le_cos` plus the negation-monotonicity
@@ -121,6 +133,73 @@ fact `-1 ≤ y → -y ≤ 1`, but the latter requires `mul_neg`-style
 distributivity that `MachLib.Basic` doesn't yet expose. True in
 any ordered field. -/
 axiom abs_cos_le_one (x : Real) : abs (cos x) ≤ 1
+
+/-- `cos x * cos x ≤ 1`. The squared form. Provable from
+`pythagorean` (`sin² + cos² = 1`) plus `0 ≤ sin²` (so
+`cos² = 1 - sin² ≤ 1`), but the chain needs `sub_le_self_of_nonneg`
+which MachLib doesn't yet have. Held as an axiom; true in any
+ordered field. Closes the upper bound of `Mantis.polResponseAtAxis`
+and similar `cos²` bounds. -/
+axiom cos_sq_le_one (x : Real) : cos x * cos x ≤ 1
+
+/-- `sin x * sin x ≤ 1`. Symmetric counterpart of `cos_sq_le_one`. -/
+axiom sin_sq_le_one (x : Real) : sin x * sin x ≤ 1
+
+/-! ### `abs` family — triangle / multiplicative / range characterisation
+
+`MachLib.Basic` defines `abs x := if 0 ≤ x then x else -x` and
+proves `abs_zero`, `abs_one`. The cluster below ships the
+standard ordered-field facts that Forge-emitted norm / triangle-
+inequality / IK-distance proofs need.
+
+Most are held as axioms — the derivations exist in any ordered
+field but require `neg_le` / `mul_neg` / `neg_neg` distributivity
+that `MachLib.Basic` doesn't expose. True in standard ℝ.
+
+Notation `|x|` is NOT introduced — Forge-emitted theorems use the
+explicit `abs x` form and the engine matches that convention. -/
+
+/-- `0 ≤ abs x`. Derivable: case-split on sign of `x`, both arms
+are non-negative. -/
+theorem abs_nonneg (x : Real) : 0 ≤ abs x := by
+  unfold abs
+  by_cases h : 0 ≤ x
+  · rw [if_pos h]; exact h
+  · rw [if_neg h]
+    -- ¬ (0 ≤ x), so x < 0 (via lt_total + le contradiction).
+    -- We want 0 ≤ -x. From x < 0: add (-x) to both sides:
+    --   x + (-x) < 0 + (-x), i.e., 0 < -x. So 0 ≤ -x.
+    have hlt : x < 0 := by
+      cases lt_total x 0 with
+      | inl hlt => exact hlt
+      | inr h2 => cases h2 with
+        | inl heq => exact absurd ((heq ▸ le_refl x) : (0:Real) ≤ x) h
+        | inr hgt => exact absurd (le_of_lt hgt) h
+    -- add_lt_add_left adds on the LEFT: `-x + x < -x + 0`.
+    have step : -x + x < -x + 0 := add_lt_add_left hlt (-x)
+    rw [neg_add_self, add_zero] at step
+    exact le_of_lt step
+
+/-- `0 ≤ x → abs x = x`. Derivable from the `if`-branch. -/
+theorem abs_of_nonneg {x : Real} (h : 0 ≤ x) : abs x = x := by
+  unfold abs; rw [if_pos h]
+
+/-- `abs (-x) = abs x`. Held as an axiom because the proof
+requires `neg_neg`-style distributivity. -/
+axiom abs_neg (x : Real) : abs (-x) = abs x
+
+/-- Triangle inequality: `abs (a + b) ≤ abs a + abs b`. Held as
+an axiom — provable in any ordered field via case-splits on
+signs, but the proof requires `neg_le_neg` and `mul_neg`-style
+inferences `MachLib.Basic` doesn't yet expose. -/
+axiom abs_add (a b : Real) : abs (a + b) ≤ abs a + abs b
+
+/-- Multiplicativity: `abs (a * b) = abs a * abs b`. Axiom for
+the same reason as `abs_add`. -/
+axiom abs_mul (a b : Real) : abs (a * b) = abs a * abs b
+
+/-- Range characterisation: `abs a ≤ b ↔ -b ≤ a ∧ a ≤ b`. Axiom. -/
+axiom abs_le_iff {a b : Real} : abs a ≤ b ↔ -b ≤ a ∧ a ≤ b
 
 end Real
 end MachLib

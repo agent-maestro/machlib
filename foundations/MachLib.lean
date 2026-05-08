@@ -13,6 +13,7 @@ import MachLib.RingTest
 import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas
+import MachLib.LinearCombination
 
 /-!
 # MachLib — top-level aggregator
