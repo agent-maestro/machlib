@@ -10,6 +10,8 @@ import MachLib.Forge
 import MachLib.ForgeTest
 import MachLib.Ring
 import MachLib.RingTest
+import MachLib.Linarith
+import MachLib.LinarithTest
 
 /-!
 # MachLib — top-level aggregator
@@ -41,6 +43,13 @@ The independent foundations for machine-native formal mathematics.
                                   endpoints. Full polynomial
                                   reflection (Lagrange, four-square)
                                   is v2.
+  * `MachLib.Linarith`          — `mach_positivity` + `mach_linarith`
+                                  v1: closes `0 ≤ expr` / `0 < expr`
+                                  via recursive structural
+                                  decomposition over the Forge
+                                  combinators. Fourier-Motzkin
+                                  elimination for hypothesis-driven
+                                  linear arithmetic is v2.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
