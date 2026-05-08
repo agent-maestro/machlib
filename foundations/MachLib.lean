@@ -12,6 +12,7 @@ import MachLib.Ring
 import MachLib.RingTest
 import MachLib.Linarith
 import MachLib.LinarithTest
+import MachLib.Lemmas
 
 /-!
 # MachLib — top-level aggregator
@@ -50,6 +51,11 @@ The independent foundations for machine-native formal mathematics.
                                   combinators. Fourier-Motzkin
                                   elimination for hypothesis-driven
                                   linear arithmetic is v2.
+  * `MachLib.Lemmas`            — specific named lemmas filling the
+                                  Forge-shape gaps in Basic / Trig
+                                  / Exp (`max_le`, `exp_le_one`,
+                                  `arccos_*`, `sqrt_pos`,
+                                  `abs_cos_le_one`).
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
