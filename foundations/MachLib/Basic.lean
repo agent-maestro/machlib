@@ -100,12 +100,29 @@ axiom realPow_pos  {x y : Real} : 0 < x → 0 < realPow x y
 
 axiom add_comm    (a b   : Real) : a + b = b + a
 axiom add_assoc   (a b c : Real) : (a + b) + c = a + (b + c)
+
+/-! ### AC typeclass instances (used by `ac_rfl`)
+
+`ac_rfl` is Lean 4's AC-aware reflexivity tactic; it closes any
+goal of the form `e₁ = e₂` where `e₁` and `e₂` are equal up to
+associativity and commutativity of a binary operator. The tactic
+hunts for `Std.Commutative` and `Std.Associative` instances on
+the operator in the goal, so we register them directly on
+`(· + ·)` and `(· * ·)` over `Real` here. Costs ~10 lines and
+trivially closes the AC residue that blocks `mach_ring` v1.5 on
+cross-product / SDF-translation goals. -/
+
+instance instAddComm  : Std.Commutative (α := Real) (· + ·) := ⟨add_comm⟩
+instance instAddAssoc : Std.Associative (α := Real) (· + ·) := ⟨add_assoc⟩
 axiom add_zero    (a     : Real) : a + 0 = a
 axiom add_neg     (a     : Real) : a + (-a) = 0
 axiom sub_def     (a b   : Real) : a - b = a + (-b)
 
 axiom mul_comm    (a b   : Real) : a * b = b * a
 axiom mul_assoc   (a b c : Real) : (a * b) * c = a * (b * c)
+
+instance instMulComm  : Std.Commutative (α := Real) (· * ·) := ⟨mul_comm⟩
+instance instMulAssoc : Std.Associative (α := Real) (· * ·) := ⟨mul_assoc⟩
 axiom mul_one_ax  (a     : Real) : a * 1 = a
 axiom mul_distrib (a b c : Real) : a * (b + c) = a * b + a * c
 
