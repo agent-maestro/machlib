@@ -14,6 +14,7 @@ import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas
 import MachLib.LinearCombination
+import MachLib.Safety.TemporalFrequency
 
 /-!
 # MachLib — top-level aggregator
@@ -57,6 +58,16 @@ The independent foundations for machine-native formal mathematics.
                                   / Exp (`max_le`, `exp_le_one`,
                                   `arccos_*`, `sqrt_pos`,
                                   `abs_cos_le_one`).
+  * `MachLib.Safety.TemporalFrequency` — formal contract for the
+                                  Phase 1 safety-verification
+                                  protocol's `temporal_frequency`
+                                  class. Provides
+                                  `ForgeAnalyzerWitness` +
+                                  `of_analyzer_witness` +
+                                  `mul_bound_additive` +
+                                  `add_bound_max`. Lands 2026-05-11
+                                  as step 4 of 5 to close Moat 1's
+                                  Phase 1 gating criterion.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
