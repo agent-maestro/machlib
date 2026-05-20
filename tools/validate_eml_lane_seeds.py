@@ -126,6 +126,7 @@ def seed_paths(root: Path) -> list[Path]:
         "roundtrip_probe_result_2026_05_20.json",
         "structure_spec_draft_2026_05_20.json",
         "evidence_schema_spec_draft_2026_05_20.json",
+        "legacy_boundary_spec_draft_2026_05_20.json",
     }
     return sorted(
         path for path in root.rglob("*.json") if path.is_file() and path.name not in excluded

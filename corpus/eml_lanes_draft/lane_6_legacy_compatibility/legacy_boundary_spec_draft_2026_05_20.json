@@ -1,0 +1,252 @@
+{
+  "date": "2026-05-20",
+  "legacy_boundary_specs": [
+    {
+      "boundary_id": "mach_legacy_mathlib_header_opt_in_boundary_v0",
+      "boundary_type": "legacy_header",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach legacy header opt-in boundary",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "adapter documentation",
+        "audit trace integration"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "explicit flag required",
+        "default output remains zero dependency"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "boundary_id": "mach_legacy_adapter_never_default_v0",
+      "boundary_type": "adapter_boundary",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach legacy adapter never-default boundary",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "review status schema",
+        "migration mapping format"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "adapter default_enabled is false",
+        "review gate required"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "boundary_id": "mach_legacy_never_release_dependency_v0",
+      "boundary_type": "release_boundary",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach legacy never-release-dependency boundary",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "release gate link",
+        "dependency audit row"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "release_dependency_allowed is false",
+        "current_release_dependency is false"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "boundary_id": "mach_legacy_to_machlib_migration_stub_v0",
+      "boundary_type": "migration_stub",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach legacy-to-MachLib migration stub",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "primitive backlog linkage",
+        "manual review trail"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "target is MachLib-owned primitive or record",
+        "no automatic acceptance"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "boundary_id": "mach_default_zero_mathlib_guard_v0",
+      "boundary_type": "default_guard",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach default zero-dependency guard",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "default-output regression test"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "default render contains no dependency import",
+        "zero-dependency checker passes"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "boundary_id": "mach_legacy_audit_trace_record_v0",
+      "boundary_type": "audit_trace",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "forbidden_claims": [
+        "default legacy compatibility behavior",
+        "release dependency on external formal-library headers",
+        "public theorem/proof/open-problem result",
+        "automatic acceptance of legacy artifacts"
+      ],
+      "forbidden_statuses": [
+        "DEFAULT_ENABLED",
+        "RELEASE_DEPENDENCY",
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach legacy audit trace record",
+      "opt_in_only": true,
+      "public_ready": false,
+      "release_dependency_allowed": false,
+      "required_future_design": [
+        "audit row schema",
+        "review checklist"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "legacy usage requires local trace",
+        "trace remains draft/internal"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "local_only": true,
+  "tier": "OBSERVATION"
+}

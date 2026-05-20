@@ -1,0 +1,276 @@
+{
+  "date": "2026-05-20",
+  "efrog_legacy_opt_in_detection": {
+    "cli_flag_detected": true,
+    "default_zero_dependency": true,
+    "failures": [],
+    "import_ok": true,
+    "legacy_parameter_default_false": true,
+    "legacy_parameter_detected": true,
+    "status": "PASS",
+    "warnings": []
+  },
+  "execution_status": "PASS",
+  "failed": 0,
+  "guardrails": {
+    "legacy_never_default": true,
+    "legacy_never_release_dependency": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 6 - Legacy compatibility",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 3,
+  "results": [
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "default_not_enabled"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "release_dependency_disallowed"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "opt_in_boundary_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_result_claim"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "adapter_review_gate"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "adapter_default_enabled_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "adapter_release_dependency_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "draft_internal"
+        }
+      ],
+      "classification": "LEGACY_ADAPTER_BOUNDARY_RECORD",
+      "compatibility_kind": "legacy_adapter_boundary",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim",
+        "not a default release path",
+        "not a release dependency",
+        "not an upload authorization"
+      ],
+      "opt_in_only": true,
+      "record_id": "legacy_adapter_boundary_record_v0",
+      "release_dependency_allowed": false,
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "default_not_enabled"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "release_dependency_disallowed"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "opt_in_boundary_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_result_claim"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "legacy_mode_opt_in_only"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "default_behavior_zero_dependency"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "efrog_default_zero_dependency"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "efrog_legacy_opt_in_detected"
+        }
+      ],
+      "classification": "LEGACY_HEADER_OPT_IN_BOUNDARY",
+      "compatibility_kind": "legacy_header_opt_in",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "efrog_probe": {
+        "cli_flag_detected": true,
+        "default_zero_dependency": true,
+        "failures": [],
+        "import_ok": true,
+        "legacy_parameter_default_false": true,
+        "legacy_parameter_detected": true,
+        "status": "PASS",
+        "warnings": []
+      },
+      "failures": [],
+      "not_claimed": [
+        "not a default release path",
+        "not a public proof result",
+        "not an upload authorization"
+      ],
+      "opt_in_only": true,
+      "record_id": "legacy_mathlib_header_opt_in_note_v0",
+      "release_dependency_allowed": false,
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "default_not_enabled"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "release_dependency_disallowed"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "opt_in_boundary_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_result_claim"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "machlib_owned_target"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "does_not_import_source_dependency"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "does_not_auto_accept_legacy_artifacts"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "requires_review_or_validation"
+        }
+      ],
+      "classification": "LEGACY_TO_MACHLIB_MIGRATION_STUB",
+      "compatibility_kind": "legacy_to_machlib_migration_stub",
+      "current_release_dependency": false,
+      "default_enabled": false,
+      "failures": [],
+      "migration_target": "MachLib-owned primitive backlog or record",
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim",
+        "not a default release path",
+        "not a release dependency",
+        "not an upload authorization"
+      ],
+      "opt_in_only": true,
+      "record_id": "legacy_to_machlib_migration_stub_v0",
+      "release_dependency_allowed": false,
+      "status": "PASS",
+      "warnings": []
+    }
+  ],
+  "seed_count": 3,
+  "tier": "OBSERVATION",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
