@@ -1,0 +1,333 @@
+{
+  "date": "2026-05-20",
+  "function_class": "D_FINITE_CERTIFICATE",
+  "local_only": true,
+  "ode_certificate_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "linear_ode_polynomial_coefficients",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "symbolic certificate record only",
+        "no public proof status"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach D-finite linear ODE certificate",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "ode",
+        "polynomial_coefficients",
+        "derivative_order",
+        "domain_or_singularity_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_dfinite_linear_ode_certificate_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "payload present",
+        "linear derivative terms bounded locally",
+        "publication booleans false"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "coefficient_vector",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "no polynomial algebra library claim"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach polynomial coefficient vector",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "polynomial_coefficients",
+        "coefficient_ordering"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_polynomial_coefficient_vector_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "coefficients are present",
+        "coefficients are stored as symbolic strings"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "derivative_order",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "symbolic order support remains draft"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach derivative order record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "order",
+        "highest_derivative_label"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_derivative_order_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "order is present",
+        "order is bounded for local execution"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "symbolic_solution_label",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "only local labels are checked"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach symbolic solution label",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "seed_function_label",
+        "local_fixture"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_symbolic_solution_label_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "fixture is known locally",
+        "fixture is not a global proof"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "domain_guard",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "no analytic continuation claim"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach domain and singularity guard",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "local_domain_or_guard",
+        "singularity_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_domain_singularity_guard_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "guard text present",
+        "leading coefficient risk noted where needed"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "stub_boundary",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "not accepted as public proof"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach stub certificate boundary",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "stub_marker",
+        "limitations",
+        "not_claimed"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_stub_certificate_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "stub recognized",
+        "stub is not executed as solution evidence"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SYMBOLIC_CHECK",
+        "PASS_STUB_RECOGNIZED",
+        "NEEDS_REVIEW"
+      ],
+      "certificate_kind": "validation_trace",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "trace is internal observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach ODE certificate validation trace",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "checks",
+        "status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a complete holonomic formalization",
+        "not a full real-analysis formalization"
+      ],
+      "spec_id": "mach_ode_certificate_validation_trace_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "records local bounded checks",
+        "records warnings without promotion"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "spec_count": 7,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

@@ -1,0 +1,113 @@
+{
+  "date": "2026-05-20",
+  "efrog_probe": {
+    "code": "EFROG_IMPORT_OK_DEFAULT_ZERO_DEPENDENCY",
+    "default_output_zero_mathlib": true,
+    "status": "PASS"
+  },
+  "efrog_status": "PASS",
+  "failed": 0,
+  "forge_efrog_evidence_script": {
+    "code": "OPTIONAL_SCRIPT_RAN",
+    "out": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/forge_efrog_evidence",
+    "returncode": 0,
+    "status": "PASS"
+  },
+  "forge_probe": {
+    "code": "FORGE_WARN",
+    "results": [
+      {
+        "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_bessel_style_certificate_stub_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_cos_ode_certificate_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_exp_ode_certificate_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_polynomial_certificate_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_sin_ode_certificate_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      }
+    ],
+    "status": "WARN"
+  },
+  "forge_status": "WARN",
+  "function_class": "D_FINITE_CERTIFICATE",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "local_only": true,
+  "passed": 0,
+  "record_count": 5,
+  "results": [
+    {
+      "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_bessel_style_certificate_stub_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_bessel_style_certificate_stub_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_cos_ode_certificate_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_cos_ode_certificate_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_exp_ode_certificate_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_exp_ode_certificate_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_polynomial_certificate_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_polynomial_certificate_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_dfinite_ode_certificate_2026_05_20/eml/dfinite_sin_ode_certificate_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_sin_ode_certificate_v0",
+      "status": "WARN"
+    }
+  ],
+  "roundtrip_status": "WARN",
+  "tier": "OBSERVATION",
+  "tmp_root": "/tmp/machlib_dfinite_ode_certificate_2026_05_20",
+  "warned": 5,
+  "zero_mathlib_status": "PASS"
+}

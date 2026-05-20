@@ -1,0 +1,186 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "function_class": "D_FINITE_CERTIFICATE",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "local_only": true,
+  "passed": 5,
+  "record_count": 5,
+  "results": [
+    {
+      "certificate_type": "linear_ode_polynomial_coefficients_stub",
+      "classification": "DFINITE_STUB_CERTIFICATE_BOUNDARY",
+      "detail": {
+        "checks": {
+          "has_ode": true,
+          "has_polynomial_coefficients": true,
+          "has_singularity_guard": true,
+          "is_draft_internal": true,
+          "is_stub": true
+        },
+        "executed_solution_check": false,
+        "fixture": "bessel_style_stub",
+        "limitations": [
+          "recognized ODE-shape stub only",
+          "no Bessel formalization claim"
+        ],
+        "passed": true,
+        "status": "PASS_STUB_RECOGNIZED"
+      },
+      "failures": [],
+      "limitations": [
+        "no Bessel formalization claim",
+        "no analytic solution claim",
+        "no public proof claim"
+      ],
+      "not_claimed": [
+        "not Bessel theory",
+        "not full holonomic system",
+        "not external-library replacement"
+      ],
+      "passed": true,
+      "record_id": "dfinite_bessel_style_certificate_stub_v0",
+      "status": "PASS_STUB_RECOGNIZED",
+      "title": "Bessel-style symbolic ODE certificate stub",
+      "warning": null
+    },
+    {
+      "certificate_type": "linear_ode_polynomial_coefficients",
+      "classification": "D_FINITE_ODE_CERTIFICATE",
+      "detail": {
+        "derivative_table": {
+          "D(f)": "-sin",
+          "D2(f)": "-cos",
+          "f": "cos"
+        },
+        "fixture": "cos_symbolic",
+        "identity_checked": "D2(f) + f = 0",
+        "passed": true,
+        "residue": {}
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no global trigonometric formalization",
+        "no public proof claim"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not full real-analysis formalization",
+        "not external-library replacement"
+      ],
+      "passed": true,
+      "record_id": "dfinite_cos_ode_certificate_v0",
+      "status": "PASS_LOCAL_SYMBOLIC_CHECK",
+      "title": "Cosine symbolic D-finite ODE certificate",
+      "warning": null
+    },
+    {
+      "certificate_type": "linear_ode_polynomial_coefficients",
+      "classification": "D_FINITE_ODE_CERTIFICATE",
+      "detail": {
+        "derivative_table": {
+          "D(f)": "exp",
+          "f": "exp"
+        },
+        "fixture": "exp_symbolic",
+        "identity_checked": "D(f) - f = 0",
+        "passed": true,
+        "residue": {}
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no global analytic continuation claim",
+        "no public proof claim"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not full real-analysis formalization",
+        "not external-library replacement"
+      ],
+      "passed": true,
+      "record_id": "dfinite_exp_ode_certificate_v0",
+      "status": "PASS_LOCAL_SYMBOLIC_CHECK",
+      "title": "Exponential symbolic D-finite ODE certificate",
+      "warning": null
+    },
+    {
+      "certificate_type": "finite_derivative_zero_certificate",
+      "classification": "POLYNOMIAL_DERIVATIVE_ZERO_CERTIFICATE",
+      "detail": {
+        "derivative_table": {
+          "D(p)": "3*x^2 + 2",
+          "D2(p)": "6*x",
+          "D3(p)": "6",
+          "D4(p)": "0",
+          "p": "x^3 + 2*x + 1"
+        },
+        "fixture": "polynomial_symbolic_degree_3",
+        "identity_checked": "D4(p) = 0 for sample degree-3 polynomial",
+        "limitations": [
+          "sample polynomial only",
+          "no all-polynomial theory claim"
+        ],
+        "passed": true
+      },
+      "failures": [],
+      "limitations": [
+        "symbolic degree only",
+        "no polynomial theorem claim"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not a release-ready polynomial library"
+      ],
+      "passed": true,
+      "record_id": "dfinite_polynomial_certificate_v0",
+      "status": "PASS_LOCAL_SYMBOLIC_CHECK",
+      "title": "Polynomial symbolic D-finite derivative-zero certificate",
+      "warning": null
+    },
+    {
+      "certificate_type": "linear_ode_polynomial_coefficients",
+      "classification": "D_FINITE_ODE_CERTIFICATE",
+      "detail": {
+        "derivative_table": {
+          "D(f)": "cos",
+          "D2(f)": "-sin",
+          "f": "sin"
+        },
+        "fixture": "sin_symbolic",
+        "identity_checked": "D2(f) + f = 0",
+        "passed": true,
+        "residue": {}
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no global trigonometric formalization",
+        "no public proof claim"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not full real-analysis formalization",
+        "not external-library replacement"
+      ],
+      "passed": true,
+      "record_id": "dfinite_sin_ode_certificate_v0",
+      "status": "PASS_LOCAL_SYMBOLIC_CHECK",
+      "title": "Sine symbolic D-finite ODE certificate",
+      "warning": null
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
