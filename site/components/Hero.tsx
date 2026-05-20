@@ -26,13 +26,13 @@ export default function Hero() {
             marginBottom: 18,
           }}
         >
-          import MachLib.EML — &lt;5 min core build — 2,786 records
+          import MachLib.EML — release snapshot pending — counts by manifest
         </p>
         <p className="subtitle">
-          A machine-native formal mathematics library.
+          A machine-native formal-library corpus workbench.
           <br />
-          Fed by Forge. Trained on by agents. Verified by the Lean kernel.
-          Zero Mathlib dependency.
+          EML-native, Forge-linked, and Lean-checkable where verified artifacts
+          are present. The zero-Mathlib release gate is in progress.
         </p>
         <div className="hero-buttons">
           <a
@@ -41,7 +41,7 @@ export default function Hero() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            Browse the Dataset →
+            Dataset Status →
           </a>
           <a className="button" href="#philosophy">
             Read the Philosophy

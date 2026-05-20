@@ -2,37 +2,31 @@
 
 [![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
 
-A self-contained formal mathematics library built for machine
-consumption. Independent foundations. Multi-proof corpus. Verified
-by the Lean 4 kernel.
+A machine-native formal library built for machine consumption.
+Records may include verification metadata and Lean-check status;
+verification status is recorded per release snapshot.
 
 ## Install
 
-```bash
-pip install machlib
-```
+Package installation status is release-specific. Until a reviewed package
+release is published, use the repository and release manifests as the source of
+truth.
 
 ## Try it
 
-```python
-from machlib import load
-
-ds = load("machlib-eml-1k")
-print(ds[0]["theorem"]["statement"]["informal"])
-# eml(x, 1) equals exp(x) for all real x
-
-print(len(ds[0]["proofs"]))  # 2 — multiple ranked proofs per theorem
-```
+Dataset access is pending/private-gated until a reviewed public release is
+approved. Counts, verification status, and zero-Mathlib gate status are
+published per release snapshot.
 
 ## What's here
 
 | | |
 |---|---|
-| `foundations/` | Independent Lean 4 foundations — ~3,400 lines, zero Mathlib |
-| `corpus/` | 1K+ verified theorem-proof records with full metadata |
+| `foundations/` | Lean 4 foundations; zero-Mathlib target in progress |
+| `corpus/` | Machine-readable records with metadata, proof traces, and per-record status |
 | `gym/` | Gymnasium-compatible training environment, 54-tactic vocabulary |
 | `tools/` | Generator, verifier, ranker, exporter, CLI |
-| `api/` | REST API for theorems, proofs, tactics, search |
+| `api/` | Optional local interface surfaces, subject to separate review |
 | `docs/` | Audience-organised guides + reference |
 
 ## Why MachLib (not Mathlib)
@@ -45,8 +39,10 @@ See [PHILOSOPHY.md](PHILOSOPHY.md) for the full case.
 
 ## Status
 
-Seed phase. 256 records, foundations built on Mathlib (transitional).
-Phase 1 (independence) and Phase 2 (1K records) in progress.
+Seed/transitional phase. Counts are published per release snapshot. The
+zero-Mathlib release gate is in progress and must pass before public
+zero-dependency claims are made. Current blockers include transitional
+`foundations/legacy_eml/` files that still import Mathlib.
 
 ## License
 

@@ -41,10 +41,10 @@ export default function Ecosystem() {
         <div className="eyebrow">// the monogate ecosystem</div>
         <h2>Part of a larger stack.</h2>
         <p className="section-lede">
-          MachLib is the foundations layer. The Forge compiles to it, CapCard
-          certifies on top of it, PETAL verifies through it, 1op visualises
-          what runs on it. Each piece is independently useful — together they
-          form a verified, agent-native math toolchain.
+          MachLib is an EML-native, Forge-linked formal-library surface.
+          CapCard and PETAL integrations are gated and subject to separate
+          review. No PETAL upload or CapCard marketplace/public profile action
+          is implied by this site.
         </p>
 
         <div className="ecosystem">

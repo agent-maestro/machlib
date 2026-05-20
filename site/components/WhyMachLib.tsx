@@ -9,10 +9,10 @@ const MATHLIB: string[] = [
 ];
 
 const MACHLIB: string[] = [
-  "Cold core build in under 5 minutes",
-  "~500 lines of foundations, axiomatic ℝ",
+  "Build timing recorded per release snapshot",
+  "Compact foundations with a zero-Mathlib release target in progress",
   "Chain-order annotations on every record",
-  "6 difficulty lanes (foundations → open problems)",
+  "6 difficulty lanes (foundations → advanced challenge lane)",
   "Tactic trace + success rate per tactic",
   "Common-mistake corpus per theorem",
   "Built for machines and the agents that train on them",

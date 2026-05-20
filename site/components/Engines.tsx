@@ -5,7 +5,8 @@ const ENGINES: { num: string; title: string; body: string }[] = [
     body:
       "Five strategies — constant_swap, domain_change, operator_swap, " +
       "composition_depth, negation — fan a single base theorem into a family " +
-      "of structurally related variants. 414 of today's 449 records came from this engine.",
+      "of structurally related variants. Release snapshots record which " +
+      "candidate records came from this engine.",
   },
   {
     num: "02",
@@ -56,10 +57,10 @@ export default function Engines() {
         <div className="eyebrow">// how it grows</div>
         <h2>Six engines feed the corpus.</h2>
         <p className="section-lede">
-          MachLib is not a snapshot. It&apos;s a pipeline. New records arrive
+          MachLib is organized around release snapshots and pipeline metadata.
+          Candidate records can arrive
           from synthesis, compilation, RL training, search, contribution, and
-          cross-domain bridging — each engine sealing its outputs into the same
-          schema.
+          cross-domain bridging, with status recorded per snapshot.
         </p>
 
         <div className="engines">

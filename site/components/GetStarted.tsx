@@ -10,18 +10,20 @@ const PATHS: Path[] = [
   {
     audience: "ML researchers",
     body:
-      "Pull the corpus from Hugging Face. 2,786 records, schema v1.0.0, one " +
-      "JSON file per theorem. Drop it into your training loop.",
+      "Dataset access is pending/private-gated until a reviewed public " +
+      "release is approved. Counts and schema status are published per " +
+      "release snapshot.",
     cmd:
-      "from datasets import load_dataset\nds = load_dataset(\"Monogate/machlib\")",
+      "# No public Hugging Face release is performed by this site copy.\n# See the release manifest for dataset access status.",
     href: "https://huggingface.co/datasets/Monogate/machlib",
-    hrefLabel: "huggingface.co/datasets/Monogate/machlib →",
+    hrefLabel: "Dataset access status →",
   },
   {
     audience: "Agent builders",
     body:
-      "Use the Lean foundations as the verification target. Your agent " +
-      "writes a proof, lake build checks it in seconds, no Mathlib in the way.",
+      "Use the Lean foundations as a local check target where verified " +
+      "artifacts are present. The zero-Mathlib release gate must pass before " +
+      "zero-dependency claims are made.",
     cmd: "git clone https://github.com/agent-maestro/machlib\ncd machlib/foundations && lake build",
     href: "https://github.com/agent-maestro/machlib",
     hrefLabel: "github.com/agent-maestro/machlib →",
@@ -46,7 +48,8 @@ export default function GetStarted() {
         <h2>Three ways in.</h2>
         <p className="section-lede">
           Pick the one that matches what you do today. The corpus, the
-          foundations, and the contribution loop are all already live.
+          foundations, and the contribution loop are reviewed per release
+          snapshot.
         </p>
 
         <div className="paths">

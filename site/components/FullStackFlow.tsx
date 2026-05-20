@@ -16,20 +16,20 @@ const STEPS: Step[] = [
   },
   {
     num: "03",
-    text: "Lean output imports MachLib (not Mathlib)",
-    sub: "import MachLib.EML, MachLib.Trig — that's it.",
+    text: "Lean output targets MachLib surfaces",
+    sub: "Zero-Mathlib gate status is recorded with the release snapshot.",
     highlight: true,
   },
   {
     num: "04",
-    text: "MachLib core builds in under 5 minutes",
-    sub: "~1,000 lines of axiomatic core foundations. Cold build. Laptop. Every time.",
+    text: "MachLib build status is snapshot-specific",
+    sub: "Counts and timing should be read from the release manifest.",
     highlight: true,
   },
   {
     num: "05",
-    text: "Proof verified. Zero external dependencies.",
-    sub: "Lean kernel says yes. Nothing else needed.",
+    text: "Lean-check status recorded per artifact",
+    sub: "Verification metadata is scoped to the artifacts present in the release.",
   },
 ];
 
@@ -40,9 +40,10 @@ export default function FullStackFlow() {
         <div className="eyebrow">// how it works</div>
         <h2>The full chain — equation to proof.</h2>
         <p className="section-lede">
-          MachLib is the verification layer of a complete toolchain. It works
-          on its own, but it really shines when the whole stack is wired up.
-          Here&apos;s the path a single equation takes.
+          MachLib is a local formal-library surface in a larger toolchain. It
+          can work on its own, and stack integrations are reviewed separately.
+          The zero-Mathlib release gate remains in progress.
+          Here&apos;s the candidate path a single equation can take.
         </p>
 
         <div className="flow">
@@ -65,10 +66,10 @@ export default function FullStackFlow() {
         </div>
 
         <p className="flow-coda">
-          You own every line from <strong>equation</strong> to{" "}
-          <strong>silicon</strong> to <strong>proof</strong>.
+          Review every line from <strong>equation</strong> to{" "}
+          <strong>generated artifact</strong> to <strong>Lean-check status</strong>.
           <br />
-          No vendor. No external library. No 45-minute builds. No permission.
+          No upload, public release, or marketplace action is implied here.
         </p>
       </div>
     </section>
