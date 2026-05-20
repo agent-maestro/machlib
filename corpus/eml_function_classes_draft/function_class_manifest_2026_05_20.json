@@ -1,0 +1,39 @@
+{
+  "date": "2026-05-20",
+  "tier": "OBSERVATION",
+  "local_only": true,
+  "status": "DRAFT_INTERNAL",
+  "family": "MachLib EML function-class frontier",
+  "record_count": 20,
+  "category_minimums": {
+    "D_FINITE_CERTIFICATE": 5,
+    "ANALYTIC_LOCAL_SERIES": 4,
+    "SMOOTH_FINITE_JET": 4,
+    "CONTINUITY_EPSILON_DELTA": 4,
+    "CLASS_BOUNDARY_RELATION": 3
+  },
+  "record_files": [
+    "d_finite/records_2026_05_20.json",
+    "analytic/records_2026_05_20.json",
+    "smooth/records_2026_05_20.json",
+    "continuous/records_2026_05_20.json",
+    "boundary_relations/records_2026_05_20.json"
+  ],
+  "not_claimed": [
+    "no public theorem/proof/open-problem result",
+    "no full real-analysis formalization",
+    "no external-library replacement claim",
+    "no public-ready status",
+    "no upload-ready status",
+    "no release-ready status"
+  ],
+  "guardrails": {
+    "no_mathlib_dependency": true,
+    "no_hf_upload": true,
+    "no_petal_upload": true,
+    "no_package_publish": true,
+    "no_hardware": true,
+    "no_forge_compiler_change": true,
+    "no_public_theorem_claim": true
+  }
+}

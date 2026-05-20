@@ -1,0 +1,22 @@
+{
+  "category_counts": {
+    "ANALYTIC_LOCAL_SERIES": 4,
+    "BOUNDARY_OR_NON_EXAMPLE": 3,
+    "CLASS_BOUNDARY_RELATION": 3,
+    "CONTINUITY_EPSILON_DELTA": 4,
+    "D_FINITE_CERTIFICATE": 5,
+    "SMOOTH_FINITE_JET": 4
+  },
+  "date": "2026-05-20",
+  "failures": [],
+  "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+  "guardrail_status": "PASS",
+  "json_parse_status": "PASS",
+  "local_only": true,
+  "record_count": 20,
+  "required_false_boolean_status": "PASS",
+  "required_field_status": "PASS",
+  "tier": "OBSERVATION",
+  "warnings": [],
+  "zero_mathlib_status": "PASS"
+}
