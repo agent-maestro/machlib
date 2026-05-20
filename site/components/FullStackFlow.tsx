@@ -17,7 +17,7 @@ const STEPS: Step[] = [
   {
     num: "03",
     text: "Lean output targets MachLib surfaces",
-    sub: "Zero-Mathlib gate status is recorded with the release snapshot.",
+    sub: "Zero Mathlib dependency is checked by the local release gate.",
     highlight: true,
   },
   {
@@ -42,7 +42,6 @@ export default function FullStackFlow() {
         <p className="section-lede">
           MachLib is a local formal-library surface in a larger toolchain. It
           can work on its own, and stack integrations are reviewed separately.
-          The zero-Mathlib release gate remains in progress.
           Here&apos;s the candidate path a single equation can take.
         </p>
 

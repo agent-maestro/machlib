@@ -32,7 +32,7 @@ export default function Hero() {
           A machine-native formal-library corpus workbench.
           <br />
           EML-native, Forge-linked, and Lean-checkable where verified artifacts
-          are present. The zero-Mathlib release gate is in progress.
+          are present. Zero Mathlib dependency, gate-backed.
         </p>
         <div className="hero-buttons">
           <a

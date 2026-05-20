@@ -10,7 +10,7 @@ const MATHLIB: string[] = [
 
 const MACHLIB: string[] = [
   "Build timing recorded per release snapshot",
-  "Compact foundations with a zero-Mathlib release target in progress",
+  "Compact foundations with gate-backed zero Mathlib dependency",
   "Chain-order annotations on every record",
   "6 difficulty lanes (foundations → advanced challenge lane)",
   "Tactic trace + success rate per tactic",

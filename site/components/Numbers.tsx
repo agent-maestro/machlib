@@ -2,7 +2,7 @@ const MACHLIB = {
   records: "By release manifest",
   tests: "By release manifest",
   build_label: "Snapshot-specific",
-  mathlib_imports: "Gate in progress",
+  mathlib_imports: "Gate-backed zero",
 } as const;
 
 const TILES: { value: string; label: string }[] = [
@@ -19,9 +19,9 @@ export default function Numbers() {
         <div className="eyebrow">// the numbers</div>
         <h2>What MachLib is, in four numbers.</h2>
         <p className="section-lede">
-          Counts, build timing, and zero-Mathlib gate status are tied to
-          release snapshots. See the release manifest for current record and
-          test totals.
+          Counts and build timing are tied to release snapshots. The
+          zero-Mathlib dependency gate must pass for every release that claims
+          it.
         </p>
 
         <div className="numbers">

@@ -2,9 +2,10 @@
 
 [![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
 
-A machine-native formal library built for machine consumption.
-Records may include verification metadata and Lean-check status;
-verification status is recorded per release snapshot.
+A machine-native Lean/EML library with zero Mathlib dependency in the current
+public default tree and release target. Records may include verification
+metadata and Lean-check status; verification status is recorded per release
+snapshot.
 
 ## Install
 
@@ -15,14 +16,15 @@ truth.
 ## Try it
 
 Dataset access is pending/private-gated until a reviewed public release is
-approved. Counts, verification status, and zero-Mathlib gate status are
-published per release snapshot.
+approved. Counts and verification status are published per release snapshot.
+Every release claiming zero Mathlib dependency must pass
+`tools/check_zero_mathlib_dependency.py`.
 
 ## What's here
 
 | | |
 |---|---|
-| `foundations/` | Lean 4 foundations; zero-Mathlib target in progress |
+| `foundations/` | Lean 4 foundations; zero Mathlib dependency in the current release target |
 | `corpus/` | Machine-readable records with metadata, proof traces, and per-record status |
 | `gym/` | Gymnasium-compatible training environment, 54-tactic vocabulary |
 | `tools/` | Generator, verifier, ranker, exporter, CLI |
@@ -40,9 +42,9 @@ See [PHILOSOPHY.md](PHILOSOPHY.md) for the full case.
 ## Status
 
 Seed/transitional phase. Counts are published per release snapshot. The
-zero-Mathlib release gate is in progress and must pass before public
-zero-dependency claims are made. Current blockers include transitional
-`foundations/legacy_eml/` files that still import Mathlib.
+zero-Mathlib release gate now passes for both the current public default tree
+and release target. Historical legacy EML source was quarantined into a local
+out-of-repo backup and represented in-tree by a non-code note.
 
 ## License
 

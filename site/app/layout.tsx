@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "MachLib — For machines, by machines",
   description:
-    "Machine-native formal-library corpus workbench. Counts, dataset access, and zero-Mathlib gate status are published per release snapshot.",
+    "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
   applicationName: "MachLib",
   authors: [{ name: "Mosa Creates LLC" }],
   keywords: [
@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     url: SITE_URL,
     title: "MachLib — For machines, by machines",
     description:
-      "Machine-native formal-library corpus workbench. Counts, dataset access, and zero-Mathlib gate status are published per release snapshot.",
+      "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
     siteName: "MachLib",
   },
   twitter: {
     card: "summary_large_image",
     title: "MachLib — For machines, by machines",
     description:
-      "Machine-native formal-library corpus workbench. Counts, dataset access, and zero-Mathlib gate status are published per release snapshot.",
+      "Machine-native formal-library corpus workbench with zero Mathlib dependency in the current public default tree and release target.",
   },
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },

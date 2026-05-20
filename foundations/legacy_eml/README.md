@@ -1,29 +1,18 @@
-# `legacy_eml/` — transitional Mathlib-dependent corpus (v0.1)
+# Legacy EML quarantine
 
-These 17 Lean files are imported from the original `monogate-lean`
-repository as the seed for MachLib's theorem corpus. They depend
-on Mathlib for `Real`, `Real.exp`, `Real.log`, and the special-
-function machinery.
+The transitional Mathlib-dependent Lean files that previously lived in this
+directory were removed from the public default tree during the 2026-05-20
+zero-Mathlib quarantine.
 
-Files ported up into `foundations/MachLib/` (deleted from here):
+MachLib's current public identity is zero-Mathlib dependency for the public
+default tree and release target. Historical porting context is preserved in:
 
-  * `SelfMapConjugacy.lean` → `MachLib.SelfMapConjugacy`
-    (12 theorems on F16 self-map conjugacies, ported 2026-05-01)
+- `reports/machlib_legacy_eml_quarantine_manifest_2026_05_20.md`
 
-**This is intentional and temporary.** Phase 1 of the MachLib
-roadmap (Sessions I-001 through I-004) builds independent
-foundations under `foundations/MachLib/` and ports the relevant
-theorems off Mathlib. Once a theorem here has been ported, its
-file moves up into `foundations/MachLib/` (or a thematic
-subdirectory) and the legacy entry is deleted.
+A local out-of-repo backup was created for review at:
 
-The aggregator-text file `_LegacyAggregator.lean.txt` is the
-former `MonogateEML.lean` aggregator, kept here as documentation
-of what lake used to build. The active `lakefile.lean` lives at
-`foundations/lakefile.lean` and starts empty in v0.1; Phase 1
-points it at the new `MachLib/` modules as they appear.
+- `/tmp/machlib_legacy_eml_mathlib_quarantine_2026_05_20/legacy_eml`
 
-Until Phase 1 is complete, this directory IS NOT BUILT by the
-default lake target. Building it requires re-installing Mathlib
-under `foundations/.lake/packages/` (the same toolchain pin as
-the upstream `monogate-lean` repository).
+That backup is local only and is not part of the public default tree. This note
+does not authorize uploads, package publishing, hardware commands, Forge
+compiler behavior changes, or public theorem/proof/open-problem claims.

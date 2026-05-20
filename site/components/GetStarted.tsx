@@ -22,8 +22,8 @@ const PATHS: Path[] = [
     audience: "Agent builders",
     body:
       "Use the Lean foundations as a local check target where verified " +
-      "artifacts are present. The zero-Mathlib release gate must pass before " +
-      "zero-dependency claims are made.",
+      "artifacts are present. The current public default tree and release " +
+      "target are zero Mathlib dependency, backed by the local gate.",
     cmd: "git clone https://github.com/agent-maestro/machlib\ncd machlib/foundations && lake build",
     href: "https://github.com/agent-maestro/machlib",
     hrefLabel: "github.com/agent-maestro/machlib →",
