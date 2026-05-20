@@ -1,0 +1,203 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 3 - Discrete algorithms",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 3,
+  "results": [
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "query": "A->D"
+        },
+        {
+          "actual": false,
+          "expected": false,
+          "query": "D->A"
+        },
+        {
+          "actual": true,
+          "convention": "zero-length path",
+          "expected": true,
+          "query": "A->A"
+        }
+      ],
+      "classification": "FINITE_GRAPH_PATH_CHECK",
+      "failures": [],
+      "fixture": {
+        "bounded_by_node_count": true,
+        "edges": [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "B",
+            "C"
+          ],
+          [
+            "C",
+            "D"
+          ]
+        ],
+        "nodes": [
+          "A",
+          "B",
+          "C",
+          "D"
+        ]
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "finite_graph_path_check_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "actual": 1,
+          "expected": 1,
+          "n": 2
+        },
+        {
+          "actual": 2,
+          "expected": 2,
+          "n": 3
+        },
+        {
+          "actual": 3,
+          "expected": 3,
+          "n": 4
+        },
+        {
+          "actual": 5,
+          "expected": 5,
+          "n": 5
+        }
+      ],
+      "classification": "BOUNDED_RECURRENCE_STEP",
+      "failures": [],
+      "fixture": {
+        "base_cases": {
+          "F(0)": 0,
+          "F(1)": 1
+        },
+        "recurrence": "F(n+2)=F(n+1)+F(n)"
+      },
+      "negative_index": {
+        "blocked": true,
+        "n": -1
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "recurrence_fib_step_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "assignment": "assignment1",
+          "clause_values": [
+            true,
+            true,
+            true
+          ],
+          "expected": true,
+          "satisfied": true
+        },
+        {
+          "assignment": "assignment2",
+          "clause_values": [
+            true,
+            true,
+            false
+          ],
+          "expected": false,
+          "satisfied": false
+        }
+      ],
+      "classification": "FINITE_CLAUSE_EVAL",
+      "failures": [],
+      "fixture": {
+        "assignments": {
+          "assignment1": {
+            "x": false,
+            "y": true,
+            "z": false
+          },
+          "assignment2": {
+            "x": true,
+            "y": false,
+            "z": true
+          }
+        },
+        "clauses": [
+          [
+            [
+              "x",
+              true
+            ],
+            [
+              "y",
+              true
+            ]
+          ],
+          [
+            [
+              "x",
+              false
+            ],
+            [
+              "z",
+              true
+            ]
+          ],
+          [
+            [
+              "z",
+              false
+            ],
+            [
+              "y",
+              true
+            ]
+          ]
+        ]
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "tiny_sat_clause_eval_v0",
+      "status": "PASS",
+      "warnings": []
+    }
+  ],
+  "seed_count": 3,
+  "tier": "OBSERVATION",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
