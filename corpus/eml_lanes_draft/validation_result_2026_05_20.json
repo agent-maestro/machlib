@@ -1,0 +1,33 @@
+{
+  "cubic_dyadic_numeric_spot_check": {
+    "negative_sqrt2": true,
+    "one_rejected": true,
+    "sqrt2": true,
+    "zero": true
+  },
+  "cubic_dyadic_status": "PASS",
+  "date": "2026-05-20",
+  "failures": [],
+  "gap_ledger_status": "PASS",
+  "guardrail_status": "PASS",
+  "json_parse_status": "PASS",
+  "lane_counts": {
+    "1": 4,
+    "2": 3,
+    "3": 3,
+    "4": 3,
+    "5": 3,
+    "6": 3
+  },
+  "lane_specific_status": "PASS",
+  "local_only": true,
+  "not_claimed_status": "PASS",
+  "required_false_boolean_status": "PASS",
+  "required_field_status": "PASS",
+  "seed_count": 19,
+  "status_validation_status": "PASS",
+  "tier": "OBSERVATION",
+  "valid_as_draft_internal": true,
+  "warnings": [],
+  "zero_mathlib_status": "PASS"
+}

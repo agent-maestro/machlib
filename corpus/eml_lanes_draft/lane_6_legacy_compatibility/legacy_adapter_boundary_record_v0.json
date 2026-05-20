@@ -16,7 +16,10 @@
       "local-only review",
       "no upload",
       "no package publish",
-      "no public claim"
+      "no public claim",
+      "legacy compatibility is opt-in only",
+      "legacy compatibility is never default",
+      "legacy compatibility is never a release dependency"
     ],
     "coverage_status": "LEGACY_COMPAT_ONLY",
     "evidence_type": "draft_eml_seed_record",
@@ -35,7 +38,10 @@
     "not_claimed": [
       "not a new result",
       "not a public proof result",
-      "not a full coverage claim"
+      "not a full coverage claim",
+      "not a default release path",
+      "not a release dependency",
+      "not an upload authorization"
     ],
     "object": "adapter may translate historical idioms into current MachLib records after review",
     "operator_atoms": [
@@ -51,7 +57,8 @@
     "upload_allowed": false,
     "validation_checks": [
       "requires explicit opt-in",
-      "never changes release dependency set"
+      "never changes release dependency set",
+      "never default"
     ]
   },
   "metadata": {

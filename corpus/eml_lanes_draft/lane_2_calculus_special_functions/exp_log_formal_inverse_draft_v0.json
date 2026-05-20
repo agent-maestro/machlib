@@ -36,7 +36,10 @@
     "not_claimed": [
       "not a complete real-analysis formalization",
       "not imported from external libraries",
-      "not a public theorem claim"
+      "not a public theorem claim",
+      "not a new result",
+      "not public-ready",
+      "not upload-authorized"
     ],
     "object": null,
     "operator_atoms": [
