@@ -1,0 +1,154 @@
+{
+  "date": "2026-05-20",
+  "efrog_status": "PASS",
+  "failed": 0,
+  "forge_efrog_evidence": {
+    "command": [
+      "python",
+      "/home/monogate/monogate/monogate-research/tools/forge_efrog_evidence/forge_efrog_evidence.py",
+      "all",
+      "--out",
+      "/tmp/machlib_lane1_roundtrip_2026_05_20/forge_efrog_evidence"
+    ],
+    "out": "/tmp/machlib_lane1_roundtrip_2026_05_20/forge_efrog_evidence",
+    "result": {
+      "available": true,
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "{\n  \"summary\": {\n    \"capability_rows\": 6,\n    \"command\": \"all\",\n    \"command_version\": \"forge_efrog_evidence_internal_tool.v0\",\n    \"deploy_performed\": false,\n    \"deterministic_result\": \"pass\",\n    \"efrog_behavior_modified\": false,\n    \"forge_behavior_modified\": false,\n    \"graph_edges\": 12,\n    \"graph_nodes\": 13,\n    \"mismatched_files\": [],\n    \"missing_evidence_count\": 3,\n    \"output_dir\": \"/tmp/machlib_lane1_roundtrip_2026_05_20/forge_efrog_evidence\",\n    \"outputs\": [\n      \"discovery_summary.json\",\n      \"exported_forge_efrog_graph.json\",\n      \"exported_capability_matrix.json\",\n      \"exported_release_gate.json\",\n      \"exported_unit_contract_examples.json\",\n      \"missing_evidence_register.json\",\n      \"export_summary.json\",\n      \"command_summary.json\"\n    ],\n    \"public_claims\": false,\n    \"publish_performed\": false,\n    \"result\": \"pass\",\n    \"tokens_touched\": false\n  },\n  \"validation\": {\n    \"deploy_performed\": false,\n    \"efrog_behavior_modified\": false,\n    \"forge_behavior_modified\": false,\n    \"missing_evidence_count\": 3,\n    \"publish_performed\": false,\n    \"status\": \"pass\",\n    \"tokens_touched\": false,\n    \"warning_count\": 0,\n    \"warnings\": []\n  }\n}\n"
+    }
+  },
+  "forge_efrog_evidence_status": "PASS",
+  "forge_efrog_evidence_warnings": [],
+  "forge_status": "PASS",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 1 - EML algebra core",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 4,
+  "results": [
+    {
+      "efrog_default_zero_mathlib": true,
+      "eml_artifact_generated": true,
+      "eml_artifact_path": "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/cubic_dyadic_equilibrium_v0.eml",
+      "failures": [],
+      "forge_probe": {
+        "command": [
+          "/home/monogate/.local/bin/eml-compile",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/cubic_dyadic_equilibrium_v0.eml",
+          "--target",
+          "python",
+          "-o",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/cubic_dyadic_equilibrium_v0.py"
+        ],
+        "output": "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/cubic_dyadic_equilibrium_v0.py",
+        "result": {
+          "available": true,
+          "returncode": 0,
+          "stderr": "wrote /tmp/machlib_lane1_roundtrip_2026_05_20/forge/cubic_dyadic_equilibrium_v0.py (418 bytes, 16 lines)\n",
+          "stdout": ""
+        }
+      },
+      "forge_probe_status": "PASS",
+      "record_id": "cubic_dyadic_equilibrium_v0",
+      "roundtrip_status": "PASS",
+      "warnings": []
+    },
+    {
+      "efrog_default_zero_mathlib": true,
+      "eml_artifact_generated": true,
+      "eml_artifact_path": "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/inequality_sign_flip_v0.eml",
+      "failures": [],
+      "forge_probe": {
+        "command": [
+          "/home/monogate/.local/bin/eml-compile",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/inequality_sign_flip_v0.eml",
+          "--target",
+          "python",
+          "-o",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/inequality_sign_flip_v0.py"
+        ],
+        "output": "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/inequality_sign_flip_v0.py",
+        "result": {
+          "available": true,
+          "returncode": 0,
+          "stderr": "wrote /tmp/machlib_lane1_roundtrip_2026_05_20/forge/inequality_sign_flip_v0.py (404 bytes, 16 lines)\n",
+          "stdout": ""
+        }
+      },
+      "forge_probe_status": "PASS",
+      "record_id": "inequality_sign_flip_v0",
+      "roundtrip_status": "PASS",
+      "warnings": []
+    },
+    {
+      "efrog_default_zero_mathlib": true,
+      "eml_artifact_generated": true,
+      "eml_artifact_path": "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/linear_dyadic_identity_v0.eml",
+      "failures": [],
+      "forge_probe": {
+        "command": [
+          "/home/monogate/.local/bin/eml-compile",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/linear_dyadic_identity_v0.eml",
+          "--target",
+          "python",
+          "-o",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/linear_dyadic_identity_v0.py"
+        ],
+        "output": "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/linear_dyadic_identity_v0.py",
+        "result": {
+          "available": true,
+          "returncode": 0,
+          "stderr": "wrote /tmp/machlib_lane1_roundtrip_2026_05_20/forge/linear_dyadic_identity_v0.py (403 bytes, 16 lines)\n",
+          "stdout": ""
+        }
+      },
+      "forge_probe_status": "PASS",
+      "record_id": "linear_dyadic_identity_v0",
+      "roundtrip_status": "PASS",
+      "warnings": []
+    },
+    {
+      "efrog_default_zero_mathlib": true,
+      "eml_artifact_generated": true,
+      "eml_artifact_path": "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/quadratic_zero_product_v0.eml",
+      "failures": [],
+      "forge_probe": {
+        "command": [
+          "/home/monogate/.local/bin/eml-compile",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/eml/quadratic_zero_product_v0.eml",
+          "--target",
+          "python",
+          "-o",
+          "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/quadratic_zero_product_v0.py"
+        ],
+        "output": "/tmp/machlib_lane1_roundtrip_2026_05_20/forge/quadratic_zero_product_v0.py",
+        "result": {
+          "available": true,
+          "returncode": 0,
+          "stderr": "wrote /tmp/machlib_lane1_roundtrip_2026_05_20/forge/quadratic_zero_product_v0.py (410 bytes, 16 lines)\n",
+          "stdout": ""
+        }
+      },
+      "forge_probe_status": "PASS",
+      "record_id": "quadratic_zero_product_v0",
+      "roundtrip_status": "PASS",
+      "warnings": []
+    }
+  ],
+  "roundtrip_status": "PASS",
+  "seed_count": 4,
+  "tier": "OBSERVATION",
+  "tmp_root": "/tmp/machlib_lane1_roundtrip_2026_05_20",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

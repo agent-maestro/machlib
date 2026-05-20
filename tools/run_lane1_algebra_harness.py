@@ -86,6 +86,8 @@ def load_lane1_seeds(root: Path) -> dict[str, Seed]:
     for path in sorted(lane_path.glob("*.json")):
         if path.name == "execution_result_2026_05_20.json":
             continue
+        if path.name == "roundtrip_result_2026_05_20.json":
+            continue
         obj = json.loads(path.read_text(encoding="utf-8"))
         seed = Seed(path=path, obj=obj)
         seeds[seed.record_id] = seed
