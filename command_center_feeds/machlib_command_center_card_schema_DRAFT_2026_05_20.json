@@ -1,0 +1,61 @@
+{
+  "display_contract": [
+    "Display as internal observation-tier status only.",
+    "Do not show as public, upload, or release readiness.",
+    "Do not imply deployment, remote push, or package publication."
+  ],
+  "field_types": {
+    "card_id": "string",
+    "command_center_deploy_performed": "boolean",
+    "lane_count": "integer",
+    "lanes": "array",
+    "not_claimed": "array",
+    "overall_status": "string",
+    "public_ready_count": "integer",
+    "push_performed": "boolean",
+    "release_ready_count": "integer",
+    "requires_human_approval_for_push": "boolean",
+    "safe_to_push_now": "boolean",
+    "seed_count": "integer",
+    "surface": "string",
+    "tier": "string",
+    "upload_allowed_count": "integer",
+    "visibility": "string",
+    "zero_mathlib_status": "string"
+  },
+  "lane_row_fields": [
+    "lane_id",
+    "title",
+    "seed_count",
+    "execution_status",
+    "roundtrip_status",
+    "warnings",
+    "failures",
+    "status",
+    "draft_internal",
+    "public_ready",
+    "upload_allowed",
+    "release_ready"
+  ],
+  "required_fields": [
+    "card_id",
+    "surface",
+    "visibility",
+    "tier",
+    "zero_mathlib_status",
+    "overall_status",
+    "lane_count",
+    "seed_count",
+    "public_ready_count",
+    "upload_allowed_count",
+    "release_ready_count",
+    "push_performed",
+    "safe_to_push_now",
+    "requires_human_approval_for_push",
+    "command_center_deploy_performed",
+    "not_claimed"
+  ],
+  "schema_id": "machlib_command_center_card_schema_DRAFT_2026_05_20",
+  "status": "DRAFT_INTERNAL",
+  "surface": "command.monogate.dev"
+}
