@@ -1,0 +1,173 @@
+{
+  "date": "2026-05-20",
+  "gap_count": 10,
+  "gaps": [
+    {
+      "blockers": [],
+      "current_status": "COVERED_BY_EML_TRANSFORM",
+      "description": "algebraic identities",
+      "eml_record_need": "identity and rewrite records",
+      "gap_id": "gap_algebraic_identities_v0",
+      "lane": 1,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "add identity-vs-constraint classifier tests",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "HIGH",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [
+        "owned factorization primitive design"
+      ],
+      "current_status": "NEEDS_MACHLIB_PRIMITIVE",
+      "description": "polynomial factorization",
+      "eml_record_need": "factorization seeds and exact solution records",
+      "gap_id": "gap_polynomial_factorization_v0",
+      "lane": 1,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "prototype finite-degree factorization cases",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "HIGH",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "MEDIUM"
+    },
+    {
+      "blockers": [
+        "ordered carrier assumptions"
+      ],
+      "current_status": "NEEDS_STRUCTURE_LAYER",
+      "description": "inequalities",
+      "eml_record_need": "inequality rule records with assumptions",
+      "gap_id": "gap_inequalities_v0",
+      "lane": 1,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "draft local ordered-carrier records",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "MEDIUM",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "MEDIUM"
+    },
+    {
+      "blockers": [
+        "owned primitive definitions",
+        "domain side-condition design"
+      ],
+      "current_status": "NEEDS_MACHLIB_PRIMITIVE",
+      "description": "exp/log/trig/pow symbolic functions",
+      "eml_record_need": "special-function primitive seeds",
+      "gap_id": "gap_exp_log_trig_pow_v0",
+      "lane": 2,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "write placeholder records and primitive API notes",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "HIGH",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "MEDIUM"
+    },
+    {
+      "blockers": [],
+      "current_status": "COVERED_BY_EML_TRANSFORM",
+      "description": "finite graphs",
+      "eml_record_need": "graph object and witness records",
+      "gap_id": "gap_finite_graphs_v0",
+      "lane": 3,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "validate bounded path witness records",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "MEDIUM",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [],
+      "current_status": "COVERED_BY_EML_TRANSFORM",
+      "description": "SAT-like constraints",
+      "eml_record_need": "boolean clause evaluation records",
+      "gap_id": "gap_sat_like_constraints_v0",
+      "lane": 3,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "validate small assignment tables",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "MEDIUM",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [],
+      "current_status": "COVERED_BY_EML_TRANSFORM",
+      "description": "recurrences",
+      "eml_record_need": "finite recurrence records",
+      "gap_id": "gap_recurrences_v0",
+      "lane": 3,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "validate bounded unfolding traces",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "MEDIUM",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [
+        "record-local law schema"
+      ],
+      "current_status": "NEEDS_STRUCTURE_LAYER",
+      "description": "typeclass-lite algebraic structures",
+      "eml_record_need": "structure records with local law checks",
+      "gap_id": "gap_typeclass_lite_structures_v0",
+      "lane": 4,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "draft magma/monoid/order carrier records",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "HIGH",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [
+        "evidence schema needs validation policy"
+      ],
+      "current_status": "NEEDS_PROOF_LAYER_DESIGN",
+      "description": "evidence and proof records",
+      "eml_record_need": "artifact status and limitation records",
+      "gap_id": "gap_evidence_records_v0",
+      "lane": 5,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "draft evidence rows with limitations",
+      "no_go_flags": [],
+      "public_ready": false,
+      "recommended_priority": "HIGH",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "LOW"
+    },
+    {
+      "blockers": [
+        "must stay opt-in and outside release dependency"
+      ],
+      "current_status": "LEGACY_COMPAT_ONLY",
+      "description": "legacy compatibility with external formal-library adapters",
+      "eml_record_need": "legacy boundary records only",
+      "gap_id": "gap_legacy_compatibility_v0",
+      "lane": 6,
+      "mathlib_dependency": false,
+      "next_safe_local_experiment": "keep adapter boundaries as draft records",
+      "no_go_flags": [
+        "never_default",
+        "never_release_dependency"
+      ],
+      "public_ready": false,
+      "recommended_priority": "MEDIUM",
+      "upload_allowed": false,
+      "zero_mathlib_risk": "HIGH_IF_DEFAULTED"
+    }
+  ],
+  "status": "DRAFT_INTERNAL"
+}

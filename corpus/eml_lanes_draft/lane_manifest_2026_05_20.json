@@ -1,0 +1,121 @@
+{
+  "date": "2026-05-20",
+  "guardrails": {
+    "forge_compiler_change_required": false,
+    "hardware_required": false,
+    "local_only": true,
+    "marketplace_ready": false,
+    "mathlib_dependency": false,
+    "public_ready": false,
+    "upload_allowed": false
+  },
+  "lanes": [
+    {
+      "description": "Arithmetic, equalities, inequalities, and bounded symbolic transformations.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_1_algebra_core",
+      "lane_number": 1,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 4,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_1_algebra_core/cubic_dyadic_equilibrium_v0.json",
+        "corpus/eml_lanes_draft/lane_1_algebra_core/linear_dyadic_identity_v0.json",
+        "corpus/eml_lanes_draft/lane_1_algebra_core/quadratic_zero_product_v0.json",
+        "corpus/eml_lanes_draft/lane_1_algebra_core/inequality_sign_flip_v0.json"
+      ],
+      "title": "EML algebra core",
+      "upload_allowed": false
+    },
+    {
+      "description": "Symbolic exp/log/trig/pow placeholders owned by MachLib, with primitives still needed.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_2_calculus_special_functions",
+      "lane_number": 2,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 3,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_2_calculus_special_functions/exp_log_formal_inverse_draft_v0.json",
+        "corpus/eml_lanes_draft/lane_2_calculus_special_functions/trig_pythagorean_symbolic_draft_v0.json",
+        "corpus/eml_lanes_draft/lane_2_calculus_special_functions/pow_square_root_symbolic_draft_v0.json"
+      ],
+      "title": "Calculus and special functions",
+      "upload_allowed": false
+    },
+    {
+      "description": "Finite graph, SAT-like, recurrence, and finite-structure checks.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_3_discrete_algorithms",
+      "lane_number": 3,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 3,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_3_discrete_algorithms/finite_graph_path_check_v0.json",
+        "corpus/eml_lanes_draft/lane_3_discrete_algorithms/tiny_sat_clause_eval_v0.json",
+        "corpus/eml_lanes_draft/lane_3_discrete_algorithms/recurrence_fib_step_v0.json"
+      ],
+      "title": "Discrete algorithms",
+      "upload_allowed": false
+    },
+    {
+      "description": "Machine-friendly algebraic structure records without imported hierarchy.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_4_typeclass_lite",
+      "lane_number": 4,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 3,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_4_typeclass_lite/typeclass_lite_magma_record_v0.json",
+        "corpus/eml_lanes_draft/lane_4_typeclass_lite/typeclass_lite_monoid_record_v0.json",
+        "corpus/eml_lanes_draft/lane_4_typeclass_lite/typeclass_lite_ordered_carrier_v0.json"
+      ],
+      "title": "Typeclass-lite structures",
+      "upload_allowed": false
+    },
+    {
+      "description": "Evidence rows for Lean-checkable artifacts where present, with limitations preserved.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_5_proof_evidence_records",
+      "lane_number": 5,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 3,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_5_proof_evidence_records/lean_checkable_artifact_record_v0.json",
+        "corpus/eml_lanes_draft/lane_5_proof_evidence_records/evidence_row_with_limitations_v0.json",
+        "corpus/eml_lanes_draft/lane_5_proof_evidence_records/failed_attempt_record_v0.json"
+      ],
+      "title": "Proof and evidence records",
+      "upload_allowed": false
+    },
+    {
+      "description": "Opt-in legacy adapter boundaries that never become default release dependencies.",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "lane_id": "lane_6_legacy_compatibility",
+      "lane_number": 6,
+      "mathlib_dependency": false,
+      "public_ready": false,
+      "seed_count": 3,
+      "seed_paths": [
+        "corpus/eml_lanes_draft/lane_6_legacy_compatibility/legacy_mathlib_header_opt_in_note_v0.json",
+        "corpus/eml_lanes_draft/lane_6_legacy_compatibility/legacy_adapter_boundary_record_v0.json",
+        "corpus/eml_lanes_draft/lane_6_legacy_compatibility/legacy_to_machlib_migration_stub_v0.json"
+      ],
+      "title": "Legacy compatibility",
+      "upload_allowed": false
+    }
+  ],
+  "schema_note": "Core records follow MachLib JSON v1 sections with a draft_eml_seed extension for lane planning fields.",
+  "seed_record_count": 19,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

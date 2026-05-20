@@ -169,6 +169,10 @@ def classify(path: Path, line: str) -> str:
         return "POLICY_TEXT"
 
     if suffix in {".toml", ".json", ".lock"} or path.name.startswith("lakefile"):
+        if '"mathlib_dependency"' in lower and "false" in lower:
+            return "POLICY_TEXT"
+        if '"mathlib"' in lower and "false" in lower:
+            return "POLICY_TEXT"
         if DEPENDENCY_DECLARATION.search(stripped):
             return "DEPENDENCY_EVIDENCE"
         if "mathlib-wrapper" in lower:

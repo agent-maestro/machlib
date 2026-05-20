@@ -1,0 +1,112 @@
+{
+  "common_mistakes": [],
+  "difficulty": {
+    "average_hint_level_at_solve": 0.0,
+    "calibrated_from_attempts": 0,
+    "label": "draft",
+    "lane": 1,
+    "prerequisite_skills": []
+  },
+  "draft_eml_seed": {
+    "assumptions": [
+      "draft internal seed",
+      "zero dependency on external formal libraries"
+    ],
+    "constraints": [
+      "local-only review",
+      "no upload",
+      "no package publish",
+      "no public claim"
+    ],
+    "coverage_status": "DRAFT_NEEDS_VALIDATION",
+    "evidence_type": "draft_eml_seed_record",
+    "expected_outputs": {
+      "candidate_real_solutions": [
+        "-1",
+        "1"
+      ]
+    },
+    "expression": "x^2 - 1 = 0",
+    "forge_compiler_change_required": false,
+    "hardware_required": false,
+    "lane": "EML algebra core",
+    "limitations": [
+      "draft schema",
+      "not release validated"
+    ],
+    "mathlib_dependency": false,
+    "normalized_form": "(x - 1) * (x + 1) = 0",
+    "not_claimed": [
+      "not a new result",
+      "not a public proof result",
+      "not a full coverage claim"
+    ],
+    "object": null,
+    "operator_atoms": [
+      "square",
+      "subtract",
+      "factor",
+      "root"
+    ],
+    "public_ready": false,
+    "record_id": "quadratic_zero_product_v0",
+    "status": "DRAFT_INTERNAL",
+    "task_family": "eml_lane_seed",
+    "title": "Quadratic zero-product seed",
+    "upload_allowed": false,
+    "validation_checks": [
+      "factors difference of squares",
+      "returns finite candidate solution set"
+    ]
+  },
+  "metadata": {
+    "creation_date": "2026-05-20",
+    "draft_internal": true,
+    "generated_by": "task_m005_eml_coverage_lanes_seed_pack",
+    "local_only": true,
+    "verification_method": "not_verified_draft_internal",
+    "verified": false
+  },
+  "proofs": [],
+  "relationships": {
+    "depends_on": [],
+    "parent": null,
+    "siblings": [],
+    "structural_siblings": []
+  },
+  "schema_version": "1.0.0-draft-eml-lane",
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "drift_risk": "UNKNOWN_DRAFT",
+    "dynamics": {
+      "decays": 0,
+      "oscillations": 0
+    },
+    "eml_depth": null,
+    "fpga_estimate": null
+  },
+  "tactic_trace": {
+    "failed": {},
+    "success_rate_by_tactic": {},
+    "successful": {}
+  },
+  "theorem": {
+    "base_id": "quadratic_zero_product_v0",
+    "domain": "eml",
+    "id": "quadratic_zero_product_v0",
+    "lane": 1,
+    "statement": {
+      "formal_eml_lang": "x^2 - 1 = 0",
+      "formal_lean": null,
+      "informal": "Quadratic zero-product seed"
+    },
+    "tags": [
+      "algebra",
+      "factorization",
+      "draft-internal",
+      "zero-dependency"
+    ],
+    "variant_strategy": null
+  }
+}

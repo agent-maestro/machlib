@@ -1,0 +1,108 @@
+{
+  "common_mistakes": [],
+  "difficulty": {
+    "average_hint_level_at_solve": 0.0,
+    "calibrated_from_attempts": 0,
+    "label": "draft",
+    "lane": 5,
+    "prerequisite_skills": []
+  },
+  "draft_eml_seed": {
+    "assumptions": [
+      "draft internal seed",
+      "zero dependency on external formal libraries"
+    ],
+    "constraints": [
+      "local-only review",
+      "no upload",
+      "no package publish",
+      "no public claim"
+    ],
+    "coverage_status": "NEEDS_PROOF_LAYER_DESIGN",
+    "evidence_type": "draft_eml_seed_record",
+    "expected_outputs": [
+      "records checker command and snapshot"
+    ],
+    "expression": null,
+    "forge_compiler_change_required": false,
+    "hardware_required": false,
+    "lane": "Proof and evidence records",
+    "limitations": [
+      "draft schema",
+      "not release validated"
+    ],
+    "mathlib_dependency": false,
+    "normalized_form": "evidence_row(status=lean_checkable_where_present)",
+    "not_claimed": [
+      "not a new result",
+      "not a public proof result",
+      "not a full coverage claim"
+    ],
+    "object": "artifact with file path, declaration name, checker status, and limitations",
+    "operator_atoms": [
+      "evidence",
+      "checker_status",
+      "snapshot"
+    ],
+    "public_ready": false,
+    "record_id": "lean_checkable_artifact_record_v0",
+    "status": "DRAFT_INTERNAL",
+    "task_family": "eml_lane_seed",
+    "title": "Lean-checkable artifact evidence row",
+    "upload_allowed": false,
+    "validation_checks": [
+      "stores verification status per artifact",
+      "does not generalize beyond checked artifact"
+    ]
+  },
+  "metadata": {
+    "creation_date": "2026-05-20",
+    "draft_internal": true,
+    "generated_by": "task_m005_eml_coverage_lanes_seed_pack",
+    "local_only": true,
+    "verification_method": "not_verified_draft_internal",
+    "verified": false
+  },
+  "proofs": [],
+  "relationships": {
+    "depends_on": [],
+    "parent": null,
+    "siblings": [],
+    "structural_siblings": []
+  },
+  "schema_version": "1.0.0-draft-eml-lane",
+  "structural_profile": {
+    "chain_order": null,
+    "cost_class": null,
+    "drift_risk": "UNKNOWN_DRAFT",
+    "dynamics": {
+      "decays": 0,
+      "oscillations": 0
+    },
+    "eml_depth": null,
+    "fpga_estimate": null
+  },
+  "tactic_trace": {
+    "failed": {},
+    "success_rate_by_tactic": {},
+    "successful": {}
+  },
+  "theorem": {
+    "base_id": "lean_checkable_artifact_record_v0",
+    "domain": "eml",
+    "id": "lean_checkable_artifact_record_v0",
+    "lane": 5,
+    "statement": {
+      "formal_eml_lang": "artifact with file path, declaration name, checker status, and limitations",
+      "formal_lean": null,
+      "informal": "Lean-checkable artifact evidence row"
+    },
+    "tags": [
+      "evidence",
+      "lean-checkable",
+      "draft-internal",
+      "zero-dependency"
+    ],
+    "variant_strategy": null
+  }
+}
