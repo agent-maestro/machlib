@@ -1,0 +1,207 @@
+{
+  "date": "2026-05-20",
+  "local_only": true,
+  "primitive_specs": [
+    {
+      "arity": 1,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic exp",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_exp_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "owned syntax",
+        "domain guard semantics",
+        "future proof/evidence layer"
+      ],
+      "rewrite_rules_draft": [
+        "exp(log(x)) rewrites only under positive-domain/formal guard"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal symbolic expression with explicit guard annotations",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 1,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic log",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_log_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "owned syntax",
+        "inverse-pair guard design",
+        "future proof/evidence layer"
+      ],
+      "rewrite_rules_draft": [
+        "log(exp(x)) rewrites only under explicit formal guard"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal symbolic expression with explicit guard annotations",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 1,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic sin",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_sin_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "owned trig primitive semantics",
+        "normal-form design"
+      ],
+      "rewrite_rules_draft": [
+        "sin(x)^2 + cos(x)^2 rewrites only under named trig-spec guard"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal symbolic expression with owned trig semantics",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 1,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic cos",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_cos_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "owned trig primitive semantics",
+        "normal-form design"
+      ],
+      "rewrite_rules_draft": [
+        "sin(x)^2 + cos(x)^2 rewrites only under named trig-spec guard"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal symbolic expression with owned trig semantics",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 2,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic pow",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_pow_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "exponent sort design",
+        "nonnegative guard link",
+        "structure layer"
+      ],
+      "rewrite_rules_draft": [
+        "sqrt(x)^2 rewrites only through pow/sqrt guarded bridge"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal base/exponent expression with guarded exponent class",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 1,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic sqrt",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_sqrt_symbolic_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "nonnegative-domain guard",
+        "absolute-value boundary design"
+      ],
+      "rewrite_rules_draft": [
+        "sqrt(x)^2 rewrites to x under explicit nonnegative-domain guard"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "formal symbolic expression with nonnegative-domain guard",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    },
+    {
+      "arity": 2,
+      "forbidden_claims": [
+        "complete real-analysis formalization",
+        "public theorem/proof claim",
+        "release-ready calculus primitive",
+        "external formal-library import"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "input_sort": "symbolic_real_term",
+      "mathlib_dependency": false,
+      "name": "Mach symbolic domain guard",
+      "output_sort": "symbolic_real_term",
+      "primitive_id": "mach_symbolic_domain_guard_v0",
+      "public_ready": false,
+      "required_future_design": [
+        "guard schema",
+        "validation hooks",
+        "evidence-row integration"
+      ],
+      "rewrite_rules_draft": [
+        "blocked rewrite remains blocked until its named guard is present"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "symbolic_domain": "guarded symbolic relation metadata",
+      "upload_allowed": false,
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "tier": "OBSERVATION"
+}

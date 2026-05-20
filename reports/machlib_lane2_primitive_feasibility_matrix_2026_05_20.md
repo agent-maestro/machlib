@@ -1,0 +1,9 @@
+# MachLib Lane 2 primitive feasibility matrix
+
+Date: 2026-05-20
+
+| Seed | Symbolic relation | Primitive needs | Domain guard needs | Feasibility | Release readiness | Blockers | Next safe local experiment |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| exp_log_formal_inverse_draft_v0 | log(exp(x)) -> x only with explicit formal guard; exp(log(x)) -> x only with positive-domain/formal guard | mach_exp_symbolic_v0, mach_log_symbolic_v0, mach_symbolic_domain_guard_v0 | formal guard for log(exp(x)), positive-domain/formal guard for exp(log(x)) | FEASIBLE_WITH_DOMAIN_GUARD | NOT_READY_FOR_RELEASE | complete real-analysis formalization, public theorem/proof claim, release-ready special-function semantics, external formal-library import | Add guarded symbolic rewrite tests after primitive syntax exists. |
+| pow_square_root_symbolic_draft_v0 | sqrt(x)^2 -> x only with explicit nonnegative-domain/formal guard | mach_pow_symbolic_v0, mach_sqrt_symbolic_v0, mach_symbolic_domain_guard_v0 | explicit nonnegative-domain/formal guard | FEASIBLE_WITH_DOMAIN_GUARD | NOT_READY_FOR_RELEASE | complete real-analysis formalization, public theorem/proof claim, release-ready special-function semantics, external formal-library import, sqrt(x^2) -> abs(x) is not directly accepted without structure/proof layer | Add guarded symbolic rewrite tests after primitive syntax exists. |
+| trig_pythagorean_symbolic_draft_v0 | sin(x)^2 + cos(x)^2 -> 1 only as a guarded symbolic placeholder under owned trig semantics | mach_sin_symbolic_v0, mach_cos_symbolic_v0, mach_symbolic_domain_guard_v0 | named MachLib trig primitive/spec guard | NEEDS_MACHLIB_PRIMITIVE | NOT_READY_FOR_RELEASE | complete real-analysis formalization, public theorem/proof claim, release-ready special-function semantics, external formal-library import | Add guarded symbolic rewrite tests after primitive syntax exists. |
