@@ -91,6 +91,7 @@ def load_lane2_seeds(root: Path) -> dict[str, Seed]:
         "primitive_feasibility_result_2026_05_20.json",
         "primitive_spec_draft_2026_05_20.json",
         "symbolic_rewrite_result_2026_05_20.json",
+        "roundtrip_probe_result_2026_05_20.json",
     }
     seeds: dict[str, Seed] = {}
     for path in sorted(lane_path.glob("*.json")):
