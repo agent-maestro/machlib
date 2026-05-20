@@ -1,0 +1,19 @@
+# MachLib Phase Spine Guardrail Report - 2026-05-20
+
+| gate | status |
+| --- | --- |
+| no_mathlib_dependency | PASS |
+| no_hf_upload | PASS |
+| no_petal_upload | PASS |
+| no_package_publish | PASS |
+| no_hardware | PASS |
+| no_forge_compiler_change | PASS |
+| no_public_theorem_claim | PASS |
+| no_push | PASS |
+| no_main_merge | PASS |
+| no_github_pr_created | PASS |
+| no_command_center_deploy | PASS |
+| no_token_like_secret | PASS |
+| no public_ready true | PASS |
+| no upload_allowed true | PASS |
+| no release_ready true | PASS |

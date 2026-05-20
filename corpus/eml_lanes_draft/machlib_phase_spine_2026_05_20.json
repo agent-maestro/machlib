@@ -1,0 +1,1036 @@
+{
+  "command_center_deploy_performed": false,
+  "commit_count": 80,
+  "commits": [
+    {
+      "artifact_group": "function classes",
+      "hash": "b8e0ffa",
+      "phase_id": "phase_11",
+      "subject": "test/corpus: add MachLib D-finite ODE certificate harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "function classes",
+      "hash": "cbc670e",
+      "phase_id": "phase_11",
+      "subject": "research/corpus: add MachLib EML function-class frontier",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "review planning",
+      "hash": "078f00c",
+      "phase_id": "phase_10",
+      "subject": "reports: add MachLib review and public readiness plans",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "cbddcc4",
+      "phase_id": "phase_9",
+      "subject": "reports/command-center: add MachLib six-lane feed card",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "6532631",
+      "phase_id": "phase_9",
+      "subject": "reports/corpus: add MachLib six-lane coverage feed",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "1c4d018",
+      "phase_id": "phase_8",
+      "subject": "test/corpus: add MachLib Lane 6 legacy boundary harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "06467a1",
+      "phase_id": "phase_7",
+      "subject": "test/corpus: add MachLib Lane 5 evidence record harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "59adb93",
+      "phase_id": "phase_6",
+      "subject": "test/corpus: add MachLib Lane 4 typeclass-lite harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "62ec80e",
+      "phase_id": "phase_5",
+      "subject": "test/corpus: add MachLib Lane 3 discrete harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "f5b9ec1",
+      "phase_id": "phase_4",
+      "subject": "test/corpus: add MachLib Lane 2 eFrog Forge roundtrip probe",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "6286f85",
+      "phase_id": "phase_4",
+      "subject": "test/corpus: add MachLib Lane 2 symbolic rewrite harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "f0816ca",
+      "phase_id": "phase_4",
+      "subject": "research/corpus: add MachLib Lane 2 primitive feasibility lab",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "330d67b",
+      "phase_id": "phase_3",
+      "subject": "test/corpus: add MachLib Lane 1 eFrog Forge roundtrip",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "b52040d",
+      "phase_id": "phase_3",
+      "subject": "test/corpus: add MachLib Lane 1 algebra harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "b811209",
+      "phase_id": "phase_2",
+      "subject": "test/corpus: add MachLib EML lane seed validator",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "EML lanes",
+      "hash": "2069871",
+      "phase_id": "phase_2",
+      "subject": "docs/corpus: add MachLib EML coverage lane seeds",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "zero-Mathlib posture",
+      "hash": "0212356",
+      "phase_id": "phase_0",
+      "subject": "docs: add MachLib legacy quarantine plan",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "zero-Mathlib posture",
+      "hash": "daa49f2",
+      "phase_id": "phase_0",
+      "subject": "chore: enforce MachLib zero Mathlib dependency gate",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "8e7433b",
+      "phase_id": "phase_0",
+      "subject": "docs: align MachLib public claim boundaries",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "fd1450b",
+      "phase_id": "pre_spine_context",
+      "subject": "feat: MachLib.Safety.TemporalFrequency (Phase 1 Moat 1 step 4)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "4b3cdb3",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(basic): Std.Commutative + Std.Associative instances on +/* over Real",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "96aa13a",
+      "phase_id": "pre_spine_context",
+      "subject": "Merge feat/ring-v1.5 \u2014 distributivity + neg_mul cluster (engine 59/26 \u2192 63/22)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "bfc1405",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(ring v1.5): distributivity + negation-multiplication cluster",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "c220bd8",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 2.62s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "acb588f",
+      "phase_id": "pre_spine_context",
+      "subject": "Merge branch 'feat/lemmas-extension'",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "99834a6",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(lemmas+linear-combination): abs cluster, cos/sin sq lemmas, mach_linear_combination v1",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "a75f28b",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 2.59s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "911f7d5",
+      "phase_id": "pre_spine_context",
+      "subject": "Merge branch 'feat/specific-lemmas'",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "a8fd8e8",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(lemmas): MachLib.Lemmas \u2014 Rank 5 specific-lemma cluster",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "1c313cd",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 2.48s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "89dcab7",
+      "phase_id": "pre_spine_context",
+      "subject": "Merge branch 'feat/linarith-v1'",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "65d7466",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(linarith): mach_positivity v1 + sq_nonneg / div_pos / pi_pos cascade",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "59ceb72",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 2.14s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "3413a2e",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(ring): mach_ring tactic v1 \u2014 closes \"linear-in-zeros\" identities",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "cc3d9e2",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(forge): interval-arithmetic lemma library for Phase D proof discharge",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "66789ea",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.38s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "0f391c6",
+      "phase_id": "pre_spine_context",
+      "subject": "research(cat-vision): rod_sensitivity nonneg proof \u2014 MachLib.CatVision",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "07ec24a",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.49s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "9589804",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(seal): MachLib.Seal \u2014 formal seal-theorem scaffolding (C-246)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "c90faf6",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.50s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "804d345",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(c-242,c-244): TIER5 vocab + 3 closures via div_nonneg",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "a3d7f43",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.30s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "83cacc0",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(c-241): TIER4 vocab + 8 closures via 3-arm alternations",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "eca797d",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(c-240): literal-positivity tactic (lit_pos) + 2 closures",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "2245cec",
+      "phase_id": "pre_spine_context",
+      "subject": "chore(c-239): cap depth-2 per-theorem budget at 600s",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "f4cc190",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.29s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "1d05ca6",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(c-239): Tier-2 vocab + 8 new Forge.lean lemmas + 3 closures",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "a161059",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.19s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "ef1a34c",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(c-239): BFS proof-sweep pipeline + 15 closures + literal regen",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "0875e57",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.20s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "e7f8b74",
+      "phase_id": "pre_spine_context",
+      "subject": "sync: add 188 forge-emitted Discovered/ scaffolding files",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "ede44e8",
+      "phase_id": "pre_spine_context",
+      "subject": "security(corpus): scrub proprietary path leaks from public records",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "59cc1dc",
+      "phase_id": "pre_spine_context",
+      "subject": "site: refresh records tile 2786 -> 3316 to match live",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "2c3624f",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(corpus): forge_mined +530 records, importer fixes",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "da6a46a",
+      "phase_id": "pre_spine_context",
+      "subject": "forge: add sub_pos_of_lt theorem + 3 bridging axioms; refactor vpd proof",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "fb767db",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.18s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "1df8581",
+      "phase_id": "pre_spine_context",
+      "subject": "proof: vpd_positive \u2014 first manual proof in MachLib/Discovered",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "2abe39b",
+      "phase_id": "pre_spine_context",
+      "subject": "site: soften build claim to \"<5 min\" + refresh records 449 -> 2,786",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "d80a744",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.32s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "14693f2",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(axioms): tan, log10, exp10, step, realPow + 2-arg step",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "eac78b9",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(basic): OfScientific Real instance for decimal literals",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "96f9429",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(validate): Lean kernel verifier mode for machlib validate",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "eca8070",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.08s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "8bfd871",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(forge-bind): MachLib.Forge -- derived lemmas for Forge kernels",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "7f6b573",
+      "phase_id": "pre_spine_context",
+      "subject": "site: bump Records tile 449 \u2192 2,786 (Phase A forge-mined)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "d6cc4f8",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(machlib): JSON schema v1.0.0 + community CLI \u2014 Phase E",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "50a573e",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(gym): multi-proof BFS engine \u2014 Phase B-001",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "dc9f535",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(corpus): forge-mined records \u2014 Phase A of v2.0 strength roadmap",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "f51202d",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.19s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "b9daf60",
+      "phase_id": "pre_spine_context",
+      "subject": "port(Hyperbolic): partial port of HyperbolicPreservation (axiomatic R)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "99ef513",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 1.00s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "cf686c0",
+      "phase_id": "pre_spine_context",
+      "subject": "chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "324839f",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 0s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "zero-Mathlib posture",
+      "hash": "82abb4c",
+      "phase_id": "pre_spine_context",
+      "subject": "port(SelfMapConjugacy): add to MachLib (axiomatic \u211d, no Mathlib)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "f044974",
+      "phase_id": "pre_spine_context",
+      "subject": "ci(build-time): refresh cold-build badge to 0s [skip ci]",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "1f498aa",
+      "phase_id": "pre_spine_context",
+      "subject": "feat(machlib): add cold-build CI badge, corpus search CLI, port plan",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "8c8a1b3",
+      "phase_id": "pre_spine_context",
+      "subject": "site: hoist Numbers tile values into MACHLIB constants",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "zero-Mathlib posture",
+      "hash": "c6b3268",
+      "phase_id": "pre_spine_context",
+      "subject": "site: depersonalize Mathlib quote \u2014 'Academia has said' instead of naming an individual",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "c3201dd",
+      "phase_id": "pre_spine_context",
+      "subject": "site: 491 \u2192 ~500 lines (3 references)",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "c50170c",
+      "phase_id": "pre_spine_context",
+      "subject": "site: refreshed hero copy + new FullStackFlow section",
+      "validation_note": "context commit"
+    }
+  ],
+  "date": "2026-05-20",
+  "guardrails": {
+    "no_command_center_deploy": true,
+    "no_forge_compiler_change": true,
+    "no_github_pr_created": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_main_merge": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_push": true,
+    "no_token_like_secret": true
+  },
+  "hf_upload_performed": false,
+  "local_only": true,
+  "next_research_queue": [
+    "Analytic local series harness",
+    "Smooth finite-jet harness",
+    "Continuous epsilon-delta/local-modulus harness",
+    "D-finite to analytic boundary lab",
+    "Function-class eFrog/Forge roundtrip feed",
+    "Command Center integration implementation plan, no deploy",
+    "Public-safe MachLib site/README patch application, no upload",
+    "Hugging Face card readiness review, no upload"
+  ],
+  "not_claimed": [
+    "not public-ready",
+    "not upload-ready",
+    "not release-ready",
+    "not a public theorem/proof/open-problem claim",
+    "not a command-center deployment",
+    "not a package publish"
+  ],
+  "overall_status": "DRAFT_INTERNAL_VALIDATED",
+  "package_publish_performed": false,
+  "phase_count": 12,
+  "phases": [
+    {
+      "artifacts": [
+        "README/site claim boundary updates",
+        "zero-Mathlib checker",
+        "legacy quarantine plan"
+      ],
+      "commits": [
+        {
+          "hash": "8e7433b",
+          "subject": "docs: align MachLib public claim boundaries"
+        },
+        {
+          "hash": "daa49f2",
+          "subject": "chore: enforce MachLib zero Mathlib dependency gate"
+        },
+        {
+          "hash": "0212356",
+          "subject": "docs: add MachLib legacy quarantine plan"
+        }
+      ],
+      "expected_subjects": [
+        "docs: align MachLib public claim boundaries",
+        "chore: enforce MachLib zero Mathlib dependency gate",
+        "docs: add MachLib legacy quarantine plan"
+      ],
+      "goal": "Align public language, enforce the zero-Mathlib gate, and quarantine legacy dependency surfaces.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Policy text remains separate from release approval."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_0",
+      "title": "Public-claim alignment and zero-Mathlib cleanup",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A clean default/release-target posture for the later EML work."
+    },
+    {
+      "artifacts": [
+        "external/local-adjacent eFrog evidence"
+      ],
+      "commits": [],
+      "expected_subjects": [
+        "chore: make eFrog Lean emitter zero-Mathlib by default"
+      ],
+      "goal": "Keep default Lean rendering zero-Mathlib while preserving legacy compatibility as opt-in.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Recorded as external evidence if the commit is not in this repository log."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_1",
+      "title": "eFrog zero-Mathlib emitter alignment",
+      "validation_status": "EXTERNAL_EVIDENCE_REPORTED",
+      "what_it_unlocked": "Roundtrip probes could check default render output without adding dependency imports."
+    },
+    {
+      "artifacts": [
+        "corpus/eml_lanes_draft",
+        "tools/validate_eml_lane_seeds.py"
+      ],
+      "commits": [
+        {
+          "hash": "2069871",
+          "subject": "docs/corpus: add MachLib EML coverage lane seeds"
+        },
+        {
+          "hash": "b811209",
+          "subject": "test/corpus: add MachLib EML lane seed validator"
+        }
+      ],
+      "expected_subjects": [
+        "docs/corpus: add MachLib EML coverage lane seeds",
+        "test/corpus: add MachLib EML lane seed validator"
+      ],
+      "goal": "Create 19 draft EML seeds and strict lane validation.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Draft seed rows are internal observations, not release/public artifacts."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_2",
+      "title": "Six-lane seed corpus and validator",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A stable six-lane corpus shape for executable harnesses."
+    },
+    {
+      "artifacts": [
+        "Lane 1 execution JSON",
+        "Lane 1 roundtrip JSON"
+      ],
+      "commits": [
+        {
+          "hash": "b52040d",
+          "subject": "test/corpus: add MachLib Lane 1 algebra harness"
+        },
+        {
+          "hash": "330d67b",
+          "subject": "test/corpus: add MachLib Lane 1 eFrog Forge roundtrip"
+        }
+      ],
+      "expected_subjects": [
+        "test/corpus: add MachLib Lane 1 algebra harness",
+        "test/corpus: add MachLib Lane 1 eFrog Forge roundtrip"
+      ],
+      "goal": "Make algebra-core seeds executable and roundtrippable.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Bounded algebra checks only."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_3",
+      "title": "Lane 1 algebra execution and roundtrip",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "First local executable EML lane."
+    },
+    {
+      "artifacts": [
+        "Lane 2 primitive feasibility",
+        "Lane 2 symbolic rewrite",
+        "Lane 2 roundtrip"
+      ],
+      "commits": [
+        {
+          "hash": "f0816ca",
+          "subject": "research/corpus: add MachLib Lane 2 primitive feasibility lab"
+        },
+        {
+          "hash": "6286f85",
+          "subject": "test/corpus: add MachLib Lane 2 symbolic rewrite harness"
+        },
+        {
+          "hash": "f5b9ec1",
+          "subject": "test/corpus: add MachLib Lane 2 eFrog Forge roundtrip probe"
+        }
+      ],
+      "expected_subjects": [
+        "research/corpus: add MachLib Lane 2 primitive feasibility lab",
+        "test/corpus: add MachLib Lane 2 symbolic rewrite harness",
+        "test/corpus: add MachLib Lane 2 eFrog Forge roundtrip probe"
+      ],
+      "goal": "Add primitive feasibility, symbolic rewrite checks, and roundtrip evidence.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Expected draft/internal warnings remain; no real-analysis claim."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_4",
+      "title": "Lane 2 symbolic special functions",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "Draft symbolic special-function lane with explicit limitations."
+    },
+    {
+      "artifacts": [
+        "Lane 3 execution and roundtrip JSON"
+      ],
+      "commits": [
+        {
+          "hash": "62ec80e",
+          "subject": "test/corpus: add MachLib Lane 3 discrete harness"
+        }
+      ],
+      "expected_subjects": [
+        "test/corpus: add MachLib Lane 3 discrete harness"
+      ],
+      "goal": "Add executable graph, SAT/clause, and recurrence checks.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Tiny bounded checks only."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_5",
+      "title": "Lane 3 discrete algorithms",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "Discrete lane joined the local executable/roundtrip set."
+    },
+    {
+      "artifacts": [
+        "Lane 4 execution, roundtrip, and structure spec"
+      ],
+      "commits": [
+        {
+          "hash": "59adb93",
+          "subject": "test/corpus: add MachLib Lane 4 typeclass-lite harness"
+        }
+      ],
+      "expected_subjects": [
+        "test/corpus: add MachLib Lane 4 typeclass-lite harness"
+      ],
+      "goal": "Validate typeclass-lite structures without Lean/mathlib hierarchy reliance.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "No algebra/typeclass theorem claim."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_6",
+      "title": "Lane 4 typeclass-lite structures",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "Machine-friendly structure records without hierarchy dependency."
+    },
+    {
+      "artifacts": [
+        "Lane 5 execution, roundtrip, and evidence schema spec"
+      ],
+      "commits": [
+        {
+          "hash": "06467a1",
+          "subject": "test/corpus: add MachLib Lane 5 evidence record harness"
+        }
+      ],
+      "expected_subjects": [
+        "test/corpus: add MachLib Lane 5 evidence record harness"
+      ],
+      "goal": "Validate evidence records and failed-attempt boundaries.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Evidence rows are not public proof results."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_7",
+      "title": "Lane 5 proof/evidence record boundaries",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A guardrailed evidence-record lane that resists proof hype."
+    },
+    {
+      "artifacts": [
+        "Lane 6 execution, roundtrip, and boundary spec"
+      ],
+      "commits": [
+        {
+          "hash": "1c4d018",
+          "subject": "test/corpus: add MachLib Lane 6 legacy boundary harness"
+        }
+      ],
+      "expected_subjects": [
+        "test/corpus: add MachLib Lane 6 legacy boundary harness"
+      ],
+      "goal": "Keep legacy compatibility opt-in only and never a release dependency.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "No default legacy behavior added."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_8",
+      "title": "Lane 6 legacy compatibility boundary",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "Clear boundary around legacy compatibility behavior."
+    },
+    {
+      "artifacts": [
+        "six-lane dashboard",
+        "push-readiness JSON",
+        "Command Center card/feed draft"
+      ],
+      "commits": [
+        {
+          "hash": "6532631",
+          "subject": "reports/corpus: add MachLib six-lane coverage feed"
+        },
+        {
+          "hash": "cbddcc4",
+          "subject": "reports/command-center: add MachLib six-lane feed card"
+        }
+      ],
+      "expected_subjects": [
+        "reports/corpus: add MachLib six-lane coverage feed",
+        "reports/command-center: add MachLib six-lane feed card"
+      ],
+      "goal": "Aggregate six-lane validation and draft an internal display feed.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Command Center integration remained a draft feed only."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_9",
+      "title": "Six-lane feed and command-center card",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "Internal dashboard feed for review without deployment."
+    },
+    {
+      "artifacts": [
+        "private review reports",
+        "integration plan",
+        "public readiness drafts"
+      ],
+      "commits": [
+        {
+          "hash": "078f00c",
+          "subject": "reports: add MachLib review and public readiness plans"
+        }
+      ],
+      "expected_subjects": [
+        "reports: add MachLib review and public readiness plans"
+      ],
+      "goal": "Prepare private-review, Command Center integration, and public-safe copy plans.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "No PR, merge, deployment, or upload performed by this phase."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_10",
+      "title": "Review/public readiness planning",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A human-review path without public/upload/release promotion."
+    },
+    {
+      "artifacts": [
+        "function-class corpus",
+        "function-class validator",
+        "D-finite ODE harness"
+      ],
+      "commits": [
+        {
+          "hash": "cbc670e",
+          "subject": "research/corpus: add MachLib EML function-class frontier"
+        },
+        {
+          "hash": "b8e0ffa",
+          "subject": "test/corpus: add MachLib D-finite ODE certificate harness"
+        }
+      ],
+      "expected_subjects": [
+        "research/corpus: add MachLib EML function-class frontier",
+        "test/corpus: add MachLib D-finite ODE certificate harness"
+      ],
+      "goal": "Add function-class frontier records and execute the D-finite ODE subset locally.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "D-finite roundtrip keeps expected draft-schema warning."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_11",
+      "title": "Function-class frontier and D-finite executable slice",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A next frontier for analytic/smooth/continuous local harnesses."
+    }
+  ],
+  "public_theorem_claim_performed": false,
+  "push_performed": false,
+  "tier": "OBSERVATION",
+  "validation_rollup": {
+    "command_center_feed_status": "DRAFT_INTERNAL",
+    "date": "2026-05-20",
+    "dfinite_execution_status": "PASS",
+    "dfinite_roundtrip_status": "WARN",
+    "dfinite_roundtrip_warning": "expected draft schema limitation",
+    "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+    "guardrails": {
+      "no_command_center_deploy": true,
+      "no_forge_compiler_change": true,
+      "no_github_pr_created": true,
+      "no_hardware": true,
+      "no_hf_upload": true,
+      "no_main_merge": true,
+      "no_mathlib_dependency": true,
+      "no_package_publish": true,
+      "no_petal_upload": true,
+      "no_public_theorem_claim": true,
+      "no_push": true,
+      "no_token_like_secret": true
+    },
+    "local_only": true,
+    "public_ready_count": 0,
+    "push_performed_by_m023": false,
+    "release_ready_count": 0,
+    "six_lane_dashboard_status": "DRAFT_INTERNAL_VALIDATED",
+    "six_lane_seed_validator": "PASS",
+    "tier": "OBSERVATION",
+    "upload_allowed_count": 0,
+    "zero_mathlib_status": "PASS"
+  },
+  "zero_mathlib_status": "PASS"
+}

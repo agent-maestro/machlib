@@ -1,0 +1,31 @@
+{
+  "command_center_feed_status": "DRAFT_INTERNAL",
+  "date": "2026-05-20",
+  "dfinite_execution_status": "PASS",
+  "dfinite_roundtrip_status": "WARN",
+  "dfinite_roundtrip_warning": "expected draft schema limitation",
+  "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+  "guardrails": {
+    "no_command_center_deploy": true,
+    "no_forge_compiler_change": true,
+    "no_github_pr_created": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_main_merge": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_push": true,
+    "no_token_like_secret": true
+  },
+  "local_only": true,
+  "public_ready_count": 0,
+  "push_performed_by_m023": false,
+  "release_ready_count": 0,
+  "six_lane_dashboard_status": "DRAFT_INTERNAL_VALIDATED",
+  "six_lane_seed_validator": "PASS",
+  "tier": "OBSERVATION",
+  "upload_allowed_count": 0,
+  "zero_mathlib_status": "PASS"
+}

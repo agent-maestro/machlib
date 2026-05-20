@@ -1,0 +1,26 @@
+{
+  "card_id": "machlib_phase_spine_2026_05_20",
+  "command_center_deploy_performed": false,
+  "commit_count": 80,
+  "next_research_queue": [
+    "Analytic local series harness",
+    "Smooth finite-jet harness",
+    "Continuous epsilon-delta/local-modulus harness",
+    "D-finite to analytic boundary lab",
+    "Function-class eFrog/Forge roundtrip feed",
+    "Command Center integration implementation plan, no deploy",
+    "Public-safe MachLib site/README patch application, no upload",
+    "Hugging Face card readiness review, no upload"
+  ],
+  "overall_status": "DRAFT_INTERNAL_VALIDATED",
+  "phase_count": 12,
+  "push_performed": false,
+  "requires_human_approval_for_push": true,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "safe_to_push_now": false,
+  "surface": "command.monogate.dev",
+  "tier": "OBSERVATION",
+  "visibility": "internal",
+  "zero_mathlib_status": "PASS"
+}
