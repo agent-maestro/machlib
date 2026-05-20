@@ -1,0 +1,103 @@
+{
+  "date": "2026-05-20",
+  "expected_warnings": [
+    {
+      "classification": "DRAFT_INTERNAL_LIMITATION",
+      "count": 6,
+      "lane_id": "lane_2",
+      "reason": "Lane 2 symbolic primitives and proof/evidence design remain draft/internal."
+    }
+  ],
+  "failures": [],
+  "guardrails": {
+    "legacy_never_default": true,
+    "legacy_never_release_dependency": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "hf_upload_performed": false,
+  "lane_count": 6,
+  "lanes": [
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_1",
+      "roundtrip_status": "PASS",
+      "seed_count": 4,
+      "status": "DRAFT_INTERNAL_VALIDATED",
+      "title": "EML algebra core",
+      "warnings": 0,
+      "zero_mathlib_status": "PASS"
+    },
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_2",
+      "roundtrip_status": "PASS",
+      "seed_count": 3,
+      "status": "DRAFT_INTERNAL_LIMITATION",
+      "title": "Calculus / special functions",
+      "warnings": 6,
+      "zero_mathlib_status": "PASS"
+    },
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_3",
+      "roundtrip_status": "PASS",
+      "seed_count": 3,
+      "status": "DRAFT_INTERNAL_VALIDATED",
+      "title": "Discrete algorithms",
+      "warnings": 0,
+      "zero_mathlib_status": "PASS"
+    },
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_4",
+      "roundtrip_status": "PASS",
+      "seed_count": 3,
+      "status": "DRAFT_INTERNAL_VALIDATED",
+      "title": "Typeclass-lite structures",
+      "warnings": 0,
+      "zero_mathlib_status": "PASS"
+    },
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_5",
+      "roundtrip_status": "PASS",
+      "seed_count": 3,
+      "status": "DRAFT_INTERNAL_VALIDATED",
+      "title": "Proof/evidence records",
+      "warnings": 0,
+      "zero_mathlib_status": "PASS"
+    },
+    {
+      "execution_status": "PASS",
+      "failures": 0,
+      "lane_id": "lane_6",
+      "roundtrip_status": "PASS",
+      "seed_count": 3,
+      "status": "DRAFT_INTERNAL_VALIDATED",
+      "title": "Legacy compatibility",
+      "warnings": 0,
+      "zero_mathlib_status": "PASS"
+    }
+  ],
+  "local_only": true,
+  "overall_status": "DRAFT_INTERNAL_VALIDATED",
+  "package_publish_performed": false,
+  "public_ready_count": 0,
+  "push_performed": false,
+  "release_ready_count": 0,
+  "seed_count": 19,
+  "tier": "OBSERVATION",
+  "upload_allowed_count": 0,
+  "zero_mathlib_status": "PASS"
+}

@@ -1,0 +1,33 @@
+{
+  "blocked_actions": [
+    "huggingface_upload",
+    "package_publish",
+    "petal_api_upload",
+    "capcard_marketplace_change",
+    "public_theorem_claim",
+    "forge_compiler_behavior_change",
+    "hardware_action"
+  ],
+  "branch": "feat/ac-instances",
+  "dashboard_status": "DRAFT_INTERNAL_VALIDATED",
+  "date": "2026-05-20",
+  "git_status_clean_before_review": false,
+  "git_status_short": "M tools/validate_eml_lane_seeds.py\n?? corpus/eml_lanes_draft/six_lane_dashboard_2026_05_20.json\n?? corpus/eml_lanes_draft/six_lane_push_readiness_2026_05_20.json\n?? reports/machlib_six_lane_coverage_dashboard_2026_05_20.md\n?? reports/machlib_six_lane_gap_and_next_steps_2026_05_20.md\n?? reports/machlib_six_lane_guardrail_report_2026_05_20.md\n?? reports/machlib_six_lane_push_readiness_review_2026_05_20.md\n?? reports/machlib_six_lane_validation_rollup_2026_05_20.md\n?? tests/test_six_lane_dashboard.py\n?? tools/build_six_lane_dashboard.py",
+  "push_performed": false,
+  "push_recommended": "HUMAN_DECISION_REQUIRED",
+  "reasons_not_release_ready": [
+    "All lane rows remain DRAFT_INTERNAL.",
+    "Lane 2 still has expected symbolic primitive and proof/evidence design limitations.",
+    "No explicit human release decision exists.",
+    "No upload, package publish, or public-result authorization exists."
+  ],
+  "reasons_ready_for_review_branch": [
+    "Six-lane draft corpus has zero hard lane failures.",
+    "Zero-dependency checker passes in all requested modes.",
+    "eFrog/Forge local probes are recorded for all six lanes."
+  ],
+  "remote": "origin\thttps://github.com/agent-maestro/machlib.git (fetch)\norigin\thttps://github.com/agent-maestro/machlib.git (push)",
+  "remote_review_only": true,
+  "required_human_decision": "Approve push to private review branch or keep local only.",
+  "safe_to_push_now": false
+}
