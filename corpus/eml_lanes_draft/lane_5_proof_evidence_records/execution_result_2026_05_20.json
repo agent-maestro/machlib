@@ -1,0 +1,230 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 5 - Proof/evidence records",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 3,
+  "results": [
+    {
+      "artifact_status": "EVIDENCE_RECORDED",
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "limitations_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "not_claimed_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_proof_boundary"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "blocked_status_absent"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "observation_field_mapped"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "limitations_non_empty"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "internal_review_status"
+        }
+      ],
+      "classification": "EVIDENCE_ROW_WITH_LIMITATIONS",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "evidence_row_with_limitations_v0",
+      "review_status": "DRAFT_INTERNAL",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "artifact_status": "FAILED_ATTEMPT_RECORDED",
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "limitations_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "not_claimed_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_proof_boundary"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "blocked_status_absent"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "failed_attempt_recorded"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "failure_reason_or_blocker_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "next_safe_local_action_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "not_treated_as_accepted"
+        }
+      ],
+      "classification": "FAILED_ATTEMPT_RECORD",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "failed_attempt_record_v0",
+      "review_status": "NEEDS_REVIEW",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "artifact_status": "NEEDS_REVIEW",
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "public_ready_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "upload_allowed_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "mathlib_dependency_false"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "limitations_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "not_claimed_present"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "no_public_proof_boundary"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "blocked_status_absent"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "artifact_status_field_mapped"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "lean_check_status_scoped"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "blanket_proof_claim_absent"
+        }
+      ],
+      "classification": "LEAN_CHECKABLE_ARTIFACT_RECORD",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "lean_checkable_artifact_record_v0",
+      "review_status": "NEEDS_REVIEW",
+      "status": "PASS",
+      "warnings": [
+        "no actual Lean artifact attached; kept as NEEDS_REVIEW"
+      ]
+    }
+  ],
+  "seed_count": 3,
+  "tier": "OBSERVATION",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

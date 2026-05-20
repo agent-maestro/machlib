@@ -1,0 +1,273 @@
+{
+  "date": "2026-05-20",
+  "evidence_schema_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach Lean-checkable artifact record",
+      "public_ready": false,
+      "required_fields": [
+        "record_id",
+        "artifact_status",
+        "validation_trace",
+        "limitations",
+        "not_claimed"
+      ],
+      "required_limitations": [
+        "no blanket proof status",
+        "not release validated"
+      ],
+      "required_not_claimed": [
+        "not a public proof result",
+        "not a new result"
+      ],
+      "schema_id": "mach_lean_checkable_artifact_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "Lean-check status remains scoped per artifact",
+        "missing artifact maps to review status"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach evidence row with limitations",
+      "public_ready": false,
+      "required_fields": [
+        "record_id",
+        "observed",
+        "limitations",
+        "not_claimed",
+        "review_status"
+      ],
+      "required_limitations": [
+        "limitation list required"
+      ],
+      "required_not_claimed": [
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "schema_id": "mach_evidence_row_with_limitations_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "limitations are non-empty",
+        "review status remains internal"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach failed attempt record",
+      "public_ready": false,
+      "required_fields": [
+        "record_id",
+        "failure_reason",
+        "blocker",
+        "next_safe_local_action",
+        "review_status"
+      ],
+      "required_limitations": [
+        "failure remains visible"
+      ],
+      "required_not_claimed": [
+        "not accepted",
+        "not public-ready"
+      ],
+      "schema_id": "mach_failed_attempt_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "failed attempt is not accepted as success",
+        "next safe local action is present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach not-claimed boundary",
+      "public_ready": false,
+      "required_fields": [
+        "not_claimed",
+        "public_ready",
+        "upload_allowed"
+      ],
+      "required_limitations": [
+        "no public result boundary"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "schema_id": "mach_not_claimed_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "boundary fields remain explicit"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach review status record",
+      "public_ready": false,
+      "required_fields": [
+        "review_status",
+        "allowed_statuses",
+        "forbidden_statuses"
+      ],
+      "required_limitations": [
+        "draft/internal status required"
+      ],
+      "required_not_claimed": [
+        "not release-ready"
+      ],
+      "schema_id": "mach_review_status_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "forbidden statuses are rejected"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "LEAN_CHECKABLE_WHERE_ARTIFACT_PRESENT",
+        "EVIDENCE_RECORDED",
+        "FAILED_ATTEMPT_RECORDED",
+        "NEEDS_REVIEW",
+        "BLOCKED_NO_GO"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED",
+        "UPLOAD_READY"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "mathlib_dependency": false,
+      "name": "Mach validation trace record",
+      "public_ready": false,
+      "required_fields": [
+        "validation_trace",
+        "checker_status",
+        "observed",
+        "limitations"
+      ],
+      "required_limitations": [
+        "trace limitations required"
+      ],
+      "required_not_claimed": [
+        "not a proof result"
+      ],
+      "schema_id": "mach_validation_trace_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "trace is local and bounded"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "local_only": true,
+  "tier": "OBSERVATION"
+}
