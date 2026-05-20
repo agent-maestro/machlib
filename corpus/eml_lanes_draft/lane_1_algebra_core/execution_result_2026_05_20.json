@@ -1,0 +1,205 @@
+{
+  "date": "2026-05-20",
+  "expected_seed_count": 4,
+  "failed": 0,
+  "guardrail_failures": [],
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 1 - EML algebra core",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 4,
+  "public_claim_status": "PASS",
+  "results": [
+    {
+      "checks": [
+        {
+          "constraint_holds": true,
+          "sample": "zero",
+          "x": 0.0
+        },
+        {
+          "constraint_holds": true,
+          "sample": "sqrt2",
+          "x": 1.4142135623730951
+        },
+        {
+          "constraint_holds": true,
+          "sample": "negative_sqrt2",
+          "x": -1.4142135623730951
+        },
+        {
+          "constraint_holds": false,
+          "sample": "one",
+          "x": 1.0
+        },
+        {
+          "constraint_holds": false,
+          "sample": "two",
+          "x": 2.0
+        }
+      ],
+      "classification": "CONSTRAINT",
+      "failures": [],
+      "not_claimed": [
+        "not a new theorem",
+        "not a physical claim",
+        "not a public proof result",
+        "not a theorem-prover benchmark claim"
+      ],
+      "record_id": "cubic_dyadic_equilibrium_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "conclusion": true,
+          "premise": true,
+          "sample": {
+            "a": 1,
+            "b": 2,
+            "c": 5
+          }
+        },
+        {
+          "conclusion": true,
+          "premise": true,
+          "sample": {
+            "a": -3,
+            "b": 0,
+            "c": 10
+          }
+        },
+        {
+          "conclusion": true,
+          "premise": true,
+          "sample": {
+            "a": -2,
+            "b": -1,
+            "c": -4
+          }
+        },
+        {
+          "premise": false,
+          "rule_applied": false,
+          "sample": {
+            "a": 2,
+            "b": 1,
+            "c": 5
+          }
+        }
+      ],
+      "classification": "BOUNDED_SYMBOLIC_RULE",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "inequality_sign_flip_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": -3
+          }
+        },
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": -1
+          }
+        },
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": 0
+          }
+        },
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": 1
+          }
+        },
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": 2
+          }
+        },
+        {
+          "identity_holds": true,
+          "sample": {
+            "x": 5
+          }
+        }
+      ],
+      "classification": "IDENTITY",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "linear_dyadic_identity_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "constraint_holds": true,
+          "sample": {
+            "x": -1
+          }
+        },
+        {
+          "constraint_holds": true,
+          "sample": {
+            "x": 1
+          }
+        },
+        {
+          "constraint_holds": false,
+          "sample": {
+            "x": 0
+          }
+        },
+        {
+          "constraint_holds": false,
+          "sample": {
+            "x": 2
+          }
+        }
+      ],
+      "classification": "CONSTRAINT",
+      "failures": [],
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "quadratic_zero_product_v0",
+      "status": "PASS",
+      "warnings": []
+    }
+  ],
+  "seed_count": 4,
+  "tier": "OBSERVATION",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
