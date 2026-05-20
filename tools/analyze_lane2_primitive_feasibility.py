@@ -99,6 +99,7 @@ def load_lane2_seeds(root: Path) -> dict[str, Seed]:
         if path.name in {
             "primitive_feasibility_result_2026_05_20.json",
             "primitive_spec_draft_2026_05_20.json",
+            "symbolic_rewrite_result_2026_05_20.json",
         }:
             continue
         obj = json.loads(path.read_text(encoding="utf-8"))

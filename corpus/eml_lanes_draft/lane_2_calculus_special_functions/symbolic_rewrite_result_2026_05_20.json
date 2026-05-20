@@ -1,0 +1,170 @@
+{
+  "date": "2026-05-20",
+  "failed": 0,
+  "failures": [],
+  "guardrails": {
+    "no_capcard_certification_claim": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_marketplace_ready_true": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_petal_verification_claim": true,
+    "no_public_ready_true": true,
+    "no_public_theorem_claim": true,
+    "no_token_like_secret": true,
+    "no_upload_allowed_true": true
+  },
+  "lane": "Lane 2 - Calculus / special functions",
+  "lane_status": "DRAFT_INTERNAL_SYMBOLIC_REWRITE_ONLY",
+  "local_only": true,
+  "passed": 3,
+  "results": [
+    {
+      "blocked_rewrites": [
+        {
+          "guard": null,
+          "input": "log(exp(x))",
+          "output": null,
+          "status": "WARN_BLOCKED_BY_MISSING_GUARD"
+        },
+        {
+          "guard": null,
+          "input": "exp(log(x))",
+          "output": null,
+          "status": "WARN_BLOCKED_BY_MISSING_GUARD"
+        }
+      ],
+      "domain_guards": [
+        "FORMAL_SYMBOLIC_INVERSE_GUARD",
+        "POSITIVE_DOMAIN_GUARD"
+      ],
+      "failures": [],
+      "guarded_rewrites": [
+        {
+          "guard": "FORMAL_SYMBOLIC_INVERSE_GUARD",
+          "input": "log(exp(x))",
+          "output": "x",
+          "status": "PASS"
+        },
+        {
+          "guard": "POSITIVE_DOMAIN_GUARD",
+          "input": "exp(log(x))",
+          "output": "x",
+          "status": "PASS"
+        }
+      ],
+      "not_claimed": [
+        "not a complete real-analysis formalization",
+        "not imported from external libraries",
+        "not a public theorem claim",
+        "not a new result",
+        "not public-ready",
+        "not upload-authorized"
+      ],
+      "record_id": "exp_log_formal_inverse_draft_v0",
+      "required_primitives": [
+        "mach_exp_symbolic_v0",
+        "mach_log_symbolic_v0",
+        "mach_symbolic_domain_guard_v0"
+      ],
+      "status": "PASS",
+      "warning_status": "WARN_ALLOWED"
+    },
+    {
+      "blocked_rewrites": [
+        {
+          "guard": null,
+          "input": "sqrt(x)^2",
+          "output": null,
+          "status": "WARN_BLOCKED_BY_MISSING_GUARD"
+        },
+        {
+          "input": "sqrt(x^2)",
+          "proposed_output": "x",
+          "reason": "unsafe: sign information is missing",
+          "status": "BLOCKED"
+        },
+        {
+          "input": "sqrt(x^2)",
+          "proposed_output": "abs(x)",
+          "reason": "NEEDS_STRUCTURE_LAYER or NEEDS_PROOF_LAYER_DESIGN before acceptance",
+          "status": "BLOCKED"
+        }
+      ],
+      "domain_guards": [
+        "NONNEGATIVE_DOMAIN_GUARD"
+      ],
+      "failures": [],
+      "guarded_rewrites": [
+        {
+          "guard": "NONNEGATIVE_DOMAIN_GUARD",
+          "input": "sqrt(x)^2",
+          "output": "x",
+          "status": "PASS"
+        }
+      ],
+      "not_claimed": [
+        "not a complete real-analysis formalization",
+        "not imported from external libraries",
+        "not a public theorem claim",
+        "not a new result",
+        "not public-ready",
+        "not upload-authorized"
+      ],
+      "record_id": "pow_square_root_symbolic_draft_v0",
+      "required_primitives": [
+        "mach_pow_symbolic_v0",
+        "mach_sqrt_symbolic_v0",
+        "mach_symbolic_domain_guard_v0"
+      ],
+      "status": "PASS",
+      "warning_status": "WARN_ALLOWED"
+    },
+    {
+      "blocked_rewrites": [
+        {
+          "guard": null,
+          "input": "sin(x)^2 + cos(x)^2",
+          "output": null,
+          "status": "WARN_BLOCKED_BY_MISSING_GUARD"
+        }
+      ],
+      "domain_guards": [
+        "TRIG_SYMBOLIC_IDENTITY_GUARD"
+      ],
+      "failures": [],
+      "guarded_rewrites": [
+        {
+          "guard": "TRIG_SYMBOLIC_IDENTITY_GUARD",
+          "input": "sin(x)^2 + cos(x)^2",
+          "output": "1",
+          "status": "PASS"
+        }
+      ],
+      "not_claimed": [
+        "not a complete real-analysis formalization",
+        "not imported from external libraries",
+        "not a public theorem claim",
+        "not a new result",
+        "not public-ready",
+        "not upload-authorized"
+      ],
+      "record_id": "trig_pythagorean_symbolic_draft_v0",
+      "required_primitives": [
+        "mach_sin_symbolic_v0",
+        "mach_cos_symbolic_v0",
+        "mach_symbolic_domain_guard_v0"
+      ],
+      "status": "PASS",
+      "warning_status": "WARN_ALLOWED"
+    }
+  ],
+  "rewrite_status": "PASS",
+  "seed_count": 3,
+  "tier": "OBSERVATION",
+  "warned": 3,
+  "zero_mathlib_status": "PASS"
+}
