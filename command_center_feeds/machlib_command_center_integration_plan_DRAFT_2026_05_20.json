@@ -1,0 +1,137 @@
+{
+  "plan_id": "machlib_command_center_integration_plan_DRAFT_2026_05_20",
+  "date": "2026-05-20",
+  "tier": "OBSERVATION",
+  "status": "DRAFT_INTERNAL",
+  "local_only": true,
+  "command_center_path_inspected": "/home/monogate/monogate/command-center",
+  "command_center_files_modified": false,
+  "command_center_deploy_performed": false,
+  "push_performed": false,
+  "source_feed_files": [
+    "command_center_feeds/machlib_six_lane_status_card_2026_05_20.json",
+    "command_center_feeds/machlib_six_lane_status_feed_2026_05_20.json",
+    "command_center_feeds/machlib_command_center_card_schema_DRAFT_2026_05_20.json"
+  ],
+  "observed_command_center": {
+    "framework": "Next.js 14 App Router",
+    "branch": "master",
+    "remote": "https://github.com/agent-maestro/command-center.git",
+    "noted_preexisting_dirty_file": "data/proof-registry.jsonl",
+    "likely_mount_files": [
+      "app/page.tsx",
+      "components/tiles/MachLibStatusTile.tsx",
+      "data/machlib_six_lane_status_card.json",
+      "components/ecosystem/EcosystemCockpit.tsx"
+    ]
+  },
+  "recommended_path": "static_json_import_after_human_approval",
+  "mount_options": [
+    {
+      "id": "static_json_import",
+      "summary": "Copy an approved MachLib feed snapshot into command-center data and render it from a tile.",
+      "pros": [
+        "smallest implementation",
+        "easy private review",
+        "no runtime network dependency"
+      ],
+      "risks": [
+        "manual snapshot drift",
+        "requires clear provenance",
+        "must preserve draft/internal language"
+      ],
+      "required_human_approval": [
+        "approve exact feed snapshot",
+        "approve display copy",
+        "approve later command-center deploy"
+      ],
+      "deployment_requirement": "future explicit command-center deployment",
+      "no_go_boundaries": [
+        "no public-ready status",
+        "no upload-ready status",
+        "no release-ready status",
+        "no proof/theorem/open-problem claim"
+      ]
+    },
+    {
+      "id": "internal_api_endpoint",
+      "summary": "Add a future internal API route that reads an approved feed snapshot.",
+      "pros": [
+        "separates data access from presentation",
+        "supports server-side validation",
+        "can support future refresh controls"
+      ],
+      "risks": [
+        "requires auth review",
+        "more moving parts",
+        "must avoid public exposure"
+      ],
+      "required_human_approval": [
+        "approve endpoint design",
+        "approve internal visibility",
+        "approve cache and refresh behavior"
+      ],
+      "deployment_requirement": "future explicit command-center implementation and deployment",
+      "no_go_boundaries": [
+        "no public endpoint",
+        "no upload workflow",
+        "no package publish workflow"
+      ]
+    },
+    {
+      "id": "future_feed_registry",
+      "summary": "Create a future internal feed registry consumed by command-center.",
+      "pros": [
+        "scales across repositories",
+        "centralizes schema and freshness rules",
+        "supports provenance history"
+      ],
+      "risks": [
+        "requires cross-repo design",
+        "higher integration complexity",
+        "needs strong auth and semantics review"
+      ],
+      "required_human_approval": [
+        "approve registry schema",
+        "approve feed ownership",
+        "approve command-center integration"
+      ],
+      "deployment_requirement": "future registry and command-center deployment",
+      "no_go_boundaries": [
+        "no public registry by default",
+        "no certification claim",
+        "no PETAL verification claim"
+      ]
+    }
+  ],
+  "display_copy": [
+    "MachLib Six-Lane Status",
+    "Zero-Mathlib: PASS",
+    "Draft internal validated",
+    "Not public-ready",
+    "Not upload-ready",
+    "Not release-ready",
+    "Push requires human approval"
+  ],
+  "blocked_display_copy": [
+    "public theorem/proof claims",
+    "open-problem resolution language",
+    "package release ready",
+    "Hugging Face upload ready",
+    "CapCard certified",
+    "PETAL verified"
+  ],
+  "guardrails": {
+    "no_command_center_deploy": true,
+    "no_command_center_files_modified": true,
+    "no_push": true,
+    "no_hf_upload": true,
+    "no_package_publish": true,
+    "no_petal_api_call": true,
+    "no_capcard_marketplace_change": true,
+    "no_hardware": true,
+    "no_forge_compiler_change": true,
+    "no_public_theorem_claim": true,
+    "no_token_like_secret": true
+  }
+}
