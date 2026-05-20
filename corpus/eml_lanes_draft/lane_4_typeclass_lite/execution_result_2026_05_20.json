@@ -1,0 +1,177 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "lane": "Lane 4 - Typeclass-lite structures",
+  "local_only": true,
+  "missing_records": [],
+  "passed": 3,
+  "results": [
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "closure"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "operation_table_exists"
+        },
+        {
+          "actual": false,
+          "expected": false,
+          "name": "associativity_claimed",
+          "note": "not claimed for magma-lite"
+        },
+        {
+          "actual": false,
+          "expected": false,
+          "name": "identity_claimed",
+          "note": "not claimed for magma-lite"
+        }
+      ],
+      "classification": "TYPECLASS_LITE_MAGMA_RECORD",
+      "failures": [],
+      "fixture": {
+        "carrier": [
+          0,
+          1,
+          2
+        ],
+        "operation": "add_mod_3",
+        "operation_table": [
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            2,
+            0,
+            1
+          ]
+        ]
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "typeclass_lite_magma_record_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "closure"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "associativity"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "identity_left_right"
+        },
+        {
+          "actual": false,
+          "expected": false,
+          "name": "imported_hierarchy_claimed"
+        }
+      ],
+      "classification": "TYPECLASS_LITE_MONOID_RECORD",
+      "failures": [],
+      "fixture": {
+        "carrier": [
+          0,
+          1,
+          2
+        ],
+        "identity": 0,
+        "operation": "add_mod_3"
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "typeclass_lite_monoid_record_v0",
+      "status": "PASS",
+      "warnings": []
+    },
+    {
+      "checks": [
+        {
+          "actual": true,
+          "expected": true,
+          "name": "reflexive"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "antisymmetric"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "transitive"
+        },
+        {
+          "actual": true,
+          "expected": true,
+          "name": "total",
+          "note": "finite ordered-carrier convention"
+        },
+        {
+          "actual": false,
+          "expected": false,
+          "name": "imported_hierarchy_claimed"
+        }
+      ],
+      "classification": "TYPECLASS_LITE_ORDERED_CARRIER",
+      "failures": [],
+      "fixture": {
+        "carrier": [
+          0,
+          1,
+          2
+        ],
+        "relation": "integer_lte_restricted"
+      },
+      "not_claimed": [
+        "not a new result",
+        "not a public proof result",
+        "not a full coverage claim"
+      ],
+      "record_id": "typeclass_lite_ordered_carrier_v0",
+      "status": "PASS",
+      "warnings": []
+    }
+  ],
+  "seed_count": 3,
+  "tier": "OBSERVATION",
+  "unexpected_records": [],
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

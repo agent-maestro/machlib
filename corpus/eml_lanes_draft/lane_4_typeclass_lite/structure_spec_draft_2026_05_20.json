@@ -1,0 +1,187 @@
+{
+  "date": "2026-05-20",
+  "local_only": true,
+  "structure_specs": [
+    {
+      "carrier_kind": "finite_carrier",
+      "finite_examples": [
+        "carrier={0,1,2}; op=add_mod_3"
+      ],
+      "forbidden_claims": [
+        "imported Lean hierarchy compatibility",
+        "public algebra/typeclass theorem status",
+        "release-ready structure layer",
+        "blanket replacement for external libraries"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "laws_as_records": [
+        "closure_record"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach magma-lite",
+      "operations": [
+        "binary_op"
+      ],
+      "public_ready": false,
+      "required_future_design": [
+        "record schema",
+        "optional law slots"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "structure_id": "mach_magma_lite_v0",
+      "upload_allowed": false,
+      "validation_checks": [
+        "closure over finite carrier",
+        "operation table present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "carrier_kind": "finite_carrier",
+      "finite_examples": [
+        "carrier={0,1,2}; op=add_mod_3; identity=0"
+      ],
+      "forbidden_claims": [
+        "imported Lean hierarchy compatibility",
+        "public algebra/typeclass theorem status",
+        "release-ready structure layer",
+        "blanket replacement for external libraries"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "laws_as_records": [
+        "closure_record",
+        "associativity_record",
+        "identity_record"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach monoid-lite",
+      "operations": [
+        "binary_op",
+        "identity"
+      ],
+      "public_ready": false,
+      "required_future_design": [
+        "law-record schema",
+        "evidence-row integration"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "structure_id": "mach_monoid_lite_v0",
+      "upload_allowed": false,
+      "validation_checks": [
+        "finite associativity table",
+        "left/right identity checks"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "carrier_kind": "finite_ordered_carrier",
+      "finite_examples": [
+        "carrier={0,1,2}; relation=integer_lte_restricted"
+      ],
+      "forbidden_claims": [
+        "imported Lean hierarchy compatibility",
+        "public algebra/typeclass theorem status",
+        "release-ready structure layer",
+        "blanket replacement for external libraries"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "laws_as_records": [
+        "reflexive_record",
+        "antisymmetric_record",
+        "transitive_record",
+        "totality_record"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach ordered-carrier-lite",
+      "operations": [
+        "relation_lte"
+      ],
+      "public_ready": false,
+      "required_future_design": [
+        "order-assumption records",
+        "monotonicity slots"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "structure_id": "mach_ordered_carrier_lite_v0",
+      "upload_allowed": false,
+      "validation_checks": [
+        "reflexive",
+        "antisymmetric",
+        "transitive",
+        "total over fixture"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "carrier_kind": "metadata_record",
+      "finite_examples": [
+        "closure/associativity/identity rows"
+      ],
+      "forbidden_claims": [
+        "imported Lean hierarchy compatibility",
+        "public algebra/typeclass theorem status",
+        "release-ready structure layer",
+        "blanket replacement for external libraries"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "laws_as_records": [
+        "local_law_result"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach law record",
+      "operations": [
+        "named_check"
+      ],
+      "public_ready": false,
+      "required_future_design": [
+        "shared law-result schema"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "structure_id": "mach_law_record_v0",
+      "upload_allowed": false,
+      "validation_checks": [
+        "law remains local to a finite example"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "carrier_kind": "finite_guard",
+      "finite_examples": [
+        "carrier={0,1,2}"
+      ],
+      "forbidden_claims": [
+        "imported Lean hierarchy compatibility",
+        "public algebra/typeclass theorem status",
+        "release-ready structure layer",
+        "blanket replacement for external libraries"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "laws_as_records": [
+        "bounded_quantification_record"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach finite carrier guard",
+      "operations": [
+        "membership_check"
+      ],
+      "public_ready": false,
+      "required_future_design": [
+        "guard schema",
+        "cardinality metadata"
+      ],
+      "status": "DRAFT_INTERNAL",
+      "structure_id": "mach_finite_carrier_guard_v0",
+      "upload_allowed": false,
+      "validation_checks": [
+        "all finite checks stay bounded"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "tier": "OBSERVATION"
+}
