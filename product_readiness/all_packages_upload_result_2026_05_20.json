@@ -1,0 +1,45 @@
+{
+  "result_id": "all_packages_upload_result_2026_05_20",
+  "upload_session_status": "ZERO_MATHLIB_CHECKER_UPLOADED_BATCH_STOPPED_BEFORE_LATER_PACKAGES",
+  "stop_reason": "batch stopped after the first package because initial project-level PyPI JSON returned 404; final project and version JSON both verify zero-mathlib-checker 0.0.0.dev0",
+  "uploaded_packages": [
+    "zero-mathlib-checker"
+  ],
+  "versions_uploaded": {
+    "zero-mathlib-checker": "0.0.0.dev0"
+  },
+  "upload_order": [
+    {
+      "package_name": "zero-mathlib-checker",
+      "upload_order": 1
+    }
+  ],
+  "artifact_filenames": {
+    "zero-mathlib-checker": [
+      "zero_mathlib_checker-0.0.0.dev0-py3-none-any.whl",
+      "zero_mathlib_checker-0.0.0.dev0.tar.gz"
+    ]
+  },
+  "pypi_verification_result": "PASS_PROJECT_AND_VERSION_JSON",
+  "pypi_project_json_result": "zero-mathlib-checker 0.0.0.dev0",
+  "pypi_version_json_result": "zero-mathlib-checker 0.0.0.dev0",
+  "failed_packages": [],
+  "skipped_packages": [
+    "claim-boundary",
+    "eml-records",
+    "review-branch-packet",
+    "hybrid-trace-eml",
+    "eml-harness",
+    "machlib-workbench",
+    "machlib"
+  ],
+  "pypi_upload_performed": true,
+  "package_publish_performed": true,
+  "twine_upload_performed": true,
+  "token_written_to_file": false,
+  "token_printed": false,
+  "token_committed": false,
+  "token_unset_after_upload": true,
+  "user_revoke_token_required": true,
+  "continue_remaining_batch_requires_explicit_user_approval": true
+}

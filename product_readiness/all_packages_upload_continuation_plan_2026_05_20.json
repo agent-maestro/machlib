@@ -1,0 +1,53 @@
+{
+  "plan_id": "all_packages_upload_continuation_plan_2026_05_20",
+  "already_uploaded": [
+    {
+      "package_name": "zero-mathlib-checker",
+      "version": "0.0.0.dev0",
+      "pypi_verification": "PASS_PROJECT_AND_VERSION_JSON"
+    }
+  ],
+  "remaining_ready_not_uploaded": [
+    {
+      "package_name": "claim-boundary",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "eml-records",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "review-branch-packet",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "machlib-workbench",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "eml-harness",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "hybrid-trace-eml",
+      "version": "0.0.0.dev0"
+    }
+  ],
+  "blocked_not_uploaded": [
+    {
+      "package_name": "machlib",
+      "reason": "broad package-boundary/API/license/public-copy review remains incomplete"
+    }
+  ],
+  "next_upload_rule": "Use one temporary token for the remaining explicitly approved batch, upload one package at a time, and stop on the first failed test, build, twine check, upload, or verification.",
+  "verification_rule": "Use version-specific PyPI JSON first, then project-level JSON with retry/backoff second.",
+  "upload_allowed_now": false,
+  "token_handling_now": false,
+  "publish_performed_now": false,
+  "pypi_upload_performed_now": false,
+  "twine_upload_performed_now": false,
+  "continuation_requires_new_explicit_approval": true,
+  "token_written_to_file": false,
+  "token_printed": false,
+  "token_committed": false
+}
