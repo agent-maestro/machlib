@@ -2,13 +2,11 @@
 
 | Rank | Option | Category | Readiness |
 | ---: | --- | --- | --- |
-| 1 | M046 eml-records hardening pass, no publish | package candidate hardening | PRIMARY |
-| 2 | AI-generated research/code/formal artifact review service | revenue service | CLOSEST_TO_REVENUE |
-| 3 | Monogate Evidence Workbench internal CLI/service | internal service | HIGH |
-| 4 | Command Center Evidence Cards static snapshot | internal dashboard | HIGH_NO_DEPLOY |
-| 5 | review-branch-packet draft package | package candidate | ALTERNATE |
-| 6 | machlib-workbench package | defer | NOT_YET |
-| 7 | eml-harness package | defer | NOT_YET |
-| 8 | machlib package / hybrid-trace-eml | defer research | NOT_YET |
+| 1 | M048 review-branch-packet draft package, no publish | package candidate | PRIMARY |
+| 2 | M048A claim-boundary hardening, no publish | package hardening | ALTERNATE |
+| 3 | M048B Command Center static snapshot review, no deploy | internal dashboard | ALTERNATE |
+| 4 | AI-generated research/code/formal artifact review service | revenue service | CLOSEST_TO_REVENUE |
+| 5 | Monogate Evidence Workbench internal CLI/service | internal service | HIGH |
+| 6 | machlib-workbench and eml-harness packages | defer | NOT_YET |
 
 All next steps remain local-only and require no PyPI, package, deployment, hardware, or public-claim action.

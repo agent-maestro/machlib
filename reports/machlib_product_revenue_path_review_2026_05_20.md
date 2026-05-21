@@ -9,4 +9,4 @@ Ranked paths remain unchanged:
 5. Hybrid Trace Evidence Toolkit.
 6. MachLib Studio.
 
-This ranking is an internal planning matrix. It is not a release, upload, deployment, or public theorem/proof/open-problem claim.
+This remains an internal planning matrix. It is not a release, upload, deployment, or public theorem/proof/open-problem claim.

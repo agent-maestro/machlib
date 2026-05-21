@@ -1,7 +1,5 @@
 # MachLib product package boundary review - 2026-05-20
 
-## Boundary status
-
 - No package publish occurred.
 - No PyPI token handling occurred.
 - No PyPI name availability was checked.

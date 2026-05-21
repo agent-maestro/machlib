@@ -1,7 +1,7 @@
 {
   "card_id": "machlib_package_candidate_status_2026_05_20",
   "claim_boundary_status": "LOCAL_DRAFT_PACKAGE_CREATED",
-  "eml_records_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+  "eml_records_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
   "not_claimed": [
     "not package published",
     "not PyPI uploaded",

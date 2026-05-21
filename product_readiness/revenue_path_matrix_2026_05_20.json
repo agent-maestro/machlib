@@ -1,21 +1,9 @@
 {
   "date": "2026-05-20",
   "local_only": true,
-  "package_publish_performed": false,
   "products": [
     {
-      "current_assets": [
-        "MachLib evidence reports",
-        "package candidate scanners"
-      ],
-      "description": "Human-approved service for reviewing AI-generated research, code, and formal artifacts.",
-      "first_mvp": "manual review packet with no public proof claims",
-      "likely_user": "technical founder or research team",
-      "missing_assets": [
-        "service boundary",
-        "pricing",
-        "intake workflow"
-      ],
+      "description": "AI-generated research/code/formal artifact review service",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -24,27 +12,15 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "product_id": "ai_research_code_formal_artifact_review_service",
+      "product_id": "ai-generated_research_code_formal_artifact_review_service",
       "public_readiness": false,
       "rank": 1,
       "release_ready": false,
-      "revenue_path": "consulting/service revenue first",
-      "upload_ready": false,
-      "value_proposition": "turn local evidence packets into reviewable engineering decisions"
+      "revenue_path": "service revenue first",
+      "upload_ready": false
     },
     {
-      "current_assets": [
-        "MachLib Evidence Workbench",
-        "phase spine",
-        "package candidate matrix"
-      ],
-      "description": "Internal CLI/service that aggregates local evidence status.",
-      "first_mvp": "local-only CLI wrapper",
-      "likely_user": "internal engineering/research operator",
-      "missing_assets": [
-        "stable API",
-        "packaging review"
-      ],
+      "description": "Monogate Evidence Workbench internal CLI/service",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -57,50 +33,11 @@
       "public_readiness": false,
       "rank": 2,
       "release_ready": false,
-      "revenue_path": "internal platform, then enterprise workflow",
-      "upload_ready": false,
-      "value_proposition": "single local inspection surface before private review decisions"
+      "revenue_path": "internal CLI/service MVP",
+      "upload_ready": false
     },
     {
-      "current_assets": [
-        "internal Command Center cards"
-      ],
-      "description": "Internal status cards/feed snapshots for local evidence artifacts.",
-      "first_mvp": "no-deploy static snapshot",
-      "likely_user": "operator reviewing MachLib status",
-      "missing_assets": [
-        "static snapshot hardening",
-        "deployment approval path"
-      ],
-      "no_go_boundaries": [
-        "no package publish",
-        "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
-        "no command-center deploy without approval"
-      ],
-      "product_id": "command_center_evidence_cards",
-      "public_readiness": false,
-      "rank": 3,
-      "release_ready": false,
-      "revenue_path": "dashboard feature after safety review",
-      "upload_ready": false,
-      "value_proposition": "compact status view without deployment requirement"
-    },
-    {
-      "current_assets": [
-        "zero-mathlib-checker",
-        "MachLib corpus examples"
-      ],
-      "description": "Benchmark/curriculum around zero-Mathlib dependency discipline.",
-      "first_mvp": "local examples only",
-      "likely_user": "formal methods learner or tool author",
-      "missing_assets": [
-        "curriculum design",
-        "license review"
-      ],
+      "description": "Command Center Evidence Cards",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -109,56 +46,49 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "product_id": "zero_mathlib_benchmark_curriculum",
+      "product_id": "command_center_evidence_cards",
       "public_readiness": false,
-      "rank": 4,
+      "rank": 3,
       "release_ready": false,
-      "revenue_path": "education/content later",
-      "upload_ready": false,
-      "value_proposition": "teaches local dependency boundaries and scanner use"
+      "revenue_path": "static snapshot first, no deploy",
+      "upload_ready": false
     },
     {
-      "current_assets": [
-        "stochastic/hybrid draft corpus"
-      ],
-      "description": "Research-only toolkit for finite stochastic/hybrid trace evidence records.",
-      "first_mvp": "local schema fixtures",
-      "likely_user": "research engineer",
-      "missing_assets": [
-        "schema hardening",
-        "claim-boundary integration"
-      ],
+      "description": "Zero-Mathlib benchmark/curriculum",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
         "no package name availability claim",
         "no release-ready claim",
         "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
-        "no stochastic/SDE/Markov theorem claim"
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "zero-mathlib_benchmark_curriculum",
+      "public_readiness": false,
+      "rank": 4,
+      "release_ready": false,
+      "revenue_path": "education/content later",
+      "upload_ready": false
+    },
+    {
+      "description": "Hybrid Trace Evidence Toolkit",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
       ],
       "product_id": "hybrid_trace_evidence_toolkit",
       "public_readiness": false,
       "rank": 5,
       "release_ready": false,
-      "revenue_path": "research support, not product yet",
-      "upload_ready": false,
-      "value_proposition": "bounded trace record validation without stochastic theorem claims"
+      "revenue_path": "research support only",
+      "upload_ready": false
     },
     {
-      "current_assets": [
-        "corpora",
-        "validators",
-        "workbench"
-      ],
-      "description": "Larger product concept for browsing and authoring MachLib evidence artifacts.",
-      "first_mvp": "not selected yet",
-      "likely_user": "future internal operator",
-      "missing_assets": [
-        "product spec",
-        "UI design",
-        "deployment boundary"
-      ],
+      "description": "MachLib Studio",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -172,17 +102,16 @@
       "rank": 6,
       "release_ready": false,
       "revenue_path": "longer-term product",
-      "upload_ready": false,
-      "value_proposition": "rich authoring and validation UX"
+      "upload_ready": false
     }
   ],
   "ranking": [
-    "ai_research_code_formal_artifact_review_service",
-    "monogate_evidence_workbench_internal_cli_service",
-    "command_center_evidence_cards",
-    "zero_mathlib_benchmark_curriculum",
-    "hybrid_trace_evidence_toolkit",
-    "machlib_studio"
+    "AI-generated research/code/formal artifact review service",
+    "Monogate Evidence Workbench internal CLI/service",
+    "Command Center Evidence Cards",
+    "Zero-Mathlib benchmark/curriculum",
+    "Hybrid Trace Evidence Toolkit",
+    "MachLib Studio"
   ],
   "release_ready": false,
   "tier": "OBSERVATION",

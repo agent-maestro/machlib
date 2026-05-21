@@ -1,9 +1,7 @@
 # MachLib product packaging matrix - 2026-05-20
 
-The first three package candidates are local drafts only:
+`eml-records` is now a hardened local draft package candidate with 30 tests.
 
-1. `zero-mathlib-checker`: hardened local draft.
-2. `claim-boundary`: created local draft, next safe step is a hardening pass like M038.
-3. `eml-records`: created local draft, next safe step is a hardening pass like M038/M039.
+The next package candidate is `review-branch-packet`, because it has a narrow local workflow and clear private-review value. `claim-boundary` hardening and Command Center static snapshot review remain alternates.
 
-Remaining candidates need API design or remain research candidates. No candidate is release-ready, upload-ready, or public-ready.
+No candidate is release-ready, upload-ready, or public-ready.

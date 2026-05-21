@@ -4,7 +4,7 @@
     {
       "card_id": "machlib_package_candidate_status_2026_05_20",
       "claim_boundary_status": "LOCAL_DRAFT_PACKAGE_CREATED",
-      "eml_records_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "eml_records_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
       "not_claimed": [
         "not package published",
         "not PyPI uploaded",
@@ -25,6 +25,7 @@
     }
   ],
   "feed_id": "machlib_package_candidate_status_feed_2026_05_20",
+  "hardened_local_draft_package_count": 2,
   "local_draft_package_count": 3,
   "package_candidate_count": 8,
   "package_publish_performed": false,

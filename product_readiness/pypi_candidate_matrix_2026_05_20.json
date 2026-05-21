@@ -54,7 +54,7 @@
         "needs standalone license/readme review before any release"
       ],
       "minimum_viable_scope": "Small claim/no-go phrase scanner with report templates.",
-      "next_safe_local_step": "hardening pass like M038",
+      "next_safe_local_step": "hardening pass like M038/M046",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -89,7 +89,7 @@
     },
     {
       "candidate_name": "eml-records",
-      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
       "dependencies": [
         "Python standard library",
         "pytest for local tests only"
@@ -98,7 +98,7 @@
         "needs standalone license/readme review before any release"
       ],
       "minimum_viable_scope": "Draft EML record schema and validator helpers for lane, function-class, stochastic/hybrid, and evidence records.",
-      "next_safe_local_step": "hardening pass like M038/M039",
+      "next_safe_local_step": "API freeze / license review / package boundary review",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -119,14 +119,14 @@
       ],
       "pypi_token_required_now": false,
       "pypi_upload_performed": false,
-      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_CREATED",
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
         "tools/validate_eml_lane_seeds.py",
         "tools/validate_function_class_records.py",
         "tools/validate_stochastic_hybrid_records.py"
       ],
-      "test_count": 16,
+      "test_count": 30,
       "token_or_publish_risks": [
         "PyPI tokens are not needed now",
         "do not run twine or upload commands"
@@ -177,7 +177,7 @@
     },
     {
       "candidate_name": "review-branch-packet",
-      "candidate_status": "DRAFT_PACKAGE_CANDIDATE",
+      "candidate_status": "NEXT_DRAFT_PACKAGE_CANDIDATE",
       "dependencies": [
         "Python standard library",
         "pytest for local tests only"
@@ -186,7 +186,7 @@
         "needs standalone license/readme review before any release"
       ],
       "minimum_viable_scope": "Generate local private-review branch summaries.",
-      "next_safe_local_step": "local design notes only",
+      "next_safe_local_step": "draft package candidate, no publish",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -207,7 +207,7 @@
       ],
       "pypi_token_required_now": false,
       "pypi_upload_performed": false,
-      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE",
+      "recommended_readiness": "NEXT_DRAFT_PACKAGE_CANDIDATE",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
         "private review reports"

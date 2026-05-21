@@ -1,143 +1,479 @@
 {
   "candidates": [
     {
-      "category": "package_candidate",
-      "name": "zero-mathlib-checker",
-      "next_safe_local_step": "API freeze and license/readme review only",
+      "candidate_name": "zero-mathlib-checker",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Standalone scanner for direct Lean dependency strings and simple dependency evidence.",
+      "next_safe_local_step": "packaging boundary review / API freeze / license review",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "strongest hardened package candidate, but next step is boundary/API freeze rather than another creation pass",
-      "status": "LOCAL_DRAFT_PACKAGE_HARDENED",
-      "tests": 15
+      "package_type": "CLI scanner",
+      "proposed_cli_names": [
+        "zero-mathlib-checker"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "STRONG_FIRST_CANDIDATE_HARDENED_LOCAL_DRAFT",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "tools/check_zero_mathlib_dependency.py"
+      ],
+      "test_count": 15,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "claim-boundary",
-      "next_safe_local_step": "hardening pass after eml-records or integrate into review packet tooling",
+      "candidate_name": "claim-boundary",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Small claim/no-go phrase scanner with report templates.",
+      "next_safe_local_step": "hardening pass like M038/M046",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "created and well-tested; next useful step is an M038-style hardening pass after eml-records",
-      "status": "LOCAL_DRAFT_PACKAGE_CREATED",
-      "tests": 35
+      "package_type": "CLI/report library",
+      "proposed_cli_names": [
+        "claim-boundary"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_CREATED",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "guardrail reports",
+        "no-go scans"
+      ],
+      "test_count": 35,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "eml-records",
-      "next_safe_local_step": "M046 eml-records hardening pass, no publish",
+      "candidate_name": "eml-records",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Draft EML record schema and validator helpers for lane, function-class, stochastic/hybrid, and evidence records.",
+      "next_safe_local_step": "API freeze / license review / package boundary review",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "most ready for another hardening pass because it was just created and needs deeper corpus fixture coverage",
-      "status": "LOCAL_DRAFT_PACKAGE_CREATED",
-      "tests": 16
+      "package_type": "schema helpers",
+      "proposed_cli_names": [
+        "eml-records"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "tools/validate_eml_lane_seeds.py",
+        "tools/validate_function_class_records.py",
+        "tools/validate_stochastic_hybrid_records.py"
+      ],
+      "test_count": 30,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "machlib-workbench",
-      "next_safe_local_step": "API design note only",
+      "candidate_name": "machlib-workbench",
+      "candidate_status": "NEEDS_API_DESIGN",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Aggregate local MachLib evidence artifacts into status packets.",
+      "next_safe_local_step": "API boundary design only",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "do not tackle as package yet; API boundaries are too broad",
-      "status": "NEEDS_API_DESIGN",
-      "tests": 0
+      "package_type": "evidence workbench",
+      "proposed_cli_names": [
+        "machlib-workbench"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "NEEDS_API_DESIGN",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "tools/run_machlib_evidence_workbench.py"
+      ],
+      "test_count": 0,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "eml-harness",
-      "next_safe_local_step": "scope split between validator helpers and execution harnesses",
-      "package_name_availability": "UNKNOWN_NOT_CHECKED",
-      "package_publish_allowed": false,
-      "readiness": "do not tackle yet; harness execution boundaries need clearer split from schema validation",
-      "status": "NEEDS_API_DESIGN",
-      "tests": 0
-    },
-    {
-      "category": "package_candidate",
-      "name": "review-branch-packet",
+      "candidate_name": "review-branch-packet",
+      "candidate_status": "NEXT_DRAFT_PACKAGE_CANDIDATE",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Generate local private-review branch summaries.",
       "next_safe_local_step": "draft package candidate, no publish",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "reasonable alternate draft package because workflow shape is narrow and local-only",
-      "status": "DRAFT_PACKAGE_CANDIDATE",
-      "tests": 0
+      "package_type": "review packet generator",
+      "proposed_cli_names": [
+        "review-branch-packet"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "NEXT_DRAFT_PACKAGE_CANDIDATE",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "private review reports"
+      ],
+      "test_count": 0,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "machlib",
-      "next_safe_local_step": "public-copy and scope boundary review only",
+      "candidate_name": "eml-harness",
+      "candidate_status": "NEEDS_API_DESIGN",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Shared local harness fixtures and bounded execution summaries.",
+      "next_safe_local_step": "separate API and scope design",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "do not tackle yet; umbrella package needs stronger public-copy and boundary review",
-      "status": "NEEDS_API_DESIGN",
-      "tests": 0
+      "package_type": "harness utilities",
+      "proposed_cli_names": [
+        "eml-harness"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "NEEDS_API_DESIGN",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "function-class harnesses",
+        "stochastic/hybrid harness"
+      ],
+      "test_count": 0,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     },
     {
-      "category": "package_candidate",
-      "name": "hybrid-trace-eml",
-      "next_safe_local_step": "research schema notes only",
+      "candidate_name": "machlib",
+      "candidate_status": "NEEDS_API_DESIGN",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Possible umbrella package boundary; too broad for local draft publishing.",
+      "next_safe_local_step": "do not package until API and license boundaries are settled",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "readiness": "research candidate only; do not productize before stochastic/hybrid claim boundaries mature",
-      "status": "RESEARCH_CANDIDATE / NEEDS_API_DESIGN",
-      "tests": 0
+      "package_type": "library meta-package",
+      "proposed_cli_names": [
+        "machlib"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "NEEDS_API_DESIGN",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "MachLib repo"
+      ],
+      "test_count": 0,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
+    },
+    {
+      "candidate_name": "hybrid-trace-eml",
+      "candidate_status": "RESEARCH_CANDIDATE / NEEDS_API_DESIGN",
+      "dependencies": [
+        "Python standard library",
+        "pytest for local tests only"
+      ],
+      "license_readme_risks": [
+        "needs standalone license/readme review before any release"
+      ],
+      "minimum_viable_scope": "Draft finite trace schema helpers for stochastic/hybrid records.",
+      "next_safe_local_step": "research-only schema design",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "package_publish_allowed": false,
+      "package_type": "research schema helpers",
+      "proposed_cli_names": [
+        "hybrid-trace-eml"
+      ],
+      "public_claim_risks": [
+        "must not imply theorem/proof/open-problem result",
+        "must not imply package is release-ready"
+      ],
+      "pypi_token_required_now": false,
+      "pypi_upload_performed": false,
+      "recommended_readiness": "RESEARCH_CANDIDATE / NEEDS_API_DESIGN",
+      "release_artifacts_created": false,
+      "source_tools_to_extract_from": [
+        "corpus/eml_stochastic_hybrid_draft"
+      ],
+      "test_count": 0,
+      "token_or_publish_risks": [
+        "PyPI tokens are not needed now",
+        "do not run twine or upload commands"
+      ]
     }
   ],
   "command_center_deploy_performed": false,
   "date": "2026-05-20",
-  "forge_compiler_behavior_changed": false,
   "guardrails": {
-    "no_command_center_deploy": true,
-    "no_forge_compiler_behavior_change": true,
-    "no_hardware_action": true,
-    "no_hugging_face_upload": true,
+    "no_hf_upload": true,
     "no_mathlib_dependency_introduced": true,
-    "no_package_name_availability_check": true,
     "no_package_publish": true,
     "no_petal_api_upload": true,
     "no_public_theorem_claim": true,
     "no_pypi_token_handling": true,
-    "no_release_ready_or_upload_ready_claim": true,
-    "no_token_like_secret_introduced": true
+    "no_token_like_secret_introduced": true,
+    "no_upload_artifact": true
   },
-  "hardware_action_performed": false,
-  "hf_upload_performed": false,
   "local_only": true,
   "package_publish_performed": false,
-  "petal_api_upload_performed": false,
   "products": [
     {
-      "category": "service",
-      "name": "AI-generated research/code/formal artifact review service",
-      "next_safe_local_step": "service MVP scope and intake checklist",
-      "readiness": "closest to revenue",
+      "description": "AI-generated research/code/formal artifact review service",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "ai-generated_research_code_formal_artifact_review_service",
+      "public_readiness": false,
+      "rank": 1,
       "release_ready": false,
-      "why": "can monetize review and synthesis using existing evidence packets without package publication"
+      "revenue_path": "service revenue first",
+      "upload_ready": false
     },
     {
-      "category": "service/internal_cli",
-      "name": "Monogate Evidence Workbench service",
-      "next_safe_local_step": "local service MVP plan, no deploy",
-      "readiness": "closest tooling product after review service",
+      "description": "Monogate Evidence Workbench internal CLI/service",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "monogate_evidence_workbench_internal_cli_service",
+      "public_readiness": false,
+      "rank": 2,
       "release_ready": false,
-      "why": "current workbench already aggregates zero-Mathlib, corpus, package, and branch posture evidence"
+      "revenue_path": "internal CLI/service MVP",
+      "upload_ready": false
     },
     {
-      "category": "dashboard/internal_frontend",
-      "name": "Command Center Evidence Cards",
-      "next_safe_local_step": "static snapshot review, no deploy",
-      "readiness": "closest frontend/internal dashboard path",
+      "description": "Command Center Evidence Cards",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "command_center_evidence_cards",
+      "public_readiness": false,
+      "rank": 3,
       "release_ready": false,
-      "why": "static snapshot worktree exists and card/feed artifacts are already internal-only"
+      "revenue_path": "static snapshot first, no deploy",
+      "upload_ready": false
+    },
+    {
+      "description": "Zero-Mathlib benchmark/curriculum",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "zero-mathlib_benchmark_curriculum",
+      "public_readiness": false,
+      "rank": 4,
+      "release_ready": false,
+      "revenue_path": "education/content later",
+      "upload_ready": false
+    },
+    {
+      "description": "Hybrid Trace Evidence Toolkit",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "hybrid_trace_evidence_toolkit",
+      "public_readiness": false,
+      "rank": 5,
+      "release_ready": false,
+      "revenue_path": "research support only",
+      "upload_ready": false
+    },
+    {
+      "description": "MachLib Studio",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability claim",
+        "no release-ready claim",
+        "no upload-ready claim",
+        "no public theorem/proof/open-problem claim"
+      ],
+      "product_id": "machlib_studio",
+      "public_readiness": false,
+      "rank": 6,
+      "release_ready": false,
+      "revenue_path": "longer-term product",
+      "upload_ready": false
     }
   ],
   "public_theorem_claim_performed": false,
-  "pypi_name_availability_checked": false,
   "pypi_token_handling_performed": false,
   "recommended_alternates": [
-    "review-branch-packet draft package",
-    "Command Center static snapshot review / no deploy",
-    "Evidence Workbench service MVP plan"
+    "M048A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH",
+    "M048B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY"
   ],
-  "recommended_primary_next_task": "M046_EML_RECORDS_HARDENING_NO_PUBLISH",
+  "recommended_primary_next_task": "M048_REVIEW_BRANCH_PACKET_DRAFT_PACKAGE_NO_PUBLISH",
   "release_artifacts_created": false,
   "tier": "OBSERVATION"
 }
