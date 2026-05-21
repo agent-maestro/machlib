@@ -1,0 +1,141 @@
+{
+  "date": "2026-05-20",
+  "derived_gap_rows": [
+    {
+      "gap_id": "probability_law_proof_layer_v0",
+      "status": "DRAFT_INTERNAL_GAP_NOT_EXECUTED"
+    }
+  ],
+  "eml_artifacts": [
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/diffusion_trace_schema_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/stochastic_increment_record_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/drift_diffusion_signature_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/brownian_noise_placeholder_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/euler_maruyama_step_placeholder_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/jump_counting_process_record_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/transition_rate_record_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/discrete_state_trace_record_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/hybrid_continuous_discrete_trace_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/transition_count_matrix_record_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/stochastic_no_overclaim_boundary_v0.eml",
+    "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/production_control_no_go_boundary_v0.eml"
+  ],
+  "execution_status": "PASS",
+  "failed": 0,
+  "guardrails": {
+    "no_certified_safety_claim": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_markov_theorem_claim": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_production_controller_claim": true,
+    "no_public_theorem_claim": true,
+    "no_sde_theorem_claim": true,
+    "no_stochastic_calculus_claim": true
+  },
+  "local_only": true,
+  "passed": 12,
+  "process_class": "STOCHASTIC_HYBRID_TRACE",
+  "record_count": 12,
+  "results": [
+    {
+      "check": "x_tau = x0 + sum(dx)",
+      "record_id": "diffusion_trace_schema_v0",
+      "status": "PASS",
+      "x_tau": 1.25
+    },
+    {
+      "check": "finite increment list",
+      "increment_count": 3,
+      "record_id": "stochastic_increment_record_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "F(x), dt, sigma, dW fields present",
+      "record_id": "drift_diffusion_signature_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "symbolic placeholder only",
+      "record_id": "brownian_noise_placeholder_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "bounded deterministic step fixture",
+      "record_id": "euler_maruyama_step_placeholder_v0",
+      "status": "PASS",
+      "x_next": 1.05
+    },
+    {
+      "check": "finite transition extraction",
+      "record_id": "jump_counting_process_record_v0",
+      "status": "PASS",
+      "transitions": [
+        "1->2",
+        "2->3",
+        "3->1",
+        "1->2"
+      ]
+    },
+    {
+      "check": "rate placeholder shape only",
+      "record_id": "transition_rate_record_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "state trace shape",
+      "record_id": "discrete_state_trace_record_v0",
+      "state_count": 5,
+      "status": "PASS"
+    },
+    {
+      "check": "continuous increments paired with jump labels",
+      "record_id": "hybrid_continuous_discrete_trace_v0",
+      "rows": [
+        [
+          0.1,
+          "none"
+        ],
+        [
+          0.0,
+          "1->2"
+        ],
+        [
+          -0.1,
+          "none"
+        ],
+        [
+          0.2,
+          "2->1"
+        ]
+      ],
+      "status": "PASS"
+    },
+    {
+      "check": "finite transition count matrix",
+      "counts": {
+        "1->2": 2,
+        "2->3": 1,
+        "3->1": 1
+      },
+      "record_id": "transition_count_matrix_record_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "theory overclaim blocker present",
+      "record_id": "stochastic_no_overclaim_boundary_v0",
+      "status": "PASS"
+    },
+    {
+      "check": "production and safety overclaim blocker present",
+      "record_id": "production_control_no_go_boundary_v0",
+      "status": "PASS"
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

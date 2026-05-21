@@ -1,0 +1,14 @@
+{
+  "date": "2026-05-20",
+  "process_classes": [
+    "BOUNDARY_NO_OVERCLAIM",
+    "DIFFUSION_TRACE",
+    "HYBRID_TRACE",
+    "JUMP_COUNTING_PROCESS",
+    "STOCHASTIC_INCREMENT",
+    "TRANSITION_RATE_RECORD"
+  ],
+  "record_count": 12,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

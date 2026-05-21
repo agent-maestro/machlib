@@ -1,0 +1,511 @@
+{
+  "date": "2026-05-20",
+  "record_count": 12,
+  "records": [
+    {
+      "certificate_payload": {
+        "fields": [
+          "x0",
+          "increments",
+          "dt",
+          "drift_label",
+          "diffusion_label"
+        ]
+      },
+      "certificate_type": "trace_schema",
+      "expression_or_trace": "dx = F(x) dt + sigma dW placeholder",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "DIFFUSION_TRACE",
+      "public_ready": false,
+      "record_id": "diffusion_trace_schema_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Diffusion trace schema",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "dx": [
+          0.1,
+          -0.05,
+          0.2
+        ],
+        "x0": 1.0
+      },
+      "certificate_type": "increment_table",
+      "expression_or_trace": "finite dx list with deterministic fixture",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "STOCHASTIC_INCREMENT",
+      "public_ready": false,
+      "record_id": "stochastic_increment_record_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Stochastic increment record",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "F(x)": "bounded_fixture_drift",
+        "dW": "deterministic_placeholder",
+        "dt": 0.1,
+        "sigma": "sigma_placeholder"
+      },
+      "certificate_type": "signature_shape",
+      "expression_or_trace": "F(x), dt, sigma, dW placeholder fields",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "DIFFUSION_TRACE",
+      "public_ready": false,
+      "record_id": "drift_diffusion_signature_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Drift/diffusion signature",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "kind": "symbolic_placeholder",
+        "sample_path_claim": false
+      },
+      "certificate_type": "noise_placeholder",
+      "expression_or_trace": "dW symbolic placeholder only",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "STOCHASTIC_INCREMENT",
+      "public_ready": false,
+      "record_id": "brownian_noise_placeholder_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Brownian noise placeholder",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "F(x)": 0.5,
+        "dW": 0.0,
+        "dt": 0.1,
+        "sigma": 0.2,
+        "x": 1.0,
+        "x_next": 1.05
+      },
+      "certificate_type": "bounded_step_fixture",
+      "expression_or_trace": "x_next = x + F(x)dt + sigma dW fixture",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "DIFFUSION_TRACE",
+      "public_ready": false,
+      "record_id": "euler_maruyama_step_placeholder_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Euler-Maruyama step placeholder",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "states": [
+          1,
+          2,
+          3,
+          1,
+          2
+        ],
+        "transitions": [
+          "1->2",
+          "2->3",
+          "3->1",
+          "1->2"
+        ]
+      },
+      "certificate_type": "jump_trace",
+      "expression_or_trace": "finite jump labels over observed trace",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "JUMP_COUNTING_PROCESS",
+      "public_ready": false,
+      "record_id": "jump_counting_process_record_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Jump counting process record",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "R(x)": "bounded_rate_label",
+        "dt": 0.1,
+        "not_estimated": true
+      },
+      "certificate_type": "rate_placeholder",
+      "expression_or_trace": "R(x) dt + d_epsilon placeholder",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "TRANSITION_RATE_RECORD",
+      "public_ready": false,
+      "record_id": "transition_rate_record_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Transition rate record",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "states": [
+          1,
+          2,
+          3,
+          1,
+          2
+        ]
+      },
+      "certificate_type": "state_trace",
+      "expression_or_trace": "states [1,2,3,1,2] with finite transitions",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "JUMP_COUNTING_PROCESS",
+      "public_ready": false,
+      "record_id": "discrete_state_trace_record_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Discrete state trace record",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "dx": [
+          0.1,
+          0.0,
+          -0.1,
+          0.2
+        ],
+        "jump_labels": [
+          "none",
+          "1->2",
+          "none",
+          "2->1"
+        ],
+        "x0": 0.0
+      },
+      "certificate_type": "hybrid_trace",
+      "expression_or_trace": "continuous increments paired with jump labels",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "HYBRID_TRACE",
+      "public_ready": false,
+      "record_id": "hybrid_continuous_discrete_trace_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Hybrid continuous/discrete trace",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "state_space": [
+          1,
+          2,
+          3
+        ],
+        "states": [
+          1,
+          2,
+          3,
+          1,
+          2
+        ]
+      },
+      "certificate_type": "count_matrix",
+      "expression_or_trace": "finite transition count matrix from observed states",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "TRANSITION_RATE_RECORD",
+      "public_ready": false,
+      "record_id": "transition_count_matrix_record_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Transition count matrix record",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "blocks": [
+          "stochastic calculus claim",
+          "SDE theorem claim",
+          "Markov theorem claim"
+        ]
+      },
+      "certificate_type": "boundary_guard",
+      "expression_or_trace": "draft boundary blocks theory overclaims",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "public_ready": false,
+      "record_id": "stochastic_no_overclaim_boundary_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Stochastic no-overclaim boundary",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    },
+    {
+      "certificate_payload": {
+        "blocks": [
+          "deployed controller claim",
+          "safety certification claim",
+          "hardware action"
+        ]
+      },
+      "certificate_type": "boundary_guard",
+      "expression_or_trace": "draft boundary blocks control and safety overclaims",
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "DRAFT_INTERNAL observation-tier record",
+        "bounded finite trace checks only",
+        "no convergence or probability-law proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not stochastic calculus formalization",
+        "not an SDE theorem",
+        "not a Markov process theorem",
+        "not production control evidence",
+        "not safety certification",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "public_ready": false,
+      "record_id": "production_control_no_go_boundary_v0",
+      "release_ready": false,
+      "status": "DRAFT_INTERNAL",
+      "title": "Production control no-go boundary",
+      "upload_allowed": false,
+      "validation_checks": [
+        "required field shape",
+        "bounded fixture only",
+        "guardrail booleans false",
+        "no theory overclaim"
+      ]
+    }
+  ],
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

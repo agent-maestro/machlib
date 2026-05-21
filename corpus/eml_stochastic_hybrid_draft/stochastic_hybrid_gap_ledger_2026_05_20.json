@@ -1,0 +1,17 @@
+{
+  "date": "2026-05-20",
+  "gaps": [
+    "Forge draft schema support",
+    "probability-law design",
+    "relation to function-class frontier",
+    "Command Center display review"
+  ],
+  "not_claimed": [
+    "not stochastic calculus formalization",
+    "not an SDE theorem",
+    "not a Markov process theorem",
+    "not production control evidence",
+    "not safety certification",
+    "not a public theorem/proof/open-problem claim"
+  ]
+}

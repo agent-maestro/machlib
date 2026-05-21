@@ -1,0 +1,36 @@
+{
+  "date": "2026-05-20",
+  "failures": [],
+  "guardrails": {
+    "no_certified_safety_claim": true,
+    "no_markov_theorem_claim": true,
+    "no_mathlib_dependency": true,
+    "no_production_controller_claim": true,
+    "no_public_theorem_claim": true,
+    "no_sde_theorem_claim": true,
+    "no_stochastic_calculus_claim": true,
+    "no_upload_publish_release": true
+  },
+  "local_only": true,
+  "present_process_classes": [
+    "BOUNDARY_NO_OVERCLAIM",
+    "DIFFUSION_TRACE",
+    "HYBRID_TRACE",
+    "JUMP_COUNTING_PROCESS",
+    "STOCHASTIC_INCREMENT",
+    "TRANSITION_RATE_RECORD"
+  ],
+  "record_count": 12,
+  "required_process_classes": [
+    "BOUNDARY_NO_OVERCLAIM",
+    "DIFFUSION_TRACE",
+    "HYBRID_TRACE",
+    "JUMP_COUNTING_PROCESS",
+    "STOCHASTIC_INCREMENT",
+    "TRANSITION_RATE_RECORD"
+  ],
+  "status": "DRAFT_INTERNAL_VALIDATED",
+  "tier": "OBSERVATION",
+  "warnings": [],
+  "zero_mathlib_status": "PASS"
+}
