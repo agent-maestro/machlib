@@ -14,5 +14,10 @@
 | no hardware action | PASS |
 | no Forge compiler behavior change | PASS |
 | no public theorem/proof/open-problem claim | PASS |
+| no stochastic calculus theorem claim | PASS |
+| no SDE theorem claim | PASS |
+| no Markov theorem claim | PASS |
+| no production controller claim | PASS |
+| no certified safety claim | PASS |
 | no Mathlib dependency | PASS |
 | no token-like secret | PASS |

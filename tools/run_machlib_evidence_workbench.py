@@ -68,6 +68,18 @@ def load_inputs(repo_root: Path) -> dict[str, dict[str, Any]]:
             repo_root / "corpus/eml_lanes_draft/machlib_phase_validation_rollup_2026_05_20.json"
         ),
         "phase_card": read_json(repo_root / "command_center_feeds/machlib_phase_spine_card_2026_05_20.json"),
+        "stochastic_validation": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/stochastic_hybrid_validation_result_2026_05_20.json"
+        ),
+        "stochastic_execution": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/trace_harness_result_2026_05_20.json"
+        ),
+        "stochastic_roundtrip": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/trace_roundtrip_result_2026_05_20.json"
+        ),
+        "stochastic_card": read_json(
+            repo_root / "command_center_feeds/machlib_stochastic_hybrid_status_card_2026_05_20.json"
+        ),
     }
 
 
@@ -81,6 +93,11 @@ def guardrails() -> dict[str, bool]:
         "no_forge_compiler_change": True,
         "no_command_center_deploy": True,
         "no_public_theorem_claim": True,
+        "no_stochastic_calculus_claim": True,
+        "no_sde_theorem_claim": True,
+        "no_markov_theorem_claim": True,
+        "no_production_controller_claim": True,
+        "no_certified_safety_claim": True,
     }
 
 
@@ -100,6 +117,10 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
     phase_spine = inputs["phase_spine"]
     phase_validation = inputs["phase_validation"]
     phase_card = inputs["phase_card"]
+    stochastic_validation = inputs["stochastic_validation"]
+    stochastic_execution = inputs["stochastic_execution"]
+    stochastic_roundtrip = inputs["stochastic_roundtrip"]
+    stochastic_card = inputs["stochastic_card"]
 
     _, git_status, _ = run_cmd(["git", "status", "--short"], repo_root)
     _, git_branch, _ = run_cmd(["git", "branch", "--show-current"], repo_root)
@@ -117,6 +138,11 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
     append_failure(failures, six_card.get("zero_mathlib_status") == "PASS", "six-lane card zero status not PASS")
     append_failure(failures, function_rollup.get("zero_mathlib_status") == "PASS", "function rollup zero status not PASS")
     append_failure(failures, phase_spine.get("zero_mathlib_status") == "PASS", "phase spine zero status not PASS")
+    append_failure(
+        failures,
+        stochastic_validation.get("zero_mathlib_status") == "PASS",
+        "stochastic/hybrid zero status not PASS",
+    )
     append_failure(failures, dashboard.get("overall_status") == "DRAFT_INTERNAL_VALIDATED", "six-lane status unexpected")
     append_failure(
         failures,
@@ -124,9 +150,34 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
         "function-class status unexpected",
     )
     append_failure(failures, phase_spine.get("overall_status") == "DRAFT_INTERNAL_VALIDATED", "phase spine status unexpected")
+    append_failure(
+        failures,
+        stochastic_validation.get("status") == "DRAFT_INTERNAL_VALIDATED",
+        "stochastic/hybrid status unexpected",
+    )
     append_failure(failures, dashboard.get("lane_count") == 6, "lane count not 6")
     append_failure(failures, dashboard.get("seed_count") == 19, "six-lane seed count not 19")
     append_failure(failures, function_rollup.get("record_count") == 20, "function-class record count not 20")
+    append_failure(
+        failures,
+        stochastic_validation.get("record_count") == 12,
+        "stochastic/hybrid record count not 12",
+    )
+    append_failure(
+        failures,
+        stochastic_execution.get("execution_status") == "PASS",
+        "stochastic/hybrid execution status not PASS",
+    )
+    append_failure(
+        failures,
+        stochastic_roundtrip.get("roundtrip_status") in {"PASS", "WARN"},
+        "stochastic/hybrid roundtrip status unexpected",
+    )
+    append_failure(
+        failures,
+        stochastic_roundtrip.get("failed") == 0,
+        "stochastic/hybrid roundtrip hard failures present",
+    )
     append_failure(
         failures,
         function_rollup.get("executable_class_count") == 5,
@@ -149,6 +200,8 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
         ("function_card", function_card),
         ("phase_spine", phase_spine),
         ("phase_card", phase_card),
+        ("stochastic_execution", stochastic_execution),
+        ("stochastic_card", stochastic_card),
     ]:
         for key in (
             "push_performed",
@@ -174,6 +227,10 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
         "six_lane_status": dashboard.get("overall_status"),
         "function_class_status": function_rollup.get("function_class_status"),
         "phase_spine_status": phase_spine.get("overall_status"),
+        "stochastic_hybrid_status": stochastic_validation.get("status"),
+        "stochastic_hybrid_record_count": stochastic_validation.get("record_count"),
+        "stochastic_hybrid_execution_status": stochastic_execution.get("execution_status"),
+        "stochastic_hybrid_roundtrip_status": stochastic_roundtrip.get("roundtrip_status"),
         "six_lane_seed_count": dashboard.get("seed_count"),
         "function_class_record_count": function_rollup.get("record_count"),
         "executable_function_class_count": function_rollup.get("executable_class_count"),
@@ -213,6 +270,8 @@ def build_status(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[
         "six_lane_status": status["six_lane_status"],
         "function_class_status": status["function_class_status"],
         "phase_spine_status": status["phase_spine_status"],
+        "stochastic_hybrid_status": status["stochastic_hybrid_status"],
+        "stochastic_hybrid_record_count": status["stochastic_hybrid_record_count"],
         "review_branch_present": status["review_branch_present"],
         "safe_to_display_internally": True,
         "safe_to_publish_publicly": False,
@@ -260,6 +319,10 @@ def write_reports(repo_root: Path, status: dict[str, Any], card: dict[str, Any])
         "machlib_phase_spine_2026_05_20.json",
         "machlib_phase_validation_rollup_2026_05_20.json",
         "machlib_phase_spine_card_2026_05_20.json",
+        "stochastic_hybrid_validation_result_2026_05_20.json",
+        "trace_harness_result_2026_05_20.json",
+        "trace_roundtrip_result_2026_05_20.json",
+        "machlib_stochastic_hybrid_status_card_2026_05_20.json",
     ]
     summary = f"""# MachLib Evidence Workbench Summary - {DATE}
 
@@ -275,6 +338,10 @@ Local-only OBSERVATION-tier workbench for MachLib validation evidence.
 - Six-lane status: {status["six_lane_status"]}
 - Function-class status: {status["function_class_status"]}
 - Phase spine status: {status["phase_spine_status"]}
+- Stochastic/hybrid status: {status["stochastic_hybrid_status"]}
+- Stochastic/hybrid records: {status["stochastic_hybrid_record_count"]}
+- Stochastic/hybrid execution: {status["stochastic_hybrid_execution_status"]}
+- Stochastic/hybrid roundtrip: {status["stochastic_hybrid_roundtrip_status"]}
 - Six-lane seeds: {status["six_lane_seed_count"]}
 - Function-class records: {status["function_class_record_count"]}
 - Executable function classes: {status["executable_function_class_count"]}
@@ -294,6 +361,8 @@ Local-only OBSERVATION-tier workbench for MachLib validation evidence.
 ## No-go boundary status
 No push, PR, merge, deployment, upload, package publish, hardware action, compiler behavior change, public theorem/proof/open-problem claim, dependency reintroduction, or token handling is performed by this tool.
 
+The stochastic/hybrid frontier remains bounded trace evidence only. It does not claim stochastic calculus formalization, an SDE theorem, a Markov theorem, production controller evidence, certified safety, or hardware truth.
+
 ## What this tool unlocks
 - One local command for review-readiness evidence.
 - One internal Command Center card/feed draft for the workbench.
@@ -309,7 +378,12 @@ No push, PR, merge, deployment, upload, package publish, hardware action, compil
         {"gate": "six-lane dashboard", "status": status["six_lane_status"], "note": "19 seeds, 6 lanes"},
         {"gate": "six-lane Command Center feed", "status": "DRAFT_INTERNAL", "note": "internal-only draft"},
         {"gate": "function-class rollup", "status": status["function_class_status"], "note": "20 records, 5 executable classes"},
-        {"gate": "phase spine", "status": status["phase_spine_status"], "note": "13 phases"},
+        {
+            "gate": "stochastic/hybrid frontier",
+            "status": status["stochastic_hybrid_status"],
+            "note": f"{status['stochastic_hybrid_record_count']} records, trace harness {status['stochastic_hybrid_execution_status']}",
+        },
+        {"gate": "phase spine", "status": status["phase_spine_status"], "note": "14 phases"},
         {"gate": "review branch presence", "status": "PASS" if status["review_branch_present"] else "FAIL", "note": status["review_branch"]},
         {
             "gate": "command-center read-only status",
@@ -338,6 +412,11 @@ No push, PR, merge, deployment, upload, package publish, hardware action, compil
         {"gate": "no hardware action", "status": "PASS"},
         {"gate": "no Forge compiler behavior change", "status": "PASS"},
         {"gate": "no public theorem/proof/open-problem claim", "status": "PASS"},
+        {"gate": "no stochastic calculus theorem claim", "status": "PASS"},
+        {"gate": "no SDE theorem claim", "status": "PASS"},
+        {"gate": "no Markov theorem claim", "status": "PASS"},
+        {"gate": "no production controller claim", "status": "PASS"},
+        {"gate": "no certified safety claim", "status": "PASS"},
         {"gate": "no Mathlib dependency", "status": "PASS"},
         {"gate": "no token-like secret", "status": "PASS"},
     ]
@@ -355,7 +434,7 @@ No push, PR, merge, deployment, upload, package publish, hardware action, compil
         "Review packet generator consolidation",
         "Evidence Workbench CLI packaging review, no publish",
         "Function-class relation expansion",
-        "stochastic/hybrid process frontier records inspired by diffusion/jump traces, still DRAFT_INTERNAL",
+        "stochastic/hybrid trace expansion, still DRAFT_INTERNAL",
     ]
     queue_rows = [{"priority": index + 1, "candidate": item} for index, item in enumerate(queue)]
     write_text(

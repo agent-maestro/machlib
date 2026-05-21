@@ -18,6 +18,8 @@
       "safe_to_publish_publicly": false,
       "safe_to_push_now": false,
       "six_lane_status": "DRAFT_INTERNAL_VALIDATED",
+      "stochastic_hybrid_record_count": 12,
+      "stochastic_hybrid_status": "DRAFT_INTERNAL_VALIDATED",
       "surface": "command.monogate.dev",
       "tier": "OBSERVATION",
       "title": "MachLib Evidence Workbench",

@@ -164,6 +164,29 @@ PHASE_DEFS = [
         "what_it_unlocked": "A single internal status surface for D-finite, analytic, smooth, continuous, and boundary records.",
         "limitations": ["Recorded as pending until the rollup commit exists."],
     },
+    {
+        "phase_id": "phase_13",
+        "title": "Phase 14 - Stochastic / hybrid process frontier",
+        "goal": "Add bounded stochastic/hybrid process trace records and local harness evidence.",
+        "subjects": ["research/corpus: add MachLib stochastic hybrid frontier"],
+        "artifacts": [
+            "stochastic/hybrid draft corpus",
+            "stochastic/hybrid validator",
+            "stochastic/hybrid trace harness",
+            "stochastic/hybrid Command Center card/feed draft",
+        ],
+        "what_it_unlocked": "A bounded trace-evidence frontier for diffusion-like increments, jump/counting traces, and hybrid alignment records.",
+        "limitations": [
+            "12 records only",
+            "trace harness PASS",
+            "roundtrip WARN expected draft-schema limitation",
+            "no stochastic calculus formalization claim",
+            "no SDE theorem claim",
+            "no Markov theorem claim",
+            "no production controller evidence claim",
+            "no certified safety claim",
+        ],
+    },
 ]
 
 
@@ -175,6 +198,7 @@ NEXT_QUEUE = [
     "Forge schema support backlog",
     "D-finite to analytic boundary lab",
     "Function-class eFrog/Forge roundtrip feed",
+    "Stochastic/hybrid relation expansion with bounded traces only",
     "Command Center integration implementation plan, no deploy",
     "Public-safe MachLib site/README patch application, no upload",
     "Hugging Face card readiness review, no upload",
@@ -247,6 +271,11 @@ def guardrails() -> dict[str, bool]:
         "no_github_pr_created": True,
         "no_command_center_deploy": True,
         "no_token_like_secret": True,
+        "no_stochastic_calculus_claim": True,
+        "no_sde_theorem_claim": True,
+        "no_markov_theorem_claim": True,
+        "no_production_controller_claim": True,
+        "no_certified_safety_claim": True,
     }
 
 
@@ -289,6 +318,15 @@ def load_validation_inputs(repo_root: Path) -> dict[str, dict[str, Any]]:
         "boundary_roundtrip": read_json(
             repo_root
             / "corpus/eml_function_classes_draft/boundary_relations/boundary_roundtrip_result_2026_05_20.json"
+        ),
+        "stochastic_validation": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/stochastic_hybrid_validation_result_2026_05_20.json"
+        ),
+        "stochastic_execution": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/trace_harness_result_2026_05_20.json"
+        ),
+        "stochastic_roundtrip": read_json(
+            repo_root / "corpus/eml_stochastic_hybrid_draft/trace_roundtrip_result_2026_05_20.json"
         ),
     }
 
@@ -362,6 +400,9 @@ def build_validation_rollup(inputs: dict[str, dict[str, Any]]) -> dict[str, Any]
     continuous_roundtrip = inputs["continuous_roundtrip"]
     boundary_execution = inputs["boundary_execution"]
     boundary_roundtrip = inputs["boundary_roundtrip"]
+    stochastic_validation = inputs["stochastic_validation"]
+    stochastic_execution = inputs["stochastic_execution"]
+    stochastic_roundtrip = inputs["stochastic_roundtrip"]
     return {
         "date": DATE,
         "tier": "OBSERVATION",
@@ -382,6 +423,11 @@ def build_validation_rollup(inputs: dict[str, dict[str, Any]]) -> dict[str, Any]
         "continuous_roundtrip_status": continuous_roundtrip.get("roundtrip_status"),
         "boundary_execution_status": boundary_execution.get("execution_status"),
         "boundary_roundtrip_status": boundary_roundtrip.get("roundtrip_status"),
+        "stochastic_hybrid_status": stochastic_validation.get("status"),
+        "stochastic_hybrid_record_count": stochastic_validation.get("record_count"),
+        "stochastic_hybrid_execution_status": stochastic_execution.get("execution_status"),
+        "stochastic_hybrid_roundtrip_status": stochastic_roundtrip.get("roundtrip_status"),
+        "stochastic_hybrid_roundtrip_warning": "expected draft schema limitation",
         "function_class_executable_class_count": 5,
         "public_ready_count": dashboard.get("public_ready_count", 0),
         "upload_allowed_count": dashboard.get("upload_allowed_count", 0),
@@ -485,7 +531,7 @@ def write_reports(spine: dict[str, Any], rollup: dict[str, Any]) -> None:
         f"""# MachLib Phase Spine Summary - {DATE}
 
 ## What Was Built
-MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, and five executable function-class harnesses.
+MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, five executable function-class harnesses, and a stochastic/hybrid trace frontier.
 
 ## Counts
 - Phases: {spine['phase_count']}
@@ -523,6 +569,13 @@ No push, merge, PR creation, deployment, upload, package publish, hardware actio
         {"gate": "continuous roundtrip", "status": rollup["continuous_roundtrip_status"], "note": "expected draft schema limitation"},
         {"gate": "boundary execution", "status": rollup["boundary_execution_status"], "note": "3 records"},
         {"gate": "boundary roundtrip", "status": rollup["boundary_roundtrip_status"], "note": "expected draft schema limitation"},
+        {"gate": "stochastic/hybrid validator", "status": rollup["stochastic_hybrid_status"], "note": "12 records"},
+        {"gate": "stochastic/hybrid trace harness", "status": rollup["stochastic_hybrid_execution_status"], "note": "bounded fixture checks"},
+        {
+            "gate": "stochastic/hybrid roundtrip",
+            "status": rollup["stochastic_hybrid_roundtrip_status"],
+            "note": rollup["stochastic_hybrid_roundtrip_warning"],
+        },
     ]
     (REPORT_DIR / f"machlib_validation_rollup_{DATE.replace('-', '_')}.md").write_text(
         "# MachLib Validation Rollup - 2026-05-20\n\n" + md_table(validation_rows, ["gate", "status", "note"]) + "\n",
@@ -540,7 +593,7 @@ All closure checks remain local-only. No push or main merge was performed. No Gi
 
 You can return here knowing the recent MachLib workstream is locally wrapped.
 
-Current state: zero-Mathlib gates pass, the six-lane EML corpus is DRAFT_INTERNAL_VALIDATED, the function-class frontier is DRAFT_INTERNAL_VALIDATED, and all five function-class harnesses execute locally. The function-class roundtrip warnings are expected for draft schema support and are not hard failures.
+Current state: zero-Mathlib gates pass, the six-lane EML corpus is DRAFT_INTERNAL_VALIDATED, the function-class frontier is DRAFT_INTERNAL_VALIDATED, all five function-class harnesses execute locally, and the stochastic/hybrid trace frontier is DRAFT_INTERNAL_VALIDATED. The roundtrip warnings are expected for draft schema support and are not hard failures.
 
 Safe next moves: continue local relation labs, review the private branch, or prepare a human-approved private review push for newer closure commits.
 
@@ -554,7 +607,7 @@ Resume at: `reports/machlib_next_research_queue_2026_05_20.md`.
     (REPORT_DIR / f"machlib_next_research_queue_{DATE.replace('-', '_')}.md").write_text(
         "# MachLib Next Research Queue - 2026-05-20\n\n"
         + md_table(queue_rows, ["priority", "task"])
-        + "\n\nAnalytic, smooth, and continuous harnesses should follow the D-finite slice because they share the new function-class record style while needing different bounded evidence models. The D-finite roundtrip warning remains an expected draft schema limitation.\n",
+        + "\n\nStochastic/hybrid follow-up should stay bounded to finite trace fixtures. It must not claim stochastic calculus formalization, SDE theorem, Markov theorem, production controller evidence, certified safety, or hardware truth.\n",
         encoding="utf-8",
     )
     guard_rows = [{"gate": key, "status": "PASS" if value else "FAIL"} for key, value in rollup["guardrails"].items()]

@@ -1,10 +1,10 @@
 # MachLib Phase Spine Summary - 2026-05-20
 
 ## What Was Built
-MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, and five executable function-class harnesses.
+MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, five executable function-class harnesses, and a stochastic/hybrid trace frontier.
 
 ## Counts
-- Phases: 13
+- Phases: 14
 - Recent commits summarized: 80
 - Zero-Mathlib status: PASS
 - Overall status: DRAFT_INTERNAL_VALIDATED
@@ -25,6 +25,7 @@ MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, si
 | phase_10 | Review/public readiness planning | 1 | COMMITTED |
 | phase_11 | Function-class frontier and executable slices | 6 | COMMITTED |
 | phase_12 | Function-class coverage rollup | 0 | PARTIAL |
+| phase_13 | Phase 14 - Stochastic / hybrid process frontier | 1 | COMMITTED |
 
 ## No-Go Boundaries
 No push, merge, PR creation, deployment, upload, package publish, hardware action, compiler behavior change, public theorem/proof/open-problem claim, or token handling was performed by this closure packet.

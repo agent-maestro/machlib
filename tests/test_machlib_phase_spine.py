@@ -22,12 +22,16 @@ def test_phase_spine_shape_and_guardrails():
     assert spine["push_performed"] is False
     assert spine["hf_upload_performed"] is False
     assert spine["package_publish_performed"] is False
-    assert len(spine["phases"]) >= 10
+    assert len(spine["phases"]) >= 14
     assert spine["phase_count"] == len(spine["phases"])
     assert rollup["zero_mathlib_status"] == "PASS"
     assert rollup["function_class_status"] == "DRAFT_INTERNAL_VALIDATED"
     assert rollup["dfinite_execution_status"] == "PASS"
     assert rollup["dfinite_roundtrip_status"] in {"PASS", "WARN"}
+    assert rollup["stochastic_hybrid_status"] == "DRAFT_INTERNAL_VALIDATED"
+    assert rollup["stochastic_hybrid_record_count"] == 12
+    assert rollup["stochastic_hybrid_execution_status"] == "PASS"
+    assert rollup["stochastic_hybrid_roundtrip_status"] in {"PASS", "WARN"}
     assert all(value is True for value in rollup["guardrails"].values())
     assert card["card_id"] == "machlib_phase_spine_2026_05_20"
     assert card["surface"] == "command.monogate.dev"
@@ -49,4 +53,5 @@ def test_required_phase_commits_are_mapped_or_external():
     assert phase_by_id["phase_9"]["validation_status"] == "COMMITTED"
     assert phase_by_id["phase_10"]["validation_status"] == "COMMITTED"
     assert phase_by_id["phase_11"]["validation_status"] == "COMMITTED"
+    assert phase_by_id["phase_13"]["validation_status"] == "COMMITTED"
     assert phase_by_id["phase_1"]["validation_status"] in {"COMMITTED", "EXTERNAL_EVIDENCE_REPORTED"}

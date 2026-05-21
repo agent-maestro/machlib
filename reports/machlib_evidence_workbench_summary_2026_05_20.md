@@ -13,6 +13,10 @@ Local-only OBSERVATION-tier workbench for MachLib validation evidence.
 - machlib_phase_spine_2026_05_20.json
 - machlib_phase_validation_rollup_2026_05_20.json
 - machlib_phase_spine_card_2026_05_20.json
+- stochastic_hybrid_validation_result_2026_05_20.json
+- trace_harness_result_2026_05_20.json
+- trace_roundtrip_result_2026_05_20.json
+- machlib_stochastic_hybrid_status_card_2026_05_20.json
 
 ## Validation summary
 - Workbench status: PASS
@@ -20,6 +24,10 @@ Local-only OBSERVATION-tier workbench for MachLib validation evidence.
 - Six-lane status: DRAFT_INTERNAL_VALIDATED
 - Function-class status: DRAFT_INTERNAL_VALIDATED
 - Phase spine status: DRAFT_INTERNAL_VALIDATED
+- Stochastic/hybrid status: DRAFT_INTERNAL_VALIDATED
+- Stochastic/hybrid records: 12
+- Stochastic/hybrid execution: PASS
+- Stochastic/hybrid roundtrip: WARN
 - Six-lane seeds: 19
 - Function-class records: 20
 - Executable function classes: 5
@@ -38,6 +46,8 @@ Local-only OBSERVATION-tier workbench for MachLib validation evidence.
 
 ## No-go boundary status
 No push, PR, merge, deployment, upload, package publish, hardware action, compiler behavior change, public theorem/proof/open-problem claim, dependency reintroduction, or token handling is performed by this tool.
+
+The stochastic/hybrid frontier remains bounded trace evidence only. It does not claim stochastic calculus formalization, an SDE theorem, a Markov theorem, production controller evidence, certified safety, or hardware truth.
 
 ## What this tool unlocks
 - One local command for review-readiness evidence.

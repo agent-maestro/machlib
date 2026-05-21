@@ -2,6 +2,10 @@
 
 | hash | subject | phase_id | artifact_group | validation_note |
 | --- | --- | --- | --- | --- |
+| 0d55d27 | research/corpus: add MachLib stochastic hybrid frontier | phase_13 | context | covered by phase spine |
+| 5c441b1 | research/corpus: add MachLib stochastic hybrid frontier | phase_13 | context | covered by phase spine |
+| 56e943d | tools/reports: add MachLib evidence workbench | pre_spine_context | context | context commit |
+| de9f18b | reports/corpus: refresh MachLib function-class boundary rollup | pre_spine_context | function classes | context commit |
 | a9a3470 | test/corpus: add MachLib function boundary harness | phase_11 | context | covered by phase spine |
 | 99fb7b4 | reports: add MachLib review and command-center planning pack | pre_spine_context | feeds | context commit |
 | 1708536 | reports/corpus: add MachLib function-class rollup | pre_spine_context | function classes | context commit |
@@ -78,7 +82,3 @@
 | d6cc4f8 | feat(machlib): JSON schema v1.0.0 + community CLI — Phase E | pre_spine_context | context | context commit |
 | 50a573e | feat(gym): multi-proof BFS engine — Phase B-001 | pre_spine_context | context | context commit |
 | dc9f535 | feat(corpus): forge-mined records — Phase A of v2.0 strength roadmap | pre_spine_context | context | context commit |
-| f51202d | ci(build-time): refresh cold-build badge to 1.19s [skip ci] | pre_spine_context | context | context commit |
-| b9daf60 | port(Hyperbolic): partial port of HyperbolicPreservation (axiomatic R) | pre_spine_context | context | context commit |
-| 99ef513 | ci(build-time): refresh cold-build badge to 1.00s [skip ci] | pre_spine_context | context | context commit |
-| cf686c0 | chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/) | pre_spine_context | context | context commit |

@@ -8,4 +8,4 @@
 | 4 | Review packet generator consolidation |
 | 5 | Evidence Workbench CLI packaging review, no publish |
 | 6 | Function-class relation expansion |
-| 7 | stochastic/hybrid process frontier records inspired by diffusion/jump traces, still DRAFT_INTERNAL |
+| 7 | stochastic/hybrid trace expansion, still DRAFT_INTERNAL |

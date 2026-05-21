@@ -14,6 +14,11 @@
 | no_github_pr_created | PASS |
 | no_command_center_deploy | PASS |
 | no_token_like_secret | PASS |
+| no_stochastic_calculus_claim | PASS |
+| no_sde_theorem_claim | PASS |
+| no_markov_theorem_claim | PASS |
+| no_production_controller_claim | PASS |
+| no_certified_safety_claim | PASS |
 | no public_ready true | PASS |
 | no upload_allowed true | PASS |
 | no release_ready true | PASS |

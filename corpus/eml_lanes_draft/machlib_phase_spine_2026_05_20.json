@@ -4,6 +4,34 @@
   "commits": [
     {
       "artifact_group": "context",
+      "hash": "0d55d27",
+      "phase_id": "phase_13",
+      "subject": "research/corpus: add MachLib stochastic hybrid frontier",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "5c441b1",
+      "phase_id": "phase_13",
+      "subject": "research/corpus: add MachLib stochastic hybrid frontier",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "56e943d",
+      "phase_id": "pre_spine_context",
+      "subject": "tools/reports: add MachLib evidence workbench",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "function classes",
+      "hash": "de9f18b",
+      "phase_id": "pre_spine_context",
+      "subject": "reports/corpus: refresh MachLib function-class boundary rollup",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
       "hash": "a9a3470",
       "phase_id": "phase_11",
       "subject": "test/corpus: add MachLib function boundary harness",
@@ -533,49 +561,26 @@
       "phase_id": "pre_spine_context",
       "subject": "feat(corpus): forge-mined records \u2014 Phase A of v2.0 strength roadmap",
       "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "f51202d",
-      "phase_id": "pre_spine_context",
-      "subject": "ci(build-time): refresh cold-build badge to 1.19s [skip ci]",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "b9daf60",
-      "phase_id": "pre_spine_context",
-      "subject": "port(Hyperbolic): partial port of HyperbolicPreservation (axiomatic R)",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "99ef513",
-      "phase_id": "pre_spine_context",
-      "subject": "ci(build-time): refresh cold-build badge to 1.00s [skip ci]",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "cf686c0",
-      "phase_id": "pre_spine_context",
-      "subject": "chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/)",
-      "validation_note": "context commit"
     }
   ],
   "date": "2026-05-20",
   "guardrails": {
+    "no_certified_safety_claim": true,
     "no_command_center_deploy": true,
     "no_forge_compiler_change": true,
     "no_github_pr_created": true,
     "no_hardware": true,
     "no_hf_upload": true,
     "no_main_merge": true,
+    "no_markov_theorem_claim": true,
     "no_mathlib_dependency": true,
     "no_package_publish": true,
     "no_petal_upload": true,
+    "no_production_controller_claim": true,
     "no_public_theorem_claim": true,
     "no_push": true,
+    "no_sde_theorem_claim": true,
+    "no_stochastic_calculus_claim": true,
     "no_token_like_secret": true
   },
   "hf_upload_performed": false,
@@ -588,6 +593,7 @@
     "Forge schema support backlog",
     "D-finite to analytic boundary lab",
     "Function-class eFrog/Forge roundtrip feed",
+    "Stochastic/hybrid relation expansion with bounded traces only",
     "Command Center integration implementation plan, no deploy",
     "Public-safe MachLib site/README patch application, no upload",
     "Hugging Face card readiness review, no upload"
@@ -602,7 +608,7 @@
   ],
   "overall_status": "DRAFT_INTERNAL_VALIDATED",
   "package_publish_performed": false,
-  "phase_count": 13,
+  "phase_count": 14,
   "phases": [
     {
       "artifacts": [
@@ -1048,6 +1054,45 @@
       "title": "Function-class coverage rollup",
       "validation_status": "PARTIAL",
       "what_it_unlocked": "A single internal status surface for D-finite, analytic, smooth, continuous, and boundary records."
+    },
+    {
+      "artifacts": [
+        "stochastic/hybrid draft corpus",
+        "stochastic/hybrid validator",
+        "stochastic/hybrid trace harness",
+        "stochastic/hybrid Command Center card/feed draft"
+      ],
+      "commits": [
+        {
+          "hash": "0d55d27",
+          "subject": "research/corpus: add MachLib stochastic hybrid frontier"
+        }
+      ],
+      "expected_subjects": [
+        "research/corpus: add MachLib stochastic hybrid frontier"
+      ],
+      "goal": "Add bounded stochastic/hybrid process trace records and local harness evidence.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "12 records only",
+        "trace harness PASS",
+        "roundtrip WARN expected draft-schema limitation",
+        "no stochastic calculus formalization claim",
+        "no SDE theorem claim",
+        "no Markov theorem claim",
+        "no production controller evidence claim",
+        "no certified safety claim"
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_13",
+      "title": "Phase 14 - Stochastic / hybrid process frontier",
+      "validation_status": "COMMITTED",
+      "what_it_unlocked": "A bounded trace-evidence frontier for diffusion-like increments, jump/counting traces, and hybrid alignment records."
     }
   ],
   "public_theorem_claim_performed": false,
@@ -1068,17 +1113,22 @@
     "function_class_executable_class_count": 5,
     "function_class_status": "DRAFT_INTERNAL_VALIDATED",
     "guardrails": {
+      "no_certified_safety_claim": true,
       "no_command_center_deploy": true,
       "no_forge_compiler_change": true,
       "no_github_pr_created": true,
       "no_hardware": true,
       "no_hf_upload": true,
       "no_main_merge": true,
+      "no_markov_theorem_claim": true,
       "no_mathlib_dependency": true,
       "no_package_publish": true,
       "no_petal_upload": true,
+      "no_production_controller_claim": true,
       "no_public_theorem_claim": true,
       "no_push": true,
+      "no_sde_theorem_claim": true,
+      "no_stochastic_calculus_claim": true,
       "no_token_like_secret": true
     },
     "local_only": true,
@@ -1089,6 +1139,11 @@
     "six_lane_seed_validator": "PASS",
     "smooth_execution_status": "PASS",
     "smooth_roundtrip_status": "WARN",
+    "stochastic_hybrid_execution_status": "PASS",
+    "stochastic_hybrid_record_count": 12,
+    "stochastic_hybrid_roundtrip_status": "WARN",
+    "stochastic_hybrid_roundtrip_warning": "expected draft schema limitation",
+    "stochastic_hybrid_status": "DRAFT_INTERNAL_VALIDATED",
     "tier": "OBSERVATION",
     "upload_allowed_count": 0,
     "zero_mathlib_status": "PASS"

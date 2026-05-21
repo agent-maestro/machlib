@@ -22,6 +22,10 @@ def test_workbench_status_core_fields():
     assert status["six_lane_seed_count"] == 19
     assert status["function_class_record_count"] == 20
     assert status["executable_function_class_count"] == 5
+    assert status["stochastic_hybrid_status"] == "DRAFT_INTERNAL_VALIDATED"
+    assert status["stochastic_hybrid_record_count"] == 12
+    assert status["stochastic_hybrid_execution_status"] == "PASS"
+    assert status["stochastic_hybrid_roundtrip_status"] in {"PASS", "WARN"}
     assert status["safe_to_push_now"] is False
     assert status["push_performed"] is False
     assert status["hf_upload_performed"] is False
@@ -42,9 +46,16 @@ def test_workbench_card_is_internal_only():
     assert card["safe_to_publish_publicly"] is False
     assert card["safe_to_push_now"] is False
     assert card["command_center_deploy_performed"] is False
+    assert card["stochastic_hybrid_status"] == "DRAFT_INTERNAL_VALIDATED"
+    assert card["stochastic_hybrid_record_count"] == 12
 
 
 def test_workbench_guardrails_true():
     workbench = load_workbench()
     status, _card, _feed = workbench.build_status(REPO_ROOT)
     assert all(value is True for value in status["guardrails"].values())
+    assert status["guardrails"]["no_stochastic_calculus_claim"] is True
+    assert status["guardrails"]["no_sde_theorem_claim"] is True
+    assert status["guardrails"]["no_markov_theorem_claim"] is True
+    assert status["guardrails"]["no_production_controller_claim"] is True
+    assert status["guardrails"]["no_certified_safety_claim"] is True

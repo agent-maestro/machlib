@@ -17,3 +17,6 @@
 | continuous roundtrip | WARN | expected draft schema limitation |
 | boundary execution | PASS | 3 records |
 | boundary roundtrip | WARN | expected draft schema limitation |
+| stochastic/hybrid validator | DRAFT_INTERNAL_VALIDATED | 12 records |
+| stochastic/hybrid trace harness | PASS | bounded fixture checks |
+| stochastic/hybrid roundtrip | WARN | expected draft schema limitation |

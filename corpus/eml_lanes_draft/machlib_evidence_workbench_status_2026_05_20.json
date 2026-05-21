@@ -14,30 +14,35 @@
   "git": {
     "branch": "feat/ac-instances",
     "log_oneline_10": [
+      "0d55d27 research/corpus: add MachLib stochastic hybrid frontier",
+      "5c441b1 research/corpus: add MachLib stochastic hybrid frontier",
+      "56e943d tools/reports: add MachLib evidence workbench",
       "de9f18b reports/corpus: refresh MachLib function-class boundary rollup",
       "a9a3470 test/corpus: add MachLib function boundary harness",
       "99fb7b4 reports: add MachLib review and command-center planning pack",
       "1708536 reports/corpus: add MachLib function-class rollup",
       "9866319 test/corpus: add MachLib continuous modulus harness",
       "4783b48 test/corpus: add MachLib smooth finite-jet harness",
-      "b02519d test/corpus: add MachLib analytic local-series harness",
-      "29144a7 reports: preserve MachLib phase spine gate output",
-      "0150f9f reports: add MachLib phase spine and sleep handoff",
-      "b8e0ffa test/corpus: add MachLib D-finite ODE certificate harness"
+      "b02519d test/corpus: add MachLib analytic local-series harness"
     ],
     "remote": "origin\thttps://github.com/agent-maestro/machlib.git (fetch)\norigin\thttps://github.com/agent-maestro/machlib.git (push)",
-    "review_branch_ls_remote": "de9f18bc80340333845188951b9e95f84598b26f\trefs/heads/review/machlib-function-class-frontier-2026-05-20",
-    "status_short": "M tools/validate_eml_lane_seeds.py\n?? command_center_feeds/machlib_evidence_workbench_card_2026_05_20.json\n?? command_center_feeds/machlib_evidence_workbench_feed_2026_05_20.json\n?? corpus/eml_lanes_draft/machlib_evidence_workbench_status_2026_05_20.json\n?? reports/machlib_evidence_workbench_guardrail_report_2026_05_20.md\n?? reports/machlib_evidence_workbench_next_tooling_queue_2026_05_20.md\n?? reports/machlib_evidence_workbench_summary_2026_05_20.md\n?? reports/machlib_evidence_workbench_validation_matrix_2026_05_20.md\n?? tests/test_machlib_evidence_workbench.py\n?? tools/run_machlib_evidence_workbench.py"
+    "review_branch_ls_remote": "56e943db2aa79c79a887bc249bf8b4078c6cab5b\trefs/heads/review/machlib-function-class-frontier-2026-05-20",
+    "status_short": "M command_center_feeds/machlib_evidence_workbench_card_2026_05_20.json\n M command_center_feeds/machlib_evidence_workbench_feed_2026_05_20.json\n M command_center_feeds/machlib_phase_spine_card_2026_05_20.json\n M command_center_feeds/machlib_phase_spine_feed_2026_05_20.json\n M corpus/eml_lanes_draft/machlib_evidence_workbench_status_2026_05_20.json\n M corpus/eml_lanes_draft/machlib_phase_spine_2026_05_20.json\n M corpus/eml_lanes_draft/machlib_phase_validation_rollup_2026_05_20.json\n M reports/machlib_evidence_workbench_guardrail_report_2026_05_20.md\n M reports/machlib_evidence_workbench_next_tooling_queue_2026_05_20.md\n M reports/machlib_evidence_workbench_summary_2026_05_20.md\n M reports/machlib_evidence_workbench_validation_matrix_2026_05_20.md\n M reports/machlib_next_research_queue_2026_05_20.md\n M reports/machlib_phase_commit_ledger_2026_05_20.md\n M reports/machlib_phase_spine_guardrail_report_2026_05_20.md\n M reports/machlib_phase_spine_summary_2026_05_20.md\n M reports/machlib_sleep_handoff_2026_05_20.md\n M reports/machlib_validation_rollup_2026_05_20.md\n M tests/test_machlib_evidence_workbench.py\n M tests/test_machlib_phase_spine.py\n M tools/build_machlib_phase_spine.py\n M tools/run_machlib_evidence_workbench.py"
   },
   "guardrails": {
+    "no_certified_safety_claim": true,
     "no_command_center_deploy": true,
     "no_forge_compiler_change": true,
     "no_hardware": true,
     "no_hf_upload": true,
+    "no_markov_theorem_claim": true,
     "no_mathlib_dependency": true,
     "no_package_publish": true,
     "no_petal_upload": true,
-    "no_public_theorem_claim": true
+    "no_production_controller_claim": true,
+    "no_public_theorem_claim": true,
+    "no_sde_theorem_claim": true,
+    "no_stochastic_calculus_claim": true
   },
   "hf_upload_performed": false,
   "local_only": true,
@@ -50,6 +55,10 @@
   "safe_to_push_now": false,
   "six_lane_seed_count": 19,
   "six_lane_status": "DRAFT_INTERNAL_VALIDATED",
+  "stochastic_hybrid_execution_status": "PASS",
+  "stochastic_hybrid_record_count": 12,
+  "stochastic_hybrid_roundtrip_status": "WARN",
+  "stochastic_hybrid_status": "DRAFT_INTERNAL_VALIDATED",
   "tier": "OBSERVATION",
   "warnings": [
     "EXTERNAL_PREEXISTING_DIRTY_STATUS: command-center data/proof-registry.jsonl"

@@ -9,8 +9,9 @@
 | 5 | Forge schema support backlog |
 | 6 | D-finite to analytic boundary lab |
 | 7 | Function-class eFrog/Forge roundtrip feed |
-| 8 | Command Center integration implementation plan, no deploy |
-| 9 | Public-safe MachLib site/README patch application, no upload |
-| 10 | Hugging Face card readiness review, no upload |
+| 8 | Stochastic/hybrid relation expansion with bounded traces only |
+| 9 | Command Center integration implementation plan, no deploy |
+| 10 | Public-safe MachLib site/README patch application, no upload |
+| 11 | Hugging Face card readiness review, no upload |
 
-Analytic, smooth, and continuous harnesses should follow the D-finite slice because they share the new function-class record style while needing different bounded evidence models. The D-finite roundtrip warning remains an expected draft schema limitation.
+Stochastic/hybrid follow-up should stay bounded to finite trace fixtures. It must not claim stochastic calculus formalization, SDE theorem, Markov theorem, production controller evidence, certified safety, or hardware truth.
