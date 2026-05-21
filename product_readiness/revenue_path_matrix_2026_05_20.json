@@ -3,7 +3,19 @@
   "local_only": true,
   "products": [
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "AI-generated research/code/formal artifact review service",
+      "first_mvp": "service revenue first",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -17,10 +29,23 @@
       "rank": 1,
       "release_ready": false,
       "revenue_path": "service revenue first",
-      "upload_ready": false
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     },
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "Monogate Evidence Workbench internal CLI/service",
+      "first_mvp": "internal CLI/service MVP",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -34,10 +59,23 @@
       "rank": 2,
       "release_ready": false,
       "revenue_path": "internal CLI/service MVP",
-      "upload_ready": false
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     },
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "Command Center Evidence Cards",
+      "first_mvp": "internal static snapshot first, no deploy yet",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -50,11 +88,24 @@
       "public_readiness": false,
       "rank": 3,
       "release_ready": false,
-      "revenue_path": "static snapshot first, no deploy",
-      "upload_ready": false
+      "revenue_path": "internal static snapshot first, no deploy yet",
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     },
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "Zero-Mathlib benchmark/curriculum",
+      "first_mvp": "curriculum/benchmark packaging after boundary review",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -63,15 +114,28 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "product_id": "zero-mathlib_benchmark_curriculum",
+      "product_id": "zero_mathlib_benchmark_curriculum",
       "public_readiness": false,
       "rank": 4,
       "release_ready": false,
-      "revenue_path": "education/content later",
-      "upload_ready": false
+      "revenue_path": "curriculum/benchmark packaging after boundary review",
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     },
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "Hybrid Trace Evidence Toolkit",
+      "first_mvp": "research toolkit after API design",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -84,11 +148,24 @@
       "public_readiness": false,
       "rank": 5,
       "release_ready": false,
-      "revenue_path": "research support only",
-      "upload_ready": false
+      "revenue_path": "research toolkit after API design",
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     },
     {
+      "current_assets": [
+        "MachLib package candidates",
+        "Evidence Workbench artifacts",
+        "Command Center internal card feeds"
+      ],
       "description": "MachLib Studio",
+      "first_mvp": "later product exploration after API design",
+      "likely_user": "internal reviewer or technical customer",
+      "missing_assets": [
+        "license review",
+        "API freeze",
+        "public-copy boundary review"
+      ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -101,17 +178,18 @@
       "public_readiness": false,
       "rank": 6,
       "release_ready": false,
-      "revenue_path": "longer-term product",
-      "upload_ready": false
+      "revenue_path": "later product exploration after API design",
+      "upload_ready": false,
+      "value_proposition": "turn local evidence artifacts into reviewable private packets"
     }
   ],
   "ranking": [
-    "AI-generated research/code/formal artifact review service",
-    "Monogate Evidence Workbench internal CLI/service",
-    "Command Center Evidence Cards",
-    "Zero-Mathlib benchmark/curriculum",
-    "Hybrid Trace Evidence Toolkit",
-    "MachLib Studio"
+    "ai-generated_research_code_formal_artifact_review_service",
+    "monogate_evidence_workbench_internal_cli_service",
+    "command_center_evidence_cards",
+    "zero_mathlib_benchmark_curriculum",
+    "hybrid_trace_evidence_toolkit",
+    "machlib_studio"
   ],
   "release_ready": false,
   "tier": "OBSERVATION",

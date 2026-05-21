@@ -1,21 +1,16 @@
-# MachLib product / PyPI candidate triage - 2026-05-20
+# MachLib Product PyPI Candidate Triage
 
-## Candidate status
+Local-only package triage after review-branch-packet creation.
 
-| Candidate | Status | Tests | Readiness |
-| --- | --- | ---: | --- |
-| zero-mathlib-checker | LOCAL_DRAFT_PACKAGE_HARDENED | 15 | STRONG_FIRST_CANDIDATE_HARDENED_LOCAL_DRAFT |
-| claim-boundary | LOCAL_DRAFT_PACKAGE_CREATED | 35 | DRAFT_PACKAGE_CANDIDATE_CREATED |
-| eml-records | LOCAL_DRAFT_PACKAGE_HARDENED | 30 | DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT |
-| review-branch-packet | NEXT_DRAFT_PACKAGE_CANDIDATE | 0 | NEXT_DRAFT_PACKAGE_CANDIDATE |
-| machlib-workbench | NEEDS_API_DESIGN | 0 | NEEDS_API_DESIGN |
-| eml-harness | NEEDS_API_DESIGN | 0 | NEEDS_API_DESIGN |
-| machlib | NEEDS_API_DESIGN | 0 | NEEDS_API_DESIGN |
-| hybrid-trace-eml | RESEARCH_CANDIDATE / NEEDS_API_DESIGN | 0 | RESEARCH_CANDIDATE / NEEDS_API_DESIGN |
+| Candidate | Status | Tests | Readiness | Next local step |
+| --- | --- | ---: | --- | --- |
+| zero-mathlib-checker | LOCAL_DRAFT_PACKAGE_HARDENED | 15 | STRONG_FIRST_CANDIDATE_HARDENED_LOCAL_DRAFT | packaging boundary review / API freeze / license review |
+| claim-boundary | LOCAL_DRAFT_PACKAGE_CREATED | 35 | DRAFT_PACKAGE_CANDIDATE_CREATED | hardening pass like M038/M046 |
+| eml-records | LOCAL_DRAFT_PACKAGE_HARDENED | 30 | DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT | API freeze / license review / package boundary review |
+| review-branch-packet | LOCAL_DRAFT_PACKAGE_CREATED | 16 | DRAFT_PACKAGE_CANDIDATE_CREATED | hardening pass and integration with Evidence Workbench |
+| machlib-workbench | NEEDS_API_DESIGN | None | NEEDS_API_DESIGN | API design before packaging |
+| eml-harness | NEEDS_API_DESIGN | None | NEEDS_API_DESIGN | harness API design and scope split |
+| machlib | NEEDS_API_DESIGN | None | NEEDS_API_DESIGN | public-copy review and boundary design |
+| hybrid-trace-eml | RESEARCH_CANDIDATE / NEEDS_API_DESIGN | None | RESEARCH_CANDIDATE / NEEDS_API_DESIGN | research API design only |
 
-All package name availability values remain `UNKNOWN_NOT_CHECKED`.
-
-## Next recommendation
-
-Primary: `M048_REVIEW_BRANCH_PACKET_DRAFT_PACKAGE_NO_PUBLISH`.
-Alternates: `M048A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH` and `M048B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY`.
+No package publish occurred. No PyPI token handling occurred. Package name availability remains UNKNOWN_NOT_CHECKED for every candidate.

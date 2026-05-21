@@ -12,6 +12,7 @@
   "package_publish_performed": false,
   "pypi_token_handling_performed": false,
   "release_artifacts_created": false,
+  "review_branch_packet_status": "LOCAL_DRAFT_PACKAGE_CREATED",
   "safe_to_display_internally": true,
   "safe_to_publish_publicly": false,
   "surface": "command.monogate.dev",

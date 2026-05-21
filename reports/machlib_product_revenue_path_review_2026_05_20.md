@@ -1,12 +1,12 @@
-# MachLib product revenue path review - 2026-05-20
+# MachLib Product Revenue Path Review
 
-Ranked paths remain unchanged:
+Revenue ranking remains unchanged.
 
-1. AI-generated research/code/formal artifact review service.
-2. Monogate Evidence Workbench internal CLI/service.
-3. Command Center Evidence Cards.
-4. Zero-Mathlib benchmark/curriculum.
-5. Hybrid Trace Evidence Toolkit.
-6. MachLib Studio.
-
-This remains an internal planning matrix. It is not a release, upload, deployment, or public theorem/proof/open-problem claim.
+| Rank | Product | Revenue path | Release ready | Upload ready |
+| ---: | --- | --- | --- | --- |
+| 1 | AI-generated research/code/formal artifact review service | service revenue first | false | false |
+| 2 | Monogate Evidence Workbench internal CLI/service | internal CLI/service MVP | false | false |
+| 3 | Command Center Evidence Cards | internal static snapshot first, no deploy yet | false | false |
+| 4 | Zero-Mathlib benchmark/curriculum | curriculum/benchmark packaging after boundary review | false | false |
+| 5 | Hybrid Trace Evidence Toolkit | research toolkit after API design | false | false |
+| 6 | MachLib Studio | later product exploration after API design | false | false |

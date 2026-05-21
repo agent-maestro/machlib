@@ -1,14 +1,14 @@
-# MachLib product readiness review - 2026-05-20
+# MachLib Product Readiness Review
 
-## Primary recommendation
+Primary recommendation: `M050_REVIEW_BRANCH_PACKET_HARDENING_NO_PUBLISH`.
 
-`M048_REVIEW_BRANCH_PACKET_DRAFT_PACKAGE_NO_PUBLISH` is the primary next task after `eml-records` hardening.
+Alternates: `M050A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH`, `M050B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY`.
 
-## Alternates
-
-- `M048A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH`
-- `M048B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY`
-
-## Summary
-
-`eml-records` is now a hardened local draft package candidate. `review-branch-packet` is the next clean package candidate because it has a narrow local workflow and private-review value.
+| Rank | Product | Revenue path | Release ready | Upload ready |
+| ---: | --- | --- | --- | --- |
+| 1 | AI-generated research/code/formal artifact review service | service revenue first | false | false |
+| 2 | Monogate Evidence Workbench internal CLI/service | internal CLI/service MVP | false | false |
+| 3 | Command Center Evidence Cards | internal static snapshot first, no deploy yet | false | false |
+| 4 | Zero-Mathlib benchmark/curriculum | curriculum/benchmark packaging after boundary review | false | false |
+| 5 | Hybrid Trace Evidence Toolkit | research toolkit after API design | false | false |
+| 6 | MachLib Studio | later product exploration after API design | false | false |

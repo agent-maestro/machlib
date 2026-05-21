@@ -2,9 +2,9 @@
   "date": "2026-05-20",
   "decisions": [
     {
-      "category": "package_candidate",
+      "category": "package_candidate_hardening",
       "decision_id": "D001",
-      "next_safe_local_step": "draft package candidate, no publish",
+      "next_safe_local_step": "hardening pass and Evidence Workbench integration plan",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -13,16 +13,16 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M048 review-branch-packet draft package, no publish",
+      "option": "M050 review-branch-packet hardening, no publish",
       "readiness": "PRIMARY",
       "recommended_rank": 1,
-      "risk": "must not automate push or PR actions by default",
-      "upside": "narrow local workflow with clear private-review value"
+      "risk": "must preserve no push, no PR, no merge, and no deploy boundaries",
+      "upside": "turns the new read-only review packet draft into a stronger reusable local workflow"
     },
     {
       "category": "package_candidate_hardening",
       "decision_id": "D002",
-      "next_safe_local_step": "hardening pass like M038/M046",
+      "next_safe_local_step": "M038-style hardening pass",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -31,16 +31,16 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M048A claim-boundary hardening, no publish",
+      "option": "M050A claim-boundary hardening, no publish",
       "readiness": "ALTERNATE",
       "recommended_rank": 2,
-      "risk": "must keep pattern fixtures separate from project claims",
-      "upside": "hardens the second scanner candidate after zero-mathlib-checker and eml-records"
+      "risk": "must avoid turning policy fixtures into public claims",
+      "upside": "hardens overclaim and no-go text detection"
     },
     {
       "category": "internal_dashboard",
       "decision_id": "D003",
-      "next_safe_local_step": "review isolated snapshot worktree only",
+      "next_safe_local_step": "static snapshot review only",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -49,16 +49,16 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M048B Command Center static snapshot review, no deploy",
+      "option": "M050B Command Center static snapshot review, no deploy",
       "readiness": "ALTERNATE",
       "recommended_rank": 3,
-      "risk": "must not modify original dirty command-center repo",
-      "upside": "moves frontend/internal status path without touching deployment"
+      "risk": "must not modify original command-center repo or deploy",
+      "upside": "improves internal visibility without deployment"
     },
     {
-      "category": "revenue_service",
+      "category": "service",
       "decision_id": "D004",
-      "next_safe_local_step": "service scope and intake checklist",
+      "next_safe_local_step": "local MVP service plan",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -67,16 +67,16 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "AI-generated research/code/formal artifact review service",
-      "readiness": "CLOSEST_TO_REVENUE",
+      "option": "Evidence Workbench service MVP plan",
+      "readiness": "SERVICE_CANDIDATE",
       "recommended_rank": 4,
-      "risk": "public-copy overclaim risk",
-      "upside": "service can use current packets without public package release"
+      "risk": "requires boundary and customer-facing copy review",
+      "upside": "closest service revenue path"
     },
     {
-      "category": "internal_service",
+      "category": "package_candidate",
       "decision_id": "D005",
-      "next_safe_local_step": "local MVP plan only",
+      "next_safe_local_step": "API design only",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -85,16 +85,16 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "Monogate Evidence Workbench internal CLI/service",
-      "readiness": "HIGH",
+      "option": "machlib-workbench package",
+      "readiness": "NEEDS_API_DESIGN",
       "recommended_rank": 5,
-      "risk": "API design remains open",
-      "upside": "existing workbench already aggregates validation status"
+      "risk": "too broad until APIs are stable",
+      "upside": "could package the workbench later"
     },
     {
-      "category": "defer",
+      "category": "research_candidate",
       "decision_id": "D006",
-      "next_safe_local_step": "API design notes only",
+      "next_safe_local_step": "research API design only",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -103,11 +103,11 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "machlib-workbench and eml-harness packages",
-      "readiness": "NOT_YET",
+      "option": "hybrid-trace-eml package",
+      "readiness": "RESEARCH_CANDIDATE / NEEDS_API_DESIGN",
       "recommended_rank": 6,
-      "risk": "API and execution boundaries are not mature enough",
-      "upside": "possible shared execution tooling later"
+      "risk": "must not imply theorem or production-controller evidence",
+      "upside": "captures stochastic/hybrid evidence toolkit"
     }
   ],
   "local_only": true,

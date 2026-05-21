@@ -4,7 +4,8 @@
   "local_draft_candidates": [
     "zero-mathlib-checker",
     "claim-boundary",
-    "eml-records"
+    "eml-records",
+    "review-branch-packet"
   ],
   "local_only": true,
   "no_package_is_release_ready": true,
