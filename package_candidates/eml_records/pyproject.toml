@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eml-records"
+version = "0.0.0.dev0"
+description = "Local draft schema and validation helpers for EML-style evidence records."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+eml-records = "eml_records.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
