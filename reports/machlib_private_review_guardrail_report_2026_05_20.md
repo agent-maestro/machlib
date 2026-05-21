@@ -1,32 +1,34 @@
-# MachLib Private Review Guardrail Report (2026-05-20)
+# MachLib Private Review Guardrail Report - 2026-05-20
 
 ## Guardrails
 
-| Guardrail | Result | Notes |
-| --- | --- | --- |
-| No GitHub PR created | PASS | This task produced a local PR draft report only. |
-| No merge | PASS | No merge, rebase, or checkout of the remote branch was performed. |
-| No push | PASS | No push was performed during this inspection task. |
-| No main branch update | PASS | The inspected remote branch is a private review branch. |
-| No Hugging Face upload | PASS | No upload or Hugging Face API call was performed. |
-| No package publish | PASS | No package publish action was performed. |
-| No PETAL/API upload | PASS | No PETAL/API call was performed. |
-| No CapCard marketplace change | PASS | No marketplace assets were modified. |
-| No command-center deploy | PASS | command.monogate.dev was not deployed or modified. |
-| No hardware action | PASS | No hardware commands were run. |
-| No Forge compiler behavior change | PASS | No Forge source or compiler behavior was changed. |
-| No public theorem/proof/open-problem claim | PASS | Reports keep all claims draft/internal and observational. |
-| Zero-Mathlib checker passes | PASS | Default, release-target, and repo-wide modes passed. |
-| Git status final clean | FAIL | The three M018 reports are intentionally uncommitted local inspection outputs. |
+| Check | Status |
+| --- | --- |
+| No push by M029 | PASS |
+| No PR creation | PASS |
+| No merge | PASS |
+| No command center deploy | PASS |
+| No Hugging Face upload | PASS |
+| No PETAL/API upload | PASS |
+| No package publish | PASS |
+| No PyPI/token handling | PASS |
+| No hardware action | PASS |
+| No Forge compiler behavior change | PASS |
+| No public theorem/proof/open-problem claim | PASS |
+| No Mathlib dependency introduced | PASS |
+| No token-like secret introduced | PASS |
 
-## Validation Summary
+## Validation Evidence
 
-- Remote review branch reachability: PASS
-- Zero-Mathlib status: PASS
-- Six-lane dashboard status: DRAFT_INTERNAL_VALIDATED
-- Command Center feed status: DRAFT_INTERNAL
-- Token-like secret scan over M018 reports: pending validation command
+| Validator | Result |
+| --- | --- |
+| Zero dependency checker, default | PASS |
+| Zero dependency checker, release target | PASS |
+| Zero dependency checker, repo-wide | PASS |
+| Six-lane dashboard builder | PASS, 19 seeds across 6 lanes |
+| Function-class rollup builder | PASS, 20 records |
+| Phase-spine builder | PASS, 13 phases |
 
-## Boundary Summary
+## Expected Warning Boundary
 
-This inspection did not create a PR, push, merge, deploy, upload, publish, modify Forge behavior, or create public proof/theorem/open-problem claims. The only repository changes from this task are local Markdown reports under `reports/`.
+Function-class eFrog/Forge roundtrips retain WARN status only for the expected Forge draft-schema limitation. No warning is attributed to dependency imports, upload/publish actions, hardware actions, compiler mutation, or public proof claims.

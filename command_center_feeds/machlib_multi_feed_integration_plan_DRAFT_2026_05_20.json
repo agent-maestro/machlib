@@ -1,0 +1,151 @@
+{
+  "date": "2026-05-20",
+  "tier": "OBSERVATION",
+  "status": "DRAFT_INTERNAL",
+  "local_only": true,
+  "plan_id": "machlib_multi_feed_integration_plan_DRAFT_2026_05_20",
+  "command_center": {
+    "path_inspected": "/home/monogate/monogate/command-center",
+    "branch": "master",
+    "remote": "origin https://github.com/agent-maestro/command-center.git",
+    "git_status": "dirty",
+    "pre_existing_dirty_files": [
+      "data/proof-registry.jsonl"
+    ],
+    "files_modified": false,
+    "deploy_performed": false
+  },
+  "machlib_feeds": [
+    {
+      "feed_id": "machlib_six_lane_status_2026_05_20",
+      "card_file": "command_center_feeds/machlib_six_lane_status_card_2026_05_20.json",
+      "feed_file": "command_center_feeds/machlib_six_lane_status_feed_2026_05_20.json",
+      "title": "MachLib Six-Lane Status",
+      "summary": "Zero-Mathlib PASS; six lanes DRAFT_INTERNAL_VALIDATED; public/upload/release-ready counts remain zero."
+    },
+    {
+      "feed_id": "machlib_function_class_status_2026_05_20",
+      "card_file": "command_center_feeds/machlib_function_class_status_card_2026_05_20.json",
+      "feed_file": "command_center_feeds/machlib_function_class_status_feed_2026_05_20.json",
+      "title": "MachLib Function-Class Frontier",
+      "summary": "D-finite, analytic, smooth, and continuous executable checks are DRAFT_INTERNAL; roundtrip warnings are expected Forge draft-schema limitations."
+    },
+    {
+      "feed_id": "machlib_phase_spine_2026_05_20",
+      "card_file": "command_center_feeds/machlib_phase_spine_card_2026_05_20.json",
+      "feed_file": "command_center_feeds/machlib_phase_spine_feed_2026_05_20.json",
+      "title": "MachLib Phase Spine",
+      "summary": "13 phases; private review branch pushed; no push to main; no deploy; human approval required for future action."
+    }
+  ],
+  "mount_options": [
+    {
+      "option_id": "static_approved_snapshot_import",
+      "name": "Static approved snapshot import",
+      "pros": [
+        "simple to review",
+        "matches existing static data pattern",
+        "no live runtime dependency"
+      ],
+      "risks": [
+        "snapshot can become stale",
+        "manual copy process required"
+      ],
+      "deployment_requirement": "future command-center code/data change with separate deploy approval",
+      "human_approval_required": true,
+      "no_go_boundaries": [
+        "no automatic publish",
+        "no public-ready implication",
+        "no external API call"
+      ]
+    },
+    {
+      "option_id": "internal_api_route_snapshot",
+      "name": "Internal API route reading approved feed snapshot",
+      "pros": [
+        "supports future refresh behavior",
+        "server-side validation possible"
+      ],
+      "risks": [
+        "more moving parts",
+        "could be mistaken for live status"
+      ],
+      "deployment_requirement": "future route and UI change with separate deploy approval",
+      "human_approval_required": true,
+      "no_go_boundaries": [
+        "no runtime MachLib repo read without approval",
+        "no upload or publish path"
+      ]
+    },
+    {
+      "option_id": "feed_registry",
+      "name": "Feed registry combining internal streams",
+      "pros": [
+        "best long-term composition model",
+        "normalizes internal statuses and guardrails"
+      ],
+      "risks": [
+        "larger schema design",
+        "risk of mixing internal and public semantics"
+      ],
+      "deployment_requirement": "future schema, adapter, UI, and deploy review",
+      "human_approval_required": true,
+      "no_go_boundaries": [
+        "no CapCard marketplace mutation",
+        "no PETAL/API upload",
+        "no hardware action"
+      ]
+    },
+    {
+      "option_id": "card_adapter_component",
+      "name": "Future command-center card adapter component",
+      "pros": [
+        "reusable card rendering",
+        "consistent guardrail display"
+      ],
+      "risks": [
+        "requires UI and adapter design",
+        "must avoid marketing-style overclaiming"
+      ],
+      "deployment_requirement": "future component change with separate deploy approval",
+      "human_approval_required": true,
+      "no_go_boundaries": [
+        "no production behavior change in this planning task",
+        "no public theorem/proof/open-problem claim"
+      ]
+    }
+  ],
+  "recommended_path": {
+    "option_id": "static_approved_snapshot_import",
+    "reason": "Easiest to review and does not imply live runtime dependencies.",
+    "requires_human_approval": true,
+    "deploy_now": false
+  },
+  "blocked_copy": [
+    "MachLib proves theorems",
+    "MachLib replaces mathlib",
+    "Open problem solved",
+    "Release ready",
+    "Upload ready",
+    "Hugging Face live",
+    "CapCard certified",
+    "PETAL verified",
+    "Production safe"
+  ],
+  "guardrails": {
+    "no_command_center_files_modified": true,
+    "no_command_center_deploy": true,
+    "no_push": true,
+    "no_pr_created": true,
+    "no_merge": true,
+    "no_hf_upload": true,
+    "no_package_publish": true,
+    "no_petal_api_call": true,
+    "no_capcard_marketplace_change": true,
+    "no_pypi_token_handling": true,
+    "no_hardware_action": true,
+    "no_forge_compiler_behavior_change": true,
+    "no_public_theorem_proof_open_problem_claim": true,
+    "no_token_like_secret": true
+  }
+}
