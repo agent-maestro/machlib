@@ -3,22 +3,19 @@
   "future_pypi_publication_requires_separate_explicit_approval": true,
   "local_draft_candidates": [
     "zero-mathlib-checker",
-    "claim-boundary"
+    "claim-boundary",
+    "eml-records"
   ],
   "local_only": true,
-  "notes": [
-    "no package publish occurred",
-    "no PyPI token handling occurred",
-    "no PyPI name availability was checked",
-    "no package is release-ready",
-    "no package is upload-ready",
-    "no release artifacts created",
-    "zero-mathlib-checker and claim-boundary remain local draft candidates"
-  ],
-  "package_name_availability_checked": false,
-  "package_publish_occurred": false,
-  "pypi_token_handling_occurred": false,
+  "no_package_is_release_ready": true,
+  "no_package_is_upload_ready": true,
+  "no_package_publish_occurred": true,
+  "no_pypi_name_availability_checked": true,
+  "no_pypi_token_handling_occurred": true,
+  "no_release_artifacts_created": true,
+  "package_publish_allowed": false,
+  "pypi_token_handling_performed": false,
+  "pypi_upload_performed": false,
   "release_artifacts_created": false,
-  "release_ready_packages": [],
-  "upload_ready_packages": []
+  "tier": "OBSERVATION"
 }

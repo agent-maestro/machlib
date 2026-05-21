@@ -89,7 +89,7 @@
     },
     {
       "candidate_name": "eml-records",
-      "candidate_status": "NEXT_DRAFT_PACKAGE_CANDIDATE",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
       "dependencies": [
         "Python standard library",
         "pytest for local tests only"
@@ -97,8 +97,8 @@
       "license_readme_risks": [
         "needs standalone license/readme review before any release"
       ],
-      "minimum_viable_scope": "Draft EML record schema validation helpers.",
-      "next_safe_local_step": "schema extraction plan only",
+      "minimum_viable_scope": "Draft EML record schema and validator helpers for lane, function-class, stochastic/hybrid, and evidence records.",
+      "next_safe_local_step": "hardening pass like M038/M039",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -119,12 +119,14 @@
       ],
       "pypi_token_required_now": false,
       "pypi_upload_performed": false,
-      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE",
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_CREATED",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
-        "corpus validators"
+        "tools/validate_eml_lane_seeds.py",
+        "tools/validate_function_class_records.py",
+        "tools/validate_stochastic_hybrid_records.py"
       ],
-      "test_count": 0,
+      "test_count": 16,
       "token_or_publish_risks": [
         "PyPI tokens are not needed now",
         "do not run twine or upload commands"
@@ -226,8 +228,8 @@
       "license_readme_risks": [
         "needs standalone license/readme review before any release"
       ],
-      "minimum_viable_scope": "Common harness patterns for bounded EML trace checks.",
-      "next_safe_local_step": "shared API survey only",
+      "minimum_viable_scope": "Shared local harness fixtures and bounded execution summaries.",
+      "next_safe_local_step": "separate API and scope design",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -238,7 +240,7 @@
       ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "package_type": "harness framework",
+      "package_type": "harness utilities",
       "proposed_cli_names": [
         "eml-harness"
       ],
@@ -251,7 +253,8 @@
       "recommended_readiness": "NEEDS_API_DESIGN",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
-        "lane and function-class harnesses"
+        "function-class harnesses",
+        "stochastic/hybrid harness"
       ],
       "test_count": 0,
       "token_or_publish_risks": [
@@ -269,8 +272,8 @@
       "license_readme_risks": [
         "needs standalone license/readme review before any release"
       ],
-      "minimum_viable_scope": "Too broad for early packaging; needs API and scope boundary.",
-      "next_safe_local_step": "scope boundary only",
+      "minimum_viable_scope": "Possible umbrella package boundary; too broad for local draft publishing.",
+      "next_safe_local_step": "do not package until API and license boundaries are settled",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -281,7 +284,7 @@
       ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "package_type": "library/meta package",
+      "package_type": "library meta-package",
       "proposed_cli_names": [
         "machlib"
       ],
@@ -312,8 +315,8 @@
       "license_readme_risks": [
         "needs standalone license/readme review before any release"
       ],
-      "minimum_viable_scope": "Finite hybrid trace fixtures and evidence records, research-only.",
-      "next_safe_local_step": "research API boundary only",
+      "minimum_viable_scope": "Draft finite trace schema helpers for stochastic/hybrid records.",
+      "next_safe_local_step": "research-only schema design",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -324,7 +327,7 @@
       ],
       "package_name_availability": "UNKNOWN_NOT_CHECKED",
       "package_publish_allowed": false,
-      "package_type": "research toolkit",
+      "package_type": "research schema helpers",
       "proposed_cli_names": [
         "hybrid-trace-eml"
       ],
@@ -337,7 +340,7 @@
       "recommended_readiness": "RESEARCH_CANDIDATE / NEEDS_API_DESIGN",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
-        "stochastic/hybrid frontier"
+        "corpus/eml_stochastic_hybrid_draft"
       ],
       "test_count": 0,
       "token_or_publish_risks": [
@@ -347,20 +350,27 @@
     }
   ],
   "date": "2026-05-20",
+  "failures": [],
   "guardrails": {
+    "no_hf_upload": true,
+    "no_mathlib_dependency_introduced": true,
     "no_package_publish": true,
+    "no_petal_api_upload": true,
     "no_public_theorem_claim": true,
-    "no_pypi_name_availability_check": true,
     "no_pypi_token_handling": true,
-    "no_release_artifacts": true
+    "no_token_like_secret_introduced": true,
+    "no_upload_artifact": true
   },
+  "local_draft_package_count": 3,
   "local_only": true,
   "package_candidate_count": 8,
+  "package_publish_allowed_count": 0,
   "publish_performed": false,
   "pypi_name_availability_checked": false,
   "pypi_token_handling_performed": false,
   "release_artifacts_created": false,
   "release_ready_count": 0,
   "tier": "OBSERVATION",
-  "upload_ready_count": 0
+  "upload_ready_count": 0,
+  "warnings": []
 }

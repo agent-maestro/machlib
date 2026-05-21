@@ -1,12 +1,13 @@
-# MachLib Package Candidate Status Rollup - 2026-05-20
+# MachLib package candidate status rollup - 2026-05-20
 
-| candidate_name | candidate_status | test_count | next_safe_local_step |
-| --- | --- | --- | --- |
-| zero-mathlib-checker | LOCAL_DRAFT_PACKAGE_HARDENED | 15 | packaging boundary review / API freeze / license review |
-| claim-boundary | LOCAL_DRAFT_PACKAGE_CREATED | 35 | hardening pass like M038 |
-| eml-records | NEXT_DRAFT_PACKAGE_CANDIDATE | 0 | schema extraction plan only |
-| machlib-workbench | NEEDS_API_DESIGN | 0 | API boundary design only |
-| review-branch-packet | DRAFT_PACKAGE_CANDIDATE | 0 | local design notes only |
-| eml-harness | NEEDS_API_DESIGN | 0 | shared API survey only |
-| machlib | NEEDS_API_DESIGN | 0 | scope boundary only |
-| hybrid-trace-eml | RESEARCH_CANDIDATE / NEEDS_API_DESIGN | 0 | research API boundary only |
+## Summary
+
+- Package candidates tracked: 8.
+- Local draft packages created/hardened: 3.
+- `zero-mathlib-checker`: `LOCAL_DRAFT_PACKAGE_HARDENED`, 15 tests.
+- `claim-boundary`: `LOCAL_DRAFT_PACKAGE_CREATED`, 35 tests.
+- `eml-records`: `LOCAL_DRAFT_PACKAGE_CREATED`, 16 tests.
+
+## Guardrails
+
+No package publish, PyPI upload, PyPI token handling, package name availability check, or release artifact creation occurred.

@@ -1,10 +1,13 @@
-# MachLib Product Readiness Drafts - 2026-05-20
+# Product readiness
 
-Local OBSERVATION-tier product and package triage artifacts. No package name availability was checked. No package publish, PyPI upload, token handling, command-center deploy, public theorem/proof/open-problem claim, release-ready claim, upload-ready claim, or release artifact creation occurred.
+This directory tracks local OBSERVATION-tier package and product candidates for MachLib evidence work.
 
-Current local package candidates:
+Current local draft package candidates:
 
-- `zero-mathlib-checker`: LOCAL_DRAFT_PACKAGE_HARDENED, 15 tests.
-- `claim-boundary`: LOCAL_DRAFT_PACKAGE_CREATED, 35 tests.
+- `zero-mathlib-checker`: `LOCAL_DRAFT_PACKAGE_HARDENED`, 15 tests.
+- `claim-boundary`: `LOCAL_DRAFT_PACKAGE_CREATED`, 35 tests.
+- `eml-records`: `LOCAL_DRAFT_PACKAGE_CREATED`, 16 tests.
 
-Both remain local draft candidates. Future PyPI publication must be separate and explicitly approved.
+No package publish occurred. No PyPI upload occurred. No PyPI token handling occurred. No PyPI name availability was checked. No release artifacts were created. No package is release-ready or upload-ready.
+
+Future PyPI publication must be a separate explicitly approved task.

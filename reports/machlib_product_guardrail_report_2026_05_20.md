@@ -1,10 +1,10 @@
-# MachLib Product Guardrail Report - 2026-05-20
+# MachLib product guardrail report - 2026-05-20
 
-| gate | status |
+| Guardrail | Status |
 | --- | --- |
 | no package publish | PASS |
 | no PyPI/token handling | PASS |
-| no PyPI name availability check | PASS |
+| no package name availability check | PASS |
 | no release artifacts created | PASS |
 | no Hugging Face upload | PASS |
 | no PETAL/API upload | PASS |
@@ -12,6 +12,5 @@
 | no hardware action | PASS |
 | no Forge compiler behavior change | PASS |
 | no public theorem/proof/open-problem claim | PASS |
-| no package release-ready claim | PASS |
-| no upload-ready claim | PASS |
-| no token-like secret | PASS |
+| no Mathlib dependency introduced | PASS |
+| no token-like secret introduced | PASS |
