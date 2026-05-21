@@ -18,7 +18,7 @@ def test_rollup_core_counts_and_statuses():
     builder = load_builder()
     rollup, push, card, feed = builder.build_all(ROOT)
     assert rollup["record_count"] == 20
-    assert rollup["executable_class_count"] == 4
+    assert rollup["executable_class_count"] == 5
     assert rollup["zero_mathlib_status"] == "PASS"
     assert rollup["function_class_status"] == "DRAFT_INTERNAL_VALIDATED"
     assert rollup["public_ready_count"] == 0
@@ -35,9 +35,8 @@ def test_rollup_core_counts_and_statuses():
 def test_class_rows_have_expected_warning_only():
     builder = load_builder()
     rollup = builder.build_rollup(ROOT)
-    executable = [row for row in rollup["classes"] if row["class_id"] != "CLASS_BOUNDARY_RELATION"]
-    assert len(executable) == 4
-    for row in executable:
+    assert len(rollup["classes"]) == 5
+    for row in rollup["classes"]:
         assert row["execution_status"] == "PASS"
         assert row["execution_failed"] == 0
         assert row["roundtrip_status"] == "WARN"
@@ -46,13 +45,16 @@ def test_class_rows_have_expected_warning_only():
         assert row["expected_warning"] == "Forge draft-schema limitation"
 
 
-def test_boundary_rows_are_records_only():
+def test_boundary_rows_have_executable_evidence():
     builder = load_builder()
     rollup = builder.build_rollup(ROOT)
     boundary = [row for row in rollup["classes"] if row["class_id"] == "CLASS_BOUNDARY_RELATION"][0]
     assert boundary["record_count"] == 3
-    assert boundary["executable_status"] == "VALIDATED_AS_RECORDS_ONLY"
-    assert boundary["roundtrip_status"] == "NOT_EXECUTED"
+    assert boundary["execution_status"] == "PASS"
+    assert boundary["execution_passed"] == 3
+    assert boundary["roundtrip_status"] == "WARN"
+    assert boundary["roundtrip_failed"] == 0
+    assert boundary["expected_warning_only"] is True
     assert boundary["failures"] == []
 
 

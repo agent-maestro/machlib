@@ -134,13 +134,14 @@ PHASE_DEFS = [
     {
         "phase_id": "phase_11",
         "title": "Function-class frontier and executable slices",
-        "goal": "Add function-class frontier records and execute D-finite, analytic, smooth, and continuous subsets locally.",
+        "goal": "Add function-class frontier records and execute D-finite, analytic, smooth, continuous, and boundary subsets locally.",
         "subjects": [
             "research/corpus: add MachLib EML function-class frontier",
             "test/corpus: add MachLib D-finite ODE certificate harness",
             "test/corpus: add MachLib analytic local-series harness",
             "test/corpus: add MachLib smooth finite-jet harness",
             "test/corpus: add MachLib continuous modulus harness",
+            "test/corpus: add MachLib function boundary harness",
         ],
         "artifacts": [
             "function-class corpus",
@@ -149,8 +150,9 @@ PHASE_DEFS = [
             "analytic local-series harness",
             "smooth finite-jet harness",
             "continuous local-modulus harness",
+            "boundary relation harness",
         ],
-        "what_it_unlocked": "A four-slice executable frontier for function-class records.",
+        "what_it_unlocked": "A five-slice executable frontier for function-class records.",
         "limitations": ["Roundtrips keep expected Forge draft-schema warnings."],
     },
     {
@@ -166,7 +168,6 @@ PHASE_DEFS = [
 
 
 NEXT_QUEUE = [
-    "Boundary relation executable harness",
     "D-finite to analytic relation lab",
     "Analytic radius/convergence guard design",
     "Smooth C-infinity proof-layer design",
@@ -264,6 +265,31 @@ def load_validation_inputs(repo_root: Path) -> dict[str, dict[str, Any]]:
             repo_root
             / "corpus/eml_function_classes_draft/d_finite/ode_certificate_roundtrip_result_2026_05_20.json"
         ),
+        "analytic_execution": read_json(
+            repo_root / "corpus/eml_function_classes_draft/analytic/local_series_result_2026_05_20.json"
+        ),
+        "analytic_roundtrip": read_json(
+            repo_root / "corpus/eml_function_classes_draft/analytic/local_series_roundtrip_result_2026_05_20.json"
+        ),
+        "smooth_execution": read_json(
+            repo_root / "corpus/eml_function_classes_draft/smooth/finite_jet_result_2026_05_20.json"
+        ),
+        "smooth_roundtrip": read_json(
+            repo_root / "corpus/eml_function_classes_draft/smooth/finite_jet_roundtrip_result_2026_05_20.json"
+        ),
+        "continuous_execution": read_json(
+            repo_root / "corpus/eml_function_classes_draft/continuous/modulus_result_2026_05_20.json"
+        ),
+        "continuous_roundtrip": read_json(
+            repo_root / "corpus/eml_function_classes_draft/continuous/modulus_roundtrip_result_2026_05_20.json"
+        ),
+        "boundary_execution": read_json(
+            repo_root / "corpus/eml_function_classes_draft/boundary_relations/boundary_result_2026_05_20.json"
+        ),
+        "boundary_roundtrip": read_json(
+            repo_root
+            / "corpus/eml_function_classes_draft/boundary_relations/boundary_roundtrip_result_2026_05_20.json"
+        ),
     }
 
 
@@ -328,6 +354,14 @@ def build_validation_rollup(inputs: dict[str, dict[str, Any]]) -> dict[str, Any]
     function_class = inputs["function_class"]
     dfinite_execution = inputs["dfinite_execution"]
     dfinite_roundtrip = inputs["dfinite_roundtrip"]
+    analytic_execution = inputs["analytic_execution"]
+    analytic_roundtrip = inputs["analytic_roundtrip"]
+    smooth_execution = inputs["smooth_execution"]
+    smooth_roundtrip = inputs["smooth_roundtrip"]
+    continuous_execution = inputs["continuous_execution"]
+    continuous_roundtrip = inputs["continuous_roundtrip"]
+    boundary_execution = inputs["boundary_execution"]
+    boundary_roundtrip = inputs["boundary_roundtrip"]
     return {
         "date": DATE,
         "tier": "OBSERVATION",
@@ -340,6 +374,15 @@ def build_validation_rollup(inputs: dict[str, dict[str, Any]]) -> dict[str, Any]
         "dfinite_execution_status": dfinite_execution.get("execution_status"),
         "dfinite_roundtrip_status": dfinite_roundtrip.get("roundtrip_status"),
         "dfinite_roundtrip_warning": "expected draft schema limitation",
+        "analytic_execution_status": analytic_execution.get("execution_status"),
+        "analytic_roundtrip_status": analytic_roundtrip.get("roundtrip_status"),
+        "smooth_execution_status": smooth_execution.get("execution_status"),
+        "smooth_roundtrip_status": smooth_roundtrip.get("roundtrip_status"),
+        "continuous_execution_status": continuous_execution.get("execution_status"),
+        "continuous_roundtrip_status": continuous_roundtrip.get("roundtrip_status"),
+        "boundary_execution_status": boundary_execution.get("execution_status"),
+        "boundary_roundtrip_status": boundary_roundtrip.get("roundtrip_status"),
+        "function_class_executable_class_count": 5,
         "public_ready_count": dashboard.get("public_ready_count", 0),
         "upload_allowed_count": dashboard.get("upload_allowed_count", 0),
         "release_ready_count": dashboard.get("release_ready_count", 0),
@@ -442,7 +485,7 @@ def write_reports(spine: dict[str, Any], rollup: dict[str, Any]) -> None:
         f"""# MachLib Phase Spine Summary - {DATE}
 
 ## What Was Built
-MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, and a D-finite ODE certificate harness.
+MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, and five executable function-class harnesses.
 
 ## Counts
 - Phases: {spine['phase_count']}
@@ -472,6 +515,14 @@ No push, merge, PR creation, deployment, upload, package publish, hardware actio
         {"gate": "function-class validator", "status": rollup["function_class_status"], "note": "20 records"},
         {"gate": "D-finite execution", "status": rollup["dfinite_execution_status"], "note": "5 records"},
         {"gate": "D-finite roundtrip", "status": rollup["dfinite_roundtrip_status"], "note": rollup["dfinite_roundtrip_warning"]},
+        {"gate": "analytic execution", "status": rollup["analytic_execution_status"], "note": "4 records"},
+        {"gate": "analytic roundtrip", "status": rollup["analytic_roundtrip_status"], "note": "expected draft schema limitation"},
+        {"gate": "smooth execution", "status": rollup["smooth_execution_status"], "note": "4 records"},
+        {"gate": "smooth roundtrip", "status": rollup["smooth_roundtrip_status"], "note": "expected draft schema limitation"},
+        {"gate": "continuous execution", "status": rollup["continuous_execution_status"], "note": "4 records"},
+        {"gate": "continuous roundtrip", "status": rollup["continuous_roundtrip_status"], "note": "expected draft schema limitation"},
+        {"gate": "boundary execution", "status": rollup["boundary_execution_status"], "note": "3 records"},
+        {"gate": "boundary roundtrip", "status": rollup["boundary_roundtrip_status"], "note": "expected draft schema limitation"},
     ]
     (REPORT_DIR / f"machlib_validation_rollup_{DATE.replace('-', '_')}.md").write_text(
         "# MachLib Validation Rollup - 2026-05-20\n\n" + md_table(validation_rows, ["gate", "status", "note"]) + "\n",
@@ -489,9 +540,9 @@ All closure checks remain local-only. No push or main merge was performed. No Gi
 
 You can return here knowing the recent MachLib workstream is locally wrapped.
 
-Current state: zero-Mathlib gates pass, the six-lane EML corpus is DRAFT_INTERNAL_VALIDATED, the function-class frontier is DRAFT_INTERNAL_VALIDATED, and the D-finite ODE certificate harness executes locally. The D-finite roundtrip warning is expected for draft schema support and is not a hard failure.
+Current state: zero-Mathlib gates pass, the six-lane EML corpus is DRAFT_INTERNAL_VALIDATED, the function-class frontier is DRAFT_INTERNAL_VALIDATED, and all five function-class harnesses execute locally. The function-class roundtrip warnings are expected for draft schema support and are not hard failures.
 
-Safe next moves: continue local harnesses for analytic, smooth, and continuous records; review the private branch; or prepare a human-approved private review push for newer closure commits.
+Safe next moves: continue local relation labs, review the private branch, or prepare a human-approved private review push for newer closure commits.
 
 Not safe without explicit human approval: public release, upload, deployment, package publishing, public proof/theorem/open-problem language, or default legacy compatibility behavior.
 

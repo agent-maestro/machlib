@@ -17,12 +17,12 @@
     "artifacts remain DRAFT_INTERNAL",
     "Command Center card is internal-only and not deployed",
     "human approval is required before any push, upload, publish, or release action",
-    "boundary/non-example relations are validated as records only"
+    "boundary/non-example relations remain local executable observations, not theorem claims"
   ],
   "reasons_ready_for_private_review": [
     "zero-dependency checker passes in all requested modes",
     "function-class validator reports DRAFT_INTERNAL_VALIDATED",
-    "four executable function-class harnesses pass with no hard failures",
+    "five executable function-class harnesses pass with no hard failures",
     "roundtrip warnings are expected draft-schema limitations only"
   ],
   "release_ready": false,

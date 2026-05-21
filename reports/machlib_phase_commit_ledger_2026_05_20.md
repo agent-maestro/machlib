@@ -2,6 +2,9 @@
 
 | hash | subject | phase_id | artifact_group | validation_note |
 | --- | --- | --- | --- | --- |
+| a9a3470 | test/corpus: add MachLib function boundary harness | phase_11 | context | covered by phase spine |
+| 99fb7b4 | reports: add MachLib review and command-center planning pack | pre_spine_context | feeds | context commit |
+| 1708536 | reports/corpus: add MachLib function-class rollup | pre_spine_context | function classes | context commit |
 | 9866319 | test/corpus: add MachLib continuous modulus harness | phase_11 | context | covered by phase spine |
 | 4783b48 | test/corpus: add MachLib smooth finite-jet harness | phase_11 | context | covered by phase spine |
 | b02519d | test/corpus: add MachLib analytic local-series harness | phase_11 | context | covered by phase spine |
@@ -79,6 +82,3 @@
 | b9daf60 | port(Hyperbolic): partial port of HyperbolicPreservation (axiomatic R) | pre_spine_context | context | context commit |
 | 99ef513 | ci(build-time): refresh cold-build badge to 1.00s [skip ci] | pre_spine_context | context | context commit |
 | cf686c0 | chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/) | pre_spine_context | context | context commit |
-| 324839f | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |
-| 82abb4c | port(SelfMapConjugacy): add to MachLib (axiomatic ℝ, no external formal library) | pre_spine_context | zero-dependency posture | context commit |
-| f044974 | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |

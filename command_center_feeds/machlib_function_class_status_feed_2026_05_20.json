@@ -90,21 +90,29 @@
         },
         {
           "class_id": "CLASS_BOUNDARY_RELATION",
-          "executable_status": "VALIDATED_AS_RECORDS_ONLY",
-          "execution_status": "VALIDATED_AS_RECORDS_ONLY",
-          "expected_warning": "not executable yet unless separately designed",
+          "efrog_status": "PASS",
+          "execution_failed": 0,
+          "execution_passed": 3,
+          "execution_status": "PASS",
+          "expected_warning": "Forge draft-schema limitation",
+          "expected_warning_only": true,
           "failures": [],
+          "forge_status": "WARN",
           "not_claimed": [
-            "prevents subset overclaims",
-            "no theorem result claim"
+            "no subset theorem claim",
+            "no real-analysis completion claim",
+            "no topology formalization claim"
           ],
           "record_count": 3,
-          "roundtrip_status": "NOT_EXECUTED",
-          "title": "Boundary and non-example records"
+          "roundtrip_failed": 0,
+          "roundtrip_passed": 0,
+          "roundtrip_status": "WARN",
+          "roundtrip_warned": 3,
+          "title": "Boundary and non-example relations"
         }
       ],
       "command_center_deploy_performed": false,
-      "executable_class_count": 4,
+      "executable_class_count": 5,
       "expected_warnings": [
         {
           "class_id": "D_FINITE_CERTIFICATE",
@@ -123,6 +131,11 @@
         },
         {
           "class_id": "CONTINUITY_EPSILON_DELTA",
+          "roundtrip_status": "WARN",
+          "warning": "Forge draft-schema limitation"
+        },
+        {
+          "class_id": "CLASS_BOUNDARY_RELATION",
           "roundtrip_status": "WARN",
           "warning": "Forge draft-schema limitation"
         }

@@ -50,19 +50,20 @@ CLASS_INPUTS = [
         "expected_warning": "Forge draft-schema limitation",
         "not_claimed": ["no topology formalization claim", "no epsilon-delta theorem proof claim"],
     },
+    {
+        "class_id": "CLASS_BOUNDARY_RELATION",
+        "title": "Boundary and non-example relations",
+        "record_count": 3,
+        "execution": "boundary_relations/boundary_result_2026_05_20.json",
+        "roundtrip": "boundary_relations/boundary_roundtrip_result_2026_05_20.json",
+        "expected_warning": "Forge draft-schema limitation",
+        "not_claimed": [
+            "no subset theorem claim",
+            "no real-analysis completion claim",
+            "no topology formalization claim",
+        ],
+    },
 ]
-
-BOUNDARY_CLASS = {
-    "class_id": "CLASS_BOUNDARY_RELATION",
-    "title": "Boundary and non-example records",
-    "record_count": 3,
-    "execution_status": "VALIDATED_AS_RECORDS_ONLY",
-    "roundtrip_status": "NOT_EXECUTED",
-    "executable_status": "VALIDATED_AS_RECORDS_ONLY",
-    "expected_warning": "not executable yet unless separately designed",
-    "failures": [],
-    "not_claimed": ["prevents subset overclaims", "no theorem result claim"],
-}
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -144,7 +145,6 @@ def build_rollup(root: Path) -> dict[str, Any]:
     manifest = read_json(root / "function_class_manifest_2026_05_20.json")
     gap_ledger = read_json(root / "function_class_gap_ledger_2026_05_20.json")
     classes = [class_row(root, item) for item in CLASS_INPUTS]
-    classes.append(dict(BOUNDARY_CLASS))
     flag_counts = count_record_flags(root)
     failures = [failure for row in classes for failure in row.get("failures", [])]
     expected_warnings = [
@@ -164,7 +164,7 @@ def build_rollup(root: Path) -> dict[str, Any]:
         "zero_mathlib_status": validation.get("zero_mathlib_status", "PASS"),
         "record_count": manifest.get("record_count", validation.get("record_count")),
         "class_count": 5,
-        "executable_class_count": 4,
+        "executable_class_count": 5,
         **flag_counts,
         "push_performed": False,
         "hf_upload_performed": False,
@@ -199,14 +199,14 @@ def build_push_readiness(rollup: dict[str, Any]) -> dict[str, Any]:
         "reasons_ready_for_private_review": [
             "zero-dependency checker passes in all requested modes",
             "function-class validator reports DRAFT_INTERNAL_VALIDATED",
-            "four executable function-class harnesses pass with no hard failures",
+            "five executable function-class harnesses pass with no hard failures",
             "roundtrip warnings are expected draft-schema limitations only",
         ],
         "reasons_not_release_ready": [
             "artifacts remain DRAFT_INTERNAL",
             "Command Center card is internal-only and not deployed",
             "human approval is required before any push, upload, publish, or release action",
-            "boundary/non-example relations are validated as records only",
+            "boundary/non-example relations remain local executable observations, not theorem claims",
         ],
         "blocked_actions": [
             "huggingface_upload",
@@ -299,15 +299,11 @@ Local-only OBSERVATION-tier rollup for D-finite, analytic, smooth, continuous, a
 ## Executable class status
 {markdown_table(class_rows[:4], ["class", "records", "execution", "roundtrip", "failures"])}
 
-## Boundary/non-example status
-- Boundary rows: 3
-- Status: VALIDATED_AS_RECORDS_ONLY
-- Purpose: prevents subset overclaims.
-
 ## What this unlocks
-- One internal rollup across all executable function-class slices.
+- One internal rollup across all five executable function-class slices.
 - One internal Command Center card/feed draft.
-- A clean next-step queue for boundary relation and schema support work.
+- Boundary/non-example records now have local executable anti-overclaim evidence.
+- A clean next-step queue for relation labs and schema support work.
 
 ## What remains draft/internal
 - No public-ready, upload-ready, or release-ready status is introduced.
@@ -325,6 +321,7 @@ Local-only OBSERVATION-tier rollup for D-finite, analytic, smooth, continuous, a
 | Analytic harness | PASS |
 | Smooth harness | PASS |
 | Continuous harness | PASS |
+| Boundary relation harness | PASS |
 | Focused test summary | PASS |
 """
     (REPORT_DIR / f"machlib_function_class_validation_rollup_{REPORT_DATE}.md").write_text(validation, encoding="utf-8")
@@ -337,7 +334,7 @@ Local-only OBSERVATION-tier rollup for D-finite, analytic, smooth, continuous, a
             "roundtrip": row.get("roundtrip_status", ""),
             "expected": row.get("expected_warning", ""),
         }
-        for row in rollup["classes"][:4]
+        for row in rollup["classes"]
     ]
     roundtrip = f"""# MachLib Function-Class Roundtrip Rollup - {DATE}
 
@@ -353,7 +350,6 @@ No Forge compiler behavior was changed by this rollup.
 
     gaps = f"""# MachLib Function-Class Gap And Next Steps - {DATE}
 
-- Boundary relation executable harness.
 - D-finite to analytic relation lab.
 - Analytic radius/convergence guard design.
 - Smooth C-infinity proof-layer design.
@@ -413,7 +409,7 @@ No Forge compiler behavior was changed by this rollup.
     handoff = f"""# MachLib Function-Class Sleep Handoff - {DATE}
 
 ## Plain English state
-The function-class frontier now has four local executable slices: D-finite ODE certificates, analytic local series, smooth finite jets, and continuous local-modulus checks. Boundary/non-example records remain validated as records only.
+The function-class frontier now has five local executable slices: D-finite ODE certificates, analytic local series, smooth finite jets, continuous local-modulus checks, and boundary/non-example relation checks.
 
 ## Current commits
 - M021 function-class frontier corpus.
@@ -421,6 +417,7 @@ The function-class frontier now has four local executable slices: D-finite ODE c
 - M024 analytic local-series harness.
 - M025 smooth finite-jet harness.
 - M026 continuous local-modulus harness.
+- M032 boundary relation harness.
 - M027 local rollup artifacts are uncommitted until explicitly committed.
 
 ## What is safe
@@ -433,7 +430,7 @@ The function-class frontier now has four local executable slices: D-finite ODE c
 - Treating expected Forge draft-schema warnings as compiler support.
 
 ## Recommended next task
-Build the boundary relation executable harness or the D-finite-to-analytic relation lab.
+Build the D-finite-to-analytic relation lab or continue Forge schema support for the draft function-class artifacts.
 
 ## Suggested push/review policy
 Private review branch only after human approval. Push readiness remains `{push["push_recommended"]}` and `safe_to_push_now=false`.

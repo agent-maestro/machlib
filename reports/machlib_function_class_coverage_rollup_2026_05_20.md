@@ -6,7 +6,7 @@ Local-only OBSERVATION-tier rollup for D-finite, analytic, smooth, continuous, a
 ## Record counts
 - Total records: 20
 - Class count: 5
-- Executable classes: 4
+- Executable classes: 5
 
 ## Executable class status
 | class | records | execution | roundtrip | failures |
@@ -16,15 +16,11 @@ Local-only OBSERVATION-tier rollup for D-finite, analytic, smooth, continuous, a
 | SMOOTH_FINITE_JET | 4 | PASS | WARN | 0 |
 | CONTINUITY_EPSILON_DELTA | 4 | PASS | WARN | 0 |
 
-## Boundary/non-example status
-- Boundary rows: 3
-- Status: VALIDATED_AS_RECORDS_ONLY
-- Purpose: prevents subset overclaims.
-
 ## What this unlocks
-- One internal rollup across all executable function-class slices.
+- One internal rollup across all five executable function-class slices.
 - One internal Command Center card/feed draft.
-- A clean next-step queue for boundary relation and schema support work.
+- Boundary/non-example records now have local executable anti-overclaim evidence.
+- A clean next-step queue for relation labs and schema support work.
 
 ## What remains draft/internal
 - No public-ready, upload-ready, or release-ready status is introduced.

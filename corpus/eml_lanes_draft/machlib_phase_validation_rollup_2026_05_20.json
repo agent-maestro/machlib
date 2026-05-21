@@ -1,9 +1,16 @@
 {
+  "analytic_execution_status": "PASS",
+  "analytic_roundtrip_status": "WARN",
+  "boundary_execution_status": "PASS",
+  "boundary_roundtrip_status": "WARN",
   "command_center_feed_status": "DRAFT_INTERNAL",
+  "continuous_execution_status": "PASS",
+  "continuous_roundtrip_status": "WARN",
   "date": "2026-05-20",
   "dfinite_execution_status": "PASS",
   "dfinite_roundtrip_status": "WARN",
   "dfinite_roundtrip_warning": "expected draft schema limitation",
+  "function_class_executable_class_count": 5,
   "function_class_status": "DRAFT_INTERNAL_VALIDATED",
   "guardrails": {
     "no_command_center_deploy": true,
@@ -25,6 +32,8 @@
   "release_ready_count": 0,
   "six_lane_dashboard_status": "DRAFT_INTERNAL_VALIDATED",
   "six_lane_seed_validator": "PASS",
+  "smooth_execution_status": "PASS",
+  "smooth_roundtrip_status": "WARN",
   "tier": "OBSERVATION",
   "upload_allowed_count": 0,
   "zero_mathlib_status": "PASS"

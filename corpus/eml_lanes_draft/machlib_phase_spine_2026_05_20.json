@@ -4,6 +4,27 @@
   "commits": [
     {
       "artifact_group": "context",
+      "hash": "a9a3470",
+      "phase_id": "phase_11",
+      "subject": "test/corpus: add MachLib function boundary harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "feeds",
+      "hash": "99fb7b4",
+      "phase_id": "pre_spine_context",
+      "subject": "reports: add MachLib review and command-center planning pack",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "function classes",
+      "hash": "1708536",
+      "phase_id": "pre_spine_context",
+      "subject": "reports/corpus: add MachLib function-class rollup",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
       "hash": "9866319",
       "phase_id": "phase_11",
       "subject": "test/corpus: add MachLib continuous modulus harness",
@@ -540,27 +561,6 @@
       "phase_id": "pre_spine_context",
       "subject": "chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/)",
       "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "324839f",
-      "phase_id": "pre_spine_context",
-      "subject": "ci(build-time): refresh cold-build badge to 0s [skip ci]",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "zero-dependency posture",
-      "hash": "82abb4c",
-      "phase_id": "pre_spine_context",
-      "subject": "port(SelfMapConjugacy): add to MachLib (axiomatic \u211d, no external formal library)",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "f044974",
-      "phase_id": "pre_spine_context",
-      "subject": "ci(build-time): refresh cold-build badge to 0s [skip ci]",
-      "validation_note": "context commit"
     }
   ],
   "date": "2026-05-20",
@@ -581,7 +581,6 @@
   "hf_upload_performed": false,
   "local_only": true,
   "next_research_queue": [
-    "Boundary relation executable harness",
     "D-finite to analytic relation lab",
     "Analytic radius/convergence guard design",
     "Smooth C-infinity proof-layer design",
@@ -971,7 +970,8 @@
         "D-finite ODE harness",
         "analytic local-series harness",
         "smooth finite-jet harness",
-        "continuous local-modulus harness"
+        "continuous local-modulus harness",
+        "boundary relation harness"
       ],
       "commits": [
         {
@@ -993,6 +993,10 @@
         {
           "hash": "9866319",
           "subject": "test/corpus: add MachLib continuous modulus harness"
+        },
+        {
+          "hash": "a9a3470",
+          "subject": "test/corpus: add MachLib function boundary harness"
         }
       ],
       "expected_subjects": [
@@ -1000,9 +1004,10 @@
         "test/corpus: add MachLib D-finite ODE certificate harness",
         "test/corpus: add MachLib analytic local-series harness",
         "test/corpus: add MachLib smooth finite-jet harness",
-        "test/corpus: add MachLib continuous modulus harness"
+        "test/corpus: add MachLib continuous modulus harness",
+        "test/corpus: add MachLib function boundary harness"
       ],
-      "goal": "Add function-class frontier records and execute D-finite, analytic, smooth, and continuous subsets locally.",
+      "goal": "Add function-class frontier records and execute D-finite, analytic, smooth, continuous, and boundary subsets locally.",
       "guardrail_status": "PASS",
       "limitations": [
         "Roundtrips keep expected Forge draft-schema warnings."
@@ -1016,7 +1021,7 @@
       "phase_id": "phase_11",
       "title": "Function-class frontier and executable slices",
       "validation_status": "COMMITTED",
-      "what_it_unlocked": "A four-slice executable frontier for function-class records."
+      "what_it_unlocked": "A five-slice executable frontier for function-class records."
     },
     {
       "artifacts": [
@@ -1049,11 +1054,18 @@
   "push_performed": false,
   "tier": "OBSERVATION",
   "validation_rollup": {
+    "analytic_execution_status": "PASS",
+    "analytic_roundtrip_status": "WARN",
+    "boundary_execution_status": "PASS",
+    "boundary_roundtrip_status": "WARN",
     "command_center_feed_status": "DRAFT_INTERNAL",
+    "continuous_execution_status": "PASS",
+    "continuous_roundtrip_status": "WARN",
     "date": "2026-05-20",
     "dfinite_execution_status": "PASS",
     "dfinite_roundtrip_status": "WARN",
     "dfinite_roundtrip_warning": "expected draft schema limitation",
+    "function_class_executable_class_count": 5,
     "function_class_status": "DRAFT_INTERNAL_VALIDATED",
     "guardrails": {
       "no_command_center_deploy": true,
@@ -1075,6 +1087,8 @@
     "release_ready_count": 0,
     "six_lane_dashboard_status": "DRAFT_INTERNAL_VALIDATED",
     "six_lane_seed_validator": "PASS",
+    "smooth_execution_status": "PASS",
+    "smooth_roundtrip_status": "WARN",
     "tier": "OBSERVATION",
     "upload_allowed_count": 0,
     "zero_mathlib_status": "PASS"

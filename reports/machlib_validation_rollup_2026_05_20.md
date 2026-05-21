@@ -9,3 +9,11 @@
 | function-class validator | DRAFT_INTERNAL_VALIDATED | 20 records |
 | D-finite execution | PASS | 5 records |
 | D-finite roundtrip | WARN | expected draft schema limitation |
+| analytic execution | PASS | 4 records |
+| analytic roundtrip | WARN | expected draft schema limitation |
+| smooth execution | PASS | 4 records |
+| smooth roundtrip | WARN | expected draft schema limitation |
+| continuous execution | PASS | 4 records |
+| continuous roundtrip | WARN | expected draft schema limitation |
+| boundary execution | PASS | 3 records |
+| boundary roundtrip | WARN | expected draft schema limitation |

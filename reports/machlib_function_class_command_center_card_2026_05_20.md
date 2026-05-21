@@ -10,7 +10,7 @@
 ## Status wording
 - Function-class status: DRAFT_INTERNAL_VALIDATED
 - Zero-dependency status: PASS
-- Executable class count: 4
+- Executable class count: 5
 
 ## Boundaries
 - Not public-ready.

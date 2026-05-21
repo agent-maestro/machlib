@@ -8,4 +8,5 @@
 | Analytic harness | PASS |
 | Smooth harness | PASS |
 | Continuous harness | PASS |
+| Boundary relation harness | PASS |
 | Focused test summary | PASS |
