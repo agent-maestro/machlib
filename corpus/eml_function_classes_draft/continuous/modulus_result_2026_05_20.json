@@ -1,0 +1,333 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "function_class": "CONTINUITY_EPSILON_DELTA",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_topology_formalization_claim": true
+  },
+  "local_only": true,
+  "passed": 4,
+  "record_count": 4,
+  "results": [
+    {
+      "certificate_type": "lipschitz_placeholder",
+      "classification": "ABSOLUTE_VALUE_LIPSCHITZ_PLACEHOLDER",
+      "detail": {
+        "boundary_note": "continuous placeholder; not differentiable at 0 noted",
+        "fixture": "absolute_value_lipschitz_placeholder",
+        "inequality": "abs(abs(x)-abs(y)) <= abs(x-y)",
+        "limitations": [
+          "bounded samples only",
+          "no theorem claim"
+        ],
+        "passed": true,
+        "sample_checks": [
+          {
+            "lhs": 0.0,
+            "passed": true,
+            "rhs": 2.0,
+            "x": -1.0,
+            "y": 1.0
+          },
+          {
+            "lhs": 0.5,
+            "passed": true,
+            "rhs": 0.5,
+            "x": -2.0,
+            "y": -1.5
+          },
+          {
+            "lhs": 0.3,
+            "passed": true,
+            "rhs": 0.3,
+            "x": 0.0,
+            "y": 0.3
+          }
+        ],
+        "status": "PASS_ABSOLUTE_VALUE_LIPSCHITZ_PLACEHOLDER"
+      },
+      "failures": [],
+      "limitations": [
+        "continuous placeholder only",
+        "not differentiable at 0 is noted but not proved"
+      ],
+      "not_claimed": [
+        "not topology formalization",
+        "not differentiability theorem",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "continuous_absolute_value_v0",
+      "status": "PASS_ABSOLUTE_VALUE_LIPSCHITZ_PLACEHOLDER",
+      "title": "Absolute-value continuity placeholder",
+      "warning": null
+    },
+    {
+      "certificate_type": "epsilon_delta_template",
+      "classification": "LINEAR_EPSILON_DELTA_CHECK",
+      "detail": {
+        "delta_rule": "epsilon / max(1, abs(a))",
+        "epsilon_samples": [
+          0.3,
+          1.0,
+          2.5
+        ],
+        "fixture": "linear_a3_bminus2",
+        "limitations": [
+          "bounded numeric-symbolic samples only",
+          "no theorem claim for all linear maps"
+        ],
+        "passed": true,
+        "sample_checks": [
+          {
+            "delta": 0.09999999999999999,
+            "epsilon": 0.3,
+            "lhs": 0.1499999999999999,
+            "passed": true,
+            "x": 0.049999999999999996,
+            "y": 0.0
+          },
+          {
+            "delta": 0.09999999999999999,
+            "epsilon": 0.3,
+            "lhs": 0.15000000000000036,
+            "passed": true,
+            "x": 1.05,
+            "y": 1.0
+          },
+          {
+            "delta": 0.09999999999999999,
+            "epsilon": 0.3,
+            "lhs": 0.15000000000000036,
+            "passed": true,
+            "x": -1.95,
+            "y": -2.0
+          },
+          {
+            "delta": 0.3333333333333333,
+            "epsilon": 1.0,
+            "lhs": 0.5,
+            "passed": true,
+            "x": 0.16666666666666666,
+            "y": 0.0
+          },
+          {
+            "delta": 0.3333333333333333,
+            "epsilon": 1.0,
+            "lhs": 0.5,
+            "passed": true,
+            "x": 1.1666666666666667,
+            "y": 1.0
+          },
+          {
+            "delta": 0.3333333333333333,
+            "epsilon": 1.0,
+            "lhs": 0.5,
+            "passed": true,
+            "x": -1.8333333333333333,
+            "y": -2.0
+          },
+          {
+            "delta": 0.8333333333333334,
+            "epsilon": 2.5,
+            "lhs": 1.25,
+            "passed": true,
+            "x": 0.4166666666666667,
+            "y": 0.0
+          },
+          {
+            "delta": 0.8333333333333334,
+            "epsilon": 2.5,
+            "lhs": 1.25,
+            "passed": true,
+            "x": 1.4166666666666667,
+            "y": 1.0
+          },
+          {
+            "delta": 0.8333333333333334,
+            "epsilon": 2.5,
+            "lhs": 1.25,
+            "passed": true,
+            "x": -1.5833333333333333,
+            "y": -2.0
+          }
+        ],
+        "status": "PASS_LINEAR_EPSILON_DELTA_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "bounded symbolic check only",
+        "no theorem claim"
+      ],
+      "not_claimed": [
+        "not topology formalization",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "continuous_linear_epsilon_delta_v0",
+      "status": "PASS_LINEAR_EPSILON_DELTA_CHECK",
+      "title": "Linear epsilon-delta placeholder",
+      "warning": null
+    },
+    {
+      "certificate_type": "local_modulus_placeholder",
+      "classification": "POLYNOMIAL_LOCAL_MODULUS_CHECK",
+      "detail": {
+        "fixture": "polynomial_x_squared_on_minus2_2",
+        "interval": [
+          -2.0,
+          2.0
+        ],
+        "limitations": [
+          "sample polynomial and bounded interval only",
+          "no global polynomial continuity proof"
+        ],
+        "modulus_rule": "epsilon / 4 on [-2,2]",
+        "passed": true,
+        "sample_checks": [
+          {
+            "delta": 0.1,
+            "epsilon": 0.4,
+            "inside_interval": true,
+            "lhs": 0.0025000000000000005,
+            "passed": true,
+            "x": 0.05,
+            "y": 0.0
+          },
+          {
+            "delta": 0.1,
+            "epsilon": 0.4,
+            "inside_interval": true,
+            "lhs": 0.10250000000000004,
+            "passed": true,
+            "x": 1.05,
+            "y": 1.0
+          },
+          {
+            "delta": 0.1,
+            "epsilon": 0.4,
+            "inside_interval": true,
+            "lhs": 0.09750000000000003,
+            "passed": true,
+            "x": -0.95,
+            "y": -1.0
+          },
+          {
+            "delta": 0.3,
+            "epsilon": 1.2,
+            "inside_interval": true,
+            "lhs": 0.0225,
+            "passed": true,
+            "x": 0.15,
+            "y": 0.0
+          },
+          {
+            "delta": 0.3,
+            "epsilon": 1.2,
+            "inside_interval": true,
+            "lhs": 0.3224999999999998,
+            "passed": true,
+            "x": 1.15,
+            "y": 1.0
+          },
+          {
+            "delta": 0.3,
+            "epsilon": 1.2,
+            "inside_interval": true,
+            "lhs": 0.2775000000000001,
+            "passed": true,
+            "x": -0.85,
+            "y": -1.0
+          }
+        ],
+        "status": "PASS_POLYNOMIAL_LOCAL_MODULUS_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "no global proof claim",
+        "interval bounds are symbolic placeholders"
+      ],
+      "not_claimed": [
+        "not topology formalization",
+        "not polynomial theorem"
+      ],
+      "passed": true,
+      "record_id": "continuous_polynomial_local_modulus_v0",
+      "status": "PASS_POLYNOMIAL_LOCAL_MODULUS_CHECK",
+      "title": "Polynomial local modulus placeholder",
+      "warning": null
+    },
+    {
+      "certificate_type": "discontinuity_boundary_record",
+      "classification": "STEP_FUNCTION_DISCONTINUITY_WITNESS",
+      "detail": {
+        "boundary": "0",
+        "delta_samples": [
+          1.0,
+          0.1,
+          0.01
+        ],
+        "epsilon": 0.5,
+        "fixture": "heaviside_step_nonexample",
+        "limitations": [
+          "finite discontinuity witness samples only",
+          "no full discontinuity theorem"
+        ],
+        "passed": true,
+        "status": "PASS_STEP_FUNCTION_DISCONTINUITY_WITNESS",
+        "witness_checks": [
+          {
+            "delta": 1.0,
+            "epsilon": 0.5,
+            "gap": 1,
+            "passed": true,
+            "x": -0.5,
+            "y": 0.5
+          },
+          {
+            "delta": 0.1,
+            "epsilon": 0.5,
+            "gap": 1,
+            "passed": true,
+            "x": -0.05,
+            "y": 0.05
+          },
+          {
+            "delta": 0.01,
+            "epsilon": 0.5,
+            "gap": 1,
+            "passed": true,
+            "x": -0.005,
+            "y": 0.005
+          }
+        ]
+      },
+      "failures": [],
+      "limitations": [
+        "non-example record only",
+        "no topology theorem claim"
+      ],
+      "not_claimed": [
+        "not topology formalization",
+        "not continuity theorem",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "continuous_step_function_nonexample_v0",
+      "status": "PASS_STEP_FUNCTION_DISCONTINUITY_WITNESS",
+      "title": "Step-function discontinuity non-example",
+      "warning": null
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

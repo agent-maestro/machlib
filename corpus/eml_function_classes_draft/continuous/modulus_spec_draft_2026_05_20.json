@@ -1,0 +1,336 @@
+{
+  "date": "2026-05-20",
+  "function_class": "CONTINUITY_EPSILON_DELTA",
+  "local_only": true,
+  "modulus_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "epsilon_delta_template",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "bounded numeric-symbolic samples only",
+        "does not prove an epsilon-delta theorem"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach continuity epsilon-delta record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "epsilon_samples",
+        "delta_rule",
+        "domain_or_interval_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_continuity_epsilon_delta_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "epsilon-delta payload present",
+        "sample checks present",
+        "limitations present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "local_modulus",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "local bounded observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach local modulus record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "modulus_rule",
+        "bounded_interval_guard",
+        "sample_checks"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_local_modulus_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "local modulus payload present",
+        "interval guard present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "lipschitz_placeholder",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "does not establish a public Lipschitz theorem"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach Lipschitz placeholder record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "inequality",
+        "sample_pairs"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_lipschitz_placeholder_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "bounded inequality samples checked",
+        "boundary note present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "discontinuity_witness",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "finite witness observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach discontinuity witness record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "jump_boundary",
+        "epsilon",
+        "delta_samples"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_discontinuity_witness_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "witness samples checked",
+        "non-example status retained"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "bounded_interval_guard",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "does not prove global continuity"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach bounded interval guard",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "interval",
+        "guard_status"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_bounded_interval_guard_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "interval is explicit",
+        "no global promotion"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "not_proved_boundary",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "records absence of topology formalization"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach topology boundary",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "limitations",
+        "not_claimed"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_topology_not_proved_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "topology boundary stated",
+        "no public proof status"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_BOUNDED_SAMPLE_CHECK"
+      ],
+      "certificate_kind": "validation_trace",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "trace is internal observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach continuity validation trace",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "checks",
+        "status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a topology formalization",
+        "not a complete continuity formalization",
+        "not a global continuity proof"
+      ],
+      "spec_id": "mach_continuity_validation_trace_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "records local bounded checks",
+        "records guardrails"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "spec_count": 7,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}
