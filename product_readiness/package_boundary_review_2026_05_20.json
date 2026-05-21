@@ -1,19 +1,24 @@
 {
   "date": "2026-05-20",
-  "first_hardening_candidate": "zero-mathlib-checker",
-  "future_pypi_task_requires_separate_explicit_approval": true,
+  "future_pypi_publication_requires_separate_explicit_approval": true,
+  "local_draft_candidates": [
+    "zero-mathlib-checker",
+    "claim-boundary"
+  ],
   "local_only": true,
   "notes": [
-    "no package publishing occurred",
+    "no package publish occurred",
     "no PyPI token handling occurred",
-    "no package name availability was checked",
+    "no PyPI name availability was checked",
     "no package is release-ready",
     "no package is upload-ready",
-    "zero-mathlib-checker is the first hardening candidate"
+    "no release artifacts created",
+    "zero-mathlib-checker and claim-boundary remain local draft candidates"
   ],
   "package_name_availability_checked": false,
   "package_publish_occurred": false,
   "pypi_token_handling_occurred": false,
+  "release_artifacts_created": false,
   "release_ready_packages": [],
   "upload_ready_packages": []
 }

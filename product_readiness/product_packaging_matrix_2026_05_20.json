@@ -4,10 +4,34 @@
   "products": [
     {
       "current_assets": [
+        "claim-boundary",
+        "review packets"
+      ],
+      "description": "AI-generated research/code/formal artifact review service",
+      "first_mvp": "manual service workflow",
+      "likely_user": "teams with formal/research code",
+      "missing_assets": [
+        "service process",
+        "legal copy"
+      ],
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no command-center deploy without approval"
+      ],
+      "product_id": "ai_research_code_review_service",
+      "public_readiness": false,
+      "release_ready": false,
+      "revenue_path": "consulting/service revenue",
+      "upload_ready": false,
+      "value_proposition": "human-readable review packets and guardrail scans"
+    },
+    {
+      "current_assets": [
         "MachLib Evidence Workbench",
         "phase spine"
       ],
-      "description": "Monogate Evidence Workbench",
+      "description": "Monogate Evidence Workbench internal CLI/service",
       "first_mvp": "local CLI/service wrapper",
       "likely_user": "internal research operators",
       "missing_assets": [
@@ -17,10 +41,6 @@
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
         "no command-center deploy without approval"
       ],
       "product_id": "monogate_evidence_workbench",
@@ -29,34 +49,6 @@
       "revenue_path": "service/subscription review workflow",
       "upload_ready": false,
       "value_proposition": "one local evidence status surface"
-    },
-    {
-      "current_assets": [
-        "corpora",
-        "harnesses"
-      ],
-      "description": "MachLib Studio",
-      "first_mvp": "local authoring prototype",
-      "likely_user": "research engineers",
-      "missing_assets": [
-        "UI",
-        "schema design"
-      ],
-      "no_go_boundaries": [
-        "no package publish",
-        "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
-        "no command-center deploy without approval"
-      ],
-      "product_id": "machlib_studio",
-      "public_readiness": false,
-      "release_ready": false,
-      "revenue_path": "studio product later",
-      "upload_ready": false,
-      "value_proposition": "interactive EML evidence authoring"
     },
     {
       "current_assets": [
@@ -71,10 +63,6 @@
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
         "no command-center deploy without approval"
       ],
       "product_id": "command_center_evidence_cards",
@@ -86,10 +74,9 @@
     },
     {
       "current_assets": [
-        "zero-Mathlib checker",
-        "lane records"
+        "zero-mathlib-checker"
       ],
-      "description": "Zero-Mathlib Benchmark Suite",
+      "description": "Zero-Mathlib benchmark/curriculum",
       "first_mvp": "local fixture suite",
       "likely_user": "Lean/library teams",
       "missing_assets": [
@@ -98,10 +85,6 @@
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
         "no command-center deploy without approval"
       ],
       "product_id": "zero_mathlib_benchmark_suite",
@@ -124,10 +107,6 @@
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
         "no command-center deploy without approval"
       ],
       "product_id": "hybrid_trace_evidence_toolkit",
@@ -139,31 +118,27 @@
     },
     {
       "current_assets": [
-        "review packets",
-        "workbench reports"
+        "corpora",
+        "harnesses"
       ],
-      "description": "AI-generated research/code review service",
-      "first_mvp": "manual service workflow",
-      "likely_user": "teams with formal/research code",
+      "description": "MachLib Studio",
+      "first_mvp": "local authoring prototype",
+      "likely_user": "research engineers",
       "missing_assets": [
-        "service process",
-        "legal copy"
+        "UI",
+        "schema design"
       ],
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
-        "no package name availability claim",
-        "no release-ready claim",
-        "no upload-ready claim",
-        "no public theorem/proof/open-problem claim",
         "no command-center deploy without approval"
       ],
-      "product_id": "ai_research_code_review_service",
+      "product_id": "machlib_studio",
       "public_readiness": false,
       "release_ready": false,
-      "revenue_path": "consulting/service revenue",
+      "revenue_path": "studio product later",
       "upload_ready": false,
-      "value_proposition": "human-readable review packets and guardrail scans"
+      "value_proposition": "interactive EML evidence authoring"
     }
   ]
 }

@@ -4,6 +4,8 @@
 | --- | --- |
 | no package publish | PASS |
 | no PyPI/token handling | PASS |
+| no PyPI name availability check | PASS |
+| no release artifacts created | PASS |
 | no Hugging Face upload | PASS |
 | no PETAL/API upload | PASS |
 | no command-center deploy | PASS |

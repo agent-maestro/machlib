@@ -1,0 +1,32 @@
+{
+  "adapter_status": "DRAFT_INTERNAL",
+  "cards": [
+    {
+      "card_id": "machlib_package_candidate_status_2026_05_20",
+      "claim_boundary_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "not_claimed": [
+        "not package published",
+        "not PyPI uploaded",
+        "not release-ready",
+        "not upload-ready",
+        "not public theorem/proof/open-problem claim"
+      ],
+      "package_publish_performed": false,
+      "pypi_token_handling_performed": false,
+      "release_artifacts_created": false,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "surface": "command.monogate.dev",
+      "tier": "OBSERVATION",
+      "title": "MachLib Package Candidate Status",
+      "visibility": "internal",
+      "zero_mathlib_checker_status": "LOCAL_DRAFT_PACKAGE_HARDENED"
+    }
+  ],
+  "deploy_performed": false,
+  "feed_id": "machlib_package_candidate_status_feed_2026_05_20",
+  "generated_at_date": "2026-05-20",
+  "push_performed": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false
+}

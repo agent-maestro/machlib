@@ -2,8 +2,9 @@
 
 - No package publishing occurred.
 - No PyPI token handling occurred.
-- No package name availability was checked.
+- No PyPI name availability was checked.
 - No package is release-ready.
 - No package is upload-ready.
-- `zero-mathlib-checker` is the first hardening candidate.
-- Any future PyPI task must be separate and explicitly approved.
+- No release artifacts created.
+- `zero-mathlib-checker` and `claim-boundary` remain local draft candidates.
+- Future PyPI publication must be separate and explicitly approved.

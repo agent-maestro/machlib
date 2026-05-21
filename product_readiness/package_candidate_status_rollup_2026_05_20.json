@@ -347,10 +347,20 @@
     }
   ],
   "date": "2026-05-20",
+  "guardrails": {
+    "no_package_publish": true,
+    "no_public_theorem_claim": true,
+    "no_pypi_name_availability_check": true,
+    "no_pypi_token_handling": true,
+    "no_release_artifacts": true
+  },
   "local_only": true,
-  "package_name_availability_checked": false,
-  "pypi_token_handled": false,
-  "pypi_upload_performed": false,
+  "package_candidate_count": 8,
+  "publish_performed": false,
+  "pypi_name_availability_checked": false,
+  "pypi_token_handling_performed": false,
   "release_artifacts_created": false,
-  "tier": "OBSERVATION"
+  "release_ready_count": 0,
+  "tier": "OBSERVATION",
+  "upload_ready_count": 0
 }
