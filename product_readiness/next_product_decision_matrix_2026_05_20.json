@@ -1,0 +1,183 @@
+{
+  "date": "2026-05-20",
+  "decisions": [
+    {
+      "category": "package_candidate_hardening",
+      "decision_id": "D001",
+      "next_safe_local_step": "add corpus fixtures, CLI edge cases, and README boundary tightening",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "M046 eml-records hardening pass, no publish",
+      "readiness": "PRIMARY",
+      "recommended_rank": 1,
+      "risk": "scope creep into harness execution or release gate claims",
+      "upside": "turns the newest schema validator into a stronger reusable local tool"
+    },
+    {
+      "category": "revenue_service",
+      "decision_id": "D002",
+      "next_safe_local_step": "write local MVP service scope and intake template",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "AI-generated research/code/formal artifact review service",
+      "readiness": "CLOSEST_TO_REVENUE",
+      "recommended_rank": 2,
+      "risk": "must avoid proof/certification overclaim in customer-facing copy",
+      "upside": "can use existing packets without public package or deployment action"
+    },
+    {
+      "category": "internal_service",
+      "decision_id": "D003",
+      "next_safe_local_step": "local MVP service plan, no deploy",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "Monogate Evidence Workbench internal CLI/service",
+      "readiness": "HIGH",
+      "recommended_rank": 3,
+      "risk": "API surface and deployment boundary need design",
+      "upside": "existing workbench already consolidates the validation stack"
+    },
+    {
+      "category": "internal_dashboard",
+      "decision_id": "D004",
+      "next_safe_local_step": "review isolated static snapshot worktree, no deploy",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "Command Center Evidence Cards static snapshot",
+      "readiness": "HIGH_NO_DEPLOY",
+      "recommended_rank": 4,
+      "risk": "must not touch original dirty command-center repo or deploy",
+      "upside": "closest frontend path because card/feed artifacts and isolated worktree exist"
+    },
+    {
+      "category": "package_candidate",
+      "decision_id": "D005",
+      "next_safe_local_step": "draft package candidate, no publish",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "review-branch-packet draft package",
+      "readiness": "ALTERNATE",
+      "recommended_rank": 5,
+      "risk": "needs stable inputs and no push/PR automation by default",
+      "upside": "narrow workflow with clear local-only value"
+    },
+    {
+      "category": "defer",
+      "decision_id": "D006",
+      "next_safe_local_step": "API design notes only",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "machlib-workbench package",
+      "readiness": "NOT_YET",
+      "recommended_rank": 6,
+      "risk": "too broad before API boundary design",
+      "upside": "could become useful umbrella CLI"
+    },
+    {
+      "category": "defer",
+      "decision_id": "D007",
+      "next_safe_local_step": "separate schema, fixture, and execution boundaries",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "eml-harness package",
+      "readiness": "NOT_YET",
+      "recommended_rank": 7,
+      "risk": "execution semantics are harder to package safely than schemas",
+      "upside": "could share bounded harness patterns"
+    },
+    {
+      "category": "defer_research",
+      "decision_id": "D008",
+      "next_safe_local_step": "boundary review and research notes only",
+      "no_go_boundaries": [
+        "no package publish",
+        "no PyPI token handling",
+        "no package name availability check",
+        "no command-center deploy",
+        "no Hugging Face upload",
+        "no PETAL/API upload",
+        "no hardware action",
+        "no Forge compiler behavior change",
+        "no public theorem/proof/open-problem claim",
+        "no release-ready or upload-ready claim"
+      ],
+      "option": "machlib package / hybrid-trace-eml",
+      "readiness": "NOT_YET",
+      "recommended_rank": 8,
+      "risk": "public-copy and research-claim boundaries are not mature enough",
+      "upside": "possible long-term packaging paths"
+    }
+  ],
+  "local_only": true,
+  "tier": "OBSERVATION"
+}
