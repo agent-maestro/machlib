@@ -1,0 +1,346 @@
+{
+  "boundary_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "internal observation only",
+        "does not prove a class hierarchy theorem"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach function-class boundary record",
+      "public_ready": false,
+      "relation_kind": "boundary_record",
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "relation",
+        "blocked_overclaim",
+        "limitations",
+        "not_claimed"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_function_class_boundary_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "relation payload present",
+        "non-overclaim marker present",
+        "limitations present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "records a boundary guard, not a public counterexample proof"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach non-implication boundary",
+      "public_ready": false,
+      "relation_kind": "non_implication_boundary",
+      "release_ready": false,
+      "required_fields": [
+        "relation",
+        "source_class",
+        "target_class",
+        "blocked_overclaim"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_non_implication_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "automatic implication is blocked",
+        "public proof status absent"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "example references require later proof-layer review"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach counterexample stub record",
+      "public_ready": false,
+      "relation_kind": "counterexample_stub",
+      "release_ready": false,
+      "required_fields": [
+        "example_or_stub",
+        "stub_status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_counterexample_stub_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "stub is explicitly draft/internal",
+        "no proof claim is present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "finite symbolic guard fixture only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach domain singularity guard record",
+      "public_ready": false,
+      "relation_kind": "domain_singularity_guard",
+      "release_ready": false,
+      "required_fields": [
+        "leading_coefficient",
+        "singularity_candidates",
+        "domain_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_domain_singularity_guard_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "leading coefficient zeros detected",
+        "global promotion blocked"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "prevents subset overclaims without proving hierarchy theorems"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach subset overclaim blocker",
+      "public_ready": false,
+      "relation_kind": "overclaim_blocker",
+      "release_ready": false,
+      "required_fields": [
+        "blocked_overclaim",
+        "validation_trace"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_subset_overclaim_blocker_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "smooth-to-analytic blocked",
+        "analytic-to-D-finite blocked",
+        "D-finite domain guard required"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "trace is internal observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach boundary validation trace",
+      "public_ready": false,
+      "relation_kind": "validation_trace",
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "checks",
+        "status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_boundary_validation_trace_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "records bounded local checks",
+        "records guardrails"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_BOUNDARY_STUB",
+        "PASS_BOUNDARY_GUARD",
+        "PASS_SINGULARITY_GUARD_CHECK"
+      ],
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "requires human review before any public-facing claim"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach public claim blocker",
+      "public_ready": false,
+      "relation_kind": "public_claim_blocker",
+      "release_ready": false,
+      "required_fields": [
+        "not_claimed",
+        "public_ready",
+        "upload_allowed",
+        "release_ready"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a real-analysis completion claim",
+        "not a topology formalization",
+        "not a function-class hierarchy completion claim"
+      ],
+      "spec_id": "mach_public_claim_blocker_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "public-ready flags are false",
+        "upload/release flags are false"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "date": "2026-05-20",
+  "function_class": "CLASS_BOUNDARY_RELATION",
+  "local_only": true,
+  "spec_count": 7,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

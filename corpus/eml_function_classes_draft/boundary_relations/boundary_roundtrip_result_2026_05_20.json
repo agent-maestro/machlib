@@ -1,0 +1,88 @@
+{
+  "date": "2026-05-20",
+  "efrog_probe": {
+    "code": "EFROG_IMPORT_OK_DEFAULT_ZERO_DEPENDENCY",
+    "default_output_zero_mathlib": true,
+    "status": "PASS"
+  },
+  "efrog_status": "PASS",
+  "failed": 0,
+  "forge_efrog_evidence_script": {
+    "code": "OPTIONAL_SCRIPT_RAN",
+    "out": "/tmp/machlib_function_boundary_2026_05_20/forge_efrog_evidence",
+    "returncode": 0,
+    "status": "PASS"
+  },
+  "forge_probe": {
+    "code": "FORGE_WARN",
+    "results": [
+      {
+        "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/analytic_not_dfinite_boundary_record_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/dfinite_domain_singularity_guard_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      },
+      {
+        "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/smooth_not_analytic_boundary_record_v0.eml",
+        "code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+        "returncode": 1,
+        "status": "WARN"
+      }
+    ],
+    "status": "WARN"
+  },
+  "forge_status": "WARN",
+  "function_class": "CLASS_BOUNDARY_RELATION",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_real_analysis_completion_claim": true,
+    "no_subset_overclaim": true,
+    "no_topology_formalization_claim": true
+  },
+  "local_only": true,
+  "passed": 0,
+  "record_count": 3,
+  "results": [
+    {
+      "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/analytic_not_dfinite_boundary_record_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "analytic_not_dfinite_boundary_record_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/dfinite_domain_singularity_guard_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "dfinite_domain_singularity_guard_v0",
+      "status": "WARN"
+    },
+    {
+      "artifact": "/tmp/machlib_function_boundary_2026_05_20/eml/smooth_not_analytic_boundary_record_v0.eml",
+      "efrog_status": "PASS",
+      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
+      "forge_status": "WARN",
+      "record_id": "smooth_not_analytic_boundary_record_v0",
+      "status": "WARN"
+    }
+  ],
+  "roundtrip_status": "WARN",
+  "tier": "OBSERVATION",
+  "tmp_root": "/tmp/machlib_function_boundary_2026_05_20",
+  "warned": 3,
+  "zero_mathlib_status": "PASS"
+}

@@ -1,0 +1,147 @@
+{
+  "date": "2026-05-20",
+  "derived_gap_rows": [
+    {
+      "counted_as_executable_record": false,
+      "example_placeholder": "absolute-value style boundary at 0",
+      "gap_id": "continuous_not_differentiable_gap_v0",
+      "reason": "not one of the three M021 boundary records",
+      "relation": "continuous does not automatically imply differentiable",
+      "status": "DERIVED_GAP_NOT_EXECUTABLE_RECORD"
+    }
+  ],
+  "execution_status": "PASS",
+  "failed": 0,
+  "function_class": "CLASS_BOUNDARY_RELATION",
+  "guardrails": {
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_real_analysis_completion_claim": true,
+    "no_subset_overclaim": true,
+    "no_topology_formalization_claim": true
+  },
+  "local_only": true,
+  "passed": 3,
+  "record_count": 3,
+  "results": [
+    {
+      "certificate_type": "non_overclaim_relation",
+      "classification": "ANALYTIC_NOT_DFINITE_BOUNDARY",
+      "detail": {
+        "blocked_overclaim": "analytic -> D-finite",
+        "checks": {
+          "finite_ode_certificate_required": true,
+          "no_dfinite_completeness_claim": true,
+          "no_global_analytic_proof_claim": true,
+          "no_public_theorem_proof_claim": true,
+          "relation_blocks_analytic_to_dfinite": true
+        },
+        "fixture": "generic_analytic_without_finite_ode_certificate_stub",
+        "limitations": [
+          "generic guard only",
+          "no specific public theorem proof",
+          "no D-finite completeness claim"
+        ],
+        "passed": true,
+        "status": "PASS_BOUNDARY_GUARD"
+      },
+      "failures": [],
+      "limitations": [
+        "no specific theorem claim",
+        "no classification completeness claim"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not analytic hierarchy proof"
+      ],
+      "passed": true,
+      "record_id": "analytic_not_dfinite_boundary_record_v0",
+      "status": "PASS_BOUNDARY_GUARD",
+      "title": "Analytic does not automatically imply D-finite boundary",
+      "warning": null
+    },
+    {
+      "certificate_type": "singularity_guard_relation",
+      "classification": "DFINITE_DOMAIN_SINGULARITY_GUARD",
+      "detail": {
+        "blocked_overclaim": "finite ODE certificate -> global function-class claim",
+        "checks": {
+          "finite_ode_not_global_claim": true,
+          "global_validity_blocked": true,
+          "leading_coefficient_zero_detected": true,
+          "record_requires_domain_guard": true
+        },
+        "fixture": "leading_coefficient_x",
+        "limitations": [
+          "bounded symbolic leading-coefficient zero check only",
+          "no global solution classification"
+        ],
+        "ode_leading_coefficient": "x",
+        "passed": true,
+        "singularity_candidates": [
+          0
+        ],
+        "status": "PASS_SINGULARITY_GUARD_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "no analytic continuation claim",
+        "no global solution classification"
+      ],
+      "not_claimed": [
+        "not holonomic system theorem",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "dfinite_domain_singularity_guard_v0",
+      "status": "PASS_SINGULARITY_GUARD_CHECK",
+      "title": "D-finite ODE certificates need domain and singularity guards",
+      "warning": null
+    },
+    {
+      "certificate_type": "non_overclaim_relation",
+      "classification": "SMOOTH_NOT_ANALYTIC_BOUNDARY",
+      "detail": {
+        "blocked_overclaim": "smooth -> analytic",
+        "checks": {
+          "no_analytic_nonexample_proof_claim": true,
+          "no_c_infinity_proof_claim": true,
+          "not_presented_as_proved": true,
+          "relation_blocks_smooth_to_analytic": true,
+          "stub_or_draft_internal": true
+        },
+        "fixture": "bump_function_style_stub_boundary",
+        "limitations": [
+          "stub recognition only",
+          "no C-infinity proof claim",
+          "no analytic non-example proof claim"
+        ],
+        "passed": true,
+        "status": "PASS_BOUNDARY_STUB"
+      },
+      "failures": [],
+      "limitations": [
+        "not proved",
+        "no public theorem claim",
+        "no C-infinity proof-layer yet"
+      ],
+      "not_claimed": [
+        "not a theorem result",
+        "not full analysis formalization"
+      ],
+      "passed": true,
+      "record_id": "smooth_not_analytic_boundary_record_v0",
+      "status": "PASS_BOUNDARY_STUB",
+      "title": "Smooth does not automatically imply analytic boundary",
+      "warning": null
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
