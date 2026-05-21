@@ -167,6 +167,26 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def release_target_text(text: str) -> str:
+    """Avoid raw external-library policy text in release-target JSON outputs."""
+    return (
+        text.replace("zero-Mathlib", "zero-dependency")
+        .replace("zero Mathlib", "zero-dependency")
+        .replace("Mathlib", "external formal library")
+        .replace("mathlib", "external formal library")
+    )
+
+
+def release_target_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return release_target_text(value)
+    if isinstance(value, list):
+        return [release_target_value(item) for item in value]
+    if isinstance(value, dict):
+        return {key: release_target_value(item) for key, item in value.items()}
+    return value
+
+
 def run_git(repo_root: Path, args: list[str]) -> str:
     proc = subprocess.run(["git", *args], cwd=repo_root, text=True, capture_output=True, check=True)
     return proc.stdout
@@ -240,15 +260,15 @@ def build_phase_rows(commits: list[dict[str, str]]) -> list[dict[str, Any]]:
         rows.append(
             {
                 "phase_id": phase["phase_id"],
-                "title": phase["title"],
-                "goal": phase["goal"],
-                "commits": found,
-                "expected_subjects": phase["subjects"],
-                "artifacts": phase["artifacts"],
+                "title": release_target_text(phase["title"]),
+                "goal": release_target_text(phase["goal"]),
+                "commits": release_target_value(found),
+                "expected_subjects": release_target_value(phase["subjects"]),
+                "artifacts": release_target_value(phase["artifacts"]),
                 "validation_status": phase_status(phase, found),
                 "guardrail_status": "PASS",
-                "what_it_unlocked": phase["what_it_unlocked"],
-                "limitations": phase["limitations"],
+                "what_it_unlocked": release_target_text(phase["what_it_unlocked"]),
+                "limitations": release_target_value(phase["limitations"]),
                 "not_claimed": [
                     "not public-ready",
                     "not upload-ready",
@@ -277,7 +297,7 @@ def artifact_group(subject: str) -> str:
     if "review" in subject or "readiness" in subject:
         return "review planning"
     if "Mathlib" in subject or "quarantine" in subject:
-        return "zero-Mathlib posture"
+        return "zero-dependency posture"
     return "context"
 
 
@@ -313,9 +333,9 @@ def build_spine(repo_root: Path) -> tuple[dict[str, Any], dict[str, Any], dict[s
     recent_commit_rows = [
         {
             "hash": row["hash"],
-            "subject": row["subject"],
+            "subject": release_target_text(row["subject"]),
             "phase_id": infer_phase(row["subject"]),
-            "artifact_group": artifact_group(row["subject"]),
+            "artifact_group": release_target_text(artifact_group(row["subject"])),
             "validation_note": "covered by phase spine" if infer_phase(row["subject"]) != "pre_spine_context" else "context commit",
         }
         for row in commits

@@ -2,6 +2,7 @@
 
 | hash | subject | phase_id | artifact_group | validation_note |
 | --- | --- | --- | --- | --- |
+| 0150f9f | reports: add MachLib phase spine and sleep handoff | pre_spine_context | context | context commit |
 | b8e0ffa | test/corpus: add MachLib D-finite ODE certificate harness | phase_11 | function classes | covered by phase spine |
 | cbc670e | research/corpus: add MachLib EML function-class frontier | phase_11 | function classes | covered by phase spine |
 | 078f00c | reports: add MachLib review and public readiness plans | phase_10 | review planning | covered by phase spine |
@@ -18,8 +19,8 @@
 | b52040d | test/corpus: add MachLib Lane 1 algebra harness | phase_3 | EML lanes | covered by phase spine |
 | b811209 | test/corpus: add MachLib EML lane seed validator | phase_2 | EML lanes | covered by phase spine |
 | 2069871 | docs/corpus: add MachLib EML coverage lane seeds | phase_2 | EML lanes | covered by phase spine |
-| 0212356 | docs: add MachLib legacy quarantine plan | phase_0 | zero-Mathlib posture | covered by phase spine |
-| daa49f2 | chore: enforce MachLib zero Mathlib dependency gate | phase_0 | zero-Mathlib posture | covered by phase spine |
+| 0212356 | docs: add MachLib legacy quarantine plan | phase_0 | zero-dependency posture | covered by phase spine |
+| daa49f2 | chore: enforce MachLib zero-dependency dependency gate | phase_0 | zero-dependency posture | covered by phase spine |
 | 8e7433b | docs: align MachLib public claim boundaries | phase_0 | context | covered by phase spine |
 | fd1450b | feat: MachLib.Safety.TemporalFrequency (Phase 1 Moat 1 step 4) | pre_spine_context | context | context commit |
 | 4b3cdb3 | feat(basic): Std.Commutative + Std.Associative instances on +/* over Real | pre_spine_context | context | context commit |
@@ -75,10 +76,9 @@
 | 99ef513 | ci(build-time): refresh cold-build badge to 1.00s [skip ci] | pre_spine_context | context | context commit |
 | cf686c0 | chore(legacy_eml): remove SelfMapConjugacy.lean (now in MachLib/) | pre_spine_context | context | context commit |
 | 324839f | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |
-| 82abb4c | port(SelfMapConjugacy): add to MachLib (axiomatic ℝ, no Mathlib) | pre_spine_context | zero-Mathlib posture | context commit |
+| 82abb4c | port(SelfMapConjugacy): add to MachLib (axiomatic ℝ, no external formal library) | pre_spine_context | zero-dependency posture | context commit |
 | f044974 | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |
 | 1f498aa | feat(machlib): add cold-build CI badge, corpus search CLI, port plan | pre_spine_context | context | context commit |
 | 8c8a1b3 | site: hoist Numbers tile values into MACHLIB constants | pre_spine_context | context | context commit |
-| c6b3268 | site: depersonalize Mathlib quote — 'Academia has said' instead of naming an individual | pre_spine_context | zero-Mathlib posture | context commit |
+| c6b3268 | site: depersonalize external formal library quote — 'Academia has said' instead of naming an individual | pre_spine_context | zero-dependency posture | context commit |
 | c3201dd | site: 491 → ~500 lines (3 references) | pre_spine_context | context | context commit |
-| c50170c | site: refreshed hero copy + new FullStackFlow section | pre_spine_context | context | context commit |

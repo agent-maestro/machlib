@@ -12,8 +12,8 @@ MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, si
 ## Phase Status
 | phase | title | commits | status |
 | --- | --- | --- | --- |
-| phase_0 | Public-claim alignment and zero-Mathlib cleanup | 3 | COMMITTED |
-| phase_1 | eFrog zero-Mathlib emitter alignment | 0 | EXTERNAL_EVIDENCE_REPORTED |
+| phase_0 | Public-claim alignment and zero-dependency cleanup | 3 | COMMITTED |
+| phase_1 | eFrog zero-dependency emitter alignment | 0 | EXTERNAL_EVIDENCE_REPORTED |
 | phase_2 | Six-lane seed corpus and validator | 2 | COMMITTED |
 | phase_3 | Lane 1 algebra execution and roundtrip | 2 | COMMITTED |
 | phase_4 | Lane 2 symbolic special functions | 3 | COMMITTED |

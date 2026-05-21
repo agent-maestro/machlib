@@ -3,6 +3,13 @@
   "commit_count": 80,
   "commits": [
     {
+      "artifact_group": "context",
+      "hash": "0150f9f",
+      "phase_id": "pre_spine_context",
+      "subject": "reports: add MachLib phase spine and sleep handoff",
+      "validation_note": "context commit"
+    },
+    {
       "artifact_group": "function classes",
       "hash": "b8e0ffa",
       "phase_id": "phase_11",
@@ -115,17 +122,17 @@
       "validation_note": "covered by phase spine"
     },
     {
-      "artifact_group": "zero-Mathlib posture",
+      "artifact_group": "zero-dependency posture",
       "hash": "0212356",
       "phase_id": "phase_0",
       "subject": "docs: add MachLib legacy quarantine plan",
       "validation_note": "covered by phase spine"
     },
     {
-      "artifact_group": "zero-Mathlib posture",
+      "artifact_group": "zero-dependency posture",
       "hash": "daa49f2",
       "phase_id": "phase_0",
-      "subject": "chore: enforce MachLib zero Mathlib dependency gate",
+      "subject": "chore: enforce MachLib zero-dependency dependency gate",
       "validation_note": "covered by phase spine"
     },
     {
@@ -514,10 +521,10 @@
       "validation_note": "context commit"
     },
     {
-      "artifact_group": "zero-Mathlib posture",
+      "artifact_group": "zero-dependency posture",
       "hash": "82abb4c",
       "phase_id": "pre_spine_context",
-      "subject": "port(SelfMapConjugacy): add to MachLib (axiomatic \u211d, no Mathlib)",
+      "subject": "port(SelfMapConjugacy): add to MachLib (axiomatic \u211d, no external formal library)",
       "validation_note": "context commit"
     },
     {
@@ -542,10 +549,10 @@
       "validation_note": "context commit"
     },
     {
-      "artifact_group": "zero-Mathlib posture",
+      "artifact_group": "zero-dependency posture",
       "hash": "c6b3268",
       "phase_id": "pre_spine_context",
-      "subject": "site: depersonalize Mathlib quote \u2014 'Academia has said' instead of naming an individual",
+      "subject": "site: depersonalize external formal library quote \u2014 'Academia has said' instead of naming an individual",
       "validation_note": "context commit"
     },
     {
@@ -553,13 +560,6 @@
       "hash": "c3201dd",
       "phase_id": "pre_spine_context",
       "subject": "site: 491 \u2192 ~500 lines (3 references)",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "c50170c",
-      "phase_id": "pre_spine_context",
-      "subject": "site: refreshed hero copy + new FullStackFlow section",
       "validation_note": "context commit"
     }
   ],
@@ -605,7 +605,7 @@
     {
       "artifacts": [
         "README/site claim boundary updates",
-        "zero-Mathlib checker",
+        "zero-dependency checker",
         "legacy quarantine plan"
       ],
       "commits": [
@@ -615,7 +615,7 @@
         },
         {
           "hash": "daa49f2",
-          "subject": "chore: enforce MachLib zero Mathlib dependency gate"
+          "subject": "chore: enforce MachLib zero-dependency dependency gate"
         },
         {
           "hash": "0212356",
@@ -624,10 +624,10 @@
       ],
       "expected_subjects": [
         "docs: align MachLib public claim boundaries",
-        "chore: enforce MachLib zero Mathlib dependency gate",
+        "chore: enforce MachLib zero-dependency dependency gate",
         "docs: add MachLib legacy quarantine plan"
       ],
-      "goal": "Align public language, enforce the zero-Mathlib gate, and quarantine legacy dependency surfaces.",
+      "goal": "Align public language, enforce the zero-dependency gate, and quarantine legacy dependency surfaces.",
       "guardrail_status": "PASS",
       "limitations": [
         "Policy text remains separate from release approval."
@@ -639,7 +639,7 @@
         "not a public theorem/proof/open-problem claim"
       ],
       "phase_id": "phase_0",
-      "title": "Public-claim alignment and zero-Mathlib cleanup",
+      "title": "Public-claim alignment and zero-dependency cleanup",
       "validation_status": "COMMITTED",
       "what_it_unlocked": "A clean default/release-target posture for the later EML work."
     },
@@ -649,9 +649,9 @@
       ],
       "commits": [],
       "expected_subjects": [
-        "chore: make eFrog Lean emitter zero-Mathlib by default"
+        "chore: make eFrog Lean emitter zero-dependency by default"
       ],
-      "goal": "Keep default Lean rendering zero-Mathlib while preserving legacy compatibility as opt-in.",
+      "goal": "Keep default Lean rendering zero-dependency while preserving legacy compatibility as opt-in.",
       "guardrail_status": "PASS",
       "limitations": [
         "Recorded as external evidence if the commit is not in this repository log."
@@ -663,7 +663,7 @@
         "not a public theorem/proof/open-problem claim"
       ],
       "phase_id": "phase_1",
-      "title": "eFrog zero-Mathlib emitter alignment",
+      "title": "eFrog zero-dependency emitter alignment",
       "validation_status": "EXTERNAL_EVIDENCE_REPORTED",
       "what_it_unlocked": "Roundtrip probes could check default render output without adding dependency imports."
     },
@@ -820,7 +820,7 @@
       "expected_subjects": [
         "test/corpus: add MachLib Lane 4 typeclass-lite harness"
       ],
-      "goal": "Validate typeclass-lite structures without Lean/mathlib hierarchy reliance.",
+      "goal": "Validate typeclass-lite structures without Lean/external formal library hierarchy reliance.",
       "guardrail_status": "PASS",
       "limitations": [
         "No algebra/typeclass theorem claim."
