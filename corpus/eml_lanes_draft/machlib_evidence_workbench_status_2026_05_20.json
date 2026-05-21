@@ -1,0 +1,59 @@
+{
+  "command_center": {
+    "path": "/home/monogate/monogate/command-center",
+    "read_only": true,
+    "status_short": "M data/proof-registry.jsonl"
+  },
+  "command_center_deploy_performed": false,
+  "command_center_dirty_preexisting": true,
+  "date": "2026-05-20",
+  "executable_function_class_count": 5,
+  "failures": [],
+  "function_class_record_count": 20,
+  "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+  "git": {
+    "branch": "feat/ac-instances",
+    "log_oneline_10": [
+      "de9f18b reports/corpus: refresh MachLib function-class boundary rollup",
+      "a9a3470 test/corpus: add MachLib function boundary harness",
+      "99fb7b4 reports: add MachLib review and command-center planning pack",
+      "1708536 reports/corpus: add MachLib function-class rollup",
+      "9866319 test/corpus: add MachLib continuous modulus harness",
+      "4783b48 test/corpus: add MachLib smooth finite-jet harness",
+      "b02519d test/corpus: add MachLib analytic local-series harness",
+      "29144a7 reports: preserve MachLib phase spine gate output",
+      "0150f9f reports: add MachLib phase spine and sleep handoff",
+      "b8e0ffa test/corpus: add MachLib D-finite ODE certificate harness"
+    ],
+    "remote": "origin\thttps://github.com/agent-maestro/machlib.git (fetch)\norigin\thttps://github.com/agent-maestro/machlib.git (push)",
+    "review_branch_ls_remote": "de9f18bc80340333845188951b9e95f84598b26f\trefs/heads/review/machlib-function-class-frontier-2026-05-20",
+    "status_short": "M tools/validate_eml_lane_seeds.py\n?? command_center_feeds/machlib_evidence_workbench_card_2026_05_20.json\n?? command_center_feeds/machlib_evidence_workbench_feed_2026_05_20.json\n?? corpus/eml_lanes_draft/machlib_evidence_workbench_status_2026_05_20.json\n?? reports/machlib_evidence_workbench_guardrail_report_2026_05_20.md\n?? reports/machlib_evidence_workbench_next_tooling_queue_2026_05_20.md\n?? reports/machlib_evidence_workbench_summary_2026_05_20.md\n?? reports/machlib_evidence_workbench_validation_matrix_2026_05_20.md\n?? tests/test_machlib_evidence_workbench.py\n?? tools/run_machlib_evidence_workbench.py"
+  },
+  "guardrails": {
+    "no_command_center_deploy": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "hf_upload_performed": false,
+  "local_only": true,
+  "package_publish_performed": false,
+  "phase_spine_status": "DRAFT_INTERNAL_VALIDATED",
+  "public_theorem_claim_performed": false,
+  "push_performed": false,
+  "review_branch": "review/machlib-function-class-frontier-2026-05-20",
+  "review_branch_present": true,
+  "safe_to_push_now": false,
+  "six_lane_seed_count": 19,
+  "six_lane_status": "DRAFT_INTERNAL_VALIDATED",
+  "tier": "OBSERVATION",
+  "warnings": [
+    "EXTERNAL_PREEXISTING_DIRTY_STATUS: command-center data/proof-registry.jsonl"
+  ],
+  "workbench_status": "PASS",
+  "zero_mathlib_status": "PASS"
+}

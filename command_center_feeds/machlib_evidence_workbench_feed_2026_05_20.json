@@ -1,0 +1,37 @@
+{
+  "adapter_status": "DRAFT_INTERNAL",
+  "cards": [
+    {
+      "card_id": "machlib_evidence_workbench_2026_05_20",
+      "command_center_deploy_performed": false,
+      "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_spine_status": "DRAFT_INTERNAL_VALIDATED",
+      "requires_human_approval_for_push": true,
+      "review_branch_present": true,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "safe_to_push_now": false,
+      "six_lane_status": "DRAFT_INTERNAL_VALIDATED",
+      "surface": "command.monogate.dev",
+      "tier": "OBSERVATION",
+      "title": "MachLib Evidence Workbench",
+      "visibility": "internal",
+      "zero_mathlib_status": "PASS"
+    }
+  ],
+  "deploy_performed": false,
+  "feed_id": "machlib_evidence_workbench_feed_2026_05_20",
+  "generated_at_date": "2026-05-20",
+  "push_performed": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "warnings": [
+    "EXTERNAL_PREEXISTING_DIRTY_STATUS: command-center data/proof-registry.jsonl"
+  ]
+}
