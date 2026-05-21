@@ -1,0 +1,12 @@
+{
+  "approved_upload_count": 0,
+  "gate_status": "READY_FOR_HUMAN_UPLOAD_APPROVAL_AND_TOKEN",
+  "next_safe_task": "M062_ONE_TOKEN_SEQUENTIAL_UPLOAD_001_CLEANUP_RELEASES",
+  "package_publish_allowed_now": false,
+  "publish_performed": false,
+  "pypi_token_handling_allowed_now": false,
+  "release_artifact_creation_in_repo_allowed_now": false,
+  "target_release": "0.0.1 public-copy cleanup",
+  "twine_upload_allowed_now": false,
+  "upload_performed": false
+}

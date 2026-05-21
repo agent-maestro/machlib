@@ -1,0 +1,117 @@
+{
+  "human_upload_approval_required": true,
+  "manifest_id": "package_001_cleanup_upload_manifest_DRAFT_2026_05_20",
+  "packages": [
+    {
+      "artifact_dir": "/tmp/monogate_001_cleanup_build_2026_05_20/zero_mathlib_checker/dist",
+      "artifacts": [
+        {
+          "filename": "zero_mathlib_checker-0.0.1-py3-none-any.whl",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/zero_mathlib_checker/dist/zero_mathlib_checker-0.0.1-py3-none-any.whl",
+          "sha256": "d67e38f3aa00201c6944d896d152d78c1911a191139fe9d1c099bd21e036a02b",
+          "size_bytes": 4917
+        },
+        {
+          "filename": "zero_mathlib_checker-0.0.1.tar.gz",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/zero_mathlib_checker/dist/zero_mathlib_checker-0.0.1.tar.gz",
+          "sha256": "433a5abcd930ae3ee4ffc9e874426456863ed74c6b805700116911a3c66b5102",
+          "size_bytes": 5742
+        }
+      ],
+      "dry_run_build_status": "PASS",
+      "local_path": "package_candidates/zero_mathlib_checker",
+      "package_name": "zero-mathlib-checker",
+      "publish_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "token_handling_performed": false,
+      "twine_check_status": "PASS",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "version": "0.0.1"
+    },
+    {
+      "artifact_dir": "/tmp/monogate_001_cleanup_build_2026_05_20/claim_boundary/dist",
+      "artifacts": [
+        {
+          "filename": "claim_boundary-0.0.1-py3-none-any.whl",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/claim_boundary/dist/claim_boundary-0.0.1-py3-none-any.whl",
+          "sha256": "d433c73515b5bb079169f8bb6a35d89ebf3b2c7ebaa31405901799f2909e5471",
+          "size_bytes": 5687
+        },
+        {
+          "filename": "claim_boundary-0.0.1.tar.gz",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/claim_boundary/dist/claim_boundary-0.0.1.tar.gz",
+          "sha256": "e13a04bae07a5e57e56d4008c46285b783fe01f6274cf0d6d3b829ab5a40dfb0",
+          "size_bytes": 6378
+        }
+      ],
+      "dry_run_build_status": "PASS",
+      "local_path": "package_candidates/claim_boundary",
+      "package_name": "claim-boundary",
+      "publish_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "token_handling_performed": false,
+      "twine_check_status": "PASS",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "version": "0.0.1"
+    },
+    {
+      "artifact_dir": "/tmp/monogate_001_cleanup_build_2026_05_20/eml_records/dist",
+      "artifacts": [
+        {
+          "filename": "eml_records-0.0.1-py3-none-any.whl",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/eml_records/dist/eml_records-0.0.1-py3-none-any.whl",
+          "sha256": "2d33e934beec3ffee7036375353b24f6ea1de7a34feb726a5c35e20d7f012a6c",
+          "size_bytes": 8799
+        },
+        {
+          "filename": "eml_records-0.0.1.tar.gz",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/eml_records/dist/eml_records-0.0.1.tar.gz",
+          "sha256": "8701e231943bbd81479d227a48333ea04c7d43f8c04e6b27608b198874ec090d",
+          "size_bytes": 10097
+        }
+      ],
+      "dry_run_build_status": "PASS",
+      "local_path": "package_candidates/eml_records",
+      "package_name": "eml-records",
+      "publish_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "token_handling_performed": false,
+      "twine_check_status": "PASS",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "version": "0.0.1"
+    },
+    {
+      "artifact_dir": "/tmp/monogate_001_cleanup_build_2026_05_20/review_branch_packet/dist",
+      "artifacts": [
+        {
+          "filename": "review_branch_packet-0.0.1-py3-none-any.whl",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/review_branch_packet/dist/review_branch_packet-0.0.1-py3-none-any.whl",
+          "sha256": "68f7b11fb80433030758ae02be5227b21b48618ef0fbd3bf87c1cb03a4adc172",
+          "size_bytes": 8653
+        },
+        {
+          "filename": "review_branch_packet-0.0.1.tar.gz",
+          "path": "/tmp/monogate_001_cleanup_build_2026_05_20/review_branch_packet/dist/review_branch_packet-0.0.1.tar.gz",
+          "sha256": "cd25c56f73f945a371162988d730a36b7bc9b93153ece8bff436c2af0b579a44",
+          "size_bytes": 10726
+        }
+      ],
+      "dry_run_build_status": "PASS",
+      "local_path": "package_candidates/review_branch_packet",
+      "package_name": "review-branch-packet",
+      "publish_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "token_handling_performed": false,
+      "twine_check_status": "PASS",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "version": "0.0.1"
+    }
+  ],
+  "target_release": "0.0.1 public-copy cleanup",
+  "token_required_after_approval": true,
+  "upload_allowed_now": false
+}
