@@ -1,0 +1,166 @@
+{
+  "adapter_status": "DRAFT_INTERNAL",
+  "cards": [
+    {
+      "card_id": "machlib_function_class_status_2026_05_20",
+      "classes": [
+        {
+          "class_id": "D_FINITE_CERTIFICATE",
+          "efrog_status": "PASS",
+          "execution_failed": 0,
+          "execution_passed": 5,
+          "execution_status": "PASS",
+          "expected_warning": "Forge draft-schema limitation",
+          "expected_warning_only": true,
+          "failures": [],
+          "forge_status": "WARN",
+          "not_claimed": [
+            "no proof claim",
+            "no holonomic theory completion claim"
+          ],
+          "record_count": 5,
+          "roundtrip_failed": 0,
+          "roundtrip_passed": 0,
+          "roundtrip_status": "WARN",
+          "roundtrip_warned": 5,
+          "title": "D-finite ODE certificates"
+        },
+        {
+          "class_id": "ANALYTIC_LOCAL_SERIES",
+          "efrog_status": "PASS",
+          "execution_failed": 0,
+          "execution_passed": 4,
+          "execution_status": "PASS",
+          "expected_warning": "Forge draft-schema limitation",
+          "expected_warning_only": true,
+          "failures": [],
+          "forge_status": "WARN",
+          "not_claimed": [
+            "no convergence claim",
+            "no global analytic continuation claim"
+          ],
+          "record_count": 4,
+          "roundtrip_failed": 0,
+          "roundtrip_passed": 0,
+          "roundtrip_status": "WARN",
+          "roundtrip_warned": 4,
+          "title": "Analytic local series"
+        },
+        {
+          "class_id": "SMOOTH_FINITE_JET",
+          "efrog_status": "PASS",
+          "execution_failed": 0,
+          "execution_passed": 4,
+          "execution_status": "PASS",
+          "expected_warning": "Forge draft-schema limitation",
+          "expected_warning_only": true,
+          "failures": [],
+          "forge_status": "WARN",
+          "not_claimed": [
+            "no C-infinity proof claim",
+            "no smooth-manifold claim"
+          ],
+          "record_count": 4,
+          "roundtrip_failed": 0,
+          "roundtrip_passed": 0,
+          "roundtrip_status": "WARN",
+          "roundtrip_warned": 4,
+          "title": "Smooth finite jets"
+        },
+        {
+          "class_id": "CONTINUITY_EPSILON_DELTA",
+          "efrog_status": "PASS",
+          "execution_failed": 0,
+          "execution_passed": 4,
+          "execution_status": "PASS",
+          "expected_warning": "Forge draft-schema limitation",
+          "expected_warning_only": true,
+          "failures": [],
+          "forge_status": "WARN",
+          "not_claimed": [
+            "no topology formalization claim",
+            "no epsilon-delta theorem proof claim"
+          ],
+          "record_count": 4,
+          "roundtrip_failed": 0,
+          "roundtrip_passed": 0,
+          "roundtrip_status": "WARN",
+          "roundtrip_warned": 4,
+          "title": "Continuous epsilon-delta / local modulus"
+        },
+        {
+          "class_id": "CLASS_BOUNDARY_RELATION",
+          "executable_status": "VALIDATED_AS_RECORDS_ONLY",
+          "execution_status": "VALIDATED_AS_RECORDS_ONLY",
+          "expected_warning": "not executable yet unless separately designed",
+          "failures": [],
+          "not_claimed": [
+            "prevents subset overclaims",
+            "no theorem result claim"
+          ],
+          "record_count": 3,
+          "roundtrip_status": "NOT_EXECUTED",
+          "title": "Boundary and non-example records"
+        }
+      ],
+      "command_center_deploy_performed": false,
+      "executable_class_count": 4,
+      "expected_warnings": [
+        {
+          "class_id": "D_FINITE_CERTIFICATE",
+          "roundtrip_status": "WARN",
+          "warning": "Forge draft-schema limitation"
+        },
+        {
+          "class_id": "ANALYTIC_LOCAL_SERIES",
+          "roundtrip_status": "WARN",
+          "warning": "Forge draft-schema limitation"
+        },
+        {
+          "class_id": "SMOOTH_FINITE_JET",
+          "roundtrip_status": "WARN",
+          "warning": "Forge draft-schema limitation"
+        },
+        {
+          "class_id": "CONTINUITY_EPSILON_DELTA",
+          "roundtrip_status": "WARN",
+          "warning": "Forge draft-schema limitation"
+        }
+      ],
+      "function_class_status": "DRAFT_INTERNAL_VALIDATED",
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a theorem/proof/open-problem claim",
+        "not a full real-analysis, topology, smooth, analytic, or holonomic formalization"
+      ],
+      "public_ready_count": 0,
+      "push_performed": false,
+      "record_count": 20,
+      "release_ready_count": 0,
+      "requires_human_approval_for_push": true,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "safe_to_push_now": false,
+      "surface": "command.monogate.dev",
+      "tier": "OBSERVATION",
+      "title": "MachLib Function-Class Status",
+      "upload_allowed_count": 0,
+      "visibility": "internal",
+      "zero_mathlib_status": "PASS"
+    }
+  ],
+  "command_center_surface": "command.monogate.dev",
+  "deploy_performed": false,
+  "feed_id": "machlib_function_class_status_feed_2026_05_20",
+  "generated_at_date": "2026-05-20",
+  "push_performed": false,
+  "required_human_actions": [
+    "approve any future push",
+    "approve any command-center deployment",
+    "approve any public release or upload language"
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false
+}

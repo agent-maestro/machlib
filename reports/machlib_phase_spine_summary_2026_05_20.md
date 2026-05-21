@@ -4,7 +4,7 @@
 MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, six EML lanes, Command Center feed drafts, public-readiness planning, function-class frontier records, and a D-finite ODE certificate harness.
 
 ## Counts
-- Phases: 12
+- Phases: 13
 - Recent commits summarized: 80
 - Zero-Mathlib status: PASS
 - Overall status: DRAFT_INTERNAL_VALIDATED
@@ -23,7 +23,8 @@ MachLib now has a local OBSERVATION-tier spine covering zero-Mathlib cleanup, si
 | phase_8 | Lane 6 legacy compatibility boundary | 1 | COMMITTED |
 | phase_9 | Six-lane feed and command-center card | 2 | COMMITTED |
 | phase_10 | Review/public readiness planning | 1 | COMMITTED |
-| phase_11 | Function-class frontier and D-finite executable slice | 2 | COMMITTED |
+| phase_11 | Function-class frontier and executable slices | 5 | COMMITTED |
+| phase_12 | Function-class coverage rollup | 0 | PARTIAL |
 
 ## No-Go Boundaries
 No push, merge, PR creation, deployment, upload, package publish, hardware action, compiler behavior change, public theorem/proof/open-problem claim, or token handling was performed by this closure packet.

@@ -1,0 +1,33 @@
+{
+  "blocked_actions": [
+    "huggingface_upload",
+    "package_publish",
+    "petal_api_upload",
+    "capcard_marketplace_change",
+    "command_center_deploy",
+    "public_theorem_claim",
+    "forge_compiler_behavior_change",
+    "hardware_action"
+  ],
+  "date": "2026-05-20",
+  "public_ready": false,
+  "push_performed": false,
+  "push_recommended": "HUMAN_DECISION_REQUIRED",
+  "reasons_not_release_ready": [
+    "artifacts remain DRAFT_INTERNAL",
+    "Command Center card is internal-only and not deployed",
+    "human approval is required before any push, upload, publish, or release action",
+    "boundary/non-example relations are validated as records only"
+  ],
+  "reasons_ready_for_private_review": [
+    "zero-dependency checker passes in all requested modes",
+    "function-class validator reports DRAFT_INTERNAL_VALIDATED",
+    "four executable function-class harnesses pass with no hard failures",
+    "roundtrip warnings are expected draft-schema limitations only"
+  ],
+  "release_ready": false,
+  "remote_review_only": true,
+  "rollup_failures": [],
+  "safe_to_push_now": false,
+  "upload_ready": false
+}

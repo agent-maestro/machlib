@@ -4,6 +4,34 @@
   "commits": [
     {
       "artifact_group": "context",
+      "hash": "9866319",
+      "phase_id": "phase_11",
+      "subject": "test/corpus: add MachLib continuous modulus harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "4783b48",
+      "phase_id": "phase_11",
+      "subject": "test/corpus: add MachLib smooth finite-jet harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "b02519d",
+      "phase_id": "phase_11",
+      "subject": "test/corpus: add MachLib analytic local-series harness",
+      "validation_note": "covered by phase spine"
+    },
+    {
+      "artifact_group": "context",
+      "hash": "29144a7",
+      "phase_id": "pre_spine_context",
+      "subject": "reports: preserve MachLib phase spine gate output",
+      "validation_note": "context commit"
+    },
+    {
+      "artifact_group": "context",
       "hash": "0150f9f",
       "phase_id": "pre_spine_context",
       "subject": "reports: add MachLib phase spine and sleep handoff",
@@ -533,34 +561,6 @@
       "phase_id": "pre_spine_context",
       "subject": "ci(build-time): refresh cold-build badge to 0s [skip ci]",
       "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "1f498aa",
-      "phase_id": "pre_spine_context",
-      "subject": "feat(machlib): add cold-build CI badge, corpus search CLI, port plan",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "8c8a1b3",
-      "phase_id": "pre_spine_context",
-      "subject": "site: hoist Numbers tile values into MACHLIB constants",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "zero-dependency posture",
-      "hash": "c6b3268",
-      "phase_id": "pre_spine_context",
-      "subject": "site: depersonalize external formal library quote \u2014 'Academia has said' instead of naming an individual",
-      "validation_note": "context commit"
-    },
-    {
-      "artifact_group": "context",
-      "hash": "c3201dd",
-      "phase_id": "pre_spine_context",
-      "subject": "site: 491 \u2192 ~500 lines (3 references)",
-      "validation_note": "context commit"
     }
   ],
   "date": "2026-05-20",
@@ -581,9 +581,12 @@
   "hf_upload_performed": false,
   "local_only": true,
   "next_research_queue": [
-    "Analytic local series harness",
-    "Smooth finite-jet harness",
-    "Continuous epsilon-delta/local-modulus harness",
+    "Boundary relation executable harness",
+    "D-finite to analytic relation lab",
+    "Analytic radius/convergence guard design",
+    "Smooth C-infinity proof-layer design",
+    "Continuous topology schema design",
+    "Forge schema support backlog",
     "D-finite to analytic boundary lab",
     "Function-class eFrog/Forge roundtrip feed",
     "Command Center integration implementation plan, no deploy",
@@ -600,7 +603,7 @@
   ],
   "overall_status": "DRAFT_INTERNAL_VALIDATED",
   "package_publish_performed": false,
-  "phase_count": 12,
+  "phase_count": 13,
   "phases": [
     {
       "artifacts": [
@@ -965,7 +968,10 @@
       "artifacts": [
         "function-class corpus",
         "function-class validator",
-        "D-finite ODE harness"
+        "D-finite ODE harness",
+        "analytic local-series harness",
+        "smooth finite-jet harness",
+        "continuous local-modulus harness"
       ],
       "commits": [
         {
@@ -975,16 +981,31 @@
         {
           "hash": "b8e0ffa",
           "subject": "test/corpus: add MachLib D-finite ODE certificate harness"
+        },
+        {
+          "hash": "b02519d",
+          "subject": "test/corpus: add MachLib analytic local-series harness"
+        },
+        {
+          "hash": "4783b48",
+          "subject": "test/corpus: add MachLib smooth finite-jet harness"
+        },
+        {
+          "hash": "9866319",
+          "subject": "test/corpus: add MachLib continuous modulus harness"
         }
       ],
       "expected_subjects": [
         "research/corpus: add MachLib EML function-class frontier",
-        "test/corpus: add MachLib D-finite ODE certificate harness"
+        "test/corpus: add MachLib D-finite ODE certificate harness",
+        "test/corpus: add MachLib analytic local-series harness",
+        "test/corpus: add MachLib smooth finite-jet harness",
+        "test/corpus: add MachLib continuous modulus harness"
       ],
-      "goal": "Add function-class frontier records and execute the D-finite ODE subset locally.",
+      "goal": "Add function-class frontier records and execute D-finite, analytic, smooth, and continuous subsets locally.",
       "guardrail_status": "PASS",
       "limitations": [
-        "D-finite roundtrip keeps expected draft-schema warning."
+        "Roundtrips keep expected Forge draft-schema warnings."
       ],
       "not_claimed": [
         "not public-ready",
@@ -993,9 +1014,35 @@
         "not a public theorem/proof/open-problem claim"
       ],
       "phase_id": "phase_11",
-      "title": "Function-class frontier and D-finite executable slice",
+      "title": "Function-class frontier and executable slices",
       "validation_status": "COMMITTED",
-      "what_it_unlocked": "A next frontier for analytic/smooth/continuous local harnesses."
+      "what_it_unlocked": "A four-slice executable frontier for function-class records."
+    },
+    {
+      "artifacts": [
+        "function-class rollup",
+        "push-readiness JSON",
+        "Command Center function-class card/feed draft"
+      ],
+      "commits": [],
+      "expected_subjects": [
+        "test/corpus: add MachLib function-class coverage rollup"
+      ],
+      "goal": "Aggregate executable function-class validation and draft an internal status card/feed.",
+      "guardrail_status": "PASS",
+      "limitations": [
+        "Recorded as pending until the rollup commit exists."
+      ],
+      "not_claimed": [
+        "not public-ready",
+        "not upload-ready",
+        "not release-ready",
+        "not a public theorem/proof/open-problem claim"
+      ],
+      "phase_id": "phase_12",
+      "title": "Function-class coverage rollup",
+      "validation_status": "PARTIAL",
+      "what_it_unlocked": "A single internal status surface for D-finite, analytic, smooth, continuous, and boundary records."
     }
   ],
   "public_theorem_claim_performed": false,

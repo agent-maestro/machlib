@@ -2,6 +2,10 @@
 
 | hash | subject | phase_id | artifact_group | validation_note |
 | --- | --- | --- | --- | --- |
+| 9866319 | test/corpus: add MachLib continuous modulus harness | phase_11 | context | covered by phase spine |
+| 4783b48 | test/corpus: add MachLib smooth finite-jet harness | phase_11 | context | covered by phase spine |
+| b02519d | test/corpus: add MachLib analytic local-series harness | phase_11 | context | covered by phase spine |
+| 29144a7 | reports: preserve MachLib phase spine gate output | pre_spine_context | context | context commit |
 | 0150f9f | reports: add MachLib phase spine and sleep handoff | pre_spine_context | context | context commit |
 | b8e0ffa | test/corpus: add MachLib D-finite ODE certificate harness | phase_11 | function classes | covered by phase spine |
 | cbc670e | research/corpus: add MachLib EML function-class frontier | phase_11 | function classes | covered by phase spine |
@@ -78,7 +82,3 @@
 | 324839f | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |
 | 82abb4c | port(SelfMapConjugacy): add to MachLib (axiomatic ℝ, no external formal library) | pre_spine_context | zero-dependency posture | context commit |
 | f044974 | ci(build-time): refresh cold-build badge to 0s [skip ci] | pre_spine_context | context | context commit |
-| 1f498aa | feat(machlib): add cold-build CI badge, corpus search CLI, port plan | pre_spine_context | context | context commit |
-| 8c8a1b3 | site: hoist Numbers tile values into MACHLIB constants | pre_spine_context | context | context commit |
-| c6b3268 | site: depersonalize external formal library quote — 'Academia has said' instead of naming an individual | pre_spine_context | zero-dependency posture | context commit |
-| c3201dd | site: 491 → ~500 lines (3 references) | pre_spine_context | context | context commit |
