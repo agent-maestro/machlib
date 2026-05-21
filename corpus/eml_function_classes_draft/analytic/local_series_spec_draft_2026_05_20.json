@@ -1,0 +1,378 @@
+{
+  "date": "2026-05-20",
+  "function_class": "ANALYTIC_LOCAL_SERIES",
+  "local_only": true,
+  "local_series_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "local_power_series",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "formal local record only",
+        "radius not established"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach local power-series record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "center",
+        "coefficients",
+        "local_domain_or_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_local_power_series_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "series payload present",
+        "local guard present",
+        "limitations present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "finite_taylor_jet",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "finite truncation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach Taylor jet record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "center",
+        "truncation_order",
+        "coefficient_table"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_taylor_jet_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "finite order is explicit",
+        "coefficient table is bounded"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "coefficient_pattern",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "symbolic pattern placeholder"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach coefficient pattern record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "pattern_name",
+        "bounded_indices",
+        "coefficients"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_coefficient_pattern_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "bounded pattern checked",
+        "no infinite proof promotion"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "truncation_order",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "does not establish convergence"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach truncation order record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "order",
+        "terms_checked"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_truncation_order_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "order is finite",
+        "terms are listed"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "radius_guard",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "radius proof not supplied"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach radius guard placeholder",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "radius_status",
+        "local_domain_or_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_radius_guard_placeholder_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "radius status is explicit",
+        "limitation text present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "singularity_guard",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "no global continuation claim"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach singularity exclusion guard",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "excluded_points",
+        "local_center"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_singularity_exclusion_guard_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "excluded point listed where applicable",
+        "guard remains local"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "not_proved_boundary",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "records absence of convergence proof"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach convergence boundary",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "limitations",
+        "not_claimed"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_convergence_not_proved_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "boundary stated",
+        "no proof status"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "validation_trace",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "trace is internal observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach analytic validation trace",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "checks",
+        "status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a convergence proof",
+        "not global analytic continuation",
+        "not a complete analytic-functions formalization"
+      ],
+      "spec_id": "mach_analytic_validation_trace_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "records local bounded checks",
+        "records guardrails"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "spec_count": 8,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}

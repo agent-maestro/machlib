@@ -52,7 +52,7 @@
       "certificate_payload": {"series_kind": "taylor_stub", "center": "0", "coefficients": "alternating parity patterns", "radius_status": "not_proved"},
       "assumptions": ["parity and factorial symbols are available"],
       "validation_checks": ["local_series_payload_present", "coefficient_pattern_present", "limitations_present"],
-      "limitations": ["no convergence proof", "no trigonometric theorem claim"],
+      "limitations": ["no convergence proof", "no global analytic continuation claim", "no trigonometric theorem claim"],
       "not_claimed": ["not analytic theorem", "not full trigonometric formalization"],
       "public_ready": false,
       "upload_allowed": false,

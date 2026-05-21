@@ -1,0 +1,173 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "function_class": "ANALYTIC_LOCAL_SERIES",
+  "guardrails": {
+    "no_convergence_claim": true,
+    "no_forge_compiler_change": true,
+    "no_global_analytic_claim": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true
+  },
+  "local_only": true,
+  "passed": 4,
+  "record_count": 4,
+  "results": [
+    {
+      "certificate_type": "coefficient_pattern_stub",
+      "classification": "EXP_SERIES_STUB",
+      "detail": {
+        "coefficients": [
+          "1",
+          "1",
+          "1/2",
+          "1/6",
+          "1/24"
+        ],
+        "fixture": "exp_symbolic_series_at_0",
+        "limitations": [
+          "finite coefficient pattern only",
+          "no convergence proof"
+        ],
+        "passed": true,
+        "truncation": "1 + x + x^2/2 + x^3/6 + x^4/24",
+        "truncation_order": 4
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no global entire-function claim"
+      ],
+      "not_claimed": [
+        "not analytic theorem",
+        "not full real-analysis formalization"
+      ],
+      "passed": true,
+      "record_id": "analytic_exp_series_stub_v0",
+      "status": "PASS_FINITE_TRUNCATION_CHECK",
+      "title": "Exponential symbolic local series stub",
+      "warning": null
+    },
+    {
+      "certificate_type": "local_coefficient_record",
+      "classification": "LOCAL_SERIES_RECORD",
+      "detail": {
+        "checks": {
+          "has_coefficients": true,
+          "has_radius_or_domain_limitation": true,
+          "has_series_kind": true,
+          "is_draft_internal": true
+        },
+        "fixture": "generic_local_power_series",
+        "limitations": [
+          "shape check only",
+          "radius/domain remains placeholder"
+        ],
+        "passed": true,
+        "status": "PASS_LOCAL_SHAPE_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no radius proof",
+        "no global analytic continuation claim"
+      ],
+      "not_claimed": [
+        "not full complex-analysis formalization",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "analytic_power_series_local_record_v0",
+      "status": "PASS_LOCAL_SHAPE_CHECK",
+      "title": "Generic local power-series record",
+      "warning": null
+    },
+    {
+      "certificate_type": "local_geometric_series_placeholder",
+      "classification": "RATIONAL_LOCAL_SERIES_EXCEPT_POLE",
+      "detail": {
+        "coefficients": [
+          "1",
+          "1",
+          "1",
+          "1",
+          "1"
+        ],
+        "excluded_points": [
+          "1"
+        ],
+        "fixture": "rational_geometric_series_at_0",
+        "limitations": [
+          "finite geometric pattern only",
+          "pole exclusion is local guard"
+        ],
+        "passed": true,
+        "truncation": "1 + x + x^2 + x^3 + x^4",
+        "truncation_order": 4
+      },
+      "failures": [],
+      "limitations": [
+        "no global analytic claim",
+        "no convergence proof beyond placeholder guard"
+      ],
+      "not_claimed": [
+        "not analytic continuation",
+        "not public proof claim"
+      ],
+      "passed": true,
+      "record_id": "analytic_rational_local_except_pole_v0",
+      "status": "PASS_FINITE_TRUNCATION_CHECK",
+      "title": "Rational local geometric series with pole guard",
+      "warning": null
+    },
+    {
+      "certificate_type": "alternating_coefficient_pattern_stub",
+      "classification": "SIN_COS_SERIES_STUB",
+      "detail": {
+        "cos_coefficients": {
+          "1": "1",
+          "x^2": "-1/2",
+          "x^4": "1/24"
+        },
+        "cos_truncation": "1 - x^2/2 + x^4/24",
+        "cos_truncation_order": 4,
+        "fixture": "sin_cos_symbolic_series_at_0",
+        "limitations": [
+          "finite alternating pattern only",
+          "no trigonometric theorem claim"
+        ],
+        "passed": true,
+        "sin_coefficients": {
+          "x": "1",
+          "x^3": "-1/6",
+          "x^5": "1/120"
+        },
+        "sin_truncation": "x - x^3/6 + x^5/120",
+        "sin_truncation_order": 5
+      },
+      "failures": [],
+      "limitations": [
+        "no convergence proof",
+        "no global analytic continuation claim",
+        "no trigonometric theorem claim"
+      ],
+      "not_claimed": [
+        "not analytic theorem",
+        "not full trigonometric formalization"
+      ],
+      "passed": true,
+      "record_id": "analytic_sin_cos_series_stub_v0",
+      "status": "PASS_FINITE_TRUNCATION_CHECK",
+      "title": "Sine/cosine symbolic alternating series stub",
+      "warning": null
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}
