@@ -1,0 +1,103 @@
+{
+  "date": "2026-05-20",
+  "tier": "OBSERVATION",
+  "local_only": true,
+  "review_scope": "Local-only publish-readiness review for current MachLib package candidates.",
+  "recommended_first_publish_candidate": "zero-mathlib-checker",
+  "publish_decision": "DO_NOT_PUBLISH_YET",
+  "next_safe_task": "M053_ZERO_MATHLIB_CHECKER_PUBLIC_COPY_LICENSE_API_REVIEW_NO_PUBLISH",
+  "package_name_availability_check_allowed_now": false,
+  "pypi_token_handling_allowed_now": false,
+  "package_publish_allowed_now": false,
+  "release_artifact_creation_allowed_now": false,
+  "twine_allowed_now": false,
+  "publish_performed": false,
+  "pypi_upload_performed": false,
+  "release_artifacts_created": false,
+  "candidates": [
+    {
+      "candidate_name": "zero-mathlib-checker",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
+      "test_count": 15,
+      "publish_readiness": "NEAREST_CANDIDATE_BUT_NOT_APPROVED",
+      "reason": "Narrow scope, 15 tests, hardened local draft, clear CLI, and no theorem claims.",
+      "blockers": [
+        "PyPI name availability not checked",
+        "license review needed",
+        "public README/copy review needed",
+        "package API freeze needed",
+        "dry-run build review needed",
+        "explicit human publish approval needed",
+        "PyPI token handling approval needed only at publish phase"
+      ],
+      "publish_now": false,
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "pypi_token_required_now": false,
+      "release_artifacts_created": false
+    },
+    {
+      "candidate_name": "claim-boundary",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "test_count": 35,
+      "publish_readiness": "NOT_READY_NEEDS_HARDENING",
+      "reason": "Local draft created but not hardened.",
+      "blockers": [
+        "hardening pass needed",
+        "license review needed",
+        "public README/copy review needed",
+        "package API freeze needed",
+        "explicit human publish approval needed"
+      ],
+      "publish_now": false,
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "pypi_token_required_now": false,
+      "release_artifacts_created": false
+    },
+    {
+      "candidate_name": "eml-records",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
+      "test_count": 30,
+      "publish_readiness": "NOT_READY_NEEDS_API_COMPAT_REVIEW",
+      "reason": "Hardened but broader schema API and compatibility expectations need review.",
+      "blockers": [
+        "schema API compatibility review needed",
+        "license review needed",
+        "public README/copy review needed",
+        "package API freeze needed",
+        "explicit human publish approval needed"
+      ],
+      "publish_now": false,
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "pypi_token_required_now": false,
+      "release_artifacts_created": false
+    },
+    {
+      "candidate_name": "review-branch-packet",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
+      "test_count": 41,
+      "publish_readiness": "NOT_READY_NEEDS_OPERATIONAL_BOUNDARY_REVIEW",
+      "reason": "Hardened but operational command boundaries require more review.",
+      "blockers": [
+        "read-only command boundary review needed",
+        "license review needed",
+        "public README/copy review needed",
+        "package API freeze needed",
+        "explicit human publish approval needed"
+      ],
+      "publish_now": false,
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "pypi_token_required_now": false,
+      "release_artifacts_created": false
+    }
+  ],
+  "guardrails": {
+    "no_pypi_name_check": true,
+    "no_pypi_upload": true,
+    "no_pypi_token_handling": true,
+    "no_package_publish": true,
+    "no_twine": true,
+    "no_release_artifacts": true,
+    "no_public_theorem_proof_open_problem_claim": true,
+    "future_publish_requires_separate_explicit_approval": true
+  }
+}
