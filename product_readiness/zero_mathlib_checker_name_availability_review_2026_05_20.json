@@ -1,0 +1,16 @@
+{
+  "review_id": "zero_mathlib_checker_name_availability_review_2026_05_20",
+  "package_name": "zero-mathlib-checker",
+  "checked_url": "https://pypi.org/pypi/zero-mathlib-checker/json",
+  "pypi_public_json_checked": true,
+  "pypi_name_status": "NOT_FOUND_PUBLIC_JSON",
+  "pypi_latest_version": null,
+  "name_available_for_first_upload": true,
+  "pypi_token_used": false,
+  "pypi_token_handling_performed": false,
+  "pypi_upload_performed": false,
+  "package_publish_performed": false,
+  "twine_upload_performed": false,
+  "release_artifacts_created_in_repo": false,
+  "review_scope": "public PyPI JSON name availability check only; no token, upload, or publish action"
+}
