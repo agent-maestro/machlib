@@ -1,0 +1,54 @@
+{
+  "review_id": "zero_mathlib_checker_api_review_2026_05_20",
+  "candidate_name": "zero-mathlib-checker",
+  "review_type": "API_REVIEW",
+  "local_only": true,
+  "api_status": "API_OK_FOR_DRY_RUN_REVIEW",
+  "summary": "The package exposes a compact scanner API and read-only CLI that are stable enough for a future dry-run build review. No token, upload, publish, deploy, merge, or push behavior is present.",
+  "api_surface": {
+    "package_exports": [
+      "ScanResult",
+      "scan_path",
+      "scan_root"
+    ],
+    "scanner_entrypoint": "zero_mathlib_checker.scanner.scan_path",
+    "cli_entrypoint": "zero-mathlib-checker = zero_mathlib_checker.cli:main",
+    "cli_commands": [
+      "zero-mathlib-checker scan <root>",
+      "zero-mathlib-checker scan <root> --json",
+      "zero-mathlib-checker scan <root> --allow-policy-text",
+      "zero-mathlib-checker scan <root> --include \"*.lean\"",
+      "zero-mathlib-checker scan <root> --exclude-dir node_modules"
+    ]
+  },
+  "checks": {
+    "scanner_scan_path_exists": "PASS",
+    "scan_root_exists": "PASS",
+    "json_output_behavior_defined": "PASS",
+    "evidence_class_names_stable_enough": "PASS",
+    "include_exclude_behavior_documented": "PASS",
+    "default_skip_dirs_present_in_code": "PASS",
+    "cli_scan_command_documented": "PASS",
+    "exit_codes_documented": "PASS",
+    "no_token_handling": "PASS",
+    "no_upload_or_publish_action": "PASS"
+  },
+  "default_exclude_dirs": [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+    "dist",
+    "build",
+    ".mypy_cache",
+    ".pytest_cache"
+  ],
+  "remaining_api_followups": [
+    "A future dry-run build review should verify installed console-script behavior in an isolated environment.",
+    "A future API freeze should decide whether Evidence field names and ScanResult.to_dict output are final for public consumers."
+  ],
+  "pypi_upload_performed": false,
+  "pypi_token_handling_performed": false,
+  "package_publish_performed": false,
+  "release_artifacts_created": false
+}

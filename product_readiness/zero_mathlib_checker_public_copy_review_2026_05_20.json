@@ -1,0 +1,35 @@
+{
+  "review_id": "zero_mathlib_checker_public_copy_review_2026_05_20",
+  "candidate_name": "zero-mathlib-checker",
+  "review_type": "PUBLIC_COPY_REVIEW",
+  "local_only": true,
+  "public_copy_status": "PUBLIC_COPY_OK_FOR_DRY_RUN_REVIEW",
+  "summary": "README copy is suitable for a future dry-run build review because it clearly frames the package as a local draft scanner, includes CLI and JSON examples, documents exit codes and limitations, and avoids publish, theorem, proof, open-problem, certification, deployment, and upload claims.",
+  "checks": {
+    "no_theorem_proof_or_open_problem_claims": "PASS",
+    "no_machlib_replaces_mathlib_claim": "PASS",
+    "no_release_upload_or_publish_claim": "PASS",
+    "no_certified_safety_or_production_controller_language": "PASS",
+    "no_hugging_face_petal_or_capcard_certification_claim": "PASS",
+    "local_draft_no_publish_boundary_clear": "PASS",
+    "cli_examples_clear": "PASS",
+    "exit_code_behavior_clear": "PASS",
+    "json_behavior_clear": "PASS",
+    "limitations_clear": "PASS",
+    "machlib_relationship_without_overclaiming": "PASS"
+  },
+  "observations": [
+    "README states that the package is not published, not release-ready, not upload-ready, and has not had package name availability checked.",
+    "README describes local editable install only and says no upload, build, or twine command is required for local testing.",
+    "README frames the package as inspired by MachLib's local zero-Mathlib checker and not as a replacement for the repository gate.",
+    "README describes the scanner as string-pattern based and not as certification of a repository."
+  ],
+  "remaining_public_copy_followups": [
+    "Human public-copy pass should confirm final PyPI long description wording before any name check or upload decision.",
+    "README should be revisited if package metadata or license wording changes during a future dry-run build review."
+  ],
+  "pypi_upload_performed": false,
+  "pypi_token_handling_performed": false,
+  "package_publish_performed": false,
+  "release_artifacts_created": false
+}

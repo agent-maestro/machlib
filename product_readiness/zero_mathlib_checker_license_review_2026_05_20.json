@@ -1,0 +1,28 @@
+{
+  "review_id": "zero_mathlib_checker_license_review_2026_05_20",
+  "candidate_name": "zero-mathlib-checker",
+  "review_type": "LICENSE_REVIEW",
+  "local_only": true,
+  "license_status": "LICENSE_PRESENT_NEEDS_HUMAN_CONFIRMATION",
+  "summary": "A repo-root LICENSE is present, but the package candidate has no package-local license file and pyproject.toml does not declare license metadata. This is not a legal opinion; a human license and package metadata confirmation is required before any publish decision.",
+  "checks": {
+    "repo_root_license_present": "PASS",
+    "package_local_license_present": "MISSING",
+    "package_pyproject_license_declared": "MISSING",
+    "readme_mentions_license": "MISSING",
+    "legal_conclusion_made": "NO"
+  },
+  "license_files_observed": [
+    "LICENSE"
+  ],
+  "license_text_observed": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+  "remaining_license_followups": [
+    "Human review should confirm whether CC BY 4.0 is intended for this Python package candidate.",
+    "Future package metadata review should decide whether to add license metadata and/or a package-local license file before publication.",
+    "Future public README review should decide whether to add explicit license wording before publication."
+  ],
+  "pypi_upload_performed": false,
+  "pypi_token_handling_performed": false,
+  "package_publish_performed": false,
+  "release_artifacts_created": false
+}
