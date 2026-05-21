@@ -1,0 +1,86 @@
+{
+  "manifest_id": "all_packages_upload_manifest_DRAFT_2026_05_20",
+  "gate_status": "WAITING_FOR_HUMAN_UPLOAD_APPROVAL_AND_TOKEN",
+  "upload_allowed_now": false,
+  "human_upload_approval_required": true,
+  "one_temporary_token_for_approved_session": true,
+  "pypi_token_handling_now": false,
+  "packages": [
+    {
+      "upload_order": 1,
+      "package_name": "zero-mathlib-checker",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/zero_mathlib_checker",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/zero-mathlib-checker/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 2,
+      "package_name": "claim-boundary",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/claim_boundary",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/claim-boundary/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 3,
+      "package_name": "eml-records",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/eml_records",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/eml-records/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 4,
+      "package_name": "review-branch-packet",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/review_branch_packet",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/review-branch-packet/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 5,
+      "package_name": "hybrid-trace-eml",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/hybrid_trace_eml",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/hybrid-trace-eml/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 6,
+      "package_name": "eml-harness",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/eml_harness",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/eml-harness/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    },
+    {
+      "upload_order": 7,
+      "package_name": "machlib-workbench",
+      "version": "0.0.0.dev0",
+      "local_path": "package_candidates/machlib_workbench",
+      "artifact_source": "/tmp/monogate_publish_readiness_2026_05_20/machlib-workbench/dist",
+      "upload_allowed_now": false,
+      "upload_performed": false,
+      "publish_performed": false
+    }
+  ],
+  "blocked_packages": [
+    {
+      "package_name": "machlib",
+      "reason": "broad package boundary not approved"
+    }
+  ]
+}

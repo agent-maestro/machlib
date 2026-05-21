@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hybrid-trace-eml"
+version = "0.0.0.dev0"
+description = "Local draft bounded hybrid trace utilities."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+hybrid-trace-eml = "hybrid_trace_eml.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
