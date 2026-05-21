@@ -1,0 +1,496 @@
+{
+  "date": "2026-05-20",
+  "tier": "OBSERVATION",
+  "phase": "PHASE_1_DRAFT_MANIFEST_NO_UPLOAD",
+  "manifest_status": "DRAFT_NOT_APPROVED_FOR_UPLOAD",
+  "approved_upload_count": 0,
+  "upload_allowed_now": false,
+  "human_approval_required": true,
+  "token_required_now": false,
+  "token_required_after_approval": true,
+  "packages": [
+    {
+      "package_name": "monogate-graph",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-graph-pkg",
+      "local_version": "0.1.1",
+      "pypi_version": "0.1.1",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-graph/monogate_graph-0.1.1-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-graph/monogate_graph-0.1.1.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version; duplicate older migration dry-run path exists at monogate-graph 0.1.0"
+      ]
+    },
+    {
+      "package_name": "eml-units",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-units-pkg",
+      "local_version": "0.1.0",
+      "pypi_version": "0.1.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-units/eml_units-0.1.0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-units/eml_units-0.1.0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "eml-signal",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-signal-pkg",
+      "local_version": "0.1.1",
+      "pypi_version": "0.1.1",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-signal/eml_signal-0.1.1-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-signal/eml_signal-0.1.1.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "eml-control",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-control-pkg",
+      "local_version": "0.1.1",
+      "pypi_version": "0.1.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-control/eml_control-0.1.1-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-control/eml_control-0.1.1.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": true,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "CANDIDATE_FOR_APPROVAL",
+      "blockers": [
+        "requires explicit upload manifest approval and temporary PyPI token before upload",
+        "Phase 2 requires exact manifest approval and temporary PyPI token"
+      ]
+    },
+    {
+      "package_name": "monogate-forge",
+      "local_path": "/home/monogate/monogate/forge",
+      "local_version": "0.12.1",
+      "pypi_version": "0.12.1",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-forge/monogate_forge-0.12.1-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-forge/monogate_forge-0.12.1.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "efrog",
+      "local_path": "/home/monogate/monogate/efrog",
+      "local_version": "0.7.0",
+      "pypi_version": "0.7.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/efrog/efrog-0.7.0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/efrog/efrog-0.7.0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "monogate-forge-mcp",
+      "local_path": "/home/monogate/monogate/mcp-server",
+      "local_version": "0.3.0",
+      "pypi_version": "0.3.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-forge-mcp/monogate_forge_mcp-0.3.0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-forge-mcp/monogate_forge_mcp-0.3.0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "monogate-capcard-cli",
+      "local_path": "/home/monogate/monogate/capcard-cli",
+      "local_version": "1.2.0",
+      "pypi_version": "1.2.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-capcard-cli/monogate_capcard_cli-1.2.0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/monogate-capcard-cli/monogate_capcard_cli-1.2.0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "eml-cost",
+      "local_path": "/home/monogate/monogate/eml-cost",
+      "local_version": "0.20.2",
+      "pypi_version": "0.20.2",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-cost/eml_cost-0.20.2-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-cost/eml_cost-0.20.2.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version; older exploration eml-cost 0.1.0a0 exists and is not selected"
+      ]
+    },
+    {
+      "package_name": "eml-stdlib",
+      "local_path": "/home/monogate/monogate/eml-stdlib",
+      "local_version": "0.4.0",
+      "pypi_version": "0.4.0",
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-stdlib/eml_stdlib-0.4.0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-stdlib/eml_stdlib-0.4.0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "eml-cost-torch",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-cost-torch-pkg",
+      "local_version": "0.5.2",
+      "pypi_version": "0.5.2",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "HELD_BACK_DO_NOT_PUBLISH",
+      "blockers": [
+        "held back for separate license/readme/package-contract review and PyTorch/CUDA dependency review"
+      ]
+    },
+    {
+      "package_name": "zero-mathlib-checker",
+      "local_path": "/home/monogate/monogate/machlib/package_candidates/zero_mathlib_checker",
+      "local_version": "0.0.0.dev0",
+      "pypi_version": null,
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/zero-mathlib-checker/zero_mathlib_checker-0.0.0.dev0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/zero-mathlib-checker/zero_mathlib_checker-0.0.0.dev0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NEW_PROJECT_REQUIRES_NAME_APPROVAL",
+      "blockers": [
+        "new project requires name approval; publish gate closed",
+        "local package candidate publish gate remains closed"
+      ]
+    },
+    {
+      "package_name": "claim-boundary",
+      "local_path": "/home/monogate/monogate/machlib/package_candidates/claim_boundary",
+      "local_version": "0.0.0.dev0",
+      "pypi_version": null,
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/claim-boundary/claim_boundary-0.0.0.dev0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/claim-boundary/claim_boundary-0.0.0.dev0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NEW_PROJECT_REQUIRES_NAME_APPROVAL",
+      "blockers": [
+        "local draft not approved for PyPI; publish gate closed",
+        "local package candidate publish gate remains closed"
+      ]
+    },
+    {
+      "package_name": "eml-records",
+      "local_path": "/home/monogate/monogate/machlib/package_candidates/eml_records",
+      "local_version": "0.0.0.dev0",
+      "pypi_version": null,
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-records/eml_records-0.0.0.dev0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/eml-records/eml_records-0.0.0.dev0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NEW_PROJECT_REQUIRES_NAME_APPROVAL",
+      "blockers": [
+        "new project requires name/API/license approval; publish gate closed",
+        "local package candidate publish gate remains closed"
+      ]
+    },
+    {
+      "package_name": "review-branch-packet",
+      "local_path": "/home/monogate/monogate/machlib/package_candidates/review_branch_packet",
+      "local_version": "0.0.0.dev0",
+      "pypi_version": null,
+      "artifact_paths": [
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/review-branch-packet/review_branch_packet-0.0.0.dev0-py3-none-any.whl",
+        "/tmp/monogate_pypi_fleet_2026_05_20/dist/review-branch-packet/review_branch_packet-0.0.0.dev0.tar.gz"
+      ],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NEW_PROJECT_REQUIRES_NAME_APPROVAL",
+      "blockers": [
+        "new project requires name/API/operational-boundary approval; publish gate closed",
+        "local package candidate publish gate remains closed"
+      ]
+    },
+    {
+      "package_name": "capcard-ai",
+      "local_path": "/home/monogate/monogate/capcard/capcard",
+      "local_version": "0.1.4",
+      "pypi_version": "0.1.4",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "discovered package outside named M053 fleet; local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "capcard-benchmark",
+      "local_path": "/home/monogate/monogate/capcard-benchmark",
+      "local_version": "0.1.0",
+      "pypi_version": null,
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "UNKNOWN_NEEDS_REVIEW",
+      "blockers": [
+        "discovered package outside named M053 fleet; public PyPI JSON returned 404"
+      ]
+    },
+    {
+      "package_name": "blackwell-agent",
+      "local_path": "/home/monogate/monogate/blackwell-agent",
+      "local_version": "0.1.0",
+      "pypi_version": null,
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "UNKNOWN_NEEDS_REVIEW",
+      "blockers": [
+        "discovered package outside named M053 fleet; public PyPI JSON returned 404"
+      ]
+    },
+    {
+      "package_name": "eml-memory",
+      "local_path": "/home/monogate/monogate/eml-memory",
+      "local_version": "0.1.0",
+      "pypi_version": "0.1.0",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "discovered package outside named M053 fleet; local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "eml-memory-curate",
+      "local_path": "/home/monogate/monogate/eml-memory-curate",
+      "local_version": "0.1.0",
+      "pypi_version": "0.1.0",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "discovered package outside named M053 fleet; local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "monogate",
+      "local_path": "/home/monogate/monogate/monogate/python",
+      "local_version": "2.5.0",
+      "pypi_version": "2.5.0",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_VERSION_NOT_GREATER",
+      "blockers": [
+        "discovered package outside named M053 fleet; local version equals PyPI version"
+      ]
+    },
+    {
+      "package_name": "monogate-core",
+      "local_path": "/home/monogate/monogate/monogate/monogate-core",
+      "local_version": "0.1.0",
+      "pypi_version": null,
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "UNKNOWN_NEEDS_REVIEW",
+      "blockers": [
+        "discovered package outside named M053 fleet; public PyPI JSON returned 404"
+      ]
+    },
+    {
+      "package_name": "capcard-distributed-sandbox",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/CapCard_Distributed_Module_Impl_Sandbox_2026_05_16",
+      "local_version": "0.1.0",
+      "pypi_version": null,
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "UNKNOWN_NEEDS_REVIEW",
+      "blockers": [
+        "discovered sandbox package outside named M053 fleet; public PyPI JSON returned 404"
+      ]
+    },
+    {
+      "package_name": "eml-genome",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-genome-pkg",
+      "local_version": "0.2.0",
+      "pypi_version": null,
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "UNKNOWN_NEEDS_REVIEW",
+      "blockers": [
+        "discovered package outside named M053 fleet; public PyPI JSON returned 404"
+      ]
+    },
+    {
+      "package_name": "eml-rewrite",
+      "local_path": "/home/monogate/monogate/monogate-research/exploration/eml-rewrite-pkg",
+      "local_version": "0.1.0a0",
+      "pypi_version": "0.6.0",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "human_approval_required": true,
+      "token_required_after_approval": false,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_UPLOADABLE_LOCAL_VERSION_LOWER",
+      "blockers": [
+        "discovered package outside named M053 fleet; local version is lower than PyPI version 0.6.0"
+      ]
+    },
+    {
+      "package_name": "machlib",
+      "candidate_name": "machlib",
+      "candidate_type": "BROAD_PACKAGE_CANDIDATE",
+      "local_path": "/home/monogate/monogate/machlib",
+      "pyproject_found": false,
+      "local_version": null,
+      "pypi_version": null,
+      "package_name_availability": "UNKNOWN_NOT_CHECKED",
+      "artifact_paths": [],
+      "upload_allowed_now": false,
+      "publish_now": false,
+      "token_required_now": false,
+      "release_artifacts_created": false,
+      "human_approval_required": true,
+      "token_required_after_approval": true,
+      "publish_performed": false,
+      "pypi_upload_performed": false,
+      "reason": "NOT_READY_REQUIRES_BOUNDARY_API_LICENSE_PUBLIC_COPY_REVIEW",
+      "proposed_package_boundary": [
+        "Decide whether PyPI machlib includes only CLI/tools or also corpus snapshots.",
+        "Decide whether reports/ and command_center_feeds/ are package data, excluded, or transformed.",
+        "Decide whether stochastic/hybrid frontier records are included or kept internal.",
+        "Decide whether function-class and six-lane draft records are included or kept internal.",
+        "Decide whether local-only review/push-readiness files are excluded."
+      ],
+      "blockers": [
+        "package boundary review required",
+        "public copy review required",
+        "license review required",
+        "API surface review required",
+        "no-public-claim review required",
+        "build dry-run not yet approved",
+        "explicit human publish approval required"
+      ]
+    }
+  ]
+}
