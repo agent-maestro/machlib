@@ -1,0 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "review-branch-packet"
+version = "0.0.0.dev0"
+description = "Local draft read-only private review branch packet generator."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+review-branch-packet = "review_branch_packet.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
