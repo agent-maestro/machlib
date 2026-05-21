@@ -1,0 +1,42 @@
+{
+  "date": "2026-05-20",
+  "local_only": true,
+  "ranked_paths": [
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "AI-generated research/code/formal artifact review service",
+      "rank": 1,
+      "release_ready": false
+    },
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "Monogate Evidence Workbench internal CLI/service",
+      "rank": 2,
+      "release_ready": false
+    },
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "Command Center Evidence Cards",
+      "rank": 3,
+      "release_ready": false
+    },
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "Zero-Mathlib benchmark/curriculum",
+      "rank": 4,
+      "release_ready": false
+    },
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "Hybrid Trace Evidence Toolkit",
+      "rank": 5,
+      "release_ready": false
+    },
+    {
+      "next_safe_local_step": "human-reviewed product brief and boundary review",
+      "path": "MachLib Studio",
+      "rank": 6,
+      "release_ready": false
+    }
+  ]
+}
