@@ -1,0 +1,43 @@
+{
+  "result_id": "zero_mathlib_checker_upload_result_2026_05_20",
+  "package_name": "zero-mathlib-checker",
+  "version": "0.0.0.dev0",
+  "upload_session_status": "FAILED_BEFORE_UPLOAD",
+  "failure_stage": "twine_check",
+  "failure_summary": "System twine/pkginfo rejected the freshly built Metadata-Version before upload. Upload was not attempted.",
+  "artifact_source": "/tmp/zero_mathlib_checker_upload_2026_05_20/dist",
+  "artifacts": [
+    {
+      "filename": "zero_mathlib_checker-0.0.0.dev0-py3-none-any.whl",
+      "artifact_type": "wheel",
+      "size_bytes": 4997,
+      "sha256": "575cc0b3fa8b39ff03cb7c95629dc5922add6c0f549a2b6b5a7ae55510ab0909"
+    },
+    {
+      "filename": "zero_mathlib_checker-0.0.0.dev0.tar.gz",
+      "artifact_type": "sdist",
+      "size_bytes": 5698,
+      "sha256": "6d896e26ef70b8f61fa5ae8a725ca78eced6fb2c3def787974a4f6ad3bfb2906"
+    }
+  ],
+  "pypi_upload_performed": false,
+  "package_publish_performed": false,
+  "twine_upload_performed": false,
+  "token_written_to_file": false,
+  "token_printed": false,
+  "token_committed": false,
+  "token_unset_after_failure": true,
+  "user_revoke_token_required": true,
+  "uploaded_packages": [],
+  "failed_packages": [
+    "zero-mathlib-checker"
+  ],
+  "skipped_packages": [
+    "claim-boundary",
+    "eml-records",
+    "review-branch-packet",
+    "machlib",
+    "eml-control"
+  ],
+  "retry_requires_explicit_user_approval": true
+}
