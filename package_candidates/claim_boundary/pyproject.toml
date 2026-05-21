@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "claim-boundary"
-version = "0.0.0.dev0"
-description = "Local draft scanner for claim and no-go boundary language."
+version = "0.0.1"
+description = "Pre-alpha scanner for claim and no-go boundary language."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

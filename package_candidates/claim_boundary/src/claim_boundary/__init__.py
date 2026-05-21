@@ -1,4 +1,4 @@
-"""Local draft claim-boundary package candidate."""
+"""Pre-alpha claim-boundary scanner."""
 
 from .scanner import ClaimScanResult, scan_path, scan_root
 

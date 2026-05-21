@@ -1,27 +1,31 @@
-# claim-boundary draft
+# claim-boundary
 
-Local draft package candidate for scanning evidence artifacts for claim, action, readiness, and token-risk language.
+`claim-boundary` is a pre-alpha package for scanning evidence artifacts for
+claim, action, readiness, and token-risk language.
 
-This package candidate is not published, not release-ready, not upload-ready, and has not had its package name availability checked. No PyPI token is needed or handled.
+It helps separate boundary text such as “not a safety certificate” from positive
+overclaims. It is not a theorem prover, not a safety certifier, not production
+controller evidence, not a replacement for Mathlib, and not a public
+theorem/proof/open-problem claim.
 
-## Local Draft Status
+## Status
 
-- Version: `0.0.0.dev0`
-- Package name availability: `UNKNOWN_NOT_CHECKED`
-- Publish status: no package publish performed
-- Upload status: no PyPI upload performed
-- Token status: no PyPI token handling performed
-- Release status: not release-ready
+- Version: `0.0.1`
+- Published for early testing.
+- Intended for local review workflows and CI-style checks.
+- Does not upload, deploy, publish, or handle tokens.
 
-## Install From Source Locally
+## Install
 
-Use a local editable install only after human review:
+```bash
+python -m pip install claim-boundary
+```
+
+For repository development:
 
 ```bash
 python -m pip install -e package_candidates/claim_boundary
 ```
-
-No upload, build, twine, or PyPI name check is required for local testing.
 
 ## Usage
 
@@ -53,14 +57,16 @@ python -m claim_boundary.cli scan . --json
 - `0`: no suspicious findings, or `--fail-on never`
 - `1`: suspicious findings exist and `--fail-on suspicious`
 
-## Relationship To Monogate / MachLib
+## Relationship To Monogate/MachLib
 
-This draft extracts the claim/no-go scanner pattern used across Monogate and MachLib reports. It helps separate boundary text such as “not certified safety” from positive overclaims.
+This package extracts the claim/no-go scanner pattern used across Monogate and
+MachLib reports. It is evidence tooling for public-copy and guardrail review,
+not a certification authority.
 
 ## Limitations
 
-- String-pattern scanner only
-- No package name availability check
-- No publish or upload path
-- No certification of a repository
-- No public theorem/proof/open-problem claim
+- String-pattern scanner only.
+- Does not prove or disprove claims.
+- Does not certify safety.
+- Does not execute deployments or uploads.
+- Does not manage credentials or tokens.

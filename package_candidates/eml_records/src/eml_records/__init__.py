@@ -1,4 +1,4 @@
-"""Local draft EML record schema and validation helpers."""
+"""Pre-alpha EML record schema and validation helpers."""
 
 from .schema import RecordFamily
 from .validators import (

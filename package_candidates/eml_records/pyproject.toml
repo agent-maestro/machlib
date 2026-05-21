@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eml-records"
-version = "0.0.0.dev0"
-description = "Local draft schema and validation helpers for EML-style evidence records."
+version = "0.0.1"
+description = "Pre-alpha schema and validation helpers for EML-style evidence records."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

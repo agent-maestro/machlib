@@ -1,4 +1,4 @@
-"""Local draft package for read-only private review branch packets."""
+"""Pre-alpha read-only private review branch packet helpers."""
 
 from .packet import ReviewBranchPacket, build_packet_from_parts
 

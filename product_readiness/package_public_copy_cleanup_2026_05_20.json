@@ -1,0 +1,58 @@
+{
+  "review_id": "package_public_copy_cleanup_2026_05_20",
+  "scope": "public copy cleanup for already published pre-alpha packages",
+  "packages": [
+    {
+      "package_name": "zero-mathlib-checker",
+      "old_version": "0.0.0.dev0",
+      "proposed_version": "0.0.1",
+      "public_copy_status": "PUBLIC_COPY_CLEANED_FOR_PATCH_RELEASE",
+      "upload_performed": false,
+      "token_handling_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "no_public_theorem_claim": true,
+      "no_safety_certification_claim": true,
+      "no_mathlib_replacement_claim": true
+    },
+    {
+      "package_name": "claim-boundary",
+      "old_version": "0.0.0.dev0",
+      "proposed_version": "0.0.1",
+      "public_copy_status": "PUBLIC_COPY_CLEANED_FOR_PATCH_RELEASE",
+      "upload_performed": false,
+      "token_handling_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "no_public_theorem_claim": true,
+      "no_safety_certification_claim": true,
+      "no_mathlib_replacement_claim": true
+    },
+    {
+      "package_name": "eml-records",
+      "old_version": "0.0.0.dev0",
+      "proposed_version": "0.0.1",
+      "public_copy_status": "PUBLIC_COPY_CLEANED_FOR_PATCH_RELEASE",
+      "upload_performed": false,
+      "token_handling_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "no_public_theorem_claim": true,
+      "no_safety_certification_claim": true,
+      "no_mathlib_replacement_claim": true
+    },
+    {
+      "package_name": "review-branch-packet",
+      "old_version": "0.0.0.dev0",
+      "proposed_version": "0.0.1",
+      "public_copy_status": "PUBLIC_COPY_CLEANED_FOR_PATCH_RELEASE",
+      "upload_performed": false,
+      "token_handling_performed": false,
+      "release_artifacts_created_in_repo": false,
+      "no_public_theorem_claim": true,
+      "no_safety_certification_claim": true,
+      "no_mathlib_replacement_claim": true
+    }
+  ],
+  "pypi_upload_performed": false,
+  "pypi_token_handling_performed": false,
+  "twine_upload_performed": false,
+  "package_publish_performed": false
+}
