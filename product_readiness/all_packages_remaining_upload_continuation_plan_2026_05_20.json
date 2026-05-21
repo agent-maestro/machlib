@@ -1,0 +1,69 @@
+{
+  "plan_id": "all_packages_remaining_upload_continuation_plan_2026_05_20",
+  "already_uploaded": [
+    {
+      "package_name": "zero-mathlib-checker",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "claim-boundary",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "eml-records",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "review-branch-packet",
+      "version": "0.0.0.dev0"
+    }
+  ],
+  "remaining_ready_not_uploaded": [
+    {
+      "package_name": "machlib-workbench",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "eml-harness",
+      "version": "0.0.0.dev0"
+    },
+    {
+      "package_name": "hybrid-trace-eml",
+      "version": "0.0.0.dev0"
+    }
+  ],
+  "blocked_not_uploaded": [
+    {
+      "package_name": "machlib",
+      "reason": "broad package-boundary/API/license/public-copy review remains incomplete"
+    }
+  ],
+  "failure": {
+    "package_name": "machlib-workbench",
+    "stage": "twine_upload",
+    "reason": "PyPI HTTP 429 Too Many Requests"
+  },
+  "continuation_rule": [
+    "do not retry immediately",
+    "wait before next upload session",
+    "use one new temporary token only after approval",
+    "upload remaining packages one at a time",
+    "verify version-specific JSON first",
+    "if project-level JSON lags, retry/backoff before deciding failure",
+    "stop on first true failure"
+  ],
+  "token_hygiene": {
+    "prior_token_must_be_revoked_or_deleted": true,
+    "token_handling_now": false,
+    "token_stored": false,
+    "token_in_reports": false,
+    "token_written_to_file": false,
+    "token_committed": false,
+    "token_printed_in_prior_traceback": true
+  },
+  "upload_allowed_now": false,
+  "token_handling_now": false,
+  "publish_performed_now": false,
+  "twine_upload_performed_now": false,
+  "pypi_upload_performed_now": false
+}

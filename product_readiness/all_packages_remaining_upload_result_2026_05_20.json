@@ -1,0 +1,66 @@
+{
+  "artifact_filenames": {
+    "claim-boundary": [
+      "claim_boundary-0.0.0.dev0-py3-none-any.whl",
+      "claim_boundary-0.0.0.dev0.tar.gz"
+    ],
+    "eml-records": [
+      "eml_records-0.0.0.dev0-py3-none-any.whl",
+      "eml_records-0.0.0.dev0.tar.gz"
+    ],
+    "review-branch-packet": [
+      "review_branch_packet-0.0.0.dev0-py3-none-any.whl",
+      "review_branch_packet-0.0.0.dev0.tar.gz"
+    ]
+  },
+  "excluded_packages": [
+    "zero-mathlib-checker",
+    "machlib"
+  ],
+  "failed_package": "machlib-workbench",
+  "failed_packages": [
+    "machlib-workbench"
+  ],
+  "failure_stage": "twine_upload_http_429_too_many_requests",
+  "failure_summary": "PyPI returned HTTP 429 during machlib-workbench upload. The batch stopped immediately before eml-harness and hybrid-trace-eml.",
+  "package_publish_performed": true,
+  "pypi_upload_performed": true,
+  "pypi_verification_result": "PARTIAL_OR_FAILED",
+  "result_id": "all_packages_remaining_upload_result_2026_05_20",
+  "skipped_packages": [
+    "eml-harness",
+    "hybrid-trace-eml"
+  ],
+  "token_committed": false,
+  "token_printed": true,
+  "token_printed_note": "The token value appeared in a local subprocess traceback after the failed twine command; it was not written to report files or committed.",
+  "token_unset_after_upload": true,
+  "token_written_to_file": false,
+  "twine_upload_performed": true,
+  "upload_order": [
+    {
+      "package_name": "claim-boundary",
+      "upload_order": 1
+    },
+    {
+      "package_name": "eml-records",
+      "upload_order": 2
+    },
+    {
+      "package_name": "review-branch-packet",
+      "upload_order": 3
+    }
+  ],
+  "upload_session_status": "PARTIAL_FAILED",
+  "uploaded_packages": [
+    "claim-boundary",
+    "eml-records",
+    "review-branch-packet"
+  ],
+  "user_revoke_token_required": true,
+  "versions_uploaded": {
+    "claim-boundary": "0.0.0.dev0",
+    "eml-records": "0.0.0.dev0",
+    "review-branch-packet": "0.0.0.dev0"
+  }
+}
