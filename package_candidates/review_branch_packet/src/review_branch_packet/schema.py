@@ -8,9 +8,14 @@ BLOCKED_ACTIONS = (
     "git fetch",
     "git checkout",
     "git merge",
+    "git rebase",
+    "git reset",
+    "git add",
+    "git commit",
     "gh pr create",
+    "npm run deploy",
     "deploy",
-    "twine",
+    "twine upload",
     "package publish",
     "PyPI upload",
     "Hugging Face upload",
@@ -21,8 +26,8 @@ READ_ONLY_GIT_COMMANDS = (
     ("git", "status", "--short"),
     ("git", "branch", "--show-current"),
     ("git", "remote", "-v"),
-    ("git", "log", "--oneline"),
-    ("git", "ls-remote", "--heads"),
+    ("git", "log", "--oneline", "<limit>"),
+    ("git", "ls-remote", "--heads", "<remote>", "<target>"),
 )
 
 DEFAULT_NO_GO_CONFIRMATIONS = {

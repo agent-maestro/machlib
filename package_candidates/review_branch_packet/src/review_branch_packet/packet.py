@@ -21,6 +21,7 @@ class ReviewBranchPacket:
     review_branch_present: bool
     review_branch_sha: str
     local_head_sha: str
+    local_head_short: str
     latest_commits: list[str]
     working_tree_clean: bool
     dirty_files: list[str]
@@ -56,6 +57,7 @@ def build_packet_from_parts(
     generated_at: str | None = None,
     push_performed: bool = False,
 ) -> ReviewBranchPacket:
+    local_head_short = local_head_sha[:7]
     return ReviewBranchPacket(
         packet_id=f"review_branch_packet_{target_review_branch.replace('/', '_')}",
         target_review_branch=target_review_branch,
@@ -68,6 +70,7 @@ def build_packet_from_parts(
         review_branch_present=review_branch_present,
         review_branch_sha=review_branch_sha,
         local_head_sha=local_head_sha,
+        local_head_short=local_head_short,
         latest_commits=latest_commits,
         working_tree_clean=len(dirty_files) == 0,
         dirty_files=dirty_files,
@@ -91,6 +94,7 @@ def build_packet_from_inspection(
         review_branch_present=bool(inspection["review_branch_present"]),
         review_branch_sha=str(inspection["review_branch_sha"]),
         local_head_sha=str(inspection["local_head_sha"]),
+        # local_head_short is derived to keep the builder tolerant of older inspection dicts.
         latest_commits=list(inspection["latest_commits"]),
         dirty_files=list(inspection["dirty_files"]),
         validation_summaries=validation_summaries,

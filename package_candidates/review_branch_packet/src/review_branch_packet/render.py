@@ -7,11 +7,11 @@ import json
 from .packet import ReviewBranchPacket
 
 
-def render_json(packet: ReviewBranchPacket) -> str:
+def render_json_packet(packet: ReviewBranchPacket) -> str:
     return json.dumps(packet.to_dict(), indent=2, sort_keys=True) + "\n"
 
 
-def render_markdown(packet: ReviewBranchPacket) -> str:
+def render_markdown_packet(packet: ReviewBranchPacket) -> str:
     commits = "\n".join(f"- `{line}`" for line in packet.latest_commits) or "- none"
     dirty = "\n".join(f"- `{line}`" for line in packet.dirty_files) or "- clean"
     validations = "\n".join(
@@ -29,6 +29,7 @@ def render_markdown(packet: ReviewBranchPacket) -> str:
 ## Branch Summary
 - Current branch: `{packet.current_branch}`
 - Local HEAD: `{packet.local_head_sha}`
+- Local HEAD short: `{packet.local_head_short}`
 - Working tree clean: `{packet.working_tree_clean}`
 
 ## Remote Review Branch Summary
@@ -41,6 +42,7 @@ def render_markdown(packet: ReviewBranchPacket) -> str:
 {commits}
 
 ## Working Tree Status
+- Clean: `{packet.working_tree_clean}`
 {dirty}
 
 ## Validation Summary
@@ -49,9 +51,16 @@ def render_markdown(packet: ReviewBranchPacket) -> str:
 ## No-Go Confirmations
 {confirmations}
 
+## Package / Publish / PyPI Boundary
+- No package publish performed.
+- No PyPI upload performed.
+- No PyPI token handling performed.
+- No release artifact creation performed.
+- This packet is not a push, not a PR, not a merge, not a deploy, and not a publish.
+
 ## Human Approval Requirements
 - Explicit approval is required before any push.
-- PR creation, merge, deploy, upload, and package publish actions remain blocked.
+- No push, no GitHub PR, no merge, no deploy, no upload, and no package publish actions are performed.
 
 ## Recommended Next Actions
 {actions}
@@ -59,3 +68,11 @@ def render_markdown(packet: ReviewBranchPacket) -> str:
 ## Blocked Actions
 {blocked}
 """
+
+
+def render_json(packet: ReviewBranchPacket) -> str:
+    return render_json_packet(packet)
+
+
+def render_markdown(packet: ReviewBranchPacket) -> str:
+    return render_markdown_packet(packet)

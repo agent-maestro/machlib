@@ -35,6 +35,8 @@ def install_fake_subprocess(monkeypatch, calls):
             return fake_completed("origin\thttps://example.invalid/repo.git (push)\n")
         if tuple(cmd[1:4]) == ("log", "--oneline", "-10"):
             return fake_completed("cafebabe demo commit\n")
+        if tuple(cmd[1:4]) == ("log", "--oneline", "-20"):
+            return fake_completed("cafebabe demo commit\n")
         if tuple(cmd[1:3]) == ("ls-remote", "--heads"):
             return fake_completed("deadbeef\trefs/heads/review/demo\n")
         raise AssertionError(cmd)
@@ -52,6 +54,8 @@ def test_cli_json_output_shape(monkeypatch, capsys):
     assert data["review_branch_present"] is True
     assert data["push_performed"] is False
     assert data["github_pr_created"] is False
+    assert data["read_only"] is True
+    assert data["local_head_short"] == "cafebab"
 
 
 def test_cli_writes_json_and_markdown(monkeypatch, tmp_path, capsys):
@@ -66,6 +70,26 @@ def test_cli_writes_json_and_markdown(monkeypatch, tmp_path, capsys):
     assert capsys.readouterr().out == ""
 
 
+def test_cli_supports_log_limit_and_validation_placeholder(monkeypatch, capsys):
+    calls = []
+    install_fake_subprocess(monkeypatch, calls)
+    rc = main(
+        [
+            "inspect",
+            "--target",
+            "review/demo",
+            "--json",
+            "--log-limit",
+            "20",
+            "--include-validation-placeholder",
+        ]
+    )
+    assert rc == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["validation_summaries"] == [{"name": "validation placeholder", "status": "NOT_RUN"}]
+    assert ("git", "log", "--oneline", "-20") in calls
+
+
 def test_cli_never_invokes_forbidden_commands(monkeypatch, capsys):
     calls = []
     install_fake_subprocess(monkeypatch, calls)
@@ -74,3 +98,11 @@ def test_cli_never_invokes_forbidden_commands(monkeypatch, capsys):
     assert not any("git push" in item for item in rendered)
     assert not any("git merge" in item for item in rendered)
     assert not any("gh pr create" in item for item in rendered)
+
+
+def test_package_does_not_require_mathlib():
+    root = ROOT / "src"
+    text = "\n".join(path.read_text(encoding="utf-8") for path in root.rglob("*.py"))
+    assert "import Mathlib" not in text
+    assert "from Mathlib" not in text
+    assert "Mathlib." not in text

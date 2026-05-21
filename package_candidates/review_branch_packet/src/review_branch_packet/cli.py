@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .git_inspect import inspect_repo
 from .packet import build_packet_from_inspection
-from .render import render_json, render_markdown
+from .render import render_json_packet, render_markdown_packet
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -21,6 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     inspect.add_argument("--json", action="store_true", dest="as_json")
     inspect.add_argument("--out", type=Path)
     inspect.add_argument("--markdown-out", type=Path)
+    inspect.add_argument("--include-validation-placeholder", action="store_true")
     args = parser.parse_args(argv)
 
     inspection = inspect_repo(
@@ -29,10 +30,13 @@ def main(argv: list[str] | None = None) -> int:
         remote_name=args.remote,
         log_limit=args.log_limit,
     )
-    packet = build_packet_from_inspection(inspection)
+    validation_summaries = None
+    if args.include_validation_placeholder:
+        validation_summaries = [{"name": "validation placeholder", "status": "NOT_RUN"}]
+    packet = build_packet_from_inspection(inspection, validation_summaries=validation_summaries)
 
-    json_text = render_json(packet)
-    markdown_text = render_markdown(packet)
+    json_text = render_json_packet(packet)
+    markdown_text = render_markdown_packet(packet)
 
     if args.out:
         args.out.write_text(json_text, encoding="utf-8")
