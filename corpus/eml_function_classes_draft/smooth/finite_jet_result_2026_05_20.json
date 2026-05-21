@@ -1,0 +1,180 @@
+{
+  "date": "2026-05-20",
+  "execution_status": "PASS",
+  "failed": 0,
+  "function_class": "SMOOTH_FINITE_JET",
+  "guardrails": {
+    "no_c_infinity_proof_claim": true,
+    "no_forge_compiler_change": true,
+    "no_hardware": true,
+    "no_hf_upload": true,
+    "no_mathlib_dependency": true,
+    "no_package_publish": true,
+    "no_petal_upload": true,
+    "no_public_theorem_claim": true,
+    "no_smooth_manifold_claim": true
+  },
+  "local_only": true,
+  "passed": 4,
+  "record_count": 4,
+  "results": [
+    {
+      "certificate_type": "boundary_derivative_tower_stub",
+      "classification": "BUMP_FUNCTION_BOUNDARY_STUB",
+      "detail": {
+        "boundary_conditions": [
+          "x=0"
+        ],
+        "checks": {
+          "boundary_at_zero_present": true,
+          "no_c_infinity_proof_claim": true,
+          "proof_layer_needed": true
+        },
+        "fixture": "bump_function_boundary_stub",
+        "limitations": [
+          "stub only",
+          "no full derivative proof",
+          "no C-infinity proof"
+        ],
+        "passed": true,
+        "status": "PASS_STUB_RECOGNIZED"
+      },
+      "failures": [],
+      "limitations": [
+        "not proved",
+        "no C-infinity proof claim",
+        "no non-analytic theorem claim",
+        "no smooth-manifold formalization claim"
+      ],
+      "not_claimed": [
+        "not public proof claim",
+        "not complete smooth analysis",
+        "not smooth-manifold formalization"
+      ],
+      "passed": true,
+      "record_id": "smooth_bump_function_boundary_stub_v0",
+      "status": "PASS_STUB_RECOGNIZED",
+      "title": "Bump-function boundary stub",
+      "warning": null
+    },
+    {
+      "certificate_type": "derivative_tower_placeholder",
+      "classification": "SYMBOLIC_DERIVATIVE_TOWER",
+      "detail": {
+        "derivative_order": 3,
+        "derivatives": {
+          "D0": "exp_symbolic",
+          "D1": "exp_symbolic",
+          "D2": "exp_symbolic",
+          "D3": "exp_symbolic"
+        },
+        "fixture": "exp_symbolic_derivative_tower",
+        "limitations": [
+          "finite derivative tower only",
+          "no analytic proof",
+          "no C-infinity proof"
+        ],
+        "passed": true,
+        "status": "PASS_DERIVATIVE_TOWER_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "no complete analytic proof",
+        "no C-infinity theorem claim",
+        "no C-infinity proof claim",
+        "no smooth-manifold formalization claim"
+      ],
+      "not_claimed": [
+        "not smoothness theorem",
+        "not real-analysis formalization",
+        "not smooth-manifold formalization"
+      ],
+      "passed": true,
+      "record_id": "smooth_exp_symbolic_derivative_tower_v0",
+      "status": "PASS_DERIVATIVE_TOWER_CHECK",
+      "title": "Exponential symbolic derivative tower placeholder",
+      "warning": null
+    },
+    {
+      "certificate_type": "piecewise_boundary_check_required",
+      "classification": "PIECEWISE_BOUNDARY_WARNING",
+      "detail": {
+        "boundary": "0",
+        "checks": {
+          "abs_like_derivative_mismatch_flagged": true,
+          "boundary_check_required": true,
+          "global_smoothness_not_automatic": true,
+          "piecewise_parts_locally_smooth_placeholder": true
+        },
+        "fixture": "abs_like_piecewise_warning",
+        "left_derivative_at_boundary": "-1",
+        "limitations": [
+          "finite side-jet warning only",
+          "does not prove global smoothness"
+        ],
+        "passed": true,
+        "piecewise_object": "f(x)=x for x>=0, -x for x<0",
+        "right_derivative_at_boundary": "1",
+        "status": "PASS_BOUNDARY_WARNING"
+      },
+      "failures": [],
+      "limitations": [
+        "piecewise smooth parts do not imply global smoothness",
+        "no theorem claim",
+        "no C-infinity proof claim",
+        "no smooth-manifold formalization claim"
+      ],
+      "not_claimed": [
+        "not global smoothness result",
+        "not public proof claim",
+        "not smooth-manifold formalization"
+      ],
+      "passed": true,
+      "record_id": "smooth_piecewise_warning_v0",
+      "status": "PASS_BOUNDARY_WARNING",
+      "title": "Piecewise smoothness boundary warning",
+      "warning": null
+    },
+    {
+      "certificate_type": "finite_derivative_jet",
+      "classification": "POLYNOMIAL_FINITE_JET",
+      "detail": {
+        "derivative_order": 4,
+        "derivatives": {
+          "D0": "x^3 + 2x + 1",
+          "D1": "3x^2 + 2",
+          "D2": "6x",
+          "D3": "6",
+          "D4": "0"
+        },
+        "fixture": "sample_polynomial_x3_plus_2x_plus_1",
+        "limitations": [
+          "sample polynomial only",
+          "no theorem claim for all polynomials"
+        ],
+        "passed": true,
+        "status": "PASS_FINITE_JET_CHECK"
+      },
+      "failures": [],
+      "limitations": [
+        "no theorem claim",
+        "finite-jet record only",
+        "no C-infinity proof claim",
+        "no smooth-manifold formalization claim"
+      ],
+      "not_claimed": [
+        "not full smooth-function library",
+        "not public proof claim",
+        "not smooth-manifold formalization"
+      ],
+      "passed": true,
+      "record_id": "smooth_polynomial_finite_jet_v0",
+      "status": "PASS_FINITE_JET_CHECK",
+      "title": "Polynomial finite-jet smoothness placeholder",
+      "warning": null
+    }
+  ],
+  "tier": "OBSERVATION",
+  "warned": 0,
+  "zero_mathlib_status": "PASS"
+}

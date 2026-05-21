@@ -1,0 +1,341 @@
+{
+  "date": "2026-05-20",
+  "finite_jet_specs": [
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "finite_jet",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "finite-order observation only",
+        "does not prove C-infinity"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach smooth finite-jet record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "derivative_order",
+        "finite_jet_or_derivative_table",
+        "local_domain_or_guard"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_smooth_finite_jet_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "finite jet payload present",
+        "local guard present",
+        "limitations present"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "derivative_table",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "sample finite table only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach derivative table record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "derivatives",
+        "checked_orders"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_derivative_table_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "derivative table is finite",
+        "orders are explicit"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "derivative_tower_placeholder",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "symbolic derivative placeholder"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach derivative tower placeholder",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "symbolic_label",
+        "checked_orders",
+        "derivative_payload"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_derivative_tower_placeholder_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "bounded tower checked",
+        "no infinite proof promotion"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "boundary_jet_check",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "does not establish global smoothness"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach boundary jet check record",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "boundary_conditions",
+        "left_right_jet_status"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_boundary_jet_check_record_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "boundary conditions are explicit",
+        "finite side-jets are compared"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "not_proved_boundary",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "records absence of C-infinity proof"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach C-infinity boundary",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "limitations",
+        "not_claimed"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_c_infinity_not_proved_boundary_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "C-infinity boundary stated",
+        "no proof status"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "piecewise_boundary_warning",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "piecewise-local smoothness is not global smoothness"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach piecewise boundary warning",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "piecewise_parts",
+        "boundary_checks",
+        "warning"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_piecewise_boundary_warning_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "piecewise warning is explicit",
+        "boundary mismatch can be flagged"
+      ],
+      "zero_mathlib_dependency": true
+    },
+    {
+      "allowed_statuses": [
+        "DRAFT_INTERNAL",
+        "PASS_LOCAL_SHAPE_CHECK",
+        "PASS_FINITE_TRUNCATION_CHECK"
+      ],
+      "certificate_kind": "validation_trace",
+      "forbidden_statuses": [
+        "PUBLIC_READY",
+        "UPLOAD_READY",
+        "RELEASE_READY",
+        "THEOREM_PROVED",
+        "OPEN_PROBLEM_SOLVED",
+        "CERTIFIED",
+        "CAPCARD_CERTIFIED",
+        "PETAL_VERIFIED"
+      ],
+      "forge_compiler_change_required": false,
+      "hardware_required": false,
+      "limitations": [
+        "trace is internal observation only"
+      ],
+      "mathlib_dependency": false,
+      "name": "Mach smooth validation trace",
+      "public_ready": false,
+      "release_ready": false,
+      "required_fields": [
+        "record_id",
+        "checks",
+        "status",
+        "limitations"
+      ],
+      "required_not_claimed": [
+        "not a public theorem/proof/open-problem result",
+        "not a C-infinity proof",
+        "not a smooth-manifold formalization",
+        "not distribution theory",
+        "not a complete smooth-functions formalization"
+      ],
+      "spec_id": "mach_smooth_validation_trace_v0",
+      "status": "DRAFT_INTERNAL",
+      "upload_allowed": false,
+      "validation_checks": [
+        "records local bounded checks",
+        "records guardrails"
+      ],
+      "zero_mathlib_dependency": true
+    }
+  ],
+  "function_class": "SMOOTH_FINITE_JET",
+  "local_only": true,
+  "spec_count": 7,
+  "status": "DRAFT_INTERNAL",
+  "tier": "OBSERVATION"
+}
