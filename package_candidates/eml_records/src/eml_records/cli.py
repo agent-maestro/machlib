@@ -28,9 +28,15 @@ def main(argv: list[str] | None = None) -> int:
     validate.add_argument("--json", action="store_true", dest="as_json")
     validate.add_argument("--family", choices=sorted(FAMILY_ALIASES))
     validate.add_argument("--strict", action="store_true")
+    validate.add_argument("--include", action="append", default=[])
+    validate.add_argument("--exclude-dir", action="append", default=[])
     args = parser.parse_args(argv)
 
-    records, load_failures, scanned_file_count = load_records(args.path)
+    records, load_failures, scanned_file_count = load_records(
+        args.path,
+        include=tuple(args.include) or None,
+        exclude_dir=tuple(args.exclude_dir) or None,
+    )
     result = validate_records(records, strict=args.strict)
     failures = [*load_failures, *result.failures]
     family_counts = dict(result.family_counts)

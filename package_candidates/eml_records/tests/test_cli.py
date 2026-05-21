@@ -57,3 +57,32 @@ def test_cli_family_filter_fails_when_missing(tmp_path) -> None:
     path.write_text(json.dumps(base_record()), encoding="utf-8")
     code = main(["validate", str(path), "--family", "function-class", "--strict"])
     assert code == 1
+
+
+def test_cli_stochastic_family_filter(tmp_path) -> None:
+    from test_validators import stochastic_record
+
+    path = tmp_path / "stochastic.json"
+    path.write_text(json.dumps(stochastic_record()), encoding="utf-8")
+    code = main(["validate", str(path), "--family", "stochastic-hybrid", "--strict"])
+    assert code == 0
+
+
+def test_cli_include_filter(tmp_path, capsys) -> None:
+    (tmp_path / "skip.json").write_text(json.dumps(base_record()), encoding="utf-8")
+    (tmp_path / "keep.eml").write_text(json.dumps(function_record()), encoding="utf-8")
+    code = main(["validate", str(tmp_path), "--include", "*.eml", "--json", "--strict"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["scanned_file_count"] == 1
+    assert payload["family_counts"]["FUNCTION_CLASS"] == 1
+
+
+def test_cli_exclude_dir(tmp_path, capsys) -> None:
+    (tmp_path / "node_modules").mkdir()
+    (tmp_path / "node_modules" / "bad.json").write_text(json.dumps({**base_record(), "public_ready": True}), encoding="utf-8")
+    (tmp_path / "good.json").write_text(json.dumps(base_record()), encoding="utf-8")
+    code = main(["validate", str(tmp_path), "--exclude-dir", "node_modules", "--json", "--strict"])
+    payload = json.loads(capsys.readouterr().out)
+    assert code == 0
+    assert payload["scanned_file_count"] == 1
