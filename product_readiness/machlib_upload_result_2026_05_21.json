@@ -1,0 +1,26 @@
+{
+  "failed_package": "machlib",
+  "failure": "PyPI returned HTTP 429 Too Many Requests during Twine upload; public PyPI JSON still returned HTTP_404 for machlib and machlib/0.0.1 after the failed session.",
+  "machlib_public_json_status_after_failure": "HTTP_404",
+  "no_other_package_uploaded": true,
+  "package_name": "machlib",
+  "pypi_token_value_recorded": false,
+  "pypi_verification_status": "NOT_PUBLISHED_PUBLIC_JSON_HTTP_404",
+  "skipped_packages": [
+    "machlib-workbench",
+    "eml-harness",
+    "hybrid-trace-eml",
+    "zero-mathlib-checker",
+    "claim-boundary",
+    "eml-records",
+    "review-branch-packet"
+  ],
+  "token_committed": false,
+  "token_printed": false,
+  "token_unset_after_upload": true,
+  "token_written_to_file": false,
+  "uploaded": false,
+  "uploaded_packages": [],
+  "user_revoke_token_required": true,
+  "version": "0.0.1"
+}

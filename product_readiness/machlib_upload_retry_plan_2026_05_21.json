@@ -1,0 +1,13 @@
+{
+  "next_approval_phrase": "Approve one-token PyPI retry upload for machlib 0.0.1 only. I will provide a new temporary token now.",
+  "package_name": "machlib",
+  "prior_failure": "PYPI_HTTP_429_TOO_MANY_REQUESTS",
+  "publish_performed": false,
+  "retry_allowed_now": false,
+  "retry_requires_cooldown": true,
+  "retry_requires_explicit_human_approval": true,
+  "retry_requires_new_token": true,
+  "token_handling_now": false,
+  "upload_allowed_now": false,
+  "version": "0.0.1"
+}
