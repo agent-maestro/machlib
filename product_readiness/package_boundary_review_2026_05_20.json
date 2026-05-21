@@ -1,6 +1,11 @@
 {
   "date": "2026-05-20",
   "future_pypi_publication_requires_separate_explicit_approval": true,
+  "hardened_local_draft_candidates": [
+    "zero-mathlib-checker",
+    "eml-records",
+    "review-branch-packet"
+  ],
   "local_draft_candidates": [
     "zero-mathlib-checker",
     "claim-boundary",

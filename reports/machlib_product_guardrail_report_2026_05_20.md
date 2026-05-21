@@ -1,5 +1,7 @@
 # MachLib Product Guardrail Report
 
+Context: package matrix refresh after review-branch-packet hardening. All package candidates remain local-only.
+
 | Guardrail | Status |
 | --- | --- |
 | no package publish | PASS |

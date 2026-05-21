@@ -1,6 +1,7 @@
 {
   "date": "2026-05-20",
   "local_only": true,
+  "package_candidate_context": "review-branch-packet hardened local draft; product/revenue ranking unchanged",
   "products": [
     {
       "current_assets": [

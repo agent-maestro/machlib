@@ -1,8 +1,8 @@
 # MachLib Product Readiness Review
 
-Primary recommendation: `M050_REVIEW_BRANCH_PACKET_HARDENING_NO_PUBLISH`.
+Primary recommendation: `M052_PACKAGE_PUBLISH_READINESS_REVIEW_NO_PUBLISH`.
 
-Alternates: `M050A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH`, `M050B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY`.
+Alternates: `M052A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH`, `M052B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY`.
 
 | Rank | Product | Revenue path | Release ready | Upload ready |
 | ---: | --- | --- | --- | --- |

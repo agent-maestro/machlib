@@ -2,9 +2,9 @@
   "date": "2026-05-20",
   "decisions": [
     {
-      "category": "package_candidate_hardening",
+      "category": "package_publish_readiness_review",
       "decision_id": "D001",
-      "next_safe_local_step": "hardening pass and Evidence Workbench integration plan",
+      "next_safe_local_step": "local publish-readiness review only; no publish",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -13,11 +13,11 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M050 review-branch-packet hardening, no publish",
+      "option": "M052 package publish readiness review, no publish",
       "readiness": "PRIMARY",
       "recommended_rank": 1,
-      "risk": "must preserve no push, no PR, no merge, and no deploy boundaries",
-      "upside": "turns the new read-only review packet draft into a stronger reusable local workflow"
+      "risk": "must not become a PyPI upload, package-name availability check, or release-artifact task",
+      "upside": "reviews hardened local package candidates without publishing or handling PyPI tokens"
     },
     {
       "category": "package_candidate_hardening",
@@ -31,7 +31,7 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M050A claim-boundary hardening, no publish",
+      "option": "M052A claim-boundary hardening, no publish",
       "readiness": "ALTERNATE",
       "recommended_rank": 2,
       "risk": "must avoid turning policy fixtures into public claims",
@@ -49,7 +49,7 @@
         "no upload-ready claim",
         "no public theorem/proof/open-problem claim"
       ],
-      "option": "M050B Command Center static snapshot review, no deploy",
+      "option": "M052B Command Center static snapshot review, no deploy",
       "readiness": "ALTERNATE",
       "recommended_rank": 3,
       "risk": "must not modify original command-center repo or deploy",

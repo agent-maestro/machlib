@@ -1,6 +1,6 @@
 # MachLib Product Revenue Path Review
 
-Revenue ranking remains unchanged.
+Revenue ranking remains unchanged after review-branch-packet hardening.
 
 | Rank | Product | Revenue path | Release ready | Upload ready |
 | ---: | --- | --- | --- | --- |

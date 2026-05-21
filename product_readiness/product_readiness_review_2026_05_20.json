@@ -134,7 +134,7 @@
     },
     {
       "candidate_name": "review-branch-packet",
-      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
       "dependencies": [
         "Python standard library",
         "pytest for local tests only"
@@ -143,7 +143,7 @@
         "needs standalone license/readme review before any release"
       ],
       "minimum_viable_scope": "Read-only private review branch packet generator with JSON and Markdown outputs.",
-      "next_safe_local_step": "hardening pass and integration with Evidence Workbench",
+      "next_safe_local_step": "integration with Evidence Workbench / API freeze / license review",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -164,12 +164,12 @@
       ],
       "pypi_token_required_now": false,
       "pypi_upload_performed": false,
-      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_CREATED",
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
         "MachLib local tooling and reports"
       ],
-      "test_count": 16,
+      "test_count": 41,
       "token_or_publish_risks": [
         "PyPI token handling not allowed in this task",
         "package publish not allowed in this task",
@@ -552,10 +552,10 @@
   "public_theorem_claim_performed": false,
   "pypi_token_handling_performed": false,
   "recommended_alternates": [
-    "M050A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH",
-    "M050B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY"
+    "M052A_CLAIM_BOUNDARY_HARDENING_NO_PUBLISH",
+    "M052B_COMMAND_CENTER_STATIC_SNAPSHOT_REVIEW_NO_DEPLOY"
   ],
-  "recommended_primary_next_task": "M050_REVIEW_BRANCH_PACKET_HARDENING_NO_PUBLISH",
+  "recommended_primary_next_task": "M052_PACKAGE_PUBLISH_READINESS_REVIEW_NO_PUBLISH",
   "release_artifacts_created": false,
   "tier": "OBSERVATION"
 }

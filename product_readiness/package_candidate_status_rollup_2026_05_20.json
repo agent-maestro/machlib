@@ -134,7 +134,7 @@
     },
     {
       "candidate_name": "review-branch-packet",
-      "candidate_status": "LOCAL_DRAFT_PACKAGE_CREATED",
+      "candidate_status": "LOCAL_DRAFT_PACKAGE_HARDENED",
       "dependencies": [
         "Python standard library",
         "pytest for local tests only"
@@ -143,7 +143,7 @@
         "needs standalone license/readme review before any release"
       ],
       "minimum_viable_scope": "Read-only private review branch packet generator with JSON and Markdown outputs.",
-      "next_safe_local_step": "hardening pass and integration with Evidence Workbench",
+      "next_safe_local_step": "integration with Evidence Workbench / API freeze / license review",
       "no_go_boundaries": [
         "no package publish",
         "no PyPI token handling",
@@ -164,12 +164,12 @@
       ],
       "pypi_token_required_now": false,
       "pypi_upload_performed": false,
-      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_CREATED",
+      "recommended_readiness": "DRAFT_PACKAGE_CANDIDATE_HARDENED_LOCAL_DRAFT",
       "release_artifacts_created": false,
       "source_tools_to_extract_from": [
         "MachLib local tooling and reports"
       ],
-      "test_count": 16,
+      "test_count": 41,
       "token_or_publish_risks": [
         "PyPI token handling not allowed in this task",
         "package publish not allowed in this task",
@@ -365,7 +365,7 @@
     "no_release_artifacts": "PASS",
     "no_token_like_secret_introduced": "PASS"
   },
-  "hardened_local_draft_package_count": 2,
+  "hardened_local_draft_package_count": 3,
   "local_draft_package_count": 4,
   "local_only": true,
   "package_candidate_count": 8,
