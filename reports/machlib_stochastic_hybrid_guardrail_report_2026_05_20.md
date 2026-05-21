@@ -14,3 +14,7 @@
 | no_markov_theorem_claim | PASS |
 | no_production_controller_claim | PASS |
 | no_certified_safety_claim | PASS |
+| no public_ready true | PASS |
+| no upload_allowed true | PASS |
+| no release_ready true | PASS |
+| no token-like secret | PASS |

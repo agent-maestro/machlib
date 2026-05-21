@@ -1,7 +1,9 @@
 {
   "date": "2026-05-20",
   "efrog_status": "PASS",
+  "evidence_script_status": "PASS",
   "failed": 0,
+  "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
   "forge_status": "WARN",
   "guardrails": {
     "no_certified_safety_claim": true,
@@ -19,70 +21,8 @@
   },
   "local_only": true,
   "passed": 0,
-  "process_class": "STOCHASTIC_HYBRID_TRACE",
+  "process_frontier": "STOCHASTIC_HYBRID_TRACE",
   "record_count": 12,
-  "results": [
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "diffusion_trace_schema_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "stochastic_increment_record_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "drift_diffusion_signature_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "brownian_noise_placeholder_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "euler_maruyama_step_placeholder_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "jump_counting_process_record_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "transition_rate_record_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "discrete_state_trace_record_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "hybrid_continuous_discrete_trace_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "transition_count_matrix_record_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "stochastic_no_overclaim_boundary_v0",
-      "status": "WARN"
-    },
-    {
-      "forge_code": "WARN_EXPECTED_DRAFT_SCHEMA_LIMIT",
-      "record_id": "production_control_no_go_boundary_v0",
-      "status": "WARN"
-    }
-  ],
   "roundtrip_status": "WARN",
   "tier": "OBSERVATION",
   "tmp_root": "/tmp/machlib_stochastic_hybrid_trace_2026_05_20",

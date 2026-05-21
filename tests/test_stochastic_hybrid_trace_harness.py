@@ -16,7 +16,12 @@ def load_harness():
 
 def test_transition_counts_fixture():
     harness = load_harness()
-    assert harness.transition_counts([1, 2, 3, 1, 2]) == {"1->2": 2, "2->3": 1, "3->1": 1}
+    assert harness.transition_counts([1, 2, 3, 1, 2]) == {
+        "1->2": 2,
+        "2->3": 1,
+        "3->1": 1,
+        "3->2": 0,
+    }
 
 
 def test_one_hot_events_fixture():

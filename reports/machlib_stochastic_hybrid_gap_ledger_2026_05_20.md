@@ -1,6 +1,3 @@
 # MachLib Stochastic Hybrid Gap Ledger - 2026-05-20
 
-- Probability-law proof layer design.
-- Forge schema support for stochastic/hybrid trace records.
-- Command Center display review.
-- Function-class relation expansion.
+See `corpus/eml_stochastic_hybrid_draft/stochastic_hybrid_gap_ledger_2026_05_20.json` for the structured gap ledger.

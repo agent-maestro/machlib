@@ -5,19 +5,20 @@
       "card_id": "machlib_stochastic_hybrid_status_2026_05_20",
       "execution_status": "PASS",
       "not_claimed": [
+        "not stochastic calculus formalization",
         "not an SDE theorem",
-        "not a Markov process theorem",
-        "not production control evidence"
+        "not a Markov theorem",
+        "not production controller evidence",
+        "not certified safety"
       ],
       "record_count": 12,
       "roundtrip_status": "WARN",
       "safe_to_display_internally": true,
       "safe_to_publish_publicly": false,
-      "safe_to_push_now": false,
       "status": "DRAFT_INTERNAL_VALIDATED",
       "surface": "command.monogate.dev",
       "tier": "OBSERVATION",
-      "title": "MachLib Stochastic/Hybrid Frontier",
+      "title": "MachLib Stochastic / Hybrid Frontier",
       "visibility": "internal",
       "zero_mathlib_status": "PASS"
     }

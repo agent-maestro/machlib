@@ -2,6 +2,8 @@
 
 - eFrog status: PASS
 - Forge status: WARN
+- Forge code: WARN_EXPECTED_DRAFT_SCHEMA_LIMIT
+- Evidence script status: PASS
 - Roundtrip status: WARN
 - Hard failures: 0
 

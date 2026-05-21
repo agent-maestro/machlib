@@ -43,4 +43,4 @@ def test_records_are_internal_and_guarded():
         text = " ".join(record["not_claimed"]).lower()
         assert "not stochastic calculus" in text
         assert "not an sde theorem" in text
-        assert "not a markov process theorem" in text
+        assert "not a markov theorem" in text

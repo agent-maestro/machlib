@@ -1,14 +1,23 @@
 {
   "date": "2026-05-20",
+  "local_only": true,
   "process_classes": [
     "BOUNDARY_NO_OVERCLAIM",
     "DIFFUSION_TRACE",
+    "DISCRETE_STATE_TRACE",
+    "DRIFT_DIFFUSION_SIGNATURE",
     "HYBRID_TRACE",
     "JUMP_COUNTING_PROCESS",
+    "NOISE_PLACEHOLDER",
+    "PRODUCTION_CONTROL_NO_GO",
     "STOCHASTIC_INCREMENT",
+    "TRANSITION_COUNT_MATRIX",
     "TRANSITION_RATE_RECORD"
   ],
+  "public_ready": false,
   "record_count": 12,
+  "release_ready": false,
   "status": "DRAFT_INTERNAL",
-  "tier": "OBSERVATION"
+  "tier": "OBSERVATION",
+  "upload_allowed": false
 }

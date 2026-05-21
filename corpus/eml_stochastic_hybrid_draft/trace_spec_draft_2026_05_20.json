@@ -1,27 +1,33 @@
 {
   "date": "2026-05-20",
+  "local_only": true,
   "mathlib_dependency": false,
   "public_ready": false,
   "release_ready": false,
   "tier": "OBSERVATION",
   "trace_specs": [
     {
-      "spec_id": "mach_diffusion_trace_record_v0",
+      "spec_id": "mach_diffusion_increment_trace_v0",
       "status": "DRAFT_INTERNAL",
       "zero_mathlib_dependency": true
     },
     {
-      "spec_id": "mach_jump_counting_trace_record_v0",
+      "spec_id": "mach_jump_count_indicator_trace_v0",
       "status": "DRAFT_INTERNAL",
       "zero_mathlib_dependency": true
     },
     {
-      "spec_id": "mach_hybrid_trace_record_v0",
+      "spec_id": "mach_transition_count_matrix_v0",
       "status": "DRAFT_INTERNAL",
       "zero_mathlib_dependency": true
     },
     {
-      "spec_id": "mach_no_overclaim_boundary_v0",
+      "spec_id": "mach_hybrid_trace_alignment_v0",
+      "status": "DRAFT_INTERNAL",
+      "zero_mathlib_dependency": true
+    },
+    {
+      "spec_id": "mach_stochastic_no_go_boundary_v0",
       "status": "DRAFT_INTERNAL",
       "zero_mathlib_dependency": true
     }

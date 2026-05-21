@@ -1,17 +1,267 @@
 {
   "date": "2026-05-20",
   "gaps": [
-    "Forge draft schema support",
-    "probability-law design",
-    "relation to function-class frontier",
-    "Command Center display review"
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Harden finite trace schema for diffusion-like paths.",
+      "gap_id": "stochastic_trace_schema_hardening",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "DIFFUSION_TRACE",
+      "recommended_priority": 1,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Clarify dW placeholder semantics without Brownian theorem claims.",
+      "gap_id": "brownian_noise_placeholder_semantics",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "NOISE_PLACEHOLDER",
+      "recommended_priority": 2,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Refine F, dt, sigma, dW field contracts.",
+      "gap_id": "drift_diffusion_signature_schema",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "DRIFT_DIFFUSION_SIGNATURE",
+      "recommended_priority": 3,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Keep Euler-style step as bounded fixture only.",
+      "gap_id": "euler_style_step_schema",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "DIFFUSION_TRACE",
+      "recommended_priority": 4,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Design finite jump trace record grammar.",
+      "gap_id": "finite_jump_trace_schema",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "JUMP_COUNTING_PROCESS",
+      "recommended_priority": 5,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Standardize observed transition count matrix payloads.",
+      "gap_id": "transition_count_matrix_schema",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "TRANSITION_COUNT_MATRIX",
+      "recommended_priority": 6,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Keep R(x) as placeholder without rate-estimation theorem.",
+      "gap_id": "transition_rate_placeholder_schema",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "TRANSITION_RATE_RECORD",
+      "recommended_priority": 7,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Align finite continuous path windows with discrete events.",
+      "gap_id": "hybrid_trace_alignment",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "HYBRID_TRACE",
+      "recommended_priority": 8,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Track Forge draft-schema support for stochastic/hybrid records.",
+      "gap_id": "forge_draft_schema_support",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "recommended_priority": 9,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Keep rendered artifacts inside the local Lean dependency guardrail.",
+      "gap_id": "efrog_zero_mathlib_rendering",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "recommended_priority": 10,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Prepare internal-only display card/feed, no deploy.",
+      "gap_id": "command_center_internal_display",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "recommended_priority": 11,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Maintain public-claim no-go boundaries.",
+      "gap_id": "no_go_public_claim_boundary",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "PRODUCTION_CONTROL_NO_GO",
+      "recommended_priority": 12,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    },
+    {
+      "EML record need": "draft internal record only",
+      "blockers": [
+        "needs schema review",
+        "human approval before public language"
+      ],
+      "current_status": "DRAFT_INTERNAL_GAP",
+      "description": "Draft future teaching records without public/release claims.",
+      "gap_id": "future_stochastic_curriculum_pack",
+      "next_safe_local_experiment": "bounded local fixture refinement",
+      "no_go_flags": [
+        "no upload",
+        "no deploy",
+        "no public theorem claim",
+        "no hardware truth claim"
+      ],
+      "process_class": "BOUNDARY_NO_OVERCLAIM",
+      "recommended_priority": 13,
+      "zero_mathlib_risk": "LOW_WITH_GATE"
+    }
   ],
-  "not_claimed": [
-    "not stochastic calculus formalization",
-    "not an SDE theorem",
-    "not a Markov process theorem",
-    "not production control evidence",
-    "not safety certification",
-    "not a public theorem/proof/open-problem claim"
-  ]
+  "local_only": true,
+  "tier": "OBSERVATION"
 }

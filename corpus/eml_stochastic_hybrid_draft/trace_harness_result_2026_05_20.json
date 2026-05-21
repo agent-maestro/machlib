@@ -1,11 +1,56 @@
 {
   "date": "2026-05-20",
-  "derived_gap_rows": [
-    {
-      "gap_id": "probability_law_proof_layer_v0",
-      "status": "DRAFT_INTERNAL_GAP_NOT_EXECUTED"
+  "derived_trace_outputs": {
+    "one_hot_indicators": [
+      {
+        "1->2": 1,
+        "2->3": 0,
+        "3->1": 0,
+        "3->2": 0
+      },
+      {
+        "1->2": 0,
+        "2->3": 1,
+        "3->1": 0,
+        "3->2": 0
+      },
+      {
+        "1->2": 0,
+        "2->3": 0,
+        "3->1": 1,
+        "3->2": 0
+      },
+      {
+        "1->2": 1,
+        "2->3": 0,
+        "3->1": 0,
+        "3->2": 0
+      }
+    ],
+    "transition_counts": {
+      "1->2": 2,
+      "2->3": 1,
+      "3->1": 1,
+      "3->2": 0
+    },
+    "transition_matrix": {
+      "1": {
+        "1": 0,
+        "2": 2,
+        "3": 0
+      },
+      "2": {
+        "1": 0,
+        "2": 0,
+        "3": 1
+      },
+      "3": {
+        "1": 1,
+        "2": 0,
+        "3": 0
+      }
     }
-  ],
+  },
   "eml_artifacts": [
     "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/diffusion_trace_schema_v0.eml",
     "/tmp/machlib_stochastic_hybrid_trace_2026_05_20/eml/stochastic_increment_record_v0.eml",
@@ -38,40 +83,78 @@
   },
   "local_only": true,
   "passed": 12,
-  "process_class": "STOCHASTIC_HYBRID_TRACE",
+  "process_frontier": "STOCHASTIC_HYBRID_TRACE",
   "record_count": 12,
   "results": [
     {
-      "check": "x_tau = x0 + sum(dx)",
+      "check": "diffusion increment reconstruction",
+      "dx": [
+        0.05,
+        -0.02,
+        0.1,
+        -0.04,
+        0.03
+      ],
+      "not_claimed": [
+        "no Brownian theorem",
+        "no SDE solver guarantee"
+      ],
+      "reconstructed_path": [
+        0.0,
+        0.05,
+        0.03,
+        0.13,
+        0.09,
+        0.12
+      ],
       "record_id": "diffusion_trace_schema_v0",
       "status": "PASS",
-      "x_tau": 1.25
+      "x0": 0.0
     },
     {
-      "check": "finite increment list",
-      "increment_count": 3,
+      "check": "x_tau = x0 + cumulative sum dx",
       "record_id": "stochastic_increment_record_v0",
       "status": "PASS"
     },
     {
-      "check": "F(x), dt, sigma, dW fields present",
+      "check": "F, dt, sigma, dW placeholder fields present",
+      "fixture": {
+        "F": "F(x)",
+        "dW": "placeholder",
+        "dt": 0.01,
+        "sigma": 0.2
+      },
       "record_id": "drift_diffusion_signature_v0",
       "status": "PASS"
     },
     {
-      "check": "symbolic placeholder only",
+      "check": "dW is placeholder only",
       "record_id": "brownian_noise_placeholder_v0",
       "status": "PASS"
     },
     {
-      "check": "bounded deterministic step fixture",
+      "check": "bounded deterministic Euler-style step placeholder",
       "record_id": "euler_maruyama_step_placeholder_v0",
-      "status": "PASS",
-      "x_next": 1.05
+      "status": "PASS"
     },
     {
-      "check": "finite transition extraction",
+      "check": "finite jump transition extraction",
+      "event_count": 4,
+      "event_times": [
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5"
+      ],
       "record_id": "jump_counting_process_record_v0",
+      "states": [
+        1,
+        2,
+        3,
+        1,
+        2
+      ],
       "status": "PASS",
       "transitions": [
         "1->2",
@@ -81,56 +164,52 @@
       ]
     },
     {
-      "check": "rate placeholder shape only",
+      "check": "R(x) placeholder shape only; no rate-estimation theorem",
       "record_id": "transition_rate_record_v0",
       "status": "PASS"
     },
     {
-      "check": "state trace shape",
+      "check": "finite state/time trace length",
       "record_id": "discrete_state_trace_record_v0",
-      "state_count": 5,
       "status": "PASS"
     },
     {
-      "check": "continuous increments paired with jump labels",
+      "check": "hybrid trace finite alignment metadata",
+      "continuous_path_length": 6,
+      "event_count": 4,
       "record_id": "hybrid_continuous_discrete_trace_v0",
-      "rows": [
-        [
-          0.1,
-          "none"
-        ],
-        [
-          0.0,
-          "1->2"
-        ],
-        [
-          -0.1,
-          "none"
-        ],
-        [
-          0.2,
-          "2->1"
-        ]
-      ],
+      "state_trace_length": 5,
       "status": "PASS"
     },
     {
       "check": "finite transition count matrix",
-      "counts": {
-        "1->2": 2,
-        "2->3": 1,
-        "3->1": 1
+      "matrix": {
+        "1": {
+          "1": 0,
+          "2": 2,
+          "3": 0
+        },
+        "2": {
+          "1": 0,
+          "2": 0,
+          "3": 1
+        },
+        "3": {
+          "1": 1,
+          "2": 0,
+          "3": 0
+        }
       },
       "record_id": "transition_count_matrix_record_v0",
       "status": "PASS"
     },
     {
-      "check": "theory overclaim blocker present",
+      "check": "stochastic/SDE/Markov overclaim boundary present",
       "record_id": "stochastic_no_overclaim_boundary_v0",
       "status": "PASS"
     },
     {
-      "check": "production and safety overclaim blocker present",
+      "check": "production/safety/hardware no-go boundary present",
       "record_id": "production_control_no_go_boundary_v0",
       "status": "PASS"
     }
