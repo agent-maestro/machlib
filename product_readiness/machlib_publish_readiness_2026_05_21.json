@@ -1,0 +1,46 @@
+{
+  "api_status": "API_OK_FOR_PRE_ALPHA_RELEASE",
+  "artifact_dir": "/tmp/machlib_publish_readiness_2026_05_21/dist",
+  "artifacts": [
+    {
+      "artifact_path": "/tmp/machlib_publish_readiness_2026_05_21/dist/machlib-0.0.1-py3-none-any.whl",
+      "filename": "machlib-0.0.1-py3-none-any.whl",
+      "sha256": "59d9383081869ad4a344a26deebe44c18bd62ae4513454781ff1adda4732a456",
+      "size_bytes": 4267
+    },
+    {
+      "artifact_path": "/tmp/machlib_publish_readiness_2026_05_21/dist/machlib-0.0.1.tar.gz",
+      "filename": "machlib-0.0.1.tar.gz",
+      "sha256": "c8fb85a4a05ba6e8153daefa5861654b71cf653b32488c7f1a3f79455121d8ce",
+      "size_bytes": 3999
+    }
+  ],
+  "blockers": [],
+  "dependencies_policy": "runtime dependencies intentionally empty; related tools are listed as optional integrations",
+  "dry_run_build_status": "PASS",
+  "excluded_from_package": [
+    "full MachLib repository",
+    "corpus snapshots",
+    "large or internal report trees",
+    "command_center_feeds",
+    "local review and publish-token reports",
+    "private review branch artifacts",
+    "generated /tmp artifacts",
+    "build, dist, egg-info, wheel, and sdist artifacts inside the repository"
+  ],
+  "license_status": "LICENSE_PRESENT_NEEDS_HUMAN_CONFIRMATION",
+  "local_path": "package_candidates/machlib",
+  "package_boundary_status": "APPROVED_MINIMAL_UMBRELLA_BOUNDARY",
+  "package_name": "machlib",
+  "package_type": "BROAD_UMBRELLA_PACKAGE",
+  "public_copy_status": "PUBLIC_COPY_OK_FOR_PRE_ALPHA_RELEASE",
+  "publish_performed": false,
+  "publish_readiness": "READY_FOR_HUMAN_UPLOAD_APPROVAL",
+  "pypi_name_status": "NOT_FOUND_PUBLIC_JSON",
+  "release_artifacts_created_in_repo": false,
+  "token_handling_now": false,
+  "twine_check_status": "PASS",
+  "upload_allowed_now": false,
+  "upload_performed": false,
+  "version": "0.0.1"
+}

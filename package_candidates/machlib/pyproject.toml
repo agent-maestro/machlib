@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "machlib"
+version = "0.0.1"
+description = "Pre-alpha umbrella package for MachLib evidence tooling boundaries."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "CC-BY-4.0"
+authors = [
+  { name = "MachLib contributors" },
+]
+dependencies = []
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.urls]
+Homepage = "https://github.com/agent-maestro/machlib"
+
+[project.scripts]
+machlib = "machlib.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

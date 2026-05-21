@@ -1,0 +1,26 @@
+{
+  "artifact_dir": "/tmp/machlib_publish_readiness_2026_05_21/dist",
+  "artifacts": [
+    {
+      "artifact_path": "/tmp/machlib_publish_readiness_2026_05_21/dist/machlib-0.0.1-py3-none-any.whl",
+      "filename": "machlib-0.0.1-py3-none-any.whl",
+      "sha256": "59d9383081869ad4a344a26deebe44c18bd62ae4513454781ff1adda4732a456",
+      "size_bytes": 4267
+    },
+    {
+      "artifact_path": "/tmp/machlib_publish_readiness_2026_05_21/dist/machlib-0.0.1.tar.gz",
+      "filename": "machlib-0.0.1.tar.gz",
+      "sha256": "c8fb85a4a05ba6e8153daefa5861654b71cf653b32488c7f1a3f79455121d8ce",
+      "size_bytes": 3999
+    }
+  ],
+  "human_approval_required": true,
+  "local_path": "package_candidates/machlib",
+  "machlib_boundary": "minimal public umbrella package only",
+  "package_name": "machlib",
+  "publish_performed": false,
+  "token_required_after_approval": true,
+  "upload_allowed_now": false,
+  "upload_performed": false,
+  "version": "0.0.1"
+}
