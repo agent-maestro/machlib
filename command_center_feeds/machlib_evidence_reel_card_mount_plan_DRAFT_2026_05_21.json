@@ -1,0 +1,36 @@
+{
+  "card_count": 7,
+  "command_center_repo_modified": false,
+  "deploy_performed": false,
+  "inspected_command_center_files": [
+    "app/page.tsx",
+    "app/machlib/page.tsx",
+    "components/machlib/MachLibStatusCards.tsx"
+  ],
+  "not_claimed": [
+    "not a theorem/proof/open-problem claim",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement",
+    "not a package upload claim",
+    "not a command-center deploy"
+  ],
+  "recommended_mount": "static_snapshot_import",
+  "recommended_path": "/machlib/evidence-reel",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "source_assets": [
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/index.html",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/render_manifest_2026_05_21.json",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_01_title.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_02_published_packages.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_03_ready_pending.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_04_passed_checks.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_05_pause_failure.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_06_not_claimed.svg",
+    "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_07_next_actions.svg"
+  ],
+  "source_reel": "machlib_package_reel_2026_05_21",
+  "surface": "command.monogate.dev",
+  "visibility": "internal"
+}
