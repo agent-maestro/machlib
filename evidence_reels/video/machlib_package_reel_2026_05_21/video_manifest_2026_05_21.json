@@ -1,0 +1,28 @@
+{
+  "card_count": 7,
+  "frame_count": 0,
+  "generated_at": "2026-05-22T09:20:53.955310+00:00",
+  "missing_tools": [
+    "cairosvg_or_rsvg-convert",
+    "ffmpeg"
+  ],
+  "mp4_generated": false,
+  "mp4_path": null,
+  "no_audio_generated": true,
+  "no_deploy_performed": true,
+  "no_public_claim": true,
+  "no_upload_performed": true,
+  "not_claimed": [
+    "not a theorem/proof/open-problem claim",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "reel_id": "machlib_package_reel_2026_05_21",
+  "tooling": {
+    "cairosvg": false,
+    "ffmpeg": false,
+    "rsvg_convert": false
+  },
+  "video_status": "BLOCKED_BY_LOCAL_TOOLING"
+}

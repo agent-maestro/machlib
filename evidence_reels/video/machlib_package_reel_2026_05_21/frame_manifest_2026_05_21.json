@@ -1,0 +1,63 @@
+{
+  "frame_count": 0,
+  "frames": [
+    {
+      "card_id": "01-title",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_01_title.svg",
+      "title": "MachLib Evidence Tooling Update"
+    },
+    {
+      "card_id": "02-published-packages",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_02_published_packages.svg",
+      "title": "Published packages"
+    },
+    {
+      "card_id": "03-ready-pending",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_03_ready_pending.svg",
+      "title": "Ready / pending packages"
+    },
+    {
+      "card_id": "04-passed-checks",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_04_passed_checks.svg",
+      "title": "Passed checks"
+    },
+    {
+      "card_id": "05-pause-failure",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_05_pause_failure.svg",
+      "title": "Pause / failure"
+    },
+    {
+      "card_id": "06-not-claimed",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_06_not_claimed.svg",
+      "title": "Not claimed"
+    },
+    {
+      "card_id": "07-next-actions",
+      "duration_seconds": 4,
+      "frame_png": null,
+      "no_upload_performed": true,
+      "source_svg": "evidence_reels/rendered/machlib_package_reel_2026_05_21/card_07_next_actions.svg",
+      "title": "Next actions"
+    }
+  ],
+  "no_upload_performed": true,
+  "reel_id": "machlib_package_reel_2026_05_21"
+}
