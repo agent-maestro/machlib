@@ -1,0 +1,40 @@
+{
+  "artifacts": [
+    {
+      "artifact_path": "/tmp/machlib_retry_upload_2026_05_21/dist/machlib-0.0.1-py3-none-any.whl",
+      "filename": "machlib-0.0.1-py3-none-any.whl",
+      "sha256": "59d9383081869ad4a344a26deebe44c18bd62ae4513454781ff1adda4732a456",
+      "size_bytes": 4267
+    },
+    {
+      "artifact_path": "/tmp/machlib_retry_upload_2026_05_21/dist/machlib-0.0.1.tar.gz",
+      "filename": "machlib-0.0.1.tar.gz",
+      "sha256": "c8fb85a4a05ba6e8153daefa5861654b71cf653b32488c7f1a3f79455121d8ce",
+      "size_bytes": 3999
+    }
+  ],
+  "failed_package": "machlib",
+  "failure": "TWINE_UPLOAD machlib failed with exit code 1",
+  "no_other_package_uploaded": true,
+  "package_name": "machlib",
+  "pypi_token_value_recorded": false,
+  "pypi_verification": null,
+  "skipped_packages": [
+    "machlib-workbench",
+    "eml-harness",
+    "hybrid-trace-eml",
+    "zero-mathlib-checker",
+    "claim-boundary",
+    "eml-records",
+    "review-branch-packet"
+  ],
+  "task": "M064_RETRY_MACHLIB_ONE_TOKEN_UPLOAD",
+  "token_committed": false,
+  "token_printed": false,
+  "token_unset_after_upload": true,
+  "token_written_to_file": false,
+  "uploaded": false,
+  "uploaded_packages": [],
+  "user_revoke_token_required": true,
+  "version": "0.0.1"
+}
