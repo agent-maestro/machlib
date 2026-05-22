@@ -1,0 +1,57 @@
+{
+  "review_date": "2026-05-21",
+  "candidates": [
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "display_name": "Qwen Puzzle Curriculum Pack",
+      "source_artifacts": [
+        "Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16",
+        "Qwen_Puzzle_Curriculum_Pack_Import_Dryrun_2026_05_16",
+        "EML_Puzzle_Curriculum_Import_Gate_2026_05_16",
+        "EML_Puzzle_Curriculum_Evidence_Ledger_2026_05_16"
+      ],
+      "evidence_status": "PASS_WITH_EXACT_FIX_LIST",
+      "marketplace_readiness": "BLOCKED_WITH_EXACT_FIX_LIST",
+      "visibility_recommendation": "draft_marketplace",
+      "marketplace_upload_performed": false,
+      "production_marketplace_modified": false,
+      "petal_api_upload_performed": false,
+      "huggingface_upload_performed": false,
+      "public_claim": false,
+      "certified_safety_claim": false,
+      "production_controller_claim": false,
+      "theorem_proof_claim": false,
+      "blockers": [
+        "Qwen pack import findings record that structured CapCard row generation needed targeted repair before ingestion.",
+        "Accepted internal CapCard pack rows include validation_status=warn and solver_status=unknown rows.",
+        "Needs a final human review pass to decide whether the repaired rows are acceptable for an internal marketplace draft."
+      ],
+      "next_safe_task": "M083_REPAIR_QWEN_CURRICULUM_CAPCARD_ROWS_NO_UPLOAD"
+    },
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "display_name": "EML Puzzle Evidence Kernel",
+      "source_artifacts": [
+        "EML_Puzzle_Proof_Kernel_2026_05_16",
+        "EML_Puzzle_Evidence_Ledger_2026_05_16",
+        "EML_Puzzle_Evidence_Quarantine_Review_2026_05_16",
+        "EML_Puzzle_Proof_Kernel_Integration_2026_05_16",
+        "PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16",
+        "PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16"
+      ],
+      "evidence_status": "PASS_WITH_INTERNAL_BOUNDARIES",
+      "marketplace_readiness": "READY_FOR_HUMAN_MARKETPLACE_APPROVAL",
+      "visibility_recommendation": "internal_marketplace",
+      "marketplace_upload_performed": false,
+      "production_marketplace_modified": false,
+      "petal_api_upload_performed": false,
+      "huggingface_upload_performed": false,
+      "public_claim": false,
+      "certified_safety_claim": false,
+      "production_controller_claim": false,
+      "theorem_proof_claim": false,
+      "blockers": [],
+      "next_safe_task": "M083_CAPCARD_MARKETPLACE_PROMOTION_AFTER_HUMAN_APPROVAL"
+    }
+  ]
+}

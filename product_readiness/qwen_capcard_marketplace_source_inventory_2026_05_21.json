@@ -1,0 +1,169 @@
+{
+  "inventory_date": "2026-05-21",
+  "source_root": "/home/monogate/monogate/monogate-research/exploration",
+  "command_center_rows_checked": true,
+  "command_center_exact_rows_present": false,
+  "command_center_status": "STALE_OR_NOT_PRESENT_BY_EXACT_ID",
+  "sources": [
+    {
+      "source_file_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/pack_ledger_summary.json",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "internal evidence ledger summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/pack_review_summary.json",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_Evidence_Review_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "quarantine review summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Import_Dryrun_2026_05_16/FINDINGS.md",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_Import_Dryrun_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "local import dry run findings",
+      "status": "pass_with_capcard_row_repair_needed",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": [
+        "Findings record that structured CapCard row generation needed targeted repair before ingestion."
+      ]
+    },
+    {
+      "source_file_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_CapCard_Rows_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "accepted internal CapCard rows",
+      "status": "mixed_pass_warn",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": [
+        "Some accepted internal rows retain validation_status=warn and solver_status=unknown."
+      ]
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Curriculum_Import_Gate_2026_05_16/import_gate_result.json",
+      "artifact_id": "EML_Puzzle_Curriculum_Import_Gate_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "import gate",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Curriculum_Evidence_Ledger_2026_05_16/curriculum_ledger_summary.json",
+      "artifact_id": "EML_Puzzle_Curriculum_Evidence_Ledger_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "evidence_type": "curriculum ledger summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/puzzle_ledger_summary.json",
+      "artifact_id": "EML_Puzzle_Evidence_Ledger_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "puzzle evidence ledger summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Evidence_Quarantine_Review_2026_05_16/puzzle_review_summary.json",
+      "artifact_id": "EML_Puzzle_Evidence_Quarantine_Review_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "quarantine review summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/FINDINGS.md",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "bounded puzzle kernel findings",
+      "status": "pass_with_boundaries",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/capcard_puzzle_evidence_rows.json",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_CapCard_Rows_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "internal CapCard candidate rows",
+      "status": "internal_candidate_public_ready_false",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_Integration_2026_05_16/validation_summary.json",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_Integration_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "integration validation summary",
+      "status": "pass",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_Integration_2026_05_16/capcard_puzzle_registry.json",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_CapCard_Registry_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "evidence_type": "internal CapCard registry",
+      "status": "internal_candidate_public_ready_false",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16/ingestion_summary.json",
+      "artifact_id": "PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "shared_petal_boundary",
+      "evidence_type": "local ingestion simulator",
+      "status": "pass_no_upload",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": []
+    },
+    {
+      "source_file_path": "monogate-research/exploration/PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16/upload_readiness_matrix.json",
+      "artifact_id": "PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16",
+      "date": "2026-05-16",
+      "candidate_id": "shared_petal_boundary",
+      "evidence_type": "public logging no-upload gate",
+      "status": "no_go_for_public_upload",
+      "freshness": "historical_2026_05_16_reviewed_on_2026_05_21",
+      "safe_for_marketplace_review": true,
+      "blockers": [
+        "PETAL endpoint and auth remain unapproved for public upload."
+      ]
+    }
+  ]
+}

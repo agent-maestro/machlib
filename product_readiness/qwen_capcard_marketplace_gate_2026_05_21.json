@@ -1,0 +1,13 @@
+{
+  "gate_status": "WAITING_FOR_HUMAN_MARKETPLACE_APPROVAL",
+  "ready_candidate_count": 1,
+  "recommended_candidates": [
+    "eml_puzzle_evidence_kernel"
+  ],
+  "marketplace_upload_allowed_now": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_allowed_now": false,
+  "huggingface_upload_allowed_now": false,
+  "public_claim_allowed_now": false,
+  "next_safe_task": "M083_CAPCARD_MARKETPLACE_PROMOTION_AFTER_HUMAN_APPROVAL"
+}
