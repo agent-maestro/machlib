@@ -1,0 +1,31 @@
+{
+  "alpha": "x / (2x + 3)",
+  "beta": "(2x + 3) / x",
+  "certified_safety_claim": false,
+  "domain_guards": [
+    "x != 0",
+    "x != -3/2",
+    "z != 0",
+    "z != -3/2",
+    "N != 0 for mu_inv"
+  ],
+  "event_volume": "D(k) = (k, 2k + 3, k(2k + 3))",
+  "evidence_status": "NUMERIC_TOY_KERNEL_ONLY",
+  "gauges": {
+    "mu_geo": "N / 2",
+    "mu_inv": "1 / (2N)"
+  },
+  "holography_proof_claim": false,
+  "identity_witness": "alpha(x) * beta(x) = 1 on guarded numeric samples",
+  "interpretation": "reciprocal Mobius-pair toy kernel",
+  "kernel_id": "alpha_beta_mobius_pair_kernel",
+  "mathlib_dependency": false,
+  "open_problem_claim": false,
+  "physics_claim": false,
+  "production_controller_claim": false,
+  "public_ready": false,
+  "shift": "y := 2x + 3",
+  "theorem_proof_claim": false,
+  "title": "Alpha-Beta Mobius Pair Toy Kernel",
+  "upload_allowed": false
+}

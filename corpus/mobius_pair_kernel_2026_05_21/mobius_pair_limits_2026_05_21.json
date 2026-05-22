@@ -1,0 +1,35 @@
+{
+  "rows": [
+    {
+      "alpha": 0.43478260869565216,
+      "alpha_error_from_half": 0.06521739130434784,
+      "beta": 2.3,
+      "beta_error_from_two": 0.2999999999999998,
+      "x": 10
+    },
+    {
+      "alpha": 0.49261083743842365,
+      "alpha_error_from_half": 0.007389162561576346,
+      "beta": 2.03,
+      "beta_error_from_two": 0.029999999999999805,
+      "x": 100
+    },
+    {
+      "alpha": 0.49925112331502747,
+      "alpha_error_from_half": 0.0007488766849725326,
+      "beta": 2.003,
+      "beta_error_from_two": 0.0030000000000001137,
+      "x": 1000
+    },
+    {
+      "alpha": 0.49992501124831273,
+      "alpha_error_from_half": 7.498875168726604e-05,
+      "beta": 2.0003,
+      "beta_error_from_two": 0.000300000000000189,
+      "x": 10000
+    }
+  ],
+  "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+  "target_alpha": 0.5,
+  "target_beta": 2.0
+}

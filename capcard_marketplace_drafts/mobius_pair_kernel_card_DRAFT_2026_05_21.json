@@ -1,0 +1,43 @@
+{
+  "candidate_id": "mobius_pair_kernel",
+  "card_id": "mobius_pair_kernel_DRAFT_2026_05_21",
+  "certified_safety_claim": false,
+  "display_name": "Alpha-Beta Mobius Pair Kernel",
+  "evidence_basis": [
+    "executable numeric checks",
+    "domain guard checks",
+    "EML-style draft records",
+    "local Senses prototype"
+  ],
+  "huggingface_upload_performed": false,
+  "limitations": [
+    "toy model only",
+    "no formal proof",
+    "no physical/holographic claim",
+    "no theorem/open-problem claim"
+  ],
+  "marketplace_status": "INTERNAL_DRAFT_CANDIDATE",
+  "marketplace_upload_performed": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "source_artifacts": [
+    "corpus/mobius_pair_kernel_2026_05_21",
+    "corpus/eml_mobius_pair_draft",
+    "senses/mobius_pair_kernel_2026_05_21"
+  ],
+  "theorem_proof_claim": false,
+  "tier": "OBSERVATION",
+  "visibility": "internal"
+}

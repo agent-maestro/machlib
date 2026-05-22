@@ -1,0 +1,85 @@
+{
+  "event_volume_status": "PASS",
+  "rows": [
+    {
+      "gauge_status": "PASS",
+      "k": -10.0,
+      "m": -17.0,
+      "mu_geo": 85.0,
+      "mu_inv": 0.0029411764705882353,
+      "n": 170.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": -5.0,
+      "m": -7.0,
+      "mu_geo": 17.5,
+      "mu_inv": 0.014285714285714285,
+      "n": 35.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": -2.0,
+      "m": -1.0,
+      "mu_geo": 1.0,
+      "mu_inv": 0.25,
+      "n": 2.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": -1.0,
+      "m": 1.0,
+      "mu_geo": -0.5,
+      "mu_inv": -0.5,
+      "n": -1.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": -0.5,
+      "m": 2.0,
+      "mu_geo": -0.5,
+      "mu_inv": -0.5,
+      "n": -1.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": 0.5,
+      "m": 4.0,
+      "mu_geo": 1.0,
+      "mu_inv": 0.25,
+      "n": 2.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": 1.0,
+      "m": 5.0,
+      "mu_geo": 2.5,
+      "mu_inv": 0.1,
+      "n": 5.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": 2.0,
+      "m": 7.0,
+      "mu_geo": 7.0,
+      "mu_inv": 0.03571428571428571,
+      "n": 14.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": 5.0,
+      "m": 13.0,
+      "mu_geo": 32.5,
+      "mu_inv": 0.007692307692307693,
+      "n": 65.0
+    },
+    {
+      "gauge_status": "PASS",
+      "k": 10.0,
+      "m": 23.0,
+      "mu_geo": 115.0,
+      "mu_inv": 0.002173913043478261,
+      "n": 230.0
+    }
+  ]
+}

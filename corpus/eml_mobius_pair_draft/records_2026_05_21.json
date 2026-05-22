@@ -1,0 +1,263 @@
+{
+  "records": [
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "numeric_sample",
+      "executable_check": "identity_product numeric check",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "alpha_beta_reciprocal_pair",
+      "statement": "alpha(x)=x/(2x+3) and beta(x)=(2x+3)/x form a reciprocal numeric pair on guarded samples.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "numeric_witness",
+      "executable_check": "identity_product(x)",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "identity_product_witness",
+      "statement": "alpha(x) beta(x) evaluates to 1 on guarded numeric samples.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "symbolic_numeric",
+      "executable_check": "alpha_mobius/beta_mobius guards",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "mobius_extension_pair",
+      "statement": "beta(z)=2+3/z and alpha(z)=1/(2+3/z) are guarded reciprocal Mobius-style expressions.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "guardrail",
+      "executable_check": "guard cases pass",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "singularity_guard_record",
+      "statement": "x=0, x=-3/2, z=0, z=-3/2, and N=0 for mu_inv are excluded where required.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "numeric_limit_evidence_only",
+      "executable_check": "finite sample convergence table",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "numeric_limit_behavior_record",
+      "statement": "large positive x samples move alpha toward 1/2 and beta toward 2 numerically.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "visualization",
+      "executable_check": "event_volume(k)",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "event_volume_visualization_record",
+      "statement": "D(k)=(k,2k+3,k(2k+3)) is a visualization trace, not a physical volume claim.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0 where beta/product used",
+        "x != -3/2 where alpha/product used",
+        "z != 0",
+        "z != -3/2 where alpha_mobius used",
+        "N != 0 where mu_inv used"
+      ],
+      "evidence_type": "exploratory_gauge",
+      "executable_check": "mu_geo/mu_inv checks",
+      "family": "mobius_pair_kernel",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "local draft record",
+        "not public-ready"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "canonical_gauge_pair_optional",
+      "statement": "mu_geo(N)=N/2 and mu_inv(N)=1/(2N) are exploratory gauge channels with N != 0 for mu_inv.",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    }
+  ]
+}

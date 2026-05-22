@@ -1,0 +1,29 @@
+{
+  "certified_safety_claim": false,
+  "kernel_id": "alpha_beta_mobius_pair_kernel",
+  "mathlib_dependency": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "open_problem_claim": false,
+  "physics_claim": false,
+  "production_controller_claim": false,
+  "public_ready": false,
+  "records": [
+    "alpha_beta_reciprocal_pair",
+    "identity_product_witness",
+    "mobius_extension_pair",
+    "singularity_guard_record",
+    "numeric_limit_behavior_record",
+    "event_volume_visualization_record",
+    "canonical_gauge_pair_optional"
+  ],
+  "spec_status": "DRAFT_INTERNAL",
+  "theorem_proof_claim": false,
+  "upload_allowed": false
+}

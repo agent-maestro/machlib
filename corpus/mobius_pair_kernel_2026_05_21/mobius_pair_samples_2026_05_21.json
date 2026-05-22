@@ -1,0 +1,134 @@
+{
+  "samples": [
+    {
+      "alpha": 0.5882352941176471,
+      "beta": 1.7,
+      "identity_product": 1.0,
+      "k": -10.0,
+      "m": -17.0,
+      "n": 170.0,
+      "status": "PASS",
+      "x": -10.0
+    },
+    {
+      "alpha": 0.7142857142857143,
+      "beta": 1.4,
+      "identity_product": 1.0,
+      "k": -5.0,
+      "m": -7.0,
+      "n": 35.0,
+      "status": "PASS",
+      "x": -5.0
+    },
+    {
+      "alpha": 2.0,
+      "beta": 0.5,
+      "identity_product": 1.0,
+      "k": -2.0,
+      "m": -1.0,
+      "n": 2.0,
+      "status": "PASS",
+      "x": -2.0
+    },
+    {
+      "reason": "alpha guard excluded -1.5",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.5
+    },
+    {
+      "alpha": -1.0,
+      "beta": -1.0,
+      "identity_product": 1.0,
+      "k": -1.0,
+      "m": 1.0,
+      "n": -1.0,
+      "status": "PASS",
+      "x": -1.0
+    },
+    {
+      "alpha": -0.25,
+      "beta": -4.0,
+      "identity_product": 1.0,
+      "k": -0.5,
+      "m": 2.0,
+      "n": -1.0,
+      "status": "PASS",
+      "x": -0.5
+    },
+    {
+      "alpha": -3.3333355555570365e-07,
+      "beta": -2999998.0000000005,
+      "identity_product": 1.0,
+      "k": -1e-06,
+      "m": 2.999998,
+      "n": -2.999998e-06,
+      "status": "PASS",
+      "x": -1e-06
+    },
+    {
+      "reason": "beta guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "alpha": 3.3333311111125925e-07,
+      "beta": 3000002.0,
+      "identity_product": 1.0,
+      "k": 1e-06,
+      "m": 3.000002,
+      "n": 3.0000019999999997e-06,
+      "status": "PASS",
+      "x": 1e-06
+    },
+    {
+      "alpha": 0.125,
+      "beta": 8.0,
+      "identity_product": 1.0,
+      "k": 0.5,
+      "m": 4.0,
+      "n": 2.0,
+      "status": "PASS",
+      "x": 0.5
+    },
+    {
+      "alpha": 0.2,
+      "beta": 5.0,
+      "identity_product": 1.0,
+      "k": 1.0,
+      "m": 5.0,
+      "n": 5.0,
+      "status": "PASS",
+      "x": 1.0
+    },
+    {
+      "alpha": 0.2857142857142857,
+      "beta": 3.5,
+      "identity_product": 1.0,
+      "k": 2.0,
+      "m": 7.0,
+      "n": 14.0,
+      "status": "PASS",
+      "x": 2.0
+    },
+    {
+      "alpha": 0.38461538461538464,
+      "beta": 2.6,
+      "identity_product": 1.0,
+      "k": 5.0,
+      "m": 13.0,
+      "n": 65.0,
+      "status": "PASS",
+      "x": 5.0
+    },
+    {
+      "alpha": 0.43478260869565216,
+      "beta": 2.3,
+      "identity_product": 0.9999999999999999,
+      "k": 10.0,
+      "m": 23.0,
+      "n": 230.0,
+      "status": "PASS",
+      "x": 10.0
+    }
+  ]
+}

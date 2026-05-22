@@ -1,0 +1,20 @@
+{
+  "certified_safety_claim": false,
+  "guardrail_status": "PASS",
+  "mathlib_dependency": false,
+  "no_public_claims": true,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "open_problem_claim": false,
+  "physics_claim": false,
+  "production_controller_claim": false,
+  "public_ready": false,
+  "theorem_proof_claim": false,
+  "upload_allowed": false
+}

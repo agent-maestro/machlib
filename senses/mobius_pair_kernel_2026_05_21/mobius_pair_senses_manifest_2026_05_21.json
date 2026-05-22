@@ -1,0 +1,22 @@
+{
+  "audio_file_generated": false,
+  "audio_runtime": "browser_web_audio_api",
+  "deploy_performed": false,
+  "hardware_required": false,
+  "microphone_required": false,
+  "mode": "local_static_browser_demo",
+  "network_required": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "prototype_id": "mobius_pair_kernel_2026_05_21",
+  "public_claim": false,
+  "status": "PASS",
+  "upload_performed": false,
+  "visual_generated": true
+}

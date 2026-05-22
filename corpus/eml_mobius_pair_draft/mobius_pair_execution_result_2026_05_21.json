@@ -1,0 +1,14 @@
+{
+  "certified_safety_claim": false,
+  "execution_status": "PASS",
+  "guard_status": "PASS",
+  "limit_status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+  "mathlib_dependency": false,
+  "open_problem_claim": false,
+  "physics_claim": false,
+  "production_controller_claim": false,
+  "public_ready": false,
+  "sample_pass_count": 12,
+  "theorem_proof_claim": false,
+  "upload_allowed": false
+}

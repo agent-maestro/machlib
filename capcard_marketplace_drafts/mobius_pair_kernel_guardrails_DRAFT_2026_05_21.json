@@ -1,0 +1,20 @@
+{
+  "candidate_id": "mobius_pair_kernel",
+  "certified_safety_claim": false,
+  "guardrail_status": "PASS",
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "theorem_proof_claim": false
+}

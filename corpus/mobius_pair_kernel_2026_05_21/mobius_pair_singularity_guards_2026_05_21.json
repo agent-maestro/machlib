@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "case": "beta_x_zero",
+      "reason": "beta guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "value": 0.0
+    },
+    {
+      "case": "product_x_zero",
+      "reason": "identity_product guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "value": 0.0
+    },
+    {
+      "case": "alpha_x_minus_three_halves",
+      "reason": "alpha guard excluded -1.5",
+      "status": "GUARD_EXCLUDED",
+      "value": -1.5
+    },
+    {
+      "case": "product_x_minus_three_halves",
+      "reason": "identity_product guard excluded -1.5",
+      "status": "GUARD_EXCLUDED",
+      "value": -1.5
+    },
+    {
+      "case": "beta_mobius_z_zero",
+      "reason": "beta_mobius guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "value": 0.0
+    },
+    {
+      "case": "alpha_mobius_z_zero",
+      "reason": "alpha_mobius guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "value": 0.0
+    },
+    {
+      "case": "alpha_mobius_z_minus_three_halves",
+      "reason": "alpha_mobius guard excluded -1.5",
+      "status": "GUARD_EXCLUDED",
+      "value": -1.5
+    },
+    {
+      "case": "mu_inv_N_zero",
+      "reason": "mu_inv guard excluded 0.0",
+      "status": "GUARD_EXCLUDED",
+      "value": 0.0
+    }
+  ],
+  "guard_status": "PASS"
+}

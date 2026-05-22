@@ -173,6 +173,8 @@ def classify(path: Path, line: str) -> str:
             return "POLICY_TEXT"
         if '"mathlib"' in lower and "false" in lower:
             return "POLICY_TEXT"
+        if "not a mathlib replacement" in lower:
+            return "POLICY_TEXT"
         if DEPENDENCY_DECLARATION.search(stripped):
             return "DEPENDENCY_EVIDENCE"
         if "mathlib-wrapper" in lower:
@@ -226,6 +228,7 @@ def classify(path: Path, line: str) -> str:
             "moving toward",
             "no active",
             "zero-mathlib",
+            "not a mathlib replacement",
             "mathlib-flavored",
             "mathlib cache",
             "reference mathlib idioms",
