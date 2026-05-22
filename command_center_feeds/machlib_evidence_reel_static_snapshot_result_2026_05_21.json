@@ -1,0 +1,10 @@
+{
+  "surface": "command.monogate.dev",
+  "isolated_worktree": "/home/monogate/monogate/command-center-machlib-snapshot-2026-05-20",
+  "isolated_worktree_commit": "10df24e",
+  "original_command_center_modified": false,
+  "deploy_performed": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "source_reel": "machlib_package_reel_2026_05_21"
+}
