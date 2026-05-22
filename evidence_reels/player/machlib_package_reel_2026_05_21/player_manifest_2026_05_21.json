@@ -1,0 +1,53 @@
+{
+  "audio_generated": false,
+  "card_count": 7,
+  "cards": [
+    {
+      "id": "01-title",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_01_title.svg",
+      "title": "MachLib Evidence Tooling Update"
+    },
+    {
+      "id": "02-published-packages",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_02_published_packages.svg",
+      "title": "Published packages"
+    },
+    {
+      "id": "03-ready-pending",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_03_ready_pending.svg",
+      "title": "Ready / pending packages"
+    },
+    {
+      "id": "04-passed-checks",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_04_passed_checks.svg",
+      "title": "Passed checks"
+    },
+    {
+      "id": "05-pause-failure",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_05_pause_failure.svg",
+      "title": "Pause / failure"
+    },
+    {
+      "id": "06-not-claimed",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_06_not_claimed.svg",
+      "title": "Not claimed"
+    },
+    {
+      "id": "07-next-actions",
+      "svg_path": "../../rendered/machlib_package_reel_2026_05_21/card_07_next_actions.svg",
+      "title": "Next actions"
+    }
+  ],
+  "deploy_performed": false,
+  "generated_at": "2026-05-22T09:27:20.628331+00:00",
+  "network_required": false,
+  "no_public_claim": true,
+  "player_status": "PASS",
+  "reel_id": "machlib_package_reel_2026_05_21",
+  "source_render_manifest": "evidence_reels/rendered/machlib_package_reel_2026_05_21/render_manifest_2026_05_21.json",
+  "source_video_manifest": "evidence_reels/video/machlib_package_reel_2026_05_21/video_manifest_2026_05_21.json",
+  "source_video_status": "BLOCKED_BY_LOCAL_TOOLING",
+  "static_html_generated": true,
+  "upload_performed": false,
+  "video_generated": false
+}

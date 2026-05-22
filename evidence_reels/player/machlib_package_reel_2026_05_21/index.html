@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MachLib Evidence Reel Player</title>
+    <link rel="stylesheet" href="reel.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Local static reel</div>
+          <h1>MachLib Evidence Reel</h1>
+        </div>
+        <div class="meta">No upload, no deploy, no public proof claim</div>
+      </header>
+
+      <section class="stage" aria-label="Evidence reel card">
+        <img data-card-image src="../../rendered/machlib_package_reel_2026_05_21/card_01_title.svg" alt="MachLib Evidence Tooling Update">
+      </section>
+
+      <section class="controls" aria-label="Reel controls">
+        <button type="button" data-prev>Previous</button>
+        <button type="button" data-play-pause>Pause</button>
+        <button type="button" data-next>Next</button>
+        <div class="progress-wrap" aria-label="Progress">
+          <div class="progress"><span data-progress></span></div>
+        </div>
+        <div class="meta"><span data-card-title>MachLib Evidence Tooling Update</span> · <span data-card-counter>1 / 7</span></div>
+      </section>
+
+      <section class="narration" aria-label="Narration text">
+        <h2 data-narration-title></h2>
+        <p data-narration-text></p>
+      </section>
+
+      <footer class="footer">
+        <span class="boundary">Pre-alpha evidence tooling — not a theorem/proof/safety claim.</span>
+        <span class="meta">Static HTML/CSS/JS only</span>
+      </footer>
+    </main>
+    <script src="reel.js"></script>
+  </body>
+</html>

@@ -1,0 +1,123 @@
+html {
+  background: #111;
+  color: #f5f1e9;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #151515;
+}
+
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.topbar,
+.controls,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  color: #d8c38b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 6px 0 16px;
+  font-size: 32px;
+}
+
+.stage {
+  background: #050505;
+  border: 1px solid #3a3428;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  overflow: hidden;
+}
+
+.stage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f7f4ed;
+}
+
+.controls {
+  margin: 18px 0;
+}
+
+button {
+  background: #f2efe7;
+  border: 1px solid #80745c;
+  color: #171717;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+button:hover,
+button:focus {
+  background: #fff7df;
+}
+
+.progress-wrap {
+  flex: 1;
+  min-width: 220px;
+}
+
+.progress {
+  background: #3a3428;
+  height: 10px;
+  overflow: hidden;
+}
+
+.progress span {
+  background: #d8c38b;
+  display: block;
+  height: 100%;
+  width: 0%;
+}
+
+.meta,
+.boundary {
+  color: #cfc6b5;
+  font-size: 14px;
+}
+
+.narration {
+  background: #201f1c;
+  border: 1px solid #3a3428;
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.narration h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.narration p {
+  color: #e8e1d2;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.footer {
+  border-top: 1px solid #3a3428;
+  margin-top: 24px;
+  padding-top: 16px;
+}
