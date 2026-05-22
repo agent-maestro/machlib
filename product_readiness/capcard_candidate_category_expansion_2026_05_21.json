@@ -1,0 +1,201 @@
+{
+  "categories": [
+    {
+      "category": "Package publish evidence card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "PyPI upload result card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "MachLib package readiness card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "1op Senses deploy readiness card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Evidence Reel product card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Hybrid Trace Senses card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Electronics curated manifest card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Zero-Mathlib benchmark card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Qwen puzzle curriculum card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "BLOCKED",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "EML harness result card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "Command Center static snapshot card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    },
+    {
+      "category": "PETAL schema readiness card",
+      "marketplace_risk": "overclaiming if public",
+      "minimum_evidence_required": [
+        "traceability",
+        "validator pass",
+        "human review"
+      ],
+      "next_build_task": "create candidate profile",
+      "readiness_today": "RAW_SIGNAL",
+      "source_artifacts": [
+        "local reports",
+        "product_readiness JSON"
+      ],
+      "why_useful": "turns an existing review artifact into a bounded internal evidence card"
+    }
+  ],
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false
+}

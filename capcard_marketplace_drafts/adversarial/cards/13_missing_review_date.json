@@ -1,0 +1,50 @@
+{
+  "accepted_internal_rows": [
+    {
+      "reviewer": "reviewer"
+    }
+  ],
+  "blockers": [],
+  "candidate_id": "13_missing_review_date",
+  "card_id": "13_missing_review_date",
+  "certified_safety_claim": false,
+  "created_at": "2026-05-21",
+  "display_name": "13 Missing Review Date",
+  "evidence_basis": [
+    "internal evidence ledger",
+    "no-upload gate"
+  ],
+  "expected_reason": "adversarial fixture expected FAIL",
+  "expected_result": "FAIL",
+  "fixture_only": true,
+  "huggingface_upload_performed": false,
+  "lifecycle_state": "INTERNAL_MARKETPLACE_DRAFT",
+  "limitations": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "marketplace_readiness": "INTERNAL_DRAFT_MARKETPLACE_READY",
+  "marketplace_upload_performed": false,
+  "next_safe_task": "fixture_review",
+  "not_claimed": [
+    "not a public proof claim"
+  ],
+  "owner": "tevv_lab",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "source_artifacts": [
+    "fixture_source.json"
+  ],
+  "theorem_proof_claim": false,
+  "tier": "OBSERVATION",
+  "version": "0.1",
+  "visibility": "internal",
+  "visibility_recommendation": "internal"
+}

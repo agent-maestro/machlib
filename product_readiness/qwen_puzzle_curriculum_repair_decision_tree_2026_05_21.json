@@ -1,0 +1,27 @@
+{
+  "can_unknown_be_bounded": "yes, only with explicit bounded explanation and human acceptance",
+  "candidate_id": "qwen_puzzle_curriculum_pack",
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "next_prompts": [
+    "Run Qwen row repair for rows 2 and 3",
+    "Rerun import/dryrun locally",
+    "Record human review",
+    "Approve internal draft marketplace promotion only if fixed",
+    "Keep blocked if not fixed"
+  ],
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "row_2_repair_required": [
+    "accepted repair evidence for validation_status=warn",
+    "bounded explanation for solver_status=unknown",
+    "reviewer_id/review_date/signoff"
+  ],
+  "row_3_repair_required": [
+    "accepted repair evidence for validation_status=warn",
+    "bounded explanation for solver_status=unknown",
+    "reviewer_id/review_date/signoff"
+  ],
+  "status": "BLOCKED_WITH_EXACT_FIX_LIST"
+}

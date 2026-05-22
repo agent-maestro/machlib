@@ -1,0 +1,14 @@
+{
+  "cards": [
+    "command_center_feeds/capcard_deep_utility_assessment_card_2026_05_21.json"
+  ],
+  "deploy_performed": false,
+  "feed_id": "capcard_deep_utility_assessment_2026_05_21",
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "surface": "command.monogate.dev",
+  "visibility": "internal"
+}

@@ -1,0 +1,15 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "certified_safety_claim": false,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "review_date": "2026-05-21",
+  "review_decision": "approve_internal_display",
+  "reviewer_id": "reviewer_internal_001",
+  "reviewer_role": "internal_reviewer",
+  "theorem_proof_claim": false
+}

@@ -1,0 +1,17 @@
+{
+  "queue": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "recommended_decision": "approve_internal_display"
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "recommended_decision": "request_revision"
+    }
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false
+}

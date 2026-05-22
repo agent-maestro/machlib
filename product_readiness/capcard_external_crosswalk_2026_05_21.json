@@ -1,0 +1,79 @@
+{
+  "crosswalk_status": "INTERNAL_REFERENCE_ONLY",
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "not_a_regulatory_control": true,
+  "not_certified_compliant": true,
+  "patterns": [
+    {
+      "capcard_adds": [
+        "false action fields",
+        "marketplace lifecycle",
+        "no-go boundaries"
+      ],
+      "does_not_cover": [
+        "model performance certification"
+      ],
+      "inspired_by": [
+        "intended use",
+        "limitations",
+        "evaluation results"
+      ],
+      "local_internal_relevance": "high",
+      "pattern": "model-card-style documentation",
+      "public_release_blocker": "no public policy",
+      "risk_if_confused_with_certification": "could imply external approval"
+    },
+    {
+      "capcard_adds": [
+        "candidate scoring",
+        "review queue"
+      ],
+      "does_not_cover": [
+        "dataset legal review"
+      ],
+      "inspired_by": [
+        "provenance",
+        "collection context"
+      ],
+      "local_internal_relevance": "medium",
+      "pattern": "dataset/datasheet-style documentation",
+      "public_release_blocker": "source freshness automation",
+      "risk_if_confused_with_certification": "could imply dataset compliance"
+    },
+    {
+      "capcard_adds": [
+        "adversarial card validation"
+      ],
+      "does_not_cover": [
+        "enterprise attestation"
+      ],
+      "inspired_by": [
+        "lifecycle metadata",
+        "governance fields"
+      ],
+      "local_internal_relevance": "medium",
+      "pattern": "AI factsheet-style lifecycle metadata",
+      "public_release_blocker": "review authority missing",
+      "risk_if_confused_with_certification": "could imply governance certification"
+    },
+    {
+      "capcard_adds": [
+        "marketplace card queue and no-upload gates"
+      ],
+      "does_not_cover": [
+        "regulatory control"
+      ],
+      "inspired_by": [
+        "test evaluation validation verification profile"
+      ],
+      "local_internal_relevance": "high",
+      "pattern": "AI risk management / TEVV profile concepts",
+      "public_release_blocker": "not_certified_compliant",
+      "risk_if_confused_with_certification": "could imply safety control"
+    }
+  ],
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false
+}

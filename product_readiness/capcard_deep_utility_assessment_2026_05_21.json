@@ -1,0 +1,42 @@
+{
+  "blunt_answer": "CapCard can be great if it becomes a TEVV workbench and internal marketplace before it tries to be public.",
+  "evidence_supporting_wedge": [
+    "working EML card",
+    "validator v2",
+    "scoring engine",
+    "workbench prototype",
+    "Qwen exact blockers"
+  ],
+  "execution_risk_score_0_to_100": 42,
+  "final_verdict": "BUILD_CAPCARD_WORKBENCH_FIRST",
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "product_potential_score_0_to_100": 78,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "real_wedge": "claim-safe review cards for AI-generated capabilities",
+  "revenue_potential_score_0_to_100": 70,
+  "stay_blocked": [
+    "Qwen until rows 2 and 3 repaired",
+    "public marketplace",
+    "PETAL/HF uploads"
+  ],
+  "strongest_product_shape": "internal evidence marketplace and TEVV cockpit",
+  "technical_readiness_score_0_to_100": 72,
+  "trustworthiness_score_0_to_100": 76,
+  "utility_opened": [
+    "candidate scoring",
+    "adversarial corpus",
+    "review workflow",
+    "static workbench",
+    "category expansion"
+  ],
+  "what_would_kill_product": [
+    "public claims too early",
+    "weak source freshness",
+    "no human signoff",
+    "confusing PETAL-style rows with PETAL verification"
+  ],
+  "while_pypi_cools_down": "build CapCard workbench and reviewer workflow"
+}

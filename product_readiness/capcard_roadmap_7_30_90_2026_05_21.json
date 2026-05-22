@@ -1,0 +1,28 @@
+{
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "roadmap_30_days": [
+    "5-10 strong cards",
+    "Command Center integration no deploy first",
+    "PETAL schema readiness no upload",
+    "review workflow with human metadata",
+    "Senses/evidence cards"
+  ],
+  "roadmap_7_days": [
+    "validator v2",
+    "workbench static preview",
+    "reviewer workflow",
+    "Qwen repair decision",
+    "internal display of one card"
+  ],
+  "roadmap_90_days": [
+    "private CapCard marketplace beta",
+    "hosted evidence workbench",
+    "customer/reviewer workflow",
+    "governance integrations",
+    "public docs with no certification claims"
+  ]
+}

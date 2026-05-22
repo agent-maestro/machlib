@@ -1,0 +1,12 @@
+{
+  "card_count": 31,
+  "corpus_status": "ADVERSARIAL_FIXTURES_ONLY",
+  "expected_fail_or_blocked_count": 28,
+  "expected_pass_count": 3,
+  "fixture_only": true,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false
+}

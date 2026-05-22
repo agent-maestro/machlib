@@ -1,0 +1,17 @@
+{
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "purpose": "internal evidence-card marketplace and TEVV cockpit for AI-generated capabilities",
+  "required_sections": [
+    "identity",
+    "evidence_summary",
+    "claim_boundary",
+    "action_fields",
+    "human_review",
+    "score_fields"
+  ],
+  "spec_id": "capcard_spec_v0_1_2026_05_21"
+}

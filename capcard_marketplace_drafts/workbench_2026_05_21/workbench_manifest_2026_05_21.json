@@ -1,0 +1,14 @@
+{
+  "blocked_candidate_count": 1,
+  "candidate_count": 2,
+  "deploy_performed": false,
+  "html_generated": true,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "strong_candidate_count": 1,
+  "upload_performed": false,
+  "workbench_status": "PASS"
+}

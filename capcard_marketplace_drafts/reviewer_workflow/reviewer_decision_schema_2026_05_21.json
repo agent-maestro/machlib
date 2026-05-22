@@ -1,0 +1,22 @@
+{
+  "required": [
+    "candidate_id",
+    "reviewer_id",
+    "reviewer_role",
+    "review_date",
+    "review_decision"
+  ],
+  "allowed_decisions": [
+    "approve_internal_display",
+    "request_revision",
+    "keep_blocked",
+    "retire_candidate"
+  ],
+  "forbidden_decisions": [
+    "approve_public_marketplace",
+    "approve_petal_upload",
+    "approve_hf_upload",
+    "approve_certified_safety",
+    "approve_production_controller"
+  ]
+}

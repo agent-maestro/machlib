@@ -1,0 +1,47 @@
+{
+  "blocked_count": 1,
+  "blocked_queue": [
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "display_name": "Qwen Puzzle Curriculum Pack",
+      "errors": [],
+      "lifecycle_state": "PUBLIC_REVIEW_BLOCKED",
+      "validation_status": "pass",
+      "warnings": []
+    }
+  ],
+  "candidate_count": 2,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "promotion_queue": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "display_name": "EML Puzzle Evidence Kernel",
+      "errors": [],
+      "lifecycle_state": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+      "validation_status": "pass",
+      "warnings": []
+    }
+  ],
+  "public_claim": false,
+  "ready_count": 1,
+  "reviewer_queue": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "display_name": "EML Puzzle Evidence Kernel",
+      "errors": [],
+      "lifecycle_state": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+      "validation_status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "display_name": "Qwen Puzzle Curriculum Pack",
+      "errors": [],
+      "lifecycle_state": "PUBLIC_REVIEW_BLOCKED",
+      "validation_status": "pass",
+      "warnings": []
+    }
+  ]
+}

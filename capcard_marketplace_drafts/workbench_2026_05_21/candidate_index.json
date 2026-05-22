@@ -1,0 +1,30 @@
+[
+  {
+    "candidate_id": "eml_puzzle_evidence_kernel",
+    "direct_source_count": 3,
+    "forbidden_action_false_score": 100,
+    "human_review_present": true,
+    "no_upload_gate_present": true,
+    "reviewer_identity_present": false,
+    "score": 89,
+    "score_band": "STRONG_INTERNAL_CANDIDATE",
+    "source_count": 4,
+    "stale_reference_count": 1,
+    "unknown_solver_penalty_count": 0,
+    "warn_count": 0
+  },
+  {
+    "candidate_id": "qwen_puzzle_curriculum_pack",
+    "direct_source_count": 0,
+    "forbidden_action_false_score": 100,
+    "human_review_present": false,
+    "no_upload_gate_present": false,
+    "reviewer_identity_present": false,
+    "score": 18,
+    "score_band": "BLOCKED",
+    "source_count": 1,
+    "stale_reference_count": 1,
+    "unknown_solver_penalty_count": 2,
+    "warn_count": 2
+  }
+]

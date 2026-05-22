@@ -1,0 +1,29 @@
+{
+  "all_active_states_require_false_action_fields": [
+    "marketplace_upload_performed",
+    "production_marketplace_modified",
+    "petal_api_upload_performed",
+    "huggingface_upload_performed",
+    "public_claim",
+    "certified_safety_claim",
+    "production_controller_claim",
+    "theorem_proof_claim",
+    "deploy_performed",
+    "hardware_action_performed"
+  ],
+  "lifecycle_spec_id": "capcard_lifecycle_spec_v0_1_2026_05_21",
+  "states": [
+    "RAW_SIGNAL",
+    "STRUCTURED_EVIDENCE",
+    "QUARANTINED",
+    "REVIEWED_INTERNAL",
+    "CANDIDATE_PROFILE",
+    "VALIDATED_CARD",
+    "INTERNAL_MARKETPLACE_DRAFT",
+    "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+    "HUMAN_APPROVED_INTERNAL_MARKETPLACE",
+    "PUBLIC_REVIEW_BLOCKED",
+    "PUBLIC_READY_REVIEW",
+    "RETIRED_OR_REJECTED"
+  ]
+}

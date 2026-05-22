@@ -1,0 +1,62 @@
+{
+  "properties": {
+    "candidate_id": {
+      "type": "string"
+    },
+    "card_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "lifecycle_state": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "reviewer": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string"
+    },
+    "updated_at": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "card_id",
+    "candidate_id",
+    "display_name",
+    "version",
+    "created_at",
+    "owner",
+    "visibility",
+    "tier",
+    "lifecycle_state",
+    "evidence_basis",
+    "source_artifacts",
+    "limitations",
+    "not_claimed",
+    "marketplace_upload_performed",
+    "production_marketplace_modified",
+    "petal_api_upload_performed",
+    "huggingface_upload_performed",
+    "public_claim",
+    "certified_safety_claim",
+    "production_controller_claim",
+    "theorem_proof_claim"
+  ],
+  "schema_id": "capcard_schema_v0_1_2026_05_21",
+  "type": "object"
+}

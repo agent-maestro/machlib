@@ -1,0 +1,32 @@
+{
+  "allowed_negative_boundary_claims": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded"
+  ],
+  "approved_allowed_only_when": "reviewer identity, role, date, decision, and acknowledgements are recorded",
+  "forbidden_positive_claims": [
+    "theorem proved",
+    "open problem solved",
+    "certified safety",
+    "production controller",
+    "PETAL verified",
+    "Hugging Face uploaded",
+    "CapCard certified"
+  ],
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "petal_hf_language_rules": [
+    "local PETAL-style rows are not PETAL verification",
+    "local Hugging Face-ready paths are not Hugging Face uploads"
+  ],
+  "policy_id": "capcard_claim_policy_v0_1_2026_05_21",
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "ready_allowed_only_when": "validator, score, and human-review gates are satisfied",
+  "verified_allowed_only_when": "specific verifier evidence and approval record are present"
+}

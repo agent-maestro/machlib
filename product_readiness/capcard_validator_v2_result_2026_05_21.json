@@ -1,0 +1,368 @@
+{
+  "adversarial_card_count": 31,
+  "adversarial_failures": 0,
+  "adversarial_results": [
+    {
+      "candidate_id": "01_valid_minimal_internal_card",
+      "errors": [],
+      "expected_result": "PASS",
+      "fixture_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "eml_like_fixture",
+      "errors": [],
+      "expected_result": "PASS",
+      "fixture_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "03_stale_only_evidence_card",
+      "errors": [
+        "03_stale_only_evidence_card: stale command-center reference cannot count as direct evidence"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "04_petal_verified_false_positive_claim",
+      "errors": [
+        "04_petal_verified_false_positive_claim: forbidden positive claim 'petal verified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "05_hugging_face_live_false_positive_claim",
+      "errors": [
+        "05_hugging_face_live_false_positive_claim: forbidden positive claim 'hugging face dataset live'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "06_certified_safety_false_claim",
+      "errors": [
+        "06_certified_safety_false_claim: forbidden positive claim 'certified safety'",
+        "06_certified_safety_false_claim: missing boundary 'not theorem prover'",
+        "06_certified_safety_false_claim: missing boundary 'not open-problem result'",
+        "06_certified_safety_false_claim: missing boundary 'not certified safety'",
+        "06_certified_safety_false_claim: missing boundary 'not production controller evidence'",
+        "06_certified_safety_false_claim: missing boundary 'not petal/api uploaded'",
+        "06_certified_safety_false_claim: missing boundary 'not hugging face uploaded'",
+        "06_certified_safety_false_claim: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "07_production_controller_false_claim",
+      "errors": [
+        "07_production_controller_false_claim: forbidden positive claim 'production controller'",
+        "07_production_controller_false_claim: missing boundary 'not theorem prover'",
+        "07_production_controller_false_claim: missing boundary 'not open-problem result'",
+        "07_production_controller_false_claim: missing boundary 'not certified safety'",
+        "07_production_controller_false_claim: missing boundary 'not production controller evidence'",
+        "07_production_controller_false_claim: missing boundary 'not petal/api uploaded'",
+        "07_production_controller_false_claim: missing boundary 'not hugging face uploaded'",
+        "07_production_controller_false_claim: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "08_theorem_proved_false_claim",
+      "errors": [
+        "08_theorem_proved_false_claim: forbidden positive claim 'theorem proved'",
+        "08_theorem_proved_false_claim: missing boundary 'not theorem prover'",
+        "08_theorem_proved_false_claim: missing boundary 'not open-problem result'",
+        "08_theorem_proved_false_claim: missing boundary 'not certified safety'",
+        "08_theorem_proved_false_claim: missing boundary 'not production controller evidence'",
+        "08_theorem_proved_false_claim: missing boundary 'not petal/api uploaded'",
+        "08_theorem_proved_false_claim: missing boundary 'not hugging face uploaded'",
+        "08_theorem_proved_false_claim: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "09_open_problem_solved_false_claim",
+      "errors": [
+        "09_open_problem_solved_false_claim: forbidden positive claim 'open problem solved'",
+        "09_open_problem_solved_false_claim: missing boundary 'not theorem prover'",
+        "09_open_problem_solved_false_claim: missing boundary 'not open-problem result'",
+        "09_open_problem_solved_false_claim: missing boundary 'not certified safety'",
+        "09_open_problem_solved_false_claim: missing boundary 'not production controller evidence'",
+        "09_open_problem_solved_false_claim: missing boundary 'not petal/api uploaded'",
+        "09_open_problem_solved_false_claim: missing boundary 'not hugging face uploaded'",
+        "09_open_problem_solved_false_claim: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "10_missing_limitations",
+      "errors": [
+        "10_missing_limitations: missing limitations",
+        "10_missing_limitations: missing boundary 'not theorem prover'",
+        "10_missing_limitations: missing boundary 'not open-problem result'",
+        "10_missing_limitations: missing boundary 'not certified safety'",
+        "10_missing_limitations: missing boundary 'not production controller evidence'",
+        "10_missing_limitations: missing boundary 'not petal/api uploaded'",
+        "10_missing_limitations: missing boundary 'not hugging face uploaded'",
+        "10_missing_limitations: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "11_missing_not_claimed",
+      "errors": [
+        "11_missing_not_claimed: missing not_claimed"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "12_missing_reviewer",
+      "errors": [
+        "12_missing_reviewer: accepted internal row missing reviewer/date"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "13_missing_review_date",
+      "errors": [
+        "13_missing_review_date: accepted internal row missing reviewer/date"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "duplicate_fixture",
+      "errors": [
+        "duplicate candidate_id"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "duplicate_fixture",
+      "errors": [
+        "duplicate candidate_id"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "15_unsafe_public_visibility",
+      "errors": [
+        "15_unsafe_public_visibility: safe_to_publish_publicly true requires public review state"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "16_production_marketplace_modified_true",
+      "errors": [
+        "16_production_marketplace_modified_true: production_marketplace_modified must be false"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "17_petal_upload_true",
+      "errors": [
+        "17_petal_upload_true: petal_api_upload_performed must be false"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "18_hf_upload_true",
+      "errors": [
+        "18_hf_upload_true: huggingface_upload_performed must be false"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "19_source_path_missing",
+      "errors": [
+        "19_source_path_missing: traceability path missing: /tmp/missing_capcard_source.json"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "20_traceability_loop",
+      "errors": [
+        "20_traceability_loop: traceability path missing: /tmp/missing_capcard_source.json"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "21_stale_command_center_only",
+      "errors": [
+        "21_stale_command_center_only: stale command-center reference cannot count as direct evidence"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "errors": [
+        "qwen_puzzle_curriculum_pack: warn rows block readiness without repair",
+        "qwen_puzzle_curriculum_pack: unknown solver rows block readiness without bounded explanation",
+        "qwen_puzzle_curriculum_pack: missing human review note for readiness"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "23_unknown_solver_marked_proof",
+      "errors": [
+        "23_unknown_solver_marked_proof: forbidden positive claim 'theorem proved'",
+        "23_unknown_solver_marked_proof: unknown solver_status requires bounded explanation",
+        "23_unknown_solver_marked_proof: missing boundary 'not theorem prover'",
+        "23_unknown_solver_marked_proof: missing boundary 'not open-problem result'",
+        "23_unknown_solver_marked_proof: missing boundary 'not certified safety'",
+        "23_unknown_solver_marked_proof: missing boundary 'not production controller evidence'",
+        "23_unknown_solver_marked_proof: missing boundary 'not petal/api uploaded'",
+        "23_unknown_solver_marked_proof: missing boundary 'not hugging face uploaded'",
+        "23_unknown_solver_marked_proof: missing boundary 'not production marketplace modified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "24_no_no_upload_gate",
+      "errors": [
+        "24_no_no_upload_gate: no-upload gate missing"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "25_token_like_secret_fixture",
+      "errors": [
+        "25_token_like_secret_fixture: token-like secret present"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "26_negative_boundary_only_safe_card",
+      "errors": [],
+      "expected_result": "PASS",
+      "fixture_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "27_incomplete_lifecycle_state",
+      "errors": [
+        "27_incomplete_lifecycle_state: missing marketplace_readiness"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "28_mismatched_candidate_id_card_id",
+      "errors": [],
+      "expected_result": "PASS",
+      "fixture_ok": true,
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "29_invalid_json_schema_shape",
+      "errors": [
+        "29_invalid_json_schema_shape: invalid JSON schema shape"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "30_overconfident_marketplace_copy",
+      "errors": [
+        "30_overconfident_marketplace_copy: forbidden positive claim 'capcard certified'"
+      ],
+      "expected_result": "FAIL",
+      "fixture_ok": true,
+      "status": "fail",
+      "warnings": []
+    }
+  ],
+  "candidate_count": 1,
+  "fail_count": 0,
+  "pass_count": 1,
+  "real_card_count": 1,
+  "results": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "errors": [],
+      "score": 90,
+      "status": "pass",
+      "warnings": []
+    }
+  ],
+  "status": "PASS",
+  "warn_count": 0
+}
