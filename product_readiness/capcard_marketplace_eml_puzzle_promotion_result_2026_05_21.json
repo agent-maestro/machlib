@@ -1,0 +1,14 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "promotion_status": "INTERNAL_DRAFT_MARKETPLACE_CARD_CREATED",
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false,
+  "qwen_puzzle_curriculum_pack_promoted": false,
+  "next_safe_task": "M084_QWEN_PUZZLE_CURRICULUM_ROW_REPAIR_REVIEW"
+}

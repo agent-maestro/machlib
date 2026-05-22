@@ -1,0 +1,35 @@
+{
+  "card_id": "eml_puzzle_evidence_kernel_DRAFT_2026_05_21",
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "display_name": "EML Puzzle Evidence Kernel",
+  "marketplace_status": "INTERNAL_DRAFT_MARKETPLACE_READY",
+  "visibility": "internal",
+  "tier": "OBSERVATION",
+  "evidence_basis": [
+    "bounded internal puzzle evidence",
+    "internal evidence ledger",
+    "PETAL-style rows local only",
+    "CapCard-style rows local only",
+    "no-upload gate"
+  ],
+  "limitations": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "requires_human_approval_for_production": true
+}

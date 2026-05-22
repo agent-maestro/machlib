@@ -1,0 +1,34 @@
+{
+  "card_id": "eml_puzzle_evidence_kernel_DRAFT_2026_05_21",
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "visibility": "internal",
+  "marketplace_status": "INTERNAL_DRAFT_MARKETPLACE_READY",
+  "qwen_puzzle_curriculum_pack_promoted": false,
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false,
+  "forge_compiler_behavior_changed": false,
+  "command_center_deploy_performed": false,
+  "requires_human_approval_for_production": true,
+  "allowed_now": [
+    "internal draft review",
+    "local copy review",
+    "human approval discussion"
+  ],
+  "not_allowed_now": [
+    "production marketplace modification",
+    "PETAL/API upload",
+    "Hugging Face upload",
+    "public publication",
+    "package publish",
+    "Forge compiler behavior change",
+    "public theorem/proof/open-problem claim",
+    "certified safety claim",
+    "production controller claim"
+  ]
+}
