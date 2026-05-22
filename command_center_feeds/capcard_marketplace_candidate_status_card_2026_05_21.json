@@ -1,0 +1,18 @@
+{
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "title": "CapCard Marketplace Candidates",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed": false,
+  "command_center_modified": false,
+  "summary": {
+    "strong_candidates": [
+      "EML Puzzle Evidence Kernel"
+    ],
+    "blocked_candidates": [
+      "Qwen Puzzle Curriculum Pack"
+    ],
+    "status": "internal review only"
+  }
+}

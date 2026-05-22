@@ -1,0 +1,21 @@
+{
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "feed_status": "DRAFT_FEED_ONLY",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed": false,
+  "command_center_modified": false,
+  "cards": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "display_name": "EML Puzzle Evidence Kernel",
+      "status": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE"
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "display_name": "Qwen Puzzle Curriculum Pack",
+      "status": "BLOCKED_WITH_EXACT_FIX_LIST"
+    }
+  ]
+}

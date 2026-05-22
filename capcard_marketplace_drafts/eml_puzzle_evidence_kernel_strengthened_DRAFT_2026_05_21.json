@@ -1,0 +1,62 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "display_name": "EML Puzzle Evidence Kernel",
+  "marketplace_status": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+  "marketplace_readiness": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+  "visibility": "internal",
+  "visibility_recommendation": "internal",
+  "tier": "OBSERVATION",
+  "evidence_quality": {
+    "ledger_present": true,
+    "no_upload_gate_present": true,
+    "quarantine_review_present": true,
+    "capcard_rows_present": true,
+    "petal_style_rows_present": true,
+    "local_ingestion_simulator_present": true
+  },
+  "evidence_basis": [
+    "internal evidence ledger",
+    "bounded internal puzzle evidence",
+    "quarantine review summary",
+    "CapCard-style rows local only",
+    "PETAL-style rows local only",
+    "local ingestion simulator",
+    "no-upload gate"
+  ],
+  "limitations": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "not_claimed": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified",
+    "not CapCard certified"
+  ],
+  "remaining_human_checks": [
+    "Confirm internal marketplace copy keeps bounded puzzle scope.",
+    "Confirm no public theorem/proof/open-problem language is introduced.",
+    "Confirm production marketplace promotion remains a separate approval."
+  ],
+  "blockers": [],
+  "next_safe_task": "M085_CAPCARD_INTERNAL_MARKETPLACE_APPROVAL_OR_QWEN_REPAIR_CONTINUATION",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false
+}

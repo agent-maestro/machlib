@@ -1,0 +1,48 @@
+{
+  "candidate_id": "qwen_puzzle_curriculum_pack",
+  "repair_review_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "marketplace_readiness": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "rows_reviewed": [
+    {
+      "source_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+      "source_row": 1,
+      "capability_id": "qwen_puzzle_curriculum_capcard_pack_repair",
+      "validation_status": "pass",
+      "solver_status": "sat",
+      "decision": "repaired_or_accepted"
+    },
+    {
+      "source_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+      "source_row": 2,
+      "capability_id": "qwen_puzzle_curriculum_capcard_pack_repair",
+      "validation_status": "warn",
+      "solver_status": "unknown",
+      "decision": "still_blocked",
+      "blocker": "validation_status=warn and solver_status=unknown with no accepted repair evidence"
+    },
+    {
+      "source_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+      "source_row": 3,
+      "capability_id": "qwen_puzzle_curriculum_capcard_pack_repair",
+      "validation_status": "warn",
+      "solver_status": "unknown",
+      "decision": "still_blocked",
+      "blocker": "validation_status=warn and solver_status=unknown with no accepted repair evidence"
+    }
+  ],
+  "blockers": [
+    "accepted_internal_capcard_pack_rows.jsonl row 2 has validation_status=warn and solver_status=unknown with no accepted repair evidence",
+    "accepted_internal_capcard_pack_rows.jsonl row 3 has validation_status=warn and solver_status=unknown with no accepted repair evidence",
+    "command-center pasted row IDs are stale or not exact direct evidence and cannot resolve source-row blockers"
+  ],
+  "qwen_puzzle_curriculum_pack_promoted": false,
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false,
+  "next_safe_task": "M085_CAPCARD_INTERNAL_MARKETPLACE_APPROVAL_OR_QWEN_REPAIR_CONTINUATION"
+}

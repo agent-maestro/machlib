@@ -1,0 +1,22 @@
+{
+  "status": "CAPCARD_MARKETPLACE_STRENGTHENING_COMPLETE",
+  "candidate_count": 2,
+  "strong_candidate_count": 1,
+  "ready_for_human_internal_marketplace_approval_count": 1,
+  "blocked_count": 1,
+  "recommended_candidates": [
+    "eml_puzzle_evidence_kernel"
+  ],
+  "blocked_candidates": [
+    "qwen_puzzle_curriculum_pack"
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false,
+  "next_safe_task": "M085_CAPCARD_INTERNAL_MARKETPLACE_APPROVAL_OR_QWEN_REPAIR_CONTINUATION"
+}

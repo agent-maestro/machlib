@@ -1,0 +1,118 @@
+{
+  "inventory_date": "2026-05-21",
+  "command_center_reference_review": {
+    "Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16": "source artifact found but exact command-center row stale",
+    "Qwen_Puzzle_Curriculum_Pack_Import_Dryrun_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Curriculum_Import_Gate_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Curriculum_Evidence_Ledger_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Curriculum_Dryrun_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Curriculum_ForgeSAT_Decision_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Evidence_Ledger_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Evidence_Quarantine_Review_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Proof_Kernel_2026_05_16": "source artifact found but exact command-center row stale",
+    "EML_Puzzle_Proof_Kernel_Integration_2026_05_16": "source artifact found but exact command-center row stale",
+    "PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16": "source artifact found but exact command-center row stale",
+    "PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16": "source artifact found but exact command-center row stale"
+  },
+  "sources": [
+    {
+      "source_path": "monogate-research/exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/puzzle_ledger_summary.json",
+      "artifact_id": "EML_Puzzle_Evidence_Ledger_2026_05_16",
+      "artifact_family": "evidence_ledger",
+      "date_or_version": "2026-05-16",
+      "status": "pass",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "eml_puzzle_evidence_kernel",
+      "marketplace_use": "direct_evidence",
+      "notes": "Accepted internal puzzle evidence ledger with zero public-ready true rows."
+    },
+    {
+      "source_path": "monogate-research/exploration/EML_Puzzle_Evidence_Quarantine_Review_2026_05_16/puzzle_review_summary.json",
+      "artifact_id": "EML_Puzzle_Evidence_Quarantine_Review_2026_05_16",
+      "artifact_family": "quarantine_review",
+      "date_or_version": "2026-05-16",
+      "status": "pass",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "eml_puzzle_evidence_kernel",
+      "marketplace_use": "direct_evidence",
+      "notes": "Review summary reports zero boundary violations."
+    },
+    {
+      "source_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/capcard_puzzle_evidence_rows.json",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_CapCard_Rows_2026_05_16",
+      "artifact_family": "capcard_style_record",
+      "date_or_version": "2026-05-16",
+      "status": "internal_candidate_public_ready_false",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "eml_puzzle_evidence_kernel",
+      "marketplace_use": "direct_evidence",
+      "notes": "Internal CapCard-style rows only."
+    },
+    {
+      "source_path": "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/petal_puzzle_attempt_records.jsonl",
+      "artifact_id": "EML_Puzzle_Proof_Kernel_PETAL_Rows_2026_05_16",
+      "artifact_family": "petal_style_record",
+      "date_or_version": "2026-05-16",
+      "status": "local_only_upload_false",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "eml_puzzle_evidence_kernel",
+      "marketplace_use": "supporting_evidence",
+      "notes": "PETAL-style rows remain local only."
+    },
+    {
+      "source_path": "monogate-research/exploration/PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16/upload_readiness_matrix.json",
+      "artifact_id": "PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16",
+      "artifact_family": "no_upload_gate",
+      "date_or_version": "2026-05-16",
+      "status": "NO_GO_FOR_PUBLIC_UPLOAD",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "both",
+      "marketplace_use": "supporting_evidence",
+      "notes": "Explicit no-upload gate."
+    },
+    {
+      "source_path": "monogate-research/exploration/PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16/ingestion_summary.json",
+      "artifact_id": "PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16",
+      "artifact_family": "local_ingestion_simulator",
+      "date_or_version": "2026-05-16",
+      "status": "pass_no_upload",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "both",
+      "marketplace_use": "supporting_evidence",
+      "notes": "Local simulator only; no API call."
+    },
+    {
+      "source_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/pack_ledger_summary.json",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16",
+      "artifact_family": "evidence_ledger",
+      "date_or_version": "2026-05-16",
+      "status": "pass",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "qwen_puzzle_curriculum_pack",
+      "marketplace_use": "supporting_evidence",
+      "notes": "Ledger passes, but row-level blockers remain."
+    },
+    {
+      "source_path": "monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+      "artifact_id": "Qwen_Puzzle_Curriculum_Pack_CapCard_Rows_2026_05_16",
+      "artifact_family": "capcard_style_record",
+      "date_or_version": "2026-05-16",
+      "status": "mixed_pass_warn",
+      "freshness": "stale_but_traceable",
+      "candidate_link": "qwen_puzzle_curriculum_pack",
+      "marketplace_use": "blocked_evidence",
+      "notes": "Rows 2 and 3 have validation_status=warn and solver_status=unknown."
+    },
+    {
+      "source_path": "command-center/data/proof-registry.jsonl",
+      "artifact_id": "pasted_2026_05_16_command_center_rows",
+      "artifact_family": "stale_reference",
+      "date_or_version": "2026-05-16",
+      "status": "source artifact found but exact command-center row stale",
+      "freshness": "stale_unknown",
+      "candidate_link": "both",
+      "marketplace_use": "stale_reference_only",
+      "notes": "Command-center exact row IDs were not used as direct evidence."
+    }
+  ]
+}

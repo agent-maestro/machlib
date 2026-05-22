@@ -1,0 +1,27 @@
+{
+  "stress_test_status": "PASS",
+  "valid_eml_strong_candidate": "PASS",
+  "adversarial_cases": [
+    "remove evidence ledger",
+    "set PETAL upload true",
+    "set HF upload true",
+    "set production marketplace modified true",
+    "insert theorem proved",
+    "insert open problem solved",
+    "insert certified safety",
+    "duplicate candidate_id",
+    "mark Qwen ready with warn rows unresolved",
+    "mark public visibility true",
+    "stale command-center exact row only with no source artifact"
+  ],
+  "expected_result": "all adversarial cases fail",
+  "actual_result": "all adversarial cases covered by validator tests or validator rules",
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false
+}

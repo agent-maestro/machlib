@@ -1,0 +1,32 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "traceability_status": "TRACEABLE_INTERNAL_DRAFT",
+  "evidence_ledger_paths": [
+    "monogate-research/exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/puzzle_ledger_summary.json",
+    "monogate-research/exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/puzzle_evidence_ledger.jsonl"
+  ],
+  "no_upload_gate_paths": [
+    "monogate-research/exploration/PETAL_Public_Attempt_Logging_NoUpload_Gate_2026_05_16/upload_readiness_matrix.json",
+    "monogate-research/exploration/PETAL_Local_Attempt_Ingestion_Simulator_2026_05_16/ingestion_summary.json"
+  ],
+  "source_rows": [
+    "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/capcard_puzzle_evidence_rows.json",
+    "monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/petal_puzzle_attempt_records.jsonl",
+    "monogate-research/exploration/EML_Puzzle_Proof_Kernel_Integration_2026_05_16/capcard_puzzle_registry.json"
+  ],
+  "candidate_review_paths": [
+    "product_readiness/qwen_capcard_marketplace_candidates_2026_05_21.json",
+    "reports/qwen_capcard_marketplace_candidate_review_2026_05_21.md"
+  ],
+  "draft_marketplace_card_paths": [
+    "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_card_DRAFT_2026_05_21.json",
+    "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_strengthened_DRAFT_2026_05_21.json"
+  ],
+  "next_step_paths": [
+    "reports/capcard_marketplace_strengthening_next_steps_2026_05_21.md"
+  ],
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false
+}
