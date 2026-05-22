@@ -1,0 +1,115 @@
+{
+  "cards": [
+    {
+      "card_id": "01-title",
+      "duration_seconds": 8,
+      "narration": "This is a short evidence update for MachLib package tooling.",
+      "on_screen_bullets": [
+        "pre-alpha tooling update",
+        "local evidence reel storyboard"
+      ],
+      "title": "MachLib Evidence Tooling Update",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "02-published-packages",
+      "duration_seconds": 8,
+      "narration": "Four small pre-alpha packages are published and verified for early testing.",
+      "on_screen_bullets": [
+        "zero-mathlib-checker",
+        "claim-boundary",
+        "eml-records",
+        "review-branch-packet"
+      ],
+      "title": "Published packages",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "03-ready-pending-packages",
+      "duration_seconds": 8,
+      "narration": "MachLib and adjacent tools remain in a careful readiness and retry path.",
+      "on_screen_bullets": [
+        "machlib",
+        "machlib-workbench",
+        "eml-harness",
+        "hybrid-trace-eml"
+      ],
+      "title": "Ready / pending packages",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "04-what-passed",
+      "duration_seconds": 8,
+      "narration": "The packet records tests, bounded validation, Twine checks, and repo artifact checks.",
+      "on_screen_bullets": [
+        "package tests",
+        "zero-Mathlib gates",
+        "Twine checks",
+        "repo artifact checks"
+      ],
+      "title": "What passed",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "05-paused",
+      "duration_seconds": 8,
+      "narration": "MachLib hit a PyPI rate limit, so the retry path pauses instead of forcing another upload.",
+      "on_screen_bullets": [
+        "PyPI HTTP 429 for MachLib",
+        "no immediate retry"
+      ],
+      "title": "What failed / paused",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "06-not-claimed",
+      "duration_seconds": 8,
+      "narration": "This is evidence tooling, not a public proof claim or safety certification.",
+      "on_screen_bullets": [
+        "not a theorem prover",
+        "not a Mathlib replacement",
+        "not an open-problem solution",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "title": "What is not claimed",
+      "visual_direction": "clean evidence card with concise package/status text"
+    },
+    {
+      "card_id": "07-next-actions",
+      "duration_seconds": 8,
+      "narration": "The next steps are cooldown, retry planning, and continued local AV product tooling.",
+      "on_screen_bullets": [
+        "cooldown",
+        "record retry plan",
+        "retry MachLib later",
+        "continue AV product tooling"
+      ],
+      "title": "Next actions",
+      "visual_direction": "clean evidence card with concise package/status text"
+    }
+  ],
+  "date": "2026-05-21",
+  "guardrails": {
+    "deploy_performed": false,
+    "hardware_action_performed": false,
+    "public_theorem_proof_open_problem_claim": false,
+    "pypi_token_handling_performed": false,
+    "pypi_upload_performed": false,
+    "video_rendered": false
+  },
+  "reel_id": "machlib_package_reel_2026_05_21",
+  "source_evidence": {
+    "available_inputs": [
+      "product_readiness/all_packages_publish_readiness_2026_05_20.json",
+      "product_readiness/all_packages_upload_manifest_DRAFT_2026_05_20.json",
+      "product_readiness/machlib_publish_readiness_2026_05_21.json",
+      "product_readiness/package_001_cleanup_upload_result_2026_05_20.json",
+      "reports/all_packages_publish_readiness_2026_05_20.md",
+      "reports/package_001_cleanup_upload_result_2026_05_20.md"
+    ],
+    "missing_inputs": []
+  },
+  "status": "LOCAL_STORYBOARD_ONLY_NO_VIDEO_RENDERED",
+  "title": "MachLib Evidence Tooling Update"
+}

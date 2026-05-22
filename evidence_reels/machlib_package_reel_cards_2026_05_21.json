@@ -1,0 +1,55 @@
+{
+  "asset_status": "PLACEHOLDER_ONLY_NO_VIDEO_RENDERED",
+  "cards": [
+    {
+      "card_id": "01-title",
+      "format": "storyboard_card",
+      "placeholder_asset": "01-title.svg",
+      "placeholder_created": false,
+      "title": "MachLib Evidence Tooling Update"
+    },
+    {
+      "card_id": "02-published-packages",
+      "format": "storyboard_card",
+      "placeholder_asset": "02-published-packages.svg",
+      "placeholder_created": false,
+      "title": "Published packages"
+    },
+    {
+      "card_id": "03-ready-pending-packages",
+      "format": "storyboard_card",
+      "placeholder_asset": "03-ready-pending-packages.svg",
+      "placeholder_created": false,
+      "title": "Ready / pending packages"
+    },
+    {
+      "card_id": "04-what-passed",
+      "format": "storyboard_card",
+      "placeholder_asset": "04-what-passed.svg",
+      "placeholder_created": false,
+      "title": "What passed"
+    },
+    {
+      "card_id": "05-paused",
+      "format": "storyboard_card",
+      "placeholder_asset": "05-paused.svg",
+      "placeholder_created": false,
+      "title": "What failed / paused"
+    },
+    {
+      "card_id": "06-not-claimed",
+      "format": "storyboard_card",
+      "placeholder_asset": "06-not-claimed.svg",
+      "placeholder_created": false,
+      "title": "What is not claimed"
+    },
+    {
+      "card_id": "07-next-actions",
+      "format": "storyboard_card",
+      "placeholder_asset": "07-next-actions.svg",
+      "placeholder_created": false,
+      "title": "Next actions"
+    }
+  ],
+  "manifest_id": "machlib_package_reel_2026_05_21_cards"
+}
