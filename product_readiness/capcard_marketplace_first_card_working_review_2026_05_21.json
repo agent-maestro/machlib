@@ -1,0 +1,18 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "card_status": "INTERNAL_DRAFT_MARKETPLACE_READY",
+  "certified_safety_claim": false,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "next_safe_task": "M084B_QWEN_PUZZLE_CURRICULUM_REPAIR_FOR_SECOND_CARD",
+  "petal_api_upload_performed": false,
+  "preview_generated": true,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "theorem_proof_claim": false,
+  "works_as_internal_draft_card": true,
+  "works_as_production_marketplace_card": false
+}

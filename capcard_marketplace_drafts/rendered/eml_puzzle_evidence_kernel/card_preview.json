@@ -1,0 +1,29 @@
+{
+  "candidate_id": "eml_puzzle_evidence_kernel",
+  "evidence_basis": [
+    "bounded internal puzzle evidence",
+    "internal evidence ledger",
+    "PETAL-style rows local only",
+    "CapCard-style rows local only",
+    "no-upload gate"
+  ],
+  "limitations": [
+    "not a theorem prover",
+    "not an open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "next_review_action": "Human review may approve, request revision, or keep the card internal.",
+  "not_certified_safety": true,
+  "not_hugging_face_uploaded": true,
+  "not_petal_api_uploaded": true,
+  "not_production_controller_evidence": true,
+  "not_public_marketplace": true,
+  "not_theorem_proof_open_problem_claim": true,
+  "status": "internal draft only",
+  "title": "EML Puzzle Evidence Kernel",
+  "visibility": "internal"
+}
