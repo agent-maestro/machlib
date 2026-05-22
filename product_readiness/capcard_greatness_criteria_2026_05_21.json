@@ -1,0 +1,23 @@
+{
+  "capcard_greatness_score_0_to_100": 68,
+  "verdict": "PROMISING_BUT_INTERNAL",
+  "criteria": [
+    {"criterion": "Evidence traceability", "why_it_matters": "Cards need source-backed trust.", "current_status": "MEDIUM", "evidence": "EML traceability exists; Qwen has unresolved rows.", "gaps": "freshness automation", "next_action": "source freshness checks", "score_0_to_5": 3},
+    {"criterion": "Validator strength", "why_it_matters": "Bad cards must fail.", "current_status": "STRONG", "evidence": "35 focused validator/simulation tests.", "gaps": "schema package not yet formalized", "next_action": "publish internal schema", "score_0_to_5": 4},
+    {"criterion": "Adversarial overclaim resistance", "why_it_matters": "Marketplace copy can drift into claims.", "current_status": "STRONG", "evidence": "forbidden PETAL/HF/safety/theorem tests.", "gaps": "more natural-language fixtures", "next_action": "add fixture corpus", "score_0_to_5": 4},
+    {"criterion": "Human review workflow", "why_it_matters": "Promotion needs accountability.", "current_status": "MEDIUM", "evidence": "reviewer checklist exists.", "gaps": "no reviewer identity enforcement in real cards yet", "next_action": "review-signoff fields", "score_0_to_5": 3},
+    {"criterion": "Candidate lifecycle clarity", "why_it_matters": "Teams need repeatable movement.", "current_status": "MEDIUM", "evidence": "lifecycle model drafted.", "gaps": "not yet embedded in CLI", "next_action": "lifecycle validator", "score_0_to_5": 3},
+    {"criterion": "Internal marketplace UX", "why_it_matters": "Cards must be useful, not just files.", "current_status": "WEAK", "evidence": "mock index only.", "gaps": "no browsing UI yet", "next_action": "static internal viewer", "score_0_to_5": 2},
+    {"criterion": "Command Center integration", "why_it_matters": "Operators need safe status display.", "current_status": "MEDIUM", "evidence": "internal feed/card JSON exists.", "gaps": "not mounted/deployed", "next_action": "no-deploy mount plan", "score_0_to_5": 3},
+    {"criterion": "PETAL/HF separation discipline", "why_it_matters": "Local rows must not imply uploads.", "current_status": "STRONG", "evidence": "all PETAL/HF action fields false and validated.", "gaps": "needs UI affordance", "next_action": "boundary strip in UI", "score_0_to_5": 4},
+    {"criterion": "Reproducibility", "why_it_matters": "Reviewers need rerunnable checks.", "current_status": "MEDIUM", "evidence": "validators and tests run locally.", "gaps": "source discovery is still manual", "next_action": "inventory command", "score_0_to_5": 3},
+    {"criterion": "Candidate comparison/ranking", "why_it_matters": "Marketplace needs prioritization.", "current_status": "WEAK", "evidence": "rollup counts exist.", "gaps": "no ranking model", "next_action": "scoring rubric", "score_0_to_5": 2},
+    {"criterion": "Monetizable workflow", "why_it_matters": "Great product must solve paid pain.", "current_status": "MEDIUM", "evidence": "audit/review workflows are plausible.", "gaps": "buyer proof missing", "next_action": "pilot with internal review pack", "score_0_to_5": 3},
+    {"criterion": "Public-copy safety", "why_it_matters": "External release creates risk.", "current_status": "MEDIUM", "evidence": "negative boundaries are consistent.", "gaps": "no public approval policy", "next_action": "public release checklist", "score_0_to_5": 3}
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false
+}

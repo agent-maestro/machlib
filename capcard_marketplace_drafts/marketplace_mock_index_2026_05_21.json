@@ -1,0 +1,19 @@
+{
+  "marketplace": "capcard_internal_mock",
+  "visibility": "internal",
+  "production_marketplace_modified": false,
+  "cards": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "display_name": "EML Puzzle Evidence Kernel",
+      "status": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+      "summary": "Bounded internal puzzle evidence card with traceability and no-upload boundaries."
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "display_name": "Qwen Puzzle Curriculum Pack",
+      "status": "BLOCKED_WITH_EXACT_FIX_LIST",
+      "summary": "Useful curriculum evidence remains blocked by warn/unknown rows without accepted repair evidence."
+    }
+  ]
+}

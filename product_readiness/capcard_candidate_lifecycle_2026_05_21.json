@@ -1,0 +1,37 @@
+{
+  "states": [
+    "RAW_SIGNAL",
+    "STRUCTURED_EVIDENCE",
+    "QUARANTINED",
+    "REVIEWED_INTERNAL",
+    "CANDIDATE_PROFILE",
+    "VALIDATED_CARD",
+    "INTERNAL_MARKETPLACE_DRAFT",
+    "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+    "HUMAN_APPROVED_INTERNAL_MARKETPLACE",
+    "PUBLIC_REVIEW_BLOCKED",
+    "PUBLIC_READY_REVIEW",
+    "RETIRED_OR_REJECTED"
+  ],
+  "state_requirements": {
+    "RAW_SIGNAL": {"entry_criteria": "artifact observed", "exit_criteria": "source path recorded", "required_files": [], "required_false_action_fields": [], "validator_checks": [], "human_review_role": "none", "failure_modes": ["untraceable artifact"]},
+    "STRUCTURED_EVIDENCE": {"entry_criteria": "evidence rows exist", "exit_criteria": "schema parse passes", "required_files": ["ledger or row file"], "required_false_action_fields": ["upload fields false"], "validator_checks": ["required fields"], "human_review_role": "spot check", "failure_modes": ["missing fields"]},
+    "QUARANTINED": {"entry_criteria": "warning or unknown status", "exit_criteria": "repair or explicit blocker", "required_files": ["quarantine review"], "required_false_action_fields": ["public_claim false"], "validator_checks": ["block readiness"], "human_review_role": "accept repair", "failure_modes": ["silent promotion"]},
+    "REVIEWED_INTERNAL": {"entry_criteria": "review note exists", "exit_criteria": "candidate profile", "required_files": ["review report"], "required_false_action_fields": ["production_marketplace_modified false"], "validator_checks": ["no positive claims"], "human_review_role": "reviewer decision", "failure_modes": ["unowned decision"]},
+    "CANDIDATE_PROFILE": {"entry_criteria": "candidate id and display name", "exit_criteria": "draft card", "required_files": ["candidate JSON"], "required_false_action_fields": ["PETAL/HF false"], "validator_checks": ["candidate required fields"], "human_review_role": "approve profile", "failure_modes": ["ambiguous scope"]},
+    "VALIDATED_CARD": {"entry_criteria": "validator pass", "exit_criteria": "internal draft", "required_files": ["card JSON"], "required_false_action_fields": ["all action fields false"], "validator_checks": ["boundaries and false fields"], "human_review_role": "review preview", "failure_modes": ["overclaim"]},
+    "INTERNAL_MARKETPLACE_DRAFT": {"entry_criteria": "local draft card", "exit_criteria": "strong candidate", "required_files": ["listing and guardrails"], "required_false_action_fields": ["public claim false"], "validator_checks": ["renderable card"], "human_review_role": "request revision or strengthen", "failure_modes": ["not useful in marketplace"]},
+    "INTERNAL_MARKETPLACE_STRONG_CANDIDATE": {"entry_criteria": "traceability and stress tests", "exit_criteria": "human approval", "required_files": ["traceability and checklist"], "required_false_action_fields": ["production false"], "validator_checks": ["stress tests"], "human_review_role": "approve internal display", "failure_modes": ["weak evidence"]},
+    "HUMAN_APPROVED_INTERNAL_MARKETPLACE": {"entry_criteria": "explicit approval", "exit_criteria": "internal display", "required_files": ["approval record"], "required_false_action_fields": ["public false"], "validator_checks": ["approval phrase"], "human_review_role": "owner approval", "failure_modes": ["approval ambiguity"]},
+    "PUBLIC_REVIEW_BLOCKED": {"entry_criteria": "blocker exists", "exit_criteria": "repair or retire", "required_files": ["blocker matrix"], "required_false_action_fields": ["public false"], "validator_checks": ["cannot publish"], "human_review_role": "triage", "failure_modes": ["ignored blocker"]},
+    "PUBLIC_READY_REVIEW": {"entry_criteria": "public policy review", "exit_criteria": "separate approval", "required_files": ["public review checklist"], "required_false_action_fields": ["upload false until approval"], "validator_checks": ["public-safe copy"], "human_review_role": "legal/product review", "failure_modes": ["external overclaim"]},
+    "RETIRED_OR_REJECTED": {"entry_criteria": "not viable", "exit_criteria": "none", "required_files": ["retirement note"], "required_false_action_fields": ["all action fields false"], "validator_checks": ["not displayed as active"], "human_review_role": "record decision", "failure_modes": ["stale active card"]}
+  },
+  "current_candidate_map": {
+    "eml_puzzle_evidence_kernel": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+    "qwen_puzzle_curriculum_pack": "PUBLIC_REVIEW_BLOCKED",
+    "qwen_eml_internal_candidate_001": "RAW_SIGNAL",
+    "senses_animal_model_card": "RAW_SIGNAL",
+    "machlib_package_evidence_card": "STRUCTURED_EVIDENCE"
+  }
+}

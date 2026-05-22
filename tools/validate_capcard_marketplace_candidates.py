@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -39,7 +40,10 @@ FORBIDDEN_POSITIVE = [
     "petal verified",
     "hugging face uploaded",
     "capcard certified",
+    "hugging face dataset live",
 ]
+
+TOKEN_PATTERN = re.compile(r"pypi-[A-Za-z0-9]{20,}|hf_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}")
 
 READY_STATES = {
     "READY_FOR_HUMAN_MARKETPLACE_APPROVAL",
@@ -137,11 +141,27 @@ def validate_row(row: dict[str, Any], *, strict: bool) -> tuple[str, list[str], 
     for key in FALSE_FIELDS:
         if row.get(key) is not False:
             errors.append(f"{cid}: {key} must be false")
+    ready = row.get("marketplace_readiness") in READY_STATES
     blob = text_blob(row).lower()
+    if TOKEN_PATTERN.search(text_blob(row)):
+        errors.append(f"{cid}: token-like secret present")
     for phrase in FORBIDDEN_POSITIVE:
         if phrase in blob and not is_negative_boundary_hit(blob, phrase):
             errors.append(f"{cid}: forbidden positive claim '{phrase}'")
-    ready = row.get("marketplace_readiness") in READY_STATES
+    if row.get("safe_to_publish_publicly") is True and row.get("marketplace_readiness") != "PUBLIC_READY_REVIEW":
+        errors.append(f"{cid}: safe_to_publish_publicly true requires public review state")
+    if row.get("marketplace_status") == "PUBLIC_READY_REVIEW" and row.get("visibility") == "internal":
+        errors.append(f"{cid}: public-ready status conflicts with internal visibility")
+    for path in row.get("traceability_paths", []):
+        if not Path(path).exists():
+            errors.append(f"{cid}: traceability path missing: {path}")
+    for accepted in row.get("accepted_internal_rows", []):
+        if not accepted.get("reviewer") or not accepted.get("reviewed_at"):
+            errors.append(f"{cid}: accepted internal row missing reviewer/date")
+    if row.get("decision") == "SOFT_GO" and not row.get("human_review_checklist_present"):
+        errors.append(f"{cid}: SOFT_GO requires human-review checklist")
+    if ready and row.get("solver_status") == "unknown" and not row.get("bounded_solver_status_explanation"):
+        errors.append(f"{cid}: unknown solver_status requires bounded explanation")
     if ready:
         boundary_text = normalize_boundary_text(" ".join(
             str(x).lower()
@@ -159,6 +179,8 @@ def validate_row(row: dict[str, Any], *, strict: bool) -> tuple[str, list[str], 
                 errors.append(f"{cid}: evidence ledger not represented")
             if "no-upload" not in basis and "no upload" not in basis:
                 errors.append(f"{cid}: no-upload gate not represented")
+            if row.get("no_upload_gate_present") is False:
+                errors.append(f"{cid}: no-upload gate missing")
     if cid == "qwen_puzzle_curriculum_pack":
         if ready:
             blockers = " ".join(map(str, row.get("blockers", []))).lower()

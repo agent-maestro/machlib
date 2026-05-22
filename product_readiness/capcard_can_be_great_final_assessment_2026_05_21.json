@@ -1,0 +1,58 @@
+{
+  "verdict": "PROMISING_BUT_INTERNAL",
+  "greatness_score_0_to_100": 68,
+  "blunt_answer": "CapCard can be great if it stays an internal evidence marketplace first; it is not ready as a public marketplace.",
+  "top_strengths": [
+    "clear internal evidence-card identity",
+    "validator and stress-test discipline",
+    "strong PETAL/HF/upload separation",
+    "first working EML Puzzle Evidence Kernel card",
+    "exact blockers for Qwen rather than hand-waving"
+  ],
+  "top_weaknesses": [
+    "only one strong card exists",
+    "marketplace UX is still mock data",
+    "source freshness is partly manual",
+    "human approval workflow lacks signed reviewer fields",
+    "public-product policy is missing"
+  ],
+  "what_is_real_now": [
+    "internal draft card files",
+    "local preview and validator",
+    "candidate lifecycle draft",
+    "simulation queues",
+    "internal Command Center feed JSON"
+  ],
+  "what_is_fake_or_not_ready": [
+    "public marketplace",
+    "PETAL verification",
+    "Hugging Face dataset publication",
+    "certification",
+    "production controller evidence"
+  ],
+  "first_working_card_status": "EML Puzzle Evidence Kernel works as an internal draft and strong candidate.",
+  "second_card_status": "Qwen Puzzle Curriculum Pack remains blocked by warn/unknown rows.",
+  "product_moat": "The moat is disciplined evidence-boundary workflow: validators, traceability, human review, and no-go claim enforcement in one card lifecycle.",
+  "next_7_day_plan": [
+    "build marketplace static viewer",
+    "wire simulation output to viewer",
+    "add reviewer signoff schema",
+    "add source freshness scanner",
+    "repair Qwen rows or retire the candidate"
+  ],
+  "next_30_day_plan": [
+    "pilot with three to five internal cards",
+    "create CapCard schema package",
+    "add Command Center no-deploy preview",
+    "add review ownership and audit log",
+    "draft public-release policy but keep public blocked"
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "theorem_proof_claim": false
+}

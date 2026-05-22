@@ -1,0 +1,21 @@
+{
+  "candidate_count": 2,
+  "fail_count": 0,
+  "pass_count": 2,
+  "results": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "errors": [],
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "errors": [],
+      "status": "pass",
+      "warnings": []
+    }
+  ],
+  "status": "PASS",
+  "warn_count": 0
+}

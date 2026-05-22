@@ -1,0 +1,12 @@
+{
+  "feed_id": "capcard_greatness_assessment_2026_05_21",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "cards": [
+    "command_center_feeds/capcard_greatness_assessment_card_2026_05_21.json"
+  ],
+  "deploy_performed": false,
+  "production_marketplace_modified": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false
+}

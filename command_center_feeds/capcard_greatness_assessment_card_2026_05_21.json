@@ -1,0 +1,15 @@
+{
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "title": "CapCard Marketplace Greatness Assessment",
+  "status": "PROMISING_BUT_INTERNAL",
+  "score": 68,
+  "summary": "CapCard has a real internal product shape, one strong card, and strict boundaries; public marketplace remains blocked."
+}

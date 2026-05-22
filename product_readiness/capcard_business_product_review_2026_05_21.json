@@ -1,0 +1,53 @@
+{
+  "answer_can_capcard_be_great": "yes, as a strong internal product first",
+  "what_would_make_it_great": [
+    "repeatable lifecycle from raw signal to validated internal card",
+    "hard validator that blocks overclaims and action-field drift",
+    "clear evidence traceability and source freshness",
+    "reviewer workflow with accountable approvals",
+    "useful Command Center/internal marketplace UX"
+  ],
+  "what_would_kill_it": [
+    "treating local rows as PETAL verification",
+    "public marketplace claims before review",
+    "weak evidence cards that read like marketing",
+    "stale source references counted as direct evidence",
+    "no human review ownership"
+  ],
+  "users": [
+    "internal AI research teams",
+    "safety/evals teams",
+    "formal methods teams",
+    "robotics/simulation review teams",
+    "model-curriculum teams",
+    "artifact review teams"
+  ],
+  "use_cases": [
+    "AI-generated artifact review",
+    "capability-marketplace triage",
+    "no-go claim enforcement",
+    "evidence-backed training/curriculum catalogs",
+    "candidate readiness dashboards",
+    "review packet generation"
+  ],
+  "revenue_paths": [
+    {"path": "internal review service", "attractiveness": "high", "time_to_value": "short", "blockers": "needs durable workflow", "required_product_work": "review queues and checklists", "risk": "medium", "score": 4},
+    {"path": "hosted/private marketplace", "attractiveness": "medium", "time_to_value": "medium", "blockers": "UX and access control", "required_product_work": "marketplace viewer", "risk": "medium", "score": 3},
+    {"path": "CLI/workbench package", "attractiveness": "medium", "time_to_value": "short", "blockers": "schema polish", "required_product_work": "validator package", "risk": "low", "score": 3},
+    {"path": "consulting/evidence audits", "attractiveness": "high", "time_to_value": "short", "blockers": "repeatable reports", "required_product_work": "audit templates", "risk": "medium", "score": 4},
+    {"path": "Command Center integration", "attractiveness": "medium", "time_to_value": "medium", "blockers": "no-deploy mount path", "required_product_work": "internal feed display", "risk": "medium", "score": 3},
+    {"path": "dataset/curriculum marketplace later", "attractiveness": "medium", "time_to_value": "long", "blockers": "Qwen repair and public policy", "required_product_work": "public review gate", "risk": "high", "score": 2}
+  ],
+  "next_7_day_build_plan": [
+    "turn validator output into card-level CI",
+    "add source freshness scanner",
+    "build static internal marketplace viewer",
+    "add reviewer identity/date fields",
+    "repair or retire Qwen warning rows"
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false
+}

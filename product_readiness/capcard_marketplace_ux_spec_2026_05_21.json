@@ -1,0 +1,13 @@
+{
+  "views": [
+    {"view": "Candidate list", "purpose": "scan candidates by status", "fields": ["name", "status", "blockers", "recommended action"], "example": "EML Puzzle Evidence Kernel strong; Qwen blocked", "blocked_fields": ["public publish button"], "no_go_copy": "Internal only until approved"},
+    {"view": "Candidate detail", "purpose": "read card summary", "fields": ["evidence basis", "limitations", "not claimed"], "example": "EML bounded puzzle evidence", "blocked_fields": ["certification badge"], "no_go_copy": "Not certified safety"},
+    {"view": "Evidence traceability tab", "purpose": "map card to sources", "fields": ["ledger paths", "no-upload gates", "source rows"], "example": "EML ledger and no-upload paths", "blocked_fields": ["stale-only direct evidence"], "no_go_copy": "Stale references are supporting only"},
+    {"view": "Limitations tab", "purpose": "show boundaries", "fields": ["scope", "what failed", "not claimed"], "example": "toy-solver bounded evidence", "blocked_fields": ["public theorem claim"], "no_go_copy": "No theorem/proof/open-problem claim"},
+    {"view": "Validator/stress-test tab", "purpose": "show validator result", "fields": ["pass count", "blocked cases", "latest run"], "example": "35 focused tests", "blocked_fields": ["manual override"], "no_go_copy": "Failed validation blocks promotion"},
+    {"view": "Human review checklist", "purpose": "make approval accountable", "fields": ["reviewer", "date", "decision"], "example": "verify no upload and bounded scope", "blocked_fields": ["anonymous approval"], "no_go_copy": "Human approval required"},
+    {"view": "No-go boundary strip", "purpose": "keep claims visible", "fields": ["PETAL false", "HF false", "public false"], "example": "local rows only", "blocked_fields": ["PETAL verified"], "no_go_copy": "Not PETAL/API uploaded"},
+    {"view": "Promotion history", "purpose": "audit movement", "fields": ["state changes", "commits", "approvals"], "example": "M083 to M084 strengthened", "blocked_fields": ["unrecorded promotion"], "no_go_copy": "No production modification"},
+    {"view": "Command Center card view", "purpose": "safe internal status display", "fields": ["surface", "visibility", "status"], "example": "internal Command Center feed", "blocked_fields": ["deploy control"], "no_go_copy": "No deploy performed"}
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "product": "CapCard",
+  "thesis": "CapCard is an internal evidence-card marketplace for AI-generated or tool-generated capabilities. Each card summarizes what was attempted, what passed, what failed, what is bounded, what is not claimed, and what human review remains.",
+  "users": [
+    "internal AI research teams",
+    "safety and evaluation teams",
+    "formal-methods adjacent reviewers",
+    "artifact review teams",
+    "model-curriculum teams"
+  ],
+  "smallest_useful_product": "A local/internal candidate list with validated evidence cards, traceability, limitations, no-go boundaries, and a human review checklist.",
+  "different_from_dashboard": "A dashboard displays status; CapCard requires claim boundaries, evidence traceability, false upload/deploy fields, and reviewer workflow before promotion.",
+  "product_promise": "Help reviewers understand capability evidence without overclaiming, uploading, or publishing prematurely.",
+  "must_never_claim": [
+    "certified safety",
+    "production controller status",
+    "public theorem/proof/open-problem result",
+    "PETAL verified unless PETAL/API evidence exists",
+    "Hugging Face uploaded unless an upload was actually performed",
+    "CapCard certified"
+  ],
+  "product_modes": [
+    {
+      "product_mode": "internal capability marketplace",
+      "value": "reviewable cards for local capabilities",
+      "users": "research and review teams",
+      "risks": "false confidence if validators are weak",
+      "readiness": "MEDIUM",
+      "next_required_work": "ship one durable internal card flow",
+      "public_safe_now": false
+    },
+    {
+      "product_mode": "evidence review cockpit",
+      "value": "traceability and no-go boundary review",
+      "users": "safety and eval reviewers",
+      "risks": "source freshness drift",
+      "readiness": "MEDIUM",
+      "next_required_work": "automated freshness checks",
+      "public_safe_now": false
+    },
+    {
+      "product_mode": "training/curriculum catalog",
+      "value": "bounded curriculum evidence cards",
+      "users": "model-curriculum teams",
+      "risks": "solver-status ambiguity",
+      "readiness": "WEAK",
+      "next_required_work": "repair Qwen warning rows",
+      "public_safe_now": false
+    },
+    {
+      "product_mode": "PETAL-style evidence registry",
+      "value": "keeps local PETAL-style rows separate from upload claims",
+      "users": "artifact review teams",
+      "risks": "confusing local style with PETAL verification",
+      "readiness": "MEDIUM",
+      "next_required_work": "stronger PETAL/API separation labels",
+      "public_safe_now": false
+    },
+    {
+      "product_mode": "Command Center status marketplace",
+      "value": "internal status cards for operators",
+      "users": "Command Center reviewers",
+      "risks": "deploy/public visibility confusion",
+      "readiness": "MEDIUM",
+      "next_required_work": "static internal status feed renderer",
+      "public_safe_now": false
+    },
+    {
+      "product_mode": "public marketplace",
+      "value": "external discovery",
+      "users": "external buyers",
+      "risks": "overclaiming and liability",
+      "readiness": "MISSING",
+      "next_required_work": "public review policy and legal/product approval",
+      "public_safe_now": false
+    }
+  ],
+  "production_marketplace_modified": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false
+}
