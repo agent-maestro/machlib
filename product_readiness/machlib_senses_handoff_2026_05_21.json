@@ -1,0 +1,27 @@
+{
+  "status": "REFRAMED_AS_SENSES_INFRASTRUCTURE",
+  "valuable_misunderstanding": true,
+  "keep_artifacts": [
+    "storyboard generator",
+    "SVG card renderer",
+    "HTML player",
+    "Command Center static snapshot plan"
+  ],
+  "not_primary_direction": [
+    "report videos",
+    "static status-only reels"
+  ],
+  "primary_next_direction": "1op.io/senses animal-senses interactive sensory layer",
+  "senses_focus": [
+    "seeing",
+    "hearing",
+    "smelling",
+    "touching",
+    "electro-sensory models",
+    "magnetic-sensory models",
+    "infrared-sensory models"
+  ],
+  "no_deploy": true,
+  "no_upload": true,
+  "no_public_claim": true
+}
