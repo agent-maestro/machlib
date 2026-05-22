@@ -1,0 +1,53 @@
+{
+  "card_count": 7,
+  "cards": [
+    {
+      "id": "01-title",
+      "svg_path": "card_01_title.svg",
+      "title": "MachLib Evidence Tooling Update"
+    },
+    {
+      "id": "02-published-packages",
+      "svg_path": "card_02_published_packages.svg",
+      "title": "Published packages"
+    },
+    {
+      "id": "03-ready-pending",
+      "svg_path": "card_03_ready_pending.svg",
+      "title": "Ready / pending packages"
+    },
+    {
+      "id": "04-passed-checks",
+      "svg_path": "card_04_passed_checks.svg",
+      "title": "Passed checks"
+    },
+    {
+      "id": "05-pause-failure",
+      "svg_path": "card_05_pause_failure.svg",
+      "title": "Pause / failure"
+    },
+    {
+      "id": "06-not-claimed",
+      "svg_path": "card_06_not_claimed.svg",
+      "title": "Not claimed"
+    },
+    {
+      "id": "07-next-actions",
+      "svg_path": "card_07_next_actions.svg",
+      "title": "Next actions"
+    }
+  ],
+  "generated_at": "2026-05-22T08:45:11.005724+00:00",
+  "no_audio_generated": true,
+  "no_deploy_performed": true,
+  "no_public_claim": true,
+  "no_upload_performed": true,
+  "no_video_generated": true,
+  "reel_id": "machlib_package_reel_2026_05_21",
+  "source_files": [
+    "evidence_reels/machlib_package_reel_2026_05_21.json",
+    "evidence_reels/machlib_package_reel_cards_2026_05_21.json",
+    "evidence_reels/machlib_package_reel_script_2026_05_21.md",
+    "evidence_reels/machlib_package_reel_narration_2026_05_21.md"
+  ]
+}

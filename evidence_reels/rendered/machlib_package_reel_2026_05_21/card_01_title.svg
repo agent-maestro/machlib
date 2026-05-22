@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">MachLib Evidence Tooling Update</title>
+  <desc id="desc">Package and validation checkpoint. Pre-alpha evidence tooling - not a theorem/proof/safety claim.</desc>
+  <rect width="1280" height="720" fill="#f7f4ed"/>
+  <rect x="0" y="0" width="1280" height="18" fill="#2457a6"/>
+  <rect x="64" y="72" width="1152" height="552" rx="0" fill="#ffffff" stroke="#d7d1c5" stroke-width="2"/>
+  <text x="92" y="124" font-size="22" font-weight="700" fill="#2457a6">MACHLIB EVIDENCE REEL / CARD 01</text>
+  <text x="92" y="194" font-size="54" font-weight="700" fill="#191919">MachLib Evidence Tooling Update</text>
+  <text x="96" y="292" font-size="28" font-weight="500" fill="#4b4b4b">Package and validation checkpoint</text>
+  <line x1="96" y1="330" x2="1184" y2="330" stroke="#e3ded3" stroke-width="2"/>
+  <text x="122" y="390" font-size="30" font-weight="500" fill="#202020">- published: zero-mathlib-checker, claim-boundary, eml-records,</text>
+<text x="122" y="434" font-size="30" font-weight="500" fill="#202020">  review-branch-packet</text>
+<text x="122" y="478" font-size="30" font-weight="500" fill="#202020">- pending: MachLib retry path and adjacent local candidates</text>
+<text x="122" y="522" font-size="30" font-weight="500" fill="#202020">- status: local visual cards only</text>
+  <rect x="64" y="650" width="1152" height="42" fill="#252525"/>
+  <text x="92" y="678" font-size="21" font-weight="600" fill="#ffffff">Pre-alpha evidence tooling &#8212; not a theorem/proof/safety claim.</text>
+</svg>

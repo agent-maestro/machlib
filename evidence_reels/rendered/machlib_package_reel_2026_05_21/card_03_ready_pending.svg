@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Ready / pending packages</title>
+  <desc id="desc">Local readiness and paused upload state. Pre-alpha evidence tooling - not a theorem/proof/safety claim.</desc>
+  <rect width="1280" height="720" fill="#f7f4ed"/>
+  <rect x="0" y="0" width="1280" height="18" fill="#8057a7"/>
+  <rect x="64" y="72" width="1152" height="552" rx="0" fill="#ffffff" stroke="#d7d1c5" stroke-width="2"/>
+  <text x="92" y="124" font-size="22" font-weight="700" fill="#8057a7">MACHLIB EVIDENCE REEL / CARD 03</text>
+  <text x="92" y="194" font-size="54" font-weight="700" fill="#191919">Ready / pending packages</text>
+  <text x="96" y="292" font-size="28" font-weight="500" fill="#4b4b4b">Local readiness and paused upload state</text>
+  <line x1="96" y1="330" x2="1184" y2="330" stroke="#e3ded3" stroke-width="2"/>
+  <text x="122" y="390" font-size="30" font-weight="500" fill="#202020">- MachLib package-ready locally but PyPI 429 paused</text>
+<text x="122" y="434" font-size="30" font-weight="500" fill="#202020">- machlib-workbench / eml-harness / hybrid-trace-eml not</text>
+<text x="122" y="478" font-size="30" font-weight="500" fill="#202020">  uploaded</text>
+<text x="122" y="522" font-size="30" font-weight="500" fill="#202020">- machlib not yet published</text>
+  <rect x="64" y="650" width="1152" height="42" fill="#252525"/>
+  <text x="92" y="678" font-size="21" font-weight="600" fill="#ffffff">Pre-alpha evidence tooling &#8212; not a theorem/proof/safety claim.</text>
+</svg>
