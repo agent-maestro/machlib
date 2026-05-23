@@ -1,0 +1,16 @@
+{
+  "card_id": "trainer_board_v0_preflight_card_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "title": "Trainer Board v0 Preflight",
+  "status": "PREFLIGHT_READY_FOR_OPERATOR_REVIEW",
+  "demo_target": "potentiometer -> threshold_reflex_v0 -> guard clamp -> LED -> serial trace -> replay",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "hardware_action_performed": false,
+  "live_serial_capture_performed": false,
+  "deploy_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}

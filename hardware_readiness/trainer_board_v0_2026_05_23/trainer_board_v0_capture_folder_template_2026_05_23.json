@@ -1,0 +1,16 @@
+{
+  "template_id": "trainer_board_v0_capture_folder_template_2026_05_23",
+  "future_folder": "evidence/trainer_board_v0/first_reflex_demo_YYYY_MM_DD/",
+  "expected_files": [
+    "raw_serial.jsonl",
+    "validation_output.txt",
+    "replay_output.txt",
+    "wiring_note.md",
+    "photos/",
+    "findings.md",
+    "PACKET_MANIFEST.json"
+  ],
+  "blackwell_created_template_only": true,
+  "hardware_action_performed": false,
+  "live_serial_capture_performed": false
+}

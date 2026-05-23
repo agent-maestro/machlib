@@ -1,0 +1,28 @@
+{
+  "schema_id": "trainer_board_v0_serial_frame_2026_05_23",
+  "frame_type": "jsonl",
+  "required_fields": [
+    "kernel_id",
+    "mode",
+    "input",
+    "request",
+    "guard_state",
+    "guard_reason",
+    "output",
+    "timestamp_ms",
+    "source"
+  ],
+  "properties": {
+    "kernel_id": {"const": "threshold_reflex_v0"},
+    "mode": {"const": "trainer_board_v0_reflex"},
+    "input": {"required": ["pot_raw"]},
+    "request": {"required": ["centered", "target", "requested_output"]},
+    "guard_state": {"enum": ["pass_through", "clamp_to_safe_output"]},
+    "guard_reason": {"type": "string"},
+    "output": {"required": ["safe_output"]},
+    "timestamp_ms": {"type": "integer"},
+    "source": {"type": "string"}
+  },
+  "hardware_observed_required_false_for_blackwell_expected_trace": true,
+  "live_serial_capture_required_false_for_blackwell_expected_trace": true
+}

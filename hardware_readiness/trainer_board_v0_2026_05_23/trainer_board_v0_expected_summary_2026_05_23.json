@@ -1,0 +1,18 @@
+{
+  "certified_safety_claim": false,
+  "clamped_count": 24,
+  "flash_performed": false,
+  "frame_count": 62,
+  "full_guard_telemetry_coverage": true,
+  "hardware_action_performed": false,
+  "hardware_observed": false,
+  "invalid_frame_count": 0,
+  "kernel_id": "threshold_reflex_v0",
+  "live_serial_capture": false,
+  "mode": "trainer_board_v0_reflex",
+  "pass_through_count": 38,
+  "production_controller_claim": false,
+  "public_claim": false,
+  "simulated_only": true,
+  "valid_frame_count": 62
+}

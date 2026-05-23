@@ -1,0 +1,19 @@
+{
+  "demo_id": "trainer_board_v0_first_reflex_demo",
+  "date": "TO_BE_FILLED_BY_OPERATOR",
+  "operator": "TO_BE_FILLED_BY_OPERATOR",
+  "hardware_board": "TO_BE_FILLED_BY_OPERATOR",
+  "firmware_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "serial_capture_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "photo_hashes": [],
+  "validator_command": "TO_BE_FILLED_BY_OPERATOR",
+  "replay_command": "TO_BE_FILLED_BY_OPERATOR",
+  "findings_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "no_high_power_loads": true,
+  "no_mains": true,
+  "no_motors": true,
+  "no_coils": true,
+  "no_unknown_buzzer_modules": true,
+  "hardware_action_performed": "TO_BE_FILLED_BY_OPERATOR",
+  "live_serial_capture_performed": "TO_BE_FILLED_BY_OPERATOR"
+}

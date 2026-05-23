@@ -1,0 +1,18 @@
+{
+  "candidate_id": "trainer_board_v0_reflex_evidence_packet_DRAFT_2026_05_23",
+  "display_name": "Trainer Board v0 Reflex Evidence Packet",
+  "status": "INTERNAL_DRAFT_CANDIDATE",
+  "visibility": "internal",
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "future_laptop_capture_required": true,
+  "blackwell_expected_trace_available": true,
+  "marketplace_upload_performed": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "hardware_action_performed": false
+}

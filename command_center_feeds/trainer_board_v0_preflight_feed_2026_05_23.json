@@ -1,0 +1,21 @@
+{
+  "feed_id": "trainer_board_v0_preflight_feed_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "status": "PREFLIGHT_READY_FOR_OPERATOR_REVIEW",
+  "items": [
+    {
+      "kind": "preflight",
+      "title": "Trainer Board v0 reflex demo packet ready for operator review",
+      "summary": "Blackwell produced simulator, expected trace, schema mirror, checklist, capture templates, and internal evidence candidate without hardware action."
+    }
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "hardware_action_performed": false,
+  "live_serial_capture_performed": false,
+  "deploy_performed": false,
+  "public_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}
