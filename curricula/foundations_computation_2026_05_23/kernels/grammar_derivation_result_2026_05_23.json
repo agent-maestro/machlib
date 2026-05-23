@@ -1,0 +1,11 @@
+{
+  "bounded_only": true,
+  "generated": [
+    "",
+    "aaabbb",
+    "aabb",
+    "ab"
+  ],
+  "kernel": "grammar_derivation_kernel",
+  "max_depth": 4
+}

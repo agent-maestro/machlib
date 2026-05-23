@@ -1,0 +1,20 @@
+{
+  "deploy_performed": false,
+  "feed_id": "foundations_computation_curriculum_feed_2026_05_23",
+  "items": [
+    {
+      "status": "INTERNAL_DEMO_PLAN",
+      "surface_id": "computation_senses"
+    },
+    {
+      "status": "INTERNAL_ONLY_QWEN_STILL_BLOCKED",
+      "surface_id": "qwen_extension_lanes"
+    },
+    {
+      "status": "INTERNAL_DRAFT_CANDIDATES",
+      "surface_id": "capcard_candidates"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

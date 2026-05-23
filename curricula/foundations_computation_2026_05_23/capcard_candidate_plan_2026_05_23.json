@@ -1,0 +1,11 @@
+{
+  "candidate_count": 6,
+  "candidates": [
+    "logic_truth_table_kernel",
+    "relation_property_kernel",
+    "dfa_trace_kernel",
+    "grammar_derivation_kernel",
+    "turing_trace_kernel",
+    "computation_senses_demo"
+  ]
+}

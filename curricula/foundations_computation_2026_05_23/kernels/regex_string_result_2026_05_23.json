@@ -1,0 +1,10 @@
+{
+  "bounded_only": true,
+  "kernel": "regex_string_kernel",
+  "matches": {
+    "aaab": true,
+    "ab": true,
+    "aba": false,
+    "b": true
+  }
+}

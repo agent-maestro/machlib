@@ -1,0 +1,23 @@
+{
+  "blocked_by_license": [
+    "public distribution",
+    "commercial use",
+    "exercise/prose copying"
+  ],
+  "blocked_by_public_copy_review": [
+    "public Computation Senses copy",
+    "public CapCard cards"
+  ],
+  "capcard_utility_0_to_100": 78,
+  "license_risk_0_to_100": 70,
+  "machlib_eml_utility_0_to_100": 80,
+  "must_stay_internal": [
+    "topic-spine mapping",
+    "Qwen extension lanes",
+    "CapCard candidates"
+  ],
+  "overclaim_risk_0_to_100": 55,
+  "qwen_curriculum_utility_0_to_100": 74,
+  "senses_product_utility_0_to_100": 82,
+  "verdict": "BUILD_COMPUTATION_SENSES_INTERNAL"
+}

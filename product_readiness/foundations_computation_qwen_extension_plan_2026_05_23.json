@@ -1,0 +1,24 @@
+{
+  "copied_text": false,
+  "copied_textbook_exercises": false,
+  "current_blockers": [
+    "row 2 validation_status=warn / solver_status=unknown",
+    "row 3 validation_status=warn / solver_status=unknown",
+    "no accepted repair evidence",
+    "stale command-center references are not direct evidence"
+  ],
+  "existing_qwen_puzzle_curriculum_remains_blocked": true,
+  "huggingface_upload_performed": false,
+  "open_problem_claim": false,
+  "optional_internal_lanes": [
+    "logic_truth_table_puzzles",
+    "relation_property_puzzles",
+    "dfa_trace_puzzles",
+    "regex_match_puzzles",
+    "grammar_derivation_puzzles",
+    "turing_trace_puzzles"
+  ],
+  "petal_api_upload_performed": false,
+  "status": "QWEN_REMAINS_BLOCKED_WITH_INTERNAL_EXTENSION_LANES",
+  "theorem_proof_claim": false
+}

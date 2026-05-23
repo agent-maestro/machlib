@@ -1,0 +1,34 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "logic_truth_table_kernel",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    },
+    {
+      "candidate_id": "relation_property_kernel",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    },
+    {
+      "candidate_id": "dfa_trace_kernel",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    },
+    {
+      "candidate_id": "grammar_derivation_kernel",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    },
+    {
+      "candidate_id": "turing_trace_kernel",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    },
+    {
+      "candidate_id": "computation_senses_demo",
+      "internal_score_0_to_100": 72,
+      "public_ready": false
+    }
+  ]
+}

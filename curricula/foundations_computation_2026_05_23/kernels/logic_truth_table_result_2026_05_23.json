@@ -1,0 +1,34 @@
+{
+  "bounded_only": true,
+  "kernel": "logic_truth_table_kernel",
+  "rows": [
+    {
+      "env": {
+        "p": false,
+        "q": false
+      },
+      "value": false
+    },
+    {
+      "env": {
+        "p": false,
+        "q": true
+      },
+      "value": false
+    },
+    {
+      "env": {
+        "p": true,
+        "q": false
+      },
+      "value": false
+    },
+    {
+      "env": {
+        "p": true,
+        "q": true
+      },
+      "value": true
+    }
+  ]
+}

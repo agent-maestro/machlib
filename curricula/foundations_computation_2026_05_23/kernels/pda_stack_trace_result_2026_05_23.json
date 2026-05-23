@@ -1,0 +1,29 @@
+{
+  "bounded_only": true,
+  "kernel": "pda_stack_trace_placeholder",
+  "not_full_pda_theorem": true,
+  "trace": [
+    {
+      "op": "push",
+      "stack": [
+        "A"
+      ],
+      "value": "A"
+    },
+    {
+      "op": "push",
+      "stack": [
+        "A",
+        "B"
+      ],
+      "value": "B"
+    },
+    {
+      "op": "pop",
+      "stack": [
+        "A"
+      ],
+      "value": null
+    }
+  ]
+}

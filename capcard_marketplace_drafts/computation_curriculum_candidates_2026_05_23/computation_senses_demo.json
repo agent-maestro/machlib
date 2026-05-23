@@ -1,0 +1,42 @@
+{
+  "candidate_id": "computation_senses_demo",
+  "card_id": "computation_senses_demo_DRAFT_2026_05_23",
+  "certified_safety_claim": false,
+  "copied_text": false,
+  "display_name": "Computation Senses Demo",
+  "evidence_basis": [
+    "original bounded toy kernel plan",
+    "internal EML curriculum draft records",
+    "license boundary packet",
+    "local computation senses prototype plan"
+  ],
+  "huggingface_upload_performed": false,
+  "license_review_required": true,
+  "limitations": [
+    "internal curriculum mapping only",
+    "original toy examples only",
+    "not public or commercial content"
+  ],
+  "marketplace_status": "INTERNAL_DRAFT_CANDIDATE",
+  "marketplace_upload_performed": false,
+  "not_claimed": [
+    "not copied textbook content",
+    "not theorem proof",
+    "not open-problem result",
+    "not certified safety",
+    "not production controller",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "source_inspiration": "Foundations of Computation high-level topic spine",
+  "theorem_proof_claim": false,
+  "tier": "OBSERVATION",
+  "visibility": "internal"
+}

@@ -1,0 +1,1082 @@
+{
+  "chapter_families": [
+    {
+      "copied_text": false,
+      "family_id": "logic_and_proof",
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "topic_count": 10,
+      "topics": [
+        "logic_and_proof_propositional_logic",
+        "logic_and_proof_boolean_algebra",
+        "logic_and_proof_logic_circuits",
+        "logic_and_proof_predicates_and_quantifiers",
+        "logic_and_proof_deduction",
+        "logic_and_proof_proof",
+        "logic_and_proof_proof_by_contradiction",
+        "logic_and_proof_induction",
+        "logic_and_proof_recursion_and_induction",
+        "logic_and_proof_recursive_definitions"
+      ]
+    },
+    {
+      "copied_text": false,
+      "family_id": "sets_functions_relations",
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "topic_count": 8,
+      "topics": [
+        "sets_functions_relations_basic_sets",
+        "sets_functions_relations_boolean_algebra_of_sets",
+        "sets_functions_relations_programming_with_sets",
+        "sets_functions_relations_functions",
+        "sets_functions_relations_programming_with_functions",
+        "sets_functions_relations_counting_past_infinity",
+        "sets_functions_relations_relations",
+        "sets_functions_relations_relational_databases"
+      ]
+    },
+    {
+      "copied_text": false,
+      "family_id": "regular_expressions_fsa",
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "topic_count": 7,
+      "topics": [
+        "regular_expressions_fsa_languages",
+        "regular_expressions_fsa_regular_expressions",
+        "regular_expressions_fsa_using_regular_expressions",
+        "regular_expressions_fsa_finite_state_automata",
+        "regular_expressions_fsa_nondeterministic_finite_state_automata",
+        "regular_expressions_fsa_regular_languages",
+        "regular_expressions_fsa_non_regular_languages"
+      ]
+    },
+    {
+      "copied_text": false,
+      "family_id": "grammars",
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "topic_count": 6,
+      "topics": [
+        "grammars_context_free_grammars",
+        "grammars_bnf",
+        "grammars_parsing_and_parse_trees",
+        "grammars_pushdown_automata",
+        "grammars_non_context_free_languages",
+        "grammars_general_grammars"
+      ]
+    },
+    {
+      "copied_text": false,
+      "family_id": "turing_computability",
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Turing Machines and Computability",
+      "topic_count": 3,
+      "topics": [
+        "turing_computability_turing_machines",
+        "turing_computability_computability",
+        "turing_computability_limits_of_computation"
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_propositional_logic"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_propositional_logic_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for propositional logic as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_propositional_logic",
+      "topic_label": "propositional logic"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_boolean_algebra"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_boolean_algebra_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for boolean algebra as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_boolean_algebra",
+      "topic_label": "boolean algebra"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_logic_circuits"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_logic_circuits_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for logic circuits as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_logic_circuits",
+      "topic_label": "logic circuits"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_predicates_and_quantifiers"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_predicates_and_quantifiers_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for predicates and quantifiers as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_predicates_and_quantifiers",
+      "topic_label": "predicates and quantifiers"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_deduction"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_deduction_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for deduction as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_deduction",
+      "topic_label": "deduction"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_proof"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_proof_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for proof as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_proof",
+      "topic_label": "proof"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_proof_by_contradiction"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_proof_by_contradiction_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for proof by contradiction as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_proof_by_contradiction",
+      "topic_label": "proof by contradiction"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_induction"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_induction_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for induction as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_induction",
+      "topic_label": "induction"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_recursion_and_induction"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_recursion_and_induction_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for recursion and induction as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_recursion_and_induction",
+      "topic_label": "recursion and induction"
+    },
+    {
+      "candidate_capcard_cards": [
+        "logic_truth_table_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_logic_and_proof_recursive_definitions"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_logic_and_proof_recursive_definitions_toy_lane"
+      ],
+      "candidate_senses_demo": "logic_senses",
+      "chapter_family": "logic_and_proof",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Logic and Proof",
+      "summary": "Original internal mapping row for recursive definitions as a bounded computation curriculum topic.",
+      "topic_id": "logic_and_proof_recursive_definitions",
+      "topic_label": "recursive definitions"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_basic_sets"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_basic_sets_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for basic sets as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_basic_sets",
+      "topic_label": "basic sets"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_boolean_algebra_of_sets"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_boolean_algebra_of_sets_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for boolean algebra of sets as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_boolean_algebra_of_sets",
+      "topic_label": "boolean algebra of sets"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_programming_with_sets"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_programming_with_sets_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for programming with sets as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_programming_with_sets",
+      "topic_label": "programming with sets"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_functions"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_functions_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for functions as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_functions",
+      "topic_label": "functions"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_programming_with_functions"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_programming_with_functions_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for programming with functions as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_programming_with_functions",
+      "topic_label": "programming with functions"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_counting_past_infinity"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_counting_past_infinity_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for counting past infinity as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_counting_past_infinity",
+      "topic_label": "counting past infinity"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_relations"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_relations_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for relations as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_relations",
+      "topic_label": "relations"
+    },
+    {
+      "candidate_capcard_cards": [
+        "relation_property_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_sets_functions_relations_relational_databases"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_sets_functions_relations_relational_databases_toy_lane"
+      ],
+      "candidate_senses_demo": "relation_senses",
+      "chapter_family": "sets_functions_relations",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Sets, Functions, and Relations",
+      "summary": "Original internal mapping row for relational databases as a bounded computation curriculum topic.",
+      "topic_id": "sets_functions_relations_relational_databases",
+      "topic_label": "relational databases"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_languages"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_languages_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for languages as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_languages",
+      "topic_label": "languages"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_regular_expressions"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_regular_expressions_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for regular expressions as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_regular_expressions",
+      "topic_label": "regular expressions"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_using_regular_expressions"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_using_regular_expressions_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for using regular expressions as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_using_regular_expressions",
+      "topic_label": "using regular expressions"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_finite_state_automata"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_finite_state_automata_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for finite-state automata as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_finite_state_automata",
+      "topic_label": "finite-state automata"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_nondeterministic_finite_state_automata"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_nondeterministic_finite_state_automata_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for nondeterministic finite-state automata as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_nondeterministic_finite_state_automata",
+      "topic_label": "nondeterministic finite-state automata"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_regular_languages"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_regular_languages_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for regular languages as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_regular_languages",
+      "topic_label": "regular languages"
+    },
+    {
+      "candidate_capcard_cards": [
+        "dfa_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_regular_expressions_fsa_non_regular_languages"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_regular_expressions_fsa_non_regular_languages_toy_lane"
+      ],
+      "candidate_senses_demo": "automata_senses",
+      "chapter_family": "regular_expressions_fsa",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Regular Expressions and Finite-State Automata",
+      "summary": "Original internal mapping row for non-regular languages as a bounded computation curriculum topic.",
+      "topic_id": "regular_expressions_fsa_non_regular_languages",
+      "topic_label": "non-regular languages"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_context_free_grammars"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_context_free_grammars_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for context-free grammars as a bounded computation curriculum topic.",
+      "topic_id": "grammars_context_free_grammars",
+      "topic_label": "context-free grammars"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_bnf"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_bnf_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for BNF as a bounded computation curriculum topic.",
+      "topic_id": "grammars_bnf",
+      "topic_label": "BNF"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_parsing_and_parse_trees"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_parsing_and_parse_trees_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for parsing and parse trees as a bounded computation curriculum topic.",
+      "topic_id": "grammars_parsing_and_parse_trees",
+      "topic_label": "parsing and parse trees"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_pushdown_automata"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_pushdown_automata_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for pushdown automata as a bounded computation curriculum topic.",
+      "topic_id": "grammars_pushdown_automata",
+      "topic_label": "pushdown automata"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_non_context_free_languages"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_non_context_free_languages_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for non-context-free languages as a bounded computation curriculum topic.",
+      "topic_id": "grammars_non_context_free_languages",
+      "topic_label": "non-context-free languages"
+    },
+    {
+      "candidate_capcard_cards": [
+        "grammar_derivation_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_grammars_general_grammars"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_grammars_general_grammars_toy_lane"
+      ],
+      "candidate_senses_demo": "grammar_senses",
+      "chapter_family": "grammars",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Grammars",
+      "summary": "Original internal mapping row for general grammars as a bounded computation curriculum topic.",
+      "topic_id": "grammars_general_grammars",
+      "topic_label": "general grammars"
+    },
+    {
+      "candidate_capcard_cards": [
+        "turing_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_turing_computability_turing_machines"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_turing_computability_turing_machines_toy_lane"
+      ],
+      "candidate_senses_demo": "turing_trace_senses",
+      "chapter_family": "turing_computability",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Turing Machines and Computability",
+      "summary": "Original internal mapping row for Turing machines as a bounded computation curriculum topic.",
+      "topic_id": "turing_computability_turing_machines",
+      "topic_label": "Turing machines"
+    },
+    {
+      "candidate_capcard_cards": [
+        "turing_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_turing_computability_computability"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_turing_computability_computability_toy_lane"
+      ],
+      "candidate_senses_demo": "turing_trace_senses",
+      "chapter_family": "turing_computability",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Turing Machines and Computability",
+      "summary": "Original internal mapping row for computability as a bounded computation curriculum topic.",
+      "topic_id": "turing_computability_computability",
+      "topic_label": "computability"
+    },
+    {
+      "candidate_capcard_cards": [
+        "turing_trace_kernel"
+      ],
+      "candidate_eml_records": [
+        "eml_turing_computability_limits_of_computation"
+      ],
+      "candidate_qwen_tasks": [
+        "qwen_turing_computability_limits_of_computation_toy_lane"
+      ],
+      "candidate_senses_demo": "turing_trace_senses",
+      "chapter_family": "turing_computability",
+      "copied_text": false,
+      "internal_summary_original": true,
+      "license_review_required": true,
+      "not_claimed": [
+        "not copied textbook content",
+        "not public theorem/proof/open-problem claim",
+        "not license clearance for commercial use",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "public_ready": false,
+      "source_chapter": "Turing Machines and Computability",
+      "summary": "Original internal mapping row for limits of computation as a bounded computation curriculum topic.",
+      "topic_id": "turing_computability_limits_of_computation",
+      "topic_label": "limits of computation"
+    }
+  ]
+}

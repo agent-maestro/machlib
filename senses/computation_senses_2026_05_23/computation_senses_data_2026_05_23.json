@@ -1,0 +1,29 @@
+{
+  "topics": [
+    {
+      "id": "logic_senses",
+      "label": "Logic Senses",
+      "panel": "truth table grid"
+    },
+    {
+      "id": "relation_senses",
+      "label": "Relation Senses",
+      "panel": "finite relation graph"
+    },
+    {
+      "id": "automata_senses",
+      "label": "Automata Senses",
+      "panel": "DFA state trace"
+    },
+    {
+      "id": "grammar_senses",
+      "label": "Grammar Senses",
+      "panel": "bounded derivation tree"
+    },
+    {
+      "id": "turing_trace_senses",
+      "label": "Turing Trace Senses",
+      "panel": "bounded tape/head trace"
+    }
+  ]
+}

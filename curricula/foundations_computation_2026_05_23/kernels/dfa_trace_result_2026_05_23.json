@@ -1,0 +1,19 @@
+{
+  "accepted": true,
+  "bounded_only": true,
+  "kernel": "dfa_trace_kernel",
+  "trace": [
+    {
+      "state": "even",
+      "symbol": null
+    },
+    {
+      "state": "odd",
+      "symbol": "a"
+    },
+    {
+      "state": "even",
+      "symbol": "a"
+    }
+  ]
+}
