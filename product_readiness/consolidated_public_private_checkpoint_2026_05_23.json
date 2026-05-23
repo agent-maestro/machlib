@@ -1,0 +1,75 @@
+{
+  "checkpoint_id": "consolidated_public_private_checkpoint_2026_05_23",
+  "record_date": "2026-05-23",
+  "public_live": [
+    {
+      "surface": "1op_homepage",
+      "status": "LIVE",
+      "url": "https://1op.io/",
+      "footer_claim_cleanup": "COMPLETE",
+      "unsupported_lean_theorem_count_removed": true,
+      "verified_copy": [
+        "265 equations",
+        "Senses live",
+        "EML Cost Conjecture"
+      ]
+    },
+    {
+      "surface": "1op_senses",
+      "status": "LIVE",
+      "url": "https://1op.io/senses",
+      "animal_senses_live": true,
+      "operator_senses_live": true,
+      "microphone_enabled": false,
+      "hardware_action_performed": false,
+      "verification_note": "Live HTML contains 1op Senses, Operator Senses, and Animal senses copy. The exact title-case phrase Animal Senses was not present in the raw HTML at verification time."
+    },
+    {
+      "surface": "machlib_pypi",
+      "status": "LIVE",
+      "url": "https://pypi.org/project/machlib/0.0.1/",
+      "package_name": "machlib",
+      "version": "0.0.1",
+      "release_files_visible": true
+    }
+  ],
+  "private_internal": [
+    {
+      "surface": "capcard_lab_workbench",
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY"
+    },
+    {
+      "surface": "eml_puzzle_evidence_kernel_capcard",
+      "classification": "PRIVATE_INTERNAL_MARKETPLACE_ONLY"
+    },
+    {
+      "surface": "qwen_puzzle_curriculum_pack",
+      "classification": "BLOCKED_WITH_EXACT_FIX_LIST"
+    },
+    {
+      "surface": "foundations_computation_mapper",
+      "classification": "INTERNAL_CURRICULUM_SPINE_ONLY"
+    },
+    {
+      "surface": "computation_senses",
+      "classification": "INTERNAL_ONLY_LICENSE_COPY_REVIEW_REQUIRED"
+    },
+    {
+      "surface": "capcard_mutation_scoring_reviewer_internals",
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY"
+    }
+  ],
+  "deploy_performed_by_this_task": false,
+  "push_performed_by_this_task": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "production_marketplace_modified": false,
+  "package_publish_performed_by_this_task": false,
+  "pypi_token_handling_performed": false,
+  "hardware_action_performed": false,
+  "public_theorem_claim": false,
+  "physics_proof_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "token_value_recorded": false
+}

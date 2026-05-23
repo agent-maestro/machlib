@@ -1,0 +1,46 @@
+{
+  "feed_id": "consolidated_public_private_checkpoint_feed_2026_05_23",
+  "checkpoint_id": "consolidated_public_private_checkpoint_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "status": "READY_FOR_INTERNAL_DISPLAY",
+  "record_date": "2026-05-23",
+  "items": [
+    {
+      "item_id": "oneop_homepage_public_live",
+      "kind": "public_live_surface",
+      "title": "1op homepage footer cleanup is live",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "oneop_senses_public_live",
+      "kind": "public_live_surface",
+      "title": "1op Senses and Operator Senses are live",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "machlib_pypi_public_live",
+      "kind": "public_live_surface",
+      "title": "machlib 0.0.1 is live on PyPI",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "capcard_private_boundary",
+      "kind": "private_boundary",
+      "title": "CapCard Lab and EML Puzzle CapCard remain private",
+      "status": "PRIVATE_INTERNAL"
+    },
+    {
+      "item_id": "foundations_private_boundary",
+      "kind": "private_boundary",
+      "title": "Foundations Computation Mapper remains internal only",
+      "status": "INTERNAL_CURRICULUM_SPINE_ONLY"
+    }
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed_by_this_task": false,
+  "push_performed_by_this_task": false,
+  "public_theorem_claim": false,
+  "token_value_recorded": false
+}
