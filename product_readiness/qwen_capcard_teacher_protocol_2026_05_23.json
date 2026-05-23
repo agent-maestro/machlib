@@ -1,0 +1,64 @@
+{
+  "capcard_status_mapping": {
+    "direct_pass": "READY_FOR_HUMAN_REPAIR_REVIEW",
+    "missing_evidence": "BLOCKED_WITH_EXACT_FIX_LIST",
+    "warn_unknown": "BLOCKED_WITH_EXACT_FIX_LIST"
+  },
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "evidence_honesty_rules": [
+    "Missing evidence must be named as missing.",
+    "Warn/unknown rows cannot be accepted without direct repair evidence.",
+    "Stale Command Center references are context only, not direct evidence."
+  ],
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "json_only_strategy": "Ask for one JSON object, then extract first safe object if thinking text precedes it.",
+  "no_go_boundary_reminder": [
+    "PETAL verified",
+    "Hugging Face uploaded",
+    "certified safety",
+    "production controller",
+    "theorem proved",
+    "open problem solved",
+    "marketplace upload performed",
+    "public_ready true"
+  ],
+  "output_schema": [
+    "candidate_id",
+    "status",
+    "evidence_basis",
+    "limitations",
+    "not_claimed",
+    "public_ready",
+    "petal_api_upload_performed",
+    "huggingface_upload_performed",
+    "production_marketplace_modified",
+    "marketplace_upload_performed",
+    "public_claim",
+    "theorem_proof_claim",
+    "open_problem_claim",
+    "certified_safety_claim",
+    "production_controller_claim"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "protocol_id": "qwen_capcard_teacher_protocol_2026_05_23",
+  "public_claim": false,
+  "public_ready": false,
+  "repair_strategy": "Feed scorer reasons back and require corrected JSON only.",
+  "stale_reference_rules": [
+    "Do not cite stale Command Center rows as direct evidence."
+  ],
+  "status": "PASS",
+  "system_instruction": "You are a local Qwen model producing private/internal CapCard JSON for Monogate. Return one JSON object only; if evidence is missing, say missing evidence, never invent acceptance.",
+  "theorem_proof_claim": false,
+  "unknown_solver_handling_rules": [
+    "Do not mark unknown as solved.",
+    "Use BLOCKED_WITH_EXACT_FIX_LIST or READY_FOR_HUMAN_REPAIR_REVIEW."
+  ],
+  "warn_row_repair_rules": [
+    "Preserve blocker until validator PASS and human review note exist."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "model": "qwen3:30b",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "real_model_outputs_used": true,
+  "repair_id": "qwen_puzzle_row23_real_repair_2026_05_23",
+  "rows": [
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct repaired row artifact",
+        "validator PASS output",
+        "human review note bounding unknown solver status"
+      ],
+      "extracted_json": null,
+      "extraction_status": "MODEL_TIMEOUT",
+      "final_status": "STILL_BLOCKED",
+      "model_proposed_fix": [],
+      "raw_model_output": "",
+      "reason": "No safe extractable repair JSON was produced under the targeted timeout.",
+      "row_id": "row_2",
+      "scorer_result": {
+        "extraction_status": "MODEL_TIMEOUT",
+        "reasons": [
+          "MODEL_TIMEOUT",
+          "timeout_after_20s"
+        ],
+        "score_0_to_100": 0,
+        "status": "FAIL",
+        "suggested_repair_prompt": "Return a valid safe CapCard JSON object only.",
+        "task_id": "row_2"
+      }
+    },
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct repaired row artifact",
+        "validator PASS output",
+        "human review note bounding unknown solver status"
+      ],
+      "extracted_json": null,
+      "extraction_status": "MODEL_TIMEOUT",
+      "final_status": "STILL_BLOCKED",
+      "model_proposed_fix": [],
+      "raw_model_output": "",
+      "reason": "No safe extractable repair JSON was produced under the targeted timeout.",
+      "row_id": "row_3",
+      "scorer_result": {
+        "extraction_status": "MODEL_TIMEOUT",
+        "reasons": [
+          "MODEL_TIMEOUT",
+          "timeout_after_20s"
+        ],
+        "score_0_to_100": 0,
+        "status": "FAIL",
+        "suggested_repair_prompt": "Return a valid safe CapCard JSON object only.",
+        "task_id": "row_3"
+      }
+    }
+  ],
+  "theorem_proof_claim": false
+}

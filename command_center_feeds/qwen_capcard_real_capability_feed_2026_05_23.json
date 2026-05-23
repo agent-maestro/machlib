@@ -1,0 +1,24 @@
+{
+  "deploy_performed": false,
+  "feed_id": "qwen_capcard_real_capability_feed_2026_05_23",
+  "items": [
+    {
+      "card_id": "qwen_capcard_real_capability_card_2026_05_23",
+      "deploy_performed": false,
+      "huggingface_upload_performed": false,
+      "model": "qwen3:30b",
+      "petal_api_upload_performed": false,
+      "production_marketplace_modified": false,
+      "public_claim": false,
+      "qwen_operationally_smarter": false,
+      "real_model_attempt_count": 252,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "status": "QWEN_CAPCARD_REAL_CAPABILITY_VERDICT_COMPLETE",
+      "surface": "command.monogate.dev",
+      "visibility": "internal"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

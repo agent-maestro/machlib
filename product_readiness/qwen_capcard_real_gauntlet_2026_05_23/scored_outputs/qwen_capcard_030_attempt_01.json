@@ -1,0 +1,11 @@
+{
+  "extraction_status": "MODEL_TIMEOUT",
+  "reasons": [
+    "MODEL_TIMEOUT",
+    "timeout_after_3s"
+  ],
+  "score_0_to_100": 0,
+  "status": "FAIL",
+  "suggested_repair_prompt": "Return a valid safe CapCard JSON object only.",
+  "task_id": "qwen_capcard_030"
+}

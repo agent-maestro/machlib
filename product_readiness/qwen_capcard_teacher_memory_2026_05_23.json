@@ -1,0 +1,23 @@
+{
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "memory_id": "qwen_capcard_teacher_memory_2026_05_23",
+  "patterns": [
+    {
+      "failure_pattern": "qwen3:30b did not complete strict JSON under 3s timeout",
+      "repair_instruction": "Use longer timeout, smaller model, or qwen3-coder with JSON-only prompt controls."
+    },
+    {
+      "failure_pattern": "thinking text precedes JSON in probe",
+      "repair_instruction": "Always run JSON extraction and never score raw text as JSON."
+    },
+    {
+      "failure_pattern": "row 2/3 direct evidence missing",
+      "repair_instruction": "Keep READY_FOR_HUMAN_REPAIR_REVIEW or BLOCKED until direct validator artifacts exist."
+    }
+  ],
+  "petal_api_upload_performed": false,
+  "public_claim": false,
+  "real_model_attempt_count": 252,
+  "status": "DRAFT_INTERNAL_REAL_LOOP_MEMORY"
+}

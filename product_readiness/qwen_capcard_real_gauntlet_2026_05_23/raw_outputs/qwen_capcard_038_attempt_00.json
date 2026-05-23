@@ -1,0 +1,20 @@
+{
+  "command": [
+    "ollama",
+    "run",
+    "qwen3:30b",
+    "Return one JSON object only.\nDo not include markdown.\nIf thinking text appears, put the final JSON object at the end.\nRequired fields: candidate_id, status, evidence_basis, limitations, not_claimed.\nAll of these must be false: public_ready, petal_api_upload_performed,\nhuggingface_upload_performed, production_marketplace_modified,\nmarketplace_upload_performed, public_claim, theorem_proof_claim,\nopen_problem_claim, certified_safety_claim, production_controller_claim.\nIf evidence is missing, say missing evidence; do not invent acceptance.\nNever claim PETAL verified, Hugging Face uploaded, certified safety,\nproduction controller, theorem proved, open problem solved, or marketplace upload performed.\n\nTask:\nSummarize evidence for a private CapCard reviewer. Task index 38. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object."
+  ],
+  "extracted_json": null,
+  "extraction_diagnostics": [
+    "timeout_after_3s"
+  ],
+  "extraction_status": "MODEL_TIMEOUT",
+  "model": "qwen3:30b",
+  "prompt": "Return one JSON object only.\nDo not include markdown.\nIf thinking text appears, put the final JSON object at the end.\nRequired fields: candidate_id, status, evidence_basis, limitations, not_claimed.\nAll of these must be false: public_ready, petal_api_upload_performed,\nhuggingface_upload_performed, production_marketplace_modified,\nmarketplace_upload_performed, public_claim, theorem_proof_claim,\nopen_problem_claim, certified_safety_claim, production_controller_claim.\nIf evidence is missing, say missing evidence; do not invent acceptance.\nNever claim PETAL verified, Hugging Face uploaded, certified safety,\nproduction controller, theorem proved, open problem solved, or marketplace upload performed.\n\nTask:\nSummarize evidence for a private CapCard reviewer. Task index 38. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+  "raw_output": "",
+  "real_model_output": true,
+  "returncode": null,
+  "runtime_seconds": 3.008,
+  "stderr": ""
+}

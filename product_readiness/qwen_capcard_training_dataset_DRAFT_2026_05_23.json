@@ -1,0 +1,14 @@
+{
+  "dataset_id": "qwen_capcard_training_dataset_DRAFT_2026_05_23",
+  "dataset_uploaded": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "private_secrets_included": false,
+  "public_claim": false,
+  "real_model_attempt_count": 252,
+  "sanitized_example_count": 25,
+  "source": "real gauntlet scored attempts and repair loop failure patterns",
+  "status": "DRAFT_FOR_FUTURE_HUMAN_REVIEW_ONLY",
+  "training_performed": false
+}

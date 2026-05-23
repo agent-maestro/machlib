@@ -1,0 +1,14 @@
+{
+  "best_repair_patterns": [
+    "repeat false action fields explicitly",
+    "state missing evidence instead of acceptance"
+  ],
+  "memory_id": "qwen_capcard_failure_memory_v2_2026_05_23",
+  "patterns": [
+    "thinking text before JSON",
+    "missing required CapCard fields",
+    "timeout on long prompts"
+  ],
+  "real_model_outputs_used": true,
+  "status": "DRAFT_INTERNAL"
+}

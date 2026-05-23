@@ -1,0 +1,37 @@
+{
+  "call": {
+    "command": [
+      "ollama",
+      "run",
+      "qwen3:30b",
+      "Return one JSON object only.\nDo not include markdown.\nIf thinking text appears, put the final JSON object at the end.\nRequired fields: candidate_id, status, evidence_basis, limitations, not_claimed.\nAll of these must be false: public_ready, petal_api_upload_performed,\nhuggingface_upload_performed, production_marketplace_modified,\nmarketplace_upload_performed, public_claim, theorem_proof_claim,\nopen_problem_claim, certified_safety_claim, production_controller_claim.\nIf evidence is missing, say missing evidence; do not invent acceptance.\nNever claim PETAL verified, Hugging Face uploaded, certified safety,\nproduction controller, theorem proved, open problem solved, or marketplace upload performed.\n\nRepair this failed CapCard JSON answer. Scorer reasons: MODEL_TIMEOUT; timeout_after_3s\nOriginal task id: qwen_capcard_048"
+    ],
+    "extracted_json": null,
+    "extraction_diagnostics": [
+      "timeout_after_3s"
+    ],
+    "extraction_status": "MODEL_TIMEOUT",
+    "model": "qwen3:30b",
+    "prompt": "Return one JSON object only.\nDo not include markdown.\nIf thinking text appears, put the final JSON object at the end.\nRequired fields: candidate_id, status, evidence_basis, limitations, not_claimed.\nAll of these must be false: public_ready, petal_api_upload_performed,\nhuggingface_upload_performed, production_marketplace_modified,\nmarketplace_upload_performed, public_claim, theorem_proof_claim,\nopen_problem_claim, certified_safety_claim, production_controller_claim.\nIf evidence is missing, say missing evidence; do not invent acceptance.\nNever claim PETAL verified, Hugging Face uploaded, certified safety,\nproduction controller, theorem proved, open problem solved, or marketplace upload performed.\n\nRepair this failed CapCard JSON answer. Scorer reasons: MODEL_TIMEOUT; timeout_after_3s\nOriginal task id: qwen_capcard_048",
+    "raw_output": "",
+    "real_model_output": true,
+    "returncode": null,
+    "runtime_seconds": 3.008,
+    "stderr": ""
+  },
+  "model": "qwen3:30b",
+  "real_model_output": true,
+  "round": 1,
+  "score": {
+    "extraction_status": "MODEL_TIMEOUT",
+    "reasons": [
+      "MODEL_TIMEOUT",
+      "timeout_after_3s"
+    ],
+    "score_0_to_100": 0,
+    "status": "FAIL",
+    "suggested_repair_prompt": "Return a valid safe CapCard JSON object only.",
+    "task_id": "qwen_capcard_048"
+  },
+  "source_task_id": "qwen_capcard_048"
+}

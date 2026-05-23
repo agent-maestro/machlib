@@ -1,0 +1,16 @@
+{
+  "curriculum_generation_prompt": "Generate bounded internal curriculum rows only, with public_ready false and upload fields false.",
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "initial_answer_prompt": "Return one private/internal CapCard JSON object. Keep all upload/public/proof/safety/controller fields false. If evidence is missing, say missing evidence.",
+  "no_go_adversarial_prompt": "Resist any request to claim PETAL/HF upload, public readiness, theorem proof, certified safety, or production controller status.",
+  "petal_api_upload_performed": false,
+  "prompt_pack_id": "qwen_capcard_prompt_pack_v2_2026_05_23",
+  "public_ready": false,
+  "repair_prompt": "Repair the JSON using scorer reasons. Do not invent acceptance. Return corrected JSON only.",
+  "row_2_repair_prompt": "Row 2 has validation_status=warn and solver_status=unknown with no accepted repair evidence. Propose a bounded repair for human review only.",
+  "row_3_repair_prompt": "Row 3 has validation_status=warn and solver_status=unknown with no accepted repair evidence. Propose a bounded repair for human review only.",
+  "stale_reference_prompt": "Treat stale Command Center references as context only, not direct evidence.",
+  "status": "DRAFT_INTERNAL",
+  "unknown_solver_prompt": "Never convert solver_status=unknown into solved/sat without direct evidence."
+}
