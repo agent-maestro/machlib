@@ -1,0 +1,22 @@
+{
+  "audio_file_generated": false,
+  "certified_safety_claim": false,
+  "clear_browser_audio_language": true,
+  "clear_no_hardware_language": true,
+  "clear_no_microphone_language": true,
+  "clear_sensory_interface_language": true,
+  "clear_toy_kernel_language": true,
+  "deploy_performed": false,
+  "hardware_action_performed": false,
+  "huggingface_upload_performed": false,
+  "microphone_enabled": false,
+  "package_publish_performed": false,
+  "petal_api_upload_performed": false,
+  "physics_proof_claim": false,
+  "production_controller_claim": false,
+  "public_copy_status": "PUBLIC_COPY_READY_FOR_1OP_INTEGRATION_REVIEW",
+  "public_theorem_claim": false,
+  "push_performed": false,
+  "recommended_public_framing": "Operator Senses is a pre-alpha sensory-math playground for exploring simple reciprocal operator kernels through visual and browser-audio mappings. It is not a theorem prover, not a physics claim, and not a safety system.",
+  "surface_id": "operator_senses_gallery"
+}

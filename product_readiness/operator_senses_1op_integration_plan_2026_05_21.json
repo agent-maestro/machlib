@@ -1,0 +1,28 @@
+{
+  "audio_file_generated": false,
+  "certified_safety_claim": false,
+  "deploy_performed": false,
+  "hardware_action_performed": false,
+  "huggingface_upload_performed": false,
+  "integration_recommendation": "Add Operator Senses as a no-deploy reviewed section or tab inside 1op /senses after public-copy review.",
+  "microphone_enabled": false,
+  "package_publish_performed": false,
+  "petal_api_upload_performed": false,
+  "physics_proof_claim": false,
+  "production_controller_claim": false,
+  "preferred_route_options": [
+    "/senses#operators",
+    "/senses/operators"
+  ],
+  "public_theorem_claim": false,
+  "push_performed": false,
+  "required_assets": [
+    "operator kernel catalog data",
+    "gallery kernel subset",
+    "visual mapping panels",
+    "browser Web Audio controls",
+    "public boundary copy"
+  ],
+  "source_surface": "operator_senses_gallery",
+  "target_surface": "1op_senses_page"
+}
