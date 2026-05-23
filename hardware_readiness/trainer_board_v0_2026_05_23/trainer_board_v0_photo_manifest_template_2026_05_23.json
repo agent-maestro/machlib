@@ -1,0 +1,38 @@
+{
+  "manifest_id": "trainer_board_v0_photo_manifest_template_2026_05_23",
+  "photos": [
+    {
+      "filename": "parts_unpowered_001.jpg",
+      "description": "Unpowered parts before wiring",
+      "required": true,
+      "hash": "TO_BE_FILLED_BY_OPERATOR"
+    },
+    {
+      "filename": "wiring_unpowered_001.jpg",
+      "description": "Unpowered wiring showing potentiometer, resistor, LED, ESP32, GND, 3V3",
+      "required": true,
+      "hash": "TO_BE_FILLED_BY_OPERATOR"
+    },
+    {
+      "filename": "board_powered_idle_001.jpg",
+      "description": "Board powered idle after approval",
+      "required": true,
+      "hash": "TO_BE_FILLED_BY_OPERATOR"
+    },
+    {
+      "filename": "serial_capture_screen_001.jpg",
+      "description": "Screen showing serial capture or validator result",
+      "required": true,
+      "hash": "TO_BE_FILLED_BY_OPERATOR"
+    },
+    {
+      "filename": "led_response_optional_001.jpg",
+      "description": "Optional LED response photo",
+      "required": false,
+      "hash": "TO_BE_FILLED_BY_OPERATOR"
+    }
+  ],
+  "no_secrets": true,
+  "no_private_third_party_payloads": true,
+  "no_face_or_pii_unless_explicitly_approved": true
+}

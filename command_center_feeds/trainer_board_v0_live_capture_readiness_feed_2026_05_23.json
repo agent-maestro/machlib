@@ -1,0 +1,19 @@
+{
+  "feed_id": "trainer_board_v0_live_capture_readiness_feed_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "status": "WAITING_FOR_OPERATOR_HARDWARE_APPROVAL",
+  "items": [
+    {
+      "kind": "live_capture_readiness",
+      "title": "Trainer Board v0 approval gate ready",
+      "summary": "Blackwell prepared laptop handoff, stop conditions, photo manifest, and live capture manifest templates without hardware action."
+    }
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed": false,
+  "hardware_action_performed": false,
+  "live_serial_capture_performed": false,
+  "public_claim": false
+}

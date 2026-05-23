@@ -1,0 +1,16 @@
+{
+  "manifest_id": "trainer_board_v0_live_capture_manifest_template_2026_05_23",
+  "operator": "TO_BE_FILLED_BY_OPERATOR",
+  "date": "TO_BE_FILLED_BY_OPERATOR",
+  "board": "TO_BE_FILLED_BY_OPERATOR",
+  "firmware_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "serial_capture_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "validation_output_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "replay_output_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "findings_hash": "TO_BE_FILLED_BY_OPERATOR",
+  "photo_hashes": [],
+  "approval_reference": "TO_BE_FILLED_BY_OPERATOR",
+  "no_certified_safety": true,
+  "no_production_controller": true,
+  "no_darpa_acceptance": true
+}
