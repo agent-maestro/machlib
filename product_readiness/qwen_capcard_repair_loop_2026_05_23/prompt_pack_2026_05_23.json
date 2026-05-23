@@ -1,0 +1,13 @@
+{
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "prompt_pack_id": "qwen_capcard_prompt_pack_2026_05_23",
+  "public_ready": false,
+  "recommended_prompt_rules": [
+    "Return JSON only.",
+    "Treat warn/unknown rows as blocked unless direct evidence is provided.",
+    "State stale references are not direct evidence.",
+    "Keep upload/public/proof/safety/controller fields false."
+  ],
+  "status": "DRAFT_INTERNAL"
+}

@@ -1,0 +1,21 @@
+{
+  "best_model": "qwen3:30b",
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "final_average_score": 100.0,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "improvement_delta": 0.0,
+  "initial_average_score": 100.0,
+  "model_runtime_status": "SCORER_ONLY_DRY_RUN_MODEL_OUTPUTS_NOT_REAL",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_more_capable": "partial",
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "status": "QWEN_CAPCARD_CAPABILITY_UPDATE_COMPLETE",
+  "task_count": 50,
+  "theorem_proof_claim": false
+}

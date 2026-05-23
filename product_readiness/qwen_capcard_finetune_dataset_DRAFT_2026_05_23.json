@@ -1,0 +1,14 @@
+{
+  "copied_proprietary_content": false,
+  "dataset_id": "qwen_capcard_finetune_dataset_DRAFT_2026_05_23",
+  "dataset_published": false,
+  "example_count": 1,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "private_secrets_included": false,
+  "public_claim": false,
+  "source": "repair-loop prompt pack and failure memory",
+  "status": "DRAFT_DATASET_FOR_FUTURE_REVIEW_ONLY",
+  "training_performed": false
+}

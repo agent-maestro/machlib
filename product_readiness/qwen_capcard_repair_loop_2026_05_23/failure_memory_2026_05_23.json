@@ -1,0 +1,12 @@
+{
+  "failure_memory": [
+    {
+      "corrected_shape": "bounded internal CapCard row",
+      "example_bad_output": "fixture",
+      "failure_pattern": "prevent_warn_unknown_overclaim",
+      "repair_instruction": "Keep blocked or ready_for_human_repair_review, never solved.",
+      "scorer_reason": "warn/unknown rows require direct evidence",
+      "should_reuse_in_future": true
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "adversarial_card_count": 0,
+  "adversarial_failures": 0,
+  "adversarial_results": [],
+  "candidate_count": 4,
+  "fail_count": 2,
+  "pass_count": 2,
+  "real_card_count": 4,
+  "results": [
+    {
+      "candidate_id": "eml_puzzle_evidence_kernel",
+      "errors": [],
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "mobius_pair_kernel",
+      "errors": [
+        "mobius_pair_kernel: missing next_safe_task"
+      ],
+      "status": "fail",
+      "warnings": []
+    },
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "errors": [],
+      "status": "pass",
+      "warnings": []
+    },
+    {
+      "candidate_id": "trainer_board_v0_reflex_evidence_packet_DRAFT_2026_05_23",
+      "errors": [
+        "trainer_board_v0_reflex_evidence_packet_DRAFT_2026_05_23: missing next_safe_task",
+        "trainer_board_v0_reflex_evidence_packet_DRAFT_2026_05_23: theorem_proof_claim must be false"
+      ],
+      "status": "fail",
+      "warnings": []
+    }
+  ],
+  "status": "FAIL",
+  "warn_count": 0
+}

@@ -1,0 +1,26 @@
+{
+  "deploy_performed": false,
+  "feed_id": "qwen_capcard_capability_status_feed_2026_05_23",
+  "items": [
+    {
+      "best_model": "qwen3:30b",
+      "card_id": "qwen_capcard_capability_status_2026_05_23",
+      "certified_safety_claim": false,
+      "deploy_performed": false,
+      "huggingface_upload_performed": false,
+      "petal_api_upload_performed": false,
+      "production_controller_claim": false,
+      "production_marketplace_modified": false,
+      "public_claim": false,
+      "qwen_more_capable": "partial",
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "status": "QWEN_CAPCARD_CAPABILITY_UPDATE_COMPLETE",
+      "surface": "command.monogate.dev",
+      "theorem_proof_claim": false,
+      "visibility": "internal"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

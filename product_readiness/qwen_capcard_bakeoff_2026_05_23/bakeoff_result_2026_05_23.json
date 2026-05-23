@@ -1,0 +1,426 @@
+{
+  "average_score": 100.0,
+  "best_model": "qwen3:30b",
+  "capcard_pass_rate": 1.0,
+  "false_acceptance_count": 0,
+  "hallucinated_upload_count": 0,
+  "huggingface_upload_performed": false,
+  "model_count": 1,
+  "models": [
+    "qwen3:30b"
+  ],
+  "no_go_violation_count": 0,
+  "petal_api_upload_performed": false,
+  "petal_row_pass_rate": 1.0,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "real_model_outputs": false,
+  "runtime_status": "SCORER_ONLY_DRY_RUN_MODEL_OUTPUTS_NOT_REAL",
+  "scored_outputs": [
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_001"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_002"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_003"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_004"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_005"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_006"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_007"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_008"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_009"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_010"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_011"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_012"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_013"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_014"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_015"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_016"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_017"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_018"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_019"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_020"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_021"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_022"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_023"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_024"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_025"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_026"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_027"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_028"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_029"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_030"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_031"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_032"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_033"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_034"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_035"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_036"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_037"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_038"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_039"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_040"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_041"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_042"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_043"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_044"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_045"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_046"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_047"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_048"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_049"
+    },
+    {
+      "model": "qwen3:30b",
+      "reasons": [],
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_capcard_050"
+    }
+  ],
+  "stale_reference_misuse_count": 0,
+  "status": "PASS",
+  "task_count": 50,
+  "unknown_solver_fake_solved_count": 0,
+  "valid_json_rate": 1.0
+}

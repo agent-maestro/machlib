@@ -1,0 +1,42 @@
+{
+  "best_model": "qwen3:30b",
+  "certified_safety_claim": false,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "real_model_outputs_used": false,
+  "repair_attempt_id": "qwen_puzzle_curriculum_row_repair_attempt_2026_05_23",
+  "rows": [
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct repaired row artifact",
+        "validator PASS output",
+        "human review note bounding unknown solver status"
+      ],
+      "final_row_status": "ready_for_human_repair_review",
+      "model_proposed_fix": "Prepare bounded replacement row requiring direct validator evidence and human review before acceptance.",
+      "original_blocker": "validation_status=warn / solver_status=unknown / no accepted repair evidence",
+      "reason": "The lab can generate the repair shape, but no direct accepted repair evidence exists yet.",
+      "row_id": "accepted_internal_capcard_pack_rows.jsonl:2"
+    },
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct repaired row artifact",
+        "validator PASS output",
+        "human review note bounding unknown solver status"
+      ],
+      "final_row_status": "ready_for_human_repair_review",
+      "model_proposed_fix": "Prepare bounded replacement row requiring direct validator evidence and human review before acceptance.",
+      "original_blocker": "validation_status=warn / solver_status=unknown / no accepted repair evidence",
+      "reason": "The lab can generate the repair shape, but no direct accepted repair evidence exists yet.",
+      "row_id": "accepted_internal_capcard_pack_rows.jsonl:3"
+    }
+  ],
+  "status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "theorem_proof_claim": false
+}

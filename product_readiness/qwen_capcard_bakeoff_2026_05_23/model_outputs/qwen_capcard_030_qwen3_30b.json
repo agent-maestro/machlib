@@ -1,0 +1,6 @@
+{
+  "model": "qwen3:30b",
+  "output_text": "{\"candidate_id\": \"qwen_capcard_030\", \"certified_safety_claim\": false, \"evidence_basis\": [\"local scorer fixture\", \"Qwen runtime not represented as real output for this row\", \"direct repair evidence still required for warn/unknown rows\"], \"huggingface_upload_performed\": false, \"limitations\": [\"dry-run scorer-only output\", \"row 2/3 warn and unknown blockers remain bounded unless direct evidence is added\", \"stale Command Center references are not direct evidence\"], \"marketplace_upload_performed\": false, \"not_claimed\": [\"not PETAL/API uploaded\", \"not Hugging Face uploaded\", \"not a theorem proof\", \"not certified safety\", \"not production controller evidence\"], \"open_problem_claim\": false, \"petal_api_upload_performed\": false, \"production_controller_claim\": false, \"production_marketplace_modified\": false, \"public_claim\": false, \"public_ready\": false, \"status\": \"BLOCKED_WITH_EXACT_FIX_LIST\", \"theorem_proof_claim\": false}",
+  "real_model_output": false,
+  "task_id": "qwen_capcard_030"
+}

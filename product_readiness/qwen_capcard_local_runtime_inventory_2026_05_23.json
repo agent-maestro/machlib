@@ -1,0 +1,32 @@
+{
+  "available_runtimes": [
+    "ollama"
+  ],
+  "disk_available": "2.8T on repository filesystem",
+  "gpu_summary": "NVIDIA GB10 visible through nvidia-smi; VRAM reporting not supported by this driver output",
+  "gpu_visible": true,
+  "installed_local_models": [
+    {
+      "modified": "2 weeks ago",
+      "name": "qwen3:30b",
+      "size": "18 GB"
+    }
+  ],
+  "inventory_id": "qwen_capcard_local_runtime_inventory_2026_05_23",
+  "llama_cli_available": false,
+  "llama_server_available": false,
+  "local_qwen_probe_note": "qwen3:30b responded locally, but Ollama CLI output included thinking text before the JSON payload; full bakeoff remains scorer-only until strict JSON controls are added.",
+  "local_qwen_probe_performed": true,
+  "local_qwen_probe_result": "CALLABLE_BUT_NOT_STRICT_JSON_BY_DEFAULT",
+  "model_install_safe_reasonable": true,
+  "no_cloud_used": true,
+  "no_finetune_performed": true,
+  "no_hf_upload_performed": true,
+  "no_petal_upload_performed": true,
+  "ollama_path": "/usr/local/bin/ollama",
+  "ollama_version": "0.23.2",
+  "ram_available": "105Gi at inspection",
+  "ram_total": "121Gi",
+  "recommended_model_candidate": "qwen3-coder:30b if pull completes; otherwise qwen3:30b",
+  "vllm_available": false
+}

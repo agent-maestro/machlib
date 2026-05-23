@@ -1,0 +1,20 @@
+{
+  "install_attempted": true,
+  "install_commands_run": [
+    "ollama pull qwen3-coder:30b"
+  ],
+  "install_failures": [
+    "qwen3-coder:30b pull resolved but transfer rate was ~1 MB/s with 4-6 hour ETA; stopped and fell back to already-installed qwen3:30b"
+  ],
+  "local_qwen_probe_note": "qwen3:30b responded locally, but Ollama CLI output included thinking text before the JSON payload; full bakeoff remains scorer-only until strict JSON controls are added.",
+  "local_qwen_probe_performed": true,
+  "local_qwen_probe_result": "CALLABLE_BUT_NOT_STRICT_JSON_BY_DEFAULT",
+  "no_cloud_used": true,
+  "no_finetune_performed": true,
+  "no_hf_upload_performed": true,
+  "no_petal_upload_performed": true,
+  "preferred_primary_model": "qwen3-coder:30b",
+  "selected_primary_model": "qwen3:30b",
+  "selected_secondary_model": null,
+  "selection_id": "qwen_capcard_model_selection_2026_05_23"
+}
