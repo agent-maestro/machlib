@@ -1,0 +1,16 @@
+{
+  "card_id": "public_private_surface_classification_2026_05_21",
+  "deploy_performed": false,
+  "github_pr_created": false,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "status": "PUBLIC_PRIVATE_CLASSIFICATION_READY",
+  "surface": "command.monogate.dev",
+  "title": "Public/private surface classification",
+  "visibility": "internal"
+}

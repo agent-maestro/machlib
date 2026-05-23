@@ -1,0 +1,27 @@
+{
+  "deploy_performed": false,
+  "feed_id": "public_private_surface_classification_feed_2026_05_21",
+  "items": [
+    {
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY",
+      "surface_id": "capcard_lab_workbench"
+    },
+    {
+      "classification": "PUBLIC_CANDIDATE_NEEDS_PUBLIC_COPY_REVIEW",
+      "surface_id": "operator_senses_gallery"
+    },
+    {
+      "classification": "PUBLIC_SURFACE_READY_FOR_DEPLOY_REVIEW",
+      "surface_id": "oneop_senses_page"
+    },
+    {
+      "classification": "PRIVATE_INTERNAL_MARKETPLACE_ONLY",
+      "surface_id": "eml_puzzle_evidence_kernel_capcard"
+    }
+  ],
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "status": "PUBLIC_PRIVATE_CLASSIFICATION_READY",
+  "visibility": "internal"
+}
