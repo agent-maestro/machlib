@@ -1,0 +1,44 @@
+{
+  "feed_id": "public_launch_status_feed_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "status": "READY_FOR_INTERNAL_DISPLAY",
+  "record_date": "2026-05-23",
+  "items": [
+    {
+      "item_id": "oneop_senses_live",
+      "kind": "public_launch",
+      "title": "1op Senses is live",
+      "url": "https://1op.io/senses",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "operator_senses_live_inside_senses",
+      "kind": "public_launch",
+      "title": "Operator Senses is live inside /senses",
+      "url": "https://1op.io/senses",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "machlib_pypi_live",
+      "kind": "public_launch",
+      "title": "machlib 0.0.1 is live on PyPI",
+      "url": "https://pypi.org/project/machlib/0.0.1/",
+      "status": "LIVE"
+    },
+    {
+      "item_id": "footer_claim_cleanup_recommended",
+      "kind": "public_claim_audit",
+      "title": "1op footer theorem-count copy needs a direct source or cleanup",
+      "status": "CLEANUP_RECOMMENDED"
+    }
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "deploy_performed": false,
+  "push_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false
+}

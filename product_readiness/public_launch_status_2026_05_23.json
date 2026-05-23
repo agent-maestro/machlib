@@ -1,0 +1,109 @@
+{
+  "status": "PUBLIC_LAUNCH_STATUS_RECORDED",
+  "record_date": "2026-05-23",
+  "public_live": [
+    {
+      "surface_id": "oneop_senses",
+      "display_name": "1op Senses",
+      "url": "https://1op.io/senses",
+      "status": "LIVE",
+      "public_now": true,
+      "verification": {
+        "fetch_ok": true,
+        "expected_copy_found": true,
+        "verification_date": "2026-05-23"
+      }
+    },
+    {
+      "surface_id": "operator_senses_inside_senses",
+      "display_name": "Operator Senses inside /senses",
+      "url": "https://1op.io/senses",
+      "status": "LIVE",
+      "public_now": true,
+      "verification": {
+        "fetch_ok": true,
+        "expected_copy_found": true,
+        "verification_date": "2026-05-23"
+      }
+    },
+    {
+      "surface_id": "machlib_pypi_package",
+      "display_name": "machlib 0.0.1",
+      "url": "https://pypi.org/project/machlib/0.0.1/",
+      "status": "LIVE",
+      "public_now": true,
+      "verification": {
+        "pypi_json_ok": true,
+        "package_name": "machlib",
+        "version": "0.0.1",
+        "verification_date": "2026-05-23"
+      }
+    }
+  ],
+  "private_internal": [
+    {
+      "surface_id": "capcard_lab_workbench",
+      "display_name": "CapCard Lab Workbench",
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY",
+      "safe_to_publish_publicly": false
+    },
+    {
+      "surface_id": "eml_puzzle_evidence_kernel_capcard",
+      "display_name": "EML Puzzle Evidence Kernel CapCard",
+      "classification": "PRIVATE_INTERNAL_MARKETPLACE_ONLY",
+      "safe_to_publish_publicly": false
+    },
+    {
+      "surface_id": "qwen_repair_workbench",
+      "display_name": "Qwen repair workbench",
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY",
+      "safe_to_publish_publicly": false
+    },
+    {
+      "surface_id": "capcard_mutation_scoring_reviewer_internals",
+      "display_name": "CapCard mutation, scoring, and reviewer internals",
+      "classification": "PRIVATE_INTERNAL_REVIEW_ONLY",
+      "safe_to_publish_publicly": false
+    }
+  ],
+  "footer_audit": {
+    "claim": "50 Lean theorems \u00b7 265 equations \u00b7 EML Cost Conjecture (in development)",
+    "live_on_1op": true,
+    "source_file": "/home/monogate/monogate/1op/src/components/Footer.tsx",
+    "supported": false,
+    "intended_public_display": "NEEDS_HUMAN_DECISION",
+    "supported_parts": [
+      {
+        "part": "265 equations",
+        "status": "SUPPORTED",
+        "source": "/home/monogate/monogate/1op/src/lib/data/genome-data.js",
+        "source_detail": "GENOME_STATS.total = 265"
+      },
+      {
+        "part": "EML Cost Conjecture (in development)",
+        "status": "BOUNDED_AS_IN_DEVELOPMENT",
+        "source": "/home/monogate/monogate/1op/src/components/Footer.tsx",
+        "source_detail": "The footer copy explicitly marks the conjecture as in development."
+      }
+    ],
+    "unsupported_parts": [
+      {
+        "part": "50 Lean theorems",
+        "status": "NO_CLEAR_SUPPORTING_SOURCE_FOUND",
+        "source_detail": "A direct source for the count was not found during this audit. The 1op lean-graph page references a different larger metadata count, so this footer count should not remain public without a supporting artifact."
+      }
+    ],
+    "cleanup_recommended": true,
+    "cleanup_recommendation": "Prepare a no-deploy cleanup task to replace the footer theorem-count copy with sourced public copy, or add a direct supporting artifact before keeping the count public."
+  },
+  "deploy_performed_by_this_task": false,
+  "push_performed_by_this_task": false,
+  "token_handling_performed": false,
+  "package_publish_performed": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "production_marketplace_modified": false,
+  "capcard_lab_exposed_publicly": false,
+  "eml_puzzle_capcard_exposed_publicly": false,
+  "unsupported_theorem_claim_introduced": false
+}
