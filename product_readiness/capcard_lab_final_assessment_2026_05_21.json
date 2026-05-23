@@ -1,0 +1,16 @@
+{
+  "evidence_freshness_score_0_to_100": 67,
+  "execution_risk_score_0_to_100": 48,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "marketplace_ux_score_0_to_100": 72,
+  "petal_api_upload_performed": false,
+  "product_potential_score_0_to_100": 78,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "revenue_path_score_0_to_100": 70,
+  "status": "PASS",
+  "trust_infrastructure_score_0_to_100": 82,
+  "validator_strength_score_0_to_100": 84,
+  "verdict": "BUILD_CAPCARD_LAB_NOW"
+}

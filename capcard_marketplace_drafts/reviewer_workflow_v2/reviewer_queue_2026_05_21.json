@@ -1,0 +1,29 @@
+{
+  "reviewer_queue": [
+    {
+      "action": "review_or_repair",
+      "candidate_id": "eml_puzzle_evidence_kernel"
+    },
+    {
+      "action": "review_or_repair",
+      "candidate_id": "qwen_puzzle_curriculum_pack"
+    },
+    {
+      "action": "review_or_repair",
+      "candidate_id": "zero_mathlib_checker_package"
+    },
+    {
+      "action": "review_or_repair",
+      "candidate_id": "claim_boundary_package"
+    },
+    {
+      "action": "review_or_repair",
+      "candidate_id": "eml_records_package"
+    },
+    {
+      "action": "review_or_repair",
+      "candidate_id": "review_branch_packet_package"
+    }
+  ],
+  "status": "PASS"
+}

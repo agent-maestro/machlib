@@ -1,0 +1,45 @@
+{
+  "exact_next_actions": [
+    "locate accepted row 2 source and rerun local import/dryrun validation",
+    "locate accepted row 3 source and rerun local import/dryrun validation",
+    "write bounded solver_status explanation or repair evidence",
+    "capture human reviewer identity/date before marketplace promotion"
+  ],
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "rows": [
+    {
+      "accepted_repair_evidence": false,
+      "bounded_explanation_present": false,
+      "decision": "still_blocked",
+      "reviewer_metadata_required": [
+        "reviewer_id",
+        "reviewer_role",
+        "review_date",
+        "repair_decision"
+      ],
+      "row": 2,
+      "solver_status": "unknown",
+      "source_path": "product_readiness/qwen_capcard_marketplace_candidates_2026_05_21.json",
+      "validation_status": "warn"
+    },
+    {
+      "accepted_repair_evidence": false,
+      "bounded_explanation_present": false,
+      "decision": "still_blocked",
+      "reviewer_metadata_required": [
+        "reviewer_id",
+        "reviewer_role",
+        "review_date",
+        "repair_decision"
+      ],
+      "row": 3,
+      "solver_status": "unknown",
+      "source_path": "product_readiness/qwen_capcard_marketplace_candidates_2026_05_21.json",
+      "validation_status": "warn"
+    }
+  ],
+  "status": "QWEN_KEEP_BLOCKED"
+}

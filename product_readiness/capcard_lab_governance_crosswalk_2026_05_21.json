@@ -1,0 +1,143 @@
+{
+  "patterns": [
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "model-card-style reporting",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    },
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "dataset/datasheet-style documentation",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    },
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "AI factsheet-style lifecycle metadata",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    },
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "NIST AI RMF-style risk management",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    },
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "AI Verify-style testing/reporting concepts",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    },
+    {
+      "not_certified_compliant": true,
+      "not_regulatory_control": true,
+      "overclaim_risk": "confusing internal evidence with certification",
+      "pattern": "TEVV/capability-evaluation workflows",
+      "product_opportunity": "private TEVV cockpit for generated artifacts",
+      "relationship": "conceptually_aligned",
+      "what_capcard_adds": [
+        "mutation gauntlet",
+        "marketplace readiness",
+        "no-go action fields"
+      ],
+      "what_capcard_borrows": [
+        "intended use",
+        "limitations",
+        "evidence traceability"
+      ],
+      "what_capcard_lacks": [
+        "certification",
+        "regulatory control",
+        "public compliance claim"
+      ]
+    }
+  ],
+  "status": "PASS"
+}

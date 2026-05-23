@@ -1,0 +1,12 @@
+{
+  "certified_safety_claim": false,
+  "decision": "approve_internal_display",
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "review_date": "2026-05-21",
+  "reviewer_id": "internal-reviewer",
+  "reviewer_role": "human_reviewer"
+}

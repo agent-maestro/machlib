@@ -1,0 +1,101 @@
+{
+  "segments": [
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "AI eval teams",
+      "strongest_candidate_type": "strong internal evidence card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "formal/artifact review teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "model-curriculum teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "safety/governance teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "robotics/simulation review teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "internal platform teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "evidence audit consultants",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    },
+    {
+      "product_surface": "static internal workbench",
+      "revenue_path": "private evidence review workbench",
+      "risks": [
+        "overclaiming",
+        "stale evidence",
+        "missing reviewer metadata"
+      ],
+      "segment": "education/curriculum teams",
+      "strongest_candidate_type": "readiness dashboard card",
+      "why_capcard_helps": "Turns local evidence into reviewable cards with explicit no-go boundaries."
+    }
+  ],
+  "status": "PASS"
+}

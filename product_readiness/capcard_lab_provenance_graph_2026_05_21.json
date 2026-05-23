@@ -1,0 +1,1588 @@
+{
+  "edge_count": 180,
+  "edges": [
+    {
+      "from": "source_000",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "supports"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "source_000",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_001",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "supports"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "source_001",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_002",
+      "to": "zero_mathlib_checker_package",
+      "type": "supports"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "source_002",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_003",
+      "to": "claim_boundary_package",
+      "type": "supports"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "source_003",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_004",
+      "to": "eml_records_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "source_004",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_005",
+      "to": "review_branch_packet_package",
+      "type": "supports"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "source_005",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_006",
+      "to": "machlib_package_readiness",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "source_006",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_007",
+      "to": "machlib_workbench_package",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "source_007",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_008",
+      "to": "eml_harness_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "source_008",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_009",
+      "to": "hybrid_trace_eml_package",
+      "type": "supports"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "source_009",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_010",
+      "to": "oneop_senses_animal_models",
+      "type": "supports"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "source_010",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_011",
+      "to": "machlib_evidence_reel",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "source_011",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_012",
+      "to": "capcard_tevv_lab",
+      "type": "supports"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "source_012",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_013",
+      "to": "electronics_curated_manifest_support",
+      "type": "supports"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "source_013",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_014",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "supports"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "source_014",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_015",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "supports"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "source_015",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_016",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "supports"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "source_016",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_017",
+      "to": "zero_mathlib_checker_package",
+      "type": "supports"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "source_017",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_018",
+      "to": "claim_boundary_package",
+      "type": "supports"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "source_018",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_019",
+      "to": "eml_records_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "source_019",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_020",
+      "to": "review_branch_packet_package",
+      "type": "supports"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "source_020",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_021",
+      "to": "machlib_package_readiness",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "source_021",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_022",
+      "to": "machlib_workbench_package",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "source_022",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_023",
+      "to": "eml_harness_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "source_023",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_024",
+      "to": "hybrid_trace_eml_package",
+      "type": "supports"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "source_024",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_025",
+      "to": "oneop_senses_animal_models",
+      "type": "supports"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "source_025",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_026",
+      "to": "machlib_evidence_reel",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "source_026",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_027",
+      "to": "capcard_tevv_lab",
+      "type": "supports"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "source_027",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_028",
+      "to": "electronics_curated_manifest_support",
+      "type": "supports"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "source_028",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_029",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "supports"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "source_029",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_030",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "supports"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "source_030",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_031",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "supports"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "source_031",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_032",
+      "to": "zero_mathlib_checker_package",
+      "type": "supports"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "source_032",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_033",
+      "to": "claim_boundary_package",
+      "type": "supports"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "source_033",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_034",
+      "to": "eml_records_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "source_034",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_035",
+      "to": "review_branch_packet_package",
+      "type": "supports"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "source_035",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_036",
+      "to": "machlib_package_readiness",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "source_036",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_037",
+      "to": "machlib_workbench_package",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "source_037",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_038",
+      "to": "eml_harness_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "source_038",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_039",
+      "to": "hybrid_trace_eml_package",
+      "type": "supports"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "source_039",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_040",
+      "to": "oneop_senses_animal_models",
+      "type": "supports"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "source_040",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_041",
+      "to": "machlib_evidence_reel",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "source_041",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_042",
+      "to": "capcard_tevv_lab",
+      "type": "supports"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "source_042",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_043",
+      "to": "electronics_curated_manifest_support",
+      "type": "supports"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "source_043",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_044",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "supports"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "source_044",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_045",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "supports"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "source_045",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_046",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "supports"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "source_046",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_047",
+      "to": "zero_mathlib_checker_package",
+      "type": "supports"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "source_047",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_048",
+      "to": "claim_boundary_package",
+      "type": "supports"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "source_048",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_049",
+      "to": "eml_records_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "source_049",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_050",
+      "to": "review_branch_packet_package",
+      "type": "supports"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "source_050",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_051",
+      "to": "machlib_package_readiness",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "source_051",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_052",
+      "to": "machlib_workbench_package",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "source_052",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_053",
+      "to": "eml_harness_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "source_053",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_054",
+      "to": "hybrid_trace_eml_package",
+      "type": "supports"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "source_054",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_055",
+      "to": "oneop_senses_animal_models",
+      "type": "supports"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "source_055",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_056",
+      "to": "machlib_evidence_reel",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "source_056",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_057",
+      "to": "capcard_tevv_lab",
+      "type": "supports"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "source_057",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_058",
+      "to": "electronics_curated_manifest_support",
+      "type": "supports"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "source_058",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_059",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "supports"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "source_059",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_060",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "supports"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "source_060",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_061",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "supports"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "source_061",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_062",
+      "to": "zero_mathlib_checker_package",
+      "type": "supports"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "source_062",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_063",
+      "to": "claim_boundary_package",
+      "type": "supports"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "source_063",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_064",
+      "to": "eml_records_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "source_064",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_065",
+      "to": "review_branch_packet_package",
+      "type": "supports"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "source_065",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_066",
+      "to": "machlib_package_readiness",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "source_066",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_067",
+      "to": "machlib_workbench_package",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "source_067",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_068",
+      "to": "eml_harness_package",
+      "type": "supports"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "source_068",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_069",
+      "to": "hybrid_trace_eml_package",
+      "type": "supports"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "source_069",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_070",
+      "to": "oneop_senses_animal_models",
+      "type": "supports"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "source_070",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_071",
+      "to": "machlib_evidence_reel",
+      "type": "supports"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "source_071",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_072",
+      "to": "capcard_tevv_lab",
+      "type": "supports"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "source_072",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_073",
+      "to": "electronics_curated_manifest_support",
+      "type": "supports"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "source_073",
+      "type": "traces_to"
+    },
+    {
+      "from": "source_074",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "supports"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "source_074",
+      "type": "traces_to"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel_no_upload_gate",
+      "to": "eml_puzzle_evidence_kernel",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "eml_puzzle_evidence_kernel",
+      "to": "eml_puzzle_evidence_kernel_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack_no_upload_gate",
+      "to": "qwen_puzzle_curriculum_pack",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "qwen_puzzle_curriculum_pack",
+      "to": "qwen_puzzle_curriculum_pack_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "zero_mathlib_checker_package_no_upload_gate",
+      "to": "zero_mathlib_checker_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "zero_mathlib_checker_package",
+      "to": "zero_mathlib_checker_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "claim_boundary_package_no_upload_gate",
+      "to": "claim_boundary_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "claim_boundary_package",
+      "to": "claim_boundary_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "eml_records_package_no_upload_gate",
+      "to": "eml_records_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "eml_records_package",
+      "to": "eml_records_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "review_branch_packet_package_no_upload_gate",
+      "to": "review_branch_packet_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "review_branch_packet_package",
+      "to": "review_branch_packet_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "machlib_package_readiness_no_upload_gate",
+      "to": "machlib_package_readiness",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "machlib_package_readiness",
+      "to": "machlib_package_readiness_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "machlib_workbench_package_no_upload_gate",
+      "to": "machlib_workbench_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "machlib_workbench_package",
+      "to": "machlib_workbench_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "eml_harness_package_no_upload_gate",
+      "to": "eml_harness_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "eml_harness_package",
+      "to": "eml_harness_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "hybrid_trace_eml_package_no_upload_gate",
+      "to": "hybrid_trace_eml_package",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "hybrid_trace_eml_package",
+      "to": "hybrid_trace_eml_package_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "oneop_senses_animal_models_no_upload_gate",
+      "to": "oneop_senses_animal_models",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "oneop_senses_animal_models",
+      "to": "oneop_senses_animal_models_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "machlib_evidence_reel_no_upload_gate",
+      "to": "machlib_evidence_reel",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "machlib_evidence_reel",
+      "to": "machlib_evidence_reel_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "capcard_tevv_lab_no_upload_gate",
+      "to": "capcard_tevv_lab",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "capcard_tevv_lab",
+      "to": "capcard_tevv_lab_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "electronics_curated_manifest_support_no_upload_gate",
+      "to": "electronics_curated_manifest_support",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "electronics_curated_manifest_support",
+      "to": "electronics_curated_manifest_support_reviewer_queue",
+      "type": "reviewer_queue_for"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate_no_upload_gate",
+      "to": "mobius_pair_kernel_future_candidate",
+      "type": "no_upload_gate_for"
+    },
+    {
+      "from": "mobius_pair_kernel_future_candidate",
+      "to": "mobius_pair_kernel_future_candidate_reviewer_queue",
+      "type": "reviewer_queue_for"
+    }
+  ],
+  "huggingface_upload_performed": false,
+  "node_count": 120,
+  "nodes": [
+    {
+      "id": "eml_puzzle_evidence_kernel",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "qwen_puzzle_curriculum_pack",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "zero_mathlib_checker_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "claim_boundary_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "eml_records_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "review_branch_packet_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "machlib_package_readiness",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "machlib_workbench_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "eml_harness_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "hybrid_trace_eml_package",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "oneop_senses_animal_models",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "machlib_evidence_reel",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "capcard_tevv_lab",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "electronics_curated_manifest_support",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "id": "mobius_pair_kernel_future_candidate",
+      "status": "candidate_for_internal_review",
+      "type": "candidate"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_000",
+      "source_path": "capcard_marketplace_drafts/adversarial/README.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_001",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/01_valid_minimal_internal_card.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_002",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/02_valid_strong_eml_like_card.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_003",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/03_stale_only_evidence_card.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_004",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/04_petal_verified_false_positive_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_005",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/05_hugging_face_live_false_positive_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_006",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/06_certified_safety_false_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_007",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/07_production_controller_false_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_008",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/08_theorem_proved_false_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_009",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/09_open_problem_solved_false_claim.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_010",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/10_missing_limitations.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_011",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/11_missing_not_claimed.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_012",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/12_missing_reviewer.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_013",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/13_missing_review_date.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_014",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/14_duplicate_candidate_id.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_015",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/14b_duplicate_candidate_id_pair.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_016",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/15_unsafe_public_visibility.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_017",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/16_production_marketplace_modified_true.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_018",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/17_petal_upload_true.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_019",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/18_hf_upload_true.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_020",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/19_source_path_missing.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_021",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/20_traceability_loop.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_022",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/21_stale_command_center_only.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_023",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/22_qwen_warn_rows_unresolved_ready.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_024",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/23_unknown_solver_marked_proof.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_025",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/24_no_no_upload_gate.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_026",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/25_token_like_secret_fixture.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_027",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/26_negative_boundary_only_safe_card.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_028",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/27_incomplete_lifecycle_state.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_029",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/28_mismatched_candidate_id_card_id.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_030",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/29_invalid_json_schema_shape.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_031",
+      "source_path": "capcard_marketplace_drafts/adversarial/cards/30_overconfident_marketplace_copy.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_032",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_card_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_033",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_guardrails_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_034",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_listing_DRAFT_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_035",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_reviewer_checklist_DRAFT_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_036",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_strengthened_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_037",
+      "source_path": "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_traceability_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_038",
+      "source_path": "capcard_marketplace_drafts/marketplace_mock_index_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_039",
+      "source_path": "capcard_marketplace_drafts/marketplace_mock_index_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_040",
+      "source_path": "capcard_marketplace_drafts/mobius_pair_kernel_card_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_041",
+      "source_path": "capcard_marketplace_drafts/mobius_pair_kernel_guardrails_DRAFT_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_042",
+      "source_path": "capcard_marketplace_drafts/mobius_pair_kernel_listing_DRAFT_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_043",
+      "source_path": "capcard_marketplace_drafts/rendered/eml_puzzle_evidence_kernel/card_preview.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_044",
+      "source_path": "capcard_marketplace_drafts/rendered/eml_puzzle_evidence_kernel/card_preview.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_045",
+      "source_path": "capcard_marketplace_drafts/rendered/eml_puzzle_evidence_kernel/index.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_046",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/reviewer_checklist_template_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_047",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/reviewer_decision_schema_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_048",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/reviewer_queue_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_049",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/README.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_050",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/invalid_approve_public.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_051",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/invalid_certified_safety.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_052",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/invalid_petal_upload.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_053",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/valid_approve_internal_eml.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_054",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow/sample_decisions/valid_request_revision_qwen.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_055",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/reviewer_decision_schema_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_056",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/reviewer_packet_1op_senses_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_057",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/reviewer_packet_eml_puzzle_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_058",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/reviewer_packet_qwen_puzzle_2026_05_21.md",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_059",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/reviewer_queue_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_060",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/sample_decisions/invalid_approve_public.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_061",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/sample_decisions/invalid_certified_safety.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_062",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/sample_decisions/invalid_petal_upload.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_063",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/sample_decisions/valid_approve_internal_eml.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_064",
+      "source_path": "capcard_marketplace_drafts/reviewer_workflow_v2/sample_decisions/valid_request_revision_qwen.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_065",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/blocked_candidates.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_066",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/candidate_index.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_067",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/eml_puzzle_evidence_kernel.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_068",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/index.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_069",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/qwen_puzzle_curriculum_pack.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_070",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/reviewer_queue.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_071",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/risk_dashboard.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_072",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/strong_candidates.html",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_draft",
+      "id": "source_073",
+      "source_path": "capcard_marketplace_drafts/workbench_2026_05_21/workbench_manifest_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "family": "capcard_spec",
+      "id": "source_074",
+      "source_path": "capcard_specs/capcard_claim_policy_v0_1_2026_05_21.json",
+      "type": "evidence_source"
+    },
+    {
+      "id": "eml_puzzle_evidence_kernel_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "eml_puzzle_evidence_kernel_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "qwen_puzzle_curriculum_pack_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "qwen_puzzle_curriculum_pack_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "zero_mathlib_checker_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "zero_mathlib_checker_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "claim_boundary_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "claim_boundary_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "eml_records_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "eml_records_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "review_branch_packet_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "review_branch_packet_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "machlib_package_readiness_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "machlib_package_readiness_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "machlib_workbench_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "machlib_workbench_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "eml_harness_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "eml_harness_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "hybrid_trace_eml_package_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "hybrid_trace_eml_package_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "oneop_senses_animal_models_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "oneop_senses_animal_models_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "machlib_evidence_reel_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "machlib_evidence_reel_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "capcard_tevv_lab_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "capcard_tevv_lab_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "electronics_curated_manifest_support_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "electronics_curated_manifest_support_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    },
+    {
+      "id": "mobius_pair_kernel_future_candidate_no_upload_gate",
+      "status": "false_upload_fields",
+      "type": "no_upload_gate"
+    },
+    {
+      "id": "mobius_pair_kernel_future_candidate_reviewer_queue",
+      "status": "human_review_required",
+      "type": "review_record"
+    }
+  ],
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "status": "PASS"
+}

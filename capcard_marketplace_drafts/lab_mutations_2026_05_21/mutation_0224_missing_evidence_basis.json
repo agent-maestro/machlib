@@ -1,0 +1,62 @@
+{
+  "blockers": [],
+  "candidate_id": "zero_mathlib_checker_package",
+  "card_id": "zero_mathlib_checker_package_LAB_DRAFT_2026_05_21",
+  "category": "package_evidence",
+  "certified_safety_claim": false,
+  "deploy_performed": false,
+  "display_name": "zero-mathlib-checker package",
+  "expected_result": "BLOCKED",
+  "fixture_only": true,
+  "hardware_action_performed": false,
+  "huggingface_upload_performed": false,
+  "lifecycle_state": "INTERNAL_MARKETPLACE_STRONG_CANDIDATE",
+  "limitations": [
+    "internal observation tier",
+    "not public marketplace",
+    "bounded evidence only",
+    "not theorem prover",
+    "not open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "marketplace_readiness": "READY_FOR_HUMAN_INTERNAL_MARKETPLACE_APPROVAL",
+  "marketplace_upload_performed": false,
+  "mutation_family": "missing_evidence_basis",
+  "mutation_id": "0224_missing_evidence_basis",
+  "not_claimed": [
+    "not theorem prover",
+    "not open-problem result",
+    "not certified safety",
+    "not production controller evidence",
+    "not PETAL/API uploaded",
+    "not Hugging Face uploaded",
+    "not production marketplace modified"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "readiness_band": "STRONG_INTERNAL",
+  "reviewer_required": true,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "score_placeholders": {
+    "buyer_utility": 0,
+    "readiness": 0,
+    "trust": 0
+  },
+  "source_artifacts": [
+    "product_readiness/qwen_capcard_marketplace_candidates_2026_05_21.json",
+    "capcard_marketplace_drafts/eml_puzzle_evidence_kernel_strengthened_DRAFT_2026_05_21.json",
+    "product_readiness/capcard_deep_utility_assessment_2026_05_21.json"
+  ],
+  "theorem_proof_claim": false,
+  "upload_performed": false,
+  "validator_status": "BLOCKED",
+  "visibility": "internal",
+  "visibility_recommendation": "internal_marketplace"
+}

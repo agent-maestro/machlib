@@ -1,0 +1,14 @@
+{
+  "blocked_count": 486,
+  "detection_coverage_percent": 100.0,
+  "fixture_token_strings_quarantined": true,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "mutation_count": 500,
+  "mutation_family_count": 35,
+  "passed_safe_negative_boundary_count": 14,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "status": "PASS"
+}

@@ -1,0 +1,13 @@
+{
+  "candidate_count": 15,
+  "deploy_performed": false,
+  "html_generated": true,
+  "huggingface_upload_performed": false,
+  "marketplace_upload_performed": false,
+  "mutation_count": 500,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "upload_performed": false,
+  "workbench_status": "PASS"
+}

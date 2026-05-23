@@ -1,0 +1,19 @@
+{
+  "cards": [
+    {
+      "deploy_performed": false,
+      "huggingface_upload_performed": false,
+      "marketplace_upload_performed": false,
+      "petal_api_upload_performed": false,
+      "production_marketplace_modified": false,
+      "public_claim": false,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "surface": "command.monogate.dev",
+      "title": "CapCard Lab Engine",
+      "visibility": "internal"
+    }
+  ],
+  "deploy_performed": false,
+  "public_claim": false
+}
