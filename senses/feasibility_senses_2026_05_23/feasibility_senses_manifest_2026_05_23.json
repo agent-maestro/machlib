@@ -1,0 +1,14 @@
+{
+  "audio_file_generated": false,
+  "audio_runtime": "browser_web_audio_api",
+  "deploy_performed": false,
+  "hardware_required": false,
+  "microphone_required": false,
+  "mode": "local_static_browser_demo",
+  "network_required": false,
+  "prototype_id": "feasibility_senses_2026_05_23",
+  "public_claim": false,
+  "status": "PASS",
+  "upload_performed": false,
+  "visual_generated": true
+}

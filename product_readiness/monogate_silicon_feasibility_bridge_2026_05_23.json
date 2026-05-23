@@ -1,0 +1,20 @@
+{
+  "certified_safety_claim": false,
+  "hardware_action_performed": false,
+  "helps_with": [
+    "state/event counter sizing",
+    "frame bandwidth",
+    "memory budget",
+    "timing estimates"
+  ],
+  "production_controller_claim": false,
+  "public_claim": false,
+  "status": "SIMULATION_ONLY_INTERNAL",
+  "surface": "monogate_silicon_feasibility_bridge",
+  "tapeout_performed": false,
+  "trace0_resource_budgets": {
+    "event_counter_bits": 32,
+    "frame_budget_bytes": 256,
+    "toy_operation_budget": 1000000.0
+  }
+}

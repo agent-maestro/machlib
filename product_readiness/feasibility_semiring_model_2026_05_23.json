@@ -1,0 +1,63 @@
+{
+  "examples": {
+    "alternative": {
+      "band": "PRACTICAL",
+      "claim_risk": 0,
+      "cost": 1000000.0,
+      "evidence": [],
+      "evidence_risk": 0,
+      "freshness_penalty": 0,
+      "human_review_cost": 0,
+      "memory": 10000.0
+    },
+    "blocked_forbidden_claim": {
+      "band": "BLOCKED",
+      "claim_risk": 1.0,
+      "cost": 1000000.0,
+      "evidence": [],
+      "evidence_risk": 0,
+      "freshness_penalty": 0,
+      "human_review_cost": 0,
+      "memory": 10000.0
+    },
+    "parallel": {
+      "band": "ABSURD",
+      "claim_risk": 0,
+      "cost": 1e+300,
+      "evidence": [],
+      "evidence_risk": 0,
+      "freshness_penalty": 0,
+      "human_review_cost": 0,
+      "memory": 1010000.0
+    },
+    "sequential": {
+      "band": "ABSURD",
+      "claim_risk": 0,
+      "cost": 1e+300,
+      "evidence": [],
+      "evidence_risk": 0,
+      "freshness_penalty": 0,
+      "human_review_cost": 0,
+      "memory": 1000000.0
+    },
+    "stale": {
+      "band": "PRACTICAL",
+      "claim_risk": 0,
+      "cost": 1000000.0,
+      "evidence": [],
+      "evidence_risk": 0,
+      "freshness_penalty": 0.2,
+      "human_review_cost": 0,
+      "memory": 10000.0
+    }
+  },
+  "language": "semiring/provenance/min-plus inspired toy model",
+  "not_claimed": [
+    "not a formal new algebraic theorem",
+    "not proved complete",
+    "not a public standard"
+  ],
+  "public_claim": false,
+  "status": "DRAFT_INTERNAL",
+  "theorem_proof_claim": false
+}

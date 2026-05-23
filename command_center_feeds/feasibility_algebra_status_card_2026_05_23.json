@@ -1,0 +1,9 @@
+{
+  "card_id": "feasibility_algebra_status",
+  "deploy_performed": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "surface": "command.monogate.dev",
+  "visibility": "internal"
+}

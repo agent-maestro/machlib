@@ -1,0 +1,1627 @@
+{
+  "matrix": {
+    "constant_but_huge_hidden_factor": {
+      "browser_interactive_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "cluster_small": {
+        "1": "BORDERLINE",
+        "10": "BORDERLINE",
+        "100": "BORDERLINE",
+        "1000": "BORDERLINE",
+        "1000000": "BORDERLINE",
+        "2": "BORDERLINE",
+        "20": "BORDERLINE",
+        "5": "BORDERLINE",
+        "50": "BORDERLINE"
+      },
+      "gpu_box": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      }
+    },
+    "cubic_n3": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "BORDERLINE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "BORDERLINE",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "BORDERLINE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "exponential_2n": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "INFEASIBLE",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      }
+    },
+    "factorial_n": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "BORDERLINE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "INFEASIBLE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "ABSURD",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      }
+    },
+    "fixed_parameter_like": {
+      "browser_interactive_budget": {
+        "1": "HEAVY_BUT_POSSIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "HEAVY_BUT_POSSIBLE",
+        "20": "INFEASIBLE",
+        "5": "BORDERLINE",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "HEAVY_BUT_POSSIBLE",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "HEAVY_BUT_POSSIBLE",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "HEAVY_BUT_POSSIBLE",
+        "50": "BORDERLINE"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "PRACTICAL",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      }
+    },
+    "io_bound_scan": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "BORDERLINE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "HEAVY_BUT_POSSIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "linear_n": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "HEAVY_BUT_POSSIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "logspace_style": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "PRACTICAL",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "HEAVY_BUT_POSSIBLE",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "memory_quadratic": {
+      "browser_interactive_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "n_log_n": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "HEAVY_BUT_POSSIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "HEAVY_BUT_POSSIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "polynomial_n10": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "INFEASIBLE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "BORDERLINE",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "HEAVY_BUT_POSSIBLE",
+        "50": "INFEASIBLE"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "INFEASIBLE",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "INFEASIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "INFEASIBLE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "INFEASIBLE",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "INFEASIBLE"
+      }
+    },
+    "polynomial_n100": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "INFEASIBLE",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      }
+    },
+    "polynomial_n1000": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "ABSURD",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "ABSURD",
+        "20": "ABSURD",
+        "5": "ABSURD",
+        "50": "ABSURD"
+      }
+    },
+    "proof_search_branching": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "BORDERLINE"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "INFEASIBLE",
+        "5": "TRIVIAL",
+        "50": "ABSURD"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "INFEASIBLE",
+        "5": "PRACTICAL",
+        "50": "ABSURD"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "ABSURD",
+        "1000": "ABSURD",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "INFEASIBLE"
+      }
+    },
+    "pseudo_polynomial": {
+      "browser_interactive_budget": {
+        "1": "HEAVY_BUT_POSSIBLE",
+        "10": "BORDERLINE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "HEAVY_BUT_POSSIBLE",
+        "20": "INFEASIBLE",
+        "5": "BORDERLINE",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "PRACTICAL",
+        "10": "HEAVY_BUT_POSSIBLE",
+        "100": "BORDERLINE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "HEAVY_BUT_POSSIBLE",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "HEAVY_BUT_POSSIBLE",
+        "50": "BORDERLINE"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "BORDERLINE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "BORDERLINE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "BORDERLINE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      }
+    },
+    "quadratic_n2": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "HEAVY_BUT_POSSIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "PRACTICAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "INFEASIBLE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "BORDERLINE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "BORDERLINE",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "subexponential_2sqrt_n": {
+      "browser_interactive_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "capcard_review_budget": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "PRACTICAL"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "silicon_toy_budget": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "INFEASIBLE",
+        "1000000": "ABSURD",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "workstation": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "PRACTICAL",
+        "1000000": "ABSURD",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      }
+    },
+    "verifier_linear_solver_huge": {
+      "browser_interactive_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "capcard_review_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "cluster_small": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "PRACTICAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "gpu_box": {
+        "1": "TRIVIAL",
+        "10": "PRACTICAL",
+        "100": "PRACTICAL",
+        "1000": "PRACTICAL",
+        "1000000": "BORDERLINE",
+        "2": "PRACTICAL",
+        "20": "PRACTICAL",
+        "5": "PRACTICAL",
+        "50": "PRACTICAL"
+      },
+      "hypothetical_large_cluster": {
+        "1": "TRIVIAL",
+        "10": "TRIVIAL",
+        "100": "TRIVIAL",
+        "1000": "TRIVIAL",
+        "1000000": "TRIVIAL",
+        "2": "TRIVIAL",
+        "20": "TRIVIAL",
+        "5": "TRIVIAL",
+        "50": "TRIVIAL"
+      },
+      "laptop_small": {
+        "1": "BORDERLINE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "silicon_toy_budget": {
+        "1": "INFEASIBLE",
+        "10": "INFEASIBLE",
+        "100": "INFEASIBLE",
+        "1000": "INFEASIBLE",
+        "1000000": "INFEASIBLE",
+        "2": "INFEASIBLE",
+        "20": "INFEASIBLE",
+        "5": "INFEASIBLE",
+        "50": "INFEASIBLE"
+      },
+      "workstation": {
+        "1": "PRACTICAL",
+        "10": "PRACTICAL",
+        "100": "HEAVY_BUT_POSSIBLE",
+        "1000": "BORDERLINE",
+        "1000000": "INFEASIBLE",
+        "2": "PRACTICAL",
+        "20": "HEAVY_BUT_POSSIBLE",
+        "5": "PRACTICAL",
+        "50": "HEAVY_BUT_POSSIBLE"
+      }
+    }
+  },
+  "public_claim": false,
+  "status": "PASS",
+  "theorem_proof_claim": false
+}

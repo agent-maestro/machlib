@@ -1,0 +1,451 @@
+{
+  "families": [
+    {
+      "asymptotic_class": "O(n)",
+      "asymptotic_label": "O(n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n",
+      "expression_id": "linear_n",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 1
+      },
+      "practical_notes": "Usually feasible until IO dominates.",
+      "why_interesting": "Usually feasible until IO dominates."
+    },
+    {
+      "asymptotic_class": "O(n log n)",
+      "asymptotic_label": "O(n log n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n log n",
+      "expression_id": "n_log_n",
+      "kind": "n_log_n",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {},
+      "practical_notes": "Often practical for sorting/indexing scale.",
+      "why_interesting": "Often practical for sorting/indexing scale."
+    },
+    {
+      "asymptotic_class": "O(n^2)",
+      "asymptotic_label": "O(n^2)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^2",
+      "expression_id": "quadratic_n2",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 2
+      },
+      "practical_notes": "Feasible only to moderate n.",
+      "why_interesting": "Feasible only to moderate n."
+    },
+    {
+      "asymptotic_class": "O(n^3)",
+      "asymptotic_label": "O(n^3)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^3",
+      "expression_id": "cubic_n3",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 3
+      },
+      "practical_notes": "Quickly heavy but common in bounded linear algebra.",
+      "why_interesting": "Quickly heavy but common in bounded linear algebra."
+    },
+    {
+      "asymptotic_class": "O(n^10)",
+      "asymptotic_label": "O(n^10)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^10",
+      "expression_id": "polynomial_n10",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 10
+      },
+      "practical_notes": "Formally polynomial but operationally severe.",
+      "why_interesting": "Formally polynomial but operationally severe."
+    },
+    {
+      "asymptotic_class": "O(n^100)",
+      "asymptotic_label": "O(n^100)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^100",
+      "expression_id": "polynomial_n100",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 100
+      },
+      "practical_notes": "Polynomial label hides extreme infeasibility.",
+      "why_interesting": "Polynomial label hides extreme infeasibility."
+    },
+    {
+      "asymptotic_class": "O(n^1000)",
+      "asymptotic_label": "O(n^1000)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^1000",
+      "expression_id": "polynomial_n1000",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 1000
+      },
+      "practical_notes": "Central adversarial polynomial-feasibility gap.",
+      "why_interesting": "Central adversarial polynomial-feasibility gap."
+    },
+    {
+      "asymptotic_class": "O(2^n)",
+      "asymptotic_label": "O(2^n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "2^n",
+      "expression_id": "exponential_2n",
+      "kind": "exponential",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "base": 2
+      },
+      "practical_notes": "Classic exponential blowup.",
+      "why_interesting": "Classic exponential blowup."
+    },
+    {
+      "asymptotic_class": "O(2^sqrt(n))",
+      "asymptotic_label": "O(2^sqrt(n))",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "2^sqrt(n)",
+      "expression_id": "subexponential_2sqrt_n",
+      "kind": "subexponential",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "base": 2
+      },
+      "practical_notes": "Can beat high-degree polynomial for many n.",
+      "why_interesting": "Can beat high-degree polynomial for many n."
+    },
+    {
+      "asymptotic_class": "O(n!)",
+      "asymptotic_label": "O(n!)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n!",
+      "expression_id": "factorial_n",
+      "kind": "factorial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {},
+      "practical_notes": "Symbolic only beyond small n.",
+      "why_interesting": "Symbolic only beyond small n."
+    },
+    {
+      "asymptotic_class": "O(log n)",
+      "asymptotic_label": "O(log n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "log n",
+      "expression_id": "logspace_style",
+      "kind": "logspace",
+      "memory_kind": "log",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {},
+      "practical_notes": "Tiny operations and memory in this toy model.",
+      "why_interesting": "Tiny operations and memory in this toy model."
+    },
+    {
+      "asymptotic_class": "pseudo-polynomial",
+      "asymptotic_label": "pseudo-polynomial",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n * V",
+      "expression_id": "pseudo_polynomial",
+      "kind": "pseudo_polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "value_bound": 1000000
+      },
+      "practical_notes": "Feasible depends on numeric value bound.",
+      "why_interesting": "Feasible depends on numeric value bound."
+    },
+    {
+      "asymptotic_class": "FPT-like",
+      "asymptotic_label": "FPT-like",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "2^k * n",
+      "expression_id": "fixed_parameter_like",
+      "kind": "fixed_parameter",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "k": 20
+      },
+      "practical_notes": "Can be practical when k is small; huge when k grows.",
+      "why_interesting": "Can be practical when k is small; huge when k grows."
+    },
+    {
+      "asymptotic_class": "O(1)",
+      "asymptotic_label": "O(1)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "10^18",
+      "expression_id": "constant_but_huge_hidden_factor",
+      "kind": "constant_huge",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "constant": 1e+18
+      },
+      "practical_notes": "Constant-time label can still be impossible.",
+      "why_interesting": "Constant-time label can still be impossible."
+    },
+    {
+      "asymptotic_class": "O(n^2)",
+      "asymptotic_label": "O(n^2)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n^2 memory",
+      "expression_id": "memory_quadratic",
+      "kind": "polynomial",
+      "memory_kind": "quadratic",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 2
+      },
+      "practical_notes": "Memory, not operations, becomes the blocker.",
+      "why_interesting": "Memory, not operations, becomes the blocker."
+    },
+    {
+      "asymptotic_class": "O(n)",
+      "asymptotic_label": "O(n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "n scan",
+      "expression_id": "io_bound_scan",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 1,
+        "factor": 100
+      },
+      "practical_notes": "Linear but bounded by bandwidth and latency.",
+      "why_interesting": "Linear but bounded by bandwidth and latency."
+    },
+    {
+      "asymptotic_class": "O(n)",
+      "asymptotic_label": "O(n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "10^9 * n",
+      "expression_id": "verifier_linear_solver_huge",
+      "kind": "polynomial",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "exponent": 1,
+        "factor": 1000000000.0
+      },
+      "practical_notes": "Linear verifier with a huge hidden factor.",
+      "why_interesting": "Linear verifier with a huge hidden factor."
+    },
+    {
+      "asymptotic_class": "O(3^n)",
+      "asymptotic_label": "O(3^n)",
+      "examples": [
+        "internal toy workload",
+        "CapCard review budget",
+        "Senses visualization budget"
+      ],
+      "expected_feasibility_behavior": "Evaluated against bounded resource profiles, not just asymptotic labels.",
+      "expression": "3^n",
+      "expression_id": "proof_search_branching",
+      "kind": "exponential",
+      "memory_kind": "linear",
+      "not_claimed": [
+        "not a theorem proof",
+        "not a new complexity class",
+        "not certified safety",
+        "not production controller evidence"
+      ],
+      "params": {
+        "base": 3
+      },
+      "practical_notes": "Branching proof search explodes early.",
+      "why_interesting": "Branching proof search explodes early."
+    }
+  ],
+  "family_count": 18
+}

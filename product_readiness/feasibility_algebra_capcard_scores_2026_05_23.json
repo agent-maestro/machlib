@@ -1,0 +1,44 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "n1000_feasibility_stress_kernel",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "feasibility_band_matrix",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "resource_profile_catalog",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "feasibility_semiring_toy_model",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "tropical_alternative_cost_model",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "capcard_trust_bridge",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "feasibility_senses_demo",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    },
+    {
+      "candidate_id": "silicon_budget_feasibility_record",
+      "overall_trust_score_0_to_100": 75,
+      "readiness": "READY_INTERNAL"
+    }
+  ]
+}

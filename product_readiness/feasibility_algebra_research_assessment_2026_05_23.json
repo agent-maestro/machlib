@@ -1,0 +1,12 @@
+{
+  "blunt_answer": "n^1000 unlocks a useful product/research lens: asymptotic class is not feasibility. It is not a new complexity theorem.",
+  "capcard_utility_0_to_100": 84,
+  "overclaim_risk_0_to_100": 72,
+  "public_claim": false,
+  "research_depth_0_to_100": 82,
+  "senses_utility_0_to_100": 78,
+  "silicon_planning_utility_0_to_100": 80,
+  "substrate_potential_0_to_100": 76,
+  "theorem_proof_claim": false,
+  "verdict": "BUILD_FEASIBILITY_ALGEBRA_LAB"
+}

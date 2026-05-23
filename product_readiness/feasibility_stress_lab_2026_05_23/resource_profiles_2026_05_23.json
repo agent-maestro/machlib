@@ -1,0 +1,76 @@
+{
+  "profiles": [
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 8589934592,
+      "name": "Small laptop",
+      "notes": "Interactive local budget.",
+      "operation_budget": 1000000000.0,
+      "profile_id": "laptop_small",
+      "time_budget_seconds": 10
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 68719476736,
+      "name": "Workstation",
+      "notes": "Single strong workstation.",
+      "operation_budget": 1000000000000.0,
+      "profile_id": "workstation",
+      "time_budget_seconds": 600
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 85899345920,
+      "name": "GPU box",
+      "notes": "Accelerated but finite local machine.",
+      "operation_budget": 1000000000000000.0,
+      "profile_id": "gpu_box",
+      "time_budget_seconds": 3600
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 2199023255552,
+      "name": "Small cluster",
+      "notes": "Internal cluster-scale budget.",
+      "operation_budget": 1e+18,
+      "profile_id": "cluster_small",
+      "time_budget_seconds": 86400
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 1125899906842624,
+      "name": "Hypothetical large cluster",
+      "notes": "Huge planning budget, not a guarantee.",
+      "operation_budget": 1e+24,
+      "profile_id": "hypothetical_large_cluster",
+      "time_budget_seconds": 604800
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 262144,
+      "name": "Silicon toy budget",
+      "notes": "Trace0-scale toy hardware estimate.",
+      "operation_budget": 1000000.0,
+      "profile_id": "silicon_toy_budget",
+      "time_budget_seconds": 0.02
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 268435456,
+      "name": "Browser interactive budget",
+      "notes": "Smooth public UI budget.",
+      "operation_budget": 10000000.0,
+      "profile_id": "browser_interactive_budget",
+      "time_budget_seconds": 0.1
+    },
+    {
+      "energy_budget_optional": null,
+      "memory_budget_bytes": 1073741824,
+      "name": "CapCard review budget",
+      "notes": "Internal human review packet budget.",
+      "operation_budget": 100000000.0,
+      "profile_id": "capcard_review_budget",
+      "time_budget_seconds": 30
+    }
+  ]
+}

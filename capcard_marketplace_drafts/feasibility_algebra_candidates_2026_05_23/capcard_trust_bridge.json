@@ -1,0 +1,21 @@
+{
+  "candidate_id": "capcard_trust_bridge",
+  "certified_safety_claim": false,
+  "display_name": "Capcard Trust Bridge",
+  "evidence_basis": [
+    "stress lab outputs",
+    "EML draft records",
+    "guardrail reports"
+  ],
+  "huggingface_upload_performed": false,
+  "marketplace_status": "INTERNAL_DRAFT_CANDIDATE",
+  "marketplace_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "theorem_proof_claim": false,
+  "visibility": "internal"
+}
