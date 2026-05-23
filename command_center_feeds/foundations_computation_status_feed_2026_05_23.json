@@ -1,0 +1,38 @@
+{
+  "feed_id": "foundations_computation_status_feed_2026_05_23",
+  "surface": "command.monogate.dev",
+  "visibility": "internal",
+  "status": "READY_FOR_INTERNAL_DISPLAY",
+  "record_date": "2026-05-23",
+  "items": [
+    {
+      "item_id": "foundations_mapper_classification",
+      "kind": "classification",
+      "title": "Foundations Computation mapper remains internal-only",
+      "classification": "INTERNAL_CURRICULUM_SPINE_ONLY"
+    },
+    {
+      "item_id": "foundations_license_copy_boundary",
+      "kind": "guardrail",
+      "title": "License and copy review required before public or commercial use",
+      "license_review_required": true,
+      "copy_review_required": true
+    },
+    {
+      "item_id": "foundations_no_public_distribution",
+      "kind": "guardrail",
+      "title": "No public distribution, package publish, or deploy is allowed now",
+      "public_distribution_allowed_now": false,
+      "package_publish_allowed_now": false,
+      "deploy_allowed_now": false
+    }
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "public_now": false,
+  "private_now": true,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_theorem_claim": false
+}

@@ -1,0 +1,23 @@
+{
+  "surface_id": "foundations_computation_curriculum_mapper",
+  "classification": "INTERNAL_CURRICULUM_SPINE_ONLY",
+  "public_now": false,
+  "private_now": true,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "license_review_required": true,
+  "copy_review_required": true,
+  "commercial_clearance_claim": false,
+  "copied_text_included": false,
+  "exercises_copied": false,
+  "pdf_bundled": false,
+  "public_distribution_allowed_now": false,
+  "package_publish_allowed_now": false,
+  "deploy_allowed_now": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_theorem_claim": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}
