@@ -1,0 +1,905 @@
+{
+  "limits": [
+    {
+      "alpha": 0.43478260869565216,
+      "alpha_target": 0.5,
+      "beta": 2.3,
+      "beta_target": 2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": 0.49261083743842365,
+      "alpha_target": 0.5,
+      "beta": 2.03,
+      "beta_target": 2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": 0.49925112331502747,
+      "alpha_target": 0.5,
+      "beta": 2.003,
+      "beta_target": 2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": 0.49992501124831273,
+      "alpha_target": 0.5,
+      "beta": 2.0003,
+      "beta_target": 2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2222222222222222,
+      "alpha_target": -0.25,
+      "beta": -4.5,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.24691358024691357,
+      "alpha_target": -0.25,
+      "beta": -4.05,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.24968789013732834,
+      "alpha_target": -0.25,
+      "beta": -4.005,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.2499687539057618,
+      "alpha_target": -0.25,
+      "beta": -4.0005,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.23255813953488372,
+      "alpha_target": -0.25,
+      "beta": -4.3,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.24813895781637718,
+      "alpha_target": -0.25,
+      "beta": -4.03,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.2498126405196103,
+      "alpha_target": -0.25,
+      "beta": -4.003,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.24998125140614455,
+      "alpha_target": -0.25,
+      "beta": -4.0003,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.23809523809523808,
+      "alpha_target": -0.25,
+      "beta": -4.2,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.24875621890547264,
+      "alpha_target": -0.25,
+      "beta": -4.02,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.24987506246876562,
+      "alpha_target": -0.25,
+      "beta": -4.002,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.24998750062496874,
+      "alpha_target": -0.25,
+      "beta": -4.0002,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.24390243902439024,
+      "alpha_target": -0.25,
+      "beta": -4.1,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.24937655860349128,
+      "alpha_target": -0.25,
+      "beta": -4.01,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.24993751562109473,
+      "alpha_target": -0.25,
+      "beta": -4.001,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.2499937501562461,
+      "alpha_target": -0.25,
+      "beta": -4.0001,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2564102564102564,
+      "alpha_target": -0.25,
+      "beta": -3.9,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.2506265664160401,
+      "alpha_target": -0.25,
+      "beta": -3.99,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.25006251562890724,
+      "alpha_target": -0.25,
+      "beta": -3.999,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.2500062501562539,
+      "alpha_target": -0.25,
+      "beta": -3.9999,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2631578947368421,
+      "alpha_target": -0.25,
+      "beta": -3.8,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.25125628140703515,
+      "alpha_target": -0.25,
+      "beta": -3.98,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.25012506253126565,
+      "alpha_target": -0.25,
+      "beta": -3.998,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.2500125006250313,
+      "alpha_target": -0.25,
+      "beta": -3.9998,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2702702702702703,
+      "alpha_target": -0.25,
+      "beta": -3.7,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.2518891687657431,
+      "alpha_target": -0.25,
+      "beta": -3.97,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.2501876407305479,
+      "alpha_target": -0.25,
+      "beta": -3.997,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.2500187514063555,
+      "alpha_target": -0.25,
+      "beta": -3.9997,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2857142857142857,
+      "alpha_target": -0.25,
+      "beta": -3.5,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.25316455696202533,
+      "alpha_target": -0.25,
+      "beta": -3.95,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.2503128911138924,
+      "alpha_target": -0.25,
+      "beta": -3.995,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.25003125390673836,
+      "alpha_target": -0.25,
+      "beta": -3.9995,
+      "beta_target": -4,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.2857142857142857,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.5,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.32786885245901637,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.05,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.33277870216306155,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.005,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.3332777870354941,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.0005,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.30303030303030304,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.3,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.33003300330033003,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.03,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.333000333000333,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.003,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.33330000333300003,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.0003,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.3125,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.2,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.33112582781456956,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.02,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.3331112591605596,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.002,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.33331111259249385,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.0002,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.3225806451612903,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.1,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.33222591362126247,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.01,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.3332222592469177,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.001,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.33332222259258026,
+      "alpha_target": -0.3333333333333333,
+      "beta": -3.0001,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.3448275862068966,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.9,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.33444816053511706,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.99,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.33344448149383127,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.999,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.33334444481482717,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.9999,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.35714285714285715,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.8,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.33557046979865773,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.98,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.333555703802535,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.998,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.3333555570371358,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.9998,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.37037037037037035,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.7,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.3367003367003367,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.97,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.333667000333667,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.997,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.3333666700003334,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.9997,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.4,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.5,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.3389830508474576,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.95,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.333889816360601,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.995,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.33338889814969164,
+      "alpha_target": -0.3333333333333333,
+      "beta": -2.9995,
+      "beta_target": -3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.4,
+      "alpha_target": -0.5,
+      "beta": -2.5,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.4878048780487805,
+      "alpha_target": -0.5,
+      "beta": -2.05,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.49875311720698257,
+      "alpha_target": -0.5,
+      "beta": -2.005,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.49987503124218946,
+      "alpha_target": -0.5,
+      "beta": -2.0005,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.43478260869565216,
+      "alpha_target": -0.5,
+      "beta": -2.3,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.49261083743842365,
+      "alpha_target": -0.5,
+      "beta": -2.03,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.49925112331502747,
+      "alpha_target": -0.5,
+      "beta": -2.003,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.49992501124831273,
+      "alpha_target": -0.5,
+      "beta": -2.0003,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.45454545454545453,
+      "alpha_target": -0.5,
+      "beta": -2.2,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.49504950495049505,
+      "alpha_target": -0.5,
+      "beta": -2.02,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.4995004995004995,
+      "alpha_target": -0.5,
+      "beta": -2.002,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.49995000499950004,
+      "alpha_target": -0.5,
+      "beta": -2.0002,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.47619047619047616,
+      "alpha_target": -0.5,
+      "beta": -2.1,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.4975124378109453,
+      "alpha_target": -0.5,
+      "beta": -2.01,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.49975012493753124,
+      "alpha_target": -0.5,
+      "beta": -2.001,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.4999750012499375,
+      "alpha_target": -0.5,
+      "beta": -2.0001,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.5263157894736842,
+      "alpha_target": -0.5,
+      "beta": -1.9,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.5025125628140703,
+      "alpha_target": -0.5,
+      "beta": -1.99,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.5002501250625313,
+      "alpha_target": -0.5,
+      "beta": -1.999,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.5000250012500626,
+      "alpha_target": -0.5,
+      "beta": -1.9999,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.5555555555555556,
+      "alpha_target": -0.5,
+      "beta": -1.8,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.5050505050505051,
+      "alpha_target": -0.5,
+      "beta": -1.98,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.5005005005005005,
+      "alpha_target": -0.5,
+      "beta": -1.998,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.5000500050005,
+      "alpha_target": -0.5,
+      "beta": -1.9998,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.5882352941176471,
+      "alpha_target": -0.5,
+      "beta": -1.7,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.5076142131979695,
+      "alpha_target": -0.5,
+      "beta": -1.97,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.5007511266900351,
+      "alpha_target": -0.5,
+      "beta": -1.997,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.5000750112516877,
+      "alpha_target": -0.5,
+      "beta": -1.9997,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    },
+    {
+      "alpha": -0.6666666666666666,
+      "alpha_target": -0.5,
+      "beta": -1.5,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10
+    },
+    {
+      "alpha": -0.5128205128205128,
+      "alpha_target": -0.5,
+      "beta": -1.95,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 100
+    },
+    {
+      "alpha": -0.5012531328320802,
+      "alpha_target": -0.5,
+      "beta": -1.995,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 1000
+    },
+    {
+      "alpha": -0.5001250312578145,
+      "alpha_target": -0.5,
+      "beta": -1.9995,
+      "beta_target": -2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "NUMERIC_LIMIT_EVIDENCE_ONLY",
+      "x": 10000
+    }
+  ],
+  "status": "NUMERIC_LIMIT_EVIDENCE_ONLY"
+}

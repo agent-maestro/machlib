@@ -1,0 +1,38 @@
+{
+  "candidate_id": "operator_affine_08_aneg4_b3",
+  "card_id": "operator_affine_08_aneg4_b3_DRAFT_2026_05_21",
+  "certified_safety_claim": false,
+  "display_name": "Operator Kernel -4x+3",
+  "evidence_basis": [
+    "executable numeric checks",
+    "singularity guard checks",
+    "EML draft records",
+    "Senses gallery"
+  ],
+  "huggingface_upload_performed": false,
+  "limitations": [
+    "toy model only",
+    "no formal proof",
+    "no physics/holography proof",
+    "no theorem/open-problem claim"
+  ],
+  "marketplace_status": "INTERNAL_DRAFT_CANDIDATE",
+  "marketplace_upload_performed": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "theorem_proof_claim": false,
+  "tier": "OBSERVATION",
+  "visibility": "internal"
+}

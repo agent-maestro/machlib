@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "case_id": "operator_adversarial_01",
+      "description": "x=0",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_02",
+      "description": "x=-b/a",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_03",
+      "description": "z=0",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_04",
+      "description": "z=-b/a",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_05",
+      "description": "a=0 degenerate",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_06",
+      "description": "N=0 gauge inverse",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_07",
+      "description": "false theorem claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_08",
+      "description": "false physics/holography proof claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_09",
+      "description": "false certified safety claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_10",
+      "description": "false production controller claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_11",
+      "description": "false Mathlib replacement claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_12",
+      "description": "false PETAL verified claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_13",
+      "description": "false HF uploaded claim",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_14",
+      "description": "token-like fixture string",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_15",
+      "description": "public_ready true",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_16",
+      "description": "upload_allowed true",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_17",
+      "description": "safe_to_publish_publicly true",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_18",
+      "description": "missing singularity guard",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_19",
+      "description": "missing not_claimed",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    },
+    {
+      "case_id": "operator_adversarial_20",
+      "description": "invalid sample with identity product not 1",
+      "expected": "BLOCKED_OR_FIXTURE_ONLY"
+    }
+  ],
+  "status": "PASS"
+}

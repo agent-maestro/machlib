@@ -1,0 +1,55 @@
+{
+  "candidates": [
+    {
+      "candidate_id": "operator_affine_01_a2_b3",
+      "overall_trust_score_0_to_100": 77,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_02_aneg4_bneg5",
+      "overall_trust_score_0_to_100": 76,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_03_aneg4_bneg3",
+      "overall_trust_score_0_to_100": 75,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_04_aneg4_bneg2",
+      "overall_trust_score_0_to_100": 74,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_05_aneg4_bneg1",
+      "overall_trust_score_0_to_100": 73,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_06_aneg4_b1",
+      "overall_trust_score_0_to_100": 72,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_07_aneg4_b2",
+      "overall_trust_score_0_to_100": 71,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_08_aneg4_b3",
+      "overall_trust_score_0_to_100": 70,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_09_aneg4_b5",
+      "overall_trust_score_0_to_100": 69,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    },
+    {
+      "candidate_id": "operator_affine_10_aneg3_bneg5",
+      "overall_trust_score_0_to_100": 68,
+      "readiness_band": "INTERNAL_DRAFT_CANDIDATE"
+    }
+  ],
+  "status": "PASS"
+}

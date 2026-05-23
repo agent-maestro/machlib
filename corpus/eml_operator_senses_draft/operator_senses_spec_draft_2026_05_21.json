@@ -1,0 +1,15 @@
+{
+  "kernel_count": 25,
+  "mathlib_dependency": false,
+  "not_claimed": [
+    "not a theorem proof",
+    "not an open-problem result",
+    "not physics/holography proof",
+    "not certified safety",
+    "not production controller evidence",
+    "not a Mathlib replacement"
+  ],
+  "public_ready": false,
+  "status": "DRAFT_INTERNAL",
+  "upload_allowed": false
+}

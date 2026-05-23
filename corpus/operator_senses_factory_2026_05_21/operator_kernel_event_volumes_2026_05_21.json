@@ -1,0 +1,3154 @@
+{
+  "event_volumes": [
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -37,
+      "n": 740
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -17,
+      "n": 170
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -7,
+      "n": 35
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -3,
+      "n": 9
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -1,
+      "n": 2
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 1,
+      "n": -1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 2.0,
+      "n": -1.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 2.5,
+      "n": -0.625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 3.5,
+      "n": 0.875
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 4.0,
+      "n": 2.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 5,
+      "n": 5
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 7,
+      "n": 14
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 9,
+      "n": 27
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 13,
+      "n": 65
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 23,
+      "n": 230
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 43,
+      "n": 860
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 103,
+      "n": 5150
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 203,
+      "n": 20300
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -97,
+      "n": 4850
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": -197,
+      "n": 19700
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_01_a2_b3",
+      "m": 17,
+      "n": 119
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 75,
+      "n": -1500
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 35,
+      "n": -350
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 15,
+      "n": -75
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 7,
+      "n": -21
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 3,
+      "n": -6
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -1,
+      "n": 1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -3.0,
+      "n": 1.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -4.0,
+      "n": 1.0
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -6.0,
+      "n": -1.5
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -7.0,
+      "n": -3.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -9,
+      "n": -9
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -13,
+      "n": -26
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -17,
+      "n": -51
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -25,
+      "n": -125
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -45,
+      "n": -450
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -85,
+      "n": -1700
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -205,
+      "n": -10250
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -405,
+      "n": -40500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 195,
+      "n": -9750
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": 395,
+      "n": -39500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "m": -33,
+      "n": -231
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 77,
+      "n": -1540
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 37,
+      "n": -370
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 17,
+      "n": -85
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 9,
+      "n": -27
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 5,
+      "n": -10
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 1,
+      "n": -1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -1.0,
+      "n": 0.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -2.0,
+      "n": 0.5
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -4.0,
+      "n": -1.0
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -5.0,
+      "n": -2.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -7,
+      "n": -7
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -11,
+      "n": -22
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -15,
+      "n": -45
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -23,
+      "n": -115
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -43,
+      "n": -430
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -83,
+      "n": -1660
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -203,
+      "n": -10150
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -403,
+      "n": -40300
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 197,
+      "n": -9850
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": 397,
+      "n": -39700
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "m": -31,
+      "n": -217
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 78,
+      "n": -1560
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 38,
+      "n": -380
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 18,
+      "n": -90
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 10,
+      "n": -30
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 6,
+      "n": -12
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 2,
+      "n": -2
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 0.0,
+      "n": -0.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -1.0,
+      "n": 0.25
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -3.0,
+      "n": -0.75
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -4.0,
+      "n": -2.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -6,
+      "n": -6
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -10,
+      "n": -20
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -14,
+      "n": -42
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -22,
+      "n": -110
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -42,
+      "n": -420
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -82,
+      "n": -1640
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -202,
+      "n": -10100
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -402,
+      "n": -40200
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 198,
+      "n": -9900
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": 398,
+      "n": -39800
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "m": -30,
+      "n": -210
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 79,
+      "n": -1580
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 39,
+      "n": -390
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 19,
+      "n": -95
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 11,
+      "n": -33
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 7,
+      "n": -14
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 3,
+      "n": -3
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 1.0,
+      "n": -0.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 0.0,
+      "n": -0.0
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -2.0,
+      "n": -0.5
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -3.0,
+      "n": -1.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -5,
+      "n": -5
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -9,
+      "n": -18
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -13,
+      "n": -39
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -21,
+      "n": -105
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -41,
+      "n": -410
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -81,
+      "n": -1620
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -201,
+      "n": -10050
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -401,
+      "n": -40100
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 199,
+      "n": -9950
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": 399,
+      "n": -39900
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "m": -29,
+      "n": -203
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 81,
+      "n": -1620
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 41,
+      "n": -410
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 21,
+      "n": -105
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 13,
+      "n": -39
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 9,
+      "n": -18
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 5,
+      "n": -5
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 3.0,
+      "n": -1.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 2.0,
+      "n": -0.5
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 0.0,
+      "n": 0.0
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -1.0,
+      "n": -0.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -3,
+      "n": -3
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -7,
+      "n": -14
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -11,
+      "n": -33
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -19,
+      "n": -95
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -39,
+      "n": -390
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -79,
+      "n": -1580
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -199,
+      "n": -9950
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -399,
+      "n": -39900
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 201,
+      "n": -10050
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": 401,
+      "n": -40100
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "m": -27,
+      "n": -189
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 82,
+      "n": -1640
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 42,
+      "n": -420
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 22,
+      "n": -110
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 14,
+      "n": -42
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 10,
+      "n": -20
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 6,
+      "n": -6
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 4.0,
+      "n": -2.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 3.0,
+      "n": -0.75
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 1.0,
+      "n": 0.25
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 0.0,
+      "n": 0.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -2,
+      "n": -2
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -6,
+      "n": -12
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -10,
+      "n": -30
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -18,
+      "n": -90
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -38,
+      "n": -380
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -78,
+      "n": -1560
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -198,
+      "n": -9900
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -398,
+      "n": -39800
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 202,
+      "n": -10100
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": 402,
+      "n": -40200
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "m": -26,
+      "n": -182
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 83,
+      "n": -1660
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 43,
+      "n": -430
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 23,
+      "n": -115
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 15,
+      "n": -45
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 11,
+      "n": -22
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 7,
+      "n": -7
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 5.0,
+      "n": -2.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 4.0,
+      "n": -1.0
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 2.0,
+      "n": 0.5
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 1.0,
+      "n": 0.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -1,
+      "n": -1
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -5,
+      "n": -10
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -9,
+      "n": -27
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -17,
+      "n": -85
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -37,
+      "n": -370
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -77,
+      "n": -1540
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -197,
+      "n": -9850
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -397,
+      "n": -39700
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 203,
+      "n": -10150
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": 403,
+      "n": -40300
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "m": -25,
+      "n": -175
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 85,
+      "n": -1700
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 45,
+      "n": -450
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 25,
+      "n": -125
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 17,
+      "n": -51
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 13,
+      "n": -26
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 9,
+      "n": -9
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 7.0,
+      "n": -3.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 6.0,
+      "n": -1.5
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 4.0,
+      "n": 1.0
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 3.0,
+      "n": 1.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 1,
+      "n": 1
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -3,
+      "n": -6
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -7,
+      "n": -21
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -15,
+      "n": -75
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -35,
+      "n": -350
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -75,
+      "n": -1500
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -195,
+      "n": -9750
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -395,
+      "n": -39500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 205,
+      "n": -10250
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": 405,
+      "n": -40500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "m": -23,
+      "n": -161
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 55,
+      "n": -1100
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 25,
+      "n": -250
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 10,
+      "n": -50
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 4,
+      "n": -12
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 1,
+      "n": -2
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -2,
+      "n": 2
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -3.5,
+      "n": 1.75
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -4.25,
+      "n": 1.0625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -5.75,
+      "n": -1.4375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -6.5,
+      "n": -3.25
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -8,
+      "n": -8
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -11,
+      "n": -22
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -14,
+      "n": -42
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -20,
+      "n": -100
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -35,
+      "n": -350
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -65,
+      "n": -1300
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -155,
+      "n": -7750
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -305,
+      "n": -30500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 145,
+      "n": -7250
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": 295,
+      "n": -29500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "m": -26,
+      "n": -182
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 57,
+      "n": -1140
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 27,
+      "n": -270
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 12,
+      "n": -60
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 6,
+      "n": -18
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 3,
+      "n": -6
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 0,
+      "n": 0
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -1.5,
+      "n": 0.75
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -2.25,
+      "n": 0.5625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -3.75,
+      "n": -0.9375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -4.5,
+      "n": -2.25
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -6,
+      "n": -6
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -9,
+      "n": -18
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -12,
+      "n": -36
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -18,
+      "n": -90
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -33,
+      "n": -330
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -63,
+      "n": -1260
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -153,
+      "n": -7650
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -303,
+      "n": -30300
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 147,
+      "n": -7350
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": 297,
+      "n": -29700
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "m": -24,
+      "n": -168
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 58,
+      "n": -1160
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 28,
+      "n": -280
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 13,
+      "n": -65
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 7,
+      "n": -21
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 4,
+      "n": -8
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 1,
+      "n": -1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -0.5,
+      "n": 0.25
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -1.25,
+      "n": 0.3125
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -2.75,
+      "n": -0.6875
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -3.5,
+      "n": -1.75
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -5,
+      "n": -5
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -8,
+      "n": -16
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -11,
+      "n": -33
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -17,
+      "n": -85
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -32,
+      "n": -320
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -62,
+      "n": -1240
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -152,
+      "n": -7600
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -302,
+      "n": -30200
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 148,
+      "n": -7400
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": 298,
+      "n": -29800
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "m": -23,
+      "n": -161
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 59,
+      "n": -1180
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 29,
+      "n": -290
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 14,
+      "n": -70
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 8,
+      "n": -24
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 5,
+      "n": -10
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 2,
+      "n": -2
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 0.5,
+      "n": -0.25
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -0.25,
+      "n": 0.0625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -1.75,
+      "n": -0.4375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -2.5,
+      "n": -1.25
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -4,
+      "n": -4
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -7,
+      "n": -14
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -10,
+      "n": -30
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -16,
+      "n": -80
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -31,
+      "n": -310
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -61,
+      "n": -1220
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -151,
+      "n": -7550
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -301,
+      "n": -30100
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 149,
+      "n": -7450
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": 299,
+      "n": -29900
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "m": -22,
+      "n": -154
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 61,
+      "n": -1220
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 31,
+      "n": -310
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 16,
+      "n": -80
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 10,
+      "n": -30
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 7,
+      "n": -14
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 4,
+      "n": -4
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 2.5,
+      "n": -1.25
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 1.75,
+      "n": -0.4375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 0.25,
+      "n": 0.0625
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -0.5,
+      "n": -0.25
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -2,
+      "n": -2
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -5,
+      "n": -10
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -8,
+      "n": -24
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -14,
+      "n": -70
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -29,
+      "n": -290
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -59,
+      "n": -1180
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -149,
+      "n": -7450
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -299,
+      "n": -29900
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 151,
+      "n": -7550
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": 301,
+      "n": -30100
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "m": -20,
+      "n": -140
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 62,
+      "n": -1240
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 32,
+      "n": -320
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 17,
+      "n": -85
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 11,
+      "n": -33
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 8,
+      "n": -16
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 5,
+      "n": -5
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 3.5,
+      "n": -1.75
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 2.75,
+      "n": -0.6875
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 1.25,
+      "n": 0.3125
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 0.5,
+      "n": 0.25
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -1,
+      "n": -1
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -4,
+      "n": -8
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -7,
+      "n": -21
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -13,
+      "n": -65
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -28,
+      "n": -280
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -58,
+      "n": -1160
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -148,
+      "n": -7400
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -298,
+      "n": -29800
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 152,
+      "n": -7600
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": 302,
+      "n": -30200
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "m": -19,
+      "n": -133
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 63,
+      "n": -1260
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 33,
+      "n": -330
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 18,
+      "n": -90
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 12,
+      "n": -36
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 9,
+      "n": -18
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 6,
+      "n": -6
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 4.5,
+      "n": -2.25
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 3.75,
+      "n": -0.9375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 2.25,
+      "n": 0.5625
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 1.5,
+      "n": 0.75
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 0,
+      "n": 0
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -3,
+      "n": -6
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -6,
+      "n": -18
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -12,
+      "n": -60
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -27,
+      "n": -270
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -57,
+      "n": -1140
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -147,
+      "n": -7350
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -297,
+      "n": -29700
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 153,
+      "n": -7650
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": 303,
+      "n": -30300
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "m": -18,
+      "n": -126
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 65,
+      "n": -1300
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 35,
+      "n": -350
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 20,
+      "n": -100
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 14,
+      "n": -42
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 11,
+      "n": -22
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 8,
+      "n": -8
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 6.5,
+      "n": -3.25
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 5.75,
+      "n": -1.4375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 4.25,
+      "n": 1.0625
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 3.5,
+      "n": 1.75
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 2,
+      "n": 2
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -1,
+      "n": -2
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -4,
+      "n": -12
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -10,
+      "n": -50
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -25,
+      "n": -250
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -55,
+      "n": -1100
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -145,
+      "n": -7250
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -295,
+      "n": -29500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 155,
+      "n": -7750
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": 305,
+      "n": -30500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "m": -16,
+      "n": -112
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 35,
+      "n": -700
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 15,
+      "n": -150
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 5,
+      "n": -25
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 1,
+      "n": -3
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -1,
+      "n": 2
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -3,
+      "n": 3
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -4.0,
+      "n": 2.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -4.5,
+      "n": 1.125
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -5.5,
+      "n": -1.375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -6.0,
+      "n": -3.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -7,
+      "n": -7
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -9,
+      "n": -18
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -11,
+      "n": -33
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -15,
+      "n": -75
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -25,
+      "n": -250
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -45,
+      "n": -900
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -105,
+      "n": -5250
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -205,
+      "n": -20500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 95,
+      "n": -4750
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": 195,
+      "n": -19500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "m": -19,
+      "n": -133
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 37,
+      "n": -740
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 17,
+      "n": -170
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 7,
+      "n": -35
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 3,
+      "n": -9
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 1,
+      "n": -2
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -1,
+      "n": 1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -2.0,
+      "n": 1.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -2.5,
+      "n": 0.625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -3.5,
+      "n": -0.875
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -4.0,
+      "n": -2.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -5,
+      "n": -5
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -7,
+      "n": -14
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -9,
+      "n": -27
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -13,
+      "n": -65
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -23,
+      "n": -230
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -43,
+      "n": -860
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -103,
+      "n": -5150
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -203,
+      "n": -20300
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 97,
+      "n": -4850
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": 197,
+      "n": -19700
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "m": -17,
+      "n": -119
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 38,
+      "n": -760
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 18,
+      "n": -180
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 8,
+      "n": -40
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 4,
+      "n": -12
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 2,
+      "n": -4
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 0,
+      "n": 0
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -1.0,
+      "n": 0.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -1.5,
+      "n": 0.375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -2.5,
+      "n": -0.625
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -3.0,
+      "n": -1.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -4,
+      "n": -4
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -6,
+      "n": -12
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -8,
+      "n": -24
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -12,
+      "n": -60
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -22,
+      "n": -220
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -42,
+      "n": -840
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -102,
+      "n": -5100
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -202,
+      "n": -20200
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 98,
+      "n": -4900
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": 198,
+      "n": -19800
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "m": -16,
+      "n": -112
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 39,
+      "n": -780
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 19,
+      "n": -190
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 9,
+      "n": -45
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 5,
+      "n": -15
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 3,
+      "n": -6
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 1,
+      "n": -1
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 0.0,
+      "n": -0.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -0.5,
+      "n": 0.125
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -1.5,
+      "n": -0.375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -2.0,
+      "n": -1.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -3,
+      "n": -3
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -5,
+      "n": -10
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -7,
+      "n": -21
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -11,
+      "n": -55
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -21,
+      "n": -210
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -41,
+      "n": -820
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -101,
+      "n": -5050
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -201,
+      "n": -20100
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 99,
+      "n": -4950
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": 199,
+      "n": -19900
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "m": -15,
+      "n": -105
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 41,
+      "n": -820
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 21,
+      "n": -210
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 11,
+      "n": -55
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 7,
+      "n": -21
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 5,
+      "n": -10
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 3,
+      "n": -3
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 2.0,
+      "n": -1.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 1.5,
+      "n": -0.375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 0.5,
+      "n": 0.125
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 0.0,
+      "n": 0.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -1,
+      "n": -1
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -3,
+      "n": -6
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -5,
+      "n": -15
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -9,
+      "n": -45
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -19,
+      "n": -190
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -39,
+      "n": -780
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -99,
+      "n": -4950
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -199,
+      "n": -19900
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 101,
+      "n": -5050
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": 201,
+      "n": -20100
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "m": -13,
+      "n": -91
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 42,
+      "n": -840
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 22,
+      "n": -220
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 12,
+      "n": -60
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 8,
+      "n": -24
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 6,
+      "n": -12
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 4,
+      "n": -4
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 3.0,
+      "n": -1.5
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 2.5,
+      "n": -0.625
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 1.5,
+      "n": 0.375
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 1.0,
+      "n": 0.5
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 0,
+      "n": 0
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -2,
+      "n": -4
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -4,
+      "n": -12
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -8,
+      "n": -40
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -18,
+      "n": -180
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -38,
+      "n": -760
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -98,
+      "n": -4900
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -198,
+      "n": -19800
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 102,
+      "n": -5100
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": 202,
+      "n": -20200
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "m": -12,
+      "n": -84
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 43,
+      "n": -860
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 23,
+      "n": -230
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 13,
+      "n": -65
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 9,
+      "n": -27
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 7,
+      "n": -14
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 5,
+      "n": -5
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 4.0,
+      "n": -2.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 3.5,
+      "n": -0.875
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 2.5,
+      "n": 0.625
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 2.0,
+      "n": 1.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 1,
+      "n": 1
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -1,
+      "n": -2
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -3,
+      "n": -9
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -7,
+      "n": -35
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -17,
+      "n": -170
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -37,
+      "n": -740
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -97,
+      "n": -4850
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -197,
+      "n": -19700
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 103,
+      "n": -5150
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": 203,
+      "n": -20300
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "m": -11,
+      "n": -77
+    },
+    {
+      "k": -20,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 45,
+      "n": -900
+    },
+    {
+      "k": -10,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 25,
+      "n": -250
+    },
+    {
+      "k": -5,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 15,
+      "n": -75
+    },
+    {
+      "k": -3,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 11,
+      "n": -33
+    },
+    {
+      "k": -2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 9,
+      "n": -18
+    },
+    {
+      "k": -1,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 7,
+      "n": -7
+    },
+    {
+      "k": -0.5,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 6.0,
+      "n": -3.0
+    },
+    {
+      "k": -0.25,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 5.5,
+      "n": -1.375
+    },
+    {
+      "k": 0.25,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 4.5,
+      "n": 1.125
+    },
+    {
+      "k": 0.5,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 4.0,
+      "n": 2.0
+    },
+    {
+      "k": 1,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 3,
+      "n": 3
+    },
+    {
+      "k": 2,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 1,
+      "n": 2
+    },
+    {
+      "k": 3,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -1,
+      "n": -3
+    },
+    {
+      "k": 5,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -5,
+      "n": -25
+    },
+    {
+      "k": 10,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -15,
+      "n": -150
+    },
+    {
+      "k": 20,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -35,
+      "n": -700
+    },
+    {
+      "k": 50,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -95,
+      "n": -4750
+    },
+    {
+      "k": 100,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -195,
+      "n": -19500
+    },
+    {
+      "k": -50,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 105,
+      "n": -5250
+    },
+    {
+      "k": -100,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": 205,
+      "n": -20500
+    },
+    {
+      "k": 7,
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "m": -9,
+      "n": -63
+    }
+  ]
+}

@@ -1,0 +1,555 @@
+{
+  "guard_status": "PASS",
+  "guards": [
+    {
+      "kernel_id": "operator_affine_01_a2_b3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_01_a2_b3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.5
+    },
+    {
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.499999999
+    },
+    {
+      "kernel_id": "operator_affine_01_a2_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.500000001
+    },
+    {
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.25
+    },
+    {
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.249999999
+    },
+    {
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.250000001
+    },
+    {
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.75
+    },
+    {
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.749999999
+    },
+    {
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.750000001
+    },
+    {
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.5
+    },
+    {
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.499999999
+    },
+    {
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.500000001
+    },
+    {
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.25
+    },
+    {
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.249999999
+    },
+    {
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.250000001
+    },
+    {
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.25
+    },
+    {
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.250000001
+    },
+    {
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.249999999
+    },
+    {
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.5
+    },
+    {
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.500000001
+    },
+    {
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.499999999
+    },
+    {
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.75
+    },
+    {
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.750000001
+    },
+    {
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.749999999
+    },
+    {
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 1.25
+    },
+    {
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.250000001
+    },
+    {
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.249999999
+    },
+    {
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.6666666666666667
+    },
+    {
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.6666666656666667
+    },
+    {
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.6666666676666668
+    },
+    {
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.0
+    },
+    {
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.999999999
+    },
+    {
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.000000001
+    },
+    {
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.6666666666666666
+    },
+    {
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.6666666656666667
+    },
+    {
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.6666666676666666
+    },
+    {
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.3333333333333333
+    },
+    {
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.3333333323333333
+    },
+    {
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.33333333433333334
+    },
+    {
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.3333333333333333
+    },
+    {
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.33333333433333334
+    },
+    {
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.3333333323333333
+    },
+    {
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.6666666666666666
+    },
+    {
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.6666666676666666
+    },
+    {
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.6666666656666667
+    },
+    {
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 1.0
+    },
+    {
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.000000001
+    },
+    {
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.999999999
+    },
+    {
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 1.6666666666666667
+    },
+    {
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.6666666676666668
+    },
+    {
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.6666666656666667
+    },
+    {
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -2.5
+    },
+    {
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -2.499999999
+    },
+    {
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "status": "PASS_NEAR_GUARD",
+      "x": -2.500000001
+    },
+    {
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.5
+    },
+    {
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.499999999
+    },
+    {
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.500000001
+    },
+    {
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -1.0
+    },
+    {
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.999999999
+    },
+    {
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "status": "PASS_NEAR_GUARD",
+      "x": -1.000000001
+    },
+    {
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": -0.5
+    },
+    {
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.499999999
+    },
+    {
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "status": "PASS_NEAR_GUARD",
+      "x": -0.500000001
+    },
+    {
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.5
+    },
+    {
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.500000001
+    },
+    {
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.499999999
+    },
+    {
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 1.0
+    },
+    {
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.000000001
+    },
+    {
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "status": "PASS_NEAR_GUARD",
+      "x": 0.999999999
+    },
+    {
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 1.5
+    },
+    {
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.500000001
+    },
+    {
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "status": "PASS_NEAR_GUARD",
+      "x": 1.499999999
+    },
+    {
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "reason": "x is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 0.0
+    },
+    {
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "reason": "a*x+b is singular",
+      "status": "GUARD_EXCLUDED",
+      "x": 2.5
+    },
+    {
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 2.500000001
+    },
+    {
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "status": "PASS_NEAR_GUARD",
+      "x": 2.499999999
+    }
+  ]
+}

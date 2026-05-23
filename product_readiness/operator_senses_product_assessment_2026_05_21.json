@@ -1,0 +1,8 @@
+{
+  "capcard_candidate_utility_0_to_100": 80,
+  "machlib_evidence_utility_0_to_100": 76,
+  "overclaim_risk_0_to_100": 62,
+  "research_depth_0_to_100": 68,
+  "senses_product_potential_0_to_100": 82,
+  "verdict": "BUILD_OPERATOR_SENSES_LAB"
+}

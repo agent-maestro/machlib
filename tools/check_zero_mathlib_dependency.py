@@ -175,6 +175,8 @@ def classify(path: Path, line: str) -> str:
             return "POLICY_TEXT"
         if "not a mathlib replacement" in lower:
             return "POLICY_TEXT"
+        if "false mathlib replacement claim" in lower:
+            return "POLICY_TEXT"
         if DEPENDENCY_DECLARATION.search(stripped):
             return "DEPENDENCY_EVIDENCE"
         if "mathlib-wrapper" in lower:

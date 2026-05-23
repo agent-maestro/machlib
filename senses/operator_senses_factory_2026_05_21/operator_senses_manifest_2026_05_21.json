@@ -1,0 +1,16 @@
+{
+  "audio_file_generated": false,
+  "audio_runtime": "browser_web_audio_api",
+  "deploy_performed": false,
+  "gallery_kernel_count": 10,
+  "hardware_required": false,
+  "kernel_count": 25,
+  "microphone_required": false,
+  "mode": "local_static_browser_demo",
+  "network_required": false,
+  "prototype_id": "operator_senses_factory_2026_05_21",
+  "public_claim": false,
+  "status": "PASS",
+  "upload_performed": false,
+  "visual_generated": true
+}

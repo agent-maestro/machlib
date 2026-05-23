@@ -1,0 +1,12 @@
+{
+  "failed_count": 0,
+  "guard_check_count": 100,
+  "identity_product_pass_count": 515,
+  "kernel_count": 25,
+  "limit_numeric_evidence_count": 100,
+  "physics_claim": false,
+  "public_claim": false,
+  "sample_check_count": 525,
+  "status": "PASS",
+  "theorem_proof_claim": false
+}

@@ -1,0 +1,154 @@
+{
+  "kernels": [
+    {
+      "a": 2,
+      "alpha_expression": "x/(2*x+3)",
+      "b": 3,
+      "beta_expression": "(2*x+3)/x",
+      "kernel_id": "operator_affine_01_a2_b3",
+      "limit_alpha_target": 0.5,
+      "limit_beta_target": 2,
+      "shift_expression": "y=2*x+3",
+      "singularity_set": [
+        0,
+        -1.5
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+-5)",
+      "b": -5,
+      "beta_expression": "(-4*x+-5)/x",
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+-5",
+      "singularity_set": [
+        0,
+        -1.25
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+-3)",
+      "b": -3,
+      "beta_expression": "(-4*x+-3)/x",
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+-3",
+      "singularity_set": [
+        0,
+        -0.75
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+-2)",
+      "b": -2,
+      "beta_expression": "(-4*x+-2)/x",
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+-2",
+      "singularity_set": [
+        0,
+        -0.5
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+-1)",
+      "b": -1,
+      "beta_expression": "(-4*x+-1)/x",
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+-1",
+      "singularity_set": [
+        0,
+        -0.25
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+1)",
+      "b": 1,
+      "beta_expression": "(-4*x+1)/x",
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+1",
+      "singularity_set": [
+        0,
+        0.25
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+2)",
+      "b": 2,
+      "beta_expression": "(-4*x+2)/x",
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+2",
+      "singularity_set": [
+        0,
+        0.5
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+3)",
+      "b": 3,
+      "beta_expression": "(-4*x+3)/x",
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+3",
+      "singularity_set": [
+        0,
+        0.75
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -4,
+      "alpha_expression": "x/(-4*x+5)",
+      "b": 5,
+      "beta_expression": "(-4*x+5)/x",
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "limit_alpha_target": -0.25,
+      "limit_beta_target": -4,
+      "shift_expression": "y=-4*x+5",
+      "singularity_set": [
+        0,
+        1.25
+      ],
+      "status": "PASS"
+    },
+    {
+      "a": -3,
+      "alpha_expression": "x/(-3*x+-5)",
+      "b": -5,
+      "beta_expression": "(-3*x+-5)/x",
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "limit_alpha_target": -0.3333333333333333,
+      "limit_beta_target": -3,
+      "shift_expression": "y=-3*x+-5",
+      "singularity_set": [
+        0,
+        -1.6666666666666667
+      ],
+      "status": "PASS"
+    }
+  ]
+}

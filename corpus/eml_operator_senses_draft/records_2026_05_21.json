@@ -1,0 +1,910 @@
+{
+  "records": [
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "affine_shift_kernel",
+      "kernel_id": "operator_affine_01_a2_b3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_01_a2_b3_affine_shift_kernel",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "reciprocal_alpha_beta_pair",
+      "kernel_id": "operator_affine_02_aneg4_bneg5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_02_aneg4_bneg5_reciprocal_alpha_beta_pair",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "identity_product_witness",
+      "kernel_id": "operator_affine_03_aneg4_bneg3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_03_aneg4_bneg3_identity_product_witness",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "mobius_extension",
+      "kernel_id": "operator_affine_04_aneg4_bneg2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_04_aneg4_bneg2_mobius_extension",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "singularity_guard",
+      "kernel_id": "operator_affine_05_aneg4_bneg1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_05_aneg4_bneg1_singularity_guard",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "numeric_limit_behavior",
+      "kernel_id": "operator_affine_06_aneg4_b1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_06_aneg4_b1_numeric_limit_behavior",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "event_volume_visualization",
+      "kernel_id": "operator_affine_07_aneg4_b2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_07_aneg4_b2_event_volume_visualization",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "gauge_pair",
+      "kernel_id": "operator_affine_08_aneg4_b3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_08_aneg4_b3_gauge_pair",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "senses_mapping",
+      "kernel_id": "operator_affine_09_aneg4_b5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_09_aneg4_b5_senses_mapping",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "affine_shift_kernel",
+      "kernel_id": "operator_affine_10_aneg3_bneg5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_10_aneg3_bneg5_affine_shift_kernel",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "reciprocal_alpha_beta_pair",
+      "kernel_id": "operator_affine_11_aneg3_bneg3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_11_aneg3_bneg3_reciprocal_alpha_beta_pair",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "identity_product_witness",
+      "kernel_id": "operator_affine_12_aneg3_bneg2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_12_aneg3_bneg2_identity_product_witness",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "mobius_extension",
+      "kernel_id": "operator_affine_13_aneg3_bneg1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_13_aneg3_bneg1_mobius_extension",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "singularity_guard",
+      "kernel_id": "operator_affine_14_aneg3_b1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_14_aneg3_b1_singularity_guard",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "numeric_limit_behavior",
+      "kernel_id": "operator_affine_15_aneg3_b2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_15_aneg3_b2_numeric_limit_behavior",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "event_volume_visualization",
+      "kernel_id": "operator_affine_16_aneg3_b3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_16_aneg3_b3_event_volume_visualization",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "gauge_pair",
+      "kernel_id": "operator_affine_17_aneg3_b5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_17_aneg3_b5_gauge_pair",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "senses_mapping",
+      "kernel_id": "operator_affine_18_aneg2_bneg5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_18_aneg2_bneg5_senses_mapping",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "affine_shift_kernel",
+      "kernel_id": "operator_affine_19_aneg2_bneg3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_19_aneg2_bneg3_affine_shift_kernel",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "reciprocal_alpha_beta_pair",
+      "kernel_id": "operator_affine_20_aneg2_bneg2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_20_aneg2_bneg2_reciprocal_alpha_beta_pair",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "identity_product_witness",
+      "kernel_id": "operator_affine_21_aneg2_bneg1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_21_aneg2_bneg1_identity_product_witness",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "mobius_extension",
+      "kernel_id": "operator_affine_22_aneg2_b1",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_22_aneg2_b1_mobius_extension",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "singularity_guard",
+      "kernel_id": "operator_affine_23_aneg2_b2",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_23_aneg2_b2_singularity_guard",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "numeric_limit_behavior",
+      "kernel_id": "operator_affine_24_aneg2_b3",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_24_aneg2_b3_numeric_limit_behavior",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "x != 0",
+        "a*x+b != 0",
+        "z != 0",
+        "a+b/z != 0"
+      ],
+      "evidence_type": "numeric_property_style_local",
+      "executable_check": "operator_senses_factory numeric and guard checks",
+      "family": "event_volume_visualization",
+      "kernel_id": "operator_affine_25_aneg2_b5",
+      "limitations": [
+        "toy model only",
+        "numeric evidence only",
+        "internal draft"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_affine_25_aneg2_b5_event_volume_visualization",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    },
+    {
+      "certified_safety_claim": false,
+      "domain_guards": [
+        "per-kernel singularity sets"
+      ],
+      "evidence_type": "aggregate_numeric_evidence",
+      "executable_check": "aggregate execution result PASS",
+      "family": "summary",
+      "kernel_id": "operator_senses_factory",
+      "limitations": [
+        "toy kernels only",
+        "not formal proof"
+      ],
+      "mathlib_dependency": false,
+      "not_claimed": [
+        "not a theorem proof",
+        "not an open-problem result",
+        "not physics/holography proof",
+        "not certified safety",
+        "not production controller evidence",
+        "not a Mathlib replacement"
+      ],
+      "open_problem_claim": false,
+      "physics_claim": false,
+      "production_controller_claim": false,
+      "public_ready": false,
+      "record_id": "operator_senses_factory_summary",
+      "status": "DRAFT_INTERNAL",
+      "theorem_proof_claim": false,
+      "upload_allowed": false
+    }
+  ]
+}
