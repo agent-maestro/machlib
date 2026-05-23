@@ -1,0 +1,19 @@
+{
+  "certified_safety_claim": false,
+  "command_center_deploy_performed": false,
+  "huggingface_upload_performed": false,
+  "package_boundary": "minimal_pre_alpha_umbrella",
+  "package_name": "machlib",
+  "petal_api_upload_performed": false,
+  "physics_proof_claim": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_surface": true,
+  "public_theorem_claim": false,
+  "pypi_status": "LIVE",
+  "pypi_url": "https://pypi.org/project/machlib/0.0.1/",
+  "pypi_verified": true,
+  "release_files_visible": true,
+  "token_value_recorded": false,
+  "version": "0.0.1"
+}

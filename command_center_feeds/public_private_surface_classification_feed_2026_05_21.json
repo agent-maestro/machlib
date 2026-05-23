@@ -17,6 +17,10 @@
     {
       "classification": "PRIVATE_INTERNAL_MARKETPLACE_ONLY",
       "surface_id": "eml_puzzle_evidence_kernel_capcard"
+    },
+    {
+      "classification": "PUBLIC_PACKAGE_LIVE",
+      "surface_id": "machlib_pypi_package"
     }
   ],
   "petal_api_upload_performed": false,

@@ -11,6 +11,7 @@
   "safe_to_publish_publicly": false,
   "status": "PUBLIC_PRIVATE_CLASSIFICATION_READY",
   "surface": "command.monogate.dev",
+  "surface_count": 5,
   "title": "Public/private surface classification",
   "visibility": "internal"
 }

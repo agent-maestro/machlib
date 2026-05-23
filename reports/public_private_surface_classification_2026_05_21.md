@@ -8,6 +8,7 @@ Date: 2026-05-21
 | Operator Senses Gallery | PUBLIC_CANDIDATE_NEEDS_PUBLIC_COPY_REVIEW | No | Yes | Public-copy review before 1op integration or deployment review | Theorem/proof/open-problem result, physics or holography proof, certified safety, production controller evidence |
 | 1op Senses Page | PUBLIC_SURFACE_READY_FOR_DEPLOY_REVIEW | No | No | Human deploy review and explicit deploy approval | Medical/veterinary advice, hardware validation, production autonomy, certified safety |
 | EML Puzzle Evidence Kernel CapCard | PRIVATE_INTERNAL_MARKETPLACE_ONLY | No | Yes | Internal marketplace review only | Theorem prover, open-problem result, certified safety, production controller status, PETAL/HF upload |
+| MachLib PyPI Package | PUBLIC_PACKAGE_LIVE | Yes | No | Continue bounded public package maintenance | Theorem prover, Mathlib replacement, open-problem solver, certified safety, production controller status, PETAL/HF/CapCard certification |
 
 ## Decision notes
 
@@ -18,3 +19,5 @@ Operator Senses is a plausible public candidate because the sensory math playgro
 1op Senses is already the public-facing animal-senses surface and is ready for deploy review only. No deployment is approved or performed here.
 
 The EML Puzzle Evidence Kernel CapCard remains internal observation-tier marketplace material only.
+
+MachLib `0.0.1` is now live as a public PyPI package. The package is classified as a minimal pre-alpha umbrella package, not as a full repository release or certification surface.

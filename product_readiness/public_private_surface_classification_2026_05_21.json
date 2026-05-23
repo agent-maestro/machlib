@@ -72,6 +72,28 @@
       "safe_to_publish_publicly": false,
       "surface_id": "eml_puzzle_evidence_kernel_capcard",
       "theorem_proof_claim": false
+    },
+    {
+      "classification": "PUBLIC_PACKAGE_LIVE",
+      "display_name": "MachLib PyPI Package",
+      "package_boundary": "minimal_pre_alpha_umbrella",
+      "private_now": false,
+      "public_claim": false,
+      "public_now": true,
+      "pypi_status": "LIVE",
+      "pypi_url": "https://pypi.org/project/machlib/0.0.1/",
+      "rationale": "The minimal pre-alpha machlib 0.0.1 package is live on PyPI with wheel and source distribution visible.",
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": true,
+      "surface_id": "machlib_pypi_package",
+      "not_claimed": [
+        "not theorem prover",
+        "not Mathlib replacement",
+        "not open-problem solver",
+        "not certified safety",
+        "not production controller",
+        "not PETAL/HF/CapCard certification"
+      ]
     }
   ]
 }
