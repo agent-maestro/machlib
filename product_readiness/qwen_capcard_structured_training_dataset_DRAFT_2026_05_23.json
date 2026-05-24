@@ -1,0 +1,14 @@
+{
+  "dataset_id": "qwen_capcard_structured_training_dataset_DRAFT_2026_05_23",
+  "dataset_publish_performed": false,
+  "example_count": 50,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "private_secrets_included": false,
+  "public_claim": false,
+  "source": "structured gauntlet and repair loop sanitized score summaries",
+  "status": "DRAFT_FOR_FUTURE_HUMAN_REVIEW_ONLY",
+  "training_performed": false,
+  "upload_performed": false
+}

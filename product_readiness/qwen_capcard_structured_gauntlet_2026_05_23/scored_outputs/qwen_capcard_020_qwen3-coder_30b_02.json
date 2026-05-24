@@ -1,0 +1,12 @@
+{
+  "extraction_status": "JSON_INVALID",
+  "reasons": [
+    "JSON_INVALID",
+    "candidate_invalid_json:Invalid control character at"
+  ],
+  "schema_valid": false,
+  "score_0_to_100": 0,
+  "status": "FAIL",
+  "suggested_repair_prompt": "Return valid schema JSON only.",
+  "task_id": "qwen_capcard_020"
+}

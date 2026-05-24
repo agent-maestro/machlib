@@ -1,0 +1,9 @@
+{
+  "extraction_status": "SCHEMA_JSON",
+  "reasons": [],
+  "schema_valid": true,
+  "score_0_to_100": 100,
+  "status": "PASS",
+  "suggested_repair_prompt": "No repair needed.",
+  "task_id": "qwen_capcard_047"
+}

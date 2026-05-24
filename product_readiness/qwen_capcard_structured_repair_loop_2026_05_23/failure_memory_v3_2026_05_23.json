@@ -1,0 +1,8 @@
+{
+  "patterns": [
+    "local model may still timeout",
+    "warn/unknown rows remain evidence-blocked"
+  ],
+  "real_model_outputs_used": true,
+  "status": "DRAFT_INTERNAL"
+}

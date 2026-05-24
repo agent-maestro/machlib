@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 3300,
+  "elapsed_seconds_is_approximate": true,
+  "failure_reason": null,
+  "huggingface_upload_performed": false,
+  "model": "qwen3-coder:30b",
+  "model_available_after": true,
+  "no_cloud_used": true,
+  "no_finetune_performed": true,
+  "no_hf_upload_performed": true,
+  "ollama_list_after": "NAME               ID              SIZE     MODIFIED       \nqwen3-coder:30b    06c1097efce0    18 GB    29 minutes ago    \nqwen3:30b          ad815644918f    18 GB    2 weeks ago",
+  "petal_api_upload_performed": false,
+  "pull_attempted": true,
+  "pull_completed": true
+}

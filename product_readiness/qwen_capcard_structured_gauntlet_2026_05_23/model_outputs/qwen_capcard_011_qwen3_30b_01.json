@@ -1,0 +1,37 @@
+{
+  "command": [
+    "ollama-api",
+    "http://127.0.0.1:11434/api/generate",
+    "qwen3:30b",
+    "format:schema"
+  ],
+  "extracted_json": {
+    "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+    "certified_safety_claim": false,
+    "evidence_present": false,
+    "explanation": "Row 2/3 has validation_status=warn and solver_status=unknown without accepted repair evidence. No direct repair evidence available for this row.",
+    "forbidden_claims_present": false,
+    "huggingface_upload_performed": false,
+    "missing_evidence": [
+      "accepted repair evidence for row 2/3"
+    ],
+    "petal_api_upload_performed": false,
+    "production_controller_claim": false,
+    "production_marketplace_modified": false,
+    "public_ready": false,
+    "status": "WARN",
+    "task_id": "qwen_capcard_011",
+    "theorem_proof_claim": false
+  },
+  "extraction_diagnostics": [],
+  "extraction_status": "SCHEMA_JSON",
+  "mode": "api_schema_format_think_false",
+  "model": "qwen3:30b",
+  "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_011\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nRepair a Qwen curriculum row with validation_status=warn and solver_status=unknown. Task index 11. Use straightforward fields. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+  "raw_output": "{\n  \"task_id\": \"qwen_capcard_011\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"accepted repair evidence for row 2/3\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Row 2/3 has validation_status=warn and solver_status=unknown without accepted repair evidence. No direct repair evidence available for this row.\"\n}\n",
+  "real_model_output": true,
+  "returncode": null,
+  "runtime_seconds": 2.706,
+  "schema_valid": true,
+  "stderr": ""
+}

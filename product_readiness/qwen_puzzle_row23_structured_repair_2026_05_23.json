@@ -1,0 +1,102 @@
+{
+  "best_model": "qwen3:30b",
+  "best_runtime_mode": "api_schema_format_think_false",
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "rows": [
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "validation_status=warn",
+        "solver_status=unknown"
+      ],
+      "extracted_json": {
+        "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "Qwen Puzzle Curriculum accepted row_2 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "validation_status=warn",
+          "solver_status=unknown"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "BLOCKED",
+        "task_id": "qwen_puzzle_row_2_structured_repair",
+        "theorem_proof_claim": false
+      },
+      "final_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+      "model": "qwen3:30b",
+      "model_proposed_fix": "Qwen Puzzle Curriculum accepted row_2 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.",
+      "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_2_structured_repair\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"validation_status=warn\",\n    \"solver_status=unknown\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Qwen Puzzle Curriculum accepted row_2 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.\"\n}\n",
+      "reason": "Structured model proposed bounded repair language, but direct accepted repair evidence is still absent.",
+      "row_id": "row_2",
+      "runtime_mode": "api_schema_format_think_false",
+      "schema_errors": [],
+      "schema_valid": true,
+      "scorer_result": {
+        "reasons": [],
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "row_2"
+      }
+    },
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "validation_status=warn",
+        "solver_status=unknown"
+      ],
+      "extracted_json": {
+        "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "Qwen Puzzle Curriculum accepted row_3 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "validation_status=warn",
+          "solver_status=unknown"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "BLOCKED",
+        "task_id": "qwen_puzzle_row_3_structured_repair",
+        "theorem_proof_claim": false
+      },
+      "final_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+      "model": "qwen3:30b",
+      "model_proposed_fix": "Qwen Puzzle Curriculum accepted row_3 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.",
+      "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_3_structured_repair\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"validation_status=warn\",\n    \"solver_status=unknown\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Qwen Puzzle Curriculum accepted row_3 is blocked because validation_status=warn and solver_status=unknown have no accepted direct repair evidence. Propose a bounded internal repair status. Do not mark repaired by existing evidence unless a direct source artifact exists.\"\n}\n",
+      "reason": "Structured model proposed bounded repair language, but direct accepted repair evidence is still absent.",
+      "row_id": "row_3",
+      "runtime_mode": "api_schema_format_think_false",
+      "schema_errors": [],
+      "schema_valid": true,
+      "scorer_result": {
+        "reasons": [],
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "row_3"
+      }
+    }
+  ],
+  "status": "QWEN_PUZZLE_ROW23_STRUCTURED_REPAIR_COMPLETE",
+  "theorem_proof_claim": false
+}

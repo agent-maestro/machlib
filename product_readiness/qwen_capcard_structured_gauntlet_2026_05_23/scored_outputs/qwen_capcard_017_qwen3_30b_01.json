@@ -1,0 +1,11 @@
+{
+  "extraction_status": "SCHEMA_JSON",
+  "reasons": [
+    "unknown solver status appears faked as solved"
+  ],
+  "schema_valid": true,
+  "score_0_to_100": 70,
+  "status": "WARN",
+  "suggested_repair_prompt": "Repair the JSON only. Keep all upload/public/proof/safety/controller fields false. Do not accept warn/unknown rows without direct evidence. Reasons: unknown solver status appears faked as solved",
+  "task_id": "qwen_capcard_017"
+}

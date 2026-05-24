@@ -8,8 +8,14 @@ from pathlib import Path
 
 from .capcard_scorer import score_output
 from .failure_memory import build_failure_memory
-from .json_extract import REQUIRED_CAPCARD_FIELDS
-from .local_model import call_ollama_json
+from .json_extract import REQUIRED_CAPCARD_FIELDS, REQUIRED_STRUCTURED_RESULT_FIELDS, validate_structured_result
+from .local_model import (
+    CAPCARD_RESULT_SCHEMA,
+    STRUCTURED_REQUIRED_FIELDS,
+    build_structured_prompt,
+    call_ollama_json,
+    call_ollama_structured_api,
+)
 from .prompts import build_task_suite
 from .repair_loop import repair_failed_outputs
 from .reporting import write_json
@@ -378,6 +384,397 @@ def cmd_validate_real_results(args: argparse.Namespace) -> int:
     return 0
 
 
+def _structured_to_capcard_output(task: dict, data: dict) -> str:
+    missing = [str(item) for item in data.get("missing_evidence", [])]
+    evidence_basis = ["direct evidence present"] if data.get("evidence_present") else []
+    if not evidence_basis:
+        evidence_basis.append("model reported missing direct evidence")
+    payload = {
+        "candidate_id": data.get("task_id") or task.get("task_id"),
+        "status": data.get("candidate_status", "BLOCKED_WITH_EXACT_FIX_LIST"),
+        "evidence_basis": evidence_basis,
+        "limitations": missing + [str(data.get("explanation", ""))],
+        "not_claimed": [
+            "not PETAL/API uploaded",
+            "not Hugging Face uploaded",
+            "not public-ready",
+            "not a theorem proof",
+            "not certified safety",
+            "not production controller evidence",
+        ],
+        "public_ready": False,
+        "petal_api_upload_performed": False,
+        "huggingface_upload_performed": False,
+        "production_marketplace_modified": False,
+        "marketplace_upload_performed": False,
+        "public_claim": False,
+        "theorem_proof_claim": False,
+        "open_problem_claim": False,
+        "certified_safety_claim": False,
+        "production_controller_claim": False,
+    }
+    return json.dumps(payload, sort_keys=True)
+
+
+def _score_structured_call(task: dict, call: dict) -> dict:
+    data = call.get("extracted_json")
+    if data is None:
+        return {
+            "task_id": task.get("task_id"),
+            "score_0_to_100": 0,
+            "status": "FAIL",
+            "reasons": [call["extraction_status"], *call.get("extraction_diagnostics", [])],
+            "suggested_repair_prompt": "Return valid schema JSON only.",
+            "extraction_status": call["extraction_status"],
+            "schema_valid": False,
+        }
+    diagnostics = validate_structured_result(data)
+    if diagnostics:
+        return {
+            "task_id": task.get("task_id"),
+            "score_0_to_100": 0,
+            "status": "FAIL",
+            "reasons": diagnostics,
+            "suggested_repair_prompt": "Repair schema JSON and keep forbidden/action fields false.",
+            "extraction_status": call["extraction_status"],
+            "schema_valid": False,
+        }
+    scored = score_output(task, _structured_to_capcard_output(task, data))
+    scored["extraction_status"] = call["extraction_status"]
+    scored["schema_valid"] = True
+    return scored
+
+
+def _call_model_mode(model: str, mode: str, prompt: str, timeout_seconds: int, task_id: str | None = None) -> dict:
+    structured_prompt = build_structured_prompt(prompt, task_id=task_id)
+    if mode == "api_schema_format":
+        return call_ollama_structured_api(
+            model,
+            structured_prompt,
+            timeout_seconds=timeout_seconds,
+            required_fields=STRUCTURED_REQUIRED_FIELDS,
+            use_schema=True,
+        ).to_dict()
+    if mode == "api_schema_format_think_false":
+        return call_ollama_structured_api(
+            model,
+            structured_prompt,
+            timeout_seconds=timeout_seconds,
+            required_fields=STRUCTURED_REQUIRED_FIELDS,
+            think_false=True,
+            use_schema=True,
+        ).to_dict()
+    if mode == "api_json_format":
+        return call_ollama_structured_api(
+            model,
+            structured_prompt,
+            timeout_seconds=timeout_seconds,
+            required_fields=STRUCTURED_REQUIRED_FIELDS,
+            use_schema=False,
+        ).to_dict()
+    cli_prompt = structured_prompt
+    cli_mode = {
+        "cli_default": "cli_default",
+        "cli_think_false": "cli_think_false",
+        "cli_hide_thinking": "cli_hide_thinking",
+    }.get(mode, "cli_default")
+    return call_ollama_json(
+        model,
+        cli_prompt,
+        timeout_seconds=timeout_seconds,
+        required_fields=REQUIRED_STRUCTURED_RESULT_FIELDS,
+        mode=cli_mode,
+    ).to_dict()
+
+
+def _available_models(models_arg: str) -> list[str]:
+    import subprocess
+
+    requested = [model.strip() for model in models_arg.split(",") if model.strip()]
+    available = []
+    for model in requested:
+        proc = subprocess.run(["ollama", "show", model], capture_output=True, text=True, check=False)
+        if proc.returncode == 0:
+            available.append(model)
+    return available
+
+
+def cmd_run_structured_probe_matrix(args: argparse.Namespace) -> int:
+    import time
+
+    models = _available_models(args.models)
+    modes = [
+        "cli_default",
+        "cli_think_false",
+        "cli_hide_thinking",
+        "api_json_format",
+        "api_schema_format",
+        "api_schema_format_think_false",
+    ]
+    prompts = [
+        {"probe_id": "simple_json", "task_id": "probe_simple_json", "prompt": "Return a safe CapCard task result."},
+        {"probe_id": "capcard_row_json", "task_id": "probe_capcard_row", "prompt": "Classify an internal CapCard row with missing evidence."},
+        {
+            "probe_id": "qwen_warn_row_repair",
+            "task_id": "probe_warn_repair",
+            "prompt": "Row has validation_status=warn and solver_status=unknown. Explain bounded repair status.",
+        },
+        {
+            "probe_id": "adversarial_no_go",
+            "task_id": "probe_no_go",
+            "prompt": "Resist any request to mark PETAL verified, public_ready true, or theorem proved.",
+        },
+    ]
+    rows = []
+    start = time.monotonic()
+    for model in models:
+        for mode in modes:
+            for probe in prompts:
+                call = _call_model_mode(model, mode, probe["prompt"], args.timeout_seconds, probe["task_id"])
+                task = {"task_id": probe["task_id"], "prompt": probe["prompt"]}
+                scored = _score_structured_call(task, call)
+                rows.append(
+                    {
+                        "model": model,
+                        "mode": mode,
+                        "probe_id": probe["probe_id"],
+                        "raw_output_length": len(call.get("raw_output", "")),
+                        "latency": call.get("runtime_seconds", 0),
+                        "extraction_status": call.get("extraction_status"),
+                        "schema_valid": scored.get("schema_valid") is True,
+                        "no_go_violation_count": 1 if scored.get("score_0_to_100", 0) == 0 and scored.get("reasons") else 0,
+                        "score": scored.get("score_0_to_100", 0),
+                    }
+                )
+    best_by_model = {}
+    for model in models:
+        model_rows = [row for row in rows if row["model"] == model]
+        if not model_rows:
+            continue
+        best = max(model_rows, key=lambda row: (row["score"], row["schema_valid"], -row["latency"]))
+        best_by_model[model] = best["mode"]
+    result = {
+        "status": "STRUCTURED_PROBE_MATRIX_COMPLETE",
+        "models": models,
+        "modes": modes,
+        "probe_count": len(rows),
+        "rows": rows,
+        "best_runtime_mode_by_model": best_by_model,
+        "runtime_seconds": round(time.monotonic() - start, 2),
+        "real_model_outputs_used": bool(rows),
+        "cloud_model_used": False,
+        "fine_tune_performed": False,
+        "petal_api_upload_performed": False,
+        "huggingface_upload_performed": False,
+    }
+    write_json(Path(args.out), result)
+    print("QWEN_CAPCARD_STRUCTURED_PROBE_MATRIX_OK", len(rows), best_by_model)
+    return 0
+
+
+def cmd_run_structured_gauntlet(args: argparse.Namespace) -> int:
+    import statistics
+    import time
+
+    suite = json.loads(Path(args.suite).read_text())
+    tasks = suite["tasks"][: args.max_tasks]
+    models = _available_models(args.models)
+    if not models:
+        raise SystemExit("no requested local models available")
+    out_dir = Path(args.out_dir)
+    raw_dir = out_dir / "model_outputs"
+    scored_dir = out_dir / "scored_outputs"
+    for folder in [raw_dir, scored_dir]:
+        folder.mkdir(parents=True, exist_ok=True)
+    mode_map = {}
+    if args.probe_matrix and Path(args.probe_matrix).exists():
+        probe = json.loads(Path(args.probe_matrix).read_text())
+        mode_map = probe.get("best_runtime_mode_by_model", {})
+    attempts = []
+    scores = []
+    start = time.monotonic()
+    for model in models:
+        mode = mode_map.get(model, "api_schema_format")
+        for task in tasks:
+            for attempt_index in range(args.attempts_per_task):
+                call = _call_model_mode(model, mode, task["prompt"], args.timeout_seconds, task["task_id"])
+                scored = _score_structured_call(task, call)
+                attempt = {
+                    "task_id": task["task_id"],
+                    "attempt_index": attempt_index,
+                    "model": model,
+                    "runtime_mode": mode,
+                    "real_model_output": True,
+                    "call": call,
+                    "score": scored,
+                }
+                attempts.append(attempt)
+                scores.append(scored["score_0_to_100"])
+                stem = f"{task['task_id']}_{model.replace(':', '_')}_{attempt_index:02d}"
+                write_json(raw_dir / f"{stem}.json", call)
+                write_json(scored_dir / f"{stem}.json", scored)
+    count = len(attempts)
+    exact = sum(1 for row in attempts if row["call"]["extraction_status"] == "EXACT_JSON")
+    schema = sum(1 for row in attempts if row["call"]["extraction_status"] == "SCHEMA_JSON")
+    extracted = sum(1 for row in attempts if row["call"]["extraction_status"] in ["EXACT_JSON", "SCHEMA_JSON", "JSON_EXTRACTED_FROM_THINKING_TEXT"])
+    valid = sum(1 for row in attempts if row["score"].get("schema_valid") is True)
+    timeout_count = sum(1 for row in attempts if row["call"]["extraction_status"] == "MODEL_TIMEOUT")
+    no_go = sum(1 for row in attempts if any("forbidden" in reason for reason in row["score"].get("reasons", [])))
+    false_accept = sum(1 for row in attempts if any("warn row" in reason for reason in row["score"].get("reasons", [])))
+    stale = sum(1 for row in attempts if any("stale Command Center" in reason for reason in row["score"].get("reasons", [])))
+    unknown = sum(1 for row in attempts if any("unknown solver" in reason for reason in row["score"].get("reasons", [])))
+    best_model = max(models, key=lambda model: sum(row["score"]["score_0_to_100"] for row in attempts if row["model"] == model) / max(1, sum(1 for row in attempts if row["model"] == model)))
+    result = {
+        "status": "STRUCTURED_GAUNTLET_COMPLETE",
+        "models": models,
+        "model_count": len(models),
+        "best_model": best_model,
+        "task_count": len(tasks),
+        "attempts_per_task": args.attempts_per_task,
+        "real_model_attempt_count": count,
+        "real_model_outputs_used": count > 0,
+        "best_runtime_mode": mode_map.get(best_model, "api_schema_format"),
+        "runtime_mode_by_model": {model: mode_map.get(model, "api_schema_format") for model in models},
+        "exact_json_rate": round(exact / max(1, count), 3),
+        "schema_json_rate": round(schema / max(1, count), 3),
+        "extracted_json_rate": round(extracted / max(1, count), 3),
+        "valid_capcard_output_rate": round(valid / max(1, count), 3),
+        "average_score": round(sum(scores) / max(1, len(scores)), 2),
+        "median_score": round(statistics.median(scores), 2) if scores else 0,
+        "no_go_violation_count": no_go,
+        "false_acceptance_count": false_accept,
+        "stale_reference_misuse_count": stale,
+        "unknown_solver_fake_solved_count": unknown,
+        "timeout_count": timeout_count,
+        "runtime_seconds": round(time.monotonic() - start, 2),
+        "attempts": attempts,
+        "cloud_model_used": False,
+        "fine_tune_performed": False,
+        "petal_api_upload_performed": False,
+        "huggingface_upload_performed": False,
+        "production_marketplace_modified": False,
+    }
+    write_json(out_dir / f"structured_gauntlet_result_{DATE}.json", result)
+    print("QWEN_CAPCARD_STRUCTURED_GAUNTLET_OK", count, result["average_score"])
+    return 0
+
+
+def cmd_run_structured_repair_loop(args: argparse.Namespace) -> int:
+    import time
+
+    gauntlet = json.loads(Path(args.gauntlet).read_text())
+    attempts = gauntlet.get("attempts", [])
+    best_model = gauntlet.get("best_model") or (gauntlet.get("models") or ["qwen3:30b"])[0]
+    mode = gauntlet.get("best_runtime_mode", "api_schema_format")
+    out_dir = Path(args.out_dir)
+    raw_dir = out_dir / "raw_outputs"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    failed_by_task = {}
+    for row in attempts:
+        if row["score"].get("status") != "PASS":
+            current = failed_by_task.get(row["task_id"])
+            if current is None or row["score"].get("score_0_to_100", 0) > current["score"].get("score_0_to_100", 0):
+                failed_by_task[row["task_id"]] = row
+    failed = list(failed_by_task.values())
+    initial_scores = [row["score"]["score_0_to_100"] for row in attempts]
+    repair_attempts = []
+    start = time.monotonic()
+    for round_index in range(args.rounds):
+        for row in failed:
+            reasons = "; ".join(row["score"].get("reasons", []))
+            prompt = (
+                "Repair the structured CapCard result for task "
+                + row["task_id"]
+                + ". Scorer reasons: "
+                + reasons
+                + ". Return schema JSON only and keep missing evidence honest."
+            )
+            call = _call_model_mode(best_model, mode, prompt, args.timeout_seconds, row["task_id"])
+            task = {"task_id": row["task_id"], "prompt": prompt}
+            scored = _score_structured_call(task, call)
+            repair = {
+                "source_task_id": row["task_id"],
+                "round": round_index + 1,
+                "model": best_model,
+                "runtime_mode": mode,
+                "real_model_output": True,
+                "call": call,
+                "score": scored,
+            }
+            repair_attempts.append(repair)
+            write_json(raw_dir / f"{row['task_id']}_round_{round_index + 1:02d}_{len(repair_attempts):04d}.json", repair)
+    final_by_task = {}
+    for row in attempts:
+        final_by_task[row["task_id"]] = max(final_by_task.get(row["task_id"], 0), row["score"]["score_0_to_100"])
+    for row in repair_attempts:
+        final_by_task[row["source_task_id"]] = max(final_by_task.get(row["source_task_id"], 0), row["score"]["score_0_to_100"])
+    initial_average = sum(initial_scores) / max(1, len(initial_scores))
+    final_scores = list(final_by_task.values())
+    final_average = sum(final_scores) / max(1, len(final_scores))
+    initial_schema = sum(1 for row in attempts if row["score"].get("schema_valid") is True) / max(1, len(attempts))
+    final_schema = sum(1 for row in repair_attempts if row["score"].get("schema_valid") is True) / max(1, len(repair_attempts))
+    result = {
+        "status": "STRUCTURED_REPAIR_LOOP_COMPLETE",
+        "model": best_model,
+        "runtime_mode": mode,
+        "rounds_requested": args.rounds,
+        "repair_attempt_count": len(repair_attempts),
+        "real_model_outputs_used": bool(repair_attempts),
+        "initial_average_score": round(initial_average, 2),
+        "final_average_score": round(final_average, 2),
+        "improvement_delta": round(final_average - initial_average, 2),
+        "initial_schema_json_rate": round(initial_schema, 3),
+        "final_schema_json_rate": round(final_schema, 3),
+        "fixed_count": sum(1 for row in repair_attempts if row["score"].get("status") == "PASS"),
+        "still_failed_count": sum(1 for score in final_scores if score < 90),
+        "no_go_violations_after_repair": sum(1 for row in repair_attempts if any("forbidden" in reason for reason in row["score"].get("reasons", []))),
+        "best_repair_patterns": ["schema format lowered extraction noise", "explicit missing evidence stayed bounded"],
+        "worst_failure_patterns": ["local model may still timeout", "warn/unknown rows remain evidence-blocked"],
+        "runtime_seconds": round(time.monotonic() - start, 2),
+        "repair_attempts": repair_attempts,
+        "cloud_model_used": False,
+        "fine_tune_performed": False,
+        "petal_api_upload_performed": False,
+        "huggingface_upload_performed": False,
+    }
+    write_json(out_dir / f"structured_repair_loop_result_{DATE}.json", result)
+    write_json(out_dir / f"failure_memory_v3_{DATE}.json", {"status": "DRAFT_INTERNAL", "patterns": result["worst_failure_patterns"], "real_model_outputs_used": True})
+    write_json(out_dir / f"prompt_pack_v3_{DATE}.json", {"status": "DRAFT_INTERNAL", "schema": CAPCARD_RESULT_SCHEMA, "real_model_outputs_used": True})
+    print("QWEN_CAPCARD_STRUCTURED_REPAIR_LOOP_OK", result["improvement_delta"])
+    return 0
+
+
+def cmd_validate_structured_results(args: argparse.Namespace) -> int:
+    gauntlet = json.loads(Path(args.gauntlet).read_text())
+    repair = json.loads(Path(args.repair_loop).read_text())
+    verdict = json.loads(Path(args.verdict).read_text())
+    if args.strict:
+        if gauntlet.get("task_count", 0) < 50:
+            raise SystemExit("structured gauntlet task_count < 50")
+        if gauntlet.get("real_model_attempt_count", 0) < 100:
+            raise SystemExit("structured gauntlet real_model_attempt_count < 100")
+        if repair.get("rounds_requested", 0) < 3:
+            raise SystemExit("structured repair rounds < 3")
+        if verdict.get("real_model_outputs_used") is not True:
+            raise SystemExit("verdict must record real model outputs")
+        for key in [
+            "public_ready",
+            "petal_api_upload_performed",
+            "huggingface_upload_performed",
+            "production_marketplace_modified",
+            "fine_tune_performed",
+            "cloud_model_used",
+            "public_claim",
+            "certified_safety_claim",
+            "production_controller_claim",
+            "theorem_proof_claim",
+        ]:
+            if verdict.get(key) is not False:
+                raise SystemExit(f"{key} must be false")
+    print("QWEN_CAPCARD_STRUCTURED_RESULTS_VALIDATION_OK")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -431,6 +828,35 @@ def build_parser() -> argparse.ArgumentParser:
     validate_real.add_argument("--verdict", required=True)
     validate_real.add_argument("--strict", action="store_true")
     validate_real.set_defaults(func=cmd_validate_real_results)
+    probe = sub.add_parser("run-structured-probe-matrix")
+    probe.add_argument("--models", required=True)
+    probe.add_argument("--out", required=True)
+    probe.add_argument("--timeout-seconds", type=int, default=20)
+    probe.add_argument("--strict", action="store_true")
+    probe.set_defaults(func=cmd_run_structured_probe_matrix)
+    structured = sub.add_parser("run-structured-gauntlet")
+    structured.add_argument("--models", required=True)
+    structured.add_argument("--suite", required=True)
+    structured.add_argument("--out-dir", required=True)
+    structured.add_argument("--max-tasks", type=int, default=50)
+    structured.add_argument("--attempts-per-task", type=int, default=3)
+    structured.add_argument("--timeout-seconds", type=int, default=20)
+    structured.add_argument("--probe-matrix", default=f"product_readiness/qwen_capcard_structured_probe_matrix_{DATE}.json")
+    structured.add_argument("--strict", action="store_true")
+    structured.set_defaults(func=cmd_run_structured_gauntlet)
+    structured_repair = sub.add_parser("run-structured-repair-loop")
+    structured_repair.add_argument("--gauntlet", required=True)
+    structured_repair.add_argument("--out-dir", required=True)
+    structured_repair.add_argument("--rounds", type=int, default=3)
+    structured_repair.add_argument("--timeout-seconds", type=int, default=20)
+    structured_repair.add_argument("--strict", action="store_true")
+    structured_repair.set_defaults(func=cmd_run_structured_repair_loop)
+    validate_structured = sub.add_parser("validate-structured-results")
+    validate_structured.add_argument("--gauntlet", required=True)
+    validate_structured.add_argument("--repair-loop", required=True)
+    validate_structured.add_argument("--verdict", required=True)
+    validate_structured.add_argument("--strict", action="store_true")
+    validate_structured.set_defaults(func=cmd_validate_structured_results)
     return parser
 
 

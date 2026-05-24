@@ -1,0 +1,31 @@
+{
+  "current_task_may_attempt_pull": true,
+  "disk_free": "Filesystem      Size  Used Avail Use% Mounted on\n/dev/nvme0n1p2  3.7T  808G  2.7T  23% /",
+  "gpu_vram_visible": false,
+  "inventory_id": "qwen_capcard_runtime_upgrade_inventory_2026_05_23",
+  "no_cloud_used": true,
+  "no_finetune_performed": true,
+  "no_hf_upload_performed": true,
+  "nvidia_smi_summary": [
+    "Sat May 23 19:13:10 2026       ",
+    "+-----------------------------------------------------------------------------------------+",
+    "| NVIDIA-SMI 580.142                Driver Version: 580.142        CUDA Version: 13.0     |",
+    "+-----------------------------------------+------------------------+----------------------+",
+    "| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |",
+    "| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |",
+    "|                                         |                        |               MIG M. |",
+    "|=========================================+========================+======================|",
+    "|   0  NVIDIA GB10                    On  |   0000000F:01:00.0  On |                  N/A |",
+    "| N/A   60C    P0             13W /  N/A  | Not Supported          |      1%      Default |",
+    "|                                         |                        |                  N/A |",
+    "+-----------------------------------------+------------------------+----------------------+"
+  ],
+  "ollama_list": "NAME               ID              SIZE     MODIFIED       \nqwen3-coder:30b    06c1097efce0    18 GB    29 minutes ago    \nqwen3:30b          ad815644918f    18 GB    2 weeks ago",
+  "ollama_version": "ollama version is 0.23.2",
+  "overnight_pull_recommended": false,
+  "qwen3_30b_installed": true,
+  "qwen3_coder_30b_installed": true,
+  "qwen3_coder_show_returncode": 0,
+  "qwen3_show_returncode": 0,
+  "ram": "total        used        free      shared  buff/cache   available\nMem:           121Gi        51Gi        49Gi        72Mi        20Gi        69Gi\nSwap:           15Gi       6.9Gi       9.1Gi"
+}

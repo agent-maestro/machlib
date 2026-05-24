@@ -1,0 +1,90 @@
+{
+  "real_model_outputs_used": true,
+  "schema": {
+    "additionalProperties": false,
+    "properties": {
+      "candidate_status": {
+        "enum": [
+          "BLOCKED_WITH_EXACT_FIX_LIST",
+          "READY_FOR_HUMAN_REPAIR_REVIEW",
+          "INTERNAL_DRAFT_CANDIDATE"
+        ],
+        "type": "string"
+      },
+      "certified_safety_claim": {
+        "const": false,
+        "type": "boolean"
+      },
+      "evidence_present": {
+        "type": "boolean"
+      },
+      "explanation": {
+        "type": "string"
+      },
+      "forbidden_claims_present": {
+        "const": false,
+        "type": "boolean"
+      },
+      "huggingface_upload_performed": {
+        "const": false,
+        "type": "boolean"
+      },
+      "missing_evidence": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "petal_api_upload_performed": {
+        "const": false,
+        "type": "boolean"
+      },
+      "production_controller_claim": {
+        "const": false,
+        "type": "boolean"
+      },
+      "production_marketplace_modified": {
+        "const": false,
+        "type": "boolean"
+      },
+      "public_ready": {
+        "const": false,
+        "type": "boolean"
+      },
+      "status": {
+        "enum": [
+          "PASS",
+          "WARN",
+          "FAIL",
+          "BLOCKED"
+        ],
+        "type": "string"
+      },
+      "task_id": {
+        "type": "string"
+      },
+      "theorem_proof_claim": {
+        "const": false,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "task_id",
+      "status",
+      "candidate_status",
+      "evidence_present",
+      "missing_evidence",
+      "forbidden_claims_present",
+      "public_ready",
+      "petal_api_upload_performed",
+      "huggingface_upload_performed",
+      "production_marketplace_modified",
+      "theorem_proof_claim",
+      "certified_safety_claim",
+      "production_controller_claim",
+      "explanation"
+    ],
+    "type": "object"
+  },
+  "status": "DRAFT_INTERNAL"
+}

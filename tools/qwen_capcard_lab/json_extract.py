@@ -35,6 +35,30 @@ REQUIRED_CAPCARD_FIELDS = [
     "not_claimed",
 ]
 
+REQUIRED_STRUCTURED_RESULT_FIELDS = [
+    "task_id",
+    "status",
+    "candidate_status",
+    "evidence_present",
+    "missing_evidence",
+    "forbidden_claims_present",
+    "public_ready",
+    "petal_api_upload_performed",
+    "huggingface_upload_performed",
+    "production_marketplace_modified",
+    "theorem_proof_claim",
+    "certified_safety_claim",
+    "production_controller_claim",
+    "explanation",
+]
+
+STRUCTURED_STATUS_VALUES = {"PASS", "WARN", "FAIL", "BLOCKED"}
+STRUCTURED_CANDIDATE_STATUS_VALUES = {
+    "BLOCKED_WITH_EXACT_FIX_LIST",
+    "READY_FOR_HUMAN_REPAIR_REVIEW",
+    "INTERNAL_DRAFT_CANDIDATE",
+}
+
 
 @dataclass(frozen=True)
 class ExtractionResult:
@@ -100,6 +124,32 @@ def _is_safe_object(data: dict[str, Any], required_fields: list[str] | None) -> 
     for key in required_fields or []:
         if key not in data:
             diagnostics.append(f"missing_required_field:{key}")
+    return diagnostics
+
+
+def validate_structured_result(data: dict[str, Any]) -> list[str]:
+    diagnostics = _is_safe_object(data, REQUIRED_STRUCTURED_RESULT_FIELDS)
+    if data.get("status") not in STRUCTURED_STATUS_VALUES:
+        diagnostics.append("invalid_status")
+    if data.get("candidate_status") not in STRUCTURED_CANDIDATE_STATUS_VALUES:
+        diagnostics.append("invalid_candidate_status")
+    if not isinstance(data.get("evidence_present"), bool):
+        diagnostics.append("evidence_present_must_be_bool")
+    if not isinstance(data.get("missing_evidence"), list):
+        diagnostics.append("missing_evidence_must_be_list")
+    if data.get("forbidden_claims_present") is not False:
+        diagnostics.append("forbidden_claims_present_must_be_false")
+    for key in [
+        "public_ready",
+        "petal_api_upload_performed",
+        "huggingface_upload_performed",
+        "production_marketplace_modified",
+        "theorem_proof_claim",
+        "certified_safety_claim",
+        "production_controller_claim",
+    ]:
+        if data.get(key) is not False:
+            diagnostics.append(f"{key}_must_be_false")
     return diagnostics
 
 

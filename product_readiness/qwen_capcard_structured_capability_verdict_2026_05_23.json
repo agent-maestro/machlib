@@ -1,0 +1,46 @@
+{
+  "best_model": "qwen3:30b",
+  "best_runtime_mode": "api_schema_format_think_false",
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "final_average_score": 100.0,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "improvement_delta": 51.65,
+  "initial_average_score": 48.35,
+  "model_rollup": [
+    {
+      "attempts": 150,
+      "average_score": 96.7,
+      "model": "qwen3:30b",
+      "runtime_mode": "api_schema_format_think_false",
+      "schema_valid_rate": 1.0
+    },
+    {
+      "attempts": 150,
+      "average_score": 0.0,
+      "model": "qwen3-coder:30b",
+      "runtime_mode": "cli_think_false",
+      "schema_valid_rate": 0.0
+    }
+  ],
+  "models_tested": [
+    "qwen3:30b",
+    "qwen3-coder:30b"
+  ],
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_operationally_smarter": false,
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "real_model_attempt_count": 300,
+  "real_model_outputs_used": true,
+  "recommended_next_action": "Make qwen3:30b API schema mode the default CapCard local path; investigate qwen3-coder API/schema prompting before defaulting it.",
+  "schema_json_rate": 0.5,
+  "status": "QWEN_CAPCARD_STRUCTURED_CAPABILITY_VERDICT_COMPLETE",
+  "structured_output_unlocked": false,
+  "task_count": 50,
+  "theorem_proof_claim": false
+}

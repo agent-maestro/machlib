@@ -1,0 +1,16 @@
+{
+  "best_model": "qwen3:30b",
+  "best_runtime_mode": "api_schema_format_think_false",
+  "deploy_performed": false,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "real_model_attempt_count": 300,
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "status": "QWEN_CAPCARD_STRUCTURED_CAPABILITY_VERDICT_COMPLETE",
+  "structured_output_unlocked": false,
+  "surface": "command.monogate.dev",
+  "visibility": "internal"
+}

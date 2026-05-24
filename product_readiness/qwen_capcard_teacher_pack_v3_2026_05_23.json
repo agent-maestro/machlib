@@ -1,0 +1,20 @@
+{
+  "best_runtime_mode_by_model": {
+    "qwen3-coder:30b": "cli_think_false",
+    "qwen3:30b": "api_schema_format_think_false"
+  },
+  "core_rules": [
+    "Use Ollama API JSON Schema format when available",
+    "Use think=false for qwen3:30b",
+    "Treat missing direct evidence as missing evidence, never acceptance",
+    "Keep all public/upload/proof/safety/controller fields false",
+    "Do not promote Qwen Puzzle rows 2/3 without direct accepted repair evidence"
+  ],
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "pack_id": "qwen_capcard_teacher_pack_v3_2026_05_23",
+  "petal_api_upload_performed": false,
+  "public_ready": false,
+  "schema_contract": "CapCard structured task result schema in tools.qwen_capcard_lab.local_model.CAPCARD_RESULT_SCHEMA",
+  "status": "DRAFT_INTERNAL"
+}
