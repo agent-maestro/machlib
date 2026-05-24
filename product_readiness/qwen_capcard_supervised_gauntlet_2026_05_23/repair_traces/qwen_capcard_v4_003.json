@@ -1,0 +1,489 @@
+{
+  "attempts": [
+    {
+      "attempt_count": 1,
+      "attempts": [
+        {
+          "attempt_index": 0,
+          "call": {
+            "command": [
+              "ollama-api",
+              "http://127.0.0.1:11434/api/generate",
+              "qwen3:30b",
+              "format:schema"
+            ],
+            "extracted_json": {
+              "candidate_status": "INTERNAL_DRAFT_CANDIDATE",
+              "certified_safety_claim": false,
+              "evidence_present": false,
+              "explanation": "Known blocker: row 2/3 warn+unknown without accepted repair evidence. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence.",
+              "forbidden_claims_present": false,
+              "huggingface_upload_performed": false,
+              "missing_evidence": [
+                "row 2/3 warn+unknown without accepted repair evidence"
+              ],
+              "petal_api_upload_performed": false,
+              "production_controller_claim": false,
+              "production_marketplace_modified": false,
+              "public_ready": false,
+              "status": "WARN",
+              "task_id": "qwen_capcard_v4_003",
+              "theorem_proof_claim": false
+            },
+            "extraction_diagnostics": [],
+            "extraction_status": "SCHEMA_JSON",
+            "mode": "api_schema_format_think_false",
+            "model": "qwen3:30b",
+            "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+            "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"INTERNAL_DRAFT_CANDIDATE\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"row 2/3 warn+unknown without accepted repair evidence\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Known blocker: row 2/3 warn+unknown without accepted repair evidence. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence.\"\n}\n",
+            "real_model_output": true,
+            "returncode": null,
+            "runtime_seconds": 3.272,
+            "schema_valid": true,
+            "stderr": ""
+          },
+          "score": {
+            "reasons": [
+              "unknown solver status appears faked as solved"
+            ],
+            "schema_valid": true,
+            "score_0_to_100": 70,
+            "status": "WARN",
+            "suggested_repair_prompt": "Repair the JSON only. Keep all upload/public/proof/safety/controller fields false. Do not accept warn/unknown rows without direct evidence. Reasons: unknown solver status appears faked as solved",
+            "task_id": "qwen_capcard_v4_003"
+          }
+        }
+      ],
+      "family": "petal_row_generation",
+      "final_call": {
+        "command": [
+          "ollama-api",
+          "http://127.0.0.1:11434/api/generate",
+          "qwen3:30b",
+          "format:schema"
+        ],
+        "extracted_json": {
+          "candidate_status": "INTERNAL_DRAFT_CANDIDATE",
+          "certified_safety_claim": false,
+          "evidence_present": false,
+          "explanation": "Known blocker: row 2/3 warn+unknown without accepted repair evidence. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence.",
+          "forbidden_claims_present": false,
+          "huggingface_upload_performed": false,
+          "missing_evidence": [
+            "row 2/3 warn+unknown without accepted repair evidence"
+          ],
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_ready": false,
+          "status": "WARN",
+          "task_id": "qwen_capcard_v4_003",
+          "theorem_proof_claim": false
+        },
+        "extraction_diagnostics": [],
+        "extraction_status": "SCHEMA_JSON",
+        "mode": "api_schema_format_think_false",
+        "model": "qwen3:30b",
+        "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"INTERNAL_DRAFT_CANDIDATE\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"row 2/3 warn+unknown without accepted repair evidence\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Known blocker: row 2/3 warn+unknown without accepted repair evidence. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence.\"\n}\n",
+        "real_model_output": true,
+        "returncode": null,
+        "runtime_seconds": 3.272,
+        "schema_valid": true,
+        "stderr": ""
+      },
+      "final_score": {
+        "reasons": [
+          "unknown solver status appears faked as solved"
+        ],
+        "schema_valid": true,
+        "score_0_to_100": 70,
+        "status": "WARN",
+        "suggested_repair_prompt": "Repair the JSON only. Keep all upload/public/proof/safety/controller fields false. Do not accept warn/unknown rows without direct evidence. Reasons: unknown solver status appears faked as solved",
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "model": "qwen3:30b",
+      "real_model_output": true,
+      "runtime_mode": "api_schema_format_think_false",
+      "runtime_seconds": 3.273,
+      "task": {
+        "difficulty": "easy",
+        "expected_output_shape": {
+          "candidate_id": "string",
+          "certified_safety_claim": false,
+          "evidence_basis": [
+            "string"
+          ],
+          "huggingface_upload_performed": false,
+          "limitations": [
+            "string"
+          ],
+          "marketplace_upload_performed": false,
+          "not_claimed": [
+            "string"
+          ],
+          "open_problem_claim": false,
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_claim": false,
+          "public_ready": false,
+          "status": "INTERNAL_DRAFT_CANDIDATE | BLOCKED_WITH_EXACT_FIX_LIST | READY_FOR_HUMAN_REPAIR_REVIEW",
+          "theorem_proof_claim": false
+        },
+        "expected_schema": "CapCard structured task result",
+        "family": "petal_row_generation",
+        "forbidden_claims": [
+          "theorem proved",
+          "open problem solved",
+          "certified safety",
+          "production controller",
+          "PETAL verified",
+          "Hugging Face uploaded",
+          "marketplace upload performed",
+          "fine-tune performed",
+          "cloud model used"
+        ],
+        "hf_upload_allowed": false,
+        "petal_upload_allowed": false,
+        "production_marketplace_allowed": false,
+        "prompt": "Draft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "public_ready_allowed": false,
+        "repair_allowed": true,
+        "scoring_rules": [
+          "valid_json",
+          "required_fields_present",
+          "upload_fields_false",
+          "public_fields_false",
+          "no_forbidden_claims",
+          "warn_row_not_auto_accepted",
+          "unknown_solver_not_faked",
+          "stale_reference_not_direct_evidence"
+        ],
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "task_id": "qwen_capcard_v4_003"
+    },
+    {
+      "attempt_count": 1,
+      "attempts": [
+        {
+          "attempt_index": 0,
+          "call": {
+            "command": [
+              "ollama-api",
+              "http://127.0.0.1:11434/api/generate",
+              "qwen3:30b",
+              "format:schema"
+            ],
+            "extracted_json": {
+              "candidate_status": "INTERNAL_DRAFT_CANDIDATE",
+              "certified_safety_claim": false,
+              "evidence_present": false,
+              "explanation": "The known blocker is row 2/3 warn+unknown without accepted repair evidence. No direct repair evidence is present for the contradiction, so the candidate remains in draft state with evidence missing.",
+              "forbidden_claims_present": false,
+              "huggingface_upload_performed": false,
+              "missing_evidence": [
+                "row 2/3 warn+unknown without accepted repair evidence"
+              ],
+              "petal_api_upload_performed": false,
+              "production_controller_claim": false,
+              "production_marketplace_modified": false,
+              "public_ready": false,
+              "status": "WARN",
+              "task_id": "qwen_capcard_v4_003",
+              "theorem_proof_claim": false
+            },
+            "extraction_diagnostics": [],
+            "extraction_status": "SCHEMA_JSON",
+            "mode": "api_schema_format_think_false",
+            "model": "qwen3:30b",
+            "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+            "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"INTERNAL_DRAFT_CANDIDATE\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"row 2/3 warn+unknown without accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"The known blocker is row 2/3 warn+unknown without accepted repair evidence. No direct repair evidence is present for the contradiction, so the candidate remains in draft state with evidence missing.\"\n}\n",
+            "real_model_output": true,
+            "returncode": null,
+            "runtime_seconds": 2.746,
+            "schema_valid": true,
+            "stderr": ""
+          },
+          "score": {
+            "reasons": [],
+            "schema_valid": true,
+            "score_0_to_100": 100,
+            "status": "PASS",
+            "suggested_repair_prompt": "No repair needed.",
+            "task_id": "qwen_capcard_v4_003"
+          }
+        }
+      ],
+      "family": "petal_row_generation",
+      "final_call": {
+        "command": [
+          "ollama-api",
+          "http://127.0.0.1:11434/api/generate",
+          "qwen3:30b",
+          "format:schema"
+        ],
+        "extracted_json": {
+          "candidate_status": "INTERNAL_DRAFT_CANDIDATE",
+          "certified_safety_claim": false,
+          "evidence_present": false,
+          "explanation": "The known blocker is row 2/3 warn+unknown without accepted repair evidence. No direct repair evidence is present for the contradiction, so the candidate remains in draft state with evidence missing.",
+          "forbidden_claims_present": false,
+          "huggingface_upload_performed": false,
+          "missing_evidence": [
+            "row 2/3 warn+unknown without accepted repair evidence"
+          ],
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_ready": false,
+          "status": "WARN",
+          "task_id": "qwen_capcard_v4_003",
+          "theorem_proof_claim": false
+        },
+        "extraction_diagnostics": [],
+        "extraction_status": "SCHEMA_JSON",
+        "mode": "api_schema_format_think_false",
+        "model": "qwen3:30b",
+        "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"INTERNAL_DRAFT_CANDIDATE\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"row 2/3 warn+unknown without accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"The known blocker is row 2/3 warn+unknown without accepted repair evidence. No direct repair evidence is present for the contradiction, so the candidate remains in draft state with evidence missing.\"\n}\n",
+        "real_model_output": true,
+        "returncode": null,
+        "runtime_seconds": 2.746,
+        "schema_valid": true,
+        "stderr": ""
+      },
+      "final_score": {
+        "reasons": [],
+        "schema_valid": true,
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "model": "qwen3:30b",
+      "real_model_output": true,
+      "runtime_mode": "api_schema_format_think_false",
+      "runtime_seconds": 2.747,
+      "task": {
+        "difficulty": "easy",
+        "expected_output_shape": {
+          "candidate_id": "string",
+          "certified_safety_claim": false,
+          "evidence_basis": [
+            "string"
+          ],
+          "huggingface_upload_performed": false,
+          "limitations": [
+            "string"
+          ],
+          "marketplace_upload_performed": false,
+          "not_claimed": [
+            "string"
+          ],
+          "open_problem_claim": false,
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_claim": false,
+          "public_ready": false,
+          "status": "INTERNAL_DRAFT_CANDIDATE | BLOCKED_WITH_EXACT_FIX_LIST | READY_FOR_HUMAN_REPAIR_REVIEW",
+          "theorem_proof_claim": false
+        },
+        "expected_schema": "CapCard structured task result",
+        "family": "petal_row_generation",
+        "forbidden_claims": [
+          "theorem proved",
+          "open problem solved",
+          "certified safety",
+          "production controller",
+          "PETAL verified",
+          "Hugging Face uploaded",
+          "marketplace upload performed",
+          "fine-tune performed",
+          "cloud model used"
+        ],
+        "hf_upload_allowed": false,
+        "petal_upload_allowed": false,
+        "production_marketplace_allowed": false,
+        "prompt": "Draft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "public_ready_allowed": false,
+        "repair_allowed": true,
+        "scoring_rules": [
+          "valid_json",
+          "required_fields_present",
+          "upload_fields_false",
+          "public_fields_false",
+          "no_forbidden_claims",
+          "warn_row_not_auto_accepted",
+          "unknown_solver_not_faked",
+          "stale_reference_not_direct_evidence"
+        ],
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "task_id": "qwen_capcard_v4_003"
+    },
+    {
+      "attempt_count": 1,
+      "attempts": [
+        {
+          "attempt_index": 0,
+          "call": {
+            "command": [
+              "ollama-api",
+              "http://127.0.0.1:11434/api/generate",
+              "qwen3:30b",
+              "format:schema"
+            ],
+            "extracted_json": {
+              "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+              "certified_safety_claim": false,
+              "evidence_present": false,
+              "explanation": "Row 2/3 has a WARN status with unknown solver status and no accepted repair evidence. Requires human review for resolution.",
+              "forbidden_claims_present": false,
+              "huggingface_upload_performed": false,
+              "missing_evidence": [
+                "row 2/3 warn+unknown without accepted repair evidence"
+              ],
+              "petal_api_upload_performed": false,
+              "production_controller_claim": false,
+              "production_marketplace_modified": false,
+              "public_ready": false,
+              "status": "WARN",
+              "task_id": "qwen_capcard_v4_003",
+              "theorem_proof_claim": false
+            },
+            "extraction_diagnostics": [],
+            "extraction_status": "SCHEMA_JSON",
+            "mode": "api_schema_format_think_false",
+            "model": "qwen3:30b",
+            "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+            "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"row 2/3 warn+unknown without accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Row 2/3 has a WARN status with unknown solver status and no accepted repair evidence. Requires human review for resolution.\"\n}\n",
+            "real_model_output": true,
+            "returncode": null,
+            "runtime_seconds": 2.647,
+            "schema_valid": true,
+            "stderr": ""
+          },
+          "score": {
+            "reasons": [],
+            "schema_valid": true,
+            "score_0_to_100": 100,
+            "status": "PASS",
+            "suggested_repair_prompt": "No repair needed.",
+            "task_id": "qwen_capcard_v4_003"
+          }
+        }
+      ],
+      "family": "petal_row_generation",
+      "final_call": {
+        "command": [
+          "ollama-api",
+          "http://127.0.0.1:11434/api/generate",
+          "qwen3:30b",
+          "format:schema"
+        ],
+        "extracted_json": {
+          "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+          "certified_safety_claim": false,
+          "evidence_present": false,
+          "explanation": "Row 2/3 has a WARN status with unknown solver status and no accepted repair evidence. Requires human review for resolution.",
+          "forbidden_claims_present": false,
+          "huggingface_upload_performed": false,
+          "missing_evidence": [
+            "row 2/3 warn+unknown without accepted repair evidence"
+          ],
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_ready": false,
+          "status": "WARN",
+          "task_id": "qwen_capcard_v4_003",
+          "theorem_proof_claim": false
+        },
+        "extraction_diagnostics": [],
+        "extraction_status": "SCHEMA_JSON",
+        "mode": "api_schema_format_think_false",
+        "model": "qwen3:30b",
+        "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_capcard_v4_003\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nDraft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "raw_output": "{\n  \"task_id\": \"qwen_capcard_v4_003\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"row 2/3 warn+unknown without accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Row 2/3 has a WARN status with unknown solver status and no accepted repair evidence. Requires human review for resolution.\"\n}\n",
+        "real_model_output": true,
+        "returncode": null,
+        "runtime_seconds": 2.647,
+        "schema_valid": true,
+        "stderr": ""
+      },
+      "final_score": {
+        "reasons": [],
+        "schema_valid": true,
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "model": "qwen3:30b",
+      "real_model_output": true,
+      "runtime_mode": "api_schema_format_think_false",
+      "runtime_seconds": 2.648,
+      "task": {
+        "difficulty": "easy",
+        "expected_output_shape": {
+          "candidate_id": "string",
+          "certified_safety_claim": false,
+          "evidence_basis": [
+            "string"
+          ],
+          "huggingface_upload_performed": false,
+          "limitations": [
+            "string"
+          ],
+          "marketplace_upload_performed": false,
+          "not_claimed": [
+            "string"
+          ],
+          "open_problem_claim": false,
+          "petal_api_upload_performed": false,
+          "production_controller_claim": false,
+          "production_marketplace_modified": false,
+          "public_claim": false,
+          "public_ready": false,
+          "status": "INTERNAL_DRAFT_CANDIDATE | BLOCKED_WITH_EXACT_FIX_LIST | READY_FOR_HUMAN_REPAIR_REVIEW",
+          "theorem_proof_claim": false
+        },
+        "expected_schema": "CapCard structured task result",
+        "family": "petal_row_generation",
+        "forbidden_claims": [
+          "theorem proved",
+          "open problem solved",
+          "certified safety",
+          "production controller",
+          "PETAL verified",
+          "Hugging Face uploaded",
+          "marketplace upload performed",
+          "fine-tune performed",
+          "cloud model used"
+        ],
+        "hf_upload_allowed": false,
+        "petal_upload_allowed": false,
+        "production_marketplace_allowed": false,
+        "prompt": "Draft a PETAL-style local row for an internal puzzle evidence object without upload. Task index 3. Handle contradictory evidence carefully. Return JSON only. Keep CapCard private/internal. Do not mark warning rows as accepted without direct repair evidence. Do not fake unknown solver status as solved. Do not use stale Command Center references as direct evidence. Set upload, public, certified safety, production controller, and theorem claim fields to false. The known blocker is row 2/3 warn+unknown without accepted repair evidence. Return a single JSON object.",
+        "public_ready_allowed": false,
+        "repair_allowed": true,
+        "scoring_rules": [
+          "valid_json",
+          "required_fields_present",
+          "upload_fields_false",
+          "public_fields_false",
+          "no_forbidden_claims",
+          "warn_row_not_auto_accepted",
+          "unknown_solver_not_faked",
+          "stale_reference_not_direct_evidence"
+        ],
+        "task_id": "qwen_capcard_v4_003"
+      },
+      "task_id": "qwen_capcard_v4_003"
+    }
+  ],
+  "task_id": "qwen_capcard_v4_003"
+}

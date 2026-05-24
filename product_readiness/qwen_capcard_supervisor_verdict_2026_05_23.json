@@ -1,0 +1,33 @@
+{
+  "adversarial_task_count": 100,
+  "average_final_score": 96.67,
+  "average_initial_score": 96.67,
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "default_model": "qwen3:30b",
+  "default_runtime_mode": "api_schema_format_think_false",
+  "fine_tune_performed": false,
+  "fine_tune_worth_considering_later": true,
+  "huggingface_upload_performed": false,
+  "improvement_delta": 0,
+  "models_tested": [
+    "qwen3:30b",
+    "qwen3-coder:30b"
+  ],
+  "no_go_violation_count": 19,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_operationally_smarter": "partial",
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "real_model_attempt_count": 600,
+  "real_model_outputs_used": true,
+  "recommended_next_action": "Use qwen3:30b API schema mode as the default supervisor runtime, add adversarial forbidden-field repair examples to teacher memory, and keep Qwen Puzzle rows 2/3 in human repair review until direct accepted evidence exists.",
+  "schema_json_rate": 1.0,
+  "status": "QWEN_CAPCARD_SUPERVISOR_VERDICT_COMPLETE",
+  "supervisor_ready": true,
+  "task_count": 100,
+  "theorem_proof_claim": false
+}

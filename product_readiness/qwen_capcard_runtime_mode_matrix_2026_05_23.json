@@ -1,0 +1,111 @@
+{
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "matrix_id": "qwen_capcard_runtime_mode_matrix_2026_05_23",
+  "models": [
+    "qwen3:30b",
+    "qwen3-coder:30b"
+  ],
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_ready": false,
+  "rows": [
+    {
+      "available": true,
+      "average_score": 82.5,
+      "median_latency": 4.89,
+      "model": "qwen3:30b",
+      "no_go_violation_count": 1,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "api_schema_format_think_false",
+      "schema_json_rate": 1.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 0.0,
+      "median_latency": 2.49,
+      "model": "qwen3:30b",
+      "no_go_violation_count": 0,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "api_schema_format",
+      "schema_json_rate": 0.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 0.0,
+      "median_latency": 30.008,
+      "model": "qwen3:30b",
+      "no_go_violation_count": 0,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "cli_think_false",
+      "schema_json_rate": 0.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 0.0,
+      "median_latency": 18.25,
+      "model": "qwen3:30b",
+      "no_go_violation_count": 0,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "cli_hide_thinking",
+      "schema_json_rate": 0.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 82.5,
+      "median_latency": 5.315,
+      "model": "qwen3-coder:30b",
+      "no_go_violation_count": 1,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "api_schema_format_think_false",
+      "schema_json_rate": 1.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 82.5,
+      "median_latency": 2.506,
+      "model": "qwen3-coder:30b",
+      "no_go_violation_count": 1,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "api_schema_format",
+      "schema_json_rate": 1.0,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 50.0,
+      "median_latency": 2.453,
+      "model": "qwen3-coder:30b",
+      "no_go_violation_count": 0,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "cli_think_false",
+      "schema_json_rate": 0.5,
+      "startup_success": true
+    },
+    {
+      "available": true,
+      "average_score": 0.0,
+      "median_latency": 2.639,
+      "model": "qwen3-coder:30b",
+      "no_go_violation_count": 0,
+      "notes": "local runtime mode probe",
+      "runtime_mode": "cli_hide_thinking",
+      "schema_json_rate": 0.0,
+      "startup_success": true
+    }
+  ],
+  "runtime_modes_tested": [
+    "api_schema_format_think_false",
+    "api_schema_format",
+    "cli_think_false",
+    "cli_hide_thinking"
+  ],
+  "runtime_seconds": 137.11,
+  "status": "PASS"
+}

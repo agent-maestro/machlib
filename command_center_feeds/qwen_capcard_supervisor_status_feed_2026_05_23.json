@@ -1,0 +1,22 @@
+{
+  "deploy_performed": false,
+  "feed_id": "qwen_capcard_supervisor_status_feed_2026_05_23",
+  "items": [
+    {
+      "card_id": "qwen_capcard_supervisor_status_card_2026_05_23",
+      "default_model": "qwen3:30b",
+      "default_runtime_mode": "api_schema_format_think_false",
+      "deploy_performed": false,
+      "public_claim": false,
+      "real_model_attempt_count": 600,
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "schema_json_rate": 1.0,
+      "status": "QWEN_CAPCARD_SUPERVISOR_VERDICT_COMPLETE",
+      "surface": "command.monogate.dev",
+      "visibility": "internal"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

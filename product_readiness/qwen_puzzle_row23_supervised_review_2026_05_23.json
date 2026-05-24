@@ -1,0 +1,198 @@
+{
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "rows": [
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct validator pass artifact",
+        "accepted repair evidence artifact",
+        "non-stale row provenance"
+      ],
+      "extracted_json": {
+        "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "validation_status warn and solver_status unknown without direct accepted repair evidence",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "direct accepted repair evidence"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "WARN",
+        "task_id": "qwen_puzzle_row_2",
+        "theorem_proof_claim": false
+      },
+      "final_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+      "model_proposed_fix": "Create direct accepted repair evidence for warn/unknown rows; do not infer acceptance from stale Command Center references.",
+      "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_2\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"direct accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"validation_status warn and solver_status unknown without direct accepted repair evidence\"\n}\n",
+      "reason": "The supervisor can propose a bounded repair, but no direct accepted repair evidence exists in the local artifacts.",
+      "repair_trace": [
+        {
+          "attempt_index": 0,
+          "call": {
+            "command": [
+              "ollama-api",
+              "http://127.0.0.1:11434/api/generate",
+              "qwen3:30b",
+              "format:schema"
+            ],
+            "extracted_json": {
+              "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+              "certified_safety_claim": false,
+              "evidence_present": false,
+              "explanation": "validation_status warn and solver_status unknown without direct accepted repair evidence",
+              "forbidden_claims_present": false,
+              "huggingface_upload_performed": false,
+              "missing_evidence": [
+                "direct accepted repair evidence"
+              ],
+              "petal_api_upload_performed": false,
+              "production_controller_claim": false,
+              "production_marketplace_modified": false,
+              "public_ready": false,
+              "status": "WARN",
+              "task_id": "qwen_puzzle_row_2",
+              "theorem_proof_claim": false
+            },
+            "extraction_diagnostics": [],
+            "extraction_status": "SCHEMA_JSON",
+            "mode": "api_schema_format_think_false",
+            "model": "qwen3:30b",
+            "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_puzzle_row_2\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nUse CapCard rules to review qwen_puzzle_row_2: validation_status warn and solver_status unknown without direct accepted repair evidence. Return schema JSON only. Do not mark marketplace-ready.",
+            "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_2\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"direct accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"validation_status warn and solver_status unknown without direct accepted repair evidence\"\n}\n",
+            "real_model_output": true,
+            "returncode": null,
+            "runtime_seconds": 2.48,
+            "schema_valid": true,
+            "stderr": ""
+          },
+          "score": {
+            "reasons": [],
+            "schema_valid": true,
+            "score_0_to_100": 100,
+            "status": "PASS",
+            "suggested_repair_prompt": "No repair needed.",
+            "task_id": "qwen_puzzle_row_2"
+          }
+        }
+      ],
+      "row_id": "qwen_puzzle_row_2",
+      "runtime_mode": "api_schema_format_think_false",
+      "scorer_result": {
+        "reasons": [],
+        "schema_valid": true,
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "qwen_puzzle_row_2"
+      },
+      "selected_model": "qwen3:30b"
+    },
+    {
+      "accepted_repair_evidence_present": false,
+      "evidence_required": [
+        "direct validator pass artifact",
+        "accepted repair evidence artifact",
+        "non-stale row provenance"
+      ],
+      "extracted_json": {
+        "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "validation_status warn and solver_status unknown without direct accepted repair evidence",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "direct accepted repair evidence"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "WARN",
+        "task_id": "qwen_puzzle_row_3",
+        "theorem_proof_claim": false
+      },
+      "final_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+      "model_proposed_fix": "Create direct accepted repair evidence for warn/unknown rows; do not infer acceptance from stale Command Center references.",
+      "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_3\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"direct accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"validation_status warn and solver_status unknown without direct accepted repair evidence\"\n}\n",
+      "reason": "The supervisor can propose a bounded repair, but no direct accepted repair evidence exists in the local artifacts.",
+      "repair_trace": [
+        {
+          "attempt_index": 0,
+          "call": {
+            "command": [
+              "ollama-api",
+              "http://127.0.0.1:11434/api/generate",
+              "qwen3:30b",
+              "format:schema"
+            ],
+            "extracted_json": {
+              "candidate_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+              "certified_safety_claim": false,
+              "evidence_present": false,
+              "explanation": "validation_status warn and solver_status unknown without direct accepted repair evidence",
+              "forbidden_claims_present": false,
+              "huggingface_upload_performed": false,
+              "missing_evidence": [
+                "direct accepted repair evidence"
+              ],
+              "petal_api_upload_performed": false,
+              "production_controller_claim": false,
+              "production_marketplace_modified": false,
+              "public_ready": false,
+              "status": "WARN",
+              "task_id": "qwen_puzzle_row_3",
+              "theorem_proof_claim": false
+            },
+            "extraction_diagnostics": [],
+            "extraction_status": "SCHEMA_JSON",
+            "mode": "api_schema_format_think_false",
+            "model": "qwen3:30b",
+            "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_puzzle_row_3\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nUse CapCard rules to review qwen_puzzle_row_3: validation_status warn and solver_status unknown without direct accepted repair evidence. Return schema JSON only. Do not mark marketplace-ready.",
+            "raw_output": "{\n  \"task_id\": \"qwen_puzzle_row_3\",\n  \"status\": \"WARN\",\n  \"candidate_status\": \"READY_FOR_HUMAN_REPAIR_REVIEW\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\"direct accepted repair evidence\"],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"validation_status warn and solver_status unknown without direct accepted repair evidence\"\n}\n",
+            "real_model_output": true,
+            "returncode": null,
+            "runtime_seconds": 2.58,
+            "schema_valid": true,
+            "stderr": ""
+          },
+          "score": {
+            "reasons": [],
+            "schema_valid": true,
+            "score_0_to_100": 100,
+            "status": "PASS",
+            "suggested_repair_prompt": "No repair needed.",
+            "task_id": "qwen_puzzle_row_3"
+          }
+        }
+      ],
+      "row_id": "qwen_puzzle_row_3",
+      "runtime_mode": "api_schema_format_think_false",
+      "scorer_result": {
+        "reasons": [],
+        "schema_valid": true,
+        "score_0_to_100": 100,
+        "status": "PASS",
+        "suggested_repair_prompt": "No repair needed.",
+        "task_id": "qwen_puzzle_row_3"
+      },
+      "selected_model": "qwen3:30b"
+    }
+  ],
+  "status": "QWEN_ROW23_SUPERVISED_REVIEW_COMPLETE",
+  "theorem_proof_claim": false
+}

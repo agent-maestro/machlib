@@ -1,0 +1,315 @@
+{
+  "dataset_id": "qwen_capcard_supervisor_dataset_DRAFT_2026_05_23",
+  "dataset_publish_performed": false,
+  "example_count": 50,
+  "examples": [
+    {
+      "family": "petal_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_001"
+    },
+    {
+      "family": "petal_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_002"
+    },
+    {
+      "family": "petal_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_003"
+    },
+    {
+      "family": "petal_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_004"
+    },
+    {
+      "family": "petal_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_005"
+    },
+    {
+      "family": "capcard_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_006"
+    },
+    {
+      "family": "capcard_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_007"
+    },
+    {
+      "family": "capcard_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_008"
+    },
+    {
+      "family": "capcard_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_009"
+    },
+    {
+      "family": "capcard_row_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_010"
+    },
+    {
+      "family": "qwen_warn_row_repair",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_011"
+    },
+    {
+      "family": "qwen_warn_row_repair",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_012"
+    },
+    {
+      "family": "qwen_warn_row_repair",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_013"
+    },
+    {
+      "family": "qwen_warn_row_repair",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_014"
+    },
+    {
+      "family": "qwen_warn_row_repair",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_015"
+    },
+    {
+      "family": "unknown_solver_status_handling",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_016"
+    },
+    {
+      "family": "unknown_solver_status_handling",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_017"
+    },
+    {
+      "family": "unknown_solver_status_handling",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_018"
+    },
+    {
+      "family": "unknown_solver_status_handling",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_019"
+    },
+    {
+      "family": "unknown_solver_status_handling",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_020"
+    },
+    {
+      "family": "stale_reference_detection",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_021"
+    },
+    {
+      "family": "stale_reference_detection",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_022"
+    },
+    {
+      "family": "stale_reference_detection",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_023"
+    },
+    {
+      "family": "stale_reference_detection",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_024"
+    },
+    {
+      "family": "stale_reference_detection",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_025"
+    },
+    {
+      "family": "no_go_boundary_resistance",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_026"
+    },
+    {
+      "family": "no_go_boundary_resistance",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_027"
+    },
+    {
+      "family": "no_go_boundary_resistance",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_028"
+    },
+    {
+      "family": "no_go_boundary_resistance",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_029"
+    },
+    {
+      "family": "no_go_boundary_resistance",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_030"
+    },
+    {
+      "family": "bounded_curriculum_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_031"
+    },
+    {
+      "family": "bounded_curriculum_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_032"
+    },
+    {
+      "family": "bounded_curriculum_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_033"
+    },
+    {
+      "family": "bounded_curriculum_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_034"
+    },
+    {
+      "family": "bounded_curriculum_generation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_035"
+    },
+    {
+      "family": "evidence_summary",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_036"
+    },
+    {
+      "family": "evidence_summary",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_037"
+    },
+    {
+      "family": "evidence_summary",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_038"
+    },
+    {
+      "family": "evidence_summary",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_039"
+    },
+    {
+      "family": "evidence_summary",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_040"
+    },
+    {
+      "family": "validator_error_explanation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_041"
+    },
+    {
+      "family": "validator_error_explanation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_042"
+    },
+    {
+      "family": "validator_error_explanation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_043"
+    },
+    {
+      "family": "validator_error_explanation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_044"
+    },
+    {
+      "family": "validator_error_explanation",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_045"
+    },
+    {
+      "family": "internal_marketplace_readiness_classification",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_046"
+    },
+    {
+      "family": "internal_marketplace_readiness_classification",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_047"
+    },
+    {
+      "family": "internal_marketplace_readiness_classification",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_048"
+    },
+    {
+      "family": "internal_marketplace_readiness_classification",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_049"
+    },
+    {
+      "family": "internal_marketplace_readiness_classification",
+      "reasons": [],
+      "score": null,
+      "task_id": "qwen_capcard_v4_050"
+    }
+  ],
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "private_secrets_included": false,
+  "public_claim": false,
+  "source": "qwen_capcard_supervised_gauntlet_2026_05_23 sanitized failure/repair candidates",
+  "status": "DRAFT_FOR_FUTURE_HUMAN_REVIEW_ONLY",
+  "training_performed": false
+}

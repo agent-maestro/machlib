@@ -1,0 +1,34 @@
+{
+  "ask_human_when": [
+    "direct evidence missing",
+    "warn row with unknown solver status",
+    "stale reference is the only support",
+    "marketplace readiness is requested"
+  ],
+  "cannot_auto_promote": [
+    "Qwen Puzzle Curriculum Pack",
+    "public-ready CapCard candidates",
+    "certified safety claims",
+    "production controller claims"
+  ],
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "human_review_candidate_rule": "Schema-valid PASS outputs can become human-review candidates only when evidence is traceable and forbidden/action fields are false.",
+  "max_attempts_per_task": 3,
+  "max_timeout_seconds": 30,
+  "petal_api_upload_performed": false,
+  "policy_id": "qwen_capcard_local_policy_pack_2026_05_23",
+  "production_marketplace_modified": false,
+  "public_ready": false,
+  "recommended_default_model": "qwen3:30b",
+  "recommended_default_runtime_mode": "api_schema_format_think_false",
+  "status": "LOCAL_POLICY_PACK_READY",
+  "stop_on": [
+    "token_like_secret",
+    "petal_or_hf_upload_true",
+    "certified_safety_true",
+    "production_controller_true",
+    "theorem_proof_claim_true"
+  ]
+}
