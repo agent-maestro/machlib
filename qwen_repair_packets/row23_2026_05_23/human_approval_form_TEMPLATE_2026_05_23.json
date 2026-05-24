@@ -1,0 +1,45 @@
+{
+  "accepted_repair_applied": false,
+  "acknowledgements": {
+    "no_certified_safety_claim": false,
+    "no_hf_upload": false,
+    "no_petal_upload": false,
+    "no_production_controller_claim": false,
+    "no_production_marketplace_change": false,
+    "no_public_claim": false,
+    "no_theorem_proof_claim": false
+  },
+  "allowed_pack_decisions": [
+    "keep_blocked",
+    "ready_for_internal_marketplace_review",
+    "request_more_evidence"
+  ],
+  "allowed_row_2_decisions": [
+    "accept_repair_internal",
+    "request_more_evidence",
+    "keep_blocked"
+  ],
+  "allowed_row_3_decisions": [
+    "accept_repair_internal",
+    "request_more_evidence",
+    "keep_blocked"
+  ],
+  "certified_safety_claim": false,
+  "huggingface_upload_performed": false,
+  "human_decision_applied": false,
+  "instructions": "Human reviewer must fill all reviewer fields, choose row and pack decisions, and set acknowledgements true in a separate completed decision file. This template is not a decision.",
+  "marketplace_promotion_performed": false,
+  "pack_decision": "TEMPLATE_NOT_COMPLETED",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "review_date": "TO_BE_FILLED_BY_HUMAN",
+  "reviewer_id": "TO_BE_FILLED_BY_HUMAN",
+  "reviewer_role": "TO_BE_FILLED_BY_HUMAN",
+  "row_2_decision": "TEMPLATE_NOT_COMPLETED",
+  "row_3_decision": "TEMPLATE_NOT_COMPLETED",
+  "template_id": "qwen_row23_human_approval_form_TEMPLATE_2026_05_23",
+  "template_only": true,
+  "theorem_proof_claim": false
+}

@@ -1,0 +1,17 @@
+{
+  "card_id": "qwen_row23_human_repair_review_card_2026_05_23",
+  "deploy_performed": false,
+  "human_decision_applied": false,
+  "marketplace_promotion_performed": false,
+  "pack_status_before_human_decision": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "public_claim": false,
+  "rows_ready_for_review": [
+    "row_2",
+    "row_3"
+  ],
+  "safe_to_display_internally": true,
+  "safe_to_publish_publicly": false,
+  "status": "WAITING_FOR_HUMAN_REPAIR_DECISION",
+  "surface": "command.monogate.dev",
+  "visibility": "internal"
+}

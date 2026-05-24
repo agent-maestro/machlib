@@ -1,0 +1,31 @@
+{
+  "accepted_repair_applied": false,
+  "human_decision_applied": false,
+  "marketplace_promotion_performed": false,
+  "matrix_id": "qwen_row23_before_after_matrix_2026_05_23",
+  "rows": [
+    {
+      "after_solver_status": "sat",
+      "after_validation_status": "pass",
+      "before_solver_status": "unknown",
+      "before_validation_status": "warn",
+      "direct_evidence_path": "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_2_direct_evidence_2026_05_23.json",
+      "final_decision_pending": true,
+      "human_review_required": true,
+      "row_id": "row_2",
+      "source_row": 2
+    },
+    {
+      "after_solver_status": "sat",
+      "after_validation_status": "pass",
+      "before_solver_status": "unknown",
+      "before_validation_status": "warn",
+      "direct_evidence_path": "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_3_direct_evidence_2026_05_23.json",
+      "final_decision_pending": true,
+      "human_review_required": true,
+      "row_id": "row_3",
+      "source_row": 3
+    }
+  ],
+  "status": "PASS"
+}
