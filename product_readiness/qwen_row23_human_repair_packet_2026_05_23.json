@@ -1,0 +1,39 @@
+{
+  "candidate_id": "qwen_puzzle_curriculum_pack",
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "direct_repair_evidence_found": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "missing_evidence_manifest": "product_readiness/qwen_row23_missing_evidence_manifest_2026_05_23.json",
+  "packet_id": "qwen_row23_human_repair_packet_2026_05_23",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "recommended_human_actions": [
+    "Open original accepted_internal_capcard_pack_rows.jsonl source artifact from the Qwen evidence ledger if available outside MachLib.",
+    "Repair or replace rows 2 and 3 with direct validator-supported evidence.",
+    "Add a bounded human acceptance note if unknown solver status is intentionally retained.",
+    "Re-run CapCard marketplace validator after direct evidence is added."
+  ],
+  "rows": [
+    {
+      "human_action": "supply or create accepted repair evidence, or demote/replace row",
+      "row": 2,
+      "status": "STILL_BLOCKED"
+    },
+    {
+      "human_action": "supply or create accepted repair evidence, or demote/replace row",
+      "row": 3,
+      "status": "STILL_BLOCKED"
+    }
+  ],
+  "safe_for_human_review": true,
+  "source_inventory": "product_readiness/qwen_row23_source_artifact_inventory_2026_05_23.json",
+  "status": "HUMAN_REPAIR_PACKET_READY_MISSING_EVIDENCE",
+  "supervisor_classification": "product_readiness/qwen_row23_supervisor_evidence_classification_2026_05_23.json",
+  "theorem_proof_claim": false
+}

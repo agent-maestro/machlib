@@ -1,0 +1,21 @@
+{
+  "deploy_performed": false,
+  "feed_id": "qwen_row23_repair_packet_feed_2026_05_23",
+  "items": [
+    {
+      "candidate_id": "qwen_puzzle_curriculum_pack",
+      "card_id": "qwen_row23_repair_packet_card_2026_05_23",
+      "deploy_performed": false,
+      "direct_repair_evidence_found": false,
+      "public_claim": false,
+      "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "status": "HUMAN_REPAIR_PACKET_READY_MISSING_EVIDENCE",
+      "surface": "command.monogate.dev",
+      "visibility": "internal"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

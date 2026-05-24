@@ -1,0 +1,44 @@
+{
+  "candidate_id": "qwen_puzzle_curriculum_pack",
+  "certified_safety_claim": false,
+  "cloud_model_used": false,
+  "direct_repair_evidence_found": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "manifest_id": "qwen_row23_missing_evidence_manifest_2026_05_23",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "row_blockers": [
+    {
+      "final_status": "STILL_BLOCKED",
+      "missing_evidence": [
+        "accepted repair evidence artifact",
+        "direct validator pass artifact or bounded human acceptance note",
+        "non-stale source-row provenance"
+      ],
+      "row": 2,
+      "solver_status": "unknown",
+      "source": "accepted_internal_capcard_pack_rows.jsonl",
+      "validation_status": "warn"
+    },
+    {
+      "final_status": "STILL_BLOCKED",
+      "missing_evidence": [
+        "accepted repair evidence artifact",
+        "direct validator pass artifact or bounded human acceptance note",
+        "non-stale source-row provenance"
+      ],
+      "row": 3,
+      "solver_status": "unknown",
+      "source": "accepted_internal_capcard_pack_rows.jsonl",
+      "validation_status": "warn"
+    }
+  ],
+  "stale_reference_rule": "Command Center pasted rows or stale references cannot count as direct evidence.",
+  "status": "MISSING_DIRECT_REPAIR_EVIDENCE",
+  "theorem_proof_claim": false
+}

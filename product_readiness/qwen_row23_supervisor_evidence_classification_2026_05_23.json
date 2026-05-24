@@ -1,0 +1,143 @@
+{
+  "certified_safety_claim": false,
+  "classification_id": "qwen_row23_supervisor_evidence_classification_2026_05_23",
+  "classifier_decision": "NO_DIRECT_REPAIR_EVIDENCE_FOUND",
+  "cloud_model_used": false,
+  "fine_tune_performed": false,
+  "huggingface_upload_performed": false,
+  "inventory_summary": {
+    "artifact_count": 3839,
+    "direct_evidence_candidate_count": 0,
+    "direct_repair_evidence_found": false,
+    "files_scanned": 7448,
+    "row2_relevant_count": 745,
+    "row3_relevant_count": 38,
+    "stale_reference_only_count": 102
+  },
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_puzzle_curriculum_pack_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+  "real_model_output_used": true,
+  "runtime_mode": "api_schema_format_think_false",
+  "selected_model": "qwen3:30b",
+  "status": "QWEN_ROW23_EVIDENCE_CLASSIFICATION_COMPLETE",
+  "supervisor_result": {
+    "attempt_count": 1,
+    "attempts": [
+      {
+        "attempt_index": 0,
+        "call": {
+          "command": [
+            "ollama-api",
+            "http://127.0.0.1:11434/api/generate",
+            "qwen3:30b",
+            "format:schema"
+          ],
+          "extracted_json": {
+            "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+            "certified_safety_claim": false,
+            "evidence_present": false,
+            "explanation": "direct_evidence_candidate_count is zero, so no direct repair evidence available; pack remains blocked with missing evidence listed",
+            "forbidden_claims_present": false,
+            "huggingface_upload_performed": false,
+            "missing_evidence": [
+              "direct repair evidence"
+            ],
+            "petal_api_upload_performed": false,
+            "production_controller_claim": false,
+            "production_marketplace_modified": false,
+            "public_ready": false,
+            "status": "BLOCKED",
+            "task_id": "qwen_row23_evidence_classification",
+            "theorem_proof_claim": false
+          },
+          "extraction_diagnostics": [],
+          "extraction_status": "SCHEMA_JSON",
+          "mode": "api_schema_format_think_false",
+          "model": "qwen3:30b",
+          "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_row23_evidence_classification\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nClassify Qwen Puzzle Curriculum Pack row 2 and row 3 repair evidence from this local inventory summary. Rows require direct accepted repair evidence. If direct_evidence_candidate_count is zero, keep the pack blocked and list missing evidence. Inventory summary: files_scanned=7448; artifact_count=3839; direct_evidence_candidate_count=0; stale_reference_only_count=102; row2_relevant_count=745; row3_relevant_count=38. Do not promote marketplace readiness. Return schema JSON only.",
+          "raw_output": "{\n  \"task_id\": \"qwen_row23_evidence_classification\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"direct repair evidence\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"direct_evidence_candidate_count is zero, so no direct repair evidence available; pack remains blocked with missing evidence listed\"\n}\n",
+          "real_model_output": true,
+          "returncode": null,
+          "runtime_seconds": 7.717,
+          "schema_valid": true,
+          "stderr": ""
+        },
+        "score": {
+          "reasons": [],
+          "schema_valid": true,
+          "score_0_to_100": 100,
+          "status": "PASS",
+          "suggested_repair_prompt": "No repair needed.",
+          "task_id": "qwen_row23_evidence_classification"
+        }
+      }
+    ],
+    "family": "source_traceability",
+    "final_call": {
+      "command": [
+        "ollama-api",
+        "http://127.0.0.1:11434/api/generate",
+        "qwen3:30b",
+        "format:schema"
+      ],
+      "extracted_json": {
+        "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "direct_evidence_candidate_count is zero, so no direct repair evidence available; pack remains blocked with missing evidence listed",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "direct repair evidence"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "BLOCKED",
+        "task_id": "qwen_row23_evidence_classification",
+        "theorem_proof_claim": false
+      },
+      "extraction_diagnostics": [],
+      "extraction_status": "SCHEMA_JSON",
+      "mode": "api_schema_format_think_false",
+      "model": "qwen3:30b",
+      "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_row23_evidence_classification\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nClassify Qwen Puzzle Curriculum Pack row 2 and row 3 repair evidence from this local inventory summary. Rows require direct accepted repair evidence. If direct_evidence_candidate_count is zero, keep the pack blocked and list missing evidence. Inventory summary: files_scanned=7448; artifact_count=3839; direct_evidence_candidate_count=0; stale_reference_only_count=102; row2_relevant_count=745; row3_relevant_count=38. Do not promote marketplace readiness. Return schema JSON only.",
+      "raw_output": "{\n  \"task_id\": \"qwen_row23_evidence_classification\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"direct repair evidence\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"direct_evidence_candidate_count is zero, so no direct repair evidence available; pack remains blocked with missing evidence listed\"\n}\n",
+      "real_model_output": true,
+      "returncode": null,
+      "runtime_seconds": 7.717,
+      "schema_valid": true,
+      "stderr": ""
+    },
+    "final_score": {
+      "reasons": [],
+      "schema_valid": true,
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_row23_evidence_classification"
+    },
+    "model": "qwen3:30b",
+    "real_model_output": true,
+    "runtime_mode": "api_schema_format_think_false",
+    "runtime_seconds": 7.717,
+    "task": {
+      "difficulty": "hard",
+      "family": "source_traceability",
+      "hf_upload_allowed": false,
+      "petal_upload_allowed": false,
+      "production_marketplace_allowed": false,
+      "prompt": "Classify Qwen Puzzle Curriculum Pack row 2 and row 3 repair evidence from this local inventory summary. Rows require direct accepted repair evidence. If direct_evidence_candidate_count is zero, keep the pack blocked and list missing evidence. Inventory summary: files_scanned=7448; artifact_count=3839; direct_evidence_candidate_count=0; stale_reference_only_count=102; row2_relevant_count=745; row3_relevant_count=38. Do not promote marketplace readiness. Return schema JSON only.",
+      "public_ready_allowed": false,
+      "repair_allowed": true,
+      "task_id": "qwen_row23_evidence_classification"
+    },
+    "task_id": "qwen_row23_evidence_classification"
+  },
+  "theorem_proof_claim": false
+}
