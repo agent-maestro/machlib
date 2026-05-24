@@ -1,0 +1,123 @@
+{
+  "blockers": [],
+  "certified_safety_claim": false,
+  "evidence": [
+    {
+      "evidence_kind": "accepted_internal_capcard_puzzle_rows",
+      "pass_row_count": 3,
+      "row_count": 3,
+      "rows": [
+        {
+          "capability_id": "eml_puzzle_kernel.exact_cover_tiny",
+          "evidence_paths": [
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/encoded_tasks/exact_cover_tiny.json",
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/puzzle_results.json"
+          ],
+          "evidence_type": "puzzle_solver_result",
+          "limitations": [
+            "Tiny pure-Python backtracking solver.",
+            "UNSAT result is a bounded toy-solver result, not a checker certificate."
+          ],
+          "marketplace_status": "internal_candidate",
+          "not_claimed": [
+            "open_math_result",
+            "theorem_result",
+            "checker_certificate",
+            "public_capability"
+          ],
+          "promotion_status": "no_go",
+          "public_ready": false,
+          "solver_status": "sat",
+          "task_family": "exact",
+          "validation_status": "pass"
+        },
+        {
+          "capability_id": "eml_puzzle_kernel.exact_cover_tiny",
+          "evidence_paths": [
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/encoded_tasks/exact_cover_tiny.json",
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/puzzle_results.json"
+          ],
+          "evidence_type": "puzzle_solver_result",
+          "limitations": [
+            "Tiny pure-Python backtracking solver.",
+            "UNSAT result is a bounded toy-solver result, not a checker certificate."
+          ],
+          "marketplace_status": "internal_candidate",
+          "not_claimed": [
+            "open_math_result",
+            "theorem_result",
+            "checker_certificate",
+            "public_capability"
+          ],
+          "promotion_status": "no_go",
+          "public_ready": false,
+          "solver_status": "sat",
+          "task_family": "exact",
+          "validation_status": "pass"
+        },
+        {
+          "capability_id": "eml_puzzle_kernel.exact_cover_tiny",
+          "evidence_paths": [
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/encoded_tasks/exact_cover_tiny.json",
+            "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/puzzle_results.json"
+          ],
+          "evidence_type": "puzzle_solver_result",
+          "limitations": [
+            "Tiny pure-Python backtracking solver.",
+            "UNSAT result is a bounded toy-solver result, not a checker certificate."
+          ],
+          "marketplace_status": "internal_candidate",
+          "not_claimed": [
+            "open_math_result",
+            "theorem_result",
+            "checker_certificate",
+            "public_capability"
+          ],
+          "promotion_status": "no_go",
+          "public_ready": false,
+          "solver_status": "sat",
+          "task_family": "exact",
+          "validation_status": "pass"
+        }
+      ],
+      "solver_status": "sat",
+      "solver_statuses": [
+        "sat"
+      ],
+      "source_path": "/home/monogate/monogate/monogate-research/exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/accepted_internal_capcard_puzzle_rows.jsonl",
+      "validation_status": "pass"
+    }
+  ],
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "row_id": "qwen_puzzle_row_2",
+  "source_row": 2,
+  "source_row_payload": {
+    "agent_id": "qwen_eml_internal_candidate_001",
+    "capability_id": "qwen_puzzle_curriculum_capcard_pack_repair",
+    "evidence_paths": [
+      "exploration/EML_Puzzle_Evidence_Ledger_2026_05_16/accepted_internal_capcard_puzzle_rows.jsonl"
+    ],
+    "evidence_type": "puzzle_curriculum_eval_result",
+    "limitations": [
+      "Bounded-scope limitation: Solver output is for a tiny toy instance, not a general solution."
+    ],
+    "marketplace_status": "internal_candidate",
+    "not_claimed": [
+      "No PETAL upload",
+      "No marketplace promotion",
+      "No Forge compiler change",
+      "No machine-checker claim"
+    ],
+    "promotion_status": "no_go",
+    "public_ready": false,
+    "solver_status": "unknown",
+    "task_family": "puzzle_curriculum_eval",
+    "validation_status": "warn"
+  },
+  "theorem_proof_claim": false
+}

@@ -1,0 +1,22 @@
+{
+  "accepted_repair_applied_automatically": false,
+  "bounded_unknown_acceptable": true,
+  "certified_safety_claim": false,
+  "direct_evidence_generated": true,
+  "direct_evidence_paths": [
+    "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_3_direct_evidence_2026_05_23.json"
+  ],
+  "final_row_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "packet_id": "qwen_puzzle_row_3_direct_rerun_packet_2026_05_23",
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "row_id": "qwen_puzzle_row_3",
+  "solver_status_after_rerun": "sat",
+  "source_row": 3,
+  "theorem_proof_claim": false,
+  "validation_status_after_rerun": "pass"
+}

@@ -1,0 +1,85 @@
+{
+  "blockers": [],
+  "certified_safety_claim": false,
+  "evidence": [
+    {
+      "assignment_if_sat": [
+        "set_c",
+        "set_d"
+      ],
+      "certified_safety_claim": false,
+      "clauses_checked": 6,
+      "evidence_kind": "encoded_task_rerun",
+      "evidence_path": "/home/monogate/monogate/monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/encoded_tasks/exact_cover_tiny.json",
+      "expected_status": "sat",
+      "huggingface_upload_performed": false,
+      "limitations": [
+        "Tiny pure-Python backtracking solver.",
+        "Bounded toy-solver rerun only; not a checker certificate."
+      ],
+      "matches_expected": true,
+      "not_claimed": [
+        "open_math_result",
+        "theorem_result",
+        "checker_certificate",
+        "public_capability"
+      ],
+      "petal_api_upload_performed": false,
+      "production_controller_claim": false,
+      "production_marketplace_modified": false,
+      "public_claim": false,
+      "public_ready": false,
+      "runtime_s": 0.0,
+      "search_nodes": 7,
+      "solver_status": "sat",
+      "task_id": "exact_cover_tiny",
+      "theorem_proof_claim": false
+    },
+    {
+      "evidence_kind": "puzzle_results_summary",
+      "matches_expected_count": 6,
+      "result_count": 6,
+      "solver_status": "sat",
+      "solver_statuses": [
+        "sat",
+        "unsat"
+      ],
+      "source_path": "/home/monogate/monogate/monogate-research/exploration/EML_Puzzle_Proof_Kernel_2026_05_16/puzzle_results.json",
+      "validation_status": "pass"
+    }
+  ],
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "row_id": "qwen_puzzle_row_3",
+  "source_row": 3,
+  "source_row_payload": {
+    "agent_id": "qwen_eml_internal_candidate_001",
+    "capability_id": "qwen_puzzle_curriculum_capcard_pack_repair",
+    "evidence_paths": [
+      "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/encoded_tasks/exact_cover_tiny.json",
+      "exploration/EML_Puzzle_Proof_Kernel_2026_05_16/puzzle_results.json"
+    ],
+    "evidence_type": "puzzle_curriculum_eval_result",
+    "limitations": [
+      "Tiny pure-Python backtracking solver.",
+      "UNSAT result is a bounded toy-solver result, not a checker certificate."
+    ],
+    "marketplace_status": "internal_candidate",
+    "not_claimed": [
+      "No PETAL upload",
+      "No marketplace promotion",
+      "No Forge compiler change",
+      "No machine-checker claim"
+    ],
+    "promotion_status": "no_go",
+    "public_ready": false,
+    "solver_status": "unknown",
+    "task_family": "puzzle_curriculum_eval",
+    "validation_status": "warn"
+  },
+  "theorem_proof_claim": false
+}

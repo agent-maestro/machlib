@@ -1,0 +1,26 @@
+{
+  "blocker": null,
+  "bounded_unknown_classification": "BOUNDED_UNKNOWN_ACCEPTABLE_FOR_REVIEW",
+  "certified_safety_claim": false,
+  "direct_evidence_generated": true,
+  "direct_evidence_paths": [
+    "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_3_direct_evidence_2026_05_23.json"
+  ],
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "reason": "direct bounded rerun evidence generated for human review",
+  "rerun_possible": true,
+  "row_id": "qwen_puzzle_row_3",
+  "solver_status_after_rerun": "sat",
+  "solver_status_before": "unknown",
+  "source_file_path": "/home/monogate/monogate/monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+  "source_present": true,
+  "source_row": 3,
+  "theorem_proof_claim": false,
+  "validation_status_after_rerun": "pass",
+  "validation_status_before": "warn"
+}

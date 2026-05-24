@@ -1,0 +1,19 @@
+{
+  "human_review_required": true,
+  "public_claim": false,
+  "review_id": "qwen_row23_solver_status_review_2026_05_23",
+  "rows": [
+    {
+      "bounded_unknown_classification": "BOUNDED_UNKNOWN_ACCEPTABLE_FOR_REVIEW",
+      "row_id": "qwen_puzzle_row_2",
+      "solver_status_after_rerun": "sat",
+      "solver_status_before": "unknown"
+    },
+    {
+      "bounded_unknown_classification": "BOUNDED_UNKNOWN_ACCEPTABLE_FOR_REVIEW",
+      "row_id": "qwen_puzzle_row_3",
+      "solver_status_after_rerun": "sat",
+      "solver_status_before": "unknown"
+    }
+  ]
+}

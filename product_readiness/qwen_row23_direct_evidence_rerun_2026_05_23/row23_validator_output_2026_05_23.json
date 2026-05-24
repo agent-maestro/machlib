@@ -1,0 +1,11 @@
+{
+  "diagnostics": [],
+  "direct_evidence_generated_count": 2,
+  "huggingface_upload_performed": false,
+  "petal_api_upload_performed": false,
+  "production_marketplace_modified": false,
+  "public_ready": false,
+  "row_count": 2,
+  "status": "pass",
+  "validator_id": "qwen_row23_validator_output_2026_05_23"
+}

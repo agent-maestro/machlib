@@ -1062,6 +1062,14 @@ def cmd_validate_supervisor_results(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_rerun_row23_evidence(args: argparse.Namespace) -> int:
+    from .row23_rerun import load_json, run_rerun
+
+    summary = run_rerun(load_json(Path(args.field_map)), Path(args.out_dir))
+    print("QWEN_ROW23_DIRECT_RERUN_OK", summary["direct_evidence_generated_count"])
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1175,6 +1183,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate_supervisor.add_argument("--verdict", required=True)
     validate_supervisor.add_argument("--strict", action="store_true")
     validate_supervisor.set_defaults(func=cmd_validate_supervisor_results)
+    row23 = sub.add_parser("rerun-row23-evidence")
+    row23.add_argument("--field-map", required=True)
+    row23.add_argument("--out-dir", required=True)
+    row23.add_argument("--strict", action="store_true")
+    row23.set_defaults(func=cmd_rerun_row23_evidence)
     return parser
 
 

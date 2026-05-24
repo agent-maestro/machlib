@@ -1,0 +1,42 @@
+{
+  "accepted_repair_applied_automatically": false,
+  "certified_safety_claim": false,
+  "decision_id": "qwen_row23_direct_repair_decision_2026_05_23",
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "rows": [
+    {
+      "bounded_unknown_acceptable": true,
+      "direct_evidence_generated": true,
+      "direct_evidence_paths": [
+        "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_2_direct_evidence_2026_05_23.json"
+      ],
+      "final_reason": "Bounded direct rerun evidence generated; human review still required and no marketplace promotion applied.",
+      "final_row_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+      "row_id": "qwen_puzzle_row_2",
+      "solver_status_after_rerun": "sat",
+      "source_row": 2,
+      "validation_status_after_rerun": "pass"
+    },
+    {
+      "bounded_unknown_acceptable": true,
+      "direct_evidence_generated": true,
+      "direct_evidence_paths": [
+        "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_3_direct_evidence_2026_05_23.json"
+      ],
+      "final_reason": "Bounded direct rerun evidence generated; human review still required and no marketplace promotion applied.",
+      "final_row_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+      "row_id": "qwen_puzzle_row_3",
+      "solver_status_after_rerun": "sat",
+      "source_row": 3,
+      "validation_status_after_rerun": "pass"
+    }
+  ],
+  "status": "QWEN_ROW23_DIRECT_REPAIR_DECISION_COMPLETE",
+  "theorem_proof_claim": false
+}

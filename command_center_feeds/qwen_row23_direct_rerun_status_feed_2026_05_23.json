@@ -1,0 +1,21 @@
+{
+  "deploy_performed": false,
+  "feed_id": "qwen_row23_direct_rerun_status_feed_2026_05_23",
+  "items": [
+    {
+      "card_id": "qwen_row23_direct_rerun_status_card_2026_05_23",
+      "deploy_performed": false,
+      "public_claim": false,
+      "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+      "row2_final_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+      "row3_final_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+      "safe_to_display_internally": true,
+      "safe_to_publish_publicly": false,
+      "status": "QWEN_ROW23_DIRECT_RERUN_STATUS_COMPLETE",
+      "surface": "command.monogate.dev",
+      "visibility": "internal"
+    }
+  ],
+  "public_claim": false,
+  "visibility": "internal"
+}

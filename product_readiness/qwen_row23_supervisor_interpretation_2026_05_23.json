@@ -1,0 +1,219 @@
+{
+  "capcard_scorer_result": {
+    "reasons": [],
+    "schema_valid": true,
+    "score_0_to_100": 100,
+    "status": "PASS",
+    "suggested_repair_prompt": "No repair needed.",
+    "task_id": "qwen_row23_direct_rerun_interpretation"
+  },
+  "certified_safety_claim": false,
+  "deterministic_final_interpretation": "DIRECT_RERUN_EVIDENCE_READY_FOR_HUMAN_REVIEW",
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "interpretation_id": "qwen_row23_supervisor_interpretation_2026_05_23",
+  "model_interpretation_can_override_rerun_facts": false,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "public_ready": false,
+  "qwen_supervisor_used": true,
+  "real_model_output_used": true,
+  "rerun_summary": {
+    "all_rows_have_direct_evidence": true,
+    "certified_safety_claim": false,
+    "direct_evidence_generated_count": 2,
+    "direct_rerun_attempted": true,
+    "huggingface_upload_performed": false,
+    "petal_api_upload_performed": false,
+    "production_controller_claim": false,
+    "production_marketplace_modified": false,
+    "public_claim": false,
+    "public_ready": false,
+    "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+    "row_results": [
+      {
+        "blocker": null,
+        "bounded_unknown_classification": "BOUNDED_UNKNOWN_ACCEPTABLE_FOR_REVIEW",
+        "certified_safety_claim": false,
+        "direct_evidence_generated": true,
+        "direct_evidence_paths": [
+          "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_2_direct_evidence_2026_05_23.json"
+        ],
+        "huggingface_upload_performed": false,
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_claim": false,
+        "public_ready": false,
+        "reason": "direct bounded rerun evidence generated for human review",
+        "rerun_possible": true,
+        "row_id": "qwen_puzzle_row_2",
+        "solver_status_after_rerun": "sat",
+        "solver_status_before": "unknown",
+        "source_file_path": "/home/monogate/monogate/monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+        "source_present": true,
+        "source_row": 2,
+        "theorem_proof_claim": false,
+        "validation_status_after_rerun": "pass",
+        "validation_status_before": "warn"
+      },
+      {
+        "blocker": null,
+        "bounded_unknown_classification": "BOUNDED_UNKNOWN_ACCEPTABLE_FOR_REVIEW",
+        "certified_safety_claim": false,
+        "direct_evidence_generated": true,
+        "direct_evidence_paths": [
+          "product_readiness/qwen_row23_direct_evidence_rerun_2026_05_23/qwen_puzzle_row_3_direct_evidence_2026_05_23.json"
+        ],
+        "huggingface_upload_performed": false,
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_claim": false,
+        "public_ready": false,
+        "reason": "direct bounded rerun evidence generated for human review",
+        "rerun_possible": true,
+        "row_id": "qwen_puzzle_row_3",
+        "solver_status_after_rerun": "sat",
+        "solver_status_before": "unknown",
+        "source_file_path": "/home/monogate/monogate/monogate-research/exploration/Qwen_Puzzle_Curriculum_Pack_Evidence_Ledger_2026_05_16/accepted_internal_capcard_pack_rows.jsonl",
+        "source_present": true,
+        "source_row": 3,
+        "theorem_proof_claim": false,
+        "validation_status_after_rerun": "pass",
+        "validation_status_before": "warn"
+      }
+    ],
+    "status": "DIRECT_RERUN_COMPLETE",
+    "summary_id": "qwen_row23_direct_evidence_summary_2026_05_23",
+    "theorem_proof_claim": false
+  },
+  "runtime_mode": "api_schema_format_think_false",
+  "selected_model": "qwen3:30b",
+  "stale_references_remain_stale": true,
+  "status": "QWEN_ROW23_SUPERVISOR_INTERPRETATION_COMPLETE",
+  "supervisor_summary": {
+    "attempt_count": 1,
+    "attempts": [
+      {
+        "attempt_index": 0,
+        "call": {
+          "command": [
+            "ollama-api",
+            "http://127.0.0.1:11434/api/generate",
+            "qwen3:30b",
+            "format:schema"
+          ],
+          "extracted_json": {
+            "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+            "certified_safety_claim": false,
+            "evidence_present": false,
+            "explanation": "Direct evidence missing as required fields not met per task instructions",
+            "forbidden_claims_present": false,
+            "huggingface_upload_performed": false,
+            "missing_evidence": [
+              "direct_evidence_generated_count=2",
+              "all_rows_have_direct_evidence=True",
+              "Both rows require human review",
+              "no marketplace promotion is allowed"
+            ],
+            "petal_api_upload_performed": false,
+            "production_controller_claim": false,
+            "production_marketplace_modified": false,
+            "public_ready": false,
+            "status": "BLOCKED",
+            "task_id": "qwen_row23_direct_rerun_interpretation",
+            "theorem_proof_claim": false
+          },
+          "extraction_diagnostics": [],
+          "extraction_status": "SCHEMA_JSON",
+          "mode": "api_schema_format_think_false",
+          "model": "qwen3:30b",
+          "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_row23_direct_rerun_interpretation\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nInterpret direct rerun output for Qwen row 2/3. Model interpretation cannot override rerun facts. direct_evidence_generated_count=2; all_rows_have_direct_evidence=True; Both rows require human review; no marketplace promotion is allowed. Return schema JSON only.",
+          "raw_output": "{\n  \"task_id\": \"qwen_row23_direct_rerun_interpretation\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"direct_evidence_generated_count=2\",\n    \"all_rows_have_direct_evidence=True\",\n    \"Both rows require human review\",\n    \"no marketplace promotion is allowed\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Direct evidence missing as required fields not met per task instructions\"\n}\n",
+          "real_model_output": true,
+          "returncode": null,
+          "runtime_seconds": 7.548,
+          "schema_valid": true,
+          "stderr": ""
+        },
+        "score": {
+          "reasons": [],
+          "schema_valid": true,
+          "score_0_to_100": 100,
+          "status": "PASS",
+          "suggested_repair_prompt": "No repair needed.",
+          "task_id": "qwen_row23_direct_rerun_interpretation"
+        }
+      }
+    ],
+    "family": "source_traceability",
+    "final_call": {
+      "command": [
+        "ollama-api",
+        "http://127.0.0.1:11434/api/generate",
+        "qwen3:30b",
+        "format:schema"
+      ],
+      "extracted_json": {
+        "candidate_status": "BLOCKED_WITH_EXACT_FIX_LIST",
+        "certified_safety_claim": false,
+        "evidence_present": false,
+        "explanation": "Direct evidence missing as required fields not met per task instructions",
+        "forbidden_claims_present": false,
+        "huggingface_upload_performed": false,
+        "missing_evidence": [
+          "direct_evidence_generated_count=2",
+          "all_rows_have_direct_evidence=True",
+          "Both rows require human review",
+          "no marketplace promotion is allowed"
+        ],
+        "petal_api_upload_performed": false,
+        "production_controller_claim": false,
+        "production_marketplace_modified": false,
+        "public_ready": false,
+        "status": "BLOCKED",
+        "task_id": "qwen_row23_direct_rerun_interpretation",
+        "theorem_proof_claim": false
+      },
+      "extraction_diagnostics": [],
+      "extraction_status": "SCHEMA_JSON",
+      "mode": "api_schema_format_think_false",
+      "model": "qwen3:30b",
+      "prompt": "Return one JSON object that validates against this JSON Schema. No markdown, no prose, no hidden reasoning text in the response.\nTask id: qwen_row23_direct_rerun_interpretation\nIf evidence is missing, set evidence_present false and list missing_evidence. Never invent acceptance. Keep every upload, public, proof, safety, and production field false.\nSchema:\n{\"additionalProperties\": false, \"properties\": {\"candidate_status\": {\"enum\": [\"BLOCKED_WITH_EXACT_FIX_LIST\", \"READY_FOR_HUMAN_REPAIR_REVIEW\", \"INTERNAL_DRAFT_CANDIDATE\"], \"type\": \"string\"}, \"certified_safety_claim\": {\"const\": false, \"type\": \"boolean\"}, \"evidence_present\": {\"type\": \"boolean\"}, \"explanation\": {\"type\": \"string\"}, \"forbidden_claims_present\": {\"const\": false, \"type\": \"boolean\"}, \"huggingface_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"missing_evidence\": {\"items\": {\"type\": \"string\"}, \"type\": \"array\"}, \"petal_api_upload_performed\": {\"const\": false, \"type\": \"boolean\"}, \"production_controller_claim\": {\"const\": false, \"type\": \"boolean\"}, \"production_marketplace_modified\": {\"const\": false, \"type\": \"boolean\"}, \"public_ready\": {\"const\": false, \"type\": \"boolean\"}, \"status\": {\"enum\": [\"PASS\", \"WARN\", \"FAIL\", \"BLOCKED\"], \"type\": \"string\"}, \"task_id\": {\"type\": \"string\"}, \"theorem_proof_claim\": {\"const\": false, \"type\": \"boolean\"}}, \"required\": [\"task_id\", \"status\", \"candidate_status\", \"evidence_present\", \"missing_evidence\", \"forbidden_claims_present\", \"public_ready\", \"petal_api_upload_performed\", \"huggingface_upload_performed\", \"production_marketplace_modified\", \"theorem_proof_claim\", \"certified_safety_claim\", \"production_controller_claim\", \"explanation\"], \"type\": \"object\"}\nTask:\nInterpret direct rerun output for Qwen row 2/3. Model interpretation cannot override rerun facts. direct_evidence_generated_count=2; all_rows_have_direct_evidence=True; Both rows require human review; no marketplace promotion is allowed. Return schema JSON only.",
+      "raw_output": "{\n  \"task_id\": \"qwen_row23_direct_rerun_interpretation\",\n  \"status\": \"BLOCKED\",\n  \"candidate_status\": \"BLOCKED_WITH_EXACT_FIX_LIST\",\n  \"evidence_present\": false,\n  \"missing_evidence\": [\n    \"direct_evidence_generated_count=2\",\n    \"all_rows_have_direct_evidence=True\",\n    \"Both rows require human review\",\n    \"no marketplace promotion is allowed\"\n  ],\n  \"forbidden_claims_present\": false,\n  \"public_ready\": false,\n  \"petal_api_upload_performed\": false,\n  \"huggingface_upload_performed\": false,\n  \"production_marketplace_modified\": false,\n  \"theorem_proof_claim\": false,\n  \"certified_safety_claim\": false,\n  \"production_controller_claim\": false,\n  \"explanation\": \"Direct evidence missing as required fields not met per task instructions\"\n}\n",
+      "real_model_output": true,
+      "returncode": null,
+      "runtime_seconds": 7.548,
+      "schema_valid": true,
+      "stderr": ""
+    },
+    "final_score": {
+      "reasons": [],
+      "schema_valid": true,
+      "score_0_to_100": 100,
+      "status": "PASS",
+      "suggested_repair_prompt": "No repair needed.",
+      "task_id": "qwen_row23_direct_rerun_interpretation"
+    },
+    "model": "qwen3:30b",
+    "real_model_output": true,
+    "runtime_mode": "api_schema_format_think_false",
+    "runtime_seconds": 7.549,
+    "task": {
+      "difficulty": "hard",
+      "family": "source_traceability",
+      "hf_upload_allowed": false,
+      "petal_upload_allowed": false,
+      "production_marketplace_allowed": false,
+      "prompt": "Interpret direct rerun output for Qwen row 2/3. Model interpretation cannot override rerun facts. direct_evidence_generated_count=2; all_rows_have_direct_evidence=True; Both rows require human review; no marketplace promotion is allowed. Return schema JSON only.",
+      "public_ready_allowed": false,
+      "repair_allowed": true,
+      "task_id": "qwen_row23_direct_rerun_interpretation"
+    },
+    "task_id": "qwen_row23_direct_rerun_interpretation"
+  },
+  "theorem_proof_claim": false
+}

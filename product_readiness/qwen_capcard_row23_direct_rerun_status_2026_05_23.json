@@ -1,0 +1,18 @@
+{
+  "accepted_repair_applied_automatically": false,
+  "certified_safety_claim": false,
+  "direct_rerun_attempted": true,
+  "huggingface_upload_performed": false,
+  "human_review_required": true,
+  "petal_api_upload_performed": false,
+  "production_controller_claim": false,
+  "production_marketplace_modified": false,
+  "public_claim": false,
+  "qwen_puzzle_curriculum_pack_status": "READY_FOR_HUMAN_REPAIR_REVIEW",
+  "qwen_supervisor_used": true,
+  "row2_final_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+  "row3_final_status": "REPAIRED_BY_DIRECT_RERUN_EVIDENCE",
+  "status": "QWEN_ROW23_DIRECT_RERUN_STATUS_COMPLETE",
+  "status_id": "qwen_capcard_row23_direct_rerun_status_2026_05_23",
+  "theorem_proof_claim": false
+}
