@@ -19,6 +19,7 @@ import MachLib.ProofSpine
 import MachLib.PolynomialEvidence
 import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
+import MachLib.PolynomialRootCount
 
 /-!
 # MachLib — top-level aggregator
@@ -84,6 +85,9 @@ The independent foundations for machine-native formal mathematics.
                                   identity theorem claim.
   * `MachLib.FiniteZeroPacket`   — sample finite-zero evidence packets
                                   over the tiny polynomial AST.
+  * `MachLib.PolynomialRootCount` — first degree/root-count primitives
+                                  and a checked linear-factor root-count
+                                  foothold.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
