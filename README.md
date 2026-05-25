@@ -3,9 +3,10 @@
 [![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
 
 A machine-native Lean/EML library with zero Mathlib dependency in the current
-public default tree and release target. Records may include verification
-metadata and Lean-check status; verification status is recorded per release
-snapshot.
+public default tree and release target. MachLib is Monogate's compact Lean
+check target: a small verification layer for EML/Forge artifacts, not a Mathlib
+replacement. Records may include verification metadata and
+Lean-check status; verification status is recorded per release snapshot.
 
 ## Install
 

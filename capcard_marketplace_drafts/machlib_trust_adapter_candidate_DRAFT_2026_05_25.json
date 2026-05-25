@@ -1,0 +1,36 @@
+{
+  "candidate_id": "machlib_trust_adapter_candidate_DRAFT_2026_05_25",
+  "title": "MachLib Trust Adapter",
+  "classification": "INTERNAL_DRAFT_CANDIDATE",
+  "visibility": "internal",
+  "summary": "MachLib acts as a compact Lean check target for EML/Forge artifacts with zero-Mathlib release gates and explicit evidence boundaries.",
+  "evidence_paths": [
+    "README.md",
+    "PHILOSOPHY.md",
+    "docs/forge_machlib_contract_2026_05_25.md",
+    "product_readiness/machlib_identity_audit_2026_05_25.json",
+    "reports/machlib_identity_audit_2026_05_25.md"
+  ],
+  "recommended_use": [
+    "Describe MachLib as a Lean-check target for EML/Forge artifacts.",
+    "Use MachLib proof-pattern language in CapCard/playbook copy.",
+    "Require zero-Mathlib gate evidence before release-target claims."
+  ],
+  "not_claimed": [
+    "not a Mathlib replacement",
+    "certified safety",
+    "production controller",
+    "public theorem result without reviewed artifact",
+    "production marketplace promotion"
+  ],
+  "public_ready": false,
+  "marketplace_ready": false,
+  "safe_to_publish_publicly": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "public_theorem_claim": false
+}

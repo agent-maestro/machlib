@@ -102,9 +102,9 @@ one moves into the other. The Lean kernel is the lingua franca.
 
 ## Honest about what we don't have
 
-  - The independent foundations are partial. v0.1 still imports
-    Mathlib for exp / ln / trig. Phase 1 replaces those imports
-    with self-contained 3,400-line foundations.
+  - Earlier seed phases imported Mathlib for exp / ln / trig. Current
+    release-target claims must pass the zero-Mathlib gate; historical
+    references remain as migration context, not as active dependency claims.
   - The corpus is 256 records, not 100K. We are upfront about
     this; the roadmap shows the path from 256 → 1K → 10K → 100K.
   - The chain-order metadata depends on Pfaffian theory not yet
