@@ -15,6 +15,7 @@ import MachLib.LinarithTest
 import MachLib.Lemmas
 import MachLib.LinearCombination
 import MachLib.Safety.TemporalFrequency
+import MachLib.ProofSpine
 
 /-!
 # MachLib — top-level aggregator
@@ -68,6 +69,10 @@ The independent foundations for machine-native formal mathematics.
                                   `add_bound_max`. Lands 2026-05-11
                                   as step 4 of 5 to close Moat 1's
                                   Phase 1 gating criterion.
+  * `MachLib.ProofSpine`         — ten small checked obligations that
+                                  connect EML / Forge / Explorer /
+                                  CapCard surfaces to concrete MachLib
+                                  artifacts.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
