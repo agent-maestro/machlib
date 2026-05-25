@@ -18,6 +18,7 @@ import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
 import MachLib.PolynomialEvidence
 import MachLib.AnalyticIdentityFeasibility
+import MachLib.FiniteZeroPacket
 
 /-!
 # MachLib — top-level aggregator
@@ -81,6 +82,8 @@ The independent foundations for machine-native formal mathematics.
                                   root footholds for a future analytic
                                   identity substrate; no analytic
                                   identity theorem claim.
+  * `MachLib.FiniteZeroPacket`   — sample finite-zero evidence packets
+                                  over the tiny polynomial AST.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
