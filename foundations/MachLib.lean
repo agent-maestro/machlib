@@ -16,6 +16,7 @@ import MachLib.Lemmas
 import MachLib.LinearCombination
 import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
+import MachLib.PolynomialEvidence
 import MachLib.AnalyticIdentityFeasibility
 
 /-!
@@ -74,6 +75,8 @@ The independent foundations for machine-native formal mathematics.
                                   connect EML / Forge / Explorer /
                                   CapCard surfaces to concrete MachLib
                                   artifacts.
+  * `MachLib.PolynomialEvidence` — tiny polynomial AST, evaluator, and
+                                  finite root evidence substrate.
   * `MachLib.AnalyticIdentityFeasibility` — tiny checked polynomial
                                   root footholds for a future analytic
                                   identity substrate; no analytic

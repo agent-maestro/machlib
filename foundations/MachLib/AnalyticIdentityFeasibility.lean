@@ -1,4 +1,4 @@
-import MachLib.Ring
+import MachLib.PolynomialEvidence
 
 /-!
 MachLib.AnalyticIdentityFeasibility — tiny checked footholds for a future
@@ -29,6 +29,16 @@ theorem linear_factor_known_root_checked (a r : Real) :
 theorem repeated_factor_known_root_checked (a r : Real) :
     a * ((r - r) * (r - r)) = 0 := by
   mach_ring
+
+/-- Polynomial AST zero evaluation, routed through `MachLib.PolynomialEvidence`. -/
+theorem polynomial_ast_zero_eval_checked (x : Real) :
+    PolynomialEvidence.Poly.eval PolynomialEvidence.Poly.zero x = 0 :=
+  PolynomialEvidence.Poly.eval_zero x
+
+/-- Polynomial AST factor/root evidence, routed through `MachLib.PolynomialEvidence`. -/
+theorem polynomial_ast_factor_root_checked (r : Real) :
+    PolynomialEvidence.Poly.eval (PolynomialEvidence.Poly.linearFactor r) r = 0 :=
+  PolynomialEvidence.Poly.eval_linearFactor_at_root r
 
 end AnalyticIdentityFeasibility
 end MachLib
