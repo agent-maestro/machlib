@@ -20,6 +20,7 @@ import MachLib.PolynomialEvidence
 import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
+import MachLib.NormalizedPolynomialRootCount
 
 /-!
 # MachLib — top-level aggregator
@@ -88,6 +89,9 @@ The independent foundations for machine-native formal mathematics.
   * `MachLib.PolynomialRootCount` — first degree/root-count primitives
                                   and a checked linear-factor root-count
                                   foothold.
+  * `MachLib.NormalizedPolynomialRootCount` — coefficient-list normal-form
+                                  scaffold and checked nonzero-constant
+                                  finite-root packet.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
