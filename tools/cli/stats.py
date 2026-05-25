@@ -14,7 +14,11 @@ def _walk_records(corpus_root: Path) -> list[dict[str, Any]]:
             data = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             continue
-        if isinstance(data, dict) and "schema_version" in data:
+        if (
+            isinstance(data, dict)
+            and "schema_version" in data
+            and isinstance(data.get("theorem"), dict)
+        ):
             out.append(data)
     return out
 

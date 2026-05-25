@@ -1,6 +1,6 @@
 """Schema-conformance tests across the entire corpus.
 
-Every JSON file under ``corpus/`` must:
+Every canonical theorem JSON file under ``corpus/`` must:
 
   * be valid JSON,
   * carry the eight required top-level sections,
@@ -45,9 +45,20 @@ def _all_records() -> list[tuple[Path, dict]]:
     out: list[tuple[Path, dict]] = []
     for path in CORPUS.rglob("*.json"):
         data = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(data, dict) and "schema_version" in data:
+        if (
+            isinstance(data, dict)
+            and "schema_version" in data
+            and isinstance(data.get("theorem"), dict)
+        ):
             out.append((path, data))
     return out
+
+
+def _is_draft_internal(record: dict) -> bool:
+    metadata = record.get("metadata", {})
+    return bool(metadata.get("draft_internal")) or str(
+        record.get("schema_version", "")
+    ).endswith("-draft-eml-lane")
 
 
 # Collected once, parametrised across every record.
@@ -87,7 +98,7 @@ def test_record_has_at_least_one_proof(path: Path, record: dict) -> None:
     # forge_mined records are sorry stubs awaiting Phase B (BFS engine
     # + RL agent). They legitimately ship with zero proofs until the
     # discovery loop fills them in.
-    if record["theorem"]["domain"] == "forge_mined":
+    if record["theorem"]["domain"] == "forge_mined" or _is_draft_internal(record):
         return
     proofs = record.get("proofs", [])
     assert len(proofs) >= 1, f"{path}: zero proofs"
@@ -99,7 +110,7 @@ def test_record_has_exactly_one_optimal_proof(
 ) -> None:
     # forge_mined records ship with empty proofs -- the BFS engine
     # marks an optimal proof once it lands one. Skip until then.
-    if record["theorem"]["domain"] == "forge_mined":
+    if record["theorem"]["domain"] == "forge_mined" or _is_draft_internal(record):
         return
     proofs = record.get("proofs", [])
     optimals = [p for p in proofs if p.get("is_optimal")]

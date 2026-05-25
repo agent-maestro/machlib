@@ -240,7 +240,7 @@ def run_git(repo_root: Path, args: list[str]) -> str:
 
 
 def parse_log(repo_root: Path) -> list[dict[str, str]]:
-    lines = run_git(repo_root, ["log", "--oneline", "-80"]).splitlines()
+    lines = run_git(repo_root, ["log", "--oneline", "-240"]).splitlines()
     commits = []
     for line in lines:
         if not line.strip():

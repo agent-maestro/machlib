@@ -57,6 +57,14 @@ TEXT_NAMES = {
     "pyproject.toml",
 }
 
+SKIP_DIRS = {
+    ".git",
+    ".lake",
+    ".next",
+    "node_modules",
+    "__pycache__",
+}
+
 MATHLIB_PATTERNS = [
     re.compile(r"\bimport\s+Mathlib\b"),
     re.compile(r"\bfrom\s+Mathlib\b"),
@@ -94,7 +102,7 @@ def iter_scan_files() -> list[Path]:
         for child in path.rglob("*"):
             if not child.is_file():
                 continue
-            if ".git" in child.parts or ".lake" in child.parts or "__pycache__" in child.parts:
+            if any(part in SKIP_DIRS for part in child.parts):
                 continue
             if child.suffix in SCAN_SUFFIXES or child.name in TEXT_NAMES:
                 files.add(child)
