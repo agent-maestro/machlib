@@ -16,6 +16,7 @@ import MachLib.Lemmas
 import MachLib.LinearCombination
 import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
+import MachLib.AnalyticIdentityFeasibility
 
 /-!
 # MachLib — top-level aggregator
@@ -73,6 +74,10 @@ The independent foundations for machine-native formal mathematics.
                                   connect EML / Forge / Explorer /
                                   CapCard surfaces to concrete MachLib
                                   artifacts.
+  * `MachLib.AnalyticIdentityFeasibility` — tiny checked polynomial
+                                  root footholds for a future analytic
+                                  identity substrate; no analytic
+                                  identity theorem claim.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
