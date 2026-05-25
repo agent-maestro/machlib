@@ -39,6 +39,12 @@ def degreeUpper : Poly → Nat
 theorem degreeUpper_linearFactor (r : Real) :
     degreeUpper (Poly.linearFactor r) = 1 := rfl
 
+/-- Multiplying by a linear factor increases the syntactic degree upper bound
+by one. This is only a syntactic upper-bound fact, not a normalized polynomial
+degree theorem. -/
+theorem degreeUpper_factorMul (r : Real) (q : Poly) :
+    degreeUpper (Poly.factorMul r q) = 1 + degreeUpper q := rfl
+
 /-- If `(x - r)` evaluates to zero at `x`, then `x = r`. -/
 theorem linearFactor_root_unique (r x : Real)
     (h : Root (Poly.linearFactor r) x) : x = r := by
@@ -61,6 +67,55 @@ theorem linearFactor_no_distinct_root_pair (r : Real) :
   have hy_eq : y = r := linearFactor_root_unique r y hyroot
   apply hne
   rw [hx_eq, hy_eq]
+
+/-- A finite root list is sound when every actual root is present in the list.
+This is intentionally finite/list-shaped; it does not claim a complete set of
+roots for arbitrary polynomial syntax. -/
+def RootListSound (p : Poly) (roots : List Real) : Prop :=
+  ∀ x : Real, Root p x → x ∈ roots
+
+/-- Root-list distinctness without importing a larger finite-set library. -/
+def RootListDistinct : List Real → Prop
+  | [] => True
+  | x :: xs => x ∉ xs ∧ RootListDistinct xs
+
+/-- A finite root list respects the syntactic degree upper bound. -/
+def RootListDegreeBound (p : Poly) (roots : List Real) : Prop :=
+  roots.length ≤ degreeUpper p
+
+/-- A checked finite root packet for a tiny polynomial. -/
+structure FiniteRootPacket where
+  poly : Poly
+  roots : List Real
+  sound : RootListSound poly roots
+  distinct : RootListDistinct roots
+  degree_bound : RootListDegreeBound poly roots
+
+/-- The singleton `[r]` is a sound root list for the linear factor `(x - r)`. -/
+theorem linearFactor_rootListSound (r : Real) :
+    RootListSound (Poly.linearFactor r) [r] := by
+  intro x hx
+  have hx_eq : x = r := linearFactor_root_unique r x hx
+  rw [hx_eq]
+  simp
+
+/-- The singleton `[r]` has no duplicate roots. -/
+theorem singleton_rootListDistinct (r : Real) :
+    RootListDistinct [r] := by
+  simp [RootListDistinct]
+
+/-- The singleton root list for a linear factor is bounded by degree one. -/
+theorem linearFactor_rootListDegreeBound (r : Real) :
+    RootListDegreeBound (Poly.linearFactor r) [r] := by
+  simp [RootListDegreeBound, degreeUpper_linearFactor]
+
+/-- A complete checked finite-root packet for the first degree-one case. -/
+noncomputable def linearFactorFiniteRootPacket (r : Real) : FiniteRootPacket where
+  poly := Poly.linearFactor r
+  roots := [r]
+  sound := linearFactor_rootListSound r
+  distinct := singleton_rootListDistinct r
+  degree_bound := linearFactor_rootListDegreeBound r
 
 end PolynomialRootCount
 end MachLib

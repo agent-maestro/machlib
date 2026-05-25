@@ -1,0 +1,135 @@
+{
+  "packet_id": "machlib_polynomial_root_count_packet_v2_2026_05_25",
+  "status": "MACHLIB_POLYNOMIAL_ROOT_COUNT_PACKET_V2_READY",
+  "date": "2026-05-25",
+  "lean_module": "MachLib.PolynomialRootCount",
+  "lean_path": "foundations/MachLib/PolynomialRootCount.lean",
+  "primitive_count": 8,
+  "checked_result_count": 8,
+  "primitives": [
+    {
+      "name": "Root",
+      "lean_name": "MachLib.PolynomialRootCount.Root",
+      "status": "DEFINED",
+      "purpose": "classify an input as a zero of a polynomial evaluator"
+    },
+    {
+      "name": "NonzeroWitness",
+      "lean_name": "MachLib.PolynomialRootCount.NonzeroWitness",
+      "status": "DEFINED",
+      "purpose": "represent nonzero-polynomial evidence by one nonzero evaluation witness"
+    },
+    {
+      "name": "DistinctRootPair",
+      "lean_name": "MachLib.PolynomialRootCount.DistinctRootPair",
+      "status": "DEFINED",
+      "purpose": "state the first finite root-count obstruction shape"
+    },
+    {
+      "name": "degreeUpper",
+      "lean_name": "MachLib.PolynomialRootCount.degreeUpper",
+      "status": "DEFINED",
+      "purpose": "compute a syntactic degree upper bound over the tiny polynomial AST"
+    },
+    {
+      "name": "RootListSound",
+      "lean_name": "MachLib.PolynomialRootCount.RootListSound",
+      "status": "DEFINED",
+      "purpose": "require every actual root to appear in a finite root list"
+    },
+    {
+      "name": "RootListDistinct",
+      "lean_name": "MachLib.PolynomialRootCount.RootListDistinct",
+      "status": "DEFINED",
+      "purpose": "track duplicate-free root lists without importing a finite-set library"
+    },
+    {
+      "name": "RootListDegreeBound",
+      "lean_name": "MachLib.PolynomialRootCount.RootListDegreeBound",
+      "status": "DEFINED",
+      "purpose": "state that a finite root list length is bounded by syntactic degree"
+    },
+    {
+      "name": "FiniteRootPacket",
+      "lean_name": "MachLib.PolynomialRootCount.FiniteRootPacket",
+      "status": "DEFINED",
+      "purpose": "bundle polynomial, roots, soundness, distinctness, and degree bound"
+    }
+  ],
+  "checked_results": [
+    {
+      "id": "degree_upper_linear_factor",
+      "lean_name": "MachLib.PolynomialRootCount.degreeUpper_linearFactor",
+      "statement": "degreeUpper (x - r) = 1",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "degree_upper_factor_mul",
+      "lean_name": "MachLib.PolynomialRootCount.degreeUpper_factorMul",
+      "statement": "degreeUpper ((x - r) * q) = 1 + degreeUpper q",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_factor_root_unique",
+      "lean_name": "MachLib.PolynomialRootCount.linearFactor_root_unique",
+      "statement": "if eval (x - r) at x is zero, then x = r",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_factor_no_distinct_root_pair",
+      "lean_name": "MachLib.PolynomialRootCount.linearFactor_no_distinct_root_pair",
+      "statement": "a linear factor cannot have two distinct roots",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_factor_root_list_sound",
+      "lean_name": "MachLib.PolynomialRootCount.linearFactor_rootListSound",
+      "statement": "the singleton list [r] contains every root of x - r",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "singleton_root_list_distinct",
+      "lean_name": "MachLib.PolynomialRootCount.singleton_rootListDistinct",
+      "statement": "the singleton root list [r] has no duplicate roots",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_factor_root_list_degree_bound",
+      "lean_name": "MachLib.PolynomialRootCount.linearFactor_rootListDegreeBound",
+      "statement": "the singleton root list [r] has length bounded by degreeUpper (x - r)",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_factor_finite_root_packet",
+      "lean_name": "MachLib.PolynomialRootCount.linearFactorFiniteRootPacket",
+      "statement": "a checked finite-root packet exists for x - r",
+      "evidence_class": "MACHLIB_CHECKED"
+    }
+  ],
+  "tiny_root_count_result": "LINEAR_FACTOR_FINITE_ROOT_PACKET_CHECKED",
+  "general_root_count_theorem_status": "BLOCKED_MISSING_NORMALIZED_DEGREE_INDUCTION",
+  "blocked_next": [
+    "normalized coefficient-list representation for arbitrary polynomial syntax",
+    "proof that normalized degree agrees with evaluator semantics",
+    "finite root-set representation beyond list membership",
+    "root-list union/deduplication across products",
+    "multiplicity accounting",
+    "induction showing a degree-n nonzero polynomial has at most n distinct roots"
+  ],
+  "depends_on": [
+    "MachLib.PolynomialEvidence",
+    "MachLib.FiniteZeroPacket",
+    "product_readiness/machlib_polynomial_root_count_scaffold_v1_2026_05_25.json"
+  ],
+  "public_ready": false,
+  "marketplace_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "public_theorem_claim": false,
+  "general_root_count_theorem_proved": false,
+  "analytic_identity_theorem_proved": false
+}
