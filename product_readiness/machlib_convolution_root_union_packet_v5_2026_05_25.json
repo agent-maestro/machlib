@@ -6,7 +6,7 @@
   "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
   "primitive_count": 7,
   "checked_result_count": 12,
-  "bridge_axiom_count": 1,
+  "bridge_axiom_count": 0,
   "primitives": [
     {
       "name": "addCoeff",
@@ -110,13 +110,13 @@
       "id": "product_root_list_sound_union",
       "lean_name": "MachLib.NormalizedPolynomialRootCount.productRootListSound_union",
       "statement": "product root-list soundness transfers to union of factor root lists",
-      "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM"
+      "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM"
     },
     {
       "id": "mul_coeff_root_list_sound_union",
       "lean_name": "MachLib.NormalizedPolynomialRootCount.mulCoeffRootListSound_union",
       "statement": "convolution product root-list soundness transfers to union of factor root lists",
-      "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM"
+      "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM"
     },
     {
       "id": "product_degree_bound_nil_left",
@@ -136,7 +136,7 @@
     "prove full ProductDegreeBoundTarget for normalized convolution products",
     "prove RootListDistinct preservation for unionUniqueRoots",
     "prove root-list cardinality bound for product unions",
-    "replace mul_eq_zero_or_left_or_right bridge axiom with a derived integral-domain theorem",
+    "replace mul_eq_zero_or_left_or_right derived theorem with a derived integral-domain theorem",
     "connect normalized product degree arithmetic to full RootCountInductionTarget"
   ],
   "depends_on": [

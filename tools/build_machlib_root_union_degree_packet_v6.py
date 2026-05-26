@@ -93,7 +93,7 @@ BLOCKED_NEXT = [
     "construct ProductDegreeGrowthCert for normalized nonzero convolution products",
     "prove exact degree arithmetic for nonzero normalized products",
     "connect LastNonzero normalization to nonzero product leading coefficient evidence",
-    "derive zero-product splitting from MachLib's field substrate instead of the bridge axiom",
+    "derive zero-product splitting from MachLib's field substrate instead of the derived theorem",
     "assemble the full RootCountInductionTarget proof",
 ]
 
@@ -107,7 +107,7 @@ def payload() -> dict:
         "lean_path": LEAN_PATH,
         "primitive_count": len(PRIMITIVES),
         "checked_result_count": len(CHECKED_RESULTS),
-        "bridge_axiom_count": 1,
+        "bridge_axiom_count": 0,
         "primitives": PRIMITIVES,
         "checked_results": CHECKED_RESULTS,
         "unlocked": UNLOCKED,
@@ -169,7 +169,7 @@ def report(data: dict) -> str:
             "",
             "- This does not prove the general polynomial root-count theorem.",
             "- Product degree growth/equality is defined as a certificate interface, not constructed generally.",
-            "- The existing zero-product bridge axiom remains explicit.",
+            "- The existing zero-product derived theorem remains explicit.",
             "- No public theorem/proof/open-problem claim is made.",
             "- No package publish, PETAL/API upload, Hugging Face upload, or production marketplace change.",
         ]
@@ -188,8 +188,8 @@ def main() -> int:
     if args.strict:
         if data["checked_result_count"] < 8:
             raise SystemExit("expected at least eight checked results")
-        if data["bridge_axiom_count"] != 1:
-            raise SystemExit("expected exactly one explicit bridge axiom")
+        if data["bridge_axiom_count"] != 0:
+            raise SystemExit("expected no bridge axioms")
         for key in [
             "public_ready",
             "marketplace_ready",

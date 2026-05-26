@@ -63,6 +63,10 @@ def degreeBound : CoeffPoly → Nat
 noncomputable def linearCoeff (r : Real) : CoeffPoly :=
   [-r, 1]
 
+/-- A small monic quadratic coefficient-list example, stored low-to-high. -/
+noncomputable def monicQuadraticCoeff (a b : Real) : CoeffPoly :=
+  [a, b, 1]
+
 /-- Pointwise coefficient-list addition. Missing coefficients are treated as
 zero, so this is the normalized-list substrate for polynomial addition. -/
 noncomputable def addCoeff : CoeffPoly → CoeffPoly → CoeffPoly
@@ -93,12 +97,21 @@ operand evaluators. -/
 def MulEvalSound (product p q : CoeffPoly) : Prop :=
   ∀ x : Real, eval product x = eval p x * eval q x
 
-/-- Current MachLib bridge axiom for the real integral-domain step needed by
-root-count induction: a product can be zero only when one factor is zero.
-Future work can replace this with a derived theorem if the field substrate is
-expanded enough. -/
-axiom mul_eq_zero_or_left_or_right
-    {a b : Real} : a * b = 0 → a = 0 ∨ b = 0
+/-- Real integral-domain step needed by root-count induction: a product can
+be zero only when one factor is zero. Derived from MachLib's existing field
+axioms (`mul_inv`, commutativity, associativity, and zero multiplication). -/
+theorem mul_eq_zero_or_left_or_right
+    {a b : Real} (h : a * b = 0) : a = 0 ∨ b = 0 := by
+  by_cases ha : a = 0
+  · exact Or.inl ha
+  · right
+    calc b
+        = 1 * b := (one_mul_thm b).symm
+      _ = (a * (1 / a)) * b := by rw [mul_inv a ha]
+      _ = ((1 / a) * a) * b := by rw [mul_comm a (1 / a)]
+      _ = (1 / a) * (a * b) := by rw [mul_assoc]
+      _ = (1 / a) * 0 := by rw [h]
+      _ = 0 := mul_zero (1 / a)
 
 /-- Finite root-list soundness for coefficient-list polynomials. -/
 def RootListSound (p : CoeffPoly) (roots : List Real) : Prop :=
@@ -369,6 +382,10 @@ theorem degreeBound_singleton (c : Real) :
 theorem degreeBound_linearCoeff (r : Real) :
     degreeBound (linearCoeff r) = 1 := rfl
 
+/-- A monic quadratic example has degree bound two. -/
+theorem degreeBound_monicQuadraticCoeff (a b : Real) :
+    degreeBound (monicQuadraticCoeff a b) = 2 := rfl
+
 /-- A coefficient-list linear factor is normalized because its last
 coefficient is one. -/
 theorem linearCoeff_lastNonzero (r : Real) :
@@ -391,6 +408,26 @@ theorem linearCoeff_root_iff_linearFactor_root (r x : Real) :
       PolynomialRootCount.Root (Poly.linearFactor r) x := by
   unfold Root PolynomialRootCount.Root
   rw [eval_linearCoeff_eq_linearFactor]
+
+/-- The singleton root list is sound for a coefficient-list linear factor. -/
+theorem linearCoeff_rootListSound (r : Real) :
+    RootListSound (linearCoeff r) [r] := by
+  intro x hx
+  have hast : PolynomialRootCount.Root (Poly.linearFactor r) x :=
+    (linearCoeff_root_iff_linearFactor_root r x).mp hx
+  have hx_eq : x = r := PolynomialRootCount.linearFactor_root_unique r x hast
+  rw [hx_eq]
+  simp
+
+/-- Singleton root lists are distinct in the coefficient-list layer. -/
+theorem singletonCoeffRootListDistinct (r : Real) :
+    RootListDistinct [r] := by
+  simp [RootListDistinct]
+
+/-- The singleton root list for a coefficient-list linear factor is degree-bounded. -/
+theorem linearCoeff_rootListDegreeBound (r : Real) :
+    RootListDegreeBound (linearCoeff r) [r] := by
+  simp [RootListDegreeBound, degreeBound_linearCoeff]
 
 /-- A nonzero singleton coefficient list is normalized. -/
 theorem singleton_lastNonzero {c : Real} (hc : c ≠ 0) :
@@ -522,6 +559,88 @@ theorem productRootListDegreeBound_union_of_cert
   unfold RootListDegreeBound ProductDegreeGrowthCert at *
   have hlen := length_unionUniqueRoots_le_add rootsP rootsQ
   omega
+
+/-! ## Checked concrete examples
+
+These examples exercise the bridge on small normalized products. They are
+evidence examples, not the general root-count induction theorem.
+-/
+
+/-- Example 1: constant times constant has exact structural degree growth. -/
+theorem example_growth_const_const (a b : Real) :
+    ProductDegreeGrowthCert [a * b] [a] [b] := by
+  unfold ProductDegreeGrowthCert degreeBound
+  change 0 ≤ 0
+  omega
+
+/-- Example 2: constant times linear has exact structural degree growth. -/
+theorem example_growth_const_linear (a r : Real) :
+    ProductDegreeGrowthCert [a * (-r), a] [a] (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert linearCoeff degreeBound
+  change 1 ≤ 1
+  omega
+
+/-- Example 3: linear times constant has exact structural degree growth. -/
+theorem example_growth_linear_const (r a : Real) :
+    ProductDegreeGrowthCert [(-r) * a, a] (linearCoeff r) [a] := by
+  unfold ProductDegreeGrowthCert linearCoeff degreeBound
+  change 1 ≤ 1
+  omega
+
+/-- Example 4: linear times linear has exact structural degree growth. -/
+theorem example_growth_linear_linear (r s : Real) :
+    ProductDegreeGrowthCert
+      [(-r) * (-s), (-r) * 1 + 1 * (-s), 1]
+      (linearCoeff r) (linearCoeff s) := by
+  unfold ProductDegreeGrowthCert linearCoeff degreeBound
+  change 2 ≤ 2
+  omega
+
+/-- Example 5: linear times monic quadratic has exact structural degree growth. -/
+theorem example_growth_linear_quadratic (r a b : Real) :
+    ProductDegreeGrowthCert
+      [(-r) * a, (-r) * b + 1 * a, (-r) * 1 + 1 * b, 1]
+      (linearCoeff r) (monicQuadraticCoeff a b) := by
+  unfold ProductDegreeGrowthCert linearCoeff monicQuadraticCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- Example 1: product root packet bridge for two linear factors. -/
+theorem example_product_linear_linear_degreeBound (r s : Real) :
+    RootListDegreeBound
+      [(-r) * (-s), (-r) * 1 + 1 * (-s), 1]
+      (unionUniqueRoots [r] [s]) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := example_growth_linear_linear r s)
+    (hp := linearCoeff_rootListDegreeBound r)
+    (hq := linearCoeff_rootListDegreeBound s)
+
+/-- Example 2: duplicate linear roots deduplicate and remain degree-bounded. -/
+theorem example_product_repeated_linear_degreeBound (r : Real) :
+    RootListDegreeBound
+      [(-r) * (-r), (-r) * 1 + 1 * (-r), 1]
+      (unionUniqueRoots [r] [r]) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := example_growth_linear_linear r r)
+    (hp := linearCoeff_rootListDegreeBound r)
+    (hq := linearCoeff_rootListDegreeBound r)
+
+/-- Example 3: two singleton lists union distinctly after insertion. -/
+theorem example_union_two_singletons_distinct (r s : Real) :
+    RootListDistinct (unionUniqueRoots [r] [s]) :=
+  productRootListDistinct_union
+    (singletonCoeffRootListDistinct r)
+    (singletonCoeffRootListDistinct s)
+
+/-- Example 4: repeated singleton union stays cardinality-bounded. -/
+theorem example_union_repeated_singleton_length (r : Real) :
+    (unionUniqueRoots [r] [r]).length ≤ [r].length + [r].length :=
+  productRootListLength_union_le_add [r] [r]
+
+/-- Example 5: three singleton insertions stay cardinality-bounded. -/
+theorem example_union_three_singletons_length (r s t : Real) :
+    (unionUniqueRoots [r, s] [t]).length ≤ [r, s].length + [t].length :=
+  productRootListLength_union_le_add [r, s] [t]
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/

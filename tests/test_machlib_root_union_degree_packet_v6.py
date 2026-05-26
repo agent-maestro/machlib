@@ -11,7 +11,7 @@ def test_root_union_degree_packet_v6_shape():
     data = json.loads(PACKET.read_text())
     assert data["status"] == "MACHLIB_ROOT_UNION_DEGREE_PACKET_V6_READY"
     assert data["checked_result_count"] >= 8
-    assert data["bridge_axiom_count"] == 1
+    assert data["bridge_axiom_count"] == 0
     assert data["root_list_distinctness_status"] == "CHECKED_FOR_UNIQUE_UNION"
     assert data["root_list_cardinality_status"] == "CHECKED_UNION_LENGTH_LE_FACTOR_LENGTH_SUM"
     assert data["product_degree_growth_status"] == "CERTIFICATE_INTERFACE_DEFINED_NOT_CONSTRUCTED"
@@ -45,10 +45,11 @@ def test_root_union_degree_contains_distinctness_cardinality_and_cert_layers():
         assert expected in lean_text
 
 
-def test_root_union_degree_keeps_single_explicit_bridge_axiom():
+def test_root_union_degree_uses_derived_zero_product_theorem():
     lean_text = LEAN.read_text()
     axiom_lines = [line.strip() for line in lean_text.splitlines() if line.strip().startswith("axiom ")]
-    assert axiom_lines == ["axiom mul_eq_zero_or_left_or_right"]
+    assert axiom_lines == []
+    assert "theorem mul_eq_zero_or_left_or_right" in lean_text
 
 
 def test_root_union_degree_has_no_sorry():

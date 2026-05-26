@@ -1,0 +1,78 @@
+{
+  "packet_id": "machlib_degree_examples_packet_v7_2026_05_25",
+  "status": "MACHLIB_DEGREE_EXAMPLES_PACKET_V7_READY",
+  "date": "2026-05-25",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "checked_result_count": 3,
+  "degree_growth_example_count": 5,
+  "root_union_example_count": 5,
+  "bridge_axiom_count": 0,
+  "checked_results": [
+    {
+      "id": "derived_zero_product_theorem",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.mul_eq_zero_or_left_or_right",
+      "statement": "zero-product splitting is derived from existing MachLib field axioms",
+      "evidence_class": "MACHLIB_CHECKED_DERIVED_THEOREM"
+    },
+    {
+      "id": "linear_coeff_root_list_sound",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.linearCoeff_rootListSound",
+      "statement": "the singleton root list [r] is sound for coefficient-list linear factors",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_coeff_root_list_degree_bound",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.linearCoeff_rootListDegreeBound",
+      "statement": "the singleton root list [r] is degree-bounded for coefficient-list linear factors",
+      "evidence_class": "MACHLIB_CHECKED"
+    }
+  ],
+  "degree_growth_examples": [
+    "example_growth_const_const",
+    "example_growth_const_linear",
+    "example_growth_linear_const",
+    "example_growth_linear_linear",
+    "example_growth_linear_quadratic"
+  ],
+  "root_union_examples": [
+    "example_product_linear_linear_degreeBound",
+    "example_product_repeated_linear_degreeBound",
+    "example_union_two_singletons_distinct",
+    "example_union_repeated_singleton_length",
+    "example_union_three_singletons_length"
+  ],
+  "unlocked": [
+    "zero-product splitting is now derived, not an added bridge axiom",
+    "five checked degree-growth examples cover constant, linear, and monic quadratic product shapes",
+    "five checked root-list examples cover degree-bound, deduplication, distinctness, and cardinality handoff",
+    "coefficient-list linear factors now have sound singleton root-list packets"
+  ],
+  "blocked_next": [
+    "prove exact degree growth for arbitrary normalized nonzero convolution products",
+    "connect explicit product coefficient examples back to canonical mulCoeff normal forms",
+    "prove leading-coefficient nonzero preservation for normalized products",
+    "assemble the full RootCountInductionTarget proof"
+  ],
+  "depends_on": [
+    "product_readiness/machlib_root_union_degree_packet_v6_2026_05_25.json",
+    "product_readiness/machlib_convolution_root_union_packet_v5_2026_05_25.json",
+    "product_readiness/machlib_product_root_bridge_packet_v4_2026_05_25.json"
+  ],
+  "zero_product_status": "DERIVED_THEOREM_NO_BRIDGE_AXIOM",
+  "degree_growth_status": "FIVE_CHECKED_EXAMPLES_GENERAL_THEOREM_NOT_PROVED",
+  "root_union_status": "FIVE_CHECKED_EXAMPLES_DISTINCTNESS_CARDINALITY_BRIDGE_READY",
+  "general_root_count_theorem_status": "BLOCKED_MISSING_GENERAL_NORMALIZED_PRODUCT_DEGREE_GROWTH",
+  "induction_target_status": "DEFINED_NOT_PROVED",
+  "public_ready": false,
+  "marketplace_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "public_theorem_claim": false,
+  "general_root_count_theorem_proved": false,
+  "analytic_identity_theorem_proved": false
+}

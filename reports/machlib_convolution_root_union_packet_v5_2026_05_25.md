@@ -22,8 +22,8 @@ union machinery for product-root packets.
 - `mem_insert_unique_root_self` — inserted root is present after unique insertion (MACHLIB_CHECKED)
 - `mem_union_unique_roots_left` — left root-list membership survives unique union (MACHLIB_CHECKED)
 - `mem_union_unique_roots_right` — right root-list membership survives unique union (MACHLIB_CHECKED)
-- `product_root_list_sound_union` — product root-list soundness transfers to union of factor root lists (MACHLIB_CHECKED_WITH_BRIDGE_AXIOM)
-- `mul_coeff_root_list_sound_union` — convolution product root-list soundness transfers to union of factor root lists (MACHLIB_CHECKED_WITH_BRIDGE_AXIOM)
+- `product_root_list_sound_union` — product root-list soundness transfers to union of factor root lists (MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM)
+- `mul_coeff_root_list_sound_union` — convolution product root-list soundness transfers to union of factor root lists (MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM)
 - `product_degree_bound_nil_left` — product degree arithmetic base case for empty left operand (MACHLIB_CHECKED)
 
 ## Unlocked
@@ -39,7 +39,7 @@ union machinery for product-root packets.
 - prove full ProductDegreeBoundTarget for normalized convolution products
 - prove RootListDistinct preservation for unionUniqueRoots
 - prove root-list cardinality bound for product unions
-- replace mul_eq_zero_or_left_or_right bridge axiom with a derived integral-domain theorem
+- replace mul_eq_zero_or_left_or_right derived theorem with a derived integral-domain theorem
 - connect normalized product degree arithmetic to full RootCountInductionTarget
 
 ## Boundary
@@ -47,6 +47,6 @@ union machinery for product-root packets.
 - This does not prove the general polynomial root-count theorem.
 - Degree arithmetic is named and has a checked base case, but the general theorem is not proved.
 - Root-list union soundness is checked; distinctness/cardinality preservation remains open.
-- The existing zero-product bridge axiom remains explicit.
+- The existing zero-product derived theorem remains explicit.
 - No public theorem/proof/open-problem claim is made.
 - No package publish, PETAL/API upload, Hugging Face upload, or production marketplace change.

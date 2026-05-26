@@ -12,7 +12,7 @@ def test_product_root_bridge_packet_v4_shape():
     assert data["status"] == "MACHLIB_PRODUCT_ROOT_BRIDGE_PACKET_V4_READY"
     assert data["primitive_count"] >= 3
     assert data["checked_result_count"] >= 7
-    assert data["bridge_axiom_count"] == 1
+    assert data["bridge_axiom_count"] == 0
     assert data["general_root_count_theorem_proved"] is False
     assert data["analytic_identity_theorem_proved"] is False
     assert data["public_theorem_claim"] is False
@@ -27,10 +27,11 @@ def test_product_root_bridge_lean_names_exist():
         assert result["lean_name"].split(".")[-1] in lean_text
 
 
-def test_product_root_bridge_has_exact_bridge_axiom():
+def test_product_root_bridge_has_derived_zero_product_theorem():
     lean_text = LEAN.read_text()
     axiom_lines = [line.strip() for line in lean_text.splitlines() if line.strip().startswith("axiom ")]
-    assert axiom_lines == ["axiom mul_eq_zero_or_left_or_right"]
+    assert axiom_lines == []
+    assert "theorem mul_eq_zero_or_left_or_right" in lean_text
 
 
 def test_product_root_bridge_contains_linear_and_product_layers():

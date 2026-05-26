@@ -45,9 +45,9 @@ def test_normalized_root_count_includes_induction_target_but_no_claim():
     assert "general polynomial root-count theorem" in lean_text
 
 
-def test_no_untracked_axiom_or_sorry_in_normalized_root_count_module():
+def test_no_axiom_or_sorry_in_normalized_root_count_module():
     text = LEAN.read_text()
-    allowed = "axiom mul_eq_zero_or_left_or_right"
     axiom_lines = [line.strip() for line in text.splitlines() if line.strip().startswith("axiom ")]
-    assert axiom_lines == [allowed]
+    assert axiom_lines == []
+    assert "theorem mul_eq_zero_or_left_or_right" in text
     assert "sorry" not in text

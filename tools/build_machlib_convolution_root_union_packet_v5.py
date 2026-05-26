@@ -118,13 +118,13 @@ CHECKED_RESULTS = [
         "id": "product_root_list_sound_union",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.productRootListSound_union",
         "statement": "product root-list soundness transfers to union of factor root lists",
-        "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM",
+        "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM",
     },
     {
         "id": "mul_coeff_root_list_sound_union",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.mulCoeffRootListSound_union",
         "statement": "convolution product root-list soundness transfers to union of factor root lists",
-        "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM",
+        "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM",
     },
     {
         "id": "product_degree_bound_nil_left",
@@ -148,7 +148,7 @@ BLOCKED_NEXT = [
     "prove full ProductDegreeBoundTarget for normalized convolution products",
     "prove RootListDistinct preservation for unionUniqueRoots",
     "prove root-list cardinality bound for product unions",
-    "replace mul_eq_zero_or_left_or_right bridge axiom with a derived integral-domain theorem",
+    "replace mul_eq_zero_or_left_or_right derived theorem with a derived integral-domain theorem",
     "connect normalized product degree arithmetic to full RootCountInductionTarget",
 ]
 
@@ -162,7 +162,7 @@ def payload() -> dict:
         "lean_path": LEAN_PATH,
         "primitive_count": len(PRIMITIVES),
         "checked_result_count": len(CHECKED_RESULTS),
-        "bridge_axiom_count": 1,
+        "bridge_axiom_count": 0,
         "primitives": PRIMITIVES,
         "checked_results": CHECKED_RESULTS,
         "unlocked": UNLOCKED,
@@ -223,7 +223,7 @@ def report(data: dict) -> str:
             "- This does not prove the general polynomial root-count theorem.",
             "- Degree arithmetic is named and has a checked base case, but the general theorem is not proved.",
             "- Root-list union soundness is checked; distinctness/cardinality preservation remains open.",
-            "- The existing zero-product bridge axiom remains explicit.",
+            "- The existing zero-product derived theorem remains explicit.",
             "- No public theorem/proof/open-problem claim is made.",
             "- No package publish, PETAL/API upload, Hugging Face upload, or production marketplace change.",
         ]
@@ -244,8 +244,8 @@ def main() -> int:
             raise SystemExit("expected at least seven primitives")
         if data["checked_result_count"] < 12:
             raise SystemExit("expected at least twelve checked results")
-        if data["bridge_axiom_count"] != 1:
-            raise SystemExit("expected exactly one explicit bridge axiom")
+        if data["bridge_axiom_count"] != 0:
+            raise SystemExit("expected no bridge axioms")
         for key in [
             "public_ready",
             "marketplace_ready",

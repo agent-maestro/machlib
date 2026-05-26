@@ -35,13 +35,13 @@ certificate, not only an upper-bound theorem.
 - construct ProductDegreeGrowthCert for normalized nonzero convolution products
 - prove exact degree arithmetic for nonzero normalized products
 - connect LastNonzero normalization to nonzero product leading coefficient evidence
-- derive zero-product splitting from MachLib's field substrate instead of the bridge axiom
+- derive zero-product splitting from MachLib's field substrate instead of the derived theorem
 - assemble the full RootCountInductionTarget proof
 
 ## Boundary
 
 - This does not prove the general polynomial root-count theorem.
 - Product degree growth/equality is defined as a certificate interface, not constructed generally.
-- The existing zero-product bridge axiom remains explicit.
+- The existing zero-product derived theorem remains explicit.
 - No public theorem/proof/open-problem claim is made.
 - No package publish, PETAL/API upload, Hugging Face upload, or production marketplace change.

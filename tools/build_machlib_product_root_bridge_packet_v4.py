@@ -29,8 +29,8 @@ PRIMITIVES = [
     {
         "name": "mul_eq_zero_or_left_or_right",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.mul_eq_zero_or_left_or_right",
-        "status": "BRIDGE_AXIOM",
-        "purpose": "real integral-domain zero-product bridge used by product-root splitting",
+        "status": "DERIVED_THEOREM",
+        "purpose": "derived real zero-product theorem used by product-root splitting",
     },
 ]
 
@@ -64,19 +64,19 @@ CHECKED_RESULTS = [
         "id": "product_root_split",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_split",
         "statement": "a root of a semantically certified product is a root of one factor",
-        "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM",
+        "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM",
     },
     {
         "id": "product_root_right_of_left_nonroot",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_right_of_left_nonroot",
         "statement": "if the left factor is nonzero at x, product root implies right root",
-        "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM",
+        "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM",
     },
     {
         "id": "product_root_left_of_right_nonroot",
         "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_left_of_right_nonroot",
         "statement": "if the right factor is nonzero at x, product root implies left root",
-        "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM",
+        "evidence_class": "MACHLIB_CHECKED_WITH_DERIVED_ZERO_PRODUCT_THEOREM",
     },
 ]
 
@@ -84,13 +84,13 @@ CHECKED_RESULTS = [
 UNLOCKED = [
     "linear coefficient-list representation now matches the existing AST linear-factor packet",
     "semantic product certificate gives a safe place to attach future convolution normalizers",
-    "product-root splitting is available under an explicit real integral-domain bridge axiom",
+    "product-root splitting is available under an explicit real integral-domain derived theorem",
     "root-count induction can now target factor/product splitting instead of only base cases",
 ]
 
 
 BLOCKED_NEXT = [
-    "replace bridge axiom with a derived integral-domain theorem if MachLib field substrate expands",
+    "keep the derived zero-product theorem as a regression while product induction expands",
     "implement coefficient-list convolution plus MulEvalSound proofs for concrete products",
     "root-list union/deduplication across product factors",
     "degree arithmetic for convolution products",
@@ -108,16 +108,15 @@ def payload() -> dict:
         "lean_path": LEAN_PATH,
         "primitive_count": len(PRIMITIVES),
         "checked_result_count": len(CHECKED_RESULTS),
-        "bridge_axiom_count": 1,
+        "bridge_axiom_count": 0,
         "primitives": PRIMITIVES,
         "checked_results": CHECKED_RESULTS,
         "unlocked": UNLOCKED,
         "blocked_next": BLOCKED_NEXT,
-        "bridge_axioms": [
+        "derived_zero_product_theorems": [
             {
                 "lean_name": "MachLib.NormalizedPolynomialRootCount.mul_eq_zero_or_left_or_right",
-                "reason": "MachLib's current minimal real-field substrate does not yet derive zero-product splitting.",
-                "replacement_path": "derive from expanded field/integral-domain substrate or add a verified domain layer",
+                "reason": "Derived from MachLib's existing field axioms: inverse, multiplication associativity/commutativity, and zero multiplication.",
             }
         ],
         "general_root_count_theorem_status": "BLOCKED_MISSING_CONVOLUTION_ROOT_LIST_INDUCTION",
@@ -152,14 +151,14 @@ def report(data: dict) -> str:
         "",
         "This packet bridges the normalized coefficient-list root-count route",
         "to two missing pieces: a linear coefficient-list representation and",
-        "product-root splitting. Product splitting depends on one explicit",
-        "bridge axiom for the real zero-product property.",
+        "product-root splitting. Product splitting now depends on a derived",
+        "theorem for the real zero-product property.",
         "",
-        "## Bridge Axiom",
+        "## Derived Theorem",
         "",
-        "The bridge axiom is `mul_eq_zero_or_left_or_right`: if `a * b = 0`,",
-        "then `a = 0` or `b = 0`. This is standard for reals, but MachLib's",
-        "current minimal field substrate does not derive it yet.",
+        "The derived theorem is `mul_eq_zero_or_left_or_right`: if `a * b = 0`,",
+        "then `a = 0` or `b = 0`. It is derived in MachLib from the existing",
+        "field axioms rather than added as a new axiom.",
         "",
         "## Checked Results",
         "",
@@ -202,8 +201,8 @@ def main() -> int:
             raise SystemExit("expected at least three bridge primitives")
         if data["checked_result_count"] < 7:
             raise SystemExit("expected at least seven checked bridge results")
-        if data["bridge_axiom_count"] != 1:
-            raise SystemExit("expected exactly one bridge axiom")
+        if data["bridge_axiom_count"] != 0:
+            raise SystemExit("expected no bridge axioms")
         for key in [
             "public_ready",
             "marketplace_ready",
