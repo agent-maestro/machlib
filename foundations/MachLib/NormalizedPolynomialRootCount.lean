@@ -221,6 +221,13 @@ def LinearMulCoeffDegreeGrowthTarget : Prop :=
     LastNonzero p →
     ProductDegreeGrowthCert (normalizedProductCoeff (linearCoeff r) p) (linearCoeff r) p
 
+/-- Target shape for arbitrary normalized coefficients times a right-side
+linear factor. -/
+def RightLinearMulCoeffDegreeGrowthTarget : Prop :=
+  ∀ r p,
+    LastNonzero p →
+    ProductDegreeGrowthCert (normalizedProductCoeff p (linearCoeff r)) p (linearCoeff r)
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -405,6 +412,87 @@ theorem degreeBound_addCoeff_scalar_cons_self (a b : Real) :
           change Nat.succ (degreeBound (addCoeff (scalarMulCoeff a (d :: ds)) (c :: d :: ds))) =
             Nat.succ (Nat.succ (degreeBound (d :: ds)))
           rw [ih c h]
+
+/-- Shifting a normalized coefficient list preserves the last nonzero witness. -/
+theorem shiftCoeff_lastNonzero {p : CoeffPoly} (h : LastNonzero p) :
+    LastNonzero (shiftCoeff p) := by
+  cases p with
+  | nil =>
+      cases h
+  | cons c cs =>
+      unfold shiftCoeff LastNonzero
+      exact h
+
+/-- Shifting a normalized coefficient list increases the degree bound by one. -/
+theorem degreeBound_shiftCoeff_of_LastNonzero {p : CoeffPoly}
+    (h : LastNonzero p) :
+    degreeBound (shiftCoeff p) = Nat.succ (degreeBound p) := by
+  cases p with
+  | nil =>
+      cases h
+  | cons c cs =>
+      cases cs with
+      | nil =>
+          unfold shiftCoeff degreeBound
+          rfl
+      | cons d ds =>
+          unfold shiftCoeff degreeBound
+          rfl
+
+/-- Shifting any positive-degree coefficient list increases its degree bound
+by one. This avoids needing a leading-coefficient witness in intermediate raw
+right-linear products. -/
+theorem degreeBound_shiftCoeff_of_positive {p : CoeffPoly}
+    (hdeg : 0 < degreeBound p) :
+    degreeBound (shiftCoeff p) = Nat.succ (degreeBound p) := by
+  cases p with
+  | nil =>
+      unfold degreeBound at hdeg
+      omega
+  | cons c cs =>
+      cases cs with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          unfold shiftCoeff degreeBound
+          rfl
+
+/-- Adding a two-coefficient list on the left to a shifted normalized tail
+preserves the shifted tail's final nonzero coefficient. -/
+theorem addCoeff_two_left_shift_lastNonzero (a b : Real) {q : CoeffPoly}
+    (h : LastNonzero q) (hdeg : 0 < degreeBound q) :
+    LastNonzero (addCoeff [a, b] (shiftCoeff q)) := by
+  cases q with
+  | nil =>
+      cases h
+  | cons c cs =>
+      cases cs with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          unfold shiftCoeff addCoeff LastNonzero
+          exact h
+
+/-- Adding a two-coefficient list on the left to a shifted normalized tail
+keeps the shifted tail's degree bound. -/
+theorem degreeBound_addCoeff_two_left_shift (a b : Real) {q : CoeffPoly}
+    (hdeg : 0 < degreeBound q) :
+    degreeBound (addCoeff [a, b] (shiftCoeff q)) =
+      degreeBound (shiftCoeff q) := by
+  cases q with
+  | nil =>
+      unfold degreeBound at hdeg
+      omega
+  | cons c cs =>
+      cases cs with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          unfold shiftCoeff addCoeff degreeBound
+          rfl
 
 /-- Pointwise coefficient-list addition evaluates to pointwise addition. -/
 theorem eval_addCoeff (p q : CoeffPoly) (x : Real) :
@@ -708,6 +796,97 @@ theorem linearMulCoeffDegreeGrowthTarget_checked :
     LinearMulCoeffDegreeGrowthTarget := by
   intro r p h
   exact linearMulCoeffDegreeGrowth r h
+
+/-- Multiplication on the right by `linearCoeff r` has exact raw degree growth
+for any normalized nonempty coefficient list. -/
+theorem degreeBound_mulCoeff_right_linear (r : Real) :
+    ∀ {p : CoeffPoly}, LastNonzero p →
+      degreeBound (mulCoeff p (linearCoeff r)) = Nat.succ (degreeBound p) := by
+  intro p h
+  induction p with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold mulCoeff linearCoeff scalarMulCoeff shiftCoeff addCoeff degreeBound
+          rfl
+      | cons d ds =>
+          have htail : LastNonzero (d :: ds) := h
+          have htail_deg_pos : 0 < degreeBound (mulCoeff (d :: ds) (linearCoeff r)) := by
+            rw [ih htail]
+            omega
+          unfold mulCoeff linearCoeff scalarMulCoeff
+          have htail_deg_pos' : 0 < degreeBound (mulCoeff (d :: ds) [-r, 1]) := by
+            simpa [linearCoeff] using htail_deg_pos
+          change degreeBound (addCoeff [c * -r, c * 1] (shiftCoeff (mulCoeff (d :: ds) [-r, 1]))) =
+            Nat.succ (degreeBound (c :: d :: ds))
+          rw [degreeBound_addCoeff_two_left_shift (c * (-r)) (c * 1) htail_deg_pos']
+          have ih' : degreeBound (mulCoeff (d :: ds) [-r, 1]) = Nat.succ (degreeBound (d :: ds)) := by
+            simpa [linearCoeff] using ih htail
+          have hshift : degreeBound (shiftCoeff (mulCoeff (d :: ds) [-r, 1])) =
+              Nat.succ (degreeBound (mulCoeff (d :: ds) [-r, 1])) := by
+            exact degreeBound_shiftCoeff_of_positive htail_deg_pos'
+          rw [hshift]
+          rw [ih']
+          rfl
+
+/-- Multiplication on the right by `linearCoeff r` preserves a raw nonzero
+leading coefficient before normalization. This is the mirror bridge for the
+recursive `mulCoeff` shape. -/
+theorem rightLinearMulCoeffRawLastNonzero (r : Real) :
+    ∀ {p : CoeffPoly}, LastNonzero p → LastNonzero (mulCoeff p (linearCoeff r)) := by
+  intro p h
+  induction p with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold mulCoeff linearCoeff scalarMulCoeff shiftCoeff addCoeff LastNonzero
+          change c * 1 ≠ 0
+          rw [mul_one_ax]
+          exact h
+      | cons d ds =>
+          have htail : LastNonzero (d :: ds) := h
+          have htail_raw : LastNonzero (mulCoeff (d :: ds) (linearCoeff r)) := ih htail
+          have htail_deg : 0 < degreeBound (mulCoeff (d :: ds) (linearCoeff r)) := by
+            rw [degreeBound_mulCoeff_right_linear r htail]
+            omega
+          unfold mulCoeff linearCoeff scalarMulCoeff
+          exact addCoeff_two_left_shift_lastNonzero (c * (-r)) (c * 1) htail_raw htail_deg
+
+/-- Arbitrary normalized coefficients times a right-side linear factor
+preserve normalized nonzero leading coefficients after product normalization. -/
+theorem rightLinearMulCoeffLastNonzero (r : Real) {p : CoeffPoly}
+    (h : LastNonzero p) :
+    LastNonzero (normalizedProductCoeff p (linearCoeff r)) := by
+  have hraw := rightLinearMulCoeffRawLastNonzero r h
+  unfold normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  exact hraw
+
+/-- Arbitrary normalized coefficients times a right-side linear factor have
+exact degree growth after product normalization. -/
+theorem rightLinearMulCoeffDegreeGrowth (r : Real) {p : CoeffPoly}
+    (h : LastNonzero p) :
+    ProductDegreeGrowthCert
+      (normalizedProductCoeff p (linearCoeff r)) p (linearCoeff r) := by
+  have hraw := rightLinearMulCoeffRawLastNonzero r h
+  unfold ProductDegreeGrowthCert normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  rw [degreeBound_mulCoeff_right_linear r h]
+  have hlin : degreeBound (linearCoeff r) = 1 := by
+    unfold linearCoeff degreeBound
+    rfl
+  rw [hlin]
+  omega
+
+/-- The right-linear arbitrary normalized degree-growth target is now checked. -/
+theorem rightLinearMulCoeffDegreeGrowthTarget_checked :
+    RightLinearMulCoeffDegreeGrowthTarget := by
+  intro r p h
+  exact rightLinearMulCoeffDegreeGrowth r h
 
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
