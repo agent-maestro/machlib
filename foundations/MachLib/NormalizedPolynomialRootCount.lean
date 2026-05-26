@@ -67,6 +67,40 @@ noncomputable def linearCoeff (r : Real) : CoeffPoly :=
 noncomputable def monicQuadraticCoeff (a b : Real) : CoeffPoly :=
   [a, b, 1]
 
+/-- Explicit coefficient-list product of two linear factors. -/
+noncomputable def linearLinearCoeff (r s : Real) : CoeffPoly :=
+  [(-r) * (-s), (-r) * 1 + 1 * (-s), 1]
+
+/-- Explicit coefficient-list product of three linear factors, represented
+through a staging coefficient list. -/
+noncomputable def stagedTripleLinearCoeff (r s t : Real) : CoeffPoly :=
+  [((-r) * (-s)) * (-t),
+   ((-r) * (-s)) * 1 + ((-r) * 1 + 1 * (-s)) * (-t),
+   ((-r) * 1 + 1 * (-s)) * 1 + 1 * (-t),
+   1]
+
+/-- Explicit constant-scale linear product. -/
+noncomputable def scaledLinearCoeff (a r : Real) : CoeffPoly :=
+  [a * (-r), a]
+
+/-- Explicit linear times monic-quadratic product. -/
+noncomputable def linearQuadraticCoeff (r a b : Real) : CoeffPoly :=
+  [(-r) * a, (-r) * b + 1 * a, (-r) * 1 + 1 * b, 1]
+
+/-- Drop trailing zero coefficients from a low-to-high coefficient list.
+This is intentionally tiny and list-shaped; it does not prove full polynomial
+canonical-form uniqueness. -/
+noncomputable def normalizeCoeff : CoeffPoly → CoeffPoly
+  | [] => []
+  | c :: cs =>
+      by
+        classical
+        let rest := normalizeCoeff cs
+        exact if rest = [] then
+          if c = 0 then [] else [c]
+        else
+          c :: rest
+
 /-- Pointwise coefficient-list addition. Missing coefficients are treated as
 zero, so this is the normalized-list substrate for polynomial addition. -/
 noncomputable def addCoeff : CoeffPoly → CoeffPoly → CoeffPoly
@@ -89,6 +123,10 @@ with `q` is `c*q + x*(cs*q)`. -/
 noncomputable def mulCoeff : CoeffPoly → CoeffPoly → CoeffPoly
   | [], _ => []
   | c :: cs, q => addCoeff (scalarMulCoeff c q) (shiftCoeff (mulCoeff cs q))
+
+/-- Named normalized product output. -/
+noncomputable def normalizedProductCoeff (p q : CoeffPoly) : CoeffPoly :=
+  normalizeCoeff (mulCoeff p q)
 
 /-- A semantic product certificate. It avoids claiming we have a complete
 coefficient-list convolution normalizer yet: a candidate product list is
@@ -374,6 +412,46 @@ theorem productDegreeBound_nil_left (q : CoeffPoly) :
   unfold mulCoeff degreeBound
   simp
 
+/-- Empty lists normalize to empty lists. -/
+theorem normalizeCoeff_nil :
+    normalizeCoeff [] = [] := rfl
+
+/-- A nonzero singleton is already normalized. -/
+theorem normalizeCoeff_singleton_nonzero {c : Real} (hc : c ≠ 0) :
+    normalizeCoeff [c] = [c] := by
+  unfold normalizeCoeff
+  simp [normalizeCoeff_nil, hc]
+
+/-- A zero singleton normalizes away. -/
+theorem normalizeCoeff_singleton_zero :
+    normalizeCoeff [0] = ([] : CoeffPoly) := by
+  unfold normalizeCoeff
+  simp [normalizeCoeff_nil]
+
+/-- Already-normalized coefficient lists are unchanged by the tiny normalizer. -/
+theorem normalizeCoeff_of_LastNonzero {p : CoeffPoly}
+    (h : LastNonzero p) :
+    normalizeCoeff p = p := by
+  induction p with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold LastNonzero at h
+          exact normalizeCoeff_singleton_nonzero h
+      | cons d ds =>
+          unfold LastNonzero at h
+          unfold normalizeCoeff
+          have htail : normalizeCoeff (d :: ds) = d :: ds := ih h
+          simp [htail]
+
+/-- Normalization preserves degree bound for lists that are already normalized. -/
+theorem degreeBound_normalizeCoeff_eq_of_LastNonzero {p : CoeffPoly}
+    (h : LastNonzero p) :
+    degreeBound (normalizeCoeff p) = degreeBound p := by
+  rw [normalizeCoeff_of_LastNonzero h]
+
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
     degreeBound [c] = 0 := rfl
@@ -392,6 +470,11 @@ theorem linearCoeff_lastNonzero (r : Real) :
     LastNonzero (linearCoeff r) := by
   unfold linearCoeff LastNonzero
   exact one_ne_zero
+
+/-- Linear coefficient lists are unchanged by normalization. -/
+theorem normalizeCoeff_linearCoeff (r : Real) :
+    normalizeCoeff (linearCoeff r) = linearCoeff r :=
+  normalizeCoeff_of_LastNonzero (linearCoeff_lastNonzero r)
 
 /-- The coefficient-list linear factor evaluates to the same expression as
 the AST linear factor. -/
@@ -428,6 +511,37 @@ theorem singletonCoeffRootListDistinct (r : Real) :
 theorem linearCoeff_rootListDegreeBound (r : Real) :
     RootListDegreeBound (linearCoeff r) [r] := by
   simp [RootListDegreeBound, degreeBound_linearCoeff]
+
+/-- The explicit constant-scaled linear product evaluates as a product. -/
+theorem scaledLinearCoeff_evalSound (a r : Real) :
+    MulEvalSound (scaledLinearCoeff a r) [a] (linearCoeff r) := by
+  intro x
+  unfold scaledLinearCoeff linearCoeff eval
+  change a * -r + x * (a + x * 0) = (a + x * 0) * (-r + x * (1 + x * 0))
+  mach_ring
+
+/-- The explicit product of two linear factors evaluates as a product. -/
+theorem linearLinearCoeff_evalSound (r s : Real) :
+    MulEvalSound (linearLinearCoeff r s) (linearCoeff r) (linearCoeff s) := by
+  intro x
+  unfold linearLinearCoeff linearCoeff eval
+  change
+    (-r) * (-s) + x * (((-r) * 1 + 1 * (-s)) + x * (1 + x * 0)) =
+      (-r + x * (1 + x * 0)) * (-s + x * (1 + x * 0))
+  mach_ring
+  ac_rfl
+
+/-- The explicit linear times monic-quadratic product evaluates as a product. -/
+theorem linearQuadraticCoeff_evalSound (r a b : Real) :
+    MulEvalSound
+      (linearQuadraticCoeff r a b) (linearCoeff r) (monicQuadraticCoeff a b) := by
+  intro x
+  unfold linearQuadraticCoeff linearCoeff monicQuadraticCoeff eval
+  change
+    (-r) * a + x * (((-r) * b + 1 * a) + x * (((-r) * 1 + 1 * b) + x * (1 + x * 0))) =
+      (-r + x * (1 + x * 0)) * (a + x * (b + x * (1 + x * 0)))
+  mach_ring
+  ac_rfl
 
 /-- A nonzero singleton coefficient list is normalized. -/
 theorem singleton_lastNonzero {c : Real} (hc : c ≠ 0) :
@@ -641,6 +755,262 @@ theorem example_union_repeated_singleton_length (r : Real) :
 theorem example_union_three_singletons_length (r s t : Real) :
     (unionUniqueRoots [r, s] [t]).length ≤ [r, s].length + [t].length :=
   productRootListLength_union_le_add [r, s] [t]
+
+/-! ## Exact product-degree normalizer v8 examples
+
+The following examples keep the product-degree frontier honest: they check
+structural degree bounds for normalized product outputs, while the general
+arbitrary convolution degree-growth theorem remains a target.
+-/
+
+/-- v8 quadratic times linear example 1. -/
+theorem example_v8_quadratic_linear_1 (a b r : Real) :
+    ProductDegreeGrowthCert
+      [a * (-r), a * 1 + b * (-r), b * 1 + 1 * (-r), 1]
+      (monicQuadraticCoeff a b) (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 quadratic times linear example 2, with the linear factor first. -/
+theorem example_v8_quadratic_linear_2 (r a b : Real) :
+    ProductDegreeGrowthCert
+      (linearQuadraticCoeff r a b)
+      (linearCoeff r) (monicQuadraticCoeff a b) := by
+  unfold ProductDegreeGrowthCert linearQuadraticCoeff linearCoeff monicQuadraticCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 quadratic times linear example 3, specializing to a zero constant term. -/
+theorem example_v8_quadratic_linear_3 (b r : Real) :
+    ProductDegreeGrowthCert
+      [0 * (-r), 0 * 1 + b * (-r), b * 1 + 1 * (-r), 1]
+      (monicQuadraticCoeff 0 b) (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 quadratic times linear example 4, specializing to a zero linear term. -/
+theorem example_v8_quadratic_linear_4 (a r : Real) :
+    ProductDegreeGrowthCert
+      [a * (-r), a * 1 + 0 * (-r), 0 * 1 + 1 * (-r), 1]
+      (monicQuadraticCoeff a 0) (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 quadratic times linear example 5, repeated linear attachment. -/
+theorem example_v8_quadratic_linear_5 (r : Real) :
+    ProductDegreeGrowthCert
+      (linearQuadraticCoeff r ((-r) * (-r)) ((-r) * 1 + 1 * (-r)))
+      (linearCoeff r)
+      [(-r) * (-r), (-r) * 1 + 1 * (-r), 1] := by
+  unfold ProductDegreeGrowthCert linearQuadraticCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 quadratic times quadratic example 1. -/
+theorem example_v8_quadratic_quadratic_1 (a b c d : Real) :
+    ProductDegreeGrowthCert
+      [a * c, a * d + b * c, a * 1 + b * d + 1 * c, b * 1 + 1 * d, 1]
+      (monicQuadraticCoeff a b) (monicQuadraticCoeff c d) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 4 ≤ 4
+  omega
+
+/-- v8 quadratic times quadratic example 2, repeated quadratic. -/
+theorem example_v8_quadratic_quadratic_2 (a b : Real) :
+    ProductDegreeGrowthCert
+      [a * a, a * b + b * a, a * 1 + b * b + 1 * a, b * 1 + 1 * b, 1]
+      (monicQuadraticCoeff a b) (monicQuadraticCoeff a b) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 4 ≤ 4
+  omega
+
+/-- v8 quadratic times quadratic example 3, zero constant on the left. -/
+theorem example_v8_quadratic_quadratic_3 (b c d : Real) :
+    ProductDegreeGrowthCert
+      [0 * c, 0 * d + b * c, 0 * 1 + b * d + 1 * c, b * 1 + 1 * d, 1]
+      (monicQuadraticCoeff 0 b) (monicQuadraticCoeff c d) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 4 ≤ 4
+  omega
+
+/-- v8 quadratic times quadratic example 4, zero linear on the right. -/
+theorem example_v8_quadratic_quadratic_4 (a b c : Real) :
+    ProductDegreeGrowthCert
+      [a * c, a * 0 + b * c, a * 1 + b * 0 + 1 * c, b * 1 + 1 * 0, 1]
+      (monicQuadraticCoeff a b) (monicQuadraticCoeff c 0) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 4 ≤ 4
+  omega
+
+/-- v8 quadratic times quadratic example 5, both sparse. -/
+theorem example_v8_quadratic_quadratic_5 (a c : Real) :
+    ProductDegreeGrowthCert
+      [a * c, a * 0 + 0 * c, a * 1 + 0 * 0 + 1 * c, 0 * 1 + 1 * 0, 1]
+      (monicQuadraticCoeff a 0) (monicQuadraticCoeff c 0) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 4 ≤ 4
+  omega
+
+/-- v8 repeated-root example 1: `(x-r)^2`. -/
+theorem example_v8_repeated_root_1 (r : Real) :
+    ProductDegreeGrowthCert (linearLinearCoeff r r) (linearCoeff r) (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert linearLinearCoeff linearCoeff degreeBound
+  change 2 ≤ 2
+  omega
+
+/-- v8 repeated-root example 2: staged `(x-r)^3`. -/
+theorem example_v8_repeated_root_2 (r : Real) :
+    ProductDegreeGrowthCert
+      (stagedTripleLinearCoeff r r r)
+      (linearLinearCoeff r r) (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert stagedTripleLinearCoeff linearLinearCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 repeated-root example 3: `(x-r)^2(x-s)`. -/
+theorem example_v8_repeated_root_3 (r s : Real) :
+    ProductDegreeGrowthCert
+      (stagedTripleLinearCoeff r r s)
+      (linearLinearCoeff r r) (linearCoeff s) := by
+  unfold ProductDegreeGrowthCert stagedTripleLinearCoeff linearLinearCoeff linearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 repeated-root example 4: `(x-r)(x-s)^2`. -/
+theorem example_v8_repeated_root_4 (r s : Real) :
+    ProductDegreeGrowthCert
+      (stagedTripleLinearCoeff r s s)
+      (linearLinearCoeff r s) (linearCoeff s) := by
+  unfold ProductDegreeGrowthCert stagedTripleLinearCoeff linearLinearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 repeated-root example 5: `(x-r)^3` viewed as linear times quadratic. -/
+theorem example_v8_repeated_root_5 (r : Real) :
+    ProductDegreeGrowthCert
+      (linearQuadraticCoeff r ((-r) * (-r)) ((-r) * 1 + 1 * (-r)))
+      (linearCoeff r) (linearLinearCoeff r r) := by
+  unfold ProductDegreeGrowthCert linearQuadraticCoeff linearCoeff linearLinearCoeff degreeBound
+  change 3 ≤ 3
+  omega
+
+/-- v8 scaled product example 1: nonzero constant times linear shape. -/
+theorem example_v8_scaled_product_1 (a r : Real) :
+    ProductDegreeGrowthCert (scaledLinearCoeff a r) [a] (linearCoeff r) := by
+  unfold ProductDegreeGrowthCert scaledLinearCoeff linearCoeff degreeBound
+  change 1 ≤ 1
+  omega
+
+/-- v8 scaled product example 2: linear times constant shape. -/
+theorem example_v8_scaled_product_2 (r a : Real) :
+    ProductDegreeGrowthCert [(-r) * a, 1 * a] (linearCoeff r) [a] := by
+  unfold ProductDegreeGrowthCert linearCoeff degreeBound
+  change 1 ≤ 1
+  omega
+
+/-- v8 scaled product example 3: constant times monic quadratic shape. -/
+theorem example_v8_scaled_product_3 (a b c : Real) :
+    ProductDegreeGrowthCert [a * b, a * c, a] [a] (monicQuadraticCoeff b c) := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 2 ≤ 2
+  omega
+
+/-- v8 scaled product example 4: monic quadratic times constant shape. -/
+theorem example_v8_scaled_product_4 (a b c : Real) :
+    ProductDegreeGrowthCert [b * a, c * a, 1 * a] (monicQuadraticCoeff b c) [a] := by
+  unfold ProductDegreeGrowthCert monicQuadraticCoeff degreeBound
+  change 2 ≤ 2
+  omega
+
+/-- v8 scaled product example 5: constant times repeated-root quadratic. -/
+theorem example_v8_scaled_product_5 (a r : Real) :
+    ProductDegreeGrowthCert
+      [a * ((-r) * (-r)), a * ((-r) * 1 + 1 * (-r)), a]
+      [a] (linearLinearCoeff r r) := by
+  unfold ProductDegreeGrowthCert linearLinearCoeff degreeBound
+  change 2 ≤ 2
+  omega
+
+/-- v8 cleanup example 1: empty list normalizes to empty. -/
+theorem example_v8_cleanup_1 :
+    normalizeCoeff ([] : CoeffPoly) = [] :=
+  normalizeCoeff_nil
+
+/-- v8 cleanup example 2: singleton zero normalizes away. -/
+theorem example_v8_cleanup_2 :
+    normalizeCoeff [0] = ([] : CoeffPoly) :=
+  normalizeCoeff_singleton_zero
+
+/-- v8 cleanup example 3: nonzero singleton is already normalized. -/
+theorem example_v8_cleanup_3 {c : Real} (hc : c ≠ 0) :
+    normalizeCoeff [c] = [c] :=
+  normalizeCoeff_singleton_nonzero hc
+
+/-- v8 cleanup example 4: linear coefficient lists are already normalized. -/
+theorem example_v8_cleanup_4 (r : Real) :
+    normalizeCoeff (linearCoeff r) = linearCoeff r :=
+  normalizeCoeff_linearCoeff r
+
+/-- v8 cleanup example 5: LastNonzero inputs preserve degree under normalization. -/
+theorem example_v8_cleanup_5 {p : CoeffPoly} (h : LastNonzero p) :
+    degreeBound (normalizeCoeff p) = degreeBound p :=
+  degreeBound_normalizeCoeff_eq_of_LastNonzero h
+
+/-- v8 root-packet example 1: `(x-r)(x-s)` gets the union of singleton roots. -/
+theorem example_v8_root_packet_linear_linear (r s : Real) :
+    RootListDegreeBound (linearLinearCoeff r s) (unionUniqueRoots [r] [s]) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := by
+      unfold ProductDegreeGrowthCert linearLinearCoeff linearCoeff degreeBound
+      change 2 ≤ 2
+      omega)
+    (hp := linearCoeff_rootListDegreeBound r)
+    (hq := linearCoeff_rootListDegreeBound s)
+
+/-- v8 root-packet example 2: `(x-r)^2` deduplicates repeated singleton roots. -/
+theorem example_v8_root_packet_repeated_linear (r : Real) :
+    RootListDegreeBound (linearLinearCoeff r r) (unionUniqueRoots [r] [r]) :=
+  example_v8_root_packet_linear_linear r r
+
+/-- v8 root-packet example 3: `(x-r)(x-s)(x-t)` as a staged product packet. -/
+theorem example_v8_root_packet_staged_triple (r s t : Real) :
+    RootListDegreeBound
+      (stagedTripleLinearCoeff r s t)
+      (unionUniqueRoots (unionUniqueRoots [r] [s]) [t]) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := by
+      unfold ProductDegreeGrowthCert stagedTripleLinearCoeff linearLinearCoeff linearCoeff degreeBound
+      change 3 ≤ 3
+      omega)
+    (hp := example_v8_root_packet_linear_linear r s)
+    (hq := linearCoeff_rootListDegreeBound t)
+
+/-- v8 root-packet example 4: constant-scale times linear, degree-bound layer. -/
+theorem example_v8_root_packet_scaled_linear (a r : Real) :
+    RootListDegreeBound (scaledLinearCoeff a r) (unionUniqueRoots [] [r]) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := example_v8_scaled_product_1 a r)
+    (hp := by
+      unfold RootListDegreeBound degreeBound
+      change 0 ≤ 0
+      omega)
+    (hq := linearCoeff_rootListDegreeBound r)
+
+/-- v8 root-packet example 5: linear times quadratic with a provided
+quadratic root-degree certificate. -/
+theorem example_v8_root_packet_linear_quadratic_with_certificate
+    (r a b : Real) {rootsQ : List Real}
+    (hq : RootListDegreeBound (monicQuadraticCoeff a b) rootsQ) :
+    RootListDegreeBound
+      (linearQuadraticCoeff r a b)
+      (unionUniqueRoots [r] rootsQ) :=
+  productRootListDegreeBound_union_of_cert
+    (hcert := example_v8_quadratic_linear_2 r a b)
+    (hp := linearCoeff_rootListDegreeBound r)
+    (hq := hq)
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/

@@ -1,0 +1,121 @@
+{
+  "packet_id": "machlib_exact_product_degree_normalizer_packet_v8_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_EXACT_PRODUCT_DEGREE_NORMALIZER_PACKET_V8_READY",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "normalizer_layer": {
+    "normalize_coeff": "normalizeCoeff",
+    "normalized_product_output": "normalizedProductCoeff",
+    "already_normalized_degree_preservation": "degreeBound_normalizeCoeff_eq_of_LastNonzero",
+    "checked_result_count": 9,
+    "checked_results": [
+      "normalizeCoeff_nil",
+      "normalizeCoeff_singleton_zero",
+      "normalizeCoeff_singleton_nonzero",
+      "normalizeCoeff_of_LastNonzero",
+      "degreeBound_normalizeCoeff_eq_of_LastNonzero",
+      "normalizeCoeff_linearCoeff",
+      "scaledLinearCoeff_evalSound",
+      "linearLinearCoeff_evalSound",
+      "linearQuadraticCoeff_evalSound"
+    ]
+  },
+  "targeted_example_class_count": 5,
+  "targeted_example_count": 25,
+  "targeted_examples": {
+    "quadratic_times_linear": [
+      "example_v8_quadratic_linear_1",
+      "example_v8_quadratic_linear_2",
+      "example_v8_quadratic_linear_3",
+      "example_v8_quadratic_linear_4",
+      "example_v8_quadratic_linear_5"
+    ],
+    "quadratic_times_quadratic": [
+      "example_v8_quadratic_quadratic_1",
+      "example_v8_quadratic_quadratic_2",
+      "example_v8_quadratic_quadratic_3",
+      "example_v8_quadratic_quadratic_4",
+      "example_v8_quadratic_quadratic_5"
+    ],
+    "repeated_roots": [
+      "example_v8_repeated_root_1",
+      "example_v8_repeated_root_2",
+      "example_v8_repeated_root_3",
+      "example_v8_repeated_root_4",
+      "example_v8_repeated_root_5"
+    ],
+    "constant_scale_products": [
+      "example_v8_scaled_product_1",
+      "example_v8_scaled_product_2",
+      "example_v8_scaled_product_3",
+      "example_v8_scaled_product_4",
+      "example_v8_scaled_product_5"
+    ],
+    "trailing_zero_cleanup": [
+      "example_v8_cleanup_1",
+      "example_v8_cleanup_2",
+      "example_v8_cleanup_3",
+      "example_v8_cleanup_4",
+      "example_v8_cleanup_5"
+    ]
+  },
+  "root_packet_example_count": 5,
+  "root_packet_examples": [
+    {
+      "id": "linear_linear",
+      "shape": "(x-r)(x-s)",
+      "lean_name": "example_v8_root_packet_linear_linear",
+      "evidence_class": "CHECKED_DEGREE_BOUND_PACKET"
+    },
+    {
+      "id": "repeated_linear",
+      "shape": "(x-r)^2",
+      "lean_name": "example_v8_root_packet_repeated_linear",
+      "evidence_class": "CHECKED_DEGREE_BOUND_PACKET"
+    },
+    {
+      "id": "staged_triple",
+      "shape": "(x-r)(x-s)(x-t)",
+      "lean_name": "example_v8_root_packet_staged_triple",
+      "evidence_class": "CHECKED_STAGED_DEGREE_BOUND_PACKET"
+    },
+    {
+      "id": "constant_times_linear",
+      "shape": "constant * (x-r)",
+      "lean_name": "example_v8_root_packet_scaled_linear",
+      "evidence_class": "CHECKED_DEGREE_BOUND_PACKET"
+    },
+    {
+      "id": "linear_times_quadratic_with_certificate",
+      "shape": "(x-r) * monic_quadratic(a,b)",
+      "lean_name": "example_v8_root_packet_linear_quadratic_with_certificate",
+      "evidence_class": "CHECKED_CERTIFICATE_INTERFACE"
+    }
+  ],
+  "degree_theorem_feasibility_split": {
+    "already_normalized_normalizer_preservation": "CHECKED",
+    "linear_times_quadratic_eval_soundness": "CHECKED_SPECIALIZED",
+    "linear_times_arbitrary_normalized_polynomial": "NOT_YET_PROVED",
+    "arbitrary_normalized_product_degree_growth": "NOT_YET_PROVED"
+  },
+  "blocked_next": [
+    "prove full product degree growth for arbitrary normalized nonzero convolution products",
+    "prove normalized leading-coefficient preservation for mulCoeff without specializing product shapes",
+    "derive root-list union cardinality strong enough for the general induction theorem",
+    "replace certificate interfaces for quadratic root packets with complete checked root enumerators",
+    "assemble RootCountInductionTarget after product-degree arithmetic is general"
+  ],
+  "bridge_axiom_count": 0,
+  "general_root_count_theorem_proved": false,
+  "analytic_identity_theorem_proved": false,
+  "public_theorem_claim": false,
+  "marketplace_ready": false,
+  "public_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}
