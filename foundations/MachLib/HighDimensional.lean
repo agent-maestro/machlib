@@ -165,6 +165,51 @@ def ConcretePositiveCoordinateObligation
     w.rawEvent = BoundaryEventClass.domainWall ∧
     w.rescuedEvent = BoundaryEventClass.logDomainRescue
 
+/-- Concrete v0 guard-clamp witness extracted from a Forge rescue trace.
+This is the second independent discharged foothold: instead of proving
+positivity by a log-domain lift, it proves a guarded coordinate remains inside
+an explicit output bound for one overflow rescue sample. -/
+structure GuardClampOutputSafetyWitness where
+  rawCoordinate : Real
+  guardedCoordinate : Real
+  outputLimit : Real
+  rawEvent : BoundaryEventClass
+  rescuedEvent : BoundaryEventClass
+  guardWithinLimit : guardedCoordinate ≤ outputLimit
+  rawIsOverflowWall : rawEvent = BoundaryEventClass.overflowWall
+  rescueIsGuardRescue : rescuedEvent = BoundaryEventClass.guardRescue
+
+/-- Concrete output-safety obligation for one guard-clamp rescue sample. -/
+def ConcreteOutputSafetyObligation
+    (w : GuardClampOutputSafetyWitness) : Prop :=
+  w.guardedCoordinate ≤ w.outputLimit ∧
+    w.rawEvent = BoundaryEventClass.overflowWall ∧
+    w.rescuedEvent = BoundaryEventClass.guardRescue
+
+/-- Concrete v0 saturation-deshelf witness extracted from a Forge rescue trace.
+This witness is deliberately local: it records that the recovered pre-clamp
+pressure is still compatible with the declared clamp interval, and that the
+trace moved from a saturation shelf to corner concentration. -/
+structure SaturationDeshelfClampWitness where
+  probeCoordinate : Real
+  preClampPressure : Real
+  lowerBound : Real
+  upperBound : Real
+  rawEvent : BoundaryEventClass
+  rescuedEvent : BoundaryEventClass
+  lowerLePressure : lowerBound ≤ preClampPressure
+  pressureLeUpper : preClampPressure ≤ upperBound
+  rawIsSaturationShelf : rawEvent = BoundaryEventClass.saturationShelf
+  rescueIsCornerConcentration : rescuedEvent = BoundaryEventClass.cornerConcentration
+
+/-- Concrete clamp-invariant obligation for one saturation-deshelf sample. -/
+def ConcreteClampInvariantObligation
+    (w : SaturationDeshelfClampWitness) : Prop :=
+  w.lowerBound ≤ w.preClampPressure ∧
+    w.preClampPressure ≤ w.upperBound ∧
+    w.rawEvent = BoundaryEventClass.saturationShelf ∧
+    w.rescuedEvent = BoundaryEventClass.cornerConcentration
+
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
     (p : BoundaryRunPacket) :
@@ -411,6 +456,28 @@ theorem log_domain_positive_coordinate_witness_discharges_concrete_obligation
     ConcretePositiveCoordinateObligation w := by
   exact And.intro w.liftedPositive
     (And.intro w.rawIsDomainWall w.rescueIsLogDomain)
+
+/-- Second discharged rescue foothold: the concrete output-safety part of a
+Forge guard-clamp rescue sample follows directly from the witness record,
+without invoking `OutputSafetyObligation` or a packet bridge axiom. This is a
+sample-level bound witness, not the final semantic rewrite theorem for all
+guarded programs. -/
+theorem guard_clamp_output_safety_witness_discharges_concrete_obligation
+    (w : GuardClampOutputSafetyWitness) :
+    ConcreteOutputSafetyObligation w := by
+  exact And.intro w.guardWithinLimit
+    (And.intro w.rawIsOverflowWall w.rescueIsGuardRescue)
+
+/-- Third discharged rescue foothold: the concrete clamp-invariant part of a
+Forge saturation-deshelf sample follows directly from the witness record. This
+does not claim that deshelf is rescue-normal or that every saturation rewrite is
+semantically proved. -/
+theorem saturation_deshelf_clamp_witness_discharges_concrete_obligation
+    (w : SaturationDeshelfClampWitness) :
+    ConcreteClampInvariantObligation w := by
+  exact And.intro w.lowerLePressure
+    (And.intro w.pressureLeUpper
+      (And.intro w.rawIsSaturationShelf w.rescueIsCornerConcentration))
 
 theorem overflow_to_guard_rescue_maps_to_output_safety
     (p : BoundaryRunPacket) :
