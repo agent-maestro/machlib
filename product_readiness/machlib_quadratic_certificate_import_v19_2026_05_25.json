@@ -1,0 +1,51 @@
+{
+  "date": "2026-05-25",
+  "source": "machlib_root_certificate_pipeline_v19_v20_2026_05_25",
+  "certificates": [
+    {
+      "certificate_id": "quadratic_rational_square_outside_window_quadratic_import_v19",
+      "description": "(x-7)(x-8) with root limit 6 converted from v18 quadratic residual classification",
+      "coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        7,
+        8
+      ],
+      "expected_product_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "expected_dedup_roots": [
+        7,
+        8
+      ],
+      "normalized": true,
+      "source": "machlib_quadratic_residual_classifier_v18",
+      "conversion": "RATIONAL_DISCRIMINANT_SQUARE_TO_V15_CERTIFICATE"
+    }
+  ],
+  "validations": [
+    {
+      "certificate_id": "quadratic_rational_square_outside_window_quadratic_import_v19",
+      "status": "PASS",
+      "computed_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "computed_roots": [
+        7,
+        8
+      ],
+      "degree_bound": 2,
+      "expected_root_count": 2,
+      "failures": [],
+      "warnings": []
+    }
+  ]
+}

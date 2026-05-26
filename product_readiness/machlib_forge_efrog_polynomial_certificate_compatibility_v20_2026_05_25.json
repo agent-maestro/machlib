@@ -1,0 +1,18 @@
+{
+  "packet_id": "machlib_forge_efrog_polynomial_certificate_compatibility_v20_2026_05_25",
+  "date": "2026-05-25",
+  "status": "REPORT_ONLY_NO_BEHAVIOR_CHANGE",
+  "future_certificate_shape": {
+    "coeffs": "low_to_high_normalized_coefficients",
+    "constant": "leading_coefficient_for_linear_factor_product",
+    "linear_roots": "ordered_exact_roots_when_known",
+    "expected_product_coeffs": "normalized_coefficients_for_validation",
+    "expected_dedup_roots": "deduplicated_roots_for_root_count_packets",
+    "normalized": true
+  },
+  "forge_compiler_behavior_changed": false,
+  "efrog_behavior_changed": false,
+  "root_count_induction_target_proved": false,
+  "public_ready": false,
+  "marketplace_ready": false
+}

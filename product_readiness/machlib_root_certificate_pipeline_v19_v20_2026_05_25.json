@@ -1,0 +1,334 @@
+{
+  "packet_id": "machlib_root_certificate_pipeline_v19_v20_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_ROOT_CERTIFICATE_PIPELINE_V19_V20_READY",
+  "source_pipeline": "machlib_polynomial_root_pipeline_v17_v18_2026_05_25",
+  "source_pipeline_status": "MACHLIB_POLYNOMIAL_ROOT_PIPELINE_V17_V18_READY",
+  "case_count": 10,
+  "v16_certificate_generated_count": 6,
+  "v18_quadratic_classification_count": 3,
+  "v19_imported_certificate_count": 1,
+  "v19_validation_failure_count": 0,
+  "v19_imported_certificates": [
+    {
+      "certificate_id": "quadratic_rational_square_outside_window_quadratic_import_v19",
+      "description": "(x-7)(x-8) with root limit 6 converted from v18 quadratic residual classification",
+      "coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        7,
+        8
+      ],
+      "expected_product_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "expected_dedup_roots": [
+        7,
+        8
+      ],
+      "normalized": true,
+      "source": "machlib_quadratic_residual_classifier_v18",
+      "conversion": "RATIONAL_DISCRIMINANT_SQUARE_TO_V15_CERTIFICATE"
+    }
+  ],
+  "v19_validations": [
+    {
+      "certificate_id": "quadratic_rational_square_outside_window_quadratic_import_v19",
+      "status": "PASS",
+      "computed_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "computed_roots": [
+        7,
+        8
+      ],
+      "degree_bound": 2,
+      "expected_root_count": 2,
+      "failures": [],
+      "warnings": []
+    }
+  ],
+  "v19_conversion_blockers": [
+    {
+      "case_id": "quadratic_two_integer_roots_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "cubic_three_integer_roots_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "irreducible_over_rational_window_v16",
+      "classification": "NEGATIVE_DISCRIMINANT_NO_REAL_ROOTS_IN_QUADRATIC_STUB",
+      "reason": "NEGATIVE_DISCRIMINANT"
+    },
+    {
+      "case_id": "repeated_cubic_root_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "scaled_pair_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "fractional_roots_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "constant_only_v16",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    },
+    {
+      "case_id": "quadratic_irrational_roots_v18",
+      "classification": "IRRATIONAL_ROOTS_BLOCKED_IN_RATIONAL_LAYER",
+      "reason": "DISCRIMINANT_NOT_RATIONAL_SQUARE"
+    },
+    {
+      "case_id": "quadratic_large_rational_root_outside_window_v18",
+      "classification": "NOT_QUADRATIC",
+      "reason": "RESIDUAL_NOT_DEGREE_TWO"
+    }
+  ],
+  "v20_evidence_rows": [
+    {
+      "case_id": "quadratic_two_integer_roots_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "found_roots": [
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "cubic_three_integer_roots_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "found_roots": [
+        1,
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "irreducible_over_rational_window_v16",
+      "status": "V18_CLASSIFIED_BLOCKER",
+      "input_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "found_roots": [],
+      "remaining_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "residual_degree": 2,
+      "quadratic_classification": "NEGATIVE_DISCRIMINANT_NO_REAL_ROOTS_IN_QUADRATIC_STUB",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "repeated_cubic_root_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "found_roots": [
+        2,
+        2,
+        2
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "scaled_pair_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "found_roots": [
+        1,
+        4
+      ],
+      "remaining_coeffs": [
+        2
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "fractional_roots_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "found_roots": [
+        -1,
+        "1/2"
+      ],
+      "remaining_coeffs": [
+        3
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "constant_only_v16",
+      "status": "V16_CERTIFICATE_AVAILABLE",
+      "input_coeffs": [
+        7
+      ],
+      "found_roots": [],
+      "remaining_coeffs": [
+        7
+      ],
+      "residual_degree": 0,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": null,
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "quadratic_irrational_roots_v18",
+      "status": "V18_CLASSIFIED_BLOCKER",
+      "input_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "found_roots": [],
+      "remaining_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "residual_degree": 2,
+      "quadratic_classification": "IRRATIONAL_ROOTS_BLOCKED_IN_RATIONAL_LAYER",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "quadratic_large_rational_root_outside_window_v18",
+      "status": "BOUNDED_SEARCH_BLOCKER",
+      "input_coeffs": [
+        -10,
+        9,
+        1
+      ],
+      "found_roots": [
+        1
+      ],
+      "remaining_coeffs": [
+        10,
+        1
+      ],
+      "residual_degree": 1,
+      "quadratic_classification": "NOT_QUADRATIC",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    },
+    {
+      "case_id": "quadratic_rational_square_outside_window_v18",
+      "status": "V19_CERTIFICATE_CONVERTIBLE",
+      "input_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "found_roots": [],
+      "remaining_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "residual_degree": 2,
+      "quadratic_classification": "RATIONAL_DISCRIMINANT_SQUARE_FACTORABLE",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "root_count_induction_target_proved": false,
+      "public_theorem_claim": false
+    }
+  ],
+  "root_count_induction_target_status": "DEFINED_NOT_PROVED",
+  "forge_efrog_compatibility_status": "REPORT_ONLY_NO_BEHAVIOR_CHANGE",
+  "boundary": {
+    "general_root_count_theorem_proved": false,
+    "root_count_induction_target_proved": false,
+    "analytic_identity_theorem_proved": false,
+    "arbitrary_root_discovery_claim": false,
+    "quadratic_closed_form_theorem_claim": false,
+    "forge_compiler_behavior_changed": false,
+    "efrog_behavior_changed": false,
+    "public_theorem_claim": false,
+    "marketplace_ready": false,
+    "public_ready": false,
+    "production_marketplace_modified": false,
+    "petal_api_upload_performed": false,
+    "huggingface_upload_performed": false,
+    "package_publish_performed": false,
+    "certified_safety_claim": false,
+    "production_controller_claim": false
+  }
+}
