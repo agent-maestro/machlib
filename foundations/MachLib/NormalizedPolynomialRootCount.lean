@@ -228,6 +228,14 @@ def RightLinearMulCoeffDegreeGrowthTarget : Prop :=
     LastNonzero p →
     ProductDegreeGrowthCert (normalizedProductCoeff p (linearCoeff r)) p (linearCoeff r)
 
+/-- Target shape for arbitrary normalized coefficient-list products preserving
+the raw leading-coefficient witness before trailing-zero normalization. -/
+def MulCoeffLastNonzeroTarget : Prop :=
+  ∀ p q : CoeffPoly,
+    LastNonzero p →
+    LastNonzero q →
+    LastNonzero (mulCoeff p q)
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -493,6 +501,117 @@ theorem degreeBound_addCoeff_two_left_shift (a b : Real) {q : CoeffPoly}
       | cons d ds =>
           unfold shiftCoeff addCoeff degreeBound
           rfl
+
+/-- Scalar multiplication preserves the syntactic degree bound, even when the
+scalar is zero. This is a list-shape fact, not a nonzero-leading theorem. -/
+theorem degreeBound_scalarMulCoeff (a : Real) :
+    ∀ p : CoeffPoly, degreeBound (scalarMulCoeff a p) = degreeBound p := by
+  intro p
+  induction p with
+  | nil =>
+      unfold scalarMulCoeff degreeBound
+      rfl
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold scalarMulCoeff degreeBound
+          rfl
+      | cons d ds =>
+          unfold scalarMulCoeff degreeBound
+          change Nat.succ (degreeBound (scalarMulCoeff a (d :: ds))) =
+            Nat.succ (degreeBound (d :: ds))
+          rw [ih]
+
+/-- Adding a strictly lower-degree coefficient list on the left preserves the
+right list's last nonzero witness. This is the generic version of the earlier
+two-coefficient/right-linear helper. -/
+theorem addCoeff_left_lower_degree_lastNonzero :
+    ∀ {p q : CoeffPoly},
+      degreeBound p < degreeBound q →
+      LastNonzero q →
+      LastNonzero (addCoeff p q) := by
+  intro p q hdeg hq
+  induction p generalizing q with
+  | nil =>
+      cases q with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          unfold addCoeff
+          exact hq
+  | cons c cs ih =>
+      cases q with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          cases ds with
+          | nil =>
+              cases cs with
+              | nil =>
+                  unfold degreeBound at hdeg
+                  omega
+              | cons e es =>
+                  unfold degreeBound at hdeg
+                  omega
+          | cons e es =>
+              cases cs with
+              | nil =>
+                  unfold addCoeff LastNonzero
+                  exact hq
+              | cons f fs =>
+                  unfold addCoeff LastNonzero
+                  change LastNonzero (addCoeff (f :: fs) (e :: es))
+                  have hqtail : LastNonzero (e :: es) := hq
+                  apply ih
+                  · unfold degreeBound at hdeg
+                    omega
+                  · exact hqtail
+
+/-- Adding a strictly lower-degree coefficient list on the left preserves the
+right list's degree bound. -/
+theorem degreeBound_addCoeff_left_lower_degree :
+    ∀ {p q : CoeffPoly},
+      degreeBound p < degreeBound q →
+      degreeBound (addCoeff p q) = degreeBound q := by
+  intro p q hdeg
+  induction p generalizing q with
+  | nil =>
+      cases q with
+      | nil =>
+          unfold addCoeff
+          rfl
+      | cons d ds =>
+          unfold addCoeff
+          rfl
+  | cons c cs ih =>
+      cases q with
+      | nil =>
+          unfold degreeBound at hdeg
+          omega
+      | cons d ds =>
+          cases ds with
+          | nil =>
+              cases cs with
+              | nil =>
+                  unfold degreeBound at hdeg
+                  omega
+              | cons e es =>
+                  unfold degreeBound at hdeg
+                  omega
+          | cons e es =>
+              cases cs with
+              | nil =>
+                  unfold addCoeff degreeBound
+                  rfl
+              | cons f fs =>
+                  unfold addCoeff degreeBound
+                  change Nat.succ (degreeBound (addCoeff (f :: fs) (e :: es))) =
+                    Nat.succ (degreeBound (e :: es))
+                  rw [ih]
+                  unfold degreeBound at hdeg
+                  omega
 
 /-- Pointwise coefficient-list addition evaluates to pointwise addition. -/
 theorem eval_addCoeff (p q : CoeffPoly) (x : Real) :
@@ -887,6 +1006,108 @@ theorem rightLinearMulCoeffDegreeGrowthTarget_checked :
     RightLinearMulCoeffDegreeGrowthTarget := by
   intro r p h
   exact rightLinearMulCoeffDegreeGrowth r h
+
+/-- Raw arbitrary normalized convolution simultaneously preserves a nonzero
+leading coefficient and has the exact lower-bound degree growth needed for
+root-count induction. Keeping the two statements together avoids a circular
+dependency: the degree argument needs the recursive product to be normalized,
+and the normalization argument needs the recursive degree lower bound. -/
+theorem mulCoeff_lastNonzero_and_raw_growth :
+    ∀ {p q : CoeffPoly},
+      LastNonzero p →
+      LastNonzero q →
+      LastNonzero (mulCoeff p q) ∧
+        degreeBound p + degreeBound q ≤ degreeBound (mulCoeff p q) := by
+  intro p q hp hq
+  induction p with
+  | nil =>
+      cases hp
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          have hc : c ≠ 0 := hp
+          have hscaled : LastNonzero (scalarMulCoeff c q) :=
+            scalarMulCoeff_lastNonzero hc hq
+          constructor
+          · change LastNonzero (addCoeff (scalarMulCoeff c q) [0])
+            rw [addCoeff_zero_singleton_right_of_LastNonzero hscaled]
+            exact hscaled
+          · change degreeBound [c] + degreeBound q ≤
+              degreeBound (addCoeff (scalarMulCoeff c q) [0])
+            rw [addCoeff_zero_singleton_right_of_LastNonzero hscaled]
+            rw [degreeBound_scalarMulCoeff]
+            unfold degreeBound
+            omega
+      | cons d ds =>
+          have htail : LastNonzero (d :: ds) := hp
+          have htailPair := ih htail
+          have htailProduct : LastNonzero (mulCoeff (d :: ds) q) := htailPair.left
+          have htailGrowth :
+              degreeBound (d :: ds) + degreeBound q ≤
+                degreeBound (mulCoeff (d :: ds) q) := htailPair.right
+          have hlower :
+              degreeBound (scalarMulCoeff c q) <
+                degreeBound (shiftCoeff (mulCoeff (d :: ds) q)) := by
+            rw [degreeBound_scalarMulCoeff]
+            rw [degreeBound_shiftCoeff_of_LastNonzero htailProduct]
+            omega
+          constructor
+          · unfold mulCoeff
+            apply addCoeff_left_lower_degree_lastNonzero
+            · exact hlower
+            · exact shiftCoeff_lastNonzero htailProduct
+          · unfold mulCoeff
+            rw [degreeBound_addCoeff_left_lower_degree hlower]
+            rw [degreeBound_shiftCoeff_of_LastNonzero htailProduct]
+            change Nat.succ (degreeBound (d :: ds)) + degreeBound q ≤
+              Nat.succ (degreeBound (mulCoeff (d :: ds) q))
+            omega
+
+/-- Arbitrary normalized coefficient-list convolution preserves a raw nonzero
+leading coefficient before normalization. -/
+theorem mulCoeff_lastNonzero {p q : CoeffPoly}
+    (hp : LastNonzero p) (hq : LastNonzero q) :
+    LastNonzero (mulCoeff p q) :=
+  (mulCoeff_lastNonzero_and_raw_growth hp hq).left
+
+/-- Raw arbitrary normalized convolution has exact lower-bound degree growth.
+This is the unchecked target's core degree direction before normalization. -/
+theorem degreeBound_mulCoeff_raw_growth {p q : CoeffPoly}
+    (hp : LastNonzero p) (hq : LastNonzero q) :
+    degreeBound p + degreeBound q ≤ degreeBound (mulCoeff p q) :=
+  (mulCoeff_lastNonzero_and_raw_growth hp hq).right
+
+/-- Arbitrary normalized convolution preserves nonzero leading coefficients
+after trailing-zero normalization. -/
+theorem normalizedProductCoeff_lastNonzero {p q : CoeffPoly}
+    (hp : LastNonzero p) (hq : LastNonzero q) :
+    LastNonzero (normalizedProductCoeff p q) := by
+  have hraw := mulCoeff_lastNonzero hp hq
+  unfold normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  exact hraw
+
+/-- The arbitrary product leading-coefficient target is now checked. -/
+theorem mulCoeffLastNonzeroTarget_checked :
+    MulCoeffLastNonzeroTarget := by
+  intro p q hp hq
+  exact mulCoeff_lastNonzero hp hq
+
+/-- Arbitrary normalized coefficient-list products have the degree budget
+needed by root-list union induction. -/
+theorem normalizedProductCoeffDegreeGrowth {p q : CoeffPoly}
+    (hp : LastNonzero p) (hq : LastNonzero q) :
+    ProductDegreeGrowthCert (normalizedProductCoeff p q) p q := by
+  have hraw := mulCoeff_lastNonzero hp hq
+  unfold ProductDegreeGrowthCert normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  exact degreeBound_mulCoeff_raw_growth hp hq
+
+/-- The arbitrary normalized product-degree growth target is now checked. -/
+theorem normalizedMulCoeffDegreeGrowthTarget_checked :
+    NormalizedMulCoeffDegreeGrowthTarget := by
+  intro p q hp hq
+  exact normalizedProductCoeffDegreeGrowth hp hq
 
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
@@ -1620,6 +1841,42 @@ noncomputable def normalizedProductFiniteRootPacketWithDegreeGrowthCert
       (hcert := hgrowth)
       (hp := left.degree_bound)
       (hq := right.degree_bound)
+
+/-- Generic normalized-product packet constructor using the checked arbitrary
+normalized product leading-coefficient and degree-growth bridges. This removes
+the v9-v12 certificate interface for products of already-normalized finite-root
+packets. -/
+noncomputable def normalizedProductFiniteRootPacket
+    (left right : NormalizedFiniteRootPacket) :
+    NormalizedFiniteRootPacket :=
+  normalizedProductFiniteRootPacketWithDegreeGrowthCert
+    left
+    right
+    (normalizedProductCoeff_lastNonzero left.normalized right.normalized)
+    (normalizedProductCoeffDegreeGrowth left.normalized right.normalized)
+
+/-- Product packet assembly target now supported for any two finite normalized
+root packets. This is the product-composition bridge toward, but not yet the
+same as, full root enumeration for an arbitrary input polynomial. -/
+def ProductPacketAssemblyTarget : Prop :=
+  ∀ left right : NormalizedFiniteRootPacket,
+    RootListSound
+      (normalizedProductFiniteRootPacket left right).coeffs
+      (normalizedProductFiniteRootPacket left right).roots ∧
+    RootListDistinct (normalizedProductFiniteRootPacket left right).roots ∧
+    RootListDegreeBound
+      (normalizedProductFiniteRootPacket left right).coeffs
+      (normalizedProductFiniteRootPacket left right).roots
+
+/-- The normalized product packet assembly target is now checked. -/
+theorem productPacketAssemblyTarget_checked :
+    ProductPacketAssemblyTarget := by
+  intro left right
+  constructor
+  · exact (normalizedProductFiniteRootPacket left right).sound
+  · constructor
+    · exact (normalizedProductFiniteRootPacket left right).distinct
+    · exact (normalizedProductFiniteRootPacket left right).degree_bound
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/
