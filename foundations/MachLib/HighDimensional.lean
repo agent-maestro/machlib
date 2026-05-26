@@ -83,12 +83,77 @@ axiom log_domain_boundary_packet_finite_survival_nonneg
 /-- Benchmark-observed boundary dominance relation for one replay packet. -/
 axiom BoundaryDominatesCenter : BoundaryRunPacket -> Prop
 
+/-- Boundary-event class labels shared by Forge and Course 006 packets. -/
+inductive BoundaryEventClass where
+  | interiorSample
+  | cornerConcentration
+  | domainWall
+  | overflowWall
+  | saturationShelf
+  | phantomAttractor
+  | guardRescue
+  | logDomainRescue
+
+/-- Packet contains at least one event of the given class. -/
+axiom PacketHasEvent : BoundaryRunPacket -> BoundaryEventClass -> Prop
+
+/-- Obligation predicates attached to taxonomy classes. -/
+axiom BaselineReplayValid : BoundaryRunPacket -> Prop
+axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
+axiom BoundedEvaluationObligation : BoundaryRunPacket -> Prop
+axiom ClampInvariantObligation : BoundaryRunPacket -> Prop
+axiom PrecisionSensitivityObligation : BoundaryRunPacket -> Prop
+axiom OutputSafetyObligation : BoundaryRunPacket -> Prop
+axiom PositiveCoordinateObligation : BoundaryRunPacket -> Prop
+
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     packetCenterHits p <= packetBoundaryHits p ->
     BoundaryDominatesCenter p
+
+axiom interior_sample_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.interiorSample ->
+    BaselineReplayValid p
+
+axiom domain_wall_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.domainWall ->
+    DomainPreservationObligation p
+
+axiom overflow_wall_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.overflowWall ->
+    BoundedEvaluationObligation p
+
+axiom saturation_shelf_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.saturationShelf ->
+    ClampInvariantObligation p
+
+axiom phantom_attractor_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.phantomAttractor ->
+    PrecisionSensitivityObligation p
+
+axiom guard_rescue_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.guardRescue ->
+    OutputSafetyObligation p
+
+axiom log_domain_rescue_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateObligation p
 
 /-- The volume ratio `V(unit_ball_d) / V([-1,1]^d)` tends to zero. -/
 theorem high_dim_ball_cube_ratio_tends_zero :
@@ -139,6 +204,54 @@ theorem boundary_dominance_packet_bridge
     BoundaryDominatesCenter p := by
   intro hvalid hcounts
   exact boundary_dominates_center_from_packet p hvalid hcounts
+
+theorem domain_wall_maps_to_domain_preservation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.domainWall ->
+    DomainPreservationObligation p := by
+  intro hvalid hevent
+  exact domain_wall_obligation p hvalid hevent
+
+theorem overflow_wall_maps_to_bounded_evaluation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.overflowWall ->
+    BoundedEvaluationObligation p := by
+  intro hvalid hevent
+  exact overflow_wall_obligation p hvalid hevent
+
+theorem saturation_shelf_maps_to_clamp_invariant
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.saturationShelf ->
+    ClampInvariantObligation p := by
+  intro hvalid hevent
+  exact saturation_shelf_obligation p hvalid hevent
+
+theorem phantom_attractor_maps_to_precision_sensitivity
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.phantomAttractor ->
+    PrecisionSensitivityObligation p := by
+  intro hvalid hevent
+  exact phantom_attractor_obligation p hvalid hevent
+
+theorem guard_rescue_maps_to_output_safety
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.guardRescue ->
+    OutputSafetyObligation p := by
+  intro hvalid hevent
+  exact guard_rescue_obligation p hvalid hevent
+
+theorem log_domain_rescue_maps_to_positive_coordinates
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateObligation p := by
+  intro hvalid hevent
+  exact log_domain_rescue_obligation p hvalid hevent
 
 end HighDimensional
 end MachLib
