@@ -114,6 +114,20 @@ inductive BoundaryIntervention where
   | precisionEscape
   | saturationDeshelf
 
+/-- Reviewer-facing semantic tier for rescue operators.
+`semanticRewrite` is intentionally not assigned to any v0 rescue operator. -/
+inductive RescueSemanticTier where
+  | packetBridgeOnly
+  | concreteSampleInvariant
+  | semanticRewrite
+
+/-- Current v0 semantic tier for each rescue operator. -/
+def rescueSemanticTier : BoundaryIntervention -> RescueSemanticTier
+  | BoundaryIntervention.logDomainLift => RescueSemanticTier.concreteSampleInvariant
+  | BoundaryIntervention.guardClamp => RescueSemanticTier.concreteSampleInvariant
+  | BoundaryIntervention.precisionEscape => RescueSemanticTier.packetBridgeOnly
+  | BoundaryIntervention.saturationDeshelf => RescueSemanticTier.concreteSampleInvariant
+
 /-- Packet pair witnessing one raw/intervened benchmark comparison. -/
 axiom BoundaryInterventionPair : Type
 
@@ -209,6 +223,18 @@ def ConcreteClampInvariantObligation
     w.preClampPressure ≤ w.upperBound ∧
     w.rawEvent = BoundaryEventClass.saturationShelf ∧
     w.rescuedEvent = BoundaryEventClass.cornerConcentration
+
+/-- Concrete local invariant semantics currently discharged by v0 witnesses.
+Precision escape is intentionally `False` here: it has packet/replay evidence,
+but no concrete sample-invariant theorem yet. -/
+def RescueHasConcreteSampleInvariant : BoundaryIntervention -> Prop
+  | BoundaryIntervention.logDomainLift =>
+      ∀ w : LogDomainPositiveCoordinateWitness, ConcretePositiveCoordinateObligation w
+  | BoundaryIntervention.guardClamp =>
+      ∀ w : GuardClampOutputSafetyWitness, ConcreteOutputSafetyObligation w
+  | BoundaryIntervention.precisionEscape => False
+  | BoundaryIntervention.saturationDeshelf =>
+      ∀ w : SaturationDeshelfClampWitness, ConcreteClampInvariantObligation w
 
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
@@ -478,6 +504,38 @@ theorem saturation_deshelf_clamp_witness_discharges_concrete_obligation
   exact And.intro w.lowerLePressure
     (And.intro w.pressureLeUpper
       (And.intro w.rawIsSaturationShelf w.rescueIsCornerConcentration))
+
+/-- The log-domain lane is at the v0 concrete-sample-invariant tier. -/
+theorem log_domain_lift_has_concrete_sample_invariant_semantics :
+    rescueSemanticTier BoundaryIntervention.logDomainLift =
+      RescueSemanticTier.concreteSampleInvariant ∧
+    RescueHasConcreteSampleInvariant BoundaryIntervention.logDomainLift := by
+  exact And.intro rfl
+    (fun w => log_domain_positive_coordinate_witness_discharges_concrete_obligation w)
+
+/-- The guard-clamp lane is at the v0 concrete-sample-invariant tier. -/
+theorem guard_clamp_has_concrete_sample_invariant_semantics :
+    rescueSemanticTier BoundaryIntervention.guardClamp =
+      RescueSemanticTier.concreteSampleInvariant ∧
+    RescueHasConcreteSampleInvariant BoundaryIntervention.guardClamp := by
+  exact And.intro rfl
+    (fun w => guard_clamp_output_safety_witness_discharges_concrete_obligation w)
+
+/-- The saturation-deshelf lane is at the v0 concrete-sample-invariant tier. -/
+theorem saturation_deshelf_has_concrete_sample_invariant_semantics :
+    rescueSemanticTier BoundaryIntervention.saturationDeshelf =
+      RescueSemanticTier.concreteSampleInvariant ∧
+    RescueHasConcreteSampleInvariant BoundaryIntervention.saturationDeshelf := by
+  exact And.intro rfl
+    (fun w => saturation_deshelf_clamp_witness_discharges_concrete_obligation w)
+
+/-- Precision escape remains deliberately weaker than the three concrete
+sample-invariant lanes. -/
+theorem precision_escape_remains_packet_bridge_only_semantics :
+    rescueSemanticTier BoundaryIntervention.precisionEscape =
+      RescueSemanticTier.packetBridgeOnly ∧
+    ¬ RescueHasConcreteSampleInvariant BoundaryIntervention.precisionEscape := by
+  exact And.intro rfl (fun h => h)
 
 theorem overflow_to_guard_rescue_maps_to_output_safety
     (p : BoundaryRunPacket) :
