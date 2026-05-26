@@ -1,0 +1,48 @@
+{
+  "packet_id": "machlib_normalized_product_eval_packet_v10_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_NORMALIZED_PRODUCT_EVAL_PACKET_V10_READY",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "checked_result_count": 6,
+  "checked_results": [
+    "eval_eq_zero_of_normalizeCoeff_eq_nil",
+    "normalizeCoeff_evalSound",
+    "normalizeCoeffEvalSoundTarget_checked",
+    "scalarMulCoeff_lastNonzero",
+    "normalizedProductCoeff_evalSound",
+    "normalizedProductFiniteRootPacketWithDegreeGrowthCert"
+  ],
+  "target_count": 3,
+  "targets_named_not_proved": [
+    "LinearMulCoeffLastNonzeroTarget",
+    "LinearMulCoeffDegreeGrowthTarget",
+    "NormalizedMulCoeffDegreeGrowthTarget"
+  ],
+  "normalizer_eval_soundness_status": "CHECKED",
+  "normalized_product_eval_soundness_status": "CHECKED",
+  "scalar_last_nonzero_preservation_status": "CHECKED_FOR_NONZERO_SCALAR",
+  "normalized_product_packet_constructor_status": "CHECKED_WITH_LEADING_AND_DEGREE_GROWTH_CERTIFICATES",
+  "forge_efrog_compatibility_report": "reports/machlib_forge_efrog_polynomial_packet_compatibility_2026_05_25.md",
+  "next_exact_bridge": [
+    "prove LinearMulCoeffLastNonzeroTarget",
+    "prove LinearMulCoeffDegreeGrowthTarget",
+    "then generalize to NormalizedMulCoeffDegreeGrowthTarget"
+  ],
+  "bridge_axiom_count": 0,
+  "general_root_count_theorem_proved": false,
+  "linear_times_arbitrary_degree_growth_proved": false,
+  "arbitrary_normalized_product_degree_growth_proved": false,
+  "analytic_identity_theorem_proved": false,
+  "forge_compiler_behavior_changed": false,
+  "efrog_behavior_changed": false,
+  "public_theorem_claim": false,
+  "marketplace_ready": false,
+  "public_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}

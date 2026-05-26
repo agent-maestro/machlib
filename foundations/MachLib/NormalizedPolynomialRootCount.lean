@@ -209,6 +209,18 @@ proved, root packets can move directly from `mulCoeff` to `normalizedProductCoef
 def NormalizeCoeffEvalSoundTarget : Prop :=
   ∀ p : CoeffPoly, ∀ x : Real, eval (normalizeCoeff p) x = eval p x
 
+/-- Target shape for the first linear-times-arbitrary normalized product
+leading-coefficient theorem. -/
+def LinearMulCoeffLastNonzeroTarget : Prop :=
+  ∀ r p, LastNonzero p → LastNonzero (normalizedProductCoeff (linearCoeff r) p)
+
+/-- Target shape for the first linear-times-arbitrary normalized product
+degree-growth theorem. -/
+def LinearMulCoeffDegreeGrowthTarget : Prop :=
+  ∀ r p,
+    LastNonzero p →
+    ProductDegreeGrowthCert (normalizedProductCoeff (linearCoeff r) p) (linearCoeff r) p
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -228,6 +240,88 @@ theorem eval_singleton (c x : Real) :
   unfold eval
   change c + x * 0 = c
   rw [mul_zero, add_zero]
+
+/-- If normalization erases a coefficient list, then the list evaluates to
+zero. This is the trailing-zero cleanup fact needed before normalizer
+evaluation soundness can be proved. -/
+theorem eval_eq_zero_of_normalizeCoeff_eq_nil {p : CoeffPoly}
+    (h : normalizeCoeff p = []) (x : Real) :
+    eval p x = 0 := by
+  induction p generalizing x with
+  | nil =>
+      unfold eval
+      rfl
+  | cons c cs ih =>
+      unfold normalizeCoeff at h
+      let rest := normalizeCoeff cs
+      by_cases hrest : rest = []
+      · by_cases hc : c = 0
+        · unfold eval
+          rw [hc, zero_add]
+          have htail : normalizeCoeff cs = [] := by
+            simpa [rest] using hrest
+          rw [ih htail x, mul_zero]
+        · have htail : normalizeCoeff cs = [] := by
+            simpa [rest] using hrest
+          simp [htail, hc] at h
+      · simp [hrest] at h
+
+/-- Trailing-zero normalization preserves coefficient-list evaluation. -/
+theorem normalizeCoeff_evalSound (p : CoeffPoly) (x : Real) :
+    eval (normalizeCoeff p) x = eval p x := by
+  induction p generalizing x with
+  | nil =>
+      unfold normalizeCoeff eval
+      rfl
+  | cons c cs ih =>
+      unfold normalizeCoeff
+      let rest := normalizeCoeff cs
+      by_cases hrest : rest = []
+      · by_cases hc : c = 0
+        · simp [hrest, hc, eval]
+          have htail : normalizeCoeff cs = [] := by
+            simpa [rest] using hrest
+          have hzero : eval cs x = 0 := eval_eq_zero_of_normalizeCoeff_eq_nil htail x
+          simp [htail, hzero, mul_zero]
+          rw [eval_nil, zero_add]
+        · simp [hrest, hc, eval]
+          have htail : normalizeCoeff cs = [] := by
+            simpa [rest] using hrest
+          have hzero : eval cs x = 0 := eval_eq_zero_of_normalizeCoeff_eq_nil htail x
+          simp [htail, hc, hzero, mul_zero, add_zero]
+          exact eval_singleton c x
+      · simp [hrest]
+        have hrest' : normalizeCoeff cs ≠ [] := by
+          intro hnil
+          exact hrest (by simpa [rest] using hnil)
+        simp [hrest', eval, ih x]
+
+/-- The normalizer evaluation-soundness target is now checked. -/
+theorem normalizeCoeffEvalSoundTarget_checked :
+    NormalizeCoeffEvalSoundTarget := by
+  intro p x
+  exact normalizeCoeff_evalSound p x
+
+/-- Nonzero scalar multiplication preserves the normalized-last-coefficient
+predicate. This is the first checked leading-coefficient preservation bridge. -/
+theorem scalarMulCoeff_lastNonzero {a : Real} (ha : a ≠ 0) :
+    ∀ {p : CoeffPoly}, LastNonzero p → LastNonzero (scalarMulCoeff a p) := by
+  intro p h
+  induction p with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold scalarMulCoeff LastNonzero
+          intro hmul
+          have split := mul_eq_zero_or_left_or_right hmul
+          cases split with
+          | inl ha0 => exact ha ha0
+          | inr hc0 => exact h hc0
+      | cons d ds =>
+          unfold scalarMulCoeff LastNonzero
+          exact ih h
 
 /-- Pointwise coefficient-list addition evaluates to pointwise addition. -/
 theorem eval_addCoeff (p q : CoeffPoly) (x : Real) :
@@ -313,6 +407,14 @@ theorem mulCoeff_evalSound (p q : CoeffPoly) :
     MulEvalSound (mulCoeff p q) p q := by
   intro x
   exact eval_mulCoeff p q x
+
+/-- The normalized convolution product also carries product evaluation
+soundness because trimming trailing zeros preserves evaluation. -/
+theorem normalizedProductCoeff_evalSound (p q : CoeffPoly) :
+    MulEvalSound (normalizedProductCoeff p q) p q := by
+  intro x
+  unfold normalizedProductCoeff
+  rw [normalizeCoeff_evalSound, eval_mulCoeff]
 
 /-- A value already in a list remains present after unique insertion. -/
 theorem mem_insertUniqueRoot_of_mem {x y : Real} {roots : List Real}
@@ -1166,6 +1268,32 @@ noncomputable def mulCoeffFiniteRootPacketWithDegreeGrowthCert
   normalized := hnormalized
   roots := unionUniqueRoots left.roots right.roots
   sound := mulCoeffRootListSound_union left.sound right.sound
+  distinct := productRootListDistinct_union left.distinct right.distinct
+  degree_bound :=
+    productRootListDegreeBound_union_of_cert
+      (hcert := hgrowth)
+      (hp := left.degree_bound)
+      (hq := right.degree_bound)
+
+/-- Generic normalized-product packet constructor. Compared with
+`mulCoeffFiniteRootPacketWithDegreeGrowthCert`, this one targets the actual
+normalized product output. Normalizer evaluation soundness is now checked, so
+callers only need to provide the still-hard normalized leading coefficient and
+degree-growth facts. -/
+noncomputable def normalizedProductFiniteRootPacketWithDegreeGrowthCert
+    (left right : NormalizedFiniteRootPacket)
+    (hnormalized : LastNonzero (normalizedProductCoeff left.coeffs right.coeffs))
+    (hgrowth : ProductDegreeGrowthCert (normalizedProductCoeff left.coeffs right.coeffs)
+      left.coeffs right.coeffs) :
+    NormalizedFiniteRootPacket where
+  coeffs := normalizedProductCoeff left.coeffs right.coeffs
+  normalized := hnormalized
+  roots := unionUniqueRoots left.roots right.roots
+  sound :=
+    productRootListSound_union
+      (hmul := normalizedProductCoeff_evalSound left.coeffs right.coeffs)
+      left.sound
+      right.sound
   distinct := productRootListDistinct_union left.distinct right.distinct
   degree_bound :=
     productRootListDegreeBound_union_of_cert
