@@ -1,0 +1,83 @@
+{
+  "packet_id": "machlib_product_induction_bridge_packet_v9_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_PRODUCT_INDUCTION_BRIDGE_PACKET_V9_READY",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "checked_bridge_count": 7,
+  "checked_bridges": [
+    {
+      "lean_name": "stagedTripleLinearCoeff_evalSound",
+      "status": "CHECKED",
+      "meaning": "explicit staged triple-linear coefficient list evaluates as product"
+    },
+    {
+      "lean_name": "linearLinearFiniteRootPacket",
+      "status": "CHECKED_PACKET_CONSTRUCTOR",
+      "meaning": "full finite-root packet for (x-r)(x-s)"
+    },
+    {
+      "lean_name": "repeatedLinearFiniteRootPacket",
+      "status": "CHECKED_PACKET_CONSTRUCTOR",
+      "meaning": "full finite-root packet for (x-r)^2"
+    },
+    {
+      "lean_name": "scaledLinearFiniteRootPacket",
+      "status": "CHECKED_PACKET_CONSTRUCTOR",
+      "meaning": "full finite-root packet for nonzero constant times linear"
+    },
+    {
+      "lean_name": "stagedTripleLinearFiniteRootPacket",
+      "status": "CHECKED_PACKET_CONSTRUCTOR",
+      "meaning": "full finite-root packet for staged (x-r)(x-s)(x-t)"
+    },
+    {
+      "lean_name": "linearQuadraticFiniteRootPacketWithCertificate",
+      "status": "CHECKED_CERTIFICATE_CONSUMER",
+      "meaning": "linear times quadratic can consume a full quadratic packet when available"
+    },
+    {
+      "lean_name": "mulCoeffFiniteRootPacketWithDegreeGrowthCert",
+      "status": "CHECKED_GENERIC_BRIDGE",
+      "meaning": "generic convolution root packet constructor once normalized product degree-growth facts are supplied"
+    }
+  ],
+  "target_count": 2,
+  "targets_named": [
+    {
+      "lean_name": "NormalizedMulCoeffDegreeGrowthTarget",
+      "status": "TARGET_NAMED_NOT_PROVED",
+      "meaning": "arbitrary normalized nonzero product has degree budget equal to factor-degree sum"
+    },
+    {
+      "lean_name": "NormalizeCoeffEvalSoundTarget",
+      "status": "TARGET_NAMED_NOT_PROVED",
+      "meaning": "trailing-zero normalization preserves coefficient-list evaluation"
+    }
+  ],
+  "root_enumeration_status": "FULL_FOR_LINEAR_LINEAR_REPEATED_SCALED_AND_STAGED_TRIPLE; CERTIFICATE_CONSUMER_FOR_LINEAR_QUADRATIC",
+  "mulCoeff_generic_packet_status": "CHECKED_WITH_NORMALIZATION_AND_DEGREE_GROWTH_CERTIFICATES",
+  "normalized_product_degree_growth_status": "TARGET_NAMED_NOT_PROVED",
+  "normalize_eval_soundness_status": "TARGET_NAMED_NOT_PROVED",
+  "still_blocked": [
+    "prove NormalizeCoeffEvalSoundTarget so normalizedProductCoeff inherits mulCoeff root soundness",
+    "prove LastNonzero (mulCoeff p q) for normalized nonzero p and q",
+    "prove ProductDegreeGrowthCert (normalizedProductCoeff p q) p q for arbitrary normalized nonzero p and q",
+    "derive the full root-count induction theorem from the generic product packet bridge",
+    "replace the linear-quadratic certificate consumer with a complete quadratic root enumerator"
+  ],
+  "bridge_axiom_count": 0,
+  "general_root_count_theorem_proved": false,
+  "arbitrary_normalized_product_degree_growth_proved": false,
+  "normalize_eval_soundness_proved": false,
+  "analytic_identity_theorem_proved": false,
+  "public_theorem_claim": false,
+  "marketplace_ready": false,
+  "public_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}

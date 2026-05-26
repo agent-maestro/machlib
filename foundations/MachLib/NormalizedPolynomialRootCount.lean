@@ -195,6 +195,20 @@ from exact degree arithmetic. -/
 def ProductDegreeGrowthCert (product p q : CoeffPoly) : Prop :=
   degreeBound p + degreeBound q ≤ degreeBound product
 
+/-- Target shape for the exact normalized product-degree bridge. This is the
+next hard theorem: normalized nonzero products should have enough degree
+budget to cover the sum of the factor degrees. -/
+def NormalizedMulCoeffDegreeGrowthTarget : Prop :=
+  ∀ p q : CoeffPoly,
+    LastNonzero p →
+    LastNonzero q →
+    ProductDegreeGrowthCert (normalizedProductCoeff p q) p q
+
+/-- Target shape for showing the normalizer preserves evaluation. Once this is
+proved, root packets can move directly from `mulCoeff` to `normalizedProductCoeff`. -/
+def NormalizeCoeffEvalSoundTarget : Prop :=
+  ∀ p : CoeffPoly, ∀ x : Real, eval (normalizeCoeff p) x = eval p x
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -542,6 +556,46 @@ theorem linearQuadraticCoeff_evalSound (r a b : Real) :
       (-r + x * (1 + x * 0)) * (a + x * (b + x * (1 + x * 0)))
   mach_ring
   ac_rfl
+
+/-- The explicit staged triple-linear product evaluates as a product of the
+first two factors and the third factor. -/
+theorem stagedTripleLinearCoeff_evalSound (r s t : Real) :
+    MulEvalSound
+      (stagedTripleLinearCoeff r s t) (linearLinearCoeff r s) (linearCoeff t) := by
+  intro x
+  unfold stagedTripleLinearCoeff linearLinearCoeff linearCoeff eval
+  change
+    (((-r) * (-s)) * (-t)) +
+        x * ((((-r) * (-s)) * 1 + ((-r) * 1 + 1 * (-s)) * (-t)) +
+          x * ((((-r) * 1 + 1 * (-s)) * 1 + 1 * (-t)) + x * (1 + x * 0))) =
+      (((-r) * (-s)) + x * (((-r) * 1 + 1 * (-s)) + x * (1 + x * 0))) *
+        (-t + x * (1 + x * 0))
+  mach_ring
+  ac_rfl
+
+/-- The explicit two-linear coefficient list is normalized. -/
+theorem linearLinearCoeff_lastNonzero (r s : Real) :
+    LastNonzero (linearLinearCoeff r s) := by
+  unfold linearLinearCoeff LastNonzero
+  exact one_ne_zero
+
+/-- The explicit staged triple-linear coefficient list is normalized. -/
+theorem stagedTripleLinearCoeff_lastNonzero (r s t : Real) :
+    LastNonzero (stagedTripleLinearCoeff r s t) := by
+  unfold stagedTripleLinearCoeff LastNonzero
+  exact one_ne_zero
+
+/-- Constant-scaled linear coefficient lists are normalized when the scale is nonzero. -/
+theorem scaledLinearCoeff_lastNonzero {a r : Real} (ha : a ≠ 0) :
+    LastNonzero (scaledLinearCoeff a r) := by
+  unfold scaledLinearCoeff LastNonzero
+  exact ha
+
+/-- The explicit linear-quadratic coefficient list is normalized. -/
+theorem linearQuadraticCoeff_lastNonzero (r a b : Real) :
+    LastNonzero (linearQuadraticCoeff r a b) := by
+  unfold linearQuadraticCoeff LastNonzero
+  exact one_ne_zero
 
 /-- A nonzero singleton coefficient list is normalized. -/
 theorem singleton_lastNonzero {c : Real} (hc : c ≠ 0) :
@@ -1011,6 +1065,113 @@ theorem example_v8_root_packet_linear_quadratic_with_certificate
     (hcert := example_v8_quadratic_linear_2 r a b)
     (hp := linearCoeff_rootListDegreeBound r)
     (hq := hq)
+
+/-! ## Finite root packet constructors beyond certificate-only examples -/
+
+/-- Full finite-root packet for `(x-r)(x-s)` in the coefficient-list layer. -/
+noncomputable def linearLinearFiniteRootPacket (r s : Real) :
+    NormalizedFiniteRootPacket where
+  coeffs := linearLinearCoeff r s
+  normalized := linearLinearCoeff_lastNonzero r s
+  roots := unionUniqueRoots [r] [s]
+  sound :=
+    productRootListSound_union
+      (hmul := linearLinearCoeff_evalSound r s)
+      (linearCoeff_rootListSound r)
+      (linearCoeff_rootListSound s)
+  distinct :=
+    productRootListDistinct_union
+      (singletonCoeffRootListDistinct r)
+      (singletonCoeffRootListDistinct s)
+  degree_bound := example_v8_root_packet_linear_linear r s
+
+/-- Full finite-root packet for `(x-r)^2`; duplicate roots are deduplicated by
+the root-list union operation. -/
+noncomputable def repeatedLinearFiniteRootPacket (r : Real) :
+    NormalizedFiniteRootPacket :=
+  linearLinearFiniteRootPacket r r
+
+/-- Full finite-root packet for nonzero constant-scale times a linear factor. -/
+noncomputable def scaledLinearFiniteRootPacket (a r : Real) (ha : a ≠ 0) :
+    NormalizedFiniteRootPacket where
+  coeffs := scaledLinearCoeff a r
+  normalized := scaledLinearCoeff_lastNonzero ha
+  roots := unionUniqueRoots [] [r]
+  sound :=
+    productRootListSound_union
+      (hmul := scaledLinearCoeff_evalSound a r)
+      (nonzeroConstant_emptyRootListSound ha)
+      (linearCoeff_rootListSound r)
+  distinct :=
+    productRootListDistinct_union
+      (by simp [RootListDistinct])
+      (singletonCoeffRootListDistinct r)
+  degree_bound := example_v8_root_packet_scaled_linear a r
+
+/-- Full finite-root packet for `(x-r)(x-s)(x-t)` as a staged product. -/
+noncomputable def stagedTripleLinearFiniteRootPacket (r s t : Real) :
+    NormalizedFiniteRootPacket where
+  coeffs := stagedTripleLinearCoeff r s t
+  normalized := stagedTripleLinearCoeff_lastNonzero r s t
+  roots := unionUniqueRoots (unionUniqueRoots [r] [s]) [t]
+  sound :=
+    productRootListSound_union
+      (hmul := stagedTripleLinearCoeff_evalSound r s t)
+      (linearLinearFiniteRootPacket r s).sound
+      (linearCoeff_rootListSound t)
+  distinct :=
+    productRootListDistinct_union
+      (linearLinearFiniteRootPacket r s).distinct
+      (singletonCoeffRootListDistinct t)
+  degree_bound := example_v8_root_packet_staged_triple r s t
+
+/-- Linear times quadratic can now consume a full quadratic packet when one is
+available. This remains a certificate interface until MachLib has complete
+quadratic root enumeration. -/
+noncomputable def linearQuadraticFiniteRootPacketWithCertificate
+    (r a b : Real) (quadraticPacket : NormalizedFiniteRootPacket)
+    (hcoeffs : quadraticPacket.coeffs = monicQuadraticCoeff a b) :
+    NormalizedFiniteRootPacket where
+  coeffs := linearQuadraticCoeff r a b
+  normalized := linearQuadraticCoeff_lastNonzero r a b
+  roots := unionUniqueRoots [r] quadraticPacket.roots
+  sound := by
+    have hsound := quadraticPacket.sound
+    rw [hcoeffs] at hsound
+    exact
+      productRootListSound_union
+        (hmul := linearQuadraticCoeff_evalSound r a b)
+        (linearCoeff_rootListSound r)
+        hsound
+  distinct :=
+    productRootListDistinct_union
+      (singletonCoeffRootListDistinct r)
+      quadraticPacket.distinct
+  degree_bound := by
+    have hdegree := quadraticPacket.degree_bound
+    rw [hcoeffs] at hdegree
+    exact example_v8_root_packet_linear_quadratic_with_certificate r a b hdegree
+
+/-- Generic convolution product packet constructor. This removes the root-list
+certificate interface whenever callers can provide the two hard product-degree
+facts still missing from the general theorem: normalized output and degree
+growth for the concrete `mulCoeff` result. -/
+noncomputable def mulCoeffFiniteRootPacketWithDegreeGrowthCert
+    (left right : NormalizedFiniteRootPacket)
+    (hnormalized : LastNonzero (mulCoeff left.coeffs right.coeffs))
+    (hgrowth : ProductDegreeGrowthCert (mulCoeff left.coeffs right.coeffs)
+      left.coeffs right.coeffs) :
+    NormalizedFiniteRootPacket where
+  coeffs := mulCoeff left.coeffs right.coeffs
+  normalized := hnormalized
+  roots := unionUniqueRoots left.roots right.roots
+  sound := mulCoeffRootListSound_union left.sound right.sound
+  distinct := productRootListDistinct_union left.distinct right.distinct
+  degree_bound :=
+    productRootListDegreeBound_union_of_cert
+      (hcert := hgrowth)
+      (hp := left.degree_bound)
+      (hq := right.degree_bound)
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/
