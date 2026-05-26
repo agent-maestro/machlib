@@ -125,7 +125,7 @@ inductive RescueSemanticTier where
 def rescueSemanticTier : BoundaryIntervention -> RescueSemanticTier
   | BoundaryIntervention.logDomainLift => RescueSemanticTier.concreteSampleInvariant
   | BoundaryIntervention.guardClamp => RescueSemanticTier.concreteSampleInvariant
-  | BoundaryIntervention.precisionEscape => RescueSemanticTier.packetBridgeOnly
+  | BoundaryIntervention.precisionEscape => RescueSemanticTier.concreteSampleInvariant
   | BoundaryIntervention.saturationDeshelf => RescueSemanticTier.concreteSampleInvariant
 
 /-- Packet pair witnessing one raw/intervened benchmark comparison. -/
@@ -200,6 +200,30 @@ def ConcreteOutputSafetyObligation
     w.rawEvent = BoundaryEventClass.overflowWall ∧
     w.rescuedEvent = BoundaryEventClass.guardRescue
 
+/-- Concrete v0 precision-escape witness extracted from a Forge rescue trace.
+This witness is deliberately local: it records that low precision reported a
+stalled gradient, while the higher-precision replay exposed a nonzero escape
+signal and moved the sample back to the interior. -/
+structure PrecisionEscapeWitness where
+  probeCoordinate : Real
+  escapedCoordinate : Real
+  lowPrecisionGradient : Real
+  highPrecisionGradient : Real
+  rawEvent : BoundaryEventClass
+  rescuedEvent : BoundaryEventClass
+  lowPrecisionStalled : lowPrecisionGradient = 0
+  highPrecisionEscapes : ¬ highPrecisionGradient = 0
+  rawIsPhantomAttractor : rawEvent = BoundaryEventClass.phantomAttractor
+  rescueIsInteriorSample : rescuedEvent = BoundaryEventClass.interiorSample
+
+/-- Concrete precision-escape obligation for one phantom-attractor sample. -/
+def ConcretePrecisionEscapeObligation
+    (w : PrecisionEscapeWitness) : Prop :=
+  w.lowPrecisionGradient = 0 ∧
+    ¬ w.highPrecisionGradient = 0 ∧
+    w.rawEvent = BoundaryEventClass.phantomAttractor ∧
+    w.rescuedEvent = BoundaryEventClass.interiorSample
+
 /-- Concrete v0 saturation-deshelf witness extracted from a Forge rescue trace.
 This witness is deliberately local: it records that the recovered pre-clamp
 pressure is still compatible with the declared clamp interval, and that the
@@ -232,7 +256,8 @@ def RescueHasConcreteSampleInvariant : BoundaryIntervention -> Prop
       ∀ w : LogDomainPositiveCoordinateWitness, ConcretePositiveCoordinateObligation w
   | BoundaryIntervention.guardClamp =>
       ∀ w : GuardClampOutputSafetyWitness, ConcreteOutputSafetyObligation w
-  | BoundaryIntervention.precisionEscape => False
+  | BoundaryIntervention.precisionEscape =>
+      ∀ w : PrecisionEscapeWitness, ConcretePrecisionEscapeObligation w
   | BoundaryIntervention.saturationDeshelf =>
       ∀ w : SaturationDeshelfClampWitness, ConcreteClampInvariantObligation w
 
@@ -494,6 +519,17 @@ theorem guard_clamp_output_safety_witness_discharges_concrete_obligation
   exact And.intro w.guardWithinLimit
     (And.intro w.rawIsOverflowWall w.rescueIsGuardRescue)
 
+/-- Third discharged rescue foothold: the concrete precision-escape part of a
+Forge phantom-attractor sample follows directly from the witness record. This
+is a local precision-sensitivity witness, not a convergence or optimizer
+correctness theorem. -/
+theorem precision_escape_witness_discharges_concrete_obligation
+    (w : PrecisionEscapeWitness) :
+    ConcretePrecisionEscapeObligation w := by
+  exact And.intro w.lowPrecisionStalled
+    (And.intro w.highPrecisionEscapes
+      (And.intro w.rawIsPhantomAttractor w.rescueIsInteriorSample))
+
 /-- Third discharged rescue foothold: the concrete clamp-invariant part of a
 Forge saturation-deshelf sample follows directly from the witness record. This
 does not claim that deshelf is rescue-normal or that every saturation rewrite is
@@ -521,6 +557,14 @@ theorem guard_clamp_has_concrete_sample_invariant_semantics :
   exact And.intro rfl
     (fun w => guard_clamp_output_safety_witness_discharges_concrete_obligation w)
 
+/-- The precision-escape lane is now at the v0 concrete-sample-invariant tier. -/
+theorem precision_escape_has_concrete_sample_invariant_semantics :
+    rescueSemanticTier BoundaryIntervention.precisionEscape =
+      RescueSemanticTier.concreteSampleInvariant ∧
+    RescueHasConcreteSampleInvariant BoundaryIntervention.precisionEscape := by
+  exact And.intro rfl
+    (fun w => precision_escape_witness_discharges_concrete_obligation w)
+
 /-- The saturation-deshelf lane is at the v0 concrete-sample-invariant tier. -/
 theorem saturation_deshelf_has_concrete_sample_invariant_semantics :
     rescueSemanticTier BoundaryIntervention.saturationDeshelf =
@@ -528,14 +572,6 @@ theorem saturation_deshelf_has_concrete_sample_invariant_semantics :
     RescueHasConcreteSampleInvariant BoundaryIntervention.saturationDeshelf := by
   exact And.intro rfl
     (fun w => saturation_deshelf_clamp_witness_discharges_concrete_obligation w)
-
-/-- Precision escape remains deliberately weaker than the three concrete
-sample-invariant lanes. -/
-theorem precision_escape_remains_packet_bridge_only_semantics :
-    rescueSemanticTier BoundaryIntervention.precisionEscape =
-      RescueSemanticTier.packetBridgeOnly ∧
-    ¬ RescueHasConcreteSampleInvariant BoundaryIntervention.precisionEscape := by
-  exact And.intro rfl (fun h => h)
 
 theorem overflow_to_guard_rescue_maps_to_output_safety
     (p : BoundaryRunPacket) :
