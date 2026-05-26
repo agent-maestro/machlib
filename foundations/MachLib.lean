@@ -21,6 +21,7 @@ import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
 import MachLib.NormalizedPolynomialRootCount
+import MachLib.HighDimensional
 
 /-!
 # MachLib — top-level aggregator
@@ -92,6 +93,10 @@ The independent foundations for machine-native formal mathematics.
   * `MachLib.NormalizedPolynomialRootCount` — coefficient-list normal-form
                                   scaffold and checked nonzero-constant
                                   finite-root packet.
+  * `MachLib.HighDimensional`    — compile-checked theorem queue for
+                                  high-dimensional EML geometry and
+                                  guarded-lowering obligations; stubs only,
+                                  no proof claim.
 
 Zero Mathlib dependency. `lake build` verifies the entire library
 in seconds.
