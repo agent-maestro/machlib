@@ -407,6 +407,26 @@ theorem guard_rescue_packet_carries_output_safety_witness
       BoundaryEventClass.guardRescue
       htransition)
 
+/-- A phantom-attractor escape packet carries the precision-sensitivity
+obligation and a concrete nonempty transition-graph witness. The event witness
+is explicit because transitions are currently packet evidence, not a semantic
+constructor for events. -/
+theorem precision_escape_packet_carries_precision_witness
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.phantomAttractor ->
+    PacketHasTransition p BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample ->
+    PrecisionSensitivityObligation p ∧
+      (∃ x : BoundaryEventClass, ∃ y : BoundaryEventClass, PacketHasTransition p x y) := by
+  intro hvalid hevent htransition
+  exact And.intro
+    (phantom_attractor_obligation p hvalid hevent)
+    (transition_graph_nonempty_from_transition
+      p
+      BoundaryEventClass.phantomAttractor
+      BoundaryEventClass.interiorSample
+      htransition)
+
 theorem log_domain_lift_pair_maps_to_positive_coordinates
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
