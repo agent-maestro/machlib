@@ -363,6 +363,24 @@ theorem domain_to_log_domain_rescue_maps_to_positive_coordinates
   intro hvalid htransition
   exact domain_to_log_domain_rescue_obligation p hvalid htransition
 
+/-- A valid log-domain rescue packet carries both the positive-coordinate
+obligation and a concrete nonempty transition-graph witness. -/
+theorem log_domain_rescue_packet_carries_positive_coordinate_witness
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    LogDomainBoundaryMode p ->
+    PacketHasTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateObligation p ∧
+      (∃ x : BoundaryEventClass, ∃ y : BoundaryEventClass, PacketHasTransition p x y) := by
+  intro hvalid _hmode htransition
+  exact And.intro
+    (domain_to_log_domain_rescue_obligation p hvalid htransition)
+    (transition_graph_nonempty_from_transition
+      p
+      BoundaryEventClass.domainWall
+      BoundaryEventClass.logDomainRescue
+      htransition)
+
 theorem overflow_to_guard_rescue_maps_to_output_safety
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
