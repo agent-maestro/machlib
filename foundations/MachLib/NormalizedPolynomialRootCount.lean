@@ -19,6 +19,7 @@ namespace MachLib
 namespace NormalizedPolynomialRootCount
 
 open MachLib.Real
+open MachLib.PolynomialEvidence
 
 /-- Coefficient-list polynomials, stored low-to-high:
 `[a0, a1, a2]` means `a0 + a1*x + a2*x*x`.
@@ -57,6 +58,24 @@ def degreeBound : CoeffPoly → Nat
   | [_] => 0
   | _ :: cs => Nat.succ (degreeBound cs)
 
+/-- Coefficient-list version of the linear factor `(x - r)`, stored low-to-high. -/
+noncomputable def linearCoeff (r : Real) : CoeffPoly :=
+  [-r, 1]
+
+/-- A semantic product certificate. It avoids claiming we have a complete
+coefficient-list convolution normalizer yet: a candidate product list is
+accepted only when its evaluator is pointwise equal to the product of the
+operand evaluators. -/
+def MulEvalSound (product p q : CoeffPoly) : Prop :=
+  ∀ x : Real, eval product x = eval p x * eval q x
+
+/-- Current MachLib bridge axiom for the real integral-domain step needed by
+root-count induction: a product can be zero only when one factor is zero.
+Future work can replace this with a derived theorem if the field substrate is
+expanded enough. -/
+axiom mul_eq_zero_or_left_or_right
+    {a b : Real} : a * b = 0 → a = 0 ∨ b = 0
+
 /-- Finite root-list soundness for coefficient-list polynomials. -/
 def RootListSound (p : CoeffPoly) (roots : List Real) : Prop :=
   ∀ x : Real, Root p x → x ∈ roots
@@ -93,6 +112,33 @@ theorem eval_singleton (c x : Real) :
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
     degreeBound [c] = 0 := rfl
+
+/-- A coefficient-list linear factor has degree bound one. -/
+theorem degreeBound_linearCoeff (r : Real) :
+    degreeBound (linearCoeff r) = 1 := rfl
+
+/-- A coefficient-list linear factor is normalized because its last
+coefficient is one. -/
+theorem linearCoeff_lastNonzero (r : Real) :
+    LastNonzero (linearCoeff r) := by
+  unfold linearCoeff LastNonzero
+  exact one_ne_zero
+
+/-- The coefficient-list linear factor evaluates to the same expression as
+the AST linear factor. -/
+theorem eval_linearCoeff_eq_linearFactor (r x : Real) :
+    eval (linearCoeff r) x = Poly.eval (Poly.linearFactor r) x := by
+  unfold linearCoeff eval Poly.linearFactor Poly.eval
+  change -r + x * (1 + x * 0) = x - r
+  rw [mul_zero, add_zero, mul_one_ax, sub_def, add_comm]
+
+/-- Root equivalence between the normalized coefficient-list linear factor
+and the existing AST linear-factor packet. -/
+theorem linearCoeff_root_iff_linearFactor_root (r x : Real) :
+    Root (linearCoeff r) x ↔
+      PolynomialRootCount.Root (Poly.linearFactor r) x := by
+  unfold Root PolynomialRootCount.Root
+  rw [eval_linearCoeff_eq_linearFactor]
 
 /-- A nonzero singleton coefficient list is normalized. -/
 theorem singleton_lastNonzero {c : Real} (hc : c ≠ 0) :
@@ -131,6 +177,42 @@ noncomputable def nonzeroConstantFiniteRootPacket
   sound := nonzeroConstant_emptyRootListSound hc
   distinct := emptyRootListDistinct
   degree_bound := nonzeroConstant_emptyRootListDegreeBound c
+
+/-- A root of a semantically certified product must be a root of one factor.
+This is the first product-root bridge needed for a root-count induction. -/
+theorem productRoot_split
+    {product p q : CoeffPoly} (hmul : MulEvalSound product p q)
+    {x : Real} (hroot : Root product x) :
+    Root p x ∨ Root q x := by
+  unfold Root at hroot
+  rw [hmul x] at hroot
+  exact mul_eq_zero_or_left_or_right hroot
+
+/-- If the left factor is known not to vanish at a point, a product root must
+come from the right factor. -/
+theorem productRoot_right_of_left_nonroot
+    {product p q : CoeffPoly} (hmul : MulEvalSound product p q)
+    {x : Real} (hleft : eval p x ≠ 0) (hroot : Root product x) :
+    Root q x := by
+  have split := productRoot_split (product := product) (p := p) (q := q) hmul hroot
+  cases split with
+  | inl hp =>
+      unfold Root at hp
+      exact False.elim (hleft hp)
+  | inr hq => exact hq
+
+/-- If the right factor is known not to vanish at a point, a product root must
+come from the left factor. -/
+theorem productRoot_left_of_right_nonroot
+    {product p q : CoeffPoly} (hmul : MulEvalSound product p q)
+    {x : Real} (hright : eval q x ≠ 0) (hroot : Root product x) :
+    Root p x := by
+  have split := productRoot_split (product := product) (p := p) (q := q) hmul hroot
+  cases split with
+  | inl hp => exact hp
+  | inr hq =>
+      unfold Root at hq
+      exact False.elim (hright hq)
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/

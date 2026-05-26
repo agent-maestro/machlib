@@ -1,0 +1,112 @@
+{
+  "packet_id": "machlib_product_root_bridge_packet_v4_2026_05_25",
+  "status": "MACHLIB_PRODUCT_ROOT_BRIDGE_PACKET_V4_READY",
+  "date": "2026-05-25",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "primitive_count": 3,
+  "checked_result_count": 7,
+  "bridge_axiom_count": 1,
+  "primitives": [
+    {
+      "name": "linearCoeff",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.linearCoeff",
+      "status": "DEFINED",
+      "purpose": "coefficient-list representation of x - r"
+    },
+    {
+      "name": "MulEvalSound",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.MulEvalSound",
+      "status": "DEFINED",
+      "purpose": "semantic certificate that a coefficient list evaluates as product p*q"
+    },
+    {
+      "name": "mul_eq_zero_or_left_or_right",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.mul_eq_zero_or_left_or_right",
+      "status": "BRIDGE_AXIOM",
+      "purpose": "real integral-domain zero-product bridge used by product-root splitting"
+    }
+  ],
+  "checked_results": [
+    {
+      "id": "degree_bound_linear_coeff",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.degreeBound_linearCoeff",
+      "statement": "linearCoeff r has degree bound one",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_coeff_last_nonzero",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.linearCoeff_lastNonzero",
+      "statement": "linearCoeff r is normalized because its last coefficient is one",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "eval_linear_coeff_eq_linear_factor",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.eval_linearCoeff_eq_linearFactor",
+      "statement": "coefficient-list linear factor evaluates like the AST linear factor",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "linear_coeff_root_iff_linear_factor_root",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.linearCoeff_root_iff_linearFactor_root",
+      "statement": "normalized and AST linear-factor roots are equivalent",
+      "evidence_class": "MACHLIB_CHECKED"
+    },
+    {
+      "id": "product_root_split",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_split",
+      "statement": "a root of a semantically certified product is a root of one factor",
+      "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM"
+    },
+    {
+      "id": "product_root_right_of_left_nonroot",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_right_of_left_nonroot",
+      "statement": "if the left factor is nonzero at x, product root implies right root",
+      "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM"
+    },
+    {
+      "id": "product_root_left_of_right_nonroot",
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.productRoot_left_of_right_nonroot",
+      "statement": "if the right factor is nonzero at x, product root implies left root",
+      "evidence_class": "MACHLIB_CHECKED_WITH_BRIDGE_AXIOM"
+    }
+  ],
+  "unlocked": [
+    "linear coefficient-list representation now matches the existing AST linear-factor packet",
+    "semantic product certificate gives a safe place to attach future convolution normalizers",
+    "product-root splitting is available under an explicit real integral-domain bridge axiom",
+    "root-count induction can now target factor/product splitting instead of only base cases"
+  ],
+  "blocked_next": [
+    "replace bridge axiom with a derived integral-domain theorem if MachLib field substrate expands",
+    "implement coefficient-list convolution plus MulEvalSound proofs for concrete products",
+    "root-list union/deduplication across product factors",
+    "degree arithmetic for convolution products",
+    "linear-factor packet for normalized coefficient lists with singleton root list",
+    "full induction proof for RootCountInductionTarget"
+  ],
+  "bridge_axioms": [
+    {
+      "lean_name": "MachLib.NormalizedPolynomialRootCount.mul_eq_zero_or_left_or_right",
+      "reason": "MachLib's current minimal real-field substrate does not yet derive zero-product splitting.",
+      "replacement_path": "derive from expanded field/integral-domain substrate or add a verified domain layer"
+    }
+  ],
+  "general_root_count_theorem_status": "BLOCKED_MISSING_CONVOLUTION_ROOT_LIST_INDUCTION",
+  "induction_target_status": "DEFINED_NOT_PROVED",
+  "depends_on": [
+    "MachLib.NormalizedPolynomialRootCount",
+    "product_readiness/machlib_normalized_polynomial_root_count_packet_v3_2026_05_25.json"
+  ],
+  "public_ready": false,
+  "marketplace_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false,
+  "public_theorem_claim": false,
+  "general_root_count_theorem_proved": false,
+  "analytic_identity_theorem_proved": false
+}
