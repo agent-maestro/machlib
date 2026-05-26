@@ -323,6 +323,89 @@ theorem scalarMulCoeff_lastNonzero {a : Real} (ha : a ≠ 0) :
           unfold scalarMulCoeff LastNonzero
           exact ih h
 
+/-- Multiplying coefficients by one is structurally the identity. -/
+theorem scalarMulCoeff_one (p : CoeffPoly) :
+    scalarMulCoeff 1 p = p := by
+  induction p with
+  | nil =>
+      unfold scalarMulCoeff
+      rfl
+  | cons c cs ih =>
+      unfold scalarMulCoeff
+      rw [one_mul_thm, ih]
+
+/-- Adding an empty coefficient list on the right is structurally identity. -/
+theorem addCoeff_nil_right (p : CoeffPoly) :
+    addCoeff p [] = p := by
+  cases p with
+  | nil =>
+      unfold addCoeff
+      rfl
+  | cons c cs =>
+      unfold addCoeff
+      rfl
+
+/-- Adding a single zero coefficient on the right leaves any nonempty
+coefficient list unchanged. -/
+theorem addCoeff_zero_singleton_right_of_LastNonzero {p : CoeffPoly}
+    (h : LastNonzero p) :
+    addCoeff p [0] = p := by
+  cases p with
+  | nil =>
+      cases h
+  | cons c cs =>
+      unfold addCoeff
+      rw [add_zero]
+      rw [addCoeff_nil_right]
+
+/-- The singleton coefficient `[1]` is a left identity for convolution against
+normalized nonempty coefficient lists. -/
+theorem mulCoeff_one_left_of_LastNonzero {p : CoeffPoly}
+    (h : LastNonzero p) :
+    mulCoeff [1] p = p := by
+  unfold mulCoeff shiftCoeff
+  rw [scalarMulCoeff_one]
+  exact addCoeff_zero_singleton_right_of_LastNonzero h
+
+/-- Adding a scaled copy of a normalized list to a one-slot-longer list keeps
+the longer list's last nonzero coefficient. -/
+theorem addCoeff_scalar_cons_self_lastNonzero (a b : Real) :
+    ∀ {p : CoeffPoly}, LastNonzero p →
+      LastNonzero (addCoeff (scalarMulCoeff a p) (b :: p)) := by
+  intro p h
+  induction p generalizing b with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold scalarMulCoeff addCoeff LastNonzero
+          exact h
+      | cons d ds =>
+          unfold scalarMulCoeff addCoeff LastNonzero
+          exact ih c h
+
+/-- The degree bound of a one-slot-longer add/scale shape grows by exactly one
+for normalized nonempty coefficient lists. -/
+theorem degreeBound_addCoeff_scalar_cons_self (a b : Real) :
+    ∀ {p : CoeffPoly}, LastNonzero p →
+      degreeBound (addCoeff (scalarMulCoeff a p) (b :: p)) =
+        Nat.succ (degreeBound p) := by
+  intro p h
+  induction p generalizing b with
+  | nil =>
+      cases h
+  | cons c cs ih =>
+      cases cs with
+      | nil =>
+          unfold scalarMulCoeff addCoeff degreeBound
+          rfl
+      | cons d ds =>
+          unfold scalarMulCoeff addCoeff degreeBound
+          change Nat.succ (degreeBound (addCoeff (scalarMulCoeff a (d :: ds)) (c :: d :: ds))) =
+            Nat.succ (Nat.succ (degreeBound (d :: ds)))
+          rw [ih c h]
+
 /-- Pointwise coefficient-list addition evaluates to pointwise addition. -/
 theorem eval_addCoeff (p q : CoeffPoly) (x : Real) :
     eval (addCoeff p q) x = eval p x + eval q x := by
@@ -567,6 +650,64 @@ theorem degreeBound_normalizeCoeff_eq_of_LastNonzero {p : CoeffPoly}
     (h : LastNonzero p) :
     degreeBound (normalizeCoeff p) = degreeBound p := by
   rw [normalizeCoeff_of_LastNonzero h]
+
+/-- Multiplying a normalized coefficient list on the left by `linearCoeff r`
+has the expected add/shift structure. -/
+theorem mulCoeff_linearCoeff_shape (r : Real) {p : CoeffPoly}
+    (h : LastNonzero p) :
+    mulCoeff (linearCoeff r) p =
+      addCoeff (scalarMulCoeff (-r) p) (shiftCoeff p) := by
+  unfold linearCoeff mulCoeff
+  rw [mulCoeff_one_left_of_LastNonzero h]
+
+/-- Linear times arbitrary normalized coefficients preserves a normalized
+nonzero leading coefficient after product normalization. -/
+theorem linearMulCoeffLastNonzero (r : Real) {p : CoeffPoly}
+    (h : LastNonzero p) :
+    LastNonzero (normalizedProductCoeff (linearCoeff r) p) := by
+  have hshape := mulCoeff_linearCoeff_shape r h
+  have hraw : LastNonzero (mulCoeff (linearCoeff r) p) := by
+    rw [hshape]
+    unfold shiftCoeff
+    exact addCoeff_scalar_cons_self_lastNonzero (-r) 0 h
+  unfold normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  exact hraw
+
+/-- The linear-times-arbitrary normalized leading-coefficient target is now
+checked. -/
+theorem linearMulCoeffLastNonzeroTarget_checked :
+    LinearMulCoeffLastNonzeroTarget := by
+  intro r p h
+  exact linearMulCoeffLastNonzero r h
+
+/-- Linear times arbitrary normalized coefficients has exact degree growth
+after product normalization. -/
+theorem linearMulCoeffDegreeGrowth (r : Real) {p : CoeffPoly}
+    (h : LastNonzero p) :
+    ProductDegreeGrowthCert
+      (normalizedProductCoeff (linearCoeff r) p) (linearCoeff r) p := by
+  have hshape := mulCoeff_linearCoeff_shape r h
+  have hraw : LastNonzero (mulCoeff (linearCoeff r) p) := by
+    rw [hshape]
+    unfold shiftCoeff
+    exact addCoeff_scalar_cons_self_lastNonzero (-r) 0 h
+  unfold ProductDegreeGrowthCert normalizedProductCoeff
+  rw [normalizeCoeff_of_LastNonzero hraw]
+  rw [hshape]
+  unfold shiftCoeff
+  rw [degreeBound_addCoeff_scalar_cons_self (-r) 0 h]
+  have hlin : degreeBound (linearCoeff r) = 1 := by
+    unfold linearCoeff degreeBound
+    rfl
+  rw [hlin]
+  omega
+
+/-- The linear-times-arbitrary normalized degree-growth target is now checked. -/
+theorem linearMulCoeffDegreeGrowthTarget_checked :
+    LinearMulCoeffDegreeGrowthTarget := by
+  intro r p h
+  exact linearMulCoeffDegreeGrowth r h
 
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
