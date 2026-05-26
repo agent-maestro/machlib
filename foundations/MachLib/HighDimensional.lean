@@ -119,11 +119,12 @@ inductive BoundaryIntervention where
 inductive RescueSemanticTier where
   | packetBridgeOnly
   | concreteSampleInvariant
+  | restrictedSemanticRewrite
   | semanticRewrite
 
 /-- Current v0 semantic tier for each rescue operator. -/
 def rescueSemanticTier : BoundaryIntervention -> RescueSemanticTier
-  | BoundaryIntervention.logDomainLift => RescueSemanticTier.concreteSampleInvariant
+  | BoundaryIntervention.logDomainLift => RescueSemanticTier.restrictedSemanticRewrite
   | BoundaryIntervention.guardClamp => RescueSemanticTier.concreteSampleInvariant
   | BoundaryIntervention.precisionEscape => RescueSemanticTier.concreteSampleInvariant
   | BoundaryIntervention.saturationDeshelf => RescueSemanticTier.concreteSampleInvariant
@@ -177,6 +178,15 @@ def ConcretePositiveCoordinateObligation
     (w : LogDomainPositiveCoordinateWitness) : Prop :=
   0 < w.liftedCoordinate ∧
     w.rawEvent = BoundaryEventClass.domainWall ∧
+    w.rescuedEvent = BoundaryEventClass.logDomainRescue
+
+/-- Restricted semantic contract for the log-domain lift lane. It says the
+rescue is a representation change from a raw domain wall into a positive
+internal coordinate for this small log-domain program class. -/
+def RestrictedLogDomainLiftSemantics
+    (w : LogDomainPositiveCoordinateWitness) : Prop :=
+  w.rawEvent = BoundaryEventClass.domainWall ∧
+    0 < w.liftedCoordinate ∧
     w.rescuedEvent = BoundaryEventClass.logDomainRescue
 
 /-- Concrete v0 guard-clamp witness extracted from a Forge rescue trace.
@@ -260,6 +270,13 @@ def RescueHasConcreteSampleInvariant : BoundaryIntervention -> Prop
       ∀ w : PrecisionEscapeWitness, ConcretePrecisionEscapeObligation w
   | BoundaryIntervention.saturationDeshelf =>
       ∀ w : SaturationDeshelfClampWitness, ConcreteClampInvariantObligation w
+
+/-- Restricted semantic rewrite status currently exists only for the
+log-domain lift lane. -/
+def RescueHasRestrictedSemanticRewrite : BoundaryIntervention -> Prop
+  | BoundaryIntervention.logDomainLift =>
+      ∀ w : LogDomainPositiveCoordinateWitness, RestrictedLogDomainLiftSemantics w
+  | _ => False
 
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
@@ -508,6 +525,17 @@ theorem log_domain_positive_coordinate_witness_discharges_concrete_obligation
   exact And.intro w.liftedPositive
     (And.intro w.rawIsDomainWall w.rescueIsLogDomain)
 
+/-- First restricted semantic rewrite foothold: for the small log-domain
+program class represented by `LogDomainPositiveCoordinateWitness`, the rescue
+operator rewrites a raw domain-wall sample into a positive internal-coordinate
+sample with a log-domain rescue event. This is deliberately narrower than a
+full optimizer semantic rewrite theorem. -/
+theorem log_domain_lift_restricted_semantic_rewrite
+    (w : LogDomainPositiveCoordinateWitness) :
+    RestrictedLogDomainLiftSemantics w := by
+  exact And.intro w.rawIsDomainWall
+    (And.intro w.liftedPositive w.rescueIsLogDomain)
+
 /-- Second discharged rescue foothold: the concrete output-safety part of a
 Forge guard-clamp rescue sample follows directly from the witness record,
 without invoking `OutputSafetyObligation` or a packet bridge axiom. This is a
@@ -541,13 +569,17 @@ theorem saturation_deshelf_clamp_witness_discharges_concrete_obligation
     (And.intro w.pressureLeUpper
       (And.intro w.rawIsSaturationShelf w.rescueIsCornerConcentration))
 
-/-- The log-domain lane is at the v0 concrete-sample-invariant tier. -/
-theorem log_domain_lift_has_concrete_sample_invariant_semantics :
+/-- The log-domain lane is at the restricted semantic rewrite tier and still
+carries the concrete positive-coordinate sample invariant. -/
+theorem log_domain_lift_has_restricted_semantic_rewrite :
     rescueSemanticTier BoundaryIntervention.logDomainLift =
-      RescueSemanticTier.concreteSampleInvariant ∧
+      RescueSemanticTier.restrictedSemanticRewrite ∧
+    RescueHasRestrictedSemanticRewrite BoundaryIntervention.logDomainLift ∧
     RescueHasConcreteSampleInvariant BoundaryIntervention.logDomainLift := by
   exact And.intro rfl
-    (fun w => log_domain_positive_coordinate_witness_discharges_concrete_obligation w)
+    (And.intro
+      (fun w => log_domain_lift_restricted_semantic_rewrite w)
+      (fun w => log_domain_positive_coordinate_witness_discharges_concrete_obligation w))
 
 /-- The guard-clamp lane is at the v0 concrete-sample-invariant tier. -/
 theorem guard_clamp_has_concrete_sample_invariant_semantics :
