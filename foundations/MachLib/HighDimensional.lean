@@ -346,6 +346,15 @@ theorem valid_transition_graph_maps_to_boundary_dynamics
   intro hvalid hgraph
   exact transition_graph_obligation p hvalid hgraph
 
+/-- Closed foothold: one observed transition gives a nonempty transition graph witness. -/
+theorem transition_graph_nonempty_from_transition
+    (p : BoundaryRunPacket)
+    (fromEvent toEvent : BoundaryEventClass) :
+    PacketHasTransition p fromEvent toEvent ->
+    ∃ x : BoundaryEventClass, ∃ y : BoundaryEventClass, PacketHasTransition p x y := by
+  intro htransition
+  exact Exists.intro fromEvent (Exists.intro toEvent htransition)
+
 theorem domain_to_log_domain_rescue_maps_to_positive_coordinates
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
