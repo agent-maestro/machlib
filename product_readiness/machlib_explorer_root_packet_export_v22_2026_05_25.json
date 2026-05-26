@@ -1,0 +1,42 @@
+{
+  "export_id": "machlib_explorer_root_packet_export_v22_2026_05_25",
+  "status": "INTERNAL_EXPLORER_EXPORT_READY",
+  "title": "MachLib polynomial root evidence",
+  "source_packet": "machlib_polynomial_evidence_workbench_v21_2026_05_25",
+  "coeffs": [
+    56,
+    -15,
+    1
+  ],
+  "found_roots": [],
+  "remaining_coeffs": [
+    56,
+    -15,
+    1
+  ],
+  "search_status": "BLOCKED",
+  "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+  "quadratic_classification": {
+    "classification": "RATIONAL_DISCRIMINANT_SQUARE_FACTORABLE",
+    "degree": 2,
+    "discriminant": 1,
+    "rational_roots": [
+      7,
+      8
+    ],
+    "blocker": null
+  },
+  "certificate_status": "PASS",
+  "imported_certificate_id": "workbench_input_v21",
+  "ui_sections": [
+    "coefficients",
+    "found_roots",
+    "residual",
+    "blocker_or_classification",
+    "certificate_status",
+    "claim_boundary"
+  ],
+  "public_ready": false,
+  "marketplace_ready": false,
+  "root_count_induction_target_proved": false
+}

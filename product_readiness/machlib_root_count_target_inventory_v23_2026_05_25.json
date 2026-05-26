@@ -1,0 +1,28 @@
+{
+  "packet_id": "machlib_root_count_target_inventory_v23_2026_05_25",
+  "status": "ROOT_COUNT_TARGET_INVENTORY_READY",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "checked_targets": [
+    "rootCountForKnownPacketTarget_checked",
+    "rootCountForLinearFactorProductsTarget_checked",
+    "rootCountForRepeatedLinearProductsTarget_checked",
+    "rootCountForFactoredTarget_checked"
+  ],
+  "defined_not_proved_targets": [
+    "RootCountInductionTarget",
+    "RootCountForArbitraryCoeffTarget"
+  ],
+  "exact_theorem_shape": {
+    "input": "normalized coefficient list p",
+    "nonzero_witness": "LastNonzero p",
+    "output": "finite root list roots",
+    "requirements": [
+      "RootListSound p roots",
+      "RootListDistinct roots",
+      "RootListDegreeBound p roots"
+    ]
+  },
+  "next_lean_bridge": "derive more assumptions behind certificate validation, then attack arbitrary root enumeration only with explicit factorization evidence",
+  "root_count_induction_target_proved": false,
+  "public_theorem_claim": false
+}

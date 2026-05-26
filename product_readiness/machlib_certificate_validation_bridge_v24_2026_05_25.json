@@ -1,0 +1,27 @@
+{
+  "packet_id": "machlib_certificate_validation_bridge_v24_2026_05_25",
+  "status": "DERIVED_EXECUTABLE_CERTIFICATE_VALIDATION_READY",
+  "bridge": "exact coefficient product reconstruction plus root evaluation validation",
+  "input_certificate_id": "workbench_input_v21",
+  "validation": {
+    "certificate_id": "workbench_input_v21",
+    "status": "PASS",
+    "computed_coeffs": [
+      56,
+      -15,
+      1
+    ],
+    "computed_roots": [
+      7,
+      8
+    ],
+    "degree_bound": 2,
+    "expected_root_count": 2,
+    "failures": [],
+    "warnings": []
+  },
+  "derived_bridge_scope": "executable exact arithmetic certificate validation, not a Lean theorem",
+  "product_evaluation_soundness_status": "EXECUTABLE_CHECKED_FOR_IMPORTED_CERTIFICATE",
+  "root_count_induction_target_proved": false,
+  "public_theorem_claim": false
+}

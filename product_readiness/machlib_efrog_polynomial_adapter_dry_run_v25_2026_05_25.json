@@ -1,0 +1,24 @@
+{
+  "packet_id": "machlib_efrog_polynomial_adapter_dry_run_v25_2026_05_25",
+  "status": "EFROG_POLYNOMIAL_ADAPTER_DRY_RUN_READY",
+  "source_kind": "efrog_dry_run_expression",
+  "source_text": "x^2 - 15*x + 56",
+  "emitted_coeffs": [
+    56,
+    -15,
+    1
+  ],
+  "certificate_shape": {
+    "coeffs": "low_to_high_normalized_coefficients",
+    "constant": "leading_coefficient_for_linear_factor_product",
+    "linear_roots": "ordered_exact_roots_when_known",
+    "expected_product_coeffs": "normalized_coefficients_for_validation",
+    "expected_dedup_roots": "deduplicated_roots_for finite root-count packets",
+    "normalized": true
+  },
+  "efrog_behavior_changed": false,
+  "forge_compiler_behavior_changed": false,
+  "adapter_mode": "dry_run_only",
+  "public_ready": false,
+  "marketplace_ready": false
+}
