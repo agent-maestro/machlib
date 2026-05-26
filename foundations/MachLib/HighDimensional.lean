@@ -389,6 +389,24 @@ theorem overflow_to_guard_rescue_maps_to_output_safety
   intro hvalid htransition
   exact overflow_to_guard_rescue_obligation p hvalid htransition
 
+/-- A valid guarded rescue packet carries both the output-safety obligation and
+a concrete nonempty transition-graph witness. -/
+theorem guard_rescue_packet_carries_output_safety_witness
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    GuardedBoundaryMode p ->
+    PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    OutputSafetyObligation p ∧
+      (∃ x : BoundaryEventClass, ∃ y : BoundaryEventClass, PacketHasTransition p x y) := by
+  intro hvalid _hmode htransition
+  exact And.intro
+    (overflow_to_guard_rescue_obligation p hvalid htransition)
+    (transition_graph_nonempty_from_transition
+      p
+      BoundaryEventClass.overflowWall
+      BoundaryEventClass.guardRescue
+      htransition)
+
 theorem log_domain_lift_pair_maps_to_positive_coordinates
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
