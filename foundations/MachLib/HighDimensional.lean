@@ -447,6 +447,47 @@ theorem saturation_deshelf_packet_carries_clamp_witness
       BoundaryEventClass.cornerConcentration
       htransition)
 
+/-- Suite-level structural hook for the v0 proof-carrying rescue manifest:
+if all four lane packets carry their witnesses, then the suite exposes all four
+obligation witnesses. -/
+theorem proof_carrying_rescue_suite_v0_carries_all_obligations
+    (logPacket guardPacket precisionPacket saturationPacket : BoundaryRunPacket) :
+    ValidBoundaryRunPacket logPacket ->
+    LogDomainBoundaryMode logPacket ->
+    PacketHasTransition logPacket BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    ValidBoundaryRunPacket guardPacket ->
+    GuardedBoundaryMode guardPacket ->
+    PacketHasTransition guardPacket BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    ValidBoundaryRunPacket precisionPacket ->
+    PacketHasEvent precisionPacket BoundaryEventClass.phantomAttractor ->
+    PacketHasTransition precisionPacket BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample ->
+    ValidBoundaryRunPacket saturationPacket ->
+    PacketHasEvent saturationPacket BoundaryEventClass.saturationShelf ->
+    PacketHasTransition saturationPacket BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration ->
+    PositiveCoordinateObligation logPacket ∧
+      OutputSafetyObligation guardPacket ∧
+      PrecisionSensitivityObligation precisionPacket ∧
+      ClampInvariantObligation saturationPacket := by
+  intro hlogValid hlogMode hlogTransition
+  intro hguardValid hguardMode hguardTransition
+  intro hprecisionValid hprecisionEvent hprecisionTransition
+  intro hsatValid hsatEvent hsatTransition
+  exact And.intro
+    (And.left
+      (log_domain_rescue_packet_carries_positive_coordinate_witness
+        logPacket hlogValid hlogMode hlogTransition))
+    (And.intro
+      (And.left
+        (guard_rescue_packet_carries_output_safety_witness
+          guardPacket hguardValid hguardMode hguardTransition))
+      (And.intro
+        (And.left
+          (precision_escape_packet_carries_precision_witness
+            precisionPacket hprecisionValid hprecisionEvent hprecisionTransition))
+        (And.left
+          (saturation_deshelf_packet_carries_clamp_witness
+            saturationPacket hsatValid hsatEvent hsatTransition))))
+
 theorem log_domain_lift_pair_maps_to_positive_coordinates
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
