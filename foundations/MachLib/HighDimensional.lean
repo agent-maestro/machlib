@@ -145,6 +145,26 @@ axiom OutputSafetyInterventionObligation : BoundaryInterventionPair -> Prop
 axiom PrecisionEscapeInterventionObligation : BoundaryInterventionPair -> Prop
 axiom ClampDeshelfInterventionObligation : BoundaryInterventionPair -> Prop
 
+/-- Concrete v0 log-domain witness extracted from a Forge rescue trace.
+This is intentionally smaller than `BoundaryRunPacket`: it records only the
+fields needed to discharge the positive-coordinate part of the log-domain lane
+without appealing to the abstract packet-obligation bridge. -/
+structure LogDomainPositiveCoordinateWitness where
+  rawCoordinate : Real
+  liftedCoordinate : Real
+  rawEvent : BoundaryEventClass
+  rescuedEvent : BoundaryEventClass
+  liftedPositive : 0 < liftedCoordinate
+  rawIsDomainWall : rawEvent = BoundaryEventClass.domainWall
+  rescueIsLogDomain : rescuedEvent = BoundaryEventClass.logDomainRescue
+
+/-- Concrete positive-coordinate obligation for one log-domain rescue sample. -/
+def ConcretePositiveCoordinateObligation
+    (w : LogDomainPositiveCoordinateWitness) : Prop :=
+  0 < w.liftedCoordinate ∧
+    w.rawEvent = BoundaryEventClass.domainWall ∧
+    w.rescuedEvent = BoundaryEventClass.logDomainRescue
+
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
     (p : BoundaryRunPacket) :
@@ -380,6 +400,17 @@ theorem log_domain_rescue_packet_carries_positive_coordinate_witness
       BoundaryEventClass.domainWall
       BoundaryEventClass.logDomainRescue
       htransition)
+
+/-- First discharged log-domain lane foothold: the concrete positive-coordinate
+part of a Forge log-domain rescue sample follows directly from the witness
+record, without invoking `PositiveCoordinateObligation` or a packet bridge
+axiom. This is not yet the full semantic rewrite theorem; it is the local
+sample-level obligation that the generated Forge fixture can expose. -/
+theorem log_domain_positive_coordinate_witness_discharges_concrete_obligation
+    (w : LogDomainPositiveCoordinateWitness) :
+    ConcretePositiveCoordinateObligation w := by
+  exact And.intro w.liftedPositive
+    (And.intro w.rawIsDomainWall w.rescueIsLogDomain)
 
 theorem overflow_to_guard_rescue_maps_to_output_safety
     (p : BoundaryRunPacket) :
