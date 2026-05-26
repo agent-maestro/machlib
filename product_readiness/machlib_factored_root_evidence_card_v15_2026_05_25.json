@@ -1,0 +1,15 @@
+{
+  "card_id": "machlib_factored_root_evidence_card_v15_2026_05_25",
+  "title": "MachLib factored root packet import",
+  "status": "MACHLIB_FACTORIZATION_CERTIFICATE_IMPORT_V15_READY",
+  "visibility": "internal",
+  "summary": "Validated explicit factorization certificates for nonzero constants times linear factors and produced deduplicated finite-root packet evidence.",
+  "certificate_count": 7,
+  "pass_count": 7,
+  "fail_count": 0,
+  "root_count_induction_target_proved": false,
+  "arbitrary_factorization_discovery": false,
+  "public_ready": false,
+  "marketplace_ready": false,
+  "production_marketplace_modified": false
+}
