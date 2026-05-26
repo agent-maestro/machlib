@@ -1,0 +1,16 @@
+{
+  "card_id": "machlib_rational_root_search_evidence_card_v16_2026_05_25",
+  "title": "MachLib bounded rational-root search",
+  "status": "MACHLIB_RATIONAL_ROOT_SEARCH_V16_READY",
+  "visibility": "internal",
+  "summary": "Bounded exact rational-root search emits v15 factorization certificates or exact blockers.",
+  "case_count": 7,
+  "certificate_generated_count": 6,
+  "blocked_count": 1,
+  "arbitrary_factorization_discovery": false,
+  "complete_rational_root_search_claim": false,
+  "root_count_induction_target_proved": false,
+  "public_ready": false,
+  "marketplace_ready": false,
+  "production_marketplace_modified": false
+}

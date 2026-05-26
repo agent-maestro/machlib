@@ -1,0 +1,152 @@
+{
+  "date": "2026-05-25",
+  "source": "machlib_rational_root_search_v16_2026_05_25",
+  "certificates": [
+    {
+      "certificate_id": "quadratic_two_integer_roots_certificate_v16",
+      "description": "x^2 - 5x + 6",
+      "coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        3
+      ],
+      "expected_product_coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "expected_dedup_roots": [
+        2,
+        3
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "cubic_three_integer_roots_certificate_v16",
+      "description": "x^3 - 6x^2 + 11x - 6",
+      "coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        1,
+        2,
+        3
+      ],
+      "expected_product_coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "expected_dedup_roots": [
+        1,
+        2,
+        3
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "repeated_cubic_root_certificate_v16",
+      "description": "(x-2)^3",
+      "coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        2,
+        2
+      ],
+      "expected_product_coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "expected_dedup_roots": [
+        2
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "scaled_pair_certificate_v16",
+      "description": "2(x-1)(x-4)",
+      "coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "constant": 2,
+      "linear_roots": [
+        1,
+        4
+      ],
+      "expected_product_coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "expected_dedup_roots": [
+        1,
+        4
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "fractional_roots_certificate_v16",
+      "description": "3(x-1/2)(x+1)",
+      "coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "constant": 3,
+      "linear_roots": [
+        -1,
+        "1/2"
+      ],
+      "expected_product_coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "expected_dedup_roots": [
+        -1,
+        "1/2"
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "constant_only_certificate_v16",
+      "description": "7",
+      "coeffs": [
+        7
+      ],
+      "constant": 7,
+      "linear_roots": [],
+      "expected_product_coeffs": [
+        7
+      ],
+      "expected_dedup_roots": [],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    }
+  ]
+}

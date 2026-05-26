@@ -1,0 +1,429 @@
+{
+  "packet_id": "machlib_rational_root_search_v16_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_RATIONAL_ROOT_SEARCH_V16_READY",
+  "search_class": "bounded_rational_linear_factor_search",
+  "root_limit": 6,
+  "denominator_limit": 4,
+  "case_count": 7,
+  "certificate_generated_count": 6,
+  "blocked_count": 1,
+  "validation_failure_count": 0,
+  "expectation_failure_count": 0,
+  "certificates": [
+    {
+      "certificate_id": "quadratic_two_integer_roots_certificate_v16",
+      "description": "x^2 - 5x + 6",
+      "coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        3
+      ],
+      "expected_product_coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "expected_dedup_roots": [
+        2,
+        3
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "cubic_three_integer_roots_certificate_v16",
+      "description": "x^3 - 6x^2 + 11x - 6",
+      "coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        1,
+        2,
+        3
+      ],
+      "expected_product_coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "expected_dedup_roots": [
+        1,
+        2,
+        3
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "repeated_cubic_root_certificate_v16",
+      "description": "(x-2)^3",
+      "coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        2,
+        2
+      ],
+      "expected_product_coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "expected_dedup_roots": [
+        2
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "scaled_pair_certificate_v16",
+      "description": "2(x-1)(x-4)",
+      "coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "constant": 2,
+      "linear_roots": [
+        1,
+        4
+      ],
+      "expected_product_coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "expected_dedup_roots": [
+        1,
+        4
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "fractional_roots_certificate_v16",
+      "description": "3(x-1/2)(x+1)",
+      "coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "constant": 3,
+      "linear_roots": [
+        -1,
+        "1/2"
+      ],
+      "expected_product_coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "expected_dedup_roots": [
+        -1,
+        "1/2"
+      ],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    },
+    {
+      "certificate_id": "constant_only_certificate_v16",
+      "description": "7",
+      "coeffs": [
+        7
+      ],
+      "constant": 7,
+      "linear_roots": [],
+      "expected_product_coeffs": [
+        7
+      ],
+      "expected_dedup_roots": [],
+      "normalized": true,
+      "source": "machlib_rational_root_search_v16"
+    }
+  ],
+  "case_results": [
+    {
+      "case_id": "quadratic_two_integer_roots_v16",
+      "description": "x^2 - 5x + 6",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "blocker": null,
+      "certificate_id": "quadratic_two_integer_roots_certificate_v16",
+      "validation": {
+        "certificate_id": "quadratic_two_integer_roots_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          6,
+          -5,
+          1
+        ],
+        "computed_roots": [
+          2,
+          3
+        ],
+        "degree_bound": 2,
+        "expected_root_count": 2,
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "case_id": "cubic_three_integer_roots_v16",
+      "description": "x^3 - 6x^2 + 11x - 6",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        1,
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "blocker": null,
+      "certificate_id": "cubic_three_integer_roots_certificate_v16",
+      "validation": {
+        "certificate_id": "cubic_three_integer_roots_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          -6,
+          11,
+          -6,
+          1
+        ],
+        "computed_roots": [
+          1,
+          2,
+          3
+        ],
+        "degree_bound": 3,
+        "expected_root_count": 3,
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "case_id": "irreducible_over_rational_window_v16",
+      "description": "x^2 + 1",
+      "status": "BLOCKED",
+      "expectation_met": true,
+      "input_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "constant": null,
+      "linear_roots": [],
+      "remaining_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "certificate_id": null,
+      "validation": null
+    },
+    {
+      "case_id": "repeated_cubic_root_v16",
+      "description": "(x-2)^3",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "constant": 1,
+      "linear_roots": [
+        2,
+        2,
+        2
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "blocker": null,
+      "certificate_id": "repeated_cubic_root_certificate_v16",
+      "validation": {
+        "certificate_id": "repeated_cubic_root_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          -8,
+          12,
+          -6,
+          1
+        ],
+        "computed_roots": [
+          2
+        ],
+        "degree_bound": 3,
+        "expected_root_count": 1,
+        "failures": [],
+        "warnings": [
+          "repeated roots deduplicated"
+        ]
+      }
+    },
+    {
+      "case_id": "scaled_pair_v16",
+      "description": "2(x-1)(x-4)",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "constant": 2,
+      "linear_roots": [
+        1,
+        4
+      ],
+      "remaining_coeffs": [
+        2
+      ],
+      "blocker": null,
+      "certificate_id": "scaled_pair_certificate_v16",
+      "validation": {
+        "certificate_id": "scaled_pair_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          8,
+          -10,
+          2
+        ],
+        "computed_roots": [
+          1,
+          4
+        ],
+        "degree_bound": 2,
+        "expected_root_count": 2,
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "case_id": "fractional_roots_v16",
+      "description": "3(x-1/2)(x+1)",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "constant": 3,
+      "linear_roots": [
+        -1,
+        "1/2"
+      ],
+      "remaining_coeffs": [
+        3
+      ],
+      "blocker": null,
+      "certificate_id": "fractional_roots_certificate_v16",
+      "validation": {
+        "certificate_id": "fractional_roots_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          "-3/2",
+          "3/2",
+          3
+        ],
+        "computed_roots": [
+          -1,
+          "1/2"
+        ],
+        "degree_bound": 2,
+        "expected_root_count": 2,
+        "failures": [],
+        "warnings": []
+      }
+    },
+    {
+      "case_id": "constant_only_v16",
+      "description": "7",
+      "status": "CERTIFICATE_GENERATED",
+      "expectation_met": true,
+      "input_coeffs": [
+        7
+      ],
+      "constant": 7,
+      "linear_roots": [],
+      "remaining_coeffs": [
+        7
+      ],
+      "blocker": null,
+      "certificate_id": "constant_only_certificate_v16",
+      "validation": {
+        "certificate_id": "constant_only_certificate_v16",
+        "status": "PASS",
+        "computed_coeffs": [
+          7
+        ],
+        "computed_roots": [],
+        "degree_bound": 0,
+        "expected_root_count": 0,
+        "failures": [],
+        "warnings": []
+      }
+    }
+  ],
+  "arbitrary_factorization_discovery": false,
+  "complete_rational_root_search_claim": false,
+  "root_count_induction_target_status": "DEFINED_NOT_PROVED",
+  "boundary": {
+    "general_root_count_theorem_proved": false,
+    "root_count_induction_target_proved": false,
+    "analytic_identity_theorem_proved": false,
+    "forge_compiler_behavior_changed": false,
+    "efrog_behavior_changed": false,
+    "public_theorem_claim": false,
+    "marketplace_ready": false,
+    "public_ready": false,
+    "production_marketplace_modified": false,
+    "petal_api_upload_performed": false,
+    "huggingface_upload_performed": false,
+    "package_publish_performed": false,
+    "certified_safety_claim": false,
+    "production_controller_claim": false
+  }
+}
