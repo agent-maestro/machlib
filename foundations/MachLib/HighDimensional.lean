@@ -427,6 +427,26 @@ theorem precision_escape_packet_carries_precision_witness
       BoundaryEventClass.interiorSample
       htransition)
 
+/-- A saturation-deshelf packet carries the clamp-invariant obligation and a
+concrete nonempty transition-graph witness. As with phantom attractors, the
+event witness is explicit because transition evidence does not yet construct
+event membership. -/
+theorem saturation_deshelf_packet_carries_clamp_witness
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasEvent p BoundaryEventClass.saturationShelf ->
+    PacketHasTransition p BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration ->
+    ClampInvariantObligation p ∧
+      (∃ x : BoundaryEventClass, ∃ y : BoundaryEventClass, PacketHasTransition p x y) := by
+  intro hvalid hevent htransition
+  exact And.intro
+    (saturation_shelf_obligation p hvalid hevent)
+    (transition_graph_nonempty_from_transition
+      p
+      BoundaryEventClass.saturationShelf
+      BoundaryEventClass.cornerConcentration
+      htransition)
+
 theorem log_domain_lift_pair_maps_to_positive_coordinates
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
