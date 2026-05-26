@@ -132,6 +132,18 @@ theorem is the next induction bridge; this definition names the exact shape. -/
 def ProductDegreeBoundTarget : Prop :=
   ∀ p q : CoeffPoly, degreeBound (mulCoeff p q) ≤ degreeBound p + degreeBound q
 
+/-- A product degree certificate for the current coefficient product. The
+general constructor for this certificate is still future work. -/
+def ProductDegreeBoundCert (product p q : CoeffPoly) : Prop :=
+  degreeBound product ≤ degreeBound p + degreeBound q
+
+/-- A product degree-growth certificate. Root-count induction needs this
+direction: the product must have enough degree budget to cover the union of
+factor roots. For nonzero normalized products this should eventually come
+from exact degree arithmetic. -/
+def ProductDegreeGrowthCert (product p q : CoeffPoly) : Prop :=
+  degreeBound p + degreeBound q ≤ degreeBound product
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -285,6 +297,63 @@ theorem mem_unionUniqueRoots_left {x : Real} {left right : List Real}
       | inr htail =>
           exact mem_insertUniqueRoot_of_mem (ih htail)
 
+/-- Unique insertion preserves duplicate-free root lists. -/
+theorem RootListDistinct_insertUniqueRoot (x : Real) {roots : List Real}
+    (hd : RootListDistinct roots) :
+    RootListDistinct (insertUniqueRoot x roots) := by
+  classical
+  unfold insertUniqueRoot
+  by_cases hx : x ∈ roots
+  · simpa [hx] using hd
+  · simp [hx, RootListDistinct, hd]
+
+/-- Unique union preserves duplicate-free root lists. -/
+theorem RootListDistinct_unionUniqueRoots
+    {left right : List Real}
+    (hleft : RootListDistinct left)
+    (hright : RootListDistinct right) :
+    RootListDistinct (unionUniqueRoots left right) := by
+  induction left with
+  | nil =>
+      unfold unionUniqueRoots
+      exact hright
+  | cons x xs ih =>
+      unfold unionUniqueRoots
+      unfold RootListDistinct at hleft
+      exact RootListDistinct_insertUniqueRoot x (ih hleft.right)
+
+/-- Unique insertion increases length by at most one. -/
+theorem length_insertUniqueRoot_le_succ (x : Real) (roots : List Real) :
+    (insertUniqueRoot x roots).length ≤ roots.length + 1 := by
+  classical
+  unfold insertUniqueRoot
+  by_cases hx : x ∈ roots
+  · simp [hx]
+  · simp [hx]
+
+/-- Values already present do not change length under unique insertion. -/
+theorem length_insertUniqueRoot_eq_of_mem {x : Real} {roots : List Real}
+    (h : x ∈ roots) :
+    (insertUniqueRoot x roots).length = roots.length := by
+  classical
+  unfold insertUniqueRoot
+  simp [h]
+
+/-- Unique union is bounded by the sum of source list lengths. -/
+theorem length_unionUniqueRoots_le_add (left right : List Real) :
+    (unionUniqueRoots left right).length ≤ left.length + right.length := by
+  induction left with
+  | nil =>
+      unfold unionUniqueRoots
+      simp
+  | cons x xs ih =>
+      unfold unionUniqueRoots
+      change (insertUniqueRoot x (unionUniqueRoots xs right)).length ≤
+        (xs.length + 1) + right.length
+      have hinsert := length_insertUniqueRoot_le_succ x (unionUniqueRoots xs right)
+      have htail := ih
+      omega
+
 /-- The product-degree arithmetic base case is checked. The general degree
 arithmetic theorem still needs induction over normalized convolution output. -/
 theorem productDegreeBound_nil_left (q : CoeffPoly) :
@@ -423,6 +492,36 @@ theorem mulCoeffRootListSound_union
     (hq : RootListSound q rootsQ) :
     RootListSound (mulCoeff p q) (unionUniqueRoots rootsP rootsQ) :=
   productRootListSound_union (hmul := mulCoeff_evalSound p q) hp hq
+
+/-- Product root-list distinctness follows from duplicate-free factor lists
+because `unionUniqueRoots` inserts only missing roots. -/
+theorem productRootListDistinct_union
+    {rootsP rootsQ : List Real}
+    (hp : RootListDistinct rootsP)
+    (hq : RootListDistinct rootsQ) :
+    RootListDistinct (unionUniqueRoots rootsP rootsQ) :=
+  RootListDistinct_unionUniqueRoots hp hq
+
+/-- Product root-list cardinality is bounded by the sum of factor root-list
+cardinalities. -/
+theorem productRootListLength_union_le_add
+    (rootsP rootsQ : List Real) :
+    (unionUniqueRoots rootsP rootsQ).length ≤ rootsP.length + rootsQ.length :=
+  length_unionUniqueRoots_le_add rootsP rootsQ
+
+/-- If a product has a degree certificate, then bounded factor root lists
+produce a bounded product root list. This is the honest bridge between checked
+root-list union arithmetic and the still-separate product-degree arithmetic. -/
+theorem productRootListDegreeBound_union_of_cert
+    {product p q : CoeffPoly}
+    {rootsP rootsQ : List Real}
+    (hcert : ProductDegreeGrowthCert product p q)
+    (hp : RootListDegreeBound p rootsP)
+    (hq : RootListDegreeBound q rootsQ) :
+    RootListDegreeBound product (unionUniqueRoots rootsP rootsQ) := by
+  unfold RootListDegreeBound ProductDegreeGrowthCert at *
+  have hlen := length_unionUniqueRoots_le_add rootsP rootsQ
+  omega
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/
