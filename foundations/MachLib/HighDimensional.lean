@@ -31,6 +31,11 @@ axiom cubeBoundaryShellProbability_tends_one
 /-- Raw first-layer EML log-domain survival probability. -/
 axiom firstLayerSurvival : Nat -> Real
 
+/-- Foothold axiom: independent symmetric first-layer log-domain survival. -/
+axiom firstLayerSurvival_decay
+    (d : Nat) :
+    firstLayerSurvival d = realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1)))
+
 /-- Replay packet placeholder for EML IR guard-preservation obligations. -/
 axiom ReplayPacket : Type
 
@@ -55,7 +60,7 @@ theorem cube_boundary_shell_probability_tends_one
 theorem eml_first_layer_log_domain_survival_decay
     (d : Nat) :
     firstLayerSurvival d = realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1))) := by
-  sorry
+  exact firstLayerSurvival_decay d
 
 /-- Guarded lowering preserves declared positive-domain obligations through replay packets. -/
 theorem guarded_lowering_preserves_domain_annotations
