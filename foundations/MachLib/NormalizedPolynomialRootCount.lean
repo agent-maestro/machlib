@@ -1,4 +1,5 @@
 import MachLib.PolynomialRootCount
+import MachLib.Ring
 
 /-!
 MachLib.NormalizedPolynomialRootCount — coefficient-list root-count scaffold.
@@ -62,6 +63,29 @@ def degreeBound : CoeffPoly → Nat
 noncomputable def linearCoeff (r : Real) : CoeffPoly :=
   [-r, 1]
 
+/-- Pointwise coefficient-list addition. Missing coefficients are treated as
+zero, so this is the normalized-list substrate for polynomial addition. -/
+noncomputable def addCoeff : CoeffPoly → CoeffPoly → CoeffPoly
+  | [], q => q
+  | p, [] => p
+  | c :: cs, d :: ds => (c + d) :: addCoeff cs ds
+
+/-- Multiply every coefficient by a scalar. -/
+noncomputable def scalarMulCoeff (a : Real) : CoeffPoly → CoeffPoly
+  | [] => []
+  | c :: cs => (a * c) :: scalarMulCoeff a cs
+
+/-- Multiply a coefficient list by `x`, i.e. shift coefficients up by one
+degree. -/
+noncomputable def shiftCoeff (p : CoeffPoly) : CoeffPoly :=
+  0 :: p
+
+/-- Recursive coefficient-list convolution. For `p = c + x*cs`, the product
+with `q` is `c*q + x*(cs*q)`. -/
+noncomputable def mulCoeff : CoeffPoly → CoeffPoly → CoeffPoly
+  | [], _ => []
+  | c :: cs, q => addCoeff (scalarMulCoeff c q) (shiftCoeff (mulCoeff cs q))
+
 /-- A semantic product certificate. It avoids claiming we have a complete
 coefficient-list convolution normalizer yet: a candidate product list is
 accepted only when its evaluator is pointwise equal to the product of the
@@ -89,6 +113,25 @@ def RootListDistinct : List Real → Prop
 def RootListDegreeBound (p : CoeffPoly) (roots : List Real) : Prop :=
   roots.length ≤ degreeBound p
 
+/-- Add a root to a list only if it is not already present. This is the
+minimal duplicate-control primitive needed before product root lists can be
+assembled from factor root lists. -/
+noncomputable def insertUniqueRoot (x : Real) (roots : List Real) : List Real :=
+  by
+    classical
+    exact if x ∈ roots then roots else x :: roots
+
+/-- Union root lists while avoiding newly introduced duplicates. This is a
+constructive list-level operation, not a finite-set library replacement. -/
+noncomputable def unionUniqueRoots : List Real → List Real → List Real
+  | [], ys => ys
+  | x :: xs, ys => insertUniqueRoot x (unionUniqueRoots xs ys)
+
+/-- Degree arithmetic target for coefficient-list products. The general
+theorem is the next induction bridge; this definition names the exact shape. -/
+def ProductDegreeBoundTarget : Prop :=
+  ∀ p q : CoeffPoly, degreeBound (mulCoeff p q) ≤ degreeBound p + degreeBound q
+
 /-- The normalized finite-root packet shape for future induction. -/
 structure NormalizedFiniteRootPacket where
   coeffs : CoeffPoly
@@ -108,6 +151,146 @@ theorem eval_singleton (c x : Real) :
   unfold eval
   change c + x * 0 = c
   rw [mul_zero, add_zero]
+
+/-- Pointwise coefficient-list addition evaluates to pointwise addition. -/
+theorem eval_addCoeff (p q : CoeffPoly) (x : Real) :
+    eval (addCoeff p q) x = eval p x + eval q x := by
+  induction p generalizing q with
+  | nil =>
+      cases q with
+      | nil =>
+          unfold addCoeff eval
+          rw [add_zero]
+      | cons d ds =>
+          unfold addCoeff eval
+          rw [zero_add]
+  | cons c cs ih =>
+      cases q with
+      | nil =>
+          unfold addCoeff eval
+          rw [add_zero]
+      | cons d ds =>
+          unfold addCoeff eval
+          rw [ih ds]
+          rw [mul_distrib]
+          ac_rfl
+
+/-- Scalar multiplication of coefficients evaluates to scalar multiplication
+of the polynomial value. -/
+theorem eval_scalarMulCoeff (a : Real) (p : CoeffPoly) (x : Real) :
+    eval (scalarMulCoeff a p) x = a * eval p x := by
+  induction p with
+  | nil =>
+      unfold scalarMulCoeff eval
+      rw [mul_zero]
+  | cons c cs ih =>
+      unfold scalarMulCoeff eval
+      rw [ih]
+      have hswap : x * (a * eval cs x) = a * (x * eval cs x) := by
+        calc x * (a * eval cs x)
+            = (x * a) * eval cs x := (mul_assoc x a (eval cs x)).symm
+          _ = (a * x) * eval cs x := by rw [mul_comm x a]
+          _ = a * (x * eval cs x) := mul_assoc a x (eval cs x)
+      rw [hswap]
+      rw [mul_distrib]
+
+/-- Shifting coefficients evaluates as multiplication by `x`. -/
+theorem eval_shiftCoeff (p : CoeffPoly) (x : Real) :
+    eval (shiftCoeff p) x = x * eval p x := by
+  unfold shiftCoeff
+  cases p with
+  | nil =>
+      unfold eval
+      rw [eval_nil, mul_zero, add_zero]
+  | cons c cs =>
+      unfold eval
+      rw [zero_add]
+      change x * (c + x * eval cs x) = x * (c + x * eval cs x)
+      rfl
+
+/-- Coefficient-list convolution evaluates to the product of the operand
+evaluations. This is the concrete product soundness bridge needed before
+root-list induction can move beyond semantic product certificates. -/
+theorem eval_mulCoeff (p q : CoeffPoly) (x : Real) :
+    eval (mulCoeff p q) x = eval p x * eval q x := by
+  induction p with
+  | nil =>
+      unfold mulCoeff eval
+      rw [zero_mul]
+  | cons c cs ih =>
+      unfold mulCoeff
+      change
+        eval (addCoeff (scalarMulCoeff c q) (shiftCoeff (mulCoeff cs q))) x =
+          (c + x * eval cs x) * eval q x
+      rw [eval_addCoeff, eval_scalarMulCoeff, eval_shiftCoeff, ih]
+      have htail : x * (eval cs x * eval q x) = eval q x * (x * eval cs x) := by
+        calc x * (eval cs x * eval q x)
+            = (x * eval cs x) * eval q x := (mul_assoc x (eval cs x) (eval q x)).symm
+          _ = eval q x * (x * eval cs x) := by rw [mul_comm (x * eval cs x) (eval q x)]
+      rw [htail]
+      rw [mul_distrib_right]
+      rw [mul_comm (eval q x) (x * eval cs x)]
+
+/-- The recursive convolution product carries a semantic product certificate. -/
+theorem mulCoeff_evalSound (p q : CoeffPoly) :
+    MulEvalSound (mulCoeff p q) p q := by
+  intro x
+  exact eval_mulCoeff p q x
+
+/-- A value already in a list remains present after unique insertion. -/
+theorem mem_insertUniqueRoot_of_mem {x y : Real} {roots : List Real}
+    (h : y ∈ roots) :
+    y ∈ insertUniqueRoot x roots := by
+  classical
+  unfold insertUniqueRoot
+  by_cases hx : x ∈ roots
+  · simpa [hx] using h
+  · simpa [hx] using List.mem_cons_of_mem x h
+
+/-- The inserted value is present after unique insertion. -/
+theorem mem_insertUniqueRoot_self (x : Real) (roots : List Real) :
+    x ∈ insertUniqueRoot x roots := by
+  classical
+  unfold insertUniqueRoot
+  by_cases hx : x ∈ roots
+  · simp [hx]
+  · simp [hx]
+
+/-- Membership in the right root list is preserved by unique union. -/
+theorem mem_unionUniqueRoots_right {x : Real} {left right : List Real}
+    (h : x ∈ right) :
+    x ∈ unionUniqueRoots left right := by
+  induction left with
+  | nil =>
+      unfold unionUniqueRoots
+      exact h
+  | cons y ys ih =>
+      unfold unionUniqueRoots
+      exact mem_insertUniqueRoot_of_mem ih
+
+/-- Membership in the left root list is preserved by unique union. -/
+theorem mem_unionUniqueRoots_left {x : Real} {left right : List Real}
+    (h : x ∈ left) :
+    x ∈ unionUniqueRoots left right := by
+  induction left with
+  | nil =>
+      cases h
+  | cons y ys ih =>
+      unfold unionUniqueRoots
+      simp at h
+      cases h with
+      | inl hxy =>
+          rw [hxy]
+          exact mem_insertUniqueRoot_self y (unionUniqueRoots ys right)
+      | inr htail =>
+          exact mem_insertUniqueRoot_of_mem (ih htail)
+
+/-- The product-degree arithmetic base case is checked. The general degree
+arithmetic theorem still needs induction over normalized convolution output. -/
+theorem productDegreeBound_nil_left (q : CoeffPoly) :
+    degreeBound (mulCoeff [] q) ≤ degreeBound [] + degreeBound q := by
+  unfold mulCoeff degreeBound
+  simp
 
 /-- Singleton coefficient lists have degree bound zero. -/
 theorem degreeBound_singleton (c : Real) :
@@ -213,6 +396,33 @@ theorem productRoot_left_of_right_nonroot
   | inr hq =>
       unfold Root at hq
       exact False.elim (hright hq)
+
+/-- Product root-list soundness: if each factor has a sound finite root list,
+then a semantically certified product has roots in the unique union of those
+factor lists. -/
+theorem productRootListSound_union
+    {product p q : CoeffPoly}
+    {rootsP rootsQ : List Real}
+    (hmul : MulEvalSound product p q)
+    (hp : RootListSound p rootsP)
+    (hq : RootListSound q rootsQ) :
+    RootListSound product (unionUniqueRoots rootsP rootsQ) := by
+  intro x hroot
+  have split := productRoot_split (product := product) (p := p) (q := q) hmul hroot
+  cases split with
+  | inl hpRoot =>
+      exact mem_unionUniqueRoots_left (hp x hpRoot)
+  | inr hqRoot =>
+      exact mem_unionUniqueRoots_right (hq x hqRoot)
+
+/-- Convolution-specific product root-list soundness. -/
+theorem mulCoeffRootListSound_union
+    {p q : CoeffPoly}
+    {rootsP rootsQ : List Real}
+    (hp : RootListSound p rootsP)
+    (hq : RootListSound q rootsQ) :
+    RootListSound (mulCoeff p q) (unionUniqueRoots rootsP rootsQ) :=
+  productRootListSound_union (hmul := mulCoeff_evalSound p q) hp hq
 
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/
