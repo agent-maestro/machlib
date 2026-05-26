@@ -1,0 +1,85 @@
+{
+  "packet_id": "machlib_factored_root_packet_v14_2026_05_25",
+  "date": "2026-05-25",
+  "status": "MACHLIB_FACTORED_ROOT_PACKET_V14_READY",
+  "lean_module": "MachLib.NormalizedPolynomialRootCount",
+  "lean_path": "foundations/MachLib/NormalizedPolynomialRootCount.lean",
+  "checked_result_count": 15,
+  "checked_results": [
+    "RootEnumeratorSound",
+    "rootEnumeratorSound_of_packet",
+    "RootCountForKnownPacketTarget",
+    "rootCountForKnownPacketTarget_checked",
+    "linearFiniteRootPacket",
+    "foldNormalizedProductPacket",
+    "factoredLinearProductPacket",
+    "repeatedLinearProductPacket",
+    "RootCountForLinearFactorProductsTarget",
+    "rootCountForLinearFactorProductsTarget_checked",
+    "RootCountForRepeatedLinearProductsTarget",
+    "rootCountForRepeatedLinearProductsTarget_checked",
+    "RootCountForFactoredTarget",
+    "rootCountForFactoredTarget_checked",
+    "RootCountForArbitraryCoeffTarget"
+  ],
+  "known_packet_target_status": "CHECKED",
+  "linear_factor_product_target_status": "CHECKED",
+  "repeated_linear_product_target_status": "CHECKED",
+  "factored_packet_composition_target_status": "CHECKED",
+  "arbitrary_coeff_target_status": "DEFINED_NOT_PROVED",
+  "forge_efrog_certificate_shape": {
+    "coeffs": [
+      "Real"
+    ],
+    "normalization": {
+      "kind": "normalized_coeff_list",
+      "last_nonzero_required": true
+    },
+    "factorization": [
+      {
+        "kind": "constant",
+        "value": "c",
+        "nonzero_certificate": "c != 0"
+      },
+      {
+        "kind": "linear",
+        "root": "r"
+      }
+    ],
+    "root_packet_expected": [
+      "deduplicated roots"
+    ],
+    "evidence_obligations": [
+      "RootListSound",
+      "RootListDistinct",
+      "RootListDegreeBound"
+    ],
+    "boundary": {
+      "forge_compiler_behavior_changed": false,
+      "efrog_behavior_changed": false,
+      "arbitrary_root_discovery_claim": false
+    }
+  },
+  "still_open": [
+    "arbitrary root discovery for normalized coefficient lists",
+    "factorization search or certificate import from Forge/eFrog",
+    "RootCountInductionTarget proof for arbitrary coefficients",
+    "public Explorer/CapCard surfacing of these internal packets"
+  ],
+  "bridge_axiom_count": 0,
+  "general_root_count_theorem_proved": false,
+  "root_count_induction_target_proved": false,
+  "arbitrary_root_discovery_claim": false,
+  "analytic_identity_theorem_proved": false,
+  "forge_compiler_behavior_changed": false,
+  "efrog_behavior_changed": false,
+  "public_theorem_claim": false,
+  "marketplace_ready": false,
+  "public_ready": false,
+  "production_marketplace_modified": false,
+  "petal_api_upload_performed": false,
+  "huggingface_upload_performed": false,
+  "package_publish_performed": false,
+  "certified_safety_claim": false,
+  "production_controller_claim": false
+}

@@ -245,6 +245,12 @@ structure NormalizedFiniteRootPacket where
   distinct : RootListDistinct roots
   degree_bound : RootListDegreeBound coeffs roots
 
+/-- Combined finite-root enumerator soundness interface. This is the small
+surface Forge/eFrog can eventually target: a coefficient list, a candidate
+root list, and the three checked obligations needed by the packet layer. -/
+def RootEnumeratorSound (p : CoeffPoly) (roots : List Real) : Prop :=
+  RootListSound p roots ∧ RootListDistinct roots ∧ RootListDegreeBound p roots
+
 /-- Empty coefficient lists evaluate to zero. -/
 theorem eval_nil (x : Real) :
     eval [] x = 0 := rfl
@@ -1878,6 +1884,106 @@ theorem productPacketAssemblyTarget_checked :
     · exact (normalizedProductFiniteRootPacket left right).distinct
     · exact (normalizedProductFiniteRootPacket left right).degree_bound
 
+/-- Any normalized finite-root packet exposes the compact root-enumerator
+interface. -/
+theorem rootEnumeratorSound_of_packet (packet : NormalizedFiniteRootPacket) :
+    RootEnumeratorSound packet.coeffs packet.roots := by
+  unfold RootEnumeratorSound
+  exact ⟨packet.sound, packet.distinct, packet.degree_bound⟩
+
+/-- Checked root-enumerator target for already-assembled packets. -/
+def RootCountForKnownPacketTarget : Prop :=
+  ∀ packet : NormalizedFiniteRootPacket,
+    RootEnumeratorSound packet.coeffs packet.roots
+
+/-- The known-packet root-count target is now checked. -/
+theorem rootCountForKnownPacketTarget_checked :
+    RootCountForKnownPacketTarget := by
+  intro packet
+  exact rootEnumeratorSound_of_packet packet
+
+/-- A singleton linear factor as a reusable finite-root packet. -/
+noncomputable def linearFiniteRootPacket (r : Real) :
+    NormalizedFiniteRootPacket where
+  coeffs := linearCoeff r
+  normalized := linearCoeff_lastNonzero r
+  roots := [r]
+  sound := linearCoeff_rootListSound r
+  distinct := singletonCoeffRootListDistinct r
+  degree_bound := linearCoeff_rootListDegreeBound r
+
+/-- Fold a list of known finite-root packets into one normalized product
+packet. The fold is intentionally packet-native, so every step carries
+root-list soundness, duplicate control, and degree-bound evidence. -/
+noncomputable def foldNormalizedProductPacket :
+    NormalizedFiniteRootPacket → List NormalizedFiniteRootPacket →
+      NormalizedFiniteRootPacket
+  | acc, [] => acc
+  | acc, factor :: rest =>
+      foldNormalizedProductPacket (normalizedProductFiniteRootPacket acc factor) rest
+
+/-- A factored polynomial packet: nonzero constant scale times a list of
+linear factors. This is not arbitrary factorization discovery; it consumes an
+explicit factor list as evidence. -/
+noncomputable def factoredLinearProductPacket
+    (c : Real) (hc : c ≠ 0) (roots : List Real) :
+    NormalizedFiniteRootPacket :=
+  foldNormalizedProductPacket
+    (nonzeroConstantFiniteRootPacket c hc)
+    (roots.map linearFiniteRootPacket)
+
+/-- Repeated-root product packet. Duplicate roots are handled by the same
+unique-union packet composition machinery. -/
+noncomputable def repeatedLinearProductPacket
+    (c : Real) (hc : c ≠ 0) (r : Real) (n : Nat) :
+    NormalizedFiniteRootPacket :=
+  factoredLinearProductPacket c hc (List.replicate n r)
+
+/-- Target for explicit factored linear products. This is the first practical
+root-count layer above individual examples: if factorization is supplied, the
+root packet can be assembled. -/
+def RootCountForLinearFactorProductsTarget : Prop :=
+  ∀ (c : Real) (hc : c ≠ 0) (roots : List Real),
+    RootEnumeratorSound
+      (factoredLinearProductPacket c hc roots).coeffs
+      (factoredLinearProductPacket c hc roots).roots
+
+/-- The explicit linear-factor product target is now checked. -/
+theorem rootCountForLinearFactorProductsTarget_checked :
+    RootCountForLinearFactorProductsTarget := by
+  intro c hc roots
+  exact rootEnumeratorSound_of_packet (factoredLinearProductPacket c hc roots)
+
+/-- Target for repeated-root linear products. This is a separate target because
+it is the path that keeps `(x-r)^k` from becoming a misleading multi-root
+claim: packet composition keeps the root list duplicate-controlled. -/
+def RootCountForRepeatedLinearProductsTarget : Prop :=
+  ∀ (c : Real) (hc : c ≠ 0) (r : Real) (n : Nat),
+    RootEnumeratorSound
+      (repeatedLinearProductPacket c hc r n).coeffs
+      (repeatedLinearProductPacket c hc r n).roots
+
+/-- The repeated-root linear product target is now checked. -/
+theorem rootCountForRepeatedLinearProductsTarget_checked :
+    RootCountForRepeatedLinearProductsTarget := by
+  intro c hc r n
+  exact rootEnumeratorSound_of_packet (repeatedLinearProductPacket c hc r n)
+
+/-- Target for products of already-known packets. This is broader than the
+linear-factor target but still honest: it composes evidence, not root
+discovery. -/
+def RootCountForFactoredTarget : Prop :=
+  ∀ seed factors,
+    RootEnumeratorSound
+      (foldNormalizedProductPacket seed factors).coeffs
+      (foldNormalizedProductPacket seed factors).roots
+
+/-- The factored packet-composition target is now checked. -/
+theorem rootCountForFactoredTarget_checked :
+    RootCountForFactoredTarget := by
+  intro seed factors
+  exact rootEnumeratorSound_of_packet (foldNormalizedProductPacket seed factors)
+
 /-- The future induction claim shape. It is a definition of the target
 property, not a proved theorem. -/
 def RootCountInductionTarget : Prop :=
@@ -1887,6 +1993,12 @@ def RootCountInductionTarget : Prop :=
       RootListSound p roots ∧
       RootListDistinct roots ∧
       RootListDegreeBound p roots
+
+/-- The arbitrary coefficient-list target remains explicitly separate. It
+requires root discovery or factorization evidence for arbitrary normalized
+lists, not just product composition from known packets. -/
+def RootCountForArbitraryCoeffTarget : Prop :=
+  RootCountInductionTarget
 
 end NormalizedPolynomialRootCount
 end MachLib
