@@ -107,6 +107,29 @@ axiom packetTransitionEntropy : BoundaryRunPacket -> Real
 /-- Transition graph is well-formed for the packet trace. -/
 axiom ValidTransitionGraph : BoundaryRunPacket -> Prop
 
+/-- Named intervention operators over boundary-event dynamics. -/
+inductive BoundaryIntervention where
+  | logDomainLift
+  | guardClamp
+  | precisionEscape
+  | saturationDeshelf
+
+/-- Packet pair witnessing one raw/intervened benchmark comparison. -/
+axiom BoundaryInterventionPair : Type
+
+/-- Pair validity: same dimension/depth/sample/seed comparison, simulated only. -/
+axiom ValidInterventionPair : BoundaryInterventionPair -> Prop
+
+/-- The named intervention used by a pair. -/
+axiom PairUsesIntervention : BoundaryInterventionPair -> BoundaryIntervention -> Prop
+
+/-- The pair exhibits a from-event to to-event rescue transition. -/
+axiom PairHasRescueTransition :
+    BoundaryInterventionPair -> BoundaryEventClass -> BoundaryEventClass -> Prop
+
+/-- Finite survival did not regress in the pairwise benchmark. -/
+axiom PairNonregressingSurvival : BoundaryInterventionPair -> Prop
+
 /-- Obligation predicates attached to taxonomy classes. -/
 axiom BaselineReplayValid : BoundaryRunPacket -> Prop
 axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
@@ -116,6 +139,11 @@ axiom PrecisionSensitivityObligation : BoundaryRunPacket -> Prop
 axiom OutputSafetyObligation : BoundaryRunPacket -> Prop
 axiom PositiveCoordinateObligation : BoundaryRunPacket -> Prop
 axiom BoundaryDynamicsObligation : BoundaryRunPacket -> Prop
+axiom InterventionSoundnessObligation : BoundaryInterventionPair -> Prop
+axiom PositiveCoordinateInterventionObligation : BoundaryInterventionPair -> Prop
+axiom OutputSafetyInterventionObligation : BoundaryInterventionPair -> Prop
+axiom PrecisionEscapeInterventionObligation : BoundaryInterventionPair -> Prop
+axiom ClampDeshelfInterventionObligation : BoundaryInterventionPair -> Prop
 
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
@@ -183,6 +211,34 @@ axiom overflow_to_guard_rescue_obligation
     ValidBoundaryRunPacket p ->
     PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
     OutputSafetyObligation p
+
+axiom log_domain_lift_intervention_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.logDomainLift ->
+    PairHasRescueTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateInterventionObligation p
+
+axiom guard_clamp_intervention_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.guardClamp ->
+    PairHasRescueTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    OutputSafetyInterventionObligation p
+
+axiom precision_escape_intervention_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.precisionEscape ->
+    PairHasRescueTransition p BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample ->
+    PrecisionEscapeInterventionObligation p
+
+axiom saturation_deshelf_intervention_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.saturationDeshelf ->
+    PairHasRescueTransition p BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration ->
+    ClampDeshelfInterventionObligation p
 
 /-- The volume ratio `V(unit_ball_d) / V([-1,1]^d)` tends to zero. -/
 theorem high_dim_ball_cube_ratio_tends_zero :
@@ -305,6 +361,42 @@ theorem overflow_to_guard_rescue_maps_to_output_safety
     OutputSafetyObligation p := by
   intro hvalid htransition
   exact overflow_to_guard_rescue_obligation p hvalid htransition
+
+theorem log_domain_lift_pair_maps_to_positive_coordinates
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.logDomainLift ->
+    PairHasRescueTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateInterventionObligation p := by
+  intro hvalid huses htransition
+  exact log_domain_lift_intervention_obligation p hvalid huses htransition
+
+theorem guard_clamp_pair_maps_to_output_safety
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.guardClamp ->
+    PairHasRescueTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    OutputSafetyInterventionObligation p := by
+  intro hvalid huses htransition
+  exact guard_clamp_intervention_obligation p hvalid huses htransition
+
+theorem precision_escape_pair_maps_to_precision_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.precisionEscape ->
+    PairHasRescueTransition p BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample ->
+    PrecisionEscapeInterventionObligation p := by
+  intro hvalid huses htransition
+  exact precision_escape_intervention_obligation p hvalid huses htransition
+
+theorem saturation_deshelf_pair_maps_to_clamp_obligation
+    (p : BoundaryInterventionPair) :
+    ValidInterventionPair p ->
+    PairUsesIntervention p BoundaryIntervention.saturationDeshelf ->
+    PairHasRescueTransition p BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration ->
+    ClampDeshelfInterventionObligation p := by
+  intro hvalid huses htransition
+  exact saturation_deshelf_intervention_obligation p hvalid huses htransition
 
 end HighDimensional
 end MachLib
