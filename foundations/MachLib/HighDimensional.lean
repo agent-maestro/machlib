@@ -97,6 +97,16 @@ inductive BoundaryEventClass where
 /-- Packet contains at least one event of the given class. -/
 axiom PacketHasEvent : BoundaryRunPacket -> BoundaryEventClass -> Prop
 
+/-- Packet contains at least one transition from one event class to another. -/
+axiom PacketHasTransition :
+    BoundaryRunPacket -> BoundaryEventClass -> BoundaryEventClass -> Prop
+
+/-- Packet transition entropy metric exported by Forge/electronics evidence. -/
+axiom packetTransitionEntropy : BoundaryRunPacket -> Real
+
+/-- Transition graph is well-formed for the packet trace. -/
+axiom ValidTransitionGraph : BoundaryRunPacket -> Prop
+
 /-- Obligation predicates attached to taxonomy classes. -/
 axiom BaselineReplayValid : BoundaryRunPacket -> Prop
 axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
@@ -105,6 +115,7 @@ axiom ClampInvariantObligation : BoundaryRunPacket -> Prop
 axiom PrecisionSensitivityObligation : BoundaryRunPacket -> Prop
 axiom OutputSafetyObligation : BoundaryRunPacket -> Prop
 axiom PositiveCoordinateObligation : BoundaryRunPacket -> Prop
+axiom BoundaryDynamicsObligation : BoundaryRunPacket -> Prop
 
 /-- Valid high-dimensional packets may witness boundary dominance. -/
 axiom boundary_dominates_center_from_packet
@@ -154,6 +165,24 @@ axiom log_domain_rescue_obligation
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.logDomainRescue ->
     PositiveCoordinateObligation p
+
+axiom transition_graph_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    ValidTransitionGraph p ->
+    BoundaryDynamicsObligation p
+
+axiom domain_to_log_domain_rescue_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateObligation p
+
+axiom overflow_to_guard_rescue_obligation
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    OutputSafetyObligation p
 
 /-- The volume ratio `V(unit_ball_d) / V([-1,1]^d)` tends to zero. -/
 theorem high_dim_ball_cube_ratio_tends_zero :
@@ -252,6 +281,30 @@ theorem log_domain_rescue_maps_to_positive_coordinates
     PositiveCoordinateObligation p := by
   intro hvalid hevent
   exact log_domain_rescue_obligation p hvalid hevent
+
+theorem valid_transition_graph_maps_to_boundary_dynamics
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    ValidTransitionGraph p ->
+    BoundaryDynamicsObligation p := by
+  intro hvalid hgraph
+  exact transition_graph_obligation p hvalid hgraph
+
+theorem domain_to_log_domain_rescue_maps_to_positive_coordinates
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
+    PositiveCoordinateObligation p := by
+  intro hvalid htransition
+  exact domain_to_log_domain_rescue_obligation p hvalid htransition
+
+theorem overflow_to_guard_rescue_maps_to_output_safety
+    (p : BoundaryRunPacket) :
+    ValidBoundaryRunPacket p ->
+    PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
+    OutputSafetyObligation p := by
+  intro hvalid htransition
+  exact overflow_to_guard_rescue_obligation p hvalid htransition
 
 end HighDimensional
 end MachLib
