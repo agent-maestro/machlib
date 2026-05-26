@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -54,6 +55,50 @@ def test_search_handles_repeated_roots():
     )
     assert result["status"] == "CERTIFICATE_GENERATED"
     assert result["linear_roots"] == [2, 2, 2]
+
+
+def test_parse_cli_coeff_argument():
+    tool = load_tool()
+    assert tool.parse_coeff_argument("6,-5,1") == [6, -5, 1]
+    assert tool.parse_coeff_argument("-3/2, 3/2, 3") == ["-3/2", "3/2", 3]
+
+
+def test_cli_coeff_input_mode(tmp_path):
+    out_json = tmp_path / "search.json"
+    out_certificates = tmp_path / "certificates.json"
+    out_report = tmp_path / "search.md"
+    out_card = tmp_path / "card.json"
+
+    subprocess.run(
+        [
+            sys.executable,
+            str(TOOL),
+            "--coeffs",
+            "6,-5,1",
+            "--out-json",
+            str(out_json),
+            "--out-certificates",
+            str(out_certificates),
+            "--out-report",
+            str(out_report),
+            "--out-card",
+            str(out_card),
+            "--strict",
+        ],
+        check=True,
+    )
+
+    data = json.loads(out_json.read_text())
+    certs = json.loads(out_certificates.read_text())
+    card = json.loads(out_card.read_text())
+
+    assert data["status"] == "MACHLIB_RATIONAL_ROOT_SEARCH_V16_READY"
+    assert data["case_count"] == 1
+    assert data["certificate_generated_count"] == 1
+    assert data["case_results"][0]["linear_roots"] == [2, 3]
+    assert len(certs["certificates"]) == 1
+    assert card["status"] == data["status"]
+    assert "Bounded rational search only" in out_report.read_text()
 
 
 def test_v16_packet_outputs():

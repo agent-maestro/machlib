@@ -328,9 +328,28 @@ def load_cases(path: Path | None) -> list[dict[str, Any]]:
     raise ValueError("case file must be a list or object with cases")
 
 
+def parse_coeff_argument(text: str) -> list[int | str]:
+    values: list[int | str] = []
+    for raw in text.split(","):
+        item = raw.strip()
+        if not item:
+            continue
+        try:
+            value = Fraction(item)
+        except ValueError as exc:
+            raise ValueError(f"invalid coefficient {item!r}") from exc
+        values.append(v15.encode_fraction(value))
+    if not values:
+        raise ValueError("--coeffs must contain at least one coefficient")
+    return values
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cases")
+    parser.add_argument("--coeffs", help="Comma-separated low-to-high coefficients, e.g. 6,-5,1")
+    parser.add_argument("--case-id", default="cli_coeff_input_v16")
+    parser.add_argument("--description", default="CLI coefficient input")
     parser.add_argument("--root-limit", type=int, default=6)
     parser.add_argument("--denominator-limit", type=int, default=4)
     parser.add_argument(
@@ -352,13 +371,26 @@ def main() -> int:
     parser.add_argument("--strict", action="store_true")
     args = parser.parse_args()
 
-    payload = run_cases(load_cases(Path(args.cases) if args.cases else None), args.root_limit, args.denominator_limit)
+    if args.coeffs and args.cases:
+        raise SystemExit("--coeffs and --cases are mutually exclusive")
+    if args.coeffs:
+        cases = [
+            {
+                "case_id": args.case_id,
+                "description": args.description,
+                "coeffs": parse_coeff_argument(args.coeffs),
+            }
+        ]
+    else:
+        cases = load_cases(Path(args.cases) if args.cases else None)
+
+    payload = run_cases(cases, args.root_limit, args.denominator_limit)
     if args.strict:
         if payload["status"] != "MACHLIB_RATIONAL_ROOT_SEARCH_V16_READY":
             raise SystemExit("rational-root search failed")
-        if payload["certificate_generated_count"] < 5:
+        if not args.coeffs and payload["certificate_generated_count"] < 5:
             raise SystemExit("expected at least five generated certificates")
-        if payload["blocked_count"] < 1:
+        if not args.coeffs and payload["blocked_count"] < 1:
             raise SystemExit("expected at least one exact blocker")
         for key, value in payload["boundary"].items():
             if value is not False:

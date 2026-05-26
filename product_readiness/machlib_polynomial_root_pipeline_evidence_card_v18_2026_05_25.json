@@ -1,0 +1,16 @@
+{
+  "card_id": "machlib_polynomial_root_pipeline_evidence_card_v18_2026_05_25",
+  "title": "MachLib polynomial root pipeline",
+  "status": "MACHLIB_POLYNOMIAL_ROOT_PIPELINE_V17_V18_READY",
+  "visibility": "internal",
+  "summary": "Coefficient input flows through bounded rational search, residual packets, and quadratic residual classification.",
+  "case_count": 10,
+  "certificate_generated_count": 6,
+  "blocked_count": 4,
+  "residual_packet_count": 10,
+  "quadratic_classification_count": 3,
+  "public_ready": false,
+  "marketplace_ready": false,
+  "root_count_induction_target_proved": false,
+  "production_marketplace_modified": false
+}

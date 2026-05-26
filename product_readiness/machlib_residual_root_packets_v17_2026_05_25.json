@@ -1,0 +1,295 @@
+{
+  "date": "2026-05-25",
+  "source": "machlib_polynomial_root_pipeline_v17_v18_2026_05_25",
+  "residual_packets": [
+    {
+      "case_id": "quadratic_two_integer_roots_v16",
+      "description": "x^2 - 5x + 6",
+      "input_coeffs": [
+        6,
+        -5,
+        1
+      ],
+      "factored_roots": [
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "cubic_three_integer_roots_v16",
+      "description": "x^3 - 6x^2 + 11x - 6",
+      "input_coeffs": [
+        -6,
+        11,
+        -6,
+        1
+      ],
+      "factored_roots": [
+        1,
+        2,
+        3
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "irreducible_over_rational_window_v16",
+      "description": "x^2 + 1",
+      "input_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "NEGATIVE_DISCRIMINANT_NO_REAL_ROOTS_IN_QUADRATIC_STUB",
+        "degree": 2,
+        "discriminant": -4,
+        "rational_roots": [],
+        "blocker": "NEGATIVE_DISCRIMINANT"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "repeated_cubic_root_v16",
+      "description": "(x-2)^3",
+      "input_coeffs": [
+        -8,
+        12,
+        -6,
+        1
+      ],
+      "factored_roots": [
+        2,
+        2,
+        2
+      ],
+      "remaining_coeffs": [
+        1
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "scaled_pair_v16",
+      "description": "2(x-1)(x-4)",
+      "input_coeffs": [
+        8,
+        -10,
+        2
+      ],
+      "factored_roots": [
+        1,
+        4
+      ],
+      "remaining_coeffs": [
+        2
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "fractional_roots_v16",
+      "description": "3(x-1/2)(x+1)",
+      "input_coeffs": [
+        "-3/2",
+        "3/2",
+        3
+      ],
+      "factored_roots": [
+        -1,
+        "1/2"
+      ],
+      "remaining_coeffs": [
+        3
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "constant_only_v16",
+      "description": "7",
+      "input_coeffs": [
+        7
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        7
+      ],
+      "search_status": "CERTIFICATE_GENERATED",
+      "search_blocker": null,
+      "residual_degree": 0,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 0,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "quadratic_irrational_roots_v18",
+      "description": "x^2 - 2",
+      "input_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "IRRATIONAL_ROOTS_BLOCKED_IN_RATIONAL_LAYER",
+        "degree": 2,
+        "discriminant": 8,
+        "rational_roots": [],
+        "blocker": "DISCRIMINANT_NOT_RATIONAL_SQUARE"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "quadratic_large_rational_root_outside_window_v18",
+      "description": "(x-10)(x+1) with root limit 6",
+      "input_coeffs": [
+        -10,
+        9,
+        1
+      ],
+      "factored_roots": [
+        1
+      ],
+      "remaining_coeffs": [
+        10,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 1,
+      "quadratic_classification": {
+        "classification": "NOT_QUADRATIC",
+        "degree": 1,
+        "discriminant": null,
+        "rational_roots": [],
+        "blocker": "RESIDUAL_NOT_DEGREE_TWO"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "quadratic_rational_square_outside_window_v18",
+      "description": "(x-7)(x-8) with root limit 6",
+      "input_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "RATIONAL_DISCRIMINANT_SQUARE_FACTORABLE",
+        "degree": 2,
+        "discriminant": 1,
+        "rational_roots": [
+          7,
+          8
+        ],
+        "blocker": null
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    }
+  ]
+}

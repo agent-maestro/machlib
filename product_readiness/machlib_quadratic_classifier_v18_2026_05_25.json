@@ -1,0 +1,93 @@
+{
+  "date": "2026-05-25",
+  "source": "machlib_polynomial_root_pipeline_v17_v18_2026_05_25",
+  "quadratic_classifications": [
+    {
+      "case_id": "irreducible_over_rational_window_v16",
+      "description": "x^2 + 1",
+      "input_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        1,
+        0,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "NEGATIVE_DISCRIMINANT_NO_REAL_ROOTS_IN_QUADRATIC_STUB",
+        "degree": 2,
+        "discriminant": -4,
+        "rational_roots": [],
+        "blocker": "NEGATIVE_DISCRIMINANT"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "quadratic_irrational_roots_v18",
+      "description": "x^2 - 2",
+      "input_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        -2,
+        0,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "IRRATIONAL_ROOTS_BLOCKED_IN_RATIONAL_LAYER",
+        "degree": 2,
+        "discriminant": 8,
+        "rational_roots": [],
+        "blocker": "DISCRIMINANT_NOT_RATIONAL_SQUARE"
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    },
+    {
+      "case_id": "quadratic_rational_square_outside_window_v18",
+      "description": "(x-7)(x-8) with root limit 6",
+      "input_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "factored_roots": [],
+      "remaining_coeffs": [
+        56,
+        -15,
+        1
+      ],
+      "search_status": "BLOCKED",
+      "search_blocker": "NO_COMPLETE_LINEAR_FACTORIZATION_FOUND_WITHIN_BOUND",
+      "residual_degree": 2,
+      "quadratic_classification": {
+        "classification": "RATIONAL_DISCRIMINANT_SQUARE_FACTORABLE",
+        "degree": 2,
+        "discriminant": 1,
+        "rational_roots": [
+          7,
+          8
+        ],
+        "blocker": null
+      },
+      "root_count_induction_target_proved": false,
+      "arbitrary_factorization_discovery": false,
+      "complete_rational_root_search_claim": false
+    }
+  ]
+}
