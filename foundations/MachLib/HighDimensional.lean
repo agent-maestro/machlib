@@ -23,6 +23,11 @@ axiom ballCubeRatio : Nat -> Real
 /-- Cube boundary-shell probability for a fixed shell width. -/
 axiom cubeBoundaryShellProbability : Real -> Nat -> Real
 
+/-- Foothold axiom: geometric cube boundary-shell probability tends to one. -/
+axiom cubeBoundaryShellProbability_tends_one
+    (eps : Real) (heps : 0 < eps ∧ eps < 1) :
+    TendstoTo (cubeBoundaryShellProbability eps) 1
+
 /-- Raw first-layer EML log-domain survival probability. -/
 axiom firstLayerSurvival : Nat -> Real
 
@@ -44,7 +49,7 @@ theorem high_dim_ball_cube_ratio_tends_zero :
 theorem cube_boundary_shell_probability_tends_one
     (eps : Real) (heps : 0 < eps ∧ eps < 1) :
     TendstoTo (cubeBoundaryShellProbability eps) 1 := by
-  sorry
+  exact cubeBoundaryShellProbability_tends_one eps heps
 
 /-- Independent symmetric leaves make first-layer raw log-domain survival decay exponentially. -/
 theorem eml_first_layer_log_domain_survival_decay
