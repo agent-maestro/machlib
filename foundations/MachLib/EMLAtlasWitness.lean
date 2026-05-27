@@ -16,5 +16,12 @@ theorem atlas_exp_from_eml_witness (x : Real) :
     eml x 1 = exp x :=
   eml_arg2_one x
 
+/-- Atlas witness for `subtraction_boundary`:
+`eml(log(v), exp(u))` recovers `v - u` when `v` is positive. -/
+theorem atlas_subtraction_boundary_witness (v u : Real) (hv : 0 < v) :
+    eml (log v) (exp u) = v - u := by
+  unfold eml
+  rw [exp_log hv, log_exp]
+
 end Real
 end MachLib
