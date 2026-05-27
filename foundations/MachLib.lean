@@ -4,6 +4,7 @@ import MachLib.Log
 import MachLib.Trig
 import MachLib.EML
 import MachLib.EMLDomainSafety
+import MachLib.EMLAtlasWitness
 import MachLib.SelfMapConjugacy
 import MachLib.Hyperbolic
 import MachLib.HyperbolicPreservation
