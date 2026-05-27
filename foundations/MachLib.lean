@@ -3,6 +3,7 @@ import MachLib.Exp
 import MachLib.Log
 import MachLib.Trig
 import MachLib.EML
+import MachLib.EMLDomainSafety
 import MachLib.SelfMapConjugacy
 import MachLib.Hyperbolic
 import MachLib.HyperbolicPreservation
@@ -37,6 +38,8 @@ The independent foundations for machine-native formal mathematics.
   * `MachLib.Trig`              — sine, cosine, π, periodicity
   * `MachLib.EML`               — the eml(x,y) = exp(x) − log(y)
                                   primitive
+  * `MachLib.EMLDomainSafety`   — tiny checked domain-safety witnesses
+                                  for Monogate EML packet obligations.
   * `MachLib.SelfMapConjugacy`  — F16 self-map conjugacies (EAL/EXL,
                                   EML/EDL) ported from legacy_eml
   * `MachLib.Hyperbolic`        — sinh, cosh + ELC-form decomposition
