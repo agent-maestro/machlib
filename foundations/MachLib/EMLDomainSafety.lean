@@ -28,6 +28,11 @@ theorem softplus_pair_log_argument_positive (a b : Real) :
     0 < exp a + exp b :=
   add_pos (exp_pos a) (exp_pos b)
 
+/-- Checked witness for the EML-R13 sigmoid packet:
+`1 + exp(-x)` is a nonzero division denominator. -/
+theorem sigmoid_denominator_nonzero (x : Real) :
+    1 + exp (-x) ≠ 0 :=
+  ne_of_gt (add_pos one_pos (exp_pos (-x)))
+
 end Real
 end MachLib
-
