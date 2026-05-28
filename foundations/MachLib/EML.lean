@@ -62,5 +62,15 @@ theorem eml_arg1_zero (y : Real) : eml 0 y = 1 - log y := by
 
 theorem eml_def_unfold (x y : Real) : eml x y = exp x - log y := rfl
 
+/-! ### Atlas / Advantage Lab witnesses -/
+
+/-- Subtraction boundary witness for the EML Atlas gate and Advantage Lab.
+For positive `v`, feeding inverse-shaped arguments into EML recovers flat
+subtraction: `eml(log v, exp u) = v - u`. -/
+theorem eml_log_exp_subtraction_boundary (v u : Real) (hv : 0 < v) :
+    eml (log v) (exp u) = v - u := by
+  unfold eml
+  rw [exp_log hv, log_exp]
+
 end Real
 end MachLib
