@@ -16,7 +16,8 @@ that production-shape kernels reach for repeatedly:
     `lt_of_lt_of_le`, `le_antisymm`.
   * Nonneg combinators: `exp_nonneg`, `add_nonneg`, `add_pos`,
     `mul_nonneg`, `div_nonneg_of_pos_denom`.
-  * Forge-side conveniences: `sub_pos_of_lt`, `nonneg_of_pos`.
+  * Forge-side conveniences: `sub_pos_of_lt`, `zero_div_of_pos`,
+    `nonneg_of_pos`.
 
 Each lemma is proved from the axioms in `MachLib.Basic` (no
 Mathlib). Forge-emitted Lean files should `import MachLib.Forge`
@@ -174,6 +175,21 @@ strictly below `1`. Held as an axiom: provable from `mul_inv` plus
 multiplicative-scaling helpers aren't yet in `MachLib.Basic`. The
 fact is true in any standard ordered field. -/
 axiom div_lt_one_of_pos_lt {a b : Real} (hb : 0 < b) (hab : a < b) : a / b < 1
+
+/-! ### Zero numerator division
+
+Generated hardware/electronics kernels often prove a zero-time
+boundary condition by reducing `0 / tau` to `0` under a positive
+time constant. These helpers are derived from `div_def` and
+`zero_mul`; they add no division axiom. -/
+
+/-- Zero divided by a nonzero denominator is zero. -/
+theorem zero_div_of_ne_zero {a : Real} (ha : a ≠ 0) : 0 / a = 0 := by
+  rw [div_def 0 a ha, zero_mul]
+
+/-- Zero divided by a positive denominator is zero. -/
+theorem zero_div_of_pos {a : Real} (ha : 0 < a) : 0 / a = 0 :=
+  zero_div_of_ne_zero (ne_of_gt ha)
 
 /-! ### Min / max combinators (C-239 follow-up)
 

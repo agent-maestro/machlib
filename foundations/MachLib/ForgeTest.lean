@@ -145,6 +145,16 @@ theorem ratio_in_unit (x d : Real)
   · exact interval_div_unit x d hd_pos h_x.2 h_d
 
 /-!
+## T-06b  zero_division_surface
+  Forge electronics proofs use this shape for zero-time boundary
+  conditions, e.g. `0 / tau = 0` when `tau > 0`.
+-/
+
+theorem zero_division_surface (d : Real) (h_d : (0 : Real) < d) :
+    (0 : Real) / d = 0 := by
+  exact zero_div_of_pos h_d
+
+/-!
 ## T-07  nonneg_product
   `noncomputable def nonneg_prod (a b : Real) : Real := a * b`
   Refinements: `h_a : 0 ≤ a`, `h_b : 0 ≤ b`
