@@ -33,6 +33,15 @@ theorem subtraction_boundary_affine_offset_witness (x y : Real) (hxy : 0 < x + y
   rw [atlas_subtraction_boundary_witness (x + y) y hxy]
   rw [sub_def, add_assoc, add_neg, add_zero]
 
+/-- Two-stage nested-chain witness for `subtraction_boundary`: one checked
+subtraction-boundary rewrite feeds the exponent coordinate of the next. This
+is a scoped proof/teaching-shape witness only; standard subtraction remains the
+runtime lowering. -/
+theorem subtraction_boundary_two_stage_chain_witness (v w u : Real) (hv : 0 < v) (hw : 0 < w) :
+    eml (log v) (exp (eml (log w) (exp u))) = v - (w - u) := by
+  rw [atlas_subtraction_boundary_witness w u hw]
+  rw [atlas_subtraction_boundary_witness v (w - u) hv]
+
 /-- Atlas witness for `constants_zero_and_e`: the three small EML constant
 boundary identities selected by EML-D9. The local foundation writes Euler's
 constant as `exp 1`. -/
