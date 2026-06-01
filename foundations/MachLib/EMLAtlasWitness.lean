@@ -24,6 +24,15 @@ theorem atlas_subtraction_boundary_witness (v u : Real) (hv : 0 < v) :
   unfold eml
   rw [exp_log hv, log_exp]
 
+/-- Affine-offset family witness for `subtraction_boundary`: after shifting
+the positive log coordinate by `y`, EML subtracts the offset back out. This is
+a proof/teaching-shape witness only; standard subtraction remains the runtime
+lowering. -/
+theorem subtraction_boundary_affine_offset_witness (x y : Real) (hxy : 0 < x + y) :
+    eml (log (x + y)) (exp y) = x := by
+  rw [atlas_subtraction_boundary_witness (x + y) y hxy]
+  rw [sub_def, add_assoc, add_neg, add_zero]
+
 /-- Atlas witness for `constants_zero_and_e`: the three small EML constant
 boundary identities selected by EML-D9. The local foundation writes Euler's
 constant as `exp 1`. -/
