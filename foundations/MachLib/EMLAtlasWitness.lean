@@ -50,6 +50,16 @@ theorem subtraction_boundary_affine_nested_chain_witness (x y z : Real) (hxy : 0
     eml (log (x + y)) (exp (eml (log z) (exp y))) = (x + y) - (z - y) := by
   exact subtraction_boundary_two_stage_chain_witness (x + y) z y hxy hz
 
+/-- Three-stage nested-chain witness for `subtraction_boundary`: three checked
+subtraction-boundary rewrites compose under explicit positive log-domain
+guards. This is a scoped proof/teaching-shape witness only; standard
+subtraction remains the runtime lowering. -/
+theorem subtraction_boundary_three_stage_chain_witness (a b c u : Real) (ha : 0 < a) (hb : 0 < b) (hc : 0 < c) :
+    eml (log a) (exp (eml (log b) (exp (eml (log c) (exp u))))) = a - (b - (c - u)) := by
+  rw [atlas_subtraction_boundary_witness c u hc]
+  rw [atlas_subtraction_boundary_witness b (c - u) hb]
+  rw [atlas_subtraction_boundary_witness a (b - (c - u)) ha]
+
 /-- Atlas witness for `constants_zero_and_e`: the three small EML constant
 boundary identities selected by EML-D9. The local foundation writes Euler's
 constant as `exp 1`. -/
