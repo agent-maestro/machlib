@@ -72,5 +72,21 @@ theorem eml_log_exp_subtraction_boundary (v u : Real) (hv : 0 < v) :
   unfold eml
   rw [exp_log hv, log_exp]
 
+/-! ### Constant boundary witnesses -/
+
+/-- Constant boundary witness: `eml(0, exp(1)) = 0`.
+This is the local MachLib spelling of the Atlas shorthand `eml(0,e)=0`. -/
+theorem eml_zero_exp_one_zero : eml 0 (exp 1) = 0 := by
+  unfold eml
+  rw [exp_zero, log_exp, sub_def, add_neg]
+
+/-- Constant boundary witness: `eml(0, 1) = 1`. -/
+theorem eml_zero_one_one : eml 0 1 = 1 := by
+  rw [eml_arg1_zero, log_one, sub_zero]
+
+/-- Constant boundary witness: `eml(1, 1) = exp(1)`. -/
+theorem eml_one_one_exp_one : eml 1 1 = exp 1 := by
+  exact eml_arg2_one 1
+
 end Real
 end MachLib
