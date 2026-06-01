@@ -1,4 +1,5 @@
 import MachLib.EML
+import MachLib.Ring
 
 /-!
 # EML Atlas witness footholds
@@ -29,6 +30,17 @@ constant as `exp 1`. -/
 theorem constants_zero_one_e_boundary_witness :
     eml 0 (exp 1) = 0 ∧ eml 0 1 = 1 ∧ eml 1 1 = exp 1 := by
   exact ⟨eml_zero_exp_one_zero, eml_zero_one_one, eml_one_one_exp_one⟩
+
+/-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
+`log y` on the positive real branch. This is a proof/teaching-shape witness
+only; standard `log y` remains the runtime lowering. -/
+theorem ln_from_eml_boundary_witness (y : Real) (hy : 0 < y) :
+    eml 1 (eml (eml 1 y) 1) = log y := by
+  have _branch_guard : 0 < y := hy
+  unfold eml
+  rw [log_one, sub_zero, log_exp]
+  rw [sub_def, sub_def, neg_add, neg_neg_helper]
+  rw [← add_assoc, add_neg, zero_add]
 
 end Real
 end MachLib
