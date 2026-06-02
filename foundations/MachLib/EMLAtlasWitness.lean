@@ -74,6 +74,16 @@ theorem constants_zero_one_e_boundary_witness :
     eml 0 (exp 1) = 0 ∧ eml 0 1 = 1 ∧ eml 1 1 = exp 1 := by
   exact ⟨eml_zero_exp_one_zero, eml_zero_one_one, eml_one_one_exp_one⟩
 
+/-- Constant-coordinate refresh witness selected by EML-D47. This is a
+single non-duplicate constant identity only; it does not reopen the D10
+constants bundle or change standard log/exp runtime controls. -/
+theorem constant_coordinate_zero_exp_two_witness :
+    eml 0 (exp (1 + 1)) = -1 := by
+  unfold eml
+  rw [exp_zero, log_exp]
+  rw [sub_def, neg_add]
+  rw [← add_assoc, add_neg, zero_add]
+
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
 only; standard `log y` remains the runtime lowering. -/
