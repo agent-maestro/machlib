@@ -17,6 +17,13 @@ theorem atlas_exp_from_eml_witness (x : Real) :
     eml x 1 = exp x :=
   eml_arg2_one x
 
+/-- Positive-domain log-exp roundtrip witness selected by EML-D38 and scoped
+by EML-D39. This is a guarded identity witness only; it does not relabel
+standard log/exp as an EML runtime lowering. -/
+theorem positive_log_exp_roundtrip_witness (x : Real) (hx : 0 < x) :
+    exp (log x) = x := by
+  exact exp_log hx
+
 /-- Atlas witness for `subtraction_boundary`:
 `eml(log(v), exp(u))` recovers `v - u` when `v` is positive. -/
 theorem atlas_subtraction_boundary_witness (v u : Real) (hv : 0 < v) :
