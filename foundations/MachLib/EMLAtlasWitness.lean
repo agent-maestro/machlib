@@ -84,6 +84,14 @@ theorem constant_coordinate_zero_exp_two_witness :
   rw [sub_def, neg_add]
   rw [← add_assoc, add_neg, zero_add]
 
+/-- Expm1-boundary witness selected by EML-D55 and scoped by EML-D56. This is
+a single proof-shape identity only; protected `expm1` remains the runtime and
+numerical-stability control. -/
+theorem expm1_boundary_identity_witness (x : Real) :
+    eml x (exp 1) = exp x - 1 := by
+  unfold eml
+  rw [log_exp]
+
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
 only; standard `log y` remains the runtime lowering. -/
