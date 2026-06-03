@@ -92,6 +92,15 @@ theorem expm1_boundary_identity_witness (x : Real) :
   unfold eml
   rw [log_exp]
 
+/-- Probability-logit boundary coordinate witness selected by EML-D64 and
+scoped by EML-D65. This is one guarded proof-shape identity only; protected
+`log` and `log1p` remain the runtime controls. -/
+theorem probability_logit_boundary_coordinate_witness (p : Real) (hp : 0 < p) (hp1 : p < 1) :
+    eml (log p) (exp (log (1 - p))) = p - log (1 - p) := by
+  have _domain_guard : p < 1 := hp1
+  unfold eml
+  rw [exp_log hp, log_exp]
+
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
 only; standard `log y` remains the runtime lowering. -/
