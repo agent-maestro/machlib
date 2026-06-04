@@ -114,6 +114,19 @@ theorem log1p_shifted_boundary_coordinate_witness (x : Real) (hx : 0 < 1 + x) :
     _ = x + 0 := by rw [add_neg]
     _ = x := by rw [add_zero]
 
+/-- Log1m-shifted boundary coordinate witness selected by EML-D82 and scoped
+by EML-D83. This is one guarded proof-shape identity only; protected `log`
+and `log1p` remain the runtime controls. -/
+theorem log1m_shifted_boundary_coordinate_witness (x : Real) (hx : 0 < 1 - x) :
+    eml (log (1 - x)) (exp 1) = -x := by
+  rw [atlas_subtraction_boundary_witness (1 - x) 1 hx]
+  calc (1 - x) - 1
+      = (1 + -x) + -1 := by rw [sub_def, sub_def]
+    _ = (-x + 1) + -1 := by rw [add_comm 1 (-x)]
+    _ = -x + (1 + -1) := by rw [add_assoc]
+    _ = -x + 0 := by rw [add_neg]
+    _ = -x := by rw [add_zero]
+
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
 only; standard `log y` remains the runtime lowering. -/
