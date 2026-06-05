@@ -127,6 +127,19 @@ theorem log1m_shifted_boundary_coordinate_witness (x : Real) (hx : 0 < 1 - x) :
     _ = -x + 0 := by rw [add_neg]
     _ = -x := by rw [add_zero]
 
+/-- Log1p affine-scaled boundary coordinate witness selected by EML-D91 and
+scoped by EML-D92. This is one guarded proof-shape identity only; protected
+`log` and `log1p` remain the runtime controls. -/
+theorem log1p_affine_scaled_boundary_coordinate_witness (a x : Real) (hax : 0 < 1 + a * x) :
+    eml (log (1 + a * x)) (exp 1) = a * x := by
+  rw [atlas_subtraction_boundary_witness (1 + a * x) 1 hax]
+  calc (1 + a * x) - 1
+      = (1 + a * x) + -1 := by rw [sub_def]
+    _ = (a * x + 1) + -1 := by rw [add_comm 1 (a * x)]
+    _ = a * x + (1 + -1) := by rw [add_assoc]
+    _ = a * x + 0 := by rw [add_neg]
+    _ = a * x := by rw [add_zero]
+
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
 only; standard `log y` remains the runtime lowering. -/
