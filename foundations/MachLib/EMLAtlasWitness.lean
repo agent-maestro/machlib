@@ -1,6 +1,7 @@
 import MachLib.EML
 import MachLib.HyperbolicPreservation
 import MachLib.Ring
+import MachLib.Trig
 
 /-!
 # EML Atlas witness footholds
@@ -147,6 +148,13 @@ deferred, and standard `exp` remains the runtime control. -/
 theorem exp_negation_multiplicative_identity_witness (x : Real) :
     exp x * exp (-x) = 1 := by
   exact MachLib.HyperbolicPreservation.exp_mul_exp_neg x
+
+/-- Trig Pythagorean unit identity witness selected by ATLAS-A42. This is a
+pure trig wrapper witness only; the EML companion hint remains deferred, and
+standard trig functions remain the runtime controls. -/
+theorem trig_pythagorean_unit_identity_witness (x : Real) :
+    Real.sin x * Real.sin x + Real.cos x * Real.cos x = 1 := by
+  exact MachLib.Real.sin_sq_add_cos_sq x
 
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
