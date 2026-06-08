@@ -1,4 +1,5 @@
 import MachLib.EML
+import MachLib.HyperbolicPreservation
 import MachLib.Ring
 
 /-!
@@ -139,6 +140,13 @@ theorem log1p_affine_scaled_boundary_coordinate_witness (a x : Real) (hax : 0 < 
     _ = a * x + (1 + -1) := by rw [add_assoc]
     _ = a * x + 0 := by rw [add_neg]
     _ = a * x := by rw [add_zero]
+
+/-- Exp-negation multiplicative identity witness selected by ATLAS-A32. This
+is a pure exp-algebra wrapper witness only; the EML companion hint remains
+deferred, and standard `exp` remains the runtime control. -/
+theorem exp_negation_multiplicative_identity_witness (x : Real) :
+    exp x * exp (-x) = 1 := by
+  exact MachLib.HyperbolicPreservation.exp_mul_exp_neg x
 
 /-- Atlas witness for `ln_from_eml`: the nested EML reconstruction of
 `log y` on the positive real branch. This is a proof/teaching-shape witness
