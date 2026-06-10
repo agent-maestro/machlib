@@ -28,6 +28,7 @@ import MachLib.SinNotInEML
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
+import MachLib.ElementaryEML
 
 /-!
 # MachLib — top-level aggregator
