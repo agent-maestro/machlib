@@ -841,4 +841,21 @@ private theorem exp_sub_exp_gt_helper {a b : Real} (hab : a < b) :
   rw [← add_assoc, neg_add_self, zero_add, add_comm (-exp a) (exp b), ← sub_def] at step
   exact step
 
+/-- Row 3 vc-vc, d ≤ 0 sub-case. Closes via log convention: at x = 0,
+`t.eval 0 = exp(1 - log d1) - log(1 - 0) = exp(1 - log d1) - 0`, which
+must equal sin 0 = 0, giving exp(1 - log d1) = 0, contradicting exp_pos. -/
+private theorem sin_not_in_eml_t1_vc_t2_eml_vc_dnonpos (d1 d : Real)
+    (hd : ¬ ((0 : Real) < d)) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (.eml .var (.const d1)) (.eml .var (.const d))).eval x =
+          Real.sin x) := by
+  intro hsin
+  have hlog_d_eq : log d = 0 := log_of_nonpos hd
+  have h0 := hsin 0
+  simp only [EMLTree.eval, sin_zero, exp_zero] at h0
+  rw [hlog_d_eq, sub_zero, log_one, sub_zero] at h0
+  have hpos : (0 : Real) < exp (1 - log d1) := exp_pos _
+  rw [h0] at hpos
+  exact lt_irrefl_ax 0 hpos
+
 end MachLib
