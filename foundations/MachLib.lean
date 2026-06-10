@@ -39,6 +39,7 @@ import MachLib.SinNotInEMLDepth2FinalVcVc
 import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
 import MachLib.EMLPfaffian
+import MachLib.EMLHierarchyIterExp
 
 /-!
 # MachLib — top-level aggregator
