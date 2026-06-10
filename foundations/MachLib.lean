@@ -27,6 +27,7 @@ import MachLib.HighDimensional
 import MachLib.SinNotInEML
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
+import MachLib.ExpExpNotInEML1
 
 /-!
 # MachLib — top-level aggregator
