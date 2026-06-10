@@ -40,6 +40,7 @@ import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
 import MachLib.EMLPfaffian
 import MachLib.EMLHierarchyIterExp
+import MachLib.Rolle
 
 /-!
 # MachLib — top-level aggregator
