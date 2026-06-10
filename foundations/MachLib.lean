@@ -26,6 +26,7 @@ import MachLib.NormalizedPolynomialRootCount
 import MachLib.HighDimensional
 import MachLib.SinNotInEML
 import MachLib.CosNotInEML
+import MachLib.EMLHierarchy
 
 /-!
 # MachLib — top-level aggregator
