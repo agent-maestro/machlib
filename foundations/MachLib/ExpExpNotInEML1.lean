@@ -37,6 +37,26 @@ This file does not depend on Mathlib.
 -/
 
 namespace MachLib
+namespace Real
+
+/-- `exp(exp x) - exp x` is strictly increasing in `x`. Used to close the
+`eml(var, const c2)` case of `exp(exp x) ∉ EML_1` (where the hypothesis
+forces `exp(exp x) - exp x = constant`, contradicting strict
+monotonicity).
+
+This is a natural analytic property of `f(x) = exp(exp x) - exp x`: its
+derivative is `exp x · exp(exp x) - exp x = exp x · (exp(exp x) - 1)`,
+which is positive for all real `x` because `exp(exp x) > 1` (since
+`exp x > 0`). Added as a direct axiom in MachLib until the convexity /
+monotonicity infrastructure is fully formalized; replaces a more
+specific numerical-bound axiom. -/
+axiom exp_exp_minus_exp_strictly_increasing :
+    ∀ x y : Real, x < y → exp (exp x) - exp x < exp (exp y) - exp y
+
+end Real
+end MachLib
+
+namespace MachLib
 
 open Real
 
@@ -123,25 +143,90 @@ theorem exp_exp_ne_eml_var_var :
   rw [← h1eq] at hlt
   exact lt_irrefl_ax 1 hlt
 
-/-! ### Deferred case: `eml(var, const c2)`
+/-- `eml(var, const c2)` cannot equal `exp ∘ exp`.
 
-The sixth depth-≤-1 grammar shape `eml(var, const c2)` is **not** closed
-in this file. The argument structure is: `eval x = exp x - log c2`,
-evaluation at x = 0 forces `log c2 = 1 - exp 1`, evaluation at x = 1
-forces `exp(exp 1) = 2 * exp 1 - 1`. This is false numerically
-(`exp(exp 1) ≈ 15.15`, `2 * exp 1 - 1 ≈ 4.44`) but contradicting it
-in MachLib needs one of:
+The hypothesis `exp(exp x) = exp x - log c2` for all `x` forces
+`exp(exp x) - exp x = -log c2`, a constant. But by
+`exp_exp_minus_exp_strictly_increasing`, the function
+`x ↦ exp(exp x) - exp x` is strictly increasing, so it cannot be
+constant. Concretely, the values at `x = 0` and `x = 1` must differ
+strictly. -/
+theorem exp_exp_ne_eml_var_const (c2 : Real) :
+    ¬ (∀ x : Real,
+        Real.exp (Real.exp x) =
+          (EMLTree.eml .var (.const c2)).eval x) := by
+  intro hexp
+  have h0 := hexp 0
+  have h1 := hexp 1
+  simp only [EMLTree.eval, exp_zero] at h0 h1
+  -- h0 : exp 1 = 1 - log c2
+  -- h1 : exp (exp 1) = exp 1 - log c2
+  -- Derive -log c2 = exp 1 - 1 from h0:
+  have hneg_log : -log c2 = exp 1 - 1 := by
+    rw [sub_def] at h0
+    -- h0 : exp 1 = 1 + -log c2
+    have step : (-1 : Real) + (1 + -log c2) = (-1) + exp 1 := by rw [h0]
+    rw [← add_assoc, neg_add_self, zero_add] at step
+    -- step : -log c2 = -1 + exp 1
+    rw [add_comm (-1 : Real) (exp 1), ← sub_def] at step
+    exact step
+  -- Compute exp(exp 1) - exp 1 = -log c2 from h1:
+  have hexp_diff : exp (exp 1) - exp 1 = -log c2 := by
+    rw [h1, sub_def, sub_def, add_assoc, add_comm (-log c2) (-exp 1),
+        ← add_assoc, add_neg, zero_add]
+  -- Combine: exp(exp 1) - exp 1 = exp 1 - 1.
+  have key : exp (exp 1) - exp 1 = exp 1 - 1 := hexp_diff.trans hneg_log
+  -- Strict monotonicity gives the opposite strict inequality:
+  -- exp(exp 0) - exp 0 < exp(exp 1) - exp 1
+  have hlt : exp (exp 0) - exp 0 < exp (exp 1) - exp 1 :=
+    exp_exp_minus_exp_strictly_increasing 0 1 zero_lt_one_ax
+  rw [exp_zero] at hlt
+  -- hlt : exp 1 - 1 < exp (exp 1) - exp 1
+  rw [key] at hlt
+  -- hlt : exp 1 - 1 < exp 1 - 1
+  exact lt_irrefl_ax _ hlt
 
-- A numerical-bound axiom `exp_e_gt_two_e_minus_one : exp(exp 1) > 2 * exp 1 - 1`.
-- The convexity infrastructure `exp_lower_bound : ∀ x, 1 + x ≤ exp x`,
-  whence `1 + exp 1 ≤ exp(exp 1)`, and since `exp 1 > 1` gives
-  `1 + exp 1 > 2 * exp 1 - 1` (i.e., `2 > exp 1` which is FALSE since
-  exp_one_gt_two would give the opposite). The convexity bound alone
-  is therefore insufficient; the numerical-bound axiom is the cleaner
-  path.
+/-- **Master theorem:** `exp ∘ exp ∉ EML_1`.
 
-Either path is a small contribution to MachLib's analytic infrastructure,
-better packaged as its own bounded artifact than as a one-off addition
-here. -/
+Combines the six per-case theorems via the EMLTree case analysis.
+This closes the deferred direction of `EML_1 ⊊ EML_2` from
+`MachLib.EMLHierarchy`. -/
+theorem exp_exp_not_in_eml_1 :
+    ¬ InEMLDepth (fun x : Real => Real.exp (Real.exp x)) 1 := by
+  intro ⟨t, htd, hexp⟩
+  match t, htd with
+  | .const c, _ =>
+    exact exp_exp_ne_const c (fun x => hexp x)
+  | .var, _ =>
+    exact exp_exp_ne_var (fun x => hexp x)
+  | .eml t1 t2, htd =>
+    have ht1 : t1.depth = 0 := by
+      simp only [EMLTree.depth] at htd
+      have h := Nat.le_max_left t1.depth t2.depth
+      omega
+    have ht2 : t2.depth = 0 := by
+      simp only [EMLTree.depth] at htd
+      have h := Nat.le_max_right t1.depth t2.depth
+      omega
+    match t1, ht1, t2, ht2 with
+    | .eml _ _, ht1, _, _ =>
+      simp only [EMLTree.depth] at ht1; omega
+    | _, _, .eml _ _, ht2 =>
+      simp only [EMLTree.depth] at ht2; omega
+    | .const c1, _, .const c2, _ =>
+      exact exp_exp_ne_eml_const_const c1 c2 (fun x => hexp x)
+    | .const c1, _, .var, _ =>
+      exact exp_exp_ne_eml_const_var c1 (fun x => hexp x)
+    | .var, _, .const c2, _ =>
+      exact exp_exp_ne_eml_var_const c2 (fun x => hexp x)
+    | .var, _, .var, _ =>
+      exact exp_exp_ne_eml_var_var (fun x => hexp x)
+
+/-- **`EML_1 ⊊ EML_2`** as a strict containment, witnessed by `exp ∘ exp`. -/
+theorem strict_eml_one_subset_eml_two :
+    (∀ f : Real → Real, InEMLDepth f 1 → InEMLDepth f 2) ∧
+    (∃ f : Real → Real, InEMLDepth f 2 ∧ ¬ InEMLDepth f 1) :=
+  ⟨eml_one_subset_eml_two,
+   ⟨fun x => Real.exp (Real.exp x), exp_exp_in_eml_2, exp_exp_not_in_eml_1⟩⟩
 
 end MachLib
