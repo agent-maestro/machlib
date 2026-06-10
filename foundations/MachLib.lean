@@ -24,6 +24,7 @@ import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
 import MachLib.NormalizedPolynomialRootCount
 import MachLib.HighDimensional
+import MachLib.SinNotInEML
 
 /-!
 # MachLib — top-level aggregator
