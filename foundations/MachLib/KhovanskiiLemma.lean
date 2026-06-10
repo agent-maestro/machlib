@@ -108,39 +108,155 @@ axiom PfaffianFunction.derivative_rank_lt (f : PfaffianFunction)
 
 /-! ## Constructive Khovanskii bound via strong induction on rank -/
 
-/-- **The constructive Khovanskii bound** (Phase C theorem).
+/-! ## Strategic note (Phase C-final)
 
-Replaces Phase A's `PfaffianFunction.zero_bound` axiom with a
-constructive proof. Conditional on the three smaller axioms (base
-case, derivative-is-Pfaffian, rank-decrease) + Phase B's Rolle.
+Replaces the prior `pfaffian_zero_count_bound_constructive` axiom
+with a constructive proof. Conditional on the three smaller axioms
+(base case, derivative-is-Pfaffian, rank-decrease) + Phase B's Rolle
++ one auxiliary axiom for the constant-Pfaffian case.
 
-For any Pfaffian function `f` with `0 < f.rank` and any bounded
-open interval `(a, b)`, the zero count of `f` on `(a, b)` is at most
-`f.degree + f.rank` (a coarse but valid bound from the iterated Rolle
-chain).
+Bound: zero count of `f` on `(a, b)` is at most `PfaffianRank f`.
+
+Proof structure: strong induction on `PfaffianRank f`.
+- Base case (`f.chain.order = 0`): apply `polynomial_zero_count_bound`;
+  `degree ≤ rank`.
+- Inductive step (`f.chain.order > 0`): split on whether `f.derivative`
+  is identically zero.
+  - If zero: `f` is non-zero constant, zero count = 0.
+  - If non-zero: apply IH to `f.derivative` (smaller rank), then
+    `zero_count_bound_by_deriv` (Phase B).
+-/
+
+/-! ## Auxiliary axiom: constant Pfaffian (derivative = 0 everywhere) -/
+
+/-- If a Pfaffian function has identically zero derivative AND is
+not identically zero itself, then it's a non-zero constant — i.e.,
+its value is non-zero everywhere. (Reason: derivative = 0 ⇒ function
+is constant; non-zero constant has non-zero value everywhere.)
+
+Axiomatized. The classical proof uses the mean value theorem
+(consequence of Rolle's theorem, Phase B). Could be made constructive
+via Phase B + MachLib's analytic infrastructure. -/
+axiom pfaffian_derivative_zero_implies_nonzero_everywhere
+    (g : PfaffianFunction)
+    (h_deriv_zero : ∀ x : Real, g.derivative.eval x = 0)
+    (h_g_ne : ∃ x : Real, g.eval x ≠ 0) :
+    ∀ x : Real, g.eval x ≠ 0
+
+/-! ## The constructive Khovanskii bound theorem -/
+
+/-- **The constructive Khovanskii bound.** Replaces the previous
+session's `pfaffian_zero_count_bound_constructive` axiom with a
+proof. Conditional on the smaller axioms (base case, derivative-is-
+Pfaffian, rank-decrease, constant case) + Phase B's Rolle.
+
+Bound: zero count of `f` on `(a, b)` is at most `PfaffianRank f`.
 
 Proof: strong induction on `PfaffianRank f`.
-
-- Base case (`f.chain.order = 0`): apply `polynomial_zero_count_bound`.
-  Zero count ≤ `f.degree` ≤ `f.degree + f.rank`.
-
-- Inductive step (`f.chain.order > 0`): by `derivative_eval`, `f'` is
-  the derivative. By `derivative_rank_lt`, `f'.rank < f.rank`, so the
-  inductive hypothesis applies to `f'`. By Phase B's
-  `zero_count_bound_by_deriv`, `f`'s zero count ≤ `f'`'s zero count
-  + 1 ≤ `f'.degree + f'.rank + 1` ≤ `f.degree + f.rank` (with the
-  rank decrease absorbing the +1).
-
-The proof structure is encoded inductively below. Currently
-axiomatized; a future session can replace the axiom with the
-explicit inductive proof once the rank-arithmetic bookkeeping is
-worked out. -/
-axiom pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
+- Base case (`f.chain.order = 0`): polynomial bound + `rank = degree`.
+- Inductive step (`f.chain.order > 0`): split on whether `f.derivative`
+  is identically zero.
+  - If so: `f` is non-zero constant, so zero count = 0.
+  - If not: apply IH to `f.derivative` (smaller rank), then
+    `zero_count_bound_by_deriv` for `f`. -/
+theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
     (a b : Real) (hab : a < b)
     (hne : ∃ x : Real, f.eval x ≠ 0) :
     ∀ zeros : List Real,
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
-      zeros.length ≤ f.degree + PfaffianRank f
+      zeros.length ≤ PfaffianRank f := by
+  -- Generalize: prove for all g and all rank-equal-n.
+  suffices h : ∀ n : Nat, ∀ (g : PfaffianFunction) (a' b' : Real),
+                a' < b' → (∃ x, g.eval x ≠ 0) → PfaffianRank g = n →
+    ∀ zeros : List Real,
+      (∀ z ∈ zeros, a' < z ∧ z < b' ∧ g.eval z = 0) →
+      zeros.length ≤ n by
+    have := h (PfaffianRank f) f a b hab hne rfl
+    exact this
+  intro n
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+    intro g a' b' hab' hgne hgrank zeros hzeros
+    by_cases h0 : g.chain.order = 0
+    · -- Base case: order = 0, polynomial.
+      have hbound :=
+        polynomial_zero_count_bound g h0 a' b' hab' hgne zeros hzeros
+      -- hbound : zeros.length ≤ g.degree.
+      -- Show g.degree ≤ PfaffianRank g = n.
+      have hdeg_le : g.degree ≤ PfaffianRank g := by
+        unfold PfaffianRank
+        rw [h0]; omega
+      rw [hgrank] at hdeg_le
+      exact Nat.le_trans hbound hdeg_le
+    · -- Inductive step: order > 0.
+      -- Split on whether g.derivative is identically zero.
+      by_cases h_deriv_all_zero : ∀ x : Real, g.derivative.eval x = 0
+      · -- g.derivative = 0 everywhere → g is non-zero constant.
+        have hg_all_ne :=
+          pfaffian_derivative_zero_implies_nonzero_everywhere g h_deriv_all_zero hgne
+        -- zeros must be empty.
+        have hzeros_empty : zeros = [] := by
+          cases zeros with
+          | nil => rfl
+          | cons z rest =>
+            -- z ∈ zeros → g.eval z = 0; but hg_all_ne says g.eval z ≠ 0.
+            have hz_in : z ∈ (z :: rest) := List.mem_cons_self _ _
+            have := hzeros z hz_in
+            -- this : a' < z ∧ z < b' ∧ g.eval z = 0
+            exfalso
+            exact hg_all_ne z this.2.2
+        rw [hzeros_empty]
+        simp
+      · -- g.derivative is not identically zero.
+        -- Derive ∃ x, g.derivative.eval x ≠ 0 from the ¬ ∀ form.
+        have h_deriv_some_ne : ∃ x : Real, g.derivative.eval x ≠ 0 := by
+          apply Classical.byContradiction
+          intro h_all_eq
+          apply h_deriv_all_zero
+          intro x
+          apply Classical.byContradiction
+          intro hne
+          exact h_all_eq ⟨x, hne⟩
+        -- h_deriv_some_ne : ∃ x, g.derivative.eval x ≠ 0.
+        -- Apply IH to g.derivative.
+        have hrank_pos : 0 < PfaffianRank g := by
+          unfold PfaffianRank
+          have hord_pos : 0 < g.chain.order := Nat.pos_of_ne_zero h0
+          omega
+        have hdiff_lt := PfaffianFunction.derivative_rank_lt g hrank_pos
+        -- hdiff_lt : PfaffianRank g.derivative < PfaffianRank g = n.
+        rw [hgrank] at hdiff_lt
+        -- Apply IH.
+        let m := PfaffianRank g.derivative
+        have hm_lt : m < n := hdiff_lt
+        have ih_deriv := ih m hm_lt g.derivative a' b' hab' h_deriv_some_ne rfl
+        -- ih_deriv : ∀ zeros', ... g.derivative.eval z = 0 → zeros'.length ≤ m.
+        -- Apply Phase B's zero_count_bound_by_deriv.
+        have hdiff_witness : ∀ c : Real, a' < c → c < b' →
+              ∃ f' : Real, HasDerivAt g.eval f' c := by
+          intro c _ _
+          exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
+        have h_f'_bound : ∀ zeros_f' : List Real,
+            (∀ z ∈ zeros_f', a' < z ∧ z < b' ∧
+              ∃ f'' : Real, HasDerivAt g.eval f'' z ∧ f'' = 0) →
+            zeros_f'.length ≤ m := by
+          intro zeros_f' hzeros_f'
+          apply ih_deriv zeros_f'
+          intro z hz
+          obtain ⟨ha, hb, hd⟩ := hzeros_f' z hz
+          refine ⟨ha, hb, ?_⟩
+          -- g.derivative.eval z = 0 (via HasDerivAt_unique).
+          obtain ⟨f'', hd', hfeq⟩ := hd
+          have heq : f'' = g.derivative.eval z :=
+            HasDerivAt_unique g.eval f'' (g.derivative.eval z) z hd'
+              (PfaffianFunction.derivative_eval g z)
+          rw [← heq, hfeq]
+        have hbound_via_rolle : zeros.length ≤ m + 1 :=
+          zero_count_bound_by_deriv g.eval a' b' hab' hdiff_witness m h_f'_bound
+            zeros hzeros
+        -- hbound_via_rolle : zeros.length ≤ m + 1.
+        -- m + 1 ≤ n (from hm_lt : m < n, so m + 1 ≤ n).
+        omega
 
 /-! ## Phase C plan (documented as roadmap)
 
@@ -152,7 +268,7 @@ theorem pfaffian_zero_count_bound_constructive_proof
     (hne : ∃ x, f.eval x ≠ 0) :
     ∀ zeros, ... → zeros.length ≤ f.degree + PfaffianRank f := by
   -- Strong induction on f.rank.
-  induction PfaffianRank f using Nat.strong_induction_on with
+  induction PfaffianRank f using Nat.strongRecOn with
   | _ n ih =>
     intro zeros hzeros
     by_cases h0 : f.chain.order = 0
