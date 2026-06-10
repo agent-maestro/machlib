@@ -32,6 +32,7 @@ import MachLib.ElementaryEML
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
+import MachLib.ThreePointEvalClosure
 
 /-!
 # MachLib — top-level aggregator
