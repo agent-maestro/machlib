@@ -25,6 +25,13 @@ axiom log_lt_self_of_pos : ∀ x : Real, 0 < x → log x < x
 /-- `0 < sin 1`. Follows from `sin_pos_on_open_zero_pi` (0 < 1 < π). -/
 axiom sin_one_pos : (0 : Real) < sin 1
 
+/-- `exp x > 2x` for all real `x`. Stronger than `exp_gt_one_plus_self`,
+needed to close cases where two-point evaluation forces
+`exp(exp π) - exp π = exp 1 - 1`. Standard fact: `f(x) = exp x - 2x` has
+`f(log 2) = 2 - 2 log 2 > 0` as its minimum (convex function), so `f > 0`
+everywhere. -/
+axiom exp_gt_two_x : ∀ x : Real, (1 + 1) * x < exp x
+
 /-- `exp 1 > 1 + 1`. Direct corollary. -/
 theorem exp_one_gt_two : (1 + 1 : Real) < exp 1 :=
   exp_gt_one_plus_self 1 zero_lt_one_ax
@@ -515,11 +522,89 @@ theorem sin_not_in_eml_t1_cc_t2_eml_vc (c1 d1 d : Real) :
   rw [← hpi_zero] at hpos
   exact lt_irrefl_ax 0 hpos
 
--- Remaining 5 cases deferred (require either log injectivity beyond the
--- positives covered above, or sharper exp(exp π) numerical bounds):
--- - Row 1: t1 = .var, t2 = .eml(.var, .const d)
--- - Row 3 cv: t1 = .eml(.var, .const d1), t2 = .eml(.const c, .var)
--- - Row 3 vc: t1 ∈ {.eml(.const c1, .var), .eml(.var, .const d1), .eml(.var, .var)},
---   t2 = .eml(.var, .const d) (3 cases)
+-- Row 1 case t1 = .var, t2 = .eml(.var, .const d): the algebra chain
+-- log d = 1 - exp 1 (extracted from x = 0 evaluation) → exp(exp π) - exp π =
+-- exp 1 - 1 → contradiction via exp_gt_two_x is conceptually clear but
+-- the explicit Lean algebra required to convert between sub_def / neg-distributed
+-- forms is substantial. Deferred. The remaining structural identity needed is
+-- `-(a - b) = b - a`, which would close this and similar cases in one stroke.
+
+/-- Row 3 cv vc: t1 = `.eml(.const c1, .var)`, t2 = `.eml(.var, .const d)`.
+Uses sign argument: LHS positive (exp π - 1 > 0), RHS negative
+(exp(exp(exp c1) / π) - exp(exp(exp c1)) < 0 since exp c1 - log π <
+exp c1). -/
+theorem sin_not_in_eml_t1_cv_t2_eml_vc (c1 d : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (.eml (.const c1) .var) (.eml .var (.const d))).eval x =
+          Real.sin x) := by
+  intro hsin
+  have h0 := hsin 0
+  have hπ := hsin pi
+  simp only [EMLTree.eval, sin_zero, sin_pi, exp_zero, log_zero, sub_zero] at h0 hπ
+  -- h0 : exp(exp c1) - log(1 - log d) = 0
+  -- hπ : exp(exp c1 - log pi) - log(exp pi - log d) = 0
+  -- Strategy: derive exp pi - log d < 1 - log d, then cancel -log d to
+  -- get exp pi < 1, contradicting exp pi > 1.
+  have hlog_lhs_eq : log (1 - log d) = exp (exp c1) := by
+    have step : exp (exp c1) - log (1 - log d) + log (1 - log d) =
+                  0 + log (1 - log d) := by rw [h0]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  have hlog_rhs_eq : log (exp pi - log d) = exp (exp c1 - log pi) := by
+    have step : exp (exp c1 - log pi) - log (exp pi - log d) + log (exp pi - log d) =
+                  0 + log (exp pi - log d) := by rw [hπ]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  have hpos1 : 0 < 1 - log d := by
+    apply log_pos_arg_pos
+    rw [hlog_lhs_eq]; exact exp_pos _
+  have hpos_pi : 0 < exp pi - log d := by
+    apply log_pos_arg_pos
+    rw [hlog_rhs_eq]; exact exp_pos _
+  have hone_minus : 1 - log d = exp (exp (exp c1)) := by
+    have step : exp (log (1 - log d)) = exp (exp (exp c1)) := by rw [hlog_lhs_eq]
+    rw [exp_log hpos1] at step
+    exact step
+  have hexp_minus : exp pi - log d = exp (exp (exp c1 - log pi)) := by
+    have step : exp (log (exp pi - log d)) = exp (exp (exp c1 - log pi)) := by
+      rw [hlog_rhs_eq]
+    rw [exp_log hpos_pi] at step
+    exact step
+  -- log pi > 0 from pi > 1:
+  have hlog_pi_pos : 0 < log pi := by
+    have step : log 1 < log pi := log_lt_log zero_lt_one_ax pi_gt_one
+    rw [log_one] at step
+    exact step
+  -- exp c1 - log pi < exp c1 (since log pi > 0):
+  have hsubexp : exp c1 - log pi < exp c1 := by
+    have hneg : -log pi < 0 := by
+      have step := add_lt_add_left hlog_pi_pos (-log pi)
+      rw [add_zero, neg_add_self] at step
+      exact step
+    have step := add_lt_add_left hneg (exp c1)
+    rw [add_zero, ← sub_def] at step
+    exact step
+  -- Hence exp(exp c1 - log pi) < exp(exp c1):
+  have hexp_sub : exp (exp c1 - log pi) < exp (exp c1) := exp_lt hsubexp
+  -- And exp(exp(exp c1 - log pi)) < exp(exp(exp c1)):
+  have hdouble_exp : exp (exp (exp c1 - log pi)) < exp (exp (exp c1)) := exp_lt hexp_sub
+  -- Substitute via hone_minus and hexp_minus: exp pi - log d < 1 - log d.
+  rw [← hexp_minus, ← hone_minus] at hdouble_exp
+  -- Cancel -log d via add_lt_add_left + comm:
+  have hcanc : exp pi < 1 := by
+    have step : log d + (exp pi - log d) < log d + (1 - log d) :=
+      add_lt_add_left hdouble_exp (log d)
+    -- Simplify both sides: log d + (a - log d) = a.
+    rw [sub_def, sub_def, ← add_assoc, ← add_assoc,
+        add_comm (log d) (exp pi), add_comm (log d) 1,
+        add_assoc, add_assoc, add_neg, add_zero, add_zero] at step
+    exact step
+  -- exp pi > 1 from pi > 0:
+  have hpi_pos : 0 < pi := pi_pos
+  have hexp_pi_gt_one : (1 : Real) < exp pi := by
+    have step : exp 0 < exp pi := exp_lt hpi_pos
+    rw [exp_zero] at step
+    exact step
+  exact lt_irrefl_ax _ (lt_trans_ax hcanc hexp_pi_gt_one)
 
 end MachLib
