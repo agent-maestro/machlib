@@ -41,6 +41,7 @@ import MachLib.Pfaffian
 import MachLib.EMLPfaffian
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
+import MachLib.KhovanskiiLemma
 
 /-!
 # MachLib — top-level aggregator
