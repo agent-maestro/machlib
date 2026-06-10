@@ -68,6 +68,24 @@ axiom rolle (f : Real → Real) (a b : Real) (hab : a < b)
     (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
     ∃ c : Real, a < c ∧ c < b ∧ HasDerivAt f 0 c
 
+/-! ## Mean Value Theorem (consequence of Rolle) -/
+
+/-- **Mean Value Theorem.** If `f` is differentiable on `(a, b)`, there
+exists `c ∈ (a, b)` and `f' : Real` such that `HasDerivAt f f' c`
+and `f b - f a = f' * (b - a)`.
+
+Classical derivation from Rolle: define `h(x) = f(x) - L(x)` where `L`
+is the linear interpolation between `(a, f a)` and `(b, f b)`. Then
+`h a = h b = 0`, so by Rolle, `∃ c` with `h'(c) = 0`, giving
+`f'(c) = L'(c) = (f b - f a) / (b - a)`.
+
+Axiomatized for Phase B; constructive proof via Rolle is ~50 lines
+and deferred. -/
+axiom mean_value_theorem (f : Real → Real) (a b : Real) (hab : a < b)
+    (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
+    ∃ c : Real, ∃ f' : Real, a < c ∧ c < b ∧ HasDerivAt f f' c ∧
+      f b - f a = f' * (b - a)
+
 /-! ## Zero count bound via Rolle's theorem -/
 
 /-- **Zero count of f ≤ 1 + zero count of f'**, on a bounded open

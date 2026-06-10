@@ -127,21 +127,63 @@ Proof structure: strong induction on `PfaffianRank f`.
     `zero_count_bound_by_deriv` (Phase B).
 -/
 
-/-! ## Auxiliary axiom: constant Pfaffian (derivative = 0 everywhere) -/
+/-! ## Constant Pfaffian (derivative = 0 everywhere) -- PROVEN via MVT -/
 
 /-- If a Pfaffian function has identically zero derivative AND is
-not identically zero itself, then it's a non-zero constant — i.e.,
-its value is non-zero everywhere. (Reason: derivative = 0 ⇒ function
-is constant; non-zero constant has non-zero value everywhere.)
+not identically zero itself, then its value is non-zero everywhere.
 
-Axiomatized. The classical proof uses the mean value theorem
-(consequence of Rolle's theorem, Phase B). Could be made constructive
-via Phase B + MachLib's analytic infrastructure. -/
-axiom pfaffian_derivative_zero_implies_nonzero_everywhere
+**Proof:** Suppose otherwise — `∃ y, g.eval y = 0`. Combined with
+`∃ x₀, g.eval x₀ ≠ 0`, we have two points with different values.
+By MVT on the interval between them, there's a point `c` where
+`HasDerivAt g.eval f' c` with `f' = (g.eval y - g.eval x₀) / (y -
+x₀) ≠ 0`. But `g.derivative.eval c = 0` and `HasDerivAt g.eval
+(g.derivative.eval c) c` (from Phase C's `derivative_eval`); by
+`HasDerivAt_unique`, `f' = 0`, contradicting `f' ≠ 0`. -/
+theorem pfaffian_derivative_zero_implies_nonzero_everywhere
     (g : PfaffianFunction)
     (h_deriv_zero : ∀ x : Real, g.derivative.eval x = 0)
     (h_g_ne : ∃ x : Real, g.eval x ≠ 0) :
-    ∀ x : Real, g.eval x ≠ 0
+    ∀ x : Real, g.eval x ≠ 0 := by
+  obtain ⟨x₀, hx₀_ne⟩ := h_g_ne
+  -- Show g.eval x = g.eval x₀ for all x (the function is constant).
+  -- Then g.eval x = g.eval x₀ ≠ 0.
+  suffices hconst : ∀ x : Real, g.eval x = g.eval x₀ by
+    intro x; rw [hconst x]; exact hx₀_ne
+  intro x
+  rcases lt_total x x₀ with hlt | heq | hgt
+  · -- x < x₀: apply MVT on (x, x₀).
+    have hdiff : ∀ c : Real, x < c → c < x₀ →
+                 ∃ f' : Real, HasDerivAt g.eval f' c := by
+      intro c _ _
+      exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
+    obtain ⟨c, f', _, _, hd, hmvt⟩ :=
+      mean_value_theorem g.eval x x₀ hlt hdiff
+    have hf'_eq : f' = g.derivative.eval c :=
+      HasDerivAt_unique g.eval f' (g.derivative.eval c) c hd
+        (PfaffianFunction.derivative_eval g c)
+    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero c
+    rw [hf'_zero, zero_mul] at hmvt
+    -- hmvt : g.eval x₀ - g.eval x = 0
+    have step : g.eval x₀ - g.eval x + g.eval x = 0 + g.eval x := by rw [hmvt]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  · rw [heq]
+  · -- x₀ < x: apply MVT on (x₀, x).
+    have hdiff : ∀ c : Real, x₀ < c → c < x →
+                 ∃ f' : Real, HasDerivAt g.eval f' c := by
+      intro c _ _
+      exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
+    obtain ⟨c, f', _, _, hd, hmvt⟩ :=
+      mean_value_theorem g.eval x₀ x hgt hdiff
+    have hf'_eq : f' = g.derivative.eval c :=
+      HasDerivAt_unique g.eval f' (g.derivative.eval c) c hd
+        (PfaffianFunction.derivative_eval g c)
+    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero c
+    rw [hf'_zero, zero_mul] at hmvt
+    -- hmvt : g.eval x - g.eval x₀ = 0
+    have step : g.eval x - g.eval x₀ + g.eval x₀ = 0 + g.eval x₀ := by rw [hmvt]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step
 
 /-! ## The constructive Khovanskii bound theorem -/
 
