@@ -744,4 +744,101 @@ theorem sin_not_in_eml_t1_cv_t2_eml_vc (c1 d : Real) :
     exact step
   exact lt_irrefl_ax _ (lt_trans_ax hcanc hexp_pi_gt_one)
 
+-- ===================================================================
+-- Helpers for the final case (Row 3 vc-vc).
+-- ===================================================================
+
+/-- `log y < y - 1` for `1 < y`. Derived from `exp_gt_one_plus_self`. -/
+private theorem log_lt_sub_one_helper {y : Real} (hy : 1 < y) : log y < y - 1 := by
+  have hpos : (0 : Real) < y := lt_trans_ax zero_lt_one_ax hy
+  have hlog_pos : (0 : Real) < log y := by
+    have step : log 1 < log y := log_lt_log zero_lt_one_ax hy
+    rw [log_one] at step
+    exact step
+  have h := exp_gt_one_plus_self (log y) hlog_pos
+  rw [exp_log hpos] at h
+  -- h : 1 + log y < y
+  -- Goal: log y < y - 1.
+  -- log y + 1 = 1 + log y < y, so log y < y - 1.
+  have step1 : log y + 1 < y := by rw [add_comm] at h; exact h
+  have step2 := add_lt_add_left step1 (-1)
+  -- step2 : -1 + (log y + 1) < -1 + y
+  -- Simplify LHS: -1 + (log y + 1) = log y + (-1 + 1) = log y + 0 = log y (via comm + assoc + neg_add_self).
+  rw [← add_assoc, add_comm (-1) (log y), add_assoc, neg_add_self,
+      add_zero, add_comm (-1) y, ← sub_def] at step2
+  exact step2
+
+/-- `log 2 < 1`, where `2 = 1 + 1`. Derived from `exp_one_gt_two`. -/
+private theorem log_two_lt_one_helper : log ((1 : Real) + 1) < 1 := by
+  have h2_pos : (0 : Real) < 1 + 1 := by
+    have step := add_lt_add_left zero_lt_one_ax 1
+    rw [add_zero] at step
+    exact lt_trans_ax zero_lt_one_ax step
+  have step : log (1 + 1) < log (exp 1) := log_lt_log h2_pos exp_one_gt_two
+  rw [log_exp] at step
+  exact step
+
+/-- Multiplicative monotonicity: `0 < c → a < b → c * a < c * b`.
+Derived from `mul_pos` + algebra. -/
+private theorem mul_lt_mul_left_helper {c : Real} (hc : 0 < c) {a b : Real}
+    (h : a < b) : c * a < c * b := by
+  -- b - a > 0.
+  have hba_pos : (0 : Real) < b - a := by
+    have step := add_lt_add_left h (-a)
+    rw [neg_add_self, add_comm (-a) b, ← sub_def] at step
+    exact step
+  -- c * (b - a) > 0.
+  have hprod : (0 : Real) < c * (b - a) := mul_pos hc hba_pos
+  -- c * (b - a) = c * b - c * a (distributivity).
+  have hdistr : c * (b - a) = c * b - c * a := by
+    have e1 : (b - a) = b + -a := sub_def _ _
+    have e2 : c * b - c * a = c * b + -(c * a) := sub_def _ _
+    rw [e1, e2, mul_distrib, mul_neg]
+  rw [hdistr] at hprod
+  -- hprod : 0 < c * b - c * a.
+  -- Hence c * a < c * b.
+  have step := add_lt_add_left hprod (c * a)
+  rw [add_zero] at step
+  -- step : c * a < c * a + (c * b - c * a).
+  -- Simplify RHS: c * a + (c * b - c * a) = c * b.
+  have heq : c * a + (c * b - c * a) = c * b := by
+    have e3 : c * b - c * a = c * b + -(c * a) := sub_def _ _
+    rw [e3, ← add_assoc, add_comm (c * a) (c * b), add_assoc, add_neg, add_zero]
+  rw [heq] at step
+  exact step
+
+/-- `a ≤ 0 → log a = 0` (MachLib convention). -/
+private theorem log_of_nonpos {a : Real} (ha : ¬ (0 < a)) : log a = 0 := by
+  unfold log
+  exact dif_neg ha
+
+/-- Mean-value lower bound: `exp(a) * (b - a) < exp(b) - exp(a)` for `a < b`. -/
+private theorem exp_sub_exp_gt_helper {a b : Real} (hab : a < b) :
+    exp a * (b - a) < exp b - exp a := by
+  have hba_pos : (0 : Real) < b - a := by
+    have step := add_lt_add_left hab (-a)
+    rw [neg_add_self, add_comm (-a) b, ← sub_def] at step
+    exact step
+  have h1 : 1 + (b - a) < exp (b - a) := exp_gt_one_plus_self _ hba_pos
+  have hexp_a_pos : (0 : Real) < exp a := exp_pos _
+  -- Multiply by exp a.
+  have h2 : exp a * (1 + (b - a)) < exp a * exp (b - a) :=
+    mul_lt_mul_left_helper hexp_a_pos h1
+  -- exp a * exp (b - a) = exp b.
+  have hcomb : exp a * exp (b - a) = exp b := by
+    rw [← exp_add]
+    congr 1
+    rw [sub_def, ← add_assoc, add_comm a b, add_assoc, add_neg, add_zero]
+  rw [hcomb] at h2
+  -- h2 : exp a * (1 + (b - a)) < exp b.
+  -- exp a * (1 + (b - a)) = exp a + exp a * (b - a).
+  have heq2 : exp a * (1 + (b - a)) = exp a + exp a * (b - a) := by
+    rw [mul_distrib, mul_one_ax]
+  rw [heq2] at h2
+  -- h2 : exp a + exp a * (b - a) < exp b.
+  -- Subtract exp a from both sides.
+  have step := add_lt_add_left h2 (-exp a)
+  rw [← add_assoc, neg_add_self, zero_add, add_comm (-exp a) (exp b), ← sub_def] at step
+  exact step
+
 end MachLib
