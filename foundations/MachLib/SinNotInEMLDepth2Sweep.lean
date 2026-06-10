@@ -471,9 +471,71 @@ theorem sin_not_in_eml_t1_vv_t2_eml_cv (c : Real) :
   -- hgt1 : 1 < sin 1
   exact lt_irrefl_ax _ (lt_of_lt_of_le hgt1 hsin_le)
 
--- Row 3 cv t1 = .eml(.var, .const d1): deferred — needs cleaner cancellation
--- of (exp c1 - log d1) between two evaluation points where the t1 inner
--- variable is non-zero.
+/-- Row 3 cv vc: t1 = `.eml(.var, .const d1)`, t2 = `.eml(.const c, .var)`.
+Closure via the chain `exp(exp(1 - log d1)) - log π = exp(exp(exp π - log d1))`
+derived from (E0) and (Eπ), plus `exp π > 1` ⇒ contradiction with
+`log π > 0`. -/
+theorem sin_not_in_eml_t1_vc_t2_eml_cv (d1 c : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (.eml .var (.const d1)) (.eml (.const c) .var)).eval x =
+          Real.sin x) := by
+  intro hsin
+  have h0 := hsin 0
+  have hπ := hsin pi
+  simp only [EMLTree.eval, sin_zero, sin_pi, exp_zero, log_zero, sub_zero] at h0 hπ
+  rw [log_exp] at h0
+  -- h0 : exp(1 - log d1) - c = 0
+  have hc_eq : c = exp (1 - log d1) := by
+    have step : exp (1 - log d1) - c + c = 0 + c := by rw [h0]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  -- hπ : exp(exp pi - log d1) - log(exp c - log pi) = 0
+  have hπ_log : log (exp c - log pi) = exp (exp pi - log d1) := by
+    have step : exp (exp pi - log d1) - log (exp c - log pi) + log (exp c - log pi) =
+                  0 + log (exp c - log pi) := by rw [hπ]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  -- log of (exp c - log pi) is exp(...) > 0, so by log_pos_arg_pos, arg > 0.
+  have hsub_pos : 0 < exp c - log pi := by
+    apply log_pos_arg_pos
+    rw [hπ_log]; exact exp_pos _
+  -- Apply exp_log: exp c - log pi = exp(exp(exp pi - log d1)).
+  have hπ_eq : exp c - log pi = exp (exp (exp pi - log d1)) := by
+    have h : exp (log (exp c - log pi)) = exp (exp (exp pi - log d1)) := by rw [hπ_log]
+    rw [exp_log hsub_pos] at h
+    exact h
+  -- Substitute c = exp(1 - log d1) into exp c:
+  rw [hc_eq] at hπ_eq
+  -- hπ_eq : exp(exp(1 - log d1)) - log pi = exp(exp(exp pi - log d1))
+  -- Show 1 - log d1 < exp pi - log d1, hence (via exp twice) the RHS > exp(exp(1 - log d1)).
+  have hexp_pi_gt_one : (1 : Real) < exp pi := by
+    have step : exp 0 < exp pi := exp_lt pi_pos
+    rw [exp_zero] at step
+    exact step
+  have h_step1 : 1 - log d1 < exp pi - log d1 := by
+    have step := add_lt_add_left hexp_pi_gt_one (-log d1)
+    rw [add_comm (-log d1) 1, add_comm (-log d1) (exp pi), ← sub_def, ← sub_def] at step
+    exact step
+  have h_step2 : exp (1 - log d1) < exp (exp pi - log d1) := exp_lt h_step1
+  have h_step3 : exp (exp (1 - log d1)) < exp (exp (exp pi - log d1)) := exp_lt h_step2
+  -- log pi > 0 from pi > 1.
+  have hlog_pi_pos : 0 < log pi := by
+    have step : log 1 < log pi := log_lt_log zero_lt_one_ax pi_gt_one
+    rw [log_one] at step
+    exact step
+  -- Hence A - log pi < A (where A = exp(exp(1 - log d1))).
+  have hsub_lt : exp (exp (1 - log d1)) - log pi < exp (exp (1 - log d1)) := by
+    have hneg : -log pi < 0 := by
+      have step1 := add_lt_add_left hlog_pi_pos (-log pi)
+      rw [add_zero, neg_add_self] at step1
+      exact step1
+    have step := add_lt_add_left hneg (exp (exp (1 - log d1)))
+    rw [add_zero, ← sub_def] at step
+    exact step
+  -- Rewrite h_step3 via hπ_eq to get A < A - log pi.
+  rw [← hπ_eq] at h_step3
+  -- h_step3 : A < A - log pi; hsub_lt : A - log pi < A. Transitive contradiction.
+  exact lt_irrefl_ax _ (lt_trans_ax h_step3 hsub_lt)
 
 /-- Row 3 vc family: t1 = `.eml(.const c1, .const d1)`, t2 = `.eml(.var, .const d)`.
 Uses `log_injective_pos`. -/
