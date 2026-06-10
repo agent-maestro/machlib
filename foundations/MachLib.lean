@@ -31,6 +31,7 @@ import MachLib.ExpExpNotInEML1
 import MachLib.ElementaryEML
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
+import MachLib.IteratedExpBounds
 
 /-!
 # MachLib — top-level aggregator
