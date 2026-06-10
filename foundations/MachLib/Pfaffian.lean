@@ -117,10 +117,16 @@ def PfaffianFunction.zero_count_le (f : PfaffianFunction) (a b : Real)
     zeros.length ≤ N
 
 /-- **The Khovanskii bound applied to a Pfaffian function.** Any
-Pfaffian function `f` has zero count on `(a, b)` bounded by
-`pfaffian_zero_count_bound f.chain.order f.degree`. -/
+NON-ZERO Pfaffian function `f` (i.e., not identically zero) has
+zero count on `(a, b)` bounded by `pfaffian_zero_count_bound
+f.chain.order f.degree`.
+
+The non-zero precondition (`hne`) excludes the degenerate case where
+`f` is the constant 0 function — that function vanishes everywhere
+and trivially has unbounded zero count, which would make the axiom
+inconsistent. -/
 axiom PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
-    (hab : a < b) :
+    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
     f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree)
 
 /-! ## Base function embeddings -/

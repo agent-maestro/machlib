@@ -38,6 +38,7 @@ import MachLib.Differentiation
 import MachLib.SinNotInEMLDepth2FinalVcVc
 import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
+import MachLib.EMLPfaffian
 
 /-!
 # MachLib — top-level aggregator
