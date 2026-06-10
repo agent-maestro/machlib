@@ -35,6 +35,7 @@ import MachLib.IteratedExpBounds
 import MachLib.ThreePointEvalClosure
 import MachLib.AnalyticFiniteZeros
 import MachLib.Differentiation
+import MachLib.SinNotInEMLDepth2FinalVcVc
 
 /-!
 # MachLib — top-level aggregator

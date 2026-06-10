@@ -749,7 +749,7 @@ theorem sin_not_in_eml_t1_cv_t2_eml_vc (c1 d : Real) :
 -- ===================================================================
 
 /-- `log y < y - 1` for `1 < y`. Derived from `exp_gt_one_plus_self`. -/
-private theorem log_lt_sub_one_helper {y : Real} (hy : 1 < y) : log y < y - 1 := by
+theorem log_lt_sub_one_helper {y : Real} (hy : 1 < y) : log y < y - 1 := by
   have hpos : (0 : Real) < y := lt_trans_ax zero_lt_one_ax hy
   have hlog_pos : (0 : Real) < log y := by
     have step : log 1 < log y := log_lt_log zero_lt_one_ax hy
@@ -769,7 +769,7 @@ private theorem log_lt_sub_one_helper {y : Real} (hy : 1 < y) : log y < y - 1 :=
   exact step2
 
 /-- `log 2 < 1`, where `2 = 1 + 1`. Derived from `exp_one_gt_two`. -/
-private theorem log_two_lt_one_helper : log ((1 : Real) + 1) < 1 := by
+theorem log_two_lt_one_helper : log ((1 : Real) + 1) < 1 := by
   have h2_pos : (0 : Real) < 1 + 1 := by
     have step := add_lt_add_left zero_lt_one_ax 1
     rw [add_zero] at step
@@ -780,7 +780,7 @@ private theorem log_two_lt_one_helper : log ((1 : Real) + 1) < 1 := by
 
 /-- Multiplicative monotonicity: `0 < c → a < b → c * a < c * b`.
 Derived from `mul_pos` + algebra. -/
-private theorem mul_lt_mul_left_helper {c : Real} (hc : 0 < c) {a b : Real}
+theorem mul_lt_mul_left_helper {c : Real} (hc : 0 < c) {a b : Real}
     (h : a < b) : c * a < c * b := by
   -- b - a > 0.
   have hba_pos : (0 : Real) < b - a := by
@@ -808,12 +808,12 @@ private theorem mul_lt_mul_left_helper {c : Real} (hc : 0 < c) {a b : Real}
   exact step
 
 /-- `a ≤ 0 → log a = 0` (MachLib convention). -/
-private theorem log_of_nonpos {a : Real} (ha : ¬ (0 < a)) : log a = 0 := by
+theorem log_of_nonpos {a : Real} (ha : ¬ (0 < a)) : log a = 0 := by
   unfold log
   exact dif_neg ha
 
 /-- Mean-value lower bound: `exp(a) * (b - a) < exp(b) - exp(a)` for `a < b`. -/
-private theorem exp_sub_exp_gt_helper {a b : Real} (hab : a < b) :
+theorem exp_sub_exp_gt_helper {a b : Real} (hab : a < b) :
     exp a * (b - a) < exp b - exp a := by
   have hba_pos : (0 : Real) < b - a := by
     have step := add_lt_add_left hab (-a)
@@ -844,7 +844,7 @@ private theorem exp_sub_exp_gt_helper {a b : Real} (hab : a < b) :
 /-- Row 3 vc-vc, d ≤ 0 sub-case. Closes via log convention: at x = 0,
 `t.eval 0 = exp(1 - log d1) - log(1 - 0) = exp(1 - log d1) - 0`, which
 must equal sin 0 = 0, giving exp(1 - log d1) = 0, contradicting exp_pos. -/
-private theorem sin_not_in_eml_t1_vc_t2_eml_vc_dnonpos (d1 d : Real)
+theorem sin_not_in_eml_t1_vc_t2_eml_vc_dnonpos (d1 d : Real)
     (hd : ¬ ((0 : Real) < d)) :
     ¬ (∀ x : Real,
         (EMLTree.eml (.eml .var (.const d1)) (.eml .var (.const d))).eval x =
