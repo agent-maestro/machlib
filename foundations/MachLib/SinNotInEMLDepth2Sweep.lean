@@ -3,6 +3,7 @@ import MachLib.EML
 import MachLib.SinNotInEML
 import MachLib.CosNotInEML
 import MachLib.SinNotInEMLDepth2Partial
+import MachLib.Ring
 
 /-!
 # Depth-2 sin barrier sweep — infrastructure + per-case theorems
@@ -522,12 +523,86 @@ theorem sin_not_in_eml_t1_cc_t2_eml_vc (c1 d1 d : Real) :
   rw [← hpi_zero] at hpos
   exact lt_irrefl_ax 0 hpos
 
--- Row 1 case t1 = .var, t2 = .eml(.var, .const d): the algebra chain
--- log d = 1 - exp 1 (extracted from x = 0 evaluation) → exp(exp π) - exp π =
--- exp 1 - 1 → contradiction via exp_gt_two_x is conceptually clear but
--- the explicit Lean algebra required to convert between sub_def / neg-distributed
--- forms is substantial. Deferred. The remaining structural identity needed is
--- `-(a - b) = b - a`, which would close this and similar cases in one stroke.
+/-- Row 1: t1 = `.var`, t2 = `.eml(.var, .const d)`. Closure via the
+key equation `exp(exp π) - exp 1 = exp π - 1` (derived by cancelling
+`log d` between the two evaluation points) plus `exp_gt_two_x` for
+the strict inequality. Uses `MachLib.Ring`'s `neg_add` and
+`neg_neg_helper` for the algebraic cancellation. -/
+theorem sin_not_in_eml_t1_var_t2_eml_vc (d : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml .var (.eml .var (.const d))).eval x = Real.sin x) := by
+  intro hsin
+  have h0 := hsin 0
+  have hπ := hsin pi
+  simp only [EMLTree.eval, sin_zero, sin_pi, exp_zero] at h0 hπ
+  -- h0 : 1 - log(1 - log d) = 0
+  -- hπ : exp pi - log(exp pi - log d) = 0
+  -- Extract log values.
+  have hlog0 : log (1 - log d) = 1 := by
+    have step : 1 - log (1 - log d) + log (1 - log d) =
+                  0 + log (1 - log d) := by rw [h0]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  have hlogπ : log (exp pi - log d) = exp pi := by
+    have step : exp pi - log (exp pi - log d) + log (exp pi - log d) =
+                  0 + log (exp pi - log d) := by rw [hπ]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  -- Extract positivity via log_pos_arg_pos.
+  have hpos0 : 0 < 1 - log d := by
+    apply log_pos_arg_pos; rw [hlog0]; exact zero_lt_one_ax
+  have hposπ : 0 < exp pi - log d := by
+    apply log_pos_arg_pos; rw [hlogπ]; exact exp_pos pi
+  -- Apply exp_log.
+  have hA : 1 - log d = exp 1 := by
+    have : exp (log (1 - log d)) = exp 1 := by rw [hlog0]
+    rw [exp_log hpos0] at this; exact this
+  have hB : exp pi - log d = exp (exp pi) := by
+    have : exp (log (exp pi - log d)) = exp (exp pi) := by rw [hlogπ]
+    rw [exp_log hposπ] at this; exact this
+  -- Key equation: exp(exp pi) - exp 1 = exp pi - 1. Derived by
+  -- (exp pi - log d) - (1 - log d) = exp pi - 1 [algebraic cancellation].
+  have hkey : exp (exp pi) - exp 1 = exp pi - 1 := by
+    rw [← hB, ← hA]
+    -- goal: (exp pi - log d) - (1 - log d) = exp pi - 1
+    rw [sub_def, sub_def, sub_def, neg_add, neg_neg_helper,
+        add_assoc, ← add_assoc (-log d) (-1) (log d),
+        add_comm (-log d) (-1),
+        add_assoc (-1) (-log d) (log d), neg_add_self, add_zero,
+        ← sub_def]
+  -- Now derive contradiction via exp_gt_two_x.
+  -- 2 * exp pi < exp(exp pi).
+  have hexp_gt : (1 + 1) * exp pi < exp (exp pi) := exp_gt_two_x (exp pi)
+  -- 2 * exp pi - exp 1 < exp(exp pi) - exp 1.
+  have hC1 : (1 + 1) * exp pi - exp 1 < exp (exp pi) - exp 1 := by
+    have step := add_lt_add_left hexp_gt (-exp 1)
+    rw [add_comm (-exp 1) ((1+1) * exp pi), add_comm (-exp 1) (exp (exp pi)),
+        ← sub_def, ← sub_def] at step
+    exact step
+  -- Substitute hkey: 2 * exp pi - exp 1 < exp pi - 1.
+  rw [hkey] at hC1
+  -- Derive: exp pi - 1 < (1+1) * exp pi - exp 1.
+  -- Equivalent: -1 < exp pi - exp 1 (since (1+1) * exp pi - exp 1 = exp pi + (exp pi - exp 1)).
+  -- exp pi - exp 1 > 0 from exp_lt(pi_gt_one), and -1 < 0.
+  have hpi_gt_exp1 : exp 1 < exp pi := exp_lt pi_gt_one
+  have hsub_pos : 0 < exp pi - exp 1 := by
+    have step := add_lt_add_left hpi_gt_exp1 (-exp 1)
+    rw [neg_add_self, add_comm (-exp 1) (exp pi), ← sub_def] at step
+    exact step
+  have hneg_one_neg : (-1 : Real) < 0 := by
+    have step := add_lt_add_left zero_lt_one_ax (-1)
+    rw [add_zero, neg_add_self] at step
+    exact step
+  have hneg_one_lt_sub : (-1 : Real) < exp pi - exp 1 :=
+    lt_trans_ax hneg_one_neg hsub_pos
+  have h_two_pi_eq : (1 + 1) * exp pi - exp 1 = exp pi + (exp pi - exp 1) := by
+    rw [mul_comm, mul_distrib, mul_one_ax, sub_def, sub_def, add_assoc]
+  have h2pi_gt : exp pi - 1 < (1 + 1) * exp pi - exp 1 := by
+    rw [h_two_pi_eq]
+    have step := add_lt_add_left hneg_one_lt_sub (exp pi)
+    rw [← sub_def] at step
+    exact step
+  exact lt_irrefl_ax _ (lt_trans_ax h2pi_gt hC1)
 
 /-- Row 3 cv vc: t1 = `.eml(.const c1, .var)`, t2 = `.eml(.var, .const d)`.
 Uses sign argument: LHS positive (exp π - 1 > 0), RHS negative
