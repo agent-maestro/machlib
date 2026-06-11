@@ -105,10 +105,12 @@ axiom zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
     (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c)
     (N : Nat)
     (hf'_bound : ∀ zeros_f' : List Real,
+        zeros_f'.Nodup →
         (∀ z ∈ zeros_f', a < z ∧ z < b ∧
           ∃ f'' : Real, HasDerivAt f f'' z ∧ f'' = 0) →
         zeros_f'.length ≤ N) :
     ∀ zeros_f : List Real,
+      zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f z = 0) →
       zeros_f.length ≤ N + 1
 

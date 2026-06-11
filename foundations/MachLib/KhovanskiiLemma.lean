@@ -81,6 +81,7 @@ axiom polynomial_zero_count_bound (f : PfaffianFunction)
     (h_order : f.chain.order = 0) (a b : Real) (hab : a < b)
     (hne : ∃ x : Real, f.eval x ≠ 0) :
     ∀ zeros : List Real,
+      zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
       zeros.length ≤ f.degree
 
@@ -205,12 +206,14 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
     (a b : Real) (hab : a < b)
     (hne : ∃ x : Real, f.eval x ≠ 0) :
     ∀ zeros : List Real,
+      zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
       zeros.length ≤ PfaffianRank f := by
   -- Generalize: prove for all g and all rank-equal-n.
   suffices h : ∀ n : Nat, ∀ (g : PfaffianFunction) (a' b' : Real),
                 a' < b' → (∃ x, g.eval x ≠ 0) → PfaffianRank g = n →
     ∀ zeros : List Real,
+      zeros.Nodup →
       (∀ z ∈ zeros, a' < z ∧ z < b' ∧ g.eval z = 0) →
       zeros.length ≤ n by
     have := h (PfaffianRank f) f a b hab hne rfl
@@ -218,39 +221,32 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
   intro n
   induction n using Nat.strongRecOn with
   | _ n ih =>
-    intro g a' b' hab' hgne hgrank zeros hzeros
+    intro g a' b' hab' hgne hgrank zeros hzeros_nodup hzeros
     by_cases h0 : g.chain.order = 0
     · -- Base case: order = 0, polynomial.
       have hbound :=
-        polynomial_zero_count_bound g h0 a' b' hab' hgne zeros hzeros
-      -- hbound : zeros.length ≤ g.degree.
-      -- Show g.degree ≤ PfaffianRank g = n.
+        polynomial_zero_count_bound g h0 a' b' hab' hgne zeros hzeros_nodup hzeros
       have hdeg_le : g.degree ≤ PfaffianRank g := by
         unfold PfaffianRank
         rw [h0]; omega
       rw [hgrank] at hdeg_le
       exact Nat.le_trans hbound hdeg_le
     · -- Inductive step: order > 0.
-      -- Split on whether g.derivative is identically zero.
       by_cases h_deriv_all_zero : ∀ x : Real, g.derivative.eval x = 0
       · -- g.derivative = 0 everywhere → g is non-zero constant.
         have hg_all_ne :=
           pfaffian_derivative_zero_implies_nonzero_everywhere g h_deriv_all_zero hgne
-        -- zeros must be empty.
         have hzeros_empty : zeros = [] := by
           cases zeros with
           | nil => rfl
           | cons z rest =>
-            -- z ∈ zeros → g.eval z = 0; but hg_all_ne says g.eval z ≠ 0.
             have hz_in : z ∈ (z :: rest) := List.mem_cons_self _ _
             have := hzeros z hz_in
-            -- this : a' < z ∧ z < b' ∧ g.eval z = 0
             exfalso
             exact hg_all_ne z this.2.2
         rw [hzeros_empty]
         simp
       · -- g.derivative is not identically zero.
-        -- Derive ∃ x, g.derivative.eval x ≠ 0 from the ¬ ∀ form.
         have h_deriv_some_ne : ∃ x : Real, g.derivative.eval x ≠ 0 := by
           apply Classical.byContradiction
           intro h_all_eq
@@ -259,35 +255,29 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
           apply Classical.byContradiction
           intro hne
           exact h_all_eq ⟨x, hne⟩
-        -- h_deriv_some_ne : ∃ x, g.derivative.eval x ≠ 0.
-        -- Apply IH to g.derivative.
         have hrank_pos : 0 < PfaffianRank g := by
           unfold PfaffianRank
           have hord_pos : 0 < g.chain.order := Nat.pos_of_ne_zero h0
           omega
         have hdiff_lt := PfaffianFunction.derivative_rank_lt g hrank_pos
-        -- hdiff_lt : PfaffianRank g.derivative < PfaffianRank g = n.
         rw [hgrank] at hdiff_lt
-        -- Apply IH.
         let m := PfaffianRank g.derivative
         have hm_lt : m < n := hdiff_lt
         have ih_deriv := ih m hm_lt g.derivative a' b' hab' h_deriv_some_ne rfl
-        -- ih_deriv : ∀ zeros', ... g.derivative.eval z = 0 → zeros'.length ≤ m.
-        -- Apply Phase B's zero_count_bound_by_deriv.
         have hdiff_witness : ∀ c : Real, a' < c → c < b' →
               ∃ f' : Real, HasDerivAt g.eval f' c := by
           intro c _ _
           exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
         have h_f'_bound : ∀ zeros_f' : List Real,
+            zeros_f'.Nodup →
             (∀ z ∈ zeros_f', a' < z ∧ z < b' ∧
               ∃ f'' : Real, HasDerivAt g.eval f'' z ∧ f'' = 0) →
             zeros_f'.length ≤ m := by
-          intro zeros_f' hzeros_f'
-          apply ih_deriv zeros_f'
+          intro zeros_f' hnodup_f' hzeros_f'
+          apply ih_deriv zeros_f' hnodup_f'
           intro z hz
           obtain ⟨ha, hb, hd⟩ := hzeros_f' z hz
           refine ⟨ha, hb, ?_⟩
-          -- g.derivative.eval z = 0 (via HasDerivAt_unique).
           obtain ⟨f'', hd', hfeq⟩ := hd
           have heq : f'' = g.derivative.eval z :=
             HasDerivAt_unique g.eval f'' (g.derivative.eval z) z hd'
@@ -295,9 +285,7 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
           rw [← heq, hfeq]
         have hbound_via_rolle : zeros.length ≤ m + 1 :=
           zero_count_bound_by_deriv g.eval a' b' hab' hdiff_witness m h_f'_bound
-            zeros hzeros
-        -- hbound_via_rolle : zeros.length ≤ m + 1.
-        -- m + 1 ≤ n (from hm_lt : m < n, so m + 1 ≤ n).
+            zeros hzeros_nodup hzeros
         omega
 
 /-! ## Phase C plan (documented as roadmap)

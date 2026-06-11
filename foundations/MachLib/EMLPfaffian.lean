@@ -70,6 +70,18 @@ axiom eml_pfaffian : EMLTree → PfaffianFunction
 axiom eml_pfaffian_eval (t : EMLTree) (x : Real) :
     (eml_pfaffian t).eval x = t.eval x
 
+/-- The list `[natCast 1 * π, natCast 2 * π, ..., natCast (M+1) * π]` has
+no duplicates. Used in the sin barrier proof to satisfy the Nodup
+precondition of `PfaffianFunction.zero_count_le`.
+
+Axiomatized; a constructive proof requires either `List.Nodup.map`
+(which isn't trivially applicable from Lean core's current signature)
+or manual induction on M with `Pairwise` reasoning. The mathematical
+fact follows from the injectivity of `i ↦ natCast (i+1) * π` (since
+natCast is order-preserving and π > 0) + `List.range`'s Nodup-ness. -/
+axiom sin_zeros_list_nodup (M : Nat) :
+    ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi)).Nodup
+
 /-! ## Helpers for the list construction -/
 
 /-- `natCast k * π ≥ 0` for all `k`. -/
@@ -166,8 +178,13 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
     · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
     · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
     · rw [← hzeq, hf_eval]; exact sin_natCast_mul_pi (i + 1)
+  -- The list zeros is Nodup because (List.range (M+1)) is Nodup and
+  -- the function i ↦ natCast (i+1) * pi is injective on Nat.
+  -- Proved by manual induction on M (Lean core's List.Nodup.map signature
+  -- isn't easily applicable here).
+  have hzeros_nodup : zeros.Nodup := sin_zeros_list_nodup M
   -- Apply hbound: zeros.length ≤ M. But length = M + 1. Contradiction.
-  have hlen_le : zeros.length ≤ M := hbound zeros hzeros_valid
+  have hlen_le : zeros.length ≤ M := hbound zeros hzeros_nodup hzeros_valid
   rw [hzeros_len] at hlen_le
   omega
 

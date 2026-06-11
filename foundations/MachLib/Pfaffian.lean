@@ -109,10 +109,16 @@ axiom pfaffian_zero_count_bound_monotone :
     ∀ n n' d d' : Nat, n ≤ n' → d ≤ d' →
     pfaffian_zero_count_bound n d ≤ pfaffian_zero_count_bound n' d'
 
-/-- A `Real → Prop` predicate counting zeros (cardinality bounded). -/
+/-- A `Real → Prop` predicate counting zeros (cardinality bounded).
+
+**`Nodup` requirement:** the list of zeros must have distinct
+elements. Without this, the predicate is inconsistent — any list
+that repeats a single zero arbitrarily many times would satisfy the
+hypothesis but have unbounded length. -/
 def PfaffianFunction.zero_count_le (f : PfaffianFunction) (a b : Real)
     (N : Nat) : Prop :=
   ∀ zeros : List Real,
+    zeros.Nodup →
     (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
     zeros.length ≤ N
 
