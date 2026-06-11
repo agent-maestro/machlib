@@ -70,17 +70,7 @@ axiom eml_pfaffian : EMLTree → PfaffianFunction
 axiom eml_pfaffian_eval (t : EMLTree) (x : Real) :
     (eml_pfaffian t).eval x = t.eval x
 
-/-- The list `[natCast 1 * π, natCast 2 * π, ..., natCast (M+1) * π]` has
-no duplicates. Used in the sin barrier proof to satisfy the Nodup
-precondition of `PfaffianFunction.zero_count_le`.
-
-Axiomatized; a constructive proof requires either `List.Nodup.map`
-(which isn't trivially applicable from Lean core's current signature)
-or manual induction on M with `Pairwise` reasoning. The mathematical
-fact follows from the injectivity of `i ↦ natCast (i+1) * π` (since
-natCast is order-preserving and π > 0) + `List.range`'s Nodup-ness. -/
-axiom sin_zeros_list_nodup (M : Nat) :
-    ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi)).Nodup
+-- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
 /-! ## Helpers for the list construction -/
 
@@ -124,6 +114,25 @@ theorem natCast_mul_pi_lt {j k : Nat} (hjk : j < k) :
       have step := add_lt_add_left pi_pos (natCast m * pi)
       rw [add_zero] at step
       exact step
+
+/-- The list `[natCast 1 * π, natCast 2 * π, ..., natCast (M+1) * π]` has
+no duplicates. PROVEN via `List.Pairwise.map` + injectivity from
+`natCast_mul_pi_lt` (strict-order-preserving). -/
+theorem sin_zeros_list_nodup (M : Nat) :
+    ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi)).Nodup := by
+  show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi))
+  exact (List.nodup_range (M + 1)).map (fun i => natCast (i + 1) * pi)
+    (fun i j (_hij_neq : i ≠ j) => by
+      intro hij_eq
+      dsimp only at hij_eq
+      rcases Nat.lt_or_ge i j with hlt | hge
+      · have h := natCast_mul_pi_lt (show i + 1 < j + 1 from by omega)
+        rw [hij_eq] at h
+        exact lt_irrefl_ax _ h
+      · have hlt2 : j < i := by omega
+        have h := natCast_mul_pi_lt (show j + 1 < i + 1 from by omega)
+        rw [← hij_eq] at h
+        exact lt_irrefl_ax _ h)
 
 /-! ## Sin barrier — uniform-in-k closure via Pfaffian zero bound
 
