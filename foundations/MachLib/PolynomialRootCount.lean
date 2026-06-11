@@ -152,6 +152,153 @@ theorem polyHasDerivAt_eval (p : Poly) (x : Real) :
     exact HasDerivAt_mul (Poly.eval p) (Poly.eval q)
             (Poly.eval (polyDerivative p) x) (Poly.eval (polyDerivative q) x) x ihp ihq
 
+/-! ## Polynomial normalization — polySimplify -/
+
+open Classical in
+/-- `true` if the polynomial is the literal `const 0`. Uses classical
+decidability of Real equality. -/
+noncomputable def polyIsZeroConst : Poly → Bool
+  | Poly.const c => if c = 0 then true else false
+  | _ => false
+
+open Classical in
+/-- `true` if the polynomial is the literal `const 1`. -/
+noncomputable def polyIsOneConst : Poly → Bool
+  | Poly.const c => if c = 1 then true else false
+  | _ => false
+
+open Classical in
+/-- Polynomial normalization. Collapses identity factors / additive
+zeros:
+- `add p (const 0) → p`, `add (const 0) p → p`.
+- `sub p (const 0) → p`.
+- `mul p (const 0) → const 0`, `mul (const 0) p → const 0`.
+- `mul p (const 1) → p`, `mul (const 1) p → p`.
+
+Other expressions are left structurally intact. The normalization
+preserves evaluation (theorem `polySimplify_eval`). -/
+noncomputable def polySimplify : Poly → Poly
+  | Poly.const c => Poly.const c
+  | Poly.var => Poly.var
+  | Poly.add p q =>
+    let p' := polySimplify p
+    let q' := polySimplify q
+    if polyIsZeroConst p' then q'
+    else if polyIsZeroConst q' then p'
+    else Poly.add p' q'
+  | Poly.sub p q =>
+    let p' := polySimplify p
+    let q' := polySimplify q
+    if polyIsZeroConst q' then p'
+    else Poly.sub p' q'
+  | Poly.mul p q =>
+    let p' := polySimplify p
+    let q' := polySimplify q
+    if polyIsZeroConst p' then Poly.const 0
+    else if polyIsZeroConst q' then Poly.const 0
+    else if polyIsOneConst p' then q'
+    else if polyIsOneConst q' then p'
+    else Poly.mul p' q'
+
+/-- If `polyIsZeroConst p = true`, then `Poly.eval p x = 0` everywhere. -/
+theorem polyIsZeroConst_eval (p : Poly) (h : polyIsZeroConst p = true) (x : Real) :
+    Poly.eval p x = 0 := by
+  cases p with
+  | const c =>
+    unfold polyIsZeroConst at h
+    by_cases hc : c = 0
+    · rw [hc]; rfl
+    · simp [hc] at h
+  | var => unfold polyIsZeroConst at h; simp at h
+  | add _ _ => unfold polyIsZeroConst at h; simp at h
+  | sub _ _ => unfold polyIsZeroConst at h; simp at h
+  | mul _ _ => unfold polyIsZeroConst at h; simp at h
+
+/-- If `polyIsOneConst p = true`, then `Poly.eval p x = 1` everywhere. -/
+theorem polyIsOneConst_eval (p : Poly) (h : polyIsOneConst p = true) (x : Real) :
+    Poly.eval p x = 1 := by
+  cases p with
+  | const c =>
+    unfold polyIsOneConst at h
+    by_cases hc : c = 1
+    · rw [hc]; rfl
+    · simp [hc] at h
+  | var => unfold polyIsOneConst at h; simp at h
+  | add _ _ => unfold polyIsOneConst at h; simp at h
+  | sub _ _ => unfold polyIsOneConst at h; simp at h
+  | mul _ _ => unfold polyIsOneConst at h; simp at h
+
+/-- **`polySimplify` preserves evaluation.** -/
+theorem polySimplify_eval (p : Poly) (x : Real) :
+    Poly.eval (polySimplify p) x = Poly.eval p x := by
+  induction p with
+  | const c => rfl
+  | var => rfl
+  | add p q ihp ihq =>
+    unfold polySimplify
+    by_cases hp : polyIsZeroConst (polySimplify p) = true
+    · rw [if_pos hp]
+      have hp_eval : Poly.eval (polySimplify p) x = 0 :=
+        polyIsZeroConst_eval (polySimplify p) hp x
+      show Poly.eval (polySimplify q) x = Poly.eval p x + Poly.eval q x
+      rw [ihq, ← ihp, hp_eval, zero_add]
+    · rw [if_neg hp]
+      by_cases hq : polyIsZeroConst (polySimplify q) = true
+      · rw [if_pos hq]
+        have hq_eval : Poly.eval (polySimplify q) x = 0 :=
+          polyIsZeroConst_eval (polySimplify q) hq x
+        show Poly.eval (polySimplify p) x = Poly.eval p x + Poly.eval q x
+        rw [ihp, ← ihq, hq_eval, add_zero]
+      · rw [if_neg hq]
+        show Poly.eval (polySimplify p) x + Poly.eval (polySimplify q) x =
+             Poly.eval p x + Poly.eval q x
+        rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    unfold polySimplify
+    by_cases hq : polyIsZeroConst (polySimplify q) = true
+    · rw [if_pos hq]
+      have hq_eval : Poly.eval (polySimplify q) x = 0 :=
+        polyIsZeroConst_eval (polySimplify q) hq x
+      show Poly.eval (polySimplify p) x = Poly.eval p x - Poly.eval q x
+      rw [ihp, ← ihq, hq_eval, sub_zero]
+    · rw [if_neg hq]
+      show Poly.eval (polySimplify p) x - Poly.eval (polySimplify q) x =
+           Poly.eval p x - Poly.eval q x
+      rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    unfold polySimplify
+    by_cases hp : polyIsZeroConst (polySimplify p) = true
+    · rw [if_pos hp]
+      have hp_eval : Poly.eval (polySimplify p) x = 0 :=
+        polyIsZeroConst_eval (polySimplify p) hp x
+      show (0 : Real) = Poly.eval p x * Poly.eval q x
+      rw [← ihp, hp_eval, zero_mul]
+    · rw [if_neg hp]
+      by_cases hq : polyIsZeroConst (polySimplify q) = true
+      · rw [if_pos hq]
+        have hq_eval : Poly.eval (polySimplify q) x = 0 :=
+          polyIsZeroConst_eval (polySimplify q) hq x
+        show (0 : Real) = Poly.eval p x * Poly.eval q x
+        rw [← ihq, hq_eval, mul_zero]
+      · rw [if_neg hq]
+        by_cases hp1 : polyIsOneConst (polySimplify p) = true
+        · rw [if_pos hp1]
+          have hp1_eval : Poly.eval (polySimplify p) x = 1 :=
+            polyIsOneConst_eval (polySimplify p) hp1 x
+          show Poly.eval (polySimplify q) x = Poly.eval p x * Poly.eval q x
+          rw [ihq, ← ihp, hp1_eval, one_mul_thm]
+        · rw [if_neg hp1]
+          by_cases hq1 : polyIsOneConst (polySimplify q) = true
+          · rw [if_pos hq1]
+            have hq1_eval : Poly.eval (polySimplify q) x = 1 :=
+              polyIsOneConst_eval (polySimplify q) hq1 x
+            show Poly.eval (polySimplify p) x = Poly.eval p x * Poly.eval q x
+            rw [ihp, ← ihq, hq1_eval, mul_one_ax]
+          · rw [if_neg hq1]
+            show Poly.eval (polySimplify p) x * Poly.eval (polySimplify q) x =
+                 Poly.eval p x * Poly.eval q x
+            rw [ihp, ihq]
+
 /-! ## polyDerivative degreeUpper bound (non-strict) -/
 
 /-- The symbolic derivative has `degreeUpper` no greater than the
