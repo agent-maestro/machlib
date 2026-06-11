@@ -152,6 +152,51 @@ theorem polyHasDerivAt_eval (p : Poly) (x : Real) :
     exact HasDerivAt_mul (Poly.eval p) (Poly.eval q)
             (Poly.eval (polyDerivative p) x) (Poly.eval (polyDerivative q) x) x ihp ihq
 
+/-! ## polyDerivative degreeUpper bound (non-strict) -/
+
+/-- The symbolic derivative has `degreeUpper` no greater than the
+original. Non-strict; the strict decrease `degreeUpper (polyDerivative
+p) < degreeUpper p` (needed for the FTA induction via Rolle) requires
+polynomial NORMALIZATION (collapse `0 * x` → `0`, etc.) which isn't
+yet in MachLib. Without normalization, expressions like `mul (const c)
+var` have polyDerivative `add (mul (const 0) var) (mul (const c)
+(const 1))` whose syntactic degreeUpper = original's.
+
+This non-strict bound is proven directly by structural induction. -/
+theorem polyDerivative_degreeUpper_le (p : Poly) :
+    degreeUpper (polyDerivative p) ≤ degreeUpper p := by
+  induction p with
+  | const _ => exact Nat.le_refl 0
+  | var => exact Nat.zero_le 1
+  | add p q ihp ihq =>
+    -- degreeUpper (add (polyDerivative p) (polyDerivative q))
+    --   = max (degreeUpper (polyDerivative p)) (degreeUpper (polyDerivative q))
+    --   ≤ max (degreeUpper p) (degreeUpper q) = degreeUpper (add p q).
+    show Nat.max (degreeUpper (polyDerivative p)) (degreeUpper (polyDerivative q)) ≤
+           Nat.max (degreeUpper p) (degreeUpper q)
+    apply Nat.max_le.mpr
+    exact ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+           Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | sub p q ihp ihq =>
+    show Nat.max (degreeUpper (polyDerivative p)) (degreeUpper (polyDerivative q)) ≤
+           Nat.max (degreeUpper p) (degreeUpper q)
+    apply Nat.max_le.mpr
+    exact ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+           Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | mul p q ihp ihq =>
+    -- degreeUpper (add (mul (polyDerivative p) q) (mul p (polyDerivative q)))
+    --   = max (degreeUpper (polyDerivative p) + degreeUpper q)
+    --         (degreeUpper p + degreeUpper (polyDerivative q))
+    --   ≤ max (degreeUpper p + degreeUpper q)
+    --         (degreeUpper p + degreeUpper q) = degreeUpper (mul p q).
+    show Nat.max (degreeUpper (polyDerivative p) + degreeUpper q)
+                  (degreeUpper p + degreeUpper (polyDerivative q)) ≤
+           degreeUpper p + degreeUpper q
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.add_le_add_right ihp _
+    · exact Nat.add_le_add_left ihq _
+
 /-! ## Polynomial fundamental theorem of algebra (axiomatized) -/
 
 /-- **Polynomial FTA bound.** A non-zero polynomial `p` has at most
