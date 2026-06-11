@@ -2,6 +2,7 @@ import MachLib.Exp
 import MachLib.Log
 import MachLib.Differentiation
 import MachLib.AnalyticFiniteZeros
+import MachLib.Ring
 
 /-!
 # Rolle's Theorem — header port (Phase B of Pfaffian programme)
@@ -74,17 +75,159 @@ axiom rolle (f : Real → Real) (a b : Real) (hab : a < b)
 exists `c ∈ (a, b)` and `f' : Real` such that `HasDerivAt f f' c`
 and `f b - f a = f' * (b - a)`.
 
-Classical derivation from Rolle: define `h(x) = f(x) - L(x)` where `L`
-is the linear interpolation between `(a, f a)` and `(b, f b)`. Then
-`h a = h b = 0`, so by Rolle, `∃ c` with `h'(c) = 0`, giving
-`f'(c) = L'(c) = (f b - f a) / (b - a)`.
+**Provable from Rolle.** Define `h(x) := (b - a) * f(x) - (b - a) *
+f(a) - (f(b) - f(a)) * (x - a)`. Then `h a = h b = 0` via algebra,
+and `h` is differentiable. Apply Rolle to `h` to get
+`(b - a) * f'(c) = f(b) - f(a)`.
 
-Axiomatized for Phase B; constructive proof via Rolle is ~50 lines
-and deferred. -/
+The constructive proof is ~80 lines but bumps against algebraic
+manipulation that requires AC-stronger tactics than MachLib's
+`mach_ring` currently provides. Deferred — meanwhile axiomatized
+to unblock downstream MVT consumers. -/
 axiom mean_value_theorem (f : Real → Real) (a b : Real) (hab : a < b)
     (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
     ∃ c : Real, ∃ f' : Real, a < c ∧ c < b ∧ HasDerivAt f f' c ∧
       f b - f a = f' * (b - a)
+
+/-! ## (Constructive MVT proof attempt — DEFERRED)
+
+The body below is left as a documented skeleton for the constructive
+proof. Each `_` marks where ~10-20 lines of dense algebraic
+manipulation are needed (sub_def + add_comm + add_assoc + add_neg
++ ...). MachLib's `mach_ring` Phase 2 leaves residue on these
+expansions. A focused 1-session artifact with a stronger AC tactic
+(or careful manual chains) completes the proof.
+
+```
+example (f : Real → Real) (a b : Real) (hab : a < b)
+    (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
+    ∃ c : Real, ∃ f' : Real, a < c ∧ c < b ∧ HasDerivAt f f' c ∧
+      f b - f a = f' * (b - a) := by
+  -- Define the auxiliary function h(x) = (b-a) * f(x) - (b-a) * f(a) - (f(b) - f(a)) * (x - a).
+  let h : Real → Real := fun x =>
+    (b - a) * f x - (b - a) * f a - (f b - f a) * (x - a)
+  -- Show h a = h b.
+  have hfa_eq_fb : h a = h b := by
+    show (b - a) * f a - (b - a) * f a - (f b - f a) * (a - a) =
+         (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a)
+    rw [sub_self a]
+    show (b - a) * f a - (b - a) * f a - (f b - f a) * 0 =
+         (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a)
+    rw [mul_zero, sub_zero]
+    -- Goal: (b - a) * f a - (b - a) * f a = (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a).
+    -- LHS = 0. RHS = (b-a)(f b - f a) - (f b - f a)(b - a) = 0.
+    have hlhs : (b - a) * f a - (b - a) * f a = 0 := sub_self _
+    rw [hlhs]
+    -- Goal: 0 = (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a).
+    -- Show via algebraic identity: (b-a)(f b) - (b-a)(f a) - (f b - f a)(b-a) = 0.
+    have hidentity : (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a) = 0 := by
+      mach_ring
+    rw [hidentity]
+  -- Show h is differentiable on (a, b) with derivative h'(x) = (b-a) f'(x) - (f b - f a).
+  have h_diff : ∀ c : Real, a < c → c < b →
+      ∃ h' : Real, HasDerivAt h h' c := by
+    intro c hca hcb
+    obtain ⟨f'_c, hf'_c⟩ := hdiff c hca hcb
+    -- Compute h's derivative at c.
+    -- h(x) = (b - a) * f x - (b - a) * f a - (f b - f a) * (x - a).
+    -- Let g1(x) = (b - a) * f x. g1'(c) = (b-a) * f'_c (via HasDerivAt_mul + const).
+    -- Let g2(x) = (b - a) * f a (constant). g2'(c) = 0.
+    -- Let g3(x) = (f b - f a) * (x - a). g3'(c) = f b - f a (via HasDerivAt_mul + id-sub-const).
+    -- h(x) = g1(x) - g2(x) - g3(x). h'(c) = g1'(c) - g2'(c) - g3'(c) = (b-a) * f'_c - 0 - (f b - f a).
+    have hg1 : HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c := by
+      have h_const : HasDerivAt (fun _ : Real => b - a) 0 c := HasDerivAt_const (b - a) c
+      have h_prod := HasDerivAt_mul (fun _ => b - a) f 0 f'_c c h_const hf'_c
+      -- h_prod : HasDerivAt (fun y => (fun _ => b - a) y * f y) (0 * f c + (b - a) * f'_c) c.
+      -- Need: HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c.
+      -- Simplify 0 * f c = 0; 0 + (b - a) * f'_c = (b - a) * f'_c.
+      have h_simp : (0 : Real) * f c + (b - a) * f'_c = (b - a) * f'_c := by
+        rw [zero_mul, zero_add]
+      rw [h_simp] at h_prod
+      exact h_prod
+    have hg2 : HasDerivAt (fun _ : Real => (b - a) * f a) 0 c :=
+      HasDerivAt_const _ c
+    have hg3 : HasDerivAt (fun x => (f b - f a) * (x - a)) (f b - f a) c := by
+      -- (x - a) has derivative 1.
+      have h_id : HasDerivAt (fun y : Real => y) 1 c := HasDerivAt_id c
+      have h_const_a : HasDerivAt (fun _ : Real => a) 0 c := HasDerivAt_const a c
+      have h_sub : HasDerivAt (fun y => y - a) (1 - 0) c :=
+        HasDerivAt_sub (fun y => y) (fun _ => a) 1 0 c h_id h_const_a
+      have h_sub_simp : (1 : Real) - 0 = 1 := sub_zero 1
+      rw [h_sub_simp] at h_sub
+      have h_const_fba : HasDerivAt (fun _ : Real => f b - f a) 0 c := HasDerivAt_const _ c
+      have h_prod := HasDerivAt_mul (fun _ => f b - f a) (fun x => x - a) 0 1 c h_const_fba h_sub
+      -- h_prod : HasDerivAt (fun y => (fun _ => f b - f a) y * ((fun x => x - a) y)) (0 * (c - a) + (f b - f a) * 1) c.
+      have h_simp : (0 : Real) * (c - a) + (f b - f a) * 1 = f b - f a := by
+        rw [zero_mul, zero_add, mul_one_ax]
+      rw [h_simp] at h_prod
+      exact h_prod
+    -- h = g1 - g2 - g3.
+    have h_g12 : HasDerivAt (fun x => (b - a) * f x - (b - a) * f a) ((b - a) * f'_c - 0) c :=
+      HasDerivAt_sub _ _ _ _ c hg1 hg2
+    have h_full : HasDerivAt h ((b - a) * f'_c - 0 - (f b - f a)) c :=
+      HasDerivAt_sub _ _ _ _ c h_g12 hg3
+    refine ⟨(b - a) * f'_c - 0 - (f b - f a), h_full⟩
+  -- Apply Rolle to h.
+  obtain ⟨c, hca, hcb, h_zero⟩ := rolle h a b hab hfa_eq_fb h_diff
+  -- h_zero : HasDerivAt h 0 c.
+  -- From the h_diff construction, the derivative we constructed at c was (b - a) * f' - 0 - (f b - f a)
+  -- where f' is the derivative of f at c (from hdiff).
+  obtain ⟨f'_c, hf'_c⟩ := hdiff c hca hcb
+  -- We need: (b - a) * f'_c - 0 - (f b - f a) = 0, then f b - f a = (b - a) * f'_c = f'_c * (b - a).
+  have h_derived : HasDerivAt h ((b - a) * f'_c - 0 - (f b - f a)) c := by
+    have hg1 : HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c := by
+      have h_const : HasDerivAt (fun _ : Real => b - a) 0 c := HasDerivAt_const (b - a) c
+      have h_prod := HasDerivAt_mul (fun _ => b - a) f 0 f'_c c h_const hf'_c
+      have h_simp : (0 : Real) * f c + (b - a) * f'_c = (b - a) * f'_c := by
+        rw [zero_mul, zero_add]
+      rw [h_simp] at h_prod
+      exact h_prod
+    have hg2 : HasDerivAt (fun _ : Real => (b - a) * f a) 0 c := HasDerivAt_const _ c
+    have hg3 : HasDerivAt (fun x => (f b - f a) * (x - a)) (f b - f a) c := by
+      have h_id : HasDerivAt (fun y : Real => y) 1 c := HasDerivAt_id c
+      have h_const_a : HasDerivAt (fun _ : Real => a) 0 c := HasDerivAt_const a c
+      have h_sub : HasDerivAt (fun y => y - a) (1 - 0) c :=
+        HasDerivAt_sub (fun y => y) (fun _ => a) 1 0 c h_id h_const_a
+      have h_sub_simp : (1 : Real) - 0 = 1 := sub_zero 1
+      rw [h_sub_simp] at h_sub
+      have h_const_fba : HasDerivAt (fun _ : Real => f b - f a) 0 c := HasDerivAt_const _ c
+      have h_prod := HasDerivAt_mul (fun _ => f b - f a) (fun x => x - a) 0 1 c h_const_fba h_sub
+      have h_simp : (0 : Real) * (c - a) + (f b - f a) * 1 = f b - f a := by
+        rw [zero_mul, zero_add, mul_one_ax]
+      rw [h_simp] at h_prod
+      exact h_prod
+    have h_g12 : HasDerivAt (fun x => (b - a) * f x - (b - a) * f a) ((b - a) * f'_c - 0) c :=
+      HasDerivAt_sub _ _ _ _ c hg1 hg2
+    exact HasDerivAt_sub _ _ _ _ c h_g12 hg3
+  -- By HasDerivAt_unique, the two derivatives of h at c match: 0 = (b - a) * f'_c - 0 - (f b - f a).
+  have h_eq : (0 : Real) = (b - a) * f'_c - 0 - (f b - f a) :=
+    HasDerivAt_unique h 0 _ c h_zero h_derived
+  -- Solve for f b - f a = (b - a) * f'_c = f'_c * (b - a).
+  -- 0 = (b-a) * f'_c - 0 - (f b - f a) = (b-a) * f'_c - (f b - f a) (using sub_zero).
+  -- So f b - f a = (b - a) * f'_c.
+  have h_simp1 : (b - a) * f'_c - 0 - (f b - f a) = (b - a) * f'_c - (f b - f a) := by
+    rw [sub_zero]
+  rw [h_simp1] at h_eq
+  -- h_eq : 0 = (b - a) * f'_c - (f b - f a).
+  -- Add (f b - f a) to both sides: f b - f a = (b - a) * f'_c.
+  have h_step : (f b - f a) = (b - a) * f'_c := by
+    -- 0 = (b - a) * f'_c - (f b - f a), so f b - f a = (b - a) * f'_c.
+    have step : (f b - f a) + 0 = (f b - f a) + ((b - a) * f'_c - (f b - f a)) := by rw [h_eq]
+    -- Simplify LHS via add_zero.
+    -- Simplify RHS via: (f b - f a) + ((b - a) * f'_c + -(f b - f a))
+    --                 = ((f b - f a) + -(f b - f a)) + (b - a) * f'_c (rearrange)
+    --                 = 0 + (b - a) * f'_c
+    --                 = (b - a) * f'_c.
+    rw [add_zero, sub_def, ← add_assoc, add_comm (f b - f a) ((b - a) * f'_c),
+        add_assoc ((b - a) * f'_c) (f b - f a) (-(f b - f a)), add_neg,
+        add_zero] at step
+    exact step
+  -- Convert to f'_c * (b - a).
+  have h_final : f b - f a = f'_c * (b - a) := by
+    rw [h_step]; exact mul_comm (b - a) f'_c
+  exact ⟨c, f'_c, hca, hcb, hf'_c, h_final⟩
+```
+-/
 
 /-! ## Zero count bound via Rolle's theorem -/
 
