@@ -1,4 +1,5 @@
 import MachLib.FiniteZeroPacket
+import MachLib.Differentiation
 
 /-!
 MachLib.PolynomialRootCount — first tiny root-count scaffold.
@@ -116,6 +117,40 @@ noncomputable def linearFactorFiniteRootPacket (r : Real) : FiniteRootPacket whe
   sound := linearFactor_rootListSound r
   distinct := singleton_rootListDistinct r
   degree_bound := linearFactor_rootListDegreeBound r
+
+/-! ## Polynomial derivative — symbolic, with HasDerivAt agreement -/
+
+/-- Symbolic derivative of a polynomial. Follows the standard rules:
+constant → 0, var → 1, sum/difference componentwise, product via the
+product rule. Lives in the PolynomialRootCount namespace; reference
+as `MachLib.PolynomialRootCount.polyDerivative`. -/
+noncomputable def polyDerivative : Poly → Poly
+  | Poly.const _ => Poly.const 0
+  | Poly.var => Poly.const 1
+  | Poly.add p q => Poly.add (polyDerivative p) (polyDerivative q)
+  | Poly.sub p q => Poly.sub (polyDerivative p) (polyDerivative q)
+  | Poly.mul p q => Poly.add (Poly.mul (polyDerivative p) q)
+                              (Poly.mul p (polyDerivative q))
+
+/-- `Poly.eval p` is differentiable everywhere, and its derivative is
+`Poly.eval polyDerivative p`. Proven by induction on the polynomial
+structure using Differentiation.lean's `HasDerivAt_*` rules. -/
+theorem polyHasDerivAt_eval (p : Poly) (x : Real) :
+    HasDerivAt (Poly.eval p) (Poly.eval (polyDerivative p) x) x := by
+  induction p with
+  | const c =>
+    exact HasDerivAt_const c x
+  | var =>
+    exact HasDerivAt_id x
+  | add p q ihp ihq =>
+    exact HasDerivAt_add (Poly.eval p) (Poly.eval q)
+            (Poly.eval (polyDerivative p) x) (Poly.eval (polyDerivative q) x) x ihp ihq
+  | sub p q ihp ihq =>
+    exact HasDerivAt_sub (Poly.eval p) (Poly.eval q)
+            (Poly.eval (polyDerivative p) x) (Poly.eval (polyDerivative q) x) x ihp ihq
+  | mul p q ihp ihq =>
+    exact HasDerivAt_mul (Poly.eval p) (Poly.eval q)
+            (Poly.eval (polyDerivative p) x) (Poly.eval (polyDerivative q) x) x ihp ihq
 
 /-! ## Polynomial fundamental theorem of algebra (axiomatized) -/
 
