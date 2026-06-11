@@ -117,5 +117,27 @@ noncomputable def linearFactorFiniteRootPacket (r : Real) : FiniteRootPacket whe
   distinct := singleton_rootListDistinct r
   degree_bound := linearFactor_rootListDegreeBound r
 
+/-! ## Polynomial fundamental theorem of algebra (axiomatized) -/
+
+/-- **Polynomial FTA bound.** A non-zero polynomial `p` has at most
+`degreeUpper p` distinct zeros on any bounded open interval `(a, b)`.
+
+The classical proof: induct on degree. Base case (degree 0): non-zero
+constant has 0 zeros. Inductive step (degree d > 0): if `p` has a root
+`r`, factor `p = (x - r) * q` with `degreeUpper q ≤ d - 1` by polynomial
+division. By IH, `q` has ≤ d - 1 zeros. So `p` has ≤ 1 + (d - 1) = d
+zeros. Alternatively: use Rolle's theorem + induction on degree via
+`(Poly.derivative p)` (degreeUpper drops by 1).
+
+Axiomatized for now; constructive proof requires polynomial division
+infrastructure (~200 lines) OR a `Poly.derivative` + Rolle chain
+(~150 lines). Both are substantive standalone artifacts. -/
+axiom poly_root_count_bound (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, Poly.eval p x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ Poly.eval p z = 0) →
+      zeros.length ≤ degreeUpper p
+
 end PolynomialRootCount
 end MachLib

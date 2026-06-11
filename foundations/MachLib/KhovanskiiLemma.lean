@@ -3,6 +3,7 @@ import MachLib.Log
 import MachLib.Differentiation
 import MachLib.Pfaffian
 import MachLib.Rolle
+import MachLib.PolynomialRootCount
 
 /-!
 # Khovanskii's Lemma — Phase C (constructive proof skeleton)
@@ -67,23 +68,60 @@ Encoded simply as `Nat`. -/
 noncomputable def PfaffianRank (f : PfaffianFunction) : Nat :=
   f.chain.order * 1000000 + f.degree
 
-/-! ## The base case axiom -/
+/-! ## The base case — reduced via structural correspondence + Poly FTA -/
 
-/-- **Polynomial zero count bound.** For a Pfaffian function of
-chain order 0 (i.e., a polynomial in `x` alone), the zero count on
-any bounded interval is at most the polynomial degree.
+/-- **Structural correspondence axiom.** An order-0 Pfaffian function
+corresponds to a polynomial (MachLib's `Poly` AST) with matching
+evaluation and bounded degree. Axiomatized as the bridge between
+Phase A's opaque Pfaffian function type and MachLib's concrete
+polynomial AST.
 
-Provable constructively from `MachLib.PolynomialRootCount.lean` +
-the fundamental theorem of algebra (polynomial of degree d has at
-most d roots). Currently axiomatized as the base case for Phase C's
-induction. -/
-axiom polynomial_zero_count_bound (f : PfaffianFunction)
+Constructive proof requires Phase A's `PfaffianChain` to be made
+inductive (currently opaque); the order-0 case reduces to const +
+var + add + sub + mul, which match Poly's constructors. ~100-200
+lines of refactoring + downstream updates. -/
+axiom pfaffian_order_zero_corresponds_to_poly
+    (f : PfaffianFunction) (h_order : f.chain.order = 0) :
+    ∃ p : MachLib.PolynomialEvidence.Poly,
+      MachLib.PolynomialRootCount.degreeUpper p ≤ f.degree ∧
+      (∀ x : Real, f.eval x = MachLib.PolynomialEvidence.Poly.eval p x)
+
+/-- **The polynomial zero count bound — DERIVED THEOREM.**
+
+Previously a monolithic axiom; now derived from two smaller axioms:
+- `pfaffian_order_zero_corresponds_to_poly` (structural).
+- `MachLib.PolynomialRootCount.poly_root_count_bound` (polynomial
+  FTA on the concrete Poly type).
+
+Proof: extract a Poly representative for the order-0 Pfaffian
+function, transfer the eval hypothesis, apply the Poly-level FTA,
+combine with the degree bound. -/
+theorem polynomial_zero_count_bound (f : PfaffianFunction)
     (h_order : f.chain.order = 0) (a b : Real) (hab : a < b)
     (hne : ∃ x : Real, f.eval x ≠ 0) :
     ∀ zeros : List Real,
       zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
-      zeros.length ≤ f.degree
+      zeros.length ≤ f.degree := by
+  intro zeros hnodup hzeros
+  obtain ⟨p, hpdeg, hpeval⟩ := pfaffian_order_zero_corresponds_to_poly f h_order
+  -- Translate hypothesis using hpeval.
+  have hne_p : ∃ x : Real, MachLib.PolynomialEvidence.Poly.eval p x ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    rw [← hpeval x]
+    exact hx
+  have hzeros_p : ∀ z ∈ zeros,
+      a < z ∧ z < b ∧ MachLib.PolynomialEvidence.Poly.eval p z = 0 := by
+    intro z hz
+    obtain ⟨ha, hb, hf⟩ := hzeros z hz
+    refine ⟨ha, hb, ?_⟩
+    rw [← hpeval z]; exact hf
+  have hbound_poly :=
+    MachLib.PolynomialRootCount.poly_root_count_bound p a b hab hne_p
+      zeros hnodup hzeros_p
+  -- hbound_poly : zeros.length ≤ degreeUpper p ≤ f.degree.
+  exact Nat.le_trans hbound_poly hpdeg
 
 /-! ## The structural axiom: every Pfaffian has a Pfaffian derivative -/
 
