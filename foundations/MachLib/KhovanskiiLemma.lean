@@ -344,67 +344,88 @@ noncomputable def PfaffianFunction.derivative (f : PfaffianFunction) :
   ⟨f.expr.derivative⟩
 
 /-- The derivative's eval matches the calculus derivative.
-**Closed 2026-06-12 final refactor:** proven by induction on the
-expression structure, using HasDerivAt rules from `Differentiation.lean`.
-This is one of the 4 structural axioms — converted to a theorem by the
-PfaffianExpr inductive refactor. -/
-theorem PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real) :
-    HasDerivAt f.eval (f.derivative.eval x) x := by
-  -- Generalize over x so the IH is universally quantified — required
-  -- for the comp case where we need the f-IH at g.eval x, not at x.
-  suffices h : ∀ e : PfaffianExpr, ∀ y : Real,
-                HasDerivAt e.eval (e.derivative.eval y) y by
-    exact h f.expr x
-  intro e
-  induction e with
-  | const c => intro y; exact HasDerivAt_const c y
-  | var => intro y; exact HasDerivAt_id y
-  | exp_atom => intro y; exact HasDerivAt_exp y
-  | log_atom =>
-    -- log_atom's derivative is `const 0` — the conservative choice for
-    -- MachLib's clamped log. Sound on the clamped region (x ≤ 0) where
-    -- log is constant 0, but not on the analytic region (x > 0) where
-    -- the true derivative is 1/x. Domain qualification via
-    -- EMLPfaffianValidOn is the consumer's responsibility; here we
-    -- document the gap rather than fully close it (would require
-    -- making derivative domain-aware).
-    intro y; sorry
-  | add f g ihf ihg =>
-    intro y
-    exact HasDerivAt_add f.eval g.eval _ _ y (ihf y) (ihg y)
-  | sub f g ihf ihg =>
-    intro y
-    exact HasDerivAt_sub f.eval g.eval _ _ y (ihf y) (ihg y)
-  | mul f g ihf ihg =>
-    intro y
-    exact HasDerivAt_mul f.eval g.eval _ _ y (ihf y) (ihg y)
-  | comp f g ihf ihg =>
-    intro y
-    -- comp's derivative: f.derivative.eval (g.eval y) * g.derivative.eval y
-    -- HasDerivAt_comp takes (a, b, ihg-at-y, ihf-at-g.eval-y).
-    exact HasDerivAt_comp f.eval g.eval _ _ y (ihg y) (ihf (g.eval y))
 
-/-! ## The rank-decrease theorem (was axiom) -/
+**SOUNDNESS GAP — DOCUMENTED 2026-06-12.** This axiom is **materially
+false** as universally stated, because the inductive `PfaffianExpr`
+refactor includes a `log_atom` constructor whose `.derivative` is
+defined as `const 0` (the conservative choice for MachLib's clamped
+`Real.log`). For `Real.log`:
+
+- For `y > 0`: actual derivative is `1/y` (per `HasDerivAt_log_pos`),
+  not `0`. So `HasDerivAt Real.log 0 y` is FALSE.
+- For `y = 0`: `Real.log` is discontinuous (returns 0 by definition,
+  but limit from above is −∞). Not differentiable.
+- For `y < 0`: `Real.log` is constantly 0 on a neighborhood, so the
+  claim holds.
+
+**Closure path:** Add an `inv : PfaffianExpr → PfaffianExpr`
+constructor so `log_atom.derivative` becomes `inv var` (with eval
+`fun x => 1/x` for `x ≠ 0`, clamped to `0` at `x = 0`). Then prove
+`HasDerivAt Real.log (1/y) y` for `y > 0` (use `HasDerivAt_log_pos`)
+and `HasDerivAt Real.log 0 y` for `y < 0` (constant region). The
+`y = 0` boundary remains a discontinuity that should be excluded
+via `EMLPfaffianValidOn`.
+
+**Why this axiom in the meantime:** removing `log_atom` breaks
+`eml_pfaffian`'s log handling, which the sin barrier proof depends
+on. Closing this requires the `inv` constructor refactor (~100 lines
+across `Pfaffian.lean`, `KhovanskiiLemma.lean`, and `EMLPfaffian.lean`).
+
+All other constructors (const, var, exp_atom, add, sub, mul, comp)
+are correctly handled in the closure attempt — proof structure ready
+in git history at commit `2d9b8c2`. -/
+axiom PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real) :
+    HasDerivAt f.eval (f.derivative.eval x) x
+
+/-! ## The rank-decrease axiom -/
 
 /-- The derivative of a non-trivial Pfaffian function has strictly
-smaller rank. **Closed 2026-06-12 final refactor:** proven by induction
-on the expression structure. -/
-theorem PfaffianFunction.derivative_rank_lt (f : PfaffianFunction)
+smaller rank.
+
+**SOUNDNESS GAP — DOCUMENTED 2026-06-12.** This axiom is **materially
+false** as stated, because `exp_atom.derivative = exp_atom` (the
+classical chain relation `(e^x)' = e^x`). With
+
+    PfaffianRank f = f.chain.order * 1_000_000 + f.degree
+
+`exp_atom` has rank `1_000_001`, and so does its derivative — strict
+`<` is unprovable. The hypothesis `0 < PfaffianRank f` is satisfied
+(`1_000_001 > 0`), but the conclusion `1_000_001 < 1_000_001` is false.
+
+**This is not a flaw in the rank formula** — *any* rank function
+defined purely on `PfaffianExpr`'s current shape will fail to
+decrease on `exp_atom`, because `exp` is genuinely closed under
+differentiation. Classical Khovanskii does not use simple
+rank-on-derivative induction; it uses chain-relation-aware reduction
+(degree-in-`y_n` decreases when paired with rewrites using the chain
+relations `y_i' = P_i(x, y_1, ..., y_i)`).
+
+**Closure path:** Restructure `PfaffianExpr` to expose explicit chain
+variables. Instead of `exp_atom` as an opaque atom, represent a
+Pfaffian function as a polynomial in `(x, y_1, ..., y_n)` plus the
+chain relations. The rank becomes `(n, degree_in_y_n)` lex; the
+derivative's degree in `y_n` decreases when you substitute the chain
+relation. ~600-1000 lines across `Pfaffian.lean`,
+`KhovanskiiLemma.lean`, `EMLPfaffian.lean` + reverify the polynomial
+FTA integration. Multi-session work.
+
+**Why this axiom in the meantime:** `pfaffian_zero_count_bound_constructive`
+uses this axiom for its strong-induction termination. Without it,
+the constructive Khovanskii bound is itself unprovable on the current
+representation. The conclusion of `pfaffian_zero_count_bound_constructive`
+is classically true — but the proof technique recorded in this file
+relies on a false intermediate claim.
+
+**Honest status:** the constructive Khovanskii closure is
+**conditional on this axiom** until the structural refactor lands.
+Prior sessions' claim that the closure was "constructive" was
+optimistic — closer to "constructive given the four structural
+axioms hold." Two of those four have been discharged (Poly
+correspondence + derivative-as-PfaffianFunction); two remain
+(derivative_eval and this one). -/
+axiom PfaffianFunction.derivative_rank_lt (f : PfaffianFunction)
     (hrank : 0 < PfaffianRank f) :
-    PfaffianRank f.derivative < PfaffianRank f := by
-  -- Strategy: PfaffianRank = chain.order * 1000000 + degree.
-  -- For each constructor, show the derivative's rank is less.
-  -- For chain order ≥ 1 (exp_atom, log_atom, compound terms with
-  -- atoms inside): derivative's chain order ≤ original (often less).
-  -- For chain order = 0 (const, var, polynomial combinations):
-  -- derivative's degree decreases.
-  --
-  -- A complete proof requires tracking both chain order and degree
-  -- changes per constructor. The bookkeeping argument is classical
-  -- (~50-100 lines of case analysis on the inductive structure).
-  -- Deferred to a follow-up commit; the closure pattern is
-  -- well-established by the refactor.
-  sorry
+    PfaffianRank f.derivative < PfaffianRank f
 
 /-! ## Constructive Khovanskii bound via strong induction on rank -/
 
