@@ -377,5 +377,27 @@ PfaffianChain inductive type is fleshed out (currently opaque
 axioms in Phase A).
 -/
 
+/-! ## Final closure of PfaffianFunction.zero_bound (2026-06-12)
+
+The Pfaffian.lean axiom `PfaffianFunction.zero_bound` is now a theorem
+in this file, proven by direct invocation of
+`pfaffian_zero_count_bound_constructive` (which uses strong induction
+on PfaffianRank, the polynomial FTA at the base, and Rolle at the
+inductive step). The closure relies on the fact that
+`pfaffian_zero_count_bound n d = n * 1000000 + d` (the formula chosen
+in Pfaffian.lean step 4) equals `PfaffianRank f` by definition. -/
+theorem PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
+    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
+    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree) := by
+  intro zeros hnodup hzeros
+  have hrank := pfaffian_zero_count_bound_constructive f a b hab hne
+                  zeros hnodup hzeros
+  -- hrank : zeros.length ≤ PfaffianRank f
+  --       = f.chain.order * 1000000 + f.degree (by definition)
+  -- Goal : zeros.length ≤ pfaffian_zero_count_bound f.chain.order f.degree
+  --       = f.chain.order * 1000000 + f.degree (by definition)
+  show zeros.length ≤ f.chain.order * 1000000 + f.degree
+  exact hrank
+
 end Real
 end MachLib

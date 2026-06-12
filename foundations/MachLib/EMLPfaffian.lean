@@ -4,6 +4,7 @@ import MachLib.Trig
 import MachLib.EML
 import MachLib.EMLHierarchy
 import MachLib.Pfaffian
+import MachLib.KhovanskiiLemma
 
 /-!
 # EML → Pfaffian embedding + Sin Barrier (Phase D)
