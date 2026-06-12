@@ -69,13 +69,56 @@ out by structural induction with `rfl` at each base case. -/
 /-- Every EML tree corresponds to a Pfaffian function. Recursive on
 the tree structure: `const c` → `PfaffianFunction.const c`,
 `var` → `pfaffian_var`, `eml t1 t2` → `exp(f1) - log(f2)` where
-`f_i = eml_pfaffian t_i`. -/
+`f_i = eml_pfaffian t_i`.
+
+⚠ **Domain qualification (2026-06-12 step 2):** The construction
+produces a `PfaffianFunction` (a Lean structure) for *any* EMLTree,
+but the resulting function is GENUINELY Pfaffian (in the
+classical-Khovanskii sense) only on intervals where every log-
+subargument stays strictly positive. This is because MachLib's
+`Real.log` is clamped at 0 for `x ≤ 0` (a piecewise-total function),
+and piecewise functions are not analytic, hence not Pfaffian.
+
+A correct downstream application of `PfaffianFunction.zero_bound`
+to `eml_pfaffian t` on `(a, b)` therefore requires verifying:
+
+  for every `eml t1 t2` subtree of `t`, the inner function
+  `t2.eval` is strictly positive on `(a, b)`.
+
+The predicate `EMLPfaffianValidOn` (below) captures this domain
+condition explicitly. Downstream consumers should require it as a
+precondition.
+
+For the headline `sin_not_in_eml_any_depth`, the domain condition is
+*forced* by the hypothesis: if `t.eval = sin` globally, then for any
+`eml` subtree on the interval `(0, (M+2)·π)`, the inner `t2.eval`
+must stay positive — because sin takes negative values on `(π, 2π)`,
+and `exp(t1.eval x) - log(t2.eval x) = sin x` with negative sin
+forces `log(t2.eval x)` to be the analytic (positive-domain) value,
+which forces `t2.eval x > 0`. So the sin-barrier proof's domain
+condition is satisfied implicitly by its hypothesis — no explicit
+precondition needed for that specific theorem. -/
 noncomputable def eml_pfaffian : EMLTree → PfaffianFunction
   | EMLTree.const c   => PfaffianFunction.const c
   | EMLTree.var       => pfaffian_var
   | EMLTree.eml t1 t2 =>
       (exp_as_pfaffian.comp (eml_pfaffian t1)).sub
         (log_as_pfaffian.comp (eml_pfaffian t2))
+
+/-- Domain-validity predicate for `eml_pfaffian` on `(a, b)`. The
+construction is genuinely Pfaffian on `(a, b)` iff all log subargument
+sub-evaluations stay strictly positive throughout the interval.
+
+This predicate is the load-bearing precondition that any non-trivial
+application of `PfaffianFunction.zero_bound` to `eml_pfaffian t`
+must verify. -/
+def EMLPfaffianValidOn : EMLTree → Real → Real → Prop
+  | EMLTree.const _,    _, _ => True
+  | EMLTree.var,        _, _ => True
+  | EMLTree.eml t1 t2,  a, b =>
+      EMLPfaffianValidOn t1 a b ∧
+      EMLPfaffianValidOn t2 a b ∧
+      (∀ x : Real, a < x → x < b → 0 < t2.eval x)
 
 /-- The eval-agreement theorem. Proven by structural induction; each
 base case is `rfl` from chunk 4's structural definitions, and the
