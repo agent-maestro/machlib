@@ -183,6 +183,7 @@ noncomputable def PfaffianExpr.toPoly : PfaffianExpr →
   | sub f g    => MachLib.PolynomialEvidence.Poly.sub f.toPoly g.toPoly
   | mul f g    => MachLib.PolynomialEvidence.Poly.mul f.toPoly g.toPoly
   | comp f g   => MachLib.PolynomialEvidence.Poly.subst f.toPoly g.toPoly
+  | inv _      => MachLib.PolynomialEvidence.Poly.const 0  -- vacuous: inv.chainOrder ≥ 1
 
 /-- Under chainOrder = 0, the Poly translation has the same eval as
 the original PfaffianExpr. -/
@@ -234,6 +235,12 @@ theorem PfaffianExpr.toPoly_eval (e : PfaffianExpr)
             (MachLib.PolynomialEvidence.Poly.eval g.toPoly x) = _
     rw [← MachLib.PolynomialEvidence.Poly.subst_eval f.toPoly g.toPoly x]
     rfl
+  | inv g _ =>
+    -- chainOrder (inv g) = 1 + g.chainOrder ≥ 1, contradicts h.
+    exfalso
+    have := h
+    unfold PfaffianExpr.chainOrder at this
+    omega
 
 /-- Under chainOrder = 0, the Poly translation's `degreeUpper` is
 bounded by the PfaffianExpr's degree. -/
@@ -280,6 +287,11 @@ theorem PfaffianExpr.toPoly_degreeUpper_le (e : PfaffianExpr)
     exact Nat.le_trans
       (MachLib.PolynomialRootCount.degreeUpper_subst f.toPoly g.toPoly)
       (Nat.mul_le_mul (ihf hf) (ihg hg))
+  | inv g _ =>
+    exfalso
+    have := h
+    unfold PfaffianExpr.chainOrder at this
+    omega
 
 /-- **Structural correspondence theorem.** An order-0 Pfaffian function
 corresponds to a polynomial (MachLib's `Poly` AST) with matching
@@ -343,39 +355,181 @@ noncomputable def PfaffianFunction.derivative (f : PfaffianFunction) :
     PfaffianFunction :=
   ⟨f.expr.derivative⟩
 
-/-- The derivative's eval matches the calculus derivative.
+/-! ### Domain-validity predicate for PfaffianExpr
 
-**SOUNDNESS GAP — DOCUMENTED 2026-06-12.** This axiom is **materially
-false** as universally stated, because the inductive `PfaffianExpr`
-refactor includes a `log_atom` constructor whose `.derivative` is
-defined as `const 0` (the conservative choice for MachLib's clamped
-`Real.log`). For `Real.log`:
+A `PfaffianExpr` is **valid** at a point `x` when all its operations
+yield meaningful classical derivatives there. Atoms (`exp_atom`,
+`var`, `const`) are valid everywhere; `log_atom` requires `x > 0`;
+`inv g` requires `g` valid at `x` AND `g.eval x ≠ 0`. -/
+def PfaffianExpr.IsValidAt : PfaffianExpr → Real → Prop
+  | const _,    _ => True
+  | var,        _ => True
+  | exp_atom,   _ => True
+  | log_atom,   x => 0 < x
+  | add f g,    x => f.IsValidAt x ∧ g.IsValidAt x
+  | sub f g,    x => f.IsValidAt x ∧ g.IsValidAt x
+  | mul f g,    x => f.IsValidAt x ∧ g.IsValidAt x
+  | comp f g,   x => g.IsValidAt x ∧ f.IsValidAt (g.eval x)
+  | inv g,      x => g.IsValidAt x ∧ g.eval x ≠ 0
 
-- For `y > 0`: actual derivative is `1/y` (per `HasDerivAt_log_pos`),
-  not `0`. So `HasDerivAt Real.log 0 y` is FALSE.
-- For `y = 0`: `Real.log` is discontinuous (returns 0 by definition,
-  but limit from above is −∞). Not differentiable.
-- For `y < 0`: `Real.log` is constantly 0 on a neighborhood, so the
-  claim holds.
+/-- A PfaffianFunction is **valid on `(a, b)`** when its underlying
+expression is valid at every interior point of the interval. -/
+def PfaffianFunction.IsValidOn (f : PfaffianFunction) (a b : Real) : Prop :=
+  ∀ x : Real, a < x → x < b → f.expr.IsValidAt x
 
-**Closure path:** Add an `inv : PfaffianExpr → PfaffianExpr`
-constructor so `log_atom.derivative` becomes `inv var` (with eval
-`fun x => 1/x` for `x ≠ 0`, clamped to `0` at `x = 0`). Then prove
-`HasDerivAt Real.log (1/y) y` for `y > 0` (use `HasDerivAt_log_pos`)
-and `HasDerivAt Real.log 0 y` for `y < 0` (constant region). The
-`y = 0` boundary remains a discontinuity that should be excluded
-via `EMLPfaffianValidOn`.
+/-- Helper: products of nonzeros are nonzero. Proven from `mul_inv`. -/
+theorem mul_ne_zero_aux {a b : Real} (ha : a ≠ 0) (hb : b ≠ 0) :
+    a * b ≠ 0 := by
+  intro hzero
+  -- From a * b = 0 and a ≠ 0, derive b = 0 via mul_inv.
+  have h1 : a * (1 / a) = 1 := mul_inv a ha
+  have step : b = (1 / a) * (a * b) := by
+    rw [← mul_assoc]
+    rw [mul_comm (1 / a) a]
+    rw [h1, one_mul_thm]
+  rw [hzero] at step
+  rw [mul_zero] at step
+  -- step : b = 0
+  exact hb step
 
-**Why this axiom in the meantime:** removing `log_atom` breaks
-`eml_pfaffian`'s log handling, which the sin barrier proof depends
-on. Closing this requires the `inv` constructor refactor (~100 lines
-across `Pfaffian.lean`, `KhovanskiiLemma.lean`, and `EMLPfaffian.lean`).
+/-- **Validity is closed under differentiation.** If `e` is valid at
+`x`, then `e.derivative` is also valid at `x`. The key cases:
+- `log_atom`: c > 0 ⇒ inv var valid at c (since c ≠ 0).
+- `inv g`: g valid ∧ g.eval ≠ 0 ⇒ derivative's inv (g*g) valid
+  (since g*g ≠ 0). -/
+theorem PfaffianExpr.IsValidAt_derivative (e : PfaffianExpr) (x : Real)
+    (h : e.IsValidAt x) : e.derivative.IsValidAt x := by
+  induction e generalizing x with
+  | const _ => trivial
+  | var => trivial
+  | exp_atom => trivial
+  | log_atom =>
+    -- derivative = inv var; IsValidAt = var.IsValidAt x ∧ var.eval x ≠ 0
+    -- = True ∧ x ≠ 0. From h : 0 < x, x ≠ 0.
+    have hx : (0 : Real) < x := h
+    refine ⟨trivial, ?_⟩
+    -- var.eval x = x; need x ≠ 0.
+    show (x : Real) ≠ 0
+    intro hzero
+    rw [hzero] at hx
+    exact lt_irrefl_ax 0 hx
+  | add f g ihf ihg =>
+    have hf : f.IsValidAt x := h.1
+    have hg : g.IsValidAt x := h.2
+    exact ⟨ihf x hf, ihg x hg⟩
+  | sub f g ihf ihg =>
+    have hf : f.IsValidAt x := h.1
+    have hg : g.IsValidAt x := h.2
+    exact ⟨ihf x hf, ihg x hg⟩
+  | mul f g ihf ihg =>
+    -- derivative = add (mul f.derivative g) (mul f g.derivative)
+    have hf : f.IsValidAt x := h.1
+    have hg : g.IsValidAt x := h.2
+    exact ⟨⟨ihf x hf, hg⟩, ⟨hf, ihg x hg⟩⟩
+  | comp f g ihf ihg =>
+    -- derivative = mul (comp f.derivative g) g.derivative
+    have hg : g.IsValidAt x := h.1
+    have hfg : f.IsValidAt (g.eval x) := h.2
+    refine ⟨⟨hg, ?_⟩, ihg x hg⟩
+    exact ihf (g.eval x) hfg
+  | inv g ihg =>
+    -- derivative = mul (sub (const 0) g.derivative) (inv (mul g g))
+    have hg_valid : g.IsValidAt x := h.1
+    have hg_ne : g.eval x ≠ 0 := h.2
+    refine ⟨?_, ?_⟩
+    · -- (sub (const 0) g.derivative).IsValidAt x = True ∧ g.derivative.IsValidAt x
+      exact ⟨trivial, ihg x hg_valid⟩
+    · -- (inv (mul g g)).IsValidAt x = (mul g g).IsValidAt x ∧ (mul g g).eval x ≠ 0
+      refine ⟨⟨hg_valid, hg_valid⟩, ?_⟩
+      show g.eval x * g.eval x ≠ 0
+      exact mul_ne_zero_aux hg_ne hg_ne
 
-All other constructors (const, var, exp_atom, add, sub, mul, comp)
-are correctly handled in the closure attempt — proof structure ready
-in git history at commit `2d9b8c2`. -/
-axiom PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real) :
-    HasDerivAt f.eval (f.derivative.eval x) x
+/-- The derivative's eval matches the calculus derivative on the
+analytic domain. **Closed 2026-06-12 via inv constructor + IsValidAt:**
+the previous universal-in-x axiom was materially false for log_atom
+on x ≤ 0; this theorem requires the point `x` to be in the
+expression's analytic domain (`IsValidAt`). The `inv` constructor
+gives `log_atom.derivative = inv var` with `eval = 1/x`, matching
+the classical derivative `(log x)' = 1/x` on `x > 0`. -/
+theorem PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real)
+    (hvalid : f.expr.IsValidAt x) :
+    HasDerivAt f.eval (f.derivative.eval x) x := by
+  -- Generalize over x so the IH is universally quantified.
+  suffices h : ∀ e : PfaffianExpr, ∀ y : Real,
+                e.IsValidAt y →
+                HasDerivAt e.eval (e.derivative.eval y) y by
+    exact h f.expr x hvalid
+  intro e
+  induction e with
+  | const c => intro y _; exact HasDerivAt_const c y
+  | var => intro y _; exact HasDerivAt_id y
+  | exp_atom => intro y _; exact HasDerivAt_exp y
+  | log_atom =>
+    -- IsValidAt requires 0 < y. derivative is `inv var`,
+    -- eval = 1/y. HasDerivAt_log_pos gives HasDerivAt log (1/y) y.
+    intro y hy
+    have : 0 < y := hy
+    show HasDerivAt Real.log ((PfaffianExpr.inv PfaffianExpr.var).eval y) y
+    show HasDerivAt Real.log (1 / y) y
+    exact HasDerivAt_log_pos y this
+  | add f g ihf ihg =>
+    intro y hy
+    exact HasDerivAt_add f.eval g.eval _ _ y (ihf y hy.1) (ihg y hy.2)
+  | sub f g ihf ihg =>
+    intro y hy
+    exact HasDerivAt_sub f.eval g.eval _ _ y (ihf y hy.1) (ihg y hy.2)
+  | mul f g ihf ihg =>
+    intro y hy
+    exact HasDerivAt_mul f.eval g.eval _ _ y (ihf y hy.1) (ihg y hy.2)
+  | comp f g ihf ihg =>
+    intro y hy
+    -- IsValidAt (comp f g) y = g.IsValidAt y ∧ f.IsValidAt (g.eval y)
+    exact HasDerivAt_comp f.eval g.eval _ _ y (ihg y hy.1) (ihf (g.eval y) hy.2)
+  | inv g ihg =>
+    intro y hy
+    -- IsValidAt (inv g) y = g.IsValidAt y ∧ g.eval y ≠ 0
+    have hg_valid : g.IsValidAt y := hy.1
+    have hg_ne : g.eval y ≠ 0 := hy.2
+    have hg_deriv : HasDerivAt g.eval (g.derivative.eval y) y := ihg y hg_valid
+    have hinv : HasDerivAt (fun z => 1 / g.eval z)
+                  (-g.derivative.eval y / (g.eval y * g.eval y)) y :=
+      HasDerivAt_inv g.eval (g.derivative.eval y) y hg_ne hg_deriv
+    -- Helper: g.eval y * g.eval y ≠ 0 (product of nonzeros).
+    have hgg_ne : g.eval y * g.eval y ≠ 0 := by
+      intro hzero
+      -- From hzero : g.eval y * g.eval y = 0, derive g.eval y = 0
+      -- using hg_ne for contradiction.
+      have : g.eval y * (1 / g.eval y) = 1 := mul_inv (g.eval y) hg_ne
+      -- (g*g) * (1/g) = 0 * (1/g) = 0 by hzero; but (g*g)*(1/g) = g*(g*(1/g)) = g*1 = g.
+      have step1 : (g.eval y * g.eval y) * (1 / g.eval y) =
+                    g.eval y * (g.eval y * (1 / g.eval y)) := mul_assoc _ _ _
+      rw [this, mul_one_ax] at step1
+      -- step1 : (g.eval y * g.eval y) * (1 / g.eval y) = g.eval y
+      rw [hzero] at step1
+      -- step1 : 0 * (1 / g.eval y) = g.eval y
+      rw [mul_comm] at step1
+      rw [mul_zero] at step1
+      -- step1 : 0 = g.eval y
+      exact hg_ne step1.symm
+    -- (inv g).derivative.eval y = (0 - g.derivative.eval y) * (1 / (g.eval y * g.eval y))
+    -- Bridge to HasDerivAt_inv's form: -g.derivative.eval y / (g.eval y * g.eval y).
+    have heq : (PfaffianExpr.inv g).derivative.eval y =
+               -g.derivative.eval y / (g.eval y * g.eval y) := by
+      show ((0 : Real) - g.derivative.eval y) *
+            (1 / (g.eval y * g.eval y)) =
+           -g.derivative.eval y / (g.eval y * g.eval y)
+      -- Step 1: 0 - a = -a (using sub_def + zero_add + add_comm)
+      have h_zero_sub : (0 : Real) - g.derivative.eval y =
+                        -g.derivative.eval y := by
+        rw [sub_def, zero_add]
+      rw [h_zero_sub]
+      -- Step 2: -a * (1/b) = -a / b (reverse of div_def, b ≠ 0)
+      rw [← div_def (-g.derivative.eval y) (g.eval y * g.eval y) hgg_ne]
+    -- Now: (inv g).eval = fun z => 1 / g.eval z (by definition).
+    show HasDerivAt (fun z => 1 / g.eval z)
+                    ((PfaffianExpr.inv g).derivative.eval y) y
+    rw [heq]
+    exact hinv
 
 /-! ## The rank-decrease axiom -/
 
@@ -460,49 +614,58 @@ By MVT on the interval between them, there's a point `c` where
 x₀) ≠ 0`. But `g.derivative.eval c = 0` and `HasDerivAt g.eval
 (g.derivative.eval c) c` (from Phase C's `derivative_eval`); by
 `HasDerivAt_unique`, `f' = 0`, contradicting `f' ≠ 0`. -/
-theorem pfaffian_derivative_zero_implies_nonzero_everywhere
-    (g : PfaffianFunction)
-    (h_deriv_zero : ∀ x : Real, g.derivative.eval x = 0)
-    (h_g_ne : ∃ x : Real, g.eval x ≠ 0) :
-    ∀ x : Real, g.eval x ≠ 0 := by
-  obtain ⟨x₀, hx₀_ne⟩ := h_g_ne
-  -- Show g.eval x = g.eval x₀ for all x (the function is constant).
-  -- Then g.eval x = g.eval x₀ ≠ 0.
-  suffices hconst : ∀ x : Real, g.eval x = g.eval x₀ by
-    intro x; rw [hconst x]; exact hx₀_ne
-  intro x
-  rcases lt_total x x₀ with hlt | heq | hgt
-  · -- x < x₀: apply MVT on (x, x₀).
-    have hdiff : ∀ c : Real, x < c → c < x₀ →
+theorem pfaffian_derivative_zero_implies_nonzero_on
+    (g : PfaffianFunction) (a b : Real) (_hab : a < b)
+    (h_valid : ∀ x : Real, a < x → x < b → g.expr.IsValidAt x)
+    (h_deriv_zero_on : ∀ x : Real, a < x → x < b → g.derivative.eval x = 0)
+    (h_g_ne_in : ∃ x : Real, a < x ∧ x < b ∧ g.eval x ≠ 0) :
+    ∀ z : Real, a < z → z < b → g.eval z ≠ 0 := by
+  obtain ⟨x₀, hx₀_a, hx₀_b, hx₀_ne⟩ := h_g_ne_in
+  -- Local constancy: g.eval z = g.eval x₀ for all z ∈ (a, b).
+  -- Then z = x₀ derives g.eval z ≠ 0.
+  suffices hconst : ∀ z : Real, a < z → z < b → g.eval z = g.eval x₀ by
+    intro z hza hzb; rw [hconst z hza hzb]; exact hx₀_ne
+  intro z hza hzb
+  rcases lt_total z x₀ with hlt | heq | hgt
+  · -- z < x₀: MVT on (z, x₀); both endpoints and all interior points are in (a, b).
+    have hdiff : ∀ c : Real, z < c → c < x₀ →
                  ∃ f' : Real, HasDerivAt g.eval f' c := by
-      intro c _ _
-      exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
-    obtain ⟨c, f', _, _, hd, hmvt⟩ :=
-      mean_value_theorem g.eval x x₀ hlt hdiff
+      intro c hcz hcx₀
+      have hca : a < c := lt_trans_ax hza hcz
+      have hcb : c < b := lt_trans_ax hcx₀ hx₀_b
+      exact ⟨g.derivative.eval c,
+             PfaffianFunction.derivative_eval g c (h_valid c hca hcb)⟩
+    obtain ⟨c, f', hca, hcx₀, hd, hmvt⟩ :=
+      mean_value_theorem g.eval z x₀ hlt hdiff
+    have hc_a : a < c := lt_trans_ax hza hca
+    have hc_b : c < b := lt_trans_ax hcx₀ hx₀_b
     have hf'_eq : f' = g.derivative.eval c :=
       HasDerivAt_unique g.eval f' (g.derivative.eval c) c hd
-        (PfaffianFunction.derivative_eval g c)
-    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero c
+        (PfaffianFunction.derivative_eval g c (h_valid c hc_a hc_b))
+    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero_on c hc_a hc_b
     rw [hf'_zero, zero_mul] at hmvt
-    -- hmvt : g.eval x₀ - g.eval x = 0
-    have step : g.eval x₀ - g.eval x + g.eval x = 0 + g.eval x := by rw [hmvt]
+    have step : g.eval x₀ - g.eval z + g.eval z = 0 + g.eval z := by rw [hmvt]
     rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
     exact step.symm
   · rw [heq]
-  · -- x₀ < x: apply MVT on (x₀, x).
-    have hdiff : ∀ c : Real, x₀ < c → c < x →
+  · -- x₀ < z: MVT on (x₀, z).
+    have hdiff : ∀ c : Real, x₀ < c → c < z →
                  ∃ f' : Real, HasDerivAt g.eval f' c := by
-      intro c _ _
-      exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
-    obtain ⟨c, f', _, _, hd, hmvt⟩ :=
-      mean_value_theorem g.eval x₀ x hgt hdiff
+      intro c hcx₀ hcz
+      have hca : a < c := lt_trans_ax hx₀_a hcx₀
+      have hcb : c < b := lt_trans_ax hcz hzb
+      exact ⟨g.derivative.eval c,
+             PfaffianFunction.derivative_eval g c (h_valid c hca hcb)⟩
+    obtain ⟨c, f', hcx₀, hcz, hd, hmvt⟩ :=
+      mean_value_theorem g.eval x₀ z hgt hdiff
+    have hc_a : a < c := lt_trans_ax hx₀_a hcx₀
+    have hc_b : c < b := lt_trans_ax hcz hzb
     have hf'_eq : f' = g.derivative.eval c :=
       HasDerivAt_unique g.eval f' (g.derivative.eval c) c hd
-        (PfaffianFunction.derivative_eval g c)
-    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero c
+        (PfaffianFunction.derivative_eval g c (h_valid c hc_a hc_b))
+    have hf'_zero : f' = 0 := by rw [hf'_eq]; exact h_deriv_zero_on c hc_a hc_b
     rw [hf'_zero, zero_mul] at hmvt
-    -- hmvt : g.eval x - g.eval x₀ = 0
-    have step : g.eval x - g.eval x₀ + g.eval x₀ = 0 + g.eval x₀ := by rw [hmvt]
+    have step : g.eval z - g.eval x₀ + g.eval x₀ = 0 + g.eval x₀ := by rw [hmvt]
     rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
     exact step
 
@@ -524,57 +687,68 @@ Proof: strong induction on `PfaffianRank f`.
     `zero_count_bound_by_deriv` for `f`. -/
 theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
     (a b : Real) (hab : a < b)
-    (hne : ∃ x : Real, f.eval x ≠ 0) :
+    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
+    (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
     ∀ zeros : List Real,
       zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
       zeros.length ≤ PfaffianRank f := by
   -- Generalize: prove for all g and all rank-equal-n.
   suffices h : ∀ n : Nat, ∀ (g : PfaffianFunction) (a' b' : Real),
-                a' < b' → (∃ x, g.eval x ≠ 0) → PfaffianRank g = n →
+                a' < b' →
+                (∀ x : Real, a' < x → x < b' → g.expr.IsValidAt x) →
+                (∃ x, a' < x ∧ x < b' ∧ g.eval x ≠ 0) →
+                PfaffianRank g = n →
     ∀ zeros : List Real,
       zeros.Nodup →
       (∀ z ∈ zeros, a' < z ∧ z < b' ∧ g.eval z = 0) →
       zeros.length ≤ n by
-    have := h (PfaffianRank f) f a b hab hne rfl
+    have := h (PfaffianRank f) f a b hab h_valid hne rfl
     exact this
   intro n
   induction n using Nat.strongRecOn with
   | _ n ih =>
-    intro g a' b' hab' hgne hgrank zeros hzeros_nodup hzeros
+    intro g a' b' hab' hgvalid hgne hgrank zeros hzeros_nodup hzeros
     by_cases h0 : g.chain.order = 0
     · -- Base case: order = 0, polynomial.
+      -- polynomial_zero_count_bound takes hne : ∃ x, g.eval x ≠ 0 (anywhere).
+      have hgne_any : ∃ x : Real, g.eval x ≠ 0 := by
+        obtain ⟨x, _, _, hxne⟩ := hgne
+        exact ⟨x, hxne⟩
       have hbound :=
-        polynomial_zero_count_bound g h0 a' b' hab' hgne zeros hzeros_nodup hzeros
+        polynomial_zero_count_bound g h0 a' b' hab' hgne_any zeros hzeros_nodup hzeros
       have hdeg_le : g.degree ≤ PfaffianRank g := by
         unfold PfaffianRank
         rw [h0]; omega
       rw [hgrank] at hdeg_le
       exact Nat.le_trans hbound hdeg_le
     · -- Inductive step: order > 0.
-      by_cases h_deriv_all_zero : ∀ x : Real, g.derivative.eval x = 0
-      · -- g.derivative = 0 everywhere → g is non-zero constant.
-        have hg_all_ne :=
-          pfaffian_derivative_zero_implies_nonzero_everywhere g h_deriv_all_zero hgne
+      by_cases h_deriv_zero_on : ∀ x : Real, a' < x → x < b' →
+                                  g.derivative.eval x = 0
+      · -- g.derivative = 0 on (a', b') → g is non-zero constant there.
+        have hg_nz_on :=
+          pfaffian_derivative_zero_implies_nonzero_on g a' b' hab'
+            hgvalid h_deriv_zero_on hgne
         have hzeros_empty : zeros = [] := by
           cases zeros with
           | nil => rfl
           | cons z rest =>
             have hz_in : z ∈ (z :: rest) := List.mem_cons_self _ _
-            have := hzeros z hz_in
+            have ⟨hza, hzb, hzeq⟩ := hzeros z hz_in
             exfalso
-            exact hg_all_ne z this.2.2
+            exact hg_nz_on z hza hzb hzeq
         rw [hzeros_empty]
         simp
-      · -- g.derivative is not identically zero.
-        have h_deriv_some_ne : ∃ x : Real, g.derivative.eval x ≠ 0 := by
+      · -- ∃ x ∈ (a', b'), g.derivative.eval x ≠ 0.
+        have h_deriv_some_ne_in : ∃ x : Real, a' < x ∧ x < b' ∧
+                                  g.derivative.eval x ≠ 0 := by
           apply Classical.byContradiction
-          intro h_all_eq
-          apply h_deriv_all_zero
-          intro x
+          intro h_no
+          apply h_deriv_zero_on
+          intro x hxa hxb
           apply Classical.byContradiction
-          intro hne
-          exact h_all_eq ⟨x, hne⟩
+          intro hne_x
+          exact h_no ⟨x, hxa, hxb, hne_x⟩
         have hrank_pos : 0 < PfaffianRank g := by
           unfold PfaffianRank
           have hord_pos : 0 < g.chain.order := Nat.pos_of_ne_zero h0
@@ -583,11 +757,18 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
         rw [hgrank] at hdiff_lt
         let m := PfaffianRank g.derivative
         have hm_lt : m < n := hdiff_lt
-        have ih_deriv := ih m hm_lt g.derivative a' b' hab' h_deriv_some_ne rfl
+        -- Derive validity for g.derivative on (a', b') from g's validity.
+        have hgd_valid : ∀ x : Real, a' < x → x < b' →
+                        g.derivative.expr.IsValidAt x := by
+          intro x hxa hxb
+          exact PfaffianExpr.IsValidAt_derivative g.expr x (hgvalid x hxa hxb)
+        have ih_deriv := ih m hm_lt g.derivative a' b' hab'
+                              hgd_valid h_deriv_some_ne_in rfl
         have hdiff_witness : ∀ c : Real, a' < c → c < b' →
               ∃ f' : Real, HasDerivAt g.eval f' c := by
-          intro c _ _
-          exact ⟨g.derivative.eval c, PfaffianFunction.derivative_eval g c⟩
+          intro c hca hcb
+          exact ⟨g.derivative.eval c,
+                 PfaffianFunction.derivative_eval g c (hgvalid c hca hcb)⟩
         have h_f'_bound : ∀ zeros_f' : List Real,
             zeros_f'.Nodup →
             (∀ z ∈ zeros_f', a' < z ∧ z < b' ∧
@@ -601,7 +782,7 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
           obtain ⟨f'', hd', hfeq⟩ := hd
           have heq : f'' = g.derivative.eval z :=
             HasDerivAt_unique g.eval f'' (g.derivative.eval z) z hd'
-              (PfaffianFunction.derivative_eval g z)
+              (PfaffianFunction.derivative_eval g z (hgvalid z ha hb))
           rw [← heq, hfeq]
         have hbound_via_rolle : zeros.length ≤ m + 1 :=
           zero_count_bound_by_deriv g.eval a' b' hab' hdiff_witness m h_f'_bound
@@ -669,15 +850,13 @@ inductive step). The closure relies on the fact that
 `pfaffian_zero_count_bound n d = n * 1000000 + d` (the formula chosen
 in Pfaffian.lean step 4) equals `PfaffianRank f` by definition. -/
 theorem PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
-    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
+    (hab : a < b)
+    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
+    (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
     f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree) := by
   intro zeros hnodup hzeros
-  have hrank := pfaffian_zero_count_bound_constructive f a b hab hne
+  have hrank := pfaffian_zero_count_bound_constructive f a b hab h_valid hne
                   zeros hnodup hzeros
-  -- hrank : zeros.length ≤ PfaffianRank f
-  --       = f.chain.order * 1000000 + f.degree (by definition)
-  -- Goal : zeros.length ≤ pfaffian_zero_count_bound f.chain.order f.degree
-  --       = f.chain.order * 1000000 + f.degree (by definition)
   show zeros.length ≤ f.chain.order * 1000000 + f.degree
   exact hrank
 

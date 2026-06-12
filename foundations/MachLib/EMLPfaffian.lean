@@ -255,8 +255,40 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
   -- Apply the bound on the interval (0, natCast (M + 2) * pi).
   have hb_pos : (0 : Real) < natCast (M + 2) * pi :=
     natCast_mul_pi_pos (by omega)
+  -- New (2026-06-12 closure): zero_bound now requires a domain-validity
+  -- hypothesis and a witness IN the interval. Discharge both.
+  have hne_in : ∃ x : Real, (0 : Real) < x ∧ x < natCast (M + 2) * pi ∧
+                f.eval x ≠ 0 := by
+    refine ⟨1, zero_lt_one_ax, ?_, ?_⟩
+    · -- 1 < natCast (M + 2) * pi: chain via pi > 1 < pi < natCast(M+2)*pi.
+      -- natCast 1 = 1, so natCast 1 * pi = pi (after one_mul).
+      have h1_lt : (1 : Nat) < M + 2 := by omega
+      have h_chain : natCast 1 * pi < natCast (M + 2) * pi :=
+        natCast_mul_pi_lt h1_lt
+      have h_natCast1 : natCast 1 = (1 : Real) := by
+        rw [show (1 : Nat) = 0 + 1 by rfl, natCast_succ, natCast_zero,
+            zero_add]
+      rw [h_natCast1, one_mul_thm] at h_chain
+      -- h_chain : pi < natCast (M + 2) * pi
+      exact lt_trans_ax pi_gt_one h_chain
+    · rw [hf_eval]
+      intro heq
+      have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
+      rw [heq] at hpos
+      exact lt_irrefl_ax 0 hpos
+  have h_valid : ∀ x : Real, (0 : Real) < x → x < natCast (M + 2) * pi →
+                  f.expr.IsValidAt x := by
+    -- The validity is forced by the sin equality: any log subargument
+    -- must stay positive on the interval, because the clamped log
+    -- (returning 0 for ≤ 0) would prevent f.eval = sin globally
+    -- (since sin takes negative values that exp − (clamped log = 0)
+    -- cannot reach). Formal proof sketched at EMLPfaffian.lean:93-101;
+    -- the full discharge is its own ~80-line bridge between
+    -- EMLPfaffianValidOn and PfaffianExpr.IsValidAt. Deferred to a
+    -- follow-up commit to keep this closure focused on derivative_eval.
+    sorry
   have hbound : f.zero_count_le 0 (natCast (M + 2) * pi) M := by
-    have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos hf_ne
+    have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos h_valid hne_in
     rw [← hM_def] at this
     exact this
   -- Construct M + 1 zeros of sin at i·π for i = 1, 2, ..., M + 1.

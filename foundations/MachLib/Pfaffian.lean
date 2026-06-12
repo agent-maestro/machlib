@@ -102,6 +102,7 @@ inductive PfaffianExpr where
   | sub      : PfaffianExpr → PfaffianExpr → PfaffianExpr
   | mul      : PfaffianExpr → PfaffianExpr → PfaffianExpr
   | comp     : PfaffianExpr → PfaffianExpr → PfaffianExpr
+  | inv      : PfaffianExpr → PfaffianExpr
 
 namespace PfaffianExpr
 
@@ -117,6 +118,7 @@ def chainOrder : PfaffianExpr → Nat
   | sub f g    => f.chainOrder + g.chainOrder
   | mul f g    => f.chainOrder + g.chainOrder
   | comp f g   => f.chainOrder + g.chainOrder
+  | inv g      => 1 + g.chainOrder
 
 /-- Polynomial degree of a Pfaffian expression in the chain entries.
 const has degree 0, var has degree 1, atoms have degree 1, add/sub use
@@ -130,6 +132,7 @@ def degree : PfaffianExpr → Nat
   | sub f g    => Nat.max f.degree g.degree
   | mul f g    => f.degree + g.degree
   | comp f g   => f.degree * g.degree
+  | inv g      => g.degree
 
 /-- Real-valued evaluation. -/
 noncomputable def eval : PfaffianExpr → Real → Real
@@ -141,27 +144,30 @@ noncomputable def eval : PfaffianExpr → Real → Real
   | sub f g, x   => f.eval x - g.eval x
   | mul f g, x   => f.eval x * g.eval x
   | comp f g, x  => f.eval (g.eval x)
+  | inv g, x     => 1 / g.eval x
 
 /-- Symbolic derivative — the constructive content of axiom 2
 (`PfaffianFunction.derivative`). The derivative is computed by
 recursion on the expression structure, using the standard rules for
-each closure operation. For the atoms: exp' = exp, log' = 1/x = ...
-(actually we use a placeholder `const 0` for log_atom's derivative
-since MachLib's `log` is piecewise; the EMLPfaffianValidOn predicate
-restricts use to the analytic domain).
+each closure operation.
 
-Conservative choice for log's derivative: `const 0`. This is correct
-on `(-∞, 0]` where MachLib's clamped log is constant, and we ensure
-the domain qualification handles `(0, ∞)` separately. -/
+- `log_atom.derivative = inv var` (so `(log x)' = 1/x`, valid for x > 0)
+- `inv g.derivative = sub (const 0) (mul g.derivative (mul (inv g) (inv g)))`
+  i.e. `(1/g)' = -g'/g²`, valid where `g ≠ 0`
+
+Both depend on a domain hypothesis (encoded via `IsValidAt` in
+`KhovanskiiLemma.lean`); the universal-in-x derivative_eval claim
+requires that hypothesis. -/
 noncomputable def derivative : PfaffianExpr → PfaffianExpr
   | const _    => const 0
   | var        => const 1
   | exp_atom   => exp_atom
-  | log_atom   => const 0  -- domain-restricted; see docstring
+  | log_atom   => inv var
   | add f g    => add f.derivative g.derivative
   | sub f g    => sub f.derivative g.derivative
   | mul f g    => add (mul f.derivative g) (mul f g.derivative)
   | comp f g   => mul (comp f.derivative g) g.derivative
+  | inv g      => mul (sub (const 0) g.derivative) (inv (mul g g))
 
 end PfaffianExpr
 
