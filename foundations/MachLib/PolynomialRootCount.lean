@@ -854,12 +854,130 @@ theorem polyDerivative_degreeUpper_lt_after_simplify (p : Poly)
     -- Both sides reduce by `rfl`-equivalent unfolding; the relation is 0 < 1.
     exact Nat.zero_lt_one
   | add p q ihp ihq =>
-    -- Case analysis on polySimplify (add p q):
-    --   polyIsZeroConst (polySimplify p) → result is polySimplify q
-    --     Use ihq for the strict bound (degreeUpper q > 0 from hypothesis).
-    --   polyIsZeroConst (polySimplify q) → result is polySimplify p, symmetric.
-    --   else → result is add (polySimplify p) (polySimplify q), use both ihs.
-    sorry
+    -- Three sub-cases on polySimplify (add p q):
+    --   polyIsZeroConst sp → RHS = degreeUpper sq; LHS collapses via the
+    --     polyIsZeroConst_polyDerivative_after_simplify helper to
+    --     degreeUpper sdq; strict ihq closes.
+    --   polyIsZeroConst sq → symmetric.
+    --   else → RHS = max(sp, sq) > 0, so at least one of sp, sq > 0; use the
+    --     corresponding strict IH plus the non-strict helper on the other side.
+    by_cases hsp : polyIsZeroConst (polySimplify p) = true
+    · have hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true :=
+        polyIsZeroConst_polyDerivative_after_simplify p hsp
+      have hLHS_eq : degreeUpper (polySimplify (polyDerivative (Poly.add p q)))
+                   = degreeUpper (polySimplify (polyDerivative q)) := by
+        show degreeUpper (polySimplify
+                (Poly.add (polyDerivative p) (polyDerivative q)))
+             = degreeUpper (polySimplify (polyDerivative q))
+        congr 1
+        conv => lhs; unfold polySimplify
+        rw [if_pos hsdp]
+      have hRHS_eq : degreeUpper (polySimplify (Poly.add p q))
+                   = degreeUpper (polySimplify q) := by
+        congr 1
+        conv => lhs; unfold polySimplify
+        rw [if_pos hsp]
+      rw [hLHS_eq, hRHS_eq]
+      rw [hRHS_eq] at hp
+      exact ihq hp
+    · by_cases hsq : polyIsZeroConst (polySimplify q) = true
+      · have hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true :=
+          polyIsZeroConst_polyDerivative_after_simplify q hsq
+        -- The LHS collapse here is symmetric: polyIsZeroConst sdq = true via
+        -- helper. polySimplify (add dp dq) checks polyIsZeroConst sdp first;
+        -- it MAY be true (then result = sdq = const 0), but otherwise it
+        -- checks polyIsZeroConst sdq (true), so result = sdp. Either way
+        -- the resulting degreeUpper ≤ degreeUpper sp via the non-strict
+        -- helper, and the strict ihp closes against degreeUpper sp > 0.
+        have hRHS_eq : degreeUpper (polySimplify (Poly.add p q))
+                     = degreeUpper (polySimplify p) := by
+          congr 1
+          conv => lhs; unfold polySimplify
+          rw [if_neg hsp, if_pos hsq]
+        rw [hRHS_eq] at hp
+        rw [hRHS_eq]
+        show degreeUpper (polySimplify
+                (Poly.add (polyDerivative p) (polyDerivative q)))
+             < degreeUpper (polySimplify p)
+        -- LHS bound: ≤ max(degreeUpper sdp, degreeUpper sdq) via the
+        -- non-strict helper on each side, then degreeUpper sdq = 0 (helper
+        -- + polyIsZeroConst_degreeUpper) and degreeUpper sdp < degreeUpper sp
+        -- via strict ihp.
+        have hsdq_zero : degreeUpper (polySimplify (polyDerivative q)) = 0 :=
+          polyIsZeroConst_degreeUpper _ hsdq
+        have hLHS_le_max : degreeUpper (polySimplify
+                (Poly.add (polyDerivative p) (polyDerivative q)))
+              ≤ Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                         (degreeUpper (polySimplify (polyDerivative q))) := by
+          conv => lhs; unfold polySimplify
+          by_cases hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+          · rw [if_pos hsdp]; exact Nat.le_max_right _ _
+          · rw [if_neg hsdp]
+            by_cases hsdq' : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+            · rw [if_pos hsdq']; exact Nat.le_max_left _ _
+            · rw [if_neg hsdq']; exact Nat.le_refl _
+        have hLHS_max : Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                                 (degreeUpper (polySimplify (polyDerivative q)))
+                      < degreeUpper (polySimplify p) := by
+          apply Nat.max_lt.mpr
+          refine ⟨ihp hp, ?_⟩
+          rw [hsdq_zero]; exact hp
+        exact Nat.lt_of_le_of_lt hLHS_le_max hLHS_max
+      · -- Neither zero-const. RHS = max(sp, sq).
+        have hRHS_eq : degreeUpper (polySimplify (Poly.add p q))
+                     = Nat.max (degreeUpper (polySimplify p))
+                                (degreeUpper (polySimplify q)) := by
+          have : polySimplify (Poly.add p q)
+               = Poly.add (polySimplify p) (polySimplify q) := by
+            conv => lhs; unfold polySimplify
+            rw [if_neg hsp, if_neg hsq]
+          rw [this]; rfl
+        rw [hRHS_eq] at hp
+        rw [hRHS_eq]
+        -- LHS ≤ max(sdp, sdq); each side < sp or < sq.
+        have hLHS_le_max : degreeUpper (polySimplify
+                (Poly.add (polyDerivative p) (polyDerivative q)))
+              ≤ Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                         (degreeUpper (polySimplify (polyDerivative q))) := by
+          conv => lhs; unfold polySimplify
+          by_cases hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+          · rw [if_pos hsdp]; exact Nat.le_max_right _ _
+          · rw [if_neg hsdp]
+            by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+            · rw [if_pos hsdq]; exact Nat.le_max_left _ _
+            · rw [if_neg hsdq]; exact Nat.le_refl _
+        -- max(sdp, sdq) < max(sp, sq): each side bounded.
+        -- If degreeUpper sp > 0: ihp gives sdp < sp.
+        -- If degreeUpper sp = 0: non-strict helper gives sdp ≤ 0, so sdp = 0.
+        -- Symmetric for sq. At least one of sp, sq > 0 from hp (max > 0).
+        have hmax_lt : Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                                 (degreeUpper (polySimplify (polyDerivative q)))
+                     < Nat.max (degreeUpper (polySimplify p))
+                                (degreeUpper (polySimplify q)) := by
+          -- Show both sides of the LHS max are < max(sp, sq) individually.
+          -- For each side, dispatch on whether the corresponding sp or sq is 0:
+          -- when 0, the side's polyDerivative simplifies to 0 too (via non-strict
+          -- helper + polyIsZeroConst_degreeUpper); when > 0, the strict IH applies.
+          apply Nat.max_lt.mpr
+          refine ⟨?_, ?_⟩
+          · -- degreeUpper sdp < max(sp, sq).
+            by_cases hsp_pos : degreeUpper (polySimplify p) > 0
+            · exact Nat.lt_of_lt_of_le (ihp hsp_pos) (Nat.le_max_left _ _)
+            · -- ¬(sp > 0) means sp = 0; sdp ≤ sp = 0 via non-strict helper.
+              have hsp_eq : degreeUpper (polySimplify p) = 0 :=
+                Nat.le_zero.mp (Nat.not_lt.mp hsp_pos)
+              have hsdp_eq : degreeUpper (polySimplify (polyDerivative p)) = 0 :=
+                Nat.le_zero.mp (hsp_eq ▸ polyDerivative_degreeUpper_le_after_simplify p)
+              rw [hsdp_eq]; exact hp
+          · -- degreeUpper sdq < max(sp, sq).
+            by_cases hsq_pos : degreeUpper (polySimplify q) > 0
+            · exact Nat.lt_of_lt_of_le (ihq hsq_pos) (Nat.le_max_right _ _)
+            · have hsq_eq : degreeUpper (polySimplify q) = 0 :=
+                Nat.le_zero.mp (Nat.not_lt.mp hsq_pos)
+              have hsdq_eq : degreeUpper (polySimplify (polyDerivative q)) = 0 :=
+                Nat.le_zero.mp (hsq_eq ▸ polyDerivative_degreeUpper_le_after_simplify q)
+              rw [hsdq_eq]; exact hp
+        exact Nat.lt_of_le_of_lt hLHS_le_max hmax_lt
   | sub p q ihp ihq =>
     -- Same shape as `add` (polySimplify treats sub similarly).
     sorry
