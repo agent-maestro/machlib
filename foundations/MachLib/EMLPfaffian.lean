@@ -57,18 +57,39 @@ namespace MachLib
 
 open Real
 
-/-! ## EML → Pfaffian embedding -/
+/-! ## EML → Pfaffian embedding — constructive (chunk 5, 2026-06-11)
 
-/-- Every EML tree corresponds to a Pfaffian function. Axiomatized
-for now; a constructive recursive definition using the Phase A
-operations (`exp_as_pfaffian.comp`, `log_as_pfaffian.comp`,
-`PfaffianFunction.sub`) is straightforward but requires handling
-the log domain convention in the eval-agreement proof. -/
-axiom eml_pfaffian : EMLTree → PfaffianFunction
+Khovanskii sprint week 1 chunk 5. With chunk 4's structural refactor
+of PfaffianFunction (and the rfl-trivial eval theorems on each closure
+op), the EML → Pfaffian embedding becomes a direct recursive
+definition: the three EMLTree constructors map to `const`, `pfaffian_var`,
+and the `exp` / `log` / `sub` composition. The eval-agreement falls
+out by structural induction with `rfl` at each base case. -/
 
-/-- The eval-agreement axiom. -/
-axiom eml_pfaffian_eval (t : EMLTree) (x : Real) :
-    (eml_pfaffian t).eval x = t.eval x
+/-- Every EML tree corresponds to a Pfaffian function. Recursive on
+the tree structure: `const c` → `PfaffianFunction.const c`,
+`var` → `pfaffian_var`, `eml t1 t2` → `exp(f1) - log(f2)` where
+`f_i = eml_pfaffian t_i`. -/
+noncomputable def eml_pfaffian : EMLTree → PfaffianFunction
+  | EMLTree.const c   => PfaffianFunction.const c
+  | EMLTree.var       => pfaffian_var
+  | EMLTree.eml t1 t2 =>
+      (exp_as_pfaffian.comp (eml_pfaffian t1)).sub
+        (log_as_pfaffian.comp (eml_pfaffian t2))
+
+/-- The eval-agreement theorem. Proven by structural induction; each
+base case is `rfl` from chunk 4's structural definitions, and the
+recursive case unfolds via `PfaffianFunction.sub_eval` / `comp_eval`
+(also `rfl`) plus the IH. -/
+theorem eml_pfaffian_eval (t : EMLTree) (x : Real) :
+    (eml_pfaffian t).eval x = t.eval x := by
+  induction t with
+  | const c => rfl
+  | var => rfl
+  | eml t1 t2 ih1 ih2 =>
+    show Real.exp ((eml_pfaffian t1).eval x) - Real.log ((eml_pfaffian t2).eval x)
+       = Real.exp (t1.eval x) - Real.log (t2.eval x)
+    rw [ih1, ih2]
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 

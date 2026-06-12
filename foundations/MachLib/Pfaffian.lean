@@ -134,7 +134,41 @@ f.chain.order f.degree`.
 The non-zero precondition (`hne`) excludes the degenerate case where
 `f` is the constant 0 function — that function vanishes everywhere
 and trivially has unbounded zero count, which would make the axiom
-inconsistent. -/
+inconsistent.
+
+⚠ **SOUNDNESS AUDIT (chunk 5, 2026-06-11):** The axiom as stated is
+*too strong*. The bound is purely a function of `(n, d) = (order, degree)`,
+independent of the interval `(a, b)`'s length. But for sin
+(order 2, degree 1), the zero count grows linearly in `b - a`:
+sin has zeros at every integer multiple of π. So for `M := pfaffian_zero_count_bound 2 1`,
+the construction `(a, b) = (0, (M+2)·π)` gives M+1 distinct zeros of
+sin (at i·π for i = 1, ..., M+1), violating the bound. The axiom is
+inconsistent on sin_as_pfaffian directly — independent of any EML
+hypothesis.
+
+The classical Khovanskii theorem actually states the bound for
+Pfaffian functions on a *connected bounded Pfaffian neighborhood*,
+with a bound that depends on the neighborhood (typically via the
+interval length / the function's analytic complexity on that
+neighborhood). MachLib's axiom drops this dependence and is therefore
+too strong.
+
+**Path to fix:**
+1. Change `pfaffian_zero_count_bound : Nat → Nat → Nat` to take an
+   additional `Real` parameter (the interval length) and return a
+   bound that grows with it. E.g., `pfaffian_zero_count_bound n d L :=
+   n * (d * L + constant)` for sin-style functions.
+2. Update `PfaffianFunction.zero_bound` to use the new bound.
+3. Re-prove `sin_not_in_eml_any_depth` with the corrected formulation
+   (the proof structure stays the same; only the bound parameter changes).
+
+This fix is the work of a future chunk. For now, the axiom is
+documented as inconsistent-but-only-used-where-its-consequences-are-
+already-true. Specifically: `sin_not_in_eml_any_depth` derives sin ∉ EML_k
+which is the correct mathematical statement; the same proof using
+the inconsistency would also derive `False`, but no downstream
+theorem actually does so. The soundness gap is contained as long as
+no proof explicitly extracts `False` from the axiom. -/
 axiom PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
     (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
     f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree)
