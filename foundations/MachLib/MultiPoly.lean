@@ -387,6 +387,87 @@ theorem multiSimplify_eval {n : Nat} (p : MultiPoly n) (x : Real)
                = eval p x env * eval q x env
             rw [ihp, ihq]
 
+/-! ## Chain-extension lifts
+
+For phase 3 of the `derivative_rank_lt` refactor: when combining two
+`PfaffianFn` values with chains of length `n` and `k`, we need to
+lift each one's polynomial to a polynomial over the combined chain
+of length `n + k`. -/
+
+/-- Lift a `MultiPoly n` to a `MultiPoly (n + k)` by reinterpreting each
+`varY i` as `varY ⟨i.val, _⟩` in the extended chain (i.e., the lift
+puts the original chain variables at the BEGINNING of the new chain). -/
+def liftLeft {n : Nat} (k : Nat) : MultiPoly n → MultiPoly (n + k)
+  | const c   => const c
+  | varX      => varX
+  | varY i    => varY ⟨i.val, by
+      have := i.isLt; omega⟩
+  | add p q   => add (liftLeft k p) (liftLeft k q)
+  | sub p q   => sub (liftLeft k p) (liftLeft k q)
+  | mul p q   => mul (liftLeft k p) (liftLeft k q)
+
+/-- Lift a `MultiPoly k` to a `MultiPoly (n + k)` by reinterpreting each
+`varY j` as `varY ⟨n + j.val, _⟩` (the lift puts the original chain
+variables at the END of the new chain, after `n` slots). -/
+def liftRight (n : Nat) {k : Nat} : MultiPoly k → MultiPoly (n + k)
+  | const c   => const c
+  | varX      => varX
+  | varY j    => varY ⟨n + j.val, by
+      have := j.isLt; omega⟩
+  | add p q   => add (liftRight n p) (liftRight n q)
+  | sub p q   => sub (liftRight n p) (liftRight n q)
+  | mul p q   => mul (liftRight n p) (liftRight n q)
+
+/-- Lift preserves evaluation when the env's first `n` slots match
+the original env. -/
+theorem liftLeft_eval {n k : Nat} (p : MultiPoly n) (x : Real)
+    (envOrig : Fin n → Real) (envExt : Fin (n + k) → Real)
+    (h : ∀ i : Fin n, envExt ⟨i.val, by have := i.isLt; omega⟩ = envOrig i) :
+    eval (liftLeft k p) x envExt = eval p x envOrig := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY i =>
+    show envExt ⟨i.val, _⟩ = envOrig i
+    exact h i
+  | add p q ihp ihq =>
+    show eval (liftLeft k p) x envExt + eval (liftLeft k q) x envExt
+       = eval p x envOrig + eval q x envOrig
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show eval (liftLeft k p) x envExt - eval (liftLeft k q) x envExt
+       = eval p x envOrig - eval q x envOrig
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show eval (liftLeft k p) x envExt * eval (liftLeft k q) x envExt
+       = eval p x envOrig * eval q x envOrig
+    rw [ihp, ihq]
+
+/-- Lift preserves evaluation when the env's last `k` slots match
+the original env. -/
+theorem liftRight_eval (n : Nat) {k : Nat} (p : MultiPoly k) (x : Real)
+    (envOrig : Fin k → Real) (envExt : Fin (n + k) → Real)
+    (h : ∀ j : Fin k, envExt ⟨n + j.val, by have := j.isLt; omega⟩ = envOrig j) :
+    eval (liftRight n p) x envExt = eval p x envOrig := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    show envExt ⟨n + j.val, _⟩ = envOrig j
+    exact h j
+  | add p q ihp ihq =>
+    show eval (liftRight n p) x envExt + eval (liftRight n q) x envExt
+       = eval p x envOrig + eval q x envOrig
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show eval (liftRight n p) x envExt - eval (liftRight n q) x envExt
+       = eval p x envOrig - eval q x envOrig
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show eval (liftRight n p) x envExt * eval (liftRight n q) x envExt
+       = eval p x envOrig * eval q x envOrig
+    rw [ihp, ihq]
+
 end MultiPoly
 end MultiPolyMod
 end MachLib

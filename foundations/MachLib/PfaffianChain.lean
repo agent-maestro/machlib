@@ -121,5 +121,66 @@ theorem simplify_eval (f : PfaffianFn) (x : Real) :
 
 end PfaffianFn
 
+/-! ## Chain combinators (phase 3 infrastructure)
+
+When combining two `PfaffianFn` values with chains of length `n` and
+`k`, we need to lift each one's polynomial to the combined chain of
+length `n + k`. -/
+
+namespace PfaffianChain
+
+/-- Append two chains: the result has length `n + k`. The first `n`
+slots come from `c1`, the next `k` from `c2`. Relations get lifted
+to the larger chain space. -/
+noncomputable def append {n k : Nat} (c1 : PfaffianChain n)
+    (c2 : PfaffianChain k) : PfaffianChain (n + k) :=
+  { evals := fun i =>
+      if h : i.val < n then c1.evals ⟨i.val, h⟩
+      else c2.evals ⟨i.val - n, by have := i.isLt; omega⟩,
+    relations := fun i =>
+      if h : i.val < n then
+        MultiPoly.liftLeft k (c1.relations ⟨i.val, h⟩)
+      else
+        MultiPoly.liftRight n (c2.relations ⟨i.val - n,
+          by have := i.isLt; omega⟩) }
+
+end PfaffianChain
+
+/-! ## PfaffianFn smart constructors -/
+
+namespace PfaffianFn
+
+/-- The constant function `c`. Chain of length 0. -/
+noncomputable def const (c : Real) : PfaffianFn :=
+  { n := 0,
+    chain := { evals := Fin.elim0, relations := Fin.elim0 },
+    poly := MultiPoly.const c }
+
+/-- The identity function `x`. Chain of length 0. -/
+noncomputable def var : PfaffianFn :=
+  { n := 0,
+    chain := { evals := Fin.elim0, relations := Fin.elim0 },
+    poly := MultiPoly.varX }
+
+/-- The exponential function `exp(x)` as a PfaffianFn. Chain of
+length 1: `y_1 = exp x`, relation `y_1' = y_1` (the defining
+chain relation of exp). The polynomial is `varY 0`. -/
+noncomputable def expFn : PfaffianFn :=
+  { n := 1,
+    chain := { evals := fun _ => Real.exp,
+               relations := fun _ => MultiPoly.varY 0 },
+    poly := MultiPoly.varY 0 }
+
+/-! ### Eval sanity for the smart constructors -/
+
+theorem eval_const (c : Real) (x : Real) :
+    (const c).eval x = c := rfl
+
+theorem eval_var (x : Real) : var.eval x = x := rfl
+
+theorem eval_expFn (x : Real) : expFn.eval x = Real.exp x := rfl
+
+end PfaffianFn
+
 end PfaffianChainMod
 end MachLib
