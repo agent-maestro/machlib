@@ -144,6 +144,39 @@ noncomputable def append {n k : Nat} (c1 : PfaffianChain n)
         MultiPoly.liftRight n (c2.relations ⟨i.val - n,
           by have := i.isLt; omega⟩) }
 
+/-! ### Append correspondence lemmas (phase 3.5)
+
+The `append` operation puts c1's chainValues in slots [0, n) and c2's
+in slots [n, n+k). These lemmas express that correspondence — needed
+by the `liftLeft_eval` / `liftRight_eval` hypotheses for combiners. -/
+
+theorem append_chainValues_left {n k : Nat} (c1 : PfaffianChain n)
+    (c2 : PfaffianChain k) (x : Real) (i : Fin n) :
+    (c1.append c2).chainValues x ⟨i.val, by have := i.isLt; omega⟩ =
+    c1.chainValues x i := by
+  show (c1.append c2).evals ⟨i.val, _⟩ x = c1.evals i x
+  show (if h : i.val < n then c1.evals ⟨i.val, h⟩
+        else c2.evals ⟨i.val - n, _⟩) x = c1.evals i x
+  have hlt : i.val < n := i.isLt
+  rw [dif_pos hlt]
+
+theorem append_chainValues_right {n k : Nat} (c1 : PfaffianChain n)
+    (c2 : PfaffianChain k) (x : Real) (j : Fin k) :
+    (c1.append c2).chainValues x ⟨n + j.val, by have := j.isLt; omega⟩ =
+    c2.chainValues x j := by
+  show (c1.append c2).evals ⟨n + j.val, _⟩ x = c2.evals j x
+  show (if h : n + j.val < n then c1.evals ⟨n + j.val, h⟩
+        else c2.evals ⟨n + j.val - n, _⟩) x = c2.evals j x
+  have hnlt : ¬ (n + j.val < n) := by omega
+  rw [dif_neg hnlt]
+  -- The remaining goal is c2.evals on the shifted Fin equals c2.evals j x.
+  -- Cast away the Fin difference by .val equality.
+  have hval_eq : (⟨n + j.val - n, by omega⟩ : Fin k) = j := by
+    apply Fin.eq_of_val_eq
+    show n + j.val - n = j.val
+    omega
+  rw [hval_eq]
+
 end PfaffianChain
 
 /-! ## PfaffianFn smart constructors -/
@@ -179,6 +212,95 @@ theorem eval_const (c : Real) (x : Real) :
 theorem eval_var (x : Real) : var.eval x = x := rfl
 
 theorem eval_expFn (x : Real) : expFn.eval x = Real.exp x := rfl
+
+/-! ### Chain-combining operations (phase 3.5)
+
+`add`, `sub`, `mul` of two PfaffianFns: build a combined chain via
+`append`, lift each polynomial to the combined chain space, and
+combine via the corresponding MultiPoly op. -/
+
+/-- Addition of Pfaffian functions: chain is `f.chain ++ g.chain`,
+polynomial is `liftLeft f.poly + liftRight g.poly`. -/
+noncomputable def add (f g : PfaffianFn) : PfaffianFn :=
+  { n := f.n + g.n,
+    chain := f.chain.append g.chain,
+    poly := MultiPoly.add
+              (MultiPoly.liftLeft g.n f.poly)
+              (MultiPoly.liftRight f.n g.poly) }
+
+/-- Subtraction. -/
+noncomputable def sub (f g : PfaffianFn) : PfaffianFn :=
+  { n := f.n + g.n,
+    chain := f.chain.append g.chain,
+    poly := MultiPoly.sub
+              (MultiPoly.liftLeft g.n f.poly)
+              (MultiPoly.liftRight f.n g.poly) }
+
+/-- Multiplication. -/
+noncomputable def mul (f g : PfaffianFn) : PfaffianFn :=
+  { n := f.n + g.n,
+    chain := f.chain.append g.chain,
+    poly := MultiPoly.mul
+              (MultiPoly.liftLeft g.n f.poly)
+              (MultiPoly.liftRight f.n g.poly) }
+
+/-! ### Eval correctness for combiners
+
+Each combiner's eval reduces to the corresponding Real operation via
+the `liftLeft_eval` / `liftRight_eval` lemmas, with the appended-chain
+correspondence supplied by `append_chainValues_left/right`. -/
+
+theorem eval_add (f g : PfaffianFn) (x : Real) :
+    (f.add g).eval x = f.eval x + g.eval x := by
+  show MultiPoly.eval
+        (MultiPoly.add (MultiPoly.liftLeft g.n f.poly)
+                        (MultiPoly.liftRight f.n g.poly))
+        x ((f.chain.append g.chain).chainValues x)
+    = MultiPoly.eval f.poly x (f.chain.chainValues x)
+      + MultiPoly.eval g.poly x (g.chain.chainValues x)
+  rw [MultiPoly.eval_add]
+  congr 1
+  · -- eval (liftLeft g.n f.poly) x appended = eval f.poly x f.chain.chainValues
+    apply MultiPoly.liftLeft_eval
+    intro i
+    exact PfaffianChain.append_chainValues_left f.chain g.chain x i
+  · apply MultiPoly.liftRight_eval
+    intro j
+    exact PfaffianChain.append_chainValues_right f.chain g.chain x j
+
+theorem eval_sub (f g : PfaffianFn) (x : Real) :
+    (f.sub g).eval x = f.eval x - g.eval x := by
+  show MultiPoly.eval
+        (MultiPoly.sub (MultiPoly.liftLeft g.n f.poly)
+                        (MultiPoly.liftRight f.n g.poly))
+        x ((f.chain.append g.chain).chainValues x)
+    = MultiPoly.eval f.poly x (f.chain.chainValues x)
+      - MultiPoly.eval g.poly x (g.chain.chainValues x)
+  rw [MultiPoly.eval_sub]
+  congr 1
+  · apply MultiPoly.liftLeft_eval
+    intro i
+    exact PfaffianChain.append_chainValues_left f.chain g.chain x i
+  · apply MultiPoly.liftRight_eval
+    intro j
+    exact PfaffianChain.append_chainValues_right f.chain g.chain x j
+
+theorem eval_mul (f g : PfaffianFn) (x : Real) :
+    (f.mul g).eval x = f.eval x * g.eval x := by
+  show MultiPoly.eval
+        (MultiPoly.mul (MultiPoly.liftLeft g.n f.poly)
+                        (MultiPoly.liftRight f.n g.poly))
+        x ((f.chain.append g.chain).chainValues x)
+    = MultiPoly.eval f.poly x (f.chain.chainValues x)
+      * MultiPoly.eval g.poly x (g.chain.chainValues x)
+  rw [MultiPoly.eval_mul]
+  congr 1
+  · apply MultiPoly.liftLeft_eval
+    intro i
+    exact PfaffianChain.append_chainValues_left f.chain g.chain x i
+  · apply MultiPoly.liftRight_eval
+    intro j
+    exact PfaffianChain.append_chainValues_right f.chain g.chain x j
 
 end PfaffianFn
 
