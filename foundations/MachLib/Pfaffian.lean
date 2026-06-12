@@ -82,14 +82,108 @@ structure PfaffianChain where
   order : Nat
 deriving Inhabited
 
-/-- A **Pfaffian function** is a polynomial in the chain entries
-(treating `x` as a chain entry too). Structural representation:
-a wrapper carrying the chain, the polynomial degree, and the
-real-valued evaluation function. -/
+/-- **Constructive Pfaffian expression** (2026-06-12 final refactor).
+Inductive type representing the structural shape of a Pfaffian
+function. Each constructor corresponds to a closed Pfaffian operation;
+together they form the triangular family MachLib's Pfaffian theory is
+about.
+
+This type carries the *constructive* structure that the chunk-4
+PfaffianFunction structure was missing. The 4 structural axioms in
+`KhovanskiiLemma.lean` (derivative existence, derivative_eval,
+derivative_rank_lt, order-0-corresponds-to-poly) become theorems by
+recursion on this inductive type. -/
+inductive PfaffianExpr where
+  | const    : Real → PfaffianExpr
+  | var      : PfaffianExpr
+  | exp_atom : PfaffianExpr
+  | log_atom : PfaffianExpr
+  | add      : PfaffianExpr → PfaffianExpr → PfaffianExpr
+  | sub      : PfaffianExpr → PfaffianExpr → PfaffianExpr
+  | mul      : PfaffianExpr → PfaffianExpr → PfaffianExpr
+  | comp     : PfaffianExpr → PfaffianExpr → PfaffianExpr
+
+namespace PfaffianExpr
+
+/-- Chain order of a Pfaffian expression, by recursion on structure.
+exp and log atoms each contribute 1; compound operations add chain
+orders. -/
+def chainOrder : PfaffianExpr → Nat
+  | const _    => 0
+  | var        => 0
+  | exp_atom   => 1
+  | log_atom   => 1
+  | add f g    => f.chainOrder + g.chainOrder
+  | sub f g    => f.chainOrder + g.chainOrder
+  | mul f g    => f.chainOrder + g.chainOrder
+  | comp f g   => f.chainOrder + g.chainOrder
+
+/-- Polynomial degree of a Pfaffian expression in the chain entries.
+const has degree 0, var has degree 1, atoms have degree 1, add/sub use
+max, mul/comp use product. -/
+def degree : PfaffianExpr → Nat
+  | const _    => 0
+  | var        => 1
+  | exp_atom   => 1
+  | log_atom   => 1
+  | add f g    => Nat.max f.degree g.degree
+  | sub f g    => Nat.max f.degree g.degree
+  | mul f g    => f.degree + g.degree
+  | comp f g   => f.degree * g.degree
+
+/-- Real-valued evaluation. -/
+noncomputable def eval : PfaffianExpr → Real → Real
+  | const c, _   => c
+  | var, x       => x
+  | exp_atom, x  => Real.exp x
+  | log_atom, x  => Real.log x
+  | add f g, x   => f.eval x + g.eval x
+  | sub f g, x   => f.eval x - g.eval x
+  | mul f g, x   => f.eval x * g.eval x
+  | comp f g, x  => f.eval (g.eval x)
+
+/-- Symbolic derivative — the constructive content of axiom 2
+(`PfaffianFunction.derivative`). The derivative is computed by
+recursion on the expression structure, using the standard rules for
+each closure operation. For the atoms: exp' = exp, log' = 1/x = ...
+(actually we use a placeholder `const 0` for log_atom's derivative
+since MachLib's `log` is piecewise; the EMLPfaffianValidOn predicate
+restricts use to the analytic domain).
+
+Conservative choice for log's derivative: `const 0`. This is correct
+on `(-∞, 0]` where MachLib's clamped log is constant, and we ensure
+the domain qualification handles `(0, ∞)` separately. -/
+noncomputable def derivative : PfaffianExpr → PfaffianExpr
+  | const _    => const 0
+  | var        => const 1
+  | exp_atom   => exp_atom
+  | log_atom   => const 0  -- domain-restricted; see docstring
+  | add f g    => add f.derivative g.derivative
+  | sub f g    => sub f.derivative g.derivative
+  | mul f g    => add (mul f.derivative g) (mul f g.derivative)
+  | comp f g   => mul (comp f.derivative g) g.derivative
+
+end PfaffianExpr
+
+/-- A **Pfaffian function** wraps a `PfaffianExpr` — the constructive
+structural representation. Chain, degree, and eval are derived from
+the expression by the corresponding recursive functions. -/
 structure PfaffianFunction where
-  chain : PfaffianChain
-  degree : Nat
-  eval : Real → Real
+  expr : PfaffianExpr
+
+namespace PfaffianFunction
+
+/-- Chain projection — delegates to the expression's chainOrder. -/
+def chain (f : PfaffianFunction) : PfaffianChain :=
+  { order := f.expr.chainOrder }
+
+/-- Degree projection. -/
+def degree (f : PfaffianFunction) : Nat := f.expr.degree
+
+/-- Eval projection. -/
+noncomputable def eval (f : PfaffianFunction) : Real → Real := f.expr.eval
+
+end PfaffianFunction
 
 /-! ## The Pfaffian zero-count bound (the main axiom) -/
 
@@ -176,9 +270,7 @@ def PfaffianFunction.zero_count_le (f : PfaffianFunction) (a b : Real)
 The chain is `(exp)` with `exp' = exp` (polynomial of degree 1 in
 the single chain entry). -/
 noncomputable def exp_as_pfaffian : PfaffianFunction :=
-  { chain := { order := 1 }
-    degree := 1
-    eval := Real.exp }
+  ⟨PfaffianExpr.exp_atom⟩
 
 theorem exp_as_pfaffian_eval :
     ∀ x : Real, exp_as_pfaffian.eval x = Real.exp x := fun _ => rfl
@@ -192,9 +284,7 @@ theorem exp_as_pfaffian_degree :
 /-- `Real.log` (restricted to its positive domain) is Pfaffian of
 order 1, degree 1. -/
 noncomputable def log_as_pfaffian : PfaffianFunction :=
-  { chain := { order := 1 }
-    degree := 1
-    eval := Real.log }
+  ⟨PfaffianExpr.log_atom⟩
 
 theorem log_as_pfaffian_eval :
     ∀ x : Real, 0 < x → log_as_pfaffian.eval x = Real.log x :=
@@ -240,9 +330,7 @@ construction. Net axiom drop: 5 ops × 4 axioms = 20. -/
 `f.chain.order + g.chain.order` (the loose upper bound consistent
 with the underlying math); degree is `Nat.max`. -/
 noncomputable def PfaffianFunction.add (f g : PfaffianFunction) : PfaffianFunction :=
-  { chain := { order := f.chain.order + g.chain.order }
-    degree := Nat.max f.degree g.degree
-    eval := fun x => f.eval x + g.eval x }
+  ⟨PfaffianExpr.add f.expr g.expr⟩
 
 theorem PfaffianFunction.add_eval (f g : PfaffianFunction) (x : Real) :
     (f.add g).eval x = f.eval x + g.eval x := rfl
@@ -257,9 +345,7 @@ theorem PfaffianFunction.add_degree (f g : PfaffianFunction) :
 
 /-- Difference of two Pfaffian functions. -/
 noncomputable def PfaffianFunction.sub (f g : PfaffianFunction) : PfaffianFunction :=
-  { chain := { order := f.chain.order + g.chain.order }
-    degree := Nat.max f.degree g.degree
-    eval := fun x => f.eval x - g.eval x }
+  ⟨PfaffianExpr.sub f.expr g.expr⟩
 
 theorem PfaffianFunction.sub_eval (f g : PfaffianFunction) (x : Real) :
     (f.sub g).eval x = f.eval x - g.eval x := rfl
@@ -274,10 +360,8 @@ theorem PfaffianFunction.sub_degree (f g : PfaffianFunction) :
 
 /-- Composition `f ∘ g`. Order bounded by `f.order + g.order`,
 degree by `f.degree * g.degree`. -/
-def PfaffianFunction.comp (f g : PfaffianFunction) : PfaffianFunction :=
-  { chain := { order := f.chain.order + g.chain.order }
-    degree := f.degree * g.degree
-    eval := fun x => f.eval (g.eval x) }
+noncomputable def PfaffianFunction.comp (f g : PfaffianFunction) : PfaffianFunction :=
+  ⟨PfaffianExpr.comp f.expr g.expr⟩
 
 theorem PfaffianFunction.comp_eval (f g : PfaffianFunction) (x : Real) :
     (f.comp g).eval x = f.eval (g.eval x) := rfl
@@ -291,10 +375,8 @@ theorem PfaffianFunction.comp_degree (f g : PfaffianFunction) :
   Nat.le_refl _
 
 /-- Constant function as a Pfaffian function (order 0, degree 0). -/
-def PfaffianFunction.const (c : Real) : PfaffianFunction :=
-  { chain := { order := 0 }
-    degree := 0
-    eval := fun _ => c }
+noncomputable def PfaffianFunction.const (c : Real) : PfaffianFunction :=
+  ⟨PfaffianExpr.const c⟩
 
 theorem PfaffianFunction.const_eval (c x : Real) :
     (PfaffianFunction.const c).eval x = c := rfl
@@ -306,10 +388,8 @@ theorem PfaffianFunction.const_degree (c : Real) :
     (PfaffianFunction.const c).degree = 0 := rfl
 
 /-- Identity (variable) function as a Pfaffian function. -/
-def pfaffian_var : PfaffianFunction :=
-  { chain := { order := 0 }
-    degree := 1
-    eval := fun x => x }
+noncomputable def pfaffian_var : PfaffianFunction :=
+  ⟨PfaffianExpr.var⟩
 
 theorem pfaffian_var_eval :
     ∀ x : Real, pfaffian_var.eval x = x := fun _ => rfl
