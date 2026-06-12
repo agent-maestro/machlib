@@ -183,39 +183,35 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
     have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
     rw [heq] at hpos
     exact lt_irrefl_ax 0 hpos
-  -- The bound M.
-  let M : Nat := pfaffian_zero_count_bound f.chain.order f.degree
-  have hM_def : M = pfaffian_zero_count_bound f.chain.order f.degree := rfl
-  -- Interval (0, natCast (M + 2) * pi).
-  have hb_pos : (0 : Real) < natCast (M + 2) * pi :=
-    natCast_mul_pi_pos (by omega)
-  have hbound : f.zero_count_le 0 (natCast (M + 2) * pi) M := by
-    have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos hf_ne
-    rw [← hM_def] at this
-    exact this
-  -- Build the list of M+1 zeros at natCast 1 * pi, natCast 2 * pi, ..., natCast (M+1) * pi.
-  -- Use a recursive helper.
-  let zeros : List Real := (List.range (M + 1)).map (fun i => natCast (i + 1) * pi)
-  have hzeros_len : zeros.length = M + 1 := by
-    simp [zeros, List.length_map, List.length_range]
-  -- Each z ∈ zeros satisfies 0 < z, z < natCast (M+2) * pi, f.eval z = 0.
-  have hzeros_valid : ∀ z ∈ zeros,
-      0 < z ∧ z < natCast (M + 2) * pi ∧ f.eval z = 0 := by
-    intro z hz
-    simp only [zeros, List.mem_map, List.mem_range] at hz
-    obtain ⟨i, hi_lt, hzeq⟩ := hz
-    refine ⟨?_, ?_, ?_⟩
-    · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
-    · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
-    · rw [← hzeq, hf_eval]; exact sin_natCast_mul_pi (i + 1)
-  -- The list zeros is Nodup because (List.range (M+1)) is Nodup and
-  -- the function i ↦ natCast (i+1) * pi is injective on Nat.
-  -- Proved by manual induction on M (Lean core's List.Nodup.map signature
-  -- isn't easily applicable here).
-  have hzeros_nodup : zeros.Nodup := sin_zeros_list_nodup M
-  -- Apply hbound: zeros.length ≤ M. But length = M + 1. Contradiction.
-  have hlen_le : zeros.length ≤ M := hbound zeros hzeros_nodup hzeros_valid
-  rw [hzeros_len] at hlen_le
-  omega
+  -- ⚠ 2026-06-11: This proof was originally written against an
+  -- INCONSISTENT version of PfaffianFunction.zero_bound whose bound
+  -- was interval-length-independent. The corrected axiom now takes
+  -- an `L : Nat` parameter with `b - a ≤ natCast L`, so the bound
+  -- `pfaffian_zero_count_bound n d L` is allowed to grow with L.
+  --
+  -- The original proof structure (pick M = bound, construct M+1 zeros
+  -- in (0, (M+2)·π)) is now circular: M = pfaffian_zero_count_bound n d L
+  -- where L must be ≥ (M+2)·π, so M depends on L which depends on M.
+  --
+  -- A correct proof requires a different structure. One approach:
+  --   1. Choose L : Nat as a free parameter (to be picked at the end).
+  --   2. Set M(L) := pfaffian_zero_count_bound n d L.
+  --   3. Construct N(L) zeros where N(L) > M(L) for some choice of L.
+  --      The construction must produce zeros in (0, L) — sin has
+  --      ⌊L/π⌋ zeros at i·π for i = 1, ..., ⌊L/π⌋.
+  --   4. For contradiction: need ⌊L/π⌋ > pfaffian_zero_count_bound n d L
+  --      for some L. This requires Khovanskii's actual growth rate
+  --      bound (which isn't yet axiomatized in MachLib).
+  --
+  -- This is a substantive mathematical claim about the rate of growth
+  -- of the Pfaffian bound. Marked `sorry` until the right axiom
+  -- (Khovanskii's actual rate-of-growth statement) is added in a
+  -- future sprint.
+  --
+  -- The mathematical conclusion (sin ∉ EML_k) is still correct; what's
+  -- missing is the formal proof under the now-consistent axiom system.
+  -- The prior proof was VALID under the old INCONSISTENT axiom (any
+  -- conclusion follows from inconsistency) but is no longer derivable.
+  sorry
 
 end MachLib

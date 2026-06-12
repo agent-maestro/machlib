@@ -95,23 +95,27 @@ structure PfaffianFunction where
 
 /-- **Pfaffian zero bound** (Khovanskii's theorem, axiomatized form).
 
-For any Pfaffian function `f` and any bounded open interval `(a, b)`
-contained in the domain of definition of `f`, the number of zeros of
-`f` on `(a, b)` is bounded by `pfaffian_zero_count_bound n d` where
-`n = f.chain.order` and `d = f.degree`. The bound depends ONLY on
-`n` and `d`, not on `f` or `(a, b)`.
+For any Pfaffian function `f` and any bounded open interval `(a, b)`,
+the number of zeros of `f` on `(a, b)` is bounded by
+`pfaffian_zero_count_bound n d L` where `n = f.chain.order`,
+`d = f.degree`, and `L : Nat` is any natural-number upper bound
+on the interval length `(b - a)` (specifically: `b - a ≤ natCast L`).
 
-This is the key strategic theorem: the uniform-in-parameters bound
-that the existing `analytic_finite_zeros_compact` (in
-`AnalyticFiniteZeros.lean`) does NOT provide. Replacing this axiom
-with a constructive proof is the Phase C deliverable. -/
-axiom pfaffian_zero_count_bound : Nat → Nat → Nat
+**2026-06-11 soundness fix:** The bound previously had signature
+`Nat → Nat → Nat` (interval-independent), which was inconsistent on
+sin-like functions whose zero count grows with interval length. The
+third parameter (`L : Nat`, interval-length bound) is now required.
 
-/-- The bound is monotone in both arguments — a sanity-check axiom
-that captures the "more orders, more zeros" intuition. -/
+Replacing this axiom with a constructive proof is the future Khovanskii
+deliverable. -/
+axiom pfaffian_zero_count_bound : Nat → Nat → Nat → Nat
+
+/-- The bound is monotone in all three arguments — more orders, higher
+degree, or longer intervals all (weakly) increase the upper bound on
+zero count. -/
 axiom pfaffian_zero_count_bound_monotone :
-    ∀ n n' d d' : Nat, n ≤ n' → d ≤ d' →
-    pfaffian_zero_count_bound n d ≤ pfaffian_zero_count_bound n' d'
+    ∀ n n' d d' L L' : Nat, n ≤ n' → d ≤ d' → L ≤ L' →
+    pfaffian_zero_count_bound n d L ≤ pfaffian_zero_count_bound n' d' L'
 
 /-- A `Real → Prop` predicate counting zeros (cardinality bounded).
 
@@ -127,51 +131,25 @@ def PfaffianFunction.zero_count_le (f : PfaffianFunction) (a b : Real)
     zeros.length ≤ N
 
 /-- **The Khovanskii bound applied to a Pfaffian function.** Any
-NON-ZERO Pfaffian function `f` (i.e., not identically zero) has
-zero count on `(a, b)` bounded by `pfaffian_zero_count_bound
-f.chain.order f.degree`.
+NON-ZERO Pfaffian function `f` (i.e., not identically zero) on a
+bounded interval `(a, b)` with explicit length witness `L : Nat`
+(`b - a ≤ natCast L`) has zero count bounded by
+`pfaffian_zero_count_bound f.chain.order f.degree L`.
 
 The non-zero precondition (`hne`) excludes the degenerate case where
 `f` is the constant 0 function — that function vanishes everywhere
 and trivially has unbounded zero count, which would make the axiom
 inconsistent.
 
-⚠ **SOUNDNESS AUDIT (chunk 5, 2026-06-11):** The axiom as stated is
-*too strong*. The bound is purely a function of `(n, d) = (order, degree)`,
-independent of the interval `(a, b)`'s length. But for sin
-(order 2, degree 1), the zero count grows linearly in `b - a`:
-sin has zeros at every integer multiple of π. So for `M := pfaffian_zero_count_bound 2 1`,
-the construction `(a, b) = (0, (M+2)·π)` gives M+1 distinct zeros of
-sin (at i·π for i = 1, ..., M+1), violating the bound. The axiom is
-inconsistent on sin_as_pfaffian directly — independent of any EML
-hypothesis.
-
-The classical Khovanskii theorem actually states the bound for
-Pfaffian functions on a *connected bounded Pfaffian neighborhood*,
-with a bound that depends on the neighborhood (typically via the
-interval length / the function's analytic complexity on that
-neighborhood). MachLib's axiom drops this dependence and is therefore
-too strong.
-
-**Path to fix:**
-1. Change `pfaffian_zero_count_bound : Nat → Nat → Nat` to take an
-   additional `Real` parameter (the interval length) and return a
-   bound that grows with it. E.g., `pfaffian_zero_count_bound n d L :=
-   n * (d * L + constant)` for sin-style functions.
-2. Update `PfaffianFunction.zero_bound` to use the new bound.
-3. Re-prove `sin_not_in_eml_any_depth` with the corrected formulation
-   (the proof structure stays the same; only the bound parameter changes).
-
-This fix is the work of a future chunk. For now, the axiom is
-documented as inconsistent-but-only-used-where-its-consequences-are-
-already-true. Specifically: `sin_not_in_eml_any_depth` derives sin ∉ EML_k
-which is the correct mathematical statement; the same proof using
-the inconsistency would also derive `False`, but no downstream
-theorem actually does so. The soundness gap is contained as long as
-no proof explicitly extracts `False` from the axiom. -/
+**2026-06-11 soundness fix:** The previous signature lacked the
+interval-length parameter and was inconsistent on sin-like functions
+(sin has zero count growing linearly in `b - a`). The new signature
+adds `L : Nat` plus the witness `hL : b - a ≤ natCast L`, so the
+bound on long intervals is allowed to be large. -/
 axiom PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
-    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
-    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree)
+    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0)
+    (L : Nat) (hL : b - a ≤ natCast L) :
+    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree L)
 
 /-! ## Base function embeddings -/
 

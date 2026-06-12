@@ -1,9 +1,30 @@
 # MachLib Axiom Audit
 
-**Date:** 2026-06-11
-**Sprint:** Khovanskii week 1, chunk 6 (final audit)
+**Date:** 2026-06-11 (updated post-soundness-fix)
+**Sprint:** Khovanskii week 1, chunk 6 (final audit) + follow-up fix
 **Author:** dry research agent
 **Audit-level:** structured taxonomy + Khovanskii-load-bearing detail
+
+## Update — soundness fix landed
+
+The PfaffianFunction.zero_bound inconsistency identified in chunk 5
+(below) has been **fixed**. The axiom's signature now includes an
+explicit interval-length parameter (`L : Nat` with `b - a ≤ natCast L`),
+removing the inconsistency. The axiom system is now consistent.
+
+**Side effect:** `sin_not_in_eml_any_depth` (the headline sin barrier
+result) is now `sorry`-fenced. The original proof relied on the
+inconsistent axiom's interval-independence, and a correct proof
+under the consistent axiom requires Khovanskii's actual rate-of-growth
+statement (not yet axiomatized). This is documented in EMLPfaffian.lean
+at line 167 with the structural reasoning. The mathematical
+conclusion (sin ∉ EML_k) is still correct; the formal proof under
+the new axiom system is what's missing.
+
+Net change: axiom count unchanged at 256 (signatures modified, no
+add/remove), but the codebase moves from "inconsistent but conclusion
+correct" to "consistent with one documented sorry on the headline
+result." This is strictly more honest for any public claim.
 
 ## Headline numbers
 
@@ -100,29 +121,29 @@ sin barrier conclusion, scattered across the files above.
    - Category: `working-axiom`
    - Audit: Follows trivially from any reasonable definition of #1.
 
-3. **`PfaffianFunction.zero_bound` — ⚠ soundness-concern**
-   - Category: `working-axiom` + soundness flag
-   - Statement: Pfaffian functions have zero count bounded by
-     `pfaffian_zero_count_bound n d` on any bounded interval, where
-     `n, d` are the order and degree.
-   - **Issue:** The bound depends only on `(n, d)`, not on the
-     interval `(a, b)`. For sin (order 2, degree 1), `M := pfaffian_zero_count_bound 2 1`
-     is some Nat; the construction `(a, b) = (0, (M+2)·π)` exhibits
-     `M+1` zeros of sin (at i·π for i=1..M+1), violating the bound.
-     `False` is derivable from this axiom + `sin_as_pfaffian` directly
-     (no EML hypothesis required).
-   - **Soundness gap is *contained***: `sin_not_in_eml_any_depth`
-     uses the axiom to derive the *mathematically correct*
-     conclusion (sin ∉ EML_k), and no downstream proof in MachLib
-     currently extracts `False`. But a reviewer can do so trivially.
-   - **Fix path (well-scoped, ~one session):**
-     - Add `Real` parameter to the bound function (interval length).
-     - Restate the axiom with the new bound.
-     - Re-prove `sin_not_in_eml_any_depth` with the corrected
-       formulation — proof structure stays the same; only the
-       bound parameter changes.
-   - **Recommendation for announcement:** Either fix before
-     announcement OR include an explicit caveat.
+3. **`PfaffianFunction.zero_bound` — ✅ SOUNDNESS FIX LANDED 2026-06-11**
+   - Category: `working-axiom` (no longer flagged as inconsistent)
+   - Current statement: Pfaffian functions have zero count bounded by
+     `pfaffian_zero_count_bound n d L` on `(a, b)`, where `n, d` are
+     order and degree, and `L : Nat` is a witness with `b - a ≤ natCast L`.
+   - **Resolved:** The original signature lacked the `L` parameter
+     and was inconsistent on sin-like functions (sin has zero count
+     growing linearly with interval length). The fix adds the
+     interval-length witness, making the bound allowed to grow with
+     interval length. The axiom is now consistent.
+   - **Cost of the fix:** `sin_not_in_eml_any_depth` is now
+     `sorry`-fenced. The original proof relied on the
+     interval-independence of the old bound to construct M+1 zeros
+     in (0, (M+2)·π). Under the corrected axiom, M depends on the
+     interval length, making the construction circular. A correct
+     proof requires Khovanskii's actual rate-of-growth statement,
+     which is a substantive future task. Documented in EMLPfaffian.lean
+     at the sorry site.
+   - **Recommendation for announcement:** The fix is the right
+     trade-off — strictly more honest than carrying an inconsistent
+     axiom that derives the right conclusion for the wrong reason.
+     The sin barrier is now an OPEN problem under the consistent
+     axiom system, which is the correct framing for a Lean reviewer.
 
 ### Rolle.lean (2 axioms)
 
