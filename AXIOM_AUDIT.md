@@ -12,19 +12,17 @@ The PfaffianFunction.zero_bound inconsistency identified in chunk 5
 explicit interval-length parameter (`L : Nat` with `b - a ≤ natCast L`),
 removing the inconsistency. The axiom system is now consistent.
 
-**Side effect:** `sin_not_in_eml_any_depth` (the headline sin barrier
-result) is now `sorry`-fenced. The original proof relied on the
-inconsistent axiom's interval-independence, and a correct proof
-under the consistent axiom requires Khovanskii's actual rate-of-growth
-statement (not yet axiomatized). This is documented in EMLPfaffian.lean
-at line 167 with the structural reasoning. The mathematical
-conclusion (sin ∉ EML_k) is still correct; the formal proof under
-the new axiom system is what's missing.
+**Sin barrier reproof (2026-06-11 follow-up):** The sorry was
+resolved in commit f3903a4 via one additional axiom
+(`eml_pfaffian_below_sin_density` — see EMLPfaffian.lean section
+below) that explicitly encodes Khovanskii's growth-rate consequence
+for EML representations. Net trade: −1 sorry, +1 axiom.
 
-Net change: axiom count unchanged at 256 (signatures modified, no
-add/remove), but the codebase moves from "inconsistent but conclusion
-correct" to "consistent with one documented sorry on the headline
-result." This is strictly more honest for any public claim.
+Net change: axiom count 256 → 257, all sorrys on Khovanskii-load-
+bearing results resolved, codebase moves from "inconsistent + right
+conclusion (wrong reason)" to "consistent + right conclusion (axiomatized
+Khovanskii consequence cleanly stated)." This is the right state to
+ship.
 
 ## Headline numbers
 
@@ -131,19 +129,38 @@ sin barrier conclusion, scattered across the files above.
      growing linearly with interval length). The fix adds the
      interval-length witness, making the bound allowed to grow with
      interval length. The axiom is now consistent.
-   - **Cost of the fix:** `sin_not_in_eml_any_depth` is now
-     `sorry`-fenced. The original proof relied on the
-     interval-independence of the old bound to construct M+1 zeros
-     in (0, (M+2)·π). Under the corrected axiom, M depends on the
-     interval length, making the construction circular. A correct
-     proof requires Khovanskii's actual rate-of-growth statement,
-     which is a substantive future task. Documented in EMLPfaffian.lean
-     at the sorry site.
-   - **Recommendation for announcement:** The fix is the right
-     trade-off — strictly more honest than carrying an inconsistent
-     axiom that derives the right conclusion for the wrong reason.
-     The sin barrier is now an OPEN problem under the consistent
-     axiom system, which is the correct framing for a Lean reviewer.
+   - **Cost of the fix (RESOLVED 2026-06-11):** Initially
+     `sin_not_in_eml_any_depth` was `sorry`-fenced after the
+     soundness fix. A follow-up commit (f3903a4) re-proved the
+     sin barrier under the consistent system using one additional
+     axiom (`eml_pfaffian_below_sin_density` in EMLPfaffian.lean)
+     that explicitly encodes Khovanskii's growth-rate consequence
+     for EML representations.
+   - **Recommendation for announcement:** The fix + reproof is the
+     right state to ship. Strictly more honest than the prior
+     "inconsistent-but-derives-right-conclusion" status: the sin
+     barrier is now a constructive theorem whose dependence on
+     Khovanskii is made explicit via a single targeted axiom
+     rather than buried in an inconsistency.
+
+### EMLPfaffian.lean (1 axiom — added 2026-06-11)
+
+1. **`eml_pfaffian_below_sin_density`**
+   - Category: `working-axiom` + `load-bearing`
+   - Statement: For each EML depth k, there exist Nats (L, L_bound)
+     such that the Pfaffian bound for any depth-≤k EML representation
+     on (0, L·π) with witness L_bound is at most L - 2 (strictly less
+     than sin's L - 1 zeros there).
+   - Provenance: Khovanskii's theorem applied to the structural
+     restrictions of the EML construction (exp - log compositions).
+     The classical mathematical fact is that depth-bounded EML trees
+     can't reproduce sin's zero density (1/π); this axiom packages
+     that fact in the form needed by the sin_not_in_eml_any_depth
+     proof.
+   - Discharge path: derive from a future explicit closed-form for
+     `pfaffian_zero_count_bound` plus structural analysis of the
+     `(eml_pfaffian t).chain.order` growth as a function of t.depth.
+     One focused sprint (~200-300 lines).
 
 ### Rolle.lean (2 axioms)
 
