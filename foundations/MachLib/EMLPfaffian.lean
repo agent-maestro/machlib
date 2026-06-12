@@ -177,12 +177,36 @@ exist (L, L_bound) such that (i) any depth-≤k EML tree's Pfaffian
 bound on (0, L·π) with witness L_bound is at most L-2 (so sin's L-1
 zeros at i·π exceed the bound), and (ii) L_bound is a Nat upper bound
 on L·π. -/
-axiom eml_pfaffian_below_sin_density (k : Nat) :
-    ∃ L : Nat, ∃ L_bound : Nat, 1 < L ∧
-    (natCast L * pi ≤ natCast L_bound) ∧
-    (∀ t : EMLTree, t.depth ≤ k →
-        pfaffian_zero_count_bound (eml_pfaffian t).chain.order
-            (eml_pfaffian t).degree L_bound + 2 ≤ L)
+/-
+  ⚠ WITHDRAWN 2026-06-11. The axiom below was added in commit 3fa025a
+  to reprove sin_not_in_eml_any_depth under the corrected (consistent)
+  PfaffianFunction.zero_bound. When discharge was attempted, the
+  axiom was discovered to be INCONSISTENT with PfaffianFunction.zero_bound
+  applied to sin_as_pfaffian:
+
+    sin_as_pfaffian.chain.order = 2, degree = 1.
+    eml_pfaffian (EMLTree.eml (const c) (const d)) also has chain.order
+    = 2 + 0 + 0 = 2, degree = 1.
+    pfaffian_zero_count_bound is purely (n, d, L)-typed and cannot
+    distinguish them.
+    For sin on length-L_bound interval, bound(2, 1, L_bound) ≥ ⌊L_bound/π⌋.
+    For L_bound ≥ L·π, ⌊L_bound/π⌋ ≥ L.
+    So bound(2, 1, L_bound) + 2 ≥ L + 2 > L. Axiom violated.
+
+  The fix requires either (a) extending the Pfaffian formalization
+  so the bound can depend on chain structure beyond just (order, degree),
+  or (b) a sin-specific argument that doesn't go through the generic
+  Pfaffian bound. Both are substantial future work.
+
+  ──────────────────────────────────────────────────────────────────────
+  axiom eml_pfaffian_below_sin_density (k : Nat) :
+      ∃ L : Nat, ∃ L_bound : Nat, 1 < L ∧
+      (natCast L * pi ≤ natCast L_bound) ∧
+      (∀ t : EMLTree, t.depth ≤ k →
+          pfaffian_zero_count_bound (eml_pfaffian t).chain.order
+              (eml_pfaffian t).degree L_bound + 2 ≤ L)
+  ──────────────────────────────────────────────────────────────────────
+-/
 
 /-! ## Sin barrier — uniform-in-k closure via Pfaffian zero bound
 
@@ -213,49 +237,40 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
     have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
     rw [heq] at hpos
     exact lt_irrefl_ax 0 hpos
-  -- Extract the Khovanskii-rate witness for our depth k.
-  obtain ⟨L, L_bound, hL_pos, hL_le_bound, hbound_lt⟩ :=
-    eml_pfaffian_below_sin_density k
-  -- The Pfaffian bound for f on length-L_bound intervals.
-  let B : Nat := pfaffian_zero_count_bound f.chain.order f.degree L_bound
-  -- Instantiate the axiom at our specific t (depth ≤ k by htd):
-  have hB_lt_L : B + 2 ≤ L := hbound_lt t htd
-  -- Apply the Pfaffian zero bound on (0, natCast L * pi).
-  have hb_pos : (0 : Real) < natCast L * pi :=
-    natCast_mul_pi_pos (by omega)
-  have hsub : natCast L * pi - 0 ≤ natCast L_bound := by
-    rw [sub_zero]; exact hL_le_bound
-  have hbound : f.zero_count_le 0 (natCast L * pi) B :=
-    f.zero_bound 0 (natCast L * pi) hb_pos hf_ne L_bound hsub
-  -- Construct L - 1 zeros of sin at i·π for i = 1, ..., L - 1.
-  let zeros : List Real :=
-    (List.range (L - 1)).map (fun i => natCast (i + 1) * pi)
-  have hzeros_len : zeros.length = L - 1 := by
-    simp [zeros, List.length_map, List.length_range]
-  have hzeros_valid : ∀ z ∈ zeros,
-      0 < z ∧ z < natCast L * pi ∧ f.eval z = 0 := by
-    intro z hz
-    simp only [zeros, List.mem_map, List.mem_range] at hz
-    obtain ⟨i, hi_lt, hzeq⟩ := hz
-    refine ⟨?_, ?_, ?_⟩
-    · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
-    · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
-    · rw [← hzeq, hf_eval]; exact sin_natCast_mul_pi (i + 1)
-  -- sin_zeros_list_nodup M produces Nodup for List.range (M+1).
-  -- We need List.range (L - 1), so M = L - 2 (since L > 1, L ≥ 2,
-  -- and L - 2 + 1 = L - 1 in Nat for L ≥ 2).
-  have hzeros_nodup : zeros.Nodup := by
-    have heq : L - 1 = L - 2 + 1 := by omega
-    show (List.map (fun i => natCast (i + 1) * pi)
-            (List.range (L - 1))).Nodup
-    rw [heq]
-    exact sin_zeros_list_nodup (L - 2)
-  -- The bound says zeros.length ≤ B. But the axiom gives B + 2 ≤ L,
-  -- i.e., B ≤ L - 2 < L - 1 = zeros.length. Contradiction.
-  have hlen_le : zeros.length ≤ B := hbound zeros hzeros_nodup hzeros_valid
-  rw [hzeros_len] at hlen_le
-  -- hlen_le : L - 1 ≤ B. hB_lt_L : B + 2 ≤ L.
-  -- Combined: L - 1 ≤ B ≤ L - 2. So L - 1 ≤ L - 2. False.
-  omega
+  -- ⚠ 2026-06-11: The reproof attempted in commit 3fa025a used an
+  -- additional axiom `eml_pfaffian_below_sin_density` that turned
+  -- out to be INCONSISTENT with the corrected PfaffianFunction.zero_bound
+  -- (see the WITHDRAWN block above). The proof is therefore reverted
+  -- to sorry, documenting the structural reason.
+  --
+  -- The core obstruction: pfaffian_zero_count_bound is purely
+  -- (n, d, L)-typed. For sin (chain.order=2, degree=1), the bound
+  -- must accommodate sin's L_bound/π zeros — forcing
+  --   bound(2, 1, L_bound) ≥ L_bound/π ≥ L  (when L_bound ≥ L·π).
+  -- For eml_pfaffian (eml (const c) (const d)) which also has
+  -- chain.order = 2 + 0 + 0 = 2, degree = 1, the bound CAN'T be
+  -- smaller without violating consistency for sin.
+  --
+  -- A correct proof of the sin barrier under MachLib's current
+  -- Pfaffian formalization requires either:
+  --   (a) Extending Pfaffian functions with richer chain-structure
+  --       data on which the bound depends — not just (order, degree).
+  --       MachLib's current chunk-4 structure encodes only (order, degree, eval),
+  --       which is insufficient to capture Khovanskii's actual
+  --       structural distinction.
+  --   (b) A sin-specific argument that doesn't go through the generic
+  --       Pfaffian zero bound — e.g., a direct combinatorial argument
+  --       about EML tree shapes.
+  --
+  -- Both are substantial future work (~1000+ lines for option a;
+  -- option b might be smaller but requires a new mathematical insight).
+  --
+  -- The mathematical conclusion (sin ∉ EML_k) is still correct
+  -- classically. What this proof site documents is that MachLib's
+  -- current formalization of Khovanskii's theorem is too coarse to
+  -- distinguish sin from EML representations at the same (order, degree)
+  -- complexity. This is a real expressiveness gap in the formalization,
+  -- not just a missing proof.
+  sorry
 
 end MachLib
