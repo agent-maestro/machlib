@@ -21,6 +21,7 @@ import MachLib.ProofSpine
 import MachLib.PolynomialEvidence
 import MachLib.MultiPoly
 import MachLib.PfaffianChain
+import MachLib.PfaffianFnBound
 import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
