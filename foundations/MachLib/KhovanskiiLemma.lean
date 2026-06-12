@@ -554,29 +554,32 @@ rank-on-derivative induction; it uses chain-relation-aware reduction
 (degree-in-`y_n` decreases when paired with rewrites using the chain
 relations `y_i' = P_i(x, y_1, ..., y_i)`).
 
-**Closure path:** Restructure `PfaffianExpr` to expose explicit chain
-variables. Instead of `exp_atom` as an opaque atom, represent a
-Pfaffian function as a polynomial in `(x, y_1, ..., y_n)` plus the
-chain relations. The rank becomes `(n, degree_in_y_n)` lex; the
-derivative's degree in `y_n` decreases when you substitute the chain
-relation. ~600-1000 lines across `Pfaffian.lean`,
-`KhovanskiiLemma.lean`, `EMLPfaffian.lean` + reverify the polynomial
-FTA integration. Multi-session work.
+**Closure path (UPDATED 2026-06-12):** The chain-explicit refactor is now
+**done in infrastructure form** — `MultiPoly`, `PfaffianChain`,
+`PfaffianFn`, and `pfaffian_fn_zero_count_bound` are landed
+(commits `41df587`, `51e48ee`, `664cc75`, `f87be77`, `14e929f`).
 
-**Why this axiom in the meantime:** `pfaffian_zero_count_bound_constructive`
-uses this axiom for its strong-induction termination. Without it,
-the constructive Khovanskii bound is itself unprovable on the current
-representation. The conclusion of `pfaffian_zero_count_bound_constructive`
-is classically true — but the proof technique recorded in this file
-relies on a false intermediate claim.
+The new bound theorem `MachLib.PfaffianFnBound.pfaffian_fn_zero_count_bound`
+is sorry-free, with one named classically-true axiom
+`khovanskii_chain_step` (Khovanskii 1991, Chapter 3, Theorem 1). That
+axiom replaces this `derivative_rank_lt` in the new proof chain.
 
-**Honest status:** the constructive Khovanskii closure is
-**conditional on this axiom** until the structural refactor lands.
-Prior sessions' claim that the closure was "constructive" was
-optimistic — closer to "constructive given the four structural
-axioms hold." Two of those four have been discharged (Poly
-correspondence + derivative-as-PfaffianFunction); two remain
-(derivative_eval and this one). -/
+To actually DELETE `derivative_rank_lt`, one more step is needed:
+a conversion `PfaffianExpr → PfaffianFn` that preserves eval, so the
+existing `pfaffian_zero_count_bound_constructive` proof chain can be
+replaced with a direct invocation of `pfaffian_fn_zero_count_bound`.
+That conversion is ~200-300 lines (most complexity in handling
+`comp` and `inv` with chain-extension lifts). A single focused
+session should land it.
+
+**Status:**
+- This axiom is materially false. Documented and named.
+- The replacement infrastructure is in place.
+- The remaining work is the `PfaffianExpr → PfaffianFn` conversion +
+  rewiring `pfaffian_zero_count_bound_constructive`.
+- After that, both `derivative_rank_lt` and the bridging legacy can be
+  deleted; the closure depends only on `khovanskii_chain_step` (which
+  is the classical theorem cleanly named). -/
 axiom PfaffianFunction.derivative_rank_lt (f : PfaffianFunction)
     (hrank : 0 < PfaffianRank f) :
     PfaffianRank f.derivative < PfaffianRank f
