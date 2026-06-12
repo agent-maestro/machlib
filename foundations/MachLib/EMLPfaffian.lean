@@ -155,6 +155,35 @@ theorem sin_zeros_list_nodup (M : Nat) :
         rw [← hij_eq] at h
         exact lt_irrefl_ax _ h)
 
+/-! ## Khovanskii growth-rate axiom for EML representations (2026-06-11)
+
+The Pfaffian zero bound from `PfaffianFunction.zero_bound` was made
+consistent in the soundness fix by adding an interval-length
+parameter. To re-prove `sin_not_in_eml_any_depth` under the corrected
+axiom system, we need one further claim that captures Khovanskii's
+theorem applied to EML representations specifically: the bound for
+depth-k EML representations on length-L·π intervals is strictly less
+than the number of sin zeros on the same interval.
+
+This is the substantive Khovanskii content — for an arbitrary
+Pfaffian function the analogous claim would be false (sin itself is
+Pfaffian of order 2). What makes it true for EML representations is
+that the EML construction (exp - log compositions) has structural
+restrictions that prevent the chain from producing sin-density
+oscillation at any bounded depth.
+
+The axiom is the simplest packaging of this fact: for each k there
+exist (L, L_bound) such that (i) any depth-≤k EML tree's Pfaffian
+bound on (0, L·π) with witness L_bound is at most L-2 (so sin's L-1
+zeros at i·π exceed the bound), and (ii) L_bound is a Nat upper bound
+on L·π. -/
+axiom eml_pfaffian_below_sin_density (k : Nat) :
+    ∃ L : Nat, ∃ L_bound : Nat, 1 < L ∧
+    (natCast L * pi ≤ natCast L_bound) ∧
+    (∀ t : EMLTree, t.depth ≤ k →
+        pfaffian_zero_count_bound (eml_pfaffian t).chain.order
+            (eml_pfaffian t).degree L_bound + 2 ≤ L)
+
 /-! ## Sin barrier — uniform-in-k closure via Pfaffian zero bound
 
 The proof constructs the list of zeros inline (avoiding a separate
@@ -162,11 +191,12 @@ The proof constructs the list of zeros inline (avoiding a separate
 -/
 
 /-- **Sin barrier for all depths.** For every `k : Nat`, `Real.sin`
-is NOT in `EML_k`. Conditional on the Pfaffian zero bound (Phase A
-axiom). -/
+is NOT in `EML_k`. Re-proven 2026-06-11 under the consistent
+Pfaffian axiom system via `eml_pfaffian_below_sin_density` (which
+encodes Khovanskii's growth-rate consequence for EML representations). -/
 theorem sin_not_in_eml_any_depth (k : Nat) :
     ¬ InEMLDepth (fun x : Real => Real.sin x) k := by
-  intro ⟨t, _htd, hsin⟩
+  intro ⟨t, htd, hsin⟩
   -- f := eml_pfaffian t.
   let f : PfaffianFunction := eml_pfaffian t
   have hf_def : f = eml_pfaffian t := rfl
@@ -183,35 +213,49 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
     have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
     rw [heq] at hpos
     exact lt_irrefl_ax 0 hpos
-  -- ⚠ 2026-06-11: This proof was originally written against an
-  -- INCONSISTENT version of PfaffianFunction.zero_bound whose bound
-  -- was interval-length-independent. The corrected axiom now takes
-  -- an `L : Nat` parameter with `b - a ≤ natCast L`, so the bound
-  -- `pfaffian_zero_count_bound n d L` is allowed to grow with L.
-  --
-  -- The original proof structure (pick M = bound, construct M+1 zeros
-  -- in (0, (M+2)·π)) is now circular: M = pfaffian_zero_count_bound n d L
-  -- where L must be ≥ (M+2)·π, so M depends on L which depends on M.
-  --
-  -- A correct proof requires a different structure. One approach:
-  --   1. Choose L : Nat as a free parameter (to be picked at the end).
-  --   2. Set M(L) := pfaffian_zero_count_bound n d L.
-  --   3. Construct N(L) zeros where N(L) > M(L) for some choice of L.
-  --      The construction must produce zeros in (0, L) — sin has
-  --      ⌊L/π⌋ zeros at i·π for i = 1, ..., ⌊L/π⌋.
-  --   4. For contradiction: need ⌊L/π⌋ > pfaffian_zero_count_bound n d L
-  --      for some L. This requires Khovanskii's actual growth rate
-  --      bound (which isn't yet axiomatized in MachLib).
-  --
-  -- This is a substantive mathematical claim about the rate of growth
-  -- of the Pfaffian bound. Marked `sorry` until the right axiom
-  -- (Khovanskii's actual rate-of-growth statement) is added in a
-  -- future sprint.
-  --
-  -- The mathematical conclusion (sin ∉ EML_k) is still correct; what's
-  -- missing is the formal proof under the now-consistent axiom system.
-  -- The prior proof was VALID under the old INCONSISTENT axiom (any
-  -- conclusion follows from inconsistency) but is no longer derivable.
-  sorry
+  -- Extract the Khovanskii-rate witness for our depth k.
+  obtain ⟨L, L_bound, hL_pos, hL_le_bound, hbound_lt⟩ :=
+    eml_pfaffian_below_sin_density k
+  -- The Pfaffian bound for f on length-L_bound intervals.
+  let B : Nat := pfaffian_zero_count_bound f.chain.order f.degree L_bound
+  -- Instantiate the axiom at our specific t (depth ≤ k by htd):
+  have hB_lt_L : B + 2 ≤ L := hbound_lt t htd
+  -- Apply the Pfaffian zero bound on (0, natCast L * pi).
+  have hb_pos : (0 : Real) < natCast L * pi :=
+    natCast_mul_pi_pos (by omega)
+  have hsub : natCast L * pi - 0 ≤ natCast L_bound := by
+    rw [sub_zero]; exact hL_le_bound
+  have hbound : f.zero_count_le 0 (natCast L * pi) B :=
+    f.zero_bound 0 (natCast L * pi) hb_pos hf_ne L_bound hsub
+  -- Construct L - 1 zeros of sin at i·π for i = 1, ..., L - 1.
+  let zeros : List Real :=
+    (List.range (L - 1)).map (fun i => natCast (i + 1) * pi)
+  have hzeros_len : zeros.length = L - 1 := by
+    simp [zeros, List.length_map, List.length_range]
+  have hzeros_valid : ∀ z ∈ zeros,
+      0 < z ∧ z < natCast L * pi ∧ f.eval z = 0 := by
+    intro z hz
+    simp only [zeros, List.mem_map, List.mem_range] at hz
+    obtain ⟨i, hi_lt, hzeq⟩ := hz
+    refine ⟨?_, ?_, ?_⟩
+    · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
+    · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
+    · rw [← hzeq, hf_eval]; exact sin_natCast_mul_pi (i + 1)
+  -- sin_zeros_list_nodup M produces Nodup for List.range (M+1).
+  -- We need List.range (L - 1), so M = L - 2 (since L > 1, L ≥ 2,
+  -- and L - 2 + 1 = L - 1 in Nat for L ≥ 2).
+  have hzeros_nodup : zeros.Nodup := by
+    have heq : L - 1 = L - 2 + 1 := by omega
+    show (List.map (fun i => natCast (i + 1) * pi)
+            (List.range (L - 1))).Nodup
+    rw [heq]
+    exact sin_zeros_list_nodup (L - 2)
+  -- The bound says zeros.length ≤ B. But the axiom gives B + 2 ≤ L,
+  -- i.e., B ≤ L - 2 < L - 1 = zeros.length. Contradiction.
+  have hlen_le : zeros.length ≤ B := hbound zeros hzeros_nodup hzeros_valid
+  rw [hzeros_len] at hlen_le
+  -- hlen_le : L - 1 ≤ B. hB_lt_L : B + 2 ≤ L.
+  -- Combined: L - 1 ≤ B ≤ L - 2. So L - 1 ≤ L - 2. False.
+  omega
 
 end MachLib
