@@ -234,6 +234,159 @@ theorem degreeX_dX_le {n : Nat} : ∀ p : MultiPoly n,
       · exact Nat.add_le_add_right hp _
       · exact Nat.add_le_add_left hq _
 
+/-! ## Normalization — multiSimplify
+
+Mirrors `PolynomialRootCount.polySimplify`'s single-variable pattern.
+Eliminates phantom `0*x` and `1*x` terms so that formal degree
+reflects effective degree. Crucial for proving strict degree decrease
+under `dX` (which fails on the naive AST — see the discussion above). -/
+
+open Classical in
+/-- `true` if the polynomial is the literal `const 0`. -/
+noncomputable def multiIsZeroConst {n : Nat} : MultiPoly n → Bool
+  | const c => if c = 0 then true else false
+  | _ => false
+
+open Classical in
+/-- `true` if the polynomial is the literal `const 1`. -/
+noncomputable def multiIsOneConst {n : Nat} : MultiPoly n → Bool
+  | const c => if c = 1 then true else false
+  | _ => false
+
+open Classical in
+/-- Multivariate polynomial normalization. Collapses identity factors
+and additive zeros (analogous to `polySimplify`). -/
+noncomputable def multiSimplify {n : Nat} : MultiPoly n → MultiPoly n
+  | const c => const c
+  | varX    => varX
+  | varY i  => varY i
+  | add p q =>
+    let p' := multiSimplify p
+    let q' := multiSimplify q
+    if multiIsZeroConst p' then q'
+    else if multiIsZeroConst q' then p'
+    else add p' q'
+  | sub p q =>
+    let p' := multiSimplify p
+    let q' := multiSimplify q
+    if multiIsZeroConst q' then p'
+    else sub p' q'
+  | mul p q =>
+    let p' := multiSimplify p
+    let q' := multiSimplify q
+    if multiIsZeroConst p' then const 0
+    else if multiIsZeroConst q' then const 0
+    else if multiIsOneConst p' then q'
+    else if multiIsOneConst q' then p'
+    else mul p' q'
+
+/-- `multiIsZeroConst p = true ⇒ p evaluates to 0`. -/
+theorem multiIsZeroConst_eval {n : Nat} (p : MultiPoly n)
+    (h : multiIsZeroConst p = true) (x : Real) (env : Fin n → Real) :
+    eval p x env = 0 := by
+  cases p with
+  | const c =>
+    unfold multiIsZeroConst at h
+    by_cases hc : c = 0
+    · rw [hc]; rfl
+    · simp [hc] at h
+  | varX => unfold multiIsZeroConst at h; simp at h
+  | varY _ => unfold multiIsZeroConst at h; simp at h
+  | add _ _ => unfold multiIsZeroConst at h; simp at h
+  | sub _ _ => unfold multiIsZeroConst at h; simp at h
+  | mul _ _ => unfold multiIsZeroConst at h; simp at h
+
+/-- `multiIsOneConst p = true ⇒ p evaluates to 1`. -/
+theorem multiIsOneConst_eval {n : Nat} (p : MultiPoly n)
+    (h : multiIsOneConst p = true) (x : Real) (env : Fin n → Real) :
+    eval p x env = 1 := by
+  cases p with
+  | const c =>
+    unfold multiIsOneConst at h
+    by_cases hc : c = 1
+    · rw [hc]; rfl
+    · simp [hc] at h
+  | varX => unfold multiIsOneConst at h; simp at h
+  | varY _ => unfold multiIsOneConst at h; simp at h
+  | add _ _ => unfold multiIsOneConst at h; simp at h
+  | sub _ _ => unfold multiIsOneConst at h; simp at h
+  | mul _ _ => unfold multiIsOneConst at h; simp at h
+
+/-- **`multiSimplify` preserves evaluation.** Analogue of `polySimplify_eval`. -/
+theorem multiSimplify_eval {n : Nat} (p : MultiPoly n) (x : Real)
+    (env : Fin n → Real) :
+    eval (multiSimplify p) x env = eval p x env := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY i => rfl
+  | add p q ihp ihq =>
+    unfold multiSimplify
+    by_cases hp : multiIsZeroConst (multiSimplify p) = true
+    · rw [if_pos hp]
+      have hp_eval : eval (multiSimplify p) x env = 0 :=
+        multiIsZeroConst_eval (multiSimplify p) hp x env
+      show eval (multiSimplify q) x env = eval p x env + eval q x env
+      rw [ihq, ← ihp, hp_eval, zero_add]
+    · rw [if_neg hp]
+      by_cases hq : multiIsZeroConst (multiSimplify q) = true
+      · rw [if_pos hq]
+        have hq_eval : eval (multiSimplify q) x env = 0 :=
+          multiIsZeroConst_eval (multiSimplify q) hq x env
+        show eval (multiSimplify p) x env = eval p x env + eval q x env
+        rw [ihp, ← ihq, hq_eval, add_zero]
+      · rw [if_neg hq]
+        show eval (multiSimplify p) x env + eval (multiSimplify q) x env
+           = eval p x env + eval q x env
+        rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    unfold multiSimplify
+    by_cases hq : multiIsZeroConst (multiSimplify q) = true
+    · rw [if_pos hq]
+      have hq_eval : eval (multiSimplify q) x env = 0 :=
+        multiIsZeroConst_eval (multiSimplify q) hq x env
+      show eval (multiSimplify p) x env = eval p x env - eval q x env
+      rw [ihp, ← ihq, hq_eval, sub_zero]
+    · rw [if_neg hq]
+      show eval (multiSimplify p) x env - eval (multiSimplify q) x env
+         = eval p x env - eval q x env
+      rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    unfold multiSimplify
+    by_cases hp : multiIsZeroConst (multiSimplify p) = true
+    · rw [if_pos hp]
+      have hp_eval : eval (multiSimplify p) x env = 0 :=
+        multiIsZeroConst_eval (multiSimplify p) hp x env
+      show eval (const 0 : MultiPoly n) x env = eval p x env * eval q x env
+      show (0 : Real) = eval p x env * eval q x env
+      rw [← ihp, hp_eval, zero_mul]
+    · rw [if_neg hp]
+      by_cases hq : multiIsZeroConst (multiSimplify q) = true
+      · rw [if_pos hq]
+        have hq_eval : eval (multiSimplify q) x env = 0 :=
+          multiIsZeroConst_eval (multiSimplify q) hq x env
+        show eval (const 0 : MultiPoly n) x env = eval p x env * eval q x env
+        show (0 : Real) = eval p x env * eval q x env
+        rw [← ihq, hq_eval, mul_zero]
+      · rw [if_neg hq]
+        by_cases hp1 : multiIsOneConst (multiSimplify p) = true
+        · rw [if_pos hp1]
+          have hp1_eval : eval (multiSimplify p) x env = 1 :=
+            multiIsOneConst_eval (multiSimplify p) hp1 x env
+          show eval (multiSimplify q) x env = eval p x env * eval q x env
+          rw [ihq, ← ihp, hp1_eval, one_mul_thm]
+        · rw [if_neg hp1]
+          by_cases hq1 : multiIsOneConst (multiSimplify q) = true
+          · rw [if_pos hq1]
+            have hq1_eval : eval (multiSimplify q) x env = 1 :=
+              multiIsOneConst_eval (multiSimplify q) hq1 x env
+            show eval (multiSimplify p) x env = eval p x env * eval q x env
+            rw [ihp, ← ihq, hq1_eval, mul_one_ax]
+          · rw [if_neg hq1]
+            show eval (multiSimplify p) x env * eval (multiSimplify q) x env
+               = eval p x env * eval q x env
+            rw [ihp, ihq]
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
