@@ -19,6 +19,7 @@ import MachLib.LinearCombination
 import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
 import MachLib.PolynomialEvidence
+import MachLib.MultiPoly
 import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
