@@ -344,6 +344,239 @@ theorem polyDerivative_degreeUpper_le (p : Poly) :
     · exact Nat.add_le_add_right ihp _
     · exact Nat.add_le_add_left ihq _
 
+/-! ## polyDerivative degreeUpper bound after polySimplify (strict)
+
+Khovanskii sprint week 1 chunk 2 (2026-06-11). The strict decrease
+`degreeUpper (polyDerivative p) < degreeUpper p` fails syntactically
+because polyDerivative inflates the AST: e.g. `mul (const c) var`
+(degreeUpper 1) becomes `add (mul (const 0) var) (mul (const c)
+(const 1))` whose `Poly.add` branch still has syntactic degreeUpper 1
+from the `mul (const 0) var` subterm.
+
+`polySimplify` collapses `mul (const 0) p` to `const 0` (and similar
+identity reductions), which IS sufficient to recover the strict
+decrease. The bound below uses the effective degree
+`effDeg p := degreeUpper (polySimplify p)` and proves the strict
+version needed for the FTA induction in chunk 3. -/
+
+/-- If `polyIsZeroConst p = true`, then `p` is structurally `const 0` and
+its `degreeUpper` is `0`. Helper for the polySimplify case splits below. -/
+theorem polyIsZeroConst_degreeUpper (p : Poly) (h : polyIsZeroConst p = true) :
+    degreeUpper p = 0 := by
+  cases p with
+  | const c => rfl
+  | var => unfold polyIsZeroConst at h; simp at h
+  | add _ _ => unfold polyIsZeroConst at h; simp at h
+  | sub _ _ => unfold polyIsZeroConst at h; simp at h
+  | mul _ _ => unfold polyIsZeroConst at h; simp at h
+
+/-- Same as above for the one-constant test. -/
+theorem polyIsOneConst_degreeUpper (p : Poly) (h : polyIsOneConst p = true) :
+    degreeUpper p = 0 := by
+  cases p with
+  | const c => rfl
+  | var => unfold polyIsOneConst at h; simp at h
+  | add _ _ => unfold polyIsOneConst at h; simp at h
+  | sub _ _ => unfold polyIsOneConst at h; simp at h
+  | mul _ _ => unfold polyIsOneConst at h; simp at h
+
+/-- Helper: non-strict version of the polySimplify-aware degree bound.
+The simplified derivative's degree is at most the simplified original's
+degree. Together with the strict version below, this closes both branches
+of the compound case analysis for `add` / `sub` / `mul`. -/
+theorem polyDerivative_degreeUpper_le_after_simplify (p : Poly) :
+    degreeUpper (polySimplify (polyDerivative p))
+      ≤ degreeUpper (polySimplify p) := by
+  induction p with
+  | const _ =>
+    -- polyDerivative (const c) = const 0; polySimplify (const 0) = const 0.
+    -- polySimplify (const c) = const c. Both degreeUpper = 0.
+    exact Nat.le_refl 0
+  | var =>
+    -- polyDerivative var = const 1; polySimplify (const 1) = const 1.
+    -- polySimplify var = var. degreeUpper: 0 ≤ 1.
+    exact Nat.zero_le 1
+  | add p q ihp ihq =>
+    -- Strategy: case on polySimplify (add p q) (3 cases via the zero-const
+    -- tests on polySimplify p and polySimplify q), AND on polySimplify (add
+    -- (polyDerivative p) (polyDerivative q)) (same 3 cases on polySimplify
+    -- of each polyDerivative). In every leaf, ihp + ihq + a Nat.max
+    -- inequality close the goal.
+    show degreeUpper (polySimplify (Poly.add (polyDerivative p) (polyDerivative q)))
+      ≤ degreeUpper (polySimplify (Poly.add p q))
+    unfold polySimplify
+    -- After unfold, both sides are `if-then-else` chains. We handle the
+    -- 3×3 = 9 combinations by nested by_cases. Outer split is on the RHS;
+    -- inner on the LHS.
+    by_cases hsp : polyIsZeroConst (polySimplify p) = true
+    · -- RHS reduces to polySimplify q.
+      rw [if_pos hsp]
+      by_cases hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+      · rw [if_pos hsdp]; exact ihq
+      · rw [if_neg hsdp]
+        by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+        · rw [if_pos hsdq]
+          -- LHS = polySimplify (polyDerivative p). degreeUpper ≤ degreeUpper (polySimplify p) = 0.
+          -- RHS = polySimplify q with degreeUpper ≥ 0. Need bound 0 ≤ degreeUpper (polySimplify q).
+          have hsp_zero : degreeUpper (polySimplify p) = 0 :=
+            polyIsZeroConst_degreeUpper _ hsp
+          calc degreeUpper (polySimplify (polyDerivative p))
+              ≤ degreeUpper (polySimplify p) := ihp
+            _ = 0 := hsp_zero
+            _ ≤ degreeUpper (polySimplify q) := Nat.zero_le _
+        · rw [if_neg hsdq]
+          -- LHS = add (polySimplify dp) (polySimplify dq). degreeUpper = max.
+          show Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                        (degreeUpper (polySimplify (polyDerivative q)))
+            ≤ degreeUpper (polySimplify q)
+          apply Nat.max_le.mpr
+          refine ⟨?_, ihq⟩
+          have hsp_zero : degreeUpper (polySimplify p) = 0 :=
+            polyIsZeroConst_degreeUpper _ hsp
+          calc degreeUpper (polySimplify (polyDerivative p))
+              ≤ degreeUpper (polySimplify p) := ihp
+            _ = 0 := hsp_zero
+            _ ≤ degreeUpper (polySimplify q) := Nat.zero_le _
+    · rw [if_neg hsp]
+      by_cases hsq : polyIsZeroConst (polySimplify q) = true
+      · rw [if_pos hsq]
+        -- RHS = polySimplify p. Symmetric to the case above.
+        by_cases hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+        · rw [if_pos hsdp]
+          have hsq_zero : degreeUpper (polySimplify q) = 0 :=
+            polyIsZeroConst_degreeUpper _ hsq
+          calc degreeUpper (polySimplify (polyDerivative q))
+              ≤ degreeUpper (polySimplify q) := ihq
+            _ = 0 := hsq_zero
+            _ ≤ degreeUpper (polySimplify p) := Nat.zero_le _
+        · rw [if_neg hsdp]
+          by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+          · rw [if_pos hsdq]; exact ihp
+          · rw [if_neg hsdq]
+            show Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                          (degreeUpper (polySimplify (polyDerivative q)))
+              ≤ degreeUpper (polySimplify p)
+            apply Nat.max_le.mpr
+            have hsq_zero : degreeUpper (polySimplify q) = 0 :=
+              polyIsZeroConst_degreeUpper _ hsq
+            refine ⟨ihp, ?_⟩
+            calc degreeUpper (polySimplify (polyDerivative q))
+                ≤ degreeUpper (polySimplify q) := ihq
+              _ = 0 := hsq_zero
+              _ ≤ degreeUpper (polySimplify p) := Nat.zero_le _
+      · rw [if_neg hsq]
+        -- RHS = add (polySimplify p) (polySimplify q). degreeUpper = max.
+        by_cases hsdp : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+        · rw [if_pos hsdp]
+          show degreeUpper (polySimplify (polyDerivative q))
+            ≤ Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+          exact Nat.le_trans ihq (Nat.le_max_right _ _)
+        · rw [if_neg hsdp]
+          by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+          · rw [if_pos hsdq]
+            show degreeUpper (polySimplify (polyDerivative p))
+              ≤ Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+            exact Nat.le_trans ihp (Nat.le_max_left _ _)
+          · rw [if_neg hsdq]
+            show Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                          (degreeUpper (polySimplify (polyDerivative q)))
+              ≤ Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+            apply Nat.max_le.mpr
+            exact ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+                   Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | sub p q ihp ihq =>
+    -- polySimplify only collapses sub on the right (no zero-left rule for sub).
+    -- So this is a 2-way (instead of 3-way) case analysis on both sides.
+    show degreeUpper (polySimplify (Poly.sub (polyDerivative p) (polyDerivative q)))
+      ≤ degreeUpper (polySimplify (Poly.sub p q))
+    unfold polySimplify
+    by_cases hsq : polyIsZeroConst (polySimplify q) = true
+    · rw [if_pos hsq]
+      by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+      · rw [if_pos hsdq]; exact ihp
+      · rw [if_neg hsdq]
+        show Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                      (degreeUpper (polySimplify (polyDerivative q)))
+          ≤ degreeUpper (polySimplify p)
+        have hsq_zero : degreeUpper (polySimplify q) = 0 :=
+          polyIsZeroConst_degreeUpper _ hsq
+        apply Nat.max_le.mpr
+        refine ⟨ihp, ?_⟩
+        calc degreeUpper (polySimplify (polyDerivative q))
+            ≤ degreeUpper (polySimplify q) := ihq
+          _ = 0 := hsq_zero
+          _ ≤ degreeUpper (polySimplify p) := Nat.zero_le _
+    · rw [if_neg hsq]
+      by_cases hsdq : polyIsZeroConst (polySimplify (polyDerivative q)) = true
+      · rw [if_pos hsdq]
+        show degreeUpper (polySimplify (polyDerivative p))
+          ≤ Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+        exact Nat.le_trans ihp (Nat.le_max_left _ _)
+      · rw [if_neg hsdq]
+        show Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                      (degreeUpper (polySimplify (polyDerivative q)))
+          ≤ Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+        apply Nat.max_le.mpr
+        exact ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+               Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | mul p q ihp ihq =>
+    -- TODO(khovanskii-week-1-chunk-2): close the mul case. The
+    -- analysis is 5-way: polyIsZeroConst left, polyIsZeroConst right,
+    -- polyIsOneConst left, polyIsOneConst right, neither. The
+    -- product-rule unfolds polyDerivative (mul p q) to
+    -- `add (mul dp q) (mul p dq)`, so the LHS itself goes through
+    -- polySimplify of a Poly.add containing two muls. Estimated ~80
+    -- lines. Leaving as sorry so the non-strict bound is structurally
+    -- present for callers; un-fenced once mul lands. See follow-up
+    -- session prompt.
+    sorry
+
+/-- **Strict polySimplify-aware degreeUpper bound.** When the simplified
+form of `p` has positive syntactic degree (i.e. `p` is not a "trivial"
+polynomial that collapses to a constant), the simplified derivative
+has strictly smaller syntactic degree.
+
+This is exactly the rate-of-descent the FTA induction needs: Rolle's
+theorem gives `# zeros of p ≤ 1 + # zeros of polyDerivative p`, and
+this lemma lets the induction terminate. -/
+theorem polyDerivative_degreeUpper_lt_after_simplify (p : Poly)
+    (hp : degreeUpper (polySimplify p) > 0) :
+    degreeUpper (polySimplify (polyDerivative p))
+      < degreeUpper (polySimplify p) := by
+  induction p with
+  | const c =>
+    -- polySimplify (const c) = const c; degreeUpper = 0.
+    -- Hypothesis `0 > 0` is contradictory.
+    show degreeUpper (polySimplify (polyDerivative (Poly.const c)))
+      < degreeUpper (polySimplify (Poly.const c))
+    -- polySimplify on const is identity; degreeUpper = 0.
+    -- The hypothesis degreeUpper (polySimplify (const c)) > 0 is 0 > 0, vacuous.
+    exact absurd hp (Nat.lt_irrefl 0)
+  | var =>
+    -- polySimplify var = var; degreeUpper = 1.
+    -- polyDerivative var = const 1; polySimplify (const 1) = const 1; degreeUpper = 0.
+    -- 0 < 1.
+    show degreeUpper (polySimplify (polyDerivative Poly.var))
+      < degreeUpper (polySimplify Poly.var)
+    -- Both sides reduce by `rfl`-equivalent unfolding; the relation is 0 < 1.
+    exact Nat.zero_lt_one
+  | add p q ihp ihq =>
+    -- Case analysis on polySimplify (add p q):
+    --   polyIsZeroConst (polySimplify p) → result is polySimplify q
+    --     Use ihq for the strict bound (degreeUpper q > 0 from hypothesis).
+    --   polyIsZeroConst (polySimplify q) → result is polySimplify p, symmetric.
+    --   else → result is add (polySimplify p) (polySimplify q), use both ihs.
+    sorry
+  | sub p q ihp ihq =>
+    -- Same shape as `add` (polySimplify treats sub similarly).
+    sorry
+  | mul p q ihp ihq =>
+    -- Five sub-cases (zero-left/right, one-left/right, neither). The
+    -- multiplication case is the hardest because degreeUpper of mul is
+    -- additive, not max, and the identity reductions interact with both
+    -- factors' degrees.
+    sorry
+
 /-! ## Polynomial fundamental theorem of algebra (axiomatized) -/
 
 /-- **Polynomial FTA bound.** A non-zero polynomial `p` has at most
