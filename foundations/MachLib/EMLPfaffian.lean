@@ -135,6 +135,75 @@ theorem eml_pfaffian_eval (t : EMLTree) (x : Real) :
        = Real.exp (t1.eval x) - Real.log (t2.eval x)
     rw [ih1, ih2]
 
+/-! ## Bridge: EMLPfaffianValidOn → PfaffianExpr.IsValidAt
+
+The `EMLPfaffianValidOn t a b` predicate (defined above) captures the
+EMLTree-level domain condition: every `eml t1 t2` subtree has
+`t2.eval > 0` on `(a, b)`. The `PfaffianExpr.IsValidAt` predicate
+(defined in `KhovanskiiLemma.lean`) is its Pfaffian-side counterpart.
+This theorem bridges the two. Proven by structural induction on
+`EMLTree`. -/
+theorem eml_pfaffian_isvalidat_of_validon (t : EMLTree) (a b : Real)
+    (hvalidon : EMLPfaffianValidOn t a b) :
+    ∀ x : Real, a < x → x < b → (eml_pfaffian t).expr.IsValidAt x := by
+  intro x hxa hxb
+  induction t with
+  | const c =>
+    -- eml_pfaffian (const c) = ⟨const c⟩; IsValidAt = True.
+    trivial
+  | var =>
+    -- eml_pfaffian var = ⟨var⟩; IsValidAt = True.
+    trivial
+  | eml t1 t2 ih1 ih2 =>
+    -- EMLPfaffianValidOn (eml t1 t2) a b = validon t1 ∧ validon t2 ∧ (∀ x, ..., 0 < t2.eval x)
+    obtain ⟨hv1, hv2, hpos⟩ := hvalidon
+    -- (eml_pfaffian (eml t1 t2)).expr.IsValidAt x: triplet from sub/comp/comp structure.
+    refine ⟨?_, ?_⟩
+    · -- First subtree: comp exp_atom (eml_pfaffian t1).expr
+      refine ⟨ih1 hv1, ?_⟩
+      -- exp_atom.IsValidAt _ = True
+      trivial
+    · -- Second subtree: comp log_atom (eml_pfaffian t2).expr
+      refine ⟨ih2 hv2, ?_⟩
+      -- log_atom.IsValidAt ((eml_pfaffian t2).expr.eval x) = 0 < t2.eval x
+      show (0 : Real) < (eml_pfaffian t2).expr.eval x
+      have := hpos x hxa hxb
+      -- (eml_pfaffian t2).expr.eval x = (eml_pfaffian t2).eval x = t2.eval x
+      show (0 : Real) < (eml_pfaffian t2).eval x
+      rw [eml_pfaffian_eval t2 x]
+      exact this
+
+/-! ## Sin-equality forces validity (axiomatized analytic argument)
+
+If `t.eval x = sin x` for all `x : Real`, then `EMLPfaffianValidOn t 0 b`
+holds for every `b > 0`. The classical argument:
+
+1. `t.eval` equals `sin`, hence is smooth (sin is smooth everywhere).
+2. For any `eml t1 t2` subtree of `t`, the eval is
+   `exp(t1.eval x) - log_clamped(t2.eval x)`. Since `exp` is smooth,
+   smoothness of the whole forces `log_clamped(t2.eval x)` to be smooth.
+3. `log_clamped` is discontinuous at `0` (jumps from 0 to the analytic
+   log). For its composition with `t2.eval` to be smooth, `t2.eval`
+   must not cross 0 anywhere `t.eval = sin` is smooth — which is
+   everywhere.
+4. At any zero of `sin` (`x = i·π`), if `t = eml t1 t2`, then
+   `t.eval = exp - log_clamped(t2) = 0` forces `log_clamped(t2) > 0`
+   (since `exp > 0`), hence `t2 > 0` (since log_clamped(t2) = 0 when
+   t2 ≤ 0).
+5. By connectivity of `(0, b)` and `t2` not crossing 0 plus `t2 > 0`
+   at any sin-zero in the interval (if any exists), `t2 > 0` throughout.
+
+The argument requires formalizing smoothness preservation, continuity,
+and connectivity — none of which MachLib currently has. Axiomatized
+here as a single load-bearing analytic claim, named so reviewers can
+locate it as a single auditable item. Closure path: add a Smoothness
+module with `IsSmoothOn`, `IsSmoothOn_of_eq`, `Continuous_of_HasDerivAt`,
+and a connectivity argument; ~300-500 lines, multi-session. -/
+axiom eml_pfaffian_validon_from_sin_equality
+    (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
+    (b : Real) (_hb_pos : 0 < b) :
+    EMLPfaffianValidOn t 0 b
+
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
 /-! ## Helpers for the list construction -/
@@ -278,15 +347,18 @@ theorem sin_not_in_eml_any_depth (k : Nat) :
       exact lt_irrefl_ax 0 hpos
   have h_valid : ∀ x : Real, (0 : Real) < x → x < natCast (M + 2) * pi →
                   f.expr.IsValidAt x := by
-    -- The validity is forced by the sin equality: any log subargument
-    -- must stay positive on the interval, because the clamped log
-    -- (returning 0 for ≤ 0) would prevent f.eval = sin globally
-    -- (since sin takes negative values that exp − (clamped log = 0)
-    -- cannot reach). Formal proof sketched at EMLPfaffian.lean:93-101;
-    -- the full discharge is its own ~80-line bridge between
-    -- EMLPfaffianValidOn and PfaffianExpr.IsValidAt. Deferred to a
-    -- follow-up commit to keep this closure focused on derivative_eval.
-    sorry
+    -- Step 1: get EMLPfaffianValidOn from the sin equality (axiomatized
+    --   classical analytic argument; see docstring of
+    --   `eml_pfaffian_validon_from_sin_equality`).
+    have hsin' : ∀ x : Real, t.eval x = Real.sin x := fun x => (hsin x).symm
+    have hvalidon : EMLPfaffianValidOn t 0 (natCast (M + 2) * pi) :=
+      eml_pfaffian_validon_from_sin_equality t hsin'
+        (natCast (M + 2) * pi) hb_pos
+    -- Step 2: bridge to PfaffianExpr.IsValidAt (structurally proven).
+    show ∀ x, (0 : Real) < x → x < natCast (M + 2) * pi →
+          (eml_pfaffian t).expr.IsValidAt x
+    exact eml_pfaffian_isvalidat_of_validon t 0
+            (natCast (M + 2) * pi) hvalidon
   have hbound : f.zero_count_le 0 (natCast (M + 2) * pi) M := by
     have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos h_valid hne_in
     rw [← hM_def] at this
