@@ -1,5 +1,6 @@
 import MachLib.FiniteZeroPacket
 import MachLib.Differentiation
+import MachLib.Rolle
 
 /-!
 MachLib.PolynomialRootCount — first tiny root-count scaffold.
@@ -1709,27 +1710,289 @@ theorem polyDerivative_degreeUpper_lt_after_simplify (p : Poly)
                 exact Nat.lt_of_le_of_lt h_outer_collapse h_b_strict
             exact h_strict
 
-/-! ## Polynomial fundamental theorem of algebra (axiomatized) -/
+/-! ## Helpers for the FTA bound proof (chunk 3 prep)
 
-/-- **Polynomial FTA bound.** A non-zero polynomial `p` has at most
+`degreeUpper_polySimplify_le_self` and `eval_constant_when_degreeUpper_zero`
+let us bridge the effective degree (degreeUpper of polySimplify) to the
+syntactic degree, and let us conclude that a polynomial with effective
+degree 0 evaluates to a constant. Both are used in the FTA constructive
+proof below. -/
+
+/-- polySimplify can only collapse, never expand: the simplified
+polynomial's syntactic degreeUpper is at most the original's. -/
+theorem degreeUpper_polySimplify_le_self (p : Poly) :
+    degreeUpper (polySimplify p) ≤ degreeUpper p := by
+  induction p with
+  | const _ => exact Nat.le_refl 0
+  | var => exact Nat.le_refl 1
+  | add p q ihp ihq =>
+    conv => lhs; unfold polySimplify
+    by_cases hsp : polyIsZeroConst (polySimplify p) = true
+    · rw [if_pos hsp]
+      exact Nat.le_trans ihq (Nat.le_max_right _ _)
+    · rw [if_neg hsp]
+      by_cases hsq : polyIsZeroConst (polySimplify q) = true
+      · rw [if_pos hsq]
+        exact Nat.le_trans ihp (Nat.le_max_left _ _)
+      · rw [if_neg hsq]
+        show Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+          ≤ Nat.max (degreeUpper p) (degreeUpper q)
+        exact Nat.max_le.mpr ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+                              Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | sub p q ihp ihq =>
+    conv => lhs; unfold polySimplify
+    by_cases hsq : polyIsZeroConst (polySimplify q) = true
+    · rw [if_pos hsq]
+      exact Nat.le_trans ihp (Nat.le_max_left _ _)
+    · rw [if_neg hsq]
+      show Nat.max (degreeUpper (polySimplify p)) (degreeUpper (polySimplify q))
+        ≤ Nat.max (degreeUpper p) (degreeUpper q)
+      exact Nat.max_le.mpr ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+                            Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | mul p q ihp ihq =>
+    conv => lhs; unfold polySimplify
+    by_cases hsp : polyIsZeroConst (polySimplify p) = true
+    · rw [if_pos hsp]; exact Nat.zero_le _
+    · rw [if_neg hsp]
+      by_cases hsq : polyIsZeroConst (polySimplify q) = true
+      · rw [if_pos hsq]; exact Nat.zero_le _
+      · rw [if_neg hsq]
+        by_cases h1sp : polyIsOneConst (polySimplify p) = true
+        · rw [if_pos h1sp]
+          show degreeUpper (polySimplify q) ≤ degreeUpper p + degreeUpper q
+          exact Nat.le_trans ihq (Nat.le_add_left _ _)
+        · rw [if_neg h1sp]
+          by_cases h1sq : polyIsOneConst (polySimplify q) = true
+          · rw [if_pos h1sq]
+            show degreeUpper (polySimplify p) ≤ degreeUpper p + degreeUpper q
+            exact Nat.le_trans ihp (Nat.le_add_right _ _)
+          · rw [if_neg h1sq]
+            show degreeUpper (polySimplify p) + degreeUpper (polySimplify q)
+              ≤ degreeUpper p + degreeUpper q
+            exact Nat.add_le_add ihp ihq
+
+/-- A polynomial with syntactic degreeUpper 0 evaluates to a constant
+(doesn't depend on the input). Used in the FTA base case to conclude
+that a polynomial with effective degree 0 and a non-zero witness has
+no roots. -/
+theorem eval_constant_when_degreeUpper_zero (p : Poly) (h : degreeUpper p = 0)
+    (x y : Real) :
+    Poly.eval p x = Poly.eval p y := by
+  induction p with
+  | const c => rfl
+  | var =>
+    -- degreeUpper var = 1; h : 1 = 0 is impossible.
+    unfold degreeUpper at h
+    exact absurd h (by decide)
+  | add p q ihp ihq =>
+    have hmax : Nat.max (degreeUpper p) (degreeUpper q) = 0 := h
+    have hp_zero : degreeUpper p = 0 :=
+      Nat.le_zero.mp (hmax ▸ Nat.le_max_left _ _)
+    have hq_zero : degreeUpper q = 0 :=
+      Nat.le_zero.mp (hmax ▸ Nat.le_max_right _ _)
+    show Poly.eval p x + Poly.eval q x = Poly.eval p y + Poly.eval q y
+    rw [ihp hp_zero, ihq hq_zero]
+  | sub p q ihp ihq =>
+    have hmax : Nat.max (degreeUpper p) (degreeUpper q) = 0 := h
+    have hp_zero : degreeUpper p = 0 :=
+      Nat.le_zero.mp (hmax ▸ Nat.le_max_left _ _)
+    have hq_zero : degreeUpper q = 0 :=
+      Nat.le_zero.mp (hmax ▸ Nat.le_max_right _ _)
+    show Poly.eval p x - Poly.eval q x = Poly.eval p y - Poly.eval q y
+    rw [ihp hp_zero, ihq hq_zero]
+  | mul p q ihp ihq =>
+    have hsum : degreeUpper p + degreeUpper q = 0 := h
+    have hp_zero : degreeUpper p = 0 := by omega
+    have hq_zero : degreeUpper q = 0 := by omega
+    show Poly.eval p x * Poly.eval q x = Poly.eval p y * Poly.eval q y
+    rw [ihp hp_zero, ihq hq_zero]
+
+/-- If `polyDerivative p` evaluates to 0 everywhere, then `p` evaluates to
+a constant. Proof: for any two real points, apply MVT to `Poly.eval p`;
+the derivative at the witness c equals `Poly.eval (polyDerivative p) c = 0`
+by `polyHasDerivAt_eval`, so the MVT identity `f(b) - f(a) = f'(c)(b - a)`
+collapses to `f(b) = f(a)`. -/
+theorem polyDerivative_zero_implies_eval_constant (p : Poly)
+    (h_deriv_zero : ∀ x : Real, Poly.eval (polyDerivative p) x = 0) :
+    ∀ x y : Real, Poly.eval p x = Poly.eval p y := by
+  -- Trichotomy on the two points.
+  have h_aux : ∀ a b : Real, a < b → Poly.eval p a = Poly.eval p b := by
+    intro a b hab
+    -- Apply MVT on (a, b).
+    have hdiff : ∀ c : Real, a < c → c < b →
+        ∃ f' : Real, MachLib.Real.HasDerivAt (Poly.eval p) f' c := by
+      intro c _ _
+      exact ⟨Poly.eval (polyDerivative p) c, polyHasDerivAt_eval p c⟩
+    obtain ⟨c, f'_c, hca, hcb, hf'_c, hmvt⟩ :=
+      MachLib.Real.mean_value_theorem (Poly.eval p) a b hab hdiff
+    -- hf'_c : HasDerivAt (Poly.eval p) f'_c c.
+    -- By polyHasDerivAt_eval, the derivative at c is Poly.eval (polyDerivative p) c = 0.
+    -- HasDerivAt_unique gives f'_c = 0.
+    have hderiv_at_c : MachLib.Real.HasDerivAt (Poly.eval p)
+                          (Poly.eval (polyDerivative p) c) c :=
+      polyHasDerivAt_eval p c
+    have hf'_c_zero : f'_c = Poly.eval (polyDerivative p) c :=
+      MachLib.Real.HasDerivAt_unique (Poly.eval p) f'_c
+        (Poly.eval (polyDerivative p) c) c hf'_c hderiv_at_c
+    rw [h_deriv_zero c] at hf'_c_zero
+    -- hf'_c_zero : f'_c = 0.
+    -- hmvt : Poly.eval p b - Poly.eval p a = f'_c * (b - a).
+    rw [hf'_c_zero, zero_mul] at hmvt
+    -- hmvt : Poly.eval p b - Poly.eval p a = 0.
+    -- Conclude Poly.eval p b = Poly.eval p a.
+    have h_eq : Poly.eval p b - Poly.eval p a = 0 := hmvt
+    -- a - b = 0 → a = b. Use sub_def + add_neg.
+    have : Poly.eval p b = Poly.eval p a + (Poly.eval p b - Poly.eval p a) := by
+      rw [sub_def]
+      calc Poly.eval p b
+          = Poly.eval p b + 0 := (add_zero _).symm
+        _ = Poly.eval p b + (-Poly.eval p a + Poly.eval p a) := by rw [neg_add_self]
+        _ = (Poly.eval p b + -Poly.eval p a) + Poly.eval p a := by rw [← add_assoc]
+        _ = Poly.eval p a + (Poly.eval p b + -Poly.eval p a) := add_comm _ _
+    rw [h_eq, add_zero] at this
+    exact this.symm
+  -- Trichotomy: x < y, x = y (trivial), or y < x.
+  intro x y
+  rcases lt_total x y with hxy | hxy | hxy
+  · exact h_aux x y hxy
+  · rw [hxy]
+  · exact (h_aux y x hxy).symm
+
+/-! ## Polynomial fundamental theorem of algebra — constructive proof (chunk 3)
+
+Khovanskii sprint week 1 chunk 3 (2026-06-11). Strong induction on the
+effective degree `degreeUpper (polySimplify p)`. Base case (effDeg 0):
+the polynomial evaluates to a constant; combined with `hne`, this
+constant is non-zero, so no roots. Inductive step: case on whether
+`polyDerivative p` is identically zero. If yes, `p` evaluates to a
+constant (via MVT helper). If no, apply Rolle's `zero_count_bound_by_deriv`
+with the strict degreeUpper bound from chunk 2 and the IH on the
+derivative. -/
+
+/-- Auxiliary effective-degree FTA bound, by strong induction on n. The
+visible `poly_root_count_bound` below derives the syntactic-degree
+form via `degreeUpper_polySimplify_le_self`. -/
+theorem poly_root_count_bound_eff_aux :
+    ∀ n : Nat, ∀ p : Poly,
+    degreeUpper (polySimplify p) = n →
+    ∀ a b : Real, a < b →
+    (∃ x : Real, Poly.eval p x ≠ 0) →
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ Poly.eval p z = 0) →
+      zeros.length ≤ n := by
+  intro n
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+    intro p heff a b hab hne zeros hnodup hzeros
+    by_cases hn : n = 0
+    · -- Base case: effDeg p = 0. polySimplify p evaluates to a constant.
+      -- Combined with hne, that constant is non-zero ⇒ no roots.
+      rw [hn] at heff
+      have hconst : ∀ x y : Real,
+          Poly.eval (polySimplify p) x = Poly.eval (polySimplify p) y :=
+        fun x y => eval_constant_when_degreeUpper_zero (polySimplify p) heff x y
+      have hp_const : ∀ x y : Real, Poly.eval p x = Poly.eval p y := by
+        intro x y
+        rw [← polySimplify_eval p x, ← polySimplify_eval p y]
+        exact hconst x y
+      obtain ⟨x_0, hx_0⟩ := hne
+      have hp_ne : ∀ z : Real, Poly.eval p z ≠ 0 := by
+        intro z hz_eq
+        apply hx_0
+        rw [hp_const x_0 z]; exact hz_eq
+      cases zeros with
+      | nil => rw [hn]; exact Nat.zero_le _
+      | cons z rest =>
+        have hz_in : z ∈ z :: rest := List.mem_cons_self _ _
+        have := hzeros z hz_in
+        exact absurd this.2.2 (hp_ne z)
+    · -- Inductive step: n > 0.
+      have hn_pos : n > 0 := Nat.pos_of_ne_zero hn
+      by_cases hderiv_zero : ∀ x : Real, Poly.eval (polyDerivative p) x = 0
+      · -- polyDerivative p is identically 0 ⇒ p evaluates to a constant.
+        have hp_const : ∀ x y : Real, Poly.eval p x = Poly.eval p y :=
+          polyDerivative_zero_implies_eval_constant p hderiv_zero
+        obtain ⟨x_0, hx_0⟩ := hne
+        have hp_ne : ∀ z : Real, Poly.eval p z ≠ 0 := by
+          intro z hz_eq
+          apply hx_0
+          rw [hp_const x_0 z]; exact hz_eq
+        cases zeros with
+        | nil => exact Nat.zero_le _
+        | cons z rest =>
+          have hz_in : z ∈ z :: rest := List.mem_cons_self _ _
+          have := hzeros z hz_in
+          exact absurd this.2.2 (hp_ne z)
+      · -- polyDerivative p has NonzeroWitness (extract classically).
+        have hne_dp : ∃ x : Real, Poly.eval (polyDerivative p) x ≠ 0 := by
+          apply Classical.byContradiction
+          intro h_all
+          apply hderiv_zero
+          intro x
+          apply Classical.byContradiction
+          intro hne_x
+          apply h_all
+          exact ⟨x, hne_x⟩
+        -- effDeg(polyDerivative p) < n via the chunk-2 strict bound.
+        have hpd_eff : degreeUpper (polySimplify (polyDerivative p)) < n := by
+          rw [← heff]
+          have hp_pos : degreeUpper (polySimplify p) > 0 := heff ▸ hn_pos
+          exact polyDerivative_degreeUpper_lt_after_simplify p hp_pos
+        -- IH on polyDerivative p.
+        have ih_dp : ∀ zeros_dp : List Real,
+            zeros_dp.Nodup →
+            (∀ z ∈ zeros_dp, a < z ∧ z < b ∧ Poly.eval (polyDerivative p) z = 0) →
+            zeros_dp.length ≤ degreeUpper (polySimplify (polyDerivative p)) :=
+          ih _ hpd_eff (polyDerivative p) rfl a b hab hne_dp
+        -- Translate ih_dp into hf'_bound form (HasDerivAt language).
+        have hf'_bound : ∀ zeros_f' : List Real,
+            zeros_f'.Nodup →
+            (∀ z ∈ zeros_f', a < z ∧ z < b ∧
+              ∃ f'' : Real, MachLib.Real.HasDerivAt (Poly.eval p) f'' z ∧ f'' = 0) →
+            zeros_f'.length ≤ degreeUpper (polySimplify (polyDerivative p)) := by
+          intro zeros_f' hnodup_f' hzeros_f'
+          apply ih_dp zeros_f' hnodup_f'
+          intro z hz_in
+          obtain ⟨ha_z, hb_z, f'', hderiv, hf''_zero⟩ := hzeros_f' z hz_in
+          refine ⟨ha_z, hb_z, ?_⟩
+          have hderiv_poly : MachLib.Real.HasDerivAt (Poly.eval p)
+                                (Poly.eval (polyDerivative p) z) z :=
+            polyHasDerivAt_eval p z
+          have h_eq : f'' = Poly.eval (polyDerivative p) z :=
+            MachLib.Real.HasDerivAt_unique (Poly.eval p) f''
+              (Poly.eval (polyDerivative p) z) z hderiv hderiv_poly
+          rw [← h_eq]; exact hf''_zero
+        have hdiff : ∀ c : Real, a < c → c < b →
+            ∃ f' : Real, MachLib.Real.HasDerivAt (Poly.eval p) f' c := by
+          intro c _ _
+          exact ⟨Poly.eval (polyDerivative p) c, polyHasDerivAt_eval p c⟩
+        have h_bound : zeros.length
+                     ≤ degreeUpper (polySimplify (polyDerivative p)) + 1 :=
+          MachLib.Real.zero_count_bound_by_deriv (Poly.eval p) a b hab hdiff
+            (degreeUpper (polySimplify (polyDerivative p))) hf'_bound
+            zeros hnodup hzeros
+        exact Nat.le_trans h_bound hpd_eff
+
+/-- **Polynomial FTA bound (constructive theorem, chunk 3).**
+
+A polynomial `p` with at least one non-zero value has at most
 `degreeUpper p` distinct zeros on any bounded open interval `(a, b)`.
 
-The classical proof: induct on degree. Base case (degree 0): non-zero
-constant has 0 zeros. Inductive step (degree d > 0): if `p` has a root
-`r`, factor `p = (x - r) * q` with `degreeUpper q ≤ d - 1` by polynomial
-division. By IH, `q` has ≤ d - 1 zeros. So `p` has ≤ 1 + (d - 1) = d
-zeros. Alternatively: use Rolle's theorem + induction on degree via
-`(Poly.derivative p)` (degreeUpper drops by 1).
-
-Axiomatized for now; constructive proof requires polynomial division
-infrastructure (~200 lines) OR a `Poly.derivative` + Rolle chain
-(~150 lines). Both are substantive standalone artifacts. -/
-axiom poly_root_count_bound (p : Poly) (a b : Real) (hab : a < b)
+Derived from `poly_root_count_bound_eff_aux` via
+`degreeUpper_polySimplify_le_self`. Replaces the prior axiom of the
+same name (chunk 3 close, 2026-06-11). -/
+theorem poly_root_count_bound (p : Poly) (a b : Real) (hab : a < b)
     (hne : ∃ x : Real, Poly.eval p x ≠ 0) :
     ∀ zeros : List Real,
       zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ Poly.eval p z = 0) →
-      zeros.length ≤ degreeUpper p
+      zeros.length ≤ degreeUpper p := by
+  intro zeros hnodup hzeros
+  have h_eff : zeros.length ≤ degreeUpper (polySimplify p) :=
+    poly_root_count_bound_eff_aux (degreeUpper (polySimplify p)) p rfl a b hab
+      hne zeros hnodup hzeros
+  exact Nat.le_trans h_eff (degreeUpper_polySimplify_le_self p)
 
 end PolynomialRootCount
 end MachLib
