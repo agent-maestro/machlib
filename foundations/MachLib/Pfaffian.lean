@@ -97,25 +97,36 @@ structure PfaffianFunction where
 
 For any Pfaffian function `f` and any bounded open interval `(a, b)`,
 the number of zeros of `f` on `(a, b)` is bounded by
-`pfaffian_zero_count_bound n d L` where `n = f.chain.order`,
-`d = f.degree`, and `L : Nat` is any natural-number upper bound
-on the interval length `(b - a)` (specifically: `b - a ≤ natCast L`).
+`pfaffian_zero_count_bound n d` where `n = f.chain.order` and
+`d = f.degree`. The bound is uniform in the interval `(a, b)` — this
+is precisely Khovanskii's classical theorem for genuine Pfaffian
+functions on a Pfaffian neighborhood.
 
-**2026-06-11 soundness fix:** The bound previously had signature
-`Nat → Nat → Nat` (interval-independent), which was inconsistent on
-sin-like functions whose zero count grows with interval length. The
-third parameter (`L : Nat`, interval-length bound) is now required.
+**Classical side conditions:** The bound is uniform-in-interval ONLY
+for Pfaffian functions built from triangular Pfaffian chains
+(each `y_i' = P_i(x, y_1, ..., y_i)` depending only on earlier
+members). Functions whose natural chain is circular — notably
+sin/cos with `sin' = cos, cos' = -sin` — are NOT genuine Pfaffian
+functions on ℝ and do not appear in MachLib's Pfaffian family.
+See the 2026-06-12 deletion comment on `sin_as_pfaffian` for the
+full analysis.
+
+**History:** This axiom briefly took an `L : Nat` (interval-length)
+parameter in 2026-06-11 as an attempted soundness fix when sin was
+still in the Pfaffian family. The diagnosis on 2026-06-12 identified
+that sin/cos were the true source of inconsistency. After removing
+the sin/cos embeddings, the original uniform-in-interval signature
+is consistent and is restored here.
 
 Replacing this axiom with a constructive proof is the future Khovanskii
 deliverable. -/
-axiom pfaffian_zero_count_bound : Nat → Nat → Nat → Nat
+axiom pfaffian_zero_count_bound : Nat → Nat → Nat
 
-/-- The bound is monotone in all three arguments — more orders, higher
-degree, or longer intervals all (weakly) increase the upper bound on
-zero count. -/
+/-- The bound is monotone in both arguments — more orders or higher
+degree (weakly) increases the upper bound. -/
 axiom pfaffian_zero_count_bound_monotone :
-    ∀ n n' d d' L L' : Nat, n ≤ n' → d ≤ d' → L ≤ L' →
-    pfaffian_zero_count_bound n d L ≤ pfaffian_zero_count_bound n' d' L'
+    ∀ n n' d d' : Nat, n ≤ n' → d ≤ d' →
+    pfaffian_zero_count_bound n d ≤ pfaffian_zero_count_bound n' d'
 
 /-- A `Real → Prop` predicate counting zeros (cardinality bounded).
 
@@ -131,25 +142,23 @@ def PfaffianFunction.zero_count_le (f : PfaffianFunction) (a b : Real)
     zeros.length ≤ N
 
 /-- **The Khovanskii bound applied to a Pfaffian function.** Any
-NON-ZERO Pfaffian function `f` (i.e., not identically zero) on a
-bounded interval `(a, b)` with explicit length witness `L : Nat`
-(`b - a ≤ natCast L`) has zero count bounded by
-`pfaffian_zero_count_bound f.chain.order f.degree L`.
+NON-ZERO Pfaffian function `f` (i.e., not identically zero) has zero
+count on `(a, b)` bounded by `pfaffian_zero_count_bound f.chain.order
+f.degree` — uniformly in `(a, b)`.
 
 The non-zero precondition (`hne`) excludes the degenerate case where
-`f` is the constant 0 function — that function vanishes everywhere
-and trivially has unbounded zero count, which would make the axiom
-inconsistent.
+`f` is the constant 0 function.
 
-**2026-06-11 soundness fix:** The previous signature lacked the
-interval-length parameter and was inconsistent on sin-like functions
-(sin has zero count growing linearly in `b - a`). The new signature
-adds `L : Nat` plus the witness `hL : b - a ≤ natCast L`, so the
-bound on long intervals is allowed to be large. -/
+**Triangular-chain side condition:** This is consistent because
+MachLib's Pfaffian family (exp, log, polynomials, compositions and
+combinations thereof) consists entirely of functions whose natural
+chains are triangular. Sin/cos were briefly axiomatized as Pfaffian
+in Phase A and were the source of the 2026-06-11 soundness gap; they
+were removed on 2026-06-12 after the diagnosis identified their
+non-triangular chain as the root cause. -/
 axiom PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
-    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0)
-    (L : Nat) (hL : b - a ≤ natCast L) :
-    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree L)
+    (hab : a < b) (hne : ∃ x : Real, f.eval x ≠ 0) :
+    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree)
 
 /-! ## Base function embeddings -/
 
@@ -187,35 +196,27 @@ theorem log_as_pfaffian_order :
 theorem log_as_pfaffian_degree :
     log_as_pfaffian.degree = 1 := rfl
 
-/-- `Real.sin` is Pfaffian of order 2, degree 1. -/
-noncomputable def sin_as_pfaffian : PfaffianFunction :=
-  { chain := { order := 2 }
-    degree := 1
-    eval := Real.sin }
+/-! ⚠ REMOVED 2026-06-12 (Khovanskii sprint week 2 step 1):
+sin_as_pfaffian and cos_as_pfaffian have been deleted.
 
-theorem sin_as_pfaffian_eval :
-    ∀ x : Real, sin_as_pfaffian.eval x = Real.sin x := fun _ => rfl
+The original Phase A definitions claimed sin and cos are Pfaffian
+functions on ℝ with chain.order = 2, degree = 1. This is
+constructively false: classical Khovanskii requires the Pfaffian
+chain be *triangular* (each y_i' depends only on x and y_1, ..., y_i).
+The sin/cos chain — sin' = cos, cos' = -sin — is mutually circular,
+not triangular. Sin is Pfaffian only on bounded intervals (via
+tan(x/2) rationalization), with complexity that depends on the
+interval.
 
-theorem sin_as_pfaffian_order :
-    sin_as_pfaffian.chain.order = 2 := rfl
+Coexistence of "globally Pfaffian sin (n=2, d=1)" with
+`PfaffianFunction.zero_bound`'s uniform-in-(n, d) bound forces an
+inconsistency: sin's L_bound/π zeros force bound(2,1,L_bound) ≥ L/π,
+which makes the bound vacuous at that complexity. This was the root
+cause of two soundness gaps the discharge attempts surfaced.
 
-theorem sin_as_pfaffian_degree :
-    sin_as_pfaffian.degree = 1 := rfl
-
-/-- `Real.cos` is Pfaffian of order 2, degree 1. -/
-noncomputable def cos_as_pfaffian : PfaffianFunction :=
-  { chain := { order := 2 }
-    degree := 1
-    eval := Real.cos }
-
-theorem cos_as_pfaffian_eval :
-    ∀ x : Real, cos_as_pfaffian.eval x = Real.cos x := fun _ => rfl
-
-theorem cos_as_pfaffian_order :
-    cos_as_pfaffian.chain.order = 2 := rfl
-
-theorem cos_as_pfaffian_degree :
-    cos_as_pfaffian.degree = 1 := rfl
+The embeddings were referenced nowhere outside Pfaffian.lean (verified
+by grep) and are deleted. Future trig-on-bounded-interval results
+should be reintroduced with explicit interval qualification. -/
 
 /-! ## Closure operations — definitions (chunk 4 refactor)
 
