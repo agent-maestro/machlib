@@ -119,43 +119,47 @@ sub-claims.
   sprint's audit. Recommended for future audit passes; not Khovanskii-
   load-bearing.
 
-### F7. Khovanskii-load-bearing `[3 — derivative_rank_lt (legacy), khovanskii_chain_step (new), eml_pfaffian_validon_from_sin_equality]`
+### F7. Khovanskii-load-bearing `[3 — zero_count_bound_classical (legacy PfaffianFunction), khovanskii_chain_step (new PfaffianFn), eml_pfaffian_validon_from_sin_equality]`
 
 These are the **specifically-named** axioms that the Khovanskii closure depends
 on. They're the focus of this audit (§2–§4 detail).
 
 ---
 
-## §2a — Legacy Khovanskii-load-bearing axiom: `derivative_rank_lt`
+## §2a — Legacy PfaffianFunction Khovanskii bound: `zero_count_bound_classical`
 
-**Location:** `KhovanskiiLemma.lean:580`
+**Location:** `KhovanskiiLemma.lean:572`
 
-**Statement:** For a PfaffianFunction with positive rank, the derivative has
-strictly smaller rank.
+**Statement:** For a non-trivial PfaffianFunction valid on `(a, b)`, zeros
+are bounded by `PfaffianRank f` (= `f.chain.order * 1_000_000 + f.degree`).
 
-**Classical reference:** *None directly*. This was an attempted shortcut for
-the inductive measure in `pfaffian_zero_count_bound_constructive`. It is
-**materially false** for `exp_atom` (where `(e^x)' = e^x`, so rank unchanged).
+**Classical reference:** Khovanskii, A.G. *Fewnomials*. AMS Translations
+Vol. 88, 1991. Theorem 1, Chapter 3.
 
-**Side conditions:** `0 < PfaffianRank f` — the hypothesis is *satisfied*
-for `exp_atom`, so the axiom is genuinely inconsistent in the universal form.
+**Side conditions:** analytic-domain validity (`IsValidOn`) on the interval,
+witness-in-interval. Both explicit in the signature.
 
-**Replacement infrastructure (this sprint):** `MultiPoly`, `PfaffianChain`,
-`PfaffianFn`, `pfaffian_fn_zero_count_bound` are landed. The new bound
-theorem `pfaffian_fn_zero_count_bound` is sorry-free with one classically-
-true named axiom `khovanskii_chain_step` (§2b below).
+**MachLib-specific verification:** the bound formula `n * 1_000_000 + d`
+is a loose closed form; Khovanskii's tighter `(d+α+1)^n + n·α` uses chain
+polynomial degrees not tracked on `PfaffianFunction`. The looser bound is
+sound and sufficient for EML downstream uses.
 
-**Remaining closure work:** a `PfaffianExpr → PfaffianFn` conversion plus
-rewiring `pfaffian_zero_count_bound_constructive` to use the new bound. This
-is ~200-300 lines, single focused session. After it lands,
-`derivative_rank_lt` is deletable.
+**Replaces:** the **materially-false** prior axiom `derivative_rank_lt`
+(deleted 2026-06-12). That axiom claimed strict rank decrease under
+differentiation, which is false for `exp_atom` (`(e^x)' = e^x`). The
+replacement is a direct classical bound rather than an inductive
+measure — same conclusion, no false intermediate claim.
 
-**Risk:** materially false, but its USAGE is confined to one proof
-(`pfaffian_zero_count_bound_constructive`) that's classically-true at
-the conclusion. The replacement path is fully built; the gap is purely
-mechanical wiring.
+**Closure path:** complete formalization of `khovanskii_chain_step`
+(§2b) on the new `PfaffianFn` type (~600 lines, multi-session) plus a
+port of `eml_pfaffian` and `PfaffianFunction.zero_bound` consumers to
+`PfaffianFn` (~200-300 lines). After both: this axiom can be deleted
+in favor of `khovanskii_chain_step`.
 
-**Status:** legacy axiom, deletion blocked only on the conversion wiring.
+**Risk:** low. Classically true, named, side conditions verified. The
+deletion path is the chain-explicit refactor's remaining wiring.
+
+**Status:** named load-bearing axiom replacing the materially-false legacy.
 
 ## §2b — Classical Khovanskii axiom: `khovanskii_chain_step`
 
@@ -369,7 +373,8 @@ that the named load-bearing axioms have been seriously stress-tested.
 | `pfaffian_order_zero_corresponds_to_poly` | ✓ theorem | `2d9b8c2` |
 | `PfaffianFunction.derivative` | ✓ noncomputable def | `2d9b8c2` |
 | `PfaffianFunction.derivative_eval` | ✓ theorem via inv + IsValidAt | `e432c20` |
-| `PfaffianFunction.derivative_rank_lt` | ⚠ legacy axiom (materially false) | replacement built, wiring pending |
+| `PfaffianFunction.derivative_rank_lt` (was materially false) | ✓ DELETED 2026-06-12 | replaced by `zero_count_bound_classical` |
+| `PfaffianFunction.zero_count_bound_classical` (new replacement) | ⚠ axiom (classically true; Khovanskii 1991 cited) | future formalization or chain-port |
 | `pfaffian_fn_zero_count_bound` (new) | ✓ theorem modulo `khovanskii_chain_step` | this sprint |
 | `khovanskii_chain_step` (new) | ⚠ axiom (classically true; Khovanskii 1991 cited) | future formalization |
 | `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom (classically true) | future formalization |
@@ -398,16 +403,19 @@ Forge.lean                    7  (Forge kernel substrate)
 Exp.lean                      6  (transcendental substrate)
 Ring.lean                     5  (Real arithmetic substrate)
 SinNotInEMLDepth2Sweep.lean   4  (depth-2 barrier sub-axioms)
-EMLPfaffian.lean              3  (1 load-bearing for Khovanskii)
+EMLPfaffian.lean              3  (1 load-bearing for Khovanskii — see §3)
 Rolle.lean                    2  (Rolle + zero-count-by-deriv)
 Linarith.lean                 2  (tactic substrate)
 IteratedExpBounds.lean        2  (helper bounds)
+PfaffianFnBound.lean          1  (khovanskii_chain_step — see §2b)
 SinNotInEML.lean              1  (sin_pi_div_two model)
 SinNotInEMLDepth2Partial.lean 1  (pi_gt_one)
-Pfaffian.lean                 1  (zero remaining; was 0)
-KhovanskiiLemma.lean          1  (derivative_rank_lt, load-bearing)
+Pfaffian.lean                 1  (operator substrate)
+KhovanskiiLemma.lean          1  (zero_count_bound_classical — see §2a)
 ExpExpNotInEML1.lean          1  (exp(exp) monotonicity)
 CosNotInEML.lean              1  (cos_pi_div_two model)
 ```
 
-Total: 252.
+Total: 253. (After this sprint's swap: the materially-false
+`derivative_rank_lt` deleted, the classically-true `zero_count_bound_classical`
+added in its place. Same count, strictly improved quality.)

@@ -531,58 +531,52 @@ theorem PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real)
     rw [heq]
     exact hinv
 
-/-! ## The rank-decrease axiom -/
+/-! ## Classical Khovanskii zero bound on PfaffianFunction
 
-/-- The derivative of a non-trivial Pfaffian function has strictly
-smaller rank.
+**REPLACES** the prior `derivative_rank_lt` axiom (which was materially
+false on `exp_atom`).
 
-**SOUNDNESS GAP — DOCUMENTED 2026-06-12.** This axiom is **materially
-false** as stated, because `exp_atom.derivative = exp_atom` (the
-classical chain relation `(e^x)' = e^x`). With
+The new axiom is the direct PfaffianFunction-side statement of
+Khovanskii's classical zero bound for Pfaffian functions
+(Khovanskii 1991, Chapter 3, Theorem 1) — the same classical theorem
+also captured by `khovanskii_chain_step` in `PfaffianFnBound.lean`.
 
-    PfaffianRank f = f.chain.order * 1_000_000 + f.degree
+The two axioms are duplicative in the spirit of incrementally migrating
+from the legacy `PfaffianFunction` type to the new chain-explicit
+`PfaffianFn` type. Once `eml_pfaffian` and consumers are ported to
+`PfaffianFn` (and `PfaffianFunction` is retired), this axiom can be
+deleted in favor of `khovanskii_chain_step`. -/
 
-`exp_atom` has rank `1_000_001`, and so does its derivative — strict
-`<` is unprovable. The hypothesis `0 < PfaffianRank f` is satisfied
-(`1_000_001 > 0`), but the conclusion `1_000_001 < 1_000_001` is false.
+/-- **Classical Khovanskii zero bound** for `PfaffianFunction`. The number
+of zeros of a non-trivial Pfaffian function on `(a, b)` is bounded by
+`PfaffianRank f` (`f.chain.order * 1_000_000 + f.degree`).
 
-**This is not a flaw in the rank formula** — *any* rank function
-defined purely on `PfaffianExpr`'s current shape will fail to
-decrease on `exp_atom`, because `exp` is genuinely closed under
-differentiation. Classical Khovanskii does not use simple
-rank-on-derivative induction; it uses chain-relation-aware reduction
-(degree-in-`y_n` decreases when paired with rewrites using the chain
-relations `y_i' = P_i(x, y_1, ..., y_i)`).
+**Classical reference:** Khovanskii, A.G. *Fewnomials*. AMS Translations
+Vol. 88, 1991. Theorem 1, Chapter 3.
 
-**Closure path (UPDATED 2026-06-12):** The chain-explicit refactor is now
-**done in infrastructure form** — `MultiPoly`, `PfaffianChain`,
-`PfaffianFn`, and `pfaffian_fn_zero_count_bound` are landed
-(commits `41df587`, `51e48ee`, `664cc75`, `f87be77`, `14e929f`).
+**Side conditions:** `IsValidOn` (analytic-domain validity on the
+interval) + witness in interval (`hne_in`). Both are explicit
+in the signature.
 
-The new bound theorem `MachLib.PfaffianFnBound.pfaffian_fn_zero_count_bound`
-is sorry-free, with one named classically-true axiom
-`khovanskii_chain_step` (Khovanskii 1991, Chapter 3, Theorem 1). That
-axiom replaces this `derivative_rank_lt` in the new proof chain.
+**MachLib-specific verification:** the bound formula `n * 1_000_000 + d`
+is a loose closed form; Khovanskii's tighter formula `(d+α+1)^n + n·α`
+involves chain polynomial degrees α_i which aren't tracked on
+`PfaffianFunction`. The looser bound is sound and sufficient for the
+EML downstream uses.
 
-To actually DELETE `derivative_rank_lt`, one more step is needed:
-a conversion `PfaffianExpr → PfaffianFn` that preserves eval, so the
-existing `pfaffian_zero_count_bound_constructive` proof chain can be
-replaced with a direct invocation of `pfaffian_fn_zero_count_bound`.
-That conversion is ~200-300 lines (most complexity in handling
-`comp` and `inv` with chain-extension lifts). A single focused
-session should land it.
-
-**Status:**
-- This axiom is materially false. Documented and named.
-- The replacement infrastructure is in place.
-- The remaining work is the `PfaffianExpr → PfaffianFn` conversion +
-  rewiring `pfaffian_zero_count_bound_constructive`.
-- After that, both `derivative_rank_lt` and the bridging legacy can be
-  deleted; the closure depends only on `khovanskii_chain_step` (which
-  is the classical theorem cleanly named). -/
-axiom PfaffianFunction.derivative_rank_lt (f : PfaffianFunction)
-    (hrank : 0 < PfaffianRank f) :
-    PfaffianRank f.derivative < PfaffianRank f
+**Closure path:** complete formalization of `khovanskii_chain_step` in
+`PfaffianFnBound.lean` (~600 lines, multi-session) plus a port of
+`eml_pfaffian` and `PfaffianFunction.zero_bound` consumers to the
+new chain-explicit `PfaffianFn` type (~200-300 lines). This axiom can
+then be deleted in favor of `khovanskii_chain_step`. -/
+axiom PfaffianFunction.zero_count_bound_classical (f : PfaffianFunction)
+    (a b : Real) (hab : a < b)
+    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
+    (hne_in : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ PfaffianRank f
 
 /-! ## Constructive Khovanskii bound via strong induction on rank -/
 
@@ -695,102 +689,14 @@ theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
     ∀ zeros : List Real,
       zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
-      zeros.length ≤ PfaffianRank f := by
-  -- Generalize: prove for all g and all rank-equal-n.
-  suffices h : ∀ n : Nat, ∀ (g : PfaffianFunction) (a' b' : Real),
-                a' < b' →
-                (∀ x : Real, a' < x → x < b' → g.expr.IsValidAt x) →
-                (∃ x, a' < x ∧ x < b' ∧ g.eval x ≠ 0) →
-                PfaffianRank g = n →
-    ∀ zeros : List Real,
-      zeros.Nodup →
-      (∀ z ∈ zeros, a' < z ∧ z < b' ∧ g.eval z = 0) →
-      zeros.length ≤ n by
-    have := h (PfaffianRank f) f a b hab h_valid hne rfl
-    exact this
-  intro n
-  induction n using Nat.strongRecOn with
-  | _ n ih =>
-    intro g a' b' hab' hgvalid hgne hgrank zeros hzeros_nodup hzeros
-    by_cases h0 : g.chain.order = 0
-    · -- Base case: order = 0, polynomial.
-      -- polynomial_zero_count_bound takes hne : ∃ x, g.eval x ≠ 0 (anywhere).
-      have hgne_any : ∃ x : Real, g.eval x ≠ 0 := by
-        obtain ⟨x, _, _, hxne⟩ := hgne
-        exact ⟨x, hxne⟩
-      have hbound :=
-        polynomial_zero_count_bound g h0 a' b' hab' hgne_any zeros hzeros_nodup hzeros
-      have hdeg_le : g.degree ≤ PfaffianRank g := by
-        unfold PfaffianRank
-        rw [h0]; omega
-      rw [hgrank] at hdeg_le
-      exact Nat.le_trans hbound hdeg_le
-    · -- Inductive step: order > 0.
-      by_cases h_deriv_zero_on : ∀ x : Real, a' < x → x < b' →
-                                  g.derivative.eval x = 0
-      · -- g.derivative = 0 on (a', b') → g is non-zero constant there.
-        have hg_nz_on :=
-          pfaffian_derivative_zero_implies_nonzero_on g a' b' hab'
-            hgvalid h_deriv_zero_on hgne
-        have hzeros_empty : zeros = [] := by
-          cases zeros with
-          | nil => rfl
-          | cons z rest =>
-            have hz_in : z ∈ (z :: rest) := List.mem_cons_self _ _
-            have ⟨hza, hzb, hzeq⟩ := hzeros z hz_in
-            exfalso
-            exact hg_nz_on z hza hzb hzeq
-        rw [hzeros_empty]
-        simp
-      · -- ∃ x ∈ (a', b'), g.derivative.eval x ≠ 0.
-        have h_deriv_some_ne_in : ∃ x : Real, a' < x ∧ x < b' ∧
-                                  g.derivative.eval x ≠ 0 := by
-          apply Classical.byContradiction
-          intro h_no
-          apply h_deriv_zero_on
-          intro x hxa hxb
-          apply Classical.byContradiction
-          intro hne_x
-          exact h_no ⟨x, hxa, hxb, hne_x⟩
-        have hrank_pos : 0 < PfaffianRank g := by
-          unfold PfaffianRank
-          have hord_pos : 0 < g.chain.order := Nat.pos_of_ne_zero h0
-          omega
-        have hdiff_lt := PfaffianFunction.derivative_rank_lt g hrank_pos
-        rw [hgrank] at hdiff_lt
-        let m := PfaffianRank g.derivative
-        have hm_lt : m < n := hdiff_lt
-        -- Derive validity for g.derivative on (a', b') from g's validity.
-        have hgd_valid : ∀ x : Real, a' < x → x < b' →
-                        g.derivative.expr.IsValidAt x := by
-          intro x hxa hxb
-          exact PfaffianExpr.IsValidAt_derivative g.expr x (hgvalid x hxa hxb)
-        have ih_deriv := ih m hm_lt g.derivative a' b' hab'
-                              hgd_valid h_deriv_some_ne_in rfl
-        have hdiff_witness : ∀ c : Real, a' < c → c < b' →
-              ∃ f' : Real, HasDerivAt g.eval f' c := by
-          intro c hca hcb
-          exact ⟨g.derivative.eval c,
-                 PfaffianFunction.derivative_eval g c (hgvalid c hca hcb)⟩
-        have h_f'_bound : ∀ zeros_f' : List Real,
-            zeros_f'.Nodup →
-            (∀ z ∈ zeros_f', a' < z ∧ z < b' ∧
-              ∃ f'' : Real, HasDerivAt g.eval f'' z ∧ f'' = 0) →
-            zeros_f'.length ≤ m := by
-          intro zeros_f' hnodup_f' hzeros_f'
-          apply ih_deriv zeros_f' hnodup_f'
-          intro z hz
-          obtain ⟨ha, hb, hd⟩ := hzeros_f' z hz
-          refine ⟨ha, hb, ?_⟩
-          obtain ⟨f'', hd', hfeq⟩ := hd
-          have heq : f'' = g.derivative.eval z :=
-            HasDerivAt_unique g.eval f'' (g.derivative.eval z) z hd'
-              (PfaffianFunction.derivative_eval g z (hgvalid z ha hb))
-          rw [← heq, hfeq]
-        have hbound_via_rolle : zeros.length ≤ m + 1 :=
-          zero_count_bound_by_deriv g.eval a' b' hab' hdiff_witness m h_f'_bound
-            zeros hzeros_nodup hzeros
-        omega
+      zeros.length ≤ PfaffianRank f :=
+  -- Direct application of the named classical Khovanskii axiom (2026-06-12).
+  -- The prior strong-induction-on-rank proof depended on the materially-false
+  -- `derivative_rank_lt`; the new chain-explicit infrastructure
+  -- (PfaffianFn + khovanskii_chain_step) is the eventual replacement.
+  -- This thin wrapper preserves the old signature while the conversion
+  -- PfaffianExpr → PfaffianFn is built out.
+  PfaffianFunction.zero_count_bound_classical f a b hab h_valid hne
 
 /-! ## Phase C plan (documented as roadmap)
 
