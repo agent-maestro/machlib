@@ -241,6 +241,74 @@ Eliminates phantom `0*x` and `1*x` terms so that formal degree
 reflects effective degree. Crucial for proving strict degree decrease
 under `dX` (which fails on the naive AST — see the discussion above). -/
 
+/-! ## Substitution: replace `y_i` with another polynomial
+
+Used by the constructive Khovanskii chain-step reduction (item 3 of
+4 in the constructive-Khovanskii closure path) — substituting the
+chain relation's polynomial for the highest chain variable
+projects to a smaller chain. -/
+
+/-- Substitute `y_i` with the polynomial `q` everywhere in `p`. -/
+noncomputable def substY {n : Nat} (i : Fin n) (q : MultiPoly n) :
+    MultiPoly n → MultiPoly n
+  | const c => const c
+  | varX => varX
+  | varY j => if i = j then q else varY j
+  | add p1 p2 => add (substY i q p1) (substY i q p2)
+  | sub p1 p2 => sub (substY i q p1) (substY i q p2)
+  | mul p1 p2 => mul (substY i q p1) (substY i q p2)
+
+/-! ### Eval correctness for substY -/
+
+/-- Updating one slot of an environment. Used in the eval theorem
+for `substY`: substituting `q` for `y_i` semantically means evaluating
+with `env i` replaced by `eval q x env`. -/
+noncomputable def updateEnv {n : Nat} (env : Fin n → Real) (i : Fin n)
+    (v : Real) : Fin n → Real :=
+  fun j => if i = j then v else env j
+
+/-- Eval distributes through substitution: substituting q for y_i
+in p and evaluating equals evaluating p with the env's i-slot
+replaced by eval q. -/
+theorem eval_substY {n : Nat} (i : Fin n) (q : MultiPoly n)
+    (p : MultiPoly n) (x : Real) (env : Fin n → Real) :
+    eval (substY i q p) x env =
+    eval p x (updateEnv env i (eval q x env)) := by
+  induction p with
+  | const c =>
+    show c = c
+    rfl
+  | varX =>
+    show x = x
+    rfl
+  | varY j =>
+    -- substY i q (varY j) = if i = j then q else varY j
+    -- eval (varY j) x (updateEnv env i (eval q x env))
+    --   = (updateEnv env i (eval q x env)) j
+    --   = if i = j then eval q x env else env j
+    show eval (if i = j then q else varY j) x env
+       = (updateEnv env i (eval q x env)) j
+    by_cases h : i = j
+    · simp [h, updateEnv]
+    · simp [h, updateEnv]
+      show eval (varY j) x env = env j
+      rfl
+  | add p1 p2 ih1 ih2 =>
+    show eval (substY i q p1) x env + eval (substY i q p2) x env
+       = eval p1 x (updateEnv env i (eval q x env))
+       + eval p2 x (updateEnv env i (eval q x env))
+    rw [ih1, ih2]
+  | sub p1 p2 ih1 ih2 =>
+    show eval (substY i q p1) x env - eval (substY i q p2) x env
+       = eval p1 x (updateEnv env i (eval q x env))
+       - eval p2 x (updateEnv env i (eval q x env))
+    rw [ih1, ih2]
+  | mul p1 p2 ih1 ih2 =>
+    show eval (substY i q p1) x env * eval (substY i q p2) x env
+       = eval p1 x (updateEnv env i (eval q x env))
+       * eval p2 x (updateEnv env i (eval q x env))
+    rw [ih1, ih2]
+
 open Classical in
 /-- `true` if the polynomial is the literal `const 0`. -/
 noncomputable def multiIsZeroConst {n : Nat} : MultiPoly n → Bool
