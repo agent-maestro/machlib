@@ -44,6 +44,7 @@ import MachLib.Pfaffian
 import MachLib.EMLTreeComposition
 import MachLib.EMLPfaffian
 import MachLib.CosNotInEMLAnyDepth
+import MachLib.LambertW
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
 import MachLib.KhovanskiiLemma
