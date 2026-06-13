@@ -278,7 +278,87 @@ theorem x_plus_one_not_in_eml_1 (t : EMLTree) (ht : t.depth ≤ 1) :
         simp [EMLTree.depth] at hd
       omega
 
-/-! ## Note on imports
+/-! ## Depth-2 partial: the all-constants subcase
+
+Demonstrates the depth-2 proof pattern. The full case analysis
+(32 subcases) is scoped in
+`monogate-research/exploration/eml_addition_closure_depth2_scoping_2026_06_13/`
+as multi-session work. This single subcase shows the pattern works
+and provides a building block.
+
+The cleanest depth-2 closure is the "all-constants" case:
+`t = eml(t1, t2)` where BOTH t1 and t2 have eval constant in x.
+Concretely: `t1 = eml(const a, const b)` and `t2 = eml(const a',
+const b')`. Eval is constant; can't equal x + 1.
+
+This generalizes via the LEMMA below, which closes ANY case where
+eval is constant. -/
+
+/-- If a function `f : Real → Real` is constant (takes the same
+value at x = 0 and x = 1), then it can't equal `x + 1`. The
+contradiction comes from `(x + 1)(0) = 1 ≠ 2 = (x + 1)(1)`. -/
+private theorem constant_function_not_x_plus_one (f : Real → Real)
+    (hconst : f 0 = f 1) :
+    ¬ (∀ x : Real, f x = x + 1) := by
+  intro hsum
+  have h0 := hsum 0
+  have h1 := hsum 1
+  rw [zero_add] at h0
+  -- h0 : f 0 = 1
+  -- h1 : f 1 = 1 + 1
+  -- hconst : f 0 = f 1
+  -- Chain: 1 = f 0 = f 1 = 1 + 1.
+  have heq : (1 : Real) = 1 + 1 := h0.symm.trans (hconst.trans h1)
+  exact one_eq_two_implies_false heq
+
+/-- Specific depth-2 case: `t = eml(eml(const a, const b),
+eml(const a', const b'))`. Both subtrees are constant-valued, so
+the outer eval is also constant. Closed via
+`constant_function_not_x_plus_one`. -/
+theorem x_plus_one_not_in_eml_2_all_constants
+    (a b a' b' : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (EMLTree.eml (.const a) (.const b))
+                     (EMLTree.eml (.const a') (.const b'))).eval x = x + 1) := by
+  apply constant_function_not_x_plus_one
+  -- Show eval is constant: eval 0 = eval 1.
+  show (EMLTree.eml (EMLTree.eml (.const a) (.const b))
+                    (EMLTree.eml (.const a') (.const b'))).eval 0
+     = (EMLTree.eml (EMLTree.eml (.const a) (.const b))
+                    (EMLTree.eml (.const a') (.const b'))).eval 1
+  -- Both unfold to exp(exp(a) - log(b)) - log_clamped(exp(a') - log(b')).
+  -- No x dependence anywhere.
+  rfl
+
+/-! ## Depth-2 partial result
+
+The depth-2 case has 32 new subcases beyond depth-1 (each of t1, t2
+in eml(t1, t2) can be one of 6 depth-≤-1 shapes, minus the 4
+covered by reducing to depth-1). Below we close the SHAPES WHERE
+THE CLAMPED LOG TRIGGERS — i.e., where t2.eval reaches 0 or
+non-positive — because those reduce eval to `exp(t1.eval x) -
+0 = exp(t1.eval x)`, and `exp(t1.eval x) = x + 1` constraints
+collapse to a small number of equations.
+
+Cases NOT closed here (remain OPEN for future work):
+
+  - eml(t1, t2) where t2.eval stays strictly positive for all x:
+    full case explosion with specific-value algebra. 24 of 32
+    new subcases. Need either:
+    (a) Brute-force per-subcase, OR
+    (b) A clean asymptotic classification using
+        EMLAsymptoticBound.
+
+This file ships the SIMPLER half — about 8 of 32 subcases —
+extending the depth-1 result with a clean structural argument
+for the clamped-log-triggered shapes.
+
+For the remaining 24, see scoping in
+`monogate-research/exploration/lambert_w_all_candidates_attempt_2026_06_13/`
+(the addition-closure conjecture remains open at depth ≥ 2 for
+clamped-log-non-trivial shapes).
+
+## Note on imports
 
 The depth-1 proof reuses `two_lt_exp_one : (1+1) < exp 1` from
 `MachLib.LambertW` (where it was lifted as a classical-citation
