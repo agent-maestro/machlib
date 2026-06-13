@@ -309,6 +309,76 @@ theorem eval_substY {n : Nat} (i : Fin n) (q : MultiPoly n)
        * eval p2 x (updateEnv env i (eval q x env))
     rw [ih1, ih2]
 
+/-! ### Degree bound for substY
+
+The Khovanskii chain-step reduction needs to bound the polynomial
+degree after substituting a chain relation for a chain variable.
+The bound:
+
+  totalDegree (substY i q p) ≤ totalDegree p * (1 + totalDegree q)
+
+Tight at p = (varY i)^k where the bound becomes k * tD(q) and the
+LHS equals exactly k * tD(q). -/
+theorem totalDegree_substY_le {n : Nat} (i : Fin n) (q : MultiPoly n)
+    (p : MultiPoly n) :
+    totalDegree (substY i q p) ≤ totalDegree p * (1 + totalDegree q) := by
+  induction p with
+  | const c =>
+    show (0 : Nat) ≤ 0 * (1 + totalDegree q)
+    simp
+  | varX =>
+    show (1 : Nat) ≤ 1 * (1 + totalDegree q)
+    rw [Nat.one_mul]
+    exact Nat.le_add_right 1 _
+  | varY j =>
+    show totalDegree (if i = j then q else varY j) ≤
+         1 * (1 + totalDegree q)
+    by_cases h : i = j
+    · -- substY varY_i = q. Goal becomes totalDegree q ≤ 1 + totalDegree q.
+      simp [h, Nat.one_mul]
+    · -- substY varY_j (j ≠ i) = varY j. Goal: 1 ≤ 1 + totalDegree q.
+      simp [h, Nat.one_mul]
+      exact Nat.le_add_right 1 _
+  | add p1 p2 ih1 ih2 =>
+    show Nat.max (totalDegree (substY i q p1)) (totalDegree (substY i q p2)) ≤
+         Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · have hp1_le_max : totalDegree p1 ≤ Nat.max (totalDegree p1) (totalDegree p2) :=
+        Nat.le_max_left _ _
+      have hmul : totalDegree p1 * (1 + totalDegree q) ≤
+             Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q) :=
+        Nat.mul_le_mul_right _ hp1_le_max
+      exact Nat.le_trans ih1 hmul
+    · have hp2_le_max : totalDegree p2 ≤ Nat.max (totalDegree p1) (totalDegree p2) :=
+        Nat.le_max_right _ _
+      have hmul : totalDegree p2 * (1 + totalDegree q) ≤
+             Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q) :=
+        Nat.mul_le_mul_right _ hp2_le_max
+      exact Nat.le_trans ih2 hmul
+  | sub p1 p2 ih1 ih2 =>
+    show Nat.max (totalDegree (substY i q p1)) (totalDegree (substY i q p2)) ≤
+         Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · have hp1_le_max : totalDegree p1 ≤ Nat.max (totalDegree p1) (totalDegree p2) :=
+        Nat.le_max_left _ _
+      have hmul : totalDegree p1 * (1 + totalDegree q) ≤
+             Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q) :=
+        Nat.mul_le_mul_right _ hp1_le_max
+      exact Nat.le_trans ih1 hmul
+    · have hp2_le_max : totalDegree p2 ≤ Nat.max (totalDegree p1) (totalDegree p2) :=
+        Nat.le_max_right _ _
+      have hmul : totalDegree p2 * (1 + totalDegree q) ≤
+             Nat.max (totalDegree p1) (totalDegree p2) * (1 + totalDegree q) :=
+        Nat.mul_le_mul_right _ hp2_le_max
+      exact Nat.le_trans ih2 hmul
+  | mul p1 p2 ih1 ih2 =>
+    show totalDegree (substY i q p1) + totalDegree (substY i q p2) ≤
+         (totalDegree p1 + totalDegree p2) * (1 + totalDegree q)
+    rw [Nat.add_mul]
+    exact Nat.add_le_add ih1 ih2
+
 open Classical in
 /-- `true` if the polynomial is the literal `const 0`. -/
 noncomputable def multiIsZeroConst {n : Nat} : MultiPoly n → Bool
