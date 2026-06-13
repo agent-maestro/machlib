@@ -419,3 +419,65 @@ CosNotInEML.lean              1  (cos_pi_div_two model)
 Total: 253. (After this sprint's swap: the materially-false
 `derivative_rank_lt` deleted, the classically-true `zero_count_bound_classical`
 added in its place. Same count, strictly improved quality.)
+
+## §8 — 2026-06-13 addendum: cos any-depth closure
+
+After the sprint snapshot above, one focused single-day closure landed:
+`MachLib.CosNotInEMLAnyDepth` (commit `machlib@6ee4d97`). This proves
+`cos_not_in_eml_any_depth (k : Nat) : ¬ InEMLDepth (fun x => Real.cos x) k`,
+the symmetric companion to `sin_not_in_eml_any_depth`. The structural proof
+is parallel to sin's (same `eml_pfaffian` envelope + Khovanskii zero bound
++ overrun-the-bound contradiction), but the supporting infrastructure
+(cos's `cos_at_half_odd_pi` induction, the cos-zeros list nodup proof,
+the strict-order lemma) is constructive and not a port.
+
+Three new classical-citation axioms landed with the closure:
+
+1. **`pi_div_one_plus_one_pos : 0 < pi / (1 + 1)`** (CosNotInEMLAnyDepth.lean).
+   Trivial classical fact. Discharge path: ~20 lines once Ring.lean grows a
+   `div_pos` family.
+2. **`pi_div_one_plus_one_lt_pi : pi / (1 + 1) < pi`** (CosNotInEMLAnyDepth.lean).
+   Same discharge path.
+3. **`eml_pfaffian_validon_from_cos_equality`** (CosNotInEMLAnyDepth.lean).
+   Cos analog of the sin-side §3 axiom. Same classical
+   smoothness-preservation argument verbatim; cos is smooth everywhere
+   just like sin, and the connectivity argument is phase-independent.
+   Discharge path: the same Smoothness module that retires the sin-side
+   axiom retires this one too. Multi-session; both axioms ride one closure.
+
+**New total: 256 axioms** (253 + 3).
+
+**Updated file-by-file counts** (delta only, rest unchanged):
+
+```
+CosNotInEMLAnyDepth.lean      3   (NEW FILE — see §8)
+```
+
+**Per-axiom-family impact (categorical, not quantitative):** the cos
+closure does not introduce a new family. All three new axioms fall into
+existing families documented in §1:
+
+- `pi_div_one_plus_one_pos` and `pi_div_one_plus_one_lt_pi` → real
+  arithmetic substrate (would belong in Basic.lean / Ring.lean once
+  div-ordering lands there).
+- `eml_pfaffian_validon_from_cos_equality` → smoothness-preservation
+  cluster, same family as `eml_pfaffian_validon_from_sin_equality` (§3).
+
+Reviewer pre-emption answer A1 in §6 ("252 axioms total") should now read
+"256 axioms total". The narrative is unchanged: the Khovanskii closure
+is conditional on a small number of explicit classical citations, all
+named, all with discharge paths. The cos closure does not change the
+shape of that story — it adds three concretely-named axioms in already-
+existing categories, all classically-true.
+
+**What this closure adds to the EML credibility story:** the sin/cos
+barrier symmetry is now restored. Before this commit, sin had
+4 stratification levels closed (depth ≤ 0, ≤ 1, depth-2 32/32,
+any-depth) while cos only had 2 (depth ≤ 0, ≤ 1). After this commit,
+cos has 3 (depth ≤ 0, ≤ 1, any-depth — depth-2 is structurally
+redundant given any-depth and is intentionally not added).
+
+The cos closure does NOT discharge any prior axiom, does NOT modify
+any prior proof, and does NOT change the Khovanskii closure narrative.
+It's pure addition: +1 file, +3 axioms, +1 main theorem, +supporting
+infrastructure.
