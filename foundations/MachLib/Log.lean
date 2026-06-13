@@ -41,6 +41,23 @@ theorem log_exp (x : Real) : log (exp x) = x := by
   have key : exp (log (exp x)) = exp x := exp_log hpos
   exact exp_injective key
 
+/-- `log x = 0` for `x ≤ 0`. Direct from MachLib's clamped-log
+convention (the definition's else-branch). Used by downstream EML
+expressiveness arguments where the clamped log triggers
+asymptotically. -/
+theorem log_nonpos {x : Real} (hx : x ≤ 0) : log x = 0 := by
+  unfold log
+  have hnot : ¬ (0 < x) := by
+    intro h
+    -- 0 < x ≤ 0: case-split on ≤ via le_iff_lt_or_eq.
+    rcases (le_iff_lt_or_eq x 0).mp hx with hxlt | hxeq
+    · -- x < 0 and 0 < x: chain to 0 < 0 via lt_trans_ax.
+      exact lt_irrefl_ax 0 (lt_trans_ax h hxlt)
+    · -- x = 0 and 0 < x: substitute to get 0 < 0.
+      rw [hxeq] at h
+      exact lt_irrefl_ax 0 h
+  simp [hnot]
+
 theorem log_one : log 1 = 0 := by
   have : log (exp 0) = 0 := log_exp 0
   rw [exp_zero] at this

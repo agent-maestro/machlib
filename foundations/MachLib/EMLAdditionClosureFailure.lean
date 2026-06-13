@@ -370,6 +370,69 @@ theorem x_plus_one_not_in_eml_2_all_constants
   -- No x dependence anywhere.
   rfl
 
+/-! ## Asymptotic-classification subcase: eml(const c1, eml(const c2, var))
+
+This is a depth-2 subcase where the function is NOT constant in x
+(unlike all-constants) but IS eventually constant. The mechanism:
+
+  t.eval x = exp(c1) - log_clamped(exp(c2) - log(x))
+
+For x ≥ exp(exp(c2)):
+  - log(x) ≥ log(exp(exp(c2))) = exp(c2)  (using log_lt_log + log_exp)
+  - So exp(c2) - log(x) ≤ 0
+  - Hence log_clamped(exp(c2) - log(x)) = 0 (by log_nonpos)
+  - Hence t.eval x = exp(c1) - 0 = exp(c1)  (constant!)
+
+Then apply `eventually_constant_not_x_plus_one` with N = exp(exp(c2))
+and c = exp(c1).
+
+This is the FIRST concrete subcase where the asymptotic-classification
+approach beats specific-value algebra: at small x, the function IS
+non-trivial; only at large x does it collapse to a constant. -/
+
+theorem x_plus_one_not_in_eml_2_eml_const_eml_const_var
+    (c1 c2 : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (.const c1)
+                     (EMLTree.eml (.const c2) .var)).eval x = x + 1) := by
+  apply eventually_constant_not_x_plus_one _ (Real.exp c1) (Real.exp (Real.exp c2))
+  intro x hx
+  -- Goal: t.eval x = exp c1, given x ≥ exp(exp c2).
+  show Real.exp c1 - Real.log (Real.exp c2 - Real.log x) = Real.exp c1
+  -- Step 1: show log x ≥ exp c2.
+  have h_exp_c2_pos : (0 : Real) < Real.exp (Real.exp c2) := exp_pos _
+  have hx_pos : (0 : Real) < x := lt_of_lt_of_le h_exp_c2_pos hx
+  -- log is monotone on positives. log(x) ≥ log(exp(exp c2)) = exp c2.
+  rcases (le_iff_lt_or_eq (Real.exp (Real.exp c2)) x).mp hx with hxlt | hxeq
+  · -- x > exp(exp c2): strict.
+    have hlog_lt : Real.log (Real.exp (Real.exp c2)) < Real.log x :=
+      log_lt_log h_exp_c2_pos hxlt
+    rw [log_exp] at hlog_lt
+    -- hlog_lt : exp c2 < log x
+    -- So exp c2 - log x < 0.
+    have h_diff_neg : Real.exp c2 - Real.log x < 0 := by
+      -- (exp c2) + (-log x) < 0 iff exp c2 < log x.
+      rw [sub_def]
+      -- Goal: exp c2 + -log x < 0
+      have step := add_lt_add_left hlog_lt (-Real.log x)
+      -- step : -log x + exp c2 < -log x + log x
+      rw [neg_add_self] at step
+      -- step : -log x + exp c2 < 0
+      rw [add_comm] at step
+      exact step
+    have h_log_zero : Real.log (Real.exp c2 - Real.log x) = 0 :=
+      log_nonpos (le_of_lt h_diff_neg)
+    rw [h_log_zero, sub_def, neg_zero, add_zero]
+  · -- x = exp(exp c2): equality. log x = log(exp(exp c2)) = exp c2.
+    -- So exp c2 - log x = 0. log_clamped(0) = log_zero = 0.
+    rw [← hxeq]
+    rw [log_exp]
+    -- Goal: exp c1 - log (exp c2 - exp c2) = exp c1
+    -- exp c2 - exp c2 = 0
+    have h_self_diff : Real.exp c2 - Real.exp c2 = (0 : Real) := by
+      rw [sub_def, add_neg]
+    rw [h_self_diff, log_zero, sub_def, neg_zero, add_zero]
+
 /-! ## Depth-2 partial result
 
 The depth-2 case has 32 new subcases beyond depth-1 (each of t1, t2
