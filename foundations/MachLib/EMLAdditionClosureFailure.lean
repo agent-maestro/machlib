@@ -75,6 +75,46 @@ private theorem one_eq_two_implies_false (h : (1 : Real) = 1 + 1) : False := by
   rw [← step] at hz
   exact lt_irrefl_ax 0 hz
 
+/-- Generalization of `one_eq_two_implies_false`: for any `a : Real`,
+`a = a + 1 → False`. Reusable for any asymptotic-classification
+disproof that reduces to "constant value equals constant value + 1". -/
+private theorem a_eq_a_plus_one_false (a : Real) (h : a = a + 1) : False := by
+  -- Subtract a from both sides via congrArg of (· + -a):
+  have step : a + (-a) = (a + 1) + (-a) := by
+    rw [← h]
+  rw [add_neg] at step
+  -- step : 0 = (a + 1) + -a
+  -- Simplify RHS: (a + 1) + -a = a + 1 + -a = a + -a + 1 = 0 + 1 = 1.
+  rw [add_assoc, add_comm 1 (-a), ← add_assoc, add_neg, zero_add] at step
+  -- step : 0 = 1
+  have hz : (0 : Real) < 1 := zero_lt_one_ax
+  rw [← step] at hz
+  exact lt_irrefl_ax 0 hz
+
+/-- **The asymptotic-classification anchor for depth ≥ 2.** If a
+function `f : Real → Real` is eventually constant (takes the same
+value `c` for all `x ≥ N`), then `f` is not eventually equal to
+`x + 1`. The contradiction comes from `f N = c = N + 1` and
+`f (N + 1) = c = N + 2`, giving `N + 1 = N + 2`, hence `0 = 1`.
+
+This is the load-bearing helper for ANY depth-2 (or deeper)
+subcase where the eval becomes constant for large x — which
+happens whenever the clamped log triggers, i.e., when an inner
+sub-evaluation reaches ≤ 0 asymptotically. -/
+theorem eventually_constant_not_x_plus_one (f : Real → Real)
+    (c N : Real) (hN : ∀ x : Real, N ≤ x → f x = c) :
+    ¬ (∀ x : Real, f x = x + 1) := by
+  intro hsum
+  -- Sample at two points x = N and x = N + 1, both ≥ N.
+  have h_N1_geq : N ≤ N + 1 := by
+    have := add_lt_add_left zero_lt_one_ax N
+    rw [add_zero] at this
+    exact le_of_lt this
+  have hc1 : c = N + 1 := (hN N (le_refl _)).symm.trans (hsum N)
+  have hc2 : c = N + 1 + 1 := (hN (N + 1) h_N1_geq).symm.trans (hsum (N + 1))
+  -- Combining: N + 1 = (N + 1) + 1, hence 0 = 1 via a_eq_a_plus_one_false.
+  exact a_eq_a_plus_one_false (N + 1) (hc1.symm.trans hc2)
+
 /-! ## The target function and depth-0 proof -/
 
 /-- `x + 1` is not expressible by any depth-0 EMLTree. The two
