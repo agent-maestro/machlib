@@ -213,6 +213,67 @@ theorem eval_var (x : Real) : var.eval x = x := rfl
 
 theorem eval_expFn (x : Real) : expFn.eval x = Real.exp x := rfl
 
+/-! ### Total derivative (constructive Khovanskii item 2, FRAMEWORK)
+
+The total derivative of a PfaffianFn `f(x, y_1, ..., y_n)` treats it
+as a function of x where y_i = y_i(x) are determined by the chain
+relations:
+
+  d/dx f = ∂f/∂x + Σ_{i=0..n-1} (∂f/∂y_i) · (chain.relations i)
+
+The construction below assembles this polynomial. Eval correctness
+(`HasDerivAt`-shaped theorem) is FUTURE WORK; it requires multi-
+variable HasDerivAt machinery that MachLib does not have yet. See
+`monogate-research/exploration/constructive_khovanskii_zero_bound_scoping_2026_06_13/`
+for the closure path estimate.
+
+The structural framework here is the load-bearing first step;
+downstream consumers can use the polynomial-level structure even
+before the HasDerivAt proof lands. -/
+
+/-- Recursive accumulator: sum the chain-rule contribution from each
+chain variable up to index `k`. Returns `dX poly + Σ_{i<k} (chain.relations i) * (dY i poly)`. -/
+noncomputable def chainSumAux {n : Nat} (chain : PfaffianChain n)
+    (poly : MultiPoly n) : Nat → MultiPoly n
+  | 0 => MultiPoly.dX poly
+  | k + 1 =>
+    if h : k < n then
+      MultiPoly.add
+        (chainSumAux chain poly k)
+        (MultiPoly.mul (chain.relations ⟨k, h⟩)
+                       (MultiPoly.dY ⟨k, h⟩ poly))
+    else
+      chainSumAux chain poly k
+
+/-- The total derivative as a PfaffianFn. Same chain (the y_i don't
+change), updated polynomial via the chain rule. -/
+noncomputable def totalDerivative (f : PfaffianFn) : PfaffianFn :=
+  { n := f.n,
+    chain := f.chain,
+    poly := chainSumAux f.chain f.poly f.n }
+
+/-- Trivial structural check: totalDerivative preserves chain length. -/
+theorem totalDerivative_chainLength (f : PfaffianFn) :
+    (totalDerivative f).chainLength = f.chainLength := rfl
+
+/-- The base case of `chainSumAux`: at k = 0, it's just dX of the
+polynomial. -/
+theorem chainSumAux_zero {n : Nat} (chain : PfaffianChain n)
+    (poly : MultiPoly n) :
+    chainSumAux chain poly 0 = MultiPoly.dX poly := rfl
+
+/-- The recursive step of `chainSumAux`: adds the chain-rule
+contribution for the next variable. -/
+theorem chainSumAux_succ {n : Nat} (chain : PfaffianChain n)
+    (poly : MultiPoly n) (k : Nat) (h : k < n) :
+    chainSumAux chain poly (k + 1) =
+    MultiPoly.add
+      (chainSumAux chain poly k)
+      (MultiPoly.mul (chain.relations ⟨k, h⟩)
+                     (MultiPoly.dY ⟨k, h⟩ poly)) := by
+  show (if h : k < n then _ else _) = _
+  simp [h]
+
 /-! ### Chain-combining operations (phase 3.5)
 
 `add`, `sub`, `mul` of two PfaffianFns: build a combined chain via
