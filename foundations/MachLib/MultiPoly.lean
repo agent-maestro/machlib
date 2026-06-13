@@ -380,6 +380,60 @@ theorem totalDegree_substY_le {n : Nat} (i : Fin n) (q : MultiPoly n)
     rw [Nat.add_mul]
     exact Nat.add_le_add ih1 ih2
 
+/-! ### Drop last chain variable (chain-projection on the polynomial)
+
+When `degreeY n p = 0` for `p : MultiPoly (n+1)` (i.e., p doesn't
+depend on the last chain variable), p can be projected to
+`MultiPoly n`. This is the polynomial-level chain projection used
+by Item 4 (Khovanskii reduction) to reduce chain length.
+
+The construction is structural: replace `varY ⟨n, _⟩` with `const 0`
+(safe under the degreeY n = 0 hypothesis). -/
+noncomputable def dropLastY {n : Nat} : MultiPoly (n + 1) → MultiPoly n
+  | .const c => .const c
+  | .varX => .varX
+  | .varY i =>
+      if h : i.val < n then .varY ⟨i.val, h⟩
+      else .const 0
+  | .add p q => .add (dropLastY p) (dropLastY q)
+  | .sub p q => .sub (dropLastY p) (dropLastY q)
+  | .mul p q => .mul (dropLastY p) (dropLastY q)
+
+/-- `dropLastY` preserves totalDegree (since we only replace nodes
+with degree-0 constants). -/
+theorem dropLastY_totalDegree_le {n : Nat} (p : MultiPoly (n + 1)) :
+    totalDegree (dropLastY p) ≤ totalDegree p := by
+  induction p with
+  | const c => exact Nat.le_refl _
+  | varX => exact Nat.le_refl _
+  | varY i =>
+    show totalDegree (if h : i.val < n then varY ⟨i.val, h⟩ else const 0) ≤ 1
+    by_cases h : i.val < n
+    · simp [h]
+      show (1 : Nat) ≤ 1
+      exact Nat.le_refl _
+    · simp [h]
+      show (0 : Nat) ≤ 1
+      exact Nat.zero_le _
+  | add p q ihp ihq =>
+    show Nat.max (totalDegree (dropLastY p)) (totalDegree (dropLastY q)) ≤
+         Nat.max (totalDegree p) (totalDegree q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans ihp (Nat.le_max_left _ _)
+    · exact Nat.le_trans ihq (Nat.le_max_right _ _)
+  | sub p q ihp ihq =>
+    show Nat.max (totalDegree (dropLastY p)) (totalDegree (dropLastY q)) ≤
+         Nat.max (totalDegree p) (totalDegree q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans ihp (Nat.le_max_left _ _)
+    · exact Nat.le_trans ihq (Nat.le_max_right _ _)
+  | mul p q ihp ihq =>
+    show totalDegree (dropLastY p) + totalDegree (dropLastY q) ≤
+         totalDegree p + totalDegree q
+    exact Nat.add_le_add ihp ihq
+
 /-! ### HasDerivAt correctness for dX (partial derivative in x)
 
 For a fixed environment `env`, the function `fun y => eval p y env` is
