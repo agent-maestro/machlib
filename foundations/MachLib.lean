@@ -42,6 +42,7 @@ import MachLib.SinNotInEMLDepth2FinalVcVc
 import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
 import MachLib.EMLPfaffian
+import MachLib.CosNotInEMLAnyDepth
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
 import MachLib.KhovanskiiLemma
