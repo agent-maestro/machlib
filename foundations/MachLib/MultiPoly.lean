@@ -379,6 +379,50 @@ theorem totalDegree_substY_le {n : Nat} (i : Fin n) (q : MultiPoly n)
     rw [Nat.add_mul]
     exact Nat.add_le_add ih1 ih2
 
+/-! ### Chain-projection: substY eliminates y_i when q doesn't contain y_i
+
+The Khovanskii chain-step reduction substitutes the chain relation
+for the HIGHEST chain variable y_{n-1}. For a triangular chain, that
+relation has `degreeY (n-1) = 0` (the highest variable's relation
+doesn't depend on itself). After substitution, the resulting
+polynomial has `degreeY (n-1) = 0` everywhere — i.e., y_{n-1} has
+been eliminated.
+
+This is the **load-bearing degree-projection lemma** for the chain-
+length-induction step of Khovanskii's proof. -/
+theorem degreeY_substY_eliminates {n : Nat} (i : Fin n) (q : MultiPoly n)
+    (hq : degreeY i q = 0) (p : MultiPoly n) :
+    degreeY i (substY i q p) = 0 := by
+  induction p with
+  | const c =>
+    show degreeY i (const c) = 0
+    rfl
+  | varX =>
+    show degreeY i (varX (n := n)) = 0
+    rfl
+  | varY j =>
+    show degreeY i (if i = j then q else varY j) = 0
+    by_cases h : i = j
+    · -- i = j: result is q. degreeY i q = 0 by hypothesis.
+      subst h
+      simp
+      exact hq
+    · -- i ≠ j: result is varY j. degreeY i (varY j) = 0 since i ≠ j.
+      simp [h]
+      show degreeY i (varY j) = 0
+      simp [degreeY, h]
+  | add p1 p2 ih1 ih2 =>
+    show Nat.max (degreeY i (substY i q p1)) (degreeY i (substY i q p2)) = 0
+    rw [ih1, ih2]
+    rfl
+  | sub p1 p2 ih1 ih2 =>
+    show Nat.max (degreeY i (substY i q p1)) (degreeY i (substY i q p2)) = 0
+    rw [ih1, ih2]
+    rfl
+  | mul p1 p2 ih1 ih2 =>
+    show degreeY i (substY i q p1) + degreeY i (substY i q p2) = 0
+    rw [ih1, ih2]
+
 open Classical in
 /-- `true` if the polynomial is the literal `const 0`. -/
 noncomputable def multiIsZeroConst {n : Nat} : MultiPoly n → Bool
