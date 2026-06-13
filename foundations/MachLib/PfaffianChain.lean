@@ -281,6 +281,99 @@ theorem chainSumAux_succ {n : Nat} (chain : PfaffianChain n)
   show (if h : k < n then _ else _) = _
   simp [h]
 
+/-! ### Structural total derivative + HasDerivAt for arbitrary chain length
+
+The `chainTotalDeriv` function is a STRUCTURAL recursion that computes
+the total derivative of a MultiPoly with respect to x, given a chain.
+Each varY i is replaced by the chain relation `chain.relations i`
+(which is the derivative of the corresponding chain function), and
+the operators distribute as expected.
+
+The corresponding `multiPolyHasDerivAt_eval_with_chain` theorem
+proves that this is indeed the derivative of `eval p y (chain.chainValues y)`
+at x, given chain coherence. -/
+
+/-- The structural total derivative of a MultiPoly, with each y_i
+replaced by the chain relation (giving y_i'(x)). -/
+noncomputable def chainTotalDeriv {n : Nat} (chain : PfaffianChain n) :
+    MultiPoly n → MultiPoly n
+  | .const _ => .const 0
+  | .varX => .const 1
+  | .varY i => chain.relations i
+  | .add p q => .add (chainTotalDeriv chain p) (chainTotalDeriv chain q)
+  | .sub p q => .sub (chainTotalDeriv chain p) (chainTotalDeriv chain q)
+  | .mul p q => .add
+      (.mul (chainTotalDeriv chain p) q)
+      (.mul p (chainTotalDeriv chain q))
+
+/-- **THE CHAIN-RULE THEOREM.** For a PfaffianChain coherent at x, the
+function `fun y => eval p y (chain.chainValues y)` has HasDerivAt at x
+with derivative `eval (chainTotalDeriv chain p) x (chain.chainValues x)`.
+
+Constructive proof by structural induction on the MultiPoly AST:
+  - const c: derivative is 0.
+  - varX: derivative is 1.
+  - varY i: derivative is chain.relations i (from chain coherence).
+  - add/sub/mul: derived by HasDerivAt_add/sub/mul applied to IHs.
+
+This is the CONSTRUCTIVE proof of the multi-variable chain rule
+specialized to PfaffianFn evaluations. -/
+theorem multiPolyHasDerivAt_eval_with_chain {n : Nat}
+    (chain : PfaffianChain n) (p : MultiPoly n) (x : Real)
+    (hcoherent : chain.IsCoherentAt x) :
+    HasDerivAt (fun y => MultiPoly.eval p y (chain.chainValues y))
+               (MultiPoly.eval (chainTotalDeriv chain p) x
+                                (chain.chainValues x))
+               x := by
+  induction p with
+  | const c =>
+    -- F(y) = c, F'(x) = 0.
+    show HasDerivAt (fun _ => c) 0 x
+    exact HasDerivAt_const c x
+  | varX =>
+    -- F(y) = y, F'(x) = 1.
+    show HasDerivAt (fun y => y) 1 x
+    exact HasDerivAt_id x
+  | varY i =>
+    -- F(y) = chain.chainValues y i = chain.evals i y.
+    -- F'(x) = chain.evals i derivative at x
+    --       = eval (chain.relations i) x (chain.chainValues x) by coherence.
+    show HasDerivAt (fun y => chain.chainValues y i)
+                    (MultiPoly.eval (chain.relations i) x (chain.chainValues x))
+                    x
+    -- chain.chainValues y i = chain.evals i y by def.
+    have heq : (fun y => chain.chainValues y i) = chain.evals i := by
+      funext y
+      rfl
+    rw [heq]
+    exact hcoherent i
+  | add p q ihp ihq =>
+    show HasDerivAt
+      (fun y => MultiPoly.eval p y (chain.chainValues y)
+              + MultiPoly.eval q y (chain.chainValues y))
+      (MultiPoly.eval (chainTotalDeriv chain p) x (chain.chainValues x)
+       + MultiPoly.eval (chainTotalDeriv chain q) x (chain.chainValues x))
+      x
+    exact HasDerivAt_add _ _ _ _ x ihp ihq
+  | sub p q ihp ihq =>
+    show HasDerivAt
+      (fun y => MultiPoly.eval p y (chain.chainValues y)
+              - MultiPoly.eval q y (chain.chainValues y))
+      (MultiPoly.eval (chainTotalDeriv chain p) x (chain.chainValues x)
+       - MultiPoly.eval (chainTotalDeriv chain q) x (chain.chainValues x))
+      x
+    exact HasDerivAt_sub _ _ _ _ x ihp ihq
+  | mul p q ihp ihq =>
+    show HasDerivAt
+      (fun y => MultiPoly.eval p y (chain.chainValues y)
+              * MultiPoly.eval q y (chain.chainValues y))
+      (MultiPoly.eval (chainTotalDeriv chain p) x (chain.chainValues x)
+       * MultiPoly.eval q x (chain.chainValues x)
+       + MultiPoly.eval p x (chain.chainValues x)
+       * MultiPoly.eval (chainTotalDeriv chain q) x (chain.chainValues x))
+      x
+    exact HasDerivAt_mul _ _ _ _ x ihp ihq
+
 /-! ### HasDerivAt for length-0 chains (the base case of the full chain rule)
 
 For a PfaffianFn with chain length 0, the eval is just a univariate
