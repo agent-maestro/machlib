@@ -262,6 +262,13 @@ theorem chainSumAux_zero {n : Nat} (chain : PfaffianChain n)
     (poly : MultiPoly n) :
     chainSumAux chain poly 0 = MultiPoly.dX poly := rfl
 
+/-- For chain length 0 (no chain variables), `chainSumAux` at the
+chain's index `n` is just `dX poly`. The full total derivative on
+length-0 chains reduces to dX. -/
+theorem chainSumAux_at_chainLength_zero (chain : PfaffianChain 0)
+    (poly : MultiPoly 0) :
+    chainSumAux chain poly 0 = MultiPoly.dX poly := rfl
+
 /-- The recursive step of `chainSumAux`: adds the chain-rule
 contribution for the next variable. -/
 theorem chainSumAux_succ {n : Nat} (chain : PfaffianChain n)
@@ -273,6 +280,48 @@ theorem chainSumAux_succ {n : Nat} (chain : PfaffianChain n)
                      (MultiPoly.dY ⟨k, h⟩ poly)) := by
   show (if h : k < n then _ else _) = _
   simp [h]
+
+/-! ### HasDerivAt for length-0 chains (the base case of the full chain rule)
+
+For a PfaffianFn with chain length 0, the eval is just a univariate
+polynomial in x. The HasDerivAt theorem follows directly from
+`multiPolyHasDerivAt_eval_dX` since there are no chain variables to
+worry about.
+
+This is the BASE CASE of the full HasDerivAt-for-PfaffianFn theorem
+(needed for the constructive Khovanskii inductive step). The
+inductive case (chain length n+1) requires the multi-variable chain
+rule combining dX, dY, and the chain coherence — a separate ~150-200
+line proof. -/
+
+/-- For a PfaffianFn with no chain variables, the eval has HasDerivAt
+matching the totalDerivative (which reduces to dX in this case). -/
+theorem PfaffianFn.hasDerivAt_eval_chainLength_zero (f : PfaffianFn)
+    (h0 : f.n = 0) (x : Real) :
+    HasDerivAt f.eval (MultiPoly.eval (MultiPoly.dX f.poly) x
+                        (f.chain.chainValues x)) x := by
+  -- f.eval x = MultiPoly.eval f.poly x (f.chain.chainValues x).
+  -- With f.n = 0, chainValues is trivially the empty function.
+  -- HasDerivAt follows from multiPolyHasDerivAt_eval_dX with env =
+  -- chainValues x.
+  show HasDerivAt (fun y => MultiPoly.eval f.poly y (f.chain.chainValues y))
+                  (MultiPoly.eval (MultiPoly.dX f.poly) x (f.chain.chainValues x))
+                  x
+  -- For chain length 0, chainValues is constant (no actual values).
+  -- So `fun y => MultiPoly.eval f.poly y (f.chain.chainValues y)` equals
+  -- `fun y => MultiPoly.eval f.poly y (f.chain.chainValues x)`.
+  have hcv : ∀ y, f.chain.chainValues y = f.chain.chainValues x := by
+    intro y
+    -- chainValues : Fin n → Real with n = 0 is Fin.elim0 essentially.
+    funext i
+    -- i : Fin 0 is impossible, so this is vacuously true.
+    exact absurd i.isLt (by simp [h0])
+  have hfun : (fun y => MultiPoly.eval f.poly y (f.chain.chainValues y))
+            = (fun y => MultiPoly.eval f.poly y (f.chain.chainValues x)) := by
+    funext y
+    rw [hcv]
+  rw [hfun]
+  exact MultiPoly.multiPolyHasDerivAt_eval_dX f.poly (f.chain.chainValues x) x
 
 /-! ### Chain-combining operations (phase 3.5)
 
