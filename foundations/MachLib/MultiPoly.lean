@@ -1,4 +1,5 @@
 import MachLib.Ring
+import MachLib.Differentiation
 
 /-!
 # MachLib.MultiPoly — multivariate polynomial AST for Pfaffian chains
@@ -378,6 +379,55 @@ theorem totalDegree_substY_le {n : Nat} (i : Fin n) (q : MultiPoly n)
          (totalDegree p1 + totalDegree p2) * (1 + totalDegree q)
     rw [Nat.add_mul]
     exact Nat.add_le_add ih1 ih2
+
+/-! ### HasDerivAt correctness for dX (partial derivative in x)
+
+For a fixed environment `env`, the function `fun y => eval p y env` is
+a univariate polynomial in `y` with constants drawn from `env`. Its
+derivative at `x` equals `eval (dX p) x env`.
+
+This is the LOAD-BEARING univariate piece of the constructive
+Khovanskii Item 2. The full TOTAL derivative (where y_i are themselves
+functions of x via the chain) builds on this by adding the chain
+contributions; that remains as future work since it requires
+formalizing multi-variable HasDerivAt machinery that MachLib does not
+yet have. -/
+theorem multiPolyHasDerivAt_eval_dX {n : Nat} (p : MultiPoly n)
+    (env : Fin n → Real) (x : Real) :
+    HasDerivAt (fun y => eval p y env) (eval (dX p) x env) x := by
+  induction p with
+  | const c =>
+    -- eval (const c) y env = c, dX (const c) = const 0, eval = 0.
+    show HasDerivAt (fun _ => c) 0 x
+    exact HasDerivAt_const c x
+  | varX =>
+    -- eval varX y env = y, dX varX = const 1, eval = 1.
+    show HasDerivAt (fun y => y) 1 x
+    exact HasDerivAt_id x
+  | varY j =>
+    -- eval (varY j) y env = env j (constant), dX = const 0, eval = 0.
+    show HasDerivAt (fun _ => env j) 0 x
+    exact HasDerivAt_const (env j) x
+  | add p q ihp ihq =>
+    -- eval (add p q) y env = eval p y env + eval q y env.
+    -- dX (add p q) = add (dX p) (dX q).
+    -- HasDerivAt_add applied to IH for p and q.
+    show HasDerivAt (fun y => eval p y env + eval q y env)
+                    (eval (dX p) x env + eval (dX q) x env) x
+    exact HasDerivAt_add _ _ _ _ x ihp ihq
+  | sub p q ihp ihq =>
+    show HasDerivAt (fun y => eval p y env - eval q y env)
+                    (eval (dX p) x env - eval (dX q) x env) x
+    exact HasDerivAt_sub _ _ _ _ x ihp ihq
+  | mul p q ihp ihq =>
+    -- eval (mul p q) y env = eval p y env * eval q y env.
+    -- dX (mul p q) = add (mul (dX p) q) (mul p (dX q)).
+    -- eval = (eval (dX p) x env) * (eval q x env)
+    --      + (eval p x env) * (eval (dX q) x env).
+    show HasDerivAt (fun y => eval p y env * eval q y env)
+                    (eval (dX p) x env * eval q x env
+                     + eval p x env * eval (dX q) x env) x
+    exact HasDerivAt_mul _ _ _ _ x ihp ihq
 
 /-! ### Chain-projection: substY eliminates y_i when q doesn't contain y_i
 
