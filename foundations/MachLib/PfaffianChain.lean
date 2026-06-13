@@ -387,6 +387,54 @@ inductive case (chain length n+1) requires the multi-variable chain
 rule combining dX, dY, and the chain coherence — a separate ~150-200
 line proof. -/
 
+/-- **PfaffianFn HasDerivAt — general chain length.** For a PfaffianFn
+whose chain is coherent at x, the eval has HasDerivAt with derivative
+given by `chainTotalDeriv`. Direct application of
+`multiPolyHasDerivAt_eval_with_chain`. -/
+theorem PfaffianFn.hasDerivAt_eval (f : PfaffianFn) (x : Real)
+    (hcoherent : f.chain.IsCoherentAt x) :
+    HasDerivAt f.eval
+               (MultiPoly.eval (chainTotalDeriv f.chain f.poly) x
+                                (f.chain.chainValues x))
+               x := by
+  show HasDerivAt (fun y => MultiPoly.eval f.poly y (f.chain.chainValues y))
+                  (MultiPoly.eval (chainTotalDeriv f.chain f.poly) x
+                                   (f.chain.chainValues x))
+                  x
+  exact multiPolyHasDerivAt_eval_with_chain f.chain f.poly x hcoherent
+
+/-- The chain-total-derivative as a PfaffianFn (same chain, updated
+polynomial). This is the natural PfaffianFn-level wrapper for the
+constructive total derivative. Used in the constructive Khovanskii
+inductive step (Item 4) as the function whose zero count bounds f's
+via Rolle. -/
+noncomputable def chainTotalDerivative (f : PfaffianFn) : PfaffianFn :=
+  { n := f.n,
+    chain := f.chain,
+    poly := chainTotalDeriv f.chain f.poly }
+
+/-- Same chain length: the derivative preserves chain structure. -/
+theorem chainTotalDerivative_chainLength (f : PfaffianFn) :
+    f.chainTotalDerivative.chainLength = f.chainLength := rfl
+
+/-- Eval of the chain-total-derivative matches the polynomial-level
+chainTotalDeriv evaluation. -/
+theorem chainTotalDerivative_eval (f : PfaffianFn) (x : Real) :
+    f.chainTotalDerivative.eval x =
+    MultiPoly.eval (chainTotalDeriv f.chain f.poly) x (f.chain.chainValues x) := rfl
+
+/-- **The HasDerivAt theorem in PfaffianFn-natural form.** Repeats
+`PfaffianFn.hasDerivAt_eval` with the PfaffianFn wrapper for the
+derivative. This is the form Item 4 (Khovanskii reduction) actually
+uses with `zero_count_bound_by_deriv`. -/
+theorem hasDerivAt_eval_natural (f : PfaffianFn) (x : Real)
+    (hcoherent : f.chain.IsCoherentAt x) :
+    HasDerivAt f.eval (f.chainTotalDerivative.eval x) x := by
+  show HasDerivAt f.eval
+                  (MultiPoly.eval (chainTotalDeriv f.chain f.poly) x
+                                   (f.chain.chainValues x)) x
+  exact PfaffianFn.hasDerivAt_eval f x hcoherent
+
 /-- For a PfaffianFn with no chain variables, the eval has HasDerivAt
 matching the totalDerivative (which reduces to dX in this case). -/
 theorem PfaffianFn.hasDerivAt_eval_chainLength_zero (f : PfaffianFn)
