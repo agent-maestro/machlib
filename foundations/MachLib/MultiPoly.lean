@@ -429,18 +429,82 @@ theorem multiPolyHasDerivAt_eval_dX {n : Nat} (p : MultiPoly n)
                      + eval p x env * eval (dX q) x env) x
     exact HasDerivAt_mul _ _ _ _ x ihp ihq
 
-/-! ### Partial derivative in y_i (deferred)
+/-! ### HasDerivAt correctness for dY (partial derivative in y_i)
 
-The symmetric `multiPolyHasDerivAt_eval_dY` (partial derivative in
-y_i, holding x and other y_j constant) is the natural sibling of
-`multiPolyHasDerivAt_eval_dX` above. The proof structure parallels
-the dX case but requires careful handling of the `updateEnv`
-substitution at the goal-type level — Lean's definitional unfolding
-of `eval` doesn't fire automatically through `updateEnv` for the
-varY case.
-
-Deferred to a focused session. ~40-50 lines once the type-unification
-pattern is worked out. -/
+Symmetric to `multiPolyHasDerivAt_eval_dX`. Holds x and other y_j
+constant; differentiates with respect to the i-th chain variable
+treated as a univariate variable. -/
+theorem multiPolyHasDerivAt_eval_dY {n : Nat} (i : Fin n) (p : MultiPoly n)
+    (env : Fin n → Real) (x : Real) (yi₀ : Real) :
+    HasDerivAt (fun yi => eval p x (updateEnv env i yi))
+               (eval (dY i p) x (updateEnv env i yi₀))
+               yi₀ := by
+  induction p with
+  | const c =>
+    -- eval (const c) x (updateEnv env i yi) = c, dY = const 0.
+    show HasDerivAt (fun _ => c) 0 yi₀
+    exact HasDerivAt_const c yi₀
+  | varX =>
+    -- eval varX x (updateEnv env i yi) = x for all yi.
+    show HasDerivAt (fun _ => x) 0 yi₀
+    exact HasDerivAt_const x yi₀
+  | varY j =>
+    by_cases h : i = j
+    · -- i = j: function is fun yi => (updateEnv env i yi) i = yi.
+      -- dY i (varY i) = const 1, eval = 1.
+      subst h
+      -- Rewrite the function and derivative using updateEnv and dY definitions.
+      have hupd : ∀ yi, (updateEnv env i yi) i = yi := by
+        intro yi
+        show (if i = i then yi else env i) = yi
+        simp
+      have hfun : (fun yi => eval (varY i) x (updateEnv env i yi))
+                = (fun yi => yi) := by
+        funext yi
+        show (updateEnv env i yi) i = yi
+        exact hupd yi
+      have hdY : eval (dY i (varY i)) x (updateEnv env i yi₀) = 1 := by
+        show eval (if i = i then const 1 else const 0) x (updateEnv env i yi₀) = 1
+        simp only [if_true]
+        rfl
+      rw [hfun, hdY]
+      exact HasDerivAt_id yi₀
+    · -- i ≠ j: function is constant env j.
+      -- dY i (varY j) = const 0, eval = 0.
+      have hupd : ∀ yi, (updateEnv env i yi) j = env j := by
+        intro yi
+        show (if i = j then yi else env j) = env j
+        simp [h]
+      have hfun : (fun yi => eval (varY j) x (updateEnv env i yi))
+                = (fun _ => env j) := by
+        funext yi
+        show (updateEnv env i yi) j = env j
+        exact hupd yi
+      have hdY : eval (dY i (varY j)) x (updateEnv env i yi₀) = 0 := by
+        show eval (if i = j then const 1 else const 0) x (updateEnv env i yi₀) = 0
+        simp [h]
+        rfl
+      rw [hfun, hdY]
+      exact HasDerivAt_const (env j) yi₀
+  | add p q ihp ihq =>
+    show HasDerivAt
+      (fun yi => eval p x (updateEnv env i yi) + eval q x (updateEnv env i yi))
+      (eval (dY i p) x (updateEnv env i yi₀)
+       + eval (dY i q) x (updateEnv env i yi₀)) yi₀
+    exact HasDerivAt_add _ _ _ _ yi₀ ihp ihq
+  | sub p q ihp ihq =>
+    show HasDerivAt
+      (fun yi => eval p x (updateEnv env i yi) - eval q x (updateEnv env i yi))
+      (eval (dY i p) x (updateEnv env i yi₀)
+       - eval (dY i q) x (updateEnv env i yi₀)) yi₀
+    exact HasDerivAt_sub _ _ _ _ yi₀ ihp ihq
+  | mul p q ihp ihq =>
+    show HasDerivAt
+      (fun yi => eval p x (updateEnv env i yi) * eval q x (updateEnv env i yi))
+      (eval (dY i p) x (updateEnv env i yi₀) * eval q x (updateEnv env i yi₀)
+       + eval p x (updateEnv env i yi₀) * eval (dY i q) x (updateEnv env i yi₀))
+      yi₀
+    exact HasDerivAt_mul _ _ _ _ yi₀ ihp ihq
 
 /-! ### Chain-projection: substY eliminates y_i when q doesn't contain y_i
 
