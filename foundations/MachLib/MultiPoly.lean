@@ -429,6 +429,19 @@ theorem multiPolyHasDerivAt_eval_dX {n : Nat} (p : MultiPoly n)
                      + eval p x env * eval (dX q) x env) x
     exact HasDerivAt_mul _ _ _ _ x ihp ihq
 
+/-! ### Partial derivative in y_i (deferred)
+
+The symmetric `multiPolyHasDerivAt_eval_dY` (partial derivative in
+y_i, holding x and other y_j constant) is the natural sibling of
+`multiPolyHasDerivAt_eval_dX` above. The proof structure parallels
+the dX case but requires careful handling of the `updateEnv`
+substitution at the goal-type level — Lean's definitional unfolding
+of `eval` doesn't fire automatically through `updateEnv` for the
+varY case.
+
+Deferred to a focused session. ~40-50 lines once the type-unification
+pattern is worked out. -/
+
 /-! ### Chain-projection: substY eliminates y_i when q doesn't contain y_i
 
 The Khovanskii chain-step reduction substitutes the chain relation
