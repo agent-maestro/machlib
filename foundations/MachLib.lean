@@ -45,6 +45,7 @@ import MachLib.EMLTreeComposition
 import MachLib.EMLPfaffian
 import MachLib.CosNotInEMLAnyDepth
 import MachLib.LambertW
+import MachLib.Asymptotics
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
 import MachLib.KhovanskiiLemma
