@@ -177,6 +177,28 @@ theorem append_chainValues_right {n k : Nat} (c1 : PfaffianChain n)
     omega
   rw [hval_eq]
 
+/-! ### Chain-projection: drop the last chain variable
+
+For a triangular chain of length n+1, the lower-indexed relations
+(by triangularity) don't depend on the last variable y_n. So we can
+project to a chain of length n by dropping the last eval+relation
+and casting the remaining relations via `MultiPoly.dropLastY`.
+
+This is the chain-level chain-projection used by Item 4 (Khovanskii
+reduction). -/
+noncomputable def dropLast {n : Nat} (c : PfaffianChain (n+1)) :
+    PfaffianChain n :=
+  { evals := fun i => c.evals ⟨i.val, by omega⟩,
+    relations := fun i =>
+      MultiPoly.dropLastY (c.relations ⟨i.val, by omega⟩) }
+
+/-- The dropped chain preserves the eval at lower indices. -/
+theorem dropLast_chainValues_lower {n : Nat} (c : PfaffianChain (n+1))
+    (x : Real) (i : Fin n) :
+    (dropLast c).chainValues x i = c.chainValues x ⟨i.val, by omega⟩ := by
+  show (dropLast c).evals i x = c.evals ⟨i.val, by omega⟩ x
+  rfl
+
 end PfaffianChain
 
 /-! ## PfaffianFn smart constructors -/
@@ -434,6 +456,25 @@ theorem hasDerivAt_eval_natural (f : PfaffianFn) (x : Real)
                   (MultiPoly.eval (chainTotalDeriv f.chain f.poly) x
                                    (f.chain.chainValues x)) x
   exact PfaffianFn.hasDerivAt_eval f x hcoherent
+
+/-! ### PfaffianFn-level chain projection
+
+When `f.n = n + 1` and the polynomial doesn't depend on the last
+chain variable y_n (i.e., `degreeY ⟨n, _⟩ f.poly = 0`), we can
+project f to a PfaffianFn of chain length n by:
+  1. Drop the last variable from the chain (PfaffianChain.dropLast).
+  2. Drop the last variable from the polynomial (MultiPoly.dropLastY).
+
+This is the PfaffianFn-level projection used in Item 4. -/
+noncomputable def dropLast {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
+    PfaffianFn :=
+  { n := N,
+    chain := PfaffianChain.dropLast (hN ▸ f.chain),
+    poly := MultiPoly.dropLastY (hN ▸ f.poly) }
+
+/-- The projection preserves chain length to N. -/
+theorem dropLast_chainLength {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
+    (f.dropLast hN).chainLength = N := rfl
 
 /-- For a PfaffianFn with no chain variables, the eval has HasDerivAt
 matching the totalDerivative (which reduces to dX in this case). -/
