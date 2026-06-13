@@ -231,4 +231,51 @@ theorem EventuallyLE.exp {f g : Real → Real} (hfg : EventuallyLE f g) :
     EventuallyLE (fun x => Real.exp (f x)) (fun x => Real.exp (g x)) :=
   hfg.comp_mono exp_monotone
 
+/-! ## Demonstrative theorems using the substrate
+
+These prove the canonical asymptotic comparisons that downstream
+consumers will need. Each is a constructive proof using the new
+substrate — no new axioms beyond `exp_grows_strictly` and
+`exp_monotone` from above. -/
+
+/-- `Real.log` is eventually strictly less than the identity. Proof:
+for `x ≥ 1`, `x > 0` so `exp(log x) = x` (by `exp_log`). And
+`exp_grows_strictly` says `log x < exp(log x) = x`. -/
+theorem log_eventually_lt_id : EventuallyLt Real.log (fun x => x) := by
+  refine ⟨1, ?_⟩
+  intro x hx
+  have hx_pos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have hexp_log_eq : Real.exp (Real.log x) = x := exp_log hx_pos
+  have hgrow : Real.log x < Real.exp (Real.log x) :=
+    exp_grows_strictly (Real.log x)
+  rw [hexp_log_eq] at hgrow
+  exact hgrow
+
+/-- Chain `iter_exp k < iter_exp m` for `k < m`. Iterated application
+of `iter_exp_strict_succ` (which is unconditional / pointwise). -/
+theorem iter_exp_strict_lt {k m : Nat} (hkm : k < m) (x : Real) :
+    iter_exp k x < iter_exp m x := by
+  -- Strong induction on the difference m - k.
+  induction m with
+  | zero => omega
+  | succ n ih =>
+    by_cases h : k = n
+    · -- k = n, so k + 1 = m. Direct from iter_exp_strict_succ.
+      rw [h]
+      exact iter_exp_strict_succ n x
+    · -- k < n, so by IH k < n gives iter_exp k x < iter_exp n x,
+      -- then iter_exp_strict_succ n x bumps to iter_exp (n+1) x.
+      have hkn : k < n := by omega
+      have h1 : iter_exp k x < iter_exp n x := ih hkn
+      have h2 : iter_exp n x < iter_exp (n + 1) x :=
+        iter_exp_strict_succ n x
+      exact lt_trans_ax h1 h2
+
+/-- Eventual version of `iter_exp_strict_lt`. -/
+theorem iter_exp_eventually_lt {k m : Nat} (hkm : k < m) :
+    EventuallyLt (iter_exp k) (iter_exp m) := by
+  refine ⟨0, ?_⟩
+  intro x _
+  exact iter_exp_strict_lt hkm x
+
 end MachLib
