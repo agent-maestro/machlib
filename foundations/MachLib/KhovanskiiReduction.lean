@@ -42,6 +42,7 @@ namespace MachLib
 namespace PfaffianChainMod
 
 open Real
+open MachLib.MultiPolyMod
 
 /-! ## Real-arithmetic preliminaries
 
@@ -148,6 +149,60 @@ theorem mulNegExp_derivative_factored (f' E f c y_n' : Real) :
   -- Residue: f * (E * (c * y_n')) = E * (f * (c * y_n')).
   -- Use mul_comm and assoc.
   rw [← mul_assoc, mul_comm f E, mul_assoc]
+
+/-! ## Step 2: PfaffianFn.reducedDerivative (the muse's `f' - c·y_n'·f`)
+
+The "reduced derivative" of f at chain variable i with scalar c:
+
+  reducedDerivative c f i := f.chainTotalDerivative - c · y_i' · f
+
+where `y_i' = chain.relations i` (a polynomial in the same chain
+space). This is the factor that appears in g' = exp(-c·y_n) · (...)
+from Step 1.
+
+Crucially: reducedDerivative stays in the SAME chain as f. No chain
+extension needed — the construction is pure polynomial arithmetic. -/
+
+/-- The reduced derivative `f' - c · y_i' · f` as a PfaffianFn.
+Same chain as f; new polynomial via chainTotalDeriv + arithmetic. -/
+noncomputable def PfaffianFn.reducedDerivative (c : Real) (f : PfaffianFn)
+    (i : Fin f.n) : PfaffianFn :=
+  { n := f.n,
+    chain := f.chain,
+    poly := MultiPoly.sub
+              (PfaffianFn.chainTotalDeriv f.chain f.poly)
+              (MultiPoly.mul
+                (MultiPoly.mul (MultiPoly.const c) (f.chain.relations i))
+                f.poly) }
+
+/-- Reduced derivative preserves chain length. -/
+theorem PfaffianFn.reducedDerivative_chainLength (c : Real) (f : PfaffianFn)
+    (i : Fin f.n) :
+    (f.reducedDerivative c i).chainLength = f.chainLength := rfl
+
+/-- **Eval correctness for reducedDerivative.** The eval equals
+`f.chainTotalDerivative.eval x - c · y_i'(x) · f.eval x` where
+`y_i'(x) = MultiPoly.eval (chain.relations i) x (chainValues x)`. -/
+theorem PfaffianFn.reducedDerivative_eval (c : Real) (f : PfaffianFn)
+    (i : Fin f.n) (x : Real) :
+    (f.reducedDerivative c i).eval x =
+    f.chainTotalDerivative.eval x -
+    c * MultiPoly.eval (f.chain.relations i) x (f.chain.chainValues x)
+      * f.eval x := by
+  -- Apply eval_sub then eval_mul (twice) and eval_const.
+  show MultiPoly.eval
+        (MultiPoly.sub
+          (chainTotalDeriv f.chain f.poly)
+          (MultiPoly.mul
+            (MultiPoly.mul (MultiPoly.const c) (f.chain.relations i))
+            f.poly))
+        x (f.chain.chainValues x)
+       = f.chainTotalDerivative.eval x -
+         c * MultiPoly.eval (f.chain.relations i) x (f.chain.chainValues x)
+           * f.eval x
+  rw [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_mul,
+      MultiPoly.eval_const]
+  rfl
 
 end PfaffianChainMod
 end MachLib
