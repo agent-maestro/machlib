@@ -399,6 +399,93 @@ noncomputable def dropLastY {n : Nat} : MultiPoly (n + 1) → MultiPoly n
   | .sub p q => .sub (dropLastY p) (dropLastY q)
   | .mul p q => .mul (dropLastY p) (dropLastY q)
 
+/-- **Eval correctness for `dropLastY`.** When `degreeY n p = 0`
+(p doesn't depend on the last chain variable), `dropLastY p`
+evaluates to the same value as p (with the env restricted to the
+first n slots, ignoring whatever is in slot n).
+
+This is the LOAD-BEARING correctness theorem for the chain-projection
+step in Item 4: it says that when we drop a chain variable that
+the polynomial doesn't depend on, the eval is preserved. -/
+theorem eval_dropLastY {n : Nat} (p : MultiPoly (n + 1))
+    (hp : degreeY ⟨n, Nat.lt_succ_self n⟩ p = 0)
+    (x : Real) (env : Fin (n + 1) → Real) :
+    eval (dropLastY p) x (fun i => env ⟨i.val, by omega⟩) = eval p x env := by
+  induction p with
+  | const c =>
+    show c = c
+    rfl
+  | varX =>
+    show x = x
+    rfl
+  | varY i =>
+    -- dropLastY (varY i) = if i.val < n then varY ⟨i.val, _⟩ else const 0.
+    -- For i.val = n: degreeY n (varY n) = 1, contradicts hp = 0.
+    -- For i.val < n: eval matches.
+    show eval (if h : i.val < n then varY ⟨i.val, h⟩ else const 0) x
+              (fun i => env ⟨i.val, by omega⟩)
+       = env i
+    by_cases h : i.val < n
+    · simp only [h, dite_true]
+      show env ⟨i.val, by omega⟩ = env i
+      have : (⟨i.val, by omega⟩ : Fin (n + 1)) = i :=
+        Fin.eq_of_val_eq rfl
+      rw [this]
+    · -- i.val ≥ n + 1's bound means i.val = n. But then degreeY n (varY n) = 1.
+      -- Contradiction with hp = 0.
+      simp only [h, dite_false]
+      exfalso
+      have hi_eq : i.val = n := by
+        have := i.isLt
+        omega
+      have : (⟨n, Nat.lt_succ_self n⟩ : Fin (n + 1)) = i := by
+        apply Fin.eq_of_val_eq
+        show n = i.val
+        omega
+      rw [this] at hp
+      -- hp : degreeY i (varY i) = 0. But degreeY i (varY i) = 1 by definition.
+      have hone : degreeY i (varY i) = 1 := by
+        show (if i = i then 1 else 0) = 1
+        simp
+      rw [hone] at hp
+      exact absurd hp (by omega)
+  | add p q ihp ihq =>
+    -- degreeY n (add p q) = max (degreeY n p) (degreeY n q) = 0.
+    -- So both degreeY n p = 0 and degreeY n q = 0. Apply IHs.
+    have hp_q : degreeY ⟨n, Nat.lt_succ_self n⟩ p = 0
+              ∧ degreeY ⟨n, Nat.lt_succ_self n⟩ q = 0 := by
+      have hmax : Nat.max (degreeY ⟨n, Nat.lt_succ_self n⟩ p)
+                          (degreeY ⟨n, Nat.lt_succ_self n⟩ q) = 0 := hp
+      have := Nat.max_le.mp (Nat.le_of_eq hmax)
+      refine ⟨?_, ?_⟩ <;> omega
+    show eval (dropLastY p) x (fun i => env ⟨i.val, by omega⟩)
+       + eval (dropLastY q) x (fun i => env ⟨i.val, by omega⟩)
+       = eval p x env + eval q x env
+    rw [ihp hp_q.1, ihq hp_q.2]
+  | sub p q ihp ihq =>
+    have hp_q : degreeY ⟨n, Nat.lt_succ_self n⟩ p = 0
+              ∧ degreeY ⟨n, Nat.lt_succ_self n⟩ q = 0 := by
+      have hmax : Nat.max (degreeY ⟨n, Nat.lt_succ_self n⟩ p)
+                          (degreeY ⟨n, Nat.lt_succ_self n⟩ q) = 0 := hp
+      have := Nat.max_le.mp (Nat.le_of_eq hmax)
+      refine ⟨?_, ?_⟩ <;> omega
+    show eval (dropLastY p) x (fun i => env ⟨i.val, by omega⟩)
+       - eval (dropLastY q) x (fun i => env ⟨i.val, by omega⟩)
+       = eval p x env - eval q x env
+    rw [ihp hp_q.1, ihq hp_q.2]
+  | mul p q ihp ihq =>
+    -- degreeY n (mul p q) = degreeY n p + degreeY n q = 0.
+    -- So both are 0. Apply IHs.
+    have hp_q : degreeY ⟨n, Nat.lt_succ_self n⟩ p = 0
+              ∧ degreeY ⟨n, Nat.lt_succ_self n⟩ q = 0 := by
+      have hsum : degreeY ⟨n, Nat.lt_succ_self n⟩ p
+                + degreeY ⟨n, Nat.lt_succ_self n⟩ q = 0 := hp
+      refine ⟨?_, ?_⟩ <;> omega
+    show eval (dropLastY p) x (fun i => env ⟨i.val, by omega⟩)
+       * eval (dropLastY q) x (fun i => env ⟨i.val, by omega⟩)
+       = eval p x env * eval q x env
+    rw [ihp hp_q.1, ihq hp_q.2]
+
 /-- `dropLastY` preserves totalDegree (since we only replace nodes
 with degree-0 constants). -/
 theorem dropLastY_totalDegree_le {n : Nat} (p : MultiPoly (n + 1)) :
