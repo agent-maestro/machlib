@@ -532,5 +532,213 @@ theorem PfaffianFn.khovanskii_bound_modulo_step_3
           (MultiPoly.degreeX g.poly)
   exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
 
+/-! ## Step 3 reformulation: the scaledReduction operator
+
+Today's attempt to close Step 3 (machlib `3922049`) discovered that
+the muse's exact plan — pick c so that `degreeY_last (f' - c·y_n'·f)
+< degreeY_last f` — likely fails for the general case. In the
+simplest single-exp chain, no choice of c drops the y-degree.
+
+The classical Khovanskii argument uses a DIFFERENT auxiliary factor:
+`exp(-c · x)` (linear in x), NOT `exp(-c · y_n)` (linear in last
+chain variable). The resulting chain-step operator is
+
+  `scaledReduction c f := f' - c · f`
+
+(NOT `f' - c · y_n' · f`). The corresponding zero count transfer:
+
+  g(x) := f(x) · exp(-c · x)
+  g'(x) = exp(-c·x) · (f'(x) - c · f(x))
+  By Rolle: zeros(f) ≤ zeros(scaledReduction c f) + 1.
+
+And the **complexity measure** that actually decreases:
+
+  μ(f) := (degreeY_last f.poly, degreeX (leadingCoeffY_last f.poly))
+          lexicographic
+
+For the single-exp chain `y' = y` with `c = degreeY_last(f)`:
+  y^d coefficient of `f' - d·f`
+    = (a_d' + d·a_d) - d · a_d
+    = a_d'
+  ⟹ x-degree of leading y-coefficient drops by 1.
+
+After deg(a_d) + 1 applications, a_d reaches degree 0 then constant 0,
+at which point `degreeY_last` drops by 1. Iterating brings the chain
+down to chainLength 0 (polynomial). This is the right
+classical-Khovanskii argument shape.
+
+This section ships the analog of Steps 1, 2, 4 for the new operator.
+Step 5 (iteration) and the full Step 3 (existence + termination
+argument with the lex measure) follow in subsequent commits. -/
+
+/-! ### Auxiliary function exp(-c · x) -/
+
+/-- The auxiliary `f.eval x · exp(-c · x)`. Real → Real function,
+NOT a PfaffianFn. Used as the Rolle vehicle for `scaledReduction`. -/
+noncomputable def mulNegExpX_aux (f : PfaffianFn) (c : Real) : Real → Real :=
+  fun x => f.eval x * Real.exp (-c * x)
+
+/-- **Same-zero-set lemma**: the auxiliary has the same zeros as f,
+because `exp(-c · x)` is never zero. -/
+theorem mulNegExpX_aux_zero_iff (f : PfaffianFn) (c : Real) (x : Real) :
+    mulNegExpX_aux f c x = 0 ↔ f.eval x = 0 := by
+  show f.eval x * Real.exp (-c * x) = 0 ↔ f.eval x = 0
+  constructor
+  · intro h
+    have hexp_ne : Real.exp (-c * x) ≠ 0 := exp_ne_zero _
+    rw [mul_comm] at h
+    exact mul_eq_zero_of_factor_ne_zero hexp_ne h
+  · intro h
+    rw [h, zero_mul]
+
+/-- **HasDerivAt for the exp(-c·x) auxiliary (raw product rule form).** -/
+theorem hasDerivAt_mulNegExpX_aux_raw (f : PfaffianFn) (c : Real) (x : Real)
+    (hf : HasDerivAt f.eval (f.chainTotalDerivative.eval x) x) :
+    HasDerivAt (mulNegExpX_aux f c)
+               (f.chainTotalDerivative.eval x * Real.exp (-c * x)
+                + f.eval x * (Real.exp (-c * x) * (-c)))
+               x := by
+  show HasDerivAt (fun x => f.eval x * Real.exp (-c * x))
+                  (f.chainTotalDerivative.eval x * Real.exp (-c * x)
+                   + f.eval x * (Real.exp (-c * x) * (-c))) x
+  -- HasDerivAt for (-c * x): use HasDerivAt_id and HasDerivAt_mul with const.
+  have hid : HasDerivAt (fun x => x) 1 x := HasDerivAt_id x
+  have hconst : HasDerivAt (fun _ : Real => -c) 0 x := HasDerivAt_const (-c) x
+  have hmul := HasDerivAt_mul (fun _ => -c) (fun x => x) 0 1 x hconst hid
+  have hsimp : 0 * x + -c * 1 = -c := by
+    rw [zero_mul, zero_add, mul_one_ax]
+  rw [hsimp] at hmul
+  -- HasDerivAt for exp(-c·x).
+  have hexp_at : HasDerivAt Real.exp (Real.exp (-c * x)) (-c * x) :=
+    HasDerivAt_exp (-c * x)
+  have hexp_comp := HasDerivAt_comp Real.exp (fun x => -c * x) (-c)
+                      (Real.exp (-c * x)) x hmul hexp_at
+  -- Product rule.
+  exact HasDerivAt_mul f.eval (fun x => Real.exp (-c * x))
+          (f.chainTotalDerivative.eval x)
+          (Real.exp (-c * x) * (-c)) x hf hexp_comp
+
+/-- **Algebraic identity (factored form for exp(-c·x) variant).**
+
+  f' · E + f · (E · (-c)) = E · (f' - c · f)
+
+where E = exp(-c · x). Pure ring identity. -/
+theorem mulNegExpX_derivative_factored (f' E f c : Real) :
+    f' * E + f * (E * (-c)) = E * (f' - c * f) := by
+  mach_ring
+  rw [← mul_assoc, mul_comm f E, mul_assoc]
+
+/-! ### The scaledReduction operator (Step 2 analog) -/
+
+/-- The scaled reduction `f' - c · f` as a PfaffianFn. Same chain as
+`f`; new polynomial via `chainTotalDeriv f.chain f.poly` minus
+`c · f.poly`. -/
+noncomputable def PfaffianFn.scaledReduction (c : Real) (f : PfaffianFn) :
+    PfaffianFn :=
+  { n := f.n,
+    chain := f.chain,
+    poly := MultiPoly.sub
+              (PfaffianFn.chainTotalDeriv f.chain f.poly)
+              (MultiPoly.mul (MultiPoly.const c) f.poly) }
+
+theorem PfaffianFn.scaledReduction_chainLength (c : Real) (f : PfaffianFn) :
+    (f.scaledReduction c).chainLength = f.chainLength := rfl
+
+/-- **Eval correctness for scaledReduction.** -/
+theorem PfaffianFn.scaledReduction_eval (c : Real) (f : PfaffianFn) (x : Real) :
+    (f.scaledReduction c).eval x = f.chainTotalDerivative.eval x - c * f.eval x := by
+  show MultiPoly.eval
+        (MultiPoly.sub
+          (PfaffianFn.chainTotalDeriv f.chain f.poly)
+          (MultiPoly.mul (MultiPoly.const c) f.poly))
+        x (f.chain.chainValues x)
+      = f.chainTotalDerivative.eval x - c * f.eval x
+  rw [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_const]
+  rfl
+
+/-! ### Step 4 analog: zero count transfer via scaledReduction -/
+
+/-- **Bridge lemma (scaledReduction variant)**: at a point z where
+`mulNegExpX_aux f c` has zero derivative, `(scaledReduction c f).eval z = 0`. -/
+theorem PfaffianFn.scaledReduction_eval_zero_of_g_deriv_zero
+    (f : PfaffianFn) (c : Real) (z : Real)
+    (hcoh : f.chain.IsCoherentAt z)
+    (g'' : Real)
+    (hg''_deriv : HasDerivAt (mulNegExpX_aux f c) g'' z)
+    (hg''_zero : g'' = 0) :
+    (f.scaledReduction c).eval z = 0 := by
+  have hf' : HasDerivAt f.eval (f.chainTotalDerivative.eval z) z :=
+    hasDerivAt_eval_natural f z hcoh
+  have hcanonical := hasDerivAt_mulNegExpX_aux_raw f c z hf'
+  have huniq := HasDerivAt_unique (mulNegExpX_aux f c)
+                  g''
+                  (f.chainTotalDerivative.eval z * Real.exp (-c * z)
+                   + f.eval z * (Real.exp (-c * z) * (-c)))
+                  z hg''_deriv hcanonical
+  have hcan_zero : f.chainTotalDerivative.eval z * Real.exp (-c * z)
+                    + f.eval z * (Real.exp (-c * z) * (-c)) = 0 := by
+    rw [← huniq]; exact hg''_zero
+  have hfact := mulNegExpX_derivative_factored
+                  (f.chainTotalDerivative.eval z)
+                  (Real.exp (-c * z)) (f.eval z) c
+  rw [hfact] at hcan_zero
+  have hexp_ne : Real.exp (-c * z) ≠ 0 := exp_ne_zero _
+  have hred_zero : f.chainTotalDerivative.eval z - c * f.eval z = 0 :=
+    mul_eq_zero_of_factor_ne_zero hexp_ne hcan_zero
+  rw [PfaffianFn.scaledReduction_eval]
+  exact hred_zero
+
+/-- **Zero count transfer via scaledReduction (raw HasDerivAt form).** -/
+theorem PfaffianFn.zero_count_scaledReduction_transfer_raw
+    (f : PfaffianFn) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (mulNegExpX_aux f c) f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧ mulNegExpX_aux f c z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    exact (mulNegExpX_aux_zero_iff f c z).mpr hfz
+  have hdiff : ∀ x : Real, a < x → x < b →
+                ∃ f' : Real, HasDerivAt (mulNegExpX_aux f c) f' x := by
+    intro x hax hxb
+    have hcoh : f.chain.IsCoherentAt x := hcoherent x hax hxb
+    have hf' : HasDerivAt f.eval (f.chainTotalDerivative.eval x) x :=
+      hasDerivAt_eval_natural f x hcoh
+    refine ⟨_, hasDerivAt_mulNegExpX_aux_raw f c x hf'⟩
+  exact zero_count_bound_by_deriv (mulNegExpX_aux f c) a b hab hdiff N
+          h_reduced_bound zeros_f hnodup hzeros_g
+
+/-- **Zero count transfer via scaledReduction (eval form, user-friendly).** -/
+theorem PfaffianFn.zero_count_scaledReduction_transfer
+    (f : PfaffianFn) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound_eval : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ (f.scaledReduction c).eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply PfaffianFn.zero_count_scaledReduction_transfer_raw f c a b hab hcoherent N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_reduced_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  refine ⟨haz, hzb, ?_⟩
+  exact PfaffianFn.scaledReduction_eval_zero_of_g_deriv_zero
+          f c z (hcoherent z haz hzb) g'' hg''_deriv hg''_zero
+
 end PfaffianChainMod
 end MachLib
