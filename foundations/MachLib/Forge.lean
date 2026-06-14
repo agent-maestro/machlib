@@ -570,6 +570,27 @@ all `x b`, not just when `x ≤ b`.) -/
 theorem interval_min_le_upper (x b : Real) (_hxb : x ≤ b) : min x b ≤ b :=
   min_le_right x b
 
+/-! ### Floor — Forge-emit support primitive
+
+The Forge Lean backend emits unqualified `floor` calls when a kernel
+.eml uses the `floor` builtin (e.g. lattice cell-index computations in
+gaming kernels like `crystal_lattice.eml`, `neon_substrate.eml`). To
+keep MachLib's "axiomatic, sorry-free" character, we expose `floor` as
+a pure `Real → Real` axiom with no defining properties — Forge-emitted
+proofs that use `floor` only need it to type-check, not to reason
+about its value. If a future kernel proof actually requires
+properties of `floor` (idempotence, integer-on-integers, ≤ x, etc.),
+those should be added incrementally as `axiom`s with explicit names,
+not retrofitted into a single mega-axiom.
+
+The Mathlib analogue is `Int.floor : Real → Int` plus an `Int → Real`
+coercion. We collapse that to `Real → Real` because every Forge-emit
+usage feeds the floor back into Real arithmetic; the round-trip
+through `Int` would just inflate the dependency surface without
+buying any proof power. -/
+
+axiom floor : Real → Real
+
 end Real
 end MachLib
 
