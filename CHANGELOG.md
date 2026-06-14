@@ -20,6 +20,14 @@ per-release status.
   `discharge_voltage_decays_exponentially` to sign preservation under
   non-negative initial voltage (no polarity inversion mid-phase). IEC
   62304 Class C. Pointer comment added to the Discovered stub.
+- `MachLib.Applications.SpringCriticallyDamped` — game-animation kernel
+  proof. Khovanskii-localised positivity of the critically-damped
+  harmonic spring `A · (1 + ω·t) · exp(-ω·t)`. ExpPoly length 1, total
+  degree 2; the lone zero at `t = -1/ω` is excluded by the animation
+  window `t ≥ 0`. Sign-preserving + strictly-positive variants ship;
+  the underdamped (cos-bearing) branch remains open pending
+  trig-Khovanskii. From `eml-stdlib/gaming/animation/spring.eml`'s
+  `spring_critical_signed` obligation.
 - `MachLib.SingleExpKhovanskii` — constructive Khovanskii zero bound for
   polynomial-in-(x, eˣ), three resolution paths:
   - `expPoly_khovanskii_bound` (parametric capstone; user supplies an

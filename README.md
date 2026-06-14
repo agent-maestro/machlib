@@ -51,6 +51,15 @@ open work.
   current = 0 ↔ overpotential = 0 for the Butler-Volmer electrode-kinetics
   kernel (downstream: BMS, fuel cells, corrosion). Replaces a `sorry` in
   `MachLib/Discovered/butler_volmer.lean`.
+- `foundations/MachLib/Applications/PlasmaConcentrationNonneg.lean` —
+  non-negativity of the two-compartment pharmacokinetic plasma kernel
+  (downstream: TCI anaesthesia, ICU monitoring; IEC 62304 Class C).
+- `foundations/MachLib/Applications/DischargeVoltageSafety.lean` —
+  sign preservation for the biphasic-truncated-exponential defibrillator
+  discharge kernel (downstream: AED, ICD; IEC 62304 Class C).
+- `foundations/MachLib/Applications/SpringCriticallyDamped.lean` —
+  Khovanskii-localised positivity of the critically-damped harmonic spring
+  (downstream: game animation, character controllers, UI motion).
 - `foundations/AxiomAudit.lean` — reproducible `#print axioms` over the
   headline theorems. Run via `lake env lean AxiomAudit.lean`.
 - `foundations/KhovanskiiExamples.lean` — three worked applications.
