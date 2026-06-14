@@ -720,6 +720,42 @@ theorem eval_zero_of_eq_polySimplify_const_zero (p : Poly)
     ∀ x : Real, Poly.eval p x = 0 :=
   fun x => eval_zero_of_polySimplify_zero p h x
 
+/-! ### Auto-witness for length-1 ExpPoly — the trivial case
+
+The simplest case of the auto-witness: when `ep.coeffs.length = 1`,
+the witness is just `refl` (zero iterations). This demonstrates the
+framework's end-to-end usability for the simplest poly-in-(x, e^x).
+
+For length > 1, the auto-witness construction requires fuel-based
+recursion + the strict-descent lemma + pattern matching for drop
+triggers (when polySimplify of last yields `Poly.const 0`). The
+existence of such a witness is provable via strong induction on
+`length + Σ degreeUpper of simplified coeffs`. -/
+
+/-- For a length-1 ExpPoly, the auto-witness is trivially `refl`. -/
+theorem autoWitness_length_one (p : Poly) :
+    IsKhovanskiiReducibleExp ⟨[p]⟩ ⟨[p]⟩ 0 :=
+  IsKhovanskiiReducibleExp.refl ⟨[p]⟩
+
+/-- Combined with `expPoly_khovanskii_bound`, the trivial length-1 case
+yields the polynomial root count bound directly. -/
+theorem length_one_full_bound
+    (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, Poly.eval p x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0) →
+      zeros.length ≤ degreeUpper p := by
+  intro zeros hnodup hzeros
+  have hne' : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    rw [eval_singleton]
+    exact hx
+  have := expPoly_khovanskii_bound ⟨[p]⟩ p 0 (autoWitness_length_one p)
+            a b hab hne' zeros hnodup hzeros
+  simpa using this
+
 /-! ### Paths (b) and (c) — research-grade
 
 ## Path (b): Eval-level reasoning (status)
