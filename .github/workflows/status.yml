@@ -1,0 +1,181 @@
+name: status
+
+# Re-derives the verification dashboard's numbers on every push to
+# master and publishes a `status.json` to the dedicated `status-data`
+# branch — a surface only this workflow writes. Anyone with the same
+# commit SHAs in machlib + forge + eml-stdlib + monogate-research can
+# reproduce the JSON byte-for-byte (content_hash_sha256 in the payload
+# is the integrity check).
+#
+# Design notes:
+#
+#   * status.json is NOT committed to master. A human with push access
+#     could hand-edit a file in the source tree; the source tree is the
+#     wrong surface for an integrity-claiming dashboard.
+#   * The output branch `status-data` is orphan (no shared history with
+#     master). Each run force-pushes a single-commit tree containing
+#     only status.json. The branch is its own audit trail; the JSON's
+#     own machlib_sha + generated_at_utc carry the data provenance.
+#   * The renderer in monogate-net fetches via
+#     raw.githubusercontent.com/agent-maestro/machlib/status-data/status.json
+#     and MUST display the JSON's own SHA + timestamp, never the page
+#     fetch time.
+#   * If `lake build` fails the workflow still publishes a status.json
+#     with build.lake_build_passed = false. The renderer is expected to
+#     refuse to display a "discharged" claim when the build is red.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "foundations/**"
+      - "tools/status/**"
+      - ".github/workflows/status.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  emit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout machlib (deep history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: machlib
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve machlib SHA
+        id: machlib_sha
+        working-directory: machlib
+        run: |
+          SHA=$(git rev-parse HEAD)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Resolved machlib SHA: $SHA"
+
+      - name: Fetch previous status.json from status-data branch
+        working-directory: machlib
+        run: |
+          mkdir -p .status-prev
+          # Try to fetch the orphan branch; first run won't have one.
+          if git fetch origin status-data:refs/remotes/origin/status-data 2>/dev/null; then
+            git show origin/status-data:status.json > .status-prev/status.json \
+              || echo "null" > .status-prev/status.json
+            echo "Previous status.json found:"
+            head -20 .status-prev/status.json
+          else
+            echo "null" > .status-prev/status.json
+            echo "No previous status-data branch yet (first run)."
+          fi
+
+      - name: Clone forge
+        uses: actions/checkout@v4
+        with:
+          repository: agent-maestro/forge
+          path: forge
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone eml-stdlib
+        uses: actions/checkout@v4
+        with:
+          repository: agent-maestro/eml-stdlib
+          path: eml-stdlib
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Note: monogate-research is private; we use the embedded copy of
+      # forge_verify_audit.py at machlib/tools/status/forge_verify_audit.py
+      # instead of cloning monogate-research.
+
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve toolchain pin
+        working-directory: machlib/foundations
+        run: |
+          cat lean-toolchain
+          lean --version
+
+      - name: Lake build
+        id: build
+        working-directory: machlib/foundations
+        run: |
+          set +e
+          lake build 2>&1 | tee build.log
+          EXIT=$?
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
+          # Always succeed this step; failures land in status.json's
+          # build.lake_build_passed field. CI overall still passes (so
+          # the dashboard refreshes even on a red build), but the page
+          # renderer is expected to surface the failure prominently.
+          exit 0
+
+      - name: Axiom audit
+        working-directory: machlib/foundations
+        run: |
+          # Best-effort: if the build is red the audit may not run; the
+          # status.json carries an empty axiom_info dict in that case.
+          lake env lean AxiomAudit.lean > axiom_audit.txt 2>&1 || true
+          head -60 axiom_audit.txt || true
+
+      - name: Run forge_verify_audit
+        run: |
+          python3 machlib/tools/status/forge_verify_audit.py \
+            --forge-root forge \
+            --eml-stdlib-root eml-stdlib \
+            --discovered-root machlib/foundations/MachLib/Discovered \
+            --applications-root machlib/foundations/MachLib/Applications \
+            --out-json verify_audit.json \
+            --out-md verify_audit.md
+
+      - name: Generate status.json
+        run: |
+          python3 machlib/tools/status/generate_status.py \
+            --machlib-root machlib \
+            --machlib-sha "${{ steps.machlib_sha.outputs.sha }}" \
+            --axiom-audit machlib/foundations/axiom_audit.txt \
+            --build-log machlib/foundations/build.log \
+            --build-exit-code "${{ steps.build.outputs.exit_code }}" \
+            --verify-audit-json verify_audit.json \
+            --previous-status machlib/.status-prev/status.json \
+            --out status.json
+          echo "=== status.json summary ==="
+          python3 -c "
+          import json
+          d = json.loads(open('status.json').read())
+          print('schema_version :', d['schema_version'])
+          print('machlib_sha    :', d['machlib_sha'])
+          print('generated_at   :', d['generated_at_utc'])
+          print('lake_passed    :', d['build']['lake_build_passed'])
+          print('sorries        :', d['sorries']['total'],
+                'delta=', d['sorries']['delta_vs_previous'].get('net_change'))
+          va = d['verify_audit']
+          print(f\"verify         : total={va['total']} strengthened={va['strengthened']} \"
+                f\"proven_mod_machlib_axioms={va['proven_mod_machlib_axioms']} \"
+                f\"placeholder={va['placeholder']} open={va['open']} \"
+                f\"discharged_pct={va['discharged_pct']} gap_pct={va['gap_pct']}\")
+          print('content_hash   :', d['content_hash_sha256'])
+          "
+
+      - name: Publish status.json to status-data branch (force-push)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir status-publish
+          cp status.json status-publish/
+          cd status-publish
+          git init -b status-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add status.json
+          git commit -m "ci(status): refresh status.json at ${{ steps.machlib_sha.outputs.sha }}"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          # Orphan force-push: this branch's history is just the
+          # sequence of CI-emitted snapshots. No human writes here.
+          git push --force origin status-data
