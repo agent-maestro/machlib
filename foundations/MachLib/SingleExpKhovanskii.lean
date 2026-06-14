@@ -3,6 +3,7 @@ import MachLib.PolynomialRootCount
 import MachLib.Exp
 import MachLib.Differentiation
 import MachLib.Rolle
+import MachLib.Ring
 
 /-!
 # MachLib.SingleExpKhovanskii — constructive Khovanskii bound for poly-in-(x, e^x)
@@ -197,6 +198,92 @@ theorem hasDerivAt_eval (ep : ExpPoly) (x : Real) :
                   (evalAux (scaledReductionAux 0 ep.coeffs 0) 0 x) x
   exact hasDerivAt_evalAux ep.coeffs 0 x
 
-end ExpPoly
-end SingleExpKhovanskii
-end MachLib
+/-! ## scaledReduction with arbitrary c: HasDerivAt
+
+For arbitrary c, the derivative of `ep.eval x · exp(-c·x)` equals
+`exp(-c·x) · (scaledReduction ep c).eval x`. This is the Rolle vehicle. -/
+
+/-- Real-arithmetic helper: a*b = 0 with a ≠ 0 implies b = 0. -/
+theorem mul_eq_zero_of_factor_ne_zero_local {a b : Real} (ha : a ≠ 0)
+    (hab : a * b = 0) : b = 0 := by
+  have hkey : a * b * (1 / a) = b := by
+    rw [mul_comm a b, mul_assoc, mul_inv a ha, mul_one_ax]
+  rw [hab, zero_mul] at hkey
+  exact hkey.symm
+
+/-- The Rolle vehicle `ep.eval x · exp(-c · x)`. -/
+noncomputable def mulNegExpX (ep : ExpPoly) (c : Real) : Real → Real :=
+  fun x => ep.eval x * Real.exp (-c * x)
+
+/-- Same zero set: `exp(-c·x)` is never zero, so the auxiliary has
+the same zeros as `ep.eval`. -/
+theorem mulNegExpX_zero_iff (ep : ExpPoly) (c : Real) (x : Real) :
+    mulNegExpX ep c x = 0 ↔ ep.eval x = 0 := by
+  show ep.eval x * Real.exp (-c * x) = 0 ↔ ep.eval x = 0
+  constructor
+  · intro h
+    have hexp_ne : Real.exp (-c * x) ≠ 0 := exp_ne_zero _
+    rw [mul_comm] at h
+    exact mul_eq_zero_of_factor_ne_zero_local hexp_ne h
+  · intro h
+    rw [h, zero_mul]
+
+/-- **HasDerivAt for the Rolle vehicle.** Raw product-rule form. -/
+theorem hasDerivAt_mulNegExpX_raw (ep : ExpPoly) (c : Real) (x : Real) :
+    HasDerivAt (mulNegExpX ep c)
+               ((scaledReduction ep 0).eval x * Real.exp (-c * x)
+                + ep.eval x * (Real.exp (-c * x) * (-c)))
+               x := by
+  show HasDerivAt (fun y => ep.eval y * Real.exp (-c * y))
+                  ((scaledReduction ep 0).eval x * Real.exp (-c * x)
+                   + ep.eval x * (Real.exp (-c * x) * (-c))) x
+  have hep := hasDerivAt_eval ep x
+  -- HasDerivAt for fun y => -c · y.
+  have hlinear : HasDerivAt (fun y => -c * y) (-c) x := by
+    have hid : HasDerivAt (fun y => y) 1 x := HasDerivAt_id x
+    have hconst : HasDerivAt (fun _ : Real => -c) 0 x := HasDerivAt_const _ x
+    have hmul := HasDerivAt_mul (fun _ => -c) (fun y => y) 0 1 x hconst hid
+    have : 0 * x + (-c) * 1 = -c := by rw [zero_mul, zero_add, mul_one_ax]
+    rw [this] at hmul
+    exact hmul
+  have hexp_at : HasDerivAt Real.exp (Real.exp (-c * x)) (-c * x) :=
+    HasDerivAt_exp _
+  have hexp_comp := HasDerivAt_comp Real.exp (fun y => -c * y) (-c)
+                      (Real.exp (-c * x)) x hlinear hexp_at
+  exact HasDerivAt_mul ep.eval (fun y => Real.exp (-c * y))
+          ((scaledReduction ep 0).eval x)
+          (Real.exp (-c * x) * (-c)) x hep hexp_comp
+
+/-! ## Open piece: `scaledReduction_eval_combine`
+
+The algebraic identity
+
+  `(scaledReduction ep 0).eval x + ep.eval x · (-c) = (scaledReduction ep c).eval x`
+
+reduces (after `simp only [Poly.eval]` and abstracting complex
+subterms) to a pure scalar ring identity in 7 Real variables:
+
+  `(pd + n·pe)·E + S0 + (pe·E + R)·(-c) = (pd + (n - c)·pe)·E + (S0 + R·(-c))`
+
+Both sides expand to `pd·E + (n - c)·pe·E + S0 - c·R`. This is
+ring-trivial classically but MachLib's `mach_ring v1` doesn't fully
+normalize multi-variable polynomial identities — manual rewriting via
+`mul_comm`, `mul_assoc`, `mul_distrib`, `add_assoc`, `add_comm`,
+`sub_def` runs into combinatorial blowup. Each rewrite is correct
+individually; chaining them to match the exact post-normalization
+form is fragile.
+
+Resolution path (future work):
+  (a) Wait for `mach_ring v2` (polynomial reflection — Lagrange,
+      four-square — per MachLib roadmap).
+  (b) Prove the identity by hand via explicit calc chain
+      (estimated ~30 lines of careful manual rewriting).
+  (c) Introduce a helper `linear_combination`-style tactic.
+
+This is the only blocker for the `zero_count_scaledReduction_transfer`
++ explicit Khovanskii bound theorem. Once this identity ships, the
+rest of the proof is mechanical (~150 lines).
+
+For now, the SUBSTRATE (ExpPoly + eval + HasDerivAt for c=0 +
+`hasDerivAt_mulNegExpX_raw` for arbitrary c) is shipped and provides
+the foundation. -/
