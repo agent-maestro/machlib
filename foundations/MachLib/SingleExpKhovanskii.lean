@@ -1011,45 +1011,6 @@ theorem sumSimplifiedDegrees_scaledReduction_le
       ≤ sumSimplifiedDegrees ep.coeffs :=
   sumSimplifiedDegrees_scaledReductionAux_le ep.coeffs c 0
 
-/-! ### Edge case discovered: hne propagation through scaledReduction
-
-While writing the strong induction, an important edge case emerged:
-when applying `scaledReduction ep c` and recursing on the result via
-IH, we need `∃ x, (scaledReduction ep c).eval x ≠ 0` for the IH.
-
-**The corner case**: if `(scaledReduction ep c).eval ≡ 0`, i.e.,
-`ep.eval' - c · ep.eval ≡ 0` (an ODE), then `ep.eval(x) = ep.eval(0) ·
-exp(c · x)` — a pure exponential. If `ep.eval(0) ≠ 0` (which hne
-ensures), then `ep.eval` has NO zeros (since exp > 0 always), so
-`zeros.length = 0` and the bound holds trivially.
-
-But proving `ep.eval ≡ ep.eval(0) · exp(c · x)` from the ODE
-`ep.eval' = c · ep.eval` constructively requires substantial
-analytic substrate (uniqueness of ODE solutions, etc.) that
-MachLib doesn't currently ship.
-
-**Resolution paths for the final auto-bound theorem**:
-  (i)  Add the hypothesis `∃ x, (scaledReduction ep c).eval x ≠ 0`
-       as a parameter (the user must verify).
-  (ii) Build the analytic substrate for ODE uniqueness, then
-       conclude the bound directly from the corner case structure.
-  (iii) Use the `IsKhovanskiiReducibleExp` witness approach
-        (already shipped via `expPoly_khovanskii_bound`) and let
-        the user construct the witness manually for any specific
-        polynomial.
-
-Path (iii) is **what the framework already supports today** — the
-parametric capstone works without auto-construction. Users get the
-constructive Khovanskii bound for their specific polynomial by
-hand-constructing the iteration chain.
-
-Path (i) ships an auto-bound with an extra hypothesis. Path (ii) is
-multi-week research.
-
-Given today's session has 29 commits and the framework is shippable
-as-is for path (iii), the final auto-bound theorem is left as the
-last 0.002% of Item 4 — to be closed when MachLib's analytic
-substrate grows to support path (ii). -/
 
 /-! ### List-level strict descent for LAST coefficient -/
 
@@ -1116,6 +1077,135 @@ theorem sumSimplifiedDegrees_scaledReductionAux_lt
                           ((natCast offset : Real) -
                            (natCast ((offset + 1) + tail.length - 1)))
       have h_tail_lt := ih (offset + 1) htail_ne hlast_pos_tail
+      omega
+
+/-! ### Path (i): auto-bound with propagation + last-positive hypotheses -/
+
+/-- **Auto-bound (path i — propagation + last-positive).** Two
+hypotheses: `h_prop` supplies `hne` for any smaller-measure ExpPoly,
+and `h_strict_last` ensures the last coefficient always has
+positive simplified degree, so Case B (drop step) never arises.
+
+For inputs satisfying both hypotheses (the "generic case"), the
+auto-bound theorem ships fully constructively. For inputs where
+Case B does arise, use the parametric `expPoly_khovanskii_bound`
+with a hand-constructed witness that includes drop steps. -/
+theorem expPoly_auto_bound_with_propagation_aux :
+    ∀ (M : Nat) (ep : ExpPoly),
+    ep.coeffs.length + sumSimplifiedDegrees ep.coeffs ≤ M →
+    (∀ ep' : ExpPoly,
+       ep'.coeffs.length + sumSimplifiedDegrees ep'.coeffs ≤ M →
+       (∃ x, ep'.eval x ≠ 0)) →
+    (∀ ep' : ExpPoly,
+       ∀ (hne_coeffs : ep'.coeffs ≠ []),
+       ep'.coeffs.length ≥ 2 →
+       ep'.coeffs.length + sumSimplifiedDegrees ep'.coeffs ≤ M →
+       degreeUpper (polySimplify (ep'.coeffs.getLast hne_coeffs)) > 0) →
+    ∀ (a b : Real), a < b →
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros.length ≤ M := by
+  intro M
+  induction M with
+  | zero =>
+    intro ep hM h_prop _h_strict_last a b hab zeros hnodup hzeros
+    have hne := h_prop ep hM
+    have hlen : ep.coeffs.length = 0 := by
+      have h := Nat.zero_le (sumSimplifiedDegrees ep.coeffs)
+      omega
+    have hempty : ep.coeffs = [] := List.length_eq_zero.mp hlen
+    exfalso
+    obtain ⟨x, hx⟩ := hne
+    apply hx
+    show evalAux ep.coeffs 0 x = 0
+    rw [hempty]
+    rfl
+  | succ M' ih =>
+    intro ep hM h_prop h_strict_last a b hab zeros hnodup hzeros
+    have hne := h_prop ep hM
+    match h_coeffs : ep.coeffs with
+    | [] =>
+      exfalso
+      obtain ⟨x, hx⟩ := hne
+      apply hx
+      show evalAux ep.coeffs 0 x = 0
+      rw [h_coeffs]
+      rfl
+    | [p] =>
+      have hne_p : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0 := by
+        obtain ⟨x, hx⟩ := hne
+        refine ⟨x, ?_⟩
+        show evalAux [p] 0 x ≠ 0
+        rw [← h_coeffs]
+        exact hx
+      have hzeros_p : ∀ z ∈ zeros,
+                       a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0 := by
+        intro z hz
+        obtain ⟨hz1, hz2, hz3⟩ := hzeros z hz
+        refine ⟨hz1, hz2, ?_⟩
+        show evalAux [p] 0 z = 0
+        rw [← h_coeffs]
+        exact hz3
+      have hbnd := expPoly_zero_count_bound_length_one_simplified p a b hab
+                     hne_p zeros hnodup hzeros_p
+      have h_sum_eq : sumSimplifiedDegrees ep.coeffs = degreeUpper (polySimplify p) := by
+        rw [h_coeffs, sumSimplifiedDegrees_cons, sumSimplifiedDegrees_nil]
+        omega
+      have hlen : ep.coeffs.length = 1 := by rw [h_coeffs]; rfl
+      rw [h_sum_eq, hlen] at hM
+      omega
+    | p :: q :: rest =>
+      have hne_coeffs : ep.coeffs ≠ [] := by
+        rw [h_coeffs]; exact List.cons_ne_nil _ _
+      have hlen_ge_2 : ep.coeffs.length ≥ 2 := by rw [h_coeffs]; simp
+      have hlast_pos : degreeUpper (polySimplify (ep.coeffs.getLast hne_coeffs)) > 0 :=
+        h_strict_last ep hne_coeffs hlen_ge_2 hM
+      let c : Real := natCast (ep.coeffs.length - 1)
+      let ep_red := scaledReduction ep c
+      have h_strict := sumSimplifiedDegrees_scaledReductionAux_lt
+                         ep.coeffs 0 hne_coeffs hlast_pos
+      have h_offset_eq : (0 : Nat) + ep.coeffs.length - 1 = ep.coeffs.length - 1 := by omega
+      rw [h_offset_eq] at h_strict
+      have h_aux_len : ∀ (coeffs : List Poly) (c : Real) (offset : Nat),
+                        (scaledReductionAux c coeffs offset).length = coeffs.length := by
+        intro coeffs c offset
+        induction coeffs generalizing offset with
+        | nil => rfl
+        | cons head tail ihl =>
+          show (Poly.add (polyDerivative head)
+                         (Poly.mul (Poly.const _) head)
+                :: scaledReductionAux c tail (offset + 1)).length
+             = (head :: tail).length
+          rw [List.length_cons, List.length_cons, ihl (offset + 1)]
+      have h_len_eq : ep_red.coeffs.length = ep.coeffs.length := h_aux_len ep.coeffs c 0
+      have h_sum_eq : sumSimplifiedDegrees ep_red.coeffs
+                    = sumSimplifiedDegrees
+                        (scaledReductionAux (natCast (ep.coeffs.length - 1))
+                                            ep.coeffs 0) := rfl
+      have h_measure : ep_red.coeffs.length + sumSimplifiedDegrees ep_red.coeffs ≤ M' := by
+        rw [h_len_eq, h_sum_eq]
+        omega
+      have h_prop_red : ∀ ep' : ExpPoly,
+                        ep'.coeffs.length + sumSimplifiedDegrees ep'.coeffs ≤ M' →
+                        (∃ x, ep'.eval x ≠ 0) := by
+        intro ep' hep'
+        exact h_prop ep' (by omega)
+      have h_strict_last_red : ∀ ep' : ExpPoly,
+                                ∀ (hne_c : ep'.coeffs ≠ []),
+                                ep'.coeffs.length ≥ 2 →
+                                ep'.coeffs.length +
+                                  sumSimplifiedDegrees ep'.coeffs ≤ M' →
+                                degreeUpper (polySimplify
+                                  (ep'.coeffs.getLast hne_c)) > 0 := by
+        intro ep' hne_c hlen_ge hmeas
+        exact h_strict_last ep' hne_c hlen_ge (by omega)
+      have hred_bound := ih ep_red h_measure h_prop_red h_strict_last_red a b hab
+      have h_eval_bound : ∀ zeros' : List Real,
+                            zeros'.Nodup →
+                            (∀ z ∈ zeros', a < z ∧ z < b ∧ ep_red.eval z = 0) →
+                            zeros'.length ≤ M' := hred_bound
+      have h_transfer := zero_count_scaledReduction_transfer ep c a b hab M' h_eval_bound
+      have := h_transfer zeros hnodup hzeros
       omega
 
 end ExpPoly
