@@ -339,3 +339,81 @@ theorem scaledReduction_eval_combine (ep : ExpPoly) (c : Real) (x : Real) :
             (Real.exp (natCast o * x))
             (evalAux (scaledReductionAux 0 rest (o + 1)) (o + 1) x)
             (evalAux rest (o + 1) x) c
+
+/-! ## Zero count transfer via Rolle -/
+
+theorem scaledReduction_eval_zero_of_aux_deriv_zero
+    (ep : ExpPoly) (c : Real) (z : Real)
+    (g'' : Real)
+    (hg''_deriv : HasDerivAt (mulNegExpX ep c) g'' z)
+    (hg''_zero : g'' = 0) :
+    (scaledReduction ep c).eval z = 0 := by
+  have hcanonical := hasDerivAt_mulNegExpX_raw ep c z
+  have huniq := HasDerivAt_unique (mulNegExpX ep c) g''
+                  ((scaledReduction ep 0).eval z * Real.exp (-c * z)
+                   + ep.eval z * (Real.exp (-c * z) * (-c)))
+                  z hg''_deriv hcanonical
+  have hcan_zero : (scaledReduction ep 0).eval z * Real.exp (-c * z)
+                   + ep.eval z * (Real.exp (-c * z) * (-c)) = 0 := by
+    rw [← huniq]; exact hg''_zero
+  have hfact : (scaledReduction ep 0).eval z * Real.exp (-c * z)
+                + ep.eval z * (Real.exp (-c * z) * (-c))
+             = Real.exp (-c * z) * (scaledReduction ep c).eval z := by
+    rw [← scaledReduction_eval_combine ep c z]
+    rw [show (scaledReduction ep 0).eval z * Real.exp (-c * z)
+          = Real.exp (-c * z) * (scaledReduction ep 0).eval z from mul_comm _ _]
+    rw [show ep.eval z * (Real.exp (-c * z) * (-c))
+          = Real.exp (-c * z) * (ep.eval z * (-c)) from by
+      rw [← mul_assoc, mul_comm (ep.eval z) (Real.exp _), mul_assoc]]
+    rw [← mul_distrib]
+  rw [hfact] at hcan_zero
+  have hexp_ne : Real.exp (-c * z) ≠ 0 := exp_ne_zero _
+  exact mul_eq_zero_of_factor_ne_zero_local hexp_ne hcan_zero
+
+theorem zero_count_scaledReduction_transfer_raw
+    (ep : ExpPoly) (c : Real) (a b : Real) (hab : a < b)
+    (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (mulNegExpX ep c) f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧ mulNegExpX ep c z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    exact (mulNegExpX_zero_iff ep c z).mpr hfz
+  have hdiff : ∀ x : Real, a < x → x < b →
+                ∃ f' : Real, HasDerivAt (mulNegExpX ep c) f' x := by
+    intro x _ _
+    refine ⟨_, hasDerivAt_mulNegExpX_raw ep c x⟩
+  exact zero_count_bound_by_deriv (mulNegExpX ep c) a b hab hdiff N
+          h_reduced_bound zeros_f hnodup hzeros_g
+
+theorem zero_count_scaledReduction_transfer
+    (ep : ExpPoly) (c : Real) (a b : Real) (hab : a < b)
+    (N : Nat)
+    (h_red_bound_eval : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ (scaledReduction ep c).eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply zero_count_scaledReduction_transfer_raw ep c a b hab N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_red_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  refine ⟨haz, hzb, ?_⟩
+  exact scaledReduction_eval_zero_of_aux_deriv_zero ep c z g'' hg''_deriv hg''_zero
+
+end ExpPoly
+end SingleExpKhovanskii
+end MachLib
