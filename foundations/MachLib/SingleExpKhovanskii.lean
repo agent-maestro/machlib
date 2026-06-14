@@ -504,10 +504,14 @@ theorem expPoly_zero_count_iter_bound
       rw [hlen]
       omega
 
-/-- **Capstone (parametric Khovanskii bound).** Given a reduction witness
-landing at a length-1 `target`, with bound on the target via polynomial root
-count, conclude an explicit Khovanskii bound on `ep`. -/
-theorem expPoly_khovanskii_bound
+/-- **Capstone (parametric Khovanskii bound, length-preserving).** Given a
+reduction witness landing at a length-1 `target`, conclude a bound on `ep`.
+
+**Important limitation**: `scaledReduction` preserves `coeffs.length`, so
+`IsIteratedScaledReduction ep ⟨[p]⟩ cs` is ONLY satisfiable when
+`ep.coeffs.length = 1` (the trivial case). For non-trivial reduction, see
+`IsKhovanskiiReducibleExp` below which adds drop steps. -/
+theorem expPoly_khovanskii_bound_length_preserving
     (ep : ExpPoly) (p : Poly) (cs : List Real)
     (h_iter : IsIteratedScaledReduction ep ⟨[p]⟩ cs)
     (a b : Real) (hab : a < b)
@@ -517,6 +521,99 @@ theorem expPoly_khovanskii_bound
       (∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0) →
       zeros.length ≤ degreeUpper p + cs.length := by
   apply expPoly_zero_count_iter_bound ep ⟨[p]⟩ cs h_iter a b hab (degreeUpper p)
+  exact expPoly_zero_count_bound_length_one p a b hab hne
+
+/-! ## Extended iteration with drop steps
+
+Since `scaledReduction` preserves list length, the iteration must include
+DROP steps to actually reduce a length-(L+1) ExpPoly down to length-1.
+
+A drop step removes the last coefficient of `ep`, eval-preserving when the
+last coefficient evaluates to 0 at every x. -/
+
+/-- Eval preservation when last coefficient is the zero function. For
+`coeffs = head ++ [last]` with `last` evaluating to 0 always, the eval of
+`⟨coeffs⟩` equals the eval of `⟨head⟩`. -/
+theorem eval_drop_last_when_zero (head : List Poly) (last : Poly)
+    (h_last : ∀ x, Poly.eval last x = 0) (x : Real) :
+    (⟨head ++ [last]⟩ : ExpPoly).eval x = (⟨head⟩ : ExpPoly).eval x := by
+  show evalAux (head ++ [last]) 0 x = evalAux head 0 x
+  generalize 0 = o
+  induction head generalizing o with
+  | nil =>
+    show evalAux ([last]) o x = evalAux [] o x
+    show Poly.eval last x * Real.exp ((natCast o) * x) + evalAux [] (o + 1) x = 0
+    rw [h_last]
+    show 0 * Real.exp ((natCast o) * x) + 0 = 0
+    rw [zero_mul, zero_add]
+  | cons h t ih =>
+    show Poly.eval h x * Real.exp ((natCast o) * x) + evalAux (t ++ [last]) (o + 1) x
+       = Poly.eval h x * Real.exp ((natCast o) * x) + evalAux t (o + 1) x
+    rw [ih (o + 1)]
+
+/-- **Extended reducibility predicate**: combines scaledReduction steps
+(each adds 1 to the Rolle counter) with drop steps (which preserve zeros). -/
+inductive IsKhovanskiiReducibleExp : ExpPoly → ExpPoly → Nat → Prop where
+  | refl (ep : ExpPoly) : IsKhovanskiiReducibleExp ep ep 0
+  | step (ep g : ExpPoly) (k : Nat) (c : Real)
+      (h : IsKhovanskiiReducibleExp (scaledReduction ep c) g k) :
+      IsKhovanskiiReducibleExp ep g (k + 1)
+  | drop (head : List Poly) (last : Poly) (g : ExpPoly) (k : Nat)
+      (h_last_zero : ∀ x : Real, Poly.eval last x = 0)
+      (h : IsKhovanskiiReducibleExp ⟨head⟩ g k) :
+      IsKhovanskiiReducibleExp ⟨head ++ [last]⟩ g k
+
+/-- **Iterated bound (extended).** Handles both step and drop constructors. -/
+theorem expPoly_zero_count_khovanskii_bound
+    (ep g : ExpPoly) (k : Nat)
+    (h_iter : IsKhovanskiiReducibleExp ep g k)
+    (a b : Real) (hab : a < b)
+    (N : Nat)
+    (h_target_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ g.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros_f.length ≤ N + k := by
+  revert h_target_bound
+  induction h_iter with
+  | refl ep =>
+      intro h_target_bound zeros_f hnodup hzeros
+      have := h_target_bound zeros_f hnodup hzeros
+      omega
+  | step ep g k c h_next ih =>
+      intro h_target_bound
+      have hred_bound := ih h_target_bound
+      have hstep := zero_count_scaledReduction_transfer ep c a b hab (N + k) hred_bound
+      intro zeros_f hnodup hzeros
+      have := hstep zeros_f hnodup hzeros
+      omega
+  | drop head last g k h_last_zero h_next ih =>
+      intro h_target_bound
+      have hdrop_bound := ih h_target_bound
+      -- zeros of ⟨head ++ [last]⟩ = zeros of ⟨head⟩ via eval_drop_last_when_zero.
+      intro zeros_f hnodup hzeros
+      apply hdrop_bound zeros_f hnodup
+      intro z hz
+      obtain ⟨haz, hzb, hev⟩ := hzeros z hz
+      refine ⟨haz, hzb, ?_⟩
+      rw [← eval_drop_last_when_zero head last h_last_zero z]
+      exact hev
+
+/-- **Capstone (full Khovanskii bound).** Reduces from `ep` to a length-1
+`⟨[p]⟩` target via a mix of scaledReduction + drop steps. -/
+theorem expPoly_khovanskii_bound
+    (ep : ExpPoly) (p : Poly) (k : Nat)
+    (h_iter : IsKhovanskiiReducibleExp ep ⟨[p]⟩ k)
+    (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros.length ≤ degreeUpper p + k := by
+  apply expPoly_zero_count_khovanskii_bound ep ⟨[p]⟩ k h_iter a b hab (degreeUpper p)
   exact expPoly_zero_count_bound_length_one p a b hab hne
 
 end ExpPoly
