@@ -815,25 +815,43 @@ theorem `expPoly_full_auto_bound` requires the strict-descent
 plumbing across the list, which we sketch below but defer the
 full proof to a focused session. -/
 
-/-! ### Auto-bound — statement and proof sketch
+/-! ### Auto-bound length-1 case (the EASY half of the strong induction)
 
-For any ExpPoly with non-trivial eval, zero count on `(a, b)` is bounded by
-`expPolyAutoBound ep = length + Σ_k degreeUpper(polySimplify coeffs[k])`.
+Wraps `expPoly_zero_count_bound_length_one_simplified` to fit the
+auto-bound measure: for length-1 ExpPoly, the zero count is bounded
+by the simplified degreeUpper of the single coefficient, which is
+exactly `expPolyAutoBound ep - 1` (since length = 1, sum = degree).
 
-The proof:
-  * Base (length 0): vacuous via hne (eval ≡ 0).
-  * Length 1: direct via `expPoly_zero_count_bound_length_one_simplified`.
-  * Length ≥ 2: by strong induction on `expPolyAutoBound ep`. Apply
-    `simplifiedScaledReduction` once; either the measure strictly drops
-    (via `polyDerivative_degreeUpper_lt_after_simplify`) and IH applies
-    after Rolle, OR the last coefficient simplifies to `Poly.const 0`
-    (via `polyDerivative_zero_when_simplified_degree_zero`) enabling a
-    `drop` step that decreases length.
+For length ≥ 2, the induction step requires strict-descent plumbing
+detailed in the file header. The infrastructure for both manual
+witness construction (today) and a future auto-witness (~150 more
+lines) ships in this file. -/
 
-Status: the full induction across arbitrary list lengths requires
-~150 lines of careful Lean plumbing — left as the final closure
-piece for a future focused session. The infrastructure for either
-hand- or auto-construction is complete in this file. -/
+/-- **Auto-bound — length-1 specialization.** This is the direct version
+applicable when ep has exactly one coefficient. The bound matches
+`expPolyAutoBound ⟨[p]⟩ = 1 + degreeUpper(polySimplify p)`, but the
+actual bound is `degreeUpper(polySimplify p) = expPolyAutoBound ⟨[p]⟩ - 1`. -/
+theorem expPoly_zero_count_auto_bound_length_one
+    (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0) →
+      zeros.length ≤ expPolyAutoBound ⟨[p]⟩ := by
+  intro zeros hnodup hzeros
+  have hbnd := expPoly_zero_count_bound_length_one_simplified p a b hab hne
+                 zeros hnodup hzeros
+  show zeros.length ≤ (⟨[p]⟩ : ExpPoly).coeffs.length + sumSimplifiedDegrees (⟨[p]⟩ : ExpPoly).coeffs
+  show zeros.length ≤ 1 + sumSimplifiedDegrees [p]
+  have hsum : sumSimplifiedDegrees [p] = degreeUpper (polySimplify p) := by
+    show ([p].map (fun p => degreeUpper (polySimplify p))).foldl (· + ·) 0
+       = degreeUpper (polySimplify p)
+    show List.foldl (· + ·) 0 [degreeUpper (polySimplify p)]
+       = degreeUpper (polySimplify p)
+    show (0 : Nat) + degreeUpper (polySimplify p) = degreeUpper (polySimplify p)
+    omega
+  rw [hsum]
+  omega
 
 end ExpPoly
 end SingleExpKhovanskii
