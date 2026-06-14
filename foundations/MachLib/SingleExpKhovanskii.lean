@@ -456,34 +456,68 @@ theorem expPoly_zero_count_bound_length_one
     exact hev
   exact poly_root_count_bound p a b hab hne' zeros hnodup hzeros'
 
-/-! ## Iteration: dropping the last coefficient after enough scaledReductions
+/-! ## Iteration arithmetic (parametric in a reduction witness)
 
-To prove the full Khovanskii bound, we need to iterate `scaledReduction` until
-the last coefficient's eval becomes 0, then drop it and recurse.
+Parallel to the PfaffianFn `IsKhovanskiiReducible` track. Bundle a sequence
+of `scaledReduction` applications as a witness, then prove that each step
+adds 1 to the Rolle bound. -/
 
-A `polyDerivative` of any constant `Poly.const c` is `Poly.const 0` (eval 0).
-A `polyDerivative` of degreeUpper-0 polynomial evaluates to 0 always.
-So after `degreeUpper(last) + 1` iterations of scaledReduction with
-c = (length - 1), the last coefficient evaluates to 0 (the trailing
-exp(k·x) term contributes 0 to eval, and we can recurse on the shorter list).
+/-- Witness predicate: `ep →* target` via a list of `c` values applied as
+successive `scaledReduction` steps. -/
+inductive IsIteratedScaledReduction : ExpPoly → ExpPoly → List Real → Prop where
+  | refl (ep : ExpPoly) : IsIteratedScaledReduction ep ep []
+  | step (ep target : ExpPoly) (c : Real) (cs : List Real)
+      (h : IsIteratedScaledReduction (scaledReduction ep c) target cs) :
+      IsIteratedScaledReduction ep target (c :: cs)
 
-The mechanics of this iteration (the actual termination proof and witness
-construction) is the next chunk. Substrate now ready:
+/-- **Iterated zero count bound (eval form).** Given a reduction witness
+`ep →* target` of length `cs.length`, and a bound `N` on `target`'s zeros,
+conclude `zeros(ep) ≤ N + cs.length`. -/
+theorem expPoly_zero_count_iter_bound
+    (ep target : ExpPoly) (cs : List Real)
+    (h_iter : IsIteratedScaledReduction ep target cs)
+    (a b : Real) (hab : a < b)
+    (N : Nat)
+    (h_target_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ target.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros_f.length ≤ N + cs.length := by
+  revert h_target_bound
+  induction h_iter with
+  | refl ep =>
+      intro h_target_bound zeros_f hnodup hzeros
+      have := h_target_bound zeros_f hnodup hzeros
+      simp
+      exact this
+  | step ep target c cs h_next ih =>
+      intro h_target_bound
+      have hred_bound := ih h_target_bound
+      have hstep := zero_count_scaledReduction_transfer ep c a b hab (N + cs.length) hred_bound
+      intro zeros_f hnodup hzeros
+      have := hstep zeros_f hnodup hzeros
+      show zeros_f.length ≤ N + (c :: cs).length
+      have hlen : (c :: cs).length = cs.length + 1 := rfl
+      rw [hlen]
+      omega
 
-  * `scaledReduction` operator + eval correctness.
-  * Zero count transfer (this commit's `zero_count_scaledReduction_transfer`).
-  * Base case (length-1 bound, this commit).
-
-Future work for the explicit Khovanskii bound:
-  * `degreeUpper_polyDerivative_le_degreeUpper_minus_one` (or similar).
-  * Termination argument: after enough iterations, last → eval 0.
-  * Strong induction on `(length, max_degreeUpper)` lex measure.
-
-The full bound theorem will say something like:
-
-  `zeros(ep) on (a,b) ≤ ep.coeffs.length * (max_degreeUpper(ep.coeffs) + 1)`
-
-(or a tighter formula). -/
+/-- **Capstone (parametric Khovanskii bound).** Given a reduction witness
+landing at a length-1 `target`, with bound on the target via polynomial root
+count, conclude an explicit Khovanskii bound on `ep`. -/
+theorem expPoly_khovanskii_bound
+    (ep : ExpPoly) (p : Poly) (cs : List Real)
+    (h_iter : IsIteratedScaledReduction ep ⟨[p]⟩ cs)
+    (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros.length ≤ degreeUpper p + cs.length := by
+  apply expPoly_zero_count_iter_bound ep ⟨[p]⟩ cs h_iter a b hab (degreeUpper p)
+  exact expPoly_zero_count_bound_length_one p a b hab hne
 
 end ExpPoly
 end SingleExpKhovanskii
