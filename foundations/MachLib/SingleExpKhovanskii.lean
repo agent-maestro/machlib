@@ -686,22 +686,41 @@ theorem simplifiedScaledReduction_eval (ep : ExpPoly) (c : Real) (x : Real) :
      = evalAux (scaledReduction ep c).coeffs 0 x
   exact evalAux_simplifyCoeffs _ _ _
 
-/-! ### Path (a) status
+/-! ### Path (a) status — strict descent already proved in MachLib
 
-`simplifiedScaledReduction` ships eval-equivalent to `scaledReduction`,
-so it can be used as a drop-in replacement. The structural `degreeUpper`
-of the simplified coefficients is bounded by the original's, and
-crucially, the `mul (const 0) _` artifacts that prevented termination
-in the naive scaledReduction are now eliminated.
+The strict-descent lemma `polyDerivative_degreeUpper_lt_after_simplify`
+is already in `MachLib.PolynomialRootCount` (line 1185), shipped in the
+Khovanskii sprint week 1. Its signature:
 
-Full auto-witness via this path requires:
-  * `degreeUpper_polySimplify_polyDerivative_lt_self` — prove
-    that the simplified derivative has strictly smaller degreeUpper
-    when the input had degreeUpper > 0.
-  * Well-founded recursion using the above as the termination witness.
-  * Construct `IsKhovanskiiReducibleExp` witness automatically.
+  ```
+  theorem polyDerivative_degreeUpper_lt_after_simplify (p : Poly)
+      (hp : degreeUpper (polySimplify p) > 0) :
+      degreeUpper (polySimplify (polyDerivative p))
+        < degreeUpper (polySimplify p)
+  ```
 
-Estimated ~80-120 more lines for the strict-decrease lemma + auto-witness.
+This is the termination witness we need. Combined with
+`simplifiedScaledReduction`, the auto-witness construction becomes
+straightforward via fuel-based recursion. -/
+
+/-- Eval-zero detection: `polySimplify p = Poly.const 0` implies eval is 0 always.
+This discharges the `h_last_zero` obligation in the `drop` constructor for
+the iteration's drop steps. -/
+theorem eval_zero_of_polySimplify_zero (p : Poly)
+    (h : polySimplify p = Poly.const 0) (x : Real) :
+    Poly.eval p x = 0 := by
+  have heq : Poly.eval (polySimplify p) x = Poly.eval p x := polySimplify_eval p x
+  rw [← heq, h]
+  rfl
+
+/-- Helper: a simplified coefficient that's structurally `Poly.const 0`
+satisfies the drop constructor's `h_last_zero` requirement universally. -/
+theorem eval_zero_of_eq_polySimplify_const_zero (p : Poly)
+    (h : polySimplify p = Poly.const 0) :
+    ∀ x : Real, Poly.eval p x = 0 :=
+  fun x => eval_zero_of_polySimplify_zero p h x
+
+/-! ### Paths (b) and (c) — research-grade
 
 ## Path (b): Eval-level reasoning (status)
 
