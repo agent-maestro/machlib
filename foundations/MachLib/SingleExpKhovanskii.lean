@@ -647,10 +647,77 @@ theorem scaledReduction_last_const_pattern_eval_zero (c : Real) (x : Real) :
   rw [const_zero_eval_zero]
   rw [zero_mul, add_zero]
 
-/-! ## Algorithmic witness construction — status
+/-! ## Path (a): polySimplify integration
 
-Full automatic construction of `IsKhovanskiiReducibleExp` from any input
-`ep` remains open. The challenge: termination measure on `Poly` AST.
+The auto-witness construction's termination issue stems from
+`polyDerivative` not strictly decreasing structural `degreeUpper`
+(because of `mul (const 0) _` artifacts). Solution: simplify after
+each derivative.
+
+`polySimplify` (from `MachLib.PolynomialRootCount`) drops syntactic
+`mul (const 0) _`, `mul _ (const 0)`, `mul (const 1) _`, `mul _ (const 1)`,
+`add (const 0) _`, etc. It preserves eval (`polySimplify_eval`). -/
+
+/-- Map `polySimplify` over a list of `Poly`. Pointwise simplification. -/
+noncomputable def simplifyCoeffs (coeffs : List Poly) : List Poly :=
+  coeffs.map polySimplify
+
+/-- Simplified scaledReduction: apply polySimplify to each coefficient
+after scaledReduction. -/
+noncomputable def simplifiedScaledReduction (ep : ExpPoly) (c : Real) : ExpPoly :=
+  ⟨simplifyCoeffs (scaledReduction ep c).coeffs⟩
+
+/-- `polySimplify` preserves `evalAux` pointwise. -/
+theorem evalAux_simplifyCoeffs (coeffs : List Poly) (o : Nat) (x : Real) :
+    evalAux (simplifyCoeffs coeffs) o x = evalAux coeffs o x := by
+  induction coeffs generalizing o with
+  | nil => rfl
+  | cons p rest ih =>
+    show Poly.eval (polySimplify p) x * Real.exp ((natCast o) * x)
+         + evalAux (simplifyCoeffs rest) (o + 1) x
+       = Poly.eval p x * Real.exp ((natCast o) * x)
+         + evalAux rest (o + 1) x
+    rw [polySimplify_eval, ih]
+
+/-- `simplifiedScaledReduction` preserves eval — same as `scaledReduction`. -/
+theorem simplifiedScaledReduction_eval (ep : ExpPoly) (c : Real) (x : Real) :
+    (simplifiedScaledReduction ep c).eval x = (scaledReduction ep c).eval x := by
+  show evalAux (simplifyCoeffs (scaledReduction ep c).coeffs) 0 x
+     = evalAux (scaledReduction ep c).coeffs 0 x
+  exact evalAux_simplifyCoeffs _ _ _
+
+/-! ### Path (a) status
+
+`simplifiedScaledReduction` ships eval-equivalent to `scaledReduction`,
+so it can be used as a drop-in replacement. The structural `degreeUpper`
+of the simplified coefficients is bounded by the original's, and
+crucially, the `mul (const 0) _` artifacts that prevented termination
+in the naive scaledReduction are now eliminated.
+
+Full auto-witness via this path requires:
+  * `degreeUpper_polySimplify_polyDerivative_lt_self` — prove
+    that the simplified derivative has strictly smaller degreeUpper
+    when the input had degreeUpper > 0.
+  * Well-founded recursion using the above as the termination witness.
+  * Construct `IsKhovanskiiReducibleExp` witness automatically.
+
+Estimated ~80-120 more lines for the strict-decrease lemma + auto-witness.
+
+## Path (b): Eval-level reasoning (status)
+
+An alternative bypassing structural degree tracking entirely: prove the
+Khovanskii bound by induction on the number of distinct exponentials
+in the eval expression, using sample-point evaluation. Research-grade;
+no known constructive presentation in MachLib's setting.
+
+## Path (c): Wronskian/Cramer (status)
+
+The classical pre-Khovanskii approach: bound zeros of `Σ_k a_k(x) exp(k·x)`
+via the determinant of the (d+1)×(d+1) Wronskian matrix of derivatives.
+Requires multilinear algebra substrate (determinants, Cramer's rule) not
+yet in MachLib. Research-grade.
+
+## Algorithmic witness construction — current status
 
 The key issue: structural `degreeUpper (polyDerivative p)` does NOT
 always strictly drop. Counter-example: `p = Poly.mul (Poly.const c) Poly.var`
