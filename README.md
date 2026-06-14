@@ -32,6 +32,31 @@ Every release claiming zero Mathlib dependency must pass
 | `api/` | Optional local interface surfaces, subject to separate review |
 | `docs/` | Audience-organised guides + reference |
 
+## Featured artifacts
+
+The current capstone in `foundations/` is a constructive Khovanskii zero
+bound for polynomial-in-(x, eˣ), with a Forge-emitted safety-critical kernel
+proof shipped on top of it. Honest about the foundation: the result is
+proven modulo MachLib's axiomatized analytic base (Rolle zero-counting
+corollary, `HasDerivAt` rules, `exp_pos`, Real arithmetic and order); in
+mathlib every one of those is a theorem, and grounding the base there is
+open work.
+
+- `foundations/MachLib/SingleExpKhovanskii.lean` — three resolution paths
+  (`expPoly_khovanskii_bound`, `expPoly_auto_bound_with_propagation_aux`,
+  `expPoly_ode_no_zeros`).
+- `foundations/MachLib/KhovanskiiReduction.lean` — `khovanskii_bound_full`
+  for general triangular Pfaffian chains, parametric in a reduction witness.
+- `foundations/MachLib/Applications/ButlerVolmerKhovanskii.lean` —
+  current = 0 ↔ overpotential = 0 for the Butler-Volmer electrode-kinetics
+  kernel (downstream: BMS, fuel cells, corrosion). Replaces a `sorry` in
+  `MachLib/Discovered/butler_volmer.lean`.
+- `foundations/AxiomAudit.lean` — reproducible `#print axioms` over the
+  headline theorems. Run via `lake env lean AxiomAudit.lean`.
+- `foundations/KhovanskiiExamples.lean` — three worked applications.
+
+See [CHANGELOG.md](CHANGELOG.md) for the per-release entry.
+
 ## Why MachLib (not Mathlib)
 
 Mathlib is the cathedral, by humans, for humans.

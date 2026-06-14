@@ -1,0 +1,75 @@
+# Changelog
+
+All notable changes to MachLib are recorded here. Format roughly follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions are
+release-snapshot identifiers; see the release manifests for the authoritative
+per-release status.
+
+## [Unreleased] — 2026-06-14
+
+### Added
+
+- `MachLib.SingleExpKhovanskii` — constructive Khovanskii zero bound for
+  polynomial-in-(x, eˣ), three resolution paths:
+  - `expPoly_khovanskii_bound` (parametric capstone; user supplies an
+    `IsKhovanskiiReducibleExp` witness).
+  - `expPoly_auto_bound_with_propagation_aux` (strong-induction auto-bound
+    over `length + Σ degreeUpper(polySimplify coeffs)`, parametric in a
+    propagation hypothesis).
+  - `expPoly_ode_no_zeros` (MVT-based ODE corner case: when
+    `f' - c·f ≡ 0` on `(a, b)`, `f` is zero-free).
+- `MachLib.KhovanskiiReduction` — `khovanskii_bound_full` for general
+  triangular Pfaffian chains, parametric in a reduction witness
+  (`IsKhovanskiiReducible` with `reduce` + `drop` constructors).
+- `MachLib.MultiPolyToPoly` — `MultiPoly 0 → Poly` conversion + the
+  chainLength-0 base-case zero bound.
+- `MachLib.Applications.ButlerVolmerKhovanskii` — Forge kernel proof for
+  the Butler-Volmer electrode-kinetics safety contract: current = 0 iff
+  overpotential = 0. Replaces a `sorry` in
+  `MachLib/Discovered/butler_volmer.lean`. Domain: BMS, fuel cell
+  controllers, corrosion engineering.
+- `foundations/AxiomAudit.lean` — reproducible `#print axioms` over the
+  headline theorems, run via `lake env lean AxiomAudit.lean`.
+- `foundations/KhovanskiiExamples.lean` — three worked applications.
+
+### Foundations note
+
+Results are proven **modulo MachLib's axiomatized analytic base**: a Rolle
+zero-counting corollary (`zero_count_bound_by_deriv`), the `HasDerivAt`
+rules + `HasDerivAt_unique`, `exp_pos` / `exp_zero`, and `MachLib.Real`
+arithmetic / order. In mathlib every one of these is a theorem, not an
+axiom — grounding the base in mathlib is open work, not done here.
+
+`zero_count_bound_by_deriv` does the core analytic work; the Khovanskii
+layer added in this release is the reduction and the explicit-bound
+bookkeeping on top of it. The audit (`AxiomAudit.lean`) makes the
+dependency set fully visible.
+
+The release added no assumptions beyond that documented base.
+
+### Notes
+
+- The textbook Khovanskii operator `f' - c·y_n'·f` does not drop degree
+  in single-exp chains. The operator that works is `scaledReduction c f :=
+  f' - c·f` (see the git history around the `4fe434a` commit for the
+  discovery).
+- `expPoly_ode_no_zeros` does not invoke `Classical.choice` in its Lean
+  dependency closure. This is **not** a constructive-analysis claim — the
+  MVT it rests on is classical in spirit and only escapes the dependency
+  list because the MVT itself is axiomatized in MachLib.
+- 3 `sorry`-warnings exist in 2 non-headline modules (`MachLib.ForgeTest`
+  and `MachLib.HighDimensional`, work-in-progress queues unrelated to this
+  release). Transitive-import closure of the headline theorems and the
+  audit (25 modules) confirms neither is in the dependency chain.
+
+### Verification
+
+- `lake build` of the foundations target is green.
+- Headline files have zero `sorry`.
+- `lake env lean foundations/AxiomAudit.lean` reproduces the per-theorem
+  axiom listing.
+
+### Attribution
+
+Formalization developed by an AI agent (Claude Code) driving MachLib
+commits. Coordination on behalf of the Monogate research team.
