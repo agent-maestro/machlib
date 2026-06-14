@@ -463,5 +463,38 @@ theorem PfaffianFn.zero_count_bound_chainLength_zero
   exact MultiPolyToPoly.multiPoly_root_count_bound_at_fixed_env
           f.poly env a b hab hne' zeros hnodup hzeros'
 
+/-! ## Capstone: the constructive Khovanskii bound (modulo Step 3)
+
+Compose `zero_count_iter_bound` (Step 5) with `zero_count_bound_chainLength_zero`
+(the base case). The result is the **full constructive Khovanskii zero
+bound**, modulo the existence of a degree-drop iteration chain that
+takes f down to a chainLength-0 PfaffianFn.
+
+The only piece NOT yet constructive is the EXISTENCE proof for the
+iteration chain (Step 3 — classical degree-drop). Callers can either:
+  - Construct an iteration chain by hand for specific PfaffianFns.
+  - Eventually invoke the closed Step 3 theorem when it ships.
+
+Either way, this capstone makes the connection point explicit. -/
+
+/-- **Constructive Khovanskii zero bound (modulo Step 3).** Given a
+k-step degree-drop iteration chain `f →* g` with `g` of chain length
+zero, the zero count of `f` on `(a, b)` is bounded by
+`degreeX(g.poly) + k`. -/
+theorem PfaffianFn.khovanskii_bound_modulo_step_3
+    (f g : PfaffianFn) (k : Nat)
+    (h_iter : f.IsIteratedReducedDerivative g k)
+    (hg0 : g.n = 0)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (hne : ∃ x : Real, g.eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ MultiPoly.degreeX g.poly + k := by
+  apply PfaffianFn.zero_count_iter_bound f g k h_iter a b hab hcoherent
+          (MultiPoly.degreeX g.poly)
+  exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
+
 end PfaffianChainMod
 end MachLib
