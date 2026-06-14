@@ -344,5 +344,84 @@ theorem PfaffianFn.zero_count_reducedDerivative_transfer
   exact PfaffianFn.reducedDerivative_eval_zero_of_g_deriv_zero
           f i c z (hcoherent z haz hzb) g'' hg''_deriv hg''_zero
 
+/-! ## Step 5: iteration to a base function (parametric)
+
+Iterate Step 4: each application reduces the zero count by 1. After k
+applications, we reach a target function g whose zero count we assume
+is bounded by N (the base bound). Conclude zero count of f ≤ N + k.
+
+Crucially: this iteration is PARAMETRIC. The choice of (i_j, c_j) at
+each step is supplied as data (the `IsIteratedReducedDerivative`
+predicate), NOT derived. Step 3 (the classical degree-drop) would
+provide a constructive existence proof — Step 5 here only handles
+the iteration ARITHMETIC modulo that existence.
+
+A consequence: if Step 3 is ever closed (or supplied as a hypothesis
+in a different proof), Step 5's iteration arithmetic doesn't need
+to change. -/
+
+/-- **Iterated reducedDerivative predicate.** `IsIteratedReducedDerivative
+f g k` means that g can be obtained from f by k applications of
+`reducedDerivative` (with arbitrary intermediate index/scalar choices). -/
+inductive PfaffianFn.IsIteratedReducedDerivative :
+    PfaffianFn → PfaffianFn → Nat → Prop where
+  | refl (f : PfaffianFn) : IsIteratedReducedDerivative f f 0
+  | step (f g : PfaffianFn) (k : Nat) (i : Fin f.n) (c : Real)
+      (h_next : IsIteratedReducedDerivative (f.reducedDerivative c i) g k) :
+      IsIteratedReducedDerivative f g (k + 1)
+
+/-- **Iterated chain-step reduction bound.** If g is the result of k
+applications of `reducedDerivative` to f, and g's zero count on (a, b)
+is bounded by N, then f's zero count is bounded by N + k. Proved by
+induction on the iteration count. -/
+theorem PfaffianFn.zero_count_iter_bound
+    (f g : PfaffianFn) (k : Nat) (h_iter : f.IsIteratedReducedDerivative g k)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (hN_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ g.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + k := by
+  -- Revert all hypotheses that depend on the inductively-varying f
+  -- so the IH for `step` is parametric in them.
+  revert hcoherent hN_bound
+  induction h_iter with
+  | refl f =>
+      intro _hcoh hN_bound zeros_f hnodup hzeros
+      have := hN_bound zeros_f hnodup hzeros
+      omega
+  | step f g k i c h_next ih =>
+      intro hcoherent hN_bound
+      -- Coherence of `(f.reducedDerivative c i).chain` = coherence of `f.chain`.
+      have hred_coh : (f.reducedDerivative c i).chain.IsCoherentOn a b := hcoherent
+      -- IH: with coherence and the bound on g, zeros of (reducedDerivative) ≤ N + k.
+      have hred_bound := ih hred_coh hN_bound
+      -- Apply Step 4 (eval form): zeros of f ≤ (N + k) + 1 = N + (k + 1).
+      have hstep := PfaffianFn.zero_count_reducedDerivative_transfer
+                      f i c a b hab hcoherent (N + k) hred_bound
+      intro zeros_f hnodup hzeros
+      have := hstep zeros_f hnodup hzeros
+      omega
+
+/-! ## Bound when the base function has chainLength 0 (polynomial case)
+
+When the iteration terminates at a chainLength-0 PfaffianFn, the base
+function is a polynomial in x alone. Polynomial root count
+(`poly_root_count_bound` in PolynomialRootCount.lean) gives the base
+bound. The MultiPoly-to-Poly conversion + degree preservation lemmas
+are deferred to a future commit (MachLib has no MultiPoly 0 → Poly
+yet); this section names the obligation as a hypothesis.
+
+The user obligation for the full Khovanskii bound:
+  (a) Find an iteration chain f → ... → g where g has chainLength 0.
+      (This is Step 3 — the classical degree-drop argument.)
+  (b) Supply a polynomial bound for g.
+  (c) Apply `zero_count_iter_bound` to compose. -/
+
 end PfaffianChainMod
 end MachLib
