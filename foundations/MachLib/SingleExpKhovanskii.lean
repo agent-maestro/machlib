@@ -254,36 +254,88 @@ theorem hasDerivAt_mulNegExpX_raw (ep : ExpPoly) (c : Real) (x : Real) :
           ((scaledReduction ep 0).eval x)
           (Real.exp (-c * x) * (-c)) x hep hexp_comp
 
-/-! ## Open piece: `scaledReduction_eval_combine`
+/-! ## The pure scalar ring identity (path (b): hand-proved via calc)
 
-The algebraic identity
-
-  `(scaledReduction ep 0).eval x + ep.eval x · (-c) = (scaledReduction ep c).eval x`
-
-reduces (after `simp only [Poly.eval]` and abstracting complex
-subterms) to a pure scalar ring identity in 7 Real variables:
+Reduces to the 7-variable Real identity:
 
   `(pd + n·pe)·E + S0 + (pe·E + R)·(-c) = (pd + (n - c)·pe)·E + (S0 + R·(-c))`
 
-Both sides expand to `pd·E + (n - c)·pe·E + S0 - c·R`. This is
-ring-trivial classically but MachLib's `mach_ring v1` doesn't fully
-normalize multi-variable polynomial identities — manual rewriting via
-`mul_comm`, `mul_assoc`, `mul_distrib`, `add_assoc`, `add_comm`,
-`sub_def` runs into combinatorial blowup. Each rewrite is correct
-individually; chaining them to match the exact post-normalization
-form is fragile.
+Both sides expand to `pd·E + (n - c)·pe·E + S0 - c·R`. We hand-prove
+this via an explicit calc chain. -/
 
-Resolution path (future work):
-  (a) Wait for `mach_ring v2` (polynomial reflection — Lagrange,
-      four-square — per MachLib roadmap).
-  (b) Prove the identity by hand via explicit calc chain
-      (estimated ~30 lines of careful manual rewriting).
-  (c) Introduce a helper `linear_combination`-style tactic.
+/-- Right-distributive `(a + b) * c = a * c + b * c` derived from MachLib's
+left-distributive `mul_distrib`. -/
+theorem add_mul_local (a b c : Real) : (a + b) * c = a * c + b * c := by
+  rw [mul_comm (a + b) c, mul_distrib, mul_comm c a, mul_comm c b]
 
-This is the only blocker for the `zero_count_scaledReduction_transfer`
-+ explicit Khovanskii bound theorem. Once this identity ships, the
-rest of the proof is mechanical (~150 lines).
+/-- Helper: `n * pe * E + pe * E * (-c) = (n - c) * pe * E` for Reals. -/
+theorem combine_pe_E (n pe E c : Real) :
+    n * pe * E + pe * E * (-c) = (n - c) * pe * E := by
+  -- = n·(pe·E) + (-c)·(pe·E) = (n + -c)·(pe·E) = (n - c)·(pe·E)
+  rw [mul_assoc n pe E]
+  rw [show pe * E * -c = -c * (pe * E) from mul_comm _ _]
+  rw [show n * (pe * E) + -c * (pe * E) = (n + -c) * (pe * E) from by
+    rw [mul_comm n (pe * E), mul_comm (-c) (pe * E)]
+    rw [← mul_distrib]
+    rw [mul_comm (pe * E) (n + -c)]]
+  rw [show n + -c = n - c from (sub_def n c).symm]
+  rw [mul_assoc]
 
-For now, the SUBSTRATE (ExpPoly + eval + HasDerivAt for c=0 +
-`hasDerivAt_mulNegExpX_raw` for arbitrary c) is shipped and provides
-the foundation. -/
+/-- The scalar ring identity that powers the inductive step. -/
+theorem expPoly_step_ring_identity (pd n pe E S0 R c : Real) :
+    (pd + (n - 0) * pe) * E + S0 + (pe * E + R) * -c
+    = (pd + (n - c) * pe) * E + (S0 + R * -c) := by
+  rw [sub_zero]
+  rw [add_mul_local (pe * E) R (-c)]
+  rw [add_mul_local pd (n * pe) E]
+  rw [add_mul_local pd ((n - c) * pe) E]
+  rw [← combine_pe_E n pe E c]
+  -- Goal (post-rewrites): pd·E + n·pe·E + S0 + (pe·E·(-c) + R·(-c))
+  --                    = pd·E + (n·pe·E + pe·E·(-c)) + (S0 + R·(-c))
+  -- mach_ring partially normalizes but leaves additive residue.
+  -- Close by explicit add_comm + add_assoc.
+  mach_ring
+  -- Residue: S0 + (pd*E + (E*(n*pe) + (-(R*c) + -(c*(pe*E)))))
+  --        = S0 + (-(R*c) + (pd*E + (E*(n*pe) + -(c*(pe*E)))))
+  congr 1
+  -- Inner: pd*E + (E*(n*pe) + (-(R*c) + -(c*(pe*E))))
+  --      = -(R*c) + (pd*E + (E*(n*pe) + -(c*(pe*E))))
+  -- Move -(R*c) from position 3 to position 1.
+  rw [← add_assoc (E * (n * pe)) (-(R * c)) (-(c * (pe * E)))]
+  rw [add_comm (E * (n * pe)) (-(R * c))]
+  rw [add_assoc (-(R * c)) (E * (n * pe)) (-(c * (pe * E)))]
+  rw [← add_assoc (pd * E) (-(R * c)) (E * (n * pe) + -(c * (pe * E)))]
+  rw [add_comm (pd * E) (-(R * c))]
+  rw [add_assoc (-(R * c)) (pd * E) (E * (n * pe) + -(c * (pe * E)))]
+
+/-- Algebraic identity:
+  `(scaledReduction ep 0).eval x + ep.eval x · (-c) = (scaledReduction ep c).eval x`
+We need this to factor the derivative into Rolle-friendly form. Proved
+at the eval level via list-recursive matching + the scalar ring identity. -/
+theorem scaledReduction_eval_combine (ep : ExpPoly) (c : Real) (x : Real) :
+    (scaledReduction ep 0).eval x + ep.eval x * (-c)
+    = (scaledReduction ep c).eval x := by
+  show evalAux (scaledReductionAux 0 ep.coeffs 0) 0 x + evalAux ep.coeffs 0 x * (-c)
+     = evalAux (scaledReductionAux c ep.coeffs 0) 0 x
+  generalize 0 = o
+  induction ep.coeffs generalizing o with
+  | nil =>
+    show (0 : Real) + 0 * (-c) = 0
+    rw [zero_mul, zero_add]
+  | cons p rest ih =>
+    have hih := ih (o + 1)
+    show (Poly.eval (Poly.add (polyDerivative p) (Poly.mul (Poly.const (natCast o - 0)) p)) x
+            * Real.exp (natCast o * x)
+          + evalAux (scaledReductionAux 0 rest (o + 1)) (o + 1) x)
+         + (Poly.eval p x * Real.exp (natCast o * x)
+            + evalAux rest (o + 1) x) * (-c)
+       = Poly.eval (Poly.add (polyDerivative p) (Poly.mul (Poly.const (natCast o - c)) p)) x
+            * Real.exp (natCast o * x)
+         + evalAux (scaledReductionAux c rest (o + 1)) (o + 1) x
+    rw [← hih]
+    simp only [Poly.eval]
+    exact expPoly_step_ring_identity
+            (Poly.eval (polyDerivative p) x) (natCast o) (Poly.eval p x)
+            (Real.exp (natCast o * x))
+            (evalAux (scaledReductionAux 0 rest (o + 1)) (o + 1) x)
+            (evalAux rest (o + 1) x) c
