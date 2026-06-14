@@ -204,5 +204,145 @@ theorem PfaffianFn.reducedDerivative_eval (c : Real) (f : PfaffianFn)
       MultiPoly.eval_const]
   rfl
 
+/-! ## Step 4: zero count transfer lemma (the muse's combined bound)
+
+This is the chain-step reduction that combines Steps 1-3:
+
+  zeros(f) ≤ zeros(reducedDerivative c f i) + 1
+
+The proof:
+  1. Define g := f · exp(-c · y_i) on (a, b).
+  2. zeros(g) = zeros(f) on (a,b) by mulNegExp_aux_zero_iff (Step 1).
+  3. g is differentiable on (a,b), with derivative exp(-c·y_i) · reducedDerivative
+     (by Step 1's hasDerivAt_mulNegExp_aux_raw + Step 2's reducedDerivative_eval
+     + the factoring identity mulNegExp_derivative_factored).
+  4. zeros(g') = zeros(reducedDerivative) on (a,b) — same exp ≠ 0 argument.
+  5. Apply zero_count_bound_by_deriv (Rolle's corollary): zeros(g) ≤ zeros(g') + 1.
+
+Constructive throughout. No axiom of Step 4 itself — only the Rolle corollary
+(`zero_count_bound_by_deriv`, axiomatized in Rolle.lean) and the exp ≠ 0 fact.
+
+Crucially: this lemma does NOT depend on the degree-drop claim (Step 3). It's
+purely a zero-count transfer that holds for ANY c. Step 3 is needed only to
+make the iteration in Step 5 well-founded — the choice of c that drives the
+degree-drop is downstream of this transfer. -/
+
+/-- **Zero count transfer (raw form).** Uses the HasDerivAt-shape bound that
+matches `zero_count_bound_by_deriv` directly. Most callers want
+`zero_count_reducedDerivative_transfer` below, which converts the bound
+hypothesis to eval-form via the bridge lemma. -/
+theorem PfaffianFn.zero_count_reducedDerivative_transfer_raw
+    (f : PfaffianFn) (i : Fin f.n) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (mulNegExp_aux f c (f.chain.evals i))
+                                    f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  -- g := mulNegExp_aux f c (chain.evals i) — the auxiliary Rolle vehicle.
+  -- Convert zeros of f.eval to zeros of g via mulNegExp_aux_zero_iff.
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧
+                   mulNegExp_aux f c (f.chain.evals i) z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    exact (mulNegExp_aux_zero_iff f c _ z).mpr hfz
+  -- g is differentiable on (a,b) via Step 1 + chain coherence.
+  have hdiff : ∀ x : Real, a < x → x < b →
+                ∃ f' : Real, HasDerivAt (mulNegExp_aux f c (f.chain.evals i)) f' x := by
+    intro x hax hxb
+    have hcoh : f.chain.IsCoherentAt x := hcoherent x hax hxb
+    have hf' : HasDerivAt f.eval (f.chainTotalDerivative.eval x) x :=
+      hasDerivAt_eval_natural f x hcoh
+    have hy' := hcoh i
+    refine ⟨_, hasDerivAt_mulNegExp_aux_raw f c (f.chain.evals i) _ x hf' hy'⟩
+  exact zero_count_bound_by_deriv (mulNegExp_aux f c (f.chain.evals i))
+          a b hab hdiff N h_reduced_bound zeros_f hnodup hzeros_g
+
+/-- **Bridge lemma**: zeros of `g'` (raw HasDerivAt form) correspond to
+zeros of `(reducedDerivative c f i).eval`. This converts the hypothesis form
+of `zero_count_reducedDerivative_transfer` from "HasDerivAt zero" to
+"reducedDerivative eval zero". Uses HasDerivAt uniqueness + exp ≠ 0. -/
+theorem PfaffianFn.reducedDerivative_eval_zero_of_g_deriv_zero
+    (f : PfaffianFn) (i : Fin f.n) (c : Real) (z : Real)
+    (hcoh : f.chain.IsCoherentAt z)
+    (g'' : Real)
+    (hg''_deriv : HasDerivAt (mulNegExp_aux f c (f.chain.evals i)) g'' z)
+    (hg''_zero : g'' = 0) :
+    (f.reducedDerivative c i).eval z = 0 := by
+  -- Canonical derivative from Step 1.
+  have hf' : HasDerivAt f.eval (f.chainTotalDerivative.eval z) z :=
+    hasDerivAt_eval_natural f z hcoh
+  have hy' := hcoh i
+  have hcanonical :=
+    hasDerivAt_mulNegExp_aux_raw f c (f.chain.evals i)
+      (MultiPoly.eval (f.chain.relations i) z (f.chain.chainValues z)) z hf' hy'
+  -- HasDerivAt uniqueness: g'' equals canonical derivative.
+  have huniq := HasDerivAt_unique (mulNegExp_aux f c (f.chain.evals i))
+                  g''
+                  (f.chainTotalDerivative.eval z * Real.exp (-c * f.chain.evals i z)
+                   + f.eval z * (Real.exp (-c * f.chain.evals i z)
+                                 * (-c * MultiPoly.eval (f.chain.relations i) z
+                                          (f.chain.chainValues z))))
+                  z hg''_deriv hcanonical
+  -- huniq + hg''_zero ⟹ canonical = 0.
+  have hcan_zero : f.chainTotalDerivative.eval z * Real.exp (-c * f.chain.evals i z)
+                    + f.eval z * (Real.exp (-c * f.chain.evals i z)
+                                  * (-c * MultiPoly.eval (f.chain.relations i) z
+                                           (f.chain.chainValues z))) = 0 := by
+    rw [← huniq]; exact hg''_zero
+  -- Factor: canonical = exp(...) · (f' - c · y_i' · f).
+  have hfact := mulNegExp_derivative_factored
+                  (f.chainTotalDerivative.eval z)
+                  (Real.exp (-c * f.chain.evals i z))
+                  (f.eval z)
+                  c
+                  (MultiPoly.eval (f.chain.relations i) z (f.chain.chainValues z))
+  rw [hfact] at hcan_zero
+  -- Now: exp(...) · (f' - c · y_i' · f) = 0 and exp ≠ 0.
+  have hexp_ne : Real.exp (-c * f.chain.evals i z) ≠ 0 := exp_ne_zero _
+  have hred_zero : f.chainTotalDerivative.eval z
+                    - c * MultiPoly.eval (f.chain.relations i) z (f.chain.chainValues z)
+                      * f.eval z = 0 :=
+    mul_eq_zero_of_factor_ne_zero hexp_ne hcan_zero
+  rw [PfaffianFn.reducedDerivative_eval]
+  exact hred_zero
+
+/-- **Zero count transfer (eval form, user-friendly).** This is the
+"natural" form of the chain-step reduction:
+
+  zeros(f) ≤ zeros(reducedDerivative c f i) + 1
+
+stated entirely in terms of PfaffianFn evaluation. Internally bridges to the
+raw HasDerivAt-form bound via `reducedDerivative_eval_zero_of_g_deriv_zero`. -/
+theorem PfaffianFn.zero_count_reducedDerivative_transfer
+    (f : PfaffianFn) (i : Fin f.n) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound_eval : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          (f.reducedDerivative c i).eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply PfaffianFn.zero_count_reducedDerivative_transfer_raw f i c a b hab hcoherent N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_reduced_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  refine ⟨haz, hzb, ?_⟩
+  exact PfaffianFn.reducedDerivative_eval_zero_of_g_deriv_zero
+          f i c z (hcoherent z haz hzb) g'' hg''_deriv hg''_zero
+
 end PfaffianChainMod
 end MachLib
