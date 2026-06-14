@@ -2,6 +2,17 @@
 -- Source module: defibrillator_energy
 -- Source file:   <private>/defibrillator_energy.eml
 -- Verified fns:  discharge_voltage, phase1_energy, biphasic_total_energy, impedance_compensation_v0
+--
+-- 2026-06-14: The Forge stub for `discharge_voltage_decays_exponentially`
+-- is a `True := by trivial` placeholder. The strengthened safety-critical
+-- claim — sign preservation under non-negative initial voltage (no
+-- polarity inversion mid-phase) — is proven at
+--   MachLib.Forge.DefibrillatorEnergy.discharge_voltage_signpreserving
+-- in MachLib/Applications/DischargeVoltageSafety.lean (IEC 62304 Class C).
+-- phase1_energy_nonneg and biphasic_total_energy_nonneg remain as
+-- Forge-emitted sorry stubs for follow-up.
+-- compensation_v0_increases_with_target_energy already has a concrete
+-- proof (sqrt_nonneg) shipped in this file.
 
 import MachLib.EML
 import MachLib.Trig

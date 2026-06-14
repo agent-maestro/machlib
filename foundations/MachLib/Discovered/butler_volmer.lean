@@ -2,6 +2,16 @@
 -- Source module: butler_volmer
 -- Source file:   <private>/butler_volmer.eml
 -- Verified fns:  current_density
+--
+-- 2026-06-14: The Forge stub theorem below is a `True` placeholder. The
+-- clinically meaningful strengthening — current = 0 iff overpotential = 0
+-- — is proven at
+--   MachLib.Forge.ButlerVolmer.butler_volmer_zero_iff_overpotential_zero
+-- in MachLib/Applications/ButlerVolmerKhovanskii.lean.
+-- The Applications file redefines current_density (identical body) and
+-- proves both directions of the iff via exp_injective + algebraic chain.
+-- See foundations/MachLib/Applications/ButlerVolmerKhovanskii.lean for the
+-- safety-critical framing (BMS, fuel cells, corrosion).
 
 import MachLib.EML
 import MachLib.Trig

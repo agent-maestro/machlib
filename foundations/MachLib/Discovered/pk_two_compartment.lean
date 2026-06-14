@@ -2,6 +2,12 @@
 -- Source module: pk_two_compartment
 -- Source file:   <private>/pk_two_compartment.eml
 -- Verified fns:  plasma_concentration, auc_inf, effect_site_step
+--
+-- 2026-06-14: plasma_concentration_nonneg now has a real proof inline below.
+-- Companion proof at MachLib.Applications.PlasmaConcentrationNonneg documents
+-- the safety-critical framing (TCI / ICU monitoring, IEC 62304 Class C).
+-- auc_inf_finite_for_positive_rates and effect_site_tracks_central_compartment
+-- remain as Forge-emitted sorry stubs for follow-up.
 
 import MachLib.EML
 import MachLib.Trig
@@ -33,7 +39,10 @@ theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b 
     (h10 : (time_min <= T_MAX)) :
     ((plasma_concentration coef_a rate_alpha coef_b rate_beta time_min) >= (0 : Real)) := by
   unfold plasma_concentration
-  sorry  -- TODO: prove against MachLib foundations
+  -- Sum of (non-negative coefficient) · (positive exp) terms.
+  apply add_nonneg
+  · exact mul_nonneg h1 (exp_nonneg _)
+  · exact mul_nonneg h5 (exp_nonneg _)
 
 -- ── auc_inf ──
 

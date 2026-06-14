@@ -9,6 +9,17 @@ per-release status.
 
 ### Added
 
+- `MachLib.Applications.PlasmaConcentrationNonneg` — pharma kernel
+  proof. Bi-exponential IV-bolus central-compartment concentration is
+  non-negative under the Forge kernel preconditions. Domain: TCI
+  anaesthesia pumps, ICU monitors. Safety class: IEC 62304 Class C, FDA
+  510(k). Also closed the `sorry` for `plasma_concentration_nonneg`
+  inline in `MachLib/Discovered/pk_two_compartment.lean`.
+- `MachLib.Applications.DischargeVoltageSafety` — defibrillator kernel
+  proof. Strengthens the Forge `True := by trivial` placeholder for
+  `discharge_voltage_decays_exponentially` to sign preservation under
+  non-negative initial voltage (no polarity inversion mid-phase). IEC
+  62304 Class C. Pointer comment added to the Discovered stub.
 - `MachLib.SingleExpKhovanskii` — constructive Khovanskii zero bound for
   polynomial-in-(x, eˣ), three resolution paths:
   - `expPoly_khovanskii_bound` (parametric capstone; user supplies an
@@ -25,9 +36,9 @@ per-release status.
   chainLength-0 base-case zero bound.
 - `MachLib.Applications.ButlerVolmerKhovanskii` — Forge kernel proof for
   the Butler-Volmer electrode-kinetics safety contract: current = 0 iff
-  overpotential = 0. Replaces a `sorry` in
-  `MachLib/Discovered/butler_volmer.lean`. Domain: BMS, fuel cell
-  controllers, corrosion engineering.
+  overpotential = 0. Strengthens the `True := by trivial` placeholder
+  in `MachLib/Discovered/butler_volmer.lean` (pointer comment added).
+  Domain: BMS, fuel cell controllers, corrosion engineering.
 - `foundations/AxiomAudit.lean` — reproducible `#print axioms` over the
   headline theorems, run via `lake env lean AxiomAudit.lean`.
 - `foundations/KhovanskiiExamples.lean` — three worked applications.
