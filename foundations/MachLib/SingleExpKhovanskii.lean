@@ -414,6 +414,77 @@ theorem zero_count_scaledReduction_transfer
   refine ⟨haz, hzb, ?_⟩
   exact scaledReduction_eval_zero_of_aux_deriv_zero ep c z g'' hg''_deriv hg''_zero
 
+/-! ## Base case: length-1 ExpPoly (univariate polynomial)
+
+When `ep.coeffs = [p]`, `ep.eval x = Poly.eval p x * exp(0 * x) = Poly.eval p x`.
+Reduces to `poly_root_count_bound`. -/
+
+/-- `exp(0 * x) = 1`. Helper for the length-1 reduction. -/
+theorem exp_zero_mul (x : Real) : Real.exp (0 * x) = 1 := by
+  rw [zero_mul, exp_zero]
+
+/-- For a length-1 ExpPoly, eval reduces to the univariate polynomial eval. -/
+theorem eval_singleton (p : Poly) (x : Real) :
+    (⟨[p]⟩ : ExpPoly).eval x = Poly.eval p x := by
+  show evalAux [p] 0 x = Poly.eval p x
+  show Poly.eval p x * Real.exp ((natCast 0) * x) + evalAux [] (0 + 1) x = Poly.eval p x
+  show Poly.eval p x * Real.exp ((natCast 0) * x) + 0 = Poly.eval p x
+  rw [show (natCast 0 : Real) = 0 from natCast_zero]
+  rw [exp_zero_mul, mul_one_ax, add_zero]
+
+/-- **Base case bound**: length-1 ExpPoly has zero count ≤ `degreeUpper` of its
+single coefficient. -/
+theorem expPoly_zero_count_bound_length_one
+    (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0) →
+      zeros.length ≤ degreeUpper p := by
+  intro zeros hnodup hzeros
+  -- Convert to univariate poly bound.
+  have hne' : ∃ x : Real, Poly.eval p x ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    rw [← eval_singleton]
+    exact hx
+  have hzeros' : ∀ z ∈ zeros, a < z ∧ z < b ∧ Poly.eval p z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hev⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    rw [← eval_singleton]
+    exact hev
+  exact poly_root_count_bound p a b hab hne' zeros hnodup hzeros'
+
+/-! ## Iteration: dropping the last coefficient after enough scaledReductions
+
+To prove the full Khovanskii bound, we need to iterate `scaledReduction` until
+the last coefficient's eval becomes 0, then drop it and recurse.
+
+A `polyDerivative` of any constant `Poly.const c` is `Poly.const 0` (eval 0).
+A `polyDerivative` of degreeUpper-0 polynomial evaluates to 0 always.
+So after `degreeUpper(last) + 1` iterations of scaledReduction with
+c = (length - 1), the last coefficient evaluates to 0 (the trailing
+exp(k·x) term contributes 0 to eval, and we can recurse on the shorter list).
+
+The mechanics of this iteration (the actual termination proof and witness
+construction) is the next chunk. Substrate now ready:
+
+  * `scaledReduction` operator + eval correctness.
+  * Zero count transfer (this commit's `zero_count_scaledReduction_transfer`).
+  * Base case (length-1 bound, this commit).
+
+Future work for the explicit Khovanskii bound:
+  * `degreeUpper_polyDerivative_le_degreeUpper_minus_one` (or similar).
+  * Termination argument: after enough iterations, last → eval 0.
+  * Strong induction on `(length, max_degreeUpper)` lex measure.
+
+The full bound theorem will say something like:
+
+  `zeros(ep) on (a,b) ≤ ep.coeffs.length * (max_degreeUpper(ep.coeffs) + 1)`
+
+(or a tighter formula). -/
+
 end ExpPoly
 end SingleExpKhovanskii
 end MachLib
