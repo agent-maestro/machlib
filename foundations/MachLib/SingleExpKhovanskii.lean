@@ -793,7 +793,13 @@ combined length and effective polynomial-degree budget. -/
 
 /-- Sum the effective polynomial degrees (after polySimplify) of coefficients. -/
 noncomputable def sumSimplifiedDegrees (coeffs : List Poly) : Nat :=
-  (coeffs.map (fun p => degreeUpper (polySimplify p))).foldl (· + ·) 0
+  (coeffs.map (fun p => degreeUpper (polySimplify p))).sum
+
+theorem sumSimplifiedDegrees_nil : sumSimplifiedDegrees [] = 0 := rfl
+
+theorem sumSimplifiedDegrees_cons (head : Poly) (tail : List Poly) :
+    sumSimplifiedDegrees (head :: tail) =
+    degreeUpper (polySimplify head) + sumSimplifiedDegrees tail := rfl
 
 /-- The auto-bound measure: length + sum of simplified degrees. -/
 noncomputable def expPolyAutoBound (ep : ExpPoly) : Nat :=
@@ -844,11 +850,7 @@ theorem expPoly_zero_count_auto_bound_length_one
   show zeros.length ≤ (⟨[p]⟩ : ExpPoly).coeffs.length + sumSimplifiedDegrees (⟨[p]⟩ : ExpPoly).coeffs
   show zeros.length ≤ 1 + sumSimplifiedDegrees [p]
   have hsum : sumSimplifiedDegrees [p] = degreeUpper (polySimplify p) := by
-    show ([p].map (fun p => degreeUpper (polySimplify p))).foldl (· + ·) 0
-       = degreeUpper (polySimplify p)
-    show List.foldl (· + ·) 0 [degreeUpper (polySimplify p)]
-       = degreeUpper (polySimplify p)
-    show (0 : Nat) + degreeUpper (polySimplify p) = degreeUpper (polySimplify p)
+    rw [sumSimplifiedDegrees_cons, sumSimplifiedDegrees_nil]
     omega
   rw [hsum]
   omega
@@ -984,14 +986,30 @@ theorem coeffStep_eq_const_zero_when_degreeUpper_zero (p : Poly)
        = Poly.const 0
   rw [if_pos h_pd_isZero, h_mul_zero]
 
-/-! ### Auto-bound substrate complete
+/-! ### List-level lemma: sum doesn't increase under scaledReduction -/
 
-With `coeffStep_degreeUpper_polySimplify_le`,
-`coeffStep_degreeUpper_polySimplify_lt`, and
-`coeffStep_eq_const_zero_when_degreeUpper_zero`, the per-coefficient
-behavior under scaledReduction is fully characterized. The remaining
-work is the list-recursive strong induction (~80-100 lines) that
-combines these with the iteration arithmetic. -/
+theorem sumSimplifiedDegrees_scaledReductionAux_le
+    (coeffs : List Poly) (c : Real) (offset : Nat) :
+    sumSimplifiedDegrees (scaledReductionAux c coeffs offset)
+      ≤ sumSimplifiedDegrees coeffs := by
+  induction coeffs generalizing offset with
+  | nil => exact Nat.le_refl _
+  | cons head tail ih =>
+    show sumSimplifiedDegrees
+          (Poly.add (polyDerivative head)
+                    (Poly.mul (Poly.const ((natCast offset) - c)) head)
+           :: scaledReductionAux c tail (offset + 1))
+       ≤ sumSimplifiedDegrees (head :: tail)
+    rw [sumSimplifiedDegrees_cons, sumSimplifiedDegrees_cons]
+    have h1 := coeffStep_degreeUpper_polySimplify_le head ((natCast offset) - c)
+    have h2 := ih (offset + 1)
+    omega
+
+theorem sumSimplifiedDegrees_scaledReduction_le
+    (ep : ExpPoly) (c : Real) :
+    sumSimplifiedDegrees (scaledReduction ep c).coeffs
+      ≤ sumSimplifiedDegrees ep.coeffs :=
+  sumSimplifiedDegrees_scaledReductionAux_le ep.coeffs c 0
 
 end ExpPoly
 end SingleExpKhovanskii
