@@ -740,5 +740,79 @@ theorem PfaffianFn.zero_count_scaledReduction_transfer
   exact PfaffianFn.scaledReduction_eval_zero_of_g_deriv_zero
           f c z (hcoherent z haz hzb) g'' hg''_deriv hg''_zero
 
+/-! ### Step 5 analog: iteration arithmetic for scaledReduction
+
+Parallel to `IsIteratedReducedDerivative` + `zero_count_iter_bound`,
+but for `scaledReduction`. The classical Khovanskii termination
+argument uses this operator (not reducedDerivative), so this is the
+ITERATION FRAMEWORK that the closed Step 3 will plug into.
+
+Important property: like reducedDerivative, scaledReduction
+preserves chain length (same `chain` field). So this iteration is
+also chain-length-preserving and must be interleaved with `dropLast`
+steps to reach chainLength 0 from positive chain length. -/
+
+/-- **Iterated scaledReduction predicate.** `IsIteratedScaledReduction
+f g k` means g is obtained from f by k applications of
+`scaledReduction` (with arbitrary intermediate scalar choices). -/
+inductive PfaffianFn.IsIteratedScaledReduction :
+    PfaffianFn → PfaffianFn → Nat → Prop where
+  | refl (f : PfaffianFn) : IsIteratedScaledReduction f f 0
+  | step (f g : PfaffianFn) (k : Nat) (c : Real)
+      (h_next : IsIteratedScaledReduction (f.scaledReduction c) g k) :
+      IsIteratedScaledReduction f g (k + 1)
+
+/-- **Iterated chain-step reduction bound (scaledReduction variant).**
+Same structure as `zero_count_iter_bound`. -/
+theorem PfaffianFn.zero_count_iter_bound_scaledReduction
+    (f g : PfaffianFn) (k : Nat) (h_iter : f.IsIteratedScaledReduction g k)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (hN_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ g.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + k := by
+  revert hcoherent hN_bound
+  induction h_iter with
+  | refl f =>
+      intro _hcoh hN_bound zeros_f hnodup hzeros
+      have := hN_bound zeros_f hnodup hzeros
+      omega
+  | step f g k c h_next ih =>
+      intro hcoherent hN_bound
+      -- scaledReduction preserves chain, so coherence transfers.
+      have hred_coh : (f.scaledReduction c).chain.IsCoherentOn a b := hcoherent
+      have hred_bound := ih hred_coh hN_bound
+      have hstep := PfaffianFn.zero_count_scaledReduction_transfer
+                      f c a b hab hcoherent (N + k) hred_bound
+      intro zeros_f hnodup hzeros
+      have := hstep zeros_f hnodup hzeros
+      omega
+
+/-- **Capstone for the scaledReduction track (modulo Step 3).**
+Compose the iteration bound with the chainLength-0 base case. Same
+limitation as the reducedDerivative capstone: scaledReduction
+preserves chain length, so this is degenerate (g.n = f.n) unless
+combined with dropLast steps. -/
+theorem PfaffianFn.khovanskii_bound_scaledReduction_modulo_step_3
+    (f g : PfaffianFn) (k : Nat)
+    (h_iter : f.IsIteratedScaledReduction g k)
+    (hg0 : g.n = 0)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (hne : ∃ x : Real, g.eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ MultiPoly.degreeX g.poly + k := by
+  apply PfaffianFn.zero_count_iter_bound_scaledReduction f g k h_iter a b hab
+          hcoherent (MultiPoly.degreeX g.poly)
+  exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
+
 end PfaffianChainMod
 end MachLib
