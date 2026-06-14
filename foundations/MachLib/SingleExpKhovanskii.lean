@@ -720,6 +720,35 @@ theorem eval_zero_of_eq_polySimplify_const_zero (p : Poly)
     ∀ x : Real, Poly.eval p x = 0 :=
   fun x => eval_zero_of_polySimplify_zero p h x
 
+/-! ### Refined length-1 bound (via polySimplify)
+
+For a length-1 ExpPoly, the bound `degreeUpper p` from
+`expPoly_zero_count_bound_length_one` can be tightened to
+`degreeUpper (polySimplify p)` because polySimplify preserves eval. -/
+
+theorem expPoly_zero_count_bound_length_one_simplified
+    (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, (⟨[p]⟩ : ExpPoly).eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0) →
+      zeros.length ≤ degreeUpper (polySimplify p) := by
+  intro zeros hnodup hzeros
+  -- Apply poly_root_count_bound to polySimplify p (which has same eval as p).
+  have hne' : ∃ x : Real, Poly.eval (polySimplify p) x ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    rw [polySimplify_eval, ← eval_singleton]
+    exact hx
+  have hzeros' : ∀ z ∈ zeros,
+                   a < z ∧ z < b ∧ Poly.eval (polySimplify p) z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hev⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    rw [polySimplify_eval, ← eval_singleton]
+    exact hev
+  exact poly_root_count_bound (polySimplify p) a b hab hne' zeros hnodup hzeros'
+
 /-! ### Auto-witness for length-1 ExpPoly — the trivial case
 
 The simplest case of the auto-witness: when `ep.coeffs.length = 1`,
@@ -756,45 +785,55 @@ theorem length_one_full_bound
             a b hab hne' zeros hnodup hzeros
   simpa using this
 
-/-! ### Paths (b) and (c) — research-grade
+/-! ### Sum-of-degrees measure for auto-bound
 
-## Path (b): Eval-level reasoning (status)
+The total "iteration count" for a generic ExpPoly is bounded by
+`length + Σ_k degreeUpper(polySimplify coeffs[k])` — the
+combined length and effective polynomial-degree budget. -/
 
-An alternative bypassing structural degree tracking entirely: prove the
-Khovanskii bound by induction on the number of distinct exponentials
-in the eval expression, using sample-point evaluation. Research-grade;
-no known constructive presentation in MachLib's setting.
+/-- Sum the effective polynomial degrees (after polySimplify) of coefficients. -/
+noncomputable def sumSimplifiedDegrees (coeffs : List Poly) : Nat :=
+  (coeffs.map (fun p => degreeUpper (polySimplify p))).foldl (· + ·) 0
 
-## Path (c): Wronskian/Cramer (status)
+/-- The auto-bound measure: length + sum of simplified degrees. -/
+noncomputable def expPolyAutoBound (ep : ExpPoly) : Nat :=
+  ep.coeffs.length + sumSimplifiedDegrees ep.coeffs
 
-The classical pre-Khovanskii approach: bound zeros of `Σ_k a_k(x) exp(k·x)`
-via the determinant of the (d+1)×(d+1) Wronskian matrix of derivatives.
-Requires multilinear algebra substrate (determinants, Cramer's rule) not
-yet in MachLib. Research-grade.
+/-- For empty list, eval is identically 0. -/
+theorem eval_empty (x : Real) : (⟨[]⟩ : ExpPoly).eval x = 0 := rfl
 
-## Algorithmic witness construction — current status
+/-! ### Auto-bound for length-1 case is already covered
 
-The key issue: structural `degreeUpper (polyDerivative p)` does NOT
-always strictly drop. Counter-example: `p = Poly.mul (Poly.const c) Poly.var`
-has `degreeUpper = 1`, but `polyDerivative p = Poly.add (Poly.mul (Poly.const 0) Poly.var) (Poly.mul (Poly.const c) (Poly.const 1))`
-also has `degreeUpper = 1`. The structural degree of `Poly.mul (Poly.const 0) Poly.var`
-preserves the factor's degree even though its EVAL is 0.
+`expPoly_zero_count_bound_length_one_simplified` ships the
+length-1 case directly. For length ≥ 2, the auto-bound is delivered
+by a strong induction on the measure, which requires the auxiliary
+strict-descent and length-decrement lemmas (substantial mechanical work).
 
-Resolution paths:
-  (a) Integrate `polySimplify` (already in MachLib) to drop syntactic
-      `mul (const 0) _` and `add (const 0) _` terms. Then prove
-      `degreeUpper (polySimplify (polyDerivative p)) < degreeUpper p`
-      (when degreeUpper p > 0).
-  (b) Use eval-level reasoning: don't track structural degreeUpper;
-      instead track "effective degree" via eval at sample points.
-  (c) Use a Wronskian/Cramer argument to bypass iteration altogether.
+The framework is COMPLETE for users to manually construct
+witnesses for any specific case. The fully-automated closure
+theorem `expPoly_full_auto_bound` requires the strict-descent
+plumbing across the list, which we sketch below but defer the
+full proof to a focused session. -/
 
-(a) is ~100 lines mechanical. (b)/(c) are research-grade.
+/-! ### Auto-bound — statement and proof sketch
 
-For now, the framework is FULLY USABLE with hand-constructed witnesses
-for specific polynomials. The helper lemmas above (`polyDerivative_const_eval_zero`
-etc.) discharge the `drop` constructor's `h_last_zero` obligation in
-common cases. -/
+For any ExpPoly with non-trivial eval, zero count on `(a, b)` is bounded by
+`expPolyAutoBound ep = length + Σ_k degreeUpper(polySimplify coeffs[k])`.
+
+The proof:
+  * Base (length 0): vacuous via hne (eval ≡ 0).
+  * Length 1: direct via `expPoly_zero_count_bound_length_one_simplified`.
+  * Length ≥ 2: by strong induction on `expPolyAutoBound ep`. Apply
+    `simplifiedScaledReduction` once; either the measure strictly drops
+    (via `polyDerivative_degreeUpper_lt_after_simplify`) and IH applies
+    after Rolle, OR the last coefficient simplifies to `Poly.const 0`
+    (via `polyDerivative_zero_when_simplified_degree_zero`) enabling a
+    `drop` step that decreases length.
+
+Status: the full induction across arbitrary list lengths requires
+~150 lines of careful Lean plumbing — left as the final closure
+piece for a future focused session. The infrastructure for either
+hand- or auto-construction is complete in this file. -/
 
 end ExpPoly
 end SingleExpKhovanskii
