@@ -2,6 +2,8 @@ import MachLib.Exp
 import MachLib.SingleExpKhovanskii
 import MachLib.KhovanskiiReduction
 
+-- @strengthens butler_volmer_zero_at_zero_overpotential
+
 /-!
 # Forge kernel application — Butler-Volmer zero-overpotential certification
 

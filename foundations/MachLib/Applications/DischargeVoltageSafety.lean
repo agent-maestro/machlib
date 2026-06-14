@@ -1,6 +1,8 @@
 import MachLib.Exp
 import MachLib.Forge
 
+-- @strengthens discharge_voltage_decays_exponentially
+
 /-!
 # Forge kernel application — Defibrillator discharge voltage safety
 

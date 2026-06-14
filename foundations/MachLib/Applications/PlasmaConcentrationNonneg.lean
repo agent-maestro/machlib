@@ -1,6 +1,8 @@
 import MachLib.Exp
 import MachLib.Forge
 
+-- @strengthens plasma_concentration_nonneg
+
 /-!
 # Forge kernel application — Pharmacokinetic plasma concentration non-negativity
 

@@ -1,6 +1,8 @@
 import MachLib.Exp
 import MachLib.Forge
 
+-- @strengthens spring_critical_signed
+
 /-!
 # Gaming kernel application — Critically-damped spring positivity
 
