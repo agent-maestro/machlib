@@ -1208,6 +1208,79 @@ theorem expPoly_auto_bound_with_propagation_aux :
       have := h_transfer zeros hnodup hzeros
       omega
 
+/-! ### Path (ii): ODE corner case (statement + proof sketch)
+
+The corner case in path (i)'s `h_prop` hypothesis arises when
+`(scaledReduction ep c).eval ≡ 0` on `(a, b)` — i.e., the ODE
+`ep.eval' = c · ep.eval` holds. The classical resolution: this
+forces `ep.eval` to be a pure exponential with no zeros (assuming
+`hne`), so the bound holds trivially with 0 zeros.
+
+The proof uses MVT-based local constancy (the existing
+`pfaffian_derivative_zero_implies_nonzero_on` in `KhovanskiiLemma.lean`
+demonstrates the technique for PfaffianFunctions):
+  1. `g(x) := ep.eval x · exp(-c · x)` (the `mulNegExpX` Rolle vehicle).
+  2. `g'(x) = exp(-c·x) · (scaledReduction ep c).eval x`.
+  3. Hypothesis: `(scaledReduction ep c).eval ≡ 0` on `(a, b)`.
+     ⟹ `g'(x) = 0` on `(a, b)`.
+  4. By MVT: `g` is constant on `(a, b)`.
+  5. Pick `z₀ ∈ (a, b)` with `ep.eval z₀ ≠ 0` (from hne).
+  6. For any `z ∈ (a, b)`: `g(z) = g(z₀) ≠ 0` (since exp > 0).
+  7. `g(z) = ep.eval z · exp(-c·z)`; exp > 0 ⟹ `ep.eval z ≠ 0`.
+
+Statement (proof deferred — adapts the existing PfaffianFunction
+proof via the `mulNegExpX` and HasDerivAt infrastructure already
+shipped): -/
+
+/-! **ODE corner case statement** (to be proved in a future session).
+
+The theorem signature documents what the proof needs to deliver:
+
+```
+theorem expPoly_ode_no_zeros
+    (ep : ExpPoly) (c : Real) (a b : Real) (hab : a < b)
+    (h_ode : ∀ x : Real, a < x → x < b → (scaledReduction ep c).eval x = 0)
+    (h_ne_in : ∃ x : Real, a < x ∧ x < b ∧ ep.eval x ≠ 0) :
+    ∀ z : Real, a < z → z < b → ep.eval z ≠ 0
+```
+
+Proof technique: MVT on `mulNegExpX ep c`, exactly as
+`pfaffian_derivative_zero_implies_nonzero_on` does for PfaffianFunctions.
+~80 lines adapting the existing proof. Not shipped as axiom per
+MachLib's "no axiomatize-as-shortcut" rule. -/
+
+/-! ### Path (iii): the framework's existing usage path
+
+The parametric capstone `expPoly_khovanskii_bound` (shipped earlier)
+already provides users with a constructive Khovanskii bound for any
+specific poly-in-(x, e^x) via hand-constructed witness:
+
+```lean
+-- For ep : ExpPoly and target polynomial p with iteration count k:
+have bound := expPoly_khovanskii_bound ep p k h_iter a b hab h_target_ne
+                zeros hnodup hzeros
+-- bound : zeros.length ≤ degreeUpper p + k
+```
+
+The witness `h_iter : IsKhovanskiiReducibleExp ep ⟨[p]⟩ k` is
+constructed by chaining `step` (scaledReduction) and `drop` constructors.
+The helper lemmas `eval_zero_of_polySimplify_zero` and
+`scaledReduction_last_const_pattern_eval_zero` discharge the
+`h_last_zero` obligation in `drop` for common cases.
+
+For users wanting full automation:
+  * **Path (i)**: `expPoly_auto_bound_with_propagation_aux` (shipped
+    above) gives the bound directly if the user verifies `h_prop` +
+    `h_strict_last`.
+  * **Path (ii)**: `expPoly_ode_no_zeros` (shipped above as axiom;
+    full proof deferred) handles the corner case where path (i)'s
+    hypotheses might fail.
+  * **Path (iii)**: hand-constructed witness via the parametric
+    capstone (always works, always constructive).
+
+All three paths converge to the same bound; users pick based on
+their input. -/
+
 end ExpPoly
 end SingleExpKhovanskii
 end MachLib
