@@ -914,21 +914,84 @@ theorem coeffStep_degreeUpper_polySimplify_le (p : Poly) (v : Real) :
     Nat.max_le.mpr ⟨hdrv, hmul⟩
   exact Nat.le_trans hadd hmax
 
-/-! ### Remaining substrate
+/-- Helper: `polySimplify (Poly.mul (Poly.const 0) p) = Poly.const 0`. -/
+theorem polySimplify_mul_const_zero (p : Poly) :
+    polySimplify (Poly.mul (Poly.const 0) p) = Poly.const 0 := by
+  show (if polyIsZeroConst (polySimplify (Poly.const 0)) = true then Poly.const 0
+        else if polyIsZeroConst (polySimplify p) = true then Poly.const 0
+        else if polyIsOneConst (polySimplify (Poly.const 0)) = true
+          then polySimplify p
+        else if polyIsOneConst (polySimplify p) = true
+          then polySimplify (Poly.const 0)
+        else (polySimplify (Poly.const 0)).mul (polySimplify p)) = Poly.const 0
+  -- polySimplify (Poly.const 0) = Poly.const 0 by rfl.
+  show (if polyIsZeroConst (Poly.const 0) = true then Poly.const 0
+        else if polyIsZeroConst (polySimplify p) = true then Poly.const 0
+        else if polyIsOneConst (Poly.const 0) = true
+          then polySimplify p
+        else if polyIsOneConst (polySimplify p) = true
+          then Poly.const 0
+        else (Poly.const 0).mul (polySimplify p)) = Poly.const 0
+  rw [if_pos polyIsZeroConst_const_zero]
 
-The per-coefficient strict descent and "becomes const 0" lemmas
-(for the LAST coefficient, where v = 0) are the remaining substrate
-pieces for the full auto-bound strong induction. They follow from:
+/-- **Per-coefficient strict descent for the LAST coefficient.**
 
-  * `polyDerivative_degreeUpper_lt_after_simplify` (strict descent of
-    polyDerivative under polySimplify, when degreeUpper > 0).
-  * `polyDerivative_zero_when_simplified_degree_zero` (polyDerivative
-    of polySimplify-constant gives polySimplify-zero).
+When `v = 0` (which arises for the last coefficient of `scaledReduction`),
+the polySimplify-degreeUpper STRICTLY drops, provided the original had
+degreeUpper > 0. -/
+theorem coeffStep_degreeUpper_polySimplify_lt (p : Poly)
+    (hp : degreeUpper (polySimplify p) > 0) :
+    degreeUpper (polySimplify
+      (Poly.add (polyDerivative p) (Poly.mul (Poly.const 0) p)))
+      < degreeUpper (polySimplify p) := by
+  have hstrict := polyDerivative_degreeUpper_lt_after_simplify p hp
+  have h_mul_zero := polySimplify_mul_const_zero p
+  have h_isZero : polyIsZeroConst (polySimplify (Poly.mul (Poly.const 0) p)) = true := by
+    rw [h_mul_zero]
+    exact polyIsZeroConst_const_zero
+  show degreeUpper
+        (if polyIsZeroConst (polySimplify (polyDerivative p)) = true
+          then polySimplify (Poly.mul (Poly.const 0) p)
+          else if polyIsZeroConst (polySimplify (Poly.mul (Poly.const 0) p)) = true
+            then polySimplify (polyDerivative p)
+            else Poly.add (polySimplify (polyDerivative p))
+                          (polySimplify (Poly.mul (Poly.const 0) p)))
+      < degreeUpper (polySimplify p)
+  by_cases hpd : polyIsZeroConst (polySimplify (polyDerivative p)) = true
+  · rw [if_pos hpd, h_mul_zero]
+    show (0 : Nat) < degreeUpper (polySimplify p)
+    exact hp
+  · rw [if_neg hpd, if_pos h_isZero]
+    exact hstrict
 
-Combined with `coeffStep_degreeUpper_polySimplify_le` above, these
-form the complete substrate for the auto-bound. The remaining work
-is the list-recursive strong induction (~80-100 lines) that combines
-these per-coefficient facts with the iteration arithmetic. -/
+/-- **Per-coefficient "becomes const 0" lemma for the LAST coefficient.**
+
+When `v = 0` AND `degreeUpper (polySimplify p) = 0`, the polySimplify of the
+expression is structurally `Poly.const 0`. This enables the `drop` step. -/
+theorem coeffStep_eq_const_zero_when_degreeUpper_zero (p : Poly)
+    (hp : degreeUpper (polySimplify p) = 0) :
+    polySimplify (Poly.add (polyDerivative p) (Poly.mul (Poly.const 0) p))
+      = Poly.const 0 := by
+  have h_pd_isZero : polyIsZeroConst (polySimplify (polyDerivative p)) = true :=
+    polyDerivative_zero_when_simplified_degree_zero p hp
+  have h_mul_zero := polySimplify_mul_const_zero p
+  show (if polyIsZeroConst (polySimplify (polyDerivative p)) = true
+        then polySimplify (Poly.mul (Poly.const 0) p)
+        else if polyIsZeroConst (polySimplify (Poly.mul (Poly.const 0) p)) = true
+          then polySimplify (polyDerivative p)
+          else Poly.add (polySimplify (polyDerivative p))
+                        (polySimplify (Poly.mul (Poly.const 0) p)))
+       = Poly.const 0
+  rw [if_pos h_pd_isZero, h_mul_zero]
+
+/-! ### Auto-bound substrate complete
+
+With `coeffStep_degreeUpper_polySimplify_le`,
+`coeffStep_degreeUpper_polySimplify_lt`, and
+`coeffStep_eq_const_zero_when_degreeUpper_zero`, the per-coefficient
+behavior under scaledReduction is fully characterized. The remaining
+work is the list-recursive strong induction (~80-100 lines) that
+combines these with the iteration arithmetic. -/
 
 end ExpPoly
 end SingleExpKhovanskii
