@@ -853,6 +853,83 @@ theorem expPoly_zero_count_auto_bound_length_one
   rw [hsum]
   omega
 
+/-! ### Per-coefficient sub-lemmas for the strong induction
+
+The strong-induction proof for arbitrary-length auto-bound needs to
+show that `sumSimplifiedDegrees` decreases by ≥ 1 per
+`simplifiedScaledReduction` step (or that length decreases via drop).
+
+Each coefficient after scaledReduction is
+`Poly.add (polyDerivative p) (Poly.mul (Poly.const v) p)`
+for some scalar `v`. The lemmas below bound the polySimplify-degreeUpper
+of this expression. -/
+
+/-- `polySimplify` of `Poly.add` has degreeUpper ≤ max of the operands'
+simplified degreeUppers. Direct from polySimplify's case structure. -/
+theorem degreeUpper_polySimplify_add_le (a b : Poly) :
+    degreeUpper (polySimplify (Poly.add a b))
+      ≤ Nat.max (degreeUpper (polySimplify a)) (degreeUpper (polySimplify b)) := by
+  show degreeUpper
+        (if polyIsZeroConst (polySimplify a) = true then polySimplify b
+         else if polyIsZeroConst (polySimplify b) = true then polySimplify a
+         else Poly.add (polySimplify a) (polySimplify b))
+      ≤ Nat.max (degreeUpper (polySimplify a)) (degreeUpper (polySimplify b))
+  by_cases hp : polyIsZeroConst (polySimplify a) = true
+  · rw [if_pos hp]
+    exact Nat.le_max_right _ _
+  · rw [if_neg hp]
+    by_cases hq : polyIsZeroConst (polySimplify b) = true
+    · rw [if_pos hq]
+      exact Nat.le_max_left _ _
+    · rw [if_neg hq]
+      show Nat.max (degreeUpper (polySimplify a)) (degreeUpper (polySimplify b))
+        ≤ Nat.max (degreeUpper (polySimplify a)) (degreeUpper (polySimplify b))
+      exact Nat.le_refl _
+
+/-- **Per-coefficient degreeUpper bound under scaledReduction.**
+
+For any `p : Poly` and scalar `v`, the polySimplify-degreeUpper of
+`Poly.add (polyDerivative p) (Poly.mul (Poly.const v) p)` is at most
+`degreeUpper (polySimplify p)`.
+
+This means each coefficient of `scaledReduction ep c` has polySimplify-
+degreeUpper ≤ the corresponding original's — no coefficient INCREASES
+the measure. -/
+theorem coeffStep_degreeUpper_polySimplify_le (p : Poly) (v : Real) :
+    degreeUpper (polySimplify
+      (Poly.add (polyDerivative p) (Poly.mul (Poly.const v) p)))
+      ≤ degreeUpper (polySimplify p) := by
+  have hdrv := polyDerivative_degreeUpper_le_after_simplify p
+  have hmul_full := degreeUpper_polySimplify_mul_le (Poly.const v) p
+  have hconst : degreeUpper (polySimplify (Poly.const v)) = 0 := rfl
+  have hmul : degreeUpper (polySimplify (Poly.mul (Poly.const v) p))
+                ≤ degreeUpper (polySimplify p) := by
+    rw [hconst] at hmul_full
+    omega
+  have hadd := degreeUpper_polySimplify_add_le (polyDerivative p)
+                 (Poly.mul (Poly.const v) p)
+  have hmax : Nat.max (degreeUpper (polySimplify (polyDerivative p)))
+                       (degreeUpper (polySimplify (Poly.mul (Poly.const v) p)))
+              ≤ degreeUpper (polySimplify p) :=
+    Nat.max_le.mpr ⟨hdrv, hmul⟩
+  exact Nat.le_trans hadd hmax
+
+/-! ### Remaining substrate
+
+The per-coefficient strict descent and "becomes const 0" lemmas
+(for the LAST coefficient, where v = 0) are the remaining substrate
+pieces for the full auto-bound strong induction. They follow from:
+
+  * `polyDerivative_degreeUpper_lt_after_simplify` (strict descent of
+    polyDerivative under polySimplify, when degreeUpper > 0).
+  * `polyDerivative_zero_when_simplified_degree_zero` (polyDerivative
+    of polySimplify-constant gives polySimplify-zero).
+
+Combined with `coeffStep_degreeUpper_polySimplify_le` above, these
+form the complete substrate for the auto-bound. The remaining work
+is the list-recursive strong induction (~80-100 lines) that combines
+these per-coefficient facts with the iteration arithmetic. -/
+
 end ExpPoly
 end SingleExpKhovanskii
 end MachLib
