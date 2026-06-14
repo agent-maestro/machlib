@@ -53,6 +53,7 @@ import MachLib.Rolle
 import MachLib.KhovanskiiLemma
 import MachLib.MultiPolyToPoly
 import MachLib.KhovanskiiReduction
+import MachLib.SingleExpKhovanskii
 
 /-!
 # MachLib — top-level aggregator
