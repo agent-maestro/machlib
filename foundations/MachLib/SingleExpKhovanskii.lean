@@ -1232,22 +1232,89 @@ Statement (proof deferred — adapts the existing PfaffianFunction
 proof via the `mulNegExpX` and HasDerivAt infrastructure already
 shipped): -/
 
-/-! **ODE corner case statement** (to be proved in a future session).
+/-- **Path (ii): ODE corner case proof.** If `(scaledReduction ep c).eval`
+is identically 0 on `(a, b)` and `ep.eval` is non-zero somewhere on
+`(a, b)`, then `ep.eval` has NO zeros on `(a, b)`.
 
-The theorem signature documents what the proof needs to deliver:
-
-```
+Proof: `mulNegExpX ep c` has derivative `exp(-c·x) · (scaledReduction
+ep c).eval x = 0` everywhere on `(a, b)`. By MVT applied per pair of
+points, `mulNegExpX` is constant. Since `mulNegExpX` is non-zero at
+one point (by hne, exp ≠ 0), it's non-zero everywhere, and
+`mulNegExpX_zero_iff` transfers this to `ep.eval`. -/
 theorem expPoly_ode_no_zeros
     (ep : ExpPoly) (c : Real) (a b : Real) (hab : a < b)
     (h_ode : ∀ x : Real, a < x → x < b → (scaledReduction ep c).eval x = 0)
     (h_ne_in : ∃ x : Real, a < x ∧ x < b ∧ ep.eval x ≠ 0) :
-    ∀ z : Real, a < z → z < b → ep.eval z ≠ 0
-```
-
-Proof technique: MVT on `mulNegExpX ep c`, exactly as
-`pfaffian_derivative_zero_implies_nonzero_on` does for PfaffianFunctions.
-~80 lines adapting the existing proof. Not shipped as axiom per
-MachLib's "no axiomatize-as-shortcut" rule. -/
+    ∀ z : Real, a < z → z < b → ep.eval z ≠ 0 := by
+  obtain ⟨x₀, hx₀_a, hx₀_b, hx₀_ne⟩ := h_ne_in
+  -- Step 1: mulNegExpX has HasDerivAt 0 on (a, b).
+  have h_g_deriv_zero : ∀ y : Real, a < y → y < b →
+                         HasDerivAt (mulNegExpX ep c) 0 y := by
+    intro y hya hyb
+    have hraw := hasDerivAt_mulNegExpX_raw ep c y
+    have hfact : (scaledReduction ep 0).eval y * Real.exp (-c * y)
+                  + ep.eval y * (Real.exp (-c * y) * (-c))
+               = Real.exp (-c * y) * (scaledReduction ep c).eval y := by
+      rw [← scaledReduction_eval_combine ep c y]
+      rw [show (scaledReduction ep 0).eval y * Real.exp (-c * y)
+            = Real.exp (-c * y) * (scaledReduction ep 0).eval y from mul_comm _ _]
+      rw [show ep.eval y * (Real.exp (-c * y) * (-c))
+            = Real.exp (-c * y) * (ep.eval y * (-c)) from by
+        rw [← mul_assoc, mul_comm (ep.eval y) (Real.exp _), mul_assoc]]
+      rw [← mul_distrib]
+    have h_ode_y : (scaledReduction ep c).eval y = 0 := h_ode y hya hyb
+    have h_raw_eq_zero : (scaledReduction ep 0).eval y * Real.exp (-c * y)
+                          + ep.eval y * (Real.exp (-c * y) * (-c)) = 0 := by
+      rw [hfact, h_ode_y, mul_zero]
+    rw [h_raw_eq_zero] at hraw
+    exact hraw
+  -- Step 2: mulNegExpX is constant on (a, b) via MVT.
+  suffices hconst : ∀ z : Real, a < z → z < b →
+                     mulNegExpX ep c z = mulNegExpX ep c x₀ by
+    intro z hza hzb hz_eval_zero
+    have h_g_z_zero : mulNegExpX ep c z = 0 :=
+      (mulNegExpX_zero_iff ep c z).mpr hz_eval_zero
+    rw [hconst z hza hzb] at h_g_z_zero
+    have h_x0_eval_zero : ep.eval x₀ = 0 :=
+      (mulNegExpX_zero_iff ep c x₀).mp h_g_z_zero
+    exact hx₀_ne h_x0_eval_zero
+  intro z hza hzb
+  rcases lt_total z x₀ with hlt | heq | hgt
+  · -- z < x₀: MVT on (z, x₀).
+    have hdiff : ∀ y : Real, z < y → y < x₀ →
+                 ∃ f' : Real, HasDerivAt (mulNegExpX ep c) f' y := by
+      intro y hyz hyx₀
+      exact ⟨0, h_g_deriv_zero y (lt_trans_ax hza hyz)
+                                  (lt_trans_ax hyx₀ hx₀_b)⟩
+    obtain ⟨y, f', hyz, hyx₀, hd, hmvt⟩ :=
+      mean_value_theorem (mulNegExpX ep c) z x₀ hlt hdiff
+    have hy_a : a < y := lt_trans_ax hza hyz
+    have hy_b : y < b := lt_trans_ax hyx₀ hx₀_b
+    have hf'_eq : f' = 0 :=
+      HasDerivAt_unique (mulNegExpX ep c) f' 0 y hd (h_g_deriv_zero y hy_a hy_b)
+    rw [hf'_eq, zero_mul] at hmvt
+    have step : mulNegExpX ep c x₀ - mulNegExpX ep c z + mulNegExpX ep c z
+              = 0 + mulNegExpX ep c z := by rw [hmvt]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step.symm
+  · rw [heq]
+  · -- z > x₀: MVT on (x₀, z).
+    have hdiff : ∀ y : Real, x₀ < y → y < z →
+                 ∃ f' : Real, HasDerivAt (mulNegExpX ep c) f' y := by
+      intro y hyx₀ hyz
+      exact ⟨0, h_g_deriv_zero y (lt_trans_ax hx₀_a hyx₀)
+                                  (lt_trans_ax hyz hzb)⟩
+    obtain ⟨y, f', hyx₀, hyz, hd, hmvt⟩ :=
+      mean_value_theorem (mulNegExpX ep c) x₀ z hgt hdiff
+    have hy_a : a < y := lt_trans_ax hx₀_a hyx₀
+    have hy_b : y < b := lt_trans_ax hyz hzb
+    have hf'_eq : f' = 0 :=
+      HasDerivAt_unique (mulNegExpX ep c) f' 0 y hd (h_g_deriv_zero y hy_a hy_b)
+    rw [hf'_eq, zero_mul] at hmvt
+    have step : mulNegExpX ep c z - mulNegExpX ep c x₀ + mulNegExpX ep c x₀
+              = 0 + mulNegExpX ep c x₀ := by rw [hmvt]
+    rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
+    exact step
 
 /-! ### Path (iii): the framework's existing usage path
 
