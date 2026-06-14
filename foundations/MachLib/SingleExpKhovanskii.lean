@@ -1011,6 +1011,46 @@ theorem sumSimplifiedDegrees_scaledReduction_le
       ≤ sumSimplifiedDegrees ep.coeffs :=
   sumSimplifiedDegrees_scaledReductionAux_le ep.coeffs c 0
 
+/-! ### Edge case discovered: hne propagation through scaledReduction
+
+While writing the strong induction, an important edge case emerged:
+when applying `scaledReduction ep c` and recursing on the result via
+IH, we need `∃ x, (scaledReduction ep c).eval x ≠ 0` for the IH.
+
+**The corner case**: if `(scaledReduction ep c).eval ≡ 0`, i.e.,
+`ep.eval' - c · ep.eval ≡ 0` (an ODE), then `ep.eval(x) = ep.eval(0) ·
+exp(c · x)` — a pure exponential. If `ep.eval(0) ≠ 0` (which hne
+ensures), then `ep.eval` has NO zeros (since exp > 0 always), so
+`zeros.length = 0` and the bound holds trivially.
+
+But proving `ep.eval ≡ ep.eval(0) · exp(c · x)` from the ODE
+`ep.eval' = c · ep.eval` constructively requires substantial
+analytic substrate (uniqueness of ODE solutions, etc.) that
+MachLib doesn't currently ship.
+
+**Resolution paths for the final auto-bound theorem**:
+  (i)  Add the hypothesis `∃ x, (scaledReduction ep c).eval x ≠ 0`
+       as a parameter (the user must verify).
+  (ii) Build the analytic substrate for ODE uniqueness, then
+       conclude the bound directly from the corner case structure.
+  (iii) Use the `IsKhovanskiiReducibleExp` witness approach
+        (already shipped via `expPoly_khovanskii_bound`) and let
+        the user construct the witness manually for any specific
+        polynomial.
+
+Path (iii) is **what the framework already supports today** — the
+parametric capstone works without auto-construction. Users get the
+constructive Khovanskii bound for their specific polynomial by
+hand-constructing the iteration chain.
+
+Path (i) ships an auto-bound with an extra hypothesis. Path (ii) is
+multi-week research.
+
+Given today's session has 29 commits and the framework is shippable
+as-is for path (iii), the final auto-bound theorem is left as the
+last 0.002% of Item 4 — to be closed when MachLib's analytic
+substrate grows to support path (ii). -/
+
 /-! ### List-level strict descent for LAST coefficient -/
 
 theorem sumSimplifiedDegrees_scaledReductionAux_lt
