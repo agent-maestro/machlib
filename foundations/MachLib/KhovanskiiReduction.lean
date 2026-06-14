@@ -1017,5 +1017,43 @@ theorem PfaffianFn.khovanskii_bound_full
           hcoherent (MultiPoly.degreeX g.poly)
   exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
 
+/-! ## SingleExp chain instance (foundation for Item 1)
+
+The canonical single-exponential chain (chain length 1, evals = exp,
+relations = varY 0) with its triangularity + coherence proofs ready
+to plug into `khovanskii_bound_full`. Any PfaffianFn whose chain is
+this single-exp chain — i.e., a polynomial in (x, e^x) — can use the
+full Khovanskii framework once a reduction-chain witness is provided. -/
+
+/-- The canonical single-exp chain `(exp, exp')` with relation y_0' = y_0. -/
+noncomputable def SingleExpChain : PfaffianChain 1 :=
+  { evals := fun _ => Real.exp,
+    relations := fun _ => MultiPoly.varY 0 }
+
+/-- The single-exp chain is triangular. Vacuous for n = 1: there are no
+pairs (i, j) with j.val > i.val in `Fin 1`. -/
+theorem SingleExpChain_isTriangular : SingleExpChain.IsTriangular := by
+  intro i j hij
+  exfalso
+  have hi := i.isLt
+  have hj := j.isLt
+  omega
+
+/-- The single-exp chain is coherent at every x. The chain relation
+y_0' = y_0 is satisfied by exp because `HasDerivAt exp (exp x) x`. -/
+theorem SingleExpChain_isCoherentAt (x : Real) :
+    SingleExpChain.IsCoherentAt x := by
+  intro i
+  show HasDerivAt Real.exp
+        (MultiPoly.eval (MultiPoly.varY 0) x (SingleExpChain.chainValues x)) x
+  show HasDerivAt Real.exp (Real.exp x) x
+  exact HasDerivAt_exp x
+
+/-- The single-exp chain is coherent on any interval. -/
+theorem SingleExpChain_isCoherentOn (a b : Real) :
+    SingleExpChain.IsCoherentOn a b := by
+  intro x _ _
+  exact SingleExpChain_isCoherentAt x
+
 end PfaffianChainMod
 end MachLib
