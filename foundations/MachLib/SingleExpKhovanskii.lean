@@ -1011,6 +1011,73 @@ theorem sumSimplifiedDegrees_scaledReduction_le
       ≤ sumSimplifiedDegrees ep.coeffs :=
   sumSimplifiedDegrees_scaledReductionAux_le ep.coeffs c 0
 
+/-! ### List-level strict descent for LAST coefficient -/
+
+theorem sumSimplifiedDegrees_scaledReductionAux_lt
+    (coeffs : List Poly) (offset : Nat)
+    (hne : coeffs ≠ [])
+    (hlast_pos : degreeUpper (polySimplify (coeffs.getLast hne)) > 0) :
+    sumSimplifiedDegrees
+      (scaledReductionAux (natCast (offset + coeffs.length - 1)) coeffs offset)
+      < sumSimplifiedDegrees coeffs := by
+  induction coeffs generalizing offset with
+  | nil => exact absurd rfl hne
+  | cons head tail ih =>
+    by_cases htail : tail = []
+    · -- coeffs = [head]; head IS last.
+      subst htail
+      have hoff : offset + 1 - 1 = offset := by omega
+      have hlast_pos' : degreeUpper (polySimplify head) > 0 := hlast_pos
+      have hstrict := coeffStep_degreeUpper_polySimplify_lt head hlast_pos'
+      show sumSimplifiedDegrees
+            (Poly.add (polyDerivative head)
+                     (Poly.mul (Poly.const ((natCast offset : Real) -
+                                            (natCast (offset + 1 - 1)))) head)
+             :: scaledReductionAux (natCast (offset + 1 - 1)) [] (offset + 1))
+          < sumSimplifiedDegrees [head]
+      rw [hoff]
+      have hsub : (natCast offset : Real) - natCast offset = 0 := sub_self _
+      rw [hsub]
+      show sumSimplifiedDegrees
+            (Poly.add (polyDerivative head)
+                      (Poly.mul (Poly.const 0) head) :: [])
+          < sumSimplifiedDegrees [head]
+      rw [sumSimplifiedDegrees_cons, sumSimplifiedDegrees_nil,
+          sumSimplifiedDegrees_cons, sumSimplifiedDegrees_nil]
+      omega
+    · -- Length ≥ 2: head NOT last; use non-strict for head, IH for tail.
+      -- coeffs.length = tail.length + 1 ≥ 2.
+      have htail_ne : tail ≠ [] := htail
+      have hgetlast : (head :: tail).getLast (List.cons_ne_nil head tail)
+                    = tail.getLast htail_ne := List.getLast_cons htail_ne
+      have hlast_pos_tail : degreeUpper (polySimplify (tail.getLast htail_ne)) > 0 := by
+        rw [← hgetlast]
+        exact hlast_pos
+      -- IH: sumSimplifiedDegrees (scaledReductionAux _ tail (offset+1)) < sumSimplifiedDegrees tail.
+      -- The c for IH: natCast ((offset+1) + tail.length - 1) = natCast (offset + tail.length).
+      -- The c we need: natCast (offset + (tail.length + 1) - 1) = natCast (offset + tail.length). Same.
+      have hlen : (head :: tail).length = tail.length + 1 := rfl
+      have hoff_eq : offset + (tail.length + 1) - 1 = (offset + 1) + tail.length - 1 := by omega
+      show sumSimplifiedDegrees
+            (scaledReductionAux (natCast (offset + (head :: tail).length - 1))
+                                (head :: tail) offset)
+          < sumSimplifiedDegrees (head :: tail)
+      rw [hlen]
+      show sumSimplifiedDegrees
+            (Poly.add (polyDerivative head)
+                     (Poly.mul (Poly.const ((natCast offset : Real) -
+                                            (natCast (offset + (tail.length + 1) - 1)))) head)
+             :: scaledReductionAux (natCast (offset + (tail.length + 1) - 1)) tail (offset + 1))
+          < sumSimplifiedDegrees (head :: tail)
+      rw [hoff_eq]
+      rw [sumSimplifiedDegrees_cons (head := head) (tail := tail)]
+      rw [sumSimplifiedDegrees_cons]
+      have h_head_le := coeffStep_degreeUpper_polySimplify_le head
+                          ((natCast offset : Real) -
+                           (natCast ((offset + 1) + tail.length - 1)))
+      have h_tail_lt := ih (offset + 1) htail_ne hlast_pos_tail
+      omega
+
 end ExpPoly
 end SingleExpKhovanskii
 end MachLib
