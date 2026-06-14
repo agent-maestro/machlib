@@ -902,5 +902,120 @@ theorem PfaffianChain.dropLast_coherent_on_of_triangular {n : Nat}
   intro x hax hxb
   exact PfaffianChain.dropLast_coherent_of_triangular c htri x (hcoh x hax hxb)
 
+/-! ## Extended iteration: IsKhovanskiiReducible (reduce + drop)
+
+The full Khovanskii iteration interleaves scaledReduction steps (each
+adding 1 to the Rolle counter) with dropLast steps (which preserve
+zeros, hence preserve the counter). For triangular Pfaffian chains,
+both operations are well-defined and chain coherence is preserved
+through the iteration.
+
+The predicate `IsKhovanskiiReducible f g k` is the extension of
+`IsIteratedScaledReduction` with a third constructor for drop steps. -/
+
+/-- **Khovanskii reducibility predicate.** Extended `IsIteratedScaledReduction`
+allowing interleaved `dropLast` steps (which don't increment the Rolle
+counter k, since they preserve zeros). The triangularity hypothesis is
+external to the predicate; the iteration theorem requires it. -/
+inductive PfaffianFn.IsKhovanskiiReducible :
+    PfaffianFn → PfaffianFn → Nat → Prop where
+  | refl (f : PfaffianFn) : IsKhovanskiiReducible f f 0
+  | reduce (f g : PfaffianFn) (k : Nat) (c : Real)
+      (h_next : IsKhovanskiiReducible (f.scaledReduction c) g k) :
+      IsKhovanskiiReducible f g (k + 1)
+  | drop (f g : PfaffianFn) (k : Nat) (N : Nat) (hN : f.n = N + 1)
+      (h_deg_zero : MultiPoly.degreeY ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩
+                                      f.poly = 0)
+      (h_next : IsKhovanskiiReducible (f.dropLast hN) g k) :
+      IsKhovanskiiReducible f g k
+
+/-- **Iterated bound for IsKhovanskiiReducible (triangular chains).** The
+zero count of f is bounded by N + k, where N bounds the zeros of g
+(after k reduce steps + arbitrarily many drop steps), provided the
+starting chain is triangular (so coherence is preserved through drops).
+
+Like `zero_count_iter_bound_scaledReduction` but handling drop too. -/
+theorem PfaffianFn.zero_count_khovanskii_bound
+    (f g : PfaffianFn) (k : Nat) (h_iter : f.IsKhovanskiiReducible g k)
+    (htri : f.chain.IsTriangular)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (hN_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ g.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + k := by
+  revert htri hcoherent hN_bound
+  induction h_iter with
+  | refl f =>
+      intro _htri _hcoh hN_bound zeros_f hnodup hzeros
+      have := hN_bound zeros_f hnodup hzeros
+      omega
+  | reduce f g k c h_next ih =>
+      intro htri hcoherent hN_bound
+      -- scaledReduction preserves chain, so triangularity + coherence transfer.
+      have hred_tri : (f.scaledReduction c).chain.IsTriangular := htri
+      have hred_coh : (f.scaledReduction c).chain.IsCoherentOn a b := hcoherent
+      have hred_bound := ih hred_tri hred_coh hN_bound
+      have hstep := PfaffianFn.zero_count_scaledReduction_transfer
+                      f c a b hab hcoherent (N + k) hred_bound
+      intro zeros_f hnodup hzeros
+      have := hstep zeros_f hnodup hzeros
+      omega
+  | drop f g k N_inner hN h_deg_zero h_next ih =>
+      intro htri hcoherent hN_bound
+      -- Destructure f to expose n as a local variable so we can substitute hN.
+      -- For dropLast, triangularity + coherence preservation give us the
+      -- analogous hypotheses on (f.dropLast hN).
+      -- The eval bridge (dropLast_eval) ensures zeros of f = zeros of dropLast f.
+      have hdrop_eval := PfaffianFn.dropLast_eval f hN h_deg_zero
+      -- Coherence + triangularity for dropLast.
+      -- We need to use the triangularity-preservation theorems, which require
+      -- the chain to be PfaffianChain (n+1). The hN cast makes this delicate.
+      have hdrop_tri : (f.dropLast hN).chain.IsTriangular := by
+        -- (f.dropLast hN).chain = PfaffianChain.dropLast (hN ▸ f.chain).
+        -- (hN ▸ f.chain).IsTriangular follows from htri (transports cleanly).
+        obtain ⟨n, chain, poly⟩ := f
+        cases hN
+        exact PfaffianChain.dropLast_preserves_triangular chain htri
+      have hdrop_coh : (f.dropLast hN).chain.IsCoherentOn a b := by
+        obtain ⟨n, chain, poly⟩ := f
+        cases hN
+        exact PfaffianChain.dropLast_coherent_on_of_triangular chain htri a b
+                hcoherent
+      -- Apply IH on f.dropLast hN.
+      have hdrop_bound := ih hdrop_tri hdrop_coh hN_bound
+      -- Convert: zeros of f via dropLast_eval are the same as zeros of f.dropLast.
+      intro zeros_f hnodup hzeros
+      apply hdrop_bound zeros_f hnodup
+      intro z hz
+      obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+      refine ⟨haz, hzb, ?_⟩
+      rw [hdrop_eval z]
+      exact hfz
+
+/-- **Extended capstone** using IsKhovanskiiReducible with triangularity.
+For a triangular chain, the iteration can drop chain length to 0
+constructively (given a witness chain of reduce + drop steps). -/
+theorem PfaffianFn.khovanskii_bound_full
+    (f g : PfaffianFn) (k : Nat)
+    (h_iter : f.IsKhovanskiiReducible g k)
+    (htri : f.chain.IsTriangular)
+    (hg0 : g.n = 0)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (hne : ∃ x : Real, g.eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ MultiPoly.degreeX g.poly + k := by
+  apply PfaffianFn.zero_count_khovanskii_bound f g k h_iter htri a b hab
+          hcoherent (MultiPoly.degreeX g.poly)
+  exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
+
 end PfaffianChainMod
 end MachLib
