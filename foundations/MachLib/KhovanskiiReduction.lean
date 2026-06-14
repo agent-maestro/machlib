@@ -463,6 +463,42 @@ theorem PfaffianFn.zero_count_bound_chainLength_zero
   exact MultiPolyToPoly.multiPoly_root_count_bound_at_fixed_env
           f.poly env a b hab hne' zeros hnodup hzeros'
 
+/-! ## PfaffianFn-level dropLast eval bridge
+
+The MultiPoly-level `eval_dropLastY` (PfaffianChain.lean line 410)
+needs a PfaffianFn-level wrapper for use in the Khovanskii iteration:
+when `f.n = N+1` and the polynomial doesn't depend on `y_N`,
+`(f.dropLast hN).eval x = f.eval x`. This is the bridge that lets
+`dropLast` steps integrate with the zero-count framework without
+changing the zero set.
+
+**Architectural significance**: this discovery is the missing piece
+in the iteration framework. Step 5's `IsIteratedReducedDerivative`
+preserves chain length (reducedDerivative is chain-preserving), so
+it alone cannot reduce a positive-chain-length PfaffianFn to a
+chainLength-0 polynomial. We need INTERLEAVED reduce + drop steps.
+This bridge is the foundation for that. -/
+
+theorem PfaffianFn.dropLast_eval {N : Nat} (f : PfaffianFn)
+    (hN : f.n = N + 1)
+    (h_deg_zero : MultiPoly.degreeY ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩ f.poly = 0)
+    (x : Real) :
+    (f.dropLast hN).eval x = f.eval x := by
+  -- Destructure f to expose n as a local variable.
+  obtain ⟨n, chain, poly⟩ := f
+  -- Now hN : n = N + 1 with n a local var; subst works.
+  cases hN
+  -- After subst: n = N + 1 literally; no casts.
+  show MultiPoly.eval (MultiPoly.dropLastY poly) x
+         ((PfaffianChain.dropLast chain).chainValues x)
+       = MultiPoly.eval poly x (chain.chainValues x)
+  have hcv : (PfaffianChain.dropLast chain).chainValues x
+           = fun i => chain.chainValues x ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩ := by
+    funext i
+    exact PfaffianChain.dropLast_chainValues_lower chain x i
+  rw [hcv]
+  exact MultiPoly.eval_dropLastY poly h_deg_zero x (chain.chainValues x)
+
 /-! ## Capstone: the constructive Khovanskii bound (modulo Step 3)
 
 Compose `zero_count_iter_bound` (Step 5) with `zero_count_bound_chainLength_zero`
