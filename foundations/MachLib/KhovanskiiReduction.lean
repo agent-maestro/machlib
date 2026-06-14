@@ -814,5 +814,93 @@ theorem PfaffianFn.khovanskii_bound_scaledReduction_modulo_step_3
           hcoherent (MultiPoly.degreeX g.poly)
   exact PfaffianFn.zero_count_bound_chainLength_zero g hg0 a b hab hne
 
+/-! ## Triangularity preservation under dropLast (foundation for (2))
+
+For the Khovanskii iteration to extend to interleaved reduce + drop
+steps in the general case, we need:
+
+  (i)  `dropLast` preserves `IsTriangular`.
+  (ii) `dropLast` preserves `IsCoherentAt` when the chain is triangular.
+
+The triangularity hypothesis is essential — without it, dropLast may
+break coherence because the dropped relations could have y_n
+dependencies that don't vanish under `dropLastY`.
+
+This section ships both lemmas, foundation for the eventual extension
+of `IsIteratedScaledReduction` to include drop steps. -/
+
+/-- **Triangularity preservation under dropLast.** Uses
+`MultiPoly.degreeY_dropLastY_le` to push the degreeY = 0 property
+through dropLastY. -/
+theorem PfaffianChain.dropLast_preserves_triangular {n : Nat}
+    (c : PfaffianChain (n + 1)) (htri : c.IsTriangular) :
+    (PfaffianChain.dropLast c).IsTriangular := by
+  intro i j hij
+  -- New relation at i is dropLastY of old relation at ⟨i.val, _⟩.
+  show MultiPoly.degreeY j
+        (MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩))
+       = 0
+  -- By degreeY_dropLastY_le ≤ degreeY ⟨j.val, _⟩ of original relation.
+  -- Original triangularity gives that = 0.
+  have h_orig : MultiPoly.degreeY
+                  ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩
+                  (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) = 0 := by
+    apply htri ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩
+               ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩
+    exact hij
+  have h_le := MultiPoly.degreeY_dropLastY_le
+                 (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) j
+  omega
+
+/-- **Coherence preservation under dropLast (given triangularity).**
+The dropped chain is coherent at x whenever the original was, provided
+the original was triangular. The triangularity ensures that each
+lower relation's last-y-degree is 0, so dropLastY preserves its eval. -/
+theorem PfaffianChain.dropLast_coherent_of_triangular {n : Nat}
+    (c : PfaffianChain (n + 1)) (htri : c.IsTriangular)
+    (x : Real) (hcoh : c.IsCoherentAt x) :
+    (PfaffianChain.dropLast c).IsCoherentAt x := by
+  intro i
+  -- Need: HasDerivAt ((dropLast c).evals i)
+  --                  ((dropLast c).relations i evaluated) x.
+  -- (dropLast c).evals i = c.evals ⟨i.val, _⟩.
+  -- (dropLast c).relations i = dropLastY (c.relations ⟨i.val, _⟩).
+  show HasDerivAt (c.evals ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)
+        (MultiPoly.eval
+          (MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩))
+          x ((PfaffianChain.dropLast c).chainValues x))
+        x
+  -- Original coherence: HasDerivAt c.evals ⟨i.val, _⟩ (orig_relation eval) x.
+  have h_orig := hcoh ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩
+  -- The eval of dropLastY of the original relation equals the original
+  -- relation's eval at the same point, by eval_dropLastY + triangularity.
+  -- Triangularity at j = ⟨n, _⟩ > i: degreeY n (relations ⟨i.val, _⟩) = 0.
+  have h_deg_zero : MultiPoly.degreeY
+                      ⟨n, Nat.lt_succ_self n⟩
+                      (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) = 0 := by
+    apply htri ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩ ⟨n, Nat.lt_succ_self n⟩
+    -- Need: n > i.val. i.val < n so OK.
+    show n > i.val
+    exact i.isLt
+  -- Bridge chainValues of dropLast with chainValues of original.
+  have hcv : (PfaffianChain.dropLast c).chainValues x
+           = fun k => c.chainValues x ⟨k.val, Nat.lt_succ_of_lt k.isLt⟩ := by
+    funext k
+    exact PfaffianChain.dropLast_chainValues_lower c x k
+  rw [hcv]
+  -- Apply eval_dropLastY to rewrite the eval.
+  rw [MultiPoly.eval_dropLastY _ h_deg_zero x (c.chainValues x)]
+  exact h_orig
+
+/-- **Coherence preservation on an interval (given triangularity).**
+Lifts `dropLast_coherent_of_triangular` from a single point to an
+interval. -/
+theorem PfaffianChain.dropLast_coherent_on_of_triangular {n : Nat}
+    (c : PfaffianChain (n + 1)) (htri : c.IsTriangular)
+    (a b : Real) (hcoh : c.IsCoherentOn a b) :
+    (PfaffianChain.dropLast c).IsCoherentOn a b := by
+  intro x hax hxb
+  exact PfaffianChain.dropLast_coherent_of_triangular c htri x (hcoh x hax hxb)
+
 end PfaffianChainMod
 end MachLib

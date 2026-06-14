@@ -521,6 +521,54 @@ theorem dropLastY_totalDegree_le {n : Nat} (p : MultiPoly (n + 1)) :
          totalDegree p + totalDegree q
     exact Nat.add_le_add ihp ihq
 
+/-- **degreeY preservation under dropLastY (≤ form).** For any j : Fin n,
+`degreeY j (dropLastY p) ≤ degreeY ⟨j.val, _⟩ p`. This says: dropping
+the last chain variable can only DECREASE (or preserve) the degree of
+any remaining variable. Used for triangularity preservation in the
+constructive Khovanskii iteration. -/
+theorem degreeY_dropLastY_le {n : Nat} (p : MultiPoly (n + 1))
+    (j : Fin n) :
+    degreeY j (dropLastY p)
+      ≤ degreeY ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ p := by
+  induction p with
+  | const c => exact Nat.le_refl _
+  | varX => exact Nat.le_refl _
+  | varY i =>
+    show degreeY j (if h : i.val < n then varY ⟨i.val, h⟩ else const 0)
+       ≤ (if ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ = i then 1 else 0)
+    by_cases h : i.val < n
+    · simp only [h, dite_true]
+      show (if j = ⟨i.val, h⟩ then 1 else 0)
+         ≤ (if ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ = i then 1 else 0)
+      by_cases hjk : j.val = i.val
+      · have h1 : j = ⟨i.val, h⟩ := Fin.eq_of_val_eq hjk
+        have h2 : (⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ : Fin (n + 1)) = i :=
+          Fin.eq_of_val_eq hjk
+        rw [if_pos h1, if_pos h2]
+        exact Nat.le_refl _
+      · have h1 : j ≠ ⟨i.val, h⟩ := fun heq => hjk (congrArg Fin.val heq)
+        rw [if_neg h1]
+        exact Nat.zero_le _
+    · simp only [h, dite_false]
+      show (0 : Nat) ≤ _
+      exact Nat.zero_le _
+  | add p q ihp ihq =>
+    show Nat.max (degreeY j (dropLastY p)) (degreeY j (dropLastY q))
+       ≤ Nat.max (degreeY ⟨j.val, _⟩ p) (degreeY ⟨j.val, _⟩ q)
+    apply Nat.max_le.mpr
+    refine ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+            Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | sub p q ihp ihq =>
+    show Nat.max (degreeY j (dropLastY p)) (degreeY j (dropLastY q))
+       ≤ Nat.max (degreeY ⟨j.val, _⟩ p) (degreeY ⟨j.val, _⟩ q)
+    apply Nat.max_le.mpr
+    refine ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+            Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | mul p q ihp ihq =>
+    show degreeY j (dropLastY p) + degreeY j (dropLastY q)
+       ≤ degreeY ⟨j.val, _⟩ p + degreeY ⟨j.val, _⟩ q
+    exact Nat.add_le_add ihp ihq
+
 /-! ### HasDerivAt correctness for dX (partial derivative in x)
 
 For a fixed environment `env`, the function `fun y => eval p y env` is
