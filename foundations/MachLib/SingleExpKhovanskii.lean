@@ -616,6 +616,64 @@ theorem expPoly_khovanskii_bound
   apply expPoly_zero_count_khovanskii_bound ep ⟨[p]⟩ k h_iter a b hab (degreeUpper p)
   exact expPoly_zero_count_bound_length_one p a b hab hne
 
+/-! ## Helper lemmas for discharging `h_last_zero` in `drop` constructor
+
+The `drop` constructor of `IsKhovanskiiReducibleExp` requires proving
+that the last polynomial coefficient evaluates to 0 at every x. These
+helpers cover common cases. -/
+
+/-- `polyDerivative (const c)` evaluates to 0 always. -/
+theorem polyDerivative_const_eval_zero (c : Real) (x : Real) :
+    Poly.eval (polyDerivative (Poly.const c)) x = 0 := by
+  show Poly.eval (Poly.const 0) x = 0
+  rfl
+
+/-- `Poly.const 0` evaluates to 0 always (the syntactic zero polynomial). -/
+theorem const_zero_eval_zero (x : Real) : Poly.eval (Poly.const 0) x = 0 := rfl
+
+/-- For the scaledReduction-induced last coefficient pattern
+`Poly.add (polyDerivative (Poly.const c)) (Poly.mul (Poly.const k) (Poly.const c))`
+with `k = 0`, the eval is 0. This is the pattern that arises after applying
+scaledReduction with c = (length-1) to a list whose last is `Poly.const c`. -/
+theorem scaledReduction_last_const_pattern_eval_zero (c : Real) (x : Real) :
+    Poly.eval
+      (Poly.add (polyDerivative (Poly.const c))
+                (Poly.mul (Poly.const 0) (Poly.const c)))
+      x = 0 := by
+  show Poly.eval (polyDerivative (Poly.const c)) x
+       + Poly.eval (Poly.mul (Poly.const 0) (Poly.const c)) x = 0
+  rw [polyDerivative_const_eval_zero]
+  show 0 + Poly.eval (Poly.const 0) x * Poly.eval (Poly.const c) x = 0
+  rw [const_zero_eval_zero]
+  rw [zero_mul, add_zero]
+
+/-! ## Algorithmic witness construction — status
+
+Full automatic construction of `IsKhovanskiiReducibleExp` from any input
+`ep` remains open. The challenge: termination measure on `Poly` AST.
+
+The key issue: structural `degreeUpper (polyDerivative p)` does NOT
+always strictly drop. Counter-example: `p = Poly.mul (Poly.const c) Poly.var`
+has `degreeUpper = 1`, but `polyDerivative p = Poly.add (Poly.mul (Poly.const 0) Poly.var) (Poly.mul (Poly.const c) (Poly.const 1))`
+also has `degreeUpper = 1`. The structural degree of `Poly.mul (Poly.const 0) Poly.var`
+preserves the factor's degree even though its EVAL is 0.
+
+Resolution paths:
+  (a) Integrate `polySimplify` (already in MachLib) to drop syntactic
+      `mul (const 0) _` and `add (const 0) _` terms. Then prove
+      `degreeUpper (polySimplify (polyDerivative p)) < degreeUpper p`
+      (when degreeUpper p > 0).
+  (b) Use eval-level reasoning: don't track structural degreeUpper;
+      instead track "effective degree" via eval at sample points.
+  (c) Use a Wronskian/Cramer argument to bypass iteration altogether.
+
+(a) is ~100 lines mechanical. (b)/(c) are research-grade.
+
+For now, the framework is FULLY USABLE with hand-constructed witnesses
+for specific polynomials. The helper lemmas above (`polyDerivative_const_eval_zero`
+etc.) discharge the `drop` constructor's `h_last_zero` obligation in
+common cases. -/
+
 end ExpPoly
 end SingleExpKhovanskii
 end MachLib
