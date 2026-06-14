@@ -1,6 +1,7 @@
 import MachLib.PfaffianChain
 import MachLib.Differentiation
 import MachLib.Rolle
+import MachLib.MultiPolyToPoly
 
 /-!
 # Constructive Khovanskii — Item 4 reduction substrate (the muse's angle 1)
@@ -410,18 +411,57 @@ theorem PfaffianFn.zero_count_iter_bound
 
 /-! ## Bound when the base function has chainLength 0 (polynomial case)
 
-When the iteration terminates at a chainLength-0 PfaffianFn, the base
-function is a polynomial in x alone. Polynomial root count
-(`poly_root_count_bound` in PolynomialRootCount.lean) gives the base
-bound. The MultiPoly-to-Poly conversion + degree preservation lemmas
-are deferred to a future commit (MachLib has no MultiPoly 0 → Poly
-yet); this section names the obligation as a hypothesis.
+When the iteration terminates at a chainLength-0 PfaffianFn, the
+function is effectively a univariate polynomial in x (the `Fin 0`
+chain is empty). `MultiPolyToPoly.multiPoly_root_count_bound_at_fixed_env`
+delivers the polynomial root count, and the env-invariance lemma for
+n = 0 bridges the fact that `chainValues` varies with x (irrelevantly,
+since for `n = 0` the env is vacuous).
 
-The user obligation for the full Khovanskii bound:
-  (a) Find an iteration chain f → ... → g where g has chainLength 0.
-      (This is Step 3 — the classical degree-drop argument.)
-  (b) Supply a polynomial bound for g.
-  (c) Apply `zero_count_iter_bound` to compose. -/
+This closes the polynomial base case constructively. Combined with
+`zero_count_iter_bound`, the only remaining obligation for the full
+constructive Khovanskii bound is Step 3 (the existence of a
+degree-drop iteration chain). -/
+
+/-- **Base case bound for chain length 0.** A PfaffianFn whose chain
+is empty has zero count bounded by its underlying polynomial's
+x-degree, on any bounded open interval where the function is
+nonzero somewhere. -/
+theorem PfaffianFn.zero_count_bound_chainLength_zero
+    (f : PfaffianFn) (h0 : f.n = 0) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, f.eval x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ MultiPoly.degreeX f.poly := by
+  intro zeros hnodup hzeros
+  -- Fix env := chainValues at anchor `a`. For n = 0 the env is vacuous,
+  -- so MultiPoly.eval is invariant in env (env_invariant lemma).
+  let env : Fin f.n → Real := f.chain.chainValues a
+  -- Convert hypothesis hne: f.eval x = MultiPoly.eval f.poly x (chainValues x).
+  have hne' : ∃ x : Real, MultiPoly.eval f.poly x env ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    have heq : MultiPoly.eval f.poly x env
+             = MultiPoly.eval f.poly x (f.chain.chainValues x) :=
+      MultiPolyToPoly.multiPoly_eval_env_invariant_n_zero h0 f.poly x env
+        (f.chain.chainValues x)
+    rw [heq]
+    exact hx
+  -- Convert zeros: f.eval z = 0 ⟹ MultiPoly.eval f.poly z env = 0.
+  have hzeros' : ∀ z ∈ zeros, a < z ∧ z < b ∧ MultiPoly.eval f.poly z env = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    have heq : MultiPoly.eval f.poly z env
+             = MultiPoly.eval f.poly z (f.chain.chainValues z) :=
+      MultiPolyToPoly.multiPoly_eval_env_invariant_n_zero h0 f.poly z env
+        (f.chain.chainValues z)
+    rw [heq]
+    exact hfz
+  -- Apply the multivariate polynomial root count bound.
+  exact MultiPolyToPoly.multiPoly_root_count_bound_at_fixed_env
+          f.poly env a b hab hne' zeros hnodup hzeros'
 
 end PfaffianChainMod
 end MachLib

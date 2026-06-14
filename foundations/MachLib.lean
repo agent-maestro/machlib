@@ -51,6 +51,7 @@ import MachLib.EMLAsymptoticBound
 import MachLib.EMLHierarchyIterExp
 import MachLib.Rolle
 import MachLib.KhovanskiiLemma
+import MachLib.MultiPolyToPoly
 import MachLib.KhovanskiiReduction
 
 /-!
