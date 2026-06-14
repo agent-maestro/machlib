@@ -7,6 +7,38 @@ per-release status.
 
 ## [Unreleased] — 2026-06-14
 
+### Calibration note — interim audit figures over-counted
+
+In-flight prose around the Khovanskii closure on 2026-06-14 quoted an
+audit summary of "210 Forge `@verify` obligations proven-in-place,
+80%/19% gap-vs-discharged" and a related sorry count of "269 discovered
+sorries (up from 222)". Both figures came from a local working tree
+that contained, alongside the publicly-tracked files, ~62 ungated
+Discovered/ stubs auto-emitted by the local `auto_prove.py` workflow
+(blanket-ignored under `foundations/MachLib/Discovered/.gitignore`),
+plus 32 duplicate `.eml` files in a forge `build/` artifact directory.
+Neither was visible to a fresh public clone.
+
+The CI-emitted `status.json` (`.github/workflows/status.yml`, lands on
+the `status-data` branch on every master push) reports the
+public-verifiable figures: 1088 `@verify` obligations total, 36
+proven-in-place, 225 placeholder, 823 open, gap_pct 96.3%,
+discharged_pct 3.7%, 198 discovered sorries. Those are the numbers a
+stranger running `lake build` at the recorded SHA can reproduce.
+
+The 4 strengthened Forge contracts shipped this cycle (Butler-Volmer,
+plasma concentration, defibrillator discharge, critically-damped spring)
+are publicly tracked and verified, and counted in both the local and
+public audits. The over-count was concentrated in `proven_in_place`
+(stubs the Forge backend auto-emitted with concrete-enough bodies that
+the audit's heuristic classifier didn't flag them).
+
+Follow-up: `forge_verify_audit.py` now defaults to `git ls-files`-aware
+file enumeration so a local audit gives the same number as CI. The
+`--include-untracked` flag preserves the full local view for callers
+who want it. Until the 62 ungated stubs are reviewed and pushed, the
+CI figure is the right one to quote.
+
 ### Added
 
 - `MachLib.Applications.PlasmaConcentrationNonneg` — pharma kernel

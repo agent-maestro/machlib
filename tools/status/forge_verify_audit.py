@@ -8,7 +8,6 @@ clone it). If you edit this file, sync the change to monogate-research,
 or vice-versa. Long-term this should be a published Python package
 both repos depend on; for now, duplication is the deliberate trade.
 
-
 Cross-references three sources:
 
   1. Forge `.eml` annotations: `@verify(lean, theorem = "X")` lines (and
@@ -34,9 +33,64 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+
+def _git_tracked_files(root: Path, suffixes: tuple[str, ...]) -> set[Path] | None:
+    """If `root` is inside a git repo, return the absolute paths of
+    tracked files under it matching `suffixes`. Otherwise return None
+    (caller should fall back to filesystem walk).
+
+    This makes a local audit run see the same files CI sees — a fresh
+    clone has only tracked files, so honesty-of-numbers depends on
+    matching that scope. Without it, a developer's gitignored
+    build/ artifacts and ungated auto-generated stubs inflate the
+    counts."""
+    try:
+        out = subprocess.run(
+            ["git", "ls-files", "--full-name"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return None
+    if out.returncode != 0:
+        return None
+    # Resolve the repo root since git ls-files paths are relative to it.
+    try:
+        repo_root_result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=str(root),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except (FileNotFoundError, OSError):
+        return None
+    if repo_root_result.returncode != 0:
+        return None
+    repo_root = Path(repo_root_result.stdout.strip())
+    root_abs = root.resolve()
+    tracked: set[Path] = set()
+    for line in out.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if not line.endswith(suffixes):
+            continue
+        abs_path = (repo_root / line).resolve()
+        # Only keep files within the requested root.
+        try:
+            abs_path.relative_to(root_abs)
+        except ValueError:
+            continue
+        tracked.add(abs_path)
+    return tracked
 
 VERIFY_RE = re.compile(
     r'@verify\s*\(\s*lean\s*,\s*theorem\s*=\s*"(?P<theorem>[^"]+)"\s*\)'
@@ -114,12 +168,18 @@ class LedgerEntry:
     status: str  # "open" | "placeholder" | "strengthened" | "proven_in_place"
 
 
-def scan_eml_verify(eml_root: Path, source_root_label: str) -> list[VerifyObligation]:
+def scan_eml_verify(
+    eml_root: Path, source_root_label: str, respect_gitignore: bool = True
+) -> list[VerifyObligation]:
     """Scan a directory tree of `.eml` files for `@verify(lean, ...)`."""
     out: list[VerifyObligation] = []
     if not eml_root.exists():
         return out
-    for eml_file in sorted(eml_root.rglob("*.eml")):
+    tracked = _git_tracked_files(eml_root, (".eml",)) if respect_gitignore else None
+    files = (
+        sorted(tracked) if tracked is not None else sorted(eml_root.rglob("*.eml"))
+    )
+    for eml_file in files:
         try:
             text = eml_file.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
@@ -164,11 +224,23 @@ def classify_theorem_body(text: str, theorem_start: int) -> str:
     return "proven"
 
 
-def scan_discovered(discovered_root: Path) -> list[DiscoveredStub]:
+def scan_discovered(
+    discovered_root: Path, respect_gitignore: bool = True
+) -> list[DiscoveredStub]:
     out: list[DiscoveredStub] = []
     if not discovered_root.exists():
         return out
-    for lean_file in sorted(discovered_root.rglob("*.lean")):
+    tracked = (
+        _git_tracked_files(discovered_root, (".lean",))
+        if respect_gitignore
+        else None
+    )
+    files = (
+        sorted(tracked)
+        if tracked is not None
+        else sorted(discovered_root.rglob("*.lean"))
+    )
+    for lean_file in files:
         try:
             raw = lean_file.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
@@ -190,11 +262,23 @@ def scan_discovered(discovered_root: Path) -> list[DiscoveredStub]:
 NAMESPACE_RE = re.compile(r'^\s*namespace\s+([A-Za-z_][A-Za-z0-9_.]*)\b', re.MULTILINE)
 
 
-def scan_applications(applications_root: Path) -> list[ApplicationsProof]:
+def scan_applications(
+    applications_root: Path, respect_gitignore: bool = True
+) -> list[ApplicationsProof]:
     out: list[ApplicationsProof] = []
     if not applications_root.exists():
         return out
-    for lean_file in sorted(applications_root.rglob("*.lean")):
+    tracked = (
+        _git_tracked_files(applications_root, (".lean",))
+        if respect_gitignore
+        else None
+    )
+    files = (
+        sorted(tracked)
+        if tracked is not None
+        else sorted(applications_root.rglob("*.lean"))
+    )
+    for lean_file in files:
         try:
             raw = lean_file.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
@@ -373,17 +457,35 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="print only obligations with status open|placeholder to stdout",
     )
+    parser.add_argument(
+        "--include-untracked",
+        action="store_true",
+        help=(
+            "audit ALL files under each root (including gitignored / "
+            "untracked / build artifacts). Default is to use `git ls-files` "
+            "when available, which matches what CI sees in a fresh clone. "
+            "Use this flag only if you want to see the full local view; "
+            "results will diverge from CI."
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    respect_gitignore = not args.include_untracked
     obligations = (
-        scan_eml_verify(args.forge_root, "forge")
-        + scan_eml_verify(args.eml_stdlib_root, "eml-stdlib")
+        scan_eml_verify(args.forge_root, "forge", respect_gitignore=respect_gitignore)
+        + scan_eml_verify(
+            args.eml_stdlib_root, "eml-stdlib", respect_gitignore=respect_gitignore
+        )
     )
-    discovered = scan_discovered(args.discovered_root)
-    applications = scan_applications(args.applications_root)
+    discovered = scan_discovered(
+        args.discovered_root, respect_gitignore=respect_gitignore
+    )
+    applications = scan_applications(
+        args.applications_root, respect_gitignore=respect_gitignore
+    )
     entries = build_ledger(obligations, discovered, applications)
     write_json(entries, args.out_json)
     if args.out_md is not None:
