@@ -609,6 +609,27 @@ This means the entire tree is eventually constant, so the Phase-1
 immediately. Same template as `x_plus_one_not_in_eml_2_eml_const_eml_const_var`
 in EMLAdditionClosureFailure.lean, ported to inv_x. -/
 
+/-- **Shared clamp-trigger helper.** For x ≥ exp(exp a), the inner
+`exp a - log x ≤ 0`, so the clamped log returns 0. Reused across
+multiple depth-2 cases. -/
+private theorem log_inner_zero_at_exp_exp (a x : Real)
+    (hx : Real.exp (Real.exp a) ≤ x) :
+    Real.log (Real.exp a - Real.log x) = 0 := by
+  rcases (Real.le_iff_lt_or_eq (Real.exp (Real.exp a)) x).mp hx with hxlt | hxeq
+  · have h_exp_a_pos : (0 : Real) < Real.exp (Real.exp a) := Real.exp_pos _
+    have hlog_lt :
+        Real.log (Real.exp (Real.exp a)) < Real.log x :=
+      Real.log_lt_log h_exp_a_pos hxlt
+    rw [Real.log_exp] at hlog_lt
+    have h_diff_neg : Real.exp a - Real.log x < 0 := by
+      rw [Real.sub_def]
+      have step := Real.add_lt_add_left hlog_lt (-Real.log x)
+      rw [Real.neg_add_self] at step
+      rw [Real.add_comm] at step
+      exact step
+    exact Real.log_nonpos (Real.le_of_lt h_diff_neg)
+  · rw [← hxeq, Real.log_exp, Real.sub_self, Real.log_zero]
+
 theorem not_eventually_K_over_x_one_eml_const_eml_const_var
     (c1 c2 : Real) :
     ¬ EventuallyKOverX 1
@@ -617,41 +638,244 @@ theorem not_eventually_K_over_x_one_eml_const_eml_const_var
   apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
   refine ⟨Real.exp c1, Real.exp (Real.exp c2), ?_⟩
   intro x hx
-  -- hx : exp(exp c2) ≤ x
-  -- Show: eval x = exp c1.
   show Real.exp c1 - Real.log (Real.exp c2 - Real.log x) = Real.exp c1
-  have h_exp_c2_pos : (0 : Real) < Real.exp (Real.exp c2) := Real.exp_pos _
-  have hx_pos : (0 : Real) < x := Real.lt_of_lt_of_le h_exp_c2_pos hx
-  -- Case split on hx: strict (x > exp(exp c2)) or equality.
-  rcases (Real.le_iff_lt_or_eq (Real.exp (Real.exp c2)) x).mp hx with hxlt | hxeq
-  · -- Strict case: log x > exp c2 (by log_lt_log + log_exp).
-    have hlog_lt :
-        Real.log (Real.exp (Real.exp c2)) < Real.log x :=
-      Real.log_lt_log h_exp_c2_pos hxlt
-    rw [Real.log_exp] at hlog_lt
-    -- hlog_lt : exp c2 < log x
-    -- Hence exp c2 - log x < 0:
-    have h_diff_neg : Real.exp c2 - Real.log x < 0 := by
-      rw [Real.sub_def]
-      have step := Real.add_lt_add_left hlog_lt (-Real.log x)
-      rw [Real.neg_add_self] at step
-      rw [Real.add_comm] at step
-      exact step
-    have h_log_zero : Real.log (Real.exp c2 - Real.log x) = 0 :=
-      Real.log_nonpos (Real.le_of_lt h_diff_neg)
-    rw [h_log_zero, Real.sub_def, Real.neg_zero, Real.add_zero]
-  · -- Equality case: x = exp(exp c2). log x = exp c2. exp c2 - exp c2 = 0.
-    rw [← hxeq, Real.log_exp]
-    rw [Real.sub_self, Real.log_zero, Real.sub_def, Real.neg_zero, Real.add_zero]
+  rw [log_inner_zero_at_exp_exp c2 x hx]
+  rw [Real.sub_def, Real.neg_zero, Real.add_zero]
 
-/- PHASE 2 — STATUS as of 2026-06-15
+/-! ## Depth-2 sweep: all-constants cases (eval is literally constant in x)
+
+These shapes have no `var` anywhere, so eval is constant in x and
+the framework closes them via Phase 1's
+`EventuallyConstant.not_eventually_K_over_x` immediately. -/
+
+/-- Depth-2 all-constants A: `eml(const c, eml(const a, const b))`. -/
+theorem not_eventually_K_over_x_one_eml_const_eml_const_const
+    (c a b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (.const c) (EMLTree.eml (.const a) (.const b))).eval x) := by
+  apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
+  refine ⟨Real.exp c - Real.log (Real.exp a - Real.log b), 0, ?_⟩
+  intro x _
+  rfl
+
+/-- Depth-2 all-constants B: `eml(eml(const c1, const c2), const c)`. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_const_const
+    (c1 c2 c : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const c1) (.const c2)) (.const c)).eval x) := by
+  apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
+  refine ⟨Real.exp (Real.exp c1 - Real.log c2) - Real.log c, 0, ?_⟩
+  intro x _
+  rfl
+
+/-- Depth-2 all-constants C: `eml(eml(const c1, const c2), eml(const a, const b))`. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_const_eml_const_const
+    (c1 c2 a b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const c1) (.const c2))
+                     (EMLTree.eml (.const a) (.const b))).eval x) := by
+  apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
+  refine ⟨Real.exp (Real.exp c1 - Real.log c2) -
+          Real.log (Real.exp a - Real.log b), 0, ?_⟩
+  intro x _
+  rfl
+
+/-! ## Depth-2 sweep: clamp-trigger cases (eval eventually constant via clamp) -/
+
+/-- Depth-2 clamp D:
+`eml(eml(const c1, const c2), eml(const a, var))`. Same template
+as `not_eventually_K_over_x_one_eml_const_eml_const_var` but with
+t1 = eml(const c1, const c2) instead of const c. The eval becomes
+`exp(exp c1 - log c2)` for x ≥ exp(exp a). -/
+theorem not_eventually_K_over_x_one_eml_eml_const_const_eml_const_var
+    (c1 c2 a : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const c1) (.const c2))
+                     (EMLTree.eml (.const a) .var)).eval x) := by
+  apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
+  refine ⟨Real.exp (Real.exp c1 - Real.log c2), Real.exp (Real.exp a), ?_⟩
+  intro x hx
+  show Real.exp (Real.exp c1 - Real.log c2) -
+       Real.log (Real.exp a - Real.log x) =
+       Real.exp (Real.exp c1 - Real.log c2)
+  rw [log_inner_zero_at_exp_exp a x hx]
+  rw [Real.sub_def, Real.neg_zero, Real.add_zero]
+
+/-! ## Depth-2 sweep: exp-dominance cases (t1 = var) -/
+
+/-- Depth-2 exp-dominance E: `eml(var, eml(const a, const b))`.
+Eval x = `exp x - log_clamped(exp a - log b)`. The inner is a
+constant (call it L). eval = exp x - L for all x. Same exp
+dominance chain as `eml(var, const b)` at depth 1, with
+L = `log_clamped(exp a - log b)` replacing `log b`. -/
+theorem not_eventually_K_over_x_one_eml_var_eml_const_const
+    (a b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml (.const a) (.const b))).eval x) := by
+  intro ⟨N, hN⟩
+  -- Let L := log_clamped(exp a - log b). Sample at
+  -- x_0 = max N (max (1+1) (L + 1)).
+  -- exp x_0 > x_0 ≥ L + 1, so eval = exp x_0 - L > 1.
+  -- But eval = 1/x_0 < 1, contradiction.
+  --
+  -- This is the same proof body as not_eventually_K_over_x_one_eml_var_const
+  -- with L = Real.log (Real.exp a - Real.log b) replacing `Real.log b`.
+  -- We inline rather than factor a helper because the helper would need to
+  -- abstract over the EMLTree shape too, which complicates the unfolding.
+  have hN_le :
+      N ≤ max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    le_max_left _ _
+  have h_inner_le :
+      max (1+1) (Real.log (Real.exp a - Real.log b) + 1) ≤
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    le_max_right _ _
+  have h_two_le_inner :
+      (1+1 : Real) ≤
+        max (1+1) (Real.log (Real.exp a - Real.log b) + 1) :=
+    le_max_left _ _
+  have h_L_le_inner :
+      Real.log (Real.exp a - Real.log b) + 1 ≤
+        max (1+1) (Real.log (Real.exp a - Real.log b) + 1) :=
+    le_max_right _ _
+  have h_two_le :
+      (1+1 : Real) ≤
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    Real.le_trans h_two_le_inner h_inner_le
+  have h_L_le :
+      Real.log (Real.exp a - Real.log b) + 1 ≤
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    Real.le_trans h_L_le_inner h_inner_le
+  have h_one_lt_two : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  have h_one_lt :
+      (1 : Real) <
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    Real.lt_of_lt_of_le h_one_lt_two h_two_le
+  have h_pos :
+      (0 : Real) <
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_one_lt
+  have h_eval :
+      (EMLTree.eml .var (EMLTree.eml (.const a) (.const b))).eval
+        (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))) =
+      1 / max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) :=
+    hN _ hN_le
+  simp only [EMLTree.eval] at h_eval
+  have h_exp_gt :
+      max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) <
+        Real.exp
+          (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))) :=
+    exp_grows_strictly _
+  have h_L_lt_exp :
+      Real.log (Real.exp a - Real.log b) + 1 <
+        Real.exp
+          (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))) :=
+    Real.lt_of_le_of_lt h_L_le h_exp_gt
+  have h_eval_gt_one :
+      1 < Real.exp
+            (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))) -
+          Real.log (Real.exp a - Real.log b) := by
+    have step :
+        -Real.log (Real.exp a - Real.log b) +
+          (Real.log (Real.exp a - Real.log b) + 1) <
+        -Real.log (Real.exp a - Real.log b) +
+          Real.exp
+            (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))) :=
+      Real.add_lt_add_left h_L_lt_exp _
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    rw [Real.add_comm
+          (-Real.log (Real.exp a - Real.log b))
+          (Real.exp
+            (max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1))))] at step
+    rw [← Real.sub_def] at step
+    exact step
+  rw [h_eval] at h_eval_gt_one
+  have h_div_lt_one :
+      (1 : Real) /
+        max N (max (1+1) (Real.log (Real.exp a - Real.log b) + 1)) < 1 :=
+    Real.div_lt_one_of_pos_lt h_pos h_one_lt
+  exact Real.lt_irrefl_ax _
+    (Real.lt_trans_ax h_eval_gt_one h_div_lt_one)
+
+/-- Depth-2 exp-dom + clamp F: `eml(var, eml(const a, var))`. The inner
+t2 = eml(const a, var) clamps for x ≥ exp(exp a). After clamping,
+eval = exp x. For x ≥ max(N, exp(exp a), 1+1):
+  exp x > x ≥ 1+1 > 1 > 1/x, but eval = 1/x. Contradiction. -/
+theorem not_eventually_K_over_x_one_eml_var_eml_const_var
+    (a : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml (.const a) .var)).eval x) := by
+  intro ⟨N, hN⟩
+  -- Sample at x_0 = max N (max (1+1) (exp(exp a))).
+  have hN_le :
+      N ≤ max N (max (1+1) (Real.exp (Real.exp a))) := le_max_left _ _
+  have h_inner_le :
+      max (1+1) (Real.exp (Real.exp a)) ≤
+        max N (max (1+1) (Real.exp (Real.exp a))) := le_max_right _ _
+  have h_two_le_inner :
+      (1+1 : Real) ≤ max (1+1) (Real.exp (Real.exp a)) :=
+    le_max_left _ _
+  have h_expexp_le_inner :
+      Real.exp (Real.exp a) ≤ max (1+1) (Real.exp (Real.exp a)) :=
+    le_max_right _ _
+  have h_two_le :
+      (1+1 : Real) ≤ max N (max (1+1) (Real.exp (Real.exp a))) :=
+    Real.le_trans h_two_le_inner h_inner_le
+  have h_expexp_le :
+      Real.exp (Real.exp a) ≤
+        max N (max (1+1) (Real.exp (Real.exp a))) :=
+    Real.le_trans h_expexp_le_inner h_inner_le
+  have h_one_lt_two : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  have h_one_lt :
+      (1 : Real) < max N (max (1+1) (Real.exp (Real.exp a))) :=
+    Real.lt_of_lt_of_le h_one_lt_two h_two_le
+  have h_pos :
+      (0 : Real) < max N (max (1+1) (Real.exp (Real.exp a))) :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_one_lt
+  -- Apply hN at x_0:
+  have h_eval :
+      (EMLTree.eml .var (EMLTree.eml (.const a) .var)).eval
+        (max N (max (1+1) (Real.exp (Real.exp a)))) =
+      1 / max N (max (1+1) (Real.exp (Real.exp a))) :=
+    hN _ hN_le
+  simp only [EMLTree.eval] at h_eval
+  -- h_eval : exp x_0 - log(exp a - log x_0) = 1/x_0
+  -- Use the clamp helper: log(exp a - log x_0) = 0 since x_0 ≥ exp(exp a).
+  rw [log_inner_zero_at_exp_exp a
+      (max N (max (1+1) (Real.exp (Real.exp a))))
+      h_expexp_le, Real.sub_def, Real.neg_zero, Real.add_zero] at h_eval
+  -- h_eval : exp x_0 = 1/x_0
+  -- exp x_0 > x_0 > 1 > 1/x_0:
+  have h_exp_gt_x :
+      max N (max (1+1) (Real.exp (Real.exp a))) <
+        Real.exp (max N (max (1+1) (Real.exp (Real.exp a)))) :=
+    exp_grows_strictly _
+  have h_div_lt_one :
+      (1 : Real) / max N (max (1+1) (Real.exp (Real.exp a))) < 1 :=
+    Real.div_lt_one_of_pos_lt h_pos h_one_lt
+  -- exp x_0 > x_0 > 1:
+  have h_exp_gt_one :
+      (1 : Real) <
+        Real.exp (max N (max (1+1) (Real.exp (Real.exp a)))) :=
+    Real.lt_trans_ax h_one_lt h_exp_gt_x
+  -- Combine: 1 < exp x_0 = 1/x_0 < 1, contradiction.
+  rw [h_eval] at h_exp_gt_one
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_exp_gt_one h_div_lt_one)
+
+/- PHASE 2 — STATUS as of 2026-06-15 (post depth-2 sweep)
 
 **Depth ≤ 1 fully closed.** All 6 EMLTree shapes at depth ≤ 1
-ruled out as `EventuallyKOverX 1` via the framework, zero
-sorries. Plus the first depth-2 case via the clamp-trigger
-pattern.
+ruled out as `EventuallyKOverX 1` via the framework. **Depth-2
+sweep partially closed**: 7 of 32 depth-2 shapes shipped
+via the framework, covering the "no-var" all-constants cases,
+the clamp-trigger cases, and the t1=var exp-dominance cases.
 
-Closed (7 theorems):
+Closed (13 theorems, zero sorries):
 
   Depth 0:
     ✓ const c
@@ -667,11 +891,34 @@ Closed (7 theorems):
                           but eval = 1/x_0 + log x_0 ≤ 1 + x_0,
                           contradiction)
 
-  Depth 2:
-    ✓ eml(const c1, eml(const c2, var))
+  Depth 2 (7 shapes covered, 25 remaining):
+    ✓ eml(const c, eml(const a, var))
                           (eventually constant via clamp trigger
-                          for x ≥ exp(exp c2), via Phase 1
-                          EventuallyConstant disjointness)
+                          for x ≥ exp(exp a))
+    ✓ eml(const c, eml(const a, const b))             [all-const]
+    ✓ eml(eml(const c1, const c2), const c)           [all-const]
+    ✓ eml(eml(const c1, const c2), eml(const a, const b))
+                                                      [all-const]
+    ✓ eml(eml(const c1, const c2), eml(const a, var))
+                          (clamp trigger as in eml(const, ...))
+    ✓ eml(var, eml(const a, const b))
+                          (exp dominance, t2 inner constant)
+    ✓ eml(var, eml(const a, var))
+                          (t2 clamps, eval = exp x > 1 > 1/x)
+
+  Depth 2 remaining (~25 shapes, mostly K/x and non-clamp patterns):
+    - eml(eml(const, var), const c)        K/x coefficient (closed
+                                           in InvXNotInEML.lean v0
+                                           with global hypothesis;
+                                           framework version needs
+                                           eventually-equation chain)
+    - eml(eml(const, var), eml(const, var)) similar K/x
+    - eml(eml(var, *), *)                  iterated-exp super-growth
+    - eml(var, var) and var children       eventually-constant via
+                                           other patterns or new
+                                           predicates
+    - eml(const, eml(var, *))              eval involves exp(c) -
+                                           log(non-trivial t2)
 
 The depth-≤-1 closure means the framework version is now
 STRICTLY STRONGER than the existing `inv_x_not_in_eml_1` from
