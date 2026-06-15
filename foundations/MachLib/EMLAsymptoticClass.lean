@@ -594,6 +594,458 @@ theorem not_eventually_K_over_x_one_eml_var_var :
   -- Combine: x_0 + 1 < exp x_0 ≤ x_0 + 1, contradiction.
   exact Real.lt_irrefl_ax _ (Real.lt_of_lt_of_le h_tan h_exp_le)
 
+/-! ## Phase 3 setup: EventuallyKOverX K uniqueness + EventuallyMinusLog
+
+For depth-2 Pattern A shapes (K/x asymptotic with K = exp(exp a) > 1),
+we use the uniqueness of K under `EventuallyKOverX K`: if a function
+is both `EventuallyKOverX K1` and `EventuallyKOverX K2`, then K1 = K2.
+Combined with `K = exp(exp a) ≠ 1` (the local K-coefficient barrier
+below), this closes the Pattern A shapes via a clean reduction to
+Phase 1.
+
+For Pattern C (const t1 + non-trivial t2 with var), we'll need a new
+predicate `EventuallyMinusLog` capturing the asymptotic `f x ~ -log x`
+behavior. Defined here; closure theorems using it deferred to Phase 4. -/
+
+/-- Local copy of `one_lt_exp_exp` from InvXNotInEML.lean (which is
+private there). `1 < exp(exp a)` for any a. -/
+private theorem one_lt_exp_exp_local (a : Real) :
+    1 < Real.exp (Real.exp a) := by
+  have h_exp_a_pos : (0 : Real) < Real.exp a := Real.exp_pos a
+  have h_strict : Real.exp 0 < Real.exp (Real.exp a) := Real.exp_lt h_exp_a_pos
+  rw [Real.exp_zero] at h_strict
+  exact h_strict
+
+/-- Local copy of `exp_exp_ne_one` from InvXNotInEML.lean (private there). -/
+private theorem exp_exp_ne_one_local (a : Real) : Real.exp (Real.exp a) ≠ 1 :=
+  Real.ne_of_gt (one_lt_exp_exp_local a)
+
+/-- Local copy of `log_inner_zero_at_exp_exp` (defined later in the file
+for the depth-2 starter). Forward-declared here so the Phase 3 Pattern A
+theorems can use it. The definition below is the canonical one; this
+copy keeps the Phase 3 section self-contained without code movement. -/
+private theorem log_inner_zero_at_exp_exp_local (a x : Real)
+    (hx : Real.exp (Real.exp a) ≤ x) :
+    Real.log (Real.exp a - Real.log x) = 0 := by
+  rcases (Real.le_iff_lt_or_eq (Real.exp (Real.exp a)) x).mp hx with hxlt | hxeq
+  · have h_exp_a_pos : (0 : Real) < Real.exp (Real.exp a) := Real.exp_pos _
+    have hlog_lt :
+        Real.log (Real.exp (Real.exp a)) < Real.log x :=
+      Real.log_lt_log h_exp_a_pos hxlt
+    rw [Real.log_exp] at hlog_lt
+    have h_diff_neg : Real.exp a - Real.log x < 0 := by
+      rw [Real.sub_def]
+      have step := Real.add_lt_add_left hlog_lt (-Real.log x)
+      rw [Real.neg_add_self] at step
+      rw [Real.add_comm] at step
+      exact step
+    exact Real.log_nonpos (Real.le_of_lt h_diff_neg)
+  · rw [← hxeq, Real.log_exp, Real.sub_self, Real.log_zero]
+
+/-- **K-uniqueness for `EventuallyKOverX`.** A function `f` can be
+`EventuallyKOverX K` for at most one value of K. -/
+theorem EventuallyKOverX.K_unique (K K' : Real) (f : Real → Real)
+    (h : EventuallyKOverX K f) (h' : EventuallyKOverX K' f) :
+    K = K' := by
+  obtain ⟨N, hN⟩ := h
+  obtain ⟨N', hN'⟩ := h'
+  -- Sample at x_0 = max N (max N' 1). Both hypotheses give
+  -- f x_0 = K/x_0 and f x_0 = K'/x_0. So K/x_0 = K'/x_0.
+  -- Multiply by x_0 (positive, hence nonzero): K = K'.
+  have hN_le : N ≤ max N (max N' 1) := le_max_left _ _
+  have h_inner_le : max N' 1 ≤ max N (max N' 1) := le_max_right _ _
+  have hN'_le : N' ≤ max N (max N' 1) :=
+    Real.le_trans (le_max_left _ _) h_inner_le
+  have h_one_le : (1 : Real) ≤ max N (max N' 1) :=
+    Real.le_trans (le_max_right _ _) h_inner_le
+  have h_pos : (0 : Real) < max N (max N' 1) :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  have h_ne : max N (max N' 1) ≠ 0 := Real.ne_of_gt h_pos
+  have h_K : f (max N (max N' 1)) = K / max N (max N' 1) := hN _ hN_le
+  have h_K' : f (max N (max N' 1)) = K' / max N (max N' 1) := hN' _ hN'_le
+  have h_eq : K / max N (max N' 1) = K' / max N (max N' 1) := h_K.symm.trans h_K'
+  have step :
+      (K / max N (max N' 1)) * max N (max N' 1) =
+        (K' / max N (max N' 1)) * max N (max N' 1) :=
+    congrArg (fun y => y * max N (max N' 1)) h_eq
+  rw [div_mul_cancel h_ne, div_mul_cancel h_ne] at step
+  exact step
+
+/-- **K-over-x rewrite for the Pattern A shapes.** For `x > 0`:
+`exp(exp a - log x) = exp(exp a) / x`. The chain:
+  exp(exp a - log x)
+  = exp(exp a + -log x)    [sub_def]
+  = exp(exp a) * exp(-log x)  [exp_add]
+  = exp(exp a) * (1/exp(log x))  [exp_neg_inv]
+  = exp(exp a) * (1/x)     [exp_log]
+  = exp(exp a) / x         [← div_def]
+-/
+private theorem exp_const_sub_log_eq_K_over_x (a x : Real) (hx : 0 < x) :
+    Real.exp (Real.exp a - Real.log x) = Real.exp (Real.exp a) / x := by
+  rw [Real.sub_def]
+  rw [Real.exp_add]
+  rw [Real.exp_neg_inv]
+  rw [Real.exp_log hx]
+  rw [← Real.div_def (Real.exp (Real.exp a)) x (Real.ne_of_gt hx)]
+
+/-! ## Phase 3 Pattern A: K/x coefficient shapes
+
+These shapes have eval x = K/x where K = exp(exp a) > 1. They close
+via `EventuallyKOverX.K_unique` reduction to "K = 1" + the
+K-coefficient barrier `exp_exp_ne_one`. -/
+
+/-- **Pattern A specific: `eml(eml(const a, var), const 1)`**.
+Eval x = exp(exp a - log x) - log 1 = exp(exp a)/x. So
+`EventuallyKOverX (exp(exp a))` holds. Combined with the framework
+hypothesis `EventuallyKOverX 1`, uniqueness forces
+`exp(exp a) = 1`, contradicting `exp_exp_ne_one`. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_var_const_one
+    (a : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const a) .var) (.const 1)).eval x) := by
+  intro h_hyp
+  -- Show the eval is EventuallyKOverX (exp(exp a)).
+  have h_K : EventuallyKOverX (Real.exp (Real.exp a))
+              (fun x =>
+                (EMLTree.eml (EMLTree.eml (.const a) .var) (.const 1)).eval x) := by
+    refine ⟨1, ?_⟩
+    intro x hx
+    have h_x_pos : (0 : Real) < x :=
+      Real.lt_of_lt_of_le Real.zero_lt_one_ax hx
+    show Real.exp (Real.exp a - Real.log x) - Real.log 1 =
+         Real.exp (Real.exp a) / x
+    rw [Real.log_one, Real.sub_zero]
+    exact exp_const_sub_log_eq_K_over_x a x h_x_pos
+  -- Apply K-uniqueness:
+  have h_K_eq_one : Real.exp (Real.exp a) = 1 :=
+    EventuallyKOverX.K_unique _ _ _ h_K h_hyp
+  exact exp_exp_ne_one_local a h_K_eq_one
+
+/-- **Pattern A clamp: `eml(eml(const a, var), eml(const a', var))`**.
+The inner t2 = eml(const a', var) clamps for x ≥ exp(exp a'). After
+clamping, eval = K/x exactly with K = exp(exp a). Same closure via
+K-uniqueness. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_var_eml_const_var
+    (a a' : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const a) .var)
+                     (EMLTree.eml (.const a') .var)).eval x) := by
+  intro h_hyp
+  have h_K : EventuallyKOverX (Real.exp (Real.exp a))
+              (fun x =>
+                (EMLTree.eml (EMLTree.eml (.const a) .var)
+                             (EMLTree.eml (.const a') .var)).eval x) := by
+    refine ⟨max 1 (Real.exp (Real.exp a')), ?_⟩
+    intro x hx
+    have h_one_le : (1 : Real) ≤ x :=
+      Real.le_trans (le_max_left _ _) hx
+    have h_expexp_le : Real.exp (Real.exp a') ≤ x :=
+      Real.le_trans (le_max_right _ _) hx
+    have h_x_pos : (0 : Real) < x :=
+      Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+    show Real.exp (Real.exp a - Real.log x) -
+         Real.log (Real.exp a' - Real.log x) =
+         Real.exp (Real.exp a) / x
+    rw [log_inner_zero_at_exp_exp_local a' x h_expexp_le]
+    rw [Real.sub_def, Real.neg_zero, Real.add_zero]
+    exact exp_const_sub_log_eq_K_over_x a x h_x_pos
+  have h_K_eq_one : Real.exp (Real.exp a) = 1 :=
+    EventuallyKOverX.K_unique _ _ _ h_K h_hyp
+  exact exp_exp_ne_one_local a h_K_eq_one
+
+/-! ## Phase 3 Pattern B: iterated-exp super-growth (sketch)
+
+Shapes where t1 = eml(var, *) or contains var produce exp(exp x)
+or worse. eval grows much faster than 1/x → 0; contradiction at
+moderately large x. One representative shipped here. -/
+
+/-- **Pattern B: `eml(eml(var, const b), eml(const a, var))`**.
+t1 = eml(var, const b) so t1.eval x = exp x - log b.
+t2 = eml(const a, var) clamps for x ≥ exp(exp a).
+After clamping, eval = exp(exp x - log b).
+
+For framework hypothesis: exp(exp x - log b) = 1/x = exp(-log x)
+(via exp_neg_inv + exp_log). By exp injectivity: exp x - log b = -log x.
+So exp x = log b - log x.
+
+At x_0 ≥ max(N, exp(exp a), exp(log b + 1+1)):
+  - log x_0 ≥ log b + 1+1 (log monotone).
+  - log b - log x_0 ≤ -(1+1) < 0.
+  - exp x_0 > 0 (exp_pos).
+  - But exp x_0 = log b - log x_0 < 0, contradicting exp x_0 > 0. -/
+theorem not_eventually_K_over_x_one_eml_eml_var_const_eml_const_var
+    (b a : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml .var (.const b))
+                     (EMLTree.eml (.const a) .var)).eval x) := by
+  intro ⟨N, hN⟩
+  -- Sample at x_0 = max N (max (Real.exp (Real.exp a))
+  --                          (Real.exp (Real.log b + (1+1)))).
+  -- This ensures: x_0 ≥ N; x_0 ≥ exp(exp a) (clamp); x_0 ≥ exp(log b + 1+1).
+  -- Hence log x_0 ≥ log b + 1+1 via log monotonicity.
+  have hN_le :
+      N ≤
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) := le_max_left _ _
+  have h_inner_le :
+      max (Real.exp (Real.exp a)) (Real.exp (Real.log b + (1+1))) ≤
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) := le_max_right _ _
+  have h_expexp_a_le_inner :
+      Real.exp (Real.exp a) ≤
+        max (Real.exp (Real.exp a)) (Real.exp (Real.log b + (1+1))) :=
+    le_max_left _ _
+  have h_explog_le_inner :
+      Real.exp (Real.log b + (1+1)) ≤
+        max (Real.exp (Real.exp a)) (Real.exp (Real.log b + (1+1))) :=
+    le_max_right _ _
+  have h_expexp_a_le :
+      Real.exp (Real.exp a) ≤
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) :=
+    Real.le_trans h_expexp_a_le_inner h_inner_le
+  have h_explog_le :
+      Real.exp (Real.log b + (1+1)) ≤
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) :=
+    Real.le_trans h_explog_le_inner h_inner_le
+  -- x_0 > 0:
+  have h_explog_pos : (0 : Real) < Real.exp (Real.log b + (1+1)) :=
+    Real.exp_pos _
+  have h_x_0_pos :
+      (0 : Real) <
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) :=
+    Real.lt_of_lt_of_le h_explog_pos h_explog_le
+  -- Apply hN at x_0:
+  have h_eval :
+      (EMLTree.eml (EMLTree.eml .var (.const b))
+                   (EMLTree.eml (.const a) .var)).eval
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1))))) =
+      1 /
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) := hN _ hN_le
+  simp only [EMLTree.eval] at h_eval
+  -- h_eval : exp(exp x_0 - log b) - log(exp a - log x_0) = 1/x_0
+  rw [log_inner_zero_at_exp_exp_local a _ h_expexp_a_le] at h_eval
+  rw [Real.sub_def, Real.neg_zero, Real.add_zero] at h_eval
+  -- h_eval : exp(exp x_0 - log b) = 1/x_0
+  -- Show: exp x_0 > 0 contradicts the chain.
+  -- Easier route: substitute 1/x_0 = exp(-log x_0).
+  rw [show (1 : Real) /
+        max N (max (Real.exp (Real.exp a))
+                   (Real.exp (Real.log b + (1+1)))) =
+        Real.exp (- Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1)))))) from
+      by rw [Real.exp_neg_inv, Real.exp_log h_x_0_pos]] at h_eval
+  -- h_eval : exp(exp x_0 - log b) = exp(-log x_0)
+  -- exp injectivity: exp x_0 - log b = -log x_0.
+  have h_arg_eq :
+      Real.exp
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1))))) -
+      Real.log b =
+      - Real.log
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1))))) := by
+    rcases Real.lt_total
+      (Real.exp
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1))))) -
+        Real.log b)
+      (- Real.log
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1)))))) with hlt | heq | hgt
+    · have h := Real.exp_lt hlt
+      rw [h_eval] at h
+      exact absurd h (Real.lt_irrefl_ax _)
+    · exact heq
+    · have h := Real.exp_lt hgt
+      rw [h_eval] at h
+      exact absurd h (Real.lt_irrefl_ax _)
+  -- h_arg_eq : exp x_0 - log b = -log x_0
+  -- Rearrange to: exp x_0 = log b - log x_0.
+  -- Then bound: log b - log x_0 < 0 from log x_0 ≥ log b + 1+1.
+  -- But exp x_0 > 0. Contradiction.
+  have h_log_lt :
+      Real.log b + (1+1) ≤
+        Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))) := by
+    -- log_lt_log on x_0 ≥ exp(log b + 1+1) AND log_exp.
+    rcases (Real.le_iff_lt_or_eq
+            (Real.exp (Real.log b + (1+1)))
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1)))))).mp
+        h_explog_le with hlt | heq
+    · have := Real.log_lt_log h_explog_pos hlt
+      rw [Real.log_exp] at this
+      exact Real.le_of_lt this
+    · rw [← heq, Real.log_exp]
+      exact Real.le_refl _
+  -- Now derive exp x_0 = log b - log x_0:
+  -- h_arg_eq : exp x_0 - log b = -log x_0
+  -- ⟹ exp x_0 = log b - log x_0 (by add log b)
+  have h_exp_eq_diff :
+      Real.exp
+        (max N (max (Real.exp (Real.exp a))
+                    (Real.exp (Real.log b + (1+1))))) =
+      Real.log b -
+        Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))) := by
+    -- Add log b to both sides of h_arg_eq.
+    have step :
+        (Real.exp _ - Real.log b) + Real.log b =
+        (-Real.log _) + Real.log b :=
+      congrArg (fun y => y + Real.log b) h_arg_eq
+    rw [Real.sub_def] at step
+    rw [Real.add_assoc] at step
+    rw [Real.neg_add_self] at step
+    rw [Real.add_zero] at step
+    rw [Real.add_comm
+        (-Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))))
+        (Real.log b)] at step
+    rw [← Real.sub_def] at step
+    exact step
+  -- exp x_0 > 0:
+  have h_exp_pos :
+      (0 : Real) <
+        Real.exp
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))) :=
+    Real.exp_pos _
+  -- log b - log x_0 < 0:
+  -- log x_0 ≥ log b + (1+1) ⟹ log b - log x_0 ≤ log b - (log b + 1+1) = -(1+1) < 0.
+  have h_diff_neg :
+      Real.log b -
+        Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))) < 0 := by
+    -- From h_log_lt: log b + (1+1) ≤ log x_0, so log b ≤ log x_0 - (1+1) ≤ log x_0.
+    -- We want log b - log x_0 < 0, i.e., log b < log x_0.
+    -- log x_0 ≥ log b + (1+1) > log b + 0 = log b (since 1+1 > 0).
+    have h_logb_lt :
+        Real.log b <
+          Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) := by
+      have step : Real.log b + 0 < Real.log b + (1+1) := by
+        have h_pos : (0 : Real) < 1+1 := Real.add_pos
+          Real.zero_lt_one_ax Real.zero_lt_one_ax
+        exact Real.add_lt_add_left h_pos _
+      rw [Real.add_zero] at step
+      exact Real.lt_of_lt_of_le step h_log_lt
+    -- log b < log x_0 ⟹ log b - log x_0 < 0.
+    rw [Real.sub_def]
+    have step :
+        Real.log b +
+          -Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) <
+        Real.log
+          (max N (max (Real.exp (Real.exp a))
+                      (Real.exp (Real.log b + (1+1))))) +
+          -Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) := by
+      have h_addleft :
+          -Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) +
+          Real.log b <
+          -Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) +
+          Real.log
+            (max N (max (Real.exp (Real.exp a))
+                        (Real.exp (Real.log b + (1+1))))) :=
+        Real.add_lt_add_left h_logb_lt _
+      rw [Real.add_comm
+          (-Real.log _) (Real.log b)] at h_addleft
+      rw [Real.add_comm
+          (-Real.log _) (Real.log _)] at h_addleft
+      exact h_addleft
+    rw [Real.add_neg] at step
+    exact step
+  -- Combine: exp x_0 > 0 AND exp x_0 = log b - log x_0 < 0. Contradiction.
+  rw [h_exp_eq_diff] at h_exp_pos
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_exp_pos h_diff_neg)
+
+/-! ## Phase 3 Pattern C: EventuallyMinusLog predicate (setup only)
+
+For shapes where `eval x ~ -log x` asymptotically (e.g.,
+`eml(const c, eml(var, _))` with non-trivial inner), we need a
+predicate capturing the eventually-minus-log behavior. Phase 3
+sets up the predicate + disjointness from `EventuallyKOverX 1`;
+specific closure theorems using it remain Phase 4 work. -/
+
+/-- `f` is eventually `-log x`: there exists `N` such that
+`f x = -log x` for all `x ≥ N`. -/
+def EventuallyMinusLog (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → f x = -Real.log x
+
+/-- `EventuallyMinusLog` is disjoint from `EventuallyKOverX 1`:
+no function can satisfy both. Because `-log x` and `1/x` differ
+at any specific x (in particular, sign disagreement for x > 1). -/
+theorem EventuallyMinusLog.not_eventually_K_over_x_one
+    {f : Real → Real} (hf : EventuallyMinusLog f) :
+    ¬ EventuallyKOverX 1 f := by
+  obtain ⟨N, hN⟩ := hf
+  intro ⟨N', hN'⟩
+  -- Sample at x_0 = max N (max N' (1+1)). x_0 ≥ 1+1 > 1 > 0.
+  -- f x_0 = -log x_0 (from hN).
+  -- f x_0 = 1/x_0 (from hN').
+  -- So -log x_0 = 1/x_0.
+  -- log x_0 > 0 (since x_0 > 1), so -log x_0 < 0.
+  -- 1/x_0 > 0 (one_div_pos_of_pos with x_0 > 0).
+  -- So 0 < 1/x_0 = -log x_0 < 0, contradiction.
+  have hN_le : N ≤ max N (max N' (1+1)) := le_max_left _ _
+  have h_inner_le : max N' (1+1) ≤ max N (max N' (1+1)) := le_max_right _ _
+  have hN'_le : N' ≤ max N (max N' (1+1)) :=
+    Real.le_trans (le_max_left _ _) h_inner_le
+  have h_two_le : (1+1 : Real) ≤ max N (max N' (1+1)) :=
+    Real.le_trans (le_max_right _ _) h_inner_le
+  have h_one_lt_two : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  have h_one_lt : (1 : Real) < max N (max N' (1+1)) :=
+    Real.lt_of_lt_of_le h_one_lt_two h_two_le
+  have h_pos : (0 : Real) < max N (max N' (1+1)) :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_one_lt
+  -- f x_0 = -log x_0 AND f x_0 = 1/x_0:
+  have h_minus_log : f (max N (max N' (1+1))) =
+                     -Real.log (max N (max N' (1+1))) := hN _ hN_le
+  have h_inv : f (max N (max N' (1+1))) = 1 / max N (max N' (1+1)) := hN' _ hN'_le
+  have h_eq : -Real.log (max N (max N' (1+1))) =
+              1 / max N (max N' (1+1)) := h_minus_log.symm.trans h_inv
+  -- 1/x_0 > 0:
+  have h_inv_pos : (0 : Real) < 1 / max N (max N' (1+1)) :=
+    Real.one_div_pos_of_pos h_pos
+  -- -log x_0 < 0 because log x_0 > 0 (from x_0 > 1 + log_lt_log).
+  have h_log_pos : (0 : Real) < Real.log (max N (max N' (1+1))) := by
+    have := Real.log_lt_log Real.zero_lt_one_ax h_one_lt
+    rw [show Real.log 1 = 0 from Real.log_one] at this
+    exact this
+  have h_neg_log_neg : -Real.log (max N (max N' (1+1))) < 0 := by
+    -- From 0 < log x_0: by add_lt_add_left with c = -log x_0:
+    --   -log x_0 + 0 < -log x_0 + log x_0 = 0.
+    have step :
+        -Real.log (max N (max N' (1+1))) + 0 <
+        -Real.log (max N (max N' (1+1))) +
+          Real.log (max N (max N' (1+1))) :=
+      Real.add_lt_add_left h_log_pos _
+    rw [Real.neg_add_self, Real.add_zero] at step
+    exact step
+  -- Combine: 0 < 1/x_0 = -log x_0 < 0, contradicting lt_irrefl.
+  rw [← h_eq] at h_inv_pos
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_inv_pos h_neg_log_neg)
+
 /-! ## Phase 2 (depth-2 starter): the clamp-trigger eventually-constant pattern
 
 For depth-2 EMLTrees with shape
