@@ -46,6 +46,7 @@ import MachLib.EMLPfaffian
 import MachLib.CosNotInEMLAnyDepth
 import MachLib.LambertW
 import MachLib.EMLAdditionClosureFailure
+import MachLib.EMLDifferentiationClosureFailure
 import MachLib.Asymptotics
 import MachLib.EMLAsymptoticBound
 import MachLib.EMLHierarchyIterExp
