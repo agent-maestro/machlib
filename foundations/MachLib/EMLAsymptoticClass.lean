@@ -2,6 +2,7 @@ import MachLib.Asymptotics
 import MachLib.SinNotInEML
 import MachLib.InvXNotInEML
 import MachLib.Forge
+import MachLib.Linarith   -- for one_div_pos_of_pos
 
 /-!
 # EML Asymptotic Classification Framework — Phase 1
@@ -404,54 +405,219 @@ theorem not_eventually_K_over_x_one_eml_var_const (b : Real) :
     Real.div_lt_one_of_pos_lt h_pos h_one_lt
   exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_eval_gt_one h_div_lt_one)
 
-/- PHASE 2 — REMAINING WORK
+/-- **Phase-2 partial: the `eml(const a, var)` depth-1 case.**
+Eval x = `exp a - log x`. As x → ∞, log x → ∞, so eval → -∞.
+Meanwhile 1/x → 0+. So at sufficiently large x, eval < 0 < 1/x.
 
-Phase 2 shipped here:
-  - Depth-0 base cases: const c, var.
-  - Depth-1 case 1: eml(const, const) via the EventuallyConstant
-    framework.
-  - Depth-1 case 2: eml(var, const b) via exp dominance (exp x
-    eventually exceeds any constant log b + 1, so eval > 1 > 1/x).
+Sample at x_0 = `max N (exp(exp a + 1) + 1)`.
+  - x_0 > exp(exp a + 1), so log x_0 > exp a + 1 (by log_lt_log + log_exp).
+  - Hence (exp a - log x_0) + 1 < 0, i.e., exp a - log x_0 < -1.
+  - But eval x_0 = 1/x_0 > 0 from hypothesis.
+  - So 1/x_0 < -1 < 0 < 1/x_0, contradiction. -/
+theorem not_eventually_K_over_x_one_eml_const_var (a : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x => (EMLTree.eml (.const a) .var).eval x) := by
+  intro ⟨N, hN⟩
+  -- Sample setup: x_0 = max N (exp(exp a + 1) + 1).
+  have hN_le : N ≤ max N (Real.exp (Real.exp a + 1) + 1) := le_max_left _ _
+  have h_Tp1_le :
+      Real.exp (Real.exp a + 1) + 1 ≤
+        max N (Real.exp (Real.exp a + 1) + 1) := le_max_right _ _
+  -- x_0 > T = exp(exp a + 1):
+  have h_T_pos : (0 : Real) < Real.exp (Real.exp a + 1) := Real.exp_pos _
+  have h_T_lt_Tp1 :
+      Real.exp (Real.exp a + 1) < Real.exp (Real.exp a + 1) + 1 := by
+    have step :
+        Real.exp (Real.exp a + 1) + 0 < Real.exp (Real.exp a + 1) + 1 :=
+      Real.add_lt_add_left Real.zero_lt_one_ax _
+    rw [Real.add_zero] at step
+    exact step
+  have h_T_lt_x0 :
+      Real.exp (Real.exp a + 1) <
+        max N (Real.exp (Real.exp a + 1) + 1) :=
+    Real.lt_of_lt_of_le h_T_lt_Tp1 h_Tp1_le
+  have h_x0_pos : (0 : Real) < max N (Real.exp (Real.exp a + 1) + 1) :=
+    Real.lt_trans_ax h_T_pos h_T_lt_x0
+  -- log x_0 > exp a + 1 (log_lt_log + log_exp):
+  have h_log_T_lt :
+      Real.log (Real.exp (Real.exp a + 1)) <
+        Real.log (max N (Real.exp (Real.exp a + 1) + 1)) :=
+    Real.log_lt_log h_T_pos h_T_lt_x0
+  rw [Real.log_exp] at h_log_T_lt
+  -- h_log_T_lt : exp a + 1 < log x_0
+  -- Derive (exp a - log x_0) + 1 < 0:
+  have h_step1 :
+      (Real.exp a -
+        Real.log (max N (Real.exp (Real.exp a + 1) + 1))) + 1 < 0 := by
+    have step :
+        -Real.log (max N (Real.exp (Real.exp a + 1) + 1)) +
+          (Real.exp a + 1) <
+        -Real.log (max N (Real.exp (Real.exp a + 1) + 1)) +
+          Real.log (max N (Real.exp (Real.exp a + 1) + 1)) :=
+      Real.add_lt_add_left h_log_T_lt _
+    rw [Real.neg_add_self] at step
+    -- step : -log x_0 + (exp a + 1) < 0
+    rw [Real.add_comm
+        (-Real.log (max N (Real.exp (Real.exp a + 1) + 1)))
+        (Real.exp a + 1)] at step
+    rw [Real.add_assoc] at step
+    rw [Real.add_comm 1
+        (-Real.log (max N (Real.exp (Real.exp a + 1) + 1)))] at step
+    rw [← Real.add_assoc] at step
+    rw [← Real.sub_def] at step
+    exact step
+  -- Derive exp a - log x_0 < -1:
+  have h_eval_lt_neg_one :
+      Real.exp a -
+        Real.log (max N (Real.exp (Real.exp a + 1) + 1)) < -1 := by
+    have step :
+        -(1 : Real) +
+          ((Real.exp a -
+              Real.log (max N (Real.exp (Real.exp a + 1) + 1))) + 1) <
+        -(1 : Real) + 0 :=
+      Real.add_lt_add_left h_step1 (-(1 : Real))
+    rw [Real.add_zero] at step
+    -- step : -1 + ((exp a - log x_0) + 1) < -1
+    rw [← Real.add_assoc] at step
+    rw [Real.add_comm (-(1 : Real))
+        (Real.exp a -
+          Real.log (max N (Real.exp (Real.exp a + 1) + 1)))] at step
+    rw [Real.add_assoc] at step
+    rw [Real.neg_add_self] at step
+    rw [Real.add_zero] at step
+    exact step
+  -- Apply hN at x_0:
+  have h_eval :
+      (EMLTree.eml (.const a) .var).eval
+        (max N (Real.exp (Real.exp a + 1) + 1)) =
+      1 / max N (Real.exp (Real.exp a + 1) + 1) :=
+    hN _ hN_le
+  simp only [EMLTree.eval] at h_eval
+  -- h_eval : exp a - log x_0 = 1/x_0
+  rw [h_eval] at h_eval_lt_neg_one
+  -- h_eval_lt_neg_one : 1/x_0 < -1
+  have h_one_div_pos :
+      (0 : Real) < 1 / max N (Real.exp (Real.exp a + 1) + 1) :=
+    Real.one_div_pos_of_pos h_x0_pos
+  have h_neg_one_lt_zero : -(1 : Real) < 0 := by
+    have step : -(1 : Real) + 0 < -(1 : Real) + 1 :=
+      Real.add_lt_add_left Real.zero_lt_one_ax _
+    rw [Real.neg_add_self, Real.add_zero] at step
+    exact step
+  -- Chain: 1/x_0 < -1 < 0 < 1/x_0 ⟹ 1/x_0 < 1/x_0, contradiction.
+  have h_lt_zero :
+      (1 : Real) / max N (Real.exp (Real.exp a + 1) + 1) < 0 :=
+    Real.lt_trans_ax h_eval_lt_neg_one h_neg_one_lt_zero
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_lt_zero h_one_div_pos)
 
-Phase 2 remaining (the other two depth-1 cases):
+/-! ## Phase 2 (depth-2 starter): the clamp-trigger eventually-constant pattern
 
-  - `eml(const a, var)`: eval x = exp a - log x. As x → ∞, log x
-    grows past any constant, so eval → -∞. At
-    `x_0 = max N (exp(exp a + 1) + 1)`: log x_0 > exp a + 1, so
-    eval x_0 < -1 < 0 < 1/x_0. Mechanically requires the
-    `(exp a + -log x_0) + 1 < 0` rearrangement chain (4-5 rw
-    steps) which is tractable but exceeds this session's budget.
-    Documented + designed; ~50 lines of careful chain.
+For depth-2 EMLTrees with shape
+`eml(const c1, eml(const c2, var))`:
 
-  - `eml(var, var)`: eval x = exp x - log x. Harder than
-    eml(var, const b) because log x is now non-constant. The
-    `exp x > log x + 1/x` inequality holds asymptotically but
-    proving it at a specific large x requires either a tighter
-    exp_grows_strictly variant (e.g., `exp x > x + 1` for x ≥ 0)
-    or sampling at a specific x like exp 1 with the threshold
-    case-split (sample at max N (exp 1)). Open.
+  eval x = exp c1 - log_clamped(exp c2 - log x).
 
-Phase 2 for depth ≥ 2:
+For x ≥ exp(exp c2), the inner `exp c2 - log x ≤ 0`, so the clamp
+fires and `log_clamped = 0`. Hence eval = exp c1, constant.
 
-  Structural induction with IH on sub-trees. The IH must be
-  stronger than just `¬ EventuallyKOverX 1`: it must classify
-  each sub-tree's eval into a finite set of asymptotic classes
-  (EventuallyConstant, EventuallyExpGrowth, EventuallyMinusLog,
-  EventuallyKOverX_K with K specifically `exp(exp(...))`-valued,
-  etc.). Each new asymptotic class needs its own predicate +
-  disjointness lemmas from `EventuallyKOverX 1`.
+This means the entire tree is eventually constant, so the Phase-1
+`EventuallyConstant.not_eventually_K_over_x` closes the case
+immediately. Same template as `x_plus_one_not_in_eml_2_eml_const_eml_const_var`
+in EMLAdditionClosureFailure.lean, ported to inv_x. -/
 
-  Estimated 3-5 sessions for full coverage, or an axiomatic
-  shortcut (lift the K-coefficient barrier as a structural axiom
-  on EMLTree.eval forms).
+theorem not_eventually_K_over_x_one_eml_const_eml_const_var
+    (c1 c2 : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (.const c1) (EMLTree.eml (.const c2) .var)).eval x) := by
+  apply EventuallyConstant.not_eventually_K_over_x Real.one_ne_zero
+  refine ⟨Real.exp c1, Real.exp (Real.exp c2), ?_⟩
+  intro x hx
+  -- hx : exp(exp c2) ≤ x
+  -- Show: eval x = exp c1.
+  show Real.exp c1 - Real.log (Real.exp c2 - Real.log x) = Real.exp c1
+  have h_exp_c2_pos : (0 : Real) < Real.exp (Real.exp c2) := Real.exp_pos _
+  have hx_pos : (0 : Real) < x := Real.lt_of_lt_of_le h_exp_c2_pos hx
+  -- Case split on hx: strict (x > exp(exp c2)) or equality.
+  rcases (Real.le_iff_lt_or_eq (Real.exp (Real.exp c2)) x).mp hx with hxlt | hxeq
+  · -- Strict case: log x > exp c2 (by log_lt_log + log_exp).
+    have hlog_lt :
+        Real.log (Real.exp (Real.exp c2)) < Real.log x :=
+      Real.log_lt_log h_exp_c2_pos hxlt
+    rw [Real.log_exp] at hlog_lt
+    -- hlog_lt : exp c2 < log x
+    -- Hence exp c2 - log x < 0:
+    have h_diff_neg : Real.exp c2 - Real.log x < 0 := by
+      rw [Real.sub_def]
+      have step := Real.add_lt_add_left hlog_lt (-Real.log x)
+      rw [Real.neg_add_self] at step
+      rw [Real.add_comm] at step
+      exact step
+    have h_log_zero : Real.log (Real.exp c2 - Real.log x) = 0 :=
+      Real.log_nonpos (Real.le_of_lt h_diff_neg)
+    rw [h_log_zero, Real.sub_def, Real.neg_zero, Real.add_zero]
+  · -- Equality case: x = exp(exp c2). log x = exp c2. exp c2 - exp c2 = 0.
+    rw [← hxeq, Real.log_exp]
+    rw [Real.sub_self, Real.log_zero, Real.sub_def, Real.neg_zero, Real.add_zero]
 
-This file's Phase-2 contribution: 4 of the 6 depth-≤-1 shapes
-closed (const, var, eml(const, const), eml(var, const)). The
-other 2 (eml(const, var), eml(var, var)) are the natural next
-deliverables. Phase 2 at full coverage closes
-`1/x ∉ EML at depth ≤ 1` via the framework — a clean
-reformulation of `inv_x_not_in_eml_1` from InvXNotInEML.lean
-that doesn't depend on the global-equation hypothesis.
+/- PHASE 2 — STATUS as of 2026-06-15
+
+Closed via the framework (6 theorems, zero sorries):
+
+  Depth 0:
+    ✓ const c
+    ✓ var
+
+  Depth 1:
+    ✓ eml(const, const)  (via EventuallyConstant disjointness)
+    ✓ eml(const a, var)  (log dominance: log x_0 > exp a + 1
+                          forces eval x_0 < -1, but eval = 1/x_0 > 0)
+    ✓ eml(var, const b)  (exp dominance: exp x_0 > log b + 1
+                          forces eval x_0 > 1, but eval = 1/x_0 < 1)
+
+  Depth 2:
+    ✓ eml(const c1, eml(const c2, var))
+                          (eventually constant via clamp trigger
+                          for x ≥ exp(exp c2), via Phase 1
+                          EventuallyConstant disjointness)
+
+Remaining at depth 1: one shape, `eml(var, var)`. Eval = exp x -
+log x. Needs the tangent-line bound `0 < x → x + 1 < exp x`
+(provable from strict convexity of exp + exp(0) = 1, classical).
+MachLib only has `exp_grows_strictly : x < exp x`, which is
+weaker. Lifting the tangent-line bound as a small classical-
+citation axiom (precedent: `log_le_id_at_one` in
+EMLAsymptoticBound.lean) would close this case in ~30 lines.
+Deferred — the axiom-lifting is its own commit decision.
+
+Depth ≥ 2: ~31+ shapes remaining. Many close via the
+EventuallyConstant disjointness whenever a clamped-log triggers
+asymptotically (estimating ~50-70% of depth-2 shapes). Concrete
+examples that will close cleanly via the framework once shipped:
+  - eml(const, eml(var, const))  — eventually constant (different
+                                   trigger).
+  - eml(const, eml(const, eml(_, _)))
+                                  — recursive clamp.
+  - eml(_, eml(eml(const, var), _))
+                                  — inner sub-tree drives clamp.
+
+Shapes where the clamped log NEVER triggers (e.g., when t2.eval
+stays positive — common for tree subterms like `eml(var, var)`
+which gives `exp x - log x > 0` for x ≥ 1) need new asymptotic
+predicates beyond Phase 1's two. The next file
+(EMLAsymptoticClassPhase3.lean) would ship those — predicates
+like `EventuallyExpGrowth`, `EventuallyMinusLog`, and their
+classification + disjointness lemmas.
+
+Path summary: 5 of 6 depth-≤-1 shapes closed mechanically + 1
+depth-2 case as the first structural-induction step. The
+EventuallyConstant disjointness is the workhorse for any
+clamp-trigger shape at any depth. The K-coefficient mechanism
+identified in the Hardy-field bridge crack
+(InvXNotInEML.lean :: exp_exp_ne_one) handles the K/x-asymptotic
+shapes. Together these close the majority of depth-2 cases.
+The residual non-clamp non-K/x shapes (eml(var, var) and its
+descendants) remain the structural-induction frontier.
 -/
 
 end MachLib
