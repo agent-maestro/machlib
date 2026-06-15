@@ -48,6 +48,7 @@ import MachLib.LambertW
 import MachLib.EMLAdditionClosureFailure
 import MachLib.EMLDifferentiationClosureFailure
 import MachLib.InvXNotInEML
+import MachLib.EMLAsymptoticClass
 import MachLib.Asymptotics
 import MachLib.EMLAsymptoticBound
 import MachLib.EMLHierarchyIterExp
