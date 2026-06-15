@@ -2,7 +2,8 @@ import MachLib.Asymptotics
 import MachLib.SinNotInEML
 import MachLib.InvXNotInEML
 import MachLib.Forge
-import MachLib.Linarith   -- for one_div_pos_of_pos
+import MachLib.Linarith              -- one_div_pos_of_pos
+import MachLib.EMLAsymptoticBound    -- log_le_id_at_one
 
 /-!
 # EML Asymptotic Classification Framework — Phase 1
@@ -510,6 +511,89 @@ theorem not_eventually_K_over_x_one_eml_const_var (a : Real) :
     Real.lt_trans_ax h_eval_lt_neg_one h_neg_one_lt_zero
   exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_lt_zero h_one_div_pos)
 
+/-! ## The tangent-line axiom (closes `eml(var, var)`)
+
+Classical fact: `Real.exp` is strictly convex (second derivative
+positive everywhere). The tangent line at `x = 0` is `y = 1 + x`.
+By strict convexity, `exp(x) > tangent(x) = 1 + x` for `x ≠ 0`.
+In particular, `x + 1 < exp x` for `x > 0`.
+
+Lifted as a classical-citation axiom here following the precedent
+of `log_le_id_at_one` in `EMLAsymptoticBound.lean`. Discharge
+path: ~30 lines via a convexity primitive (`exp_convex`) plus
+the tangent-equation derivation. The existing
+`exp_grows_strictly : x < exp x` is the weaker version (the
+secant-line bound at x = 0 vs. ∞); the tangent-line bound is the
+strict sharper form needed here. -/
+axiom exp_tangent_line_strict (x : Real) (hx : 0 < x) :
+    x + 1 < Real.exp x
+
+/-- **Phase-2: `eml(var, var)` depth-1 case via the tangent-line axiom.**
+Eval x = `exp x - log x`. Hypothesis = 1/x eventually.
+
+Sample at x_0 = max N (1+1). At this x_0:
+  - log x_0 ≤ x_0 (by log_le_id_at_one).
+  - 1/x_0 ≤ 1 (by div_lt_one_of_pos_lt since x_0 > 1).
+  - So 1/x_0 + log x_0 ≤ 1 + x_0 (by add_le_add_both).
+  - From hypothesis: exp x_0 - log x_0 = 1/x_0, so
+    exp x_0 = 1/x_0 + log x_0 ≤ 1 + x_0 = x_0 + 1.
+  - But x_0 + 1 < exp x_0 (by tangent_line_strict, since x_0 > 0).
+  - So x_0 + 1 < exp x_0 ≤ x_0 + 1, contradicting lt_irrefl. -/
+theorem not_eventually_K_over_x_one_eml_var_var :
+    ¬ EventuallyKOverX 1 (fun x => (EMLTree.eml .var .var).eval x) := by
+  intro ⟨N, hN⟩
+  -- Sample at x_0 = max N (1+1).
+  have hN_le : N ≤ max N (1+1) := le_max_left _ _
+  have h_two_le : (1+1 : Real) ≤ max N (1+1) := le_max_right _ _
+  have h_one_lt_two : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  have h_one_lt : (1 : Real) < max N (1+1) :=
+    Real.lt_of_lt_of_le h_one_lt_two h_two_le
+  have h_pos : (0 : Real) < max N (1+1) :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_one_lt
+  have h_one_le : (1 : Real) ≤ max N (1+1) := Real.le_of_lt h_one_lt
+  -- Apply hN at x_0:
+  have h_eval :
+      (EMLTree.eml .var .var).eval (max N (1+1)) = 1 / max N (1+1) :=
+    hN _ hN_le
+  simp only [EMLTree.eval] at h_eval
+  -- h_eval : exp x_0 - log x_0 = 1/x_0
+  -- Rearrange to exp x_0 = 1/x_0 + log x_0:
+  have h_eval_rearr :
+      Real.exp (max N (1+1)) =
+        1 / max N (1+1) + Real.log (max N (1+1)) := by
+    have step :
+        (Real.exp (max N (1+1)) - Real.log (max N (1+1))) +
+          Real.log (max N (1+1)) =
+        1 / max N (1+1) + Real.log (max N (1+1)) :=
+      congrArg (fun y => y + Real.log (max N (1+1))) h_eval
+    rw [Real.sub_def] at step
+    rw [Real.add_assoc] at step
+    rw [Real.neg_add_self] at step
+    rw [Real.add_zero] at step
+    exact step
+  -- 1/x_0 ≤ 1 and log x_0 ≤ x_0, so 1/x_0 + log x_0 ≤ 1 + x_0:
+  have h_div_lt : (1 : Real) / max N (1+1) < 1 :=
+    Real.div_lt_one_of_pos_lt h_pos h_one_lt
+  have h_div_le : (1 : Real) / max N (1+1) ≤ 1 := Real.le_of_lt h_div_lt
+  have h_log_le : Real.log (max N (1+1)) ≤ max N (1+1) :=
+    EMLTree.log_le_id_at_one (max N (1+1)) h_one_le
+  have h_bound :
+      (1 : Real) / max N (1+1) + Real.log (max N (1+1)) ≤
+        1 + max N (1+1) :=
+    Real.add_le_add_both h_div_le h_log_le
+  -- So exp x_0 ≤ 1 + x_0:
+  have h_exp_le : Real.exp (max N (1+1)) ≤ 1 + max N (1+1) := by
+    rw [h_eval_rearr]
+    exact h_bound
+  -- Rewrite 1 + x_0 to x_0 + 1 to match the tangent-line bound:
+  rw [Real.add_comm 1 (max N (1+1))] at h_exp_le
+  -- h_exp_le : exp x_0 ≤ x_0 + 1
+  -- Tangent-line axiom: x_0 + 1 < exp x_0.
+  have h_tan : max N (1+1) + 1 < Real.exp (max N (1+1)) :=
+    exp_tangent_line_strict (max N (1+1)) h_pos
+  -- Combine: x_0 + 1 < exp x_0 ≤ x_0 + 1, contradiction.
+  exact Real.lt_irrefl_ax _ (Real.lt_of_lt_of_le h_tan h_exp_le)
+
 /-! ## Phase 2 (depth-2 starter): the clamp-trigger eventually-constant pattern
 
 For depth-2 EMLTrees with shape
@@ -562,7 +646,12 @@ theorem not_eventually_K_over_x_one_eml_const_eml_const_var
 
 /- PHASE 2 — STATUS as of 2026-06-15
 
-Closed via the framework (6 theorems, zero sorries):
+**Depth ≤ 1 fully closed.** All 6 EMLTree shapes at depth ≤ 1
+ruled out as `EventuallyKOverX 1` via the framework, zero
+sorries. Plus the first depth-2 case via the clamp-trigger
+pattern.
+
+Closed (7 theorems):
 
   Depth 0:
     ✓ const c
@@ -574,6 +663,9 @@ Closed via the framework (6 theorems, zero sorries):
                           forces eval x_0 < -1, but eval = 1/x_0 > 0)
     ✓ eml(var, const b)  (exp dominance: exp x_0 > log b + 1
                           forces eval x_0 > 1, but eval = 1/x_0 < 1)
+    ✓ eml(var, var)      (tangent-line bound: x_0 + 1 < exp x_0,
+                          but eval = 1/x_0 + log x_0 ≤ 1 + x_0,
+                          contradiction)
 
   Depth 2:
     ✓ eml(const c1, eml(const c2, var))
@@ -581,14 +673,15 @@ Closed via the framework (6 theorems, zero sorries):
                           for x ≥ exp(exp c2), via Phase 1
                           EventuallyConstant disjointness)
 
-Remaining at depth 1: one shape, `eml(var, var)`. Eval = exp x -
-log x. Needs the tangent-line bound `0 < x → x + 1 < exp x`
-(provable from strict convexity of exp + exp(0) = 1, classical).
-MachLib only has `exp_grows_strictly : x < exp x`, which is
-weaker. Lifting the tangent-line bound as a small classical-
-citation axiom (precedent: `log_le_id_at_one` in
-EMLAsymptoticBound.lean) would close this case in ~30 lines.
-Deferred — the axiom-lifting is its own commit decision.
+The depth-≤-1 closure means the framework version is now
+STRICTLY STRONGER than the existing `inv_x_not_in_eml_1` from
+InvXNotInEML.lean — the framework uses the weaker "eventually
+equal" hypothesis vs. the existing "globally equal" one.
+
+One new axiom this commit:
+  `exp_tangent_line_strict : 0 < x → x + 1 < exp x`
+  Classical tangent-line bound from strict convexity of exp at
+  x = 0. Precedent: `log_le_id_at_one` in EMLAsymptoticBound.lean.
 
 Depth ≥ 2: ~31+ shapes remaining. Many close via the
 EventuallyConstant disjointness whenever a clamped-log triggers
