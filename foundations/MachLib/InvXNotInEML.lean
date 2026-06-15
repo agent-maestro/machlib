@@ -305,4 +305,191 @@ theorem inv_x_not_in_eml_2_all_constants
   simp only [EMLTree.eval] at h1 h_e
   exact inv_x_1_ne_exp_1 (h1.symm.trans h_e)
 
+/-! ## The K-coefficient structural lemma
+
+This is the load-bearing structural mechanism for ruling out `inv_x`
+in K/x-asymptotic shapes at every depth.
+
+**Claim.** Any depth-2 EMLTree shape that produces `eval x = K/x +
+log_term` for constant K, when evaluated at appropriate x, forces
+`K = 1`. But in every such shape, K has the form `exp(exp(...))`
+where the inner `exp(...)` is strictly positive (by `exp_pos`), so
+`K = exp(strictly-positive) > exp(0) = 1` (by `exp_lt`). Hence
+`K ≠ 1` and the shape cannot represent `inv_x`.
+
+The helper `exp_exp_ne_one` packages this: `exp(exp a) ≠ 1` for any
+`a : Real`. Used by depth-2 K/x cases below. -/
+
+/-- For any real `a`, `exp(exp a) > 1`. Strict, because `exp a > 0`
+(by `exp_pos`) and `exp` is strictly monotone with `exp 0 = 1`. -/
+private theorem one_lt_exp_exp (a : Real) : 1 < Real.exp (Real.exp a) := by
+  have h_exp_a_pos : (0 : Real) < Real.exp a := Real.exp_pos a
+  have h_strict : Real.exp 0 < Real.exp (Real.exp a) := Real.exp_lt h_exp_a_pos
+  rw [Real.exp_zero] at h_strict
+  exact h_strict
+
+/-- `exp(exp a) ≠ 1` for any `a : Real`. The closure key for K/x-shaped
+depth-2 EMLTrees. -/
+private theorem exp_exp_ne_one (a : Real) : Real.exp (Real.exp a) ≠ 1 :=
+  Real.ne_of_gt (one_lt_exp_exp a)
+
+/-! ## Depth-2 case: `eml(eml(const a, var), const 1)` — exact K/x
+
+This shape evaluates to `exp(exp(a) - log(x)) - log(1) = exp(exp(a) -
+log(x)) - 0 = exp(exp(a))/x` for all `x > 0` (using
+`exp_neg_inv`-style identity `exp(c - log x) = exp(c)/x`).
+
+For this to equal `1/x` everywhere, we'd need `exp(exp(a)) = 1`,
+which `exp_exp_ne_one` rules out.
+
+Sample at x = 1: log 1 = 0, so eval 1 = exp(exp(a)). Target inv_x 1 = 1.
+So exp(exp(a)) = 1, refuted by `exp_exp_ne_one`. -/
+theorem inv_x_not_in_eml_2_eml_const_var_const_one (a : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (EMLTree.eml (.const a) .var) (.const 1)).eval x = inv_x x) := by
+  intro hsum
+  have h1 := hsum 1
+  simp only [EMLTree.eval, Real.log_one, Real.sub_zero, inv_x] at h1
+  rw [one_div_one_eq_one] at h1
+  -- h1 : exp(exp a) = 1
+  exact exp_exp_ne_one a h1
+
+/-! ## Depth-2 case: `eml(eml(const a, var), eml(const a', var))` — K/x via inner clamp
+
+Evaluates to `exp(exp(a) - log x) - log_clamped(exp(a') - log x)`.
+For x ≥ exp(exp a'), the inner `exp(a') - log x ≤ 0` so the clamped
+log gives 0. Then eval = `exp(exp(a))/x` for x large.
+
+Sample at x = exp(exp a'): get exp(a') - exp(a') = 0 inside the clamped
+log, which is `log 0 = 0`. Then eval = `exp(exp(a) - exp(a'))`. Target
+inv_x (exp(exp a')) = 1/(exp(exp a')) = exp(-exp(a')) via exp_neg_inv.
+So `exp(exp(a) - exp(a')) = exp(-exp(a'))`. By exp injectivity (via
+`exp_injective` or strict-monotonicity), `exp(a) - exp(a') = -exp(a')`,
+hence `exp(a) = 0`. Contradicts `exp_pos`. -/
+theorem inv_x_not_in_eml_2_eml_const_var_eml_const_var (a a' : Real) :
+    ¬ (∀ x : Real,
+        (EMLTree.eml (EMLTree.eml (.const a) .var)
+                     (EMLTree.eml (.const a') .var)).eval x = inv_x x) := by
+  intro hsum
+  -- Sample at x = exp(exp a').
+  have h := hsum (Real.exp (Real.exp a'))
+  simp only [EMLTree.eval, Real.log_exp, inv_x] at h
+  -- h : exp (exp a - exp a') - log (exp a' - exp a') = 1 / exp (exp a')
+  rw [Real.sub_self, Real.log_zero, Real.sub_zero] at h
+  -- h : exp (exp a - exp a') = 1 / exp (exp a')
+  -- Rewrite RHS using exp_neg_inv: 1/exp y = exp(-y).
+  rw [← Real.exp_neg_inv (Real.exp a')] at h
+  -- h : exp (exp a - exp a') = exp (-exp a')
+  -- Now exp injectivity: exp a - exp a' = -exp a', so exp a = 0.
+  -- We derive this directly via the exp_lt + lt_total tactic instead
+  -- of relying on a packaged exp_injective.
+  have h_arg_eq : Real.exp a - Real.exp a' = -Real.exp a' := by
+    -- Use exp's strict monotonicity: if exp(u) = exp(v) then u = v.
+    rcases Real.lt_total (Real.exp a - Real.exp a') (-Real.exp a') with hlt | heq | hgt
+    · -- u < v ⟹ exp u < exp v, contradicts h.
+      have hexp_lt : Real.exp (Real.exp a - Real.exp a') < Real.exp (-Real.exp a') :=
+        Real.exp_lt hlt
+      rw [h] at hexp_lt
+      exact absurd hexp_lt (Real.lt_irrefl_ax _)
+    · exact heq
+    · -- v < u ⟹ exp v < exp u, contradicts h (the other direction).
+      have hexp_lt : Real.exp (-Real.exp a') < Real.exp (Real.exp a - Real.exp a') :=
+        Real.exp_lt hgt
+      rw [h] at hexp_lt
+      exact absurd hexp_lt (Real.lt_irrefl_ax _)
+  -- exp a - exp a' = -exp a' ⟹ exp a = 0. Contradicts exp_pos.
+  have h_exp_a_eq_zero : Real.exp a = 0 := by
+    -- h_arg_eq : exp a + -exp a' = -exp a'  (after sub_def).
+    -- Add exp a' to both: exp a + (-exp a' + exp a') = -exp a' + exp a'.
+    -- ⟹ exp a + 0 = 0.
+    -- ⟹ exp a = 0.
+    rw [Real.sub_def] at h_arg_eq
+    have step : (Real.exp a + -Real.exp a') + Real.exp a' =
+                -Real.exp a' + Real.exp a' := by rw [h_arg_eq]
+    rw [Real.add_assoc, Real.neg_add_self, Real.add_zero] at step
+    -- step : exp a = 0  (the all-occurrences rewrite of `neg_add_self`
+    -- collapsed both `-exp a' + exp a'` instances simultaneously,
+    -- leaving the bare `exp a` on the LHS).
+    exact step
+  have h_exp_a_pos : (0 : Real) < Real.exp a := Real.exp_pos a
+  rw [h_exp_a_eq_zero] at h_exp_a_pos
+  exact Real.lt_irrefl_ax _ h_exp_a_pos
+
+/-! ## Depth-2 case: `eml(const c, eml(const a, var))` — eventually constant
+
+Evaluates to `exp(c) - log_clamped(exp(a) - log(x))`. For x ≥ exp(exp(a)),
+the inner `exp(a) - log(x) ≤ 0` so the clamped log gives 0. Hence
+eval = `exp(c)` (constant) for `x ≥ exp(exp(a))`.
+
+But `inv_x x = 1/x` is non-constant (1/x ≠ 1/(x+1) for x > 0). So
+sampling at two large points x_1, x_2 ≥ exp(exp(a)) forces
+`exp(c) = 1/x_1 = 1/x_2`, hence `x_1 = x_2`, contradiction for any
+distinct samples.
+
+Concretely: sample at `x_1 = max(exp(exp a), 1)` and `x_2 = x_1 + 1`.
+Both ≥ exp(exp(a)) by construction. Both samples force eval = exp(c),
+so `1/x_1 = 1/x_2 = exp(c)`, hence `1/x_1 = 1/x_2`, contradicting
+`x_1 ≠ x_2`.
+
+The cleanest packaging: an `eventually_constant_not_inv_x` lemma. -/
+
+/-- Helper: `1 / 1 ≠ 1 / (1 + 1)`, i.e., `1 ≠ 1/(1+1)`. The closure key
+for "eventually constant" depth-2 cases. Proven via the chain:
+multiplying `1 = 1/(1+1)` by `(1+1)` gives `1+1 = 1`, contradicting
+`one_lt_one_plus_one`. -/
+private theorem one_ne_one_div_two : (1 : Real) ≠ 1 / (1 + 1) := by
+  intro h
+  have h_pos : (0 : Real) < 1 + 1 :=
+    Real.add_pos Real.zero_lt_one_ax Real.zero_lt_one_ax
+  have h_ne : (1 + 1 : Real) ≠ 0 := Real.ne_of_gt h_pos
+  have h_mul_inv : (1 + 1 : Real) * (1 / (1 + 1)) = 1 :=
+    Real.mul_inv (1 + 1) h_ne
+  rw [← h] at h_mul_inv
+  rw [Real.mul_one_ax] at h_mul_inv
+  -- h_mul_inv : 1 + 1 = 1
+  have h_lt : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  rw [h_mul_inv] at h_lt
+  exact Real.lt_irrefl_ax _ h_lt
+
+/-- **The eventually-constant disproof helper for `inv_x`.** If `f`
+is eventually constant on `[N, ∞)` and `N ≤ 1`, then `f ≠ inv_x`.
+
+Sample at `x = 1` (forces `c = 1/1 = 1`) and at `x = 1 + 1` (forces
+`c = 1/(1+1)`). So `1 = c = 1/(1+1)`, contradicting `one_ne_one_div_two`.
+
+This is the inv_x analog of `eventually_constant_not_x_plus_one` from
+`EMLAdditionClosureFailure.lean`. The depth-2 clamp-trigger cases all
+plug into this. -/
+theorem eventually_constant_not_inv_x (f : Real → Real)
+    (c N : Real) (hN : ∀ x : Real, N ≤ x → f x = c) (hN_le_one : N ≤ 1) :
+    ¬ (∀ x : Real, f x = inv_x x) := by
+  intro hsum
+  have h_one_le_two : (1 : Real) ≤ 1 + 1 := Real.le_of_lt one_lt_one_plus_one
+  have hN_le_two : N ≤ 1 + 1 := Real.le_trans hN_le_one h_one_le_two
+  have h1 : c = inv_x 1 := (hN 1 hN_le_one).symm.trans (hsum 1)
+  have h2 : c = inv_x (1 + 1) := (hN (1 + 1) hN_le_two).symm.trans (hsum (1 + 1))
+  have heq : inv_x 1 = inv_x (1 + 1) := h1.symm.trans h2
+  simp only [inv_x] at heq
+  rw [one_div_one_eq_one] at heq
+  -- heq : 1 = 1/(1+1)
+  exact one_ne_one_div_two heq
+
+/- HONEST SCOPING NOTE — not a declaration.
+
+The `eventually_constant_not_inv_x` helper above requires N ≤ 1 so
+that 1 and 1+1 are both in the constant region.
+
+For shapes like `eml(const c, eml(const a, var))`, the eval becomes
+constant exp(c) only for x ≥ exp(exp a), and exp(exp a) > 1 always
+(by one_lt_exp_exp). So this helper does NOT directly close that
+shape. A larger-sample variant
+  eventually_constant_not_inv_x_at_N (N : Real) (hN_pos : 0 < N)
+sampling at x = N+1 and x = N+1+1 instead of 1 and 1+1 would be
+needed. We ship just the N ≤ 1 helper as the foundational case;
+the threshold-dependent application is left for follow-up
+sessions, mirroring the same gap in
+`eventually_constant_not_x_plus_one` from
+EMLAdditionClosureFailure (which has the same N ≤ 1 limitation).
+-/
+
 end MachLib
