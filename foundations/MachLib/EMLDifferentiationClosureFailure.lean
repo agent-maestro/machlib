@@ -40,20 +40,27 @@ weakens the Lambert-W candidate 1 strategy substantially.
 
 ## Proof shape
 
-Same case-analysis pattern as `x_plus_one_not_in_eml_1`:
+Two sample points do all the work: `x = 1` and `x = exp 1`. The
+`exp 1` sample is the trick — it lets us avoid `1/2` literal
+arithmetic (which MachLib's Basic + Forge can't directly chain)
+by trading it for `exp_neg_inv : exp(-x) = 1/exp x`, which gives
+`1/(exp 1) = exp(-1)`. `exp_lt` + `exp_zero` then bound
+`exp(-1) < 1` cleanly.
 
-  * Depth 0: `const c` (constant — can't equal `exp x - 1/x` which
-    is non-constant) and `var` (`var.eval x = x`, but `x = exp x -
-    1/x` at `x = 1` gives `exp 1 = 2`, refuted by `two_lt_exp_one`).
-  * Depth 1: 4 new shapes via `eml(t1, t2)` with `t1, t2` depth-0.
-    For each, the proof samples `f` at strategic positive x-values
-    and derives a contradiction from MachLib's existing `exp_lt`,
-    `exp_log`, `log_exp`, `exp_neg_inv`, `two_lt_exp_one`, and
-    `one_lt_exp_one` axioms.
+The load-bearing inequality chain (used by const c, eml(const,
+const), and eml(const, var)) is:
 
-Only the `eml(const a, var)` subcase requires a non-trivial
-arithmetic chain (sampling at `x = 1` and `x = exp 1`). The others
-yield contradictions from a single sample at `x = 1`.
+  exp 1 < exp(exp 1)              -- from exp_lt + one_lt_exp_one
+  exp 1 + (something < 0) < exp 1 -- from add_lt_add_left
+  ⟹ exp(exp 1) < exp 1, contradicting exp 1 < exp(exp 1).
+
+The `var`, `eml(var, var)`, and `eml(var, const b)` subcases use
+a single `x = 1` sample (or one extra `exp 1` sample for the last)
+and refute via `two_lt_exp_one`, `one_ne_zero`, or `exp(-1) < 1`
+respectively. No sign case-split on `c2` is needed for the
+`eml(var, const c)` case because two samples on the same `log c2`
+value pin both `log c2 = 1` AND `log c2 = exp(-1)`, giving the
+contradiction directly.
 -/
 
 namespace MachLib
@@ -67,101 +74,120 @@ open Real
 
 noncomputable def deriv_xx (x : Real) : Real := Real.exp x - 1 / x
 
-/-! ## Two key non-constancy facts used by multiple cases
+/-! ## Arithmetic helpers used by multiple cases
 
-Both follow from `two_lt_exp_one : (1+1) < exp 1` plus
-`exp_add : exp(x + y) = exp x * exp y` plus basic arithmetic.
+These wrap the basic axioms into the exact inequality shapes the
+case analysis needs. -/
 
-`deriv_xx_1_ne_2 : deriv_xx 1 ≠ deriv_xx 2`
+/-- `1/1 = 1`. -/
+private theorem one_div_one_eq_one : (1 : Real) / 1 = 1 := by
+  have := Real.mul_inv 1 Real.one_ne_zero
+  rw [Real.one_mul_thm] at this
+  exact this
 
-is the non-constancy witness. Used by the const-eval shapes
-(`const c`, `eml(const, const)`).
+/-- `1/(exp 1) = exp(-1)`. -/
+private theorem one_div_exp_one_eq_exp_neg_one :
+    (1 : Real) / Real.exp 1 = Real.exp (-1) :=
+  (Real.exp_neg_inv 1).symm
 
-We do not need the actual value of `deriv_xx 1` or `deriv_xx 2`;
-only that they differ. -/
+/-- `−1 < 0`. Stated with explicit `-(1 : Real)` so the pattern in
+`neg_add_self` matches (the literal `(-1 : Real)` does not reduce
+to `Neg.neg 1` for `rw` purposes). -/
+private theorem neg_one_lt_zero : -(1 : Real) < 0 := by
+  have step : -(1 : Real) + 0 < -(1 : Real) + 1 :=
+    Real.add_lt_add_left Real.zero_lt_one_ax (-(1 : Real))
+  rw [Real.neg_add_self] at step
+  rw [Real.add_zero] at step
+  exact step
 
-/-- Helper: `deriv_xx` is not constant. Sampled at `x = 1` and
-`x = 1 + 1`, the values differ. The contradiction route:
-`deriv_xx 1 = deriv_xx 2` rearranges to `exp 2 - exp 1 = 1/2`,
-but `exp 2 - exp 1 > 0 + 1 > 1/2` from `two_lt_exp_one` plus
-`one_lt_one_plus_one`.
+/-- `exp(-1) < 1`. -/
+private theorem exp_neg_one_lt_one : Real.exp (-1) < 1 := by
+  have step : Real.exp (-(1 : Real)) < Real.exp 0 := Real.exp_lt neg_one_lt_zero
+  rw [Real.exp_zero] at step
+  exact step
 
-The arithmetic is mechanical but lengthy; we factor the algebraic
-chain explicitly. -/
-theorem deriv_xx_1_ne_2 : deriv_xx 1 ≠ deriv_xx (1 + 1) := by
+/-- `exp 1 < exp(exp 1)`. -/
+private theorem exp_one_lt_exp_exp_one : Real.exp 1 < Real.exp (Real.exp 1) :=
+  Real.exp_lt one_lt_exp_one
+
+/-! ## Non-constancy of `deriv_xx`
+
+Sampling at `x = 1` and `x = exp 1`:
+
+  deriv_xx 1     = exp 1 - 1/1   = exp 1 - 1
+  deriv_xx (e)   = exp e - 1/e   = exp e - exp(-1)   (via exp_neg_inv)
+
+If those were equal, `exp 1 - 1 = exp(exp 1) - exp(-1)`, which
+rearranges to `exp(exp 1) = exp 1 + (-1 + exp(-1))`. But the RHS
+is `< exp 1` (because `-1 + exp(-1) < -1 + 1 = 0`), while the LHS
+is `> exp 1` (from `exp_lt + one_lt_exp_one`). Contradiction. -/
+theorem deriv_xx_1_ne_exp_1 :
+    deriv_xx 1 ≠ deriv_xx (Real.exp 1) := by
   intro h_eq
-  -- h_eq : deriv_xx 1 = deriv_xx 2
-  -- ⇒ exp 1 - 1/1 = exp (1+1) - 1/(1+1)
-  -- ⇒ exp 1 - 1 = exp 2 - 1/2
-  -- ⇒ exp 2 - exp 1 = -1 + 1/2 = -(1 - 1/2) = -(1/2)
-  -- But exp 2 = exp(1+1) = exp 1 * exp 1, and exp 1 > 2, so
-  -- exp 2 - exp 1 = exp 1 * (exp 1 - 1) > 2 * 1 = 2 > -1/2.
-  --
-  -- Mechanical chain in Lean: we DO have two_lt_exp_one, but
-  -- chaining through `*` and `1/2` exceeds the algebra MachLib's
-  -- basic axioms supply directly. The proof would mirror the
-  -- exp(1) ≠ 2 chain in EMLAdditionClosureFailure (which is the
-  -- analogous depth-1 fact). For now we ship this lemma as a
-  -- spec-level claim used only by the `const c` and `eml(const,
-  -- const)` subcases below; the depth-1 theorem still proves the
-  -- other 4 subcases mechanically.
-  sorry
+  simp only [deriv_xx] at h_eq
+  rw [one_div_one_eq_one] at h_eq
+  rw [one_div_exp_one_eq_exp_neg_one] at h_eq
+  -- h_eq : exp 1 - 1 = exp(exp 1) - exp(-1)
+  rw [Real.sub_def, Real.sub_def] at h_eq
+  -- h_eq : exp 1 + -1 = exp(exp 1) + -exp(-1)
+  have rearr : Real.exp (Real.exp 1) = Real.exp 1 + (-1 + Real.exp (-1)) := by
+    have step : (Real.exp 1 + -1) + Real.exp (-1) =
+                (Real.exp (Real.exp 1) + -Real.exp (-1)) + Real.exp (-1) := by
+      rw [h_eq]
+    rw [Real.add_assoc] at step
+    rw [Real.add_assoc (Real.exp (Real.exp 1))] at step
+    rw [Real.neg_add_self] at step
+    rw [Real.add_zero] at step
+    exact step.symm
+  -- exp 1 + (-1 + exp(-1)) < exp 1 via add_lt_add_left.
+  have h_inner : -1 + Real.exp (-1) < 0 := by
+    have step : -1 + Real.exp (-1) < -1 + 1 :=
+      Real.add_lt_add_left exp_neg_one_lt_one (-1)
+    rw [Real.neg_add_self] at step
+    exact step
+  have h_lt : Real.exp 1 + (-1 + Real.exp (-1)) < Real.exp 1 := by
+    have step : Real.exp 1 + (-1 + Real.exp (-1)) < Real.exp 1 + 0 :=
+      Real.add_lt_add_left h_inner (Real.exp 1)
+    rw [Real.add_zero] at step
+    exact step
+  have h_gt : Real.exp 1 < Real.exp (Real.exp 1) := exp_one_lt_exp_exp_one
+  rw [rearr] at h_gt
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_gt h_lt)
 
 /-! ## Depth-0 proof
 
-`exp x - 1/x` evaluated at `x = 1` and `x = 2`:
-  - `(deriv_xx) 1 = exp 1 - 1/1 = exp 1 - 1`
-  - `(deriv_xx) 2 = exp 2 - 1/2`
-Both samples refute each depth-0 shape. -/
+`exp x - 1/x` at `x = 1` is `exp 1 - 1` and at `x = exp 1` is
+`exp(exp 1) - exp(-1)`. Both samples refute each depth-0 shape. -/
 
-/-- `exp x - 1/x` is not expressible by any depth-0 EMLTree.
-The two depth-0 shapes are `const c` (constant — refuted by
-`deriv_xx_1_ne_2`) and `var` (`var.eval x = x`, but `x = exp x -
-1/x` at `x = 1` gives `1 = exp 1 - 1`, i.e., `exp 1 = 1 + 1`,
-refuted by `two_lt_exp_one`). -/
+/-- `exp x - 1/x` is not expressible by any depth-0 EMLTree. -/
 theorem eml_xx_deriv_not_in_eml_0 (t : EMLTree) (ht : t.depth ≤ 0) :
     ¬ (∀ x : Real, t.eval x = deriv_xx x) := by
   intro heq
   cases t with
   | const c =>
-    -- t.eval x = c for all x. So c = deriv_xx 1 AND c = deriv_xx 2.
-    -- Use deriv_xx_1_ne_2.
+    -- t.eval x = c. Both samples give c on the LHS, so deriv_xx 1
+    -- = deriv_xx (exp 1). Use deriv_xx_1_ne_exp_1.
     have h1 := heq 1
-    have h2 := heq (1 + 1)
-    simp only [EMLTree.eval] at h1 h2
-    -- h1 : c = deriv_xx 1
-    -- h2 : c = deriv_xx 2
-    -- So deriv_xx 1 = deriv_xx 2 (transitivity).
-    have heq12 : deriv_xx 1 = deriv_xx (1 + 1) := h1.symm.trans h2
-    exact deriv_xx_1_ne_2 heq12
+    have h_e := heq (Real.exp 1)
+    simp only [EMLTree.eval] at h1 h_e
+    have heq1e : deriv_xx 1 = deriv_xx (Real.exp 1) := h1.symm.trans h_e
+    exact deriv_xx_1_ne_exp_1 heq1e
   | var =>
-    -- t.eval x = x for all x. At x = 1: 1 = deriv_xx 1 = exp 1 - 1.
-    -- So exp 1 = 1 + 1, contradicting two_lt_exp_one.
+    -- t.eval x = x. At x = 1: 1 = exp 1 - 1, so exp 1 = 1 + 1.
+    -- Contradicts two_lt_exp_one.
     have h1 := heq 1
     simp only [EMLTree.eval, deriv_xx] at h1
-    -- h1 : 1 = exp 1 - 1/1
-    -- Rewrite 1/1 = 1 via mul_inv (with a = 1).
-    have h_one_div_one : (1 : Real) / 1 = 1 := by
-      have := Real.mul_inv 1 Real.one_ne_zero
-      rw [Real.one_mul_thm] at this
-      exact this
-    rw [h_one_div_one] at h1
+    rw [one_div_one_eq_one] at h1
     -- h1 : 1 = exp 1 - 1
-    -- Add 1 to both sides: 1 + 1 = exp 1.
     have h_exp1 : Real.exp 1 = 1 + 1 := by
-      -- exp 1 - 1 = 1 ⇒ exp 1 = 1 + 1
-      -- exp 1 = (exp 1 - 1) + 1  (algebra)
       have step : Real.exp 1 = (Real.exp 1 - 1) + 1 := by
         rw [Real.sub_def]
         rw [Real.add_assoc, Real.neg_add_self, Real.add_zero]
       rw [step, ← h1]
-    -- two_lt_exp_one : (1 + 1) < exp 1.
-    -- Combined with exp 1 = 1 + 1: 1 + 1 < 1 + 1, contradiction.
     have h_strict : ((1 + 1 : Real)) < Real.exp 1 := two_lt_exp_one
     rw [h_exp1] at h_strict
     exact Real.lt_irrefl_ax _ h_strict
   | eml _ _ =>
-    -- depth ≥ 1, contradicts ht : depth ≤ 0.
     simp [EMLTree.depth] at ht
 
 /-! ## Depth-1 proof: case analysis on the 4 eml subcases
@@ -171,10 +197,9 @@ For depth-1 we have the new shapes `eml(t1, t2)` where each of
 
 The `eml(const, var)` case is the most arithmetically demanding;
 its sub-proof samples at `x = 1` AND `x = exp 1` and chains
-through `exp_log`, `exp_neg_inv`, `exp_lt`, `one_lt_exp_one` to
-get a clean monotonicity contradiction. The other 3 yield from a
-single sample at `x = 1` plus one of `two_lt_exp_one`,
-`one_ne_zero`, or a `1 = 1/2` argument. -/
+through `log_one`, `log_exp`, `exp_neg_inv`, `exp_lt`,
+`one_lt_exp_one` to get a clean monotonicity contradiction. The
+others fall out faster. -/
 
 theorem eml_xx_deriv_not_in_eml_1 (t : EMLTree) (ht : t.depth ≤ 1) :
     ¬ (∀ x : Real, t.eval x = deriv_xx x) := by
@@ -197,45 +222,65 @@ theorem eml_xx_deriv_not_in_eml_1 (t : EMLTree) (ht : t.depth ≤ 1) :
     | const c1 =>
       cases t2 with
       | const c2 =>
-        -- eml(const c1, const c2): eval is constant in x. Use the
-        -- f-non-constant lemma exactly as in the `const c` case.
+        -- eml(const c1, const c2): eval x = exp c1 - log c2, constant.
+        -- Same as the const c case via deriv_xx_1_ne_exp_1.
         have h1 := heq 1
-        have h2 := heq (1 + 1)
-        simp only [EMLTree.eval] at h1 h2
-        -- h1 : exp c1 - log c2 = deriv_xx 1
-        -- h2 : exp c1 - log c2 = deriv_xx 2
-        have heq12 : deriv_xx 1 = deriv_xx (1 + 1) := h1.symm.trans h2
-        exact deriv_xx_1_ne_2 heq12
+        have h_e := heq (Real.exp 1)
+        simp only [EMLTree.eval] at h1 h_e
+        have heq1e : deriv_xx 1 = deriv_xx (Real.exp 1) := h1.symm.trans h_e
+        exact deriv_xx_1_ne_exp_1 heq1e
       | var =>
-        -- eml(const c, var): eval x = exp c - log x. At x = 1:
-        -- exp c - log 1 = exp c. Target: deriv_xx 1 = exp 1 - 1.
-        -- So exp c = exp 1 - 1.
-        --
-        -- Need a second sample. At x = exp 1: eval = exp c -
-        -- log(exp 1) = exp c - 1. Target: deriv_xx (exp 1) =
-        -- exp(exp 1) - 1/(exp 1) = exp(exp 1) - exp(-1)
-        -- (using exp_neg_inv).
-        -- So exp c - 1 = exp(exp 1) - exp(-1).
-        -- From x = 1: exp c = exp 1 - 1. Substitute:
-        -- (exp 1 - 1) - 1 = exp(exp 1) - exp(-1)
-        -- ⇒ exp(exp 1) = exp 1 - 2 + exp(-1)
-        --              = exp 1 + (-2 + exp(-1))
-        --
-        -- Two monotonicity facts:
-        -- (a) exp(exp 1) > exp 1 (since exp 1 > 1).
-        -- (b) exp(-1) < 1 (since -1 < 0 and exp_zero = 1).
-        --
-        -- From (b): -2 + exp(-1) < -2 + 1 = -1 < 0.
-        -- So exp 1 + (-2 + exp(-1)) < exp 1 + 0 = exp 1.
-        -- Combined with (a): exp 1 < exp(exp 1) = exp 1 +
-        -- (-2 + exp(-1)) < exp 1. So exp 1 < exp 1. ⊥.
-        --
-        -- The arithmetic chain is mechanical but exceeds the
-        -- direct algebra MachLib's basic axioms supply without
-        -- linarith. Same status as deriv_xx_1_ne_2 above: the
-        -- spec-level claim is correct, the Lean proof needs
-        -- linarith / ring extensions or a longer manual chain.
-        sorry
+        -- eml(const c, var): eval x = exp c - log x.
+        -- At x = 1:    exp c - 0   = exp 1 - 1        ⟹ exp c = exp 1 - 1
+        -- At x = exp 1: exp c - 1  = exp(exp 1) - exp(-1)
+        -- Substitute:   (exp 1 - 1) - 1 = exp(exp 1) - exp(-1)
+        --   ⟹ exp(exp 1) = (exp 1 + -1) + -1 + exp(-1)
+        -- Then exp(-1) < 1 ⟹ (exp 1 + -1 + -1) + exp(-1) < exp 1 + -1 + -1 + 1
+        --                                                 = exp 1 + -1
+        --                                                 < exp 1.
+        -- Combined with exp 1 < exp(exp 1), contradiction.
+        have h1 := heq 1
+        have h_e := heq (Real.exp 1)
+        simp only [EMLTree.eval, Real.log_one, Real.log_exp, Real.sub_zero,
+                   deriv_xx] at h1 h_e
+        rw [one_div_one_eq_one] at h1
+        rw [one_div_exp_one_eq_exp_neg_one] at h_e
+        -- h1  : exp c1 = exp 1 - 1
+        -- h_e : exp c1 - 1 = exp(exp 1) - exp(-1)
+        rw [h1] at h_e
+        -- h_e : (exp 1 - 1) - 1 = exp(exp 1) - exp(-1)
+        rw [Real.sub_def, Real.sub_def, Real.sub_def] at h_e
+        -- h_e : ((exp 1 + -1) + -1) = exp(exp 1) + -exp(-1)
+        have rearr : Real.exp (Real.exp 1) =
+                     ((Real.exp 1 + -1) + -1) + Real.exp (-1) := by
+          have step : ((Real.exp 1 + -1) + -1) + Real.exp (-1) =
+                      (Real.exp (Real.exp 1) + -Real.exp (-1)) + Real.exp (-1) := by
+            rw [h_e]
+          rw [Real.add_assoc (Real.exp (Real.exp 1))] at step
+          rw [Real.neg_add_self] at step
+          rw [Real.add_zero] at step
+          exact step.symm
+        -- ((exp 1 + -1) + -1) + exp(-1) < ((exp 1 + -1) + -1) + 1
+        have h_step1 : ((Real.exp 1 + -1) + -1) + Real.exp (-1) <
+                       ((Real.exp 1 + -1) + -1) + 1 :=
+          Real.add_lt_add_left exp_neg_one_lt_one ((Real.exp 1 + -1) + -1)
+        -- ((exp 1 + -1) + -1) + 1 = exp 1 + -1
+        have h_simp : ((Real.exp 1 + -1) + -1) + 1 = Real.exp 1 + -1 := by
+          rw [Real.add_assoc (Real.exp 1 + -1)]
+          rw [Real.neg_add_self]
+          rw [Real.add_zero]
+        rw [h_simp] at h_step1
+        -- exp 1 + -1 < exp 1
+        have h_step2 : Real.exp 1 + -1 < Real.exp 1 := by
+          have step : Real.exp 1 + -1 < Real.exp 1 + 0 :=
+            Real.add_lt_add_left neg_one_lt_zero (Real.exp 1)
+          rw [Real.add_zero] at step
+          exact step
+        have h_lt : ((Real.exp 1 + -1) + -1) + Real.exp (-1) < Real.exp 1 :=
+          Real.lt_trans_ax h_step1 h_step2
+        have h_gt : Real.exp 1 < Real.exp (Real.exp 1) := exp_one_lt_exp_exp_one
+        rw [rearr] at h_gt
+        exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_gt h_lt)
       | eml a b =>
         have : (1 : Nat) ≤ 0 := by
           have hd : (EMLTree.eml a b).depth ≤ 0 := Nat.le_of_eq htd.2
@@ -244,73 +289,80 @@ theorem eml_xx_deriv_not_in_eml_1 (t : EMLTree) (ht : t.depth ≤ 1) :
     | var =>
       cases t2 with
       | const c2 =>
-        -- eml(var, const c): eval x = exp x - log c. At x = 1:
-        -- exp 1 - log c = deriv_xx 1 = exp 1 - 1.
-        -- So log c = 1, hence c = exp 1 (via exp_log + exp_log).
+        -- eml(var, const c): eval x = exp x - log c.
+        -- At x = 1:     exp 1 - log c   = exp 1 - 1
+        -- At x = exp 1: exp(exp 1) - log c = exp(exp 1) - exp(-1)
+        -- The two equations both pin -log c: from first, -log c = -1,
+        -- from second, -log c = -exp(-1). Hence -1 = -exp(-1), so
+        -- 1 = exp(-1), contradicting exp(-1) < 1.
         --
-        -- At x = 2 (= 1 + 1): eval = exp 2 - log c = exp 2 - 1
-        -- (substituting log c = 1). Target: deriv_xx 2 = exp 2 -
-        -- 1/2. So -1 = -1/2, i.e., 1 = 1/2.
+        -- Note: no sign case-split on c is needed. The clamped log
+        -- value (whatever it is) gets pinned to both 1 and exp(-1).
+        have h1 := heq 1
+        have h_e := heq (Real.exp 1)
+        simp only [EMLTree.eval, deriv_xx] at h1 h_e
+        rw [one_div_one_eq_one] at h1
+        rw [one_div_exp_one_eq_exp_neg_one] at h_e
+        -- h1  : exp 1 - log c2 = exp 1 - 1
+        -- h_e : exp(exp 1) - log c2 = exp(exp 1) - exp(-1)
+        rw [Real.sub_def, Real.sub_def] at h1
+        rw [Real.sub_def, Real.sub_def] at h_e
+        -- Cancel exp 1 on both sides of h1 ⟹ -log c2 = -1
+        have h_neg_log_eq_neg_one : -Real.log c2 = (-1 : Real) := by
+          have step : (-Real.exp 1) + (Real.exp 1 + -Real.log c2) =
+                      (-Real.exp 1) + (Real.exp 1 + -1) := by rw [h1]
+          rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+          rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+          exact step
+        -- Substitute -log c2 = -1 into h_e (via the LHS):
+        rw [h_neg_log_eq_neg_one] at h_e
+        -- h_e : exp(exp 1) + -1 = exp(exp 1) + -exp(-1)
         --
-        -- 1 = 1/2: multiply by 2 to get 2 = 1, then use
-        -- one_eq_two_implies_false. The multiplication uses
-        -- `mul_inv` with a = 1 + 1 (i.e., (1+1) * (1/(1+1)) = 1
-        -- when (1+1) ≠ 0), then rearrange.
-        --
-        -- Same status as the `eml(const a, var)` case: the
-        -- algebra is mechanical but requires a longer chain than
-        -- one direct rewrite. Documented here; sorry-ed pending
-        -- a linarith-style extension.
-        sorry
+        -- The straightforward approach (cancel exp(exp 1), then negate
+        -- both sides to get 1 = exp(-1)) hits a `rw` cascade: `-1 →
+        -- -exp(-1)` rewrites the `-1` inside the new `exp(-1)` too.
+        -- Instead, derive `-1 < -exp(-1)` from `exp(-1) < 1` (a clean
+        -- `add_lt_add_left` chain), apply that to add `exp(exp 1)`
+        -- to both sides, and rewrite via h_e to get `α < α`.
+        have h_neg_strict : -(1 : Real) < -Real.exp (-1) := by
+          have step : (-(1 : Real) + -Real.exp (-1)) + Real.exp (-1) <
+                      (-(1 : Real) + -Real.exp (-1)) + 1 :=
+            Real.add_lt_add_left exp_neg_one_lt_one
+              (-(1 : Real) + -Real.exp (-1))
+          rw [Real.add_assoc] at step
+          rw [Real.neg_add_self] at step
+          rw [Real.add_zero] at step
+          rw [Real.add_comm (-(1 : Real)) (-Real.exp (-1))] at step
+          rw [Real.add_assoc] at step
+          rw [Real.neg_add_self] at step
+          rw [Real.add_zero] at step
+          exact step
+        have h_strict : Real.exp (Real.exp 1) + -1 <
+                        Real.exp (Real.exp 1) + -Real.exp (-1) :=
+          Real.add_lt_add_left h_neg_strict (Real.exp (Real.exp 1))
+        rw [h_e] at h_strict
+        exact Real.lt_irrefl_ax _ h_strict
       | var =>
-        -- eml(var, var): eval x = exp x - log x. At x = 1:
-        -- exp 1 - log 1 = exp 1. Target: deriv_xx 1 = exp 1 - 1.
-        -- So exp 1 = exp 1 - 1, i.e., 0 = -1.
-        -- Add 1 to both sides: 1 = 0, contradicting one_ne_zero.
+        -- eml(var, var): eval x = exp x - log x.
+        -- At x = 1: exp 1 - log 1 = exp 1 - 0 = exp 1.
+        -- Target: deriv_xx 1 = exp 1 - 1.
+        -- So exp 1 = exp 1 - 1 ⟹ 0 = -1 ⟹ 1 = 0, contradicts one_ne_zero.
         have h1 := heq 1
         simp only [EMLTree.eval, deriv_xx, Real.log_one] at h1
-        -- h1 : exp 1 - 0 = exp 1 - 1/1
-        -- Simplify both sides using sub_zero (on LHS) and 1/1 = 1 (on RHS).
-        have h_one_div_one : (1 : Real) / 1 = 1 := by
-          have := Real.mul_inv 1 Real.one_ne_zero
-          rw [Real.one_mul_thm] at this
-          exact this
-        rw [Real.sub_zero, h_one_div_one] at h1
+        rw [Real.sub_zero, one_div_one_eq_one] at h1
         -- h1 : exp 1 = exp 1 - 1
-        -- Add 1 to both sides: exp 1 + 1 = exp 1.
-        -- Subtract exp 1: 1 = 0.
-        --
-        -- Lean: h1 : exp 1 = exp 1 - 1. Rewrite RHS via sub_def:
-        -- exp 1 - 1 = exp 1 + (-1). So h1 : exp 1 = exp 1 + (-1).
-        -- Subtract exp 1 from both: 0 = -1.
-        -- Negate: 0 = 1. Contradicts one_ne_zero.
         rw [Real.sub_def] at h1
         -- h1 : exp 1 = exp 1 + -1
-        -- (-exp 1) + (exp 1 + -1) = (-exp 1) + exp 1 = 0
-        -- Rearrange LHS: ((-exp 1) + exp 1) + -1 = 0 + -1 = -1.
-        -- So 0 = -1.
         have step : (-Real.exp 1) + (Real.exp 1 + -1) =
                     (-Real.exp 1) + Real.exp 1 := by
           rw [← h1]
         rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
-        -- step : -1 = 0   (or maybe : 0 = -1; checking sign)
-        -- The rewrite chain leaves us with `-1 = ...` on the LHS;
-        -- equate to zero and conclude.
-        -- Actually after the rewrites:
-        --   LHS of step is now `((-exp 1) + exp 1) + -1`
-        --     = (after neg_add_self): 0 + -1
-        --     = (after zero_add): -1
-        --   RHS of step is now `(-exp 1) + exp 1`
-        --     = (after neg_add_self): 0
-        -- So step : -1 = 0.
-        --
-        -- Multiply both sides by -1 (or use neg_neg / neg_zero):
-        -- 1 = 0, contradicting one_ne_zero.
+        -- step : -1 = 0  (rw rewrites all occurrences of `-?a + ?a` in
+        -- one pass, so a single `Real.neg_add_self` collapses both
+        -- copies of `(-exp 1) + exp 1` simultaneously.)
         have h_one_eq_zero : (1 : Real) = 0 := by
           have hn : -((-1 : Real)) = -(0 : Real) := by rw [step]
           rw [Real.neg_zero] at hn
-          -- hn : -(-1) = 0
-          -- Use neg_neg_helper to simplify -(-1) = 1.
           have hnn : -((-1 : Real)) = 1 := Real.neg_neg_helper 1
           rw [hnn] at hn
           exact hn
