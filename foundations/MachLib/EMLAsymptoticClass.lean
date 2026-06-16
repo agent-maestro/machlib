@@ -2485,6 +2485,244 @@ theorem not_eventually_K_over_x_one_eml_eml_var_var_eml_var_var :
                      (EMLTree.eml .var .var)).eval x) :=
   eml_eml_var_var_eml_var_var_eventually_above_one.not_eventually_K_over_x_one
 
+/-! ## Phase 13: Bernoulli axiom + unconditional closure of the 3 residual shapes
+
+Lifts the classical Bernoulli bound `log(1+y) ≤ y for y ≥ 0` as
+an axiom, ships a helper for `log(exp x + M) ≤ x + M`, then
+closes the 3 residual shapes unconditionally via case split on
+log b's sign. -/
+
+/-- **Bernoulli bound (classical).** `log(1+y) ≤ y` for `y ≥ 0`.
+Discharge path: concavity of log + tangent line at 0. -/
+axiom log_one_plus_le_self (y : Real) (hy : 0 ≤ y) : Real.log (1 + y) ≤ y
+
+/-- Helper: for `x ≥ 0` and `M ≥ 0`, `log(exp x + M) ≤ x + M`.
+
+Chain:
+  - exp x ≥ 1 (since x ≥ 0).
+  - exp x · M ≥ M (since exp x ≥ 1 and M ≥ 0).
+  - exp x + M ≤ exp x + exp x · M = exp x · (1 + M).
+  - log(exp x · (1 + M)) = log(exp x) + log(1 + M) = x + log(1+M)
+    (log_mul, log_exp).
+  - log(1 + M) ≤ M (Bernoulli). -/
+private theorem log_exp_x_plus_M_le_x_plus_M
+    (x M : Real) (h_zero_le_x : 0 ≤ x) (h_M_nonneg : 0 ≤ M) :
+    Real.log (Real.exp x + M) ≤ x + M := by
+  have h_exp_pos : (0 : Real) < Real.exp x := Real.exp_pos x
+  have h_one_le_exp : (1 : Real) ≤ Real.exp x := by
+    rcases (Real.le_iff_lt_or_eq 0 x).mp h_zero_le_x with h_lt | h_eq
+    · have := Real.exp_lt h_lt
+      rw [Real.exp_zero] at this
+      exact Real.le_of_lt this
+    · rw [← h_eq, Real.exp_zero]
+      exact Real.le_refl _
+  have h_one_plus_M_pos : (0 : Real) < 1 + M := by
+    have h : 1 + 0 ≤ 1 + M := Real.add_le_add_left h_M_nonneg _
+    rw [Real.add_zero] at h
+    exact Real.lt_of_lt_of_le Real.zero_lt_one_ax h
+  -- exp x + M ≤ exp x · (1 + M):
+  have h_M_le_expM : M ≤ Real.exp x * M := by
+    rcases (Real.le_iff_lt_or_eq 0 M).mp h_M_nonneg with h_M_pos | h_M_zero
+    · have step :=
+        Real.mul_le_mul_of_nonneg_right h_one_le_exp (Real.le_of_lt h_M_pos)
+      rw [Real.one_mul_thm] at step
+      exact step
+    · rw [← h_M_zero, Real.mul_zero]
+      exact Real.le_refl _
+  have h_sum_le_prod :
+      Real.exp x + M ≤ Real.exp x * (1 + M) := by
+    rw [Real.mul_distrib, Real.mul_one_ax]
+    exact Real.add_le_add_left h_M_le_expM (Real.exp x)
+  -- log monotonicity:
+  have h_lhs_pos : (0 : Real) < Real.exp x + M := by
+    have h : Real.exp x + 0 ≤ Real.exp x + M :=
+      Real.add_le_add_left h_M_nonneg _
+    rw [Real.add_zero] at h
+    exact Real.lt_of_lt_of_le h_exp_pos h
+  have h_log_le :
+      Real.log (Real.exp x + M) ≤ Real.log (Real.exp x * (1 + M)) := by
+    rcases (Real.le_iff_lt_or_eq
+            (Real.exp x + M) (Real.exp x * (1 + M))).mp
+        h_sum_le_prod with h_lt | h_eq
+    · exact Real.le_of_lt (Real.log_lt_log h_lhs_pos h_lt)
+    · rw [h_eq]
+      exact Real.le_refl _
+  rw [Real.log_mul h_exp_pos h_one_plus_M_pos] at h_log_le
+  rw [Real.log_exp] at h_log_le
+  -- h_log_le : log(exp x + M) ≤ x + log(1 + M)
+  have h_bern : Real.log (1 + M) ≤ M := log_one_plus_le_self M h_M_nonneg
+  have h_x_plus :
+      x + Real.log (1 + M) ≤ x + M := Real.add_le_add_left h_bern _
+  exact Real.le_trans h_log_le h_x_plus
+
+/-- Helper: for x ≥ 1 with x ≥ 1 - log b: `exp x - x > 1 - log b`.
+Used in the log b < 0 sub-case of the residual shapes. -/
+private theorem exp_x_sub_x_gt_one_sub_log_b
+    (b x : Real) (h_one_le : 1 ≤ x) (h_x_ge : 1 - Real.log b ≤ x) :
+    1 - Real.log b < Real.exp x - x := by
+  -- exp x > 2x = x + x ≥ x + (1 - log b) (since x ≥ 1 - log b).
+  -- So exp x - x > 1 - log b.
+  have h_exp_gt_2x : (1 + 1) * x < Real.exp x :=
+    exp_gt_two_x_at_one x h_one_le
+  have h_2x_eq : (1 + 1) * x = x + x := by
+    rw [Real.mul_distrib_right, Real.one_mul_thm]
+  rw [h_2x_eq] at h_exp_gt_2x
+  -- x + (1 - log b) ≤ x + x:
+  have h_chain : x + (1 - Real.log b) ≤ x + x :=
+    Real.add_le_add_left h_x_ge _
+  have h_xp1ml_lt_exp : x + (1 - Real.log b) < Real.exp x :=
+    Real.lt_of_le_of_lt h_chain h_exp_gt_2x
+  -- Subtract x: 1 - log b < exp x - x.
+  have step : -x + (x + (1 - Real.log b)) < -x + Real.exp x :=
+    Real.add_lt_add_left h_xp1ml_lt_exp _
+  rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+  rw [Real.add_comm (-x) (Real.exp x)] at step
+  rw [← Real.sub_def] at step
+  exact step
+
+/-- **`eml(var, eml(var, const b))` is EventuallyAboveOne (unconditional).**
+Combines the Phase 12 conditional theorem (log b ≥ 0 case) with the
+Bernoulli helper for log b < 0. -/
+theorem eml_var_eml_var_const_eventually_above_one (b : Real) :
+    EventuallyAboveOne
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml .var (.const b))).eval x) := by
+  refine ⟨max 1 (max (Real.log b + 1) (1 - Real.log b)), ?_⟩
+  intro x hx
+  have h_one_le : (1 : Real) ≤ x := Real.le_trans (le_max_left _ _) hx
+  have h_inner_le :
+      max (Real.log b + 1) (1 - Real.log b) ≤ x :=
+    Real.le_trans (le_max_right _ _) hx
+  have h_logb_p1_le : Real.log b + 1 ≤ x :=
+    Real.le_trans (le_max_left _ _) h_inner_le
+  have h_one_sub_logb_le : 1 - Real.log b ≤ x :=
+    Real.le_trans (le_max_right _ _) h_inner_le
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  have h_zero_le_x : (0 : Real) ≤ x := Real.le_of_lt h_x_pos
+  have h_x_lt_expx : x < Real.exp x := exp_grows_strictly x
+  -- log b < x ⟹ log b < exp x:
+  have h_logb_lt_logb1 : Real.log b < Real.log b + 1 := by
+    have step : Real.log b + 0 < Real.log b + 1 :=
+      Real.add_lt_add_left Real.zero_lt_one_ax _
+    rw [Real.add_zero] at step
+    exact step
+  have h_logb_lt_x : Real.log b < x :=
+    Real.lt_of_lt_of_le h_logb_lt_logb1 h_logb_p1_le
+  have h_logb_lt_expx : Real.log b < Real.exp x :=
+    Real.lt_trans_ax h_logb_lt_x h_x_lt_expx
+  have h_diff_pos : (0 : Real) < Real.exp x - Real.log b :=
+    Real.sub_pos_of_lt h_logb_lt_expx
+  -- Unfold EMLTree.eval to get the explicit form.
+  simp only [EMLTree.eval]
+  -- Goal: 1 < exp x - log(exp x - log b).
+  -- Case split on log b's sign:
+  rcases Real.lt_total (Real.log b) 0 with h_logb_neg | h_logb_zero | h_logb_pos
+  · -- log b < 0 case: use Bernoulli helper.
+    -- M = -log b > 0. exp x - log b = exp x + (-log b) = exp x + M.
+    -- log(exp x + M) ≤ x + M = x - log b (Bernoulli helper).
+    -- eval = exp x - log(exp x + M) ≥ exp x - (x - log b) = (exp x - x) + log b.
+    -- Need eval > 1: from exp x - x > 1 - log b (helper), get (exp x - x) + log b > 1.
+    have h_M_pos : (0 : Real) < -Real.log b := by
+      have h := neg_lt_neg_of_lt h_logb_neg
+      rw [Real.neg_zero] at h
+      exact h
+    have h_M_nonneg : (0 : Real) ≤ -Real.log b := Real.le_of_lt h_M_pos
+    -- log(exp x + (-log b)) ≤ x + (-log b):
+    have h_log_le : Real.log (Real.exp x + -Real.log b) ≤ x + -Real.log b :=
+      log_exp_x_plus_M_le_x_plus_M x (-Real.log b) h_zero_le_x h_M_nonneg
+    -- Convert exp x - log b form to exp x + -log b:
+    have h_diff_eq : Real.exp x - Real.log b = Real.exp x + -Real.log b :=
+      Real.sub_def _ _
+    -- Goal: 1 < exp x - log(exp x - log b)
+    -- Rewrite the inner subtract to add-neg form:
+    rw [h_diff_eq]
+    -- Goal: 1 < exp x - log(exp x + -log b)
+    have h_exp_x_sub_x_gt :
+        1 - Real.log b < Real.exp x - x :=
+      exp_x_sub_x_gt_one_sub_log_b b x h_one_le h_one_sub_logb_le
+    -- Eval lower bound via log_le:
+    have h_eval_ge :
+        Real.exp x - (x + -Real.log b) ≤
+        Real.exp x - Real.log (Real.exp x + -Real.log b) := by
+      rw [Real.sub_def, Real.sub_def]
+      exact Real.add_le_add_left (neg_le_neg_of_le h_log_le) (Real.exp x)
+    -- Simplify exp x - (x + -log b) = (exp x - x) + log b:
+    have h_diff_simp :
+        Real.exp x - (x + -Real.log b) = (Real.exp x - x) + Real.log b := by
+      rw [Real.sub_def, Real.sub_def, Real.neg_add]
+      rw [Real.neg_neg_helper]
+      rw [← Real.add_assoc]
+    -- (exp x - x) + log b > 1:
+    have h_diff_gt_one : 1 < (Real.exp x - x) + Real.log b := by
+      have step : Real.log b + (1 - Real.log b) <
+                  Real.log b + (Real.exp x - x) :=
+        Real.add_lt_add_left h_exp_x_sub_x_gt _
+      rw [Real.sub_def] at step
+      rw [Real.add_comm 1 (-Real.log b)] at step
+      rw [← Real.add_assoc] at step
+      rw [Real.add_neg] at step
+      rw [Real.zero_add] at step
+      rw [Real.add_comm (Real.log b) (Real.exp x - x)] at step
+      exact step
+    rw [← h_diff_simp] at h_diff_gt_one
+    exact Real.lt_of_lt_of_le h_diff_gt_one h_eval_ge
+  · -- log b = 0 case: log(exp x - 0) = log(exp x) = x. eval = exp x - x > 1.
+    show 1 < Real.exp x - Real.log (Real.exp x - Real.log b)
+    rw [h_logb_zero, Real.sub_zero, Real.log_exp]
+    -- Goal: 1 < exp x - x.
+    have h_tan : x + 1 < Real.exp x := exp_tangent_line_strict x h_x_pos
+    -- exp x - x > 1 (from tangent):
+    have step : -x + (x + 1) < -x + Real.exp x :=
+      Real.add_lt_add_left h_tan _
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    rw [Real.add_comm (-x) (Real.exp x)] at step
+    rw [← Real.sub_def] at step
+    exact step
+  · -- log b > 0 case: exp x - log b < exp x. log(exp x - log b) < x.
+    -- eval = exp x - log(...) > exp x - x > 1.
+    -- Show: exp x - log b < exp x strict (from -log b < 0).
+    have h_neg_logb_lt_zero : -Real.log b < 0 := by
+      have h := neg_lt_neg_of_lt h_logb_pos
+      rw [Real.neg_zero] at h
+      exact h
+    have h_diff_lt_expx : Real.exp x - Real.log b < Real.exp x := by
+      rw [Real.sub_def]
+      have step : Real.exp x + -Real.log b < Real.exp x + 0 :=
+        Real.add_lt_add_left h_neg_logb_lt_zero _
+      rw [Real.add_zero] at step
+      exact step
+    have h_log_lt_x :
+        Real.log (Real.exp x - Real.log b) < x := by
+      have := Real.log_lt_log h_diff_pos h_diff_lt_expx
+      rw [Real.log_exp] at this
+      exact this
+    -- eval > exp x - x:
+    have h_tan : x + 1 < Real.exp x := exp_tangent_line_strict x h_x_pos
+    have h_one_lt_diff_xx : (1 : Real) < Real.exp x - x := by
+      have step : -x + (x + 1) < -x + Real.exp x :=
+        Real.add_lt_add_left h_tan _
+      rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+      rw [Real.add_comm (-x) (Real.exp x)] at step
+      rw [← Real.sub_def] at step
+      exact step
+    -- exp x - x < exp x - log(...) (from log(...) < x):
+    have h_diff_xx_lt_eval :
+        Real.exp x - x <
+        Real.exp x - Real.log (Real.exp x - Real.log b) := by
+      rw [Real.sub_def, Real.sub_def]
+      exact Real.add_lt_add_left (neg_lt_neg_of_lt h_log_lt_x) (Real.exp x)
+    show 1 < Real.exp x - Real.log (Real.exp x - Real.log b)
+    exact Real.lt_trans_ax h_one_lt_diff_xx h_diff_xx_lt_eval
+
+/-- Closure corollary. -/
+theorem not_eventually_K_over_x_one_eml_var_eml_var_const (b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml .var (.const b))).eval x) :=
+  (eml_var_eml_var_const_eventually_above_one b
+   ).not_eventually_K_over_x_one
+
 /-! ## Phase 12: conditional closure for `eml(var, eml(v,c))`
 
 The shape `eml(var, eml(var, const b))` has eval = `exp x - log(exp x - log b)`.
