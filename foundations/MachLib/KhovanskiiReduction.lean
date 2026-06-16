@@ -1088,6 +1088,23 @@ theorem degreeY_chainTotalDeriv_le_SingleExp (i : Fin 1) (p : MultiPoly 1) :
   PfaffianFn.degreeY_chainTotalDeriv_le SingleExpChain i
     (SingleExpChain_rel_deg_bound i) p
 
+/-- **Step 3i (SingleExp specialization)**: SingleExpChain's relations
+don't depend on x. Chain length 1 forces j = 0; `relations 0 = varY 0`
+has `degreeX 0`. -/
+theorem SingleExpChain_rel_x_bound :
+    ∀ j : Fin 1, MultiPoly.degreeX (SingleExpChain.relations j) = 0 := by
+  intro j
+  -- For chain length 1, j = 0; relations 0 = varY 0; degreeX (varY 0) = 0.
+  rfl
+
+/-- **chainTotalDeriv weakly decreases degreeX for SingleExpChain**:
+direct corollary specializing the general `degreeX_chainTotalDeriv_le`. -/
+theorem degreeX_chainTotalDeriv_le_SingleExp (p : MultiPoly 1) :
+    MultiPoly.degreeX (PfaffianFn.chainTotalDeriv SingleExpChain p) ≤
+    MultiPoly.degreeX p :=
+  PfaffianFn.degreeX_chainTotalDeriv_le SingleExpChain
+    SingleExpChain_rel_x_bound p
+
 /-! ## Step 3c — dropLast applicability via lex measure
 
 When the lex measure's first component reaches 0 (degreeY of the last

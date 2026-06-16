@@ -500,6 +500,75 @@ theorem degreeY_chainTotalDeriv_le {n : Nat} (chain : PfaffianChain n)
     · exact Nat.add_le_add_left
               (degreeY_chainTotalDeriv_le chain i h_rel_deg q) _
 
+/-! ### Step 3i — chainTotalDeriv weakly decreases degreeX
+
+Parallel to Step 3h's degreeY bound: for chains where each relation
+satisfies `degreeX (c.relations j) ≤ 0` (i.e., relations are constant
+in x — true for SingleExpChain), `chainTotalDeriv` weakly decreases
+`degreeX`.
+
+For SingleExpChain (relations 0 = varY 0): `degreeX (varY 0) = 0`,
+so the hypothesis holds. This bound combined with Step 3h's degreeY
+preservation gives the foundation for Step 3b's strict-decrease
+analysis: the leading y^d coefficient a_d(x) under chainTotalDeriv
+has degreeX strictly bounded by degreeX(a_d), and (modulo canonical
+form) the actual leading transforms to a_d'(x). -/
+
+/-- **chainTotalDeriv weakly decreases degreeX (per-relation constant
+in x).** Structural induction on the polynomial AST. When the chain
+relations don't depend on x (`degreeX (c.relations j) = 0` for all j),
+the total derivative weakly decreases degreeX. The `varX` case is
+where the strict decrease happens (1 → 0). -/
+theorem degreeX_chainTotalDeriv_le {n : Nat} (chain : PfaffianChain n)
+    (h_rel_x : ∀ j : Fin n, MultiPoly.degreeX (chain.relations j) = 0) :
+    ∀ p : MultiPoly n,
+      MultiPoly.degreeX (chainTotalDeriv chain p) ≤
+      MultiPoly.degreeX p
+  | .const _ => Nat.le_refl _
+  | .varX => by
+    show MultiPoly.degreeX (MultiPoly.const 1 : MultiPoly n) ≤
+         MultiPoly.degreeX (MultiPoly.varX : MultiPoly n)
+    show (0 : Nat) ≤ 1
+    omega
+  | .varY j => by
+    show MultiPoly.degreeX (chain.relations j) ≤
+         MultiPoly.degreeX (MultiPoly.varY j : MultiPoly n)
+    rw [h_rel_x j]
+    exact Nat.zero_le _
+  | .add p q => by
+    show Nat.max (MultiPoly.degreeX (chainTotalDeriv chain p))
+                  (MultiPoly.degreeX (chainTotalDeriv chain q))
+         ≤ Nat.max (MultiPoly.degreeX p) (MultiPoly.degreeX q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans (degreeX_chainTotalDeriv_le chain h_rel_x p)
+              (Nat.le_max_left _ _)
+    · exact Nat.le_trans (degreeX_chainTotalDeriv_le chain h_rel_x q)
+              (Nat.le_max_right _ _)
+  | .sub p q => by
+    show Nat.max (MultiPoly.degreeX (chainTotalDeriv chain p))
+                  (MultiPoly.degreeX (chainTotalDeriv chain q))
+         ≤ Nat.max (MultiPoly.degreeX p) (MultiPoly.degreeX q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans (degreeX_chainTotalDeriv_le chain h_rel_x p)
+              (Nat.le_max_left _ _)
+    · exact Nat.le_trans (degreeX_chainTotalDeriv_le chain h_rel_x q)
+              (Nat.le_max_right _ _)
+  | .mul p q => by
+    show Nat.max
+          (MultiPoly.degreeX (chainTotalDeriv chain p) +
+            MultiPoly.degreeX q)
+          (MultiPoly.degreeX p +
+            MultiPoly.degreeX (chainTotalDeriv chain q))
+         ≤ MultiPoly.degreeX p + MultiPoly.degreeX q
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.add_le_add_right
+              (degreeX_chainTotalDeriv_le chain h_rel_x p) _
+    · exact Nat.add_le_add_left
+              (degreeX_chainTotalDeriv_le chain h_rel_x q) _
+
 /-- Eval of the chain-total-derivative matches the polynomial-level
 chainTotalDeriv evaluation. -/
 theorem chainTotalDerivative_eval (f : PfaffianFn) (x : Real) :
