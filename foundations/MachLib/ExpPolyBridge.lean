@@ -412,5 +412,63 @@ theorem MultiPoly1ToPoly_eval (p : MultiPoly 1)
          MultiPoly.eval p x env * MultiPoly.eval q x env
     rw [ihp h_deg_p, ihq h_deg_q]
 
+/-! ## Final capstone — PfaffianFn ↔ ExpPoly correspondence
+
+Compose the three eval-correctness theorems (eval_yCoeffs,
+MultiPoly1ToPoly_eval, exp_eq_pow_varY) into a single chain showing
+that every PfaffianFn over SingleExpChain has a corresponding ExpPoly
+with the same eval. This is the final wiring that makes
+SingleExpKhovanskii's constructive auto-bound directly applicable
+to ANY PfaffianFn over SingleExpChain. -/
+
+/-- **listEvalAux ↔ evalAux bridge under y-freeness**. The
+`listEvalAux` over y-free coefficients evaluates the same as the
+ExpPoly `evalAux` over the `MultiPoly1ToPoly`-mapped list, at any
+matching offset. -/
+theorem listEvalAux_eq_evalAux_via_polyList
+    (coeffs : List (MultiPoly 1))
+    (h_free : ∀ c ∈ coeffs, MultiPoly.degreeY 0 c = 0)
+    (offset : Nat) (x : Real) (env : Fin 1 → Real)
+    (h_env : env 0 = Real.exp x) :
+    MultiPoly.listEvalAux coeffs offset x env =
+    evalAux (List.map MultiPoly1ToPoly coeffs) offset x := by
+  induction coeffs generalizing offset with
+  | nil =>
+    show (0 : Real) = 0
+    rfl
+  | cons c rest ih =>
+    show MultiPoly.eval c x env *
+         MultiPoly.eval (MultiPoly.pow (MultiPoly.varY 0) offset) x env +
+         MultiPoly.listEvalAux rest (offset + 1) x env =
+         Poly.eval (MultiPoly1ToPoly c) x *
+           Real.exp ((Real.natCast offset) * x) +
+         evalAux (List.map MultiPoly1ToPoly rest) (offset + 1) x
+    have h_c_free : MultiPoly.degreeY 0 c = 0 := h_free c (List.mem_cons_self _ _)
+    have h_rest_free :
+        ∀ c' ∈ rest, MultiPoly.degreeY 0 c' = 0 := by
+      intro c' hc'
+      exact h_free c' (List.mem_cons_of_mem _ hc')
+    rw [MultiPoly1ToPoly_eval c h_c_free x env,
+        exp_eq_pow_varY offset x env 0 h_env,
+        ih h_rest_free (offset + 1)]
+
+/-- **The final capstone**: for any MultiPoly 1, the PfaffianFn over
+SingleExpChain with that poly evaluates the same as the ExpPoly
+constructed via yCoeffs + MultiPoly1ToPoly mapping. -/
+theorem PfaffianFn_eval_eq_ExpPoly_eval (poly : MultiPoly 1) (x : Real) :
+    (⟨List.map MultiPoly1ToPoly (MultiPoly.yCoeffs poly)⟩ : ExpPoly).eval x =
+    ({ n := 1, chain := SingleExpChain, poly := poly } : PfaffianFn).eval x := by
+  -- ep.eval x = evalAux ep.coeffs 0 x.
+  show evalAux (List.map MultiPoly1ToPoly (MultiPoly.yCoeffs poly)) 0 x =
+       MultiPoly.eval poly x (SingleExpChain.chainValues x)
+  -- Bridge through listEvalAux via the y-freeness of yCoeffs entries.
+  rw [← listEvalAux_eq_evalAux_via_polyList
+        (MultiPoly.yCoeffs poly)
+        (MultiPoly.yCoeffs_entries_y_free poly)
+        0 x _ (SingleExpChain_chainValues_zero x)]
+  -- Now LHS = listEvalAux (yCoeffs poly) 0 x env, which equals listEval (yCoeffs poly) x env.
+  -- And eval_yCoeffs gives = eval poly x env.
+  exact MultiPoly.eval_yCoeffs poly x (SingleExpChain.chainValues x)
+
 end ExpPolyBridge
 end MachLib
