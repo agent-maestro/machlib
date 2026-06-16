@@ -200,6 +200,17 @@ theorem eval_zero {n : Nat} (x : Real) (env : Fin n → Real) :
 theorem eval_one {n : Nat} (x : Real) (env : Fin n → Real) :
     eval (one (n := n)) x env = 1 := rfl
 
+/-- **Pow eval — base case** (k = 0): `pow p 0` evaluates to 1. -/
+theorem eval_pow_zero {n : Nat} (p : MultiPoly n)
+    (x : Real) (env : Fin n → Real) :
+    eval (pow p 0) x env = 1 := rfl
+
+/-- **Pow eval — inductive step** (k+1): `pow p (k+1) = p * pow p k`. -/
+theorem eval_pow_succ {n : Nat} (p : MultiPoly n) (k : Nat)
+    (x : Real) (env : Fin n → Real) :
+    eval (pow p (k+1)) x env =
+    eval p x env * eval (pow p k) x env := rfl
+
 /-! ## Degree sanity -/
 
 theorem degreeX_const {n : Nat} (c : Real) :

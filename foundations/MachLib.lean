@@ -57,6 +57,7 @@ import MachLib.KhovanskiiLemma
 import MachLib.MultiPolyToPoly
 import MachLib.KhovanskiiReduction
 import MachLib.SingleExpKhovanskii
+import MachLib.ExpPolyBridge
 
 /-!
 # MachLib — top-level aggregator
