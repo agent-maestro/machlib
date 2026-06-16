@@ -340,24 +340,71 @@ theorem chainExpPolyAutoBound_succ {N : Nat}
     coeffs.length +
       (coeffs.map (chainExpPolyAutoBound N)).foldr (· + ·) 0 := rfl
 
+/-! ## Bound theorem — chain length 0 base case
+
+For a PfaffianFn over `MultiExpChain 0` (chain length 0, no chain
+variables), the eval is a polynomial in x, and the bound follows
+directly from `PolynomialRootCount.poly_root_count_bound`. -/
+
+/-- **Bound for chain length 0**: zero count ≤ chainExpPolyAutoBound. -/
+theorem MultiExp_zero_count_bound_zero (poly : MultiPoly 0)
+    (a b : MachLib.Real) (hab : a < b)
+    (hne : ∃ x : MachLib.Real,
+      (MultiPolyToPfaffianFn 0 poly).eval x ≠ 0) :
+    ∀ zeros : List MachLib.Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (MultiPolyToPfaffianFn 0 poly).eval z = 0) →
+      zeros.length ≤
+      chainExpPolyAutoBound 0 (multiPolyToChainExpPolyT 0 poly) := by
+  intro zeros hnodup hzeros
+  -- Translate eval through the bridge: f.eval z = Poly.eval (multiPolyToPoly poly) z.
+  have h_eval_bridge :
+      ∀ z : MachLib.Real,
+        (MultiPolyToPfaffianFn 0 poly).eval z =
+        Poly.eval (MachLib.PfaffianFnBound.multiPolyToPoly poly) z := by
+    intro z
+    show MultiPoly.eval poly z ((MultiExpChain 0).chainValues z) =
+         Poly.eval (MachLib.PfaffianFnBound.multiPolyToPoly poly) z
+    exact (MachLib.PfaffianFnBound.multiPolyToPoly_eval rfl poly z _).symm
+  -- Translate hne to Poly form.
+  have hne_poly : ∃ x : MachLib.Real,
+      Poly.eval (MachLib.PfaffianFnBound.multiPolyToPoly poly) x ≠ 0 := by
+    obtain ⟨x, hx⟩ := hne
+    refine ⟨x, ?_⟩
+    rw [← h_eval_bridge x]
+    exact hx
+  -- Translate zeros to Poly form.
+  have hzeros_poly : ∀ z ∈ zeros,
+      a < z ∧ z < b ∧
+      Poly.eval (MachLib.PfaffianFnBound.multiPolyToPoly poly) z = 0 := by
+    intro z hz
+    obtain ⟨ha, hb, heval⟩ := hzeros z hz
+    refine ⟨ha, hb, ?_⟩
+    rw [← h_eval_bridge z]
+    exact heval
+  -- Apply poly_root_count_bound + match the bound to chainExpPolyAutoBound.
+  show zeros.length ≤
+       chainExpPolyAutoBound 0
+         (MachLib.PfaffianFnBound.multiPolyToPoly poly)
+  show zeros.length ≤
+       PolynomialRootCount.degreeUpper
+         (MachLib.PfaffianFnBound.multiPolyToPoly poly)
+  exact PolynomialRootCount.poly_root_count_bound
+          (MachLib.PfaffianFnBound.multiPolyToPoly poly)
+          a b hab hne_poly zeros hnodup hzeros_poly
+
 /-! ## Status of multi-chain Khovanskii (after this commit)
 
-The recursive bound definition is in place. The remaining piece is the
-**bound theorem**: for any PfaffianFn over MultiExpChain N with finite
-nonzero point in the interval, its zero count is bounded by
-`chainExpPolyAutoBound N (multiPolyToChainExpPolyT N f.poly)`.
+The recursive bound definition + base case (N=0) are in place. The
+remaining piece for chain length N+1 is the inductive bound:
+SingleExp auto-bound applied to the outer list structure, with each
+coefficient's zero-count contribution bounded by the recursive
+chain-length-N bound (by IH).
 
-The proof composes:
-  - Chain length 0: PolynomialRootCount.poly_root_count_bound (FTA).
-  - Chain length N+1: SingleExp auto-bound applied to the outer list
-    structure, with each coefficient's zero-count contribution bounded
-    by the recursive chain-length-N bound (by IH).
-
-This is multi-session work mirroring `expPoly_auto_bound_with_propagation_aux`
-but parameterized over the nested structure. The substrate is now
-fully in place: every PfaffianFn over MultiExpChain N has a constructive
-ChainExpPolyT N representation with matching eval, so the zero count
-analysis can proceed recursively. -/
+The substrate is fully in place: every PfaffianFn over MultiExpChain N
+has a constructive ChainExpPolyT N representation with matching eval,
+so the zero count analysis can proceed recursively. -/
 
 end ChainExpPolyMod
 end MachLib
