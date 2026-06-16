@@ -1357,5 +1357,52 @@ noncomputable def PfaffianFn.buildReducer
                          r.witness inner.witness
           }
 
+/-! ## Step 3g — capstone composition (SDR → witness → zero-count bound)
+
+Compose the 3a–3f framework with `khovanskii_bound_full` into two
+user-facing theorems:
+
+  - `witness_via_sdr`: from a StepwiseDecreaseReducer, produce a
+    Khovanskii witness (existentially).
+  - `khovanskii_bound_via_sdr`: compose witness + the marquee bound
+    theorem; from an SDR + a "terminal nonzero" hypothesis, produce
+    the zero-count bound.
+
+These are the user-facing entrypoints to the constructive Khovanskii
+framework: pass an SDR + minimal hypotheses, get the closed-form bound.
+The framework is now closed modulo the SDR itself (a single specific
+lemma per chain class — the next session's frontier for SingleExp). -/
+
+/-- **Step 3g: witness extraction via SDR.** Compose buildReducer (3f)
+with witness_construction (3e). For any chain class with an SDR, every
+PfaffianFn has a Khovanskii witness. -/
+theorem PfaffianFn.witness_via_sdr
+    (sdr : PfaffianFn.StepwiseDecreaseReducer) (f : PfaffianFn) :
+    ∃ g : PfaffianFn, ∃ k : Nat,
+      g.n = 0 ∧ PfaffianFn.IsKhovanskiiReducible f g k :=
+  PfaffianFn.witness_construction (PfaffianFn.buildReducer sdr) f
+
+/-- **Step 3g: capstone bound via SDR.** From a StepwiseDecreaseReducer
+and a "terminal nonzero" hypothesis (the witness's final g has some
+nonzero point), produce the zero-count bound. The bound's existential
+form is necessary because the SDR-driven witness is constructed
+existentially. -/
+theorem PfaffianFn.khovanskii_bound_via_sdr
+    (sdr : PfaffianFn.StepwiseDecreaseReducer)
+    (f : PfaffianFn) (htri : f.chain.IsTriangular)
+    (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (terminal_nonzero :
+       ∀ g k, g.n = 0 → PfaffianFn.IsKhovanskiiReducible f g k →
+         ∃ x : Real, g.eval x ≠ 0) :
+    ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros.length ≤ N := by
+  obtain ⟨g, k, hg0, hwit⟩ := PfaffianFn.witness_via_sdr sdr f
+  refine ⟨MultiPoly.degreeX g.poly + k, ?_⟩
+  intro zeros hnodup hzeros
+  exact PfaffianFn.khovanskii_bound_full f g k hwit htri hg0 a b hab
+          hcoherent (terminal_nonzero g k hg0 hwit) zeros hnodup hzeros
+
 end PfaffianChainMod
 end MachLib
