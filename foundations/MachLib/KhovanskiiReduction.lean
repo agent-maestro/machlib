@@ -1105,6 +1105,66 @@ theorem degreeX_chainTotalDeriv_le_SingleExp (p : MultiPoly 1) :
   PfaffianFn.degreeX_chainTotalDeriv_le SingleExpChain
     SingleExpChain_rel_x_bound p
 
+/-! ## MultiExpChain — generalization to chain length N
+
+The multi-exp chain instance: chain length N with each y_i' = y_i.
+All y_i = exp(x) (the same value), but treated as N independent
+chain variables for the Khovanskii framework. Triangular (each
+relation is `varY i` which depends only on y_i, not y_j for j > i)
+and coherent. -/
+
+/-- **The multi-exp chain** of length N: each y_i' = y_i with y_i = exp x. -/
+noncomputable def MultiExpChain (N : Nat) : PfaffianChain N :=
+  { evals := fun _ => Real.exp,
+    relations := fun i => MultiPoly.varY i }
+
+/-- **The multi-exp chain is triangular**: relation i = varY i,
+which has degreeY j = 0 for j ≠ i (vacuous for j > i). -/
+theorem MultiExpChain_isTriangular (N : Nat) :
+    (MultiExpChain N).IsTriangular := by
+  intro i j hij
+  show MultiPoly.degreeY j (MultiPoly.varY i : MultiPoly N) = 0
+  have h_ne : j ≠ i := by
+    intro heq; subst heq
+    exact Nat.lt_irrefl _ hij
+  show (if j = i then 1 else 0) = 0
+  simp [h_ne]
+
+/-- **The multi-exp chain is coherent at every x**: each y_i' = y_i
+is satisfied because `HasDerivAt exp (exp x) x`, and `chainValues x i =
+exp x` for every i. -/
+theorem MultiExpChain_isCoherentAt (N : Nat) (x : Real) :
+    (MultiExpChain N).IsCoherentAt x := by
+  intro i
+  show HasDerivAt Real.exp
+        (MultiPoly.eval (MultiPoly.varY i)
+          x ((MultiExpChain N).chainValues x)) x
+  show HasDerivAt Real.exp ((MultiExpChain N).chainValues x i) x
+  show HasDerivAt Real.exp (Real.exp x) x
+  exact HasDerivAt_exp x
+
+/-- **The multi-exp chain is coherent on any interval.** -/
+theorem MultiExpChain_isCoherentOn (N : Nat) (a b : Real) :
+    (MultiExpChain N).IsCoherentOn a b := by
+  intro x _ _
+  exact MultiExpChain_isCoherentAt N x
+
+/-- The single-exp chain is a special case of the multi-exp chain
+(at N = 1). -/
+theorem MultiExpChain_eq_SingleExpChain :
+    MultiExpChain 1 = SingleExpChain := by
+  show ({ evals := fun _ => Real.exp,
+          relations := fun i => MultiPoly.varY i } : PfaffianChain 1) =
+       { evals := fun _ => Real.exp,
+         relations := fun _ => MultiPoly.varY 0 }
+  congr
+  funext i
+  have : i = 0 := by
+    apply Fin.eq_of_val_eq
+    have := i.isLt
+    omega
+  rw [this]
+
 /-! ## Step 3k — scaledReduction inherits the degree bounds
 
 `scaledReduction c f = chainTotalDeriv f.poly - c · f.poly`. Composing
