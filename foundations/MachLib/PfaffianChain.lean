@@ -476,6 +476,75 @@ noncomputable def dropLast {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
 theorem dropLast_chainLength {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
     (f.dropLast hN).chainLength = N := rfl
 
+/-! ### Lex complexity measure (Khovanskii Step 3a)
+
+For a PfaffianFn with chain length N+1, the lex measure
+  `μ(f) := (degreeY_last f.poly, degreeX (leadingCoeffY_last f.poly))`
+strictly decreases under `scaledReduction` for SingleExpChain (and
+analogous chains). When the first component reaches 0 (no dependence
+on the last chain variable), `dropLast` applies and chain length drops.
+
+This is the **termination measure** for the constructive Khovanskii
+witness construction (Step 3). The decrease lemma (Step 3b) and the
+dropLast-applicability lemma (Step 3c) follow in subsequent commits. -/
+
+/-- The "last chain variable" index for a PfaffianFn with f.n = N + 1. -/
+def lastChainIdx {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) : Fin f.n :=
+  ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩
+
+/-- **Khovanskii lex measure.** First component: degreeY of the last
+chain variable in f.poly. Second component: degreeX of the leading
+coefficient in that variable. -/
+noncomputable def PfaffianFn.lexMeasure {N : Nat} (f : PfaffianFn)
+    (hN : f.n = N + 1) : Nat × Nat :=
+  let i := lastChainIdx f hN
+  (MultiPoly.degreeY i f.poly,
+   MultiPoly.degreeX (MultiPoly.leadingCoeffY i f.poly))
+
+/-- The strict lex order on the measure. `(d, e) <_lex (d', e')` iff
+`d < d'` OR (`d = d'` AND `e < e'`). The standard pair lex order; used
+to show termination of the iterated reduce + drop loop. -/
+def lexLT (m m' : Nat × Nat) : Prop :=
+  m.1 < m'.1 ∨ (m.1 = m'.1 ∧ m.2 < m'.2)
+
+/-- `lexLT` is irreflexive. -/
+theorem lexLT_irrefl (m : Nat × Nat) : ¬ lexLT m m := by
+  intro h
+  rcases h with h1 | ⟨_, h2⟩
+  · exact Nat.lt_irrefl _ h1
+  · exact Nat.lt_irrefl _ h2
+
+/-- `lexLT` is transitive. -/
+theorem lexLT_trans {m₁ m₂ m₃ : Nat × Nat}
+    (h12 : lexLT m₁ m₂) (h23 : lexLT m₂ m₃) : lexLT m₁ m₃ := by
+  rcases h12 with h12a | ⟨h12eq, h12b⟩
+  · rcases h23 with h23a | ⟨h23eq, _⟩
+    · exact Or.inl (Nat.lt_trans h12a h23a)
+    · exact Or.inl (h23eq ▸ h12a)
+  · rcases h23 with h23a | ⟨h23eq, h23b⟩
+    · exact Or.inl (h12eq ▸ h23a)
+    · exact Or.inr ⟨h12eq.trans h23eq, Nat.lt_trans h12b h23b⟩
+
+/-- Well-foundedness of `lexLT`: the standard product-order well-foundedness.
+Used to extract a terminating reduction sequence from the strict-decrease
+lemma in Step 3d. -/
+theorem lexLT_wf : WellFounded lexLT := by
+  apply WellFounded.intro
+  intro ⟨d, e⟩
+  -- Strong induction on d (any e), then on e (fixed d).
+  suffices h : ∀ d e, Acc lexLT (d, e) from h d e
+  intro d
+  induction d using Nat.strongRecOn with
+  | _ d ihd =>
+    intro e
+    induction e using Nat.strongRecOn with
+    | _ e ihe =>
+      constructor
+      intro ⟨d', e'⟩ h
+      rcases h with hd | ⟨hdeq, he⟩
+      · exact ihd d' hd e'
+      · subst hdeq; exact ihe e' he
+
 /-- For a PfaffianFn with no chain variables, the eval has HasDerivAt
 matching the totalDerivative (which reduces to dX in this case). -/
 theorem PfaffianFn.hasDerivAt_eval_chainLength_zero (f : PfaffianFn)

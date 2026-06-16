@@ -133,6 +133,44 @@ noncomputable def dY {n : Nat} (i : Fin n) : MultiPoly n → MultiPoly n
   | sub p q   => sub (dY i p) (dY i q)
   | mul p q   => add (mul (dY i p) q) (mul p (dY i q))
 
+/-! ## Leading coefficient in `y_i` (Khovanskii Step 3a)
+
+The **formal leading coefficient** when a `MultiPoly n` is viewed as a
+polynomial in the chain variable `y_i`. The result is a `MultiPoly n`
+that — inductively — does not contain `varY i`.
+
+For the Khovanskii termination argument, the pair
+  `(degreeY i p, degreeX (leadingCoeffY i p))`
+forms the lex measure that decreases under `scaledReduction`. Step 3a
+ships the definition + basic correctness (degreeY i of the result is 0).
+Step 3b proves the lex decrease under scaledReduction. Step 3c handles
+dropLast. Step 3d combines into termination. -/
+
+/-- Formal leading coefficient in `y_i`. Result inductively does not
+contain `varY i`.
+
+  - `const c`: leading is c (degree 0 in y_i).
+  - `varX`: leading is x (degree 0 in y_i).
+  - `varY j`: j = i → `const 1` (degree 1, leading 1);
+              j ≠ i → `varY j` (degree 0, leading is itself).
+  - `add p q`: degrees max; leading is from the higher, or sum if equal.
+  - `sub p q`: similar; if q dominates, leading is negated.
+  - `mul p q`: degrees add; leading is product of leadings. -/
+noncomputable def leadingCoeffY {n : Nat} (i : Fin n) :
+    MultiPoly n → MultiPoly n
+  | const c   => const c
+  | varX      => varX
+  | varY j    => if j = i then const 1 else varY j
+  | add p q   =>
+      if degreeY i p > degreeY i q then leadingCoeffY i p
+      else if degreeY i q > degreeY i p then leadingCoeffY i q
+      else add (leadingCoeffY i p) (leadingCoeffY i q)
+  | sub p q   =>
+      if degreeY i p > degreeY i q then leadingCoeffY i p
+      else if degreeY i q > degreeY i p then sub (const 0) (leadingCoeffY i q)
+      else sub (leadingCoeffY i p) (leadingCoeffY i q)
+  | mul p q   => mul (leadingCoeffY i p) (leadingCoeffY i q)
+
 /-! ## Sanity theorems for eval -/
 
 theorem eval_const {n : Nat} (c : Real) (x : Real) (env : Fin n → Real) :
@@ -177,6 +215,59 @@ theorem degreeY_const {n : Nat} (i : Fin n) (c : Real) :
 
 theorem degreeY_varX {n : Nat} (i : Fin n) :
     degreeY i (varX (n := n)) = 0 := rfl
+
+/-! ## leadingCoeffY correctness — degreeY of leading is 0 -/
+
+/-- **The leading coefficient does not contain `varY i`.** Structural
+induction on `p`. -/
+theorem degreeY_leadingCoeffY {n : Nat} (i : Fin n) :
+    ∀ p : MultiPoly n, degreeY i (leadingCoeffY i p) = 0
+  | const _   => rfl
+  | varX      => rfl
+  | varY j    => by
+    show degreeY i (if j = i then const 1 else varY j) = 0
+    by_cases h : j = i
+    · simp [h]; rfl
+    · simp [h]
+      -- Goal: degreeY i (varY j) = 0, i.e., (if i = j then 1 else 0) = 0.
+      show (if i = j then 1 else 0) = 0
+      have h' : i ≠ j := fun heq => h heq.symm
+      simp [h']
+  | add p q   => by
+    show degreeY i (if degreeY i p > degreeY i q then leadingCoeffY i p
+                    else if degreeY i q > degreeY i p then leadingCoeffY i q
+                    else add (leadingCoeffY i p) (leadingCoeffY i q)) = 0
+    by_cases h1 : degreeY i p > degreeY i q
+    · simp [h1]; exact degreeY_leadingCoeffY i p
+    · by_cases h2 : degreeY i q > degreeY i p
+      · simp [h1, h2]; exact degreeY_leadingCoeffY i q
+      · simp [h1, h2]
+        show Nat.max (degreeY i (leadingCoeffY i p))
+                      (degreeY i (leadingCoeffY i q)) = 0
+        rw [degreeY_leadingCoeffY i p, degreeY_leadingCoeffY i q]
+        rfl
+  | sub p q   => by
+    show degreeY i (if degreeY i p > degreeY i q then leadingCoeffY i p
+                    else if degreeY i q > degreeY i p then
+                      sub (const 0) (leadingCoeffY i q)
+                    else sub (leadingCoeffY i p) (leadingCoeffY i q)) = 0
+    by_cases h1 : degreeY i p > degreeY i q
+    · simp [h1]; exact degreeY_leadingCoeffY i p
+    · by_cases h2 : degreeY i q > degreeY i p
+      · simp [h1, h2]
+        show Nat.max (degreeY i (const 0 : MultiPoly n))
+                      (degreeY i (leadingCoeffY i q)) = 0
+        rw [degreeY_leadingCoeffY i q]
+        rfl
+      · simp [h1, h2]
+        show Nat.max (degreeY i (leadingCoeffY i p))
+                      (degreeY i (leadingCoeffY i q)) = 0
+        rw [degreeY_leadingCoeffY i p, degreeY_leadingCoeffY i q]
+        rfl
+  | mul p q   => by
+    show degreeY i (mul (leadingCoeffY i p) (leadingCoeffY i q)) = 0
+    show degreeY i (leadingCoeffY i p) + degreeY i (leadingCoeffY i q) = 0
+    rw [degreeY_leadingCoeffY i p, degreeY_leadingCoeffY i q]
 
 theorem totalDegree_const {n : Nat} (c : Real) :
     totalDegree (const c : MultiPoly n) = 0 := rfl
