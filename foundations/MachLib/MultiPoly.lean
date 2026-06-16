@@ -269,6 +269,91 @@ theorem degreeY_leadingCoeffY {n : Nat} (i : Fin n) :
     show degreeY i (leadingCoeffY i p) + degreeY i (leadingCoeffY i q) = 0
     rw [degreeY_leadingCoeffY i p, degreeY_leadingCoeffY i q]
 
+/-! ## Step 3b building blocks — algebraic lemmas for leadingCoeffY
+
+These lemmas describe how `leadingCoeffY` and `degreeY` behave under
+key polynomial operations. The strict-decrease claim for `scaledReduction`
+(Step 3b proper) follows by combining them.
+
+### The argument shape (for SingleExpChain, written out):
+
+For `f : PfaffianFn` with chain length 1 (single y), with `c : Real` and
+`d := degreeY 0 f.poly`:
+  - `chainTotalDeriv chain (varY 0) = chain.relations 0 = varY 0` (single-exp).
+  - For p = Σ_k a_k(x) · y^k: chainTotalDeriv preserves degreeY, leading
+    coefficient becomes a_d' + d·a_d.
+  - `mul (const c) p` preserves degreeY, leading multiplied by c.
+  - `sub` preserves degreeY when equal; when degrees match exactly,
+    leading is the difference.
+
+With c = d, the leading y^d coefficient of `f' - c·f` becomes:
+  (a_d' + d·a_d) - d·a_d = a_d'.
+
+So degreeX of leading strictly decreases by 1 (when a_d has positive
+x-degree). When a_d has x-degree 0, the next iteration zeros it out
+and degreeY_last drops by 1. Either way, lex measure decreases.
+
+The "leading is a_d' + d·a_d" claim requires algebraic normalization
+(MultiPoly canonical form), which is multi-session future work. The
+building blocks below are the foundation. -/
+
+/-- `degreeY` of a constant-product preserves the operand's degree. -/
+theorem degreeY_mul_const {n : Nat} (i : Fin n) (c : Real)
+    (p : MultiPoly n) :
+    degreeY i (mul (const c) p) = degreeY i p := by
+  show degreeY i (const c : MultiPoly n) + degreeY i p = degreeY i p
+  rw [degreeY_const]
+  exact Nat.zero_add _
+
+/-- `leadingCoeffY` of a constant-product multiplies leading by the constant. -/
+theorem leadingCoeffY_mul_const {n : Nat} (i : Fin n) (c : Real)
+    (p : MultiPoly n) :
+    leadingCoeffY i (mul (const c) p) = mul (const c) (leadingCoeffY i p) := rfl
+
+/-- When `p` has strictly smaller `degreeY i` than `q`, the `sub`'s
+formal degree is `q`'s degree. -/
+theorem degreeY_sub_of_lt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (hpq : degreeY i p < degreeY i q) :
+    degreeY i (sub p q) = degreeY i q := by
+  show Nat.max (degreeY i p) (degreeY i q) = degreeY i q
+  exact Nat.max_eq_right (Nat.le_of_lt hpq)
+
+/-- When degrees match exactly, the formal degree of `sub` is the common
+value. (May overstate the true degree due to cancellation; canonical
+form is required to detect it.) -/
+theorem degreeY_sub_of_eq {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (hpq : degreeY i p = degreeY i q) :
+    degreeY i (sub p q) = degreeY i p := by
+  show Nat.max (degreeY i p) (degreeY i q) = degreeY i p
+  rw [hpq]; exact Nat.max_self _
+
+/-- When `p` has strictly smaller `degreeY i` than `q`, the `sub`'s
+leading coefficient is the negated leading of `q`. -/
+theorem leadingCoeffY_sub_of_lt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (hpq : degreeY i p < degreeY i q) :
+    leadingCoeffY i (sub p q) = sub (const 0) (leadingCoeffY i q) := by
+  show (if degreeY i p > degreeY i q then leadingCoeffY i p
+        else if degreeY i q > degreeY i p then
+          sub (const 0) (leadingCoeffY i q)
+        else sub (leadingCoeffY i p) (leadingCoeffY i q))
+       = sub (const 0) (leadingCoeffY i q)
+  have h1 : ¬ degreeY i p > degreeY i q := Nat.not_lt.mpr (Nat.le_of_lt hpq)
+  simp [h1, hpq]
+
+/-- When degrees match exactly, the `sub`'s leading coefficient is the
+difference of leadings. -/
+theorem leadingCoeffY_sub_of_eq {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (hpq : degreeY i p = degreeY i q) :
+    leadingCoeffY i (sub p q) = sub (leadingCoeffY i p) (leadingCoeffY i q) := by
+  show (if degreeY i p > degreeY i q then leadingCoeffY i p
+        else if degreeY i q > degreeY i p then
+          sub (const 0) (leadingCoeffY i q)
+        else sub (leadingCoeffY i p) (leadingCoeffY i q))
+       = sub (leadingCoeffY i p) (leadingCoeffY i q)
+  have h1 : ¬ degreeY i p > degreeY i q := by rw [hpq]; exact Nat.lt_irrefl _
+  have h2 : ¬ degreeY i q > degreeY i p := by rw [hpq]; exact Nat.lt_irrefl _
+  simp [h1, h2]
+
 theorem totalDegree_const {n : Nat} (c : Real) :
     totalDegree (const c : MultiPoly n) = 0 := rfl
 
