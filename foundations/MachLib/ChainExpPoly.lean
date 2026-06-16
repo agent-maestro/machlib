@@ -1,6 +1,8 @@
 import MachLib.MultiPoly
 import MachLib.PolynomialEvidence
 import MachLib.Exp
+import MachLib.MultiPolyCanonYN
+import MachLib.PfaffianFnBound
 
 /-!
 # MachLib.ChainExpPoly — nested ExpPoly-like representation for arbitrary chain length
@@ -92,6 +94,34 @@ theorem ChainExpPolyT_one : ChainExpPolyT 1 = List Poly := rfl
 
 theorem ChainExpPolyT_succ (N : Nat) :
     ChainExpPolyT (N + 1) = List (ChainExpPolyT N) := rfl
+
+/-! ## Bridge MultiPoly N → ChainExpPolyT N
+
+The recursive bridge: for chain length 0, use `multiPolyToPoly`
+(from PfaffianFnBound). For chain length N+1, decompose via
+`yCoeffsAtLast_dropped` to get a `List (MultiPoly N)`, then recurse
+on each element to get a `List (ChainExpPolyT N) = ChainExpPolyT (N+1)`.
+
+This is the multi-chain analog of `ExpPoly.toMultiPoly1`'s inverse
+direction. -/
+
+open MachLib.MultiPolyMod (MultiPoly)
+open MachLib.MultiPolyMod.MultiPoly
+
+/-- **The recursive bridge**: convert a `MultiPoly N` into a
+`ChainExpPolyT N` by structural recursion on N. -/
+noncomputable def multiPolyToChainExpPolyT : (N : Nat) → MultiPoly N →
+    ChainExpPolyT N
+  | 0,     p => MachLib.PfaffianFnBound.multiPolyToPoly p
+  | N + 1, p =>
+      (yCoeffsAtLast_dropped p).map (multiPolyToChainExpPolyT N)
+
+theorem multiPolyToChainExpPolyT_zero (p : MultiPoly 0) :
+    multiPolyToChainExpPolyT 0 p = MachLib.PfaffianFnBound.multiPolyToPoly p := rfl
+
+theorem multiPolyToChainExpPolyT_succ {N : Nat} (p : MultiPoly (N + 1)) :
+    multiPolyToChainExpPolyT (N + 1) p =
+    (yCoeffsAtLast_dropped p).map (multiPolyToChainExpPolyT N) := rfl
 
 end ChainExpPolyMod
 end MachLib
