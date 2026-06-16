@@ -265,6 +265,92 @@ theorem listEval_listAdd (l1 l2 : List (MultiPoly 1))
     listEval l1 x env + listEval l2 x env :=
   listEvalAux_listAdd l1 l2 0 x env
 
+/-! ## Eval correctness — add case via induction
+
+The compound `eval_yCoeffs_add` uses the auto-generated equation lemma
+`yCoeffs.eq_4` (or matched via `match` reduction in `induction`). When
+inducting on `p`, the `add` case lets Lean unfold `yCoeffs (add p q)`
+via the inductive eliminator. -/
+
+/-- **Add case** (via induction): listEval of yCoeffs distributes over
+add. Uses the inductive eliminator to access the def-eq reduction. -/
+theorem eval_yCoeffs_add_via_induction
+    (p q : MultiPoly 1) (x : Real) (env : Fin 1 → Real)
+    (ihp : listEval (yCoeffs p) x env = eval p x env)
+    (ihq : listEval (yCoeffs q) x env = eval q x env) :
+    listEval (yCoeffs (add p q)) x env = eval (add p q) x env := by
+  -- yCoeffs (add p q) unfolds to listAdd (yCoeffs p) (yCoeffs q)
+  -- via the structural recursion. Use `change` to bypass any well-founded
+  -- wrapping.
+  change listEval (listAdd (yCoeffs p) (yCoeffs q)) x env =
+         eval p x env + eval q x env
+  rw [listEval_listAdd, ihp, ihq]
+
+/-! ## listSub eval correctness
+
+The `listSub` operation evaluates to the difference of its operands'
+evals. The proof follows the same structure as `listEvalAux_listAdd`
+but with subtraction. -/
+
+theorem listSub_nil_nil : listSub ([] : List (MultiPoly 1)) [] = [] := rfl
+
+theorem listSub_nil_cons (q : MultiPoly 1) (qs : List (MultiPoly 1)) :
+    listSub [] (q :: qs) = sub (const 0) q :: listSub [] qs := rfl
+
+theorem listSub_cons_nil (p : MultiPoly 1) (ps : List (MultiPoly 1)) :
+    listSub (p :: ps) [] = p :: ps := rfl
+
+theorem listSub_cons_cons (p q : MultiPoly 1) (ps qs : List (MultiPoly 1)) :
+    listSub (p :: ps) (q :: qs) = sub p q :: listSub ps qs := rfl
+
+/-- **listSub is eval-subtractive at any offset.** Induction on `l1`,
+case-split on `l2`. Both compound cases use the algebraic rearrangement
+`(a - b) * c = a * c - b * c` via `mul_distrib_right` + `neg_mul`. -/
+theorem listEvalAux_listSub (l1 l2 : List (MultiPoly 1)) (k : Nat)
+    (x : Real) (env : Fin 1 → Real) :
+    listEvalAux (listSub l1 l2) k x env =
+    listEvalAux l1 k x env - listEvalAux l2 k x env := by
+  induction l1 generalizing l2 k with
+  | nil =>
+    induction l2 generalizing k with
+    | nil =>
+      rw [listSub_nil_nil, listEvalAux_nil, Real.sub_def, Real.neg_zero,
+          Real.add_zero]
+    | cons q qs ihq =>
+      rw [listSub_nil_cons, listEvalAux_cons, listEvalAux_cons,
+          listEvalAux_nil, ihq (k + 1), eval_sub]
+      simp only [Real.sub_def, Real.mul_distrib_right, Real.neg_add,
+                 Real.neg_mul, Real.zero_add, Real.zero_mul, eval_const,
+                 listEvalAux_nil, Real.add_zero, Real.neg_zero]
+  | cons p ps ih =>
+    cases l2 with
+    | nil =>
+      rw [listSub_cons_nil, listEvalAux_nil, Real.sub_def, Real.neg_zero,
+          Real.add_zero]
+    | cons q qs =>
+      rw [listSub_cons_cons, listEvalAux_cons, listEvalAux_cons,
+          listEvalAux_cons, eval_sub, ih qs (k + 1)]
+      simp only [Real.sub_def, Real.mul_distrib_right, Real.neg_add,
+                 Real.neg_mul]
+      ac_rfl
+
+/-- **listSub is eval-subtractive** (offset 0). -/
+theorem listEval_listSub (l1 l2 : List (MultiPoly 1))
+    (x : Real) (env : Fin 1 → Real) :
+    listEval (listSub l1 l2) x env =
+    listEval l1 x env - listEval l2 x env :=
+  listEvalAux_listSub l1 l2 0 x env
+
+/-- **Sub case** (via induction): listEval of yCoeffs distributes over sub. -/
+theorem eval_yCoeffs_sub_via_induction
+    (p q : MultiPoly 1) (x : Real) (env : Fin 1 → Real)
+    (ihp : listEval (yCoeffs p) x env = eval p x env)
+    (ihq : listEval (yCoeffs q) x env = eval q x env) :
+    listEval (yCoeffs (sub p q)) x env = eval (sub p q) x env := by
+  change listEval (listSub (yCoeffs p) (yCoeffs q)) x env =
+         eval p x env - eval q x env
+  rw [listEval_listSub, ihp, ihq]
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
