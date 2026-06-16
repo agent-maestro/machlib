@@ -314,5 +314,50 @@ theorem MultiPolyToPfaffianFn_eval_eq_chainEval (N : Nat)
          ((MultiExpChain N).chainValues x)
   exact (chainEval_multiPolyToChainExpPolyT N poly x _).symm
 
+/-! ## Recursive auto-bound for ChainExpPolyT
+
+A Khovanskii-style upper bound that recursively counts:
+  - chain length 0: `degreeUpper poly` (polynomial FTA bound).
+  - chain length N+1: list length + Σ recursive bounds on each coefficient.
+
+This is the multi-chain analog of `expPolyAutoBound` from
+`SingleExpKhovanskii`. For chain length 1 (= List Poly), it
+specializes to `length + Σ degreeUpper coeffs[i]` which matches the
+single-exp track (modulo `polySimplify`). -/
+
+/-- Recursive auto-bound for ChainExpPolyT N. -/
+noncomputable def chainExpPolyAutoBound : (N : Nat) → ChainExpPolyT N → Nat
+  | 0,     p      => PolynomialRootCount.degreeUpper p
+  | _ + 1, coeffs =>
+      coeffs.length + (coeffs.map (chainExpPolyAutoBound _)).foldr (· + ·) 0
+
+theorem chainExpPolyAutoBound_zero (p : Poly) :
+    chainExpPolyAutoBound 0 p = PolynomialRootCount.degreeUpper p := rfl
+
+theorem chainExpPolyAutoBound_succ {N : Nat}
+    (coeffs : ChainExpPolyT (N + 1)) :
+    chainExpPolyAutoBound (N + 1) coeffs =
+    coeffs.length +
+      (coeffs.map (chainExpPolyAutoBound N)).foldr (· + ·) 0 := rfl
+
+/-! ## Status of multi-chain Khovanskii (after this commit)
+
+The recursive bound definition is in place. The remaining piece is the
+**bound theorem**: for any PfaffianFn over MultiExpChain N with finite
+nonzero point in the interval, its zero count is bounded by
+`chainExpPolyAutoBound N (multiPolyToChainExpPolyT N f.poly)`.
+
+The proof composes:
+  - Chain length 0: PolynomialRootCount.poly_root_count_bound (FTA).
+  - Chain length N+1: SingleExp auto-bound applied to the outer list
+    structure, with each coefficient's zero-count contribution bounded
+    by the recursive chain-length-N bound (by IH).
+
+This is multi-session work mirroring `expPoly_auto_bound_with_propagation_aux`
+but parameterized over the nested structure. The substrate is now
+fully in place: every PfaffianFn over MultiExpChain N has a constructive
+ChainExpPolyT N representation with matching eval, so the zero count
+analysis can proceed recursively. -/
+
 end ChainExpPolyMod
 end MachLib
