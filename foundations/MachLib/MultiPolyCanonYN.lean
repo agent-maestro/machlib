@@ -621,6 +621,51 @@ theorem yCoeffsAt_entries_degreeY_zero {n : Nat} (i : Fin n)
     exact listMulN_entries_degreeY_zero i
             (yCoeffsAt i p) (yCoeffsAt i q) ihp ihq c hc
 
+/-! ## Multi-chain bridge — yCoeffsAt + dropLastY = chain length reduction
+
+The classical Khovanskii chain-length induction: for a polynomial
+`p : MultiPoly (N+1)`, decompose into y_last-free coefficients via
+`yCoeffsAt last`, then drop the last chain variable from each
+coefficient via `dropLastY`. The result is a `List (MultiPoly N)`
+representing the same polynomial in the "polynomial in y_last with
+coefficients in chain length N" form.
+
+This is the inductive structure for the multi-chain Khovanskii
+recursion: at each level, canonicalize via `yCoeffsAt` and project
+down via `dropLastY`. -/
+
+/-- The "last chain variable" index for `MultiPoly (N+1)`. -/
+def lastIdx (N : Nat) : Fin (N + 1) := ⟨N, Nat.lt_succ_self N⟩
+
+/-- **Apply yCoeffsAt last + dropLastY**: each coefficient drops to
+`MultiPoly N`. The result represents `p` as a polynomial in y_last
+with coefficients in the smaller chain. -/
+noncomputable def yCoeffsAtLast_dropped {N : Nat}
+    (p : MultiPoly (N + 1)) : List (MultiPoly N) :=
+  (yCoeffsAt (lastIdx N) p).map dropLastY
+
+/-- **The eval-bridge for each entry**: the dropped coefficient
+evaluates the same as the original (in the larger env), because
+the original has degreeY_last = 0. -/
+theorem dropLastY_yCoeffsAt_entry_eval {N : Nat}
+    (p : MultiPoly (N + 1)) (c : MultiPoly (N + 1))
+    (hc : c ∈ yCoeffsAt (lastIdx N) p)
+    (x : Real) (env : Fin (N + 1) → Real) :
+    eval (dropLastY c) x (fun i => env ⟨i.val, by omega⟩) =
+    eval c x env := by
+  apply eval_dropLastY c
+  exact yCoeffsAt_entries_degreeY_zero (lastIdx N) p c hc
+
+/-- **The structural decomposition theorem**: `p` evaluates as
+`Σ_k eval c_k env · (env last)^k` where `c_k` are the original
+y_last-free coefficients of `yCoeffsAt last p`. Direct from
+`eval_yCoeffsAt` specialized to `i = last`. -/
+theorem yCoeffsAt_last_eval {N : Nat} (p : MultiPoly (N + 1))
+    (x : Real) (env : Fin (N + 1) → Real) :
+    listEvalN (lastIdx N) (yCoeffsAt (lastIdx N) p) x env =
+    eval p x env :=
+  eval_yCoeffsAt (lastIdx N) p x env
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
