@@ -520,6 +520,62 @@ theorem ExpPoly_M_le_chainExpPolyAutoBound_one (coeffs : List Poly) :
   exact Nat.add_le_add_left
     (sumSimplifiedDegrees_le_sum_degreeUpper coeffs) _
 
+/-! ## Chain length 1 bound theorem — full wrapper
+
+Composes all the chain-length-1 pieces into a single bound theorem.
+The user supplies SingleExpKhovanskii's auto-bound hypotheses
+(propagation + strict-last); the theorem produces the multi-chain
+bound via chainExpPolyAutoBound 1. -/
+
+/-- **MultiExp Khovanskii bound at chain length 1**. For a MultiPoly 1
+polynomial poly and an interval (a, b), the PfaffianFn over
+MultiExpChain 1 has zero count bounded by
+`chainExpPolyAutoBound 1 (multiPolyToChainExpPolyT 1 poly)`, given
+the standard SingleExp propagation + strict-last hypotheses. -/
+theorem MultiExp_zero_count_bound_one
+    (poly : MultiPoly 1) (a b : MachLib.Real) (hab : a < b)
+    (M_hyp : Nat)
+    (h_meas :
+      (multiPolyToChainExpPolyT 1 poly).length +
+      MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+        (multiPolyToChainExpPolyT 1 poly) ≤ M_hyp)
+    (h_prop : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤ M_hyp →
+      (∃ x, ep'.eval x ≠ 0))
+    (h_strict_last : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ∀ (hne_c : ep'.coeffs ≠ []),
+      ep'.coeffs.length ≥ 2 →
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤ M_hyp →
+      PolynomialRootCount.degreeUpper
+        (MachLib.PolynomialRootCount.polySimplify
+          (ep'.coeffs.getLast hne_c)) > 0) :
+    ∀ zeros : List MachLib.Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (MultiPolyToPfaffianFn 1 poly).eval z = 0) →
+      zeros.length ≤ M_hyp := by
+  intro zeros hnodup hzeros
+  -- Build the ExpPoly directly.
+  let ep : MachLib.SingleExpKhovanskii.ExpPoly :=
+    ⟨multiPolyToChainExpPolyT 1 poly⟩
+  -- Translate the zero conditions through the bridges.
+  have hzeros_ep : ∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0 := by
+    intro z hz
+    obtain ⟨ha, hb, hf_z⟩ := hzeros z hz
+    refine ⟨ha, hb, ?_⟩
+    show MachLib.SingleExpKhovanskii.ExpPoly.evalAux
+           (multiPolyToChainExpPolyT 1 poly) 0 z = 0
+    rw [MultiPolyToPfaffianFn_eval_eq_chainEval] at hf_z
+    rw [chainEval_one_eq_evalAux (multiPolyToChainExpPolyT 1 poly) z _
+          (MultiExpChain_chainValues_const 1 z 0)] at hf_z
+    exact hf_z
+  exact MachLib.SingleExpKhovanskii.ExpPoly.expPoly_auto_bound_with_propagation_aux
+          M_hyp ep h_meas h_prop h_strict_last a b hab zeros hnodup hzeros_ep
+
 /-! ## Multi-chain Khovanskii sprint summary (substrate complete)
 
 After 8 commits in this push chain (e3d2617 → b5cc2d7), the
