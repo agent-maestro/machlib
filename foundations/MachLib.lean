@@ -58,6 +58,7 @@ import MachLib.MultiPolyToPoly
 import MachLib.KhovanskiiReduction
 import MachLib.SingleExpKhovanskii
 import MachLib.ExpPolyBridge
+import MachLib.MultiPolyCanonY
 
 /-!
 # MachLib — top-level aggregator
