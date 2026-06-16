@@ -3828,4 +3828,83 @@ The residual non-clamp non-K/x shapes (eml(var, var) and its
 descendants) remain the structural-induction frontier.
 -/
 
+/-! ## Phase 15B: structural-induction framework
+
+Define `EMLGoodClass` as the disjunction of the 4 "safe" asymptotic
+classes (all disjoint from `EventuallyKOverX 1`). The goal of the
+framework is `∀ t : EMLTree, EMLGoodClass t.eval`, from which the
+main result `∀ t, ¬ EventuallyKOverX 1 t.eval` follows.
+
+This file ships:
+  - The predicate.
+  - The disjointness lemma `EMLGoodClass → ¬ EventuallyKOverX 1`.
+  - Base cases for `const c` and `var`.
+  - The `eml(const c, const d)` inductive case (the simplest one).
+
+The remaining inductive cases (5 × 5 = 25 sub-cases for non-trivial
+t1, t2) are the multi-session frontier — each maps to a depth-2 or
+deeper closure theorem already shipped (Phases 0-14). Lifting them
+into class-level closure rules is the structural-induction proper.
+
+The scaffolding gives a future session a clean target. -/
+
+/-- A function is in one of the 4 "safe" asymptotic classes — all
+disjoint from `EventuallyKOverX 1`. -/
+def EMLGoodClass (f : Real → Real) : Prop :=
+  EventuallyConstant f ∨
+  EventuallyAboveOne f ∨
+  EventuallyNegative f ∨
+  EventuallyMinusLog f
+
+/-- **The framework's key disjointness lemma.** Membership in any
+of the 4 safe classes precludes `EventuallyKOverX 1`. -/
+theorem EMLGoodClass.not_eventually_K_over_x_one
+    {f : Real → Real} (h : EMLGoodClass f) :
+    ¬ EventuallyKOverX 1 f := by
+  rcases h with hc | ha | hn | hl
+  · exact hc.not_eventually_K_over_x Real.one_ne_zero
+  · exact ha.not_eventually_K_over_x_one
+  · exact hn.not_eventually_K_over_x_one
+  · exact hl.not_eventually_K_over_x_one
+
+/-- **Base case** `const c`: constant, hence EMLGoodClass via the
+EventuallyConstant disjunct. -/
+theorem const_good_class (c : Real) :
+    EMLGoodClass (EMLTree.const c).eval := by
+  left
+  refine ⟨c, 0, ?_⟩
+  intro x _
+  rfl
+
+/-- **Base case** `var`: identity, EMLGoodClass via the
+EventuallyAboveOne disjunct (x > 1 for x ≥ 1+1). -/
+theorem var_good_class :
+    EMLGoodClass EMLTree.var.eval := by
+  right; left
+  refine ⟨1 + 1, ?_⟩
+  intro x hx
+  exact Real.lt_of_lt_of_le one_lt_one_plus_one hx
+
+/-- **Simplest inductive case** `eml(const c, const d)`: eval =
+`exp c - log d` (constant). EMLGoodClass via EventuallyConstant. -/
+theorem eml_const_const_good_class (c d : Real) :
+    EMLGoodClass (EMLTree.eml (.const c) (.const d)).eval := by
+  left
+  refine ⟨Real.exp c - Real.log d, 0, ?_⟩
+  intro x _
+  rfl
+
+/-- **Phase 15B main theorem (partial).** For trees whose
+`EMLGoodClass` membership has been shipped, the K/x-non-membership
+follows directly.
+
+This is currently a thin wrapper around `EMLGoodClass.not_eventually_K_over_x_one`.
+The Phase 15B frontier is to ship `∀ t : EMLTree, EMLGoodClass t.eval`
+via structural induction; once that lands, the main theorem
+`∀ t, ¬ EventuallyKOverX 1 t.eval` follows by composition. -/
+theorem not_eventually_K_over_x_one_of_good_class
+    {f : Real → Real} (h : EMLGoodClass f) :
+    ¬ EventuallyKOverX 1 f :=
+  h.not_eventually_K_over_x_one
+
 end MachLib
