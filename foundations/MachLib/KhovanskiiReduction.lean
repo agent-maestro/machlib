@@ -1111,5 +1111,90 @@ unchanged. -/
 theorem PfaffianFn.scaledReduction_n (c : Real) (f : PfaffianFn) :
     (f.scaledReduction c).n = f.n := rfl
 
+/-! ## Step 3d — witness construction orchestration
+
+The witness construction takes any triangular PfaffianFn f and produces
+g (with g.n = 0) plus a counter k such that `IsKhovanskiiReducible f g k`.
+The recursion is on (f.n, lexMeasure f) — outer on chain length, inner
+on lex measure within each chain length.
+
+The outer recursion (induct on chain length): when f.n = 0, witness is
+refl. When f.n > 0, an inner loop applies reduce steps until lex first
+component reaches 0, then a drop step reduces chain length to f.n - 1
+and recursion continues.
+
+The inner loop requires the Step 3b strict-decrease lemma as input —
+that lemma is multi-session future work. This file ships:
+  - IsKhovanskiiReducible.trans (composability for chaining witnesses).
+  - witness_chain_length_zero (the base case: f.n = 0 → trivial witness).
+  - The outer recursion structure documented for future Step 3d closure. -/
+
+/-- **Transitivity**: `IsKhovanskiiReducible` chains via composition.
+If f reduces to g₁ in k₁ steps and g₁ reduces to g₂ in k₂ steps, then
+f reduces to g₂ in k₁ + k₂ steps. -/
+theorem PfaffianFn.IsKhovanskiiReducible.trans
+    {f g₁ g₂ : PfaffianFn} {k₁ k₂ : Nat}
+    (h₁ : PfaffianFn.IsKhovanskiiReducible f g₁ k₁)
+    (h₂ : PfaffianFn.IsKhovanskiiReducible g₁ g₂ k₂) :
+    PfaffianFn.IsKhovanskiiReducible f g₂ (k₁ + k₂) := by
+  induction h₁ with
+  | refl f =>
+    show PfaffianFn.IsKhovanskiiReducible f g₂ (0 + k₂)
+    rw [Nat.zero_add]
+    exact h₂
+  | reduce f g k c _ ih =>
+    show PfaffianFn.IsKhovanskiiReducible f g₂ (k + 1 + k₂)
+    have h_step : k + 1 + k₂ = k + k₂ + 1 := by omega
+    rw [h_step]
+    exact PfaffianFn.IsKhovanskiiReducible.reduce f g₂ (k + k₂) c (ih h₂)
+  | drop f g k N hN h_deg_zero _ ih =>
+    show PfaffianFn.IsKhovanskiiReducible f g₂ (k + k₂)
+    exact PfaffianFn.IsKhovanskiiReducible.drop f g₂ (k + k₂) N hN
+            h_deg_zero (ih h₂)
+
+/-- **Base case** for Step 3d's outer recursion: when f.n = 0, the
+witness is trivially refl with g = f, k = 0. -/
+theorem PfaffianFn.witness_chain_length_zero (f : PfaffianFn) (h0 : f.n = 0) :
+    ∃ g : PfaffianFn, ∃ k : Nat,
+      g.n = 0 ∧ PfaffianFn.IsKhovanskiiReducible f g k :=
+  ⟨f, 0, h0, PfaffianFn.IsKhovanskiiReducible.refl f⟩
+
+/-! ### Step 3d structural recursion (parametric in Step 3b's strict-decrease)
+
+For each `f` with `f.n = N + 1`, given a "single-step reducer" that
+produces either a drop or a reduce step landing on a strictly smaller
+PfaffianFn (smaller in `f.n` or in `lexMeasure`), we can assemble the
+full witness via the well-founded recursion on `(f.n, lexMeasure f)`.
+
+The 1-step reducer takes any PfaffianFn with chain length > 0 and
+returns a witness for a smaller f'. Step 3a's `lexLT_wf` extracts
+termination. The Step 3b lemma (strict-decrease under scaledReduction
+with c = degreeY_last) provides the reduce-step instance of this
+reducer for SingleExpChain (multi-session).
+
+NOTE: this is the STATEMENT only. The proof requires the Step 3b
+strict-decrease lemma as the missing input. -/
+
+/-- A "single chain-length-decreasing step": from f, produce f' with
+strictly smaller chain length AND an IsKhovanskiiReducible witness
+between them. For drop steps. -/
+structure PfaffianFn.DropStep (f : PfaffianFn) where
+  result : PfaffianFn
+  counter : Nat
+  result_n_lt : result.n < f.n
+  witness : PfaffianFn.IsKhovanskiiReducible f result counter
+
+/-- The drop-step witness when lex first component is 0. Builds a
+DropStep using Step 3c's drop_one helper. -/
+noncomputable def PfaffianFn.DropStep.ofLexFirstZero
+    {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1)
+    (h_lex_zero : (PfaffianFn.lexMeasure f hN).1 = 0) :
+    PfaffianFn.DropStep f :=
+  { result := f.dropLast hN
+    counter := 0
+    result_n_lt := by
+      rw [PfaffianFn.dropLast_n, hN]; exact Nat.lt_succ_self N
+    witness := PfaffianFn.IsKhovanskiiReducible.drop_one f hN h_lex_zero }
+
 end PfaffianChainMod
 end MachLib
