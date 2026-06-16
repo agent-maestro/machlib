@@ -4,6 +4,7 @@ import MachLib.PolynomialRootCount
 import MachLib.Exp
 import MachLib.SingleExpKhovanskii
 import MachLib.KhovanskiiReduction
+import MachLib.MultiPolyCanonY
 
 /-!
 # MachLib.ExpPolyBridge — Poly → MultiPoly 1 embedding
@@ -337,6 +338,79 @@ theorem PfaffianFn_singleExp_auto_bound_via_bridge
     exact hf_z
   exact MachLib.SingleExpKhovanskii.ExpPoly.expPoly_auto_bound_with_propagation_aux
           M ep h_meas h_prop h_strict_last a b hab zeros hnodup hzeros_ep
+
+/-! ## Inverse direction: MultiPoly 1 → Poly (y-free polynomials)
+
+Closes the loop with option A's canonical form. A y-free `MultiPoly 1`
+(satisfying `degreeY 0 = 0`) can be exactly converted to a `Poly` via
+a structural mirror of `Poly.toMultiPoly1`. -/
+
+/-- **Inverse embedding** `MultiPoly 1 → Poly`. The `varY 0` case ships
+`Poly.const 0` (impossible under the degreeY 0 = 0 hypothesis but
+serves as a structural placeholder). -/
+noncomputable def MultiPoly1ToPoly : MultiPoly 1 → Poly
+  | MultiPoly.const c   => Poly.const c
+  | MultiPoly.varX      => Poly.var
+  | MultiPoly.varY _    => Poly.const 0
+  | MultiPoly.add p q   =>
+      Poly.add (MultiPoly1ToPoly p) (MultiPoly1ToPoly q)
+  | MultiPoly.sub p q   =>
+      Poly.sub (MultiPoly1ToPoly p) (MultiPoly1ToPoly q)
+  | MultiPoly.mul p q   =>
+      Poly.mul (MultiPoly1ToPoly p) (MultiPoly1ToPoly q)
+
+/-- **Eval correctness for the inverse embedding.** Under the hypothesis
+`degreeY 0 p = 0` (no dependence on the y_0 chain variable), the inverse
+embedding's eval matches the original MultiPoly's eval at any
+environment (since the y_0 slot is irrelevant). -/
+theorem MultiPoly1ToPoly_eval (p : MultiPoly 1)
+    (h_deg : MultiPoly.degreeY 0 p = 0)
+    (x : Real) (env : Fin 1 → Real) :
+    Poly.eval (MultiPoly1ToPoly p) x = MultiPoly.eval p x env := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    -- degreeY 0 (varY j) = if 0 = j then 1 else 0. The hypothesis says
+    -- this equals 0, so 0 ≠ j, i.e., j ≠ 0.
+    have hj : (0 : Fin 1) ≠ j := by
+      intro hjeq
+      have : (if (0 : Fin 1) = j then (1 : Nat) else 0) = 0 := h_deg
+      rw [if_pos hjeq] at this
+      exact Nat.one_ne_zero this
+    -- For Fin 1, this means j ≠ 0, but there's no such j.
+    have : j = 0 := by
+      apply Fin.eq_of_val_eq
+      have := j.isLt
+      omega
+    exact absurd this.symm hj
+  | add p q ihp ihq =>
+    have hmax : Nat.max (MultiPoly.degreeY 0 p) (MultiPoly.degreeY 0 q) = 0 := h_deg
+    have ⟨h_le_p, h_le_q⟩ :
+        MultiPoly.degreeY 0 p ≤ 0 ∧ MultiPoly.degreeY 0 q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have h_deg_p : MultiPoly.degreeY 0 p = 0 := Nat.le_zero.mp h_le_p
+    have h_deg_q : MultiPoly.degreeY 0 q = 0 := Nat.le_zero.mp h_le_q
+    show Poly.eval (MultiPoly1ToPoly p) x + Poly.eval (MultiPoly1ToPoly q) x =
+         MultiPoly.eval p x env + MultiPoly.eval q x env
+    rw [ihp h_deg_p, ihq h_deg_q]
+  | sub p q ihp ihq =>
+    have hmax : Nat.max (MultiPoly.degreeY 0 p) (MultiPoly.degreeY 0 q) = 0 := h_deg
+    have ⟨h_le_p, h_le_q⟩ :
+        MultiPoly.degreeY 0 p ≤ 0 ∧ MultiPoly.degreeY 0 q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have h_deg_p : MultiPoly.degreeY 0 p = 0 := Nat.le_zero.mp h_le_p
+    have h_deg_q : MultiPoly.degreeY 0 q = 0 := Nat.le_zero.mp h_le_q
+    show Poly.eval (MultiPoly1ToPoly p) x - Poly.eval (MultiPoly1ToPoly q) x =
+         MultiPoly.eval p x env - MultiPoly.eval q x env
+    rw [ihp h_deg_p, ihq h_deg_q]
+  | mul p q ihp ihq =>
+    have hsum : MultiPoly.degreeY 0 p + MultiPoly.degreeY 0 q = 0 := h_deg
+    have h_deg_p : MultiPoly.degreeY 0 p = 0 := by omega
+    have h_deg_q : MultiPoly.degreeY 0 q = 0 := by omega
+    show Poly.eval (MultiPoly1ToPoly p) x * Poly.eval (MultiPoly1ToPoly q) x =
+         MultiPoly.eval p x env * MultiPoly.eval q x env
+    rw [ihp h_deg_p, ihq h_deg_q]
 
 end ExpPolyBridge
 end MachLib
