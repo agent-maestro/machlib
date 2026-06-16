@@ -2485,6 +2485,106 @@ theorem not_eventually_K_over_x_one_eml_eml_var_var_eml_var_var :
                      (EMLTree.eml .var .var)).eval x) :=
   eml_eml_var_var_eml_var_var_eventually_above_one.not_eventually_K_over_x_one
 
+/-! ## Phase 12: conditional closure for `eml(var, eml(v,c))`
+
+The shape `eml(var, eml(var, const b))` has eval = `exp x - log(exp x - log b)`.
+For ANY b, eval → ∞ asymptotically, but the rate's parameter
+dependence on `log b`'s sign blocks a unified mechanical chain in
+the current axiom set:
+
+  - **log b ≥ 0**: `log(exp x - log b) ≤ log(exp x) = x` (log
+    monotone non-strict). Eval ≥ exp x - x > 1 (tangent line).
+    **Tractable** (this section).
+
+  - **log b < 0**: `log(exp x - log b) > log(exp x) = x` (log
+    monotone strict). Eval < exp x - x. Bounding tighter requires
+    the Bernoulli bound `log(1+y) ≤ y`. **Residual** — would
+    unblock 3 shapes if lifted as an axiom.
+
+This section ships the `0 ≤ log b` conditional version. The
+unconditional version is deferred to Phase 13 (axiom lift). -/
+
+/-- **`eml(var, eml(var, const b))` is EventuallyAboveOne when
+log b ≥ 0.** Eval = `exp x - log(exp x - log b)`. For log b ≥ 0:
+  - log(exp x - log b) ≤ x (log monotone).
+  - eval ≥ exp x - x > 1 (tangent line). -/
+theorem eml_var_eml_var_const_eventually_above_one_when_log_b_nonneg
+    (b : Real) (h_logb_nonneg : 0 ≤ Real.log b) :
+    EventuallyAboveOne
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml .var (.const b))).eval x) := by
+  refine ⟨max 1 (Real.log b + 1), ?_⟩
+  intro x hx
+  have h_one_le : (1 : Real) ≤ x := Real.le_trans (le_max_left _ _) hx
+  have h_logb_p1_le : Real.log b + 1 ≤ x :=
+    Real.le_trans (le_max_right _ _) hx
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  -- exp x - log b > 0:
+  have h_logb_lt_x : Real.log b < x := by
+    have h_logb_lt_logb1 : Real.log b < Real.log b + 1 := by
+      have step : Real.log b + 0 < Real.log b + 1 :=
+        Real.add_lt_add_left Real.zero_lt_one_ax _
+      rw [Real.add_zero] at step
+      exact step
+    exact Real.lt_of_lt_of_le h_logb_lt_logb1 h_logb_p1_le
+  have h_x_lt_expx : x < Real.exp x := exp_grows_strictly x
+  have h_logb_lt_expx : Real.log b < Real.exp x :=
+    Real.lt_trans_ax h_logb_lt_x h_x_lt_expx
+  have h_diff_lb_pos : (0 : Real) < Real.exp x - Real.log b :=
+    Real.sub_pos_of_lt h_logb_lt_expx
+  -- exp x - log b ≤ exp x (since log b ≥ 0 means -log b ≤ 0):
+  have h_neg_logb_le_zero : -Real.log b ≤ 0 := by
+    have h := neg_le_neg_of_le h_logb_nonneg
+    rw [Real.neg_zero] at h
+    exact h
+  have h_diff_le_expx : Real.exp x - Real.log b ≤ Real.exp x := by
+    rw [Real.sub_def]
+    have step : Real.exp x + -Real.log b ≤ Real.exp x + 0 :=
+      Real.add_le_add_left h_neg_logb_le_zero _
+    rw [Real.add_zero] at step
+    exact step
+  -- log(exp x - log b) ≤ x (log monotone + log_exp):
+  have h_log_le_x :
+      Real.log (Real.exp x - Real.log b) ≤ x := by
+    rcases (Real.le_iff_lt_or_eq
+            (Real.exp x - Real.log b) (Real.exp x)).mp
+        h_diff_le_expx with h_lt | h_eq
+    · have step := Real.log_lt_log h_diff_lb_pos h_lt
+      rw [Real.log_exp] at step
+      exact Real.le_of_lt step
+    · rw [h_eq, Real.log_exp]
+      exact Real.le_refl _
+  -- Tangent line: x + 1 < exp x.
+  have h_tan : x + 1 < Real.exp x := exp_tangent_line_strict x h_x_pos
+  -- 1 < exp x - x:
+  have h_one_lt_diff_xx : (1 : Real) < Real.exp x - x := by
+    have step : -x + (x + 1) < -x + Real.exp x :=
+      Real.add_lt_add_left h_tan _
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    rw [Real.add_comm (-x) (Real.exp x)] at step
+    rw [← Real.sub_def] at step
+    exact step
+  -- exp x - x ≤ exp x - log(exp x - log b) (from log(...) ≤ x):
+  have h_diff_xx_le_eval :
+      Real.exp x - x ≤
+      Real.exp x - Real.log (Real.exp x - Real.log b) := by
+    rw [Real.sub_def, Real.sub_def]
+    exact Real.add_le_add_left
+      (neg_le_neg_of_le h_log_le_x) (Real.exp x)
+  -- Combine: 1 < exp x - x ≤ eval.
+  show 1 < Real.exp x - Real.log (Real.exp x - Real.log b)
+  exact Real.lt_of_lt_of_le h_one_lt_diff_xx h_diff_xx_le_eval
+
+/-- Closure corollary (conditional). -/
+theorem not_eventually_K_over_x_one_eml_var_eml_var_const_when_log_b_nonneg
+    (b : Real) (h_logb_nonneg : 0 ≤ Real.log b) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml .var (EMLTree.eml .var (.const b))).eval x) :=
+  (eml_var_eml_var_const_eventually_above_one_when_log_b_nonneg b
+      h_logb_nonneg).not_eventually_K_over_x_one
+
 /-! ## Phase 7: depth-2 sweep continuation
 
 Two more shapes:
