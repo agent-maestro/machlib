@@ -1891,13 +1891,60 @@ We lift the classical "exp doubles every interval"-style bound:
 whenever x ≥ max 1 K. -/
 
 /-- **The classical superlinear exp bound.** `exp x > 2x` for
-x ≥ 1. Lifted as a classical-citation axiom following the
-precedent of `exp_tangent_line_strict` (Phase 2). Discharge
-path: convexity of exp gives `exp x ≥ exp(x/2)² > (1 + x/2)² >
-2x` for x ≥ 1 from two_lt_exp_one + monotonicity. The axiomatic
-lift saves ~30 lines of arithmetic per direct discharge. -/
-axiom exp_gt_two_x_at_one (x : Real) (hx : 1 ≤ x) :
-    (1 + 1) * x < Real.exp x
+x ≥ 1.
+
+**Discharged from `exp_tangent_line_strict`** (Phase 15 axiom audit):
+  - `exp 1 > 2` (tangent line at x = 1: `1 + 1 < exp 1`).
+  - For x ≥ 1: `x - 1 ≥ 0`, so `x ≤ exp(x - 1)` (tangent line non-strict).
+  - `exp x = exp(1 + (x-1)) = exp 1 · exp(x-1)` (exp_add).
+  - `exp 1 · x ≤ exp 1 · exp(x-1) = exp x` (multiply by exp 1 > 0).
+  - `2x < exp 1 · x` (strict, since exp 1 > 2 and x ≥ 1 > 0).
+  - Combine: `2x < exp 1 · x ≤ exp x`. -/
+theorem exp_gt_two_x_at_one (x : Real) (hx : 1 ≤ x) :
+    (1 + 1) * x < Real.exp x := by
+  -- exp 1 > 2 (tangent line at x = 1):
+  have h_exp_one_gt_two : (1 + 1 : Real) < Real.exp 1 :=
+    exp_tangent_line_strict 1 Real.zero_lt_one_ax
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax hx
+  -- x ≤ exp(x - 1):
+  have h_x_le_exp_sub : x ≤ Real.exp (x - 1) := by
+    rcases (Real.le_iff_lt_or_eq 1 x).mp hx with h_x_gt | h_x_eq
+    · -- x > 1: x - 1 > 0, tangent line strict.
+      have h_xm1_pos : (0 : Real) < x - 1 := by
+        have step : (-1 : Real) + 1 < -1 + x :=
+          Real.add_lt_add_left h_x_gt _
+        rw [Real.neg_add_self] at step
+        rw [Real.add_comm (-1 : Real) x, ← Real.sub_def] at step
+        exact step
+      have h_tan := exp_tangent_line_strict (x - 1) h_xm1_pos
+      -- h_tan : (x - 1) + 1 < exp(x - 1).
+      have h_eq : (x - 1) + 1 = x := by
+        rw [Real.sub_def, Real.add_assoc, Real.neg_add_self, Real.add_zero]
+      rw [h_eq] at h_tan
+      exact Real.le_of_lt h_tan
+    · -- x = 1: exp(x-1) = exp 0 = 1 = x.
+      rw [← h_x_eq, Real.sub_self, Real.exp_zero]
+      exact Real.le_refl _
+  -- exp x = exp 1 · exp(x - 1):
+  have h_one_plus_xm1 : (1 : Real) + (x - 1) = x := by
+    rw [Real.sub_def, ← Real.add_assoc,
+        Real.add_comm (1 : Real) x, Real.add_assoc,
+        Real.add_neg, Real.add_zero]
+  have h_exp_eq : Real.exp x = Real.exp 1 * Real.exp (x - 1) := by
+    have h := Real.exp_add 1 (x - 1)
+    rw [h_one_plus_xm1] at h
+    exact h
+  -- exp 1 · x ≤ exp x:
+  have h_exp1_pos : (0 : Real) < Real.exp 1 := Real.exp_pos 1
+  have h_exp1_x_le_expx : Real.exp 1 * x ≤ Real.exp x := by
+    rw [h_exp_eq]
+    exact Real.mul_le_mul_of_nonneg_left h_x_le_exp_sub
+      (Real.le_of_lt h_exp1_pos)
+  -- (1+1) · x < exp 1 · x:
+  have h_2x_lt_exp1_x : (1 + 1) * x < Real.exp 1 * x :=
+    Real.mul_lt_mul_of_pos_right h_exp_one_gt_two h_x_pos
+  exact Real.lt_of_lt_of_le h_2x_lt_exp1_x h_exp1_x_le_expx
 
 /-- Helper: for `x ≥ max 1 K`, `exp x - log x > K`.
 
@@ -2493,8 +2540,35 @@ closes the 3 residual shapes unconditionally via case split on
 log b's sign. -/
 
 /-- **Bernoulli bound (classical).** `log(1+y) ≤ y` for `y ≥ 0`.
-Discharge path: concavity of log + tangent line at 0. -/
-axiom log_one_plus_le_self (y : Real) (hy : 0 ≤ y) : Real.log (1 + y) ≤ y
+
+**Discharged from `exp_tangent_line_strict`** (Phase 15 axiom audit):
+  - y = 0: log(1 + 0) = log 1 = 0 = y. Equal.
+  - y > 0: tangent line strict gives `1 + y < exp y`. log monotone
+    (`log_lt_log`) and `log_exp` give `log(1 + y) < y`. -/
+theorem log_one_plus_le_self (y : Real) (hy : 0 ≤ y) :
+    Real.log (1 + y) ≤ y := by
+  rcases (Real.le_iff_lt_or_eq 0 y).mp hy with h_y_pos | h_y_zero
+  · -- y > 0:
+    have h_tan : y + 1 < Real.exp y :=
+      exp_tangent_line_strict y h_y_pos
+    have h_one_plus_y_lt_exp : 1 + y < Real.exp y := by
+      rw [Real.add_comm] at h_tan
+      exact h_tan
+    have h_one_plus_y_pos : (0 : Real) < 1 + y := by
+      have h_one_le : (1 : Real) ≤ 1 + y := by
+        have step : (1 : Real) + 0 ≤ 1 + y :=
+          Real.add_le_add_left hy _
+        rw [Real.add_zero] at step
+        exact step
+      exact Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+    have h_log_lt :
+        Real.log (1 + y) < Real.log (Real.exp y) :=
+      Real.log_lt_log h_one_plus_y_pos h_one_plus_y_lt_exp
+    rw [Real.log_exp] at h_log_lt
+    exact Real.le_of_lt h_log_lt
+  · -- y = 0:
+    rw [← h_y_zero, Real.add_zero, Real.log_one]
+    exact Real.le_refl _
 
 /-- Helper: for `x ≥ 0` and `M ≥ 0`, `log(exp x + M) ≤ x + M`.
 
