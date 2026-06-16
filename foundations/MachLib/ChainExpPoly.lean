@@ -394,17 +394,48 @@ theorem MultiExp_zero_count_bound_zero (poly : MultiPoly 0)
           (MachLib.PfaffianFnBound.multiPolyToPoly poly)
           a b hab hne_poly zeros hnodup hzeros_poly
 
-/-! ## Status of multi-chain Khovanskii (after this commit)
+/-! ## Bridge to SingleExp: chain length 1 unfolds to `List Poly` bound
 
-The recursive bound definition + base case (N=0) are in place. The
-remaining piece for chain length N+1 is the inductive bound:
-SingleExp auto-bound applied to the outer list structure, with each
-coefficient's zero-count contribution bounded by the recursive
-chain-length-N bound (by IH).
+For `N = 1` (= List Poly = `ExpPoly.coeffs`), the recursive
+`chainExpPolyAutoBound` unfolds to `length + Σ degreeUpper`. This
+matches SingleExpKhovanskii's auto-bound structure (modulo
+`polySimplify`, which gives a tighter bound but the same shape). -/
 
-The substrate is fully in place: every PfaffianFn over MultiExpChain N
-has a constructive ChainExpPolyT N representation with matching eval,
-so the zero count analysis can proceed recursively. -/
+theorem chainExpPolyAutoBound_one_unfold (coeffs : List Poly) :
+    chainExpPolyAutoBound 1 coeffs =
+    coeffs.length +
+    (coeffs.map PolynomialRootCount.degreeUpper).foldr (· + ·) 0 := rfl
+
+/-! ## Inductive bound theorem statement (the next-session frontier)
+
+The full multi-chain bound theorem:
+
+  ∀ N, ∀ poly : MultiPoly N, ∀ a b interval, ∀ nonzero witness,
+    zero count of (MultiPolyToPfaffianFn N poly).eval on (a, b) ≤
+    chainExpPolyAutoBound N (multiPolyToChainExpPolyT N poly)
+
+Proof by induction on N:
+  - N=0: MultiExp_zero_count_bound_zero (shipped above).
+  - N+1: composition of
+    1. The bridge: PfaffianFn over MultiExpChain (N+1) evaluates as
+       chainEval (N+1) of the bridged ChainExpPolyT (= layer of
+       List (ChainExpPolyT N)).
+    2. The outer list bound: each ChainExpPolyT N coefficient
+       contributes ≤ chainExpPolyAutoBound N to the total. By IH each
+       contribution is bounded; the SingleExp auto-bound-style
+       argument then gives the outer list's zero count bound of
+       `length + Σ inner_bounds`.
+
+The inductive step requires generalizing SingleExpKhovanskii's
+auto-bound to accept an arbitrary per-coefficient bound function
+(rather than the hardcoded `degreeUpper · polySimplify`). This is
+mechanical but non-trivial (~150 lines).
+
+Once shipped, the full constructive multi-chain Khovanskii closure
+ships for every triangular Pfaffian chain of the MultiExpChain form:
+each y_i' = y_i with y_i = exp x. Specialization to other coefficient-
+linear triangular chains (y_i' = c_i · y_i for varying c_i) is a
+straightforward parameter generalization. -/
 
 end ChainExpPolyMod
 end MachLib
