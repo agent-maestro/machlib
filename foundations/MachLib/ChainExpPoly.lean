@@ -178,5 +178,98 @@ theorem listEvalAuxN_eq_sumWithPowers_map_eval {n : Nat} (i : Fin n)
                        (k + 1) (env i)
     rw [← iterMul_eq_eval_pow_varY i k x env, ih (k + 1)]
 
+/-! ## Inductive case eval correctness — via List.map and eval_dropLastY
+
+For chain length N+1, the bridge composes IH (chainEval on dropped
+coefficients = eval on dropped coefficients) with eval_dropLastY (in
+restricted env = in full env, given y-freeness) and the
+sumWithPowers ↔ listEvalAuxN bridge. -/
+
+/-- Helper: `sumWithPowers` over `(coeffs.map dropLastY).map eval` equals
+the same over `coeffs.map eval`, when all entries are y-free. The bridge
+between "evaluated dropped coefficient in restricted env" and "evaluated
+original in full env". -/
+theorem sumWithPowers_map_dropLastY_eval_eq_sumWithPowers_map_eval
+    {N : Nat} (coeffs : List (MultiPoly (N + 1)))
+    (h_free : ∀ c ∈ coeffs,
+      MultiPoly.degreeY (MultiPoly.lastIdx N) c = 0)
+    (k : Nat) (x : MachLib.Real) (env : Fin (N + 1) → MachLib.Real) :
+    sumWithPowers
+      ((coeffs.map MultiPoly.dropLastY).map
+        (fun d => MultiPoly.eval d x
+          (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)))
+      k (env ⟨N, Nat.lt_succ_self N⟩) =
+    sumWithPowers
+      (coeffs.map (fun c => MultiPoly.eval c x env))
+      k (env ⟨N, Nat.lt_succ_self N⟩) := by
+  induction coeffs generalizing k with
+  | nil =>
+    show (0 : MachLib.Real) = 0
+    rfl
+  | cons c rest ih =>
+    show MultiPoly.eval (MultiPoly.dropLastY c) x
+          (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) *
+         iterMul (env ⟨N, Nat.lt_succ_self N⟩) k +
+         sumWithPowers
+           ((rest.map MultiPoly.dropLastY).map
+             (fun d => MultiPoly.eval d x
+               (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)))
+           (k + 1) (env ⟨N, Nat.lt_succ_self N⟩) =
+         MultiPoly.eval c x env *
+         iterMul (env ⟨N, Nat.lt_succ_self N⟩) k +
+         sumWithPowers
+           (rest.map (fun c => MultiPoly.eval c x env))
+           (k + 1) (env ⟨N, Nat.lt_succ_self N⟩)
+    have h_c_free : MultiPoly.degreeY (MultiPoly.lastIdx N) c = 0 :=
+      h_free c (List.mem_cons_self _ _)
+    have h_rest_free :
+        ∀ c' ∈ rest, MultiPoly.degreeY (MultiPoly.lastIdx N) c' = 0 := by
+      intro c' hc'
+      exact h_free c' (List.mem_cons_of_mem _ hc')
+    rw [MultiPoly.eval_dropLastY c h_c_free x env, ih h_rest_free (k + 1)]
+
+/-- **The capstone bridge theorem**: `chainEval N (multiPolyToChainExpPolyT N p) x env =
+MultiPoly.eval p x env`. Proven by induction on N. -/
+theorem chainEval_multiPolyToChainExpPolyT :
+    ∀ (N : Nat) (p : MultiPoly N) (x : MachLib.Real)
+      (env : Fin N → MachLib.Real),
+    chainEval N (multiPolyToChainExpPolyT N p) x env =
+    MultiPoly.eval p x env
+  | 0,     p, x, env => chainEval_multiPolyToChainExpPolyT_zero p x env
+  | N + 1, p, x, env => by
+    rw [multiPolyToChainExpPolyT_succ, chainEval_succ, List.map_map]
+    -- Apply IH per entry via List.map_congr_left.
+    have h_ih_pointwise :
+        ((fun c => chainEval N c x
+          (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩))
+            ∘ multiPolyToChainExpPolyT N) =
+        (fun d => MultiPoly.eval d x
+          (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)) := by
+      funext d
+      exact chainEval_multiPolyToChainExpPolyT N d x _
+    rw [h_ih_pointwise]
+    -- Unfold yCoeffsAtLast_dropped + dropLastY per entry.
+    show sumWithPowers
+          (((MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).map MultiPoly.dropLastY).map
+            (fun d => MultiPoly.eval d x
+              (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)))
+          0 (env ⟨N, Nat.lt_succ_self N⟩) =
+         MultiPoly.eval p x env
+    rw [sumWithPowers_map_dropLastY_eval_eq_sumWithPowers_map_eval
+          (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p)
+          (MultiPoly.yCoeffsAt_entries_degreeY_zero (MultiPoly.lastIdx N) p)
+          0 x env]
+    -- Now use listEvalAuxN_eq_sumWithPowers_map_eval to bridge.
+    -- Need to align env ⟨N, ...⟩ with env (lastIdx N). They're defeq.
+    show sumWithPowers
+          ((MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).map
+            (fun c => MultiPoly.eval c x env))
+          0 (env (MultiPoly.lastIdx N)) =
+         MultiPoly.eval p x env
+    rw [← listEvalAuxN_eq_sumWithPowers_map_eval (MultiPoly.lastIdx N)
+          (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p) 0 x env]
+    -- Goal: listEvalAuxN last (yCoeffsAt last p) 0 x env = MultiPoly.eval p x env
+    exact MultiPoly.yCoeffsAt_last_eval p x env
+
 end ChainExpPolyMod
 end MachLib
