@@ -1,9 +1,10 @@
 import MachLib.SingleExpKhovanskii
 import MachLib.KhovanskiiReduction
 import MachLib.MultiPolyToPoly
+import MachLib.PfaffianFnBound
 
 /-!
-# Axiom Audit — Constructive Khovanskii Closure (2026-06-13/14)
+# Axiom Audit — Constructive Khovanskii Closure (2026-06-13/14, revised 2026-06-16)
 
 Verify the axiom dependencies of the major theorems shipped today.
 Each `#print axioms` invocation lists the transitive axiom closure
@@ -12,6 +13,13 @@ axioms (Real arithmetic, HasDerivAt, Rolle, MVT prerequisites).
 
 Any axiom NOT in MachLib's documented foundations is a finding to
 investigate before announcement.
+
+## 2026-06-16 revision
+
+`PfaffianFnBound.khovanskii_chain_step` axiom RETIRED.
+`pfaffian_fn_zero_count_bound` is now a thin wrapper around
+`KhovanskiiReduction.khovanskii_bound_full` (takes a reduction
+witness). This eliminates one classical axiom from the closure.
 -/
 
 open MachLib.SingleExpKhovanskii.ExpPoly
@@ -36,6 +44,10 @@ open MachLib.PfaffianChainMod
 /-! ## PfaffianFn track (non-degenerate capstone) -/
 
 #print axioms PfaffianFn.khovanskii_bound_full
+
+/-! ## PfaffianFnBound track (witness-wrapper, post axiom retirement) -/
+
+#print axioms MachLib.PfaffianFnBound.pfaffian_fn_zero_count_bound
 
 /-! ## ExpPoly substrate: ring identity (path-b hand-prove) -/
 
