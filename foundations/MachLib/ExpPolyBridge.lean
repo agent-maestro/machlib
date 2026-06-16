@@ -260,5 +260,83 @@ theorem ExpPoly.toPfaffianFn_n (ep : ExpPoly) :
 theorem ExpPoly.toPfaffianFn_chain (ep : ExpPoly) :
     (ExpPoly.toPfaffianFn ep).chain = SingleExpChain := rfl
 
+/-! ## End-to-end demonstration — length-1 bound via the bridge
+
+The simplest wire-through: for an ExpPoly ⟨[p]⟩ (length-1), the
+PfaffianFn obtained via the bridge has zero count bounded by
+`degreeUpper p`. This composes:
+  - `SingleExpKhovanskii.length_one_full_bound` (ExpPoly side,
+    constructive).
+  - `ExpPoly.eval_toPfaffianFn` (the bridge eval correctness).
+
+The result is a PfaffianFn-level Khovanskii bound that doesn't require
+the abstract SDR machinery — the ExpPoly's constructive auto-witness
+is "smuggled through" the bridge as the eval-preservation. This is a
+proof-of-concept that the bridge correctly connects the two tracks. -/
+
+open MachLib.SingleExpKhovanskii.ExpPoly in
+/-- **End-to-end length-1 bound for the bridge image**: for any Poly p
+and interval (a, b) where Poly.eval p has a nonzero point, the
+PfaffianFn `(⟨[p]⟩).toPfaffianFn` has zero count on (a, b) bounded by
+`degreeUpper p`. Wire-through of ExpPoly's constructive bound. -/
+theorem PfaffianFn_singleExp_length_one_bound
+    (p : Poly) (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, Poly.eval p x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (ExpPoly.toPfaffianFn (⟨[p]⟩ : ExpPoly)).eval z = 0) →
+      zeros.length ≤ PolynomialRootCount.degreeUpper p := by
+  intro zeros hnodup hzeros
+  -- Translate the zero-conditions through the bridge.
+  have hzeros_ep : ∀ z ∈ zeros,
+      a < z ∧ z < b ∧ (⟨[p]⟩ : ExpPoly).eval z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hf_z⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    rw [← ExpPoly.eval_toPfaffianFn (⟨[p]⟩ : ExpPoly) z]
+    exact hf_z
+  exact MachLib.SingleExpKhovanskii.ExpPoly.length_one_full_bound p a b
+          hab hne zeros hnodup hzeros_ep
+
+/-- **General auto-bound via the bridge**: the propagation+strict-last
+auto-bound for ExpPoly (any length) translated to the PfaffianFn level.
+All ExpPoly-track hypotheses are passed through; the eval condition
+on `(toPfaffianFn ep).eval` is bridged to `ep.eval` via
+`ExpPoly.eval_toPfaffianFn`. -/
+theorem PfaffianFn_singleExp_auto_bound_via_bridge
+    (M : Nat) (ep : ExpPoly)
+    (h_meas : ep.coeffs.length +
+              MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+                ep.coeffs ≤ M)
+    (h_prop : ∀ ep' : ExpPoly,
+       ep'.coeffs.length +
+         MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+           ep'.coeffs ≤ M →
+       (∃ x, ep'.eval x ≠ 0))
+    (h_strict_last : ∀ ep' : ExpPoly,
+       ∀ (hne_coeffs : ep'.coeffs ≠ []),
+       ep'.coeffs.length ≥ 2 →
+       ep'.coeffs.length +
+         MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+           ep'.coeffs ≤ M →
+       PolynomialRootCount.degreeUpper
+         (polySimplify (ep'.coeffs.getLast hne_coeffs)) > 0)
+    (a b : Real) (hab : a < b) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (ExpPoly.toPfaffianFn ep).eval z = 0) →
+      zeros.length ≤ M := by
+  intro zeros hnodup hzeros
+  have hzeros_ep : ∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hf_z⟩ := hzeros z hz
+    refine ⟨haz, hzb, ?_⟩
+    rw [← ExpPoly.eval_toPfaffianFn ep z]
+    exact hf_z
+  exact MachLib.SingleExpKhovanskii.ExpPoly.expPoly_auto_bound_with_propagation_aux
+          M ep h_meas h_prop h_strict_last a b hab zeros hnodup hzeros_ep
+
 end ExpPolyBridge
 end MachLib
