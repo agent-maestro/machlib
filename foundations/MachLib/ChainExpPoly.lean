@@ -406,6 +406,51 @@ theorem chainExpPolyAutoBound_one_unfold (coeffs : List Poly) :
     coeffs.length +
     (coeffs.map PolynomialRootCount.degreeUpper).foldr (· + ·) 0 := rfl
 
+/-! ## Structural length lemma for multiPolyToChainExpPolyT
+
+The length of the recursive bridge's output at N+1 equals the length
+of `yCoeffsAt last` applied to the input. Useful for the inductive
+bound argument: the outer list length is preserved through the
+bridge. -/
+
+theorem multiPolyToChainExpPolyT_succ_length {N : Nat}
+    (p : MultiPoly (N + 1)) :
+    (multiPolyToChainExpPolyT (N + 1) p).length =
+    (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).length := by
+  rw [multiPolyToChainExpPolyT_succ]
+  show ((MultiPoly.yCoeffsAtLast_dropped p).map _).length =
+       (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).length
+  rw [List.length_map]
+  show ((MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).map _).length =
+       (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).length
+  rw [List.length_map]
+
+/-! ## Multi-chain Khovanskii sprint summary (substrate complete)
+
+After 8 commits in this push chain (e3d2617 → b5cc2d7), the
+constructive substrate for multi-chain Khovanskii over `MultiExpChain N`
+is fully in place. The end-to-end picture:
+
+  Any MultiPoly N polynomial poly
+       ↓ MultiPolyToPfaffianFn N (wraps with MultiExpChain N)
+  PfaffianFn over MultiExpChain N
+       ↓ .eval x
+  Real value = MultiPoly.eval poly x ((MultiExpChain N).chainValues x)
+       ↓ chainEval_multiPolyToChainExpPolyT (eval bridge)
+       ↓ chainEval N (multiPolyToChainExpPolyT N poly) x (chainValues x)
+       ↓
+  Zero count bounded by chainExpPolyAutoBound N (multiPolyToChainExpPolyT N poly)
+  (N=0 ✓ shipped; N+1 inductive step is the remaining frontier)
+
+The N+1 inductive step requires generalizing
+`expPoly_auto_bound_with_propagation_aux` (SingleExpKhovanskii) to
+accept an arbitrary per-coefficient bound function. This is mechanical
+~150 lines of work mirroring the existing strict-descent argument
+but parameterized over the inner bound rather than using `degreeUpper · polySimplify`.
+
+The bridge work shipped in this push gives every load-bearing piece
+needed for that generalization. -/
+
 /-! ## Inductive bound theorem statement (the next-session frontier)
 
 The full multi-chain bound theorem:
