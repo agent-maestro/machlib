@@ -4,6 +4,7 @@ import MachLib.Exp
 import MachLib.MultiPolyCanonYN
 import MachLib.PfaffianFnBound
 import MachLib.KhovanskiiReduction
+import MachLib.SingleExpKhovanskii
 
 /-!
 # MachLib.ChainExpPoly — nested ExpPoly-like representation for arbitrary chain length
@@ -424,6 +425,66 @@ theorem multiPolyToChainExpPolyT_succ_length {N : Nat}
   show ((MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).map _).length =
        (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p).length
   rw [List.length_map]
+
+/-! ## Real-level iterMul ↔ exp identity
+
+The Real-level `iterMul (exp x) k = exp((natCast k) * x)` identity.
+This connects `chainEval`'s iterated-mul evaluator (with `env i = exp x`)
+to ExpPoly's `exp(k · x)` evaluator. Inductive proof using
+`Real.exp_add`. -/
+
+theorem iterMul_exp_eq_exp_natCast_mul (x : MachLib.Real) (k : Nat) :
+    iterMul (Real.exp x) k = Real.exp ((Real.natCast k) * x) := by
+  induction k with
+  | zero =>
+    show (1 : MachLib.Real) = Real.exp (Real.natCast 0 * x)
+    rw [Real.natCast_zero, Real.zero_mul, Real.exp_zero]
+  | succ k ih =>
+    show Real.exp x * iterMul (Real.exp x) k =
+         Real.exp (Real.natCast (k + 1) * x)
+    rw [ih, Real.natCast_succ, Real.mul_distrib_right, Real.one_mul_thm,
+        Real.exp_add, Real.mul_comm]
+
+/-! ## chainEval at chain length 1 = ExpPoly eval
+
+For `coeffs : List Poly = ChainExpPolyT 1`, `chainEval 1` matches
+SingleExpKhovanskii's `evalAux` evaluator when the env's single
+y-variable is `exp x`. This bridges the multi-chain framework's
+chain-length-1 case to the existing single-exp track. -/
+
+theorem sumWithPowers_eq_evalAux_when_env_is_exp
+    (coeffs : List Poly) (k : Nat) (x : MachLib.Real) :
+    sumWithPowers (coeffs.map (fun p => Poly.eval p x)) k (Real.exp x) =
+    MachLib.SingleExpKhovanskii.ExpPoly.evalAux coeffs k x := by
+  induction coeffs generalizing k with
+  | nil =>
+    show (0 : MachLib.Real) = 0
+    rfl
+  | cons p rest ih =>
+    show Poly.eval p x * iterMul (Real.exp x) k +
+         sumWithPowers (rest.map (fun p => Poly.eval p x))
+                       (k + 1) (Real.exp x) =
+         Poly.eval p x * Real.exp ((Real.natCast k) * x) +
+         MachLib.SingleExpKhovanskii.ExpPoly.evalAux rest (k + 1) x
+    rw [iterMul_exp_eq_exp_natCast_mul, ih (k + 1)]
+
+/-- **chainEval 1 = ExpPoly.eval bridge**: when env 0 = exp x, the
+chain-length-1 nested evaluator coincides with ExpPoly's `evalAux`. -/
+theorem chainEval_one_eq_evalAux (coeffs : List Poly) (x : MachLib.Real)
+    (env : Fin 1 → MachLib.Real) (h_env : env 0 = Real.exp x) :
+    chainEval 1 coeffs x env =
+    MachLib.SingleExpKhovanskii.ExpPoly.evalAux coeffs 0 x := by
+  show sumWithPowers (coeffs.map (fun p => chainEval 0 p x _)) 0 (env 0) =
+       MachLib.SingleExpKhovanskii.ExpPoly.evalAux coeffs 0 x
+  have h_map :
+      coeffs.map (fun p => chainEval 0 p x
+        (fun i => env ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)) =
+      coeffs.map (fun p => Poly.eval p x) := by
+    apply List.map_congr_left
+    intro p _
+    exact chainEval_zero p x _
+  rw [h_map, h_env]
+  exact sumWithPowers_eq_evalAux_when_env_is_exp coeffs 0 x
 
 /-! ## Multi-chain Khovanskii sprint summary (substrate complete)
 
