@@ -486,6 +486,40 @@ theorem chainEval_one_eq_evalAux (coeffs : List Poly) (x : MachLib.Real)
   rw [h_map, h_env]
   exact sumWithPowers_eq_evalAux_when_env_is_exp coeffs 0 x
 
+/-! ## Bound comparison: chainExpPolyAutoBound 1 ≥ ExpPoly's autoBound
+
+The multi-chain bound at chain length 1 (using raw `degreeUpper`) is
+weaker than (but ≥) SingleExpKhovanskii's bound (using
+`degreeUpper · polySimplify`). This means any ExpPoly bound transfers
+to a multi-chain bound. -/
+
+theorem sumSimplifiedDegrees_le_sum_degreeUpper (coeffs : List Poly) :
+    MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees coeffs ≤
+    (coeffs.map PolynomialRootCount.degreeUpper).foldr (· + ·) 0 := by
+  induction coeffs with
+  | nil =>
+    show (0 : Nat) ≤ 0
+    exact Nat.le_refl 0
+  | cons p rest ih =>
+    show PolynomialRootCount.degreeUpper
+           (MachLib.PolynomialRootCount.polySimplify p) +
+         MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees rest ≤
+         PolynomialRootCount.degreeUpper p +
+         (rest.map PolynomialRootCount.degreeUpper).foldr (· + ·) 0
+    have h_p : PolynomialRootCount.degreeUpper
+                 (MachLib.PolynomialRootCount.polySimplify p) ≤
+               PolynomialRootCount.degreeUpper p :=
+      MachLib.PolynomialRootCount.degreeUpper_polySimplify_le_self p
+    exact Nat.add_le_add h_p ih
+
+theorem ExpPoly_M_le_chainExpPolyAutoBound_one (coeffs : List Poly) :
+    coeffs.length +
+    MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees coeffs ≤
+    chainExpPolyAutoBound 1 coeffs := by
+  rw [chainExpPolyAutoBound_one_unfold]
+  exact Nat.add_le_add_left
+    (sumSimplifiedDegrees_le_sum_degreeUpper coeffs) _
+
 /-! ## Multi-chain Khovanskii sprint summary (substrate complete)
 
 After 8 commits in this push chain (e3d2617 → b5cc2d7), the
