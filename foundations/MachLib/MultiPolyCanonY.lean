@@ -351,6 +351,145 @@ theorem eval_yCoeffs_sub_via_induction
          eval p x env - eval q x env
   rw [listEval_listSub, ihp, ihq]
 
+/-! ## Shift identity for listEvalAux
+
+Incrementing the offset by 1 multiplies the eval by `env 0`. This is
+the recursive step relating `listEvalAux l k` to `listEvalAux l (k+1)`.
+Foundation for the listMul convolution correctness. -/
+
+theorem listEvalAux_succ_offset (l : List (MultiPoly 1)) (k : Nat)
+    (x : Real) (env : Fin 1 → Real) :
+    listEvalAux l (k + 1) x env = env 0 * listEvalAux l k x env := by
+  induction l generalizing k with
+  | nil =>
+    rw [listEvalAux_nil, listEvalAux_nil, Real.mul_zero]
+  | cons c rest ih =>
+    rw [listEvalAux_cons, listEvalAux_cons, ih (k + 1)]
+    -- pow_succ identity for env 0:
+    have h_pow_succ : eval (pow (varY 0) (k + 1)) x env =
+                      env 0 * eval (pow (varY 0) k) x env := by
+      rw [eval_pow_succ]
+      rfl
+    rw [h_pow_succ, Real.mul_distrib]
+    ac_rfl
+
+/-! ## listScale eval correctness
+
+`listScale p l` evaluates to `eval p · listEvalAux l k`. Used in the
+listMul correctness proof. -/
+
+theorem listScale_nil (p : MultiPoly 1) :
+    listScale p [] = [] := rfl
+
+theorem listScale_cons (p q : MultiPoly 1) (qs : List (MultiPoly 1)) :
+    listScale p (q :: qs) = mul p q :: listScale p qs := rfl
+
+theorem listEvalAux_listScale (p : MultiPoly 1) (l : List (MultiPoly 1))
+    (k : Nat) (x : Real) (env : Fin 1 → Real) :
+    listEvalAux (listScale p l) k x env =
+    eval p x env * listEvalAux l k x env := by
+  induction l generalizing k with
+  | nil =>
+    rw [listScale_nil, listEvalAux_nil]
+    show (0 : Real) = eval p x env * 0
+    rw [Real.mul_zero]
+  | cons q qs ih =>
+    rw [listScale_cons, listEvalAux_cons, listEvalAux_cons, eval_mul,
+        ih (k + 1), Real.mul_distrib]
+    ac_rfl
+
+/-! ## listMul eval correctness — the convolution case -/
+
+theorem listMul_nil (l : List (MultiPoly 1)) :
+    listMul [] l = [] := rfl
+
+theorem listMul_cons (p : MultiPoly 1) (ps : List (MultiPoly 1))
+    (qs : List (MultiPoly 1)) :
+    listMul (p :: ps) qs =
+    listAdd (listScale p qs) (const 0 :: listMul ps qs) := rfl
+
+/-- **listMul is eval-multiplicative.** Induction on l1; the cons case
+composes listAdd_eval + listScale_eval + the shift identity. -/
+theorem listEvalAux_listMul (l1 l2 : List (MultiPoly 1)) (k : Nat)
+    (x : Real) (env : Fin 1 → Real) :
+    listEvalAux (listMul l1 l2) k x env =
+    listEvalAux l1 k x env * listEvalAux l2 0 x env := by
+  induction l1 generalizing k with
+  | nil =>
+    rw [listMul_nil, listEvalAux_nil]
+    show (0 : Real) = 0 * listEvalAux l2 0 x env
+    rw [Real.zero_mul]
+  | cons p ps ih =>
+    rw [listMul_cons, listEvalAux_listAdd, listEvalAux_listScale,
+        listEvalAux_cons, ih (k + 1), listEvalAux_cons]
+    -- LHS: eval p · listEvalAux l2 k + (eval (const 0) · pow k +
+    --       listEvalAux ps (k+1) · listEvalAux l2 0)
+    -- RHS: (eval p · pow k + listEvalAux ps (k+1)) · listEvalAux l2 0
+    --    = eval p · pow k · listEvalAux l2 0 + listEvalAux ps (k+1) · listEvalAux l2 0
+    -- For equality, need: eval p · listEvalAux l2 k = eval p · pow k · listEvalAux l2 0.
+    -- Apply shift identity to l2 at offset k iteratively (or use the fact that
+    -- listEvalAux l2 k = pow k · listEvalAux l2 0).
+    have h_shift_l2 : listEvalAux l2 k x env =
+                      eval (pow (varY 0) k) x env * listEvalAux l2 0 x env := by
+      induction k with
+      | zero => rw [eval_pow_zero, Real.one_mul_thm]
+      | succ k ihk =>
+        rw [listEvalAux_succ_offset, ihk, eval_pow_succ]
+        show eval (varY 0) x env *
+             (eval (pow (varY 0) k) x env * listEvalAux l2 0 x env) =
+             eval (varY 0) x env * eval (pow (varY 0) k) x env *
+             listEvalAux l2 0 x env
+        rw [Real.mul_assoc]
+    rw [h_shift_l2, eval_const, Real.zero_mul, Real.zero_add,
+        Real.mul_distrib_right]
+    ac_rfl
+
+theorem listEval_listMul (l1 l2 : List (MultiPoly 1))
+    (x : Real) (env : Fin 1 → Real) :
+    listEval (listMul l1 l2) x env =
+    listEval l1 x env * listEval l2 x env :=
+  listEvalAux_listMul l1 l2 0 x env
+
+/-- **Mul case** (via induction): listEval of yCoeffs distributes over mul. -/
+theorem eval_yCoeffs_mul_via_induction
+    (p q : MultiPoly 1) (x : Real) (env : Fin 1 → Real)
+    (ihp : listEval (yCoeffs p) x env = eval p x env)
+    (ihq : listEval (yCoeffs q) x env = eval q x env) :
+    listEval (yCoeffs (mul p q)) x env = eval (mul p q) x env := by
+  change listEval (listMul (yCoeffs p) (yCoeffs q)) x env =
+         eval p x env * eval q x env
+  rw [listEval_listMul, ihp, ihq]
+
+/-! ## Integrated eval correctness
+
+Combining all 6 cases via structural induction. -/
+
+/-- **The canonical-form eval correctness theorem.** Every MultiPoly 1
+evaluates to the same value as its yCoeffs canonical-form representation.
+
+The proof is structural induction: the 3 base cases (const, varX, varY)
+are direct; the 3 compound cases use `_via_induction` helpers that
+access the def-eq reduction via `change`. -/
+theorem eval_yCoeffs (p : MultiPoly 1) (x : Real) (env : Fin 1 → Real) :
+    listEval (yCoeffs p) x env = eval p x env := by
+  induction p with
+  | const c => exact eval_yCoeffs_const c x env
+  | varX => exact eval_yCoeffs_varX x env
+  | varY j =>
+    -- j : Fin 1, so j = 0.
+    have : j = 0 := by
+      apply Fin.eq_of_val_eq
+      have := j.isLt
+      omega
+    subst this
+    exact eval_yCoeffs_varY x env
+  | add p q ihp ihq =>
+    exact eval_yCoeffs_add_via_induction p q x env ihp ihq
+  | sub p q ihp ihq =>
+    exact eval_yCoeffs_sub_via_induction p q x env ihp ihq
+  | mul p q ihp ihq =>
+    exact eval_yCoeffs_mul_via_induction p q x env ihp ihq
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
