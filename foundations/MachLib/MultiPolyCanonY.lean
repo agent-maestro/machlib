@@ -39,11 +39,19 @@ namespace MultiPoly
 
 /-- Pointwise addition of two coefficient lists. The shorter list is
 padded with the (implicit) `const 0` entries. -/
-noncomputable def listAdd :
+def listAdd :
     List (MultiPoly 1) → List (MultiPoly 1) → List (MultiPoly 1)
   | [], qs => qs
-  | ps, [] => ps
+  | p :: ps, [] => p :: ps
   | p :: ps, q :: qs => add p q :: listAdd ps qs
+
+theorem listAdd_nil_left (l : List (MultiPoly 1)) : listAdd [] l = l := rfl
+
+theorem listAdd_cons_nil (p : MultiPoly 1) (ps : List (MultiPoly 1)) :
+    listAdd (p :: ps) [] = p :: ps := rfl
+
+theorem listAdd_cons_cons (p q : MultiPoly 1) (ps qs : List (MultiPoly 1)) :
+    listAdd (p :: ps) (q :: qs) = add p q :: listAdd ps qs := rfl
 
 /-- Pointwise subtraction of two coefficient lists. The first list's
 extra entries pass through; the second list's extra entries are
@@ -57,7 +65,7 @@ noncomputable def listSub :
 
 /-- Scale a coefficient list by a single MultiPoly. Multiplies each
 entry by `p`. -/
-noncomputable def listScale (p : MultiPoly 1) :
+def listScale (p : MultiPoly 1) :
     List (MultiPoly 1) → List (MultiPoly 1)
   | [] => []
   | q :: qs => mul p q :: listScale p qs
@@ -217,6 +225,45 @@ theorem eval_yCoeffs_varY (x : Real) (env : Fin 1 → Real) :
   show eval (varY 0 : MultiPoly 1) x env * 1 = env 0
   rw [Real.mul_one_ax]
   rfl
+
+/-! ## listAdd eval correctness — additive composition
+
+The `listAdd` operation evaluates to the sum of its operands' evals.
+This is the foundation for the `eval_yCoeffs_add` compound case. -/
+
+theorem listEvalAux_nil (k : Nat) (x : Real) (env : Fin 1 → Real) :
+    listEvalAux ([] : List (MultiPoly 1)) k x env = 0 := rfl
+
+theorem listEvalAux_cons (c : MultiPoly 1) (rest : List (MultiPoly 1))
+    (k : Nat) (x : Real) (env : Fin 1 → Real) :
+    listEvalAux (c :: rest) k x env =
+    eval c x env * eval (pow (varY 0) k) x env +
+    listEvalAux rest (k + 1) x env := rfl
+
+/-- **listAdd is eval-additive at any offset.** Induction on `l1`,
+case-split on `l2`. The cons-cons case uses `mul_distrib_right` + AC. -/
+theorem listEvalAux_listAdd (l1 l2 : List (MultiPoly 1)) (k : Nat)
+    (x : Real) (env : Fin 1 → Real) :
+    listEvalAux (listAdd l1 l2) k x env =
+    listEvalAux l1 k x env + listEvalAux l2 k x env := by
+  induction l1 generalizing l2 k with
+  | nil =>
+    rw [listAdd_nil_left, listEvalAux_nil, Real.zero_add]
+  | cons p ps ih =>
+    cases l2 with
+    | nil =>
+      rw [listAdd_cons_nil, listEvalAux_nil, Real.add_zero]
+    | cons q qs =>
+      rw [listAdd_cons_cons, listEvalAux_cons, listEvalAux_cons,
+          listEvalAux_cons, eval_add, ih qs (k + 1), Real.mul_distrib_right]
+      ac_rfl
+
+/-- **listAdd is eval-additive** (offset 0). Direct from `listEvalAux_listAdd`. -/
+theorem listEval_listAdd (l1 l2 : List (MultiPoly 1))
+    (x : Real) (env : Fin 1 → Real) :
+    listEval (listAdd l1 l2) x env =
+    listEval l1 x env + listEval l2 x env :=
+  listEvalAux_listAdd l1 l2 0 x env
 
 end MultiPoly
 end MultiPolyMod
