@@ -1105,6 +1105,69 @@ theorem degreeX_chainTotalDeriv_le_SingleExp (p : MultiPoly 1) :
   PfaffianFn.degreeX_chainTotalDeriv_le SingleExpChain
     SingleExpChain_rel_x_bound p
 
+/-! ## Step 3k — scaledReduction inherits the degree bounds
+
+`scaledReduction c f = chainTotalDeriv f.poly - c · f.poly`. Composing
+Steps 3h, 3i, 3j: both components of the subtraction satisfy the degree
+bounds, so the result does too.
+
+  - `degreeY i (scaledReduction c f).poly ≤ degreeY i f.poly`.
+  - `degreeX (scaledReduction c f).poly ≤ degreeX f.poly`.
+
+These bounds confirm that the lex measure components (degreeY_last,
+degreeX leadingCoeffY_last) are WEAKLY non-increasing under
+scaledReduction. The STRICT-decrease (Step 3b proper) requires going
+into the algebraic content of the leading-coefficient transformation,
+which is multi-session future work. -/
+
+/-- **`scaledReduction`-shape weakly decreases degreeY** (poly-level
+formulation, parametric in the chain). For any chain `c` whose
+relations satisfy the per-index bound, the subtraction
+`chainTotalDeriv chain poly - const c · poly` has bounded degreeY. -/
+theorem degreeY_scaledReduction_poly_le {n : Nat}
+    (chain : PfaffianChain n) (c_scale : Real) (poly : MultiPoly n)
+    (i : Fin n)
+    (h_rel_deg : ∀ j : Fin n,
+      MultiPoly.degreeY i (chain.relations j) ≤
+      MultiPoly.degreeY i (MultiPoly.varY j : MultiPoly n)) :
+    MultiPoly.degreeY i
+      (MultiPoly.sub (PfaffianFn.chainTotalDeriv chain poly)
+                      (MultiPoly.mul (MultiPoly.const c_scale) poly)) ≤
+    MultiPoly.degreeY i poly := by
+  show Nat.max
+        (MultiPoly.degreeY i (PfaffianFn.chainTotalDeriv chain poly))
+        (MultiPoly.degreeY i
+          (MultiPoly.mul (MultiPoly.const c_scale) poly))
+       ≤ MultiPoly.degreeY i poly
+  apply Nat.max_le.mpr
+  refine ⟨?_, ?_⟩
+  · exact PfaffianFn.degreeY_chainTotalDeriv_le chain i h_rel_deg poly
+  · rw [MultiPoly.degreeY_mul_const]; exact Nat.le_refl _
+
+/-- **`scaledReduction`-shape weakly decreases degreeX** (poly-level
+formulation). For chains with x-independent relations, the subtraction's
+degreeX is bounded by the input's. -/
+theorem degreeX_scaledReduction_poly_le {n : Nat}
+    (chain : PfaffianChain n) (c_scale : Real) (poly : MultiPoly n)
+    (h_rel_x : ∀ j : Fin n, MultiPoly.degreeX (chain.relations j) = 0) :
+    MultiPoly.degreeX
+      (MultiPoly.sub (PfaffianFn.chainTotalDeriv chain poly)
+                      (MultiPoly.mul (MultiPoly.const c_scale) poly)) ≤
+    MultiPoly.degreeX poly := by
+  show Nat.max
+        (MultiPoly.degreeX (PfaffianFn.chainTotalDeriv chain poly))
+        (MultiPoly.degreeX
+          (MultiPoly.mul (MultiPoly.const c_scale) poly))
+       ≤ MultiPoly.degreeX poly
+  apply Nat.max_le.mpr
+  refine ⟨?_, ?_⟩
+  · exact PfaffianFn.degreeX_chainTotalDeriv_le chain h_rel_x poly
+  · -- const × poly: degreeX bounded.
+    show MultiPoly.degreeX (MultiPoly.const c_scale : MultiPoly n) +
+         MultiPoly.degreeX poly ≤ MultiPoly.degreeX poly
+    show 0 + MultiPoly.degreeX poly ≤ MultiPoly.degreeX poly
+    rw [Nat.zero_add]; exact Nat.le_refl _
+
 /-! ## Step 3c — dropLast applicability via lex measure
 
 When the lex measure's first component reaches 0 (degreeY of the last
