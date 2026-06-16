@@ -2398,6 +2398,93 @@ theorem not_eventually_K_over_x_one_eml_eml_var_const_var (b : Real) :
   (eml_eml_var_const_var_eventually_above_one b
    ).not_eventually_K_over_x_one
 
+/-! ## Phase 11: the recursive `y = exp x - log x` shape
+
+`eml(eml(var, var), eml(var, var))` has eval = `exp(exp x - log x) -
+log(exp x - log x)`. The trick: let `y = exp x - log x`. Then
+eval = `exp y - log y`, which has the same shape as the depth-1
+`eml(var, var)` proof. The recursion applies because:
+
+  - y > 1 (from Phase 9 helper at K = 1, requires only x ≥ 1).
+  - For y ≥ 1: tangent gives exp y > y + 1, and log_le_id gives
+    log y ≤ y.
+  - So exp y - log y > (y + 1) - y = 1.
+  - Hence eval > 1. EventuallyAboveOne. -/
+
+/-- **`eml(eml(var, var), eml(var, var))` is EventuallyAboveOne.**
+Recursive y = exp x - log x trick: eval = exp y - log y. For y > 1
+(from helper), exp y > y + 1 (tangent) and log y ≤ y (log_le_id),
+so exp y - log y > (y + 1) - y = 1. -/
+theorem eml_eml_var_var_eml_var_var_eventually_above_one :
+    EventuallyAboveOne
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml .var .var)
+                     (EMLTree.eml .var .var)).eval x) := by
+  refine ⟨1, ?_⟩
+  intro x h_one_le
+  -- y := exp x - log x. y > 1 from helper at K = 1.
+  have h_y_gt_one : (1 : Real) < Real.exp x - Real.log x :=
+    exp_sub_log_gt_K_at_max_one_K x 1 h_one_le h_one_le
+  have h_y_ge_one : (1 : Real) ≤ Real.exp x - Real.log x :=
+    Real.le_of_lt h_y_gt_one
+  have h_y_pos : (0 : Real) < Real.exp x - Real.log x :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_y_gt_one
+  -- Tangent line on y > 0:
+  have h_tan :
+      (Real.exp x - Real.log x) + 1 <
+        Real.exp (Real.exp x - Real.log x) :=
+    exp_tangent_line_strict _ h_y_pos
+  -- log y ≤ y (log_le_id_at_one):
+  have h_log_y_le_y :
+      Real.log (Real.exp x - Real.log x) ≤ Real.exp x - Real.log x :=
+    EMLTree.log_le_id_at_one _ h_y_ge_one
+  show 1 < Real.exp (Real.exp x - Real.log x) -
+            Real.log (Real.exp x - Real.log x)
+  -- Chain: 1 + log y ≤ y + 1 < exp y. Subtract log y: 1 < exp y - log y.
+  have h_one_p_logy_le_y_p_one :
+      1 + Real.log (Real.exp x - Real.log x) ≤
+        (Real.exp x - Real.log x) + 1 := by
+    have step :
+        1 + Real.log (Real.exp x - Real.log x) ≤
+        1 + (Real.exp x - Real.log x) :=
+      Real.add_le_add_left h_log_y_le_y _
+    rw [Real.add_comm 1 (Real.exp x - Real.log x)] at step
+    exact step
+  have h_one_p_logy_lt_exp :
+      1 + Real.log (Real.exp x - Real.log x) <
+        Real.exp (Real.exp x - Real.log x) :=
+    Real.lt_of_le_of_lt h_one_p_logy_le_y_p_one h_tan
+  -- Subtract log y from both sides:
+  have step :
+      -Real.log (Real.exp x - Real.log x) +
+        (1 + Real.log (Real.exp x - Real.log x)) <
+      -Real.log (Real.exp x - Real.log x) +
+        Real.exp (Real.exp x - Real.log x) :=
+    Real.add_lt_add_left h_one_p_logy_lt_exp _
+  -- LHS: -log y + (1 + log y) = -log y + (log y + 1) [comm]
+  --                          = (-log y + log y) + 1 [← assoc]
+  --                          = 0 + 1 [neg_add_self]
+  --                          = 1 [zero_add].
+  rw [Real.add_comm 1 (Real.log (Real.exp x - Real.log x))] at step
+  rw [← Real.add_assoc] at step
+  rw [Real.neg_add_self] at step
+  rw [Real.zero_add] at step
+  -- step : 1 < -log y + exp y
+  -- RHS: -log y + exp y = exp y + -log y [comm] = exp y - log y [← sub_def].
+  rw [Real.add_comm
+      (-Real.log (Real.exp x - Real.log x))
+      (Real.exp (Real.exp x - Real.log x))] at step
+  rw [← Real.sub_def] at step
+  exact step
+
+/-- Closure corollary. -/
+theorem not_eventually_K_over_x_one_eml_eml_var_var_eml_var_var :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml .var .var)
+                     (EMLTree.eml .var .var)).eval x) :=
+  eml_eml_var_var_eml_var_var_eventually_above_one.not_eventually_K_over_x_one
+
 /-! ## Phase 7: depth-2 sweep continuation
 
 Two more shapes:
