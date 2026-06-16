@@ -1046,6 +1046,191 @@ theorem EventuallyMinusLog.not_eventually_K_over_x_one
   rw [← h_eq] at h_inv_pos
   exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_inv_pos h_neg_log_neg)
 
+/-! ## Phase 4: Pattern A general-c via two-sample chain + Pattern C via EventuallyNegative
+
+Phase 3 shipped Pattern A only for the special case where the t2's
+`log_clamped` is 0 (e.g., c = 1 in `eml(eml(const a, var), const c)`).
+Phase 4 ships Pattern A for general c via a two-sample chain that
+forces `log c = 0` AND `K = 1`.
+
+Phase 4 also ships the `EventuallyNegative` predicate for Pattern C
+shapes whose eval eventually drops below 0. -/
+
+/-- Pattern A two-sample contradiction. From `K = 1 + L · x_0` and
+`K = 1 + L · (x_0 + 1)`, force `K = 1`. The chain:
+  - 1 + L · x_0 = 1 + L · (x_0 + 1).
+  - Distribute the RHS: 1 + (L · x_0 + L).
+  - Subtract 1 + L · x_0: 0 = L.
+  - Substitute L = 0 in the first equation: K = 1. -/
+private theorem K_minus_L_x_equals_one_two_sample (K L x_0 : Real)
+    (h_0 : K = 1 + L * x_0)
+    (h_1 : K = 1 + L * (x_0 + 1)) :
+    K = 1 := by
+  have h_eq : 1 + L * x_0 = 1 + L * (x_0 + 1) := h_0.symm.trans h_1
+  rw [Real.mul_distrib L x_0 1, Real.mul_one_ax] at h_eq
+  rw [← Real.add_assoc] at h_eq
+  -- h_eq : 1 + L * x_0 = (1 + L * x_0) + L
+  have h_L_zero : L = 0 := by
+    have step :
+        -(1 + L * x_0) + (1 + L * x_0) =
+          -(1 + L * x_0) + ((1 + L * x_0) + L) :=
+      congrArg (fun y => -(1 + L * x_0) + y) h_eq
+    rw [Real.neg_add_self] at step
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    exact step.symm
+  rw [h_L_zero, Real.zero_mul, Real.add_zero] at h_0
+  exact h_0
+
+/-- From `K / x - L = 1 / x` (and `x ≠ 0`), derive `K = 1 + L * x`.
+Multiply both sides by x: (K/x - L) · x = (1/x) · x = 1. LHS expands
+via mul_distrib_right to K/x · x + (-L) · x = K + (-L) · x. Adding L·x:
+K + (-L · x + L · x) = K + 0 = K = 1 + L · x. -/
+private theorem K_over_x_sub_L_imp_K_eq_one_plus_L_x
+    (K L x : Real) (hx_ne : x ≠ 0)
+    (h : K / x - L = 1 / x) :
+    K = 1 + L * x := by
+  have step : (K / x - L) * x = (1 / x) * x := congrArg (· * x) h
+  rw [Real.sub_def, Real.mul_distrib_right] at step
+  rw [div_mul_cancel hx_ne, div_mul_cancel hx_ne] at step
+  -- step : K + -L * x = 1
+  have step2 : K + -L * x + L * x = 1 + L * x :=
+    congrArg (· + L * x) step
+  rw [Real.add_assoc] at step2
+  rw [← Real.mul_distrib_right] at step2
+  rw [Real.neg_add_self] at step2
+  rw [Real.zero_mul, Real.add_zero] at step2
+  exact step2
+
+/-- **Pattern A general-c: `eml(eml(const a, var), const c)`.**
+Eval x = exp(exp a - log x) - log c = K/x - log c where K = exp(exp a).
+Hypothesis = 1/x ⟹ K = 1 + log c · x for ALL x ≥ N. Two-sample chain
+at x_0 and x_0 + 1 forces log c = 0 + K = 1. K = 1 contradicts
+`exp_exp_ne_one_local`. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_var_const
+    (a c : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const a) .var) (.const c)).eval x) := by
+  intro ⟨N, hN⟩
+  -- Sample at x_0 = max N 1 and x_1 = x_0 + 1.
+  have hN_le : N ≤ max N 1 := le_max_left _ _
+  have h_one_le : (1 : Real) ≤ max N 1 := le_max_right _ _
+  have h_x_0_pos : (0 : Real) < max N 1 :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  have h_x_0_ne : max N 1 ≠ 0 := Real.ne_of_gt h_x_0_pos
+  have h_step_lt : max N 1 + 0 < max N 1 + 1 :=
+    Real.add_lt_add_left Real.zero_lt_one_ax _
+  rw [Real.add_zero] at h_step_lt
+  have hN_le_x1 : N ≤ max N 1 + 1 :=
+    Real.le_trans hN_le (Real.le_of_lt h_step_lt)
+  have h_x_1_pos : (0 : Real) < max N 1 + 1 :=
+    Real.lt_trans_ax h_x_0_pos h_step_lt
+  have h_x_1_ne : max N 1 + 1 ≠ 0 := Real.ne_of_gt h_x_1_pos
+  -- Apply hN at both samples:
+  have h_eval_0 := hN (max N 1) hN_le
+  have h_eval_1 := hN (max N 1 + 1) hN_le_x1
+  simp only [EMLTree.eval] at h_eval_0 h_eval_1
+  rw [exp_const_sub_log_eq_K_over_x a (max N 1) h_x_0_pos] at h_eval_0
+  rw [exp_const_sub_log_eq_K_over_x a (max N 1 + 1) h_x_1_pos] at h_eval_1
+  -- h_eval_0 : exp(exp a) / x_0 - log c = 1 / x_0
+  -- h_eval_1 : exp(exp a) / x_1 - log c = 1 / x_1
+  have h_K_0 :=
+    K_over_x_sub_L_imp_K_eq_one_plus_L_x
+      (Real.exp (Real.exp a)) (Real.log c) (max N 1) h_x_0_ne h_eval_0
+  have h_K_1 :=
+    K_over_x_sub_L_imp_K_eq_one_plus_L_x
+      (Real.exp (Real.exp a)) (Real.log c) (max N 1 + 1) h_x_1_ne h_eval_1
+  have h_K_eq_one : Real.exp (Real.exp a) = 1 :=
+    K_minus_L_x_equals_one_two_sample _ _ _ h_K_0 h_K_1
+  exact exp_exp_ne_one_local a h_K_eq_one
+
+/-! ## EventuallyNegative predicate + disjointness (Pattern C foundation) -/
+
+/-- `f` is eventually negative: `f x < 0` for all `x ≥ N` for some `N`. -/
+def EventuallyNegative (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → f x < 0
+
+/-- `EventuallyNegative` is disjoint from `EventuallyKOverX 1`:
+`1/x > 0` for x > 0, contradicting eventually negative. -/
+theorem EventuallyNegative.not_eventually_K_over_x_one
+    {f : Real → Real} (hf : EventuallyNegative f) :
+    ¬ EventuallyKOverX 1 f := by
+  obtain ⟨N, hN⟩ := hf
+  intro ⟨N', hN'⟩
+  -- Sample at x_0 = max N (max N' 1). Then f x_0 < 0 AND f x_0 = 1/x_0 > 0.
+  have hN_le : N ≤ max N (max N' 1) := le_max_left _ _
+  have h_inner_le : max N' 1 ≤ max N (max N' 1) := le_max_right _ _
+  have hN'_le : N' ≤ max N (max N' 1) :=
+    Real.le_trans (le_max_left _ _) h_inner_le
+  have h_one_le : (1 : Real) ≤ max N (max N' 1) :=
+    Real.le_trans (le_max_right _ _) h_inner_le
+  have h_pos : (0 : Real) < max N (max N' 1) :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  have h_neg : f (max N (max N' 1)) < 0 := hN _ hN_le
+  have h_inv : f (max N (max N' 1)) = 1 / max N (max N' 1) := hN' _ hN'_le
+  have h_inv_pos : (0 : Real) < 1 / max N (max N' 1) :=
+    Real.one_div_pos_of_pos h_pos
+  rw [h_inv] at h_neg
+  exact Real.lt_irrefl_ax _ (Real.lt_trans_ax h_inv_pos h_neg)
+
+/-- Small helper: `a < b ⟹ a - b < 0`. -/
+private theorem sub_neg_of_lt {a b : Real} (h : a < b) : a - b < 0 := by
+  have step : -b + a < -b + b := Real.add_lt_add_left h _
+  rw [Real.neg_add_self] at step
+  rw [Real.add_comm (-b) a] at step
+  rw [← Real.sub_def] at step
+  exact step
+
+/-- **Pattern C classification: `eml(const c, eml(var, const b))` is
+EventuallyNegative.** Eval x = exp c - log(exp x - log b). For
+`x ≥ max 1 (log b + exp(exp c))`:
+  - exp x > x ≥ log b + exp(exp c) (exp_grows_strictly).
+  - So exp x - log b > exp(exp c) > 0.
+  - log_lt_log + log_exp: log(exp x - log b) > exp c.
+  - eval = exp c - log(...) < 0 by sub_neg_of_lt. -/
+theorem eml_const_eml_var_const_eventually_negative (c b : Real) :
+    EventuallyNegative
+      (fun x => (EMLTree.eml (.const c) (EMLTree.eml .var (.const b))).eval x) := by
+  refine ⟨max 1 (Real.log b + Real.exp (Real.exp c)), ?_⟩
+  intro x hx
+  have h_one_le : (1 : Real) ≤ x :=
+    Real.le_trans (le_max_left _ _) hx
+  have h_lb_exp_le : Real.log b + Real.exp (Real.exp c) ≤ x :=
+    Real.le_trans (le_max_right _ _) hx
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  show Real.exp c - Real.log (Real.exp x - Real.log b) < 0
+  -- exp x > log b + exp(exp c) (via exp_grows_strictly + chain):
+  have h_exp_x_gt :
+      Real.log b + Real.exp (Real.exp c) < Real.exp x :=
+    Real.lt_of_le_of_lt h_lb_exp_le (exp_grows_strictly x)
+  -- exp x - log b > exp(exp c):
+  have h_diff_gt : Real.exp (Real.exp c) < Real.exp x - Real.log b := by
+    rw [Real.sub_def]
+    have step :
+        -Real.log b + (Real.log b + Real.exp (Real.exp c)) <
+        -Real.log b + Real.exp x :=
+      Real.add_lt_add_left h_exp_x_gt _
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    rw [Real.add_comm (-Real.log b) (Real.exp x)] at step
+    exact step
+  -- log(exp x - log b) > exp c:
+  have h_log_gt :
+      Real.log (Real.exp (Real.exp c)) <
+        Real.log (Real.exp x - Real.log b) :=
+    Real.log_lt_log (Real.exp_pos _) h_diff_gt
+  rw [Real.log_exp] at h_log_gt
+  -- exp c < log(exp x - log b) ⟹ exp c - log(...) < 0:
+  exact sub_neg_of_lt h_log_gt
+
+/-- **Pattern C closure**: `eml(const c, eml(var, const b))` is not
+`EventuallyKOverX 1`. Direct corollary of the EventuallyNegative
+classification + disjointness. -/
+theorem not_eventually_K_over_x_one_eml_const_eml_var_const (c b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x => (EMLTree.eml (.const c) (EMLTree.eml .var (.const b))).eval x) :=
+  (eml_const_eml_var_const_eventually_negative c b).not_eventually_K_over_x_one
+
 /-! ## Phase 2 (depth-2 starter): the clamp-trigger eventually-constant pattern
 
 For depth-2 EMLTrees with shape
