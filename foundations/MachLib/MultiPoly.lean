@@ -269,6 +269,85 @@ theorem degreeY_leadingCoeffY {n : Nat} (i : Fin n) :
     show degreeY i (leadingCoeffY i p) + degreeY i (leadingCoeffY i q) = 0
     rw [degreeY_leadingCoeffY i p, degreeY_leadingCoeffY i q]
 
+/-! ## Step 3l — leadingCoeffY weakly decreases degreeX
+
+The formal leading coefficient (in `y_i`) has its x-degree bounded
+by the input's x-degree. This is the key fact for the lex measure's
+second component: `degreeX (leadingCoeffY i f.poly)` is well-defined
+and bounded by `degreeX f.poly`.
+
+Combined with Steps 3i + 3k, this bounds the second component of the
+lex measure under scaledReduction: it cannot increase beyond
+`degreeX f.poly`. -/
+
+/-- **`leadingCoeffY` weakly decreases degreeX.** Structural induction:
+trivial cases preserve degreeX; compound cases use the appropriate
+case-split on degreeY comparison + Nat.max_le for add/sub, additive
+bound for mul. -/
+theorem degreeX_leadingCoeffY_le {n : Nat} (i : Fin n) :
+    ∀ p : MultiPoly n, degreeX (leadingCoeffY i p) ≤ degreeX p
+  | const _ => Nat.le_refl _
+  | varX => Nat.le_refl _
+  | varY j => by
+    show degreeX (if j = i then const 1 else varY j) ≤ degreeX (varY j : MultiPoly n)
+    by_cases h : j = i
+    · simp [h]; exact Nat.zero_le _
+    · simp [h]
+  | add p q => by
+    show degreeX
+          (if degreeY i p > degreeY i q then leadingCoeffY i p
+           else if degreeY i q > degreeY i p then leadingCoeffY i q
+           else add (leadingCoeffY i p) (leadingCoeffY i q))
+         ≤ Nat.max (degreeX p) (degreeX q)
+    by_cases h1 : degreeY i p > degreeY i q
+    · simp [h1]
+      exact Nat.le_trans (degreeX_leadingCoeffY_le i p) (Nat.le_max_left _ _)
+    · simp [h1]
+      by_cases h2 : degreeY i q > degreeY i p
+      · simp [h2]
+        exact Nat.le_trans (degreeX_leadingCoeffY_le i q) (Nat.le_max_right _ _)
+      · simp [h2]
+        show Nat.max (degreeX (leadingCoeffY i p)) (degreeX (leadingCoeffY i q))
+             ≤ Nat.max (degreeX p) (degreeX q)
+        apply Nat.max_le.mpr
+        refine ⟨?_, ?_⟩
+        · exact Nat.le_trans (degreeX_leadingCoeffY_le i p) (Nat.le_max_left _ _)
+        · exact Nat.le_trans (degreeX_leadingCoeffY_le i q) (Nat.le_max_right _ _)
+  | sub p q => by
+    show degreeX
+          (if degreeY i p > degreeY i q then leadingCoeffY i p
+           else if degreeY i q > degreeY i p then
+             sub (const 0) (leadingCoeffY i q)
+           else sub (leadingCoeffY i p) (leadingCoeffY i q))
+         ≤ Nat.max (degreeX p) (degreeX q)
+    by_cases h1 : degreeY i p > degreeY i q
+    · simp [h1]
+      exact Nat.le_trans (degreeX_leadingCoeffY_le i p) (Nat.le_max_left _ _)
+    · simp [h1]
+      by_cases h2 : degreeY i q > degreeY i p
+      · simp [h2]
+        show Nat.max (degreeX (const 0 : MultiPoly n)) (degreeX (leadingCoeffY i q))
+             ≤ Nat.max (degreeX p) (degreeX q)
+        show Nat.max 0 (degreeX (leadingCoeffY i q))
+             ≤ Nat.max (degreeX p) (degreeX q)
+        apply Nat.max_le.mpr
+        refine ⟨Nat.zero_le _, ?_⟩
+        exact Nat.le_trans (degreeX_leadingCoeffY_le i q) (Nat.le_max_right _ _)
+      · simp [h2]
+        show Nat.max (degreeX (leadingCoeffY i p)) (degreeX (leadingCoeffY i q))
+             ≤ Nat.max (degreeX p) (degreeX q)
+        apply Nat.max_le.mpr
+        refine ⟨?_, ?_⟩
+        · exact Nat.le_trans (degreeX_leadingCoeffY_le i p) (Nat.le_max_left _ _)
+        · exact Nat.le_trans (degreeX_leadingCoeffY_le i q) (Nat.le_max_right _ _)
+  | mul p q => by
+    show degreeX (mul (leadingCoeffY i p) (leadingCoeffY i q))
+         ≤ degreeX p + degreeX q
+    show degreeX (leadingCoeffY i p) + degreeX (leadingCoeffY i q)
+         ≤ degreeX p + degreeX q
+    exact Nat.add_le_add (degreeX_leadingCoeffY_le i p)
+                          (degreeX_leadingCoeffY_le i q)
+
 /-! ## Step 3b building blocks — algebraic lemmas for leadingCoeffY
 
 These lemmas describe how `leadingCoeffY` and `degreeY` behave under
