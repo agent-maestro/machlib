@@ -439,6 +439,67 @@ noncomputable def chainTotalDerivative (f : PfaffianFn) : PfaffianFn :=
 theorem chainTotalDerivative_chainLength (f : PfaffianFn) :
     f.chainTotalDerivative.chainLength = f.chainLength := rfl
 
+/-! ### Step 3h — chainTotalDeriv preserves degreeY (per-relation degree bound)
+
+For chains where EVERY relation `c.relations j` satisfies the per-index
+bound `degreeY i (c.relations j) ≤ degreeY i (varY j)`, the total
+derivative preserves `degreeY i` everywhere. This is the key structural
+fact for the Step 3b strict-decrease argument: scaledReduction's y^d
+coefficient remains of the SAME y-degree d, with only the x-coefficient
+transforming.
+
+For SingleExpChain (chain length 1, `relations 0 = varY 0`), the
+hypothesis holds trivially: i = j = 0, and `relations 0 = varY 0` has
+degreeY 0 = 1 = degreeY 0 (varY 0). -/
+
+/-- **chainTotalDeriv preserves degreeY (general per-relation bound).**
+Structural induction on the polynomial AST. The mul case's degree
+blow-up is bounded by the sum, matching the original mul. -/
+theorem degreeY_chainTotalDeriv_le {n : Nat} (chain : PfaffianChain n)
+    (i : Fin n)
+    (h_rel_deg : ∀ j : Fin n,
+      MultiPoly.degreeY i (chain.relations j) ≤
+      MultiPoly.degreeY i (MultiPoly.varY j : MultiPoly n)) :
+    ∀ p : MultiPoly n,
+      MultiPoly.degreeY i (chainTotalDeriv chain p) ≤
+      MultiPoly.degreeY i p
+  | .const _ => Nat.le_refl _
+  | .varX => Nat.le_refl _
+  | .varY j => h_rel_deg j
+  | .add p q => by
+    show Nat.max (MultiPoly.degreeY i (chainTotalDeriv chain p))
+                  (MultiPoly.degreeY i (chainTotalDeriv chain q))
+         ≤ Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans (degreeY_chainTotalDeriv_le chain i h_rel_deg p)
+              (Nat.le_max_left _ _)
+    · exact Nat.le_trans (degreeY_chainTotalDeriv_le chain i h_rel_deg q)
+              (Nat.le_max_right _ _)
+  | .sub p q => by
+    show Nat.max (MultiPoly.degreeY i (chainTotalDeriv chain p))
+                  (MultiPoly.degreeY i (chainTotalDeriv chain q))
+         ≤ Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q)
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.le_trans (degreeY_chainTotalDeriv_le chain i h_rel_deg p)
+              (Nat.le_max_left _ _)
+    · exact Nat.le_trans (degreeY_chainTotalDeriv_le chain i h_rel_deg q)
+              (Nat.le_max_right _ _)
+  | .mul p q => by
+    show Nat.max
+          (MultiPoly.degreeY i (chainTotalDeriv chain p) +
+            MultiPoly.degreeY i q)
+          (MultiPoly.degreeY i p +
+            MultiPoly.degreeY i (chainTotalDeriv chain q))
+         ≤ MultiPoly.degreeY i p + MultiPoly.degreeY i q
+    apply Nat.max_le.mpr
+    refine ⟨?_, ?_⟩
+    · exact Nat.add_le_add_right
+              (degreeY_chainTotalDeriv_le chain i h_rel_deg p) _
+    · exact Nat.add_le_add_left
+              (degreeY_chainTotalDeriv_le chain i h_rel_deg q) _
+
 /-- Eval of the chain-total-derivative matches the polynomial-level
 chainTotalDeriv evaluation. -/
 theorem chainTotalDerivative_eval (f : PfaffianFn) (x : Real) :

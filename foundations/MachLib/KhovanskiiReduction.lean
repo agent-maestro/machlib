@@ -1055,6 +1055,39 @@ theorem SingleExpChain_isCoherentOn (a b : Real) :
   intro x _ _
   exact SingleExpChain_isCoherentAt x
 
+/-- **Step 3h (SingleExp specialization)**: SingleExpChain satisfies
+the per-relation degree bound that makes `chainTotalDeriv` preserve
+`degreeY`. Chain length 1 forces j = 0; `relations 0 = varY 0` has
+`degreeY 0 = 1` which matches `degreeY 0 (varY 0)`. -/
+theorem SingleExpChain_rel_deg_bound (i : Fin 1) :
+    ∀ j : Fin 1,
+      MultiPoly.degreeY i (SingleExpChain.relations j) ≤
+      MultiPoly.degreeY i (MultiPoly.varY j : MultiPoly 1) := by
+  intro j
+  -- For chain length 1, both i and j are 0.
+  have hi : i = ⟨0, by omega⟩ := by
+    apply Fin.eq_of_val_eq
+    have := i.isLt
+    omega
+  have hj : j = ⟨0, by omega⟩ := by
+    apply Fin.eq_of_val_eq
+    have := j.isLt
+    omega
+  subst hi
+  subst hj
+  -- SingleExpChain.relations 0 = varY 0.
+  show MultiPoly.degreeY ⟨0, _⟩ (MultiPoly.varY 0 : MultiPoly 1) ≤
+       MultiPoly.degreeY ⟨0, _⟩ (MultiPoly.varY 0 : MultiPoly 1)
+  exact Nat.le_refl _
+
+/-- **chainTotalDeriv preserves degreeY for SingleExpChain**: direct
+corollary specializing the general `degreeY_chainTotalDeriv_le`. -/
+theorem degreeY_chainTotalDeriv_le_SingleExp (i : Fin 1) (p : MultiPoly 1) :
+    MultiPoly.degreeY i (PfaffianFn.chainTotalDeriv SingleExpChain p) ≤
+    MultiPoly.degreeY i p :=
+  PfaffianFn.degreeY_chainTotalDeriv_le SingleExpChain i
+    (SingleExpChain_rel_deg_bound i) p
+
 /-! ## Step 3c — dropLast applicability via lex measure
 
 When the lex measure's first component reaches 0 (degreeY of the last
