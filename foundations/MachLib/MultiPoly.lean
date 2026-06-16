@@ -1142,6 +1142,156 @@ theorem liftRight_eval (n : Nat) {k : Nat} (p : MultiPoly k) (x : Real)
        = eval p x envOrig * eval q x envOrig
     rw [ihp, ihq]
 
+/-! ## Step 3j — multiSimplify weakly decreases degrees
+
+For the Step 3b strict-decrease analysis on `scaledReduction`, we need
+to know that AST-level simplification doesn't increase formal degrees.
+This section ships the degreeY and degreeX bounds under `multiSimplify`. -/
+
+/-- **multiSimplify weakly decreases degreeY.** Structural induction:
+trivial cases (const/varX/varY) preserve degree exactly. The compound
+cases (add/sub/mul) use Nat.max_le for additive ops and the various
+zero/one short-circuits for mul. -/
+theorem degreeY_multiSimplify_le {n : Nat} (i : Fin n) :
+    ∀ p : MultiPoly n, degreeY i (multiSimplify p) ≤ degreeY i p
+  | const _ => Nat.le_refl _
+  | varX => Nat.le_refl _
+  | varY _ => Nat.le_refl _
+  | add p q => by
+    show degreeY i
+          (if multiIsZeroConst (multiSimplify p) = true then multiSimplify q
+           else if multiIsZeroConst (multiSimplify q) = true then multiSimplify p
+           else add (multiSimplify p) (multiSimplify q))
+         ≤ Nat.max (degreeY i p) (degreeY i q)
+    by_cases hp : multiIsZeroConst (multiSimplify p) = true
+    · simp [hp]
+      exact Nat.le_trans (degreeY_multiSimplify_le i q) (Nat.le_max_right _ _)
+    · simp [hp]
+      by_cases hq : multiIsZeroConst (multiSimplify q) = true
+      · simp [hq]
+        exact Nat.le_trans (degreeY_multiSimplify_le i p) (Nat.le_max_left _ _)
+      · simp [hq]
+        show Nat.max (degreeY i (multiSimplify p)) (degreeY i (multiSimplify q))
+             ≤ Nat.max (degreeY i p) (degreeY i q)
+        apply Nat.max_le.mpr
+        refine ⟨?_, ?_⟩
+        · exact Nat.le_trans (degreeY_multiSimplify_le i p) (Nat.le_max_left _ _)
+        · exact Nat.le_trans (degreeY_multiSimplify_le i q) (Nat.le_max_right _ _)
+  | sub p q => by
+    show degreeY i
+          (if multiIsZeroConst (multiSimplify q) = true then multiSimplify p
+           else sub (multiSimplify p) (multiSimplify q))
+         ≤ Nat.max (degreeY i p) (degreeY i q)
+    by_cases hq : multiIsZeroConst (multiSimplify q) = true
+    · simp [hq]
+      exact Nat.le_trans (degreeY_multiSimplify_le i p) (Nat.le_max_left _ _)
+    · simp [hq]
+      show Nat.max (degreeY i (multiSimplify p)) (degreeY i (multiSimplify q))
+           ≤ Nat.max (degreeY i p) (degreeY i q)
+      apply Nat.max_le.mpr
+      refine ⟨?_, ?_⟩
+      · exact Nat.le_trans (degreeY_multiSimplify_le i p) (Nat.le_max_left _ _)
+      · exact Nat.le_trans (degreeY_multiSimplify_le i q) (Nat.le_max_right _ _)
+  | mul p q => by
+    show degreeY i
+          (if multiIsZeroConst (multiSimplify p) = true then const 0
+           else if multiIsZeroConst (multiSimplify q) = true then const 0
+           else if multiIsOneConst (multiSimplify p) = true then multiSimplify q
+           else if multiIsOneConst (multiSimplify q) = true then multiSimplify p
+           else mul (multiSimplify p) (multiSimplify q))
+         ≤ degreeY i p + degreeY i q
+    by_cases hp0 : multiIsZeroConst (multiSimplify p) = true
+    · simp [hp0]; exact Nat.zero_le _
+    · simp [hp0]
+      by_cases hq0 : multiIsZeroConst (multiSimplify q) = true
+      · simp [hq0]; exact Nat.zero_le _
+      · simp [hq0]
+        by_cases hp1 : multiIsOneConst (multiSimplify p) = true
+        · simp [hp1]
+          have h_le := degreeY_multiSimplify_le i q
+          omega
+        · simp [hp1]
+          by_cases hq1 : multiIsOneConst (multiSimplify q) = true
+          · simp [hq1]
+            have h_le := degreeY_multiSimplify_le i p
+            omega
+          · simp [hq1]
+            show degreeY i (multiSimplify p) + degreeY i (multiSimplify q)
+                 ≤ degreeY i p + degreeY i q
+            exact Nat.add_le_add (degreeY_multiSimplify_le i p)
+                                  (degreeY_multiSimplify_le i q)
+
+/-- **multiSimplify weakly decreases degreeX.** Parallel structure to
+`degreeY_multiSimplify_le`. -/
+theorem degreeX_multiSimplify_le {n : Nat} :
+    ∀ p : MultiPoly n, degreeX (multiSimplify p) ≤ degreeX p
+  | const _ => Nat.le_refl _
+  | varX => Nat.le_refl _
+  | varY _ => Nat.le_refl _
+  | add p q => by
+    show degreeX
+          (if multiIsZeroConst (multiSimplify p) = true then multiSimplify q
+           else if multiIsZeroConst (multiSimplify q) = true then multiSimplify p
+           else add (multiSimplify p) (multiSimplify q))
+         ≤ Nat.max (degreeX p) (degreeX q)
+    by_cases hp : multiIsZeroConst (multiSimplify p) = true
+    · simp [hp]
+      exact Nat.le_trans (degreeX_multiSimplify_le q) (Nat.le_max_right _ _)
+    · simp [hp]
+      by_cases hq : multiIsZeroConst (multiSimplify q) = true
+      · simp [hq]
+        exact Nat.le_trans (degreeX_multiSimplify_le p) (Nat.le_max_left _ _)
+      · simp [hq]
+        show Nat.max (degreeX (multiSimplify p)) (degreeX (multiSimplify q))
+             ≤ Nat.max (degreeX p) (degreeX q)
+        apply Nat.max_le.mpr
+        refine ⟨?_, ?_⟩
+        · exact Nat.le_trans (degreeX_multiSimplify_le p) (Nat.le_max_left _ _)
+        · exact Nat.le_trans (degreeX_multiSimplify_le q) (Nat.le_max_right _ _)
+  | sub p q => by
+    show degreeX
+          (if multiIsZeroConst (multiSimplify q) = true then multiSimplify p
+           else sub (multiSimplify p) (multiSimplify q))
+         ≤ Nat.max (degreeX p) (degreeX q)
+    by_cases hq : multiIsZeroConst (multiSimplify q) = true
+    · simp [hq]
+      exact Nat.le_trans (degreeX_multiSimplify_le p) (Nat.le_max_left _ _)
+    · simp [hq]
+      show Nat.max (degreeX (multiSimplify p)) (degreeX (multiSimplify q))
+           ≤ Nat.max (degreeX p) (degreeX q)
+      apply Nat.max_le.mpr
+      refine ⟨?_, ?_⟩
+      · exact Nat.le_trans (degreeX_multiSimplify_le p) (Nat.le_max_left _ _)
+      · exact Nat.le_trans (degreeX_multiSimplify_le q) (Nat.le_max_right _ _)
+  | mul p q => by
+    show degreeX
+          (if multiIsZeroConst (multiSimplify p) = true then const 0
+           else if multiIsZeroConst (multiSimplify q) = true then const 0
+           else if multiIsOneConst (multiSimplify p) = true then multiSimplify q
+           else if multiIsOneConst (multiSimplify q) = true then multiSimplify p
+           else mul (multiSimplify p) (multiSimplify q))
+         ≤ degreeX p + degreeX q
+    by_cases hp0 : multiIsZeroConst (multiSimplify p) = true
+    · simp [hp0]; exact Nat.zero_le _
+    · simp [hp0]
+      by_cases hq0 : multiIsZeroConst (multiSimplify q) = true
+      · simp [hq0]; exact Nat.zero_le _
+      · simp [hq0]
+        by_cases hp1 : multiIsOneConst (multiSimplify p) = true
+        · simp [hp1]
+          have h_le := degreeX_multiSimplify_le q
+          omega
+        · simp [hp1]
+          by_cases hq1 : multiIsOneConst (multiSimplify q) = true
+          · simp [hq1]
+            have h_le := degreeX_multiSimplify_le p
+            omega
+          · simp [hq1]
+            show degreeX (multiSimplify p) + degreeX (multiSimplify q)
+                 ≤ degreeX p + degreeX q
+            exact Nat.add_le_add (degreeX_multiSimplify_le p)
+                                  (degreeX_multiSimplify_le q)
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
