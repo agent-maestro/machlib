@@ -1698,6 +1698,136 @@ theorem not_eventually_K_over_x_one_eml_eml_var_const_eml_const_const
   (eml_eml_var_const_eml_const_const_eventually_above_one b c d
    ).not_eventually_K_over_x_one
 
+/-! ## Phase 7: depth-2 sweep continuation
+
+Two more shapes:
+  - eml(eml(c,v), eml(v,c)) — K/x mixed with -log(exp x - log b).
+    EventuallyNegative via K/x ≤ K AND K < log(exp x - log b).
+  - eml(eml(v,v), eml(c,v)) — t2 clamps for x ≥ exp(exp c), then
+    eval = exp(exp x - log x) > 1. EventuallyAboveOne. -/
+
+/-- **`eml(eml(const a, var), eml(var, const b))` is EventuallyNegative.**
+Eval = K/x - log(exp x - log b) where K = exp(exp a). The chain:
+  - K/x ≤ K for x ≥ 1 (since K > 0 and 1/x ≤ 1).
+  - log(exp x - log b) > K for x ≥ max 1 (log b + exp K).
+  - So K/x ≤ K < log(...), hence K/x < log(...), hence eval < 0. -/
+theorem eml_eml_const_var_eml_var_const_eventually_negative
+    (a b : Real) :
+    EventuallyNegative
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const a) .var)
+                     (EMLTree.eml .var (.const b))).eval x) := by
+  refine ⟨max (1+1)
+               (Real.log b + Real.exp (Real.exp (Real.exp a))), ?_⟩
+  intro x hx
+  have h_two_le : (1+1 : Real) ≤ x := Real.le_trans (le_max_left _ _) hx
+  have h_lb_expK_le :
+      Real.log b + Real.exp (Real.exp (Real.exp a)) ≤ x :=
+    Real.le_trans (le_max_right _ _) hx
+  have h_one_lt_two : (1 : Real) < 1+1 := one_lt_one_plus_one
+  have h_one_lt_x : (1 : Real) < x :=
+    Real.lt_of_lt_of_le h_one_lt_two h_two_le
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_trans_ax Real.zero_lt_one_ax h_one_lt_x
+  have h_x_ne : x ≠ 0 := Real.ne_of_gt h_x_pos
+  -- log(exp x - log b) > exp(exp a) = K, via the standard chain:
+  have h_exp_x_gt :
+      Real.log b + Real.exp (Real.exp (Real.exp a)) < Real.exp x :=
+    Real.lt_of_le_of_lt h_lb_expK_le (exp_grows_strictly x)
+  have h_diff_gt :
+      Real.exp (Real.exp (Real.exp a)) < Real.exp x - Real.log b := by
+    have step :
+        -Real.log b +
+          (Real.log b + Real.exp (Real.exp (Real.exp a))) <
+        -Real.log b + Real.exp x :=
+      Real.add_lt_add_left h_exp_x_gt _
+    rw [← Real.add_assoc, Real.neg_add_self, Real.zero_add] at step
+    rw [Real.add_comm (-Real.log b) (Real.exp x)] at step
+    rw [← Real.sub_def] at step
+    exact step
+  have h_log_gt_K :
+      Real.exp (Real.exp a) < Real.log (Real.exp x - Real.log b) := by
+    have := Real.log_lt_log (Real.exp_pos _) h_diff_gt
+    rw [Real.log_exp] at this
+    exact this
+  -- K/x < K (since K > 0 and x > 1):
+  have h_K_pos : (0 : Real) < Real.exp (Real.exp a) := Real.exp_pos _
+  have h_inv_lt_one : (1 : Real) / x < 1 :=
+    Real.div_lt_one_of_pos_lt h_x_pos h_one_lt_x
+  have h_K_div_lt_K : Real.exp (Real.exp a) / x < Real.exp (Real.exp a) := by
+    rw [Real.div_def _ _ h_x_ne]
+    rw [Real.mul_comm (Real.exp (Real.exp a)) (1/x)]
+    have := Real.mul_lt_mul_of_pos_right h_inv_lt_one h_K_pos
+    rw [Real.one_mul_thm] at this
+    exact this
+  -- Combine: K/x < K < log(exp x - log b).
+  have h_K_div_lt_log :
+      Real.exp (Real.exp a) / x < Real.log (Real.exp x - Real.log b) :=
+    Real.lt_trans_ax h_K_div_lt_K h_log_gt_K
+  -- Show eval < 0:
+  show Real.exp (Real.exp a - Real.log x) -
+       Real.log (Real.exp x - Real.log b) < 0
+  rw [exp_const_sub_log_eq_K_over_x a x h_x_pos]
+  exact sub_neg_of_lt h_K_div_lt_log
+
+/-- Closure corollary. -/
+theorem not_eventually_K_over_x_one_eml_eml_const_var_eml_var_const
+    (a b : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml (.const a) .var)
+                     (EMLTree.eml .var (.const b))).eval x) :=
+  (eml_eml_const_var_eml_var_const_eventually_negative a b
+   ).not_eventually_K_over_x_one
+
+/-- **`eml(eml(var, var), eml(const c, var))` is EventuallyAboveOne.**
+t2 = eml(const c, var) clamps for x ≥ exp(exp c). After clamping:
+  eval = exp(exp x - log x).
+For x ≥ 1: exp x - log x > 0 (since exp x > x ≥ log x). So
+exp(exp x - log x) > exp 0 = 1. EventuallyAboveOne. -/
+theorem eml_eml_var_var_eml_const_var_eventually_above_one
+    (c : Real) :
+    EventuallyAboveOne
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml .var .var)
+                     (EMLTree.eml (.const c) .var)).eval x) := by
+  refine ⟨max 1 (Real.exp (Real.exp c)), ?_⟩
+  intro x hx
+  have h_one_le : (1 : Real) ≤ x := Real.le_trans (le_max_left _ _) hx
+  have h_expexp_le : Real.exp (Real.exp c) ≤ x :=
+    Real.le_trans (le_max_right _ _) hx
+  have h_x_pos : (0 : Real) < x :=
+    Real.lt_of_lt_of_le Real.zero_lt_one_ax h_one_le
+  -- Show eval = exp(exp x - log x) > 1.
+  show 1 < Real.exp (Real.exp x - Real.log x) -
+            Real.log (Real.exp c - Real.log x)
+  -- t2 clamps via the helper:
+  rw [log_inner_zero_at_exp_exp_local c x h_expexp_le]
+  rw [Real.sub_def, Real.neg_zero, Real.add_zero]
+  -- Goal: 1 < exp(exp x - log x).
+  -- Derived from 0 < exp x - log x and exp_lt + exp_zero.
+  have h_log_le : Real.log x ≤ x :=
+    EMLTree.log_le_id_at_one x h_one_le
+  have h_x_lt_exp : x < Real.exp x := exp_grows_strictly x
+  have h_log_lt_exp : Real.log x < Real.exp x :=
+    Real.lt_of_le_of_lt h_log_le h_x_lt_exp
+  have h_diff_pos : (0 : Real) < Real.exp x - Real.log x :=
+    Real.sub_pos_of_lt h_log_lt_exp
+  have step : Real.exp 0 < Real.exp (Real.exp x - Real.log x) :=
+    Real.exp_lt h_diff_pos
+  rw [Real.exp_zero] at step
+  exact step
+
+/-- Closure corollary. -/
+theorem not_eventually_K_over_x_one_eml_eml_var_var_eml_const_var
+    (c : Real) :
+    ¬ EventuallyKOverX 1
+      (fun x =>
+        (EMLTree.eml (EMLTree.eml .var .var)
+                     (EMLTree.eml (.const c) .var)).eval x) :=
+  (eml_eml_var_var_eml_const_var_eventually_above_one c
+   ).not_eventually_K_over_x_one
+
 /- **Pattern C still-deferred: `eml(const c, eml(var, var))`.**
 
 Eval = `exp c - log(exp x - log x)`. To show EventuallyNegative,
