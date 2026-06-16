@@ -490,6 +490,172 @@ theorem eval_yCoeffs (p : MultiPoly 1) (x : Real) (env : Fin 1 → Real) :
   | mul p q ihp ihq =>
     exact eval_yCoeffs_mul_via_induction p q x env ihp ihq
 
+/-! ## y-freeness of yCoeffs entries
+
+Every coefficient produced by yCoeffs has degreeY 0 = 0 (i.e., is
+y-free as a MultiPoly 1). This is structural by construction —
+each list operation preserves y-freeness. -/
+
+/-- listAdd preserves y-freeness of all entries. -/
+theorem listAdd_entries_y_free (l1 l2 : List (MultiPoly 1))
+    (h1 : ∀ c ∈ l1, degreeY 0 c = 0)
+    (h2 : ∀ c ∈ l2, degreeY 0 c = 0) :
+    ∀ c ∈ listAdd l1 l2, degreeY 0 c = 0 := by
+  induction l1 generalizing l2 with
+  | nil =>
+    intro c hc
+    rw [listAdd_nil_left] at hc
+    exact h2 c hc
+  | cons p ps ih =>
+    cases l2 with
+    | nil =>
+      intro c hc
+      rw [listAdd_cons_nil] at hc
+      exact h1 c hc
+    | cons q qs =>
+      intro c hc
+      rw [listAdd_cons_cons] at hc
+      cases hc with
+      | head =>
+        -- c = add p q.
+        show Nat.max (degreeY 0 p) (degreeY 0 q) = 0
+        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rfl
+      | tail _ hc' =>
+        exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
+                 (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
+
+/-- listSub preserves y-freeness of all entries. -/
+theorem listSub_entries_y_free (l1 l2 : List (MultiPoly 1))
+    (h1 : ∀ c ∈ l1, degreeY 0 c = 0)
+    (h2 : ∀ c ∈ l2, degreeY 0 c = 0) :
+    ∀ c ∈ listSub l1 l2, degreeY 0 c = 0 := by
+  induction l1 generalizing l2 with
+  | nil =>
+    induction l2 with
+    | nil =>
+      intro c hc
+      rw [listSub_nil_nil] at hc
+      exact absurd hc (List.not_mem_nil _)
+    | cons q qs ihq =>
+      intro c hc
+      rw [listSub_nil_cons] at hc
+      cases hc with
+      | head =>
+        -- c = sub (const 0) q.
+        show Nat.max (degreeY 0 (const 0 : MultiPoly 1))
+                     (degreeY 0 q) = 0
+        rw [h2 q (List.mem_cons_self _ _)]
+        rfl
+      | tail _ hc' =>
+        exact ihq (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
+  | cons p ps ih =>
+    cases l2 with
+    | nil =>
+      intro c hc
+      rw [listSub_cons_nil] at hc
+      exact h1 c hc
+    | cons q qs =>
+      intro c hc
+      rw [listSub_cons_cons] at hc
+      cases hc with
+      | head =>
+        -- c = sub p q.
+        show Nat.max (degreeY 0 p) (degreeY 0 q) = 0
+        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rfl
+      | tail _ hc' =>
+        exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
+                 (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
+
+/-- listScale by a y-free poly preserves y-freeness. -/
+theorem listScale_entries_y_free (p : MultiPoly 1)
+    (hp : degreeY 0 p = 0) (l : List (MultiPoly 1))
+    (hl : ∀ c ∈ l, degreeY 0 c = 0) :
+    ∀ c ∈ listScale p l, degreeY 0 c = 0 := by
+  induction l with
+  | nil =>
+    intro c hc
+    rw [listScale_nil] at hc
+    exact absurd hc (List.not_mem_nil _)
+  | cons q qs ih =>
+    intro c hc
+    rw [listScale_cons] at hc
+    cases hc with
+    | head =>
+      -- c = mul p q.
+      show degreeY 0 p + degreeY 0 q = 0
+      rw [hp, hl q (List.mem_cons_self _ _)]
+    | tail _ hc' =>
+      exact ih (fun c hc => hl c (List.mem_cons_of_mem _ hc)) c hc'
+
+/-- listMul preserves y-freeness of all entries. -/
+theorem listMul_entries_y_free (l1 l2 : List (MultiPoly 1))
+    (h1 : ∀ c ∈ l1, degreeY 0 c = 0)
+    (h2 : ∀ c ∈ l2, degreeY 0 c = 0) :
+    ∀ c ∈ listMul l1 l2, degreeY 0 c = 0 := by
+  induction l1 with
+  | nil =>
+    intro c hc
+    rw [listMul_nil] at hc
+    exact absurd hc (List.not_mem_nil _)
+  | cons p ps ih =>
+    intro c hc
+    rw [listMul_cons] at hc
+    -- listAdd (listScale p l2) (const 0 :: listMul ps l2)
+    apply listAdd_entries_y_free
+        (listScale p l2) (const 0 :: listMul ps l2)
+    · -- listScale p l2 entries are y-free.
+      exact listScale_entries_y_free p (h1 p (List.mem_cons_self _ _))
+              l2 h2
+    · -- const 0 :: listMul ps l2 entries.
+      intro c' hc'
+      cases hc' with
+      | head => rfl
+      | tail _ hc'' =>
+        exact ih (fun c hc => h1 c (List.mem_cons_of_mem _ hc)) c' hc''
+    exact hc
+
+/-- **Main structural lemma**: every entry in yCoeffs p has degreeY 0 = 0
+(i.e., is y-free as a MultiPoly 1). -/
+theorem yCoeffs_entries_y_free (p : MultiPoly 1) :
+    ∀ c ∈ yCoeffs p, degreeY 0 c = 0 := by
+  induction p with
+  | const c =>
+    intro c' hc'
+    -- yCoeffs (const c) = [const c]. The only entry is const c.
+    change c' ∈ ([const c] : List (MultiPoly 1)) at hc'
+    cases hc' with
+    | head => rfl
+    | tail _ h => exact absurd h (List.not_mem_nil _)
+  | varX =>
+    intro c' hc'
+    change c' ∈ ([varX] : List (MultiPoly 1)) at hc'
+    cases hc' with
+    | head => rfl
+    | tail _ h => exact absurd h (List.not_mem_nil _)
+  | varY j =>
+    intro c' hc'
+    change c' ∈ ([const 0, const 1] : List (MultiPoly 1)) at hc'
+    cases hc' with
+    | head => rfl
+    | tail _ h =>
+      cases h with
+      | head => rfl
+      | tail _ h' => exact absurd h' (List.not_mem_nil _)
+  | add p q ihp ihq =>
+    intro c hc
+    change c ∈ listAdd (yCoeffs p) (yCoeffs q) at hc
+    exact listAdd_entries_y_free (yCoeffs p) (yCoeffs q) ihp ihq c hc
+  | sub p q ihp ihq =>
+    intro c hc
+    change c ∈ listSub (yCoeffs p) (yCoeffs q) at hc
+    exact listSub_entries_y_free (yCoeffs p) (yCoeffs q) ihp ihq c hc
+  | mul p q ihp ihq =>
+    intro c hc
+    change c ∈ listMul (yCoeffs p) (yCoeffs q) at hc
+    exact listMul_entries_y_free (yCoeffs p) (yCoeffs q) ihp ihq c hc
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
