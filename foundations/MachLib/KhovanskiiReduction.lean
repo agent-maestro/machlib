@@ -1168,6 +1168,52 @@ theorem degreeX_scaledReduction_poly_le {n : Nat}
     show 0 + MultiPoly.degreeX poly ≤ MultiPoly.degreeX poly
     rw [Nat.zero_add]; exact Nat.le_refl _
 
+/-! ## Step 3m — integrated lex-measure bound under scaledReduction (SingleExp)
+
+The complete bound composition for SingleExpChain: both lex measure
+components — `degreeY 0` (first) and `degreeX (leadingCoeffY 0 ...)`
+(second) — are simultaneously bounded under `scaledReduction`'s shape.
+
+This is the "≤ direction" of the strict-decrease half of Step 3b,
+fully assembled for SingleExp. The "<" direction for the second
+component (the actual strict decrease when c = degreeY_last) is the
+remaining algebraic content. -/
+
+/-- **Integrated lex bound under `scaledReduction` for SingleExp.**
+For SingleExpChain's `scaledReduction` shape:
+  - degreeY 0 of the result ≤ degreeY 0 poly.
+  - degreeX (leadingCoeffY 0 of result) ≤ degreeX poly.
+
+Both follow by composition of Steps 3h, 3i, 3k, 3l. -/
+theorem scaledReduction_lex_bound_SingleExp
+    (poly : MultiPoly 1) (c : Real) :
+    MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1)
+      (MultiPoly.sub
+        (PfaffianFn.chainTotalDeriv SingleExpChain poly)
+        (MultiPoly.mul (MultiPoly.const c) poly))
+    ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) poly
+  ∧
+    MultiPoly.degreeX
+      (MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 1)
+        (MultiPoly.sub
+          (PfaffianFn.chainTotalDeriv SingleExpChain poly)
+          (MultiPoly.mul (MultiPoly.const c) poly)))
+    ≤ MultiPoly.degreeX poly := by
+  refine ⟨?_, ?_⟩
+  · -- First component: composed via Step 3k.
+    exact degreeY_scaledReduction_poly_le SingleExpChain c poly
+            (⟨0, by omega⟩) (SingleExpChain_rel_deg_bound _)
+  · -- Second component: leadingCoeffY's degreeX ≤ scaledReduction's degreeX
+    --                 ≤ poly's degreeX (composition of 3l + 3k for SingleExp).
+    have h_leading := MultiPoly.degreeX_leadingCoeffY_le (⟨0, by omega⟩ : Fin 1)
+        (MultiPoly.sub
+          (PfaffianFn.chainTotalDeriv SingleExpChain poly)
+          (MultiPoly.mul (MultiPoly.const c) poly))
+    have h_scaled :=
+        degreeX_scaledReduction_poly_le SingleExpChain c poly
+          SingleExpChain_rel_x_bound
+    exact Nat.le_trans h_leading h_scaled
+
 /-! ## Step 3c — dropLast applicability via lex measure
 
 When the lex measure's first component reaches 0 (degreeY of the last
