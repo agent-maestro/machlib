@@ -4055,4 +4055,157 @@ theorem EventuallyAboveOne.eml_with_minus_log
     rw [h_t2_eq]; exact h_neg_log_neg
   exact h1.eml_with_negative h2_neg
 
+/-! ## Phase 16: taxonomy enrichment — `EventuallyDominatesAny`
+
+A function dominates any constant: for any K, eventually `f x > K`.
+Stronger than `EventuallyAboveOne` (which only requires K = 1).
+Captures `var` and any subtree with unbounded growth.
+
+This predicate unlocks 3 new closure rules: `Dominates × {Const,
+Negative, MinusLog} → Dominates`. The third one (`Dominates ×
+MinusLog`) is by reduction to `Dominates × Negative` (since
+-log x < 0 for x > 1). -/
+
+/-- `f` eventually dominates any constant. -/
+def EventuallyDominatesAny (f : Real → Real) : Prop :=
+  ∀ K : Real, ∃ N : Real, ∀ x : Real, N ≤ x → K < f x
+
+/-- **Subclass relation**: `EventuallyDominatesAny → EventuallyAboveOne`
+(take K = 1). -/
+theorem EventuallyDominatesAny.eventually_above_one
+    {f : Real → Real} (h : EventuallyDominatesAny f) :
+    EventuallyAboveOne f :=
+  h 1
+
+/-- **Disjointness**: `EventuallyDominatesAny → ¬ EventuallyKOverX 1`
+via the subclass to `EventuallyAboveOne`. -/
+theorem EventuallyDominatesAny.not_eventually_K_over_x_one
+    {f : Real → Real} (h : EventuallyDominatesAny f) :
+    ¬ EventuallyKOverX 1 f :=
+  h.eventually_above_one.not_eventually_K_over_x_one
+
+/-- **Base case**: `var.eval` (the identity) dominates any constant.
+For any K, sample at max K 0; then x ≥ K, hence K ≤ x. -/
+theorem var_eventually_dominates_any :
+    EventuallyDominatesAny EMLTree.var.eval := by
+  intro K
+  refine ⟨max K (K + 1), ?_⟩
+  intro x hx
+  -- K + 1 ≤ x ⟹ K < x.
+  have h_Kp1_le : K + 1 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_K_lt_Kp1 : K < K + 1 := by
+    have step : K + 0 < K + 1 :=
+      Real.add_lt_add_left Real.zero_lt_one_ax _
+    rw [Real.add_zero] at step
+    exact step
+  show K < x
+  exact Real.lt_of_lt_of_le h_K_lt_Kp1 h_Kp1_le
+
+/-- **Closure rule 6**: `Dominates × Const → Dominates`.
+
+Chain: `t1.eval` dominates any K. For target K, sample t1.eval at
+K' = K + log_clamped(c2). Then t1.eval > K', exp(t1.eval) > exp K' > K'
+(via exp_grows_strictly), so exp(t1.eval) - log_clamped(c2) > K. -/
+theorem EventuallyDominatesAny.eml_with_const
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyDominatesAny t1.eval)
+    (h2 : EventuallyConstant t2.eval) :
+    EventuallyDominatesAny (EMLTree.eml t1 t2).eval := by
+  obtain ⟨c2, N2, hN2⟩ := h2
+  intro K
+  -- Need t1.eval > K + log c2 eventually:
+  obtain ⟨N1, hN1⟩ := h1 (K + Real.log c2)
+  refine ⟨max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t1_gt : K + Real.log c2 < t1.eval x := hN1 x hN1_le
+  have h_t2_eq : t2.eval x = c2 := hN2 x hN2_le
+  -- exp(t1.eval x) > exp(K + log c2) > K + log c2 (chain):
+  have h_exp_lt : Real.exp (K + Real.log c2) < Real.exp (t1.eval x) :=
+    Real.exp_lt h_t1_gt
+  have h_self : K + Real.log c2 < Real.exp (K + Real.log c2) :=
+    exp_grows_strictly (K + Real.log c2)
+  have h_chain : K + Real.log c2 < Real.exp (t1.eval x) :=
+    Real.lt_trans_ax h_self h_exp_lt
+  -- Subtract log c2: K < exp(t1.eval x) - log c2 = eml.eval x.
+  have step :
+      (K + Real.log c2) + -Real.log c2 <
+      Real.exp (t1.eval x) + -Real.log c2 := by
+    rw [Real.add_comm (K + Real.log c2) (-Real.log c2)]
+    rw [Real.add_comm (Real.exp (t1.eval x)) (-Real.log c2)]
+    exact Real.add_lt_add_left h_chain _
+  rw [Real.add_assoc, Real.add_neg, Real.add_zero] at step
+  -- step : K < exp(t1.eval x) + -log c2
+  rw [← Real.sub_def] at step
+  show K < Real.exp (t1.eval x) - Real.log (t2.eval x)
+  rw [h_t2_eq]
+  exact step
+
+/-- **Closure rule 7**: `Dominates × Negative → Dominates`.
+
+Clamp triggers: log_clamped(t2.eval) = 0. So eml.eval = exp(t1.eval).
+And exp(t1.eval) dominates any K (since t1 dominates and exp_grows_strictly). -/
+theorem EventuallyDominatesAny.eml_with_negative
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyDominatesAny t1.eval)
+    (h2 : EventuallyNegative t2.eval) :
+    EventuallyDominatesAny (EMLTree.eml t1 t2).eval := by
+  obtain ⟨N2, hN2⟩ := h2
+  intro K
+  obtain ⟨N1, hN1⟩ := h1 K
+  refine ⟨max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t1_gt : K < t1.eval x := hN1 x hN1_le
+  have h_t2_neg : t2.eval x < 0 := hN2 x hN2_le
+  have h_log_zero : Real.log (t2.eval x) = 0 :=
+    Real.log_nonpos (Real.le_of_lt h_t2_neg)
+  show K < Real.exp (t1.eval x) - Real.log (t2.eval x)
+  rw [h_log_zero, Real.sub_zero]
+  -- K < exp(t1.eval x): chain via t1.eval > K + exp_grows_strictly.
+  have h_exp_lt : Real.exp K < Real.exp (t1.eval x) :=
+    Real.exp_lt h_t1_gt
+  have h_self : K < Real.exp K := exp_grows_strictly K
+  exact Real.lt_trans_ax h_self h_exp_lt
+
+/-- **Closure rule 8**: `Dominates × MinusLog → Dominates`.
+
+Reduction to rule 7: t2 ∈ MinusLog and x > 1 gives t2.eval = -log x < 0,
+so t2 ∈ Negative on the appropriate threshold. -/
+theorem EventuallyDominatesAny.eml_with_minus_log
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyDominatesAny t1.eval)
+    (h2 : EventuallyMinusLog t2.eval) :
+    EventuallyDominatesAny (EMLTree.eml t1 t2).eval := by
+  have h2_neg : EventuallyNegative t2.eval := by
+    obtain ⟨N2, hN2⟩ := h2
+    refine ⟨max N2 (1 + 1), ?_⟩
+    intro x hx
+    have hN2_le : N2 ≤ x := Real.le_trans (le_max_left _ _) hx
+    have h_two_le : (1 + 1 : Real) ≤ x :=
+      Real.le_trans (le_max_right _ _) hx
+    have h_one_lt_x : (1 : Real) < x :=
+      Real.lt_of_lt_of_le one_lt_one_plus_one h_two_le
+    have h_t2_eq : t2.eval x = -Real.log x := hN2 x hN2_le
+    have h_log_x_pos : (0 : Real) < Real.log x := by
+      have := Real.log_lt_log Real.zero_lt_one_ax h_one_lt_x
+      rw [Real.log_one] at this
+      exact this
+    have h_neg_log_neg : -Real.log x < 0 := by
+      have step : -Real.log x + 0 < -Real.log x + Real.log x :=
+        Real.add_lt_add_left h_log_x_pos _
+      rw [Real.add_zero, Real.neg_add_self] at step
+      exact step
+    rw [h_t2_eq]; exact h_neg_log_neg
+  exact h1.eml_with_negative h2_neg
+
+/-- **var's good class via Dominates** (sharper than the direct
+EventuallyAboveOne proof). -/
+theorem var_good_class_via_dominates :
+    EMLGoodClass EMLTree.var.eval := by
+  right; left
+  exact var_eventually_dominates_any.eventually_above_one
+
 end MachLib
