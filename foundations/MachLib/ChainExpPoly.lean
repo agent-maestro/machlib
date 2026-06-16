@@ -3,6 +3,7 @@ import MachLib.PolynomialEvidence
 import MachLib.Exp
 import MachLib.MultiPolyCanonYN
 import MachLib.PfaffianFnBound
+import MachLib.KhovanskiiReduction
 
 /-!
 # MachLib.ChainExpPoly — nested ExpPoly-like representation for arbitrary chain length
@@ -270,6 +271,48 @@ theorem chainEval_multiPolyToChainExpPolyT :
           (MultiPoly.yCoeffsAt (MultiPoly.lastIdx N) p) 0 x env]
     -- Goal: listEvalAuxN last (yCoeffsAt last p) 0 x env = MultiPoly.eval p x env
     exact MultiPoly.yCoeffsAt_last_eval p x env
+
+/-! ## PfaffianFn over MultiExpChain correspondence
+
+The final piece: connect `PfaffianFn over MultiExpChain N` to
+`ChainExpPolyT N`. The eval correspondence falls out from the bridge
++ MultiExpChain's chainValues structure (each y_i evaluates to exp x). -/
+
+open MachLib.PfaffianChainMod
+
+/-- **The bridge PfaffianFn over MultiExpChain N**: any MultiPoly N
+gives rise to a PfaffianFn with chain MultiExpChain N. -/
+noncomputable def MultiPolyToPfaffianFn (N : Nat) (poly : MultiPoly N) :
+    PfaffianFn :=
+  { n := N
+    chain := MultiExpChain N
+    poly := poly }
+
+theorem MultiPolyToPfaffianFn_n (N : Nat) (poly : MultiPoly N) :
+    (MultiPolyToPfaffianFn N poly).n = N := rfl
+
+theorem MultiPolyToPfaffianFn_chain (N : Nat) (poly : MultiPoly N) :
+    (MultiPolyToPfaffianFn N poly).chain = MultiExpChain N := rfl
+
+/-- **MultiExpChain's chainValues at every index = `Real.exp x`**.
+Direct from the chain definition (all evals = Real.exp). -/
+theorem MultiExpChain_chainValues_const (N : Nat) (x : MachLib.Real)
+    (i : Fin N) :
+    (MultiExpChain N).chainValues x i = Real.exp x := rfl
+
+/-- **Bridge eval correctness**: `PfaffianFn over MultiExpChain` eval
+matches `chainEval` on the bridged ChainExpPolyT, when the env is
+`MultiExpChain N`'s chainValues. -/
+theorem MultiPolyToPfaffianFn_eval_eq_chainEval (N : Nat)
+    (poly : MultiPoly N) (x : MachLib.Real) :
+    (MultiPolyToPfaffianFn N poly).eval x =
+    chainEval N (multiPolyToChainExpPolyT N poly) x
+      ((MultiExpChain N).chainValues x) := by
+  -- (PfaffianFn over MultiExpChain N).eval x = MultiPoly.eval poly x (chain.chainValues x).
+  show MultiPoly.eval poly x ((MultiExpChain N).chainValues x) =
+       chainEval N (multiPolyToChainExpPolyT N poly) x
+         ((MultiExpChain N).chainValues x)
+  exact (chainEval_multiPolyToChainExpPolyT N poly x _).symm
 
 end ChainExpPolyMod
 end MachLib
