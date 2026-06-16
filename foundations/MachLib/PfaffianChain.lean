@@ -495,7 +495,7 @@ def lastChainIdx {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) : Fin f.n :=
 /-- **Khovanskii lex measure.** First component: degreeY of the last
 chain variable in f.poly. Second component: degreeX of the leading
 coefficient in that variable. -/
-noncomputable def PfaffianFn.lexMeasure {N : Nat} (f : PfaffianFn)
+noncomputable def lexMeasure {N : Nat} (f : PfaffianFn)
     (hN : f.n = N + 1) : Nat × Nat :=
   let i := lastChainIdx f hN
   (MultiPoly.degreeY i f.poly,

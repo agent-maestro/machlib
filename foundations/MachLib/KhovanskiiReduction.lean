@@ -1055,5 +1055,61 @@ theorem SingleExpChain_isCoherentOn (a b : Real) :
   intro x _ _
   exact SingleExpChain_isCoherentAt x
 
+/-! ## Step 3c — dropLast applicability via lex measure
+
+When the lex measure's first component reaches 0 (degreeY of the last
+chain variable is 0), the polynomial doesn't depend on `y_{n-1}` and
+`dropLast` applies cleanly. This section ships the bridge lemmas and
+one-step witness constructors for IsKhovanskiiReducible.
+
+Combined with Step 3b's strict-decrease (for the reduce step) and
+Step 3a's well-foundedness, Step 3d will orchestrate the full witness
+construction via strong recursion on the lex measure. -/
+
+/-- **Bridge**: lex measure first component being 0 IS the dropLast
+applicability hypothesis. The `lastChainIdx` index matches the
+index used in `IsKhovanskiiReducible.drop`'s `h_deg_zero`. -/
+theorem PfaffianFn.lex_first_zero_iff_dropLast_applicable
+    {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
+    (f.lexMeasure hN).1 = 0 ↔
+    MultiPoly.degreeY ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩ f.poly = 0 := by
+  -- Both sides are defeq via `lastChainIdx` unfolding.
+  show MultiPoly.degreeY (lastChainIdx f hN) f.poly = 0 ↔
+       MultiPoly.degreeY ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩ f.poly = 0
+  rfl
+
+/-- **One-step drop witness**: when the lex measure's first component
+is 0, `IsKhovanskiiReducible f (f.dropLast hN) 0` holds via the drop
+constructor + refl. -/
+theorem PfaffianFn.IsKhovanskiiReducible.drop_one
+    {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1)
+    (h_lex_zero : (f.lexMeasure hN).1 = 0) :
+    PfaffianFn.IsKhovanskiiReducible f (f.dropLast hN) 0 :=
+  PfaffianFn.IsKhovanskiiReducible.drop f (f.dropLast hN) 0 N hN
+    h_lex_zero
+    (PfaffianFn.IsKhovanskiiReducible.refl (f.dropLast hN))
+
+/-- **One-step reduce witness**: `IsKhovanskiiReducible f (scaledReduction c f) 1`
+via the reduce constructor + refl. Independent of the lex measure. -/
+theorem PfaffianFn.IsKhovanskiiReducible.reduce_one
+    (f : PfaffianFn) (c : Real) :
+    PfaffianFn.IsKhovanskiiReducible f (f.scaledReduction c) 1 :=
+  PfaffianFn.IsKhovanskiiReducible.reduce f (f.scaledReduction c) 0 c
+    (PfaffianFn.IsKhovanskiiReducible.refl (f.scaledReduction c))
+
+/-- **Drop preserves chain length**: after dropLast, the result's chain
+length is N (one less than f.n). Used in the Step 3d termination
+argument to track that the outer recursion measure (chain length) drops. -/
+theorem PfaffianFn.dropLast_n
+    {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) :
+    (f.dropLast hN).n = N := rfl
+
+/-- **Reduce preserves chain length**: scaledReduction keeps the chain
+intact. Used in the Step 3d termination argument to track that the
+inner recursion measure (lex measure) drops while chain length is
+unchanged. -/
+theorem PfaffianFn.scaledReduction_n (c : Real) (f : PfaffianFn) :
+    (f.scaledReduction c).n = f.n := rfl
+
 end PfaffianChainMod
 end MachLib
