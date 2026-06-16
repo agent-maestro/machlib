@@ -576,6 +576,41 @@ theorem MultiExp_zero_count_bound_one
   exact MachLib.SingleExpKhovanskii.ExpPoly.expPoly_auto_bound_with_propagation_aux
           M_hyp ep h_meas h_prop h_strict_last a b hab zeros hnodup hzeros_ep
 
+/-- **MultiExp Khovanskii bound at chain length 1 — explicit form**.
+The chain-length-1 bound stated directly in terms of
+`chainExpPolyAutoBound 1`. Direct corollary of
+`MultiExp_zero_count_bound_one` with `M_hyp = chainExpPolyAutoBound 1
+(multiPolyToChainExpPolyT 1 poly)`; the `h_meas` hypothesis is
+discharged automatically via `ExpPoly_M_le_chainExpPolyAutoBound_one`. -/
+theorem MultiExp_zero_count_bound_one_explicit
+    (poly : MultiPoly 1) (a b : MachLib.Real) (hab : a < b)
+    (h_prop : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤
+      chainExpPolyAutoBound 1 (multiPolyToChainExpPolyT 1 poly) →
+      (∃ x, ep'.eval x ≠ 0))
+    (h_strict_last : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ∀ (hne_c : ep'.coeffs ≠ []),
+      ep'.coeffs.length ≥ 2 →
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤
+      chainExpPolyAutoBound 1 (multiPolyToChainExpPolyT 1 poly) →
+      PolynomialRootCount.degreeUpper
+        (MachLib.PolynomialRootCount.polySimplify
+          (ep'.coeffs.getLast hne_c)) > 0) :
+    ∀ zeros : List MachLib.Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (MultiPolyToPfaffianFn 1 poly).eval z = 0) →
+      zeros.length ≤
+      chainExpPolyAutoBound 1 (multiPolyToChainExpPolyT 1 poly) :=
+  MultiExp_zero_count_bound_one poly a b hab
+    (chainExpPolyAutoBound 1 (multiPolyToChainExpPolyT 1 poly))
+    (ExpPoly_M_le_chainExpPolyAutoBound_one _)
+    h_prop h_strict_last
+
 /-! ## Multi-chain Khovanskii sprint summary (substrate complete)
 
 After 8 commits in this push chain (e3d2617 → b5cc2d7), the
