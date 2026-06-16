@@ -123,5 +123,60 @@ theorem multiPolyToChainExpPolyT_succ {N : Nat} (p : MultiPoly (N + 1)) :
     multiPolyToChainExpPolyT (N + 1) p =
     (yCoeffsAtLast_dropped p).map (multiPolyToChainExpPolyT N) := rfl
 
+/-! ## iterMul ↔ MultiPoly.pow(varY) bridge
+
+`iterMul (env i) k` (the eval-side iterated multiplication used by
+`chainEval`) coincides with `MultiPoly.eval (pow (varY i) k) x env`
+(the polynomial-side iterated power). Inductive proof. -/
+
+theorem iterMul_eq_eval_pow_varY {n : Nat} (i : Fin n) (k : Nat)
+    (x : MachLib.Real) (env : Fin n → MachLib.Real) :
+    iterMul (env i) k =
+    MultiPoly.eval (MultiPoly.pow (MultiPoly.varY i) k) x env := by
+  induction k with
+  | zero =>
+    show (1 : MachLib.Real) =
+         MultiPoly.eval (MultiPoly.pow (MultiPoly.varY i) 0) x env
+    rw [MultiPoly.eval_pow_zero]
+  | succ k ih =>
+    show env i * iterMul (env i) k =
+         MultiPoly.eval (MultiPoly.pow (MultiPoly.varY i) (k + 1)) x env
+    rw [MultiPoly.eval_pow_succ, ih]
+    rfl
+
+/-! ## Base case eval correctness -/
+
+theorem chainEval_multiPolyToChainExpPolyT_zero (p : MultiPoly 0)
+    (x : MachLib.Real) (env : Fin 0 → MachLib.Real) :
+    chainEval 0 (multiPolyToChainExpPolyT 0 p) x env =
+    MultiPoly.eval p x env := by
+  rw [multiPolyToChainExpPolyT_zero, chainEval_zero]
+  exact MachLib.PfaffianFnBound.multiPolyToPoly_eval rfl p x env
+
+/-! ## listEvalAuxN ↔ sumWithPowers bridge
+
+The two evaluators connect via the iterMul ↔ pow identity (when the
+coefficients are evaluated to Real values first). This is the
+conversion lemma needed for the inductive case of the eval correctness
+theorem. -/
+
+theorem listEvalAuxN_eq_sumWithPowers_map_eval {n : Nat} (i : Fin n)
+    (coeffs : List (MultiPoly n)) (k : Nat)
+    (x : MachLib.Real) (env : Fin n → MachLib.Real) :
+    MultiPoly.listEvalAuxN i coeffs k x env =
+    sumWithPowers (coeffs.map (fun c => MultiPoly.eval c x env)) k (env i) := by
+  induction coeffs generalizing k with
+  | nil =>
+    show (0 : MachLib.Real) = 0
+    rfl
+  | cons c rest ih =>
+    show MultiPoly.eval c x env *
+         MultiPoly.eval (MultiPoly.pow (MultiPoly.varY i) k) x env +
+         MultiPoly.listEvalAuxN i rest (k + 1) x env =
+         MultiPoly.eval c x env * iterMul (env i) k +
+         sumWithPowers (rest.map (fun c => MultiPoly.eval c x env))
+                       (k + 1) (env i)
+    rw [← iterMul_eq_eval_pow_varY i k x env, ih (k + 1)]
+
 end ChainExpPolyMod
 end MachLib
