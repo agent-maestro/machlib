@@ -1196,5 +1196,53 @@ noncomputable def PfaffianFn.DropStep.ofLexFirstZero
       rw [PfaffianFn.dropLast_n, hN]; exact Nat.lt_succ_self N
     witness := PfaffianFn.IsKhovanskiiReducible.drop_one f hN h_lex_zero }
 
+/-! ## Step 3e — witness orchestration via strong recursion on chain length
+
+The witness construction proper: given a reducer that handles each
+`f.n > 0` case, strong recursion on `f.n` assembles the full witness.
+The reducer can be a Drop step (chain length drops) or a Reduce-then-Drop
+chain (inner loop on lex measure that terminates via Step 3b's
+strict-decrease + Step 3a's `lexLT_wf`).
+
+The Step 3e theorem is parametric in the reducer — chain-independent.
+For SingleExp, the SingleExpKhovanskii machinery supplies the reducer.
+For multi-chain general triangular cases, the full reducer requires
+Step 3b in MultiPoly normal form (multi-session). -/
+
+/-- A reducer: takes any chain-length-positive PfaffianFn and produces
+a DropStep — i.e., a single chain-length-decreasing step. (In practice,
+this may internally chain multiple reduce steps before producing the
+drop.) The Step 3e orchestration is parametric in this. -/
+abbrev PfaffianFn.Reducer : Type :=
+  ∀ f : PfaffianFn, f.n > 0 → PfaffianFn.DropStep f
+
+/-- **Step 3e: witness construction.** Strong recursion on `f.n` using
+a Reducer at each level. Combines `witness_chain_length_zero` (base) with
+the reducer (step) to produce the full IsKhovanskiiReducible witness. -/
+theorem PfaffianFn.witness_construction (reducer : PfaffianFn.Reducer)
+    (f : PfaffianFn) :
+    ∃ g : PfaffianFn, ∃ k : Nat,
+      g.n = 0 ∧ PfaffianFn.IsKhovanskiiReducible f g k := by
+  -- Strong induction on f.n.
+  suffices h : ∀ N : Nat, ∀ f : PfaffianFn, f.n = N →
+      ∃ g k, g.n = 0 ∧ PfaffianFn.IsKhovanskiiReducible f g k from
+    h f.n f rfl
+  intro N
+  induction N using Nat.strongRecOn with
+  | _ N ih =>
+    intro f hN
+    rcases Nat.eq_zero_or_pos N with h0 | hpos
+    · -- N = 0 base case.
+      have hf0 : f.n = 0 := h0 ▸ hN
+      exact PfaffianFn.witness_chain_length_zero f hf0
+    · -- N > 0: apply reducer to get a DropStep, then IH.
+      have hfpos : f.n > 0 := hN ▸ hpos
+      let step := reducer f hfpos
+      have hstep_lt : step.result.n < N := hN ▸ step.result_n_lt
+      obtain ⟨g, k', hg0, h_witness⟩ :=
+        ih step.result.n hstep_lt step.result rfl
+      refine ⟨g, step.counter + k', hg0, ?_⟩
+      exact PfaffianFn.IsKhovanskiiReducible.trans step.witness h_witness
+
 end PfaffianChainMod
 end MachLib
