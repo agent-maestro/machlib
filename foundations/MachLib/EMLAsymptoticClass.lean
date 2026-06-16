@@ -3907,4 +3907,152 @@ theorem not_eventually_K_over_x_one_of_good_class
     ¬ EventuallyKOverX 1 f :=
   h.not_eventually_K_over_x_one
 
+/-! ## Phase 15B closure rules — class-level eml combinators
+
+For each (class(t1), class(t2)) combination, we determine class(eml(t1, t2)).
+The 5 closure rules below cover the "clamp-trigger" cases (when t2's
+eval is eventually non-positive or eventually -log x), plus the
+const × const baseline. These suffice to close many eml subtrees
+without per-shape enumeration.
+
+The K/x case (t1 ∈ MinusLog-like + clamp-trigger) is the hard one
+and remains the per-shape territory (Phases 0-14 handled it via
+specific 2-sample contradictions). -/
+
+/-- **Closure rule 1**: `Const × Const → Const`. eval = exp c1 - log c2
+eventually. -/
+theorem EventuallyConstant.eml_with_const
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyConstant t1.eval)
+    (h2 : EventuallyConstant t2.eval) :
+    EventuallyConstant (EMLTree.eml t1 t2).eval := by
+  obtain ⟨c1, N1, hN1⟩ := h1
+  obtain ⟨c2, N2, hN2⟩ := h2
+  refine ⟨Real.exp c1 - Real.log c2, max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  show Real.exp (t1.eval x) - Real.log (t2.eval x) =
+       Real.exp c1 - Real.log c2
+  rw [hN1 x hN1_le, hN2 x hN2_le]
+
+/-- **Closure rule 2**: `Const × Negative → Const`. Since t2.eval < 0
+eventually, log_clamped triggers (log = 0), so eml.eval = exp c1
+eventually. -/
+theorem EventuallyConstant.eml_with_negative
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyConstant t1.eval)
+    (h2 : EventuallyNegative t2.eval) :
+    EventuallyConstant (EMLTree.eml t1 t2).eval := by
+  obtain ⟨c1, N1, hN1⟩ := h1
+  obtain ⟨N2, hN2⟩ := h2
+  refine ⟨Real.exp c1, max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t2_neg : t2.eval x < 0 := hN2 x hN2_le
+  have h_log_zero : Real.log (t2.eval x) = 0 :=
+    Real.log_nonpos (Real.le_of_lt h_t2_neg)
+  show Real.exp (t1.eval x) - Real.log (t2.eval x) = Real.exp c1
+  rw [hN1 x hN1_le, h_log_zero, Real.sub_zero]
+
+/-- **Closure rule 3**: `Const × MinusLog → Const`. Since t2.eval =
+-log x eventually and -log x < 0 for x > 1, log_clamped triggers.
+So eml.eval = exp c1 eventually (for x > 1). -/
+theorem EventuallyConstant.eml_with_minus_log
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyConstant t1.eval)
+    (h2 : EventuallyMinusLog t2.eval) :
+    EventuallyConstant (EMLTree.eml t1 t2).eval := by
+  obtain ⟨c1, N1, hN1⟩ := h1
+  obtain ⟨N2, hN2⟩ := h2
+  -- Sample at max N1 (max N2 (1+1)). Above 1+1 > 1 ensures log x > 0.
+  refine ⟨Real.exp c1, max N1 (max N2 (1 + 1)), ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have h_rest := Real.le_trans (le_max_right _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_left _ _) h_rest
+  have h_two_le : (1 + 1 : Real) ≤ x :=
+    Real.le_trans (le_max_right _ _) h_rest
+  have h_one_lt_x : (1 : Real) < x :=
+    Real.lt_of_lt_of_le one_lt_one_plus_one h_two_le
+  have h_t2_eq : t2.eval x = -Real.log x := hN2 x hN2_le
+  -- log x > 0 (from x > 1):
+  have h_log_x_pos : (0 : Real) < Real.log x := by
+    have := Real.log_lt_log Real.zero_lt_one_ax h_one_lt_x
+    rw [Real.log_one] at this
+    exact this
+  -- -log x < 0:
+  have h_neg_log_neg : -Real.log x < 0 := by
+    have step : -Real.log x + 0 < -Real.log x + Real.log x :=
+      Real.add_lt_add_left h_log_x_pos _
+    rw [Real.add_zero, Real.neg_add_self] at step
+    exact step
+  have h_t2_neg : t2.eval x < 0 := by
+    rw [h_t2_eq]; exact h_neg_log_neg
+  have h_log_zero : Real.log (t2.eval x) = 0 :=
+    Real.log_nonpos (Real.le_of_lt h_t2_neg)
+  show Real.exp (t1.eval x) - Real.log (t2.eval x) = Real.exp c1
+  rw [hN1 x hN1_le, h_log_zero, Real.sub_zero]
+
+/-- **Closure rule 4**: `AboveOne × Negative → AboveOne`. Since
+t2.eval < 0 eventually, log_clamped = 0, and eml.eval = exp(t1.eval).
+Since t1.eval > 1, exp(t1.eval) > exp 1 > 2 > 1. -/
+theorem EventuallyAboveOne.eml_with_negative
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyAboveOne t1.eval)
+    (h2 : EventuallyNegative t2.eval) :
+    EventuallyAboveOne (EMLTree.eml t1 t2).eval := by
+  obtain ⟨N1, hN1⟩ := h1
+  obtain ⟨N2, hN2⟩ := h2
+  refine ⟨max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t1_gt_one : 1 < t1.eval x := hN1 x hN1_le
+  have h_t2_neg : t2.eval x < 0 := hN2 x hN2_le
+  have h_log_zero : Real.log (t2.eval x) = 0 :=
+    Real.log_nonpos (Real.le_of_lt h_t2_neg)
+  show 1 < Real.exp (t1.eval x) - Real.log (t2.eval x)
+  rw [h_log_zero, Real.sub_zero]
+  -- 1 < exp(t1.eval x): from t1.eval x > 1 > 0 ⟹ exp(t1.eval x) > exp 1 > 2 > 1.
+  have h_exp_lt : Real.exp 1 < Real.exp (t1.eval x) := Real.exp_lt h_t1_gt_one
+  have h_two_lt_exp_1 : (1 + 1 : Real) < Real.exp 1 :=
+    exp_tangent_line_strict 1 Real.zero_lt_one_ax
+  have h_one_lt_two : (1 : Real) < 1 + 1 := one_lt_one_plus_one
+  have h_one_lt_exp_1 : (1 : Real) < Real.exp 1 :=
+    Real.lt_trans_ax h_one_lt_two h_two_lt_exp_1
+  exact Real.lt_trans_ax h_one_lt_exp_1 h_exp_lt
+
+/-- **Closure rule 5**: `AboveOne × MinusLog → AboveOne`. Same chain
+as rule 4, with t2's negative-eventually derived from t2.eval = -log x
+and x > 1. -/
+theorem EventuallyAboveOne.eml_with_minus_log
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyAboveOne t1.eval)
+    (h2 : EventuallyMinusLog t2.eval) :
+    EventuallyAboveOne (EMLTree.eml t1 t2).eval := by
+  -- Convert t2 ∈ MinusLog to t2 ∈ Negative (above x > 1), then chain rule 4.
+  have h2_neg : EventuallyNegative t2.eval := by
+    obtain ⟨N2, hN2⟩ := h2
+    refine ⟨max N2 (1 + 1), ?_⟩
+    intro x hx
+    have hN2_le : N2 ≤ x := Real.le_trans (le_max_left _ _) hx
+    have h_two_le : (1 + 1 : Real) ≤ x :=
+      Real.le_trans (le_max_right _ _) hx
+    have h_one_lt_x : (1 : Real) < x :=
+      Real.lt_of_lt_of_le one_lt_one_plus_one h_two_le
+    have h_t2_eq : t2.eval x = -Real.log x := hN2 x hN2_le
+    have h_log_x_pos : (0 : Real) < Real.log x := by
+      have := Real.log_lt_log Real.zero_lt_one_ax h_one_lt_x
+      rw [Real.log_one] at this
+      exact this
+    have h_neg_log_neg : -Real.log x < 0 := by
+      have step : -Real.log x + 0 < -Real.log x + Real.log x :=
+        Real.add_lt_add_left h_log_x_pos _
+      rw [Real.add_zero, Real.neg_add_self] at step
+      exact step
+    rw [h_t2_eq]; exact h_neg_log_neg
+  exact h1.eml_with_negative h2_neg
+
 end MachLib
