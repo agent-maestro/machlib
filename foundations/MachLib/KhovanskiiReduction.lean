@@ -1244,5 +1244,118 @@ theorem PfaffianFn.witness_construction (reducer : PfaffianFn.Reducer)
       refine ⟨g, step.counter + k', hg0, ?_⟩
       exact PfaffianFn.IsKhovanskiiReducible.trans step.witness h_witness
 
+/-! ## Step 3f — build a Reducer from a stepwise lex-decrease
+
+A `Reducer` (Step 3e input) takes f with `f.n > 0` and produces a
+chain-length-decreasing `DropStep`. In practice, building this requires
+an inner loop: when `lex_first > 0`, chain `scaledReduction` steps
+(each strictly decreasing the lex measure) until `lex_first = 0`, then
+drop.
+
+Step 3f formalises this inner loop. Given a `StepwiseDecreaseReducer`
+(a function that handles one reduce step), it produces a full
+`Reducer` via well-founded recursion on `lexLT`. -/
+
+/-- A **single reduce step**: from f with `lex_first > 0`, produce f'
+with same chain length, strictly smaller lex measure, plus the
+IsKhovanskiiReducible witness for the step. -/
+structure PfaffianFn.ReduceStep {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) where
+  result : PfaffianFn
+  result_hN : result.n = N + 1
+  counter : Nat
+  lex_decrease : lexLT (lexMeasure result result_hN) (lexMeasure f hN)
+  witness : PfaffianFn.IsKhovanskiiReducible f result counter
+
+/-- A **stepwise-decrease reducer**: from any f with `lex_first > 0`,
+produce a single ReduceStep. The SingleExp chain instance (with
+c = degreeY_last and the a_d → a_d' transformation) supplies this. -/
+abbrev PfaffianFn.StepwiseDecreaseReducer : Type :=
+  ∀ (f : PfaffianFn) {N : Nat} (hN : f.n = N + 1),
+    (lexMeasure f hN).1 > 0 → PfaffianFn.ReduceStep f hN
+
+/-- **Step 3f: build a Reducer from a StepwiseDecreaseReducer.**
+The inner loop: strong recursion on the lex measure (well-founded
+via lexLT_wf, double Nat.strongRecOn). At each step:
+  - If `lex_first = 0`: drop via Step 3c.
+  - If `lex_first > 0`: apply the stepwise reducer; recurse with the
+    smaller lex measure. -/
+noncomputable def PfaffianFn.buildReducer
+    (sdr : PfaffianFn.StepwiseDecreaseReducer) : PfaffianFn.Reducer := by
+  intro f hpos
+  -- Extract N with f.n = N + 1 via direct match (Sigma, not Exists).
+  let N : Nat := f.n - 1
+  have hN : f.n = N + 1 := by
+    have hne : f.n ≠ 0 := Nat.pos_iff_ne_zero.mp hpos
+    show f.n = f.n - 1 + 1
+    omega
+  -- Strong recursion on (lexMeasure f hN). We package the recursion
+  -- target as a generic statement parameterized by the measure pair.
+  suffices h : ∀ m1 m2 : Nat, ∀ f' : PfaffianFn, ∀ (hN' : f'.n = N + 1),
+      lexMeasure f' hN' = (m1, m2) → PfaffianFn.DropStep f' from
+    let m := lexMeasure f hN
+    h m.1 m.2 f hN rfl
+  intro m1
+  induction m1 using Nat.strongRecOn with
+  | _ m1 ih1 =>
+    intro m2
+    induction m2 using Nat.strongRecOn with
+    | _ m2 ih2 =>
+      intro f' hN' h_lex_eq
+      by_cases h_m1_zero : m1 = 0
+      · -- m1 = 0: lex first is 0. Drop.
+        have h_lex_zero : (lexMeasure f' hN').1 = 0 := by
+          rw [h_lex_eq]; exact h_m1_zero
+        exact PfaffianFn.DropStep.ofLexFirstZero f' hN' h_lex_zero
+      · -- m1 > 0: apply stepwise reducer; recurse on smaller lex.
+        have h_m1_pos : m1 > 0 := Nat.pos_of_ne_zero h_m1_zero
+        have h_lex_first_pos : (lexMeasure f' hN').1 > 0 := by
+          rw [h_lex_eq]; exact h_m1_pos
+        let r := sdr f' hN' h_lex_first_pos
+        have h_lex_lt :
+            lexLT (lexMeasure r.result r.result_hN) (lexMeasure f' hN') :=
+          r.lex_decrease
+        rw [h_lex_eq] at h_lex_lt
+        -- Case split on which component decreases (use Decidable, not Or).
+        let m' := lexMeasure r.result r.result_hN
+        by_cases h_m'_first_lt : m'.1 < m1
+        · -- m'.1 < m1. Use ih1.
+          let inner := ih1 m'.1 h_m'_first_lt m'.2 r.result r.result_hN rfl
+          have h_inner_lt : inner.result.n < f'.n := by
+            have h1 : inner.result.n < r.result.n := inner.result_n_lt
+            rw [r.result_hN, ← hN'] at h1
+            exact h1
+          exact {
+            result := inner.result
+            counter := r.counter + inner.counter
+            result_n_lt := h_inner_lt
+            witness := PfaffianFn.IsKhovanskiiReducible.trans
+                         r.witness inner.witness
+          }
+        · -- m'.1 ≥ m1. Combined with lex_lt, must have m'.1 = m1 and m'.2 < m2.
+          have h_m1_eq : m'.1 = m1 := by
+            rcases h_lex_lt with hm1' | ⟨hm1eq, _⟩
+            · exact absurd hm1' h_m'_first_lt
+            · exact hm1eq
+          have h_m'_second_lt : m'.2 < m2 := by
+            rcases h_lex_lt with hm1' | ⟨_, hm2'⟩
+            · exact absurd hm1' h_m'_first_lt
+            · exact hm2'
+          let inner := ih2 m'.2 h_m'_second_lt r.result r.result_hN
+                         (by
+                           show lexMeasure r.result r.result_hN = (m1, m'.2)
+                           show m' = (m1, m'.2)
+                           rw [← h_m1_eq])
+          have h_inner_lt : inner.result.n < f'.n := by
+            have h1 : inner.result.n < r.result.n := inner.result_n_lt
+            rw [r.result_hN, ← hN'] at h1
+            exact h1
+          exact {
+            result := inner.result
+            counter := r.counter + inner.counter
+            result_n_lt := h_inner_lt
+            witness := PfaffianFn.IsKhovanskiiReducible.trans
+                         r.witness inner.witness
+          }
+
 end PfaffianChainMod
 end MachLib
