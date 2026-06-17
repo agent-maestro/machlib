@@ -869,6 +869,109 @@ theorem listMulN_ne_of_both_ne {n : Nat} (A B : List (MultiPoly n))
   have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
   omega
 
+/-- getLast of listMulN A B (eval) = (A.getLast.eval) * (B.getLast.eval)
+for both A, B nonempty. -/
+theorem listMulN_getLast_eval {n : Nat} :
+    ∀ (A B : List (MultiPoly n)) (hA : A ≠ []) (hB : B ≠ [])
+      (x : Real) (env : Fin n → Real),
+    MultiPoly.eval
+      ((MachLib.MultiPolyMod.MultiPoly.listMulN A B).getLast
+        (listMulN_ne_of_both_ne A B hA hB)) x env =
+    MultiPoly.eval (A.getLast hA) x env * MultiPoly.eval (B.getLast hB) x env := by
+  intro A
+  induction A with
+  | nil => intro B hA; exact (hA rfl).elim
+  | cons a as ih =>
+    intro B hA hB x env
+    cases as with
+    | nil =>
+      -- A = [a]. listMulN [a] B = listAddN (listScaleN a B) [const 0] (definitionally,
+      -- via listMulN_cons + listMulN_nil + the (const 0 :: []) = [const 0] notation).
+      -- We use `change` to expose this definitional form.
+      change MultiPoly.eval
+              ((MachLib.MultiPolyMod.MultiPoly.listAddN
+                (MachLib.MultiPolyMod.MultiPoly.listScaleN a B)
+                ([MultiPoly.const 0] : List (MultiPoly n))).getLast _) x env =
+             MultiPoly.eval a x env * MultiPoly.eval (B.getLast hB) x env
+      have h_scale_ne : MachLib.MultiPolyMod.MultiPoly.listScaleN a B ≠ [] :=
+        listScaleN_nonempty_iff a B hB
+      have h_const_ne : ([MultiPoly.const 0] : List (MultiPoly n)) ≠ [] :=
+        List.cons_ne_nil _ _
+      rw [listAddN_getLast_eval _ _ h_scale_ne h_const_ne x env]
+      rw [listScaleN_length]
+      -- Goal now: ITE on B.length vs [const 0].length. [const 0].length = 1 (definitional).
+      have h_const_len : ([MultiPoly.const 0] : List (MultiPoly n)).length = 1 := rfl
+      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      by_cases h_B_eq : B.length = 1
+      · -- Equal length case (B.length = 1).
+        rw [if_neg (by show ¬ B.length > 1; omega),
+            if_neg (by show ¬ 1 > B.length; omega)]
+        -- Goal: eval listScaleN.getLast + eval ([const 0].getLast) = eval a * eval B.getLast.
+        rw [listScaleN_getLast_eval a B hB x env]
+        show MultiPoly.eval a x env * MultiPoly.eval (B.getLast hB) x env +
+             MultiPoly.eval
+               (([MultiPoly.const 0] : List (MultiPoly n)).getLast
+                 (List.cons_ne_nil _ _)) x env =
+             MultiPoly.eval a x env * MultiPoly.eval (B.getLast hB) x env
+        show _ + (0 : Real) = _
+        rw [add_zero]
+      · -- B.length > 1.
+        have h_B_gt : B.length > 1 := by omega
+        rw [if_pos (by show B.length > 1; omega)]
+        rw [listScaleN_getLast_eval a B hB x env]
+    | cons a' as' =>
+      -- A = a :: a' :: as'. listMulN unfolds to
+      -- listAddN (listScaleN a B) (const 0 :: listMulN (a' :: as') B).
+      -- listMulN (a' :: as') B is nonempty (recursion).
+      -- (const 0 :: listMulN ...).length = (a' :: as').length + B.length > B.length.
+      -- So the right side is longer; getLast = (const 0 :: ...).getLast = (listMulN ...).getLast.
+      -- By IH: = (a' :: as').getLast * B.getLast.
+      have h_as'_ne : (a' :: as' : List (MultiPoly n)) ≠ [] := List.cons_ne_nil _ _
+      have h_mul_ne : MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B ≠ [] :=
+        listMulN_ne_of_both_ne (a' :: as') B h_as'_ne hB
+      -- Use change to expose the listAddN form.
+      change MultiPoly.eval
+              ((MachLib.MultiPolyMod.MultiPoly.listAddN
+                (MachLib.MultiPolyMod.MultiPoly.listScaleN a B)
+                (MultiPoly.const 0 ::
+                  MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B)).getLast _) x env =
+             MultiPoly.eval ((a :: a' :: as').getLast _) x env *
+             MultiPoly.eval (B.getLast hB) x env
+      have h_scale_ne : MachLib.MultiPolyMod.MultiPoly.listScaleN a B ≠ [] :=
+        listScaleN_nonempty_iff a B hB
+      have h_cons_ne : (MultiPoly.const 0 ::
+                       MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B :
+                       List (MultiPoly n)) ≠ [] := List.cons_ne_nil _ _
+      rw [listAddN_getLast_eval _ _ h_scale_ne h_cons_ne x env]
+      rw [listScaleN_length]
+      -- Inner length: (const 0 :: listMulN (a' :: as') B).length = (listMulN ...).length + 1
+      --                                                          = ((a' :: as').length + B.length - 1) + 1
+      --                                                          = (a' :: as').length + B.length.
+      have h_as'_pos : (a' :: as').length ≥ 1 := List.length_pos.mpr h_as'_ne
+      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_inner_len : (MultiPoly.const 0 ::
+                          MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B :
+                          List (MultiPoly n)).length =
+                         (a' :: as').length + B.length := by
+        show (MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B).length + 1 =
+             (a' :: as').length + B.length
+        rw [listMulN_length_eq _ _ h_as'_ne hB]
+        omega
+      -- For (a' :: as').length ≥ 1: (a' :: as').length + B.length > B.length.
+      rw [if_neg
+        (by show ¬ B.length > (MultiPoly.const 0 ::
+                MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B :
+                List (MultiPoly n)).length
+            rw [h_inner_len]; omega)]
+      rw [if_pos
+        (by show (MultiPoly.const 0 ::
+              MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B :
+              List (MultiPoly n)).length > B.length
+            rw [h_inner_len]; omega)]
+      -- Goal: eval ((const 0 :: listMulN ...).getLast _) = eval ((a :: a' :: as').getLast _) * eval B.getLast.
+      rw [List.getLast_cons h_mul_ne]
+      rw [ih B h_as'_ne hB x env]
+      rw [List.getLast_cons h_as'_ne]
 
 /-! ### Bridge axiom (residual)
 
