@@ -2120,5 +2120,81 @@ noncomputable example :
       rw [if_pos rfl]
       decide)
 
+/-! ## Generic SDR wrapper (item 2)
+
+Wraps the SingleExp-specialized `SingleExpStepwiseDecreaseReducer`
+into the generic `PfaffianFn.StepwiseDecreaseReducer` (which the
+existing `buildReducer`, `witness_via_sdr`, and `khovanskii_bound_via_sdr`
+consume). The wrapper takes a *fallback* SDR for non-SingleExp shapes
+as a parameter, so callers can supply whatever they have for other
+chain classes (or a dummy when they know only SingleExp inputs will
+be evaluated). -/
+
+/-- Generic SDR built from a SingleExp dispatch + a fallback for
+other chain shapes. The wrapper checks each input `f` for the
+SingleExp shape (chain length 1 with `SingleExpChain` as the chain);
+on match, it routes through `sdr_se`; otherwise it falls back to
+`sdr_other`.
+
+For path-c's current scope, callers supply any `sdr_other` (e.g. one
+that produces a placeholder or refuses) since path-c only handles
+SingleExp. Once other chain SDRs ship (`IterExpChain`, etc.), they
+plug in here. -/
+noncomputable def singleExp_to_generic_sdr
+    (sdr_se : SingleExpStepwiseDecreaseReducer)
+    (sdr_other : PfaffianFn.StepwiseDecreaseReducer) :
+    PfaffianFn.StepwiseDecreaseReducer := fun f {N} hN h_pos => by
+  by_cases h_N : N = 0
+  · subst h_N
+    -- Now N = 0, hN : f.n = 1. Destructure f.
+    obtain ⟨n_field, chain_field, poly_field⟩ := f
+    have h_n_eq : n_field = 1 := hN
+    cases h_n_eq
+    -- Decide chain_field = SingleExpChain via Classical.
+    haveI : Decidable (chain_field = SingleExpChain) := Classical.propDecidable _
+    by_cases h_chain : chain_field = SingleExpChain
+    · subst h_chain
+      exact sdr_se poly_field h_pos
+    · exact sdr_other ⟨1, chain_field, poly_field⟩ hN h_pos
+  · exact sdr_other f hN h_pos
+
+/-! ## End-to-end Khovanskii bound for SingleExp inputs (item 1)
+
+Composes `singleExp_sdr` (via the generic wrapper) with the existing
+`khovanskii_bound_via_sdr` capstone to produce a concrete zero-count
+bound for a SingleExp PfaffianFn.
+
+The caller supplies:
+- The polynomial `p : MultiPoly 1`.
+- The interval `(a, b)` to count zeros over.
+- A "terminal nonzero" hypothesis (the witness's chain-length-0 endpoint
+  isn't identically zero — required by the bound theorem's
+  contrapositive).
+- A fallback SDR for non-SingleExp shapes (which is never invoked when
+  starting from a SingleExp `⟨1, SingleExpChain, p⟩` since the
+  recursion preserves the chain). -/
+
+/-- **End-to-end bound for any SingleExp PfaffianFn.** -/
+theorem singleExp_khovanskii_bound
+    (p : MultiPoly 1)
+    (sdr_other : PfaffianFn.StepwiseDecreaseReducer)
+    (a b : MachLib.Real) (hab : a < b)
+    (terminal_nonzero :
+       ∀ g k, g.n = 0 →
+         PfaffianFn.IsKhovanskiiReducible
+           (⟨1, SingleExpChain, p⟩ : PfaffianFn) g k →
+         ∃ x : MachLib.Real, g.eval x ≠ 0) :
+    ∃ N : Nat, ∀ zeros : List MachLib.Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (⟨1, SingleExpChain, p⟩ : PfaffianFn).eval z = 0) →
+      zeros.length ≤ N :=
+  PfaffianFn.khovanskii_bound_via_sdr
+    (singleExp_to_generic_sdr singleExp_sdr sdr_other)
+    (⟨1, SingleExpChain, p⟩ : PfaffianFn)
+    SingleExpChain_isTriangular
+    a b hab
+    (SingleExpChain_isCoherentOn a b)
+    terminal_nonzero
+
 end ChainExp2PathC
 end MachLib
