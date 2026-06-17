@@ -887,5 +887,307 @@ theorem polyDerivativeCoeffs_hasDerivAt (L : List Real) (x : Real) :
     rw [← h_eq]
     exact h_sum
 
+/-! ## Phase G — `polyTrueDegree` + strict decrease + PIT bridge
+
+The actual canonical degree: the smallest `n` such that all
+coefficient-list entries at positions > n are zero. Built via
+`Nat.find` over a classically-decidable predicate.
+
+This is the eval-canonical degree the `h_bridge` closure rides on:
+ring-equivalent polynomials produce equal `polyTrueDegree`, and
+the polynomial derivative drops it by exactly one (when positive). -/
+
+/-! ### Indexed coefficient extraction -/
+
+/-- `coeffAt L k` is the coefficient at position `k` in `L`, with
+0 for out-of-range indices. -/
+noncomputable def coeffAt : List Real → Nat → Real
+  | [],       _     => 0
+  | c :: _,   0     => c
+  | _ :: cs,  k + 1 => coeffAt cs k
+
+theorem coeffAt_nil (k : Nat) : coeffAt [] k = 0 := by
+  cases k <;> rfl
+
+theorem coeffAt_cons_zero (c : Real) (cs : List Real) :
+    coeffAt (c :: cs) 0 = c := rfl
+
+theorem coeffAt_cons_succ (c : Real) (cs : List Real) (k : Nat) :
+    coeffAt (c :: cs) (k + 1) = coeffAt cs k := rfl
+
+theorem coeffAt_out_of_range (L : List Real) (k : Nat) (h : k ≥ L.length) :
+    coeffAt L k = 0 := by
+  induction L generalizing k with
+  | nil => exact coeffAt_nil k
+  | cons c cs ih =>
+    cases k with
+    | zero =>
+      show c = 0
+      exfalso; simp at h
+    | succ k' =>
+      rw [coeffAt_cons_succ]
+      apply ih
+      simp at h
+      omega
+
+/-! ### `polyDegreeBoundedBy` and `polyTrueDegree` -/
+
+/-- `polyDegreeBoundedBy L n`: every coefficient of `L` at position
+`> n` is zero. -/
+def polyDegreeBoundedBy (L : List Real) (n : Nat) : Prop :=
+  ∀ k, k > n → coeffAt L k = 0
+
+theorem polyDegreeBoundedBy_at_length (L : List Real) :
+    polyDegreeBoundedBy L L.length := by
+  intro k hk
+  exact coeffAt_out_of_range L k (Nat.le_of_lt hk)
+
+theorem polyDegreeBoundedBy_exists (L : List Real) :
+    ∃ n, polyDegreeBoundedBy L n :=
+  ⟨L.length, polyDegreeBoundedBy_at_length L⟩
+
+/-- The well-ordering principle for `Nat`: every non-empty subset
+(presented as a `Prop`-valued predicate with an existential witness)
+has a least element. Proven by strong induction on the witness; no
+Mathlib dependency. -/
+theorem nat_least_element (P : Nat → Prop) (h_ex : ∃ n, P n) :
+    ∃ n, P n ∧ ∀ m, m < n → ¬ P m := by
+  obtain ⟨witness, h_w⟩ := h_ex
+  induction witness using Nat.strongRecOn with
+  | _ k ih =>
+    by_cases h_min : ∀ m, m < k → ¬ P m
+    · exact ⟨k, h_w, h_min⟩
+    · -- ¬ ∀ m, m < k → ¬ P m ⇒ ∃ m < k, P m.
+      have h_exists : ∃ m, m < k ∧ P m := by
+        apply Classical.byContradiction
+        intro h_no
+        apply h_min
+        intro m hm_lt hm_P
+        exact h_no ⟨m, hm_lt, hm_P⟩
+      obtain ⟨m, hm_lt, hm_P⟩ := h_exists
+      exact ih m hm_lt hm_P
+
+/-- The true polynomial degree of a coefficient list: the smallest
+`n` such that positions > n have zero coefficient. -/
+noncomputable def polyTrueDegree (L : List Real) : Nat :=
+  Classical.choose (nat_least_element _ (polyDegreeBoundedBy_exists L))
+
+/-- `polyTrueDegree L` is itself a valid bound. -/
+theorem polyTrueDegree_spec (L : List Real) :
+    polyDegreeBoundedBy L (polyTrueDegree L) :=
+  (Classical.choose_spec (nat_least_element _ (polyDegreeBoundedBy_exists L))).1
+
+/-- Below `polyTrueDegree` the predicate fails (the bound is tight). -/
+theorem not_polyDegreeBoundedBy_below (L : List Real) (k : Nat)
+    (hk : k < polyTrueDegree L) : ¬ polyDegreeBoundedBy L k :=
+  (Classical.choose_spec (nat_least_element _ (polyDegreeBoundedBy_exists L))).2 k hk
+
+/-- Minimality: any valid bound is at least `polyTrueDegree`. -/
+theorem polyTrueDegree_le_of_bounded (L : List Real) (n : Nat)
+    (h : polyDegreeBoundedBy L n) : polyTrueDegree L ≤ n := by
+  apply Classical.byContradiction
+  intro h_not_le
+  have h_lt : n < polyTrueDegree L := Nat.lt_of_not_le h_not_le
+  exact not_polyDegreeBoundedBy_below L n h_lt h
+
+/-! ### `coeffAt` for `listScaleByPos` and `polyDerivativeCoeffs` -/
+
+theorem coeffAt_listScaleByPos (cs : List Real) (start k : Nat) :
+    coeffAt (listScaleByPos cs start) k = natCast (start + k) * coeffAt cs k := by
+  induction cs generalizing start k with
+  | nil =>
+    simp only [listScaleByPos_nil, coeffAt_nil]
+    rw [mul_zero]
+  | cons c cs' ih =>
+    rw [listScaleByPos_cons]
+    cases k with
+    | zero =>
+      simp only [coeffAt_cons_zero]
+      show natCast start * c = natCast (start + 0) * c
+      rw [Nat.add_zero]
+    | succ k' =>
+      simp only [coeffAt_cons_succ]
+      rw [ih]
+      show natCast (start + 1 + k') * coeffAt cs' k' = natCast (start + (k' + 1)) * coeffAt cs' k'
+      have : start + 1 + k' = start + (k' + 1) := by omega
+      rw [this]
+
+theorem coeffAt_polyDerivativeCoeffs (L : List Real) (k : Nat) :
+    coeffAt (polyDerivativeCoeffs L) k = natCast (k + 1) * coeffAt L (k + 1) := by
+  cases L with
+  | nil =>
+    rw [polyDerivativeCoeffs_nil, coeffAt_nil, coeffAt_nil, mul_zero]
+  | cons c cs =>
+    rw [polyDerivativeCoeffs_cons, coeffAt_listScaleByPos, coeffAt_cons_succ]
+    show natCast (1 + k) * coeffAt cs k = natCast (k + 1) * coeffAt cs k
+    have : (1 + k) = (k + 1) := by omega
+    rw [this]
+
+/-! ### Strict decrease of `polyTrueDegree` under `polyDerivativeCoeffs`
+
+If `polyTrueDegree L > 0`, then there's a nonzero coefficient at
+some position > polyTrueDegree L - 1. Applying `polyDerivativeCoeffs`
+scales by `(k+1) > 0`, so the result has a bound of
+`polyTrueDegree L - 1`. -/
+
+/-- `natCast (k+1) ≠ 0` for any `k : Nat`. -/
+theorem natCast_succ_ne_zero (k : Nat) : natCast (k + 1) ≠ 0 := by
+  intro h_eq
+  have h_pos : (0 : Real) < natCast (k + 1) := by
+    have : natCast 0 < natCast (k + 1) := natCast_strict_mono (by omega)
+    rw [natCast_zero] at this
+    exact this
+  rw [h_eq] at h_pos
+  exact lt_irrefl_ax _ h_pos
+
+/-- Product cancellation: `a ≠ 0` and `b ≠ 0` ⇒ `a * b ≠ 0`. -/
+theorem mul_ne_zero_helper (a b : Real) (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 := by
+  intro h_zero
+  -- a * b = 0 with a ≠ 0 ⇒ b = 0 (zero_of_mul_left_ne_zero).
+  exact hb (zero_of_mul_left_ne_zero a b ha h_zero)
+
+/-- The strict-decrease theorem at coefficient-list level:
+`polyTrueDegree (polyDerivativeCoeffs L) < polyTrueDegree L`
+when `polyTrueDegree L > 0`. -/
+theorem polyTrueDegree_polyDerivativeCoeffs_lt (L : List Real)
+    (h : polyTrueDegree L > 0) :
+    polyTrueDegree (polyDerivativeCoeffs L) < polyTrueDegree L := by
+  have h_bounded :
+      polyDegreeBoundedBy (polyDerivativeCoeffs L) (polyTrueDegree L - 1) := by
+    intro j hj
+    have hj' : j + 1 > polyTrueDegree L := by omega
+    have h_zero : coeffAt L (j + 1) = 0 := polyTrueDegree_spec L (j + 1) hj'
+    rw [coeffAt_polyDerivativeCoeffs, h_zero, mul_zero]
+  have h_le : polyTrueDegree (polyDerivativeCoeffs L) ≤ polyTrueDegree L - 1 :=
+    polyTrueDegree_le_of_bounded (polyDerivativeCoeffs L)
+      (polyTrueDegree L - 1) h_bounded
+  omega
+
+/-! ### PIT bridge: eval-equal lists have equal `polyTrueDegree`
+
+If `L1` and `L2` evaluate to the same function, then PIT applied to
+`listSubR L1 L2` (which evaluates to identically zero) gives all
+its coefficients are zero, hence `coeffAt L1 k = coeffAt L2 k` for
+every position. Therefore `polyDegreeBoundedBy L1 = polyDegreeBoundedBy L2`,
+and `polyTrueDegree L1 = polyTrueDegree L2`. -/
+
+/-- `coeffAt` of `listSubR` at position `k`: it's the element-wise
+sub at `k` (with out-of-range positions treated as 0). -/
+theorem coeffAt_listSubR (L1 L2 : List Real) (k : Nat) :
+    coeffAt (listSubR L1 L2) k = coeffAt L1 k - coeffAt L2 k := by
+  induction L1 generalizing L2 k with
+  | nil =>
+    induction L2 generalizing k with
+    | nil =>
+      simp only [listSubR_nil_nil, coeffAt_nil]
+      rw [sub_self]
+    | cons q qs' ih_q =>
+      rw [listSubR_nil_cons]
+      cases k with
+      | zero =>
+        simp only [coeffAt_cons_zero, coeffAt_nil]
+      | succ k' =>
+        rw [coeffAt_cons_succ, ih_q k']
+        simp only [coeffAt_cons_succ, coeffAt_nil]
+  | cons p ps' ih =>
+    cases L2 with
+    | nil =>
+      rw [listSubR_cons_nil]
+      cases k with
+      | zero =>
+        simp only [coeffAt_cons_zero, coeffAt_nil]
+        rw [sub_def, neg_zero, add_zero]
+      | succ k' =>
+        simp only [coeffAt_cons_succ, coeffAt_nil]
+        rw [sub_def, neg_zero, add_zero]
+    | cons q qs' =>
+      rw [listSubR_cons_cons]
+      cases k with
+      | zero => simp only [coeffAt_cons_zero]
+      | succ k' =>
+        simp only [coeffAt_cons_succ]
+        exact ih qs' k'
+
+/-- If `listSubR L1 L2` has all coefficients zero (in the PIT sense),
+then `coeffAt L1 = coeffAt L2` everywhere. -/
+theorem coeffAt_eq_of_evalCoeffs_eq (L1 L2 : List Real)
+    (h_eval : ∀ x, evalCoeffs L1 x = evalCoeffs L2 x) :
+    ∀ k, coeffAt L1 k = coeffAt L2 k := by
+  -- The difference list listSubR L1 L2 evaluates to 0 everywhere.
+  have h_diff_zero : ∀ x, evalCoeffs (listSubR L1 L2) x = 0 := by
+    intro x
+    rw [evalCoeffs_listSubR, h_eval x]
+    exact sub_self _
+  -- PIT: every entry of listSubR L1 L2 is zero.
+  have h_pit : ∀ c ∈ listSubR L1 L2, c = 0 :=
+    evalCoeffs_zero_iff_all_zero (listSubR L1 L2) h_diff_zero
+  -- Now: coeffAt (listSubR L1 L2) k = 0 for every k.
+  intro k
+  have h_coeff_zero : coeffAt (listSubR L1 L2) k = 0 := by
+    -- coeffAt (listSubR L1 L2) k is either a list entry (in which case h_pit gives 0)
+    -- or out-of-range (in which case coeffAt = 0 by coeffAt_out_of_range).
+    by_cases h_k : k < (listSubR L1 L2).length
+    · -- In range: the k-th entry is in the list, and h_pit says it's 0.
+      exact coeffAt_in_list_zero (listSubR L1 L2) k h_k h_pit
+    · -- Out of range.
+      exact coeffAt_out_of_range _ k (Nat.not_lt.mp h_k)
+  -- Combine with coeffAt_listSubR.
+  rw [coeffAt_listSubR] at h_coeff_zero
+  -- h_coeff_zero : coeffAt L1 k - coeffAt L2 k = 0
+  -- ⇒ coeffAt L1 k = coeffAt L2 k.
+  have : coeffAt L1 k = 0 + coeffAt L2 k := by
+    rw [sub_def] at h_coeff_zero
+    -- coeffAt L1 k + (- coeffAt L2 k) = 0
+    -- ⇒ coeffAt L1 k = - (- coeffAt L2 k) = coeffAt L2 k.
+    have h_inv : coeffAt L1 k + (- coeffAt L2 k) = 0 := h_coeff_zero
+    -- Add coeffAt L2 k to both sides.
+    have h_step : (coeffAt L1 k + (- coeffAt L2 k)) + coeffAt L2 k =
+                  0 + coeffAt L2 k := by rw [h_inv]
+    rw [add_assoc] at h_step
+    rw [add_comm (- coeffAt L2 k) (coeffAt L2 k), add_neg, add_zero] at h_step
+    exact h_step
+  rw [zero_add] at this
+  exact this
+where
+  /-- Helper: if all entries of a list are zero, then `coeffAt` at any
+  in-range position is zero. -/
+  coeffAt_in_list_zero (L : List Real) (k : Nat) (hk : k < L.length)
+      (h : ∀ c ∈ L, c = 0) : coeffAt L k = 0 := by
+    induction L generalizing k with
+    | nil => simp at hk
+    | cons c cs ih_cs =>
+      cases k with
+      | zero =>
+        rw [coeffAt_cons_zero]
+        exact h c (List.mem_cons_self _ _)
+      | succ k' =>
+        rw [coeffAt_cons_succ]
+        apply ih_cs k' (by simp at hk; omega)
+        intro c' hc'
+        exact h c' (List.mem_cons_of_mem _ hc')
+
+/-- The headline PIT-bridged degree-equality theorem. -/
+theorem polyTrueDegree_eq_of_evalCoeffs_eq (L1 L2 : List Real)
+    (h_eval : ∀ x, evalCoeffs L1 x = evalCoeffs L2 x) :
+    polyTrueDegree L1 = polyTrueDegree L2 := by
+  have h_coeff : ∀ k, coeffAt L1 k = coeffAt L2 k :=
+    coeffAt_eq_of_evalCoeffs_eq L1 L2 h_eval
+  -- polyDegreeBoundedBy depends only on coeffAt. So it's the same for L1 and L2.
+  have h_iff : ∀ n, polyDegreeBoundedBy L1 n ↔ polyDegreeBoundedBy L2 n := by
+    intro n
+    constructor
+    · intro h k hk
+      rw [← h_coeff k]
+      exact h k hk
+    · intro h k hk
+      rw [h_coeff k]
+      exact h k hk
+  -- Both directions of ≤ via the iff + minimality.
+  apply Nat.le_antisymm
+  · exact polyTrueDegree_le_of_bounded L1 (polyTrueDegree L2)
+      ((h_iff _).mpr (polyTrueDegree_spec L2))
+  · exact polyTrueDegree_le_of_bounded L2 (polyTrueDegree L1)
+      ((h_iff _).mp (polyTrueDegree_spec L1))
+
 end PolynomialCanonical
 end MachLib
