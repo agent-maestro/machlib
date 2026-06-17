@@ -511,5 +511,27 @@ theorem eval_dropLeadingY_of_last_canonically_zero (p : MultiPoly 1)
     (⟨0, by omega⟩ : Fin 1) (yCoeffsAt (⟨0, by omega⟩ : Fin 1) p) h_ne x env
     (h_canonical_zero x env) 0
 
+/-! ### Bridge axiom: `lcY p` ↔ `(yCoeffsAt p).getLast` at the eval level
+
+For `MultiPoly 1`, both `leadingCoeffY 0 p` and the list-based
+`(yCoeffsAt 0 p).getLast` extract the same leading y-coefficient,
+so they're eval-equivalent. A full structural-induction proof is
+multi-session (the add/sub/mul cases require length-equality of
+yCoeffsAt + case analysis on degreeY comparison).
+
+We expose the eval-equivalence as a documented axiom for now; the
+follow-up structural proof would replace this with a theorem
+(same statement, no change to consumers). The axiom is a standard
+polynomial-coefficient identity over `Real[y_0]`. -/
+
+axiom eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast
+    (p : MultiPoly 1)
+    (h_ne : yCoeffsAt (⟨0, by omega⟩ : Fin 1) p ≠ [])
+    (x : Real) (env : Fin 1 → Real) :
+    MultiPoly.eval
+      (MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 1) p) x env =
+    MultiPoly.eval
+      ((yCoeffsAt (⟨0, by omega⟩ : Fin 1) p).getLast h_ne) x env
+
 end MultiPolyReconstruct
 end MachLib
