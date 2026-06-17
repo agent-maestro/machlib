@@ -584,6 +584,196 @@ theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_add_lt
   rw [h_lhs, h_rhs_leading, h_rhs_deg]
   exact ihq
 
+/-! ## Helper: natCast over add
+
+MachLib.Basic ships `natCast_zero` and `natCast_succ` but no
+`natCast_add`. Prove it by induction on the right summand. -/
+
+theorem natCast_add_helper (a b : Nat) :
+    MachLib.Real.natCast (a + b)
+    = MachLib.Real.natCast a + MachLib.Real.natCast b := by
+  induction b with
+  | zero =>
+    show MachLib.Real.natCast (a + 0) = MachLib.Real.natCast a + MachLib.Real.natCast 0
+    rw [MachLib.Real.natCast_zero, Nat.add_zero]
+    mach_ring
+  | succ b' ih =>
+    show MachLib.Real.natCast (a + (b' + 1))
+       = MachLib.Real.natCast a + MachLib.Real.natCast (b' + 1)
+    rw [show a + (b' + 1) = (a + b') + 1 from by omega]
+    rw [MachLib.Real.natCast_succ, MachLib.Real.natCast_succ]
+    rw [ih]
+    mach_ring
+
+/-! ## Pure-Real ring identity for lemma 1's mul case
+
+The mul case's algebra reduces to one abstract identity:
+  (A + na·B)·D + B·(C + nb·D) = A·D + B·C + (na + nb)·(B·D)
+
+Expanding both sides: A·D + na·B·D + B·C + B·nb·D = A·D + B·C + na·B·D + nb·B·D.
+These are equal by AC on +/*. mach_ring v2.5 closes this when the
+variables are abstract (no nested AST sub-terms confusing the
+distributivity simp). -/
+
+theorem mul_case_ring_identity (A B C D na nb : MachLib.Real) :
+    (A + na * B) * D + B * (C + nb * D)
+    = A * D + B * C + (na + nb) * (B * D) := by
+  mach_ring
+
+/-! ## Lemma 1 mul case — the technical heart of Step 3b
+
+The mul case has special structure: both summands of the Leibniz
+expansion `add (mul (cTD p) q) (mul p (cTD q))` have the SAME
+`degreeY 0 = degreeY 0 p + degreeY 0 q` (using
+`degreeY_chainTotalDeriv_eq_SingleExp`). So leadingCoeffY of the add
+distributes into add of leadingCoeffYs (no trichotomy needed — degrees
+are always equal).
+
+Then `leadingCoeffY (mul X Y) = mul (leadingCoeffY X) (leadingCoeffY Y)`
+factors each summand into a product of leadingCoeffYs. Apply IH on p
+and q separately. mach_ring v2.5 closes the final algebra: the
+`(d_p + d_q)` factor on the RHS emerges as `d_p · X + d_q · X` where
+`X = eval (lcY p) · eval (lcY q)`. -/
+
+theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_mul
+    (p q : MultiPoly 1) (x : MachLib.Real) (env : Fin 1 → MachLib.Real)
+    (ihp :
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain p)) x env =
+      MultiPoly.eval (chainTotalDeriv SingleExpChain
+                       (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env +
+      (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)) *
+        MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env)
+    (ihq :
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain q)) x env =
+      MultiPoly.eval (chainTotalDeriv SingleExpChain
+                       (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q)) x env +
+      (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ q)) *
+        MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                     (chainTotalDeriv SingleExpChain (MultiPoly.mul p q))) x env =
+    MultiPoly.eval (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.mul p q))) x env +
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩
+                            (MultiPoly.mul p q))) *
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.mul p q)) x env := by
+  have hp_eq := degreeY_chainTotalDeriv_eq_SingleExp p
+  have hq_eq := degreeY_chainTotalDeriv_eq_SingleExp q
+  -- chainTotalDeriv (mul p q) = add (mul (cTD p) q) (mul p (cTD q)).
+  -- Both summands have degreeY 0 = dp + dq. The leadingCoeffY of the
+  -- equal-degree add distributes into add of leadingCoeffYs. Each
+  -- inner leadingCoeffY of a mul is mul of leadingCoeffYs.
+  have h_lhs :
+      MultiPoly.leadingCoeffY ⟨0, by omega⟩
+        (chainTotalDeriv SingleExpChain (MultiPoly.mul p q))
+      = MultiPoly.add
+          (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                            (chainTotalDeriv SingleExpChain p))
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q))
+          (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                            (chainTotalDeriv SingleExpChain q))) := by
+    -- Unfold the chainTotalDeriv expansion and the add's leadingCoeffY.
+    show (if MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain p)
+               + MultiPoly.degreeY ⟨0, by omega⟩ q
+             > MultiPoly.degreeY ⟨0, by omega⟩ p
+               + MultiPoly.degreeY ⟨0, by omega⟩
+                  (chainTotalDeriv SingleExpChain q)
+          then MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                               (chainTotalDeriv SingleExpChain p))
+                             (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q)
+          else if MultiPoly.degreeY ⟨0, by omega⟩ p
+                    + MultiPoly.degreeY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain q)
+                  > MultiPoly.degreeY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain p)
+                    + MultiPoly.degreeY ⟨0, by omega⟩ q
+               then MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                                  (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                                     (chainTotalDeriv SingleExpChain q))
+               else MultiPoly.add
+                      (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                                        (chainTotalDeriv SingleExpChain p))
+                                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q))
+                      (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                                        (chainTotalDeriv SingleExpChain q))))
+          = MultiPoly.add
+              (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                                (chainTotalDeriv SingleExpChain p))
+                             (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q))
+              (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                             (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                                (chainTotalDeriv SingleExpChain q)))
+    rw [hp_eq, hq_eq]
+    have h_eq_deg :
+        MultiPoly.degreeY ⟨0, by omega⟩ p + MultiPoly.degreeY ⟨0, by omega⟩ q
+        = MultiPoly.degreeY ⟨0, by omega⟩ p
+          + MultiPoly.degreeY ⟨0, by omega⟩ q := rfl
+    have h_not_gt : ¬ MultiPoly.degreeY ⟨0, by omega⟩ p
+                      + MultiPoly.degreeY ⟨0, by omega⟩ q
+                    > MultiPoly.degreeY ⟨0, by omega⟩ p
+                      + MultiPoly.degreeY ⟨0, by omega⟩ q :=
+      Nat.lt_irrefl _
+    rw [if_neg h_not_gt, if_neg h_not_gt]
+  -- leadingCoeffY (mul p q) = mul (leadingCoeffY p) (leadingCoeffY q): rfl.
+  have h_rhs_leading :
+      MultiPoly.leadingCoeffY ⟨0, by omega⟩ (MultiPoly.mul p q)
+      = MultiPoly.mul (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) := rfl
+  -- degreeY (mul p q) = dp + dq: rfl.
+  have h_rhs_deg :
+      MultiPoly.degreeY ⟨0, by omega⟩ (MultiPoly.mul p q)
+      = MultiPoly.degreeY ⟨0, by omega⟩ p
+        + MultiPoly.degreeY ⟨0, by omega⟩ q := rfl
+  rw [h_lhs, h_rhs_leading, h_rhs_deg]
+  -- chainTotalDeriv (mul (leadingCoeffY p) (leadingCoeffY q))
+  --   = add (mul (cTD (lc p)) (lc q)) (mul (lc p) (cTD (lc q))) by rfl.
+  -- (Leibniz expansion of chainTotalDeriv on a mul AST node.)
+  show MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                        (chainTotalDeriv SingleExpChain p)) x env
+       * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env
+     + MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env
+       * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                          (chainTotalDeriv SingleExpChain q)) x env
+     = (MultiPoly.eval (chainTotalDeriv SingleExpChain
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env
+        * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env
+      + MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env
+        * MultiPoly.eval (chainTotalDeriv SingleExpChain
+                           (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q)) x env)
+     + MachLib.Real.natCast
+         (MultiPoly.degreeY ⟨0, by omega⟩ p
+          + MultiPoly.degreeY ⟨0, by omega⟩ q)
+       * (MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env
+        * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env)
+  -- Apply IHs on p and q.
+  rw [ihp, ihq]
+  -- natCast distributes over add.
+  rw [show MachLib.Real.natCast
+              (MultiPoly.degreeY ⟨0, by omega⟩ p
+               + MultiPoly.degreeY ⟨0, by omega⟩ q)
+         = MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)
+         + MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ q)
+      from natCast_add_helper _ _]
+  -- The algebra is the abstract identity
+  --   (A + na * B) * D + B * (C + nb * D) = A * D + B * C + (na + nb) * (B * D)
+  -- mach_ring v2.5 leaves residue when the nested * structure inside +
+  -- atoms differs across sides. Abstracting into the helper below clears
+  -- the names so mach_ring sees a flat polynomial identity it can close.
+  exact mul_case_ring_identity
+    (MultiPoly.eval (chainTotalDeriv SingleExpChain
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env)
+    (MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env)
+    (MultiPoly.eval (chainTotalDeriv SingleExpChain
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q)) x env)
+    (MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env)
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p))
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ q))
+
 /-! ## Status of full lemma 1
 
 The `_add_lt` sub-case above shows the proof structure works end-to-end:
