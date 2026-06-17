@@ -4,7 +4,8 @@ export default function Hero() {
       <div className="container">
         <div className="tagline">// machlib.org</div>
         <h1>
-          <span className="accent">MachLib</span>
+          A formal math library —{" "}
+          <span className="accent">for machines, by machines.</span>
         </h1>
         <p
           className="mono"
@@ -15,7 +16,7 @@ export default function Hero() {
             marginTop: 8,
           }}
         >
-          For machines, by machines.
+          MachLib — Lean-checkable, EML-native, zero Mathlib dependency.
         </p>
         <p
           className="mono"

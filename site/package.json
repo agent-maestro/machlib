@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check:first-impression": "node scripts/lint_first_impression.mjs",
+    "check:first-impression:strict": "node scripts/lint_first_impression.mjs --strict"
   },
   "dependencies": {
     "next": "^15.5.18",
