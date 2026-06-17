@@ -2,6 +2,9 @@ import MachLib.SingleExpKhovanskii
 import MachLib.KhovanskiiReduction
 import MachLib.MultiPolyToPoly
 import MachLib.PfaffianFnBound
+import MachLib.ChainExp2PathC
+import MachLib.MultiPolyReconstruct
+import MachLib.PolynomialCanonical
 
 /-!
 # Axiom Audit — Constructive Khovanskii Closure (2026-06-13/14, revised 2026-06-16)
@@ -66,3 +69,56 @@ open MachLib.PfaffianChainMod
 
 #print axioms SingleExpChain_isCoherentAt
 #print axioms SingleExpChain_isTriangular
+
+/-! ## Path-c constructive Khovanskii closure (2026-06-17 audit)
+
+The new constructive framework: PolynomialCanonical (canonicalizer)
++ MultiPolyReconstruct (bridge) + ChainExp2PathC (dispatch +
+capstone). Expected axiom footprint: the same MachLib foundations
+above, plus `Classical.choice`, `propext`, `Quot.sound` (Lean 4
+standard). Anything else is a finding. -/
+
+section PathC
+
+open MachLib.ChainExp2PathC
+open MachLib.PolynomialCanonical
+open MachLib.MultiPolyReconstruct
+open MachLib.PfaffianChainMod
+
+-- The end-to-end capstone (item 1). Captures the full path-c chain.
+#print axioms singleExp_khovanskii_bound
+
+-- Generic SDR wrapper (item 2).
+#print axioms singleExp_to_generic_sdr
+
+-- Dispatch reducer.
+#print axioms PfaffianFn.singleExp_dispatch_step
+
+-- Closed SingleExp ReduceStep constructors.
+#print axioms PfaffianFn.singleExp_reduceStep_closed
+#print axioms PfaffianFn.singleExp_canonicalTrim_step
+
+-- PfaffianFn-level h_bridge closure (Case-B both components).
+#print axioms singleExp_h_bridge_closure
+
+-- The bridge theorem (was previously an axiom; now proven).
+#print axioms eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast
+
+-- Polynomial identity theorem (PIT).
+#print axioms evalCoeffs_zero_iff_all_zero
+
+-- Strict-degree derivative strict-decrease.
+#print axioms polyTrueDegreeStrict_polyDerivativeCoeffs_lt
+
+-- HasDerivAt correspondence for polyDerivativeCoeffs.
+#print axioms polyDerivativeCoeffs_hasDerivAt
+
+-- yCoeffsAt length equality (substantive new lemma).
+#print axioms yCoeffsAt_length_eq
+
+-- listAddN/Sub/Mul_getLast_eval — the three getLast distributivity lemmas.
+#print axioms listAddN_getLast_eval
+#print axioms listSubN_getLast_eval
+#print axioms listMulN_getLast_eval
+
+end PathC
