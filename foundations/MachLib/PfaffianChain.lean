@@ -736,6 +736,104 @@ theorem multiPolyToPolyForLex_eval_of_y_free {n : Nat} (q : MultiPoly n)
          MultiPoly.eval p x env * MultiPoly.eval q x env
     rw [ihp h_p, ihq h_q]
 
+/-- **Structural identity for cTD on y-free MultiPolys**:
+`mP2PFL (chainTotalDeriv chain q) = polyDerivative (mP2PFL q)` as
+*Polys* (not just at eval). For y-free q, chainTotalDeriv's varY
+case never fires (q's AST has no varY), so cTD's structural
+recursion matches polyDerivative's exactly through the mP2PFL
+bridge. Chain-independent (the `chain` parameter is irrelevant for
+y-free q). -/
+theorem multiPolyToPolyForLex_chainTotalDeriv_of_y_free {n : Nat}
+    (chain : PfaffianChain n) (q : MultiPoly n)
+    (h_free : ∀ i : Fin n, MultiPoly.degreeY i q = 0) :
+    multiPolyToPolyForLex (chainTotalDeriv chain q) =
+    MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex q) := by
+  induction q with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    exfalso
+    have h := h_free j
+    change (if j = j then (1 : Nat) else 0) = 0 at h
+    rw [if_pos rfl] at h
+    exact Nat.one_ne_zero h
+  | add p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨hp', _⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hp'
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨_, hq'⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hq'
+    show MachLib.PolynomialEvidence.Poly.add
+           (multiPolyToPolyForLex (chainTotalDeriv chain p))
+           (multiPolyToPolyForLex (chainTotalDeriv chain q)) =
+         MachLib.PolynomialEvidence.Poly.add
+           (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex p))
+           (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex q))
+    rw [ihp h_p, ihq h_q]
+  | sub p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨hp', _⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hp'
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨_, hq'⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hq'
+    show MachLib.PolynomialEvidence.Poly.sub
+           (multiPolyToPolyForLex (chainTotalDeriv chain p))
+           (multiPolyToPolyForLex (chainTotalDeriv chain q)) =
+         MachLib.PolynomialEvidence.Poly.sub
+           (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex p))
+           (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex q))
+    rw [ihp h_p, ihq h_q]
+  | mul p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change MultiPoly.degreeY i p + MultiPoly.degreeY i q = 0 at this
+      omega
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change MultiPoly.degreeY i p + MultiPoly.degreeY i q = 0 at this
+      omega
+    -- cTD (mul p q) = add (mul (cTD p) q) (mul p (cTD q)) by Leibniz.
+    -- mP2PFL gives Poly.add (Poly.mul (mP2PFL (cTD p)) (mP2PFL q))
+    --                       (Poly.mul (mP2PFL p) (mP2PFL (cTD q))).
+    -- polyDerivative (Poly.mul (mP2PFL p) (mP2PFL q)) =
+    --   Poly.add (Poly.mul (polyDerivative (mP2PFL p)) (mP2PFL q))
+    --            (Poly.mul (mP2PFL p) (polyDerivative (mP2PFL q))).
+    show MachLib.PolynomialEvidence.Poly.add
+           (MachLib.PolynomialEvidence.Poly.mul
+             (multiPolyToPolyForLex (chainTotalDeriv chain p))
+             (multiPolyToPolyForLex q))
+           (MachLib.PolynomialEvidence.Poly.mul
+             (multiPolyToPolyForLex p)
+             (multiPolyToPolyForLex (chainTotalDeriv chain q))) =
+         MachLib.PolynomialEvidence.Poly.add
+           (MachLib.PolynomialEvidence.Poly.mul
+             (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex p))
+             (multiPolyToPolyForLex q))
+           (MachLib.PolynomialEvidence.Poly.mul
+             (multiPolyToPolyForLex p)
+             (MachLib.PolynomialRootCount.polyDerivative (multiPolyToPolyForLex q)))
+    rw [ihp h_p, ihq h_q]
+
 /-- **Khovanskii lex measure.** First component: degreeY of the last
 chain variable in f.poly. Second component: the **eval-canonical
 true polynomial degree** — `polyTrueDegree ∘ polyCoeffs ∘

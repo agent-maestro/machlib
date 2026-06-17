@@ -1189,5 +1189,42 @@ theorem polyTrueDegree_eq_of_evalCoeffs_eq (L1 L2 : List Real)
   · exact polyTrueDegree_le_of_bounded L2 (polyTrueDegree L1)
       ((h_iff _).mp (polyTrueDegree_spec L1))
 
+/-! ### Bridge: `polyCoeffs ∘ polyDerivative` ↔ `polyDerivativeCoeffs ∘ polyCoeffs`
+
+Both forms represent the formal polynomial derivative — one routed
+through the `Poly` AST and `PolynomialRootCount.polyDerivative`,
+the other routed through the coefficient list and
+`polyDerivativeCoeffs`. They are eval-equal via HasDerivAt
+uniqueness; PIT bridges this to polyTrueDegree equality. -/
+
+open MachLib.PolynomialRootCount in
+/-- The two derivative routes have equal `polyTrueDegree`. Useful in
+the h_bridge closure chain: lemma 2 lands you at `cTD (lcY 0 p)`
+which via the cTD→polyDerivative structural identity (in
+PfaffianChain.lean) becomes `polyDerivative (mP2PFL (lcY 0 p))`,
+and this lemma lets you transfer the strict-decrease conclusion
+from `polyDerivativeCoeffs ∘ polyCoeffs` to that form. -/
+theorem polyTrueDegree_polyDerivative_eq_polyDerivativeCoeffs (P : Poly) :
+    polyTrueDegree (polyCoeffs (polyDerivative P)) =
+    polyTrueDegree (polyDerivativeCoeffs (polyCoeffs P)) := by
+  apply polyTrueDegree_eq_of_evalCoeffs_eq
+  intro x
+  rw [polyCoeffs_eval]
+  -- Goal: Poly.eval (polyDerivative P) x = evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x.
+  have h_dpe : HasDerivAt (Poly.eval P) (Poly.eval (polyDerivative P) x) x :=
+    polyHasDerivAt_eval P x
+  have h_pdce : HasDerivAt (evalCoeffs (polyCoeffs P))
+                  (evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x) x :=
+    polyDerivativeCoeffs_hasDerivAt (polyCoeffs P) x
+  -- Bridge: Poly.eval P = evalCoeffs (polyCoeffs P) as functions.
+  have h_funext : Poly.eval P = evalCoeffs (polyCoeffs P) := by
+    funext y
+    exact (polyCoeffs_eval P y).symm
+  rw [h_funext] at h_dpe
+  exact HasDerivAt_unique (evalCoeffs (polyCoeffs P))
+    (Poly.eval (polyDerivative P) x)
+    (evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x)
+    x h_dpe h_pdce
+
 end PolynomialCanonical
 end MachLib
