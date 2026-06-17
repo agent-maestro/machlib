@@ -1618,26 +1618,71 @@ theorem PfaffianFn.khovanskii_bound_via_sdr
   exact PfaffianFn.khovanskii_bound_full f g k hwit htri hg0 a b hab
           hcoherent (terminal_nonzero g k hg0 hwit) zeros hnodup hzeros
 
-/-! ## Step 3b → SingleExp StepwiseDecreaseReducer
+/-! ## Step 3b → SingleExp ReduceStep — status & residual gap
 
-After the lex measure refactor (PfaffianChain.lean now uses
-`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex` for the second
-component), Step 3b's bridged strict-decrease maps directly onto the
-lex measure's second component. The `singleExp_reduceStep` constructor
-below takes the lex-decrease as a hypothesis; the path-c content
-(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`) plus
-a structural equality
-(`multiPolyToPolyForLex = PfaffianFnBound.multiPolyToPoly`, both `rfl`)
-discharges it. -/
+**Architectural status (after lex measure refactor):**
+`PfaffianChain.lexMeasure`'s second component is
+`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex ∘ leadingCoeffY_last`.
+This is the *same shape* Step 3b's bridged strict-decrease
+(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`)
+controls — but Step 3b proves the decrease for
+`mP2PFL (chainTotalDeriv (leadingCoeffY p))`, while `lexMeasure
+(scaledReduction f)` measures `mP2PFL (leadingCoeffY (scaledReduction.poly))`.
+These two are **eval-equal** (lemma 2,
+`leadingCoeffY_scaledReduction_eval_SingleExp` in ChainExp2PathC) but
+not syntactically equal.
+
+**Residual gap.** `polySimplify` only folds zero/one constants — it
+does not perform ring cancellation. So even though
+`leadingCoeffY (sub (cTD p) (mul (const d) p))` eval-equals
+`cTD (leadingCoeffY p)`, the polysimplified `mP2PFL` of the first
+form has degreeUpper that's the *max* of both sub-term degrees (and
+the second sub-term `mul (const d) (lcY p)` contributes the full
+original degreeUpper). The strict decrease that holds at the eval
+level does *not* automatically lift to the polysimplify-syntactic
+level used by the lex measure.
+
+**What would close the gap.** Either:
+1. **Strengthen polySimplify** with a `ring_nf`-style normalization
+   that cancels `a - a → 0` for ring-equivalent sub-trees (~ several
+   hundred lines, plus the eval-preservation lemma).
+2. **Eval-canonical lex measure.** Replace the second component with a
+   true canonical-form-via-eval map (e.g. Lagrange-interpolation
+   canonical Poly), so that eval-equal inputs trivially give equal
+   measures. Then lemma 2 + path-c step3b directly close h_bridge.
+3. **Use the structured ChainExpPoly bound.** `chainExpPolyAutoBound 1
+   ∘ multiPolyToChainExpPolyT 1` decomposes the polynomial by
+   y-coefficient extraction (`yCoeffsAt`) — at the last position the
+   `d·a_d - d·a_d` cancellation already happens during `listSubN`
+   construction.  ChainExpPolyT2.lean already ships much of this
+   infrastructure for the chain-length-2 case.
+
+Path-of-least-resistance: option 3, since the existing
+ChainExpPolyT infrastructure already implements the per-position
+extraction this needs. That refactor changes `lexMeasure`'s second
+component and re-statements of Step 3b — followup work, not a thin
+plumbing exercise as I initially estimated.
+
+The `singleExp_reduceStep` constructor below still takes the
+lex-decrease as a hypothesis; consumers wishing to instantiate it
+today need to supply `h_bridge` externally, OR wait for option 3's
+lex-measure refactor. -/
 
 /-- **SingleExp ReduceStep constructor.**
 For a chain-length-1 PfaffianFn with positive first-component lex
 measure, produces a ReduceStep using `scaledReduction at
 c = (lexMeasure f hN).1`. The `h_bridge` hypothesis is the lex-measure
-strict-decrease — now directly closable from Step 3b's bridged result
-(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY` plus
-the structural-rfl equality between `multiPolyToPolyForLex` and
-`PfaffianFnBound.multiPolyToPoly`). -/
+strict-decrease.
+
+**Why h_bridge is still a parameter** (see the section docstring
+above for the full analysis): Step 3b
+(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`)
+proves the bridged strict-decrease for
+`mP2PFL (cTD (leadingCoeffY p))`, but the lex measure on the
+scaledReduction sees `mP2PFL (leadingCoeffY (scaledReduction.poly))`
+— eval-equal (lemma 2) but not polysimplify-equal. Closing this
+needs ring-cancellation-aware canonicalization, which is a
+followup refactor. -/
 noncomputable def PfaffianFn.singleExp_reduceStep
     (f : PfaffianFn) (hN : f.n = 1)
     (h_pos : (lexMeasure f hN).1 > 0)
@@ -1653,6 +1698,7 @@ noncomputable def PfaffianFn.singleExp_reduceStep
     counter := 1
     lex_decrease := h_bridge
     witness := PfaffianFn.IsKhovanskiiReducible.reduce_one f c }
+
 
 /-! ## Why no full `StepwiseDecreaseReducer` here
 
