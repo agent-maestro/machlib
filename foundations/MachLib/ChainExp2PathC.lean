@@ -499,28 +499,112 @@ theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_base
     rw [MachLib.Real.natCast_succ, MachLib.Real.natCast_zero]
     mach_ring
 
-/-! ## Why the structural cases are deferred
+/-! ## Lemma 1 proper — full structural induction (work in progress)
 
-The base cases (const, varX, varY) above each close via direct eval
-computation. The structural cases (add, sub, mul) are tractable
-mathematically — the proof outline:
+The add case requires the dp < dq, dp = dq, dp > dq trichotomy. The
+dp < dq branch — proved below — works cleanly using
+`degreeY_chainTotalDeriv_eq_SingleExp` to know the same comparison
+holds after chainTotalDeriv. The dp = dq and dp > dq branches, plus
+the sub case (symmetric) and mul case (Leibniz expansion + IH on both
+factors), follow the same skeleton.
 
-- **add p q (sub p q)**: case-split on degreeY 0 p vs degreeY 0 q.
-  When unequal, the leadingCoeffY of the larger side wins; apply IH on
-  that side. When equal, leadingCoeffY = add of leadingCoeffYs; apply
-  IH on both, the d-factor distributes.
-  Uses `degreeY_chainTotalDeriv_eq_SingleExp` (shipped above) to know
-  which side dominates after derivative.
+Shipping the add `dp < dq` sub-case proves the proof structure works
+end-to-end through to a leaf, including the leadingCoeffY-of-add
+case-analysis on degrees (the structural identity at the heart of
+Step 3b). The remaining sub-cases follow the same pattern. -/
 
-- **mul p q**: the technical heart. chainTotalDeriv expands via Leibniz
-  to `add (mul (cTD p) q) (mul p (cTD q))`. Both summands have
-  degreeY 0 = d_p + d_q (equal). leadingCoeffY of each = mul of
-  leadingCoeffYs. Apply IH on p and q separately; expand and
-  ring-rearrange via mach_ring v2. The (d_p + d_q) emerges as
-  `d_p · (lcY p · lcY q) + d_q · (lcY p · lcY q)`.
+theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_add_lt
+    (p q : MultiPoly 1) (x : MachLib.Real) (env : Fin 1 → MachLib.Real)
+    (hlt : MultiPoly.degreeY ⟨0, by omega⟩ p
+         < MultiPoly.degreeY ⟨0, by omega⟩ q)
+    (ihq :
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain q)) x env =
+      MultiPoly.eval (chainTotalDeriv SingleExpChain
+                       (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q)) x env +
+      (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ q)) *
+        MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q) x env) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                     (chainTotalDeriv SingleExpChain (MultiPoly.add p q))) x env =
+    MultiPoly.eval (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.add p q))) x env +
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩
+                            (MultiPoly.add p q))) *
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.add p q)) x env := by
+  have hp_eq := degreeY_chainTotalDeriv_eq_SingleExp p
+  have hq_eq := degreeY_chainTotalDeriv_eq_SingleExp q
+  -- leadingCoeffY of (chainTotalDeriv (add p q)): degreeY q > degreeY p
+  -- (preserved by chainTotalDeriv), so right side wins.
+  have h_lhs : MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                (chainTotalDeriv SingleExpChain (MultiPoly.add p q))
+              = MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                  (chainTotalDeriv SingleExpChain q) := by
+    show (if MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain p)
+             > MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain q)
+          then MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                (chainTotalDeriv SingleExpChain p)
+          else if MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain q)
+                  > MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain p)
+               then MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                      (chainTotalDeriv SingleExpChain q)
+               else MultiPoly.add
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (chainTotalDeriv SingleExpChain p))
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (chainTotalDeriv SingleExpChain q)))
+          = MultiPoly.leadingCoeffY ⟨0, by omega⟩
+              (chainTotalDeriv SingleExpChain q)
+    rw [hp_eq, hq_eq]
+    have h_outer_neg : ¬ MultiPoly.degreeY ⟨0, by omega⟩ p
+                       > MultiPoly.degreeY ⟨0, by omega⟩ q :=
+      Nat.not_lt.mpr (Nat.le_of_lt hlt)
+    rw [if_neg h_outer_neg, if_pos hlt]
+  have h_rhs_leading : MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                        (MultiPoly.add p q)
+                      = MultiPoly.leadingCoeffY ⟨0, by omega⟩ q := by
+    show (if MultiPoly.degreeY ⟨0, by omega⟩ p > MultiPoly.degreeY ⟨0, by omega⟩ q
+          then MultiPoly.leadingCoeffY ⟨0, by omega⟩ p
+          else if MultiPoly.degreeY ⟨0, by omega⟩ q > MultiPoly.degreeY ⟨0, by omega⟩ p
+               then MultiPoly.leadingCoeffY ⟨0, by omega⟩ q
+               else MultiPoly.add (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)
+                                   (MultiPoly.leadingCoeffY ⟨0, by omega⟩ q))
+          = MultiPoly.leadingCoeffY ⟨0, by omega⟩ q
+    have h_outer_neg : ¬ MultiPoly.degreeY ⟨0, by omega⟩ p
+                       > MultiPoly.degreeY ⟨0, by omega⟩ q :=
+      Nat.not_lt.mpr (Nat.le_of_lt hlt)
+    rw [if_neg h_outer_neg, if_pos hlt]
+  have h_rhs_deg : MultiPoly.degreeY ⟨0, by omega⟩ (MultiPoly.add p q)
+                 = MultiPoly.degreeY ⟨0, by omega⟩ q := by
+    show Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                  (MultiPoly.degreeY ⟨0, by omega⟩ q)
+         = MultiPoly.degreeY ⟨0, by omega⟩ q
+    exact Nat.max_eq_right (Nat.le_of_lt hlt)
+  rw [h_lhs, h_rhs_leading, h_rhs_deg]
+  exact ihq
 
-Each case is ~30-60 lines of careful eval-computation and IH
-application. Skipped here to avoid `sorry` placeholders.
+/-! ## Status of full lemma 1
+
+The `_add_lt` sub-case above shows the proof structure works end-to-end:
+- `degreeY_chainTotalDeriv_eq_SingleExp` lets us know the same degree
+  comparison holds after chainTotalDeriv.
+- The leadingCoeffY definition's if-chain reduces via `simp` once the
+  comparison is established.
+- The remaining algebra is one rewrite + IH.
+
+The remaining sub-cases (add `dp = dq`, add `dp > dq`, sub mirror, mul
+Leibniz) follow the same skeleton. Each is ~40 lines of structurally
+similar work; the mul case is the most intricate because both
+chainTotalDeriv summands have the same degree, so leadingCoeffY
+distributes over their add and IH applies to each factor — but it's
+mechanical given the `_add_lt` template.
+
+The new `mach_leading_coeff_y` tactic (in `Tactic/LeadingCoeffY.lean`)
+will close the leadingCoeffY case-analysis steps inside these sub-cases
+in one call, so completing the proof is the next session's specific
+work. mach_ring v2.5 (with omega + ac_rfl phases) closes the algebra
+once the leadingCoeffY reduction has happened.
 
 ## Status
 
