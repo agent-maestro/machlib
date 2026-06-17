@@ -835,25 +835,28 @@ theorem multiPolyToPolyForLex_chainTotalDeriv_of_y_free {n : Nat}
     rw [ihp h_p, ihq h_q]
 
 /-- **Khovanskii lex measure.** First component: degreeY of the last
-chain variable in f.poly. Second component: the **eval-canonical
-true polynomial degree** — `polyTrueDegree ∘ polyCoeffs ∘
+chain variable in f.poly. Second component: the **strict canonical
+polynomial degree** — `polyTrueDegreeStrict ∘ polyCoeffs ∘
 multiPolyToPolyForLex` applied to the leading coefficient in the
 last chain variable.
 
-`polyTrueDegree (polyCoeffs P)` returns the actual mathematical
-degree of the polynomial `P` (the position of the last nonzero
-coefficient), and is an invariant of ring-equivalence:
-ring-equivalent ASTs collapse to equal `polyTrueDegree` (proven via
-the polynomial identity theorem in `MachLib.PolynomialCanonical`).
-This makes the strict-descent argument under `scaledReduction` work
-where the older `degreeUpper ∘ polySimplify` form failed —
-`polySimplify` doesn't detect ring cancellation, but the canonical
-coefficient list does. -/
+The "strict" variant distinguishes a canonically-zero coefficient
+list (returns 0) from a canonically-nonzero one (returns
+`polyTrueDegree + 1`). This lets the descent argument cover the
+"constant nonzero leading coefficient" subcase: scaledReduction
+makes the leading coefficient canonically zero, so the second
+component drops from 1 to 0. With the older non-strict variant,
+both canonically-constant and canonically-zero leading coefficients
+collapsed to 0, blocking that subcase.
+
+The remaining `polyTrueDegreeStrict = 0` corner (canonically-zero
+leading coefficient at AST level — i.e. dead leading term) still
+needs a separate canonical-trim operation; followup work. -/
 noncomputable def lexMeasure {N : Nat} (f : PfaffianFn)
     (hN : f.n = N + 1) : Nat × Nat :=
   let i := lastChainIdx f hN
   (MultiPoly.degreeY i f.poly,
-   MachLib.PolynomialCanonical.polyTrueDegree
+   MachLib.PolynomialCanonical.polyTrueDegreeStrict
      (MachLib.PolynomialCanonical.polyCoeffs
        (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i f.poly))))
 

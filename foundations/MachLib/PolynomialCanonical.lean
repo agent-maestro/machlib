@@ -1189,6 +1189,152 @@ theorem polyTrueDegree_eq_of_evalCoeffs_eq (L1 L2 : List Real)
   · exact polyTrueDegree_le_of_bounded L2 (polyTrueDegree L1)
       ((h_iff _).mp (polyTrueDegree_spec L1))
 
+/-! ### Canonical-zero predicate and strict degree
+
+`polyTrueDegree` collapses the canonically-constant case and the
+canonically-zero case to the same value (both 0). For the
+h_bridge closure to extend through the "constant-nonzero leading
+coefficient" subcase, we need a measure that distinguishes them.
+
+`polyTrueDegreeStrict L = polyTrueDegree L + 1` when L is canonically
+nonzero, else 0. This makes:
+- Canonically zero ⇒ 0.
+- Canonically constant nonzero ⇒ 1.
+- Canonically degree-k polynomial ⇒ k + 1.
+
+Phase G's derivative strict-decrease then holds whenever
+`polyTrueDegreeStrict > 0`: even the "constant nonzero → zero"
+collapse (1 → 0) becomes a strict drop. -/
+
+/-- A coefficient list is canonically zero iff every position
+evaluates to 0. By PIT, equivalent to "every coefficient is 0". -/
+def CanonicallyZero (L : List Real) : Prop :=
+  ∀ x : Real, evalCoeffs L x = 0
+
+/-- Canonically-zero is equivalent (via PIT) to all-coefficients-zero. -/
+theorem canonicallyZero_iff_all_coeffs_zero (L : List Real) :
+    CanonicallyZero L ↔ ∀ c ∈ L, c = 0 := by
+  constructor
+  · intro h; exact evalCoeffs_zero_iff_all_zero L h
+  · intro h x
+    induction L with
+    | nil => exact evalCoeffs_nil x
+    | cons c cs ih =>
+      have h_c : c = 0 := h c (List.mem_cons_self _ _)
+      have h_cs : ∀ c' ∈ cs, c' = 0 := fun c' hc' =>
+        h c' (List.mem_cons_of_mem _ hc')
+      rw [evalCoeffs_cons, h_c, zero_add]
+      rw [ih h_cs]
+      rw [mul_zero]
+
+noncomputable instance instDecidableCanonicallyZero (L : List Real) :
+    Decidable (CanonicallyZero L) := Classical.propDecidable _
+
+/-- The strict polynomial degree: collapses to 0 only for canonically
+zero lists, distinguishing them from canonically-constant nonzero. -/
+noncomputable def polyTrueDegreeStrict (L : List Real) : Nat :=
+  if CanonicallyZero L then 0 else polyTrueDegree L + 1
+
+theorem polyTrueDegreeStrict_of_canonicallyZero (L : List Real)
+    (h : CanonicallyZero L) : polyTrueDegreeStrict L = 0 := by
+  show (if CanonicallyZero L then 0 else polyTrueDegree L + 1) = 0
+  rw [if_pos h]
+
+theorem polyTrueDegreeStrict_of_not_canonicallyZero (L : List Real)
+    (h : ¬ CanonicallyZero L) : polyTrueDegreeStrict L = polyTrueDegree L + 1 := by
+  show (if CanonicallyZero L then 0 else polyTrueDegree L + 1) = polyTrueDegree L + 1
+  rw [if_neg h]
+
+/-- PIT bridge for `polyTrueDegreeStrict`: eval-equal lists have equal
+strict degrees. -/
+theorem polyTrueDegreeStrict_eq_of_evalCoeffs_eq (L1 L2 : List Real)
+    (h_eval : ∀ x, evalCoeffs L1 x = evalCoeffs L2 x) :
+    polyTrueDegreeStrict L1 = polyTrueDegreeStrict L2 := by
+  -- canonicallyZero L1 ↔ canonicallyZero L2 (since eval-equal).
+  have h_canon_iff : CanonicallyZero L1 ↔ CanonicallyZero L2 := by
+    constructor
+    · intro h x; rw [← h_eval x]; exact h x
+    · intro h x; rw [h_eval x]; exact h x
+  by_cases h_z1 : CanonicallyZero L1
+  · have h_z2 : CanonicallyZero L2 := h_canon_iff.mp h_z1
+    rw [polyTrueDegreeStrict_of_canonicallyZero L1 h_z1,
+        polyTrueDegreeStrict_of_canonicallyZero L2 h_z2]
+  · have h_nz2 : ¬ CanonicallyZero L2 := fun h => h_z1 (h_canon_iff.mpr h)
+    rw [polyTrueDegreeStrict_of_not_canonicallyZero L1 h_z1,
+        polyTrueDegreeStrict_of_not_canonicallyZero L2 h_nz2,
+        polyTrueDegree_eq_of_evalCoeffs_eq L1 L2 h_eval]
+
+/-- The strict-degree derivative strict-decrease. Covers the
+canonically-constant nonzero case (which the non-strict version
+missed): the derivative is canonically zero, so the strict degree
+drops 1 → 0. -/
+theorem polyTrueDegreeStrict_polyDerivativeCoeffs_lt (L : List Real)
+    (h : polyTrueDegreeStrict L > 0) :
+    polyTrueDegreeStrict (polyDerivativeCoeffs L) < polyTrueDegreeStrict L := by
+  -- h means L is canonically nonzero.
+  have h_L_nz : ¬ CanonicallyZero L := by
+    intro h_z
+    rw [polyTrueDegreeStrict_of_canonicallyZero L h_z] at h
+    exact Nat.lt_irrefl 0 h
+  rw [polyTrueDegreeStrict_of_not_canonicallyZero L h_L_nz]
+  -- Now goal: polyTrueDegreeStrict (polyDerivativeCoeffs L) < polyTrueDegree L + 1.
+  by_cases h_d_z : CanonicallyZero (polyDerivativeCoeffs L)
+  · -- Derivative canonically zero: polyTrueDegreeStrict = 0 < polyTrueDegree L + 1.
+    rw [polyTrueDegreeStrict_of_canonicallyZero _ h_d_z]
+    omega
+  · -- Derivative canonically nonzero: polyTrueDegreeStrict = polyTrueDegree + 1.
+    rw [polyTrueDegreeStrict_of_not_canonicallyZero _ h_d_z]
+    -- Now goal: polyTrueDegree (polyDerivativeCoeffs L) + 1 < polyTrueDegree L + 1.
+    -- Equivalent: polyTrueDegree (polyDerivativeCoeffs L) < polyTrueDegree L.
+    -- Need polyTrueDegree L > 0. Suppose not: polyTrueDegree L = 0 means L is
+    -- canonically a constant (eval ≡ a constant). Then polyDerivativeCoeffs L
+    -- represents the derivative of a constant = canonically 0. Contradicts h_d_z.
+    have h_ptd_pos : polyTrueDegree L > 0 := by
+      apply Classical.byContradiction
+      intro h_not_pos
+      have h_zero : polyTrueDegree L = 0 := by omega
+      -- polyTrueDegree L = 0 + L not canonically zero means L is canonically
+      -- a nonzero constant. Then polyDerivativeCoeffs L (the derivative) is
+      -- canonically zero.
+      apply h_d_z
+      -- Goal: CanonicallyZero (polyDerivativeCoeffs L).
+      -- polyTrueDegree L = 0 means polyDegreeBoundedBy L 0, i.e., coeffAt L k = 0 for k > 0.
+      -- So L has only position 0 possibly nonzero.
+      -- polyDerivativeCoeffs L drops position 0 and scales the rest by position.
+      -- coeffAt (polyDerivativeCoeffs L) k = natCast (k+1) * coeffAt L (k+1) = natCast (k+1) * 0 = 0.
+      -- So polyDerivativeCoeffs L has all coefficients zero → CanonicallyZero.
+      intro x
+      have h_bound : polyDegreeBoundedBy L 0 := h_zero ▸ polyTrueDegree_spec L
+      -- Show evalCoeffs (polyDerivativeCoeffs L) x = 0 by induction or direct.
+      -- Use the fact: all coeffAt of polyDerivativeCoeffs L are zero.
+      have h_d_all_zero : ∀ k, coeffAt (polyDerivativeCoeffs L) k = 0 := by
+        intro k
+        rw [coeffAt_polyDerivativeCoeffs]
+        have h_l_k : coeffAt L (k + 1) = 0 := h_bound (k + 1) (by omega)
+        rw [h_l_k, mul_zero]
+      -- Now: evalCoeffs of a list with all coeffAt = 0 is 0.
+      exact evalCoeffs_zero_of_all_coeffAt_zero (polyDerivativeCoeffs L) h_d_all_zero x
+    have h_lt : polyTrueDegree (polyDerivativeCoeffs L) < polyTrueDegree L :=
+      polyTrueDegree_polyDerivativeCoeffs_lt L h_ptd_pos
+    omega
+where
+  /-- Helper: a coefficient list with all `coeffAt` values 0 is canonically zero. -/
+  evalCoeffs_zero_of_all_coeffAt_zero (L : List Real)
+      (h : ∀ k, coeffAt L k = 0) (x : Real) : evalCoeffs L x = 0 := by
+    induction L with
+    | nil => rfl
+    | cons c cs ih =>
+      have h_c : c = 0 := by
+        have := h 0
+        rw [coeffAt_cons_zero] at this
+        exact this
+      have h_cs : ∀ k, coeffAt cs k = 0 := by
+        intro k
+        have := h (k + 1)
+        rw [coeffAt_cons_succ] at this
+        exact this
+      rw [evalCoeffs_cons, h_c, zero_add, ih h_cs, mul_zero]
+
 /-! ### Bridge: `polyCoeffs ∘ polyDerivative` ↔ `polyDerivativeCoeffs ∘ polyCoeffs`
 
 Both forms represent the formal polynomial derivative — one routed
@@ -1217,6 +1363,28 @@ theorem polyTrueDegree_polyDerivative_eq_polyDerivativeCoeffs (P : Poly) :
                   (evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x) x :=
     polyDerivativeCoeffs_hasDerivAt (polyCoeffs P) x
   -- Bridge: Poly.eval P = evalCoeffs (polyCoeffs P) as functions.
+  have h_funext : Poly.eval P = evalCoeffs (polyCoeffs P) := by
+    funext y
+    exact (polyCoeffs_eval P y).symm
+  rw [h_funext] at h_dpe
+  exact HasDerivAt_unique (evalCoeffs (polyCoeffs P))
+    (Poly.eval (polyDerivative P) x)
+    (evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x)
+    x h_dpe h_pdce
+
+open MachLib.PolynomialRootCount in
+/-- Strict-degree version of the derivative bridge. -/
+theorem polyTrueDegreeStrict_polyDerivative_eq_polyDerivativeCoeffs (P : Poly) :
+    polyTrueDegreeStrict (polyCoeffs (polyDerivative P)) =
+    polyTrueDegreeStrict (polyDerivativeCoeffs (polyCoeffs P)) := by
+  apply polyTrueDegreeStrict_eq_of_evalCoeffs_eq
+  intro x
+  rw [polyCoeffs_eval]
+  have h_dpe : HasDerivAt (Poly.eval P) (Poly.eval (polyDerivative P) x) x :=
+    polyHasDerivAt_eval P x
+  have h_pdce : HasDerivAt (evalCoeffs (polyCoeffs P))
+                  (evalCoeffs (polyDerivativeCoeffs (polyCoeffs P)) x) x :=
+    polyDerivativeCoeffs_hasDerivAt (polyCoeffs P) x
   have h_funext : Poly.eval P = evalCoeffs (polyCoeffs P) := by
     funext y
     exact (polyCoeffs_eval P y).symm
