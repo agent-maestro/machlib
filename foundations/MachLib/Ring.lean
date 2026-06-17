@@ -192,12 +192,18 @@ macro "mach_ring" : tactic => `(tactic|
    --   * `add_neg` — direct cancellation, e.g. `(x + tx) + -(x + tx) = 0`.
    --   * `add_neg_swapped` — pair-swap cancellation, e.g.
    --     `(sx + tx) + -(tx + sx) = 0`.
+   --   * v2: `ac_rfl` — handle pure AC residues over `+` / `*`
+   --     using Lean core's recursive AC normaliser + the
+   --     `Std.Commutative` / `Std.Associative` instances on Real.
+   --     This closes the post-distribution residue where both sides
+   --     are AC-equivalent (e.g. `E * (D * (B * c)) = D * (c * (B * E))`).
    --   * Full simp with AC + cancellation lemmas as the catch-all
    --     for any remaining shape Lean's term ordering can resolve.
    try (first
         | rfl
         | exact add_neg _
         | exact add_neg_swapped _ _
+        | ac_rfl
         -- Phase 2 catch-all: full AC over BOTH `+` and `*`. `mul_comm`
         -- + `mul_assoc` lets simp unify mirror-pair products like
         -- `ay * (az * bx)` and `az * (ay * bx)` that appear in

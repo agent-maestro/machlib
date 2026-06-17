@@ -145,11 +145,7 @@ factored form. This is the ring identity that lets us rewrite
 where E = exp(-c * y_n x). Pure real-arithmetic algebra. -/
 theorem mulNegExp_derivative_factored (f' E f c y_n' : Real) :
     f' * E + f * (E * (-c * y_n')) = E * (f' - c * y_n' * f) := by
-  -- mach_ring handles most ring rewrites but leaves a mul_comm residue.
   mach_ring
-  -- Residue: f * (E * (c * y_n')) = E * (f * (c * y_n')).
-  -- Use mul_comm and assoc.
-  rw [← mul_assoc, mul_comm f E, mul_assoc]
 
 /-! ## Step 2: PfaffianFn.reducedDerivative (the muse's `f' - c·y_n'·f`)
 
@@ -626,7 +622,6 @@ where E = exp(-c · x). Pure ring identity. -/
 theorem mulNegExpX_derivative_factored (f' E f c : Real) :
     f' * E + f * (E * (-c)) = E * (f' - c * f) := by
   mach_ring
-  rw [← mul_assoc, mul_comm f E, mul_assoc]
 
 /-! ### The scaledReduction operator (Step 2 analog) -/
 

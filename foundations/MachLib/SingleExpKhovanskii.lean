@@ -285,28 +285,15 @@ theorem combine_pe_E (n pe E c : Real) :
 theorem expPoly_step_ring_identity (pd n pe E S0 R c : Real) :
     (pd + (n - 0) * pe) * E + S0 + (pe * E + R) * -c
     = (pd + (n - c) * pe) * E + (S0 + R * -c) := by
+  -- v1 required ~7 lines of explicit add_comm / add_assoc rewrites
+  -- after distribution; v2 closes after just the pre-distribution
+  -- rewrites via the ac_rfl phase. See git history for the v1 form.
   rw [sub_zero]
   rw [add_mul_local (pe * E) R (-c)]
   rw [add_mul_local pd (n * pe) E]
   rw [add_mul_local pd ((n - c) * pe) E]
   rw [← combine_pe_E n pe E c]
-  -- Goal (post-rewrites): pd·E + n·pe·E + S0 + (pe·E·(-c) + R·(-c))
-  --                    = pd·E + (n·pe·E + pe·E·(-c)) + (S0 + R·(-c))
-  -- mach_ring partially normalizes but leaves additive residue.
-  -- Close by explicit add_comm + add_assoc.
   mach_ring
-  -- Residue: S0 + (pd*E + (E*(n*pe) + (-(R*c) + -(c*(pe*E)))))
-  --        = S0 + (-(R*c) + (pd*E + (E*(n*pe) + -(c*(pe*E)))))
-  congr 1
-  -- Inner: pd*E + (E*(n*pe) + (-(R*c) + -(c*(pe*E))))
-  --      = -(R*c) + (pd*E + (E*(n*pe) + -(c*(pe*E))))
-  -- Move -(R*c) from position 3 to position 1.
-  rw [← add_assoc (E * (n * pe)) (-(R * c)) (-(c * (pe * E)))]
-  rw [add_comm (E * (n * pe)) (-(R * c))]
-  rw [add_assoc (-(R * c)) (E * (n * pe)) (-(c * (pe * E)))]
-  rw [← add_assoc (pd * E) (-(R * c)) (E * (n * pe) + -(c * (pe * E)))]
-  rw [add_comm (pd * E) (-(R * c))]
-  rw [add_assoc (-(R * c)) (pd * E) (E * (n * pe) + -(c * (pe * E)))]
 
 /-- Algebraic identity:
   `(scaledReduction ep 0).eval x + ep.eval x · (-c) = (scaledReduction ep c).eval x`

@@ -1204,7 +1204,6 @@ theorem linearQuadraticCoeff_evalSound (r a b : Real) :
     (-r) * a + x * (((-r) * b + 1 * a) + x * (((-r) * 1 + 1 * b) + x * (1 + x * 0))) =
       (-r + x * (1 + x * 0)) * (a + x * (b + x * (1 + x * 0)))
   mach_ring
-  ac_rfl
 
 /-- The explicit staged triple-linear product evaluates as a product of the
 first two factors and the third factor. -/
