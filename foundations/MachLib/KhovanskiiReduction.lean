@@ -1618,5 +1618,79 @@ theorem PfaffianFn.khovanskii_bound_via_sdr
   exact PfaffianFn.khovanskii_bound_full f g k hwit htri hg0 a b hab
           hcoherent (terminal_nonzero g k hg0 hwit) zeros hnodup hzeros
 
+/-! ## Step 3b → SingleExp StepwiseDecreaseReducer
+
+Wraps `step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`
+(from `ChainExp2PathC.lean`) into a `StepwiseDecreaseReducer` for the
+SingleExp case.
+
+### Architectural note on the bridge
+
+`lexMeasure` uses `MultiPoly.degreeX (leadingCoeffY i f.poly)` (raw
+formal degree). Path-c's Step 3b proves strict-decrease on the
+**bridged** measure
+`degreeUpper ∘ polySimplify ∘ multiPolyToPoly ∘ leadingCoeffY i`.
+
+These two measures agree at canonical points (when polySimplify is the
+identity) but differ when the formal AST has phantom terms (e.g.,
+`add p 0` formally has degreeX = max(degreeX p, 0) = degreeX p, but
+multiPolyToPoly + polySimplify removes the phantom). For the
+strict-decrease pattern under `scaledReduction`, the formal degreeX
+can stay equal while the bridged form strictly decreases — exactly
+the case Step 3b handles.
+
+**Honest gap**: closing this requires either
+1. Changing `lexMeasure` to use the bridged form (a ~30-line refactor
+   in `PfaffianChain.lean`).
+2. Proving the formal degreeX strictly decreases under polysimplify
+   normalization preserved (a ~150-line lemma).
+
+Neither is "the final 50 lines". The SDR below takes the formal
+strict-decrease as an explicit hypothesis — moving the architectural
+gap from "inside the SDR" to "the SDR's caller". -/
+
+/-- **SingleExp StepwiseDecreaseReducer (with explicit lex bridge).**
+For a chain-length-1 PfaffianFn over SingleExpChain with positive
+first-component lex measure, produces a ReduceStep using
+`scaledReduction at c = (lexMeasure f hN).1`. The `h_bridge`
+hypothesis supplies the formal `lexLT` decrease — morally Step 3b
+(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY` in
+ChainExp2PathC), but the formal connection requires the architectural
+work documented above. -/
+noncomputable def PfaffianFn.singleExp_reduceStep
+    (f : PfaffianFn) (hN : f.n = 1)
+    (h_pos : (lexMeasure f hN).1 > 0)
+    (h_bridge : lexLT
+      (lexMeasure
+        (f.scaledReduction (Real.natCast (lexMeasure f hN).1))
+        (show (f.scaledReduction (Real.natCast (lexMeasure f hN).1)).n = 1 from hN))
+      (lexMeasure f hN)) :
+    PfaffianFn.ReduceStep f hN :=
+  let c : Real := Real.natCast (lexMeasure f hN).1
+  { result := f.scaledReduction c
+    result_hN := hN  -- (f.scaledReduction c).n = f.n by defeq
+    counter := 1
+    lex_decrease := h_bridge
+    witness := PfaffianFn.IsKhovanskiiReducible.reduce_one f c }
+
+/-! ## Why no full `StepwiseDecreaseReducer` here
+
+`StepwiseDecreaseReducer` is `∀ f {N} (hN : f.n = N + 1), ...` — it
+must work for every chain length N. The SingleExp construction
+above (`singleExp_reduceStep`) only covers `N = 0` (chain-length-1).
+
+A total `StepwiseDecreaseReducer` requires either:
+1. A chain-specific SDR for every chain length the consumer cares
+   about (parametric SDR composition).
+2. A non-trivial reduction for non-SingleExp / non-length-1 cases.
+
+Path (c)'s chain-Khovanskii bound is specifically about
+chain-length-1 SingleExpChain — the SingleExp `singleExp_reduceStep`
+shipped above IS the path-c contribution. Wiring it into a total SDR
+for `buildReducer` is a follow-on commit (parametric SDR composition)
+that doesn't add mathematical content — just dispatches `N = 0` to
+`singleExp_reduceStep` and accepts external SDRs for other chain
+lengths via composition. -/
+
 end PfaffianChainMod
 end MachLib
