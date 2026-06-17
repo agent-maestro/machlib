@@ -61,6 +61,7 @@ import MachLib.ExpPolyBridge
 import MachLib.MultiPolyCanonY
 import MachLib.MultiPolyCanonYN
 import MachLib.ChainExpPoly
+import MachLib.IterExpChain
 
 /-!
 # MachLib — top-level aggregator
