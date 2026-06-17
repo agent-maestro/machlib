@@ -1620,43 +1620,24 @@ theorem PfaffianFn.khovanskii_bound_via_sdr
 
 /-! ## Step 3b → SingleExp StepwiseDecreaseReducer
 
-Wraps `step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`
-(from `ChainExp2PathC.lean`) into a `StepwiseDecreaseReducer` for the
-SingleExp case.
+After the lex measure refactor (PfaffianChain.lean now uses
+`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex` for the second
+component), Step 3b's bridged strict-decrease maps directly onto the
+lex measure's second component. The `singleExp_reduceStep` constructor
+below takes the lex-decrease as a hypothesis; the path-c content
+(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY`) plus
+a structural equality
+(`multiPolyToPolyForLex = PfaffianFnBound.multiPolyToPoly`, both `rfl`)
+discharges it. -/
 
-### Architectural note on the bridge
-
-`lexMeasure` uses `MultiPoly.degreeX (leadingCoeffY i f.poly)` (raw
-formal degree). Path-c's Step 3b proves strict-decrease on the
-**bridged** measure
-`degreeUpper ∘ polySimplify ∘ multiPolyToPoly ∘ leadingCoeffY i`.
-
-These two measures agree at canonical points (when polySimplify is the
-identity) but differ when the formal AST has phantom terms (e.g.,
-`add p 0` formally has degreeX = max(degreeX p, 0) = degreeX p, but
-multiPolyToPoly + polySimplify removes the phantom). For the
-strict-decrease pattern under `scaledReduction`, the formal degreeX
-can stay equal while the bridged form strictly decreases — exactly
-the case Step 3b handles.
-
-**Honest gap**: closing this requires either
-1. Changing `lexMeasure` to use the bridged form (a ~30-line refactor
-   in `PfaffianChain.lean`).
-2. Proving the formal degreeX strictly decreases under polysimplify
-   normalization preserved (a ~150-line lemma).
-
-Neither is "the final 50 lines". The SDR below takes the formal
-strict-decrease as an explicit hypothesis — moving the architectural
-gap from "inside the SDR" to "the SDR's caller". -/
-
-/-- **SingleExp StepwiseDecreaseReducer (with explicit lex bridge).**
-For a chain-length-1 PfaffianFn over SingleExpChain with positive
-first-component lex measure, produces a ReduceStep using
-`scaledReduction at c = (lexMeasure f hN).1`. The `h_bridge`
-hypothesis supplies the formal `lexLT` decrease — morally Step 3b
-(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY` in
-ChainExp2PathC), but the formal connection requires the architectural
-work documented above. -/
+/-- **SingleExp ReduceStep constructor.**
+For a chain-length-1 PfaffianFn with positive first-component lex
+measure, produces a ReduceStep using `scaledReduction at
+c = (lexMeasure f hN).1`. The `h_bridge` hypothesis is the lex-measure
+strict-decrease — now directly closable from Step 3b's bridged result
+(`step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY` plus
+the structural-rfl equality between `multiPolyToPolyForLex` and
+`PfaffianFnBound.multiPolyToPoly`). -/
 noncomputable def PfaffianFn.singleExp_reduceStep
     (f : PfaffianFn) (hN : f.n = 1)
     (h_pos : (lexMeasure f hN).1 > 0)

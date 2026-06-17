@@ -1,5 +1,6 @@
 import MachLib.MultiPoly
 import MachLib.Differentiation
+import MachLib.PolynomialRootCount
 
 /-!
 # MachLib.PfaffianChain — chain-explicit Pfaffian functions
@@ -622,14 +623,57 @@ dropLast-applicability lemma (Step 3c) follow in subsequent commits. -/
 def lastChainIdx {N : Nat} (f : PfaffianFn) (hN : f.n = N + 1) : Fin f.n :=
   ⟨N, hN.symm ▸ Nat.lt_succ_self N⟩
 
+/-! ### Bridged measure helper for the lex measure's second component
+
+The lex measure's second component uses the **bridged** form
+`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex`. This is the
+canonical degree that path-c's Step 3b proves strictly decreases
+under `scaledReduction` at `c = degreeY_last`. The raw
+`MultiPoly.degreeX` doesn't strictly decrease in general — phantom
+AST terms like `add p 0` formally preserve degreeX even after the
+substantive cancellation. polysimplify removes the phantoms; the
+bridged form is what the strict-descent argument actually controls.
+
+`multiPolyToPolyForLex` is the structural conversion
+`MultiPoly n → Poly` that replaces every `varY i` with `Poly.const 0`
+(vacuous in the lex measure's `leadingCoeffY` slot since
+`degreeY_leadingCoeffY` proves the leading coefficient is y-free).
+This is the same definition as `PfaffianFnBound.multiPolyToPoly` —
+inlined here to avoid an import cycle (PfaffianFnBound depends on
+PfaffianChain). The two are propositionally equal via structural
+`rfl`. -/
+
+noncomputable def multiPolyToPolyForLex {n : Nat} :
+    MultiPoly n → MachLib.PolynomialEvidence.Poly
+  | MultiPoly.const c => MachLib.PolynomialEvidence.Poly.const c
+  | MultiPoly.varX => MachLib.PolynomialEvidence.Poly.var
+  | MultiPoly.varY _ => MachLib.PolynomialEvidence.Poly.const 0
+  | MultiPoly.add p q =>
+      MachLib.PolynomialEvidence.Poly.add
+        (multiPolyToPolyForLex p) (multiPolyToPolyForLex q)
+  | MultiPoly.sub p q =>
+      MachLib.PolynomialEvidence.Poly.sub
+        (multiPolyToPolyForLex p) (multiPolyToPolyForLex q)
+  | MultiPoly.mul p q =>
+      MachLib.PolynomialEvidence.Poly.mul
+        (multiPolyToPolyForLex p) (multiPolyToPolyForLex q)
+
 /-- **Khovanskii lex measure.** First component: degreeY of the last
-chain variable in f.poly. Second component: degreeX of the leading
-coefficient in that variable. -/
+chain variable in f.poly. Second component: the **bridged degree** —
+`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex` applied to the
+leading coefficient in the last chain variable.
+
+Using the bridged form for the second component lets the strict-descent
+argument from Step 3b apply directly: polySimplify removes the phantom
+AST terms that prevent the raw `degreeX` from strictly decreasing under
+`scaledReduction`. -/
 noncomputable def lexMeasure {N : Nat} (f : PfaffianFn)
     (hN : f.n = N + 1) : Nat × Nat :=
   let i := lastChainIdx f hN
   (MultiPoly.degreeY i f.poly,
-   MultiPoly.degreeX (MultiPoly.leadingCoeffY i f.poly))
+   MachLib.PolynomialRootCount.degreeUpper
+     (MachLib.PolynomialRootCount.polySimplify
+       (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i f.poly))))
 
 /-- The strict lex order on the measure. `(d, e) <_lex (d', e')` iff
 `d < d'` OR (`d = d'` AND `e < e'`). The standard pair lex order; used
