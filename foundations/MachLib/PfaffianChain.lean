@@ -659,6 +659,83 @@ noncomputable def multiPolyToPolyForLex {n : Nat} :
       MachLib.PolynomialEvidence.Poly.mul
         (multiPolyToPolyForLex p) (multiPolyToPolyForLex q)
 
+/-- **The mP2PFL eval bridge for y-free MultiPolys**: when `q` has
+`degreeY i = 0` at every chain-variable index `i`, the bridged Poly
+eval matches the original MultiPoly eval at any environment.
+Foundational for the h_bridge closure chain — combines with
+ChainExp2PathC's lemma 2 (eval-level lcY/cTD identity) to translate
+MultiPoly evals into Poly evals where `PolynomialCanonical`'s PIT
++ derivative bridge can act. -/
+theorem multiPolyToPolyForLex_eval_of_y_free {n : Nat} (q : MultiPoly n)
+    (h_free : ∀ i : Fin n, MultiPoly.degreeY i q = 0)
+    (x : MachLib.Real) (env : Fin n → MachLib.Real) :
+    MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex q) x =
+    MultiPoly.eval q x env := by
+  induction q with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    -- degreeY j (varY j) = 1, but h_free j gives = 0. Contradiction.
+    exfalso
+    have h := h_free j
+    show False
+    change (if j = j then (1 : Nat) else 0) = 0 at h
+    rw [if_pos rfl] at h
+    exact Nat.one_ne_zero h
+  | add p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨hp', _⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hp'
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨_, hq'⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hq'
+    show MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex p) x +
+         MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex q) x =
+         MultiPoly.eval p x env + MultiPoly.eval q x env
+    rw [ihp h_p, ihq h_q]
+  | sub p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨hp', _⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hp'
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 at this
+      have ⟨_, hq'⟩ : MultiPoly.degreeY i p ≤ 0 ∧ MultiPoly.degreeY i q ≤ 0 :=
+        Nat.max_le.mp (Nat.le_of_eq this)
+      exact Nat.le_zero.mp hq'
+    show MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex p) x -
+         MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex q) x =
+         MultiPoly.eval p x env - MultiPoly.eval q x env
+    rw [ihp h_p, ihq h_q]
+  | mul p q ihp ihq =>
+    have h_p : ∀ i, MultiPoly.degreeY i p = 0 := by
+      intro i
+      have := h_free i
+      change MultiPoly.degreeY i p + MultiPoly.degreeY i q = 0 at this
+      omega
+    have h_q : ∀ i, MultiPoly.degreeY i q = 0 := by
+      intro i
+      have := h_free i
+      change MultiPoly.degreeY i p + MultiPoly.degreeY i q = 0 at this
+      omega
+    show MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex p) x *
+         MachLib.PolynomialEvidence.Poly.eval (multiPolyToPolyForLex q) x =
+         MultiPoly.eval p x env * MultiPoly.eval q x env
+    rw [ihp h_p, ihq h_q]
+
 /-- **Khovanskii lex measure.** First component: degreeY of the last
 chain variable in f.poly. Second component: the **eval-canonical
 true polynomial degree** — `polyTrueDegree ∘ polyCoeffs ∘
