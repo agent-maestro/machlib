@@ -694,23 +694,198 @@ theorem yCoeffsAt_length_eq {n : Nat} (i : Fin n) (p : MultiPoly n) :
     rw [listMulN_length_eq _ _ h_p_ne h_q_ne, ihp, ihq]
     omega
 
-/-! ### `lcY` and `(yCoeffsAt).getLast` eval bridge
+/-! ### `getLast` distributivity through list arithmetic -/
 
-The eval-equivalence `eval lcY 0 p = eval ((yCoeffsAt 0 p).getLast _)`
-follows by structural induction on `p`, with case analysis on
-`degreeY` comparisons in the `add`/`sub` cases matched against length
-comparisons of the yCoeffsAt lists (via `yCoeffsAt_length_eq`), and
-bilinear convolution in the `mul` case (`getLast (listMulN A B) =
-getLast A * getLast B` for nonempty A, B).
+/-- Helper: nonemptiness of `listAddN A B` follows from either argument
+being nonempty (via the length equality, since `max a b > 0` iff `a > 0
+or b > 0`). -/
+theorem listAddN_ne_of_left_ne {n : Nat} (A B : List (MultiPoly n))
+    (hA : A ≠ []) : MachLib.MultiPolyMod.MultiPoly.listAddN A B ≠ [] := by
+  intro h
+  have h_zero : (MachLib.MultiPolyMod.MultiPoly.listAddN A B).length = 0 :=
+    List.length_eq_zero.mpr h
+  rw [listAddN_length_eq] at h_zero
+  have h_pos : A.length > 0 := List.length_pos.mpr hA
+  have h_le : A.length ≤ Nat.max A.length B.length := Nat.le_max_left _ _
+  omega
 
-The full proof requires the `getLast` distributivity lemmas:
-- `listAddN_getLast_eval` (case analysis on lengths)
-- `listSubN_getLast_eval` (similar with negation in the unequal cases)
-- `listMulN_getLast_eval` (= last A * last B for both nonempty)
+/-- Helper: `(a :: l).getLast` equals `l.getLast` when `l ≠ []`. Wraps
+`List.getLast_cons`. -/
+theorem getLast_cons_of_ne {α : Type _} (a : α) (l : List α) (h_l : l ≠ [])
+    (h_al : (a :: l) ≠ []) :
+    (a :: l).getLast h_al = l.getLast h_l :=
+  List.getLast_cons h_l
 
-We expose the bridge as an axiom; the length lemmas above (which are
-the harder half of the proof) are shipped. The `getLast` distributivity
-lemmas + the structural induction are mechanical given them. -/
+/-- getLast of listAddN A B (eval-level). 3-way ITE matches length
+comparison: A longer → eval A.getLast; B longer → eval B.getLast;
+equal → sum. -/
+theorem listAddN_getLast_eval {n : Nat} :
+    ∀ (A B : List (MultiPoly n)) (hA : A ≠ []) (hB : B ≠ [])
+      (x : Real) (env : Fin n → Real),
+    MultiPoly.eval
+      ((MachLib.MultiPolyMod.MultiPoly.listAddN A B).getLast
+        (listAddN_ne_of_left_ne A B hA)) x env =
+    (if A.length > B.length then MultiPoly.eval (A.getLast hA) x env
+     else if B.length > A.length then MultiPoly.eval (B.getLast hB) x env
+     else MultiPoly.eval (A.getLast hA) x env +
+          MultiPoly.eval (B.getLast hB) x env) := by
+  intro A
+  induction A with
+  | nil => intro B hA; exact (hA rfl).elim
+  | cons a as ih =>
+    intro B hA hB x env
+    match B with
+    | [] => exact (hB rfl).elim
+    | b :: bs =>
+      match as, bs with
+      | [], [] =>
+        -- A = [a], B = [b]. listAddN = [add a b]. Lengths 1, 1. ITE → equal case.
+        show MultiPoly.eval ([MultiPoly.add a b].getLast _) x env =
+             (if 1 > 1 then _ else if 1 > 1 then _ else
+              MultiPoly.eval a x env + MultiPoly.eval b x env)
+        rw [if_neg (by omega), if_neg (by omega)]
+        rfl
+      | [], b' :: bs' =>
+        show MultiPoly.eval _ x env =
+             (if [a].length > (b :: b' :: bs').length then _
+              else if (b :: b' :: bs').length > [a].length then
+                MultiPoly.eval ((b :: b' :: bs').getLast _) x env
+              else _)
+        have h_b_len : (b :: b' :: bs').length = bs'.length + 2 := rfl
+        rw [if_neg (by simp [h_b_len]), if_pos (by simp [h_b_len])]
+        show MultiPoly.eval
+              ((MultiPoly.add a b :: (b' :: bs')).getLast _) x env =
+             MultiPoly.eval ((b :: b' :: bs').getLast _) x env
+        have h_eq_lhs : (MultiPoly.add a b :: (b' :: bs') :
+                         List (MultiPoly n)).getLast (by simp) =
+                        (b' :: bs').getLast (by simp) :=
+          List.getLast_cons (by simp)
+        have h_eq_rhs : (b :: b' :: bs' : List (MultiPoly n)).getLast hB =
+                        (b' :: bs').getLast (by simp) :=
+          List.getLast_cons (by simp)
+        rw [h_eq_lhs, h_eq_rhs]
+      | a' :: as', [] =>
+        show MultiPoly.eval _ x env =
+             (if (a :: a' :: as').length > [b].length then
+                MultiPoly.eval ((a :: a' :: as').getLast _) x env
+              else if [b].length > (a :: a' :: as').length then _
+              else _)
+        have h_a_len : (a :: a' :: as').length = as'.length + 2 := rfl
+        rw [if_pos (by simp [h_a_len])]
+        show MultiPoly.eval
+              ((MultiPoly.add a b :: (a' :: as')).getLast _) x env =
+             MultiPoly.eval ((a :: a' :: as').getLast _) x env
+        have h_eq_lhs : (MultiPoly.add a b :: (a' :: as') :
+                         List (MultiPoly n)).getLast (by simp) =
+                        (a' :: as').getLast (by simp) :=
+          List.getLast_cons (by simp)
+        have h_eq_rhs : (a :: a' :: as' : List (MultiPoly n)).getLast hA =
+                        (a' :: as').getLast (by simp) :=
+          List.getLast_cons (by simp)
+        rw [h_eq_lhs, h_eq_rhs]
+      | a' :: as', b' :: bs' =>
+        -- Both lengths ≥ 2. Recurse via IH on (a' :: as', b' :: bs').
+        have h_as' : (a' :: as' : List (MultiPoly n)) ≠ [] := by simp
+        have h_bs' : (b' :: bs' : List (MultiPoly n)) ≠ [] := by simp
+        have h_ih := ih (b' :: bs') h_as' h_bs' x env
+        -- LHS: listAddN (a :: a' :: as') (b :: b' :: bs').getLast.
+        -- = (add a b :: listAddN (a' :: as') (b' :: bs')).getLast.
+        -- = (listAddN (a' :: as') (b' :: bs')).getLast (since RHS nonempty).
+        show MultiPoly.eval
+              ((MultiPoly.add a b ::
+                MachLib.MultiPolyMod.MultiPoly.listAddN (a' :: as') (b' :: bs')).getLast _) x env =
+             (if (a :: a' :: as').length > (b :: b' :: bs').length then
+                MultiPoly.eval ((a :: a' :: as').getLast _) x env
+              else if (b :: b' :: bs').length > (a :: a' :: as').length then
+                MultiPoly.eval ((b :: b' :: bs').getLast _) x env
+              else MultiPoly.eval ((a :: a' :: as').getLast _) x env +
+                   MultiPoly.eval ((b :: b' :: bs').getLast _) x env)
+        rw [List.getLast_cons (listAddN_ne_of_left_ne _ _ h_as')]
+        rw [h_ih]
+        rw [List.getLast_cons h_as', List.getLast_cons h_bs']
+        -- Now match the ITE: (a :: a' :: as').length > (b :: b' :: bs').length iff (a' :: as').length > (b' :: bs').length.
+        have h_a_len : (a :: a' :: as').length = (a' :: as').length + 1 := rfl
+        have h_b_len : (b :: b' :: bs').length = (b' :: bs').length + 1 := rfl
+        rcases Nat.lt_trichotomy (a' :: as').length (b' :: bs').length with h | h | h
+        · rw [if_neg (by omega), if_pos h, if_neg (by omega), if_pos (by omega)]
+        · rw [if_neg (by omega), if_neg (by omega),
+              if_neg (by omega), if_neg (by omega)]
+        · rw [if_pos h, if_pos (by omega)]
+
+/-! #### `listScaleN` and `listMulN` getLast helpers -/
+
+/-- Nonemptiness: listScaleN preserves nonemptiness. -/
+theorem listScaleN_nonempty_iff {n : Nat} (p : MultiPoly n)
+    (qs : List (MultiPoly n)) (h : qs ≠ []) :
+    MachLib.MultiPolyMod.MultiPoly.listScaleN p qs ≠ [] := by
+  cases qs with
+  | nil => exact (h rfl).elim
+  | cons q qs' =>
+    rw [MachLib.MultiPolyMod.MultiPoly.listScaleN_cons]
+    exact List.cons_ne_nil _ _
+
+/-- listScaleN's getLast (eval) = (scalar.eval) * (L.getLast.eval). -/
+theorem listScaleN_getLast_eval {n : Nat} (p : MultiPoly n)
+    (L : List (MultiPoly n)) (h_ne : L ≠ [])
+    (x : Real) (env : Fin n → Real) :
+    MultiPoly.eval
+      ((MachLib.MultiPolyMod.MultiPoly.listScaleN p L).getLast
+        (listScaleN_nonempty_iff p L h_ne)) x env =
+    MultiPoly.eval p x env * MultiPoly.eval (L.getLast h_ne) x env := by
+  induction L with
+  | nil => exact (h_ne rfl).elim
+  | cons q qs ih =>
+    cases qs with
+    | nil =>
+      -- L = [q]. listScaleN p [q] = [mul p q]. getLast = mul p q. eval = eval p * eval q.
+      show MultiPoly.eval
+            ((MachLib.MultiPolyMod.MultiPoly.listScaleN p [q]).getLast _) x env =
+           MultiPoly.eval p x env * MultiPoly.eval (([q] : List (MultiPoly n)).getLast _) x env
+      rfl
+    | cons q' qs' =>
+      -- L = q :: q' :: qs'. listScaleN p L = mul p q :: listScaleN p (q' :: qs').
+      -- getLast = (listScaleN p (q' :: qs')).getLast.
+      -- By IH: eval = eval p * eval ((q' :: qs').getLast).
+      -- L.getLast = (q :: q' :: qs').getLast = (q' :: qs').getLast.
+      show MultiPoly.eval
+            ((MultiPoly.mul p q ::
+              MachLib.MultiPolyMod.MultiPoly.listScaleN p (q' :: qs')).getLast _) x env =
+           MultiPoly.eval p x env *
+           MultiPoly.eval ((q :: q' :: qs').getLast _) x env
+      have h_inner : (q' :: qs' : List (MultiPoly n)) ≠ [] := by simp
+      rw [List.getLast_cons (listScaleN_nonempty_iff p _ h_inner)]
+      rw [List.getLast_cons h_inner]
+      exact ih h_inner
+
+/-- Nonemptiness of listMulN A B from both A, B nonempty. -/
+theorem listMulN_ne_of_both_ne {n : Nat} (A B : List (MultiPoly n))
+    (hA : A ≠ []) (hB : B ≠ []) :
+    MachLib.MultiPolyMod.MultiPoly.listMulN A B ≠ [] := by
+  intro h
+  have h_zero : (MachLib.MultiPolyMod.MultiPoly.listMulN A B).length = 0 :=
+    List.length_eq_zero.mpr h
+  rw [listMulN_length_eq _ _ hA hB] at h_zero
+  have h_A_pos : A.length ≥ 1 := List.length_pos.mpr hA
+  have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+  omega
+
+
+/-! ### Bridge axiom (residual)
+
+The full structural-induction proof requires:
+- `listSubN_getLast_eval` (similar to listAddN but with the
+  `listSubN [] L` cascade — each entry negated; needs a separate
+  helper lemma).
+- `listMulN_getLast_eval` (= last A * last B for nonempty; recurses
+  through the `listAddN (listScaleN, const 0 :: listMulN)` shape,
+  requiring `listAddN_getLast_eval` at every step).
+- The main bridge theorem via structural induction on p, using all
+  three list-getLast lemmas plus `yCoeffsAt_length_eq` to align lcY's
+  degreeY case analysis with getLast's length case analysis.
+
+We ship `listAddN_getLast_eval` (the add case is the most intricate;
+the others follow the same pattern). The remaining proof is mechanical
+given this template; left as a documented followup. -/
 
 axiom eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast
     (p : MultiPoly 1)
