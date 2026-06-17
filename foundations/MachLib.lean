@@ -63,6 +63,7 @@ import MachLib.MultiPolyCanonYN
 import MachLib.ChainExpPoly
 import MachLib.IterExpChain
 import MachLib.InnerKhovanskii
+import MachLib.InnerKhovanskiiExp
 
 /-!
 # MachLib — top-level aggregator
