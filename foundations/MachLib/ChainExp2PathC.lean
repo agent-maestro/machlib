@@ -636,6 +636,14 @@ theorem add_eq_ring_identity (A B C D n : MachLib.Real) :
   rw [MachLib.Real.mul_distrib n B D]
   ac_rfl
 
+/-- Pure-Real identity for lemma 2's cancellation step:
+`(A + B) - B = A`. -/
+theorem sub_cancel_ring_identity (A B : MachLib.Real) :
+    A + B - B = A := by
+  rw [MachLib.Real.sub_def, MachLib.Real.add_assoc]
+  rw [MachLib.Real.add_neg]
+  rw [MachLib.Real.add_zero]
+
 /-! ## Lemma 1 mul case — the technical heart of Step 3b
 
 The mul case has special structure: both summands of the Leibniz
@@ -1201,29 +1209,277 @@ theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_sub_gt
   rw [h_lhs, h_rhs_leading, h_rhs_deg]
   exact ihp
 
-/-! ## Status of full lemma 1
+/-! ## Lemma 1 full — the assembly
 
-The `_add_lt` sub-case above shows the proof structure works end-to-end:
-- `degreeY_chainTotalDeriv_eq_SingleExp` lets us know the same degree
-  comparison holds after chainTotalDeriv.
-- The leadingCoeffY definition's if-chain reduces via `simp` once the
-  comparison is established.
-- The remaining algebra is one rewrite + IH.
+The full structural induction dispatches each AST case to the
+corresponding helper. const / varX / varY close inline (the base
+cases). add / sub trichotomize on degreeY 0 p vs degreeY 0 q and
+dispatch to _add_lt / _add_eq / _add_gt or _sub_lt / _sub_eq / _sub_gt.
+mul dispatches to the mul helper. -/
 
-The remaining sub-cases (add `dp = dq`, add `dp > dq`, sub mirror, mul
-Leibniz) follow the same skeleton. Each is ~40 lines of structurally
-similar work; the mul case is the most intricate because both
-chainTotalDeriv summands have the same degree, so leadingCoeffY
-distributes over their add and IH applies to each factor — but it's
-mechanical given the `_add_lt` template.
+theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp
+    (p : MultiPoly 1) (x : MachLib.Real) (env : Fin 1 → MachLib.Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                     (chainTotalDeriv SingleExpChain p)) x env =
+    MultiPoly.eval (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env +
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)) *
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env := by
+  induction p with
+  | const c =>
+    show (0 : MachLib.Real) = 0 + MachLib.Real.natCast 0 * c
+    rw [MachLib.Real.natCast_zero]; mach_ring
+  | varX =>
+    show (1 : MachLib.Real) = 1 + MachLib.Real.natCast 0 * x
+    rw [MachLib.Real.natCast_zero]; mach_ring
+  | varY i =>
+    have h_i : i = ⟨0, by omega⟩ := Fin.ext (by have := i.isLt; omega)
+    rw [h_i]
+    show (1 : MachLib.Real) = 0 + MachLib.Real.natCast 1 * 1
+    rw [MachLib.Real.natCast_succ, MachLib.Real.natCast_zero]
+    mach_ring
+  | add p q ihp ihq =>
+    rcases Nat.lt_trichotomy (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                              (MultiPoly.degreeY ⟨0, by omega⟩ q) with hlt | heq | hgt
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_add_lt p q x env hlt ihq
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_add_eq p q x env heq ihp ihq
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_add_gt p q x env hgt ihp
+  | sub p q ihp ihq =>
+    rcases Nat.lt_trichotomy (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                              (MultiPoly.degreeY ⟨0, by omega⟩ q) with hlt | heq | hgt
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_sub_lt p q x env hlt ihq
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_sub_eq p q x env heq ihp ihq
+    · exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_sub_gt p q x env hgt ihp
+  | mul p q ihp ihq =>
+    exact leadingCoeffY_chainTotalDeriv_eval_SingleExp_mul p q x env ihp ihq
 
-The new `mach_leading_coeff_y` tactic (in `Tactic/LeadingCoeffY.lean`)
-will close the leadingCoeffY case-analysis steps inside these sub-cases
-in one call, so completing the proof is the next session's specific
-work. mach_ring v2.5 (with omega + ac_rfl phases) closes the algebra
-once the leadingCoeffY reduction has happened.
+/-! ## Lemma 2 — the d·a_d cancellation identity
 
-## Status
+The "scaled-reduction" leading coefficient identity. For any
+p : MultiPoly 1 with d := degreeY 0 p:
+
+  eval (leadingCoeffY 0 (chainTotalDeriv p - (natCast d) · p)) x env
+  = eval (chainTotalDeriv (leadingCoeffY 0 p)) x env
+
+This is the algebraic consequence of lemma 1 + the leadingCoeffY-of-sub
+case-analysis when degrees match. The `d · leadingCoeffY p` term from
+lemma 1 cancels with the `d · leadingCoeffY p` from the second
+summand's leading. What remains is `chainTotalDeriv (leadingCoeffY p)`,
+which (since `leadingCoeffY p` has `degreeY 0 = 0`) acts as a
+polynomial derivative in x. -/
+
+theorem leadingCoeffY_scaledReduction_eval_SingleExp
+    (p : MultiPoly 1) (x : MachLib.Real) (env : Fin 1 → MachLib.Real) :
+    MultiPoly.eval
+      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+        (MultiPoly.sub
+          (chainTotalDeriv SingleExpChain p)
+          (MultiPoly.mul (MultiPoly.const
+                            (MachLib.Real.natCast
+                               (MultiPoly.degreeY ⟨0, by omega⟩ p))) p))) x env =
+    MultiPoly.eval
+      (chainTotalDeriv SingleExpChain
+        (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env := by
+  have hp_eq := degreeY_chainTotalDeriv_eq_SingleExp p
+  -- Degrees of the two sub summands match (both = degreeY 0 p).
+  have h_deg_eq :
+      MultiPoly.degreeY ⟨0, by omega⟩ (chainTotalDeriv SingleExpChain p)
+      = MultiPoly.degreeY ⟨0, by omega⟩
+          (MultiPoly.mul (MultiPoly.const
+                            (MachLib.Real.natCast
+                               (MultiPoly.degreeY ⟨0, by omega⟩ p))) p) := by
+    rw [hp_eq]
+    show MultiPoly.degreeY ⟨0, by omega⟩ p
+         = MultiPoly.degreeY ⟨0, by omega⟩
+             (MultiPoly.const (MachLib.Real.natCast
+                                  (MultiPoly.degreeY ⟨0, by omega⟩ p)))
+           + MultiPoly.degreeY ⟨0, by omega⟩ p
+    show MultiPoly.degreeY ⟨0, by omega⟩ p = 0 + MultiPoly.degreeY ⟨0, by omega⟩ p
+    omega
+  -- leadingCoeffY of (sub with equal degrees) = sub of leadingCoeffYs.
+  have h_lc_sub : MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                    (MultiPoly.sub
+                      (chainTotalDeriv SingleExpChain p)
+                      (MultiPoly.mul (MultiPoly.const
+                                        (MachLib.Real.natCast
+                                           (MultiPoly.degreeY ⟨0, by omega⟩ p))) p))
+                  = MultiPoly.sub
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (chainTotalDeriv SingleExpChain p))
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (MultiPoly.mul (MultiPoly.const
+                                            (MachLib.Real.natCast
+                                               (MultiPoly.degreeY ⟨0, by omega⟩ p))) p)) :=
+    MultiPoly.leadingCoeffY_sub_of_eq ⟨0, by omega⟩ _ _ h_deg_eq
+  -- leadingCoeffY (mul (const d) p) = mul (const d) (leadingCoeffY p).
+  have h_lc_mul := MultiPoly.leadingCoeffY_mul_const ⟨0, by omega⟩
+                     (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)) p
+  rw [h_lc_sub, h_lc_mul]
+  -- eval expands: eval(sub a b) = eval a - eval b. Substitute lemma 1
+  -- for the chainTotalDeriv leading. The `d · leadingCoeffY p` terms
+  -- cancel between lemma 1's RHS and the second summand.
+  show MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                        (chainTotalDeriv SingleExpChain p)) x env
+     - MultiPoly.eval (MultiPoly.mul
+                         (MultiPoly.const
+                            (MachLib.Real.natCast
+                               (MultiPoly.degreeY ⟨0, by omega⟩ p)))
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env
+     = MultiPoly.eval (chainTotalDeriv SingleExpChain
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env
+  rw [leadingCoeffY_chainTotalDeriv_eval_SingleExp p x env]
+  show MultiPoly.eval (chainTotalDeriv SingleExpChain
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env
+     + MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)
+       * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env
+     - MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)
+       * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env
+     = MultiPoly.eval (chainTotalDeriv SingleExpChain
+                         (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env
+  exact sub_cancel_ring_identity
+    (MultiPoly.eval (chainTotalDeriv SingleExpChain
+                      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p)) x env)
+    (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)
+     * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) x env)
+
+/-! ## Auxiliary: multiPolyToPoly preserves eval for y-free MultiPoly 1
+
+multiPolyToPoly was defined for n = 0 in PfaffianFnBound, but the
+construction also gives the right eval when the input is y-free
+(the varY case never fires structurally). This auxiliary version
+makes that explicit. -/
+
+theorem multiPolyToPoly_eval_y_free :
+    ∀ (p : MultiPoly 1) (_h : MultiPoly.degreeY ⟨0, by omega⟩ p = 0)
+      (x : MachLib.Real) (env : Fin 1 → MachLib.Real),
+    Poly.eval (multiPolyToPoly p) x = MultiPoly.eval p x env
+  | MultiPoly.const _, _, _, _ => rfl
+  | MultiPoly.varX, _, _, _ => rfl
+  | MultiPoly.varY i, h, _, _ => by
+    exfalso
+    have h_i : i = ⟨0, by omega⟩ := Fin.ext (by have := i.isLt; omega)
+    rw [h_i] at h
+    have : (if (⟨0, by omega⟩ : Fin 1) = (⟨0, by omega⟩ : Fin 1) then (1 : Nat) else 0) = 0 := h
+    rw [if_pos rfl] at this
+    exact Nat.one_ne_zero this
+  | MultiPoly.add p q, h, x, env => by
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    show Poly.eval (multiPolyToPoly p) x + Poly.eval (multiPolyToPoly q) x
+       = MultiPoly.eval p x env + MultiPoly.eval q x env
+    rw [multiPolyToPoly_eval_y_free p hp x env,
+        multiPolyToPoly_eval_y_free q hq x env]
+  | MultiPoly.sub p q, h, x, env => by
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    show Poly.eval (multiPolyToPoly p) x - Poly.eval (multiPolyToPoly q) x
+       = MultiPoly.eval p x env - MultiPoly.eval q x env
+    rw [multiPolyToPoly_eval_y_free p hp x env,
+        multiPolyToPoly_eval_y_free q hq x env]
+  | MultiPoly.mul p q, h, x, env => by
+    have hsum : MultiPoly.degreeY ⟨0, by omega⟩ p
+              + MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := h
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := by omega
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := by omega
+    show Poly.eval (multiPolyToPoly p) x * Poly.eval (multiPolyToPoly q) x
+       = MultiPoly.eval p x env * MultiPoly.eval q x env
+    rw [multiPolyToPoly_eval_y_free p hp x env,
+        multiPolyToPoly_eval_y_free q hq x env]
+
+/-! ## Step 3b — strict-decrease of the lex measure's second component
+
+Combines lemma 2 (the d·a_d cancellation) with lemma 3 (strict-decrease
+of chainTotalDeriv on y-free polynomials via the multiPolyToPoly bridge).
+
+The chain: under scaledReduction at c = degreeY_last,
+1. **Lemma 2**: leadingCoeffY of the result eval-equals
+   chainTotalDeriv(leadingCoeffY p).
+2. **Lemma 3a**: leadingCoeffY p is y-free (degreeY 0 = 0).
+3. **Lemma 3b**: chainTotalDeriv on y-free = polyDerivative via the
+   multiPolyToPoly bridge.
+4. **Lemma 3 proper**: polyDerivative strictly decreases degreeUpper
+   after polySimplify.
+
+The eval-level claim of Step 3b:
+
+  eval (leadingCoeffY 0 (chainTotalDeriv p - d · p)) x env
+  = polyEval (polyDerivative (multiPolyToPoly (leadingCoeffY 0 p))) x
+
+combined with the strict-decrease lemma gives the eval-level
+strict-decrease for the lex measure's second component on the
+multiPolyToPoly-bridged form. -/
+
+open MachLib.PolynomialEvidence (Poly)
+
+theorem step3b_eval_bridge
+    (p : MultiPoly 1) (x : MachLib.Real) (env : Fin 1 → MachLib.Real) :
+    MultiPoly.eval
+      (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+        (MultiPoly.sub
+          (chainTotalDeriv SingleExpChain p)
+          (MultiPoly.mul (MultiPoly.const
+                            (MachLib.Real.natCast
+                               (MultiPoly.degreeY ⟨0, by omega⟩ p))) p))) x env =
+    Poly.eval (polyDerivative
+                 (multiPolyToPoly
+                    (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) x := by
+  -- Step 1: apply lemma 2 to reduce LHS to eval(cTD(leadingCoeffY p)).
+  rw [leadingCoeffY_scaledReduction_eval_SingleExp p x env]
+  -- Step 2: leadingCoeffY p is y-free (degreeY 0 = 0 by degreeY_leadingCoeffY).
+  have h_yfree :
+      MultiPoly.degreeY ⟨0, by omega⟩
+        (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY ⟨0, by omega⟩ p
+  -- Step 3: chainTotalDeriv preserves y-freeness (lemma 3a).
+  have h_cTD_yfree :=
+    degreeY_chainTotalDeriv_zero_of_zero
+      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) h_yfree
+  -- Step 4: chainTotalDeriv on y-free MultiPoly 1 = polyDerivative via
+  -- the multiPolyToPoly bridge (lemma 3b).
+  have h_bridge :=
+    multiPolyToPoly_chainTotalDeriv_eq_polyDerivative
+      (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) h_yfree
+  -- eval (cTD (leadingCoeffY p)) x env
+  --   = polyEval (multiPolyToPoly (cTD (leadingCoeffY p))) x  (y-free preserves eval)
+  --   = polyEval (polyDerivative (multiPolyToPoly (leadingCoeffY p))) x  (h_bridge)
+  rw [← multiPolyToPoly_eval_y_free
+        (chainTotalDeriv SingleExpChain (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))
+        h_cTD_yfree x env]
+  rw [h_bridge]
+
+/-! ## Step 3b strict-decrease conclusion
+
+Combining `step3b_eval_bridge` with the existing
+`polyDerivative_degreeUpper_lt_after_simplify` gives the formal-degree
+strict-decrease bound used in path (c)'s lex measure. -/
+
+theorem step3b_degreeUpper_strict_decrease
+    (p : MultiPoly 1)
+    (h_pos : degreeUpper (polySimplify (multiPolyToPoly
+                            (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) > 0) :
+    degreeUpper (polySimplify (multiPolyToPoly
+                  (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))))
+    < degreeUpper (polySimplify (multiPolyToPoly
+                  (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) := by
+  have h_yfree :
+      MultiPoly.degreeY ⟨0, by omega⟩
+        (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY ⟨0, by omega⟩ p
+  exact degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt
+    (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p) h_yfree h_pos
+
+/-! ## Status
 
 **Shipped**:
 - `degreeY_chainTotalDeriv_zero_of_zero` (lemma 3a) — y_0-freeness
