@@ -1,6 +1,7 @@
 import MachLib.MultiPoly
 import MachLib.Differentiation
 import MachLib.PolynomialRootCount
+import MachLib.PolynomialCanonical
 
 /-!
 # MachLib.PfaffianChain — chain-explicit Pfaffian functions
@@ -659,20 +660,26 @@ noncomputable def multiPolyToPolyForLex {n : Nat} :
         (multiPolyToPolyForLex p) (multiPolyToPolyForLex q)
 
 /-- **Khovanskii lex measure.** First component: degreeY of the last
-chain variable in f.poly. Second component: the **bridged degree** —
-`degreeUpper ∘ polySimplify ∘ multiPolyToPolyForLex` applied to the
-leading coefficient in the last chain variable.
+chain variable in f.poly. Second component: the **eval-canonical
+true polynomial degree** — `polyTrueDegree ∘ polyCoeffs ∘
+multiPolyToPolyForLex` applied to the leading coefficient in the
+last chain variable.
 
-Using the bridged form for the second component lets the strict-descent
-argument from Step 3b apply directly: polySimplify removes the phantom
-AST terms that prevent the raw `degreeX` from strictly decreasing under
-`scaledReduction`. -/
+`polyTrueDegree (polyCoeffs P)` returns the actual mathematical
+degree of the polynomial `P` (the position of the last nonzero
+coefficient), and is an invariant of ring-equivalence:
+ring-equivalent ASTs collapse to equal `polyTrueDegree` (proven via
+the polynomial identity theorem in `MachLib.PolynomialCanonical`).
+This makes the strict-descent argument under `scaledReduction` work
+where the older `degreeUpper ∘ polySimplify` form failed —
+`polySimplify` doesn't detect ring cancellation, but the canonical
+coefficient list does. -/
 noncomputable def lexMeasure {N : Nat} (f : PfaffianFn)
     (hN : f.n = N + 1) : Nat × Nat :=
   let i := lastChainIdx f hN
   (MultiPoly.degreeY i f.poly,
-   MachLib.PolynomialRootCount.degreeUpper
-     (MachLib.PolynomialRootCount.polySimplify
+   MachLib.PolynomialCanonical.polyTrueDegree
+     (MachLib.PolynomialCanonical.polyCoeffs
        (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i f.poly))))
 
 /-- The strict lex order on the measure. `(d, e) <_lex (d', e')` iff
