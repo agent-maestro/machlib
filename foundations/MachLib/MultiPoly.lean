@@ -1382,6 +1382,85 @@ theorem degreeX_multiSimplify_le {n : Nat} :
             exact Nat.add_le_add (degreeX_multiSimplify_le p)
                                   (degreeX_multiSimplify_le q)
 
+/-! ## Collapse multi-chain to single-chain
+
+`collapseMultiExp` replaces every `varY i` (for any `i : Fin n`) with
+`varY 0 : MultiPoly 1`. This is the structural operation that
+"forgets" the multi-chain index — useful when all chain values are
+the same function (e.g., `y_i = exp x` for every `i` in `MultiExpChain`).
+
+The eval-correctness statement: when the env is a constant function
+(every `y_i` has the same value `v`), `eval (collapseMultiExp p) x
+(fun _ => v) = eval p x (fun _ => v)`. -/
+
+/-- Replace every `varY i` (for any `i : Fin n`) with `varY 0 : MultiPoly 1`.
+Used to collapse `MultiPoly n` to `MultiPoly 1` when the chain values are
+all equal (the `MultiExpChain` case).
+
+Defined inductively on the polynomial AST rather than via `match` on
+`{n : Nat} → MultiPoly n → MultiPoly 1` to keep equation lemmas
+definitionally-reducible. -/
+def collapseMultiExp {n : Nat} (p : MultiPoly n) : MultiPoly 1 :=
+  match p with
+  | const c  => const c
+  | varX     => varX
+  | varY _   => varY ⟨0, by omega⟩
+  | add p q  => add (collapseMultiExp p) (collapseMultiExp q)
+  | sub p q  => sub (collapseMultiExp p) (collapseMultiExp q)
+  | mul p q  => mul (collapseMultiExp p) (collapseMultiExp q)
+
+theorem collapseMultiExp_const {n : Nat} (c : Real) :
+    collapseMultiExp (const c : MultiPoly n) = const c := rfl
+
+theorem collapseMultiExp_varX {n : Nat} :
+    collapseMultiExp (varX : MultiPoly n) = varX := rfl
+
+theorem collapseMultiExp_varY {n : Nat} (i : Fin n) :
+    collapseMultiExp (varY i : MultiPoly n) = varY ⟨0, by omega⟩ := rfl
+
+theorem collapseMultiExp_add {n : Nat} (p q : MultiPoly n) :
+    collapseMultiExp (add p q) =
+    add (collapseMultiExp p) (collapseMultiExp q) := rfl
+
+theorem collapseMultiExp_sub {n : Nat} (p q : MultiPoly n) :
+    collapseMultiExp (sub p q) =
+    sub (collapseMultiExp p) (collapseMultiExp q) := rfl
+
+theorem collapseMultiExp_mul {n : Nat} (p q : MultiPoly n) :
+    collapseMultiExp (mul p q) =
+    mul (collapseMultiExp p) (collapseMultiExp q) := rfl
+
+/-- **Eval correctness for collapse under constant env**: when every
+chain variable holds the same value `v`, the collapsed polynomial evaluates
+identically. -/
+theorem eval_collapseMultiExp_const_env {n : Nat} (p : MultiPoly n)
+    (x v : Real) :
+    eval (collapseMultiExp p) x (fun _ => v) = eval p x (fun _ => v) := by
+  induction p with
+  | const c => rw [collapseMultiExp_const]; rfl
+  | varX => rw [collapseMultiExp_varX]; rfl
+  | varY i =>
+    rw [collapseMultiExp_varY]
+    rfl
+  | add p q ihp ihq =>
+    rw [collapseMultiExp_add]
+    show eval (collapseMultiExp p) x (fun _ => v)
+       + eval (collapseMultiExp q) x (fun _ => v)
+       = eval p x (fun _ => v) + eval q x (fun _ => v)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    rw [collapseMultiExp_sub]
+    show eval (collapseMultiExp p) x (fun _ => v)
+       - eval (collapseMultiExp q) x (fun _ => v)
+       = eval p x (fun _ => v) - eval q x (fun _ => v)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    rw [collapseMultiExp_mul]
+    show eval (collapseMultiExp p) x (fun _ => v)
+       * eval (collapseMultiExp q) x (fun _ => v)
+       = eval p x (fun _ => v) * eval q x (fun _ => v)
+    rw [ihp, ihq]
+
 end MultiPoly
 end MultiPolyMod
 end MachLib

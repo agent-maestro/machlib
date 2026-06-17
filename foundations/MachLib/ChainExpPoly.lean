@@ -721,5 +721,85 @@ each y_i' = y_i with y_i = exp x. Specialization to other coefficient-
 linear triangular chains (y_i' = c_i · y_i for varying c_i) is a
 straightforward parameter generalization. -/
 
+/-! ## Chain-length-N bound via collapse to chain length 1
+
+Observation: `MultiExpChain N` is the **degenerate** multi-chain where
+every chain value is `exp x` (same function in every slot). A polynomial
+`MultiPoly N` evaluated on this chain is morally a polynomial in
+`(x, exp x)` — the SingleExp case. So the chain-length-N bound reduces
+to the chain-length-1 bound applied to the collapsed polynomial
+`MultiPoly.collapseMultiExp poly : MultiPoly 1`.
+
+This sidesteps the parameterized SingleExp auto-bound entirely for
+`MultiExpChain N`. A non-degenerate multi-chain (e.g., iterated
+exponentials `y_0 = exp x, y_1 = exp(exp x), ...`) would not admit this
+collapse and would need the parameterized argument — but that is a
+separate workstream. -/
+
+open MultiPolyMod.MultiPoly in
+/-- **The collapse bridge**: for any chain length N, the PfaffianFn over
+`MultiExpChain N` of `poly` evaluates the same as the PfaffianFn over
+`MultiExpChain 1` of `collapseMultiExp poly` — because both chains
+present `exp x` in every slot at every `x`. -/
+theorem MultiPolyToPfaffianFn_eval_eq_via_collapse
+    (N : Nat) (poly : MultiPoly N) (x : MachLib.Real) :
+    (MultiPolyToPfaffianFn N poly).eval x =
+    (MultiPolyToPfaffianFn 1 (collapseMultiExp poly)).eval x := by
+  show MultiPoly.eval poly x ((MultiExpChain N).chainValues x) =
+       MultiPoly.eval (collapseMultiExp poly) x
+         ((MultiExpChain 1).chainValues x)
+  -- Both chainValues are the constant `fun _ => Real.exp x`.
+  have hN : (MultiExpChain N).chainValues x = (fun _ : Fin N => Real.exp x) := by
+    funext _; rfl
+  have h1 : (MultiExpChain 1).chainValues x = (fun _ : Fin 1 => Real.exp x) := by
+    funext _; rfl
+  rw [hN, h1]
+  exact (eval_collapseMultiExp_const_env poly x (Real.exp x)).symm
+
+open MultiPolyMod.MultiPoly in
+/-- **Multi-chain Khovanskii bound at arbitrary chain length N (via
+collapse)**: the zero count for the PfaffianFn `MultiPolyToPfaffianFn N
+poly` is bounded by the chain-length-1 auto-bound on the collapsed
+polynomial. Direct application of `MultiExp_zero_count_bound_one_explicit`
+to `collapseMultiExp poly` after the eval bridge. -/
+theorem MultiExp_zero_count_bound_general_via_collapse
+    (N : Nat) (poly : MultiPoly N) (a b : MachLib.Real) (hab : a < b)
+    (h_prop : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤
+      chainExpPolyAutoBound 1
+        (multiPolyToChainExpPolyT 1 (collapseMultiExp poly)) →
+      (∃ x, ep'.eval x ≠ 0))
+    (h_strict_last : ∀ ep' : MachLib.SingleExpKhovanskii.ExpPoly,
+      ∀ (hne_c : ep'.coeffs ≠ []),
+      ep'.coeffs.length ≥ 2 →
+      ep'.coeffs.length +
+        MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees
+          ep'.coeffs ≤
+      chainExpPolyAutoBound 1
+        (multiPolyToChainExpPolyT 1 (collapseMultiExp poly)) →
+      PolynomialRootCount.degreeUpper
+        (MachLib.PolynomialRootCount.polySimplify
+          (ep'.coeffs.getLast hne_c)) > 0) :
+    ∀ zeros : List MachLib.Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (MultiPolyToPfaffianFn N poly).eval z = 0) →
+      zeros.length ≤
+      chainExpPolyAutoBound 1
+        (multiPolyToChainExpPolyT 1 (collapseMultiExp poly)) := by
+  intro zeros hnodup hzeros
+  -- Translate zero conditions through the collapse bridge.
+  have hzeros' : ∀ z ∈ zeros, a < z ∧ z < b ∧
+                 (MultiPolyToPfaffianFn 1 (collapseMultiExp poly)).eval z = 0 := by
+    intro z hz
+    obtain ⟨ha, hb, h_eval⟩ := hzeros z hz
+    refine ⟨ha, hb, ?_⟩
+    rw [← MultiPolyToPfaffianFn_eval_eq_via_collapse]
+    exact h_eval
+  exact MultiExp_zero_count_bound_one_explicit (collapseMultiExp poly) a b hab
+          h_prop h_strict_last zeros hnodup hzeros'
+
 end ChainExpPolyMod
 end MachLib
