@@ -145,25 +145,137 @@ theorem chainExp2_derivative (g : MultiPoly 1) :
     chainExp2InnerKhovanskiiExp.derivative g =
     PfaffianFn.chainTotalDeriv SingleExpChain g := rfl
 
-/-! ## Summary
+/-! ## Parameterized chain-length-2 bound
 
-`chainExp2InnerKhovanskiiExp` is the structural commitment: any
-chain-length-2 Pfaffian function over `IterExpChain 2`, organized by
-powers of `y_1 = exp(y_0)`, can be expressed as
+If a `measure : MultiPoly 1 → Nat` is supplied that satisfies the three
+measured-side axioms (`length_one_bound`, `coeffStep_le`, `coeffStep_lt`)
+for our operations, then the parametric `auto_bound_with_propagation_aux`
+ships the chain-length-2 over IterExp 2 bound directly.
 
-    evalList chainExp2InnerKhovanskiiExp [g_0, g_1, ..., g_d] x
+This corollary takes those axioms as **hypotheses** rather than proving
+them — see the next section for why the natural candidate (the
+chain-level-1 auto-bound) does NOT satisfy `coeffStep_le`. -/
 
-where each `g_k : MultiPoly 1` is the y_1^k coefficient. The framework's
-algebraic machinery — `hasDerivAt_evalAux`, `scaledReductionAux`,
-`scaledReductionAux_eval_combine`, the Rolle vehicle `mulNegExpH`, and
-`zero_count_scaledReduction_transfer` — is all available on this instance.
+open MachLib.InnerKhovanskiiExpMod
+open InnerKhovanskiiExp
 
-Closing the constructive chain-length-2 Khovanskii bound requires
-discharging the measured-side axioms (`length_one_bound`, `coeffStep_le`,
-`coeffStep_lt`) for `T = MultiPoly 1`. The natural measure is the
-chain-level-1 auto-bound `chainExpPolyAutoBound 1 ∘ multiPolyToChainExpPolyT
-1`; verifying that this measure descends under `coeffStep g k =
-chainTotalDeriv g + (k · y_0) · g` is the remaining substrate work. -/
+theorem chainExp2_bound_via_measured_axioms
+    (measure : MultiPoly 1 → Nat)
+    (length_one_bound : ∀ g : MultiPoly 1, ∀ a b : Real, a < b →
+      (∃ x : Real, innerEval g x ≠ 0) →
+      ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ innerEval g z = 0) →
+      zeros.length ≤ measure g)
+    (coeffStep_le : ∀ k : Real, ∀ g : MultiPoly 1,
+      measure (innerAdd (innerDerivative g) (innerScalarMul k g)) ≤ measure g)
+    (coeffStep_lt : ∀ g : MultiPoly 1, measure g > 0 →
+      measure (innerAdd (innerDerivative g) (innerScalarMul 0 g)) < measure g)
+    (M : Nat) (coeffs : List (MultiPoly 1))
+    (hM : coeffs.length
+            + InnerKhovanskiiExpMeasured.sumMeasure
+                { toInnerKhovanskiiExp := chainExp2InnerKhovanskiiExp,
+                  measure := measure,
+                  length_one_bound := length_one_bound,
+                  coeffStep_le := coeffStep_le,
+                  coeffStep_lt := coeffStep_lt }
+                coeffs ≤ M)
+    (h_prop : ∀ coeffs' : List (MultiPoly 1),
+       coeffs'.length
+         + InnerKhovanskiiExpMeasured.sumMeasure
+            { toInnerKhovanskiiExp := chainExp2InnerKhovanskiiExp,
+              measure := measure,
+              length_one_bound := length_one_bound,
+              coeffStep_le := coeffStep_le,
+              coeffStep_lt := coeffStep_lt }
+            coeffs' ≤ M →
+       (∃ x : Real, evalList chainExp2InnerKhovanskiiExp coeffs' x ≠ 0))
+    (h_strict_last : ∀ coeffs' : List (MultiPoly 1),
+       ∀ (hne_c : coeffs' ≠ []),
+       coeffs'.length ≥ 2 →
+       coeffs'.length
+         + InnerKhovanskiiExpMeasured.sumMeasure
+            { toInnerKhovanskiiExp := chainExp2InnerKhovanskiiExp,
+              measure := measure,
+              length_one_bound := length_one_bound,
+              coeffStep_le := coeffStep_le,
+              coeffStep_lt := coeffStep_lt }
+            coeffs' ≤ M →
+       measure (coeffs'.getLast hne_c) > 0)
+    (a b : Real) (hab : a < b)
+    (zeros : List Real) (hnodup : zeros.Nodup)
+    (hzeros : ∀ z ∈ zeros, a < z ∧ z < b ∧
+      evalList chainExp2InnerKhovanskiiExp coeffs z = 0) :
+    zeros.length ≤ M :=
+  InnerKhovanskiiExpMeasured.auto_bound_with_propagation_aux
+    { toInnerKhovanskiiExp := chainExp2InnerKhovanskiiExp,
+      measure := measure,
+      length_one_bound := length_one_bound,
+      coeffStep_le := coeffStep_le,
+      coeffStep_lt := coeffStep_lt }
+    M coeffs hM h_prop h_strict_last a b hab zeros hnodup hzeros
+
+/-! ## Why the natural measure does NOT work — and what would
+
+The natural candidate measure is `chainExpPolyAutoBound 1 ∘
+multiPolyToChainExpPolyT 1`, which is the chain-level-1 auto-bound on
+the y_0-decomposition of g. Concretely, for g = Σ p_k(x) · y_0^k (with
+degreeY 0 = d), this is `(d+1) + Σ degreeUpper (polySimplify p_k)`.
+
+Under this measure, **neither `coeffStep_le` nor `coeffStep_lt` holds**.
+The obstruction is structural:
+
+- `chainTotalDeriv SingleExpChain g` preserves `degreeY 0 g` (chain rule
+  on `y_0' = y_0` keeps the y_0-power structure).
+- `(k · y_0) · g = mul (mul (const k) (varY 0)) g` shifts every y_0-power
+  up by 1, so `degreeY 0` increases by 1.
+- Sum: `coeffStep(g, k)` has `degreeY 0 = degreeY 0 g + 1` for any `k`
+  (including k = 0), because `yCoeffsAt` operates **purely syntactically**:
+  `mul (const 0) X` is NOT folded to `const 0` by `multiPolyToChainExpPolyT`.
+
+Concrete example: for `g = varY 0` (degreeY 0 = 1, measure = 2),
+  `coeffStep(g, k) = varY 0 + k · (varY 0)^2`,
+  which has `degreeY 0 = 2` and measure ≥ 3 — **strictly larger** than g.
+
+### Three paths forward (each is genuine multi-session work)
+
+1. **Algebraic normalization before measuring.** Define a `multiPolySimplify
+   1 : MultiPoly 1 → MultiPoly 1` that folds `mul (const 0) X = const 0`,
+   removes zero summands in `add`, etc. — analogous to the existing
+   `polySimplify` for `Poly`. Measure becomes `chainExpPolyAutoBound 1 ∘
+   multiPolyToChainExpPolyT 1 ∘ multiPolySimplify`. Then `scalarMul 0 t`
+   simplifies to `const 0`, leaving only `chainTotalDeriv` contribution
+   at k=0. Strict descent on `chainTotalDeriv` requires a lex measure
+   (degreeY 0, degreeX of leadingCoeffY 0), not a single Nat.
+
+2. **Lex measure encoded as Nat with bounded blow-up.** Encode
+   `(degreeY 0, degreeX of leadingCoeffY 0)` as `degreeY 0 * BIG + degreeX
+   leadingCoeffY` for sufficiently large BIG. Requires global bounds on
+   `degreeX leadingCoeffY` for all polynomials reachable from initial g
+   under the framework's reductions. Tractable for a SPECIFIC starting
+   polynomial p but messy as a general structural measure.
+
+3. **Redesign the framework structure.** Replace the strict-descent
+   axioms with a different termination measure that captures the lex
+   nature directly (e.g., `WellFoundedRelation` on T instead of a Nat
+   measure, or product Nat measures). This is the cleanest mathematical
+   approach but requires reworking the parametric main theorem's
+   induction structure.
+
+### What this commit ships
+
+- `chainExp2InnerKhovanskiiExp` — the algebraic instance (operations +
+  four eval-correctness axioms), now augmented with documentation of
+  the measure obstruction.
+
+- `chainExp2_bound_via_measured_axioms` — the chain-length-2 bound
+  theorem, **parametric over the measure axioms as hypotheses**. Shows
+  the framework consumes correctly: if you supply a measure satisfying
+  the three axioms, `auto_bound_with_propagation_aux` ships the bound
+  directly. Calling code would need to discharge the axioms via one of
+  the three paths above.
+
+The constructive chain-length-2 over IterExp 2 bound remains open
+pending discharge of the measure axioms via one of the three paths. -/
 
 end ChainExp2InstanceMod
 end MachLib
