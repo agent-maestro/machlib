@@ -214,68 +214,98 @@ theorem chainExp2_bound_via_measured_axioms
       coeffStep_lt := coeffStep_lt }
     M coeffs hM h_prop h_strict_last a b hab zeros hnodup hzeros
 
-/-! ## Why the natural measure does NOT work — and what would
+/-! ## Why ALL THREE candidate paths fall short — and what does work
 
-The natural candidate measure is `chainExpPolyAutoBound 1 ∘
-multiPolyToChainExpPolyT 1`, which is the chain-level-1 auto-bound on
-the y_0-decomposition of g. Concretely, for g = Σ p_k(x) · y_0^k (with
-degreeY 0 = d), this is `(d+1) + Σ degreeUpper (polySimplify p_k)`.
+After investigation, the three paths I sketched in an earlier commit
+ALL hit the same fundamental obstruction. The framework's
+`auto_bound_with_propagation_aux` requires a **Nat-valued measure** with
+`coeffStep_le` (non-strict descent for arbitrary k) AND `coeffStep_lt`
+(strict descent at k=0). For the chain-level-2 case, no Nat measure can
+satisfy both simultaneously.
 
-Under this measure, **neither `coeffStep_le` nor `coeffStep_lt` holds**.
-The obstruction is structural:
+### Path (a): Algebraic normalization — does NOT close
 
-- `chainTotalDeriv SingleExpChain g` preserves `degreeY 0 g` (chain rule
-  on `y_0' = y_0` keeps the y_0-power structure).
-- `(k · y_0) · g = mul (mul (const k) (varY 0)) g` shifts every y_0-power
-  up by 1, so `degreeY 0` increases by 1.
-- Sum: `coeffStep(g, k)` has `degreeY 0 = degreeY 0 g + 1` for any `k`
-  (including k = 0), because `yCoeffsAt` operates **purely syntactically**:
-  `mul (const 0) X` is NOT folded to `const 0` by `multiPolyToChainExpPolyT`.
+Even using the existing `multiSimplify` (in MultiPoly.lean) which folds
+`mul (const 0) X = const 0`, removes zero summands, etc:
 
-Concrete example: for `g = varY 0` (degreeY 0 = 1, measure = 2),
-  `coeffStep(g, k) = varY 0 + k · (varY 0)^2`,
-  which has `degreeY 0 = 2` and measure ≥ 3 — **strictly larger** than g.
+- For k = 0: `scalarMul 0 g = mul (mul (const 0) (varY 0)) g`
+  simplifies to `const 0`. Good. So
+  `multiSimplify (coeffStep g 0) = multiSimplify (chainTotalDeriv g)`.
 
-### Three paths forward (each is genuine multi-session work)
+- For k ≠ 0: `scalarMul k g = mul (mul (const k) (varY 0)) g`
+  does NOT simplify (k is non-zero). So `multiSimplify (coeffStep g k)`
+  still contains the y_0-multiplied term and has degreeY 0 = degreeY 0 g
+  + 1. Measure (any Nat function of degreeY 0) increases.
 
-1. **Algebraic normalization before measuring.** Define a `multiPolySimplify
-   1 : MultiPoly 1 → MultiPoly 1` that folds `mul (const 0) X = const 0`,
-   removes zero summands in `add`, etc. — analogous to the existing
-   `polySimplify` for `Poly`. Measure becomes `chainExpPolyAutoBound 1 ∘
-   multiPolyToChainExpPolyT 1 ∘ multiPolySimplify`. Then `scalarMul 0 t`
-   simplifies to `const 0`, leaving only `chainTotalDeriv` contribution
-   at k=0. Strict descent on `chainTotalDeriv` requires a lex measure
-   (degreeY 0, degreeX of leadingCoeffY 0), not a single Nat.
+multiSimplify rescues k=0 but not general k. coeffStep_le fails.
 
-2. **Lex measure encoded as Nat with bounded blow-up.** Encode
-   `(degreeY 0, degreeX of leadingCoeffY 0)` as `degreeY 0 * BIG + degreeX
-   leadingCoeffY` for sufficiently large BIG. Requires global bounds on
-   `degreeX leadingCoeffY` for all polynomials reachable from initial g
-   under the framework's reductions. Tractable for a SPECIFIC starting
-   polynomial p but messy as a general structural measure.
+### Path (b): Lex measure encoded as Nat — does NOT close
 
-3. **Redesign the framework structure.** Replace the strict-descent
-   axioms with a different termination measure that captures the lex
-   nature directly (e.g., `WellFoundedRelation` on T instead of a Nat
-   measure, or product Nat measures). This is the cleanest mathematical
-   approach but requires reworking the parametric main theorem's
-   induction structure.
+Encode `(degreeY 0 g, degreeX (leadingCoeffY 0 g))` as
+`measure g = degreeY 0 g * BIG + degreeX (leadingCoeffY 0 g)`
+for BIG ≥ max-possible degreeX.
+
+- `chainTotalDeriv g` preserves degreeY 0, drops degreeX of leading by 1
+  → measure -= 1 (strict descent at k=0 ✓).
+
+- `(k · y_0) · g` for k ≠ 0: degreeY 0 += 1 → measure += BIG.
+
+So for k ≠ 0, measure(coeffStep g k) = measure(chainTotalDeriv g) +
+  measure((k · y_0) · g) (roughly), which exceeds measure g by ≈ BIG.
+coeffStep_le fails by a margin of BIG.
+
+The fundamental issue: lex (a, b) encoded as a · BIG + b INCREASES by
+BIG when a increases by 1. Any Nat encoding of lex has the same problem.
+
+### Path (c): Framework redesign — open
+
+Replace `measure : T → Nat` with a `WellFoundedRelation T` or product
+Nat measure. The induction in `auto_bound_with_propagation_aux` becomes
+well-founded induction on T. This captures the lex descent structurally.
+
+This is genuine framework redesign: ~300+ lines reworking the parametric
+main theorem's induction, plus a new `auto_bound_with_propagation_aux`
+that operates on the well-founded structure. It's the cleanest
+mathematical path but takes a separate dedicated session.
+
+### The STRUCTURAL diagnosis
+
+The SingleExp framework's strict-descent argument relies on
+`scalarMul k t` being **measure-preserving** for arbitrary k (only
+strict at k=0 via the derivative). For SingleExp this holds because
+scalarMul is multiplication by a Real constant.
+
+For chain-level extension, scalarMul must multiply by `h_deriv(x)` (a
+chain function, not a constant). For `h_deriv = exp = y_0`, this is
+multiplication by a chain variable, which structurally raises
+degreeY 0. Any Nat measure that captures enough to give strict descent
+on the derivative will INCREASE under this y_0 multiplication.
+
+The framework as designed cannot fit chain-level-2 without redesign.
 
 ### What this commit ships
 
 - `chainExp2InnerKhovanskiiExp` — the algebraic instance (operations +
-  four eval-correctness axioms), now augmented with documentation of
-  the measure obstruction.
+  four eval-correctness axioms). Confirmed working: the algebraic
+  layer compiles, eval correctness holds, the Rolle vehicle
+  (`mulNegExpH`) and `zero_count_scaledReduction_transfer` work
+  directly on this instance.
 
 - `chainExp2_bound_via_measured_axioms` — the chain-length-2 bound
   theorem, **parametric over the measure axioms as hypotheses**. Shows
-  the framework consumes correctly: if you supply a measure satisfying
-  the three axioms, `auto_bound_with_propagation_aux` ships the bound
-  directly. Calling code would need to discharge the axioms via one of
-  the three paths above.
+  the framework consumes correctly: if a measure satisfying the three
+  axioms ever exists for our operations, `auto_bound_with_propagation_aux`
+  ships the bound. As established above, NO Nat-valued measure can
+  satisfy the axioms for our `scalarMul = mul (varY 0)` — so this
+  parametric theorem is honest scaffolding, NOT a constructive bound.
 
-The constructive chain-length-2 over IterExp 2 bound remains open
-pending discharge of the measure axioms via one of the three paths. -/
+### What remains open
+
+The constructive chain-length-2 over IterExp 2 bound. The path forward
+is framework redesign (path c) — replacing the Nat-valued measure with
+a well-founded structure that captures the lex descent without
+penalizing y_0 multiplication. This is the next session's work, not
+this session's. -/
 
 end ChainExp2InstanceMod
 end MachLib
