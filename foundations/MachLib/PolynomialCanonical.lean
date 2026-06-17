@@ -362,5 +362,98 @@ theorem polyCoeffs_eval (p : Poly) (x : Real) :
     rw [polyCoeffs_mul, evalCoeffs_listMulR, ihp, ihq]
     rfl
 
+/-! ## Phase D — ring laws for the list-arithmetic helpers
+
+Foundational identities that make the abstract polynomial-ring
+structure of `List Real` (under `listAddR`, `listSubR`, `listMulR`)
+provable at the list level. These are building blocks for the
+canonical-form-via-eval lemma (PIT, Phase E) and the
+polynomial-derivative strict-decrease theorem (Phase F). -/
+
+/-- The all-zero list of given length. -/
+noncomputable def zeroList : Nat → List Real
+  | 0     => []
+  | n + 1 => 0 :: zeroList n
+
+theorem zeroList_zero : zeroList 0 = [] := rfl
+
+theorem zeroList_succ (n : Nat) : zeroList (n + 1) = 0 :: zeroList n := rfl
+
+theorem zeroList_length (n : Nat) : (zeroList n).length = n := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    rw [zeroList_succ]
+    show (zeroList n).length + 1 = n + 1
+    rw [ih]
+
+/-- Evaluating the all-zero list gives zero at every point. -/
+theorem evalCoeffs_zeroList (n : Nat) (x : Real) :
+    evalCoeffs (zeroList n) x = 0 := by
+  induction n with
+  | zero => rfl
+  | succ n ih =>
+    rw [zeroList_succ, evalCoeffs_cons, ih]
+    show (0 : Real) + x * 0 = 0
+    rw [mul_zero, add_zero]
+
+/-- `listAddR` is commutative. -/
+theorem listAddR_comm (ps qs : List Real) :
+    listAddR ps qs = listAddR qs ps := by
+  induction ps generalizing qs with
+  | nil => rw [listAddR_nil_left, listAddR_nil_right]
+  | cons p ps' ih =>
+    cases qs with
+    | nil => rw [listAddR_nil_right, listAddR_nil_left]
+    | cons q qs' =>
+      rw [listAddR_cons_cons, listAddR_cons_cons, ih]
+      show (p + q) :: _ = (q + p) :: _
+      rw [add_comm p q]
+
+/-- `listAddR` is associative. -/
+theorem listAddR_assoc (ps qs rs : List Real) :
+    listAddR (listAddR ps qs) rs = listAddR ps (listAddR qs rs) := by
+  induction ps generalizing qs rs with
+  | nil => rw [listAddR_nil_left, listAddR_nil_left]
+  | cons p ps' ih =>
+    cases qs with
+    | nil => rw [listAddR_nil_right, listAddR_nil_left]
+    | cons q qs' =>
+      cases rs with
+      | nil => rw [listAddR_nil_right, listAddR_nil_right]
+      | cons r rs' =>
+        rw [listAddR_cons_cons, listAddR_cons_cons,
+            listAddR_cons_cons, listAddR_cons_cons, ih]
+        show ((p + q) + r) :: _ = (p + (q + r)) :: _
+        rw [add_assoc]
+
+/-- `listSubR` written as a self-add identity at the eval level:
+the canonical "self subtraction" eval-collapses to zero. -/
+theorem evalCoeffs_listSubR_self (ps : List Real) (x : Real) :
+    evalCoeffs (listSubR ps ps) x = 0 := by
+  rw [evalCoeffs_listSubR]
+  show evalCoeffs ps x - evalCoeffs ps x = 0
+  rw [sub_self]
+
+/-- The headline cancellation: `(P + Q) - Q` and `P` evaluate to the
+same value at every point. This is the eval-level cancellation that
+the `h_bridge` closure ultimately needs — though the syntactic-list
+equality requires the polynomial identity theorem (Phase E). -/
+theorem evalCoeffs_listSubR_listAddR_self (P Q : List Real) (x : Real) :
+    evalCoeffs (listSubR (listAddR P Q) Q) x = evalCoeffs P x := by
+  rw [evalCoeffs_listSubR, evalCoeffs_listAddR]
+  show (evalCoeffs P x + evalCoeffs Q x) - evalCoeffs Q x = evalCoeffs P x
+  rw [sub_def, add_assoc, add_neg, add_zero]
+
+/-- A direct consequence for `polyCoeffs`: `sub (add p q) q` eval-
+equals `p` at every point. This is the canonicalization claim at
+the eval level — the syntactic claim at the coefficient-list level
+needs PIT (Phase E). -/
+theorem polyCoeffs_eval_sub_add_self (p q : Poly) (x : Real) :
+    evalCoeffs (polyCoeffs (Poly.sub (Poly.add p q) q)) x =
+    evalCoeffs (polyCoeffs p) x := by
+  rw [polyCoeffs_sub, polyCoeffs_add]
+  exact evalCoeffs_listSubR_listAddR_self _ _ x
+
 end PolynomialCanonical
 end MachLib
