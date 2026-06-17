@@ -442,5 +442,74 @@ theorem degreeY_dropLeadingY_lt (p : MultiPoly 1)
       omega
     exact Nat.lt_of_lt_of_le h_lt h_drop_le
 
+/-! ### `eval_dropLeadingY` — when the last yCoeffsAt entry is canonically zero -/
+
+/-- Key technical lemma: `listEvalAuxN` of a list and of its `dropLast`
+agree at every point when the last entry of the list is canonically
+zero at that point. -/
+theorem listEvalAuxN_dropLast_eq_of_last_eval_zero {n : Nat} (i : Fin n)
+    (L : List (MultiPoly n)) (h_ne : L ≠ [])
+    (x : Real) (env : Fin n → Real)
+    (h_last_zero : MultiPoly.eval (L.getLast h_ne) x env = 0)
+    (k : Nat) :
+    listEvalAuxN i L.dropLast k x env = listEvalAuxN i L k x env := by
+  induction L generalizing k with
+  | nil => exact (h_ne rfl).elim
+  | cons c rest ih =>
+    cases rest with
+    | nil =>
+      -- L = [c]. dropLast = []. getLast = c. h_last_zero: c.eval = 0.
+      -- listEvalAuxN [] k = 0. listEvalAuxN [c] k = c.eval * y^k + 0.
+      show listEvalAuxN i ([] : List (MultiPoly n)) k x env =
+           listEvalAuxN i [c] k x env
+      rw [listEvalAuxN_nil, listEvalAuxN_cons, listEvalAuxN_nil]
+      -- 0 = c.eval * y^k + 0. Need c.eval = 0.
+      -- getLast [c] _ = c (definitionally).
+      have h_c_zero : MultiPoly.eval c x env = 0 := h_last_zero
+      rw [h_c_zero]
+      show (0 : Real) = 0 * MultiPoly.eval
+                            (MultiPoly.pow (MultiPoly.varY i) k) x env + 0
+      rw [zero_mul, add_zero]
+    | cons c' rest' =>
+      -- L = c :: c' :: rest'. dropLast = c :: (c' :: rest').dropLast.
+      -- getLast L = getLast (c' :: rest').
+      change listEvalAuxN i (c :: (c' :: rest').dropLast) k x env =
+             listEvalAuxN i (c :: c' :: rest') k x env
+      rw [listEvalAuxN_cons, listEvalAuxN_cons]
+      -- Apply IH on (c' :: rest') at offset k + 1.
+      have h_rest_ne : (c' :: rest') ≠ [] := List.cons_ne_nil _ _
+      have h_rest_last_zero :
+          MultiPoly.eval ((c' :: rest').getLast h_rest_ne) x env = 0 := by
+        -- getLast (c :: c' :: rest') = getLast (c' :: rest').
+        have h_eq : ((c :: c' :: rest').getLast h_ne) =
+                    ((c' :: rest').getLast h_rest_ne) :=
+          List.getLast_cons h_rest_ne
+        rw [← h_eq]
+        exact h_last_zero
+      have h_ih := ih h_rest_ne h_rest_last_zero (k + 1)
+      rw [h_ih]
+
+open MachLib.PolynomialCanonical in
+/-- **Eval preservation for `dropLeadingY`.** When the leading
+y-coefficient (last entry of `yCoeffsAt 0 p`) is canonically zero
+at every point, `dropLeadingY p` evaluates to the same value as `p`. -/
+theorem eval_dropLeadingY_of_last_canonically_zero (p : MultiPoly 1)
+    (h_ne : yCoeffsAt (⟨0, by omega⟩ : Fin 1) p ≠ [])
+    (h_canonical_zero : ∀ x env,
+      MultiPoly.eval
+        ((yCoeffsAt (⟨0, by omega⟩ : Fin 1) p).getLast h_ne) x env = 0)
+    (x : Real) (env : Fin 1 → Real) :
+    MultiPoly.eval (dropLeadingY p) x env = MultiPoly.eval p x env := by
+  unfold dropLeadingY
+  rw [eval_reconstructY]
+  rw [← eval_yCoeffsAt (⟨0, by omega⟩ : Fin 1) p x env]
+  rw [show listEvalN (⟨0, by omega⟩ : Fin 1)
+            (yCoeffsAt (⟨0, by omega⟩ : Fin 1) p) x env =
+          listEvalAuxN (⟨0, by omega⟩ : Fin 1)
+            (yCoeffsAt (⟨0, by omega⟩ : Fin 1) p) 0 x env from rfl]
+  exact listEvalAuxN_dropLast_eq_of_last_eval_zero
+    (⟨0, by omega⟩ : Fin 1) (yCoeffsAt (⟨0, by omega⟩ : Fin 1) p) h_ne x env
+    (h_canonical_zero x env) 0
+
 end MultiPolyReconstruct
 end MachLib

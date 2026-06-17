@@ -923,6 +923,12 @@ inductive PfaffianFn.IsKhovanskiiReducible :
                                       f.poly = 0)
       (h_next : IsKhovanskiiReducible (f.dropLast hN) g k) :
       IsKhovanskiiReducible f g k
+  | trim (f g : PfaffianFn) (p' : MultiPoly f.n) (k : Nat)
+      (h_eval : ∀ x : Real,
+        f.eval x =
+        (PfaffianFn.mk f.n f.chain p').eval x)
+      (h_next : IsKhovanskiiReducible (PfaffianFn.mk f.n f.chain p') g k) :
+      IsKhovanskiiReducible f g k
 
 /-- **Iterated bound for IsKhovanskiiReducible (triangular chains).** The
 zero count of f is bounded by N + k, where N bounds the zeros of g
@@ -991,6 +997,20 @@ theorem PfaffianFn.zero_count_khovanskii_bound
       obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
       refine ⟨haz, hzb, ?_⟩
       rw [hdrop_eval z]
+      exact hfz
+  | trim f g p' k h_eval h_next ih =>
+      -- Trim preserves chain (same f.n, f.chain), so triangularity + coherence transfer.
+      intro htri hcoherent hN_bound
+      have htri' : (PfaffianFn.mk f.n f.chain p').chain.IsTriangular := htri
+      have hcoh' : (PfaffianFn.mk f.n f.chain p').chain.IsCoherentOn a b := hcoherent
+      have htrim_bound := ih htri' hcoh' hN_bound
+      -- f.eval ≡ trimmed.eval, so zeros sets coincide.
+      intro zeros_f hnodup hzeros
+      apply htrim_bound zeros_f hnodup
+      intro z hz
+      obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+      refine ⟨haz, hzb, ?_⟩
+      rw [← h_eval z]
       exact hfz
 
 /-- **Extended capstone** using IsKhovanskiiReducible with triangularity.
@@ -1365,6 +1385,9 @@ theorem PfaffianFn.IsKhovanskiiReducible.trans
     show PfaffianFn.IsKhovanskiiReducible f g₂ (k + k₂)
     exact PfaffianFn.IsKhovanskiiReducible.drop f g₂ (k + k₂) N hN
             h_deg_zero (ih h₂)
+  | trim f g p' k h_eval _ ih =>
+    show PfaffianFn.IsKhovanskiiReducible f g₂ (k + k₂)
+    exact PfaffianFn.IsKhovanskiiReducible.trim f g₂ p' (k + k₂) h_eval (ih h₂)
 
 /-- **Base case** for Step 3d's outer recursion: when f.n = 0, the
 witness is trivially refl with g = f, k = 0. -/

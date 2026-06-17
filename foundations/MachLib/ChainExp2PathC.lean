@@ -1,6 +1,7 @@
 import MachLib.KhovanskiiReduction
 import MachLib.IterExpChain
 import MachLib.PfaffianFnBound
+import MachLib.MultiPolyReconstruct
 
 /-!
 # MachLib.ChainExp2PathC — path (c) architecture for chain-level-2 Khovanskii
@@ -1926,6 +1927,64 @@ noncomputable def PfaffianFn.singleExp_reduceStep_closed (p : MultiPoly 1)
     PfaffianFn.ReduceStep (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl :=
   PfaffianFn.singleExp_reduceStep _ rfl h_pos
     (singleExp_h_bridge_closure p h_strict_pos)
+
+/-! ## SingleExp canonical-trim ReduceStep
+
+Handles the residual `polyTrueDegreeStrict = 0` corner — the
+canonically-zero leading y-coefficient case (dead AST term). When
+`(yCoeffsAt 0 p).getLast` evaluates to 0 at every point,
+`dropLeadingY p` is eval-equivalent to `p` and has strictly lower
+formal `degreeY 0`. This satisfies the lex strict-decrease in
+its first component (Case A), and the trim step has a no-Rolle-
+counter witness via the new `IsKhovanskiiReducible.trim`
+constructor. -/
+
+open MachLib.MultiPolyReconstruct in
+/-- **SingleExp canonical-trim ReduceStep.** When `degreeY 0 p > 0`
+and the last entry of `yCoeffsAt 0 p` is canonically zero, produces
+a ReduceStep that trims the dead leading term, dropping formal
+`degreeY` by ≥ 1. The witness uses the new `trim` constructor of
+`IsKhovanskiiReducible`. -/
+noncomputable def PfaffianFn.singleExp_canonicalTrim_step (p : MultiPoly 1)
+    (h_pos : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p > 0)
+    (h_canonical_zero :
+      ∀ (h_ne : MachLib.MultiPolyMod.MultiPoly.yCoeffsAt
+                  (⟨0, by omega⟩ : Fin 1) p ≠ [])
+        (x : Real) (env : Fin 1 → Real),
+        MultiPoly.eval
+          ((MachLib.MultiPolyMod.MultiPoly.yCoeffsAt
+              (⟨0, by omega⟩ : Fin 1) p).getLast h_ne)
+          x env = 0) :
+    PfaffianFn.ReduceStep (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl where
+  result := ⟨1, SingleExpChain, dropLeadingY p⟩
+  result_hN := rfl
+  counter := 0
+  lex_decrease := by
+    -- Case A: first lex component strictly drops.
+    refine Or.inl ?_
+    show MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) (dropLeadingY p) <
+         MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p
+    exact degreeY_dropLeadingY_lt p h_pos
+  witness := by
+    have h_ne :
+        MachLib.MultiPolyMod.MultiPoly.yCoeffsAt
+          (⟨0, by omega⟩ : Fin 1) p ≠ [] :=
+      MachLib.MultiPolyMod.MultiPoly.yCoeffsAt_nonempty _ p
+    refine PfaffianFn.IsKhovanskiiReducible.trim
+      (⟨1, SingleExpChain, p⟩ : PfaffianFn)
+      (⟨1, SingleExpChain, dropLeadingY p⟩ : PfaffianFn)
+      (dropLeadingY p) 0 ?_ ?_
+    · -- h_eval: f.eval x = trimmed.eval x for every x.
+      intro x
+      show MultiPoly.eval p x
+            ((⟨1, SingleExpChain, p⟩ : PfaffianFn).chain.chainValues x) =
+           MultiPoly.eval (dropLeadingY p) x
+            ((PfaffianFn.mk (⟨1, SingleExpChain, p⟩ : PfaffianFn).n
+                (⟨1, SingleExpChain, p⟩ : PfaffianFn).chain
+                (dropLeadingY p)).chain.chainValues x)
+      have h_canon := h_canonical_zero h_ne
+      rw [eval_dropLeadingY_of_last_canonically_zero p h_ne h_canon x _]
+    · exact PfaffianFn.IsKhovanskiiReducible.refl _
 
 end ChainExp2PathC
 end MachLib
