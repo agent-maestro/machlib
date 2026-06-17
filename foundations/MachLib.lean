@@ -66,6 +66,7 @@ import MachLib.InnerKhovanskii
 import MachLib.InnerKhovanskiiExp
 import MachLib.ChainExp2Instance
 import MachLib.ChainExp2PathC
+import MachLib.Tactic.LeadingCoeffY
 
 /-!
 # MachLib — top-level aggregator

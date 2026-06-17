@@ -197,6 +197,11 @@ macro "mach_ring" : tactic => `(tactic|
    --     `Std.Commutative` / `Std.Associative` instances on Real.
    --     This closes the post-distribution residue where both sides
    --     are AC-equivalent (e.g. `E * (D * (B * c)) = D * (c * (B * E))`).
+   --   * v2.5: `omega` — for goals that reduced to Nat-arithmetic
+   --     (degree bounds, max/min closures, monotonicity steps). Lean
+   --     core's `omega` handles `Nat.max`/`Nat.min`/`Nat.sub` and
+   --     hypothesis chains. Tried BEFORE the simp catch-all because
+   --     it's strictly stronger for the Nat fragment.
    --   * Full simp with AC + cancellation lemmas as the catch-all
    --     for any remaining shape Lean's term ordering can resolve.
    try (first
@@ -204,6 +209,7 @@ macro "mach_ring" : tactic => `(tactic|
         | exact add_neg _
         | exact add_neg_swapped _ _
         | ac_rfl
+        | omega
         -- Phase 2 catch-all: full AC over BOTH `+` and `*`. `mul_comm`
         -- + `mul_assoc` lets simp unify mirror-pair products like
         -- `ay * (az * bx)` and `az * (ay * bx)` that appear in
