@@ -65,6 +65,7 @@ import MachLib.IterExpChain
 import MachLib.InnerKhovanskii
 import MachLib.InnerKhovanskiiExp
 import MachLib.ChainExp2Instance
+import MachLib.ChainExp2PathC
 
 /-!
 # MachLib — top-level aggregator
