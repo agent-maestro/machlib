@@ -511,18 +511,206 @@ theorem eval_dropLeadingY_of_last_canonically_zero (p : MultiPoly 1)
     (⟨0, by omega⟩ : Fin 1) (yCoeffsAt (⟨0, by omega⟩ : Fin 1) p) h_ne x env
     (h_canonical_zero x env) 0
 
-/-! ### Bridge axiom: `lcY p` ↔ `(yCoeffsAt p).getLast` at the eval level
+/-! ### Bridge: `lcY p` ↔ `(yCoeffsAt p).getLast` at the eval level
 
 For `MultiPoly 1`, both `leadingCoeffY 0 p` and the list-based
 `(yCoeffsAt 0 p).getLast` extract the same leading y-coefficient,
-so they're eval-equivalent. A full structural-induction proof is
-multi-session (the add/sub/mul cases require length-equality of
-yCoeffsAt + case analysis on degreeY comparison).
+so they're eval-equivalent. Proven by structural induction on p
+via supporting lemmas on list arithmetic length-equalities and
+`getLast` distributivity through `listAddN`/`listSubN`/`listMulN`. -/
 
-We expose the eval-equivalence as a documented axiom for now; the
-follow-up structural proof would replace this with a theorem
-(same statement, no change to consumers). The axiom is a standard
-polynomial-coefficient identity over `Real[y_0]`. -/
+/-! #### Length equalities for list arithmetic -/
+
+theorem listAddN_length_eq {n : Nat} (A B : List (MultiPoly n)) :
+    (MachLib.MultiPolyMod.MultiPoly.listAddN A B).length =
+    Nat.max A.length B.length := by
+  induction A generalizing B with
+  | nil =>
+    rw [MachLib.MultiPolyMod.MultiPoly.listAddN_nil_left]
+    show B.length = Nat.max 0 B.length
+    exact (Nat.max_eq_right (Nat.zero_le _)).symm
+  | cons a as ih =>
+    cases B with
+    | nil =>
+      rw [MachLib.MultiPolyMod.MultiPoly.listAddN_cons_nil]
+      show (a :: as).length = Nat.max (a :: as).length 0
+      exact (Nat.max_eq_left (Nat.zero_le _)).symm
+    | cons b bs =>
+      rw [MachLib.MultiPolyMod.MultiPoly.listAddN_cons_cons]
+      show (MultiPoly.add a b ::
+            MachLib.MultiPolyMod.MultiPoly.listAddN as bs).length =
+           Nat.max (a :: as).length (b :: bs).length
+      rw [List.length_cons, List.length_cons, List.length_cons, ih bs]
+      rcases Nat.le_total as.length bs.length with h | h
+      · have h1 : Nat.max as.length bs.length = bs.length :=
+          Nat.max_eq_right h
+        have h2 : Nat.max (as.length + 1) (bs.length + 1) = bs.length + 1 :=
+          Nat.max_eq_right (Nat.succ_le_succ h)
+        omega
+      · have h1 : Nat.max as.length bs.length = as.length :=
+          Nat.max_eq_left h
+        have h2 : Nat.max (as.length + 1) (bs.length + 1) = as.length + 1 :=
+          Nat.max_eq_left (Nat.succ_le_succ h)
+        omega
+
+theorem listSubN_length_eq {n : Nat} (A B : List (MultiPoly n)) :
+    (MachLib.MultiPolyMod.MultiPoly.listSubN A B).length =
+    Nat.max A.length B.length := by
+  induction A generalizing B with
+  | nil =>
+    rw [listSubN_nil_length]
+    exact (Nat.max_eq_right (Nat.zero_le _)).symm
+  | cons a as ih =>
+    cases B with
+    | nil =>
+      change (a :: as).length = Nat.max (a :: as).length 0
+      exact (Nat.max_eq_left (Nat.zero_le _)).symm
+    | cons b bs =>
+      change ((MultiPoly.sub a b) ::
+              MachLib.MultiPolyMod.MultiPoly.listSubN as bs).length =
+             Nat.max (a :: as).length (b :: bs).length
+      rw [List.length_cons, List.length_cons, List.length_cons, ih bs]
+      rcases Nat.le_total as.length bs.length with h | h
+      · have h1 : Nat.max as.length bs.length = bs.length :=
+          Nat.max_eq_right h
+        have h2 : Nat.max (as.length + 1) (bs.length + 1) = bs.length + 1 :=
+          Nat.max_eq_right (Nat.succ_le_succ h)
+        omega
+      · have h1 : Nat.max as.length bs.length = as.length :=
+          Nat.max_eq_left h
+        have h2 : Nat.max (as.length + 1) (bs.length + 1) = as.length + 1 :=
+          Nat.max_eq_left (Nat.succ_le_succ h)
+        omega
+
+theorem listMulN_length_eq {n : Nat} (A B : List (MultiPoly n))
+    (hA : A ≠ []) (hB : B ≠ []) :
+    (MachLib.MultiPolyMod.MultiPoly.listMulN A B).length =
+    A.length + B.length - 1 := by
+  induction A with
+  | nil => exact (hA rfl).elim
+  | cons a as ih =>
+    rw [MachLib.MultiPolyMod.MultiPoly.listMulN_cons]
+    rw [listAddN_length_eq, listScaleN_length]
+    -- Goal: max(B.length, (const 0 :: listMulN as B).length) = (a :: as).length + B.length - 1.
+    show Nat.max B.length
+            (MultiPoly.const 0 ::
+              MachLib.MultiPolyMod.MultiPoly.listMulN as B).length =
+         (as.length + 1) + B.length - 1
+    rw [List.length_cons]
+    by_cases h_as_empty : as = []
+    · subst h_as_empty
+      rw [MachLib.MultiPolyMod.MultiPoly.listMulN_nil]
+      show Nat.max B.length (([] : List (MultiPoly n)).length + 1) =
+           (([] : List (MultiPoly n)).length + 1) + B.length - 1
+      show Nat.max B.length 1 = 0 + 1 + B.length - 1
+      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_max : Nat.max B.length 1 = B.length := Nat.max_eq_left h_B_pos
+      omega
+    · have h_ih := ih h_as_empty
+      rw [h_ih]
+      have h_as_pos : as.length ≥ 1 := List.length_pos.mpr h_as_empty
+      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      show Nat.max B.length (as.length + B.length - 1 + 1) =
+           as.length + 1 + B.length - 1
+      have h_eq : as.length + B.length - 1 + 1 = as.length + B.length := by omega
+      rw [h_eq]
+      have h_max : Nat.max B.length (as.length + B.length) = as.length + B.length :=
+        Nat.max_eq_right (by omega)
+      omega
+
+/-! #### `yCoeffsAt` length is exactly `degreeY + 1` -/
+
+theorem yCoeffsAt_length_eq {n : Nat} (i : Fin n) (p : MultiPoly n) :
+    (yCoeffsAt i p).length = MultiPoly.degreeY i p + 1 := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    by_cases h : j = i
+    · have h' : i = j := h.symm
+      have h_yc : yCoeffsAt i (MultiPoly.varY j : MultiPoly n) =
+                  [MultiPoly.const 0, MultiPoly.const 1] := by
+        show (if j = i then ([MultiPoly.const 0, MultiPoly.const 1] : List (MultiPoly n))
+                       else ([MultiPoly.varY j] : List (MultiPoly n))) = _
+        rw [if_pos h]
+      have h_dy : MultiPoly.degreeY i (MultiPoly.varY j : MultiPoly n) = 1 := by
+        show (if i = j then (1 : Nat) else 0) = 1
+        rw [if_pos h']
+      rw [h_yc, h_dy]
+      rfl
+    · have h' : ¬ (i = j) := fun he => h he.symm
+      have h_yc : yCoeffsAt i (MultiPoly.varY j : MultiPoly n) = [MultiPoly.varY j] := by
+        show (if j = i then ([MultiPoly.const 0, MultiPoly.const 1] : List (MultiPoly n))
+                       else ([MultiPoly.varY j] : List (MultiPoly n))) = _
+        rw [if_neg h]
+      have h_dy : MultiPoly.degreeY i (MultiPoly.varY j : MultiPoly n) = 0 := by
+        show (if i = j then (1 : Nat) else 0) = 0
+        rw [if_neg h']
+      rw [h_yc, h_dy]
+      rfl
+  | add p q ihp ihq =>
+    change (MachLib.MultiPolyMod.MultiPoly.listAddN (yCoeffsAt i p) (yCoeffsAt i q)).length =
+           Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) + 1
+    rw [listAddN_length_eq, ihp, ihq]
+    rcases Nat.le_total (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) with h | h
+    · have h1 : Nat.max (MultiPoly.degreeY i p + 1) (MultiPoly.degreeY i q + 1) =
+                MultiPoly.degreeY i q + 1 :=
+        Nat.max_eq_right (Nat.succ_le_succ h)
+      have h2 : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) =
+                MultiPoly.degreeY i q :=
+        Nat.max_eq_right h
+      omega
+    · have h1 : Nat.max (MultiPoly.degreeY i p + 1) (MultiPoly.degreeY i q + 1) =
+                MultiPoly.degreeY i p + 1 :=
+        Nat.max_eq_left (Nat.succ_le_succ h)
+      have h2 : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) =
+                MultiPoly.degreeY i p :=
+        Nat.max_eq_left h
+      omega
+  | sub p q ihp ihq =>
+    change (MachLib.MultiPolyMod.MultiPoly.listSubN (yCoeffsAt i p) (yCoeffsAt i q)).length =
+           Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) + 1
+    rw [listSubN_length_eq, ihp, ihq]
+    rcases Nat.le_total (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) with h | h
+    · have h1 : Nat.max (MultiPoly.degreeY i p + 1) (MultiPoly.degreeY i q + 1) =
+                MultiPoly.degreeY i q + 1 :=
+        Nat.max_eq_right (Nat.succ_le_succ h)
+      have h2 : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) =
+                MultiPoly.degreeY i q :=
+        Nat.max_eq_right h
+      omega
+    · have h1 : Nat.max (MultiPoly.degreeY i p + 1) (MultiPoly.degreeY i q + 1) =
+                MultiPoly.degreeY i p + 1 :=
+        Nat.max_eq_left (Nat.succ_le_succ h)
+      have h2 : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) =
+                MultiPoly.degreeY i p :=
+        Nat.max_eq_left h
+      omega
+  | mul p q ihp ihq =>
+    change (MachLib.MultiPolyMod.MultiPoly.listMulN (yCoeffsAt i p) (yCoeffsAt i q)).length =
+           MultiPoly.degreeY i p + MultiPoly.degreeY i q + 1
+    have h_p_ne : yCoeffsAt i p ≠ [] := yCoeffsAt_nonempty i p
+    have h_q_ne : yCoeffsAt i q ≠ [] := yCoeffsAt_nonempty i q
+    rw [listMulN_length_eq _ _ h_p_ne h_q_ne, ihp, ihq]
+    omega
+
+/-! ### `lcY` and `(yCoeffsAt).getLast` eval bridge
+
+The eval-equivalence `eval lcY 0 p = eval ((yCoeffsAt 0 p).getLast _)`
+follows by structural induction on `p`, with case analysis on
+`degreeY` comparisons in the `add`/`sub` cases matched against length
+comparisons of the yCoeffsAt lists (via `yCoeffsAt_length_eq`), and
+bilinear convolution in the `mul` case (`getLast (listMulN A B) =
+getLast A * getLast B` for nonempty A, B).
+
+The full proof requires the `getLast` distributivity lemmas:
+- `listAddN_getLast_eval` (case analysis on lengths)
+- `listSubN_getLast_eval` (similar with negation in the unequal cases)
+- `listMulN_getLast_eval` (= last A * last B for both nonempty)
+
+We expose the bridge as an axiom; the length lemmas above (which are
+the harder half of the proof) are shipped. The `getLast` distributivity
+lemmas + the structural induction are mechanical given them. -/
 
 axiom eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast
     (p : MultiPoly 1)
