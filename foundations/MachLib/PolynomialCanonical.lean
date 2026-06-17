@@ -1,4 +1,5 @@
 import MachLib.PolynomialEvidence
+import MachLib.PolynomialRootCount
 import MachLib.Ring
 
 /-!
@@ -454,6 +455,299 @@ theorem polyCoeffs_eval_sub_add_self (p q : Poly) (x : Real) :
     evalCoeffs (polyCoeffs p) x := by
   rw [polyCoeffs_sub, polyCoeffs_add]
   exact evalCoeffs_listSubR_listAddR_self _ _ x
+
+/-! ## Phase E — polynomial identity theorem (PIT)
+
+Headline: `(∀ x, evalCoeffs L x = 0) → ∀ c ∈ L, c = 0`.
+
+Strategy: convert `evalCoeffs L` into a concrete `Poly` (via the
+Horner-form `polyFromCoeffs`), bound its `degreeUpper`, then use
+`poly_root_count_bound` with `L.length + 1` distinct `Real.natCast`
+roots to derive contradiction if any coefficient is nonzero.
+
+This is the eval-canonicalization lemma the `h_bridge` closure
+ultimately rests on: eval-equal coefficient lists differ only by
+trailing zeros. Phase F then composes PIT with the polynomial-
+derivative degree-drop. -/
+
+/-! ### Horner-form `polyFromCoeffs` -/
+
+/-- Convert a coefficient list to a `Poly` in Horner form. -/
+noncomputable def polyFromCoeffs : List Real → Poly
+  | []      => Poly.const 0
+  | c :: cs => Poly.add (Poly.const c) (Poly.mul Poly.var (polyFromCoeffs cs))
+
+theorem polyFromCoeffs_nil : polyFromCoeffs [] = Poly.const 0 := rfl
+
+theorem polyFromCoeffs_cons (c : Real) (cs : List Real) :
+    polyFromCoeffs (c :: cs) =
+    Poly.add (Poly.const c) (Poly.mul Poly.var (polyFromCoeffs cs)) := rfl
+
+/-- `polyFromCoeffs L` evaluated at `x` matches `evalCoeffs L x`. -/
+theorem polyFromCoeffs_eval (L : List Real) (x : Real) :
+    Poly.eval (polyFromCoeffs L) x = evalCoeffs L x := by
+  induction L with
+  | nil =>
+    rw [polyFromCoeffs_nil, evalCoeffs_nil]
+    rfl
+  | cons c cs ih =>
+    rw [polyFromCoeffs_cons, evalCoeffs_cons]
+    show Poly.eval (Poly.const c) x +
+         Poly.eval (Poly.var) x * Poly.eval (polyFromCoeffs cs) x =
+         c + x * evalCoeffs cs x
+    rw [ih]
+    rfl
+
+/-- `degreeUpper (polyFromCoeffs L) ≤ L.length`. The Horner form
+adds exactly one to `degreeUpper` per list element via the
+`mul var (...)` factor. -/
+theorem polyFromCoeffs_degreeUpper_le (L : List Real) :
+    MachLib.PolynomialRootCount.degreeUpper (polyFromCoeffs L) ≤ L.length := by
+  induction L with
+  | nil =>
+    show MachLib.PolynomialRootCount.degreeUpper (Poly.const 0) ≤ 0
+    exact Nat.le_refl 0
+  | cons c cs ih =>
+    rw [polyFromCoeffs_cons]
+    -- degreeUpper of add = max of children's degreeUpper.
+    -- LHS: max (deg const c) (deg (mul var (polyFromCoeffs cs)))
+    --    = max 0 (1 + deg (polyFromCoeffs cs))
+    --    = 1 + deg (polyFromCoeffs cs)
+    -- IH: deg (polyFromCoeffs cs) ≤ cs.length.
+    -- Conclude: 1 + deg ≤ 1 + cs.length = (c :: cs).length.
+    show Nat.max 0 (1 +
+      MachLib.PolynomialRootCount.degreeUpper (polyFromCoeffs cs))
+      ≤ cs.length + 1
+    refine Nat.max_le.mpr ⟨Nat.zero_le _, ?_⟩
+    omega
+
+/-! ### `Real.natCast` strict monotonicity (distinctness for the root list) -/
+
+/-- `natCast n < natCast (n + 1)`. The +1 in `natCast_succ` is
+strictly positive (`zero_lt_one_ax`). -/
+theorem natCast_lt_succ (n : Nat) :
+    natCast n < natCast (n + 1) := by
+  rw [natCast_succ]
+  have h : (0 : Real) < 1 := zero_lt_one_ax
+  have := add_lt_add_left h (natCast n)
+  rw [add_zero] at this
+  exact this
+
+/-- `natCast` is strictly monotone: `m < n → natCast m < natCast n`. -/
+theorem natCast_strict_mono : ∀ {m n : Nat}, m < n → natCast m < natCast n := by
+  intro m n hmn
+  induction n with
+  | zero => omega
+  | succ n' ih =>
+    have h_le : m ≤ n' := Nat.lt_succ_iff.mp hmn
+    rcases Nat.lt_or_eq_of_le h_le with hlt | heq
+    · exact lt_trans_ax (ih hlt) (natCast_lt_succ n')
+    · subst heq; exact natCast_lt_succ m
+
+/-- `natCast` is injective on `Nat`: distinct `Nat`s map to distinct
+`Real`s. -/
+theorem natCast_injective : ∀ {m n : Nat}, m ≠ n → natCast m ≠ natCast n := by
+  intro m n hmn h_eq
+  rcases Nat.lt_or_ge m n with hlt | hge
+  · have h_lt : natCast m < natCast n := natCast_strict_mono hlt
+    rw [h_eq] at h_lt
+    exact lt_irrefl_ax _ h_lt
+  · rcases Nat.lt_or_eq_of_le hge with hgt | heq
+    · have h_gt : natCast n < natCast m := natCast_strict_mono hgt
+      rw [h_eq] at h_gt
+      exact lt_irrefl_ax _ h_gt
+    · exact hmn heq.symm
+
+/-! ### List of distinct positive `natCast` roots
+
+For the root-count contradiction we need `L.length + 1` distinct
+nonzero reals in some interval. We pick `[natCast 1, natCast 2, …,
+natCast (n + 1)]`. -/
+
+/-- `natCastList from n` produces `[natCast from, natCast (from+1), …,
+natCast (from + n - 1)]`. -/
+noncomputable def natCastList : Nat → Nat → List Real
+  | _,    0     => []
+  | from', n + 1 => natCast from' :: natCastList (from' + 1) n
+
+theorem natCastList_length (from' n : Nat) :
+    (natCastList from' n).length = n := by
+  induction n generalizing from' with
+  | zero => rfl
+  | succ n ih =>
+    show (natCast from' :: natCastList (from' + 1) n).length = n + 1
+    rw [List.length_cons, ih]
+
+/-- Transitivity of `≤` for `Real`. -/
+theorem real_le_trans {a b c : Real} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ c := by
+  rcases (le_iff_lt_or_eq a b).mp h1 with h1lt | h1eq
+  · rcases (le_iff_lt_or_eq b c).mp h2 with h2lt | h2eq
+    · exact (le_iff_lt_or_eq _ _).mpr (Or.inl (lt_trans_ax h1lt h2lt))
+    · exact h2eq ▸ (le_iff_lt_or_eq _ _).mpr (Or.inl h1lt)
+  · exact h1eq ▸ h2
+
+/-- All entries of `natCastList from n` are bounded above by
+`natCast (from + n)`. -/
+theorem natCastList_lt_upper (from' n : Nat) :
+    ∀ z ∈ natCastList from' n, z < natCast (from' + n) := by
+  induction n generalizing from' with
+  | zero => intro z hz; cases hz
+  | succ n ih =>
+    intro z hz
+    change z ∈ natCast from' :: natCastList (from' + 1) n at hz
+    rcases List.mem_cons.mp hz with rfl | hz_in
+    · apply natCast_strict_mono; omega
+    · have h_ih := ih (from' + 1) z hz_in
+      have h_eq : from' + 1 + n = from' + (n + 1) := by omega
+      rw [h_eq] at h_ih
+      exact h_ih
+
+/-- All entries of `natCastList from n` are at least `natCast from`. -/
+theorem natCastList_ge_lower (from' n : Nat) :
+    ∀ z ∈ natCastList from' n, natCast from' ≤ z := by
+  induction n generalizing from' with
+  | zero => intro z hz; cases hz
+  | succ n ih =>
+    intro z hz
+    change z ∈ natCast from' :: natCastList (from' + 1) n at hz
+    rcases List.mem_cons.mp hz with rfl | hz_in
+    · exact (le_iff_lt_or_eq _ _).mpr (Or.inr rfl)
+    · have h_ih := ih (from' + 1) z hz_in
+      have h_step : natCast from' ≤ natCast (from' + 1) :=
+        (le_iff_lt_or_eq _ _).mpr (Or.inl (natCast_lt_succ _))
+      exact real_le_trans h_step h_ih
+
+/-- `natCastList` is Nodup: all entries are pairwise distinct. -/
+theorem natCastList_nodup (from' n : Nat) :
+    (natCastList from' n).Nodup := by
+  induction n generalizing from' with
+  | zero =>
+    show (([] : List Real)).Nodup
+    exact List.Pairwise.nil
+  | succ n ih =>
+    show (natCast from' :: natCastList (from' + 1) n).Nodup
+    refine List.nodup_cons.mpr ⟨?_, ih (from' + 1)⟩
+    intro h_mem
+    have h_lb := natCastList_ge_lower (from' + 1) n _ h_mem
+    have h_lt_step : natCast from' < natCast (from' + 1) :=
+      natCast_lt_succ from'
+    rcases (le_iff_lt_or_eq _ _).mp h_lb with h_lt | h_eq
+    · exact lt_irrefl_ax _ (lt_trans_ax h_lt_step h_lt)
+    · exact lt_irrefl_ax _ (h_eq ▸ h_lt_step)
+
+/-! ### Eval-zero extension via root-count
+
+If `evalCoeffs L` is zero on `{1, 2, …, L.length + 1}` (concretely
+the entries of `natCastList 1 (L.length + 1)`), then by the
+root-count bound `polyFromCoeffs L` has no nonzero witness — i.e.
+`evalCoeffs L` is identically zero. -/
+
+/-- The extension lemma: eval-zero on enough distinct points
+forces identical-zero. -/
+theorem evalCoeffs_zero_of_zero_on_natCastList (L : List Real)
+    (h : ∀ z ∈ natCastList 1 (L.length + 1), evalCoeffs L z = 0) :
+    ∀ x : Real, evalCoeffs L x = 0 := by
+  intro x
+  apply Classical.byContradiction
+  intro h_ne
+  -- We need a nonzero witness for poly_root_count_bound.
+  have hne_poly : ∃ y : Real, Poly.eval (polyFromCoeffs L) y ≠ 0 :=
+    ⟨x, by rw [polyFromCoeffs_eval]; exact h_ne⟩
+  -- Pick the interval (natCast 0, natCast (L.length + 2)).
+  let a := natCast 0
+  let b := natCast (L.length + 2)
+  have hab : a < b := by
+    show natCast 0 < natCast (L.length + 2)
+    exact natCast_strict_mono (by omega)
+  -- The list of roots.
+  let zeros := natCastList 1 (L.length + 1)
+  have h_len : zeros.length = L.length + 1 := natCastList_length _ _
+  have h_nodup : zeros.Nodup := natCastList_nodup _ _
+  have h_in_interval : ∀ z ∈ zeros, a < z ∧ z < b ∧
+                       Poly.eval (polyFromCoeffs L) z = 0 := by
+    intro z hz
+    refine ⟨?_, ?_, ?_⟩
+    · -- a = natCast 0 < z: z ≥ natCast 1 > natCast 0.
+      have h_ge_one : natCast 1 ≤ z := natCastList_ge_lower 1 _ z hz
+      have h_zero_lt_one : natCast 0 < natCast 1 :=
+        natCast_strict_mono (by omega)
+      rcases (le_iff_lt_or_eq _ _).mp h_ge_one with h_lt | h_eq
+      · exact lt_trans_ax h_zero_lt_one h_lt
+      · exact h_eq ▸ h_zero_lt_one
+    · -- z < b = natCast (L.length + 2): z < natCast (1 + (L.length + 1)) =
+      -- natCast (L.length + 2).
+      have h_lt_upper : z < natCast (1 + (L.length + 1)) :=
+        natCastList_lt_upper 1 _ z hz
+      have h_eq : 1 + (L.length + 1) = L.length + 2 := by omega
+      rw [h_eq] at h_lt_upper
+      exact h_lt_upper
+    · rw [polyFromCoeffs_eval]
+      exact h z hz
+  -- Apply poly_root_count_bound.
+  have h_bound : zeros.length ≤
+      MachLib.PolynomialRootCount.degreeUpper (polyFromCoeffs L) :=
+    MachLib.PolynomialRootCount.poly_root_count_bound
+      (polyFromCoeffs L) a b hab hne_poly zeros h_nodup h_in_interval
+  -- Contradiction: zeros.length = L.length + 1 > degreeUpper ≤ L.length.
+  rw [h_len] at h_bound
+  have h_deg_le : MachLib.PolynomialRootCount.degreeUpper
+                    (polyFromCoeffs L) ≤ L.length :=
+    polyFromCoeffs_degreeUpper_le L
+  omega
+
+/-! ### The polynomial identity theorem -/
+
+/-- Cancellation: if `z ≠ 0` and `z * y = 0`, then `y = 0`. -/
+theorem zero_of_mul_left_ne_zero (z y : Real)
+    (hz : z ≠ 0) (h : z * y = 0) : y = 0 := by
+  have h_inv : (1 / z) * z = 1 := by
+    rw [mul_comm]; exact mul_inv z hz
+  calc y
+      = 1 * y               := (one_mul_thm y).symm
+    _ = ((1 / z) * z) * y    := by rw [h_inv]
+    _ = (1 / z) * (z * y)    := by rw [mul_assoc]
+    _ = (1 / z) * 0          := by rw [h]
+    _ = 0                    := mul_zero _
+
+/-- **PIT.** If `evalCoeffs L x = 0` for every `x`, then every
+coefficient in `L` is zero. -/
+theorem evalCoeffs_zero_iff_all_zero (L : List Real)
+    (h : ∀ x : Real, evalCoeffs L x = 0) :
+    ∀ c ∈ L, c = 0 := by
+  induction L with
+  | nil => intro c hc; cases hc
+  | cons c cs ih =>
+    have h_c : c = 0 := by
+      have h0 := h 0
+      rw [evalCoeffs_cons] at h0
+      show c = 0
+      have : c + 0 * evalCoeffs cs 0 = 0 := h0
+      rw [zero_mul, add_zero] at this
+      exact this
+    -- Recurse: need `∀ x, evalCoeffs cs x = 0`.
+    have h_cs : ∀ x : Real, evalCoeffs cs x = 0 := by
+      apply evalCoeffs_zero_of_zero_on_natCastList
+      intro z hz
+      have h_z := h z
+      rw [evalCoeffs_cons, h_c, zero_add] at h_z
+      -- h_z : z * evalCoeffs cs z = 0
+      -- z > 0 → z ≠ 0 → evalCoeffs cs z = 0.
+      have h_z_pos : (0 : Real) < z := by
+        have h_lb : natCast 1 ≤ z := natCastList_ge_lower 1 _ z hz
+        have h_zero_lt_one : (0 : Real) < natCast 1 := by
+          have : natCast 0 < natCast 1 := natCast_strict_mono (by omega)
+          rw [natCast_zero] at this
+          exact this
+        rcases (le_iff_lt_or_eq _ _).mp h_lb with h_lt | h_eq
+        · exact lt_trans_ax h_zero_lt_one h_lt
+        · exact h_eq ▸ h_zero_lt_one
+      have h_z_ne : z ≠ 0 := fun heq => lt_irrefl_ax _ (heq ▸ h_z_pos)
+      exact zero_of_mul_left_ne_zero z _ h_z_ne h_z
+    intro c' hc'
+    change c' ∈ c :: cs at hc'
+    rcases List.mem_cons.mp hc' with rfl | hc'_in
+    · exact h_c
+    · exact ih h_cs c' hc'_in
 
 end PolynomialCanonical
 end MachLib
