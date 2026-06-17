@@ -1,5 +1,6 @@
 import MachLib.PolynomialEvidence
 import MachLib.PolynomialRootCount
+import MachLib.Differentiation
 import MachLib.Ring
 
 /-!
@@ -748,6 +749,143 @@ theorem evalCoeffs_zero_iff_all_zero (L : List Real)
     rcases List.mem_cons.mp hc' with rfl | hc'_in
     · exact h_c
     · exact ih h_cs c' hc'_in
+
+/-! ## Phase F — polynomial derivative at the coefficient-list level
+
+Coefficient-list mirror of the polynomial derivative
+(`PolynomialRootCount.polyDerivative` works on the AST). With these
+in hand, the strict-decrease theorem on canonical degree under
+derivative — and ultimately the `h_bridge` closure — becomes a
+matter of bookkeeping.
+
+`polyDerivativeCoeffs [c_0, c_1, c_2, …, c_n] = [c_1, 2·c_2, 3·c_3, …, n·c_n]`:
+drops the constant term and scales each remaining coefficient by
+its position. -/
+
+/-- Scale each entry of a list by its position (offset by `start`):
+`listScaleByPos [c_0, c_1, …] k = [k·c_0, (k+1)·c_1, …]`. -/
+noncomputable def listScaleByPos : List Real → Nat → List Real
+  | [],       _ => []
+  | c :: cs,  k => natCast k * c :: listScaleByPos cs (k + 1)
+
+theorem listScaleByPos_nil (k : Nat) : listScaleByPos [] k = [] := rfl
+
+theorem listScaleByPos_cons (c : Real) (cs : List Real) (k : Nat) :
+    listScaleByPos (c :: cs) k = natCast k * c :: listScaleByPos cs (k + 1) := rfl
+
+/-- The coefficient-list polynomial derivative. -/
+noncomputable def polyDerivativeCoeffs : List Real → List Real
+  | []       => []
+  | _ :: cs  => listScaleByPos cs 1
+
+theorem polyDerivativeCoeffs_nil : polyDerivativeCoeffs [] = [] := rfl
+
+theorem polyDerivativeCoeffs_cons (c : Real) (cs : List Real) :
+    polyDerivativeCoeffs (c :: cs) = listScaleByPos cs 1 := rfl
+
+/-! ### Step-shift identity for `listScaleByPos`
+
+`eval (listScaleByPos cs (k+1)) x = eval cs x + eval (listScaleByPos cs k) x`.
+Both sides represent `Σ_i (k + i + 1) c_i x^i`; the +1 shift contributes
+exactly an extra `Σ_i c_i x^i = eval cs x`. -/
+
+/-- AC identity used by the step-shift proof:
+`(a + b) + (X + Y) = (b + X) + (a + Y)`. -/
+theorem step_shift_helper (a b X Y : Real) :
+    (a + b) + (X + Y) = (b + X) + (a + Y) := by mach_ring
+
+theorem evalCoeffs_listScaleByPos_succ (cs : List Real) (k : Nat) (x : Real) :
+    evalCoeffs (listScaleByPos cs (k + 1)) x =
+    evalCoeffs cs x + evalCoeffs (listScaleByPos cs k) x := by
+  induction cs generalizing k with
+  | nil =>
+    rw [listScaleByPos_nil, evalCoeffs_nil]
+    show (0 : Real) = 0 + 0
+    rw [add_zero]
+  | cons c cs' ih =>
+    rw [listScaleByPos_cons, listScaleByPos_cons, evalCoeffs_cons]
+    -- LHS: natCast (k+1) * c + x * evalCoeffs (listScaleByPos cs' (k+1+1)) x
+    rw [ih (k + 1)]
+    -- LHS: natCast (k+1) * c + x * (evalCoeffs cs' x + evalCoeffs (listScaleByPos cs' (k+1)) x)
+    rw [evalCoeffs_cons]
+    -- RHS: (c + x * evalCoeffs cs' x) + evalCoeffs (natCast k * c :: listScaleByPos cs' (k+1)) x
+    rw [evalCoeffs_cons]
+    -- RHS: (c + x * evalCoeffs cs' x) + (natCast k * c + x * evalCoeffs (listScaleByPos cs' (k+1)) x)
+    rw [natCast_succ, mul_distrib_right, one_mul_thm, mul_distrib]
+    -- LHS: (natCast k * c + c) + (x * evalCoeffs cs' x + x * evalCoeffs (listScaleByPos cs' (k+1)) x)
+    -- RHS: (c + x * evalCoeffs cs' x) + (natCast k * c + x * evalCoeffs (listScaleByPos cs' (k+1)) x)
+    exact step_shift_helper (natCast k * c) c _ _
+
+/-- The structural recursion for `polyDerivativeCoeffs` at eval level:
+`eval (polyDerivativeCoeffs (c :: cs)) x = eval cs x + x · eval (polyDerivativeCoeffs cs) x`.
+This is what makes the product rule fall out cleanly in the
+HasDerivAt proof. -/
+theorem evalCoeffs_polyDerivativeCoeffs_cons (c : Real) (cs : List Real) (x : Real) :
+    evalCoeffs (polyDerivativeCoeffs (c :: cs)) x =
+    evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x := by
+  rw [polyDerivativeCoeffs_cons]
+  -- Apply step-shift with k = 0: eval (listScaleByPos cs 1) = eval cs + eval (listScaleByPos cs 0).
+  rw [evalCoeffs_listScaleByPos_succ cs 0 x]
+  -- Need: evalCoeffs cs x + evalCoeffs (listScaleByPos cs 0) x =
+  --       evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x.
+  show evalCoeffs cs x + evalCoeffs (listScaleByPos cs 0) x =
+       evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x
+  -- Strip the common `evalCoeffs cs x +` on both sides.
+  congr 1
+  -- Now: evalCoeffs (listScaleByPos cs 0) x = x * evalCoeffs (polyDerivativeCoeffs cs) x.
+  cases cs with
+  | nil =>
+    rw [listScaleByPos_nil, polyDerivativeCoeffs_nil, evalCoeffs_nil]
+    show (0 : Real) = x * 0
+    rw [mul_zero]
+  | cons c' cs' =>
+    rw [listScaleByPos_cons, evalCoeffs_cons,
+        natCast_zero, zero_mul, zero_add, polyDerivativeCoeffs_cons]
+
+/-! ### HasDerivAt correspondence
+
+The formal derivative `polyDerivativeCoeffs` matches the analytic
+derivative of `evalCoeffs` everywhere. Standard sum/product rule
+induction. -/
+
+theorem polyDerivativeCoeffs_hasDerivAt (L : List Real) (x : Real) :
+    HasDerivAt (evalCoeffs L) (evalCoeffs (polyDerivativeCoeffs L) x) x := by
+  induction L with
+  | nil =>
+    rw [polyDerivativeCoeffs_nil, evalCoeffs_nil]
+    show HasDerivAt (fun y => evalCoeffs ([] : List Real) y) 0 x
+    show HasDerivAt (fun _ => (0 : Real)) 0 x
+    exact HasDerivAt_const 0 x
+  | cons c cs ih =>
+    rw [evalCoeffs_polyDerivativeCoeffs_cons]
+    -- Want: HasDerivAt (eval (c :: cs)) (eval cs x + x * eval (polyDerivativeCoeffs cs) x) x.
+    -- eval (c :: cs) y = c + y * eval cs y.
+    -- d/dy at y=x: 0 + (1 * eval cs x + x * eval (polyDerivativeCoeffs cs) x).
+    show HasDerivAt (fun y => evalCoeffs (c :: cs) y)
+           (evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x) x
+    have h_unfold : (fun y => evalCoeffs (c :: cs) y) =
+                    (fun y => c + y * evalCoeffs cs y) := by
+      funext y; rw [evalCoeffs_cons]
+    rw [h_unfold]
+    -- Sum rule on `c + (y * evalCoeffs cs y)`:
+    have h_const : HasDerivAt (fun _ : Real => c) 0 x := HasDerivAt_const c x
+    have h_id : HasDerivAt (fun y : Real => y) 1 x := HasDerivAt_id x
+    have h_mul : HasDerivAt (fun y => y * evalCoeffs cs y)
+                  (1 * evalCoeffs cs x +
+                   x * evalCoeffs (polyDerivativeCoeffs cs) x) x :=
+      HasDerivAt_mul (fun y => y) (evalCoeffs cs) 1
+        (evalCoeffs (polyDerivativeCoeffs cs) x) x h_id ih
+    have h_sum := HasDerivAt_add (fun _ => c) (fun y => y * evalCoeffs cs y)
+                    0 (1 * evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x)
+                    x h_const h_mul
+    -- The derivative provided by h_sum is 0 + (1 * evalCoeffs cs x + x * ...).
+    -- We need it as: evalCoeffs cs x + x * ....
+    have h_eq : (0 : Real) + (1 * evalCoeffs cs x +
+                  x * evalCoeffs (polyDerivativeCoeffs cs) x) =
+                evalCoeffs cs x + x * evalCoeffs (polyDerivativeCoeffs cs) x := by
+      rw [zero_add, one_mul_thm]
+    rw [← h_eq]
+    exact h_sum
 
 end PolynomialCanonical
 end MachLib
