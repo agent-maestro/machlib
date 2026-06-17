@@ -145,11 +145,121 @@ mechanically from it. -/
 namespace MachLib
 namespace ChainExp2PathC
 
+open MachLib.MultiPolyMod
 open MachLib.PfaffianChainMod
+open MachLib.PfaffianChainMod.PfaffianFn
 open MachLib.IterExpChainMod
 
--- This file is documentation-only. The actual proof work happens in
--- KhovanskiiReduction.lean once the Step 3b lemmas are discharged.
+/-! ## Foundational lemma: chainTotalDeriv preserves y_0-freeness
+
+For SingleExpChain, the chain relation is `relations 0 = varY 0`. So
+chainTotalDeriv could introduce y_0 dependence via the varY case. But
+if the input has `degreeY 0 = 0` (i.e., no y_0 in the AST), the varY 0
+case never fires, and the result is y_0-free.
+
+This is **intermediate lemma 3a** — a structural precondition for the
+strict-decrease lemma. It lets us treat `leadingCoeffY 0 p` (which has
+`degreeY 0 = 0` by `degreeY_leadingCoeffY`) as effectively a single-variable
+polynomial when applying `chainTotalDeriv`. -/
+
+theorem degreeY_chainTotalDeriv_zero_of_zero
+    (p : MultiPoly 1) (h : MultiPoly.degreeY ⟨0, by omega⟩ p = 0) :
+    MultiPoly.degreeY ⟨0, by omega⟩
+      (chainTotalDeriv SingleExpChain p) = 0 := by
+  induction p with
+  | const c =>
+    -- chainTotalDeriv (const c) = const 0. degreeY 0 (const 0) = 0.
+    show MultiPoly.degreeY ⟨0, by omega⟩
+          (MultiPoly.const (0 : MachLib.Real) : MultiPoly 1) = 0
+    rfl
+  | varX =>
+    -- chainTotalDeriv varX = const 1. degreeY 0 (const 1) = 0.
+    show MultiPoly.degreeY ⟨0, by omega⟩
+          (MultiPoly.const (1 : MachLib.Real) : MultiPoly 1) = 0
+    rfl
+  | varY i =>
+    -- hypothesis: degreeY 0 (varY i) = 0. But (varY 0) has degreeY 0 = 1.
+    -- For i : Fin 1, i = ⟨0, _⟩. So degreeY 0 (varY 0) = 1. Hypothesis fails.
+    exfalso
+    have h_i : i = ⟨0, by omega⟩ := Fin.ext (by have := i.isLt; omega)
+    rw [h_i] at h
+    -- h : degreeY 0 (varY 0) = 0, which is `if 0 = 0 then 1 else 0 = 0`.
+    show False
+    have : (if (⟨0, by omega⟩ : Fin 1) = (⟨0, by omega⟩ : Fin 1) then (1 : Nat) else 0) = 0 := h
+    rw [if_pos rfl] at this
+    exact Nat.one_ne_zero this
+  | add p q ihp ihq =>
+    -- degreeY 0 (add p q) = max → both 0. IH gives both chainTotalDeriv 0.
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    -- chainTotalDeriv (add p q) = add (chainTotalDeriv p) (chainTotalDeriv q).
+    -- degreeY 0 of this = max → both 0.
+    show Nat.max (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain p))
+                  (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain q)) = 0
+    rw [ih_p, ih_q]
+    rfl
+  | sub p q ihp ihq =>
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    show Nat.max (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain p))
+                  (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain q)) = 0
+    rw [ih_p, ih_q]
+    rfl
+  | mul p q ihp ihq =>
+    -- degreeY 0 (mul p q) = degreeY p + degreeY q = 0 → both 0.
+    have hsum : MultiPoly.degreeY ⟨0, by omega⟩ p
+              + MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := h
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := by omega
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := by omega
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    -- chainTotalDeriv (mul p q) = add (mul (chainTotalDeriv p) q) (mul p (chainTotalDeriv q)).
+    -- degreeY 0 of this = max(degreeY (mul (chainTotalDeriv p) q),
+    --                          degreeY (mul p (chainTotalDeriv q)))
+    --                  = max(degreeY chainTotalDeriv p + degreeY q,
+    --                        degreeY p + degreeY chainTotalDeriv q)
+    --                  = max(0 + 0, 0 + 0) = 0.
+    show Nat.max
+          (MultiPoly.degreeY ⟨0, by omega⟩
+            (chainTotalDeriv SingleExpChain p)
+           + MultiPoly.degreeY ⟨0, by omega⟩ q)
+          (MultiPoly.degreeY ⟨0, by omega⟩ p
+           + MultiPoly.degreeY ⟨0, by omega⟩
+              (chainTotalDeriv SingleExpChain q)) = 0
+    rw [ih_p, ih_q, hp, hq]
+    rfl
+
+/-! ## Status
+
+**Shipped in this commit**: `degreeY_chainTotalDeriv_zero_of_zero` —
+chainTotalDeriv preserves y_0-freeness on SingleExpChain (lemma 3a).
+
+**Next concrete steps**:
+- `chainTotalDeriv_y_free_eq_polyDerivative_x`: for y_0-free p,
+  chainTotalDeriv equals partial_x p (eval-level).
+- `degreeX_chainTotalDeriv_lt_after_simplify_y_free`: lemma 3 proper.
+- Then lemmas 1 (leadingCoeffY of chainTotalDeriv) and 2 (cancellation
+  at scaledReduction).
+
+Each is concrete proof work, ~50-100 lines each. -/
 
 end ChainExp2PathC
 end MachLib
