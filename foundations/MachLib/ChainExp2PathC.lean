@@ -1569,5 +1569,235 @@ theorem step3b_pfaffianFn_singleExp_strict_decrease_via_leadingCoeffY
                   (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) :=
   step3b_degreeUpper_strict_decrease p h_pos
 
+/-! ## Phase H closure — `h_bridge` for `singleExp_reduceStep`
+
+Wires lemma 2 + the eval / cTD-structural / derivative-canonical
+bridges + Phase G strict-decrease into the lex strict-decrease under
+SingleExp `scaledReduction` at `c = degreeY_last`. Provides a
+ReduceStep constructor (`singleExp_reduceStep_closed`) without an
+external `h_bridge` hypothesis.
+
+The closure works at the chain-length-1 / `MultiPoly 1` level. The
+PfaffianFn-level wrapper specializes via `hN : f.n = 1` plus
+`h_chain : f.chain = SingleExpChain`.
+
+The proof routes through:
+
+  polyTrueDegree (polyCoeffs (mP2PFL (lcY 0 scaledReduction.poly)))
+    = polyTrueDegree (polyCoeffs (mP2PFL (cTD (lcY 0 p))))   -- via lemma 2 + bridge (1) + PIT
+    = polyTrueDegree (polyCoeffs (polyDerivative (mP2PFL (lcY 0 p))))     -- via bridge (2)
+    = polyTrueDegree (polyDerivativeCoeffs (polyCoeffs (mP2PFL (lcY 0 p)))) -- via bridge (3)
+    < polyTrueDegree (polyCoeffs (mP2PFL (lcY 0 p)))                       -- via Phase G strict-decrease
+
+The `h_canon_pos` precondition (canonical leading-coefficient
+x-degree > 0) is what feeds Phase G; the `polyTrueDegree = 0` case
+needs separate framework handling (the lex measure as currently
+defined cannot distinguish a canonically-constant leading
+coefficient from a canonically-zero one, since both yield
+polyTrueDegree = 0). -/
+
+open MachLib.PolynomialCanonical in
+/-- The MultiPoly-1-level strict-decrease theorem: the chain of
+bridges. Given the canonical leading-coefficient x-degree precondition,
+the polyTrueDegree of the scaledReduction's leading coefficient (via
+mP2PFL + polyCoeffs) is strictly less than that of p's. -/
+theorem singleExp_polyTrueDegree_scaledReduction_lt
+    (p : MultiPoly 1)
+    (h_canon_pos :
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) > 0) :
+    polyTrueDegree
+      (polyCoeffs (multiPolyToPolyForLex
+        (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+          (MultiPoly.sub
+            (chainTotalDeriv SingleExpChain p)
+            (MultiPoly.mul
+              (MultiPoly.const
+                (Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩ p)))
+              p))))) <
+    polyTrueDegree
+      (polyCoeffs (multiPolyToPolyForLex
+        (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) := by
+  -- Abbreviate the index and the canonical coeff list via `let`.
+  let i : Fin 1 := ⟨0, by omega⟩
+  let L_p := polyCoeffs (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p))
+  -- All MultiPoly 1 entries are y-free at every index iff they're y-free at i.
+  -- We use this several times via the helper below.
+  -- Step (i): the scaledReduction's lcY is eval-equal to cTD (lcY p) via lemma 2.
+  -- Step (ii): mP2PFL eval-faithful for y-free → bridge to Poly.eval.
+  -- Step (iii): apply polyCoeffs_eval to get evalCoeffs-equality, then PIT bridge.
+  have h_eq1 :
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY i
+            (MultiPoly.sub
+              (chainTotalDeriv SingleExpChain p)
+              (MultiPoly.mul
+                (MultiPoly.const
+                  (Real.natCast (MultiPoly.degreeY i p)))
+                p))))) =
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (chainTotalDeriv SingleExpChain
+            (MultiPoly.leadingCoeffY i p)))) := by
+    apply polyTrueDegree_eq_of_evalCoeffs_eq
+    intro x
+    -- Reduce both evalCoeffs ∘ polyCoeffs to Poly.eval ∘ mP2PFL via polyCoeffs_eval.
+    rw [polyCoeffs_eval, polyCoeffs_eval]
+    -- Both inputs to mP2PFL are y-free (lcY's output is y-free by
+    -- degreeY_leadingCoeffY; cTD preserves y-freeness for SingleExp by
+    -- degreeY_chainTotalDeriv_zero_of_zero).
+    have h_lcY_sr_free :
+        ∀ j : Fin 1, MultiPoly.degreeY j
+          (MultiPoly.leadingCoeffY i
+            (MultiPoly.sub
+              (chainTotalDeriv SingleExpChain p)
+              (MultiPoly.mul
+                (MultiPoly.const
+                  (Real.natCast (MultiPoly.degreeY i p)))
+                p))) = 0 := by
+      intro j
+      have hj_eq_i : j = i := Subsingleton.elim _ _
+      rw [hj_eq_i]
+      exact MultiPoly.degreeY_leadingCoeffY i _
+    have h_ctd_lcY_free :
+        ∀ j : Fin 1, MultiPoly.degreeY j
+          (chainTotalDeriv SingleExpChain
+            (MultiPoly.leadingCoeffY i p)) = 0 := by
+      intro j
+      have hj_eq_i : j = i := Subsingleton.elim _ _
+      rw [hj_eq_i]
+      exact degreeY_chainTotalDeriv_zero_of_zero
+        (MultiPoly.leadingCoeffY i p)
+        (MultiPoly.degreeY_leadingCoeffY i p)
+    -- Use the bridge to convert Poly.eval to MultiPoly.eval.
+    rw [multiPolyToPolyForLex_eval_of_y_free _ h_lcY_sr_free x (fun _ => 0),
+        multiPolyToPolyForLex_eval_of_y_free _ h_ctd_lcY_free x (fun _ => 0)]
+    -- Apply lemma 2.
+    exact leadingCoeffY_scaledReduction_eval_SingleExp p x (fun _ => 0)
+  -- Step (iv): bridge (2) — cTD → polyDerivative for y-free.
+  have h_eq2 :
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (chainTotalDeriv SingleExpChain
+            (MultiPoly.leadingCoeffY i p)))) =
+      polyTrueDegree
+        (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+          (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) := by
+    have h_lcY_p_free :
+        ∀ j : Fin 1, MultiPoly.degreeY j
+          (MultiPoly.leadingCoeffY i p) = 0 := by
+      intro j
+      have hj_eq_i : j = i := Subsingleton.elim _ _
+      rw [hj_eq_i]
+      exact MultiPoly.degreeY_leadingCoeffY i p
+    rw [multiPolyToPolyForLex_chainTotalDeriv_of_y_free
+          SingleExpChain (MultiPoly.leadingCoeffY i p) h_lcY_p_free]
+  -- Step (v): bridge (3) — polyTrueDegree (polyCoeffs ∘ polyDerivative)
+  --                       = polyTrueDegree (polyDerivativeCoeffs ∘ polyCoeffs).
+  have h_eq3 :
+      polyTrueDegree
+        (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+          (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) =
+      polyTrueDegree (polyDerivativeCoeffs L_p) :=
+    polyTrueDegree_polyDerivative_eq_polyDerivativeCoeffs
+      (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p))
+  -- Step (vi): Phase G strict-decrease.
+  have h_lt : polyTrueDegree (polyDerivativeCoeffs L_p) < polyTrueDegree L_p :=
+    polyTrueDegree_polyDerivativeCoeffs_lt L_p h_canon_pos
+  -- Chain.
+  calc polyTrueDegree
+          (polyCoeffs (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i
+              (MultiPoly.sub
+                (chainTotalDeriv SingleExpChain p)
+                (MultiPoly.mul
+                  (MultiPoly.const
+                    (Real.natCast (MultiPoly.degreeY i p)))
+                  p)))))
+      = polyTrueDegree
+          (polyCoeffs (multiPolyToPolyForLex
+            (chainTotalDeriv SingleExpChain
+              (MultiPoly.leadingCoeffY i p)))) := h_eq1
+    _ = polyTrueDegree
+          (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+            (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) := h_eq2
+    _ = polyTrueDegree (polyDerivativeCoeffs L_p) := h_eq3
+    _ < polyTrueDegree L_p := h_lt
+
+open MachLib.PolynomialCanonical in
+/-- **SingleExp-specific closure** at the canonical `MultiPoly 1` shape.
+The lex strict-decrease for `scaledReduction` on PfaffianFn
+`⟨1, SingleExpChain, p⟩` at `c = degreeY 0 p`, given positive
+canonical leading-coefficient x-degree (`h_canon_pos`). -/
+theorem singleExp_h_bridge_closure (p : MultiPoly 1)
+    (h_canon_pos :
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) > 0) :
+    lexLT
+      (lexMeasure
+        ((⟨1, SingleExpChain, p⟩ : PfaffianFn).scaledReduction
+          (Real.natCast
+            (lexMeasure (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl).1)) rfl)
+      (lexMeasure (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl) := by
+  refine Or.inr ⟨?_, ?_⟩
+  · -- First-component equality.
+    show MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1)
+          (MultiPoly.sub
+            (chainTotalDeriv SingleExpChain p)
+            (MultiPoly.mul
+              (MultiPoly.const
+                (Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p)))
+              p)) =
+         MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p
+    change Nat.max
+      (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1)
+        (chainTotalDeriv SingleExpChain p))
+      (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1)
+        (MultiPoly.mul
+          (MultiPoly.const
+            (Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p)))
+          p)) =
+        MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p
+    rw [degreeY_chainTotalDeriv_eq_SingleExp p]
+    show Nat.max
+      (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p)
+      (0 + MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p) =
+        MultiPoly.degreeY (⟨0, by omega⟩ : Fin 1) p
+    rw [Nat.zero_add]
+    exact Nat.max_eq_right (Nat.le_refl _)
+  · -- Second-component strict-decrease.
+    exact singleExp_polyTrueDegree_scaledReduction_lt p h_canon_pos
+
+open MachLib.PolynomialCanonical in
+/-- **Closed SingleExp ReduceStep constructor.** Produces a
+`PfaffianFn.ReduceStep` for the SingleExp shape `⟨1, SingleExpChain, p⟩`
+*without* the external `h_bridge` hypothesis — it's now discharged
+internally by `singleExp_h_bridge_closure`.
+
+Preconditions:
+- `h_pos`: positive y-degree (first lex component > 0).
+- `h_canon_pos`: positive canonical leading-coefficient x-degree
+  (second lex component > 0).
+
+The `h_canon_pos = 0` case (canonically-constant leading coefficient)
+cannot be handled by `scaledReduction` in the current framework — the
+lex measure as defined cannot distinguish a canonically-constant
+leading coefficient from a canonically-zero one, both yield
+`polyTrueDegree = 0`. That corner case needs a separate
+"canonical-constant-coefficient drop" mechanism (analogous to the
+chain-length drop), which is followup work. -/
+noncomputable def PfaffianFn.singleExp_reduceStep_closed (p : MultiPoly 1)
+    (h_pos : (lexMeasure (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl).1 > 0)
+    (h_canon_pos :
+      polyTrueDegree
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY ⟨0, by omega⟩ p))) > 0) :
+    PfaffianFn.ReduceStep (⟨1, SingleExpChain, p⟩ : PfaffianFn) rfl :=
+  PfaffianFn.singleExp_reduceStep _ rfl h_pos
+    (singleExp_h_bridge_closure p h_canon_pos)
+
 end ChainExp2PathC
 end MachLib
