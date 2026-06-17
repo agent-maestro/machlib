@@ -367,9 +367,164 @@ theorem degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt
   --    < degreeUpper (polySimplify (multiPolyToPoly p))
   exact polyDerivative_degreeUpper_lt_after_simplify (multiPolyToPoly p) h_pos
 
-/-! ## Status
+/-! ## Lemma 1 prerequisite — chainTotalDeriv preserves degreeY exactly
 
-**Shipped in this commit**:
+The existing `degreeY_chainTotalDeriv_le` gives a NON-strict bound. For
+lemma 1, we need the STRONG equality: chainTotalDeriv preserves degreeY
+exactly on SingleExpChain (because `chain.relations 0 = varY 0` has
+`degreeY 0 = 1`, same as `varY 0` itself).
+
+This equality means: after chainTotalDeriv, the formal y_0-degree of
+the result EQUALS that of the input. The leading-coefficient slots
+line up. -/
+
+theorem degreeY_chainTotalDeriv_eq_SingleExp (p : MultiPoly 1) :
+    MultiPoly.degreeY ⟨0, by omega⟩
+      (chainTotalDeriv SingleExpChain p) =
+    MultiPoly.degreeY ⟨0, by omega⟩ p := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY i =>
+    -- chainTotalDeriv (varY i) = chain.relations i = varY 0 (SingleExp).
+    -- For Fin 1, i = ⟨0, _⟩. degreeY 0 (varY 0) = 1 on both sides.
+    have h_i : i = ⟨0, by omega⟩ := Fin.ext (by have := i.isLt; omega)
+    rw [h_i]
+    rfl
+  | add p q ihp ihq =>
+    -- degreeY 0 (chainTotalDeriv (add p q)) = max → use IH on each side.
+    show Nat.max (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain p))
+                  (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain q))
+       = Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                  (MultiPoly.degreeY ⟨0, by omega⟩ q)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain p))
+                  (MultiPoly.degreeY ⟨0, by omega⟩
+                    (chainTotalDeriv SingleExpChain q))
+       = Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                  (MultiPoly.degreeY ⟨0, by omega⟩ q)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    -- chainTotalDeriv (mul p q) = add (mul deriv_p q) (mul p deriv_q).
+    -- degreeY 0 = max(deg_p_after + deg_q, deg_p + deg_q_after)
+    --           = max(deg_p + deg_q, deg_p + deg_q)  [by IH]
+    --           = deg_p + deg_q.
+    show Nat.max
+          (MultiPoly.degreeY ⟨0, by omega⟩
+            (chainTotalDeriv SingleExpChain p)
+           + MultiPoly.degreeY ⟨0, by omega⟩ q)
+          (MultiPoly.degreeY ⟨0, by omega⟩ p
+           + MultiPoly.degreeY ⟨0, by omega⟩
+              (chainTotalDeriv SingleExpChain q))
+       = MultiPoly.degreeY ⟨0, by omega⟩ p
+       + MultiPoly.degreeY ⟨0, by omega⟩ q
+    rw [ihp, ihq]
+    exact Nat.max_self _
+
+/-! ## Lemma 1 proper — leadingCoeffY of chainTotalDeriv (eval-level)
+
+The eval-level identity: for any `p : MultiPoly 1` with `d := degreeY 0 p`,
+
+  `eval (leadingCoeffY 0 (chainTotalDeriv SingleExpChain p)) x env =
+   eval (chainTotalDeriv SingleExpChain (leadingCoeffY 0 p)) x env +
+   (natCast d) * eval (leadingCoeffY 0 p) x env`
+
+(Holds for d ≥ 0 — when d = 0 the identity collapses to
+`chainTotalDeriv p = chainTotalDeriv p`.)
+
+Proof by structural induction on `p`. The mul case is the technical
+heart: expand both sides via eval_add / eval_mul, apply IHs on each
+factor, ring-rearrange so the (d_p + d_q) factor matches the RHS.
+
+The `add` case with non-equal degrees uses
+`degreeY_chainTotalDeriv_eq_SingleExp` (above) to know which side
+contributes the leading coefficient. -/
+
+/-- Lemma 1 BASE CASES: the eval-level identity holds for const, varX,
+and varY. The full structural induction (add, sub, mul cases) is the
+remaining work for Step 3b. -/
+theorem leadingCoeffY_chainTotalDeriv_eval_SingleExp_base
+    (x : MachLib.Real) (env : Fin 1 → MachLib.Real) :
+    -- const c case
+    (∀ c : MachLib.Real,
+      MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (chainTotalDeriv SingleExpChain
+                         (MultiPoly.const c : MultiPoly 1))) x env =
+      MultiPoly.eval (chainTotalDeriv SingleExpChain
+                       (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (MultiPoly.const c : MultiPoly 1))) x env +
+      (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩
+                 (MultiPoly.const c : MultiPoly 1))) *
+        MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                         (MultiPoly.const c : MultiPoly 1)) x env)
+  ∧ -- varX case
+    (MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                     (chainTotalDeriv SingleExpChain
+                       (MultiPoly.varX : MultiPoly 1))) x env =
+     MultiPoly.eval (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.varX : MultiPoly 1))) x env +
+     (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩
+                (MultiPoly.varX : MultiPoly 1))) *
+       MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.varX : MultiPoly 1)) x env)
+  ∧ -- varY 0 case
+    (MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                     (chainTotalDeriv SingleExpChain
+                       (MultiPoly.varY ⟨0, by omega⟩ : MultiPoly 1))) x env =
+     MultiPoly.eval (chainTotalDeriv SingleExpChain
+                     (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.varY ⟨0, by omega⟩ : MultiPoly 1))) x env +
+     (MachLib.Real.natCast (MultiPoly.degreeY ⟨0, by omega⟩
+                (MultiPoly.varY ⟨0, by omega⟩ : MultiPoly 1))) *
+       MultiPoly.eval (MultiPoly.leadingCoeffY ⟨0, by omega⟩
+                       (MultiPoly.varY ⟨0, by omega⟩ : MultiPoly 1)) x env) := by
+  refine ⟨?_, ?_, ?_⟩
+  · intro c
+    show (0 : MachLib.Real) = 0 + MachLib.Real.natCast 0 * c
+    rw [MachLib.Real.natCast_zero]; mach_ring
+  · show (1 : MachLib.Real) = 1 + MachLib.Real.natCast 0 * x
+    rw [MachLib.Real.natCast_zero]; mach_ring
+  · -- chainTotalDeriv (varY 0) = relations 0 = varY 0.
+    -- leadingCoeffY 0 (varY 0) = const 1.
+    -- LHS = eval (const 1) = 1.
+    -- chainTotalDeriv (const 1) = const 0.
+    -- RHS = eval (const 0) + (natCast 1) * eval (const 1)
+    --     = 0 + 1 * 1 = 1.
+    show (1 : MachLib.Real) = 0 + MachLib.Real.natCast 1 * 1
+    rw [MachLib.Real.natCast_succ, MachLib.Real.natCast_zero]
+    mach_ring
+
+/-! ## Why the structural cases are deferred
+
+The base cases (const, varX, varY) above each close via direct eval
+computation. The structural cases (add, sub, mul) are tractable
+mathematically — the proof outline:
+
+- **add p q (sub p q)**: case-split on degreeY 0 p vs degreeY 0 q.
+  When unequal, the leadingCoeffY of the larger side wins; apply IH on
+  that side. When equal, leadingCoeffY = add of leadingCoeffYs; apply
+  IH on both, the d-factor distributes.
+  Uses `degreeY_chainTotalDeriv_eq_SingleExp` (shipped above) to know
+  which side dominates after derivative.
+
+- **mul p q**: the technical heart. chainTotalDeriv expands via Leibniz
+  to `add (mul (cTD p) q) (mul p (cTD q))`. Both summands have
+  degreeY 0 = d_p + d_q (equal). leadingCoeffY of each = mul of
+  leadingCoeffYs. Apply IH on p and q separately; expand and
+  ring-rearrange via mach_ring v2. The (d_p + d_q) emerges as
+  `d_p · (lcY p · lcY q) + d_q · (lcY p · lcY q)`.
+
+Each case is ~30-60 lines of careful eval-computation and IH
+application. Skipped here to avoid `sorry` placeholders.
+
+## Status
+
+**Shipped**:
 - `degreeY_chainTotalDeriv_zero_of_zero` (lemma 3a) — y_0-freeness
   preservation under chainTotalDeriv.
 - `multiPolyToPoly_chainTotalDeriv_eq_polyDerivative` (lemma 3b) — the
@@ -378,15 +533,19 @@ theorem degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt
 - `degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt`
   (lemma 3 proper) — strict-decrease of degreeUpper-after-polySimplify,
   via the bridge.
+- `degreeY_chainTotalDeriv_eq_SingleExp` (lemma 1 prerequisite) — the
+  STRONG equality: chainTotalDeriv preserves degreeY exactly on
+  SingleExpChain. Crucial for ensuring leadingCoeffY positions line up
+  before and after chainTotalDeriv.
 
-**Remaining**:
-- **Lemma 1** — `leadingCoeffY_chainTotalDeriv_SingleExp`: the d·a_d
-  emergence at the leading coefficient. ~100-150 lines.
+**Remaining for Step 3b**:
+- **Lemma 1** proper — `leadingCoeffY_chainTotalDeriv_SingleExp`: the
+  d·a_d emergence identity at the leading coefficient. ~100-150 lines
+  of structural induction with mul-case Leibniz interaction.
 - **Lemma 2** — `leadingCoeffY_scaledReduction_SingleExp`: the d·a_d
-  cancellation, derived from lemma 1. ~30-50 lines.
-- **Step 3b conclusion**: chain lemmas 1, 2, 3 to get the
-  strict-decrease at the leading coefficient (for the lex measure's
-  second component). -/
+  cancellation, mechanical given lemma 1. ~30-50 lines.
+- **Step 3b assembly**: combine lemmas 1, 2, 3 to get strict-decrease
+  at the leading coefficient (for the lex measure's second component). -/
 
 end ChainExp2PathC
 end MachLib
