@@ -644,6 +644,105 @@ noncomputable def yCoeffsAtLast_dropped {N : Nat}
     (p : MultiPoly (N + 1)) : List (MultiPoly N) :=
   (yCoeffsAt (lastIdx N) p).map dropLastY
 
+/-! ## Singleton-length yCoeffsAt for y-free polynomials
+
+When `p` has `degreeY i = 0` (no dependence on the i-th chain variable),
+the y-coefficient extraction at i produces a length-1 list. The exact
+AST of the entry varies by case (add/sub produce `[add p q]` directly;
+mul produces `[add (mul p q) (const 0)]` due to `listMulN`'s inductive
+shape, which appends a `const 0` carry) — but the **length is uniformly
+1**, which is the structural fact needed for chain-length reduction. -/
+
+theorem yCoeffsAt_length_one_when_y_free {n : Nat} (i : Fin n)
+    (p : MultiPoly n) (h_y_free : degreeY i p = 0) :
+    (yCoeffsAt i p).length = 1 := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    have hij_ne : i ≠ j := by
+      intro hij
+      have : (if i = j then (1 : Nat) else 0) = 0 := h_y_free
+      rw [if_pos hij] at this
+      exact Nat.one_ne_zero this
+    have hji_ne : j ≠ i := fun heq => hij_ne heq.symm
+    show (if j = i then ([const 0, const 1] : List (MultiPoly n))
+                   else ([varY j] : List (MultiPoly n))).length = 1
+    simp [hji_ne]
+  | add p q ihp ihq =>
+    have hmax : Nat.max (degreeY i p) (degreeY i q) = 0 := h_y_free
+    have ⟨h_le_p, h_le_q⟩ :
+        degreeY i p ≤ 0 ∧ degreeY i q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have h_p : degreeY i p = 0 := Nat.le_zero.mp h_le_p
+    have h_q : degreeY i q = 0 := Nat.le_zero.mp h_le_q
+    have hp_len := ihp h_p
+    have hq_len := ihq h_q
+    rcases hp : yCoeffsAt i p with _ | ⟨p', rest_p⟩
+    · rw [hp] at hp_len; simp at hp_len
+    rcases hq : yCoeffsAt i q with _ | ⟨q', rest_q⟩
+    · rw [hq] at hq_len; simp at hq_len
+    have hp_rest : rest_p = [] := by
+      rw [hp] at hp_len
+      have : rest_p.length = 0 := by simpa using hp_len
+      exact List.length_eq_zero.mp this
+    have hq_rest : rest_q = [] := by
+      rw [hq] at hq_len
+      have : rest_q.length = 0 := by simpa using hq_len
+      exact List.length_eq_zero.mp this
+    subst hp_rest; subst hq_rest
+    show (listAddN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
+    rw [hp, hq]
+    rfl
+  | sub p q ihp ihq =>
+    have hmax : Nat.max (degreeY i p) (degreeY i q) = 0 := h_y_free
+    have ⟨h_le_p, h_le_q⟩ :
+        degreeY i p ≤ 0 ∧ degreeY i q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have h_p : degreeY i p = 0 := Nat.le_zero.mp h_le_p
+    have h_q : degreeY i q = 0 := Nat.le_zero.mp h_le_q
+    have hp_len := ihp h_p
+    have hq_len := ihq h_q
+    rcases hp : yCoeffsAt i p with _ | ⟨p', rest_p⟩
+    · rw [hp] at hp_len; simp at hp_len
+    rcases hq : yCoeffsAt i q with _ | ⟨q', rest_q⟩
+    · rw [hq] at hq_len; simp at hq_len
+    have hp_rest : rest_p = [] := by
+      rw [hp] at hp_len
+      have : rest_p.length = 0 := by simpa using hp_len
+      exact List.length_eq_zero.mp this
+    have hq_rest : rest_q = [] := by
+      rw [hq] at hq_len
+      have : rest_q.length = 0 := by simpa using hq_len
+      exact List.length_eq_zero.mp this
+    subst hp_rest; subst hq_rest
+    show (listSubN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
+    rw [hp, hq]
+    rfl
+  | mul p q ihp ihq =>
+    have hsum : degreeY i p + degreeY i q = 0 := h_y_free
+    have h_p : degreeY i p = 0 := by omega
+    have h_q : degreeY i q = 0 := by omega
+    have hp_len := ihp h_p
+    have hq_len := ihq h_q
+    rcases hp : yCoeffsAt i p with _ | ⟨p', rest_p⟩
+    · rw [hp] at hp_len; simp at hp_len
+    rcases hq : yCoeffsAt i q with _ | ⟨q', rest_q⟩
+    · rw [hq] at hq_len; simp at hq_len
+    have hp_rest : rest_p = [] := by
+      rw [hp] at hp_len
+      have : rest_p.length = 0 := by simpa using hp_len
+      exact List.length_eq_zero.mp this
+    have hq_rest : rest_q = [] := by
+      rw [hq] at hq_len
+      have : rest_q.length = 0 := by simpa using hq_len
+      exact List.length_eq_zero.mp this
+    subst hp_rest; subst hq_rest
+    show (listMulN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
+    rw [hp, hq]
+    -- listMulN [p'] [q'] = [add (mul p' q') (const 0)]  — length 1.
+    rfl
+
 /-- **The eval-bridge for each entry**: the dropped coefficient
 evaluates the same as the original (in the larger env), because
 the original has degreeY_last = 0. -/

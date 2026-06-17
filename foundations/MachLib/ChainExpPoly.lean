@@ -637,6 +637,59 @@ but parameterized over the inner bound rather than using `degreeUpper · polySim
 The bridge work shipped in this push gives every load-bearing piece
 needed for that generalization. -/
 
+/-! ## Y-last-free reduction
+
+When a `MultiPoly (N+1)` has `degreeY last = 0` (no dependence on the
+last chain variable), the chain length collapses: the chain-bridged
+representation has the singleton form `[multiPolyToChainExpPolyT N q]`
+for some `q : MultiPoly N`. This is the structural "chain reduction"
+identity for y-last-free polynomials. -/
+
+open MultiPolyMod.MultiPoly in
+theorem yCoeffsAtLast_dropped_length_one_when_y_free
+    {N : Nat} (p : MultiPoly (N + 1))
+    (h : degreeY (lastIdx N) p = 0) :
+    (yCoeffsAtLast_dropped p).length = 1 := by
+  unfold yCoeffsAtLast_dropped
+  rw [List.length_map]
+  exact yCoeffsAt_length_one_when_y_free (lastIdx N) p h
+
+open MultiPolyMod.MultiPoly in
+theorem multiPolyToChainExpPolyT_length_one_when_y_free
+    {N : Nat} (p : MultiPoly (N + 1))
+    (h : degreeY (lastIdx N) p = 0) :
+    ((multiPolyToChainExpPolyT (N + 1) p : ChainExpPolyT (N + 1))
+      : List (ChainExpPolyT N)).length = 1 := by
+  rw [multiPolyToChainExpPolyT_succ, List.length_map]
+  exact yCoeffsAtLast_dropped_length_one_when_y_free p h
+
+open MultiPolyMod.MultiPoly in
+/-- **The chain-length reduction**: for a y-last-free `p`, the chain
+length N+1 auto-bound equals 1 + the chain length N auto-bound on the
+sole dropped coefficient. -/
+theorem chainExpPolyAutoBound_succ_y_free
+    {N : Nat} (p : MultiPoly (N + 1))
+    (h : degreeY (lastIdx N) p = 0) :
+    ∃ q : MultiPoly N,
+      chainExpPolyAutoBound (N + 1) (multiPolyToChainExpPolyT (N + 1) p) =
+      1 + chainExpPolyAutoBound N (multiPolyToChainExpPolyT N q) := by
+  have h_len : (yCoeffsAtLast_dropped p).length = 1 :=
+    yCoeffsAtLast_dropped_length_one_when_y_free p h
+  rcases h_list : yCoeffsAtLast_dropped p with _ | ⟨q, rest⟩
+  · rw [h_list] at h_len; simp at h_len
+  have h_rest : rest = [] := by
+    rw [h_list] at h_len
+    have : rest.length = 0 := by simpa using h_len
+    exact List.length_eq_zero.mp this
+  subst h_rest
+  refine ⟨q, ?_⟩
+  rw [multiPolyToChainExpPolyT_succ, h_list]
+  show chainExpPolyAutoBound (N + 1)
+        ((q :: ([] : List (MultiPoly N))).map (multiPolyToChainExpPolyT N)) =
+      1 + chainExpPolyAutoBound N (multiPolyToChainExpPolyT N q)
+  rw [chainExpPolyAutoBound_succ]
+  simp
+
 /-! ## Inductive bound theorem statement (the next-session frontier)
 
 The full multi-chain bound theorem:
