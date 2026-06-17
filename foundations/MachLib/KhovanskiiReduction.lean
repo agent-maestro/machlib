@@ -1642,7 +1642,10 @@ original degreeUpper). The strict decrease that holds at the eval
 level does *not* automatically lift to the polysimplify-syntactic
 level used by the lex measure.
 
-**What would close the gap.** Either:
+**What would close the gap.** Three candidate paths; on closer
+inspection (commit history of this section) they all hit the same
+eval-vs-syntactic wall:
+
 1. **Strengthen polySimplify** with a `ring_nf`-style normalization
    that cancels `a - a → 0` for ring-equivalent sub-trees (~ several
    hundred lines, plus the eval-preservation lemma).
@@ -1650,23 +1653,34 @@ level used by the lex measure.
    true canonical-form-via-eval map (e.g. Lagrange-interpolation
    canonical Poly), so that eval-equal inputs trivially give equal
    measures. Then lemma 2 + path-c step3b directly close h_bridge.
-3. **Use the structured ChainExpPoly bound.** `chainExpPolyAutoBound 1
-   ∘ multiPolyToChainExpPolyT 1` decomposes the polynomial by
-   y-coefficient extraction (`yCoeffsAt`) — at the last position the
-   `d·a_d - d·a_d` cancellation already happens during `listSubN`
-   construction.  ChainExpPolyT2.lean already ships much of this
-   infrastructure for the chain-length-2 case.
+3. **Use the structured ChainExpPoly bound** —
+   `chainExpPolyAutoBound 1 ∘ multiPolyToChainExpPolyT 1`. *Looked
+   tempting but doesn't actually shortcut the problem.* Examined
+   2026-06-17: `yCoeffsAt 0` element-at-position-d on
+   `sub (cTD p) (mul (const d) p)` ends up as
+   `Poly.sub (yCoeffsAt 0 (cTD p))[d] (mul (const d) a_d)` after
+   `listSubN`. `degreeUpper Poly.sub = max`, so even if the left
+   operand were structurally `add a_d' (mul (const d) a_d)`, the max
+   stays at `degreeUpper a_d` — same wall as option (1).
+   Worse: `leadingCoeffY_chainTotalDeriv_SingleExp` (the structural
+   identity in ChainExp2PathC.lean line 69 docstring) was only ever
+   proven at the *eval* level (`..._eval_...` suffix on every
+   shipped lemma). The structural-`=` version is likely false for
+   non-canonical ASTs (the mul case's Leibniz expansion produces a
+   syntactic form that doesn't equal `add (cTD lcY) (d · lcY)`
+   without ring normalization).
 
-Path-of-least-resistance: option 3, since the existing
-ChainExpPolyT infrastructure already implements the per-position
-extraction this needs. That refactor changes `lexMeasure`'s second
-component and re-statements of Step 3b — followup work, not a thin
-plumbing exercise as I initially estimated.
+**Honest summary.** All three paths converge on the same missing
+piece: a ring-cancellation-aware canonicalizer for Poly that
+preserves eval and lets eval-equality drive
+degreeUpper-after-canonicalize equality. That is the genuine
+multi-session investment; there is no "switch which measure we
+use" shortcut.
 
 The `singleExp_reduceStep` constructor below still takes the
 lex-decrease as a hypothesis; consumers wishing to instantiate it
-today need to supply `h_bridge` externally, OR wait for option 3's
-lex-measure refactor. -/
+today need to supply `h_bridge` externally. Closing it permanently
+requires the canonicalizer above — there is no faster path. -/
 
 /-- **SingleExp ReduceStep constructor.**
 For a chain-length-1 PfaffianFn with positive first-component lex
