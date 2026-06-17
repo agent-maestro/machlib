@@ -1,5 +1,6 @@
 import MachLib.KhovanskiiReduction
 import MachLib.IterExpChain
+import MachLib.PfaffianFnBound
 
 /-!
 # MachLib.ChainExp2PathC — path (c) architecture for chain-level-2 Khovanskii
@@ -247,19 +248,145 @@ theorem degreeY_chainTotalDeriv_zero_of_zero
     rw [ih_p, ih_q, hp, hq]
     rfl
 
+/-! ## Lemma 3b — multiPolyToPoly bridges chainTotalDeriv to polyDerivative
+
+For y_0-free `p : MultiPoly 1`, the existing `multiPolyToPoly` bridge
+(from `PfaffianFnBound.lean`) sends `chainTotalDeriv SingleExpChain p`
+to `polyDerivative (multiPolyToPoly p)`. This is the structural
+correspondence that lets us lift the existing Poly strict-decrease
+theorem (`polyDerivative_degreeUpper_lt_after_simplify`) to MultiPoly 1. -/
+
+open MachLib.PfaffianFnBound
+open MachLib.PolynomialRootCount
+open MachLib.PolynomialEvidence (Poly)
+
+theorem multiPolyToPoly_chainTotalDeriv_eq_polyDerivative
+    (p : MultiPoly 1) (h : MultiPoly.degreeY ⟨0, by omega⟩ p = 0) :
+    multiPolyToPoly (chainTotalDeriv SingleExpChain p) =
+    polyDerivative (multiPolyToPoly p) := by
+  induction p with
+  | const c =>
+    -- chainTotalDeriv (const c) = const 0. multiPolyToPoly (const 0) = Poly.const 0.
+    -- polyDerivative (multiPolyToPoly (const c)) = polyDerivative (Poly.const c) = Poly.const 0.
+    rfl
+  | varX =>
+    -- chainTotalDeriv varX = const 1. multiPolyToPoly (const 1) = Poly.const 1.
+    -- polyDerivative (multiPolyToPoly varX) = polyDerivative Poly.var = Poly.const 1.
+    rfl
+  | varY i =>
+    -- y_0-free forces no varY, but varY i in Fin 1 must be varY ⟨0, _⟩ with degreeY 0 = 1.
+    exfalso
+    have h_i : i = ⟨0, by omega⟩ := Fin.ext (by have := i.isLt; omega)
+    rw [h_i] at h
+    have : (if (⟨0, by omega⟩ : Fin 1) = (⟨0, by omega⟩ : Fin 1) then (1 : Nat) else 0) = 0 := h
+    rw [if_pos rfl] at this
+    exact Nat.one_ne_zero this
+  | add p q ihp ihq =>
+    -- y_0-free (add p q) gives both p and q y_0-free.
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    show multiPolyToPoly (chainTotalDeriv SingleExpChain (MultiPoly.add p q)) =
+         polyDerivative (multiPolyToPoly (MultiPoly.add p q))
+    -- LHS unfolds: multiPolyToPoly (add (chainTotalDeriv p) (chainTotalDeriv q))
+    --            = Poly.add (multiPolyToPoly (chainTotalDeriv p))
+    --                       (multiPolyToPoly (chainTotalDeriv q)).
+    -- RHS unfolds: polyDerivative (Poly.add (multiPolyToPoly p) (multiPolyToPoly q))
+    --            = Poly.add (polyDerivative (multiPolyToPoly p))
+    --                       (polyDerivative (multiPolyToPoly q)).
+    show Poly.add (multiPolyToPoly (chainTotalDeriv SingleExpChain p))
+                  (multiPolyToPoly (chainTotalDeriv SingleExpChain q))
+       = Poly.add (polyDerivative (multiPolyToPoly p))
+                  (polyDerivative (multiPolyToPoly q))
+    rw [ih_p, ih_q]
+  | sub p q ihp ihq =>
+    have hmax : Nat.max (MultiPoly.degreeY ⟨0, by omega⟩ p)
+                        (MultiPoly.degreeY ⟨0, by omega⟩ q) = 0 := h
+    have ⟨hp_le, hq_le⟩ : MultiPoly.degreeY ⟨0, by omega⟩ p ≤ 0 ∧
+                          MultiPoly.degreeY ⟨0, by omega⟩ q ≤ 0 :=
+      Nat.max_le.mp (Nat.le_of_eq hmax)
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := Nat.le_zero.mp hp_le
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := Nat.le_zero.mp hq_le
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    show Poly.sub (multiPolyToPoly (chainTotalDeriv SingleExpChain p))
+                  (multiPolyToPoly (chainTotalDeriv SingleExpChain q))
+       = Poly.sub (polyDerivative (multiPolyToPoly p))
+                  (polyDerivative (multiPolyToPoly q))
+    rw [ih_p, ih_q]
+  | mul p q ihp ihq =>
+    have hsum : MultiPoly.degreeY ⟨0, by omega⟩ p
+              + MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := h
+    have hp : MultiPoly.degreeY ⟨0, by omega⟩ p = 0 := by omega
+    have hq : MultiPoly.degreeY ⟨0, by omega⟩ q = 0 := by omega
+    have ih_p := ihp hp
+    have ih_q := ihq hq
+    -- chainTotalDeriv (mul p q) = add (mul (chainTotalDeriv p) q) (mul p (chainTotalDeriv q)).
+    -- multiPolyToPoly of this = Poly.add (Poly.mul ... ...) (Poly.mul ... ...).
+    -- polyDerivative (multiPolyToPoly (mul p q)) = polyDerivative (Poly.mul (mpp p) (mpp q))
+    --                                            = Poly.add (Poly.mul (polyDerivative mpp p) (mpp q))
+    --                                                       (Poly.mul (mpp p) (polyDerivative mpp q)).
+    show Poly.add (Poly.mul (multiPolyToPoly (chainTotalDeriv SingleExpChain p))
+                             (multiPolyToPoly q))
+                  (Poly.mul (multiPolyToPoly p)
+                             (multiPolyToPoly (chainTotalDeriv SingleExpChain q)))
+       = Poly.add (Poly.mul (polyDerivative (multiPolyToPoly p))
+                             (multiPolyToPoly q))
+                  (Poly.mul (multiPolyToPoly p)
+                             (polyDerivative (multiPolyToPoly q)))
+    rw [ih_p, ih_q]
+
+/-! ## Lemma 3 proper — strict-decrease of degreeUpper via the bridge
+
+The strict-decrease lemma needed for path (c)'s Step 3b: for y_0-free
+`p : MultiPoly 1` with `degreeUpper (polySimplify (multiPolyToPoly p)) > 0`,
+
+  `degreeUpper (polySimplify (multiPolyToPoly (chainTotalDeriv SingleExpChain p)))
+   < degreeUpper (polySimplify (multiPolyToPoly p))`.
+
+Direct consequence of `multiPolyToPoly_chainTotalDeriv_eq_polyDerivative`
+(lemma 3b above) combined with the existing
+`polyDerivative_degreeUpper_lt_after_simplify` from
+`PolynomialRootCount.lean`. -/
+
+theorem degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt
+    (p : MultiPoly 1) (h_yfree : MultiPoly.degreeY ⟨0, by omega⟩ p = 0)
+    (h_pos : degreeUpper (polySimplify (multiPolyToPoly p)) > 0) :
+    degreeUpper (polySimplify (multiPolyToPoly
+                  (chainTotalDeriv SingleExpChain p)))
+    < degreeUpper (polySimplify (multiPolyToPoly p)) := by
+  -- Bridge: multiPolyToPoly (chainTotalDeriv p) = polyDerivative (multiPolyToPoly p).
+  rw [multiPolyToPoly_chainTotalDeriv_eq_polyDerivative p h_yfree]
+  -- Now: degreeUpper (polySimplify (polyDerivative (multiPolyToPoly p)))
+  --    < degreeUpper (polySimplify (multiPolyToPoly p))
+  exact polyDerivative_degreeUpper_lt_after_simplify (multiPolyToPoly p) h_pos
+
 /-! ## Status
 
-**Shipped in this commit**: `degreeY_chainTotalDeriv_zero_of_zero` —
-chainTotalDeriv preserves y_0-freeness on SingleExpChain (lemma 3a).
+**Shipped in this commit**:
+- `degreeY_chainTotalDeriv_zero_of_zero` (lemma 3a) — y_0-freeness
+  preservation under chainTotalDeriv.
+- `multiPolyToPoly_chainTotalDeriv_eq_polyDerivative` (lemma 3b) — the
+  bridge: multiPolyToPoly converts chainTotalDeriv on y_0-free MultiPoly 1
+  into polyDerivative on Poly.
+- `degreeUpper_polySimplify_multiPolyToPoly_chainTotalDeriv_lt`
+  (lemma 3 proper) — strict-decrease of degreeUpper-after-polySimplify,
+  via the bridge.
 
-**Next concrete steps**:
-- `chainTotalDeriv_y_free_eq_polyDerivative_x`: for y_0-free p,
-  chainTotalDeriv equals partial_x p (eval-level).
-- `degreeX_chainTotalDeriv_lt_after_simplify_y_free`: lemma 3 proper.
-- Then lemmas 1 (leadingCoeffY of chainTotalDeriv) and 2 (cancellation
-  at scaledReduction).
-
-Each is concrete proof work, ~50-100 lines each. -/
+**Remaining**:
+- **Lemma 1** — `leadingCoeffY_chainTotalDeriv_SingleExp`: the d·a_d
+  emergence at the leading coefficient. ~100-150 lines.
+- **Lemma 2** — `leadingCoeffY_scaledReduction_SingleExp`: the d·a_d
+  cancellation, derived from lemma 1. ~30-50 lines.
+- **Step 3b conclusion**: chain lemmas 1, 2, 3 to get the
+  strict-decrease at the leading coefficient (for the lex measure's
+  second component). -/
 
 end ChainExp2PathC
 end MachLib
