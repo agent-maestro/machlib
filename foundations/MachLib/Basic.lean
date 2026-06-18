@@ -69,6 +69,34 @@ axiom realOfScientific_pos
     (m : Nat) (s : Bool) (e : Nat) (hm : 0 < m) :
     0 < realOfScientific m s e
 
+/-- Decimal literals at integer values reduce to their `oneR` /
+canonical-sum form. These three axioms bridge the gap between
+Lean's `OfScientific`-elaborated decimal literals (`(1.0 : Real)`,
+`(2.0 : Real)`, `(3.0 : Real)`) and the `oneR`-based natural-number-cast
+values that show up in proofs.
+
+The literals desugar definitionally:
+  `(1.0 : Real) = realOfScientific 10 true 1`
+  `(2.0 : Real) = realOfScientific 20 true 1`
+  `(3.0 : Real) = realOfScientific 30 true 1`
+
+But `realOfScientific` is otherwise opaque (per the axiom above), so
+the equalities `... = 1`, `... = 1 + 1`, `... = 1 + 1 + 1` are NOT
+derivable from `MachLib.Basic`'s other axioms. Each is consistent
+with the standard `OfScientific` interpretation
+(`m × 10^±e = numerical value`), and adding them changes nothing
+analytically — they just let the canonical-form path through proofs
+of the form `(2.0 : Real) / 2.0 = 1` etc.
+
+C-243 (2026-06-18). Surfaced by lean_proofs_v1.1 finding F12: 3 of
+18 corpus theorems blocked at this exact gap (cosh_at_zero needs
+`(2.0 : Real) = 1 + 1`; smoothstep_bounded needs `(2.0 : Real) ≤
+(3.0 : Real)` provable via the canonical form; lerp_endpoint_one
+needs `(1.0 : Real) = 1`). -/
+axiom realOfScientific_one_dot_zero : realOfScientific 10 true 1 = 1
+axiom realOfScientific_two_dot_zero : realOfScientific 20 true 1 = 1 + 1
+axiom realOfScientific_three_dot_zero : realOfScientific 30 true 1 = 1 + 1 + 1
+
 /--
 Real-to-real power. Forge kernels emit `(base ^ exp)` for
 non-integer exponents (e.g. `(1 + (alpha * psi) ^ n_shape)` in
