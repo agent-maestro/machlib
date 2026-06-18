@@ -122,3 +122,39 @@ open MachLib.PfaffianChainMod
 #print axioms listMulN_getLast_eval
 
 end PathC
+
+
+/-! ## C-243 literal-bridge axioms (2026-06-18 audit)
+
+Three new axioms in MachLib/Basic.lean immediately after
+`realOfScientific_pos`. Surfaced by lean_proofs_v1 (monogate-research)
+finding F12: 3 of 18 corpus theorems blocked at the gap between
+Lean's `OfScientific`-elaborated decimal literals and the `oneR`-based
+canonical-sum values. All three are consistent with the standard
+`OfScientific` interpretation (m × 10^±e = numerical value); they
+add no analytic content, only let canonical-form paths through proofs
+of the form `(2.0 : Real) / 2.0 = 1`.
+
+The axioms are minimal in surface — they only mention `oneR`-derived
+naturals and the opaque `realOfScientific` carrier. No transcendentals,
+no derivatives, no analysis. They appear in `#print axioms` closures
+of any theorem that exercises a decimal literal in arithmetic
+(downstream of the lean_proofs_v1.2 work, this applies to
+cosh_at_zero, smoothstep_bounded, and any future theorem using
+`(2.0 : Real)` or `(3.0 : Real)` in division or ordering).
+
+The three new axiom names print cleanly via `#check` to confirm they
+are reachable from MachLib's open namespace surface. -/
+
+section C243LiteralBridge
+
+open MachLib.Real
+
+-- Confirm the three new C-243 axioms are accessible and have the
+-- expected types. `#check` is sufficient — these have no constructive
+-- content beyond what their statement says.
+#check @realOfScientific_one_dot_zero
+#check @realOfScientific_two_dot_zero
+#check @realOfScientific_three_dot_zero
+
+end C243LiteralBridge
