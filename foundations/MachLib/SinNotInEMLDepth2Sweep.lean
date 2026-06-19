@@ -17,11 +17,19 @@ No Mathlib dependency. Zero-Mathlib gate stays PASS.
 namespace MachLib
 namespace Real
 
-/-- Taylor lower bound: `1 + x < exp x` for `x > 0`. -/
-axiom exp_gt_one_plus_self : ∀ x : Real, 0 < x → 1 + x < exp x
+/-- `log x < x` for `x > 0`. Standard log < self bound.
 
-/-- `log x < x` for `x > 0`. Standard log < self bound. -/
-axiom log_lt_self_of_pos : ∀ x : Real, 0 < x → log x < x
+**2026-06-19 update**: discharged from `exp_log` (existing) +
+`exp_grows_strictly_thm` (foundational in `Exp.lean`). No longer an
+axiom.
+
+Proof: for `x > 0`, `exp (log x) = x` (by `exp_log`). Then
+`log x < exp (log x) = x` (by `exp_grows_strictly_thm`). -/
+theorem log_lt_self_of_pos (x : Real) (hx : 0 < x) : log x < x := by
+  have h_exp_log : exp (log x) = x := exp_log hx
+  have h_grows : log x < exp (log x) := exp_grows_strictly_thm (log x)
+  rw [h_exp_log] at h_grows
+  exact h_grows
 
 /-- `0 < sin 1`. Follows from `sin_pos_on_open_zero_pi` (0 < 1 < π). -/
 axiom sin_one_pos : (0 : Real) < sin 1

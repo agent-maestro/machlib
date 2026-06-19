@@ -124,16 +124,16 @@ theorem lambertW_not_in_eml_0 (t : EMLTree) (ht : t.depth ≤ 0) :
       simp [EMLTree.depth] at hd
     omega
 
-/-! ## Supporting axiom for the depth-1 case-3 sub-case
+/-! ## Supporting bound for the depth-1 case-3 sub-case
 
-The `eml(var, const c)` case needs a strict bound `2 < exp 1`
-(classical-true, e ≈ 2.718). MachLib has `one_lt_exp_one : 1 < exp 1`
-but not the strict-2 version. Adding here as a classical-citation
-axiom; would be derivable from a constructive lower bound on exp(1)
-(e.g., via the series expansion: exp(1) = 1 + 1 + 1/2 + ... ≥ 2.5).
-~30-50 lines of constructive derivation; lifted here as a single
-axiom for now to keep the Lambert-W file focused. -/
-axiom two_lt_exp_one : ((1 + 1 : Real)) < Real.exp 1
+The `eml(var, const c)` case needs the strict bound `2 < exp 1`
+(classical-true, e ≈ 2.718).
+
+**2026-06-19 update**: discharged from `Real.exp_gt_one_plus_self`
+(foundational axiom in `Exp.lean`) at `x = 1`. The bound
+`1 + 1 < exp 1` is the specific instance. No longer an axiom. -/
+theorem two_lt_exp_one : ((1 + 1 : Real)) < Real.exp 1 :=
+  Real.exp_gt_one_plus_self 1 zero_lt_one_ax
 
 /-! ## Depth-1 barrier
 

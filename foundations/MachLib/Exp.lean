@@ -79,5 +79,48 @@ theorem exp_sub (x y : Real) : exp (x - y) = exp x / exp y := by
   rw [sub_def, exp_add, exp_neg_inv]
   exact (div_def (exp x) (exp y) (exp_ne_zero y)).symm
 
+/-! ### Tangent-line lower bound (axiom)
+
+The single classical-analytic fact `1 + x < exp x` for `x > 0`,
+underlying every asymptotic comparison of `exp` against polynomials.
+Equivalent to the strict-convexity of `exp` at 0.
+
+Classical proof: series `exp x = 1 + x + x²/2 + ...` with positive
+remainder. MachLib doesn't carry the series machinery, so this is
+axiomatised here as a foundation primitive (moved here from
+`SinNotInEMLDepth2Sweep.lean` on 2026-06-19 to centralise its use).
+
+Downstream consumers across SinNotInEMLDepth2Sweep, LambertW, and
+Asymptotics all reference this single axiom; no other module
+introduces a duplicate or near-duplicate axiom of the same shape. -/
+axiom exp_gt_one_plus_self (x : Real) (hx : 0 < x) : 1 + x < exp x
+
+/-- `x < exp x` for ALL real `x`. Pointwise version of
+`Asymptotics.exp_grows_strictly` (which is now a theorem citing this
+foundation).
+
+Proof: case-split on `x > 0` vs `x ≤ 0`. For `x > 0`, use
+`exp_gt_one_plus_self` + `1 < 1 + x`. For `x ≤ 0`, use `exp_pos`. -/
+theorem exp_grows_strictly_thm (x : Real) : x < exp x := by
+  by_cases hx_pos : 0 < x
+  · -- x > 0: from 1 + x < exp x (exp_gt_one_plus_self) and x < 1 + x.
+    have h1 : 1 + x < exp x := exp_gt_one_plus_self x hx_pos
+    have h2 : x < 1 + x := by
+      have := add_lt_add_left zero_lt_one_ax x
+      -- this : x + 0 < x + 1
+      rwa [add_zero, add_comm x 1] at this
+    exact lt_trans_ax h2 h1
+  · -- x ≤ 0: from exp x > 0 ≥ x.
+    have hx_le_zero : x ≤ 0 := by
+      rcases lt_total x 0 with h | h | h
+      · exact (le_iff_lt_or_eq _ _).mpr (Or.inl h)
+      · exact (le_iff_lt_or_eq _ _).mpr (Or.inr h)
+      · exact absurd h hx_pos
+    have h_exp_pos : 0 < exp x := exp_pos x
+    -- x ≤ 0 < exp x
+    rcases (le_iff_lt_or_eq _ _).mp hx_le_zero with hlt | heq
+    · exact lt_trans_ax hlt h_exp_pos
+    · subst heq; exact h_exp_pos
+
 end Real
 end MachLib

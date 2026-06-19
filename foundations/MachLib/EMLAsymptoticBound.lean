@@ -191,7 +191,7 @@ theorem tame_eval_eventually_le (t : EMLTree) (htame : Tame t) :
         -- contradicting log < 0.
         exfalso
         have h_step : Real.exp (Real.log (t2.eval x)) ≤ Real.exp 0 :=
-          exp_monotone _ _ (le_of_lt h)
+          exp_monotone (le_of_lt h)
         rw [h_exp_log, exp_zero] at h_step
         -- h_step : t2.eval x ≤ 1
         have heq : t2.eval x = 1 := le_antisymm h_step h_t2_pos
@@ -261,7 +261,7 @@ theorem tame_eval_eventually_le (t : EMLTree) (htame : Tame t) :
     --                       = iter_exp (t1.depth + 2) x.
     have h_exp_bound : Real.exp (t1.eval x)
                      ≤ Real.exp (iter_exp (t1.depth + 1) x) :=
-      exp_monotone _ _ h_t1_bound
+      exp_monotone h_t1_bound
     have h_exp_iter : Real.exp (iter_exp (t1.depth + 1) x)
                     = iter_exp (t1.depth + 1 + 1) x := by
       show Real.exp (iter_exp (t1.depth + 1) x)

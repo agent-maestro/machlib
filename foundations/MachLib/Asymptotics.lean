@@ -174,9 +174,13 @@ direct applications by Lambert-W, gamma, and Khovanskii barriers.
 -/
 
 /-- `Real.exp` strictly grows: `x < exp(x)` for all `x : Real`.
-Classical fact; provable from the series expansion or by combining
-`exp_zero = 1`, `exp_pos`, and monotonicity. -/
-axiom exp_grows_strictly (x : Real) : x < Real.exp x
+
+**2026-06-19 update**: discharged via the foundational
+`Real.exp_grows_strictly_thm` (in `Exp.lean`), which itself
+discharges from `exp_gt_one_plus_self` + `exp_pos`. No longer an
+axiom. -/
+theorem exp_grows_strictly (x : Real) : x < Real.exp x :=
+  Real.exp_grows_strictly_thm x
 
 /-- `iter_exp k+1` strictly dominates `iter_exp k` at every point.
 Direct consequence: `iter_exp (k+1) x = exp(iter_exp k x)` (by
@@ -225,20 +229,12 @@ theorem EventuallyLE.comp_mono {f g h : Real → Real}
 /-- `Real.exp` is monotone, packaged as an `EventuallyLE` lemma:
 if `f ≤ g` eventually, then `exp ∘ f ≤ exp ∘ g` eventually.
 
-**2026-06-19 update**: discharged from `Real.exp_lt` (strict
-monotonicity axiom in `MachLib/Exp.lean`) + `le_iff_lt_or_eq`. No
-longer an axiom. -/
-theorem exp_monotone (x y : Real) (hxy : x ≤ y) : Real.exp x ≤ Real.exp y := by
-  rcases (le_iff_lt_or_eq x y).mp hxy with hlt | heq
-  · -- x < y → exp x < exp y → exp x ≤ exp y
-    exact (le_iff_lt_or_eq _ _).mpr (Or.inl (Real.exp_lt hlt))
-  · -- x = y → exp x = exp y → exp x ≤ exp y
-    rw [heq]
-    exact (le_iff_lt_or_eq _ _).mpr (Or.inr rfl)
-
+**2026-06-19 update**: discharged from the existing
+`MachLib.Real.exp_monotone` theorem in `Exp.lean` (which itself
+discharges from `exp_lt` axiom). No longer an axiom here. -/
 theorem EventuallyLE.exp {f g : Real → Real} (hfg : EventuallyLE f g) :
     EventuallyLE (fun x => Real.exp (f x)) (fun x => Real.exp (g x)) :=
-  hfg.comp_mono exp_monotone
+  hfg.comp_mono (fun _ _ h => MachLib.Real.exp_monotone h)
 
 /-! ## Demonstrative theorems using the substrate
 
