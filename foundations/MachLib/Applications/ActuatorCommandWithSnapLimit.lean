@@ -189,7 +189,7 @@ and v3's `hi_le_prev_plus_rl` becomes `snap_hi ≤ jerk_hi`.
 -/
 
 /-- snap_lo ≥ jerk_lo. Specialisation of v3's prev_minus_rl_le_lo. -/
-private theorem jerk_lo_le_snap_lo
+theorem jerk_lo_le_snap_lo
     (prev_result prev_prev_result prev_prev_prev_result
      jerk_limit snap_limit : Real)
     (h_prev_jerk_lower :
@@ -208,7 +208,7 @@ private theorem jerk_lo_le_snap_lo
     h_prev_jerk_lower
 
 /-- snap_hi ≤ jerk_hi. Specialisation of v3's hi_le_prev_plus_rl. -/
-private theorem snap_hi_le_jerk_hi
+theorem snap_hi_le_jerk_hi
     (prev_result prev_prev_result prev_prev_prev_result
      jerk_limit snap_limit : Real)
     (h_prev_jerk_upper :
