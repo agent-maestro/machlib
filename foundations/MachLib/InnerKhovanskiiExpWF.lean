@@ -125,5 +125,53 @@ theorem measureLT_WF {T : Type} (m : T → Nat) :
     WellFounded (measureLT m) :=
   InvImage.wf m Nat.lt_wfRel.wf
 
+/-! ## Chain-2 obstruction — precise statement for next session
+
+The naive per-coefficient lex measure
+`m g = (degreeY 0 g, polyTrueDegreeStrict (polyCoeffs (mP2PFL (lcY 0 g))))`
+does NOT satisfy `coeffStep_le` for chain-level 2 over `IterExpChain 2`.
+This section formalises exactly why, so the next session can pick up
+without re-deriving the obstruction.
+
+The chain-2 chainTotalDeriv has the form (informally):
+
+  chainTotalDeriv f = ∂f/∂x + y_0 · ∂f/∂y_0 + y_0·y_1 · ∂f/∂y_1
+
+where the `y_0 · ∂f/∂y_0` term RAISES `degreeY 0` by 1 (unlike
+SingleExp, where chainTotalDeriv preserves degreeY 0 by
+`degreeY_chainTotalDeriv_eq_SingleExp`).
+
+Then `coeffStep g k = chainTotalDeriv g + (k · y_0) · g` has:
+  - degreeY 0 of `chainTotalDeriv g`: ≥ degreeY 0 g + 1 in general
+  - degreeY 0 of `(k · y_0) · g` for k ≠ 0: = degreeY 0 g + 1
+  - So degreeY 0 of `coeffStep g k`: ≥ degreeY 0 g + 1
+
+Under the lex measure with first component `degreeY 0`, this is a
+STRICT INCREASE, so `coeffStep_le` (¬ measureRel (coeffStep g k) g)
+fails — the relation IS satisfied in the wrong direction.
+
+## The two candidate fixes (for the next session)
+
+**Fix A: Decompose the chain extension.** Track `degreeY 0` and
+`degreeY 1` separately. `chainTotalDeriv` on a chain-2 multi-poly
+that's polynomial in `y_1` of degree d_1 reduces d_1 by 1 (the
+y_1-leading term gets differentiated to a y_0-poly of one lower
+y_1-degree). The measure becomes `(d_1, max d_0_across_y_1_levels,
+polyTrueDegreeStrict ...)`. This is the muse's "angle 1" reduction
+applied symbolically at the measure level.
+
+**Fix B: Reformulate the framework as a list-level WF relation.**
+Instead of measuring each coefficient T, measure the LIST `List T`
+as a single object. The relation `measureRel : List T → List T → Prop`
+is well-founded if every reduction step yields a strictly smaller
+list. Then `coeffStep_le` becomes "the list after scaledReductionAux
+is ≤ the list before" which can absorb the local y_0-multiplication
+because the OTHER coefficients in the list (which DO satisfy strict
+decrease at k=0) drag the list-level measure down.
+
+Both fixes require ~200–300 lines of new lemmas. Fix A is
+mathematically cleaner; Fix B is closer to the existing framework
+shape. Picking is the next session's first decision. -/
+
 end InnerKhovanskiiExpWFMod
 end MachLib
