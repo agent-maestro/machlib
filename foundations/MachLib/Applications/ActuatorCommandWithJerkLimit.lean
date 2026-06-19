@@ -105,7 +105,7 @@ Both target `sub_def` at SPECIFIC arguments (`c, d`) so internal
 subtractions inside `c` (e.g. `prev - prev_prev`) are NOT expanded. -/
 
 /-- From `c - d ≤ x` derive `-d ≤ x - c`. -/
-private theorem sub_le_imp {c d x : Real} (h : c - d ≤ x) : -d ≤ x - c := by
+theorem sub_le_imp {c d x : Real} (h : c - d ≤ x) : -d ≤ x - c := by
   have step := add_le_add_left h (-c)
   -- step : -c + (c - d) ≤ -c + x
   rw [sub_def c d] at step
@@ -117,7 +117,7 @@ private theorem sub_le_imp {c d x : Real} (h : c - d ≤ x) : -d ≤ x - c := by
   exact step
 
 /-- From `x ≤ c + d` derive `x - c ≤ d`. -/
-private theorem le_add_imp {c d x : Real} (h : x ≤ c + d) : x - c ≤ d := by
+theorem le_add_imp {c d x : Real} (h : x ≤ c + d) : x - c ≤ d := by
   have step := add_le_add_left h (-c)
   -- step : -c + x ≤ -c + (c + d)
   rw [← add_assoc, neg_add_self, zero_add] at step
@@ -180,7 +180,7 @@ private theorem result_le_hi
 
 /-- From `r_prev + jerk_limit ≤ rate_limit` and `rate_limit ≤ u_max - prev`,
 derive `hi ≤ u_max`. -/
-private theorem hi_le_umax
+theorem hi_le_umax
     (prev_result u_max rate_limit jerk_limit r_prev : Real)
     (h_r_prev_upper : r_prev + jerk_limit ≤ rate_limit)
     (h_interior_upper : rate_limit ≤ u_max - prev_result) :
@@ -206,7 +206,7 @@ Algebra:  `-r + j ≤ rate ≤ prev - u_min`
    ⟹  `u_min + (j - r) ≤ prev`           (add u_min to both sides, rearrange)
    ⟹  `u_min ≤ prev - j + r = prev + r - j = lo`
 -/
-private theorem umin_le_lo
+theorem umin_le_lo
     (prev_result u_min rate_limit jerk_limit r_prev : Real)
     (h_r_prev_lower : -r_prev + jerk_limit ≤ rate_limit)
     (h_interior_lower : rate_limit ≤ prev_result - u_min) :
@@ -255,7 +255,7 @@ Algebra:  `-r + j ≤ rate`
    ⟺  `-rate ≤ r - j`
    ⟺  `prev - rate ≤ prev + r - j = lo`
 -/
-private theorem prev_minus_rl_le_lo
+theorem prev_minus_rl_le_lo
     (prev_result rate_limit jerk_limit r_prev : Real)
     (h_r_prev_lower : -r_prev + jerk_limit ≤ rate_limit) :
     prev_result - rate_limit ≤ prev_result + r_prev - jerk_limit := by
@@ -322,7 +322,7 @@ private theorem prev_minus_rl_le_lo
   exact h
 
 /-- From `r_prev + jerk_limit ≤ rate_limit`, derive `hi ≤ prev + rate_limit`. -/
-private theorem hi_le_prev_plus_rl
+theorem hi_le_prev_plus_rl
     (prev_result rate_limit jerk_limit r_prev : Real)
     (h_r_prev_upper : r_prev + jerk_limit ≤ rate_limit) :
     prev_result + r_prev + jerk_limit ≤ prev_result + rate_limit := by
