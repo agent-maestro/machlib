@@ -709,7 +709,77 @@ measure on `MultiPoly 2` for `IterExpChain 2`, given the current
 step shape `chainTotalDeriv g + 0·y_0·g`. Closing the chain-2
 Khovanskii bound requires one of: (a) weakening WFR's `coeffStep_lt`
 to a precondition shape, (b) changing the chain-2 step to include
-`−degreeY·g` subtraction, or (c) list-level WF (Fix B). -/
+`−degreeY·g` subtraction, or (c) list-level WF (Fix B).
+
+## Muse triangulation (2026-06-19 review, three independent perspectives)
+
+All three muses converged on (c) as the right structural family but
+crystallised the obstruction more sharply than the in-file analysis
+above. Their consensus + a key additional finding:
+
+1. **Path (c) is the only mathematically faithful direction.**
+   - (a) "weaken WFR signature" is a retreat that propagates
+     downstream; defensible only as last resort.
+   - (b) "subtract `−degreeY·g`" manufactures an Euler operator —
+     changes the algebraic object to satisfy the measure, which is
+     "dangerous" (muse 2). Moving the obstruction rather than
+     explaining it.
+
+2. **The right list-level object is the Dershowitz–Manna multiset
+   extension** of the existing lex-3 per-coefficient order, NOT a
+   bespoke list measure (muse 2 + 3 emphatic). Standard constructive
+   well-foundedness theorem; exists for exactly our failure mode
+   ("one element rises but is replaced by finitely many strictly-
+   smaller elements"). Naming the real object makes the
+   well-foundedness follow from the textbook theorem rather than a
+   hand-built argument.
+
+3. **Angle 1 (mulNegExp_aux) DOES NOT obviously generalise** to
+   chain-2 with `y_1`. Muse 3 makes the calculation explicit:
+   ```
+   (f · exp(−c·y_1))' = (f' − c·y_1' · f) · exp(−c·y_1)
+                      = (Df − c·y_0·y_1·f) · exp(−c·y_1)
+   ```
+   The `y_0·y_1` factor in the correction is exactly the
+   `f' − c·yₙ'·f` operator we already showed does NOT drop the
+   coefficient measure (this is the same wall we hit in commit
+   `4fe434a`-vintage analysis). The chain-2 vehicle walks into the
+   same obstruction.
+
+## What this implies for the next session
+
+The actual fix splits into two CONNECTED pieces:
+
+(i)  **Reframe `scaledReductionAux` as a one-to-many transformation**
+     OR show that our existing one-to-one step composes with a list-
+     level operation that DOES one-to-many descent. Currently
+     `scaledReductionAux` is length-preserving (1→1 per coefficient);
+     the Dershowitz–Manna multiset order helps when ONE element is
+     replaced by MULTIPLE strictly smaller ones. Our chain-2 step has
+     a single output per coefficient — multiset descent only applies
+     after some structural rephrasing.
+
+(ii) **OR** revisit (a) — weaken the WFR's `coeffStep_lt` to require
+     a precondition (analogue of Measured's `measure t > 0`). Muse 2
+     explicitly notes this is "philosophically correct" because the
+     original Measured framework's strict-descent is NEVER analysed
+     in isolation — it's always invoked after establishing the
+     coefficient participates in global descent.
+
+The HONEST READING after muse triangulation: the current WFR
+abstraction is asking for too much (per-coefficient strict descent
+without precondition). Either the abstraction needs softening (path
+a, edit InnerKhovanskiiExpWF.lean) OR the step needs reframing
+(path c, with a multiset-friendly reformulation of
+scaledReductionAux). Both are next-session work; both are clean
+mathematical extensions, not workarounds.
+
+This file as it stands (the canonical-measure scaffold + the
+obstacle documentation + this muse-triangulation summary) is the
+honest substrate that next-session work should extend. No axioms.
+No `sorry`. The chain-2 Khovanskii bound remains parametric over
+the strict-descent witness — exactly the same shape as
+`chainExp2_bound_via_measured_axioms` in `ChainExp2Instance.lean`. -/
 
 end ChainExp2WFInstanceMod
 end MachLib
