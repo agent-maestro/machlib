@@ -223,9 +223,18 @@ theorem EventuallyLE.comp_mono {f g h : Real → Real}
   exact hmono (f x) (g x) (hN x hx)
 
 /-- `Real.exp` is monotone, packaged as an `EventuallyLE` lemma:
-if `f ≤ g` eventually, then `exp ∘ f ≤ exp ∘ g` eventually. Needs
-`exp_monotone` axiom. -/
-axiom exp_monotone (x y : Real) : x ≤ y → Real.exp x ≤ Real.exp y
+if `f ≤ g` eventually, then `exp ∘ f ≤ exp ∘ g` eventually.
+
+**2026-06-19 update**: discharged from `Real.exp_lt` (strict
+monotonicity axiom in `MachLib/Exp.lean`) + `le_iff_lt_or_eq`. No
+longer an axiom. -/
+theorem exp_monotone (x y : Real) (hxy : x ≤ y) : Real.exp x ≤ Real.exp y := by
+  rcases (le_iff_lt_or_eq x y).mp hxy with hlt | heq
+  · -- x < y → exp x < exp y → exp x ≤ exp y
+    exact (le_iff_lt_or_eq _ _).mpr (Or.inl (Real.exp_lt hlt))
+  · -- x = y → exp x = exp y → exp x ≤ exp y
+    rw [heq]
+    exact (le_iff_lt_or_eq _ _).mpr (Or.inr rfl)
 
 theorem EventuallyLE.exp {f g : Real → Real} (hfg : EventuallyLE f g) :
     EventuallyLE (fun x => Real.exp (f x)) (fun x => Real.exp (g x)) :=

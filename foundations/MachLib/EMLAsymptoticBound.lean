@@ -85,10 +85,21 @@ inductive Tame : EMLTree → Prop
 
 /-! ## Supporting axioms for the structural theorem -/
 
-/-- `log x ≤ x` for `x ≥ 1`. Classical inequality (log x ≤ x - 1
-≤ x for x ≥ 1). Discharge path: from `exp_log` + `exp_grows_strictly`
-in ~30 lines. -/
-axiom log_le_id_at_one (x : Real) (hx : 1 ≤ x) : Real.log x ≤ x
+/-- `log x ≤ x` for `x ≥ 1`. Classical inequality.
+
+**2026-06-19 update**: discharged from `Real.exp_log` (existing) +
+`Asymptotics.exp_grows_strictly` (existing) + `le_of_lt`. No longer
+an axiom.
+
+Proof: for `x ≥ 1 > 0`, `exp (log x) = x` (by `exp_log`). Then
+`log x < exp (log x) = x` (by `exp_grows_strictly`). Hence `log x ≤ x`. -/
+theorem log_le_id_at_one (x : Real) (hx : 1 ≤ x) : Real.log x ≤ x := by
+  have hx_pos : 0 < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have h_exp_log : Real.exp (Real.log x) = x := Real.exp_log hx_pos
+  have h_grows : Real.log x < Real.exp (Real.log x) :=
+    MachLib.exp_grows_strictly (Real.log x)
+  rw [h_exp_log] at h_grows
+  exact (le_iff_lt_or_eq _ _).mpr (Or.inl h_grows)
 
 /-! ## The structural theorem -/
 
