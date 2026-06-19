@@ -97,8 +97,9 @@ theorem neg_le_neg {a b : Real} (h : a ≤ b) : -b ≤ -a := by
 
 /-- `c ≤ a → c ≤ b → c ≤ min a b`. Greatest-lower-bound intro
 (the `c = 0` specialisation already ships as `min_nonneg`). -/
-theorem le_min {a b c : Real} (hca : c ≤ a) (hcb : c ≤ b) : c ≤ min a b := by
-  unfold min
+theorem le_min {a b c : Real} (hca : c ≤ a) (hcb : c ≤ b) :
+    c ≤ MachLib.Real.min a b := by
+  unfold MachLib.Real.min
   by_cases h : a ≤ b
   · rw [if_pos h]; exact hca
   · rw [if_neg h]; exact hcb
