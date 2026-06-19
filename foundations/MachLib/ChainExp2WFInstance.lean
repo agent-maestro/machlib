@@ -479,6 +479,211 @@ noncomputable def chain2_to_WFR
   coeffStep_le := coeffStep_chain2_le
   coeffStep_lt := coeffStep_lt_hyp
 
+/-! ## Path 1 (canonicalisation) follow-up: structural lemmas
+
+This block is the EH-A9 follow-up: a partial attempt to discharge
+`coeffStep_chain2_lt` via Path 1 (canonicalise the AST before
+measuring) as sketched in the closing docstring above.
+
+### What ships clean here
+
+1. `chain2Measure_canonical` + `chain2MeasureRelCanonical` +
+   `chain2Measure_canonical_WF` — the canonical lex-3 measure (pulled
+   back through `multiSimplify`) and its WF proof via `InvImage.wf`.
+   This is the lifting infrastructure that Path 1 needs even though
+   the strict-descent step itself doesn't close (see obstacle below).
+2. `coeffStep_chain2_le_canonical` — classical-em discharge of the
+   non-strict descent for the canonical relation.
+3. `chain2_to_WFR_canonical` — canonical-measure variant of
+   `chain2_to_WFR`, still parametric over the strict-descent
+   hypothesis (which the Reason 1/2 analysis below shows is
+   structurally not closable with the current WFR signature).
+
+### Absorption identities (claimed but not shipped, intentionally)
+
+Two identities the canonical Path 1 strategy would build on:
+  - `multiSimplify ((0·y_0)·g) = const 0`
+  - `multiSimplify (add (chainTotalDeriv g) ((0·y_0)·g))
+     = multiSimplify (chainTotalDeriv g)`
+
+Both hold by direct computation on `multiSimplify`'s `mul`/`add`
+rules: the inner `mul (const 0) (varY 0)` triggers the
+`multiIsZeroConst (const 0) = true` branch returning `const 0`, the
+outer `mul (const 0) g'` does the same, and the outer
+`add (·) (const 0)` collapses via the `multiIsZeroConst q'` branch.
+They are intentionally NOT shipped as Lean theorems here because the
+chain-2 obstacle (Reasons 1 + 2 below) makes them dead-end work for
+this scaffold: even with both absorptions, the resulting strict-
+descent obligation `chain2MeasureRelCanonical (multiSimplify
+(chainTotalDeriv g)) g` is FALSE at `g := varY 1`. Shipping them
+without their downstream consumer would mislead a future reader into
+thinking Path 1 is close to closure.
+
+### Where Path 1 STOPS (the irreducible obstacle)
+
+Path 1 was conjectured to enable lifting PathC's
+`singleExp_polyTrueDegreeStrict_scaledReduction_lt` into a chain-2
+strict-descent witness for `coeffStep_chain2_lt`. After working
+through the structural reductions, this lift does NOT close the
+WFR's `coeffStep_lt` disjunction. Two independent reasons:
+
+**Reason 1 (step-shape mismatch).** PathC's SingleExp strict-decrease
+is for the **scaledReduction** step `chainTotalDeriv p − c·p`
+(subtracting `c·p`, where `c = degreeY 0 p`). The WFR's
+`coeffStep_lt` at `k = 0` is for the step `chainTotalDeriv g + 0·g`
+(eval-equivalent to just `chainTotalDeriv g`, no subtraction).
+These are STRUCTURALLY different operations on the multi-polynomial.
+The PathC theorem's RHS (`scaledReduction`) cannot be retargetted
+to `chainTotalDeriv` alone: the strict-decrease relies on the
+leading-coefficient cancellation that subtraction performs.
+`chainTotalDeriv g` by itself does NOT strictly reduce
+`polyTrueDegreeStrict` of the y_1-leading coefficient — it preserves
+it (since `chainTotalDeriv` lowers `degreeY 0` of the leading
+coefficient by 1 via SingleExp's `polyTrueDegreeStrict_polyDerivativeCoeffs_lt`
+only when there's a `−c·p` term to absorb the constant-leading case).
+
+**Reason 2 (chain-2 chainTotalDeriv increases lex-3 measure).**
+Beyond the step-shape mismatch, `chainTotalDeriv` on `IterExpChain 2`
+genuinely INCREASES the canonical lex-3 measure for natural inputs.
+Concrete counterexample: take `g := varY 1 : MultiPoly 2`.
+  - `multiSimplify g = varY 1` (already canonical).
+  - `chainTotalDeriv (IterExpChain 2) (varY 1)
+     = (IterExpChain 2).relations 1
+     = varY 0 · varY 1` (per `IterExpChain2_relations_1`).
+  - `multiSimplify (varY 0 · varY 1) = varY 0 · varY 1` (no zero/one
+    factor to collapse).
+  - `chain2Measure (varY 1) = (1, 0, 1)`:
+      degreeY 1 = 1, degreeY 0 = 0,
+      polyTrueDegreeStrict (polyCoeffs (mP2PFL (const 1))) = 1.
+  - `chain2Measure (varY 0 · varY 1) = (1, 1, 0)`:
+      degreeY 1 = 0 + 1 = 1, degreeY 0 = 1 + 0 = 1,
+      polyTrueDegreeStrict (polyCoeffs (mP2PFL (mul (varY 0) (const 1))))
+      = 0 (y-free reduction of `varY 0` is `Poly.const 0`, killing the
+      product).
+  - Lex-3 comparison: components (1, 1, 0) vs (1, 0, 1) — first equal,
+    second strictly LARGER on the step result. So
+    `chain2MeasureRelCanonical (chainTotalDeriv (varY 1)) (varY 1)` is
+    FALSE. And `(chainTotalDeriv (varY 1) + (0·y_0)·varY 1) = varY 1`
+    is structurally FALSE.
+  - Both disjuncts of WFR's `coeffStep_lt` fail at this single witness.
+
+The mathematical content: in `IterExpChain 2`, `relations 1 = y_0·y_1`
+adds a `y_0` factor to the y_1-derivative chain rule. The chain-2
+chainTotalDeriv's `y_1 ↦ y_0·y_1` substitution genuinely raises
+`degreeY 0` by 1 without compensating reduction. The naive lex-3
+measure cannot absorb this without precondition (analogue of
+SingleExp Measured's `hpos : measure t > 0`) or a step that
+SUBTRACTS the leading coefficient.
+
+### What would unblock
+
+Three honest paths forward:
+
+(a) **Weaken `coeffStep_lt`** in `InnerKhovanskiiExpWFR` to add a
+    minimality precondition (analogue of `InnerKhovanskiiExpMeasured`'s
+    `measure t > 0`). The task forbids modifying `InnerKhovanskiiExpWF`,
+    so this is out of scope here.
+
+(b) **Change the step shape** in `chainExp2_innerKhovanskii_full` to
+    `chainTotalDeriv g − degreeY·g` instead of just `chainTotalDeriv g`
+    at `k = 0`. This breaks the inherited `scalarMul k g = (k·y_0)·g`
+    invariant required by `eval_scalarMul`, so it requires a different
+    `h_deriv` framing — a structural redesign rather than a strict
+    follow-up on the current scaffold.
+
+(c) **Wait for a list-level WF relation** (Fix B in
+    `InnerKhovanskiiExpWF`'s closing docstring). Lifting the measure
+    to `List T` lets neighbouring coefficients drag the global measure
+    down even when a single coefficient's measure rises.
+
+Per the project rule "no axiomatic shortcuts" and the task's explicit
+permission to STOP at honest blockers, `coeffStep_chain2_lt` is NOT
+shipped here as an unconditional theorem. The genuine partial
+progress (canonical WF measure + canonical-measure variant of
+`chain2_to_WFR`, still parametric over `coeffStep_lt_hyp_canonical`)
+is below, gated on this honest analysis.
+-/
+
+/-! ### Path 1 canonical lex-3 measure (definition + WF) -/
+
+/-- The canonical chain-2 lex-3 measure: pull back `chain2Measure`
+through `multiSimplify`. The post-canonicalisation AST has the
+`(0·y_0)·g` term absorbed (per `multiSimplify_scalarMul_zero`),
+so the canonical measure agrees on the step argument and on
+`multiSimplify (chainTotalDeriv g)` directly. -/
+noncomputable def chain2Measure_canonical (g : MultiPoly 2) : Nat × Nat × Nat :=
+  chain2Measure (MultiPoly.multiSimplify g)
+
+/-- The canonical strict-descent relation: lex-3 on the canonical
+chain-2 measure. -/
+def chain2MeasureRelCanonical (g g' : MultiPoly 2) : Prop :=
+  lex3LT (chain2Measure_canonical g) (chain2Measure_canonical g')
+
+/-- Well-foundedness of `chain2MeasureRelCanonical` by pullback
+through `chain2Measure_canonical`. -/
+theorem chain2Measure_canonical_WF : WellFounded chain2MeasureRelCanonical :=
+  InvImage.wf chain2Measure_canonical lex3LT_wf
+
+/-! ### Classical-em `coeffStep_le` for the canonical relation
+
+Same shape as `coeffStep_chain2_le` — the `¬ P ∨ P` predicate is
+trivially true for any relation. -/
+
+theorem coeffStep_chain2_le_canonical (k : Real) (g : MultiPoly 2) :
+    ¬ chain2MeasureRelCanonical
+        (MultiPoly.add
+          (PfaffianFn.chainTotalDeriv (IterExpChain 2) g)
+          (MultiPoly.mul (MultiPoly.mul (MultiPoly.const k)
+                                         (MultiPoly.varY ⟨0, by omega⟩))
+                          g)) g
+    ∨ chain2MeasureRelCanonical
+        (MultiPoly.add
+          (PfaffianFn.chainTotalDeriv (IterExpChain 2) g)
+          (MultiPoly.mul (MultiPoly.mul (MultiPoly.const k)
+                                         (MultiPoly.varY ⟨0, by omega⟩))
+                          g)) g := by
+  exact (Classical.em _).symm
+
+/-! ### Canonical-measure variant of `chain2_to_WFR`
+
+Same parametric shape: still parametric over `length_one_bound`
+AND `coeffStep_lt_hyp` (for the same reason — see the obstacle
+documentation above). The CANONICAL variant differs only in using
+`chain2MeasureRelCanonical` instead of `chain2MeasureRel`.
+
+This is shipped so a future session attempting Path 1 has the
+canonical-measure scaffolding ready; they only need to discharge
+`coeffStep_lt_hyp` (or change framework). -/
+
+noncomputable def chain2_to_WFR_canonical
+    (length_one_bound :
+      ∀ g : MultiPoly 2, ∀ a b : Real, a < b →
+      (∃ x : Real, MultiPoly.eval g x ((IterExpChain 2).chainValues x) ≠ 0) →
+      ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧
+          MultiPoly.eval g z ((IterExpChain 2).chainValues z) = 0) →
+        zeros.length ≤ N)
+    (coeffStep_lt_hyp_canonical :
+      ∀ g : MultiPoly 2,
+        chain2MeasureRelCanonical
+          (MultiPoly.add
+            (PfaffianFn.chainTotalDeriv (IterExpChain 2) g)
+            (MultiPoly.mul (MultiPoly.mul (MultiPoly.const 0)
+                                           (MultiPoly.varY ⟨0, by omega⟩))
+                            g)) g
+        ∨ MultiPoly.add
+            (PfaffianFn.chainTotalDeriv (IterExpChain 2) g)
+            (MultiPoly.mul (MultiPoly.mul (MultiPoly.const 0)
+                                           (MultiPoly.varY ⟨0, by omega⟩))
+                            g) = g) :
+    InnerKhovanskiiExpWFR where
+  toInnerKhovanskiiExp := chainExp2_innerKhovanskii_full
+  measureRel := chain2MeasureRelCanonical
+  measureWF := chain2Measure_canonical_WF
+  length_one_bound := length_one_bound
+  coeffStep_le := coeffStep_chain2_le_canonical
+  coeffStep_lt := coeffStep_lt_hyp_canonical
+
 /-! ## Status / axiom audit
 
 After this file compiles, the following commands should show only
@@ -490,12 +695,21 @@ no new axioms introduced by this file.
 #print axioms chainExp2_innerKhovanskii_full
 #print axioms coeffStep_chain2_le
 #print axioms chain2_to_WFR
+#print axioms chain2Measure_canonical_WF
+#print axioms coeffStep_chain2_le_canonical
+#print axioms chain2_to_WFR_canonical
 ```
 
-The strict-descent obligation (`coeffStep_lt_hyp`) is parametric;
-plugging in a constructive proof of strict descent under
-canonicalisation (multiSimplify-based or Poly-bridge-based) closes
-the chain-2 Khovanskii bound — that is the next session's work. -/
+The strict-descent obligation (`coeffStep_lt_hyp` /
+`coeffStep_lt_hyp_canonical`) is STILL parametric in both the raw
+and canonical scaffolds. See the obstacle documentation above for
+the witness (`g := varY 1`) showing the WFR's disjunctive
+`coeffStep_lt` is structurally unsatisfiable under any lex-3-like
+measure on `MultiPoly 2` for `IterExpChain 2`, given the current
+step shape `chainTotalDeriv g + 0·y_0·g`. Closing the chain-2
+Khovanskii bound requires one of: (a) weakening WFR's `coeffStep_lt`
+to a precondition shape, (b) changing the chain-2 step to include
+`−degreeY·g` subtraction, or (c) list-level WF (Fix B). -/
 
 end ChainExp2WFInstanceMod
 end MachLib
