@@ -68,6 +68,7 @@ import MachLib.ChainExp2Instance
 import MachLib.ChainExp2PathC
 import MachLib.InnerKhovanskiiExpWF
 import MachLib.ChainExp2WFInstance
+import MachLib.ChainExp2SDR
 import MachLib.Tactic.LeadingCoeffY
 
 /-!
