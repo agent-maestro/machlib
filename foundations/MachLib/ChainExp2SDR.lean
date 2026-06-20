@@ -181,5 +181,41 @@ theorem multiPolyToPolyForLex_eval_chainTotalDeriv_IterExp {n : Nat}
            * Poly.eval (polyDerivative (multiPolyToPolyForLex q)) x
     rw [ihp, ihq]
 
+/-! ## Top chain-variable degree is preserved by chainTotalDeriv (chain-2)
+
+Chain-2 analog of `degreeY_chainTotalDeriv_eq_SingleExp`. Needed so that
+`leadingCoeffY ⟨1⟩` extracts the coefficient of the SAME y₁-power before and after
+the derivative: the y₁-degree doesn't move, because `y₁' = y₀·y₁` keeps the y₁
+power and only injects a y₀ factor. Purely structural (syntactic degree), so it
+holds as an exact equality. -/
+theorem degreeY1_chainTotalDeriv_eq_IterExp2 (p : MultiPoly 2) :
+    MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+      = MultiPoly.degreeY ⟨1, by omega⟩ p := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    rcases j with ⟨v, hv⟩
+    match v, hv with
+    | 0, _ => rfl
+    | 1, _ => rfl
+  | add p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                 (MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+       = Nat.max (MultiPoly.degreeY ⟨1, by omega⟩ p) (MultiPoly.degreeY ⟨1, by omega⟩ q)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                 (MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+       = Nat.max (MultiPoly.degreeY ⟨1, by omega⟩ p) (MultiPoly.degreeY ⟨1, by omega⟩ q)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                  + MultiPoly.degreeY ⟨1, by omega⟩ q)
+                 (MultiPoly.degreeY ⟨1, by omega⟩ p
+                  + MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+       = MultiPoly.degreeY ⟨1, by omega⟩ p + MultiPoly.degreeY ⟨1, by omega⟩ q
+    rw [ihp, ihq]; exact Nat.max_self _
+
 end ChainExp2SDR
 end MachLib
