@@ -217,5 +217,337 @@ theorem degreeY1_chainTotalDeriv_eq_IterExp2 (p : MultiPoly 2) :
        = MultiPoly.degreeY ⟨1, by omega⟩ p + MultiPoly.degreeY ⟨1, by omega⟩ q
     rw [ihp, ihq]; exact Nat.max_self _
 
+/-! ## mP2PFL is evaluation at y = 0
+
+`multiPolyToPolyForLex` replaces every `varY` with `Poly.const 0`, so evaluating
+the projected Poly is the same as evaluating the original MultiPoly with all
+chain variables set to 0. (Generalises `multiPolyToPolyForLex_eval_of_y_free`,
+which needs y-freeness; here we pin the environment instead.) -/
+theorem eval_multiPolyToPolyForLex_eq_eval_zero {n : Nat} (q : MultiPoly n)
+    (x : Real) :
+    Poly.eval (multiPolyToPolyForLex q) x = MultiPoly.eval q x (fun _ => 0) := by
+  induction q with
+  | const c => rfl
+  | varX => rfl
+  | varY j => rfl
+  | add p q ihp ihq =>
+    show Poly.eval (multiPolyToPolyForLex p) x + Poly.eval (multiPolyToPolyForLex q) x
+       = MultiPoly.eval p x (fun _ => 0) + MultiPoly.eval q x (fun _ => 0)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show Poly.eval (multiPolyToPolyForLex p) x - Poly.eval (multiPolyToPolyForLex q) x
+       = MultiPoly.eval p x (fun _ => 0) - MultiPoly.eval q x (fun _ => 0)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show Poly.eval (multiPolyToPolyForLex p) x * Poly.eval (multiPolyToPolyForLex q) x
+       = MultiPoly.eval p x (fun _ => 0) * MultiPoly.eval q x (fun _ => 0)
+    rw [ihp, ihq]
+
+/-! ## leadingCoeffY ⟨1⟩ commutes with cTD at y₀ = 0 (chain-2)
+
+Chain-2 analog of ChainExp2PathC's leadingCoeffY-under-cTD identity, SPECIALISED
+to an environment with y₀ = 0. The general identity carries a `d·y₀·lcY₁` term
+(because `y₁' = y₀·y₁`); at y₀ = 0 that term vanishes, collapsing every case to a
+plain `rw [ihp, ihq]` — no `natCast`/ring `mul`-case algebra. The add/sub
+trichotomy and the equal-degree mul distribution use
+`degreeY1_chainTotalDeriv_eq_IterExp2` to align the `leadingCoeffY` if-conditions
+across the derivative. -/
+theorem lcY1_cTD_eval_zero_IterExp2 (p : MultiPoly 2) (x : Real)
+    (env : Fin 2 → Real)
+    (henv0 : MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) x env = 0) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩
+        (chainTotalDeriv (IterExpChain 2) p)) x env
+  = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)) x env := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    rcases j with ⟨v, hv⟩
+    match v, hv with
+    | 0, _ => rfl
+    | 1, _ =>
+      show MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) x env
+           * MultiPoly.eval (MultiPoly.const (1 : Real)) x env = 0
+      rw [henv0]; mach_ring
+  | add p q ihp ihq =>
+    have hp_eq := degreeY1_chainTotalDeriv_eq_IterExp2 p
+    have hq_eq := degreeY1_chainTotalDeriv_eq_IterExp2 q
+    by_cases hpq : MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+    · have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                    (chainTotalDeriv (IterExpChain 2) (MultiPoly.add p q))
+                  = MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) p) := by
+        show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                 > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+              then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+              else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                      > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                   else MultiPoly.add
+                          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+              = MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+        rw [hp_eq, hq_eq, if_pos hpq]
+      have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.add p q)
+                  = MultiPoly.leadingCoeffY ⟨1, by omega⟩ p := by
+        show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+              then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+              else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                   then MultiPoly.leadingCoeffY ⟨1, by omega⟩ q
+                   else MultiPoly.add (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                      (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+              = MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+        rw [if_pos hpq]
+      rw [h_lhs, h_rhs]; exact ihp
+    · by_cases hqp : MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+      · have h_first_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ p
+                             > MultiPoly.degreeY ⟨1, by omega⟩ q :=
+          Nat.not_lt.mpr (Nat.le_of_lt hqp)
+        have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) (MultiPoly.add p q))
+                    = MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                        (chainTotalDeriv (IterExpChain 2) q) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                        > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                     then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                     else MultiPoly.add
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+                = MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+          rw [hp_eq, hq_eq, if_neg h_first_neg, if_pos hqp]
+        have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.add p q)
+                    = MultiPoly.leadingCoeffY ⟨1, by omega⟩ q := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+                else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                     then MultiPoly.leadingCoeffY ⟨1, by omega⟩ q
+                     else MultiPoly.add (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                = MultiPoly.leadingCoeffY ⟨1, by omega⟩ q
+          rw [if_neg h_first_neg, if_pos hqp]
+        rw [h_lhs, h_rhs]; exact ihq
+      · have hp_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q := hpq
+        have hq_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p := hqp
+        have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) (MultiPoly.add p q))
+                    = MultiPoly.add
+                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                        > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                     then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                     else MultiPoly.add
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+                = MultiPoly.add
+                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+          rw [hp_eq, hq_eq, if_neg hp_neg, if_neg hq_neg]
+        have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.add p q)
+                    = MultiPoly.add (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+                else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                     then MultiPoly.leadingCoeffY ⟨1, by omega⟩ q
+                     else MultiPoly.add (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                = MultiPoly.add (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+          rw [if_neg hp_neg, if_neg hq_neg]
+        rw [h_lhs, h_rhs]
+        show MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)) x env
+             + MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) x env
+           = MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)) x env
+             + MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)) x env
+        rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    have hp_eq := degreeY1_chainTotalDeriv_eq_IterExp2 p
+    have hq_eq := degreeY1_chainTotalDeriv_eq_IterExp2 q
+    by_cases hpq : MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+    · have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                    (chainTotalDeriv (IterExpChain 2) (MultiPoly.sub p q))
+                  = MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) p) := by
+        show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                 > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+              then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+              else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                      > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   then MultiPoly.sub (MultiPoly.const 0)
+                          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+                   else MultiPoly.sub
+                          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+              = MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+        rw [hp_eq, hq_eq, if_pos hpq]
+      have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.sub p q)
+                  = MultiPoly.leadingCoeffY ⟨1, by omega⟩ p := by
+        show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+              then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+              else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                   then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+                   else MultiPoly.sub (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                      (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+              = MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+        rw [if_pos hpq]
+      rw [h_lhs, h_rhs]; exact ihp
+    · by_cases hqp : MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+      · have h_first_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ p
+                             > MultiPoly.degreeY ⟨1, by omega⟩ q :=
+          Nat.not_lt.mpr (Nat.le_of_lt hqp)
+        have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) (MultiPoly.sub p q))
+                    = MultiPoly.sub (MultiPoly.const 0)
+                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                          (chainTotalDeriv (IterExpChain 2) q)) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                        > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                     then MultiPoly.sub (MultiPoly.const 0)
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+                     else MultiPoly.sub
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+                = MultiPoly.sub (MultiPoly.const 0)
+                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+          rw [hp_eq, hq_eq, if_neg h_first_neg, if_pos hqp]
+        have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.sub p q)
+                    = MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+                else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                     then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+                     else MultiPoly.sub (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                = MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+          rw [if_neg h_first_neg, if_pos hqp]
+        rw [h_lhs, h_rhs]
+        show MultiPoly.eval (MultiPoly.const (0:Real)) x env
+             - MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) x env
+           = MultiPoly.eval (MultiPoly.const (0:Real)) x env
+             - MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)) x env
+        rw [ihq]
+      · have hp_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q := hpq
+        have hq_neg : ¬ MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p := hqp
+        have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                      (chainTotalDeriv (IterExpChain 2) (MultiPoly.sub p q))
+                    = MultiPoly.sub
+                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                   > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                else if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                        > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                     then MultiPoly.sub (MultiPoly.const 0)
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+                     else MultiPoly.sub
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                            (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+                = MultiPoly.sub
+                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+          rw [hp_eq, hq_eq, if_neg hp_neg, if_neg hq_neg]
+        have h_rhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.sub p q)
+                    = MultiPoly.sub (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) := by
+          show (if MultiPoly.degreeY ⟨1, by omega⟩ p > MultiPoly.degreeY ⟨1, by omega⟩ q
+                then MultiPoly.leadingCoeffY ⟨1, by omega⟩ p
+                else if MultiPoly.degreeY ⟨1, by omega⟩ q > MultiPoly.degreeY ⟨1, by omega⟩ p
+                     then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+                     else MultiPoly.sub (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                = MultiPoly.sub (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+          rw [if_neg hp_neg, if_neg hq_neg]
+        rw [h_lhs, h_rhs]
+        show MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)) x env
+             - MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) x env
+           = MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)) x env
+             - MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)) x env
+        rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    have hp_eq := degreeY1_chainTotalDeriv_eq_IterExp2 p
+    have hq_eq := degreeY1_chainTotalDeriv_eq_IterExp2 q
+    have h_lhs : MultiPoly.leadingCoeffY ⟨1, by omega⟩
+                  (chainTotalDeriv (IterExpChain 2) (MultiPoly.mul p q))
+                = MultiPoly.add
+                    (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                                   (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                    (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                   (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))) := by
+      show (if MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+               + MultiPoly.degreeY ⟨1, by omega⟩ q
+             > MultiPoly.degreeY ⟨1, by omega⟩ p
+               + MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+            then MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                               (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)
+            else if MultiPoly.degreeY ⟨1, by omega⟩ p
+                     + MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)
+                   > MultiPoly.degreeY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)
+                     + MultiPoly.degreeY ⟨1, by omega⟩ q
+                 then MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))
+                 else MultiPoly.add
+                        (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                                       (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                        (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                       (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q))))
+            = MultiPoly.add
+                (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p))
+                               (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q))
+                (MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                               (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)))
+      rw [hp_eq, hq_eq, if_neg (Nat.lt_irrefl _), if_neg (Nat.lt_irrefl _)]
+    have h_rhs_leading : MultiPoly.leadingCoeffY ⟨1, by omega⟩ (MultiPoly.mul p q)
+                        = MultiPoly.mul (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)
+                                        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) := rfl
+    rw [h_lhs, h_rhs_leading]
+    show MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) p)) x env
+         * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) x env
+       + MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p) x env
+         * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ (chainTotalDeriv (IterExpChain 2) q)) x env
+     = MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p)) x env
+         * MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q) x env
+       + MultiPoly.eval (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p) x env
+         * MultiPoly.eval (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY ⟨1, by omega⟩ q)) x env
+    rw [ihp, ihq]
+
+/-! ## The descent eval-identity (chain-2, c = 0)
+
+Combining the three pieces — `eval_multiPolyToPolyForLex_eq_eval_zero` (mP2PFL =
+eval@0), `lcY1_cTD_eval_zero_IterExp2` (leadingCoeffY commutes with cTD at y₀=0),
+and the cornerstone `multiPolyToPolyForLex_eval_chainTotalDeriv_IterExp` — gives
+the identity the lex measure's second component needs:
+
+  `mP2PFL(leadingCoeffY₁(cTD p))  ≡  polyDerivative(mP2PFL(leadingCoeffY₁ p))`  (at eval)
+
+i.e. taking the y₁-leading coefficient of `cTD p`, then projecting y→0, is the
+same (as a Poly, pointwise) as projecting the leading coefficient of `p` and then
+taking the ordinary x-derivative. This is exactly the input the PolynomialCanonical
+PIT bridge needs to lift to `polyCoeffs`/`polyTrueDegreeStrict` equality, after
+which `polyTrueDegreeStrict_polyDerivativeCoeffs_lt` (Phase G) gives the strict
+second-component descent for the `c = 0` ReduceStep. -/
+theorem eval_mP2PFL_lcY1_chainTotalDeriv_IterExp2 (p : MultiPoly 2) (x : Real) :
+    Poly.eval (multiPolyToPolyForLex (MultiPoly.leadingCoeffY ⟨1, by omega⟩
+        (chainTotalDeriv (IterExpChain 2) p))) x
+  = Poly.eval (polyDerivative (multiPolyToPolyForLex
+        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p))) x := by
+  rw [eval_multiPolyToPolyForLex_eq_eval_zero]
+  rw [lcY1_cTD_eval_zero_IterExp2 p x (fun _ => 0) (by rfl)]
+  rw [← eval_multiPolyToPolyForLex_eq_eval_zero]
+  exact multiPolyToPolyForLex_eval_chainTotalDeriv_IterExp
+    (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p) x
+
 end ChainExp2SDR
 end MachLib
