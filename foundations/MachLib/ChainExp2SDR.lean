@@ -549,5 +549,118 @@ theorem eval_mP2PFL_lcY1_chainTotalDeriv_IterExp2 (p : MultiPoly 2) (x : Real) :
   exact multiPolyToPolyForLex_eval_chainTotalDeriv_IterExp
     (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p) x
 
+/-! ## Lex second-component strict descent at c = 0 (chain-2)
+
+Chain-2 analog of `singleExp_polyTrueDegreeStrict_scaledReduction_lt`, at the
+`c = 0` scaledReduction. The descent eval-identity replaces single-exp's
+two-step (lemma-2 + y-free structural) bridge with a single PIT step; the only
+extra work is reducing the `sub (cTD p) (mul (const 0) p)` shape (the y₁-leading
+coefficient distributes since both summands have equal y₁-degree, and the
+`mul (const 0)` summand evaluates to 0). -/
+open MachLib.PolynomialCanonical in
+theorem chain2_polyTrueDegreeStrict_scaledReduction_zero_lt (p : MultiPoly 2)
+    (h_strict_pos :
+      polyTrueDegreeStrict
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p))) > 0) :
+    polyTrueDegreeStrict
+      (polyCoeffs (multiPolyToPolyForLex
+        (MultiPoly.leadingCoeffY ⟨1, by omega⟩
+          (MultiPoly.sub
+            (chainTotalDeriv (IterExpChain 2) p)
+            (MultiPoly.mul (MultiPoly.const (0 : Real)) p))))) <
+    polyTrueDegreeStrict
+      (polyCoeffs (multiPolyToPolyForLex
+        (MultiPoly.leadingCoeffY ⟨1, by omega⟩ p))) := by
+  let i : Fin 2 := ⟨1, by omega⟩
+  let L_p := polyCoeffs (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p))
+  have h_eq1 :
+      polyTrueDegreeStrict
+        (polyCoeffs (multiPolyToPolyForLex
+          (MultiPoly.leadingCoeffY i
+            (MultiPoly.sub
+              (chainTotalDeriv (IterExpChain 2) p)
+              (MultiPoly.mul (MultiPoly.const (0 : Real)) p))))) =
+      polyTrueDegreeStrict
+        (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+          (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) := by
+    apply polyTrueDegreeStrict_eq_of_evalCoeffs_eq
+    intro x
+    rw [polyCoeffs_eval, polyCoeffs_eval]
+    have hA : MultiPoly.degreeY i (chainTotalDeriv (IterExpChain 2) p)
+            = MultiPoly.degreeY i p := degreeY1_chainTotalDeriv_eq_IterExp2 p
+    have hB : MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)
+            = MultiPoly.degreeY i p := by
+      show 0 + MultiPoly.degreeY i p = MultiPoly.degreeY i p
+      omega
+    have h_notAB : ¬ MultiPoly.degreeY i (chainTotalDeriv (IterExpChain 2) p)
+                     > MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p) := by
+      rw [hA, hB]; exact Nat.lt_irrefl _
+    have h_notBA : ¬ MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)
+                     > MultiPoly.degreeY i (chainTotalDeriv (IterExpChain 2) p) := by
+      rw [hA, hB]; exact Nat.lt_irrefl _
+    have h_lcY_sub :
+        MultiPoly.leadingCoeffY i
+          (MultiPoly.sub (chainTotalDeriv (IterExpChain 2) p)
+                         (MultiPoly.mul (MultiPoly.const (0 : Real)) p))
+        = MultiPoly.sub
+            (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))
+            (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)) := by
+      show (if MultiPoly.degreeY i (chainTotalDeriv (IterExpChain 2) p)
+               > MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)
+            then MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p)
+            else if MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)
+                    > MultiPoly.degreeY i (chainTotalDeriv (IterExpChain 2) p)
+                 then MultiPoly.sub (MultiPoly.const 0)
+                        (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p))
+                 else MultiPoly.sub
+                        (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))
+                        (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p)))
+          = MultiPoly.sub
+              (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))
+              (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p))
+      rw [if_neg h_notAB, if_neg h_notBA]
+    rw [h_lcY_sub]
+    show Poly.eval (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))) x
+         - Poly.eval (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p))) x
+       = Poly.eval (MachLib.PolynomialRootCount.polyDerivative
+            (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p))) x
+    have hzero : Poly.eval (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i (MultiPoly.mul (MultiPoly.const (0 : Real)) p))) x = 0 := by
+      show (0 : Real)
+           * Poly.eval (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)) x = 0
+      mach_ring
+    rw [hzero]
+    have hsub0 : Poly.eval (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))) x - 0
+       = Poly.eval (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i (chainTotalDeriv (IterExpChain 2) p))) x := by mach_ring
+    rw [hsub0]
+    exact eval_mP2PFL_lcY1_chainTotalDeriv_IterExp2 p x
+  have h_eq3 :
+      polyTrueDegreeStrict
+        (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+          (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) =
+      polyTrueDegreeStrict (polyDerivativeCoeffs L_p) :=
+    polyTrueDegreeStrict_polyDerivative_eq_polyDerivativeCoeffs
+      (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p))
+  have h_lt :
+      polyTrueDegreeStrict (polyDerivativeCoeffs L_p) <
+      polyTrueDegreeStrict L_p :=
+    polyTrueDegreeStrict_polyDerivativeCoeffs_lt L_p h_strict_pos
+  calc polyTrueDegreeStrict
+          (polyCoeffs (multiPolyToPolyForLex
+            (MultiPoly.leadingCoeffY i
+              (MultiPoly.sub
+                (chainTotalDeriv (IterExpChain 2) p)
+                (MultiPoly.mul (MultiPoly.const (0 : Real)) p)))))
+      = polyTrueDegreeStrict
+          (polyCoeffs (MachLib.PolynomialRootCount.polyDerivative
+            (multiPolyToPolyForLex (MultiPoly.leadingCoeffY i p)))) := h_eq1
+    _ = polyTrueDegreeStrict (polyDerivativeCoeffs L_p) := h_eq3
+    _ < polyTrueDegreeStrict L_p := h_lt
+
 end ChainExp2SDR
 end MachLib
