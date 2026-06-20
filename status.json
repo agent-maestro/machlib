@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "machlib_sha": "e512911421c7ab47527792b5998d5e341c3e0894",
+  "generated_at_utc": "2026-06-20T03:54:58Z",
+  "previous_machlib_sha": "bf002e17ac5058e6bce161f032ee2cadcfd87a3c",
+  "previous_generated_at_utc": "2026-06-19T21:39:57Z",
+  "reproduce": {
+    "command_lines": [
+      "git clone https://github.com/agent-maestro/machlib && cd machlib",
+      "git checkout e512911421c7ab47527792b5998d5e341c3e0894",
+      "git clone --depth 1 https://github.com/agent-maestro/forge ../forge",
+      "git clone --depth 1 https://github.com/agent-maestro/eml-stdlib ../eml-stdlib",
+      "cd foundations && lake build && lake env lean AxiomAudit.lean > /tmp/axiom_audit.txt && cd ..",
+      "python tools/status/forge_verify_audit.py \\",
+      "    --forge-root ../forge --eml-stdlib-root ../eml-stdlib \\",
+      "    --discovered-root foundations/MachLib/Discovered \\",
+      "    --applications-root foundations/MachLib/Applications \\",
+      "    --out-json /tmp/verify_audit.json --out-md /tmp/verify_audit.md",
+      "python tools/status/generate_status.py \\",
+      "    --machlib-root . --machlib-sha e512911421c7ab47527792b5998d5e341c3e0894 \\",
+      "    --axiom-audit /tmp/axiom_audit.txt --build-log <(lake build 2>&1) \\",
+      "    --build-exit-code 0 --verify-audit-json /tmp/verify_audit.json \\",
+      "    --previous-status .status-prev/status.json --out status.json"
+    ],
+    "note": "Anyone with these commits checked out can regenerate this file. content_hash_sha256 should match byte-for-byte; if it doesn't, the data has been tampered with or the toolchain drifted (file a github issue with the diff)."
+  },
+  "build": {
+    "lake_build_passed": true,
+    "lake_exit_code": 0,
+    "modules_built": 69,
+    "modules_total": 77,
+    "modules_failed_listed": [],
+    "non_green_in_proven_dependency_chain": null,
+    "non_green_in_proven_chain_note": "null = library is fully green so the question is moot. If lake_build_passed is false this should be true unless the renderer can prove the failed modules are downstream-only."
+  },
+  "sorries": {
+    "core": 0,
+    "discovered": 221,
+    "total": 221,
+    "file_counts": {
+      "core": 8,
+      "discovered": 340
+    },
+    "delta_vs_previous": {
+      "previous_total": 221,
+      "net_change": 0,
+      "method": "net_only",
+      "note": "net_only: current minus previous total. Does not distinguish 'closed N then introduced N+k' from 'introduced k net'. Tracking per-theorem set-diff is a follow-up."
+    },
+    "history_recent": [
+      {
+        "sha": "c4b42eb519a17695f49acb78bf7f76747426a5d0",
+        "ts": "2026-06-17T23:18:23Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "f90391e7eea52c6315d2f8d2c22d004a6287d02a",
+        "ts": "2026-06-17T23:52:14Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "f05bc626820b247bf9912f03383f5160c92ce74e",
+        "ts": "2026-06-18T18:46:18Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "1bde3d6c6012d57a214305ce9626d32729bf0a6d",
+        "ts": "2026-06-18T19:56:00Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "0af8c5af71a1914d422bc6bc8b1b9209609f2878",
+        "ts": "2026-06-19T03:56:45Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "a598d950396f7e066c898ffacfc74fbabf14be44",
+        "ts": "2026-06-19T05:05:44Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "0a3c0ec80cebe12d371620e3b433112f70975c4e",
+        "ts": "2026-06-19T06:05:09Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "bae847184f73c550de88c07a79c9ff0d14349219",
+        "ts": "2026-06-19T08:22:27Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "960d68756a34e77cb0b11cce274d5316d2cffe44",
+        "ts": "2026-06-19T09:45:12Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "6fcbc9e5424dd1efe67887aed9a22f972ba29e34",
+        "ts": "2026-06-19T15:17:40Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "3654e0aadb04ab390ee5ba513811da685155c6ff",
+        "ts": "2026-06-19T15:49:57Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "a90981d7199661ab36961661e809cfbaec56a4fe",
+        "ts": "2026-06-19T15:55:51Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "2528e79e5e52306d17aeb1020018a3d4ad21e2f4",
+        "ts": "2026-06-19T16:06:13Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "465510cb3a4045747f06ed08a8a8832a8d257ab9",
+        "ts": "2026-06-19T16:45:34Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "2d8bcec5bd322d1848ec7fd08aba84cfeeeb3514",
+        "ts": "2026-06-19T17:29:47Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "7a21915dac287ac29820564345578ace6680c938",
+        "ts": "2026-06-19T17:44:33Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "31231254f94bcda236b4b90b37e2b8de84bf1fb4",
+        "ts": "2026-06-19T18:06:37Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "079dfe5125195c863dd30a3dee37dde77203c581",
+        "ts": "2026-06-19T18:31:54Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "a03962ea2a045fe4a22a9b316ebe08c7d285fb6d",
+        "ts": "2026-06-19T18:56:32Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "f90cd37781095d4c819340295ce5d02dec519f26",
+        "ts": "2026-06-19T19:11:19Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "fb0439a90eaf02405a8bff32e3ff04c2464dcb87",
+        "ts": "2026-06-19T19:34:23Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "27e1a176a5e50be6f079c08f4f56a24ac74a8686",
+        "ts": "2026-06-19T19:45:46Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "6777f9b1e6ca9106a8eed640d00a0d4e9e2326ef",
+        "ts": "2026-06-19T20:02:08Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "1586a3be32552819a92bd0b2369e4eb35cc7f7eb",
+        "ts": "2026-06-19T20:03:27Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "cfb0f8ec916e2f91dd90e1087e99b773e5f91889",
+        "ts": "2026-06-19T20:14:49Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "74d83fb7b98aa8984830741d29e316b45e6200f0",
+        "ts": "2026-06-19T20:21:13Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "488511b81436a1485f6c7666ac7882a5b4e1956f",
+        "ts": "2026-06-19T20:32:37Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "6ecc15747cba2fd34af3891d1ecbe1ddcf669410",
+        "ts": "2026-06-19T20:56:30Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "bf002e17ac5058e6bce161f032ee2cadcfd87a3c",
+        "ts": "2026-06-19T21:39:57Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      },
+      {
+        "sha": "e512911421c7ab47527792b5998d5e341c3e0894",
+        "ts": "2026-06-20T03:54:58Z",
+        "total": 221,
+        "discovered": 221,
+        "core": 0
+      }
+    ],
+    "core_files_tracked": [
+      "Basic.lean",
+      "Exp.lean",
+      "Log.lean",
+      "Trig.lean",
+      "EML.lean",
+      "Hyperbolic.lean",
+      "HyperbolicPreservation.lean",
+      "SelfMapConjugacy.lean"
+    ],
+    "method": "strip Lean block comments (/-! ... -/, /- ... -/) and Lean line comments (--), then count `\\bsorry\\b`. File scope: core = the 8 hand-written MACHLIB_CORE_FILES at top level of foundations/MachLib/; discovered = everything else under foundations/MachLib/ excluding Test.lean and .lake/. Matches monogate-research's builder_v2.py canonical method."
+  },
+  "verify_audit": {
+    "total": 1088,
+    "strengthened": 4,
+    "proven_from_mathlib": 0,
+    "proven_mod_machlib_axioms": 202,
+    "placeholder": 225,
+    "open": 657,
+    "discharged_pct": 18.9,
+    "gap_pct": 81.1,
+    "note": "MachLib has zero mathlib dependency by design, so proven_from_mathlib is structurally 0. proven_mod_machlib_axioms is conditional on the documented axiomatized base \u2014 see axiomatized_base for the load-bearing list."
+  },
+  "axiomatized_base": {
+    "audit_file": "foundations/AxiomAudit.lean",
+    "machlib_real_axioms_count": 46,
+    "machlib_real_axioms": [
+      "MachLib.Real",
+      "MachLib.Real.HasDerivAt",
+      "MachLib.Real.HasDerivAt_add",
+      "MachLib.Real.HasDerivAt_comp",
+      "MachLib.Real.HasDerivAt_const",
+      "MachLib.Real.HasDerivAt_exp",
+      "MachLib.Real.HasDerivAt_id",
+      "MachLib.Real.HasDerivAt_mul",
+      "MachLib.Real.HasDerivAt_sub",
+      "MachLib.Real.HasDerivAt_unique",
+      "MachLib.Real.addR",
+      "MachLib.Real.add_assoc",
+      "MachLib.Real.add_comm",
+      "MachLib.Real.add_lt_add_left",
+      "MachLib.Real.add_neg",
+      "MachLib.Real.add_zero",
+      "MachLib.Real.divR",
+      "MachLib.Real.exp",
+      "MachLib.Real.exp_pos",
+      "MachLib.Real.exp_zero",
+      "MachLib.Real.leR",
+      "MachLib.Real.le_iff_lt_or_eq",
+      "MachLib.Real.ltR",
+      "MachLib.Real.lt_irrefl_ax",
+      "MachLib.Real.lt_total",
+      "MachLib.Real.lt_trans_ax",
+      "MachLib.Real.mulR",
+      "MachLib.Real.mul_assoc",
+      "MachLib.Real.mul_comm",
+      "MachLib.Real.mul_distrib",
+      "MachLib.Real.mul_inv",
+      "MachLib.Real.mul_neg",
+      "MachLib.Real.mul_one_ax",
+      "MachLib.Real.natCast",
+      "MachLib.Real.natCast_succ",
+      "MachLib.Real.natCast_zero",
+      "MachLib.Real.negR",
+      "MachLib.Real.neg_mul",
+      "MachLib.Real.oneR",
+      "MachLib.Real.rolle",
+      "MachLib.Real.subR",
+      "MachLib.Real.sub_def",
+      "MachLib.Real.zeroR",
+      "MachLib.Real.zero_count_bound_by_deriv",
+      "MachLib.Real.zero_lt_one_ax",
+      "MachLib.Real.zero_ne_one_ax"
+    ],
+    "non_machlib_axioms": [
+      "Classical.choice",
+      "Quot.sound",
+      "propext"
+    ],
+    "headline_theorems_audited": [
+      "MachLib.ChainExp2PathC.PfaffianFn.singleExp_canonicalTrim_step",
+      "MachLib.ChainExp2PathC.PfaffianFn.singleExp_dispatch_step",
+      "MachLib.ChainExp2PathC.PfaffianFn.singleExp_reduceStep_closed",
+      "MachLib.ChainExp2PathC.singleExp_h_bridge_closure",
+      "MachLib.ChainExp2PathC.singleExp_khovanskii_bound",
+      "MachLib.ChainExp2PathC.singleExp_to_generic_sdr",
+      "MachLib.MultiPolyReconstruct.eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast",
+      "MachLib.MultiPolyReconstruct.listAddN_getLast_eval",
+      "MachLib.MultiPolyReconstruct.listMulN_getLast_eval",
+      "MachLib.MultiPolyReconstruct.listSubN_getLast_eval",
+      "MachLib.MultiPolyReconstruct.yCoeffsAt_length_eq",
+      "MachLib.PfaffianChainMod.PfaffianFn.khovanskii_bound_full",
+      "MachLib.PfaffianChainMod.SingleExpChain_isCoherentAt",
+      "MachLib.PfaffianChainMod.SingleExpChain_isTriangular",
+      "MachLib.PfaffianFnBound.pfaffian_fn_zero_count_bound",
+      "MachLib.PolynomialCanonical.evalCoeffs_zero_iff_all_zero",
+      "MachLib.PolynomialCanonical.polyDerivativeCoeffs_hasDerivAt",
+      "MachLib.PolynomialCanonical.polyTrueDegreeStrict_polyDerivativeCoeffs_lt",
+      "MachLib.SingleExpKhovanskii.ExpPoly.coeffStep_degreeUpper_polySimplify_lt",
+      "MachLib.SingleExpKhovanskii.ExpPoly.coeffStep_eq_const_zero_when_degreeUpper_zero",
+      "MachLib.SingleExpKhovanskii.ExpPoly.expPoly_auto_bound_with_propagation_aux",
+      "MachLib.SingleExpKhovanskii.ExpPoly.expPoly_khovanskii_bound",
+      "MachLib.SingleExpKhovanskii.ExpPoly.expPoly_ode_no_zeros",
+      "MachLib.SingleExpKhovanskii.ExpPoly.expPoly_zero_count_auto_bound_length_one",
+      "MachLib.SingleExpKhovanskii.ExpPoly.scaledReduction_eval_combine",
+      "MachLib.SingleExpKhovanskii.ExpPoly.sumSimplifiedDegrees_scaledReductionAux_lt"
+    ],
+    "note": "Every MachLib.Real.* entry is a theorem in mathlib; grounding MachLib's analytic base there is open work, not shipped. propext / Classical.choice / Quot.sound are Lean's standard axioms and would also appear in any mathlib-grounded proof."
+  },
+  "content_hash_sha256": "d6f2db81ffa793f39c6fb2a333fba3cc256a8b03110c85b402d9eb6b6655257a"
+}
