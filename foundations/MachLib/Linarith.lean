@@ -223,6 +223,13 @@ theorem speed_spread_nonneg {speed spread u : Real}
   rw [(sub_def speed spread).symm] at hadd
   exact le_trans h2 hadd
 
+/-- `0 ≤ a·r − d` when `d ≤ b·r`, `b ≤ a`, `0 ≤ r` (`d ≤ b·r ≤ a·r`). Closes
+the `3·radius − depth ≥ 0` factor in sphere submerged-volume (`depth ≤ 2·r`).
+Hyps ordered so `b` resolves from `hd` before `hba` is tried. -/
+theorem sub_mul_band_nonneg {a b r d : Real}
+    (hr : 0 ≤ r) (hd : d ≤ b * r) (hba : b ≤ a) : 0 ≤ a * r - d :=
+  sub_nonneg_of_le (le_trans hd (mul_le_mul_of_nonneg_right hba hr))
+
 /-- `−1 ≤ S − 1` when `0 ≤ S` (the `S − 1 ≥ −1` lower-bound shape, e.g. tanh-
 from-sigmoid `2/(1+exp(−2x)) − 1 ≥ −1`, reduced to `0 ≤ 2/(1+exp)`). -/
 theorem sub_one_ge_neg_one {S : Real} (h : 0 ≤ S) : -(1 : Real) ≤ S - 1 := by
@@ -346,6 +353,8 @@ macro_rules
       | exact frac_le_one _
       -- Radial-emitter velocity floor `0 ≤ speed + spread·u`.
       | (apply speed_spread_nonneg <;> assumption)
+      -- `0 ≤ a·r − d` from `d ≤ b·r ≤ a·r` (sphere `3r − depth`).
+      | (apply sub_mul_band_nonneg <;> first | assumption | mach_norm_num)
       -- `−1 ≤ S − 1` shape (tanh-from-sigmoid `2/(1+exp) − 1 ≥ −1`).
       | (apply sub_one_ge_neg_one; mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
