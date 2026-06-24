@@ -137,6 +137,10 @@ macro_rules
       | exact cos_le_one _
       | exact le_of_lt (neg_one_lt_tanh _)
       | exact le_of_lt (tanh_lt_one _)
+      -- erf ∈ [-1, 1] (Gauss error function range). Closes erf_kernel's
+      -- in-unit-interval obligation.
+      | exact neg_one_le_erf _
+      | exact erf_le_one _
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)

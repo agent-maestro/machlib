@@ -71,6 +71,11 @@ axiom arctan : Real → Real
 -- Symbol only — `erf`'s bound/zero properties are NOT asserted here, so the
 -- erf kernel obligations honestly remain `sorry` until those axioms land.
 axiom erf : Real → Real
+-- erf maps ℝ → (-1, 1). The two range bounds are held as axioms (erf is an
+-- opaque symbol, so they are not derivable) — clearly true and standard.
+-- Close the `erf_kernel` in-unit-interval obligation. C-246.
+axiom neg_one_le_erf (x : Real) : -1 ≤ erf x
+axiom erf_le_one     (x : Real) : erf x ≤ 1
 
 /-! ### Defining properties (minimal set) -/
 

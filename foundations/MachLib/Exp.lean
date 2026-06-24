@@ -67,6 +67,13 @@ theorem exp_monotone {x y : Real} (h : x ≤ y) : exp x ≤ exp y := by
   · rw [heq]
     exact (le_iff_lt_or_eq _ _).mpr (Or.inr rfl)
 
+/-- `exp x ≤ 1` for `x ≤ 0`. Proved (no axiom) from `exp_monotone` +
+`exp_zero`. Closes the complement-of-decay floor `1 - exp(-k) ≥ 0`
+(exponential fog, saturation deficits) once `-k ≤ 0`. -/
+theorem exp_le_one_of_nonpos {x : Real} (hx : x ≤ 0) : exp x ≤ 1 := by
+  have h := exp_monotone hx
+  rwa [exp_zero] at h
+
 theorem exp_injective {x y : Real} (h : exp x = exp y) : x = y := by
   rcases lt_total x y with hlt | heq | hgt
   · exact (ne_of_lt (exp_lt hlt) h).elim
