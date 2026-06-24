@@ -148,8 +148,16 @@ macro_rules
       -- clamped composite ≥ one of its inputs).
       | (apply le_max_of_le_left <;> mach_positivity)
       | (apply le_max_of_le_right <;> mach_positivity)
-      -- Affine floor: `FLOOR ≤ FLOOR + (nonneg)` (linear-interp band floors).
+      -- Affine floor: `FLOOR ≤ FLOOR + (nonneg)` / `(nonneg) + FLOOR`.
       | (apply le_add_of_nonneg_right <;> mach_positivity)
+      | (apply le_add_of_nonneg_left <;> mach_positivity)
+      -- Clamp ceil: `min a b ≤ a` / `≤ b` (e.g. `clamp ≤ HI`).
+      | exact min_le_left _ _
+      | exact min_le_right _ _
+      -- Clamp floor: `LO ≤ min (max .. LO) HI` — splits to `LO ≤ max .. LO`
+      -- (closed by le_max_right) and `LO ≤ HI` (the clamp-bound ordering;
+      -- closes when it's a hypothesis — see emitter note below).
+      | (apply le_min <;> mach_positivity)
       -- Structural decompositions for `0 < ...`. Order matters:
       -- `add_pos_of_nonneg_pos` before `add_pos` so a sum like
       -- `a + b + c + d` with only `d` strictly-positive closes.
