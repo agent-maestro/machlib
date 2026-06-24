@@ -132,6 +132,10 @@ macro_rules
       | (apply mul_nonneg <;> mach_positivity)
       | (apply div_nonneg_of_nonneg_pos <;> mach_positivity)
       | (apply div_pos_of_pos_pos <;> mach_positivity)
+      -- `exp_pos` (0 < exp) BEFORE `exp_nonneg` (0 ≤ exp): strict-positive
+      -- floors like `RHO_0 * exp(-h/H) > 0` (air_density, atmosphere decay,
+      -- optical-neuron response) need the strict form as a `mul_pos` factor.
+      | exact exp_pos _
       | (apply exp_nonneg)
       -- ── Forge-emitter arms (2026-06-24): close per-kernel range/nonneg
       --    obligations (sqrt/max/min/general-div/rpow) that shipped `sorry`.
