@@ -180,6 +180,9 @@ macro_rules
       -- Trig-amplitude band: abs(base · sin · cos …) ≤ base (orbit, wave,
       -- white_noise). The nonlinear abs-of-product shape.
       | mach_abs_bound
+      -- Pythagorean identity sin²+cos²=1 (the lemma already exists in Trig;
+      -- closes `*_witness` equality obligations). exact, harmless elsewhere.
+      | exact pythagorean _
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)
