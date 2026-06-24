@@ -127,6 +127,16 @@ macro_rules
       -- `1 ≤ cosh x` (hyperbolic cosine floor) — closes the Forge
       -- `cosh_geq_one` obligation. Harmless on non-cosh goals (exact fails).
       | exact cosh_ge_one _
+      -- Bounded-range closers (sin/cos/tanh ∈ [-1,1]). The bound axioms
+      -- already live in Trig; these arms wire them into the `*_in_unit_interval`
+      -- / `tanh_monotone` obligations Forge emits. Harmless elsewhere (exact
+      -- fails). tanh's are strict (< 1, -1 <) so weaken with `le_of_lt`.
+      | exact neg_one_le_sin _
+      | exact sin_le_one _
+      | exact neg_one_le_cos _
+      | exact cos_le_one _
+      | exact le_of_lt (neg_one_lt_tanh _)
+      | exact le_of_lt (tanh_lt_one _)
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)
