@@ -276,8 +276,10 @@ macro_rules
       | (apply one_sub_cube_band <;> assumption)
       -- `0 ≤ 1 − c²` for clamped c ∈ [0,1] (ricochet); side goals via positivity.
       | (apply one_sub_sq_nonneg <;> mach_positivity)
-      -- Exponential-fog complements `0 ≤ 1 − exp(−…)`.
-      | (apply one_sub_exp_neg_mul_nonneg <;> assumption)
+      -- Exponential-fog complements `0 ≤ 1 − exp(−…)`. Side goals via
+      -- mach_positivity so `0 ≤ k` from a strict `0 < k` domain hyp also works
+      -- (toxin: a clearance-decay product reusing this factor).
+      | (apply one_sub_exp_neg_mul_nonneg <;> mach_positivity)
       | (apply one_sub_exp_neg_nonneg <;> mach_positivity)
       -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
       | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
