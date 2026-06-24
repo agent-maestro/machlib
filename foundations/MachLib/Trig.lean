@@ -61,6 +61,16 @@ axiom sqrt   : Real → Real
 axiom atan2  : Real → Real → Real
 axiom arcsin : Real → Real
 axiom arccos : Real → Real
+-- Single-argument arctangent. The Forge backend maps EML `atan` to
+-- `Real.arctan`; without this symbol every atan/atan2/accelerometer kernel
+-- failed to compile ("unknown constant Real.arctan"). Function-symbol
+-- declaration only, same kind as arcsin/arccos above — no new property axiom.
+axiom arctan : Real → Real
+-- Gauss error function. EML `erf` passes through to a bare `erf` call; without
+-- this symbol math/erf.eml failed to compile ("unknown identifier erf").
+-- Symbol only — `erf`'s bound/zero properties are NOT asserted here, so the
+-- erf kernel obligations honestly remain `sorry` until those axioms land.
+axiom erf : Real → Real
 
 /-! ### Defining properties (minimal set) -/
 
