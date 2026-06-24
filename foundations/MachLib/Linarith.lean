@@ -176,6 +176,16 @@ theorem neg_nonpos_of_nonneg {a : Real} (h : 0 ≤ a) : -a ≤ 0 := by
     exact le_of_lt hh
   · rw [← heq, neg_zero]; exact le_refl 0
 
+/-- `a < 0 → 0 < -a`. Strict mirror of `neg_nonpos_of_nonneg`. Lets
+`mach_positivity` turn a negativity fact (e.g. `log feedback < 0` from
+`log_neg_of_lt_one`) into the strict-positive `0 < -log feedback` that a
+`div_pos` denominator subgoal needs (reverb T60). Derived from
+`add_lt_add_left` + `neg_add_self`, no new axioms. -/
+theorem neg_pos_of_neg {a : Real} (h : a < 0) : 0 < -a := by
+  have hh : -a + a < -a + 0 := add_lt_add_left h (-a)
+  rw [add_zero, neg_add_self] at hh
+  exact hh
+
 /-- `0 ≤ 1 − exp((−a)·b)` for `a,b ≥ 0` (exponential fog `1 − exp(−ρ·d)`).
 exp of a nonpos is ≤ 1. -/
 theorem one_sub_exp_neg_mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -440,6 +450,12 @@ macro_rules
       | (apply min_nonneg <;> mach_positivity)
       | (apply div_nonneg <;> mach_positivity)
       | (apply realPow_nonneg <;> mach_positivity)
+      -- Sub-unit log sign: `0 < -log x` from `0 < x < 1` (reverb T60's
+      -- decay-time denominator `-log(feedback)`). `neg_pos_of_neg` flips to
+      -- the goal `log x < 0`, discharged by `log_neg_of_lt_one` from the two
+      -- domain hyps. `apply neg_pos_of_neg` fails fast unless the goal is
+      -- `0 < -_`, so the arm is self-guarding.
+      | (apply neg_pos_of_neg; apply log_neg_of_lt_one <;> assumption)
       -- Hypothesis weakening: prove `0 ≤ x` from a bound `c ≤ x` in context
       -- (e.g. a kernel `requires age ≥ 1`), reducing to `0 ≤ c`.
       | (refine le_trans ?_ (by assumption) <;> mach_positivity)
@@ -456,6 +472,10 @@ macro_rules
       -- Affine floor: `FLOOR ≤ FLOOR + (nonneg)` / `(nonneg) + FLOOR`.
       | (apply le_add_of_nonneg_right <;> mach_positivity)
       | (apply le_add_of_nonneg_left <;> mach_positivity)
+      -- Resistor-divider amplification: `v ≤ v · (1 + r1/r2)` (ldo output ≥
+      -- reference). `apply` fails fast unless the goal is exactly this shape,
+      -- so the arm is self-guarding; the three sign subgoals are domain hyps.
+      | (apply le_mul_one_add_div <;> assumption)
       -- Clamp ceil: `min a b ≤ a` / `≤ b` (e.g. `clamp ≤ HI`).
       | exact min_le_left _ _
       | exact min_le_right _ _

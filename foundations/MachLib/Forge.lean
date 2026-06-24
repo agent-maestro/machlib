@@ -421,6 +421,21 @@ theorem le_add_of_nonneg_right {a b : Real} (h : 0 ≤ b) : a ≤ a + b := by
 theorem le_add_of_nonneg_left {a b : Real} (h : 0 ≤ b) : a ≤ b + a := by
   rw [add_comm]; exact le_add_of_nonneg_right h
 
+/-- Resistor-divider amplification: `v ≤ v · (1 + r1/r2)` when `0 < v`,
+`0 ≤ r1`, `0 < r2`. A non-inverting divider's output (LDO feedback, op-amp
+gain) is always ≥ its reference because the gain factor `1 + r1/r2 ≥ 1`.
+Closes `ldo_output_voltage_above_reference` and any
+`v_out = v_ref·(1 + r_top/r_bot)` shape. PROVED: `r1/r2 ≥ 0` (`div_nonneg`)
+⇒ `1 ≤ 1 + r1/r2` (`le_add_of_nonneg_right`) ⇒ `v·1 ≤ v·(1+r1/r2)`
+(`mul_le_mul_of_nonneg_left`), and `v·1 = v`. No new axioms. -/
+theorem le_mul_one_add_div {v r1 r2 : Real}
+    (hv : 0 < v) (hr1 : 0 ≤ r1) (hr2 : 0 < r2) :
+    v ≤ v * (1 + r1 / r2) := by
+  have hc : 0 ≤ r1 / r2 := div_nonneg hr1 (le_of_lt hr2)
+  have hb : (1 : Real) ≤ 1 + r1 / r2 := le_add_of_nonneg_right hc
+  have step : v * 1 ≤ v * (1 + r1 / r2) := mul_le_mul_of_nonneg_left hb (le_of_lt hv)
+  rwa [mul_one_ax] at step
+
 /-! ### `≤ 1` products (C-242, 2026-05-03)
 
 A product of two non-negative ≤-1 values is itself ≤ 1. -/

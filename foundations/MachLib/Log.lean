@@ -104,6 +104,16 @@ theorem log_lt_log {x y : Real} (hx : 0 < x) (hxy : x < y) :
       rw [exp_log hy, exp_log hx] at step
       exact (lt_irrefl_ax x (lt_trans_ax hxy step)).elim
 
+/-- `log x < 0` for `0 < x < 1`. The strict-monotonicity corollary at the
+unit boundary: since `log 1 = 0` and `log` is increasing, sub-unit arguments
+have negative log. Closes the `reverb_t60_positive` denominator sign
+(`-log feedback > 0` from `0 < feedback < 1`) and any decay-time kernel whose
+time-constant divides by `-log(feedback)`. PROVED from `log_lt_log` + `log_one`,
+no new axioms. -/
+theorem log_neg_of_lt_one {x : Real} (hx : 0 < x) (hx1 : x < 1) : log x < 0 := by
+  have h := log_lt_log hx hx1
+  rwa [log_one] at h
+
 /-- On the positive reals minus the singleton {1}, `log` is non-zero.
 This guards EDL self-map definitions where dividing by `log x` must
 be meaningful. -/
