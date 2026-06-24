@@ -208,6 +208,21 @@ theorem frac_le_one (z : Real) : z - floor z ≤ 1 := by
   rw [sub_def, add_comm]
   exact le_of_lt h
 
+/-- `0 ≤ speed + spread·u` for `0 ≤ spread`, `−1 ≤ u`, `spread ≤ speed` (radial
+emitter velocity floor). `spread·u ≥ −spread` and `speed − spread ≥ 0`. -/
+theorem speed_spread_nonneg {speed spread u : Real}
+    (hspr : 0 ≤ spread) (hu : -1 ≤ u) (hle : spread ≤ speed) :
+    0 ≤ speed + spread * u := by
+  have hm : spread * (-1) ≤ spread * u := mul_le_mul_of_nonneg_left hu hspr
+  rw [mul_neg, mul_one_ax] at hm
+  have h2 : 0 ≤ speed - spread := sub_nonneg_of_le hle
+  have hadd : speed + -spread ≤ speed + spread * u := by
+    rcases (le_iff_lt_or_eq _ _).mp hm with h | h
+    · exact le_of_lt (add_lt_add_left h speed)
+    · rw [h]; exact le_refl _
+  rw [(sub_def speed spread).symm] at hadd
+  exact le_trans h2 hadd
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -300,6 +315,8 @@ macro_rules
       -- Fractional part bands `0 ≤ z − ⌊z⌋` / `z − ⌊z⌋ ≤ 1` (white-noise hash).
       | exact frac_nonneg _
       | exact frac_le_one _
+      -- Radial-emitter velocity floor `0 ≤ speed + spread·u`.
+      | (apply speed_spread_nonneg <;> assumption)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
