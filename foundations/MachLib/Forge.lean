@@ -237,6 +237,20 @@ theorem min_le_right (a b : Real) : min a b ≤ b := by
   · rw [if_pos h]; exact h
   · rw [if_neg h]; exact le_refl b
 
+/-- A lower bound of both branches is a lower bound of `min`. The
+introduction rule dual to `min_le_left`/`min_le_right`. Forge emits
+`min`-shaped clamp floors (`lo ≤ min (max x lo) hi`); `mach_positivity`
+splits them with this lemma into `lo ≤ max x lo` (closed by
+`le_max_right`) and `lo ≤ hi` (closed by the emitted `h_clampₙ`
+hypothesis). Lived only in `Applications/` proof files before — outside
+`Linarith.lean`'s import closure, so the `le_min` arm silently no-op'd
+and every clamp floor fell through to `sorry`. C-244. -/
+theorem le_min {a b c : Real} (h1 : c ≤ a) (h2 : c ≤ b) : c ≤ min a b := by
+  unfold min
+  by_cases h : a ≤ b
+  · rw [if_pos h]; exact h1
+  · rw [if_neg h]; exact h2
+
 /-- Both branches nonneg ⇒ `min` nonneg. -/
 theorem min_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ min a b := by
   unfold min
