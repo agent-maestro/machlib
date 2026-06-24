@@ -160,6 +160,9 @@ macro_rules
       -- sign info on `x`) closes via the axiom rather than
       -- splitting into two unprovable `0 ≤ x` subgoals.
       | exact sq_nonneg _
+      -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
+      -- obligation and any `0 ≤ |…|` subgoal.
+      | exact abs_nonneg _
       -- `1 ≤ cosh x` (hyperbolic cosine floor) — closes the Forge
       -- `cosh_geq_one` obligation. Harmless on non-cosh goals (exact fails).
       | exact cosh_ge_one _
@@ -212,6 +215,9 @@ macro_rules
       -- Subtraction nonneg: `0 ≤ a - b` from a bound `b ≤ a` (e.g. Adam's
       -- `0 ≤ 1 - beta2` from `beta2 ≤ 1`). Reduces to proving `b ≤ a`.
       | (apply sub_nonneg_of_le <;> mach_positivity)
+      -- Strict version: `0 < a - b` from `b < a` (e.g. acoustic_cloak
+      -- shell thickness `r_outer - r_inner > 0` from `r_outer > r_inner`).
+      | (apply sub_pos_of_lt <;> mach_positivity)
       -- Floor via transitive max: `FLOOR ≤ max (max .. FLOOR) ..` (e.g. a
       -- clamped composite ≥ one of its inputs).
       | (apply le_max_of_le_left <;> mach_positivity)
