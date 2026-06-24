@@ -223,6 +223,16 @@ theorem speed_spread_nonneg {speed spread u : Real}
   rw [(sub_def speed spread).symm] at hadd
   exact le_trans h2 hadd
 
+/-- `−1 ≤ S − 1` when `0 ≤ S` (the `S − 1 ≥ −1` lower-bound shape, e.g. tanh-
+from-sigmoid `2/(1+exp(−2x)) − 1 ≥ −1`, reduced to `0 ≤ 2/(1+exp)`). -/
+theorem sub_one_ge_neg_one {S : Real} (h : 0 ≤ S) : -(1 : Real) ≤ S - 1 := by
+  rw [sub_def]
+  rcases (le_iff_lt_or_eq 0 S).mp h with hlt | heq
+  · have hh := add_lt_add_left hlt (-1)
+    rw [add_zero, add_comm] at hh
+    exact le_of_lt hh
+  · rw [← heq, zero_add]; exact le_refl _
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -317,6 +327,8 @@ macro_rules
       | exact frac_le_one _
       -- Radial-emitter velocity floor `0 ≤ speed + spread·u`.
       | (apply speed_spread_nonneg <;> assumption)
+      -- `−1 ≤ S − 1` shape (tanh-from-sigmoid `2/(1+exp) − 1 ≥ −1`).
+      | (apply sub_one_ge_neg_one; mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
