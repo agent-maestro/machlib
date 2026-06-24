@@ -93,6 +93,12 @@ axiom sqrt_one        : sqrt 1 = 1
 axiom sqrt_nonneg     (x : Real) : 0 ≤ sqrt x
 axiom sqrt_sq_nonneg  (x : Real) : 0 ≤ x → sqrt x * sqrt x = x
 axiom sqrt_neg_zero   (x : Real) : x < 0 → sqrt x = 0
+-- Order characterisation (one direction): a nonneg lower bound whose square
+-- is ≤ y is itself ≤ sqrt y. Sound for the real square root (z ≥ 0, z² ≤ y ⇒
+-- z = sqrt(z²) ≤ sqrt y by monotonicity). Held as an axiom alongside the
+-- other sqrt facts — there is no concrete Real model to derive it from.
+-- Closes quadratic-formula root-sign obligations (lqr Riccati discriminant).
+axiom le_sqrt_of_sq_le {z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y
 
 -- arcsin / arccos: principal-value inverses, bounded.
 axiom arcsin_zero  : arcsin 0 = 0

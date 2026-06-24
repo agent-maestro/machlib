@@ -186,6 +186,37 @@ theorem neg_pos_of_neg {a : Real} (h : a < 0) : 0 < -a := by
   rw [add_zero, neg_add_self] at hh
   exact hh
 
+/-- `0 < a·a` for `a ≠ 0`. The square of a nonzero real is strictly positive.
+Sign trichotomy (`lt_total`): the positive branch is `mul_pos` directly; the
+negative branch routes through `(-a)·(-a) = a·a` (`neg_mul_neg`) with `0 < -a`
+(`neg_pos_of_neg`). Closes the `b²/r` denominator positivity in lqr Riccati
+(`b ≠ 0`, `r > 0`). No new axioms. -/
+theorem mul_self_pos {a : Real} (h : a ≠ 0) : 0 < a * a := by
+  rcases lt_total a 0 with hlt | heq | hgt
+  · have hna : 0 < -a := neg_pos_of_neg hlt
+    have hpos : 0 < (-a) * (-a) := mul_pos hna hna
+    rwa [neg_mul_neg] at hpos
+  · exact absurd heq h
+  · exact mul_pos hgt hgt
+
+/-- `0 ≤ X + sqrt(X·X + c)` for `0 ≤ c`. Nonnegativity of the quadratic-formula
+root numerator `−B + √(B²+…)` once the discriminant is written `X·X + c` with
+`c ≥ 0`. If `X ≥ 0` the sqrt term alone suffices (`sqrt_nonneg`); if `X < 0`
+then `sqrt(X²+c) ≥ −X` because `(−X)² = X² ≤ X²+c` (`le_sqrt_of_sq_le`), so the
+sum is `≥ X + (−X) = 0`. Closes `lqr_1d_riccati_positive`. Only new axiom in the
+chain is `le_sqrt_of_sq_le`. -/
+theorem add_sqrt_sq_add_nonneg {X c : Real} (hc : 0 ≤ c) :
+    0 ≤ X + sqrt (X * X + c) := by
+  rcases lt_total X 0 with hlt | heq | hgt
+  · have hnX : 0 ≤ -X := le_of_lt (neg_pos_of_neg hlt)
+    have hsq : (-X) * (-X) ≤ X * X + c := by
+      rw [neg_mul_neg]; exact le_add_of_nonneg_right hc
+    have hle : -X ≤ sqrt (X * X + c) := le_sqrt_of_sq_le hnX hsq
+    have h2 : X + (-X) ≤ X + sqrt (X * X + c) := add_le_add_left hle X
+    rwa [add_neg] at h2
+  · rw [heq]; exact add_nonneg (le_refl 0) (sqrt_nonneg _)
+  · exact add_nonneg (le_of_lt hgt) (sqrt_nonneg _)
+
 /-- `0 ≤ 1 − exp((−a)·b)` for `a,b ≥ 0` (exponential fog `1 − exp(−ρ·d)`).
 exp of a nonpos is ≤ 1. -/
 theorem one_sub_exp_neg_mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -445,6 +476,13 @@ macro_rules
       -- and the Riccati `sqrt(...) > 0` shapes. The subgoal `0 < x` recurses
       -- (usually a domain hypothesis). No new axiom.
       | (apply sqrt_pos <;> mach_positivity)
+      -- Quadratic-formula root numerator `0 ≤ X + sqrt(X·X + c)` (lqr Riccati).
+      -- `apply` fails fast unless the goal is exactly this shape; the residual
+      -- subgoal is `0 ≤ c` (the 4·(b²/r)·q discriminant addend), which recurses.
+      | (apply add_sqrt_sq_add_nonneg <;> mach_positivity)
+      -- `0 < a·a` from a nonzero hypothesis (lqr `b ≠ 0` ⇒ `0 < b·b`, the b²/r
+      -- denominator). `assumption` supplies the `a ≠ 0` side condition.
+      | (apply mul_self_pos; assumption)
       | exact le_max_right _ _
       | exact le_max_left _ _
       | (apply min_nonneg <;> mach_positivity)
