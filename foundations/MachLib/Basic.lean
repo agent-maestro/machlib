@@ -118,6 +118,13 @@ axiom realPow : Real → Real → Real
 axiom realPow_zero (x : Real) : realPow x 0 = 1
 axiom realPow_one  (x : Real) : realPow x 1 = x
 axiom realPow_pos  {x y : Real} : 0 < x → 0 < realPow x y
+-- Elementary, disclosed: a nonneg base raised to any real exponent is
+-- nonneg (realPow 0 y = 0 for y≠0, = 1 for y=0; positive base via realPow_pos).
+-- `realPow` is opaque here, so this is axiomatized like its siblings above.
+axiom realPow_nonneg {x : Real} (hx : 0 ≤ x) (y : Real) : 0 ≤ x ^ y
+-- Lean div-by-zero convention (matches Mathlib's `div_zero`); sound for the
+-- opaque `divR`. Lets `div_nonneg` (proved in Forge.lean) cover nonneg denominators.
+axiom div_zero (a : Real) : a / 0 = 0
 
 @[instance] noncomputable def instDecLT (a b : Real) : Decidable (a < b) :=
   Classical.propDecidable _

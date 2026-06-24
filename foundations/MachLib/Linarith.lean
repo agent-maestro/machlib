@@ -130,6 +130,26 @@ macro_rules
       | (apply div_nonneg_of_nonneg_pos <;> mach_positivity)
       | (apply div_pos_of_pos_pos <;> mach_positivity)
       | (apply exp_nonneg)
+      -- ── Forge-emitter arms (2026-06-24): close per-kernel range/nonneg
+      --    obligations (sqrt/max/min/general-div/rpow) that shipped `sorry`.
+      | exact sqrt_nonneg _
+      | exact le_max_right _ _
+      | exact le_max_left _ _
+      | (apply min_nonneg <;> mach_positivity)
+      | (apply div_nonneg <;> mach_positivity)
+      | (apply realPow_nonneg <;> mach_positivity)
+      -- Hypothesis weakening: prove `0 ≤ x` from a bound `c ≤ x` in context
+      -- (e.g. a kernel `requires age ≥ 1`), reducing to `0 ≤ c`.
+      | (refine le_trans ?_ (by assumption) <;> mach_positivity)
+      -- Subtraction nonneg: `0 ≤ a - b` from a bound `b ≤ a` (e.g. Adam's
+      -- `0 ≤ 1 - beta2` from `beta2 ≤ 1`). Reduces to proving `b ≤ a`.
+      | (apply sub_nonneg_of_le <;> mach_positivity)
+      -- Floor via transitive max: `FLOOR ≤ max (max .. FLOOR) ..` (e.g. a
+      -- clamped composite ≥ one of its inputs).
+      | (apply le_max_of_le_left <;> mach_positivity)
+      | (apply le_max_of_le_right <;> mach_positivity)
+      -- Affine floor: `FLOOR ≤ FLOOR + (nonneg)` (linear-interp band floors).
+      | (apply le_add_of_nonneg_right <;> mach_positivity)
       -- Structural decompositions for `0 < ...`. Order matters:
       -- `add_pos_of_nonneg_pos` before `add_pos` so a sum like
       -- `a + b + c + d` with only `d` strictly-positive closes.
