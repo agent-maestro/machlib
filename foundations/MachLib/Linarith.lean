@@ -238,6 +238,19 @@ floor after `lit_one_eq` normalises the decimal `−1.0` to `−(1)`. -/
 theorem neg_one_le_one : -(1 : Real) ≤ 1 :=
   le_trans (neg_nonpos_of_nonneg (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax)
 
+/-- Spherical unit-norm identity `(cosφ·sinθ)² + sin²φ + (cosφ·cosθ)² = 1`
+(orbit `norm_witness`). Factor `cos²φ·(sin²θ+cos²θ) + sin²φ`, apply pythagorean
+in θ then φ. -/
+theorem sphere_norm_one (theta phi : Real) :
+    (((cos phi) * (sin theta)) * ((cos phi) * (sin theta)) + (sin phi) * (sin phi))
+      + ((cos phi) * (cos theta)) * ((cos phi) * (cos theta)) = 1 := by
+  have key : (((cos phi)*(sin theta))*((cos phi)*(sin theta)) + (sin phi)*(sin phi))
+       + ((cos phi)*(cos theta))*((cos phi)*(cos theta))
+     = (cos phi * cos phi) * (sin theta * sin theta + cos theta * cos theta)
+       + sin phi * sin phi := by mach_ring
+  rw [key, pythagorean theta, mul_one_ax, add_comm]
+  exact pythagorean phi
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -361,6 +374,8 @@ macro_rules
       -- Pythagorean identity sin²+cos²=1 (the lemma already exists in Trig;
       -- closes `*_witness` equality obligations). exact, harmless elsewhere.
       | exact pythagorean _
+      -- Spherical-coordinate unit norm (orbit norm_witness).
+      | exact sphere_norm_one _ _
       -- Boundary identities: evaluate-at-zero / definitional equalities that
       -- reduce to `0=0` / `1=1` after stock rewrites (rc step-at-zero, pll
       -- zero-offset). `; done` so the arm only succeeds if FULLY closed —
