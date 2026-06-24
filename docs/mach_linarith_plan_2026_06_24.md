@@ -120,6 +120,21 @@ monomial-normalising `ring` (Horner form), the long-flagged "ring v2". So:
   THEN literal-bridge generalisation. ring v2 is the substantial piece; without
   it the SOS certificates cannot be discharged. Everything else is validated.
 
+**Refinement (same day): the FACTORED certificate partially sidesteps ring v2.**
+For a polynomial with NO cancelling constant term, the factored form expands to
+exactly the goal's monomials (each once), so mach_ring v1.5 closes it with no
+collection: `3t²−2t³ = t²·(3−2t)` works → **smoothstep CLOSES** (hand-proved
+green: `mul_nonneg (sq_nonneg t) (sub_nonneg_of_le …)`, bound via
+`mul_le_mul_of_nonneg_left` + `mach_norm_num`). BUT polynomials WITH a constant
+still need collection: `ease_out = 1−(1−t)²` expands with a `1 + −1` that
+mach_ring can't cancel → still blocked. So the factored sidestep covers the
+"starts-at-0, no-constant" subset (smoothstep), not the general band. General
+case still gated on ring v2 (collection) OR a real nlinarith (products +
+linarith). NET: the path is de-risked (a univariate recursive-factor tactic,
+not full ring v2, suffices for the common no-constant easing functions) but
+auto-finding the factorisation still needs an elab tactic (extract coeffs,
+factor out tᵏ, recurse) — a focused multi-hour build, not a macro.
+
 ## What NOT to do
 - Do not ship a `mach_linarith` that only `apply`s a fixed lemma list (the
   current v1 stub) and call it linarith — it closes none of the real backlog.
