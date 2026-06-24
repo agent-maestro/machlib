@@ -361,6 +361,24 @@ theorem div_nonneg_of_nonneg_pos
   rw [div_def a b (ne_of_gt hb)]
   exact mul_nonneg ha (one_div_nonneg_of_pos hb)
 
+/-- General `0 ≤ a → 0 ≤ b → 0 ≤ a / b` (nonneg denominator).
+PROVED from `div_nonneg_of_nonneg_pos` (strict denom) + `div_zero` (b = 0),
+case-split on `0 ≤ b` via `le_iff_lt_or_eq`. This is the leaf lemma the Forge
+Lean emitter needs to discharge the per-kernel range/nonneg obligations that
+currently ship as `sorry`. -/
+theorem div_nonneg
+    {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a / b := by
+  rcases (le_iff_lt_or_eq 0 b).mp hb with hlt | heq
+  · exact div_nonneg_of_nonneg_pos ha hlt
+  · rw [← heq, div_zero]; exact le_refl 0
+
+/-- Affine floor: `a ≤ a + b` when `0 ≤ b`. Closes per-kernel `f ≥ FLOOR`
+obligations where the body is `FLOOR + (nonneg)` (e.g. linear-interp band
+floors). PROVED from `add_le_add_left` + `add_zero`. -/
+theorem le_add_of_nonneg_right {a b : Real} (h : 0 ≤ b) : a ≤ a + b := by
+  have hh := add_le_add_left h a
+  rwa [add_zero] at hh
+
 /-! ### `≤ 1` products (C-242, 2026-05-03)
 
 A product of two non-negative ≤-1 values is itself ≤ 1. -/
