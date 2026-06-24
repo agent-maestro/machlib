@@ -673,6 +673,12 @@ axiom floor_le (x : Real) : floor x ≤ x
 /-- `x < ⌊x⌋ + 1`. Defining upper property; the fractional part is `< 1`. -/
 axiom lt_floor_add_one (x : Real) : x < floor x + 1
 
+/-- `⌊0⌋ = 0`. The bracketing axioms (`floor_le`, `lt_floor_add_one`) only pin
+`⌊0⌋ ∈ (−1, 0]`; since `floor` is collapsed to `Real → Real` (no integer
+codomain) the integer-valued fact `⌊0⌋ = 0` is not derivable and is added here.
+Closes `white_noise_at_origin_finite` (`hash2(0,0) = 0 − ⌊0⌋ = 0`). -/
+axiom floor_zero : floor 0 = 0
+
 end Real
 end MachLib
 

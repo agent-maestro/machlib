@@ -249,6 +249,18 @@ applied with `y = k·k`). -/
 theorem one_sub_exp_neg_nonneg {y : Real} (hy : 0 ≤ y) : 0 ≤ 1 - exp (-y) :=
   sub_nonneg_of_le (exp_le_one_of_nonpos (neg_nonpos_of_nonneg hy))
 
+/-- `0 ≤ 1 − exp((−t)/tau)` for `t ≥ 0`, `tau > 0`. The saturating
+exponential-approach shape `1 − e^{−t/τ}` (RC charging, ink recovery, sprint
+velocity ramp). The argument `(−t)/tau ≤ 0` because `−t ≤ 0` and `tau > 0`, so
+`exp` of it is `≤ 1`. Hypotheses are baked in so no separate nonpositivity
+prover is needed. PROVED from `exp_le_one_of_nonpos` + `sub_nonneg_of_le`;
+no new axioms. -/
+theorem one_sub_exp_neg_div_nonneg {t tau : Real} (ht : 0 ≤ t) (htau : 0 < tau) :
+    0 ≤ 1 - exp ((-t) / tau) := by
+  apply sub_nonneg_of_le (exp_le_one_of_nonpos _)
+  rw [div_def (-t) tau (ne_of_gt htau), neg_mul]
+  exact neg_nonpos_of_nonneg (mul_nonneg ht (one_div_nonneg_of_pos htau))
+
 /-- `0 ≤ c·x + c` for `c ≥ 0`, `−1 ≤ x` (the `[-1,1] → [0,1]` affine remap
 `½x + ½`, matcap UV). Factor `c·(x+1)`; `x+1 ≥ 0` from `−1 ≤ x`. -/
 theorem affine_remap_nonneg {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ c * x + c := by
@@ -422,6 +434,10 @@ macro_rules
       -- (toxin: a clearance-decay product reusing this factor).
       | (apply one_sub_exp_neg_mul_nonneg <;> mach_positivity)
       | (apply one_sub_exp_neg_nonneg <;> mach_positivity)
+      -- Saturating exponential approach `1 − exp(−t/τ)` (ink recovery, sprint
+      -- velocity ramp, RC charge). `apply` fails fast off-shape; the two
+      -- subgoals `0 ≤ t`, `0 < τ` are domain hyps.
+      | (apply one_sub_exp_neg_div_nonneg <;> assumption)
       -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
       | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
       -- Fractional part bands `0 ≤ z − ⌊z⌋` / `z − ⌊z⌋ ≤ 1` (white-noise hash).
@@ -470,7 +486,7 @@ macro_rules
       -- and leave an unsolved goal.
       | (simp only [zero_div, div_zero, exp_zero, sin_zero, cos_zero,
                     tanh_zero, mul_zero, zero_mul, sub_self, add_zero,
-                    mul_one_ax, one_mul_thm]; done)
+                    sub_zero, floor_zero, mul_one_ax, one_mul_thm]; done)
       -- Ring identities (fresnel f0+(1-f0)=1 etc.). Same `; done` guard —
       -- Ring identities (fresnel f0+(1-f0)=1, `*_witness`). mach_ring now
       -- completes ADDITIVE collection (add_left_comm). GUARDED by `show _ = _`
