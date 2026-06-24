@@ -215,8 +215,10 @@ macro "mach_ring" : tactic => `(tactic|
         -- `ay * (az * bx)` and `az * (ay * bx)` that appear in
         -- cross-product / Lagrange polynomial identities. Plus the
         -- additive cancellation rules so `+x + -x` collapses.
-        | simp [add_comm, add_assoc, mul_comm, mul_assoc,
-                add_neg, neg_add_self, add_zero, zero_add, neg_add,
+        | simp [add_comm, add_assoc, add_left_comm,
+                mul_comm, mul_assoc,
+                add_neg, neg_add_self, add_neg_cancel_left, neg_add_cancel_left,
+                add_zero, zero_add, neg_add,
                 neg_mul, mul_neg, neg_mul_neg, neg_neg_helper])))
 
 end Real

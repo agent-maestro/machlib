@@ -84,6 +84,28 @@ theorem exp_nonneg (x : Real) : 0 ≤ exp x :=
 theorem nonneg_of_pos {a : Real} (h : 0 < a) : 0 ≤ a :=
   le_of_lt h
 
+/-- Left-commutativity of `+`. With `add_comm`/`add_assoc` this completes the
+standard AC simp set; `simp`'s additive normaliser stalls on coefficient
+collection without it (this omission was the `mach_ring` "v2" gap). PROVED. -/
+theorem add_left_comm (a b c : Real) : a + (b + c) = b + (a + c) := by
+  rw [← add_assoc, add_comm a b, add_assoc]
+
+/-- Left-commutativity of `*`. Multiplicative counterpart of `add_left_comm`,
+completing the AC simp set over `*`. PROVED. -/
+theorem mul_left_comm (a b c : Real) : a * (b * c) = b * (a * c) := by
+  rw [← mul_assoc, mul_comm a b, mul_assoc]
+
+/-- `a + (-a + b) = b`. Cancels an additive inverse that AC-sorting has placed
+NON-adjacent to its mate (the residue `mach_ring` leaves on e.g. fresnel
+`f0 + (-f0 + 1) = 1`). simp's bare AC set can reorder but not cancel across a
+sum — these two lemmas supply the missing inverse-cancellation. PROVED. -/
+theorem add_neg_cancel_left (a b : Real) : a + (-a + b) = b := by
+  rw [← add_assoc, add_neg, zero_add]
+
+/-- `-a + (a + b) = b`. Mirror of `add_neg_cancel_left`. PROVED. -/
+theorem neg_add_cancel_left (a b : Real) : -a + (a + b) = b := by
+  rw [← add_assoc, neg_add_self, zero_add]
+
 /-- The sum of two non-negatives is non-negative. Uses
 `add_lt_add_left` to lift a strict inequality through addition,
 then weakens to `≤`. -/

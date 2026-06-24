@@ -216,8 +216,12 @@ macro_rules
                     tanh_zero, mul_zero, zero_mul, sub_self, add_zero,
                     mul_one_ax, one_mul_thm]; done)
       -- Ring identities (fresnel f0+(1-f0)=1 etc.). Same `; done` guard —
-      -- mach_ring v1.5 leaves additive-cancellation residue on some goals.
-      | (mach_ring; done)
+      -- Ring identities (fresnel f0+(1-f0)=1, `*_witness`). mach_ring now
+      -- completes ADDITIVE collection (add_left_comm). GUARDED by `show _ = _`
+      -- so it only fires on EQUALITY goals — on inequalities mach_ring's full-AC
+      -- simp is expensive and can time out (e.g. lqr_1d), so we skip it there.
+      -- `; done` so partial progress isn't read as success by `first`.
+      | (show _ = _; mach_ring; done)
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)

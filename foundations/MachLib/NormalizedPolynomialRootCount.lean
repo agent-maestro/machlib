@@ -1192,7 +1192,6 @@ theorem linearLinearCoeff_evalSound (r s : Real) :
     (-r) * (-s) + x * (((-r) * 1 + 1 * (-s)) + x * (1 + x * 0)) =
       (-r + x * (1 + x * 0)) * (-s + x * (1 + x * 0))
   mach_ring
-  ac_rfl
 
 /-- The explicit linear times monic-quadratic product evaluates as a product. -/
 theorem linearQuadraticCoeff_evalSound (r a b : Real) :
