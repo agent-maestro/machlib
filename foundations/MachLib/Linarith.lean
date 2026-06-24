@@ -233,6 +233,11 @@ theorem sub_one_ge_neg_one {S : Real} (h : 0 ≤ S) : -(1 : Real) ≤ S - 1 := b
     exact le_of_lt hh
   · rw [← heq, zero_add]; exact le_refl _
 
+/-- `−1 ≤ 1`. (`−1 ≤ 0 ≤ 1`.) Closes the upper side of a clamp-to-`[−1,1]`
+floor after `lit_one_eq` normalises the decimal `−1.0` to `−(1)`. -/
+theorem neg_one_le_one : -(1 : Real) ≤ 1 :=
+  le_trans (neg_nonpos_of_nonneg (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax)
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -284,6 +289,7 @@ macro_rules
       | exact zero_lt_one_ax
       | exact le_refl 0
       | exact le_of_lt zero_lt_one_ax
+      | exact neg_one_le_one
       | assumption
       | (apply le_of_lt; assumption)
       -- Conjunction split: `*_in_unit_interval` obligations are `0 ≤ x ∧ x ≤ 1`
@@ -423,7 +429,12 @@ macro_rules
       | (apply add_pos <;> mach_positivity)
       | (apply mul_pos <;> mach_positivity)
       -- Weaken-to-nonneg bridge.
-      | (apply nonneg_of_pos; mach_positivity))
+      | (apply nonneg_of_pos; mach_positivity)
+      -- Decimal→OfNat normalisation fallback: a clamp-to-[-1,1] floor has the
+      -- bound `-(1)` (OfNat) but the clamp lower `-1.0` (decimal); rewrite the
+      -- decimals and retry (sign, hard_tanh). simp errors on no-progress, so
+      -- this only fires when a 1.0/0.0 literal is actually present.
+      | (simp only [lit_one_eq, lit_zero_eq] <;> mach_positivity))
 
 /-- `mach_abs_bound` recursion: peel one magnitude-≤1 factor (`abs_mul_le_of_
 abs_le_one`) at a time, or finish at `abs base` with `base ≥ 0`. -/
