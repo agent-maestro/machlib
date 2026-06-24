@@ -188,6 +188,16 @@ applied with `y = k·k`). -/
 theorem one_sub_exp_neg_nonneg {y : Real} (hy : 0 ≤ y) : 0 ≤ 1 - exp (-y) :=
   sub_nonneg_of_le (exp_le_one_of_nonpos (neg_nonpos_of_nonneg hy))
 
+/-- `0 ≤ c·x + c` for `c ≥ 0`, `−1 ≤ x` (the `[-1,1] → [0,1]` affine remap
+`½x + ½`, matcap UV). Factor `c·(x+1)`; `x+1 ≥ 0` from `−1 ≤ x`. -/
+theorem affine_remap_nonneg {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ c * x + c := by
+  have key : c * x + c = c * (x + 1) := by mach_ring
+  rw [key]
+  apply mul_nonneg hc
+  have h := sub_nonneg_of_le hx
+  rw [sub_def, neg_neg_helper] at h
+  exact h
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -269,6 +279,8 @@ macro_rules
       -- Exponential-fog complements `0 ≤ 1 − exp(−…)`.
       | (apply one_sub_exp_neg_mul_nonneg <;> assumption)
       | (apply one_sub_exp_neg_nonneg <;> mach_positivity)
+      -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
+      | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
