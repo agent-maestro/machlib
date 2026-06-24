@@ -111,6 +111,53 @@ theorem mul_sq_nonneg {c x : Real} (hc : 0 ≤ c) : 0 ≤ c * x * x := by
   rw [mul_assoc]
   exact mul_nonneg hc (sq_nonneg x)
 
+/-! ### Polynomial-band lemmas (easing functions on [0,1])
+
+The Forge easing kernels (smoothstep, ease) emit `0 ≤ poly(t)` over `0 ≤ t ≤ 1`.
+These are nonlinear and were blocked on a real ring/nlinarith. With `mach_ring`
+now AC-complete it can prove the FACTORED certificate (coefficients copied from
+the goal, so no decimal arithmetic), and a general band lemma with SYMBOLIC
+coefficients absorbs the literal values — `mach_norm_num` then discharges the
+`0 ≤ B`, `B ≤ A` side conditions. No reflection, no axioms. -/
+
+/-- `A·t·t − B·t·t·t = t·t·(A − B·t)`. Symbolic factoring (mach_ring). -/
+theorem cube_factor (A B t : Real) : A * t * t - B * t * t * t = t * t * (A - B * t) := by
+  mach_ring
+
+/-- Degree-3, zero-constant band: `0 ≤ A·t² − B·t³` on `[0,1]` when `0 ≤ B ≤ A`
+(smoothstep `3t²−2t³`). Factor `t²·(A−B·t)`; `t² ≥ 0` and `A−B·t ≥ 0` because
+`B·t ≤ B ≤ A`. -/
+theorem cube_band_nonneg {A B t : Real} (ht0 : 0 ≤ t) (ht1 : t ≤ 1)
+    (hB : 0 ≤ B) (hBA : B ≤ A) : 0 ≤ A * t * t - B * t * t * t := by
+  rw [cube_factor]
+  apply mul_nonneg (sq_nonneg t)
+  apply sub_nonneg_of_le
+  have hb : B * t ≤ B * 1 := mul_le_mul_of_nonneg_left ht1 hB
+  rw [mul_one_ax] at hb
+  exact le_trans hb hBA
+
+/-- `0 ≤ 1 − (1−x)²` on `[0,1]` (ease-out quadratic). Difference of squares
+`= x·(2−x)`; both factors nonneg. -/
+theorem one_sub_sq_band {x : Real} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
+    0 ≤ 1 - (1 - x) * (1 - x) := by
+  have key : (1 : Real) - (1 - x) * (1 - x) = x * ((1 + 1) - x) := by mach_ring
+  rw [key]
+  apply mul_nonneg h0
+  apply sub_nonneg_of_le
+  exact le_trans h1 (le_add_of_nonneg_right (le_of_lt zero_lt_one_ax))
+
+/-- `0 ≤ 1 − (1−x)³` on `[0,1]` (ease-out cubic). Difference of cubes
+`= x·(1 + (1−x) + (1−x)²)`; the remainder is a sum of nonnegs (no quadratic
+positivity needed). -/
+theorem one_sub_cube_band {x : Real} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
+    0 ≤ 1 - ((1 - x) * (1 - x)) * (1 - x) := by
+  have h1x : 0 ≤ 1 - x := sub_nonneg_of_le h1
+  have key : (1 : Real) - ((1 - x) * (1 - x)) * (1 - x)
+      = x * (1 + ((1 - x) + (1 - x) * (1 - x))) := by mach_ring
+  rw [key]
+  apply mul_nonneg h0
+  exact add_nonneg (le_of_lt zero_lt_one_ax) (add_nonneg h1x (sq_nonneg (1 - x)))
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -181,6 +228,12 @@ macro_rules
       -- Energy shape `0 ≤ c · x · x` (Hooke ½kd², kinetic ½mv²) where the
       -- optimizer expanded `c · x²` to `(c · x) · x`. Reduces to `0 ≤ c`.
       | (apply mul_sq_nonneg <;> mach_positivity)
+      -- Easing band `0 ≤ A·t² − B·t³` on [0,1] (smoothstep). Side conditions
+      -- 0≤t, t≤1 from kernel hyps (assumption); 0≤B, B≤A by mach_norm_num.
+      | (apply cube_band_nonneg <;> first | assumption | mach_norm_num)
+      -- Ease-out quadratic/cubic bands `0 ≤ 1 − (1−t)ⁿ` on [0,1].
+      | (apply one_sub_sq_band <;> assumption)
+      | (apply one_sub_cube_band <;> assumption)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
