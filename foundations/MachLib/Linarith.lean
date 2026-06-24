@@ -51,9 +51,19 @@ import MachLib.Basic
 import MachLib.Forge
 import MachLib.Trig
 import MachLib.Lemmas
+import MachLib.Ring
 
 namespace MachLib
 namespace Real
+
+/-- `0 / a = 0` for ALL `a` (including `a = 0`, since `div_zero` gives
+`0/0 = 0`). Unconditional simp lemma for boundary obligations like
+`vin · (1 - exp(0/tau)) = 0` where the `0/tau` appears without a `tau ≠ 0`
+rewrite in reach. -/
+theorem zero_div (a : Real) : 0 / a = 0 := by
+  by_cases h : a = 0
+  · rw [h]; exact div_zero 0
+  · exact zero_div_of_ne_zero h
 
 /-! ### Strict-positive division helpers (for `mach_positivity`)
 
@@ -197,6 +207,17 @@ macro_rules
       -- Pythagorean identity sin²+cos²=1 (the lemma already exists in Trig;
       -- closes `*_witness` equality obligations). exact, harmless elsewhere.
       | exact pythagorean _
+      -- Boundary identities: evaluate-at-zero / definitional equalities that
+      -- reduce to `0=0` / `1=1` after stock rewrites (rc step-at-zero, pll
+      -- zero-offset). `; done` so the arm only succeeds if FULLY closed —
+      -- otherwise simp's partial progress would be read as success by `first`
+      -- and leave an unsolved goal.
+      | (simp only [zero_div, div_zero, exp_zero, sin_zero, cos_zero,
+                    tanh_zero, mul_zero, zero_mul, sub_self, add_zero,
+                    mul_one_ax, one_mul_thm]; done)
+      -- Ring identities (fresnel f0+(1-f0)=1 etc.). Same `; done` guard —
+      -- mach_ring v1.5 leaves additive-cancellation residue on some goals.
+      | (mach_ring; done)
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)
