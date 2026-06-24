@@ -198,6 +198,16 @@ theorem affine_remap_nonneg {c x : Real} (hc : 0 ≤ c) (hx : -1 ≤ x) : 0 ≤ 
   rw [sub_def, neg_neg_helper] at h
   exact h
 
+/-- Fractional part is nonneg: `0 ≤ z − ⌊z⌋` (white-noise hash `frac(sin·k)`). -/
+theorem frac_nonneg (z : Real) : 0 ≤ z - floor z := sub_nonneg_of_le (floor_le z)
+
+/-- Fractional part is `≤ 1`: `z − ⌊z⌋ ≤ 1`. -/
+theorem frac_le_one (z : Real) : z - floor z ≤ 1 := by
+  have h := add_lt_add_left (lt_floor_add_one z) (-(floor z))
+  rw [neg_add_cancel_left] at h
+  rw [sub_def, add_comm]
+  exact le_of_lt h
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -287,6 +297,9 @@ macro_rules
       | (apply one_sub_exp_neg_nonneg <;> mach_positivity)
       -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
       | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
+      -- Fractional part bands `0 ≤ z − ⌊z⌋` / `z − ⌊z⌋ ≤ 1` (white-noise hash).
+      | exact frac_nonneg _
+      | exact frac_le_one _
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _

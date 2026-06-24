@@ -651,6 +651,13 @@ buying any proof power. -/
 
 axiom floor : Real → Real
 
+/-- `⌊x⌋ ≤ x`. Defining lower property of `floor`. Clearly true; the fractional
+part `x − ⌊x⌋` is therefore nonneg (white-noise hash). C-248. -/
+axiom floor_le (x : Real) : floor x ≤ x
+
+/-- `x < ⌊x⌋ + 1`. Defining upper property; the fractional part is `< 1`. -/
+axiom lt_floor_add_one (x : Real) : x < floor x + 1
+
 end Real
 end MachLib
 
