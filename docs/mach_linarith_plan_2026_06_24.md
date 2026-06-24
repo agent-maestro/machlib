@@ -135,6 +135,39 @@ not full ring v2, suffices for the common no-constant easing functions) but
 auto-finding the factorisation still needs an elab tactic (extract coeffs,
 factor out tᵏ, recurse) — a focused multi-hour build, not a macro.
 
+## Phase 3 attempt #2 (2026-06-24): ring v2 via AC-completion — works, but has blast radius
+
+Tried to BUILD ring v2 (not just scope it). Key results:
+
+**It works mathematically.** `mach_ring`'s catch-all simp set has `add_comm`,
+`add_assoc` but is MISSING `add_left_comm` (and `mul_left_comm`) — the third
+lemma of the standard AC set, without which `simp`'s additive normaliser stalls
+on coefficient collection. Adding `add_left_comm`/`mul_left_comm` (both PROVED,
+no axiom) lets `mach_ring` close the ease_out identity `1-(1-t)² = t(2-t)` and
+other collection-needing identities. So **ring v2 = mach_ring + a complete AC
+simp set**. No reflective normaliser needed.
+
+**But it can't just be bolted on.** Two failure modes found:
+1. Strengthening `mach_ring` GLOBALLY (editing Ring.lean's catch-all) broke an
+   existing proof — `NormalizedPolynomialRootCount.lean` did `mach_ring; <step>`
+   and the now-stronger mach_ring closes the goal, so `<step>` errors "no goals
+   to be solved". Plus 1 emitted file regressed. Net corpus gain: ZERO (the
+   identity wins were offset). Strengthening a core tactic ripples into every
+   dependent proof.
+2. An ISOLATED `mach_ring2` (mach_ring + abel-simp) used as a guarded
+   mach_positivity arm ALSO regressed 2 files — because the arm is tried on
+   ARBITRARY goals (inequalities), where the `simp only [add_comm, …]` pass
+   misbehaves, and `fresnel f0+(1-f0)=1` (RHS a bare constant) it left open.
+
+**Conclusion:** ring v2 is a SMALL change (3 AC lemmas) but a CAREFUL one — it
+must (a) be a separate tactic applied ONLY to equality goals, AND (b) fix the
+handful of existing `mach_ring; <step>` proofs that depend on the weaker
+behavior. Reverted to clean 77%. This is the dedicated-build boundary: the
+mechanism is now fully understood, but landing it safely is deliberate work,
+not a session patch. AND it only unblocks the IDENTITY obligations — the
+polynomial INEQUALITY bands still additionally need certificate-finding (the
+SOS/factored form), which is the separate elab.
+
 ## What NOT to do
 - Do not ship a `mach_linarith` that only `apply`s a fixed lemma list (the
   current v1 stub) and call it linarith — it closes none of the real backlog.
