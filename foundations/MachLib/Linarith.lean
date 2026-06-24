@@ -150,6 +150,11 @@ macro_rules
       -- ── Forge-emitter arms (2026-06-24): close per-kernel range/nonneg
       --    obligations (sqrt/max/min/general-div/rpow) that shipped `sorry`.
       | exact sqrt_nonneg _
+      -- `0 < sqrt x` from `0 < x` (sqrt_pos exists in Lemmas). Closes
+      -- strict-positive scaling floors like `1 / sqrt(d_k) > 0` (attention)
+      -- and the Riccati `sqrt(...) > 0` shapes. The subgoal `0 < x` recurses
+      -- (usually a domain hypothesis). No new axiom.
+      | (apply sqrt_pos <;> mach_positivity)
       | exact le_max_right _ _
       | exact le_max_left _ _
       | (apply min_nonneg <;> mach_positivity)
