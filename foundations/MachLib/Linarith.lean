@@ -251,6 +251,10 @@ macro_rules
       | exact le_of_lt zero_lt_one_ax
       | assumption
       | (apply le_of_lt; assumption)
+      -- Conjunction split: `*_in_unit_interval` obligations are `0 ≤ x ∧ x ≤ 1`
+      -- (the emitter conjoins both ensures). Prove each half. Fails fast on
+      -- non-∧ goals (anonymous constructor needs a structure).
+      | (refine ⟨?_, ?_⟩ <;> mach_positivity)
       -- Literal positivity (Forge bridge)
       | exact ofScientific_pos _ (by decide)
       | exact ofScientific_nonneg _ (by decide)
