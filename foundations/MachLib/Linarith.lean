@@ -237,6 +237,15 @@ theorem add_sqrt_sq_add_nonneg {X c : Real} (hc : 0 ≤ c) :
   · rw [heq]; exact add_nonneg (le_refl 0) (sqrt_nonneg _)
   · exact add_nonneg (le_of_lt hgt) (sqrt_nonneg _)
 
+/-- `0 ≤ v − sqrt S` for `0 ≤ v` and `S ≤ v·v`. The radicand is bounded above by
+`v²`, so its root is bounded above by `v` (`sqrt_le_of_le_sq`) and the
+difference is nonneg. Closes the time-of-flight numerator
+`v₀ − sqrt(min(max(v₀²−2·d·r, 0), v₀²))`, where the inner `min … v₀²` supplies
+`S ≤ v₀²`. PROVED from `sqrt_le_of_le_sq` + `sub_nonneg_of_le`. -/
+theorem sub_sqrt_nonneg_of_le_sq {v S : Real} (hv : 0 ≤ v) (hS : S ≤ v * v) :
+    0 ≤ v - sqrt S :=
+  sub_nonneg_of_le (sqrt_le_of_le_sq hv hS)
+
 /-- `0 ≤ 1 − exp((−a)·b)` for `a,b ≥ 0` (exponential fog `1 − exp(−ρ·d)`).
 exp of a nonpos is ≤ 1. -/
 theorem one_sub_exp_neg_mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -519,6 +528,10 @@ macro_rules
       -- `0 < a·a` from a nonzero hypothesis (lqr `b ≠ 0` ⇒ `0 < b·b`, the b²/r
       -- denominator). `assumption` supplies the `a ≠ 0` side condition.
       | (apply mul_self_pos; assumption)
+      -- `0 ≤ v − sqrt(min(…, v·v))`: time-of-flight numerator. The `min … v·v`
+      -- gives `S ≤ v·v` (min_le_right) and `0 ≤ v` is a domain hyp — both
+      -- recurse through mach_positivity. `apply` fails fast off-shape.
+      | (apply sub_sqrt_nonneg_of_le_sq <;> mach_positivity)
       -- Negated-numerator quotient `(-a)/b < 0` (perspective m22/m23 depth
       -- coefficients). `apply` fails fast unless the goal is this exact shape;
       -- the `0 < a` / `0 < b` subgoals recurse (sum/product/sub-pos + the

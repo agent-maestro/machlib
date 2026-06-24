@@ -99,6 +99,10 @@ axiom sqrt_neg_zero   (x : Real) : x < 0 → sqrt x = 0
 -- other sqrt facts — there is no concrete Real model to derive it from.
 -- Closes quadratic-formula root-sign obligations (lqr Riccati discriminant).
 axiom le_sqrt_of_sq_le {z y : Real} (hz : 0 ≤ z) (h : z * z ≤ y) : z ≤ sqrt y
+-- Upper companion: a nonneg bound whose square dominates y bounds sqrt y from
+-- above (z ≥ 0, y ≤ z² ⇒ sqrt y ≤ sqrt(z²) = z). Closes the `v − sqrt(clamped)`
+-- numerators where the radicand is min-clamped below v² (tof constant-decel).
+axiom sqrt_le_of_le_sq {z y : Real} (hz : 0 ≤ z) (h : y ≤ z * z) : sqrt y ≤ z
 
 -- arcsin / arccos: principal-value inverses, bounded.
 axiom arcsin_zero  : arcsin 0 = 0
