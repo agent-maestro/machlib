@@ -186,6 +186,26 @@ theorem neg_pos_of_neg {a : Real} (h : a < 0) : 0 < -a := by
   rw [add_zero, neg_add_self] at hh
   exact hh
 
+/-- `0 < a → -a < 0`. Strict mirror of `neg_nonpos_of_nonneg`; the negation of
+a strict-positive is strict-negative. Used to give the perspective depth-remap
+entries (`m22 = -(far+near)/(far-near)`, `m23`) their `< 0` sign. -/
+theorem neg_neg_of_pos {a : Real} (h : 0 < a) : -a < 0 := by
+  have hh : -a + 0 < -a + a := add_lt_add_left h (-a)
+  rw [add_zero, neg_add_self] at hh
+  exact hh
+
+/-- `(-a)/b < 0` for `0 < a`, `0 < b`. A negated-numerator quotient over a
+positive denominator is negative. Closes the perspective-projection depth
+coefficients `fov_m22_signed` / `fov_m23_signed`. PROVED: `a/b > 0`
+(`div_pos_of_pos_pos`), rewrite `(-a)/b = -(a/b)` (`div_def` + `neg_mul`), then
+`neg_neg_of_pos`. No new axioms. -/
+theorem neg_div_pos_neg {a b : Real} (ha : 0 < a) (hb : 0 < b) : (-a) / b < 0 := by
+  have hpos : 0 < a * (1 / b) := by
+    have h := div_pos_of_pos_pos ha hb
+    rwa [div_def a b (ne_of_gt hb)] at h
+  rw [div_def (-a) b (ne_of_gt hb), neg_mul]
+  exact neg_neg_of_pos hpos
+
 /-- `0 < a·a` for `a ≠ 0`. The square of a nonzero real is strictly positive.
 Sign trichotomy (`lt_total`): the positive branch is `mul_pos` directly; the
 negative branch routes through `(-a)·(-a) = a·a` (`neg_mul_neg`) with `0 < -a`
@@ -483,6 +503,16 @@ macro_rules
       -- `0 < a·a` from a nonzero hypothesis (lqr `b ≠ 0` ⇒ `0 < b·b`, the b²/r
       -- denominator). `assumption` supplies the `a ≠ 0` side condition.
       | (apply mul_self_pos; assumption)
+      -- Negated-numerator quotient `(-a)/b < 0` (perspective m22/m23 depth
+      -- coefficients). `apply` fails fast unless the goal is this exact shape;
+      -- the `0 < a` / `0 < b` subgoals recurse (sum/product/sub-pos + the
+      -- transitivity arm below for `0 < far`).
+      | (apply neg_div_pos_neg <;> mach_positivity)
+      -- Strict transitivity fallback: `0 < x` from `0 < c` and `c < x` in
+      -- context (e.g. `0 < far` from `0 < near`, `near < far`). The two
+      -- `by assumption` pin the middle term, so the arm only fires when both
+      -- links are hypotheses — fails fast otherwise.
+      | (apply lt_trans_ax (by assumption) (by assumption))
       | exact le_max_right _ _
       | exact le_max_left _ _
       | (apply min_nonneg <;> mach_positivity)
