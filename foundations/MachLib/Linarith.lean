@@ -388,6 +388,10 @@ abs_le_one`) at a time, or finish at `abs base` with `base ≥ 0`. -/
 macro_rules
   | `(tactic| mach_abs_bound) => `(tactic|
       first
+      -- base: `abs base ≤ abs base` (bound is `abs amp`, e.g. wave
+      -- `abs(amp·cos) ≤ abs amp`) — just reflexivity.
+      | exact le_refl _
+      -- base: `abs base ≤ base` with `base ≥ 0` (bound is the raw base).
       | (rw [abs_of_nonneg (by mach_positivity)]; exact le_refl _)
       | (refine le_trans (abs_mul_le_of_abs_le_one ?_) ?_ <;>
            first
