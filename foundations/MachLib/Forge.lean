@@ -379,6 +379,11 @@ theorem le_add_of_nonneg_right {a b : Real} (h : 0 ≤ b) : a ≤ a + b := by
   have hh := add_le_add_left h a
   rwa [add_zero] at hh
 
+/-- Affine floor (term on the LEFT): `a ≤ b + a` when `0 ≤ b`. Mirror of
+`le_add_of_nonneg_right`; closes `aqi_in_band`-style floors `(nonneg) + FLOOR`. -/
+theorem le_add_of_nonneg_left {a b : Real} (h : 0 ≤ b) : a ≤ b + a := by
+  rw [add_comm]; exact le_add_of_nonneg_right h
+
 /-! ### `≤ 1` products (C-242, 2026-05-03)
 
 A product of two non-negative ≤-1 values is itself ≤ 1. -/
