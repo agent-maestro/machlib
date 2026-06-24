@@ -93,6 +93,14 @@ Rayleigh phase / Mie scattering / particle drag bounds family
 where the Forge kernel writes `1 + cos² θ` or `(1 - g)²` shapes. -/
 axiom sq_nonneg (x : Real) : 0 ≤ x * x
 
+/-- `0 ≤ c → 0 ≤ c * x * x`. PROVED (no axiom) by reassociating to
+`c * (x * x)` and `mul_nonneg`. Closes the energy shape Forge emits when
+the optimizer expands `c · x²` to `(c · x) · x` — Hooke `½·k·d·d`, kinetic
+`½·m·v·v`, etc. — which `mul_nonneg` alone can't (it would demand `0 ≤ x`). -/
+theorem mul_sq_nonneg {c x : Real} (hc : 0 ≤ c) : 0 ≤ c * x * x := by
+  rw [mul_assoc]
+  exact mul_nonneg hc (sq_nonneg x)
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -160,6 +168,9 @@ macro_rules
       -- sign info on `x`) closes via the axiom rather than
       -- splitting into two unprovable `0 ≤ x` subgoals.
       | exact sq_nonneg _
+      -- Energy shape `0 ≤ c · x · x` (Hooke ½kd², kinetic ½mv²) where the
+      -- optimizer expanded `c · x²` to `(c · x) · x`. Reduces to `0 ≤ c`.
+      | (apply mul_sq_nonneg <;> mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
