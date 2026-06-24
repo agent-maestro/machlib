@@ -92,6 +92,26 @@ Rayleigh phase / Mie scattering / particle drag bounds family
 where the Forge kernel writes `1 + cos² θ` or `(1 - g)²` shapes. -/
 axiom sq_nonneg (x : Real) : 0 ≤ x * x
 
+/-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
+
+Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
+`(0.5:Real) < (1.0:Real)`, `0 < (0.5:Real)` — by reducing to a decidable `Nat`
+cross-multiplication via `realOfScientific_le_of_nat` / `_lt_of_nat`
+(`MachLib.Basic`), or to mantissa positivity via `realOfScientific_pos`. This is
+the foundation Phase 2/3 (`mach_linarith` / `mach_nlinarith`) build on: the
+constant-term comparisons those engines emit (`2 ≤ 3`, `0.5 ≥ 0`) are exactly
+this shape. Scoped to literals — it never touches a goal with a free variable,
+so it cannot manufacture a false ordering. See
+`docs/mach_linarith_plan_2026_06_24.md`. -/
+
+macro "mach_norm_num" : tactic => `(tactic|
+  first
+  | (apply realOfScientific_le_of_nat <;> decide)
+  | (apply realOfScientific_lt_of_nat <;> decide)
+  | (apply le_of_lt; apply realOfScientific_lt_of_nat <;> decide)
+  | (apply realOfScientific_pos <;> decide)
+  | (apply le_of_lt; apply realOfScientific_pos <;> decide))
+
 /-! ### `mach_positivity` tactic
 
 Closes `0 ≤ expr` and `0 < expr` goals by recursive structural
@@ -116,6 +136,9 @@ macro_rules
       -- Literal positivity (Forge bridge)
       | exact ofScientific_pos _ (by decide)
       | exact ofScientific_nonneg _ (by decide)
+      -- Decimal-literal order (Phase 1): `2.0 ≤ 3.0`, `0 < 0.5`, … reduce to
+      -- a decidable Nat compare. Foundation for mach_linarith/nlinarith.
+      | mach_norm_num
       -- Named-constant positivity (Trig bridge — `pi` shows up in
       -- atmosphere phase / scattering kernels via `1 / (16 * pi)`).
       | exact pi_pos

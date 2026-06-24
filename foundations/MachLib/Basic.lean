@@ -97,6 +97,28 @@ axiom realOfScientific_one_dot_zero : realOfScientific 10 true 1 = 1
 axiom realOfScientific_two_dot_zero : realOfScientific 20 true 1 = 1 + 1
 axiom realOfScientific_three_dot_zero : realOfScientific 30 true 1 = 1 + 1 + 1
 
+/-! ### Decimal-literal order (foundation for `mach_norm_num`, Phase 1)
+
+Every Real decimal literal desugars to `realOfScientific m true e`, denoting the
+rational `m · 10⁻ᵉ = m / 10ᵉ` (verified: `(2.0:Real) = realOfScientific 20 true 1`,
+`(0.5:Real) = realOfScientific 5 true 1`, all by `rfl`). Because `realOfScientific`
+is otherwise opaque, the ORDER between two such literals is not derivable from the
+field axioms. These two axioms supply exactly that, reduced to a **decidable Nat
+cross-multiplication** (`m₁/10^e₁ ⊕ m₂/10^e₂  ⟺  m₁·10^e₂ ⊕ m₂·10^e₁`, valid
+because `10^e > 0`).
+
+SOUNDNESS: both hold in the standard `OfScientific` interpretation
+(`realOfScientific m true e = m/10ᵉ`), so adding them is consistent with ZFC —
+the same footing as `realOfScientific_pos`. They cannot prove a false ordering:
+the `Nat` premise is decidable, so a literal compare only closes when the
+underlying rationals genuinely satisfy it. C-247. -/
+axiom realOfScientific_le_of_nat {m₁ e₁ m₂ e₂ : Nat}
+    (h : m₁ * 10 ^ e₂ ≤ m₂ * 10 ^ e₁) :
+    realOfScientific m₁ true e₁ ≤ realOfScientific m₂ true e₂
+axiom realOfScientific_lt_of_nat {m₁ e₁ m₂ e₂ : Nat}
+    (h : m₁ * 10 ^ e₂ < m₂ * 10 ^ e₁) :
+    realOfScientific m₁ true e₁ < realOfScientific m₂ true e₂
+
 /--
 Real-to-real power. Forge kernels emit `(base ^ exp)` for
 non-integer exponents (e.g. `(1 + (alpha * psi) ^ n_shape)` in
