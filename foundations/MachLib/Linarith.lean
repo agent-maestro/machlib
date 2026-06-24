@@ -230,6 +230,21 @@ theorem sub_mul_band_nonneg {a b r d : Real}
     (hr : 0 ≤ r) (hd : d ≤ b * r) (hba : b ≤ a) : 0 ≤ a * r - d :=
   sub_nonneg_of_le (le_trans hd (mul_le_mul_of_nonneg_right hba hr))
 
+/-- Converse of `sub_nonneg_of_le`: `0 ≤ b − a → a ≤ b`. Generally useful. -/
+theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
+  have e : a + (b - a) = b := by rw [sub_def, add_comm b (-a)]; exact add_neg_cancel_left a b
+  rcases (le_iff_lt_or_eq 0 (b - a)).mp h with hlt | heq
+  · have hh := add_lt_add_left hlt a
+    rw [add_zero, e] at hh
+    exact le_of_lt hh
+  · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
+
+/-- `(−a)·b ≤ 0` for `0 ≤ a`, `0 ≤ b` (H-bridge reverse voltage
+`(−duty)·v_bus ≤ 0`). `(−a)·b = −(a·b) ≤ 0`. -/
+theorem neg_mul_nonpos {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : (-a) * b ≤ 0 := by
+  rw [neg_mul]
+  exact neg_nonpos_of_nonneg (mul_nonneg ha hb)
+
 /-- `−1 ≤ S − 1` when `0 ≤ S` (the `S − 1 ≥ −1` lower-bound shape, e.g. tanh-
 from-sigmoid `2/(1+exp(−2x)) − 1 ≥ −1`, reduced to `0 ≤ 2/(1+exp)`). -/
 theorem sub_one_ge_neg_one {S : Real} (h : 0 ≤ S) : -(1 : Real) ≤ S - 1 := by
@@ -355,6 +370,8 @@ macro_rules
       | (apply speed_spread_nonneg <;> assumption)
       -- `0 ≤ a·r − d` from `d ≤ b·r ≤ a·r` (sphere `3r − depth`).
       | (apply sub_mul_band_nonneg <;> first | assumption | mach_norm_num)
+      -- H-bridge reverse voltage `(−duty)·v ≤ 0` (duty≥0, v≥0).
+      | (apply neg_mul_nonpos <;> first | assumption | (apply le_of_lt; assumption))
       -- `−1 ≤ S − 1` shape (tanh-from-sigmoid `2/(1+exp) − 1 ≥ −1`).
       | (apply sub_one_ge_neg_one; mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
