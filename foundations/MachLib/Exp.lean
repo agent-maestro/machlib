@@ -102,6 +102,14 @@ Asymptotics all reference this single axiom; no other module
 introduces a duplicate or near-duplicate axiom of the same shape. -/
 axiom exp_gt_one_plus_self (x : Real) (hx : 0 < x) : 1 + x < exp x
 
+/-- The exponential tangent line: `1 + x ≤ exp x` for ALL real `x` (equality at
+`x = 0`). The non-strict, unrestricted companion to `exp_gt_one_plus_self`
+(which needs `0 < x`). Closes saturating-integral nonnegativity where the
+argument is `≤ 0` — e.g. sprint distance `t − τ·(1 − e^{−t/τ}) ≥ 0`, which
+reduces to `1 − e^{−u} ≤ u`. Sound (the graph of exp lies above every tangent;
+this is the tangent at the origin). -/
+axiom one_add_le_exp (x : Real) : 1 + x ≤ exp x
+
 /-- `x < exp x` for ALL real `x`. Pointwise version of
 `Asymptotics.exp_grows_strictly` (which is now a theorem citing this
 foundation).

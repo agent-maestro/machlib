@@ -246,6 +246,48 @@ theorem sub_sqrt_nonneg_of_le_sq {v S : Real} (hv : 0 ≤ v) (hS : S ≤ v * v) 
     0 ≤ v - sqrt S :=
   sub_nonneg_of_le (sqrt_le_of_le_sq hv hS)
 
+/-- Converse of `sub_nonneg_of_le`: `0 ≤ b − a → a ≤ b`. Generally useful. -/
+theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
+  have e : a + (b - a) = b := by rw [sub_def, add_comm b (-a)]; exact add_neg_cancel_left a b
+  rcases (le_iff_lt_or_eq 0 (b - a)).mp h with hlt | heq
+  · have hh := add_lt_add_left hlt a
+    rw [add_zero, e] at hh
+    exact le_of_lt hh
+  · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
+
+/-- `tau · (t / tau) = t` for `tau ≠ 0`. Field cancellation via `mul_inv`. -/
+theorem mul_div_cancel' {t tau : Real} (htau : tau ≠ 0) : tau * (t / tau) = t := by
+  rw [div_def t tau htau, ← mul_assoc, mul_comm tau t, mul_assoc,
+      mul_inv tau htau, mul_one_ax]
+
+/-- `1 − exp x ≤ −x` (exp tangent, rearranged). From `one_add_le_exp`. -/
+theorem one_sub_exp_le_neg (x : Real) : 1 - exp x ≤ -x := by
+  apply le_of_sub_nonneg
+  have key : 0 ≤ exp x - (1 + x) := sub_nonneg_of_le (one_add_le_exp x)
+  have eq : (-x) - (1 - exp x) = exp x - (1 + x) := by mach_ring
+  rw [eq]; exact key
+
+/-- `0 ≤ t − τ·(1 − exp(−t/τ))` for `t ≥ 0`, `τ > 0`. The saturating-integral
+nonnegativity: distance covered under exponential velocity ramp is nonneg
+because `τ·(1 − e^{−t/τ}) ≤ τ·(t/τ) = t` (the chord lies below the line `u`,
+i.e. `1 − e^{−u} ≤ u`). Closes `sprint_distance_nonneg`. PROVED from
+`one_sub_exp_le_neg` (exp tangent) + `mul_div_cancel'`; the only new axiom in
+the chain is `one_add_le_exp`. -/
+theorem sub_mul_one_sub_exp_neg_div_nonneg {t tau : Real}
+    (ht : 0 ≤ t) (htau : 0 < tau) :
+    0 ≤ t - tau * (1 - exp ((-t) / tau)) := by
+  apply sub_nonneg_of_le
+  -- goal: tau * (1 - exp((-t)/tau)) ≤ t
+  have hdiv : (-t) / tau = -(t / tau) := by
+    rw [div_def (-t) tau (ne_of_gt htau), neg_mul, ← div_def t tau (ne_of_gt htau)]
+  have h1 : 1 - exp ((-t) / tau) ≤ -((-t) / tau) := one_sub_exp_le_neg ((-t) / tau)
+  have h3 := mul_le_mul_of_nonneg_left h1 (le_of_lt htau)
+  -- h3 : tau * (1 - exp((-t)/tau)) ≤ tau * (-((-t)/tau)); the RHS bound is t
+  have hcancel : tau * (-((-t) / tau)) = t := by
+    rw [hdiv, neg_neg_helper, mul_div_cancel' (ne_of_gt htau)]
+  rw [hcancel] at h3
+  exact h3
+
 /-- `0 ≤ 1 − exp((−a)·b)` for `a,b ≥ 0` (exponential fog `1 − exp(−ρ·d)`).
 exp of a nonpos is ≤ 1. -/
 theorem one_sub_exp_neg_mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
@@ -311,15 +353,6 @@ Hyps ordered so `b` resolves from `hd` before `hba` is tried. -/
 theorem sub_mul_band_nonneg {a b r d : Real}
     (hr : 0 ≤ r) (hd : d ≤ b * r) (hba : b ≤ a) : 0 ≤ a * r - d :=
   sub_nonneg_of_le (le_trans hd (mul_le_mul_of_nonneg_right hba hr))
-
-/-- Converse of `sub_nonneg_of_le`: `0 ≤ b − a → a ≤ b`. Generally useful. -/
-theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
-  have e : a + (b - a) = b := by rw [sub_def, add_comm b (-a)]; exact add_neg_cancel_left a b
-  rcases (le_iff_lt_or_eq 0 (b - a)).mp h with hlt | heq
-  · have hh := add_lt_add_left hlt a
-    rw [add_zero, e] at hh
-    exact le_of_lt hh
-  · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
 
 /-- `(−a)·b ≤ 0` for `0 ≤ a`, `0 ≤ b` (H-bridge reverse voltage
 `(−duty)·v_bus ≤ 0`). `(−a)·b = −(a·b) ≤ 0`. -/
@@ -447,6 +480,9 @@ macro_rules
       -- velocity ramp, RC charge). `apply` fails fast off-shape; the two
       -- subgoals `0 ≤ t`, `0 < τ` are domain hyps.
       | (apply one_sub_exp_neg_div_nonneg <;> assumption)
+      -- Saturating integral `t − τ·(1 − exp(−t/τ)) ≥ 0` (sprint distance).
+      -- `apply` fails fast off-shape; subgoals `0 ≤ t`, `0 < τ` are domain hyps.
+      | (apply sub_mul_one_sub_exp_neg_div_nonneg <;> assumption)
       -- Affine remap `0 ≤ c·x + c` ([-1,1]→[0,1], matcap UV).
       | (apply affine_remap_nonneg <;> first | mach_norm_num | assumption)
       -- Fractional part bands `0 ≤ z − ⌊z⌋` / `z − ⌊z⌋ ≤ 1` (white-noise hash).
