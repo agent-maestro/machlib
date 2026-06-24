@@ -158,6 +158,15 @@ theorem one_sub_cube_band {x : Real} (h0 : 0 ≤ x) (h1 : x ≤ 1) :
   apply mul_nonneg h0
   exact add_nonneg (le_of_lt zero_lt_one_ax) (add_nonneg h1x (sq_nonneg (1 - x)))
 
+/-- `0 ≤ 1 − c²` for any `c ∈ [0,1]` (ricochet `1 − clamp(cosθ,0,1)²`).
+Diff of squares `(1−c)(1+c)`; both factors nonneg. The `c` here is typically a
+clamp expression, so the side goals close by `mach_positivity` (min/max arms). -/
+theorem one_sub_sq_nonneg {c : Real} (h0 : 0 ≤ c) (h1 : c ≤ 1) : 0 ≤ 1 - c * c := by
+  have key : (1 : Real) - c * c = (1 - c) * (1 + c) := by mach_ring
+  rw [key]
+  apply mul_nonneg (sub_nonneg_of_le h1)
+  exact add_nonneg (le_of_lt zero_lt_one_ax) h0
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -234,6 +243,8 @@ macro_rules
       -- Ease-out quadratic/cubic bands `0 ≤ 1 − (1−t)ⁿ` on [0,1].
       | (apply one_sub_sq_band <;> assumption)
       | (apply one_sub_cube_band <;> assumption)
+      -- `0 ≤ 1 − c²` for clamped c ∈ [0,1] (ricochet); side goals via positivity.
+      | (apply one_sub_sq_nonneg <;> mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
