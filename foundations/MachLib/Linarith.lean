@@ -124,6 +124,9 @@ macro_rules
       -- sign info on `x`) closes via the axiom rather than
       -- splitting into two unprovable `0 ≤ x` subgoals.
       | exact sq_nonneg _
+      -- `1 ≤ cosh x` (hyperbolic cosine floor) — closes the Forge
+      -- `cosh_geq_one` obligation. Harmless on non-cosh goals (exact fails).
+      | exact cosh_ge_one _
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)

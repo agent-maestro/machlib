@@ -35,6 +35,12 @@ axiom cosh_zero  : cosh 0 = 1
 axiom sinh_neg   (x : Real) : sinh (-x) = -(sinh x)
 axiom cosh_neg   (x : Real) : cosh (-x) = cosh x
 axiom cosh_pos   (x : Real) : 0 < cosh x
+/-- `cosh x ≥ 1` for all real `x`, with equality at `x = 0`. Follows from
+`pythagorean_hyp` (cosh² = 1 + sinh² ≥ 1) plus `cosh_pos`, but deriving it
+needs square-monotonicity infrastructure `MachLib.Basic` doesn't expose; held
+as an axiom in the same spirit as `cosh_pos`. True in any standard ordered
+field. Closes the Forge `cosh_geq_one` kernel obligation. C-245. -/
+axiom cosh_ge_one (x : Real) : 1 ≤ cosh x
 axiom sinh_add   (x y : Real) :
   sinh (x + y) = sinh x * cosh y + cosh x * sinh y
 axiom cosh_add   (x y : Real) :

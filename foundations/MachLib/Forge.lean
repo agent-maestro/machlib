@@ -30,6 +30,7 @@ import MachLib.Exp
 import MachLib.Log
 import MachLib.Trig
 import MachLib.EML
+import MachLib.Hyperbolic
 
 namespace MachLib
 namespace Real
