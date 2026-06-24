@@ -89,6 +89,37 @@ the high-80s/low-90s (the residue then = genuinely deep analytic facts:
 multi-week, correctness-critical effort — **not** a bolt-on. Decide explicitly
 before starting; do not approximate it with unsound shortcuts.
 
+## Phase 3 scoping update (2026-06-24, after reaching 77%)
+
+The polynomial bands (smoothstep, ease, ricochet) were validated end-to-end and
+the blocker is now pinned precisely.
+
+**The certificate is Bernstein form, and it works.** A polynomial nonneg on
+[0,1] has nonneg Bernstein coefficients, giving a sum-of-nonneg-products:
+`smoothstep = 3t² − 2t³ = 3·t²(1−t) + t³`. Each term closes by `mul_nonneg`
+(`t² ≥ 0`, `1−t ≥ 0` from `t ≤ 1`, `t ≥ 0`). HAND-PROVED green this way.
+
+**Two sub-techniques confirmed working:**
+1. Decimal→sum bridge by DEFEQ COERCION, not `rw`: `rw [realOfScientific_
+   three_dot_zero]` fails (`3.0` is `OfScientific.ofScientific 30 true 1`
+   syntactically, not `realOfScientific 30 true 1`), but
+   `have e3 : (3.0:Real) = 1+1+1 := realOfScientific_three_dot_zero` typechecks
+   (defeq) and then `rw [e3]` works. Bridges exist only for 1.0/2.0/3.0 —
+   higher literals (6,10,15 for smootherstep) need more, or a general
+   `realOfScientific (n*10) true 1 = natCast n` lemma.
+2. `mach_norm_num` discharges the `0 ≤ 3.0` coefficient side.
+
+**THE BLOCKER — mach_ring v2.** The SOS rewrite `3t²−2t³ = 3t²(1−t) + t³`
+(even after substituting integer 1+1+1 / 1+1 for the decimals) is NOT closed by
+`mach_ring` v1.5 — it leaves additive-cancellation residue (the `3t² − 3t³ + t³
+= 3t² − 2t³` step). mach_ring is simp/AC-based; this needs a true
+monomial-normalising `ring` (Horner form), the long-flagged "ring v2". So:
+
+  **Phase 3 critical path = mach_ring v2** (monomial normalisation), THEN the
+  Bernstein-coefficient certificate generator (mechanical once ring v2 exists),
+  THEN literal-bridge generalisation. ring v2 is the substantial piece; without
+  it the SOS certificates cannot be discharged. Everything else is validated.
+
 ## What NOT to do
 - Do not ship a `mach_linarith` that only `apply`s a fixed lemma list (the
   current v1 stub) and call it linarith — it closes none of the real backlog.
