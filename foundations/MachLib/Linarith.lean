@@ -167,6 +167,27 @@ theorem one_sub_sq_nonneg {c : Real} (h0 : 0 ≤ c) (h1 : c ≤ 1) : 0 ≤ 1 - c
   apply mul_nonneg (sub_nonneg_of_le h1)
   exact add_nonneg (le_of_lt zero_lt_one_ax) h0
 
+/-- `0 ≤ a → -a ≤ 0`. (`neg_le_neg` is private in EMLAsymptoticClass; derived
+here from `add_lt_add_left` + `neg_add_self`.) -/
+theorem neg_nonpos_of_nonneg {a : Real} (h : 0 ≤ a) : -a ≤ 0 := by
+  rcases (le_iff_lt_or_eq 0 a).mp h with hlt | heq
+  · have hh : -a + 0 < -a + a := add_lt_add_left hlt (-a)
+    rw [add_zero, neg_add_self] at hh
+    exact le_of_lt hh
+  · rw [← heq, neg_zero]; exact le_refl 0
+
+/-- `0 ≤ 1 − exp((−a)·b)` for `a,b ≥ 0` (exponential fog `1 − exp(−ρ·d)`).
+exp of a nonpos is ≤ 1. -/
+theorem one_sub_exp_neg_mul_nonneg {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    0 ≤ 1 - exp ((-a) * b) := by
+  apply sub_nonneg_of_le (exp_le_one_of_nonpos _)
+  rw [neg_mul]; exact neg_nonpos_of_nonneg (mul_nonneg ha hb)
+
+/-- `0 ≤ 1 − exp(−y)` for `y ≥ 0` (squared-exponential fog `1 − exp(−(ρd)²)`,
+applied with `y = k·k`). -/
+theorem one_sub_exp_neg_nonneg {y : Real} (hy : 0 ≤ y) : 0 ≤ 1 - exp (-y) :=
+  sub_nonneg_of_le (exp_le_one_of_nonpos (neg_nonpos_of_nonneg hy))
+
 /-! ### `mach_norm_num` tactic (Phase 1: decimal-literal arithmetic)
 
 Closes order goals between Real decimal literals — `(2.0:Real) ≤ (3.0:Real)`,
@@ -245,6 +266,9 @@ macro_rules
       | (apply one_sub_cube_band <;> assumption)
       -- `0 ≤ 1 − c²` for clamped c ∈ [0,1] (ricochet); side goals via positivity.
       | (apply one_sub_sq_nonneg <;> mach_positivity)
+      -- Exponential-fog complements `0 ≤ 1 − exp(−…)`.
+      | (apply one_sub_exp_neg_mul_nonneg <;> assumption)
+      | (apply one_sub_exp_neg_nonneg <;> mach_positivity)
       -- `0 ≤ abs x` (magnitude is nonneg). Closes abs_kernel's nonneg
       -- obligation and any `0 ≤ |…|` subgoal.
       | exact abs_nonneg _
