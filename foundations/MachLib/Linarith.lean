@@ -50,6 +50,7 @@ Out of scope (v2 / future)
 import MachLib.Basic
 import MachLib.Forge
 import MachLib.Trig
+import MachLib.Lemmas
 
 namespace MachLib
 namespace Real
@@ -112,6 +113,18 @@ macro "mach_norm_num" : tactic => `(tactic|
   | (apply realOfScientific_pos <;> decide)
   | (apply le_of_lt; apply realOfScientific_pos <;> decide))
 
+/-! ### `mach_abs_bound` tactic (trig-amplitude band shape)
+
+Closes `abs(base · t₁ · t₂ … ) ≤ base` where `base ≥ 0` (a hypothesis /
+mach_positivity) and each `tᵢ` is a magnitude-≤1 factor (`sin`, `cos`). Peels
+one bounded factor per step via `abs_mul_le_of_abs_le_one` (right operand
+first), recursing on the remaining product until it reaches `abs base`, then
+`abs_of_nonneg`. This is the abs-of-product band closer (orbit, wave, white
+noise) — the nonlinear shape `mach_positivity` cannot reach. Declared here
+(before `mach_positivity`) so each can reference the other; `macro_rules`
+bodies follow `mach_positivity`'s syntax declaration below. -/
+syntax (name := machAbsBound) "mach_abs_bound" : tactic
+
 /-! ### `mach_positivity` tactic
 
 Closes `0 ≤ expr` and `0 < expr` goals by recursive structural
@@ -164,6 +177,9 @@ macro_rules
       -- in-unit-interval obligation.
       | exact neg_one_le_erf _
       | exact erf_le_one _
+      -- Trig-amplitude band: abs(base · sin · cos …) ≤ base (orbit, wave,
+      -- white_noise). The nonlinear abs-of-product shape.
+      | mach_abs_bound
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)
@@ -215,6 +231,18 @@ macro_rules
       | (apply mul_pos <;> mach_positivity)
       -- Weaken-to-nonneg bridge.
       | (apply nonneg_of_pos; mach_positivity))
+
+/-- `mach_abs_bound` recursion: peel one magnitude-≤1 factor (`abs_mul_le_of_
+abs_le_one`) at a time, or finish at `abs base` with `base ≥ 0`. -/
+macro_rules
+  | `(tactic| mach_abs_bound) => `(tactic|
+      first
+      | (rw [abs_of_nonneg (by mach_positivity)]; exact le_refl _)
+      | (refine le_trans (abs_mul_le_of_abs_le_one ?_) ?_ <;>
+           first
+           | exact abs_sin_le_one _
+           | exact abs_cos_le_one _
+           | mach_abs_bound))
 
 /-! ### `mach_linarith` tactic — v1 stub
 

@@ -134,6 +134,11 @@ distributivity that `MachLib.Basic` doesn't yet expose. True in
 any ordered field. -/
 axiom abs_cos_le_one (x : Real) : abs (cos x) ≤ 1
 
+/-- `|sin x| ≤ 1`. Symmetric counterpart of `abs_cos_le_one` (the asymmetry
+was just an omission). Closes the `abs(... * sin ...)` factor in trig-amplitude
+band obligations (orbit, wave, white-noise). True in any ordered field. -/
+axiom abs_sin_le_one (x : Real) : abs (sin x) ≤ 1
+
 /-- `cos x * cos x ≤ 1`. The squared form. Provable from
 `pythagorean` (`sin² + cos² = 1`) plus `0 ≤ sin²` (so
 `cos² = 1 - sin² ≤ 1`), but the chain needs `sub_le_self_of_nonneg`
@@ -200,6 +205,16 @@ axiom abs_mul (a b : Real) : abs (a * b) = abs a * abs b
 
 /-- Range characterisation: `abs a ≤ b ↔ -b ≤ a ∧ a ≤ b`. Axiom. -/
 axiom abs_le_iff {a b : Real} : abs a ≤ b ↔ -b ≤ a ∧ a ≤ b
+
+/-- Multiplying by a magnitude-≤1 factor does not increase `abs`. PROVED (no
+axiom) from `abs_mul` + `mul_le_mul_of_nonneg_left`. Peeling lemma for the
+trig-amplitude band shape `abs(base · t₁ · t₂ …) ≤ base`: apply once per
+bounded factor, leaving `abs base`. -/
+theorem abs_mul_le_of_abs_le_one {x y : Real} (hy : abs y ≤ 1) :
+    abs (x * y) ≤ abs x := by
+  rw [abs_mul]
+  have h := mul_le_mul_of_nonneg_left hy (abs_nonneg x)
+  rwa [mul_one_ax] at h
 
 end Real
 end MachLib
