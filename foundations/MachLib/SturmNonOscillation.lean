@@ -210,21 +210,84 @@ theorem vpow_deriv2 (α x : Real) (hx : 0 < x) :
     rw [hexpand, hL1]; mach_ring
   rwa [hval2] at hprod
 
-/-! ### Remaining step — the Abel assembly (precisely scoped)
+/-! ### Abel–Wronskian core (all algebra verified)
 
-With the explicit positive solution `v = vpow α` in hand (`vpow_pos`,
-`vpow_deriv`, `vpow_deriv2`), the regular-singular non-oscillation theorem
-follows by the Abel–Wronskian argument, which has NO real-power algebra left:
+With the explicit positive solution `v = vpow α` (`vpow_pos`/`vpow_deriv`/
+`vpow_deriv2`), the regular-singular non-oscillation theorem follows by the
+Abel–Wronskian argument. The three lemmas below discharge ALL of its algebra
+(no `sorry`); the only remaining step is the MVT sign-glue (pure logic).
 
-  • `W := u'·v − u·v'` has `W' = u''v − uv'' = r·u·v − u·r·v = 0` (both solve
-    `_'' = r·_`); the value simplifies by `mach_ring` (u,v,u',v',r are atoms).
-    So `W` is constant (via `mono_of_deriv_nonneg` both ways).
-  • `φ := u/v`; `φ'·v² = W` (using `mul_inv` — NOT `1/x·1/x`, so no new field
-    algebra). MVT on `φ` over an arch `[a,b]` (`φ(a)=φ(b)=0`) gives an interior
-    `ξ` with `φ'(ξ)=0`, hence `W(ξ)·= 0`, hence `W ≡ 0`, hence `φ' ≡ 0`, hence
-    `φ` constant `= φ(a) = 0` — contradicting `φ = u/v > 0` on the arch.
+Note: these used `ac_rfl` (Real's registered `Std.Commutative`/`Associative`
+instances) for the multiplicative-AC steps that `mach_ring` cannot canonicalise
+— the workaround for MachLib's incomplete ring tactic. -/
 
-`mono_of_deriv_nonneg` and the arch contradiction are reused verbatim. This is
-the dedicated next step; the keystone (the hard part) is done above. -/
+/-- **Abel.** The Wronskian `W = u'·v − u·v'` of two solutions of the Euler
+equation `_'' = ((α²−α)/x²)·_` (with `v = x^α`) is constant: `W' = 0`. -/
+theorem abel_euler_wronskian_deriv_zero
+    (u up upp : Real → Real) (α x : Real) (hx : 0 < x)
+    (hu : HasDerivAt u (up x) x) (hup : HasDerivAt up (upp x) x)
+    (hode : upp x = (α * α - α) * (1 / (x * x)) * u x) :
+    HasDerivAt (fun y => up y * vpow α y - u y * (vpow α y * (α * (1 / y)))) 0 x := by
+  have ht1 := HasDerivAt_mul up (vpow α) (upp x) (vpow α x * (α * (1 / x))) x
+    hup (vpow_deriv α x hx)
+  have ht2 := HasDerivAt_mul u (fun y => vpow α y * (α * (1 / y)))
+    (up x) ((α * α - α) * (1 / (x * x)) * vpow α x) x hu (vpow_deriv2 α x hx)
+  have hsub := HasDerivAt_sub _ _ _ _ x ht1 ht2
+  have hval :
+      (upp x * vpow α x + up x * (vpow α x * (α * (1 / x))))
+        - (up x * (vpow α x * (α * (1 / x))) + u x * ((α * α - α) * (1 / (x * x)) * vpow α x))
+        = 0 := by
+    rw [hode]
+    have heq :
+        (α * α - α) * (1 / (x * x)) * u x * vpow α x + up x * (vpow α x * (α * (1 / x)))
+          = up x * (vpow α x * (α * (1 / x)))
+            + u x * ((α * α - α) * (1 / (x * x)) * vpow α x) := by ac_rfl
+    rw [heq, Real.sub_self]
+  rwa [hval] at hsub
+
+/-- The quotient `φ = u/v` has the explicit derivative (product + reciprocal). -/
+theorem phi_euler_deriv (u up : Real → Real) (α x : Real) (hx : 0 < x)
+    (hu : HasDerivAt u (up x) x) :
+    HasDerivAt (fun y => u y * (1 / vpow α y))
+      (up x * (1 / vpow α x)
+        + u x * (-(vpow α x * (α * (1 / x))) / (vpow α x * vpow α x))) x := by
+  have hv_ne : vpow α x ≠ 0 := Real.ne_of_gt (vpow_pos α x)
+  have hinv := HasDerivAt_inv (vpow α) (vpow α x * (α * (1 / x))) x hv_ne (vpow_deriv α x hx)
+  exact HasDerivAt_mul u (fun y => 1 / vpow α y) (up x)
+    (-(vpow α x * (α * (1 / x))) / (vpow α x * vpow α x)) x hu hinv
+
+/-- The bridge: `φ'(x)·v(x)² = W(x)`. Ties the quotient derivative to the
+Wronskian (so the constant `W` controls the sign of `φ'`). -/
+theorem phi_euler_identity (u up : Real → Real) (α x : Real) :
+    (up x * (1 / vpow α x)
+        + u x * (-(vpow α x * (α * (1 / x))) / (vpow α x * vpow α x)))
+      * (vpow α x * vpow α x)
+      = up x * vpow α x - u x * (vpow α x * (α * (1 / x))) := by
+  have hv_ne : vpow α x ≠ 0 := Real.ne_of_gt (vpow_pos α x)
+  have hvv_ne : vpow α x * vpow α x ≠ 0 :=
+    Real.ne_of_gt (Real.mul_pos (vpow_pos α x) (vpow_pos α x))
+  have h1 : (1 / vpow α x) * (vpow α x * vpow α x) = vpow α x := by
+    rw [← Real.mul_assoc, Real.mul_comm (1 / vpow α x) (vpow α x),
+        Real.mul_inv (vpow α x) hv_ne, Real.one_mul_thm]
+  have h2 : (-(vpow α x * (α * (1 / x))) / (vpow α x * vpow α x)) * (vpow α x * vpow α x)
+      = -(vpow α x * (α * (1 / x))) := by
+    rw [Real.div_def (-(vpow α x * (α * (1 / x)))) (vpow α x * vpow α x) hvv_ne,
+        Real.mul_assoc, Real.mul_comm (1 / (vpow α x * vpow α x)) (vpow α x * vpow α x),
+        Real.mul_inv (vpow α x * vpow α x) hvv_ne, Real.mul_one_ax]
+  rw [Real.mul_distrib_right, Real.mul_assoc (up x), Real.mul_assoc (u x),
+      h1, h2, Real.mul_neg, ← Real.sub_def]
+
+/-! ### Remaining step — the MVT sign-glue (pure logic, no algebra)
+
+Everything algebraic is proved above. The full Euler `−1/4` non-oscillation
+theorem closes by, for an arch `u(a)=u(b)=0`, `u>0` on `(a,b)`:
+  • Rolle on `u` → interior `m`, `u(m)>0` ⇒ `φ(m) = u(m)/v(m) > 0`
+    (`φ(a)=φ(b)=0` since `u(a)=u(b)=0`).
+  • MVT on `φ` over `[a,m]` ⇒ `φ'(ξ₁)>0`; over `[m,b]` ⇒ `φ'(ξ₂)<0` (`ξ₁<m<ξ₂`).
+  • `phi_euler_identity`: `W(ξᵢ)=φ'(ξᵢ)·v(ξᵢ)²`, so `W(ξ₁)>0`, `W(ξ₂)<0`.
+  • `abel_euler_wronskian_deriv_zero` ⇒ `W'=0` ⇒ (MVT on `[ξ₁,ξ₂]`)
+    `W(ξ₁)=W(ξ₂)` — contradiction (`>0 = <0`).
+Reuses `mean_value_theorem`, `rolle`, `HasDerivAt_unique`, `phi_euler_deriv`. No
+ring/field algebra remains — this is the dedicated logical finish. -/
 
 end MachLib
