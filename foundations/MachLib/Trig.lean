@@ -66,6 +66,15 @@ axiom arccos : Real → Real
 -- failed to compile ("unknown constant Real.arctan"). Function-symbol
 -- declaration only, same kind as arcsin/arccos above — no new property axiom.
 axiom arctan : Real → Real
+-- arctan maps ℝ strictly into the OPEN principal range (-π/2, π/2): it
+-- approaches ±π/2 only as x → ±∞, never reaching it. Held as axioms (arctan is
+-- an opaque symbol with no concrete Real model to derive from) — clearly true
+-- and standard, the inverse-tangent principal range, exactly mirroring
+-- Mathlib's `Real.arctan_lt_pi_div_two` / `Real.neg_pi_div_two_lt_arctan`.
+-- Stated with the decimal `2.0` so they unify with the Forge-emitted bound
+-- `pi() / 2.0`. Closes the atan / atan2_pos_x open-interval band obligations.
+axiom arctan_lt_pi_div_two     (x : Real) : arctan x < pi / 2.0
+axiom neg_pi_div_two_lt_arctan (x : Real) : -(pi / 2.0) < arctan x
 -- Gauss error function. EML `erf` passes through to a bare `erf` call; without
 -- this symbol math/erf.eml failed to compile ("unknown identifier erf").
 -- Symbol only — `erf`'s bound/zero properties are NOT asserted here, so the

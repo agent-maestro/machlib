@@ -525,6 +525,11 @@ macro_rules
       -- in-unit-interval obligation.
       | exact neg_one_le_erf _
       | exact erf_le_one _
+      -- arctan ∈ (-π/2, π/2), strict. Closes the atan / atan2_pos_x
+      -- open-interval band obligations (`result > -(pi/2.0)`,
+      -- `result < pi/2.0`). Bounds live in Trig; strict, so used directly.
+      | exact neg_pi_div_two_lt_arctan _
+      | exact arctan_lt_pi_div_two _
       -- Trig-amplitude band: abs(base · sin · cos …) ≤ base (orbit, wave,
       -- white_noise). The nonlinear abs-of-product shape.
       | mach_abs_bound

@@ -175,6 +175,42 @@ SOS/factored form), which is the separate elab.
   the bespoke-axiom grind this doc exists to stop. ~2 obligations per axiom,
   unbounded surface, no reuse.
 
+## UPDATE — 2026-06-25 (262/282 = 92.9%; ALL 6 spec gaps now resolved)
+
+The last 2 spec gaps — `atan_in_open_half_pi_band` and
+`atan2_pos_x_in_open_half_pi_band` — are **CLOSED**, exactly as the 2026-06-24
+note (§A) prescribed: *"a sound Lean proof needs a symbolic `pi/2` bound (not a
+truncated decimal) plus an arctan range axiom in MachLib."* Both pieces now
+exist:
+
+1. **Forge `pi()` builtin** (forge `3cd6a20`): a nullary symbolic constant. The
+   proof backends render it as the EXACT real (`Real.pi`), compute backends lower
+   it to the float64 literal. eml-stdlib `atan.eml` / `atan2.eml` now state the
+   band as `result < pi() / 2.0` instead of the decimal `HALF_PI`
+   (`1.5707963267948966 < π/2`, which made the strict bound false over ℝ).
+2. **MachLib arctan range axioms** (`Trig.lean`): `arctan_lt_pi_div_two` and
+   `neg_pi_div_two_lt_arctan`, stated with `pi / 2.0` to unify with the emitted
+   obligation, wired into `mach_positivity` (two new arms). Sound, foundational,
+   reusable — they mirror Mathlib's `Real.arctan_lt_pi_div_two` /
+   `Real.neg_pi_div_two_lt_arctan`, NOT per-kernel fudges.
+
+Verified: `lake env lean` on the forge-emitted obligations + `#print axioms` —
+both depend on `[Real, arctan, divR, ltR, negR, neg_pi_div_two_lt_arctan, pi,
+realOfScientific]` and **NO `sorryAx`**. Full `lake build` green. The
+`mach_positivity` arms are additive (`exact` fails off arctan-shaped goals), so
+zero corpus regression.
+
+**The spec-gap category (§A) is now empty** — all 6 findings (doppler×2,
+thermistor×2, atan×2) became real fixes to the public lib + foundations, none
+closed with an unsound axiom. The remaining **20 open** are the genuine engine /
+analytic gaps: §B decimal-nlinarith (8), §C deep-analytic (5), §D
+transcendental-const (4 — `fov×2` could now use `pi()` too but still need a
+`tan_pos` axiom; left for a focused pass), §E floor-parity (2), §F
+decimal-eval (1). The next real increment remains the Phase-3 decimal+product
+engine, not more arms.
+
+---
+
 ## FINAL STATE — 2026-06-24 (260/282 = 92% substantive; +4 spec-gap fixes)
 
 The reusable-closer tier is now **exhausted**. Pushed from 243 → 256 (+13) this
@@ -212,13 +248,14 @@ These were *Forge / eml-stdlib findings* (the `ensures` not entailed by the
 - ✅ FIXED `thermistor_steinhart_temperature_positive` / `…_beta_…`: `1/inv > 0`
   needed `inv > 0` (a,b,c free / β can be <0). Added the `requires (inv > 0)`
   (eml-stdlib `7c9a971`) — both now CLOSE (one_div_pos).
-- ⚠ REMAIN (must NOT close): `atan_in_open_half_pi_band`,
-  `atan2_pos_x_in_open_half_pi_band`: `arctan x >
-  −HALF_PI` where `HALF_PI = 1.5707963267948966` is the truncated double,
-  STRICTLY less than the real π/2 (1.5707963267948966192…). Since arctan's range
-  is the OPEN (−π/2, π/2), ∃x with arctan x ∈ (−π/2, −HALF_PI) ⇒ the strict bound
-  is FALSE at the asymptotic extreme. A real-vs-float discrepancy, not provable
-  for the real model.
+- ✅ FIXED 2026-06-25 (see UPDATE at top): `atan_in_open_half_pi_band`,
+  `atan2_pos_x_in_open_half_pi_band`. Were `arctan x > −HALF_PI` where
+  `HALF_PI = 1.5707963267948966` is the truncated double, STRICTLY less than the
+  real π/2 — so with the decimal the strict bound was FALSE at the asymptotic
+  extreme (a real-vs-float discrepancy). The forge `pi()` builtin lets the band
+  be stated with the EXACT π/2 (`pi() / 2.0` → `Real.pi / 2.0`), and the new
+  MachLib `neg_pi_div_two_lt_arctan` / `arctan_lt_pi_div_two` range axioms close
+  it soundly. Both now CLOSE with no `sorryAx`.
 
 **(B) Decimal-interval nlinarith — 8 — need Phase 3 (decimal model + product
 search). Documented above; unchanged:** `bangbang_in_actuator_band`,
