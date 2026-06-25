@@ -175,6 +175,34 @@ SOS/factored form), which is the separate elab.
   the bespoke-axiom grind this doc exists to stop. ~2 obligations per axiom,
   unbounded surface, no reuse.
 
+## UPDATE — 2026-06-25 #2 (264/282 = 93.6%; fov×2 closed via the pi() builtin)
+
+`fov_m00_positive` / `fov_m11_positive` (§D transcendental-const) now **CLOSE**,
+riding the same `pi()` builtin. The perspective-projection coefficient
+`1/(aspect·tan(fov/2)) > 0` needs `0 < tan(fov/2)`, i.e. the half-FOV in the
+first quadrant. Fix:
+- eml-stdlib `fov_projection.eml`: domain `fov < 3.141` → `fov < pi()`. The
+  decimal 3.141 forced the unprovable `3.141 < π` bridge; symbolic `pi()` gives
+  `fov < Real.pi` directly (compute backends still lower to the float literal —
+  the standard "FOV below 180°" runtime check).
+- `Trig.lean`: `axiom tan_half_pos (x) : 0 < x → x < pi → 0 < tan (0.5*x)`. The
+  half is baked in ON PURPOSE — the general `tan_pos` on (0,π/2) would force
+  `0.5·x < pi/2`, needing `0.5·2.0 = 1` over opaque realOfScientific (the
+  decimal reconciliation that is Phase-3's job). This form is general (any
+  tan(x/2) on (0,π)) and sound.
+- `Linarith.lean`: a strict `mul_pos` arm (was only `mul_nonneg`) + a
+  `tan_half_pos` arm in `mach_positivity`. Both additive (`apply`/`exact` fail
+  off-shape → `first` falls through → no corpus regression; full `lake build`
+  green).
+
+Verified: `#print axioms` on both fov obligations → no `sorryAx` (depend on
+`tan_half_pos` + `one_div_pos_of_pos`/`mul_pos`/`zero_lt_one_ax` + foundational
+axioms). **264/282 = 93.6% substantive.** §D drops from 4 to 2 (wien, hamming).
+Remaining 18: §B decimal-nlinarith (8), §C deep-analytic (5), §D (2), §E
+floor-parity (2), §F decimal-eval (1).
+
+---
+
 ## UPDATE — 2026-06-25 (262/282 = 92.9%; ALL 6 spec gaps now resolved)
 
 The last 2 spec gaps — `atan_in_open_half_pi_band` and

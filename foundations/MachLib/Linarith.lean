@@ -556,8 +556,14 @@ macro_rules
       -- Structural decompositions for `0 ≤ ...`
       | (apply add_nonneg <;> mach_positivity)
       | (apply mul_nonneg <;> mach_positivity)
+      | (apply mul_pos <;> mach_positivity)
       | (apply div_nonneg_of_nonneg_pos <;> mach_positivity)
       | (apply div_pos_of_pos_pos <;> mach_positivity)
+      -- Half-angle tangent positivity: 0 < tan(0.5·x) from `0 < x` and `x < pi`
+      -- in scope (the perspective-projection domain). The two hyps come from the
+      -- emitted `domain` clauses via `assumption`. Closes fov_m00 / fov_m11
+      -- (1/(aspect·tan(fov/2)) > 0) once div_pos/mul_pos peel the reciprocal.
+      | exact tan_half_pos _ (by assumption) (by assumption)
       -- `exp_pos` (0 < exp) BEFORE `exp_nonneg` (0 ≤ exp): strict-positive
       -- floors like `RHO_0 * exp(-h/H) > 0` (air_density, atmosphere decay,
       -- optical-neuron response) need the strict form as a `mul_pos` factor.

@@ -75,6 +75,15 @@ axiom arctan : Real → Real
 -- `pi() / 2.0`. Closes the atan / atan2_pos_x open-interval band obligations.
 axiom arctan_lt_pi_div_two     (x : Real) : arctan x < pi / 2.0
 axiom neg_pi_div_two_lt_arctan (x : Real) : -(pi / 2.0) < arctan x
+
+-- Half-angle tangent positivity: for x in (0, π) the half-angle x/2 lies in the
+-- first quadrant (0, π/2), where tan is positive. Stated with the half baked in
+-- (`tan (0.5 * x)` from `x < pi`) ON PURPOSE: the general `tan_pos` on (0, π/2)
+-- would force the half-angle range `0.5·x < pi/2`, which needs `0.5·2.0 = 1`
+-- over opaque realOfScientific — the decimal reconciliation that is Phase-3's
+-- job, not a cheap closer. This form is general (any tan(x/2) on (0,π)) and
+-- sound. Closes the perspective-projection coefficients (fov_m00 / fov_m11).
+axiom tan_half_pos (x : Real) : 0 < x → x < pi → 0 < tan (0.5 * x)
 -- Gauss error function. EML `erf` passes through to a bare `erf` call; without
 -- this symbol math/erf.eml failed to compile ("unknown identifier erf").
 -- Symbol only — `erf`'s bound/zero properties are NOT asserted here, so the
