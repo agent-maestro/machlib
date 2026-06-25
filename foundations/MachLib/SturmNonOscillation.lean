@@ -277,17 +277,114 @@ theorem phi_euler_identity (u up : Real → Real) (α x : Real) :
   rw [Real.mul_distrib_right, Real.mul_assoc (up x), Real.mul_assoc (u x),
       h1, h2, Real.mul_neg, ← Real.sub_def]
 
-/-! ### Remaining step — the MVT sign-glue (pure logic, no algebra)
+/-! ### The full regular-singular non-oscillation theorem
 
-Everything algebraic is proved above. The full Euler `−1/4` non-oscillation
-theorem closes by, for an arch `u(a)=u(b)=0`, `u>0` on `(a,b)`:
-  • Rolle on `u` → interior `m`, `u(m)>0` ⇒ `φ(m) = u(m)/v(m) > 0`
-    (`φ(a)=φ(b)=0` since `u(a)=u(b)=0`).
-  • MVT on `φ` over `[a,m]` ⇒ `φ'(ξ₁)>0`; over `[m,b]` ⇒ `φ'(ξ₂)<0` (`ξ₁<m<ξ₂`).
-  • `phi_euler_identity`: `W(ξᵢ)=φ'(ξᵢ)·v(ξᵢ)²`, so `W(ξ₁)>0`, `W(ξ₂)<0`.
-  • `abel_euler_wronskian_deriv_zero` ⇒ `W'=0` ⇒ (MVT on `[ξ₁,ξ₂]`)
-    `W(ξ₁)=W(ξ₂)` — contradiction (`>0 = <0`).
-Reuses `mean_value_theorem`, `rolle`, `HasDerivAt_unique`, `phi_euler_deriv`. No
-ring/field algebra remains — this is the dedicated logical finish. -/
+The MVT sign-glue, assembled on the keystone + Abel core. Sign helpers first
+(`mul_pos`/`lt_total`-derived), then the theorem. -/
+
+/-- `a < 0`, `0 < b` ⇒ `a·b < 0`. -/
+theorem mul_neg_of_neg_of_pos {a b : Real} (ha : a < 0) (hb : 0 < b) : a * b < 0 := by
+  have hnab : 0 < (-a) * b := Real.mul_pos (Real.neg_pos_of_neg ha) hb
+  rw [Real.neg_mul] at hnab
+  have h := Real.neg_neg_of_pos hnab
+  rwa [Real.neg_neg_helper] at h
+
+/-- `0 < a·b`, `0 < b` ⇒ `0 < a`. -/
+theorem pos_of_mul_pos_right {a b : Real} (h : 0 < a * b) (hb : 0 < b) : 0 < a := by
+  rcases Real.lt_total 0 a with ha | ha | ha
+  · exact ha
+  · rw [← ha, Real.zero_mul] at h; exact absurd h (Real.lt_irrefl_ax 0)
+  · exact absurd (Real.lt_trans_ax h (mul_neg_of_neg_of_pos ha hb)) (Real.lt_irrefl_ax 0)
+
+/-- `a·b < 0`, `0 < b` ⇒ `a < 0`. -/
+theorem neg_of_mul_neg_right {a b : Real} (h : a * b < 0) (hb : 0 < b) : a < 0 := by
+  rcases Real.lt_total a 0 with ha | ha | ha
+  · exact ha
+  · rw [ha, Real.zero_mul] at h; exact absurd h (Real.lt_irrefl_ax 0)
+  · exact absurd (Real.lt_trans_ax (Real.mul_pos ha hb) h) (Real.lt_irrefl_ax 0)
+
+/-- `a < b ⇒ a − b < 0`. -/
+theorem sub_neg_of_lt' {a b : Real} (h : a < b) : a - b < 0 := by
+  rw [Real.sub_def]
+  have hh : -b + a < -b + b := Real.add_lt_add_left h (-b)
+  rw [Real.neg_add_self] at hh
+  rwa [Real.add_comm (-b) a] at hh
+
+/-- **Sturm non-oscillation, regular-singular `−1/4` case.** For the Euler
+equation `u'' = ((α²−α)/x²)·u` on an interval `(a,b) ⊂ (0,∞)`, there is no
+positive arch: `u` cannot have `u(a)=u(b)=0` while staying strictly positive on
+`(a,b)`. Since `α = ½ ± √(c+¼)` is real exactly when `c = α²−α ≥ −1/4`, this is
+the EML-finite-but-`r<0` band that `sturm_no_positive_bump` (which needs `r ≥ 0`)
+cannot reach — so this theorem closes the regular-singular gap.
+
+Proof: the explicit positive solution `v = x^α` (`vpow`) makes the Wronskian
+`W = u'v − uv'` constant (`abel_euler_wronskian_deriv_zero`); `φ = u/v` satisfies
+`φ'·v² = W` (`phi_euler_identity`). Rolle gives an interior `m` with `u(m)>0`, so
+`φ(m)>0` while `φ(a)=φ(b)=0`; MVT on `[a,m]` and `[m,b]` forces `φ'(ξ₁)>0`,
+`φ'(ξ₂)<0`, hence `W(ξ₁)>0`, `W(ξ₂)<0`; but MVT on `[ξ₁,ξ₂]` with `W'=0` gives
+`W(ξ₁)=W(ξ₂)` — contradiction. No `sorryAx`. -/
+theorem sturm_euler_no_positive_bump
+    (u up upp : Real → Real) (α : Real) {a b : Real} (hab : a < b) (ha : 0 < a)
+    (hu : ∀ x, a < x → x < b → HasDerivAt u (up x) x)
+    (hup : ∀ x, a < x → x < b → HasDerivAt up (upp x) x)
+    (hode : ∀ x, a < x → x < b → upp x = (α * α - α) * (1 / (x * x)) * u x)
+    (hua : u a = 0) (hub : u b = 0)
+    (hbump : ∀ x, a < x → x < b → 0 < u x) :
+    False := by
+  obtain ⟨m, ham, hmb, _⟩ := rolle u a b hab (by rw [hua, hub])
+    (fun c h1 h2 => ⟨up c, hu c h1 h2⟩)
+  have hm_pos : 0 < m := Real.lt_trans_ax ha ham
+  have hφm : 0 < u m * (1 / vpow α m) :=
+    Real.mul_pos (hbump m ham hmb) (one_div_pos_of_pos (vpow_pos α m))
+  obtain ⟨ξ₁, f1, haξ1, hξ1m, hd1, heq1⟩ :=
+    mean_value_theorem (fun y => u y * (1 / vpow α y)) a m ham
+      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_trans_ax ha h1)
+        (hu c h1 (Real.lt_trans_ax h2 hmb))⟩)
+  have hf1 : f1 = up ξ₁ * (1 / vpow α ξ₁)
+        + u ξ₁ * (-(vpow α ξ₁ * (α * (1 / ξ₁))) / (vpow α ξ₁ * vpow α ξ₁)) :=
+    HasDerivAt_unique _ f1 _ ξ₁ hd1
+      (phi_euler_deriv u up α ξ₁ (Real.lt_trans_ax ha haξ1) (hu ξ₁ haξ1 (Real.lt_trans_ax hξ1m hmb)))
+  rw [show u a * (1 / vpow α a) = 0 by rw [hua, Real.zero_mul], Real.sub_zero] at heq1
+  have hf1_pos : 0 < f1 :=
+    pos_of_mul_pos_right (heq1 ▸ hφm) (Real.sub_pos_of_lt (Real.lt_trans_ax haξ1 hξ1m))
+  obtain ⟨ξ₂, f2, hmξ2, hξ2b, hd2, heq2⟩ :=
+    mean_value_theorem (fun y => u y * (1 / vpow α y)) m b hmb
+      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_trans_ax hm_pos h1)
+        (hu c (Real.lt_trans_ax ham h1) h2)⟩)
+  have hf2 : f2 = up ξ₂ * (1 / vpow α ξ₂)
+        + u ξ₂ * (-(vpow α ξ₂ * (α * (1 / ξ₂))) / (vpow α ξ₂ * vpow α ξ₂)) :=
+    HasDerivAt_unique _ f2 _ ξ₂ hd2
+      (phi_euler_deriv u up α ξ₂ (Real.lt_trans_ax hm_pos hmξ2) (hu ξ₂ (Real.lt_trans_ax ham hmξ2) hξ2b))
+  rw [show u b * (1 / vpow α b) = 0 by rw [hub, Real.zero_mul]] at heq2
+  have hf2_neg : f2 < 0 := by
+    have hlt : f2 * (b - m) < 0 := by
+      rw [← heq2, Real.sub_def, Real.zero_add]; exact Real.neg_neg_of_pos hφm
+    exact neg_of_mul_neg_right hlt (Real.sub_pos_of_lt (Real.lt_trans_ax hmξ2 hξ2b))
+  have hξ1ξ2 : ξ₁ < ξ₂ := Real.lt_trans_ax hξ1m hmξ2
+  have hWξ1 : 0 < up ξ₁ * vpow α ξ₁ - u ξ₁ * (vpow α ξ₁ * (α * (1 / ξ₁))) := by
+    rw [← phi_euler_identity u up α ξ₁, ← hf1]
+    exact Real.mul_pos hf1_pos (Real.mul_pos (vpow_pos α ξ₁) (vpow_pos α ξ₁))
+  have hWξ2 : up ξ₂ * vpow α ξ₂ - u ξ₂ * (vpow α ξ₂ * (α * (1 / ξ₂))) < 0 := by
+    rw [← phi_euler_identity u up α ξ₂, ← hf2]
+    exact mul_neg_of_neg_of_pos hf2_neg (Real.mul_pos (vpow_pos α ξ₂) (vpow_pos α ξ₂))
+  obtain ⟨ζ, fW, hξ1ζ, hζξ2, hdW, heqW⟩ :=
+    mean_value_theorem (fun y => up y * vpow α y - u y * (vpow α y * (α * (1 / y)))) ξ₁ ξ₂ hξ1ξ2
+      (fun c h1 h2 => ⟨_, abel_euler_wronskian_deriv_zero u up upp α c
+        (Real.lt_trans_ax ha (Real.lt_trans_ax haξ1 h1))
+        (hu c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))
+        (hup c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))
+        (hode c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))⟩)
+  have hfW : fW = 0 := HasDerivAt_unique _ fW 0 ζ hdW
+    (abel_euler_wronskian_deriv_zero u up upp α ζ
+      (Real.lt_trans_ax ha (Real.lt_trans_ax haξ1 hξ1ζ))
+      (hu ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b))
+      (hup ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b))
+      (hode ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b)))
+  rw [hfW, Real.zero_mul] at heqW
+  have hlt : up ξ₂ * vpow α ξ₂ - u ξ₂ * (vpow α ξ₂ * (α * (1 / ξ₂)))
+        - (up ξ₁ * vpow α ξ₁ - u ξ₁ * (vpow α ξ₁ * (α * (1 / ξ₁)))) < 0 :=
+    sub_neg_of_lt' (Real.lt_trans_ax hWξ2 hWξ1)
+  rw [heqW] at hlt
+  exact Real.lt_irrefl_ax 0 hlt
 
 end MachLib
