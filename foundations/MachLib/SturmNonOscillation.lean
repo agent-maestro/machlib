@@ -122,27 +122,109 @@ theorem sturm_no_negative_bump
   · show -(y b) = 0
     rw [hyb]; exact Real.neg_zero
 
-/-! ### Scoping note — the regular-singular `−1/4` threshold (next theorem)
+/-! ### Toward the regular-singular `−1/4` threshold — the explicit Euler solution
 
 `sturm_no_positive_bump`/`_negative_bump` cover `r ≥ 0`. The Euler / regular-
 singular case `r = c/x²` is non-oscillatory for `c ≥ −1/4` even though `r < 0`
-when `−1/4 ≤ c < 0` (the threshold near a regular singular point is `−1/4`, not
-`0`). `eml_cost.certify_non_oscillation` returns `certified=False` there because
-THIS theorem does not reach it. The cleanest Lean route to close that gap (the
-Abel–Wronskian argument, no change of variables):
+when `−1/4 ≤ c < 0` (the oscillation threshold near a regular singular point is
+`−1/4`, not `0`). The route to that theorem (Abel–Wronskian) needs an explicit
+positive comparison solution `v = x^α`. THIS SECTION PROVES the keystone: `x^α`
+is a positive solution of `x²v'' = (α²−α)v` — i.e. of `u'' = r·u` with
+`r = (α²−α)/x²`, and `c = α²−α ≥ −1/4` exactly when a real `α` exists
+(`α = ½ ± √(c+¼)`). The hard part (the real-power second derivative + the field
+algebra) is done here; the remaining Abel assembly (below) is the next step. -/
 
-  • `v x := x^{1/2 + β}` with `β = √(c + 1/4) ≥ 0` is an EXPLICIT positive
-    solution on `(0,∞)`: `v'' = (c/x²)·v` (indicial `m(m−1)=c`), `v > 0`.
-  • Abel: the Wronskian `W := u'·v − u·v'` of two solutions of the SAME equation
-    is constant (`W' = u''v − uv'' = (c/x²)uv − u(c/x²)v = 0`).
-  • Hence `(u/v)' = (u'v − uv')/v² = W/v²` has constant sign, so `u/v` is
-    monotone (or constant). On an arch `u(a)=u(b)=0` ⇒ `u/v` is `0` at both `a`
-    and `b` (as `v>0`) — impossible for a strictly monotone function; and the
-    constant case forces `u ≡ 0`.
+/-- Left cancellation in a field: `a ≠ 0 → a·b = a·c → b = c`. PROVED from
+`mul_inv`. Generally useful; the Euler keystone needs it for `1/x · 1/x`. -/
+theorem mul_left_cancel₀ {a b c : Real} (ha : a ≠ 0) (h : a * b = a * c) : b = c := by
+  have h1a : (1 / a) * a = 1 := by rw [Real.mul_comm]; exact Real.mul_inv a ha
+  calc b = 1 * b := (Real.one_mul_thm b).symm
+    _ = ((1 / a) * a) * b := by rw [h1a]
+    _ = (1 / a) * (a * b) := by rw [Real.mul_assoc]
+    _ = (1 / a) * (a * c) := by rw [h]
+    _ = ((1 / a) * a) * c := by rw [Real.mul_assoc]
+    _ = 1 * c := by rw [h1a]
+    _ = c := Real.one_mul_thm c
 
-All difficulty concentrates in the first bullet: differentiating the real power
-`v = x^{1/2+β} = exp((1/2+β)·log x)` twice (needs the `exp`∘`log` chain rule for
-a real exponent). That is the dedicated next piece; `mono_of_deriv_nonneg` and
-the arch contradiction here are reused verbatim. -/
+/-- `(1/x)·(1/x) = 1/(x·x)`. The reciprocal-product fact MachLib lacked, from
+`mul_inv` + `mul_left_cancel₀`. -/
+theorem one_div_mul_one_div {x : Real} (hx : 0 < x) :
+    (1 / x) * (1 / x) = 1 / (x * x) := by
+  have hx_ne : x ≠ 0 := Real.ne_of_gt hx
+  have hxx : x * x ≠ 0 := Real.ne_of_gt (Real.mul_pos hx hx)
+  apply mul_left_cancel₀ hxx
+  have hL : (x * x) * ((1 / x) * (1 / x)) = (x * (1 / x)) * (x * (1 / x)) := by mach_ring
+  rw [Real.mul_inv x hx_ne, Real.one_mul_thm] at hL
+  rw [hL, Real.mul_inv (x * x) hxx]
+
+/-- `v(x) = x^α = exp(α · log x)`. -/
+noncomputable def vpow (α x : Real) : Real := Real.exp (α * Real.log x)
+
+/-- `x^α > 0`. -/
+theorem vpow_pos (α x : Real) : 0 < vpow α x := Real.exp_pos _
+
+/-- `(x^α)' = x^α · (α · (1/x))` for `x > 0` (chain rule, `exp ∘ (α·log)`). -/
+theorem vpow_deriv (α x : Real) (hx : 0 < x) :
+    HasDerivAt (vpow α) (vpow α x * (α * (1 / x))) x := by
+  have hinner : HasDerivAt (fun y => α * Real.log y) (α * (1 / x)) x := by
+    have h := HasDerivAt_mul (fun _ => α) Real.log 0 (1 / x) x
+      (HasDerivAt_const α x) (HasDerivAt_log_pos x hx)
+    have hval : (0 * Real.log x + α * (1 / x)) = α * (1 / x) := by
+      rw [Real.zero_mul, Real.zero_add]
+    rwa [hval] at h
+  exact HasDerivAt_comp Real.exp (fun y => α * Real.log y)
+    (α * (1 / x)) (Real.exp (α * Real.log x)) x hinner (HasDerivAt_exp (α * Real.log x))
+
+/-- **Euler keystone.** `x^α` solves `x²v'' = (α²−α)v`: its second derivative
+(of the first-derivative function `y ↦ v(y)·(α·(1/y))`) is `(α²−α)·(1/x²)·v(x)`.
+So `v = x^α` is an explicit positive solution of `u'' = r·u` with `r = c/x²`,
+`c = α²−α` (≥ −1/4 iff `α` is real). This is the keystone for the regular-
+singular non-oscillation theorem. PROVED — real-power chain rule (`vpow_deriv`),
+reciprocal rule, and `one_div_mul_one_div`; no sorryAx. -/
+theorem vpow_deriv2 (α x : Real) (hx : 0 < x) :
+    HasDerivAt (fun y => vpow α y * (α * (1 / y)))
+      ((α * α - α) * (1 / (x * x)) * vpow α x) x := by
+  have hx_ne : x ≠ 0 := Real.ne_of_gt hx
+  have hxx : x * x ≠ 0 := Real.ne_of_gt (Real.mul_pos hx hx)
+  have hg : HasDerivAt (fun y => α * (1 / y)) (α * (-1 / (x * x))) x := by
+    have hinv : HasDerivAt (fun y => 1 / y) (-1 / (x * x)) x := by
+      simpa using HasDerivAt_inv (fun y => y) 1 x hx_ne (HasDerivAt_id x)
+    have h := HasDerivAt_mul (fun _ => α) (fun y => 1 / y) 0 (-1 / (x * x)) x
+      (HasDerivAt_const α x) hinv
+    have hval : (0 * (1 / x) + α * (-1 / (x * x))) = α * (-1 / (x * x)) := by
+      rw [Real.zero_mul, Real.zero_add]
+    rwa [hval] at h
+  have hprod := HasDerivAt_mul (vpow α) (fun y => α * (1 / y))
+    (vpow α x * (α * (1 / x))) (α * (-1 / (x * x))) x (vpow_deriv α x hx) hg
+  have hval2 :
+      (vpow α x * (α * (1 / x))) * (α * (1 / x)) + vpow α x * (α * (-1 / (x * x)))
+        = (α * α - α) * (1 / (x * x)) * vpow α x := by
+    have hL1 : (1 / x) * (1 / x) = 1 / (x * x) := one_div_mul_one_div hx
+    have hneg : (-1 / (x * x)) = -(1 / (x * x)) := by
+      rw [Real.div_def (-1) (x * x) hxx, Real.neg_mul, Real.one_mul_thm]
+    rw [hneg]
+    have hexpand :
+        (vpow α x * (α * (1 / x))) * (α * (1 / x)) + vpow α x * (α * -(1 / (x * x)))
+          = vpow α x * (α * α) * ((1 / x) * (1 / x)) + vpow α x * (-(α * (1 / (x * x)))) := by
+      mach_ring
+    rw [hexpand, hL1]; mach_ring
+  rwa [hval2] at hprod
+
+/-! ### Remaining step — the Abel assembly (precisely scoped)
+
+With the explicit positive solution `v = vpow α` in hand (`vpow_pos`,
+`vpow_deriv`, `vpow_deriv2`), the regular-singular non-oscillation theorem
+follows by the Abel–Wronskian argument, which has NO real-power algebra left:
+
+  • `W := u'·v − u·v'` has `W' = u''v − uv'' = r·u·v − u·r·v = 0` (both solve
+    `_'' = r·_`); the value simplifies by `mach_ring` (u,v,u',v',r are atoms).
+    So `W` is constant (via `mono_of_deriv_nonneg` both ways).
+  • `φ := u/v`; `φ'·v² = W` (using `mul_inv` — NOT `1/x·1/x`, so no new field
+    algebra). MVT on `φ` over an arch `[a,b]` (`φ(a)=φ(b)=0`) gives an interior
+    `ξ` with `φ'(ξ)=0`, hence `W(ξ)·= 0`, hence `W ≡ 0`, hence `φ' ≡ 0`, hence
+    `φ` constant `= φ(a) = 0` — contradicting `φ = u/v > 0` on the arch.
+
+`mono_of_deriv_nonneg` and the arch contradiction are reused verbatim. This is
+the dedicated next step; the keystone (the hard part) is done above. -/
 
 end MachLib
