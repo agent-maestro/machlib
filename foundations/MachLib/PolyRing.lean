@@ -110,6 +110,37 @@ noncomputable def X : UPoly := [0, 1]
 @[simp] theorem eval_X (x : Real) : eval X x = x := by
   simp only [X, eval_cons, eval_nil, mul_zero, add_zero, mul_one_ax, zero_add]
 
+/-- **Polynomial equality up to trailing zeros.** Two coefficient lists denote the
+same polynomial when their common prefix matches coefficient-for-coefficient and
+any extra tail coefficients are zero. Crucially this compares coefficients
+DIRECTLY (`a = b`), so each obligation is a single matchable equality — never a
+difference `a + (-b) = 0`, which would force `mach_ring` to COLLECT constants
+(e.g. `1 + 1 + (-1 + -1) = 0`), the one thing it cannot do. This is what lets the
+reification tactic handle identities that cancel to a LOWER degree
+(`(s+1) − s = 1`), where the two sides' coefficient lists have different lengths. -/
+def PEq : UPoly → UPoly → Prop
+  | [],     []     => True
+  | [],     b :: q => b = 0 ∧ PEq [] q
+  | a :: p, []     => a = 0 ∧ PEq p []
+  | a :: p, b :: q => a = b ∧ PEq p q
+
+/-- `PEq p q` ⇒ the two polynomials evaluate equally everywhere. The bridge the
+reification tactic applies after reducing a `Real` identity to a `PEq` of
+coefficient lists. -/
+theorem eval_eq_of_PEq : ∀ (p q : UPoly), PEq p q → ∀ (x : Real), eval p x = eval q x
+  | [],     [],     _, _ => rfl
+  | [],     b :: q, h, x => by
+      simp only [PEq] at h
+      have hq : eval q x = 0 := (eval_eq_of_PEq [] q h.2 x).symm.trans (eval_nil x)
+      simp only [eval_nil, eval_cons, h.1, hq, mul_zero, add_zero]
+  | a :: p, [],     h, x => by
+      simp only [PEq] at h
+      have hp : eval p x = 0 := (eval_eq_of_PEq p [] h.2 x).trans (eval_nil x)
+      simp only [eval_nil, eval_cons, h.1, hp, mul_zero, add_zero]
+  | a :: p, b :: q, h, x => by
+      simp only [PEq] at h
+      simp only [eval_cons, h.1, eval_eq_of_PEq p q h.2 x]
+
 end UPoly
 
 open UPoly in

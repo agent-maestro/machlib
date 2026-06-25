@@ -8,7 +8,7 @@ Makes the PolyRing reflective engine push-button. `mach_poly x` proves a
 univariate polynomial identity `lhs = rhs` over the atom `x` by:
   1. reifying both sides into `PExpr` (the metaprogram `reifyPExpr`),
   2. rewriting along `PExpr.denote_eq_eval` to `eval (toPoly ea) x = eval (toPoly eb) x`,
-  3. reducing to the coefficient-list equality `toPoly ea = toPoly eb`, and
+  3. reducing to `PEq (toPoly ea) (toPoly eb)` (equality up to trailing zeros), and
   4. discharging each per-coefficient CONSTANT equality with `mach_ring`.
 
 This is the collection `mach_ring` alone cannot do (it can't combine like
@@ -16,12 +16,13 @@ monomials after distribution) — the reflection does the collection structurall
 and leaves only degree-0 arithmetic. `import Lean` is Lean CORE (no Mathlib /
 external dependency), so the zero-dependency property of MachLib is preserved.
 
-SCOPE: closes univariate polynomial identities whose two sides have the SAME
-effective degree (no leading-term cancellation) — which covers the smoothstep /
-ease certificates (e.g. `1 − s²(3−2s) = (1−s)²(1+2s)`). Identities that cancel to
-a lower degree (`(s+1) − s = 1`) currently leave a trailing-zero coefficient list
-that the list-equality step can't match; the length-insensitive `IsZero`-difference
-form is the next refinement. Multivariate identities are slice 3.
+SCOPE: closes ANY univariate polynomial identity over a single atom, including
+ones that CANCEL to a lower degree (`(s+1) − s = 1`, `s − s = 0`). The key is
+`UPoly.PEq`: it compares the two coefficient lists DIRECTLY (`a = b`, tolerating
+trailing zeros) rather than via a difference `a + (-b) = 0` — the latter would
+hand `mach_ring` constant-collection goals like `1 + 1 + (-1 + -1) = 0` that it
+cannot sort-and-cancel. Multivariate identities (quat four-square, Vec3 Lagrange)
+are slice 3.
 -/
 
 open Lean Elab Tactic Meta
@@ -43,8 +44,9 @@ partial def MachLib.Real.reifyPExpr (x : Expr) (e : Expr) : MetaM Expr := do
     return mkApp (mkConst ``PExpr.neg) (← reifyPExpr x a[2]!)
   | _ => return mkApp (mkConst ``PExpr.lit) e
 
-/-- `mach_poly x` — close a same-degree univariate polynomial identity over `x`
-through the PolyRing reflective normaliser. See the file header for scope. -/
+/-- `mach_poly x` — close a univariate polynomial identity over `x` through the
+PolyRing reflective normaliser. Handles leading-term cancellation. See the file
+header for scope. -/
 elab "mach_poly" xt:term : tactic => do
   let xE ← elabTerm xt none
   let goal ← getMainGoal
@@ -56,12 +58,12 @@ elab "mach_poly" xt:term : tactic => do
   let goal2 ← goal.change (← mkEq (mkApp2 dC xE ea) (mkApp2 dC xE eb))
   replaceMainGoal [goal2]
   evalTactic (← `(tactic| simp only [MachLib.Real.PExpr.denote_eq_eval]))
-  evalTactic (← `(tactic| apply congrArg (fun p => MachLib.Real.UPoly.eval p $xt)))
+  evalTactic (← `(tactic| apply MachLib.Real.UPoly.eval_eq_of_PEq))
   evalTactic (← `(tactic| simp only [MachLib.Real.PExpr.toPoly, MachLib.Real.UPoly.add,
       MachLib.Real.UPoly.mul, MachLib.Real.UPoly.scale, MachLib.Real.UPoly.shiftX,
       MachLib.Real.UPoly.neg, MachLib.Real.UPoly.C, MachLib.Real.UPoly.X,
-      List.cons.injEq, and_true]))
-  evalTactic (← `(tactic| (repeat' apply And.intro) <;> mach_ring))
+      MachLib.Real.UPoly.PEq]))
+  evalTactic (← `(tactic| (repeat' apply And.intro) <;> (try trivial) <;> mach_ring))
 
 /-! ### Regression demonstrations (these double as the tactic's test suite). -/
 
@@ -75,5 +77,11 @@ example (s : Real) : (s + 1) * (s + 1) = s * s + (1 + 1) * s + 1 := by mach_poly
 example (s : Real) : (s + 1) * (s - 1) = s * s - 1 := by mach_poly s
 example (s : Real) : (s * s) * (s * s) = s * s * s * s := by mach_poly s
 example (s : Real) : -(s - 1) = 1 - s := by mach_poly s
+
+-- cancellation to a LOWER degree (different-length coefficient lists): the PEq
+-- equality-up-to-trailing-zeros path. These were out of scope for the v1 tactic.
+example (s : Real) : (s + 1) - s = 1 := by mach_poly s
+example (s : Real) : s - s = 0 := by mach_poly s
+example (s : Real) : (s + 1) * (s - 1) + 1 = s * s := by mach_poly s
 
 end MachLib.Real.PolyRingTactic.Tests
