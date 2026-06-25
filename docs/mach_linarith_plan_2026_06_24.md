@@ -174,3 +174,80 @@ SOS/factored form), which is the separate elab.
 - Do not add per-kernel bound axioms for these (smoothstep_nonneg, …): that is
   the bespoke-axiom grind this doc exists to stop. ~2 obligations per axiom,
   unbounded surface, no reuse.
+
+## FINAL STATE — 2026-06-24 (256/282 = 90.8% substantive)
+
+The reusable-closer tier is now **exhausted**. Pushed from 243 → 256 (+13) this
+session, all sound, all reusable (no per-kernel bound axioms), zero corpus
+regression. The closers added — each generalises beyond its first kernel:
+
+| closer | shape | kernel(s) |
+|---|---|---|
+| `le_mul_one_add_div` | `v ≤ v·(1+r1/r2)` | ldo divider |
+| `log_neg_of_lt_one`,`neg_pos_of_neg` | `0 < −log(feedback)` | reverb T60 |
+| `add_sqrt_sq_add_nonneg`,`mul_self_pos` + `le_sqrt_of_sq_le`(ax) | quadratic-formula root sign | lqr Riccati |
+| `neg_div_pos_neg` + lt_trans arm | `(−a)/b < 0` | fov m22/m23 |
+| `one_sub_exp_neg_div_nonneg` | `0 ≤ 1−e^{−t/τ}` | ink recovery, sprint velocity |
+| `floor_zero`(ax) | `0 − ⌊0⌋ = 0` | white_noise |
+| emitter binary-state `rcases` | `(v==c1)‖(v==c2)` case split | hysteresis |
+| `sub_sqrt_nonneg_of_le_sq` + `sqrt_le_of_le_sq`(ax) | `0 ≤ v − √(min(…,v²))` | tof |
+| `sub_mul_one_sub_exp_neg_div_nonneg` + `one_add_le_exp`(ax) | `0 ≤ t − τ(1−e^{−t/τ})` | sprint distance |
+| `le_mul_of_one_le_right` | `a ≤ a·b`, gain≥1 | tapetum |
+| `sub_le_self` | `a − b ≤ a` | thermal erosion |
+
+New axioms this session (4, all sound, all reusable — NOT per-kernel bounds):
+`le_sqrt_of_sq_le`, `sqrt_le_of_le_sq` (sqrt order, both directions),
+`floor_zero` (⌊0⌋=0, not derivable from the bracketing axioms), `one_add_le_exp`
+(the exp tangent line, all x).
+
+### The remaining 26, categorised — and why each is OUT of cheap reach
+
+**(A) EML SPEC GAPS — 6 — must NOT be closed (the `ensures` is not entailed by
+the `requires`/`domain`; closing needs an UNSOUND axiom). These are *Forge /
+eml-stdlib findings*, not prover limitations:**
+- `doppler_observed_freq_positive`, `doppler_air_default_freq_positive`:
+  `result ≥ 0` but nothing constrains `v_sound + v_listener ≥ 0` (a fast-receding
+  listener makes the numerator negative). Needs an extra `requires`.
+- `thermistor_steinhart_temperature_positive`: `1/(a+b·ln r+c·ln³r) > 0` with
+  only `r > 0` — denominator sign unconstrained (a,b,c free).
+- `thermistor_beta_temperature_positive`: `1/(1/t_ref + ln(r/r_ref)/β) > 0`
+  with `β ≠ 0` (not `β > 0`) — denominator sign unconstrained.
+- `atan_in_open_half_pi_band`, `atan2_pos_x_in_open_half_pi_band`: `arctan x >
+  −HALF_PI` where `HALF_PI = 1.5707963267948966` is the truncated double,
+  STRICTLY less than the real π/2 (1.5707963267948966192…). Since arctan's range
+  is the OPEN (−π/2, π/2), ∃x with arctan x ∈ (−π/2, −HALF_PI) ⇒ the strict bound
+  is FALSE at the asymptotic extreme. A real-vs-float discrepancy, not provable
+  for the real model.
+
+**(B) Decimal-interval nlinarith — 8 — need Phase 3 (decimal model + product
+search). Documented above; unchanged:** `bangbang_in_actuator_band`,
+`bangbang_sym_in_band` (0.5 + clamp), `smootherstep_in_unit_interval`
+(completed-square, fractional-decimal coeffs), `rtd_resistance_above/below_zero`
+(quadratic/cubic positivity over a decimal interval), `rod_sensitivity_bounded_unit`,
+`air_density_humid_lower_than_dry`, `planck_radiance_increases_with_temperature`.
+
+**(C) Deep analytic facts — 5 — each a genuine transcendental theorem (Jensen /
+convexity / Cauchy–Schwarz), NOT a bound to axiomatise per-kernel:**
+`silu_at_zero_is_zero` (silu ≥ −1, the function minimum), `erf_as_zero_is_zero`
+(erf rational-approx ≥ 0), `bce_loss_nonnegative` + `bce_with_logits_equals_bce`
+(softplus(z) ≥ target·z — bce ≥ 0 convexity), `matched_filter_cauchy_schwarz`.
+
+**(D) Transcendental const — 4:** `fov_m00_positive`, `fov_m11_positive`
+(`1/tan(fov/2) > 0` — needs `tan_pos` on (0,π/2) AND `0.5·3.141 < π/2`, i.e.
+`3.141 < π`), `wien_inversely_proportional_to_T` (T_MIN const + monotone),
+`hamming_in_unit_interval` (HALF const + cos band).
+
+**(E) floor parity — 2:** `checker_returns_zero_or_one`,
+`checker_tiled_returns_zero_or_one` — `(⌊x⌋+⌊y⌋) mod 2 ∈ {0,1}`. Needs
+integer-floor / mod-2 reasoning the Real→Real `floor` collapse discards.
+
+**(F) decimal-const evaluation — 1:** `hamming_at_zero_is_offset`
+(`A0 − A1 = 0.08`, i.e. `0.54 − 0.46 = 0.08` over opaque `realOfScientific`).
+
+### Honest framing of the number
+Excluding the 6 spec gaps (which are *not* well-specified obligations a prover
+should close), the rate over WELL-SPECIFIED obligations is **256/276 = 92.8%**.
+The remaining 20 split cleanly: ~13 wait on the Phase-3 nlinarith+decimal engine
+(B+D+F), ~5 are deep analytic theorems (C), 2 are floor-parity (E). None is
+closeable by a *reusable* lemma — the next real increment is the engine, not
+more arms.
