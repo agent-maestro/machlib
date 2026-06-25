@@ -38,6 +38,7 @@ import MachLib.IteratedExpBounds
 import MachLib.ThreePointEvalClosure
 import MachLib.AnalyticFiniteZeros
 import MachLib.Differentiation
+import MachLib.EntropyDuality
 import MachLib.SinNotInEMLDepth2FinalVcVc
 import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
