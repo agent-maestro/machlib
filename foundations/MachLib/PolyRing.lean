@@ -138,6 +138,59 @@ theorem one_sub_smoothstep_factored (s : Real) :
     refine ⟨?_, ?_, ?_, ?_⟩ <;> mach_ring
   rw [← hL, ← hR, hP]
 
+/-! ### Reflection layer (slice 2): reified ring syntax → UPoly.
+
+`PExpr` is a reified univariate ring expression over a single atom. `denote`
+maps it back to `Real` (mirroring the original expression structure, so a
+reification tactic's correctness step is `rfl`); `toPoly` lowers it to a `UPoly`;
+`denote_eq_eval` is the soundness bridge between them. A reification tactic (next
+brick) will turn a goal `lhs = rhs` into `eval (toPoly ea) x = eval (toPoly eb) x`
+and close it by reducing to the coefficient lists. -/
+
+inductive PExpr where
+  | atom : PExpr
+  | lit  : Real → PExpr
+  | add  : PExpr → PExpr → PExpr
+  | mul  : PExpr → PExpr → PExpr
+  | sub  : PExpr → PExpr → PExpr
+  | neg  : PExpr → PExpr
+
+namespace PExpr
+
+/-- Interpret a reified expression back to `Real` at atom value `x`. (Noncomputable
+because `Real`'s operations are.) -/
+noncomputable def denote (x : Real) : PExpr → Real
+  | atom    => x
+  | lit c   => c
+  | add a b => denote x a + denote x b
+  | mul a b => denote x a * denote x b
+  | sub a b => denote x a - denote x b
+  | neg a   => - denote x a
+
+/-- Lower a reified expression to its coefficient-list polynomial. -/
+noncomputable def toPoly : PExpr → UPoly
+  | atom    => UPoly.X
+  | lit c   => UPoly.C c
+  | add a b => UPoly.add (toPoly a) (toPoly b)
+  | mul a b => UPoly.mul (toPoly a) (toPoly b)
+  | sub a b => UPoly.add (toPoly a) (UPoly.neg (toPoly b))
+  | neg a   => UPoly.neg (toPoly a)
+
+/-- **Soundness of the reflection.** Evaluating the reified expression equals
+evaluating its lowered polynomial — the bridge a reification tactic rewrites
+along to reduce a `Real` identity to a polynomial-coefficient comparison. -/
+theorem denote_eq_eval (e : PExpr) (x : Real) :
+    denote x e = UPoly.eval (toPoly e) x := by
+  induction e with
+  | atom => simp only [denote, toPoly, UPoly.eval_X]
+  | lit c => simp only [denote, toPoly, UPoly.eval_C]
+  | add a b iha ihb => simp only [denote, toPoly, UPoly.eval_add, iha, ihb]
+  | mul a b iha ihb => simp only [denote, toPoly, UPoly.eval_mul, iha, ihb]
+  | sub a b iha ihb =>
+    simp only [denote, toPoly, UPoly.eval_add, UPoly.eval_neg, iha, ihb, sub_def]
+  | neg a iha => simp only [denote, toPoly, UPoly.eval_neg, iha]
+
+end PExpr
 end Real
 end MachLib
 
