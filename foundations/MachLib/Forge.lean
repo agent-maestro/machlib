@@ -436,6 +436,15 @@ theorem le_mul_one_add_div {v r1 r2 : Real}
   have step : v * 1 ≤ v * (1 + r1 / r2) := mul_le_mul_of_nonneg_left hb (le_of_lt hv)
   rwa [mul_one_ax] at step
 
+/-- Gain ≥ 1 grows a nonneg base: `a ≤ a · b` when `0 ≤ a`, `1 ≤ b`. The general
+amplifier shape (`tapetum_amplify`'s `input · clamp(gain) ≥ input`, any
+`out = in · gain` with `gain ≥ 1`). PROVED: `a·1 ≤ a·b`
+(`mul_le_mul_of_nonneg_left`), `a·1 = a`. No new axioms. -/
+theorem le_mul_of_one_le_right {a b : Real} (ha : 0 ≤ a) (hb : 1 ≤ b) :
+    a ≤ a * b := by
+  have step : a * 1 ≤ a * b := mul_le_mul_of_nonneg_left hb ha
+  rwa [mul_one_ax] at step
+
 /-! ### `≤ 1` products (C-242, 2026-05-03)
 
 A product of two non-negative ≤-1 values is itself ≤ 1. -/

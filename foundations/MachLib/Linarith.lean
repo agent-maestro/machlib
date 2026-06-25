@@ -255,6 +255,15 @@ theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
     exact le_of_lt hh
   · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
 
+/-- `a − b ≤ a` when `0 ≤ b`. A subtraction of a nonneg quantity decreases (or
+holds) the value. Closes monotone-decrease obligations whose body is
+`x − (nonneg)` — e.g. `thermal_apply_self_decreases` (`h_self − transfer`).
+PROVED via `le_of_sub_nonneg` (`a − (a − b) = b`). -/
+theorem sub_le_self {a b : Real} (hb : 0 ≤ b) : a - b ≤ a := by
+  rw [sub_def]
+  have h := add_le_add_left (neg_nonpos_of_nonneg hb) a
+  rwa [add_zero] at h
+
 /-- `tau · (t / tau) = t` for `tau ≠ 0`. Field cancellation via `mul_inv`. -/
 theorem mul_div_cancel' {t tau : Real} (htau : tau ≠ 0) : tau * (t / tau) = t := by
   rw [div_def t tau htau, ← mul_assoc, mul_comm tau t, mul_assoc,
@@ -609,6 +618,14 @@ macro_rules
       -- reference). `apply` fails fast unless the goal is exactly this shape,
       -- so the arm is self-guarding; the three sign subgoals are domain hyps.
       | (apply le_mul_one_add_div <;> assumption)
+      -- Gain ≥ 1 grows a nonneg base: `a ≤ a · b` (tapetum amplifier
+      -- `input · clamp(gain) ≥ input`). Subgoals `0 ≤ a` (domain hyp) and
+      -- `1 ≤ b` recurse — the clamp `1 ≤ min (max g 1) hi` closes via le_min
+      -- (1 ≤ max g 1 by le_max_right, 1 ≤ hi by the emitted clamp hyp).
+      | (apply le_mul_of_one_le_right <;> mach_positivity)
+      -- Monotone decrease `a − b ≤ a` for `0 ≤ b` (thermal erosion
+      -- `h_self − transfer ≤ h_self`). `apply` fails fast off-shape.
+      | (apply sub_le_self <;> mach_positivity)
       -- Clamp ceil: `min a b ≤ a` / `≤ b` (e.g. `clamp ≤ HI`).
       | exact min_le_left _ _
       | exact min_le_right _ _
