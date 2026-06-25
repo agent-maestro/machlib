@@ -131,4 +131,35 @@ theorem sin_escapes_signed_classes :
   ⟨sin_not_eventually_negative, sin_not_eventually_above_one,
    sin_not_eventually_dominates_any⟩
 
+/-! ### The CONVERSE witness — a split-torus solution realised as an EMLTree.
+
+`exp x = exp x − log 1` (clamp: `log 1 = 0`), so `e^x` is the depth-1 `EMLTree`
+`eml(var, const 1)`. It is the prototypical SPLIT-torus solution (`y'' = y`), and
+by Phase-17 closure rule 6 (`Dominates × Const → Dominates`) it sits in
+`EventuallyDominatesAny` — hence, by the disjointness above, has NO arbitrarily
+large zeros. This is the structural converse of `sin_escapes_signed_classes`:
+the split side IS an `EMLTree` and DOES land in a signed asymptotic class. The
+two together realise the split↔compact dichotomy (frontier T1.A) inside Lean:
+
+  • `sin`  (compact torus) — no `EMLTree`, escapes every signed class.
+  • `e^x`  (split  torus) — the `EMLTree` `eml(var, const 1)`, dominates. -/
+
+/-- `const 1` is constant (the divisor leaf of the `e^x` tree). -/
+theorem const_one_eventually_constant :
+    EventuallyConstant (EMLTree.const 1).eval :=
+  ⟨1, 0, fun _ _ => rfl⟩
+
+/-- The split-torus solution `e^x = eml(var, const 1)` dominates: it is in the
+signed class `EventuallyDominatesAny`. Converse-side companion to
+`sin_not_eventually_dominates_any`. -/
+theorem exp_eml_dominates :
+    EventuallyDominatesAny (EMLTree.eml EMLTree.var (EMLTree.const 1)).eval :=
+  var_eventually_dominates_any.eml_with_const const_one_eventually_constant
+
+/-- …and therefore has NO arbitrarily large zeros — the split-torus structural
+opposite of `sin_has_arbitrarily_large_zeros`. -/
+theorem exp_eml_not_arbitrarily_large_zeros :
+    ¬ HasArbitrarilyLargeZeros (EMLTree.eml EMLTree.var (EMLTree.const 1)).eval :=
+  exp_eml_dominates.not_arbitrarily_large_zeros
+
 end MachLib
