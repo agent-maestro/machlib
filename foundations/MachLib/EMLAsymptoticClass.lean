@@ -4201,6 +4201,110 @@ theorem EventuallyDominatesAny.eml_with_minus_log
     rw [h_t2_eq]; exact h_neg_log_neg
   exact h1.eml_with_negative h2_neg
 
+/-! ### Phase 17 — the `× Dominates` (second-argument) column
+
+Closure rules 6-8 covered `Dominates` as the FIRST argument. The dual
+question — what happens when the SECOND argument dominates — has a uniform
+answer: a dominating divisor sends `log (t2.eval) → +∞`, so as long as the
+first argument's exponential contribution `exp (t1.eval)` stays bounded
+ABOVE, the difference `exp (t1.eval) - log (t2.eval)` is eventually negative.
+
+`Const`, `Negative`, and `MinusLog` are exactly the first-argument classes
+whose `exp (t1.eval)` is bounded above (by `exp c1`, by `1`, by `1`
+respectively), so all three close to `EventuallyNegative`. The remaining
+first-argument classes (`AboveOne`, `Dominates`) do NOT: their `exp (t1.eval)`
+can outrun `log (t2.eval)` (e.g. `t1 = t2 = var` gives
+`exp x - log x → +∞`), so those cells are genuinely indeterminate, not merely
+unproven. -/
+
+/-- A dominating divisor's clamped log eventually exceeds any threshold `M`:
+`exp M < t2.eval` ⟹ `M = log (exp M) < log (t2.eval)` by `log` monotonicity. -/
+private theorem log_gt_of_dominates {t2 : EMLTree} (M : Real)
+    (h2 : EventuallyDominatesAny t2.eval) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → M < Real.log (t2.eval x) := by
+  obtain ⟨N, hN⟩ := h2 (Real.exp M)
+  refine ⟨N, ?_⟩
+  intro x hx
+  have h_t2_gt : Real.exp M < t2.eval x := hN x hx
+  have h_pos : (0 : Real) < Real.exp M := Real.exp_pos M
+  have h := Real.log_lt_log h_pos h_t2_gt
+  rwa [Real.log_exp] at h
+
+/-- **Closure rule 9**: `Const × Dominates → Negative`.
+
+`t1.eval = c1`, so `exp (t1.eval) = exp c1` (a fixed bound). A dominating
+divisor pushes `log (t2.eval)` above `exp c1`, so the difference is negative. -/
+theorem EventuallyConstant.eml_with_dominates
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyConstant t1.eval)
+    (h2 : EventuallyDominatesAny t2.eval) :
+    EventuallyNegative (EMLTree.eml t1 t2).eval := by
+  obtain ⟨c1, N1, hN1⟩ := h1
+  obtain ⟨N2, hN2⟩ := log_gt_of_dominates (Real.exp c1) h2
+  refine ⟨max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t1_eq : t1.eval x = c1 := hN1 x hN1_le
+  have h_log_gt : Real.exp c1 < Real.log (t2.eval x) := hN2 x hN2_le
+  show Real.exp (t1.eval x) - Real.log (t2.eval x) < 0
+  rw [h_t1_eq]
+  exact sub_neg_of_lt h_log_gt
+
+/-- **Closure rule 10**: `Negative × Dominates → Negative`.
+
+`t1.eval < 0` ⟹ `exp (t1.eval) < exp 0 = 1`. A dominating divisor pushes
+`log (t2.eval)` above `1`, so `exp (t1.eval) < 1 < log (t2.eval)`. -/
+theorem EventuallyNegative.eml_with_dominates
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyNegative t1.eval)
+    (h2 : EventuallyDominatesAny t2.eval) :
+    EventuallyNegative (EMLTree.eml t1 t2).eval := by
+  obtain ⟨N1, hN1⟩ := h1
+  obtain ⟨N2, hN2⟩ := log_gt_of_dominates 1 h2
+  refine ⟨max N1 N2, ?_⟩
+  intro x hx
+  have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+  have hN2_le : N2 ≤ x := Real.le_trans (le_max_right _ _) hx
+  have h_t1_neg : t1.eval x < 0 := hN1 x hN1_le
+  have h_log_gt : (1 : Real) < Real.log (t2.eval x) := hN2 x hN2_le
+  -- exp (t1.eval x) < exp 0 = 1
+  have h_exp_lt_one : Real.exp (t1.eval x) < 1 := by
+    have := Real.exp_lt h_t1_neg
+    rwa [Real.exp_zero] at this
+  show Real.exp (t1.eval x) - Real.log (t2.eval x) < 0
+  exact sub_neg_of_lt (Real.lt_trans_ax h_exp_lt_one h_log_gt)
+
+/-- **Closure rule 11**: `MinusLog × Dominates → Negative`.
+
+`t1.eval = -log x < 0` for `x > 1`, so `t1 ∈ Negative` on a shifted threshold;
+reduce to rule 10. -/
+theorem EventuallyMinusLog.eml_with_dominates
+    {t1 t2 : EMLTree}
+    (h1 : EventuallyMinusLog t1.eval)
+    (h2 : EventuallyDominatesAny t2.eval) :
+    EventuallyNegative (EMLTree.eml t1 t2).eval := by
+  have h1_neg : EventuallyNegative t1.eval := by
+    obtain ⟨N1, hN1⟩ := h1
+    refine ⟨max N1 (1 + 1), ?_⟩
+    intro x hx
+    have hN1_le : N1 ≤ x := Real.le_trans (le_max_left _ _) hx
+    have h_two_le : (1 + 1 : Real) ≤ x := Real.le_trans (le_max_right _ _) hx
+    have h_one_lt_x : (1 : Real) < x :=
+      Real.lt_of_lt_of_le one_lt_one_plus_one h_two_le
+    have h_t1_eq : t1.eval x = -Real.log x := hN1 x hN1_le
+    have h_log_x_pos : (0 : Real) < Real.log x := by
+      have := Real.log_lt_log Real.zero_lt_one_ax h_one_lt_x
+      rw [Real.log_one] at this
+      exact this
+    have h_neg : -Real.log x < 0 := by
+      have step : -Real.log x + 0 < -Real.log x + Real.log x :=
+        Real.add_lt_add_left h_log_x_pos _
+      rw [Real.add_zero, Real.neg_add_self] at step
+      exact step
+    rw [h_t1_eq]; exact h_neg
+  exact h1_neg.eml_with_dominates h2
+
 /-- **var's good class via Dominates** (sharper than the direct
 EventuallyAboveOne proof). -/
 theorem var_good_class_via_dominates :
