@@ -175,7 +175,7 @@ SOS/factored form), which is the separate elab.
   the bespoke-axiom grind this doc exists to stop. ~2 obligations per axiom,
   unbounded surface, no reuse.
 
-## FINAL STATE — 2026-06-24 (256/282 = 90.8% substantive)
+## FINAL STATE — 2026-06-24 (260/282 = 92% substantive; +4 spec-gap fixes)
 
 The reusable-closer tier is now **exhausted**. Pushed from 243 → 256 (+13) this
 session, all sound, all reusable (no per-kernel bound axioms), zero corpus
@@ -202,17 +202,18 @@ New axioms this session (4, all sound, all reusable — NOT per-kernel bounds):
 
 ### The remaining 26, categorised — and why each is OUT of cheap reach
 
-**(A) EML SPEC GAPS — 6 — must NOT be closed (the `ensures` is not entailed by
-the `requires`/`domain`; closing needs an UNSOUND axiom). These are *Forge /
-eml-stdlib findings*, not prover limitations:**
-- `doppler_observed_freq_positive`, `doppler_air_default_freq_positive`:
-  `result ≥ 0` but nothing constrains `v_sound + v_listener ≥ 0` (a fast-receding
-  listener makes the numerator negative). Needs an extra `requires`.
-- `thermistor_steinhart_temperature_positive`: `1/(a+b·ln r+c·ln³r) > 0` with
-  only `r > 0` — denominator sign unconstrained (a,b,c free).
-- `thermistor_beta_temperature_positive`: `1/(1/t_ref + ln(r/r_ref)/β) > 0`
-  with `β ≠ 0` (not `β > 0`) — denominator sign unconstrained.
-- `atan_in_open_half_pi_band`, `atan2_pos_x_in_open_half_pi_band`: `arctan x >
+**(A) EML SPEC GAPS — were 6; 4 now FIXED, 2 remain (2026-06-24 finish-&-ship).**
+These were *Forge / eml-stdlib findings* (the `ensures` not entailed by the
+`requires`/`domain`), not prover limitations:
+- ✅ FIXED `doppler_observed_freq_positive`, `doppler_air_default_freq_positive`:
+  `result ≥ 0` needed `v_sound + v_listener ≥ 0` (a fast-receding listener makes
+  the numerator negative). Added the `requires` (eml-stdlib `7c9a971`) — both
+  now CLOSE (div_nonneg). Real correctness fix to the public lib.
+- ✅ FIXED `thermistor_steinhart_temperature_positive` / `…_beta_…`: `1/inv > 0`
+  needed `inv > 0` (a,b,c free / β can be <0). Added the `requires (inv > 0)`
+  (eml-stdlib `7c9a971`) — both now CLOSE (one_div_pos).
+- ⚠ REMAIN (must NOT close): `atan_in_open_half_pi_band`,
+  `atan2_pos_x_in_open_half_pi_band`: `arctan x >
   −HALF_PI` where `HALF_PI = 1.5707963267948966` is the truncated double,
   STRICTLY less than the real π/2 (1.5707963267948966192…). Since arctan's range
   is the OPEN (−π/2, π/2), ∃x with arctan x ∈ (−π/2, −HALF_PI) ⇒ the strict bound
@@ -246,7 +247,7 @@ integer-floor / mod-2 reasoning the Real→Real `floor` collapse discards.
 
 ### Honest framing of the number
 Excluding the 6 spec gaps (which are *not* well-specified obligations a prover
-should close), the rate over WELL-SPECIFIED obligations is **256/276 = 92.8%**.
+should close), the rate over WELL-SPECIFIED obligations is **260/280 = 92.9%** (only atan×2 remain spec-subtle).
 The remaining 20 split cleanly: ~13 wait on the Phase-3 nlinarith+decimal engine
 (B+D+F), ~5 are deep analytic theorems (C), 2 are floor-parity (E). None is
 closeable by a *reusable* lemma — the next real increment is the engine, not
