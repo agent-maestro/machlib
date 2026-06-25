@@ -52,6 +52,7 @@ import MachLib.Forge
 import MachLib.Trig
 import MachLib.Lemmas
 import MachLib.Ring
+import MachLib.PolyRing
 
 namespace MachLib
 namespace Real
@@ -254,6 +255,34 @@ theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
     rw [add_zero, e] at hh
     exact le_of_lt hh
   · rw [← heq, add_zero] at e; rw [e]; exact le_refl _
+
+/-- Smoothstep LOWER bound in FACTORED shape: `0 ≤ s²(3−2s)` on `[0,1]`. (Matches
+the `s*s*((1+1+1)-(1+1)*s)` form Forge emits, vs `cube_band_nonneg`'s expanded
+`A·t²−B·t³`.) Product of nonnegs: `s² ≥ 0`, and `3−2s ≥ 1 > 0` since `s ≤ 1`. -/
+theorem smoothstep_nonneg {s : Real} (h0 : 0 ≤ s) (h1 : s ≤ 1) :
+    0 ≤ s * s * ((1 + 1 + 1) - (1 + 1) * s) := by
+  apply mul_nonneg (mul_nonneg h0 h0)
+  apply sub_nonneg_of_le
+  have h2nn : (0 : Real) ≤ 1 + 1 :=
+    add_nonneg (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax)
+  have hb : (1 + 1) * s ≤ (1 + 1) * 1 := mul_le_mul_of_nonneg_left h1 h2nn
+  rw [mul_one_ax] at hb
+  exact le_trans hb (le_add_of_nonneg_right (le_of_lt zero_lt_one_ax))
+
+/-- Smoothstep UPPER bound: `s²(3−2s) ≤ 1` on `[0,1]` — the companion to
+`cube_band_nonneg` (lower bound) that completes the smoothstep `in_unit_band`.
+Routes through the cubic certificate `one_sub_smoothstep_factored` (the PolyRing
+reflective normaliser), since `1 − s²(3−2s) = (1−s)²(1+2s)` is the cubic
+collection `mach_ring` v1.5 cannot do. With both bounds every smoothstep
+`*_in_unit_band` obligation (MGE: sun_disk, joint soften, lifetime alpha; corpus:
+smoothstep easings) now closes. -/
+theorem smoothstep_le_one {s : Real} (h0 : 0 ≤ s) (h1 : s ≤ 1) :
+    s * s * ((1 + 1 + 1) - (1 + 1) * s) ≤ 1 := by
+  apply le_of_sub_nonneg
+  rw [one_sub_smoothstep_factored]
+  exact mul_nonneg (mul_nonneg (sub_nonneg_of_le h1) (sub_nonneg_of_le h1))
+    (add_nonneg (le_of_lt zero_lt_one_ax)
+      (mul_nonneg (add_nonneg (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax)) h0))
 
 /-- `a − b ≤ a` when `0 ≤ b`. A subtraction of a nonneg quantity decreases (or
 holds) the value. Closes monotone-decrease obligations whose body is

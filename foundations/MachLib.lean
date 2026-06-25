@@ -12,6 +12,7 @@ import MachLib.Forge
 import MachLib.ForgeTest
 import MachLib.Ring
 import MachLib.RingTest
+import MachLib.PolyRing
 import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas
