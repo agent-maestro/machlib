@@ -23,12 +23,21 @@ Legendre transform pairs the EML-1 exponential with the EML-2 entropy gate
     distributions matching the moments, the exponential family is the unique
     minimiser because `exp` and `entropy` are convex duals (T1.B).
 
-Together they ground "MaxEnt selects the exponential family because `exp` is the
-convex dual of entropy" (T1.B) in a Lean proof — a second EML frontier verified
-beyond the T1.A Sturm spine. All three `#print axioms`-clean: MachLib
-foundations only, no `sorryAx`. (`fenchel_young`'s scaled-tangent rearrangement
-`(A−B)+(B+(C−A))=C` is outside `mach_ring`'s fragment, so it is distributed by
-hand and cancelled with the additive primitives — see the `helper` lemma.)
+And on the same tangent line, the information-theoretic floor:
+
+  • `log_le_sub_one`   `log t ≤ t − 1` (`t > 0`) — `log` below its tangent at 1.
+  • `gibbs_pointwise`  `p·log(q/p) ≤ q − p` (`p, q > 0`) — the pointwise content
+    of **`KL(p‖q) ≥ 0`**: summing over `Σp = Σq = 1` gives `KL ≥ 0`, the reason
+    relative entropy is bounded below. The sum is outside MachLib's scope; the
+    pointwise bound (which IS the scaled `log` tangent) is the analytic heart.
+
+All five ground "MaxEnt selects the exponential family because `exp` is the
+convex dual of entropy, and relative entropy is bounded below" (T1.B) in a Lean
+proof — a second EML frontier verified beyond the T1.A Sturm spine. Every one is
+`#print axioms`-clean: MachLib foundations only, no `sorryAx`. (`fenchel_young`'s
+scaled-tangent rearrangement `(A−B)+(B+(C−A))=C` is outside `mach_ring`'s
+fragment, so it is distributed by hand and cancelled with the additive
+primitives — see the `helper` lemma.)
 -/
 
 namespace MachLib
@@ -107,6 +116,44 @@ theorem fenchel_young (x y : Real) (hy : 0 < y) :
   have hfin := add_le_add_left hmul (y * Real.log y - y)
   rw [hid, add_comm (y * Real.log y - y) (Real.exp x)] at hfin
   exact hfin
+
+/-! ### Gibbs' inequality / `KL ≥ 0`
+
+The information-theoretic heart of T1.B: relative entropy is bounded below. It
+rests on the SAME `exp` tangent line as the Fenchel–Young inequality above, in
+its `log` form `log t ≤ t − 1`. -/
+
+/-- **The log tangent line.** `log t ≤ t − 1` for `t > 0` — `log` lies below its
+tangent at `1`. The dual of the `exp` tangent line `1 + s ≤ exp s`
+(`one_add_le_exp`), pulled back through `exp_log`. -/
+theorem log_le_sub_one {t : Real} (ht : 0 < t) : Real.log t ≤ t - 1 := by
+  have h : 1 + Real.log t ≤ t := by
+    have hx := one_add_le_exp (Real.log t)
+    rwa [exp_log ht] at hx
+  -- 1 + log t ≤ t  ⇒  log t ≤ t − 1, by adding −1 on the left and cancelling.
+  have h2 := add_le_add_left h (-1)
+  rw [← add_assoc, neg_add_self, zero_add, add_comm (-1) t, ← sub_def] at h2
+  exact h2
+
+/-- **Gibbs' inequality, pointwise.** For `p, q > 0`, `p·log(q/p) ≤ q − p`.
+This is the per-term content of `KL(p‖q) ≥ 0`: summing over distributions with
+`Σp = Σq = 1` gives `Σ p·log(q/p) ≤ 0`, i.e. `KL(p‖q) = Σ p·log(p/q) ≥ 0` — the
+reason relative entropy (and hence MaxEnt) is bounded below (T1.B). The sum step
+needs `Σp = Σq`, which is outside MachLib's elementary-function scope; the
+pointwise bound proved here is the analytic heart (it IS the `log t ≤ t − 1`
+tangent, scaled). -/
+theorem gibbs_pointwise {p q : Real} (hp : 0 < p) (hq : 0 < q) :
+    p * Real.log (q / p) ≤ q - p := by
+  have hqp : 0 < q / p := div_pos_of_pos_pos hq hp
+  have htan : Real.log (q / p) ≤ q / p - 1 := log_le_sub_one hqp
+  have hmul : p * Real.log (q / p) ≤ p * (q / p - 1) :=
+    mul_le_mul_of_nonneg_left htan (le_of_lt hp)
+  -- p·(q/p − 1) = q − p  (distribute, cancel p·(q/p)=q).
+  have hsimp : p * (q / p - 1) = q - p := by
+    rw [sub_def (q / p) 1, mul_distrib, mul_neg, mul_one_ax,
+        mul_div_cancel' (ne_of_gt hp), ← sub_def q p]
+  rw [hsimp] at hmul
+  exact hmul
 
 end Real
 end MachLib
