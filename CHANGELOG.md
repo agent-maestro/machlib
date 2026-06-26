@@ -5,6 +5,29 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-06-25
+
+### Added — ring-v3, the decompose-first toolkit, and a close-rate harness
+
+- **`MachLib.MPolyRing` (ring-v3)** + the `mach_mpoly` tactic: a nested multivariate
+  polynomial normal form. Reify once, normalise once, compare once — polynomial in
+  the monomial count, not exponential in the variable count. Closes identities the
+  recursive multivariate tactic could not: the 8-variable Euler four-square
+  (quaternion-norm) identity goes from *not finishing in 50 minutes* to *seconds*,
+  `sorryAx`-free.
+- **`MachLib.Decompose`** — four reusable "decompose before nlinarith" lemmas
+  (`abs_le_sqrt`, `mul_mem_symm_band`, `lerp_le_of_le`, `quad_denom_pos`) + the
+  `mach_decompose` tactic, safe-by-construction (apply/exact + assumption; fails
+  cleanly, never silent-`sorry`).
+- **`foundations/scripts/closerate.sh`** — a reproducible close-rate harness for the
+  Forge `@verify(lean)` corpus. Compiles each emitted obligation independently
+  (recursively over all sub-corpora) and counts which `mach_positivity | rfl | sorry`
+  cascades genuinely close vs fall through. Current figure: **364 / 582 = 62.5%**
+  auto-close, 251 files, 0 build errors. (The textual `sorry` fallback is in every
+  emitted proof, so file-grep is NOT the close-rate — only compilation is.)
+
+Full write-up: [`docs/verification_automation_2026_06_25.md`](docs/verification_automation_2026_06_25.md).
+
 ## [Unreleased] — 2026-06-14
 
 ### Calibration note — interim audit figures over-counted

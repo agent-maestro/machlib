@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."   # foundations/
 DISC=MachLib/Discovered
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
-ls "$DISC"/*.lean | xargs -P "$(nproc)" -I{} bash -c '
+find "$DISC" -name "*.lean" | xargs -P "$(nproc)" -I{} bash -c '
   f="{}"; out=$(lake env lean "$f" 2>&1)
   base=$(basename "$f")
   thms=$(grep -cE "^theorem " "$f")
