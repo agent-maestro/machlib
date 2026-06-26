@@ -5,6 +5,21 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-06-26
+
+### Added — `MachLib.FPModel`: verified f64 forward-error (cross-target equivalence, leg 2)
+
+- **`MachLib.FPModel`** — the first proof (not regression test) relating a
+  kernel's IEEE-754 `f64` evaluation to its exact `Real` semantics. Adopts the
+  standard model of FP arithmetic (Higham §2.2) as three Mathlib-free axioms
+  (`u`, `0 ≤ u`, `u ≤ 1`; `u = 2⁻⁵³` for binary64). `length_sq2_fwd_error` and
+  `length_sq3_fwd_error` (the `vec3_length_sq` kernel) prove the `f64` result is
+  within the tight relative bound `(1+u)ⁿ − 1 ≈ n·u` of the exact value, for
+  *every* rounding. `#print axioms` → only `propext` + the `Real` base + the 3
+  `u` axioms; no `sorryAx`. EML's straight-line scalar restriction is what makes
+  this a closed-form bound rather than a CompCert-scale semantics theorem.
+  Full write-up: [`docs/cross_target_equivalence_2026_06_26.md`](foundations/docs/cross_target_equivalence_2026_06_26.md).
+
 ## [Unreleased] — 2026-06-25
 
 ### Added — ring-v3, the decompose-first toolkit, and a close-rate harness
