@@ -59,6 +59,14 @@ jobs:
           echo "seconds=$seconds" >> "$GITHUB_OUTPUT"
           echo "Cold build wall-time: ${seconds}s"
 
+      # `lake build` only builds MachLib.lean + its transitive imports.
+      # This static check fails if a foundation module is reachable from
+      # nothing (and so never built / gated) — closing the "module exists
+      # but CI never sees it" hole. Pure grep; no isolated elaboration.
+      - name: Aggregator completeness (no ungated orphan modules)
+        working-directory: foundations
+        run: bash scripts/check_aggregator.sh
+
       - name: Write build-time badge JSON
         env:
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}
