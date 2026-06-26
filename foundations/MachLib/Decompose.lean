@@ -79,3 +79,21 @@ theorem quad_denom_pos {a b : Real} (ha : -1 < a) (ha' : a < 1)
       (le_add_of_nonneg_right (mul_nonneg (mul_nonneg (by mach_positivity) (le_of_lt (neg_pos_of_neg hneg))) h1pb))
 
 end MachLib.Real
+
+/-- `mach_decompose` — try each `MachLib.Decompose` lemma against the goal,
+discharging side-hypotheses from the local context.
+
+SAFE BY CONSTRUCTION: every arm is `apply`/`exact` + `assumption`, which FAILS
+cleanly when the goal doesn't match a lemma's conclusion or the required
+hypotheses aren't in context. It never leaves a goal and never emits `sorry`/
+`sorryAx`, so it can be dropped into an emitter's `first | mach_positivity |
+mach_decompose | sorry` cascade with NO risk of a silent false close — it either
+genuinely closes the goal or hands it back to the next arm. -/
+macro "mach_decompose" : tactic => `(tactic|
+  first
+  | (apply MachLib.Real.quad_denom_pos <;> assumption)
+  | (apply MachLib.Real.lerp_le_of_le <;> assumption)
+  | exact (MachLib.Real.abs_le_sqrt (by assumption)).1
+  | exact (MachLib.Real.abs_le_sqrt (by assumption)).2
+  | exact (MachLib.Real.mul_mem_symm_band (by assumption) (by assumption) (by assumption)).1
+  | exact (MachLib.Real.mul_mem_symm_band (by assumption) (by assumption) (by assumption)).2)
