@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -44,7 +45,11 @@ noncomputable def SPATIAL_BREATH_AMP : Real := (0.06 : Real)
 noncomputable def chrysanthemum_field (r : Real) (theta : Real) (t : Real) (zoom : Real) (hyper_value : Real) : Real :=
   (min (max (((min (max (((((((((Real.cos (((theta * PETALS_PRIMARY) + (t * ROT_PRIMARY)) + ((SWIRL_PIVOT - (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ)))))) * SWIRL_AMP))) + ONE) * HALF) * W_PRIMARY) + (((((Real.cos ((((theta + ((Real.sin ((t * WOBBLE_FREQ) + (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))))) * WOBBLE_DEPTH)) * PETALS_SECONDARY) + (t * ROT_SECONDARY)) - (((SWIRL_PIVOT - (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ)))))) * SWIRL_AMP) * (0.7 : Real)))) + ONE) * HALF) * W_SECONDARY) * (min (max zoom ZERO) ONE))) + (((((Real.cos ((((theta * PETALS_DETAIL) + (t * ROT_DETAIL)) + (((r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))) * (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ)))))) * TWIST_RATE)) + (((SWIRL_PIVOT - (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ)))))) * SWIRL_AMP) * (0.5 : Real)))) + ONE) * HALF) * W_DETAIL) * (min (max zoom ZERO) ONE))) + (((Real.exp ((-((r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))) * (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))))) / CENTRE_RADIUS_SQ)) * (((Real.sin (t * CENTRE_FREQ)) + ONE) * HALF)) * W_CENTRE)) * (min (max (Real.exp ((-((r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))) * (r * (ONE + (SPATIAL_BREATH_AMP * (Real.sin (t * BREATHE_FREQ))))))) / RADIAL_SCALE_SQ)) ZERO) ONE)) * (ONE + ((Real.sin (t * BREATHE_FREQ)) * BREATHE_AMP))) ZERO) ONE) * ((ONE - (min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE)) + ((min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE) * (min (max ((r - ((min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE) * HOLE_MAX_RADIUS)) * CURTAIN_FADE) ZERO) ONE)))) + ((min (max hyper_value ZERO) ONE) * (ONE - ((ONE - (min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE)) + ((min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE) * (min (max ((r - ((min (max ((min (max (zoom - CURTAIN_THRESHOLD) ZERO) ONE) * CURTAIN_INV_RANGE) ZERO) ONE) * HOLE_MAX_RADIUS)) * CURTAIN_FADE) ZERO) ONE)))))) ZERO) ONE)
 
-theorem chrysanthemum_field_in_unit_band (r : Real) (theta : Real) (t : Real) (zoom : Real) (hyper_value : Real) :
+theorem chrysanthemum_field_in_unit_band (r : Real) (theta : Real) (t : Real) (zoom : Real) (hyper_value : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((chrysanthemum_field r theta t zoom hyper_value) >= ZERO) := by
   unfold chrysanthemum_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

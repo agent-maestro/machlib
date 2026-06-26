@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -26,7 +27,11 @@ noncomputable def WEIGHT_DETAIL : Real := (0.4 : Real)
 noncomputable def substrate_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((((Real.sin (((u * FREQ_PRIMARY) + (v * FREQ_SECONDARY)) + (t * TIME_SCALE_PRIMARY))) + ONE) * HALF) * WEIGHT_PRIMARY) + ((((Real.sin (((u + v) * FREQ_DETAIL) + (t * TIME_SCALE_DETAIL))) + ONE) * HALF) * WEIGHT_DETAIL)) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_vision_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_vision_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((substrate_field u v t proximity) >= ZERO) := by
   unfold substrate_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

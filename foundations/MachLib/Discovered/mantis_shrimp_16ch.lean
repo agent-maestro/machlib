@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -36,47 +37,67 @@ noncomputable def POL_AXIS_04 : Real := (2.356194 : Real)
 noncomputable def response_at_peak (lambda_um : Real) (peak_um : Real) : Real :=
   (Real.exp (((-HALF) * ((lambda_um - peak_um) / SIGMA_UM)) * ((lambda_um - peak_um) / SIGMA_UM)))
 
-theorem mantis_response_at_peak_in_unit_band (lambda_um : Real) (peak_um : Real) :
+theorem mantis_response_at_peak_in_unit_band (lambda_um : Real) (peak_um : Real)
+    (h_dom1 : (lambda_um >= (0 : Real))) :
     ((response_at_peak lambda_um peak_um) >= ZERO) := by
   unfold response_at_peak
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── pol_response_at_axis ──
 
 noncomputable def pol_response_at_axis (angle_rad : Real) (axis_rad : Real) : Real :=
   ((Real.cos (angle_rad - axis_rad)) * (Real.cos (angle_rad - axis_rad)))
 
-theorem mantis_pol_response_at_axis_in_unit_band (angle_rad : Real) (axis_rad : Real) :
+theorem mantis_pol_response_at_axis_in_unit_band (angle_rad : Real) (axis_rad : Real)
+    (h_dom1 : (angle_rad >= (0 : Real))) :
     ((pol_response_at_axis angle_rad axis_rad) >= ZERO) := by
   unfold pol_response_at_axis
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── false_color_r ──
 
 noncomputable def false_color_r (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) : Real :=
   (min (max ((((c09 * (0.2 : Real)) + (c10 * (0.3 : Real))) + (c11 * (0.3 : Real))) + (c12 * (0.2 : Real))) ZERO) ONE)
 
-theorem mantis_false_color_r_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) :
+theorem mantis_false_color_r_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((false_color_r c01 c02 c03 c04 c05 c06 c07 c08 c09 c10 c11 c12) >= ZERO) := by
   unfold false_color_r
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── false_color_g ──
 
 noncomputable def false_color_g (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) : Real :=
   (min (max ((((c05 * (0.25 : Real)) + (c06 * (0.25 : Real))) + (c07 * (0.25 : Real))) + (c08 * (0.25 : Real))) ZERO) ONE)
 
-theorem mantis_false_color_g_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) :
+theorem mantis_false_color_g_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((false_color_g c01 c02 c03 c04 c05 c06 c07 c08 c09 c10 c11 c12) >= ZERO) := by
   unfold false_color_g
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── false_color_b ──
 
 noncomputable def false_color_b (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) : Real :=
   (min (max ((((c01 * (0.2 : Real)) + (c02 * (0.2 : Real))) + (c03 * (0.3 : Real))) + (c04 * (0.3 : Real))) ZERO) ONE)
 
-theorem mantis_false_color_b_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real) :
+theorem mantis_false_color_b_in_unit_band (c01 : Real) (c02 : Real) (c03 : Real) (c04 : Real) (c05 : Real) (c06 : Real) (c07 : Real) (c08 : Real) (c09 : Real) (c10 : Real) (c11 : Real) (c12 : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((false_color_b c01 c02 c03 c04 c05 c06 c07 c08 c09 c10 c11 c12) >= ZERO) := by
   unfold false_color_b
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

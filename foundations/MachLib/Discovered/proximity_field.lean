@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -18,7 +19,12 @@ noncomputable def ONE : Real := (1 : Real)
 noncomputable def proximity_from_distance (d : Real) (falloff : Real) : Real :=
   (Real.exp (-((d * d) / falloff)))
 
-theorem proximity_in_unit_band (d : Real) (falloff : Real) :
+theorem proximity_in_unit_band (d : Real) (falloff : Real)
+    (h_dom1 : (d >= ZERO))
+    (h_dom2 : (falloff > ZERO)) :
     ((proximity_from_distance d falloff) >= ZERO) := by
   unfold proximity_from_distance
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

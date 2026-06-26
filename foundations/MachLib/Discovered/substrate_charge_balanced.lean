@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -29,7 +30,11 @@ noncomputable def COEF_DOUBLE : Real := (0.18 : Real)
 noncomputable def substrate_charge_balanced_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((((ONE + (COEF_DIAG_A * (Real.exp ((2.0 : Real) * (ALPHA_1 * u))))) + (COEF_DIAG_B * (Real.exp ((2.0 : Real) * (ALPHA_2 * u))))) + ((COEF_CROSS * (Real.cos (((BETA_1 * v) + (GAMMA_1 * t)) - ((BETA_2 * v) + (GAMMA_2 * t))))) * (Real.exp ((ALPHA_1 * u) + (ALPHA_2 * u))))) + (COEF_DOUBLE * (Real.exp ((2.0 : Real) * ((ALPHA_1 * u) + (ALPHA_2 * u)))))) - ONE) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_charge_balanced_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_charge_balanced_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((substrate_charge_balanced_field u v t proximity) >= ZERO) := by
   unfold substrate_charge_balanced_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

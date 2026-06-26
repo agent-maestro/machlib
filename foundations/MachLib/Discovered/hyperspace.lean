@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -28,9 +29,13 @@ noncomputable def DEPTH_BASE : Real := (0.3 : Real)
 -- ── hyperspace_field ──
 
 noncomputable def hyperspace_field (r : Real) (theta : Real) (t : Real) (depth : Real) : Real :=
-  (min (max (((((((Real.sin (((log (r + EPS)) * RING_FREQ) - (t * FLOW_RATE))) + ONE) * HALF) * W_TUNNEL) + ((((Real.sin ((theta * SYMMETRY) + (t * SYMMETRY_ROT))) + ONE) * HALF) * W_CRYSTAL)) + ((((Real.sin (((log (r + EPS)) * DEPTH_FREQ) + (t * DEPTH_FLOW))) + ONE) * HALF) * W_RECURSIVE)) * (DEPTH_BASE + ((min (max depth ZERO) ONE) * (ONE - DEPTH_BASE)))) ZERO) ONE)
+  (min (max (((((((Real.sin (((Real.log (r + EPS)) * RING_FREQ) - (t * FLOW_RATE))) + ONE) * HALF) * W_TUNNEL) + ((((Real.sin ((theta * SYMMETRY) + (t * SYMMETRY_ROT))) + ONE) * HALF) * W_CRYSTAL)) + ((((Real.sin (((Real.log (r + EPS)) * DEPTH_FREQ) + (t * DEPTH_FLOW))) + ONE) * HALF) * W_RECURSIVE)) * (DEPTH_BASE + ((min (max depth ZERO) ONE) * (ONE - DEPTH_BASE)))) ZERO) ONE)
 
-theorem hyperspace_field_in_unit_band (r : Real) (theta : Real) (t : Real) (depth : Real) :
+theorem hyperspace_field_in_unit_band (r : Real) (theta : Real) (t : Real) (depth : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((hyperspace_field r theta t depth) >= ZERO) := by
   unfold hyperspace_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

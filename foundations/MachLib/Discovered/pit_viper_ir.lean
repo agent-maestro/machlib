@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -25,47 +26,75 @@ noncomputable def T_RANGE_4TH : Real := (20264100000.0 : Real)
 noncomputable def response (lambda_um : Real) : Real :=
   (Real.exp (((-HALF) * ((lambda_um - LAMBDA_PEAK) / LAMBDA_SIGMA)) * ((lambda_um - LAMBDA_PEAK) / LAMBDA_SIGMA)))
 
-theorem pit_viper_response_in_unit_band (lambda_um : Real) :
+theorem pit_viper_response_in_unit_band (lambda_um : Real)
+    (h_dom1 : (lambda_um >= (0 : Real))) :
     ((response lambda_um) >= ZERO) := by
   unfold response
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── temperature_to_radiance ──
 
 noncomputable def temperature_to_radiance (t_kelvin : Real) : Real :=
   (((((min (max t_kelvin T_LO) T_HI) * (min (max t_kelvin T_LO) T_HI)) * ((min (max t_kelvin T_LO) T_HI) * (min (max t_kelvin T_LO) T_HI))) - T_LO_4TH) / T_RANGE_4TH)
 
-theorem pit_viper_t_to_radiance_unit_band (t_kelvin : Real) :
+theorem pit_viper_t_to_radiance_unit_band (t_kelvin : Real)
+    (h_dom1 : (t_kelvin >= T_LO))
+    (h_dom2 : (t_kelvin <= T_HI))
+    (h_clamp1 : T_LO ≤ T_HI) :
     ((temperature_to_radiance t_kelvin) >= ZERO) := by
   unfold temperature_to_radiance
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── colormap_r ──
 
 noncomputable def colormap_r (t : Real) : Real :=
   (min (max (((min (max t ZERO) ONE) - (0.25 : Real)) / (0.25 : Real)) ZERO) ONE)
 
-theorem pit_viper_colormap_r_in_unit_band (t : Real) :
+theorem pit_viper_colormap_r_in_unit_band (t : Real)
+    (h_dom1 : (t >= ZERO))
+    (h_dom2 : (t <= ONE))
+    (h_clamp1 : ZERO ≤ ONE) :
     ((colormap_r t) >= ZERO) := by
   unfold colormap_r
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── colormap_g ──
 
 noncomputable def colormap_g (t : Real) : Real :=
   (min (max (((min (max t ZERO) ONE) - (0.75 : Real)) / (0.25 : Real)) ZERO) ONE)
 
-theorem pit_viper_colormap_g_in_unit_band (t : Real) :
+theorem pit_viper_colormap_g_in_unit_band (t : Real)
+    (h_dom1 : (t >= ZERO))
+    (h_dom2 : (t <= ONE))
+    (h_clamp1 : ZERO ≤ ONE) :
     ((colormap_g t) >= ZERO) := by
   unfold colormap_g
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
 
 -- ── colormap_b ──
 
 noncomputable def colormap_b (t : Real) : Real :=
   (((min (max ((min (max t ZERO) ONE) / (0.25 : Real)) ZERO) ONE) * (min (max (((0.75 : Real) - (min (max t ZERO) ONE)) / (0.5 : Real)) ZERO) ONE)) + ((min (max (((min (max t ZERO) ONE) - (0.75 : Real)) / (0.25 : Real)) ZERO) ONE) * (0.7 : Real)))
 
-theorem pit_viper_colormap_b_in_unit_band (t : Real) :
+theorem pit_viper_colormap_b_in_unit_band (t : Real)
+    (h_dom1 : (t >= ZERO))
+    (h_dom2 : (t <= ONE))
+    (h_clamp1 : ZERO ≤ ONE) :
     ((colormap_b t) >= ZERO) := by
   unfold colormap_b
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

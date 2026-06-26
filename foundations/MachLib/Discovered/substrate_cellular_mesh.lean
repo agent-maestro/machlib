@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -28,7 +29,11 @@ noncomputable def GLOW_TIGHTNESS : Real := (30.0 : Real)
 noncomputable def cellular_mesh_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((Real.exp (-((((u - ((Real.sin (t * RATE_1X)) * CELL_RADIUS_1)) * (u - ((Real.sin (t * RATE_1X)) * CELL_RADIUS_1))) + ((v - ((Real.cos (t * RATE_1Y)) * CELL_RADIUS_1)) * (v - ((Real.cos (t * RATE_1Y)) * CELL_RADIUS_1)))) * GLOW_TIGHTNESS))) + (Real.exp (-((((u - ((Real.cos (t * RATE_2X)) * CELL_RADIUS_2)) * (u - ((Real.cos (t * RATE_2X)) * CELL_RADIUS_2))) + ((v - ((Real.sin (t * RATE_2Y)) * CELL_RADIUS_2)) * (v - ((Real.sin (t * RATE_2Y)) * CELL_RADIUS_2)))) * GLOW_TIGHTNESS)))) + (Real.exp (-((((u - ((Real.sin (t * RATE_3X)) * CELL_RADIUS_3)) * (u - ((Real.sin (t * RATE_3X)) * CELL_RADIUS_3))) + ((v - ((Real.cos (t * RATE_3Y)) * CELL_RADIUS_3)) * (v - ((Real.cos (t * RATE_3Y)) * CELL_RADIUS_3)))) * GLOW_TIGHTNESS)))) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_cellular_mesh_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_cellular_mesh_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((cellular_mesh_field u v t proximity) >= ZERO) := by
   unfold cellular_mesh_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

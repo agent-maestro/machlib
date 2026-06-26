@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -25,7 +26,11 @@ noncomputable def EPSILON : Real := (0.01 : Real)
 noncomputable def sdf_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((RADIUS_BASE + (RADIUS_SWING * (Real.sin (t * RADIUS_RATE)))) * (RADIUS_BASE + (RADIUS_SWING * (Real.sin (t * RADIUS_RATE))))) / ((((u - ((Real.sin (t * CENTRE_RATE_X)) * HALF)) * (u - ((Real.sin (t * CENTRE_RATE_X)) * HALF))) + ((v - ((Real.cos (t * CENTRE_RATE_Y)) * HALF)) * (v - ((Real.cos (t * CENTRE_RATE_Y)) * HALF)))) + EPSILON)) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem sdf_architectural_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem sdf_architectural_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((sdf_field u v t proximity) >= ZERO) := by
   unfold sdf_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

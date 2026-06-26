@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -14,7 +15,7 @@ noncomputable def ZERO : Real := (0 : Real)
 noncomputable def ONE : Real := (1 : Real)
 noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def RING_SCALE : Real := (0.4 : Real)
-noncomputable def TIME_RATE : Real := (1.5 : Real)
+noncomputable def TIME_RATE : Real := (0.45 : Real)
 noncomputable def EPSILON : Real := (0.02 : Real)
 
 -- ── field_line_field ──
@@ -22,7 +23,11 @@ noncomputable def EPSILON : Real := (0.02 : Real)
 noncomputable def field_line_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((Real.sin ((((ONE / (Real.sqrt ((((u - HALF) * (u - HALF)) + ((v - HALF) * (v - HALF))) + EPSILON))) + (t * TIME_RATE)) * RING_SCALE) * (ONE / EPSILON))) + ONE) * HALF) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_field_line_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_field_line_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((field_line_field u v t proximity) >= ZERO) := by
   unfold field_line_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

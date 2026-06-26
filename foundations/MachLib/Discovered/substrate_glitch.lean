@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -13,7 +14,7 @@ open MachLib.Real
 noncomputable def ZERO : Real := (0 : Real)
 noncomputable def ONE : Real := (1 : Real)
 noncomputable def BIG_SCALE : Real := (1000.0 : Real)
-noncomputable def TIME_RATE : Real := (100.0 : Real)
+noncomputable def TIME_RATE : Real := (9.0 : Real)
 noncomputable def DRIFT_GAIN : Real := (1000000.0 : Real)
 
 -- ── glitch_field ──
@@ -21,7 +22,11 @@ noncomputable def DRIFT_GAIN : Real := (1000000.0 : Real)
 noncomputable def glitch_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max (((abs ((((Real.sin (((u * BIG_SCALE) + (v * BIG_SCALE)) + (t * TIME_RATE))) * (Real.sin (((u * BIG_SCALE) + (v * BIG_SCALE)) + (t * TIME_RATE)))) + ((Real.cos (((u * BIG_SCALE) + (v * BIG_SCALE)) + (t * TIME_RATE))) * (Real.cos (((u * BIG_SCALE) + (v * BIG_SCALE)) + (t * TIME_RATE))))) - ONE)) * DRIFT_GAIN) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_glitch_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_glitch_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((glitch_field u v t proximity) >= ZERO) := by
   unfold glitch_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -32,7 +33,11 @@ noncomputable def G_PART_SCALE : Real := (1.2 : Real)
 noncomputable def substrate_parity_split_field (u : Real) (v : Real) (t : Real) (proximity : Real) : Real :=
   (min (max ((((((Real.cos (BLEND_RATE * t)) + ONE) * HALF) * (min (max (((((ONE + (COEF_F12 * (Real.exp ((ALPHA_1 * u) + (ALPHA_2 * u))))) + (COEF_F13 * (Real.exp ((ALPHA_1 * u) + (BETA * v))))) + (COEF_F23 * (Real.exp ((ALPHA_2 * u) + (BETA * v))))) - ONE) * F_PART_SCALE) ZERO) ONE)) + ((ONE - (((Real.cos (BLEND_RATE * t)) + ONE) * HALF)) * (min (max (((((COEF_G1 * (Real.exp (ALPHA_1 * u))) + (COEF_G2 * (Real.exp (ALPHA_2 * u)))) + (COEF_G3 * (Real.exp (BETA * v)))) + (COEF_G123 * (Real.exp (((ALPHA_1 * u) + (ALPHA_2 * u)) + (BETA * v))))) * G_PART_SCALE) ZERO) ONE))) * (min (max proximity ZERO) ONE)) ZERO) ONE)
 
-theorem substrate_parity_split_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real) :
+theorem substrate_parity_split_field_in_unit_band (u : Real) (v : Real) (t : Real) (proximity : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((substrate_parity_split_field u v t proximity) >= ZERO) := by
   unfold substrate_parity_split_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

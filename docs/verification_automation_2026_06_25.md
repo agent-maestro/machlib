@@ -1,4 +1,4 @@
-# Automated proof closure from a math DSL — ring-v3, the decompose-first doctrine, and a 63% zero-Mathlib close-rate
+# Automated proof closure from a math DSL — ring-v3, the decompose-first doctrine, and a 67% zero-Mathlib close-rate
 
 *2026-06-25*
 
@@ -61,7 +61,7 @@ cleanly* when the goal doesn't match or the hypotheses aren't present. It never
 leaves a goal and never emits `sorry`/`sorryAx` — which is precisely why
 silent-`sorry` tactics like `mach_ring` are kept *out* of any emitter cascade.
 
-## 3. The number: 54% auto-close, zero-Mathlib, reproducible
+## 3. The number: 67% auto-close, zero-Mathlib, reproducible
 
 The honest measurement was the missing piece. Every substantive obligation Forge
 emits carries a `first | mach_positivity | rfl | sorry` cascade — so the literal
@@ -74,14 +74,16 @@ obligation independently (recursively, including the `carriers/`, `photonics/` a
 `maglev/` sub-corpora — they're self-contained, so co-importing collides on shared
 constants) and counts the `declaration uses 'sorry'` warnings.
 
-> **364 / 582 = 62.5%** of the emitted Lean 4 obligations close *automatically*
+> **387 / 581 = 66.6%** of the emitted Lean 4 obligations close *automatically*
 > against zero-Mathlib foundations — no human-written proof — in a few seconds.
 
-The 364 closures are genuine: the cascade uses only `mach_positivity` and `rfl`,
-neither of which can silent-`sorry`. The remaining ~37% emit and stay
+The 387 closures are genuine: the cascade uses only `mach_positivity` and `rfl`,
+neither of which can silent-`sorry`. The remaining ~33% emit and stay
 regression-gated against a baseline; they are not claimed as proven. This is a raw,
 uncurated figure over all 251 emitted obligation files — re-run the harness on a
-fresh clone and you get the same number.
+fresh clone and you get the same number. (Was 364 / 582 = 62.5% until a 2026-06-26
+refresh updated 16 committed obligations that were stale bare-`sorry` output
+predating the cascade emitter.)
 
 ## 4. Honest scope — what does *not* close
 
@@ -100,7 +102,7 @@ git clone https://github.com/agent-maestro/machlib
 cd machlib/foundations
 lake build MachLib.MPolyRing          # ring-v3 + the four-square regression theorem
 lake build MachLib.Decompose          # the doctrine lemmas + mach_decompose
-bash scripts/closerate.sh             # the 54% number, from scratch
+bash scripts/closerate.sh             # the 66.6% number, from scratch
 ```
 
 No Mathlib, direct or transitive — that gate is enforced per release.

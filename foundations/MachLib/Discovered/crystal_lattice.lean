@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -27,9 +28,13 @@ noncomputable def MORTAR_BRIGHTNESS : Real := (0.05 : Real)
 -- ── crystal_lattice_field ──
 
 noncomputable def crystal_lattice_field (u : Real) (v : Real) (t : Real) : Real :=
-  (min (max (((STONE_BASE + (STONE_AMP * (((Real.sin ((t * BREATH_SPEED) + ((((floor (u * CELL_SCALE)) * PHASE_MIX_X) + ((floor (v * CELL_SCALE)) * PHASE_MIX_Y)) * PHASE_SCALE))) + ONE) * HALF))) * (ONE - (min (max (ONE - ((min (min ((u * CELL_SCALE) - (floor (u * CELL_SCALE))) (ONE - ((u * CELL_SCALE) - (floor (u * CELL_SCALE))))) (min ((v * CELL_SCALE) - (floor (v * CELL_SCALE))) (ONE - ((v * CELL_SCALE) - (floor (v * CELL_SCALE)))))) * EDGE_FALLOFF)) ZERO) ONE))) + (MORTAR_BRIGHTNESS * (min (max (ONE - ((min (min ((u * CELL_SCALE) - (floor (u * CELL_SCALE))) (ONE - ((u * CELL_SCALE) - (floor (u * CELL_SCALE))))) (min ((v * CELL_SCALE) - (floor (v * CELL_SCALE))) (ONE - ((v * CELL_SCALE) - (floor (v * CELL_SCALE)))))) * EDGE_FALLOFF)) ZERO) ONE))) ZERO) ONE)
+  (min (max (((STONE_BASE + (STONE_AMP * (((Real.sin ((t * BREATH_SPEED) + ((((Real.floor (u * CELL_SCALE)) * PHASE_MIX_X) + ((Real.floor (v * CELL_SCALE)) * PHASE_MIX_Y)) * PHASE_SCALE))) + ONE) * HALF))) * (ONE - (min (max (ONE - ((min (min ((u * CELL_SCALE) - (Real.floor (u * CELL_SCALE))) (ONE - ((u * CELL_SCALE) - (Real.floor (u * CELL_SCALE))))) (min ((v * CELL_SCALE) - (Real.floor (v * CELL_SCALE))) (ONE - ((v * CELL_SCALE) - (Real.floor (v * CELL_SCALE)))))) * EDGE_FALLOFF)) ZERO) ONE))) + (MORTAR_BRIGHTNESS * (min (max (ONE - ((min (min ((u * CELL_SCALE) - (Real.floor (u * CELL_SCALE))) (ONE - ((u * CELL_SCALE) - (Real.floor (u * CELL_SCALE))))) (min ((v * CELL_SCALE) - (Real.floor (v * CELL_SCALE))) (ONE - ((v * CELL_SCALE) - (Real.floor (v * CELL_SCALE)))))) * EDGE_FALLOFF)) ZERO) ONE))) ZERO) ONE)
 
-theorem crystal_lattice_field_in_unit_band (u : Real) (v : Real) (t : Real) :
+theorem crystal_lattice_field_in_unit_band (u : Real) (v : Real) (t : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((crystal_lattice_field u v t) >= ZERO) := by
   unfold crystal_lattice_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

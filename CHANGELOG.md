@@ -22,8 +22,12 @@ per-release status.
 - **`foundations/scripts/closerate.sh`** — a reproducible close-rate harness for the
   Forge `@verify(lean)` corpus. Compiles each emitted obligation independently
   (recursively over all sub-corpora) and counts which `mach_positivity | rfl | sorry`
-  cascades genuinely close vs fall through. Current figure: **364 / 582 = 62.5%**
-  auto-close, 251 files, 0 build errors. (The textual `sorry` fallback is in every
+  cascades genuinely close vs fall through. Current figure: **387 / 581 = 66.6%**
+  auto-close, 251 files, 0 build errors (up from 364 / 582 = 62.5%: a 2026-06-26
+  refresh brought 16 Discovered obligations up to current `eml-compile`
+  emission — the committed copies were stale bare-`sorry` output predating the
+  `first | mach_positivity | rfl | sorry` cascade; +23 close, −1 theorem from a
+  shadow_pcf re-emit). (The textual `sorry` fallback is in every
   emitted proof, so file-grep is NOT the close-rate — only compilation is.)
 
 Full write-up: [`docs/verification_automation_2026_06_25.md`](docs/verification_automation_2026_06_25.md).

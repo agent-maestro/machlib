@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -24,9 +25,13 @@ noncomputable def LINE_AMP : Real := (0.55 : Real)
 -- ── neon_substrate_field ──
 
 noncomputable def neon_substrate_field (u : Real) (v : Real) (t : Real) : Real :=
-  (min (max (DARK_BASE + ((max (Real.exp (((-((u * CELL_SCALE) - (floor ((u * CELL_SCALE) + HALF)))) * ((u * CELL_SCALE) - (floor ((u * CELL_SCALE) + HALF)))) * LINE_TIGHTNESS)) (Real.exp (((-((v * CELL_SCALE) - (floor ((v * CELL_SCALE) + HALF)))) * ((v * CELL_SCALE) - (floor ((v * CELL_SCALE) + HALF)))) * LINE_TIGHTNESS))) * (LINE_BASE + (LINE_AMP * (((Real.sin ((t * FLOW_RATE) + (((u * CELL_SCALE) + (v * CELL_SCALE)) * FLOW_WAVELENGTH))) + ONE) * HALF))))) ZERO) ONE)
+  (min (max (DARK_BASE + ((max (Real.exp (((-((u * CELL_SCALE) - (Real.floor ((u * CELL_SCALE) + HALF)))) * ((u * CELL_SCALE) - (Real.floor ((u * CELL_SCALE) + HALF)))) * LINE_TIGHTNESS)) (Real.exp (((-((v * CELL_SCALE) - (Real.floor ((v * CELL_SCALE) + HALF)))) * ((v * CELL_SCALE) - (Real.floor ((v * CELL_SCALE) + HALF)))) * LINE_TIGHTNESS))) * (LINE_BASE + (LINE_AMP * (((Real.sin ((t * FLOW_RATE) + (((u * CELL_SCALE) + (v * CELL_SCALE)) * FLOW_WAVELENGTH))) + ONE) * HALF))))) ZERO) ONE)
 
-theorem neon_substrate_field_in_unit_band (u : Real) (v : Real) (t : Real) :
+theorem neon_substrate_field_in_unit_band (u : Real) (v : Real) (t : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((neon_substrate_field u v t) >= ZERO) := by
   unfold neon_substrate_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover

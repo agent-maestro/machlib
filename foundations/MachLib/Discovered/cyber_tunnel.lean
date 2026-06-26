@@ -6,6 +6,7 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
 
 open MachLib
 open MachLib.Real
@@ -26,9 +27,13 @@ noncomputable def DEPTH_BASE : Real := (0.25 : Real)
 -- ── cyber_tunnel_field ──
 
 noncomputable def cyber_tunnel_field (u : Real) (v : Real) (t : Real) (depth : Real) : Real :=
-  (min (max ((((((ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE)) * (ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE))) * (ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE))) * (RING_BASE + (RING_AMP * (((Real.sin (((log (ONE / ((Real.sqrt ((u * u) + (v * v))) + EPS))) + (t * TUNNEL_SPEED)) * RING_FREQ)) + ONE) * HALF)))) * (HEX_BASE + (HEX_AMP * (((Real.sin (((atan2 v u) * HEX_COUNT) + (((log (ONE / ((Real.sqrt ((u * u) + (v * v))) + EPS))) + (t * TUNNEL_SPEED)) * HALF))) + ONE) * HALF)))) * (DEPTH_BASE + ((ONE - DEPTH_BASE) * (min (max depth ZERO) ONE)))) ZERO) ONE)
+  (min (max ((((((ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE)) * (ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE))) * (ONE - (min (max (Real.sqrt ((u * u) + (v * v))) ZERO) ONE))) * (RING_BASE + (RING_AMP * (((Real.sin (((Real.log (ONE / ((Real.sqrt ((u * u) + (v * v))) + EPS))) + (t * TUNNEL_SPEED)) * RING_FREQ)) + ONE) * HALF)))) * (HEX_BASE + (HEX_AMP * (((Real.sin (((atan2 v u) * HEX_COUNT) + (((Real.log (ONE / ((Real.sqrt ((u * u) + (v * v))) + EPS))) + (t * TUNNEL_SPEED)) * HALF))) + ONE) * HALF)))) * (DEPTH_BASE + ((ONE - DEPTH_BASE) * (min (max depth ZERO) ONE)))) ZERO) ONE)
 
-theorem cyber_tunnel_field_in_unit_band (u : Real) (v : Real) (t : Real) (depth : Real) :
+theorem cyber_tunnel_field_in_unit_band (u : Real) (v : Real) (t : Real) (depth : Real)
+    (h_clamp1 : ZERO ≤ ONE) :
     ((cyber_tunnel_field u v t depth) >= ZERO) := by
   unfold cyber_tunnel_field
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | mach_positivity
+  | rfl
+  | sorry  -- mach_positivity out of reach; left for the prover
