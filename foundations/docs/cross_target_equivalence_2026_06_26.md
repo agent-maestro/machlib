@@ -151,10 +151,16 @@ this one theorem; arbitrary accumulations (longer dots, matrix rows of any
 width) are covered directly. `#print axioms` → `propext` + the `Real` base, no
 `sorryAx`, no `u`.
 
+## Concrete precisions
+
+`f64_u = 2⁻⁵³` and `f32_u = 2⁻²⁴` are now actual `Real`s (`1 / 2ⁿ` via `npow`),
+each with a machine-checked `0 ≤ · ≤ 1`. So the abstract `w` becomes a real
+target precision: `dot2_f64` states the actual Rust-`f64` `a·b+c·d` bound
+`(1+2⁻⁵³)²−1`, and every other kernel instantiates the same way (supply
+`f64_u`/`f32_u` + their nonneg proof).
+
 ## Next rungs
 
-- A concrete numeric `f32`/`f64` instance (instantiate `w := 2⁻²⁴ / 2⁻⁵³` and
-  evaluate the bound) once the `Real` pow/division lemmas are in.
 - The EML→RTL leg (`Formal equivalence proofs: EML source = synthesized gates`,
   roadmap Phase 3) — the hardware end of the same chain.
 
