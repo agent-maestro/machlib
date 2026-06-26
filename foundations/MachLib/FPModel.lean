@@ -388,6 +388,37 @@ theorem roundsW_abs {w fl e : Real} (h : RoundsW w fl e) : abs (fl - e) ≤ w * 
   rw [hfe, abs_mul, mul_comm (abs e) (abs δ)]
   exact mul_le_mul_of_nonneg_right hδabs (abs_nonneg e)
 
+/-- `|p| ≤ |e| + E` when `p` is within `E` of `e`. -/
+theorem abs_le_add_err {p e E : Real} (h : abs (p - e) ≤ E) : abs p ≤ abs e + E := by
+  have e1 : p = e + (p - e) := by mach_mpoly [p, e]
+  have ht := abs_add e (p - e)
+  rw [← e1] at ht
+  exact le_trans ht (add_le_add_left h (abs e))
+
+/-- **The conditioned-sum building block.** One rounding node `r = ⌊acc + x⌉`,
+where `acc` approximates exact `e` within budget `Eacc` and `x` approximates
+`ex` within `Ex`: the rounded sum approximates `e + ex` within
+`w·((|e|+Eacc)+(|ex|+Ex)) + (Eacc+Ex)`. Every `dotN`/`lerp` bound above is a
+chain of this lemma — it is what makes the conditioned method compose over an
+*arbitrary* summation tree, with no per-kernel reproof. -/
+theorem cond_combine (w : Real) (hw0 : 0 ≤ w)
+    {acc x r e ex Eacc Ex : Real}
+    (hacc : abs (acc - e) ≤ Eacc) (hx : abs (x - ex) ≤ Ex)
+    (hr : RoundsW w r (acc + x)) :
+    abs (r - (e + ex)) ≤ w * ((abs e + Eacc) + (abs ex + Ex)) + (Eacc + Ex) := by
+  have hsplit : abs (r - (e + ex)) ≤ abs (r - (acc + x)) + abs ((acc + x) - (e + ex)) := by
+    have eq : r - (e + ex) = (r - (acc + x)) + ((acc + x) - (e + ex)) := by
+      mach_mpoly [r, acc, x, e, ex]
+    rw [eq]; exact abs_add _ _
+  have ht1 : abs (r - (acc + x)) ≤ w * ((abs e + Eacc) + (abs ex + Ex)) := by
+    have hsum : abs (acc + x) ≤ (abs e + Eacc) + (abs ex + Ex) :=
+      le_trans (abs_add acc x) (add_le_add_both (abs_le_add_err hacc) (abs_le_add_err hx))
+    exact le_trans (roundsW_abs hr) (mul_le_mul_of_nonneg_left hsum hw0)
+  have ht2 : abs ((acc + x) - (e + ex)) ≤ Eacc + Ex := by
+    have hd : (acc + x) - (e + ex) = (acc - e) + (x - ex) := by mach_mpoly [acc, x, e, ex]
+    rw [hd]; exact le_trans (abs_add _ _) (add_le_add_both hacc hx)
+  exact le_trans hsplit (add_le_add_both ht1 ht2)
+
 /-- `|p| ≤ (1+w)·|e|` when `p` is within `w·|e|` of `e`. -/
 theorem abs_le_one_add {w p e : Real} (h : abs (p - e) ≤ w * abs e) :
     abs p ≤ (1 + w) * abs e := by
