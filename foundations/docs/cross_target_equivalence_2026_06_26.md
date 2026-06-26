@@ -77,14 +77,35 @@ expression* every target lowers. This proves that the lowered `f64`
 move "Forge regression-tests its targets" toward "Forge **proves** them
 equivalent" — for the fragment where that is honestly provable.
 
+## Update — the conditioned (mixed-sign) case, precision-generic
+
+`length_sq` is the clean case because every summand is `≥ 0`. The follow-up
+handles the cancellation-prone case and decouples the precision:
+
+- **`RoundsW w`** — the standard model parameterized by the precision's unit
+  roundoff `w` (f64 `= 2⁻⁵³`, f32/WGSL `= 2⁻²⁴`, bf16 `= 2⁻⁸`). One theorem,
+  every target. `#print axioms` on the `w`-parameterized results shows *no* `u`
+  axiom at all — they rest only on `propext` + the `Real` base.
+- **`dot2_fwd_error`** — the `f64`/`f32` evaluation of `a·b + c·d` (a *mixed-sign*
+  sum) is within `(1+w)² − 1 ≈ 2w` of the exact value, **measured against the
+  conditioning quantity `|a·b| + |c·d|`**, not `|result|`. This is the honest
+  statement: if the result cancels to ≈ 0, the *relative* error is unbounded,
+  but the *absolute* error stays bounded by the (uncancelled) magnitudes. Proven
+  by abs-propagation (`roundsW_abs`, `abs_le_one_add`, triangle inequality).
+
+The split is the point: nonneg-accumulation kernels (`length_sq`, attenuation,
+energies) get a *relative* bound; mixed-sign kernels (`dot`, residuals) get an
+*absolute* bound against their condition number. Both are honest; neither is a
+blanket "verified."
+
 ## Next rungs
 
-- More kernels: `dot`, `lerp`, the `mat4`/`quat` algebra (all straight-line,
-  mostly nonneg or well-conditioned).
-- A `WGSL`/`f32` instance (`u = 2⁻²⁴`) — the GPU leg, same model, larger `u`.
-- The harder, honest frontier: a *conditioned* bound for cancellation-prone
-  kernels, and eventually the EML→RTL leg (`Formal equivalence proofs: EML
-  source = synthesized gates`, roadmap Phase 3).
+- `dot3` (the full `vec3` dot) and `lerp` extend the conditioned machinery
+  mechanically (one more rounding level, same `roundsW_abs` + triangle).
+- A concrete numeric `f32`/`f64` instance (instantiate `w := 2⁻²⁴ / 2⁻⁵³` and
+  evaluate the bound) once the `Real` pow/division lemmas are in.
+- The EML→RTL leg (`Formal equivalence proofs: EML source = synthesized gates`,
+  roadmap Phase 3) — the hardware end of the same chain.
 
 ## Reproduce
 

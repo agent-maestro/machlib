@@ -19,6 +19,14 @@ per-release status.
   `u` axioms; no `sorryAx`. EML's straight-line scalar restriction is what makes
   this a closed-form bound rather than a CompCert-scale semantics theorem.
   Full write-up: [`docs/cross_target_equivalence_2026_06_26.md`](foundations/docs/cross_target_equivalence_2026_06_26.md).
+- **Conditioned bounds + precision-generic model** (same module): `RoundsW w`
+  parameterizes the standard model over the precision's unit roundoff (f64 2⁻⁵³,
+  f32 2⁻²⁴, bf16 2⁻⁸) — one theorem, every target, and *no* `u` axiom (rests
+  only on `propext` + the `Real` base). `dot2_fwd_error` handles the mixed-sign /
+  cancellation-prone case `length_sq` avoids: `|fl(a·b+c·d) − exact| ≤
+  ((1+w)²−1)·(|a·b|+|c·d|)` — absolute error against the conditioning quantity,
+  the honest statement when the result can cancel to ≈0. Helpers `roundsW_abs`,
+  `abs_le_one_add`, `mul_one_add_sub`.
 
 ## [Unreleased] — 2026-06-25
 

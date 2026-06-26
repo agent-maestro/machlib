@@ -308,4 +308,90 @@ theorem length_sq3_fwd_error
       exact mul_le_mul_of_nonneg_right key hsum
     exact le_trans hsub step
 
+/-! ## Precision-generic conditioned bounds — the mixed-sign / cancellation case
+
+`length_sq` was the clean case: all summands `≥ 0`, so a *relative* bound holds.
+Real kernels like `dot` and `lerp` mix signs (and subtract), so a relative
+bound is false near cancellation. The honest statement bounds the **absolute**
+error by the **conditioning quantity** `Σ |term|` — and we parameterize the
+model over the precision's unit roundoff `w` (f64 `= 2⁻⁵³`, f32 `= 2⁻²⁴`,
+bf16 `= 2⁻⁸`), so one theorem covers every target. -/
+
+/-- The standard FP model, parameterized by the precision's unit roundoff `w`.
+(`Rounds` above is this at the ambient `w = u`.) -/
+def RoundsW (w fl e : Real) : Prop :=
+  ∃ δ : Real, -w ≤ δ ∧ δ ≤ w ∧ fl = e * (1 + δ)
+
+/-- `e·(1+d) − e = e·d` (helper; stated with fresh vars so `mach_mpoly`'s
+atom parser doesn't trip on an `obtain`-destructured fvar). -/
+theorem mul_one_add_sub (e d : Real) : e * (1 + d) - e = e * d := by mach_mpoly [e, d]
+
+/-- Absolute error of one rounding, any precision: `|fl − e| ≤ w·|e|`. -/
+theorem roundsW_abs {w fl e : Real} (h : RoundsW w fl e) : abs (fl - e) ≤ w * abs e := by
+  obtain ⟨δ, hδl, hδu, hfl⟩ := h
+  have hnd : -δ ≤ w := by
+    have h1 : -δ ≤ -(-w) := neg_le_neg hδl
+    have h2 : -(-w) = w := by mach_ring
+    rw [h2] at h1; exact h1
+  have hδabs : abs δ ≤ w := abs_le_of hδu hnd
+  have hfe : fl - e = e * δ := by rw [hfl]; exact mul_one_add_sub e δ
+  rw [hfe, abs_mul, mul_comm (abs e) (abs δ)]
+  exact mul_le_mul_of_nonneg_right hδabs (abs_nonneg e)
+
+/-- `|p| ≤ (1+w)·|e|` when `p` is within `w·|e|` of `e`. -/
+theorem abs_le_one_add {w p e : Real} (h : abs (p - e) ≤ w * abs e) :
+    abs p ≤ (1 + w) * abs e := by
+  have ht : abs p ≤ abs e + abs (p - e) := by
+    have e1 : p = e + (p - e) := by mach_ring
+    have htri := abs_add e (p - e)
+    rw [← e1] at htri; exact htri
+  have h2 : abs e + abs (p - e) ≤ abs e + w * abs e := add_le_add_left h (abs e)
+  have e2 : abs e + w * abs e = (1 + w) * abs e := by mach_ring
+  rw [e2] at h2; exact le_trans ht h2
+
+/-- **`dot2` conditioned forward-error.** The `f64`/`f32` evaluation of
+`a·b + c·d` — a *mixed-sign* sum, the cancellation-prone case `length_sq`
+avoids — is within `(1+w)² − 1 ≈ 2w` of the exact value, measured against the
+**conditioning quantity** `|a·b| + |c·d|`. (Not `|result|`: if the result
+cancels to ≈ 0 the *relative* error is unbounded — this absolute-vs-Σ|term|
+form is the honest one.) Holds for any unit roundoff `w ≥ 0`, so the same
+theorem is the f64 *and* the f32/WGSL bound. -/
+theorem dot2_fwd_error (w : Real) (hw0 : 0 ≤ w)
+    (a b c d : Real) (p1 p2 r : Real)
+    (hp1 : RoundsW w p1 (a * b)) (hp2 : RoundsW w p2 (c * d))
+    (hr : RoundsW w r (p1 + p2)) :
+    abs (r - (a * b + c * d))
+      ≤ ((1 + w) * (1 + w) - 1) * (abs (a * b) + abs (c * d)) := by
+  have hsplit : abs (r - (a * b + c * d))
+      ≤ abs (r - (p1 + p2)) + abs ((p1 + p2) - (a * b + c * d)) := by
+    have e : r - (a * b + c * d) = (r - (p1 + p2)) + ((p1 + p2) - (a * b + c * d)) := by
+      mach_mpoly [r, p1, p2, a, b, c, d]
+    rw [e]; exact abs_add _ _
+  have hp1b : abs p1 ≤ (1 + w) * abs (a * b) := abs_le_one_add (roundsW_abs hp1)
+  have hp2b : abs p2 ≤ (1 + w) * abs (c * d) := abs_le_one_add (roundsW_abs hp2)
+  have hsumb : abs (p1 + p2) ≤ (1 + w) * (abs (a * b) + abs (c * d)) := by
+    have ht := abs_add p1 p2
+    have hadd := add_le_add_both hp1b hp2b
+    have e : (1 + w) * abs (a * b) + (1 + w) * abs (c * d)
+        = (1 + w) * (abs (a * b) + abs (c * d)) := by mach_mpoly [w, abs (a * b), abs (c * d)]
+    rw [e] at hadd
+    exact le_trans ht hadd
+  have ht1 : abs (r - (p1 + p2)) ≤ w * ((1 + w) * (abs (a * b) + abs (c * d))) :=
+    le_trans (roundsW_abs hr) (mul_le_mul_of_nonneg_left hsumb hw0)
+  have ht2 : abs ((p1 + p2) - (a * b + c * d)) ≤ w * (abs (a * b) + abs (c * d)) := by
+    have hd : (p1 + p2) - (a * b + c * d) = (p1 - a * b) + (p2 - c * d) := by mach_ring
+    rw [hd]
+    have htri := abs_add (p1 - a * b) (p2 - c * d)
+    have hadd := add_le_add_both (roundsW_abs hp1) (roundsW_abs hp2)
+    have e : w * abs (a * b) + w * abs (c * d) = w * (abs (a * b) + abs (c * d)) := by
+      mach_mpoly [w, abs (a * b), abs (c * d)]
+    rw [e] at hadd
+    exact le_trans htri hadd
+  have hcomb := add_le_add_both ht1 ht2
+  have efinal : w * ((1 + w) * (abs (a * b) + abs (c * d))) + w * (abs (a * b) + abs (c * d))
+      = ((1 + w) * (1 + w) - 1) * (abs (a * b) + abs (c * d)) := by
+    mach_mpoly [w, abs (a * b), abs (c * d)]
+  rw [efinal] at hcomb
+  exact le_trans hsplit hcomb
+
 end MachLib.Real
