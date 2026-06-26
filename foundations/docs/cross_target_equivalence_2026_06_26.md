@@ -135,11 +135,24 @@ standard abs toolkit MachLib was missing — `le_abs_self`, `neg_le_abs`,
 That is the moat sentence, earned: **Forge does not just regression-test that
 its targets agree — it proves a bound on their disagreement.**
 
+## The general theorem — `RSum_bound`
+
+The fixed-arity kernels are now instances of one result. For *any* list summed
+sequentially with rounding (`RSum`), Higham's bound:
+
+> `|fl(Σ xᵢ) − Σ xᵢ| ≤ ((1+w)ⁿ − 1) · Σ|xᵢ|`   (`n` = length)
+
+Proved Mathlib-free by induction over the list, **one `cond_combine` per
+element** — the building block, iterated — closing the per-step slack
+`(1+w)(Pₖ−1)·|x|` with `le_of_sub_nonneg`. It needed a `Nat`-power on `Real`
+(`npow`, since MachLib only had the `Real^Real` analytic power) plus
+`lsum`/`labs` and `|Σx| ≤ Σ|x|`. `dot2/3/4` are now corollaries-in-spirit of
+this one theorem; arbitrary accumulations (longer dots, matrix rows of any
+width) are covered directly. `#print axioms` → `propext` + the `Real` base, no
+`sorryAx`, no `u`.
+
 ## Next rungs
 
-- `dot4` already covers `mat4` cells and `quat` components. A general
-  `N`-term conditioned summation (Higham, by list induction) would subsume
-  `dot2/3/4` and arbitrary accumulations — the natural consolidation.
 - A concrete numeric `f32`/`f64` instance (instantiate `w := 2⁻²⁴ / 2⁻⁵³` and
   evaluate the bound) once the `Real` pow/division lemmas are in.
 - The EML→RTL leg (`Formal equivalence proofs: EML source = synthesized gates`,

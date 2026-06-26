@@ -751,4 +751,114 @@ theorem dot4_fwd_error (w : Real) (hw0 : 0 ≤ w)
   rw [efinal] at hcomb
   exact le_trans hsplit hcomb
 
+/-! ## General N-term summation — Higham's theorem, Mathlib-free
+
+`dot2/3/4` are fixed-arity instances. This is the general sequential rounded
+sum of a list, via `cond_combine` + a recursively-defined `Nat`-power (MachLib's
+only `^` is the `Real^Real` analytic power). -/
+
+/-- `Nat`-power on `Real` (monoid power). -/
+noncomputable def npow : Nat → Real → Real
+  | 0,     _ => 1
+  | n + 1, x => x * npow n x
+
+theorem npow_succ (n : Nat) (x : Real) : npow (n + 1) x = x * npow n x := rfl
+
+theorem one_le_npow (x : Real) (hx : 1 ≤ x) : ∀ n : Nat, (1 : Real) ≤ npow n x
+  | 0 => le_refl 1
+  | n + 1 => by
+      have ih := one_le_npow x hx n
+      have h0x : (0 : Real) ≤ x := le_trans (le_of_lt one_pos) hx
+      have hm := mul_le_mul_of_nonneg_left ih h0x
+      rw [show x * (1 : Real) = x by mach_ring] at hm
+      rw [npow_succ]; exact le_trans hx hm
+
+/-- Exact sum of a list. -/
+noncomputable def lsum : List Real → Real
+  | [] => 0
+  | x :: xs => x + lsum xs
+
+/-- Sum of absolute values — the conditioning quantity. -/
+noncomputable def labs : List Real → Real
+  | [] => 0
+  | x :: xs => abs x + labs xs
+
+theorem labs_nonneg : ∀ xs : List Real, (0 : Real) ≤ labs xs
+  | [] => by show (0 : Real) ≤ 0; exact le_refl 0
+  | x :: xs => by
+      show (0 : Real) ≤ abs x + labs xs
+      exact add_nonneg (abs_nonneg x) (labs_nonneg xs)
+
+theorem abs_lsum_le_labs : ∀ xs : List Real, abs (lsum xs) ≤ labs xs
+  | [] => by show abs (0 : Real) ≤ 0; rw [abs_zero]; exact le_refl 0
+  | x :: xs => by
+      show abs (x + lsum xs) ≤ abs x + labs xs
+      exact le_trans (abs_add x (lsum xs)) (add_le_add_left (abs_lsum_le_labs xs) (abs x))
+
+/-- Sequential rounded sum: `s = ⌊x₁ + ⌊x₂ + … + ⌊xₙ + 0⌉⌉⌉`. -/
+inductive RSum (w : Real) : List Real → Real → Prop
+  | nil : RSum w [] 0
+  | cons (x : Real) (xs : List Real) (acc r : Real) :
+      RSum w xs acc → RoundsW w r (x + acc) → RSum w (x :: xs) r
+
+/-- The per-step algebraic slack (over fresh vars, so `mach_mpoly`'s atom parser
+doesn't trip on the `induction`-bound `x`): `target − bound = (1+w)(P−1)·ax`. -/
+theorem sum_step_slack (w ax L P : Real) :
+    ((1 + w) * P - 1) * (ax + L)
+      - (w * ((ax + 0) + (L + (P - 1) * L)) + (0 + (P - 1) * L))
+    = (1 + w) * (P - 1) * ax := by mach_mpoly [w, ax, L, P]
+
+/-- **General N-term conditioned summation (Higham).** Any sequential rounded
+sum of a list is within `(1+w)ⁿ − 1` of the exact sum, against the conditioning
+quantity `Σ|xᵢ|` (`n = length`). `dot2/3/4` are the arity-fixed instances. The
+proof is one `cond_combine` per element — the building block, iterated. -/
+theorem RSum_bound (w : Real) (hw0 : 0 ≤ w) :
+    ∀ {xs : List Real} {s : Real}, RSum w xs s →
+      abs (s - lsum xs) ≤ (npow xs.length (1 + w) - 1) * labs xs := by
+  intro xs s h
+  induction h with
+  | nil =>
+      show abs ((0 : Real) - 0) ≤ ((1 : Real) - 1) * 0
+      rw [show (0 : Real) - 0 = 0 by mach_ring, abs_zero, show ((1 : Real) - 1) * 0 = 0 by mach_ring]
+      exact le_refl 0
+  | cons x xs acc r h_xs h_r ih =>
+      show abs (r - (x + lsum xs))
+          ≤ (npow (xs.length + 1) (1 + w) - 1) * (abs x + labs xs)
+      have hxx : abs (x - x) ≤ 0 := by
+        rw [show x - x = 0 by mach_ring, abs_zero]; exact le_refl 0
+      have hcc := cond_combine w hw0 hxx ih h_r
+      -- hcc : abs (r - (x + lsum xs))
+      --        ≤ w*((|x|+0)+(|lsum xs|+E)) + (0+E),  E = (npow k (1+w) - 1)*labs xs
+      refine le_trans hcc ?_
+      have hP : (1 : Real) ≤ npow xs.length (1 + w) :=
+        one_le_npow (1 + w) (le_add_of_nonneg_right hw0) xs.length
+      have hL : (0 : Real) ≤ labs xs := labs_nonneg xs
+      have hls : abs (lsum xs) ≤ labs xs := abs_lsum_le_labs xs
+      have hax : (0 : Real) ≤ abs x := abs_nonneg x
+      -- step 1: replace |lsum xs| by labs xs (monotone, w ≥ 0)
+      have hinner : abs (lsum xs) + (npow xs.length (1 + w) - 1) * labs xs
+          ≤ labs xs + (npow xs.length (1 + w) - 1) * labs xs :=
+        add_le_add_both hls (le_refl _)
+      have hmono :
+          w * ((abs x + 0) + (abs (lsum xs) + (npow xs.length (1 + w) - 1) * labs xs))
+              + (0 + (npow xs.length (1 + w) - 1) * labs xs)
+            ≤ w * ((abs x + 0) + (labs xs + (npow xs.length (1 + w) - 1) * labs xs))
+              + (0 + (npow xs.length (1 + w) - 1) * labs xs) :=
+        add_le_add_both
+          (mul_le_mul_of_nonneg_left (add_le_add_left hinner (abs x + 0)) hw0)
+          (le_refl _)
+      refine le_trans hmono ?_
+      -- step 2: equality slack = (1+w)(P-1)|x| ≥ 0
+      rw [npow_succ]
+      have hslack : (0 : Real)
+          ≤ (1 + w) * (npow xs.length (1 + w) - 1) * abs x :=
+        mul_nonneg (mul_nonneg (zero_le_one_add hw0) (sub_nonneg_of_le hP)) hax
+      have hdiff := sum_step_slack w (abs x) (labs xs) (npow xs.length (1 + w))
+      have hd : (0 : Real)
+          ≤ ((1 + w) * npow xs.length (1 + w) - 1) * (abs x + labs xs)
+            - (w * ((abs x + 0) + (labs xs + (npow xs.length (1 + w) - 1) * labs xs))
+              + (0 + (npow xs.length (1 + w) - 1) * labs xs)) := by
+        rw [hdiff]; exact hslack
+      exact le_of_sub_nonneg hd
+
 end MachLib.Real
