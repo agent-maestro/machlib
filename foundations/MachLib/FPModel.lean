@@ -394,4 +394,177 @@ theorem dot2_fwd_error (w : Real) (hw0 : 0 ≤ w)
   rw [efinal] at hcomb
   exact le_trans hsplit hcomb
 
+/-- `0 ≤ 1 + w` for `0 ≤ w`. -/
+theorem zero_le_one_add {w : Real} (hw0 : 0 ≤ w) : (0 : Real) ≤ 1 + w :=
+  le_trans (le_of_lt one_pos) (le_add_of_nonneg_right hw0)
+
+/-- **`dot3` conditioned forward-error — the `vec3` dot kernel.** Reuses
+`dot2` for the inner `(ay·by + az·bz)` subtree, then combines with `ax·bx`
+at the final rounding. Within `(1+w)³ − 1 ≈ 3w` of the exact value, against
+the conditioning quantity `|ax·bx| + |ay·by| + |az·bz|`. -/
+theorem dot3_fwd_error (w : Real) (hw0 : 0 ≤ w)
+    (ax bx ay by_ az bz : Real) (p1 p2 p3 s r : Real)
+    (hp1 : RoundsW w p1 (ax * bx)) (hp2 : RoundsW w p2 (ay * by_))
+    (hp3 : RoundsW w p3 (az * bz))
+    (hs : RoundsW w s (p2 + p3)) (hr : RoundsW w r (p1 + s)) :
+    abs (r - (ax * bx + (ay * by_ + az * bz)))
+      ≤ ((1 + w) * (1 + w) * (1 + w) - 1)
+          * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz))) := by
+  have h1w : (0 : Real) ≤ 1 + w := zero_le_one_add hw0
+  -- inner subtree via dot2
+  have hsE : abs (s - (ay * by_ + az * bz))
+      ≤ ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz)) :=
+    dot2_fwd_error w hw0 ay by_ az bz p2 p3 s hp2 hp3 hs
+  -- |s| ≤ (1+w)²(B+C)
+  have hsBound : abs s ≤ (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)) := by
+    have htri : abs s ≤ abs (ay * by_ + az * bz) + abs (s - (ay * by_ + az * bz)) := by
+      have e1 : s = (ay * by_ + az * bz) + (s - (ay * by_ + az * bz)) := by
+        mach_mpoly [s, ay, by_, az, bz]
+      have ha := abs_add (ay * by_ + az * bz) (s - (ay * by_ + az * bz))
+      rw [← e1] at ha; exact ha
+    have hBC : abs (ay * by_ + az * bz) ≤ abs (ay * by_) + abs (az * bz) := abs_add _ _
+    have step := add_le_add_both hBC hsE
+    have e : (abs (ay * by_) + abs (az * bz))
+          + ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz))
+        = (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)) := by
+      mach_mpoly [w, abs (ay * by_), abs (az * bz)]
+    rw [e] at step
+    exact le_trans htri step
+  have hp1Bound : abs p1 ≤ (1 + w) * abs (ax * bx) := abs_le_one_add (roundsW_abs hp1)
+  -- outer split
+  have hsplit : abs (r - (ax * bx + (ay * by_ + az * bz)))
+      ≤ abs (r - (p1 + s)) + abs ((p1 + s) - (ax * bx + (ay * by_ + az * bz))) := by
+    have e : r - (ax * bx + (ay * by_ + az * bz))
+        = (r - (p1 + s)) + ((p1 + s) - (ax * bx + (ay * by_ + az * bz))) := by
+      mach_mpoly [r, p1, s, ax, bx, ay, by_, az, bz]
+    rw [e]; exact abs_add _ _
+  have hps : abs (p1 + s)
+      ≤ (1 + w) * abs (ax * bx) + (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)) :=
+    le_trans (abs_add p1 s) (add_le_add_both hp1Bound hsBound)
+  have ht1 : abs (r - (p1 + s))
+      ≤ w * ((1 + w) * abs (ax * bx)
+          + (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz))) :=
+    le_trans (roundsW_abs hr) (mul_le_mul_of_nonneg_left hps hw0)
+  have ht2 : abs ((p1 + s) - (ax * bx + (ay * by_ + az * bz)))
+      ≤ w * abs (ax * bx) + ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz)) := by
+    have hd : (p1 + s) - (ax * bx + (ay * by_ + az * bz))
+        = (p1 - ax * bx) + (s - (ay * by_ + az * bz)) := by
+      mach_mpoly [p1, s, ax, bx, ay, by_, az, bz]
+    rw [hd]
+    exact le_trans (abs_add _ _) (add_le_add_both (roundsW_abs hp1) hsE)
+  have hcomb := add_le_add_both ht1 ht2
+  -- boundexpr ≤ ((1+w)³−1)(A+B+C): the difference is w(1+w)²·|ax·bx| ≥ 0
+  have hfinal : w * ((1 + w) * abs (ax * bx)
+            + (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)))
+          + (w * abs (ax * bx)
+            + ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz)))
+      ≤ ((1 + w) * (1 + w) * (1 + w) - 1)
+          * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz))) := by
+    have hnn : (0 : Real) ≤ w * (1 + w) * (1 + w) * abs (ax * bx) :=
+      mul_nonneg (mul_nonneg (mul_nonneg hw0 h1w) h1w) (abs_nonneg _)
+    have hdiff : ((1 + w) * (1 + w) * (1 + w) - 1)
+              * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz)))
+            - (w * ((1 + w) * abs (ax * bx)
+                + (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)))
+              + (w * abs (ax * bx)
+                + ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz))))
+          = w * (1 + w) * (1 + w) * abs (ax * bx) := by
+      mach_mpoly [w, abs (ax * bx), abs (ay * by_), abs (az * bz)]
+    have hd : (0 : Real) ≤ ((1 + w) * (1 + w) * (1 + w) - 1)
+              * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz)))
+            - (w * ((1 + w) * abs (ax * bx)
+                + (1 + w) * (1 + w) * (abs (ay * by_) + abs (az * bz)))
+              + (w * abs (ax * bx)
+                + ((1 + w) * (1 + w) - 1) * (abs (ay * by_) + abs (az * bz)))) := by
+      rw [hdiff]; exact hnn
+    exact le_of_sub_nonneg hd
+  exact le_trans hsplit (le_trans hcomb hfinal)
+
+/-- **`lerp` conditioned forward-error — `a + (b−a)·t`.** The `(b−a)`
+subtraction is itself a cancellation source, so the conditioning quantity is
+`|a| + |(b−a)·t|`. Within `(1+w)³ − 1` of the exact value. Eval order:
+`g = ⌊b−a⌉`, `m = ⌊g·t⌉`, `res = ⌊a+m⌉`. -/
+theorem lerp_fwd_error (w : Real) (hw0 : 0 ≤ w)
+    (a b t : Real) (g m res : Real)
+    (hg : RoundsW w g (b - a)) (hm : RoundsW w m (g * t))
+    (hres : RoundsW w res (a + m)) :
+    abs (res - (a + (b - a) * t))
+      ≤ ((1 + w) * (1 + w) * (1 + w) - 1) * (abs a + abs ((b - a) * t)) := by
+  -- inner: |m − (b−a)·t| ≤ ((1+w)²−1)·|(b−a)·t|  (a product with one pre-rounded operand)
+  have hmE : abs (m - (b - a) * t) ≤ ((1 + w) * (1 + w) - 1) * abs ((b - a) * t) := by
+    have hsplit : abs (m - (b - a) * t) ≤ abs (m - g * t) + abs (g * t - (b - a) * t) := by
+      have e : m - (b - a) * t = (m - g * t) + (g * t - (b - a) * t) := by
+        mach_mpoly [m, g, b, a, t]
+      rw [e]; exact abs_add _ _
+    have hgt : abs (g * t) ≤ (1 + w) * abs ((b - a) * t) := by
+      have hg1 : abs g ≤ (1 + w) * abs (b - a) := abs_le_one_add (roundsW_abs hg)
+      rw [abs_mul g t]
+      have step : abs g * abs t ≤ ((1 + w) * abs (b - a)) * abs t :=
+        mul_le_mul_of_nonneg_right hg1 (abs_nonneg t)
+      have e : ((1 + w) * abs (b - a)) * abs t = (1 + w) * abs ((b - a) * t) := by
+        rw [abs_mul (b - a) t]; mach_mpoly [w, abs (b - a), abs t]
+      rw [e] at step; exact step
+    have hm1 : abs (m - g * t) ≤ w * ((1 + w) * abs ((b - a) * t)) :=
+      le_trans (roundsW_abs hm) (mul_le_mul_of_nonneg_left hgt hw0)
+    have hm2 : abs (g * t - (b - a) * t) ≤ w * abs ((b - a) * t) := by
+      have e1 : g * t - (b - a) * t = (g - (b - a)) * t := by mach_mpoly [g, b, a, t]
+      rw [e1, abs_mul (g - (b - a)) t]
+      have step : abs (g - (b - a)) * abs t ≤ (w * abs (b - a)) * abs t :=
+        mul_le_mul_of_nonneg_right (roundsW_abs hg) (abs_nonneg t)
+      have e2 : (w * abs (b - a)) * abs t = w * abs ((b - a) * t) := by
+        rw [abs_mul (b - a) t]; mach_mpoly [w, abs (b - a), abs t]
+      rw [e2] at step; exact step
+    have hcomb := add_le_add_both hm1 hm2
+    have efinal : w * ((1 + w) * abs ((b - a) * t)) + w * abs ((b - a) * t)
+        = ((1 + w) * (1 + w) - 1) * abs ((b - a) * t) := by mach_mpoly [w, abs ((b - a) * t)]
+    rw [efinal] at hcomb
+    exact le_trans hsplit hcomb
+  -- |m| ≤ (1+w)²·|(b−a)·t|
+  have hmBound : abs m ≤ (1 + w) * (1 + w) * abs ((b - a) * t) := by
+    have htri : abs m ≤ abs ((b - a) * t) + abs (m - (b - a) * t) := by
+      have e1 : m = (b - a) * t + (m - (b - a) * t) := by mach_mpoly [m, b, a, t]
+      have ha := abs_add ((b - a) * t) (m - (b - a) * t)
+      rw [← e1] at ha; exact ha
+    have step := add_le_add_left hmE (abs ((b - a) * t))
+    have e : abs ((b - a) * t) + ((1 + w) * (1 + w) - 1) * abs ((b - a) * t)
+        = (1 + w) * (1 + w) * abs ((b - a) * t) := by mach_mpoly [w, abs ((b - a) * t)]
+    rw [e] at step
+    exact le_trans htri step
+  -- outer
+  have hsplit : abs (res - (a + (b - a) * t))
+      ≤ abs (res - (a + m)) + abs (m - (b - a) * t) := by
+    have e : res - (a + (b - a) * t) = (res - (a + m)) + (m - (b - a) * t) := by
+      mach_mpoly [res, a, m, b, t]
+    rw [e]; exact abs_add _ _
+  have hres1 : abs (res - (a + m))
+      ≤ w * (abs a + (1 + w) * (1 + w) * abs ((b - a) * t)) := by
+    have ham : abs (a + m) ≤ abs a + (1 + w) * (1 + w) * abs ((b - a) * t) :=
+      le_trans (abs_add a m) (add_le_add_left hmBound (abs a))
+    exact le_trans (roundsW_abs hres) (mul_le_mul_of_nonneg_left ham hw0)
+  have hcomb := add_le_add_both hres1 hmE
+  -- boundexpr ≤ ((1+w)³−1)(|a|+P): difference is ((1+w)³−1−w)·|a| ≥ 0
+  have hfinal : w * (abs a + (1 + w) * (1 + w) * abs ((b - a) * t))
+          + ((1 + w) * (1 + w) - 1) * abs ((b - a) * t)
+      ≤ ((1 + w) * (1 + w) * (1 + w) - 1) * (abs a + abs ((b - a) * t)) := by
+    have hcube : (0 : Real) ≤ (1 + w) * (1 + w) * (1 + w) - 1 - w := by
+      have e : (1 + w) * (1 + w) * (1 + w) - 1 - w
+          = w + w + w * w + w * w + w * w + w * w * w := by mach_mpoly [w]
+      have hnn : (0 : Real) ≤ w + w + w * w + w * w + w * w + w * w * w :=
+        add_nonneg (add_nonneg (add_nonneg (add_nonneg (add_nonneg hw0 hw0)
+          (mul_self_nonneg w)) (mul_self_nonneg w)) (mul_self_nonneg w))
+          (mul_nonneg (mul_self_nonneg w) hw0)
+      rw [e]; exact hnn
+    have hnn : (0 : Real) ≤ ((1 + w) * (1 + w) * (1 + w) - 1 - w) * abs a :=
+      mul_nonneg hcube (abs_nonneg a)
+    have hdiff : ((1 + w) * (1 + w) * (1 + w) - 1) * (abs a + abs ((b - a) * t))
+            - (w * (abs a + (1 + w) * (1 + w) * abs ((b - a) * t))
+              + ((1 + w) * (1 + w) - 1) * abs ((b - a) * t))
+          = ((1 + w) * (1 + w) * (1 + w) - 1 - w) * abs a := by
+      mach_mpoly [w, abs a, abs ((b - a) * t)]
+    have hd : (0 : Real) ≤ ((1 + w) * (1 + w) * (1 + w) - 1) * (abs a + abs ((b - a) * t))
+            - (w * (abs a + (1 + w) * (1 + w) * abs ((b - a) * t))
+              + ((1 + w) * (1 + w) - 1) * abs ((b - a) * t)) := by rw [hdiff]; exact hnn
+    exact le_of_sub_nonneg hd
+  exact le_trans hsplit (le_trans hcomb hfinal)
+
 end MachLib.Real

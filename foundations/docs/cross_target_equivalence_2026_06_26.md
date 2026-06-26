@@ -98,10 +98,25 @@ energies) get a *relative* bound; mixed-sign kernels (`dot`, residuals) get an
 *absolute* bound against their condition number. Both are honest; neither is a
 blanket "verified."
 
+## The kernel set so far
+
+Five forward-error theorems, the complete `vec3` scalar algebra:
+
+| kernel | bound | form |
+| --- | --- | --- |
+| `length_sq2` / `length_sq3` | `(1+u)ⁿ − 1` × `length_sq` | **relative** (nonneg summands) |
+| `dot2` / `dot3` | `(1+w)ⁿ − 1` × `Σ|aᵢ·bᵢ|` | **conditioned** (mixed sign) |
+| `lerp` | `(1+w)³ − 1` × `(|a| + |(b−a)·t|)` | **conditioned** (subtraction) |
+
+`dot3` *reuses* `dot2` for its inner subtree, and `lerp` reuses the same
+`roundsW_abs` + `abs_le_one_add` + triangle machinery — the conditioned method
+composes. `dot2/dot3/lerp` are precision-generic (parameterized by `w`; `#print
+axioms` shows no `u`), so each is simultaneously the f64 and the f32/WGSL bound.
+
 ## Next rungs
 
-- `dot3` (the full `vec3` dot) and `lerp` extend the conditioned machinery
-  mechanically (one more rounding level, same `roundsW_abs` + triangle).
+- `mat4`/`quat` algebra (matrix-multiply cells are short dot products — the
+  `dot` machinery applies) and the longer accumulations.
 - A concrete numeric `f32`/`f64` instance (instantiate `w := 2⁻²⁴ / 2⁻⁵³` and
   evaluate the bound) once the `Real` pow/division lemmas are in.
 - The EML→RTL leg (`Formal equivalence proofs: EML source = synthesized gates`,
