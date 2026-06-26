@@ -861,4 +861,39 @@ theorem RSum_bound (w : Real) (hw0 : 0 ≤ w) :
         rw [hdiff]; exact hslack
       exact le_of_sub_nonneg hd
 
+/-! ## Concrete precisions — IEEE binary64 and binary32
+
+The theorems above are parameterized over the unit roundoff `w`. Here it
+becomes an actual number: `f64_u = 2⁻⁵³`, `f32_u = 2⁻²⁴`, each a real
+`1 / 2ⁿ` with a machine-checked `0 ≤ · ≤ 1`, so every `dotN`/`lerp`/
+`cross_target`/`RSum_bound` instantiates at a real target precision. -/
+
+theorem one_le_two : (1 : Real) ≤ 1 + 1 := le_add_of_nonneg_right (le_of_lt one_pos)
+
+theorem npow_two_pos (n : Nat) : (0 : Real) < npow n (1 + 1) :=
+  lt_of_lt_of_le zero_lt_one_ax (one_le_npow (1 + 1) one_le_two n)
+
+/-- IEEE binary64 unit roundoff, `2⁻⁵³`. -/
+noncomputable def f64_u : Real := 1 / npow 53 (1 + 1)
+/-- IEEE binary32 unit roundoff, `2⁻²⁴`. -/
+noncomputable def f32_u : Real := 1 / npow 24 (1 + 1)
+
+theorem f64_u_nonneg : (0 : Real) ≤ f64_u := one_div_nonneg_of_pos (npow_two_pos 53)
+theorem f64_u_le_one : f64_u ≤ 1 :=
+  div_le_one_of_le_of_pos (npow_two_pos 53) (one_le_npow (1 + 1) one_le_two 53)
+theorem f32_u_nonneg : (0 : Real) ≤ f32_u := one_div_nonneg_of_pos (npow_two_pos 24)
+theorem f32_u_le_one : f32_u ≤ 1 :=
+  div_le_one_of_le_of_pos (npow_two_pos 24) (one_le_npow (1 + 1) one_le_two 24)
+
+/-- **`dot2` at IEEE binary64** — the abstract bound made concrete: the actual
+Rust-`f64` evaluation of `a·b + c·d` is within `(1+2⁻⁵³)² − 1` of the exact
+value (≈ 2·2⁻⁵³). One specialization of `dot2_fwd_error`; the same holds for
+`f32_u = 2⁻²⁴` and for every other kernel above. -/
+theorem dot2_f64 (a b c d : Real) (p1 p2 r : Real)
+    (hp1 : RoundsW f64_u p1 (a * b)) (hp2 : RoundsW f64_u p2 (c * d))
+    (hr : RoundsW f64_u r (p1 + p2)) :
+    abs (r - (a * b + c * d))
+      ≤ ((1 + f64_u) * (1 + f64_u) - 1) * (abs (a * b) + abs (c * d)) :=
+  dot2_fwd_error f64_u f64_u_nonneg a b c d p1 p2 r hp1 hp2 hr
+
 end MachLib.Real
