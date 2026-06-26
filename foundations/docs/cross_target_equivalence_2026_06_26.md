@@ -113,6 +113,27 @@ Five forward-error theorems, the complete `vec3` scalar algebra:
 composes. `dot2/dot3/lerp` are precision-generic (parameterized by `w`; `#print
 axioms` shows no `u`), so each is simultaneously the f64 and the f32/WGSL bound.
 
+## The loop closed — `cross_target`
+
+Everything above bounds *target vs exact* (`f64 ≈ Real`, `f32 ≈ Real`). The
+thing the conformance harness actually samples is *target vs target* —
+`assert_close(gpu_f32, cpu_f64)`. That now follows in one line by the triangle
+inequality:
+
+```
+cross_target : |r1 − e| ≤ B1  →  |r2 − e| ≤ B2  →  |r1 − r2| ≤ B1 + B2
+```
+
+`dot3_cross_target` applies it: the Rust **f64** and WGSL **f32** evaluations of
+the same `vec3` dot agree within `B(2⁻⁵³) + B(2⁻²⁴)` — the sum of their
+forward-error bounds. The `1e-6` the harness checks empirically is now a
+*theorem*, parameterized over both precisions. (Deriving it also added the
+standard abs toolkit MachLib was missing — `le_abs_self`, `neg_le_abs`,
+`le_of_abs_le`, `abs_le_of`, `cross_target`.)
+
+That is the moat sentence, earned: **Forge does not just regression-test that
+its targets agree — it proves a bound on their disagreement.**
+
 ## Next rungs
 
 - `mat4`/`quat` algebra (matrix-multiply cells are short dot products — the

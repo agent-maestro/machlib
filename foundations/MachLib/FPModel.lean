@@ -89,6 +89,56 @@ theorem sub_le_sub_right {a b : Real} (h : a ≤ b) (c : Real) : a - c ≤ b - c
 theorem sub_le_sub_left {a b : Real} (h : a ≤ b) (c : Real) : c - b ≤ c - a := by
   rw [sub_def, sub_def]; exact add_le_add_both (le_refl c) (neg_le_neg h)
 
+theorem le_of_eq {a b : Real} (h : a = b) : a ≤ b := h ▸ le_refl a
+
+theorem le_abs_self (t : Real) : t ≤ abs t := by
+  unfold abs
+  rcases lt_total 0 t with h | h | h
+  · rw [if_pos (le_of_lt h)]; exact le_refl t
+  · rw [if_pos (le_of_eq h)]; exact le_refl t
+  · have hnt : ¬ (0 ≤ t) := fun hle => lt_irrefl_ax (0 : Real) (lt_of_le_of_lt hle h)
+    rw [if_neg hnt]
+    exact le_trans (le_of_lt h) (neg_nonneg_of_nonpos (le_of_lt h))
+
+theorem neg_le_abs (t : Real) : -t ≤ abs t := by
+  unfold abs
+  rcases lt_total 0 t with h | h | h
+  · rw [if_pos (le_of_lt h)]
+    exact le_trans (neg_nonpos_of_nonneg (le_of_lt h)) (le_of_lt h)
+  · have ht : (0 : Real) ≤ t := le_of_eq h
+    rw [if_pos ht]; exact le_trans (neg_nonpos_of_nonneg ht) ht
+  · have hnt : ¬ (0 ≤ t) := fun hle => lt_irrefl_ax (0 : Real) (lt_of_le_of_lt hle h)
+    rw [if_neg hnt]; exact le_refl _
+
+theorem le_of_abs_le {t B : Real} (h : abs t ≤ B) : t ≤ B := le_trans (le_abs_self t) h
+theorem neg_le_of_abs_le {t B : Real} (h : abs t ≤ B) : -t ≤ B := le_trans (neg_le_abs t) h
+
+/-- **Cross-target agreement.** Two evaluations of the *same* exact value `e`
+agree within the sum of their forward-error bounds. With the f64 bound (`B1`)
+and the f32/WGSL bound (`B2`) of a kernel, this proves the two *targets* agree —
+the exact statement the conformance harness samples, now a theorem. -/
+theorem cross_target {r1 r2 e B1 B2 : Real}
+    (h1 : abs (r1 - e) ≤ B1) (h2 : abs (r2 - e) ≤ B2) :
+    abs (r1 - r2) ≤ B1 + B2 := by
+  apply abs_le_of
+  · have ha : r1 - e ≤ B1 := le_of_abs_le h1
+    have hb : e - r2 ≤ B2 := by
+      have hn := neg_le_of_abs_le h2
+      have e1 : -(r2 - e) = e - r2 := by mach_mpoly [r2, e]
+      rw [e1] at hn; exact hn
+    have hsum := add_le_add_both ha hb
+    have e2 : (r1 - e) + (e - r2) = r1 - r2 := by mach_mpoly [r1, r2, e]
+    rw [e2] at hsum; exact hsum
+  · have ha : r2 - e ≤ B2 := le_of_abs_le h2
+    have hb : e - r1 ≤ B1 := by
+      have hn := neg_le_of_abs_le h1
+      have e1 : -(r1 - e) = e - r1 := by mach_mpoly [r1, e]
+      rw [e1] at hn; exact hn
+    have hsum := add_le_add_both ha hb
+    have e2 : (r2 - e) + (e - r1) = -(r1 - r2) := by mach_mpoly [r1, r2, e]
+    have e3 : B2 + B1 = B1 + B2 := by mach_mpoly [B1, B2]
+    rw [e2, e3] at hsum; exact hsum
+
 theorem one_add_u_nonneg : (0 : Real) ≤ 1 + u := by
   have : (0 : Real) ≤ 1 := le_of_lt one_pos
   exact le_trans this (le_add_of_nonneg_right u_nonneg)
@@ -566,5 +616,27 @@ theorem lerp_fwd_error (w : Real) (hw0 : 0 ≤ w)
               + ((1 + w) * (1 + w) - 1) * abs ((b - a) * t)) := by rw [hdiff]; exact hnn
     exact le_of_sub_nonneg hd
   exact le_trans hsplit (le_trans hcomb hfinal)
+
+/-- **`dot3` cross-target — Rust f64 vs WGSL f32, proven.** The two precisions'
+evaluations of the same `vec3` dot agree within the sum of their forward-error
+bounds — the `assert_close(gpu, cpu)` the harness samples, now a theorem (with
+the precisions `w1`, `w2` left free: f64 `= 2⁻⁵³`, f32 `= 2⁻²⁴`). -/
+theorem dot3_cross_target (w1 w2 : Real) (hw1 : 0 ≤ w1) (hw2 : 0 ≤ w2)
+    (ax bx ay by_ az bz : Real)
+    (p1 p2 p3 s r : Real) (q1 q2 q3 sQ rQ : Real)
+    (hp1 : RoundsW w1 p1 (ax * bx)) (hp2 : RoundsW w1 p2 (ay * by_))
+    (hp3 : RoundsW w1 p3 (az * bz))
+    (hs : RoundsW w1 s (p2 + p3)) (hr : RoundsW w1 r (p1 + s))
+    (hq1 : RoundsW w2 q1 (ax * bx)) (hq2 : RoundsW w2 q2 (ay * by_))
+    (hq3 : RoundsW w2 q3 (az * bz))
+    (hsQ : RoundsW w2 sQ (q2 + q3)) (hrQ : RoundsW w2 rQ (q1 + sQ)) :
+    abs (r - rQ)
+      ≤ ((1 + w1) * (1 + w1) * (1 + w1) - 1)
+          * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz)))
+        + ((1 + w2) * (1 + w2) * (1 + w2) - 1)
+          * (abs (ax * bx) + (abs (ay * by_) + abs (az * bz))) :=
+  cross_target
+    (dot3_fwd_error w1 hw1 ax bx ay by_ az bz p1 p2 p3 s r hp1 hp2 hp3 hs hr)
+    (dot3_fwd_error w2 hw2 ax bx ay by_ az bz q1 q2 q3 sQ rQ hq1 hq2 hq3 hsQ hrQ)
 
 end MachLib.Real
