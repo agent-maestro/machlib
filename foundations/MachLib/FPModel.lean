@@ -639,4 +639,85 @@ theorem dot3_cross_target (w1 w2 : Real) (hw1 : 0 ≤ w1) (hw2 : 0 ≤ w2)
     (dot3_fwd_error w1 hw1 ax bx ay by_ az bz p1 p2 p3 s r hp1 hp2 hp3 hs hr)
     (dot3_fwd_error w2 hw2 ax bx ay by_ az bz q1 q2 q3 sQ rQ hq1 hq2 hq3 hsQ hrQ)
 
+/-- **`dot4` conditioned forward-error — the `mat4` cell *and* `quat` component
+kernel.** A 4-term sum of products `a₁·b₁ + a₂·b₂ + a₃·b₃ + a₄·b₄`, evaluated as
+a *balanced* tree `⌊⌊p₁+p₂⌉ + ⌊p₃+p₄⌉⌉`. This is exactly the shape of both a
+`mul_mat4` cell (row · column) and a `mul_quat` Hamilton-product component
+(the latter mixed-sign — handled transparently, since the bound is on
+magnitudes). Two `dot2`s plus a symmetric combine: because both halves have the
+same depth, the bound is `(1+w)³ − 1` with **no slack** (the combine is an
+equality, not an inequality). -/
+theorem dot4_fwd_error (w : Real) (hw0 : 0 ≤ w)
+    (a1 b1 a2 b2 a3 b3 a4 b4 : Real)
+    (p1 p2 p3 p4 s1 s2 r : Real)
+    (hp1 : RoundsW w p1 (a1 * b1)) (hp2 : RoundsW w p2 (a2 * b2))
+    (hp3 : RoundsW w p3 (a3 * b3)) (hp4 : RoundsW w p4 (a4 * b4))
+    (hs1 : RoundsW w s1 (p1 + p2)) (hs2 : RoundsW w s2 (p3 + p4))
+    (hr : RoundsW w r (s1 + s2)) :
+    abs (r - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4)))
+      ≤ ((1 + w) * (1 + w) * (1 + w) - 1)
+          * ((abs (a1 * b1) + abs (a2 * b2)) + (abs (a3 * b3) + abs (a4 * b4))) := by
+  have hs1E : abs (s1 - (a1 * b1 + a2 * b2))
+      ≤ ((1 + w) * (1 + w) - 1) * (abs (a1 * b1) + abs (a2 * b2)) :=
+    dot2_fwd_error w hw0 a1 b1 a2 b2 p1 p2 s1 hp1 hp2 hs1
+  have hs2E : abs (s2 - (a3 * b3 + a4 * b4))
+      ≤ ((1 + w) * (1 + w) - 1) * (abs (a3 * b3) + abs (a4 * b4)) :=
+    dot2_fwd_error w hw0 a3 b3 a4 b4 p3 p4 s2 hp3 hp4 hs2
+  have hs1B : abs s1 ≤ (1 + w) * (1 + w) * (abs (a1 * b1) + abs (a2 * b2)) := by
+    have htri : abs s1 ≤ abs (a1 * b1 + a2 * b2) + abs (s1 - (a1 * b1 + a2 * b2)) := by
+      have e1 : s1 = (a1 * b1 + a2 * b2) + (s1 - (a1 * b1 + a2 * b2)) := by
+        mach_mpoly [s1, a1, b1, a2, b2]
+      have ha := abs_add (a1 * b1 + a2 * b2) (s1 - (a1 * b1 + a2 * b2))
+      rw [← e1] at ha; exact ha
+    have step := add_le_add_both (abs_add (a1 * b1) (a2 * b2)) hs1E
+    have e : (abs (a1 * b1) + abs (a2 * b2))
+          + ((1 + w) * (1 + w) - 1) * (abs (a1 * b1) + abs (a2 * b2))
+        = (1 + w) * (1 + w) * (abs (a1 * b1) + abs (a2 * b2)) := by
+      mach_mpoly [w, abs (a1 * b1), abs (a2 * b2)]
+    rw [e] at step; exact le_trans htri step
+  have hs2B : abs s2 ≤ (1 + w) * (1 + w) * (abs (a3 * b3) + abs (a4 * b4)) := by
+    have htri : abs s2 ≤ abs (a3 * b3 + a4 * b4) + abs (s2 - (a3 * b3 + a4 * b4)) := by
+      have e1 : s2 = (a3 * b3 + a4 * b4) + (s2 - (a3 * b3 + a4 * b4)) := by
+        mach_mpoly [s2, a3, b3, a4, b4]
+      have ha := abs_add (a3 * b3 + a4 * b4) (s2 - (a3 * b3 + a4 * b4))
+      rw [← e1] at ha; exact ha
+    have step := add_le_add_both (abs_add (a3 * b3) (a4 * b4)) hs2E
+    have e : (abs (a3 * b3) + abs (a4 * b4))
+          + ((1 + w) * (1 + w) - 1) * (abs (a3 * b3) + abs (a4 * b4))
+        = (1 + w) * (1 + w) * (abs (a3 * b3) + abs (a4 * b4)) := by
+      mach_mpoly [w, abs (a3 * b3), abs (a4 * b4)]
+    rw [e] at step; exact le_trans htri step
+  have hsplit : abs (r - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4)))
+      ≤ abs (r - (s1 + s2))
+        + abs ((s1 + s2) - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4))) := by
+    have e : r - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4))
+        = (r - (s1 + s2)) + ((s1 + s2) - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4))) := by
+      mach_mpoly [r, s1, s2, a1, b1, a2, b2, a3, b3, a4, b4]
+    rw [e]; exact abs_add _ _
+  have hss : abs (s1 + s2)
+      ≤ (1 + w) * (1 + w) * (abs (a1 * b1) + abs (a2 * b2))
+        + (1 + w) * (1 + w) * (abs (a3 * b3) + abs (a4 * b4)) :=
+    le_trans (abs_add s1 s2) (add_le_add_both hs1B hs2B)
+  have ht1 : abs (r - (s1 + s2))
+      ≤ w * ((1 + w) * (1 + w) * (abs (a1 * b1) + abs (a2 * b2))
+          + (1 + w) * (1 + w) * (abs (a3 * b3) + abs (a4 * b4))) :=
+    le_trans (roundsW_abs hr) (mul_le_mul_of_nonneg_left hss hw0)
+  have ht2 : abs ((s1 + s2) - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4)))
+      ≤ ((1 + w) * (1 + w) - 1) * (abs (a1 * b1) + abs (a2 * b2))
+        + ((1 + w) * (1 + w) - 1) * (abs (a3 * b3) + abs (a4 * b4)) := by
+    have hd : (s1 + s2) - ((a1 * b1 + a2 * b2) + (a3 * b3 + a4 * b4))
+        = (s1 - (a1 * b1 + a2 * b2)) + (s2 - (a3 * b3 + a4 * b4)) := by
+      mach_mpoly [s1, s2, a1, b1, a2, b2, a3, b3, a4, b4]
+    rw [hd]; exact le_trans (abs_add _ _) (add_le_add_both hs1E hs2E)
+  have hcomb := add_le_add_both ht1 ht2
+  have efinal : w * ((1 + w) * (1 + w) * (abs (a1 * b1) + abs (a2 * b2))
+            + (1 + w) * (1 + w) * (abs (a3 * b3) + abs (a4 * b4)))
+          + (((1 + w) * (1 + w) - 1) * (abs (a1 * b1) + abs (a2 * b2))
+            + ((1 + w) * (1 + w) - 1) * (abs (a3 * b3) + abs (a4 * b4)))
+      = ((1 + w) * (1 + w) * (1 + w) - 1)
+          * ((abs (a1 * b1) + abs (a2 * b2)) + (abs (a3 * b3) + abs (a4 * b4))) := by
+    mach_mpoly [w, abs (a1 * b1), abs (a2 * b2), abs (a3 * b3), abs (a4 * b4)]
+  rw [efinal] at hcomb
+  exact le_trans hsplit hcomb
+
 end MachLib.Real

@@ -106,6 +106,7 @@ Five forward-error theorems, the complete `vec3` scalar algebra:
 | --- | --- | --- |
 | `length_sq2` / `length_sq3` | `(1+u)ⁿ − 1` × `length_sq` | **relative** (nonneg summands) |
 | `dot2` / `dot3` | `(1+w)ⁿ − 1` × `Σ|aᵢ·bᵢ|` | **conditioned** (mixed sign) |
+| `dot4` | `(1+w)³ − 1` × `Σ|aᵢ·bᵢ|` | **conditioned** — `mat4` cell *and* `quat` component |
 | `lerp` | `(1+w)³ − 1` × `(|a| + |(b−a)·t|)` | **conditioned** (subtraction) |
 
 `dot3` *reuses* `dot2` for its inner subtree, and `lerp` reuses the same
@@ -136,8 +137,9 @@ its targets agree — it proves a bound on their disagreement.**
 
 ## Next rungs
 
-- `mat4`/`quat` algebra (matrix-multiply cells are short dot products — the
-  `dot` machinery applies) and the longer accumulations.
+- `dot4` already covers `mat4` cells and `quat` components. A general
+  `N`-term conditioned summation (Higham, by list induction) would subsume
+  `dot2/3/4` and arbitrary accumulations — the natural consolidation.
 - A concrete numeric `f32`/`f64` instance (instantiate `w := 2⁻²⁴ / 2⁻⁵³` and
   evaluate the bound) once the `Real` pow/division lemmas are in.
 - The EML→RTL leg (`Formal equivalence proofs: EML source = synthesized gates`,
