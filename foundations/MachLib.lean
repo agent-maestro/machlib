@@ -18,6 +18,7 @@ import MachLib.MPolyRing
 import MachLib.Linarith
 import MachLib.LinarithTest
 import MachLib.Lemmas
+import MachLib.Decompose
 import MachLib.LinearCombination
 import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
