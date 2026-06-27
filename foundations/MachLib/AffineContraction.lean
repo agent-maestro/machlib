@@ -61,4 +61,30 @@ theorem affine_trajectory_bound {c d ε : Real} {xc xe : Nat → Real}
         (le_of_eq (add_comm ε (c * abs (xc k - xe k)))))
   exact contraction_certificate (fun n => abs (xc n - xe n)) hc0 hε h0 hrec n
 
+/-- **Nonlinear contraction.** The same trajectory bound for *any* map `f` given
+only a global Lipschitz hypothesis `|f x − f y| ≤ L·|x − y|` — no affine structure
+needed, so it covers nonlinear contractions (a saturating controller, the
+logistic map's stable regime, …). `affine_trajectory_bound` is the instance
+`f = (c·+d)`, `L = c`. (Local/domain-restricted Lipschitz is the continuation.) -/
+theorem lipschitz_trajectory_bound {f : Real → Real} {L ε : Real} {xc xe : Nat → Real}
+    (hL0 : 0 ≤ L) (hε : 0 ≤ ε)
+    (hlip : ∀ x y, abs (f x - f y) ≤ L * abs (x - y))
+    (h0 : abs (xc 0 - xe 0) ≤ 0)
+    (hexact : ∀ k, xe (k + 1) = f (xe k))
+    (hstep : ∀ k, abs (xc (k + 1) - f (xc k)) ≤ ε)
+    (n : Nat) :
+    abs (xc n - xe n) ≤ ε * geom L n ∧ (1 - L) * (ε * geom L n) ≤ ε := by
+  have hrec : ∀ k, (fun n => abs (xc n - xe n)) (k + 1)
+      ≤ L * (fun n => abs (xc n - xe n)) k + ε := by
+    intro k
+    show abs (xc (k + 1) - xe (k + 1)) ≤ L * abs (xc k - xe k) + ε
+    rw [hexact k,
+        show xc (k + 1) - f (xe k)
+          = (xc (k + 1) - f (xc k)) + (f (xc k) - f (xe k))
+          from by mach_mpoly [xc (k + 1), f (xc k), f (xe k)]]
+    exact le_trans (abs_add _ _)
+      (le_trans (add_le_add_both (hstep k) (hlip (xc k) (xe k)))
+        (le_of_eq (add_comm ε (L * abs (xc k - xe k)))))
+  exact contraction_certificate (fun n => abs (xc n - xe n)) hL0 hε h0 hrec n
+
 end MachLib.Real

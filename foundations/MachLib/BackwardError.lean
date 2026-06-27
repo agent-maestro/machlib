@@ -68,4 +68,53 @@ theorem add_backward {w a b p : Real} (hp : RoundsW w p (a + b)) :
   · rw [bw_pert_eq a δ]; exact pert_bound hδabs
   · rw [bw_pert_eq b δ]; exact pert_bound hδabs
 
+/-! ## backward-error γₙ — a computed dot product is the exact dot of perturbed inputs -/
+
+theorem bdot_eq (a b c d d1 d2 d3 : Real) :
+    (a * b * (1 + d1) + c * d * (1 + d2)) * (1 + d3)
+      = (a * (1 + d1) * (1 + d3)) * b + (c * (1 + d2) * (1 + d3)) * d := by
+  mach_mpoly [a, b, c, d, d1, d2, d3]
+theorem bpert2_eq (a d1 d3 : Real) :
+    a * (1 + d1) * (1 + d3) - a = a * (d1 + d3 + d1 * d3) := by mach_mpoly [a, d1, d3]
+
+/-- Two relative roundings compose to `≤ γ₂ = (1+w)²−1`:
+`|δ₁+δ₃+δ₁δ₃| ≤ (1+w)(1+w)−1`. -/
+theorem two_delta_bound {w δ1 δ3 : Real} (hw0 : 0 ≤ w) (h1 : abs δ1 ≤ w) (h3 : abs δ3 ≤ w) :
+    abs (δ1 + δ3 + δ1 * δ3) ≤ (1 + w) * (1 + w) - 1 := by
+  have htri : abs (δ1 + δ3 + δ1 * δ3) ≤ (abs δ1 + abs δ3) + abs (δ1 * δ3) :=
+    le_trans (abs_add (δ1 + δ3) (δ1 * δ3)) (add_le_add_both (abs_add δ1 δ3) (le_refl _))
+  have hprod : abs (δ1 * δ3) ≤ w * w := by
+    rw [abs_mul]
+    exact le_trans (mul_le_mul_of_nonneg_right h1 (abs_nonneg δ3))
+                   (mul_le_mul_of_nonneg_left h3 hw0)
+  exact le_trans htri (le_trans (add_le_add_both (add_le_add_both h1 h3) hprod)
+    (le_of_eq (show (w + w) + w * w = (1 + w) * (1 + w) - 1 from by mach_mpoly [w])))
+
+/-- **Backward stability of `dot2`** (the γₙ result, n=2). The computed
+`fl(a·b + c·d)` is the *exact* dot product `a'·b + c'·d` of inputs each perturbed
+relatively by `≤ γ₂ = (1+w)²−1`. The algorithm solves a nearby problem exactly —
+the honest statement for an inner product, independent of its conditioning. -/
+theorem dot2_backward {w a b c d p1 p2 r : Real} (hw0 : 0 ≤ w)
+    (hp1 : RoundsW w p1 (a * b)) (hp2 : RoundsW w p2 (c * d)) (hr : RoundsW w r (p1 + p2)) :
+    ∃ a' c', r = a' * b + c' * d
+      ∧ abs (a' - a) ≤ ((1 + w) * (1 + w) - 1) * abs a
+      ∧ abs (c' - c) ≤ ((1 + w) * (1 + w) - 1) * abs c := by
+  obtain ⟨δ1, hδ1l, hδ1u, hpeq1⟩ := hp1
+  obtain ⟨δ2, hδ2l, hδ2u, hpeq2⟩ := hp2
+  obtain ⟨δ3, hδ3l, hδ3u, hpeq3⟩ := hr
+  refine ⟨a * (1 + δ1) * (1 + δ3), c * (1 + δ2) * (1 + δ3), ?_, ?_, ?_⟩
+  · rw [hpeq3, hpeq1, hpeq2]; exact bdot_eq a b c d δ1 δ2 δ3
+  · rw [bpert2_eq a δ1 δ3, abs_mul]
+    exact le_trans
+      (mul_le_mul_of_nonneg_left
+        (two_delta_bound hw0 (roundsW_delta_abs hδ1l hδ1u) (roundsW_delta_abs hδ3l hδ3u))
+        (abs_nonneg a))
+      (le_of_eq (mul_comm (abs a) ((1 + w) * (1 + w) - 1)))
+  · rw [bpert2_eq c δ2 δ3, abs_mul]
+    exact le_trans
+      (mul_le_mul_of_nonneg_left
+        (two_delta_bound hw0 (roundsW_delta_abs hδ2l hδ2u) (roundsW_delta_abs hδ3l hδ3u))
+        (abs_nonneg c))
+      (le_of_eq (mul_comm (abs c) ((1 + w) * (1 + w) - 1)))
+
 end MachLib.Real

@@ -66,4 +66,32 @@ theorem cond_is_rel_of_nonneg {t1 t2 B : Real} (h1 : 0 ≤ t1) (h2 : 0 ≤ t2) :
     B * (abs t1 + abs t2) = B * abs (t1 + t2) := by
   rw [sigma_eq_exact_nonneg h1 h2]
 
+/-! ## a κ-bound for a real family: dominant term ⇒ well-conditioned -/
+
+/-- Reverse triangle inequality: `|a| − |b| ≤ |a + b|`. -/
+theorem reverse_triangle (a b : Real) : abs a - abs b ≤ abs (a + b) := by
+  have h : abs a ≤ abs (a + b) + abs b := by
+    have ht := abs_add (a + b) (-b)
+    rwa [show (a + b) + (-b) = a from by mach_ring, abs_neg] at ht
+  have h2 := sub_le_sub_right h (abs b)
+  rwa [show abs (a + b) + abs b - abs b = abs (a + b) from by mach_mpoly [abs (a + b), abs b]] at h2
+
+/-- **κ ≤ 3 for the dominant-term family.** If one term dominates
+(`2·|t₂| ≤ |t₁|`), then `Σ|tᵢ| ≤ 3·|exact|` — i.e. `κ = Σ|tᵢ|/|exact| ≤ 3`, so the
+conditioned bound is within a factor 3 of a true relative forward-error bound. A
+proven condition-number bound for a real kernel class (no cancellation: the
+dominant term keeps `|t₁+t₂|` away from 0). -/
+theorem kappa_bound_dominant {t1 t2 : Real} (h : (1 + 1) * abs t2 ≤ abs t1) :
+    abs t1 + abs t2 ≤ (1 + 1 + 1) * abs (t1 + t2) := by
+  have h2 : (0 : Real) ≤ 1 + 1 := le_trans (le_of_lt one_pos) (le_add_of_nonneg_right (le_of_lt one_pos))
+  have h3 : (0 : Real) ≤ 1 + 1 + 1 := le_trans h2 (le_add_of_nonneg_right (le_of_lt one_pos))
+  have hstep : abs t1 + abs t2 ≤ (1 + 1 + 1) * (abs t1 - abs t2) := by
+    have hd : 0 ≤ abs t1 - (1 + 1) * abs t2 := sub_nonneg_of_le h
+    have e : (1 + 1 + 1) * (abs t1 - abs t2) - (abs t1 + abs t2)
+        = (1 + 1) * (abs t1 - (1 + 1) * abs t2) := by mach_mpoly [abs t1, abs t2]
+    have hpos : 0 ≤ (1 + 1 + 1) * (abs t1 - abs t2) - (abs t1 + abs t2) := by
+      rw [e]; exact mul_nonneg h2 hd
+    exact le_of_sub_nonneg hpos
+  exact le_trans hstep (mul_le_mul_of_nonneg_left (reverse_triangle t1 t2) h3)
+
 end MachLib.Real
