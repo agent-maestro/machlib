@@ -113,6 +113,46 @@ theorem neg_le_abs (t : Real) : -t ≤ abs t := by
 theorem le_of_abs_le {t B : Real} (h : abs t ≤ B) : t ≤ B := le_trans (le_abs_self t) h
 theorem neg_le_of_abs_le {t B : Real} (h : abs t ≤ B) : -t ≤ B := le_trans (neg_le_abs t) h
 
+/-! ### `abs` algebra — PROMOTED from axioms (2026-06-27 audit, relocated here).
+
+`abs_neg`/`abs_add`/`abs_le_iff` were axioms in `Lemmas.lean` only because their
+proofs need the `abs`-bound infrastructure (`le_abs_self`, `neg_le_abs`,
+`abs_le_of`, `neg_le_neg`) that lives HERE, downstream of `Lemmas`. Nothing
+between `Lemmas` and `FPModel` uses them (directly or indirectly), so they move
+DOWN and become theorems. (`abs_mul` stays an axiom in `Lemmas`: it is needed at
+`Linarith`'s level via `abs_mul_le_of_abs_le_one`, upstream of where its
+sign-split infra lives — a genuine tangle deferred in the audit map.) -/
+
+/-- `abs (-x) = abs x`. PROMOTED: antisymmetry of two `abs_le_of` bounds. -/
+theorem abs_neg (x : Real) : abs (-x) = abs x := by
+  apply le_antisymm
+  · apply abs_le_of
+    · exact neg_le_abs x
+    · rw [neg_neg_helper]; exact le_abs_self x
+  · apply abs_le_of
+    · have h := neg_le_abs (-x); rwa [neg_neg_helper] at h
+    · exact le_abs_self (-x)
+
+/-- Triangle inequality `abs (a + b) ≤ abs a + abs b`. PROMOTED. -/
+theorem abs_add (a b : Real) : abs (a + b) ≤ abs a + abs b := by
+  apply abs_le_of
+  · exact add_le_add_both (le_abs_self a) (le_abs_self b)
+  · have h := add_le_add_both (neg_le_abs a) (neg_le_abs b)
+    rw [neg_add a b]; exact h
+
+/-- Range characterisation `abs a ≤ b ↔ -b ≤ a ∧ a ≤ b`. PROMOTED. -/
+theorem abs_le_iff {a b : Real} : abs a ≤ b ↔ -b ≤ a ∧ a ≤ b := by
+  constructor
+  · intro h
+    refine ⟨?_, le_trans (le_abs_self a) h⟩
+    have h1 : -a ≤ b := le_trans (neg_le_abs a) h
+    have h2 := neg_le_neg h1
+    rwa [neg_neg_helper] at h2
+  · intro hpair
+    apply abs_le_of hpair.2
+    have h3 := neg_le_neg hpair.1
+    rwa [neg_neg_helper] at h3
+
 /-- **Cross-target agreement.** Two evaluations of the *same* exact value `e`
 agree within the sum of their forward-error bounds. With the f64 bound (`B1`)
 and the f32/WGSL bound (`B2`) of a kernel, this proves the two *targets* agree —

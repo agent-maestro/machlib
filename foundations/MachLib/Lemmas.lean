@@ -189,29 +189,18 @@ theorem abs_nonneg (x : Real) : 0 ≤ abs x := by
 theorem abs_of_nonneg {x : Real} (h : 0 ≤ x) : abs x = x := by
   unfold abs; rw [if_pos h]
 
-/-- `abs (-x) = abs x`. REDUNDANT axiom — `abs` is concretely `if 0 ≤ x then x
-else -x`, so this is determined by the def (`neg_neg_helper` + the sign-flip
-`x ≤ 0 ↔ 0 ≤ -x` + `abs_of_nonneg`/`abs_of_nonpos`). AUDIT NOTE (2026-06-27): the
-old "requires neg_neg Basic doesn't expose" claim is now stale — `neg_neg_helper`,
-`neg_mul`, `mul_neg` are theorems in `Ring.lean`, but `Ring` imports `Lemmas`, so
-they sit *downstream* of this declaration. Promoting this cluster cleanly needs
-those primitives (+ `abs_of_nonpos`, the sign-flips) relocated *upstream* of
-`Lemmas` (into `Basic`); tracked as the audit's next step (the 3 `Ring` negation
-axioms were promoted first, 292→289). -/
-axiom abs_neg (x : Real) : abs (-x) = abs x
+/-! `abs_neg` / `abs_add` / `abs_le_iff` were axioms here, but `abs` is concretely
+`if 0 ≤ x then x else -x`, so they are determined by the def. They are now THEOREMS
+in `FPModel.lean` (2026-06-27 audit), where their proof infrastructure
+(`le_abs_self`, `neg_le_abs`, `abs_le_of`, `neg_le_neg`) lives — nothing between
+here and `FPModel` used them, so they moved DOWN rather than the infra moving UP. -/
 
-/-- Triangle inequality: `abs (a + b) ≤ abs a + abs b`. Provable in any ordered
-field by sign case-splits (the genuinely non-trivial one of the cluster). Same
-import-order blocker as `abs_neg` — see its note. -/
-axiom abs_add (a b : Real) : abs (a + b) ≤ abs a + abs b
-
-/-- Multiplicativity: `abs (a * b) = abs a * abs b`. REDUNDANT (determined by the
-`abs` def + `neg_mul`/`mul_neg` via 4 sign cases). Same import-order blocker as
-`abs_neg`. -/
+/-- Multiplicativity: `abs (a * b) = abs a * abs b`. Still an axiom: `abs` is
+def-determined so this IS provable (4-way sign split), but unlike the other abs
+facts it is needed at `Linarith`'s level (via `abs_mul_le_of_abs_le_one` below),
+which is *upstream* of where its sign-split infra (`neg_nonneg_of_nonpos`,
+`neg_le_neg`) lives. Promoting it needs that infra relocated up — deferred. -/
 axiom abs_mul (a b : Real) : abs (a * b) = abs a * abs b
-
-/-- Range characterisation: `abs a ≤ b ↔ -b ≤ a ∧ a ≤ b`. Axiom. -/
-axiom abs_le_iff {a b : Real} : abs a ≤ b ↔ -b ≤ a ∧ a ≤ b
 
 /-- Multiplying by a magnitude-≤1 factor does not increase `abs`. PROVED (no
 axiom) from `abs_mul` + `mul_le_mul_of_nonneg_left`. Peeling lemma for the

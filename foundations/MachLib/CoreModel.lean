@@ -2,6 +2,7 @@ import MachLib.Basic
 import MachLib.Ring
 import MachLib.Lemmas
 import MachLib.Forge
+import MachLib.FPModel
 
 /-!
 # Consistency model — the flagship axiom closure has a model (so it is not vacuous)
@@ -23,6 +24,10 @@ and give it **two** instances:
   compiles *only if* every spec field is discharged by an actual MachLib axiom, so
   the spec is provably *no stronger* than what MachLib assumes. (If a field were
   stronger than the real axiom, `:= MachLib.Real.<axiom>` would fail to typecheck.)
+  `#print axioms machlibWitness` enumerates exactly the flagship closure — the
+  ordered-comm-ring-with-`abs` axioms; as more of those `abs` facts become theorems
+  (the audit), the closure shifts to the finer order axioms they rest on (e.g.
+  `lt_irrefl_ax`), all of which are spec fields here.
 * `intModel : RealCoreSpec` over `Int` — **consistency.** `ℤ` is an ordered
   commutative ring with `abs`, so every axiom in the closure holds in it. This
   instance is built purely from Lean-core `Int` lemmas; `#print axioms intModel`
@@ -73,6 +78,7 @@ structure RealCoreSpec where
   -- order axioms
   lt_total           : ∀ a b, lt a b ∨ a = b ∨ lt b a
   lt_trans           : ∀ a b c, lt a b → lt b c → lt a c
+  lt_irrefl          : ∀ a, ¬ lt a a
   le_iff_lt_or_eq    : ∀ a b, le a b ↔ lt a b ∨ a = b
   add_lt_add_left    : ∀ a b c, lt a b → lt (add c a) (add c b)
   mul_pos            : ∀ a b, lt zero a → lt zero b → lt zero (mul a b)
@@ -111,6 +117,7 @@ noncomputable def machlibWitness : RealCoreSpec where
   sub_def     := MachLib.Real.sub_def
   lt_total    := MachLib.Real.lt_total
   lt_trans    := fun _ _ _ => MachLib.Real.lt_trans_ax
+  lt_irrefl   := MachLib.Real.lt_irrefl_ax
   le_iff_lt_or_eq := MachLib.Real.le_iff_lt_or_eq
   add_lt_add_left := fun _ _ c h => MachLib.Real.add_lt_add_left h c
   mul_pos     := fun _ _ => MachLib.Real.mul_pos
@@ -149,6 +156,7 @@ def intModel : RealCoreSpec where
   sub_def     := fun a b => by dsimp only; omega
   lt_total    := fun a b => by dsimp only; omega
   lt_trans    := fun a b c => by dsimp only; omega
+  lt_irrefl   := fun a => by dsimp only; omega
   le_iff_lt_or_eq := fun a b => by dsimp only; omega
   add_lt_add_left := fun a b c => by dsimp only; omega
   mul_pos     := fun _ _ => Int.mul_pos
