@@ -85,6 +85,9 @@ import MachLib.ErrorAlgebraTrans
 import MachLib.ForwardError
 import MachLib.HybridError
 import MachLib.ConditionedError
+import MachLib.TrigLipschitz
+import MachLib.ConditionNumber
+import MachLib.RippleCarry
 
 /-!
 # MachLib — top-level aggregator

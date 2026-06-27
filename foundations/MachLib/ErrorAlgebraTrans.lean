@@ -6,6 +6,7 @@ import MachLib.MPolyRing
 import MachLib.FPModel
 import MachLib.Exp
 import MachLib.Trig
+import MachLib.TrigLipschitz
 import MachLib.ErrorAlgebra
 
 /-!

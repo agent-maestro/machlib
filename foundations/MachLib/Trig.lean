@@ -46,13 +46,10 @@ axiom neg_one_le_cos (x : Real) : -1 ≤ cos x
 
 /-! ### Lipschitz (`|sin'| = |cos| ≤ 1`, `|cos'| = |sin| ≤ 1`)
 
-`sin` and `cos` are globally 1-Lipschitz — the standard consequence of their
-derivative being bounded by 1. Derivable from `HasDerivAt_sin`/`HasDerivAt_cos`
-(`Differentiation`) + `mean_value_theorem` (`Rolle`) + the boundedness axioms
-above; axiomatised here for directness, in the same spirit as that boundedness.
-A future session can promote these to theorems. -/
-axiom sin_lipschitz (a b : Real) : abs (sin a - sin b) ≤ abs (a - b)
-axiom cos_lipschitz (a b : Real) : abs (cos a - cos b) ≤ abs (a - b)
+`sin`/`cos` are globally 1-Lipschitz. These were briefly axioms here; now PROVED
+(`sin_lipschitz`/`cos_lipschitz`) in `MachLib.TrigLipschitz` via
+`mean_value_theorem` + `HasDerivAt_sin`/`HasDerivAt_cos` + boundedness — so the
+trusted base no longer carries them as axioms. -/
 
 /-! ### Periodicity (period 2π) -/
 
