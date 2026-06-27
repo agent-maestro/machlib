@@ -83,6 +83,7 @@ import MachLib.Iteration
 import MachLib.ErrorAlgebra
 import MachLib.ErrorAlgebraTrans
 import MachLib.ForwardError
+import MachLib.HybridError
 
 /-!
 # MachLib — top-level aggregator
