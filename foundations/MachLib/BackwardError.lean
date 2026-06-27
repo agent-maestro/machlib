@@ -117,4 +117,46 @@ theorem dot2_backward {w a b c d p1 p2 r : Real} (hw0 : 0 ≤ w)
         (abs_nonneg c))
       (le_of_eq (mul_comm (abs c) ((1 + w) * (1 + w) - 1)))
 
+/-! ## general γₙ — `n` roundings compose to `(1+w)ⁿ − 1` -/
+
+/-- Product of `(1 + δᵢ)` over a list of relative perturbations. -/
+noncomputable def prodDelta : List Real → Real
+  | []      => 1
+  | d :: ds => (1 + d) * prodDelta ds
+
+theorem pdb_ring (w N : Real) : w * N + (N - 1) = (1 + w) * N - 1 := by mach_mpoly [w, N]
+theorem pdb_ring2 (N : Real) : (1 : Real) + (N - 1) = N := by mach_mpoly [N]
+theorem pdb_split (d P : Real) : (1 + d) * P - 1 = d * P + (P - 1) := by mach_mpoly [d, P]
+
+/-- **General γₙ.** The product of `n` relative roundings (`|δᵢ| ≤ w`) is within
+`(1+w)ⁿ − 1` of 1: `|∏(1+δᵢ) − 1| ≤ (1+w)^n − 1`. The `n`-term generalisation of
+`two_delta_bound` — the core of `n`-term forward/backward error (Higham's `γₙ`). -/
+theorem prod_delta_bound {w : Real} (hw0 : 0 ≤ w) :
+    ∀ (ds : List Real), (∀ d, d ∈ ds → abs d ≤ w) →
+      abs (prodDelta ds - 1) ≤ npow ds.length (1 + w) - 1
+  | [], _ => by
+      have h : abs (prodDelta [] - 1) = npow ([] : List Real).length (1 + w) - 1 := by
+        simp only [prodDelta, List.length_nil, npow]
+        rw [show (1 : Real) - 1 = 0 from by mach_ring, abs_of_nonneg (le_refl (0 : Real))]
+      exact le_of_eq h
+  | d :: ds, hmem => by
+      have hd : abs d ≤ w := hmem d (List.mem_cons_self d ds)
+      have ih := prod_delta_bound hw0 ds (fun d' hd' => hmem d' (List.mem_cons_of_mem d hd'))
+      have hPmag : abs (prodDelta ds) ≤ npow ds.length (1 + w) := by
+        have ht := abs_le_add_err ih
+        rwa [show abs (1 : Real) = 1 from abs_of_nonneg (le_of_lt one_pos),
+             pdb_ring2 (npow ds.length (1 + w))] at ht
+      show abs (prodDelta (d :: ds) - 1) ≤ npow (d :: ds).length (1 + w) - 1
+      rw [show prodDelta (d :: ds) = (1 + d) * prodDelta ds from rfl,
+          show (d :: ds).length = ds.length + 1 from rfl,
+          pdb_split d (prodDelta ds)]
+      refine le_trans (abs_add _ _) ?_
+      have hdP : abs (d * prodDelta ds) ≤ w * npow ds.length (1 + w) := by
+        rw [abs_mul]
+        exact le_trans (mul_le_mul_of_nonneg_right hd (abs_nonneg _))
+                       (mul_le_mul_of_nonneg_left hPmag hw0)
+      refine le_trans (add_le_add_both hdP ih) ?_
+      rw [npow_succ]
+      exact le_of_eq (pdb_ring w (npow ds.length (1 + w)))
+
 end MachLib.Real

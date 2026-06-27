@@ -100,4 +100,41 @@ theorem Interval.mulSym_mem {I J : Interval} {x y : Real}
   have h := neg_le_neg (neg_le_of_abs_le hR)
   rwa [show -(-(x * y)) = x * y from by mach_ring] at h
 
+/-! ## the tight bilinear sign-case bound (heart of the 4-corner enclosure) -/
+
+theorem nonpos_of_not_nonneg {x : Real} (h : ¬ 0 ≤ x) : x ≤ 0 := by
+  rcases lt_total 0 x with h0 | h0 | h0
+  · exact absurd (le_of_lt h0) h
+  · exact absurd (le_of_eq h0) h
+  · exact le_of_lt h0
+
+/-- For `y ∈ [c,d]`, `x·y ≤ max(x·c, x·d)` — *any* sign of `x` (the product
+attains its max at an endpoint of `y`). -/
+theorem mul_le_max_endpoints (x c d y : Real) (hcy : c ≤ y) (hyd : y ≤ d) :
+    x * y ≤ max (x * c) (x * d) := by
+  by_cases hx : 0 ≤ x
+  · exact le_trans (mul_le_mul_of_nonneg_left hyd hx) (le_max_right _ _)
+  · have hnx : 0 ≤ -x := neg_nonneg_of_nonpos (nonpos_of_not_nonneg hx)
+    have h1 : (-x) * c ≤ (-x) * y := mul_le_mul_of_nonneg_left hcy hnx
+    rw [show (-x) * c = -(x * c) from by mach_ring,
+        show (-x) * y = -(x * y) from by mach_ring] at h1
+    have h2 := neg_le_neg h1
+    rw [show -(-(x * y)) = x * y from by mach_ring,
+        show -(-(x * c)) = x * c from by mach_ring] at h2
+    exact le_trans h2 (le_max_left _ _)
+
+/-- For `y ∈ [c,d]`, `min(x·c, x·d) ≤ x·y` — the matching lower bound, any sign. -/
+theorem min_le_mul_endpoints (x c d y : Real) (hcy : c ≤ y) (hyd : y ≤ d) :
+    min (x * c) (x * d) ≤ x * y := by
+  by_cases hx : 0 ≤ x
+  · exact le_trans (min_le_left _ _) (mul_le_mul_of_nonneg_left hcy hx)
+  · have hnx : 0 ≤ -x := neg_nonneg_of_nonpos (nonpos_of_not_nonneg hx)
+    have h1 : (-x) * y ≤ (-x) * d := mul_le_mul_of_nonneg_left hyd hnx
+    rw [show (-x) * y = -(x * y) from by mach_ring,
+        show (-x) * d = -(x * d) from by mach_ring] at h1
+    have h2 := neg_le_neg h1
+    rw [show -(-(x * d)) = x * d from by mach_ring,
+        show -(-(x * y)) = x * y from by mach_ring] at h2
+    exact le_trans (min_le_right _ _) h2
+
 end MachLib.Real

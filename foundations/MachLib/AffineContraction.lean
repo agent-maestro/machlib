@@ -87,4 +87,31 @@ theorem lipschitz_trajectory_bound {f : Real → Real} {L ε : Real} {xc xe : Na
         (le_of_eq (add_comm ε (L * abs (xc k - xe k)))))
   exact contraction_certificate (fun n => abs (xc n - xe n)) hL0 hε h0 hrec n
 
+/-- **Local (domain-restricted) contraction.** `f` need only be Lipschitz on a
+domain `D`, provided both orbits stay in `D`. The honest version for maps that
+contract only on an invariant region (a basin of attraction) — the local Banach
+setting. -/
+theorem local_lipschitz_trajectory_bound {f : Real → Real} {L ε : Real}
+    {xc xe : Nat → Real} {D : Real → Prop}
+    (hL0 : 0 ≤ L) (hε : 0 ≤ ε)
+    (hlip : ∀ x y, D x → D y → abs (f x - f y) ≤ L * abs (x - y))
+    (hin : ∀ k, D (xc k) ∧ D (xe k))
+    (h0 : abs (xc 0 - xe 0) ≤ 0)
+    (hexact : ∀ k, xe (k + 1) = f (xe k))
+    (hstep : ∀ k, abs (xc (k + 1) - f (xc k)) ≤ ε)
+    (n : Nat) :
+    abs (xc n - xe n) ≤ ε * geom L n ∧ (1 - L) * (ε * geom L n) ≤ ε := by
+  have hrec : ∀ k, (fun n => abs (xc n - xe n)) (k + 1)
+      ≤ L * (fun n => abs (xc n - xe n)) k + ε := by
+    intro k
+    show abs (xc (k + 1) - xe (k + 1)) ≤ L * abs (xc k - xe k) + ε
+    rw [hexact k,
+        show xc (k + 1) - f (xe k)
+          = (xc (k + 1) - f (xc k)) + (f (xc k) - f (xe k))
+          from by mach_mpoly [xc (k + 1), f (xc k), f (xe k)]]
+    exact le_trans (abs_add _ _)
+      (le_trans (add_le_add_both (hstep k) (hlip (xc k) (xe k) (hin k).1 (hin k).2))
+        (le_of_eq (add_comm ε (L * abs (xc k - xe k)))))
+  exact contraction_certificate (fun n => abs (xc n - xe n)) hL0 hε h0 hrec n
+
 end MachLib.Real
