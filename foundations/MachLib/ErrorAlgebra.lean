@@ -7,15 +7,22 @@ import MachLib.FPModel
 import MachLib.Iteration
 
 /-!
-# Forward-error as a compositional algebra — the product rule
+# Magnitude-growth as a compositional algebra — the product rule
 
-Frontier-1b (the operator-basis research) showed the forward-error bound of a
-kernel is a *structural attribute* of its expression tree: in the standard model
+NOTE ON SCOPE (corrected): the `*_grow` lemmas here bound the **magnitude** of a
+computed value — `|v| ≤ (1+w)^d · F` — i.e. the *upper* half of the standard
+model. That is a real, compositional Higham running-error magnitude bound, but it
+is NOT the forward error `|v − ve|` (which also needs the lower side). The TRUE
+two-sided forward-error algebra is `MachLib.ForwardError` (`renc_mul`/`renc_add`/
+`renc_fwd`, giving `|v − ve| ≤ ((1+w)^d − 1)·ve`); the transcendental rules in
+`ErrorAlgebraTrans` are likewise genuine forward error. Read `*_grow` below as
+*magnitude growth*, not forward error.
+
+Frontier-1b showed this magnitude bound is a *structural attribute* of the tree:
 each rounding op contributes a `(1+w)` factor, and the factors **compound through
-a product** (the exponents ADD) but not through a nonneg sum (which takes the
-max). FPModel already proves the **sum** side abstractly (`cond_combine`,
-`RSum_bound`). This file supplies the missing **product** side, so the algebra is
-rigorous on both:
+a product** (exponents ADD) but not through a nonneg sum (which takes the max).
+This file supplies the **product** magnitude rule (FPModel/`cond_combine` give the
+sum side):
 
 * `npow_add` — the exponent bookkeeping `(1+w)^(a+b) = (1+w)^a · (1+w)^b`.
 * `mul_grow` — **the product-composition rule.** If `x` is magnitude-bounded by
@@ -56,10 +63,11 @@ theorem npow_add (x : Real) (a : Nat) : ∀ b, npow (a + b) x = npow a x * npow 
       rw [Nat.add_succ, npow_succ, npow_succ, npow_add x a b,
           ea_mulswap3 x (npow a x) (npow b x)]
 
-/-- **Product-composition rule.** Magnitude bounds with growth exponents `a`, `b`
-compose through a rounded product into exponent `a+b+1` (operands add, +1 for the
-multiply's rounding). The `×`-analogue of `cond_combine`; together they propagate
-forward-error over any expression tree. -/
+/-- **Product-composition rule (magnitude).** Magnitude bounds with growth
+exponents `a`, `b` compose through a rounded product into exponent `a+b+1`
+(operands add, +1 for the multiply's rounding). The `×`-analogue of `cond_combine`;
+together they propagate the *magnitude* bound over any expression tree. (The
+forward-error analogue is `ForwardError.renc_mul`.) -/
 theorem mul_grow {w x y p X Y : Real} {a b : Nat}
     (hw : 0 ≤ w) (hX : 0 ≤ X) (hY : 0 ≤ Y)
     (hx : abs x ≤ npow a (1 + w) * X)
@@ -135,11 +143,11 @@ theorem add_grow {w x y p X Y : Real} {m : Nat}
 
 /-! ## the certifier interface: leaf base case + a worked composition
 
-These are the templates the automated forward-error certifier emits: every leaf
-gets `leaf_bound` (exponent 0), every `×` node `mul_grow`, every `+` node
-`add_grow`. `length_sq2_compose` shows the fold closes end-to-end — the same
-`(1+w)²` bound FPModel proved by hand, here assembled purely from the operator
-rules. -/
+Templates the certifier emits for the **magnitude** bound: every leaf gets
+`leaf_bound` (exponent 0), every `×` node `mul_grow`, every `+` node `add_grow`.
+`length_sq2_compose` shows the fold closes end-to-end. (For the TRUE forward
+error `|s − exact|`, the analogous fold over the two-sided rules is
+`ForwardError.length_sq2_fwd_compose`.) -/
 
 /-- Base case: a leaf (variable/constant) equals its own exact value — exponent 0. -/
 theorem leaf_bound (w x : Real) : abs x ≤ npow 0 (1 + w) * abs x := by
@@ -147,10 +155,10 @@ theorem leaf_bound (w x : Real) : abs x ≤ npow 0 (1 + w) * abs x := by
     rw [show npow 0 (1 + w) = 1 from rfl]; exact one_mul_thm (abs x)
   exact le_of_eq e.symm
 
-/-- **Worked composition** — `length_sq2 = x*x + y*y`, certified by folding the
-operator rules: `leaf_bound` (×2 per product) → `mul_grow` (each product, exp 1)
-→ `add_grow` (the sum, exp 2). Reproduces FPModel's hand-proved `(1+w)²` bound
-mechanically. This is exactly what the certifier generates per kernel. -/
+/-- **Worked composition (magnitude)** — `length_sq2 = x*x + y*y`, folding
+`leaf_bound` → `mul_grow` → `add_grow` to bound `|s| ≤ (1+w)²·exact`. This is the
+*magnitude* fold; the forward-error counterpart is
+`ForwardError.length_sq2_fwd_compose`. -/
 theorem length_sq2_compose {w x y px py s : Real}
     (hw : 0 ≤ w)
     (hpx : RoundsW w px (x * x)) (hpy : RoundsW w py (y * y))
