@@ -81,6 +81,7 @@ import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.Iteration
 import MachLib.ErrorAlgebra
+import MachLib.ErrorAlgebraTrans
 
 /-!
 # MachLib — top-level aggregator
