@@ -94,6 +94,7 @@ import MachLib.BackwardError
 import MachLib.IntervalArith
 import MachLib.AffineContraction
 import MachLib.CrossTargetPairs
+import MachLib.PIDCapstone
 
 /-!
 # MachLib — top-level aggregator
