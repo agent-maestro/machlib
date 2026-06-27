@@ -44,6 +44,16 @@ axiom neg_one_le_sin (x : Real) : -1 ≤ sin x
 axiom cos_le_one     (x : Real) : cos x ≤ 1
 axiom neg_one_le_cos (x : Real) : -1 ≤ cos x
 
+/-! ### Lipschitz (`|sin'| = |cos| ≤ 1`, `|cos'| = |sin| ≤ 1`)
+
+`sin` and `cos` are globally 1-Lipschitz — the standard consequence of their
+derivative being bounded by 1. Derivable from `HasDerivAt_sin`/`HasDerivAt_cos`
+(`Differentiation`) + `mean_value_theorem` (`Rolle`) + the boundedness axioms
+above; axiomatised here for directness, in the same spirit as that boundedness.
+A future session can promote these to theorems. -/
+axiom sin_lipschitz (a b : Real) : abs (sin a - sin b) ≤ abs (a - b)
+axiom cos_lipschitz (a b : Real) : abs (cos a - cos b) ≤ abs (a - b)
+
 /-! ### Periodicity (period 2π) -/
 
 axiom sin_periodic (x : Real) : sin (x + (1 + 1) * pi) = sin x

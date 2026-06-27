@@ -5,6 +5,7 @@ import MachLib.Ring
 import MachLib.MPolyRing
 import MachLib.FPModel
 import MachLib.Exp
+import MachLib.Trig
 import MachLib.ErrorAlgebra
 
 /-!
@@ -42,6 +43,7 @@ theorem et_tan_ring (E w : Real) :
 theorem et_factor (a b d : Real) :
     a * b * (1 + d) - a = a * (b * (1 + d) - 1) := by mach_mpoly [a, b, d]
 theorem et_neg (A : Real) : -(A - 1) = 1 - A := by mach_mpoly [A]
+theorem et_split3 (a b c : Real) : a - c = (a - b) + (b - c) := by mach_mpoly [a, b, c]
 
 /-- `1 - A ≤ B - 1` from `2 ≤ A + B`. -/
 theorem et_lower {A B : Real} (h : 1 + 1 ≤ A + B) : 1 - A ≤ B - 1 := by
@@ -117,5 +119,45 @@ theorem exp_grow {w E xc xe p : Real}
     have htwo : (1 : Real) + 1 ≤ (1 + 1) + (E * w + E * w) :=
       le_add_of_nonneg_right (add_nonneg_ea (mul_nonneg hE hw0) (mul_nonneg hE hw0))
     exact le_trans htwo hsum_lo
+
+/-! ## the other transcendental kind: bounded-Lipschitz (`sin`, `cos`)
+
+`exp` *amplifies* — it turns absolute argument error into a relative output
+factor. `sin`/`cos` do the opposite: being globally 1-Lipschitz and bounded by 1,
+they keep the error **absolute and bounded**. So the transcendental class splits
+in two — amplifying (`exp`/`ln`, need the hybrid abs→rel conversion) and
+bounded-Lipschitz (`sin`/`cos`, error stays `≤ E + w`). -/
+
+/-- **`sin` forward-error rule.** One rounded `sin` of an argument with absolute
+error `≤ E` stays within `E + w` of `sin x_e` — absolute, not amplified, because
+`sin` is 1-Lipschitz and `|sin| ≤ 1`. -/
+theorem sin_grow {w E xc xe p : Real}
+    (hw0 : 0 ≤ w) (harg : abs (xc - xe) ≤ E)
+    (hp : RoundsW w p (sin xc)) :
+    abs (p - sin xe) ≤ w + E := by
+  have hround1 : abs (p - sin xc) ≤ w := by
+    have h := mul_le_mul_of_nonneg_left (abs_sin_le_one xc) hw0
+    rw [show w * 1 = w from by mach_ring] at h
+    exact le_trans (roundsW_abs hp) h
+  have hprop : abs (sin xc - sin xe) ≤ E := le_trans (sin_lipschitz xc xe) harg
+  rw [et_split3 p (sin xc) (sin xe)]
+  exact le_trans (abs_add _ _) (add_le_add_both hround1 hprop)
+
+/-- **`cos` forward-error rule** (same bound, same reason). -/
+theorem cos_grow {w E xc xe p : Real}
+    (hw0 : 0 ≤ w) (harg : abs (xc - xe) ≤ E)
+    (hp : RoundsW w p (cos xc)) :
+    abs (p - cos xe) ≤ w + E := by
+  have habscos : abs (cos xc) ≤ 1 := by
+    apply abs_le_of (cos_le_one xc)
+    have h := neg_le_neg (neg_one_le_cos xc)
+    rwa [show -(-1 : Real) = 1 from by mach_ring] at h
+  have hround1 : abs (p - cos xc) ≤ w := by
+    have h := mul_le_mul_of_nonneg_left habscos hw0
+    rw [show w * 1 = w from by mach_ring] at h
+    exact le_trans (roundsW_abs hp) h
+  have hprop : abs (cos xc - cos xe) ≤ E := le_trans (cos_lipschitz xc xe) harg
+  rw [et_split3 p (cos xc) (cos xe)]
+  exact le_trans (abs_add _ _) (add_le_add_both hround1 hprop)
 
 end MachLib.Real
