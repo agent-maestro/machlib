@@ -29,13 +29,7 @@ This is the characterisation; proving `κ`-bounds for general kernel families
 
 namespace MachLib.Real
 
-/-- `|x| = −x` for nonpositive `x` (the `abs_of_nonneg` companion). -/
-theorem abs_of_nonpos {x : Real} (h : x ≤ 0) : abs x = -x := by
-  unfold abs
-  by_cases h0 : 0 ≤ x
-  · have hx : x = 0 := le_antisymm h h0
-    rw [if_pos h0, hx]; mach_ring
-  · rw [if_neg h0]
+-- `abs_of_nonpos` relocated up to `Sign.lean` (2026-06-27 audit). Available via import.
 
 /-- `κ ≥ 1` always: the conditioning quantity dominates the exact value. (Just
 the triangle inequality, named for what it means.) -/

@@ -26,6 +26,7 @@ import MachLib.Basic
 import MachLib.Trig
 import MachLib.Exp
 import MachLib.Forge
+import MachLib.Sign
 
 namespace MachLib
 namespace Real
@@ -126,29 +127,22 @@ theorem cos_sq_add_sin_sq (x : Real) :
     cos x * cos x + sin x * sin x = 1 := by
   rw [add_comm]; exact pythagorean x
 
-/-- `abs (cos x) ≤ 1`. Closes the upper-bound half of polarisation
-response in the Mantis kernel. Held as an axiom: provable from
-`cos_le_one` + `neg_one_le_cos` plus the negation-monotonicity
-fact `-1 ≤ y → -y ≤ 1`, but the latter requires `mul_neg`-style
-distributivity that `MachLib.Basic` doesn't yet expose. True in
-any ordered field. -/
-axiom abs_cos_le_one (x : Real) : abs (cos x) ≤ 1
+/-- `cos x * cos x ≤ 1`. PROMOTED from axiom to theorem (2026-06-27 audit): from
+`pythagorean` (`sin²+cos²=1`) and `0 ≤ sin²` (`mul_self_nonneg`, now upstream in
+`Sign`), `cos² ≤ sin²+cos² = 1`. -/
+theorem cos_sq_le_one (x : Real) : cos x * cos x ≤ 1 := by
+  have h : cos x * cos x ≤ sin x * sin x + cos x * cos x :=
+    le_add_of_nonneg_left (mul_self_nonneg (sin x))
+  rwa [pythagorean x] at h
 
-/-- `|sin x| ≤ 1`. Symmetric counterpart of `abs_cos_le_one` (the asymmetry
-was just an omission). Closes the `abs(... * sin ...)` factor in trig-amplitude
-band obligations (orbit, wave, white-noise). True in any ordered field. -/
-axiom abs_sin_le_one (x : Real) : abs (sin x) ≤ 1
+/-- `sin x * sin x ≤ 1`. PROMOTED (symmetric to `cos_sq_le_one`). -/
+theorem sin_sq_le_one (x : Real) : sin x * sin x ≤ 1 := by
+  have h : sin x * sin x ≤ sin x * sin x + cos x * cos x :=
+    le_add_of_nonneg_right (mul_self_nonneg (cos x))
+  rwa [pythagorean x] at h
 
-/-- `cos x * cos x ≤ 1`. The squared form. Provable from
-`pythagorean` (`sin² + cos² = 1`) plus `0 ≤ sin²` (so
-`cos² = 1 - sin² ≤ 1`), but the chain needs `sub_le_self_of_nonneg`
-which MachLib doesn't yet have. Held as an axiom; true in any
-ordered field. Closes the upper bound of `Mantis.polResponseAtAxis`
-and similar `cos²` bounds. -/
-axiom cos_sq_le_one (x : Real) : cos x * cos x ≤ 1
-
-/-- `sin x * sin x ≤ 1`. Symmetric counterpart of `cos_sq_le_one`. -/
-axiom sin_sq_le_one (x : Real) : sin x * sin x ≤ 1
+-- `abs_cos_le_one` / `abs_sin_le_one` are now THEOREMS too, but proved BELOW (they
+-- need `abs_mul` + the `u²≤1 ⇒ u≤1` helper, which come after this point).
 
 /-! ### `abs` family — triangle / multiplicative / range characterisation
 
@@ -195,12 +189,34 @@ in `FPModel.lean` (2026-06-27 audit), where their proof infrastructure
 (`le_abs_self`, `neg_le_abs`, `abs_le_of`, `neg_le_neg`) lives — nothing between
 here and `FPModel` used them, so they moved DOWN rather than the infra moving UP. -/
 
-/-- Multiplicativity: `abs (a * b) = abs a * abs b`. Still an axiom: `abs` is
-def-determined so this IS provable (4-way sign split), but unlike the other abs
-facts it is needed at `Linarith`'s level (via `abs_mul_le_of_abs_le_one` below),
-which is *upstream* of where its sign-split infra (`neg_nonneg_of_nonpos`,
-`neg_le_neg`) lives. Promoting it needs that infra relocated up — deferred. -/
-axiom abs_mul (a b : Real) : abs (a * b) = abs a * abs b
+/-- Multiplicativity: `abs (a * b) = abs a * abs b`. PROMOTED from axiom to theorem
+(2026-06-27 audit). The 4-way sign split: `abs_of_nonneg`/`abs_of_nonpos` reduce
+each `abs` to `±`, then `neg_mul`/`mul_neg`/`neg_mul_neg` close each case. Needed
+at `Linarith`'s level (via `abs_mul_le_of_abs_le_one` below), so its sign-split
+infra (`neg_nonneg_of_nonpos`, `neg_le_neg`, `nonpos_of_not_nonneg`,
+`abs_of_nonpos`) was relocated up into `Sign.lean` to make this provable here. -/
+theorem abs_mul (a b : Real) : abs (a * b) = abs a * abs b := by
+  by_cases ha : 0 ≤ a <;> by_cases hb : 0 ≤ b
+  · rw [abs_of_nonneg ha, abs_of_nonneg hb, abs_of_nonneg (mul_nonneg ha hb)]
+  · have hb' : b ≤ 0 := nonpos_of_not_nonneg hb
+    have hp : 0 ≤ a * (-b) := mul_nonneg ha (neg_nonneg_of_nonpos hb')
+    rw [mul_neg] at hp
+    have hab : a * b ≤ 0 := by
+      have h2 := neg_le_neg hp; rwa [neg_neg_helper, neg_zero] at h2
+    rw [abs_of_nonneg ha, abs_of_nonpos hb', abs_of_nonpos hab, mul_neg]
+  · have ha' : a ≤ 0 := nonpos_of_not_nonneg ha
+    have hp : 0 ≤ (-a) * b := mul_nonneg (neg_nonneg_of_nonpos ha') hb
+    rw [neg_mul] at hp
+    have hab : a * b ≤ 0 := by
+      have h2 := neg_le_neg hp; rwa [neg_neg_helper, neg_zero] at h2
+    rw [abs_of_nonpos ha', abs_of_nonneg hb, abs_of_nonpos hab, neg_mul]
+  · have ha' : a ≤ 0 := nonpos_of_not_nonneg ha
+    have hb' : b ≤ 0 := nonpos_of_not_nonneg hb
+    have hab : 0 ≤ a * b := by
+      have hp : 0 ≤ (-a) * (-b) :=
+        mul_nonneg (neg_nonneg_of_nonpos ha') (neg_nonneg_of_nonpos hb')
+      rwa [neg_mul_neg] at hp
+    rw [abs_of_nonpos ha', abs_of_nonpos hb', abs_of_nonneg hab, neg_mul_neg]
 
 /-- Multiplying by a magnitude-≤1 factor does not increase `abs`. PROVED (no
 axiom) from `abs_mul` + `mul_le_mul_of_nonneg_left`. Peeling lemma for the
@@ -211,6 +227,31 @@ theorem abs_mul_le_of_abs_le_one {x y : Real} (hy : abs y ≤ 1) :
   rw [abs_mul]
   have h := mul_le_mul_of_nonneg_left hy (abs_nonneg x)
   rwa [mul_one_ax] at h
+
+/-- `0 ≤ u → u·u ≤ 1 → u ≤ 1`. The "square root" of a unit-square bound. -/
+theorem le_one_of_sq_le_one {u : Real} (h0 : 0 ≤ u) (hsq : u * u ≤ 1) : u ≤ 1 := by
+  rcases lt_total u 1 with h | h | h
+  · exact le_of_lt h
+  · exact le_of_eq h
+  · exfalso
+    have hu0 : 0 < u := lt_trans_ax zero_lt_one_ax h
+    have e : (1 : Real) * u = u := by rw [mul_comm, mul_one_ax]
+    have h1u : u < u * u := by
+      have hm := mul_lt_mul_of_pos_right h hu0; rwa [e] at hm
+    exact lt_irrefl_ax 1 (lt_of_lt_of_le (lt_trans_ax h h1u) hsq)
+
+/-- `abs (cos x) ≤ 1`. PROMOTED from axiom to theorem (2026-06-27 audit):
+`|cos|·|cos| = |cos·cos| = cos·cos ≤ 1` (`cos_sq_le_one`), then `le_one_of_sq_le_one`. -/
+theorem abs_cos_le_one (x : Real) : abs (cos x) ≤ 1 := by
+  apply le_one_of_sq_le_one (abs_nonneg (cos x))
+  rw [← abs_mul, abs_of_nonneg (mul_self_nonneg (cos x))]
+  exact cos_sq_le_one x
+
+/-- `abs (sin x) ≤ 1`. PROMOTED (symmetric to `abs_cos_le_one`). -/
+theorem abs_sin_le_one (x : Real) : abs (sin x) ≤ 1 := by
+  apply le_one_of_sq_le_one (abs_nonneg (sin x))
+  rw [← abs_mul, abs_of_nonneg (mul_self_nonneg (sin x))]
+  exact sin_sq_le_one x
 
 end Real
 end MachLib

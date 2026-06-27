@@ -102,11 +102,7 @@ theorem Interval.mulSym_mem {I J : Interval} {x y : Real}
 
 /-! ## the tight bilinear sign-case bound (heart of the 4-corner enclosure) -/
 
-theorem nonpos_of_not_nonneg {x : Real} (h : ¬ 0 ≤ x) : x ≤ 0 := by
-  rcases lt_total 0 x with h0 | h0 | h0
-  · exact absurd (le_of_lt h0) h
-  · exact absurd (le_of_eq h0) h
-  · exact le_of_lt h0
+-- `nonpos_of_not_nonneg` relocated up to `Sign.lean` (2026-06-27 audit). Available via import.
 
 /-- For `y ∈ [c,d]`, `x·y ≤ max(x·c, x·d)` — *any* sign of `x` (the product
 attains its max at an endpoint of `y`). -/

@@ -11,6 +11,7 @@ import MachLib.HyperbolicPreservation
 import MachLib.Forge
 import MachLib.ForgeTest
 import MachLib.Ring
+import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
 import MachLib.PolyRingTactic

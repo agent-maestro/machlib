@@ -59,37 +59,17 @@ theorem abs_le_of {t B : Real} (h1 : t ≤ B) (h2 : -t ≤ B) : abs t ≤ B := b
   · rw [if_pos h]; exact h1
   · rw [if_neg h]; exact h2
 
-/-! ### Order/sign preliminaries (Mathlib-free, derived from MachLib primitives) -/
+/-! ### Order/sign preliminaries (Mathlib-free, derived from MachLib primitives).
+`neg_nonneg_of_nonpos`, `neg_le_neg`, `le_of_eq` relocated up to `Sign.lean`
+(2026-06-27 audit; available here via the `Lemmas` → `Sign` import). -/
 
-theorem neg_nonneg_of_nonpos {x : Real} (h : x ≤ 0) : 0 ≤ -x := by
-  have hc : x + (-x) ≤ 0 + (-x) := add_le_add_both h (le_refl (-x))
-  have e1 : x + (-x) = 0 := by mach_ring
-  have e2 : (0 : Real) + (-x) = -x := by mach_ring
-  rw [e1, e2] at hc; exact hc
-
-theorem neg_le_neg {a b : Real} (h : a ≤ b) : -b ≤ -a := by
-  have hc : a + (-a + -b) ≤ b + (-a + -b) := add_le_add_both h (le_refl (-a + -b))
-  have e1 : a + (-a + -b) = -b := by mach_mpoly [a, b]
-  have e2 : b + (-a + -b) = -a := by mach_mpoly [a, b]
-  rw [e1, e2] at hc; exact hc
-
-theorem mul_self_nonneg (x : Real) : 0 ≤ x * x := by
-  rcases lt_total 0 x with h | h | h
-  · exact mul_nonneg (le_of_lt h) (le_of_lt h)
-  · have hx : x = 0 := h.symm
-    rw [hx, mul_zero]; exact le_refl 0
-  · have hnx : 0 ≤ -x := neg_nonneg_of_nonpos (le_of_lt h)
-    have hp : 0 ≤ (-x) * (-x) := mul_nonneg hnx hnx
-    have e : (-x) * (-x) = x * x := by mach_ring
-    rw [e] at hp; exact hp
+-- `mul_self_nonneg` relocated up to `Sign.lean` (2026-06-27 audit). Available via import.
 
 theorem sub_le_sub_right {a b : Real} (h : a ≤ b) (c : Real) : a - c ≤ b - c := by
   rw [sub_def, sub_def]; exact add_le_add_both h (le_refl (-c))
 
 theorem sub_le_sub_left {a b : Real} (h : a ≤ b) (c : Real) : c - b ≤ c - a := by
   rw [sub_def, sub_def]; exact add_le_add_both (le_refl c) (neg_le_neg h)
-
-theorem le_of_eq {a b : Real} (h : a = b) : a ≤ b := h ▸ le_refl a
 
 theorem le_abs_self (t : Real) : t ≤ abs t := by
   unfold abs
