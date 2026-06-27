@@ -159,4 +159,28 @@ theorem prod_delta_bound {w : Real} (hw0 : 0 ≤ w) :
       rw [npow_succ]
       exact le_of_eq (pdb_ring w (npow ds.length (1 + w)))
 
+/-! ## the N-term inner-product backward error (γₙ per term) -/
+
+theorem chain_ring (x P : Real) : x * P - x = x * (P - 1) := by mach_mpoly [x, P]
+
+/-- **N-term backward error.** A base value `x` carried through a chain of `n`
+relative roundings (`prodDelta ds`, `|δᵢ| ≤ w`) emerges as the *exact* value
+`x' = x·∏(1+δᵢ)` of a single perturbed input, with
+`|x' − x| ≤ γₙ·|x| = ((1+w)ⁿ − 1)·|x|`.
+
+This is the per-term backward error of an `n`-term inner product: the
+most-accumulated term flows through 1 multiply + (n−1) adds = `n` roundings, so it
+is the exact term of an input perturbed by `≤ γₙ`. It is exactly the `n`-fold
+generalisation of `dot2_backward`, whose per-term factor `(1+δ₁)(1+δ₃)` is the
+2-element chain `prodDelta [δ₁, δ₃]` bounded by `two_delta_bound = γ₂`. The whole
+dot is the sum of such terms, so a rounded inner product is the exact inner
+product of inputs each perturbed by `≤ γₙ` — Higham backward stability, any `n`. -/
+theorem chain_backward {w x : Real} (hw0 : 0 ≤ w)
+    (ds : List Real) (hds : ∀ d, d ∈ ds → abs d ≤ w) :
+    abs (x * prodDelta ds - x) ≤ (npow ds.length (1 + w) - 1) * abs x := by
+  rw [chain_ring x (prodDelta ds), abs_mul]
+  exact le_trans
+    (mul_le_mul_of_nonneg_left (prod_delta_bound hw0 ds hds) (abs_nonneg x))
+    (le_of_eq (mul_comm (abs x) (npow ds.length (1 + w) - 1)))
+
 end MachLib.Real

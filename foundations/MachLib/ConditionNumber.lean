@@ -94,4 +94,52 @@ theorem kappa_bound_dominant {t1 t2 : Real} (h : (1 + 1) * abs t2 ≤ abs t1) :
     exact le_of_sub_nonneg hpos
   exact le_trans hstep (mul_le_mul_of_nonneg_left (reverse_triangle t1 t2) h3)
 
+/-! ## general-N κ — one term dominating the sum of the rest ⇒ κ ≤ 3 -/
+
+/-- Running sum of a list — the exact value `Σtᵢ`. -/
+noncomputable def sumList : List Real → Real
+  | []      => 0
+  | t :: ts => t + sumList ts
+
+/-- Running sum of magnitudes — the conditioning quantity `Σ|tᵢ|`. -/
+noncomputable def sigmaList : List Real → Real
+  | []      => 0
+  | t :: ts => abs t + sigmaList ts
+
+/-- Triangle inequality over a list: `|Σtᵢ| ≤ Σ|tᵢ|` (so `κ = Σ|tᵢ|/|Σtᵢ| ≥ 1`
+for any number of terms). -/
+theorem abs_sumList_le : ∀ ts : List Real, abs (sumList ts) ≤ sigmaList ts
+  | []      => le_of_eq (abs_of_nonneg (le_refl (0 : Real)))
+  | t :: ts => by
+      show abs (t + sumList ts) ≤ abs t + sigmaList ts
+      exact le_trans (abs_add t (sumList ts))
+                     (add_le_add_both (le_refl (abs t)) (abs_sumList_le ts))
+
+/-- **κ ≤ 3 for the N-term dominant family.** If the leading term dominates the
+*sum of magnitudes of all the others* (`2·Σ|rest| ≤ |t₁|`), then for the whole
+list `Σ|tᵢ| ≤ 3·|Σtᵢ|` — i.e. `κ ≤ 3`, regardless of how many small terms there
+are. The arbitrary-N generalisation of `kappa_bound_dominant`: one dominant term
+keeps the exact sum away from 0 (no cancellation), so the conditioned bound stays
+within a factor 3 of a true relative forward-error bound. -/
+theorem kappa_bound_dominant_list {t1 : Real} {rest : List Real}
+    (h : (1 + 1) * sigmaList rest ≤ abs t1) :
+    sigmaList (t1 :: rest) ≤ (1 + 1 + 1) * abs (sumList (t1 :: rest)) := by
+  have h2 : (0 : Real) ≤ 1 + 1 :=
+    le_trans (le_of_lt one_pos) (le_add_of_nonneg_right (le_of_lt one_pos))
+  have h3 : (0 : Real) ≤ 1 + 1 + 1 := le_trans h2 (le_add_of_nonneg_right (le_of_lt one_pos))
+  have hR' : abs (sumList rest) ≤ sigmaList rest := abs_sumList_le rest
+  have hrev : abs t1 - abs (sumList rest) ≤ abs (t1 + sumList rest) :=
+    reverse_triangle t1 (sumList rest)
+  have hER : abs t1 - sigmaList rest ≤ abs (t1 + sumList rest) :=
+    le_trans (sub_le_sub_left hR' (abs t1)) hrev
+  have hstep : abs t1 + sigmaList rest ≤ (1 + 1 + 1) * (abs t1 - sigmaList rest) := by
+    have hd : 0 ≤ abs t1 - (1 + 1) * sigmaList rest := sub_nonneg_of_le h
+    have e : (1 + 1 + 1) * (abs t1 - sigmaList rest) - (abs t1 + sigmaList rest)
+        = (1 + 1) * (abs t1 - (1 + 1) * sigmaList rest) := by mach_mpoly [abs t1, sigmaList rest]
+    have hpos : 0 ≤ (1 + 1 + 1) * (abs t1 - sigmaList rest) - (abs t1 + sigmaList rest) := by
+      rw [e]; exact mul_nonneg h2 hd
+    exact le_of_sub_nonneg hpos
+  show abs t1 + sigmaList rest ≤ (1 + 1 + 1) * abs (t1 + sumList rest)
+  exact le_trans hstep (mul_le_mul_of_nonneg_left hER h3)
+
 end MachLib.Real

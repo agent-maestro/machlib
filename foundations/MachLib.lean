@@ -95,6 +95,7 @@ import MachLib.IntervalArith
 import MachLib.AffineContraction
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
+import MachLib.FixedPointSat
 
 /-!
 # MachLib — top-level aggregator

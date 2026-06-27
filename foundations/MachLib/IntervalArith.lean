@@ -137,4 +137,53 @@ theorem min_le_mul_endpoints (x c d y : Real) (hcy : c ≤ y) (hyd : y ≤ d) :
         show -(-(x * y)) = x * y from by mach_ring] at h2
     exact le_trans (min_le_right _ _) h2
 
+/-! ## the tight 4-corner signed multiplication
+
+`mulSym` gives a symmetric `[−R, R]` enclosure valid for any sign but loose. The
+tight enclosure is the exact `[min, max]` over the four corner products
+`{lo·lo, hi·lo, lo·hi, hi·hi}` — and it follows purely by assembling the two
+bilinear endpoint lemmas (`mul_le_max_endpoints` / `min_le_mul_endpoints`) along
+each axis, no new sign analysis. -/
+
+/-- Column bound: for `x ∈ [a,b]`, `x·c ≤ max(a·c, b·c)` (any sign). The `y`-axis
+endpoint lemma transposed onto the `x`-axis by commutativity. -/
+theorem mul_col_le {a b x : Real} (c : Real) (hax : a ≤ x) (hxb : x ≤ b) :
+    x * c ≤ max (a * c) (b * c) := by
+  have h := mul_le_max_endpoints c a b x hax hxb
+  rw [mul_comm c x, mul_comm c a, mul_comm c b] at h
+  exact h
+
+/-- Column bound (lower): for `x ∈ [a,b]`, `min(a·c, b·c) ≤ x·c` (any sign). -/
+theorem col_le_mul {a b x : Real} (c : Real) (hax : a ≤ x) (hxb : x ≤ b) :
+    min (a * c) (b * c) ≤ x * c := by
+  have h := min_le_mul_endpoints c a b x hax hxb
+  rw [mul_comm c x, mul_comm c a, mul_comm c b] at h
+  exact h
+
+/-- The tight 4-corner signed product: `[min, max]` over the four corners
+`{lo·lo, hi·lo, lo·hi, hi·hi}`. Tighter than `mulSym`; the exact enclosure. -/
+noncomputable def Interval.mul (I J : Interval) : Interval :=
+  ⟨min (min (I.lo * J.lo) (I.hi * J.lo)) (min (I.lo * J.hi) (I.hi * J.hi)),
+   max (max (I.lo * J.lo) (I.hi * J.lo)) (max (I.lo * J.hi) (I.hi * J.hi))⟩
+
+/-- **Tight signed multiplication encloses (any sign).** `x ∈ I`, `y ∈ J` ⟹
+`x·y ∈ I.mul J`, the exact 4-corner box. -/
+theorem Interval.mul_mem {I J : Interval} {x y : Real}
+    (hx : I.mem x) (hy : J.mem y) : (I.mul J).mem (x * y) := by
+  obtain ⟨hxl, hxu⟩ := hx; obtain ⟨hyl, hyu⟩ := hy
+  refine ⟨?_, ?_⟩
+  · -- lower: 4-corner min ≤ min(x·lo, x·hi) ≤ x·y
+    have hmid := min_le_mul_endpoints x J.lo J.hi y hyl hyu
+    have hc := col_le_mul (a := I.lo) (b := I.hi) (x := x) J.lo hxl hxu
+    have hd := col_le_mul (a := I.lo) (b := I.hi) (x := x) J.hi hxl hxu
+    exact le_trans
+      (le_min (le_trans (min_le_left _ _) hc) (le_trans (min_le_right _ _) hd))
+      hmid
+  · -- upper: x·y ≤ max(x·lo, x·hi) ≤ 4-corner max
+    have hmid := mul_le_max_endpoints x J.lo J.hi y hyl hyu
+    have hc := mul_col_le (a := I.lo) (b := I.hi) (x := x) J.lo hxl hxu
+    have hd := mul_col_le (a := I.lo) (b := I.hi) (x := x) J.hi hxl hxu
+    exact le_trans hmid
+      (max_le (le_trans hc (le_max_left _ _)) (le_trans hd (le_max_right _ _)))
+
 end MachLib.Real
