@@ -93,21 +93,46 @@ theorem mul_distrib_right (a b c : Real) :
     (a + b) * c = a * c + b * c := by
   rw [mul_comm (a + b) c, mul_distrib, mul_comm c a, mul_comm c b]
 
-/-- `(-a) * b = -(a * b)`. Held as an axiom for the same reason as
-the abs cluster in `Lemmas.lean` — provable via inverse-
-uniqueness chain (`a * b + -a * b = (a + -a) * b = 0`), but the
-chain runs into Lean precedence quirks (`-a * b` reparses
-ambiguously between `(-a) * b` and `-(a * b)` depending on the
-surrounding term). True in any commutative ring. -/
-axiom neg_mul (a b : Real) : (-a) * b = -(a * b)
+/-- `(-a) * b = -(a * b)`. PROMOTED from axiom to theorem (2026-06-27 axiom
+audit): `(-a)*b` is an additive inverse of `a*b` (since
+`a*b + (-a)*b = (a + -a)*b = 0*b = 0`), and `-(a*b)` is THE inverse, so they are
+equal — the same inverse-uniqueness chain `neg_add` uses. The old "precedence
+quirk" note was about display, not provability; the explicit `calc` sidesteps it.
+True in any commutative ring; here derived from `mul_distrib_right` + `add_neg` +
+`zero_mul`. -/
+theorem neg_mul (a b : Real) : (-a) * b = -(a * b) := by
+  have key : a * b + (-a) * b = 0 := by
+    rw [← mul_distrib_right, add_neg, zero_mul]
+  calc (-a) * b
+      = 0 + (-a) * b                  := (zero_add _).symm
+    _ = (-(a * b) + a * b) + (-a) * b := by rw [neg_add_self]
+    _ = -(a * b) + (a * b + (-a) * b) := by rw [add_assoc]
+    _ = -(a * b) + 0                  := by rw [key]
+    _ = -(a * b)                      := add_zero _
 
-/-- `a * (-b) = -(a * b)`. Symmetric to `neg_mul`. Axiom. -/
-axiom mul_neg (a b : Real) : a * (-b) = -(a * b)
+/-- `a * (-b) = -(a * b)`. PROMOTED from axiom to theorem (symmetric to `neg_mul`):
+`a*b + a*(-b) = a*(b + -b) = a*0 = 0`, so `a*(-b)` is the inverse of `a*b`. Derived
+from `mul_distrib` + `add_neg` + `mul_zero`. -/
+theorem mul_neg (a b : Real) : a * (-b) = -(a * b) := by
+  have key : a * b + a * (-b) = 0 := by
+    rw [← mul_distrib, add_neg, mul_zero]
+  calc a * (-b)
+      = 0 + a * (-b)                  := (zero_add _).symm
+    _ = (-(a * b) + a * b) + a * (-b) := by rw [neg_add_self]
+    _ = -(a * b) + (a * b + a * (-b)) := by rw [add_assoc]
+    _ = -(a * b) + 0                  := by rw [key]
+    _ = -(a * b)                      := add_zero _
 
-/-- `-(-a) = a`. Double-negation cancellation. Held as axiom —
-provable via inverse uniqueness chain (same shape as `neg_add`
-above) but kept axiomatic for clarity. -/
-axiom neg_neg_helper (a : Real) : -(-a) = a
+/-- `-(-a) = a`. PROMOTED from axiom to theorem (double-negation): `a` is an
+additive inverse of `-a` (since `-a + a = 0`), and `-(-a)` is THE inverse — same
+uniqueness chain as `neg_add`. Derived from `neg_add_self` + the group axioms. -/
+theorem neg_neg_helper (a : Real) : -(-a) = a := by
+  calc -(-a)
+      = -(-a) + 0          := (add_zero _).symm
+    _ = -(-a) + (-a + a)   := by rw [neg_add_self]
+    _ = (-(-a) + -a) + a   := by rw [← add_assoc]
+    _ = 0 + a              := by rw [neg_add_self]
+    _ = a                  := zero_add _
 
 /-- `(-a) * (-b) = a * b`. Two negations cancel. Derivable from
 the axioms above. -/
