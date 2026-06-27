@@ -37,12 +37,12 @@ axiom sin_add        (x y : Real) :
 axiom cos_add        (x y : Real) :
   cos (x + y) = cos x * cos y - sin x * sin y
 
-/-! ### Boundedness -/
+/-! ### Boundedness
 
-axiom sin_le_one     (x : Real) : sin x ≤ 1
-axiom neg_one_le_sin (x : Real) : -1 ≤ sin x
-axiom cos_le_one     (x : Real) : cos x ≤ 1
-axiom neg_one_le_cos (x : Real) : -1 ≤ cos x
+`sin_le_one`/`neg_one_le_sin`/`cos_le_one`/`neg_one_le_cos` PROMOTED to theorems in
+`Lemmas.lean` (2026-06-27 audit) — they follow from the squared bounds
+(`sin_sq_le_one`/`cos_sq_le_one`, themselves derived from `pythagorean`) via the
+`u²≤1 ⇒ u≤1` peeling lemma, which lives downstream of `Trig`. -/
 
 /-! ### Lipschitz (`|sin'| = |cos| ≤ 1`, `|cos'| = |sin| ≤ 1`)
 

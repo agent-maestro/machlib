@@ -253,5 +253,32 @@ theorem abs_sin_le_one (x : Real) : abs (sin x) ≤ 1 := by
   rw [← abs_mul, abs_of_nonneg (mul_self_nonneg (sin x))]
   exact sin_sq_le_one x
 
+/-! ### one-sided trig bounds — PROMOTED from `Trig` axioms (2026-06-27 audit).
+`sin_le_one`/`neg_one_le_sin`/`cos_le_one`/`neg_one_le_cos` follow from the squared
+bounds (`sin_sq_le_one`/`cos_sq_le_one`) via the `u²≤1 ⇒ u≤1` peeling lemma — they
+were axioms in `Trig` only because that infra was downstream. -/
+
+/-- `u·u ≤ 1 → u ≤ 1` (no `0 ≤ u` premise). -/
+theorem le_one_of_sq_le_one' {u : Real} (hsq : u * u ≤ 1) : u ≤ 1 := by
+  by_cases h : 0 ≤ u
+  · exact le_one_of_sq_le_one h hsq
+  · exact le_trans (nonpos_of_not_nonneg h) (le_of_lt zero_lt_one_ax)
+
+/-- `u·u ≤ 1 → -1 ≤ u`. -/
+theorem neg_one_le_of_sq_le_one {u : Real} (hsq : u * u ≤ 1) : -1 ≤ u := by
+  by_cases h : 0 ≤ u
+  · have hn10 : -(1 : Real) ≤ 0 := by
+      have := neg_le_neg (le_of_lt zero_lt_one_ax); rwa [neg_zero] at this
+    exact le_trans hn10 h
+  · have hn : 0 ≤ -u := neg_nonneg_of_nonpos (nonpos_of_not_nonneg h)
+    have hsq' : (-u) * (-u) ≤ 1 := by rw [neg_mul_neg]; exact hsq
+    have h2 := neg_le_neg (le_one_of_sq_le_one hn hsq')
+    rwa [neg_neg_helper] at h2
+
+theorem sin_le_one (x : Real) : sin x ≤ 1 := le_one_of_sq_le_one' (sin_sq_le_one x)
+theorem cos_le_one (x : Real) : cos x ≤ 1 := le_one_of_sq_le_one' (cos_sq_le_one x)
+theorem neg_one_le_sin (x : Real) : -1 ≤ sin x := neg_one_le_of_sq_le_one (sin_sq_le_one x)
+theorem neg_one_le_cos (x : Real) : -1 ≤ cos x := neg_one_le_of_sq_le_one (cos_sq_le_one x)
+
 end Real
 end MachLib
