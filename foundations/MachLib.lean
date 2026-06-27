@@ -88,6 +88,7 @@ import MachLib.ConditionedError
 import MachLib.TrigLipschitz
 import MachLib.ConditionNumber
 import MachLib.RippleCarry
+import MachLib.BitVecMul
 import MachLib.BackwardError
 import MachLib.IntervalArith
 import MachLib.AffineContraction
