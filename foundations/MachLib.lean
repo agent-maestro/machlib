@@ -79,6 +79,8 @@ import MachLib.ChainExp2SDR
 import MachLib.Tactic.LeadingCoeffY
 import MachLib.FPModel
 import MachLib.FixedPoint
+import MachLib.Iteration
+import MachLib.ErrorAlgebra
 
 /-!
 # MachLib — top-level aggregator
