@@ -41,6 +41,13 @@ theorem ea_mulswap3 (x p q : Real) : x * (p * q) = p * (x * q) := by mach_mpoly 
 theorem ea_regroup (p s q t : Real) : (p * s) * (q * t) = (p * q) * (s * t) := by
   mach_mpoly [p, s, q, t]
 theorem ea_assoc3 (a b c : Real) : a * (b * c) = (a * b) * c := by mach_mpoly [a, b, c]
+theorem ea_distrib (a b c : Real) : a * b + a * c = a * (b + c) := by mach_mpoly [a, b, c]
+
+/-- Sum of nonnegs is nonneg — used by generated leaf-factor nonneg proofs. -/
+theorem add_nonneg_ea {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b := by
+  have h := add_le_add_both ha hb
+  have e : (0 : Real) + 0 = 0 := by mach_ring
+  rw [e] at h; exact h
 
 /-- Exponent law for `npow`: `x^(a+b) = x^a · x^b`. -/
 theorem npow_add (x : Real) (a : Nat) : ∀ b, npow (a + b) x = npow a x * npow b x
@@ -53,32 +60,105 @@ theorem npow_add (x : Real) (a : Nat) : ∀ b, npow (a + b) x = npow a x * npow 
 compose through a rounded product into exponent `a+b+1` (operands add, +1 for the
 multiply's rounding). The `×`-analogue of `cond_combine`; together they propagate
 forward-error over any expression tree. -/
-theorem mul_grow {w x y p xe ye : Real} {a b : Nat}
-    (hw : 0 ≤ w)
-    (hx : abs x ≤ npow a (1 + w) * abs xe)
-    (hy : abs y ≤ npow b (1 + w) * abs ye)
+theorem mul_grow {w x y p X Y : Real} {a b : Nat}
+    (hw : 0 ≤ w) (hX : 0 ≤ X) (hY : 0 ≤ Y)
+    (hx : abs x ≤ npow a (1 + w) * X)
+    (hy : abs y ≤ npow b (1 + w) * Y)
     (hp : RoundsW w p (x * y)) :
-    abs p ≤ npow (a + b + 1) (1 + w) * (abs xe * abs ye) := by
+    abs p ≤ npow (a + b + 1) (1 + w) * (X * Y) := by
   have h1w : (0 : Real) ≤ 1 + w :=
     le_trans (le_of_lt one_pos) (le_add_of_nonneg_right hw)
-  -- |p| ≤ (1+w)·|x·y| = (1+w)·(|x|·|y|)
   have h1 : abs p ≤ (1 + w) * abs (x * y) := abs_le_one_add (roundsW_abs hp)
   rw [abs_mul] at h1
-  -- |x|·|y| ≤ (npow a (1+w)·|xe|)·(npow b (1+w)·|ye|)
-  have hax : 0 ≤ npow a (1 + w) * abs xe := mul_nonneg (npow_nonneg h1w a) (abs_nonneg xe)
-  have hxy : abs x * abs y ≤ (npow a (1 + w) * abs xe) * (npow b (1 + w) * abs ye) :=
+  have hax : 0 ≤ npow a (1 + w) * X := mul_nonneg (npow_nonneg h1w a) hX
+  have hxy : abs x * abs y ≤ (npow a (1 + w) * X) * (npow b (1 + w) * Y) :=
     le_trans (mul_le_mul_of_nonneg_right hx (abs_nonneg y))
              (mul_le_mul_of_nonneg_left hy hax)
-  -- regroup and fold the exponents: = npow (a+b) (1+w) · (|xe|·|ye|)
-  rw [ea_regroup (npow a (1 + w)) (abs xe) (npow b (1 + w)) (abs ye),
-      ← npow_add (1 + w) a b] at hxy
-  -- |p| ≤ (1+w)·(npow (a+b) (1+w) · (|xe|·|ye|)) = npow (a+b+1) (1+w) · (|xe|·|ye|)
-  have h2 : (1 + w) * (abs x * abs y)
-      ≤ (1 + w) * (npow (a + b) (1 + w) * (abs xe * abs ye)) :=
+  rw [ea_regroup (npow a (1 + w)) X (npow b (1 + w)) Y, ← npow_add (1 + w) a b] at hxy
+  have h2 : (1 + w) * (abs x * abs y) ≤ (1 + w) * (npow (a + b) (1 + w) * (X * Y)) :=
     mul_le_mul_of_nonneg_left hxy h1w
-  have hfold : (1 + w) * (npow (a + b) (1 + w) * (abs xe * abs ye))
-      = npow (a + b + 1) (1 + w) * (abs xe * abs ye) := by
-    rw [npow_succ]; exact ea_assoc3 (1 + w) (npow (a + b) (1 + w)) (abs xe * abs ye)
+  have hfold : (1 + w) * (npow (a + b) (1 + w) * (X * Y))
+      = npow (a + b + 1) (1 + w) * (X * Y) := by
+    rw [npow_succ]; exact ea_assoc3 (1 + w) (npow (a + b) (1 + w)) (X * Y)
   exact le_trans h1 (le_trans h2 (le_of_eq hfold))
+
+/-! ## exponent lifting + the sum rule (completes the arithmetic interface) -/
+
+/-- `npow` is monotone in the exponent for base `≥ 1` (additive-gap form). -/
+theorem npow_mono {z : Real} (hz1 : 1 ≤ z) (a : Nat) :
+    ∀ k, npow a z ≤ npow (a + k) z
+  | 0     => le_refl _
+  | k + 1 => by
+      rw [Nat.add_succ, npow_succ]
+      have hz0 : 0 ≤ z := le_trans (le_of_lt one_pos) hz1
+      have hnn : 0 ≤ npow (a + k) z := npow_nonneg hz0 (a + k)
+      have hstep : npow (a + k) z ≤ z * npow (a + k) z := by
+        have h := mul_le_mul_of_nonneg_right hz1 hnn
+        rwa [one_mul_thm] at h
+      exact le_trans (npow_mono hz1 a k) hstep
+
+theorem npow_mono_le {z : Real} (hz1 : 1 ≤ z) {a b : Nat} (hab : a ≤ b) :
+    npow a z ≤ npow b z := by
+  obtain ⟨k, hk⟩ := Nat.le.dest hab
+  rw [← hk]; exact npow_mono hz1 a k
+
+/-- Lift a magnitude bound to any larger exponent (so two operands can be
+brought to a common exponent before the sum rule). -/
+theorem npow_le_lift {w X v : Real} {a m : Nat}
+    (hw : 0 ≤ w) (hX : 0 ≤ X)
+    (hv : abs v ≤ npow a (1 + w) * X) (ham : a ≤ m) :
+    abs v ≤ npow m (1 + w) * X := by
+  have h1w : (1 : Real) ≤ 1 + w := le_add_of_nonneg_right hw
+  exact le_trans hv (mul_le_mul_of_nonneg_right (npow_mono_le h1w ham) hX)
+
+/-- **Sum-composition rule (nonneg).** Two operands at a *common* exponent `m`
+combine through a rounded sum into exponent `m+1` — the exponent does NOT
+compound (unlike a product). The `+`-analogue of `mul_grow`; lift first with
+`npow_le_lift` to share `m = max a b`. -/
+theorem add_grow {w x y p X Y : Real} {m : Nat}
+    (hw : 0 ≤ w)
+    (hx : abs x ≤ npow m (1 + w) * X)
+    (hy : abs y ≤ npow m (1 + w) * Y)
+    (hp : RoundsW w p (x + y)) :
+    abs p ≤ npow (m + 1) (1 + w) * (X + Y) := by
+  have h1w : (0 : Real) ≤ 1 + w :=
+    le_trans (le_of_lt one_pos) (le_add_of_nonneg_right hw)
+  have h1 : abs p ≤ (1 + w) * abs (x + y) := abs_le_one_add (roundsW_abs hp)
+  have hchain : abs (x + y) ≤ npow m (1 + w) * (X + Y) := by
+    rw [← ea_distrib (npow m (1 + w)) X Y]
+    exact le_trans (abs_add x y) (add_le_add_both hx hy)
+  have h4 : (1 + w) * abs (x + y) ≤ (1 + w) * (npow m (1 + w) * (X + Y)) :=
+    mul_le_mul_of_nonneg_left hchain h1w
+  have hfold : (1 + w) * (npow m (1 + w) * (X + Y)) = npow (m + 1) (1 + w) * (X + Y) := by
+    rw [npow_succ]; exact ea_assoc3 (1 + w) (npow m (1 + w)) (X + Y)
+  exact le_trans h1 (le_trans h4 (le_of_eq hfold))
+
+/-! ## the certifier interface: leaf base case + a worked composition
+
+These are the templates the automated forward-error certifier emits: every leaf
+gets `leaf_bound` (exponent 0), every `×` node `mul_grow`, every `+` node
+`add_grow`. `length_sq2_compose` shows the fold closes end-to-end — the same
+`(1+w)²` bound FPModel proved by hand, here assembled purely from the operator
+rules. -/
+
+/-- Base case: a leaf (variable/constant) equals its own exact value — exponent 0. -/
+theorem leaf_bound (w x : Real) : abs x ≤ npow 0 (1 + w) * abs x := by
+  have e : npow 0 (1 + w) * abs x = abs x := by
+    rw [show npow 0 (1 + w) = 1 from rfl]; exact one_mul_thm (abs x)
+  exact le_of_eq e.symm
+
+/-- **Worked composition** — `length_sq2 = x*x + y*y`, certified by folding the
+operator rules: `leaf_bound` (×2 per product) → `mul_grow` (each product, exp 1)
+→ `add_grow` (the sum, exp 2). Reproduces FPModel's hand-proved `(1+w)²` bound
+mechanically. This is exactly what the certifier generates per kernel. -/
+theorem length_sq2_compose {w x y px py s : Real}
+    (hw : 0 ≤ w)
+    (hpx : RoundsW w px (x * x)) (hpy : RoundsW w py (y * y))
+    (hs : RoundsW w s (px + py)) :
+    abs s ≤ npow 2 (1 + w) * (abs x * abs x + abs y * abs y) :=
+  add_grow hw
+    (mul_grow hw (abs_nonneg x) (abs_nonneg x) (leaf_bound w x) (leaf_bound w x) hpx)
+    (mul_grow hw (abs_nonneg y) (abs_nonneg y) (leaf_bound w y) (leaf_bound w y) hpy)
+    hs
 
 end MachLib.Real
