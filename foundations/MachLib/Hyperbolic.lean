@@ -45,8 +45,8 @@ axiom sinh_add   (x y : Real) :
   sinh (x + y) = sinh x * cosh y + cosh x * sinh y
 axiom cosh_add   (x y : Real) :
   cosh (x + y) = cosh x * cosh y + sinh x * sinh y
-axiom pythagorean_hyp (x : Real) :
-  cosh x * cosh x - sinh x * sinh x = 1
+-- `pythagorean_hyp` PROMOTED to a theorem in `HyperbolicId.lean` (2026-06-27 audit;
+-- difference-of-squares from `cosh±sinh = exp(±x)` + `exp_add`/`exp_zero`).
 
 /-! ### ELC-form decomposition
 
@@ -79,18 +79,10 @@ axiom two_cosh_eq_exp_add (x : Real) :
 
 /-! ### Subtraction + double-angle identities
 
-Same ring-algebra constraint as the conversion identities — these
-fall out of `sinh_add` / `cosh_add` plus parity, but the
-distribution chain wants `ring` to be readable. -/
-
-axiom sinh_sub (x y : Real) :
-  sinh (x - y) = sinh x * cosh y - cosh x * sinh y
-axiom cosh_sub (x y : Real) :
-  cosh (x - y) = cosh x * cosh y - sinh x * sinh y
-axiom sinh_two_mul (x : Real) :
-  sinh ((1 + 1) * x) = (1 + 1) * sinh x * cosh x
-axiom cosh_two_mul (x : Real) :
-  cosh ((1 + 1) * x) = cosh x * cosh x + sinh x * sinh x
+`sinh_sub` / `cosh_sub` / `sinh_two_mul` / `cosh_two_mul` PROMOTED to theorems in
+`HyperbolicId.lean` (2026-06-27 audit) — they fall out of `sinh_add`/`cosh_add`
+plus parity, and the "distribution chain wants `ring`" the old comment named is
+now available downstream (`HyperbolicId` imports `Ring`/`MPolyRing`). -/
 
 /-! ### Link to `Trig.tanh`
 

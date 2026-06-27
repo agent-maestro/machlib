@@ -1,4 +1,5 @@
 import MachLib.Hyperbolic
+import MachLib.HyperbolicId
 
 /-!
 MachLib.HyperbolicPreservation — port of
