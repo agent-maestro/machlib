@@ -99,10 +99,26 @@ doesn't yet expose (cf. the C-242 note in `Forge.lean`). Held
 as an axiom in the same spirit as `one_div_nonneg_of_pos` and
 `mul_lt_mul_of_pos_right` — true in any ordered field. -/
 
-/-- `0 ≤ x * x`. The "squares are non-negative" fact. Closes the
-Rayleigh phase / Mie scattering / particle drag bounds family
-where the Forge kernel writes `1 + cos² θ` or `(1 - g)²` shapes. -/
-axiom sq_nonneg (x : Real) : 0 ≤ x * x
+/-- `0 ≤ x * x`. The "squares are non-negative" fact. PROMOTED from axiom to
+theorem (2026-06-27 axiom audit): for `0 ≤ x` it is `mul_nonneg`; for `x ≤ 0` the
+square equals `(-x)·(-x)` (`neg_mul_neg`) with `-x ≥ 0`. The sign split uses only
+`Basic`/`Forge`/`Ring` facts (all imported here); `x ≤ 0` from `¬0≤x` and `0 ≤ -x`
+are derived inline (the standalone versions live downstream, so they are inlined
+rather than imported). Closes the Rayleigh phase / Mie scattering / particle drag
+bounds family (`1 + cos² θ`, `(1 - g)²` shapes). -/
+theorem sq_nonneg (x : Real) : 0 ≤ x * x := by
+  by_cases h : 0 ≤ x
+  · exact mul_nonneg h h
+  · have hx : x ≤ 0 := by
+      rcases lt_total 0 x with h0 | h0 | h0
+      · exact absurd (le_of_lt h0) h
+      · subst h0; exact le_refl 0
+      · exact le_of_lt h0
+    have hnx : 0 ≤ -x := by
+      have hh := add_le_add_both hx (le_refl (-x))
+      rw [add_neg, zero_add] at hh; exact hh
+    have hpos : 0 ≤ (-x) * (-x) := mul_nonneg hnx hnx
+    rwa [neg_mul_neg] at hpos
 
 /-- `0 ≤ c → 0 ≤ c * x * x`. PROVED (no axiom) by reassociating to
 `c * (x * x)` and `mul_nonneg`. Closes the energy shape Forge emits when
