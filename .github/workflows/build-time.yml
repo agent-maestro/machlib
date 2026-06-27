@@ -67,6 +67,15 @@ jobs:
         working-directory: foundations
         run: bash scripts/check_aggregator.sh
 
+      # The flagship axiom closure is proved consistent by an ℤ-model
+      # (`MachLib.Model.intModel`). That argument only holds if the model is a
+      # genuine EXTERNAL one — depending on none of MachLib's own axioms. This
+      # gate re-derives `#print axioms intModel` and fails if it ever becomes
+      # circular (i.e. depends on a `MachLib.Real.*` axiom).
+      - name: Consistency model (flagship closure has an external ℤ-model)
+        working-directory: foundations
+        run: bash scripts/check_consistency_model.sh
+
       - name: Write build-time badge JSON
         env:
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}
