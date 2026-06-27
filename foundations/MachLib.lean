@@ -88,6 +88,10 @@ import MachLib.ConditionedError
 import MachLib.TrigLipschitz
 import MachLib.ConditionNumber
 import MachLib.RippleCarry
+import MachLib.BackwardError
+import MachLib.IntervalArith
+import MachLib.AffineContraction
+import MachLib.CrossTargetPairs
 
 /-!
 # MachLib — top-level aggregator
