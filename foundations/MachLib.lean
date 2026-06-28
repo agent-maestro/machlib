@@ -89,6 +89,7 @@ import MachLib.ForwardError
 import MachLib.OperatorBasisSound
 import MachLib.HybridError
 import MachLib.OperatorBasisTrans
+import MachLib.OperatorBasisGeneral
 import MachLib.ConditionedError
 import MachLib.TrigLipschitz
 import MachLib.ConditionNumber
