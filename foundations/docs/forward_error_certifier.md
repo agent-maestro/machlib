@@ -91,6 +91,14 @@ the engine's binding-integrity gate uses). `MachLib.ForgeBindingDemo` certifies 
 output verbatim — `length_sq2` (`x²+y²`) and `sigmoid` (`1/(1+e^{−x})`, a division
 kernel) — closing the AST → `GExpr` → bound chain, machine-checked.
 
+**The binding is drift-gated, not a one-time snapshot.** `tools/machlib_bind/check.py`
+re-runs the binder over the whole corpus and compares each certified kernel's `tree_hash`
+to a committed baseline manifest, failing CI on **drift** (a certified kernel's expression
+changed → re-verify), **regression** (a certified kernel fell off-basis), or a **coverage
+drop**. The gate is proven to go red on an injected change (a one-line edit to a real
+kernel's body flips it to a `DRIFT` failure naming the kernel and the old→new hash) — so a
+kernel cannot silently diverge from the bound that certifies it.
+
 The binder also **inlines immutable `let`-bindings** — substituting a `let`'s definition
 at each use yields a single `GExpr`. Inlining duplicates a shared subtree, so the
 certifier over-counts that subterm's rounding (the real kernel rounds it once): a *sound*
