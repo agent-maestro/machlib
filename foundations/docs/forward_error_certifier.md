@@ -97,13 +97,14 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **429/483
-functions (88.8%) are in the certified operator basis**, 182 of them guarded. The binder
-also **inlines user-function calls** (the callee's body with args bound to params — same
-sound inlining as `let`; recursion / cross-module off-basis). The off-basis remainder is
-named by exact count — `tan` (×5), `floor` (×6), `tuple` (×5), unresolved `call` (×4),
-`asin` (×1) — `tan` is guarded near `cos=0`, `floor` is discontinuous, `asin` amplifies
-near `±1` — and a parser gap (×33).
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **441/502
+functions (87.8%) are in the certified operator basis**, 190 of them guarded. The binder
+**inlines user-function calls** (incl. `::`-qualified cross-module ones — same sound
+inlining as `let`). The off-basis remainder is named by exact count — unresolved `call`
+(×18, into `if`-kernels), `floor` (×12, discontinuous), `tan` (×5, guarded near `cos=0`),
+`tuple` (×5, multi-return), `asin` (×1, amplifies near `±1`) — and a parser gap (×20,
+`if`-expression kernels). (The corpus is 502, not 483: resolving `::`-qualified calls
+revealed 13 previously-unparseable files — a truer denominator than the earlier 88.8%.)
 
 ## 6. What this does NOT claim
 
