@@ -38,14 +38,37 @@ Every release claiming zero Mathlib dependency must pass
 
 ## Featured artifacts
 
-The current capstone in `foundations/` is a constructive Khovanskii zero
-bound for polynomial-in-(x, eˣ), with a Forge-emitted safety-critical kernel
-proof shipped on top of it. Honest about the foundation: the result is
-proven modulo MachLib's axiomatized analytic base (Rolle zero-counting
-corollary, `HasDerivAt` rules, `exp_pos`, Real arithmetic and order); in
-mathlib every one of those is a theorem, and grounding the base there is
-open work.
+`foundations/` has two pillars, both `sorryAx`-free and Mathlib-free. The
+reader's guide to exactly what is and isn't proven — every claim paired with the
+command to check it — is
+[`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md).
 
+**1. Verified numerics, bits to trajectory** — a floating-point/fixed-point
+verification layer for Forge-emitted kernels, with an end-to-end capstone (a PID
+control loop carried from its bit-level netlist to a finite closed-loop trajectory
+bound) and a machine-checked **consistency proof** for its core.
+
+**2. A constructive Khovanskii zero bound** for polynomial-in-(x, eˣ) and for
+general triangular Pfaffian chains, with Forge-emitted safety-critical kernel
+proofs on top. Honest about the foundation: these are proven modulo MachLib's
+axiomatized analytic base (Rolle zero-counting corollary, `HasDerivAt` rules,
+`exp_pos`, Real arithmetic and order); in mathlib every one of those is a theorem,
+and grounding the base there is open work. The featured Khovanskii results and all
+the safety-critical applications are **constructive** — they depend on **no**
+"classical Khovanskii" axiom (verify with `#print axioms`); the one such axiom that
+remains is confined to a legacy general-`PfaffianFunction` development that nothing
+featured uses.
+
+- `foundations/MachLib/PIDCapstone.lean` — `pid_trajectory_from_bits`: a PID
+  control kernel proved from a bit-level netlist (the per-step round-off ε derived
+  from the bits) all the way to a finite trajectory bound. The discrete-datapath
+  claim and the analytic closed-loop claim are the *same* checked fact.
+- `foundations/MachLib/CoreModel.lean` — the flagship results' axiom closure is
+  proven consistent by an external ℤ-model (`intModel` depends on no MachLib
+  axiom), CI-gated. The answer to "are these results vacuous?".
+- `foundations/MachLib/FPModel.lean` — cross-target equivalence: two evaluations
+  of the same exact value (e.g. Rust f64 vs WGSL f32) agree within their
+  forward-error bounds (`cross_target`).
 - `foundations/MachLib/SingleExpKhovanskii.lean` — three resolution paths
   (`expPoly_khovanskii_bound`, `expPoly_auto_bound_with_propagation_aux`,
   `expPoly_ode_no_zeros`).

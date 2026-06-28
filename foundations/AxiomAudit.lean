@@ -5,6 +5,9 @@ import MachLib.PfaffianFnBound
 import MachLib.ChainExp2PathC
 import MachLib.MultiPolyReconstruct
 import MachLib.PolynomialCanonical
+import MachLib.PIDCapstone
+import MachLib.CoreModel
+import MachLib.FPModel
 
 /-!
 # Axiom Audit — Constructive Khovanskii Closure (2026-06-13/14, revised 2026-06-16)
@@ -158,3 +161,33 @@ open MachLib.Real
 #check @realOfScientific_three_dot_zero
 
 end C243LiteralBridge
+
+
+/-! ## Verified-numerics pillar (2026-06-27 audit)
+
+The bits→trajectory capstone, the cross-target equivalence layer, and the
+consistency model. Expected footprint: the MachLib analytic/Real base above; the
+bit-level (RTL) halves are pure Lean-core (`propext`/`Quot.sound` only); and
+`intModel` must depend on NONE of MachLib's own axioms — it is the external
+ℤ-model witnessing consistency, so anything `MachLib.Real.*` in its closure is a
+finding (the `check_consistency_model.sh` gate enforces this). -/
+
+section VerifiedNumerics
+
+open MachLib.Real MachLib.Model
+
+-- The end-to-end capstone: bit-level netlist → finite closed-loop trajectory bound.
+#print axioms pid_trajectory_from_bits
+-- Its bit-level halves — pure Lean-core (propext/Quot.sound only).
+#print axioms MachLib.RTL.fxpid_correct
+#print axioms MachLib.RTL.fxpid_trunc_lt_3ulp
+
+-- Cross-target equivalence (e.g. Rust f64 vs WGSL f32 agree within their bounds).
+#print axioms cross_target
+
+-- Consistency: the external ℤ-model must use NO MachLib axiom.
+#print axioms intModel
+-- Faithfulness: enumerates exactly the flagship closure it captures.
+#print axioms machlibWitness
+
+end VerifiedNumerics
