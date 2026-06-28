@@ -2,7 +2,7 @@
 
 A reader's front door to MachLib's **forward-error certifier**: a single proof that
 bounds the floating-point forward error of *any* kernel built from the operator basis
-`{leaf, +, ×, neg, exp, sin, cos, ÷, clamp, sqrt, ln}`, and is bound to the real kernels Forge compiles.
+`{leaf, +, ×, neg, exp, sin, cos, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
 
 Everything below is `sorryAx`-free with **0 custom axioms added** beyond MachLib's
 existing base. "`sorryAx`-free" means no `sorry`/`admit` — every step is a real proof.
@@ -49,6 +49,7 @@ data-dependent obligation division alone needs (`1/y` is unbounded near 0).
 | `clamp` | `aerr_clamp` | **exact + 1-Lipschitz** — error *preserved* (`E`, no rounding), magnitude `max\|lo\|\|hi\|` |
 | `sqrt` | `aerr_sqrt` | **guarded** (`m ≤ arg`) — `1/(2√m)`-Lipschitz, magnitude `√M` |
 | `ln` | `aerr_ln` | **guarded** (`m ≤ arg`) — `1/m`-Lipschitz, magnitude `max(\|ln m\|,\|ln M\|)` |
+| `pow` | `aerr_pow` | native `x^y` (guarded base, `y ≥ 0`) — `rpow := exp(y·log x)`, amplifying via `exp_grow` |
 
 `exp` *amplifies* (absolute argument error → relative output factor); `sin`/`cos` stay
 bounded (1-Lipschitz, `|f| ≤ 1`); `÷` needs the denominator bound. The same three
@@ -93,9 +94,9 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **394/483
-functions (81.6%) are in the certified operator basis**, 158 of them guarded (`÷`, `sqrt`,
-or `ln`). The off-basis remainder is named by exact count — `pow` (×11), `call` (×10),
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **405/483
+functions (83.9%) are in the certified operator basis**, 169 of them guarded (`÷`, `sqrt`,
+`ln`, or `pow`). The off-basis remainder is named by exact count — `call` (×10),
 `tan`/`atan`/`asin` (×13), `floor` (×6), hyperbolic (×6), `tuple` (×5), `abs` (×5) — the
 operators not yet in the basis, and a parser gap (×33).
 
@@ -103,7 +104,7 @@ operators not yet in the basis, and a parser gap (×33).
 
 - Not a verified compiler — it certifies the *expression*, and binds it to the shipped
   kernel via `tree_hash`; it does not prove the backend lowering is correct.
-- Not coverage of the whole stdlib — `pow`/`tan`/hyperbolic and loop/mutation kernels are
+- Not coverage of the whole stdlib — `tan`/inverse-trig/hyperbolic/`floor` and loop/mutation kernels are
   off-basis (§5), named, not silently included.
 - The bounds are parametric in data-dependent inputs (condition numbers, denominator
   guards) supplied per call — the fold proves the *shape* is sound, not per-kernel constants.

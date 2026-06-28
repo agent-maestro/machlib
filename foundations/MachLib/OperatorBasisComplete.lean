@@ -152,6 +152,53 @@ theorem aerr_ln {w M E v ve m p : Real} (hw0 : 0 ≤ w)
   rw [et_split3 p (log v) (log ve)]
   exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
 
+/-! ## `pow` (native `x^y`, guarded base + nonneg exponent)
+
+Forge emits native `pow` (one rounding), not a decomposition. Real power is *definable*
+without a new axiom — `rpow x y := exp(y·log x)` — and native pow's single rounding is
+exactly a `RoundsW` on `exp(y·log x)`, so the `exp` rule (`exp_grow`) does the work: the
+argument error `|y·log vx − y·log xe| ≤ y·(Ex/m)` (via the `ln`-Lipschitz bound) feeds
+`exp_grow`. Scoped to a guarded base (`0 < m ≤ x`) and a nonneg exact exponent `y` (the
+common case: literal/parameter exponents like `1.83`, `4.0`, a Hill coefficient). -/
+
+/-- Real power, *defined* (not axiomatised): `x^y := exp(y·log x)`, exact for `x > 0`. -/
+noncomputable def rpow (x y : Real) : Real := exp (y * log x)
+
+theorem rpow_pos (x y : Real) : 0 < rpow x y := exp_pos (y * log x)
+
+/-- `rpow` is monotone in the base for a nonneg exponent. -/
+theorem rpow_mono_base {a b y : Real} (ha : 0 < a) (hab : a ≤ b) (hy : 0 ≤ y) :
+    rpow a y ≤ rpow b y :=
+  exp_monotone (mul_le_mul_of_nonneg_left (log_mono ha hab) hy)
+
+/-- **`pow`** (`AErr`, native `x^y`, `0 < m ≤ v, ve`, exponent `y ≥ 0`). The error is the
+amplifying `exp`-form scaled by the magnitude `rpow Mx y`; the argument error `y·(Ex/m)`
+comes from the `1/m`-Lipschitz `ln` of the base. -/
+theorem aerr_pow {w Mx Ex vx xe y m p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hy : 0 ≤ y) (hm : 0 < m) (hmv : m ≤ vx) (hmve : m ≤ xe)
+    (h : AErr Mx Ex vx xe) (hp : RoundsW w p (rpow vx y)) :
+    AErr (rpow Mx y) (rpow Mx y * (exp (y * (Ex / m)) * (1 + w) - 1)) p (rpow xe y) := by
+  have hxe_le : xe ≤ Mx := le_trans (le_abs_self xe) h.1
+  have hmono : rpow xe y ≤ rpow Mx y := rpow_mono_base (lt_of_lt_of_le hm hmve) hxe_le hy
+  have hEarg0 : 0 ≤ y * (Ex / m) :=
+    mul_nonneg hy (div_nonneg (le_trans (abs_nonneg _) h.2) (le_of_lt hm))
+  have harg : abs (y * log vx - y * log xe) ≤ y * (Ex / m) := by
+    rw [show y * log vx - y * log xe = y * (log vx - log xe) from by mach_ring, abs_mul,
+        abs_of_nonneg hy]
+    exact mul_le_mul_of_nonneg_left
+      (le_trans (ln_lipschitz_bound hm hmv hmve) (div_le_div_pos (abs_nonneg _) h.2 hm (le_refl _)))
+      hy
+  have hF0 : 0 ≤ exp (y * (Ex / m)) * (1 + w) - 1 := by
+    have he1 : (1 : Real) ≤ exp (y * (Ex / m)) := by
+      have := exp_monotone hEarg0; rwa [exp_zero] at this
+    have h2 : exp (y * (Ex / m)) ≤ exp (y * (Ex / m)) * (1 + w) :=
+      le_trans (le_of_eq (mul_one_ax _).symm)
+        (mul_le_mul_of_nonneg_left (le_add_of_nonneg_right hw0) (le_of_lt (exp_pos _)))
+    exact sub_nonneg_of_le (le_trans he1 h2)
+  refine ⟨?_, ?_⟩
+  · rw [abs_of_nonneg (le_of_lt (rpow_pos xe y))]; exact hmono
+  · exact le_trans (exp_grow hw0 hw1 hEarg0 harg hp) (mul_le_mul_of_nonneg_right hmono hF0)
+
 /-- A guarded expression over the full operator basis. `divO a b m` records the
 denominator lower bound `m` it is certified against. -/
 inductive GExpr where
@@ -167,6 +214,7 @@ inductive GExpr where
   | clampO (a : GExpr) (lo hi : Real)
   | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
   | lnO  (a : GExpr) (m : Real)         -- `log a`, `a` bounded below by `m > 0`
+  | powO (a : GExpr) (y m : Real)       -- `a^y` (native pow), base `≥ m > 0`, exponent `y ≥ 0`
 
 /-- The exact value. -/
 noncomputable def GExpr.exact : GExpr → Real
@@ -182,6 +230,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
   | .sqrtO a _   => sqrt (GExpr.exact a)
   | .lnO a _     => log (GExpr.exact a)
+  | .powO a y _  => rpow (GExpr.exact a) y
   termination_by structural t => t
 
 /-- Magnitude bound (`÷` uses the lower bound: `|a/b| ≤ Mbound a / m`). -/
@@ -198,6 +247,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .clampO _ lo hi => max (abs lo) (abs hi)
   | .sqrtO a _   => sqrt (GExpr.Mbound a)
   | .lnO a m     => max (abs (log m)) (abs (log (GExpr.Mbound a)))
+  | .powO a y _  => rpow (GExpr.Mbound a) y
   termination_by structural t => t
 
 /-- Forward-error bound (`÷` term is `aerr_div`'s, every part scaled by `1/m`). -/
@@ -220,6 +270,8 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
                     + GExpr.Ebound w a / (sqrt m + sqrt m)
   | .lnO a m     => w * max (abs (log m)) (abs (log (GExpr.Mbound a + GExpr.Ebound w a)))
                     + GExpr.Ebound w a / m
+  | .powO a y m  => rpow (GExpr.Mbound a) y
+                    * (exp (y * (GExpr.Ebound w a / m)) * (1 + w) - 1)
   termination_by structural t => t
 
 /-- Validity: at each `÷` node, the recorded bound is positive and below the exact
@@ -237,6 +289,7 @@ def GExpr.Valid : GExpr → Prop
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
   | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   | .lnO a m     => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
+  | .powO a y m  => GExpr.Valid a ∧ 0 ≤ y ∧ 0 < m ∧ m ≤ GExpr.exact a
   termination_by structural t => t
 
 /-- Any per-node-rounded evaluation. `divO` additionally witnesses the computed
@@ -263,6 +316,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hp : RoundsW w p (sqrt va)) : GRoundedEval w (.sqrtO a m) p
   | lnO  {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
       (hp : RoundsW w p (log va)) : GRoundedEval w (.lnO a m) p
+  | powO {a : GExpr} {va p y m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
+      (hp : RoundsW w p (rpow va y)) : GRoundedEval w (.powO a y m) p
 
 /-- **The complete certifier.** Any per-node-rounded evaluation of a `Valid` expression
 over the *full* operator basis (division included) carries the `AErr` magnitude+error
@@ -284,6 +339,8 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)
   | sqrtO _ hmv hp iha => exact fun hv => aerr_sqrt hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
   | lnO _ hmv hp iha => exact fun hv => aerr_ln hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
+  | powO _ hmv hp iha =>
+      exact fun hv => aerr_pow hw0 hw1 hv.2.1 hv.2.2.1 hmv hv.2.2.2 (iha hv.1) hp
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound`, for any `Valid` kernel. -/
 theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)

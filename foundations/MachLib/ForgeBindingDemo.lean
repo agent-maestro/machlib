@@ -108,4 +108,14 @@ theorem forge_surprisal_certified {w p_in vl m : Real} (hw0 : 0 ≤ w) (hw1 : w 
     (GRoundedEval.neg (GRoundedEval.lnO (GRoundedEval.leaf p_in) hmp hp))
     ⟨trivial, hm, hmp⟩
 
+/-- **Power law `t^y`** (`eml-stdlib`-style, e.g. Stefan–Boltzmann `t^4`). Binder output:
+`(.powO (.leaf t) y m)` — native `pow`, base guarded `m ≤ t > 0`, exponent `y ≥ 0`.
+Certified verbatim: native pow's one rounding *is* a rounded `exp(y·log t)`, so the `exp`
+rule carries the bound through `gexpr_fwd_error`. -/
+theorem forge_powerlaw_certified {w t y p m : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hy : 0 ≤ y) (hm : 0 < m) (hmt : m ≤ t) (hp : RoundsW w p (rpow t y)) :
+    abs (p - rpow t y) ≤ (GExpr.powO (.leaf t) y m).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.powO (GRoundedEval.leaf t) hmt hp)
+    ⟨trivial, hy, hm, hmt⟩
+
 end MachLib.Real
