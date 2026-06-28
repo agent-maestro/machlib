@@ -123,8 +123,13 @@ complex cannot be a Lipschitz scalar tree.
 
 - Not a verified compiler — it certifies the *expression*, and binds it to the shipped
   kernel via `tree_hash`; it does not prove the backend lowering is correct.
-- Not coverage of the whole stdlib — `tan`/inverse-trig/hyperbolic/`floor` and loop/mutation kernels are
-  off-basis (§5), named, not silently included.
+- Not coverage of the whole stdlib — `tan`, `asin`/`acos` (amplify near `±1`), `floor`
+  (discontinuous), `tuple`/complex (non-scalar), and loop/mutation kernels are off-basis
+  (§5), named by exact count, not silently included. (`atan`, `sinh`, `cosh`, `tanh` *are*
+  covered.)
+- Conditionals are certified under **branch-robustness** — the bound holds when rounding
+  does not flip which side of the test is taken; a kernel that straddles a threshold
+  boundary is outside the guarantee (and a non-robust conditional is off-basis).
 - The bounds are parametric in data-dependent inputs (condition numbers, denominator
   guards) supplied per call — the fold proves the *shape* is sound, not per-kernel constants.
 - The relative-vs-absolute trade is real: `gexpr_sound` (absolute, magnitude-based) is
@@ -141,8 +146,21 @@ lake env lean -e '#print axioms MachLib.Real.gexpr_sound'
 
 # Measure the binder's reach over the real stdlib (needs the Forge repo):
 PYTHONPATH=<forge> python3 tools/machlib_bind/bind.py --dir <eml-stdlib>
+
+# Run the drift gate — fails if any certified kernel's tree_hash changed:
+PYTHONPATH=<forge> python3 tools/machlib_bind/check.py --dir <eml-stdlib>
 ```
 
 The certifier spans `OperatorBasisSound` / `OperatorBasisTrans` / `OperatorBasisGeneral`
 / `DivisionError` / `OperatorBasisComplete` / `TrajectoryCertified` / `ForgeBindingDemo`.
+
+## 8. Status
+
+Consolidated. 17-operator basis (arithmetic + `abs`/`clamp`, the transcendentals
+`exp`/`sin`/`cos`/`tanh`/`sinh`/`cosh`/`atan`, guarded `÷`/`sqrt`/`ln`/`pow`, and `if`),
+spanning straight-line **and** control-flow kernels, reaching **456/517** of the real
+eml-stdlib, agreeing across precisions and over iterations, bound to `tree_hash`, and
+**drift-gated** (a kernel cannot silently diverge from the bound that certifies it). All
+`sorryAx`-free; 3 axioms (the `atan` primitive). The remaining off-basis is structural
+(discontinuity, non-scalar shape), not missing operators.
 Each file's header states what it adds; this front door is the map.
