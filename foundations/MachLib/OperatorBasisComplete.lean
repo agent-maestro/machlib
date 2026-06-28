@@ -1,5 +1,6 @@
 import MachLib.DivisionError
 import MachLib.EntropyDuality
+import MachLib.HyperbolicLipschitz
 
 /-!
 # The complete operator-basis certifier — one fold, every operator including division
@@ -199,6 +200,14 @@ theorem aerr_pow {w Mx Ex vx xe y m p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   · rw [abs_of_nonneg (le_of_lt (rpow_pos xe y))]; exact hmono
   · exact le_trans (exp_grow hw0 hw1 hEarg0 harg hp) (mul_le_mul_of_nonneg_right hmono hF0)
 
+/-- `tanh`: bounded-Lipschitz (`|tanh| ≤ 1`, 1-Lipschitz by MVT), so like `sin`/`cos` —
+magnitude `1`, error `E + w`. -/
+theorem aerr_tanh {w M E v ve p : Real} (hw0 : 0 ≤ w)
+    (h : AErr M E v ve) (hp : RoundsW w p (tanh v)) : AErr 1 (E + w) p (tanh ve) :=
+  ⟨abs_tanh_le_one ve,
+   le_trans (bdd_lip_grow hw0 (abs_tanh_le_one v) (tanh_lipschitz v ve) h.2 hp)
+     (le_of_eq (by mach_ring))⟩
+
 /-- A guarded expression over the full operator basis. `divO a b m` records the
 denominator lower bound `m` it is certified against. -/
 inductive GExpr where
@@ -211,6 +220,7 @@ inductive GExpr where
   | expO  (a : GExpr)
   | sinO  (a : GExpr)
   | cosO  (a : GExpr)
+  | tanhO (a : GExpr)
   | divO  (a b : GExpr) (m : Real)
   | clampO (a : GExpr) (lo hi : Real)
   | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
@@ -228,6 +238,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .expO a      => exp (GExpr.exact a)
   | .sinO a      => sin (GExpr.exact a)
   | .cosO a      => cos (GExpr.exact a)
+  | .tanhO a     => tanh (GExpr.exact a)
   | .divO a b _  => GExpr.exact a / GExpr.exact b
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
   | .sqrtO a _   => sqrt (GExpr.exact a)
@@ -246,6 +257,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .expO a      => exp (GExpr.Mbound a)
   | .sinO _      => 1
   | .cosO _      => 1
+  | .tanhO _     => 1
   | .divO a _ m  => GExpr.Mbound a / m
   | .clampO _ lo hi => max (abs lo) (abs hi)
   | .sqrtO a _   => sqrt (GExpr.Mbound a)
@@ -267,6 +279,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .expO a      => exp (GExpr.Mbound a) * (exp (GExpr.Ebound w a) * (1 + w) - 1)
   | .sinO a      => GExpr.Ebound w a + w
   | .cosO a      => GExpr.Ebound w a + w
+  | .tanhO a     => GExpr.Ebound w a + w
   | .divO a b m  => w * ((GExpr.Mbound a + GExpr.Ebound w a) / m)
                     + (GExpr.Ebound w a / m + GExpr.Mbound a * GExpr.Ebound w b / (m * m))
   | .clampO a _ _ => GExpr.Ebound w a
@@ -290,6 +303,7 @@ def GExpr.Valid : GExpr → Prop
   | .expO a      => GExpr.Valid a
   | .sinO a      => GExpr.Valid a
   | .cosO a      => GExpr.Valid a
+  | .tanhO a     => GExpr.Valid a
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
   | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
@@ -314,6 +328,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hp : RoundsW w p (sin va)) : GRoundedEval w (.sinO a) p
   | cosO  {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
       (hp : RoundsW w p (cos va)) : GRoundedEval w (.cosO a) p
+  | tanhO {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
+      (hp : RoundsW w p (tanh va)) : GRoundedEval w (.tanhO a) p
   | divO  {a b : GExpr} {va vb p m : Real} (ha : GRoundedEval w a va) (hb : GRoundedEval w b vb)
       (hvb : m ≤ vb) (hp : RoundsW w p (va / vb)) : GRoundedEval w (.divO a b m) p
   | clampO {a : GExpr} {va lo hi : Real} (ha : GRoundedEval w a va) :
@@ -341,6 +357,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | expO _ hp iha      => exact fun hv => aerr_exp hw0 hw1 (iha hv) hp
   | sinO _ hp iha      => exact fun hv => aerr_sin hw0 (iha hv) hp
   | cosO _ hp iha      => exact fun hv => aerr_cos hw0 (iha hv) hp
+  | tanhO _ hp iha     => exact fun hv => aerr_tanh hw0 (iha hv) hp
   | divO _ _ hvb hp iha ihb =>
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)

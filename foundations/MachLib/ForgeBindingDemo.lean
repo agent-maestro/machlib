@@ -126,4 +126,13 @@ theorem forge_abs_certified {w x vxx : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     abs (abs vxx - abs (x * x)) ≤ (GExpr.absO (.rleaf (x * x))).Ebound w :=
   gexpr_fwd_error hw0 hw1 (GRoundedEval.absO (GRoundedEval.rleaf hxx)) trivial
 
+/-- **`tanh`** (`eml-stdlib`-style activation, `tanh(x²)`). Binder output:
+`(.tanhO (.rleaf x²))`. `tanh` is **bounded-Lipschitz** (`|tanh| ≤ 1`, 1-Lipschitz — the
+latter *derived via MVT*, no axiom), so like `sin`/`cos` it carries the inner error plus
+one rounding: `≤ w·|x²| + w`. -/
+theorem forge_tanh_certified {w x vxx p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hxx : RoundsW w vxx (x * x)) (hp : RoundsW w p (tanh vxx)) :
+    abs (p - tanh (x * x)) ≤ (GExpr.tanhO (.rleaf (x * x))).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.tanhO (GRoundedEval.rleaf hxx) hp) trivial
+
 end MachLib.Real
