@@ -97,4 +97,15 @@ theorem forge_magnitude_certified {w x y vxx vyy s p m : Real} (hw0 : 0 ≤ w) (
         (GRoundedEval.mul (GRoundedEval.leaf y) (GRoundedEval.leaf y) hyy) hs) hms hp)
     ⟨⟨⟨trivial, trivial⟩, ⟨trivial, trivial⟩⟩, hm, hmle⟩
 
+/-- **Surprisal `−ln(p)`** (`eml-stdlib`-style, information content). Binder output:
+`(.neg (.lnO (.leaf p) m))` — an `ln` kernel guarded by `m ≤ p` (the probability away
+from 0, where `ln` is ill-conditioned). Certified verbatim: the `1/m`-Lipschitz `ln`
+rule under a negation, in one fold. -/
+theorem forge_surprisal_certified {w p_in vl m : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hm : 0 < m) (hmp : m ≤ p_in) (hp : RoundsW w vl (log p_in)) :
+    abs (-vl - -(log p_in)) ≤ (GExpr.neg (.lnO (.leaf p_in) m)).Ebound w :=
+  gexpr_fwd_error hw0 hw1
+    (GRoundedEval.neg (GRoundedEval.lnO (GRoundedEval.leaf p_in) hmp hp))
+    ⟨trivial, hm, hmp⟩
+
 end MachLib.Real

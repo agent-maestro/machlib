@@ -1,4 +1,5 @@
 import MachLib.DivisionError
+import MachLib.EntropyDuality
 
 /-!
 # The complete operator-basis certifier — one fold, every operator including division
@@ -74,6 +75,83 @@ theorem aerr_sqrt {w M E v ve m p : Real} (hw0 : 0 ≤ w)
     rw [et_split3 p (sqrt v) (sqrt ve)]
     exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
 
+/-! ## a guarded transcendental: `ln` (amplifying near 0 — lower-bound guarded)
+
+Like `sqrt`, `ln` is ill-conditioned at `0` (slope `1/x → ∞`), so it is guarded by a
+lower bound `0 < m ≤ arg`; on `[m, ∞)` it is `1/m`-Lipschitz. Unlike `sqrt`, `ln`'s
+output is unbounded in *sign*, so its magnitude bound is `max(|ln m|, |ln(M+E)|)` over
+the value range `[m, M+E]`. All derived from `log_mul`/`log_lt_log`/`log_le_sub_one`
+(no new axioms). -/
+
+theorem log_mono {a b : Real} (ha : 0 < a) (hab : a ≤ b) : log a ≤ log b := by
+  rcases lt_total a b with h | h | h
+  · exact le_of_lt (log_lt_log ha h)
+  · exact le_of_eq (congrArg log h)
+  · exact absurd (lt_of_lt_of_le h hab) (lt_irrefl_ax b)
+
+theorem ld_ring (X Y : Real) : X = X + Y - Y := by mach_mpoly [X, Y]
+
+theorem log_div {a b : Real} (ha : 0 < a) (hb : 0 < b) : log (a / b) = log a - log b := by
+  have h := log_mul (div_pos_of_pos_pos ha hb) hb
+  rw [div_mul_cancel (ne_of_gt hb)] at h
+  rw [h]; exact ld_ring (log (a / b)) (log b)
+
+/-- One-sided step: `m ≤ b ≤ a ⇒ log a − log b ≤ (a−b)/m`. -/
+theorem ln_step {a b m : Real} (hm : 0 < m) (hmb : m ≤ b) (hba : b ≤ a) :
+    log a - log b ≤ (a - b) / m := by
+  have ha : 0 < a := lt_of_lt_of_le (lt_of_lt_of_le hm hmb) hba
+  have hb : 0 < b := lt_of_lt_of_le hm hmb
+  rw [show log a - log b = log (a / b) from (log_div ha hb).symm]
+  have hle1 : log (a / b) ≤ (a - b) / b := by
+    have h := log_le_sub_one (div_pos_of_pos_pos ha hb)
+    rwa [show a / b - 1 = (a - b) / b from by
+          rw [← self_div (ne_of_gt hb), div_sub_div_same (ne_of_gt hb)]] at h
+  exact le_trans hle1 (div_le_div_pos (sub_nonneg_of_le hba) (le_refl _) hm hmb)
+
+/-- `ln` is `1/m`-Lipschitz on `[m, ∞)`: `|log a − log b| ≤ |a − b| / m`. -/
+theorem ln_lipschitz_bound {a b m : Real} (hm : 0 < m) (hma : m ≤ a) (hmb : m ≤ b) :
+    abs (log a - log b) ≤ abs (a - b) / m := by
+  have htot : b ≤ a ∨ a ≤ b := by
+    rcases lt_total a b with h | h | h
+    · exact Or.inr (le_of_lt h)
+    · exact Or.inr (le_of_eq h)
+    · exact Or.inl (le_of_lt h)
+  rcases htot with hba | hab
+  · rw [abs_of_nonneg (sub_nonneg_of_le (log_mono (lt_of_lt_of_le hm hmb) hba)),
+        abs_of_nonneg (sub_nonneg_of_le hba)]
+    exact ln_step hm hmb hba
+  · rw [show log a - log b = -(log b - log a) from by mach_ring, abs_neg,
+        abs_of_nonneg (sub_nonneg_of_le (log_mono (lt_of_lt_of_le hm hma) hab)),
+        show a - b = -(b - a) from by mach_ring, abs_neg, abs_of_nonneg (sub_nonneg_of_le hab)]
+    exact ln_step hm hma hab
+
+/-- `|log x| ≤ max(|log m|, |log U|)` for `m ≤ x ≤ U` (`log` monotone). -/
+theorem abs_log_le_max {m x U : Real} (hm : 0 < m) (hx : 0 < x) (hmx : m ≤ x) (hxU : x ≤ U) :
+    abs (log x) ≤ max (abs (log m)) (abs (log U)) := by
+  apply abs_le_of
+  · exact le_trans (log_mono hx hxU) (le_trans (le_abs_self _) (le_max_right _ _))
+  · exact le_trans (neg_le_neg (log_mono hm hmx)) (le_trans (neg_le_abs _) (le_max_left _ _))
+
+/-- **`ln`** (`AErr`, argument bounded below `0 < m ≤ v, ve`). Magnitude
+`max(|log m|, |log M|)` (the *exact* range `[m, M]`, `w`-independent); error is the
+`ln`-rounding `w·max(|log m|, |log(M+E)|)` (the *computed* range `[m, M+E]`) plus the
+`1/m`-Lipschitz propagation `E/m`. -/
+theorem aerr_ln {w M E v ve m p : Real} (hw0 : 0 ≤ w)
+    (hm : 0 < m) (hmv : m ≤ v) (hmve : m ≤ ve)
+    (h : AErr M E v ve) (hp : RoundsW w p (log v)) :
+    AErr (max (abs (log m)) (abs (log M)))
+         (w * max (abs (log m)) (abs (log (M + E))) + E / m) p (log ve) := by
+  refine ⟨abs_log_le_max hm (lt_of_lt_of_le hm hmve) hmve
+            (le_trans (le_abs_self ve) h.1), ?_⟩
+  have hround : abs (p - log v) ≤ w * max (abs (log m)) (abs (log (M + E))) :=
+    le_trans (roundsW_abs hp) (mul_le_mul_of_nonneg_left
+      (abs_log_le_max hm (lt_of_lt_of_le hm hmv) hmv (le_trans (le_abs_self v) h.val_bound)) hw0)
+  have hprop : abs (log v - log ve) ≤ E / m :=
+    le_trans (ln_lipschitz_bound hm hmv hmve)
+      (div_le_div_pos (abs_nonneg _) h.2 hm (le_refl _))
+  rw [et_split3 p (log v) (log ve)]
+  exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
+
 /-- A guarded expression over the full operator basis. `divO a b m` records the
 denominator lower bound `m` it is certified against. -/
 inductive GExpr where
@@ -88,6 +166,7 @@ inductive GExpr where
   | divO  (a b : GExpr) (m : Real)
   | clampO (a : GExpr) (lo hi : Real)
   | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
+  | lnO  (a : GExpr) (m : Real)         -- `log a`, `a` bounded below by `m > 0`
 
 /-- The exact value. -/
 noncomputable def GExpr.exact : GExpr → Real
@@ -102,6 +181,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .divO a b _  => GExpr.exact a / GExpr.exact b
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
   | .sqrtO a _   => sqrt (GExpr.exact a)
+  | .lnO a _     => log (GExpr.exact a)
   termination_by structural t => t
 
 /-- Magnitude bound (`÷` uses the lower bound: `|a/b| ≤ Mbound a / m`). -/
@@ -117,6 +197,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .divO a _ m  => GExpr.Mbound a / m
   | .clampO _ lo hi => max (abs lo) (abs hi)
   | .sqrtO a _   => sqrt (GExpr.Mbound a)
+  | .lnO a m     => max (abs (log m)) (abs (log (GExpr.Mbound a)))
   termination_by structural t => t
 
 /-- Forward-error bound (`÷` term is `aerr_div`'s, every part scaled by `1/m`). -/
@@ -137,6 +218,8 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .clampO a _ _ => GExpr.Ebound w a
   | .sqrtO a m   => w * sqrt (GExpr.Mbound a + GExpr.Ebound w a)
                     + GExpr.Ebound w a / (sqrt m + sqrt m)
+  | .lnO a m     => w * max (abs (log m)) (abs (log (GExpr.Mbound a + GExpr.Ebound w a)))
+                    + GExpr.Ebound w a / m
   termination_by structural t => t
 
 /-- Validity: at each `÷` node, the recorded bound is positive and below the exact
@@ -153,6 +236,7 @@ def GExpr.Valid : GExpr → Prop
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
   | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
+  | .lnO a m     => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   termination_by structural t => t
 
 /-- Any per-node-rounded evaluation. `divO` additionally witnesses the computed
@@ -177,6 +261,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       GRoundedEval w (.clampO a lo hi) (clamp va lo hi)   -- min/max are exact: no rounding
   | sqrtO {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
       (hp : RoundsW w p (sqrt va)) : GRoundedEval w (.sqrtO a m) p
+  | lnO  {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
+      (hp : RoundsW w p (log va)) : GRoundedEval w (.lnO a m) p
 
 /-- **The complete certifier.** Any per-node-rounded evaluation of a `Valid` expression
 over the *full* operator basis (division included) carries the `AErr` magnitude+error
@@ -197,6 +283,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)
   | sqrtO _ hmv hp iha => exact fun hv => aerr_sqrt hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
+  | lnO _ hmv hp iha => exact fun hv => aerr_ln hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound`, for any `Valid` kernel. -/
 theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)

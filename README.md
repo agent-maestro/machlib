@@ -16,7 +16,7 @@ check each claim yourself.
 — one fold (`gexpr_sound`) bounds the floating-point forward error of any kernel over
 the operator basis `{+, ×, neg, exp, sin, cos, ÷}`, reaches across precisions
 (cross-target) and over iterations (trajectory), and is bound to the real kernels Forge
-compiles via `tree_hash` (364/483 of eml-stdlib measured in-basis).
+compiles via `tree_hash` (380/483 of eml-stdlib measured in-basis).
 
 ## Install
 
