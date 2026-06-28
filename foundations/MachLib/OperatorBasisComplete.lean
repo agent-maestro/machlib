@@ -24,6 +24,56 @@ structurally-guaranteed positive denominator) drops out as a one-line instance.
 
 namespace MachLib.Real
 
+/-! ## a guarded transcendental: `sqrt` (amplifying near 0 — lower-bound guarded)
+
+`sqrt` is ill-conditioned at `0` (slope `1/(2√x) → ∞`), so like division it needs a
+lower bound `0 < m ≤ arg`. On `[m, ∞)` it is `1/(2√m)`-Lipschitz — proved here from the
+difference-of-squares identity `(√a−√b)(√a+√b) = a−b` and the division-inequality kit. -/
+
+theorem sqrt_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) : sqrt a ≤ sqrt b := by
+  have hb : 0 ≤ b := le_trans ha hab
+  apply sqrt_le_of_le_sq (sqrt_nonneg b); rw [sqrt_sq_nonneg b hb]; exact hab
+
+theorem sqrt_diff_mul {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) :
+    (sqrt a - sqrt b) * (sqrt a + sqrt b) = a - b := by
+  rw [show (sqrt a - sqrt b) * (sqrt a + sqrt b) = sqrt a * sqrt a - sqrt b * sqrt b from by
+        mach_mpoly [sqrt a, sqrt b], sqrt_sq_nonneg a ha, sqrt_sq_nonneg b hb]
+
+/-- `sqrt` is `1/(2√m)`-Lipschitz on `[m, ∞)`: `|√a − √b| ≤ |a − b| / (2√m)`. -/
+theorem sqrt_lipschitz_bound {a b m : Real} (hm : 0 < m) (hma : m ≤ a) (hmb : m ≤ b) :
+    abs (sqrt a - sqrt b) ≤ abs (a - b) / (sqrt m + sqrt m) := by
+  have ha : 0 ≤ a := le_trans (le_of_lt hm) hma
+  have hb : 0 ≤ b := le_trans (le_of_lt hm) hmb
+  have hsm_le_sa : sqrt m ≤ sqrt a := sqrt_mono (le_of_lt hm) hma
+  have hsm_le_sb : sqrt m ≤ sqrt b := sqrt_mono (le_of_lt hm) hmb
+  have hsum_pos : 0 < sqrt a + sqrt b :=
+    lt_of_lt_of_le (sqrt_pos hm) (le_trans hsm_le_sa (le_add_of_nonneg_right (sqrt_nonneg b)))
+  rw [eq_div_of_mul_eq (ne_of_gt hsum_pos) (sqrt_diff_mul ha hb), abs_div_pos hsum_pos]
+  exact div_le_div_pos (abs_nonneg _) (le_refl _) (add_pos (sqrt_pos hm) (sqrt_pos hm))
+    (add_le_add_both hsm_le_sa hsm_le_sb)
+
+/-- **`sqrt`** (`AErr`, argument bounded below `0 < m ≤ v, ve`): magnitude `√M`; error is
+the `√`-rounding `w·√(M+E)` plus the `1/(2√m)`-Lipschitz propagation `E/(2√m)`. -/
+theorem aerr_sqrt {w M E v ve m p : Real} (hw0 : 0 ≤ w)
+    (hm : 0 < m) (hmv : m ≤ v) (hmve : m ≤ ve)
+    (h : AErr M E v ve) (hp : RoundsW w p (sqrt v)) :
+    AErr (sqrt M) (w * sqrt (M + E) + E / (sqrt m + sqrt m)) p (sqrt ve) := by
+  have hv0 : 0 < v := lt_of_lt_of_le hm hmv
+  have hve0 : 0 < ve := lt_of_lt_of_le hm hmve
+  refine ⟨?_, ?_⟩
+  · rw [abs_of_nonneg (sqrt_nonneg ve)]
+    exact sqrt_mono (le_of_lt hve0) (le_trans (le_abs_self ve) h.1)
+  · have hround : abs (p - sqrt v) ≤ w * sqrt (M + E) := by
+      have h1 := roundsW_abs hp
+      rw [abs_of_nonneg (sqrt_nonneg v)] at h1
+      exact le_trans h1 (mul_le_mul_of_nonneg_left
+        (sqrt_mono (le_of_lt hv0) (le_trans (le_abs_self v) h.val_bound)) hw0)
+    have hprop : abs (sqrt v - sqrt ve) ≤ E / (sqrt m + sqrt m) :=
+      le_trans (sqrt_lipschitz_bound hm hmv hmve)
+        (div_le_div_pos (abs_nonneg _) h.2 (add_pos (sqrt_pos hm) (sqrt_pos hm)) (le_refl _))
+    rw [et_split3 p (sqrt v) (sqrt ve)]
+    exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
+
 /-- A guarded expression over the full operator basis. `divO a b m` records the
 denominator lower bound `m` it is certified against. -/
 inductive GExpr where
@@ -37,6 +87,7 @@ inductive GExpr where
   | cosO  (a : GExpr)
   | divO  (a b : GExpr) (m : Real)
   | clampO (a : GExpr) (lo hi : Real)
+  | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
 
 /-- The exact value. -/
 noncomputable def GExpr.exact : GExpr → Real
@@ -50,6 +101,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .cosO a      => cos (GExpr.exact a)
   | .divO a b _  => GExpr.exact a / GExpr.exact b
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
+  | .sqrtO a _   => sqrt (GExpr.exact a)
   termination_by structural t => t
 
 /-- Magnitude bound (`÷` uses the lower bound: `|a/b| ≤ Mbound a / m`). -/
@@ -64,6 +116,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .cosO _      => 1
   | .divO a _ m  => GExpr.Mbound a / m
   | .clampO _ lo hi => max (abs lo) (abs hi)
+  | .sqrtO a _   => sqrt (GExpr.Mbound a)
   termination_by structural t => t
 
 /-- Forward-error bound (`÷` term is `aerr_div`'s, every part scaled by `1/m`). -/
@@ -82,6 +135,8 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .divO a b m  => w * ((GExpr.Mbound a + GExpr.Ebound w a) / m)
                     + (GExpr.Ebound w a / m + GExpr.Mbound a * GExpr.Ebound w b / (m * m))
   | .clampO a _ _ => GExpr.Ebound w a
+  | .sqrtO a m   => w * sqrt (GExpr.Mbound a + GExpr.Ebound w a)
+                    + GExpr.Ebound w a / (sqrt m + sqrt m)
   termination_by structural t => t
 
 /-- Validity: at each `÷` node, the recorded bound is positive and below the exact
@@ -97,6 +152,7 @@ def GExpr.Valid : GExpr → Prop
   | .cosO a      => GExpr.Valid a
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
+  | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   termination_by structural t => t
 
 /-- Any per-node-rounded evaluation. `divO` additionally witnesses the computed
@@ -119,6 +175,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hvb : m ≤ vb) (hp : RoundsW w p (va / vb)) : GRoundedEval w (.divO a b m) p
   | clampO {a : GExpr} {va lo hi : Real} (ha : GRoundedEval w a va) :
       GRoundedEval w (.clampO a lo hi) (clamp va lo hi)   -- min/max are exact: no rounding
+  | sqrtO {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
+      (hp : RoundsW w p (sqrt va)) : GRoundedEval w (.sqrtO a m) p
 
 /-- **The complete certifier.** Any per-node-rounded evaluation of a `Valid` expression
 over the *full* operator basis (division included) carries the `AErr` magnitude+error
@@ -138,6 +196,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | divO _ _ hvb hp iha ihb =>
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)
+  | sqrtO _ hmv hp iha => exact fun hv => aerr_sqrt hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound`, for any `Valid` kernel. -/
 theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)

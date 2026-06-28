@@ -79,4 +79,22 @@ theorem forge_quad_inlined_let_certified {w x y vs p : Real} (hw0 : 0 ≤ w) (hw
       (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.leaf y) hs) hp)
     ⟨⟨trivial, trivial⟩, ⟨trivial, trivial⟩⟩
 
+/-- **Euclidean magnitude `√(x²+y²)`** (`eml-stdlib`-style). Binder output:
+`(.sqrtO (.add (.mul (.leaf x)(.leaf x)) (.mul (.leaf y)(.leaf y))) m)` — a `sqrt`
+kernel, guarded by a lower bound `m ≤ x²+y²` (the argument away from 0, where `√` is
+ill-conditioned). Certified verbatim: the inner sum-of-squares forward error feeds the
+`1/(2√m)`-Lipschitz `sqrt` rule, all in one fold. -/
+theorem forge_magnitude_certified {w x y vxx vyy s p m : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hm : 0 < m) (hmle : m ≤ x * x + y * y) (hms : m ≤ s)
+    (hxx : RoundsW w vxx (x * x)) (hyy : RoundsW w vyy (y * y))
+    (hs : RoundsW w s (vxx + vyy)) (hp : RoundsW w p (sqrt s)) :
+    abs (p - sqrt (x * x + y * y))
+      ≤ (GExpr.sqrtO (.add (.mul (.leaf x) (.leaf x)) (.mul (.leaf y) (.leaf y))) m).Ebound w :=
+  gexpr_fwd_error hw0 hw1
+    (GRoundedEval.sqrtO
+      (GRoundedEval.add
+        (GRoundedEval.mul (GRoundedEval.leaf x) (GRoundedEval.leaf x) hxx)
+        (GRoundedEval.mul (GRoundedEval.leaf y) (GRoundedEval.leaf y) hyy) hs) hms hp)
+    ⟨⟨⟨trivial, trivial⟩, ⟨trivial, trivial⟩⟩, hm, hmle⟩
+
 end MachLib.Real
