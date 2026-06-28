@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "label": "cold build",
-  "message": "99.69s",
+  "message": "97.25s",
   "color": "red",
   "cacheSeconds": 300
 }
