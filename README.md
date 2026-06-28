@@ -12,6 +12,12 @@ Lean-check status; verification status is recorded per release snapshot.
 — what is proven, what it rests on, and what is open, with the exact commands to
 check each claim yourself.
 
+**The forward-error certifier:** [`foundations/docs/forward_error_certifier.md`](foundations/docs/forward_error_certifier.md)
+— one fold (`gexpr_sound`) bounds the floating-point forward error of any kernel over
+the operator basis `{+, ×, neg, exp, sin, cos, ÷}`, reaches across precisions
+(cross-target) and over iterations (trajectory), and is bound to the real kernels Forge
+compiles via `tree_hash` (273/483 of eml-stdlib measured in-basis).
+
 ## Install
 
 Package installation status is release-specific. Until a reviewed package
