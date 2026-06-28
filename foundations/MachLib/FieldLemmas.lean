@@ -59,5 +59,22 @@ theorem div_sub_div_same {a b c : Real} (hc : c ≠ 0) : a / c - b / c = (a - b)
 theorem neg_div {a c : Real} (hc : c ≠ 0) : -(a / c) = (-a) / c := by
   rw [div_def a c hc, div_def (-a) c hc, neg_mul]
 
+/-- Left-cancellation: `c ≠ 0 → c·a = c·b → a = b` (multiply by `1/c`). -/
+theorem mul_left_cancel {a b c : Real} (hc : c ≠ 0) (h : c * a = c * b) : a = b := by
+  have e : (1 / c) * (c * a) = (1 / c) * (c * b) := by rw [h]
+  rw [show (1 / c) * (c * a) = ((1 / c) * c) * a from by mach_ring,
+      show (1 / c) * (c * b) = ((1 / c) * c) * b from by mach_ring,
+      show (1 / c) * c = 1 from by rw [mul_comm]; exact mul_inv c hc,
+      show (1 : Real) * a = a from by rw [mul_comm, mul_one_ax],
+      show (1 : Real) * b = b from by rw [mul_comm, mul_one_ax]] at e
+  exact e
+
+/-- No zero divisors: `a ≠ 0 → b ≠ 0 → a·b ≠ 0`. -/
+theorem mul_ne_zero {a b : Real} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 := by
+  intro h
+  apply hb
+  apply mul_left_cancel ha
+  rw [mul_zero]; exact h
+
 end Real
 end MachLib

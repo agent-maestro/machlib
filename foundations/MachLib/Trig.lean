@@ -24,8 +24,15 @@ axiom pi  : Real
 
 axiom sin_zero       : sin 0 = 0
 axiom cos_zero       : cos 0 = 1
-axiom tan_zero       : tan 0 = 0
 axiom tan_def        (x : Real) : cos x ≠ 0 → tan x = sin x / cos x
+
+/-- `tan 0 = 0`. PROMOTED from axiom to theorem (2026-06-27 audit): `tan 0 =
+sin 0 / cos 0 = 0 / 1 = 0` (`tan_def` needs `cos 0 = 1 ≠ 0`; `0/1 = 0·(1/1) = 0`
+via `div_def` + `zero_mul`, all `Basic`-level — no downstream tactic needed). -/
+theorem tan_zero : tan 0 = 0 := by
+  have hc : cos 0 ≠ 0 := by rw [cos_zero]; exact one_ne_zero
+  rw [tan_def 0 hc, sin_zero, cos_zero, div_def 0 1 one_ne_zero, zero_mul]
+
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
 axiom pi_pos         : 0 < pi

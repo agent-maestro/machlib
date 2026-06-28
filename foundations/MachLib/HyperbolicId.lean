@@ -70,6 +70,36 @@ theorem cosh_sub_sinh_eq_exp_neg (x : Real) : cosh x - sinh x = exp (-x) := by
         mach_mpoly [exp x, exp (-x)],
       mul_div_cancel_left' two_ne_zero]
 
+/-! ### the addition formulas — derived from the conversions (full reduction to `exp`).
+Clear the `1/2` factors by cancelling `(1+1)²` (`mul_left_cancel`), express every
+`(1+1)·sinh`/`(1+1)·cosh` via the conversions, and finish with `exp_add` + ring. -/
+
+/-- `sinh (x + y) = sinh x cosh y + cosh x sinh y`. -/
+theorem sinh_add (x y : Real) : sinh (x + y) = sinh x * cosh y + cosh x * sinh y := by
+  apply mul_left_cancel (mul_ne_zero two_ne_zero two_ne_zero)
+  rw [show (1 + 1) * (1 + 1) * sinh (x + y) = (1 + 1) * ((1 + 1) * sinh (x + y)) from by mach_ring,
+      two_sinh_eq_exp_sub (x + y),
+      show exp (x + y) = exp x * exp y from exp_add x y,
+      show exp (-(x + y)) = exp (-x) * exp (-y) from by rw [neg_add, exp_add],
+      show (1 + 1) * (1 + 1) * (sinh x * cosh y + cosh x * sinh y)
+         = ((1 + 1) * sinh x) * ((1 + 1) * cosh y)
+         + ((1 + 1) * cosh x) * ((1 + 1) * sinh y) from by mach_ring,
+      two_sinh_eq_exp_sub x, two_cosh_eq_exp_add y, two_cosh_eq_exp_add x, two_sinh_eq_exp_sub y]
+  mach_mpoly [exp x, exp (-x), exp y, exp (-y)]
+
+/-- `cosh (x + y) = cosh x cosh y + sinh x sinh y`. -/
+theorem cosh_add (x y : Real) : cosh (x + y) = cosh x * cosh y + sinh x * sinh y := by
+  apply mul_left_cancel (mul_ne_zero two_ne_zero two_ne_zero)
+  rw [show (1 + 1) * (1 + 1) * cosh (x + y) = (1 + 1) * ((1 + 1) * cosh (x + y)) from by mach_ring,
+      two_cosh_eq_exp_add (x + y),
+      show exp (x + y) = exp x * exp y from exp_add x y,
+      show exp (-(x + y)) = exp (-x) * exp (-y) from by rw [neg_add, exp_add],
+      show (1 + 1) * (1 + 1) * (cosh x * cosh y + sinh x * sinh y)
+         = ((1 + 1) * cosh x) * ((1 + 1) * cosh y)
+         + ((1 + 1) * sinh x) * ((1 + 1) * sinh y) from by mach_ring,
+      two_cosh_eq_exp_add x, two_cosh_eq_exp_add y, two_sinh_eq_exp_sub x, two_sinh_eq_exp_sub y]
+  mach_mpoly [exp x, exp (-x), exp y, exp (-y)]
+
 /-! ### identities derived from the addition formulas + the conversions above. -/
 
 /-- `sinh (2x) = 2 · sinh x · cosh x`. From `sinh_add x x`. -/

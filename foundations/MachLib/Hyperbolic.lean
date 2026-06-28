@@ -39,10 +39,10 @@ needs square-monotonicity infrastructure `MachLib.Basic` doesn't expose; held
 as an axiom in the same spirit as `cosh_pos`. True in any standard ordered
 field. Closes the Forge `cosh_geq_one` kernel obligation. C-245. -/
 axiom cosh_ge_one (x : Real) : 1 ≤ cosh x
-axiom sinh_add   (x y : Real) :
-  sinh (x + y) = sinh x * cosh y + cosh x * sinh y
-axiom cosh_add   (x y : Real) :
-  cosh (x + y) = cosh x * cosh y + sinh x * sinh y
+-- `sinh_add`/`cosh_add` PROMOTED to theorems in `HyperbolicId.lean` (2026-06-27
+-- audit) — derived from `sinh_eq`/`cosh_eq` + `exp_add` by clearing `1/2` factors
+-- with `mul_left_cancel`. With them, sinh/cosh are now ENTIRELY reduced to `exp`
+-- except positivity (`cosh_pos`/`cosh_ge_one`).
 -- `pythagorean_hyp` PROMOTED to a theorem in `HyperbolicId.lean` (2026-06-27 audit;
 -- difference-of-squares from `cosh±sinh = exp(±x)` + `exp_add`/`exp_zero`).
 
