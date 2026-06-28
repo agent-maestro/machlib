@@ -152,4 +152,42 @@ theorem forge_atan_certified {w x vxx p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     abs (p - atan (x * x)) ≤ (GExpr.atanO (.rleaf (x * x))).Ebound w :=
   gexpr_fwd_error hw0 hw1 (GRoundedEval.atanO (GRoundedEval.rleaf hxx) hp) trivial
 
+/-- **A piecewise kernel** (a thresholded ramp / "deadzone": `if c then 0 else x − thr`,
+the shape of a ReLU-with-offset or a dead-band controller). Binder output:
+`(.iteO c (.leaf 0) (.add (.leaf x) (.neg (.leaf thr))))`. **This is the first kernel with
+control flow** the certifier reaches: under branch-robustness (the floating-point test
+takes the same side `c` as the exact test — true away from the threshold boundary), the
+selected value carries the **max** of the two branches' forward errors. Here branch `true`
+is exact (`0`), branch `false` carries the subtraction's one rounding, so the bound is
+`max 0 (Ebound of x−thr)` — the live branch's own error, no amplification from the
+branch. -/
+theorem forge_deadzone_certified {w x thr p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1) (c : Bool)
+    (hp : RoundsW w p (x + (-thr))) :
+    abs (cond c (0 : Real) p
+         - (GExpr.iteO c (.leaf 0) (.add (.leaf x) (.neg (.leaf thr)))).exact)
+      ≤ (GExpr.iteO c (.leaf 0) (.add (.leaf x) (.neg (.leaf thr)))).Ebound w :=
+  gexpr_fwd_error hw0 hw1
+    (GRoundedEval.iteO c (GRoundedEval.leaf 0)
+      (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.neg (GRoundedEval.leaf thr)) hp))
+    ⟨trivial, trivial, trivial⟩
+
+/-- **Cross-target: the same piecewise kernel on two lanes.** A control-flow kernel
+computed at two precisions agrees to within the sum of the two lanes' bounds — *provided
+both lanes take the same branch* `c` (the cross-target robustness assumption: an `f32`
+shader lane and an `f64` software lane must not straddle the threshold). Conditionals
+inherit cross-target equivalence from `gexpr_cross_target` with no extra proof — the moat
+now spans branching kernels, not just straight-line ones. -/
+theorem forge_deadzone_cross_target {w1 w2 x thr p1 p2 : Real}
+    (hw10 : 0 ≤ w1) (hw11 : w1 ≤ 1) (hw20 : 0 ≤ w2) (hw21 : w2 ≤ 1) (c : Bool)
+    (hp1 : RoundsW w1 p1 (x + (-thr))) (hp2 : RoundsW w2 p2 (x + (-thr))) :
+    abs (cond c (0 : Real) p1 - cond c (0 : Real) p2)
+      ≤ (GExpr.iteO c (.leaf 0) (.add (.leaf x) (.neg (.leaf thr)))).Ebound w1
+        + (GExpr.iteO c (.leaf 0) (.add (.leaf x) (.neg (.leaf thr)))).Ebound w2 :=
+  gexpr_cross_target hw10 hw11 hw20 hw21
+    (GRoundedEval.iteO c (GRoundedEval.leaf 0)
+      (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.neg (GRoundedEval.leaf thr)) hp1))
+    (GRoundedEval.iteO c (GRoundedEval.leaf 0)
+      (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.neg (GRoundedEval.leaf thr)) hp2))
+    ⟨trivial, trivial, trivial⟩
+
 end MachLib.Real

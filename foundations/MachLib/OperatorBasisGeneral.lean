@@ -176,6 +176,26 @@ theorem aerr_clamp {M E v ve lo hi : Real} (hlohi : lo ≤ hi) (h : AErr M E v v
   · exact le_trans (neg_le_neg (lo_le_clamp ve lo hi hlohi))
       (le_trans (neg_le_abs lo) (le_max_left _ _))
 
+/-- **Robust conditional** (`if c then · else ·`): given a forward-error certificate for
+*each* branch, the selected value is certified by the *max* of the two branches'
+magnitude and error bounds. The `Bool c` is the branch the computation took; the *exact*
+value selects with the **same** `c` — that is exactly the **branch-robustness**
+hypothesis (the rounding did not flip which side of the test was taken). Under it, the
+conditional cannot amplify error: whichever branch is live, its own certificate carries.
+This is the one composition the unified tree could not absorb structurally — its exact
+value is branch-dependent — so it enters as a Bool-indexed *field* (`iteO`), the analogue
+of `clamp`'s `lo`/`hi`. (A *non-robust* conditional, where rounding flips the test near
+the boundary, is genuinely off-basis: the two branches can disagree by `Ma + Mb`, not
+`max Ea Eb`.) -/
+theorem aerr_ite {Ma Ea va vea Mb Eb vb veb : Real} (c : Bool)
+    (ha : AErr Ma Ea va vea) (hb : AErr Mb Eb vb veb) :
+    AErr (max Ma Mb) (max Ea Eb) (cond c va vb) (cond c vea veb) := by
+  cases c
+  · show AErr (max Ma Mb) (max Ea Eb) vb veb
+    exact ⟨le_trans hb.1 (le_max_right _ _), le_trans hb.2 (le_max_right _ _)⟩
+  · show AErr (max Ma Mb) (max Ea Eb) va vea
+    exact ⟨le_trans ha.1 (le_max_left _ _), le_trans ha.2 (le_max_left _ _)⟩
+
 /-! ## the general fold over a free `{leaf, +, ×, neg, exp, sin, cos}` tree -/
 
 /-- A free expression over the full operator set. (Constructors `expO`/`sinO`/`cosO`

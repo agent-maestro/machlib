@@ -2,7 +2,7 @@
 
 A reader's front door to MachLib's **forward-error certifier**: a single proof that
 bounds the floating-point forward error of *any* kernel built from the operator basis
-`{leaf, +, ×, neg, abs, exp, sin, cos, tanh, sinh, cosh, atan, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
+`{leaf, +, ×, neg, abs, exp, sin, cos, tanh, sinh, cosh, atan, ÷, clamp, sqrt, ln, pow, if}`, and is bound to the real kernels Forge compiles.
 
 Everything below is `sorryAx`-free; **0 custom axioms** beyond MachLib's existing base,
 *except* `atan` (§3), which declares the `atan` primitive + its derivative — 3 axioms in
@@ -53,6 +53,7 @@ data-dependent obligation division alone needs (`1/y` is unbounded near 0).
 | `sqrt` | `aerr_sqrt` | **guarded** (`m ≤ arg`) — `1/(2√m)`-Lipschitz, magnitude `√M` |
 | `ln` | `aerr_ln` | **guarded** (`m ≤ arg`) — `1/m`-Lipschitz, magnitude `max(\|ln m\|,\|ln M\|)` |
 | `pow` | `aerr_pow` | native `x^y` (guarded base, `y ≥ 0`) — `rpow := exp(y·log x)`, amplifying via `exp_grow` |
+| `if` | `aerr_ite` | **branch-robust conditional** — error `max(E_then, E_else)`, magnitude `max(M_then, M_else)`; the selected branch carries, no amplification. Sound when rounding does not flip the test (`if/else-if/else` → nested `iteO`) |
 
 `exp` *amplifies* (absolute argument error → relative output factor); `sin`/`cos` stay
 bounded (1-Lipschitz, `|f| ≤ 1`); `÷` needs the denominator bound. The same three
@@ -97,14 +98,18 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **441/502
-functions (87.8%) are in the certified operator basis**, 190 of them guarded. The binder
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **456/517
+functions (88.2%) are in the certified operator basis**, 199 of them guarded. The binder
 **inlines user-function calls** (incl. `::`-qualified cross-module ones — same sound
-inlining as `let`). The off-basis remainder is named by exact count — unresolved `call`
-(×18, into `if`-kernels), `floor` (×12, discontinuous), `tan` (×5, guarded near `cos=0`),
-`tuple` (×5, multi-return), `asin` (×1, amplifies near `±1`) — and a parser gap (×20,
-`if`-expression kernels). (The corpus is 502, not 483: resolving `::`-qualified calls
-revealed 13 previously-unparseable files — a truer denominator than the earlier 88.8%.)
+inlining as `let`) and translates `if/else-if/else` expressions to nested `iteO` (11
+piecewise kernels — easing curves, distance attenuation, IK reachability, AABB overlap —
+now certified under branch-robustness). The off-basis remainder is named by exact count —
+`floor` (×31, discontinuous — no Lipschitz bound), unresolved `call` (×10, into
+`floor`/`tuple` kernels), `tuple` (×5, multi-return), `tan` (×5, guarded near `cos=0`),
+`acos`/`asin` (×3, amplify near `±1`) — and a parser gap (×7, complex-number/matrix
+kernels: quantum gates, DFT/FFT, simplex/voronoi noise). These remaining classes are
+*structural* (discontinuity, non-scalar shape), not missing operators — `floor`/`tuple`/
+complex cannot be a Lipschitz scalar tree.
 
 ## 6. What this does NOT claim
 
