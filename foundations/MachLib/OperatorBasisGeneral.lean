@@ -1,4 +1,5 @@
 import MachLib.OperatorBasisTrans
+import MachLib.FixedPoint
 
 /-!
 # The general absolute-error meta-theorem — every operator, freely mixed
@@ -143,6 +144,17 @@ theorem aerr_sin {w M E v ve p : Real} (hw0 : 0 ≤ w)
 theorem aerr_cos {w M E v ve p : Real} (hw0 : 0 ≤ w)
     (h : AErr M E v ve) (hp : RoundsW w p (cos v)) : AErr 1 (E + w) p (cos ve) :=
   ⟨abs_cos_le_one ve, le_trans (cos_grow hw0 h.2 hp) (le_of_eq (by mach_ring))⟩
+
+/-- `clamp` (to `[lo, hi]`, `lo ≤ hi`): magnitude bounded by the range `max |lo| |hi|`;
+error *preserved* (`E`, not `E + w`) — `min`/`max` are exact (no rounding) and `clamp`
+is 1-Lipschitz, so it propagates the argument error unchanged and cannot amplify. -/
+theorem aerr_clamp {M E v ve lo hi : Real} (hlohi : lo ≤ hi) (h : AErr M E v ve) :
+    AErr (max (abs lo) (abs hi)) E (clamp v lo hi) (clamp ve lo hi) := by
+  refine ⟨?_, le_trans (clamp_lipschitz v ve lo hi) h.2⟩
+  apply abs_le_of
+  · exact le_trans (clamp_le_hi ve lo hi) (le_trans (le_abs_self hi) (le_max_right _ _))
+  · exact le_trans (neg_le_neg (lo_le_clamp ve lo hi hlohi))
+      (le_trans (neg_le_abs lo) (le_max_left _ _))
 
 /-! ## the general fold over a free `{leaf, +, ×, neg, exp, sin, cos}` tree -/
 

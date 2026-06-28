@@ -50,4 +50,15 @@ theorem forge_sigmoid_certified {w x ve vd p : Real} (hw0 : 0 ≤ w) (hw1 : w �
         (GRoundedEval.expO (GRoundedEval.neg (GRoundedEval.leaf x)) hexp) hd) hvd hp)
     ⟨trivial, ⟨trivial, trivial⟩, zero_lt_one_ax, le_add_of_nonneg_right (le_of_lt (exp_pos (-x)))⟩
 
+/-- **`clamp`** (`eml-stdlib`, e.g. `clamp_bounded`). Binder output:
+`(.clampO inner lo hi)`. `clamp` is exact (no rounding) and 1-Lipschitz, so it
+*preserves* its argument's error: clamping a rounded square `fl(x²)` lands within the
+square's own forward error `w·|x²|` of `clamp(x²)` — the bound carries through unchanged,
+showing the certifier folds `clamp` with no error amplification. -/
+theorem forge_clamp_sq_certified {w x vxx lo hi : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hlohi : lo ≤ hi) (hxx : RoundsW w vxx (x * x)) :
+    abs (clamp vxx lo hi - clamp (x * x) lo hi)
+      ≤ (GExpr.clampO (.rleaf (x * x)) lo hi).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.clampO (GRoundedEval.rleaf hxx)) ⟨trivial, hlohi⟩
+
 end MachLib.Real

@@ -36,6 +36,7 @@ inductive GExpr where
   | sinO  (a : GExpr)
   | cosO  (a : GExpr)
   | divO  (a b : GExpr) (m : Real)
+  | clampO (a : GExpr) (lo hi : Real)
 
 /-- The exact value. -/
 noncomputable def GExpr.exact : GExpr → Real
@@ -48,6 +49,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .sinO a      => sin (GExpr.exact a)
   | .cosO a      => cos (GExpr.exact a)
   | .divO a b _  => GExpr.exact a / GExpr.exact b
+  | .clampO a lo hi => clamp (GExpr.exact a) lo hi
   termination_by structural t => t
 
 /-- Magnitude bound (`÷` uses the lower bound: `|a/b| ≤ Mbound a / m`). -/
@@ -61,6 +63,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .sinO _      => 1
   | .cosO _      => 1
   | .divO a _ m  => GExpr.Mbound a / m
+  | .clampO _ lo hi => max (abs lo) (abs hi)
   termination_by structural t => t
 
 /-- Forward-error bound (`÷` term is `aerr_div`'s, every part scaled by `1/m`). -/
@@ -78,6 +81,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .cosO a      => GExpr.Ebound w a + w
   | .divO a b m  => w * ((GExpr.Mbound a + GExpr.Ebound w a) / m)
                     + (GExpr.Ebound w a / m + GExpr.Mbound a * GExpr.Ebound w b / (m * m))
+  | .clampO a _ _ => GExpr.Ebound w a
   termination_by structural t => t
 
 /-- Validity: at each `÷` node, the recorded bound is positive and below the exact
@@ -92,6 +96,7 @@ def GExpr.Valid : GExpr → Prop
   | .sinO a      => GExpr.Valid a
   | .cosO a      => GExpr.Valid a
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
+  | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
   termination_by structural t => t
 
 /-- Any per-node-rounded evaluation. `divO` additionally witnesses the computed
@@ -112,6 +117,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hp : RoundsW w p (cos va)) : GRoundedEval w (.cosO a) p
   | divO  {a b : GExpr} {va vb p m : Real} (ha : GRoundedEval w a va) (hb : GRoundedEval w b vb)
       (hvb : m ≤ vb) (hp : RoundsW w p (va / vb)) : GRoundedEval w (.divO a b m) p
+  | clampO {a : GExpr} {va lo hi : Real} (ha : GRoundedEval w a va) :
+      GRoundedEval w (.clampO a lo hi) (clamp va lo hi)   -- min/max are exact: no rounding
 
 /-- **The complete certifier.** Any per-node-rounded evaluation of a `Valid` expression
 over the *full* operator basis (division included) carries the `AErr` magnitude+error
@@ -130,6 +137,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | cosO _ hp iha      => exact fun hv => aerr_cos hw0 (iha hv) hp
   | divO _ _ hvb hp iha ihb =>
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
+  | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound`, for any `Valid` kernel. -/
 theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
