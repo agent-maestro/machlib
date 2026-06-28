@@ -84,18 +84,24 @@ the engine's binding-integrity gate uses). `MachLib.ForgeBindingDemo` certifies 
 output verbatim — `length_sq2` (`x²+y²`) and `sigmoid` (`1/(1+e^{−x})`, a division
 kernel) — closing the AST → `GExpr` → bound chain, machine-checked.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **291/483
-functions (60.2%) are in the certified operator basis**, 97 of them division-bearing.
-The off-basis remainder is named by exact count — multi-statement/`let` kernels (×92),
-`sqrt` (×13), `ln` (×9), non-literal `clamp` bounds (×8), `pow` (×6),
-`tan`/`atan`/`asin` (×17), hyperbolic (×6) — the operators not yet in the basis, and a
-parser gap (×33).
+The binder also **inlines immutable `let`-bindings** — substituting a `let`'s definition
+at each use yields a single `GExpr`. Inlining duplicates a shared subtree, so the
+certifier over-counts that subterm's rounding (the real kernel rounds it once): a *sound*
+conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certified`
+machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
+same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
+
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **342/483
+functions (70.8%) are in the certified operator basis**, 119 of them division-bearing.
+The off-basis remainder is named by exact count — `sqrt` (×22), `ln` (×17), non-literal
+`clamp` bounds (×14), `pow` (×11), `call` (×10), `tan`/`atan`/`asin` (×13), `floor` (×6),
+hyperbolic (×6), `tuple` (×5) — the operators not yet in the basis, and a parser gap (×33).
 
 ## 6. What this does NOT claim
 
 - Not a verified compiler — it certifies the *expression*, and binds it to the shipped
   kernel via `tree_hash`; it does not prove the backend lowering is correct.
-- Not coverage of the whole stdlib — `sqrt`/`ln`/`pow`/multi-statement kernels are
+- Not coverage of the whole stdlib — `sqrt`/`ln`/`pow` and loop/mutation kernels are
   off-basis (§5), named, not silently included.
 - The bounds are parametric in data-dependent inputs (condition numbers, denominator
   guards) supplied per call — the fold proves the *shape* is sound, not per-kernel constants.

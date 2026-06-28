@@ -61,4 +61,22 @@ theorem forge_clamp_sq_certified {w x vxx lo hi : Real} (hw0 : 0 ≤ w) (hw1 : w
       ≤ (GExpr.clampO (.rleaf (x * x)) lo hi).Ebound w :=
   gexpr_fwd_error hw0 hw1 (GRoundedEval.clampO (GRoundedEval.rleaf hxx)) ⟨trivial, hlohi⟩
 
+/-- **Inlined `let` — the sharing case.** `(x+y)²` written `let s = x+y; s*s`. The binder
+inlines `s`, *duplicating* `(x+y)`: binder output
+`(.mul (.add (.leaf x)(.leaf y)) (.add (.leaf x)(.leaf y)))`. The real kernel rounds
+`s` ONCE (`vs` feeds both factors) — which is exactly the GRoundedEval where both copies
+round to the same value (both `.add` evals take the *same* `hs`). The certifier bounds
+it: its `Ebound` counts `s`'s rounding in both factors (over-counts the shared term),
+so the bound is a **sound conservative upper bound** for the shared computation — never
+an under-estimate. This is why inlining is valid even though it loses sharing. -/
+theorem forge_quad_inlined_let_certified {w x y vs p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hs : RoundsW w vs (x + y)) (hp : RoundsW w p (vs * vs)) :
+    abs (p - (x + y) * (x + y))
+      ≤ (GExpr.mul (.add (.leaf x) (.leaf y)) (.add (.leaf x) (.leaf y))).Ebound w :=
+  gexpr_fwd_error hw0 hw1
+    (GRoundedEval.mul
+      (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.leaf y) hs)
+      (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.leaf y) hs) hp)
+    ⟨⟨trivial, trivial⟩, ⟨trivial, trivial⟩⟩
+
 end MachLib.Real
