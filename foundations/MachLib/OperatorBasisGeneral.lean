@@ -145,6 +145,26 @@ theorem aerr_cos {w M E v ve p : Real} (hw0 : 0 ≤ w)
     (h : AErr M E v ve) (hp : RoundsW w p (cos v)) : AErr 1 (E + w) p (cos ve) :=
   ⟨abs_cos_le_one ve, le_trans (cos_grow hw0 h.2 hp) (le_of_eq (by mach_ring))⟩
 
+/-- `||a| − |b|| ≤ |a − b|` — `abs` is 1-Lipschitz (reverse triangle, from `abs_add`). -/
+theorem abs_abs_sub_le (a b : Real) : abs (abs a - abs b) ≤ abs (a - b) := by
+  have key : ∀ x y : Real, abs x - abs y ≤ abs (x - y) := by
+    intro x y
+    have h := abs_add (x - y) y
+    rw [show (x - y) + y = x from by mach_ring] at h
+    refine le_of_sub_nonneg ?_
+    rw [show abs (x - y) - (abs x - abs y) = abs (x - y) + abs y - abs x from by
+          mach_mpoly [abs (x - y), abs y, abs x]]
+    exact sub_nonneg_of_le h
+  apply abs_le_of
+  · exact key a b
+  · rw [show -(abs a - abs b) = abs b - abs a from by mach_ring, abs_sub_comm a b]
+    exact key b a
+
+/-- `abs` (`|·|`): exact (no rounding) and 1-Lipschitz, so it *preserves* both magnitude
+and error — `|x|` has the same `M` (`|ve| ≤ M ⇒ ||ve|| = |ve| ≤ M`) and the same `E`. -/
+theorem aerr_abs {M E v ve : Real} (h : AErr M E v ve) : AErr M E (abs v) (abs ve) :=
+  ⟨by rw [abs_of_nonneg (abs_nonneg ve)]; exact h.1, le_trans (abs_abs_sub_le v ve) h.2⟩
+
 /-- `clamp` (to `[lo, hi]`, `lo ≤ hi`): magnitude bounded by the range `max |lo| |hi|`;
 error *preserved* (`E`, not `E + w`) — `min`/`max` are exact (no rounding) and `clamp`
 is 1-Lipschitz, so it propagates the argument error unchanged and cannot amplify. -/

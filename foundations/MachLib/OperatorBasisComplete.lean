@@ -207,6 +207,7 @@ inductive GExpr where
   | add   (a b : GExpr)
   | mul   (a b : GExpr)
   | neg   (a : GExpr)
+  | absO  (a : GExpr)
   | expO  (a : GExpr)
   | sinO  (a : GExpr)
   | cosO  (a : GExpr)
@@ -223,6 +224,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .add a b     => GExpr.exact a + GExpr.exact b
   | .mul a b     => GExpr.exact a * GExpr.exact b
   | .neg a       => -(GExpr.exact a)
+  | .absO a      => abs (GExpr.exact a)
   | .expO a      => exp (GExpr.exact a)
   | .sinO a      => sin (GExpr.exact a)
   | .cosO a      => cos (GExpr.exact a)
@@ -240,6 +242,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .add a b     => GExpr.Mbound a + GExpr.Mbound b
   | .mul a b     => GExpr.Mbound a * GExpr.Mbound b
   | .neg a       => GExpr.Mbound a
+  | .absO a      => GExpr.Mbound a
   | .expO a      => exp (GExpr.Mbound a)
   | .sinO _      => 1
   | .cosO _      => 1
@@ -260,6 +263,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
                     + GExpr.Mbound b * GExpr.Ebound w a
                     + w * ((GExpr.Mbound a + GExpr.Ebound w a) * (GExpr.Mbound b + GExpr.Ebound w b))
   | .neg a       => GExpr.Ebound w a
+  | .absO a      => GExpr.Ebound w a
   | .expO a      => exp (GExpr.Mbound a) * (exp (GExpr.Ebound w a) * (1 + w) - 1)
   | .sinO a      => GExpr.Ebound w a + w
   | .cosO a      => GExpr.Ebound w a + w
@@ -282,6 +286,7 @@ def GExpr.Valid : GExpr → Prop
   | .add a b     => GExpr.Valid a ∧ GExpr.Valid b
   | .mul a b     => GExpr.Valid a ∧ GExpr.Valid b
   | .neg a       => GExpr.Valid a
+  | .absO a      => GExpr.Valid a
   | .expO a      => GExpr.Valid a
   | .sinO a      => GExpr.Valid a
   | .cosO a      => GExpr.Valid a
@@ -302,6 +307,7 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
   | mul   {a b : GExpr} {va vb p : Real} (ha : GRoundedEval w a va) (hb : GRoundedEval w b vb)
       (hp : RoundsW w p (va * vb)) : GRoundedEval w (.mul a b) p
   | neg   {a : GExpr} {va : Real} (ha : GRoundedEval w a va) : GRoundedEval w (.neg a) (-va)
+  | absO  {a : GExpr} {va : Real} (ha : GRoundedEval w a va) : GRoundedEval w (.absO a) (abs va)
   | expO  {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
       (hp : RoundsW w p (exp va)) : GRoundedEval w (.expO a) p
   | sinO  {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
@@ -331,6 +337,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | add _ _ hp iha ihb => exact fun hv => aerr_add hw0 (iha hv.1) (ihb hv.2) hp
   | mul _ _ hp iha ihb => exact fun hv => aerr_mul hw0 (iha hv.1) (ihb hv.2) hp
   | neg _ iha          => exact fun hv => aerr_neg (iha hv)
+  | absO _ iha         => exact fun hv => aerr_abs (iha hv)
   | expO _ hp iha      => exact fun hv => aerr_exp hw0 hw1 (iha hv) hp
   | sinO _ hp iha      => exact fun hv => aerr_sin hw0 (iha hv) hp
   | cosO _ hp iha      => exact fun hv => aerr_cos hw0 (iha hv) hp

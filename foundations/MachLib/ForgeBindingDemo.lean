@@ -118,4 +118,12 @@ theorem forge_powerlaw_certified {w t y p m : Real} (hw0 : 0 ≤ w) (hw1 : w ≤
   gexpr_fwd_error hw0 hw1 (GRoundedEval.powO (GRoundedEval.leaf t) hmt hp)
     ⟨trivial, hy, hm, hmt⟩
 
+/-- **`abs`** (`eml-stdlib`-style, `|fl(x²)|`). Binder output: `(.absO (.rleaf x²))`. `abs`
+is exact + 1-Lipschitz, so it *preserves* its argument's error: `|fl(x²)|` lands within
+the square's own forward error `w·|x²|` of `|x²|`. -/
+theorem forge_abs_certified {w x vxx : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hxx : RoundsW w vxx (x * x)) :
+    abs (abs vxx - abs (x * x)) ≤ (GExpr.absO (.rleaf (x * x))).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.absO (GRoundedEval.rleaf hxx)) trivial
+
 end MachLib.Real

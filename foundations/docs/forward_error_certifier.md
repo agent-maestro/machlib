@@ -2,7 +2,7 @@
 
 A reader's front door to MachLib's **forward-error certifier**: a single proof that
 bounds the floating-point forward error of *any* kernel built from the operator basis
-`{leaf, +, ×, neg, exp, sin, cos, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
+`{leaf, +, ×, neg, abs, exp, sin, cos, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
 
 Everything below is `sorryAx`-free with **0 custom axioms added** beyond MachLib's
 existing base. "`sorryAx`-free" means no `sorry`/`admit` — every step is a real proof.
@@ -43,6 +43,7 @@ data-dependent obligation division alone needs (`1/y` is unbounded near 0).
 | `+` | `aerr_add` | `Ex + Ey` + sum rounding |
 | `×` | `aerr_mul` | bilinear `(|vx|Ey + |ye|Ex)` + product rounding |
 | `neg` | `aerr_neg` | exact (`fl(−x) = −x`) |
+| `abs` | `aerr_abs` | **exact + 1-Lipschitz** — preserves both magnitude `M` and error `E` |
 | `exp` | `aerr_exp` | **amplifying** — `exp(M)`·(condition number); reuses `exp_grow` |
 | `sin`, `cos` | `aerr_sin/cos` | **bounded-Lipschitz** — `E + w`, magnitude `1` |
 | `÷` | `aerr_div` | rounding + propagation, every term scaled by `1/m` |
@@ -94,11 +95,11 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **405/483
-functions (83.9%) are in the certified operator basis**, 169 of them guarded (`÷`, `sqrt`,
-`ln`, or `pow`). The off-basis remainder is named by exact count — `call` (×10),
-`tan`/`atan`/`asin` (×13), `floor` (×6), hyperbolic (×6), `tuple` (×5), `abs` (×5) — the
-operators not yet in the basis, and a parser gap (×33).
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **410/483
+functions (84.9%) are in the certified operator basis**, 173 of them guarded (`÷`, `sqrt`,
+`ln`, or `pow`). The off-basis remainder is named by exact count — `call` (×10, user-fn
+inlining), `tan`/`atan`/`asin` (×13), `floor` (×6), hyperbolic `sinh`/`cosh`/`tanh` (×6),
+`tuple` (×5) — the operators not yet in the basis, and a parser gap (×33).
 
 ## 6. What this does NOT claim
 
