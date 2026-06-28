@@ -95,11 +95,13 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **410/483
-functions (84.9%) are in the certified operator basis**, 173 of them guarded (`÷`, `sqrt`,
-`ln`, or `pow`). The off-basis remainder is named by exact count — `call` (×10, user-fn
-inlining), `tan`/`atan`/`asin` (×13), `floor` (×6), hyperbolic `sinh`/`cosh`/`tanh` (×6),
-`tuple` (×5) — the operators not yet in the basis, and a parser gap (×33).
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **416/483
+functions (86.1%) are in the certified operator basis**, 178 of them guarded (`÷`, `sqrt`,
+`ln`, or `pow`). The binder also **inlines user-function calls** (the callee's body with
+args bound to params — same sound inlining as `let`; recursion / cross-module off-basis).
+The off-basis remainder is named by exact count — `tan`/`atan`/`asin` (×13), `floor` (×6),
+hyperbolic `sinh`/`cosh`/`tanh` (×6), `tuple` (×5), unresolved `call` (×4) — the operators
+not yet in the basis, and a parser gap (×33).
 
 ## 6. What this does NOT claim
 
