@@ -1,6 +1,7 @@
 import MachLib.DivisionError
 import MachLib.EntropyDuality
 import MachLib.HyperbolicLipschitz
+import MachLib.InverseTrig
 
 /-!
 # The complete operator-basis certifier — one fold, every operator including division
@@ -245,6 +246,20 @@ theorem aerr_cosh {w M E v ve p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   rw [et_split3 p (cosh v) (cosh ve)]
   exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
 
+/-- **`atan`** (`AErr`, 1-Lipschitz, magnitude-*preserving* since `|atan x| ≤ |x|`).
+Magnitude `M` (unchanged); error `w·(M+E) + E` (rounding bounded by `w·|v| ≤ w·(M+E)`,
+plus the 1-Lipschitz propagation `E`). -/
+theorem aerr_atan {w M E v ve p : Real} (hw0 : 0 ≤ w)
+    (h : AErr M E v ve) (hp : RoundsW w p (atan v)) :
+    AErr M (w * (M + E) + E) p (atan ve) := by
+  refine ⟨le_trans (abs_atan_le_abs ve) h.1, ?_⟩
+  have hround : abs (p - atan v) ≤ w * (M + E) :=
+    le_trans (roundsW_abs hp)
+      (mul_le_mul_of_nonneg_left (le_trans (abs_atan_le_abs v) h.val_bound) hw0)
+  have hprop : abs (atan v - atan ve) ≤ E := le_trans (atan_lipschitz v ve) h.2
+  rw [et_split3 p (atan v) (atan ve)]
+  exact le_trans (abs_add _ _) (add_le_add_both hround hprop)
+
 /-- A guarded expression over the full operator basis. `divO a b m` records the
 denominator lower bound `m` it is certified against. -/
 inductive GExpr where
@@ -260,6 +275,7 @@ inductive GExpr where
   | tanhO (a : GExpr)
   | sinhO (a : GExpr)
   | coshO (a : GExpr)
+  | atanO (a : GExpr)
   | divO  (a b : GExpr) (m : Real)
   | clampO (a : GExpr) (lo hi : Real)
   | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
@@ -280,6 +296,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .tanhO a     => tanh (GExpr.exact a)
   | .sinhO a     => sinh (GExpr.exact a)
   | .coshO a     => cosh (GExpr.exact a)
+  | .atanO a     => atan (GExpr.exact a)
   | .divO a b _  => GExpr.exact a / GExpr.exact b
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
   | .sqrtO a _   => sqrt (GExpr.exact a)
@@ -301,6 +318,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .tanhO _     => 1
   | .sinhO a     => sinh (GExpr.Mbound a)
   | .coshO a     => cosh (GExpr.Mbound a)
+  | .atanO a     => GExpr.Mbound a
   | .divO a _ m  => GExpr.Mbound a / m
   | .clampO _ lo hi => max (abs lo) (abs hi)
   | .sqrtO a _   => sqrt (GExpr.Mbound a)
@@ -325,6 +343,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .tanhO a     => GExpr.Ebound w a + w
   | .sinhO a     => w * sinh (GExpr.Mbound a + GExpr.Ebound w a) + cosh (GExpr.Mbound a + GExpr.Ebound w a) * GExpr.Ebound w a
   | .coshO a     => w * cosh (GExpr.Mbound a + GExpr.Ebound w a) + sinh (GExpr.Mbound a + GExpr.Ebound w a) * GExpr.Ebound w a
+  | .atanO a     => w * (GExpr.Mbound a + GExpr.Ebound w a) + GExpr.Ebound w a
   | .divO a b m  => w * ((GExpr.Mbound a + GExpr.Ebound w a) / m)
                     + (GExpr.Ebound w a / m + GExpr.Mbound a * GExpr.Ebound w b / (m * m))
   | .clampO a _ _ => GExpr.Ebound w a
@@ -351,6 +370,7 @@ def GExpr.Valid : GExpr → Prop
   | .tanhO a     => GExpr.Valid a
   | .sinhO a     => GExpr.Valid a
   | .coshO a     => GExpr.Valid a
+  | .atanO a     => GExpr.Valid a
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
   | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
@@ -381,6 +401,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hp : RoundsW w p (sinh va)) : GRoundedEval w (.sinhO a) p
   | coshO {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
       (hp : RoundsW w p (cosh va)) : GRoundedEval w (.coshO a) p
+  | atanO {a : GExpr} {va p : Real} (ha : GRoundedEval w a va)
+      (hp : RoundsW w p (atan va)) : GRoundedEval w (.atanO a) p
   | divO  {a b : GExpr} {va vb p m : Real} (ha : GRoundedEval w a va) (hb : GRoundedEval w b vb)
       (hvb : m ≤ vb) (hp : RoundsW w p (va / vb)) : GRoundedEval w (.divO a b m) p
   | clampO {a : GExpr} {va lo hi : Real} (ha : GRoundedEval w a va) :
@@ -411,6 +433,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | tanhO _ hp iha     => exact fun hv => aerr_tanh hw0 (iha hv) hp
   | sinhO _ hp iha     => exact fun hv => aerr_sinh hw0 hw1 (iha hv) hp
   | coshO _ hp iha     => exact fun hv => aerr_cosh hw0 hw1 (iha hv) hp
+  | atanO _ hp iha     => exact fun hv => aerr_atan hw0 (iha hv) hp
   | divO _ _ hvb hp iha ihb =>
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)

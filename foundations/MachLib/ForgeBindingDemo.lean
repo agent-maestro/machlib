@@ -144,4 +144,12 @@ theorem forge_cosh_certified {w x p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     abs (p - cosh x) ≤ (GExpr.coshO (.leaf x)).Ebound w :=
   gexpr_fwd_error hw0 hw1 (GRoundedEval.coshO (GRoundedEval.leaf x) hp) trivial
 
+/-- **`atan`** (`eml-stdlib`-style, e.g. an angle from a ratio). Binder output:
+`(.atanO (.rleaf x²))`. `atan` is **1-Lipschitz and magnitude-preserving** (`|atan x| ≤
+|x|`), so `atan(fl(x²))` carries the inner error within the magnitude-`|x²|` envelope. -/
+theorem forge_atan_certified {w x vxx p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hxx : RoundsW w vxx (x * x)) (hp : RoundsW w p (atan vxx)) :
+    abs (p - atan (x * x)) ≤ (GExpr.atanO (.rleaf (x * x))).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.atanO (GRoundedEval.rleaf hxx) hp) trivial
+
 end MachLib.Real
