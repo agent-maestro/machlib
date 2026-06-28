@@ -1,0 +1,188 @@
+# MachLib — what is proven, what it rests on, what is open
+
+A reader's front door. Its only job is to say, precisely and checkably, what
+this library establishes, what those results depend on, and where the seams are.
+If something here reads as a claim you can't reproduce in a few commands, that's
+a bug in this document — tell us.
+
+Scope note: this covers the **verified-numerics** core and the **axiom base**.
+Other lanes (the Khovanskii zero bound, the larger frontier explorations) are
+summarised honestly at the end with their asterisks named, not hidden.
+
+---
+
+## 1. What this is
+
+A compact, **Mathlib-free** Lean 4 verification layer for the numeric kernels
+that Forge emits (EML → C/Rust/WGSL/RTL/…). It is *not* a Mathlib replacement and
+not a general analysis library. It proves a small, specific set of things about
+floating-point and fixed-point numeric code, end to end, and is scrupulous about
+the boundary between what is proved and what is assumed.
+
+Everything below is `sorryAx`-free unless explicitly flagged. "`sorryAx`-free"
+means no `sorry`/`admit` holes — every step is a real proof — but it does **not**
+by itself mean the *axioms* a proof rests on are consistent. Section 4 is about
+exactly that gap, and how we close it.
+
+---
+
+## 2. Start here: the one end-to-end result
+
+**`MachLib.PIDCapstone.pid_trajectory_from_bits`** — a single control kernel
+carried, by machine-checked proof, from a bit-level netlist all the way to a
+finite closed-loop trajectory bound.
+
+- `fxpid` builds the PID multiply-add `Kp·e + Ki·i + Kd·d` as a `List Bool`
+  bit-vector circuit out of verified gates.
+- `fxpid_trunc_lt_3ulp` proves that circuit discards `< 3 ULP = 3·2⁻ᶠᴿᴬᶜ` per
+  step — the per-step round-off `ε`, derived from the bits, not assumed.
+- `pid_trajectory_from_bits` feeds that `ε` and the plant's contraction factor
+  `0 ≤ c` into a contraction certificate: `|xc n − xe n| ≤ ε · geom c n` for
+  **all** `n`, finite. For a contracting plant (`c = 0.99`) that is `≤ 100 ε`
+  over the entire run.
+
+The point: **the bit-level truncation `ε` is literally the quantity the
+real-valued trajectory bound consumes.** A statement about the silicon datapath
+and a statement about the closed-loop behaviour are the *same* checked fact, not
+two separate claims bridged by hand. This is the result to be skeptical of first;
+it is `sorryAx`-free, and its RTL half depends only on Lean's own core.
+
+---
+
+## 3. The verified-numerics spine
+
+The capstone sits on top of a layered algebra. Each layer is its own module,
+`sorryAx`-free.
+
+| Layer | What it proves |
+|---|---|
+| `FPModel` | **Cross-target equivalence**: two evaluations of the same exact value (e.g. Rust f64 vs WGSL f32) agree within the sum of their forward-error bounds (`cross_target`). The standard floating-point model (Higham) as a precision-generic `RoundsW w`. This is the *software/GPU* end. |
+| `ForwardError`/`HybridError` | A compositional two-sided forward-error algebra (`Renc`), incl. transcendental∘arithmetic kernels (e.g. Gaussian). |
+| `BackwardError` | Single-op backward error, the general `γₙ` bound (Higham), and the per-term inner-product result `chain_backward`. |
+| `IntervalArith` | Rigorous enclosures: the loose symmetric product and the **tight 4-corner** `Interval.mul`. |
+| `AffineContraction` | Trajectory bounds for affine / Lipschitz / domain-local / nonlinear iterations (the certificate the capstone uses). |
+| `ConditionNumber` | The condition number characterised; `κ ≤ 3` proved for the dominant-term family. |
+| `RippleCarry`→`BitVecMul`→`FixedPointRTL`→`FixedPointSat` | **Leg B, bits→analytic**, all **pure Lean-core** (`propext`/`Quot` only): a verified adder, a verified multiplier, the Q16.16 scaled multiply, and `fxmul_trunc_lt_ulp` — the shift discards `< 1 ULP`, *exactly* the analytic forward-error bound, now derived from the bit-level division rather than assumed. |
+
+What this spine does **not** include: a proof that the Forge compiler itself is
+correct (see §6), and grounding of the analytic base in a construction of ℝ
+(see §4).
+
+---
+
+## 4. What it rests on — the axiom base, honestly
+
+MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
+things Mathlib would prove as theorems — the real-number field/order axioms, the
+definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
+model — are **axioms** here. As of 2026-06-27 the trusted base is **260 axioms**.
+Two things make that honest rather than hand-wavy:
+
+**(a) The base is proven consistent, for the results that matter.**
+`#print axioms` proves a theorem has no `sorry`; it does *not* prove its axioms
+can't jointly derive `False` (a bogus `axiom foo : (0:Real) = 1` would pass every
+`#print axioms` check yet make everything vacuous). `MachLib.CoreModel` closes
+that gap for the flagship closure (the capstone + the forward/backward/interval/
+contraction/κ results — an ordered commutative ring with `abs`). It bundles that
+closure as `RealCoreSpec` and exhibits **two** inhabitants:
+
+- `machlibWitness` over `MachLib.Real` — *faithfulness*: each field is the actual
+  MachLib axiom, so the spec is no stronger than what MachLib assumes.
+- `intModel` over **ℤ** — *consistency*: every closure axiom holds in ℤ, and
+  `#print axioms intModel` = `[propext, Classical.choice, Quot.sound]` only — **none
+  of MachLib's axioms**. A genuine external model.
+
+A model exists ⇒ the closure can't prove `False` ⇒ those results are **not
+vacuous**. A CI gate (`scripts/check_consistency_model.sh`) fails if `intModel`
+ever becomes circular. This is the honest answer to "are these results empty?".
+*Caveat:* the model covers the division-free, transcendental-free spine (what the
+moat results ride on); the field and analytic axioms are modelled by ℝ, not ℤ —
+which is exactly why they remain separate axioms.
+
+**(b) The base is being minimised — what's redundant is removed, what's
+primitive is named.** A systematic audit promoted **32 axioms to theorems
+(292 → 260)** without changing any statement: the redundant ring/abs/field facts,
+and — on the analytic side — the hyperbolic functions are now *entirely* reduced
+to `exp` (their identities, conversions, and addition formulas are theorems;
+only `sinh_eq`/`cosh_eq`, `tanh_eq`, and positivity remain axioms), plus the
+one-sided trig bounds and `tan 0 = 0`. What remains is *defining* primitives
+(the field operations, `exp`/`sin`/`cos`/… definitions and derivatives, the FP
+unit roundoff, the carrier) — not derivable short of constructing ℝ, which is out
+of scope under the Mathlib-free doctrine. The full promotion list (which 32 axioms,
+each derivation) is tracked in the project's internal audit notes.
+
+---
+
+## 5. How to check any of this yourself
+
+```
+# every theorem is a real proof (no holes):
+lake build MachLib
+
+# what a result actually depends on (look for sorryAx — there is none):
+#print axioms MachLib.Real.pid_trajectory_from_bits
+
+# the consistency witness depends on NO MachLib axiom (core only):
+#print axioms MachLib.Model.intModel
+#   ⇒ [propext, Classical.choice, Quot.sound]
+
+# the gates:
+bash foundations/scripts/check_aggregator.sh          # no ungated orphan modules
+bash foundations/scripts/check_consistency_model.sh   # ℤ-model stays external
+python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
+```
+
+---
+
+## 6. What this does **not** claim
+
+- **No physical silicon claim here.** Leg B proves the *bit-level* datapath
+  computes its denoted integer/fixed-point function. That an FPGA bitstream or a
+  microcontroller binary behaves identically is a *separate, empirical* matter,
+  handled in a different (gated) lane — not proved in this library.
+- **No compiler-correctness claim.** The binding-integrity gate checks that a
+  proof is *about the shipped expression* (via a canonical AST hash), and the
+  cross-target results prove agreement *given the model*. Neither proves Forge's
+  compiler is correct.
+- **The analytic base is axiomatized, not constructed.** §4 is the whole story;
+  we do not build ℝ. We prove the load-bearing closure consistent and minimise
+  the rest.
+- **Not a Mathlib replacement**, and not a general theorem library.
+- **Coverage / close-rate numbers are per-release snapshots**, regenerable from
+  source; treat any single number as snapshot-specific.
+
+---
+
+## 7. The other lanes — named with their asterisks
+
+- **The Khovanskii zero bound** (`SingleExpKhovanskii`, `KhovanskiiReduction`,
+  `KhovanskiiLemma`, with safety-critical kernel applications). This is the
+  project's most *distinctive* claim — Mathlib has no Khovanskii bound — and it
+  is real constructive infrastructure. **But name the seam:** the bound rests on
+  the analytic base (§4) *and* on an axiom that **is Khovanskii's classical 1991
+  theorem itself** (Chapter 3, Theorem 1). That axiom *replaced* a prior
+  `derivative_rank_lt` axiom which was **materially false on `exp_atom`** — the
+  fix was to stop asserting the false bookkeeping lemma and instead cite the
+  classical theorem as the assumption. So today the honest headline is "a
+  formalized Khovanskii bound **conditional on Khovanskii's classical theorem**,"
+  not "a from-scratch proof of it." The constructive discharge (polynomial root
+  count + chain-relation derivative + the rank bookkeeping, ≈ 750 lines) is scoped
+  open work. The repo README and `KhovanskiiLemma.lean` itself state this; this
+  document just puts it where a reader sees it first.
+- **The frontier explorations** (research notes, private) are deliberately framed
+  as *lenses that compute a claim*, not proofs — e.g. restatements of open
+  problems, never solutions. They are not part of what this library proves.
+
+---
+
+## 8. The through-line
+
+If there is a single contribution here it is a *method*, demonstrated rather than
+asserted: **expose the invariant in the representation before reaching for
+heavier automation** (the "decomposition before automation" doctrine —
+`docs/proof_decomposition_before_automation.md`), and **prefer a provably
+consistent, minimal axiom base over the illusion of zero axioms.** The axiom
+audit in §4 is itself the cleanest case study of both: nothing was assumed away,
+the redundant was removed, the primitive was named, and the load-bearing core was
+proven non-vacuous. That is the part meant to be reproducible, critiqued, and
+built on.

@@ -8,6 +8,10 @@ check target: a small verification layer for EML/Forge artifacts, not a Mathlib
 replacement. Records may include verification metadata and
 Lean-check status; verification status is recorded per release snapshot.
 
+**Start here:** [`foundations/docs/what_is_proven.md`](foundations/docs/what_is_proven.md)
+— what is proven, what it rests on, and what is open, with the exact commands to
+check each claim yourself.
+
 ## Install
 
 Package installation status is release-specific. Until a reviewed package
