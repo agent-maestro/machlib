@@ -135,4 +135,13 @@ theorem forge_tanh_certified {w x vxx p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     abs (p - tanh (x * x)) ≤ (GExpr.tanhO (.rleaf (x * x))).Ebound w :=
   gexpr_fwd_error hw0 hw1 (GRoundedEval.tanhO (GRoundedEval.rleaf hxx) hp) trivial
 
+/-- **`cosh`** (`eml-stdlib`-style, the catenary `cosh(x)`). Binder output:
+`(.coshO (.leaf x))`. `cosh` **amplifies** (like `exp`): magnitude `cosh|x|`, and one
+rounding gives `≤ w·cosh|x|` for an exact input — the bound grows with `cosh` of the
+argument, the honest amplifying behaviour. -/
+theorem forge_cosh_certified {w x p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hp : RoundsW w p (cosh x)) :
+    abs (p - cosh x) ≤ (GExpr.coshO (.leaf x)).Ebound w :=
+  gexpr_fwd_error hw0 hw1 (GRoundedEval.coshO (GRoundedEval.leaf x) hp) trivial
+
 end MachLib.Real

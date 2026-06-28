@@ -2,7 +2,7 @@
 
 A reader's front door to MachLib's **forward-error certifier**: a single proof that
 bounds the floating-point forward error of *any* kernel built from the operator basis
-`{leaf, +, ×, neg, abs, exp, sin, cos, tanh, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
+`{leaf, +, ×, neg, abs, exp, sin, cos, tanh, sinh, cosh, ÷, clamp, sqrt, ln, pow}`, and is bound to the real kernels Forge compiles.
 
 Everything below is `sorryAx`-free with **0 custom axioms added** beyond MachLib's
 existing base. "`sorryAx`-free" means no `sorry`/`admit` — every step is a real proof.
@@ -44,7 +44,7 @@ data-dependent obligation division alone needs (`1/y` is unbounded near 0).
 | `×` | `aerr_mul` | bilinear `(|vx|Ey + |ye|Ex)` + product rounding |
 | `neg` | `aerr_neg` | exact (`fl(−x) = −x`) |
 | `abs` | `aerr_abs` | **exact + 1-Lipschitz** — preserves both magnitude `M` and error `E` |
-| `exp` | `aerr_exp` | **amplifying** — `exp(M)`·(condition number); reuses `exp_grow` |
+| `exp`, `sinh`, `cosh` | `aerr_exp/sinh/cosh` | **amplifying** — magnitude `exp/sinh/cosh M`, error scaled by the growth at `M+E` (MVT-derived) |
 | `sin`, `cos`, `tanh` | `aerr_sin/cos/tanh` | **bounded-Lipschitz** — `E + w`, magnitude `1` (`tanh`'s Lipschitz derived via MVT) |
 | `÷` | `aerr_div` | rounding + propagation, every term scaled by `1/m` |
 | `clamp` | `aerr_clamp` | **exact + 1-Lipschitz** — error *preserved* (`E`, no rounding), magnitude `max\|lo\|\|hi\|` |
@@ -95,14 +95,13 @@ conservative upper bound, never an under-estimate. `forge_quad_inlined_let_certi
 machine-checks the sharing case (`let s = x+y; s*s`, both copies of `s` round to the
 same value via one shared `RoundsW`). Loops/mutation (`let_mut`/`while`) stay off-basis.
 
-**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **418/483
-functions (86.5%) are in the certified operator basis**, 178 of them guarded. The binder
+**Measured reach** (the binder over the real eml-stdlib, not a heuristic): **422/483
+functions (87.4%) are in the certified operator basis**, 178 of them guarded. The binder
 also **inlines user-function calls** (the callee's body with args bound to params — same
 sound inlining as `let`; recursion / cross-module off-basis). The off-basis remainder is
-named by exact count — `tan`/`atan`/`asin` (×13), `floor` (×6), `sinh`/`cosh` (×4),
-`tuple` (×5), unresolved `call` (×4) — the operators not yet in the basis (`atan`/`asin`
-need inverse-function derivatives absent from the calculus; `sinh`/`cosh` amplify), and a
-parser gap (×33).
+named by exact count — `atan`/`asin` (×8), `tan` (×5), `floor` (×6), `tuple` (×5),
+unresolved `call` (×4) — `atan`/`asin` need inverse-function derivatives absent from the
+calculus, `tan` is guarded near `cos=0`, `floor` is discontinuous — and a parser gap (×33).
 
 ## 6. What this does NOT claim
 

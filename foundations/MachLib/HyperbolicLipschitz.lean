@@ -19,6 +19,12 @@ namespace MachLib.Real
 
 private theorem two_ne_zero' : (1 : Real) + 1 ≠ 0 := two_ne_zero
 
+private theorem le_total' (a b : Real) : a ≤ b ∨ b ≤ a := by
+  rcases lt_total a b with h | h | h
+  · exact Or.inl (le_of_lt h)
+  · exact Or.inl (le_of_eq h)
+  · exact Or.inr (le_of_lt h)
+
 /-- `sinh' = cosh`, derived from `sinh = (exp − exp∘neg)/2`. -/
 theorem HasDerivAt_sinh (x : Real) : HasDerivAt sinh (cosh x) x := by
   have hen : HasDerivAt (fun y => exp (-y)) (exp (-x) * (-1)) x :=
@@ -119,5 +125,105 @@ theorem abs_tanh_le_one (x : Real) : abs (tanh x) ≤ 1 := by
   apply abs_le_of (le_of_lt (tanh_lt_one x))
   have h := neg_le_neg (le_of_lt (neg_one_lt_tanh x))
   rwa [show -(-1 : Real) = 1 from by mach_ring] at h
+
+/-! ## the amplifying hyperbolics: `sinh`, `cosh` (monotonicity + range-Lipschitz via MVT) -/
+
+/-- `sinh` is monotone (`sinh' = cosh > 0`). -/
+theorem sinh_mono {a b : Real} (hab : a ≤ b) : sinh a ≤ sinh b := by
+  rcases lt_total a b with h | h | h
+  · obtain ⟨c, f', _, _, hdc, hval⟩ :=
+      mean_value_theorem sinh a b h (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
+    rw [HasDerivAt_unique sinh f' (cosh c) c hdc (HasDerivAt_sinh c)] at hval
+    exact le_of_sub_nonneg (hval ▸ mul_nonneg (le_of_lt (cosh_pos c)) (le_of_lt (sub_pos_of_lt h)))
+  · exact le_of_eq (congrArg sinh h)
+  · exact absurd (lt_of_lt_of_le h hab) (lt_irrefl_ax b)
+
+/-- `0 ≤ x → 0 ≤ sinh x`. -/
+theorem sinh_nonneg {x : Real} (hx : 0 ≤ x) : 0 ≤ sinh x := by
+  have := sinh_mono hx; rwa [sinh_zero] at this
+
+/-- `cosh` is monotone on the nonnegatives (`cosh' = sinh ≥ 0` there). -/
+theorem cosh_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) : cosh a ≤ cosh b := by
+  rcases lt_total a b with h | h | h
+  · obtain ⟨c, f', hac, _, hdc, hval⟩ :=
+      mean_value_theorem cosh a b h (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
+    rw [HasDerivAt_unique cosh f' (sinh c) c hdc (HasDerivAt_cosh c)] at hval
+    exact le_of_sub_nonneg
+      (hval ▸ mul_nonneg (sinh_nonneg (le_trans ha (le_of_lt hac))) (le_of_lt (sub_pos_of_lt h)))
+  · exact le_of_eq (congrArg cosh h)
+  · exact absurd (lt_of_lt_of_le h hab) (lt_irrefl_ax b)
+
+/-- `cosh c = cosh |c|` (even). -/
+theorem cosh_abs (c : Real) : cosh c = cosh (abs c) := by
+  rcases le_total' 0 c with hc | hc
+  · rw [abs_of_nonneg hc]
+  · rw [abs_of_nonpos hc, cosh_neg]
+
+/-- `|sinh c| = sinh |c|` (odd, nonneg on nonneg). -/
+theorem abs_sinh (c : Real) : abs (sinh c) = sinh (abs c) := by
+  rcases le_total' 0 c with hc | hc
+  · rw [abs_of_nonneg hc, abs_of_nonneg (sinh_nonneg hc)]
+  · rw [abs_of_nonpos hc, abs_of_nonpos (by have := sinh_mono hc; rwa [sinh_zero] at this),
+        sinh_neg]
+
+/-- `|c| ≤ R → cosh c ≤ cosh R`. -/
+theorem cosh_le_of_abs_le {c R : Real} (h : abs c ≤ R) : cosh c ≤ cosh R := by
+  rw [cosh_abs]; exact cosh_mono (abs_nonneg c) h
+
+/-- `|c| ≤ R → |sinh c| ≤ sinh R`. -/
+theorem abs_sinh_le_of_abs_le {c R : Real} (h : abs c ≤ R) : abs (sinh c) ≤ sinh R := by
+  rw [abs_sinh]; exact sinh_mono h
+
+/-- **`sinh` Lipschitz on `[−R, R]`** — `|sinh a − sinh b| ≤ cosh R · |a − b|` (`sinh' =
+cosh ≤ cosh R` there). The amplifying-Lipschitz bound, via MVT. -/
+theorem sinh_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R) :
+    abs (sinh a - sinh b) ≤ cosh R * abs (a - b) := by
+  have step : ∀ p q : Real, abs p ≤ R → abs q ≤ R → p < q →
+      abs (sinh q - sinh p) ≤ cosh R * (q - p) := by
+    intro p q hpR hqR hpq
+    obtain ⟨c, f', hpc, hcq, hdc, hval⟩ :=
+      mean_value_theorem sinh p q hpq (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
+    have hcR : abs c ≤ R := abs_le_of
+      (le_trans (le_of_lt hcq) (le_trans (le_abs_self q) hqR))
+      (le_trans (neg_le_neg (le_of_lt hpc)) (le_trans (neg_le_abs p) hpR))
+    rw [hval, HasDerivAt_unique sinh f' (cosh c) c hdc (HasDerivAt_sinh c), abs_mul,
+        abs_of_nonneg (le_of_lt (sub_pos_of_lt hpq)), abs_of_nonneg (le_of_lt (cosh_pos c))]
+    exact mul_le_mul_of_nonneg_right (cosh_le_of_abs_le hcR) (le_of_lt (sub_pos_of_lt hpq))
+  rcases lt_total a b with h | h | h
+  · rw [show abs (sinh a - sinh b) = abs (sinh b - sinh a) from by
+          rw [show sinh a - sinh b = -(sinh b - sinh a) from by mach_ring, abs_neg],
+        show abs (a - b) = b - a from by
+          rw [show a - b = -(b - a) from by mach_ring, abs_neg,
+              abs_of_nonneg (le_of_lt (sub_pos_of_lt h))]]
+    exact step a b ha hb h
+  · rw [h]; exact le_of_eq (by rw [show sinh b - sinh b = (0 : Real) from by mach_ring, abs_zero,
+        show b - b = (0 : Real) from by mach_ring, abs_zero, mul_zero])
+  · rw [abs_of_nonneg (le_of_lt (sub_pos_of_lt h))]; exact step b a hb ha h
+
+/-- **`cosh` Lipschitz on `[−R, R]`** — `|cosh a − cosh b| ≤ sinh R · |a − b|` (`cosh' =
+sinh`, `|sinh| ≤ sinh R` there). -/
+theorem cosh_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R) :
+    abs (cosh a - cosh b) ≤ sinh R * abs (a - b) := by
+  have step : ∀ p q : Real, abs p ≤ R → abs q ≤ R → p < q →
+      abs (cosh q - cosh p) ≤ sinh R * (q - p) := by
+    intro p q hpR hqR hpq
+    obtain ⟨c, f', hpc, hcq, hdc, hval⟩ :=
+      mean_value_theorem cosh p q hpq (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
+    have hcR : abs c ≤ R := abs_le_of
+      (le_trans (le_of_lt hcq) (le_trans (le_abs_self q) hqR))
+      (le_trans (neg_le_neg (le_of_lt hpc)) (le_trans (neg_le_abs p) hpR))
+    rw [hval, HasDerivAt_unique cosh f' (sinh c) c hdc (HasDerivAt_cosh c), abs_mul,
+        abs_of_nonneg (le_of_lt (sub_pos_of_lt hpq))]
+    exact mul_le_mul_of_nonneg_right (abs_sinh_le_of_abs_le hcR) (le_of_lt (sub_pos_of_lt hpq))
+  rcases lt_total a b with h | h | h
+  · rw [show abs (cosh a - cosh b) = abs (cosh b - cosh a) from by
+          rw [show cosh a - cosh b = -(cosh b - cosh a) from by mach_ring, abs_neg],
+        show abs (a - b) = b - a from by
+          rw [show a - b = -(b - a) from by mach_ring, abs_neg,
+              abs_of_nonneg (le_of_lt (sub_pos_of_lt h))]]
+    exact step a b ha hb h
+  · rw [h]; exact le_of_eq (by rw [show cosh b - cosh b = (0 : Real) from by mach_ring, abs_zero,
+        show b - b = (0 : Real) from by mach_ring, abs_zero, mul_zero])
+  · rw [abs_of_nonneg (le_of_lt (sub_pos_of_lt h))]; exact step b a hb ha h
 
 end MachLib.Real
