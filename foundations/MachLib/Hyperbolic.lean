@@ -30,10 +30,8 @@ Mirrors `Trig`'s axiom budget: nine axioms cover sign, addition,
 Pythagorean identity, and the ELC-form decomposition that ties
 sinh / cosh to the exponential. -/
 
-axiom sinh_zero  : sinh 0 = 0
-axiom cosh_zero  : cosh 0 = 1
-axiom sinh_neg   (x : Real) : sinh (-x) = -(sinh x)
-axiom cosh_neg   (x : Real) : cosh (-x) = cosh x
+-- `sinh_zero`/`cosh_zero`/`sinh_neg`/`cosh_neg` PROMOTED to theorems in
+-- `HyperbolicId.lean` (2026-06-27 audit; from `sinh_eq`/`cosh_eq` + FieldLemmas).
 axiom cosh_pos   (x : Real) : 0 < cosh x
 /-- `cosh x ≥ 1` for all real `x`, with equality at `x = 0`. Follows from
 `pythagorean_hyp` (cosh² = 1 + sinh² ≥ 1) plus `cosh_pos`, but deriving it
@@ -61,21 +59,11 @@ axiom cosh_eq (x : Real) : cosh x = (exp x + exp (-x)) / (1 + 1)
 
 /-! ### Conversion identities between hyperbolic and exp
 
-These are algebraic consequences of `sinh_eq` / `cosh_eq` that
-require ring-style manipulation (cancel halves, distribute over
-sums) — without a `ring` tactic in MachLib those proofs become
-many-line manual rewrites. We axiomatise them in the same spirit
-as `sin_add` / `cos_add` in `Trig`, and revisit as derived lemmas
-once MachLib gains a ring tactic. -/
-
-axiom cosh_add_sinh_eq_exp (x : Real) :
-  cosh x + sinh x = exp x
-axiom cosh_sub_sinh_eq_exp_neg (x : Real) :
-  cosh x - sinh x = exp (-x)
-axiom two_sinh_eq_exp_sub (x : Real) :
-  (1 + 1) * sinh x = exp x - exp (-x)
-axiom two_cosh_eq_exp_add (x : Real) :
-  (1 + 1) * cosh x = exp x + exp (-x)
+`cosh_add_sinh_eq_exp` / `cosh_sub_sinh_eq_exp_neg` / `two_sinh_eq_exp_sub` /
+`two_cosh_eq_exp_add` PROMOTED to theorems in `HyperbolicId.lean` (2026-06-27
+audit) — the "revisit as derived lemmas once MachLib gains a ring tactic" the old
+comment promised. They are the half-cancellation consequences of `sinh_eq`/
+`cosh_eq`, now proved with the `FieldLemmas` division kit downstream. -/
 
 /-! ### Subtraction + double-angle identities
 

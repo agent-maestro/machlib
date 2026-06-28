@@ -1,6 +1,7 @@
 import MachLib.Hyperbolic
 import MachLib.Ring
 import MachLib.MPolyRing
+import MachLib.FieldLemmas
 
 /-!
 # Hyperbolic identities — derived consequences (2026-06-27 audit)
@@ -21,6 +22,55 @@ Each derives only from axioms that REMAIN primitive in `Hyperbolic`
 
 namespace MachLib
 namespace Real
+
+/-! ### exp-conversions, derived from the defining `sinh_eq`/`cosh_eq` + the
+half-cancellation kit (`FieldLemmas`). These were axioms in `Hyperbolic` only
+because that file is upstream of the ring/field tactics. -/
+
+/-- `sinh 0 = 0`. From `sinh_eq` + `exp_zero` + `0/2 = 0`. -/
+theorem sinh_zero : sinh 0 = 0 := by
+  rw [sinh_eq 0, neg_zero, exp_zero, show (1 : Real) - 1 = 0 from by mach_ring,
+      zero_div_of_ne_zero two_ne_zero]
+
+/-- `cosh 0 = 1`. From `cosh_eq` + `exp_zero` + `2/2 = 1`. -/
+theorem cosh_zero : cosh 0 = 1 := by
+  rw [cosh_eq 0, neg_zero, exp_zero, self_div two_ne_zero]
+
+/-- `sinh (−x) = −sinh x` (odd). From `sinh_eq` + `neg_div`. -/
+theorem sinh_neg (x : Real) : sinh (-x) = -(sinh x) := by
+  rw [sinh_eq (-x), sinh_eq x, neg_div two_ne_zero, neg_neg_helper]
+  show (exp (-x) - exp x) / (1 + 1) = (-(exp x - exp (-x))) / (1 + 1)
+  rw [show -(exp x - exp (-x)) = exp (-x) - exp x from by mach_mpoly [exp x, exp (-x)]]
+
+/-- `cosh (−x) = cosh x` (even). From `cosh_eq`. -/
+theorem cosh_neg (x : Real) : cosh (-x) = cosh x := by
+  rw [cosh_eq (-x), cosh_eq x, neg_neg_helper]
+  show (exp (-x) + exp x) / (1 + 1) = (exp x + exp (-x)) / (1 + 1)
+  rw [show exp (-x) + exp x = exp x + exp (-x) from by mach_mpoly [exp x, exp (-x)]]
+
+/-- `2 · sinh x = exp x − exp(−x)`. Half-cancellation of `sinh_eq`. -/
+theorem two_sinh_eq_exp_sub (x : Real) : (1 + 1) * sinh x = exp x - exp (-x) := by
+  rw [sinh_eq x, mul_div_cancel_left two_ne_zero]
+
+/-- `2 · cosh x = exp x + exp(−x)`. -/
+theorem two_cosh_eq_exp_add (x : Real) : (1 + 1) * cosh x = exp x + exp (-x) := by
+  rw [cosh_eq x, mul_div_cancel_left two_ne_zero]
+
+/-- `cosh x + sinh x = exp x`. -/
+theorem cosh_add_sinh_eq_exp (x : Real) : cosh x + sinh x = exp x := by
+  rw [cosh_eq x, sinh_eq x, div_add_div_same two_ne_zero,
+      show (exp x + exp (-x)) + (exp x - exp (-x)) = (1 + 1) * exp x from by
+        mach_mpoly [exp x, exp (-x)],
+      mul_div_cancel_left' two_ne_zero]
+
+/-- `cosh x − sinh x = exp(−x)`. -/
+theorem cosh_sub_sinh_eq_exp_neg (x : Real) : cosh x - sinh x = exp (-x) := by
+  rw [cosh_eq x, sinh_eq x, div_sub_div_same two_ne_zero,
+      show (exp x + exp (-x)) - (exp x - exp (-x)) = (1 + 1) * exp (-x) from by
+        mach_mpoly [exp x, exp (-x)],
+      mul_div_cancel_left' two_ne_zero]
+
+/-! ### identities derived from the addition formulas + the conversions above. -/
 
 /-- `sinh (2x) = 2 · sinh x · cosh x`. From `sinh_add x x`. -/
 theorem sinh_two_mul (x : Real) : sinh ((1 + 1) * x) = (1 + 1) * sinh x * cosh x := by

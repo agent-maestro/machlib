@@ -7,6 +7,7 @@ import MachLib.EMLDomainSafety
 import MachLib.EMLAtlasWitness
 import MachLib.SelfMapConjugacy
 import MachLib.Hyperbolic
+import MachLib.FieldLemmas
 import MachLib.HyperbolicId
 import MachLib.HyperbolicPreservation
 import MachLib.Forge
