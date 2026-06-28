@@ -551,6 +551,14 @@ deleted in favor of `khovanskii_chain_step`. -/
 of zeros of a non-trivial Pfaffian function on `(a, b)` is bounded by
 `PfaffianRank f` (`f.chain.order * 1_000_000 + f.degree`).
 
+**NOT LOAD-BEARING (2026-06-27 audit).** This is the GENERAL-`PfaffianFunction`
+bound. No shipped/featured result depends on it — the single-exponential bound
+(`SingleExpKhovanskii.ExpPoly.expPoly_khovanskii_bound`) and the safety-critical
+kernel applications are constructive and do NOT reach this axiom (verify with
+`#print axioms`; the only transitive consumers are the legacy general bridge
+`eml_pfaffian` and `PfaffianFunction.zero_bound`). It is kept for a future
+general-case formalization, not because anything that ships needs it.
+
 **Classical reference:** Khovanskii, A.G. *Fewnomials*. AMS Translations
 Vol. 88, 1991. Theorem 1, Chapter 3.
 

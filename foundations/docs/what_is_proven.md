@@ -155,20 +155,36 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 
 ## 7. The other lanes — named with their asterisks
 
-- **The Khovanskii zero bound** (`SingleExpKhovanskii`, `KhovanskiiReduction`,
-  `KhovanskiiLemma`, with safety-critical kernel applications). This is the
-  project's most *distinctive* claim — Mathlib has no Khovanskii bound — and it
-  is real constructive infrastructure. **But name the seam:** the bound rests on
-  the analytic base (§4) *and* on an axiom that **is Khovanskii's classical 1991
-  theorem itself** (Chapter 3, Theorem 1). That axiom *replaced* a prior
-  `derivative_rank_lt` axiom which was **materially false on `exp_atom`** — the
-  fix was to stop asserting the false bookkeeping lemma and instead cite the
-  classical theorem as the assumption. So today the honest headline is "a
-  formalized Khovanskii bound **conditional on Khovanskii's classical theorem**,"
-  not "a from-scratch proof of it." The constructive discharge (polynomial root
-  count + chain-relation derivative + the rank bookkeeping, ≈ 750 lines) is scoped
-  open work. The repo README and `KhovanskiiLemma.lean` itself state this; this
-  document just puts it where a reader sees it first.
+- **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib
+  has no Khovanskii bound. Two things must be kept apart, because they are easy to
+  conflate (an earlier version of this very document conflated them):
+
+  - **The shipped result is constructive — verified, not asserted.** The
+    single-exponential bound `expPoly_khovanskii_bound` (zero count of a polynomial
+    in `eˣ`) and the four safety-critical kernel applications built on it
+    (Butler-Volmer electrode kinetics, the pharmacokinetic plasma kernel, the
+    defibrillator discharge kernel, the critically-damped spring) depend on **no**
+    classical-Khovanskii axiom and **no `sorry`**. `#print axioms` shows they rest
+    only on the analytic base (the Rolle zero-counting corollary, the `HasDerivAt`
+    rules, `exp_pos`, Real arithmetic and order) plus Lean's core — the *same*
+    axiomatized base as the rest of the library (§4), not a citation of the theorem
+    being proved. Check it:
+    ```
+    #print axioms MachLib.SingleExpKhovanskii.ExpPoly.expPoly_khovanskii_bound
+    #   ⇒ no zero_count_bound_classical, no sorryAx
+    ```
+  - **The general case is still cited — and it is an orphan.** A separate, more
+    ambitious development — the bound for an *arbitrary* `PfaffianFunction` (general
+    Pfaffian chains) — does rest on an axiom (`zero_count_bound_classical`) that
+    **is** Khovanskii's classical 1991 theorem (Ch. 3, Thm. 1). That axiom
+    *replaced* a prior `derivative_rank_lt` axiom which was **materially false on
+    `exp_atom`** — and false for a structural reason, not a bug: the derivative of
+    `eˣ` is `eˣ`, same chain, no rank decrease, so the naive "the derivative has
+    smaller rank" induction simply does not hold. **No shipped result routes through
+    this general axiom** (`#print axioms` on the applications confirms it); it is
+    kept for a future generalization, not load-bearing today. Honest one-liner:
+    *the single-exp Khovanskii bound is proven; the general-Pfaffian bound is cited,
+    and nothing that ships depends on the citation.*
 - **The frontier explorations** (research notes, private) are deliberately framed
   as *lenses that compute a claim*, not proofs — e.g. restatements of open
   problems, never solutions. They are not part of what this library proves.
