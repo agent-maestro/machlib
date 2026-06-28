@@ -77,6 +77,14 @@ sharper/simpler results where they apply; `gexpr_sound` is the one that covers e
   an `L`-contraction has whole-run error `≤ ε·geom L n ≤ ε/(1−L)`, where `ε` is the
   certifier's per-evaluation `Ebound` made orbit-uniform. The per-evaluation guarantee
   lifts to the whole loop (controllers, filters, solvers).
+- **Vectors / n-ary reductions** (`VectorError.aerr_sum`): the universal shapes — `Σ xᵢ`,
+  dot product `Σ xᵢ·yᵢ`, squared norm `Σ xᵢ²` — are *variable-length* reductions, not one
+  tree. `aerr_sum` certifies the accumulator loop `s := 0; for xᵢ: s := fl(s + xᵢ)` over
+  any vector of certified components, one list induction folding `aerr_add`. And
+  `VectorError.sum_const` turns the parametric error *shape* into an **explicit constant**:
+  for exact inputs the n-fold sum's error is `≤ ((1+w)ⁿ − 1)·Σ|xᵢ|` — the classic
+  summation bound `≈ n·u·Σ|xᵢ|`, closed-form in `n`. (`sum3_const_certified`,
+  `dot2_certified` machine-check concrete instances.)
 
 ## 5. It is bound to real kernels (`tree_hash`)
 
@@ -158,9 +166,11 @@ The certifier spans `OperatorBasisSound` / `OperatorBasisTrans` / `OperatorBasis
 
 Consolidated. 17-operator basis (arithmetic + `abs`/`clamp`, the transcendentals
 `exp`/`sin`/`cos`/`tanh`/`sinh`/`cosh`/`atan`, guarded `÷`/`sqrt`/`ln`/`pow`, and `if`),
-spanning straight-line **and** control-flow kernels, reaching **456/517** of the real
+spanning straight-line **and** control-flow kernels, plus **n-ary reductions** (`Σ`, dot
+product, norm) with an explicit `((1+w)ⁿ−1)` constant — so the basis now covers scalar
+trees, branches, *and* variable-length vectors. Reaching **456/517** of the real
 eml-stdlib, agreeing across precisions and over iterations, bound to `tree_hash`, and
 **drift-gated** (a kernel cannot silently diverge from the bound that certifies it). All
-`sorryAx`-free; 3 axioms (the `atan` primitive). The remaining off-basis is structural
-(discontinuity, non-scalar shape), not missing operators.
+`sorryAx`-free; 3 axioms (the `atan` primitive). The remaining scalar off-basis is
+structural (discontinuity), not missing operators.
 Each file's header states what it adds; this front door is the map.

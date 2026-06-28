@@ -92,6 +92,7 @@ import MachLib.OperatorBasisTrans
 import MachLib.OperatorBasisGeneral
 import MachLib.DivisionError
 import MachLib.OperatorBasisComplete
+import MachLib.VectorError
 import MachLib.TrajectoryCertified
 import MachLib.ForgeBindingDemo
 import MachLib.ConditionedError
