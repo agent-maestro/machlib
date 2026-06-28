@@ -137,6 +137,25 @@ theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
     abs (v - t.exact) ≤ t.Ebound w :=
   (gexpr_sound hw0 hw1 h hv).err
 
+/-- **Cross-target equivalence — for the whole operator basis.** The *same* kernel `t`
+evaluated at two unit-roundoffs `w₁, w₂` (e.g. an `f32` shader lane and an `f64`
+software lane) agrees to within `Ebound w₁ + Ebound w₂` — both evaluations enclose the
+single exact value, so the triangle bounds their gap. One proof for *every* kernel the
+certifier covers (division included), generalizing the per-kernel `CrossTargetPairs`
+lemmas: cross-target numerical agreement is now a property of the operator basis, not a
+hand-proved fact per kernel. -/
+theorem gexpr_cross_target {w1 w2 : Real}
+    (hw10 : 0 ≤ w1) (hw11 : w1 ≤ 1) (hw20 : 0 ≤ w2) (hw21 : w2 ≤ 1)
+    {t : GExpr} {v1 v2 : Real}
+    (h1 : GRoundedEval w1 t v1) (h2 : GRoundedEval w2 t v2) (hv : t.Valid) :
+    abs (v1 - v2) ≤ t.Ebound w1 + t.Ebound w2 := by
+  have e1 := gexpr_fwd_error hw10 hw11 h1 hv
+  have e2 : abs (t.exact - v2) ≤ t.Ebound w2 := by
+    rw [show t.exact - v2 = -(v2 - t.exact) from by mach_ring, abs_neg]
+    exact gexpr_fwd_error hw20 hw21 h2 hv
+  rw [et_split3 v1 t.exact v2]
+  exact le_trans (abs_add _ _) (add_le_add_both e1 e2)
+
 /-- A guarded ratio `x / y` (`y ≥ m > 0`, exact inputs) certified end-to-end by the
 complete fold — division now folds like every other operator. -/
 theorem ratio_via_gfold {w x y p m : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
@@ -158,6 +177,26 @@ theorem lorentzian_via_gfold {w x px s p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   gexpr_fwd_error hw0 hw1
     (GRoundedEval.divO (GRoundedEval.leaf 1)
       (GRoundedEval.add (GRoundedEval.leaf 1) (GRoundedEval.rleaf hpx) hs) hsc hp)
+    ⟨trivial, ⟨trivial, trivial⟩, zero_lt_one_ax, le_add_of_nonneg_right (sq_nonneg x)⟩
+
+/-- **Cross-target: the Lorentzian `1/(1+x²)` at two precisions.** A division-containing
+kernel computed on two lanes (`w₁`, `w₂`) agrees to within the sum of the two lanes'
+forward-error bounds — proven cross-target equivalence for a kernel with a transcendental-
+free but division-bearing shape, straight from the general `gexpr_cross_target`. -/
+theorem lorentzian_cross_target {w1 w2 x px1 s1 p1 px2 s2 p2 : Real}
+    (hw10 : 0 ≤ w1) (hw11 : w1 ≤ 1) (hw20 : 0 ≤ w2) (hw21 : w2 ≤ 1)
+    (hpx1 : RoundsW w1 px1 (x * x)) (hs1 : RoundsW w1 s1 (1 + px1)) (hsc1 : 1 ≤ s1)
+    (hp1 : RoundsW w1 p1 (1 / s1))
+    (hpx2 : RoundsW w2 px2 (x * x)) (hs2 : RoundsW w2 s2 (1 + px2)) (hsc2 : 1 ≤ s2)
+    (hp2 : RoundsW w2 p2 (1 / s2)) :
+    abs (p1 - p2)
+      ≤ (GExpr.divO (.leaf 1) (.add (.leaf 1) (.rleaf (x * x))) 1).Ebound w1
+        + (GExpr.divO (.leaf 1) (.add (.leaf 1) (.rleaf (x * x))) 1).Ebound w2 :=
+  gexpr_cross_target hw10 hw11 hw20 hw21
+    (GRoundedEval.divO (GRoundedEval.leaf 1)
+      (GRoundedEval.add (GRoundedEval.leaf 1) (GRoundedEval.rleaf hpx1) hs1) hsc1 hp1)
+    (GRoundedEval.divO (GRoundedEval.leaf 1)
+      (GRoundedEval.add (GRoundedEval.leaf 1) (GRoundedEval.rleaf hpx2) hs2) hsc2 hp2)
     ⟨trivial, ⟨trivial, trivial⟩, zero_lt_one_ax, le_add_of_nonneg_right (sq_nonneg x)⟩
 
 end MachLib.Real
