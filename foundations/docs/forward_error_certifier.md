@@ -174,12 +174,18 @@ to-do list.
   more general but looser on pure arithmetic than `renc_sound`'s tight relative `(1+w)^d`.
 
 **Measured tightness.** Instantiated at the per-op-class f64 budget — `u = 2⁻⁵³` for the
-correctly-rounded ops (`+ × ÷ √` and constant representation), `2u` for the libm elementary
-functions — the bound is **a median 8× the observed f64 error** across 349 stdlib kernels
-(p10 3×, p90 124×; 89% within 100×). So the bounds are *useful*, not merely true. Two
-honest caveats the measurement surfaced: (1) you must instantiate `w = 2u` for the libm
-transcendentals (they're ~1 ulp, not correctly-rounded) or the bound undershoots — pure
-arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax, …) was
+correctly-rounded ops (`+ × ÷ √` and constant representation), `4u` (2 ulp) for the libm
+elementary functions — the bound is **a median ~10× the observed f64 error** across 349
+stdlib kernels (p10 3×, p90 124×). So the bounds are *useful*, not merely true, and
+**empirically sound**: a regression gate (`test_tightness_gate.py`) re-runs the probe and
+asserts the bound never undershoots — **0 violations over ~1.4M samples**. Three honest
+findings the measurement surfaced: (1) the libm transcendentals are **not** correctly-rounded
+— the gate caught glibc `sinh` exceeding 1 ulp — so the *empirically sound* budget is `4u`
+(2 ulp), not the typical `~1 ulp`; pure arithmetic stays sound at `u`. (2) The apparent
+astronomical loose tail (`cone_s` up to `10⁴⁸×`) is **a sampling artifact** — those kernels
+have no declared input domain and a scale set by constants (e.g. a 450 nm peak), so sampling
+`[0.5, 2]` evaluates them far from their design point; near it the looseness collapses
+(`cone_s` `8.7·10⁴⁸×` → `2.7·10³×` over `[380, 560] nm`). (3) The exp/amplifying family was
 *loose* (10³⁺×) because the *symmetric* `exp(Mbound) = exp(|arg|)` magnitude envelope ignores
 the sign of the argument. **This is now addressed** by the upper-bound-aware exp rule
 (`aerr_exp_upper` / the `expUO` node): when the argument is bounded above by `U`, the
