@@ -143,6 +143,16 @@ complex cannot be a Lipschitz scalar tree.
 - The relative-vs-absolute trade is real: `gexpr_sound` (absolute, magnitude-based) is
   more general but looser on pure arithmetic than `renc_sound`'s tight relative `(1+w)^d`.
 
+**Measured tightness.** Instantiated at the per-op-class f64 budget — `u = 2⁻⁵³` for the
+correctly-rounded ops (`+ × ÷ √` and constant representation), `2u` for the libm elementary
+functions — the bound is **a median 8× the observed f64 error** across 349 stdlib kernels
+(p10 3×, p90 124×; 89% within 100×). So the bounds are *useful*, not merely true. Two
+honest caveats the measurement surfaced: (1) you must instantiate `w = 2u` for the libm
+transcendentals (they're ~1 ulp, not correctly-rounded) or the bound undershoots — pure
+arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax, …) is
+sound but *loose* (10³⁺×) because the `exp(Mbound)` magnitude envelope is pessimistic — a
+relative bound for that family is the natural tightening. Probe: `tools/machlib_bind/tightness.py`.
+
 ## 7. Check it yourself
 
 ```bash
