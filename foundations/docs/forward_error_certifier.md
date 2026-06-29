@@ -214,20 +214,38 @@ PYTHONPATH=<forge> python3 tools/machlib_bind/bind.py --dir <eml-stdlib>
 
 # Run the drift gate — fails if any certified kernel's tree_hash changed:
 PYTHONPATH=<forge> python3 tools/machlib_bind/check.py --dir <eml-stdlib>
+
+# Run the empirical-soundness gate — asserts no bound undershoots the observed f64 error:
+PYTHONPATH=<forge> python3 -m pytest tools/machlib_bind/test_tightness_gate.py
 ```
 
 The certifier spans `OperatorBasisSound` / `OperatorBasisTrans` / `OperatorBasisGeneral`
-/ `DivisionError` / `OperatorBasisComplete` / `TrajectoryCertified` / `ForgeBindingDemo`.
+/ `DivisionError` / `OperatorBasisComplete` (the fold) · `VectorError` (n-ary reductions) ·
+`TrajectoryCertified` (iteration) · `OperatorAdmissibility` (the boundary as a theorem) ·
+`ForgeBindingDemo` (real kernels). The binder + both gates live in the Forge repo's
+`tools/machlib_bind/`.
 
-## 9. Status
+## 9. Status — consolidated
 
-Consolidated. 17-operator basis (arithmetic + `abs`/`clamp`, the transcendentals
+The arc is complete and at a clean resting point. In one paragraph:
+
+One structural induction (`gexpr_sound`) certifies the floating-point forward error of any
+kernel over a **17-operator basis** (arithmetic + `abs`/`clamp`, the transcendentals
 `exp`/`sin`/`cos`/`tanh`/`sinh`/`cosh`/`atan`, guarded `÷`/`sqrt`/`ln`/`pow`, and `if`),
-spanning straight-line **and** control-flow kernels, plus **n-ary reductions** (`Σ`, dot
-product, norm) with an explicit `((1+w)ⁿ−1)` constant — so the basis now covers scalar
-trees, branches, *and* variable-length vectors. Reaching **456/517** of the real
-eml-stdlib, agreeing across precisions and over iterations, bound to `tree_hash`, and
-**drift-gated** (a kernel cannot silently diverge from the bound that certifies it). All
-`sorryAx`-free; 3 axioms (the `atan` primitive). The remaining scalar off-basis is
-structural (discontinuity), not missing operators.
-Each file's header states what it adds; this front door is the map.
+spanning **three axes** — straight-line trees, **control flow** (branch-robust `if`), and
+**n-ary reductions** (`Σ`, dot, norm, with an explicit `((1+w)ⁿ−1)` constant). It **reaches
+across precisions** (`gexpr_cross_target`) and **over iterations** (the contraction
+trajectory lift), is **bound to the shipped kernels** via `tree_hash`, and the binding is
+**drift-gated** (`check.py`). It is **measured, not assumed**: median ~10× the observed f64
+error over 349 stdlib kernels, **empirically sound** under a regression gate (0 violations
+over ~1.4M samples, at the libm-honest `4u` budget). And the *boundary* of what it covers is
+itself a **theorem** (`OperatorAdmissibility`): admissible ⇔ finite local condition number,
+proved both directions — the certified operators are instances, `floor` provably is not, and
+the guards are exactly the poles. Coverage **456/517** of the real eml-stdlib; the off-basis
+~12% is *structural* (discontinuity, non-scalar shape), not missing operators.
+
+Everything is `sorryAx`-free and rests on **3 axioms** (the `atan` primitive + its
+derivative); `aerr_ite`/`aerr_sum`/the admissibility theorems/`expUO` added **none**. Each
+file's header states what it adds; this front door is the map. The genuinely-remaining work
+is different in kind — a relative bound for the deepest amplifying kernels (small residual,
+partly a sampling artifact), or auto-emitting `expUO` more widely — not more operators.
