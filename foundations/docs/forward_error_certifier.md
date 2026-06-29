@@ -184,10 +184,15 @@ arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax,
 the sign of the argument. **This is now addressed** by the upper-bound-aware exp rule
 (`aerr_exp_upper` / the `expUO` node): when the argument is bounded above by `U`, the
 magnitude is the tight `exp U`, not `exp |arg|`. For `exp(−x²)` with `U = 0` the magnitude
-is `exp 0 = 1` instead of `exp(x²)` — collapsing the envelope by exactly `exp(x²)` (measured:
-15000× → 270× at `x = 2`; 7.7·10⁸× → 9.5·10⁴× at `x = 3`). The residual is ordinary
-propagation, not the envelope. (`forge_gaussian_tight` machine-checks it; the binder needs
-argument-range analysis to auto-emit `expUO`.) Probe: `tools/machlib_bind/tightness.py`.
+is `exp 0 = 1` instead of `exp(x²)` — collapsing the envelope by exactly `exp(x²)`. The
+binder **auto-emits** it: a static sign analysis (riding on the `divO` guards, which force
+every denominator positive) detects `exp` of a provably non-positive argument and emits
+`expUO … 0` — 14 stdlib kernels (gaussian, fog, the photoreceptor sensitivities, …). Measured
+per-kernel improvement up to **~10⁴⁹×** (`cone_s`), `tapetum` 2.6·10¹⁵× → 2·10⁴×, with the
+clean gaussians tightening modestly (`gaussian` 5.7× → 4.0×). The exp *magnitude* looseness
+is killed; the residual on the deepest kernels is a *separate* source — the argument's own
+error bound `exp(Eb_arg)` — not the envelope. (`forge_gaussian_tight` machine-checks the
+rule.) Probe: `tools/machlib_bind/tightness.py`.
 
 ## 8. Check it yourself
 
