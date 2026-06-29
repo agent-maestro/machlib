@@ -127,7 +127,30 @@ kernels: quantum gates, DFT/FFT, simplex/voronoi noise). These remaining classes
 *structural* (discontinuity, non-scalar shape), not missing operators — `floor`/`tuple`/
 complex cannot be a Lipschitz scalar tree.
 
-## 6. What this does NOT claim
+## 6. Why *these* operators — the boundary is a theorem
+
+The 88.2% is empirical; the *reason* the other ~12% are excluded is not. `OperatorAdmissibility`
+makes the boundary a theorem. An operator is certifiable only if it is **Lipschitz** — a
+bounded input error `E` must yield an output error `≤ L·E` that vanishes as `E → 0` (the `L`
+*is* the local condition number). That is the abstract property the per-operator rules
+deliver, named `ForwardBoundable`, with both directions proved:
+
+- **Sufficiency** — the certified operators are instances: `fb_abs`, `fb_clamp`, `fb_sin`,
+  `fb_cos`, `fb_tanh`, `fb_atan` (all 1-Lipschitz), and `fb_propagate` is the
+  error-propagation consequence the fold threads through each node.
+- **Necessity** — `heaviside_not_forwardBoundable`: the unit step (the local shape of `floor`
+  at an integer) admits **no** Lipschitz constant. A unit jump over an interval of width
+  `1/(L+1)` forces `1 ≤ L/(L+1) < 1` — a contradiction for every finite `L`. So `floor`
+  isn't an unimplemented operator; it is *provably* uncertifiable in this framework.
+- **The guard is necessary** — `recip_no_magnitude_bound`: unguarded `1/x` has no magnitude
+  bound near `0` (for any `M` a positive `x` gives `M·x < 1`, i.e. `M < 1/x`). That is the
+  structural reason `÷`/`√`/`ln`/`pow` carry a denominator guard `m ≤ |denom|`.
+
+So "why these operators" has a precise answer: the admissible ones are exactly those with a
+finite local condition number (Lipschitz), and the guards are exactly where an operator
+would otherwise have none. The exclusions are a characterization, not a to-do list.
+
+## 7. What this does NOT claim
 
 - Not a verified compiler — it certifies the *expression*, and binds it to the shipped
   kernel via `tree_hash`; it does not prove the backend lowering is correct.
@@ -153,7 +176,7 @@ arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax,
 sound but *loose* (10³⁺×) because the `exp(Mbound)` magnitude envelope is pessimistic — a
 relative bound for that family is the natural tightening. Probe: `tools/machlib_bind/tightness.py`.
 
-## 7. Check it yourself
+## 8. Check it yourself
 
 ```bash
 # Build the whole certifier (part of the MachLib aggregate):
@@ -172,7 +195,7 @@ PYTHONPATH=<forge> python3 tools/machlib_bind/check.py --dir <eml-stdlib>
 The certifier spans `OperatorBasisSound` / `OperatorBasisTrans` / `OperatorBasisGeneral`
 / `DivisionError` / `OperatorBasisComplete` / `TrajectoryCertified` / `ForgeBindingDemo`.
 
-## 8. Status
+## 9. Status
 
 Consolidated. 17-operator basis (arithmetic + `abs`/`clamp`, the transcendentals
 `exp`/`sin`/`cos`/`tanh`/`sinh`/`cosh`/`atan`, guarded `÷`/`sqrt`/`ln`/`pow`, and `if`),
