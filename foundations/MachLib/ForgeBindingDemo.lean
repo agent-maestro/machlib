@@ -190,4 +190,23 @@ theorem forge_deadzone_cross_target {w1 w2 x thr p1 p2 : Real}
       (GRoundedEval.add (GRoundedEval.leaf x) (GRoundedEval.neg (GRoundedEval.leaf thr)) hp2))
     ⟨trivial, trivial, trivial⟩
 
+/-- **The amplifying-family tightening — `exp(−x²)` (the Gaussian core).** The plain `expO`
+rule bounds this kernel's magnitude by `exp |arg| = exp(x²)` — astronomically loose (the
+tightness probe measured 10³–10¹⁵× error/bound on the exp family), because the *symmetric*
+magnitude `exp |arg|` ignores the sign of the argument. The **upper-bound-aware** `expUO`
+with `U = 0` (the argument `−x² ≤ 0`) gives the **tight** magnitude `exp 0 = 1` and an error
+scaled by `1`, not `exp(x²)`. Validity needs only `−x² ≤ 0`, i.e. `0 ≤ x²`. -/
+theorem forge_gaussian_tight {w x vxx p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (hxx : RoundsW w vxx (x * x)) (hp : RoundsW w p (exp (-vxx))) :
+    abs (p - exp (-(x * x)))
+      ≤ (GExpr.expUO (.neg (.rleaf (x * x))) 0).Ebound w :=
+  gexpr_fwd_error hw0 hw1
+    (GRoundedEval.expUO (GRoundedEval.neg (GRoundedEval.rleaf hxx)) hp)
+    ⟨trivial, neg_nonpos_of_nonneg (mul_self_nonneg x)⟩
+
+/-- The tightening made explicit: the certified magnitude of `exp(−x²)` is `exp 0` (`= 1`)
+under `expUO … 0` — not the loose `exp(x²)` the plain `expO` rule would give. -/
+theorem forge_gaussian_mbound_tight (x : Real) :
+    (GExpr.expUO (.neg (.rleaf (x * x))) 0).Mbound = exp 0 := rfl
+
 end MachLib.Real

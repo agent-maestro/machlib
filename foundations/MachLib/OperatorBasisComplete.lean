@@ -282,6 +282,7 @@ inductive GExpr where
   | lnO  (a : GExpr) (m : Real)         -- `log a`, `a` bounded below by `m > 0`
   | powO (a : GExpr) (y m : Real)       -- `a^y` (native pow), base `≥ m > 0`, exponent `y ≥ 0`
   | iteO (c : Bool) (a b : GExpr)       -- `if c then a else b`, branch-robust (`c` shared by exact)
+  | expUO (a : GExpr) (U : Real)        -- `exp a` with argument bounded above (`a.exact ≤ U`): tight magnitude `exp U`
 
 /-- The exact value. -/
 noncomputable def GExpr.exact : GExpr → Real
@@ -304,6 +305,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .lnO a _     => log (GExpr.exact a)
   | .powO a y _  => rpow (GExpr.exact a) y
   | .iteO c a b  => cond c (GExpr.exact a) (GExpr.exact b)
+  | .expUO a _   => exp (GExpr.exact a)
   termination_by structural t => t
 
 /-- Magnitude bound (`÷` uses the lower bound: `|a/b| ≤ Mbound a / m`). -/
@@ -327,6 +329,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .lnO a m     => max (abs (log m)) (abs (log (GExpr.Mbound a)))
   | .powO a y _  => rpow (GExpr.Mbound a) y
   | .iteO _ a b  => max (GExpr.Mbound a) (GExpr.Mbound b)
+  | .expUO _ U   => exp U
   termination_by structural t => t
 
 /-- Forward-error bound (`÷` term is `aerr_div`'s, every part scaled by `1/m`). -/
@@ -357,6 +360,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .powO a y m  => rpow (GExpr.Mbound a) y
                     * (exp (y * (GExpr.Ebound w a / m)) * (1 + w) - 1)
   | .iteO _ a b  => max (GExpr.Ebound w a) (GExpr.Ebound w b)
+  | .expUO a U   => exp U * (exp (GExpr.Ebound w a) * (1 + w) - 1)
   termination_by structural t => t
 
 /-- Validity: at each `÷` node, the recorded bound is positive and below the exact
@@ -381,6 +385,7 @@ def GExpr.Valid : GExpr → Prop
   | .lnO a m     => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   | .powO a y m  => GExpr.Valid a ∧ 0 ≤ y ∧ 0 < m ∧ m ≤ GExpr.exact a
   | .iteO _ a b  => GExpr.Valid a ∧ GExpr.Valid b
+  | .expUO a U   => GExpr.Valid a ∧ GExpr.exact a ≤ U
   termination_by structural t => t
 
 /-- Any per-node-rounded evaluation. `divO` additionally witnesses the computed
@@ -422,6 +427,8 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hb : GRoundedEval w b vb) : GRoundedEval w (.iteO c a b) (cond c va vb)
       -- both branches evaluated under the SAME `c`: the branch-robust selection (the
       -- min/max test is exact, so the selection itself adds no rounding)
+  | expUO {a : GExpr} {U va p : Real} (ha : GRoundedEval w a va)
+      (hp : RoundsW w p (exp va)) : GRoundedEval w (.expUO a U) p
 
 /-- **The complete certifier.** Any per-node-rounded evaluation of a `Valid` expression
 over the *full* operator basis (division included) carries the `AErr` magnitude+error
@@ -451,6 +458,7 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | powO _ hmv hp iha =>
       exact fun hv => aerr_pow hw0 hw1 hv.2.1 hv.2.2.1 hmv hv.2.2.2 (iha hv.1) hp
   | iteO c _ _ iha ihb => exact fun hv => aerr_ite c (iha hv.1) (ihb hv.2)
+  | expUO _ hp iha => exact fun hv => aerr_exp_upper hw0 hw1 (iha hv.1) hv.2 hp
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound`, for any `Valid` kernel. -/
 theorem gexpr_fwd_error {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)

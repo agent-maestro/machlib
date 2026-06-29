@@ -135,6 +135,33 @@ theorem aerr_exp {w M E v ve p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
       exact sub_nonneg_of_le hprod
     exact le_trans (exp_grow hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
 
+/-- **Relative (upper-bound-aware) `exp` rule.** When the argument is bounded *above* by `U`
+(`ve ≤ U`), the magnitude is the **tight** `exp U` and the error is scaled by `exp U` — not
+the symmetric `exp |arg|` of `aerr_exp`. For an argument that is non-positive (e.g.
+`exp(−x²)`, take `U = 0`) this gives magnitude `exp 0 = 1` instead of the loose `exp |arg|`,
+killing the amplifying-family looseness the tightness probe measured. The proof is `aerr_exp`'s,
+with the magnitude read off a one-sided `ve ≤ U` rather than `|ve| ≤ M` (`exp` is monotone, so
+`exp ve ≤ exp U`). -/
+theorem aerr_exp_upper {w M E v ve U p : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
+    (h : AErr M E v ve) (hU : ve ≤ U) (hp : RoundsW w p (exp v)) :
+    AErr (exp U) (exp U * (exp E * (1 + w) - 1)) p (exp ve) := by
+  have hE0 : 0 ≤ E := le_trans (abs_nonneg (v - ve)) h.2
+  have hpre : exp ve ≤ exp U := exp_monotone hU
+  refine ⟨?_, ?_⟩
+  · rw [abs_of_nonneg (le_of_lt (exp_pos ve))]; exact hpre
+  · have hfac0 : 0 ≤ exp E * (1 + w) - 1 := by
+      have he1 : 1 ≤ exp E := by have h := exp_monotone hE0; rwa [exp_zero] at h
+      have hw1' : (1 : Real) ≤ 1 + w := le_add_of_nonneg_right hw0
+      have hstep1 : (1 : Real) ≤ exp E :=
+        le_trans (le_of_eq (one_mul_thm 1).symm)
+          (le_trans (mul_le_mul_of_nonneg_right he1 (le_of_lt zero_lt_one_ax))
+                    (le_of_eq (by mach_ring)))
+      have hprod : (1 : Real) ≤ exp E * (1 + w) :=
+        le_trans hstep1 (le_trans (le_of_eq (mul_one_ax (exp E)).symm)
+          (mul_le_mul_of_nonneg_left hw1' (le_of_lt (exp_pos E))))
+      exact sub_nonneg_of_le hprod
+    exact le_trans (exp_grow hw0 hw1 hE0 h.2 hp) (mul_le_mul_of_nonneg_right hpre hfac0)
+
 /-- `sin`: bounded magnitude `1`, error `E + w` (bounded-Lipschitz). -/
 theorem aerr_sin {w M E v ve p : Real} (hw0 : 0 ≤ w)
     (h : AErr M E v ve) (hp : RoundsW w p (sin v)) : AErr 1 (E + w) p (sin ve) :=

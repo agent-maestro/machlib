@@ -179,9 +179,15 @@ functions — the bound is **a median 8× the observed f64 error** across 349 st
 (p10 3×, p90 124×; 89% within 100×). So the bounds are *useful*, not merely true. Two
 honest caveats the measurement surfaced: (1) you must instantiate `w = 2u` for the libm
 transcendentals (they're ~1 ulp, not correctly-rounded) or the bound undershoots — pure
-arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax, …) is
-sound but *loose* (10³⁺×) because the `exp(Mbound)` magnitude envelope is pessimistic — a
-relative bound for that family is the natural tightening. Probe: `tools/machlib_bind/tightness.py`.
+arithmetic stays sound at `u`; (2) the exp/amplifying family (gaussian, softmax, …) was
+*loose* (10³⁺×) because the *symmetric* `exp(Mbound) = exp(|arg|)` magnitude envelope ignores
+the sign of the argument. **This is now addressed** by the upper-bound-aware exp rule
+(`aerr_exp_upper` / the `expUO` node): when the argument is bounded above by `U`, the
+magnitude is the tight `exp U`, not `exp |arg|`. For `exp(−x²)` with `U = 0` the magnitude
+is `exp 0 = 1` instead of `exp(x²)` — collapsing the envelope by exactly `exp(x²)` (measured:
+15000× → 270× at `x = 2`; 7.7·10⁸× → 9.5·10⁴× at `x = 3`). The residual is ordinary
+propagation, not the envelope. (`forge_gaussian_tight` machine-checks it; the binder needs
+argument-range analysis to auto-emit `expUO`.) Probe: `tools/machlib_bind/tightness.py`.
 
 ## 8. Check it yourself
 
