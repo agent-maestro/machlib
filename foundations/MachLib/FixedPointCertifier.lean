@@ -1,4 +1,5 @@
 import MachLib.FixedPoint
+import MachLib.OperatorClamp3
 
 /-!
 # The fixed-point forward-error certifier — Hardware Leg A (general fold)
@@ -99,6 +100,21 @@ theorem fxerr_clamp {M E v ve lo hi : Real} (hlohi : lo ≤ hi) (h : FxErr M E v
   · exact le_trans (neg_le_neg (lo_le_clamp ve lo hi hlohi))
       (le_trans (neg_le_abs lo) (le_max_left _ _))
 
+/-- **Joint-Lipschitz clamp** (computed/rounded edges). When a fixed-point clamp's `lo`/`hi`
+are *truncated* values (e.g. `alpha·x` on the grid — the parametric ReLU) they carry their own
+error; `clamp` is jointly 1-Lipschitz (it adds no truncation, `min`/`max` select an existing
+grid value), so the additive errors sum: `E = Ev + Elo + Ehi`, magnitude `max Mlo Mhi`. The
+fixed-point analogue of `aerr_clamp3`; reuses the same `clamp_lipschitz3`/`clamp_abs_le`. -/
+theorem fxerr_clamp3 {Mv Ev v ve Mlo Elo lo loe Mhi Ehi hi hie : Real}
+    (hv : FxErr Mv Ev v ve) (hlo : FxErr Mlo Elo lo loe) (hhi : FxErr Mhi Ehi hi hie) :
+    FxErr (max Mlo Mhi) (Ev + Elo + Ehi) (clamp v lo hi) (clamp ve loe hie) := by
+  refine ⟨?_, ?_⟩
+  · refine le_trans (clamp_abs_le ve loe hie) ?_
+    exact max_le (le_trans hlo.1 (le_max_left Mlo Mhi))
+                 (le_trans hhi.1 (le_max_right Mlo Mhi))
+  · refine le_trans (clamp_lipschitz3 v lo hi ve loe hie) ?_
+    exact add_le_add_both (add_le_add_both hv.2 hlo.2) hhi.2
+
 /-! ## the fold over a fixed-point arithmetic+clamp expression -/
 
 inductive FxExpr where
@@ -108,6 +124,7 @@ inductive FxExpr where
   | add   (a b : FxExpr)
   | mul   (a b : FxExpr)
   | clampO (a : FxExpr) (lo hi : Real)
+  | clampO3 (a lo hi : FxExpr)          -- clamp with COMPUTED (rounded) edges — joint additive error
 
 noncomputable def FxExpr.exact : FxExpr → Real
   | .leaf ve     => ve
@@ -116,6 +133,7 @@ noncomputable def FxExpr.exact : FxExpr → Real
   | .add a b     => FxExpr.exact a + FxExpr.exact b
   | .mul a b     => FxExpr.exact a * FxExpr.exact b
   | .clampO a lo hi => clamp (FxExpr.exact a) lo hi
+  | .clampO3 a lo hi => clamp (FxExpr.exact a) (FxExpr.exact lo) (FxExpr.exact hi)
   termination_by structural t => t
 
 noncomputable def FxExpr.Mbound : FxExpr → Real
@@ -125,6 +143,7 @@ noncomputable def FxExpr.Mbound : FxExpr → Real
   | .add a b     => FxExpr.Mbound a + FxExpr.Mbound b
   | .mul a b     => FxExpr.Mbound a * FxExpr.Mbound b
   | .clampO _ lo hi => max (abs lo) (abs hi)
+  | .clampO3 _ lo hi => max (FxExpr.Mbound lo) (FxExpr.Mbound hi)
   termination_by structural t => t
 
 /-- Additive forward-error bound, parametric in the fixed-point step `s`. -/
@@ -136,6 +155,7 @@ noncomputable def FxExpr.Ebound (s : Real) : FxExpr → Real
   | .mul a b     => FxExpr.Mbound a * FxExpr.Ebound s b + FxExpr.Mbound b * FxExpr.Ebound s a
                     + FxExpr.Ebound s a * FxExpr.Ebound s b + s
   | .clampO a _ _ => FxExpr.Ebound s a
+  | .clampO3 a lo hi => FxExpr.Ebound s a + FxExpr.Ebound s lo + FxExpr.Ebound s hi
   termination_by structural t => t
 
 def FxExpr.Valid : FxExpr → Prop
@@ -145,6 +165,7 @@ def FxExpr.Valid : FxExpr → Prop
   | .add a b     => FxExpr.Valid a ∧ FxExpr.Valid b
   | .mul a b     => FxExpr.Valid a ∧ FxExpr.Valid b
   | .clampO a lo hi => FxExpr.Valid a ∧ lo ≤ hi
+  | .clampO3 a lo hi => FxExpr.Valid a ∧ FxExpr.Valid lo ∧ FxExpr.Valid hi
   termination_by structural t => t
 
 /-- A per-node-truncated fixed-point evaluation: each `+`/`×` truncates (`TruncW s`); the
@@ -159,6 +180,9 @@ inductive FxRoundedEval (s : Real) : FxExpr → Real → Prop where
       (hp : TruncW s p (va * vb)) : FxRoundedEval s (.mul a b) p
   | clampO {a : FxExpr} {va lo hi : Real} (ha : FxRoundedEval s a va) :
       FxRoundedEval s (.clampO a lo hi) (clamp va lo hi)
+  | clampO3 {a lo hi : FxExpr} {va vlo vhi : Real} (ha : FxRoundedEval s a va)
+      (hlo : FxRoundedEval s lo vlo) (hhi : FxRoundedEval s hi vhi) :
+      FxRoundedEval s (.clampO3 a lo hi) (clamp va vlo vhi)
 
 /-- **The fixed-point certifier.** Any per-node-truncated evaluation of a `Valid` kernel over
 the fixed-point arithmetic+clamp basis carries the additive forward-error certificate — one
@@ -173,6 +197,8 @@ theorem fx_sound {s : Real} (hs : 0 ≤ s) {t : FxExpr} {v : Real} (h : FxRounde
   | add _ _ hp iha ihb => exact fun hv => fxerr_add hs (iha hv.1) (ihb hv.2) hp
   | mul _ _ hp iha ihb => exact fun hv => fxerr_mul hs (iha hv.1) (ihb hv.2) hp
   | clampO _ iha       => exact fun hv => fxerr_clamp hv.2 (iha hv.1)
+  | clampO3 _ _ _ iha ihlo ihhi =>
+      exact fun hv => fxerr_clamp3 (iha hv.1) (ihlo hv.2.1) (ihhi hv.2.2)
 
 /-- The forward-error corollary: `|v − exact| ≤ Ebound s`, any `Valid` fixed-point kernel. -/
 theorem fx_fwd_error {s : Real} (hs : 0 ≤ s) {t : FxExpr} {v : Real}
