@@ -1,6 +1,7 @@
 import MachLib.OperatorBasisComplete
 import MachLib.TrigLipschitz
 import MachLib.FixedPoint
+import MachLib.HyperbolicId
 
 /-!
 # Why *these* operators? — an admissibility characterization (both directions)
@@ -25,6 +26,13 @@ local condition number). The certifier's per-operator rules are instances; the d
   is a theorem, not a coverage gap.
 * **The guard is necessary** (`recip_no_magnitude_bound`): unguarded `1/x` has no magnitude
   bound near `0`, the structural reason `÷`/`√`/`ln`/`pow` carry a denominator guard.
+* **The airtight refinement** (`LocallyBoundable`, `lb_exp`/`lb_sinh`/`lb_cosh`): global
+  Lipschitz misses the *amplifying* operators (`exp`/`sinh`/`cosh` have unbounded slope), so
+  the honest notion is **local** Lipschitz-ness — a finite local condition number on every
+  bounded range `[−R, R]`. Under it the certified basis is captured *in full*, amplifying ops
+  included, while `floor` still fails (`heaviside_not_locallyBoundable`). The characterization
+  is then total: admissible ⇔ finite local condition number; the guards are exactly the poles
+  where that fails; the discontinuities are excluded outright.
 
 `sorryAx`-free; no new axioms.
 -/
@@ -115,5 +123,85 @@ theorem recip_no_magnitude_bound {M : Real} (hM : 0 ≤ M) : ∃ x : Real, 0 < x
       (one_div_pos_of_pos hM1) hMM1
     rw [div_mul_cancel (ne_of_gt hM1)] at hmul
     rwa [mul_comm M (1 / (M + 1))]
+
+/-! ## Local boundedness — the airtight characterization (incl. the amplifying operators)
+
+`ForwardBoundable` (global Lipschitz) is the right notion for the 1-Lipschitz family, but the
+**amplifying** operators `exp`/`sinh`/`cosh` are *not* globally Lipschitz (their slope grows
+without bound) — yet they are exactly the operators the certifier handles via a *magnitude
+envelope*. The honest notion is **local** Lipschitz-ness: on every bounded range `[−R, R]`
+there is a finite constant `L(R)` (the *local condition number*). This captures the whole
+certified basis — amplifying ops included — while the discontinuous `floor` still fails. -/
+
+/-- `f` is **locally boundable**: on every `[−R, R]` it is Lipschitz with some finite
+constant `L(R)`. The certifier's true admissibility notion (it always works with
+magnitude-bounded inputs), broad enough to include the amplifying operators. -/
+def LocallyBoundable (f : Real → Real) : Prop :=
+  ∀ R : Real, 0 ≤ R → ∃ L : Real, 0 ≤ L ∧
+    ∀ v ve, abs v ≤ R → abs ve ≤ R → abs (f v - f ve) ≤ L * abs (v - ve)
+
+/-- Global Lipschitz ⇒ locally boundable (the same `L` works on every range). So every
+`ForwardBoundable` operator is `LocallyBoundable`. -/
+theorem ForwardBoundable.locallyBoundable {f : Real → Real} (h : ForwardBoundable f) :
+    LocallyBoundable f := by
+  obtain ⟨L, hL, hlip⟩ := h
+  exact fun R _ => ⟨L, hL, fun v ve _ _ => hlip v ve⟩
+
+theorem lb_abs : LocallyBoundable abs := fb_abs.locallyBoundable
+theorem lb_clamp (lo hi : Real) : LocallyBoundable (fun x => clamp x lo hi) :=
+  (fb_clamp lo hi).locallyBoundable
+theorem lb_sin : LocallyBoundable sin := fb_sin.locallyBoundable
+theorem lb_cos : LocallyBoundable cos := fb_cos.locallyBoundable
+theorem lb_tanh : LocallyBoundable tanh := fb_tanh.locallyBoundable
+theorem lb_atan : LocallyBoundable atan := fb_atan.locallyBoundable
+
+/-- `exp` is Lipschitz on `[−R, R]` with constant `exp R` — derived from the hyperbolic
+bounds via `exp = cosh + sinh`: `|exp a − exp b| ≤ |cosh a − cosh b| + |sinh a − sinh b| ≤
+(sinh R + cosh R)·|a − b| = exp R·|a − b|`. -/
+theorem exp_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R) :
+    abs (exp a - exp b) ≤ exp R * abs (a - b) := by
+  have hrw : exp a - exp b = (cosh a - cosh b) + (sinh a - sinh b) := by
+    rw [← cosh_add_sinh_eq_exp a, ← cosh_add_sinh_eq_exp b]; mach_ring
+  have hfold : sinh R * abs (a - b) + cosh R * abs (a - b) = exp R * abs (a - b) := by
+    rw [← cosh_add_sinh_eq_exp R]; mach_ring
+  rw [hrw]
+  exact le_trans (abs_add (cosh a - cosh b) (sinh a - sinh b))
+    (le_trans (add_le_add_both (cosh_lipschitz_bound ha hb) (sinh_lipschitz_bound ha hb))
+      (le_of_eq hfold))
+
+/-- **The amplifying operators ARE locally boundable** (each with its local condition number
+as the constant): `exp` with `exp R`, `sinh` with `cosh R`, `cosh` with `sinh R` on `[−R, R]`.
+Global Lipschitz misses these; local Lipschitz captures them. -/
+theorem lb_exp : LocallyBoundable exp :=
+  fun R _ => ⟨exp R, le_of_lt (exp_pos R), fun _ _ hv hve => exp_lipschitz_bound hv hve⟩
+theorem lb_sinh : LocallyBoundable sinh :=
+  fun R _ => ⟨cosh R, le_of_lt (cosh_pos R), fun _ _ hv hve => sinh_lipschitz_bound hv hve⟩
+theorem lb_cosh : LocallyBoundable cosh :=
+  fun R hR => ⟨sinh R, sinh_nonneg hR, fun _ _ hv hve => cosh_lipschitz_bound hv hve⟩
+
+/-- **`floor` is not even locally boundable.** The jump at `0` sits inside *every* range
+`[−R, R]` with `R > 0`, so the same unit-gap-over-width-`1/(L+1)` contradiction kills any
+local constant too. So the discontinuity is excluded under the certifier's *actual* (local)
+admissibility notion, not merely the global one — the boundary is airtight. -/
+theorem heaviside_not_locallyBoundable : ¬ LocallyBoundable heaviside := by
+  intro h
+  obtain ⟨L, hL0, hbound⟩ := h 1 (le_of_lt one_pos)
+  have hL1 : (0 : Real) < L + 1 := lt_of_lt_of_le one_pos (le_add_of_nonneg_left hL0)
+  have ht : (0 : Real) < 1 / (L + 1) := one_div_pos_of_pos hL1
+  have hLL1 : L < L + 1 := by have h := add_lt_add_left one_pos L; rwa [add_zero] at h
+  have hv0 : abs (0 : Real) ≤ 1 := by rw [abs_zero]; exact le_of_lt one_pos
+  have hvt : abs (-(1 / (L + 1))) ≤ 1 := by
+    rw [abs_neg, abs_of_nonneg (le_of_lt ht)]
+    exact div_le_one_of_le_of_pos hL1 (le_add_of_nonneg_left hL0)
+  have hjump := hbound 0 (-(1 / (L + 1))) hv0 hvt
+  rw [heaviside_zero, heaviside_neg (neg_neg_of_pos ht),
+      show (1 : Real) - 0 = 1 from by mach_ring, abs_one,
+      show (0 : Real) - (-(1 / (L + 1))) = 1 / (L + 1) from by mach_ring,
+      abs_of_nonneg (le_of_lt ht)] at hjump
+  have hlt : L * (1 / (L + 1)) < 1 := by
+    have hmul : (1 / (L + 1)) * L < (1 / (L + 1)) * (L + 1) := mul_lt_mul_left_helper ht hLL1
+    rw [div_mul_cancel (ne_of_gt hL1)] at hmul
+    rwa [mul_comm L (1 / (L + 1))]
+  exact lt_irrefl_ax 1 (lt_of_le_of_lt hjump hlt)
 
 end MachLib.Real

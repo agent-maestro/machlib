@@ -145,10 +145,17 @@ deliver, named `ForwardBoundable`, with both directions proved:
 - **The guard is necessary** — `recip_no_magnitude_bound`: unguarded `1/x` has no magnitude
   bound near `0` (for any `M` a positive `x` gives `M·x < 1`, i.e. `M < 1/x`). That is the
   structural reason `÷`/`√`/`ln`/`pow` carry a denominator guard `m ≤ |denom|`.
+- **Airtight, including the amplifying operators** — global Lipschitz misses `exp`/`sinh`/`cosh`
+  (their slope is unbounded), so the honest notion is `LocallyBoundable`: a finite local
+  condition number on every bounded range `[−R, R]`. Under it the certified basis is captured
+  *in full* — `lb_exp` (constant `exp R`), `lb_sinh`, `lb_cosh`, and the 1-Lipschitz ops as a
+  special case — while `floor` still fails (`heaviside_not_locallyBoundable`: the jump lives
+  in every range).
 
-So "why these operators" has a precise answer: the admissible ones are exactly those with a
-finite local condition number (Lipschitz), and the guards are exactly where an operator
-would otherwise have none. The exclusions are a characterization, not a to-do list.
+So "why these operators" has a precise, two-sided answer: **admissible ⇔ finite local
+condition number**; the guards are exactly the poles where that number is infinite; the
+discontinuities (`floor`) are excluded outright. The exclusions are a characterization, not a
+to-do list.
 
 ## 7. What this does NOT claim
 
