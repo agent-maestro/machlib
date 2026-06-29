@@ -73,6 +73,11 @@ sharper/simpler results where they apply; `gexpr_sound` is the one that covers e
 - **Cross-target** (`gexpr_cross_target`): the same kernel at two unit-roundoffs `w₁, w₂`
   (an `f32` shader lane, an `f64` software lane) agrees to within `Ebound w₁ + Ebound w₂`
   — both enclose the single exact value. One proof for every kernel, division included.
+  **Now measured + gated:** the real f64 lane (libm) and f32 lane (numpy.float32) of every
+  stdlib kernel agree within the proven bound at *all* ~483 k sampled points — **0 violations,
+  median ~9× slack** — so "one source → precision targets, the same function to a proven
+  tolerance" is a checked fact, not a claim (`tools/machlib_bind/crosstarget.py`, regression-
+  gated by `test_crosstarget_gate.py`).
 - **Trajectory** (`TrajectoryCertified.iterated_kernel_trajectory`): a kernel iterated by
   an `L`-contraction has whole-run error `≤ ε·geom L n ≤ ε/(1−L)`, where `ε` is the
   certifier's per-evaluation `Ebound` made orbit-uniform. The per-evaluation guarantee
