@@ -2,6 +2,7 @@ import MachLib.DivisionError
 import MachLib.EntropyDuality
 import MachLib.HyperbolicLipschitz
 import MachLib.InverseTrig
+import MachLib.OperatorClamp3
 
 /-!
 # The complete operator-basis certifier — one fold, every operator including division
@@ -278,6 +279,7 @@ inductive GExpr where
   | atanO (a : GExpr)
   | divO  (a b : GExpr) (m : Real)
   | clampO (a : GExpr) (lo hi : Real)
+  | clampO3 (a lo hi : GExpr)           -- `clamp a lo hi` with COMPUTED (rounded) edges — joint-Lipschitz
   | sqrtO (a : GExpr) (m : Real)        -- `√a`, `a` bounded below by `m > 0`
   | lnO  (a : GExpr) (m : Real)         -- `log a`, `a` bounded below by `m > 0`
   | powO (a : GExpr) (y m : Real)       -- `a^y` (native pow), base `≥ m > 0`, exponent `y ≥ 0`
@@ -301,6 +303,7 @@ noncomputable def GExpr.exact : GExpr → Real
   | .atanO a     => atan (GExpr.exact a)
   | .divO a b _  => GExpr.exact a / GExpr.exact b
   | .clampO a lo hi => clamp (GExpr.exact a) lo hi
+  | .clampO3 a lo hi => clamp (GExpr.exact a) (GExpr.exact lo) (GExpr.exact hi)
   | .sqrtO a _   => sqrt (GExpr.exact a)
   | .lnO a _     => log (GExpr.exact a)
   | .powO a y _  => rpow (GExpr.exact a) y
@@ -325,6 +328,7 @@ noncomputable def GExpr.Mbound : GExpr → Real
   | .atanO a     => GExpr.Mbound a
   | .divO a _ m  => GExpr.Mbound a / m
   | .clampO _ lo hi => max (abs lo) (abs hi)
+  | .clampO3 _ lo hi => max (GExpr.Mbound lo) (GExpr.Mbound hi)
   | .sqrtO a _   => sqrt (GExpr.Mbound a)
   | .lnO a m     => max (abs (log m)) (abs (log (GExpr.Mbound a)))
   | .powO a y _  => rpow (GExpr.Mbound a) y
@@ -353,6 +357,7 @@ noncomputable def GExpr.Ebound (w : Real) : GExpr → Real
   | .divO a b m  => w * ((GExpr.Mbound a + GExpr.Ebound w a) / m)
                     + (GExpr.Ebound w a / m + GExpr.Mbound a * GExpr.Ebound w b / (m * m))
   | .clampO a _ _ => GExpr.Ebound w a
+  | .clampO3 a lo hi => GExpr.Ebound w a + GExpr.Ebound w lo + GExpr.Ebound w hi
   | .sqrtO a m   => w * sqrt (GExpr.Mbound a + GExpr.Ebound w a)
                     + GExpr.Ebound w a / (sqrt m + sqrt m)
   | .lnO a m     => w * max (abs (log m)) (abs (log (GExpr.Mbound a + GExpr.Ebound w a)))
@@ -381,6 +386,7 @@ def GExpr.Valid : GExpr → Prop
   | .atanO a     => GExpr.Valid a
   | .divO a b m  => GExpr.Valid a ∧ GExpr.Valid b ∧ 0 < m ∧ m ≤ GExpr.exact b
   | .clampO a lo hi => GExpr.Valid a ∧ lo ≤ hi
+  | .clampO3 a lo hi => GExpr.Valid a ∧ GExpr.Valid lo ∧ GExpr.Valid hi
   | .sqrtO a m   => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   | .lnO a m     => GExpr.Valid a ∧ 0 < m ∧ m ≤ GExpr.exact a
   | .powO a y m  => GExpr.Valid a ∧ 0 ≤ y ∧ 0 < m ∧ m ≤ GExpr.exact a
@@ -417,6 +423,9 @@ inductive GRoundedEval (w : Real) : GExpr → Real → Prop where
       (hvb : m ≤ vb) (hp : RoundsW w p (va / vb)) : GRoundedEval w (.divO a b m) p
   | clampO {a : GExpr} {va lo hi : Real} (ha : GRoundedEval w a va) :
       GRoundedEval w (.clampO a lo hi) (clamp va lo hi)   -- min/max are exact: no rounding
+  | clampO3 {a lo hi : GExpr} {va vlo vhi : Real} (ha : GRoundedEval w a va)
+      (hlo : GRoundedEval w lo vlo) (hhi : GRoundedEval w hi vhi) :
+      GRoundedEval w (.clampO3 a lo hi) (clamp va vlo vhi)  -- edges computed; min/max still exact
   | sqrtO {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
       (hp : RoundsW w p (sqrt va)) : GRoundedEval w (.sqrtO a m) p
   | lnO  {a : GExpr} {va p m : Real} (ha : GRoundedEval w a va) (hmv : m ≤ va)
@@ -453,6 +462,8 @@ theorem gexpr_sound {w : Real} (hw0 : 0 ≤ w) (hw1 : w ≤ 1)
   | divO _ _ hvb hp iha ihb =>
       exact fun hv => aerr_div hw0 (iha hv.1) (ihb hv.2.1) hv.2.2.1 hvb hv.2.2.2 hp
   | clampO _ iha => exact fun hv => aerr_clamp hv.2 (iha hv.1)
+  | clampO3 _ _ _ iha ihlo ihhi =>
+      exact fun hv => aerr_clamp3 (iha hv.1) (ihlo hv.2.1) (ihhi hv.2.2)
   | sqrtO _ hmv hp iha => exact fun hv => aerr_sqrt hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
   | lnO _ hmv hp iha => exact fun hv => aerr_ln hw0 hv.2.1 hmv hv.2.2 (iha hv.1) hp
   | powO _ hmv hp iha =>

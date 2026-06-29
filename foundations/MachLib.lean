@@ -93,6 +93,7 @@ import MachLib.HybridError
 import MachLib.OperatorBasisTrans
 import MachLib.OperatorBasisGeneral
 import MachLib.DivisionError
+import MachLib.OperatorClamp3
 import MachLib.OperatorBasisComplete
 import MachLib.VectorError
 import MachLib.OperatorAdmissibility
