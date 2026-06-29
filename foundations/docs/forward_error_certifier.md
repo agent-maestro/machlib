@@ -82,6 +82,13 @@ sharper/simpler results where they apply; `gexpr_sound` is the one that covers e
   an `L`-contraction has whole-run error `≤ ε·geom L n ≤ ε/(1−L)`, where `ε` is the
   certifier's per-evaluation `Ebound` made orbit-uniform. The per-evaluation guarantee
   lifts to the whole loop (controllers, filters, solvers).
+- **Fixed-point / RTL** (`FixedPointCertifier.fx_sound`): the same idea for Forge's
+  *hardware* lane, where each op truncates onto the Q-grid so the error is **additive** (`≤ s
+  = 2⁻ᶠ` per op), not relative. One structural induction bounds the forward error of any kernel
+  over the fixed-point arithmetic+clamp basis `{leaf, neg, +, ×, clamp}` — the EML→RTL
+  forward-error backbone (Hardware Leg A), board-free, generalising the hand-proved PID bound.
+  The binder's `--fixedpoint` mode reaches **184/517** of the stdlib — the control/DSP/kinematics
+  fragment; division and transcendentals are off-basis (not grid primitives).
 - **Vectors / n-ary reductions** (`VectorError.aerr_sum`): the universal shapes — `Σ xᵢ`,
   dot product `Σ xᵢ·yᵢ`, squared norm `Σ xᵢ²` — are *variable-length* reductions, not one
   tree. `aerr_sum` certifies the accumulator loop `s := 0; for xᵢ: s := fl(s + xᵢ)` over
