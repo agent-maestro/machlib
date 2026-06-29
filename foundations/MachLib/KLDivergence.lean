@@ -76,5 +76,54 @@ theorem kl_nonneg_two {p1 q1 p2 q2 : Real}
             show q1 + (q2 + 0) = q1 + q2 from by mach_ring]
         exact hmass)
 
+/-! ## Cross-entropy ≥ entropy — Gibbs in its information-loss form -/
+
+/-- `log(q/p) = log q − log p` (both positive), local to this file (the certifier has its own
+`log_div`). Derived from `log_mul` + `p·(q/p) = q`. -/
+theorem log_div_qp {p q : Real} (hp : 0 < p) (hq : 0 < q) :
+    Real.log (q / p) = Real.log q - Real.log p := by
+  have hqp : 0 < q / p := div_pos_of_pos_pos hq hp
+  have key : Real.log q = Real.log (q / p) + Real.log p := by
+    have h1 : Real.log (p * (q / p)) = Real.log p + Real.log (q / p) := log_mul hp hqp
+    rw [mul_div_cancel' (ne_of_gt hp)] at h1
+    rw [h1]; mach_ring
+  rw [key]; mach_ring
+
+/-- `Σ pᵢ·log pᵢ` (= −entropy). -/
+noncomputable def nH (d : List (Real × Real)) : Real :=
+  d.foldr (fun c acc => c.1 * Real.log c.1 + acc) 0
+/-- `Σ pᵢ·log qᵢ` (= −cross-entropy). -/
+noncomputable def ncrossH (d : List (Real × Real)) : Real :=
+  d.foldr (fun c acc => c.1 * Real.log c.2 + acc) 0
+/-- Shannon entropy `H(p) = −Σ pᵢ·log pᵢ` (distribution-level; the scalar `entropy` is
+EntropyDuality's dual potential). -/
+noncomputable def shannonEntropy (d : List (Real × Real)) : Real := -nH d
+/-- Cross-entropy `H(p, q) = −Σ pᵢ·log qᵢ`. -/
+noncomputable def crossEntropy (d : List (Real × Real)) : Real := -ncrossH d
+
+/-- `klGap = Σ pᵢ·log(qᵢ/pᵢ) = (Σ pᵢ·log qᵢ) − (Σ pᵢ·log pᵢ)` — one list induction splitting
+each `log(qᵢ/pᵢ)` via `log_div`. -/
+theorem klGap_eq : ∀ {d : List (Real × Real)}, Pos d → klGap d = ncrossH d - nH d
+  | [], _ => by show (0 : Real) = 0 - 0; mach_ring
+  | (c :: r), h => by
+      obtain ⟨hp, hq, hr⟩ := h
+      show c.1 * Real.log (c.2 / c.1) + klGap r
+            = (c.1 * Real.log c.2 + ncrossH r) - (c.1 * Real.log c.1 + nH r)
+      rw [log_div_qp hp hq, klGap_eq hr]; mach_ring
+
+/-- `KL(p ‖ q) = crossEntropy − entropy` — the decomposition of relative entropy. -/
+theorem kl_eq_cross_sub_entropy {d : List (Real × Real)} (h : Pos d) :
+    crossEntropy d - shannonEntropy d = kl d := by
+  show -ncrossH d - -nH d = -klGap d
+  rw [klGap_eq h]; mach_ring
+
+/-- **Cross-entropy ≥ entropy** (`H(p, q) ≥ H(p)`), with equality at `q = p` — the Gibbs
+inequality in its information-loss form: the *reason cross-entropy is a sound loss* (it is
+minimised, and equals the entropy, exactly when the model `q` matches the data `p`). A direct
+consequence of `kl_nonneg` via the `crossEntropy − entropy = KL` decomposition. -/
+theorem cross_entropy_ge_entropy {d : List (Real × Real)} (h : Pos d)
+    (hmass : psum d = qsum d) : shannonEntropy d ≤ crossEntropy d :=
+  le_of_sub_nonneg (by rw [kl_eq_cross_sub_entropy h]; exact kl_nonneg h hmass)
+
 end Real
 end MachLib
