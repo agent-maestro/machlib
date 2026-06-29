@@ -211,4 +211,36 @@ theorem dot3_fwd_wellcond {w a b c d e f p1 p2 p3 q r : Real} (hw0 : 0 ≤ w)
   rw [hsig, hsum] at hk
   exact hk
 
+/-! ## general N — the κ-bridge for any-length sums (`RSum_bound` ⋈ `kappa_bound_dominant_list`) -/
+
+/-- `labs` (FPModel) and `sigmaList` (ConditionNumber) are the same Σ|·| — bridge to compose
+the two files' theorems. -/
+theorem labs_eq_sigmaList : ∀ xs : List Real, labs xs = sigmaList xs
+  | [] => rfl
+  | x :: xs => by show abs x + labs xs = abs x + sigmaList xs; rw [labs_eq_sigmaList xs]
+
+/-- `lsum` (FPModel) and `sumList` (ConditionNumber) are the same Σ·. -/
+theorem lsum_eq_sumList : ∀ xs : List Real, lsum xs = sumList xs
+  | [] => rfl
+  | x :: xs => by show x + lsum xs = x + sumList xs; rw [lsum_eq_sumList xs]
+
+/-- **The three lenses at general N (forward).** For an arbitrary-length sequential rounded sum
+whose leading term dominates the magnitude of all the rest (`2·Σ|rest| ≤ |x₁|`, so `κ ≤ 3`, no
+cancellation), the **relative** forward error is `≤ 3·γₙ = 3·((1+w)ⁿ − 1)`, `n` the length.
+
+This is the any-`n` generalisation of `dot2/dot3_fwd_wellcond`: `RSum_bound` (Higham's N-term
+summation forward error, `≤ γₙ·Σ|xᵢ|`) supplies `γₙ`; `kappa_bound_dominant_list` (the N-term
+condition-number bound) turns `Σ|xᵢ|` into `≤ 3·|Σxᵢ|`. Forward ≲ κ·backward for sums of any
+length — the lens-join no longer fixed to 2 or 3 terms. -/
+theorem RSum_wellcond (w : Real) (hw0 : 0 ≤ w) {x1 : Real} {rest : List Real} {s : Real}
+    (h : RSum w (x1 :: rest) s) (hdom : (1 + 1) * labs rest ≤ abs x1) :
+    abs (s - lsum (x1 :: rest))
+      ≤ (npow (x1 :: rest).length (1 + w) - 1) * ((1 + 1 + 1) * abs (lsum (x1 :: rest))) := by
+  refine le_trans (RSum_bound w hw0 h) (mul_le_mul_of_nonneg_left ?_ ?_)
+  · rw [labs_eq_sigmaList (x1 :: rest), lsum_eq_sumList (x1 :: rest)]
+    have hdom' : (1 + 1) * sigmaList rest ≤ abs x1 := by
+      rw [← labs_eq_sigmaList rest]; exact hdom
+    exact kappa_bound_dominant_list hdom'
+  · exact sub_nonneg_of_le (one_le_npow (1 + w) (le_add_of_nonneg_right hw0) _)
+
 end MachLib.Real
