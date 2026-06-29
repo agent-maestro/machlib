@@ -586,7 +586,7 @@ axiom PfaffianFunction.zero_count_bound_classical (f : PfaffianFunction)
       (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
       zeros.length ≤ PfaffianRank f
 
-/-! ## Constructive Khovanskii bound via strong induction on rank -/
+/-! ## (roadmap) intended constructive Khovanskii bound via strong induction on rank -/
 
 /-! ## Strategic note (Phase C-final)
 
@@ -674,23 +674,21 @@ theorem pfaffian_derivative_zero_implies_nonzero_on
     rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
     exact step
 
-/-! ## The constructive Khovanskii bound theorem -/
+/-! ## The general-`PfaffianFunction` Khovanskii bound — via the classical axiom -/
 
-/-- **The constructive Khovanskii bound.** Replaces the previous
-session's `pfaffian_zero_count_bound_constructive` axiom with a
-proof. Conditional on the smaller axioms (base case, derivative-is-
-Pfaffian, rank-decrease, constant case) + Phase B's Rolle.
+/-- **The general-Pfaffian Khovanskii bound (a citation, NOT a constructive proof).**
+This is a thin wrapper around the axiom `PfaffianFunction.zero_count_bound_classical`
+(Khovanskii 1991, Ch. 3 Thm. 1) — its body is *one line*, `zero_count_bound_classical f …`.
+It is **not** proven here; it cites Khovanskii's classical theorem. (An earlier name,
+`…_constructive`, overclaimed — there is no induction here.) The intended constructive
+proof — strong induction on `PfaffianRank`, splitting on `f.derivative` — is documented
+as a roadmap below; it stalled on a *materially-false* `derivative_rank_lt` step and is
+not done. Nothing featured uses this theorem; the featured single-exp bound
+(`expPoly_khovanskii_bound`) and the constructive reduction (`khovanskii_bound_full`)
+do not depend on the classical axiom. Verify with `#print axioms`.
 
-Bound: zero count of `f` on `(a, b)` is at most `PfaffianRank f`.
-
-Proof: strong induction on `PfaffianRank f`.
-- Base case (`f.chain.order = 0`): polynomial bound + `rank = degree`.
-- Inductive step (`f.chain.order > 0`): split on whether `f.derivative`
-  is identically zero.
-  - If so: `f` is non-zero constant, so zero count = 0.
-  - If not: apply IH to `f.derivative` (smaller rank), then
-    `zero_count_bound_by_deriv` for `f`. -/
-theorem pfaffian_zero_count_bound_constructive (f : PfaffianFunction)
+Bound: zero count of `f` on `(a, b)` is at most `PfaffianRank f`. -/
+theorem pfaffian_zero_count_bound_classical (f : PfaffianFunction)
     (a b : Real) (hab : a < b)
     (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
     (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
@@ -760,19 +758,22 @@ axioms in Phase A).
 /-! ## Final closure of PfaffianFunction.zero_bound (2026-06-12)
 
 The Pfaffian.lean axiom `PfaffianFunction.zero_bound` is now a theorem
-in this file, proven by direct invocation of
-`pfaffian_zero_count_bound_constructive` (which uses strong induction
-on PfaffianRank, the polynomial FTA at the base, and Rolle at the
-inductive step). The closure relies on the fact that
-`pfaffian_zero_count_bound n d = n * 1000000 + d` (the formula chosen
-in Pfaffian.lean step 4) equals `PfaffianRank f` by definition. -/
+in this file — but proven by direct invocation of
+`pfaffian_zero_count_bound_classical`, which is itself a *citation* of the
+classical Khovanskii axiom `zero_count_bound_classical` (NOT a constructive
+proof; the strong-induction route stalled on the materially-false
+`derivative_rank_lt`). So `zero_bound` rests on that axiom transitively. The
+closure relies on `pfaffian_zero_count_bound n d = n * 1000000 + d` (the
+formula chosen in Pfaffian.lean step 4) equalling `PfaffianRank f` by
+definition. This is legacy general-`PfaffianFunction` machinery; nothing
+featured uses it (verify with `#print axioms`). -/
 theorem PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
     (hab : a < b)
     (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
     (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
     f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree) := by
   intro zeros hnodup hzeros
-  have hrank := pfaffian_zero_count_bound_constructive f a b hab h_valid hne
+  have hrank := pfaffian_zero_count_bound_classical f a b hab h_valid hne
                   zeros hnodup hzeros
   show zeros.length ≤ f.chain.order * 1000000 + f.degree
   exact hrank

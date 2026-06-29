@@ -76,7 +76,9 @@ MachLib is Mathlib-free *by design*. The cost of that choice is explicit: the
 things Mathlib would prove as theorems — the real-number field/order axioms, the
 definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`, the floating-point
 model — are **axioms** here. As of 2026-06-27 the trusted base is **260 axioms**.
-Two things make that honest rather than hand-wavy:
+But that one number lumps two very different kinds of axiom together, and the
+distinction is the whole point (tier list in **(c)**). Three things make the base
+honest rather than hand-wavy:
 
 **(a) The base is proven consistent, for the results that matter.**
 `#print axioms` proves a theorem has no `sorry`; it does *not* prove its axioms
@@ -110,6 +112,34 @@ one-sided trig bounds and `tan 0 = 0`. What remains is *defining* primitives
 unit roundoff, the carrier) — not derivable short of constructing ℝ, which is out
 of scope under the Mathlib-free doctrine. The full promotion list (which 32 axioms,
 each derivation) is tracked in the project's internal audit notes.
+
+**(c) Two tiers — foundational primitives vs mathematical assumptions.** A single
+count of 260 hides the axioms that actually matter. They split cleanly, and a reader
+is entitled to see which is which:
+
+- **Foundational primitives** (the overwhelming majority). The real-number field and
+  order, the carrier, the definitions and derivatives of `exp`/`sin`/`cos`/`log`/`sqrt`,
+  the FP unit roundoff, the Rolle zero-counting corollary. Mathlib proves every one of
+  these as a theorem; they are standard. Grounding them is the open Mathlib-free work
+  named above — *not* a claim about anything novel. Nobody should blink at these.
+- **Mathematical assumptions** (a named handful). Axioms that assert a *deep classical
+  theorem being cited*, not a substrate primitive — the asterisks, the contribution if
+  discharged and the gap if not:
+  - `PfaffianFunction.zero_count_bound_classical` — **Khovanskii's classical zero bound
+    (1991, Ch. 3 Thm. 1)**. Mathlib does not have this either. It is consumed *only* by
+    the legacy general-`PfaffianFunction` development; **no featured result and no
+    application touches it** (verify with `#print axioms`).
+  - `PfaffianFn.khovanskii_chain_step` — the chain-step form of the same classical bound,
+    for the newer chain-explicit infrastructure.
+  - `eml_pfaffian_validon_from_sin_equality` — the sin-barrier validity bridge the
+    EML-separation results lean on.
+
+The featured Khovanskii results stay in the first tier: the single-exp bound
+(`expPoly_khovanskii_bound`) is **proven outright**, and the general triangular-chain
+bound (`khovanskii_bound_full`) is a constructive **reduction** — given a reducibility
+witness it derives the bound from the Rolle corollary, with no classical-Khovanskii
+axiom. So the one deep assumption is isolated, named, and off the featured path. What is
+earned and what is cited never share a count.
 
 ---
 

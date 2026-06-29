@@ -222,9 +222,10 @@ is consistent and is restored here.
 matching PfaffianRank:** Previously axiomatized as opaque
 `Nat → Nat → Nat`, now defined as `n * 1000000 + d`. The 1000000
 factor matches `KhovanskiiLemma.PfaffianRank`'s induction measure,
-allowing the `PfaffianFunction.zero_bound` axiom (final remaining
-Khovanskii axiom) to be closed directly via the constructive
-theorem `pfaffian_zero_count_bound_constructive`.
+allowing the `PfaffianFunction.zero_bound` axiom to be closed directly via
+`pfaffian_zero_count_bound_classical` — which is itself a *citation* of the
+classical Khovanskii axiom `zero_count_bound_classical`, not a constructive
+proof. (Legacy general-`PfaffianFunction` machinery; nothing featured uses it.)
 
 The bound is generous — for any Pfaffian function of complexity
 (n, d) on a bounded interval, the actual zero count is bounded by

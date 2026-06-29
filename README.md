@@ -54,16 +54,20 @@ verification layer for Forge-emitted kernels, with an end-to-end capstone (a PID
 control loop carried from its bit-level netlist to a finite closed-loop trajectory
 bound) and a machine-checked **consistency proof** for its core.
 
-**2. A constructive Khovanskii zero bound** for polynomial-in-(x, eˣ) and for
-general triangular Pfaffian chains, with Forge-emitted safety-critical kernel
-proofs on top. Honest about the foundation: these are proven modulo MachLib's
-axiomatized analytic base (Rolle zero-counting corollary, `HasDerivAt` rules,
-`exp_pos`, Real arithmetic and order); in mathlib every one of those is a theorem,
-and grounding the base there is open work. The featured Khovanskii results and all
-the safety-critical applications are **constructive** — they depend on **no**
-"classical Khovanskii" axiom (verify with `#print axioms`); the one such axiom that
-remains is confined to a legacy general-`PfaffianFunction` development that nothing
-featured uses.
+**2. A Khovanskii zero bound** — **proven outright** for polynomial-in-(x, eˣ), and a
+constructive **reduction** for general triangular Pfaffian chains (the bound follows
+from a supplied reducibility witness, via the Rolle corollary — no classical-Khovanskii
+axiom), with Forge-emitted safety-critical kernel proofs on top. Honest about the
+foundation: these are proven modulo MachLib's axiomatized analytic base (Rolle
+zero-counting corollary, `HasDerivAt` rules, `exp_pos`, Real arithmetic and order); in
+mathlib every one of those is a theorem, and grounding the base there is open work. The
+featured Khovanskii results and all the safety-critical applications are **constructive**
+— they depend on **no** "classical Khovanskii" axiom (verify with `#print axioms`). The
+one axiom that *is* Khovanskii's classical theorem (`zero_count_bound_classical`, the
+1991 general-Pfaffian bound) is confined to a **legacy** general-`PfaffianFunction`
+development that nothing featured uses — and it is named as a *mathematical assumption*,
+separate from the foundational substrate, in
+[`what_is_proven.md` §4(c)](foundations/docs/what_is_proven.md).
 
 - `foundations/MachLib/PIDCapstone.lean` — `pid_trajectory_from_bits`: a PID
   control kernel proved from a bit-level netlist (the per-step round-off ε derived
