@@ -27,11 +27,15 @@ The genuinely *coupled* cases are also covered here:
   ANY `ρ < 1`. Fully proven *modulo* one true hypothesis, the V-norm triangle inequality, which
   reduces to Cauchy–Schwarz.
 
-**Remaining frontier.** Auto-discharging that Cauchy–Schwarz (`B² ≤ V(x)V(y)`): its Gram identity
-`V(x)V(y) − B² = αγ(…)²` is a degree-4 polynomial identity, and `mach_ring` is not a complete
-normaliser — it cannot cancel `+c+c−c−c → 0` (verified by probe). So the triangle inequality is
-supplied as a hypothesis (a true fact), not auto-derived — awaiting a complete ring normaliser or a
-hand proof.
+* `quadratic_lyapunov_sublevel_tight'` — the SAME but UNCONDITIONAL: the V-norm triangle inequality
+  is proven (`vq_minkowski`), so there are no hypotheses beyond the standard Lyapunov certificate.
+  Fully closed, any `ρ < 1`.
+
+**Tooling note.** The triangle inequality reduces to Cauchy–Schwarz, whose Gram identity
+`V(x)V(y) − B² = αγ(…)²` is a degree-4 polynomial identity `mach_ring` cannot discharge (it does not
+cancel `+c+c−c−c → 0`). But MachLib's OTHER normaliser, **`mach_mpoly`**, *is* a complete polynomial
+normaliser and proves it directly (verified `sorryAx`-free). Lesson: for any identity needing
+cancellation, use `mach_mpoly`, not the all-`try` `mach_ring`.
 
 All theorems here are `sorryAx`-free (rest only on MachLib's documented Real-field axioms).
 -/
@@ -306,13 +310,10 @@ form), so `‖Ax+g‖_V ≤ ‖Ax‖_V + ‖g‖_V ≤ √ρ·‖x‖_V + ‖g�
 for ANY ρ < 1**, no factor 2. This trades a real restriction (`ρ < ½`, which rules out real plants)
 for an *always-true* fact (the triangle inequality, which rules out nothing).
 
-The sqrt machinery (`sqrt_sq`, `sqrt_mul`) is proven here from MachLib's sqrt axioms. The one piece
-NOT auto-derived is the V-norm triangle inequality `htri` — it reduces to Cauchy–Schwarz
-`B(x,y)² ≤ V(x)·V(y)`, whose Gram identity `V(x)V(y) − B² = αγ(…)²` is a degree-4 polynomial identity
-that MachLib's `mach_ring` cannot discharge (it does not cancel `+c+c−c−c → 0`; see the parallelogram
-note). So `htri` enters as a HYPOTHESIS, not an axiom — a true fact the caller supplies, awaiting a
-complete ring normaliser (or a hand proof) to discharge it. That is the honest frontier; the rate
-improvement itself is fully proven. -/
+The sqrt machinery (`sqrt_sq`, `sqrt_mul`) is proven here from MachLib's sqrt axioms. This theorem
+takes the V-norm triangle inequality `htri` as a hypothesis; `quadratic_lyapunov_sublevel_tight'`
+below **discharges it** (via `vq_minkowski`, whose Cauchy–Schwarz Gram identity `mach_mpoly` proves),
+so the unconditional bound needs no triangle hypothesis at all. -/
 
 /-- `√(z·z) = z` for `z ≥ 0` (from the order axioms `le_sqrt_of_sq_le` / `sqrt_le_of_le_sq`). -/
 theorem sqrt_sq {z : Real} (hz : 0 ≤ z) : sqrt (z * z) = z :=
@@ -371,5 +372,96 @@ theorem quadratic_lyapunov_sublevel_tight
   have key : sqrt (Vq α β γ (x1 k) (x2 k)) * sqrt (Vq α β γ (x1 k) (x2 k)) ≤ X * X :=
     mul_le_mul_pair (sqrt_nonneg _) hmk (sqrt_nonneg _) hmk
   rwa [sqrt_sq_nonneg _ (vq_nonneg hα hγ β (x1 k) (x2 k))] at key
+
+/-! ## Discharging the triangle hypothesis: Cauchy–Schwarz via `mach_mpoly`
+
+`mach_ring` cannot prove the Cauchy–Schwarz Gram identity (degree-4, cancellation), but MachLib's
+OTHER normaliser `mach_mpoly` *can* — it is a real polynomial normaliser, not the all-`try` `mach_ring`.
+So the V-norm triangle inequality is provable after all, and `quadratic_lyapunov_sublevel_tight` loses
+its one hypothesis (`htri`). The lesson: for any identity needing cancellation, reach for `mach_mpoly`,
+not `mach_ring`. -/
+
+/-- Total order on `Real` (re-proved here; the library's is `private`). -/
+theorem le_total_real (a b : Real) : a ≤ b ∨ b ≤ a := by
+  rcases lt_total a b with h | h | h
+  · exact Or.inl (le_of_lt h)
+  · exact Or.inl (le_of_eq h)
+  · exact Or.inr (le_of_lt h)
+
+/-- **Cauchy–Schwarz for the diagonal form `Wq`.** `(αpq+γbc)² ≤ (αp²+γb²)(αq²+γc²)` for `α,γ ≥ 0`.
+The Gram surplus `(αp²+γb²)(αq²+γc²) − B² = αγ(pc−bq)²` is a degree-4 identity `mach_mpoly` discharges
+(stated additively to avoid subtraction); the surplus is `≥ 0`. -/
+theorem wq_cauchy_schwarz {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (p b q c : Real) :
+    (α * (p * q) + γ * (b * c)) * (α * (p * q) + γ * (b * c))
+      ≤ (α * (p * p) + γ * (b * b)) * (α * (q * q) + γ * (c * c)) := by
+  have hgram : (α * (p * p) + γ * (b * b)) * (α * (q * q) + γ * (c * c))
+      = ((α * (p * q) + γ * (b * c)) * (α * (p * q) + γ * (b * c)))
+        + α * γ * ((p * c - b * q) * (p * c - b * q)) := by mach_mpoly [α, γ, p, b, q, c]
+  rw [hgram]
+  exact le_add_of_nonneg_right (mul_nonneg (mul_nonneg hα hγ) (mul_self_nonneg _))
+
+/-- Cauchy–Schwarz in `√` form: `B ≤ √(Wq(p,b)·Wq(q,c))` (any sign of `B`). -/
+theorem bW_le_sqrt {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (p b q c : Real) :
+    α * (p * q) + γ * (b * c) ≤ sqrt ((α * (p * p) + γ * (b * b)) * (α * (q * q) + γ * (c * c))) := by
+  rcases le_total_real (α * (p * q) + γ * (b * c)) 0 with h | h
+  · exact le_trans h (sqrt_nonneg _)
+  · exact le_sqrt_of_sq_le h (wq_cauchy_schwarz hα hγ p b q c)
+
+/-- **Minkowski (triangle inequality) for the `Wq` V-norm.** `√Wq(p+q,b+c) ≤ √Wq(p,b)+√Wq(q,c)`. -/
+theorem wq_minkowski {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (p b q c : Real) :
+    sqrt (Wq α γ (p + q) (b + c)) ≤ sqrt (Wq α γ p b) + sqrt (Wq α γ q c) := by
+  have hz : 0 ≤ sqrt (Wq α γ p b) + sqrt (Wq α γ q c) :=
+    add_nonneg_ea (sqrt_nonneg _) (sqrt_nonneg _)
+  apply sqrt_le_of_le_sq hz
+  have hsqA : sqrt (Wq α γ p b) * sqrt (Wq α γ p b) = Wq α γ p b :=
+    sqrt_sq_nonneg _ (wq_nonneg hα hγ p b)
+  have hsqB : sqrt (Wq α γ q c) * sqrt (Wq α γ q c) = Wq α γ q c :=
+    sqrt_sq_nonneg _ (wq_nonneg hα hγ q c)
+  have hBW : α * (p * q) + γ * (b * c) ≤ sqrt (Wq α γ p b) * sqrt (Wq α γ q c) := by
+    have h := bW_le_sqrt hα hγ p b q c
+    rwa [show (α * (p * p) + γ * (b * b)) * (α * (q * q) + γ * (c * c))
+          = Wq α γ p b * Wq α γ q c from rfl,
+        sqrt_mul (wq_nonneg hα hγ p b) (wq_nonneg hα hγ q c)] at h
+  have hpolar : Wq α γ (p + q) (b + c)
+      = sqrt (Wq α γ p b) * sqrt (Wq α γ p b)
+        + ((α * (p * q) + γ * (b * c)) + (α * (p * q) + γ * (b * c)))
+        + sqrt (Wq α γ q c) * sqrt (Wq α γ q c) := by
+    rw [hsqA, hsqB]; unfold Wq; mach_mpoly [α, γ, p, b, q, c]
+  have hrhs : (sqrt (Wq α γ p b) + sqrt (Wq α γ q c)) * (sqrt (Wq α γ p b) + sqrt (Wq α γ q c))
+      = sqrt (Wq α γ p b) * sqrt (Wq α γ p b)
+        + (sqrt (Wq α γ p b) * sqrt (Wq α γ q c) + sqrt (Wq α γ p b) * sqrt (Wq α γ q c))
+        + sqrt (Wq α γ q c) * sqrt (Wq α γ q c) := by
+    mach_mpoly [sqrt (Wq α γ p b), sqrt (Wq α γ q c)]
+  rw [hpolar, hrhs]
+  exact add_le_add_both (add_le_add_both (le_refl _) (add_le_add_both hBW hBW)) (le_refl _)
+
+/-- Minkowski lifted to the non-diagonal `Vq` (via the additive SOS coordinate). -/
+theorem vq_minkowski {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (β h1 h2 g1 g2 : Real) :
+    sqrt (Vq α β γ (h1 + g1) (h2 + g2))
+      ≤ sqrt (Vq α β γ h1 h2) + sqrt (Vq α β γ g1 g2) := by
+  rw [vq_as_wq_add, vq_def, vq_def]
+  exact wq_minkowski hα hγ (h1 + β * h2) h2 (g1 + β * g2) g2
+
+/-- **The tight oscillator bound, UNCONDITIONAL.** Same as `quadratic_lyapunov_sublevel_tight` but the
+V-norm triangle inequality is now PROVEN (`vq_minkowski`, via `mach_mpoly` Cauchy–Schwarz), so `htri`
+is gone: given only the homogeneous decrease `V(Ax) ≤ ρ·V(x)`, the disturbance bound `V(g) ≤ Vg`, and
+`√ρ·X + √Vg ≤ X`, the coupled oscillator stays in `{V ≤ X²}` — for ANY ρ < 1, no hypotheses beyond the
+standard Lyapunov certificate. -/
+theorem quadratic_lyapunov_sublevel_tight'
+    {x1 x2 g1 g2 : Nat → Real} {a11 a12 a21 a22 α β γ ρ Vg X : Real}
+    (hα : 0 ≤ α) (hγ : 0 ≤ γ) (hρ : 0 ≤ ρ)
+    (hplant1 : ∀ k, x1 (k + 1) = (a11 * x1 k + a12 * x2 k) + g1 k)
+    (hplant2 : ∀ k, x2 (k + 1) = (a21 * x1 k + a22 * x2 k) + g2 k)
+    (hhom : ∀ k, Vq α β γ (a11 * x1 k + a12 * x2 k) (a21 * x1 k + a22 * x2 k)
+              ≤ ρ * Vq α β γ (x1 k) (x2 k))
+    (hdist : ∀ k, Vq α β γ (g1 k) (g2 k) ≤ Vg)
+    (hinv : sqrt ρ * X + sqrt Vg ≤ X)
+    (h0 : sqrt (Vq α β γ (x1 0) (x2 0)) ≤ X) :
+    ∀ k, Vq α β γ (x1 k) (x2 k) ≤ X * X :=
+  quadratic_lyapunov_sublevel_tight hα hγ hρ hplant1 hplant2 hhom hdist
+    (fun k => by
+      rw [hplant1 k, hplant2 k]
+      exact vq_minkowski hα hγ β (a11 * x1 k + a12 * x2 k) (a21 * x1 k + a22 * x2 k) (g1 k) (g2 k))
+    hinv h0
 
 end MachLib.Real
