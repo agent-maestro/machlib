@@ -93,6 +93,17 @@ direction reversals = real ADC noise) — so the byte-identity question is gone.
 smooth sim — yet the envelope holds, because the bound is a *safety* guarantee resting on the
 saturation, not a tracking claim. (Run: `electronics_intake/kernels/pid_dual_target_v0/physical/`.)
 
+*Strongest version — a real NONLINEAR analog plant.* The same verified controller was then closed
+around a **diode-in-RC** (1N4148 in series with R), making the plant genuinely nonlinear (per-amplitude
+decay `τ ≈ 17→46 ms`; local `f(x)/x` climbs `0.92→0.99` — not a linear RC). The drift bound was
+**measured, not assumed**: an open-loop zero-input sweep fit `|f(x)| ≤ L·|x|+c` with `L = 0.984 < 1`
+(a real contraction). The envelope (backed by the `nonlinear_drift_clamp_safe` rung below, sorryAx-free)
+is `X* = (c+B·OUT+W)/(1−L) ≈ 2.34` nominal, `3.28` under a full-scale fault; measured peaks `|x| =
+0.855 ≤ 2.34` and `1.375 ≤ 3.28`, real analog noise (785/806 sample reversals). *Independently
+re-verified from the 3 493 raw decay pairs:* `L = 0.984`, and `c = 0.0225` bounds 100 % of them (the
+theorem hypothesis genuinely holds). The bound is loose — `L≈1` makes `1/(1−L)≈63` amplify the ADC
+noise-floor `c` — but it is a *safety* bound and the state sits far inside it.
+
 ## 5. What this does NOT claim
 
 - It bounds the **plant state**, treating the control as an adversarially clamp-bounded input. It is
@@ -135,6 +146,8 @@ envelope numbers: the two flagship instantiations (`1.0`, `2.0`) are now **machi
 arithmetic** (`MachLib.Decimal`, +1 foundational axiom `realOfScientific_clears`) — the old
 float-asserted step is closed for the flagships. Silicon:
 **validated** on Arty A7-100T under nominal + injected fault (timing-closed). Physical analog plant:
-**validated** on a real RC circuit (ESP32), genuinely noisy — which closes the one byte-identity
-joint a reviewer would push (§4). The "single biggest leap" — proven closed-loop safety, measured on
-real hardware (FPGA *and* a real analog plant), surviving an injected fault — closed.
+**validated** on a real RC circuit *and* a real **nonlinear diode-in-RC** plant (ESP32), genuinely
+noisy — which closes the one byte-identity joint a reviewer would push (§4); the nonlinear drift bound
+was measured (`L=0.984<1`) and independently re-verified from the raw sweep. The "single biggest leap"
+— proven closed-loop safety, measured on real hardware (FPGA, a real RC plant, *and* a real nonlinear
+analog plant), surviving an injected fault — closed.
