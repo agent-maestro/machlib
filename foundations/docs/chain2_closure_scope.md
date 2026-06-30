@@ -201,9 +201,15 @@ the **reduce-arm design** (above). The reduce arm now decomposes into three well
    (`vehicleM_derivative_factored`), and the **Rolle bridge** `polyMultReduce_eval_zero_of_vehicle_deriv_zero`:
    a zero of the vehicle's derivative (Rolle's gift between consecutive zeros of `f`) is a zero of
    `f' − (d·eˣ + c)·f`. This is the exact polynomial-multiplier analog of `scaledReduction`'s
-   `mulNegExpX_aux`/`…_eval_zero_of_g_deriv_zero`, holding for every `(d, c)`. **Remaining for piece 2:**
-   wire the bridge into a `reduce`-style `IsKhovanskiiReducible` constructor (the zero-count bookkeeping —
-   mechanical, mirrors `zero_count_khovanskii_bound`).
+   `mulNegExpX_aux`/`…_eval_zero_of_g_deriv_zero`, holding for every `(d, c)`.
+   **Zero-count step DONE** (same file): `zero_count_polyMultReduce_transfer` — `#zeros(f) ≤ N + 1` when `N`
+   bounds the zeros of the reduce value `f' − (d·eˣ + c)·f`, via the framework Rolle step
+   `zero_count_bound_by_deriv` applied to the vehicle. **`#print axioms` = clean** (no
+   `zero_count_bound_classical`, no `analytic_finite_zeros_compact`, no `sorry`; only
+   `zero_count_bound_by_deriv` + Real foundations). This is the counting content the dirty axiom asserts,
+   now derived by *reduction*. **Remaining for piece 2:** thread this transfer through the iteration
+   (`IsKhovanskiiReducible`-style, interleaved with `dropLast`) — bookkeeping, mirrors
+   `zero_count_iter_bound_scaledReduction`.
 3. **Prove the inner descent + assemble.** With (1)+(2): `lcY₁(R P) = a_d' − c·a_d` (single-exp reduce of
    `a_d`), so the canonical inner measure descends by the *proven single-exp* descent; feed it into
    `chain2_reduce_nestedLT_of_snd`. Then the dispatch = `chain2_canonicalTrim_step` (inner `=0`) vs this
