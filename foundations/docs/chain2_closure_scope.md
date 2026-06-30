@@ -26,6 +26,13 @@ Plus the **reduce-direction lemmas already in `ChainExp2SDR.lean`** (sorryAx-fre
 by `chainTotalDeriv`, the `c=0` leading-coefficient descent identity, and the flat-second strict descent
 `chain2_polyTrueDegreeStrict_scaledReduction_zero_lt` (line 561).
 
+**Phase 2 — structural half done** (`ChainExp2Reducer`, sorryAx-free): `chain2Measure_fst_reducePoly`
+(first component `degreeY₁` preserved by the real reduce poly `sub (cTD p) (mul (const 0) p)`) +
+`LexProd.lexProd_of_snd` (axiom-free lex helper) ⇒ `chain2_reduce_nestedLT_of_snd` collapses the full
+`nestedLT` descent to a single second-component obligation `hsnd`. See Phase 2 below for the sharpened
+characterisation of that remaining seam (it is **not** an unconditional descent — case-split + flat↔nested
+gap).
+
 ## The obligation (what a reducer must produce)
 
 `StepwiseDecreaseReducer = ∀ f hN, (measure f).1 > 0 → ReduceStep f hN`, where a `ReduceStep` carries a
@@ -63,15 +70,25 @@ Path B.**
 **Phase 2 — the reduce-step descent theorem (the only deep part).**
 Prove `chain2Order (scaledReduction f) f`, i.e. `chain2Measure(scaledReduction f) <ₗ chain2Measure(f)`,
 for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
-- **First component** `degreeY₁`: preserved by `chainTotalDeriv` (`degreeY1_chainTotalDeriv_eq_IterExp2`,
-  done) ⇒ ties ⇒ must descend the second.
-- **Second component** `singleExpMeasure(lcY₁ ·)`: this is where the **single-exp reduce descent plugs
-  in**. `lcY₁ (scaledReduction f)` must have a strictly smaller *single-exp* measure than `lcY₁ f`. The
-  bridge: `lcY₁` of the chain-2 reduce relates to the single-exp reduce of `lcY₁ f` (the
-  `lcY1_cTD_eval_zero_IterExp2` / leading-coefficient descent lemmas are the seam), and `lcY₁ f` is a
-  genuine SingleExp object, so the **already-proven single-exp reduce strict-descent** applies to it.
-- Risk: this is real proof work (connecting the chain-2 reduce to the single-exp reduce on `lcY₁`), but
-  it reuses proven lemmas on both sides; estimate the bulk of the remaining effort here.
+- **First component** `degreeY₁`: preserved by the reduce ⇒ ties ⇒ must descend the second. **DONE**
+  (`ChainExp2Reducer`, sorryAx-free): `chain2Measure_fst_reducePoly` proves it on the *real* reduce poly
+  `reducePoly p = sub (cTD p) (mul (const 0) p)` (not bare `cTD p`) — both summands keep the `y₁`-degree,
+  so the `Nat.max` over the `sub` is `degreeY₁ p`. `chain2_reduce_nestedLT_of_snd` then reduces the whole
+  `nestedLT` descent to a single second-component hypothesis `hsnd` via `LexProd.lexProd_of_snd`.
+- **Second component** `singleExpMeasure(lcY₁ ·)` — **the open seam, sharper than first stated**:
+  - It is **not** an unconditional descent. `singleExpMeasure(lcY₁ p) = (degreeY₀(lcY₁ p), trueDeg(…))`,
+    and `degreeY₀(lcY₁ ·)` can *increase* under the naive reduce when `lcY₁ p` is constant in the chain
+    values — worked counterexample `p = y₁`: `lcY₁ p = 1` (inner `(0,0)`) but `lcY₁ (reducePoly p) = y₀`
+    (inner `(1,…)`), so the second component goes **up**. So the reducer must **case-split**: `lcY₁ p`
+    non-constant (inner measure `>0`) → seam-style single-exp reduce descends the inner `trueDeg`; `lcY₁ p`
+    constant (inner `=0`, but `degreeY₁>0`) → a **distinct** `degreeY₁`-lowering move is required (the
+    `scaledReduction 0` does not descend here).
+  - **Flat↔nested gap**: the proven seam `chain2_polyTrueDegreeStrict_scaledReduction_zero_lt` descends
+    `trueDeg(mP2PFL(lcY₁ ·))` — the *flat* `y→0` projection — whereas the chain-aware inner second is
+    `trueDeg(mP2PFL(lcY₀(lcY₁ ·)))` (an **extra** `lcY₀`). Bridging flat→nested `trueDeg` is part of the
+    remaining seam, on top of the inner `degreeY₀` tie.
+- Risk: real proof work (the case-split + the flat↔nested bridge + the inner `degreeY₀` accounting),
+  reusing proven lemmas on both sides; this is the bulk of the remaining effort.
 
 **Phase 3 — assemble the chain-2 `Chain2SDR`.** Package Phase 2: given `degreeY₁ > 0`, emit the
 `Chain2ReduceStep` (result = `scaledReduction`, witness = one `IsKhovanskiiReducible.step`, `lex_decrease`

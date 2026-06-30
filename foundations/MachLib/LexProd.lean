@@ -38,6 +38,11 @@ theorem lexProd_wf {r : α → α → Prop} {s : β → β → Prop}
             · exact iha a' h1 b'
             · cases h1eq; exact ihb b' h2))) b
 
+/-- When the first components tie, `lexProd` reduces to the second relation. (Used to discharge a lex
+descent whose first component is *preserved* — e.g. a reduce step that fixes the top-variable degree.) -/
+theorem lexProd_of_snd {r : α → α → Prop} {s : β → β → Prop} {a b : α × β}
+    (heq : a.1 = b.1) (hs : s a.2 b.2) : lexProd r s a b := Or.inr ⟨heq, hs⟩
+
 /-- `lexProd` is irreflexive when both component relations are. -/
 theorem lexProd_irrefl {r : α → α → Prop} {s : β → β → Prop}
     (hr : ∀ a, ¬ r a a) (hs : ∀ b, ¬ s b b) : ∀ p, ¬ lexProd r s p p := by
