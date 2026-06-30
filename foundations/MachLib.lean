@@ -115,6 +115,7 @@ import MachLib.AffineContraction
 import MachLib.Decimal
 import MachLib.SignTactic
 import MachLib.CostTheory
+import MachLib.LexProd
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat
