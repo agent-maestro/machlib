@@ -137,4 +137,25 @@ theorem clamp_guarded_ultimately_bounded {x v w : Nat → Real} {a U W : Real}
   rw [geom_reassoc (abs a) (U + W) (geom (abs a) n)]
   exact le_trans (mul_le_mul_of_nonneg_left hsc hUW) (le_of_eq (by mach_ring))
 
+/-! ## The envelope as a number — the value a bench measures against -/
+
+/-- **The safe envelope, pinned to its ultimate value, division-free.** For a first-order plant
+`x_{k+1} = a·x_k + clamp(v_k, −U, U) + w_k` with `0 ≤ a` and bounded disturbance `|w_k| ≤ W`: if the
+candidate envelope `X` satisfies the ultimate-bound relation `(1 − a)·X = U + W` — i.e.
+`X = (U+W)/(1−a)`, stated multiplicatively so no division/inverse is needed — and the trajectory
+starts inside it, then `|x_k| ≤ X` for ALL `k`.
+
+This is the bench's check made into a theorem: discharge `(1−a)·X = U+W` for a concrete plant (one
+multiplication of the plant's own constants) and `X` is the line the captured state may not cross.
+It is the division-free specialisation of `clamp_guarded_safe` — `abs a · X + (U+W) = a·X + (1−a)·X
+= X`, so the invariance condition holds with equality exactly at the ultimate bound. -/
+theorem first_order_clamp_envelope {x v w : Nat → Real} {a U W X : Real}
+    (hplant : ∀ k, x (k + 1) = a * x k + clamp (v k) (-U) U + w k)
+    (ha : 0 ≤ a) (hU : 0 ≤ U) (hdist : ∀ k, abs (w k) ≤ W)
+    (henv : (1 - a) * X = U + W) (h0 : abs (x 0) ≤ X) :
+    ∀ k, abs (x k) ≤ X := by
+  refine clamp_guarded_safe hplant hU hdist ?_ h0
+  rw [abs_of_nonneg ha, ← henv]
+  exact le_of_eq (by mach_ring)
+
 end MachLib.Real
