@@ -121,4 +121,64 @@ theorem polyMultReduce_eval_zero_of_vehicle_deriv_zero
         (f.eval z) (MachLib.Real.natCast d) c (Real.exp z)] at hraw_zero
   exact mul_eq_zero_of_factor_ne_zero (exp_ne_zero _) hraw_zero
 
+/-! ## The constructive zero-count step (Rolle reduction for the polynomial-multiplier reduce)
+
+`#zeros(f) ≤ N + 1` whenever `N` bounds the zeros of the reduce — built from the framework's Rolle step
+`zero_count_bound_by_deriv` applied to the vehicle (same zeros as `f`), plus the bridge above (a zero of
+the vehicle's derivative is a zero of the reduce). This is the polynomial-multiplier analog of
+`zero_count_scaledReduction_transfer`, and it is the *counting* content the classical axiom
+`zero_count_bound_classical` merely asserts — here derived by reduction, citing only Rolle. -/
+
+/-- **Raw zero-count transfer** (in terms of zeros of the vehicle's derivative). -/
+theorem zero_count_polyMultReduce_transfer_raw
+    (f : PfaffianFn) (d : Nat) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (vehicleM f d c) f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧ vehicleM f d c z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    exact ⟨haz, hzb, (vehicleM_zero_iff f d c z).mpr hfz⟩
+  have hdiff : ∀ x : Real, a < x → x < b →
+                ∃ f' : Real, HasDerivAt (vehicleM f d c) f' x := by
+    intro x hax hxb
+    exact ⟨_, hasDerivAt_vehicleM f d c x (hasDerivAt_eval_natural f x (hcoherent x hax hxb))⟩
+  exact zero_count_bound_by_deriv (vehicleM f d c) a b hab hdiff N
+          h_reduced_bound zeros_f hnodup hzeros_g
+
+/-- **Zero-count transfer (eval form).** If the reduce value `f' − (d·eˣ + c)·f` has at most `N` zeros on
+`(a, b)`, then `f` has at most `N + 1`. The constructive Rolle step for the chain-2 polynomial-multiplier
+reduce — the bound by *reduction*, not by citing Khovanskii. -/
+theorem zero_count_polyMultReduce_transfer
+    (f : PfaffianFn) (d : Nat) (c : Real) (a b : Real) (hab : a < b)
+    (hcoherent : f.chain.IsCoherentOn a b)
+    (N : Nat)
+    (h_reduced_bound_eval : ∀ zeros' : List Real,
+        zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          f.chainTotalDerivative.eval z
+            - (MachLib.Real.natCast d * Real.exp z + c) * f.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real,
+      zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply zero_count_polyMultReduce_transfer_raw f d c a b hab hcoherent N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_reduced_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  exact ⟨haz, hzb,
+    polyMultReduce_eval_zero_of_vehicle_deriv_zero f d c z
+      (hasDerivAt_eval_natural f z (hcoherent z haz hzb)) g'' hg''_deriv hg''_zero⟩
+
 end MachLib.ChainExp2PolyMultRolle
