@@ -72,6 +72,47 @@ theorem cost_flatSum_blog (α₀ N : Nat) (hN : 1 ≤ N) :
   -- goal: α₀*N + 3*(N-1) = α₀*N + 3*N - 3  (α₀*N is a shared opaque atom; rest is linear)
   omega
 
+/-- Sum of `n+1` copies of an arbitrary subtree `t`, via binary `add` nodes of cost `cAdd`.
+Generalises `flatSum` (the `t = leaf α₀` case) so a *summand* can itself be a whole expression. -/
+def flatSumTree (cAdd : Nat) (t : CostTree) : Nat → CostTree
+  | 0     => t
+  | n + 1 => .bin cAdd (flatSumTree cAdd t n) t
+
+/-- Cost of a flat sum of `n+1` copies of `t`: `cost t · (n+1) + cAdd · n`. -/
+theorem cost_flatSumTree (cAdd : Nat) (t : CostTree) (n : Nat) :
+    cost (flatSumTree cAdd t n) = cost t * (n + 1) + cAdd * n := by
+  induction n with
+  | zero => simp [flatSumTree, cost]
+  | succ k ih => simp only [flatSumTree, cost, ih, Nat.mul_succ]; omega
+
+/-- A nested double sum: `N=n+1` outer terms, each an inner flat sum of `N` equal-cost (`α₀`) terms —
+the pairwise-interaction / Hopfield-energy shape `Σᵢ Σⱼ`. -/
+def doubleSum (cAdd α₀ n : Nat) : CostTree :=
+  flatSumTree cAdd (flatSumTree cAdd (.leaf α₀) n) n
+
+/-- **The O(N²) double-sum law (exact).** A nested `N×N` sum (`N=n+1`) costs
+`(α₀·N + cAdd·n)·N + cAdd·n` — a proven explicit **quadratic** in `n` (a `(linear)·N` product). Its
+closed form is `(α₀+cAdd)·N² − cAdd` (with `cAdd=3`, the blog's `(α₀+3)·N² − 3`): expand the product
+and fold `cAdd·n + cAdd = cAdd·N`. We state the exact cost — that is the O(N²) content; the factored
+form is `Nat` algebra (no `ring` in a Mathlib-free setting). -/
+theorem cost_doubleSum (cAdd α₀ n : Nat) :
+    cost (doubleSum cAdd α₀ n) = (α₀ * (n + 1) + cAdd * n) * (n + 1) + cAdd * n := by
+  unfold doubleSum
+  rw [cost_flatSumTree, cost_flatSumTree]; simp only [cost]
+
+/-! ### Basic structural properties (the "P" family): adding an operator never lowers cost. -/
+
+/-- P-monotone (unary): wrapping a subtree in an operator does not decrease cost. -/
+theorem le_cost_un (c : Nat) (a : CostTree) : cost a ≤ cost (.un c a) := by
+  simp only [cost]; omega
+
+/-- P-monotone (binary), left and right subtrees. -/
+theorem le_cost_bin_left (c : Nat) (a b : CostTree) : cost a ≤ cost (.bin c a b) := by
+  simp only [cost]; omega
+
+theorem le_cost_bin_right (c : Nat) (a b : CostTree) : cost b ≤ cost (.bin c a b) := by
+  simp only [cost]; omega
+
 /-! ### Regression / showcase. -/
 namespace Tests
 
