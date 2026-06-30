@@ -112,4 +112,46 @@ theorem chain2_reduce_nestedLT_of_snd (p : MultiPoly 2)
     nestedLT (chain2Measure (reducePoly p)) (chain2Measure p) :=
   LexProd.lexProd_of_snd (chain2Measure_fst_reducePoly p) hsnd
 
+/-! ## Phase 2 — machine-checked OBSTRUCTION: the c=0 reduce does NOT descend the nested measure
+
+The structural half collapses Phase 2 to the second-component obligation `hsnd`. **But `hsnd` is *false*
+for the naive `reducePoly`** (the c=0 `scaledReduction`). Reason: the chain-2 total derivative injects a
+`y₀` factor into the `y₁`-leading coefficient (because `y₁' = y₀·y₁`), so `degreeY₀(lcY₁ ·)` — the inner
+*first* component of `singleExpMeasure` — strictly *increases* rather than ties/decreases.
+
+Witness `p = y₁`: `lcY₁ p = 1` (inner `degreeY₀ = 0`), but `cTD p = y₀·y₁` so `lcY₁ (reducePoly p) =
+y₀·1 − 0·1` (inner `degreeY₀ = 1`). With `degreeY₁` preserved, the nested-lex descent therefore *cannot*
+hold. The two numeric facts and the no-go are machine-checked below (all `rfl`/elementary).
+
+**Consequence (the real Phase-2 finding):** the correct chain-2 reduce must reduce `lcY₁` *as a single-exp
+object* — without injecting `y₀` — which the chain total derivative does not do; the framework has no such
+operation yet (and `dropLeadingY` is `MultiPoly 1`-only, so the trim arm doesn't port for free either).
+Phase 2's reduce arm is thus genuine new construction, not mechanical mirroring. -/
+
+/-- The `y₁`-monomial obstruction witness `p = y₁`. -/
+private def yOne : MultiPoly 2 := MultiPoly.varY ⟨1, by omega⟩
+
+/-- Inner first component (`degreeY₀` of `lcY₁`) of the original `p = y₁` is `0` (`lcY₁ (y₁) = 1`). -/
+theorem chain2_inner_degreeY0_yOne : (chain2Measure yOne).2.1 = 0 := rfl
+
+/-- Inner first component of the reduced `p = y₁` is `1` — it strictly *increased* (`lcY₁` picked up a
+`y₀` from `y₁' = y₀·y₁`). -/
+theorem chain2_inner_degreeY0_reduce_yOne : (chain2Measure (reducePoly yOne)).2.1 = 1 := rfl
+
+/-- **The obstruction, machine-checked.** The naive c=0 reduce `reducePoly` does *not* strictly decrease
+`chain2Measure` at `p = y₁`: the first component (`degreeY₁`) ties (`chain2Measure_fst_reducePoly`) while
+the inner second component (`degreeY₀(lcY₁)`) goes `0 → 1`. Hence Phase 2's `hsnd` is unprovable for
+`reducePoly` — the chain-2 reduce must be a genuinely different operation. -/
+theorem chain2_reducePoly_not_nestedLT :
+    ¬ nestedLT (chain2Measure (reducePoly yOne)) (chain2Measure yOne) := by
+  intro h
+  rcases h with h1 | ⟨_, h2⟩
+  · -- first component preserved ⇒ `a < a` impossible
+    rw [chain2Measure_fst_reducePoly yOne] at h1
+    exact Nat.lt_irrefl _ h1
+  · -- inner second component went 1 vs 0 ⇒ neither `1 < 0` nor `1 = 0`
+    rcases h2 with h2a | ⟨h2eq, _⟩
+    · rw [chain2_inner_degreeY0_reduce_yOne, chain2_inner_degreeY0_yOne] at h2a; omega
+    · rw [chain2_inner_degreeY0_reduce_yOne, chain2_inner_degreeY0_yOne] at h2eq; omega
+
 end MachLib.ChainExp2Reducer

@@ -75,20 +75,25 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
   `reducePoly p = sub (cTD p) (mul (const 0) p)` (not bare `cTD p`) — both summands keep the `y₁`-degree,
   so the `Nat.max` over the `sub` is `degreeY₁ p`. `chain2_reduce_nestedLT_of_snd` then reduces the whole
   `nestedLT` descent to a single second-component hypothesis `hsnd` via `LexProd.lexProd_of_snd`.
-- **Second component** `singleExpMeasure(lcY₁ ·)` — **the open seam, sharper than first stated**:
-  - It is **not** an unconditional descent. `singleExpMeasure(lcY₁ p) = (degreeY₀(lcY₁ p), trueDeg(…))`,
-    and `degreeY₀(lcY₁ ·)` can *increase* under the naive reduce when `lcY₁ p` is constant in the chain
-    values — worked counterexample `p = y₁`: `lcY₁ p = 1` (inner `(0,0)`) but `lcY₁ (reducePoly p) = y₀`
-    (inner `(1,…)`), so the second component goes **up**. So the reducer must **case-split**: `lcY₁ p`
-    non-constant (inner measure `>0`) → seam-style single-exp reduce descends the inner `trueDeg`; `lcY₁ p`
-    constant (inner `=0`, but `degreeY₁>0`) → a **distinct** `degreeY₁`-lowering move is required (the
-    `scaledReduction 0` does not descend here).
-  - **Flat↔nested gap**: the proven seam `chain2_polyTrueDegreeStrict_scaledReduction_zero_lt` descends
-    `trueDeg(mP2PFL(lcY₁ ·))` — the *flat* `y→0` projection — whereas the chain-aware inner second is
-    `trueDeg(mP2PFL(lcY₀(lcY₁ ·)))` (an **extra** `lcY₀`). Bridging flat→nested `trueDeg` is part of the
-    remaining seam, on top of the inner `degreeY₀` tie.
-- Risk: real proof work (the case-split + the flat↔nested bridge + the inner `degreeY₀` accounting),
-  reusing proven lemmas on both sides; this is the bulk of the remaining effort.
+- **Second component** `singleExpMeasure(lcY₁ ·)` — **a MACHINE-CHECKED no-go for the naive reduce**:
+  - The c=0 `scaledReduction` (`reducePoly`) does **not** descend `chain2Measure`. The chain-2 total
+    derivative injects a `y₀` factor into `lcY₁` (since `y₁' = y₀·y₁`), so `degreeY₀(lcY₁ ·)` — the inner
+    *first* component of `singleExpMeasure` — strictly *increases*. Witness `p = y₁`: `lcY₁ p = 1` (inner
+    `degreeY₀ = 0`) but `lcY₁ (reducePoly p) = y₀·1 − 0·1` (inner `degreeY₀ = 1`). This is now PROVEN in
+    `ChainExp2Reducer` — `chain2_reducePoly_not_nestedLT` (+ the two `rfl` numeric facts
+    `chain2_inner_degreeY0_yOne = 0`, `chain2_inner_degreeY0_reduce_yOne = 1`), sorryAx-free. So Phase 2's
+    `hsnd` is *unprovable* for `reducePoly`; `chain2_reduce_nestedLT_of_snd` (the conditional Phase-2
+    reduction) stands as the template for whatever the *correct* reduce turns out to be.
+  - **The correct reduce is genuine new construction.** It must reduce `lcY₁` *as a single-exp object*
+    (without injecting `y₀`) — the chain total derivative cannot. And the trim arm does **not** port: the
+    framework's `dropLeadingY` + descent/eval lemmas are `MultiPoly 1`-only (single-exp), so a chain-2
+    `degreeY₁`-lowering trim must be ported to `MultiPoly 2` first.
+  - **Flat↔nested gap (separate issue)**: the proven seam `chain2_polyTrueDegreeStrict_scaledReduction_zero_lt`
+    descends `trueDeg(mP2PFL(lcY₁ ·))` — the *flat* `y→0` projection — whereas the chain-aware inner second
+    is `trueDeg(mP2PFL(lcY₀(lcY₁ ·)))` (an extra `lcY₀`). That seam is about the flat measure and does not
+    by itself feed the nested descent.
+- Risk: **higher than first scoped.** Phase 2's reduce is now known to be a new operation (not the chain
+  total derivative), and the trim arm needs porting from `MultiPoly 1`. This is research, not mirroring.
 
 **Phase 3 — assemble the chain-2 `Chain2SDR`.** Package Phase 2: given `degreeY₁ > 0`, emit the
 `Chain2ReduceStep` (result = `scaledReduction`, witness = one `IsKhovanskiiReducible.step`, `lex_decrease`
@@ -102,15 +107,20 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
 
 ## Effort, risk, payoff
 
-- **Effort**: Phase 2 is the bulk (a focused multi-session theorem); Phases 3–4 are mechanical mirroring
-  (~1 session combined). Total: realistically **2–4 focused sessions**.
-- **Risk**: concentrated in Phase 2 (the chain-2-↔-single-exp reduce seam). Path B keeps the closed
-  single-exp proof untouched, so a Phase-2 stall costs *only* chain-2, never a regression.
-- **Payoff**: closes chain-2 Khovanskii (the announcement blocker); the same nested-measure pattern then
-  generalises to chain-`n` (`natQuadLex_wf` already shows the WF backbone scales).
+- **Effort** (revised after the machine-checked obstruction): Phase 2 is **research, not mirroring**. It
+  needs (i) a *new* chain-2 reduce that reduces `lcY₁` as a single-exp object without injecting `y₀` (the
+  chain total derivative provably won't — `chain2_reducePoly_not_nestedLT`), and (ii) the trim arm ported
+  from `MultiPoly 1` to `MultiPoly 2` (`dropLeadingY` + `degreeY_dropLeadingY_lt` +
+  `eval_dropLeadingY_of_last_canonically_zero`). Phases 3–4 stay mechanical once a *descending* reduce
+  exists. Total: **more than 2–4 sessions**; Phase 2 may need a design iteration on the reduce/measure.
+- **Risk**: concentrated in Phase 2, now *characterised* (not just suspected): the naive reduce is ruled
+  out by proof. Path B keeps the closed single-exp proof untouched, so the stall costs *only* chain-2.
+- **Payoff**: closes chain-2 Khovanskii (the announcement blocker); the WF backbone (`natTripleLex_wf` /
+  `natQuadLex_wf`) and the structural reduction (`chain2_reduce_nestedLT_of_snd`) already scale to chain-`n`.
 
-**Recommendation.** Path B. Next concrete step: **Phase 2**, starting from
-`chain2_polyTrueDegreeStrict_scaledReduction_zero_lt` (the flat-second descent already proven) and
-lifting it to the chain-aware second via the single-exp reduce on `lcY₁`. If Phase 2's seam proves
-intractable in a session, that is itself the answer (chain-2 needs a different reduce), and it costs
-nothing already shipped.
+**Recommendation.** Path B. The structural half + the obstruction are shipped (sorryAx-free). Next concrete
+step: **design the descending chain-2 reduce** — candidate: an explicit "reduce-the-leading-coefficient"
+operator that applies the *single-exp* reduce to `lcY₁ p` (a genuine `MultiPoly` in `x, y₀`) and
+reconstructs, so the inner `singleExpMeasure` descends by the proven single-exp lemma while `degreeY₁` is
+preserved. Validate it against `chain2_reduce_nestedLT_of_snd` (it plugs straight into `hsnd`). In
+parallel, port the `MultiPoly 1` trim machinery to `MultiPoly 2` for the canonically-zero `lcY₁` corner.
