@@ -66,11 +66,18 @@ endpoints): nominal peak `|x| = 0.655 ≤ 1.0`, and under an injected `+1.0` act
 rises **above** the nominal `1.0` (the fault is real and visible) but stays `≤ 2.0` — the proof held,
 on hardware, under a fault.
 
-*Honest caveat:* the captured trajectory is bit-identical to the Verilator sim. For a deterministic
-fixed-point datapath that is the correct, strongest outcome (the FPGA reproduces the verified RTL
-exactly) — but it means the trajectory *values* alone can't distinguish a real capture from a copy of
-sim; the board-reality evidence is the timing-closed bitstreams, not the numbers. A real **analog RC
-plant** lane (where the trajectory cannot be bit-identical) is prepared and pending a bench run.
+*On the silicon trajectory:* it is bit-identical to the Verilator sim — for a deterministic
+fixed-point datapath the correct, strongest outcome (the FPGA reproduces the verified RTL exactly),
+but the trajectory *values* alone then can't distinguish a real capture from a copy of sim.
+
+*Resolved on a real analog plant.* The same verified controller was then closed around a **physical
+first-order RC circuit** (ESP32 DAC→R→node→C→GND, ADC reads the state, τ=RC=0.1 s = `plant.eml`).
+The captured trajectory is genuinely analog — **not** bit-identical to sim (783 sample-to-sample
+direction reversals = real ADC noise) — so the byte-identity question is gone. Nominal peak
+`|x| = 0.806 ≤ 1.0`; under the `+1.0` actuator fault `|x| = 1.546 ≤ 2.0`. Notably the real loop
+**limit-cycles** (the derivative term amplifies ADC noise), so its trajectory looks nothing like the
+smooth sim — yet the envelope holds, because the bound is a *safety* guarantee resting on the
+saturation, not a tracking claim. (Run: `electronics_intake/kernels/pid_dual_target_v0/physical/`.)
 
 ## 5. What this does NOT claim
 
@@ -83,7 +90,8 @@ plant** lane (where the trajectory cannot be bit-identical) is prepared and pend
 - The **forward-Euler discretization / fixed-point quantization** error is a *separate* layer — the
   per-step forward-error certifier (`forward_error_certifier.md`, `compare_to_bound.py`). The two
   compose; neither subsumes the other.
-- The physical-plant (real analog) validation is **prepared, not yet run**.
+- (Resolved) the physical-plant validation is **done** — see §4: a real analog RC plant, genuinely
+  noisy, inside the envelope under nominal + fault.
 
 ## 6. Check it yourself
 
@@ -104,7 +112,7 @@ tools/check.sh
 
 Theory: **fully closed** (scalar → vector → coupled-ℓ¹ → coupled-quadratic-oscillator, the last
 unconditional), `sorryAx`-free, 0 axioms beyond the documented base, integrity-gated. Silicon:
-**validated** on Arty A7-100T under nominal + injected fault (timing-closed; byte-identity caveat in
-§4). Physical analog plant: **prepared**, pending bench. The "single biggest leap" — proven
-closed-loop safety, measured on real hardware, surviving an injected fault — closed, and stated
-without overclaiming the one joint (byte-identity) a reviewer would push.
+**validated** on Arty A7-100T under nominal + injected fault (timing-closed). Physical analog plant:
+**validated** on a real RC circuit (ESP32), genuinely noisy — which closes the one byte-identity
+joint a reviewer would push (§4). The "single biggest leap" — proven closed-loop safety, measured on
+real hardware (FPGA *and* a real analog plant), surviving an injected fault — closed.
