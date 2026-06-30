@@ -288,4 +288,135 @@ theorem leadingCoeffY1_cTD_eval_IterExp2_sub (p q : MultiPoly 2) (x : Real) (env
         lcY_sub_of_gt (⟨1, by omega⟩ : Fin 2) p q hgt, hd]
     exact ihp
 
+/-! ### `natCast` is additive (local; `MachLib.Real.natCast_add` lives in `Decimal`, not imported here) -/
+
+private theorem natCast_add' (a b : Nat) :
+    MachLib.Real.natCast (a + b) = MachLib.Real.natCast a + MachLib.Real.natCast b := by
+  induction b with
+  | zero => rw [Nat.add_zero, MachLib.Real.natCast_zero, MachLib.Real.add_zero]
+  | succ n ih =>
+    rw [show a + (n + 1) = (a + n) + 1 from rfl, MachLib.Real.natCast_succ,
+        MachLib.Real.natCast_succ, ih, MachLib.Real.add_assoc]
+
+/-! ### Inductive `mul` case of the identity — the Leibniz heart -/
+
+/-- The `mul` step. `cTD₂(mul a b) = add(mul(cTD₂ a) b)(mul a (cTD₂ b))` (Leibniz); both summands have
+`degreeY₁ = d_a + d_b` (equal, since `cTD` preserves `degreeY₁`), so the leading coefficient of the sum is
+the sum of leadings. Expanding evals and applying both IHs, the extra term lands as
+`d_a·y₀·lcY₁a·lcY₁b + d_b·y₀·lcY₁a·lcY₁b = (d_a + d_b)·y₀·lcY₁(mul a b)` — closed by ring once
+`natCast(d_a + d_b) = natCast d_a + natCast d_b`. -/
+theorem leadingCoeffY1_cTD_eval_IterExp2_mul (a b : MultiPoly 2) (x : Real) (env : Fin 2 → Real)
+    (iha :
+      MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+          (chainTotalDeriv (IterExpChain 2) a)) x env
+      = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+          (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)) x env
+        + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) a)
+          * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)) x env)
+    (ihb :
+      MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+          (chainTotalDeriv (IterExpChain 2) b)) x env
+      = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+          (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b)) x env
+        + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) b)
+          * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b)) x env) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+        (chainTotalDeriv (IterExpChain 2) (MultiPoly.mul a b))) x env
+    = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+        (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul a b))) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul a b))
+        * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul a b))) x env := by
+  have ha_eq := degreeY1_chainTotalDeriv_eq_IterExp2 a
+  have hb_eq := degreeY1_chainTotalDeriv_eq_IterExp2 b
+  -- Leibniz: cTD over `mul`.
+  rw [show chainTotalDeriv (IterExpChain 2) (MultiPoly.mul a b)
+        = MultiPoly.add (MultiPoly.mul (chainTotalDeriv (IterExpChain 2) a) b)
+                        (MultiPoly.mul a (chainTotalDeriv (IterExpChain 2) b)) from rfl]
+  -- both summands have equal `degreeY₁` (= d_a + d_b).
+  have hcond : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+                 (MultiPoly.mul (chainTotalDeriv (IterExpChain 2) a) b)
+             = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+                 (MultiPoly.mul a (chainTotalDeriv (IterExpChain 2) b)) := by
+    show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) a)
+           + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) b
+       = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) a
+           + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) b)
+    rw [ha_eq, hb_eq]
+  -- structural rewrites: leadingCoeffY of the (equal-degree) add, leadingCoeffY of each `mul`,
+  -- degreeY of `mul a b`, and cTD over the RHS `mul`.
+  rw [lcY_add_of_eq (⟨1, by omega⟩ : Fin 2)
+        (MultiPoly.mul (chainTotalDeriv (IterExpChain 2) a) b)
+        (MultiPoly.mul a (chainTotalDeriv (IterExpChain 2) b)) hcond,
+      show MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+             (MultiPoly.mul (chainTotalDeriv (IterExpChain 2) a) b)
+         = MultiPoly.mul (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+                           (chainTotalDeriv (IterExpChain 2) a))
+                         (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b) from rfl,
+      show MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+             (MultiPoly.mul a (chainTotalDeriv (IterExpChain 2) b))
+         = MultiPoly.mul (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)
+                         (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+                           (chainTotalDeriv (IterExpChain 2) b)) from rfl,
+      show MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul a b)
+         = MultiPoly.mul (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)
+                         (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b) from rfl,
+      show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul a b)
+         = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) a
+             + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) b from rfl,
+      natCast_add',
+      show chainTotalDeriv (IterExpChain 2)
+             (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)
+                            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b))
+         = MultiPoly.add
+             (MultiPoly.mul (chainTotalDeriv (IterExpChain 2)
+                              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a))
+                            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b))
+             (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)
+                            (chainTotalDeriv (IterExpChain 2)
+                              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b))) from rfl]
+  simp only [MultiPoly.eval_add, MultiPoly.eval_mul] at iha ihb ⊢
+  rw [iha, ihb]
+  generalize MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+      (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a)) x env = A
+  generalize MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+      (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b)) x env = B
+  generalize MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) x env = Y
+  generalize MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) a) x env = LA
+  generalize MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) b) x env = LB
+  generalize MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) a) = Na
+  generalize MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) b) = Nb
+  mach_ring
+
+/-! ### Assembly — the general identity by structural induction -/
+
+/-- **The general chain-2 `leadingCoeffY₁`-under-`cTD` identity.** For every `p : MultiPoly 2`,
+
+  `eval(lcY₁(cTD₂ p)) = eval(cTD₂(lcY₁ p)) + (degreeY₁ p) · eval(y₀ · lcY₁ p)`.
+
+Assembled by structural induction from the five case lemmas above. This is the algebraic core Piece 3
+needs to compute `lcY₁(chain2Reduce c p)` (the leading coefficient of the correct reduce) and prove the
+canonical inner descent. Setting `y₀ = 0` recovers `ChainExp2SDR.lcY1_cTD_eval_zero_IterExp2`. -/
+theorem leadingCoeffY1_cTD_eval_IterExp2 (p : MultiPoly 2) (x : Real) (env : Fin 2 → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+        (chainTotalDeriv (IterExpChain 2) p)) x env
+    = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+        (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+        * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)) x env := by
+  induction p with
+  | const c => exact (leadingCoeffY1_cTD_eval_IterExp2_base x env).1 c
+  | varX => exact (leadingCoeffY1_cTD_eval_IterExp2_base x env).2.1
+  | varY j =>
+    rcases j with ⟨v, hv⟩
+    match v, hv with
+    | 0, _ => exact (leadingCoeffY1_cTD_eval_IterExp2_base x env).2.2.1
+    | 1, _ => exact (leadingCoeffY1_cTD_eval_IterExp2_base x env).2.2.2
+  | add p q ihp ihq => exact leadingCoeffY1_cTD_eval_IterExp2_add p q x env ihp ihq
+  | sub p q ihp ihq => exact leadingCoeffY1_cTD_eval_IterExp2_sub p q x env ihp ihq
+  | mul p q ihp ihq => exact leadingCoeffY1_cTD_eval_IterExp2_mul p q x env ihp ihq
+
 end MachLib.ChainExp2LcY1CTD
