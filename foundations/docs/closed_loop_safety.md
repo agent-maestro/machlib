@@ -62,6 +62,19 @@ the constants give `a = 1−DT/TAU = 0.99`, `U = DT·K/TAU·OUT_MAX = 0.01`, so 
 **`X* = (U+W)/(1−|a|) = 1 + 100·W`** — nominally `1.0` (which equals the plant's DC gain, so it holds
 for *any* stable unity-gain plant), `2.0` under a full-scale actuator fault.
 
+*The envelope number is now itself machine-checked* (`MachLib.Decimal`). Those constants are decimal
+literals, which MachLib's `Real` previously left opaque — so the step "`1−0.99 = 0.01`, hence `X* =
+1.0`" was done in Python `float`, not Lean. `MachLib.Decimal` closes that gap: the defining property
+of a decimal literal, `realOfScientific m true e · 10ᵉ = m` (one new axiom, `realOfScientific_clears`,
+which *subsumes* the three ad-hoc `…_dot_zero` bridges in `Basic.lean` — `one_dot_zero_from_clears`
+derives one back), yields a clear-denominators recipe under which both decimal **subtraction**
+(`one_sub_decimal`) and **multiplication** (`decimal_mul`) reduce to integer `natCast` arithmetic. The
+two flagship envelope relations are then theorems, `sorryAx`-free: `pid_envelope_relation : (1−0.99)·1
+= 0.01+0` and `motor_envelope_relation : (1−0.996)·2.0 = 0.008`. *Scope:* this machine-checks the
+*exact arithmetic* for these specific constants; `safety_certify.py` still instantiates arbitrary
+kernels (and the auto-derived Lyapunov rate) in floating point — the general theorems are the proof,
+the per-kernel number is the instantiation, and now the two flagship instantiations are Lean-checked.
+
 The closed loop was run on a real **Arty A7-100T** (timing-closed bitstream, Vivado, 0 failing
 endpoints): nominal peak `|x| = 0.655 ≤ 1.0`, and under an injected `+1.0` actuator fault the state
 rises **above** the nominal `1.0` (the fault is real and visible) but stays `≤ 2.0` — the proof held,
@@ -104,6 +117,11 @@ cd foundations && lake build MachLib.ClosedLoopSafety MachLib.LyapunovSafety
 printf 'import MachLib.LyapunovSafety\n#print axioms MachLib.Real.clamp_guarded_safe\n#print axioms MachLib.Real.quadratic_lyapunov_sublevel\n' > /tmp/chk.lean
 lake env lean /tmp/chk.lean   # -> no sorryAx; only Real-field/order/sqrt axioms
 
+# The per-kernel envelope NUMBERS are machine-checked (decimal arithmetic), resting only on the one
+# new foundational axiom realOfScientific_clears (no sorryAx):
+printf 'import MachLib.Decimal\n#print axioms MachLib.Real.pid_envelope_relation\n#print axioms MachLib.Real.motor_envelope_relation\n' > /tmp/dec.lean
+lake env lean /tmp/dec.lean   # -> no sorryAx; + MachLib.Real.realOfScientific_clears
+
 # Library-wide integrity gate — fails (non-zero) if ANY non-allowlisted sorryAx appears
 # (e.g. a future mach_ring-swallowed goal). Proven to go red on an injected canary:
 tools/check.sh
@@ -112,7 +130,10 @@ tools/check.sh
 ## 7. Status — consolidated
 
 Theory: **fully closed** (scalar → vector → coupled-ℓ¹ → coupled-quadratic-oscillator, the last
-unconditional), `sorryAx`-free, 0 axioms beyond the documented base, integrity-gated. Silicon:
+unconditional), `sorryAx`-free, 0 axioms beyond the documented base, integrity-gated. Per-kernel
+envelope numbers: the two flagship instantiations (`1.0`, `2.0`) are now **machine-checked decimal
+arithmetic** (`MachLib.Decimal`, +1 foundational axiom `realOfScientific_clears`) — the old
+float-asserted step is closed for the flagships. Silicon:
 **validated** on Arty A7-100T under nominal + injected fault (timing-closed). Physical analog plant:
 **validated** on a real RC circuit (ESP32), genuinely noisy — which closes the one byte-identity
 joint a reviewer would push (§4). The "single biggest leap" — proven closed-loop safety, measured on

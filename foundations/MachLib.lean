@@ -112,6 +112,7 @@ import MachLib.LyapunovSafety
 import MachLib.ProbabilisticBound
 import MachLib.IntervalArith
 import MachLib.AffineContraction
+import MachLib.Decimal
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat
