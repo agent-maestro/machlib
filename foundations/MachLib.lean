@@ -116,6 +116,7 @@ import MachLib.Decimal
 import MachLib.SignTactic
 import MachLib.CostTheory
 import MachLib.LexProd
+import MachLib.ChainExp2Measure
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat
