@@ -120,6 +120,7 @@ import MachLib.ChainExp2Measure
 import MachLib.ChainExp2Reducer
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
+import MachLib.ChainExp2PolyMultRolle
 import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat

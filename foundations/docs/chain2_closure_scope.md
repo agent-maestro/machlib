@@ -188,8 +188,16 @@ the **reduce-arm design** (above). The reduce arm now decomposes into three well
    unchanged).
 2. **Add the polynomial-multiplier reduce to the framework.** Extend `IsKhovanskiiReducible` with `R(P) =
    P' − m·P` for `m = d·y₀ + c` and prove its zero-count transfer (the Rolle argument on `P·y₁^{−d}
-   e^{−cx}`). This is the analysis-heavy piece (mirrors `scaledReduction`'s `HasDerivAt`/Rolle lemmas with
-   a function multiplier).
+   e^{−cx}`). **Analytic heart DONE** (`ChainExp2PolyMultRolle.lean`, sorryAx-free): the integrating-factor
+   vehicle `vehicleM f d c = f.eval x · exp(−(d·eˣ + c·x))` (`= f·y₁^{−d}·e^{−cx}`), its same-zero-set
+   (`vehicleM_zero_iff`), its `HasDerivAt` (`hasDerivAt_vehicleM` — assembled from the `MachLib.Real`
+   `HasDerivAt` add/mul/comp/exp rules), the factoring `f'·E + f·(E·u') = E·(f' − m·f)`
+   (`vehicleM_derivative_factored`), and the **Rolle bridge** `polyMultReduce_eval_zero_of_vehicle_deriv_zero`:
+   a zero of the vehicle's derivative (Rolle's gift between consecutive zeros of `f`) is a zero of
+   `f' − (d·eˣ + c)·f`. This is the exact polynomial-multiplier analog of `scaledReduction`'s
+   `mulNegExpX_aux`/`…_eval_zero_of_g_deriv_zero`, holding for every `(d, c)`. **Remaining for piece 2:**
+   wire the bridge into a `reduce`-style `IsKhovanskiiReducible` constructor (the zero-count bookkeeping —
+   mechanical, mirrors `zero_count_khovanskii_bound`).
 3. **Prove the inner descent + assemble.** With (1)+(2): `lcY₁(R P) = a_d' − c·a_d` (single-exp reduce of
    `a_d`), so the canonical inner measure descends by the *proven single-exp* descent; feed it into
    `chain2_reduce_nestedLT_of_snd`. Then the dispatch = `chain2_canonicalTrim_step` (inner `=0`) vs this
