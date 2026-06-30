@@ -1,4 +1,5 @@
 import MachLib.OperatorClamp3
+import MachLib.Iteration
 
 /-!
 # Closed-loop safety — the guard keeps the plant in a safe envelope, for all time
@@ -75,5 +76,65 @@ theorem clamp_guarded_safe {x v w : Nat → Real} {a U W X : Real}
   refine guarded_closed_loop_safe hplant (fun k => ?_) hdist hinv h0
   have h := clamp_abs_le (v k) (-U) U
   rwa [abs_neg, abs_of_nonneg hU, max_self] at h
+
+/-! ## ISS ultimate bound — the state CONVERGES into the safe envelope, from anywhere -/
+
+/-- Clean-named ring identities (mach_mpoly's parser can't take atoms built from the induction
+variable `m`, e.g. `npow m L` / `geom L m` — same limit as obtain'd primed vars). -/
+theorem affine_step_eq (L s0 ε P G : Real) :
+    L * (P * s0 + ε * G) + ε = (L * P) * s0 + ε * (1 + L * G) := by
+  mach_mpoly [L, s0, ε, P, G]
+
+theorem geom_reassoc (A UW G : Real) :
+    (1 - A) * (UW * G) = UW * ((1 - A) * G) := by mach_mpoly [A, UW, G]
+
+/-- Solution of the affine recurrence `s_{k+1} ≤ L·s_k + ε`: `s_n ≤ Lⁿ·s₀ + ε·(1+L+…+Lⁿ⁻¹)`.
+Unlike `contraction_certificate` (which assumes `s₀ ≤ 0`, two orbits starting together), this keeps
+the `Lⁿ·s₀` transient, so it bounds the ABSOLUTE state from an arbitrary start. -/
+theorem iterate_affine_bound {L ε : Real} (s : Nat → Real) (hL : 0 ≤ L) (hε : 0 ≤ ε)
+    (hstep : ∀ k, s (k + 1) ≤ L * s k + ε) :
+    ∀ n, s n ≤ npow n L * s 0 + ε * geom L n := by
+  intro n
+  induction n with
+  | zero =>
+      show s 0 ≤ npow 0 L * s 0 + ε * geom L 0
+      rw [show npow 0 L = 1 from rfl, show geom L 0 = 0 from rfl]
+      exact le_of_eq (by mach_ring)
+  | succ m ih =>
+      refine le_trans (hstep m)
+        (le_trans (add_le_add_both (mul_le_mul_of_nonneg_left ih hL) (le_refl ε)) (le_of_eq ?_))
+      rw [geom_succ, npow_succ]
+      exact affine_step_eq L (s 0) ε (npow m L) (geom L m)
+
+/-- **The guarded loop is input-to-state stable: the state converges into the safe envelope from
+ANY initial state.** `|x_n| ≤ |a|ⁿ·|x₀| + (U+W)·geom |a| n`: the transient `|a|ⁿ·|x₀|` decays
+(`|a| < 1`), and the disturbance term is bounded by the ultimate envelope —
+`(1−|a|)·((U+W)·geom |a| n) ≤ U+W`, i.e. `(U+W)·geom |a| n ≤ (U+W)/(1−|a|)`. So the trajectory
+settles into `‖x‖ ≤ (U+W)/(1−|a|)` no matter where it starts. The clamp guard supplies the `|u|≤U`
+(`clamp_abs_le`), for ANY controller signal `v_k`. -/
+theorem clamp_guarded_ultimately_bounded {x v w : Nat → Real} {a U W : Real}
+    (hplant : ∀ k, x (k + 1) = a * x k + clamp (v k) (-U) U + w k)
+    (hU : 0 ≤ U) (hW : 0 ≤ W)
+    (hdist : ∀ k, abs (w k) ≤ W) :
+    ∀ n, abs (x n) ≤ npow n (abs a) * abs (x 0) + (U + W) * geom (abs a) n
+      ∧ (1 - abs a) * ((U + W) * geom (abs a) n) ≤ U + W := by
+  have hUW : 0 ≤ U + W := add_nonneg_ea hU hW
+  have hstep : ∀ k, abs (x (k + 1)) ≤ abs a * abs (x k) + (U + W) := by
+    intro k
+    rw [hplant k]
+    have hg : abs (clamp (v k) (-U) U) ≤ U := by
+      have h := clamp_abs_le (v k) (-U) U; rwa [abs_neg, abs_of_nonneg hU, max_self] at h
+    have step : abs (a * x k + clamp (v k) (-U) U + w k) ≤ (abs a * abs (x k) + U) + W := by
+      refine le_trans (abs_add (a * x k + clamp (v k) (-U) U) (w k)) ?_
+      refine le_trans
+        (add_le_add_both (abs_add (a * x k) (clamp (v k) (-U) U)) (le_refl (abs (w k)))) ?_
+      rw [abs_mul]
+      exact add_le_add_both (add_le_add_both (le_refl _) hg) (hdist k)
+    exact le_trans step (le_of_eq (by mach_mpoly [abs a, abs (x k), U, W]))
+  intro n
+  refine ⟨iterate_affine_bound (fun k => abs (x k)) (abs_nonneg a) hUW hstep n, ?_⟩
+  have hsc := geom_scaled_le_one (abs_nonneg a) n
+  rw [geom_reassoc (abs a) (U + W) (geom (abs a) n)]
+  exact le_trans (mul_le_mul_of_nonneg_left hsc hUW) (le_of_eq (by mach_ring))
 
 end MachLib.Real
