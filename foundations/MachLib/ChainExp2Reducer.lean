@@ -204,4 +204,47 @@ theorem chain2_correctReduce_not_nestedLT :
     · rw [chain2_inner_degreeY0_correctReduce_xYone, chain2_inner_degreeY0_xYone] at h2a; omega
     · rw [chain2_inner_degreeY0_correctReduce_xYone, chain2_inner_degreeY0_xYone] at h2eq; omega
 
+/-! ## The correct reduce operator (general), with first-component preservation
+
+The Rolle-sound chain-2 reduce `R(P) = P' − m·P`, `m = (degreeY₁ P)·y₀ + c` — concrete in code (vs the
+ruled-out c=0 `reducePoly`). Its defining property is `lcY₁(R P) = a_d' − c·a_d` (the single-exp reduce of
+the leading coefficient); the *descent* of the inner measure under it is **Phase-2 piece 3** and needs
+(piece 1) a canonical `y₀`-degree measure + (piece 2) the polynomial-multiplier Rolle soundness in the
+framework. What is provable *now* — and is the first brick of the assembly — is that `R` preserves the
+first measure component (`degreeY₁`), exactly as `reducePoly` did: the multiplier `m` is `y₁`-free. -/
+
+/-- **The correct chain-2 reduce** (general `c`): `R(P) = P' − ((degreeY₁ P)·y₀ + c)·P`. The polynomial
+multiplier `(degreeY₁ P)·y₀ + c` cancels the `degreeY₁·y₀·lcY₁` injection of the chain total derivative,
+so `lcY₁(R P)` becomes the single-exp reduce of `lcY₁ P`. -/
+noncomputable def chain2Reduce (c : Real) (p : MultiPoly 2) : MultiPoly 2 :=
+  MultiPoly.sub (chainTotalDeriv (IterExpChain 2) p)
+    (MultiPoly.mul
+      (MultiPoly.add
+        (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)))
+                       (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+        (MultiPoly.const c))
+      p)
+
+/-- **First component preserved by the correct reduce.** `degreeY₁` (the first component of
+`chain2Measure`) is unchanged by `chain2Reduce c`: `cTD` preserves it and the multiplier `m` is `y₁`-free
+(`degreeY₁ m = 0`), so the `Nat.max` over the `sub` is `degreeY₁ p`. (The inner-component descent is the
+remaining Phase-2 work, gated on the canonical-measure redesign.) -/
+theorem chain2Reduce_fst_preserved (c : Real) (p : MultiPoly 2) :
+    (chain2Measure (chain2Reduce c p)).1 = (chain2Measure p).1 := by
+  show Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) p))
+               (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+                 (MultiPoly.mul
+                   (MultiPoly.add
+                     (MultiPoly.mul
+                       (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)))
+                       (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+                     (MultiPoly.const c))
+                   p))
+     = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p
+  rw [degreeY1_chainTotalDeriv_eq_IterExp2 p]
+  show Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+               (0 + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+     = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p
+  rw [Nat.zero_add]; exact Nat.max_self _
+
 end MachLib.ChainExp2Reducer

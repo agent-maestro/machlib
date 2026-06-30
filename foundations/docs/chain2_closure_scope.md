@@ -126,6 +126,41 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
 
 ---
 
+## Reconciliation with the prior `InnerKhovanskiiExpWF` framework
+
+`MachLib/InnerKhovanskiiExpWF.lean` (the `InnerKhovanskiiExp` measured-framework track, distinct from this
+`KhovanskiiReduction`/`StepwiseDecreaseReducer` track) attacked the *same* chain-2 wall earlier and
+independently found the `degreeY₀`-raising obstruction (its lines 128–174). Reconciling the two:
+
+- **This track's `chain2Measure` IS that file's "Fix A"** — "track `degreeY₀` and `degreeY₁` separately",
+  a nested `(degreeY₁, (degreeY₀, …))`. So the two efforts converged on the same measure shape.
+- **`chain2_correctReduce_not_nestedLT` (this track) is the rigorous proof that Fix A is *not enough*.**
+  That file's prose left Fix A as a promising open path; the machine-checked obstruction shows that with
+  the *syntactic* `degreeY₀`, Fix A still fails — *even with the correct operator* — because the `y₀`
+  cancellation is only semantic. The resolution is a **canonical** `y₀`-degree (this is new vs both
+  earlier files).
+- **Premise correction.** That file's Fix-A rationale (lines 156–159) states `chainTotalDeriv` "reduces
+  `d₁` by 1". It does **not** — `degreeY1_chainTotalDeriv_eq_IterExp2` proves `degreeY₁` is *preserved*
+  (the `y₁`-leading term stays at degree `d₁`, gaining a `y₀` factor in its coefficient). The descent must
+  come from the *inner* measure on `lcY₁`, not from `d₁`.
+
+**The correct operator is now concrete in code** (this track): `ChainExp2Reducer.chain2Reduce c p = P' −
+((degreeY₁ P)·y₀ + c)·P`, with `chain2Reduce_fst_preserved` (first component preserved). Its inner-descent
+is gated on Piece 1 below.
+
+### Piece 1 (next): canonical `y₀`-degree
+
+Replace `singleExpMeasure`'s inner first component (`MultiPoly.degreeY ⟨0⟩`, syntactic) with a canonical
+`y₀`-degree `cdegY₀`. Build (~100–200 lines): a "last canonically-nonzero index" over `yCoeffsAt ⟨0⟩ q`
+(each coefficient's canonical-zero test is `CanonicallyZero (polyCoeffs (mP2PFL c))`, already decidable;
+note `polyTrueDegree`/`CanonicallyZero` are `noncomputable`, so `cdegY₀` won't `rfl`-compute — the descent
+needs lemmas, not `decide`). Then `chain2Measure'` with `cdegY₀`, re-derive `chain2Order'_wf` (trivial via
+`InvImage.wf` + `natTripleLex_wf`), and re-establish `chain2Reduce_fst_preserved`/`…_of_snd` for it. With
+`cdegY₀`, the `x·y₁` case flips from the machine-checked *increase* to a genuine *descent* (canonical inner
+`(0,1) → (0,0)`), which is the validation target.
+
+---
+
 ## Effort, risk, payoff
 
 - **Effort** (revised after the machine-checked obstruction): Phase 2 is **research, not mirroring**. It
