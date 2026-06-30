@@ -34,8 +34,16 @@ per theorem; no `sorryAx` = a real close. Baseline 116/165 closed, **49 fail**.
 
 These need **~6 new derivable lemmas** (`log_nonneg`, `log_monotone`, `one_lt_exp`, a couple sqrt
 bounds) + **~4 new arms** (log, exp-vs-one, tanh-affine, additive-ordering). **No new axioms.** Same
-shape of work as `abs_mul_self` / `one_add_tanh_pos` this arc. Estimated close: **~25–35 of 37**, taking
-per-obligation close-rate to **~85–90%**.
+shape of work as `abs_mul_self` / `one_add_tanh_pos` this arc. ~~Estimated close: ~25–35 of 37, taking
+per-obligation close-rate to ~85–90%.~~
+
+> **UPDATE (Phase 1 executed, machlib `6587153`): actual = +10, to 126/165 = 76% — not ~90%.** The
+> estimate over-counted by bucketing on *headline shape*. Real obligations stack blockers beyond the
+> shape: a positive constant behind a `def`, a `√`/product inside an `exp` arg, a multi-step hypothesis
+> chain. So a shape that "should" close often has one more gate, and shape-count is an upper bound, not a
+> close-count. shannon/eyring/binomial/sigmoid DO close; many of their shape-mates carry an extra
+> blocker. **The structural ceiling is ≈76%**, and pushing past it is per-kernel blocker-clearing
+> (single-digit gains each), not "one more arm."
 
 ### Genuine domain `a−b` (need bespoke math) — ~12 of 49
 
