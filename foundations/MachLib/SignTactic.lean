@@ -21,18 +21,22 @@ Every leaf is a real positivity fact — it cannot manufacture a false sign (`x 
 **Measured (2026-06-30), per-obligation** (the rigorous metric: swap each `sorry` for
 `(first | mach_sign | sorry)` so the file always compiles, then `#print axioms` per theorem — a
 theorem with no `sorryAx` is a *real* close): of the `Discovered/` positivity/ordering obligations,
-the tactics close **116 / 165 (70%)**. (A per-FILE check reads 58/97 ≈ 60%, but that under-counts —
-a multi-obligation file stays red if any one obligation fails.) Coverage spans: positivity
-(`mul_pos`/`add_pos`/`div_pos`/`exp_pos`), the sigmoid-GELU/zero-floor/`1−p`/`realPow` arms, the
-ordering layer (`mach_le` + `min_nonneg` + `sub_nonneg_of_le` for structural `a − b ≥ 0` via monotone
-differences), and — using the emitted refinement hypotheses — **bound transitivity** (`0 ≤ x` from
-`c ≤ x` + `0 ≤ c`) and **square monotonicity** (`|a| ≤ |b| ⇒ a² ≤ b²`), which together close e.g.
-`defibrillator.phase1_energy = HALF·C·(v0²−v1²) ≥ 0` from `C ≥ C_MIN` and `|v1| ≤ |v0|`.
+the tactics close **126 / 165 (76%)**. (A per-FILE check reads ≈60%, but that under-counts — a
+multi-obligation file stays red if any one obligation fails.) Coverage spans: positivity
+(`mul_pos`/`add_pos`/`div_pos`/`exp_pos`/`sqrt_pos`), the sigmoid-GELU/zero-floor/`1−p`/`realPow` arms,
+the **transcendental-bound** arms (`log_nonneg`, `one_lt_exp`, `tanh_mul_add_self_nonneg` — all derived
+from existing axioms, no new ones), the **ordering layer** (`mach_le` + `min_nonneg` + recursive
+additive + `sub_nonneg_of_le` for structural `a − b ≥ 0`), and — using the emitted refinement
+hypotheses — **bound transitivity** (`0 ≤ x`/`0 < x` from `c ≤ x` + `0 ≤ c`) and **square
+monotonicity** (`|a| ≤ |b| ⇒ a² ≤ b²`).
 
-Honest ceiling: the remaining ~30% are out of any general tactic's reach — a **domain** inequality
-(`a − b ≥ 0` where `b ≤ a` is Black-Scholes-price / energy-balance specific, not structural), or a
-conditional/min loss needing case analysis. Those need a real nlinarith + a domain-lemma library, not
-more arms.
+Honest ceiling — the structural close-rate saturates near **~76%**. The Phase-1 arm batch lifted it
++10 (70→76), *below* the optimistic "~90%" shape-count estimate: real obligations stack blockers
+beyond their headline shape (a positive constant behind a `def`, a `√`/product inside an `exp` arg, a
+multi-step hypothesis chain), so a shape that "should" close often has one more gate. The remaining
+~24% split into (a) **domain** inequalities — `a − b ≥ 0` where `b ≤ a` is Black-Scholes-price /
+energy-balance specific, not structural — and (b) compounding-blocker cases needing a per-kernel push.
+Neither is closed by "one more arm"; see `docs/verify_closerate_scope.md`.
 -/
 
 namespace MachLib.Real
@@ -56,6 +60,29 @@ theorem one_add_tanh_pos (x : Real) : 0 < 1 + tanh x := by
   have h := sub_pos_of_lt (neg_one_lt_tanh x)
   have e : tanh x - (-1) = 1 + tanh x := by mach_ring
   rwa [e] at h
+
+/-- `0 ≤ tanh y · c + c` for `0 ≤ c` (= `c·(1+tanh y)`) — the un-factored sigmoid (`sigmoid_alt`). -/
+theorem tanh_mul_add_self_nonneg (y c : Real) (hc : 0 ≤ c) : 0 ≤ tanh y * c + c := by
+  have e : tanh y * c + c = c * (1 + tanh y) := by mach_ring
+  rw [e]; exact mul_nonneg hc (le_of_lt (one_add_tanh_pos y))
+
+/-- `1 < exp x` for `0 < x` (from `exp_lt` + `exp_zero`). The `exp(positive) > 1` shape (`up_factor`). -/
+theorem one_lt_exp {x : Real} (h : 0 < x) : 1 < exp x := by
+  have := exp_lt h; rwa [exp_zero] at this
+
+/-- `1 ≤ exp x` for `0 ≤ x`. -/
+theorem one_le_exp {x : Real} (h : 0 ≤ x) : 1 ≤ exp x := by
+  have := exp_monotone h; rwa [exp_zero] at this
+
+/-- `log` is monotone (`≤`) on the positives — from the strict `log_lt_log` axiom. -/
+theorem log_le_log {x y : Real} (hx : 0 < x) (hxy : x ≤ y) : log x ≤ log y := by
+  rcases (le_iff_lt_or_eq x y).mp hxy with h | h
+  · exact le_of_lt (log_lt_log hx h)
+  · subst h; exact le_refl _
+
+/-- `0 ≤ log x` for `1 ≤ x` (from `log_le_log` + `log_one`). The `log(1+snr) ≥ 0` shape (`shannon`). -/
+theorem log_nonneg {x : Real} (h : 1 ≤ x) : 0 ≤ log x := by
+  have := log_le_log zero_lt_one_ax h; rwa [log_one] at this
 
 /-- The decimal zero `0.0…0` *is* `0` — cleared via `realOfScientific_clears` (`0·10ᵉ = 0`). -/
 theorem rOS_zero (e : Nat) : realOfScientific 0 true e = 0 := by
@@ -88,6 +115,12 @@ macro_rules
       | exact le_of_lt (one_add_tanh_pos _)
       | exact le_max_right _ _
       | exact le_max_left _ _
+      | exact sqrt_nonneg _
+      | (apply sqrt_pos <;> mach_sign_core)
+      | (apply one_lt_exp <;> mach_sign_core)
+      | (apply one_le_exp <;> mach_sign_core)
+      | (apply log_nonneg <;> mach_le)
+      | (apply tanh_mul_add_self_nonneg <;> mach_sign_core)
       | mach_positivity
       | (apply mul_pos <;> mach_sign_core)
       | (apply add_pos <;> mach_sign_core)
@@ -101,6 +134,7 @@ macro_rules
       -- bound transitivity: `0 ≤ x` from a refinement hyp `c ≤ x` (e.g. `capacitance ≥ C_MIN`)
       -- + `0 ≤ c`. The `by assumption` resolves the hyp (instantiating the midpoint) first.
       | (refine le_trans ?_ (by assumption) <;> mach_sign_core)
+      | (refine lt_of_lt_of_le ?_ (by assumption) <;> mach_sign_core)
       | (apply sub_nonneg_of_le <;> mach_le))
 
 macro_rules
@@ -116,6 +150,9 @@ macro_rules
       | (apply neg_le_neg <;> mach_le)
       | (apply add_le_add_left <;> mach_le)
       | (apply mul_self_le_mul_self_of_abs_le <;> mach_le)
+      -- additive ordering, recursive: `x ≤ y + z` via `x ≤ y` (recurse) + `0 ≤ z`
+      -- (closes nested `a ≤ (a+b)+c`, e.g. carbon `total ≥ scope1`).
+      | (refine le_trans ?_ (le_add_of_nonneg_right ?_) <;> (first | mach_le | mach_sign_core))
       | (apply mul_le_mul_of_nonneg_left <;> (first | mach_le | mach_sign_core)))
 
 /-- **`mach_sign`** — close a Forge `f(vars) > 0` / `0 < f(vars)` obligation. Normalise the decimal
@@ -146,6 +183,13 @@ example (x : Real) (h : (0.5:Real) ≤ x) : (0:Real) ≤ x := by mach_sign
 example (a b : Real) (h : abs a ≤ abs b) : a * a ≤ b * b := by mach_le
 example (c v0 v1 : Real) (hc : (0.5:Real) ≤ c) (hv : abs v1 ≤ abs v0) :
     c * (v0 * v0 - v1 * v1) ≥ (0:Real) := by mach_sign
+-- Phase 1: transcendental bounds + additive/strict-bound ordering
+example (B snr : Real) (hB : (0:Real) ≤ B) (hs : (0:Real) ≤ snr) :
+    B * log ((1:Real) + snr) ≥ (0:Real) := by mach_sign      -- log positivity (shannon)
+example (x : Real) (h : (0:Real) < x) : exp x > (1:Real) := by mach_sign  -- exp-vs-one (binomial)
+example (y c : Real) (hc : (0:Real) ≤ c) : tanh y * c + c ≥ (0:Real) := by mach_sign  -- tanh-affine (sigmoid)
+example (a b c : Real) (hb : (0:Real) ≤ b) (hc : (0:Real) ≤ c) : (a + b) + c ≥ a := by mach_le  -- additive (carbon)
+example (t : Real) (h : t ≥ (0.5:Real)) : (0:Real) < t := by mach_sign     -- strict bound-transitivity
 end SignTests
 
 end MachLib.Real
