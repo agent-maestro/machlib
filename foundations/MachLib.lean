@@ -107,6 +107,7 @@ import MachLib.BitVecMul
 import MachLib.FixedPointRTL
 import MachLib.BackwardError
 import MachLib.ForwardBackwardKappa
+import MachLib.ProbabilisticBound
 import MachLib.IntervalArith
 import MachLib.AffineContraction
 import MachLib.CrossTargetPairs
