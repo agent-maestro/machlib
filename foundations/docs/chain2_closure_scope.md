@@ -148,16 +148,20 @@ independently found the `degreeY₀`-raising obstruction (its lines 128–174). 
 ((degreeY₁ P)·y₀ + c)·P`, with `chain2Reduce_fst_preserved` (first component preserved). Its inner-descent
 is gated on Piece 1 below.
 
-### Piece 1 (next): canonical `y₀`-degree
+### Piece 1 — canonical `y₀`-degree — FOUNDATION DONE (`ChainExp2CanonMeasure.lean`, sorryAx-free)
 
-Replace `singleExpMeasure`'s inner first component (`MultiPoly.degreeY ⟨0⟩`, syntactic) with a canonical
-`y₀`-degree `cdegY₀`. Build (~100–200 lines): a "last canonically-nonzero index" over `yCoeffsAt ⟨0⟩ q`
-(each coefficient's canonical-zero test is `CanonicallyZero (polyCoeffs (mP2PFL c))`, already decidable;
-note `polyTrueDegree`/`CanonicallyZero` are `noncomputable`, so `cdegY₀` won't `rfl`-compute — the descent
-needs lemmas, not `decide`). Then `chain2Measure'` with `cdegY₀`, re-derive `chain2Order'_wf` (trivial via
-`InvImage.wf` + `natTripleLex_wf`), and re-establish `chain2Reduce_fst_preserved`/`…_of_snd` for it. With
-`cdegY₀`, the `x·y₁` case flips from the machine-checked *increase* to a genuine *descent* (canonical inner
-`(0,1) → (0,0)`), which is the validation target.
+Built: `cdegY0 q` (drop trailing canonically-zero `y₀`-coefficients via `CanonicallyZero (polyCoeffs
+(mP2PFL c))`, `length − 1`), `canonLcY0`, `singleExpMeasureCanon`, `chain2MeasureCanon` (first component
+`degreeY₁` stays syntactic — the *trim* lowers it; only the inner is canonicalised), `chain2OrderCanon_wf`
+(trivial via `InvImage.wf` + `natTripleLex_wf`), and the refinement `cdegY0_le_degreeY0` (`cdegY0 q ≤
+degreeY ⟨0⟩ q` — the canonical measure never exceeds the syntactic, only forgets phantom leading terms).
+
+Remaining for Piece 1 (folds into Piece 3): re-state `chain2Reduce_fst_preserved`/`…_of_snd` against
+`chain2MeasureCanon`, and prove the **validation** — the `x·y₁` case flips from the machine-checked
+*increase* to a canonical *descent* `(0,1) → (0,0)`. This is *not* `rfl` (`cdegY0`/`CanonicallyZero` are
+`noncomputable`): it needs the `leadingCoeffY`-under-`cTD` identity (to compute `lcY₁(chain2Reduce)`) plus
+`CanonicallyZero` reasoning to show the phantom leading `y₀`-coefficient vanishes — i.e. the Piece-3
+machinery applied to the canonical measure.
 
 ---
 
