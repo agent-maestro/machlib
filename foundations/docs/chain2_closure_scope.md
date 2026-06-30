@@ -84,9 +84,23 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
     `chain2_inner_degreeY0_yOne = 0`, `chain2_inner_degreeY0_reduce_yOne = 1`), sorryAx-free. So Phase 2's
     `hsnd` is *unprovable* for `reducePoly`; `chain2_reduce_nestedLT_of_snd` (the conditional Phase-2
     reduction) stands as the template for whatever the *correct* reduce turns out to be.
-  - **The correct reduce is genuine new construction.** It must reduce `lcY₁` *as a single-exp object*
-    (without injecting `y₀`) — the chain total derivative cannot. This **reduce arm is still open** (the
-    crux).
+  - **The correct reduce — now identified.** The Rolle-sound chain-2 reduce is `R(P) = P' − m·P` with a
+    **polynomial multiplier** `m = d·y₀ + c` (`d = degreeY₁ P`). It cancels the `d·y₀·a_d` injection so
+    that `lcY₁(R P) = a_d' − c·a_d` — exactly the *single-exp reduce* of the leading coefficient `a_d =
+    lcY₁ P`. (Compare single-exp, which reduces with the *constant* `c = degreeY₀`: `lcY₀(P'−d·P) =
+    (lcY₀ P)'`; chain-2's cancellation term carries a `y₀`, so a constant multiplier cannot do it — the
+    multiplier must be the polynomial `d·y₀ + c`.) **Soundness:** `R(P) = e^{∫m}·(P·e^{−∫m})'`, and
+    `e^{−∫m} = y₁^{−d}·e^{−cx}` is nonzero along the chain (`y₁ = e^{y₀}` ⇒ `e^{−d·y₀} = y₁^{−d}`), so
+    Rolle on `P·e^{−∫m}` gives `#zeros(P) ≤ #zeros(R P) + 1`. This needs a **framework extension**:
+    `IsKhovanskiiReducible`'s `reduce` constructor only allows a *constant* `c`; a polynomial-multiplier
+    reduce (and its zero-count transfer) must be added.
+  - **The MEASURE must be canonicalised too (machine-checked).** Even the correct `R` does *not* descend
+    the *current* `chain2Measure`, because its inner first component is the **syntactic** `degreeY₀` and
+    `R` produces `lcY₁` as a non-canonical `sub`/`add` AST whose `y₀` cancellation is only semantic.
+    `ChainExp2Reducer.chain2_correctReduce_not_nestedLT` proves it for `p = x·y₁` (`lcY₁(R p)` is
+    canonically `1` but syntactic `degreeY₀ = 1`, so the inner second goes `0 → 1`). **So the inner first
+    component must be a CANONICAL `y₀`-degree, not `MultiPoly.degreeY ⟨0⟩`** — the operator alone is
+    insufficient; `chain2Measure` needs redesign (or `lcY₁` must be canonicalised before measuring).
   - **Trim arm — DONE** (`ChainExp2Trim.lean`, sorryAx-free): the *other* dispatch branch is built. The
     `MultiPoly 1` `dropLeadingY` machinery is lifted to a generic `dropLeadingYAt {n} (i)` (the primitives
     `reconstructY`/`yCoeffsAt`/`degreeY_reconstructY_lt`/`listEvalAuxN_dropLast_eq_of_last_eval_zero` are
@@ -125,9 +139,22 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
 - **Payoff**: closes chain-2 Khovanskii (the announcement blocker); the WF backbone (`natTripleLex_wf` /
   `natQuadLex_wf`) and the structural reduction (`chain2_reduce_nestedLT_of_snd`) already scale to chain-`n`.
 
-**Recommendation.** Path B. The structural half + the obstruction are shipped (sorryAx-free). Next concrete
-step: **design the descending chain-2 reduce** — candidate: an explicit "reduce-the-leading-coefficient"
-operator that applies the *single-exp* reduce to `lcY₁ p` (a genuine `MultiPoly` in `x, y₀`) and
-reconstructs, so the inner `singleExpMeasure` descends by the proven single-exp lemma while `degreeY₁` is
-preserved. Validate it against `chain2_reduce_nestedLT_of_snd` (it plugs straight into `hsnd`). In
-parallel, port the `MultiPoly 1` trim machinery to `MultiPoly 2` for the canonically-zero `lcY₁` corner.
+**Recommendation.** Path B. Shipped (sorryAx-free): structural half, both obstructions, **trim arm**, and
+the **reduce-arm design** (above). The reduce arm now decomposes into three well-specified pieces, in order:
+
+1. **Canonicalise the inner measure.** Replace `chain2Measure`'s inner first component (syntactic
+   `MultiPoly.degreeY ⟨0⟩`) with a *canonical* `y₀`-degree (the `y₀`-analog of `polyTrueDegreeStrict`), or
+   canonicalise `lcY₁` before measuring. Without this, `chain2_correctReduce_not_nestedLT` shows *no*
+   operator descends. Re-establish `chain2Order_wf` for the canonical measure (the `LexProd` backbone is
+   unchanged).
+2. **Add the polynomial-multiplier reduce to the framework.** Extend `IsKhovanskiiReducible` with `R(P) =
+   P' − m·P` for `m = d·y₀ + c` and prove its zero-count transfer (the Rolle argument on `P·y₁^{−d}
+   e^{−cx}`). This is the analysis-heavy piece (mirrors `scaledReduction`'s `HasDerivAt`/Rolle lemmas with
+   a function multiplier).
+3. **Prove the inner descent + assemble.** With (1)+(2): `lcY₁(R P) = a_d' − c·a_d` (single-exp reduce of
+   `a_d`), so the canonical inner measure descends by the *proven single-exp* descent; feed it into
+   `chain2_reduce_nestedLT_of_snd`. Then the dispatch = `chain2_canonicalTrim_step` (inner `=0`) vs this
+   reduce (inner `>0`), and Phases 3–4 mirror `buildReducer`/`witness_via_sdr` over `chain2Order_wf`.
+
+Effort: (1) moderate (a canonical-degree function + WF re-derivation), (2) the heavy analysis piece, (3)
+moderate once (1)+(2) land. Path B keeps single-exp untouched throughout.

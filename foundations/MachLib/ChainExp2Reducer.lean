@@ -154,4 +154,54 @@ theorem chain2_reducePoly_not_nestedLT :
     · rw [chain2_inner_degreeY0_reduce_yOne, chain2_inner_degreeY0_yOne] at h2a; omega
     · rw [chain2_inner_degreeY0_reduce_yOne, chain2_inner_degreeY0_yOne] at h2eq; omega
 
+/-! ## The deeper obstruction: the *correct* reduce also fails — because the measure is SYNTACTIC
+
+The Rolle-sound chain-2 reduce is `R(P) = P' − m·P` with the **polynomial** multiplier `m = d·y₀ + c`
+(`d = degreeY₁ P`): it cancels the `d·y₀·a_d` injection so that `lcY₁(R P) = a_d' − c·a_d`, i.e. the
+*single-exp reduce* of the leading coefficient `a_d = lcY₁ P` (whose single-exp measure genuinely
+descends). The multiplier stays in the chain because `e^{−d·y₀} = y₁^{−d}` (as `y₁ = e^{y₀}`), so the
+Rolle argument on `P·e^{−∫m}` (nonzero) gives `#zeros(P) ≤ #zeros(R P) + 1`.
+
+But `chain2Measure`'s inner first component is the **syntactic** `degreeY₀`, and `R` produces `lcY₁(R P)`
+as a `sub`/`add` AST whose `y₀` cancellation is only *semantic* — so syntactic `degreeY₀` still rises.
+Witness `p = x·y₁` (a genuine reduce case: `lcY₁ p = x ≢ 0`, single-exp-reducible). With `d = 1, c = 0`,
+`m = y₀`, the correct reduce `R(p) = p' − y₀·p` has `lcY₁` canonically `1` (degreeY₀ should be 0) but its
+AST is `sub(add(1·1, x·(y₀·1)), y₀·(x·1))` — syntactic `degreeY₀ = 1`. So even the correct operator fails
+the *current* measure. **Conclusion: the inner first component must be a CANONICAL `y₀`-degree, not
+syntactic `degreeY₀`** — the operator alone is not enough; the measure needs canonicalisation. -/
+
+/-- Genuine-reduce witness `p = x·y₁` (`lcY₁ = x`, not a pure exponential, single-exp-reducible). -/
+private def xYone : MultiPoly 2 := MultiPoly.mul MultiPoly.varX (MultiPoly.varY ⟨1, by omega⟩)
+
+/-- The Rolle-sound *correct* reduce at `p = x·y₁`: `R(p) = p' − y₀·p` (`m = d·y₀ + c` with `d=1, c=0`).
+Its `lcY₁` is canonically `1` — the single-exp reduce of `lcY₁ p = x` — yet its AST is a non-canonical
+`sub`. -/
+private noncomputable def correctReduce_xYone : MultiPoly 2 :=
+  MultiPoly.sub (chainTotalDeriv (IterExpChain 2) xYone)
+                (MultiPoly.mul (MultiPoly.varY ⟨0, by omega⟩) xYone)
+
+/-- Original inner first component (`degreeY₀ (lcY₁ (x·y₁)) = degreeY₀ x`) is `0`. -/
+theorem chain2_inner_degreeY0_xYone : (chain2Measure xYone).2.1 = 0 := rfl
+
+/-- Correct-reduced inner first component is `1` — the **syntactic** `degreeY₀` rose even though the
+leading coefficient is canonically the constant `1`. -/
+theorem chain2_inner_degreeY0_correctReduce_xYone :
+    (chain2Measure correctReduce_xYone).2.1 = 1 := rfl
+
+/-- **The deeper obstruction, machine-checked.** Even the *correct* (Rolle-sound, polynomial-multiplier)
+reduce does not strictly decrease `chain2Measure` at `p = x·y₁`: `degreeY₁` ties (both `1`) but the inner
+syntactic `degreeY₀` goes `0 → 1`. So the failure is in the MEASURE (syntactic `degreeY₀`), not only the
+reduce — closing chain-2 needs a *canonical* inner `y₀`-degree, not just a better operator. -/
+theorem chain2_correctReduce_not_nestedLT :
+    ¬ nestedLT (chain2Measure correctReduce_xYone) (chain2Measure xYone) := by
+  intro h
+  rcases h with h1 | ⟨_, h2⟩
+  · -- first component ties (both 1)
+    have e1 : (chain2Measure correctReduce_xYone).1 = 1 := rfl
+    have e2 : (chain2Measure xYone).1 = 1 := rfl
+    rw [e1, e2] at h1; omega
+  · rcases h2 with h2a | ⟨h2eq, _⟩
+    · rw [chain2_inner_degreeY0_correctReduce_xYone, chain2_inner_degreeY0_xYone] at h2a; omega
+    · rw [chain2_inner_degreeY0_correctReduce_xYone, chain2_inner_degreeY0_xYone] at h2eq; omega
+
 end MachLib.ChainExp2Reducer
