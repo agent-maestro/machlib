@@ -44,6 +44,7 @@ from an interval to a quadratic sublevel set.
 | `safe_envelope_invariant` / `measure_sublevel_invariant` | abstract contraction `m_{k+1} ≤ ρ·m_k + δ` | `m_k ≤ X` (the reusable core) |
 | `clamp_guarded_safe`, `clamp_guarded_ultimately_bounded` | scalar, saturating guard | `|x| ≤ X`; converges to `(U+W)/(1−|a|)` |
 | `first_order_clamp_envelope` | scalar, envelope pinned to its value | `|x| ≤ X`, `X` from `(1−a)·X = U+W` (division-free) |
+| `nonlinear_drift_clamp_safe` | scalar, **nonlinear** drift `|f(x)| ≤ L·|x|+c` (`L<1`) | `|x| ≤ X` — subsumes the linear case; `nonlinear_abs_drift_safe` is a worked non-affine instance |
 | `two_mode_clamp_envelope` | **two decoupled modes**, one actuator | weighted-ℓ¹ `p₁|x₁|+p₂|x₂| ≤ X` |
 | `coupled_two_state_clamp_envelope` | **coupled 2×2** (off-diagonal), ℓ¹-diagonally-dominant | weighted-ℓ¹ sublevel set |
 | `quadratic_lyapunov_sublevel` | **coupled oscillator** (non-diagonal `V = xᵀPx`) + disturbance | `{V ≤ X}`, needs `ρ < ½` |

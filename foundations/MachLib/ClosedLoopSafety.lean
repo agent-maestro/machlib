@@ -158,4 +158,42 @@ theorem first_order_clamp_envelope {x v w : Nat → Real} {a U W X : Real}
   rw [abs_of_nonneg ha, ← henv]
   exact le_of_eq (by mach_ring)
 
+/-! ## Nonlinear plants — the guard keeps a NONLINEAR drift safe too -/
+
+/-- **Closed-loop safety for a NONLINEAR plant.** The plant drift `f` is an arbitrary function; all
+that matters is a sub-unity growth bound `|f(y)| ≤ L·|y| + c` (Lipschitz-at-origin / linear-growth,
+`L < 1` via the invariance condition). Under the saturating guard, the state stays in `|x[k]| ≤ X`
+for all `k` and ANY controller signal, whenever `L·X + (c+U+W) ≤ X`. The clamp again carries the
+proof — the drift never has to be linear. This SUBSUMES `first_order_clamp_envelope`: a linear
+`f(x)=a·x` gives `|f(x)| = |a|·|x|`, i.e. `L = |a|`, `c = 0`. -/
+theorem nonlinear_drift_clamp_safe {x v w : Nat → Real} {f : Real → Real} {L c U W X : Real}
+    (hplant : ∀ k, x (k + 1) = f (x k) + clamp (v k) (-U) U + w k)
+    (hf : ∀ y, abs (f y) ≤ L * abs y + c)
+    (hL : 0 ≤ L) (hU : 0 ≤ U) (hdist : ∀ k, abs (w k) ≤ W)
+    (hinv : L * X + (c + U + W) ≤ X) (h0 : abs (x 0) ≤ X) :
+    ∀ k, abs (x k) ≤ X := by
+  refine safe_envelope_invariant hL hinv h0 (fun k => ?_)
+  rw [hplant k]
+  have hclamp : abs (clamp (v k) (-U) U) ≤ U := by
+    have h := clamp_abs_le (v k) (-U) U; rwa [abs_neg, abs_of_nonneg hU, max_self] at h
+  refine le_trans (abs_add (f (x k) + clamp (v k) (-U) U) (w k)) ?_
+  refine le_trans
+    (add_le_add_both (abs_add (f (x k)) (clamp (v k) (-U) U)) (le_refl (abs (w k)))) ?_
+  refine le_trans (add_le_add_both (add_le_add_both (hf (x k)) hclamp) (hdist k)) ?_
+  exact le_of_eq (by mach_ring)
+
+/-- **Worked nonlinear instance.** A genuinely non-affine (V-shaped) drift `f(x) = a·|x|` is safe
+under the guard: `|a·|y|| = |a|·|y|`, so `L = |a|`, `c = 0`, and the envelope is `X ≥ (U+W)/(1−|a|)`
+exactly as in the linear case — but the plant is not linear. Shows `nonlinear_drift_clamp_safe` is
+instantiable on a non-smooth drift, not just a relabelled linear one. -/
+theorem nonlinear_abs_drift_safe {x v w : Nat → Real} {a U W X : Real}
+    (hplant : ∀ k, x (k + 1) = a * abs (x k) + clamp (v k) (-U) U + w k)
+    (hU : 0 ≤ U) (hdist : ∀ k, abs (w k) ≤ W)
+    (hinv : abs a * X + (0 + U + W) ≤ X) (h0 : abs (x 0) ≤ X) :
+    ∀ k, abs (x k) ≤ X := by
+  refine nonlinear_drift_clamp_safe (f := fun y => a * abs y) hplant (fun y => ?_)
+    (abs_nonneg a) hU hdist hinv h0
+  rw [abs_mul, abs_of_nonneg (abs_nonneg y)]
+  exact le_of_eq (by mach_ring)
+
 end MachLib.Real
