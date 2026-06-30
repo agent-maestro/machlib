@@ -156,12 +156,18 @@ Built: `cdegY0 q` (drop trailing canonically-zero `y₀`-coefficients via `Canon
 (trivial via `InvImage.wf` + `natTripleLex_wf`), and the refinement `cdegY0_le_degreeY0` (`cdegY0 q ≤
 degreeY ⟨0⟩ q` — the canonical measure never exceeds the syntactic, only forgets phantom leading terms).
 
-Remaining for Piece 1 (folds into Piece 3): re-state `chain2Reduce_fst_preserved`/`…_of_snd` against
-`chain2MeasureCanon`, and prove the **validation** — the `x·y₁` case flips from the machine-checked
-*increase* to a canonical *descent* `(0,1) → (0,0)`. This is *not* `rfl` (`cdegY0`/`CanonicallyZero` are
-`noncomputable`): it needs the `leadingCoeffY`-under-`cTD` identity (to compute `lcY₁(chain2Reduce)`) plus
-`CanonicallyZero` reasoning to show the phantom leading `y₀`-coefficient vanishes — i.e. the Piece-3
-machinery applied to the canonical measure.
+Structural half against the canonical measure — DONE: `chain2MeasureCanon_fst_chain2Reduce` (first
+component preserved by `chain2Reduce`, verbatim from `chain2Reduce_fst_preserved` since the canonical
+measure keeps `degreeY₁` syntactic) + `chain2Reduce_nestedLT_canon_of_snd` (the full canonical `nestedLT`
+descent collapses to a single canonical *inner* obligation `hsnd`). So Piece 3 is now isolated to exactly
+the **canonical inner descent** `hsnd`: `singleExpMeasureCanon(lcY₁(chain2Reduce c p)) <ₗ
+singleExpMeasureCanon(lcY₁ p)`.
+
+Remaining (Piece 3 proper, the last deep proof): prove `hsnd`. It is *not* `rfl` (`cdegY0`/`CanonicallyZero`
+are `noncomputable`): it needs the general `leadingCoeffY`-under-`cTD` identity (to show `lcY₁(chain2Reduce
+c p) = a_d' − c·a_d`, the single-exp reduce of `a_d`) plus `CanonicallyZero` reasoning + the single-exp
+canonical descent on `a_d`. Validation checkpoint: the `x·y₁` case flips from the machine-checked *increase*
+to a canonical *descent* `(0,1) → (0,0)`.
 
 ---
 

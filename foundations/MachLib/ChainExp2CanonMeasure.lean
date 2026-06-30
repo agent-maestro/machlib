@@ -99,4 +99,28 @@ theorem cdegY0_le_degreeY0 (q : MultiPoly 2) :
   have h2 := yCoeffsAt_length_le (⟨0, by omega⟩ : Fin 2) q
   omega
 
+/-! ## Structural half against the canonical measure (with the *correct* operator)
+
+The first component of `chain2MeasureCanon` is the same syntactic `degreeY₁` as `chain2Measure`, so the
+correct reduce `chain2Reduce` preserves it here too — and the canonical-measure descent collapses to a
+single canonical *inner* second-component obligation. This is the Piece-3 structural reduction: what
+remains is exactly the canonical inner descent `hsnd` (via the `leadingCoeffY`-under-`cTD` identity +
+single-exp canonical descent). -/
+
+/-- First component (`degreeY₁`) preserved by the correct reduce under the **canonical** measure — the
+canonical measure keeps `degreeY₁` syntactic, so this is `chain2Reduce_fst_preserved` verbatim. -/
+theorem chain2MeasureCanon_fst_chain2Reduce (c : Real) (p : MultiPoly 2) :
+    (chain2MeasureCanon (chain2Reduce c p)).1 = (chain2MeasureCanon p).1 :=
+  chain2Reduce_fst_preserved c p
+
+/-- **Piece-3 structural reduction.** With the canonical measure, the correct reduce's full `nestedLT`
+descent follows from a single canonical *inner* second-component descent `hsnd`
+(`singleExpMeasureCanon(lcY₁ ·)`), because the first component is preserved. The remaining open obligation
+is exactly `hsnd` — the canonical inner descent. -/
+theorem chain2Reduce_nestedLT_canon_of_snd (c : Real) (p : MultiPoly 2)
+    (hsnd : LexProd.lexProd (· < · : Nat → Nat → Prop) (· < ·)
+              (chain2MeasureCanon (chain2Reduce c p)).2 (chain2MeasureCanon p).2) :
+    nestedLT (chain2MeasureCanon (chain2Reduce c p)) (chain2MeasureCanon p) :=
+  LexProd.lexProd_of_snd (chain2MeasureCanon_fst_chain2Reduce c p) hsnd
+
 end MachLib.ChainExp2CanonMeasure
