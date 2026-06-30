@@ -113,6 +113,98 @@ theorem le_cost_bin_left (c : Nat) (a b : CostTree) : cost a ≤ cost (.bin c a 
 theorem le_cost_bin_right (c : Nat) (a b : CostTree) : cost b ≤ cost (.bin c a b) := by
   simp only [cost]; omega
 
+/-! ### T38 — the full decomposition `Cost = Naive − Pattern − Sharing`
+
+The headline cost theorem. To make it a *theorem* and not a tautology, the two saving mechanisms are
+defined **independently** by structural recursion, then proven to account for exactly the gap between
+the naive cost (everything expanded, nothing reused) and the actual cost.
+
+Model: a `BTree` is an expression body that may reference ONE shared subexpression `s` via `ref`
+leaves (the common-subexpression / constant-folding mechanism). Every operator carries two numbers:
+its compound `nodeCost` and its `patSave` — how many primitive nodes the compound operator collapses
+(the `F₁₆` pattern mechanism, e.g. `LSE` realises `exp+exp+add+ln` as fewer nodes).
+
+- **actual** cost: `s` is computed once (`bCost s`), each `ref` in the body is free (`0`), operators
+  cost their `nodeCost`.
+- **naive** cost: every operator is expanded to its primitives (`nodeCost + patSave`) and the shared
+  `s` is re-expanded at each of its `refs body` uses.
+- **patternBonus** = the per-operator `patSave`s (body's, plus the shared `s`'s counted at each use).
+- **sharingDiscount** = `(uses − 1) · cost(s)` — the copies of `s` that reuse avoids.
+-/
+namespace T38
+
+/-- An expression body referencing one shared subexpression via `ref`. Each operator carries
+`(nodeCost, patSave)`. A ref-free `BTree` doubles as the shared subexpression `s`. -/
+inductive BTree where
+  | leaf : Nat → BTree
+  | ref  : BTree
+  | un   : Nat → Nat → BTree → BTree
+  | bin  : Nat → Nat → BTree → BTree → BTree
+
+/-- Number of uses of the shared subexpression (the multiplicity `k`). -/
+def refs : BTree → Nat
+  | .leaf _ => 0 | .ref => 1
+  | .un _ _ a => refs a | .bin _ _ a b => refs a + refs b
+
+/-- Actual (DAG) cost of the body: `ref`s are free (the shared sub is counted once, separately);
+operators cost their compound `nodeCost`. -/
+def bCost : BTree → Nat
+  | .leaf c => c | .ref => 0
+  | .un nc _ a => nc + bCost a | .bin nc _ a b => nc + bCost a + bCost b
+
+/-- Total primitive saving from compound operators in the body (`Σ patSave`). -/
+def bPat : BTree → Nat
+  | .leaf _ => 0 | .ref => 0
+  | .un _ ps a => ps + bPat a | .bin _ ps a b => ps + bPat a + bPat b
+
+/-- Naive cost: each `ref` re-expands the shared sub (cost `w`); each operator is its full primitive
+expansion `nodeCost + patSave`. -/
+def bNaive (w : Nat) : BTree → Nat
+  | .leaf c => c | .ref => w
+  | .un nc ps a => nc + ps + bNaive w a | .bin nc ps a b => nc + ps + bNaive w a + bNaive w b
+
+/-- The decomposition of the naive cost: it is the actual cost, plus the body's pattern saving, plus
+one copy of the shared sub's naive cost `w` per use. The crux lemma — induction on the body. -/
+theorem bNaive_eq (w : Nat) (t : BTree) : bNaive w t = bCost t + bPat t + refs t * w := by
+  induction t with
+  | leaf c => simp [bNaive, bCost, bPat, refs]
+  | ref => simp [bNaive, bCost, bPat, refs]
+  | un nc ps a ih => simp only [bNaive, bCost, bPat, refs, ih]; omega
+  | bin nc ps a b iha ihb =>
+    simp only [bNaive, bCost, bPat, refs, iha, ihb, Nat.add_mul]; omega
+
+/-- Naive cost of the shared subexpression `s` itself (its own primitives; `s` is ref-free so the
+`w` is irrelevant — `bNaive 0 s`). -/
+def naiveSub (s : BTree) : Nat := bCost s + bPat s
+
+/-- Actual cost of the whole expression `(s, body)`: compute `s` once, then the body. -/
+def actualCost (s body : BTree) : Nat := bCost s + bCost body
+/-- Naive cost: expand every operator and re-expand `s` at each of its uses. -/
+def naiveCost (s body : BTree) : Nat := bNaive (naiveSub s) body
+/-- Pattern bonus: compound-operator savings — the body's, plus `s`'s counted once per use. -/
+def patternBonus (s body : BTree) : Nat := bPat body + refs body * bPat s
+/-- Sharing discount: the `(uses − 1)` copies of `s` that reuse avoids. -/
+def sharingDiscount (s body : BTree) : Nat := (refs body - 1) * bCost s
+
+/-- **T38 — the full cost decomposition.** `Naive = Actual + PatternBonus + SharingDiscount`
+(equivalently `Cost = Naive − Pattern − Sharing`), whenever the shared subexpression is used at least
+once. Both savings are defined independently of `actual`/`naive`; the theorem is that they account for
+exactly the gap. -/
+theorem t38_decomposition (s body : BTree) (h : 1 ≤ refs body) :
+    naiveCost s body = actualCost s body + patternBonus s body + sharingDiscount s body := by
+  unfold naiveCost actualCost patternBonus sharingDiscount naiveSub
+  rw [bNaive_eq, Nat.mul_add]
+  -- one copy of `cost s` moves from the `refs·cost s` term into the standalone `+ cost s`:
+  have hrc : ∀ r c : Nat, 1 ≤ r → r * c = (r - 1) * c + c := by
+    intro r c hr
+    rcases r with _ | r
+    · omega
+    · simp [Nat.succ_sub_one, Nat.succ_mul]
+  have := hrc (refs body) (bCost s) h
+  omega
+
+end T38
+
 /-! ### Regression / showcase. -/
 namespace Tests
 
@@ -126,6 +218,20 @@ example : cost (flatSum 3 4 3) = 25 := by decide
 
 -- The headline closed form on N = 5 terms.
 example : cost (flatSum 3 4 4) = (4 + 3) * 5 - 3 := by decide
+
+-- T38 worked example. Shared sub `s = un 4 1 (leaf 2)` (nodeCost 4, pattern-saving 1, leaf 2):
+--   bCost s = 6, bPat s = 1, naiveSub s = 7.
+-- Body `bin 3 2 ref (bin 5 0 ref (leaf 1))` uses `s` twice (refs = 2):
+--   actual  = bCost s + bCost body = 6 + (3 + 0 + (5 + 0 + 1)) = 6 + 9 = 15
+--   pattern = bPat body + refs·bPat s = (2 + 0) + 2·1 = 4
+--   sharing = (2 − 1)·bCost s = 6
+--   naive   = actual + pattern + sharing = 15 + 4 + 6 = 25
+example :
+    T38.naiveCost (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1)))
+  = T38.actualCost (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1)))
+  + T38.patternBonus (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1)))
+  + T38.sharingDiscount (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1))) := by
+  decide
 
 end Tests
 
