@@ -178,4 +178,115 @@ theorem neg_sos_nonpos {p q : Real} (hp : 0 ≤ p) (hq : 0 ≤ q) (r x1 x2 : Rea
   neg_nonpos_of_nonneg
     (add_nonneg_ea (mul_nonneg hp (mul_self_nonneg _)) (mul_nonneg hq (mul_self_nonneg _)))
 
+/-! ## Full coupled oscillator — a non-diagonal quadratic Lyapunov function, via the parallelogram law
+
+The pure oscillator (position has no self-damping) is NOT weighted-ℓ¹-dominant, so
+`coupled_two_state_clamp_envelope` does not reach it. The decay lives only in a non-diagonal
+quadratic `V`. We take `V` in SOS coordinates, `Vq α β γ a b = α·(a+β·b)² + γ·b²` (`α,γ ≥ 0` ⟹
+`V ≥ 0`), and handle the disturbance with the **parallelogram law** instead of a Young/S-procedure:
+`V(h+g) + V(h−g) = 2V(h) + 2V(g)` is a ring identity, and `V(h−g) ≥ 0`, so the cross-term drops out
+and `V(Ax+g) ≤ 2·V(Ax) + 2·V(g)` — no sqrt, no division, no completing-the-square over the
+disturbance. The price is the factor 2: the contraction rate is `2ρ`, so this needs a
+sufficiently-damped homogeneous decrease `2ρ < 1` (`V(Ax) ≤ ρ·V(x)` with `ρ < ½`). That is the
+honest scope — a tighter rate needs the V-norm triangle inequality (Minkowski / Cauchy–Schwarz),
+which needs `sqrt_mul`/`sq_sqrt` MachLib's sqrt layer does not yet provide. -/
+
+/-- Diagonal quadratic form in SOS coordinates `(p, b)` with weights `α, γ`. The `p`-coordinate is
+opaque here, which keeps `mach_ring` off the `β` cross-term expansion that times it out. -/
+noncomputable def Wq (α γ p b : Real) : Real := α * (p * p) + γ * (b * b)
+
+/-- Quadratic Lyapunov function: `Wq` evaluated at the completed-square coordinate `p = a + β·b`.
+A genuinely non-diagonal `xᵀPx` (the `β` couples the two states). `α,γ ≥ 0` make it PSD. -/
+noncomputable def Vq (α β γ a b : Real) : Real := Wq α γ (a + β * b) b
+
+/-- `Wq` is non-negative when its weights are. -/
+theorem wq_nonneg {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (p b : Real) : 0 ≤ Wq α γ p b := by
+  unfold Wq
+  exact add_nonneg_ea (mul_nonneg hα (mul_self_nonneg _)) (mul_nonneg hγ (mul_self_nonneg _))
+
+theorem vq_nonneg {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (β a b : Real) : 0 ≤ Vq α β γ a b :=
+  wq_nonneg hα hγ _ _
+
+/-- Parallelogram law for the diagonal form `Wq`. `mach_ring` is not a complete ring normaliser —
+it cannot reduce `+c+c−c−c → 0` (the squared-sum cross-term cancellation). So we route around it:
+expand each `Wq` into a pure-square part `S` plus a cross part `C` (no cancellation — `mach_ring`
+does FOIL+regroup fine), then collapse `(S+C)+(S−C) → S+S` with `C` held OPAQUE (the one shape
+`mach_ring` does cancel), and finish with an AC rearrangement. -/
+theorem wq_parallelogram (α γ ph pg b2 g2 : Real) :
+    Wq α γ (ph + pg) (b2 + g2) + Wq α γ (ph - pg) (b2 - g2)
+      = (Wq α γ ph b2 + Wq α γ ph b2) + (Wq α γ pg g2 + Wq α γ pg g2) := by
+  have key : ∀ S C : Real, (S + C) + (S - C) = S + S := fun S C => by mach_ring
+  have hadd : Wq α γ (ph + pg) (b2 + g2)
+      = (α * (ph * ph) + γ * (b2 * b2) + (α * (pg * pg) + γ * (g2 * g2)))
+        + (α * (ph * pg + pg * ph) + γ * (b2 * g2 + g2 * b2)) := by unfold Wq; mach_ring
+  have hsub : Wq α γ (ph - pg) (b2 - g2)
+      = (α * (ph * ph) + γ * (b2 * b2) + (α * (pg * pg) + γ * (g2 * g2)))
+        - (α * (ph * pg + pg * ph) + γ * (b2 * g2 + g2 * b2)) := by unfold Wq; mach_ring
+  rw [hadd, hsub, key (α * (ph * ph) + γ * (b2 * b2) + (α * (pg * pg) + γ * (g2 * g2)))
+        (α * (ph * pg + pg * ph) + γ * (b2 * g2 + g2 * b2))]
+  unfold Wq; mach_ring
+
+/-- `Vq` in the additive SOS coordinate: `Vq(h+g) = Wq(p_h+p_g, h2+g2)` where `p = a+β·b` is linear,
+so it splits additively. Proven by rewriting only the LINEAR argument — `mach_ring` never squares,
+so no `β` cross-term blow-up. -/
+theorem vq_as_wq_add (α β γ h1 h2 g1 g2 : Real) :
+    Vq α β γ (h1 + g1) (h2 + g2)
+      = Wq α γ ((h1 + β * h2) + (g1 + β * g2)) (h2 + g2) := by
+  unfold Vq
+  rw [show (h1 + g1) + β * (h2 + g2) = (h1 + β * h2) + (g1 + β * g2) from by mach_ring]
+
+theorem vq_as_wq_sub (α β γ h1 h2 g1 g2 : Real) :
+    Vq α β γ (h1 - g1) (h2 - g2)
+      = Wq α γ ((h1 + β * h2) - (g1 + β * g2)) (h2 - g2) := by
+  unfold Vq
+  rw [show (h1 - g1) + β * (h2 - g2) = (h1 + β * h2) - (g1 + β * g2) from by mach_ring]
+
+/-- `Vq` is `Wq` at the completed-square coordinate, by definition. -/
+theorem vq_def (α β γ a b : Real) : Vq α β γ a b = Wq α γ (a + β * b) b := rfl
+
+/-- **Parallelogram bound: the disturbance cross-term drops out.** `V(h+g) ≤ (V(h)+V(h)) +
+(V(g)+V(g))` for the quadratic form, from the parallelogram law and `V(h−g) ≥ 0`. No sqrt, no Young
+inequality, no S-procedure. (`E+E` rather than `2·E`: MachLib's Real has no `OfNat 2`, so doubling
+is addition.) -/
+theorem vq_add_le {α γ : Real} (hα : 0 ≤ α) (hγ : 0 ≤ γ) (β h1 h2 g1 g2 : Real) :
+    Vq α β γ (h1 + g1) (h2 + g2)
+      ≤ (Vq α β γ h1 h2 + Vq α β γ h1 h2) + (Vq α β γ g1 g2 + Vq α β γ g1 g2) := by
+  -- parallelogram in Wq coordinates: Vq(h+g) + Vq(h−g) = 2Vq(h) + 2Vq(g)
+  have hpar : Vq α β γ (h1 + g1) (h2 + g2) + Vq α β γ (h1 - g1) (h2 - g2)
+      = (Vq α β γ h1 h2 + Vq α β γ h1 h2) + (Vq α β γ g1 g2 + Vq α β γ g1 g2) := by
+    rw [vq_as_wq_add, vq_as_wq_sub, wq_parallelogram, vq_def α β γ h1 h2, vq_def α β γ g1 g2]
+  have hpos : 0 ≤ Vq α β γ (h1 - g1) (h2 - g2) := vq_nonneg hα hγ β _ _
+  have step1 : Vq α β γ (h1 + g1) (h2 + g2)
+      ≤ Vq α β γ (h1 + g1) (h2 + g2) + Vq α β γ (h1 - g1) (h2 - g2) := by
+    have h := add_le_add_both (le_refl (Vq α β γ (h1 + g1) (h2 + g2))) hpos
+    rwa [add_zero] at h
+  exact le_trans step1 (le_of_eq hpar)
+
+/-- **A coupled oscillator stays in a quadratic sublevel set, for all time.** Plant
+`x_{k+1} = A·x_k + g_k` (full 2×2 `A`, `g` the clamped control + bounded disturbance), with a
+non-diagonal quadratic Lyapunov function `Vq α β γ`. Given a sufficiently-damped homogeneous decrease
+`V(A·x) ≤ ρ·V(x)` (the SOS/LMI certificate — `ρ < ½` so the parallelogram factor 2 still contracts)
+and a disturbance bound `V(g) ≤ Vg`, the sublevel set `{V ≤ X}` is forward-invariant whenever
+`X` absorbs the offset (`2ρ·X + 2·Vg ≤ X`). The first machine-checked safety envelope for a genuinely
+coupled (non-ℓ¹-dominant) plant — the oscillator case. -/
+theorem quadratic_lyapunov_sublevel
+    {x1 x2 g1 g2 : Nat → Real} {a11 a12 a21 a22 α β γ ρ Vg X : Real}
+    (hα : 0 ≤ α) (hγ : 0 ≤ γ) (h2ρ : 0 ≤ ρ + ρ)
+    (hplant1 : ∀ k, x1 (k + 1) = (a11 * x1 k + a12 * x2 k) + g1 k)
+    (hplant2 : ∀ k, x2 (k + 1) = (a21 * x1 k + a22 * x2 k) + g2 k)
+    (hhom : ∀ k, Vq α β γ (a11 * x1 k + a12 * x2 k) (a21 * x1 k + a22 * x2 k)
+              ≤ ρ * Vq α β γ (x1 k) (x2 k))
+    (hdist : ∀ k, Vq α β γ (g1 k) (g2 k) ≤ Vg)
+    (hinv : (ρ + ρ) * X + (Vg + Vg) ≤ X)
+    (h0 : Vq α β γ (x1 0) (x2 0) ≤ X) :
+    ∀ k, Vq α β γ (x1 k) (x2 k) ≤ X := by
+  refine measure_sublevel_invariant (V := fun k => Vq α β γ (x1 k) (x2 k)) h2ρ hinv h0 (fun k => ?_)
+  show Vq α β γ (x1 (k + 1)) (x2 (k + 1)) ≤ (ρ + ρ) * Vq α β γ (x1 k) (x2 k) + (Vg + Vg)
+  rw [hplant1 k, hplant2 k]
+  refine le_trans (vq_add_le hα hγ β (a11 * x1 k + a12 * x2 k) (a21 * x1 k + a22 * x2 k)
+    (g1 k) (g2 k)) ?_
+  refine le_trans (add_le_add_both
+    (add_le_add_both (hhom k) (hhom k)) (add_le_add_both (hdist k) (hdist k))) ?_
+  exact le_of_eq (by mach_ring)
+
 end MachLib.Real
