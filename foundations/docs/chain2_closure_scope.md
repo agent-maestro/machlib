@@ -85,9 +85,16 @@ for `degreeY₁ f > 0`. Decompose by the nested-lex structure:
     `hsnd` is *unprovable* for `reducePoly`; `chain2_reduce_nestedLT_of_snd` (the conditional Phase-2
     reduction) stands as the template for whatever the *correct* reduce turns out to be.
   - **The correct reduce is genuine new construction.** It must reduce `lcY₁` *as a single-exp object*
-    (without injecting `y₀`) — the chain total derivative cannot. And the trim arm does **not** port: the
-    framework's `dropLeadingY` + descent/eval lemmas are `MultiPoly 1`-only (single-exp), so a chain-2
-    `degreeY₁`-lowering trim must be ported to `MultiPoly 2` first.
+    (without injecting `y₀`) — the chain total derivative cannot. This **reduce arm is still open** (the
+    crux).
+  - **Trim arm — DONE** (`ChainExp2Trim.lean`, sorryAx-free): the *other* dispatch branch is built. The
+    `MultiPoly 1` `dropLeadingY` machinery is lifted to a generic `dropLeadingYAt {n} (i)` (the primitives
+    `reconstructY`/`yCoeffsAt`/`degreeY_reconstructY_lt`/`listEvalAuxN_dropLast_eq_of_last_eval_zero` are
+    all `{n}`-generic, so the two lemmas port verbatim), and instantiated at `⟨1⟩ : Fin 2` to give
+    `chain2_canonicalTrim_step` — a sound `Chain2ReduceStep` for the canonically-zero-`lcY₁` corner
+    (phantom `y₁`-leading term): `lex_decrease` is the first-component (`degreeY₁`) drop (`Or.inl`),
+    witnessed by `IsKhovanskiiReducible.trim`. This handles `degreeY₁ p > 0 ∧ lcY₁ p ≡ 0`; the
+    complementary `lcY₁ p ≢ 0` is the open reduce arm.
   - **Flat↔nested gap (separate issue)**: the proven seam `chain2_polyTrueDegreeStrict_scaledReduction_zero_lt`
     descends `trueDeg(mP2PFL(lcY₁ ·))` — the *flat* `y→0` projection — whereas the chain-aware inner second
     is `trueDeg(mP2PFL(lcY₀(lcY₁ ·)))` (an extra `lcY₀`). That seam is about the flat measure and does not
