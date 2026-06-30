@@ -243,4 +243,98 @@ theorem RSum_wellcond (w : Real) (hw0 : 0 ≤ w) {x1 : Real} {rest : List Real} 
     exact kappa_bound_dominant_list hdom'
   · exact sub_nonneg_of_le (one_le_npow (1 + w) (le_add_of_nonneg_right hw0) _)
 
+/-! ## general N — the inner product itself (round each product, then sum) -/
+
+/-- Exact inner product `Σ aₖ·bₖ` of a list of pairs. -/
+noncomputable def edot : List (Real × Real) → Real
+  | [] => 0
+  | (a, b) :: ps => a * b + edot ps
+
+/-- Conditioning quantity `Σ|aₖ·bₖ|`. -/
+noncomputable def esig : List (Real × Real) → Real
+  | [] => 0
+  | (a, b) :: ps => abs (a * b) + esig ps
+
+/-- Computed inner product: round each product (`RoundsW p (a·b)`), then sequentially round-sum. -/
+inductive RDot (w : Real) : List (Real × Real) → Real → Prop
+  | nil : RDot w [] 0
+  | cons (a b : Real) (ps : List (Real × Real)) (p acc r : Real) :
+      RoundsW w p (a * b) → RDot w ps acc → RoundsW w r (p + acc) → RDot w ((a, b) :: ps) r
+
+theorem esig_nonneg : ∀ ps : List (Real × Real), (0 : Real) ≤ esig ps
+  | [] => le_refl 0
+  | (a, b) :: ps => by
+      show (0 : Real) ≤ abs (a * b) + esig ps
+      exact add_nonneg_ea (abs_nonneg (a * b)) (esig_nonneg ps)
+
+theorem abs_edot_le_esig : ∀ ps : List (Real × Real), abs (edot ps) ≤ esig ps
+  | [] => by show abs (0 : Real) ≤ 0; rw [abs_zero]; exact le_refl 0
+  | (a, b) :: ps => by
+      show abs (a * b + edot ps) ≤ abs (a * b) + esig ps
+      exact le_trans (abs_add (a * b) (edot ps))
+        (add_le_add_both (le_refl (abs (a * b))) (abs_edot_le_esig ps))
+
+/-- Per-step slack for the inner product (the product rounding adds the `w·|ab|` terms the pure
+sum lacked): `target − bound = (1+w)(P − (1+w))·|ab| ≥ 0`. Fresh vars so `mach_mpoly` parses. -/
+theorem dot_step_slack (w X L P : Real) :
+    ((1 + w) * P - 1) * (X + L)
+      - (w * ((X + w * X) + (L + (P - 1) * L)) + (w * X + (P - 1) * L))
+    = (1 + w) * (P - (1 + w)) * X := by mach_mpoly [w, X, L, P]
+
+/-- **General-N inner product forward error (the full dotN).** A rounded inner product of ANY
+length — each product rounded, then sequentially round-summed — is within `γ_{n+1} = (1+w)ⁿ⁺¹−1`
+of the exact dot, against the conditioning quantity `Σ|aₖbₖ|`. The `+1` over `RSum_bound`'s `γₙ`
+is the one extra rounding per term from the multiply. `dot2_fwd`/`dot3_fwd` are the n=2,3 cases;
+this is every n. Proof mirrors `RSum_bound` — one `cond_combine` per term, the element being the
+rounded product `p` (`|p − ab| ≤ w|ab|`) rather than an exact summand. -/
+theorem RDot_fwd (w : Real) (hw0 : 0 ≤ w) :
+    ∀ {ps : List (Real × Real)} {r : Real}, RDot w ps r →
+      abs (r - edot ps) ≤ (npow (ps.length + 1) (1 + w) - 1) * esig ps := by
+  intro ps r h
+  induction h with
+  | nil =>
+      show abs ((0 : Real) - 0) ≤ (npow (0 + 1) (1 + w) - 1) * 0
+      rw [show (0 : Real) - 0 = 0 by mach_ring, abs_zero,
+          show (npow (0 + 1) (1 + w) - 1) * 0 = 0 by mach_ring]
+      exact le_refl 0
+  | cons a b ps p acc r hp _ hr ih =>
+      show abs (r - (a * b + edot ps))
+          ≤ (npow (ps.length + 1 + 1) (1 + w) - 1) * (abs (a * b) + esig ps)
+      have hpe : abs (p - a * b) ≤ w * abs (a * b) := roundsW_abs hp
+      refine le_trans (cond_combine w hw0 hpe ih hr) ?_
+      have hls : abs (edot ps) ≤ esig ps := abs_edot_le_esig ps
+      have hinner : abs (edot ps) + (npow (ps.length + 1) (1 + w) - 1) * esig ps
+          ≤ esig ps + (npow (ps.length + 1) (1 + w) - 1) * esig ps :=
+        add_le_add_both hls (le_refl _)
+      have hmono :
+          w * ((abs (a * b) + w * abs (a * b))
+                + (abs (edot ps) + (npow (ps.length + 1) (1 + w) - 1) * esig ps))
+              + (w * abs (a * b) + (npow (ps.length + 1) (1 + w) - 1) * esig ps)
+            ≤ w * ((abs (a * b) + w * abs (a * b))
+                + (esig ps + (npow (ps.length + 1) (1 + w) - 1) * esig ps))
+              + (w * abs (a * b) + (npow (ps.length + 1) (1 + w) - 1) * esig ps) :=
+        add_le_add_both
+          (mul_le_mul_of_nonneg_left
+            (add_le_add_left hinner (abs (a * b) + w * abs (a * b))) hw0) (le_refl _)
+      refine le_trans hmono ?_
+      rw [npow_succ]
+      have hPge : (1 + w) ≤ npow (ps.length + 1) (1 + w) := by
+        rw [npow_succ]
+        have h1 : (1 : Real) ≤ npow ps.length (1 + w) :=
+          one_le_npow (1 + w) (le_add_of_nonneg_right hw0) ps.length
+        calc (1 + w) = (1 + w) * 1 := by mach_ring
+          _ ≤ (1 + w) * npow ps.length (1 + w) :=
+              mul_le_mul_of_nonneg_left h1 (zero_le_one_add hw0)
+      have hslack : (0 : Real)
+          ≤ (1 + w) * (npow (ps.length + 1) (1 + w) - (1 + w)) * abs (a * b) :=
+        mul_nonneg (mul_nonneg (zero_le_one_add hw0) (sub_nonneg_of_le hPge)) (abs_nonneg _)
+      have hdiff := dot_step_slack w (abs (a * b)) (esig ps) (npow (ps.length + 1) (1 + w))
+      have hd : (0 : Real)
+          ≤ ((1 + w) * npow (ps.length + 1) (1 + w) - 1) * (abs (a * b) + esig ps)
+            - (w * ((abs (a * b) + w * abs (a * b))
+                  + (esig ps + (npow (ps.length + 1) (1 + w) - 1) * esig ps))
+              + (w * abs (a * b) + (npow (ps.length + 1) (1 + w) - 1) * esig ps)) := by
+        rw [hdiff]; exact hslack
+      exact le_of_sub_nonneg hd
+
 end MachLib.Real
