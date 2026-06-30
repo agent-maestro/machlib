@@ -87,4 +87,105 @@ theorem leadingCoeffY1_cTD_eval_IterExp2_base (x : Real) (env : Fin 2 → Real) 
           * (env (⟨0, by omega⟩ : Fin 2) * (1 : Real))
     rw [MachLib.Real.natCast_succ, MachLib.Real.natCast_zero]; mach_ring
 
+/-! ### `leadingCoeffY`-of-`add` helpers (the `add` analogs of the existing `…_sub_…` lemmas) -/
+
+private theorem lcY_add_of_gt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i q < MultiPoly.degreeY i p) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i p := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.leadingCoeffY i p
+  rw [if_pos h]
+
+private theorem lcY_add_of_lt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i p < MultiPoly.degreeY i q) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i q := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.leadingCoeffY i q
+  rw [if_neg (Nat.not_lt.mpr (Nat.le_of_lt h)), if_pos h]
+
+private theorem lcY_add_of_eq {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i p = MultiPoly.degreeY i q) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q)
+      = MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q) := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q)
+  rw [if_neg (by omega : ¬ MultiPoly.degreeY i p > MultiPoly.degreeY i q),
+      if_neg (by omega : ¬ MultiPoly.degreeY i q > MultiPoly.degreeY i p)]
+
+/-! ### Inductive `add` case of the identity -/
+
+/-- The `add` step of the general chain-2 `leadingCoeffY₁`-under-`cTD` identity: the `degreeY₁`
+trichotomy (`cTD` preserves `degreeY₁`, so the leading term comes from the same side after the
+derivative), then the IHs. The `=`-branch carries the extra `d·y₀·lcY₁` term through a ring rearrangement
+(`d_p = d_q`). -/
+theorem leadingCoeffY1_cTD_eval_IterExp2_add (p q : MultiPoly 2) (x : Real) (env : Fin 2 → Real)
+    (ihp :
+      MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+          (chainTotalDeriv (IterExpChain 2) p)) x env
+      = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+          (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)) x env
+        + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+          * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)) x env)
+    (ihq :
+      MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+          (chainTotalDeriv (IterExpChain 2) q)) x env
+      = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+          (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) x env
+        + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q)
+          * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) x env) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+        (chainTotalDeriv (IterExpChain 2) (MultiPoly.add p q))) x env
+    = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+        (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q))) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q))
+        * MultiPoly.eval (MultiPoly.mul (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q))) x env := by
+  have hp_eq := degreeY1_chainTotalDeriv_eq_IterExp2 p
+  have hq_eq := degreeY1_chainTotalDeriv_eq_IterExp2 q
+  -- cTD distributes over `add` (definitional).
+  rw [show chainTotalDeriv (IterExpChain 2) (MultiPoly.add p q)
+        = MultiPoly.add (chainTotalDeriv (IterExpChain 2) p)
+            (chainTotalDeriv (IterExpChain 2) q) from rfl]
+  rcases Nat.lt_trichotomy (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+                           (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q) with hlt | heq | hgt
+  · -- d_p < d_q: leading from q.
+    have hd : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q)
+            = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q := Nat.max_eq_right (Nat.le_of_lt hlt)
+    rw [lcY_add_of_lt (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) p)
+          (chainTotalDeriv (IterExpChain 2) q) (by rw [hp_eq, hq_eq]; exact hlt),
+        lcY_add_of_lt (⟨1, by omega⟩ : Fin 2) p q hlt, hd]
+    exact ihq
+  · -- d_p = d_q: both sides contribute; ring with the extra term.
+    have hd : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q)
+            = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q := by
+      show Nat.max _ _ = _; rw [heq]; exact Nat.max_self _
+    rw [lcY_add_of_eq (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) p)
+          (chainTotalDeriv (IterExpChain 2) q) (by rw [hp_eq, hq_eq]; exact heq),
+        lcY_add_of_eq (⟨1, by omega⟩ : Fin 2) p q heq, hd,
+        show chainTotalDeriv (IterExpChain 2)
+               (MultiPoly.add (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)
+                              (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))
+           = MultiPoly.add
+               (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))
+               (chainTotalDeriv (IterExpChain 2) (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))
+           from rfl]
+    simp only [MultiPoly.eval_add, MultiPoly.eval_mul] at ihp ihq ⊢
+    rw [heq] at ihp
+    rw [ihp, ihq]; mach_ring
+  · -- d_p > d_q: leading from p.
+    have hd : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q)
+            = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p := Nat.max_eq_left (Nat.le_of_lt hgt)
+    rw [lcY_add_of_gt (⟨1, by omega⟩ : Fin 2) (chainTotalDeriv (IterExpChain 2) p)
+          (chainTotalDeriv (IterExpChain 2) q) (by rw [hp_eq, hq_eq]; exact hgt),
+        lcY_add_of_gt (⟨1, by omega⟩ : Fin 2) p q hgt, hd]
+    exact ihp
+
 end MachLib.ChainExp2LcY1CTD
