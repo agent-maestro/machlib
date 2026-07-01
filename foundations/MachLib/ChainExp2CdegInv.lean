@@ -201,4 +201,97 @@ theorem cdegY0_eq_of_eval_eq (q1 q2 : MultiPoly 2)
      = ((yCoeffsAt (⟨0, by omega⟩ : Fin 2) q2).reverse.dropWhile coeffCanonZeroB).length - 1
   rw [rdw_eq_of_listSubN _ _ hsub]
 
+/-! ### Second component — `canonLcY0` eval-invariance (0-env) → `singleExpMeasureCanon` eval-invariance -/
+
+/-- From `sub p q` canonically zero, `p` and `q` agree at the `0`-env. -/
+theorem eval0_eq_of_sub_canonZero (p q : MultiPoly 2)
+    (h : coeffCanonZeroB (MultiPoly.sub p q) = true) :
+    ∀ x : Real, MultiPoly.eval p x (fun _ => 0) = MultiPoly.eval q x (fun _ => 0) := by
+  intro x
+  have hz : MultiPoly.eval (MultiPoly.sub p q) x (fun _ => 0) = 0 :=
+    (canonZero_iff_eval_zero_at_0 (MultiPoly.sub p q)).mp (decide_eq_true_iff.mp h) x
+  rw [MultiPoly.eval_sub] at hz
+  have hcalc : MultiPoly.eval p x (fun _ => 0)
+      = (MultiPoly.eval p x (fun _ => 0) - MultiPoly.eval q x (fun _ => 0))
+        + MultiPoly.eval q x (fun _ => 0) := by mach_ring
+  rw [hcalc, hz]; mach_ring
+
+/-- The `headD`-recursion of `·.reverse.dropWhile p` on a cons (parallel to `rdw_cons`). -/
+theorem rdwHead_cons {α : Type} (p : α → Bool) (a : α) (rest : List α) (d : α) :
+    ((a :: rest).reverse.dropWhile p).headD d
+    = if 0 < (rest.reverse.dropWhile p).length
+      then (rest.reverse.dropWhile p).headD d
+      else (if p a = true then d else a) := by
+  rw [List.reverse_cons, dropWhile_append_single p a rest.reverse]
+  rcases hd : rest.reverse.dropWhile p with _ | ⟨e, es⟩
+  · by_cases hpa : p a = true
+    · simp [List.dropWhile, hpa]
+    · simp [List.dropWhile, hpa]
+  · simp
+
+/-- **`canonLcY0` eval-invariance at `0`-env** (main induction, parallel to `rdw_eq_of_listSubN`). If
+`listSubN L1 L2` is entrywise canonically zero, the `headD`s of the two trimmed reversed lists agree at
+the `0`-env. -/
+theorem rdwHead_eval0_eq_of_listSubN :
+    ∀ (L1 L2 : List (MultiPoly 2)),
+      (∀ c ∈ listSubN L1 L2, coeffCanonZeroB c = true) →
+      ∀ x : Real,
+        MultiPoly.eval ((L1.reverse.dropWhile coeffCanonZeroB).headD (MultiPoly.const 0)) x (fun _ => 0)
+        = MultiPoly.eval ((L2.reverse.dropWhile coeffCanonZeroB).headD (MultiPoly.const 0)) x (fun _ => 0)
+  | [], L2, hsub => by
+    intro x
+    rw [dropWhile_all coeffCanonZeroB L2.reverse
+      (fun c hc => all_canonZero_of_listSubN_nil L2 hsub c (List.mem_reverse.mp hc))]
+    rfl
+  | p :: ps, [], hsub => by
+    intro x
+    rw [listSubN_cons_nil] at hsub
+    rw [dropWhile_all coeffCanonZeroB (p :: ps).reverse
+      (fun c hc => hsub c (List.mem_reverse.mp hc))]
+    rfl
+  | p :: ps, q :: qs, hsub => by
+    intro x
+    rw [listSubN_cons_cons] at hsub
+    have hpq : coeffCanonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hcpq : coeffCanonZeroB p = coeffCanonZeroB q :=
+      coeffCanonZeroB_eq_of_sub_canonZero p q hpq
+    have htail : ∀ c ∈ listSubN ps qs, coeffCanonZeroB c = true :=
+      fun c hc => hsub c (List.mem_cons_of_mem _ hc)
+    have hlen := rdw_eq_of_listSubN ps qs htail
+    have hheadIH := rdwHead_eval0_eq_of_listSubN ps qs htail x
+    have hpq0 := eval0_eq_of_sub_canonZero p q hpq x
+    rw [rdwHead_cons coeffCanonZeroB p ps, rdwHead_cons coeffCanonZeroB q qs, hcpq, hlen]
+    by_cases hc : 0 < (qs.reverse.dropWhile coeffCanonZeroB).length
+    · rw [if_pos hc, if_pos hc]; exact hheadIH
+    · rw [if_neg hc, if_neg hc]
+      by_cases hcz : coeffCanonZeroB q = true
+      · rw [if_pos hcz, if_pos hcz]
+      · rw [if_neg hcz, if_neg hcz]; exact hpq0
+
+/-- **`singleExpMeasureCanon` is eval-invariant.** Eval-equal `MultiPoly 2`s have equal canonical single-exp
+measure — the first component by `cdegY0_eq_of_eval_eq`, the second (`polyTrueDegreeStrict` of `canonLcY0`)
+by `rdwHead_eval0_eq_of_listSubN` fed through `polyTrueDegreeStrict_eq_of_evalCoeffs_eq`. -/
+theorem singleExpMeasureCanon_eq_of_eval_eq (q1 q2 : MultiPoly 2)
+    (h : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval q1 x env = MultiPoly.eval q2 x env) :
+    singleExpMeasureCanon q1 = singleExpMeasureCanon q2 := by
+  have hzero : ∀ (x : Real) (env : Fin 2 → Real),
+      MultiPoly.eval (MultiPoly.sub q1 q2) x env = 0 := by
+    intro x env; rw [MultiPoly.eval_sub, h x env]; mach_ring
+  have hsub : ∀ c ∈ listSubN (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q1)
+                             (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q2),
+      coeffCanonZeroB c = true := by
+    intro c hc
+    apply coeffCanonZeroB_true_of_eval_zero
+    intro x env
+    exact yCoeffsAt_entry_eval_zero_of_eval_zero (⟨0, by omega⟩ : Fin 2)
+      (MultiPoly.sub q1 q2) hzero x env c hc
+  unfold singleExpMeasureCanon
+  rw [cdegY0_eq_of_eval_eq q1 q2 h]
+  congr 1
+  apply polyTrueDegreeStrict_eq_of_evalCoeffs_eq
+  intro x
+  rw [polyCoeffs_eval, polyCoeffs_eval,
+      eval_multiPolyToPolyForLex_eq_eval_zero, eval_multiPolyToPolyForLex_eq_eval_zero]
+  exact rdwHead_eval0_eq_of_listSubN _ _ hsub x
+
 end MachLib.ChainExp2CdegInv
