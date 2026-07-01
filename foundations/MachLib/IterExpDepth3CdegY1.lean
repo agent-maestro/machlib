@@ -365,4 +365,82 @@ open MachLib.ChainExp2Reducer in
 theorem chain2OrderCanonEvalInv_wf : WellFounded chain2OrderCanonEvalInv :=
   InvImage.wf chain2MeasureCanonEvalInv LexProd.natTripleLex_wf
 
+/-! ### Relating `cdegY1`/`canonLcY1` to the syntactic top `y₁`-coefficient (mirror of the depth-2
+`y0top` bridge, for the descent's phantom/non-phantom case split). The generic list helpers are
+re-declared (private in `ChainExp2SingleExpDescent`). -/
+
+private theorem reverse_head_eq_getLast {α : Type} (L : List α) (hne : L ≠ [])
+    {a : α} {t : List α} (hrev : L.reverse = a :: t) : a = L.getLast hne := by
+  have hh : L.reverse.head? = L.getLast? := List.head?_reverse L
+  rw [hrev, List.head?_cons, List.getLast?_eq_getLast L hne] at hh
+  exact Option.some.inj hh
+
+private theorem rdw_full_of_getLast_neg {α : Type} (p : α → Bool) (L : List α) (hne : L ≠ [])
+    (hlast : p (L.getLast hne) = false) :
+    L.reverse.dropWhile p = L.reverse := by
+  rcases hrev : L.reverse with _ | ⟨a, t⟩
+  · exact absurd (List.reverse_eq_nil_iff.mp hrev) hne
+  · rw [List.dropWhile_cons, reverse_head_eq_getLast L hne hrev, hlast, if_neg (by decide)]
+
+private theorem length_dropWhile_le' {α : Type} (p : α → Bool) :
+    ∀ l : List α, (l.dropWhile p).length ≤ l.length
+  | [] => Nat.le_refl 0
+  | a :: as => by
+    by_cases hp : p a = true
+    · have hd : (a :: as).dropWhile p = as.dropWhile p := by simp [List.dropWhile, hp]
+      rw [hd]; exact Nat.le_succ_of_le (length_dropWhile_le' p as)
+    · have hd : (a :: as).dropWhile p = a :: as := by simp [List.dropWhile, hp]
+      rw [hd]; exact Nat.le_refl _
+
+private theorem rdw_lt_of_getLast_pos {α : Type} (p : α → Bool) (L : List α) (hne : L ≠ [])
+    (hlast : p (L.getLast hne) = true) :
+    (L.reverse.dropWhile p).length < L.length := by
+  rcases hrev : L.reverse with _ | ⟨a, t⟩
+  · exact absurd (List.reverse_eq_nil_iff.mp hrev) hne
+  · have hpos : 0 < L.length := Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero.mp h))
+    have htlen : t.length = L.length - 1 := by
+      have hc := congrArg List.length hrev
+      rw [List.length_reverse, List.length_cons] at hc
+      omega
+    rw [List.dropWhile_cons, reverse_head_eq_getLast L hne hrev, hlast, if_pos rfl]
+    calc (t.dropWhile p).length ≤ t.length := length_dropWhile_le' p t
+      _ < L.length := by omega
+
+/-- The top (highest-power) `y₁`-coefficient of `q` (the syntactic leading `y₁`-coefficient). -/
+noncomputable def y1top (q : MultiPoly 2) : MultiPoly 2 :=
+  (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).getLast (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q)
+
+/-- Top `y₁`-coeff not nested-canon-zero ⇒ `cdegY1` equals syntactic `degreeY ⟨1⟩` (nothing dropped). -/
+theorem cdegY1_eq_degreeY1_of_top (q : MultiPoly 2)
+    (hlast : coeffCanonZeroB1 (y1top q) = false) :
+    cdegY1 q = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q := by
+  unfold cdegY1
+  rw [rdw_full_of_getLast_neg coeffCanonZeroB1 _
+        (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) hlast,
+      List.length_reverse, yCoeffsAt_length_eq]
+  omega
+
+/-- Top `y₁`-coeff not nested-canon-zero ⇒ `canonLcY1` IS that top coefficient. -/
+theorem canonLcY1_eq_top (q : MultiPoly 2)
+    (hlast : coeffCanonZeroB1 (y1top q) = false) :
+    canonLcY1 q = y1top q := by
+  unfold canonLcY1
+  rw [rdw_full_of_getLast_neg coeffCanonZeroB1 _
+        (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) hlast]
+  rcases hrev : (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse with _ | ⟨a, t⟩
+  · exact absurd (List.reverse_eq_nil_iff.mp hrev) (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q)
+  · show a = y1top q
+    exact reverse_head_eq_getLast _ (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) hrev
+
+/-- Top `y₁`-coeff nested-canon-zero and syntactic degree positive ⇒ `cdegY1` strictly drops. -/
+theorem cdegY1_lt_degreeY1_of_top (q : MultiPoly 2)
+    (hlast : coeffCanonZeroB1 (y1top q) = true)
+    (hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q) :
+    cdegY1 q < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q := by
+  unfold cdegY1
+  have hlt := rdw_lt_of_getLast_pos coeffCanonZeroB1 _
+                (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) hlast
+  rw [yCoeffsAt_length_eq] at hlt
+  omega
+
 end MachLib.IterExpDepth3CdegY1
