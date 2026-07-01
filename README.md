@@ -54,10 +54,16 @@ verification layer for Forge-emitted kernels, with an end-to-end capstone (a PID
 control loop carried from its bit-level netlist to a finite closed-loop trajectory
 bound) and a machine-checked **consistency proof** for its core.
 
-**2. A Khovanskii zero bound** — **proven outright** for polynomial-in-(x, eˣ), and a
-constructive **reduction** for general triangular Pfaffian chains (the bound follows
-from a supplied reducibility witness, via the Rolle corollary — no classical-Khovanskii
-axiom), with Forge-emitted safety-critical kernel proofs on top. Honest about the
+**2. A Khovanskii zero bound** — **proven outright** for polynomial-in-(x, eˣ) and,
+as of commit `dda2a58`, for **depth-2 double-exponential chains** (x, eˣ, e^{eˣ}): there
+the reducibility witness is *constructed*, not assumed, so that bound is **unconditional**
+and free of the classical-Khovanskii axiom (`chain2_khovanskii_bound_unconditional`,
+`#print axioms`-verified — it rests only on the honest Rolle corollary). For **general**
+triangular Pfaffian chains the bound is still a constructive **reduction** from a *supplied*
+reducibility witness (via the same Rolle corollary — no classical-Khovanskii axiom), and the
+**arbitrary-depth** case remains **cited**: the legacy `zero_count_bound_classical` axiom
+still stands for general Pfaffian functions, and depth-3+ would mirror the depth-2 arc with a
+deeper nested measure. Forge-emitted safety-critical kernel proofs sit on top. Honest about the
 foundation: these are proven modulo MachLib's axiomatized analytic base (Rolle
 zero-counting corollary, `HasDerivAt` rules, `exp_pos`, Real arithmetic and order); in
 mathlib every one of those is a theorem, and grounding the base there is open work. The
@@ -84,6 +90,11 @@ separate from the foundational substrate, in
   `expPoly_ode_no_zeros`).
 - `foundations/MachLib/KhovanskiiReduction.lean` — `khovanskii_bound_full`
   for general triangular Pfaffian chains, parametric in a reduction witness.
+- `foundations/MachLib/ChainExp2NoZeros.lean` — `chain2_khovanskii_bound_unconditional`:
+  the depth-2 (double-exponential) bound with the witness *constructed*, so it is
+  unconditional and free of `zero_count_bound_classical` (the capstone of the
+  `ChainExp2*` descent: chain-aware nested measure + polynomial-multiplier Rolle
+  transfer + integrating-factor vehicle argument).
 - `foundations/MachLib/Applications/ButlerVolmerKhovanskii.lean` —
   current = 0 ↔ overpotential = 0 for the Butler-Volmer electrode-kinetics
   kernel (downstream: BMS, fuel cells, corrosion). Replaces a `sorry` in

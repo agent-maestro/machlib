@@ -186,8 +186,8 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 ## 7. The other lanes — named with their asterisks
 
 - **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib
-  has no Khovanskii bound. Two things must be kept apart, because they are easy to
-  conflate (an earlier version of this very document conflated them):
+  has no Khovanskii bound. Three things must be kept apart, because they are easy to
+  conflate (an earlier version of this document conflated the first two):
 
   - **The shipped result is constructive — verified, not asserted.** The
     single-exponential bound `expPoly_khovanskii_bound` (zero count of a polynomial
@@ -203,6 +203,24 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     #print axioms MachLib.SingleExpKhovanskii.ExpPoly.expPoly_khovanskii_bound
     #   ⇒ no zero_count_bound_classical, no sorryAx
     ```
+  - **Depth-2 is now proven too — unconditionally, as of `dda2a58`.** Between the
+    single-exp bound and the cited general case sits the double-exponential chain
+    (`x, eˣ, e^{eˣ}`). Its finite-zero bound `chain2_khovanskii_bound_unconditional`
+    (`MachLib.ChainExp2NoZeros`) is **proven, not cited**: the reduction witness is
+    *constructed* — a chain-aware nested descent measure, a polynomial-multiplier Rolle
+    transfer, and an integrating-factor vehicle argument for the terminal case — so the
+    only hypothesis is that the function is nonzero at *some* interior point (the honest
+    minimum, since an identically-zero function has infinitely many zeros and no finite
+    bound can exist). `#print axioms` shows no `zero_count_bound_classical` and no
+    `sorryAx` — only the analytic base plus the honest Rolle corollary
+    `zero_count_bound_by_deriv`. Check it:
+    ```
+    #print axioms MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional
+    #   ⇒ no zero_count_bound_classical, no sorryAx
+    ```
+    This is the first depth beyond 1 where the witness is *built* rather than assumed;
+    depth-3+ would mirror the same arc with a deeper nested measure. It does **not**
+    discharge the arbitrary-depth axiom below — that stands.
   - **The general case is still cited — and it is an orphan.** A separate, more
     ambitious development — the bound for an *arbitrary* `PfaffianFunction` (general
     Pfaffian chains) — does rest on an axiom (`zero_count_bound_classical`) that
@@ -213,8 +231,9 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     smaller rank" induction simply does not hold. **No shipped result routes through
     this general axiom** (`#print axioms` on the applications confirms it); it is
     kept for a future generalization, not load-bearing today. Honest one-liner:
-    *the single-exp Khovanskii bound is proven; the general-Pfaffian bound is cited,
-    and nothing that ships depends on the citation.*
+    *the single-exp and depth-2 Khovanskii bounds are proven (both dirty-axiom-free);
+    the arbitrary-depth general-Pfaffian bound is still cited, and nothing that ships
+    depends on the citation.*
 - **The frontier explorations** (research notes, private) are deliberately framed
   as *lenses that compute a claim*, not proofs — e.g. restatements of open
   problems, never solutions. They are not part of what this library proves.

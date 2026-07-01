@@ -5,6 +5,34 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-06-30
+
+### Added — depth-2 Khovanskii bound, unconditional and dirty-axiom-free (`dda2a58`)
+
+- **`MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional`** — the
+  finite-zero bound for the **depth-2 double-exponential** Pfaffian chain
+  (`x, eˣ, e^{eˣ}`), **proven, not cited**. For a chain-2 polynomial nonzero at
+  *some* interior point of `(a,b)`, the number of zeros on `(a,b)` is finitely
+  bounded. `#print axioms` → `propext, Classical.choice, Quot.sound`, the `Real`
+  base, and the honest Rolle corollary `zero_count_bound_by_deriv`; **no
+  `zero_count_bound_classical`, no `sorryAx`**. This is the first depth beyond the
+  single-exponential case where the reducibility witness is *constructed* rather than
+  supplied/assumed.
+- **How the witness is built** (the `ChainExp2*` files): a *chain-aware nested
+  descent measure* (`chain2MeasureCanon`, canonical y₀-degree so the reduce cannot
+  inflate it), a *polynomial-multiplier Rolle transfer*
+  (`zero_count_polyMultReduce_transfer`, the reduce `P' − ((degreeY₁ P)·y₀ + c)·P`),
+  and — for the terminal `reduct ≡ 0` case that pure exponentials hit — an
+  *integrating-factor vehicle argument*: `V = f·exp(−(d·eˣ+c·x))` has `V' = E·(reduct)`,
+  so `reduct ≡ 0 ⇒ V` constant (MVT) ⇒ `f` nonzero everywhere once nonzero at one point.
+  The single-exponential framework (`SingleExpKhovanskii`, `KhovanskiiReduction`) is
+  untouched.
+- **Honest scope.** This does **not** discharge the arbitrary-depth axiom. The legacy
+  `zero_count_bound_classical` (Khovanskii 1991) still stands for the general
+  `PfaffianFunction` bound; depth-3+ would mirror the depth-2 arc with a deeper nested
+  measure. Tier summary now reads: *single-exp proven, depth-2 proven, arbitrary-depth
+  cited.* See [`what_is_proven.md` §7](foundations/docs/what_is_proven.md).
+
 ## [Unreleased] — 2026-06-26
 
 ### Added — `MachLib.FPModel`: verified f64 forward-error (cross-target equivalence, leg 2)
