@@ -504,4 +504,30 @@ theorem chain2MeasureCanonEvalInv_descends (q : MultiPoly 2)
         < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q
       rw [hRdeg] at h1; omega)
 
+/-- **The `→` of `coeffCanonZeroB1` for `y₁`-free polynomials.** A `y₁`-free `c` whose nested canon-zero
+test passes vanishes on EVERY environment — lifting the `env0`-only characterization
+(`coeffCanonZeroB1_true_iff`) to all envs via `y₁`-freeness (`eval_eq_of_env_agree_off`). This is the
+missing direction the capstone's non-phantom↔hnz equivalence needs. -/
+theorem eval_zero_of_coeffCanonZeroB1_yfree (c : MultiPoly 2)
+    (hyf : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) c = 0)
+    (h : coeffCanonZeroB1 c = true) :
+    ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval c x env = 0 := by
+  intro x env
+  have hiff := (coeffCanonZeroB1_true_iff c).mp h
+  have hagree : MultiPoly.eval c x env
+      = MultiPoly.eval c x (env0 (env (⟨0, by omega⟩ : Fin 2))) :=
+    eval_eq_of_env_agree_off (⟨1, by omega⟩ : Fin 2) c x env
+      (env0 (env (⟨0, by omega⟩ : Fin 2)))
+      (by
+        intro j hj
+        have hjv : j.val = 0 := by
+          have h1 : j.val < 2 := j.isLt
+          have h2 : j.val ≠ 1 := fun hc => hj (Fin.ext hc)
+          omega
+        have hj0 : j = (⟨0, by omega⟩ : Fin 2) := Fin.ext hjv
+        rw [hj0]; simp [env0])
+      hyf
+  rw [hagree]
+  exact hiff x (env (⟨0, by omega⟩ : Fin 2))
+
 end MachLib.IterExpDepth3CdegY1
