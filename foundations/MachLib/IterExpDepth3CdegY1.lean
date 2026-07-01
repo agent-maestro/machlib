@@ -443,4 +443,21 @@ theorem cdegY1_lt_degreeY1_of_top (q : MultiPoly 2)
   rw [yCoeffsAt_length_eq] at hlt
   omega
 
+/-- **The crux bridge: in the non-phantom case the eval-invariant measure equals the depth-2 measure.**
+When `q`'s top `y₁`-coefficient is not nested-canon-zero, `cdegY1 q = degreeY₁ q` and
+`canonLcY1 q = y1top q` (which is eval-equal to `leadingCoeffY ⟨1⟩ q`), so
+`chain2MeasureCanonEvalInv q = chain2MeasureCanon q`. This lets the proven depth-2 descent
+`chain2Reduce_nestedLT_canon` transfer directly to the eval-invariant measure. -/
+theorem chain2MeasureCanonEvalInv_eq_chain2MeasureCanon_of_nonphantom (q : MultiPoly 2)
+    (h : coeffCanonZeroB1 (y1top q) = false) :
+    chain2MeasureCanonEvalInv q = chain2MeasureCanon q := by
+  unfold chain2MeasureCanonEvalInv chain2MeasureCanon
+  rw [cdegY1_eq_degreeY1_of_top q h]
+  congr 1
+  rw [canonLcY1_eq_top q h]
+  apply singleExpMeasureCanon_eq_of_eval_eq
+  intro x env
+  exact (eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨1, by omega⟩ : Fin 2) q
+    (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) x env).symm
+
 end MachLib.IterExpDepth3CdegY1
