@@ -169,6 +169,35 @@ c p) = a_d' − c·a_d`, the single-exp reduce of `a_d`) plus `CanonicallyZero` 
 canonical descent on `a_d`. Validation checkpoint: the `x·y₁` case flips from the machine-checked *increase*
 to a canonical *descent* `(0,1) → (0,0)`.
 
+### Piece 3 — step 1 DONE, step 2 (the descent) hits the closure's fundamental fork
+
+**Step 1 — DONE** (`ChainExp2Descent.lean`, sorryAx-free): `chain2Reduce_lcY1_eval` — the cancellation.
+`eval(lcY₁(chain2Reduce c p)) = eval(cTD₂(lcY₁ p)) − c·eval(lcY₁ p)`, i.e. `lcY₁` of the reduce **is** the
+single-exp reduce of `lcY₁ p` (eval-level). The general identity's injected `d·y₀·lcY₁` term cancels the
+multiplier's `d·y₀` part. This is the operator's defining property, machine-checked.
+
+**Step 2 — the descent — is the closure's fundamental fork** (mapped, not yet crossed). The obstacle is
+sharp: the chain-2 reduce **inflates the syntactic `degreeY₀` of `lcY₁`** (via the `d·y₀·lcY₁` injection),
+whereas the single-exp framework relies on its reduce *preserving* syntactic `degreeY₀`
+(`degreeY_chainTotalDeriv_eq_SingleExp`) — that is why single-exp needs no eval-invariant degree. Two routes,
+each with a substantial remaining piece:
+
+- **Nested measure (current `chain2MeasureCanon`)**: handles the corner (gives `cdegY0` room), but the
+  descent needs **`cdegY0` eval-invariance** — a `y₀`-analog of `polyTrueDegreeStrict_eq_of_evalCoeffs_eq`
+  (which exists only for the *x*-degree). No `y₀`-template exists; it must be built (a poly-identity in
+  `y₀`: `eval = 0 ∀ y₀ ⟹ coefficients canonically zero`). Then the cancellation transfers the descent to
+  the single-exp reduce of `lcY₁ p` (whose flat measure the framework already descends).
+- **Flat measure + framework extension**: the flat second `trueDeg(mP2PFL(lcY₁))` descends off the corner
+  (the projection `mP2PFL` kills the `y₀`-inflation, and the proven seam + eval-invariance of `trueDeg`
+  apply), but at the corner `(degreeY₁>0, flat-second=0)` neither reduce nor trim fires — that corner needs
+  the **nested Rolle bound** (`#zeros(P) ≤ #zeros(P') + #zeros(lcY₁ P) + 1`), i.e. a two-sub-problem
+  `ReduceStep` the current single-result framework can't express.
+
+Both are genuine sub-arcs (comparable to the `y₁`-identity). The nested route is more self-contained
+(build `cdegY0` eval-invariance, then reuse the single-exp descent via the cancellation); the flat route
+needs a framework extension. **Recommendation: the nested route** — its one missing brick (`cdegY0`
+eval-invariance) has a clear x-template to mirror, versus the flat route's open-ended framework extension.
+
 ---
 
 ## Effort, risk, payoff
