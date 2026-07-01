@@ -1,6 +1,7 @@
 import MachLib.IterExpDepth3MeasureDescent
 import MachLib.IterExpDepth3CdegY1
 import MachLib.IterExpDepth3Vehicle
+import MachLib.IterExpDepth3CapstonePrep
 import MachLib.ChainExp2NoZeros
 
 /-!
@@ -36,6 +37,7 @@ open MachLib.ChainExp2Reducer
 open MachLib.ChainExp2Bound
 open MachLib.ChainExp2NoZeros
 open MachLib.ChainExp2CanonMeasure
+open MachLib.IterExpDepth3CapstonePrep
 
 /-- The canonical depth-3 measure: `(degreeY₂ p, eval-invariant depth-2 measure of `dropLastY (lcY₂ p))`. -/
 noncomputable def chain3MeasureCanon (p : MultiPoly 3) : Nat × (Nat × (Nat × Nat)) :=
@@ -75,6 +77,29 @@ theorem chain3Reduce_nestedLT (p : MultiPoly 3)
     rw [chain2MeasureCanonEvalInv_eq_of_eval_eq _ _
           (fun x e => chain3Reduce_dropLastY_lcY2_eval_eq_full _ p x e)]
     exact chain2MeasureCanonEvalInv_descends _ hq_np hpos hnz
+
+/-- **The depth-3 reduce descent needing ONLY `hnz`** — gaps A + B consolidated. With the inner descent
+strengthened to require only `hnz` (non-phantom is free, `degreeY₁ q = 0` handled), the depth-3 reduce
+strictly lowers `chain3MeasureCanon` for any `p` whose inner `q := dropLastY(lcY₂ p)` has a non-canon-zero
+leading `y₁`-coefficient. This is the form the final WF assembly dispatches to in the reduce case. -/
+theorem chain3Reduce_nestedLT_hnz (p : MultiPoly 3)
+    (hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+      (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))).2 ≠ 0) :
+    chain3OrderCanon (chain3Reduce (MachLib.Real.natCast (cdegY0
+      (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))))) p) p := by
+  apply LexProd.lexProd_of_snd
+  · exact chain3Reduce_fst_preserved _ p
+  · show nestedLT
+        (chain2MeasureCanonEvalInv (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3)
+          (chain3Reduce (MachLib.Real.natCast (cdegY0
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+              (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))))) p))))
+        (chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+    rw [chain2MeasureCanonEvalInv_eq_of_eval_eq _ _
+          (fun x e => chain3Reduce_dropLastY_lcY2_eval_eq_full _ p x e)]
+    exact chain2MeasureCanonEvalInv_descends_hnz _ hnz
 
 /-- **The base bridge.** When `p` is `y₂`-free (`degreeY₂ p = 0`), `chain3Fn p` agrees on the nose with
 `chain2Fn (dropLastY p)` at every point (both evaluate the same polynomial data against the same first
