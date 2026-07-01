@@ -212,4 +212,126 @@ theorem cdegY1_eq_of_eval_eq (q1 q2 : MultiPoly 2)
      = ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q2).reverse.dropWhile coeffCanonZeroB1).length - 1
   rw [rdw_eq_of_listSubN1 _ _ hsub]
 
+/-! ### `canonLcY1` (the canonical leading `y₁`-coefficient) and its eval-invariance -/
+
+/-- From `sub p q` nested-canon-zero, `p` and `q` agree at `env0 y0` (all `x, y₀`). -/
+theorem envEnv0_eq_of_sub_canonZero1 (p q : MultiPoly 2)
+    (h : coeffCanonZeroB1 (MultiPoly.sub p q) = true) :
+    ∀ (x y0 : Real), MultiPoly.eval p x (env0 y0) = MultiPoly.eval q x (env0 y0) := by
+  have hsub := (coeffCanonZeroB1_true_iff (MultiPoly.sub p q)).mp h
+  intro x y0
+  have hz := hsub x y0
+  rw [MultiPoly.eval_sub] at hz
+  have hcalc : MultiPoly.eval p x (env0 y0)
+      = (MultiPoly.eval p x (env0 y0) - MultiPoly.eval q x (env0 y0)) + MultiPoly.eval q x (env0 y0) := by
+    mach_ring
+  rw [hcalc, hz]; mach_ring
+
+/-- **`canonLcY1` eval-invariance at `env0` (main headD induction, mirror of
+`rdwHead_eval0_eq_of_listSubN`).** If `listSubN L1 L2` is entrywise nested-canon-zero, the `headD`s of
+the two trimmed reversed lists agree at `env0 y0` for all `x, y₀`. -/
+theorem rdwHead_envEnv0_eq_of_listSubN1 :
+    ∀ (L1 L2 : List (MultiPoly 2)),
+      (∀ c ∈ listSubN L1 L2, coeffCanonZeroB1 c = true) →
+      ∀ (x y0 : Real),
+        MultiPoly.eval ((L1.reverse.dropWhile coeffCanonZeroB1).headD (MultiPoly.const 0)) x (env0 y0)
+        = MultiPoly.eval ((L2.reverse.dropWhile coeffCanonZeroB1).headD (MultiPoly.const 0)) x (env0 y0)
+  | [], L2, hsub => by
+    intro x y0
+    rw [dropWhile_all coeffCanonZeroB1 L2.reverse
+      (fun c hc => all_canonZero1_of_listSubN_nil L2 hsub c (List.mem_reverse.mp hc))]
+    rfl
+  | p :: ps, [], hsub => by
+    intro x y0
+    rw [listSubN_cons_nil] at hsub
+    rw [dropWhile_all coeffCanonZeroB1 (p :: ps).reverse
+      (fun c hc => hsub c (List.mem_reverse.mp hc))]
+    rfl
+  | p :: ps, q :: qs, hsub => by
+    intro x y0
+    rw [listSubN_cons_cons] at hsub
+    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hcpq : coeffCanonZeroB1 p = coeffCanonZeroB1 q :=
+      coeffCanonZeroB1_eq_of_sub_canonZero p q hpq
+    have htail : ∀ c ∈ listSubN ps qs, coeffCanonZeroB1 c = true :=
+      fun c hc => hsub c (List.mem_cons_of_mem _ hc)
+    have hlen := rdw_eq_of_listSubN1 ps qs htail
+    have hheadIH := rdwHead_envEnv0_eq_of_listSubN1 ps qs htail x y0
+    have hpq0 := envEnv0_eq_of_sub_canonZero1 p q hpq x y0
+    rw [rdwHead_cons coeffCanonZeroB1 p ps, rdwHead_cons coeffCanonZeroB1 q qs, hcpq, hlen]
+    by_cases hc : 0 < (qs.reverse.dropWhile coeffCanonZeroB1).length
+    · rw [if_pos hc, if_pos hc]; exact hheadIH
+    · rw [if_neg hc, if_neg hc]
+      by_cases hq1 : coeffCanonZeroB1 q = true
+      · rw [if_pos hq1, if_pos hq1]
+      · rw [if_neg hq1, if_neg hq1]; exact hpq0
+
+private theorem mem_of_mem_dropWhile' {α : Type} (p : α → Bool) :
+    ∀ (M : List α) (a : α), a ∈ M.dropWhile p → a ∈ M
+  | [], a, h => h
+  | b :: bs, a, h => by
+    by_cases hb : p b = true
+    · have hd : (b :: bs).dropWhile p = bs.dropWhile p := by simp [List.dropWhile, hb]
+      rw [hd] at h
+      exact List.mem_cons_of_mem _ (mem_of_mem_dropWhile' p bs a h)
+    · have hd : (b :: bs).dropWhile p = b :: bs := by simp [List.dropWhile, hb]
+      rw [hd] at h
+      exact h
+
+/-- The canonical leading `y₁`-coefficient: the last non-nested-canon-zero `y₁`-coefficient. -/
+noncomputable def canonLcY1 (q : MultiPoly 2) : MultiPoly 2 :=
+  ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1).headD (MultiPoly.const 0)
+
+/-- `canonLcY1 q` is `y₁`-free (a `y₁`-coefficient, or `const 0`). -/
+theorem canonLcY1_degreeY1_zero (q : MultiPoly 2) :
+    MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (canonLcY1 q) = 0 := by
+  unfold canonLcY1
+  rcases hL : (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1 with _ | ⟨e, es⟩
+  · show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.const 0) = 0; rfl
+  · show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) e = 0
+    have he : e ∈ yCoeffsAt (⟨1, by omega⟩ : Fin 2) q := by
+      have hmem : e ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse := by
+        have hd : e ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1 := by
+          rw [hL]; exact List.mem_cons_self _ _
+        exact mem_of_mem_dropWhile' _ _ e hd
+      exact List.mem_reverse.mp hmem
+    exact yCoeffsAt_entries_degreeY_zero (⟨1, by omega⟩ : Fin 2) q e he
+
+/-- **`canonLcY1` is (fully) eval-invariant.** Eval-equal `MultiPoly 2`s have eval-equal canonical
+leading `y₁`-coefficients (full eval, via `env0`-agreement + `y₁`-freeness). This feeds the
+(already eval-invariant) `singleExpMeasureCanon` for the measure's inner component. -/
+theorem canonLcY1_eval_eq_of_eval_eq (q1 q2 : MultiPoly 2)
+    (h : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval q1 x env = MultiPoly.eval q2 x env)
+    (x : Real) (env : Fin 2 → Real) :
+    MultiPoly.eval (canonLcY1 q1) x env = MultiPoly.eval (canonLcY1 q2) x env := by
+  have hzero : ∀ (x' : Real) (env' : Fin 2 → Real),
+      MultiPoly.eval (MultiPoly.sub q1 q2) x' env' = 0 := by
+    intro x' env'; rw [MultiPoly.eval_sub, h x' env']; mach_ring
+  have hsub : ∀ c ∈ listSubN (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q1)
+                             (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q2),
+      coeffCanonZeroB1 c = true := by
+    intro c hc
+    apply coeffCanonZeroB1_true_of_eval_zero
+    intro x' env'
+    exact yCoeffsAt_entry_eval_zero_of_eval_zero (⟨1, by omega⟩ : Fin 2)
+      (MultiPoly.sub q1 q2) hzero x' env' c hc
+  -- env0-agreement of the two canonLcY1 (from the headD induction).
+  have henv0 := rdwHead_envEnv0_eq_of_listSubN1 _ _ hsub x (env (⟨0, by omega⟩ : Fin 2))
+  -- both canonLcY1 are y₁-free: eval at `env` = eval at `env0 (env ⟨0⟩)`.
+  have hoff : ∀ j : Fin 2, j ≠ (⟨1, by omega⟩ : Fin 2) → env j = env0 (env (⟨0, by omega⟩ : Fin 2)) j := by
+    intro j hj
+    have hj0 : j = (⟨0, by omega⟩ : Fin 2) := by
+      rcases j with ⟨v, hv⟩
+      have hv1 : v ≠ 1 := fun hveq => hj (Fin.ext hveq)
+      exact Fin.ext (by show v = 0; omega)
+    rw [hj0]
+    show env (⟨0, by omega⟩ : Fin 2)
+       = (if (⟨0, by omega⟩ : Fin 2) = (⟨0, by omega⟩ : Fin 2) then env (⟨0, by omega⟩ : Fin 2) else 0)
+    rw [if_pos rfl]
+  rw [eval_eq_of_env_agree_off (⟨1, by omega⟩ : Fin 2) (canonLcY1 q1) x env
+        (env0 (env (⟨0, by omega⟩ : Fin 2))) hoff (canonLcY1_degreeY1_zero q1),
+      eval_eq_of_env_agree_off (⟨1, by omega⟩ : Fin 2) (canonLcY1 q2) x env
+        (env0 (env (⟨0, by omega⟩ : Fin 2))) hoff (canonLcY1_degreeY1_zero q2)]
+  exact henv0
+
 end MachLib.IterExpDepth3CdegY1
