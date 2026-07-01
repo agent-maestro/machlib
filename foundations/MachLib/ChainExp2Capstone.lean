@@ -1,5 +1,6 @@
 import MachLib.ChainExp2Bound
 import MachLib.ChainExp2PhantomDescent
+import MachLib.ChainExp2PathC
 
 /-!
 # Seam C — buildChain2Reducer + the chain-2 Khovanskii bound
@@ -30,6 +31,7 @@ open MachLib.ChainExp2CTDCongr
 open MachLib.ChainExp2YPIT
 open MachLib.ChainExp2PhantomDescent
 open MachLib.ChainExp2Bound
+open MachLib.ChainExp2PathC
 
 /-! ### The `(smc q).2 = 0 → eval q ≡ 0` bridge (for the trim's eval-equality) -/
 
@@ -207,5 +209,64 @@ theorem chain2_reduces_to_y1free (p : MultiPoly 2) :
           (∀ z ∈ zeros, a < z ∧ z < b ∧ (chain2Fn p).eval z = 0) → zeros.length ≤ N + k := by
   obtain ⟨g, k, hg, hwit⟩ := buildChain2Reducer p
   exact ⟨g, k, hg, fun a b hab N hN_bound => chain2_zero_count_bound p g k hwit a b hab N hN_bound⟩
+
+/-! ### The `y₁`-free base bound (single-exp integration) -/
+
+/-- `(IterExpChain 2).dropLast` and `SingleExpChain` have the same chain values (both `y₀ = eˣ`). -/
+theorem iterExp2_dropLast_chainValues (z : Real) :
+    (PfaffianChainMod.PfaffianChain.dropLast (IterExpChain 2)).chainValues z
+      = SingleExpChain.chainValues z := by
+  funext i
+  show (IterExpChain 2).evals ⟨i.val, by omega⟩ z = Real.exp z
+  rw [IterExpChain_evals]
+  show iterExp i.val z = Real.exp z
+  have hi : i.val = 0 := by have := i.isLt; omega
+  rw [hi]; rfl
+
+/-- Along the chain, `chain2Fn g` (with `g` `y₁`-free) equals the single-exp function
+`⟨1, SingleExpChain, dropLastY g⟩`. -/
+theorem chain2Fn_y1free_eval_eq_singleExp (g : MultiPoly 2)
+    (hy1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) g = 0) (z : Real) :
+    (chain2Fn g).eval z
+      = (⟨1, SingleExpChain, MultiPoly.dropLastY g⟩ : PfaffianFn).eval z := by
+  rw [← PfaffianFn.dropLast_eval (chain2Fn g) rfl hy1 z]
+  show MultiPoly.eval (MultiPoly.dropLastY g) z
+        ((PfaffianChainMod.PfaffianChain.dropLast (IterExpChain 2)).chainValues z)
+     = MultiPoly.eval (MultiPoly.dropLastY g) z (SingleExpChain.chainValues z)
+  rw [iterExp2_dropLast_chainValues]
+
+/-- **The `y₁`-free base bound.** A `y₁`-free `g` is a single exponential; its zero count is bounded by
+the (already dirty-axiom-clean) single-exp Khovanskii bound, given the standard non-vanishing/terminal
+condition. Transferred to `chain2Fn g` via the chain equality. -/
+theorem base_bound_y1free (g : MultiPoly 2)
+    (hy1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) g = 0)
+    (sdr_other : PfaffianFn.StepwiseDecreaseReducer) (a b : Real) (hab : a < b)
+    (h_term : ∀ g' k, g'.n = 0 →
+       PfaffianFn.IsKhovanskiiReducible
+         (⟨1, SingleExpChain, MultiPoly.dropLastY g⟩ : PfaffianFn) g' k →
+       ∃ x : Real, g'.eval x ≠ 0) :
+    ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (chain2Fn g).eval z = 0) → zeros.length ≤ N := by
+  obtain ⟨N, hN⟩ := singleExp_khovanskii_bound (MultiPoly.dropLastY g) sdr_other a b hab h_term
+  refine ⟨N, fun zeros hnd hz => hN zeros hnd (fun z hzmem => ?_)⟩
+  obtain ⟨ha, hb', hzero⟩ := hz z hzmem
+  exact ⟨ha, hb', by rw [← chain2Fn_y1free_eval_eq_singleExp g hy1 z]; exact hzero⟩
+
+/-- **Chain-2 Khovanskii bound (assembled).** For every chain-2 `p` there is a `y₁`-free single-exp
+reduct `g` and step count `k` such that, given the standard non-vanishing/terminal condition on `g`,
+`p`'s zeros are finitely bounded — `#print axioms`-clean of `zero_count_bound_classical`. -/
+theorem chain2_khovanskii_bound (p : MultiPoly 2)
+    (sdr_other : PfaffianFn.StepwiseDecreaseReducer) (a b : Real) (hab : a < b) :
+    ∃ (g : MultiPoly 2) (k : Nat), MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) g = 0 ∧
+      ((∀ g' j, g'.n = 0 →
+         PfaffianFn.IsKhovanskiiReducible
+           (⟨1, SingleExpChain, MultiPoly.dropLastY g⟩ : PfaffianFn) g' j →
+         ∃ x : Real, g'.eval x ≠ 0) →
+       ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+         (∀ z ∈ zeros, a < z ∧ z < b ∧ (chain2Fn p).eval z = 0) → zeros.length ≤ N) := by
+  obtain ⟨g, k, hg, hred⟩ := chain2_reduces_to_y1free p
+  refine ⟨g, k, hg, fun h_term => ?_⟩
+  obtain ⟨N, hN⟩ := base_bound_y1free g hg sdr_other a b hab h_term
+  exact ⟨N + k, fun zeros hnd hz => hred a b hab N hN zeros hnd hz⟩
 
 end MachLib.ChainExp2Capstone
