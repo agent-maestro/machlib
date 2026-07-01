@@ -5,7 +5,32 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
-## [Unreleased] — 2026-06-30
+## [Unreleased] — 2026-07-01
+
+### Added — depth-3 (triple-exponential) Khovanskii bound, unconditional and dirty-axiom-free (`ab77c5b`)
+
+- **`MachLib.IterExpDepth3Bound.chain3_khovanskii_bound_unconditional`** — the
+  finite-zero bound for the **depth-3 triple-exponential** Pfaffian chain
+  (`y₀ = eˣ, y₁ = e^{eˣ}, y₂ = e^{e^{eˣ}}`), **proven, not cited**. For a chain-3
+  polynomial nonzero at *some* interior point of `(a,b)`, the number of zeros on
+  `(a,b)` is finitely bounded — NO `terminal_nonzero` hypothesis. `#print axioms`
+  → only the honest `MachLib.Real` interface (`rolle`, `zero_count_bound_by_deriv`,
+  the ring/order/field axioms, `natCast`) plus Lean's `propext`/`Classical.choice`/
+  `Quot.sound`: **NO `sorryAx`, NO `zero_count_bound_classical`, NO
+  `analytic_finite_zeros`**. Verified by `tools/claim_audit`.
+- **How the climb works** (the `IterExpDepth3*` files): `WellFounded.induction` on
+  an augmented measure `chain3Order5` (`(chain3MeasureCanon, degreeY₁ q)`), four
+  arms — base (`degreeY₂ = 0` → the depth-2 bound above) / `degreeY₂`-trim /
+  inner-trim (drop the phantom leading `y₁`-term of `lcY₂ p`; the crux — its own
+  `reconstructY`/`leadingCoeffY` toolkit) / reduce (graded multiplier, then the
+  integrating-factor vehicle for `reduct ≡ 0` or Rolle `+1`). The depth-2/single-exp
+  frameworks are untouched.
+- **Meaning + honest scope.** Frontier 1 (the depth-N iterated-exponential tower) is
+  closed at **depth 3** — the depth-2 closure provably extends one level up by depth
+  induction, entirely from honest Rolle. This does **not** discharge the
+  arbitrary-depth axiom: `PfaffianFunction.zero_bound` still cites
+  `zero_count_bound_classical` for general depth; only depths 1–3 are counted, not
+  quoted.
 
 ### Added — depth-2 Khovanskii bound, unconditional and dirty-axiom-free (`dda2a58`)
 

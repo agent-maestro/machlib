@@ -1,0 +1,38 @@
+{
+  "_comment": "MachLib claim registry. Each entry ties a PROSE CLAIM (claim_text substrings that must appear, whitespace-normalized, in source_file) to the theorem it cites and the axioms that claim forbids. `claim_audit.py` resolves each against `#print axioms`. Adding a headline that calls a theorem 'clean' WITHOUT registering it here is the intended anti-pattern the auditor exists to discourage.",
+  "claims": [
+    {
+      "id": "chain2-khovanskii-unconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "chain2_khovanskii_bound_unconditional",
+        "no `zero_count_bound_classical`, no `sorryAx`"
+      ],
+      "module": "MachLib.ChainExp2NoZeros",
+      "theorem": "MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional",
+      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+    },
+    {
+      "id": "chain2-khovanskii-unconditional-readme",
+      "source_file": "README.md",
+      "claim_text": [
+        "chain2_khovanskii_bound_unconditional",
+        "free of the classical-Khovanskii axiom"
+      ],
+      "module": "MachLib.ChainExp2NoZeros",
+      "theorem": "MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional",
+      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+    },
+    {
+      "id": "chain3-khovanskii-unconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "chain3_khovanskii_bound_unconditional",
+        "NO `sorryAx`, NO `zero_count_bound_classical`"
+      ],
+      "module": "MachLib.IterExpDepth3Bound",
+      "theorem": "MachLib.IterExpDepth3Bound.chain3_khovanskii_bound_unconditional",
+      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+    }
+  ]
+}
