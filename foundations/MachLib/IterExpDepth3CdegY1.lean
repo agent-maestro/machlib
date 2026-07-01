@@ -1,5 +1,6 @@
 import MachLib.ChainExp2CdegInv
 import MachLib.ChainExp2YPIT
+import MachLib.ChainExp2PhantomDescent
 
 /-!
 # `cdegY1` arc, brick 1 — the nested canonical-zero test and its eval-invariance
@@ -459,5 +460,48 @@ theorem chain2MeasureCanonEvalInv_eq_chain2MeasureCanon_of_nonphantom (q : Multi
   intro x env
   exact (eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨1, by omega⟩ : Fin 2) q
     (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) x env).symm
+
+/-! ### The descent: the eval-invariant measure strictly drops under `chain2Reduce` -/
+
+open MachLib.ChainExp2Reducer in
+/-- First-component drop ⇒ `lexProd`. (`LexProd` ships only `lexProd_of_snd`.) -/
+theorem lexProd_of_fst {α β : Type} {r : α → α → Prop} {s : β → β → Prop} {a b : α × β}
+    (h : r a.1 b.1) : LexProd.lexProd r s a b := Or.inl h
+
+open MachLib.ChainExp2Reducer MachLib.ChainExp2PhantomDescent in
+/-- **The eval-invariant measure descends under `chain2Reduce`.** For a genuinely-reducing `q` (top
+`y₁`-coeff not nested-canon-zero, positive `y₁`-degree, inner reducible), the correct reduce strictly
+lowers `chain2MeasureCanonEvalInv`. Two cases via the crux bridge: if the reduce result is non-phantom,
+both measures collapse to `chain2MeasureCanon` and the proven depth-2 `chain2Reduce_nestedLT_canon`
+applies; if phantom, `cdegY1` strictly drops (first component). -/
+theorem chain2MeasureCanonEvalInv_descends (q : MultiPoly 2)
+    (hq_np : coeffCanonZeroB1 (y1top q) = false)
+    (hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q)
+    (hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 ≠ 0) :
+    nestedLT
+      (chain2MeasureCanonEvalInv (chain2Reduce
+        (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q))
+      (chain2MeasureCanonEvalInv q) := by
+  rw [chain2MeasureCanonEvalInv_eq_chain2MeasureCanon_of_nonphantom q hq_np]
+  by_cases hR_np : coeffCanonZeroB1 (y1top (chain2Reduce
+      (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q)) = false
+  · rw [chain2MeasureCanonEvalInv_eq_chain2MeasureCanon_of_nonphantom _ hR_np]
+    exact chain2Reduce_nestedLT_canon q hnz
+  · have hR_ph : coeffCanonZeroB1 (y1top (chain2Reduce
+        (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q)) = true := by
+      cases hb : coeffCanonZeroB1 (y1top (chain2Reduce
+          (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q))
+      · exact absurd hb hR_np
+      · rfl
+    have hRdeg : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chain2Reduce
+          (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q)
+        = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q :=
+      chain2Reduce_fst_preserved _ q
+    have h1 := cdegY1_lt_degreeY1_of_top _ hR_ph (by rw [hRdeg]; exact hpos)
+    exact lexProd_of_fst (by
+      show cdegY1 (chain2Reduce
+          (MachLib.Real.natCast (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))) q)
+        < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q
+      rw [hRdeg] at h1; omega)
 
 end MachLib.IterExpDepth3CdegY1
