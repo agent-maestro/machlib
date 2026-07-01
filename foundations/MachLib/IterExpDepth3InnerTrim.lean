@@ -54,8 +54,7 @@ noncomputable def innerTrim3 (p : MultiPoly 3) : MultiPoly 3 :=
   reconstructY (⟨2, by omega⟩ : Fin 3)
     ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]) 0
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]) 0
 
 /-- **Eval-preservation.** When the leading `y₁`-term of the leading `y₂`-coefficient of `p` vanishes on
 every environment (the phantom condition), `innerTrim3 p` evaluates identically to `p` at every point:
@@ -64,30 +63,26 @@ is eval-equal to the `yCoeffsAt`-round-trip, i.e. `p` itself. -/
 theorem eval_innerTrim3 (p : MultiPoly 3)
     (h_phantom : ∀ (x : Real) (env : Fin 3 → Real),
       MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))).getLast
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)).getLast
         (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 3)
-          ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-            (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)))) x env = 0)
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) x env = 0)
     (x : Real) (env : Fin 3 → Real) :
     MultiPoly.eval (innerTrim3 p) x env = MultiPoly.eval p x env := by
   have hswap_eval : MultiPoly.eval (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))) x env
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) x env
       = MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)) x env :=
-    MachLib.ChainExp2Trim.eval_dropLeadingYAt_of_last_canonically_zero (⟨1, by omega⟩ : Fin 3)
-      ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-        (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))
-      (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)))
-      h_phantom x env
+          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)) x env := by
+    rw [MachLib.ChainExp2Trim.eval_dropLeadingYAt_of_last_canonically_zero (⟨1, by omega⟩ : Fin 3)
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)
+        (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 3)
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
+        h_phantom x env]
+    exact eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨2, by omega⟩ : Fin 3) p
+      (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p) x env
   unfold innerTrim3
   rw [eval_reconstructY_last_swap (⟨2, by omega⟩ : Fin 3)
         (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-          ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-            (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)))
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
         ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
           (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))
         x env hswap_eval (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast 0,
@@ -212,8 +207,7 @@ theorem degreeY2_innerTrim3_le (p : MultiPoly 3) :
       ≤ MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p := by
   have hfree : ∀ c ∈ ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]),
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]),
       MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) c = 0 := by
     intro c hc
     rcases List.mem_append.mp hc with h | h
@@ -221,22 +215,18 @@ theorem degreeY2_innerTrim3_le (p : MultiPoly 3) :
         (List.dropLast_subset _ h)
     · rw [List.mem_singleton.mp h]
       exact degreeY2_dropLeadingYAt1_zero _
-        (MultiPoly.yCoeffsAt_entries_degreeY_zero (⟨2, by omega⟩ : Fin 3) p _
-          (List.getLast_mem _))
+        (MultiPoly.degreeY_leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)
   have hne : ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]) ≠ [] := by
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]) ≠ [] := by
     simp
   have hlt := degreeY_reconstructY_lt (⟨2, by omega⟩ : Fin 3)
     ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]) hne hfree 0
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]) hne hfree 0
   have hlen : ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]).length
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]).length
       = (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).length := by
     rw [List.length_append, List.length_dropLast, List.length_singleton]
     have hlen_pos : 0 < (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).length :=
@@ -403,15 +393,13 @@ theorem leadingCoeffY2_innerTrim3 (p : MultiPoly 3)
     MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)
       = MultiPoly.mul
           (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-            ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-              (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)))
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
           (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3)
             (MultiPoly.pow (MultiPoly.varY (⟨2, by omega⟩ : Fin 3))
               (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p))) := by
   have hfree : ∀ c ∈ ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]),
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]),
       MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) c = 0 := by
     intro c hc
     rcases List.mem_append.mp hc with h | h
@@ -419,18 +407,16 @@ theorem leadingCoeffY2_innerTrim3 (p : MultiPoly 3)
         (List.dropLast_subset _ h)
     · rw [List.mem_singleton.mp h]
       exact degreeY2_dropLeadingYAt1_zero _
-        (MultiPoly.yCoeffsAt_entries_degreeY_zero (⟨2, by omega⟩ : Fin 3) p _ (List.getLast_mem _))
+        (MultiPoly.degreeY_leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)
   have hlen : ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]).length
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]).length
       = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p + 1 := by
     rw [List.length_append, List.length_dropLast, List.length_singleton, yCoeffsAt_length_eq]
     omega
   have hexp : (0 : Nat) + ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
       [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-        ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-          (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))]).length - 1
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]).length - 1
       = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p := by rw [hlen]; omega
   unfold innerTrim3
   rw [leadingCoeffY_reconstructY (⟨2, by omega⟩ : Fin 3) _ (by simp) hfree 0 (by rw [hlen]; omega),
@@ -441,8 +427,7 @@ theorem leadingCoeffY2_innerTrim3_eval (p : MultiPoly 3)
     (hpos : 0 < MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p) (x : Real) (env : Fin 3 → Real) :
     MultiPoly.eval (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)) x env
       = MultiPoly.eval (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-          ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-            (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))) x env := by
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) x env := by
   rw [leadingCoeffY2_innerTrim3 p hpos, MultiPoly.eval_mul, leadingCoeffY_pow_self_eval,
       MachLib.Real.mul_one_ax]
 
@@ -454,13 +439,11 @@ theorem leadingCoeffY2_innerTrim3_degreeY1 (p : MultiPoly 3)
         (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p))
       = MultiPoly.degreeY (⟨1, by omega⟩ : Fin 3)
           (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-            ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-              (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p))) := by
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) := by
   rw [leadingCoeffY2_innerTrim3 p hpos]
   show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 3)
         (MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
-          ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
-            (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)))
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
       + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 3) (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3)
           (MultiPoly.pow (MultiPoly.varY (⟨2, by omega⟩ : Fin 3))
             (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p))) = _
