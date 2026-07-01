@@ -130,7 +130,7 @@ theorem degreeY0_seReduce (q : MultiPoly 2)
 /-! ### Bridge: `cdegY0` / `canonLcY0` read off the top `y₀`-coefficient -/
 
 /-- Abbreviation: the top (highest-power) `y₀`-coefficient of `q`. -/
-private noncomputable def y0top (q : MultiPoly 2) : MultiPoly 2 :=
+noncomputable def y0top (q : MultiPoly 2) : MultiPoly 2 :=
   (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).getLast (yCoeffsAt_nonempty (⟨0, by omega⟩ : Fin 2) q)
 
 /-- When the top `y₀`-coefficient is **not** canonically zero, the canonical `y₀`-degree equals the
