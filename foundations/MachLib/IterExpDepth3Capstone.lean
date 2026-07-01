@@ -1,0 +1,73 @@
+import MachLib.IterExpDepth3MeasureDescent
+import MachLib.IterExpDepth3CdegY1
+
+/-!
+# Depth-3 capstone (part 1) — the canonical measure, its well-foundedness, and the reduce descent
+
+`chain3MeasureCanon p = (degreeY₂ p, chain2MeasureCanonEvalInv (dropLastY (lcY₂ p)))` — the depth-3
+analog of the depth-2 canonical measure, with the *eval-invariant* depth-2 measure on the dropped
+leading coefficient as the inner component. This file:
+
+* defines the measure + order + well-foundedness (via the `LexProd` keystone `natQuadLex_wf`);
+* proves the **reduce descent** `chain3Reduce_nestedLT`: the correct depth-3 reduce strictly lowers the
+  measure — the payoff of the entire arc. First component `degreeY₂` ties (`chain3Reduce_fst_preserved`);
+  the inner descends because the dropped leading coefficient of the reduce is (full-env) eval-equal to a
+  depth-2 reduce (`chain3Reduce_dropLastY_lcY2_eval_eq_full`), the measure is eval-invariant
+  (`chain2MeasureCanonEvalInv_eq_of_eval_eq`), and that depth-2 reduce descends
+  (`chain2MeasureCanonEvalInv_descends`).
+
+Path B; no `sorry`.
+-/
+
+namespace MachLib.IterExpDepth3Capstone
+
+open MachLib.Real
+open MachLib.MultiPolyMod
+open MachLib.PfaffianChainMod.PfaffianFn
+open MachLib.IterExpChainMod
+open MachLib.IterExpDepth3Descent
+open MachLib.IterExpDepth3MeasureDescent
+open MachLib.IterExpDepth3CdegY1
+open MachLib.ChainExp2Reducer
+open MachLib.ChainExp2CanonMeasure
+
+/-- The canonical depth-3 measure: `(degreeY₂ p, eval-invariant depth-2 measure of `dropLastY (lcY₂ p))`. -/
+noncomputable def chain3MeasureCanon (p : MultiPoly 3) : Nat × (Nat × (Nat × Nat)) :=
+  (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p,
+   chain2MeasureCanonEvalInv (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+
+/-- The canonical depth-3 order: 4-deep `Nat`-lex pulled back along the measure. -/
+def chain3OrderCanon : MultiPoly 3 → MultiPoly 3 → Prop :=
+  InvImage (LexProd.lexProd (· < ·) nestedLT) chain3MeasureCanon
+
+/-- **Well-founded** — directly from the `LexProd` keystone `natQuadLex_wf` via `InvImage`. -/
+theorem chain3OrderCanon_wf : WellFounded chain3OrderCanon :=
+  InvImage.wf chain3MeasureCanon LexProd.natQuadLex_wf
+
+/-- **The depth-3 reduce descent** — the payoff. For a genuinely-reducing `p` (the inner `dropLastY(lcY₂ p)`
+non-phantom, positive `y₁`-degree, inner reducible), the correct reduce (with the matching graded
+multiplier constant) strictly lowers `chain3MeasureCanon`. -/
+theorem chain3Reduce_nestedLT (p : MultiPoly 3)
+    (hq_np : coeffCanonZeroB1 (y1top (MultiPoly.dropLastY
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) = false)
+    (hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+    (hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+      (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))).2 ≠ 0) :
+    chain3OrderCanon (chain3Reduce (MachLib.Real.natCast (cdegY0
+      (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))))) p) p := by
+  apply LexProd.lexProd_of_snd
+  · exact chain3Reduce_fst_preserved _ p
+  · show nestedLT
+        (chain2MeasureCanonEvalInv (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3)
+          (chain3Reduce (MachLib.Real.natCast (cdegY0
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+              (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))))) p))))
+        (chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+    rw [chain2MeasureCanonEvalInv_eq_of_eval_eq _ _
+          (fun x e => chain3Reduce_dropLastY_lcY2_eval_eq_full _ p x e)]
+    exact chain2MeasureCanonEvalInv_descends _ hq_np hpos hnz
+
+end MachLib.IterExpDepth3Capstone
