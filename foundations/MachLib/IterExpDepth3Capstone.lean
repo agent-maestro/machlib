@@ -1,5 +1,7 @@
 import MachLib.IterExpDepth3MeasureDescent
 import MachLib.IterExpDepth3CdegY1
+import MachLib.IterExpDepth3Vehicle
+import MachLib.ChainExp2NoZeros
 
 /-!
 # Depth-3 capstone (part 1) — the canonical measure, its well-foundedness, and the reduce descent
@@ -28,7 +30,11 @@ open MachLib.IterExpChainMod
 open MachLib.IterExpDepth3Descent
 open MachLib.IterExpDepth3MeasureDescent
 open MachLib.IterExpDepth3CdegY1
+open MachLib.IterExpDepth3Vehicle
+open MachLib.IterExpDepth3Bridge
 open MachLib.ChainExp2Reducer
+open MachLib.ChainExp2Bound
+open MachLib.ChainExp2NoZeros
 open MachLib.ChainExp2CanonMeasure
 
 /-- The canonical depth-3 measure: `(degreeY₂ p, eval-invariant depth-2 measure of `dropLastY (lcY₂ p))`. -/
@@ -69,5 +75,27 @@ theorem chain3Reduce_nestedLT (p : MultiPoly 3)
     rw [chain2MeasureCanonEvalInv_eq_of_eval_eq _ _
           (fun x e => chain3Reduce_dropLastY_lcY2_eval_eq_full _ p x e)]
     exact chain2MeasureCanonEvalInv_descends _ hq_np hpos hnz
+
+/-- **The base bridge.** When `p` is `y₂`-free (`degreeY₂ p = 0`), `chain3Fn p` agrees on the nose with
+`chain2Fn (dropLastY p)` at every point (both evaluate the same polynomial data against the same first
+two chain values — `dropLastY_eval_IterExp3`), so the *unconditional depth-2 Khovanskii bound* transfers
+verbatim. This is the recursion's floor: `degreeY₂ = 0` drops the depth-3 problem to the fully-solved
+depth-2 one. -/
+theorem chain3Fn_bound_of_degreeY2_zero (p : MultiPoly 3)
+    (hd : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p = 0) (a b : Real) (hab : a < b)
+    (hne : ∃ z, a < z ∧ z < b ∧ (chain3Fn p).eval z ≠ 0) :
+    ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (chain3Fn p).eval z = 0) → zeros.length ≤ N := by
+  have heval : ∀ z, (chain3Fn p).eval z = (chain2Fn (MultiPoly.dropLastY p)).eval z := by
+    intro z
+    show MultiPoly.eval p z ((IterExpChain 3).chainValues z)
+       = MultiPoly.eval (MultiPoly.dropLastY p) z ((IterExpChain 2).chainValues z)
+    exact dropLastY_eval_IterExp3 p hd z
+  obtain ⟨z, hza, hzb, hzne⟩ := hne
+  obtain ⟨N, hN⟩ := chain2_khovanskii_bound_unconditional (MultiPoly.dropLastY p) a b hab
+    ⟨z, hza, hzb, by rw [← heval]; exact hzne⟩
+  refine ⟨N, fun zeros hnd hz => hN zeros hnd (fun z' hz'mem => ?_)⟩
+  obtain ⟨ha, hb', hzero⟩ := hz z' hz'mem
+  exact ⟨ha, hb', by rw [← heval]; exact hzero⟩
 
 end MachLib.IterExpDepth3Capstone
