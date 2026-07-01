@@ -150,4 +150,43 @@ theorem chain3_degreeY2_trim_order (p : MultiPoly 3)
     MachLib.ChainExp2Trim.degreeY_dropLeadingYAt_lt (⟨2, by omega⟩ : Fin 3) p (Nat.pos_of_ne_zero hd2)
   exact lexProd_of_fst hlt
 
+/-! ### The augmented measure `M5` for the inner-trim
+
+The inner-trim (dropping a phantom leading `y₁`-term of `lcY₂ p`) preserves `chain3MeasureCanon` (it is
+eval-invariant) while strictly lowering the *syntactic* `degreeY₁` of the inner `q := dropLastY(lcY₂ p)`.
+So it is not a `chain3OrderCanon` descent on its own. `M5` appends that syntactic `degreeY₁ q` as a strictly
+less-significant tiebreaker: `M5 p = (chain3MeasureCanon p, degreeY₁ q)`. The reduce and `degreeY₂`-trim,
+which drop the FIRST component, lift for free (`lexProd_of_fst`); the inner-trim drops either the first
+(if `degreeY₂` drops) or the second (`degreeY₁ q`). -/
+
+/-- The augmented depth-3 measure: the canonical measure with syntactic `degreeY₁ q` as an innermost
+tiebreaker. -/
+noncomputable def chain3Measure5 (p : MultiPoly 3) : (Nat × (Nat × (Nat × Nat))) × Nat :=
+  (chain3MeasureCanon p,
+   MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+     (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+
+/-- The augmented order — `chain3OrderCanon` with the `degreeY₁ q` tiebreaker. -/
+def chain3Order5 : MultiPoly 3 → MultiPoly 3 → Prop :=
+  InvImage (LexProd.lexProd (LexProd.lexProd (· < ·) nestedLT) (· < ·)) chain3Measure5
+
+/-- **Well-founded** — `lexProd` of the (well-founded) canonical order with `Nat`'s `<`. -/
+theorem chain3Order5_wf : WellFounded chain3Order5 :=
+  InvImage.wf chain3Measure5 (LexProd.lexProd_wf LexProd.natQuadLex_wf Nat.lt_wfRel.wf)
+
+/-- The reduce descent lifts to `M5` for free — it drops the first (`chain3MeasureCanon`) component. -/
+theorem chain3Reduce_order5_hnz (p : MultiPoly 3)
+    (hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+      (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))).2 ≠ 0) :
+    chain3Order5 (chain3Reduce (MachLib.Real.natCast (cdegY0
+      (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))))) p) p :=
+  lexProd_of_fst (chain3Reduce_nestedLT_hnz p hnz)
+
+/-- The `degreeY₂`-trim descent lifts to `M5` for free — it also drops the first component. -/
+theorem chain3_degreeY2_trim_order5 (p : MultiPoly 3)
+    (hd2 : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p ≠ 0) :
+    chain3Order5 (MachLib.ChainExp2Trim.dropLeadingYAt (⟨2, by omega⟩ : Fin 3) p) p :=
+  lexProd_of_fst (chain3_degreeY2_trim_order p hd2)
+
 end MachLib.IterExpDepth3Capstone
