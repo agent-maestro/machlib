@@ -198,6 +198,47 @@ Both are genuine sub-arcs (comparable to the `y₁`-identity). The nested route 
 needs a framework extension. **Recommendation: the nested route** — its one missing brick (`cdegY0`
 eval-invariance) has a clear x-template to mirror, versus the flat route's open-ended framework extension.
 
+### Piece 3 — NESTED ROUTE **DONE** (the descent is PROVEN)
+
+The nested route succeeded. All sorryAx-free, no dirty axiom (`#print axioms` = propext / Quot.sound /
+Classical.choice — from the noncomputable `CanonicallyZero` decidability, inherent to every route-A brick —
+plus the legitimate `MachLib.Real` analysis axioms `rolle` / `zero_count_bound_by_deriv` / `HasDerivAt_*`).
+
+- **`cdegY0` / `singleExpMeasureCanon` eval-invariance** (`ChainExp2YPIT.lean` + `ChainExp2CdegInv.lean`):
+  the `y`-PIT (reduced to the x-PIT via a Horner bridge — no new axiom) + the canonical measure is
+  eval-invariant. This was the highest-uncertainty piece.
+- **`y₀`-analog `leadingCoeffY`-under-`cTD` identity** (`ChainExp2LcY0CTD.lean`):
+  `eval(lcY₀(cTD₂ q)) = eval(cTD₂(lcY₀ q)) + degreeY₀ q·eval(lcY₀ q)` for `y₁`-free `q`.
+- **The single-exp canonical descent** (`ChainExp2SingleExpDescent.lean`,
+  `singleExpMeasureCanon_seReduce_lt`): for `y₁`-free `q` with top `y₀`-coefficient not canonically zero,
+  `singleExpMeasureCanon(seReduce q) <ₗ singleExpMeasureCanon q`, `seReduce q = cTD₂ q − (degreeY₀ q)·q`.
+  Key: at `c = degreeY₀ q` the `y₀`-identity's `d·lcY₀` injection cancels the reduce's `c·lcY₀` term
+  exactly, so `lcY₀(seReduce q) ≡ (lcY₀ q)'`. The canonical measure only reads the top `y₀`-coefficient,
+  so no full coefficient-list transform is needed. **No (0,0) corner** exists (a nonzero constant scores
+  `polyTrueDegreeStrict = 1`, its derivative drops it to 0).
+- **The full reduce `nestedLT` descent** (`ChainExp2ReduceDescent.lean`,
+  `chain2Reduce_nestedLT_canon_htop`): for `p` with `htop(lcY₁ p)`,
+  `chain2Reduce (degreeY₀(lcY₁ p)) p` strictly descends `chain2MeasureCanon`. Assembled from the
+  structural reduction + `chain2Reduce_lcY1_eval` (cancellation) + the descent. Choosing
+  `c = degreeY₀(lcY₁ p)` makes `lcY₁(chain2Reduce c p) ≡ seReduce(lcY₁ p)` (same `q`, no trim), so no
+  `cTD` eval-congruence is needed here. The obstruction witness `p = x·y₁` IS an `htop` case — handled.
+
+### Remaining seam(s) to full closure
+
+1. **Phantom-top case.** When `lcY₁ p` is not canonically zero but its *syntactic* top `y₀`-coefficient
+   IS canonically zero (`degreeY₀(lcY₁ p) > cdegY0(lcY₁ p)` — arises from the non-canonical `lcY₁` ASTs
+   produced by prior reduces). There `c = degreeY₀` leaves a residual at full x-degree (no descent); one
+   must use `c = cdegY0` and a trimmed representative `q̂ ~ lcY₁ p` with `degreeY₀ q̂ = cdegY0 q̂`, which
+   needs **`chainTotalDeriv` eval-congruence for `y₁`-free polys** (`eval a = eval b ⇒ eval(cTD a) =
+   eval(cTD b)`). NOT structurally inductive (the hypothesis doesn't distribute over `add`/`mul`); needs
+   the `y₀`-coefficient convolution action of `cTD` (a ~200-line lemma mirroring `ChainExp2LcY0CTD`) plus
+   the x-polynomial version of the same congruence. Comparable in size to the descent itself.
+2. **`IsKhovanskiiReducible` poly-multiplier extension** — thread `ChainExp2PolyMultRolle`'s
+   `zero_count_polyMultReduce_transfer` (the Rolle zero-count for `P' − m·P`, already proven clean) into
+   the iteration.
+3. **Dispatch + Phase-4 capstone** — `Chain2SDR` (trim inner=0 / reduce inner>0) over `chain2OrderCanon_wf`
+   + `buildChain2Reducer` + close `sdr_other` for chain-2. Mechanical once (1)+(2) land.
+
 ---
 
 ## Effort, risk, payoff
