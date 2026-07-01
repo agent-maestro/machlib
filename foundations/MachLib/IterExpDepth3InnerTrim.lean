@@ -449,4 +449,37 @@ theorem leadingCoeffY2_innerTrim3_degreeY1 (p : MultiPoly 3)
             (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p))) = _
   rw [degreeY_leadingCoeffY_pow_self, Nat.add_zero]
 
+/-- **Exact `reconstructY` degree, general nonempty list.** Wrapper of `degreeY_reconstructY_exact_cons`. -/
+theorem degreeY_reconstructY_exact {n : Nat} (i : Fin n) (L : List (MultiPoly n)) (hne : L ≠ [])
+    (hfree : ∀ c ∈ L, MultiPoly.degreeY i c = 0) (k : Nat) :
+    MultiPoly.degreeY i (reconstructY i L k) = k + L.length - 1 := by
+  obtain ⟨c, cs, rfl⟩ := List.exists_cons_of_ne_nil hne
+  rw [degreeY_reconstructY_exact_cons i c cs hfree k, List.length_cons]; omega
+
+/-- **`degreeY₂` is exactly preserved by `innerTrim3`** (the rebuilt list has length `degreeY₂ p + 1`
+with all-`y₂`-free entries, and the last term always carries the top `y₂`-power). -/
+theorem degreeY2_innerTrim3_eq (p : MultiPoly 3) :
+    MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)
+      = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p := by
+  have hfree : ∀ c ∈ ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
+      [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]),
+      MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) c = 0 := by
+    intro c hc
+    rcases List.mem_append.mp hc with h | h
+    · exact MultiPoly.yCoeffsAt_entries_degreeY_zero (⟨2, by omega⟩ : Fin 3) p c
+        (List.dropLast_subset _ h)
+    · rw [List.mem_singleton.mp h]
+      exact degreeY2_dropLeadingYAt1_zero _
+        (MultiPoly.degreeY_leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)
+  have hlen : ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).dropLast ++
+      [MachLib.ChainExp2Trim.dropLeadingYAt (⟨1, by omega⟩ : Fin 3)
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)]).length
+      = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p + 1 := by
+    rw [List.length_append, List.length_dropLast, List.length_singleton, yCoeffsAt_length_eq]
+    omega
+  unfold innerTrim3
+  rw [degreeY_reconstructY_exact (⟨2, by omega⟩ : Fin 3) _ (by simp) hfree 0, hlen]
+  omega
+
 end MachLib.IterExpDepth3InnerTrim
