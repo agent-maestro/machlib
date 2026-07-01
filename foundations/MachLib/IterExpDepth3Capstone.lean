@@ -2,6 +2,7 @@ import MachLib.IterExpDepth3MeasureDescent
 import MachLib.IterExpDepth3CdegY1
 import MachLib.IterExpDepth3Vehicle
 import MachLib.IterExpDepth3CapstonePrep
+import MachLib.IterExpDepth3InnerTrim
 import MachLib.ChainExp2NoZeros
 
 /-!
@@ -38,6 +39,7 @@ open MachLib.ChainExp2Bound
 open MachLib.ChainExp2NoZeros
 open MachLib.ChainExp2CanonMeasure
 open MachLib.IterExpDepth3CapstonePrep
+open MachLib.IterExpDepth3InnerTrim
 
 /-- The canonical depth-3 measure: `(degreeY₂ p, eval-invariant depth-2 measure of `dropLastY (lcY₂ p))`. -/
 noncomputable def chain3MeasureCanon (p : MultiPoly 3) : Nat × (Nat × (Nat × Nat)) :=
@@ -188,5 +190,71 @@ theorem chain3_degreeY2_trim_order5 (p : MultiPoly 3)
     (hd2 : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p ≠ 0) :
     chain3Order5 (MachLib.ChainExp2Trim.dropLeadingYAt (⟨2, by omega⟩ : Fin 3) p) p :=
   lexProd_of_fst (chain3_degreeY2_trim_order p hd2)
+
+/-- **The inner-trim M5-descent** — the last shrinking move. For `p` with `degreeY₂ p > 0`, a phantom
+leading `y₁`-term of `lcY₂ p` (`h_phantom`), and positive `y₁`-degree there (`hd1pos`), `innerTrim3 p`
+strictly lowers `M5`. The FIRST component `chain3MeasureCanon` TIES — `degreeY₂` exactly
+(`degreeY2_innerTrim3_eq`) and the inner eval-invariant measure because `lcY₂(innerTrim3 p)` is eval-equal
+to `lcY₂ p` (the dropped `y₁`-term vanishes) — and the SECOND component (`degreeY₁ q`) DROPS
+(`degreeY_dropLeadingYAt_lt`). Via `lexProd_of_snd`. -/
+theorem innerTrim3_order5 (p : MultiPoly 3)
+    (hd2pos : 0 < MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p)
+    (hd1pos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 3)
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
+    (h_phantom : ∀ (x : Real) (env : Fin 3 → Real),
+      MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨1, by omega⟩ : Fin 3)
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)).getLast
+        (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 3)
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) x env = 0) :
+    chain3Order5 (innerTrim3 p) p := by
+  apply LexProd.lexProd_of_snd
+  · show chain3MeasureCanon (innerTrim3 p) = chain3MeasureCanon p
+    have hdeg : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)
+        = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p := degreeY2_innerTrim3_eq p
+    have hinner : chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)))
+        = chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) := by
+      apply chain2MeasureCanonEvalInv_eq_of_eval_eq
+      intro x env2
+      have hlcf1 : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)) = 0 :=
+        MultiPoly.degreeY_leadingCoeffY _ _
+      have hlcf2 : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p) = 0 :=
+        MultiPoly.degreeY_leadingCoeffY _ _
+      have hrestrict : (fun i : Fin 2 =>
+          (fun j : Fin 3 => if h : j.val < 2 then env2 ⟨j.val, h⟩ else 0) ⟨i.val, by omega⟩) = env2 := by
+        funext i
+        show (if h : i.val < 2 then env2 ⟨i.val, h⟩ else 0) = env2 i
+        rw [dif_pos i.isLt]
+      have hbridge : ∀ (X : MultiPoly 3), MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) X = 0 →
+          MultiPoly.eval (MultiPoly.dropLastY X) x env2
+            = MultiPoly.eval X x (fun j : Fin 3 => if h : j.val < 2 then env2 ⟨j.val, h⟩ else 0) := by
+        intro X hX
+        have hev := MultiPoly.eval_dropLastY X hX x
+          (fun j : Fin 3 => if h : j.val < 2 then env2 ⟨j.val, h⟩ else 0)
+        rwa [hrestrict] at hev
+      rw [hbridge _ hlcf1, hbridge _ hlcf2,
+          leadingCoeffY2_innerTrim3_eval p hd2pos,
+          MachLib.ChainExp2Trim.eval_dropLeadingYAt_of_last_canonically_zero (⟨1, by omega⟩ : Fin 3)
+            (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)
+            (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 3)
+              (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
+            h_phantom]
+    show (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p),
+          chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+            (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p))))
+        = (MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p,
+           chain2MeasureCanonEvalInv (MultiPoly.dropLastY
+            (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+    rw [hdeg, hinner]
+  · show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (innerTrim3 p)))
+        < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))
+    rw [degreeY1_dropLastY, degreeY1_dropLastY, leadingCoeffY2_innerTrim3_degreeY1 p hd2pos]
+    exact MachLib.ChainExp2Trim.degreeY_dropLeadingYAt_lt (⟨1, by omega⟩ : Fin 3)
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p) hd1pos
 
 end MachLib.IterExpDepth3Capstone
