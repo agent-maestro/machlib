@@ -348,4 +348,50 @@ theorem leadingCoeffY_reconstructY_cons {n : Nat} (i : Fin n) :
         List.getLast_cons (List.cons_ne_nil d ds),
         show (k + 1) + ds.length = k + (d :: ds).length from by rw [List.length_cons]; omega]
 
+/-- The leading `yᵢ`-coefficient of a pure power `yᵢ^m` evaluates to `1` (it is a nested product of
+`const 1`s). -/
+theorem leadingCoeffY_pow_self_eval {n : Nat} (i : Fin n) (x : Real) (env : Fin n → Real) :
+    ∀ (m : Nat), MultiPoly.eval (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) m)) x env = 1 := by
+  intro m
+  induction m with
+  | zero => rfl
+  | succ m ih =>
+    show MultiPoly.eval (MultiPoly.leadingCoeffY i
+      (MultiPoly.mul (MultiPoly.varY i) (MultiPoly.pow (MultiPoly.varY i) m))) x env = 1
+    show MultiPoly.eval (MultiPoly.mul (MultiPoly.leadingCoeffY i (MultiPoly.varY i))
+      (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) m))) x env = 1
+    rw [show MultiPoly.leadingCoeffY i (MultiPoly.varY i) = MultiPoly.const 1 from by
+          show (if i = i then MultiPoly.const 1 else MultiPoly.varY i) = MultiPoly.const 1
+          rw [if_pos rfl],
+        MultiPoly.eval_mul, MultiPoly.eval_const, MachLib.Real.one_mul_thm, ih]
+
+/-- The leading `yᵢ`-coefficient of `yᵢ^m` is free of every chain variable `y_j` (nested `const 1`s). -/
+theorem degreeY_leadingCoeffY_pow_self {n : Nat} (i j : Fin n) :
+    ∀ (m : Nat), MultiPoly.degreeY j (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) m)) = 0 := by
+  intro m
+  induction m with
+  | zero => rfl
+  | succ m ih =>
+    show MultiPoly.degreeY j (MultiPoly.leadingCoeffY i
+      (MultiPoly.mul (MultiPoly.varY i) (MultiPoly.pow (MultiPoly.varY i) m))) = 0
+    show MultiPoly.degreeY j (MultiPoly.mul (MultiPoly.leadingCoeffY i (MultiPoly.varY i))
+      (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) m))) = 0
+    rw [show MultiPoly.leadingCoeffY i (MultiPoly.varY i) = MultiPoly.const 1 from by
+          show (if i = i then MultiPoly.const 1 else MultiPoly.varY i) = MultiPoly.const 1
+          rw [if_pos rfl]]
+    show MultiPoly.degreeY j (MultiPoly.const 1)
+      + MultiPoly.degreeY j (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) m)) = 0
+    rw [ih]; rfl
+
+/-- **`leadingCoeffY` of a `reconstructY`, general nonempty list.** Wrapper of
+`leadingCoeffY_reconstructY_cons` for any nonempty `y_i`-free coefficient list with positive leading power. -/
+theorem leadingCoeffY_reconstructY {n : Nat} (i : Fin n) (L : List (MultiPoly n)) (hne : L ≠ [])
+    (hfree : ∀ c ∈ L, MultiPoly.degreeY i c = 0) (k : Nat) (hpos : 0 < k + L.length - 1) :
+    MultiPoly.leadingCoeffY i (reconstructY i L k)
+      = MultiPoly.mul (L.getLast hne)
+          (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) (k + L.length - 1))) := by
+  obtain ⟨c, cs, rfl⟩ := List.exists_cons_of_ne_nil hne
+  rw [leadingCoeffY_reconstructY_cons i c cs hfree k (by rw [List.length_cons] at hpos; omega),
+      show k + (c :: cs).length - 1 = k + cs.length from by rw [List.length_cons]; omega]
+
 end MachLib.IterExpDepth3InnerTrim
