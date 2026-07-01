@@ -86,4 +86,62 @@ theorem chain3Reduce_dropLastY_lcY2_eval_eq (c : Real) (p : MultiPoly 3) (z : Re
       hRHS,
       degreeY1_dropLastY]
 
+/-- **Full-env eval-equality** (the version the measure descent needs — the chain-values version above is
+insufficient because `chain2MeasureCanonEvalInv`'s eval-invariance quantifies over ALL environments).
+Proven via the framework `MultiPoly.eval_dropLastY` (full-env, env-restricted) rather than the
+chain-specific `dropLastY_eval_IterExp3`. -/
+theorem chain3Reduce_dropLastY_lcY2_eval_eq_full (c : Real) (p : MultiPoly 3)
+    (z : Real) (env : Fin 2 → Real) :
+    MultiPoly.eval (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (chain3Reduce c p))) z env
+    = MultiPoly.eval (chain2Reduce c (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) z env := by
+  have hf_red : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) (chain3Reduce c p)) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY _ _
+  have hf_p : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+      (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY _ _
+  have hf_cTD : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+      (chainTotalDeriv (IterExpChain 3) (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) = 0 := by
+    rw [degreeY2_cTD_eq_IterExp3]; exact hf_p
+  have hrestrict : (fun i : Fin 2 =>
+      (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0) ⟨i.val, by omega⟩) = env := by
+    funext i
+    show (if h : i.val < 2 then env ⟨i.val, h⟩ else 0) = env i
+    rw [dif_pos i.isLt]
+  have hbridge : ∀ (X : MultiPoly 3), MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) X = 0 →
+      MultiPoly.eval (MultiPoly.dropLastY X) z env
+        = MultiPoly.eval X z (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0) := by
+    intro X hX
+    have hev := MultiPoly.eval_dropLastY X hX z
+      (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0)
+    rwa [hrestrict] at hev
+  have hcTD_conn : MultiPoly.eval (chainTotalDeriv (IterExpChain 3)
+        (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) z
+        (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0)
+      = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+          (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) z env := by
+    rw [← hbridge _ hf_cTD, dropLastY_cTD_commute _ hf_p]
+  have hY0_conn : MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 3)) z
+        (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0)
+      = MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) z env := by
+    show (if h : (0 : Nat) < 2 then env ⟨0, h⟩ else 0) = env (⟨0, by omega⟩ : Fin 2)
+    rw [dif_pos (by omega)]
+  rw [hbridge _ hf_red,
+      chain3Reduce_lcY2_eval c p z (fun j : Fin 3 => if h : j.val < 2 then env ⟨j.val, h⟩ else 0),
+      hcTD_conn, hY0_conn, (hbridge _ hf_p).symm, ← degreeY1_dropLastY,
+      show MultiPoly.eval (chain2Reduce c (MultiPoly.dropLastY
+            (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) z env
+         = MultiPoly.eval (chainTotalDeriv (IterExpChain 2)
+             (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p))) z env
+           - (MachLib.Real.natCast (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+               (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)))
+              * MultiPoly.eval (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) z env + c)
+             * MultiPoly.eval (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨2, by omega⟩ : Fin 3) p)) z env
+         from by
+           show MultiPoly.eval (MultiPoly.sub _ _) z env = _
+           rw [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_add, MultiPoly.eval_mul,
+               MultiPoly.eval_const, MultiPoly.eval_const]]
+
 end MachLib.IterExpDepth3MeasureDescent
