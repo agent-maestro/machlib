@@ -1,4 +1,5 @@
 import MachLib.ChainExp2Trim
+import MachLib.ChainExp2NoZeros
 
 /-!
 # Depth-3 inner-trim — dropping a phantom leading `y₁`-term of the leading `y₂`-coefficient
@@ -23,6 +24,7 @@ open MachLib.Real
 open MachLib.MultiPolyMod
 open MachLib.MultiPolyMod.MultiPoly
 open MachLib.MultiPolyReconstruct
+open MachLib.ChainExp2NoZeros
 
 /-- **Last-coefficient swap preserves eval.** Replacing the final entry of a `reconstructY` coefficient
 list by an eval-equal polynomial does not change the evaluation — `reconstructY` is a sum `Σ cₖ·yᵢᵏ`
@@ -248,5 +250,102 @@ theorem degreeY2_innerTrim3_le (p : MultiPoly 3) :
   rw [Nat.zero_add] at hlt
   rw [hlen, hlen_eq] at hlt
   omega
+
+/-! ### `leadingCoeffY` of a `reconstructY` — the last coefficient dominates -/
+
+/-- `leadingCoeffY` of a sum, higher-degree summand wins (re-declared; the private originals live in
+`ChainExp2LcY*CTD`). -/
+theorem lcY_add_of_gt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i p > MultiPoly.degreeY i q) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i p := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q)) = _
+  rw [if_pos h]
+
+theorem lcY_add_of_lt {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i q > MultiPoly.degreeY i p) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i q := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q)) = _
+  rw [if_neg (by omega), if_pos h]
+
+/-- **Exact `reconstructY` degree.** For `y_i`-free coefficients the reconstructed `degreeY i` is exactly
+`k + cs.length` (the last term `c_last · yᵢ^{k+len-1}` always dominates — a zero coefficient still carries
+the highest `yᵢ`-power syntactically). -/
+theorem degreeY_reconstructY_exact_cons {n : Nat} (i : Fin n) :
+    ∀ (c : MultiPoly n) (cs : List (MultiPoly n)),
+      (∀ x ∈ c :: cs, MultiPoly.degreeY i x = 0) → ∀ (k : Nat),
+      MultiPoly.degreeY i (reconstructY i (c :: cs) k) = k + cs.length := by
+  intro c cs
+  induction cs generalizing c with
+  | nil =>
+    intro hfree k
+    rw [reconstructY_cons, reconstructY_nil]
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
+      show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
+      rw [hc, degreeY_pow_varY_self, Nat.zero_add]
+    show Nat.max (MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)))
+                 (MultiPoly.degreeY i (MultiPoly.const 0)) = k + 0
+    rw [hhead]
+    show Nat.max k 0 = k + 0
+    rw [show Nat.max k 0 = k from Nat.max_eq_left (Nat.zero_le k), Nat.add_zero]
+  | cons d ds ih =>
+    intro hfree k
+    rw [reconstructY_cons]
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
+      show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
+      rw [hc, degreeY_pow_varY_self, Nat.zero_add]
+    have htail : MultiPoly.degreeY i (reconstructY i (d :: ds) (k + 1)) = (k + 1) + ds.length :=
+      ih d (fun x hx => hfree x (List.mem_cons_of_mem _ hx)) (k + 1)
+    show Nat.max (MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)))
+                 (MultiPoly.degreeY i (reconstructY i (d :: ds) (k + 1))) = k + (d :: ds).length
+    rw [hhead, htail, List.length_cons,
+        show Nat.max k (k + 1 + ds.length) = k + 1 + ds.length from
+          Nat.max_eq_right (show k ≤ k + 1 + ds.length by omega)]
+    omega
+
+/-- **`leadingCoeffY` of a `reconstructY`.** For `y_i`-free coefficients with the leading `yᵢ`-power
+positive, the leading `yᵢ`-coefficient of the reconstruction is `c_last · (leading coeff of yᵢ^power)`.
+Only the last coefficient survives. -/
+theorem leadingCoeffY_reconstructY_cons {n : Nat} (i : Fin n) :
+    ∀ (c : MultiPoly n) (cs : List (MultiPoly n)),
+      (∀ x ∈ c :: cs, MultiPoly.degreeY i x = 0) → ∀ (k : Nat), 0 < k + cs.length →
+      MultiPoly.leadingCoeffY i (reconstructY i (c :: cs) k)
+        = MultiPoly.mul ((c :: cs).getLast (List.cons_ne_nil c cs))
+            (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) (k + cs.length))) := by
+  intro c cs
+  induction cs generalizing c with
+  | nil =>
+    intro hfree k hpos
+    have hk : 0 < k := by simpa using hpos
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
+      show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
+      rw [hc, degreeY_pow_varY_self, Nat.zero_add]
+    rw [reconstructY_cons, reconstructY_nil,
+        lcY_add_of_gt i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) (MultiPoly.const 0)
+          (by rw [hhead]; exact hk)]
+    show MultiPoly.mul (MultiPoly.leadingCoeffY i c)
+        (MultiPoly.leadingCoeffY i (MultiPoly.pow (MultiPoly.varY i) k)) = _
+    rw [leadingCoeffY_eq_self_of_degreeY_zero i c hc]
+    rfl
+  | cons d ds ih =>
+    intro hfree k _
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
+      show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
+      rw [hc, degreeY_pow_varY_self, Nat.zero_add]
+    have htaildeg : MultiPoly.degreeY i (reconstructY i (d :: ds) (k + 1)) = (k + 1) + ds.length :=
+      degreeY_reconstructY_exact_cons i d ds (fun x hx => hfree x (List.mem_cons_of_mem _ hx)) (k + 1)
+    rw [reconstructY_cons,
+        lcY_add_of_lt i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k))
+          (reconstructY i (d :: ds) (k + 1)) (by rw [hhead, htaildeg]; omega),
+        ih d (fun x hx => hfree x (List.mem_cons_of_mem _ hx)) (k + 1) (by omega),
+        List.getLast_cons (List.cons_ne_nil d ds),
+        show (k + 1) + ds.length = k + (d :: ds).length from by rw [List.length_cons]; omega]
 
 end MachLib.IterExpDepth3InnerTrim
