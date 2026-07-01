@@ -114,4 +114,102 @@ theorem coeffCanonZeroB1_eq_of_eval_eq (c1 c2 : MultiPoly 2)
     · intro h2 x y0; rw [h x (env0 y0)]; exact h2 x y0
   cases hb1 : coeffCanonZeroB1 c1 <;> cases hb2 : coeffCanonZeroB1 c2 <;> simp_all
 
+/-! ### `cdegY1` and its eval-invariance (mirror of the `cdegY0` list induction, one index up) -/
+
+/-- Eval-zero polys pass the nested canon-zero test. -/
+theorem coeffCanonZeroB1_true_of_eval_zero (c : MultiPoly 2)
+    (h : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval c x env = 0) :
+    coeffCanonZeroB1 c = true :=
+  (coeffCanonZeroB1_true_iff c).mpr (fun x y0 => h x (env0 y0))
+
+theorem coeffCanonZeroB1_const0 : coeffCanonZeroB1 (MultiPoly.const (0 : Real)) = true :=
+  coeffCanonZeroB1_true_of_eval_zero _ (fun _ _ => rfl)
+
+/-- From `sub p q` nested-canon-zero, `p` and `q` have equal nested canon-zero test (both determined by
+their `y₁ = 0` slice). -/
+theorem coeffCanonZeroB1_eq_of_sub_canonZero (p q : MultiPoly 2)
+    (h : coeffCanonZeroB1 (MultiPoly.sub p q) = true) :
+    coeffCanonZeroB1 p = coeffCanonZeroB1 q := by
+  have hsub := (coeffCanonZeroB1_true_iff (MultiPoly.sub p q)).mp h
+  have hpq : ∀ (x y0 : Real), MultiPoly.eval p x (env0 y0) = MultiPoly.eval q x (env0 y0) := by
+    intro x y0
+    have hz := hsub x y0
+    rw [MultiPoly.eval_sub] at hz
+    have hcalc : MultiPoly.eval p x (env0 y0)
+        = (MultiPoly.eval p x (env0 y0) - MultiPoly.eval q x (env0 y0))
+          + MultiPoly.eval q x (env0 y0) := by mach_ring
+    rw [hcalc, hz]; mach_ring
+  have hiff : coeffCanonZeroB1 p = true ↔ coeffCanonZeroB1 q = true := by
+    rw [coeffCanonZeroB1_true_iff, coeffCanonZeroB1_true_iff]
+    constructor
+    · intro hp x y0; rw [← hpq x y0]; exact hp x y0
+    · intro hq x y0; rw [hpq x y0]; exact hq x y0
+  cases hb1 : coeffCanonZeroB1 p <;> cases hb2 : coeffCanonZeroB1 q <;> simp_all
+
+theorem all_canonZero1_of_listSubN_nil :
+    ∀ L : List (MultiPoly 2),
+      (∀ c ∈ listSubN [] L, coeffCanonZeroB1 c = true) →
+      ∀ c ∈ L, coeffCanonZeroB1 c = true
+  | [], _ => by intro c hc; cases hc
+  | q :: qs, h => by
+    rw [listSubN_nil_cons] at h
+    intro c hc
+    rcases List.mem_cons.mp hc with hcq | hcqs
+    · subst hcq
+      have := coeffCanonZeroB1_eq_of_sub_canonZero (MultiPoly.const 0) c
+                (h _ (List.mem_cons_self _ _))
+      rw [coeffCanonZeroB1_const0] at this
+      exact this.symm
+    · exact all_canonZero1_of_listSubN_nil qs
+        (fun d hd => h d (List.mem_cons_of_mem _ hd)) c hcqs
+
+/-- **Main list induction** (mirror of `rdw_eq_of_listSubN`): if `listSubN L1 L2` is entrywise
+nested-canon-zero, the trimmed lengths agree. -/
+theorem rdw_eq_of_listSubN1 :
+    ∀ (L1 L2 : List (MultiPoly 2)),
+      (∀ c ∈ listSubN L1 L2, coeffCanonZeroB1 c = true) →
+      (L1.reverse.dropWhile coeffCanonZeroB1).length
+        = (L2.reverse.dropWhile coeffCanonZeroB1).length
+  | [], L2, hsub => by
+    rw [rdw_zero_of_all coeffCanonZeroB1 L2 (all_canonZero1_of_listSubN_nil L2 hsub)]
+    rfl
+  | p :: ps, [], hsub => by
+    rw [listSubN_cons_nil] at hsub
+    rw [rdw_zero_of_all coeffCanonZeroB1 (p :: ps) hsub]
+    rfl
+  | p :: ps, q :: qs, hsub => by
+    rw [listSubN_cons_cons] at hsub
+    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hcpq : coeffCanonZeroB1 p = coeffCanonZeroB1 q :=
+      coeffCanonZeroB1_eq_of_sub_canonZero p q hpq
+    have hih := rdw_eq_of_listSubN1 ps qs
+      (fun c hc => hsub c (List.mem_cons_of_mem _ hc))
+    rw [rdw_cons coeffCanonZeroB1 p ps, rdw_cons coeffCanonZeroB1 q qs, hcpq, hih]
+
+/-- **Canonical `y₁`-degree.** Drop the trailing nested-canon-zero `y₁`-coefficients, `length − 1`.
+The eval-invariant refinement of the syntactic `degreeY ⟨1⟩` (which counts phantom `y₁`-terms that only
+cancel semantically — the source of the depth-3 recursion's eval-boundary problem). -/
+noncomputable def cdegY1 (q : MultiPoly 2) : Nat :=
+  ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1).length - 1
+
+/-- **`cdegY1` is eval-invariant** — eval-equal `MultiPoly 2`s have equal canonical `y₁`-degree. This is
+what the depth-3 descent needs (the eval-equality of the dropped leading coefficient then transfers). -/
+theorem cdegY1_eq_of_eval_eq (q1 q2 : MultiPoly 2)
+    (h : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval q1 x env = MultiPoly.eval q2 x env) :
+    cdegY1 q1 = cdegY1 q2 := by
+  have hzero : ∀ (x : Real) (env : Fin 2 → Real),
+      MultiPoly.eval (MultiPoly.sub q1 q2) x env = 0 := by
+    intro x env; rw [MultiPoly.eval_sub, h x env]; mach_ring
+  have hsub : ∀ c ∈ listSubN (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q1)
+                             (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q2),
+      coeffCanonZeroB1 c = true := by
+    intro c hc
+    apply coeffCanonZeroB1_true_of_eval_zero
+    intro x env
+    exact yCoeffsAt_entry_eval_zero_of_eval_zero (⟨1, by omega⟩ : Fin 2)
+      (MultiPoly.sub q1 q2) hzero x env c hc
+  show ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q1).reverse.dropWhile coeffCanonZeroB1).length - 1
+     = ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q2).reverse.dropWhile coeffCanonZeroB1).length - 1
+  rw [rdw_eq_of_listSubN1 _ _ hsub]
+
 end MachLib.IterExpDepth3CdegY1
