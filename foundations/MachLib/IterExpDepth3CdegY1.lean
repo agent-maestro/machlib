@@ -334,4 +334,35 @@ theorem canonLcY1_eval_eq_of_eval_eq (q1 q2 : MultiPoly 2)
         (env0 (env (⟨0, by omega⟩ : Fin 2))) hoff (canonLcY1_degreeY1_zero q2)]
   exact henv0
 
+/-! ### The fully eval-invariant depth-2 measure and its eval-invariance -/
+
+open MachLib.ChainExp2Reducer in
+/-- **The fully eval-invariant chain-2 measure.** Both components canonical (unlike `chain2MeasureCanon`,
+whose first component is the syntactic `degreeY₁`): `(cdegY1, singleExpMeasureCanon(canonLcY1))`. This is
+what the depth-3 descent needs — the eval-equality of the dropped leading coefficient then transfers the
+descent through it. -/
+noncomputable def chain2MeasureCanonEvalInv (q : MultiPoly 2) : Nat × (Nat × Nat) :=
+  (cdegY1 q, singleExpMeasureCanon (canonLcY1 q))
+
+/-- **The measure is eval-invariant** — the payoff of bricks 1–3: eval-equal `MultiPoly 2`s have equal
+measure, so the depth-3 reduce's dropped leading coefficient (eval-equal to a depth-2 reduce) has the
+same measure as that depth-2 reduce. -/
+theorem chain2MeasureCanonEvalInv_eq_of_eval_eq (q1 q2 : MultiPoly 2)
+    (h : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval q1 x env = MultiPoly.eval q2 x env) :
+    chain2MeasureCanonEvalInv q1 = chain2MeasureCanonEvalInv q2 := by
+  unfold chain2MeasureCanonEvalInv
+  rw [cdegY1_eq_of_eval_eq q1 q2 h,
+      singleExpMeasureCanon_eq_of_eval_eq (canonLcY1 q1) (canonLcY1 q2)
+        (canonLcY1_eval_eq_of_eval_eq q1 q2 h)]
+
+open MachLib.ChainExp2Reducer in
+/-- The eval-invariant chain-2 order: nested `Nat`-lex pulled back along the measure. -/
+def chain2OrderCanonEvalInv : MultiPoly 2 → MultiPoly 2 → Prop :=
+  InvImage nestedLT chain2MeasureCanonEvalInv
+
+open MachLib.ChainExp2Reducer in
+/-- **Well-founded** — from the `LexProd` keystone via `InvImage` (independent of the measure internals). -/
+theorem chain2OrderCanonEvalInv_wf : WellFounded chain2OrderCanonEvalInv :=
+  InvImage.wf chain2MeasureCanonEvalInv LexProd.natTripleLex_wf
+
 end MachLib.IterExpDepth3CdegY1
