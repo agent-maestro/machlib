@@ -98,4 +98,31 @@ theorem chain3Fn_bound_of_degreeY2_zero (p : MultiPoly 3)
   obtain ⟨ha, hb', hzero⟩ := hz z' hz'mem
   exact ⟨ha, hb', by rw [← heval]; exact hzero⟩
 
+/-- **The degreeY₂-trim, eval-equality.** When the leading `y₂`-coefficient of `p` vanishes on every
+environment (a *phantom* `y₂`-top, exactly the depth-3 analog of the depth-2 phantom-`y₁` trim),
+`chain3Fn p` agrees on the nose with `chain3Fn (dropLeadingYAt ⟨2⟩ p)` at every point — dropping an
+identically-zero leading term changes nothing. Reuses the index-generic trim primitive at `Fin 3`. -/
+theorem chain3_degreeY2_trim_eval (p : MultiPoly 3)
+    (h_last_zero : ∀ (x : Real) (env : Fin 3 → Real),
+       MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).getLast
+         (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)) x env = 0) :
+    ∀ z : Real, (chain3Fn p).eval z
+      = (chain3Fn (MachLib.ChainExp2Trim.dropLeadingYAt (⟨2, by omega⟩ : Fin 3) p)).eval z := by
+  intro z
+  exact (MachLib.ChainExp2Trim.eval_dropLeadingYAt_of_last_canonically_zero
+    (⟨2, by omega⟩ : Fin 3) p (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)
+    h_last_zero z ((IterExpChain 3).chainValues z)).symm
+
+/-- **The degreeY₂-trim, measure descent.** Dropping the leading `y₂`-term strictly lowers the FIRST
+(`degreeY₂`, syntactic) component of the depth-3 measure — hence `chain3OrderCanon` — via `lexProd_of_fst`.
+This is the depth-3 recursion's `degreeY₂`-shrinking move (mirrors depth-2 `chain2_trim_order`). -/
+theorem chain3_degreeY2_trim_order (p : MultiPoly 3)
+    (hd2 : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p ≠ 0) :
+    chain3OrderCanon (MachLib.ChainExp2Trim.dropLeadingYAt (⟨2, by omega⟩ : Fin 3) p) p := by
+  have hlt : MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3)
+      (MachLib.ChainExp2Trim.dropLeadingYAt (⟨2, by omega⟩ : Fin 3) p)
+    < MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p :=
+    MachLib.ChainExp2Trim.degreeY_dropLeadingYAt_lt (⟨2, by omega⟩ : Fin 3) p (Nat.pos_of_ne_zero hd2)
+  exact lexProd_of_fst hlt
+
 end MachLib.IterExpDepth3Capstone
