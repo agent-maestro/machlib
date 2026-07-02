@@ -24,6 +24,33 @@ per-release status.
   pointing that infrastructure at money: the runtime schedule (`forge/reproduce/sims/amortization_sim.py`),
   certified.
 
+### Added — the accumulated rounding error stays inside a certified envelope (`MachLib/FinanceEnvelope.lean`)
+
+Deepens the amortization kernel from *reconciles* + *½¢-per-period* to a **global** bound: how far the
+rounded balance trajectory can drift from the exact-arithmetic one over the whole loan. The drift obeys
+`e_{k+1} = g·e_k + ρ_k`, `e_0 = 0`, `|ρ_k| ≤ c` (`g = 1+r`, `c = ½` cent) — a linear recurrence with
+bounded input.
+
+- **`MachLib.Real.error_within_envelope`** — the abstract core, the **expansion dual** of
+  `MachLib.Real.safe_envelope_invariant`: for `g ≥ 1`, `|e_k| ≤ errEnvelope g c k` for all `k`. The
+  safety envelope is a *contraction* (`g<1`) settling into a fixed box `X=δ/(1−ρ)`; this is the *growth*
+  regime (`g>1`) where the compounded error still lives inside a growing, explicit envelope
+  `cap_k = c·(gᵏ−1)/(g−1)`. Same proof shape (triangle + `mul_le_mul_of_nonneg_left` + `add_le_add_both`
+  under induction).
+- **`MachLib.Real.errEnvelope_eq_geomSum` / `geomSum_closed`** — `cap_N = c·Σ_{j<N} gʲ` and
+  `(g−1)·Σ_{j<N} gʲ = gᴺ−1`, i.e. the recognizable `c·(gᴺ−1)/(g−1)`, both proven **without division**.
+- **`MachLib.Real.amortization_drift_within_envelope`** — the punchline: the rounded schedule `b`
+  (`b_{k+1}=g·b_k−pmt+ρ_k`) never leaves `cap_k` around the exact schedule `B` (`B_{k+1}=g·B_k−pmt`),
+  for ANY per-period rounding `|ρ_k| ≤ c`. With `c=½` cent this bounds the final-payment adjustment that
+  `amortization_reconciles` uses to close the balance — connecting the local ½¢ fact to the global
+  reconciliation. For the zoo's `$250k @ 6% / 360mo` loan, `cap_N ≈ $5.02`; the measured drift is `$3.66`.
+- `#print axioms` (all four) → `propext`, `Classical.choice`, `Quot.sound` + the honest `MachLib.Real`
+  interface ONLY: **no `sorryAx`**, no classical-citation math axiom — same footprint class as the
+  safety envelope. **Mechanization note**: `mach_mpoly` reifies its bracket atoms in the *outer*
+  elaboration context, so it cannot see an `induction`-introduced local (`geomSum g n`); each ring
+  identity is therefore proven once as a top-level lemma over plain variables and `exact`-ed at the use
+  site. (`mach_ring` avoided per its known silent-`sorry` failure mode.)
+
 ## [Unreleased] — 2026-07-01
 
 ### Added — Frontier-1 lemma (1) proven for EVERY depth `N` (`33a819a`)
