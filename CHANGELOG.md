@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — Khovanskii ∀N: the depth-generic well-founded measure backbone (`MachLib/IterExpDepthNMeasure.lean`)
+
+Next brick of the depth-N tower, on the critical path to the WF capstone. The depth-2/3 capstones each
+cite a hand-built well-foundedness keystone for their arity (`natTripleLex_wf`, `natQuadLex_wf`); the ∀N
+induction needs that family *uniformly*. This supplies it:
+
+- **`MachLib.IterExpDepthN.NestedNat n`** — the depth-`(n+2)` measure codomain (`(n+1)`-deep nested `Nat`
+  product); **`nestedOrder n`** — its nested lexicographic order (definitionally `nestedOrder 2` is the
+  depth-2 `nestedLT`); **`nestedOrder_wf n`** — **well-founded for every `n`** by induction on depth
+  (base `Nat.lt`, step `lexProd_wf`). `natPairLex/​natTripleLex/​natQuadLex_wf` are its `n = 1,2,3` slices.
+- **`nestedOrder_of_fst` / `nestedOrder_of_snd`** — the two generic descent-lifting lemmas the capstone's
+  arms need (drop the top component / tie it and drop the tail).
+- `#print axioms` → **depends on NO axioms** (pure order theory; not even `propext`). This is the
+  well-founded skeleton the ∀N reduce-descent will hang on. The algebraic heart of that descent — "the
+  dropped top coefficient of the reduce IS a depth-(N−1) reduce" — is already machine-checked ∀N
+  (`chainNReduce_dropLastY_recursion`). Still ahead: the uniform *eval-invariant* measure and its descent
+  by induction on depth (base = chain2), then the ∀N Rolle/vehicle step and the capstone assembly.
+
 ### Added — verified day-count & accrual: coupon periods compose exactly (`MachLib/FinanceDayCount.lean`)
 
 The second finance kernel — the lane is not a one-off. Same discipline as amortization, aimed at the
