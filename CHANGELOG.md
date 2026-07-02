@@ -27,6 +27,13 @@ per-release status.
   `hi : i.val = M+1`, confining the one unavoidable literal to three one-equation
   wrapper lemmas. Worst step: divergent → 0.5 s; whole file 0.8 s. Reusable for the
   rest of the tower.
+- **The reduce operator, `∀N`** (`MachLib/IterExpDepthNReduce.lean`, also clean —
+  `propext`/`Quot.sound`/`MachLib.Real.*` only): `chainNReduce M m p = cTD p − m·p`, with
+  `chainNReduce_fst_preserved` (preserves the top y-degree) and `chainNReduce_lcY_top_eval`
+  (its top leading coefficient, evaluated, `= eval(cTD(lcY_top p)) + degreeY_top p·eval(Ffac M)·
+  eval(lcY_top p) − eval(m)·eval(lcY_top p)`) — the depth-N → depth-(N-1) recursion seam, for any
+  top-free multiplier `m`, driven by lemma (1). When `m`'s top term is `degreeY_top p·Ffac M` the
+  injection cancels, leaving a depth-(N-1) reduce of `lcY_top p`.
 
 ### Added — depth-3 (triple-exponential) Khovanskii bound, unconditional and dirty-axiom-free (`ab77c5b`)
 
