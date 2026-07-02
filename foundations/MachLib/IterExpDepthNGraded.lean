@@ -81,4 +81,17 @@ theorem chainNReduce_graded_cancels (M : Nat) (i : Fin (M + 2)) (hi : i.val = M 
   generalize MachLib.Real.natCast (MultiPoly.degreeY i p) = d
   exact graded_cancel_ring A F L R d
 
+/-- **The graded reduce preserves the top y-degree, `∀N`.** The measure's first-component tie for the
+reduce arm: `gradedTop + m_rest` is top-free, so `chainNReduce_fst_preserved` applies. -/
+theorem chainNReduce_graded_fst_preserved (M : Nat) (i : Fin (M + 2)) (hi : i.val = M + 1)
+    (m_rest p : MultiPoly (M + 2)) (hmr : MultiPoly.degreeY i m_rest = 0) :
+    MultiPoly.degreeY i (chainNReduce M (MultiPoly.add (gradedTop M i p) m_rest) p)
+      = MultiPoly.degreeY i p := by
+  have hm : MultiPoly.degreeY i (MultiPoly.add (gradedTop M i p) m_rest) = 0 := by
+    show Nat.max (MultiPoly.degreeY i (gradedTop M i p)) (MultiPoly.degreeY i m_rest) = 0
+    rw [gradedTop_degreeYtop_zero M i hi p, hmr]
+    decide
+  exact MachLib.IterExpDepthNReduce.chainNReduce_fst_preserved M i hi
+    (MultiPoly.add (gradedTop M i p) m_rest) p hm
+
 end MachLib.IterExpDepthN
