@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — Khovanskii ∀N Phase A: the index-generic canonical `y`-degree + eval-invariance (`MachLib/IterExpDepthNCanonDegree.lean`)
+
+The measure the ∀N descent will use is *eval-invariant* — it forgets phantom leading `y`-terms that only
+cancel semantically. Depth-2/3 built that per index (`cdegY0` at `⟨0⟩`, `cdegY1` at `⟨1⟩`, both in
+`MultiPoly 2`); the tower needs it at the **top index of any depth**, uniformly. This brick supplies it.
+
+- **`canonZeroB c`** — the one index-specific ingredient (the coefficient canon-zero test) made generic
+  by a single **classical** definition: `decide (c vanishes everywhere)`. This makes canon-zero congruent
+  under eval-equality by construction, so eval-invariance is nearly free. Every list-level helper reused
+  (`rdw_cons`, `dropWhile_all`, `rdw_zero_of_all`, `listSubN`, `yCoeffsAt_entry_eval_zero_of_eval_zero`,
+  `eval_eq_of_env_agree_off`) was already index-generic.
+- **`cdegYAt i q`** (canonical `y_i`-degree) + **`cdegYAt_eq_of_eval_eq`** — degree eval-invariance ∀
+  index, ∀ depth. Generic analog of `cdegY1_eq_of_eval_eq`.
+- **`canonLcYAt i q`** (canonical leading `y_i`-coefficient) + **`canonLcYAt_eval_eq_of_eval_eq`** — the
+  leading coefficient is eval-invariant at EVERY point (the classical test gives everywhere-agreement
+  directly, so — unlike the structural depth-2 `canonLcY1` proof — no `env0` restriction is needed).
+- `#print axioms` → `propext`, `Classical.choice`, `Quot.sound` + the honest `MachLib.Real` interface;
+  **no `sorryAx`**, no classical-citation axiom. Phase B (the uniform eval-invariant measure by recursion
+  on depth) plugs `cdegYAt`/`canonLcYAt` in at the top index and recurses via `dropLastY`.
+
 ### Added — Khovanskii ∀N: the depth-generic well-founded measure backbone (`MachLib/IterExpDepthNMeasure.lean`)
 
 Next brick of the depth-N tower, on the critical path to the WF capstone. The depth-2/3 capstones each
