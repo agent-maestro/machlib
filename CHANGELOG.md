@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — Khovanskii ∀N Phase C (brick 1): the phantom / non-phantom bridge (`MachLib/IterExpDepthNCanonBridge.lean`)
+
+The base descent `chain2MeasureCanonEvalInv_descends` works by a **phantom / non-phantom split**: when the
+top `y_i`-coefficient is *non-phantom* the canonical measure equals the syntactic one (deep syntactic
+descent applies); when *phantom* the canonical degree `cdegYAt` strictly drops (first-component descent
+outright). This is the key that turns the canonical-outer descent D(k) into a well-defined induction. This
+brick supplies both directions of the split, index/depth-generic (the depth-2 originals were `MultiPoly 2`,
+index `⟨1⟩`):
+
+- **`ytopAt i q`** — the syntactic top `y_i`-coefficient (`getLast` of `yCoeffsAt`).
+- **`cdegYAt_eq_degreeYAt_of_top` / `canonLcYAt_eq_ytop`** — non-phantom ⇒ canonical = syntactic.
+- **`cdegYAt_lt_degreeYAt_of_top`** — phantom (+ positive syntactic degree) ⇒ `cdegYAt` strictly drops.
+- **`canonLcYAt_eval_eq_leadingCoeffY_of_nonphantom`** — non-phantom ⇒ canonical leading coeff eval-equals
+  syntactic `leadingCoeffY` (what the measure-equality consumes next).
+- `#print axioms` clean (no `sorryAx`, no classical-citation). Next: the syntactic top-level measure
+  `chainNMeasureSyn` + `chainNMeasureEI = chainNMeasureSyn` on the non-phantom branch, then the S(k)/D(k)
+  mutual induction (S(k) from the recursion brick + D(k−1); D(k) from S(k) + the phantom drop).
+
 ### Added — Khovanskii ∀N Phase B: the uniform eval-invariant measure by recursion on depth (`MachLib/IterExpDepthNMeasureEI.lean`)
 
 The depth-3 descent used the fully eval-invariant depth-2 measure (`chain2MeasureCanonEvalInv`) as its
