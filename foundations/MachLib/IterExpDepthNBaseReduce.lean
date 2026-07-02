@@ -1,4 +1,5 @@
 import MachLib.IterExpDepthNGraded
+import MachLib.IterExpDepthNMeasureEI
 import MachLib.ChainExp2Reducer
 
 /-!
@@ -18,14 +19,35 @@ namespace MachLib.IterExpDepthN
 
 open MachLib.Real
 open MachLib.MultiPolyMod
+open MachLib.MultiPolyMod.MultiPoly
 open MachLib.IterExpTopIdentity
 open MachLib.IterExpDepthNReduce
 open MachLib.ChainExp2Reducer
+open MachLib.ChainExp2CanonMeasure
+open MachLib.IterExpDepth3CdegY1
 
 /-- The depth-2 case of the ∀N reduce is exactly the concrete `chain2Reduce`. -/
 theorem chainNReduce_zero_eq_chain2Reduce (c : Real) (p : MultiPoly 2) :
     chainNReduce 0 (MultiPoly.add (gradedTop 0 (⟨1, by omega⟩ : Fin 2) p) (MultiPoly.const c)) p
       = chain2Reduce c p := by
   rfl
+
+/-- **The base `D(0)`.** For a depth-2 reducing `p`, the ∀N reduce (with the depth-2 graded multiplier)
+strictly lowers `chainNMeasureEI 0`. This IS the deep `chain2MeasureCanonEvalInv_descends`, transported
+through `chainNReduce 0 = chain2Reduce` and `chainNMeasureEI 0 = chain2MeasureCanonEvalInv`. -/
+theorem chainNReduce_evalinv_descent_base (p : MultiPoly 2)
+    (hq_np : coeffCanonZeroB1 (y1top p) = false)
+    (hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+    (hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 ≠ 0) :
+    nestedOrder 2
+      (chainNMeasureEI 0 (chainNReduce 0 (MultiPoly.add (gradedTop 0 (⟨1, by omega⟩ : Fin 2) p)
+        (MultiPoly.const (MachLib.Real.natCast
+          (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))))) p))
+      (chainNMeasureEI 0 p) := by
+  rw [chainNReduce_zero_eq_chain2Reduce]
+  show nestedLT (chain2MeasureCanonEvalInv (chain2Reduce (MachLib.Real.natCast
+        (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))
+      (chain2MeasureCanonEvalInv p)
+  exact chain2MeasureCanonEvalInv_descends p hq_np hpos hnz
 
 end MachLib.IterExpDepthN
