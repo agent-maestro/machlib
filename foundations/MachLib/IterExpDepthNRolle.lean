@@ -38,4 +38,45 @@ theorem vehicleN_reduct_zero_of_deriv_zero (f : PfaffianFn) (d : Nat → Nat) (c
         (f.eval z) (reductMult d c z m)] at hraw
   exact mul_eq_zero_of_factor_ne_zero (exp_ne_zero _) hraw
 
+/-- **Raw zero-count transfer** (in terms of zeros of the vehicle's derivative). -/
+theorem zero_count_vehicleN_transfer_raw (f : PfaffianFn) (d : Nat → Nat) (c : Real) (m : Nat)
+    (a b : Real) (hab : a < b) (hcoherent : f.chain.IsCoherentOn a b) (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real, zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (vehicleN f d c m) f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧ vehicleN f d c m z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    exact ⟨haz, hzb, (vehicleN_zero_iff f d c m z).mpr hfz⟩
+  have hdiff : ∀ x : Real, a < x → x < b →
+                ∃ f' : Real, HasDerivAt (vehicleN f d c m) f' x := by
+    intro x hax hxb
+    exact ⟨_, hasDerivAt_vehicleN f d c m x (hasDerivAt_eval_natural f x (hcoherent x hax hxb))⟩
+  exact zero_count_bound_by_deriv (vehicleN f d c m) a b hab hdiff N
+          h_reduced_bound zeros_f hnodup hzeros_g
+
+/-- **Zero-count transfer (eval form).** If the reduce value `f' − reductMult·f` has at most `N` zeros on
+`(a,b)`, then `f` has at most `N + 1`. The constructive Rolle step, ∀N. -/
+theorem zero_count_vehicleN_transfer (f : PfaffianFn) (d : Nat → Nat) (c : Real) (m : Nat)
+    (a b : Real) (hab : a < b) (hcoherent : f.chain.IsCoherentOn a b) (N : Nat)
+    (h_reduced_bound_eval : ∀ zeros' : List Real, zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          f.chainTotalDerivative.eval z - reductMult d c z m * f.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply zero_count_vehicleN_transfer_raw f d c m a b hab hcoherent N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_reduced_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  exact ⟨haz, hzb, vehicleN_reduct_zero_of_deriv_zero f d c m z
+    (hasDerivAt_eval_natural f z (hcoherent z haz hzb)) g'' hg''_deriv hg''_zero⟩
+
 end MachLib.IterExpDepthN
