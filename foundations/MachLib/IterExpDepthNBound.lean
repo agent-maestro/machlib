@@ -135,4 +135,32 @@ theorem chainN_bound_step (m : Nat)
         exact ⟨N + 1, fun zeros hnd hz =>
           chainNFn_reduce_step (m + 1) p a b hab N hN zeros hnd hz⟩
 
+/-- **The ∀N Khovanskii bound, conditional on the reduce-arm `Reducing` dispatch family.** By outer
+induction on depth: the base `chainNFn 2 = chain2Fn` (definitionally) is the proven unconditional depth-2
+bound; each step is `chainN_bound_step`. So — GIVEN `hRD` (the dispatch supplies `Reducing` in every reduce
+arm at every depth) — every chain-`(m+2)` polynomial that is not identically zero on `(a,b)` has finitely
+many zeros there, for ALL depths `m`. The single remaining obligation for the fully unconditional theorem
+is discharging `hRD` (the phantom-absorption lift). `#print axioms`-clean of `zero_count_bound_classical`. -/
+theorem chainN_khovanskii_bound_of_reducing
+    (hRD : ∀ (m : Nat) (p : MultiPoly (m + 3)),
+        MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) p ≠ 0 →
+        ¬(∀ (x : Real) (env : Fin (m + 3) → Real),
+            MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨m + 1, by omega⟩ : Fin (m + 3))
+              (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) p)).getLast
+              (MultiPoly.yCoeffsAt_nonempty (⟨m + 1, by omega⟩ : Fin (m + 3))
+                (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) p))) x env = 0) →
+        Reducing m (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) p))) :
+    ∀ (m : Nat) (p : MultiPoly (m + 2)) (a b : Real), a < b →
+      (∃ z, a < z ∧ z < b ∧ (chainNFn (m + 2) p).eval z ≠ 0) →
+      ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (chainNFn (m + 2) p).eval z = 0) → zeros.length ≤ N := by
+  intro m
+  induction m with
+  | zero =>
+    intro p a b hab hne
+    exact chain2_khovanskii_bound_unconditional p a b hab hne
+  | succ m ih =>
+    intro p a b hab hne
+    exact chainN_bound_step m ih (hRD m) p a b hab hne
+
 end MachLib.IterExpDepthN
