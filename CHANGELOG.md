@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — Khovanskii ∀N Phase B: the uniform eval-invariant measure by recursion on depth (`MachLib/IterExpDepthNMeasureEI.lean`)
+
+The depth-3 descent used the fully eval-invariant depth-2 measure (`chain2MeasureCanonEvalInv`) as its
+inner nested component. The tower needs that inner measure at every depth, uniformly — this builds it.
+
+- **`chainNMeasureEI k : MultiPoly (k+2) → NestedNat (k+2)`** — the depth-`(k+2)` eval-invariant canonical
+  measure. Base `k=0` is *literally* `chain2MeasureCanonEvalInv` (so every induction bottoms out in the
+  existing, already-proven depth-2 machinery — nothing to reconcile); step `k+1` pairs the canonical
+  top-degree `cdegYAt` (Phase A) with the measure of the canonical leading coefficient projected one
+  variable down via `dropLastY`.
+- **`chainNMeasureEI_eq_of_eval_eq`** — the measure is **eval-invariant at every depth**, by induction:
+  base `chain2MeasureCanonEvalInv_eq_of_eval_eq`; step combines Phase A's `cdegYAt_eq_of_eval_eq` (outer),
+  `canonLcYAt_eval_eq_of_eval_eq` + the new `dropLastY_eval_eq_of_topfree` (the projected coefficient stays
+  eval-equal), and the inductive hypothesis (inner).
+- `#print axioms` → `propext`, `Classical.choice`, `Quot.sound` + honest `MachLib.Real`; **no `sorryAx`**.
+- **Next (Phase C, the hard frontier)**: the reduce-descent — that this measure strictly decreases under
+  the graded reduce. The algebraic engine is already ∀N (`chainNReduce_dropLastY_recursion`) and the
+  eval-invariance just landed transports it; the genuinely-uncertain step is the canonical-outer descent
+  `D(k)→D(k+1)`, which generalizes depth-3's reduce/trim/inner-trim case analysis.
+
 ### Added — Khovanskii ∀N Phase A: the index-generic canonical `y`-degree + eval-invariance (`MachLib/IterExpDepthNCanonDegree.lean`)
 
 The measure the ∀N descent will use is *eval-invariant* — it forgets phantom leading `y`-terms that only
