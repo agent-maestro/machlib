@@ -5,6 +5,25 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-07-02
+
+### Added — verified amortization (the finance-assurance lane opens) (`MachLib/FinanceAmortization.lean`)
+
+- **`MachLib.Finance.amortization_reconciles`** — a fixed-rate amortization schedule in **integer
+  cents** reconciles to the penny **exactly**: with per-period principal `b k − b (k+1)`, starting at
+  the loan `P` and closing at `b N = 0`, the principal payments sum to exactly `P`. Exact (`=`, not
+  `≤ ε`) and **rounding-mode-independent** (the final payment absorbs the accumulated rounding — how
+  real schedules are built). `#print axioms` → `propext`, `Quot.sound` only (pure Int; not even the
+  axiomatized-Real base — money is decimal fixed-point, and this proof never touches a float).
+- **`MachLib.Finance.roundHalfEven_half_ulp`** — round-half-to-even (banker's rounding) is correct to
+  within half a cent per period: `−den ≤ 2·(den·round − num) ≤ den`. `#print axioms` → Lean's three
+  only, no `sorryAx`.
+- **Why this lane**: the finance-translatable core of the project is the fixed-point/decimal-rounding
+  + contraction infrastructure (FPModel / FixedPointCertifier / ClosedLoopSafety) — *not* the
+  Khovanskii frontier, which is pure symbolic math with no dollar attached. This is the first brick
+  pointing that infrastructure at money: the runtime schedule (`forge/reproduce/sims/amortization_sim.py`),
+  certified.
+
 ## [Unreleased] — 2026-07-01
 
 ### Added — Frontier-1 lemma (1) proven for EVERY depth `N` (`33a819a`)
