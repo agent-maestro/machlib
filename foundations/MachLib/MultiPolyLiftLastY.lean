@@ -65,4 +65,26 @@ theorem degreeY_top_liftLastY {n : Nat} (x : MultiPoly n) :
       show degreeY _ (liftLastY p) + degreeY _ (liftLastY q) = 0
       rw [ihp, ihq]
 
+/-- **Eval ignores the new top variable.** `eval (liftLastY x)` at any `Fin (n+1)` environment equals
+`eval x` at the environment restricted to the first `n` slots. -/
+theorem eval_liftLastY {n : Nat} (x : MultiPoly n) (xval : Real) (env : Fin (n + 1) → Real) :
+    MultiPoly.eval (liftLastY x) xval env
+      = MultiPoly.eval x xval (fun i : Fin n => env ⟨i.val, by omega⟩) := by
+  induction x with
+  | const c => rfl
+  | varX => rfl
+  | varY i => rfl
+  | add p q ihp ihq =>
+      show MultiPoly.eval (liftLastY p) xval env + MultiPoly.eval (liftLastY q) xval env
+        = MultiPoly.eval p xval _ + MultiPoly.eval q xval _
+      rw [ihp, ihq]
+  | sub p q ihp ihq =>
+      show MultiPoly.eval (liftLastY p) xval env - MultiPoly.eval (liftLastY q) xval env
+        = MultiPoly.eval p xval _ - MultiPoly.eval q xval _
+      rw [ihp, ihq]
+  | mul p q ihp ihq =>
+      show MultiPoly.eval (liftLastY p) xval env * MultiPoly.eval (liftLastY q) xval env
+        = MultiPoly.eval p xval _ * MultiPoly.eval q xval _
+      rw [ihp, ihq]
+
 end MachLib.MultiPolyMod.MultiPoly
