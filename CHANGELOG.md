@@ -7,6 +7,22 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — `liftLastY`, a right inverse of `dropLastY` (`MachLib/MultiPolyLiftLastY.lean`)
+
+The ∀N descent's D(k)-by-induction wiring needs to thread the graded multiplier down the recursion: the
+D-step's inner reduce carries multiplier `dropLastY m_rest`, and for the inductive `D(M)` (a *graded* reduce)
+to match, `m_rest` must be the lifted lower multiplier. That requires a `dropLastY` right inverse, which did
+not exist — this supplies it.
+
+- **`liftLastY : MultiPoly n → MultiPoly (n+1)`** — embed as a polynomial free of the new top variable
+  (structural: `y_i ↦ y_i` at a lower `Fin (n+1)` index; `const`/`varX` kept).
+- **`dropLastY_liftLastY`** (`dropLastY (liftLastY x) = x`) and **`degreeY_top_liftLastY`** (`liftLastY x` is
+  top-free). Pure structural induction; `#print axioms` clean.
+
+Next: the recursive full graded multiplier (`fullMult`), the recursive reducing predicate, the base
+reconciliation (`chainNReduce 0 (gradedTop 0 + const c) p = chain2Reduce c p`, holds since `Ffac 0 = y₀`),
+and the `D(k)`-by-induction — then Phase D.
+
 ### Added — Khovanskii ∀N Phase C (brick 3b, steps 2a+2b): the S(k) and D(k) descent assembly (`IterExpDepthNDescent.lean`, `IterExpDepthNDescentD.lean`)
 
 The mechanical core of the reduce-descent, both steps, given the inner descent:
