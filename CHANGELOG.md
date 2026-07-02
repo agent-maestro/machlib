@@ -49,6 +49,16 @@ per-release status.
   `dropLastY_eval_IterExp` (top-free `q`: `eval q [IExp(M+2)] = eval (dropLastY q) [IExp(M+1)]`),
   `dropLastY_prodVarYUpTo` (the relation polys `y₀·…·y_{k-1}` match under the drop), and
   `dropLastY_cTD_commute` (top-free `q`: `dropLastY (cTD_{M+2} q) = cTD_{M+1} (dropLastY q)`).
+- **The recursion closes, `∀N`** (`MachLib/IterExpDepthNRecursion.lean`, clean — `sorryAx`-free, no
+  classical-citation axiom): `chainNReduce_dropLastY_recursion` — the depth-`(M+3)` graded reduce's
+  dropped top coefficient, evaluated one chain down, **IS a depth-`(M+2)` reduce** of
+  `dropLastY (lcY_top p)`, with multiplier just `dropLastY (m_rest)`. So the recursion is carried by
+  `dropLastY`; no separate closed-form nested multiplier is needed. Assembled term-mode from bricks
+  3+4 + `degreeYtop_cTD_eq'`. The generic-`N` analog of depth-3's `chain3Reduce_dropLastY_lcY2_eval_eq`,
+  and the depth-induction's actual step. **Mechanization note**: the top index MUST be an abstract
+  variable (`i` with `hi : i.val = M+2`), not the literal `⟨M+2,…⟩` — the literal makes `whnf` diverge
+  on the stuck recursors at a symbolic index (rw / conv / term-mode / irreducible all diverge); two
+  one-line wrappers confine the literal. This is the lemma-(1) fix, one level deeper.
 
 ### Added — depth-3 (triple-exponential) Khovanskii bound, unconditional and dirty-axiom-free (`ab77c5b`)
 
