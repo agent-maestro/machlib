@@ -44,6 +44,50 @@
       "module": "MachLib.IterExpDepthNTopIdentity",
       "theorem": "MachLib.IterExpDepthN.leadingCoeffYtop_cTD_eval_IterExpN",
       "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+    },
+    {
+      "id": "amortization-reconciles-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "amortization_reconciles",
+        "`propext`, `Quot.sound` only"
+      ],
+      "module": "MachLib.FinanceAmortization",
+      "theorem": "MachLib.Finance.amortization_reconciles",
+      "forbid_axioms": ["sorryAx", "Classical.choice"]
+    },
+    {
+      "id": "roundhalfeven-half-ulp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "roundHalfEven_half_ulp",
+        "no `sorryAx`"
+      ],
+      "module": "MachLib.FinanceAmortization",
+      "theorem": "MachLib.Finance.roundHalfEven_half_ulp",
+      "forbid_axioms": ["sorryAx"]
+    },
+    {
+      "id": "error-within-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "error_within_envelope",
+        "expansion dual"
+      ],
+      "module": "MachLib.FinanceEnvelope",
+      "theorem": "MachLib.Real.error_within_envelope",
+      "forbid_axioms": ["sorryAx"]
+    },
+    {
+      "id": "amortization-drift-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "amortization_drift_within_envelope",
+        "no `sorryAx`"
+      ],
+      "module": "MachLib.FinanceEnvelope",
+      "theorem": "MachLib.Real.amortization_drift_within_envelope",
+      "forbid_axioms": ["sorryAx"]
     }
   ]
 }
