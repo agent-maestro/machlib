@@ -88,6 +88,28 @@
       "module": "MachLib.FinanceEnvelope",
       "theorem": "MachLib.Real.amortization_drift_within_envelope",
       "forbid_axioms": ["sorryAx"]
+    },
+    {
+      "id": "daycount-additive-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "days30E360_additive",
+        "`propext`, `Quot.sound` ONLY"
+      ],
+      "module": "MachLib.FinanceDayCount",
+      "theorem": "MachLib.Finance.days30E360_additive",
+      "forbid_axioms": ["sorryAx", "Classical.choice"]
+    },
+    {
+      "id": "accrual-additive-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "accrual_additive",
+        "composes exactly across a split"
+      ],
+      "module": "MachLib.FinanceDayCount",
+      "theorem": "MachLib.Finance.accrual_additive",
+      "forbid_axioms": ["sorryAx", "Classical.choice"]
     }
   ]
 }

@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — verified day-count & accrual: coupon periods compose exactly (`MachLib/FinanceDayCount.lean`)
+
+The second finance kernel — the lane is not a one-off. Same discipline as amortization, aimed at the
+property a bond desk and an auditor argue about: **splitting a coupon period at an intermediate date must
+preserve accrued interest.** Uses the **30E/360 (Eurobond)** convention, where every date `(y,m,d)` has a
+single serial `360·y + 30·m + min(d,30)` and the day-count is the serial difference.
+
+- **`MachLib.Finance.days30E360_additive`** — the headline: `days(A,B) + days(B,C) = days(A,C)` for ANY
+  intermediate date. The day-count analogue of amortization's telescoping reconciliation — interest can't
+  be manufactured by moving the accrual boundary. **Honest domain point**: this holds for 30E/360 because
+  each date has one serial; the US 30/360 "bond basis" is *not* additive (its end-of-month rule depends on
+  the other endpoint), so picking 30E/360 is a deliberate correctness decision.
+- **`MachLib.Finance.accrual_additive`** — the money corollary: accrued interest (`notional·rateNum·days`)
+  composes exactly across a split, because it is linear in an additive day-count.
+- **`MachLib.Finance.days30E360_months`** — regularity: same day-of-month, `m` whole months apart ⇒ exactly
+  `30·m` days. Equal calendar spacing ⇒ equal day-count ⇒ equal accrual (fair level coupons).
+- **`MachLib.Finance.days30E360_full_year`** (`= 360`) and **`days30E360_nonneg`** (forward periods aren't
+  negative).
+- `#print axioms` (all five) → `propext`, `Quot.sound` ONLY — pure `Int`, not even `Classical.choice`
+  (same minimal footprint as `amortization_reconciles`; calendars and money are exact integer objects, no
+  float). Registered in `tools/claim_audit`. Runtime witness: `forge/reproduce/sims/daycount_sim.py`.
+
 ### Added — verified amortization (the finance-assurance lane opens) (`MachLib/FinanceAmortization.lean`)
 
 - **`MachLib.Finance.amortization_reconciles`** — a fixed-rate amortization schedule in **integer
