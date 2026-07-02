@@ -34,6 +34,14 @@ per-release status.
   eval(lcY_top p) − eval(m)·eval(lcY_top p)`) — the depth-N → depth-(N-1) recursion seam, for any
   top-free multiplier `m`, driven by lemma (1). When `m`'s top term is `degreeY_top p·Ffac M` the
   injection cancels, leaving a depth-(N-1) reduce of `lcY_top p`.
+- **The graded-multiplier cancellation, `∀N`** (`MachLib/IterExpDepthNGraded.lean`, clean —
+  `sorryAx`-free, no classical-citation axiom): `chainNReduce_graded_cancels` — with the top graded
+  term `gradedTop = (degreeY_top p)·Ffac M`, lemma (1)'s injection cancels *exactly* and the reduce's
+  top coefficient collapses to `eval(cTD(lcY_top p)) − eval(m_rest)·eval(lcY_top p)` — an honest
+  reduce of `lcY_top p` by the remainder `m_rest`, for ANY top-free `m_rest`. This is the depth-`N` →
+  depth-`(N-1)` step (the recursion's heart), the generic-`N` analog of chain-2's
+  `chain2Reduce_lcY1_eval` and depth-3's `chain3Reduce_lcY2_eval`. The specific nested-degree
+  `m_rest` plugs in later without redoing the cancellation.
 
 ### Added — depth-3 (triple-exponential) Khovanskii bound, unconditional and dirty-axiom-free (`ab77c5b`)
 
