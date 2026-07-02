@@ -7,6 +7,27 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Added — Khovanskii ∀N: PHASE C CLOSED — the reduce-descent for every depth (`MachLib/IterExpDepthNDescentInduction.lean`)
+
+**`chainNReduce_descends`** — for a reducing `q : MultiPoly (k+2)` at ANY depth `k`, the reduce with the
+full graded multiplier strictly lowers the eval-invariant measure `chainNMeasureEI k` in `nestedOrder (k+2)`.
+This is the ∀N analog of the deep depth-2 `chain2MeasureCanonEvalInv_descends`, now proven for **every depth**
+by induction. `#print axioms` → `propext`, `Classical.choice`, `Quot.sound` + the honest `MachLib.Real`
+interface (incl. `rolle`): **NO `sorryAx`, NO `zero_count_bound_classical`, NO `analytic_finite_zeros`**.
+
+The induction, assembled from the whole Phase C stack:
+- **`fullMult k q`** — the recursive graded multiplier: depth-2 base at `k=0`; at `k+1`, `gradedTop` +
+  `liftLastY` of the lower multiplier for the projected leading coefficient (`dropLastY_liftLastY` recovers
+  it — the multiplier-threading resolved).
+- **`Reducing k q`** — the recursive reducing predicate (depth-2 conditions at `k=0`; non-phantom + positive
+  top degree + `Reducing` of the projected leading coefficient at `k+1`).
+- Base = `chainNReduce_evalinv_descent_base` (the transported depth-2 descent, via `chainNReduce 0 =
+  chain2Reduce` + `chainNMeasureEI 0 = chain2MeasureCanonEvalInv`); step = the D-step
+  `chainNReduce_evalinv_descent` fed the IH through `dropLastY_liftLastY`.
+
+The ∀N reduce-descent — the tower's well-founded step — is complete. Remaining for the full ∀N Khovanskii
+bound: Phase D (generalise Rolle/vehicle + the outer WF induction into `chainN_khovanskii_bound_unconditional`).
+
 ### Added — `liftLastY`, a right inverse of `dropLastY` (`MachLib/MultiPolyLiftLastY.lean`)
 
 The ∀N descent's D(k)-by-induction wiring needs to thread the graded multiplier down the recursion: the
