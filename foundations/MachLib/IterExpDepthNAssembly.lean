@@ -115,4 +115,138 @@ theorem degreeYtop_leadingCoeffYprev_zero (n : Nat) (it ip : Fin n) : ∀ (X : M
       + MultiPoly.degreeY it (MultiPoly.leadingCoeffY ip q) = 0
     rw [ihp hp, ihq hq]
 
+/-- **`dropLastY` preserves `degreeY` at a non-top index.** For `ip'.val = ip.val` (so `ip` is not the top
+variable, since `ip'.val < n`), `degreeY ip' (dropLastY X) = degreeY ip X`. The `= ` sharpening of
+`MultiPoly.degreeY_dropLastY_le`; the generic bridge behind the depth-3 `degreeY1_dropLastY`. Abstract
+indices (whnf hazard). -/
+theorem degreeY_dropLastY_eq_prev (n : Nat) (ip : Fin (n + 1)) (ip' : Fin n)
+    (hcast : ip'.val = ip.val) : ∀ (X : MultiPoly (n + 1)),
+    MultiPoly.degreeY ip' (MultiPoly.dropLastY X) = MultiPoly.degreeY ip X := by
+  intro X
+  induction X with
+  | const c => rfl
+  | varX => rfl
+  | varY i =>
+    show MultiPoly.degreeY ip'
+        (if h : i.val < n then MultiPoly.varY ⟨i.val, h⟩ else MultiPoly.const 0)
+      = (if ip = i then 1 else 0)
+    by_cases hlt : i.val < n
+    · rw [dif_pos hlt]
+      show (if ip' = ⟨i.val, hlt⟩ then 1 else 0) = (if ip = i then 1 else 0)
+      by_cases hie : ip = i
+      · rw [if_pos hie, if_pos (Fin.ext (by rw [hcast]; exact congrArg Fin.val hie))]
+      · rw [if_neg hie, if_neg (fun h => hie (Fin.ext (by rw [← hcast]; exact congrArg Fin.val h)))]
+    · rw [dif_neg hlt]
+      show (0 : Nat) = (if ip = i then 1 else 0)
+      rw [if_neg (fun h => hlt (by
+        have hii : ip.val = i.val := congrArg Fin.val h
+        rw [← hii, ← hcast]; exact ip'.isLt))]
+  | add p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ip' (MultiPoly.dropLastY p))
+        (MultiPoly.degreeY ip' (MultiPoly.dropLastY q))
+      = Nat.max (MultiPoly.degreeY ip p) (MultiPoly.degreeY ip q)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY ip' (MultiPoly.dropLastY p))
+        (MultiPoly.degreeY ip' (MultiPoly.dropLastY q))
+      = Nat.max (MultiPoly.degreeY ip p) (MultiPoly.degreeY ip q)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show MultiPoly.degreeY ip' (MultiPoly.dropLastY p) + MultiPoly.degreeY ip' (MultiPoly.dropLastY q)
+      = MultiPoly.degreeY ip p + MultiPoly.degreeY ip q
+    rw [ihp, ihq]
+
+set_option maxHeartbeats 1600000 in
+/-- **`dropLastY` commutes with `leadingCoeffY ip`** (non-top index `ip`, cast to `ip'` one variable down).
+`leadingCoeffY` reads only `degreeY ip`, which `dropLastY` preserves (`degreeY_dropLastY_eq_prev`), so the
+leading-`y_ip`-coefficient extraction is unaffected by dropping the top variable. ∀N port of
+`dropLastY_leadingCoeffY1_commute` (abstract indices; whnf hazard). -/
+theorem dropLastY_leadingCoeffYprev_commute (n : Nat) (ip : Fin (n + 1)) (ip' : Fin n)
+    (hcast : ip'.val = ip.val) : ∀ (X : MultiPoly (n + 1)),
+    MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip X)
+      = MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY X) := by
+  intro X
+  induction X with
+  | const c => rfl
+  | varX => rfl
+  | varY i =>
+    have hd : MultiPoly.dropLastY (MultiPoly.varY i)
+        = (if h : i.val < n then MultiPoly.varY ⟨i.val, h⟩ else MultiPoly.const 0) := rfl
+    show MultiPoly.dropLastY (if i = ip then MultiPoly.const 1 else MultiPoly.varY i)
+      = MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY (MultiPoly.varY i))
+    by_cases hi : i = ip
+    · have hlt : i.val < n := by rw [congrArg Fin.val hi, ← hcast]; exact ip'.isLt
+      rw [if_pos hi, hd, dif_pos hlt]
+      show MultiPoly.const 1
+        = (if (⟨i.val, hlt⟩ : Fin n) = ip' then MultiPoly.const 1 else MultiPoly.varY ⟨i.val, hlt⟩)
+      rw [if_pos (Fin.ext (by rw [hcast]; exact congrArg Fin.val hi))]
+    · rw [if_neg hi, hd]
+      by_cases hlt : i.val < n
+      · rw [dif_pos hlt]
+        show MultiPoly.varY ⟨i.val, hlt⟩
+          = (if (⟨i.val, hlt⟩ : Fin n) = ip' then MultiPoly.const 1 else MultiPoly.varY ⟨i.val, hlt⟩)
+        rw [if_neg (fun h => hi (Fin.ext (by rw [← hcast]; exact (congrArg Fin.val h))))]
+      · rw [dif_neg hlt]
+        show MultiPoly.const 0 = MultiPoly.leadingCoeffY ip' (MultiPoly.const 0)
+        rfl
+  | add p q ihp ihq =>
+    show MultiPoly.dropLastY
+        (if MultiPoly.degreeY ip p > MultiPoly.degreeY ip q then MultiPoly.leadingCoeffY ip p
+          else if MultiPoly.degreeY ip q > MultiPoly.degreeY ip p then MultiPoly.leadingCoeffY ip q
+            else MultiPoly.add (MultiPoly.leadingCoeffY ip p) (MultiPoly.leadingCoeffY ip q))
+      = MultiPoly.leadingCoeffY ip' (MultiPoly.add (MultiPoly.dropLastY p) (MultiPoly.dropLastY q))
+    rw [show MultiPoly.leadingCoeffY ip' (MultiPoly.add (MultiPoly.dropLastY p) (MultiPoly.dropLastY q))
+        = (if MultiPoly.degreeY ip' (MultiPoly.dropLastY p) > MultiPoly.degreeY ip' (MultiPoly.dropLastY q)
+            then MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY p)
+            else if MultiPoly.degreeY ip' (MultiPoly.dropLastY q) > MultiPoly.degreeY ip' (MultiPoly.dropLastY p)
+              then MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY q)
+              else MultiPoly.add (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY p))
+                (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY q))) from rfl,
+        degreeY_dropLastY_eq_prev n ip ip' hcast p, degreeY_dropLastY_eq_prev n ip ip' hcast q]
+    by_cases h1 : MultiPoly.degreeY ip p > MultiPoly.degreeY ip q
+    · rw [if_pos h1, if_pos h1]; exact ihp
+    · rw [if_neg h1, if_neg h1]
+      by_cases h2 : MultiPoly.degreeY ip q > MultiPoly.degreeY ip p
+      · rw [if_pos h2, if_pos h2]; exact ihq
+      · rw [if_neg h2, if_neg h2]
+        show MultiPoly.add (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip p))
+            (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip q)) = _
+        rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show MultiPoly.dropLastY
+        (if MultiPoly.degreeY ip p > MultiPoly.degreeY ip q then MultiPoly.leadingCoeffY ip p
+          else if MultiPoly.degreeY ip q > MultiPoly.degreeY ip p
+            then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ip q)
+            else MultiPoly.sub (MultiPoly.leadingCoeffY ip p) (MultiPoly.leadingCoeffY ip q))
+      = MultiPoly.leadingCoeffY ip' (MultiPoly.sub (MultiPoly.dropLastY p) (MultiPoly.dropLastY q))
+    rw [show MultiPoly.leadingCoeffY ip' (MultiPoly.sub (MultiPoly.dropLastY p) (MultiPoly.dropLastY q))
+        = (if MultiPoly.degreeY ip' (MultiPoly.dropLastY p) > MultiPoly.degreeY ip' (MultiPoly.dropLastY q)
+            then MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY p)
+            else if MultiPoly.degreeY ip' (MultiPoly.dropLastY q) > MultiPoly.degreeY ip' (MultiPoly.dropLastY p)
+              then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY q))
+              else MultiPoly.sub (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY p))
+                (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY q))) from rfl,
+        degreeY_dropLastY_eq_prev n ip ip' hcast p, degreeY_dropLastY_eq_prev n ip ip' hcast q]
+    by_cases h1 : MultiPoly.degreeY ip p > MultiPoly.degreeY ip q
+    · rw [if_pos h1, if_pos h1]; exact ihp
+    · rw [if_neg h1, if_neg h1]
+      by_cases h2 : MultiPoly.degreeY ip q > MultiPoly.degreeY ip p
+      · rw [if_pos h2, if_pos h2]
+        show MultiPoly.sub (MultiPoly.dropLastY (MultiPoly.const 0))
+            (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip q)) = _
+        rw [ihq]; rfl
+      · rw [if_neg h2, if_neg h2]
+        show MultiPoly.sub (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip p))
+            (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip q)) = _
+        rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show MultiPoly.dropLastY
+        (MultiPoly.mul (MultiPoly.leadingCoeffY ip p) (MultiPoly.leadingCoeffY ip q))
+      = MultiPoly.leadingCoeffY ip' (MultiPoly.mul (MultiPoly.dropLastY p) (MultiPoly.dropLastY q))
+    show MultiPoly.mul (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip p))
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY ip q))
+      = MultiPoly.mul (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY p))
+          (MultiPoly.leadingCoeffY ip' (MultiPoly.dropLastY q))
+    rw [ihp, ihq]
+
 end MachLib.IterExpDepthN
