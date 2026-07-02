@@ -41,9 +41,13 @@ bounded input.
   `(g−1)·Σ_{j<N} gʲ = gᴺ−1`, i.e. the recognizable `c·(gᴺ−1)/(g−1)`, both proven **without division**.
 - **`MachLib.Real.amortization_drift_within_envelope`** — the punchline: the rounded schedule `b`
   (`b_{k+1}=g·b_k−pmt+ρ_k`) never leaves `cap_k` around the exact schedule `B` (`B_{k+1}=g·B_k−pmt`),
-  for ANY per-period rounding `|ρ_k| ≤ c`. With `c=½` cent this bounds the final-payment adjustment that
-  `amortization_reconciles` uses to close the balance — connecting the local ½¢ fact to the global
-  reconciliation. For the zoo's `$250k @ 6% / 360mo` loan, `cap_N ≈ $5.02`; the measured drift is `$3.66`.
+  for ANY per-period rounding `|ρ_k| ≤ c`. With `c=½` cent this bounds how far per-period interest
+  rounding can push the balance off the exact-arithmetic path — connecting the local ½¢ fact to a global
+  guarantee. For the zoo's `$250k @ 6% / 360mo` loan the certified **worst-case** `cap_N ≈ $5.02` (every
+  rounding adverse and fully compounding); the **measured** drift is only `~$0.05`, because real
+  per-period roundings mostly cancel — the rounded trajectory sits well inside the envelope, exactly as
+  the safety envelope's margin works. (That worst-case cap is a separate quantity from the ~$3.66
+  final-payment adjustment, which is dominated by rounding the level payment, not the per-period interest.)
 - `#print axioms` (all four) → `propext`, `Classical.choice`, `Quot.sound` + the honest `MachLib.Real`
   interface ONLY: **no `sorryAx`**, no classical-citation math axiom — same footprint class as the
   safety envelope. **Mechanization note**: `mach_mpoly` reifies its bracket atoms in the *outer*
