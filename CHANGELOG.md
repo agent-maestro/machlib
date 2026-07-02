@@ -7,6 +7,27 @@ per-release status.
 
 ## [Unreleased] — 2026-07-01
 
+### Added — Frontier-1 lemma (1) proven for EVERY depth `N` (`33a819a`)
+
+- **`MachLib.IterExpDepthN.leadingCoeffYtop_cTD_eval_IterExpN`** — the
+  top-`leadingCoeffY`-under-`chainTotalDeriv` product-injection identity, now
+  proven for **every** depth `N = M+2` (not just the closed depths 2 and 3):
+  `eval(lcY_top(cTD p)) = eval(cTD(lcY_top p)) + (degreeY_top p)·eval(Ffac M · lcY_top p)`,
+  top `⟨M+1⟩`, injection factor `Ffac M = y₀·…·y_M`. This is the first genuinely
+  general-`N` brick of the depth-N tower and the step the frontier notes called
+  "the one genuinely uncertain algebraic step". `#print axioms` → `propext` +
+  `Quot.sound` + the honest `MachLib.Real` interface ONLY: **NO `sorryAx`, NO
+  `zero_count_bound_classical`, NO `analytic_finite_zeros`** — and not even
+  `Classical.choice` (the identity is purely algebraic). Verified by `tools/claim_audit`.
+- **Why it was blocked, and the actual fix** (`MachLib/IterExpDepthNTopIdentity.lean`):
+  the earlier `∀M` attempt diverged; the cause was **not** `whnf` of `prodVarYUpTo M`
+  (marking the factor `irreducible` does not help) but `rw`'s `kabstract` re-`whnf`ing
+  the *stuck* `leadingCoeffY`/`degreeY` recursors at the **literal symbolic index**
+  `⟨M+1, by omega⟩`. Fix: keep the top index an **abstract variable** `i` with
+  `hi : i.val = M+1`, confining the one unavoidable literal to three one-equation
+  wrapper lemmas. Worst step: divergent → 0.5 s; whole file 0.8 s. Reusable for the
+  rest of the tower.
+
 ### Added — depth-3 (triple-exponential) Khovanskii bound, unconditional and dirty-axiom-free (`ab77c5b`)
 
 - **`MachLib.IterExpDepth3Bound.chain3_khovanskii_bound_unconditional`** — the

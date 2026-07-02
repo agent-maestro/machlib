@@ -33,6 +33,17 @@
       "module": "MachLib.IterExpDepth3Bound",
       "theorem": "MachLib.IterExpDepth3Bound.chain3_khovanskii_bound_unconditional",
       "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+    },
+    {
+      "id": "depthN-lemma1-forall-N-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "leadingCoeffYtop_cTD_eval_IterExpN",
+        "NO `sorryAx`, NO\n  `zero_count_bound_classical`, NO `analytic_finite_zeros`"
+      ],
+      "module": "MachLib.IterExpDepthNTopIdentity",
+      "theorem": "MachLib.IterExpDepthN.leadingCoeffYtop_cTD_eval_IterExpN",
+      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
     }
   ]
 }
