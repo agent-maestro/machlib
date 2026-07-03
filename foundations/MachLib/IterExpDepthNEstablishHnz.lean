@@ -98,4 +98,69 @@ theorem eval_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k 
       List.dropLast_concat_getLast (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) c)]
   exact eval_reconstructY_yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c x env
 
+/-- The rebuilt list of `liftInner` is `y_top`-free and length `degreeY_top c + 1`. -/
+private theorem liftInner_list_free (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2)) :
+    ∀ e ∈ ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).dropLast ++ [liftLastY inner']),
+      MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) e = 0 := by
+  intro e he
+  rcases List.mem_append.mp he with h | h
+  · exact MultiPoly.yCoeffsAt_entries_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) c e
+      (List.dropLast_subset _ h)
+  · rw [List.mem_singleton.mp h]; exact degreeY_top_liftLastY _
+
+private theorem liftInner_list_len (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2)) :
+    ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).dropLast ++ [liftLastY inner']).length
+      = MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c + 1 := by
+  rw [List.length_append, List.length_dropLast, List.length_singleton, yCoeffsAt_length_eq]; omega
+
+/-- **`liftInner` preserves the syntactic top degree.** -/
+theorem degreeYtop_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2)) :
+    MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) (liftInner k c inner')
+      = MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c := by
+  unfold liftInner
+  rw [degreeY_reconstructY_exact (⟨k + 2, by omega⟩ : Fin (k + 3)) _ (by simp)
+        (liftInner_list_free k c inner') 0, liftInner_list_len k c inner']
+  omega
+
+/-- **`liftInner`'s leading `y_top`-coefficient** (positive `degreeY_top`): `liftLastY inner'` times the
+`y`-free power-unit `leadingCoeffY (y_top^{degreeY_top c})`. -/
+theorem leadingCoeffYtop_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2))
+    (hpos : 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c) :
+    MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) (liftInner k c inner')
+      = MultiPoly.mul (liftLastY inner')
+          (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3))
+            (MultiPoly.pow (MultiPoly.varY (⟨k + 2, by omega⟩ : Fin (k + 3)))
+              (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c))) := by
+  have hexp : (0 : Nat) + ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).dropLast
+      ++ [liftLastY inner']).length - 1 = MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c := by
+    rw [liftInner_list_len k c inner']; omega
+  unfold liftInner
+  rw [leadingCoeffY_reconstructY (⟨k + 2, by omega⟩ : Fin (k + 3)) _ (by simp)
+        (liftInner_list_free k c inner') 0 (by rw [liftInner_list_len k c inner']; omega),
+      List.getLast_concat, hexp]
+
+/-- **`synMeasure` of the lift** (positive `degreeY_top c`): `(degreeY_top c, synMeasure k inner')`. Combines
+the two lemmas above with `synMeasure_mul_yfree` stripping the `y`-free power-unit. -/
+theorem synMeasure_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2))
+    (hpos : 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c) :
+    synMeasure (k + 1) (liftInner k c inner')
+      = (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c, synMeasure k inner') := by
+  have hyfree : ∀ (j : Fin (k + 2)), MultiPoly.degreeY j
+      (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3))
+        (MultiPoly.pow (MultiPoly.varY (⟨k + 2, by omega⟩ : Fin (k + 3)))
+          (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c)))) = 0 := by
+    intro j
+    rw [degreeY_dropLastY_eq_prev (k + 2) (⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ : Fin (k + 3)) j rfl _]
+    exact degreeY_leadingCoeffY_pow_self (⟨k + 2, Nat.lt_succ_self (k + 2)⟩ : Fin (k + 3))
+      (⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ : Fin (k + 3)) _
+  simp only [synMeasure]
+  rw [degreeYtop_liftInner k c inner', leadingCoeffYtop_liftInner k c inner' hpos]
+  show (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c,
+        synMeasure k (MultiPoly.mul (MultiPoly.dropLastY (liftLastY inner'))
+          (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3))
+            (MultiPoly.pow (MultiPoly.varY (⟨k + 2, by omega⟩ : Fin (k + 3)))
+              (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c))))))
+      = (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c, synMeasure k inner')
+  rw [dropLastY_liftLastY, synMeasure_mul_yfree k inner' _ hyfree]
+
 end MachLib.IterExpDepthN
