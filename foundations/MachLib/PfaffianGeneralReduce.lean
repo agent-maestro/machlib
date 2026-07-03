@@ -372,4 +372,31 @@ theorem leadingCoeffYtop_cTD_eval_gen {N : Nat} (c : PfaffianChain N) (G : Multi
         * MultiPoly.eval (MultiPoly.mul G (MultiPoly.leadingCoeffY top p)) x env :=
   idN_general_gen c G top h_reltop h_Gtop h_tri p x env
 
+/-! ## The reduce's leading coefficient — depth-`N`→`(N-1)` seam, for exp-type chains
+
+`chainReduce c m p = chainTotalDeriv c p − m·p`. Its leading `y_top`-coefficient, evaluated, is the
+depth-`(N-1)` reduce of `lcY_top p`: the leading-coeff identity injects a `degreeY_top · G · lcY_top p`
+term, and a graded multiplier `m` whose top term is `(degreeY_top p)·G` will cancel it (that cancellation
+is the measure descent, the remaining piece). Here we just expose the formula. -/
+theorem chainReduce_lcY_top_eval {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (m p : MultiPoly N) (hm : MultiPoly.degreeY top m = 0) (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainReduce c m p)) x env
+    = MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY top p)
+        * (MultiPoly.eval G x env * MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env)
+      - MultiPoly.eval m x env * MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env := by
+  have h_top : MultiPoly.degreeY top (c.relations top) = 1 := by
+    rw [h_reltop, degreeY_mul' top G (MultiPoly.varY top), h_Gtop, degreeY_varY_self' top]
+  have h1 := leadingCoeffYtop_cTD_eval_gen c G top h_reltop h_Gtop h_tri p x env
+  simp only [MultiPoly.eval_mul] at h1
+  unfold chainReduce
+  rw [MultiPoly.leadingCoeffY_sub_of_eq top (chainTotalDeriv c p) (MultiPoly.mul m p)
+        (by rw [degreeYtop_cTD_eq_gen c top h_top h_tri p, degreeY_mul' top m p, hm, Nat.zero_add]),
+      lcY_mul top m p, leadingCoeffY_eq_self_of_degreeY_zero top m hm]
+  simp only [MultiPoly.eval_sub, MultiPoly.eval_mul]
+  rw [h1]; mach_ring
+
 end MachLib.PfaffianGeneralReduce
