@@ -75,4 +75,50 @@ theorem pfaffianChainFn_no_zeros_of_reduce_zero {n : Nat} (c : PfaffianChain n) 
   rw [show A + (-B) * C = A - B * C from by mach_mpoly [A, B, C]]
   exact hr
 
+/-! ## Descent foundation: the top-degree of `chainTotalDeriv` for exponential-type chains
+
+The reduce descent rests on `degreeY_top (chainTotalDeriv c p) = degreeY_top p`. For the iterated-exp
+chain this is `degreeYtop_cTD_eq`, whose only chain-dependence is the `varY` case. That case needs
+exactly two facts, which characterize the **exponential-type + triangular** chains:
+
+* `degreeY_top (relations top) = 1`  — the top relation is *linear* in the top variable
+  (`relations top = y_top · G`, `G` top-free); and
+* `degreeY_top (relations j) = 0` for `j ≠ top` — triangularity (lower relations omit `y_top`).
+
+Everything else (`const`/`varX`/`add`/`sub`/`mul`) is chain-agnostic — `chainTotalDeriv` is a structural
+derivation, so its top-degree recurrence holds for ANY chain. This is the substantive base lemma of the
+generalized descent; the iterated-exp `degreeYtop_cTD_eq` is its instantiation. -/
+theorem degreeYtop_cTD_eq_gen {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 1)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) :
+    MultiPoly.degreeY top (chainTotalDeriv c p) = MultiPoly.degreeY top p := by
+  induction p with
+  | const cval => rfl
+  | varX => rfl
+  | varY j =>
+    show MultiPoly.degreeY top (c.relations j) = MultiPoly.degreeY top (MultiPoly.varY j)
+    by_cases hj : j = top
+    · rw [hj, h_top]
+      show (1 : Nat) = (if top = top then 1 else 0)
+      rw [if_pos rfl]
+    · rw [h_tri j hj]
+      show (0 : Nat) = (if top = j then 1 else 0)
+      rw [if_neg (fun h => hj h.symm)]
+  | add p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p))
+                 (MultiPoly.degreeY top (chainTotalDeriv c q))
+       = Nat.max (MultiPoly.degreeY top p) (MultiPoly.degreeY top q)
+    rw [ihp, ihq]
+  | sub p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p))
+                 (MultiPoly.degreeY top (chainTotalDeriv c q))
+       = Nat.max (MultiPoly.degreeY top p) (MultiPoly.degreeY top q)
+    rw [ihp, ihq]
+  | mul p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p) + MultiPoly.degreeY top q)
+                 (MultiPoly.degreeY top p + MultiPoly.degreeY top (chainTotalDeriv c q))
+       = MultiPoly.degreeY top p + MultiPoly.degreeY top q
+    rw [ihp, ihq]; exact Nat.max_self _
+
 end MachLib.PfaffianGeneralReduce
