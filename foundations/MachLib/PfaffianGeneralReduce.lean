@@ -31,6 +31,8 @@ open MachLib.PfaffianChainMod
 open MachLib.PfaffianChainMod.PfaffianChain
 open MachLib.PfaffianChainMod.PfaffianFn
 open MachLib.IterExpDepthN
+open MachLib.IterExpTopIdentity
+open MachLib.ChainExp2NoZeros
 
 /-- The general Pfaffian function `⟨n, c, p⟩` for an arbitrary chain (the analog of `chainNFn`, which
 is the `c := IterExpChain` case). -/
@@ -120,5 +122,254 @@ theorem degreeYtop_cTD_eq_gen {N : Nat} (c : PfaffianChain N) (top : Fin N)
                  (MultiPoly.degreeY top p + MultiPoly.degreeY top (chainTotalDeriv c q))
        = MultiPoly.degreeY top p + MultiPoly.degreeY top q
     rw [ihp, ihq]; exact Nat.max_self _
+
+/-! ## Descent core: the leading-coefficient identity ("lemma 1") for exponential-type chains -/
+
+private theorem lcY_add_of_gt' {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i q < MultiPoly.degreeY i p) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i p := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.leadingCoeffY i p
+  rw [if_pos h]
+
+private theorem lcY_add_of_lt' {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i p < MultiPoly.degreeY i q) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q) = MultiPoly.leadingCoeffY i q := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.leadingCoeffY i q
+  rw [if_neg (Nat.not_lt.mpr (Nat.le_of_lt h)), if_pos h]
+
+private theorem lcY_add_of_eq' {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i p = MultiPoly.degreeY i q) :
+    MultiPoly.leadingCoeffY i (MultiPoly.add p q)
+      = MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q) := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p then MultiPoly.leadingCoeffY i q
+        else MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.add (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q)
+  rw [if_neg (by omega : ¬ MultiPoly.degreeY i p > MultiPoly.degreeY i q),
+      if_neg (by omega : ¬ MultiPoly.degreeY i q > MultiPoly.degreeY i p)]
+
+def IdNGen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (p : MultiPoly N) (x : Real) (env : Fin N → Real) : Prop :=
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainTotalDeriv c p)) x env
+    = MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY top p)
+        * MultiPoly.eval (MultiPoly.mul G (MultiPoly.leadingCoeffY top p)) x env
+
+set_option maxHeartbeats 1200000 in
+theorem idN_add_gen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 1)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p q : MultiPoly N) (x : Real) (env : Fin N → Real)
+    (ihp : IdNGen c G top p x env) (ihq : IdNGen c G top q x env) :
+    IdNGen c G top (MultiPoly.add p q) x env := by
+  unfold IdNGen at ihp ihq ⊢
+  have hp_eq := degreeYtop_cTD_eq_gen c top h_top h_tri p
+  have hq_eq := degreeYtop_cTD_eq_gen c top h_top h_tri q
+  rw [cTD_add c p q]
+  rcases Nat.lt_trichotomy (MultiPoly.degreeY top p) (MultiPoly.degreeY top q) with hlt | heq | hgt
+  · have hd : MultiPoly.degreeY top (MultiPoly.add p q) = MultiPoly.degreeY top q :=
+      Nat.max_eq_right (Nat.le_of_lt hlt)
+    rw [lcY_add_of_lt' top (chainTotalDeriv c p) (chainTotalDeriv c q) (by rw [hp_eq, hq_eq]; exact hlt),
+        lcY_add_of_lt' top p q hlt, hd]
+    exact ihq
+  · have hd : MultiPoly.degreeY top (MultiPoly.add p q) = MultiPoly.degreeY top q := by
+      show Nat.max _ _ = _; rw [heq]; exact Nat.max_self _
+    rw [lcY_add_of_eq' top (chainTotalDeriv c p) (chainTotalDeriv c q) (by rw [hp_eq, hq_eq]; exact heq),
+        lcY_add_of_eq' top p q heq, hd,
+        cTD_add c (MultiPoly.leadingCoeffY top p) (MultiPoly.leadingCoeffY top q)]
+    simp only [MultiPoly.eval_add, MultiPoly.eval_mul] at ihp ihq ⊢
+    rw [heq] at ihp
+    rw [ihp, ihq]; mach_ring
+  · have hd : MultiPoly.degreeY top (MultiPoly.add p q) = MultiPoly.degreeY top p :=
+      Nat.max_eq_left (Nat.le_of_lt hgt)
+    rw [lcY_add_of_gt' top (chainTotalDeriv c p) (chainTotalDeriv c q) (by rw [hp_eq, hq_eq]; exact hgt),
+        lcY_add_of_gt' top p q hgt, hd]
+    exact ihp
+
+
+
+private theorem lcY_sub_of_gt' {n : Nat} (i : Fin n) (p q : MultiPoly n)
+    (h : MultiPoly.degreeY i q < MultiPoly.degreeY i p) :
+    MultiPoly.leadingCoeffY i (MultiPoly.sub p q) = MultiPoly.leadingCoeffY i p := by
+  show (if MultiPoly.degreeY i p > MultiPoly.degreeY i q then MultiPoly.leadingCoeffY i p
+        else if MultiPoly.degreeY i q > MultiPoly.degreeY i p
+             then MultiPoly.sub (MultiPoly.const 0) (MultiPoly.leadingCoeffY i q)
+             else MultiPoly.sub (MultiPoly.leadingCoeffY i p) (MultiPoly.leadingCoeffY i q))
+       = MultiPoly.leadingCoeffY i p
+  rw [if_pos h]
+
+private theorem lcY_varY_self' {n : Nat} (i : Fin n) :
+    MultiPoly.leadingCoeffY i (MultiPoly.varY i) = MultiPoly.const 1 := by
+  show (if i = i then MultiPoly.const 1 else MultiPoly.varY i) = MultiPoly.const 1
+  rw [if_pos rfl]
+
+private theorem degreeY_varY_self' {n : Nat} (i : Fin n) :
+    MultiPoly.degreeY i (MultiPoly.varY i) = 1 := by
+  show (if i = i then 1 else 0) = 1
+  rw [if_pos rfl]
+
+private theorem natCast_add_gen (a b : Nat) :
+    MachLib.Real.natCast (a + b) = MachLib.Real.natCast a + MachLib.Real.natCast b := by
+  induction b with
+  | zero => rw [Nat.add_zero, MachLib.Real.natCast_zero, MachLib.Real.add_zero]
+  | succ n ih =>
+    rw [show a + (n + 1) = (a + n) + 1 from rfl, MachLib.Real.natCast_succ,
+        MachLib.Real.natCast_succ, ih, MachLib.Real.add_assoc]
+
+set_option maxHeartbeats 1200000 in
+theorem idN_sub_gen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 1)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p q : MultiPoly N) (x : Real) (env : Fin N → Real)
+    (ihp : IdNGen c G top p x env) (ihq : IdNGen c G top q x env) :
+    IdNGen c G top (MultiPoly.sub p q) x env := by
+  unfold IdNGen at ihp ihq ⊢
+  have hp_eq := degreeYtop_cTD_eq_gen c top h_top h_tri p
+  have hq_eq := degreeYtop_cTD_eq_gen c top h_top h_tri q
+  rw [cTD_sub c p q]
+  rcases Nat.lt_trichotomy (MultiPoly.degreeY top p) (MultiPoly.degreeY top q) with hlt | heq | hgt
+  · have hd : MultiPoly.degreeY top (MultiPoly.sub p q) = MultiPoly.degreeY top q :=
+      Nat.max_eq_right (Nat.le_of_lt hlt)
+    rw [MultiPoly.leadingCoeffY_sub_of_lt top (chainTotalDeriv c p) (chainTotalDeriv c q)
+          (by rw [hp_eq, hq_eq]; exact hlt),
+        MultiPoly.leadingCoeffY_sub_of_lt top p q hlt, hd,
+        cTD_sub_const0 c (MultiPoly.leadingCoeffY top q)]
+    simp only [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_add, MultiPoly.eval_const]
+      at ihp ihq ⊢
+    rw [ihq]; mach_ring
+  · have hd : MultiPoly.degreeY top (MultiPoly.sub p q) = MultiPoly.degreeY top q := by
+      show Nat.max _ _ = _; rw [heq]; exact Nat.max_self _
+    rw [MultiPoly.leadingCoeffY_sub_of_eq top (chainTotalDeriv c p) (chainTotalDeriv c q)
+          (by rw [hp_eq, hq_eq]; exact heq),
+        MultiPoly.leadingCoeffY_sub_of_eq top p q heq, hd,
+        cTD_sub c (MultiPoly.leadingCoeffY top p) (MultiPoly.leadingCoeffY top q)]
+    simp only [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_add] at ihp ihq ⊢
+    rw [heq] at ihp
+    rw [ihp, ihq]
+    generalize MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env = A
+    generalize MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top q)) x env = B
+    generalize MultiPoly.eval G x env = Y
+    generalize MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env = LP
+    generalize MultiPoly.eval (MultiPoly.leadingCoeffY top q) x env = LQ
+    generalize MachLib.Real.natCast (MultiPoly.degreeY top q) = Nq
+    mach_ring
+  · have hd : MultiPoly.degreeY top (MultiPoly.sub p q) = MultiPoly.degreeY top p :=
+      Nat.max_eq_left (Nat.le_of_lt hgt)
+    rw [lcY_sub_of_gt' top (chainTotalDeriv c p) (chainTotalDeriv c q)
+          (by rw [hp_eq, hq_eq]; exact hgt),
+        lcY_sub_of_gt' top p q hgt, hd]
+    exact ihp
+
+set_option maxHeartbeats 1200000 in
+theorem idN_mul_gen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 1)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p q : MultiPoly N) (x : Real) (env : Fin N → Real)
+    (ihp : IdNGen c G top p x env) (ihq : IdNGen c G top q x env) :
+    IdNGen c G top (MultiPoly.mul p q) x env := by
+  unfold IdNGen at ihp ihq ⊢
+  have ha_eq := degreeYtop_cTD_eq_gen c top h_top h_tri p
+  have hb_eq := degreeYtop_cTD_eq_gen c top h_top h_tri q
+  rw [cTD_mul c p q]
+  have hcond : MultiPoly.degreeY top (MultiPoly.mul (chainTotalDeriv c p) q)
+             = MultiPoly.degreeY top (MultiPoly.mul p (chainTotalDeriv c q)) := by
+    rw [degreeY_mul' top (chainTotalDeriv c p) q,
+        degreeY_mul' top p (chainTotalDeriv c q), ha_eq, hb_eq]
+  rw [lcY_add_of_eq' top
+        (MultiPoly.mul (chainTotalDeriv c p) q)
+        (MultiPoly.mul p (chainTotalDeriv c q)) hcond,
+      lcY_mul top (chainTotalDeriv c p) q,
+      lcY_mul top p (chainTotalDeriv c q),
+      lcY_mul top p q,
+      degreeY_mul' top p q,
+      natCast_add_gen (MultiPoly.degreeY top p) (MultiPoly.degreeY top q),
+      cTD_mul c (MultiPoly.leadingCoeffY top p) (MultiPoly.leadingCoeffY top q)]
+  simp only [MultiPoly.eval_add, MultiPoly.eval_mul] at ihp ihq ⊢
+  rw [ihp, ihq]
+  generalize MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env = A
+  generalize MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top q)) x env = B
+  generalize MultiPoly.eval G x env = Y
+  generalize MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env = LA
+  generalize MultiPoly.eval (MultiPoly.leadingCoeffY top q) x env = LB
+  generalize MachLib.Real.natCast (MultiPoly.degreeY top p) = Na
+  generalize MachLib.Real.natCast (MultiPoly.degreeY top q) = Nb
+  mach_ring
+
+set_option maxHeartbeats 1200000 in
+theorem idN_general_gen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) (x : Real) (env : Fin N → Real) : IdNGen c G top p x env := by
+  have h_top : MultiPoly.degreeY top (c.relations top) = 1 := by
+    rw [h_reltop, degreeY_mul' top G (MultiPoly.varY top), h_Gtop, degreeY_varY_self' top]
+  induction p with
+  | const cval =>
+    unfold IdNGen
+    rw [cTD_const c cval]
+    show MultiPoly.eval (MultiPoly.const 0) x env
+        = MultiPoly.eval (chainTotalDeriv c (MultiPoly.const cval)) x env
+          + MachLib.Real.natCast 0
+            * MultiPoly.eval (MultiPoly.mul G (MultiPoly.const cval)) x env
+    rw [cTD_const c cval, MachLib.Real.natCast_zero, MultiPoly.eval_const]
+    mach_ring
+  | varX =>
+    unfold IdNGen
+    show MultiPoly.eval (MultiPoly.const 1) x env
+        = MultiPoly.eval (chainTotalDeriv c MultiPoly.varX) x env
+          + MachLib.Real.natCast 0
+            * MultiPoly.eval (MultiPoly.mul G MultiPoly.varX) x env
+    rw [MachLib.Real.natCast_zero, MultiPoly.eval_const]
+    show (1 : Real)
+        = MultiPoly.eval (MultiPoly.const 1) x env
+          + 0 * MultiPoly.eval (MultiPoly.mul G MultiPoly.varX) x env
+    rw [MultiPoly.eval_const]; mach_ring
+  | varY j =>
+    by_cases hj : j = top
+    · rw [hj]
+      unfold IdNGen
+      have hcv : chainTotalDeriv c (MultiPoly.varY top) = MultiPoly.mul G (MultiPoly.varY top) :=
+        h_reltop
+      rw [hcv, lcY_mul top G (MultiPoly.varY top),
+          leadingCoeffY_eq_self_of_degreeY_zero top G h_Gtop,
+          lcY_varY_self' top, degreeY_varY_self' top, cTD_const c 1,
+          MachLib.Real.natCast_succ, MachLib.Real.natCast_zero]
+      simp only [MultiPoly.eval_mul, MultiPoly.eval_const]
+      generalize MultiPoly.eval G x env = Y
+      mach_ring
+    · unfold IdNGen
+      have hcv : chainTotalDeriv c (MultiPoly.varY j) = c.relations j := rfl
+      have hdrel : MultiPoly.degreeY top (c.relations j) = 0 := h_tri j hj
+      have hdj : MultiPoly.degreeY top (MultiPoly.varY j) = 0 := by
+        show (if top = j then 1 else 0) = 0
+        rw [if_neg (fun h => hj h.symm)]
+      rw [hcv, leadingCoeffY_eq_self_of_degreeY_zero top (c.relations j) hdrel, hdj,
+          MachLib.Real.natCast_zero,
+          leadingCoeffY_eq_self_of_degreeY_zero top (MultiPoly.varY j) hdj, hcv]
+      generalize MultiPoly.eval (c.relations j) x env = P
+      mach_ring
+  | add p q ihp ihq => exact idN_add_gen c G top h_top h_tri p q x env ihp ihq
+  | sub p q ihp ihq => exact idN_sub_gen c G top h_top h_tri p q x env ihp ihq
+  | mul p q ihp ihq => exact idN_mul_gen c G top h_top h_tri p q x env ihp ihq
+
+/-- **Frontier-1 lemma (1), generalized to exponential-type Pfaffian chains.** For any chain `c` whose
+top relation is `relations top = G · y_top` with `G` top-free, and triangular below, the leading
+`y_top`-coefficient of `chainTotalDeriv c p` decomposes as `cTD(lcY_top p) + degreeY_top·G·lcY_top p`. -/
+theorem leadingCoeffYtop_cTD_eval_gen {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainTotalDeriv c p)) x env
+    = MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env
+      + MachLib.Real.natCast (MultiPoly.degreeY top p)
+        * MultiPoly.eval (MultiPoly.mul G (MultiPoly.leadingCoeffY top p)) x env :=
+  idN_general_gen c G top h_reltop h_Gtop h_tri p x env
 
 end MachLib.PfaffianGeneralReduce
