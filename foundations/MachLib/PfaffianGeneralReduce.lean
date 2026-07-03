@@ -585,4 +585,73 @@ noncomputable def gradedMult : (k : Nat) → PfaffianChain (k + 2) → MultiPoly
         (MultiPoly.liftLastY (gradedMult k (chainRestrict c)
           (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))))
 
+/-! ## WF descent port, layer (i) foundation: cTD/dropLastY commutation over restriction -/
+
+/-- **cTD commutes with `dropLastY` over restriction**, for a top-free polynomial. Holds for ANY chain:
+the top variable never appears (top-free), so the recurrence rides entirely on `chainRestrict`'s
+definition (`relations` match under `dropLastY`). General analog of `dropLastY_cTD_commute`. -/
+theorem dropLastY_cTD_commute_gen {N : Nat} (c : PfaffianChain (N + 1))
+    (q : MultiPoly (N + 1)) (hq : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q = 0) :
+    MultiPoly.dropLastY (chainTotalDeriv c q)
+      = chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY q) := by
+  induction q with
+  | const cval => rfl
+  | varX => rfl
+  | varY i =>
+    rcases i with ⟨v, hv⟩
+    have hv2 : v < N := by
+      by_cases hvv : v < N
+      · exact hvv
+      · exfalso
+        have hveq : v = N := by omega
+        have hd1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+                     (MultiPoly.varY (⟨v, hv⟩ : Fin (N + 1))) = 1 := by
+          show (if (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) = (⟨v, hv⟩ : Fin (N + 1)) then 1 else 0) = 1
+          rw [if_pos (Fin.ext hveq.symm)]
+        rw [hd1] at hq
+        exact absurd hq (by omega)
+    show MultiPoly.dropLastY (c.relations (⟨v, hv⟩ : Fin (N + 1)))
+       = chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY (MultiPoly.varY (⟨v, hv⟩ : Fin (N + 1))))
+    have hd : MultiPoly.dropLastY (MultiPoly.varY (⟨v, hv⟩ : Fin (N + 1)))
+            = MultiPoly.varY (⟨v, hv2⟩ : Fin N) := by
+      show (if h : v < N then MultiPoly.varY (⟨v, h⟩ : Fin N) else MultiPoly.const 0)
+         = MultiPoly.varY (⟨v, hv2⟩ : Fin N)
+      rw [dif_pos hv2]
+    rw [hd]
+    show MultiPoly.dropLastY (c.relations (⟨v, hv⟩ : Fin (N + 1)))
+       = MultiPoly.dropLastY (c.relations (⟨v, Nat.lt_succ_of_lt hv2⟩ : Fin (N + 1)))
+    rfl
+  | add p q ihp ihq =>
+    have h0 : Nat.max (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p)
+                      (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q) = 0 := hq
+    have hp : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p = 0 := Nat.le_zero.mp (h0 ▸ Nat.le_max_left _ _)
+    have hq2 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q = 0 := Nat.le_zero.mp (h0 ▸ Nat.le_max_right _ _)
+    show MultiPoly.add (MultiPoly.dropLastY (chainTotalDeriv c p))
+                       (MultiPoly.dropLastY (chainTotalDeriv c q))
+       = MultiPoly.add (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY p))
+                       (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY q))
+    rw [ihp hp, ihq hq2]
+  | sub p q ihp ihq =>
+    have h0 : Nat.max (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p)
+                      (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q) = 0 := hq
+    have hp : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p = 0 := Nat.le_zero.mp (h0 ▸ Nat.le_max_left _ _)
+    have hq2 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q = 0 := Nat.le_zero.mp (h0 ▸ Nat.le_max_right _ _)
+    show MultiPoly.sub (MultiPoly.dropLastY (chainTotalDeriv c p))
+                       (MultiPoly.dropLastY (chainTotalDeriv c q))
+       = MultiPoly.sub (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY p))
+                       (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY q))
+    rw [ihp hp, ihq hq2]
+  | mul p q ihp ihq =>
+    have h0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p
+            + MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q = 0 := hq
+    have hp : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p = 0 := by omega
+    have hq2 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q = 0 := by omega
+    show MultiPoly.add
+          (MultiPoly.mul (MultiPoly.dropLastY (chainTotalDeriv c p)) (MultiPoly.dropLastY q))
+          (MultiPoly.mul (MultiPoly.dropLastY p) (MultiPoly.dropLastY (chainTotalDeriv c q)))
+       = MultiPoly.add
+          (MultiPoly.mul (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY p)) (MultiPoly.dropLastY q))
+          (MultiPoly.mul (MultiPoly.dropLastY p) (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY q)))
+    rw [ihp hp, ihq hq2]
+
 end MachLib.PfaffianGeneralReduce
