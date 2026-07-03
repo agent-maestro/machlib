@@ -497,4 +497,68 @@ theorem IsExpChain_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (h : IsEx
     rw [(h ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩).2 ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ hij] at hle
     exact Nat.le_zero.mp hle
 
+/-! ## The graded multiplier + the descent step -/
+
+/-- The graded multiplier at one level: top term `(degreeY_top p)·G` (cancels the leading-coeff
+injection) plus a lower multiplier `mLow` (supplied recursively by the sub-level graded multiplier,
+lifted). -/
+noncomputable def gradedMultStep {N : Nat} (G : MultiPoly N) (top : Fin N) (p mLow : MultiPoly N) :
+    MultiPoly N :=
+  MultiPoly.add (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G) mLow
+
+theorem gradedMultStep_eval {N : Nat} (G : MultiPoly N) (top : Fin N) (p mLow : MultiPoly N)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (gradedMultStep G top p mLow) x env
+    = MachLib.Real.natCast (MultiPoly.degreeY top p) * MultiPoly.eval G x env
+      + MultiPoly.eval mLow x env := by
+  show MultiPoly.eval (MultiPoly.add (MultiPoly.mul (MultiPoly.const _) G) mLow) x env = _
+  rw [MultiPoly.eval_add, MultiPoly.eval_mul, MultiPoly.eval_const]
+
+theorem gradedMultStep_degreeY_top_zero {N : Nat} (G : MultiPoly N) (top : Fin N) (p mLow : MultiPoly N)
+    (h_Gtop : MultiPoly.degreeY top G = 0) (hmLow : MultiPoly.degreeY top mLow = 0) :
+    MultiPoly.degreeY top (gradedMultStep G top p mLow) = 0 := by
+  show MultiPoly.degreeY top
+      (MultiPoly.add (MultiPoly.mul (MultiPoly.const _) G) mLow) = 0
+  show Nat.max (MultiPoly.degreeY top (MultiPoly.mul (MultiPoly.const _) G))
+               (MultiPoly.degreeY top mLow) = 0
+  rw [degreeY_mul' top (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G, hmLow]
+  show Nat.max (MultiPoly.degreeY top (MultiPoly.const _) + MultiPoly.degreeY top G) 0 = 0
+  rw [h_Gtop]
+  show Nat.max (MultiPoly.degreeY top (MultiPoly.const _) + 0) 0 = 0
+  show Nat.max (0 + 0) 0 = 0
+  rfl
+
+/-- **The descent step (exp-type chains).** With the graded multiplier `gradedMultStep G top p mLow`
+(top-free `G`, top-free `mLow`), the leading `y_top`-coefficient of the reduce evaluates to the depth-
+`(N-1)` reduce residual of `lcY_top p` with the LOWER multiplier `mLow`:
+`cTD(lcY_top p) − mLow·lcY_top p`. This is the recursion step: one reduce drops the problem to `mLow` on
+`lcY_top p`, exactly what the sub-level graded multiplier (over `chainRestrict c`) continues. -/
+theorem chainReduce_gradedMultStep_lcY_top {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p mLow : MultiPoly N) (hmLow : MultiPoly.degreeY top mLow = 0) (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainReduce c (gradedMultStep G top p mLow) p)) x env
+    = MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env
+      - MultiPoly.eval mLow x env * MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env := by
+  exact chainReduce_lcY_top_cancel c G top h_reltop h_Gtop h_tri
+    (gradedMultStep G top p mLow) mLow p
+    (gradedMultStep_degreeY_top_zero G top p mLow h_Gtop hmLow) x env
+    (gradedMultStep_eval G top p mLow x env)
+
+/-- **Recursion step (eval form).** The reduct's leading `y_top`-coefficient equals the sub-level reduce
+`chainReduce c mLow (lcY_top p)` — so one reduce step turns the leading-coefficient problem into the
+same shape one degree down. This is the identity the nested measure descends on. -/
+theorem chainReduce_gradedMultStep_lcY_top_eq_subreduce {N : Nat} (c : PfaffianChain N)
+    (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p mLow : MultiPoly N) (hmLow : MultiPoly.degreeY top mLow = 0) (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainReduce c (gradedMultStep G top p mLow) p)) x env
+    = MultiPoly.eval (chainReduce c mLow (MultiPoly.leadingCoeffY top p)) x env := by
+  rw [chainReduce_gradedMultStep_lcY_top c G top h_reltop h_Gtop h_tri p mLow hmLow x env]
+  unfold chainReduce
+  rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
+
 end MachLib.PfaffianGeneralReduce
