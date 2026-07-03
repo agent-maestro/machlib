@@ -444,4 +444,57 @@ theorem dropLastY_eval_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (q : 
   rw [← MultiPoly.eval_dropLastY q hq z (c.chainValues z)]
   congr 1
 
+/-! ## Exponential-type chains — the class the descent recurses within -/
+
+/-- An **exponential-type Pfaffian chain**: at every level `i`, the relation is `y_i · G_i` with `G_i`
+top-free (`degreeY i G_i = 0`), and triangular (`relations i` omits `y_j` for `j > i`). Iterated exp is
+the case `G_i = y_0·…·y_{i-1}`. Closed under `chainRestrict`, so the descent recurses within it. -/
+def IsExpChain {N : Nat} (c : PfaffianChain N) : Prop :=
+  ∀ i : Fin N,
+    (∃ G : MultiPoly N, MultiPoly.degreeY i G = 0 ∧ c.relations i = MultiPoly.mul G (MultiPoly.varY i))
+    ∧ (∀ j : Fin N, i.val < j.val → MultiPoly.degreeY j (c.relations i) = 0)
+
+/-- Extract the top-level `(h_reltop, h_Gtop, h_tri)` triple that the reduce lemmas need. -/
+theorem IsExpChain_top {N : Nat} (c : PfaffianChain (N + 1)) (h : IsExpChain c) :
+    (∃ G : MultiPoly (N + 1),
+        MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ G = 0
+        ∧ c.relations ⟨N, Nat.lt_succ_self N⟩
+            = MultiPoly.mul G (MultiPoly.varY ⟨N, Nat.lt_succ_self N⟩))
+    ∧ (∀ j : Fin (N + 1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ (c.relations j) = 0) := by
+  refine ⟨(h ⟨N, Nat.lt_succ_self N⟩).1, ?_⟩
+  intro j hj
+  have hjlt : j.val < N := by
+    rcases Nat.lt_or_ge j.val N with h' | h'
+    · exact h'
+    · exact absurd (Fin.ext (Nat.le_antisymm (Nat.lt_succ_iff.mp j.isLt) h')) hj
+  exact (h j).2 ⟨N, Nat.lt_succ_self N⟩ hjlt
+
+/-- **`chainRestrict` preserves `IsExpChain`.** The sub-chain of an exponential-type chain is again
+exponential-type — so the measure descent recurses within the class. -/
+theorem IsExpChain_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (h : IsExpChain c) :
+    IsExpChain (chainRestrict c) := by
+  intro i
+  refine ⟨?_, ?_⟩
+  · obtain ⟨G, hG, hrel⟩ := (h ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩).1
+    refine ⟨MultiPoly.dropLastY G, ?_, ?_⟩
+    · have hle := MultiPoly.degreeY_dropLastY_le G i
+      rw [hG] at hle
+      exact Nat.le_zero.mp hle
+    · show MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)
+          = MultiPoly.mul (MultiPoly.dropLastY G) (MultiPoly.varY i)
+      rw [hrel]
+      show MultiPoly.mul (MultiPoly.dropLastY G)
+            (MultiPoly.dropLastY (MultiPoly.varY ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩))
+          = MultiPoly.mul (MultiPoly.dropLastY G) (MultiPoly.varY i)
+      congr 1
+      show (if hlt : i.val < N then MultiPoly.varY ⟨i.val, hlt⟩ else MultiPoly.const 0)
+          = MultiPoly.varY i
+      rw [dif_pos i.isLt]
+  · intro j hij
+    show MultiPoly.degreeY j (MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)) = 0
+    have hle := MultiPoly.degreeY_dropLastY_le (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) j
+    rw [(h ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩).2 ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ hij] at hle
+    exact Nat.le_zero.mp hle
+
 end MachLib.PfaffianGeneralReduce
