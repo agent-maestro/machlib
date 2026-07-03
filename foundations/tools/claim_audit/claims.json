@@ -10,7 +10,11 @@
       ],
       "module": "MachLib.ChainExp2NoZeros",
       "theorem": "MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional",
-      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     },
     {
       "id": "chain2-khovanskii-unconditional-readme",
@@ -21,7 +25,11 @@
       ],
       "module": "MachLib.ChainExp2NoZeros",
       "theorem": "MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_unconditional",
-      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     },
     {
       "id": "chain3-khovanskii-unconditional-changelog",
@@ -32,7 +40,26 @@
       ],
       "module": "MachLib.IterExpDepth3Bound",
       "theorem": "MachLib.IterExpDepth3Bound.chain3_khovanskii_bound_unconditional",
-      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
+      "id": "chainN-khovanskii-unconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "chainN_khovanskii_bound_unconditional",
+        "NO `sorryAx`, NO `zero_count_bound_classical`, NO\n`analytic_finite_zeros`"
+      ],
+      "module": "MachLib.IterExpDepthNBoundUncond",
+      "theorem": "MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     },
     {
       "id": "depthN-lemma1-forall-N-changelog",
@@ -43,7 +70,11 @@
       ],
       "module": "MachLib.IterExpDepthNTopIdentity",
       "theorem": "MachLib.IterExpDepthN.leadingCoeffYtop_cTD_eval_IterExpN",
-      "forbid_axioms": ["sorryAx", "zero_count_bound_classical", "analytic_finite_zeros"]
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
     },
     {
       "id": "amortization-reconciles-changelog",
@@ -54,7 +85,10 @@
       ],
       "module": "MachLib.FinanceAmortization",
       "theorem": "MachLib.Finance.amortization_reconciles",
-      "forbid_axioms": ["sorryAx", "Classical.choice"]
+      "forbid_axioms": [
+        "sorryAx",
+        "Classical.choice"
+      ]
     },
     {
       "id": "roundhalfeven-half-ulp-changelog",
@@ -65,7 +99,9 @@
       ],
       "module": "MachLib.FinanceAmortization",
       "theorem": "MachLib.Finance.roundHalfEven_half_ulp",
-      "forbid_axioms": ["sorryAx"]
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     },
     {
       "id": "error-within-envelope-changelog",
@@ -76,7 +112,9 @@
       ],
       "module": "MachLib.FinanceEnvelope",
       "theorem": "MachLib.Real.error_within_envelope",
-      "forbid_axioms": ["sorryAx"]
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     },
     {
       "id": "amortization-drift-envelope-changelog",
@@ -87,7 +125,9 @@
       ],
       "module": "MachLib.FinanceEnvelope",
       "theorem": "MachLib.Real.amortization_drift_within_envelope",
-      "forbid_axioms": ["sorryAx"]
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     },
     {
       "id": "daycount-additive-changelog",
@@ -98,7 +138,10 @@
       ],
       "module": "MachLib.FinanceDayCount",
       "theorem": "MachLib.Finance.days30E360_additive",
-      "forbid_axioms": ["sorryAx", "Classical.choice"]
+      "forbid_axioms": [
+        "sorryAx",
+        "Classical.choice"
+      ]
     },
     {
       "id": "accrual-additive-changelog",
@@ -109,7 +152,10 @@
       ],
       "module": "MachLib.FinanceDayCount",
       "theorem": "MachLib.Finance.accrual_additive",
-      "forbid_axioms": ["sorryAx", "Classical.choice"]
+      "forbid_axioms": [
+        "sorryAx",
+        "Classical.choice"
+      ]
     }
   ]
 }
