@@ -1,4 +1,5 @@
 import MachLib.IterExpDepthNMeasureConst
+import MachLib.IterExpDepthNCanonBridge
 import MachLib.IterExpDepth3CapstonePrep
 
 /-!
@@ -95,5 +96,29 @@ theorem hnzTower_nonzero : ∀ (k : Nat) (q : MultiPoly (k + 2)), hnzTower k q �
           (MultiPoly.degreeY_leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) hlcz
       rw [hdropz] at hinner
       exact absurd hinner (by decide)
+
+/-- **`hnz` forces the top `y`-coefficient non-phantom** (the step-level non-phantom the descent feeds to
+`chainNReduce_evalinv_descent`). Since `hnzTower (k+1) q = hnzTower k (dropLastY(lcY_top q))`, the inner is
+`≢ 0` (`hnzTower_nonzero`), so `lcY_top q ≢ 0` (dropLastY preserves canon-zero for top-free), and `ytopAt`
+(the `getLast` of `yCoeffsAt`) is eval-equal to `leadingCoeffY`, so `canonZeroB (ytopAt_top q) = false`. -/
+theorem nonphantom_of_hnzTower_step (k : Nat) (q : MultiPoly (k + 3))
+    (hnz : hnzTower (k + 1) q) :
+    canonZeroB (ytopAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = false := by
+  have hdrop : canonZeroB (MultiPoly.dropLastY
+      (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) = false :=
+    hnzTower_nonzero k _ hnz
+  have hlcnz : canonZeroB (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = false := by
+    cases h : canonZeroB (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+    · rfl
+    · exfalso
+      have hd := canonZeroB_dropLastY_of_canonZero_topfree _
+        (MultiPoly.degreeY_leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) h
+      rw [hd] at hdrop; exact absurd hdrop (by decide)
+  rw [canonZeroB_eq_of_eval_eq (ytopAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+      (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+      (fun x env => (eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general
+        (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+        (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) x env).symm)]
+  exact hlcnz
 
 end MachLib.IterExpDepthN
