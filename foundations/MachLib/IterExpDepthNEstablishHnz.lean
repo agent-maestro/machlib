@@ -1,5 +1,7 @@
 import MachLib.IterExpDepthNSynMeasure
 import MachLib.IterExpDepthNAssembly
+import MachLib.IterExpDepthNInnerTrim
+import MachLib.IterExpDepthNDescentInduction
 
 /-!
 # Phase C→D absorption — `synMeasure` invariant under a `y`-free factor (helper for the deep trim)
@@ -16,6 +18,9 @@ open MachLib.Real
 open MachLib.MultiPolyMod
 open MachLib.MultiPolyMod.MultiPoly
 open MachLib.ChainExp2NoZeros
+open MachLib.MultiPolyReconstruct
+open MachLib.ChainExp2Trim
+open MachLib.IterExpDepth3InnerTrim
 
 /-- **`synMeasure` ignores a `y`-free factor.** If `c` has `degreeY_j = 0` for every `j`, then
 `synMeasure k (q * c) = synMeasure k q`. Induction on depth: raw `degreeY` is additive and `c` contributes
@@ -67,5 +72,30 @@ theorem synMeasure_mul_yfree : ∀ (k : Nat) (q c : MultiPoly (k + 2)),
         = (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q,
            synMeasure k (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)))
     rw [ih _ (MultiPoly.dropLastY c) hdc]
+
+/-! ### The deep-trim lift — replace the leading coefficient by `liftLastY inner'` -/
+
+/-- The lift: rebuild `c` with its leading `y_top`-coefficient replaced by `liftLastY inner'`. -/
+noncomputable def liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2)) :
+    MultiPoly (k + 3) :=
+  reconstructY (⟨k + 2, by omega⟩ : Fin (k + 3))
+    ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).dropLast ++ [liftLastY inner']) 0
+
+/-- **Eval-preservation of the lift.** If `liftLastY inner'` evaluates like the leading `y_top`-coefficient
+(the `getLast`), rebuilding with it changes no value. Faithful copy of `eval_innerTrimN`'s swap. -/
+theorem eval_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPoly (k + 2))
+    (hswap : ∀ (x : Real) (env : Fin (k + 3) → Real),
+      MultiPoly.eval (liftLastY inner') x env
+        = MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).getLast
+          (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) c)) x env)
+    (x : Real) (env : Fin (k + 3) → Real) :
+    MultiPoly.eval (liftInner k c inner') x env = MultiPoly.eval c x env := by
+  unfold liftInner
+  rw [eval_reconstructY_last_swap (⟨k + 2, by omega⟩ : Fin (k + 3)) (liftLastY inner')
+        ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).getLast
+          (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) c))
+        x env (hswap x env) (MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c).dropLast 0,
+      List.dropLast_concat_getLast (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) c)]
+  exact eval_reconstructY_yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) c x env
 
 end MachLib.IterExpDepthN
