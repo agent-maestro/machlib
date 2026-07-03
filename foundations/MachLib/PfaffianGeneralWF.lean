@@ -124,4 +124,85 @@ theorem pfaffianChainFn_no_zeros_of_reduct_zero_gen {n : Nat} (c : PfaffianChain
         - (pfaffianChainFn c m).eval z * (pfaffianChainFn c p).eval z := by mach_ring
   rw [hrw]; exact hre.symm
 
+/-- **E-abstract Rolle transfer (raw).** Zeros of `f` on `(a,b)` are ≤ zeros of the vehicle derivative
+`(vehicleGen f E)'` + 1. The `vehicleGen`/`hasDerivAt_vehicleGen` engine (chain-agnostic) fed to
+`zero_count_bound_by_deriv` (the single-axiom Rolle). Mirrors `zero_count_vehicleN_transfer_raw` with the
+abstract integrating factor `E` in place of the iterated-exp `vehExpo`. -/
+theorem zero_count_vehicleGen_transfer_raw (f : PfaffianFn) (E : Real → Real) (M : Real → Real)
+    (a b : Real) (hab : a < b) (hcoherent : f.chain.IsCoherentOn a b)
+    (hE : ∀ z, a < z → z < b → HasDerivAt E (M z) z) (N : Nat)
+    (h_reduced_bound : ∀ zeros' : List Real, zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          ∃ f'' : Real, HasDerivAt (vehicleGen f E) f'' z ∧ f'' = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzeros
+  have hzeros_g : ∀ z ∈ zeros_f, a < z ∧ z < b ∧ vehicleGen f E z = 0 := by
+    intro z hz
+    obtain ⟨haz, hzb, hfz⟩ := hzeros z hz
+    exact ⟨haz, hzb, (vehicleGen_zero_iff f E z).mpr hfz⟩
+  have hdiff : ∀ x : Real, a < x → x < b → ∃ f' : Real, HasDerivAt (vehicleGen f E) f' x := by
+    intro x hax hxb
+    exact ⟨_, hasDerivAt_vehicleGen f E (M x) x (hasDerivAt_eval_natural f x (hcoherent x hax hxb)) (hE x hax hxb)⟩
+  exact zero_count_bound_by_deriv (vehicleGen f E) a b hab hdiff N h_reduced_bound zeros_f hnodup hzeros_g
+
+/-- **E-abstract Rolle transfer (eval form).** If `f' + M·f` has ≤ `N` zeros on `(a,b)`, then `f` has
+≤ `N+1`. Converts a vehicle-derivative zero to an `f' + M·f = 0` zero: `(vehicleGen f E)' = exp(E)·(f'+M·f)`
+(`hasDerivAt_vehicleGen`), and `exp > 0`. -/
+theorem zero_count_vehicleGen_transfer (f : PfaffianFn) (E : Real → Real) (M : Real → Real)
+    (a b : Real) (hab : a < b) (hcoherent : f.chain.IsCoherentOn a b)
+    (hE : ∀ z, a < z → z < b → HasDerivAt E (M z) z) (N : Nat)
+    (h_reduced_bound_eval : ∀ zeros' : List Real, zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧
+          f.chainTotalDerivative.eval z + M z * f.eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f.eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  apply zero_count_vehicleGen_transfer_raw f E M a b hab hcoherent hE N
+  intro zeros' hnodup' hzeros'_prop
+  apply h_reduced_bound_eval zeros' hnodup'
+  intro z hz
+  obtain ⟨haz, hzb, g'', hg''_deriv, hg''_zero⟩ := hzeros'_prop z hz
+  refine ⟨haz, hzb, ?_⟩
+  have hf := hasDerivAt_eval_natural f z (hcoherent z haz hzb)
+  have hvd := hasDerivAt_vehicleGen f E (M z) z hf (hE z haz hzb)
+  have huniq := HasDerivAt_unique (vehicleGen f E)
+    (f.chainTotalDerivative.eval z * (E z).exp + f.eval z * ((E z).exp * M z)) g'' z hvd hg''_deriv
+  rw [hg''_zero] at huniq
+  have hfac : f.chainTotalDerivative.eval z * (E z).exp + f.eval z * ((E z).exp * M z)
+      = (E z).exp * (f.chainTotalDerivative.eval z + M z * f.eval z) := by mach_ring
+  rw [hfac] at huniq
+  exact mul_eq_zero_of_factor_ne_zero (exp_ne_zero (E z)) huniq
+
+/-- **General reduce-step arm (Rolle +1).** If the reduce has ≤ `N` zeros on `(a,b)`, then
+`f = pfaffianChainFn c p` has ≤ `N+1`. The reduce arm the WF induction takes when the reduce is ≢ 0:
+recurse on the reduce (smaller measure via `chainReduce_order5_gen`) and add one Rolle zero. `M = −(m eval)`,
+so `f' + M·f = f' − (m eval)·f = reduce` (reduce-eval identity). Conditional on the integrating factor `E`
++ coherence, exactly like the no-zeros arm. -/
+theorem pfaffianChainFn_reduce_step_gen {n : Nat} (c : PfaffianChain n) (m p : MultiPoly n)
+    (a b : Real) (hab : a < b) (E : Real → Real) (hcoh : c.IsCoherentOn a b)
+    (hE : ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z) (N : Nat)
+    (hN : ∀ zeros' : List Real, zeros'.Nodup →
+        (∀ z ∈ zeros', a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c m p)).eval z = 0) →
+        zeros'.length ≤ N) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
+      zeros_f.length ≤ N + 1 := by
+  refine zero_count_vehicleGen_transfer (pfaffianChainFn c p) E (fun z => -(pfaffianChainFn c m).eval z)
+    a b hab hcoh hE N ?_
+  intro zeros' hnodup' hz'
+  apply hN zeros' hnodup'
+  intro z hzmem
+  obtain ⟨haz, hzb, hval⟩ := hz' z hzmem
+  refine ⟨haz, hzb, ?_⟩
+  rw [pfaffianChainFn_reduce_eval]
+  have hrw : (pfaffianChainFn c p).chainTotalDerivative.eval z
+        - (pfaffianChainFn c m).eval z * (pfaffianChainFn c p).eval z
+      = (pfaffianChainFn c p).chainTotalDerivative.eval z
+        + (-(pfaffianChainFn c m).eval z) * (pfaffianChainFn c p).eval z := by mach_ring
+  rw [hrw]; exact hval
+
 end MachLib.PfaffianGeneralReduce
