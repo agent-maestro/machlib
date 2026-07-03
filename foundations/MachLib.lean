@@ -122,6 +122,7 @@ import MachLib.ExplicitBoundRank
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianGeneralWF
 import MachLib.PfaffianGeneralHnz
+import MachLib.PfaffianGeneralHnzWF
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
