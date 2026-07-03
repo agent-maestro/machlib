@@ -21,6 +21,8 @@ open MachLib.ChainExp2NoZeros
 open MachLib.MultiPolyReconstruct
 open MachLib.ChainExp2Trim
 open MachLib.IterExpDepth3InnerTrim
+open MachLib.ChainExp2CanonMeasure
+open MachLib.ChainExp2Capstone
 
 /-- **`synMeasure` ignores a `y`-free factor.** If `c` has `degreeY_j = 0` for every `j`, then
 `synMeasure k (q * c) = synMeasure k q`. Induction on depth: raw `degreeY` is additive and `c` contributes
@@ -171,5 +173,131 @@ theorem synMeasure_liftLastY (k : Nat) (inner' : MultiPoly (k + 2)) :
       leadingCoeffY_eq_self_of_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) (liftLastY inner')
         (degreeY_top_liftLastY _),
       dropLastY_liftLastY]
+
+/-! ### The deep dispatch: `hnzTower` or a `synMeasure`-smaller eval-equal trim -/
+
+set_option maxHeartbeats 1600000 in
+/-- **The deep-case dispatch.** For a non-zero `q`, either `hnzTower k q` holds (so the reduce descends) or
+there is an eval-equal `q'` strictly below `q` in `synMeasure` (a phantom-trim). Induction on depth; the
+non-phantom step recurses on the inner coefficient and lifts the trim back with `liftInner` (or `liftLastY`
+when the top degree is `0`). After exhausting phantoms `hnzTower` is forced — the recursion terminates on
+`synOrder`. No `sorry`. -/
+theorem establish_hnz_or_trim : ∀ (k : Nat) (q : MultiPoly (k + 2)), canonZeroB q = false →
+    hnzTower k q ∨ ∃ q' : MultiPoly (k + 2),
+      (∀ (x : Real) (env : Fin (k + 2) → Real), MultiPoly.eval q' x env = MultiPoly.eval q x env)
+        ∧ synOrder k q' q := by
+  intro k
+  induction k with
+  | zero =>
+    intro q hq
+    by_cases hnz : hnzTower 0 q
+    · exact Or.inl hnz
+    · right
+      have hcz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 = 0 := by
+        rcases Nat.eq_zero_or_pos
+          (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 with h | h
+        · exact h
+        · exact absurd (Nat.pos_iff_ne_zero.mp h) hnz
+      have hlc0 : ∀ (x : Real) (env : Fin 2 → Real),
+          MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q) x env = 0 :=
+        smc2_zero_eval_zero _ (MultiPoly.degreeY_leadingCoeffY _ _) hcz
+      have hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q := by
+        rcases Nat.eq_zero_or_pos (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q) with hd0 | hp
+        · exfalso
+          have hqself := leadingCoeffY_eq_self_of_degreeY_zero (⟨1, by omega⟩ : Fin 2) q hd0
+          have hq0 : canonZeroB q = true :=
+            canonZeroB_true_of_eval_zero q (fun x env => by rw [← hqself]; exact hlc0 x env)
+          rw [hq0] at hq; exact absurd hq (by decide)
+        · exact hp
+      have hlast : ∀ (x : Real) (env : Fin 2 → Real),
+          MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).getLast
+            (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q)) x env = 0 := by
+        intro x env
+        rw [← eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨1, by omega⟩ : Fin 2) q
+              (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) x env]
+        exact hlc0 x env
+      refine ⟨dropLeadingYAt (⟨1, by omega⟩ : Fin 2) q,
+        fun x env => eval_dropLeadingYAt_of_last_canonically_zero (⟨1, by omega⟩ : Fin 2) q
+          (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) q) hlast x env, ?_⟩
+      apply nestedOrder_of_fst
+      exact degreeY_dropLeadingYAt_lt (⟨1, by omega⟩ : Fin 2) q hpos
+  | succ k ih =>
+    intro q hq
+    by_cases hnz : hnzTower (k + 1) q
+    · exact Or.inl hnz
+    · right
+      by_cases htop : canonZeroB (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = false
+      · -- top non-phantom: recurse on the inner coefficient
+        have hinner_nz : canonZeroB (MultiPoly.dropLastY
+            (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) = false := by
+          cases h : canonZeroB (MultiPoly.dropLastY
+              (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))
+          · rfl
+          · exfalso
+            have hlc0 := dropLastY_eval_zero_of_yfree
+              (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+              (MultiPoly.degreeY_leadingCoeffY _ _) ((canonZeroB_true_iff _).mp h)
+            rw [canonZeroB_true_of_eval_zero _ hlc0] at htop; exact absurd htop (by decide)
+        rcases ih (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))
+          hinner_nz with hin | ⟨inner', hin_eval, hin_syn⟩
+        · exact absurd hin hnz
+        · have hswap : ∀ (x : Real) (env : Fin (k + 3) → Real),
+              MultiPoly.eval (liftLastY inner') x env
+                = MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q).getLast
+                  (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) x env := by
+            intro x env
+            rw [eval_liftLastY inner' x env, hin_eval x _,
+                eval_dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+                  (MultiPoly.degreeY_leadingCoeffY _ _) x env]
+            exact eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general
+              (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+              (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) x env
+          by_cases hdpos : 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+          · refine ⟨liftInner k q inner', fun x env => eval_liftInner k q inner' hswap x env, ?_⟩
+            show nestedOrder (k + 3) (synMeasure (k + 1) (liftInner k q inner')) (synMeasure (k + 1) q)
+            rw [synMeasure_liftInner k q inner' hdpos]
+            refine nestedOrder_of_snd rfl ?_
+            exact hin_syn
+          · have hd0 : MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q = 0 :=
+              Nat.le_zero.mp (Nat.not_lt.mp hdpos)
+            refine ⟨liftLastY inner', fun x env => ?_, ?_⟩
+            · rw [hswap x env]
+              exact (eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general
+                (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+                (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) x env).symm.trans
+                (by rw [leadingCoeffY_eq_self_of_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) q hd0])
+            · show nestedOrder (k + 3) (synMeasure (k + 1) (liftLastY inner')) (synMeasure (k + 1) q)
+              rw [synMeasure_liftLastY k inner']
+              refine nestedOrder_of_snd (by simp only [synMeasure]; rw [hd0]) ?_
+              show nestedOrder (k + 2) (synMeasure k inner')
+                (synMeasure k (MultiPoly.dropLastY
+                  (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)))
+              exact hin_syn
+      · -- top phantom: drop the leading y_top-term
+        have htop_ph : canonZeroB (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = true := by
+          cases h : canonZeroB (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)
+          · exact absurd h htop
+          · rfl
+        have hpos : 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q := by
+          rcases Nat.eq_zero_or_pos (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) with hd0 | hp
+          · exfalso
+            have hqself := leadingCoeffY_eq_self_of_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) q hd0
+            rw [hqself] at htop_ph
+            rw [htop_ph] at hq; exact absurd hq (by decide)
+          · exact hp
+        have hlast : ∀ (x : Real) (env : Fin (k + 3) → Real),
+            MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q).getLast
+              (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) x env = 0 := by
+          intro x env
+          rw [← eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+                (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) x env]
+          exact (canonZeroB_true_iff _).mp htop_ph x env
+        refine ⟨dropLeadingYAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q,
+          fun x env => eval_dropLeadingYAt_of_last_canonically_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+            (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) hlast x env, ?_⟩
+        show nestedOrder (k + 3) (synMeasure (k + 1) (dropLeadingYAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q))
+          (synMeasure (k + 1) q)
+        apply nestedOrder_of_fst
+        exact degreeY_dropLeadingYAt_lt (⟨k + 2, by omega⟩ : Fin (k + 3)) q hpos
 
 end MachLib.IterExpDepthN
