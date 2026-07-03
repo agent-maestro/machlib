@@ -23,6 +23,33 @@ explicit-bound program; this rank lemma is its reusable arithmetic core (the sam
 lifts to the deeper nestings used at depth ≥ 3).
 
 No new axioms — pure `Nat` arithmetic (`omega` + `Nat.succ_mul` + `Nat.mul_le_mul_right`).
+
+## Relation to the documented open problem (`ChainExp2Instance.lean`)
+
+`ChainExp2Instance.lean` (§ "Why ALL THREE candidate paths fall short") records that the
+*measured* framework `chainExp2_bound_via_measured_axioms` cannot be discharged by any
+`Nat`-valued measure: its **path (b)** tries exactly this linearization
+(`measure g = degreeY₀ g * BIG + degreeX (leadingCoeffY₀ g)`) and rejects it because a
+`coeffStep` with `k ≠ 0` multiplies by `y₀`, raising `degreeY₀` by 1, so the linearized
+measure jumps up by `BIG` — "any Nat encoding of lex has the same problem." That is correct
+*for the framework's requirement* (`coeffStep_le` must hold for **arbitrary** `k`).
+
+`rankLex` sidesteps the *arbitrary-k* demand: the real `chain2_khovanskii_bound_unconditional`
+recursion never takes an arbitrary-`k` step — it reduces with the **canonical** multiplier
+(`chain2Reduce (cdegY0 (lcY₁ p))`), for which the measure descent `chain2Reduce_nestedLT_canon`
+(strict `nestedLT`) is already proven, and trims (`degreeY₁` strictly drops). `rankLex_lt`
+converts either descent into a strict `Nat` drop **provided the source tuple's inner
+components are bounded** (`a ≤ A, b ≤ B`). So the linearization is NOT impossible — it holds
+on any bounded region.
+
+What therefore *remains open* to get the constructive chain-2 bound is precisely: exhibit a
+global `(A,B)` bounding `(cdegY0 (lcY₁ q), degreeX …)` over every `q` reached by the recursion.
+`cdegY0 (lcY₁ ·)` is non-increasing under reduce (immediate from the `nestedLT` lex drop), and
+the `degreeX` component is non-increasing under both reduce and trim; the ONE hard obligation is
+that a `degreeY₁`-dropping **trim**, after earlier reduces have grown the whole-poly `degreeY₀`,
+still exposes an `lcY₁` whose `cdegY0` is bounded by a degree functional of the ORIGINAL `p`.
+That is the effective-Khovanskii degree-growth accounting — a dedicated research build, not a
+mechanical re-run. This file is its reusable arithmetic core.
 -/
 
 namespace MachLib.ExplicitBound
