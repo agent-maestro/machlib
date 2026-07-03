@@ -14,7 +14,7 @@ arm that `hnzTower` allows but `ReducingGen` forbids. This is the descent that `
 -/
 namespace MachLib.PfaffianGeneralReduce
 open MachLib.Real MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly MachLib.PfaffianChainMod
-open MachLib.PfaffianChainMod.PfaffianFn MachLib.IterExpDepthN MachLib.ChainExp2NoZeros MachLib.MultiPolyReconstruct MachLib.IterExpTopIdentity
+open MachLib.PfaffianChainMod.PfaffianFn MachLib.IterExpDepthN MachLib.ChainExp2NoZeros MachLib.MultiPolyReconstruct MachLib.IterExpTopIdentity MachLib.IterExpDepth3CdegY1
 
 /-- Abstract-index helper: for an exp-type top relation, its top y-degree is 1. Proven with an ABSTRACT
 top index to sidestep the whnf-hazard of the literal `⟨k+2,_⟩`. -/
@@ -93,5 +93,49 @@ theorem chainReduce_descends_hnz_gen
           exact nestedOrder_of_snd rfl
             (hnzTower_measure_pos k (MultiPoly.dropLastY
               (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) hnz)
+
+/-- **The general reduce's `chainNMeasureCanon` descent from `hnzTower`** — `chainReduce_orderCanon_gen`
+with the inner recursion swapped to the phantom-absorbing `chainReduce_descends_hnz_gen`. -/
+theorem chainReduce_orderCanon_hnz_gen
+    (hBaseHnz : ∀ (c' : PfaffianChain 2), IsExpChain c' → ∀ (q : MultiPoly 2), hnzTower 0 q →
+      ∃ mm : MultiPoly 2, MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) mm = 0 ∧
+        nestedOrder 2 (chainNMeasureEI 0 (chainReduce c' mm q)) (chainNMeasureEI 0 q))
+    {M : Nat} (c : PfaffianChain (M + 3)) (hexp : IsExpChain c) (p : MultiPoly (M + 3))
+    (hnz : hnzTower M (MultiPoly.dropLastY
+      (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) :
+    ∃ m : MultiPoly (M + 3), MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) m = 0 ∧
+      nestedOrder (M + 3) (chainNMeasureCanon M (chainReduce c m p)) (chainNMeasureCanon M p) := by
+  obtain ⟨⟨G, hG, hrel⟩, htri⟩ := IsExpChain_top c hexp
+  obtain ⟨m', hm'0, hm'desc⟩ := chainReduce_descends_hnz_gen hBaseHnz M (chainRestrict c)
+    (IsExpChain_chainRestrict c hexp)
+    (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)) hnz
+  refine ⟨gradedMultStep G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m'),
+    gradedMultStep_degreeY_top_zero G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m') hG
+      (MultiPoly.degreeY_top_liftLastY m'), ?_⟩
+  have hInner : nestedOrder (M + 2)
+      (chainNMeasureEI M (chainReduce (chainRestrict c) (MultiPoly.dropLastY (MultiPoly.liftLastY m'))
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))))
+      (chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) := by
+    rw [MultiPoly.dropLastY_liftLastY]; exact hm'desc
+  show nestedOrder (M + 3)
+    (chainNMeasureCanon M (chainReduce c (gradedMultStep G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m')) p))
+    (chainNMeasureCanon M p)
+  simp only [chainNMeasureCanon]
+  exact chainReduce_syntactic_descent_gen c G hrel hG htri (MultiPoly.liftLastY m') p
+    (MultiPoly.degreeY_top_liftLastY m') hInner
+
+/-- **The general reduce's `M5⁺` descent from `hnzTower`** — lifts the canon drop by dropping the first
+component of `chainNMeasure5p`. This is the reduce arm the restructured WF induction dispatches. -/
+theorem chainReduce_order5p_hnz_gen
+    (hBaseHnz : ∀ (c' : PfaffianChain 2), IsExpChain c' → ∀ (q : MultiPoly 2), hnzTower 0 q →
+      ∃ mm : MultiPoly 2, MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) mm = 0 ∧
+        nestedOrder 2 (chainNMeasureEI 0 (chainReduce c' mm q)) (chainNMeasureEI 0 q))
+    {M : Nat} (c : PfaffianChain (M + 3)) (hexp : IsExpChain c) (p : MultiPoly (M + 3))
+    (hnz : hnzTower M (MultiPoly.dropLastY
+      (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) :
+    ∃ m : MultiPoly (M + 3), MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) m = 0 ∧
+      chainNOrder5p M (chainReduce c m p) p := by
+  obtain ⟨m, hm0, hdesc⟩ := chainReduce_orderCanon_hnz_gen hBaseHnz c hexp p hnz
+  exact ⟨m, hm0, lexProd_of_fst hdesc⟩
 
 end MachLib.PfaffianGeneralReduce
