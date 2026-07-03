@@ -231,22 +231,118 @@ theorem mean_value_theorem (f : Real → Real) (a b : Real) (hab : a < b)
   exact ⟨c, f'_c, hca, hcb, hf'_c, h_final⟩
 
 
-/-! ## Zero count bound via Rolle's theorem -/
+/-! ## Zero count bound via Rolle's theorem
 
+**No longer an axiom.** `zero_count_bound_by_deriv` is now DERIVED from `rolle`
+below (Khovanskii sprint, hardening pass 2026-07): the analytic base of the
+whole tower collapses to the single axiom `rolle`. The construction sorts the
+`Nodup` zeros of `f` into strictly-increasing order (`List.mergeSort` with a
+classical `≤`-comparator), applies `rolle` between each consecutive pair to get
+a zero of `f'` strictly between them, and observes those bracket points are
+themselves strictly increasing (each lies in a disjoint sub-interval), hence
+`Nodup` and of length `zeros_f.length - 1`. Feeding that list to `hf'_bound`
+gives `zeros_f.length - 1 ≤ N`, i.e. `zeros_f.length ≤ N + 1`.
+
+All supporting definitions are `private` to this file. -/
+
+/-- Classical `≤`-as-`Bool` comparator on `Real` (reals have no decidable `≤`,
+so we go through `Classical.propDecidable`). Only used to feed `mergeSort`. -/
+private noncomputable def leB (a b : Real) : Bool := by
+  classical exact decide (a ≤ b)
+
+private theorem leB_iff (a b : Real) : leB a b = true ↔ a ≤ b := by
+  unfold leB; exact decide_eq_true_iff
+
+private theorem lt_of_le_of_ne' {a b : Real} (hle : a ≤ b) (hne : a ≠ b) : a < b := by
+  rcases (le_iff_lt_or_eq a b).mp hle with h | h
+  · exact h
+  · exact absurd h hne
+
+private theorem le_total' (a b : Real) : a ≤ b ∨ b ≤ a := by
+  rcases lt_total a b with h | h | h
+  · exact Or.inl (le_of_lt h)
+  · exact Or.inl ((le_iff_lt_or_eq a b).mpr (Or.inr h))
+  · exact Or.inr (le_of_lt h)
+
+private theorem leB_trans (a b c : Real) :
+    leB a b = true → leB b c = true → leB a c = true := by
+  intro hab hbc
+  exact (leB_iff a c).mpr (le_trans ((leB_iff a b).mp hab) ((leB_iff b c).mp hbc))
+
+private theorem leB_total (a b : Real) : (leB a b || leB b a) = true := by
+  rcases le_total' a b with h | h
+  · exact (Bool.or_eq_true _ _).mpr (Or.inl ((leB_iff a b).mpr h))
+  · exact (Bool.or_eq_true _ _).mpr (Or.inr ((leB_iff b a).mpr h))
+
+/-- **Iterated-Rolle core.** Process a `leB`-sorted `Nodup` list `hd :: s` of zeros
+of `f` in `(a,b)`: produce a `Nodup` list `cs` of zeros of `f'` in `(a,b)`, one
+strictly between each consecutive pair of zeros, every element `> hd`, of length
+`≥ (hd::s).length - 1`. The `> hd` invariant is what keeps the bracket points
+strictly increasing (hence distinct) across the recursion. -/
+private theorem interleave_from (f : Real → Real) (a b : Real)
+    (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
+    ∀ (hd : Real) (s : List Real),
+      List.Pairwise (fun x y => leB x y = true) (hd :: s) →
+      (hd :: s).Nodup →
+      (∀ z ∈ (hd :: s), a < z ∧ z < b ∧ f z = 0) →
+      ∃ cs : List Real, cs.Nodup ∧
+        (∀ c ∈ cs, a < c ∧ c < b ∧ ∃ f'' : Real, HasDerivAt f f'' c ∧ f'' = 0) ∧
+        (∀ c ∈ cs, hd < c) ∧
+        (hd :: s).length ≤ cs.length + 1 := by
+  intro hd s
+  induction s generalizing hd with
+  | nil =>
+    intro _ _ _
+    exact ⟨[], List.nodup_nil, by intro c hc; exact absurd hc (List.not_mem_nil c),
+      by intro c hc; exact absurd hc (List.not_mem_nil c), Nat.le_refl 1⟩
+  | cons z1 rest ih =>
+    intro hpair hnodup hzero
+    rw [List.pairwise_cons] at hpair
+    obtain ⟨hhd_le, hpair_tail⟩ := hpair
+    rw [List.nodup_cons] at hnodup
+    obtain ⟨hhd_notin, hnodup_tail⟩ := hnodup
+    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self z1 rest
+    have hhd_le_z1 : hd ≤ z1 := (leB_iff hd z1).mp (hhd_le z1 hz1_mem)
+    have hhd_ne_z1 : hd ≠ z1 := fun h => hhd_notin (h ▸ hz1_mem)
+    have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
+    obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
+    obtain ⟨ha_z1, hz1_b, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
+    have hdiff' : ∀ c : Real, hd < c → c < z1 → ∃ f' : Real, HasDerivAt f f' c :=
+      fun c hc1 hc2 => hdiff c (lt_trans_ax ha_hd hc1) (lt_trans_ax hc2 hz1_b)
+    have hfeq : f hd = f z1 := by rw [hf_hd, hf_z1]
+    obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle f hd z1 hhd_lt_z1 hfeq hdiff'
+    obtain ⟨cs', hcs'_nodup, hcs'_props, hcs'_gt, hcs'_len⟩ :=
+      ih z1 hpair_tail hnodup_tail (fun z hz => hzero z (List.mem_cons_of_mem hd hz))
+    have hc0_lt_cs' : ∀ c ∈ cs', c0 < c := fun c hc => lt_trans_ax hc0_hi (hcs'_gt c hc)
+    refine ⟨c0 :: cs', ?_, ?_, ?_, ?_⟩
+    · rw [List.nodup_cons]
+      exact ⟨fun hmem => lt_irrefl_ax c0 (hc0_lt_cs' c0 hmem), hcs'_nodup⟩
+    · intro c hc
+      rw [List.mem_cons] at hc
+      rcases hc with h | h
+      · subst h; exact ⟨lt_trans_ax ha_hd hc0_lo, lt_trans_ax hc0_hi hz1_b, 0, hc0_deriv, rfl⟩
+      · exact hcs'_props c h
+    · intro c hc
+      rw [List.mem_cons] at hc
+      rcases hc with h | h
+      · subst h; exact hc0_lo
+      · exact lt_trans_ax hhd_lt_z1 (hcs'_gt c h)
+    · simp only [List.length_cons] at hcs'_len ⊢
+      omega
+
+set_option linter.unusedVariables false in
 /-- **Zero count of f ≤ 1 + zero count of f'**, on a bounded open
-interval `(a, b)`. Iterated Rolle gives this bound: if `f` has zeros
-at `z_1 < z_2 < ... < z_N`, then by Rolle applied between consecutive
-zeros, `f'` has zeros at `c_1 < c_2 < ... < c_{N-1}` (one between
-each consecutive pair).
+interval `(a, b)`. If `f` has zeros at `z_1 < z_2 < ... < z_N`, then by
+Rolle applied between consecutive zeros, `f'` has zeros at
+`c_1 < c_2 < ... < c_{N-1}` (one between each consecutive pair).
 
-Axiomatized for Phase B. Provable from `rolle` plus list-manipulation
-lemmas.
+**Proved from `rolle`** (see the section note above): sort the `Nodup`
+zeros, bracket each consecutive pair via `interleave_from`, and feed the
+resulting `Nodup` list of `f'`-zeros to `hf'_bound`.
 
-The statement: for any list `zeros_f` of zeros of `f` on `(a, b)`,
-there exists a corresponding list of `zeros_f.length - 1` zeros of
-the derivative `f'`. Equivalently, if `f'` has at most `N` zeros on
-`(a, b)`, then `f` has at most `N + 1` zeros on `(a, b)`. -/
-axiom zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
+The statement: if `f'` has at most `N` zeros on `(a, b)`, then `f` has at
+most `N + 1` zeros on `(a, b)`. -/
+theorem zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
     (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c)
     (N : Nat)
     (hf'_bound : ∀ zeros_f' : List Real,
@@ -257,7 +353,25 @@ axiom zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
     ∀ zeros_f : List Real,
       zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f z = 0) →
-      zeros_f.length ≤ N + 1
+      zeros_f.length ≤ N + 1 := by
+  intro zeros_f hnodup hzero
+  have hperm : (zeros_f.mergeSort leB).Perm zeros_f := List.mergeSort_perm zeros_f leB
+  have hlen : (zeros_f.mergeSort leB).length = zeros_f.length := hperm.length_eq
+  have hnodup_s : (zeros_f.mergeSort leB).Nodup := hperm.symm.nodup hnodup
+  have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ f z = 0 :=
+    fun z hz => hzero z (hperm.mem_iff.mp hz)
+  have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
+    List.sorted_mergeSort leB_trans leB_total zeros_f
+  rw [← hlen]
+  generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
+  cases s with
+  | nil => simp
+  | cons hd t =>
+    obtain ⟨cs, hcs_nodup, hcs_props, _, hcs_len⟩ :=
+      interleave_from f a b hdiff hd t hpair_s hnodup_s hzero_s
+    have hb := hf'_bound cs hcs_nodup hcs_props
+    simp only [List.length_cons] at hcs_len ⊢
+    omega
 
 /-! ## Phase C plan (documented here as roadmap)
 

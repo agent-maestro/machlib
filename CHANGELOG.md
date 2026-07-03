@@ -7,13 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### Hardened — analytic base collapses to a single axiom: `zero_count_bound_by_deriv` is now a THEOREM (`MachLib/Rolle.lean`)
+
+**`MachLib.Real.zero_count_bound_by_deriv`** — previously an `axiom`, now **derived from `rolle`**. The whole
+iterated-exponential tower's analytic foundation therefore bottoms out at the SINGLE axiom `rolle` (plus the
+field/order interface); the separate zero-count axiom is gone. `#print axioms zero_count_bound_by_deriv` →
+`propext`, `Classical.choice`, `Quot.sound`, `rolle`, and the `Real` order / `HasDerivAt` primitives — **NO
+`sorryAx`, NO `zero_count_bound_classical`, NO `analytic_finite_zeros`**.
+
+Construction (all supporting defs `private` to `Rolle.lean`): sort the `Nodup` zeros of `f` into strictly
+increasing order via `List.mergeSort` with a classical `≤`-comparator (`leB`), then `interleave_from` applies
+`rolle` between each consecutive pair to produce a zero of `f'` strictly between them. Those bracket points are
+themselves strictly increasing (each lands in a disjoint sub-interval, enforced by the `> hd` recursion
+invariant), hence `Nodup` and of length `zeros_f.length − 1`; feeding that list to `hf'_bound` gives
+`zeros_f.length ≤ N + 1`. Uses Lean 4.14 core `List.mergeSort` / `List.Perm` / `List.Pairwise` (no Mathlib).
+All 138 modules rebuild; every downstream consumer (`KhovanskiiReduction`, `SingleExpKhovanskii`,
+`InnerKhovanskii`, `PolynomialRootCount`, …) picks up the theorem by name — signature unchanged.
+
 ### Added — Khovanskii ∀N: **ARC CLOSED** — the UNCONDITIONAL arbitrary-depth bound (`MachLib/IterExpDepthNBoundUncond.lean`)
 
 **`MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional`** — for **every** depth and every chain-`N`
 polynomial not identically zero on `(a,b)`, `chainNFn p` has finitely many zeros. NO hypothesis. `#print axioms`
 → `propext`, `Classical.choice`, `Quot.sound` + the honest `MachLib.Real` analytic interface (`rolle`, `exp`,
-`HasDerivAt` calculus, `zero_count_bound_by_deriv`): **NO `sorryAx`, NO `zero_count_bound_classical`, NO
-`analytic_finite_zeros`** — the forbidden-axiom grep is empty.
+`HasDerivAt` calculus): **NO `sorryAx`, NO `zero_count_bound_classical`, NO `analytic_finite_zeros`** — the
+forbidden-axiom grep is empty. (As of the hardening entry above, `zero_count_bound_by_deriv` is itself a
+theorem derived from `rolle`, so it no longer appears in this footprint — `rolle` is now the sole analytic axiom.)
 
 The reduce arm's `Reducing` precondition — previously the explicit hypothesis `hRD` of
 `chainN_khovanskii_bound_of_reducing` — is now a **theorem**, `establish_hnz_or_trim` (for any `q ≢ 0`, either

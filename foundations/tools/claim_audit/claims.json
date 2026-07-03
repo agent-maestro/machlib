@@ -2,6 +2,21 @@
   "_comment": "MachLib claim registry. Each entry ties a PROSE CLAIM (claim_text substrings that must appear, whitespace-normalized, in source_file) to the theorem it cites and the axioms that claim forbids. `claim_audit.py` resolves each against `#print axioms`. Adding a headline that calls a theorem 'clean' WITHOUT registering it here is the intended anti-pattern the auditor exists to discourage.",
   "claims": [
     {
+      "id": "zero-count-bound-by-deriv-from-rolle-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "zero_count_bound_by_deriv",
+        "derived from `rolle`"
+      ],
+      "module": "MachLib.Rolle",
+      "theorem": "MachLib.Real.zero_count_bound_by_deriv",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_finite_zeros"
+      ]
+    },
+    {
       "id": "chain2-khovanskii-unconditional-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [

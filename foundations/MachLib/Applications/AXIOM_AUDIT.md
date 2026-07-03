@@ -7,10 +7,11 @@
 
 ## TL;DR
 
-All 40 load-bearing axioms correspond to standard classical theorems
+All 39 load-bearing axioms correspond to standard classical theorems
 with side conditions satisfiable for the class of functions MachLib
-constructs. **Two axioms (`rolle`, `zero_count_bound_by_deriv`)
-elide a classical continuity precondition**; in practice MachLib
+constructs. **One axiom (`rolle`) elides a classical continuity
+precondition** (`zero_count_bound_by_deriv` was a second such axiom but
+is now a THEOREM derived from `rolle` — see §10); in practice MachLib
 only applies them to functions buildable from the closure of
 HasDerivAt-tracked operations, so no inconsistency can be
 constructed. Recommendation: document the "buildable function"
@@ -118,10 +119,11 @@ process can't produce a function with an endpoint discontinuity.
 adding a `continuous_at` hypothesis once continuity infrastructure
 lands. **Does not block the announcement.**
 
-### 10. **`zero_count_bound_by_deriv` (1) — FINDING (same shape)**
+### 10. **`zero_count_bound_by_deriv` (0) — RESOLVED: now a THEOREM, not an axiom**
 
 ```lean
-axiom zero_count_bound_by_deriv (f : Real → Real) (a b : Real)
+-- was `axiom`; now `theorem`, derived from `rolle` (MachLib/Rolle.lean)
+theorem zero_count_bound_by_deriv (f : Real → Real) (a b : Real)
     (hab : a < b)
     (hdiff : ∀ c, a < c → c < b → ∃ f', HasDerivAt f f' c)
     (N : Nat)
@@ -130,13 +132,15 @@ axiom zero_count_bound_by_deriv (f : Real → Real) (a b : Real)
 ```
 
 Iterated Rolle. Classical theorem: zero count of f ≤ 1 + zero count
-of f' on a bounded open interval.
+of f' on a bounded open interval. **As of the 2026-07 hardening pass
+this is proved from `rolle`** by sorting the `Nodup` zeros
+(`List.mergeSort`) and bracketing each consecutive pair via Rolle; the
+bracket points are strictly increasing, hence distinct, giving a
+`Nodup` list of `length − 1` zeros of `f'`. `#print axioms` shows
+`rolle` (not `zero_count_bound_by_deriv`) as the analytic base. It no
+longer contributes an independent axiom.
 
-Same implicit "buildable" assumption as `rolle`. The conclusion
-counts zeros INSIDE (a,b), so endpoint discontinuity doesn't affect
-the count — even more clearly safe than `rolle` itself.
-
-**Sound for MachLib's use case. Does not block the announcement.**
+**No longer a finding — it is a derived theorem.**
 
 ## Audit summary
 
@@ -151,8 +155,8 @@ the count — even more clearly safe than `rolle` itself.
 | Exp axioms | 3 | OK |
 | HasDerivAt closure | 9 | OK |
 | `rolle` | 1 | OK with documented assumption |
-| `zero_count_bound_by_deriv` | 1 | OK with documented assumption |
-| **Total** | **40** | **all OK** |
+| `zero_count_bound_by_deriv` | 0 | now a THEOREM derived from `rolle` (§10) |
+| **Total** | **39** | **all OK** |
 
 ## What this does NOT audit
 
