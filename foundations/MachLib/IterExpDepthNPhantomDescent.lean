@@ -28,6 +28,7 @@ open MachLib.IterExpDepth3CdegY1
 open MachLib.ChainExp2CanonMeasure
 open MachLib.ChainExp2YPIT
 open MachLib.IterExpDepth3CapstonePrep
+open MachLib.ChainExp2CdegInv
 
 /-- The **`hnz`-tower**: the deepest true-degree is nonzero, defined by descending the leading-coefficient
 tower to the single-exp base. `hnzTower 0 q = (smc (lcY₁ q)).2 ≠ 0` (the depth-2 `hnz`); the step descends to
@@ -138,5 +139,50 @@ theorem nestedZero_lt_of_ne : ∀ (n : Nat) (X : NestedNat n),
       subst ha0
       have hb : b ≠ nestedZero k := fun hbz => h (by subst hbz; rfl)
       exact nestedOrder_of_snd rfl (ih b hb)
+
+/-- **`hnz` ⟹ the eval-invariant measure is strictly above the floor.** The measure-positivity the reduce
+arm needs for the degree-zero / reduce-`≡0` collapse (`measure(reduce ≡ 0) = floor < measure(q)`). Induction
+on depth via `nestedZero_lt_of_ne`: the measure differs from the floor because its deepest component is the
+true-degree, `≠ 0` by `hnz` (base: `canonLcY1 = y1top` eval-equal `leadingCoeffY` under non-phantom, so
+`smc`'s `.2` = `hnz`; step: the head is `≥ 0` and the tail `≠ floor` by IH after the eval-invariant
+`canonLcYAt ↔ leadingCoeffY` rewrite). -/
+theorem hnzTower_measure_pos : ∀ (k : Nat) (r : MultiPoly (k + 2)),
+    hnzTower k r → nestedOrder (k + 2) (nestedZero (k + 2)) (chainNMeasureEI k r) := by
+  intro k
+  induction k with
+  | zero =>
+    intro r hnz
+    have hnp : coeffCanonZeroB1 (y1top r) = false := nonphantom_of_hnz r hnz
+    have hsmc2 : (singleExpMeasureCanon (canonLcY1 r)).2 ≠ 0 := by
+      rw [canonLcY1_eq_top r hnp,
+          singleExpMeasureCanon_eq_of_eval_eq (y1top r)
+            (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) r)
+            (fun x env => (eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general
+              (⟨1, by omega⟩ : Fin 2) r (MultiPoly.yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) r) x env).symm)]
+      exact hnz
+    apply nestedZero_lt_of_ne
+    intro heq
+    exact hsmc2 (congrArg (fun p : Nat × Nat × Nat => p.2.2) heq)
+  | succ k ih =>
+    intro r hnz
+    have hnp : canonZeroB (ytopAt (⟨k + 2, by omega⟩ : Fin (k + 3)) r) = false :=
+      nonphantom_of_hnzTower_step k r hnz
+    have hinner_eq : chainNMeasureEI k (MultiPoly.dropLastY
+          (canonLcYAt (⟨k + 2, by omega⟩ : Fin (k + 3)) r))
+        = chainNMeasureEI k (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) r)) := by
+      apply chainNMeasureEI_eq_of_eval_eq k
+      exact dropLastY_eval_eq_of_topfree _ _
+        (canonLcYAt_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) r)
+        (MultiPoly.degreeY_leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) r)
+        (fun x env => canonLcYAt_eval_eq_leadingCoeffY_of_nonphantom
+          (⟨k + 2, by omega⟩ : Fin (k + 3)) r hnp x env)
+    simp only [chainNMeasureEI]
+    by_cases hc : 0 < cdegYAt (⟨k + 2, by omega⟩ : Fin (k + 3)) r
+    · exact nestedOrder_of_fst hc
+    · refine nestedOrder_of_snd (by simp only [nestedZero]; omega) ?_
+      rw [hinner_eq]
+      exact ih (MultiPoly.dropLastY
+        (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) r)) hnz
 
 end MachLib.IterExpDepthN
