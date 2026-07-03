@@ -654,4 +654,61 @@ theorem dropLastY_cTD_commute_gen {N : Nat} (c : PfaffianChain (N + 1))
           (MultiPoly.mul (MultiPoly.dropLastY p) (chainTotalDeriv (chainRestrict c) (MultiPoly.dropLastY q)))
     rw [ihp hp, ihq hq2]
 
+/-! ## WF port layer (i): the eval-level recursion (reduct's dropped top-coeff = sub-reduce) -/
+
+/-- Extend an `N`-env to `N+1` (top slot = 0). -/
+noncomputable def extEnv' {N : Nat} (env : Fin N → Real) : Fin (N + 1) → Real :=
+  fun k => if h : k.val < N then env ⟨k.val, h⟩ else 0
+
+/-- Full-env `dropLastY` bridge: for top-free `Y`, `eval (dropLastY Y) x env = eval Y x (extEnv' env)`. -/
+theorem dropLastY_eval_full_gen {N : Nat} (Y : MultiPoly (N + 1))
+    (hY : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) Y = 0)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.dropLastY Y) x env = MultiPoly.eval Y x (extEnv' env) := by
+  have hrestrict : (fun j : Fin N => extEnv' env ⟨j.val, by omega⟩) = env := by
+    funext j
+    show (if h : j.val < N then env ⟨j.val, h⟩ else 0) = env j
+    rw [dif_pos j.isLt]
+  have hev := MultiPoly.eval_dropLastY Y hY x (extEnv' env)
+  rw [hrestrict] at hev
+  exact hev
+
+set_option maxHeartbeats 800000 in
+/-- **Layer (i) recursion (eval form).** The reduct's dropped top-coefficient, evaluated, equals the
+depth-`(N-1)` reduce of `dropLastY (lcY_top p)` over `chainRestrict c` (with multiplier `dropLastY mLow`).
+Mirrors `chainNReduce_dropLastY_recursion_full` with bricks 4/10/12. -/
+theorem chainReduce_dropLastY_recursion_gen {N : Nat} (c : PfaffianChain (N + 1))
+    (G : MultiPoly (N + 1))
+    (h_reltop : c.relations (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+        = MultiPoly.mul G (MultiPoly.varY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))))
+    (h_Gtop : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) G = 0)
+    (h_tri : ∀ j : Fin (N + 1), j ≠ (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) →
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (c.relations j) = 0)
+    (mLow p : MultiPoly (N + 1))
+    (hmLow : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) mLow = 0)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+        (chainReduce c (gradedMultStep G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p mLow) p))) x env
+    = MultiPoly.eval (chainReduce (chainRestrict c) (MultiPoly.dropLastY mLow)
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p))) x env := by
+  have hlcp0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p
+  have hX0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+      (chainReduce c (gradedMultStep G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p mLow) p)) = 0 :=
+    MultiPoly.degreeY_leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) _
+  have hcTDlc0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p)) = 0 := by
+    rw [degreeYtop_cTD_eq_gen c (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (by rw [h_reltop, degreeY_mul' (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) G (MultiPoly.varY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))), h_Gtop,
+      (show MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (MultiPoly.varY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))) = 1 from by show (if (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) = (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) then 1 else 0) = 1; rw [if_pos rfl])]) h_tri (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p)]; exact hlcp0
+  -- LHS: drop → lifted env → brick 10 cancellation.
+  rw [dropLastY_eval_full_gen _ hX0 x env,
+      chainReduce_gradedMultStep_lcY_top c G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) h_reltop h_Gtop h_tri p mLow hmLow x (extEnv' env)]
+  -- convert each (extEnv') term to a dropped one
+  rw [← dropLastY_eval_full_gen (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p)) hcTDlc0 x env,
+      dropLastY_cTD_commute_gen c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p) hlcp0,
+      ← dropLastY_eval_full_gen mLow hmLow x env,
+      ← dropLastY_eval_full_gen (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p) hlcp0 x env]
+  -- RHS = chainReduce eval
+  unfold chainReduce
+  rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
+
 end MachLib.PfaffianGeneralReduce
