@@ -121,4 +121,22 @@ theorem nonphantom_of_hnzTower_step (k : Nat) (q : MultiPoly (k + 3))
         (MultiPoly.yCoeffsAt_nonempty (⟨k + 2, by omega⟩ : Fin (k + 3)) q) x env).symm)]
   exact hlcnz
 
+/-- **`nestedZero` is the strict minimum:** any nested tuple different from the all-zeros floor is strictly
+above it. Induction on depth: base — `X ≠ 0 ⟹ 0 < X`; step — if the head is positive drop the first
+component, else the head ties at `0` and the tail differs, recurse. -/
+theorem nestedZero_lt_of_ne : ∀ (n : Nat) (X : NestedNat n),
+    X ≠ nestedZero n → nestedOrder n (nestedZero n) X := by
+  intro n
+  induction n with
+  | zero => intro X h; exact Nat.pos_of_ne_zero h
+  | succ k ih =>
+    intro X h
+    obtain ⟨a, b⟩ := X
+    by_cases ha : 0 < a
+    · exact nestedOrder_of_fst ha
+    · have ha0 : a = 0 := Nat.le_zero.mp (Nat.not_lt.mp ha)
+      subst ha0
+      have hb : b ≠ nestedZero k := fun hbz => h (by subst hbz; rfl)
+      exact nestedOrder_of_snd rfl (ih b hb)
+
 end MachLib.IterExpDepthN
