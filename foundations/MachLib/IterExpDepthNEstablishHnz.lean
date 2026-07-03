@@ -163,4 +163,13 @@ theorem synMeasure_liftInner (k : Nat) (c : MultiPoly (k + 3)) (inner' : MultiPo
       = (MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) c, synMeasure k inner')
   rw [dropLastY_liftLastY, synMeasure_mul_yfree k inner' _ hyfree]
 
+/-- **`synMeasure` of a bare `liftLastY`** (the `degreeY_top c = 0` trim): `(0, synMeasure k inner')`. -/
+theorem synMeasure_liftLastY (k : Nat) (inner' : MultiPoly (k + 2)) :
+    synMeasure (k + 1) (liftLastY inner') = (0, synMeasure k inner') := by
+  simp only [synMeasure]
+  rw [degreeY_top_liftLastY,
+      leadingCoeffY_eq_self_of_degreeY_zero (⟨k + 2, by omega⟩ : Fin (k + 3)) (liftLastY inner')
+        (degreeY_top_liftLastY _),
+      dropLastY_liftLastY]
+
 end MachLib.IterExpDepthN
