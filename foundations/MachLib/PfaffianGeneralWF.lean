@@ -98,4 +98,30 @@ theorem pfaffianChainFn_reduce_eval {n : Nat} (c : PfaffianChain n) (m p : Multi
   unfold chainReduce
   rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
 
+/-- **General no-zeros arm, conditional on the integrating factor `E`.** If the reduce vanishes
+identically on `(a,b)` and `f = pfaffianChainFn c p` is nonzero at an interior `z₀`, then `f` has no
+zeros on `(a,b)`. `f' = M̃·f` (reduce ≡ 0 via the reduce-eval identity), so the vehicle `f·exp(E)` with
+`E' = −M̃` is constant and nonvanishing. `E` — an antiderivative of `−M̃ = −(pfaffianChainFn c m).eval` —
+is the hypothesis; for a positive coherent exp-type chain it is `−Σ degᵢ·log yᵢ` (`Gᵢ = yᵢ'/yᵢ`), the
+general `vehExpo`. Everything else is the chain-agnostic `pfaffianFn_no_zeros_of_ode_gen`. -/
+theorem pfaffianChainFn_no_zeros_of_reduct_zero_gen {n : Nat} (c : PfaffianChain n) (m p : MultiPoly n)
+    (a b : Real) (hab : a < b) (E : Real → Real)
+    (hcoh : c.IsCoherentOn a b)
+    (hE : ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z)
+    (h_reduct : ∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c m p)).eval z = 0)
+    (z₀ : Real) (hz₀a : a < z₀) (hz₀b : z₀ < b) (hne₀ : (pfaffianChainFn c p).eval z₀ ≠ 0) :
+    ∀ z, a < z → z < b → (pfaffianChainFn c p).eval z ≠ 0 := by
+  apply pfaffianFn_no_zeros_of_ode_gen (pfaffianChainFn c p) a b hab E
+    (fun z => -(pfaffianChainFn c m).eval z) hcoh hE ?_ z₀ hz₀a hz₀b hne₀
+  intro z hza hzb
+  have hre := pfaffianChainFn_reduce_eval c m p z
+  rw [h_reduct z hza hzb] at hre
+  show (pfaffianChainFn c p).chainTotalDerivative.eval z
+      + (-(pfaffianChainFn c m).eval z) * (pfaffianChainFn c p).eval z = 0
+  have hrw : (pfaffianChainFn c p).chainTotalDerivative.eval z
+      + (-(pfaffianChainFn c m).eval z) * (pfaffianChainFn c p).eval z
+      = (pfaffianChainFn c p).chainTotalDerivative.eval z
+        - (pfaffianChainFn c m).eval z * (pfaffianChainFn c p).eval z := by mach_ring
+  rw [hrw]; exact hre.symm
+
 end MachLib.PfaffianGeneralReduce
