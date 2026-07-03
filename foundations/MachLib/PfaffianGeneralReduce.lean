@@ -419,4 +419,29 @@ theorem chainReduce_lcY_top_cancel {N : Nat} (c : PfaffianChain N) (G : MultiPol
   rw [chainReduce_lcY_top_eval c G top h_reltop h_Gtop h_tri m p hm, hcancel]
   mach_ring
 
+/-! ## Chain restriction — the sub-chain on the first `N` of `N+1` variables
+
+The measure descent recurses from depth `N+1` to depth `N`: the leading `y_top`-coefficient of a reduce
+lives on the *sub-chain* obtained by dropping the top variable. `chainRestrict c` is that sub-chain — its
+`evals` are the first `N` of `c`'s, and its `relations` are `c`'s first `N` relations projected by
+`dropLastY` (well-defined because triangularity makes them top-free). The key bridge is that evaluating a
+top-free polynomial along `c` equals evaluating its `dropLastY` along `chainRestrict c`. -/
+noncomputable def chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) : PfaffianChain N :=
+  { evals := fun i => c.evals ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩,
+    relations := fun i => MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) }
+
+/-- The restricted chain's values are the first `N` of the full chain's (definitionally). -/
+theorem chainRestrict_chainValues {N : Nat} (c : PfaffianChain (N + 1)) (z : Real) (i : Fin N) :
+    (chainRestrict c).chainValues z i = (c.chainValues z) ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩ := rfl
+
+/-- **The chain-restriction eval bridge.** A top-free polynomial `q` evaluated along `c` equals
+`dropLastY q` evaluated along the sub-chain `chainRestrict c`. This is the depth-`(N+1)`→depth-`N`
+projection the measure descent recurses on (general analog of `dropLastY_eval_IterExp`). -/
+theorem dropLastY_eval_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (q : MultiPoly (N + 1))
+    (hq : MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ q = 0) (z : Real) :
+    MultiPoly.eval q z (c.chainValues z)
+      = MultiPoly.eval (MultiPoly.dropLastY q) z ((chainRestrict c).chainValues z) := by
+  rw [← MultiPoly.eval_dropLastY q hq z (c.chainValues z)]
+  congr 1
+
 end MachLib.PfaffianGeneralReduce
