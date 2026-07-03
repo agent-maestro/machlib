@@ -33,6 +33,7 @@ open MachLib.PfaffianChainMod.PfaffianFn
 open MachLib.IterExpDepthN
 open MachLib.IterExpTopIdentity
 open MachLib.ChainExp2NoZeros
+open MachLib.ChainExp2CanonMeasure
 
 /-- The general Pfaffian function `⟨n, c, p⟩` for an arbitrary chain (the analog of `chainNFn`, which
 is the `c := IterExpChain` case). -/
@@ -560,5 +561,28 @@ theorem chainReduce_gradedMultStep_lcY_top_eq_subreduce {N : Nat} (c : PfaffianC
   rw [chainReduce_gradedMultStep_lcY_top c G top h_reltop h_Gtop h_tri p mLow hmLow x env]
   unfold chainReduce
   rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
+
+/-! ## The recursive graded multiplier
+
+`gradedMult k c q` is the multiplier that makes one reduce step drop the leading-coefficient problem to
+the sub-chain (the general analog of the iterated-exp `fullMult`). At each level the top term is
+`(degreeY_top q)·G` where `G = leadingCoeffY top (relations top)` (for an exp-type chain, `relations top
+= G·y_top`, so this recovers `G`); the lower part is `liftLastY` of the sub-level multiplier over
+`chainRestrict c`. Base at depth 2 is the single-exp canonical-degree multiplier. The recursion is on
+depth (via `chainRestrict`), and it typechecks without whnf-divergence. -/
+noncomputable def gradedMult : (k : Nat) → PfaffianChain (k + 2) → MultiPoly (k + 2) → MultiPoly (k + 2)
+  | 0 => fun c q =>
+      gradedMultStep
+        (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (c.relations (⟨1, by omega⟩ : Fin 2)))
+        (⟨1, by omega⟩ : Fin 2) q
+        (MultiPoly.const (MachLib.Real.natCast
+          (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))))
+  | k + 1 => fun c q =>
+      gradedMultStep
+        (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3))
+          (c.relations (⟨k + 2, by omega⟩ : Fin (k + 3))))
+        (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+        (MultiPoly.liftLastY (gradedMult k (chainRestrict c)
+          (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))))
 
 end MachLib.PfaffianGeneralReduce
