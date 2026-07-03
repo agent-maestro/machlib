@@ -812,4 +812,52 @@ theorem chainReduce_evalinv_descent_gen {M : Nat} (c : PfaffianChain (M + 3)) (G
     have hlt := cdegYAt_lt_degreeYAt_of_top (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p) hR_ph (by rw [hRdeg]; exact hpos_p)
     rw [hRdeg] at hlt; exact hlt
 
+/-! ## WF port layer (iii): the recursive reduce descent (existential, conditional on the depth-2 base) -/
+
+/-- The general reducing predicate (polynomial conditions on `q`; chain-independent). Mirrors the ∀N
+`Reducing`: at each level the top canonical coefficient is non-phantom, the top `y`-degree is positive,
+and the dropped leading coefficient reduces one level down. The depth-2 base carries the single-exp
+non-vanishing side condition the base descent consumes. -/
+def ReducingGen : (k : Nat) → MultiPoly (k + 2) → Prop
+  | 0 => fun q =>
+      canonZeroB (ytopAt (⟨1, by omega⟩ : Fin 2) q) = false
+      ∧ 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q
+      ∧ (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 ≠ 0
+  | k + 1 => fun q =>
+      canonZeroB (ytopAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = false
+      ∧ 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+      ∧ ReducingGen k (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))
+
+/-- **The recursive reduce descent (existential form), conditional on the depth-2 base.** For a reducing
+`q` over an exp-type chain, *some* top-free multiplier's reduce strictly lowers `chainNMeasureEI`. The
+witness is built recursively — `gradedMultStep` with the exp-type factor `G` (from `IsExpChain_top`) over
+the lifted sub-level multiplier supplied by the induction hypothesis on the restricted chain. Threading
+the multiplier existentially sidesteps the syntactic mismatch between `gradedMult`'s
+`leadingCoeffY top (relations top)` (which normalises to `G · const 1`) and the exp-type `G` that
+`chainReduce_evalinv_descent_gen`'s `h_reltop` requires. The single-exponential base descent at depth 2
+is the sole deferred hypothesis `hBase`; discharging it is the remaining single-exp sub-arc. -/
+theorem chainReduce_descends_gen
+    (hBase : ∀ (c : PfaffianChain 2), IsExpChain c → ∀ (q : MultiPoly 2), ReducingGen 0 q →
+      ∃ m : MultiPoly 2, MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) m = 0 ∧
+        nestedOrder 2 (chainNMeasureEI 0 (chainReduce c m q)) (chainNMeasureEI 0 q)) :
+    ∀ (k : Nat) (c : PfaffianChain (k + 2)), IsExpChain c → ∀ (q : MultiPoly (k + 2)), ReducingGen k q →
+      ∃ m : MultiPoly (k + 2), MultiPoly.degreeY (⟨k + 1, by omega⟩ : Fin (k + 2)) m = 0 ∧
+        nestedOrder (k + 2) (chainNMeasureEI k (chainReduce c m q)) (chainNMeasureEI k q)
+  | 0, c, hexp, q, hred => hBase c hexp q hred
+  | k + 1, c, hexp, q, hred => by
+      obtain ⟨⟨G, hG, hrel⟩, htri⟩ := IsExpChain_top c hexp
+      obtain ⟨m', hm'0, hm'desc⟩ := chainReduce_descends_gen hBase k (chainRestrict c)
+        (IsExpChain_chainRestrict c hexp)
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) hred.2.2
+      refine ⟨gradedMultStep G (⟨k + 2, by omega⟩ : Fin (k + 3)) q (MultiPoly.liftLastY m'), ?_, ?_⟩
+      · exact gradedMultStep_degreeY_top_zero G (⟨k + 2, by omega⟩ : Fin (k + 3)) q
+          (MultiPoly.liftLastY m') hG (MultiPoly.degreeY_top_liftLastY m')
+      · have hInner : nestedOrder (k + 2)
+            (chainNMeasureEI k (chainReduce (chainRestrict c) (MultiPoly.dropLastY (MultiPoly.liftLastY m'))
+              (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))))
+            (chainNMeasureEI k (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q))) := by
+          rw [MultiPoly.dropLastY_liftLastY]; exact hm'desc
+        exact chainReduce_evalinv_descent_gen c G hrel hG htri (MultiPoly.liftLastY m') q
+          (MultiPoly.degreeY_top_liftLastY m') hred.1 hred.2.1 hInner
+
 end MachLib.PfaffianGeneralReduce
