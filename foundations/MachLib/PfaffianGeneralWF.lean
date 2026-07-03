@@ -77,4 +77,25 @@ theorem chainReduce_order5_gen
   obtain ⟨m, hm0, hdesc⟩ := chainReduce_orderCanon_gen hBase c hexp p hred
   exact ⟨m, hm0, lexProd_of_fst hdesc⟩
 
+/-! ## Layer (v) chain-function side — the analytic core
+
+The measure side above is chain-agnostic + wired. The chain-FUNCTION side relates the zeros of
+`(pfaffianChainFn c p).eval` across the reduce/trim moves. The shared analytic foundation is the
+reduce-eval identity below; the no-zeros arm's integrating factor for an exp-type chain is the monomial
+`Π yᵢ^{degᵢ}` in the chain values (since `Gᵢ = yᵢ'/yᵢ`), the general analog of the iterated-exp `vehExpo`. -/
+
+/-- **General reduce-eval identity.** The reduce, evaluated along the chain, is `f' − (m·f)` — the
+`f' − M·f` that the Rolle transfer (reduce arm) and the vehicle no-zeros argument both count. Defeq-trivial:
+`chainReduce = cTD − m·p` and `(pfaffianChainFn c p).chainTotalDerivative = pfaffianChainFn c (chainTotalDeriv c p)`
+by definition, so this is `eval_sub` + `eval_mul`. Chain-agnostic (holds for ANY Pfaffian chain). -/
+theorem pfaffianChainFn_reduce_eval {n : Nat} (c : PfaffianChain n) (m p : MultiPoly n) (z : Real) :
+    (pfaffianChainFn c (chainReduce c m p)).eval z
+    = (pfaffianChainFn c p).chainTotalDerivative.eval z
+      - (pfaffianChainFn c m).eval z * (pfaffianChainFn c p).eval z := by
+  show MultiPoly.eval (chainReduce c m p) z (c.chainValues z)
+    = MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z)
+      - MultiPoly.eval m z (c.chainValues z) * MultiPoly.eval p z (c.chainValues z)
+  unfold chainReduce
+  rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
+
 end MachLib.PfaffianGeneralReduce
