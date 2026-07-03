@@ -399,4 +399,24 @@ theorem chainReduce_lcY_top_eval {N : Nat} (c : PfaffianChain N) (G : MultiPoly 
   simp only [MultiPoly.eval_sub, MultiPoly.eval_mul]
   rw [h1]; mach_ring
 
+/-- **The descent cancellation step (exp-type chains).** If the reduce multiplier `m` decomposes, along
+the chain, as `m = (degreeY_top p)·G + m'` (its top part cancels the leading-coefficient injection), then
+the leading `y_top`-coefficient of `chainReduce c m p` evaluates to the depth-`(N-1)` reduce residual of
+`lcY_top p` with the *lower* multiplier `m'`: `cTD(lcY_top p) − m'·lcY_top p`. This is the atomic step of
+the recursive measure descent — the graded multiplier (the remaining construction) is exactly the `m`
+that supplies `hcancel`, recursively. -/
+theorem chainReduce_lcY_top_cancel {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (m m' p : MultiPoly N) (hm : MultiPoly.degreeY top m = 0) (x : Real) (env : Fin N → Real)
+    (hcancel : MultiPoly.eval m x env
+        = MachLib.Real.natCast (MultiPoly.degreeY top p) * MultiPoly.eval G x env
+          + MultiPoly.eval m' x env) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top (chainReduce c m p)) x env
+    = MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) x env
+      - MultiPoly.eval m' x env * MultiPoly.eval (MultiPoly.leadingCoeffY top p) x env := by
+  rw [chainReduce_lcY_top_eval c G top h_reltop h_Gtop h_tri m p hm, hcancel]
+  mach_ring
+
 end MachLib.PfaffianGeneralReduce
