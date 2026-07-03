@@ -26,6 +26,7 @@ open MachLib.PfaffianChainMod.PfaffianFn
 open MachLib.IterExpDepthN
 open MachLib.IterExpDepth3CdegY1
 open MachLib.ChainExp2CanonMeasure
+open MachLib.ChainExp2Trim
 
 /-- **Layer (v-a): the general reduce's `chainNMeasureCanon` descent.** The layer (i) syntactic descent
 (`chainReduce_syntactic_descent_gen`, top `y`-degree ties, inner measure drops) lifted by the layer (iii)
@@ -204,5 +205,58 @@ theorem pfaffianChainFn_reduce_step_gen {n : Nat} (c : PfaffianChain n) (m p : M
       = (pfaffianChainFn c p).chainTotalDerivative.eval z
         + (-(pfaffianChainFn c m).eval z) * (pfaffianChainFn c p).eval z := by mach_ring
   rw [hrw]; exact hval
+
+/-! ## Layer (v) — base + trim arms (eval plumbing) -/
+
+/-- **General base arm.** If the top `y`-variable is absent (`degreeY_top p = 0`), `f = pfaffianChainFn c p`
+depends only on the restricted chain, so the depth-`N` bound (`IH` on `chainRestrict c`) transfers.
+Chain-agnostic: `eval p z (c.chainValues z) = eval (dropLastY p) z ((chainRestrict c).chainValues z)` via
+`eval_dropLastY` + `chainRestrict_chainValues`. -/
+theorem pfaffianChainFn_bound_of_degreeYtop_zero {N : Nat} (c : PfaffianChain (N + 1)) (p : MultiPoly (N + 1))
+    (hd : MultiPoly.degreeY (⟨N, by omega⟩ : Fin (N + 1)) p = 0) (a b : Real) (hab : a < b)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0)
+    (IH : ∀ (q : MultiPoly N) (a' b' : Real), a' < b' →
+        (∃ z, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+        ∃ M, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ M) :
+    ∃ M, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  have heval : ∀ z, (pfaffianChainFn c p).eval z
+      = (pfaffianChainFn (chainRestrict c) (MultiPoly.dropLastY p)).eval z := by
+    intro z
+    show MultiPoly.eval p z (c.chainValues z)
+      = MultiPoly.eval (MultiPoly.dropLastY p) z ((chainRestrict c).chainValues z)
+    have hrestrict : (chainRestrict c).chainValues z
+        = (fun i => (c.chainValues z) ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) := by
+      funext i; exact chainRestrict_chainValues c z i
+    rw [hrestrict, MultiPoly.eval_dropLastY p hd z (c.chainValues z)]
+  obtain ⟨z, hza, hzb, hzne⟩ := hne
+  obtain ⟨M, hM⟩ := IH (MultiPoly.dropLastY p) a b hab ⟨z, hza, hzb, by rw [← heval]; exact hzne⟩
+  refine ⟨M, fun zeros hnd hz => hM zeros hnd (fun z' hz'mem => ?_)⟩
+  obtain ⟨ha, hb', hzero⟩ := hz z' hz'mem
+  exact ⟨ha, hb', by rw [← heval]; exact hzero⟩
+
+/-- **General degree-trim eval identity.** If the leading `y_top`-coefficient's last `y_{top-1}`-term is
+canonically zero, dropping the leading `y_top`-term doesn't change the value along the chain. Chain-agnostic:
+`eval_dropLeadingYAt_of_last_canonically_zero` takes an arbitrary env. -/
+theorem pfaffianChainFn_degreeYtop_trim_eval {M : Nat} (c : PfaffianChain (M + 3)) (p : MultiPoly (M + 3))
+    (h_phantom : ∀ (x : Real) (env : Fin (M + 3) → Real),
+      MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 2, by omega⟩ : Fin (M + 3)) p).getLast
+        (MultiPoly.yCoeffsAt_nonempty (⟨M + 2, by omega⟩ : Fin (M + 3)) p)) x env = 0) (z : Real) :
+    (pfaffianChainFn c p).eval z
+      = (pfaffianChainFn c (dropLeadingYAt (⟨M + 2, by omega⟩ : Fin (M + 3)) p)).eval z :=
+  (eval_dropLeadingYAt_of_last_canonically_zero (⟨M + 2, by omega⟩ : Fin (M + 3)) p
+    (MultiPoly.yCoeffsAt_nonempty (⟨M + 2, by omega⟩ : Fin (M + 3)) p) h_phantom z (c.chainValues z)).symm
+
+/-- **General inner-trim eval identity.** Direct reuse — `eval_innerTrimN` is a pure `MultiPoly` eval
+identity (arbitrary env), so it holds along any chain. -/
+theorem pfaffianChainFn_innerTrim_eval {M : Nat} (c : PfaffianChain (M + 3)) (p : MultiPoly (M + 3))
+    (h_phantom : ∀ (x : Real) (env : Fin (M + 3) → Real),
+      MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 1, by omega⟩ : Fin (M + 3))
+        (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)).getLast
+        (MultiPoly.yCoeffsAt_nonempty (⟨M + 1, by omega⟩ : Fin (M + 3))
+          (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) x env = 0) (z : Real) :
+    (pfaffianChainFn c (innerTrimN M p)).eval z = (pfaffianChainFn c p).eval z :=
+  eval_innerTrimN M p h_phantom z (c.chainValues z)
 
 end MachLib.PfaffianGeneralReduce
