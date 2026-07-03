@@ -27,6 +27,9 @@ open MachLib.IterExpDepthN
 open MachLib.IterExpDepth3CdegY1
 open MachLib.ChainExp2CanonMeasure
 open MachLib.ChainExp2Trim
+open MachLib.MultiPolyMod.MultiPoly
+open MachLib.ChainExp2NoZeros
+open MachLib.MultiPolyReconstruct
 
 /-- **Layer (v-a): the general reduce's `chainNMeasureCanon` descent.** The layer (i) syntactic descent
 (`chainReduce_syntactic_descent_gen`, top `y`-degree ties, inner measure drops) lifted by the layer (iii)
@@ -258,5 +261,107 @@ theorem pfaffianChainFn_innerTrim_eval {M : Nat} (c : PfaffianChain (M + 3)) (p 
           (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) x env = 0) (z : Real) :
     (pfaffianChainFn c (innerTrimN M p)).eval z = (pfaffianChainFn c p).eval z :=
   eval_innerTrimN M p h_phantom z (c.chainValues z)
+
+/-! ## Layer (v) capstone — the general WF step (5-arm dispatch) -/
+
+set_option maxHeartbeats 2000000 in
+/-- **The general WF step (single depth).** For an exp-type chain `c : PfaffianChain (M+3)` coherent on
+`(a,b)`, every polynomial that is not identically zero along `c` has finitely many zeros — GIVEN: the
+depth-2 base `hBase`, an integrating-factor family `hIF` (each polynomial multiplier has an antiderivative
+of `−(m eval)` on `(a,b)`), the depth-`(M+2)` bound `IH_depth` on the restricted chain, and the reduce-arm
+dispatch `hRD_gen` (non-phantom inner ⟹ the dropped leading coefficient is `ReducingGen`). One
+`WellFounded.induction` over `chainNOrder5` dispatching the five general arms:
+base (`degreeY_top = 0`) / degree-trim / inner-trim / no-zeros (`reduce ≡ 0`) / reduce-step (`reduce ≢ 0`,
+Rolle +1). Mirrors the iterated-exp `chainN_bound_step`, now for an arbitrary exp-type chain. -/
+theorem pfaffian_bound_step_gen {M : Nat} (c : PfaffianChain (M + 3)) (hexp : IsExpChain c)
+    (a b : Real) (hab : a < b) (hcoh : c.IsCoherentOn a b)
+    (hBase : ∀ (c' : PfaffianChain 2), IsExpChain c' → ∀ (q : MultiPoly 2), ReducingGen 0 q →
+      ∃ mm : MultiPoly 2, MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) mm = 0 ∧
+        nestedOrder 2 (chainNMeasureEI 0 (chainReduce c' mm q)) (chainNMeasureEI 0 q))
+    (hIF : ∀ (mm : MultiPoly (M + 3)), ∃ E : Real → Real,
+        ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c mm).eval z) z)
+    (IH_depth : ∀ (q : MultiPoly (M + 2)) (a' b' : Real), a' < b' →
+        (∃ z, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+        ∃ Mb, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ Mb)
+    (hRD_gen : ∀ (pp : MultiPoly (M + 3)),
+        MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp ≠ 0 →
+        ¬(∀ (x : Real) (env : Fin (M + 3) → Real),
+            MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 1, by omega⟩ : Fin (M + 3))
+              (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp)).getLast
+              (MultiPoly.yCoeffsAt_nonempty (⟨M + 1, by omega⟩ : Fin (M + 3))
+                (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp))) x env = 0) →
+        ReducingGen M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp)))
+    (p : MultiPoly (M + 3)) (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ N := by
+  refine WellFounded.induction
+    (C := fun q => (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+      ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z = 0) → zeros.length ≤ N)
+    (chainNOrder5_wf M) p ?_ hne
+  clear hne p
+  intro p ih hne
+  by_cases hd_top : MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) p = 0
+  · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd_top a b hab hne IH_depth
+  · by_cases hph : ∀ (x : Real) (env : Fin (M + 3) → Real),
+        MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 1, by omega⟩ : Fin (M + 3))
+          (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)).getLast
+          (MultiPoly.yCoeffsAt_nonempty (⟨M + 1, by omega⟩ : Fin (M + 3))
+            (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) x env = 0
+    · by_cases hd1 : MultiPoly.degreeY (⟨M + 1, by omega⟩ : Fin (M + 3))
+          (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p) = 0
+      · have hlc0 : ∀ (x : Real) (env : Fin (M + 3) → Real),
+            MultiPoly.eval (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p) x env = 0 := by
+          intro x env
+          have hself := leadingCoeffY_eq_self_of_degreeY_zero (⟨M + 1, by omega⟩ : Fin (M + 3))
+            (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p) hd1
+          have hgl := eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general
+            (⟨M + 1, by omega⟩ : Fin (M + 3))
+            (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)
+            (MultiPoly.yCoeffsAt_nonempty (⟨M + 1, by omega⟩ : Fin (M + 3))
+              (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)) x env
+          rw [← hself, hgl]; exact hph x env
+        have hlast : ∀ (x : Real) (env : Fin (M + 3) → Real),
+            MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 2, by omega⟩ : Fin (M + 3)) p).getLast
+              (MultiPoly.yCoeffsAt_nonempty (⟨M + 2, by omega⟩ : Fin (M + 3)) p)) x env = 0 := by
+          intro x env
+          rw [← eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨M + 2, by omega⟩ : Fin (M + 3)) p
+                (MultiPoly.yCoeffsAt_nonempty (⟨M + 2, by omega⟩ : Fin (M + 3)) p) x env]
+          exact hlc0 x env
+        have hne_trim : ∃ z, a < z ∧ z < b ∧
+            (pfaffianChainFn c (dropLeadingYAt (⟨M + 2, by omega⟩ : Fin (M + 3)) p)).eval z ≠ 0 := by
+          obtain ⟨z, hza, hzb, hzne⟩ := hne
+          exact ⟨z, hza, hzb, by rw [← pfaffianChainFn_degreeYtop_trim_eval c p hlast z]; exact hzne⟩
+        obtain ⟨N, hN⟩ := ih _ (chainN_degreeYtop_trim_order5 M p (Nat.pos_of_ne_zero hd_top)) hne_trim
+        refine ⟨N, fun zeros hnd hz => hN zeros hnd (fun z hzmem => ?_)⟩
+        obtain ⟨ha, hb', hzero⟩ := hz z hzmem
+        exact ⟨ha, hb', by rw [← pfaffianChainFn_degreeYtop_trim_eval c p hlast z]; exact hzero⟩
+      · have hne_it : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (innerTrimN M p)).eval z ≠ 0 := by
+          obtain ⟨z, hza, hzb, hzne⟩ := hne
+          exact ⟨z, hza, hzb, by rw [pfaffianChainFn_innerTrim_eval c p hph z]; exact hzne⟩
+        obtain ⟨N, hN⟩ := ih _ (innerTrimN_order5 M p (Nat.pos_of_ne_zero hd_top)
+          (Nat.pos_of_ne_zero hd1) hph) hne_it
+        refine ⟨N, fun zeros hnd hz => hN zeros hnd (fun z hzmem => ?_)⟩
+        obtain ⟨ha, hb', hzero⟩ := hz z hzmem
+        exact ⟨ha, hb', by rw [pfaffianChainFn_innerTrim_eval c p hph z]; exact hzero⟩
+    · obtain ⟨m, hm0, horder⟩ := chainReduce_order5_gen hBase c hexp p (hRD_gen p hd_top hph)
+      obtain ⟨E, hE⟩ := hIF m
+      rcases Classical.em (∀ z, a < z → z < b →
+          (pfaffianChainFn c (chainReduce c m p)).eval z = 0) with hrz | hrz
+      · obtain ⟨z₀, hz₀a, hz₀b, hz₀ne⟩ := hne
+        have hnoz := pfaffianChainFn_no_zeros_of_reduct_zero_gen c m p a b hab E hcoh hE hrz z₀ hz₀a hz₀b hz₀ne
+        refine ⟨0, fun zeros _ hz => ?_⟩
+        cases zeros with
+        | nil => exact Nat.le_refl 0
+        | cons z zs =>
+          obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+          exact absurd hzero (hnoz z ha hb')
+      · have hne' : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c m p)).eval z ≠ 0 :=
+          Classical.byContradiction fun hcon =>
+            hrz fun z hza hzb => Classical.byContradiction fun hz0 => hcon ⟨z, hza, hzb, hz0⟩
+        obtain ⟨N, hN⟩ := ih _ horder hne'
+        exact ⟨N + 1, fun zeros hnd hz =>
+          pfaffianChainFn_reduce_step_gen c m p a b hab E hcoh hE N hN zeros hnd hz⟩
 
 end MachLib.PfaffianGeneralReduce
