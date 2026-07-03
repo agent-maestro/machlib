@@ -119,6 +119,7 @@ import MachLib.LexProd
 import MachLib.ChainExp2Measure
 import MachLib.ChainExp2Reducer
 import MachLib.ExplicitBoundRank
+import MachLib.PfaffianGeneralReduce
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
