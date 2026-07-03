@@ -218,10 +218,10 @@ Chain-agnostic: `eval p z (c.chainValues z) = eval (dropLastY p) z ((chainRestri
 theorem pfaffianChainFn_bound_of_degreeYtop_zero {N : Nat} (c : PfaffianChain (N + 1)) (p : MultiPoly (N + 1))
     (hd : MultiPoly.degreeY (⟨N, by omega⟩ : Fin (N + 1)) p = 0) (a b : Real) (hab : a < b)
     (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0)
-    (IH : ∀ (q : MultiPoly N) (a' b' : Real), a' < b' →
-        (∃ z, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+    (IH : ∀ (q : MultiPoly N),
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
         ∃ M, ∀ zeros : List Real, zeros.Nodup →
-          (∀ z ∈ zeros, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ M) :
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ M) :
     ∃ M, ∀ zeros : List Real, zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
   have heval : ∀ z, (pfaffianChainFn c p).eval z
@@ -234,7 +234,7 @@ theorem pfaffianChainFn_bound_of_degreeYtop_zero {N : Nat} (c : PfaffianChain (N
       funext i; exact chainRestrict_chainValues c z i
     rw [hrestrict, MultiPoly.eval_dropLastY p hd z (c.chainValues z)]
   obtain ⟨z, hza, hzb, hzne⟩ := hne
-  obtain ⟨M, hM⟩ := IH (MultiPoly.dropLastY p) a b hab ⟨z, hza, hzb, by rw [← heval]; exact hzne⟩
+  obtain ⟨M, hM⟩ := IH (MultiPoly.dropLastY p) ⟨z, hza, hzb, by rw [← heval]; exact hzne⟩
   refine ⟨M, fun zeros hnd hz => hM zeros hnd (fun z' hz'mem => ?_)⟩
   obtain ⟨ha, hb', hzero⟩ := hz z' hz'mem
   exact ⟨ha, hb', by rw [← heval]; exact hzero⟩
@@ -280,10 +280,10 @@ theorem pfaffian_bound_step_gen {M : Nat} (c : PfaffianChain (M + 3)) (hexp : Is
         nestedOrder 2 (chainNMeasureEI 0 (chainReduce c' mm q)) (chainNMeasureEI 0 q))
     (hIF : ∀ (mm : MultiPoly (M + 3)), ∃ E : Real → Real,
         ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c mm).eval z) z)
-    (IH_depth : ∀ (q : MultiPoly (M + 2)) (a' b' : Real), a' < b' →
-        (∃ z, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+    (IH_depth : ∀ (q : MultiPoly (M + 2)),
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
         ∃ Mb, ∀ zeros : List Real, zeros.Nodup →
-          (∀ z ∈ zeros, a' < z ∧ z < b' ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ Mb)
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z = 0) → zeros.length ≤ Mb)
     (hRD_gen : ∀ (pp : MultiPoly (M + 3)),
         MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp ≠ 0 →
         ¬(∀ (x : Real) (env : Fin (M + 3) → Real),
@@ -363,5 +363,71 @@ theorem pfaffian_bound_step_gen {M : Nat} (c : PfaffianChain (M + 3)) (hexp : Is
         obtain ⟨N, hN⟩ := ih _ horder hne'
         exact ⟨N + 1, fun zeros hnd hz =>
           pfaffianChainFn_reduce_step_gen c m p a b hab E hcoh hE N hN zeros hnd hz⟩
+
+/-! ## Layer (v) — the outer depth induction → the general bound -/
+
+/-- **Coherence is preserved under `chainRestrict`** (for exp-type chains). The restricted chain's `i`-th
+relation is `dropLastY (c.relations ⟨i⟩)`, and since `c` is triangular (`IsExpChain`) the top variable is
+absent from `c.relations ⟨i⟩` (`i.val < N`), so dropping it doesn't change its value along the chain. -/
+theorem chainRestrict_isCoherentOn {N : Nat} (c : PfaffianChain (N + 1)) (hexp : IsExpChain c)
+    (a b : Real) (hcoh : c.IsCoherentOn a b) : (chainRestrict c).IsCoherentOn a b := by
+  intro x hax hxb i
+  show HasDerivAt (c.evals ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)
+    (MultiPoly.eval (MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)) x
+      ((chainRestrict c).chainValues x)) x
+  have hc := hcoh x hax hxb ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩
+  have htop : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+      (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) = 0 :=
+    (hexp ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩).2 (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) i.isLt
+  have heval : MultiPoly.eval (MultiPoly.dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩)) x
+        ((chainRestrict c).chainValues x)
+      = MultiPoly.eval (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) x (c.chainValues x) := by
+    have hrestrict : (chainRestrict c).chainValues x
+        = (fun j => (c.chainValues x) ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩) := by
+      funext j; exact chainRestrict_chainValues c x j
+    rw [hrestrict, MultiPoly.eval_dropLastY (c.relations ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) htop x (c.chainValues x)]
+  rw [heval]; exact hc
+
+/-- **The general Pfaffian–Khovanskii finiteness bound (conditional).** For EVERY exponential-type
+Pfaffian chain `c` coherent on `(a,b)`, every polynomial that is not identically zero along `c` has
+finitely many zeros on `(a,b)`. By induction on depth: the base is the depth-2 bound `hBound2`; each step
+is the per-depth WF machine `pfaffian_bound_step_gen`, whose `IH_depth` is `ih` on `chainRestrict c`
+(exp-type via `IsExpChain_chainRestrict`, coherent via `chainRestrict_isCoherentOn`).
+
+Conditional on FOUR deferred hypotheses: `hBase` (the single-exp depth-2 reduce descent), `hIF_glob`
+(each chain's each multiplier admits an antiderivative of `−(m eval)` on `(a,b)` — the integrating factor,
+a monomial `Π yᵢ^{degᵢ}` for a positive chain), `hRD_glob` (the chain-agnostic reduce dispatch), and
+`hBound2` (the general depth-2 finiteness bound). Everything ELSE — the entire arbitrary-depth WF descent
+machine — is proven and `#print axioms` clean with `rolle` the sole analytic axiom. -/
+theorem pfaffian_khovanskii_bound_gen (a b : Real) (hab : a < b)
+    (hBase : ∀ (c' : PfaffianChain 2), IsExpChain c' → ∀ (q : MultiPoly 2), ReducingGen 0 q →
+      ∃ mm : MultiPoly 2, MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) mm = 0 ∧
+        nestedOrder 2 (chainNMeasureEI 0 (chainReduce c' mm q)) (chainNMeasureEI 0 q))
+    (hIF_glob : ∀ (d : Nat) (c' : PfaffianChain d) (mm : MultiPoly d),
+        ∃ E : Real → Real, ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c' mm).eval z) z)
+    (hRD_glob : ∀ (M : Nat) (pp : MultiPoly (M + 3)),
+        MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp ≠ 0 →
+        ¬(∀ (x : Real) (env : Fin (M + 3) → Real),
+            MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨M + 1, by omega⟩ : Fin (M + 3))
+              (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp)).getLast
+              (MultiPoly.yCoeffsAt_nonempty (⟨M + 1, by omega⟩ : Fin (M + 3))
+                (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp))) x env = 0) →
+        ReducingGen M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) pp)))
+    (hBound2 : ∀ (c2 : PfaffianChain 2), IsExpChain c2 → c2.IsCoherentOn a b → ∀ (p2 : MultiPoly 2),
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c2 p2).eval z ≠ 0) →
+        ∃ N, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c2 p2).eval z = 0) → zeros.length ≤ N) :
+    ∀ (M : Nat) (c : PfaffianChain (M + 2)), IsExpChain c → c.IsCoherentOn a b →
+      ∀ (p : MultiPoly (M + 2)), (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ N, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ N := by
+  intro M
+  induction M with
+  | zero => intro c hexp hcoh p hne; exact hBound2 c hexp hcoh p hne
+  | succ M ih =>
+    intro c hexp hcoh p hne
+    exact pfaffian_bound_step_gen c hexp a b hab hcoh hBase (hIF_glob (M + 3) c)
+      (ih (chainRestrict c) (IsExpChain_chainRestrict c hexp) (chainRestrict_isCoherentOn c hexp a b hcoh))
+      (hRD_glob M) p hne
 
 end MachLib.PfaffianGeneralReduce
