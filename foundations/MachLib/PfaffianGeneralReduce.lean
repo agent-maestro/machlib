@@ -711,4 +711,56 @@ theorem chainReduce_dropLastY_recursion_gen {N : Nat} (c : PfaffianChain (N + 1)
   unfold chainReduce
   rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
 
+/-! ## WF port layer (i) complete: the non-phantom (syntactic) reduce descent -/
+
+/-- `chainReduce` preserves the top y-degree (top-free multiplier). -/
+theorem chainReduce_degreeY_top_preserved {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 1)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (m p : MultiPoly N) (hm : MultiPoly.degreeY top m = 0) :
+    MultiPoly.degreeY top (chainReduce c m p) = MultiPoly.degreeY top p := by
+  unfold chainReduce
+  show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p))
+               (MultiPoly.degreeY top (MultiPoly.mul m p)) = MultiPoly.degreeY top p
+  rw [degreeYtop_cTD_eq_gen c top h_top h_tri p, degreeY_mul' top m p, hm, Nat.zero_add]
+  exact Nat.max_self _
+
+/-- Measure-inner equality: eval-invariance + the layer-(i) recursion. -/
+theorem chainNMeasureEI_reduce_inner_eq_gen {M : Nat} (c : PfaffianChain (M + 3)) (G : MultiPoly (M + 3))
+    (h_reltop : c.relations (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) = MultiPoly.mul G (MultiPoly.varY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))))
+    (h_Gtop : MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) G = 0)
+    (h_tri : ∀ j : Fin (M + 3), j ≠ (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) → MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (c.relations j) = 0)
+    (mLow p : MultiPoly (M + 3)) (hmLow : MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) mLow = 0) :
+    chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p)))
+    = chainNMeasureEI M (chainReduce (chainRestrict c) (MultiPoly.dropLastY mLow)
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p))) := by
+  apply chainNMeasureEI_eq_of_eval_eq M
+  intro x env
+  exact chainReduce_dropLastY_recursion_gen c G h_reltop h_Gtop h_tri mLow p hmLow x env
+
+/-- **The syntactic descent (non-phantom reduce), general.** -/
+theorem chainReduce_syntactic_descent_gen {M : Nat} (c : PfaffianChain (M + 3)) (G : MultiPoly (M + 3))
+    (h_reltop : c.relations (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) = MultiPoly.mul G (MultiPoly.varY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))))
+    (h_Gtop : MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) G = 0)
+    (h_tri : ∀ j : Fin (M + 3), j ≠ (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) → MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (c.relations j) = 0)
+    (mLow p : MultiPoly (M + 3)) (hmLow : MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) mLow = 0)
+    (hInner : nestedOrder (M + 2)
+      (chainNMeasureEI M (chainReduce (chainRestrict c) (MultiPoly.dropLastY mLow)
+        (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p))))
+      (chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p)))) :
+    nestedOrder (M + 3)
+      (MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p),
+       chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p))))
+      (MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p,
+       chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p))) := by
+  refine nestedOrder_of_snd ?_ ?_
+  · show MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p) = MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p
+    exact chainReduce_degreeY_top_preserved c (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (by rw [h_reltop, degreeY_mul' (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) G (MultiPoly.varY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))), h_Gtop, (show MultiPoly.degreeY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (MultiPoly.varY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))) = 1 from by show (if (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) = (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) then 1 else 0) = 1; rw [if_pos rfl])]) h_tri
+      (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p (gradedMultStep_degreeY_top_zero G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow h_Gtop hmLow)
+  · show nestedOrder (M + 2)
+        (chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) (chainReduce c (gradedMultStep G (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p mLow) p))))
+        (chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)) p)))
+    rw [chainNMeasureEI_reduce_inner_eq_gen c G h_reltop h_Gtop h_tri mLow p hmLow]
+    exact hInner
+
 end MachLib.PfaffianGeneralReduce
