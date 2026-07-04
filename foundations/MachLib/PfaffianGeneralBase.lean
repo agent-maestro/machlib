@@ -12,6 +12,11 @@ cancels its top term, leaving `cTD c'(lcY1 q) − mLow·lcY1 q` — instantiatin
 namespace MachLib.PfaffianGeneralReduce
 open MachLib.Real MachLib.MultiPolyMod MachLib.PfaffianChainMod
 open MachLib.PfaffianChainMod.PfaffianFn MachLib.IterExpDepthN MachLib.IterExpTopIdentity MachLib.ChainExp2NoZeros
+open MachLib.ChainExp2CanonMeasure
+open MachLib.ChainExp2CdegInv
+open MachLib.IterExpDepth3CdegY1
+open MachLib.ChainExp2Reducer
+open MachLib.ChainExp2SingleExpDescent
 
 set_option maxHeartbeats 2000000 in
 /-- **Depth-2 lcY1 eval (mLow-parametric).** For any top-free `mLow`, the reduce with multiplier
@@ -46,5 +51,32 @@ theorem chain2ReduceGen_lcY1_eval_aux {c' : PfaffianChain 2} (G1 : MultiPoly 2)
   unfold gradedMultStep
   simp only [MultiPoly.eval_add, MultiPoly.eval_mul, MultiPoly.eval_const]
   mach_ring
+
+set_option maxHeartbeats 2000000 in
+/-- **The general depth-2 syntactic descent (mm-parametric).** For a top-free `mm` whose reduce's leading
+y1-coeff evals to `seReduceGen c' G0 (lcY1 q)` (`heval`), `chain2MeasureCanon` drops: degreeY1 ties, and
+the inner `singleExpMeasureCanon` drops via brick 31. -/
+theorem chain2ReduceGen_nestedLT_canon {c' : PfaffianChain 2} (G0 : MultiPoly 2)
+    (hrel0 : c'.relations (⟨0, by omega⟩ : Fin 2) = MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+    (hG0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) G0 = 0)
+    (hreltop1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (c'.relations (⟨1, by omega⟩ : Fin 2)) = 1)
+    (htri1 : ∀ (j : Fin 2), j ≠ (⟨1, by omega⟩ : Fin 2) → MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (c'.relations j) = 0)
+    (q mm : MultiPoly 2) (hmm : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) mm = 0)
+    (heval : ∀ (x : Real) (env : Fin 2 → Real),
+      MultiPoly.eval (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (chainReduce c' mm q)) x env
+        = MultiPoly.eval (seReduceGen c' G0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) x env)
+    (htop : coeffCanonZeroB (y0top (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) = false) :
+    nestedLT (chain2MeasureCanon (chainReduce c' mm q)) (chain2MeasureCanon q) := by
+  refine LexProd.lexProd_of_snd ?_ ?_
+  · exact chainReduce_degreeY_top_preserved c' (⟨1, by omega⟩ : Fin 2) hreltop1 htri1 mm q hmm
+  · have hbridge : singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (chainReduce c' mm q))
+        = singleExpMeasureCanon (seReduceGen c' G0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) :=
+      singleExpMeasureCanon_eq_of_eval_eq _ _ heval
+    show LexProd.lexProd (· < ·) (· < ·)
+      (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) (chainReduce c' mm q)))
+      (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))
+    rw [hbridge]
+    exact singleExpMeasureCanon_seReduceGen_lt G0 hrel0 hG0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)
+      (MultiPoly.degreeY_leadingCoeffY (⟨1, by omega⟩ : Fin 2) q) htop
 
 end MachLib.PfaffianGeneralReduce
