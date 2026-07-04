@@ -16,6 +16,7 @@ namespace MachLib.PfaffianGeneralReduce
 open MachLib.Real MachLib.MultiPolyMod MachLib.PfaffianChainMod
 open MachLib.PfaffianChainMod.PfaffianFn MachLib.IterExpDepthN MachLib.IterExpTopIdentity
 open MachLib.ChainExp2NoZeros
+open MachLib.IterExpChainMod
 
 private theorem degY1L {a b : MultiPoly 2}
     (h : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add a b) = 0) :
@@ -251,5 +252,70 @@ theorem seReduceGen_lcY0_eval {c' : PfaffianChain 2} (G0 : MultiPoly 2)
       leadingCoeffY0_cTD_eval_gen G0 hrel0 hG0 q x env hy1, hlcm]
   simp only [MultiPoly.eval_mul, MultiPoly.eval_const]
   mach_ring
+
+/-- **cTD is chain-independent on y-free polynomials.** -/
+theorem cTD_yfree_eq_IterExp {c' : PfaffianChain 2} (P : MultiPoly 2)
+    (hd0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) P = 0)
+    (hd1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) P = 0) :
+    chainTotalDeriv c' P = chainTotalDeriv (IterExpChain 2) P := by
+  induction P with
+  | const c => rfl
+  | varX => rfl
+  | varY j =>
+    rcases j with ⟨v, hv⟩
+    match v, hv with
+    | 0, _ => exact absurd hd0 (by show (if (⟨0, by omega⟩ : Fin 2) = (⟨0, by omega⟩ : Fin 2) then 1 else 0) ≠ 0; rw [if_pos rfl]; decide)
+    | 1, _ => exact absurd hd1 (by show (if (⟨1, by omega⟩ : Fin 2) = (⟨1, by omega⟩ : Fin 2) then 1 else 0) ≠ 0; rw [if_pos rfl]; decide)
+  | add p q ihp ihq =>
+    have hp0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p = 0 := by
+      have hle : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.add p q) := Nat.le_max_left _ _; omega
+    have hq0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q = 0 := by
+      have hle : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.add p q) := Nat.le_max_right _ _; omega
+    have hp1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p = 0 := by
+      have hle : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p ≤ MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q) := Nat.le_max_left _ _; omega
+    have hq1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q = 0 := by
+      have hle : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q ≤ MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.add p q) := Nat.le_max_right _ _; omega
+    show MultiPoly.add (chainTotalDeriv c' p) (chainTotalDeriv c' q) = MultiPoly.add _ _
+    rw [ihp hp0 hp1, ihq hq0 hq1]
+  | sub p q ihp ihq =>
+    have hp0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p = 0 := by
+      have hle : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.sub p q) := Nat.le_max_left _ _; omega
+    have hq0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q = 0 := by
+      have hle : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.sub p q) := Nat.le_max_right _ _; omega
+    have hp1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p = 0 := by
+      have hle : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p ≤ MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.sub p q) := Nat.le_max_left _ _; omega
+    have hq1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q = 0 := by
+      have hle : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q ≤ MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.sub p q) := Nat.le_max_right _ _; omega
+    show MultiPoly.sub (chainTotalDeriv c' p) (chainTotalDeriv c' q) = MultiPoly.sub _ _
+    rw [ihp hp0 hp1, ihq hq0 hq1]
+  | mul p q ihp ihq =>
+    have hp0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p = 0 := by
+      have h2 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.mul p q) = 0 := hd0
+      rw [degreeY_mul' (⟨0, by omega⟩ : Fin 2) p q] at h2; omega
+    have hq0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q = 0 := by
+      have h2 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.mul p q) = 0 := hd0
+      rw [degreeY_mul' (⟨0, by omega⟩ : Fin 2) p q] at h2; omega
+    have hp1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p = 0 := by
+      have h2 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul p q) = 0 := hd1
+      rw [degreeY_mul' (⟨1, by omega⟩ : Fin 2) p q] at h2; omega
+    have hq1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q = 0 := by
+      have h2 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (MultiPoly.mul p q) = 0 := hd1
+      rw [degreeY_mul' (⟨1, by omega⟩ : Fin 2) p q] at h2; omega
+    show MultiPoly.add (MultiPoly.mul (chainTotalDeriv c' p) q) (MultiPoly.mul p (chainTotalDeriv c' q)) = MultiPoly.add _ _
+    rw [ihp hp0 hp1, ihq hq0 hq1]
+
+/-- **`seReduceGen` preserves the y₀-degree** (for y1-free q). -/
+theorem degreeY0_seReduceGen {c' : PfaffianChain 2} (G0 : MultiPoly 2)
+    (hrel0 : c'.relations (⟨0, by omega⟩ : Fin 2) = MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+    (hG0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) G0 = 0) (q : MultiPoly 2)
+    (hy1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q = 0) :
+    MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (seReduceGen c' G0 q) = MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q := by
+  unfold seReduceGen
+  have hmy0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2)
+      (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) = 0 := by
+    rw [degreeY_mul' (⟨0, by omega⟩ : Fin 2) _ G0, (show MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) = 0 from rfl), hG0]
+  show Nat.max (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (chainTotalDeriv c' q)) (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.mul (MultiPoly.mul (MultiPoly.const _) G0) q)) = _
+  rw [degreeY0_cTD_eq_of_y1free_gen G0 hrel0 hG0 q hy1, degreeY_mul' (⟨0, by omega⟩ : Fin 2) _ q, hmy0, Nat.zero_add]
+  exact Nat.max_self _
 
 end MachLib.PfaffianGeneralReduce
