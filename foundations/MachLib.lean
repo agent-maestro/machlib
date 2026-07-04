@@ -126,6 +126,7 @@ import MachLib.PfaffianGeneralHnzWF
 import MachLib.PfaffianGeneralSingleExp
 import MachLib.PfaffianGeneralSingleExpDescent
 import MachLib.PfaffianGeneralBase
+import MachLib.PfaffianGeneralCTDCongr
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
