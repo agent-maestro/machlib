@@ -132,6 +132,7 @@ import MachLib.PfaffianGeneralBaseHnz
 import MachLib.PfaffianGeneralVehExpo
 import MachLib.PfaffianGeneralVehExpoConnect
 import MachLib.PfaffianGeneralBound2
+import MachLib.PfaffianGeneralVehExpoTower
 import MachLib.PfaffianGeneralBoundPos
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
