@@ -136,6 +136,7 @@ import MachLib.PfaffianGeneralVehExpoTower
 import MachLib.PfaffianGeneralBoundPos
 import MachLib.PfaffianGeneralHnzIF
 import MachLib.PfaffianGeneralBoundUncond
+import MachLib.PfaffianGeneralWitness
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
