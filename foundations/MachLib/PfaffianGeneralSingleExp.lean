@@ -220,4 +220,36 @@ theorem leadingCoeffY0_cTD_eval_gen {c' : PfaffianChain 2} (G0 : MultiPoly 2)
     generalize MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q) = Nb at *
     mach_ring
 
+/-- The general single-exp reduce (multiplier `cdegY0·G₀`, generalizing IterExp's `const(cdegY0)`). -/
+noncomputable def seReduceGen (c' : PfaffianChain 2) (G0 : MultiPoly 2) (q : MultiPoly 2) : MultiPoly 2 :=
+  MultiPoly.sub (chainTotalDeriv c' q)
+    (MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) q)
+
+private theorem dgc {c : Real} : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.const c) = 0 := rfl
+
+/-- **Sub-brick 1 (general).** The leading `y₀`-coefficient of `seReduceGen` evaluates to the derivative
+part `cTD c' (lcY₀ q)` — the `d·G₀·lcY₀` injection cancels the `(cdegY0·G₀)·q` multiplier's leading coeff. -/
+theorem seReduceGen_lcY0_eval {c' : PfaffianChain 2} (G0 : MultiPoly 2)
+    (hrel0 : c'.relations (⟨0, by omega⟩ : Fin 2) = MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+    (hG0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) G0 = 0) (q : MultiPoly 2) (x : Real) (env : Fin 2 → Real)
+    (hy1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) q = 0) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 2) (seReduceGen c' G0 q)) x env
+    = MultiPoly.eval (chainTotalDeriv c' (MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 2) q)) x env := by
+  unfold seReduceGen
+  have hmy0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2)
+      (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) = 0 := by
+    rw [degreeY_mul' (⟨0, by omega⟩ : Fin 2) _ G0, dgc, hG0]
+  have hdd : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (chainTotalDeriv c' q)
+      = MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) q) := by
+    rw [degreeY_mul' (⟨0, by omega⟩ : Fin 2) _ q, hmy0, Nat.zero_add,
+        degreeY0_cTD_eq_of_y1free_gen G0 hrel0 hG0 q hy1]
+  have hlcm : MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 2)
+      (MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) q)
+      = MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) q))) G0) (MultiPoly.leadingCoeffY (⟨0, by omega⟩ : Fin 2) q) := by
+    rw [lcY_mul (⟨0, by omega⟩ : Fin 2) _ q, leadingCoeffY_eq_self_of_degreeY_zero (⟨0, by omega⟩ : Fin 2) _ hmy0]
+  rw [MultiPoly.leadingCoeffY_sub_of_eq (⟨0, by omega⟩ : Fin 2) _ _ hdd, MultiPoly.eval_sub,
+      leadingCoeffY0_cTD_eval_gen G0 hrel0 hG0 q x env hy1, hlcm]
+  simp only [MultiPoly.eval_mul, MultiPoly.eval_const]
+  mach_ring
+
 end MachLib.PfaffianGeneralReduce
