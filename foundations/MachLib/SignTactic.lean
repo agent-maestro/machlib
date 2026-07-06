@@ -160,6 +160,17 @@ zero, then run the positivity recursion. -/
 macro "mach_sign" : tactic => `(tactic|
   ((try simp only [ofSci_zero] at *) <;> mach_sign_core))
 
+/-- `¬ a ≤ b → b ≤ a` on `Real` (totality of the order, from `lt_total`).
+The negated-guard branch of an `if a ≤ b … else …` @verify obligation
+lands here: e.g. `max(a,b) ≥ a` in the else arm needs `a ≤ b` from
+`¬ (b ≤ a)`. Placed in the emit-imported SignTactic (0 dependents) so the
+Lean backend's branch closers can cite it without a heavier import. -/
+theorem le_of_not_le {a b : Real} (h : ¬ a ≤ b) : b ≤ a := by
+  rcases lt_total a b with hlt | heq | hgt
+  · exact absurd (le_of_lt hlt) h
+  · exact absurd ((le_iff_lt_or_eq a b).mpr (Or.inr heq)) h
+  · exact le_of_lt hgt
+
 /-! ### Regression suite -/
 namespace SignTests
 example (p : Real) (h : p > (0.0 : Real)) : p * (exp p) > (0.0 : Real) := by mach_sign
