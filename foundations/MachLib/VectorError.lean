@@ -1,5 +1,6 @@
 import MachLib.OperatorBasisComplete
 import MachLib.ErrorAlgebra
+import MachLib.ConditionNumber   -- sumList (List Real → Real), for the ∀N certificate
 
 /-!
 # The n-ary reduction operator — vectors, and an explicit per-operation constant
@@ -226,5 +227,54 @@ theorem norm3_unit (v0 v1 v2 : Real) (hpos : 0 < v0 * v0 + v1 * v1 + v2 * v2) :
   + (v2 / sqrt (v0*v0+v1*v1+v2*v2)) * (v2 / sqrt (v0*v0+v1*v1+v2*v2)) = 1 :=
   norm3_of_s v0 v1 v2 (sqrt (v0*v0+v1*v1+v2*v2))
     (sqrt_sq_nonneg _ (le_of_lt hpos)) (ne_of_gt (sqrt_pos hpos))
+
+/-! #### The ∀N unit-norm certificate (arbitrary dimension)
+
+`norm3_of_s` is the fixed-arity (3) core; `normList_unit` is the SAME
+result for a vector of ANY length, stated over `sumList` (the right-fold
+sum, `MachLib.Real.sumList : List Real → Real`). Forge's emitter does NOT
+need this — at a concrete N it inlines the norm3_of_s argument and lets
+`mach_mpoly` absorb the arity (the unrolled `Σ` is one big polynomial).
+The single-theorem ∀N form, by contrast, DOES need induction on the list:
+that is the honest boundary — arity-generic *ring algebra* is free, but a
+statement quantified over the *length* is not. -/
+
+private theorem sumList_nil : sumList ([] : List Real) = 0 := rfl
+private theorem sumList_cons (a : Real) (m : List Real) :
+    sumList (a :: m) = a + sumList m := rfl
+
+/-- The cons step, as its own lemma so `mach_mpoly` reifies its atoms in a
+plain-hypothesis context (it does not see `induction`-introduced binders). -/
+private theorem sumList_div_sq_step (s t : Real) (ts : List Real) (hsne : s ≠ 0)
+    (ih : sumList (ts.map (fun x => (x / s) * (x / s)))
+        = (sumList (ts.map (fun x => x * x))) * ((1 / s) * (1 / s))) :
+    sumList ((t :: ts).map (fun x => (x / s) * (x / s)))
+      = (sumList ((t :: ts).map (fun x => x * x))) * ((1 / s) * (1 / s)) := by
+  simp only [List.map_cons, sumList_cons]
+  rw [ih, div_def t s hsne]
+  mach_mpoly [t, sumList (List.map (fun x => x * x) ts), 1 / s]
+
+/-- **A scalar factors out of a sum of scaled squares**, at any length:
+`Σ (xᵢ/s)² = (Σ xᵢ²) · (1/s)²`. Induction on the list. -/
+theorem sumList_div_sq (s : Real) (hsne : s ≠ 0) (l : List Real) :
+    sumList (l.map (fun x => (x / s) * (x / s)))
+      = (sumList (l.map (fun x => x * x))) * ((1 / s) * (1 / s)) := by
+  induction l with
+  | nil => simp only [List.map_nil, sumList_nil, zero_mul]
+  | cons t ts ih => exact sumList_div_sq_step s t ts hsne ih
+
+/-- **`|normalize v|² = 1` for a vector of ANY dimension.** For any list
+`l` and any `s ≠ 0` with `s² = Σ xᵢ²` (e.g. `s = ‖v‖`), the normalised
+vector has unit squared-norm: `Σ (xᵢ/s)² = 1`. The arbitrary-N companion
+to `norm3_unit`. -/
+theorem normList_unit (s : Real) (hsne : s ≠ 0) (l : List Real)
+    (hs : s * s = sumList (l.map (fun x => x * x))) :
+    sumList (l.map (fun x => (x / s) * (x / s))) = 1 := by
+  rw [sumList_div_sq s hsne l, ← hs]
+  have hinv : s * (1 / s) = 1 := mul_inv s hsne
+  calc (s * s) * ((1 / s) * (1 / s))
+      = (s * (1 / s)) * (s * (1 / s)) := by mach_mpoly [s, 1 / s]
+    _ = 1 * 1 := by rw [hinv]
+    _ = 1 := mul_one_ax 1
 
 end MachLib.Real
