@@ -300,4 +300,24 @@ theorem rotate_preserves_norm (theta v0 v1 : Real) :
     _ = 1*(v0*v0) + 1*(v1*v1) := by rw [h]
     _ = v0*v0 + v1*v1 := by mach_mpoly [v0, v1]
 
+/-! #### Matrix multiplication is associative — `(A·B)·C = A·(B·C)`
+
+The signature linear-algebra theorem, for the matmul brick. Stated
+element-wise over 2×2 matrices (the twelve entries as scalars): each of the
+four entries of `(A·B)·C` equals the corresponding entry of `A·(B·C)`. Both
+sides expand to the same degree-3 polynomial in the entries, so each closes
+by `mach_mpoly`. The certificate for a `matmul` kernel. -/
+theorem matmul2_assoc
+    (a00 a01 a10 a11 b00 b01 b10 b11 c00 c01 c10 c11 : Real) :
+    ((a00*b00 + a01*b10)*c00 + (a00*b01 + a01*b11)*c10
+      = a00*(b00*c00 + b01*c10) + a01*(b10*c00 + b11*c10))
+  ∧ ((a00*b00 + a01*b10)*c01 + (a00*b01 + a01*b11)*c11
+      = a00*(b00*c01 + b01*c11) + a01*(b10*c01 + b11*c11))
+  ∧ ((a10*b00 + a11*b10)*c00 + (a10*b01 + a11*b11)*c10
+      = a10*(b00*c00 + b01*c10) + a11*(b10*c00 + b11*c10))
+  ∧ ((a10*b00 + a11*b10)*c01 + (a10*b01 + a11*b11)*c11
+      = a10*(b00*c01 + b01*c11) + a11*(b10*c01 + b11*c11)) := by
+  refine ⟨?_, ?_, ?_, ?_⟩ <;>
+    mach_mpoly [a00, a01, a10, a11, b00, b01, b10, b11, c00, c01, c10, c11]
+
 end MachLib.Real
