@@ -135,6 +135,10 @@ macro_rules
       -- + `0 ≤ c`. The `by assumption` resolves the hyp (instantiating the midpoint) first.
       | (refine le_trans ?_ (by assumption) <;> mach_sign_core)
       | (refine lt_of_lt_of_le ?_ (by assumption) <;> mach_sign_core)
+      -- strict-hyp bound transitivity: `0 ≤ x` / `0 < x` from a STRICT hyp `c < x`
+      -- + `0 ≤ c` (e.g. a deadzone / threshold guard `x > 1` after an `if`-split).
+      | (refine le_of_lt (lt_of_le_of_lt ?_ (by assumption)) <;> mach_sign_core)
+      | (refine lt_of_le_of_lt ?_ (by assumption) <;> mach_sign_core)
       | (apply sub_nonneg_of_le <;> mach_le))
 
 macro_rules
