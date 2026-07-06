@@ -1,6 +1,7 @@
 import MachLib.OperatorBasisComplete
 import MachLib.ErrorAlgebra
 import MachLib.ConditionNumber   -- sumList (List Real → Real), for the ∀N certificate
+import MachLib.Trig              -- sin/cos + sin_sq_add_cos_sq, for rotation norm-preservation
 
 /-!
 # The n-ary reduction operator — vectors, and an explicit per-operation constant
@@ -276,5 +277,27 @@ theorem normList_unit (s : Real) (hsne : s ≠ 0) (l : List Real)
       = (s * (1 / s)) * (s * (1 / s)) := by mach_mpoly [s, 1 / s]
     _ = 1 * 1 := by rw [hinv]
     _ = 1 := mul_one_ax 1
+
+/-! #### Rotation preserves length — `|R(θ)·v|² = |v|²`
+
+The classic verified-geometry theorem: a 2-D rotation
+`R(θ)·v = (cos θ·v₀ − sin θ·v₁, sin θ·v₀ + cos θ·v₁)` preserves the
+squared norm. The cross-terms `±2·cos·sin·v₀·v₁` cancel and the diagonal
+collapses via `sin²θ + cos²θ = 1` (`sin_sq_add_cos_sq`). Covers ANY
+rotation angle and vector — the certificate for a `rotate` kernel's
+`ensures (dot(result, result) == dot(v, v))`. -/
+theorem rotate_preserves_norm (theta v0 v1 : Real) :
+    ((cos theta)*v0 - (sin theta)*v1) * ((cos theta)*v0 - (sin theta)*v1)
+  + ((sin theta)*v0 + (cos theta)*v1) * ((sin theta)*v0 + (cos theta)*v1)
+  = v0*v0 + v1*v1 := by
+  have h : sin theta * sin theta + cos theta * cos theta = 1 :=
+    sin_sq_add_cos_sq theta
+  calc ((cos theta)*v0 - (sin theta)*v1) * ((cos theta)*v0 - (sin theta)*v1)
+        + ((sin theta)*v0 + (cos theta)*v1) * ((sin theta)*v0 + (cos theta)*v1)
+      = (sin theta * sin theta + cos theta * cos theta) * (v0*v0)
+        + (sin theta * sin theta + cos theta * cos theta) * (v1*v1) := by
+          mach_mpoly [cos theta, sin theta, v0, v1]
+    _ = 1*(v0*v0) + 1*(v1*v1) := by rw [h]
+    _ = v0*v0 + v1*v1 := by mach_mpoly [v0, v1]
 
 end MachLib.Real
