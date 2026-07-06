@@ -191,4 +191,40 @@ theorem dot2_certified {w x1 y1 x2 y2 p1 p2 s2 q : Real} (hw0 : 0 ≤ w)
     (.cons (aerr_mul hw0 (aerr_leaf x1) (aerr_leaf y1) h1)
       (.cons (aerr_mul hw0 (aerr_leaf x2) (aerr_leaf y2) h2) .nil hs2) hq)
 
+/-! ### Unit-norm certificate — `|normalize v| = 1`
+
+The first WHOLE-vector predicate (`v·v = 1` about the entire result), as opposed
+to the per-component `∀ i` bounds above. This is what a `normalize` kernel's
+`@verify(lean)` reduces to: divide each component by `‖v‖ = √(v·v)` and the
+squared-norm of the result is exactly `1`. No Mathlib — the whole thing is
+`div_def` + `mul_inv` (`a·(1/a)=1`) + `mach_mpoly` ring-normalisation. -/
+
+/-- **The div core.** For ANY `s` with `s² = v·v` and `s ≠ 0`, the 3-vector
+`(v₀/s, v₁/s, v₂/s)` has squared-norm `1`. (`s = √(v·v)` is one such witness;
+kept general so the caller supplies the sqrt facts.) -/
+theorem norm3_of_s (v0 v1 v2 s : Real)
+    (hs : s * s = v0 * v0 + v1 * v1 + v2 * v2) (hsne : s ≠ 0) :
+    (v0 / s) * (v0 / s) + (v1 / s) * (v1 / s) + (v2 / s) * (v2 / s) = 1 := by
+  rw [div_def v0 s hsne, div_def v1 s hsne, div_def v2 s hsne]
+  have hinv : s * (1 / s) = 1 := mul_inv s hsne
+  calc (v0 * (1/s)) * (v0 * (1/s)) + (v1 * (1/s)) * (v1 * (1/s))
+          + (v2 * (1/s)) * (v2 * (1/s))
+      = (v0*v0 + v1*v1 + v2*v2) * ((1/s) * (1/s)) := by mach_mpoly [v0, v1, v2, 1/s]
+    _ = (s * s) * ((1/s) * (1/s)) := by rw [hs]
+    _ = (s * (1/s)) * (s * (1/s)) := by mach_mpoly [s, 1/s]
+    _ = 1 * 1 := by rw [hinv]
+    _ = 1 := mul_one_ax 1
+
+/-- **`|normalize v|² = 1`** for a nonzero 3-vector, fully self-contained:
+dividing each component by `√(v·v)` yields a unit vector. The sqrt facts
+(`√(v·v)² = v·v` from `sqrt_sq_nonneg`, `√(v·v) ≠ 0` from `sqrt_pos`) discharge
+`norm3_of_s`'s hypotheses. This is the theorem a `normalize`
+`@verify(lean, ensures (dot(result,result) == 1.0))` kernel maps onto. -/
+theorem norm3_unit (v0 v1 v2 : Real) (hpos : 0 < v0 * v0 + v1 * v1 + v2 * v2) :
+    (v0 / sqrt (v0*v0+v1*v1+v2*v2)) * (v0 / sqrt (v0*v0+v1*v1+v2*v2))
+  + (v1 / sqrt (v0*v0+v1*v1+v2*v2)) * (v1 / sqrt (v0*v0+v1*v1+v2*v2))
+  + (v2 / sqrt (v0*v0+v1*v1+v2*v2)) * (v2 / sqrt (v0*v0+v1*v1+v2*v2)) = 1 :=
+  norm3_of_s v0 v1 v2 (sqrt (v0*v0+v1*v1+v2*v2))
+    (sqrt_sq_nonneg _ (le_of_lt hpos)) (ne_of_gt (sqrt_pos hpos))
+
 end MachLib.Real
