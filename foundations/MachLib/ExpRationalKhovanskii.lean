@@ -101,4 +101,23 @@ theorem reciprocal_relation_coherence {n : Nat} (i : Fin n) (x : Real)
   rw [reciprocal_relation_eval i x env, henv]
   exact reciprocal_hasDerivAt x hx
 
+/-! ### Structural facts — the reciprocal relation is a valid, triangular,
+QUADRATIC bottom (the single obstruction the extension overcomes). -/
+
+/-- **Triangular.** `−yᵢ²` omits every other chain variable
+(`degreeY j = 0` for `j ≠ i`), so a reciprocal bottom is a valid triangular
+chain level — the descent above it is unaffected. -/
+theorem reciprocalRelation_degreeY_of_ne {n : Nat} (i j : Fin n) (h : j ≠ i) :
+    MultiPoly.degreeY j (reciprocalRelation i) = 0 := by
+  simp [reciprocalRelation, MultiPoly.neg, MultiPoly.zero, MultiPoly.degreeY,
+    if_neg h]
+
+/-- **Quadratic in its own variable** (`degreeY i = 2`) — precisely why `1/x`
+fails `IsExpChain`, which requires the LINEAR `Gᵢ·yᵢ` (`degreeY i = 1`). This
+degree-2 self-relation is the single obstruction the exp+rational extension is
+built to clear. -/
+theorem reciprocalRelation_degreeY_self {n : Nat} (i : Fin n) :
+    MultiPoly.degreeY i (reciprocalRelation i) = 2 := by
+  simp [reciprocalRelation, MultiPoly.neg, MultiPoly.zero, MultiPoly.degreeY]
+
 end MachLib
