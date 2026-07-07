@@ -55,19 +55,37 @@ PROVEN here (0 sorry, footprints free of `sorryAx` and
   * `ELExpr.elim_top_log_logCount` — the step lowers `logCount` by one
                                      (recursion terminates).
 
-REMAINING (documented, multi-session — the rest of the ~800-line body):
-  3. The recursion DRIVER: iterate `elim_top_log` under strong induction on
-     `logCount`, with re-association lemmas that always surface a subtracted
-     `log` into the `A − logE B` shape the step consumes. Terminates at a
-     `logCount = 0` (exp-only) `ELExpr`.
-  4. Encode an exp-only `ELExpr` as an exp-type Pfaffian chain + `MultiPoly`
-     (over `chainNFn` / a tailored `PfaffianChain`) with eval-agreement, so
-     `chainN_khovanskii_bound_unconditional` / `pfaffian_khovanskii_bound_gen_uncond`
-     applies. This is the bulk of what's left.
-  5. Discharge the validity/positivity side-conditions (the second axiom,
+## Architecture note — the exp-only reduction has a ceiling (found 2026-07-07)
+
+Driving the recursion to completion revealed that `elim_top_log` cannot reach
+an exp-ONLY expression for a general EML tree. When an `eml` node's *exponent*
+subtree `t1` contains a `log`, one elimination step yields `exp (exp (t1.eval))`
+with that `log` **buried under exps** — not in the `A − log B` shape the step
+consumes. This already occurs at DEPTH 2: `eml (eml a b) c` has zeros iff
+`c − exp (exp (exp a − log b)) = 0`, `log b` buried. `exp_sub_log` resolves the
+burial to a *division* (`exp (u − log b) = exp u / b`), but that lands the
+reduction in an exp-plus-RATIONAL class, still outside `IsExpChain`.
+
+**Consequence.** What installments 1–2 + `exp_sub_log` constructively cover is
+the FRAGMENT of EML trees whose every `exp`-subtree is log-free (no burial); for
+those, the reduction reaches exp-only and the featured bound applies. The FULL
+any-depth barrier needs a constructive Khovanskii bound for the broader
+exp+rational (equivalently exp+log) chain class — i.e. extending
+`pfaffian_bound_step_hnz_gen_IF` from `IsExpChain` to admit a rational (`1/x`)
+generator. That is the genuine remaining depth, not the reduction driver.
+
+## REMAINING (reassessed)
+  3. Either (b-path) extend the constructive Khovanskii step to exp+rational
+     chains — handles burial directly, closes the general case; or
+     (fragment-path) finish the exp-only reduction for the log-free-exponent
+     fragment (driver + exp-chain encoding) as a genuine partial constructive
+     result, leaving the classical axiom only for the buried-log case.
+  4. Encode the target class as a Pfaffian chain + `MultiPoly` with
+     eval-agreement, then cite the (extended) constructive bound.
+  5. Discharge validity/positivity (the second axiom,
      `eml_pfaffian_validon_from_sin_equality`, a separate smoothness bridge).
-  6. Re-prove `sin_not_in_eml_any_depth` citing the constructive bound instead
-     of `zero_count_bound_classical`; confirm via `#print axioms`.
+  6. Re-prove `sin_not_in_eml_any_depth` off `zero_count_bound_classical`;
+     confirm via `#print axioms`.
 
 Alternative path (not taken here): extend the constructive Khovanskii proof
 itself (`pfaffian_bound_step_hnz_gen_IF` + `vehExpo`) from `IsExpChain` to an
@@ -191,6 +209,17 @@ theorem sub_log_zero_iff (A b : Real) (hb : 0 < b) :
     exact hb2.symm
   · intro h
     rw [h, log_exp, sub_def, add_neg]
+
+/-- **Burial resolution (log → division).** During the recursion a `log` can
+end up inside an `exp` argument — `exp (u − log b)` — where it is NOT in the
+`A − log B` shape `elim_top_log` consumes (it is *buried under the exp*). This
+identity resolves it to a **division**: `exp (u − log b) = exp u / b` (for
+`b > 0`). Consequence (see the architecture note in the header): the reduction
+takes an EML tree not to an exp-ONLY expression but to an exp-plus-RATIONAL one,
+which is why the featured exp-only constructive bound does not by itself finish
+the general case. -/
+theorem exp_sub_log (u b : Real) (hb : 0 < b) : exp (u - log b) = exp u / b := by
+  rw [exp_sub, exp_log hb]
 
 /-- `a − b = 0 ↔ a = b`. -/
 theorem sub_eq_zero_iff (a b : Real) : (a - b = 0) ↔ (a = b) := by
