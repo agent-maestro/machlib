@@ -3,6 +3,8 @@ import MachLib.SturmNonOscillation
 import MachLib.FieldLemmas
 import MachLib.MultiPoly
 import MachLib.PfaffianChain
+import MachLib.Log
+import MachLib.Exp
 
 /-!
 # Constructive Khovanskii for exp+rational chains — Brick 1 (rational base case)
@@ -339,5 +341,50 @@ theorem reciprocalPfaffian_zero_count
   have hz : 0 < z := lt_trans_ax ha hza
   rw [clearNum_eval hz p, show MultiPoly.eval p z (fun _ => 1 / z) = 0 from hfz]
   mach_ring
+
+/-! ## Brick 3d-ii — zero-count transfer across the `x = eᵗ` bijection
+
+The log-substitution route re-charts EML from `x` to `t = log x` and bounds
+zeros in the `t`-chart (where the chain is exp-type after clearing). This brick
+pulls such a `t`-chart bound back to the `x`-chart: zeros of `f` on `(a,b)`
+correspond, via `x = eᵗ`, to zeros of `t ↦ f(eᵗ)` on `(log a, log b)`, and the
+correspondence preserves the count. Self-contained (`exp`/`log` bijection only)
+and needed by every version of the descent-transfer, independent of how the
+`t`-chart bound itself is obtained. -/
+
+/-- **Brick 3d-ii — transfer.** If every nodup list of zeros of `t ↦ f(eᵗ)` on
+`(log a, log b)` has length `≤ N`, then so does every nodup list of zeros of `f`
+on `(a,b) ⊂ (0,∞)`. Map the `x`-zeros through `log`: the list stays nodup
+(`log` injective on positives, via `exp_log`) and length-preserving
+(`List.length_map`), and each image is a zero of `f∘exp` in `(log a, log b)`
+(`log` strictly monotone, via `log_lt_log`). -/
+theorem zero_count_transfer
+    (f : Real → Real) (a b : Real) (ha : 0 < a) (N : Nat)
+    (hgbound : ∀ zeros : List Real,
+        zeros.Nodup →
+        (∀ s ∈ zeros, log a < s ∧ s < log b ∧ f (exp s) = 0) →
+        zeros.length ≤ N) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ f z = 0) →
+      zeros.length ≤ N := by
+  intro Z hZnd hZ
+  have hpos : ∀ z ∈ Z, 0 < z := fun z hz => lt_trans_ax ha (hZ z hz).1
+  have hmap : (Z.map log).length = Z.length := List.length_map Z log
+  rw [← hmap]
+  apply hgbound (Z.map log)
+  · rw [List.Nodup, List.pairwise_map]
+    refine hZnd.imp_of_mem (fun {x y} hx hy hxy => ?_)
+    intro hlog
+    exact hxy (by
+      have := congrArg exp hlog
+      rwa [exp_log (hpos x hx), exp_log (hpos y hy)] at this)
+  · intro s hs
+    rw [List.mem_map] at hs
+    obtain ⟨z, hzZ, hzs⟩ := hs
+    obtain ⟨haz, hzb, hfz⟩ := hZ z hzZ
+    have hz0 : 0 < z := hpos z hzZ
+    subst hzs
+    exact ⟨log_lt_log ha haz, log_lt_log hz0 hzb, by rw [exp_log hz0]; exact hfz⟩
 
 end MachLib
