@@ -2,6 +2,8 @@ import MachLib.Basic
 import MachLib.Ring
 import MachLib.MultiPoly
 import MachLib.FieldLemmas
+import MachLib.PfaffianChain
+import MachLib.PfaffianGeneralReduce
 
 /-!
 # Reciprocal-top descent step — Brick A-3 (crux of the extended descent)
@@ -43,6 +45,8 @@ namespace PfaffianExpRecip
 
 open MachLib.Real
 open MachLib.MultiPolyMod
+open MachLib.PfaffianChainMod
+open MachLib.PfaffianGeneralReduce
 
 /-- **A-3-i — reciprocal-top zero reduction.** If the target `fp` (using the top
 reciprocal `y_N = 1/v`) relates to a cleared numerator `fP` over the restricted
@@ -248,6 +252,60 @@ theorem clearTop_eval (v : MultiPoly N) (x : Real) (env : Fin N → Real)
           * MultiPoly.eval (MultiPoly.mul p q) x envFull
     simp only [MultiPoly.eval]
     rw [ihp, ihq, mpolyPow_eval_add]; mach_ring
+
+/-! ## Brick A-3-iii — wiring `clearTop` to the chain + the reciprocal-top step -/
+
+/-- **A-3-iii — chain-level eval bridge.** Instantiate `clearTop_eval` at the
+actual chain: `envFull = c.chainValues`, `env = (chainRestrict c).chainValues`.
+The lower-slot agreement is `chainRestrict_chainValues` (definitional up to `Fin`
+proof-irrelevance); the reciprocal witness `c.chainValues top = 1/eval v` and
+`eval v ≠ 0` come from the chain's top reciprocal level (domain-safe, `v > 0`). -/
+theorem clearTop_chain_bridge (c : PfaffianChain (N + 1)) (v : MultiPoly N) (x : Real)
+    (hwitness : c.chainValues x ⟨N, Nat.lt_succ_self N⟩
+        = 1 / MultiPoly.eval v x ((chainRestrict c).chainValues x))
+    (hvne : MultiPoly.eval v x ((chainRestrict c).chainValues x) ≠ 0)
+    (p : MultiPoly (N + 1)) :
+    MultiPoly.eval (clearTop v p) x ((chainRestrict c).chainValues x)
+      = MultiPoly.eval (mpolyPow v (MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ p)) x
+          ((chainRestrict c).chainValues x)
+        * MultiPoly.eval p x (c.chainValues x) := by
+  refine clearTop_eval v x ((chainRestrict c).chainValues x) (c.chainValues x) ?_ hwitness hvne p
+  intro j hj
+  rw [chainRestrict_chainValues c x ⟨j.val, hj⟩]
+
+/-- **A-3-iii — reciprocal-top descent step.** Bound the zeros of
+`pfaffianChainFn c p` (top reciprocal `y_N = 1/v`) by those of
+`pfaffianChainFn (chainRestrict c) (clearTop v p)` over the restricted chain,
+supplied by the induction hypothesis. No integrating factor — the clearing
+bridge `fp·fD = fP` (A-3-ii ∘ A-3-i) does it directly. This is the extended
+descent's reciprocal-level analog of the exp-level `pfaffian_bound_step`. -/
+theorem recip_top_step (c : PfaffianChain (N + 1)) (v : MultiPoly N) (a b : Real) (M : Nat)
+    (hwitness : ∀ x : Real, a < x → x < b →
+        c.chainValues x ⟨N, Nat.lt_succ_self N⟩
+          = 1 / MultiPoly.eval v x ((chainRestrict c).chainValues x))
+    (hvne : ∀ x : Real, a < x → x < b →
+        MultiPoly.eval v x ((chainRestrict c).chainValues x) ≠ 0)
+    (p : MultiPoly (N + 1))
+    (hIH : ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b
+            ∧ (pfaffianChainFn (chainRestrict c) (clearTop v p)).eval z = 0) →
+        zeros.length ≤ M) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
+      zeros.length ≤ M := by
+  apply recip_top_zero_reduction
+    (pfaffianChainFn c p).eval
+    (pfaffianChainFn (chainRestrict c) (clearTop v p)).eval
+    (fun x => MultiPoly.eval (mpolyPow v (MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ p)) x
+        ((chainRestrict c).chainValues x))
+    a b M ?_ hIH
+  intro z ha hb
+  show MultiPoly.eval p z (c.chainValues z)
+      * MultiPoly.eval (mpolyPow v (MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ p)) z
+          ((chainRestrict c).chainValues z)
+      = MultiPoly.eval (clearTop v p) z ((chainRestrict c).chainValues z)
+  rw [clearTop_chain_bridge c v z (hwitness z ha hb) (hvne z ha hb) p]
+  mach_ring
 
 end PfaffianExpRecip
 end MachLib
