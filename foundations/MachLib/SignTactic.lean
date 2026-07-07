@@ -175,6 +175,34 @@ theorem le_of_not_le {a b : Real} (h : ¬ a ≤ b) : b ≤ a := by
   · exact absurd ((le_iff_lt_or_eq a b).mpr (Or.inr heq)) h
   · exact le_of_lt hgt
 
+/-- **Convex-combination interval preservation (upper).** A blend
+`α·a + (1-α)·b` of two values each `≤ M`, with `α ∈ [0,1]`, is itself `≤ M`.
+The generalisation of `interval_add_scale` (Forge.lean) off the unit interval:
+the inputs live in an ARBITRARY range `[·, M]`, not `[0,1]`. This is the
+anti-drift guarantee a complementary filter / EMA / weighted average earns —
+the fused estimate never escapes the interval its inputs occupy — and it is
+exactly the goal a positivity closer (`mach_sign`) cannot reach, since it is a
+convexity bound, not a sign fact. Placed in the emit-imported SignTactic (0
+dependents) so the Lean backend's closers can cite it, like `le_of_not_le`. -/
+theorem convex_comb_le {α a b M : Real} (h0 : 0 ≤ α) (h1 : α ≤ 1)
+    (ha : a ≤ M) (hb : b ≤ M) : α * a + (1 - α) * b ≤ M := by
+  have hα1 : 0 ≤ 1 - α := one_sub_nonneg_of_le_one h1
+  have collapse : α * M + (1 - α) * M = M := by mach_ring
+  exact le_trans (add_le_add_both (mul_le_mul_of_nonneg_left ha h0)
+                                  (mul_le_mul_of_nonneg_left hb hα1))
+                 (le_of_eq collapse)
+
+/-- **Convex-combination interval preservation (lower).** Dual of
+`convex_comb_le`: a blend of two values each `≥ lo`, with `α ∈ [0,1]`, is
+`≥ lo`. Together they discharge `lo ≤ result ≤ hi` for a weighted blend. -/
+theorem convex_comb_ge {α a b lo : Real} (h0 : 0 ≤ α) (h1 : α ≤ 1)
+    (ha : lo ≤ a) (hb : lo ≤ b) : lo ≤ α * a + (1 - α) * b := by
+  have hα1 : 0 ≤ 1 - α := one_sub_nonneg_of_le_one h1
+  have collapse : lo = α * lo + (1 - α) * lo := by mach_ring
+  exact le_trans (le_of_eq collapse)
+                 (add_le_add_both (mul_le_mul_of_nonneg_left ha h0)
+                                  (mul_le_mul_of_nonneg_left hb hα1))
+
 /-! ### Regression suite -/
 namespace SignTests
 example (p : Real) (h : p > (0.0 : Real)) : p * (exp p) > (0.0 : Real) := by mach_sign
@@ -205,6 +233,12 @@ example (x : Real) (h : (0:Real) < x) : exp x > (1:Real) := by mach_sign  -- exp
 example (y c : Real) (hc : (0:Real) ≤ c) : tanh y * c + c ≥ (0:Real) := by mach_sign  -- tanh-affine (sigmoid)
 example (a b c : Real) (hb : (0:Real) ≤ b) (hc : (0:Real) ≤ c) : (a + b) + c ≥ a := by mach_le  -- additive (carbon)
 example (t : Real) (h : t ≥ (0.5:Real)) : (0:Real) < t := by mach_sign     -- strict bound-transitivity
+-- convex-combination interval preservation (complementary filter / EMA anti-drift):
+-- a blend of two in-range values stays in range, for ANY α ∈ [0,1].
+example (g a alpha lo M : Real) (h0 : (0:Real) ≤ alpha) (h1 : alpha ≤ (1:Real))
+    (hg : g ≤ M) (ha : a ≤ M) : alpha * g + (1 - alpha) * a ≤ M := convex_comb_le h0 h1 hg ha
+example (g a alpha lo M : Real) (h0 : (0:Real) ≤ alpha) (h1 : alpha ≤ (1:Real))
+    (hg : lo ≤ g) (ha : lo ≤ a) : lo ≤ alpha * g + (1 - alpha) * a := convex_comb_ge h0 h1 hg ha
 end SignTests
 
 end MachLib.Real
