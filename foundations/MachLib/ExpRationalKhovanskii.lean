@@ -2,6 +2,7 @@ import MachLib.PolynomialRootCount
 import MachLib.SturmNonOscillation
 import MachLib.FieldLemmas
 import MachLib.MultiPoly
+import MachLib.PfaffianChain
 
 /-!
 # Constructive Khovanskii for exp+rational chains — Brick 1 (rational base case)
@@ -119,5 +120,29 @@ built to clear. -/
 theorem reciprocalRelation_degreeY_self {n : Nat} (i : Fin n) :
     MultiPoly.degreeY i (reciprocalRelation i) = 2 := by
   simp [reciprocalRelation, MultiPoly.neg, MultiPoly.zero, MultiPoly.degreeY]
+
+/-! ### The single-reciprocal chain — the descent's new bottom object
+
+The length-1 chain `[1/x]` the extended descent bottoms out at, after stripping
+the exp-type levels above. A `MultiPoly` over it is rational in `x`, so its
+zeros are bounded by Brick 1 (`zero_count_bound_of_subset_poly`) once the
+numerator is cleared (Brick 3b). Its coherence is Brick 2. -/
+
+open MachLib.PfaffianChainMod
+
+/-- The length-1 Pfaffian chain whose only generator is the reciprocal `1/x`
+with relation `−y₀²`. -/
+noncomputable def reciprocalChain : PfaffianChain 1 :=
+  { evals := fun _ x => 1 / x
+  , relations := fun i => reciprocalRelation i }
+
+/-- **The reciprocal chain is coherent on any `(a,b) ⊂ (0,∞)`** — each `x>0`
+gives `(1/x)' = −(1/x)²` (Brick 2). This is the `IsCoherentOn` obligation the
+descent's bottom object must satisfy. -/
+theorem reciprocalChain_isCoherentOn (a b : Real) (ha : 0 < a) :
+    reciprocalChain.IsCoherentOn a b := by
+  intro x hxa hxb i
+  have hx : 0 < x := lt_trans_ax ha hxa
+  exact reciprocal_relation_coherence i x (reciprocalChain.chainValues x) hx rfl
 
 end MachLib
