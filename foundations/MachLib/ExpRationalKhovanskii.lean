@@ -305,4 +305,39 @@ theorem clearNum_eval {x : Real} (hx : 0 < x) (p : MultiPoly 1) :
     simp only [Poly.eval, MultiPoly.eval]
     rw [ihp, ihq, polyVarPow_eval_add]; mach_ring
 
+/-! ## Brick 3c — the reciprocal bottom's zero-count (the descent's base case)
+
+Combine Brick 3b (`clearNum_eval`) with Brick 1
+(`zero_count_bound_of_subset_poly`): a `MultiPoly 1` evaluated over the
+reciprocal bottom `y = 1/x` has, on any `(a,b) ⊂ (0,∞)`, at most
+`degreeUpper (clearNum p)` zeros — **provided its numerator is not identically
+zero**. The `hsub` obligation is discharged by `clearNum_eval`: on `z > 0`,
+`clearNum p z = z^K · p(z,1/z)`, so `p(z,1/z) = 0 ⇒ clearNum p z = 0`.
+
+This is the *new base case* the extended descent bottoms out at, replacing the
+exp-chain base `pfaffian_bound2_gen` when the chain's lowest generator is `1/x`.
+Its only analytic input is `rolle` (via `PolynomialRootCount`) — no classical
+Khovanskii axiom, exactly the point of the exp+rational track. -/
+
+open MachLib.PolynomialRootCount
+
+/-- **Brick 3c — reciprocal-bottom zero-count.** On `(a,b) ⊂ (0,∞)`, the
+reciprocal-evaluated `MultiPoly 1` `x ↦ p(x, 1/x)` has at most
+`degreeUpper (clearNum p)` distinct zeros, given its numerator is not
+identically zero (`hne`). Root-count by degree of the cleared numerator —
+`rolle`-only, no `zero_count_bound_classical`. -/
+theorem reciprocalPfaffian_zero_count
+    (p : MultiPoly 1) (a b : Real) (hab : a < b) (ha : 0 < a)
+    (hne : ∃ x : Real, Poly.eval (clearNum p) x ≠ 0) :
+    ∀ zeros : List Real,
+      zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ MultiPoly.eval p z (fun _ => 1 / z) = 0) →
+      zeros.length ≤ degreeUpper (clearNum p) := by
+  apply zero_count_bound_of_subset_poly (clearNum p)
+    (fun x => MultiPoly.eval p x (fun _ => 1 / x)) a b hab hne
+  intro z hza _ hfz
+  have hz : 0 < z := lt_trans_ax ha hza
+  rw [clearNum_eval hz p, show MultiPoly.eval p z (fun _ => 1 / z) = 0 from hfz]
+  mach_ring
+
 end MachLib
