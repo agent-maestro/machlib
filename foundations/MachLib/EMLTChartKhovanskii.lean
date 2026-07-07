@@ -14,42 +14,42 @@ route (see the scoping doc
 `monogate-research/exploration/eml_exp_rational_khovanskii_extend_scoping_2026_07_07/FINDINGS.md`,
 including the 2026-07-07 CORRECTION).
 
-## The route in one paragraph
+## What the log-chart buys — and what it does NOT (corrected 2026-07-07)
 
-Re-chart EML from `x` to `t = log x` (`x = eᵗ`, a bijection `ℝ → (0,∞)`). In
-the `t`-chart every EML generator except *logs of composite arguments* is
-exp-type or the base variable: `x = eᵗ` (`y'=y`), `1/x = e⁻ᵗ` (`y'=−y`),
-`exp(u) = e^u` (`y' = u'·y`), `log x = t` (base variable). A `log(b)` with `b`
-composite needs `1/b`, degree-2 — the sole residue. **Clear** those `1/bᵢ`
-denominators (as `MachLib.clearNum` does for `1/x` in the x-chart): the cleared
-`W = V·∏bᵢᵏ` is a pure `IsExpChain` `pfaffianChainFn`, and on the EML domain
-(`bᵢ > 0`) `V`'s zeros ⊆ `W`'s zeros. Then the existing, `rolle`-only
-`pfaffian_khovanskii_bound_gen_uncond` bounds `W`'s zeros, and
-`MachLib.zero_count_transfer` (Brick 3d-ii) pulls the bound back to the x-chart.
-No surgery on the descent — the whole new content is this additive encoder.
+Re-chart EML from `x` to `t = log x` (`x = eᵗ`, a bijection `ℝ → (0,∞)`). The
+`t`-chart linearises a lot: `x = eᵗ` (`y'=y`), `1/x = e⁻ᵗ` (`y'=−y`),
+`exp(u) = e^u` (`y' = u'·y`), and crucially `log x = t` (the **base variable**,
+derivative `1`, *no reciprocal*).
 
-## Blueprint of the recursive encoder (the multi-session bulk ahead)
+But it does **not** eliminate `log` of a *composite* argument. `log(v)` has
+derivative `v'/v`, so any Pfaffian representation carries `1/v` — cf.
+`Pfaffian.lean`'s `log_atom.derivative = inv var`. For composite `v` (an EML
+subvalue, a difference `exp − log`, not a pure exponential) this `1/v` is a
+degree-2 generator (`(1/v)' = −v'·(1/v)²`) that lives in the chain's *coherence
+relations*, not as a value in `V`. **Clearing does not remove it** — there is no
+reciprocal *value* in `V` to clear; the reciprocal is structural to `log`'s
+derivative. (An earlier note here wrongly claimed clearing yields a pure
+`IsExpChain`; that holds only when logs have non-composite arguments.)
 
-For an `EMLTree T`, build (mutually, bottom-up over the tree):
-  * `chainOf T : PfaffianChain (arity T)` — generators, in triangular order:
-      base var `t`; `eᵗ` (for every `var`); for each `eml t1 t2` node an
-      `e^{u1}` (`u1 = value of t1`), an `L2 = log(v2)` (`v2 = value of t2`),
-      and a reciprocal `w2 = 1/v2`.
-  * `valOf T : MultiPoly (arity T)` with
-      `pfaffianChainFn (chainOf T) (valOf T) t = T.eval (eᵗ)` — the value `V`.
-  * `denomOf T : MultiPoly (arity T)` — the product `∏ v2ᵏ` of composite-log
-      arguments, cleared into the numerator.
-  * `numOf T := valOf T * denomOf T` — the cleared `W`, over the *exp-type*
-      sub-chain (all `w2` eliminated). Prove `IsExpChain` on that sub-chain.
+### Honest consequence
+- **Subclass (log of the bare variable only):** every `log` is `log x = t`, no
+  reciprocal anywhere; the `t`-chart chain is a genuine `IsExpChain` and the
+  existing `rolle`-only `pfaffian_khovanskii_bound_gen_uncond` + Brick 3d-ii
+  transfer close it directly. This is the surgery-free, achievable case.
+- **General EML (nested composite logs):** the chain has degree-2 reciprocal
+  levels interleaved with exp levels. This needs the **extended-class descent**
+  (handle reciprocal levels), i.e. the genuine Khovanskii surgery on
+  `PfaffianGeneral*`. Bricks 3b/3c (`clearNum`, `reciprocalPfaffian_zero_count`)
+  are the *reciprocal base-case tools* for that descent — not a way around it.
+  The log-chart still helps (outer `1/x`, `log x`, all exps go linear; the
+  `x↔t` bijection is Brick 3d-ii) but the interleaved reciprocals are the core.
 
-Proof obligations per node: coherence (`chainOf T` `IsCoherentOn` — the exp
-generators via `hasDerivAt_exp_comp` below, `L2` via `HasDerivAt_log_pos`+chain,
-`w2` via `HasDerivAt_inv`), `IsExpChain` of the cleared sub-chain, and the
-zero-subset `V=0 ∧ domain → W=0` (`W = V·∏v2ᵏ`, `v2 > 0`).
+## What this file provides
 
-This file currently lands the **coherence atom** every exp generator reuses; the
-recursive `chainOf`/`valOf`/`numOf` and their invariants are the subsequent
-bricks.
+The **exp-generator coherence atom** every exp-type level reuses — in the
+subclass chain *and* in the exp levels of the general extended descent. The
+recursive encoder itself is scoped by which case is being built (see the
+exploration FINDINGS re-correction of 2026-07-07).
 -/
 
 namespace MachLib
