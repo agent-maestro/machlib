@@ -1,4 +1,6 @@
 import MachLib.PolynomialRootCount
+import MachLib.SturmNonOscillation
+import MachLib.FieldLemmas
 
 /-!
 # Constructive Khovanskii for exp+rational chains — Brick 1 (rational base case)
@@ -48,4 +50,28 @@ theorem zero_count_bound_of_subset_poly
   exact ⟨ha, hb, hsub z ha hb hfz⟩
 
 end PolynomialRootCount
+
+/-! ## Brick 2 — the reciprocal generator's coherence
+
+The one non-exp generator EML needs is `1/x`, whose Pfaffian relation is
+`y' = −y²` (`(1/x)' = −(1/x)²`). This is the coherence the extended descent's
+bottom level requires; the `−(y·y)` form matches `MultiPoly.eval (−varY²)` along
+a chain with `y = 1/x`. -/
+
+open MachLib.Real
+
+/-- **Brick 2 — reciprocal coherence.** On `x > 0`,
+`(1/x)' = −((1/x)·(1/x))` — the `1/x` generator satisfies its Pfaffian relation
+`y' = −y²`. Built from `HasDerivAt_inv` (reciprocal rule) with the value bridged
+from `−1/(x·x)` to `−((1/x)·(1/x))` via `one_div_mul_one_div` + `neg_div`. -/
+theorem reciprocal_hasDerivAt (x : Real) (hx : 0 < x) :
+    HasDerivAt (fun x => 1 / x) (-((1 / x) * (1 / x))) x := by
+  have hx0 : x ≠ 0 := ne_of_gt hx
+  have h : HasDerivAt (fun y => 1 / y) (-1 / (x * x)) x := by
+    simpa using HasDerivAt_inv (fun y => y) 1 x hx0 (HasDerivAt_id x)
+  have hb : (-1 / (x * x) : Real) = -((1 / x) * (1 / x)) := by
+    rw [one_div_mul_one_div hx, neg_div (ne_of_gt (mul_pos hx hx))]
+  rw [hb] at h
+  exact h
+
 end MachLib
