@@ -299,6 +299,101 @@ theorem convexN_ge {m : Real} {l : List (Real × Real)}
     m ≤ wsum l := by
   have h := wsum_ge m l hw ha; rwa [hs, one_mul_thm] at h
 
+/-! ### Explicit N = 4, 5, 6 forms — thin adapters over the general theorem
+
+Each proves the SAME shape a Forge kernel lowers to (a fixed number of
+`wᵢ·aᵢ` terms, no list), then bridges to `convexN_le/ge`: rewrite the flat sum
+to `wsum […]`, the flat weight-sum to `wtot […] = 1`, discharge the list
+membership by `rcases` over the N pairs. The general theorem does the actual
+work; these just adapt the arity the Lean backend's closer ladder can `apply`.
+Classical-free (footprint = `convexN_le` + propext/Quot.sound). -/
+
+theorem convex_comb4_le {w1 w2 w3 w4 a b c d M : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4)
+    (hs : w1 + w2 + w3 + w4 = 1)
+    (qa : a ≤ M) (qb : b ≤ M) (qc : c ≤ M) (qd : d ≤ M) :
+    w1 * a + w2 * b + w3 * c + w4 * d ≤ M := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d)] = w1*a+w2*b+w3*c+w4*d := by
+    simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_le ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl <;> assumption)
+
+theorem convex_comb4_ge {w1 w2 w3 w4 a b c d lo : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4)
+    (hs : w1 + w2 + w3 + w4 = 1)
+    (qa : lo ≤ a) (qb : lo ≤ b) (qc : lo ≤ c) (qd : lo ≤ d) :
+    lo ≤ w1 * a + w2 * b + w3 * c + w4 * d := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d)] = w1*a+w2*b+w3*c+w4*d := by
+    simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_ge ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl <;> assumption)
+
+theorem convex_comb5_le {w1 w2 w3 w4 w5 a b c d e M : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4) (h5 : 0 ≤ w5)
+    (hs : w1 + w2 + w3 + w4 + w5 = 1)
+    (qa : a ≤ M) (qb : b ≤ M) (qc : c ≤ M) (qd : d ≤ M) (qe : e ≤ M) :
+    w1 * a + w2 * b + w3 * c + w4 * d + w5 * e ≤ M := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e)]
+      = w1*a+w2*b+w3*c+w4*d+w5*e := by simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_le ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl | rfl <;> assumption)
+
+theorem convex_comb5_ge {w1 w2 w3 w4 w5 a b c d e lo : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4) (h5 : 0 ≤ w5)
+    (hs : w1 + w2 + w3 + w4 + w5 = 1)
+    (qa : lo ≤ a) (qb : lo ≤ b) (qc : lo ≤ c) (qd : lo ≤ d) (qe : lo ≤ e) :
+    lo ≤ w1 * a + w2 * b + w3 * c + w4 * d + w5 * e := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e)]
+      = w1*a+w2*b+w3*c+w4*d+w5*e := by simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_ge ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl | rfl <;> assumption)
+
+theorem convex_comb6_le {w1 w2 w3 w4 w5 w6 a b c d e f M : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4) (h5 : 0 ≤ w5)
+    (h6 : 0 ≤ w6) (hs : w1 + w2 + w3 + w4 + w5 + w6 = 1)
+    (qa : a ≤ M) (qb : b ≤ M) (qc : c ≤ M) (qd : d ≤ M) (qe : e ≤ M)
+    (qf : f ≤ M) :
+    w1 * a + w2 * b + w3 * c + w4 * d + w5 * e + w6 * f ≤ M := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e),(w6,f)]
+      = w1*a+w2*b+w3*c+w4*d+w5*e+w6*f := by simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e),(w6,f)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_le ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl | rfl | rfl <;> assumption)
+
+theorem convex_comb6_ge {w1 w2 w3 w4 w5 w6 a b c d e f lo : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (h4 : 0 ≤ w4) (h5 : 0 ≤ w5)
+    (h6 : 0 ≤ w6) (hs : w1 + w2 + w3 + w4 + w5 + w6 = 1)
+    (qa : lo ≤ a) (qb : lo ≤ b) (qc : lo ≤ c) (qd : lo ≤ d) (qe : lo ≤ e)
+    (qf : lo ≤ f) :
+    lo ≤ w1 * a + w2 * b + w3 * c + w4 * d + w5 * e + w6 * f := by
+  have hsum : wsum [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e),(w6,f)]
+      = w1*a+w2*b+w3*c+w4*d+w5*e+w6*f := by simp only [wsum]; mach_ring
+  have htot : wtot [(w1,a),(w2,b),(w3,c),(w4,d),(w5,e),(w6,f)] = 1 := by
+    simp only [wtot]; rw [← hs]; mach_ring
+  rw [← hsum]
+  refine convexN_ge ?_ ?_ htot <;>
+    (intro p hp; simp only [List.mem_cons, List.not_mem_nil, or_false] at hp;
+     rcases hp with rfl | rfl | rfl | rfl | rfl | rfl <;> assumption)
+
 /-! ### Regression suite -/
 namespace SignTests
 example (p : Real) (h : p > (0.0 : Real)) : p * (exp p) > (0.0 : Real) := by mach_sign
