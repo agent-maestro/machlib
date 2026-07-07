@@ -236,6 +236,69 @@ theorem convex_comb3_ge {w1 w2 w3 a b c lo : Real}
                                       (mul_le_mul_of_nonneg_left hb h2))
                      (mul_le_mul_of_nonneg_left hc h3))
 
+/-! ### General N-way convex combination (arbitrary arity)
+
+The 2- and 3-way lemmas above are what the Forge backend auto-wires (kernels
+emit a fixed number of terms). These prove the property holds for ANY number of
+weighted terms — the fixed arity is a backend-emission choice, not a
+mathematical limit. Stated over `List (Real × Real)` (a (weight, value) per
+sensor) so the arity is genuinely unbounded; the proof is structural
+induction, no Mathlib and no `Finset`. -/
+
+/-- Weighted sum `Σ wᵢ·aᵢ` over a list of (weight, value) pairs. -/
+noncomputable def wsum : List (Real × Real) → Real
+  | [] => 0
+  | (w, a) :: t => w * a + wsum t
+
+/-- Total weight `Σ wᵢ`. -/
+noncomputable def wtot : List (Real × Real) → Real
+  | [] => 0
+  | (w, _) :: t => w + wtot t
+
+/-- `Σ wᵢ·aᵢ ≤ (Σ wᵢ)·M` when every weight ≥ 0 and every value ≤ M. -/
+theorem wsum_le (M : Real) : ∀ (l : List (Real × Real)),
+    (∀ p ∈ l, 0 ≤ p.1) → (∀ p ∈ l, p.2 ≤ M) → wsum l ≤ wtot l * M
+  | [], _, _ => by simp only [wsum, wtot, zero_mul]; exact le_refl 0
+  | (w, a) :: t, hw, ha => by
+    have hw' := List.forall_mem_cons.mp hw
+    have ha' := List.forall_mem_cons.mp ha
+    have h1 : w * a ≤ w * M := mul_le_mul_of_nonneg_left ha'.1 hw'.1
+    have h2 : wsum t ≤ wtot t * M := wsum_le M t hw'.2 ha'.2
+    have hd : w * M + wtot t * M = (w + wtot t) * M := by mach_ring
+    calc wsum ((w, a) :: t) = w * a + wsum t := by simp only [wsum]
+      _ ≤ w * M + wtot t * M := add_le_add_both h1 h2
+      _ = (w + wtot t) * M := hd
+      _ = wtot ((w, a) :: t) * M := by simp only [wtot]
+
+/-- `(Σ wᵢ)·m ≤ Σ wᵢ·aᵢ` when every weight ≥ 0 and every value ≥ m. -/
+theorem wsum_ge (m : Real) : ∀ (l : List (Real × Real)),
+    (∀ p ∈ l, 0 ≤ p.1) → (∀ p ∈ l, m ≤ p.2) → wtot l * m ≤ wsum l
+  | [], _, _ => by simp only [wsum, wtot, zero_mul]; exact le_refl 0
+  | (w, a) :: t, hw, ha => by
+    have hw' := List.forall_mem_cons.mp hw
+    have ha' := List.forall_mem_cons.mp ha
+    have h1 : w * m ≤ w * a := mul_le_mul_of_nonneg_left ha'.1 hw'.1
+    have h2 : wtot t * m ≤ wsum t := wsum_ge m t hw'.2 ha'.2
+    have hd : (w + wtot t) * m = w * m + wtot t * m := by mach_ring
+    calc wtot ((w, a) :: t) * m = (w + wtot t) * m := by simp only [wtot]
+      _ = w * m + wtot t * m := hd
+      _ ≤ w * a + wsum t := add_le_add_both h1 h2
+      _ = wsum ((w, a) :: t) := by simp only [wsum]
+
+/-- **General N-way convex-combination interval preservation (upper).** For
+ANY number of (weight, value) pairs with non-negative weights summing to 1 and
+every value ≤ M, the weighted average is ≤ M. -/
+theorem convexN_le {M : Real} {l : List (Real × Real)}
+    (hw : ∀ p ∈ l, 0 ≤ p.1) (ha : ∀ p ∈ l, p.2 ≤ M) (hs : wtot l = 1) :
+    wsum l ≤ M := by
+  have h := wsum_le M l hw ha; rwa [hs, one_mul_thm] at h
+
+/-- **General N-way convex-combination interval preservation (lower).** -/
+theorem convexN_ge {m : Real} {l : List (Real × Real)}
+    (hw : ∀ p ∈ l, 0 ≤ p.1) (ha : ∀ p ∈ l, m ≤ p.2) (hs : wtot l = 1) :
+    m ≤ wsum l := by
+  have h := wsum_ge m l hw ha; rwa [hs, one_mul_thm] at h
+
 /-! ### Regression suite -/
 namespace SignTests
 example (p : Real) (h : p > (0.0 : Real)) : p * (exp p) > (0.0 : Real) := by mach_sign
@@ -281,6 +344,17 @@ example (a b c w1 w2 w3 lo : Real) (p1 : (0:Real) ≤ w1) (p2 : (0:Real) ≤ w2)
     (p3 : (0:Real) ≤ w3) (ps : w1 + w2 + w3 = (1:Real))
     (qa : lo ≤ a) (qb : lo ≤ b) (qc : lo ≤ c) :
     lo ≤ w1 * a + w2 * b + w3 * c := convex_comb3_ge p1 p2 p3 ps qa qb qc
+-- general N-way: wsum/wtot reduce to the ordinary weighted sum on any concrete
+-- list, and convexN_le/ge apply at arbitrary arity (shown here at N=4).
+example (α a b : Real) : wsum [(α, a), (1 - α, b)] = α * a + (1 - α) * b := by
+  simp only [wsum]; mach_ring
+example (α a b : Real) : wtot [(α, a), (1 - α, b)] = α + (1 - α) := by
+  simp only [wtot]; mach_ring
+example (a b c d w1 w2 w3 w4 M : Real)
+    (hw : ∀ p ∈ [(w1, a), (w2, b), (w3, c), (w4, d)], (0:Real) ≤ p.1)
+    (ha : ∀ p ∈ [(w1, a), (w2, b), (w3, c), (w4, d)], p.2 ≤ M)
+    (hs : wtot [(w1, a), (w2, b), (w3, c), (w4, d)] = 1) :
+    wsum [(w1, a), (w2, b), (w3, c), (w4, d)] ≤ M := convexN_le hw ha hs
 end SignTests
 
 end MachLib.Real
