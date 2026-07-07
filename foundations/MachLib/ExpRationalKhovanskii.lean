@@ -1,6 +1,7 @@
 import MachLib.PolynomialRootCount
 import MachLib.SturmNonOscillation
 import MachLib.FieldLemmas
+import MachLib.MultiPoly
 
 /-!
 # Constructive Khovanskii for exp+rational chains — Brick 1 (rational base case)
@@ -73,5 +74,31 @@ theorem reciprocal_hasDerivAt (x : Real) (hx : 0 < x) :
     rw [one_div_mul_one_div hx, neg_div (ne_of_gt (mul_pos hx hx))]
   rw [hb] at h
   exact h
+
+open MachLib.MultiPolyMod
+
+/-- The Pfaffian relation for a reciprocal generator at level `i`: the
+`MultiPoly` `−yᵢ²`. Along a chain whose `yᵢ = 1/x`, its derivative-relation is
+`(1/x)' = −(1/x)²` — exactly `reciprocal_hasDerivAt`. -/
+noncomputable def reciprocalRelation {n : Nat} (i : Fin n) : MultiPoly n :=
+  MultiPoly.neg (MultiPoly.mul (MultiPoly.varY i) (MultiPoly.varY i))
+
+/-- `−yᵢ²` evaluates to `−(env i · env i)`. -/
+theorem reciprocal_relation_eval {n : Nat} (i : Fin n) (x : Real)
+    (env : Fin n → Real) :
+    MultiPoly.eval (reciprocalRelation i) x env = -(env i * env i) := by
+  simp only [reciprocalRelation, MultiPoly.neg, MultiPoly.zero, MultiPoly.eval]
+  rw [sub_def, zero_add]
+
+/-- **Reciprocal generator coherence (chain form).** A chain level `i` with
+`yᵢ = 1/x` and relation `reciprocalRelation i` is coherent at every `x > 0`:
+its derivative equals the relation evaluated along the chain. This is the
+`IsCoherentAt` obligation for the reciprocal bottom of the extended chain. -/
+theorem reciprocal_relation_coherence {n : Nat} (i : Fin n) (x : Real)
+    (env : Fin n → Real) (hx : 0 < x) (henv : env i = 1 / x) :
+    HasDerivAt (fun x => 1 / x)
+      (MultiPoly.eval (reciprocalRelation i) x env) x := by
+  rw [reciprocal_relation_eval i x env, henv]
+  exact reciprocal_hasDerivAt x hx
 
 end MachLib
