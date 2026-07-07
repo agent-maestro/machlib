@@ -203,6 +203,39 @@ theorem convex_comb_ge {α a b lo : Real} (h0 : 0 ≤ α) (h1 : α ≤ 1)
                  (add_le_add_both (mul_le_mul_of_nonneg_left ha h0)
                                   (mul_le_mul_of_nonneg_left hb hα1))
 
+/-- **3-way convex-combination interval preservation (upper).** The N=3
+weighted average with explicit non-negative weights summing to 1. Unlike the
+2-way form, the "complement weight" is not `1-α`, so the weights-sum-to-1 fact
+is a hypothesis (`w1+w2+w3=1`) rather than definitional — exactly what a Forge
+kernel supplies via `requires (w1+w2+w3 == 1.0)`. The multi-sensor fusion
+generalisation of `convex_comb_le`: a confidence-weighted blend of three
+redundant sensor readings each in `[·,M]` stays `≤ M`. -/
+theorem convex_comb3_le {w1 w2 w3 a b c M : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (hs : w1 + w2 + w3 = 1)
+    (ha : a ≤ M) (hb : b ≤ M) (hc : c ≤ M) :
+    w1 * a + w2 * b + w3 * c ≤ M := by
+  have e : w1 * M + w2 * M + w3 * M = (w1 + w2 + w3) * M := by mach_ring
+  have collapse : w1 * M + w2 * M + w3 * M = M := by rw [e, hs, one_mul_thm]
+  exact le_trans
+    (add_le_add_both (add_le_add_both (mul_le_mul_of_nonneg_left ha h1)
+                                      (mul_le_mul_of_nonneg_left hb h2))
+                     (mul_le_mul_of_nonneg_left hc h3))
+    (le_of_eq collapse)
+
+/-- **3-way convex-combination interval preservation (lower).** Dual of
+`convex_comb3_le`. Together they discharge `lo ≤ result ≤ hi` for a
+3-sensor confidence-weighted average. -/
+theorem convex_comb3_ge {w1 w2 w3 a b c lo : Real}
+    (h1 : 0 ≤ w1) (h2 : 0 ≤ w2) (h3 : 0 ≤ w3) (hs : w1 + w2 + w3 = 1)
+    (ha : lo ≤ a) (hb : lo ≤ b) (hc : lo ≤ c) :
+    lo ≤ w1 * a + w2 * b + w3 * c := by
+  have e : w1 * lo + w2 * lo + w3 * lo = (w1 + w2 + w3) * lo := by mach_ring
+  have collapse : w1 * lo + w2 * lo + w3 * lo = lo := by rw [e, hs, one_mul_thm]
+  exact le_trans (le_of_eq collapse.symm)
+    (add_le_add_both (add_le_add_both (mul_le_mul_of_nonneg_left ha h1)
+                                      (mul_le_mul_of_nonneg_left hb h2))
+                     (mul_le_mul_of_nonneg_left hc h3))
+
 /-! ### Regression suite -/
 namespace SignTests
 example (p : Real) (h : p > (0.0 : Real)) : p * (exp p) > (0.0 : Real) := by mach_sign
@@ -239,6 +272,15 @@ example (g a alpha lo M : Real) (h0 : (0:Real) ≤ alpha) (h1 : alpha ≤ (1:Rea
     (hg : g ≤ M) (ha : a ≤ M) : alpha * g + (1 - alpha) * a ≤ M := convex_comb_le h0 h1 hg ha
 example (g a alpha lo M : Real) (h0 : (0:Real) ≤ alpha) (h1 : alpha ≤ (1:Real))
     (hg : lo ≤ g) (ha : lo ≤ a) : lo ≤ alpha * g + (1 - alpha) * a := convex_comb_ge h0 h1 hg ha
+-- 3-way weighted average (multi-sensor fusion), weights sum to 1:
+example (a b c w1 w2 w3 hi : Real) (p1 : (0:Real) ≤ w1) (p2 : (0:Real) ≤ w2)
+    (p3 : (0:Real) ≤ w3) (ps : w1 + w2 + w3 = (1:Real))
+    (qa : a ≤ hi) (qb : b ≤ hi) (qc : c ≤ hi) :
+    w1 * a + w2 * b + w3 * c ≤ hi := convex_comb3_le p1 p2 p3 ps qa qb qc
+example (a b c w1 w2 w3 lo : Real) (p1 : (0:Real) ≤ w1) (p2 : (0:Real) ≤ w2)
+    (p3 : (0:Real) ≤ w3) (ps : w1 + w2 + w3 = (1:Real))
+    (qa : lo ≤ a) (qb : lo ≤ b) (qc : lo ≤ c) :
+    lo ≤ w1 * a + w2 * b + w3 * c := convex_comb3_ge p1 p2 p3 ps qa qb qc
 end SignTests
 
 end MachLib.Real
