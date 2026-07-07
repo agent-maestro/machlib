@@ -55,6 +55,7 @@ import MachLib.EMLPfaffian
 import MachLib.EMLKhovanskiiConstructive
 import MachLib.ExpRationalKhovanskii
 import MachLib.EMLTChartKhovanskii
+import MachLib.PfaffianExpRecipClass
 import MachLib.CosNotInEMLAnyDepth
 import MachLib.LambertW
 import MachLib.EMLAdditionClosureFailure
