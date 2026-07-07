@@ -52,6 +52,7 @@ import MachLib.ExpExpExpNotInEML2
 import MachLib.Pfaffian
 import MachLib.EMLTreeComposition
 import MachLib.EMLPfaffian
+import MachLib.EMLKhovanskiiConstructive
 import MachLib.CosNotInEMLAnyDepth
 import MachLib.LambertW
 import MachLib.EMLAdditionClosureFailure
