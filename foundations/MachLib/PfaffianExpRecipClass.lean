@@ -1,6 +1,8 @@
 import MachLib.MultiPoly
 import MachLib.PfaffianChain
 import MachLib.PfaffianGeneralReduce
+import MachLib.Differentiation
+import MachLib.SturmNonOscillation
 
 /-!
 # The exp-or-reciprocal Pfaffian chain class — Brick A-1 (extended descent)
@@ -112,6 +114,49 @@ theorem IsExpOrRecipChain_chainRestrict {N : Nat} (c : PfaffianChain (N + 1))
     rw [(h ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩).2
       ⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ hij] at hle
     exact Nat.le_zero.mp hle
+
+/-! ## Brick A-2 — top extraction + reciprocal-level coherence -/
+
+/-- **Top extraction.** For a depth-`(N+1)` exp-or-reciprocal chain, the top
+level `⟨N,_⟩` is exp-type or reciprocal-type, and every other level is top-free
+in the top variable. Mirrors `IsExpChain_top`, now yielding the disjunction the
+descent step will case on. -/
+theorem IsExpOrRecip_top {N : Nat} (c : PfaffianChain (N + 1))
+    (h : IsExpOrRecipChain c) :
+    ( (∃ G : MultiPoly (N + 1),
+          MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ G = 0
+          ∧ c.relations ⟨N, Nat.lt_succ_self N⟩
+              = MultiPoly.mul G (MultiPoly.varY ⟨N, Nat.lt_succ_self N⟩))
+      ∨ (∃ G : MultiPoly (N + 1),
+          MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ G = 0
+          ∧ c.relations ⟨N, Nat.lt_succ_self N⟩
+              = MultiPoly.mul G (MultiPoly.mul (MultiPoly.varY ⟨N, Nat.lt_succ_self N⟩)
+                                               (MultiPoly.varY ⟨N, Nat.lt_succ_self N⟩))) )
+    ∧ (∀ j : Fin (N + 1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY ⟨N, Nat.lt_succ_self N⟩ (c.relations j) = 0) := by
+  refine ⟨(h ⟨N, Nat.lt_succ_self N⟩).1, ?_⟩
+  intro j hj
+  have hjlt : j.val < N := by
+    rcases Nat.lt_or_ge j.val N with h' | h'
+    · exact h'
+    · exact absurd (Fin.ext (Nat.le_antisymm (Nat.lt_succ_iff.mp j.isLt) h')) hj
+  exact (h j).2 ⟨N, Nat.lt_succ_self N⟩ hjlt
+
+/-- **Reciprocal-level coherence.** If `v` has derivative `v'` at `x` and
+`v x > 0`, then `1/v` has derivative `−v'·((1/v)·(1/v))` — exactly the
+reciprocal-type relation `G·y²` with `eval G = −v'` and `y = 1/v`. This is the
+`IsCoherentAt` obligation a reciprocal level (a `log`'s inner `1/argument`)
+discharges; built from the reciprocal rule `HasDerivAt_inv`. `v x > 0` is the
+EML domain-safety condition (`log` arguments are positive). -/
+theorem recip_level_hasDerivAt (v : Real → Real) (v' x : Real)
+    (hv : HasDerivAt v v' x) (hvpos : 0 < v x) :
+    HasDerivAt (fun y => 1 / v y) (-v' * ((1 / v x) * (1 / v x))) x := by
+  have hvne : v x ≠ 0 := ne_of_gt hvpos
+  have h := HasDerivAt_inv v v' x hvne hv
+  have hb : (-v' / (v x * v x) : Real) = -v' * ((1 / v x) * (1 / v x)) := by
+    rw [one_div_mul_one_div hvpos,
+      div_def (-v') (v x * v x) (ne_of_gt (mul_pos hvpos hvpos))]
+  rw [hb] at h; exact h
 
 end PfaffianExpRecip
 end MachLib
