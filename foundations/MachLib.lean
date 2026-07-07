@@ -53,6 +53,7 @@ import MachLib.Pfaffian
 import MachLib.EMLTreeComposition
 import MachLib.EMLPfaffian
 import MachLib.EMLKhovanskiiConstructive
+import MachLib.ExpRationalKhovanskii
 import MachLib.CosNotInEMLAnyDepth
 import MachLib.LambertW
 import MachLib.EMLAdditionClosureFailure
