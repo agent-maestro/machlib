@@ -170,4 +170,32 @@ theorem wronskian_zero_zeros_subset
   obtain ⟨w, hw, hFw⟩ := hFne
   exact hFw (hFall w hw)
 
+/-- **g≡0 leaf discharge (analytic form).** Assembles
+`wronskian_zero_zeros_subset` into the exact `hDegen` conclusion shape:
+given a bound `N` on `G`'s zero lists and a vanishing Wronskian, `F`'s zero
+lists are bounded by the SAME `N`. Since `G = pfaffianChainFn c c_D` has
+`degreeY_top = 0` (leading coefficient), `N` is furnished by the descent's
+depth IH — so the degenerate log leaf costs nothing beyond the leading
+coefficient's own count. The concrete descent supplies `F,G` (via
+`hasDerivAt_eval_natural` + `eml_tree_analytic_on_pos`) and reads `hW` off
+the `g ≡ 0` hypothesis through the `pfaffianChainFn` eval homomorphism. -/
+theorem wronskian_zero_bounded_zeros
+    (F G Fp Gp : Real → Real) (a b : Real) (hab : a < b)
+    (hFanalytic : IsAnalyticOnReals F (Icc a b))
+    (hGanalytic : IsAnalyticOnReals G (Icc a b))
+    (hFderiv : ∀ x, a < x → x < b → HasDerivAt F (Fp x) x)
+    (hGderiv : ∀ x, a < x → x < b → HasDerivAt G (Gp x) x)
+    (hW : ∀ x, a < x → x < b → Fp x * G x - F x * Gp x = 0)
+    (hFne : ∃ x, Ioo a b x ∧ F x ≠ 0)
+    (N : Nat)
+    (hGbound : ∀ zeros : List Real, zeros.Nodup →
+       (∀ z ∈ zeros, a < z ∧ z < b ∧ G z = 0) → zeros.length ≤ N) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+       (∀ z ∈ zeros, a < z ∧ z < b ∧ F z = 0) → zeros.length ≤ M := by
+  refine ⟨N, fun zeros hnd hz => hGbound zeros hnd (fun z hzm => ?_)⟩
+  obtain ⟨hza, hzb, hFz⟩ := hz z hzm
+  exact ⟨hza, hzb,
+    wronskian_zero_zeros_subset F G Fp Gp a b hab hFanalytic hGanalytic
+      hFderiv hGderiv hW hFne z hza hzb hFz⟩
+
 end MachLib
