@@ -68,6 +68,7 @@ import MachLib.MultiPolyPartial
 import MachLib.PfaffianCTDCongrChain
 import MachLib.PfaffianLogIdN
 import MachLib.PfaffianLogLeadId
+import MachLib.PfaffianLogWronskian
 import MachLib.PfaffianExpRecipDescent
 import MachLib.PfaffianExpRecipExample
 import MachLib.CosNotInEMLAnyDepth
