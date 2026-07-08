@@ -73,5 +73,27 @@ theorem recip_top_combined (c : PfaffianChain (N + 1)) (a b : Real)
   · intro x hxa hxb
     rw [heval x]; exact ne_of_gt (hvpos x hxa hxb)
 
+/-- **`clearTop` preserves non-vanishing** on the domain (`v > 0`). If `p` is
+non-vanishing at some `z ∈ (a,b)`, so is `clearTop v p` — the cleared numerator
+`= v^d · p` and `v^d > 0`. This is what lets the reciprocal-top case feed the
+combined induction hypothesis (which requires a non-vanishing target). -/
+theorem clearTop_nonvanishing (c : PfaffianChain (N + 1)) (v : MultiPoly N) (a b : Real)
+    (hwitness : ∀ x : Real, a < x → x < b →
+        c.chainValues x ⟨N, Nat.lt_succ_self N⟩
+          = 1 / MultiPoly.eval v x ((chainRestrict c).chainValues x))
+    (hvpos : ∀ x : Real, a < x → x < b →
+        0 < MultiPoly.eval v x ((chainRestrict c).chainValues x))
+    (p : MultiPoly (N + 1))
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ z, a < z ∧ z < b
+      ∧ (pfaffianChainFn (chainRestrict c) (clearTop v p)).eval z ≠ 0 := by
+  obtain ⟨z, hza, hzb, hzne⟩ := hne
+  refine ⟨z, hza, hzb, ?_⟩
+  have hvne : MultiPoly.eval v z ((chainRestrict c).chainValues z) ≠ 0 :=
+    ne_of_gt (hvpos z hza hzb)
+  show MultiPoly.eval (clearTop v p) z ((chainRestrict c).chainValues z) ≠ 0
+  rw [clearTop_chain_bridge c v z (hwitness z hza hzb) hvne p]
+  exact mul_ne_zero (ne_of_gt (mpolyPow_eval_pos v (hvpos z hza hzb) _)) hzne
+
 end PfaffianExpRecipW
 end MachLib

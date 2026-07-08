@@ -110,6 +110,15 @@ theorem mpolyPow_eval_add (v : MultiPoly N) (a b : Nat) (x : Real) (env : Fin N 
         = MultiPoly.eval (mpolyPow v a) x env * MultiPoly.eval (mpolyPow v (b + 1)) x env
     rw [mpolyPow_eval_succ, ih, mpolyPow_eval_succ]; mach_ring
 
+/-- `v^k > 0` when `v > 0` — the cleared denominator is positive, so clearing is
+faithful (introduces no spurious zeros) and preserves non-vanishing. -/
+theorem mpolyPow_eval_pos (v : MultiPoly N) {x : Real} {env : Fin N → Real}
+    (hv : 0 < MultiPoly.eval v x env) (k : Nat) :
+    0 < MultiPoly.eval (mpolyPow v k) x env := by
+  induction k with
+  | zero => rw [mpolyPow_eval_zero]; exact one_pos
+  | succ k ih => rw [mpolyPow_eval_succ]; exact mul_pos hv ih
+
 /-- Padding algebra for the shared-degree `add` case (the `MultiPoly` analog of
 `pad_combine_add`). -/
 theorem mpad_combine_add (v : MultiPoly N) (x : Real) (env : Fin N → Real)
