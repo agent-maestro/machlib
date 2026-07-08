@@ -657,5 +657,49 @@ theorem exp_reduce_lead_eval_zero_of_const {N : Nat} (c : PfaffianChain N) (top 
   show (0:Real) - (0:Real) * c₁ = 0
   mach_ring
 
+
+/-- **Exp integrating factor `E = −deg·log(y_top)`.** For an EXP-type top (relation
+`G·y_top`) with `y_top > 0` on `(a,b)`, the exponent `E z = −deg·log(y_top z)` satisfies
+`E' = −(pf c (deg·G)).eval` — the integrating factor `zero_count_bound`'s reduce step needs
+for the exp reduce with multiplier `deg·G`. `(log y_top)' = y_top'/y_top = G` (coherence:
+`y_top' = G·y_top`), so `E' = −deg·G`. Needs only `y_top > 0` (positivity) — NOT the lower
+chain being exp — and it is globally defined (`y_top > 0` everywhere ⇒ no partition). -/
+theorem exp_integrating_factor {N : Nat} (c : PfaffianChain N) (top : Fin N) (G : MultiPoly N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (a b : Real) (hcoh : c.IsCoherentOn a b)
+    (hpos : ∀ z, a < z → z < b → 0 < c.evals top z) (deg : Nat) :
+    ∀ z, a < z → z < b →
+      HasDerivAt (fun w => -(MachLib.Real.natCast deg) * Real.log (c.evals top w))
+        (-(pfaffianChainFn c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast deg)) G)).eval z) z := by
+  intro z hza hzb
+  have hypos := hpos z hza hzb
+  have hyne : c.evals top z ≠ 0 := ne_of_gt hypos
+  -- y_top' = eval(relations top) = eval(G)·(c.evals top z)
+  have hytop : HasDerivAt (c.evals top)
+      (MultiPoly.eval G z (c.chainValues z) * c.evals top z) z := by
+    have h := hcoh z hza hzb top
+    rw [h_reltop] at h
+    have hrw : MultiPoly.eval (MultiPoly.mul G (MultiPoly.varY top)) z (c.chainValues z)
+        = MultiPoly.eval G z (c.chainValues z) * c.evals top z := by
+      rw [MultiPoly.eval_mul]; rfl
+    rwa [hrw] at h
+  have hlog : HasDerivAt (fun w => Real.log (c.evals top w))
+      ((1 / c.evals top z) * (MultiPoly.eval G z (c.chainValues z) * c.evals top z)) z :=
+    HasDerivAt_comp Real.log (c.evals top) (MultiPoly.eval G z (c.chainValues z) * c.evals top z)
+      (1 / c.evals top z) z hytop (HasDerivAt_log_pos _ hypos)
+  have hE := HasDerivAt_mul (fun _ => -(MachLib.Real.natCast deg)) (fun w => Real.log (c.evals top w))
+      0 ((1 / c.evals top z) * (MultiPoly.eval G z (c.chainValues z) * c.evals top z)) z
+      (HasDerivAt_const _ z) hlog
+  have hval : (0 : Real) * Real.log (c.evals top z)
+        + (-(MachLib.Real.natCast deg)) * ((1 / c.evals top z) * (MultiPoly.eval G z (c.chainValues z) * c.evals top z))
+      = -(pfaffianChainFn c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast deg)) G)).eval z := by
+    show _ = -(MultiPoly.eval (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast deg)) G) z (c.chainValues z))
+    rw [MultiPoly.eval_mul, MultiPoly.eval_const]
+    rw [show (1 / c.evals top z) * (MultiPoly.eval G z (c.chainValues z) * c.evals top z)
+          = MultiPoly.eval G z (c.chainValues z) * (c.evals top z * (1 / c.evals top z)) from by mach_ring,
+        MachLib.Real.mul_div_cancel_left hyne]
+    mach_ring
+  rwa [hval] at hE
+
 end PfaffianLogLead
 end MachLib
