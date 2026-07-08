@@ -46,6 +46,7 @@ import MachLib.ThreePointEvalClosure
 import MachLib.AnalyticFiniteZeros
 import MachLib.AnalyticFiniteZerosReal
 import MachLib.Differentiation
+import MachLib.WronskianProportional
 import MachLib.EntropyDuality
 import MachLib.KLDivergence
 import MachLib.SinNotInEMLDepth2FinalVcVc
