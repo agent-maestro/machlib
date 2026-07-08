@@ -105,6 +105,13 @@ axiom analytic_sub (f g : Real → Real) (S : RealSet) :
     IsAnalyticOnReals f S → IsAnalyticOnReals g S →
     IsAnalyticOnReals (fun x => f x - g x) S
 
+/-- Closure under product. The obvious sibling of `analytic_add`/`analytic_sub`
+(a product of real-analytic functions is real-analytic); needed so that a
+polynomial in `(x, y_1, …, y_n)` over analytic chain-values is analytic. -/
+axiom analytic_mul (f g : Real → Real) (S : RealSet) :
+    IsAnalyticOnReals f S → IsAnalyticOnReals g S →
+    IsAnalyticOnReals (fun x => f x * g x) S
+
 /-- Closure under composition. -/
 axiom analytic_comp (f g : Real → Real) (S T : RealSet) :
     IsAnalyticOnReals g S →
