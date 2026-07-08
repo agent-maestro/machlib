@@ -3,14 +3,22 @@ import MachLib.PfaffianChainNodes
 import MachLib.SinNotInEML
 
 /-!
-# EMLTree → Pfaffian chain encoder — foundation
+# EMLTree → Pfaffian chain encoder
 
-The recursive encoder turns an `EMLTree` (`const | var | eml t1 t2` with
-`eml t1 t2 = exp(t1) − log(t2)`) into a Pfaffian chain + barrier polynomial
-with eval-agreement, by *state-threading* a single growing chain via
-`chainExtend` (no chain-merging).
+The recursive encoder `enc` turns an `EMLTree` (`const | var | eml t1 t2` with
+`eml t1 t2 = exp(t1) − log(t2)`) into a Pfaffian chain + barrier polynomial, by
+*state-threading* a single growing chain via `chainExtend` (no chain-merging).
+It carries the real recip/log/exp Pfaffian relations, so it ships BOTH:
 
-This file builds the two index-bookkeeping primitives the recursion needs:
+- `enc_eval` — the barrier evaluates to `t.eval` (eval-agreement); and
+- `enc_isCoherentOn` — the produced chain is genuinely coherent on `(a,b)`,
+  given the context chain is coherent there and every `eml` node's
+  log-argument stays positive (`LogArgPos`).
+
+`enc_isCoherentOn` is the payoff: a coherent chain is analytic, which is what
+the log-Khovanskii arc consumes.
+
+Two index-bookkeeping primitives the recursion needs:
 
 - `nVars t` — the number of chain variables `t` contributes: `0` for
   `const`/`var`, and `nVars t2 + nVars t1 + 3` for `eml t1 t2` (each `eml`
@@ -78,80 +86,11 @@ theorem len_eq (t : EMLTree) (N : Nat) : len t N = N + nVars t := by
   | var => rfl
   | eml t1 t2 ih1 ih2 => show len t1 (len t2 N) + 3 = _; rw [ih1, ih2, nVars]; omega
 
-/-- The `eml` step, factored out as a NAMED helper so its structure is
-exposed for `enc`'s eval-agreement proof. Given `t2`'s chain/barrier
-`(ca, b2)` and `t1`'s `(cb, b1)`, appends the reciprocal / log / exp
-variables and returns `(chain, exp_var − log_var)`. Eval-functions read the
-sub-values off `ca`/`cb` directly (lift-free). -/
-noncomputable def encEmlStep {N : Nat} (ca : PfaffianChain N) (b2 : MultiPoly N)
-    {M : Nat} (cb : PfaffianChain M) (b1 : MultiPoly M) :
-    PfaffianChain (M + 3) × MultiPoly (M + 3) :=
-  let cc := chainExtend cb
-    (fun y => 1 / MultiPoly.eval b2 y (ca.chainValues y)) (MultiPoly.const 0)
-  let cd := chainExtend cc
-    (fun y => Real.log (MultiPoly.eval b2 y (ca.chainValues y))) (MultiPoly.const 0)
-  let ce := chainExtend cd
-    (fun y => Real.exp (MultiPoly.eval b1 y (cb.chainValues y))) (MultiPoly.const 0)
-  (ce, MultiPoly.sub
-    (MultiPoly.varY (⟨M + 2, by omega⟩ : Fin (M + 3)))
-    (MultiPoly.varY (⟨M + 1, by omega⟩ : Fin (M + 3))))
+/-! ## Index-lift foundation
 
-noncomputable def enc : (t : EMLTree) → {N : Nat} → PfaffianChain N →
-    PfaffianChain (len t N) × MultiPoly (len t N)
-  | .const c, _, chain => (chain, MultiPoly.const c)
-  | .var,     _, chain => (chain, MultiPoly.varX)
-  | .eml t1 t2, N, chain =>
-    let r2 := enc t2 chain
-    let r1 := enc t1 r2.1
-    encEmlStep r2.1 r2.2 r1.1 r1.2
-
-/-- `encEmlStep`'s barrier evaluates to `exp v1 − log v2` when the two
-sub-barriers evaluate to `v1` (`t1`'s value) and `v2` (`t2`'s value). The
-exp variable is `encEmlStep`'s top; the log variable is one below it. -/
-theorem encEmlStep_eval {N : Nat} (ca : PfaffianChain N) (b2 : MultiPoly N)
-    {M : Nat} (cb : PfaffianChain M) (b1 : MultiPoly M) (x v1 v2 : Real)
-    (hb2 : MultiPoly.eval b2 x (ca.chainValues x) = v2)
-    (hb1 : MultiPoly.eval b1 x (cb.chainValues x) = v1) :
-    MultiPoly.eval (encEmlStep ca b2 cb b1).2 x ((encEmlStep ca b2 cb b1).1.chainValues x)
-      = Real.exp v1 - Real.log v2 := by
-  simp only [encEmlStep, MultiPoly.eval_sub, MultiPoly.eval_varY]
-  congr 1
-  · show (chainExtend _ _ _).evals (⟨M + 2, by omega⟩ : Fin (M + 3)) x = Real.exp v1
-    rw [chainExtend_evals_last]
-    show Real.exp (MultiPoly.eval b1 x (cb.chainValues x)) = Real.exp v1
-    rw [hb1]
-  · show (chainExtend _ _ _).evals (⟨M + 1, by omega⟩ : Fin (M + 3)) x = Real.log v2
-    rw [chainExtend_evals_of_lt _ _ _ _ (by omega : M + 1 < M + 2)]
-    show (chainExtend _ _ _).evals (⟨M + 1, by omega⟩ : Fin (M + 2)) x = Real.log v2
-    rw [chainExtend_evals_last]
-    show Real.log (MultiPoly.eval b2 x (ca.chainValues x)) = Real.log v2
-    rw [hb2]
-
-/-- **Eval-agreement.** The encoded barrier evaluates to the tree's value:
-`(pfaffianChainFn (enc t chain).1 (enc t chain).2).eval x = t.eval x`, for any
-context chain. This is the correctness of the encoder's eval layer. -/
-theorem enc_eval : ∀ (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (x : Real),
-    (pfaffianChainFn (enc t chain).1 (enc t chain).2).eval x = t.eval x := by
-  intro t
-  induction t with
-  | const c => intro N chain x; rfl
-  | var => intro N chain x; rfl
-  | eml t1 t2 ih1 ih2 =>
-    intro N chain x
-    show MultiPoly.eval (enc (EMLTree.eml t1 t2) chain).2 x
-          ((enc (EMLTree.eml t1 t2) chain).1.chainValues x)
-       = Real.exp (t1.eval x) - Real.log (t2.eval x)
-    exact encEmlStep_eval (enc t2 chain).1 (enc t2 chain).2
-      (enc t1 (enc t2 chain).1).1 (enc t1 (enc t2 chain).1).2 x (t1.eval x) (t2.eval x)
-      (ih2 chain x) (ih1 (enc t2 chain).1 x)
-
-/-! ## Foundation for the coherent-relations layer
-
-The eval layer above uses placeholder (`const 0`) relations and reads sub-values
-off the sub-chains directly, which is lift-free. The coherent layer must instead
-carry the *real* Pfaffian relations, which live in the full chain space and
-reference `chainTotalDeriv` of the (coherent) sub-chain — so a sub-barrier `b2`
-built in `ca`'s space (`MultiPoly N`) must be raised into `cb`'s space
+The encoder's real Pfaffian relations live in the full chain space and
+reference `chainTotalDeriv` of the (coherent) sub-chain, so a sub-barrier `b2`
+built in `t2`'s space (`MultiPoly N`) must be raised into `t1`'s space
 (`MultiPoly (len t1 N)`). `encLift` is that raise, cast-free (target size is
 `len`-shaped), and `eval_encLift` + `enc_lower` prove it preserves the value:
 the raised barrier, evaluated along the extended chain, agrees with the original
@@ -191,36 +130,14 @@ theorem eval_encLift : (t : EMLTree) → {N : Nat} → (p : MultiPoly N) → (x 
           eval_encLift t1 (encLift t2 p) x _,
           eval_encLift t2 p x _]
 
-/-- **`enc` preserves lower chain-values.** Because every node is added on
-top, the first `N` variables of `enc t ca` are `ca`'s originals. -/
-theorem enc_lower (t : EMLTree) : ∀ {N : Nat} (ca : PfaffianChain N) (x : Real) (i : Fin N),
-    (enc t ca).1.evals ⟨i.val, Nat.lt_of_lt_of_le i.isLt (le_len t N)⟩ x = ca.evals i x := by
-  induction t with
-  | const c => intro N ca x i; rfl
-  | var => intro N ca x i; rfl
-  | eml t1 t2 ih1 ih2 =>
-      intro N ca x i
-      have hN2 : N ≤ len t2 N := le_len t2 N
-      have hM : len t2 N ≤ len t1 (len t2 N) := le_len t1 (len t2 N)
-      have hi0 : i.val < len t1 (len t2 N) + 2 := by have := i.isLt; omega
-      have hi1 : i.val < len t1 (len t2 N) + 1 := by have := i.isLt; omega
-      have hi2 : i.val < len t1 (len t2 N) := by have := i.isLt; omega
-      simp only [enc, encEmlStep]
-      rw [chainExtend_evals_of_lt _ _ _ _ hi0,
-          chainExtend_evals_of_lt _ _ _ _ hi1,
-          chainExtend_evals_of_lt _ _ _ _ hi2,
-          ih1 (enc t2 ca).1 x ⟨i.val, Nat.lt_of_lt_of_le i.isLt hN2⟩, ih2 ca x i]
+/-! ## The eml step's Pfaffian relations
 
-/-! ## Coherent-relations layer
-
-The eval layer's `encEmlStep` uses placeholder (`const 0`) relations. Here is the
-same eml step built with the *real* recip / log / exp Pfaffian relations, and a
-proof it is coherent. `w : MultiPoly M` is `t2`'s value expressed in `cb`'s
-space (the caller supplies `encLift t1 b2`, whose value equals `⟦t2⟧` by
-`eval_encLift` + `enc_lower`). Eval-functions are written in the node-matching
-form so each node lemma applies with `hne := rfl`. Threading this through `enc`
-(with a per-`eml`-node log-argument-positivity hypothesis) is the remaining
-brick toward `(enc t chain).1.IsCoherentOn`. -/
+The three real relations for one `eml` node, added innermost-first: reciprocal
+`r = 1/⟦t2⟧`, log `L = log⟦t2⟧`, exp `E = exp⟦t1⟧`. `w : MultiPoly M` is `t2`'s
+value expressed in `cb`'s space (the encoder supplies `encLift t1 b2`, whose
+value equals `⟦t2⟧` by `eval_encLift` + `enc_lower`). Eval-functions are written
+in the node-matching form so each node coherence lemma applies with `hne := rfl`.
+-/
 
 /-- Reciprocal level: append `r = 1/⟦t2⟧` with the recip-type relation
 `r' = −(cTD w)·r²`. -/
@@ -241,8 +158,8 @@ noncomputable def stepCD {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M) :
     (MultiPoly.mul (MultiPoly.liftLastY (chainTotalDeriv (stepCC cb w) (MultiPoly.liftLastY w)))
       (MultiPoly.varY (⟨M, by omega⟩ : Fin (M + 2))))
 
-/-- Coherent eml step: reciprocal → log → exp, all with real Pfaffian relations
-(`b1 = ⟦t1⟧` in `cb`'s space; the exp level's `E' = (cTD b1)·E`). -/
+/-- Coherent eml step chain: reciprocal → log → exp, all with real Pfaffian
+relations (`b1 = ⟦t1⟧` in `cb`'s space; the exp level's `E' = (cTD b1)·E`). -/
 noncomputable def encEmlStepR {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) :
     PfaffianChain (M + 3) :=
   chainExtend (stepCD cb w)
@@ -282,45 +199,41 @@ theorem encEmlStepR_isCoherentOn {M : Nat} (cb : PfaffianChain M) (b1 w : MultiP
   exact chainExtend_isCoherentOn (stepCD cb w) _ _ a b hcd (fun x hxa hxb =>
     chainExtend_exp_isCoherentAt (stepCD cb w) (liftLastYBy 2 b1) x (hcd x hxa hxb) _ rfl _ rfl)
 
-/-! ## The coherent encoder `encC` — threading real relations through `enc`
+/-! ## The encoder `enc`
 
-`enc` above carries placeholder (`const 0`) relations: enough for
-eval-agreement, not for coherence. `encC` is the *same* encoder built with the
-real recip/log/exp relations (`encEmlStepR`), so its chain is genuinely coherent
-wherever every `eml` node's log-argument stays positive. It carries both facts:
-`encC_eval` (barrier evaluates to `t.eval`) and `encC_isCoherentOn` (the target).
+`enc` state-threads the eml steps above. At each `eml` node `t2`'s barrier is
+lifted into `t1`'s chain space (`encLift t1`) so the recip/log relations can
+reference it; `enc_lower` (chain-value preservation) + `eval_encLift` bridge
+that lift's value back to `⟦t2⟧`, which is where the genuine positivity
+side-condition `LogArgPos` enters `enc_isCoherentOn`. -/
 
-At each `eml` node `t2`'s barrier is lifted into `t1`'s chain space
-(`encLift t1`) so the recip/log relations can reference it; `encC_lower`
-(chain-value preservation) + `eval_encLift` bridge that lift's value back to
-`⟦t2⟧`, which is where the genuine positivity side-condition `LogArgPos` enters. -/
-
-/-- The coherent eml step: real-relation chain (`encEmlStepR`) paired with the
-same `exp_var − log_var` barrier as the eval layer. `w` is `t2`'s value in
-`cb`'s space (the caller supplies `encLift t1 b2`). -/
-noncomputable def encEmlStepC {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) :
+/-- The eml step as `(chain, barrier)`: the real-relation chain `encEmlStepR`
+paired with the `exp_var − log_var` barrier. `w` is `t2`'s value in `cb`'s
+space (the encoder supplies `encLift t1 b2`). -/
+noncomputable def encEmlStep {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) :
     PfaffianChain (M + 3) × MultiPoly (M + 3) :=
   (encEmlStepR cb b1 w,
    MultiPoly.sub
      (MultiPoly.varY (⟨M + 2, by omega⟩ : Fin (M + 3)))
      (MultiPoly.varY (⟨M + 1, by omega⟩ : Fin (M + 3))))
 
-/-- The coherent encoder: like `enc` but with real Pfaffian relations. At each
-`eml` node it lifts `t2`'s barrier into `t1`'s chain space (`encLift t1`) so the
-recip/log relations can reference it. Cast-free (`len`-shaped output). -/
-noncomputable def encC : (t : EMLTree) → {N : Nat} → PfaffianChain N →
+/-- The encoder: state-thread one growing chain, innermost-first. Cast-free
+(`len`-shaped output). At each `eml` node it lifts `t2`'s barrier into `t1`'s
+chain space (`encLift t1`) so the recip/log relations can reference it. -/
+noncomputable def enc : (t : EMLTree) → {N : Nat} → PfaffianChain N →
     PfaffianChain (len t N) × MultiPoly (len t N)
   | .const c, _, chain => (chain, MultiPoly.const c)
   | .var,     _, chain => (chain, MultiPoly.varX)
   | .eml t1 t2, _, chain =>
-    let r2 := encC t2 chain
-    let r1 := encC t1 r2.1
-    encEmlStepC r1.1 r1.2 (encLift t1 r2.2)
+    let r2 := enc t2 chain
+    let r1 := enc t1 r2.1
+    encEmlStep r1.1 r1.2 (encLift t1 r2.2)
 
-/-- **`encC` preserves lower chain-values** (same as `enc_lower`; relations do
-not affect `evals`). The first `N` variables of `encC t ca` are `ca`'s. -/
-theorem encC_lower (t : EMLTree) : ∀ {N : Nat} (ca : PfaffianChain N) (x : Real) (i : Fin N),
-    (encC t ca).1.evals ⟨i.val, Nat.lt_of_lt_of_le i.isLt (le_len t N)⟩ x = ca.evals i x := by
+/-- **`enc` preserves lower chain-values.** Because every node is added on top,
+the first `N` variables of `enc t ca` are `ca`'s originals. Relations do not
+affect `evals`. -/
+theorem enc_lower (t : EMLTree) : ∀ {N : Nat} (ca : PfaffianChain N) (x : Real) (i : Fin N),
+    (enc t ca).1.evals ⟨i.val, Nat.lt_of_lt_of_le i.isLt (le_len t N)⟩ x = ca.evals i x := by
   induction t with
   | const c => intro N ca x i; rfl
   | var => intro N ca x i; rfl
@@ -331,29 +244,29 @@ theorem encC_lower (t : EMLTree) : ∀ {N : Nat} (ca : PfaffianChain N) (x : Rea
       have hi0 : i.val < len t1 (len t2 N) + 2 := by have := i.isLt; omega
       have hi1 : i.val < len t1 (len t2 N) + 1 := by have := i.isLt; omega
       have hi2 : i.val < len t1 (len t2 N) := by have := i.isLt; omega
-      simp only [encC, encEmlStepC, encEmlStepR, stepCD, stepCC]
+      simp only [enc, encEmlStep, encEmlStepR, stepCD, stepCC]
       rw [chainExtend_evals_of_lt _ _ _ _ hi0,
           chainExtend_evals_of_lt _ _ _ _ hi1,
           chainExtend_evals_of_lt _ _ _ _ hi2,
-          ih1 (encC t2 ca).1 x ⟨i.val, Nat.lt_of_lt_of_le i.isLt hN2⟩, ih2 ca x i]
+          ih1 (enc t2 ca).1 x ⟨i.val, Nat.lt_of_lt_of_le i.isLt hN2⟩, ih2 ca x i]
 
 /-- **The `encLift` value bridge.** `t2`'s barrier, lifted into `t1`'s chain
-space and evaluated along `encC t1 (encC t2 chain).1`, equals its value along
-`t2`'s own chain — because `encC_lower` says the lower chain-values are shared
+space and evaluated along `enc t1 (enc t2 chain).1`, equals its value along
+`t2`'s own chain — because `enc_lower` says the lower chain-values are shared
 and `eval_encLift` says the added top variables are irrelevant. Stated with the
-sub-value `v` as a hypothesis so it serves both `encC_eval` (via the IH) and
-`encC_isCoherentOn` (via `encC_eval`) without mutual recursion. -/
-theorem encC_encLift_eval (t1 t2 : EMLTree) {N : Nat} (chain : PfaffianChain N) (x v : Real)
-    (h2 : MultiPoly.eval (encC t2 chain).2 x ((encC t2 chain).1.chainValues x) = v) :
-    MultiPoly.eval (encLift t1 (encC t2 chain).2) x
-        ((encC t1 (encC t2 chain).1).1.chainValues x) = v := by
-  rw [eval_encLift t1 (encC t2 chain).2 x ((encC t1 (encC t2 chain).1).1.chainValues x)]
+sub-value `v` as a hypothesis so it serves both `enc_eval` (via the IH) and
+`enc_isCoherentOn` (via `enc_eval`) without mutual recursion. -/
+theorem enc_encLift_eval (t1 t2 : EMLTree) {N : Nat} (chain : PfaffianChain N) (x v : Real)
+    (h2 : MultiPoly.eval (enc t2 chain).2 x ((enc t2 chain).1.chainValues x) = v) :
+    MultiPoly.eval (encLift t1 (enc t2 chain).2) x
+        ((enc t1 (enc t2 chain).1).1.chainValues x) = v := by
+  rw [eval_encLift t1 (enc t2 chain).2 x ((enc t1 (enc t2 chain).1).1.chainValues x)]
   have henv : (fun i : Fin (len t2 N) =>
-      ((encC t1 (encC t2 chain).1).1.chainValues x)
+      ((enc t1 (enc t2 chain).1).1.chainValues x)
         ⟨i.val, Nat.lt_of_lt_of_le i.isLt (le_len t1 (len t2 N))⟩)
-      = (encC t2 chain).1.chainValues x := by
+      = (enc t2 chain).1.chainValues x := by
     funext i
-    exact encC_lower t1 (encC t2 chain).1 x i
+    exact enc_lower t1 (enc t2 chain).1 x i
   rw [henv]; exact h2
 
 /-- The two top variables (recip, log) of `stepCD` are irrelevant to a barrier
@@ -378,15 +291,15 @@ theorem stepCC_liftLastY_eval {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M)
   simp only [stepCC]
   exact eval_liftLastY_chainExtend cb _ _ w x
 
-/-- `encEmlStepC`'s barrier evaluates to `exp v1 − log v2` when the sub-barriers
-evaluate to `v1` (`⟦t1⟧`) and `v2` (`⟦t2⟧`) along `cb`. Same shape as
-`encEmlStep_eval`, bridged through the recip/log lifts. -/
-theorem encEmlStepC_eval {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) (x v1 v2 : Real)
+/-- `encEmlStep`'s barrier evaluates to `exp v1 − log v2` when the sub-barriers
+evaluate to `v1` (`⟦t1⟧`) and `v2` (`⟦t2⟧`) along `cb`, bridged through the
+recip/log lifts. -/
+theorem encEmlStep_eval {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) (x v1 v2 : Real)
     (hb1 : MultiPoly.eval b1 x (cb.chainValues x) = v1)
     (hw : MultiPoly.eval w x (cb.chainValues x) = v2) :
-    MultiPoly.eval (encEmlStepC cb b1 w).2 x ((encEmlStepC cb b1 w).1.chainValues x)
+    MultiPoly.eval (encEmlStep cb b1 w).2 x ((encEmlStep cb b1 w).1.chainValues x)
       = Real.exp v1 - Real.log v2 := by
-  simp only [encEmlStepC, MultiPoly.eval_sub, MultiPoly.eval_varY]
+  simp only [encEmlStep, MultiPoly.eval_sub, MultiPoly.eval_varY]
   congr 1
   · show (encEmlStepR cb b1 w).evals (⟨M + 2, by omega⟩ : Fin (M + 3)) x = Real.exp v1
     simp only [encEmlStepR]
@@ -404,25 +317,25 @@ theorem encEmlStepC_eval {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M) (
        = Real.log v2
     rw [stepCC_liftLastY_eval cb w x, hw]
 
-/-- **`encC` eval-agreement.** The coherent encoder's barrier still evaluates to
-the tree's value. Relation-independent: re-proved through the `encLift`/
-`encC_lower` bridges rather than the eval layer's direct reads. -/
-theorem encC_eval : ∀ (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (x : Real),
-    (pfaffianChainFn (encC t chain).1 (encC t chain).2).eval x = t.eval x := by
+/-- **Eval-agreement.** The encoded barrier evaluates to the tree's value:
+`(pfaffianChainFn (enc t chain).1 (enc t chain).2).eval x = t.eval x`, for any
+context chain. Bridged through `encLift`/`enc_lower` (relation-independent). -/
+theorem enc_eval : ∀ (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (x : Real),
+    (pfaffianChainFn (enc t chain).1 (enc t chain).2).eval x = t.eval x := by
   intro t
   induction t with
   | const c => intro N chain x; rfl
   | var => intro N chain x; rfl
   | eml t1 t2 ih1 ih2 =>
     intro N chain x
-    show MultiPoly.eval (encC (EMLTree.eml t1 t2) chain).2 x
-          ((encC (EMLTree.eml t1 t2) chain).1.chainValues x)
+    show MultiPoly.eval (enc (EMLTree.eml t1 t2) chain).2 x
+          ((enc (EMLTree.eml t1 t2) chain).1.chainValues x)
        = Real.exp (t1.eval x) - Real.log (t2.eval x)
-    exact encEmlStepC_eval (encC t1 (encC t2 chain).1).1 (encC t1 (encC t2 chain).1).2
-      (encLift t1 (encC t2 chain).2) x (t1.eval x) (t2.eval x) (ih1 (encC t2 chain).1 x)
-      (encC_encLift_eval t1 t2 chain x (t2.eval x) (ih2 chain x))
+    exact encEmlStep_eval (enc t1 (enc t2 chain).1).1 (enc t1 (enc t2 chain).1).2
+      (encLift t1 (enc t2 chain).2) x (t1.eval x) (t2.eval x) (ih1 (enc t2 chain).1 x)
+      (enc_encLift_eval t1 t2 chain x (t2.eval x) (ih2 chain x))
 
-/-- The genuine side-condition for `encC`'s coherence: every `eml` node's log
+/-- The genuine side-condition for `enc`'s coherence: every `eml` node's log
 argument `⟦t2⟧` stays positive on `(a,b)` (MachLib's `log` is only
 differentiable on the positives). -/
 def LogArgPos : EMLTree → Real → Real → Prop
@@ -433,28 +346,28 @@ def LogArgPos : EMLTree → Real → Real → Prop
 
 /-- **The encoder produces a coherent chain.** If the context chain is coherent
 on `(a,b)` and every `eml` node's log-argument stays positive there
-(`LogArgPos`), then `encC t chain`'s chain is coherent on `(a,b)`. Leaves are
+(`LogArgPos`), then `enc t chain`'s chain is coherent on `(a,b)`. Leaves are
 the context unchanged; each `eml` node is `encEmlStepR_isCoherentOn` with `cb` =
-the (inductively coherent) `t1` sub-chain and positivity via `encC_eval`. -/
-theorem encC_isCoherentOn (t : EMLTree) :
+the (inductively coherent) `t1` sub-chain and positivity via `enc_eval`. -/
+theorem enc_isCoherentOn (t : EMLTree) :
     ∀ {N : Nat} (chain : PfaffianChain N) (a b : Real),
-      chain.IsCoherentOn a b → LogArgPos t a b → (encC t chain).1.IsCoherentOn a b := by
+      chain.IsCoherentOn a b → LogArgPos t a b → (enc t chain).1.IsCoherentOn a b := by
   induction t with
   | const c => intro N chain a b hchain _; exact hchain
   | var => intro N chain a b hchain _; exact hchain
   | eml t1 t2 ih1 ih2 =>
     intro N chain a b hchain hlog
     obtain ⟨hlog1, hlog2, hpos2⟩ := hlog
-    have hc2 : (encC t2 chain).1.IsCoherentOn a b := ih2 chain a b hchain hlog2
-    have hc1 : (encC t1 (encC t2 chain).1).1.IsCoherentOn a b :=
-      ih1 (encC t2 chain).1 a b hc2 hlog1
+    have hc2 : (enc t2 chain).1.IsCoherentOn a b := ih2 chain a b hchain hlog2
+    have hc1 : (enc t1 (enc t2 chain).1).1.IsCoherentOn a b :=
+      ih1 (enc t2 chain).1 a b hc2 hlog1
     have hwpos : ∀ x, a < x → x < b →
-        0 < MultiPoly.eval (encLift t1 (encC t2 chain).2) x
-              ((encC t1 (encC t2 chain).1).1.chainValues x) := by
+        0 < MultiPoly.eval (encLift t1 (enc t2 chain).2) x
+              ((enc t1 (enc t2 chain).1).1.chainValues x) := by
       intro x hxa hxb
-      rw [encC_encLift_eval t1 t2 chain x (t2.eval x) (encC_eval t2 chain x)]
+      rw [enc_encLift_eval t1 t2 chain x (t2.eval x) (enc_eval t2 chain x)]
       exact hpos2 x hxa hxb
-    exact encEmlStepR_isCoherentOn (encC t1 (encC t2 chain).1).1
-      (encC t1 (encC t2 chain).1).2 (encLift t1 (encC t2 chain).2) a b hc1 hwpos
+    exact encEmlStepR_isCoherentOn (enc t1 (enc t2 chain).1).1
+      (enc t1 (enc t2 chain).1).2 (encLift t1 (enc t2 chain).2) a b hc1 hwpos
 
 end MachLib
