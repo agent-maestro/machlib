@@ -442,5 +442,59 @@ theorem bound_via_trim {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab :
     obtain ⟨hza, hzb, hzero⟩ := hz z hzmem
     exact ⟨hza, hzb, by rw [pfaffianChainFn_trim_eval_gen c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q h_ne_list h_phantom z]; exact hzero⟩
 
+
+/-! ## Reduce arm for arbitrary c_D at degree 1 (deeper nested log tops) -/
+
+open MachLib.MultiPolyReconstruct in
+/-- **Wronskian reduce arm for arbitrary c_D at degree 1 (deeper nested log tops).**
+For a LOG top with `degreeY_top p = 1`, if the leading coefficient `c_D = leadingCoeffY
+top p` is eval-nonzero somewhere and the Wronskian `g = c_D·cTD(p) − cTD(c_D)·p` is not
+identically zero, then `pf(c,p)` has finitely many zeros. Wires `log_wronskian_reduce_full`:
+K = #zeros(c_D) from the depth IH (c_D top-free), Ng = #zeros(g) from `bound_via_trim` (g
+has `degreeY_top ≤ 1` by `degreeYtop_wronskian_le` and eval-zero degree-1 coefficient by
+`wronskian_leadY_eval_zero`, so it trims to top-free). rolle-only; the residual
+non-fragment gaps are exactly the two hypotheses `hcd_nz` (else c_D≡0, a separate
+degree-1 reconstruction) and `hg_nz` (else g≡0, the analyticity/transcendence gap). -/
+theorem log_reduce_multilinear {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b)
+    (h_top : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations ⟨N, Nat.lt_succ_self N⟩) = 0)
+    (h_tri : ∀ j : Fin (N+1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations j) = 0)
+    (IH_depth : ∀ r : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (p : MultiPoly (N + 1))
+    (hd1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 1)
+    (hcd_nz : ∃ z, a < z ∧ z < b ∧
+        (pfaffianChainFn c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)).eval z ≠ 0)
+    (hg_nz : ∃ z, a < z ∧ z < b ∧
+        (pfaffianChainFn c (MultiPoly.sub
+          (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+          (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p))).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  -- K: c_D top-free, eval-nonzero somewhere → depth IH
+  obtain ⟨K, hK⟩ := pfaffianChainFn_bound_of_degreeYtop_zero c
+    (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)
+    (MultiPoly.degreeY_leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) a b hab hcd_nz IH_depth
+  -- Ng: g via bound_via_trim
+  have hg_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.sub
+      (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+      (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p)) ≤ 1 := by
+    have := degreeYtop_wronskian_le c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) h_top h_tri p; omega
+  have hg_lead : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.sub
+        (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+        (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p)) = 1 →
+      ∀ (x : Real) (env : Fin (N+1) → Real),
+        MultiPoly.eval ((yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.sub
+          (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+          (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p))).getD 1 (MultiPoly.const 0)) x env = 0 := by
+    intro _ x env
+    have := wronskian_leadY_eval_zero c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) h_top h_tri p x env
+    rwa [hd1] at this
+  obtain ⟨Ng, hNg⟩ := bound_via_trim c a b hab IH_depth _ hg_le hg_lead hg_nz
+  exact ⟨Ng + K + 1, log_wronskian_reduce_full c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p a b hab hcoh Ng hNg K hK⟩
+
 end PfaffianLogLead
 end MachLib
