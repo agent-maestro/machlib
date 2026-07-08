@@ -136,4 +136,45 @@ theorem enc_hAnalytic (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (S : Rea
     IsAnalyticOnReals (pfaffianChainFn (enc t chain).1 r).eval S :=
   pfaffianChainFn_eval_analytic (enc t chain).1 S (enc_evals_analytic t chain S hchain hpos) r
 
+/-! ## Reconciling the two positivity predicates
+
+`enc_isCoherentOn` takes `LogArgPos t a b` (curried open interval — natural for
+`IsCoherentOn`, which is about interior derivatives) while `enc_hAnalytic` takes
+`LogArgPosOn t (Icc a b)` (a RealSet — natural for `IsAnalyticOnReals`). Both
+say "every log-argument stays positive"; the closed-interval form is the stronger
+one and implies the open-interval form (`Ioo a b ⊆ Icc a b`), so a single
+`LogArgPosOn t (Icc a b)` hypothesis feeds both. (`LogArgPos` stays in the pure
+`EMLEncoder` file, free of the analytic imports; `LogArgPosOn` lives here — the
+bridge is the price of that separation.) -/
+
+/-- **Closed-interval positivity ⇒ open-interval positivity.** At every `eml`
+node, log-arg positivity on the closed `Icc a b` restricts to the open `(a,b)`. -/
+theorem LogArgPos_of_LogArgPosOn_Icc (a b : Real) :
+    ∀ (t : EMLTree), LogArgPosOn t (Icc a b) → LogArgPos t a b := by
+  intro t
+  induction t with
+  | const c => intro _; trivial
+  | var => intro _; trivial
+  | eml t1 t2 ih1 ih2 =>
+      intro h
+      obtain ⟨h1, h2, hlog⟩ := h
+      exact ⟨ih1 h1, ih2 h2,
+        fun x hxa hxb => hlog x ⟨Real.le_of_lt hxa, Real.le_of_lt hxb⟩⟩
+
+/-- **The encoder's full contract, behind one positivity hypothesis.** On a
+closed interval `Icc a b` where every log-argument is positive
+(`LogArgPosOn t (Icc a b)`), over a context chain itself coherent on `(a,b)` and
+analytic on `Icc a b`, the encoder's chain is BOTH coherent on `(a,b)` and
+supplies the descent's `hAnalytic`. This is the single-hypothesis interface a
+`combined_descent` integration consumes. -/
+theorem enc_coherent_and_hAnalytic (t : EMLTree) {N : Nat} (chain : PfaffianChain N)
+    (a b : Real)
+    (hcoh : chain.IsCoherentOn a b)
+    (han : ∀ i, IsAnalyticOnReals (fun x => chain.evals i x) (Icc a b))
+    (hpos : LogArgPosOn t (Icc a b)) :
+    (enc t chain).1.IsCoherentOn a b ∧
+      ∀ r, IsAnalyticOnReals (pfaffianChainFn (enc t chain).1 r).eval (Icc a b) :=
+  ⟨enc_isCoherentOn t chain a b hcoh (LogArgPos_of_LogArgPosOn_Icc a b t hpos),
+   fun r => enc_hAnalytic t chain (Icc a b) han hpos r⟩
+
 end MachLib
