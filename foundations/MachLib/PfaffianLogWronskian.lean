@@ -1,6 +1,7 @@
 import MachLib.PfaffianGeneralWF
 import MachLib.PfaffianLogLeadId
 import MachLib.FieldLemmas
+import MachLib.ChainExp2Trim
 /-!
 # Single-subinterval Wronskian reduce (log descent, analytic core)
 
@@ -288,6 +289,40 @@ theorem log_cTD_zero_bounded {N : Nat} (c : PfaffianChain N) (p : MultiPoly N) (
   | cons z zs =>
     obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
     exact absurd hzero (hnoz z ha hb')
+
+/-! ## Trim bridges for the constant-c_D fragment log_step -/
+
+open MachLib.ChainExp2Trim MachLib.MultiPolyReconstruct in
+/-- **General-depth degree-trim eval identity.** If the leading `y_top` coefficient
+(`getLast` of `yCoeffsAt top q`) is eval-zero at every chain point, dropping the leading
+`y_top` term doesn't change the value along the chain. General index/depth version of
+`pfaffianChainFn_degreeYtop_trim_eval` (stated only for depth `M+3`); direct wrapper of the
+chain-agnostic `eval_dropLeadingYAt_of_last_canonically_zero`. -/
+theorem pfaffianChainFn_trim_eval_gen {N : Nat} (c : PfaffianChain N) (top : Fin N) (q : MultiPoly N)
+    (h_ne : yCoeffsAt top q ≠ [])
+    (h_phantom : ∀ (x : Real) (env : Fin N → Real),
+      MultiPoly.eval ((yCoeffsAt top q).getLast h_ne) x env = 0) (z : Real) :
+    (pfaffianChainFn c (dropLeadingYAt top q)).eval z = (pfaffianChainFn c q).eval z :=
+  eval_dropLeadingYAt_of_last_canonically_zero top q h_ne h_phantom z (c.chainValues z)
+
+/-- **Leading `y_top` coefficient of `cTD p` is eval-zero when `c_D` is constant.** For a
+LOG top with `degreeY_top p = 1` and `leadingCoeffY top p = const c₁`, `idN_log_lead` gives
+`coeffY_1(cTD p) = cTD(const c₁) = 0` at eval. So the degree-1 coefficient of `cTD p` is
+eval-zero — the trim condition. This is why constant `c_D` (multilinear EML barriers) makes
+`cTD p` reduce to a top-free polynomial (→ depth IH), fully rolle-only, with NO
+Wronskian/partition/g≡0-analyticity. -/
+theorem leadingCoeffY_cTD_eval_zero_of_const {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) (hd1 : MultiPoly.degreeY top p = 1)
+    (c₁ : Real) (hconst : MultiPoly.leadingCoeffY top p = MultiPoly.const c₁)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval ((yCoeffsAt top (chainTotalDeriv c p)).getD 1 (MultiPoly.const 0)) x env = 0 := by
+  have h := idN_log_lead c top h_top h_tri x env p
+  unfold IdNLogLead at h
+  rw [hconst, MachLib.IterExpTopIdentity.cTD_const c c₁, hd1] at h
+  rw [h]
+  rfl
 
 end PfaffianLogLead
 end MachLib
