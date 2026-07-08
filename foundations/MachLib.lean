@@ -44,6 +44,7 @@ import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
 import MachLib.ThreePointEvalClosure
 import MachLib.AnalyticFiniteZeros
+import MachLib.AnalyticFiniteZerosReal
 import MachLib.Differentiation
 import MachLib.EntropyDuality
 import MachLib.KLDivergence

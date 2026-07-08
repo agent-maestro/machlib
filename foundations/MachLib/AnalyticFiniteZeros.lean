@@ -62,10 +62,13 @@ def Icc (a b : Real) : RealSet := fun x => a ≤ x ∧ x ≤ b
 /-- Open ray `(a, ∞)`. -/
 def Ioi (a : Real) : RealSet := fun x => a < x
 
-/-- `Set.Finite` substitute: there exists a Nat n such that the predicate
-holds for at most n distinct elements. -/
+/-- `Set.Finite` substitute (genuine bounded-cardinality): there is a bound `n`
+such that every `Nodup` list of elements of `s` has length `≤ n`. This is a real
+finiteness predicate — the same shape the Pfaffian descent's `BoundedZeros` uses —
+so `analytic_finite_zeros_compact` below is now a NON-VACUOUS analytic-finiteness
+axiom (the earlier `∀ x, s x → True` was trivially true for every set). -/
 def RealSetFinite (s : RealSet) : Prop :=
-  ∃ n : Nat, ∀ x : Real, s x → True  -- placeholder; full encoding needs list/multiset
+  ∃ n : Nat, ∀ l : List Real, l.Nodup → (∀ x ∈ l, s x) → l.length ≤ n
 
 /-! ## Real-analyticity predicate (axiomatized) -/
 
