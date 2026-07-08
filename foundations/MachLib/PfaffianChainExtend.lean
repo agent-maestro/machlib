@@ -114,4 +114,28 @@ theorem chainExtend_isCoherentAt {n : Nat} (c : PfaffianChain n)
     rw [hi, chainExtend_evals_last c ne nr, chainExtend_relations_last c ne nr]
     exact hne
 
+/-- **Coherence on an interval** transfers, given the new variable has the
+prescribed derivative throughout `(a,b)`. -/
+theorem chainExtend_isCoherentOn {n : Nat} (c : PfaffianChain n)
+    (ne : Real → Real) (nr : MultiPoly (n + 1)) (a b : Real)
+    (hc : c.IsCoherentOn a b)
+    (hne : ∀ x, a < x → x < b →
+        HasDerivAt ne (MultiPoly.eval nr x ((chainExtend c ne nr).chainValues x)) x) :
+    (chainExtend c ne nr).IsCoherentOn a b :=
+  fun x hxa hxb => chainExtend_isCoherentAt c ne nr x (hc x hxa hxb) (hne x hxa hxb)
+
+/-- **Positivity of all chain values** transfers on `(a,b)`, given the new
+variable is positive there. This is the descent's `hpos` hypothesis. -/
+theorem chainExtend_positivity {n : Nat} (c : PfaffianChain n)
+    (ne : Real → Real) (nr : MultiPoly (n + 1)) (a b : Real)
+    (hpos : ∀ z, a < z → z < b → ∀ i : Fin n, 0 < c.evals i z)
+    (hnepos : ∀ z, a < z → z < b → 0 < ne z) :
+    ∀ z, a < z → z < b → ∀ i : Fin (n + 1), 0 < (chainExtend c ne nr).evals i z := by
+  intro z hza hzb i
+  by_cases h : i.val < n
+  · rw [chainExtend_evals_of_lt c ne nr i h]; exact hpos z hza hzb ⟨i.val, h⟩
+  · have hi : i = ⟨n, Nat.lt_succ_self n⟩ := by
+      apply Fin.ext; show i.val = n; have := i.isLt; omega
+    rw [hi, chainExtend_evals_last c ne nr]; exact hnepos z hza hzb
+
 end MachLib
