@@ -243,5 +243,51 @@ theorem log_wronskian_reduce_full {N : Nat} (c : PfaffianChain N) (top : Fin N)
     show (pfaffianChainFn c p).eval z * (1 / MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z)) = 0
     rw [hpz]; exact Real.zero_mul _
 
+/-! ## g≡0 degeneracy — rolle-only for the constant-c_D fragment -/
+
+/-- **g≡0 for constant leading coefficient → 0 zeros (rolle-only).** If `pf(cTD p) ≡ 0`
+on `(a,b)` — which is the Wronskian-vanishing case `g≡0` precisely when
+`c_D = leadingCoeffY top p` is a numeric constant (then `g = c_D·cTD(p)`) — and `pf(p)` is
+non-vanishing somewhere, then `pf(p)` has NO zeros on `(a,b)`: the `m=0` linear ODE `f'=0`
+has the constant solution `f = f(z₀) ≠ 0`. Instance of `pfaffianChainFn_no_zeros_of_reduct_zero_gen`
+with `m = const 0`, `E = const`. rolle-grounded; NO analyticity, NO zero_count_bound_classical.
+
+This cleanly discharges the `g≡0` degeneracy for the constant-`c_D` EML-barrier fragment
+(the outermost log generator has `c_D = const(±1)`; the general nested case where a deeper
+log top has non-constant `c_D` remains the genuine analyticity/transcendence gap). -/
+theorem log_cTD_zero_bounded {N : Nat} (c : PfaffianChain N) (p : MultiPoly N) (a b : Real)
+    (hab : a < b) (hcoh : c.IsCoherentOn a b)
+    (hred0 : ∀ z, a < z → z < b → (pfaffianChainFn c (chainTotalDeriv c p)).eval z = 0)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  obtain ⟨z₀, hz₀a, hz₀b, hne₀⟩ := hne
+  have hE : ∀ z, a < z → z < b →
+      HasDerivAt (fun _ => (0:Real)) (-(pfaffianChainFn c (MultiPoly.const 0)).eval z) z := by
+    intro z _ _
+    show HasDerivAt (fun _ => (0:Real)) (-(MultiPoly.eval (MultiPoly.const 0) z (c.chainValues z))) z
+    show HasDerivAt (fun _ => (0:Real)) (-(0:Real)) z
+    rw [neg_zero]; exact HasDerivAt_const 0 z
+  have hreduct : ∀ z, a < z → z < b →
+      (pfaffianChainFn c (chainReduce c (MultiPoly.const 0) p)).eval z = 0 := by
+    intro z hza hzb
+    have heq : (pfaffianChainFn c (chainReduce c (MultiPoly.const 0) p)).eval z
+        = (pfaffianChainFn c (chainTotalDeriv c p)).eval z := by
+      show MultiPoly.eval (chainReduce c (MultiPoly.const 0) p) z (c.chainValues z)
+          = MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z)
+      show MultiPoly.eval (MultiPoly.sub (chainTotalDeriv c p) (MultiPoly.mul (MultiPoly.const 0) p)) z (c.chainValues z) = _
+      rw [MultiPoly.eval_sub, MultiPoly.eval_mul]
+      show MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z) - (0:Real) * MultiPoly.eval p z (c.chainValues z) = _
+      rw [Real.zero_mul, Real.sub_zero]
+    rw [heq]; exact hred0 z hza hzb
+  have hnoz := pfaffianChainFn_no_zeros_of_reduct_zero_gen c (MultiPoly.const 0) p a b hab
+    (fun _ => 0) hcoh hE hreduct z₀ hz₀a hz₀b hne₀
+  refine ⟨0, fun zeros _ hz => ?_⟩
+  cases zeros with
+  | nil => exact Nat.le_refl 0
+  | cons z zs =>
+    obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+    exact absurd hzero (hnoz z ha hb')
+
 end PfaffianLogLead
 end MachLib
