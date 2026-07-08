@@ -61,42 +61,57 @@ theorem eval_liftLastYBy {n : Nat} (k : Nat) (p : MultiPoly n) (x : Real)
 
 open MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianChain
 
+/-- The chain length `enc` actually produces from a context of length `N`.
+Defined to MATCH the construction exactly (`len t1 (len t2 N) + 3` for
+`eml`), so `enc` needs no length cast. Equals `N + nVars t` (`len_eq`). -/
+def len : EMLTree → Nat → Nat
+  | .const _, N => N
+  | .var,     N => N
+  | .eml t1 t2, N => len t1 (len t2 N) + 3
+
+/-- `len t N = N + nVars t`. -/
+theorem len_eq (t : EMLTree) (N : Nat) : len t N = N + nVars t := by
+  induction t generalizing N with
+  | const c => rfl
+  | var => rfl
+  | eml t1 t2 ih1 ih2 => show len t1 (len t2 N) + 3 = _; rw [ih1, ih2, nVars]; omega
+
 /-- **The encoder (eval layer).** State-threads a single growing chain over
 the EML tree, returning `(chain, barrier)` with the barrier expressing the
 tree's value in the chain's variables. The chain's *evaluations* are the
 exact sub-expression values (so `barrier` evaluates to `t.eval`); its
 *relations* are placeholders (`const 0`) at this layer — the coherent
-relations that make it `IsExpLogRecipW`/coherent come from the
-`PfaffianChainNodes` steps in the next layer. The recursion:
-`eml t1 t2` processes `t2` (log arg), then `t1` (exp arg) on top, lifts
-`t2`'s barrier over `t1`'s new variables (`liftLastYBy`), then appends
-reciprocal / log / exp variables; the barrier is `exp_var − log_var`. The
-one length cast reconciles `((N+a)+b)+3` with `N+(a+b+3)`. -/
+`IsExpLogRecipW` relations come from the `PfaffianChainNodes` steps in the
+next layer.
+
+`eml t1 t2` processes `t2` (log arg), then `t1` (exp arg) on top, then
+appends reciprocal (`1/t2`), log (`log t2`), exp (`exp t1`) variables; the
+barrier is `exp_var − log_var`. Using `len` for the length and referencing
+the sub-chains `ca`/`cb` directly in the node eval-functions makes the def
+BOTH cast-free and lift-free — the two simplifications that make its
+eval-agreement (`enc_eval`) clean. -/
 noncomputable def enc : (t : EMLTree) → {N : Nat} → PfaffianChain N →
-    PfaffianChain (N + nVars t) × MultiPoly (N + nVars t)
+    PfaffianChain (len t N) × MultiPoly (len t N)
   | .const c, _, chain => (chain, MultiPoly.const c)
   | .var,     _, chain => (chain, MultiPoly.varX)
   | .eml t1 t2, N, chain =>
     let r2 := enc t2 chain
     let r1 := enc t1 r2.1
+    let ca := r2.1
+    let b2 := r2.2
     let cb := r1.1
-    let b2b := liftLastYBy (nVars t1) r2.2
-    let b1  := r1.2
+    let b1 := r1.2
     let cc := chainExtend cb
-      (fun y => 1 / MultiPoly.eval b2b y (cb.chainValues y)) (MultiPoly.const 0)
-    let b2c := MultiPoly.liftLastY b2b
+      (fun y => 1 / MultiPoly.eval b2 y (ca.chainValues y)) (MultiPoly.const 0)
     let cd := chainExtend cc
-      (fun y => Real.log (MultiPoly.eval b2c y (cc.chainValues y))) (MultiPoly.const 0)
-    let b1c := liftLastYBy 2 b1
+      (fun y => Real.log (MultiPoly.eval b2 y (ca.chainValues y))) (MultiPoly.const 0)
     let ce := chainExtend cd
-      (fun y => Real.exp (MultiPoly.eval b1c y (cd.chainValues y))) (MultiPoly.const 0)
-    let barrier : MultiPoly (N + nVars t2 + nVars t1 + 3) := MultiPoly.sub
-      (MultiPoly.varY (⟨N + nVars t2 + nVars t1 + 2, by omega⟩ :
-        Fin (N + nVars t2 + nVars t1 + 3)))
-      (MultiPoly.varY (⟨N + nVars t2 + nVars t1 + 1, by omega⟩ :
-        Fin (N + nVars t2 + nVars t1 + 3)))
-    let hlen : N + nVars t2 + nVars t1 + 3 = N + nVars (EMLTree.eml t1 t2) := by
-      simp only [nVars]; omega
-    (hlen ▸ ce, hlen ▸ barrier)
+      (fun y => Real.exp (MultiPoly.eval b1 y (cb.chainValues y))) (MultiPoly.const 0)
+    let barrier : MultiPoly (len t1 (len t2 N) + 3) := MultiPoly.sub
+      (MultiPoly.varY (⟨len t1 (len t2 N) + 2, by omega⟩ :
+        Fin (len t1 (len t2 N) + 3)))
+      (MultiPoly.varY (⟨len t1 (len t2 N) + 1, by omega⟩ :
+        Fin (len t1 (len t2 N) + 3)))
+    (ce, barrier)
 
 end MachLib
