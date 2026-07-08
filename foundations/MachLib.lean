@@ -49,6 +49,7 @@ import MachLib.Differentiation
 import MachLib.WronskianProportional
 import MachLib.PfaffianLogDegenerate
 import MachLib.PfaffianChainExtend
+import MachLib.PfaffianChainExtendELR
 import MachLib.EntropyDuality
 import MachLib.KLDivergence
 import MachLib.SinNotInEMLDepth2FinalVcVc
