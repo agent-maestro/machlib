@@ -619,5 +619,43 @@ theorem log_step_multilinear {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) 
             hg_zero (fun z hza hzb => Classical.byContradiction fun hzne => hcon ⟨z, hza, hzb, hzne⟩)
         exact log_reduce_multilinear c a b hab hcoh h_top h_tri IH_depth p hd1 hcd_nz hg_nz
 
+
+/-! ## Exp arm — exp-reduce degree-drop for constant c_D (foundation of exp_step_const) -/
+
+/-- **Exp-reduce degree-drop for constant c_D.** For an EXP-type top (relation `G·y_top`,
+`G` top-free), if `leadingCoeffY top p = const c₁` then the reduce
+`chainReduce c (deg·G) p` (`deg = degreeY_top p`) has eval-zero leading `y_top` coefficient:
+`chainReduce_lcY_top_cancel` gives it = `cTD(const c₁) − 0·(const c₁) = 0`. So the exp
+reduce with multiplier `deg·G` DROPS the degree for constant `c_D` — the exp analog of the
+log `leadingCoeffY_cTD_eval_zero_of_const`, enabling a fully rolle-only exp_step on the
+constant-c_D (multilinear) fragment, with integrating factor `y_top^{-deg}` (needs only
+`y_top > 0`, no partition). -/
+theorem exp_reduce_lead_eval_zero_of_const {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (G : MultiPoly N) (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (h_Gtop : MultiPoly.degreeY top G = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) (c₁ : Real) (hconst : MultiPoly.leadingCoeffY top p = MultiPoly.const c₁)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval (MultiPoly.leadingCoeffY top
+        (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G) p)) x env = 0 := by
+  have hm : MultiPoly.degreeY top (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G) = 0 := by
+    have h1 : MultiPoly.degreeY top (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p)) : MultiPoly N) = 0 := rfl
+    show MultiPoly.degreeY top (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) + MultiPoly.degreeY top G = 0
+    omega
+  have hcancel : MultiPoly.eval (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G) x env
+      = MachLib.Real.natCast (MultiPoly.degreeY top p) * MultiPoly.eval G x env + MultiPoly.eval (MultiPoly.const 0) x env := by
+    show MultiPoly.eval (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) x env * MultiPoly.eval G x env = _
+    show MachLib.Real.natCast (MultiPoly.degreeY top p) * MultiPoly.eval G x env
+        = MachLib.Real.natCast (MultiPoly.degreeY top p) * MultiPoly.eval G x env + (0:Real)
+    rw [Real.add_zero]
+  have h := chainReduce_lcY_top_cancel c G top h_reltop h_Gtop h_tri
+    (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p))) G) (MultiPoly.const 0) p hm x env hcancel
+  rw [h, hconst]
+  show MultiPoly.eval (chainTotalDeriv c (MultiPoly.const c₁)) x env
+      - MultiPoly.eval (MultiPoly.const 0) x env * MultiPoly.eval (MultiPoly.const c₁) x env = 0
+  rw [MachLib.IterExpTopIdentity.cTD_const c c₁]
+  show (0:Real) - (0:Real) * c₁ = 0
+  mach_ring
+
 end PfaffianLogLead
 end MachLib
