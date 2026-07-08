@@ -158,5 +158,19 @@ theorem recip_level_hasDerivAt (v : Real → Real) (v' x : Real)
       div_def (-v') (v x * v x) (ne_of_gt (mul_pos hvpos hvpos))]
   rw [hb] at h; exact h
 
+/-- **Log-level coherence.** If `v` has derivative `v'` at `x` and `v x > 0`,
+then `log(v)` has derivative `(1/v)·v'` — a TOP-FREE relation (no `log(v)` term),
+the third Pfaffian level type EML needs (`eml t1 t2 = exp t1 − log t2`; see the
+LOG-TYPE GAP note in the exploration FINDINGS). Via the chain rule
+`HasDerivAt_comp` + `HasDerivAt_log_pos`. Unlike exp (`y' = G·y`) and reciprocal
+(`y' = −G·y²`), a log level's own variable is absent from its relation
+(`degreeY_log = 0`), so the descent handles it by Rolle on the coefficient's
+complexity rather than an integrating factor. The reciprocal partner `1/v` this
+depends on is the reciprocal-type level below the log level. -/
+theorem log_level_hasDerivAt (v : Real → Real) (v' x : Real)
+    (hv : HasDerivAt v v' x) (hvpos : 0 < v x) :
+    HasDerivAt (fun y => log (v y)) ((1 / v x) * v') x :=
+  HasDerivAt_comp log v v' (1 / v x) x hv (HasDerivAt_log_pos (v x) hvpos)
+
 end PfaffianExpRecip
 end MachLib
