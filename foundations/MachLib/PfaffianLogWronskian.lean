@@ -701,5 +701,82 @@ theorem exp_integrating_factor {N : Nat} (c : PfaffianChain N) (top : Fin N) (G 
     mach_ring
   rwa [hval] at hE
 
+
+/-! ## Fragment exp_step — constant-c_D (multilinear), fully rolle-only -/
+
+open MachLib.MultiPolyReconstruct in
+/-- **Fragment exp_step (constant c_D / multilinear) — fully rolle-only.** For an EXP-type
+top (relation `G·y_top`, `y_top > 0`), any barrier `p` with `degreeY_top p ≤ 1` and (at
+degree 1) constant leading coefficient has finitely many zeros, from `rolle` alone. Mirrors
+`log_step_const`: the reduce `chainReduce c (deg·G) p` drops the degree (const c_D ⇒
+eval-zero leading, `exp_reduce_lead_eval_zero_of_const`) so `bound_via_trim` bounds it by the
+depth IH; `pfaffianChainFn_reduce_step_gen` with the vehicle `exp_integrating_factor` gives
+#zeros(p) ≤ that + 1; the degenerate reduce≡0 case is the no-zeros arm. No vehExpo tower, no
+partition — the vehicle `y_top^{-deg}` needs only `y_top > 0`. -/
+theorem exp_step_const {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b)
+    (G : MultiPoly (N+1)) (h_reltop : c.relations (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) = MultiPoly.mul G (MultiPoly.varY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1))))
+    (h_Gtop : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) G = 0)
+    (h_tri : ∀ j : Fin (N+1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations j) = 0)
+    (hpos : ∀ z, a < z → z < b → 0 < c.evals (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) z)
+    (IH_depth : ∀ r : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (p : MultiPoly (N + 1))
+    (hd_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p ≤ 1)
+    (hconst : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 1 →
+        ∃ c₁ : Real, MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = MultiPoly.const c₁)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  by_cases hd0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 0
+  · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+  · have hd1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 1 := by omega
+    obtain ⟨c₁, hc1⟩ := hconst hd1
+    have h_toprel1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1))) = 1 := by
+      rw [h_reltop]
+      show MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) G + MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.varY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1))) = 1
+      rw [h_Gtop]
+      show (0 : Nat) + (if (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) = (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) then 1 else 0) = 1
+      rw [if_pos rfl]
+    have hE := exp_integrating_factor c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) G h_reltop a b hcoh hpos (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)
+    by_cases hrz : ∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p)).eval z = 0
+    · obtain ⟨z₀, hz₀a, hz₀b, hz₀ne⟩ := hne
+      have hnoz := pfaffianChainFn_no_zeros_of_reduct_zero_gen c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p a b hab _ hcoh hE hrz z₀ hz₀a hz₀b hz₀ne
+      refine ⟨0, fun zeros _ hz => ?_⟩
+      cases zeros with
+      | nil => exact Nat.le_refl 0
+      | cons z zs =>
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        exact absurd hzero (hnoz z ha hb')
+    · have hne_rd : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p)).eval z ≠ 0 :=
+        Classical.byContradiction fun hcon =>
+          hrz (fun z hza hzb => Classical.byContradiction fun hzne => hcon ⟨z, hza, hzb, hzne⟩)
+      have hrd_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p) ≤ 1 := by
+        have hcte : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainTotalDeriv c p) = 1 := by
+          rw [degreeYtop_cTD_eq_gen c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) h_toprel1 h_tri p]; exact hd1
+        have hc0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) : MultiPoly (N+1)) = 0 := rfl
+        have hm0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) = 0 := by
+          show MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.const _) + MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) G = 0
+          omega
+        have hmp : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p) = 1 := by
+          show MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.mul (MultiPoly.const _) G) + MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 1
+          rw [hm0, hd1]
+        show Nat.max (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainTotalDeriv c p)) (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (MultiPoly.mul (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p)) ≤ 1
+        rw [hcte, hmp]
+        exact Nat.le_of_eq (Nat.max_self 1)
+      have hrd_lead : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p) = 1 →
+          ∀ (x : Real) (env : Fin (N+1) → Real),
+            MultiPoly.eval ((yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p)).getD 1 (MultiPoly.const 0)) x env = 0 := by
+        intro hrd1 x env
+        have hgl := getD_at_degreeY_eq_lcY_eval (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p) x env
+        rw [hrd1] at hgl
+        rw [hgl]
+        exact exp_reduce_lead_eval_zero_of_const c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) G h_reltop h_Gtop h_tri p c₁ hc1 x env
+      obtain ⟨M, hM⟩ := bound_via_trim c a b hab IH_depth _ hrd_le hrd_lead hne_rd
+      exact ⟨M + 1, pfaffianChainFn_reduce_step_gen c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p a b hab _ hcoh hE M hM⟩
+
 end PfaffianLogLead
 end MachLib
