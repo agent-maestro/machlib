@@ -92,6 +92,11 @@ axiom analytic_exp (S : RealSet) : IsAnalyticOnReals Real.exp S
 log returns 0 by convention; analyticity breaks at the boundary.) -/
 axiom analytic_log_pos : IsAnalyticOnReals Real.log (Ioi 0)
 
+/-- The reciprocal `1/x` is analytic on `(0, ∞)`. (True on all of `x ≠ 0`;
+stated on `(0, ∞)` — the domain the encoder's reciprocal nodes need, where the
+log argument is already positive — to mirror `analytic_log_pos`.) -/
+axiom analytic_one_div_pos : IsAnalyticOnReals (fun x => 1 / x) (Ioi 0)
+
 /-- The sine function is analytic everywhere. -/
 axiom analytic_sin (S : RealSet) : IsAnalyticOnReals Real.sin S
 

@@ -148,6 +148,7 @@ import MachLib.ExplicitBoundRank
 import MachLib.ChainExp2ExplicitBound
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
+import MachLib.EMLEncoderAnalytic
 import MachLib.PfaffianGeneralWF
 import MachLib.PfaffianGeneralHnz
 import MachLib.PfaffianGeneralHnzWF
