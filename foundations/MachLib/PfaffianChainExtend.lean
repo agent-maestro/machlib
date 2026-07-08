@@ -138,4 +138,29 @@ theorem chainExtend_positivity {n : Nat} (c : PfaffianChain n)
       apply Fin.ext; show i.val = n; have := i.isLt; omega
     rw [hi, chainExtend_evals_last c ne nr]; exact hnepos z hza hzb
 
+/-! ## Eval-agreement (the recursion side)
+
+The encoder recursion expresses an EML sub-value as a barrier polynomial and
+must know two things after each `chainExtend`: the new top variable holds the
+new function's value, and previously-built sub-barriers still hold theirs. -/
+
+/-- The new top variable evaluates to the appended function `ne`. -/
+theorem chainExtend_eval_top {n : Nat} (c : PfaffianChain n) (ne : Real → Real)
+    (nr : MultiPoly (n + 1)) (x : Real) :
+    (pfaffianChainFn (chainExtend c ne nr)
+        (MultiPoly.varY (⟨n, Nat.lt_succ_self n⟩ : Fin (n + 1)))).eval x = ne x := by
+  show MultiPoly.eval (MultiPoly.varY (⟨n, Nat.lt_succ_self n⟩ : Fin (n + 1))) x
+        ((chainExtend c ne nr).chainValues x) = ne x
+  rw [MultiPoly.eval_varY]
+  show (chainExtend c ne nr).evals (⟨n, Nat.lt_succ_self n⟩ : Fin (n + 1)) x = ne x
+  rw [chainExtend_evals_last c ne nr]
+
+/-- A previously-built barrier `b`, lifted through the extension, still
+evaluates to its original value (the new top variable is irrelevant to it). -/
+theorem chainExtend_eval_lift {n : Nat} (c : PfaffianChain n) (ne : Real → Real)
+    (nr : MultiPoly (n + 1)) (b : MultiPoly n) (x : Real) :
+    (pfaffianChainFn (chainExtend c ne nr) (MultiPoly.liftLastY b)).eval x
+      = (pfaffianChainFn c b).eval x :=
+  eval_liftLastY_chainExtend c ne nr b x
+
 end MachLib
