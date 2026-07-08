@@ -64,6 +64,7 @@ import MachLib.PfaffianExpLogStepReduce
 import MachLib.PfaffianRolleStep
 import MachLib.MultiPolyCoeffEntry
 import MachLib.MultiPolyPartial
+import MachLib.PfaffianCTDCongrChain
 import MachLib.PfaffianExpRecipDescent
 import MachLib.PfaffianExpRecipExample
 import MachLib.CosNotInEMLAnyDepth
