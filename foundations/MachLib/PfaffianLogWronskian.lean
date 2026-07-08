@@ -558,5 +558,66 @@ theorem bound_via_trim_interval {N : Nat} (c : PfaffianChain (N + 1)) (a b : Rea
     obtain ⟨hza, hzb, hzero⟩ := hz z hzmem
     exact ⟨hza, hzb, by rw [hpf_eq z hza hzb]; exact hzero⟩
 
+
+/-! ## Full multilinear log_step — rolle-only modulo the single g≡0 degeneracy -/
+
+open MachLib.MultiPolyReconstruct in
+/-- **Full multilinear log_step (degree ≤ 1, any c_D) — rolle-only modulo the single g≡0
+degeneracy.** For a LOG-type top, ANY barrier `p` with `degreeY_top p ≤ 1` has finitely
+many zeros, GIVEN a handler `hDegen` for the sole non-rolle-derivable case: a degree-1
+barrier whose Wronskian `g` vanishes identically. Every other case is discharged from
+`rolle` alone:
+  degreeY_top = 0                → depth IH.
+  degreeY_top = 1, c_D ≡ 0       → bound_via_trim_interval (pointwise trim; barrier
+                                    eval-equal to a top-free poly on (a,b)).
+  degreeY_top = 1, c_D ≢ 0, g ≢ 0 → log_reduce_multilinear (Wronskian reduce arm).
+  degreeY_top = 1, c_D ≢ 0, g ≡ 0 → hDegen (the isolated analyticity/transcendence gap).
+This is the EML-barrier family at every log top (multilinear ⇒ degree ≤ 1), so the whole
+log side of retiring `zero_count_bound_classical` is rolle-only up to `hDegen`. -/
+theorem log_step_multilinear {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b)
+    (h_top : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations ⟨N, Nat.lt_succ_self N⟩) = 0)
+    (h_tri : ∀ j : Fin (N+1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (c.relations j) = 0)
+    (IH_depth : ∀ r : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (hDegen : ∀ q : MultiPoly (N + 1),
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q = 1 →
+        (∀ z, a < z → z < b → (pfaffianChainFn c (MultiPoly.sub
+          (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q) (chainTotalDeriv c q))
+          (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q)) q))).eval z = 0) →
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z = 0) → zeros.length ≤ M)
+    (p : MultiPoly (N + 1))
+    (hd_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p ≤ 1)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  by_cases hd0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 0
+  · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+  · have hd1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p = 1 := by omega
+    by_cases hcd_zero : ∀ z, a < z → z < b → (pfaffianChainFn c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)).eval z = 0
+    · refine bound_via_trim_interval c a b hab IH_depth p hd_le ?_ hne
+      intro _ z hza hzb
+      have h := getD_at_degreeY_eq_lcY_eval (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p z (c.chainValues z)
+      rw [hd1] at h
+      rw [h]; exact hcd_zero z hza hzb
+    · have hcd_nz : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)).eval z ≠ 0 :=
+        Classical.byContradiction fun hcon =>
+          hcd_zero (fun z hza hzb => Classical.byContradiction fun hzne => hcon ⟨z, hza, hzb, hzne⟩)
+      by_cases hg_zero : ∀ z, a < z → z < b → (pfaffianChainFn c (MultiPoly.sub
+          (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+          (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p))).eval z = 0
+      · exact hDegen p hd1 hg_zero hne
+      · have hg_nz : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (MultiPoly.sub
+            (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p) (chainTotalDeriv c p))
+            (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p)) p))).eval z ≠ 0 :=
+          Classical.byContradiction fun hcon =>
+            hg_zero (fun z hza hzb => Classical.byContradiction fun hzne => hcon ⟨z, hza, hzb, hzne⟩)
+        exact log_reduce_multilinear c a b hab hcoh h_top h_tri IH_depth p hd1 hcd_nz hg_nz
+
 end PfaffianLogLead
 end MachLib
