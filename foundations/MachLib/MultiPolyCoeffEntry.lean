@@ -97,6 +97,44 @@ theorem getD_listSubN_eval {n : Nat} :
           - MultiPoly.eval (qs.getD d (MultiPoly.const 0)) x env
     exact getD_listSubN_eval ps qs d x env
 
+/-- **L1 brick 3.** `getD d` commutes with `listScaleN` (scale each entry by `p`):
+`(listScaleN p qs).getD d` evals to `eval p · (qs.getD d)`. Convolution
+ingredient for `getD_listMulN`. -/
+theorem getD_listScaleN_eval {n : Nat} (p : MultiPoly n) :
+    ∀ (qs : List (MultiPoly n)) (d : Nat) (x : Real) (env : Fin n → Real),
+    MultiPoly.eval ((listScaleN p qs).getD d (MultiPoly.const 0)) x env
+      = MultiPoly.eval p x env * MultiPoly.eval (qs.getD d (MultiPoly.const 0)) x env
+  | [], d, x, env => by
+    have hnil : (([] : List (MultiPoly n)).getD d (MultiPoly.const 0)) = (MultiPoly.const 0 : MultiPoly n) := by
+      cases d <;> rfl
+    show MultiPoly.eval ((listScaleN p ([] : List (MultiPoly n))).getD d (MultiPoly.const 0)) x env = _
+    rw [show listScaleN p ([] : List (MultiPoly n)) = [] from rfl, hnil]
+    show (0 : Real) = MultiPoly.eval p x env * (0 : Real)
+    mach_ring
+  | q :: qs, 0, x, env => by
+    show MultiPoly.eval (MultiPoly.mul p q) x env
+        = MultiPoly.eval p x env * MultiPoly.eval q x env
+    rfl
+  | q :: qs, d + 1, x, env => by
+    show MultiPoly.eval ((listScaleN p qs).getD d (MultiPoly.const 0)) x env
+        = MultiPoly.eval p x env * MultiPoly.eval (qs.getD d (MultiPoly.const 0)) x env
+    exact getD_listScaleN_eval p qs d x env
+
+/-- **L1 brick 4.** `getD d` on `listMulN` (polynomial-product convolution), in
+recursive form matching `listMulN (p::ps) qs = listAddN (p·qs) (0 :: ps·qs)`:
+`getD_d(listMulN (p::ps) qs) = eval p · getD_d qs + getD_d(0 :: listMulN ps qs)`.
+Assembled from `getD_listAddN_eval` + `getD_listScaleN_eval`. The `mul`-case
+ingredient of the `idN`-log induction. -/
+theorem getD_listMulN_cons_eval {n : Nat} (p : MultiPoly n) (ps qs : List (MultiPoly n))
+    (d : Nat) (x : Real) (env : Fin n → Real) :
+    MultiPoly.eval ((listMulN (p :: ps) qs).getD d (MultiPoly.const 0)) x env
+      = MultiPoly.eval p x env * MultiPoly.eval (qs.getD d (MultiPoly.const 0)) x env
+        + MultiPoly.eval (((MultiPoly.const 0 :: listMulN ps qs)).getD d (MultiPoly.const 0)) x env := by
+  show MultiPoly.eval ((listAddN (listScaleN p qs) (MultiPoly.const 0 :: listMulN ps qs)).getD d
+        (MultiPoly.const 0)) x env = _
+  rw [getD_listAddN_eval (listScaleN p qs) (MultiPoly.const 0 :: listMulN ps qs) d x env,
+      getD_listScaleN_eval p qs d x env]
+
 end MultiPoly
 end MultiPolyMod
 end MachLib
