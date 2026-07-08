@@ -61,6 +61,7 @@ import MachLib.PfaffianExpRecipClassW
 import MachLib.PfaffianExpLogRecipClass
 import MachLib.PfaffianExpLogRecipDescent
 import MachLib.PfaffianExpLogStepReduce
+import MachLib.PfaffianRolleStep
 import MachLib.PfaffianExpRecipDescent
 import MachLib.PfaffianExpRecipExample
 import MachLib.CosNotInEMLAnyDepth
