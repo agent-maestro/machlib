@@ -47,6 +47,7 @@ import MachLib.AnalyticFiniteZeros
 import MachLib.AnalyticFiniteZerosReal
 import MachLib.Differentiation
 import MachLib.WronskianProportional
+import MachLib.PfaffianLogDegenerate
 import MachLib.EntropyDuality
 import MachLib.KLDivergence
 import MachLib.SinNotInEMLDepth2FinalVcVc
