@@ -57,5 +57,45 @@ theorem chainTotalDeriv_rolle {n : Nat} (c : PfaffianChain n) (p : MultiPoly n)
     obtain ⟨ha, hb, h0⟩ := hz z hzmem
     exact ⟨ha, hb, by rw [← hRedEq z]; exact h0⟩)
 
+/-! ## Log-top total-derivative degree bound (first `log_hard` cTD brick) -/
+
+/-- **Log-top `cTD` degree bound.** For a LOG-type top (top-free relation,
+`degreeY top (relations top) = 0`), the total derivative does NOT raise the
+top-degree — it can only preserve or drop it (`varY top ↦ relations top` goes
+`1 → 0`). Contrast the exp case (`degreeYtop_cTD_eq_gen`, which needs the
+relation to have `degreeY top = 1` and gives equality). This is the degree half
+of the Wronskian degree-drop the log descent (`log_hard`) rests on. Pure algebra
+— no analytic axiom. -/
+theorem degreeYtop_cTD_le_log {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) :
+    MultiPoly.degreeY top (chainTotalDeriv c p) ≤ MultiPoly.degreeY top p := by
+  induction p with
+  | const cval => exact Nat.le_of_eq rfl
+  | varX => exact Nat.le_of_eq rfl
+  | varY j =>
+    show MultiPoly.degreeY top (c.relations j) ≤ MultiPoly.degreeY top (MultiPoly.varY j)
+    by_cases hj : j = top
+    · rw [hj, h_top]; exact Nat.zero_le _
+    · rw [h_tri j hj]; exact Nat.zero_le _
+  | add p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p))
+                 (MultiPoly.degreeY top (chainTotalDeriv c q))
+       ≤ Nat.max (MultiPoly.degreeY top p) (MultiPoly.degreeY top q)
+    exact Nat.max_le.mpr ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+                          Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | sub p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p))
+                 (MultiPoly.degreeY top (chainTotalDeriv c q))
+       ≤ Nat.max (MultiPoly.degreeY top p) (MultiPoly.degreeY top q)
+    exact Nat.max_le.mpr ⟨Nat.le_trans ihp (Nat.le_max_left _ _),
+                          Nat.le_trans ihq (Nat.le_max_right _ _)⟩
+  | mul p q ihp ihq =>
+    show Nat.max (MultiPoly.degreeY top (chainTotalDeriv c p) + MultiPoly.degreeY top q)
+                 (MultiPoly.degreeY top p + MultiPoly.degreeY top (chainTotalDeriv c q))
+       ≤ MultiPoly.degreeY top p + MultiPoly.degreeY top q
+    exact Nat.max_le.mpr ⟨Nat.add_le_add_right ihp _, Nat.add_le_add_left ihq _⟩
+
 end PfaffianGeneralReduce
 end MachLib
