@@ -395,5 +395,52 @@ theorem log_step_const {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab :
       obtain ⟨M, hM⟩ := hbound_cTD
       exact ⟨M + 1, chainTotalDeriv_rolle c p a b hab hcoh M hM⟩
 
+
+/-! ## Reusable helper: bound a degree-≤1 top-eval-zero-leading poly via depth IH -/
+
+open MachLib.ChainExp2Trim MachLib.MultiPolyReconstruct in
+/-- **Bound a degree-≤1 top-eval-zero-leading polynomial via the depth IH.** If
+`degreeY_top q ≤ 1` and (when `= 1`) the degree-1 coefficient is eval-zero, then `q` reduces
+to a TOP-FREE polynomial (directly, or by trimming the eval-zero leading term) and the depth
+IH bounds its zeros. The shared engine of both the `cTD p` bound (constant `c_D`) and the
+Wronskian `g` bound (any `c_D`, via `wronskian_leadY_eval_zero`). -/
+theorem bound_via_trim {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab : a < b)
+    (IH_depth : ∀ r : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (q : MultiPoly (N + 1))
+    (hq_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q ≤ 1)
+    (h_lead : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q = 1 →
+        ∀ (x : Real) (env : Fin (N+1) → Real),
+          MultiPoly.eval ((yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q).getD 1 (MultiPoly.const 0)) x env = 0)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z = 0) → zeros.length ≤ M := by
+  by_cases hq0 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q = 0
+  · exact pfaffianChainFn_bound_of_degreeYtop_zero c q hq0 a b hab hne IH_depth
+  · have hq1 : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q = 1 := by omega
+    have h_ne_list : yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q ≠ [] := by
+      intro h; have := yCoeffsAt_length_eq (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q; rw [h] at this; simp at this
+    have h_phantom : ∀ (x : Real) (env : Fin (N+1) → Real),
+        MultiPoly.eval ((yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q).getLast h_ne_list) x env = 0 := by
+      intro x env
+      have hlen : (yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q).length - 1 = 1 := by
+        rw [yCoeffsAt_length_eq, hq1]
+      have hgl := list_getD_pred_eq_getLast (yCoeffsAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q) (MultiPoly.const 0) h_ne_list
+      rw [hlen] at hgl
+      rw [← hgl]
+      exact h_lead hq1 x env
+    have htrim_deg : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) (dropLeadingYAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q) = 0 := by
+      have := degreeY_dropLeadingYAt_lt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q (by rw [hq1]; exact Nat.zero_lt_one)
+      omega
+    have hne_trim : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (dropLeadingYAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q)).eval z ≠ 0 := by
+      obtain ⟨z, hza, hzb, hzne⟩ := hne
+      exact ⟨z, hza, hzb, by rw [pfaffianChainFn_trim_eval_gen c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q h_ne_list h_phantom z]; exact hzne⟩
+    obtain ⟨M, hM⟩ := pfaffianChainFn_bound_of_degreeYtop_zero c (dropLeadingYAt (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q) htrim_deg a b hab hne_trim IH_depth
+    refine ⟨M, fun zeros hnd hz => hM zeros hnd (fun z hzmem => ?_)⟩
+    obtain ⟨hza, hzb, hzero⟩ := hz z hzmem
+    exact ⟨hza, hzb, by rw [pfaffianChainFn_trim_eval_gen c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) q h_ne_list h_phantom z]; exact hzero⟩
+
 end PfaffianLogLead
 end MachLib
