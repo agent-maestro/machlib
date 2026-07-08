@@ -1,6 +1,7 @@
 import MachLib.PfaffianRecipStep
 import MachLib.PfaffianExpRecipClassW
 import MachLib.PfaffianGeneralBoundPos
+import MachLib.PolynomialRootCount
 
 /-!
 # Combined extended descent — Brick A-4b (reciprocal half)
@@ -26,9 +27,11 @@ namespace PfaffianExpRecipW
 
 open MachLib.Real
 open MachLib.MultiPolyMod
+open MachLib.PolynomialEvidence
 open MachLib.PfaffianChainMod
 open MachLib.PfaffianGeneralReduce
 open MachLib.PfaffianExpRecip
+open MachLib.PolynomialRootCount
 
 variable {N : Nat}
 
@@ -96,12 +99,62 @@ theorem clearTop_nonvanishing (c : PfaffianChain (N + 1)) (v : MultiPoly N) (a b
   rw [clearTop_chain_bridge c v z (hwitness z hza hzb) hvne p]
   exact mul_ne_zero (ne_of_gt (mpolyPow_eval_pos v (hvpos z hza hzb) _)) hzne
 
+/-! ## The base case (depth 0 — a univariate polynomial) -/
+
+/-- A `MultiPoly 0` (no `y`-variables — `Fin 0` is empty) as an honest univariate
+`Poly`. The `varY` case is vacuous (`Fin.elim0`). -/
+noncomputable def mpoly0ToPoly : MultiPoly 0 → Poly
+  | MultiPoly.const c => Poly.const c
+  | MultiPoly.varX => Poly.var
+  | MultiPoly.varY i => i.elim0
+  | MultiPoly.add p q => Poly.add (mpoly0ToPoly p) (mpoly0ToPoly q)
+  | MultiPoly.sub p q => Poly.sub (mpoly0ToPoly p) (mpoly0ToPoly q)
+  | MultiPoly.mul p q => Poly.mul (mpoly0ToPoly p) (mpoly0ToPoly q)
+
+/-- The `MultiPoly 0` and its `Poly` image evaluate equally (the env is over
+`Fin 0`, unused). -/
+theorem mpoly0_eval (p : MultiPoly 0) (x : Real) (env : Fin 0 → Real) :
+    MultiPoly.eval p x env = Poly.eval (mpoly0ToPoly p) x := by
+  induction p with
+  | const c => rfl
+  | varX => rfl
+  | varY i => exact i.elim0
+  | add p q ihp ihq =>
+    show MultiPoly.eval p x env + MultiPoly.eval q x env
+        = Poly.eval (mpoly0ToPoly (MultiPoly.add p q)) x
+    rw [ihp, ihq]; rfl
+  | sub p q ihp ihq =>
+    show MultiPoly.eval p x env - MultiPoly.eval q x env
+        = Poly.eval (mpoly0ToPoly (MultiPoly.sub p q)) x
+    rw [ihp, ihq]; rfl
+  | mul p q ihp ihq =>
+    show MultiPoly.eval p x env * MultiPoly.eval q x env
+        = Poly.eval (mpoly0ToPoly (MultiPoly.mul p q)) x
+    rw [ihp, ihq]; rfl
+
 /-! ## The combined descent (assembly) -/
 
 /-- The "finitely many zeros" conclusion for a chain function on `(a,b)`. -/
 def BoundedZeros (f : PfaffianFn) (a b : Real) : Prop :=
   ∃ K : Nat, ∀ zeros : List Real, zeros.Nodup →
     (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) → zeros.length ≤ K
+
+/-- **`base` discharged.** The depth-0 case: a `PfaffianChain 0` function is a
+univariate polynomial (`mpoly0ToPoly`), so `poly_root_count_bound` bounds its
+zeros by degree. This removes one of the combined descent's two hypotheses. -/
+theorem base_case (a b : Real) (hab : a < b) (c : PfaffianChain 0) (p : MultiPoly 0)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    BoundedZeros (pfaffianChainFn c p) a b := by
+  have hbridge : ∀ z : Real, (pfaffianChainFn c p).eval z = Poly.eval (mpoly0ToPoly p) z :=
+    fun z => mpoly0_eval p z (c.chainValues z)
+  refine ⟨degreeUpper (mpoly0ToPoly p), ?_⟩
+  intro zeros hnd hz
+  refine poly_root_count_bound (mpoly0ToPoly p) a b hab ?_ zeros hnd ?_
+  · obtain ⟨z, _, _, hne0⟩ := hne
+    exact ⟨z, by rw [← hbridge z]; exact hne0⟩
+  · intro z hzmem
+    obtain ⟨ha, hb, hz0⟩ := hz z hzmem
+    exact ⟨ha, hb, by rw [← hbridge z]; exact hz0⟩
 
 /-- **Combined extended descent (assembly).** For every witness-enriched chain
 coherent + positive on `(a,b)`, a non-vanishing polynomial has finitely many
@@ -176,6 +229,32 @@ theorem combined_descent_of_steps (a b : Real)
         (chainRestrict_isCoherentOn_W c a b hW hcoh) (positivity_chainRestrict c a b hpos)
         (clearTop (MultiPoly.dropLastY v) p) hnv
       exact ⟨M, recip_top_combined c a b v hvtf hvcoh hvpos p M hM⟩
+
+/-- **Combined extended descent, `base` pre-discharged.** With `a < b`, the
+depth-0 base is `base_case`, so the general barrier now rests on a **single**
+hypothesis — `exp_step`, the exp-top reduction (the mixed `vehExpo` machinery).
+Everything on the reciprocal side is proven. -/
+theorem combined_descent_of_exp_step (a b : Real) (hab : a < b)
+    (exp_step : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
+        IsExpOrRecipW c a b → c.IsCoherentOn a b →
+        (∀ z, a < z → z < b → ∀ i : Fin (k + 1), 0 < c.evals i z) →
+        (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
+            ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
+                = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
+        (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
+            MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
+        (∀ q : MultiPoly k,
+            (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+            BoundedZeros (pfaffianChainFn (chainRestrict c) q) a b) →
+        ∀ p : MultiPoly (k + 1),
+          (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+          BoundedZeros (pfaffianChainFn c p) a b) :
+    ∀ (N : Nat) (c : PfaffianChain N), IsExpOrRecipW c a b → c.IsCoherentOn a b →
+      (∀ z, a < z → z < b → ∀ i : Fin N, 0 < c.evals i z) →
+      ∀ (p : MultiPoly N),
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+        BoundedZeros (pfaffianChainFn c p) a b :=
+  combined_descent_of_steps a b (base_case a b hab) exp_step
 
 end PfaffianExpRecipW
 end MachLib
