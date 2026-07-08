@@ -114,4 +114,48 @@ theorem chainExtend_recip_isCoherentAt {n : Nat} (c : PfaffianChain n)
     (MultiPoly.eval (chainTotalDeriv c w) x (c.chainValues x)) x hww
     (multiPolyHasDerivAt_eval_with_chain c w x hcoh)
 
+/-- **Add-log-node coherence.** The new variable `ne = log(eval w along c)`
+with log-type relation `nr = liftLastY(cTD w)·y_k`, where index `k` already
+holds the reciprocal `1/w` (`hrecip`), has exactly the derivative `nr`
+prescribes wherever `c` is coherent and `w > 0`. This is the log half of a
+log node — added AFTER the reciprocal variable, so its relation references
+that interior variable `y_k` (not the top). Proof: the relation's eval is
+`(cTD w along c)·y_k = w'·(1/w)`, matched to the `HasDerivAt_comp` of
+`HasDerivAt_log_pos` (`log' = 1/w`). -/
+theorem chainExtend_log_isCoherentAt {n : Nat} (c : PfaffianChain n)
+    (w : MultiPoly n) (k : Fin n) (x : Real) (hcoh : c.IsCoherentAt x)
+    (hwpos : 0 < MultiPoly.eval w x (c.chainValues x))
+    (hrecip : ∀ y, c.evals k y = 1 / MultiPoly.eval w y (c.chainValues y))
+    (ne : Real → Real)
+    (hne : ne = fun y => Real.log (MultiPoly.eval w y (c.chainValues y)))
+    (nr : MultiPoly (n + 1))
+    (hnr : nr = MultiPoly.mul (MultiPoly.liftLastY (chainTotalDeriv c w))
+              (MultiPoly.varY (⟨k.val, Nat.lt_succ_of_lt k.isLt⟩ : Fin (n + 1)))) :
+    HasDerivAt ne (MultiPoly.eval nr x ((chainExtend c ne nr).chainValues x)) x := by
+  have hval : MultiPoly.eval nr x ((chainExtend c ne nr).chainValues x)
+      = (1 / MultiPoly.eval w x (c.chainValues x))
+        * MultiPoly.eval (chainTotalDeriv c w) x (c.chainValues x) := by
+    rw [hnr]
+    show MultiPoly.eval (MultiPoly.liftLastY (chainTotalDeriv c w)) x
+            ((chainExtend c ne nr).chainValues x)
+         * MultiPoly.eval (MultiPoly.varY (⟨k.val, Nat.lt_succ_of_lt k.isLt⟩ : Fin (n + 1))) x
+            ((chainExtend c ne nr).chainValues x)
+       = _
+    rw [eval_liftLastY_chainExtend c ne nr (chainTotalDeriv c w) x, MultiPoly.eval_varY]
+    have hk2 : (chainExtend c ne nr).chainValues x
+          (⟨k.val, Nat.lt_succ_of_lt k.isLt⟩ : Fin (n + 1))
+        = 1 / MultiPoly.eval w x (c.chainValues x) := by
+      show (chainExtend c ne nr).evals (⟨k.val, Nat.lt_succ_of_lt k.isLt⟩ : Fin (n + 1)) x
+         = 1 / MultiPoly.eval w x (c.chainValues x)
+      rw [chainExtend_evals_of_lt c ne nr (⟨k.val, Nat.lt_succ_of_lt k.isLt⟩) k.isLt]
+      show c.evals (⟨k.val, k.isLt⟩ : Fin n) x = 1 / MultiPoly.eval w x (c.chainValues x)
+      rw [show (⟨k.val, k.isLt⟩ : Fin n) = k from Fin.ext rfl, hrecip]
+    rw [hk2, mul_comm]
+  rw [hval, hne]
+  exact HasDerivAt_comp Real.log (fun y => MultiPoly.eval w y (c.chainValues y))
+    (MultiPoly.eval (chainTotalDeriv c w) x (c.chainValues x))
+    (1 / MultiPoly.eval w x (c.chainValues x)) x
+    (multiPolyHasDerivAt_eval_with_chain c w x hcoh)
+    (HasDerivAt_log_pos (MultiPoly.eval w x (c.chainValues x)) hwpos)
+
 end MachLib
