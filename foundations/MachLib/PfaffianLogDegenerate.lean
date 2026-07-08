@@ -111,4 +111,58 @@ theorem log_hDegen_via_analytic {N : Nat} (c : PfaffianChain (N + 1))
       (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q))).eval x)
     a b hab hFan hGan hFderiv hGderiv hW hFne Nb hGbound
 
+/-- **Fully-closed multilinear `log_step`** (no `hDegen` parameter). Feeds
+`log_step_multilinear` an `hDegen` closure discharged by
+`log_hDegen_via_analytic`. The closure re-splits on whether the leading
+coefficient vanishes identically (`cd ≡ 0` ⇒ degree-drop `bound_via_trim`;
+`cd ≢ 0` ⇒ Wronskian proportionality) so it is total, even though the
+descent only ever invokes it in the `cd ≢ 0` branch. The one remaining
+input is `hAnalytic`: every sub-barrier `pfaffianChainFn c r` is analytic on
+`[a,b]` — supplied by the EMLTree→chain encoder via
+`eml_tree_analytic_on_pos`. This is the log arm of the descent with the
+`g ≡ 0` gap fully closed. -/
+theorem log_step_multilinear_analytic {N : Nat} (c : PfaffianChain (N + 1))
+    (a b : Real) (hab : a < b) (hcoh : c.IsCoherentOn a b)
+    (h_top : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+        (c.relations ⟨N, Nat.lt_succ_self N⟩) = 0)
+    (h_tri : ∀ j : Fin (N + 1), j ≠ ⟨N, Nat.lt_succ_self N⟩ →
+        MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) (c.relations j) = 0)
+    (IH_depth : ∀ r : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧
+            (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (hAnalytic : ∀ r : MultiPoly (N + 1),
+        IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b))
+    (p : MultiPoly (N + 1))
+    (hd_le : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p ≤ 1)
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  refine PfaffianLogLead.log_step_multilinear c a b hab hcoh h_top h_tri IH_depth ?_ p hd_le hne
+  intro q hd1q hg_zeroq hneq
+  by_cases hcd_zero : ∀ z, a < z → z < b →
+      (pfaffianChainFn c
+        (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q)).eval z = 0
+  · -- cd ≡ 0: canonical degree drops, bound by trim.
+    refine PfaffianLogLead.bound_via_trim_interval c a b hab IH_depth q
+      (Nat.le_of_eq hd1q) ?_ hneq
+    intro _ z hza hzb
+    have h := getD_at_degreeY_eq_lcY_eval (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q z (c.chainValues z)
+    rw [hd1q] at h
+    rw [h]; exact hcd_zero z hza hzb
+  · -- cd ≢ 0: Wronskian proportionality (analytic discharge).
+    have hcd_nz : ∃ z, a < z ∧ z < b ∧
+        (pfaffianChainFn c
+          (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q)).eval z ≠ 0 :=
+      Classical.byContradiction fun hcon =>
+        hcd_zero (fun z hza hzb => Classical.byContradiction fun hzne => hcon ⟨z, hza, hzb, hzne⟩)
+    obtain ⟨Nb, hGbound⟩ := pfaffianChainFn_bound_of_degreeYtop_zero c
+      (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q)
+      (MultiPoly.degreeY_leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q)
+      a b hab hcd_nz IH_depth
+    exact log_hDegen_via_analytic c a b hab hcoh q (hAnalytic q)
+      (hAnalytic (MultiPoly.leadingCoeffY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) q))
+      hg_zeroq hneq Nb hGbound
+
 end MachLib
