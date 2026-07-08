@@ -1,6 +1,7 @@
 import MachLib.PfaffianExpRecipDescent
 import MachLib.PfaffianExpLogRecipClass
 import MachLib.PfaffianGeneralBoundPos
+import MachLib.PfaffianAnalytic
 
 /-!
 # Three-way combined descent — Brick A-4b' (log arm added)
@@ -74,6 +75,7 @@ theorem combined_descent_3 (a b : Real)
     (exp_step : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
         PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
             ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
                 = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
@@ -88,6 +90,7 @@ theorem combined_descent_3 (a b : Real)
     (log_step : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
         PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations ⟨k, Nat.lt_succ_self k⟩) = 0) →
         (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
             MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
@@ -99,23 +102,25 @@ theorem combined_descent_3 (a b : Real)
           BoundedZeros (pfaffianChainFn c p) a b) :
     ∀ (N : Nat) (c : PfaffianChain N), IsExpLogRecipW c a b → c.IsCoherentOn a b →
       PosExceptLog c a b →
+      (∀ r : MultiPoly N, IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
       ∀ (p : MultiPoly N),
         (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
         BoundedZeros (pfaffianChainFn c p) a b := by
   intro N
   induction N with
-  | zero => intro c _ _ _ p hne; exact base c p hne
+  | zero => intro c _ _ _ _ p hne; exact base c p hne
   | succ k ih =>
-    intro c hW hcoh hpos p hne
+    intro c hW hcoh hpos hAn p hne
     have hIHrestrict : ∀ q : MultiPoly k,
         (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
         BoundedZeros (pfaffianChainFn (chainRestrict c) q) a b :=
       fun q hq => ih (chainRestrict c) (IsExpLogRecipW_chainRestrict c a b hW)
-        (chainRestrict_isCoherentOn_ELR c a b hW hcoh) (positivity_chainRestrict_typed c a b hpos) q hq
+        (chainRestrict_isCoherentOn_ELR c a b hW hcoh) (positivity_chainRestrict_typed c a b hpos)
+        (pfaffianChainFn_analytic_chainRestrict c (Icc a b) hAn) q hq
     rcases (IsExpLogRecipW_top c a b hW).1 with hexp | hlog | hrec
     · obtain ⟨G, hG, hrel⟩ := hexp
-      exact exp_step k c hW hcoh hpos ⟨G, hG, hrel⟩ (IsExpLogRecipW_top c a b hW).2 hIHrestrict p hne
-    · exact log_step k c hW hcoh hpos hlog (IsExpLogRecipW_top c a b hW).2 hIHrestrict p hne
+      exact exp_step k c hW hcoh hpos hAn ⟨G, hG, hrel⟩ (IsExpLogRecipW_top c a b hW).2 hIHrestrict p hne
+    · exact log_step k c hW hcoh hpos hAn hlog (IsExpLogRecipW_top c a b hW).2 hIHrestrict p hne
     · obtain ⟨G, v, hG, hrel, hvtf, hvcoh, hvpos⟩ := hrec
       have hvN : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) v = 0 :=
         hvtf ⟨k, Nat.lt_succ_self k⟩ (Nat.le_refl k)
@@ -147,6 +152,7 @@ theorem combined_descent_3_of_steps (a b : Real) (hab : a < b)
     (exp_step : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
         PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
             ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
                 = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
@@ -161,6 +167,7 @@ theorem combined_descent_3_of_steps (a b : Real) (hab : a < b)
     (log_step : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
         PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations ⟨k, Nat.lt_succ_self k⟩) = 0) →
         (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
             MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
@@ -172,6 +179,7 @@ theorem combined_descent_3_of_steps (a b : Real) (hab : a < b)
           BoundedZeros (pfaffianChainFn c p) a b) :
     ∀ (N : Nat) (c : PfaffianChain N), IsExpLogRecipW c a b → c.IsCoherentOn a b →
       PosExceptLog c a b →
+      (∀ r : MultiPoly N, IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
       ∀ (p : MultiPoly N),
         (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
         BoundedZeros (pfaffianChainFn c p) a b :=

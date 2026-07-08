@@ -53,4 +53,25 @@ theorem pfaffianChainFn_eval_analytic {n : Nat} (c : PfaffianChain n) (S : RealS
     IsAnalyticOnReals (pfaffianChainFn c r).eval S :=
   poly_eval_analytic S (fun x => c.chainValues x) hevals r
 
+/-- **Converse extraction:** if every Pfaffian function over `c` is analytic, then
+each chain value is (take `r := varY i`, whose eval is `y_i`). The pair with
+`pfaffianChainFn_eval_analytic` makes "all Pfaffian functions analytic" and "all
+chain values analytic" interchangeable. -/
+theorem evals_analytic_of_pfaffianChainFn_analytic {n : Nat} (c : PfaffianChain n)
+    (S : RealSet) (h : ∀ r : MultiPoly n, IsAnalyticOnReals (pfaffianChainFn c r).eval S) :
+    ∀ i, IsAnalyticOnReals (fun x => c.evals i x) S :=
+  fun i => h (MultiPoly.varY i)
+
+/-- **Analyticity descends to `chainRestrict`.** The restricted chain's values are
+a prefix of `c`'s, so if all Pfaffian functions over `c` are analytic, so are
+those over `chainRestrict c`. This threads `hAnalytic` through the descent's
+depth recursion (the analytic analogue of `positivity_chainRestrict`). -/
+theorem pfaffianChainFn_analytic_chainRestrict {N : Nat} (c : PfaffianChain (N + 1))
+    (S : RealSet)
+    (h : ∀ r : MultiPoly (N + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval S) :
+    ∀ r : MultiPoly N, IsAnalyticOnReals (pfaffianChainFn (chainRestrict c) r).eval S := by
+  have hev := evals_analytic_of_pfaffianChainFn_analytic c S h
+  exact fun r => pfaffianChainFn_eval_analytic (chainRestrict c) S
+    (fun i => hev ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) r
+
 end MachLib
