@@ -214,5 +214,31 @@ theorem wronskian_leadY_eval_zero {N : Nat} (c : PfaffianChain N) (top : Fin N)
       getD_at_degreeY_eq_lcY_eval top p x env]
   mach_ring
 
+/-- **Wronskian top-degree bound.** `degreeY_top g ≤ degreeY_top p` for the log
+Wronskian `g = c_D·cTD(p) − cTD(c_D)·p` (`c_D = leadingCoeffY top p`). Both scalar
+factors are top-free (`degreeY_leadingCoeffY` + `degreeYtop_cTD_le_log`), so
+`degreeY_top g = max(degreeY_top(cTD p), degreeY_top p) ≤ degreeY_top p`. With
+`wronskian_leadY_eval_zero` (`coeffY_D g` eval-zero), this gives the log WF descent's
+degree-drop: `g` has canonical top degree `< D` (drop its eval-zero degree-`D` term). -/
+theorem degreeYtop_wronskian_le {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) :
+    MultiPoly.degreeY top (MultiPoly.sub
+        (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p))
+        (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p))
+      ≤ MultiPoly.degreeY top p := by
+  have hcD0 : MultiPoly.degreeY top (MultiPoly.leadingCoeffY top p) = 0 := MultiPoly.degreeY_leadingCoeffY top p
+  have hcTDcD0 : MultiPoly.degreeY top (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) = 0 := by
+    have h := degreeYtop_cTD_le_log c top h_top h_tri (MultiPoly.leadingCoeffY top p)
+    rw [hcD0] at h; exact Nat.le_zero.mp h
+  have hcTDp : MultiPoly.degreeY top (chainTotalDeriv c p) ≤ MultiPoly.degreeY top p :=
+    degreeYtop_cTD_le_log c top h_top h_tri p
+  show Nat.max (MultiPoly.degreeY top (MultiPoly.leadingCoeffY top p) + MultiPoly.degreeY top (chainTotalDeriv c p))
+               (MultiPoly.degreeY top (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) + MultiPoly.degreeY top p)
+      ≤ MultiPoly.degreeY top p
+  rw [hcD0, hcTDcD0, Nat.zero_add, Nat.zero_add]
+  exact Nat.max_le.mpr ⟨hcTDp, Nat.le_refl _⟩
+
 end PfaffianLogLead
 end MachLib
