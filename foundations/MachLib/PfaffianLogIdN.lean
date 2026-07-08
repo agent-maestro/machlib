@@ -89,5 +89,45 @@ theorem idN_log_sub_step {N : Nat} (c : PfaffianChain N) (top : Fin N) (x : Real
   rw [hL, ihp d, ihq d, hC1, hcong, hRC]
   mach_ring
 
+theorem idN_log_const_step {N : Nat} (c : PfaffianChain N) (top : Fin N) (cval : Real) (x : Real) :
+    ∀ d, IdNLogChain c top (MultiPoly.const cval) d x := by
+  intro d
+  have hL : MultiPoly.eval ((yCoeffsAt top (chainTotalDeriv c (MultiPoly.const cval))).getD d (MultiPoly.const 0)) x (c.chainValues x) = 0 := by
+    show MultiPoly.eval (([MultiPoly.const 0] : List (MultiPoly N)).getD d (MultiPoly.const 0)) x (c.chainValues x) = 0
+    cases d <;> rfl
+  have hR1 : MultiPoly.eval (chainTotalDeriv c ((yCoeffsAt top (MultiPoly.const cval)).getD d (MultiPoly.const 0))) x (c.chainValues x) = 0 := by
+    show MultiPoly.eval (chainTotalDeriv c (([MultiPoly.const cval] : List (MultiPoly N)).getD d (MultiPoly.const 0))) x (c.chainValues x) = 0
+    cases d <;> rfl
+  have hR2 : MultiPoly.eval ((yCoeffsAt top (MultiPoly.const cval)).getD (d + 1) (MultiPoly.const 0)) x (c.chainValues x) = 0 := by
+    show MultiPoly.eval (([MultiPoly.const cval] : List (MultiPoly N)).getD (d + 1) (MultiPoly.const 0)) x (c.chainValues x) = 0
+    rfl
+  show _ = _
+  rw [hL, hR1, hR2]; mach_ring
+
+theorem idN_log_varX_step {N : Nat} (c : PfaffianChain N) (top : Fin N) (x : Real) :
+    ∀ d, IdNLogChain c top MultiPoly.varX d x := by
+  intro d
+  have hR2 : MultiPoly.eval ((yCoeffsAt top MultiPoly.varX).getD (d + 1) (MultiPoly.const 0)) x (c.chainValues x) = 0 := by
+    show MultiPoly.eval (([MultiPoly.varX] : List (MultiPoly N)).getD (d + 1) (MultiPoly.const 0)) x (c.chainValues x) = 0
+    rfl
+  show MultiPoly.eval ((yCoeffsAt top (chainTotalDeriv c MultiPoly.varX)).getD d (MultiPoly.const 0)) x (c.chainValues x) = _
+  cases d with
+  | zero =>
+    show MultiPoly.eval (([MultiPoly.const 1] : List (MultiPoly N)).getD 0 (MultiPoly.const 0)) x (c.chainValues x)
+        = MultiPoly.eval (chainTotalDeriv c (([MultiPoly.varX] : List (MultiPoly N)).getD 0 (MultiPoly.const 0))) x (c.chainValues x)
+          + Real.natCast (0 + 1) * MultiPoly.eval (c.relations top) x (c.chainValues x)
+            * MultiPoly.eval ((yCoeffsAt top MultiPoly.varX).getD (0 + 1) (MultiPoly.const 0)) x (c.chainValues x)
+    rw [hR2]
+    show (1 : Real) = (1 : Real) + Real.natCast 1 * MultiPoly.eval (c.relations top) x (c.chainValues x) * (0 : Real)
+    mach_ring
+  | succ d =>
+    show MultiPoly.eval (([MultiPoly.const 1] : List (MultiPoly N)).getD (d+1) (MultiPoly.const 0)) x (c.chainValues x)
+        = MultiPoly.eval (chainTotalDeriv c (([MultiPoly.varX] : List (MultiPoly N)).getD (d+1) (MultiPoly.const 0))) x (c.chainValues x)
+          + Real.natCast (d+1+1) * MultiPoly.eval (c.relations top) x (c.chainValues x)
+            * MultiPoly.eval ((yCoeffsAt top MultiPoly.varX).getD (d+1+1) (MultiPoly.const 0)) x (c.chainValues x)
+    rw [hR2]
+    show (0 : Real) = (0 : Real) + Real.natCast (d+1+1) * MultiPoly.eval (c.relations top) x (c.chainValues x) * (0 : Real)
+    mach_ring
+
 end PfaffianLogIdN
 end MachLib
