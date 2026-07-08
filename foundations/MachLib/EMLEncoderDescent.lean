@@ -1,6 +1,7 @@
 import MachLib.EMLEncoder
 import MachLib.PfaffianChainExtendELR
 import MachLib.PfaffianExpLogRecipDescent
+import MachLib.DivisionError
 
 /-!
 # The encoder satisfies the descent's positivity hypothesis
@@ -23,6 +24,7 @@ namespace MachLib
 open MachLib.Real
 open MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly
   MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianChain
+  MachLib.PfaffianChainMod.PfaffianFn
   MachLib.PfaffianGeneralReduce MachLib.PfaffianExpLogRecip
 
 /-- **`chainExtend` preserves `PosExceptLog`.** Lower variables keep their
@@ -102,5 +104,87 @@ theorem enc_PosExceptLog (t : EMLTree) :
       (encLift t1 (enc t2 chain).2)) a b
     exact encEmlStepR_PosExceptLog (enc t1 (enc t2 chain).1).1
       (enc t1 (enc t2 chain).1).2 (encLift t1 (enc t2 chain).2) a b hcbP hwpos
+
+/-! ## The encoder produces an `IsExpLogRecipW` chain (the 4th descent input) -/
+
+/-- `degreeY` of a negation equals that of the argument (`neg p = sub 0 p`, and
+`degreeY` of a `sub` is the `max`, with the zero summand contributing 0). -/
+theorem degreeY_neg {n : Nat} (i : Fin n) (p : MultiPoly n) :
+    MultiPoly.degreeY i (MultiPoly.neg p) = MultiPoly.degreeY i p := by
+  show Nat.max (MultiPoly.degreeY i (MultiPoly.const 0)) (MultiPoly.degreeY i p)
+     = MultiPoly.degreeY i p
+  exact Nat.max_eq_right (Nat.zero_le _)
+
+/-- **The eml step's chain is `IsExpLogRecipW`.** recip node → reciprocal-type
+(witness `liftLastY w = ⟦t2⟧`, `y·v=1` via `div_mul_cancel`, `v>0` from `hwpos`),
+log node → log-type (`degreeY` of its own variable is 0), exp node → exp-type
+(`G·y_top`). Node-by-node via `chainExtend_IsExpLogRecipW`. -/
+theorem encEmlStepR_IsExpLogRecipW {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (a b : Real)
+    (hcb : IsExpLogRecipW cb a b)
+    (hwpos : ∀ x, a < x → x < b → 0 < MultiPoly.eval w x (cb.chainValues x)) :
+    IsExpLogRecipW (encEmlStepR cb b1 w) a b := by
+  have dmul : ∀ {k : Nat} (i : Fin k) (p q : MultiPoly k),
+      MultiPoly.degreeY i (MultiPoly.mul p q)
+        = MultiPoly.degreeY i p + MultiPoly.degreeY i q := fun _ _ _ => rfl
+  -- reciprocal node
+  have hcc : IsExpLogRecipW (stepCC cb w) a b := by
+    simp only [stepCC]
+    apply chainExtend_IsExpLogRecipW cb a b _ _ hcb
+    refine ⟨Or.inr (Or.inr ⟨MultiPoly.neg (MultiPoly.liftLastY (chainTotalDeriv cb w)),
+        MultiPoly.liftLastY w, ?_, ?_, ?_, ?_, ?_⟩), ?_⟩
+    · rw [degreeY_neg]; exact degreeY_top_liftLastY _
+    · rw [chainExtend_relations_last cb _ _]
+    · intro j hj
+      have hjval : j.val = M := by omega
+      have hjeq : j = (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1)) := Fin.ext hjval
+      rw [hjeq]; exact degreeY_top_liftLastY w
+    · intro x hxa hxb
+      rw [chainExtend_evals_last cb _ _, eval_liftLastY_chainExtend cb _ _ w x]
+      show (1 / MultiPoly.eval w x (cb.chainValues x)) * MultiPoly.eval w x (cb.chainValues x) = 1
+      exact div_mul_cancel (ne_of_gt (hwpos x hxa hxb))
+    · intro x hxa hxb
+      rw [eval_liftLastY_chainExtend cb _ _ w x]; exact hwpos x hxa hxb
+    · intro j hj; exact absurd hj (by omega)
+  -- log node
+  have hcd : IsExpLogRecipW (stepCD cb w) a b := by
+    simp only [stepCD]
+    apply chainExtend_IsExpLogRecipW (stepCC cb w) a b _ _ hcc
+    refine ⟨Or.inr (Or.inl ?_), ?_⟩
+    · rw [chainExtend_relations_last (stepCC cb w) _ _, dmul, degreeY_top_liftLastY, Nat.zero_add]
+      show (if (⟨M + 1, Nat.lt_succ_self (M + 1)⟩ : Fin (M + 2)) = (⟨M, by omega⟩ : Fin (M + 2))
+          then (1 : Nat) else 0) = 0
+      rw [if_neg (Fin.ne_of_val_ne (Nat.succ_ne_self M))]
+    · intro j hj; exact absurd hj (by omega)
+  -- exp node
+  simp only [encEmlStepR]
+  apply chainExtend_IsExpLogRecipW (stepCD cb w) a b _ _ hcd
+  refine ⟨Or.inl ⟨MultiPoly.liftLastY (chainTotalDeriv (stepCD cb w) (liftLastYBy 2 b1)), ?_, ?_⟩, ?_⟩
+  · exact degreeY_top_liftLastY _
+  · rw [chainExtend_relations_last (stepCD cb w) _ _]
+  · intro j hj; exact absurd hj (by omega)
+
+/-- **The encoder produces an `IsExpLogRecipW` chain.** Given the context chain is
+in the class and every log-argument stays positive (`LogArgPos`), so is
+`enc t chain`. The fourth and last descent input the encoder owes. -/
+theorem enc_IsExpLogRecipW (t : EMLTree) :
+    ∀ {N : Nat} (chain : PfaffianChain N) (a b : Real),
+      IsExpLogRecipW chain a b → LogArgPos t a b → IsExpLogRecipW (enc t chain).1 a b := by
+  induction t with
+  | const c => intro N chain a b hchain _; exact hchain
+  | var => intro N chain a b hchain _; exact hchain
+  | eml t1 t2 ih1 ih2 =>
+    intro N chain a b hchain hpos
+    obtain ⟨hpos1, hpos2, hposLog⟩ := hpos
+    have hcbW := ih1 (enc t2 chain).1 a b (ih2 chain a b hchain hpos2) hpos1
+    have hwpos : ∀ x, a < x → x < b → 0 < MultiPoly.eval (encLift t1 (enc t2 chain).2) x
+        ((enc t1 (enc t2 chain).1).1.chainValues x) := by
+      intro x hxa hxb
+      rw [enc_encLift_eval t1 t2 chain x (t2.eval x) (enc_eval t2 chain x)]
+      exact hposLog x hxa hxb
+    show IsExpLogRecipW (encEmlStepR (enc t1 (enc t2 chain).1).1 (enc t1 (enc t2 chain).1).2
+      (encLift t1 (enc t2 chain).2)) a b
+    exact encEmlStepR_IsExpLogRecipW (enc t1 (enc t2 chain).1).1
+      (enc t1 (enc t2 chain).1).2 (encLift t1 (enc t2 chain).2) a b hcbW hwpos
 
 end MachLib
