@@ -163,5 +163,56 @@ theorem idN_log_lead {N : Nat} (c : PfaffianChain N) (top : Fin N)
         show MultiPoly.leadingCoeffY top (MultiPoly.mul p q) = MultiPoly.mul (MultiPoly.leadingCoeffY top p) (MultiPoly.leadingCoeffY top q) from rfl,
         cTD_mul c (MultiPoly.leadingCoeffY top p) (MultiPoly.leadingCoeffY top q), MultiPoly.eval_add, MultiPoly.eval_mul, MultiPoly.eval_mul]
     mach_ring
+
+/-! ## Wronskian leading-coefficient cancellation (the degree-drop) -/
+
+/-- Top-free scalar `s` (`degreeY top s = 0`) pulls through fixed-degree coefficient
+extraction at any index `d ≥ degreeY_top q` (eval). Instance of `getD_mul_split_eval`
+at `m = 0` (`yCoeffsAt` of a top-free poly is length 1). -/
+theorem getD_scalar_topfree_eval {N : Nat} (top : Fin N) (s q : MultiPoly N)
+    (hs : MultiPoly.degreeY top s = 0) (d : Nat) (hq : MultiPoly.degreeY top q ≤ d)
+    (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval ((yCoeffsAt top (MultiPoly.mul s q)).getD d (MultiPoly.const 0)) x env
+      = MultiPoly.eval s x env
+        * MultiPoly.eval ((yCoeffsAt top q).getD d (MultiPoly.const 0)) x env := by
+  have hsplit := getD_mul_split_eval (yCoeffsAt top s) (yCoeffsAt top q) 0 d
+    (Nat.le_of_eq (by rw [yCoeffsAt_length_eq, hs]))
+    (by rw [yCoeffsAt_length_eq]; exact Nat.add_le_add_right hq 1) x env
+  rw [Nat.zero_add] at hsplit
+  rw [show yCoeffsAt top (MultiPoly.mul s q) = listMulN (yCoeffsAt top s) (yCoeffsAt top q) from rfl, hsplit]
+  have h0 : MultiPoly.eval ((yCoeffsAt top s).getD 0 (MultiPoly.const 0)) x env = MultiPoly.eval s x env := by
+    rw [show (0 : Nat) = MultiPoly.degreeY top s from hs.symm, getD_at_degreeY_eq_lcY_eval top s x env,
+        leadingCoeffY_eq_self_of_degreeY_zero top s hs]
+  rw [h0]
+
+/-- **Wronskian leading coefficient vanishes (eval).** For a LOG top, the degree-`D`
+coefficient (`D = degreeY_top p`) of
+`g = c_D·cTD(p) − cTD(c_D)·p`  (`c_D = leadingCoeffY top p`)
+is eval-zero: the leading terms cancel because `coeffY_D(cTD p) = cTD(c_D)` at eval
+(`idN_log_lead`) and `coeffY_D(p) = c_D`. So `g`'s canonical top degree is `< D` — the
+degree-drop the log Wronskian reducer rests on (feeds the eval-aware WF measure). The
+two scalar factors `c_D` and `cTD(c_D)` are top-free (`degreeYtop_cTD_le_log`), so they
+pull through `getD_D` via `getD_scalar_topfree_eval`. -/
+theorem wronskian_leadY_eval_zero {N : Nat} (c : PfaffianChain N) (top : Fin N)
+    (h_top : MultiPoly.degreeY top (c.relations top) = 0)
+    (h_tri : ∀ j : Fin N, j ≠ top → MultiPoly.degreeY top (c.relations j) = 0)
+    (p : MultiPoly N) (x : Real) (env : Fin N → Real) :
+    MultiPoly.eval ((yCoeffsAt top
+        (MultiPoly.sub (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p))
+                       (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p))).getD
+        (MultiPoly.degreeY top p) (MultiPoly.const 0)) x env = 0 := by
+  have hcD : MultiPoly.degreeY top (MultiPoly.leadingCoeffY top p) = 0 := MultiPoly.degreeY_leadingCoeffY top p
+  have hcTDcD : MultiPoly.degreeY top (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) = 0 := by
+    have := degreeYtop_cTD_le_log c top h_top h_tri (MultiPoly.leadingCoeffY top p)
+    rw [hcD] at this; exact Nat.le_zero.mp this
+  rw [show yCoeffsAt top (MultiPoly.sub (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p)) (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p))
+        = listSubN (yCoeffsAt top (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p))) (yCoeffsAt top (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p)) from rfl,
+      getD_listSubN_eval,
+      getD_scalar_topfree_eval top (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p) hcD (MultiPoly.degreeY top p) (degreeYtop_cTD_le_log c top h_top h_tri p) x env,
+      getD_scalar_topfree_eval top (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p hcTDcD (MultiPoly.degreeY top p) (Nat.le_refl _) x env,
+      idN_log_lead c top h_top h_tri x env p,
+      getD_at_degreeY_eq_lcY_eval top p x env]
+  mach_ring
+
 end PfaffianLogLead
 end MachLib
