@@ -373,6 +373,122 @@ theorem zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
     simp only [List.length_cons] at hcs_len ⊢
     omega
 
+/-! ## Dual interleave — Rolle with a "bad set" where `f` need not be differentiable
+
+For the LOG Wronskian partition: `f` (the reciprocal vehicle `pf(p)/c_D`) is
+differentiable only where `c_D ≠ 0`. Between consecutive zeros, a gap either avoids
+the bad set (`c_D = 0`) entirely — Rolle gives an interior critical point — or contains
+a bad point. Each gap thus yields a distinct critical point OR a distinct bad point,
+so the zero count splits as `#crit + #bad + 1`. -/
+
+/-- **Dual interleave.** Like `interleave_from`, but `f` is only known differentiable
+off a `isBad` set. Each gap between consecutive zeros contributes either a critical
+point (`f'' = 0`, when the gap avoids `isBad`) or a bad point — collected into two
+ordered `Nodup` lists. -/
+private theorem interleave_dual (f : Real → Real) (isBad : Real → Prop) (a b : Real)
+    (hdiff : ∀ c : Real, a < c → c < b → ¬ isBad c → ∃ f' : Real, HasDerivAt f f' c) :
+    ∀ (hd : Real) (s : List Real),
+      List.Pairwise (fun x y => leB x y = true) (hd :: s) →
+      (hd :: s).Nodup →
+      (∀ z ∈ (hd :: s), a < z ∧ z < b ∧ f z = 0) →
+      ∃ csC csB : List Real, csC.Nodup ∧ csB.Nodup ∧
+        (∀ c ∈ csC, a < c ∧ c < b ∧ ¬ isBad c ∧ ∃ f'' : Real, HasDerivAt f f'' c ∧ f'' = 0) ∧
+        (∀ c ∈ csB, a < c ∧ c < b ∧ isBad c) ∧
+        (∀ c ∈ csC, hd < c) ∧ (∀ c ∈ csB, hd < c) ∧
+        (hd :: s).length ≤ csC.length + csB.length + 1 := by
+  intro hd s
+  induction s generalizing hd with
+  | nil =>
+    intro _ _ _
+    exact ⟨[], [], List.nodup_nil, List.nodup_nil,
+      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil c)), Nat.le_refl 1⟩
+  | cons z1 rest ih =>
+    intro hpair hnodup hzero
+    rw [List.pairwise_cons] at hpair
+    obtain ⟨hhd_le, hpair_tail⟩ := hpair
+    rw [List.nodup_cons] at hnodup
+    obtain ⟨hhd_notin, hnodup_tail⟩ := hnodup
+    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self z1 rest
+    have hhd_le_z1 : hd ≤ z1 := (leB_iff hd z1).mp (hhd_le z1 hz1_mem)
+    have hhd_ne_z1 : hd ≠ z1 := fun h => hhd_notin (h ▸ hz1_mem)
+    have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
+    obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
+    obtain ⟨ha_z1, hz1_b, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
+    obtain ⟨csC', csB', hcsC'_nd, hcsB'_nd, hcsC'_props, hcsB'_props, hcsC'_gt, hcsB'_gt, hlen'⟩ :=
+      ih z1 hpair_tail hnodup_tail (fun z hz => hzero z (List.mem_cons_of_mem hd hz))
+    by_cases hbad : ∃ w, hd < w ∧ w < z1 ∧ isBad w
+    · obtain ⟨w0, hw0_lo, hw0_hi, hw0_bad⟩ := hbad
+      have hw0_lt_csB' : ∀ c ∈ csB', w0 < c := fun c hc => lt_trans_ax hw0_hi (hcsB'_gt c hc)
+      refine ⟨csC', w0 :: csB', hcsC'_nd, ?_, hcsC'_props, ?_, ?_, ?_, ?_⟩
+      · rw [List.nodup_cons]; exact ⟨fun hmem => lt_irrefl_ax w0 (hw0_lt_csB' w0 hmem), hcsB'_nd⟩
+      · intro c hc; rw [List.mem_cons] at hc
+        rcases hc with h | h
+        · subst h; exact ⟨lt_trans_ax ha_hd hw0_lo, lt_trans_ax hw0_hi hz1_b, hw0_bad⟩
+        · exact hcsB'_props c h
+      · intro c hc; exact lt_trans_ax hhd_lt_z1 (hcsC'_gt c hc)
+      · intro c hc; rw [List.mem_cons] at hc
+        rcases hc with h | h
+        · subst h; exact hw0_lo
+        · exact lt_trans_ax hhd_lt_z1 (hcsB'_gt c h)
+      · simp only [List.length_cons] at hlen' ⊢; omega
+    · have hbad' : ∀ w, hd < w → w < z1 → ¬ isBad w := fun w hw1 hw2 hbw => hbad ⟨w, hw1, hw2, hbw⟩
+      have hdiff' : ∀ c : Real, hd < c → c < z1 → ∃ f' : Real, HasDerivAt f f' c :=
+        fun c hc1 hc2 => hdiff c (lt_trans_ax ha_hd hc1) (lt_trans_ax hc2 hz1_b) (hbad' c hc1 hc2)
+      have hfeq : f hd = f z1 := by rw [hf_hd, hf_z1]
+      obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle f hd z1 hhd_lt_z1 hfeq hdiff'
+      have hc0_lt_csC' : ∀ c ∈ csC', c0 < c := fun c hc => lt_trans_ax hc0_hi (hcsC'_gt c hc)
+      refine ⟨c0 :: csC', csB', ?_, hcsB'_nd, ?_, hcsB'_props, ?_, ?_, ?_⟩
+      · rw [List.nodup_cons]; exact ⟨fun hmem => lt_irrefl_ax c0 (hc0_lt_csC' c0 hmem), hcsC'_nd⟩
+      · intro c hc; rw [List.mem_cons] at hc
+        rcases hc with h | h
+        · subst h; exact ⟨lt_trans_ax ha_hd hc0_lo, lt_trans_ax hc0_hi hz1_b, hbad' _ hc0_lo hc0_hi, 0, hc0_deriv, rfl⟩
+        · exact hcsC'_props c h
+      · intro c hc; rw [List.mem_cons] at hc
+        rcases hc with h | h
+        · subst h; exact hc0_lo
+        · exact lt_trans_ax hhd_lt_z1 (hcsC'_gt c h)
+      · intro c hc; exact lt_trans_ax hhd_lt_z1 (hcsB'_gt c hc)
+      · simp only [List.length_cons] at hlen' ⊢; omega
+
+/-- **Zero count with a bad set.** If `f` is differentiable off `isBad`, and the
+critical points (`f'' = 0`) number ≤ `Ncrit` while the bad points number ≤ `Nbad`,
+then `f` has ≤ `Ncrit + Nbad + 1` zeros on `(a,b)`. The `c_D`-partition of the log
+Wronskian descent: `isBad z := c_D(z) = 0`, critical points are `g`-zeros. -/
+theorem zero_count_bound_by_deriv_with_bad (f : Real → Real) (isBad : Real → Prop)
+    (a b : Real) (hab : a < b)
+    (hdiff : ∀ c : Real, a < c → c < b → ¬ isBad c → ∃ f' : Real, HasDerivAt f f' c)
+    (Ncrit Nbad : Nat)
+    (hcrit : ∀ zs : List Real, zs.Nodup →
+        (∀ z ∈ zs, a < z ∧ z < b ∧ ¬ isBad z ∧ ∃ f'' : Real, HasDerivAt f f'' z ∧ f'' = 0) →
+        zs.length ≤ Ncrit)
+    (hbadN : ∀ zs : List Real, zs.Nodup →
+        (∀ z ∈ zs, a < z ∧ z < b ∧ isBad z) → zs.length ≤ Nbad) :
+    ∀ zeros_f : List Real, zeros_f.Nodup →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f z = 0) →
+      zeros_f.length ≤ Ncrit + Nbad + 1 := by
+  intro zeros_f hnodup hzero
+  have hperm : (zeros_f.mergeSort leB).Perm zeros_f := List.mergeSort_perm zeros_f leB
+  have hlen : (zeros_f.mergeSort leB).length = zeros_f.length := hperm.length_eq
+  have hnodup_s : (zeros_f.mergeSort leB).Nodup := hperm.symm.nodup hnodup
+  have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ f z = 0 :=
+    fun z hz => hzero z (hperm.mem_iff.mp hz)
+  have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
+    List.sorted_mergeSort leB_trans leB_total zeros_f
+  rw [← hlen]
+  generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
+  cases s with
+  | nil => simp
+  | cons hd t =>
+    obtain ⟨csC, csB, hcsC_nd, hcsB_nd, hcsC_props, hcsB_props, _, _, hcs_len⟩ :=
+      interleave_dual f isBad a b hdiff hd t hpair_s hnodup_s hzero_s
+    have hbC := hcrit csC hcsC_nd hcsC_props
+    have hbB := hbadN csB hcsB_nd hcsB_props
+    simp only [List.length_cons] at hcs_len ⊢
+    omega
+
 /-! ## Phase C plan (documented here as roadmap)
 
 Phase C constructs the Pfaffian zero bound (Phase A's
