@@ -2,6 +2,7 @@ import MachLib.PfaffianRecipGrowthSpike
 import MachLib.PfaffianChainExtend
 import MachLib.IterExpDepthNDegreeY
 import MachLib.EMLEncoder
+import MachLib.PfaffianGeneralReduce
 
 /-!
 # Toward `htame` — the reciprocal-linearity kernel for encoder chains
@@ -569,5 +570,19 @@ theorem enc_EncGood (t : EMLTree) : ∀ {N : Nat} (chain : PfaffianChain N), Enc
 theorem enc_EncRelLinear (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (hchain : EncRelLinear chain) :
     EncRelLinear (MachLib.enc t chain).1 :=
   (enc_EncGood t chain hchain).1
+
+/-- **Cross-linearity is preserved under `chainRestrict`** (A/C, depth-recursion support). The restricted
+chain's relations are `dropLastY` of the original's below-top relations, and `dropLastY` cannot raise a
+below-top `degreeY` (`degreeY_dropLastY_le`). So `htame` propagates down the depth recursion `exp_hard`
+threads through `chainRestrict c`, even though a restriction is not itself an encoder chain. -/
+theorem EncRelLinear_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (hc : EncRelLinear c) :
+    EncRelLinear (MachLib.PfaffianGeneralReduce.chainRestrict c) := by
+  intro l j hjl
+  show MultiPoly.degreeY j
+      (MultiPoly.dropLastY (c.relations (⟨l.val, Nat.lt_succ_of_lt l.isLt⟩ : Fin (N + 1)))) ≤ 1
+  refine Nat.le_trans (MultiPoly.degreeY_dropLastY_le _ j) ?_
+  exact hc (⟨l.val, Nat.lt_succ_of_lt l.isLt⟩ : Fin (N + 1))
+    (⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ : Fin (N + 1))
+    (fun h => hjl (by rw [Fin.mk.injEq] at h; exact Fin.ext h))
 
 end MachLib.PfaffianRecipHtame
