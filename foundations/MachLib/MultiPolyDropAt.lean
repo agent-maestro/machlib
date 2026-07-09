@@ -27,6 +27,21 @@ open MachLib.Real
 def embedSkip {N : Nat} (i : Fin (N + 1)) (k : Fin N) : Fin (N + 1) :=
   if k.val < i.val then ⟨k.val, by omega⟩ else ⟨k.val + 1, by omega⟩
 
+/-- `embedSkip` sends the below-`i` reindex `⟨j.val, _⟩` back to `j`. -/
+theorem embedSkip_lt {N : Nat} (i j : Fin (N + 1)) (hj : j.val < i.val) :
+    embedSkip i (⟨j.val, by omega⟩ : Fin N) = j := by
+  show (if (⟨j.val, by omega⟩ : Fin N).val < i.val then _ else _) = j
+  rw [if_pos hj]
+
+/-- `embedSkip` sends the above-`i` reindex `⟨j.val - 1, _⟩` back to `j`. -/
+theorem embedSkip_gt {N : Nat} (i j : Fin (N + 1)) (hj : i.val < j.val) :
+    embedSkip i (⟨j.val - 1, by omega⟩ : Fin N) = j := by
+  show (if (⟨j.val - 1, by omega⟩ : Fin N).val < i.val then _ else _) = j
+  rw [if_neg (by omega : ¬ (j.val - 1 < i.val))]
+  apply Fin.eq_of_val_eq
+  show (j.val - 1) + 1 = j.val
+  omega
+
 /-- **Delete the interior coordinate `i`.** `varY i ↦ const 0` (safe under `degreeY i p = 0`);
 `varY j` for `j ≠ i` is reindexed into `Fin N` (drop by one above `i`, keep below). The interior
 analog of `dropLastY`. -/
