@@ -162,6 +162,7 @@ import MachLib.IterExpDepthNCanonLcYBound
 import MachLib.IterExpDepthNEIBase
 import MachLib.IterExpDepthNEIrank
 import MachLib.IterExpDepthNBudget
+import MachLib.IterExpDepthNBudgetGen
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
