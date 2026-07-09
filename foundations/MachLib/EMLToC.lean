@@ -302,6 +302,212 @@ theorem emitFunc_correct
     evalFuncC r1 r2 (emitFunc f) args base = evalFuncEML i1 i2 f args base :=
   emitC_correct i1 i2 r1 r2 hrt1 hrt2 f.body (bindArgs f.params args base)
 
+/-! ## Statements — control flow + mutable state (`WHILE` / `ASSIGN` / `STATE`)
+
+The scalar/vector layer above is expression-only. Real emitted kernels also contain **statements**:
+`let`/`let_mut` declarations, `ASSIGN` mutations, `WHILE` loops, and `STATE` (variables that persist
+across calls). This layer models them over a mutable **store** (`Env`, now threaded/updated) with
+**fuel** on the only non-terminating construct, `while`.
+
+`slet`/`sassign` are semantically identical (both update the store to `eval e`); they differ only in
+the C they emit — a declaration `T x = e;` vs a bare assignment `x = e;`. That syntactic divergence
+is *exactly* the kind the translation-validation theorem certifies away. `sexpr` is a pure
+expression-statement (no store effect — EML expressions have no side effects).
+-/
+
+/-- EML statements. `swhile`'s `List Stmt` body is the loop's block. -/
+inductive Stmt where
+  | slet    : String → EML → Stmt        -- `T x = e;`   (LET / LET_MUT)
+  | sassign : String → EML → Stmt        -- `x = e;`     (ASSIGN)
+  | swhile  : EML → List Stmt → Stmt     -- `while (c) { body }`
+  | sexpr   : EML → Stmt                 -- `e;`         (EXPR_STMT)
+
+/-- Emitted C statements (a separate type, mirroring `CExpr`). -/
+inductive CStmt where
+  | cdecl   : String → CExpr → CStmt     -- `double x = e;`
+  | cassign : String → CExpr → CStmt     -- `x = e;`
+  | cwhile  : CExpr → List CStmt → CStmt
+  | cexpr   : CExpr → CStmt
+
+section
+variable (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+
+/- **EML statement execution** over a mutable store, fuel-bounded on `swhile`. The `while` fuel bounds
+iterations only (straight-line code costs no fuel), so it's WF (not structural) recursion. -/
+mutual
+  def execStmt (fuel : Nat) (env : Env) : Stmt → Env
+    | .slet x e      => env.update x (evalEML i1 i2 env e)
+    | .sassign x e   => env.update x (evalEML i1 i2 env e)
+    | .swhile c body => execWhile fuel c body env
+    | .sexpr _       => env
+  def execStmts (fuel : Nat) (env : Env) : List Stmt → Env
+    | []      => env
+    | s :: ss => execStmts fuel (execStmt fuel env s) ss
+  def execWhile (fuel : Nat) (c : EML) (body : List Stmt) (env : Env) : Env :=
+    match fuel with
+    | 0        => env
+    | fuel + 1 => bif isTrue (evalEML i1 i2 env c).toF
+                  then execWhile fuel c body (execStmts fuel env body) else env
+end
+
+end
+
+section
+variable (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+
+/- **C statement execution** — same shape; `cdecl`/`cassign` collapse to one meaning. -/
+mutual
+  def cexecStmt (fuel : Nat) (env : Env) : CStmt → Env
+    | .cdecl x e     => env.update x (evalC r1 r2 env e)
+    | .cassign x e   => env.update x (evalC r1 r2 env e)
+    | .cwhile c body => cexecWhile fuel c body env
+    | .cexpr _       => env
+  def cexecStmts (fuel : Nat) (env : Env) : List CStmt → Env
+    | []      => env
+    | s :: ss => cexecStmts fuel (cexecStmt fuel env s) ss
+  def cexecWhile (fuel : Nat) (c : CExpr) (body : List CStmt) (env : Env) : Env :=
+    match fuel with
+    | 0        => env
+    | fuel + 1 => bif isTrue (evalC r1 r2 env c).toF
+                  then cexecWhile fuel c body (cexecStmts fuel env body) else env
+end
+
+end
+
+/- **The statement emitter** — the Lean model of `c_backend._emit_block`. -/
+mutual
+  def emitStmt : Stmt → CStmt
+    | .slet x e      => .cdecl x (emitC e)
+    | .sassign x e   => .cassign x (emitC e)
+    | .swhile c body => .cwhile (emitC c) (emitStmts body)
+    | .sexpr e       => .cexpr (emitC e)
+  def emitStmts : List Stmt → List CStmt
+    | []      => []
+    | s :: ss => emitStmt s :: emitStmts ss
+end
+
+section
+variable (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+variable (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+variable (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+variable (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+include hrt1 hrt2
+
+/- **Statement-level translation validation (T1).** For every fuel and store, the emitted C statements
+drive the store to the same state as the EML source. Because `while` is WF (fuel) recursion, these
+carry `Quot.sound` alongside `propext` — both Lean-core, sorryAx-free. -/
+set_option linter.unusedSectionVars false in
+mutual
+  theorem execStmt_correct : ∀ (fuel : Nat) (env : Env) (s : Stmt),
+      cexecStmt r1 r2 fuel env (emitStmt s) = execStmt i1 i2 fuel env s
+    | fuel, env, .slet x e => by
+        simp only [emitStmt, execStmt, cexecStmt]
+        rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
+    | fuel, env, .sassign x e => by
+        simp only [emitStmt, execStmt, cexecStmt]
+        rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
+    | fuel, env, .swhile c body => by
+        simp only [emitStmt, execStmt, cexecStmt]
+        exact execWhile_correct fuel c body env
+    | fuel, env, .sexpr e => by
+        simp only [emitStmt, execStmt, cexecStmt]
+  theorem execStmts_correct : ∀ (fuel : Nat) (env : Env) (ss : List Stmt),
+      cexecStmts r1 r2 fuel env (emitStmts ss) = execStmts i1 i2 fuel env ss
+    | fuel, env, [] => by simp only [emitStmts, execStmts, cexecStmts]
+    | fuel, env, s :: ss => by
+        simp only [emitStmts, execStmts, cexecStmts]
+        rw [execStmt_correct fuel env s, execStmts_correct fuel (execStmt i1 i2 fuel env s) ss]
+  theorem execWhile_correct : ∀ (fuel : Nat) (c : EML) (body : List Stmt) (env : Env),
+      cexecWhile r1 r2 fuel (emitC c) (emitStmts body) env = execWhile i1 i2 fuel c body env
+    | 0, c, body, env => by simp only [execWhile, cexecWhile]
+    | fuel + 1, c, body, env => by
+        simp only [execWhile, cexecWhile]
+        rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 c env, execStmts_correct fuel env body,
+            execWhile_correct fuel c body (execStmts i1 i2 fuel env body)]
+end
+
+end
+
+/-! ## Stateful functions — the `WHILE`/`STATE` compilation unit
+
+A stateful function has parameters, `state` initializers (persistent vars, modeled here as an initial
+store binding — cross-call persistence is a linkage concern outside the per-call translation boundary),
+a statement body, and a final return expression. -/
+
+/-- An EML stateful function. -/
+structure StmtFunc where
+  params : List String
+  states : List (String × EML)
+  body   : List Stmt
+  ret    : EML
+
+/-- The emitted C stateful function. -/
+structure CStmtFunc where
+  params : List String
+  states : List (String × CExpr)
+  body   : List CStmt
+  ret    : CExpr
+
+/-- Emit a stateful function — the Lean model of `_emit_function` with a `STATE`/`WHILE` body. -/
+def emitStmtFunc (f : StmtFunc) : CStmtFunc :=
+  ⟨f.params, f.states.map (fun p => (p.1, emitC p.2)), emitStmts f.body, emitC f.ret⟩
+
+/-- Install `state` initializers into the store (each init evaluated once, left-to-right). -/
+def bindStatesE (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) :
+    List (String × EML) → Env → Env
+  | [],           env => env
+  | (x, e) :: rs, env => bindStatesE i1 i2 rs (env.update x (evalEML i1 i2 env e))
+
+/-- C-side state initialization. -/
+def bindStatesC (r1 : String → Float → Float) (r2 : String → Float → Float → Float) :
+    List (String × CExpr) → Env → Env
+  | [],           env => env
+  | (x, e) :: rs, env => bindStatesC r1 r2 rs (env.update x (evalC r1 r2 env e))
+
+/-- Run a stateful EML function: bind args, install states, execute the body, return `ret`. -/
+def runStmtFuncEML (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (fuel : Nat) (f : StmtFunc) (args : List Val) (base : Env) : Val :=
+  let e1 := bindStatesE i1 i2 f.states (bindArgs f.params args base)
+  evalEML i1 i2 (execStmts i1 i2 fuel e1 f.body) f.ret
+
+/-- Run the emitted C stateful function. -/
+def runStmtFuncC (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (fuel : Nat) (g : CStmtFunc) (args : List Val) (base : Env) : Val :=
+  let e1 := bindStatesC r1 r2 g.states (bindArgs g.params args base)
+  evalC r1 r2 (cexecStmts r1 r2 fuel e1 g.body) g.ret
+
+section
+variable (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+variable (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+variable (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+variable (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+include hrt1 hrt2
+
+/-- State-initialization correspondence: the emitted C initializers install the same store. -/
+theorem bindStates_correct :
+    ∀ (states : List (String × EML)) (env : Env),
+      bindStatesC r1 r2 (states.map (fun p => (p.1, emitC p.2))) env
+        = bindStatesE i1 i2 states env
+  | [],           env => rfl
+  | (x, e) :: rs, env => by
+      simp only [List.map, bindStatesC, bindStatesE]
+      rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env,
+          bindStates_correct rs (env.update x (evalEML i1 i2 env e))]
+
+/-- **Stateful-function translation validation (T1).** With enough fuel — or any fuel, since both
+sides share it — the emitted C stateful function computes the same result as the EML source, for every
+argument list. The compilation-unit certificate for control-flow + mutable-state kernels. -/
+theorem runStmtFunc_correct (fuel : Nat) (f : StmtFunc) (args : List Val) (base : Env) :
+    runStmtFuncC r1 r2 fuel (emitStmtFunc f) args base
+      = runStmtFuncEML i1 i2 fuel f args base := by
+  simp only [runStmtFuncC, runStmtFuncEML, emitStmtFunc,
+    bindStates_correct i1 i2 r1 r2 hrt1 hrt2 f.states (bindArgs f.params args base)]
+  rw [execStmts_correct i1 i2 r1 r2 hrt1 hrt2 fuel
+        (bindStatesE i1 i2 f.states (bindArgs f.params args base)) f.body,
+      emitC_correct i1 i2 r1 r2 hrt1 hrt2 f.ret _]
+
+end
+
 /-! ## Worked examples — non-vacuity + regression smoke-test -/
 
 /-- `poly(x) = 2·x + x·x`. -/
@@ -336,5 +542,36 @@ def dotFn : EMLFunc := ⟨["a", "b"], .dot (.var "a") (.var "b")⟩
 /-- `dotFn([1,2],[3,4]) = 1·3 + 2·4 = 11`. -/
 example : ((evalFuncEML (fun _ _ => (0:Float)) (fun _ _ _ => (0:Float)) dotFn
     [.vec [1.0, 2.0], .vec [3.0, 4.0]] (fun _ => .scalar 0.0)).toF == 11.0) = true := by native_decide
+
+/-- A **stateful loop**: `sumTo(n)` accumulates `0 + 1 + … + (n-1)` via
+`state s = 0; state i = 0; while (i < n) { s = s + i; i = i + 1 }; return s`. -/
+def sumTo : StmtFunc where
+  params := ["n"]
+  states := [("s", .lit 0.0), ("i", .lit 0.0)]
+  body   := [.swhile (.bin .lt (.var "i") (.var "n"))
+              [ .sassign "s" (.bin .add (.var "s") (.var "i"))
+              , .sassign "i" (.bin .add (.var "i") (.lit 1.0)) ]]
+  ret    := .var "s"
+
+/-- The emitter turns the loop body into the expected C statements (structural, `rfl`). -/
+example : emitStmtFunc sumTo
+    = { params := ["n"]
+      , states := [("s", .lit 0.0), ("i", .lit 0.0)]
+      , body   := [.cwhile (.bin .lt (.var "i") (.var "n"))
+                    [ .cassign "s" (.bin .add (.var "s") (.var "i"))
+                    , .cassign "i" (.bin .add (.var "i") (.lit 1.0)) ]]
+      , ret    := .var "s" } := rfl
+
+/-- `sumTo(4) = 0+1+2+3 = 6` with fuel ≥ 4. -/
+example : ((runStmtFuncEML (fun _ _ => (0:Float)) (fun _ _ _ => (0:Float)) 10 sumTo
+    [.scalar 4.0] (fun _ => .scalar 0.0)).toF == 6.0) = true := by native_decide
+
+/-- The emitted C for `sumTo` computes the same result (builtin-free ⇒ any runtime works). This is
+`runStmtFunc_correct` instantiated — the control-flow + mutable-state translation certificate. -/
+example (base : Env) :
+    runStmtFuncC (fun _ _ => 0) (fun _ _ _ => 0) 10 (emitStmtFunc sumTo) [.scalar 4.0] base
+      = runStmtFuncEML (fun _ _ => 0) (fun _ _ _ => 0) 10 sumTo [.scalar 4.0] base :=
+  runStmtFunc_correct (fun _ _ => 0) (fun _ _ _ => 0) (fun _ _ => 0) (fun _ _ _ => 0)
+    (fun _ _ => rfl) (fun _ _ _ => rfl) 10 sumTo [.scalar 4.0] base
 
 end Certcom
