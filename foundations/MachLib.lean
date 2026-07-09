@@ -185,6 +185,7 @@ import MachLib.CrossTargetPairs
 import MachLib.PIDCapstone
 import MachLib.FixedPointSat
 import MachLib.CoreModel
+import MachLib.EMLToC
 
 /-!
 # MachLib — top-level aggregator
