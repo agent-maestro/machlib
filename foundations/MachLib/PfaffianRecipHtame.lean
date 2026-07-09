@@ -164,6 +164,47 @@ theorem degreeY_node_value_low {M : Nat} (i : Fin (M + 3)) (hi : i.val ≤ M) :
         (if i = (⟨M + 1, by omega⟩ : Fin (M + 3)) then 1 else 0) = 0
   rw [if_neg hne2, if_neg hne1]; decide
 
+/-- **`cTD` commutes with `liftLastY`.** For a value `p` over the base chain `c`, the chain-total-derivative
+over any one-step extension of `c`, applied to `liftLastY p`, is the lift of the base `cTD`. Because `cTD`
+of a lifted variable is the extended relation, which (`chainExtend_relations_of_lt`) is itself the lift of
+the base relation; `add`/`sub`/`mul` are homomorphisms of both operations. **Key simplifier:** it collapses
+every encoder coefficient `liftLastY(cTD (chainExtend base) (liftLastY value))` to `liftLastYBy _ (cTD base
+value)` — a lift of a BASE-chain `cTD` — so recip/top-freeness of the coefficient becomes automatic (a lift
+is free of the new top indices) and the `≤ 1` bound reduces to the base value's `cTD` bound. -/
+theorem chainTotalDeriv_chainExtend_liftLastY {n : Nat} (c : PfaffianChain n) (ne : Real → Real)
+    (nr : MultiPoly (n + 1)) :
+    ∀ p : MultiPoly n,
+      chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY p)
+        = MultiPoly.liftLastY (chainTotalDeriv c p)
+  | .const _ => rfl
+  | .varX => rfl
+  | .varY i => by
+      show (chainExtend c ne nr).relations (⟨i.val, Nat.lt_succ_of_lt i.isLt⟩ : Fin (n + 1))
+          = MultiPoly.liftLastY (c.relations i)
+      rw [chainExtend_relations_of_lt c ne nr (⟨i.val, Nat.lt_succ_of_lt i.isLt⟩ : Fin (n + 1)) i.isLt]
+  | .add p q => by
+      show MultiPoly.add (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY p))
+              (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY q))
+          = MultiPoly.liftLastY (MultiPoly.add (chainTotalDeriv c p) (chainTotalDeriv c q))
+      rw [chainTotalDeriv_chainExtend_liftLastY c ne nr p, chainTotalDeriv_chainExtend_liftLastY c ne nr q]
+      rfl
+  | .sub p q => by
+      show MultiPoly.sub (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY p))
+              (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY q))
+          = MultiPoly.liftLastY (MultiPoly.sub (chainTotalDeriv c p) (chainTotalDeriv c q))
+      rw [chainTotalDeriv_chainExtend_liftLastY c ne nr p, chainTotalDeriv_chainExtend_liftLastY c ne nr q]
+      rfl
+  | .mul p q => by
+      show MultiPoly.add
+              (MultiPoly.mul (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY p))
+                (MultiPoly.liftLastY q))
+              (MultiPoly.mul (MultiPoly.liftLastY p)
+                (chainTotalDeriv (chainExtend c ne nr) (MultiPoly.liftLastY q)))
+          = MultiPoly.liftLastY (MultiPoly.add (MultiPoly.mul (chainTotalDeriv c p) q)
+              (MultiPoly.mul p (chainTotalDeriv c q)))
+      rw [chainTotalDeriv_chainExtend_liftLastY c ne nr p, chainTotalDeriv_chainExtend_liftLastY c ne nr q]
+      rfl
+
 /-! ## Step-relation cross-linearity — the `nr` obligations for `chainExtend_preserves_EncRelLinear` -/
 
 /-- `degreeY` of a negation equals that of the argument (`neg p = sub 0 p`; the zero summand contributes 0).
