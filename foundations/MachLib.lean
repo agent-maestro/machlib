@@ -68,6 +68,7 @@ import MachLib.PfaffianExpRecipClassW
 import MachLib.PfaffianExpLogRecipClass
 import MachLib.PfaffianExpLogRecipDescent
 import MachLib.PfaffianExpLogStepReduce
+import MachLib.PfaffianLogGeneralDegree
 import MachLib.PfaffianRolleStep
 import MachLib.MultiPolyCoeffEntry
 import MachLib.MultiPolyCoeffDegree
