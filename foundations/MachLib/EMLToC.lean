@@ -174,4 +174,48 @@ theorem emitC_correct
        = bif isTrue (evalEML i1 i2 env c) then evalEML i1 i2 env t else evalEML i1 i2 env e
     rw [ihc, iht, ihe]
 
+/-! ## Function level — the compilation unit (`_emit_function`) -/
+
+/-- An EML function: parameter names + a body expression (`EMLFunction` after block-flattening). -/
+structure EMLFunc where
+  params : List String
+  body   : EML
+
+/-- The emitted C function: the same parameters + the emitted body. -/
+structure CFunc where
+  params : List String
+  body   : CExpr
+
+/-- Emit a function — the Lean model of `c_backend._emit_function` at this fragment: same signature,
+translated body. -/
+def emitFunc (f : EMLFunc) : CFunc := ⟨f.params, emitC f.body⟩
+
+/-- Bind an argument vector to the parameter names (positionally), over a base environment. -/
+def bindArgs : List String → List Float → Env → Env
+  | [],      _,       env => env
+  | _ :: _,  [],      env => env
+  | x :: xs, v :: vs, env => bindArgs xs vs (env.update x v)
+
+/-- Evaluate an EML function on an argument vector. -/
+def evalFuncEML (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (f : EMLFunc) (args : List Float) (base : Env) : Float :=
+  evalEML i1 i2 (bindArgs f.params args base) f.body
+
+/-- Evaluate an emitted C function on an argument vector. -/
+def evalFuncC (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (g : CFunc) (args : List Float) (base : Env) : Float :=
+  evalC r1 r2 (bindArgs g.params args base) g.body
+
+/-- **Function-level translation validation (T1).** The emitted C function computes the same float as
+the EML function, for every argument vector — under the same trusted-runtime hypotheses. The
+compilation-unit certificate; a direct corollary of `emitC_correct` at the parameter-bound environment. -/
+theorem emitFunc_correct
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (f : EMLFunc) (args : List Float) (base : Env) :
+    evalFuncC r1 r2 (emitFunc f) args base = evalFuncEML i1 i2 f args base :=
+  emitC_correct i1 i2 r1 r2 hrt1 hrt2 f.body (bindArgs f.params args base)
+
 end Certcom
