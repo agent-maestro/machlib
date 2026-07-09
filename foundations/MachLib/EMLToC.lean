@@ -23,17 +23,30 @@ T1 declares. `emitC_correct` is the translation-validation certificate. Extensio
 
 namespace Certcom
 
-/-- The scalar binary operators `c_backend` emits as infix C (`+ - * /`). -/
+/-- The binary operators `c_backend` emits as infix C: arithmetic (`+ - * /`), comparison
+(`< <= > >= == !=`, yielding `1.0`/`0.0` as C does with int `0`/`1` in a float context), and boolean
+(`&& ||`). -/
 inductive BinOp where
   | add | sub | mul | div
+  | lt | le | gt | ge | eq | ne
+  | band | bor
 deriving DecidableEq, Repr
 
-/-- Apply a `BinOp` at the float level — the shared meaning of both the EML op and the emitted C op. -/
+/-- Apply a `BinOp` at the float level — the shared meaning of both the EML op and the emitted C op.
+Comparisons return `1.0`/`0.0`; booleans treat nonzero as true (C's `!= 0`). -/
 def BinOp.apply : BinOp → Float → Float → Float
   | .add, a, b => a + b
   | .sub, a, b => a - b
   | .mul, a, b => a * b
   | .div, a, b => a / b
+  | .lt, a, b => if a < b then 1.0 else 0.0
+  | .le, a, b => if a ≤ b then 1.0 else 0.0
+  | .gt, a, b => if b < a then 1.0 else 0.0
+  | .ge, a, b => if b ≤ a then 1.0 else 0.0
+  | .eq, a, b => bif a == b then 1.0 else 0.0
+  | .ne, a, b => bif a != b then 1.0 else 0.0
+  | .band, a, b => bif (a != 0.0) && (b != 0.0) then 1.0 else 0.0
+  | .bor, a, b => bif (a != 0.0) || (b != 0.0) then 1.0 else 0.0
 
 /-- Unary builtins; `c_backend` routes each to a `mg_*` runtime call. -/
 inductive Trans1 where
