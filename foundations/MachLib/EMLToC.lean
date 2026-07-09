@@ -271,4 +271,46 @@ theorem emitFunc_correct
     evalFuncC r1 r2 (emitFunc f) args base = evalFuncEML i1 i2 f args base :=
   emitC_correct i1 i2 r1 r2 hrt1 hrt2 f.body (bindArgs f.params args base)
 
+/-! ## Worked examples — the certificate is non-vacuous and computes real values
+
+Small end-to-end demonstrations exercising the fragment: the emitter's output is as intended, the
+model computes concrete float values, and the function-level certificate instantiates. These double as
+a regression smoke-test. (For builtin-free functions, any runtime satisfies the trust hypotheses — the
+dummy `fun _ _ => 0` works, so the theorem instantiates unconditionally.) -/
+
+/-- Example: `poly(x) = 2·x + x·x`. -/
+def poly : EMLFunc :=
+  ⟨["x"], .bin .add (.bin .mul (.lit 2.0) (.var "x")) (.bin .mul (.var "x") (.var "x"))⟩
+
+/-- The emitter produces exactly the expected C for `poly`'s body (structural, `rfl`). -/
+example : emitC poly.body
+    = .bin .add (.bin .mul (.lit 2.0) (.var "x")) (.bin .mul (.var "x") (.var "x")) := rfl
+
+/-- `poly(3) = 2·3 + 3·3 = 15` — the model computes the real float. -/
+example : (evalFuncEML (fun _ _ => (0:Float)) (fun _ _ _ => (0:Float)) poly [3.0] (fun _ => 0.0)
+    == 15.0) = true := by native_decide
+
+/-- The emitted C for `poly` computes the same as `poly`, on `[3.0]` (an instance of the certificate;
+builtin-free ⇒ any runtime satisfies the trust hypotheses). -/
+example (base : Env) :
+    evalFuncC (fun _ _ => 0) (fun _ _ _ => 0) (emitFunc poly) [3.0] base
+      = evalFuncEML (fun _ _ => 0) (fun _ _ _ => 0) poly [3.0] base :=
+  emitFunc_correct (fun _ _ => 0) (fun _ _ _ => 0) (fun _ _ => 0) (fun _ _ _ => 0)
+    (fun _ _ => rfl) (fun _ _ _ => rfl) poly [3.0] base
+
+/-- Example: `dotFn(a,b,c,d) = dot([a,b],[c,d]) = a·c + b·d`. -/
+def dotFn : EMLFunc :=
+  ⟨["a", "b", "c", "d"], .dot [.var "a", .var "b"] [.var "c", .var "d"]⟩
+
+/-- `dotFn(1,2,3,4) = 1·3 + 2·4 = 11` — the unrolled vector dot computes the real float. -/
+example : (evalFuncEML (fun _ _ => (0:Float)) (fun _ _ _ => (0:Float)) dotFn [1.0, 2.0, 3.0, 4.0]
+    (fun _ => 0.0) == 11.0) = true := by native_decide
+
+/-- The emitted (unrolled) C for `dotFn` computes the same as `dotFn`. -/
+example (base : Env) :
+    evalFuncC (fun _ _ => 0) (fun _ _ _ => 0) (emitFunc dotFn) [1.0, 2.0, 3.0, 4.0] base
+      = evalFuncEML (fun _ _ => 0) (fun _ _ _ => 0) dotFn [1.0, 2.0, 3.0, 4.0] base :=
+  emitFunc_correct (fun _ _ => 0) (fun _ _ _ => 0) (fun _ _ => 0) (fun _ _ _ => 0)
+    (fun _ _ => rfl) (fun _ _ _ => rfl) dotFn [1.0, 2.0, 3.0, 4.0] base
+
 end Certcom
