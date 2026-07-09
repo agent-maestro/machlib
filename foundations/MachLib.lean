@@ -186,6 +186,7 @@ import MachLib.PIDCapstone
 import MachLib.FixedPointSat
 import MachLib.CoreModel
 import MachLib.EMLToC
+import MachLib.EMLToCRuntime
 
 /-!
 # MachLib — top-level aggregator
