@@ -204,6 +204,25 @@
         "sorryAx",
         "zero_count_bound_classical"
       ]
+    },
+    {
+      "_comment": "The concrete showcase: e^(e^x) − x·e^x has ≤ 47 real zeros, a machine-checked instance of the pure-exp explicit bound. Stays in the ROLLE-ONLY class (it is a pure-exp barrier), and — because the bound value is a KERNEL-checked `decide` on Ndep 0 1 = 47 — must NOT regress to `native_decide` (which would add `ofReduceBool` and move the '47' out of the kernel-checked footprint).",
+      "id": "eexp-barrier-le-47-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eexp_barrier_zero_count_le_47",
+        "at most 47 real zeros"
+      ],
+      "module": "MachLib.KhovanskiiConcrete",
+      "theorem": "MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "HasDerivAt_log_pos",
+        "HasDerivAt_inv",
+        "ofReduceBool"
+      ]
     }
   ]
 }

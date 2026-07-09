@@ -209,5 +209,7 @@ section Khovanskii
 #print axioms MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit
 -- Full MIXED exp/log/reciprocal EML barrier finiteness — both classical arms discharged.
 #print axioms MachLib.eml_eval_boundedZeros_unconditional
+-- Concrete showcase: e^(e^x) − x·e^x has ≤ 47 real zeros (rolle-only, kernel-checked bound).
+#print axioms MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47
 
 end Khovanskii
