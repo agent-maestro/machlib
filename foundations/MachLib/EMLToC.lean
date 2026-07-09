@@ -64,6 +64,7 @@ inductive EML where
   | elet : String → EML → EML → EML       -- `let x = e in body`
   | tr1  : Trans1 → EML → EML             -- `exp(e)`, `ln(e)`, …
   | tr2  : Trans2 → EML → EML → EML       -- `eml(a,b)`, `pow(a,b)`
+  | cond : EML → EML → EML → EML          -- `if c then t else e` (`NodeKind.COND`)
 deriving Repr
 
 /-- The C AST the backend emits (a SEPARATE type from `EML` so `emitC_correct` has content).
@@ -76,10 +77,15 @@ inductive CExpr where
   | clet  : String → CExpr → CExpr → CExpr
   | ucall : String → CExpr → CExpr        -- `mg_f(x)`
   | bcall : String → CExpr → CExpr → CExpr -- `mg_f(x, y)`
+  | tern  : CExpr → CExpr → CExpr → CExpr  -- `c ? t : e`
 deriving Repr
 
 /-- Environment: chain and local variable values. -/
 abbrev Env := String → Float
+
+/-- C's truthiness of a condition value: nonzero is true (the `mg_*`-free ternary uses `c != 0`).
+Both evaluators use the SAME test, so translation preserves the branch taken. -/
+def isTrue (c : Float) : Bool := c != 0.0
 
 /-- Extend an environment (the `let`-binding update; C's local shadows the outer scope). -/
 def Env.update (env : Env) (x : String) (v : Float) : Env :=
@@ -96,6 +102,7 @@ def evalEML (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float �
   | .elet x e body => evalEML i1 i2 (env.update x (evalEML i1 i2 env e)) body
   | .tr1 t e    => i1 t (evalEML i1 i2 env e)
   | .tr2 t a b  => i2 t (evalEML i1 i2 env a) (evalEML i1 i2 env b)
+  | .cond c t e => bif isTrue (evalEML i1 i2 env c) then evalEML i1 i2 env t else evalEML i1 i2 env e
 
 /-- **C evaluation** of the emitted code. `r1`/`r2` model the `mg_*` runtime (name → float function). -/
 def evalC (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
@@ -107,6 +114,7 @@ def evalC (r1 : String → Float → Float) (r2 : String → Float → Float →
   | .clet x e body => evalC r1 r2 (env.update x (evalC r1 r2 env e)) body
   | .ucall f a  => r1 f (evalC r1 r2 env a)
   | .bcall f a b => r2 f (evalC r1 r2 env a) (evalC r1 r2 env b)
+  | .tern c t e => bif isTrue (evalC r1 r2 env c) then evalC r1 r2 env t else evalC r1 r2 env e
 
 /-- **The emitter** — the Lean model of `c_backend.py` on this fragment. `tr1 t → mg_*(·)`,
 `tr2 t → mg_*(·,·)`, everything else structural. -/
@@ -118,6 +126,7 @@ def emitC : EML → CExpr
   | .elet x e body => .clet x (emitC e) (emitC body)
   | .tr1 t e    => .ucall t.cName (emitC e)
   | .tr2 t a b  => .bcall t.cName (emitC a) (emitC b)
+  | .cond c t e => .tern (emitC c) (emitC t) (emitC e)
 
 /-- **Translation validation (T1).** Given that the `mg_*` runtime implements the builtin
 interpretations (`hrt1 : r1 (t.cName) = i1 t`, `hrt2 : r2 (t.cName) = i2 t` — T1's explicit trust
@@ -146,5 +155,10 @@ theorem emitC_correct
     show r2 t.cName (evalC r1 r2 env (emitC a)) (evalC r1 r2 env (emitC b))
        = i2 t (evalEML i1 i2 env a) (evalEML i1 i2 env b)
     rw [iha, ihb, hrt2]
+  | cond c t e ihc iht ihe =>
+    show (bif isTrue (evalC r1 r2 env (emitC c)) then evalC r1 r2 env (emitC t)
+            else evalC r1 r2 env (emitC e))
+       = bif isTrue (evalEML i1 i2 env c) then evalEML i1 i2 env t else evalEML i1 i2 env e
+    rw [ihc, iht, ihe]
 
 end Certcom
