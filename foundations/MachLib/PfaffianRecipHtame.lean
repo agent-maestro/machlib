@@ -414,4 +414,71 @@ theorem encEmlStepR_EncRelLinear {M : Nat} (cb : PfaffianChain M) (b1 w : MultiP
     (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1))))
     (⟨M + 2, by omega⟩ : Fin (M + 3)) hcofftop hlift3 j
 
+/-! ## `encLift` preserves "≤ 1 at every index" (toward the `enc` induction) -/
+
+/-- `liftLastYBy k` preserves "≤ 1 at every index" (iterate `degreeY_liftLastY_le_one`). -/
+theorem degreeY_liftLastYBy_le_one {n : Nat} (k : Nat) (X : MultiPoly n)
+    (hX : ∀ j : Fin n, MultiPoly.degreeY j X ≤ 1) :
+    ∀ j : Fin (n + k), MultiPoly.degreeY j (MachLib.liftLastYBy k X) ≤ 1 := by
+  induction k with
+  | zero => exact hX
+  | succ k ih => exact degreeY_liftLastY_le_one (MachLib.liftLastYBy k X) ih
+
+/-- **`encLift` preserves "≤ 1 at every index".** Const/var lifts are the identity; an eml node lift is
+`liftLastYBy 3 ∘ encLift ∘ encLift`, each preserving the bound. Used to transport a base value's `cTD`
+bound up the encoder's variable additions. -/
+theorem degreeY_encLift_le_one (t : EMLTree) {N : Nat} (X : MultiPoly N)
+    (hX : ∀ j : Fin N, MultiPoly.degreeY j X ≤ 1) :
+    ∀ j : Fin (MachLib.len t N), MultiPoly.degreeY j (MachLib.encLift t X) ≤ 1 := by
+  induction t generalizing N X with
+  | const c => exact hX
+  | var => exact hX
+  | eml t1 t2 ih1 ih2 =>
+    exact degreeY_liftLastYBy_le_one 3 (MachLib.encLift t1 (MachLib.encLift t2 X))
+      (ih1 (MachLib.encLift t2 X) (ih2 X hX))
+
+/-! ## `cTD` commutes with `encLift` over `enc`'s extension (the final transport) -/
+
+/-- `cTD` over `encEmlStepR` commutes with `liftLastY` (`encEmlStepR = chainExtend (stepCD cb w)`). -/
+theorem cTD_encEmlStepR_liftLastY {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (p : MultiPoly (M + 2)) :
+    chainTotalDeriv (MachLib.encEmlStepR cb b1 w) (MultiPoly.liftLastY p)
+      = MultiPoly.liftLastY (chainTotalDeriv (MachLib.stepCD cb w) p) := by
+  unfold MachLib.encEmlStepR
+  exact chainTotalDeriv_chainExtend_liftLastY (MachLib.stepCD cb w) _ _ p
+
+/-- `cTD` over `encEmlStepR` collapses a `liftLastYBy 3` of a base value to `liftLastYBy 3` of the base
+`cTD` — the three step commutations composed. This is the eml-node case of the `enc`/`encLift` commutation. -/
+theorem cTD_encEmlStepR_liftLastYBy3 {M : Nat} (cb : PfaffianChain M) (b1 w Q : MultiPoly M) :
+    chainTotalDeriv (MachLib.encEmlStepR cb b1 w) (MachLib.liftLastYBy 3 Q)
+      = MachLib.liftLastYBy 3 (chainTotalDeriv cb Q) := by
+  show chainTotalDeriv (MachLib.encEmlStepR cb b1 w)
+        (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY Q)))
+      = MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb Q)))
+  rw [cTD_encEmlStepR_liftLastY cb b1 w (MultiPoly.liftLastY (MultiPoly.liftLastY Q)),
+      cTD_stepCD_liftLastY cb w (MultiPoly.liftLastY Q), cTD_stepCC_liftLastY cb w Q]
+
+/-- **`cTD` commutes with `encLift` over `enc`'s extension.** `cTD (enc t chain).1 (encLift t v) =
+encLift t (cTD chain v)`. Leaves: `enc` returns the chain unchanged and `encLift` is the identity. Node:
+`(enc (eml t1 t2) chain).1` is a triple `chainExtend` (`encEmlStepR`) and `encLift (eml t1 t2)` is
+`liftLastYBy 3 ∘ encLift t1 ∘ encLift t2`, so `cTD_encEmlStepR_liftLastYBy3` collapses the outer three
+lifts and the two IHs handle the inner encLifts. This transports a base value's `cTD` bound to the value the
+parent node feeds its coefficients (`w = encLift t1 ⟦t2⟧`). -/
+theorem cTD_enc_encLift : ∀ (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (v : MultiPoly N),
+    chainTotalDeriv (MachLib.enc t chain).1 (MachLib.encLift t v)
+      = MachLib.encLift t (chainTotalDeriv chain v)
+  | .const _, _, _, _ => rfl
+  | .var, _, _, _ => rfl
+  | .eml t1 t2, N, chain, v => by
+      show chainTotalDeriv
+            (MachLib.encEmlStepR (MachLib.enc t1 (MachLib.enc t2 chain).1).1
+              (MachLib.enc t1 (MachLib.enc t2 chain).1).2 (MachLib.encLift t1 (MachLib.enc t2 chain).2))
+            (MachLib.liftLastYBy 3 (MachLib.encLift t1 (MachLib.encLift t2 v)))
+          = MachLib.liftLastYBy 3 (MachLib.encLift t1 (MachLib.encLift t2 (chainTotalDeriv chain v)))
+      rw [cTD_encEmlStepR_liftLastYBy3 (MachLib.enc t1 (MachLib.enc t2 chain).1).1
+            (MachLib.enc t1 (MachLib.enc t2 chain).1).2 (MachLib.encLift t1 (MachLib.enc t2 chain).2)
+            (MachLib.encLift t1 (MachLib.encLift t2 v)),
+          cTD_enc_encLift t1 (MachLib.enc t2 chain).1 (MachLib.encLift t2 v),
+          cTD_enc_encLift t2 chain v]
+
 end MachLib.PfaffianRecipHtame
