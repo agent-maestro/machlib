@@ -148,4 +148,14 @@ theorem invPhi_trim_any (B d d' ir ir' g g' : Nat) (hd : d' ≤ d) (hg : g' ≤ 
   show invPhi B d' ir' g' ≤ ir + levelBudget B d (g + ir + 1)
   omega
 
+/-- `invPhi` is monotone in the inner-rank argument. Lets a bound stated over the *exact* (noncomputable)
+`innerRank` be weakened to one in terms of a computable upper bound — the syntactic-degree tool. -/
+theorem invPhi_mono_ir (B d g : Nat) {ir ir' : Nat} (h : ir ≤ ir') :
+    invPhi B d ir g ≤ invPhi B d ir' g := by
+  cases d with
+  | zero => exact h
+  | succ d =>
+    show ir + levelBudget B d (g + ir + 1) ≤ ir' + levelBudget B d (g + ir' + 1)
+    exact Nat.add_le_add h (levelBudget_mono_G B d (by omega))
+
 end MachLib.ExplicitBound
