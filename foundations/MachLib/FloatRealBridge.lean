@@ -152,4 +152,49 @@ theorem evalEML_prod3_fwd {toR : Float → MachLib.Real} (br : FPBridge toR)
   rw [h]
   exact prod3_bridge br (env "x").toF (env "y").toF (env "z").toF hx hy hz
 
+/-! ## The pipeline, connected end-to-end — from EMITTED C to the real forward-error bound
+
+`evalEML_forward_error`/`evalEML_prod3_fwd` stop at T2's `evalEML` (the Float translation-validation
+evaluator). The genuinely end-to-end link is the **emitted C itself**: T1's `emitC_correct` says
+`evalC r1 r2 env (emitC e) = evalEML i1 i2 env e` — the emitted C AST, evaluated in Float, IS the EML
+Float value. Composing that with the bridge gives one theorem spanning every layer:
+
+    EML source ──emitC (T1)──▶ C AST ──evalC (T1)──▶ Float result ──toR (bridge)──▶ Real image
+                                                                     ⤷ within T3 forward-error of exact ℝ
+
+The `Real` these are measured against is the one Theorem B (`certcom` soundness) proves models the
+`MachLib.Real` axioms — so the whole chain rests on an explicit, enumerable trust boundary (`FPBridge`'s
+per-op roundings + the C compiler), nothing hidden. -/
+
+/-- **End-to-end pipeline capstone (`x²+y²`).** The value the *emitted C* computes — `evalC` of `emitC`,
+the actual translated program — viewed through `toR`, is within T3's relative forward-error bound of the
+exact real `X²+Y²`. Proof: rewrite the emitted-C result to the EML Float value by `emitC_correct` (T1),
+then apply the bridge capstone (T3). Two proven layers, one statement. -/
+theorem pipeline_sqSum {toR : Float → MachLib.Real} (br : FPBridge toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v) (env : Env) :
+    abs (toR (evalC r1 r2 env (emitC sqSumEML)).toF
+          - (toR (env "x").toF * toR (env "x").toF + toR (env "y").toF * toR (env "y").toF))
+      ≤ (npow 2 (1 + u) - 1)
+        * (toR (env "x").toF * toR (env "x").toF + toR (env "y").toF * toR (env "y").toF) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 sqSumEML env]
+  exact evalEML_forward_error br i1 i2 env
+
+/-- **End-to-end pipeline capstone (`(x·y)·z`, depth 3).** Same span, deeper kernel: the emitted C's
+result for `(x·y)·z`, through `toR`, is within the T3 forward-error bound of the exact `X·Y·Z`. -/
+theorem pipeline_prod3 {toR : Float → MachLib.Real} (br : FPBridge toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v) (env : Env)
+    (hx : 0 ≤ toR (env "x").toF) (hy : 0 ≤ toR (env "y").toF) (hz : 0 ≤ toR (env "z").toF) :
+    abs (toR (evalC r1 r2 env (emitC prod3EML)).toF
+          - (toR (env "x").toF * toR (env "y").toF * toR (env "z").toF))
+      ≤ (npow 2 (1 + u) - 1)
+        * (toR (env "x").toF * toR (env "y").toF * toR (env "z").toF) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 prod3EML env]
+  exact evalEML_prod3_fwd br i1 i2 env hx hy hz
+
 end Certcom
