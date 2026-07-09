@@ -1,6 +1,7 @@
 import MachLib.PfaffianRecipGrowthSpike
 import MachLib.PfaffianChainExtend
 import MachLib.IterExpDepthNDegreeY
+import MachLib.EMLEncoder
 
 /-!
 # Toward `htame` — the reciprocal-linearity kernel for encoder chains
@@ -333,5 +334,84 @@ theorem exp_nr_cross_linear {N : Nat} (coeff : MultiPoly N) (top : Fin N)
   · have hvarY : MultiPoly.degreeY j (MultiPoly.varY top) = 0 := by
       show (if j = top then 1 else 0) = 0; rw [if_neg hjt]
     rw [hvarY]; have := hcoeff j; omega
+
+/-! ## The three step chains preserve cross-linearity (recip → log → exp) -/
+
+/-- **The recip step preserves `EncRelLinear`**, given the base cross-linearity and the value's `cTD`
+bound `∀ j', degreeY j' (cTD cb w) ≤ 1`. `stepCC cb w = chainExtend cb _ (−liftLastY(cTD cb w)·yₘ²)`;
+`chainExtend_preserves_EncRelLinear` + `stepCC_nr_cross_linear`. -/
+theorem stepCC_EncRelLinear {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M)
+    (hcb : EncRelLinear cb) (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1) :
+    EncRelLinear (MachLib.stepCC cb w) := by
+  unfold MachLib.stepCC
+  exact chainExtend_preserves_EncRelLinear cb _ _ hcb (fun j hj => stepCC_nr_cross_linear cb w hw j hj)
+
+/-- `cTD` over `stepCC` commutes with `liftLastY` (commutation, specialised — `stepCC = chainExtend cb`). -/
+theorem cTD_stepCC_liftLastY {M : Nat} (cb : PfaffianChain M) (w p : MultiPoly M) :
+    chainTotalDeriv (MachLib.stepCC cb w) (MultiPoly.liftLastY p)
+      = MultiPoly.liftLastY (chainTotalDeriv cb p) := by
+  unfold MachLib.stepCC
+  exact chainTotalDeriv_chainExtend_liftLastY cb _ _ p
+
+/-- `cTD` over `stepCD` commutes with `liftLastY` (`stepCD = chainExtend (stepCC cb w)`). -/
+theorem cTD_stepCD_liftLastY {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M) (p : MultiPoly (M + 1)) :
+    chainTotalDeriv (MachLib.stepCD cb w) (MultiPoly.liftLastY p)
+      = MultiPoly.liftLastY (chainTotalDeriv (MachLib.stepCC cb w) p) := by
+  unfold MachLib.stepCD
+  exact chainTotalDeriv_chainExtend_liftLastY (MachLib.stepCC cb w) _ _ p
+
+/-- **The log step preserves `EncRelLinear`.** Its coefficient `liftLastY(cTD (stepCC cb w)(liftLastY w))`
+collapses (commutation) to `liftLastY²(cTD cb w)` — ≤1 everywhere (propagation from `hw`) and `= 0` at the
+recip index `M` just below (a double lift is free of that index). `log_nr_cross_linear` then closes it. -/
+theorem stepCD_EncRelLinear {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M)
+    (hcb : EncRelLinear cb) (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1) :
+    EncRelLinear (MachLib.stepCD cb w) := by
+  have hlift1 : ∀ j : Fin (M + 1),
+      MultiPoly.degreeY j (MultiPoly.liftLastY (chainTotalDeriv cb w)) ≤ 1 :=
+    degreeY_liftLastY_le_one _ hw
+  have hlift2 : ∀ j : Fin (M + 2),
+      MultiPoly.degreeY j (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w))) ≤ 1 :=
+    degreeY_liftLastY_le_one _ hlift1
+  have hcoeffm : MultiPoly.degreeY (⟨M, by omega⟩ : Fin (M + 2))
+      (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w))) = 0 := by
+    rw [MachLib.IterExpDepthN.degreeY_liftLastY_low' (⟨M, by omega⟩ : Fin (M + 2)) (by omega : M < M + 1)]
+    exact MultiPoly.degreeY_top_liftLastY (chainTotalDeriv cb w)
+  unfold MachLib.stepCD
+  refine chainExtend_preserves_EncRelLinear (MachLib.stepCC cb w) _ _
+    (stepCC_EncRelLinear cb w hcb hw) ?_
+  intro j _
+  rw [cTD_stepCC_liftLastY cb w w]
+  exact log_nr_cross_linear (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w)))
+    (⟨M, by omega⟩ : Fin (M + 2)) hcoeffm hlift2 j
+
+/-- **The exp step preserves `EncRelLinear`.** Its coefficient `liftLastY(cTD (stepCD cb w)(liftLastYBy 2
+b1))` collapses (commutation, twice) to `liftLastY³(cTD cb b1)` — ≤1 everywhere (propagation from `hb1`)
+and `= 0` at its own top `M+2` (a triple lift is free of the outermost index). `exp_nr_cross_linear` closes
+it. Needs the base `cTD` bound for `b1 = ⟦t1⟧` as well as `w`. -/
+theorem encEmlStepR_EncRelLinear {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (hcb : EncRelLinear cb) (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1)
+    (hb1 : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb b1) ≤ 1) :
+    EncRelLinear (MachLib.encEmlStepR cb b1 w) := by
+  have hlift1 : ∀ j : Fin (M + 1),
+      MultiPoly.degreeY j (MultiPoly.liftLastY (chainTotalDeriv cb b1)) ≤ 1 :=
+    degreeY_liftLastY_le_one _ hb1
+  have hlift2 : ∀ j : Fin (M + 2),
+      MultiPoly.degreeY j (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1))) ≤ 1 :=
+    degreeY_liftLastY_le_one _ hlift1
+  have hlift3 : ∀ j : Fin (M + 3), MultiPoly.degreeY j
+      (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1)))) ≤ 1 :=
+    degreeY_liftLastY_le_one _ hlift2
+  have hcofftop : MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3))
+      (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1)))) = 0 :=
+    MultiPoly.degreeY_top_liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1)))
+  unfold MachLib.encEmlStepR
+  refine chainExtend_preserves_EncRelLinear (MachLib.stepCD cb w) _ _
+    (stepCD_EncRelLinear cb w hcb hw) ?_
+  intro j _
+  simp only [MachLib.liftLastYBy]
+  rw [cTD_stepCD_liftLastY cb w (MultiPoly.liftLastY b1), cTD_stepCC_liftLastY cb w b1]
+  exact exp_nr_cross_linear
+    (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1))))
+    (⟨M + 2, by omega⟩ : Fin (M + 3)) hcofftop hlift3 j
 
 end MachLib.PfaffianRecipHtame
