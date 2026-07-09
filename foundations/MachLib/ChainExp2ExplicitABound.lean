@@ -29,6 +29,7 @@ namespace MachLib.ChainExp2Explicit
 open MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly
 open MachLib.ChainExp2CanonMeasure
 open MachLib.MultiPolyReconstruct MachLib.ChainExp2Trim
+open MachLib.ChainExp2Reducer MachLib.ChainExp2PhantomDescent
 
 /-- **`leadingCoeffY i` never raises the degree in any `y_j`** (cross-index). Direct mirror of
 `degreeX_leadingCoeffY_le`; for `j = i` the leading coefficient is `y_i`-free so the LHS is 0. -/
@@ -287,5 +288,42 @@ theorem innerRank_succ_le (B : Nat) (q : MultiPoly 2)
       + (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 + 1
       ≤ (degreeY (⟨0, by omega⟩ : Fin 2) q + 1) * (B + 1)
   rw [he]; omega
+
+/-- **`innerRank` strictly drops on a reduce.** Extracted from `chain2Reduce_nestedLT_canon`: the reduce
+preserves `degreeY₁` (`chain2MeasureCanon_fst_chain2Reduce`), so the inner lex `(cdegY0(lcY₁), b)` drops
+— and given `b(reduce) ≤ B`, the linearization `cdegY0·(B+1)+b` drops too. This is `invPhi_reduce`'s
+`ir' + 1 ≤ ir`. (Same extraction pattern as `cdegY0_lcY1_reduce_le`.) -/
+theorem innerRank_reduce_lt (B : Nat) (p : MultiPoly 2)
+    (hnz : (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 ≠ 0)
+    (hb : (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+            (chain2Reduce (MachLib.Real.natCast
+              (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))).2 ≤ B) :
+    innerRank B (chain2Reduce (MachLib.Real.natCast
+        (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p) < innerRank B p := by
+  have h := chain2Reduce_nestedLT_canon p hnz
+  have hfst := chain2MeasureCanon_fst_chain2Reduce
+    (MachLib.Real.natCast (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p
+  unfold innerRank
+  rcases h with hlt | ⟨_, hinner⟩
+  · exact absurd (hfst ▸ hlt) (Nat.lt_irrefl _)
+  · rcases hinner with ha | ⟨haeq, hbb⟩
+    · have ha' : cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+            (chain2Reduce (MachLib.Real.natCast
+              (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))
+          < cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p) := ha
+      have hmul := Nat.mul_le_mul ha' (Nat.le_refl (B + 1))
+      have hsucc := Nat.succ_mul (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+            (chain2Reduce (MachLib.Real.natCast
+              (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))) (B + 1)
+      omega
+    · have haeq' : cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+            (chain2Reduce (MachLib.Real.natCast
+              (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))
+          = cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p) := haeq
+      have hbb' : (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2)
+            (chain2Reduce (MachLib.Real.natCast
+              (cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p))) p))).2
+          < (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 := hbb
+      rw [haeq']; omega
 
 end MachLib.ChainExp2Explicit
