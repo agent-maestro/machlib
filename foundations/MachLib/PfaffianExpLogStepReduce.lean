@@ -28,7 +28,8 @@ is free via the general `pfaffianChainFn_bound_of_degreeYtop_zero`). -/
 theorem exp_step_from_hard (a b : Real) (hab : a < b)
     (exp_hard : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
-        (∀ z, a < z → z < b → ∀ i : Fin (k + 1), 0 < c.evals i z) →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
             ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
                 = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
@@ -43,7 +44,8 @@ theorem exp_step_from_hard (a b : Real) (hab : a < b)
           BoundedZeros (pfaffianChainFn c p) a b) :
     ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
-        (∀ z, a < z → z < b → ∀ i : Fin (k + 1), 0 < c.evals i z) →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
             ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
                 = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
@@ -55,16 +57,17 @@ theorem exp_step_from_hard (a b : Real) (hab : a < b)
         ∀ p : MultiPoly (k + 1),
           (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
           BoundedZeros (pfaffianChainFn c p) a b := by
-  intro k c hW hcoh hpos hexp htf hIH p hne
+  intro k c hW hcoh hpos hAn hexp htf hIH p hne
   by_cases hd : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
   · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd a b hab hne hIH
-  · exact exp_hard k c hW hcoh hpos hexp htf hIH p hne (Nat.pos_of_ne_zero hd)
+  · exact exp_hard k c hW hcoh hpos hAn hexp htf hIH p hne (Nat.pos_of_ne_zero hd)
 
 /-- The log-top obligation, reduced to its degree>0 core (same split). -/
 theorem log_step_from_hard (a b : Real) (hab : a < b)
     (log_hard : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
-        (∀ z, a < z → z < b → ∀ i : Fin (k + 1), 0 < c.evals i z) →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations ⟨k, Nat.lt_succ_self k⟩) = 0) →
         (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
             MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
@@ -77,7 +80,8 @@ theorem log_step_from_hard (a b : Real) (hab : a < b)
           BoundedZeros (pfaffianChainFn c p) a b) :
     ∀ (k : Nat) (c : PfaffianChain (k + 1)),
         IsExpLogRecipW c a b → c.IsCoherentOn a b →
-        (∀ z, a < z → z < b → ∀ i : Fin (k + 1), 0 < c.evals i z) →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
         (MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations ⟨k, Nat.lt_succ_self k⟩) = 0) →
         (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
             MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
@@ -87,10 +91,57 @@ theorem log_step_from_hard (a b : Real) (hab : a < b)
         ∀ p : MultiPoly (k + 1),
           (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
           BoundedZeros (pfaffianChainFn c p) a b := by
-  intro k c hW hcoh hpos hlog htf hIH p hne
+  intro k c hW hcoh hpos hAn hlog htf hIH p hne
   by_cases hd : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
   · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd a b hab hne hIH
-  · exact log_hard k c hW hcoh hpos hlog htf hIH p hne (Nat.pos_of_ne_zero hd)
+  · exact log_hard k c hW hcoh hpos hAn hlog htf hIH p hne (Nat.pos_of_ne_zero hd)
+
+/-- **The descent, reduced to the two degree>0 cores.** Composes
+`combined_descent_3_of_steps` with the `_from_hard` reductions: the entire EML
+barrier bound now rests on ONLY `exp_hard` + `log_hard` (the `degreeY_top p > 0`
+Rolle / integrating-factor content). Everything else — base, reciprocal arm,
+dispatch, recursion, the degree-0 discharge, and the positivity/analyticity
+threading — is proven. This is the tightest statement of what classically
+remains for the 3-type descent. -/
+theorem combined_descent_3_of_hard (a b : Real) (hab : a < b)
+    (exp_hard : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
+        IsExpLogRecipW c a b → c.IsCoherentOn a b →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
+        (∃ G : MultiPoly (k + 1), MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ G = 0
+            ∧ c.relations ⟨k, Nat.lt_succ_self k⟩
+                = MultiPoly.mul G (MultiPoly.varY ⟨k, Nat.lt_succ_self k⟩)) →
+        (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
+            MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
+        (∀ q : MultiPoly k,
+            (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+            BoundedZeros (pfaffianChainFn (chainRestrict c) q) a b) →
+        ∀ p : MultiPoly (k + 1),
+          (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+          0 < MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ p →
+          BoundedZeros (pfaffianChainFn c p) a b)
+    (log_hard : ∀ (k : Nat) (c : PfaffianChain (k + 1)),
+        IsExpLogRecipW c a b → c.IsCoherentOn a b →
+        PosExceptLog c a b →
+        (∀ r : MultiPoly (k + 1), IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
+        (MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations ⟨k, Nat.lt_succ_self k⟩) = 0) →
+        (∀ j : Fin (k + 1), j ≠ ⟨k, Nat.lt_succ_self k⟩ →
+            MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ (c.relations j) = 0) →
+        (∀ q : MultiPoly k,
+            (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+            BoundedZeros (pfaffianChainFn (chainRestrict c) q) a b) →
+        ∀ p : MultiPoly (k + 1),
+          (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+          0 < MultiPoly.degreeY ⟨k, Nat.lt_succ_self k⟩ p →
+          BoundedZeros (pfaffianChainFn c p) a b) :
+    ∀ (N : Nat) (c : PfaffianChain N), IsExpLogRecipW c a b → c.IsCoherentOn a b →
+      PosExceptLog c a b →
+      (∀ r : MultiPoly N, IsAnalyticOnReals (pfaffianChainFn c r).eval (Icc a b)) →
+      ∀ (p : MultiPoly N),
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+        BoundedZeros (pfaffianChainFn c p) a b :=
+  combined_descent_3_of_steps a b hab (exp_step_from_hard a b hab exp_hard)
+    (log_step_from_hard a b hab log_hard)
 
 end PfaffianExpLogRecip
 end MachLib
