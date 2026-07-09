@@ -245,4 +245,116 @@ theorem degreeX_canonLcY0_lcY1_le (q : MultiPoly 2) :
   Nat.le_trans (degreeX_canonLcY0_le _)
     (degreeX_leadingCoeffY_le (⟨1, by omega⟩ : Fin 2) q)
 
+/-! ### Bridge piece (3) — the coeff-list-length tower + the closed bridge
+
+`length (polyCoeffs (multiPolyToPolyForLex m)) ≤ degreeX m + 1`. The Poly-conversion sends `add→max`,
+`mul→convolution`, so we need `listAddR`/`listSubR` length `= max` and the TIGHT `listMulR` length
+`= m+n−1` (nonempty). `polyCoeffs_nonempty` supplies the nonemptiness. -/
+
+open MachLib.PfaffianChainMod.PfaffianFn   -- multiPolyToPolyForLex
+
+-- Mathlib-free `Nat.max` helpers (built from the `Nat.max`-based primitives; `split_ifs`/`Nat.max_def`
+-- match the general `max`, not `Nat.max`, so they don't fire on these goals).
+private theorem mymax_eq_right {a b : Nat} (h : a ≤ b) : Nat.max a b = b :=
+  Nat.le_antisymm (Nat.max_le.mpr ⟨h, Nat.le_refl b⟩) (Nat.le_max_right a b)
+private theorem mymax_eq_left {a b : Nat} (h : b ≤ a) : Nat.max a b = a :=
+  Nat.le_antisymm (Nat.max_le.mpr ⟨Nat.le_refl a, h⟩) (Nat.le_max_left a b)
+private theorem max_succ (a b : Nat) : Nat.max a b + 1 = Nat.max (a + 1) (b + 1) := by
+  rcases Nat.le_total a b with h | h
+  · rw [mymax_eq_right h, mymax_eq_right (Nat.succ_le_succ h)]
+  · rw [mymax_eq_left h, mymax_eq_left (Nat.succ_le_succ h)]
+private theorem zeromax (n : Nat) : Nat.max 0 n = n := mymax_eq_right (Nat.zero_le n)
+private theorem maxzero (n : Nat) : Nat.max n 0 = n := mymax_eq_left (Nat.zero_le n)
+
+theorem length_listScaleR (r : Real) : ∀ l : List Real, (listScaleR r l).length = l.length
+  | [] => rfl
+  | q :: qs => by
+      show ((r * q) :: listScaleR r qs).length = (q :: qs).length
+      rw [List.length_cons, List.length_cons, length_listScaleR r qs]
+
+theorem length_listAddR : ∀ l1 l2 : List Real, (listAddR l1 l2).length = Nat.max l1.length l2.length
+  | [], qs => by rw [listAddR_nil_left, List.length_nil, zeromax]
+  | p :: ps, [] => by rw [listAddR_nil_right, List.length_nil, maxzero]
+  | p :: ps, q :: qs => by
+      rw [listAddR_cons_cons, List.length_cons, length_listAddR ps qs,
+          List.length_cons, List.length_cons]
+      exact max_succ _ _
+
+theorem length_listSubR : ∀ l1 l2 : List Real, (listSubR l1 l2).length = Nat.max l1.length l2.length
+  | [], [] => rfl
+  | [], q :: qs => by
+      rw [listSubR_nil_cons, List.length_cons, length_listSubR [] qs, List.length_nil,
+          List.length_cons]
+      simp only [zeromax]
+  | p :: ps, [] => by
+      show (p :: ps).length = Nat.max (p :: ps).length ([] : List Real).length
+      rw [List.length_nil, maxzero]
+  | p :: ps, q :: qs => by
+      show ((p - q) :: listSubR ps qs).length = Nat.max (p :: ps).length (q :: qs).length
+      rw [List.length_cons, length_listSubR ps qs, List.length_cons, List.length_cons]
+      exact max_succ _ _
+
+/-- **Tight convolution length** (both lists nonempty): `length (listMulR l1 l2) = |l1| + |l2| − 1`. -/
+theorem length_listMulR (l2 : List Real) (hl2 : l2 ≠ []) :
+    ∀ l1 : List Real, l1 ≠ [] → (listMulR l1 l2).length = l1.length + l2.length - 1
+  | [], h => absurd rfl h
+  | p :: ps, _ => by
+      have hl2pos : (1 : Nat) ≤ l2.length := Nat.pos_of_ne_zero (fun h => hl2 (List.length_eq_zero.mp h))
+      show (listAddR (listScaleR p l2) (0 :: listMulR ps l2)).length
+          = (p :: ps).length + l2.length - 1
+      rw [length_listAddR, length_listScaleR p l2]
+      cases ps with
+      | nil =>
+        rw [show listMulR ([] : List Real) l2 = [] from rfl]
+        show Nat.max l2.length 1 = 1 + l2.length - 1
+        rw [mymax_eq_left hl2pos]; omega
+      | cons p' ps' =>
+        have ih := length_listMulR l2 hl2 (p' :: ps') (by simp)
+        rw [List.length_cons, ih]
+        rw [mymax_eq_right (by simp only [List.length_cons]; omega)]
+        simp only [List.length_cons]; omega
+
+/-- **Bridge piece (3).** The converted single-var Poly's coefficient count is `≤ degreeX m + 1`:
+`add/sub→max`, `mul→convolution` (`|Lp|+|Lq|−1 ≤ (dp+1)+(dq+1)−1 = dp+dq+1`). -/
+theorem length_polyCoeffs_mP2PFL_le : ∀ m : MultiPoly 2,
+    (polyCoeffs (multiPolyToPolyForLex m)).length ≤ degreeX m + 1
+  | .const _ => Nat.le_refl _
+  | .varX => Nat.le_refl _
+  | .varY _ => Nat.le_refl _
+  | .add p q => by
+      show (listAddR (polyCoeffs (multiPolyToPolyForLex p)) (polyCoeffs (multiPolyToPolyForLex q))).length
+          ≤ Nat.max (degreeX p) (degreeX q) + 1
+      rw [length_listAddR]
+      exact Nat.max_le.mpr
+        ⟨Nat.le_trans (length_polyCoeffs_mP2PFL_le p) (Nat.add_le_add_right (Nat.le_max_left _ _) 1),
+         Nat.le_trans (length_polyCoeffs_mP2PFL_le q) (Nat.add_le_add_right (Nat.le_max_right _ _) 1)⟩
+  | .sub p q => by
+      show (listSubR (polyCoeffs (multiPolyToPolyForLex p)) (polyCoeffs (multiPolyToPolyForLex q))).length
+          ≤ Nat.max (degreeX p) (degreeX q) + 1
+      rw [length_listSubR]
+      exact Nat.max_le.mpr
+        ⟨Nat.le_trans (length_polyCoeffs_mP2PFL_le p) (Nat.add_le_add_right (Nat.le_max_left _ _) 1),
+         Nat.le_trans (length_polyCoeffs_mP2PFL_le q) (Nat.add_le_add_right (Nat.le_max_right _ _) 1)⟩
+  | .mul p q => by
+      show (listMulR (polyCoeffs (multiPolyToPolyForLex p)) (polyCoeffs (multiPolyToPolyForLex q))).length
+          ≤ degreeX p + degreeX q + 1
+      rw [length_listMulR _ (polyCoeffs_nonempty _) _ (polyCoeffs_nonempty _)]
+      have ihp := length_polyCoeffs_mP2PFL_le p
+      have ihq := length_polyCoeffs_mP2PFL_le q
+      omega
+
+/-- **The measure↔degreeX bridge (CLOSED).** The chain-2 measure's x-component is bounded by the
+polynomial's x-degree: `singleExpMeasureCanon(lcY₁ q).2 ≤ degreeX q + 2`. So `B := degreeX p₀ + 2` is a
+valid global bound — and since `degreeX` is non-increasing under both recursion arms (reduce +
+`degreeX_dropLeadingYAt_le`), the whole B-bound of the explicit chain-2 program holds. -/
+theorem singleExpMeasureCanon_snd_le (q : MultiPoly 2) :
+    (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 ≤ degreeX q + 2 := by
+  show polyTrueDegreeStrict (polyCoeffs (multiPolyToPolyForLex
+        (canonLcY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)))) ≤ degreeX q + 2
+  have h1 := polyTrueDegreeStrict_le_length (polyCoeffs (multiPolyToPolyForLex
+        (canonLcY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))))
+  have h3 := length_polyCoeffs_mP2PFL_le (canonLcY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q))
+  have h2 := degreeX_canonLcY0_lcY1_le q
+  omega
+
 end MachLib.ChainExp2Explicit
