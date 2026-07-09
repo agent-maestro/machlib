@@ -229,6 +229,52 @@ theorem exp_hard_of_measure {k : Nat} (c : PfaffianChain (k + 1)) (a b : Real) (
   intro p hne
   exact aux (μ p) p (Nat.le_refl _) hne
 
+/-- **`exp_hard` from a well-founded reduce descent (design Stage 0.1).** As `exp_hard_of_reduce`
+but the measure is a general `WellFounded` relation `rel` instead of a `Nat` fuel — so the
+mixed-chain design can plug in `chainNOrderCanon` (the `nestedOrder` pullback) directly, without
+encoding the nested measure to `Nat`. Proven by `WellFounded.induction` on `rel`. -/
+theorem exp_hard_of_wf {k : Nat} (c : PfaffianChain (k + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b)
+    (IH_depth : ∀ r : MultiPoly k,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧
+            (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (rel : MultiPoly (k + 1) → MultiPoly (k + 1) → Prop) (hwf : WellFounded rel)
+    (hReduce : ∀ q : MultiPoly (k + 1),
+        0 < MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q →
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+        ∃ (m : MultiPoly (k + 1)) (E : Real → Real),
+          (∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z) ∧
+          ((∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c m q)).eval z = 0)
+            ∨ rel (chainReduce c m q) q)) :
+    ∀ (p : MultiPoly (k + 1)),
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  suffices H : ∀ q : MultiPoly (k + 1),
+      (∀ y : MultiPoly (k + 1), rel y q →
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c y).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c y).eval z = 0) → zeros.length ≤ M) →
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z = 0) → zeros.length ≤ M by
+    exact fun p => WellFounded.induction hwf p H
+  intro q ih hne
+  by_cases hd0 : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q = 0
+  · exact pfaffianChainFn_bound_of_degreeYtop_zero c q hd0 a b hab hne IH_depth
+  · obtain ⟨m, E, hE, hcase⟩ := hReduce q (Nat.pos_of_ne_zero hd0) hne
+    rcases hcase with hrz | hsmall
+    · exact exp_reduce_step_bounded c m q a b hab E hcoh hE hne (Or.inl hrz)
+    · by_cases hrz2 : ∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c m q)).eval z = 0
+      · exact exp_reduce_step_bounded c m q a b hab E hcoh hE hne (Or.inl hrz2)
+      · have hne_red : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c m q)).eval z ≠ 0 :=
+          Classical.byContradiction fun hcon =>
+            hrz2 (fun z hza hzb => Classical.byContradiction fun hz0 => hcon ⟨z, hza, hzb, hz0⟩)
+        obtain ⟨Nr, hNr⟩ := ih (chainReduce c m q) hsmall hne_red
+        exact exp_reduce_step_bounded c m q a b hab E hcoh hE hne (Or.inr ⟨Nr, hNr⟩)
+
 /-- **`exp_hard` from a general (graded-multiplier) reduce descent.** The fully-general,
 *satisfiable* factoring: for an exp-type top over ANY coherent chain, `pfaffianChainFn c p` is
 BoundedZeros for every `p`, given a `Nat` measure `μ` and, for each degree>0 non-vanishing `q`,
