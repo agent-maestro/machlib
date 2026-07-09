@@ -1,5 +1,6 @@
 import MachLib.PfaffianLogGeneralDegree
 import MachLib.IterExpDepthNCanonBridge
+import MachLib.IterExpDepthNMeasureEI
 
 /-!
 # Feasibility spike (port plan step 1.2): the log Wronskian drops the CANONICAL top-degree
@@ -97,6 +98,29 @@ theorem log_wronskian_cdegYAt_lt {N : Nat} (c : PfaffianChain N) (top : Fin N)
   cdegYAt_lt_of_leadY_evalzero top q _ hq_np hq_pos
     (degreeYtop_wronskian_le c top h_top h_tri q)
     (fun x env => wronskian_leadY_eval_zero c top h_top h_tri q x env)
+
+/-- **The log level descends `chainNMeasureEI` (port step 1.1 input).** Lifts the `cdegYAt` drop
+to the full nested measure: since `cdegYAt` is the FIRST component of `chainNMeasureEI`, a strict
+drop there gives `nestedOrder` by `lexProd_of_fst`. This is the exact `chainNMeasureEI`-descent
+witness the mixed-chain measure recursion needs at a log level — the log analog of the exp
+`chainReduce_orderCanon_gen`, but the reduct is the Wronskian, not `chainReduce c m q`. Confirms the
+spike composes with the real measure machinery. -/
+theorem log_wronskian_chainNMeasureEI_lt {k : Nat} (c : PfaffianChain (k + 3))
+    (h_top : MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3))
+        (c.relations (⟨k + 2, by omega⟩ : Fin (k + 3))) = 0)
+    (h_tri : ∀ j : Fin (k + 3), j ≠ (⟨k + 2, by omega⟩ : Fin (k + 3)) →
+        MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) (c.relations j) = 0)
+    (q : MultiPoly (k + 3))
+    (hq_np : canonZeroB (ytopAt (⟨k + 2, by omega⟩ : Fin (k + 3)) q) = false)
+    (hq_pos : 0 < MultiPoly.degreeY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) :
+    nestedOrder (k + 3)
+      (chainNMeasureEI (k + 1) (MultiPoly.sub
+        (MultiPoly.mul (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q) (chainTotalDeriv c q))
+        (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY (⟨k + 2, by omega⟩ : Fin (k + 3)) q)) q)))
+      (chainNMeasureEI (k + 1) q) := by
+  have hlt := log_wronskian_cdegYAt_lt c (⟨k + 2, by omega⟩ : Fin (k + 3)) h_top h_tri q hq_np hq_pos
+  simp only [chainNMeasureEI, nestedOrder]
+  exact MachLib.IterExpDepth3CdegY1.lexProd_of_fst hlt
 
 end PfaffianLogLead
 end MachLib
