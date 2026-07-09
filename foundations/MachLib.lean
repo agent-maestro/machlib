@@ -186,6 +186,7 @@ import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
 import MachLib.EMLEncoderDescent
 import MachLib.EMLBarrierBound
+import MachLib.PfaffianExpHard
 import MachLib.PfaffianGeneralWF
 import MachLib.PfaffianExpStepMixed
 import MachLib.PfaffianGeneralHnz
