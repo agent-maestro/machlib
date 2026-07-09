@@ -260,4 +260,32 @@ theorem degreeY0_dropLeadingYAt1_le (p : MultiPoly 2) :
     (yCoeffsAt (⟨1, by omega⟩ : Fin 2) p).dropLast 0
     (fun c hc => yCoeffsAt_entries_degreeY0_le p c (List.dropLast_subset _ hc))
 
+/-! ### The inner rank and its trim bound
+
+`innerRank B q` linearizes the chain-2 measure's inner lex pair `(cdegY0(lcY₁ q), b(q))` into a `Nat`
+(`cdegY0·(B+1) + b`), the `ir` slot of `invPhi`. Its trim bound `innerRank B q + 1 ≤ (degreeY₀ q + 1)(B+1)`
+is exactly the `hir` hypothesis of `invPhi_trim_any` — discharged from `cdegY0(lcY₁ q) ≤ degreeY₀ q`
+(`cdegY0_lcY1_le_degreeY0`) and `b(q) ≤ B` (the bridge, in the WF induction). -/
+
+open MachLib.ExplicitBound in
+/-- The inner-lex rank `cdegY0·(B+1) + b` — the `ir` argument of `invPhi`. -/
+noncomputable def innerRank (B : Nat) (q : MultiPoly 2) : Nat :=
+  cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q) * (B + 1)
+    + (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2
+
+/-- **Inner-rank trim bound.** `innerRank B q + 1 ≤ (degreeY₀ q + 1)(B+1)` given `b(q) ≤ B` — the `hir`
+hypothesis of `invPhi_trim_any`. -/
+theorem innerRank_succ_le (B : Nat) (q : MultiPoly 2)
+    (hb : (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 ≤ B) :
+    innerRank B q + 1 ≤ (degreeY (⟨0, by omega⟩ : Fin 2) q + 1) * (B + 1) := by
+  have hc : cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q) * (B + 1)
+      ≤ degreeY (⟨0, by omega⟩ : Fin 2) q * (B + 1) :=
+    Nat.mul_le_mul (cdegY0_lcY1_le_degreeY0 q) (Nat.le_refl _)
+  have he : (degreeY (⟨0, by omega⟩ : Fin 2) q + 1) * (B + 1)
+      = degreeY (⟨0, by omega⟩ : Fin 2) q * (B + 1) + (B + 1) := Nat.succ_mul _ _
+  show cdegY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q) * (B + 1)
+      + (singleExpMeasureCanon (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)).2 + 1
+      ≤ (degreeY (⟨0, by omega⟩ : Fin 2) q + 1) * (B + 1)
+  rw [he]; omega
+
 end MachLib.ChainExp2Explicit
