@@ -154,5 +154,80 @@ theorem exp_reduce_step_concrete {n : Nat} (c : PfaffianChain n) (top : Fin n)
     (fun w => -(MachLib.Real.natCast d) * Real.log (c.evals top w)) hcoh
     (exp_top_integrating_factor c top G a b h_reltop hcoh hpos d) hne hReduct
 
+/-! ## `exp_hard`, localized to a single measure-descent hypothesis -/
+
+/-- **`exp_hard` from a measure descent (the `_of_hard`-style factoring).** For an exp-type
+top positive on `(a,b)`, `pfaffianChainFn c p` has boundedly many zeros for EVERY `p` — given
+only a `Nat`-valued measure `μ` such that the exp reduce with multiplier `m = (degreeY_top q)·G`
+either annihilates the reduct on `(a,b)` (⇒ no zeros) or strictly decreases `μ`. Proven by fuel
+induction on `μ`: `degreeY_top = 0` hits the depth IH; otherwise the reduce (with its now-explicit
+integrating factor, `exp_reduce_step_concrete`) either gives no zeros or recurses on the
+`μ`-smaller reduct, adding one Rolle zero.
+
+This isolates the *entire* remaining content of `exp_hard` into `hMeasure`: a well-founded
+measure the exp reduce descends over a MIXED lower chain. The chain-agnostic reduce algebra, the
+Rolle/no-zeros arms, and the integrating factor are all discharged here; `hMeasure` is exactly the
+open Khovanskii core (for a pure `IsExpChain` it is `chainNMeasureCanon` via `chainReduce_order5_gen`).
+The exp analog of `combined_descent_3_of_hard`. -/
+theorem exp_hard_of_measure {k : Nat} (c : PfaffianChain (k + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b) (G : MultiPoly (k + 1))
+    (h_reltop : c.relations (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1))
+        = MultiPoly.mul G (MultiPoly.varY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1))))
+    (hpos_top : ∀ z, a < z → z < b → 0 < c.evals (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) z)
+    (IH_depth : ∀ r : MultiPoly k,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧
+            (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (μ : MultiPoly (k + 1) → Nat)
+    (hMeasure : ∀ q : MultiPoly (k + 1),
+        0 < MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q →
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+        (∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c (MultiPoly.mul
+            (MultiPoly.const (MachLib.Real.natCast
+              (MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q))) G) q)).eval z = 0)
+      ∨ μ (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast
+            (MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q))) G) q) < μ q) :
+    ∀ (p : MultiPoly (k + 1)),
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  have aux : ∀ (fuel : Nat) (p : MultiPoly (k + 1)), μ p ≤ fuel →
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+    intro fuel
+    induction fuel with
+    | zero =>
+      intro p hμ hne
+      by_cases hd0 : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
+      · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+      · rcases hMeasure p (Nat.pos_of_ne_zero hd0) hne with hrz | hlt
+        · exact exp_reduce_step_concrete c (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) G p a b hab
+            h_reltop hcoh hpos_top _ hne (Or.inl hrz)
+        · exact absurd (Nat.lt_of_lt_of_le hlt hμ) (Nat.not_lt_zero _)
+    | succ fuel ih =>
+      intro p hμ hne
+      by_cases hd0 : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
+      · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+      · rcases hMeasure p (Nat.pos_of_ne_zero hd0) hne with hrz | hlt
+        · exact exp_reduce_step_concrete c (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) G p a b hab
+            h_reltop hcoh hpos_top _ hne (Or.inl hrz)
+        · by_cases hrz : ∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c (MultiPoly.mul
+              (MultiPoly.const (MachLib.Real.natCast
+                (MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p))) G) p)).eval z = 0
+          · exact exp_reduce_step_concrete c (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) G p a b hab
+              h_reltop hcoh hpos_top _ hne (Or.inl hrz)
+          · have hne_red : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c (MultiPoly.mul
+                (MultiPoly.const (MachLib.Real.natCast
+                  (MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p))) G) p)).eval z ≠ 0 :=
+              Classical.byContradiction fun hcon =>
+                hrz (fun z hza hzb => Classical.byContradiction fun hz0 => hcon ⟨z, hza, hzb, hz0⟩)
+            obtain ⟨Nr, hNr⟩ := ih _ (by omega) hne_red
+            exact exp_reduce_step_concrete c (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) G p a b hab
+              h_reltop hcoh hpos_top _ hne (Or.inr ⟨Nr, hNr⟩)
+  intro p hne
+  exact aux (μ p) p (Nat.le_refl _) hne
+
 end PfaffianGeneralReduce
 end MachLib
