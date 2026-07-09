@@ -2,6 +2,7 @@ import MachLib.PfaffianGeneralWF
 import MachLib.PfaffianLogLeadId
 import MachLib.FieldLemmas
 import MachLib.ChainExp2Trim
+import MachLib.PfaffianWronskianReduce
 /-!
 # Single-subinterval Wronskian reduce (log descent, analytic core)
 
@@ -28,6 +29,7 @@ open MachLib.Real
 open MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly
 open MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianChain MachLib.PfaffianChainMod.PfaffianFn
 open MachLib.PfaffianGeneralReduce MachLib.IterExpDepthN
+open MachLib.PfaffianWronskianReduce
 
 /-- Pure-real field step for the Wronskian reduce: from the vehicle-derivative-zero
 equation, recover the Wronskian value `cDv·A − cDp·B = 0`. -/
@@ -203,46 +205,21 @@ theorem log_wronskian_reduce_full {N : Nat} (c : PfaffianChain N) (top : Fin N)
         zs.length ≤ K) :
     ∀ zeros_f : List Real, zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
-      zeros_f.length ≤ Ng + K + 1 := by
-  intro zeros_f hnd hz
-  refine zero_count_bound_by_deriv_with_bad
-    (fun z => (pfaffianChainFn c p).eval z * (1 / MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z)))
-    (fun z => MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) = 0)
-    a b hab ?_ Ng K ?_ hcDzero zeros_f hnd ?_
-  · intro w hwa hwb hne
-    exact ⟨_, HasDerivAt_mul (pfaffianChainFn c p).eval
-      (fun y => 1 / MultiPoly.eval (MultiPoly.leadingCoeffY top p) y (c.chainValues y)) _ _ w
-      (hasDerivAt_eval_natural (pfaffianChainFn c p) w (hcoh w hwa hwb))
-      (HasDerivAt_inv (fun y => MultiPoly.eval (MultiPoly.leadingCoeffY top p) y (c.chainValues y))
-        (MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) w (c.chainValues w)) w
-        hne (multiPolyHasDerivAt_eval_with_chain c (MultiPoly.leadingCoeffY top p) w (hcoh w hwa hwb)))⟩
-  · intro zs hnd' hz'
-    apply hgN zs hnd'
-    intro z hzmem
-    obtain ⟨hza, hzb, hnbad, f'', hvd, hf''0⟩ := hz' z hzmem
-    refine ⟨hza, hzb, ?_⟩
-    have hcDne_z : MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) ≠ 0 := hnbad
-    have hinv := HasDerivAt_inv (fun y => MultiPoly.eval (MultiPoly.leadingCoeffY top p) y (c.chainValues y))
-      (MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) z (c.chainValues z)) z
-      hcDne_z (multiPolyHasDerivAt_eval_with_chain c (MultiPoly.leadingCoeffY top p) z (hcoh z hza hzb))
-    have hvehd := HasDerivAt_mul (pfaffianChainFn c p).eval
-      (fun y => 1 / MultiPoly.eval (MultiPoly.leadingCoeffY top p) y (c.chainValues y)) _ _ z
-      (hasDerivAt_eval_natural (pfaffianChainFn c p) z (hcoh z hza hzb)) hinv
-    have huniq := HasDerivAt_unique _ _ _ z hvd hvehd
-    rw [hf''0] at huniq
-    show MultiPoly.eval (MultiPoly.sub (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p)) (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p)) z (c.chainValues z) = 0
-    rw [MultiPoly.eval_sub, MultiPoly.eval_mul, MultiPoly.eval_mul]
-    exact wronskian_field_ne
-      (MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z))
-      (MultiPoly.eval p z (c.chainValues z))
-      (MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z))
-      (MultiPoly.eval (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) z (c.chainValues z))
-      hcDne_z huniq.symm
-  · intro z hzmem
-    obtain ⟨hza, hzb, hpz⟩ := hz z hzmem
-    refine ⟨hza, hzb, ?_⟩
-    show (pfaffianChainFn c p).eval z * (1 / MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z)) = 0
-    rw [hpz]; exact Real.zero_mul _
+      zeros_f.length ≤ Ng + K + 1 :=
+  -- The **log** instantiation of the shared `pfaffian_wronskian_reduce_full`: `V = c_D`, `W = 1`, and `E`
+  -- the bare Wronskian `g = c_D·cTD(p) − cTD(c_D)·p`. `hnum` is `eval_sub`/`eval_mul` (the numerator IS `g`),
+  -- `W ≠ 0` is `1 ≠ 0`, and `V ≠ 0`-off-bad is definitional (`V = c_D`). No `y_top` factor (δ = −1).
+  pfaffian_wronskian_reduce_full c top p
+    (MultiPoly.leadingCoeffY top p)
+    (MultiPoly.sub (MultiPoly.mul (MultiPoly.leadingCoeffY top p) (chainTotalDeriv c p))
+      (MultiPoly.mul (chainTotalDeriv c (MultiPoly.leadingCoeffY top p)) p))
+    (MultiPoly.const 1)
+    a b hab hcoh
+    (fun _z _ _ => by rw [MultiPoly.eval_const]; exact MachLib.Real.one_ne_zero)
+    (fun _z _ _ hcD => hcD)
+    (fun x env => by
+      simp only [MultiPoly.eval_const, MultiPoly.eval_sub, MultiPoly.eval_mul]; mach_ring)
+    Ng hgN K hcDzero
 
 /-! ## g≡0 degeneracy — rolle-only for the constant-c_D fragment -/
 

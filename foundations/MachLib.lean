@@ -179,6 +179,7 @@ import MachLib.IterExpDepthNStepExplicit
 import MachLib.IterExpDepthNBudgetMax
 import MachLib.IterExpDepthNExplicit
 import MachLib.PfaffianGeneralReduce
+import MachLib.PfaffianWronskianReduce
 import MachLib.PfaffianExpEliminate
 import MachLib.PfaffianExpTrim
 import MachLib.PfaffianExpWronskian

@@ -1,5 +1,6 @@
 import MachLib.PfaffianExpEliminate
 import MachLib.PfaffianLogWronskian
+import MachLib.PfaffianWronskianReduce
 
 /-!
 # `exp_hard` — the exp-Wronskian vehicle count (B3, analytic core)
@@ -37,20 +38,7 @@ open MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianChain MachLib.Pfa
 open MachLib.PfaffianGeneralReduce
 open MachLib.PfaffianExpEliminate
 open MachLib.PfaffianLogLead
-
-/-- Sign-agnostic Wronskian field step (local copy — the log arm's is `private`). From the
-reciprocal-vehicle derivative-zero equation, recover `cDv·A − cDp·B = 0`. -/
-private theorem wronskian_field_ne (A B cDv cDp : Real) (hcDne : cDv ≠ 0)
-    (h : A * (1 / cDv) + B * (-cDp / (cDv * cDv)) = 0) : cDv * A - cDp * B = 0 := by
-  have hsq : cDv * cDv ≠ 0 := MachLib.Real.mul_ne_zero hcDne hcDne
-  have h2 : (cDv * cDv) * (A * (1 / cDv)) + (cDv * cDv) * (B * (-cDp / (cDv * cDv))) = 0 := by
-    rw [← Real.mul_distrib, h, Real.mul_zero]
-  rw [show (cDv * cDv) * (A * (1 / cDv)) = (cDv * A) * (cDv * (1 / cDv)) from by mach_ring,
-      MachLib.Real.mul_div_cancel_left hcDne,
-      show (cDv * cDv) * (B * (-cDp / (cDv * cDv))) = B * ((cDv * cDv) * (-cDp / (cDv * cDv))) from by mach_ring,
-      MachLib.Real.mul_div_cancel_left hsq] at h2
-  have h3 : (cDv * A) * 1 + B * (-cDp) = cDv * A - cDp * B := by mach_ring
-  rw [h3] at h2; exact h2
+open MachLib.PfaffianWronskianReduce
 
 /-- **Chain-derivative of an exp power** (structural). For an exp top (`relations top = G·y_top`),
 `chainTotalDeriv` of `y_top^D` evaluates to `D·G·y_top^D` — the polynomial form of `(y_top^D)' =
@@ -135,10 +123,10 @@ theorem eval_pow_ne_zero {N : Nat} (q : MultiPoly N) (x : Real) (env : Fin N →
 
 /-- **B3 — the exp-Wronskian vehicle count (full, partition assembled).** On `(a,b)` where the exp variable
 `y_top` is non-vanishing, `#zeros(pfaffianChainFn c p) ≤ Ne + K + 1`, where `Ne` bounds the zeros of
-`expEliminate c G top p` and `K` bounds the zeros of `c_D = leadingCoeffY top p`. Exp analog of
-`log_wronskian_reduce_full`: reciprocal vehicle `f·(1/V)` with `V = y_top^D·c_D`, bad set `{c_D = 0}`, the
-critical points identified with the zeros of `expEliminate` via `expEliminate_wronskian_numerator` +
-`wronskian_field_ne` (dividing out `y_top^D ≠ 0`). -/
+`expEliminate c G top p` and `K` bounds the zeros of `c_D = leadingCoeffY top p`. Now a thin instantiation of
+the shared `pfaffian_wronskian_reduce_full` (the same lemma the log arm uses), with the **exp** choice
+`V = y_top^D·c_D`, `E = expEliminate`, `W = y_top^D`: `hnum` is `expEliminate_wronskian_numerator`, `W ≠ 0` /
+`V ≠ 0`-off-bad both from `y_top ≠ 0` via `eval_pow_ne_zero`. -/
 theorem expEliminate_reduce_full {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
     (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
     (p : MultiPoly N) (a b : Real) (hab : a < b) (hcoh : c.IsCoherentOn a b)
@@ -153,86 +141,19 @@ theorem expEliminate_reduce_full {N : Nat} (c : PfaffianChain N) (G : MultiPoly 
           MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) = 0) → zs.length ≤ K) :
     ∀ zeros_f : List Real, zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
-      zeros_f.length ≤ Ne + K + 1 := by
-  -- eval of V := y_top^D · c_D is nonzero off the bad set (c_D ≠ 0), using y_top ≠ 0
-  have hVne : ∀ z, a < z → z < b →
-      MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) ≠ 0 →
-      MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
-        (MultiPoly.leadingCoeffY top p)) z (c.chainValues z) ≠ 0 := by
-    intro z hza hzb hcDne
-    rw [MultiPoly.eval_mul]
-    exact MachLib.Real.mul_ne_zero
-      (eval_pow_ne_zero (MultiPoly.varY top) z (c.chainValues z) (hyt z hza hzb) _) hcDne
-  intro zeros_f hnd hz
-  refine zero_count_bound_by_deriv_with_bad
-    (fun z => (pfaffianChainFn c p).eval z * (1 / MultiPoly.eval
-        (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
-          (MultiPoly.leadingCoeffY top p)) z (c.chainValues z)))
-    (fun z => MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) = 0)
-    a b hab ?_ Ne K ?_ hcDzero zeros_f hnd ?_
-  · -- differentiability off the bad set
-    intro w hwa hwb hbad
-    exact ⟨_, HasDerivAt_mul (pfaffianChainFn c p).eval
-      (fun y => 1 / MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-        (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) y (c.chainValues y)) _ _ w
-      (hasDerivAt_eval_natural (pfaffianChainFn c p) w (hcoh w hwa hwb))
-      (HasDerivAt_inv (fun y => MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-          (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) y (c.chainValues y))
-        (MultiPoly.eval (chainTotalDeriv c (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-          (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p))) w (c.chainValues w)) w
-        (hVne w hwa hwb hbad) (multiPolyHasDerivAt_eval_with_chain c
-          (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
-            (MultiPoly.leadingCoeffY top p)) w (hcoh w hwa hwb)))⟩
-  · -- critical points off bad set ⇒ zeros of expEliminate
-    intro zs hnd' hz'
-    apply heN zs hnd'
-    intro z hzmem
-    obtain ⟨hza, hzb, hnbad, f'', hvd, hf''0⟩ := hz' z hzmem
-    refine ⟨hza, hzb, ?_⟩
-    have hcDne_z : MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) ≠ 0 := hnbad
-    have hVne_z := hVne z hza hzb hcDne_z
-    have hinv := HasDerivAt_inv (fun y => MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-        (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) y (c.chainValues y))
-      (MultiPoly.eval (chainTotalDeriv c (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-        (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p))) z (c.chainValues z)) z
-      hVne_z (multiPolyHasDerivAt_eval_with_chain c (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-        (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) z (hcoh z hza hzb))
-    have hvehd := HasDerivAt_mul (pfaffianChainFn c p).eval
-      (fun y => 1 / MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-        (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) y (c.chainValues y)) _ _ z
-      (hasDerivAt_eval_natural (pfaffianChainFn c p) z (hcoh z hza hzb)) hinv
-    have huniq := HasDerivAt_unique _ _ _ z hvd hvehd
-    rw [hf''0] at huniq
-    -- wronskian_field_ne: V·(cTD p) − (cTD V)·p = 0
-    have hwron : MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-            (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) z (c.chainValues z)
-          * MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z)
-        - MultiPoly.eval (chainTotalDeriv c (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-            (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p))) z (c.chainValues z)
-          * MultiPoly.eval p z (c.chainValues z) = 0 :=
-      wronskian_field_ne
-        (MultiPoly.eval (chainTotalDeriv c p) z (c.chainValues z))
-        (MultiPoly.eval p z (c.chainValues z))
-        (MultiPoly.eval (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-          (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) z (c.chainValues z))
-        (MultiPoly.eval (chainTotalDeriv c (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top)
-          (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p))) z (c.chainValues z))
-        hVne_z huniq.symm
-    -- bridge via (★): numerator = y_top^D · expEliminate; divide out y_top^D ≠ 0
-    rw [expEliminate_wronskian_numerator c G top h_reltop p z (c.chainValues z)] at hwron
-    have hpwne := eval_pow_ne_zero (MultiPoly.varY top) z (c.chainValues z) (hyt z hza hzb)
-      (MultiPoly.degreeY top p)
-    show (pfaffianChainFn c (expEliminate c G top p)).eval z = 0
-    have hpf : (pfaffianChainFn c (expEliminate c G top p)).eval z
-        = MultiPoly.eval (expEliminate c G top p) z (c.chainValues z) := rfl
-    rw [hpf]
-    exact mul_eq_zero_of_factor_ne_zero hpwne hwron
-  · -- the original zeros satisfy the vehicle-zero property
-    intro z hzmem
-    obtain ⟨hza, hzb, hpz⟩ := hz z hzmem
-    refine ⟨hza, hzb, ?_⟩
-    show (pfaffianChainFn c p).eval z * (1 / MultiPoly.eval (MultiPoly.mul (MultiPoly.pow
-      (MultiPoly.varY top) (MultiPoly.degreeY top p)) (MultiPoly.leadingCoeffY top p)) z (c.chainValues z)) = 0
-    rw [hpz]; exact Real.zero_mul _
+      zeros_f.length ≤ Ne + K + 1 :=
+  pfaffian_wronskian_reduce_full c top p
+    (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
+      (MultiPoly.leadingCoeffY top p))
+    (expEliminate c G top p)
+    (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
+    a b hab hcoh
+    (fun z hza hzb => eval_pow_ne_zero (MultiPoly.varY top) z (c.chainValues z) (hyt z hza hzb) _)
+    (fun z hza hzb hcD => by
+      rw [MultiPoly.eval_mul]
+      exact MachLib.Real.mul_ne_zero
+        (eval_pow_ne_zero (MultiPoly.varY top) z (c.chainValues z) (hyt z hza hzb) _) hcD)
+    (fun x env => expEliminate_wronskian_numerator c G top h_reltop p x env)
+    Ne heN K hcDzero
 
 end MachLib.PfaffianExpWronskian
