@@ -7,6 +7,32 @@ per-release status.
 
 ## [Unreleased] — 2026-07-02
 
+### exp arm CLOSED — the full mixed exp/log/reciprocal EML barrier bound is unconditional (`MachLib/PfaffianExpHard.lean`)
+
+**`MachLib.eml_eval_boundedZeros_unconditional`** — the Khovanskii-type finiteness bound for arbitrary-depth
+**mixed** exp/log/reciprocal EML barriers, machine-checked. Both classical arms are discharged: the exp arm
+(`exp_hard`) via the new `expEliminate` construction (B1–B4 in `PfaffianExpEliminate` / `PfaffianExpTrim` /
+`PfaffianExpWronskian` / `PfaffianExpHard`), the log arm via `log_hard_proof`. `#print axioms` →
+`propext` / `Classical.choice` / `Quot.sound`, the `Real` interface, `rolle`, plus the real-analyticity
+package (`analytic_finite_zeros_compact` and the identity-theorem family) and the logarithm / reciprocal
+derivative rules — with **no `sorryAx` and no `zero_count_bound_classical`**.
+
+Honest scoping, held to on the public page too: the mixed bound is *qualitative* (a finite ceiling exists,
+without an explicit constant), and its analytic footprint is genuinely **larger than Rolle** — the degenerate
+"proportional" leaves are retired by the identity theorem (a real-analytic function has finitely many zeros
+on a compact interval unless it vanishes identically). Rolle carries the descent; analyticity enters only for
+those leaves.
+
+By contrast the pure iterated-exponential bound stays Rolle-only, and is now *effective*.
+**`MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit`** gives the explicit ceiling `Ndep m D`; its
+`#print axioms` footprint has **no analyticity, no logarithm, no reciprocal** — `rolle` is the sole analytic
+input. `Ndep` is now a genuinely computable, `#eval`-able closed-form recurrence (a gratuitous
+`noncomputable` on `budgetMax` was removed), though its values are a height-`m` tower of exponentials, so
+evaluating beyond a small depth overflows the interpreter.
+
+Both claims are pinned in `tools/claim_audit/claims.json` so the distinction (pure-exp = Rolle-only; mixed =
+Rolle + identity theorem, still `sorryAx`- and `zero_count_bound_classical`-free) is a standing CI gate.
+
 ### Hardened — analytic base collapses to a single axiom: `zero_count_bound_by_deriv` is now a THEOREM (`MachLib/Rolle.lean`)
 
 **`MachLib.Real.zero_count_bound_by_deriv`** — previously an `axiom`, now **derived from `rolle`**. The whole

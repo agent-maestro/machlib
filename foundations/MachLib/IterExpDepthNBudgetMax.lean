@@ -44,8 +44,10 @@ theorem invPhiG_mono_d (cap : Nat → Nat) (hcap : ∀ {B B' : Nat}, B ≤ B' �
       show ir + levelBudgetG cap Nleaf c (B + ir + 1) ≤ ir + levelBudgetG cap Nleaf e (B + ir + 1)
       exact Nat.add_le_add_left (levelBudgetG_mono_d cap hcap Nleaf (B + ir + 1) (by omega)) ir
 
-/-- The monotone-in-`D` budget cap: `invPhiG` at the `D`-caps. -/
-noncomputable def budgetMax (m D : Nat) : Nat :=
+/-- The monotone-in-`D` budget cap: `invPhiG` at the `D`-caps. Computable — the whole `Ndep`
+recurrence is closed-form `Nat` arithmetic (`#eval`-able, though the values are hyper-exponential
+in the depth, so evaluating past a small depth overflows the interpreter stack). -/
+def budgetMax (m D : Nat) : Nat :=
   invPhiG (descentBound (m + 2)) 0 D (descentBound (m + 2) D) D
 
 /-- **`budgetN5 m D q ≤ budgetMax m D`** when `q`'s degrees are `≤ D`. -/

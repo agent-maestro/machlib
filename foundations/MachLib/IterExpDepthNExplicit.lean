@@ -27,8 +27,10 @@ open MachLib.ExplicitBound
 open MachLib.ChainExp2NoZeros
 
 /-- The explicit depth-indexed zero-count ceiling. `Ndep m D` bounds `chainNFn (m+2) q` for every `q` with
-degrees `≤ D`. -/
-noncomputable def Ndep : Nat → Nat → Nat
+degrees `≤ D`. Computable closed-form `Nat` recurrence (a genuine `#eval`-able function, not merely an
+"explicit" symbol) — though `Ndep m D` is a height-`m` tower of exponentials, so evaluating beyond a small
+depth overflows the interpreter. -/
+def Ndep : Nat → Nat → Nat
   | 0,     D => invPhi (D + 2) D (D * (D + 3) + (D + 2)) D
   | m + 1, D => budgetMax m (D + 2) + Ndep m ((D + 2) + budgetMax m (D + 2))
 

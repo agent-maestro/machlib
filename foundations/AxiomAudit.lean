@@ -8,6 +8,8 @@ import MachLib.PolynomialCanonical
 import MachLib.PIDCapstone
 import MachLib.CoreModel
 import MachLib.FPModel
+import MachLib.IterExpDepthNExplicit
+import MachLib.PfaffianExpHard
 
 /-!
 # Axiom Audit — Constructive Khovanskii Closure (2026-06-13/14, revised 2026-06-16)
@@ -191,3 +193,21 @@ open MachLib.Real MachLib.Model
 #print axioms machlibWitness
 
 end VerifiedNumerics
+
+/-! ## Constructive Khovanskii — exp arm closed; the two honest-distinction theorems
+
+Pinned as a standing gate in `tools/claim_audit/claims.json`:
+  * the pure iterated-exponential EXPLICIT bound must stay ROLLE-ONLY — no
+    analyticity, no logarithm, no reciprocal in its footprint;
+  * the full MIXED exp/log/reciprocal EML barrier bound legitimately adds the
+    real-analyticity identity theorem + log/reciprocal (for the degenerate
+    proportional leaves), but stays `sorryAx`- and `zero_count_bound_classical`-free.
+-/
+section Khovanskii
+
+-- Pure iterated-exponential EXPLICIT ceiling `Ndep m D` — rolle is the sole analytic input.
+#print axioms MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit
+-- Full MIXED exp/log/reciprocal EML barrier finiteness — both classical arms discharged.
+#print axioms MachLib.eml_eval_boundedZeros_unconditional
+
+end Khovanskii

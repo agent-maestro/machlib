@@ -171,6 +171,39 @@
         "sorryAx",
         "Classical.choice"
       ]
+    },
+    {
+      "_comment": "Pure iterated-exponential EXPLICIT bound must stay ROLLE-ONLY: no analyticity, no logarithm, no reciprocal ever creeping into its footprint. `analytic_` catches the whole identity-theorem family; the two HasDerivAt_* names catch log / reciprocal usage. This is the invariant that distinguishes it from the mixed bound below.",
+      "id": "chainN-khovanskii-explicit-rolle-only-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "chainN_khovanskii_bound_explicit",
+        "no analyticity, no logarithm, no reciprocal"
+      ],
+      "module": "MachLib.IterExpDepthNExplicit",
+      "theorem": "MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical",
+        "analytic_",
+        "HasDerivAt_log_pos",
+        "HasDerivAt_inv"
+      ]
+    },
+    {
+      "_comment": "The full mixed exp/log/reciprocal EML barrier bound. It LEGITIMATELY uses the analytic identity theorem + log/reciprocal (for the degenerate proportional leaves), so those are NOT forbidden here — the invariant is only that it stays free of hidden `sorry` and of the classical zero-count escape hatch. Contrast the pure-exp entry above: the pair pins the honest distinction.",
+      "id": "eml-eval-boundedzeros-unconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eml_eval_boundedZeros_unconditional",
+        "Both classical arms are discharged"
+      ],
+      "module": "MachLib.PfaffianExpHard",
+      "theorem": "MachLib.eml_eval_boundedZeros_unconditional",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical"
+      ]
     }
   ]
 }

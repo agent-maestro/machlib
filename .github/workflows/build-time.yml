@@ -76,6 +76,18 @@ jobs:
         working-directory: foundations
         run: bash scripts/check_consistency_model.sh
 
+      # Every headline "proven / unconditional / Rolle-only" claim in the
+      # CHANGELOG/README is pinned to the REAL `#print axioms` footprint of the
+      # theorem it cites (tools/claim_audit/claims.json). Fails if a claim
+      # outruns its footprint — e.g. the pure iterated-exp explicit bound
+      # silently gaining an analyticity / log / reciprocal axiom (it must stay
+      # Rolle-only), or the mixed EML barrier bound regressing to `sorryAx` or
+      # the classical zero-count escape hatch. The pair of entries pins the
+      # honest distinction between the two results.
+      - name: Claim audit (headline prose ↔ #print axioms footprint)
+        working-directory: foundations
+        run: python3 tools/claim_audit/claim_audit.py
+
       - name: Write build-time badge JSON
         env:
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}
