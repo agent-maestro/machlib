@@ -150,6 +150,7 @@ import MachLib.ChainExp2Measure
 import MachLib.ChainExp2Reducer
 import MachLib.ExplicitBoundRank
 import MachLib.ChainExp2ExplicitBound
+import MachLib.ChainExp2ExplicitTrim
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
