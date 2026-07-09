@@ -180,6 +180,7 @@ import MachLib.IterExpDepthNBudgetMax
 import MachLib.IterExpDepthNExplicit
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianExpEliminate
+import MachLib.PfaffianExpTrim
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
 import MachLib.EMLEncoderDescent
