@@ -155,6 +155,7 @@ import MachLib.ChainExp2ExplicitABound
 import MachLib.ChainExp2ExplicitLevelBudget
 import MachLib.ChainExp2ExplicitFinal
 import MachLib.ChainExp2ExplicitTool
+import MachLib.ChainExp2ExplicitInvPhiMono
 import MachLib.IterExpDepthNRankNested
 import MachLib.IterExpDepthNDegreeX
 import MachLib.IterExpDepthNDegreeY
@@ -173,6 +174,8 @@ import MachLib.IterExpDepthNDegreeYTrimLift
 import MachLib.IterExpDepthNTrimQDegHelpers
 import MachLib.IterExpDepthNBudget5
 import MachLib.IterExpDepthNStepExplicit
+import MachLib.IterExpDepthNBudgetMax
+import MachLib.IterExpDepthNExplicit
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
