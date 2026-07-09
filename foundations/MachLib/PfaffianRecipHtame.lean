@@ -205,6 +205,19 @@ theorem chainTotalDeriv_chainExtend_liftLastY {n : Nat} (c : PfaffianChain n) (n
       rw [chainTotalDeriv_chainExtend_liftLastY c ne nr p, chainTotalDeriv_chainExtend_liftLastY c ne nr q]
       rfl
 
+/-- **`liftLastY` preserves "≤ 1 at every index".** Below-top indices keep the base degree
+(`degreeY_liftLastY_low'`); the new top is `0`. Iterated, this propagates a base value's `cTD` bound up
+through the lift layers a coefficient wraps it in. -/
+theorem degreeY_liftLastY_le_one {n : Nat} (X : MultiPoly n)
+    (hX : ∀ j : Fin n, MultiPoly.degreeY j X ≤ 1) :
+    ∀ j : Fin (n + 1), MultiPoly.degreeY j (MultiPoly.liftLastY X) ≤ 1 := by
+  intro j
+  by_cases hj : j.val < n
+  · rw [MachLib.IterExpDepthN.degreeY_liftLastY_low' j hj]; exact hX ⟨j.val, hj⟩
+  · have hjv : j.val = n := by have := j.isLt; omega
+    have hjn : j = (⟨n, Nat.lt_succ_self n⟩ : Fin (n + 1)) := Fin.ext hjv
+    rw [hjn, MultiPoly.degreeY_top_liftLastY]; exact Nat.zero_le _
+
 /-! ## Step-relation cross-linearity — the `nr` obligations for `chainExtend_preserves_EncRelLinear` -/
 
 /-- `degreeY` of a negation equals that of the argument (`neg p = sub 0 p`; the zero summand contributes 0).
