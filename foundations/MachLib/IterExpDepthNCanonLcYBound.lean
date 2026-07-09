@@ -134,7 +134,7 @@ theorem yCoeffsAt_entries_degreeY_le {n : Nat} (jt i : Fin n) (p : MultiPoly n) 
 
 /-! ### `canonLcYAt` is one of the coefficients (or `const 0`), hence degree-non-raising -/
 
-private theorem mem_of_mem_dropWhile {α : Type} (pr : α → Bool) :
+theorem mem_of_mem_dropWhile {α : Type} (pr : α → Bool) :
     ∀ (l : List α) (a : α), a ∈ l.dropWhile pr → a ∈ l
   | [], _, h => h
   | b :: bs, a, h => by

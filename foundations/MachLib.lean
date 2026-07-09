@@ -159,6 +159,8 @@ import MachLib.IterExpDepthNRankNested
 import MachLib.IterExpDepthNDegreeX
 import MachLib.IterExpDepthNDegreeY
 import MachLib.IterExpDepthNCanonLcYBound
+import MachLib.IterExpDepthNEIBase
+import MachLib.IterExpDepthNEIrank
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
