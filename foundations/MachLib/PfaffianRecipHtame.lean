@@ -481,4 +481,93 @@ theorem cTD_enc_encLift : ∀ (t : EMLTree) {N : Nat} (chain : PfaffianChain N) 
           cTD_enc_encLift t1 (MachLib.enc t2 chain).1 (MachLib.encLift t2 v),
           cTD_enc_encLift t2 chain v]
 
+/-! ## The node value's `cTD` bound (for the `enc` induction's carried invariant) -/
+
+/-- The exp relation (top of `encEmlStepR`) is ≤ 1 at every index (collapse + `exp_nr_cross_linear`). -/
+theorem encEmlStepR_exp_rel_le_one {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (hb1 : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb b1) ≤ 1) (k : Fin (M + 3)) :
+    MultiPoly.degreeY k ((MachLib.encEmlStepR cb b1 w).relations (⟨M + 2, by omega⟩ : Fin (M + 3))) ≤ 1 := by
+  have hlift3 : ∀ j : Fin (M + 3), MultiPoly.degreeY j
+      (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1)))) ≤ 1 :=
+    degreeY_liftLastY_le_one _ (degreeY_liftLastY_le_one _ (degreeY_liftLastY_le_one _ hb1))
+  have hcofftop : MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3))
+      (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1)))) = 0 :=
+    MultiPoly.degreeY_top_liftLastY _
+  unfold MachLib.encEmlStepR
+  rw [chainExtend_relations_last (MachLib.stepCD cb w) _ _]
+  simp only [MachLib.liftLastYBy]
+  rw [cTD_stepCD_liftLastY cb w (MultiPoly.liftLastY b1), cTD_stepCC_liftLastY cb w b1]
+  exact exp_nr_cross_linear
+    (MultiPoly.liftLastY (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb b1))))
+    (⟨M + 2, by omega⟩ : Fin (M + 3)) hcofftop hlift3 k
+
+/-- The log relation (index `M+1` of `encEmlStepR`, a lift of `stepCD`'s top) is ≤ 1 at every index. -/
+theorem encEmlStepR_log_rel_le_one {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1) (k : Fin (M + 3)) :
+    MultiPoly.degreeY k ((MachLib.encEmlStepR cb b1 w).relations (⟨M + 1, by omega⟩ : Fin (M + 3))) ≤ 1 := by
+  have hlog : ∀ j : Fin (M + 2),
+      MultiPoly.degreeY j ((MachLib.stepCD cb w).relations (⟨M + 1, by omega⟩ : Fin (M + 2))) ≤ 1 := by
+    intro j
+    have hlift2 : ∀ i : Fin (M + 2),
+        MultiPoly.degreeY i (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w))) ≤ 1 :=
+      degreeY_liftLastY_le_one _ (degreeY_liftLastY_le_one _ hw)
+    have hcoeffm : MultiPoly.degreeY (⟨M, by omega⟩ : Fin (M + 2))
+        (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w))) = 0 := by
+      rw [MachLib.IterExpDepthN.degreeY_liftLastY_low' (⟨M, by omega⟩ : Fin (M + 2)) (by omega : M < M + 1)]
+      exact MultiPoly.degreeY_top_liftLastY (chainTotalDeriv cb w)
+    unfold MachLib.stepCD
+    rw [chainExtend_relations_last (MachLib.stepCC cb w) _ _, cTD_stepCC_liftLastY cb w w]
+    exact log_nr_cross_linear (MultiPoly.liftLastY (MultiPoly.liftLastY (chainTotalDeriv cb w)))
+      (⟨M, by omega⟩ : Fin (M + 2)) hcoeffm hlift2 j
+  unfold MachLib.encEmlStepR
+  rw [chainExtend_relations_of_lt (MachLib.stepCD cb w) _ _ (⟨M + 1, by omega⟩ : Fin (M + 3))
+      (by omega : M + 1 < M + 2)]
+  exact degreeY_liftLastY_le_one _ hlog k
+
+/-- **The eml node value `y_{M+2} − y_{M+1}` has `cTD` ≤ 1 at every index** — both top relations are ≤ 1
+everywhere (`degreeY_cTD_sub_vars_le_one`). This is the value-`cTD` bound the `enc` induction carries for a
+node result. -/
+theorem encEmlStepR_node_value_le_one {M : Nat} (cb : PfaffianChain M) (b1 w : MultiPoly M)
+    (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1)
+    (hb1 : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb b1) ≤ 1) (k : Fin (M + 3)) :
+    MultiPoly.degreeY k (chainTotalDeriv (MachLib.encEmlStepR cb b1 w)
+      (MultiPoly.sub (MultiPoly.varY (⟨M + 2, by omega⟩ : Fin (M + 3)))
+        (MultiPoly.varY (⟨M + 1, by omega⟩ : Fin (M + 3))))) ≤ 1 :=
+  degreeY_cTD_sub_vars_le_one (MachLib.encEmlStepR cb b1 w) _ _
+    (encEmlStepR_exp_rel_le_one cb b1 w hb1) (encEmlStepR_log_rel_le_one cb b1 w hw) k
+
+/-! ## The `enc` induction: `EncRelLinear (enc t chain).1` -/
+
+/-- The carried invariant: the chain is cross-linear AND its value has `cTD` ≤ 1 at every index (needed so a
+parent node can feed this value to its coefficients). -/
+def EncGood {n : Nat} (c : PfaffianChain n) (v : MultiPoly n) : Prop :=
+  EncRelLinear c ∧ ∀ j : Fin n, MultiPoly.degreeY j (chainTotalDeriv c v) ≤ 1
+
+/-- **`enc` preserves `EncGood`.** Induction on `t`: leaves return the chain unchanged with value `const`/
+`varX` (cTD `= 0`); an eml node is `encEmlStepR`, whose `EncRelLinear` comes from `encEmlStepR_EncRelLinear`
+fed by the transported `hw` (`cTD_enc_encLift` + `degreeY_encLift_le_one`) and the carried `hb1`, and whose
+node value's `cTD` bound is `encEmlStepR_node_value_le_one`. -/
+theorem enc_EncGood (t : EMLTree) : ∀ {N : Nat} (chain : PfaffianChain N), EncRelLinear chain →
+    EncGood (MachLib.enc t chain).1 (MachLib.enc t chain).2 := by
+  induction t with
+  | const c => intro N chain hchain; exact ⟨hchain, fun j => Nat.zero_le _⟩
+  | var => intro N chain hchain; exact ⟨hchain, fun j => Nat.zero_le _⟩
+  | eml t1 t2 ih1 ih2 =>
+    intro N chain hchain
+    obtain ⟨hr2rel, hr2v⟩ := ih2 chain hchain
+    obtain ⟨hr1rel, hr1v⟩ := ih1 (MachLib.enc t2 chain).1 hr2rel
+    have hw : ∀ j, MultiPoly.degreeY j
+        (chainTotalDeriv (MachLib.enc t1 (MachLib.enc t2 chain).1).1
+          (MachLib.encLift t1 (MachLib.enc t2 chain).2)) ≤ 1 := by
+      intro j
+      rw [cTD_enc_encLift t1 (MachLib.enc t2 chain).1 (MachLib.enc t2 chain).2]
+      exact degreeY_encLift_le_one t1 _ hr2v j
+    exact ⟨encEmlStepR_EncRelLinear _ _ _ hr1rel hw hr1v,
+      encEmlStepR_node_value_le_one _ _ _ hw hr1v⟩
+
+/-- **`enc` produces a cross-linear chain** — the `htame` interface. -/
+theorem enc_EncRelLinear (t : EMLTree) {N : Nat} (chain : PfaffianChain N) (hchain : EncRelLinear chain) :
+    EncRelLinear (MachLib.enc t chain).1 :=
+  (enc_EncGood t chain hchain).1
+
 end MachLib.PfaffianRecipHtame
