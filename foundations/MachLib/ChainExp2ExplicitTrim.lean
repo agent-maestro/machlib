@@ -32,6 +32,7 @@ namespace MachLib.ChainExp2Explicit
 
 open MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly
 open MachLib.MultiPolyReconstruct MachLib.ChainExp2Trim
+open MachLib.ChainExp2CanonMeasure MachLib.PolynomialCanonical
 
 /-! ### `reconstructY` degree core -/
 
@@ -187,5 +188,61 @@ theorem degreeX_dropLeadingYAt_le {n : Nat} (i : Fin n) (p : MultiPoly n) :
   show degreeX (reconstructY i (yCoeffsAt i p).dropLast 0) ≤ degreeX p
   exact degreeX_reconstructY_le i (degreeX p) (yCoeffsAt i p).dropLast 0
     (fun c hc => yCoeffsAt_entries_degreeX_le i p c (List.dropLast_subset _ hc))
+
+/-! ### The measure↔degreeX bridge (two of three pieces)
+
+The measure's x-component is `singleExpMeasureCanon(lcY₁ q).2 =
+polyTrueDegreeStrict (polyCoeffs (multiPolyToPolyForLex (canonLcY0 (lcY₁ q))))`. The bridge
+`… ≤ degreeX q + C` factors into three pieces; two land here cleanly (the third — a `listMulR`
+convolution-length bound — is the remaining chunk, scoped below):
+
+  (1) `polyTrueDegreeStrict L ≤ L.length + 1`                 [Poly strict-degree ≤ coeff count]
+  (2) `degreeX (canonLcY0 (lcY₁ q)) ≤ degreeX q`             [MultiPoly side, reuses the tower above]
+  (3) `length (polyCoeffs (multiPolyToPolyForLex m)) ≤ degreeX m + 1`   ← OPEN: needs
+      `length_listAddR = max`, `length_listMulR = m+n−1` (tight convolution length, Nat-subtraction
+      edge cases). With (3): b(q) ≤ degreeX q + 2, so `B := degreeX p₀ + 2` closes the B-bound. -/
+
+/-- Every list is a `dropWhile` superset of itself: membership survives `dropWhile`. -/
+private theorem mem_of_mem_dropWhile {α : Type} (p : α → Bool) :
+    ∀ (l : List α) (a : α), a ∈ l.dropWhile p → a ∈ l
+  | [], _, h => h
+  | b :: bs, a, h => by
+      rw [List.dropWhile_cons] at h
+      by_cases hpb : p b = true
+      · rw [if_pos hpb] at h
+        exact List.mem_cons_of_mem _ (mem_of_mem_dropWhile p bs a h)
+      · rw [if_neg hpb] at h; exact h
+
+/-- **Bridge piece (1).** The strict polynomial degree never exceeds the coefficient count (`+1`):
+`polyTrueDegree L ≤ L.length` (nothing is nonzero past the end), and `strict = trueDegree + 1` or `0`. -/
+theorem polyTrueDegreeStrict_le_length (L : List Real) :
+    polyTrueDegreeStrict L ≤ L.length + 1 := by
+  unfold polyTrueDegreeStrict
+  split
+  · exact Nat.zero_le _
+  · have h := polyTrueDegree_le_of_bounded L L.length (polyDegreeBoundedBy_at_length L)
+    omega
+
+/-- **Bridge piece (2).** `canonLcY0 m` is either a `yCoeffsAt ⟨0⟩ m` entry (via the `reverse`/`dropWhile`
+of that list) or `const 0`, so its `degreeX` is bounded by `degreeX m` — using the trim-side tower. -/
+theorem degreeX_canonLcY0_le (m : MultiPoly 2) :
+    degreeX (canonLcY0 m) ≤ degreeX m := by
+  show degreeX (((yCoeffsAt (⟨0, by omega⟩ : Fin 2) m).reverse.dropWhile coeffCanonZeroB).headD
+                  (const 0)) ≤ degreeX m
+  cases hl : (yCoeffsAt (⟨0, by omega⟩ : Fin 2) m).reverse.dropWhile coeffCanonZeroB with
+  | nil => exact Nat.zero_le _
+  | cons a rest =>
+    show degreeX a ≤ degreeX m
+    have ha_dw : a ∈ (yCoeffsAt (⟨0, by omega⟩ : Fin 2) m).reverse.dropWhile coeffCanonZeroB := by
+      rw [hl]; exact List.mem_cons_self _ _
+    have ha_rev := mem_of_mem_dropWhile coeffCanonZeroB _ a ha_dw
+    exact yCoeffsAt_entries_degreeX_le _ m a (List.mem_reverse.mp ha_rev)
+
+/-- **Bridge piece (2), composed to `lcY₁`.** `degreeX (canonLcY0 (lcY₁ q)) ≤ degreeX q`, via piece (2)
+and `degreeX_leadingCoeffY_le`. The MultiPoly-side half of the measure↔degreeX bridge. -/
+theorem degreeX_canonLcY0_lcY1_le (q : MultiPoly 2) :
+    degreeX (canonLcY0 (leadingCoeffY (⟨1, by omega⟩ : Fin 2) q)) ≤ degreeX q :=
+  Nat.le_trans (degreeX_canonLcY0_le _)
+    (degreeX_leadingCoeffY_le (⟨1, by omega⟩ : Fin 2) q)
 
 end MachLib.ChainExp2Explicit
