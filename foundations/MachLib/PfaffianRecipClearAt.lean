@@ -22,6 +22,7 @@ namespace PfaffianExpRecip
 
 open MachLib.Real
 open MachLib.MultiPolyMod MachLib.MultiPolyMod.MultiPoly
+open MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianFn MachLib.PfaffianGeneralReduce
 
 variable {N : Nat}
 
@@ -139,6 +140,59 @@ theorem clearAt_eval (i : Fin (N + 1)) (v : MultiPoly N) (x : Real) (env : Fin N
           * MultiPoly.eval (MultiPoly.mul p q) x envFull
     simp only [MultiPoly.eval]
     rw [ihp, ihq, mpolyPow_eval_add]; mach_ring
+
+/-! ## Chain-level bridge + the interior reciprocal descent step -/
+
+/-- The chain with interior slot `i` removed: its evals are `c`'s at the surviving slots
+(`embedSkip i`). Relations are placeholder (the zero-count bridge uses only the evals). -/
+noncomputable def chainDropAt (i : Fin (N + 1)) (c : PfaffianChain (N + 1)) : PfaffianChain N :=
+  { evals := fun k => c.evals (embedSkip i k),
+    relations := fun _ => MultiPoly.const 0 }
+
+/-- **Chain-level eval bridge.** Instantiate `clearAt_eval` at the actual chain: `envFull =
+c.chainValues`, `env = (chainDropAt i c).chainValues` (agree on survivors by construction), with
+the interior reciprocal witness `c.chainValues x i = 1/eval v`. Interior analog of
+`clearTop_chain_bridge`. -/
+theorem clearAt_chain_bridge (i : Fin (N + 1)) (c : PfaffianChain (N + 1)) (v : MultiPoly N) (x : Real)
+    (hwitness : c.chainValues x i = 1 / MultiPoly.eval v x ((chainDropAt i c).chainValues x))
+    (hvne : MultiPoly.eval v x ((chainDropAt i c).chainValues x) ≠ 0)
+    (p : MultiPoly (N + 1)) :
+    MultiPoly.eval (clearAt i v p) x ((chainDropAt i c).chainValues x)
+      = MultiPoly.eval (mpolyPow v (MultiPoly.degreeY i p)) x ((chainDropAt i c).chainValues x)
+        * MultiPoly.eval p x (c.chainValues x) := by
+  refine clearAt_eval i v x ((chainDropAt i c).chainValues x) (c.chainValues x) ?_ hwitness hvne p
+  intro k; rfl
+
+/-- **Interior reciprocal descent step.** Bound the zeros of `pfaffianChainFn c p` (with an
+interior reciprocal `y_i = 1/v`) by those of `pfaffianChainFn (chainDropAt i c) (clearAt i v p)`
+over the slot-`i`-removed chain, supplied by the IH. No integrating factor — the clearing bridge
+`fp·v^d = fP` does it (`v^d > 0` not even needed: `fp z = 0 ⇒ fP z = 0`). Interior analog of
+`recip_top_step`. -/
+theorem clearAt_recip_step (i : Fin (N + 1)) (c : PfaffianChain (N + 1)) (v : MultiPoly N)
+    (a b : Real) (M : Nat)
+    (hwitness : ∀ x : Real, a < x → x < b →
+        c.chainValues x i = 1 / MultiPoly.eval v x ((chainDropAt i c).chainValues x))
+    (hvne : ∀ x : Real, a < x → x < b →
+        MultiPoly.eval v x ((chainDropAt i c).chainValues x) ≠ 0)
+    (p : MultiPoly (N + 1))
+    (hIH : ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b
+            ∧ (pfaffianChainFn (chainDropAt i c) (clearAt i v p)).eval z = 0) →
+        zeros.length ≤ M) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
+      zeros.length ≤ M := by
+  apply recip_top_zero_reduction
+    (pfaffianChainFn c p).eval
+    (pfaffianChainFn (chainDropAt i c) (clearAt i v p)).eval
+    (fun x => MultiPoly.eval (mpolyPow v (MultiPoly.degreeY i p)) x ((chainDropAt i c).chainValues x))
+    a b M ?_ hIH
+  intro z ha hb
+  show MultiPoly.eval p z (c.chainValues z)
+      * MultiPoly.eval (mpolyPow v (MultiPoly.degreeY i p)) z ((chainDropAt i c).chainValues z)
+      = MultiPoly.eval (clearAt i v p) z ((chainDropAt i c).chainValues z)
+  rw [clearAt_chain_bridge i c v z (hwitness z ha hb) (hvne z ha hb) p]
+  mach_ring
 
 end PfaffianExpRecip
 end MachLib
