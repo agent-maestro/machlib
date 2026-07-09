@@ -585,4 +585,21 @@ theorem EncRelLinear_chainRestrict {N : Nat} (c : PfaffianChain (N + 1)) (hc : E
     (⟨j.val, Nat.lt_succ_of_lt j.isLt⟩ : Fin (N + 1))
     (fun h => hjl (by rw [Fin.mk.injEq] at h; exact Fin.ext h))
 
+/-- **The encoder's log level satisfies the log condition** `degreeY_top(relations top) = 0` — its relation
+`coeff·y_recip` references the reciprocal below, not its own variable. This is exactly the `h_top`
+hypothesis `log_wronskian_chainNMeasureEI_lt` needs at a log top, validating the descent analysis's key
+claim (after peeling the exp top, the log level's Wronskian can drop `cdegYAt`). -/
+theorem stepCD_log_rel_top_zero {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M) :
+    MultiPoly.degreeY (⟨M + 1, by omega⟩ : Fin (M + 2))
+      ((MachLib.stepCD cb w).relations (⟨M + 1, by omega⟩ : Fin (M + 2))) = 0 := by
+  unfold MachLib.stepCD
+  rw [chainExtend_relations_last (MachLib.stepCC cb w) _ _]
+  show MultiPoly.degreeY (⟨M + 1, by omega⟩ : Fin (M + 2))
+      (MultiPoly.liftLastY (chainTotalDeriv (MachLib.stepCC cb w) (MultiPoly.liftLastY w)))
+    + MultiPoly.degreeY (⟨M + 1, by omega⟩ : Fin (M + 2))
+        (MultiPoly.varY (⟨M, by omega⟩ : Fin (M + 2))) = 0
+  rw [MultiPoly.degreeY_top_liftLastY]
+  show (0 : Nat) + (if (⟨M + 1, by omega⟩ : Fin (M + 2)) = (⟨M, by omega⟩ : Fin (M + 2)) then 1 else 0) = 0
+  rw [if_neg (fun h => by rw [Fin.mk.injEq] at h; omega)]
+
 end MachLib.PfaffianRecipHtame
