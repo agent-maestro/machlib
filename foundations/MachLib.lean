@@ -158,6 +158,7 @@ import MachLib.ChainExp2ExplicitTool
 import MachLib.IterExpDepthNRankNested
 import MachLib.IterExpDepthNDegreeX
 import MachLib.IterExpDepthNDegreeY
+import MachLib.IterExpDepthNCanonLcYBound
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
