@@ -154,6 +154,7 @@ import MachLib.ChainExp2ExplicitTrim
 import MachLib.ChainExp2ExplicitABound
 import MachLib.ChainExp2ExplicitLevelBudget
 import MachLib.ChainExp2ExplicitFinal
+import MachLib.IterExpDepthNRankNested
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
