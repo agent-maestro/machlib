@@ -200,4 +200,84 @@ theorem stepCC_nr_cross_linear {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M
   have := hw ⟨j.val, hjM⟩
   omega
 
+/-- `degreeY i (varY i) = 1`. -/
+theorem degreeY_varY_one {n : Nat} (i : Fin n) : MultiPoly.degreeY i (MultiPoly.varY i) = 1 := by
+  show (if i = i then 1 else 0) = 1; rw [if_pos rfl]
+
+/-- **`= 0` kernel.** If `p` is `y_i`-free and every substituted relation is `y_i`-FREE (not just ≤ 1),
+then `cTD c p` is `y_i`-free. Used to show a log/exp coefficient — a `cTD` of a `y_i`-free value over a
+chain whose lower (substituted) relations are `y_i`-free — is exactly `0` at the recip index just below
+(the log references that recip with degree exactly 1, so its coefficient must be recip-free, not merely
+≤ 1). -/
+theorem degreeY_i_cTD_eq_zero_of_free {n : Nat} (c : PfaffianChain n) (i : Fin n)
+    (hrel : ∀ l : Fin n, i ≠ l → MultiPoly.degreeY i (c.relations l) = 0) :
+    ∀ p : MultiPoly n, MultiPoly.degreeY i p = 0 →
+      MultiPoly.degreeY i (chainTotalDeriv c p) = 0
+  | .const _, _ => rfl
+  | .varX, _ => rfl
+  | .varY l, hp => hrel l (fun h => by
+      have hh : (if i = l then (1 : Nat) else 0) = 0 := hp
+      rw [if_pos h] at hh; omega)
+  | .add p q, hp => by
+      have hmax : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 := hp
+      have hle : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) ≤ 0 := Nat.le_of_eq hmax
+      have hp0 : MultiPoly.degreeY i p = 0 := Nat.le_zero.mp (Nat.max_le.mp hle).1
+      have hq0 : MultiPoly.degreeY i q = 0 := Nat.le_zero.mp (Nat.max_le.mp hle).2
+      show Nat.max (MultiPoly.degreeY i (chainTotalDeriv c p))
+              (MultiPoly.degreeY i (chainTotalDeriv c q)) = 0
+      rw [degreeY_i_cTD_eq_zero_of_free c i hrel p hp0,
+          degreeY_i_cTD_eq_zero_of_free c i hrel q hq0]
+      decide
+  | .sub p q, hp => by
+      have hmax : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) = 0 := hp
+      have hle : Nat.max (MultiPoly.degreeY i p) (MultiPoly.degreeY i q) ≤ 0 := Nat.le_of_eq hmax
+      have hp0 : MultiPoly.degreeY i p = 0 := Nat.le_zero.mp (Nat.max_le.mp hle).1
+      have hq0 : MultiPoly.degreeY i q = 0 := Nat.le_zero.mp (Nat.max_le.mp hle).2
+      show Nat.max (MultiPoly.degreeY i (chainTotalDeriv c p))
+              (MultiPoly.degreeY i (chainTotalDeriv c q)) = 0
+      rw [degreeY_i_cTD_eq_zero_of_free c i hrel p hp0,
+          degreeY_i_cTD_eq_zero_of_free c i hrel q hq0]
+      decide
+  | .mul p q, hp => by
+      have hsum : MultiPoly.degreeY i p + MultiPoly.degreeY i q = 0 := hp
+      have hp0 : MultiPoly.degreeY i p = 0 := by omega
+      have hq0 : MultiPoly.degreeY i q = 0 := by omega
+      have h1 := degreeY_i_cTD_eq_zero_of_free c i hrel p hp0
+      have h2 := degreeY_i_cTD_eq_zero_of_free c i hrel q hq0
+      show Nat.max (MultiPoly.degreeY i (chainTotalDeriv c p) + MultiPoly.degreeY i q)
+              (MultiPoly.degreeY i p + MultiPoly.degreeY i (chainTotalDeriv c q)) = 0
+      rw [h1, h2, hp0, hq0]
+      decide
+
+/-- **Generic log step relation** `coeff·yₘ` (references the reciprocal `m` at degree 1) is ≤ 1 at EVERY
+index, given `coeff` is recip-free there (`degreeY m coeff = 0`) and ≤ 1 elsewhere. In particular cross-linear
+for `chainExtend_preserves_EncRelLinear`. The recip-freeness at `m` is exactly what the `= 0` kernel supplies. -/
+theorem log_nr_cross_linear {N : Nat} (coeff : MultiPoly N) (m : Fin N)
+    (hcoeffm : MultiPoly.degreeY m coeff = 0) (hcoeff : ∀ j : Fin N, MultiPoly.degreeY j coeff ≤ 1)
+    (j : Fin N) :
+    MultiPoly.degreeY j (MultiPoly.mul coeff (MultiPoly.varY m)) ≤ 1 := by
+  show MultiPoly.degreeY j coeff + MultiPoly.degreeY j (MultiPoly.varY m) ≤ 1
+  by_cases hjm : j = m
+  · have h1 : MultiPoly.degreeY j coeff = 0 := by rw [hjm]; exact hcoeffm
+    have h2 : MultiPoly.degreeY j (MultiPoly.varY m) = 1 := by rw [hjm]; exact degreeY_varY_one m
+    omega
+  · have hvarY : MultiPoly.degreeY j (MultiPoly.varY m) = 0 := by
+      show (if j = m then 1 else 0) = 0; rw [if_neg hjm]
+    rw [hvarY]; have := hcoeff j; omega
+
+/-- **Generic exp step relation** `coeff·y_top` (references its own top) is ≤ 1 at EVERY index, given `coeff`
+is top-free (`degreeY top coeff = 0`) and ≤ 1 elsewhere. -/
+theorem exp_nr_cross_linear {N : Nat} (coeff : MultiPoly N) (top : Fin N)
+    (hcoefftop : MultiPoly.degreeY top coeff = 0) (hcoeff : ∀ j : Fin N, MultiPoly.degreeY j coeff ≤ 1)
+    (j : Fin N) :
+    MultiPoly.degreeY j (MultiPoly.mul coeff (MultiPoly.varY top)) ≤ 1 := by
+  show MultiPoly.degreeY j coeff + MultiPoly.degreeY j (MultiPoly.varY top) ≤ 1
+  by_cases hjt : j = top
+  · have h1 : MultiPoly.degreeY j coeff = 0 := by rw [hjt]; exact hcoefftop
+    have h2 : MultiPoly.degreeY j (MultiPoly.varY top) = 1 := by rw [hjt]; exact degreeY_varY_one top
+    omega
+  · have hvarY : MultiPoly.degreeY j (MultiPoly.varY top) = 0 := by
+      show (if j = top then 1 else 0) = 0; rw [if_neg hjt]
+    rw [hvarY]; have := hcoeff j; omega
+
 end MachLib.PfaffianRecipHtame
