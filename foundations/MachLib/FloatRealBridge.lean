@@ -90,4 +90,66 @@ theorem evalEML_forward_error {toR : Float → MachLib.Real} (br : FPBridge toR)
   rw [h]
   exact length_sq2_bridge br (env "x").toF (env "y").toF
 
+/-! ## A compositional toolkit — the bridge folds over any cancellation-free tree
+
+`length_sq2_bridge` hardcoded one kernel. These three lemmas turn the bridge into a REUSABLE fold:
+a `Renc` enclosure for the float image of any leaf, product, or (equal-exponent) sum, built from the
+bridge's per-op roundings. With them, the forward-error bound for an arbitrary nonneg-leaf
+cancellation-free arithmetic tree is assembled node-by-node — the certifier's job, now carrying a
+real Float computation across the bridge. (Nonnegativity of leaves is inherent to a *relative*
+forward-error bound — `Renc` is two-sided about a nonneg exact; cancellation is the open regime.) -/
+
+/-- Leaf: a variable/constant float value is its own exact real, exponent 0 (no rounding). -/
+theorem bridge_leaf {toR : Float → MachLib.Real} (v : Float) (hv : 0 ≤ toR v) :
+    Renc 0 u (toR v) (toR v) :=
+  renc_leaf hv
+
+/-- Product node: the float product's image is within `Renc (a+b+1)` of the exact product, given the
+subtrees' enclosures and the bridge's `mul` rounding. Exponents compose freely — no lift needed. -/
+theorem bridge_mul {toR : Float → MachLib.Real} (br : FPBridge toR) {a b : Nat}
+    {flx fly : Float} {xe ye : MachLib.Real} (hxe : 0 ≤ xe) (hye : 0 ≤ ye)
+    (hx : Renc a u (toR flx) xe) (hy : Renc b u (toR fly) ye) :
+    Renc (a + b + 1) u (toR (flx * fly)) (xe * ye) :=
+  renc_mul u_nonneg u_le_one hxe hye hx hy (br.mul flx fly)
+
+/-- Sum node (equal exponent): `Renc (a+1)`, via the bridge's `add` rounding. Mixed-exponent sums
+lift to a common exponent first (the certifier's balanced-fold discipline). -/
+theorem bridge_add {toR : Float → MachLib.Real} (br : FPBridge toR) {a : Nat}
+    {flx fly : Float} {xe ye : MachLib.Real} (hxe : 0 ≤ xe) (hye : 0 ≤ ye)
+    (hx : Renc a u (toR flx) xe) (hy : Renc a u (toR fly) ye) :
+    Renc (a + 1) u (toR (flx + fly)) (xe + ye) :=
+  renc_add u_nonneg u_le_one hxe hye hx hy (br.add flx fly)
+
+/-- **Depth-3 worked kernel — the fold generalizes past the fixed 2-term kernel.** The actual Float
+computation `(x·y)·z` (nonneg inputs), through `toR`, is within `((1+u)²−1)·(X·Y·Z)` of the exact
+`X·Y·Z` — assembled by `bridge_leaf → bridge_mul → bridge_mul → renc_fwd`, two rounding levels deep. -/
+theorem prod3_bridge {toR : Float → MachLib.Real} (br : FPBridge toR) (ex ey ez : Float)
+    (hx : 0 ≤ toR ex) (hy : 0 ≤ toR ey) (hz : 0 ≤ toR ez) :
+    abs (toR ((ex * ey) * ez) - (toR ex * toR ey * toR ez))
+      ≤ (npow 2 (1 + u) - 1) * (toR ex * toR ey * toR ez) := by
+  have lxy : Renc 1 u (toR (ex * ey)) (toR ex * toR ey) :=
+    bridge_mul br hx hy (bridge_leaf ex hx) (bridge_leaf ey hy)
+  have lxyz : Renc 2 u (toR ((ex * ey) * ez)) ((toR ex * toR ey) * toR ez) :=
+    bridge_mul br (mul_nonneg hx hy) hz lxy (bridge_leaf ez hz)
+  exact renc_fwd u_nonneg u_le_one (mul_nonneg (mul_nonneg hx hy) hz) lxyz
+
+/-- The EML expression `(x·y)·z`. -/
+def prod3EML : EML :=
+  .bin .mul (.bin .mul (.var "x") (.var "y")) (.var "z")
+
+/-- The depth-3 bridge, connected to T2's `evalEML` — the capstone at a deeper expression: the emitted
+C runs `(x·y)·z` in Float, and its real value is within the T3 forward-error bound of the exact
+product, given the bridge. -/
+theorem evalEML_prod3_fwd {toR : Float → MachLib.Real} (br : FPBridge toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) (env : Env)
+    (hx : 0 ≤ toR (env "x").toF) (hy : 0 ≤ toR (env "y").toF) (hz : 0 ≤ toR (env "z").toF) :
+    abs (toR (evalEML i1 i2 env prod3EML).toF
+          - (toR (env "x").toF * toR (env "y").toF * toR (env "z").toF))
+      ≤ (npow 2 (1 + u) - 1)
+        * (toR (env "x").toF * toR (env "y").toF * toR (env "z").toF) := by
+  have h : (evalEML i1 i2 env prod3EML).toF
+      = ((env "x").toF * (env "y").toF) * (env "z").toF := rfl
+  rw [h]
+  exact prod3_bridge br (env "x").toF (env "y").toF (env "z").toF hx hy hz
+
 end Certcom
