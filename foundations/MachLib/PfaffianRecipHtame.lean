@@ -130,4 +130,38 @@ theorem chainExtend_preserves_EncRelLinear {n : Nat} (c : PfaffianChain n) (ne :
     rw [hln, chainExtend_relations_last]
     exact hnr j (fun h => hjl (h.trans hln.symm))
 
+/-! ## Value-side facts — encoder values are affine (`const` / `varX` / `y_exp − y_log`) -/
+
+/-- **`cTD` of a node value `y_a − y_b` is cross-linear in EVERY index**, given both referenced relations
+are fully linear (`degreeY k ≤ 1` for all `k`). The eml node value is the affine `exp − log`
+(`encEmlStep`), so its `cTD` is a DIFFERENCE of two relations — a `max`, never a product — hence stays ≤ 1
+wherever the relations do. The value-side companion to `degreeY_i_cTD_le_one_of_free`: that lemma covers
+indices the value is FREE of; this covers indices the value references (the value's affineness is what
+keeps `cTD` from squaring). -/
+theorem degreeY_cTD_sub_vars_le_one {n : Nat} (c : PfaffianChain n) (a b : Fin n)
+    (ha : ∀ k : Fin n, MultiPoly.degreeY k (c.relations a) ≤ 1)
+    (hb : ∀ k : Fin n, MultiPoly.degreeY k (c.relations b) ≤ 1) (j : Fin n) :
+    MultiPoly.degreeY j
+        (chainTotalDeriv c (MultiPoly.sub (MultiPoly.varY a) (MultiPoly.varY b))) ≤ 1 := by
+  show Nat.max (MultiPoly.degreeY j (c.relations a)) (MultiPoly.degreeY j (c.relations b)) ≤ 1
+  exact Nat.max_le.mpr ⟨ha j, hb j⟩
+
+/-- **The eml node value `y_{M+2} − y_{M+1}` is free of every descendant index `i ≤ M`** — in particular of
+every reciprocal buried in the sub-chain. So encoder values are `y_i`-free for a descendant recip `i` (the
+hypothesis `degreeY_i_cTD_le_one_of_free` needs): a node consumes its children through their exp/log OUTPUT
+(`i = M+2` / `M+1`), never their internal recip. -/
+theorem degreeY_node_value_low {M : Nat} (i : Fin (M + 3)) (hi : i.val ≤ M) :
+    MultiPoly.degreeY i
+        (MultiPoly.sub (MultiPoly.varY (⟨M + 2, by omega⟩ : Fin (M + 3)))
+          (MultiPoly.varY (⟨M + 1, by omega⟩ : Fin (M + 3)))) = 0 := by
+  have hne2 : ¬ (i = (⟨M + 2, by omega⟩ : Fin (M + 3))) := by
+    intro h; have hv : i.val = M + 2 := by rw [h]
+    omega
+  have hne1 : ¬ (i = (⟨M + 1, by omega⟩ : Fin (M + 3))) := by
+    intro h; have hv : i.val = M + 1 := by rw [h]
+    omega
+  show Nat.max (if i = (⟨M + 2, by omega⟩ : Fin (M + 3)) then 1 else 0)
+        (if i = (⟨M + 1, by omega⟩ : Fin (M + 3)) then 1 else 0) = 0
+  rw [if_neg hne2, if_neg hne1]; decide
+
 end MachLib.PfaffianRecipHtame
