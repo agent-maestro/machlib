@@ -164,6 +164,7 @@ import MachLib.IterExpDepthNEIrank
 import MachLib.IterExpDepthNBudget
 import MachLib.IterExpDepthNBudgetGen
 import MachLib.IterExpDepthNDescentBound
+import MachLib.IterExpDepthNRankRec
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
