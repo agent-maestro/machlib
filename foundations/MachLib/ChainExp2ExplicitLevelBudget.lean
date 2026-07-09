@@ -137,4 +137,15 @@ theorem invPhi_trim (B d d' ir' g g' : Nat) (hd : d' ≤ d) (hg : g' ≤ g)
           (levelBudget_mono_G B e (by omega))
       omega
 
+/-- **Trim closure, source at level `d+1` with ANY inner rank `ir`.** The `ir=0`-in-trim assumption is
+NOT needed (the trim fires on the x-degree component `= 0`, but `cdegY0` may be nonzero): a larger
+source `ir` only makes `invPhi B (d+1) ir g` bigger. This is the form the WF induction's trim arm uses. -/
+theorem invPhi_trim_any (B d d' ir ir' g g' : Nat) (hd : d' ≤ d) (hg : g' ≤ g)
+    (hir : ir' + 1 ≤ (g + 1) * (B + 1)) :
+    invPhi B d' ir' g' ≤ invPhi B (d + 1) ir g := by
+  have h1 : invPhi B d' ir' g' ≤ levelBudget B d (g + 1) := invPhi_trim B d d' ir' g g' hd hg hir
+  have h2 : levelBudget B d (g + 1) ≤ levelBudget B d (g + ir + 1) := levelBudget_mono_G B d (by omega)
+  show invPhi B d' ir' g' ≤ ir + levelBudget B d (g + ir + 1)
+  omega
+
 end MachLib.ExplicitBound
