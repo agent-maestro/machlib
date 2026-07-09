@@ -229,5 +229,67 @@ theorem exp_hard_of_measure {k : Nat} (c : PfaffianChain (k + 1)) (a b : Real) (
   intro p hne
   exact aux (μ p) p (Nat.le_refl _) hne
 
+/-- **`exp_hard` from a general (graded-multiplier) reduce descent.** The fully-general,
+*satisfiable* factoring: for an exp-type top over ANY coherent chain, `pfaffianChainFn c p` is
+BoundedZeros for every `p`, given a `Nat` measure `μ` and, for each degree>0 non-vanishing `q`,
+SOME reduce multiplier `m` with an integrating factor `E` whose reduct either vanishes on `(a,b)`
+or is `μ`-smaller.
+
+Unlike `exp_hard_of_measure` (which pins the simple multiplier `m = deg·G` — whose reduct leading
+coefficient `cTD(c_d)` need not terminate over a reciprocal base), here `m` is existential, so the
+hypothesis can supply the **graded** multiplier the pure-exp tower uses (whose reduct leading
+coefficient is a genuine lower-chain reduce). This is the exact exp analog of
+`combined_descent_3_of_hard`: its one hypothesis is precisely the open Khovanskii content — a
+well-founded measure the graded exp reduce descends over a mixed exp-log-recip chain. -/
+theorem exp_hard_of_reduce {k : Nat} (c : PfaffianChain (k + 1)) (a b : Real) (hab : a < b)
+    (hcoh : c.IsCoherentOn a b)
+    (IH_depth : ∀ r : MultiPoly k,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) r).eval z ≠ 0) →
+        ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+          (∀ z ∈ zeros, a < z ∧ z < b ∧
+            (pfaffianChainFn (chainRestrict c) r).eval z = 0) → zeros.length ≤ M)
+    (μ : MultiPoly (k + 1) → Nat)
+    (hReduce : ∀ q : MultiPoly (k + 1),
+        0 < MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) q →
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c q).eval z ≠ 0) →
+        ∃ (m : MultiPoly (k + 1)) (E : Real → Real),
+          (∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z) ∧
+          ((∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c m q)).eval z = 0)
+            ∨ μ (chainReduce c m q) < μ q)) :
+    ∀ (p : MultiPoly (k + 1)),
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+  have aux : ∀ (fuel : Nat) (p : MultiPoly (k + 1)), μ p ≤ fuel →
+      (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) →
+      ∃ M : Nat, ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) → zeros.length ≤ M := by
+    intro fuel
+    induction fuel with
+    | zero =>
+      intro p hμ hne
+      by_cases hd0 : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
+      · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+      · obtain ⟨m, E, hE, hcase⟩ := hReduce p (Nat.pos_of_ne_zero hd0) hne
+        rcases hcase with hrz | hlt
+        · exact exp_reduce_step_bounded c m p a b hab E hcoh hE hne (Or.inl hrz)
+        · exact absurd (Nat.lt_of_lt_of_le hlt hμ) (Nat.not_lt_zero _)
+    | succ fuel ih =>
+      intro p hμ hne
+      by_cases hd0 : MultiPoly.degreeY (⟨k, Nat.lt_succ_self k⟩ : Fin (k + 1)) p = 0
+      · exact pfaffianChainFn_bound_of_degreeYtop_zero c p hd0 a b hab hne IH_depth
+      · obtain ⟨m, E, hE, hcase⟩ := hReduce p (Nat.pos_of_ne_zero hd0) hne
+        rcases hcase with hrz | hlt
+        · exact exp_reduce_step_bounded c m p a b hab E hcoh hE hne (Or.inl hrz)
+        · by_cases hrz : ∀ z, a < z → z < b → (pfaffianChainFn c (chainReduce c m p)).eval z = 0
+          · exact exp_reduce_step_bounded c m p a b hab E hcoh hE hne (Or.inl hrz)
+          · have hne_red : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c m p)).eval z ≠ 0 :=
+              Classical.byContradiction fun hcon =>
+                hrz (fun z hza hzb => Classical.byContradiction fun hz0 => hcon ⟨z, hza, hzb, hz0⟩)
+            obtain ⟨Nr, hNr⟩ := ih (chainReduce c m p) (by omega) hne_red
+            exact exp_reduce_step_bounded c m p a b hab E hcoh hE hne (Or.inr ⟨Nr, hNr⟩)
+  intro p hne
+  exact aux (μ p) p (Nat.le_refl _) hne
+
 end PfaffianGeneralReduce
 end MachLib
