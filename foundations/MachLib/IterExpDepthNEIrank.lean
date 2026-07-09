@@ -2,7 +2,9 @@ import MachLib.IterExpDepthNEIBase
 import MachLib.IterExpDepthNRankNested
 import MachLib.IterExpDepthNMeasureEI
 import MachLib.IterExpDepthNDegreeX
+import MachLib.IterExpDepthNDegreeY
 import MachLib.IterExpDepthNAssembly
+import MachLib.IterExpDepthNDescentInduction
 import MachLib.PfaffianLogCdegSpike
 
 /-!
@@ -30,6 +32,7 @@ open MachLib.ExplicitBound
 open MachLib.ChainExp2CanonMeasure
 open MachLib.IterExpDepth3CdegY1
 open MachLib.PfaffianLogLead
+open MachLib.IterExpDepthNReduce
 
 /-- The all-`B` bound vector: every level's bound is `B`. -/
 def allBNested : (n : Nat) → Nat → NestedNat n
@@ -75,5 +78,20 @@ theorem EIrank_le_maxRank (m B : Nat) (q : MultiPoly (m + 2))
     EIrank m B q ≤ maxRank (m + 2) (allBNested (m + 2) B) :=
   rankNested_le_maxRank (m + 2) (allBNested (m + 2) B) (chainNMeasureEI m q)
     (chainNMeasureEI_le_allB m q B hx hy)
+
+/-- **`EIrank` strictly drops on a reduce** — the other half of step 3, the count-carrying descent. For a
+`Reducing k q`, the reduce with the full graded multiplier lowers `chainNMeasureEI` in `nestedOrder`
+(`chainNReduce_descends`), and the reduced poly's degrees stay `≤ B` (degreeX non-increasing, degreeY
+`≤ +1`/reduce — the `B ≥ degreeY + 1` slack absorbs it), so `rankNested_lt` gives the strict `EIrank` drop. -/
+theorem EIrank_reduce_lt (k B : Nat) (q : MultiPoly (k + 2)) (hred : Reducing k q)
+    (hx : MultiPoly.degreeX q + 2 ≤ B) (hy : ∀ i : Fin (k + 2), MultiPoly.degreeY i q + 1 ≤ B) :
+    EIrank k B (chainNReduce k (fullMult k q) q) < EIrank k B q := by
+  unfold EIrank
+  refine rankNested_lt (k + 2) (allBNested (k + 2) B) (chainNMeasureEI k q)
+    (chainNMeasureEI k (chainNReduce k (fullMult k q) q)) ?_ (chainNReduce_descends k q hred)
+  refine chainNMeasureEI_le_allB k (chainNReduce k (fullMult k q) q) B ?_ ?_
+  · exact Nat.le_trans (Nat.add_le_add_right (degreeX_chainNReduce_fullMult_le k q) 2) hx
+  · intro i
+    exact Nat.le_trans (degreeY_chainNReduce_fullMult_growth_le k q i) (hy i)
 
 end MachLib.IterExpDepthN
