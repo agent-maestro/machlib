@@ -27,6 +27,7 @@ import MachLib.Safety.TemporalFrequency
 import MachLib.ProofSpine
 import MachLib.PolynomialEvidence
 import MachLib.MultiPoly
+import MachLib.MultiPolyDropAt
 import MachLib.PfaffianChain
 import MachLib.PfaffianFnBound
 import MachLib.AnalyticIdentityFeasibility
