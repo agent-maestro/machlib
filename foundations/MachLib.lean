@@ -187,6 +187,7 @@ import MachLib.FixedPointSat
 import MachLib.CoreModel
 import MachLib.EMLToC
 import MachLib.EMLToCRuntime
+import MachLib.CompositeRuntimeError
 
 /-!
 # MachLib — top-level aggregator
