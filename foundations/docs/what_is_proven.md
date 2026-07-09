@@ -238,6 +238,14 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     ```
     Arbitrary-depth *explicit* remains open: unlike depth-2/3 *finiteness*, the explicit depth step is a
     four-arm recursion over a `(depth)`-deep nested measure — a genuine build, not a mechanical mirror.
+  - **The bound is now a usable TOOL — computable zero bounds for concrete kernels (`c6942b0`).**
+    `khovBound p` (`MachLib.ChainExp2NoZeros`) states the bound in the *computable* syntactic degrees
+    (`chain2_khovanskii_bound_syntactic` over-bounds the noncomputable `innerRank` via
+    `innerRank_le_syntactic` + `invPhi_mono_ir`), so a concrete chain-2 EML kernel gets an explicit,
+    machine-checked (`by decide`) ceiling on its zero-crossings. Worked: `e^(e^x) − x·e^x` crosses zero
+    **≤ 47** times on any interval, `x·e^(e^x) − e^(2x)` **≤ 71** times (`khovBound_kernel*`) — an
+    explicit bound on the oscillations/sign-changes of an iterated-exp transcendental, a safety-relevant
+    quantity. sorryAx-free, `zero_count_bound_classical`-free.
   - **The general case is still cited — and it is an orphan.** A separate, more
     ambitious development — the bound for an *arbitrary* `PfaffianFunction` (general
     Pfaffian chains) — does rest on an axiom (`zero_count_bound_classical`) that
