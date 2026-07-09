@@ -170,6 +170,7 @@ import MachLib.IterExpDepthNRankRecReduce
 import MachLib.IterExpDepthNRankRec5p
 import MachLib.IterExpDepthNBudgetMono
 import MachLib.IterExpDepthNDegreeYTrimLift
+import MachLib.IterExpDepthNTrimQDegHelpers
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianAnalytic
 import MachLib.EMLEncoderAnalytic
