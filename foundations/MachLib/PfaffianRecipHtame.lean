@@ -164,4 +164,40 @@ theorem degreeY_node_value_low {M : Nat} (i : Fin (M + 3)) (hi : i.val ≤ M) :
         (if i = (⟨M + 1, by omega⟩ : Fin (M + 3)) then 1 else 0) = 0
   rw [if_neg hne2, if_neg hne1]; decide
 
+/-! ## Step-relation cross-linearity — the `nr` obligations for `chainExtend_preserves_EncRelLinear` -/
+
+/-- `degreeY` of a negation equals that of the argument (`neg p = sub 0 p`; the zero summand contributes 0).
+Local copy to avoid importing the heavy encoder-descent module. -/
+theorem degreeY_neg' {n : Nat} (i : Fin n) (p : MultiPoly n) :
+    MultiPoly.degreeY i (MultiPoly.neg p) = MultiPoly.degreeY i p := by
+  show Nat.max (MultiPoly.degreeY i (MultiPoly.const 0)) (MultiPoly.degreeY i p)
+     = MultiPoly.degreeY i p
+  exact Nat.max_eq_right (Nat.zero_le _)
+
+/-- **The recip step (`stepCC`) new relation is cross-linear**, given the value's `cTD` is degree-≤1 at
+every base index. `nr = −liftLastY(cTD cb w) · yₘ²`; at `j ≠ M` the square contributes 0, and
+`degreeY j (liftLastY(cTD cb w))` peels (`degreeY_liftLastY_low'`) to `degreeY ⟨j⟩ (cTD cb w) ≤ 1` (`hw`).
+This is `chainExtend_preserves_EncRelLinear`'s `hnr` for the reciprocal level, isolating everything to the
+value-`cTD` bound `hw` (which the affine value lemmas supply). -/
+theorem stepCC_nr_cross_linear {M : Nat} (cb : PfaffianChain M) (w : MultiPoly M)
+    (hw : ∀ j' : Fin M, MultiPoly.degreeY j' (chainTotalDeriv cb w) ≤ 1)
+    (j : Fin (M + 1)) (hj : j ≠ (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1))) :
+    MultiPoly.degreeY j
+        (MultiPoly.mul (MultiPoly.neg (MultiPoly.liftLastY (chainTotalDeriv cb w)))
+          (MultiPoly.mul (MultiPoly.varY (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1)))
+                         (MultiPoly.varY (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1))))) ≤ 1 := by
+  have hjM : j.val < M := by
+    have h1 := j.isLt
+    have h2 : j.val ≠ M := fun h => hj (Fin.ext h)
+    omega
+  have hvarY : MultiPoly.degreeY j (MultiPoly.varY (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1))) = 0 := by
+    show (if j = (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1)) then 1 else 0) = 0
+    rw [if_neg hj]
+  show MultiPoly.degreeY j (MultiPoly.neg (MultiPoly.liftLastY (chainTotalDeriv cb w)))
+      + (MultiPoly.degreeY j (MultiPoly.varY (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1)))
+        + MultiPoly.degreeY j (MultiPoly.varY (⟨M, Nat.lt_succ_self M⟩ : Fin (M + 1)))) ≤ 1
+  rw [degreeY_neg', MachLib.IterExpDepthN.degreeY_liftLastY_low' j hjM, hvarY]
+  have := hw ⟨j.val, hjM⟩
+  omega
+
 end MachLib.PfaffianRecipHtame
