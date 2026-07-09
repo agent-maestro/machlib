@@ -221,6 +221,23 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
     This is the first depth beyond 1 where the witness is *built* rather than assumed;
     depth-3+ would mirror the same arc with a deeper nested measure. It does **not**
     discharge the arbitrary-depth axiom below — that stands.
+  - **Depth-2 finiteness is now EXPLICIT — `∃N` upgraded to `N(degrees)`, as of `cb20568`.**
+    `chain2_khovanskii_bound_explicit` (`MachLib.ChainExp2NoZeros`) replaces the existential `∃N` with
+    a concrete, computable degree functional:
+    `zeros.length ≤ invPhi (Dx+2) (degreeY₁ p) (innerRank (Dx+2) p) (degreeY₀ p)` for every chain-2 `p`
+    with `degreeX p ≤ Dx`. It is the *effective* (quantitative) Khovanskii bound at chain-2 — an
+    explicit, level-indexed count (exponential in `degreeY₁`, inherent to this descent), not merely
+    finiteness. It is the SAME well-founded recursion as the unconditional bound, re-run carrying a
+    level-indexed budget `invPhi` in place of `∃N` (the naive invariant `levelBudget(degreeY₁, degreeY₀)`
+    provably fails — a reduce grows `degreeY₀` — so the budget separates within-level counting from
+    cross-level), with each arm discharged by machine-checked closure lemmas
+    (`invPhi_reduce`/`invPhi_trim_any`) plus degree-monotonicity through both arms. `#print axioms`:
+    ```
+    #print axioms MachLib.ChainExp2NoZeros.chain2_khovanskii_bound_explicit
+    #   ⇒ no zero_count_bound_classical, no sorryAx
+    ```
+    Arbitrary-depth *explicit* remains open: unlike depth-2/3 *finiteness*, the explicit depth step is a
+    four-arm recursion over a `(depth)`-deep nested measure — a genuine build, not a mechanical mirror.
   - **The general case is still cited — and it is an orphan.** A separate, more
     ambitious development — the bound for an *arbitrary* `PfaffianFunction` (general
     Pfaffian chains) — does rest on an axiom (`zero_count_bound_classical`) that
