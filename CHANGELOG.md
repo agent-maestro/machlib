@@ -95,6 +95,17 @@ transcendental over the cancelling determinant — is in the fragment. Scope: gl
 primitives (`sin`/`cos`/`tanh`/`arctan`/`abs`); the local-Lipschitz ones need per-node domain tracking
 through the nesting, a further extension. `sorryAx`-free.
 
+**Local-Lipschitz transcendental over an arithmetic subtree (`MachLib/AbsoluteFoldLocal.lean`).** The
+local analog of `pipeline_tr1_of_arith`: an `exp`/`log`/… node over an arithmetic subtree, where the
+primitive is Lipschitz only on `[lo,hi]` and both the computed and exact inputs are supplied to lie in
+`[lo,hi]`. `pipeline_tr1_of_arith_local` composes `evalEML_absErr` with `absenc_lip_local`, and
+`pipeline_exp_of_arith` (`L = exp hi`) / `pipeline_log_of_arith` (`L = 1/lo`) are the concrete instances
+(from `ExpLipschitz`/`TransNodes`). So the emitted-C certificate now reaches `exp(x·y − z·w)`,
+`log(…)`, etc. Honest scope: this is ONE local transcendental layer over arithmetic; FULL recursive
+local-Lipschitz nesting is harder — the domain condition at each node depends on the accumulated absolute
+error (existential), so range and error must propagate together (interval arithmetic with directed
+rounding). That coupling is the remaining open piece. `sorryAx`-free.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it
