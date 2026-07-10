@@ -82,6 +82,19 @@ already have bounded-domain Lipschitz bounds in `HyperbolicLipschitz` (`cosh R`/
 non-globally-Lipschitz primitives (`exp`, `log`, `sinh`, `cosh` — `tan` excluded, poles) now have absolute
 forward-error nodes. `sorryAx`-free.
 
+**Recursive nesting — arbitrary arithmetic + transcendental trees (`MachLib/AbsoluteFoldNest.lean`).** The
+fold previously stopped at ONE transcendental layer; this closes the recursion. `IsFold` allows `tr1`
+nodes ANYWHERE (transcendental-of-transcendental, arithmetic-of-transcendental, …) for the primitives a
+`globLip` predicate marks globally-Lipschitz. **`nested_fold`/`pipeline_nested`**: for any `IsFold e`, the
+emitted C's value, through `toR`, is within SOME absolute bound of the exact `exactRn … e` over the whole
+nested tree. The move that makes recursion clean: the bound is EXISTENTIAL (`∃ E, AbsEnc E …`), so the
+`tr1` step needs no weakening (the witnessed `E` may depend on the float eval) — each node just assembles
+`E` from the sub-bounds via its `absenc_*` lemma. `exactRn` (exact interpretation with a `tr1` case) is the
+only new recursive def (`noncomputable`, mutual-with-`List`). Non-vacuity: `sin(x·y − z·w)` — a
+transcendental over the cancelling determinant — is in the fragment. Scope: globally-Lipschitz `tr1`
+primitives (`sin`/`cos`/`tanh`/`arctan`/`abs`); the local-Lipschitz ones need per-node domain tracking
+through the nesting, a further extension. `sorryAx`-free.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it

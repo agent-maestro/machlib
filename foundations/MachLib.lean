@@ -228,6 +228,7 @@ import MachLib.AbsoluteBridge
 import MachLib.AbsoluteFold
 import MachLib.ExpLipschitz
 import MachLib.TransNodes
+import MachLib.AbsoluteFoldNest
 
 /-!
 # MachLib — top-level aggregator
