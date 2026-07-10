@@ -73,6 +73,15 @@ the sound closed-interval MVT), and `absenc_exp_local` assembles the `exp` forwa
 `Ex`, both in `[lo,hi]` ⟹ output within `Eround + (exp hi)·Ex`. So the fold's transcendental layer now
 reaches the unbounded-derivative primitives, not just the globally-Lipschitz ones. `sorryAx`-free.
 
+**Remaining local-Lipschitz primitives — `log`/`sinh`/`cosh` (`MachLib/TransNodes.lean`).** Completes the
+unbounded-derivative set. `log_lip_lt`/`log_lip_local`: `log` is `1/lo`-Lipschitz on `[lo, ∞)` (`lo > 0`) —
+the MVT slope `1/c ≤ 1/lo` for `c ≥ lo`, via `mean_value_theorem_ct` + `HasDerivAt_log_pos` +
+`div_le_div_pos`; `absenc_log_local` gives its forward-error node (`Eround + (1/lo)·Ex`). `sinh`/`cosh`
+already have bounded-domain Lipschitz bounds in `HyperbolicLipschitz` (`cosh R`/`sinh R` on `|·| ≤ R`);
+`absenc_sinh_local`/`absenc_cosh_local` wrap them into `absenc_lip_local` nodes. So all five
+non-globally-Lipschitz primitives (`exp`, `log`, `sinh`, `cosh` — `tan` excluded, poles) now have absolute
+forward-error nodes. `sorryAx`-free.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it
