@@ -290,6 +290,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The general arithmetic-tree fold: pipeline_arith bounds the emitted C for ANY IsArith EML tree (lit/var/+/-/*), of which pipeline_det is the detEML instance. Invariant: sorryAx-free (a real structural induction over IsArith using the absenc_* nodes + emitC_correct).",
+      "id": "pipeline-arith-general-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pipeline_arith",
+        "ARBITRARY literal/variable/`+`/`−`/`×` EML tree"
+      ],
+      "module": "MachLib.AbsoluteFold",
+      "theorem": "Certcom.pipeline_arith",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

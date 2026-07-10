@@ -31,6 +31,15 @@ the relative pipeline, now VALID UNDER CANCELLATION (`X·Y ≈ Z·W`, where `Ren
 sign hypothesis on the inputs. `sorryAx`-free; assembled from two `br.mul` roundings + one `br.sub` via
 `absenc_sub_rounded` + `emitC_correct`.
 
+**Generalised to any arithmetic tree (`MachLib/AbsoluteFold.lean`).** `pipeline_det` was one kernel; this
+folds the `absenc_*` nodes over an ARBITRARY literal/variable/`+`/`−`/`×` EML tree. Recursive `exactR`
+(exact real interpretation) and `absErr` (accumulated absolute bound) — `noncomputable`, mutual with a
+`List EML` companion like `evalEML` so the node equations reduce structurally — plus one structural
+induction over the fragment `IsArith`. **`pipeline_arith`**: for any `IsArith e`, the value the emitted C
+computes, through `toR`, is within `absErr … e` of the exact `exactR … e`; every node discharged by its
+`absenc_*` lemma + the bridge rounding, leaves exact, cancellation handled by `absenc_sub`. `pipeline_det`
+is now literally the `detEML` instance (`isArith_detEML`). `sorryAx`-free.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it
