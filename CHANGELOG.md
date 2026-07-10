@@ -50,8 +50,18 @@ unary primitive `f`: if `f` is `L`-Lipschitz, the input is within `Ex`, and the 
 `Eround`, then the output is within `Eround + L·Ex` — input error amplified by the Lipschitz sensitivity,
 plus the primitive's own rounding. This is the reusable heart of the `tr1` (`exp`/`sin`/`tanh`/…) fold
 node; instantiating it per primitive uses MachLib's existing Lipschitz lemmas (`TrigLipschitz`,
-`HyperbolicLipschitz`) + the primitive's `RoundsW` spec. `sorryAx`-free. (Wiring it through the EML
-`tr1`/`tr2` fold — a per-primitive real-map + Lipschitz + rounding interface — is the next brick.)
+`HyperbolicLipschitz`) + the primitive's `RoundsW` spec. `sorryAx`-free.
+
+**Transcendental over an arithmetic subtree, through the emitted C — `pipeline_tr1_of_arith`
+(`MachLib/AbsoluteFold.lean`).** A unary primitive `t` (real semantics `f`, `L`-Lipschitz) applied to ANY
+arithmetic `e`: the emitted C's value, through `toR`, is within `Eround + L·(absErr … e)` of the exact
+`f (exactR … e)` — the arithmetic fold's absolute error amplified by the primitive's Lipschitz
+sensitivity, plus its rounding. Composes `evalEML_absErr` (the whole arithmetic fold) with `absenc_lip`
+across `emitC_correct`, so the absolute cancellation-tolerant certificate now reaches one transcendental
+layer over any arithmetic tree (e.g. `sin(x·y − z·w)`). Honest scope: covers the GLOBALLY-Lipschitz
+primitives (`sin`/`cos`/`tanh`/`arctan`/`abs`, `L = 1`); `exp`/`log`/`sinh`/`cosh`/`tan` need a
+local-Lipschitz variant, and the binary `tr2` primitives (`eml`, `pow`) decompose into unary + arithmetic
+nodes — the remaining follow-ons. `sorryAx`-free.
 
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 

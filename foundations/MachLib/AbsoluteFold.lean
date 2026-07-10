@@ -132,4 +132,37 @@ instance of the general `pipeline_arith`. -/
 theorem isArith_detEML : IsArith detEML :=
   .sub _ _ (.mul _ _ (.var "x") (.var "y")) (.mul _ _ (.var "z") (.var "w"))
 
+/-- `f(e)` — a unary primitive `t` applied to an arithmetic subtree `e`. -/
+def tr1OfEML (t : Trans1) (e : EML) : EML := .tr1 t e
+
+/-- **A transcendental over an arithmetic subtree, through the emitted C.** A unary primitive `t` — with
+real semantics `f`, `L`-Lipschitz — applied to ANY arithmetic `e` (`x·y − z·w`, a cancelling difference,
+etc.): the value the emitted C computes, through `toR`, is within `Eround + L·(absErr … e)` of the exact
+`f (exactR … e)`. The arithmetic fold's absolute error on `e` is amplified by the primitive's Lipschitz
+sensitivity `L`, plus the primitive's own rounding `Eround`. This composes `evalEML_absErr` (the whole
+arithmetic fold) with `absenc_lip` (the transcendental node) across `emitC_correct` — so the absolute,
+cancellation-tolerant certificate now reaches one transcendental layer over any arithmetic tree.
+Instantiate `f`/`L`/`Eround` per primitive: `TrigLipschitz`/`HyperbolicLipschitz` give `L` (`= 1` for
+sin/cos/tanh/arctan/abs — the GLOBALLY-Lipschitz, bounded-derivative primitives this covers), a `RoundsW`
+spec gives `Eround`. Honest scope: `exp`/`log`/`sinh`/`cosh`/`tan` have unbounded derivative and are NOT
+globally Lipschitz, so they need a LOCAL-Lipschitz variant (an `L` valid on a bounded domain, with a
+range hypothesis on the input); and the binary `tr2` primitives (`eml = exp − log`, `pow`) are likewise
+non-Lipschitz and instead DECOMPOSE into unary + arithmetic nodes (`eml` is `absenc_sub` of two `tr1`s —
+exactly `absenc_sub_rounded`). Those two are the remaining follow-ons. -/
+theorem pipeline_tr1_of_arith {toR : Float → MachLib.Real} (br : FPBridge toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (f : MachLib.Real → MachLib.Real) (L Eround : MachLib.Real)
+    (hLnn : 0 ≤ L) (hL : ∀ p q : MachLib.Real, abs (f p - f q) ≤ L * abs (p - q))
+    (e : EML) (he : IsArith e)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - f (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + L * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (f (exactR toR env e)) := by
+  rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 (tr1OfEML t e) env]
+  show AbsEnc (Eround + L * absErr toR env e)
+      (toR (i1 t (evalEML i1 i2 env e).toF)) (f (exactR toR env e))
+  exact absenc_lip hLnn hL (evalEML_absErr br i1 i2 env e he) hround
+
 end Certcom
