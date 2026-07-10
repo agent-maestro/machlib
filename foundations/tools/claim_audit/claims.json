@@ -223,6 +223,21 @@
         "HasDerivAt_inv",
         "ofReduceBool"
       ]
+    },
+    {
+      "_comment": "The mixed-capstone showcase: e^x − log x has finitely many zeros. A genuine exp+log function, so — unlike the pure-exp '47' entry — it LEGITIMATELY uses the analytic identity theorem + log; those are NOT forbidden. The invariant is only that this concrete instance stays free of hidden `sorry` and the classical zero-count escape hatch, i.e. it inherits exactly the mixed capstone's honest footprint.",
+      "id": "eml-barrier-bounded-zeros-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eml_barrier_bounded_zeros",
+        "e^x − log x"
+      ],
+      "module": "MachLib.KhovanskiiConcrete",
+      "theorem": "MachLib.KhovanskiiConcrete.eml_barrier_bounded_zeros",
+      "forbid_axioms": [
+        "sorryAx",
+        "zero_count_bound_classical"
+      ]
     }
   ]
 }

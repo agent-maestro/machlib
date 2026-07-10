@@ -19,6 +19,16 @@ turns the "at most 47 real zeros" figure from a hand-evaluated recurrence into a
 alone — no `sorryAx`, no `zero_count_bound_classical`, and (being a pure-exp barrier) no analyticity, log, or
 reciprocal.
 
+The same file also exercises the **mixed** capstone on a genuinely exp+log function.
+**`MachLib.KhovanskiiConcrete.eml_barrier_bounded_zeros`**: `e^x − log x` (the fundamental `eml` operation
+applied to `x`) has finitely many zeros on any interval in the positive reals containing `1`, a machine-checked
+instance of `eml_eval_boundedZeros_unconditional`. This one is qualitative (a finite ceiling exists) and carries
+the honest *mixed* footprint — `rolle` plus the real-analyticity identity theorem
+(`analytic_finite_zeros_compact`) and the logarithm — but is still `sorryAx`- and
+`zero_count_bound_classical`-free. Together the two showcases pin the honest distinction concretely: the
+pure-exp bound is Rolle-only with a literal ceiling; the mixed bound adds the identity theorem and gives
+finiteness without an explicit constant.
+
 ### exp arm CLOSED — the full mixed exp/log/reciprocal EML barrier bound is unconditional (`MachLib/PfaffianExpHard.lean`)
 
 **`MachLib.eml_eval_boundedZeros_unconditional`** — the Khovanskii-type finiteness bound for arbitrary-depth

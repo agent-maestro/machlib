@@ -211,5 +211,7 @@ section Khovanskii
 #print axioms MachLib.eml_eval_boundedZeros_unconditional
 -- Concrete showcase: e^(e^x) − x·e^x has ≤ 47 real zeros (rolle-only, kernel-checked bound).
 #print axioms MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47
+-- Concrete MIXED showcase: e^x − log x has finitely many zeros (rolle + identity theorem + log).
+#print axioms MachLib.KhovanskiiConcrete.eml_barrier_bounded_zeros
 
 end Khovanskii

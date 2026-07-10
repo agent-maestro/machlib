@@ -1,6 +1,7 @@
 import MachLib.IterExpDepthNExplicit
 import MachLib.ChainExp2Bound
 import MachLib.PfaffianGeneralBridge
+import MachLib.PfaffianExpHard
 
 /-!
 # A concrete Khovanskii bound: `e^(e^x) − x·e^x` has at most 47 real zeros
@@ -63,5 +64,38 @@ theorem eexp_barrier_zero_count_le_47 (a b : Real) (hab : a < b) (ha : a < 0) (h
   have hle := hbound zeros hnd hz
   have h47 : Ndep 0 1 = 47 := by decide
   rw [h47] at hle; exact hle
+
+/-! ## The mixed exp/log capstone, on a concrete function
+
+The bound above is the pure-exponential (Rolle-only) explicit ceiling. The result the whole `exp_hard` arc
+unlocked is broader — the **mixed** exp/log/reciprocal finiteness `eml_eval_boundedZeros_unconditional`. Here
+it is on the fundamental exp-minus-log operation applied to `x`. -/
+
+/-- `e^x − log x` as an `EMLTree`: the fundamental `eml` operation (`e^(·) − log(·)`) with both arguments `x`. -/
+def emlBarrier : EMLTree := EMLTree.eml EMLTree.var EMLTree.var
+
+/-- The tree evaluates to the honest function `e^x − log x`. -/
+theorem emlBarrier_eval (z : Real) : emlBarrier.eval z = Real.exp z - Real.log z := rfl
+
+/-- **`e^x − log x` has finitely many zeros on any interval in the positive reals** — a machine-checked
+instance of the FULL mixed exp/log capstone (`eml_eval_boundedZeros_unconditional`, the result the `exp_hard`
+closure unlocked). The interval must lie in `(0, ∞)` (so `log x` is defined and its argument stays positive)
+and contain `1`, where the value is `e^1 − log 1 = e > 0`. Qualitative (a finite ceiling `K` exists), resting
+on `rolle` plus the real-analyticity identity theorem — the honest footprint of the mixed case. -/
+theorem eml_barrier_bounded_zeros (a b : Real) (hab : a < b)
+    (ha : 0 < a) (h1a : a < 1) (h1b : 1 < b) :
+    ∃ K : Nat, ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ emlBarrier.eval z = 0) → zeros.length ≤ K := by
+  refine eml_eval_boundedZeros_unconditional emlBarrier a b hab ?_ ?_
+  · -- LogArgPosOn (eml var var) (Icc a b) : both sub-args trivial, and log-arg `x` > 0 on [a,b]
+    refine ⟨trivial, trivial, ?_⟩
+    intro x hx
+    show (0 : Real) < x
+    exact MachLib.Real.lt_of_lt_of_le ha hx.1
+  · -- non-vanishing at x = 1: e^1 − log 1 = e^1 − 0 = e > 0
+    refine ⟨1, h1a, h1b, ?_⟩
+    rw [emlBarrier_eval]
+    have h : Real.exp 1 - Real.log 1 = Real.exp 1 := by rw [MachLib.Real.log_one]; mach_ring
+    rw [h]; exact ne_of_gt (Real.exp_pos 1)
 
 end MachLib.KhovanskiiConcrete
