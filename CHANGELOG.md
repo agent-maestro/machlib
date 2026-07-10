@@ -106,6 +106,19 @@ local-Lipschitz nesting is harder — the domain condition at each node depends 
 error (existential), so range and error must propagate together (interval arithmetic with directed
 rounding). That coupling is the remaining open piece. `sorryAx`-free.
 
+**FULL local-Lipschitz nesting — via magnitude propagation (`MachLib/AbsoluteFoldNestMag.lean`).** Closes
+the coupling above for the symmetric-domain locals. The move: propagate a MAGNITUDE bound `M ≥ |exactRn e|`
+(clean — `|a+b| ≤ M_a+M_b`, `|a·b| ≤ M_a·M_b`, no interval sign-cases) alongside the existential error `E`;
+the FLOAT-image magnitude is then DERIVED, not tracked (`|toR (evalEML e).toF| ≤ M + E` straight from
+`AbsEnc`), so a local `tr1` node over a symmetric domain uses `R = M + E` (both inputs land in `[-R,R]`)
+with per-primitive `LipOf t R` / `MagOf t M`. `nested_fold_mag`/`pipeline_nested_mag` carry `∃ E M,
+AbsEnc E … ∧ |exactRn e| ≤ M` and reuse `exactRn`/`IsFold` unchanged. `pipeline_nested_exp` is the concrete
+`exp` instance (Lipschitz `exp R` on `[-R,R]` from `exp_lip_local`; magnitude `exp M`), so `exp(exp(x·y −
+z·w))` — a local primitive nested over itself over cancelling arithmetic — is covered end-to-end at
+ARBITRARY depth (example: `exp(exp x)` ∈ the fragment). `log` stays out (one-sided domain). So both the
+globally-Lipschitz (`AbsoluteFoldNest`) and the symmetric-local (`exp`/`sinh`/`cosh`) recursive nestings
+are now done. `sorryAx`-free.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it
