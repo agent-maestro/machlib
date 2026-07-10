@@ -304,6 +304,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "Recursive nesting of arithmetic + globally-Lipschitz transcendentals, any depth, through the emitted C. Invariant: sorryAx-free (a real structural induction over IsFold using the absenc_* nodes + emitC_correct + absenc_lip).",
+      "id": "pipeline-nested-glob-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "nested_fold`/`pipeline_nested",
+        "for any `IsFold e`"
+      ],
+      "module": "MachLib.AbsoluteFoldNest",
+      "theorem": "Certcom.pipeline_nested",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "FULL local-Lipschitz nesting for the symmetric-domain locals (exp), via magnitude propagation — exp nested to arbitrary depth over cancelling arithmetic. Invariant: sorryAx-free (magnitude fold + absenc_lip_local at R=M+E + exp_lip_local/exp_monotone).",
+      "id": "pipeline-nested-exp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pipeline_nested_exp",
+        "the concrete\n`exp` instance"
+      ],
+      "module": "MachLib.AbsoluteFoldNestMag",
+      "theorem": "Certcom.pipeline_nested_exp",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
