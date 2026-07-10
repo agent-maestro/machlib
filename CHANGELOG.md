@@ -45,6 +45,14 @@ The `neg` node is included: `FPBridge` gains a `neg` field — an EQUALITY `toR 
 absolute error through unchanged (`|(-flx)−(-xe)| = |flx−xe|`). So `IsArith` / `pipeline_arith` now cover
 literal / variable / `+` / `−` / `×` / **negation**.
 
+**Transcendental node core — `absenc_lip` (`MachLib/AbsoluteError.lean`).** The forward-error rule for a
+unary primitive `f`: if `f` is `L`-Lipschitz, the input is within `Ex`, and the primitive rounds within
+`Eround`, then the output is within `Eround + L·Ex` — input error amplified by the Lipschitz sensitivity,
+plus the primitive's own rounding. This is the reusable heart of the `tr1` (`exp`/`sin`/`tanh`/…) fold
+node; instantiating it per primitive uses MachLib's existing Lipschitz lemmas (`TrigLipschitz`,
+`HyperbolicLipschitz`) + the primitive's `RoundsW` spec. `sorryAx`-free. (Wiring it through the EML
+`tr1`/`tr2` fold — a per-primitive real-map + Lipschitz + rounding interface — is the next brick.)
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it

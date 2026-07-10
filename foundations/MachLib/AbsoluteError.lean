@@ -134,6 +134,26 @@ theorem absenc_mul {flx fly flp xe ye Ex Ey : Real}
     exact le_trans (abs_add (flx * (fly - ye)) ((flx - xe) * ye)) (add_le_add_both ha hb)
   exact le_trans htri (add_le_add_both h1 h2)
 
+/-- **Lipschitz / transcendental node.** The general shape for a unary primitive `f` (exp, sin, tanh, …):
+if `f` is `L`-Lipschitz, the input `flx` is within `Ex` of `xe`, and the computed `flf` is within the
+primitive's own rounding error `Eround` of `f flx` (the primitive applied to the input), then `flf` is
+within `Eround + L·Ex` of the exact `f xe`. The input error is amplified by the Lipschitz constant (an
+`L`-fold sensitivity) and the primitive's rounding is added — the standard forward-error rule for a
+transcendental. Instantiating it per primitive (e.g. `sin`/`cos`/`tanh`: `L = 1`) needs that primitive's
+Lipschitz lemma (MachLib has them in `TrigLipschitz`/`HyperbolicLipschitz`) + its `RoundsW` spec. -/
+theorem absenc_lip {f : Real → Real} {L flx xe Ex flf Eround : Real}
+    (hLnn : 0 ≤ L) (hL : ∀ p q : Real, abs (f p - f q) ≤ L * abs (p - q))
+    (hx : AbsEnc Ex flx xe) (hround : abs (flf - f flx) ≤ Eround) :
+    AbsEnc (Eround + L * Ex) flf (f xe) := by
+  unfold AbsEnc at hx ⊢
+  have htri : abs (flf - f xe) ≤ abs (flf - f flx) + abs (f flx - f xe) := by
+    have h := abs_add (flf - f flx) (f flx - f xe)
+    have e : (flf - f flx) + (f flx - f xe) = flf - f xe := by mach_mpoly [flf, f flx, f xe]
+    rw [e] at h; exact h
+  have h2 : abs (f flx - f xe) ≤ L * Ex :=
+    le_trans (hL flx xe) (mul_le_mul_of_nonneg_left hx hLnn)
+  exact le_trans htri (add_le_add_both hround h2)
+
 /-- **Capstone — the `eml` node as a two-line instance of the general fold.** If `flx`/`fly`
 correctly round the exact leaves `xe`/`ye` and `fld` rounds `flx − fly`, then
 `|fld − (xe − ye)| ≤ u·(2+u)·(|xe| + |ye|)`. This is *exactly* the bound
