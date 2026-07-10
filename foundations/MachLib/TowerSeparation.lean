@@ -1,4 +1,5 @@
 import MachLib.IterExpDepthNExplicit
+import MachLib.EMLPfaffian
 
 /-!
 # Tower separation via the uniform Khovanskii zero bound (scoping + first brick)
@@ -24,9 +25,21 @@ a function (`sin (k·π) = 0` for every `k`), so `sin` is separated from the exp
 - `not_expChainFn_of_excess_zeros` — **PROVED** here: the general separator. A
   function with the "excess zeros for every `(m,D)`" property is not an exp-chain
   function. Two-line reduction to `chainN_khovanskii_bound_explicit` + `omega`.
-- `sin_not_expChainFn` — **STATED**; its one remaining brick is the enumeration
-  `sin (k·π) = 0` for `k = 1 … Ndep m D + 1` (from `sin_pi` + `sin_periodic`),
-  packaged as the excess-zeros witness. Left as the next step.
+- `sin_excess_zeros` / `sin_not_expChainFn` — **PROVED, unconditional.** `sin` is not
+  an iterated-exp chain function of any order/degree. Witness: `π, 2π, …,
+  (Ndep m D + 1)·π` (each `sin (k·π) = 0` by `sin_natCast_mul_pi`), reusing the
+  `sin`-zero machinery from `sin_not_in_eml_any_depth`.
+
+## Relation to prior work (honest)
+
+The `sin`/`cos`-∉-EML separations already exist here for the EML-TREE model
+(`sin_not_in_eml_any_depth`, `cos_not_in_eml_any_depth`), each via this same
+zero-count argument. What is NEW is the GENERAL separator
+`not_expChainFn_of_excess_zeros`: it abstracts "excess zeros ⟹ not a chain
+function" once, so ANY oscillatory tower (Bessel, Airy, Si, Ci) is separated by
+merely supplying its excess-zeros witness — no bespoke per-function proof.
+`sin_not_expChainFn` is that abstraction's first instantiation, at the raw
+iterated-exp-chain level, reusing the existing `sin` enumeration.
 
 ## Scope (honest)
 
@@ -94,10 +107,45 @@ def SinExcessZeros : Prop :=
     (∃ z, a < z ∧ z < b ∧ sin z ≠ 0) ∧
     Ndep m D < zeros.length
 
-/-- **`sin` is separated from the exp tower, modulo the enumeration witness.** Once
-`SinExcessZeros` is discharged, `sin` is not an iterated-exp chain function of any
-order or degree — the rigorous form of "no exp–log operator computes `sin`". -/
-theorem sin_not_expChainFn (h : SinExcessZeros) : ¬ IsExpChainFn sin :=
-  not_expChainFn_of_excess_zeros sin h
+/-- **The `sin` witness — DISCHARGED.** For each budget `(m, D)`, the interval
+`(0, (Ndep m D + 2)·π)` carries the `Ndep m D + 1` distinct zeros `π, 2π, …,
+(Ndep m D + 1)·π` (each `sin (k·π) = 0`), with `sin 1 > 0` for non-vanishing.
+Reuses the `sin`-zero enumeration already built for `sin_not_in_eml_any_depth`
+(`EMLPfaffian.lean`): `sin_natCast_mul_pi`, `sin_zeros_list_nodup`,
+`natCast_mul_pi_{pos,lt}`, `sin_one_pos`. -/
+theorem sin_excess_zeros : SinExcessZeros := by
+  intro m D
+  refine ⟨0, natCast (Ndep m D + 2) * pi,
+          (List.range (Ndep m D + 1)).map (fun i => natCast (i + 1) * pi),
+          natCast_mul_pi_pos (by omega), sin_zeros_list_nodup (Ndep m D), ?_, ?_, ?_⟩
+  · -- every listed point is a zero of sin inside the interval
+    intro z hz
+    simp only [List.mem_map, List.mem_range] at hz
+    obtain ⟨i, hi_lt, hzeq⟩ := hz
+    refine ⟨?_, ?_, ?_⟩
+    · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
+    · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
+    · rw [← hzeq]; exact sin_natCast_mul_pi (i + 1)
+  · -- sin does not vanish identically: sin 1 > 0, and 1 lies in the interval
+    refine ⟨1, zero_lt_one_ax, ?_, ?_⟩
+    · have h_chain : natCast 1 * pi < natCast (Ndep m D + 2) * pi :=
+        natCast_mul_pi_lt (by omega)
+      have h1 : natCast (1 : Nat) = (1 : Real) := by
+        rw [show (1 : Nat) = 0 + 1 by rfl, natCast_succ, natCast_zero, zero_add]
+      rw [h1, one_mul_thm] at h_chain
+      exact lt_trans_ax pi_gt_one h_chain
+    · intro heq
+      have hpos : (0 : Real) < sin 1 := sin_one_pos
+      rw [heq] at hpos
+      exact lt_irrefl_ax 0 hpos
+  · -- the list has Ndep m D + 1 > Ndep m D entries
+    rw [List.length_map, List.length_range]; omega
+
+/-- **`sin` is separated from the exp tower — UNCONDITIONAL.** `sin` is not an
+iterated-exp chain function of any order or degree: the rigorous form of "no
+exp operator computes `sin`". Parallels the EML-tree result `sin_not_in_eml_any_depth`
+(`EMLPfaffian.lean`) at the raw iterated-exp-chain level, via the general separator. -/
+theorem sin_not_expChainFn : ¬ IsExpChainFn sin :=
+  not_expChainFn_of_excess_zeros sin sin_excess_zeros
 
 end MachLib
