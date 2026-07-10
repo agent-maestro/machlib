@@ -142,4 +142,33 @@ theorem isChainFnVal_deriv {f : Real → Real} (hf : IsChainFnVal f) :
   rw [funext hfeq]
   exact hd
 
+/-- The `i`-th total-derivative iterate of the chain function `chainNFn N p`. -/
+noncomputable def chainDerivIter (N : Nat) (p : MultiPoly N) : Nat → PfaffianFn
+  | 0     => chainNFn N p
+  | i + 1 => chainTotalDerivative (chainDerivIter N p i)
+
+/-- Every iterate is coherent everywhere: the derivation preserves the underlying chain
+(`chainTotalDerivative` keeps `.chain`), whose coherence is unconditional at the base. -/
+theorem chainDerivIter_coherent (N : Nat) (p : MultiPoly N) (i : Nat) (x : Real) :
+    (chainDerivIter N p i).chain.IsCoherentAt x := by
+  induction i with
+  | zero => exact IterExpChain_isCoherentAt N x
+  | succ k ih => exact ih
+
+/-- **Every chain function has a full derivative tower.** Iterating `isChainFnVal_deriv`
+via `chainDerivIter`: for any `IsChainFnVal f` there is a tower `d` with `d 0 = f` and
+each `d (i+1)` the derivative of `d i` at every point — the `IsDerivTower` shape that
+`IsDiffAlg` consumes. So the Pfaffian bridge `IsChainFnVal f → IsDiffAlg f` reduces to a
+SINGLE remaining step: a nonzero polynomial relation among `d 0, …, d (r+1)` (algebraic
+dependence of `r+2` elements in the transcendence-degree-`(r+1)` ring `ℝ[x, f₁,…,f_r]`).
+(The per-level "each `d i` is itself a chain-function VALUE" refinement is true but needs
+a small HEq — `PfaffianFn.chain`'s type depends on `.n` — so it is deferred; the tower's
+structural content here needs only coherence.) -/
+theorem isChainFnVal_derivTower {f : Real → Real} (hf : IsChainFnVal f) :
+    ∃ d : Nat → Real → Real, d 0 = f ∧ (∀ i x, HasDerivAt (d i) (d (i + 1) x) x) := by
+  obtain ⟨N, p, hfeq⟩ := hf
+  refine ⟨fun i => (chainDerivIter N p i).eval, (funext hfeq).symm, ?_⟩
+  intro i x
+  exact hasDerivAt_eval_natural (chainDerivIter N p i) x (chainDerivIter_coherent N p i x)
+
 end MachLib
