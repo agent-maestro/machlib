@@ -231,6 +231,7 @@ import MachLib.TransNodes
 import MachLib.AbsoluteFoldNest
 import MachLib.AbsoluteFoldLocal
 import MachLib.AbsoluteFoldNestMag
+import MachLib.CertifyNested
 
 /-!
 # MachLib — top-level aggregator
