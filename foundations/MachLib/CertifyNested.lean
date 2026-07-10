@@ -59,13 +59,21 @@ theorem pipeline_nested_glob {toR : Float → MachLib.Real} (br : FPBridge toR)
   pipeline_nested br realOfGlob (fun _ => 1) i1 i2 r1 r2 hrt1 hrt2 env
     (fun _ _ => le_of_lt zero_lt_one_ax) globLip_lipschitz hround e he
 
-/-! ## `pipeline_nested_std` — the full symmetric-domain fold (adds `exp`/`sinh` to the globals)
+/-! ## `pipeline_nested_std` — the full symmetric-domain fold (adds `exp`/`sinh`/`cosh` to the globals)
 
-Via `nested_fold_mag` (magnitude propagation), covering `{sin, cos, tanh, atan, exp, sinh}` — every
-supported primitive whose Lipschitz constant is nonneg for all `R` (so `hLipNonneg` discharges without a
-sign hypothesis). `cosh` is the sole omission: its tight constant `sinh R` is negative for `R < 0`, which
-`nested_fold_mag`'s `∀ R` non-negativity hypothesis rejects (a follow-on needs an `R ≥ 0`-threaded
-variant). `atan`'s magnitude uses `|atan x| ≤ |x| ≤ M`; `exp`/`sinh` their monotone bounds. -/
+Via `nested_fold_mag` (magnitude propagation), covering `{sin, cos, tanh, atan, exp, sinh, cosh}` — all
+seven supported primitives with a symmetric domain. Each Lipschitz constant is chosen non-negative for
+ALL `R` (so `hLipNonneg` discharges without a sign hypothesis): `1` for the globals, `exp R` for `exp`,
+`cosh R` for `sinh` and `cosh` — for `cosh` this is the LOOSER constant (the tight one is `sinh R`, which
+is negative for `R < 0`), justified by `sinh R ≤ cosh R`. `atan`'s magnitude uses `|atan x| ≤ |x| ≤ M`;
+`exp`/`sinh`/`cosh` their monotone bounds. -/
+
+/-- `sinh R ≤ cosh R` (`cosh R − sinh R = exp(−R) > 0`) — lets `cosh` use the non-negative `cosh R` as
+its `[-R,R]` Lipschitz constant instead of the sign-indefinite tight `sinh R`. -/
+theorem sinh_le_cosh (R : MachLib.Real) : sinh R ≤ cosh R := by
+  have h : (0 : MachLib.Real) ≤ cosh R - sinh R := by
+    rw [cosh_sub_sinh_eq_exp_neg R]; exact le_of_lt (exp_pos (-R))
+  exact le_of_sub_nonneg h
 
 /-- Real semantics of the `StdLip` primitive set. -/
 noncomputable def realOfStd : Trans1 → MachLib.Real → MachLib.Real
@@ -75,16 +83,19 @@ noncomputable def realOfStd : Trans1 → MachLib.Real → MachLib.Real
   | .atan => atan
   | .exp => exp
   | .sinh => sinh
+  | .cosh => cosh
   | _ => id
 
 /-- The primitives `pipeline_nested_std` covers. -/
 def StdLip (t : Trans1) : Prop :=
-  t = .sin ∨ t = .cos ∨ t = .tanh ∨ t = .atan ∨ t = .exp ∨ t = .sinh
+  t = .sin ∨ t = .cos ∨ t = .tanh ∨ t = .atan ∨ t = .exp ∨ t = .sinh ∨ t = .cosh
 
-/-- Per-primitive Lipschitz constant on `[-R, R]`: `1` (globals), `exp R` (`exp`), `cosh R` (`sinh`). -/
+/-- Per-primitive Lipschitz constant on `[-R, R]`: `1` (globals), `exp R` (`exp`), `cosh R`
+(`sinh`, and — looser — `cosh`). -/
 noncomputable def LipStd : Trans1 → MachLib.Real → MachLib.Real
   | .exp => fun R => exp R
   | .sinh => fun R => cosh R
+  | .cosh => fun R => cosh R
   | _ => fun _ => 1
 
 /-- Per-primitive output magnitude for `|input| ≤ M`. -/
@@ -92,21 +103,23 @@ noncomputable def MagStd : Trans1 → MachLib.Real → MachLib.Real
   | .atan => fun M => M
   | .exp => fun M => exp M
   | .sinh => fun M => sinh M
+  | .cosh => fun M => cosh M
   | _ => fun _ => 1
 
 theorem stdLip_nonneg (t : Trans1) (R : MachLib.Real) (h : StdLip t) : 0 ≤ LipStd t R := by
-  rcases h with rfl | rfl | rfl | rfl | rfl | rfl
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact le_of_lt zero_lt_one_ax
   · exact le_of_lt zero_lt_one_ax
   · exact le_of_lt zero_lt_one_ax
   · exact le_of_lt zero_lt_one_ax
   · exact le_of_lt (exp_pos R)
   · exact le_of_lt (cosh_pos R)
+  · exact le_of_lt (cosh_pos R)
 
 theorem stdLip_lipschitz (t : Trans1) (R : MachLib.Real) (h : StdLip t) (p q : MachLib.Real)
     (hp : abs p ≤ R) (hq : abs q ≤ R) :
     abs (realOfStd t p - realOfStd t q) ≤ LipStd t R * abs (p - q) := by
-  rcases h with rfl | rfl | rfl | rfl | rfl | rfl
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · simp only [realOfStd, LipStd]; rw [one_mul_thm]; exact sin_lipschitz p q
   · simp only [realOfStd, LipStd]; rw [one_mul_thm]; exact cos_lipschitz p q
   · simp only [realOfStd, LipStd]; rw [one_mul_thm]; exact tanh_lipschitz p q
@@ -115,10 +128,13 @@ theorem stdLip_lipschitz (t : Trans1) (R : MachLib.Real) (h : StdLip t) (p q : M
     exact exp_lip_local (-R) R p q (abs_le_iff.mp hp).1 (abs_le_iff.mp hp).2
       (abs_le_iff.mp hq).1 (abs_le_iff.mp hq).2
   · simp only [realOfStd, LipStd]; exact sinh_lipschitz_bound hp hq
+  · simp only [realOfStd, LipStd]
+    exact le_trans (cosh_lipschitz_bound hp hq)
+      (mul_le_mul_of_nonneg_right (sinh_le_cosh R) (abs_nonneg _))
 
 theorem stdMag (t : Trans1) (M : MachLib.Real) (h : StdLip t) (x : MachLib.Real) (hx : abs x ≤ M) :
     abs (realOfStd t x) ≤ MagStd t M := by
-  rcases h with rfl | rfl | rfl | rfl | rfl | rfl
+  rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · simp only [realOfStd, MagStd]; exact abs_sin_le_one x
   · simp only [realOfStd, MagStd]; exact abs_cos_le_one x
   · simp only [realOfStd, MagStd]; exact abs_tanh_le_one x
@@ -126,10 +142,12 @@ theorem stdMag (t : Trans1) (M : MachLib.Real) (h : StdLip t) (x : MachLib.Real)
   · simp only [realOfStd, MagStd]
     rw [abs_of_nonneg (le_of_lt (exp_pos x))]; exact exp_monotone (abs_le_iff.mp hx).2
   · simp only [realOfStd, MagStd]; exact abs_sinh_le_of_abs_le hx
+  · simp only [realOfStd, MagStd]
+    rw [abs_of_nonneg (le_of_lt (cosh_pos x))]; exact cosh_le_of_abs_le hx
 
 /-- **The full standard transcendental pipeline, hypotheses pre-discharged.** For any `IsFold StdLip e`
-(arithmetic + `sin`/`cos`/`tanh`/`atan`/`exp`/`sinh` nodes, any depth), the emitted C's value is within
-some absolute bound of `exactRn … realOfStd … e`, given only the primitive rounding `hround`. -/
+(arithmetic + `sin`/`cos`/`tanh`/`atan`/`exp`/`sinh`/`cosh` nodes, any depth), the emitted C's value is
+within some absolute bound of `exactRn … realOfStd … e`, given only the primitive rounding `hround`. -/
 theorem pipeline_nested_std {toR : Float → MachLib.Real} (br : FPBridge toR)
     (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
     (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
