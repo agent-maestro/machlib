@@ -122,7 +122,7 @@ theorem eval_pow_ne_zero {N : Nat} (q : MultiPoly N) (x : Real) (env : Fin N →
   | k + 1 => by rw [MultiPoly.eval_pow_succ]; exact MachLib.Real.mul_ne_zero hq (eval_pow_ne_zero q x env hq k)
 
 /-- **B3 — the exp-Wronskian vehicle count (full, partition assembled).** On `(a,b)` where the exp variable
-`y_top` is non-vanishing, `#zeros(pfaffianChainFn c p) ≤ Ne + K + 1`, where `Ne` bounds the zeros of
+`y_top` is non-vanishing, `#zeros(pfaffianChainFn c p) ≤ Ne + 2K + 1`, where `Ne` bounds the zeros of
 `expEliminate c G top p` and `K` bounds the zeros of `c_D = leadingCoeffY top p`. Now a thin instantiation of
 the shared `pfaffian_wronskian_reduce_full` (the same lemma the log arm uses), with the **exp** choice
 `V = y_top^D·c_D`, `E = expEliminate`, `W = y_top^D`: `hnum` is `expEliminate_wronskian_numerator`, `W ≠ 0` /
@@ -141,7 +141,7 @@ theorem expEliminate_reduce_full {N : Nat} (c : PfaffianChain N) (G : MultiPoly 
           MultiPoly.eval (MultiPoly.leadingCoeffY top p) z (c.chainValues z) = 0) → zs.length ≤ K) :
     ∀ zeros_f : List Real, zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
-      zeros_f.length ≤ Ne + K + 1 :=
+      zeros_f.length ≤ Ne + 2 * K + 1 :=
   pfaffian_wronskian_reduce_full c top p
     (MultiPoly.mul (MultiPoly.pow (MultiPoly.varY top) (MultiPoly.degreeY top p))
       (MultiPoly.leadingCoeffY top p))

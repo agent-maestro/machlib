@@ -56,11 +56,12 @@ private theorem eq_zero_of_mul_right' {v w : Real} (hw : w ≠ 0) (h : v * w = 0
 /-- **`f' ≡ 0` ⇒ `f` constant** (endpoints form), directly from the MVT:
 the mean-value slope is a derivative, forced to `0` by uniqueness. -/
 theorem eq_endpoints_of_deriv_zero (f : Real → Real) (p q : Real) (hpq : p < q)
-    (hderiv0 : ∀ c, p < c → c < q → HasDerivAt f 0 c) :
+    (hderiv0 : ∀ c, p ≤ c → c ≤ q → HasDerivAt f 0 c) :
     f p = f q := by
   obtain ⟨c, f', hpc, hcq, hd, heq⟩ :=
-    mean_value_theorem f p q hpq (fun c h1 h2 => ⟨0, hderiv0 c h1 h2⟩)
-  have hf'0 : f' = 0 := HasDerivAt_unique f f' 0 c hd (hderiv0 c hpc hcq)
+    mean_value_theorem_ct f p q hpq (fun c h1 h2 => ⟨0, hderiv0 c h1 h2⟩)
+  have hf'0 : f' = 0 :=
+    HasDerivAt_unique f f' 0 c hd (hderiv0 c (le_of_lt_r hpc) (le_of_lt_r hcq))
   rw [hf'0, zero_mul] at heq
   exact (eq_of_sub_eq_zero' heq).symm
 
@@ -151,10 +152,10 @@ theorem wronskian_zero_zeros_subset
     have hphi_eq : F x0 * (1 / G x0) = F y * (1 / G y) := by
       rcases lt_total x0 y with h | h | h
       · exact eq_endpoints_of_deriv_zero (fun z => F z * (1 / G z)) x0 y h
-          (fun c hc1 hc2 => hphi0 c (lt_trans_ax ha'x hc1) (lt_trans_ax hc2 hy2))
+          (fun c hc1 hc2 => hphi0 c (lt_of_lt_of_le_r ha'x hc1) (lt_of_le_of_lt_r hc2 hy2))
       · rw [h]
       · exact (eq_endpoints_of_deriv_zero (fun z => F z * (1 / G z)) y x0 h
-          (fun c hc1 hc2 => hphi0 c (lt_trans_ax hy1 hc1) (lt_trans_ax hc2 hxb'))).symm
+          (fun c hc1 hc2 => hphi0 c (lt_of_lt_of_le_r hy1 hc1) (lt_of_le_of_lt_r hc2 hxb'))).symm
     rw [hFx0, zero_mul] at hphi_eq          -- 0 = F y * (1 / G y)
     have hGy_ne : G y ≠ 0 := hGnbhd y hy1 hy2
     have hinv_ne : (1 / G y) ≠ 0 := by

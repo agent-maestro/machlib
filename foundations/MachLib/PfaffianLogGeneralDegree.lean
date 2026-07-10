@@ -223,7 +223,7 @@ theorem log_step_general {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab
             exact hw
           obtain ⟨Ng, hNg⟩ := PfaffianLogLead.bound_via_trim_rec c (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
             a b D ih _ hg_le hg_lead hg_nz
-          exact ⟨Ng + K + 1, PfaffianLogLead.log_wronskian_reduce_full c
+          exact ⟨Ng + 2 * K + 1, PfaffianLogLead.log_wronskian_reduce_full c
             (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p a b hab hcoh Ng hNg K hK⟩
 
 /-! ## `log_hard` discharged -/

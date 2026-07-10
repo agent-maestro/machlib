@@ -183,7 +183,7 @@ theorem log_wronskian_reduce_subinterval_ne {N : Nat} (c : PfaffianChain N) (top
 
 /-- **Log Wronskian reduce — FULL (partition assembled).** Combines the reciprocal-
 vehicle Rolle transfer with the `c_D`-partition (`zero_count_bound_by_deriv_with_bad`):
-`#zeros(pfaffianChainFn c p) ≤ Ng + K + 1`, where `Ng` bounds the zeros of the Wronskian
+`#zeros(pfaffianChainFn c p) ≤ Ng + 2K + 1`, where `Ng` bounds the zeros of the Wronskian
 `g = c_D·cTD(p) − cTD(c_D)·p` (from the WF recursion, since `g` has strictly smaller
 canonical top degree by `wronskian_leadY_eval_zero`) and `K` bounds the zeros of
 `c_D = leadingCoeffY top p` (top-free ⇒ a lower-chain function, bounded by the restriction
@@ -205,7 +205,7 @@ theorem log_wronskian_reduce_full {N : Nat} (c : PfaffianChain N) (top : Fin N)
         zs.length ≤ K) :
     ∀ zeros_f : List Real, zeros_f.Nodup →
       (∀ z ∈ zeros_f, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z = 0) →
-      zeros_f.length ≤ Ng + K + 1 :=
+      zeros_f.length ≤ Ng + 2 * K + 1 :=
   -- The **log** instantiation of the shared `pfaffian_wronskian_reduce_full`: `V = c_D`, `W = 1`, and `E`
   -- the bare Wronskian `g = c_D·cTD(p) − cTD(c_D)·p`. `hnum` is `eval_sub`/`eval_mul` (the numerator IS `g`),
   -- `W ≠ 0` is `1 ≠ 0`, and `V ≠ 0`-off-bad is definitional (`V = c_D`). No `y_top` factor (δ = −1).
@@ -471,7 +471,7 @@ theorem log_reduce_multilinear {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real
     have := wronskian_leadY_eval_zero c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) h_top h_tri p x env
     rwa [hd1] at this
   obtain ⟨Ng, hNg⟩ := bound_via_trim c a b hab IH_depth _ hg_le hg_lead hg_nz
-  exact ⟨Ng + K + 1, log_wronskian_reduce_full c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p a b hab hcoh Ng hNg K hK⟩
+  exact ⟨Ng + 2 * K + 1, log_wronskian_reduce_full c (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p a b hab hcoh Ng hNg K hK⟩
 
 
 /-! ## Pointwise / interval trim — the c_D ≡ 0 case of multilinear log_step -/

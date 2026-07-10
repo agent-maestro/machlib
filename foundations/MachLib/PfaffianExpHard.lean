@@ -181,7 +181,7 @@ theorem exp_step_general {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab
           obtain ⟨Ne, hNe⟩ := expEliminate_zeros_bound c G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
             h_reltop hG h_tri p (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p - 1)
             (by omega) a b (fun r hr hne_r => ih r (Nat.le_trans hr (by omega)) hne_r) hEE_nz
-          exact ⟨Ne + K + 1, expEliminate_reduce_full c G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
+          exact ⟨Ne + 2 * K + 1, expEliminate_reduce_full c G (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1))
             h_reltop p a b hab hcoh hyt Ne hNe K hK⟩
 
 /-- **`exp_hard` — the general-degree exp core, PROVEN.** Exactly the `exp_hard` hypothesis of

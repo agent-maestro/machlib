@@ -76,21 +76,25 @@ gives continuity on `[a,b]`, so Mathlib's `exists_hasDerivAt_eq_zero` applies). 
 OMITS that continuity and is *not* a theorem of ℝ — counterexample: `f x = x` on `(0,1)` with `f 0 = f 1 = 0`
 (differentiable on the open interval, `f 0 = f 1`, no interior zero of `f'`).
 
-The whole PURE-EXPONENTIAL Khovanskii lane is now on `rolle_ct`, via two migrated consumers:
+The ENTIRE Khovanskii footprint — pure-exponential AND mixed exp/log — is now on `rolle_ct`, via three
+migrated consumers, each supplying closed-interval diff from a strict subinterval or a globally differentiable
+(Pfaffian) function:
 * `interleave_from` — hence `zero_count_bound_by_deriv`, the plain zero-count transfer — applies Rolle only on
   consecutive-zero subintervals `[zᵢ,zᵢ₊₁] ⊂ (a,b)`, where closed diff follows from the open hypothesis
   (`lt_of_lt_of_le_r`/`lt_of_le_of_lt_r`); its own PUBLIC hypothesis stays open, so no caller changes.
 * `mean_value_theorem_ct` (below) — used by the vehicle no-zeros arm, `KhovanskiiLemma`, `SingleExpKhovanskii`,
-  and the `PolynomialRootCount` base case. Every such use is on a subinterval of `(a,b)` or a globally
-  differentiable function, so closed diff is available.
+  the `PolynomialRootCount` base case, and (mixed path) `WronskianProportional.eq_endpoints_of_deriv_zero`.
+* `interleave_dual` — the bad-set transfer under the log/exp Wronskian reduces — now REQUIRES off-bad input
+  zeros, so every Rolle endpoint is off-bad and closed diff holds; the caller `pfaffian_wronskian_reduce_full`
+  partitions its zeros into off-bad (counted here) and bad (`{c_D=0}`, counted directly), at the cost of one
+  extra `K` in the bound (`Ne + K + 1 → Ne + 2K + 1`).
 
-So `chainN_khovanskii_bound_explicit` / `_unconditional` and the concrete showcases depend on `rolle_ct`
-ALONE (no `rolle`). The open-only `rolle` survives for two things left as scoped work: (1) `mean_value_theorem`
-(open) — retained for OFF-path utility consumers (`SturmNonOscillation` ODE theory, `WronskianProportional`
-Lipschitz) whose MVT touches the real interval endpoints and would cascade into their ODE hypotheses;
-(2) `interleave_dual` (the bad-set transfer, used by the log/exp Wronskian reduces / mixed bound) — its Rolle
-endpoints can be bad points where the vehicle is discontinuous, needing a continuity-safe restructuring, not
-just a hypothesis swap. -/
+So `chainN_khovanskii_bound_explicit` / `_unconditional`, `eml_eval_boundedZeros_unconditional`, and the
+concrete showcases (`…_le_47`, `eml_barrier_bounded_zeros`) ALL depend on `rolle_ct` alone — no `rolle`. The
+unsound open-only `rolle` now survives ONLY in off-path / dead utility code (`SturmNonOscillation` ODE
+no-oscillation, which has no flagship caller; `mean_value_theorem` open, retained for Lipschitz/Trig utilities
+whose MVT touches real endpoints and would cascade into hypotheses no flagship needs). `rolle_ct` is witnessed
+verbatim against Mathlib ℝ by `MonogateEML.RealModel.rolle_witnessed`. -/
 axiom rolle_ct (f : Real → Real) (a b : Real) (hab : a < b)
     (hfa_eq_fb : f a = f b)
     (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) :
@@ -561,7 +565,7 @@ private theorem interleave_dual (f : Real → Real) (isBad : Real → Prop) (a b
     ∀ (hd : Real) (s : List Real),
       List.Pairwise (fun x y => leB x y = true) (hd :: s) →
       (hd :: s).Nodup →
-      (∀ z ∈ (hd :: s), a < z ∧ z < b ∧ f z = 0) →
+      (∀ z ∈ (hd :: s), a < z ∧ z < b ∧ ¬ isBad z ∧ f z = 0) →
       ∃ csC csB : List Real, csC.Nodup ∧ csB.Nodup ∧
         (∀ c ∈ csC, a < c ∧ c < b ∧ ¬ isBad c ∧ ∃ f'' : Real, HasDerivAt f f'' c ∧ f'' = 0) ∧
         (∀ c ∈ csB, a < c ∧ c < b ∧ isBad c) ∧
@@ -586,8 +590,8 @@ private theorem interleave_dual (f : Real → Real) (isBad : Real → Prop) (a b
     have hhd_le_z1 : hd ≤ z1 := (leB_iff hd z1).mp (hhd_le z1 hz1_mem)
     have hhd_ne_z1 : hd ≠ z1 := fun h => hhd_notin (h ▸ hz1_mem)
     have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
-    obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
-    obtain ⟨ha_z1, hz1_b, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
+    obtain ⟨ha_hd, hhd_b, hnb_hd, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
+    obtain ⟨ha_z1, hz1_b, hnb_z1, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
     obtain ⟨csC', csB', hcsC'_nd, hcsB'_nd, hcsC'_props, hcsB'_props, hcsC'_gt, hcsB'_gt, hlen'⟩ :=
       ih z1 hpair_tail hnodup_tail (fun z hz => hzero z (List.mem_cons_of_mem hd hz))
     by_cases hbad : ∃ w, hd < w ∧ w < z1 ∧ isBad w
@@ -606,10 +610,17 @@ private theorem interleave_dual (f : Real → Real) (isBad : Real → Prop) (a b
         · exact lt_trans_ax hhd_lt_z1 (hcsB'_gt c h)
       · simp only [List.length_cons] at hlen' ⊢; omega
     · have hbad' : ∀ w, hd < w → w < z1 → ¬ isBad w := fun w hw1 hw2 hbw => hbad ⟨w, hw1, hw2, hbw⟩
-      have hdiff' : ∀ c : Real, hd < c → c < z1 → ∃ f' : Real, HasDerivAt f f' c :=
-        fun c hc1 hc2 => hdiff c (lt_trans_ax ha_hd hc1) (lt_trans_ax hc2 hz1_b) (hbad' c hc1 hc2)
+      have hdiff' : ∀ c : Real, hd ≤ c → c ≤ z1 → ∃ f' : Real, HasDerivAt f f' c := by
+        intro c hc1 hc2
+        have hnb : ¬ isBad c := by
+          rcases (le_iff_lt_or_eq hd c).mp hc1 with h1 | h1
+          · rcases (le_iff_lt_or_eq c z1).mp hc2 with h2 | h2
+            · exact hbad' c h1 h2
+            · rw [h2]; exact hnb_z1
+          · rw [← h1]; exact hnb_hd
+        exact hdiff c (lt_of_lt_of_le_r ha_hd hc1) (lt_of_le_of_lt_r hc2 hz1_b) hnb
       have hfeq : f hd = f z1 := by rw [hf_hd, hf_z1]
-      obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle f hd z1 hhd_lt_z1 hfeq hdiff'
+      obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle_ct f hd z1 hhd_lt_z1 hfeq hdiff'
       have hc0_lt_csC' : ∀ c ∈ csC', c0 < c := fun c hc => lt_trans_ax hc0_hi (hcsC'_gt c hc)
       refine ⟨c0 :: csC', csB', ?_, hcsB'_nd, ?_, hcsB'_props, ?_, ?_, ?_⟩
       · rw [List.nodup_cons]; exact ⟨fun hmem => lt_irrefl_ax c0 (hc0_lt_csC' c0 hmem), hcsC'_nd⟩
@@ -638,13 +649,13 @@ theorem zero_count_bound_by_deriv_with_bad (f : Real → Real) (isBad : Real →
     (hbadN : ∀ zs : List Real, zs.Nodup →
         (∀ z ∈ zs, a < z ∧ z < b ∧ isBad z) → zs.length ≤ Nbad) :
     ∀ zeros_f : List Real, zeros_f.Nodup →
-      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ f z = 0) →
+      (∀ z ∈ zeros_f, a < z ∧ z < b ∧ ¬ isBad z ∧ f z = 0) →
       zeros_f.length ≤ Ncrit + Nbad + 1 := by
   intro zeros_f hnodup hzero
   have hperm : (zeros_f.mergeSort leB).Perm zeros_f := List.mergeSort_perm zeros_f leB
   have hlen : (zeros_f.mergeSort leB).length = zeros_f.length := hperm.length_eq
   have hnodup_s : (zeros_f.mergeSort leB).Nodup := hperm.symm.nodup hnodup
-  have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ f z = 0 :=
+  have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ ¬ isBad z ∧ f z = 0 :=
     fun z hz => hzero z (hperm.mem_iff.mp hz)
   have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
     List.sorted_mergeSort leB_trans leB_total zeros_f
