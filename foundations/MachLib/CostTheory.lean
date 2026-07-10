@@ -116,6 +116,57 @@ theorem le_cost_bin_left (c : Nat) (a b : CostTree) : cost a ≤ cost (.bin c a 
 theorem le_cost_bin_right (c : Nat) (a b : CostTree) : cost b ≤ cost (.bin c a b) := by
   simp only [cost]; omega
 
+/-! ### The four basic properties (P1–P4, R1) and the Additive Cost Law (T40)
+
+R1 states four basic cost properties. Three are structural facts of the combinatorial model and are
+proved here; the fourth (P4) is about a semantics this model deliberately does not carry, and is left
+honestly out of scope. T40 is the additivity the whole algebra rests on. -/
+
+/-- **P1 — Non-negativity.** `Cost(E) ≥ 0`. (Immediate in the `Nat` model — the named property.) -/
+theorem p1_nonneg (t : CostTree) : 0 ≤ cost t := Nat.zero_le _
+
+/-- **P2 — Terminal characterisation (operator lower bound).** An operator node costs at least its own
+node-cost, so with positive operator costs a non-terminal is never free — only terminals can be zero
+cost. (Full `cost = 0 ↔ terminal` needs the "every operator cost ≥ 1" hypothesis; this is its core.) -/
+theorem p2_un_cost_ge (c : Nat) (a : CostTree) : c ≤ cost (.un c a) := by simp only [cost]; omega
+theorem p2_bin_cost_ge (c : Nat) (a b : CostTree) : c ≤ cost (.bin c a b) := by simp only [cost]; omega
+
+/-- **P3 — Subadditivity under operator application.** Applying an operator of cost `c` adds exactly `c`
+to the operand costs, so `Cost(O(operands)) ≤ Σ operand costs + c` — subadditive (an equality here; the
+routing/DAG model can do strictly better via sharing, which `T38.sharingDiscount` accounts for). -/
+theorem p3_subadditive_un (c : Nat) (a : CostTree) : cost (.un c a) ≤ cost a + c := by
+  simp only [cost]; omega
+theorem p3_subadditive_bin (c : Nat) (a b : CostTree) : cost (.bin c a b) ≤ cost a + cost b + c := by
+  simp only [cost]; omega
+
+/- **P4 — Algebraic invariance** (Cost depends only on the FUNCTION computed, invariant under pointwise
+equality of expressions) is OUT OF SCOPE for this per-tree combinatorial model: it needs `Cost(f) = min`
+over all trees computing `f`, a semantics the pure-`Nat` model does not carry. `iso_cost` (below) is the
+closest structural fragment — invariance under topological, not semantic, equality. Stated, not faked. -/
+
+/-- **T40 — the Additive Cost Law.** Independent branches (disjoint subtrees) sum their costs exactly:
+a binary operator's cost is its own node-cost plus each branch's cost, with NO interaction/cross term.
+The named additivity the whole cost algebra rests on. -/
+theorem additive_cost_law (c : Nat) (a b : CostTree) : cost (.bin c a b) = c + cost a + cost b := rfl
+
+/-- A right-nested sum of `n+1` copies of `t` (dual to `flatSumTree`'s left nesting). -/
+def flatSumTreeR (cAdd : Nat) (t : CostTree) : Nat → CostTree
+  | 0     => t
+  | n + 1 => .bin cAdd t (flatSumTreeR cAdd t n)
+
+theorem cost_flatSumTreeR (cAdd : Nat) (t : CostTree) (n : Nat) :
+    cost (flatSumTreeR cAdd t n) = cost t * (n + 1) + cAdd * n := by
+  induction n with
+  | zero => simp [flatSumTreeR, cost]
+  | succ k ih => simp only [flatSumTreeR, cost, ih, Nat.mul_succ]; omega
+
+/-- **Sum cost is association-independent** — a T40 corollary: a right-nested sum costs exactly the same
+as the left-nested one. The total cost of summing independent branches depends only on the branches and
+their count, not on how the sum is parenthesised. -/
+theorem sum_assoc_invariant (cAdd : Nat) (t : CostTree) (n : Nat) :
+    cost (flatSumTreeR cAdd t n) = cost (flatSumTree cAdd t n) := by
+  rw [cost_flatSumTreeR, cost_flatSumTree]
+
 /-! ### T38 — the full decomposition `Cost = Naive − Pattern − Sharing`
 
 The headline cost theorem. To make it a *theorem* and not a tautology, the two saving mechanisms are
