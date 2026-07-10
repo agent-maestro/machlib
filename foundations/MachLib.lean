@@ -226,6 +226,7 @@ import MachLib.FloatRealBridge
 import MachLib.AbsoluteError
 import MachLib.AbsoluteBridge
 import MachLib.AbsoluteFold
+import MachLib.ExpLipschitz
 
 /-!
 # MachLib — top-level aggregator

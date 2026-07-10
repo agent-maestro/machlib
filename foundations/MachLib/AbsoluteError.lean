@@ -154,6 +154,28 @@ theorem absenc_lip {f : Real → Real} {L flx xe Ex flf Eround : Real}
     le_trans (hL flx xe) (mul_le_mul_of_nonneg_left hx hLnn)
   exact le_trans htri (add_le_add_both hround h2)
 
+/-- **Local-Lipschitz node — for the unbounded-derivative primitives (`exp`, `log`, `sinh`, …).** Same
+composition as `absenc_lip`, but `f` need only be `L`-Lipschitz on a bounded domain `[lo,hi]`, provided
+BOTH the computed input `flx` and the exact input `xe` lie in `[lo,hi]`. This is exactly what the
+unbounded-derivative primitives need: globally their slope blows up, but on `[lo,hi]` it is bounded (e.g.
+`exp` by `exp hi`, `log` by `1/lo` for `lo > 0`), and that local bound is all the forward-error argument
+uses. The two range hypotheses are the honest cost of leaving the globally-Lipschitz class. -/
+theorem absenc_lip_local {f : Real → Real} {L flx xe Ex flf Eround lo hi : Real}
+    (hLnn : 0 ≤ L)
+    (hLip : ∀ p q : Real, lo ≤ p → p ≤ hi → lo ≤ q → q ≤ hi → abs (f p - f q) ≤ L * abs (p - q))
+    (hx : AbsEnc Ex flx xe)
+    (hflx_lo : lo ≤ flx) (hflx_hi : flx ≤ hi) (hxe_lo : lo ≤ xe) (hxe_hi : xe ≤ hi)
+    (hround : abs (flf - f flx) ≤ Eround) :
+    AbsEnc (Eround + L * Ex) flf (f xe) := by
+  unfold AbsEnc at hx ⊢
+  have htri : abs (flf - f xe) ≤ abs (flf - f flx) + abs (f flx - f xe) := by
+    have h := abs_add (flf - f flx) (f flx - f xe)
+    have e : (flf - f flx) + (f flx - f xe) = flf - f xe := by mach_mpoly [flf, f flx, f xe]
+    rw [e] at h; exact h
+  have h2 : abs (f flx - f xe) ≤ L * Ex :=
+    le_trans (hLip flx xe hflx_lo hflx_hi hxe_lo hxe_hi) (mul_le_mul_of_nonneg_left hx hLnn)
+  exact le_trans htri (add_le_add_both hround h2)
+
 /-- **Capstone — the `eml` node as a two-line instance of the general fold.** If `flx`/`fly`
 correctly round the exact leaves `xe`/`ye` and `fld` rounds `flx − fly`, then
 `|fld − (xe − ye)| ≤ u·(2+u)·(|xe| + |ye|)`. This is *exactly* the bound
