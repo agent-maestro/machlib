@@ -104,7 +104,7 @@ theorem tanh_lipschitz (a b : Real) : abs (tanh a - tanh b) ≤ abs (a - b) := b
   have step : ∀ p q : Real, p < q → abs (tanh q - tanh p) ≤ q - p := by
     intro p q hpq
     obtain ⟨c, f', _, _, hdc, hval⟩ :=
-      mean_value_theorem tanh p q hpq (fun c _ _ => ⟨1 / (cosh c * cosh c), HasDerivAt_tanh c⟩)
+      mean_value_theorem_ct tanh p q hpq (fun c _ _ => ⟨1 / (cosh c * cosh c), HasDerivAt_tanh c⟩)
     rw [hval, HasDerivAt_unique tanh f' (1 / (cosh c * cosh c)) c hdc (HasDerivAt_tanh c),
         abs_mul, abs_of_nonneg (le_of_lt (sub_pos_of_lt hpq))]
     exact le_trans (mul_le_mul_of_nonneg_right (abs_tanh_deriv_le_one c)
@@ -132,7 +132,7 @@ theorem abs_tanh_le_one (x : Real) : abs (tanh x) ≤ 1 := by
 theorem sinh_mono {a b : Real} (hab : a ≤ b) : sinh a ≤ sinh b := by
   rcases lt_total a b with h | h | h
   · obtain ⟨c, f', _, _, hdc, hval⟩ :=
-      mean_value_theorem sinh a b h (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
+      mean_value_theorem_ct sinh a b h (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
     rw [HasDerivAt_unique sinh f' (cosh c) c hdc (HasDerivAt_sinh c)] at hval
     exact le_of_sub_nonneg (hval ▸ mul_nonneg (le_of_lt (cosh_pos c)) (le_of_lt (sub_pos_of_lt h)))
   · exact le_of_eq (congrArg sinh h)
@@ -146,7 +146,7 @@ theorem sinh_nonneg {x : Real} (hx : 0 ≤ x) : 0 ≤ sinh x := by
 theorem cosh_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) : cosh a ≤ cosh b := by
   rcases lt_total a b with h | h | h
   · obtain ⟨c, f', hac, _, hdc, hval⟩ :=
-      mean_value_theorem cosh a b h (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
+      mean_value_theorem_ct cosh a b h (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
     rw [HasDerivAt_unique cosh f' (sinh c) c hdc (HasDerivAt_cosh c)] at hval
     exact le_of_sub_nonneg
       (hval ▸ mul_nonneg (sinh_nonneg (le_trans ha (le_of_lt hac))) (le_of_lt (sub_pos_of_lt h)))
@@ -182,7 +182,7 @@ theorem sinh_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R
       abs (sinh q - sinh p) ≤ cosh R * (q - p) := by
     intro p q hpR hqR hpq
     obtain ⟨c, f', hpc, hcq, hdc, hval⟩ :=
-      mean_value_theorem sinh p q hpq (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
+      mean_value_theorem_ct sinh p q hpq (fun c _ _ => ⟨cosh c, HasDerivAt_sinh c⟩)
     have hcR : abs c ≤ R := abs_le_of
       (le_trans (le_of_lt hcq) (le_trans (le_abs_self q) hqR))
       (le_trans (neg_le_neg (le_of_lt hpc)) (le_trans (neg_le_abs p) hpR))
@@ -208,7 +208,7 @@ theorem cosh_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R
       abs (cosh q - cosh p) ≤ sinh R * (q - p) := by
     intro p q hpR hqR hpq
     obtain ⟨c, f', hpc, hcq, hdc, hval⟩ :=
-      mean_value_theorem cosh p q hpq (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
+      mean_value_theorem_ct cosh p q hpq (fun c _ _ => ⟨sinh c, HasDerivAt_cosh c⟩)
     have hcR : abs c ≤ R := abs_le_of
       (le_trans (le_of_lt hcq) (le_trans (le_abs_self q) hqR))
       (le_trans (neg_le_neg (le_of_lt hpc)) (le_trans (neg_le_abs p) hpR))

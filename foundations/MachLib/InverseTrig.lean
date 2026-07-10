@@ -43,7 +43,7 @@ theorem atan_lipschitz (a b : Real) : abs (atan a - atan b) ≤ abs (a - b) := b
   have step : ∀ p q : Real, p < q → abs (atan q - atan p) ≤ q - p := by
     intro p q hpq
     obtain ⟨c, f', _, _, hdc, hval⟩ :=
-      mean_value_theorem atan p q hpq (fun c _ _ => ⟨1 / (1 + c * c), HasDerivAt_atan c⟩)
+      mean_value_theorem_ct atan p q hpq (fun c _ _ => ⟨1 / (1 + c * c), HasDerivAt_atan c⟩)
     rw [hval, HasDerivAt_unique atan f' (1 / (1 + c * c)) c hdc (HasDerivAt_atan c),
         abs_mul, abs_of_nonneg (le_of_lt (sub_pos_of_lt hpq))]
     exact le_trans (mul_le_mul_of_nonneg_right (atan_deriv_le_one c)

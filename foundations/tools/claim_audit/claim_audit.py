@@ -70,6 +70,19 @@ def resolved(text: str) -> bool:
     return ("depends on axioms" in text) or ("does not depend on any axioms" in text)
 
 
+def parsed_axioms(text: str) -> set:
+    """Extract the EXACT axiom names from a `#print axioms` footprint.
+
+    Needed for `forbid_axioms_exact`: plain substring forbids can't distinguish
+    `MachLib.Real.rolle` from `MachLib.Real.rolle_ct` (the sound closed-interval
+    Rolle), so the unsound-Rolle regression gate must match whole tokens.
+    """
+    m = re.search(r"depends on axioms:\s*\[(.*)\]", text, re.S)
+    if not m:
+        return set()
+    return {a.strip() for a in m.group(1).split(",") if a.strip()}
+
+
 def check_claim(c: dict) -> list:
     """Return a list of problem strings (empty = the claim holds)."""
     problems = []
@@ -93,6 +106,12 @@ def check_claim(c: dict) -> list:
         for ax in c["forbid_axioms"]:
             if ax in text:
                 problems.append(f"FORBIDDEN axiom `{ax}` present in footprint of {c['theorem']}")
+        # Exact whole-token forbids (e.g. the unsound `MachLib.Real.rolle`, which is a
+        # substring of the SOUND `MachLib.Real.rolle_ct` and so can't be a plain forbid).
+        names = parsed_axioms(text)
+        for ax in c.get("forbid_axioms_exact", []):
+            if ax in names:
+                problems.append(f"FORBIDDEN axiom `{ax}` (exact) present in footprint of {c['theorem']}")
 
     return problems
 

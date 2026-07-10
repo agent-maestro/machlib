@@ -40,12 +40,13 @@ open Real
 across the interval: `f a ≤ f b`. PROVED from the Mean Value Theorem (the
 witnessed `f'` equals `df c` by `HasDerivAt_unique`, and `f'·(b−a) ≥ 0`). -/
 theorem mono_of_deriv_nonneg (f df : Real → Real) {a b : Real} (hab : a < b)
-    (hderiv : ∀ c, a < c → c < b → HasDerivAt f (df c) c)
+    (hderiv : ∀ c, a ≤ c → c ≤ b → HasDerivAt f (df c) c)
     (hnn : ∀ c, a < c → c < b → 0 ≤ df c) :
     f a ≤ f b := by
   obtain ⟨c, f', hac, hcb, hd, heq⟩ :=
-    mean_value_theorem f a b hab (fun c h1 h2 => ⟨df c, hderiv c h1 h2⟩)
-  have hf' : f' = df c := HasDerivAt_unique f f' (df c) c hd (hderiv c hac hcb)
+    mean_value_theorem_ct f a b hab (fun c h1 h2 => ⟨df c, hderiv c h1 h2⟩)
+  have hf' : f' = df c :=
+    HasDerivAt_unique f f' (df c) c hd (hderiv c (Real.le_of_lt_r hac) (Real.le_of_lt_r hcb))
   have hprod : 0 ≤ f' * (b - a) := by
     rw [hf']
     exact Real.mul_nonneg (hnn c hac hcb) (Real.le_of_lt (Real.sub_pos_of_lt hab))
@@ -60,7 +61,7 @@ arch between consecutive zeros, `r ≥ 0` ⇒ non-oscillatory ⇒ EML-finite
 `EML-finite` (Sturm, `r ≥ 0`) verdict rests on. -/
 theorem sturm_no_positive_bump
     (y yp ypp r : Real → Real) {a b : Real} (hab : a < b)
-    (hy  : ∀ c, a < c → c < b → HasDerivAt y (yp c) c)
+    (hy  : ∀ c, a ≤ c → c ≤ b → HasDerivAt y (yp c) c)
     (hyp : ∀ c, a < c → c < b → HasDerivAt yp (ypp c) c)
     (hode : ∀ c, a < c → c < b → ypp c = r c * y c)
     (hr  : ∀ c, a < c → c < b → 0 ≤ r c)
@@ -74,21 +75,21 @@ theorem sturm_no_positive_bump
     exact Real.mul_nonneg (hr c h1 h2) (Real.le_of_lt (hbump c h1 h2))
   -- (3) Rolle on y over [a,b]: an interior m with y'(m) = 0.
   obtain ⟨m, ham, hmb, hderiv0⟩ :=
-    rolle y a b hab (by rw [hya, hyb]) (fun c h1 h2 => ⟨yp c, hy c h1 h2⟩)
+    rolle_ct y a b hab (by rw [hya, hyb]) (fun c h1 h2 => ⟨yp c, hy c h1 h2⟩)
   have hypm0 : yp m = 0 :=
-    (HasDerivAt_unique y 0 (yp m) m hderiv0 (hy m ham hmb)).symm
+    (HasDerivAt_unique y 0 (yp m) m hderiv0 (hy m (Real.le_of_lt_r ham) (Real.le_of_lt_r hmb))).symm
   -- (4a) y' non-decreasing past m: 0 = y'(m) ≤ y'(c) for c ∈ (m,b).
   have hyp_nn : ∀ c, m < c → c < b → 0 ≤ yp c := by
     intro c hmc hcb
     have hmono : yp m ≤ yp c :=
       mono_of_deriv_nonneg yp ypp hmc
-        (fun z h1 h2 => hyp z (Real.lt_trans_ax ham h1) (Real.lt_trans_ax h2 hcb))
+        (fun z h1 h2 => hyp z (Real.lt_of_lt_of_le_r ham h1) (Real.lt_of_le_of_lt_r h2 hcb))
         (fun z h1 h2 => hypp_nn z (Real.lt_trans_ax ham h1) (Real.lt_trans_ax h2 hcb))
     rwa [hypm0] at hmono
   -- (4b) y non-decreasing on [m,b]: y(m) ≤ y(b).
   have hymb : y m ≤ y b :=
     mono_of_deriv_nonneg y yp hmb
-      (fun z h1 h2 => hy z (Real.lt_trans_ax ham h1) h2)
+      (fun z h1 h2 => hy z (Real.le_of_lt_r (Real.lt_of_lt_of_le_r ham h1)) h2)
       (fun z h1 h2 => hyp_nn z h1 h2)
   -- (4c) contradiction: 0 < y(m) ≤ y(b) = 0.
   rw [hyb] at hymb
@@ -103,7 +104,7 @@ theorems say `r ≥ 0` forbids a sign-definite arch of EITHER orientation betwee
 two zeros — the complete "no oscillation arch" statement. -/
 theorem sturm_no_negative_bump
     (y yp ypp r : Real → Real) {a b : Real} (hab : a < b)
-    (hy  : ∀ c, a < c → c < b → HasDerivAt y (yp c) c)
+    (hy  : ∀ c, a ≤ c → c ≤ b → HasDerivAt y (yp c) c)
     (hyp : ∀ c, a < c → c < b → HasDerivAt yp (ypp c) c)
     (hode : ∀ c, a < c → c < b → ypp c = r c * y c)
     (hr  : ∀ c, a < c → c < b → 0 ≤ r c)
@@ -325,36 +326,36 @@ Proof: the explicit positive solution `v = x^α` (`vpow`) makes the Wronskian
 `W(ξ₁)=W(ξ₂)` — contradiction. No `sorryAx`. -/
 theorem sturm_euler_no_positive_bump
     (u up upp : Real → Real) (α : Real) {a b : Real} (hab : a < b) (ha : 0 < a)
-    (hu : ∀ x, a < x → x < b → HasDerivAt u (up x) x)
+    (hu : ∀ x, a ≤ x → x ≤ b → HasDerivAt u (up x) x)
     (hup : ∀ x, a < x → x < b → HasDerivAt up (upp x) x)
     (hode : ∀ x, a < x → x < b → upp x = (α * α - α) * (1 / (x * x)) * u x)
     (hua : u a = 0) (hub : u b = 0)
     (hbump : ∀ x, a < x → x < b → 0 < u x) :
     False := by
-  obtain ⟨m, ham, hmb, _⟩ := rolle u a b hab (by rw [hua, hub])
+  obtain ⟨m, ham, hmb, _⟩ := rolle_ct u a b hab (by rw [hua, hub])
     (fun c h1 h2 => ⟨up c, hu c h1 h2⟩)
   have hm_pos : 0 < m := Real.lt_trans_ax ha ham
   have hφm : 0 < u m * (1 / vpow α m) :=
     Real.mul_pos (hbump m ham hmb) (one_div_pos_of_pos (vpow_pos α m))
   obtain ⟨ξ₁, f1, haξ1, hξ1m, hd1, heq1⟩ :=
-    mean_value_theorem (fun y => u y * (1 / vpow α y)) a m ham
-      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_trans_ax ha h1)
-        (hu c h1 (Real.lt_trans_ax h2 hmb))⟩)
+    mean_value_theorem_ct (fun y => u y * (1 / vpow α y)) a m ham
+      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_of_lt_of_le_r ha h1)
+        (hu c h1 (Real.le_of_lt_r (Real.lt_of_le_of_lt_r h2 hmb)))⟩)
   have hf1 : f1 = up ξ₁ * (1 / vpow α ξ₁)
         + u ξ₁ * (-(vpow α ξ₁ * (α * (1 / ξ₁))) / (vpow α ξ₁ * vpow α ξ₁)) :=
     HasDerivAt_unique _ f1 _ ξ₁ hd1
-      (phi_euler_deriv u up α ξ₁ (Real.lt_trans_ax ha haξ1) (hu ξ₁ haξ1 (Real.lt_trans_ax hξ1m hmb)))
+      (phi_euler_deriv u up α ξ₁ (Real.lt_trans_ax ha haξ1) (hu ξ₁ (Real.le_of_lt_r haξ1) (Real.le_of_lt_r (Real.lt_trans_ax hξ1m hmb))))
   rw [show u a * (1 / vpow α a) = 0 by rw [hua, Real.zero_mul], Real.sub_zero] at heq1
   have hf1_pos : 0 < f1 :=
     pos_of_mul_pos_right (heq1 ▸ hφm) (Real.sub_pos_of_lt (Real.lt_trans_ax haξ1 hξ1m))
   obtain ⟨ξ₂, f2, hmξ2, hξ2b, hd2, heq2⟩ :=
-    mean_value_theorem (fun y => u y * (1 / vpow α y)) m b hmb
-      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_trans_ax hm_pos h1)
-        (hu c (Real.lt_trans_ax ham h1) h2)⟩)
+    mean_value_theorem_ct (fun y => u y * (1 / vpow α y)) m b hmb
+      (fun c h1 h2 => ⟨_, phi_euler_deriv u up α c (Real.lt_of_lt_of_le_r hm_pos h1)
+        (hu c (Real.le_of_lt_r (Real.lt_of_lt_of_le_r ham h1)) h2)⟩)
   have hf2 : f2 = up ξ₂ * (1 / vpow α ξ₂)
         + u ξ₂ * (-(vpow α ξ₂ * (α * (1 / ξ₂))) / (vpow α ξ₂ * vpow α ξ₂)) :=
     HasDerivAt_unique _ f2 _ ξ₂ hd2
-      (phi_euler_deriv u up α ξ₂ (Real.lt_trans_ax hm_pos hmξ2) (hu ξ₂ (Real.lt_trans_ax ham hmξ2) hξ2b))
+      (phi_euler_deriv u up α ξ₂ (Real.lt_trans_ax hm_pos hmξ2) (hu ξ₂ (Real.le_of_lt_r (Real.lt_trans_ax ham hmξ2)) (Real.le_of_lt_r hξ2b)))
   rw [show u b * (1 / vpow α b) = 0 by rw [hub, Real.zero_mul]] at heq2
   have hf2_neg : f2 < 0 := by
     have hlt : f2 * (b - m) < 0 := by
@@ -368,16 +369,16 @@ theorem sturm_euler_no_positive_bump
     rw [← phi_euler_identity u up α ξ₂, ← hf2]
     exact mul_neg_of_neg_of_pos hf2_neg (Real.mul_pos (vpow_pos α ξ₂) (vpow_pos α ξ₂))
   obtain ⟨ζ, fW, hξ1ζ, hζξ2, hdW, heqW⟩ :=
-    mean_value_theorem (fun y => up y * vpow α y - u y * (vpow α y * (α * (1 / y)))) ξ₁ ξ₂ hξ1ξ2
+    mean_value_theorem_ct (fun y => up y * vpow α y - u y * (vpow α y * (α * (1 / y)))) ξ₁ ξ₂ hξ1ξ2
       (fun c h1 h2 => ⟨_, abel_euler_wronskian_deriv_zero u up upp α c
-        (Real.lt_trans_ax ha (Real.lt_trans_ax haξ1 h1))
-        (hu c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))
-        (hup c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))
-        (hode c (Real.lt_trans_ax haξ1 h1) (Real.lt_trans_ax h2 hξ2b))⟩)
+        (Real.lt_trans_ax ha (Real.lt_of_lt_of_le_r haξ1 h1))
+        (hu c (Real.le_of_lt_r (Real.lt_of_lt_of_le_r haξ1 h1)) (Real.le_of_lt_r (Real.lt_of_le_of_lt_r h2 hξ2b)))
+        (hup c (Real.lt_of_lt_of_le_r haξ1 h1) (Real.lt_of_le_of_lt_r h2 hξ2b))
+        (hode c (Real.lt_of_lt_of_le_r haξ1 h1) (Real.lt_of_le_of_lt_r h2 hξ2b))⟩)
   have hfW : fW = 0 := HasDerivAt_unique _ fW 0 ζ hdW
     (abel_euler_wronskian_deriv_zero u up upp α ζ
       (Real.lt_trans_ax ha (Real.lt_trans_ax haξ1 hξ1ζ))
-      (hu ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b))
+      (hu ζ (Real.le_of_lt_r (Real.lt_trans_ax haξ1 hξ1ζ)) (Real.le_of_lt_r (Real.lt_trans_ax hζξ2 hξ2b)))
       (hup ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b))
       (hode ζ (Real.lt_trans_ax haξ1 hξ1ζ) (Real.lt_trans_ax hζξ2 hξ2b)))
   rw [hfW, Real.zero_mul] at heqW

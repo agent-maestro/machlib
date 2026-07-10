@@ -29,6 +29,9 @@
         "sorryAx",
         "zero_count_bound_classical",
         "analytic_finite_zeros"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -44,6 +47,9 @@
         "sorryAx",
         "zero_count_bound_classical",
         "analytic_finite_zeros"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -59,6 +65,9 @@
         "sorryAx",
         "zero_count_bound_classical",
         "analytic_finite_zeros"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -74,6 +83,9 @@
         "sorryAx",
         "zero_count_bound_classical",
         "analytic_finite_zeros"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -188,6 +200,9 @@
         "analytic_",
         "HasDerivAt_log_pos",
         "HasDerivAt_inv"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -203,6 +218,9 @@
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -222,6 +240,9 @@
         "HasDerivAt_log_pos",
         "HasDerivAt_inv",
         "ofReduceBool"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     },
     {
@@ -237,6 +258,9 @@
       "forbid_axioms": [
         "sorryAx",
         "zero_count_bound_classical"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.rolle"
       ]
     }
   ]

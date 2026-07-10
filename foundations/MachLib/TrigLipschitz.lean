@@ -39,7 +39,7 @@ theorem abs_neg_sin_le_one (c : Real) : abs (-sin c) ≤ 1 := by
 /-- One-sided MVT bound for `sin` on `a < b`: `|sin b − sin a| ≤ b − a`. -/
 theorem sin_lip_lt {a b : Real} (hab : a < b) : abs (sin b - sin a) ≤ b - a := by
   obtain ⟨c, f', _, _, hd, heq⟩ :=
-    mean_value_theorem sin a b hab (fun c _ _ => ⟨cos c, HasDerivAt_sin c⟩)
+    mean_value_theorem_ct sin a b hab (fun c _ _ => ⟨cos c, HasDerivAt_sin c⟩)
   have hf' : f' = cos c := HasDerivAt_unique sin f' (cos c) c hd (HasDerivAt_sin c)
   have hba_nn : 0 ≤ b - a := sub_nonneg_of_le (le_of_lt hab)
   rw [heq, hf', abs_mul, abs_of_nonneg hba_nn]
@@ -49,7 +49,7 @@ theorem sin_lip_lt {a b : Real} (hab : a < b) : abs (sin b - sin a) ≤ b - a :=
 /-- One-sided MVT bound for `cos` on `a < b`: `|cos b − cos a| ≤ b − a`. -/
 theorem cos_lip_lt {a b : Real} (hab : a < b) : abs (cos b - cos a) ≤ b - a := by
   obtain ⟨c, f', _, _, hd, heq⟩ :=
-    mean_value_theorem cos a b hab (fun c _ _ => ⟨-sin c, HasDerivAt_cos c⟩)
+    mean_value_theorem_ct cos a b hab (fun c _ _ => ⟨-sin c, HasDerivAt_cos c⟩)
   have hf' : f' = -sin c := HasDerivAt_unique cos f' (-sin c) c hd (HasDerivAt_cos c)
   have hba_nn : 0 ≤ b - a := sub_nonneg_of_le (le_of_lt hab)
   rw [heq, hf', abs_mul, abs_of_nonneg hba_nn]
