@@ -69,6 +69,37 @@ axiom rolle (f : Real → Real) (a b : Real) (hab : a < b)
     (hdiff : ∀ c : Real, a < c → c < b → ∃ f' : Real, HasDerivAt f f' c) :
     ∃ c : Real, a < c ∧ c < b ∧ HasDerivAt f 0 c
 
+/-- **Rolle's theorem — sound closed-interval form.** Identical to `rolle`, except the differentiability
+hypothesis is on the CLOSED interval `[a,b]` (`a ≤ c → c ≤ b`). This is the *faithfully groundable* form: it
+is discharged against Mathlib's ℝ by `MonogateEML.RealModel.rolle_witnessed` (differentiability on `[a,b]`
+gives continuity on `[a,b]`, so Mathlib's `exists_hasDerivAt_eq_zero` applies). The open-only `rolle` above
+OMITS that continuity and is *not* a theorem of ℝ — counterexample: `f x = x` on `(0,1)` with `f 0 = f 1 = 0`
+(differentiable on the open interval, `f 0 = f 1`, no interior zero of `f'`).
+
+`interleave_from` — hence `zero_count_bound_by_deriv`, the plain zero-count transfer — is migrated to
+`rolle_ct`: it only applies Rolle on consecutive-zero subintervals `[zᵢ,zᵢ₊₁] ⊂ (a,b)`, where closed-interval
+differentiability follows from the open-interval hypothesis (`lt_of_lt_of_le_r`/`lt_of_le_of_lt_r`), and its
+own PUBLIC hypothesis stays open, so no caller changes. Two consumers still rest on the open-only `rolle`,
+each a bounded follow-up: (1) `mean_value_theorem` — a general-purpose MVT with ~27 call sites, whose
+migration means threading closed-interval differentiability through every caller; (2) `interleave_dual` (the
+bad-set transfer, used by the log/exp Wronskian reduces) — its Rolle endpoints can be bad points where the
+vehicle is discontinuous, so it needs a continuity-safe restructuring, not just a hypothesis swap. -/
+axiom rolle_ct (f : Real → Real) (a b : Real) (hab : a < b)
+    (hfa_eq_fb : f a = f b)
+    (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) :
+    ∃ c : Real, a < c ∧ c < b ∧ HasDerivAt f 0 c
+
+/-- `x < y → y ≤ z → x < z` (local). -/
+private theorem lt_of_lt_of_le_r {x y z : Real} (h1 : x < y) (h2 : y ≤ z) : x < z := by
+  rcases (le_iff_lt_or_eq y z).mp h2 with h | h
+  · exact lt_trans_ax h1 h
+  · rw [← h]; exact h1
+/-- `x ≤ y → y < z → x < z` (local). -/
+private theorem lt_of_le_of_lt_r {x y z : Real} (h1 : x ≤ y) (h2 : y < z) : x < z := by
+  rcases (le_iff_lt_or_eq x y).mp h1 with h | h
+  · exact lt_trans_ax h h2
+  · rw [h]; exact h2
+
 /-! ## Mean Value Theorem (consequence of Rolle)
 
 **Khovanskii sprint week 1 chunk 1 (2026-06-11):** axiom-to-theorem
@@ -307,10 +338,10 @@ private theorem interleave_from (f : Real → Real) (a b : Real)
     have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
     obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
     obtain ⟨ha_z1, hz1_b, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
-    have hdiff' : ∀ c : Real, hd < c → c < z1 → ∃ f' : Real, HasDerivAt f f' c :=
-      fun c hc1 hc2 => hdiff c (lt_trans_ax ha_hd hc1) (lt_trans_ax hc2 hz1_b)
+    have hdiff' : ∀ c : Real, hd ≤ c → c ≤ z1 → ∃ f' : Real, HasDerivAt f f' c :=
+      fun c hc1 hc2 => hdiff c (lt_of_lt_of_le_r ha_hd hc1) (lt_of_le_of_lt_r hc2 hz1_b)
     have hfeq : f hd = f z1 := by rw [hf_hd, hf_z1]
-    obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle f hd z1 hhd_lt_z1 hfeq hdiff'
+    obtain ⟨c0, hc0_lo, hc0_hi, hc0_deriv⟩ := rolle_ct f hd z1 hhd_lt_z1 hfeq hdiff'
     obtain ⟨cs', hcs'_nodup, hcs'_props, hcs'_gt, hcs'_len⟩ :=
       ih z1 hpair_tail hnodup_tail (fun z hz => hzero z (List.mem_cons_of_mem hd hz))
     have hc0_lt_cs' : ∀ c ∈ cs', c0 < c := fun c hc => lt_trans_ax hc0_hi (hcs'_gt c hc)
