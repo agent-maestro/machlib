@@ -276,6 +276,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The absolute fold wired through the emitted C, on a CANCELLING kernel (2x2 determinant x*y - z*w). pipeline_det spans EML->emitC->evalC->toR within an ABSOLUTE bound of exact R, valid under cancellation where the relative pipeline is vacuous. Invariant: sorryAx-free (a real emitC_correct + absenc_sub_rounded composition).",
+      "id": "pipeline-det-cancelling-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pipeline_det",
+        "VALID UNDER CANCELLATION"
+      ],
+      "module": "MachLib.AbsoluteBridge",
+      "theorem": "Certcom.pipeline_det",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

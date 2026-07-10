@@ -22,6 +22,15 @@ Capstone **`absenc_sub_rounded`** reproduces the *exact* `u·(2+u)·(|xe|+|ye|)`
 two-line instance of the general `absenc_sub` fold (one ring identity). The bespoke composite-error proof
 is thereby subsumed by a reusable per-node accumulation. `MachLib.Real`-only, no Mathlib.
 
+**Wired through the emitted C (`MachLib/AbsoluteBridge.lean`).** `FloatRealBridge`'s `pipeline_*`
+connected T1's emitted C to T3's *relative* forward error, but only for cancellation-free trees. The
+absolute fold now closes that gap on the canonical CANCELLING kernel — the 2×2 determinant / cross-product
+`x·y − z·w` (`detEML`). **`pipeline_det`**: the value the *emitted C* computes (`evalC ∘ emitC`), through
+`toR`, is within `u·(2+u)·(|X·Y|+|Z·W|)` of the exact `X·Y − Z·W` — the same EML→emitC→evalC→toR span as
+the relative pipeline, now VALID UNDER CANCELLATION (`X·Y ≈ Z·W`, where `Renc` is vacuous) and with NO
+sign hypothesis on the inputs. `sorryAx`-free; assembled from two `br.mul` roundings + one `br.sub` via
+`absenc_sub_rounded` + `emitC_correct`.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it
