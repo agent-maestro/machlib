@@ -171,4 +171,54 @@ theorem isChainFnVal_derivTower {f : Real → Real} (hf : IsChainFnVal f) :
   intro i x
   exact hasDerivAt_eval_natural (chainDerivIter N p i) x (chainDerivIter_coherent N p i x)
 
+/-! ## The Pfaffian bridge — `IsChainFnVal f → IsDiffAlg f`
+
+The `MultiPoly N`-level derivative iterate `polyDerivIter` stays in a FIXED `MultiPoly N`
+(no `.n`-dependent HEq — it is wrapped with `chainNFn N`, whose `.n` is `N` syntactically).
+Its jet is exactly the tower `d k = (chainNFn N (polyDerivIter … k)).eval`. The one
+non-structural fact — that the `N+2` tower levels satisfy a nonzero polynomial relation —
+is the witnessed axiom `chain_algebraic_dependence`. -/
+
+/-- The `i`-th chain-total-derivative iterate at the POLYNOMIAL level (fixed `MultiPoly N`). -/
+noncomputable def polyDerivIter (N : Nat) (p : MultiPoly N) : Nat → MultiPoly N
+  | 0     => p
+  | i + 1 => chainTotalDeriv (IterExpChain N) (polyDerivIter N p i)
+
+/-- **Algebraic dependence of chain-function values** — WITNESSED AXIOM (against Mathlib's
+transcendence degree, in `monogate-lean`). Any `N+2` polynomials in the `N+1` generators
+`(x, f₁,…,f_N)` of the order-`N` iterated-exp chain satisfy a nonzero polynomial relation
+as functions of `x`: they lie in a field of transcendence degree ≤ `N+1`, so `N+2` of them
+are algebraically dependent over ℝ. This uses only the TRIVIAL trans-degree upper bound —
+no algebraic independence of iterated exponentials (Ax's theorem) is required. -/
+axiom chain_algebraic_dependence (N : Nat) (P : Fin (N + 2) → MultiPoly N) :
+    ∃ Q : MultiPoly (N + 2),
+      (∃ (x : Real) (env : Fin (N + 2) → Real), Q.eval x env ≠ 0) ∧
+      ∀ x : Real, Q.eval x (fun i => (P i).eval x ((IterExpChain N).chainValues x)) = 0
+
+/-- **The Pfaffian bridge.** Every iterated-exp chain-function value is differentially
+algebraic. Combines the derivative tower (structural, proved) with the algebraic-dependence
+axiom (witnessed): the tower gives `d 0 = f` and the derivative chain, and the axiom hands a
+nonzero polynomial relation among `d 0, …, d(N+1)` — exactly an `IsDiffAlg` witness of order
+`N+1`. Consequently a differentially TRANSCENDENTAL function (Γ, once Hölder is in) cannot be
+a chain function — the clean form of "no exp operator computes Γ". -/
+theorem isChainFnVal_isDiffAlg {f : Real → Real} (hf : IsChainFnVal f) : IsDiffAlg f := by
+  obtain ⟨N, p, hfeq⟩ := hf
+  obtain ⟨Q, hQnz, hQrel⟩ := chain_algebraic_dependence N (fun i => polyDerivIter N p i.val)
+  refine ⟨N + 1, (fun k => (chainNFn N (polyDerivIter N p k)).eval), Q,
+          ⟨(funext hfeq).symm, ?_⟩, hQnz, ?_⟩
+  · -- consecutive tower levels are derivative/antiderivative
+    intro i _ x
+    exact hasDerivAt_eval_natural (chainNFn N (polyDerivIter N p i)) x
+      (IterExpChain_isCoherentAt N x)
+  · -- the axiom's relation is exactly the jet relation `Q.eval x (d 0 x, …, d(N+1) x) = 0`
+    intro x
+    exact hQrel x
+
+/-- **The separation, ready for Hölder.** A function that is NOT differentially algebraic
+is not an iterated-exp chain-function value. Once `¬ IsDiffAlg Real.Gamma` (Hölder) lands,
+this gives `¬ IsChainFnVal Real.Gamma` — Γ is separated from the exp tower. -/
+theorem not_isChainFnVal_of_not_isDiffAlg {f : Real → Real} (h : ¬ IsDiffAlg f) :
+    ¬ IsChainFnVal f :=
+  fun hf => h (isChainFnVal_isDiffAlg hf)
+
 end MachLib
