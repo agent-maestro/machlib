@@ -12,10 +12,13 @@ each carrying its SuperBEST node-cost; a leaf carries its own cost. `cost` is th
 The cost theory's content is that this *additive* model — operators have a uniform single-output
 interface, so composition needs no adapter nodes — already implies the headline structural facts.
 
-Scope (honest): this is the *cost-algebra* core (No-Nesting Penalty `T38-NNP`, the single-sum law
-`T42`). The full `T38` decomposition `Cost = Naive − Sharing − Pattern`, the four-class ordering, and
-the `T41-ISO` isomorphism classes are larger targets left for follow-up; this turns the two
-self-contained named theorems from prose into proof.
+Scope (honest): this is the *cost-algebra* core, now covering the No-Nesting Penalty (`T38-NNP`), the
+single- and double-sum laws (`T42`, O(N)/O(N²)), the full `T38` decomposition `Cost = Naive − Pattern
+− Sharing`, the `T41-ISO` topological cost-invariance, and the structural core of the `T41` four-class
+ordering. What stays out (stated, not faked): `T41`'s mean-cost ordering `C < B < A < D` is an
+EMPIRICAL statistic over 187 equations (not a structural theorem) — here we prove the classification is
+well-defined and the shared-skeleton floor/ceiling instead; and the Quadratic Ceiling Conjecture
+(`T42-QCC`) is a research conjecture, not formalised.
 -/
 
 namespace MachLib.CostTheory
@@ -205,6 +208,153 @@ theorem t38_decomposition (s body : BTree) (h : 1 ≤ refs body) :
 
 end T38
 
+/-! ### T41-ISO — cost is a topological invariant (isomorphic DAGs cost the same)
+
+The cross-domain isomorphism result (T41-ISO, R10): equations from unrelated fields that share the
+SAME minimal DAG topology have exactly equal cost, so any normal form or optimisation proved for one
+transfers to all others in its family. The structural core is that `cost` depends only on a tree's
+shape and per-node costs — invariant under any structure-preserving relabeling, including reordering
+the operands of a commutative binary node. We capture "same topology" by an inductive isomorphism
+`Iso` (matching constructors recursively, with a commutative child-swap for binary nodes) and prove
+`cost` is `Iso`-invariant. The blog's eight families (Arrhenius ≅ Eyring, Boltzmann ≅ logistic, …) are
+the observed instances; this proves the invariance principle they rely on. -/
+
+/-- Structural isomorphism of cost trees: same shape and node-costs, up to reordering the operands of
+commutative binary nodes. -/
+inductive Iso : CostTree → CostTree → Prop
+  | leaf (c : Nat) : Iso (.leaf c) (.leaf c)
+  | un {a a'} (c : Nat) : Iso a a' → Iso (.un c a) (.un c a')
+  | bin {a a' b b'} (c : Nat) : Iso a a' → Iso b b' → Iso (.bin c a b) (.bin c a' b')
+  | swap {a a' b b'} (c : Nat) : Iso a a' → Iso b b' → Iso (.bin c a b) (.bin c b' a')
+
+/-- **Cost is `Iso`-invariant.** Two expressions with the same DAG topology cost exactly the same —
+the T41-ISO principle. Induction on the isomorphism; the `swap` case is the commutative reordering. -/
+theorem iso_cost {t₁ t₂ : CostTree} (h : Iso t₁ t₂) : cost t₁ = cost t₂ := by
+  induction h with
+  | leaf c => rfl
+  | un c _ ih => simp only [cost, ih]
+  | bin c _ _ iha ihb => simp only [cost, iha, ihb]
+  | swap c _ _ iha ihb => simp only [cost, iha, ihb]; omega
+
+/-- `Iso` is reflexive — every tree is isomorphic to itself, so `iso_cost` is non-vacuously total. -/
+theorem Iso.refl : ∀ t : CostTree, Iso t t
+  | .leaf c => .leaf c
+  | .un c a => .un c (Iso.refl a)
+  | .bin c a b => .bin c (Iso.refl a) (Iso.refl b)
+
+/-- Commutativity of a binary operator's operands is a cost-isomorphism: `a ⊕ b` and `b ⊕ a` cost the
+same — the simplest concrete witness of topological cost-invariance. -/
+theorem cost_bin_comm (c : Nat) (a b : CostTree) : cost (.bin c a b) = cost (.bin c b a) :=
+  iso_cost (.swap c (Iso.refl a) (Iso.refl b))
+
+/-! ### T41 — the four structural classes and the structural cost ladder
+
+Every arithmetic expression falls into one of four classes by a two-bit signature: whether it contains
+an `exp`-family node and whether it contains a `ln`-family node — C = ln only, B = neither (rational),
+A = exp only, D = both (mixed). **The blog's mean-cost ordering `C < B < A < D` is an EMPIRICAL statistic
+over 187 real-world equations** (a fact about which equations happen to populate each class) — NOT a
+structural theorem, and deliberately NOT reproduced here (fabricating a structural proof of a dataset
+mean would be dishonest). What IS structural, and is proved here: (1) the classification is well-defined
+— a total function of the two-bit signature, the four classes distinct; (2) on a SHARED arithmetic
+skeleton the rational class is the cost FLOOR and the mixed class the cost CEILING — a transcendental
+family never lowers cost, and mixed carries both families plus their interaction node. -/
+namespace T41
+
+/-- A cost tree that tags its unary nodes by family, so the exp/ln signature is defined: `expn`/`lnn`
+are the two transcendental families, `ar1` any other unary arithmetic op (neg/recip/sqrt), `bin` any
+binary op. Same additive cost model as `CostTree`. -/
+inductive ETree where
+  | leaf : Nat → ETree
+  | expn : Nat → ETree → ETree
+  | lnn  : Nat → ETree → ETree
+  | ar1  : Nat → ETree → ETree
+  | bin  : Nat → ETree → ETree → ETree
+
+/-- Additive node count. -/
+def ecost : ETree → Nat
+  | .leaf c => c
+  | .expn c a => c + ecost a
+  | .lnn c a => c + ecost a
+  | .ar1 c a => c + ecost a
+  | .bin c a b => c + ecost a + ecost b
+
+/-- Presence of an `exp`-family node. -/
+def hasExp : ETree → Bool
+  | .leaf _ => false
+  | .expn _ _ => true
+  | .lnn _ a => hasExp a
+  | .ar1 _ a => hasExp a
+  | .bin _ a b => hasExp a || hasExp b
+
+/-- Presence of a `ln`-family node. -/
+def hasLn : ETree → Bool
+  | .leaf _ => false
+  | .expn _ a => hasLn a
+  | .lnn _ _ => true
+  | .ar1 _ a => hasLn a
+  | .bin _ a b => hasLn a || hasLn b
+
+/-- The four structural classes (the two-bit exp/ln signature). -/
+inductive Class where | A | B | C | D
+  deriving DecidableEq
+
+/-- Class assignment from the signature: A = exp only, B = neither, C = ln only, D = both. Total, so
+every expression has exactly one class — the "unambiguous class assignment". -/
+def classify (t : ETree) : Class :=
+  match hasExp t, hasLn t with
+  | true,  false => .A
+  | false, false => .B
+  | false, true  => .C
+  | true,  true  => .D
+
+/-- The four canonical class representatives over a shared `exp`/`ln`-free arithmetic core `a₀`: the
+core itself (B), one exp on top (A), one ln on top (C), and both families combined through an
+interaction binary node (D). `cE`/`cL`/`cI` are the exp/ln/interaction node-costs. -/
+def repB (a₀ : ETree) : ETree := a₀
+def repA (cE : Nat) (a₀ : ETree) : ETree := .expn cE a₀
+def repC (cL : Nat) (a₀ : ETree) : ETree := .lnn cL a₀
+def repD (cE cL cI : Nat) (a₀ : ETree) : ETree := .bin cI (.expn cE a₀) (.lnn cL a₀)
+
+/-- The representatives land in the intended classes (given an `exp`/`ln`-free core). B/A/C need the
+core to lack the other family; D always has both regardless of the core. -/
+theorem classify_repB {a₀ : ETree} (he : hasExp a₀ = false) (hl : hasLn a₀ = false) :
+    classify (repB a₀) = .B := by simp [classify, repB, he, hl]
+
+theorem classify_repA {a₀ : ETree} (cE : Nat) (hl : hasLn a₀ = false) :
+    classify (repA cE a₀) = .A := by simp [classify, repA, hasExp, hasLn, hl]
+
+theorem classify_repC {a₀ : ETree} (cL : Nat) (he : hasExp a₀ = false) :
+    classify (repC cL a₀) = .C := by simp [classify, repC, hasExp, hasLn, he]
+
+theorem classify_repD (cE cL cI : Nat) (a₀ : ETree) :
+    classify (repD cE cL cI a₀) = .D := by simp [classify, repD, hasExp, hasLn]
+
+/-- **Rational (B) is the structural cost FLOOR.** On a shared core, both single-family classes and the
+mixed class cost at least as much as the rational one — a transcendental family never lowers cost. -/
+theorem rational_floor (cE cL cI : Nat) (a₀ : ETree) :
+    ecost (repB a₀) ≤ ecost (repA cE a₀)
+    ∧ ecost (repB a₀) ≤ ecost (repC cL a₀)
+    ∧ ecost (repB a₀) ≤ ecost (repD cE cL cI a₀) :=
+  ⟨by simp only [repB, repA, ecost]; omega,
+   by simp only [repB, repC, ecost]; omega,
+   by simp only [repB, repD, ecost]; omega⟩
+
+/-- **Mixed (D) is the structural cost CEILING.** On a shared core, the mixed class costs at least as
+much as either single-family class (it carries both families plus their interaction node). -/
+theorem mixed_ceiling (cE cL cI : Nat) (a₀ : ETree) :
+    ecost (repA cE a₀) ≤ ecost (repD cE cL cI a₀)
+    ∧ ecost (repC cL a₀) ≤ ecost (repD cE cL cI a₀) :=
+  ⟨by simp only [repA, repD, ecost]; omega,
+   by simp only [repC, repD, ecost]; omega⟩
+
+/-- **The mixed class strictly exceeds a pure-exponential one** whenever the added ln node, interaction
+node, or core is nonempty — the structural "D is most expensive" made strict. -/
+theorem mixed_gt_exp (cE cL cI : Nat) (a₀ : ETree) (h : 0 < cL + cI + ecost a₀) :
+    ecost (repA cE a₀) < ecost (repD cE cL cI a₀) := by
+  simp only [repA, repD, ecost]; omega
+
+end T41
+
 /-! ### Regression / showcase. -/
 namespace Tests
 
@@ -232,6 +382,20 @@ example :
   + T38.patternBonus (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1)))
   + T38.sharingDiscount (.un 4 1 (.leaf 2)) (.bin 3 2 .ref (.bin 5 0 .ref (.leaf 1))) := by
   decide
+
+-- T41-ISO: `a ⊕ b` and `b ⊕ a` cost the same — commutative reorder is a cost-isomorphism.
+example : cost (.bin 3 (.leaf 4) (.leaf 5)) = cost (.bin 3 (.leaf 5) (.leaf 4)) :=
+  cost_bin_comm 3 (.leaf 4) (.leaf 5)
+
+-- Two same-topology trees, operands rearranged, cost equal via `iso_cost` (the T41-ISO principle).
+example : cost (.bin 2 (.un 1 (.leaf 3)) (.leaf 4)) = cost (.bin 2 (.leaf 4) (.un 1 (.leaf 3))) :=
+  iso_cost (.swap 2 (Iso.refl (.un 1 (.leaf 3))) (Iso.refl (.leaf 4)))
+
+-- T41 four-class: a Boltzmann-shaped mixed rep (exp core / ln core, divided) classifies as D.
+example : T41.classify (T41.repD 4 1 3 (.leaf 2)) = T41.Class.D := by decide
+
+-- Numeric floor/ceiling on a concrete core (a₀ = leaf 2, cE=4, cL=1, cI=3): B=2, A=6, C=3, D=12.
+example : T41.ecost (T41.repB (.leaf 2)) = 2 ∧ T41.ecost (T41.repD 4 1 3 (.leaf 2)) = 12 := by decide
 
 end Tests
 
