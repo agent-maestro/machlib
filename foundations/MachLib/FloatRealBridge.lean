@@ -47,6 +47,9 @@ structure FPBridge (toR : Float → MachLib.Real) : Prop where
   add : ∀ a b : Float, RoundsW u (toR (a + b)) (toR a + toR b)
   sub : ∀ a b : Float, RoundsW u (toR (a - b)) (toR a - toR b)
   mul : ∀ a b : Float, RoundsW u (toR (a * b)) (toR a * toR b)
+  /-- IEEE-754 negation is EXACT (it flips the sign bit — no rounding), so `neg` is an equality, not a
+  `RoundsW`; this is the strongest possible bridge fact. -/
+  neg : ∀ a : Float, toR (-a) = -(toR a)
 
 /-- **Consistency witness.** The bridge interface is satisfiable — the degenerate zero map obeys every
 field (`0` rounds `0`) — so theorems taking an `FPBridge` are not vacuous. This is NOT a real model
@@ -57,7 +60,7 @@ example : FPBridge (fun _ => 0) := by
     intro e he
     exact ⟨0, neg_nonpos_of_nonneg u_nonneg, u_nonneg, by rw [he]; mach_ring⟩
   exact ⟨fun a b => hz _ (by mach_ring), fun a b => hz _ (by mach_ring),
-         fun a b => hz _ (by mach_ring)⟩
+         fun a b => hz _ (by mach_ring), fun _ => neg_zero.symm⟩
 
 /-- **Worked bridge — the first load.** The *actual* Float computation `x·x + y·y`, viewed through
 `toR`, is within the standard relative forward-error `((1+u)²−1)·(X²+Y²)` (`X = toR x`) of the exact

@@ -30,6 +30,7 @@ inductive IsArith : EML → Prop
   | add (a b : EML) : IsArith a → IsArith b → IsArith (.bin .add a b)
   | sub (a b : EML) : IsArith a → IsArith b → IsArith (.bin .sub a b)
   | mul (a b : EML) : IsArith a → IsArith b → IsArith (.bin .mul a b)
+  | neg (a : EML) : IsArith a → IsArith (.neg a)
 
 /- Exact real interpretation of an arithmetic tree: leaves through `toR`, `MachLib.Real` ops at nodes. -/
 mutual
@@ -42,7 +43,7 @@ mutual
         | .sub => exactR toR env a - exactR toR env b
         | .mul => exactR toR env a * exactR toR env b
         | _ => 0
-    | .neg _ => 0
+    | .neg a => -(exactR toR env a)
     | .elet _ _ _ => 0
     | .tr1 _ _ => 0
     | .tr2 _ _ _ => 0
@@ -75,7 +76,7 @@ mutual
               + ((abs (exactR toR env a) + absErr toR env a) * absErr toR env b
                  + absErr toR env a * abs (exactR toR env b))
         | _ => 0
-    | .neg _ => 0
+    | .neg a => absErr toR env a
     | .elet _ _ _ => 0
     | .tr1 _ _ => 0
     | .tr2 _ _ _ => 0
@@ -108,6 +109,10 @@ theorem evalEML_absErr {toR : Float → MachLib.Real} (br : FPBridge toR)
       exact absenc_sub iha ihb (br.sub (evalEML i1 i2 env a).toF (evalEML i1 i2 env b).toF)
   | mul a b _ _ iha ihb =>
       exact absenc_mul iha ihb (br.mul (evalEML i1 i2 env a).toF (evalEML i1 i2 env b).toF)
+  | neg a _ iha =>
+      show AbsEnc (absErr toR env a) (toR (-(evalEML i1 i2 env a).toF)) (-(exactR toR env a))
+      rw [br.neg (evalEML i1 i2 env a).toF]
+      exact absenc_neg iha
 
 /-- **General cancelling pipeline — arbitrary arithmetic tree, through the emitted C.** The value the
 emitted C computes for any `IsArith e`, through `toR`, is within `absErr … e` of the exact real. The

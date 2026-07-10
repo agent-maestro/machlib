@@ -40,6 +40,11 @@ computes, through `toR`, is within `absErr … e` of the exact `exactR … e`; e
 `absenc_*` lemma + the bridge rounding, leaves exact, cancellation handled by `absenc_sub`. `pipeline_det`
 is now literally the `detEML` instance (`isArith_detEML`). `sorryAx`-free.
 
+The `neg` node is included: `FPBridge` gains a `neg` field — an EQUALITY `toR (-a) = -(toR a)`, not a
+`RoundsW`, because IEEE-754 negation is exact (sign-bit flip, no rounding) — and `absenc_neg` carries the
+absolute error through unchanged (`|(-flx)−(-xe)| = |flx−xe|`). So `IsArith` / `pipeline_arith` now cover
+literal / variable / `+` / `−` / `×` / **negation**.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it

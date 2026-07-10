@@ -53,6 +53,13 @@ private theorem mul_le_mul_both {a b c d : Real}
     (ha : 0 ≤ a) (hab : a ≤ b) (hc : 0 ≤ c) (hcd : c ≤ d) : a * c ≤ b * d :=
   le_trans (mul_le_mul_of_nonneg_right hab hc) (mul_le_mul_of_nonneg_left hcd (le_trans ha hab))
 
+/-- **Negation node.** IEEE-754 negation is exact, so it preserves the absolute error unchanged:
+`|(-flx) − (-xe)| = |flx − xe| ≤ Ex`. -/
+theorem absenc_neg {Ex flx xe : Real} (hx : AbsEnc Ex flx xe) : AbsEnc Ex (-flx) (-xe) := by
+  unfold AbsEnc at hx ⊢
+  have e : -flx - -xe = -(flx - xe) := by mach_mpoly [flx, xe]
+  rw [e, abs_neg]; exact hx
+
 /-- **Addition node.** If `flx`/`fly` are within `Ex`/`Ey` of `xe`/`ye` and `fls` correctly rounds
 `flx+fly`, then `fls` is within `u·((|xe|+Ex)+(|ye|+Ey)) + (Ex+Ey)` of `xe+ye`. -/
 theorem absenc_add {flx fly fls xe ye Ex Ey : Real}
