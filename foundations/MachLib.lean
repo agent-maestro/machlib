@@ -179,6 +179,7 @@ import MachLib.IterExpDepthNStepExplicit
 import MachLib.IterExpDepthNBudgetMax
 import MachLib.IterExpDepthNExplicit
 import MachLib.TowerSeparation
+import MachLib.DiffAlgebraic
 import MachLib.KhovanskiiConcrete
 import MachLib.PfaffianGeneralReduce
 import MachLib.PfaffianWronskianReduce
