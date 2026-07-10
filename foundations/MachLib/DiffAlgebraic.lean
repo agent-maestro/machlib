@@ -1,5 +1,7 @@
 import MachLib.Differentiation
 import MachLib.MultiPoly
+import MachLib.IterExpDepthNChainFn
+import MachLib.IterExpChain
 
 /-!
 # Differentially algebraic functions — the Tier-1 foundation for tower separation
@@ -101,5 +103,43 @@ theorem sin_isDiffAlg : IsDiffAlg sin := by
     intro x
     simp only [MultiPoly.eval]
     mach_ring
+
+/-! ## Toward the Pfaffian bridge — derivative-closure of the chain-function class
+
+The bridge `IsChainFnVal f → IsDiffAlg f` factors into two steps:
+1. **derivative-closure** — the derivatives of a chain function are all chain functions
+   (so `f` has a derivative tower, every level a chain function). PROVED below.
+2. **algebraic dependence** — a chain function and its first `r+1` derivatives are `r+2`
+   elements of `ℝ[x, f₁,…,f_r]` (transcendence degree ≤ `r+1`), hence satisfy a nonzero
+   polynomial relation — a differential polynomial. This step needs a transcendence-degree
+   fact (or the monomial-counting pigeonhole) that is NOT yet in the Mathlib-free library;
+   it is the one remaining brick. -/
+
+open MachLib.IterExpDepthN
+open MachLib.PfaffianChainMod MachLib.PfaffianChainMod.PfaffianFn
+open MachLib.IterExpChainMod
+
+/-- `f` is (pointwise) an iterated-exp chain-function value. No degree bound — `IsDiffAlg`
+needs none. (`IsExpChainFn` in `TowerSeparation` is the degree-bounded variant used for
+the zero-count separation.) -/
+def IsChainFnVal (f : Real → Real) : Prop :=
+  ∃ (N : Nat) (p : MultiPoly N), ∀ x : Real, f x = (chainNFn N p).eval x
+
+/-- **Derivative-closure of the chain-function class.** The derivative of an iterated-exp
+chain function is again one: it is the chain's own total-derivative polynomial
+(`chainTotalDerivative`) over the SAME chain, whose coherence is unconditional
+(`IterExpChain_isCoherentAt`). Iterating this hands a full derivative tower whose every
+level is a chain function — the structural engine of the Pfaffian→diff-algebraic bridge
+(only the algebraic-dependence step then remains). -/
+theorem isChainFnVal_deriv {f : Real → Real} (hf : IsChainFnVal f) :
+    ∃ g : Real → Real, IsChainFnVal g ∧ ∀ x : Real, HasDerivAt f (g x) x := by
+  obtain ⟨N, p, hfeq⟩ := hf
+  refine ⟨(chainNFn N p).chainTotalDerivative.eval,
+          ⟨N, chainTotalDeriv (IterExpChain N) p, fun _ => rfl⟩, ?_⟩
+  intro x
+  have hd : HasDerivAt (chainNFn N p).eval ((chainNFn N p).chainTotalDerivative.eval x) x :=
+    hasDerivAt_eval_natural (chainNFn N p) x (IterExpChain_isCoherentAt N x)
+  rw [funext hfeq]
+  exact hd
 
 end MachLib
