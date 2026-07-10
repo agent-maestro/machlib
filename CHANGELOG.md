@@ -7,6 +7,21 @@ per-release status.
 
 ## [Unreleased] — 2026-07-09
 
+### New — absolute, cancellation-tolerant forward-error fold (`MachLib/AbsoluteError.lean`)
+
+The certifier's `ForwardError.Renc` is a *relative* enclosure: it composes only on a cancellation-FREE
+tree of non-negative quantities (`cosh`, `x²+y²`). General EML arithmetic cancels (`a − b` with `a ≈ b`),
+where the relative bound is vacuous. This adds the honest general answer — the **absolute** running-error
+bound (Higham, *Accuracy and Stability*, §3.4): **`MachLib.Real.AbsEnc E fl e := |fl − e| ≤ E`**, with
+`sorryAx`-free node lemmas `absenc_exact` / `absenc_round` (leaves) and `absenc_add` / `absenc_sub` /
+`absenc_mul` (arithmetic). The **`sub` node carries the SAME bound as `add`** — cancellation destroys
+*relative* accuracy, never the *absolute* bound, which is exactly what makes this fold general.
+
+Capstone **`absenc_sub_rounded`** reproduces the *exact* `u·(2+u)·(|xe|+|ye|)` bound that
+`CompositeRuntimeError.eml_fwd_reduces_to_primitives` proves by hand for `eml = exp x − log y`, now a
+two-line instance of the general `absenc_sub` fold (one ring identity). The bespoke composite-error proof
+is thereby subsumed by a reusable per-node accumulation. `MachLib.Real`-only, no Mathlib.
+
 ### Hardened — the unsound open `rolle` axiom is RETIRED; the library has no Rolle but the sound `rolle_ct` (`MachLib/Rolle.lean`)
 
 Grounding MachLib.Real against Mathlib's ℝ surfaced that the old `rolle` axiom was **unsound as stated**: it

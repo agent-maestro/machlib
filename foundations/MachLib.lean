@@ -223,6 +223,7 @@ import MachLib.EMLToC
 import MachLib.EMLToCRuntime
 import MachLib.CompositeRuntimeError
 import MachLib.FloatRealBridge
+import MachLib.AbsoluteError
 
 /-!
 # MachLib — top-level aggregator

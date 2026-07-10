@@ -262,6 +262,20 @@
       "forbid_axioms_exact": [
         "MachLib.Real.rolle"
       ]
+    },
+    {
+      "_comment": "The absolute (cancellation-tolerant) forward-error fold. Unlike the relative Renc, `absenc_sub` holds under cancellation; the capstone `absenc_sub_rounded` reproduces the eml u(2+u) bound as an instance. Invariant: stays sorryAx-free (a real per-node accumulation, not a hand-wave).",
+      "id": "absenc-sub-rounded-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "absenc_sub_rounded",
+        "u·(2+u)·(|xe|+|ye|)"
+      ],
+      "module": "MachLib.AbsoluteError",
+      "theorem": "MachLib.Real.absenc_sub_rounded",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
