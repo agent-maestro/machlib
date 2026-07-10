@@ -169,8 +169,8 @@ theorem chain3Fn_no_zeros_of_reduct_zero (p : MultiPoly 3) (c : Real) (a b : Rea
   have hVeq : ∀ z₁ z₂, a < z₁ → z₂ < b → z₁ < z₂ → V z₁ = V z₂ := by
     intro z₁ z₂ hz₁a hz₂b hz₁z₂
     obtain ⟨cc, f', hcc1, hcc2, hderiv_cc, hmvt⟩ :=
-      mean_value_theorem V z₁ z₂ hz₁z₂
-        (fun c' hc'1 hc'2 => ⟨0, hVderiv c' (lt_trans_ax hz₁a hc'1) (lt_trans_ax hc'2 hz₂b)⟩)
+      mean_value_theorem_ct V z₁ z₂ hz₁z₂
+        (fun c' hc'1 hc'2 => ⟨0, hVderiv c' (lt_of_lt_of_le_r hz₁a hc'1) (lt_of_le_of_lt_r hc'2 hz₂b)⟩)
     have hf'0 : f' = 0 :=
       HasDerivAt_unique V f' 0 cc hderiv_cc
         (hVderiv cc (lt_trans_ax hz₁a hcc1) (lt_trans_ax hcc2 hz₂b))

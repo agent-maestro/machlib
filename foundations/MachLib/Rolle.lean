@@ -76,26 +76,35 @@ gives continuity on `[a,b]`, so Mathlib's `exists_hasDerivAt_eq_zero` applies). 
 OMITS that continuity and is *not* a theorem of ℝ — counterexample: `f x = x` on `(0,1)` with `f 0 = f 1 = 0`
 (differentiable on the open interval, `f 0 = f 1`, no interior zero of `f'`).
 
-`interleave_from` — hence `zero_count_bound_by_deriv`, the plain zero-count transfer — is migrated to
-`rolle_ct`: it only applies Rolle on consecutive-zero subintervals `[zᵢ,zᵢ₊₁] ⊂ (a,b)`, where closed-interval
-differentiability follows from the open-interval hypothesis (`lt_of_lt_of_le_r`/`lt_of_le_of_lt_r`), and its
-own PUBLIC hypothesis stays open, so no caller changes. Two consumers still rest on the open-only `rolle`,
-each a bounded follow-up: (1) `mean_value_theorem` — a general-purpose MVT with ~27 call sites, whose
-migration means threading closed-interval differentiability through every caller; (2) `interleave_dual` (the
-bad-set transfer, used by the log/exp Wronskian reduces) — its Rolle endpoints can be bad points where the
-vehicle is discontinuous, so it needs a continuity-safe restructuring, not just a hypothesis swap. -/
+The whole PURE-EXPONENTIAL Khovanskii lane is now on `rolle_ct`, via two migrated consumers:
+* `interleave_from` — hence `zero_count_bound_by_deriv`, the plain zero-count transfer — applies Rolle only on
+  consecutive-zero subintervals `[zᵢ,zᵢ₊₁] ⊂ (a,b)`, where closed diff follows from the open hypothesis
+  (`lt_of_lt_of_le_r`/`lt_of_le_of_lt_r`); its own PUBLIC hypothesis stays open, so no caller changes.
+* `mean_value_theorem_ct` (below) — used by the vehicle no-zeros arm, `KhovanskiiLemma`, `SingleExpKhovanskii`,
+  and the `PolynomialRootCount` base case. Every such use is on a subinterval of `(a,b)` or a globally
+  differentiable function, so closed diff is available.
+
+So `chainN_khovanskii_bound_explicit` / `_unconditional` and the concrete showcases depend on `rolle_ct`
+ALONE (no `rolle`). The open-only `rolle` survives for two things left as scoped work: (1) `mean_value_theorem`
+(open) — retained for OFF-path utility consumers (`SturmNonOscillation` ODE theory, `WronskianProportional`
+Lipschitz) whose MVT touches the real interval endpoints and would cascade into their ODE hypotheses;
+(2) `interleave_dual` (the bad-set transfer, used by the log/exp Wronskian reduces / mixed bound) — its Rolle
+endpoints can be bad points where the vehicle is discontinuous, needing a continuity-safe restructuring, not
+just a hypothesis swap. -/
 axiom rolle_ct (f : Real → Real) (a b : Real) (hab : a < b)
     (hfa_eq_fb : f a = f b)
     (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) :
     ∃ c : Real, a < c ∧ c < b ∧ HasDerivAt f 0 c
 
-/-- `x < y → y ≤ z → x < z` (local). -/
-private theorem lt_of_lt_of_le_r {x y z : Real} (h1 : x < y) (h2 : y ≤ z) : x < z := by
+/-- `x < y → x ≤ y` (order-axiom-only). Public — the `rolle_ct` migration's subinterval fixes use it. -/
+theorem le_of_lt_r {x y : Real} (h : x < y) : x ≤ y := (le_iff_lt_or_eq x y).mpr (Or.inl h)
+/-- `x < y → y ≤ z → x < z`. Public (used across the `rolle_ct` migration). -/
+theorem lt_of_lt_of_le_r {x y z : Real} (h1 : x < y) (h2 : y ≤ z) : x < z := by
   rcases (le_iff_lt_or_eq y z).mp h2 with h | h
   · exact lt_trans_ax h1 h
   · rw [← h]; exact h1
-/-- `x ≤ y → y < z → x < z` (local). -/
-private theorem lt_of_le_of_lt_r {x y z : Real} (h1 : x ≤ y) (h2 : y < z) : x < z := by
+/-- `x ≤ y → y < z → x < z`. Public (used across the `rolle_ct` migration). -/
+theorem lt_of_le_of_lt_r {x y z : Real} (h1 : x ≤ y) (h2 : y < z) : x < z := by
   rcases (le_iff_lt_or_eq x y).mp h1 with h | h
   · exact lt_trans_ax h h2
   · rw [h]; exact h2
@@ -206,6 +215,137 @@ theorem mean_value_theorem (f : Real → Real) (a b : Real) (hab : a < b)
   -- Step 3: apply Rolle to h, obtain c ∈ (a, b) with h'(c) = 0.
   obtain ⟨c, hca, hcb, h_zero⟩ := rolle h a b hab hfa_eq_fb h_diff
   obtain ⟨f'_c, hf'_c⟩ := hdiff c hca hcb
+  -- Re-derive h's derivative at c so we can compare with the 0 from Rolle.
+  have h_derived : HasDerivAt h ((b - a) * f'_c - 0 - (f b - f a)) c := by
+    have hg1 : HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c := by
+      have h_const : HasDerivAt (fun _ : Real => b - a) 0 c := HasDerivAt_const (b - a) c
+      have h_prod := HasDerivAt_mul (fun _ => b - a) f 0 f'_c c h_const hf'_c
+      have h_simp : (0 : Real) * f c + (b - a) * f'_c = (b - a) * f'_c := by
+        rw [zero_mul, zero_add]
+      rw [h_simp] at h_prod
+      exact h_prod
+    have hg2 : HasDerivAt (fun _ : Real => (b - a) * f a) 0 c := HasDerivAt_const _ c
+    have hg3 : HasDerivAt (fun x => (f b - f a) * (x - a)) (f b - f a) c := by
+      have h_id : HasDerivAt (fun y : Real => y) 1 c := HasDerivAt_id c
+      have h_const_a : HasDerivAt (fun _ : Real => a) 0 c := HasDerivAt_const a c
+      have h_sub : HasDerivAt (fun y => y - a) (1 - 0) c :=
+        HasDerivAt_sub (fun y => y) (fun _ => a) 1 0 c h_id h_const_a
+      have h_sub_simp : (1 : Real) - 0 = 1 := sub_zero 1
+      rw [h_sub_simp] at h_sub
+      have h_const_fba : HasDerivAt (fun _ : Real => f b - f a) 0 c := HasDerivAt_const _ c
+      have h_prod := HasDerivAt_mul (fun _ => f b - f a) (fun x => x - a) 0 1 c h_const_fba h_sub
+      have h_simp : (0 : Real) * (c - a) + (f b - f a) * 1 = f b - f a := by
+        rw [zero_mul, zero_add, mul_one_ax]
+      rw [h_simp] at h_prod
+      exact h_prod
+    have h_g12 : HasDerivAt (fun x => (b - a) * f x - (b - a) * f a) ((b - a) * f'_c - 0) c :=
+      HasDerivAt_sub _ _ _ _ c hg1 hg2
+    exact HasDerivAt_sub _ _ _ _ c h_g12 hg3
+  -- By HasDerivAt_unique: 0 = (b - a) * f'_c - 0 - (f b - f a).
+  have h_eq : (0 : Real) = (b - a) * f'_c - 0 - (f b - f a) :=
+    HasDerivAt_unique h 0 _ c h_zero h_derived
+  -- Algebra: f b - f a = (b - a) * f'_c = f'_c * (b - a).
+  have h_simp1 : (b - a) * f'_c - 0 - (f b - f a) = (b - a) * f'_c - (f b - f a) := by
+    rw [sub_zero]
+  rw [h_simp1] at h_eq
+  -- From h_eq : 0 = (b - a) * f'_c - (f b - f a).
+  -- Derive f b - f a = (b - a) * f'_c via the identity x = (x - y) + y,
+  -- which after the substitution h_eq.symm becomes x = 0 + y = y.
+  -- This avoids the prior session's mixed-form rewrite chain that
+  -- failed on the sub_def vs post-sub_def pattern mismatch.
+  have h_step : f b - f a = (b - a) * f'_c := by
+    have h_sym : (b - a) * f'_c - (f b - f a) = 0 := h_eq.symm
+    have h_id : (b - a) * f'_c
+        = ((b - a) * f'_c - (f b - f a)) + (f b - f a) := by
+      -- Use simp only for sub_def so the inner `(b - a)` subtraction isn't
+      -- the only one touched — we need the outer `- (f b - f a)` rewritten too.
+      simp only [sub_def]
+      rw [add_assoc]
+      have h_inv : -(f b + -f a) + (f b + -f a) = 0 := by
+        rw [add_comm]; exact add_neg _
+      rw [h_inv, add_zero]
+    rw [h_sym, zero_add] at h_id
+    exact h_id.symm
+  have h_final : f b - f a = f'_c * (b - a) := by
+    rw [h_step]; exact mul_comm (b - a) f'_c
+  exact ⟨c, f'_c, hca, hcb, hf'_c, h_final⟩
+
+/-- **Mean Value Theorem — sound closed-interval form (`_ct`).** Same as `mean_value_theorem` but with
+differentiability on the CLOSED `[a,b]`, via `rolle_ct`, so it is faithfully groundable. The pure-exponential
+Khovanskii path (the vehicle no-zeros arm, `KhovanskiiLemma`, `SingleExpKhovanskii`, `PolynomialRootCount`
+base case) uses this form; off-path utility consumers (`SturmNonOscillation`, `WronskianProportional`,
+trig/hyperbolic Lipschitz) stay on the open-hypothesis `mean_value_theorem`. -/
+theorem mean_value_theorem_ct (f : Real → Real) (a b : Real) (hab : a < b)
+    (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c) :
+    ∃ c : Real, ∃ f' : Real, a < c ∧ c < b ∧ HasDerivAt f f' c ∧
+      f b - f a = f' * (b - a) := by
+  -- Auxiliary function h(x) = (b-a)*f(x) - (b-a)*f(a) - (f(b) - f(a))*(x - a).
+  -- Crafted so that h(a) = h(b) = 0 algebraically, making Rolle applicable.
+  let h : Real → Real := fun x =>
+    (b - a) * f x - (b - a) * f a - (f b - f a) * (x - a)
+  -- Step 1: h a = h b.
+  have hfa_eq_fb : h a = h b := by
+    show (b - a) * f a - (b - a) * f a - (f b - f a) * (a - a) =
+         (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a)
+    rw [sub_self a, mul_zero, sub_zero]
+    -- Goal: (b - a) * f a - (b - a) * f a =
+    --       (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a)
+    have hlhs : (b - a) * f a - (b - a) * f a = 0 := sub_self _
+    rw [hlhs]
+    -- Goal: 0 = (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a)
+    -- Explicit factor-cancel replacing the prior session's failed mach_ring.
+    -- MachLib has no `mul_sub` axiom; derive it from sub_def + mul_distrib + mul_neg.
+    have hidentity :
+        (b - a) * f b - (b - a) * f a - (f b - f a) * (b - a) = 0 := by
+      have step1 : (b - a) * (f b - f a) = (b - a) * f b - (b - a) * f a := by
+        -- sub_def rewrites only one subtraction per `rw` call, so use simp
+        -- only to normalise both `f b - f a` and the outer `-` consistently.
+        simp only [sub_def]
+        rw [mul_distrib, mul_neg]
+      have step2 : (f b - f a) * (b - a) = (b - a) * (f b - f a) := mul_comm _ _
+      rw [← step1, step2]
+      exact sub_self _
+    rw [hidentity]
+  -- Step 2: h is differentiable on (a, b) with derivative
+  --   h'(c) = (b - a) * f'_c - 0 - (f b - f a).
+  have h_diff : ∀ c : Real, a ≤ c → c ≤ b →
+      ∃ h' : Real, HasDerivAt h h' c := by
+    intro c hca hcb
+    obtain ⟨f'_c, hf'_c⟩ := hdiff c hca hcb
+    -- g1(x) = (b - a) * f x;  g1'(c) = (b - a) * f'_c.
+    have hg1 : HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c := by
+      have h_const : HasDerivAt (fun _ : Real => b - a) 0 c := HasDerivAt_const (b - a) c
+      have h_prod := HasDerivAt_mul (fun _ => b - a) f 0 f'_c c h_const hf'_c
+      have h_simp : (0 : Real) * f c + (b - a) * f'_c = (b - a) * f'_c := by
+        rw [zero_mul, zero_add]
+      rw [h_simp] at h_prod
+      exact h_prod
+    -- g2(x) = (b - a) * f a (constant); g2'(c) = 0.
+    have hg2 : HasDerivAt (fun _ : Real => (b - a) * f a) 0 c :=
+      HasDerivAt_const _ c
+    -- g3(x) = (f b - f a) * (x - a); g3'(c) = f b - f a.
+    have hg3 : HasDerivAt (fun x => (f b - f a) * (x - a)) (f b - f a) c := by
+      have h_id : HasDerivAt (fun y : Real => y) 1 c := HasDerivAt_id c
+      have h_const_a : HasDerivAt (fun _ : Real => a) 0 c := HasDerivAt_const a c
+      have h_sub : HasDerivAt (fun y => y - a) (1 - 0) c :=
+        HasDerivAt_sub (fun y => y) (fun _ => a) 1 0 c h_id h_const_a
+      have h_sub_simp : (1 : Real) - 0 = 1 := sub_zero 1
+      rw [h_sub_simp] at h_sub
+      have h_const_fba : HasDerivAt (fun _ : Real => f b - f a) 0 c := HasDerivAt_const _ c
+      have h_prod := HasDerivAt_mul (fun _ => f b - f a) (fun x => x - a) 0 1 c h_const_fba h_sub
+      have h_simp : (0 : Real) * (c - a) + (f b - f a) * 1 = f b - f a := by
+        rw [zero_mul, zero_add, mul_one_ax]
+      rw [h_simp] at h_prod
+      exact h_prod
+    -- h = g1 - g2 - g3.
+    have h_g12 : HasDerivAt (fun x => (b - a) * f x - (b - a) * f a) ((b - a) * f'_c - 0) c :=
+      HasDerivAt_sub _ _ _ _ c hg1 hg2
+    have h_full : HasDerivAt h ((b - a) * f'_c - 0 - (f b - f a)) c :=
+      HasDerivAt_sub _ _ _ _ c h_g12 hg3
+    exact ⟨(b - a) * f'_c - 0 - (f b - f a), h_full⟩
+  -- Step 3: apply Rolle to h, obtain c ∈ (a, b) with h'(c) = 0.
+  obtain ⟨c, hca, hcb, h_zero⟩ := rolle_ct h a b hab hfa_eq_fb h_diff
+  obtain ⟨f'_c, hf'_c⟩ := hdiff c (le_of_lt_r hca) (le_of_lt_r hcb)
   -- Re-derive h's derivative at c so we can compare with the 0 from Rolle.
   have h_derived : HasDerivAt h ((b - a) * f'_c - 0 - (f b - f a)) c := by
     have hg1 : HasDerivAt (fun x => (b - a) * f x) ((b - a) * f'_c) c := by

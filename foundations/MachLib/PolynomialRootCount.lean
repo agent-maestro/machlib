@@ -1819,12 +1819,12 @@ theorem polyDerivative_zero_implies_eval_constant (p : Poly)
   have h_aux : ∀ a b : Real, a < b → Poly.eval p a = Poly.eval p b := by
     intro a b hab
     -- Apply MVT on (a, b).
-    have hdiff : ∀ c : Real, a < c → c < b →
+    have hdiff : ∀ c : Real, a ≤ c → c ≤ b →
         ∃ f' : Real, MachLib.Real.HasDerivAt (Poly.eval p) f' c := by
       intro c _ _
       exact ⟨Poly.eval (polyDerivative p) c, polyHasDerivAt_eval p c⟩
     obtain ⟨c, f'_c, hca, hcb, hf'_c, hmvt⟩ :=
-      MachLib.Real.mean_value_theorem (Poly.eval p) a b hab hdiff
+      MachLib.Real.mean_value_theorem_ct (Poly.eval p) a b hab hdiff
     -- hf'_c : HasDerivAt (Poly.eval p) f'_c c.
     -- By polyHasDerivAt_eval, the derivative at c is Poly.eval (polyDerivative p) c = 0.
     -- HasDerivAt_unique gives f'_c = 0.

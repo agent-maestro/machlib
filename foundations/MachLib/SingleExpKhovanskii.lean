@@ -1268,13 +1268,13 @@ theorem expPoly_ode_no_zeros
   intro z hza hzb
   rcases lt_total z x₀ with hlt | heq | hgt
   · -- z < x₀: MVT on (z, x₀).
-    have hdiff : ∀ y : Real, z < y → y < x₀ →
+    have hdiff : ∀ y : Real, z ≤ y → y ≤ x₀ →
                  ∃ f' : Real, HasDerivAt (mulNegExpX ep c) f' y := by
       intro y hyz hyx₀
-      exact ⟨0, h_g_deriv_zero y (lt_trans_ax hza hyz)
-                                  (lt_trans_ax hyx₀ hx₀_b)⟩
+      exact ⟨0, h_g_deriv_zero y (lt_of_lt_of_le_r hza hyz)
+                                  (lt_of_le_of_lt_r hyx₀ hx₀_b)⟩
     obtain ⟨y, f', hyz, hyx₀, hd, hmvt⟩ :=
-      mean_value_theorem (mulNegExpX ep c) z x₀ hlt hdiff
+      mean_value_theorem_ct (mulNegExpX ep c) z x₀ hlt hdiff
     have hy_a : a < y := lt_trans_ax hza hyz
     have hy_b : y < b := lt_trans_ax hyx₀ hx₀_b
     have hf'_eq : f' = 0 :=
@@ -1286,13 +1286,13 @@ theorem expPoly_ode_no_zeros
     exact step.symm
   · rw [heq]
   · -- z > x₀: MVT on (x₀, z).
-    have hdiff : ∀ y : Real, x₀ < y → y < z →
+    have hdiff : ∀ y : Real, x₀ ≤ y → y ≤ z →
                  ∃ f' : Real, HasDerivAt (mulNegExpX ep c) f' y := by
       intro y hyx₀ hyz
-      exact ⟨0, h_g_deriv_zero y (lt_trans_ax hx₀_a hyx₀)
-                                  (lt_trans_ax hyz hzb)⟩
+      exact ⟨0, h_g_deriv_zero y (lt_of_lt_of_le_r hx₀_a hyx₀)
+                                  (lt_of_le_of_lt_r hyz hzb)⟩
     obtain ⟨y, f', hyx₀, hyz, hd, hmvt⟩ :=
-      mean_value_theorem (mulNegExpX ep c) x₀ z hgt hdiff
+      mean_value_theorem_ct (mulNegExpX ep c) x₀ z hgt hdiff
     have hy_a : a < y := lt_trans_ax hx₀_a hyx₀
     have hy_b : y < b := lt_trans_ax hyz hzb
     have hf'_eq : f' = 0 :=

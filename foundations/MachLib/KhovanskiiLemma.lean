@@ -633,15 +633,15 @@ theorem pfaffian_derivative_zero_implies_nonzero_on
   intro z hza hzb
   rcases lt_total z x₀ with hlt | heq | hgt
   · -- z < x₀: MVT on (z, x₀); both endpoints and all interior points are in (a, b).
-    have hdiff : ∀ c : Real, z < c → c < x₀ →
+    have hdiff : ∀ c : Real, z ≤ c → c ≤ x₀ →
                  ∃ f' : Real, HasDerivAt g.eval f' c := by
       intro c hcz hcx₀
-      have hca : a < c := lt_trans_ax hza hcz
-      have hcb : c < b := lt_trans_ax hcx₀ hx₀_b
+      have hca : a < c := lt_of_lt_of_le_r hza hcz
+      have hcb : c < b := lt_of_le_of_lt_r hcx₀ hx₀_b
       exact ⟨g.derivative.eval c,
              PfaffianFunction.derivative_eval g c (h_valid c hca hcb)⟩
     obtain ⟨c, f', hca, hcx₀, hd, hmvt⟩ :=
-      mean_value_theorem g.eval z x₀ hlt hdiff
+      mean_value_theorem_ct g.eval z x₀ hlt hdiff
     have hc_a : a < c := lt_trans_ax hza hca
     have hc_b : c < b := lt_trans_ax hcx₀ hx₀_b
     have hf'_eq : f' = g.derivative.eval c :=
@@ -654,15 +654,15 @@ theorem pfaffian_derivative_zero_implies_nonzero_on
     exact step.symm
   · rw [heq]
   · -- x₀ < z: MVT on (x₀, z).
-    have hdiff : ∀ c : Real, x₀ < c → c < z →
+    have hdiff : ∀ c : Real, x₀ ≤ c → c ≤ z →
                  ∃ f' : Real, HasDerivAt g.eval f' c := by
       intro c hcx₀ hcz
-      have hca : a < c := lt_trans_ax hx₀_a hcx₀
-      have hcb : c < b := lt_trans_ax hcz hzb
+      have hca : a < c := lt_of_lt_of_le_r hx₀_a hcx₀
+      have hcb : c < b := lt_of_le_of_lt_r hcz hzb
       exact ⟨g.derivative.eval c,
              PfaffianFunction.derivative_eval g c (h_valid c hca hcb)⟩
     obtain ⟨c, f', hcx₀, hcz, hd, hmvt⟩ :=
-      mean_value_theorem g.eval x₀ z hgt hdiff
+      mean_value_theorem_ct g.eval x₀ z hgt hdiff
     have hc_a : a < c := lt_trans_ax hx₀_a hcx₀
     have hc_b : c < b := lt_trans_ax hcz hzb
     have hf'_eq : f' = g.derivative.eval c :=
