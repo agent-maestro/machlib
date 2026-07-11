@@ -1,7 +1,9 @@
 import MachLib.PfaffianGeneralBound2
 import MachLib.PfaffianGeneralRankRecAlpha
 import MachLib.PfaffianGeneralFormat2
+import MachLib.PfaffianGeneralFormatDegree
 import MachLib.ChainExp2ExplicitFinal
+import MachLib.IterExpDepthNTrimQDegHelpers
 
 /-!
 # The general order-2 Pfaffian EXPLICIT bound (WIP assembly)
@@ -186,5 +188,100 @@ theorem degreeY_bound2Mult_le (c2 : PfaffianChain 2) (G0 G1 p : MultiPoly 2) (i 
       ≤ MachLib.PfaffianChainMod.PfaffianFn.formatY2 c2 i
   rw [MultiPoly.degreeY_const, MultiPoly.degreeY_const]
   exact Nat.max_le.mpr ⟨by omega, by omega⟩
+
+theorem formatX2_le_α2 (c2 : PfaffianChain 2) :
+    MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2 ≤ α2 c2 :=
+  Nat.le_trans (Nat.le_max_left _ _) (Nat.le_trans (Nat.le_max_left _ _) (Nat.le_succ _))
+
+theorem formatY2_0_le_α2 (c2 : PfaffianChain 2) :
+    MachLib.PfaffianChainMod.PfaffianFn.formatY2 c2 (⟨0, by omega⟩ : Fin 2) ≤ α2 c2 :=
+  Nat.le_trans (Nat.le_max_right _ _) (Nat.le_trans (Nat.le_max_left _ _) (Nat.le_succ _))
+
+theorem formatY2_1_le_α2 (c2 : PfaffianChain 2) :
+    MachLib.PfaffianChainMod.PfaffianFn.formatY2 c2 (⟨1, by omega⟩ : Fin 2) ≤ α2 c2 :=
+  Nat.le_trans (Nat.le_max_right _ _) (Nat.le_succ _)
+
+/-- **`Bcap2` grows by `≤ α2` under the descent reduce** (the `hgrow` of `Ngen2_drop`, reduce arm). Every
+degree grows by `≤ format ≤ α2` (`degreeX/Y_chainReduce_le_format` + the `bound2Mult` bounds), so the
+max grows by `≤ α2`. -/
+theorem Bcap2_growth_reduce (c2 : PfaffianChain 2) (G0 G1 p : MultiPoly 2)
+    (hrel0 : c2.relations (⟨0, by omega⟩ : Fin 2)
+      = MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+    (hrel1 : c2.relations (⟨1, by omega⟩ : Fin 2)
+      = MultiPoly.mul G1 (MultiPoly.varY (⟨1, by omega⟩ : Fin 2))) :
+    Bcap2 (chainReduce c2 (bound2Mult G0 G1 p) p) ≤ Bcap2 p + α2 c2 := by
+  have hx := MachLib.PfaffianChainMod.PfaffianFn.degreeX_chainReduce_le_format c2
+    (MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2) (bound2Mult G0 G1 p) p
+    (MachLib.PfaffianChainMod.PfaffianFn.relations_degreeX_le_formatX2 c2)
+    (degreeX_bound2Mult_le c2 G0 G1 p hrel0 hrel1)
+  have hy0 := MachLib.PfaffianChainMod.PfaffianFn.degreeY_chainReduce_le_format c2
+    (⟨0, by omega⟩ : Fin 2) (MachLib.PfaffianChainMod.PfaffianFn.formatY2 c2 (⟨0, by omega⟩ : Fin 2))
+    (bound2Mult G0 G1 p) p
+    (MachLib.PfaffianChainMod.PfaffianFn.relations_degreeY_le_formatY2 c2 (⟨0, by omega⟩ : Fin 2))
+    (degreeY_bound2Mult_le c2 G0 G1 p (⟨0, by omega⟩ : Fin 2) hrel0 hrel1)
+  have hy1 := MachLib.PfaffianChainMod.PfaffianFn.degreeY_chainReduce_le_format c2
+    (⟨1, by omega⟩ : Fin 2) (MachLib.PfaffianChainMod.PfaffianFn.formatY2 c2 (⟨1, by omega⟩ : Fin 2))
+    (bound2Mult G0 G1 p) p
+    (MachLib.PfaffianChainMod.PfaffianFn.relations_degreeY_le_formatY2 c2 (⟨1, by omega⟩ : Fin 2))
+    (degreeY_bound2Mult_le c2 G0 G1 p (⟨1, by omega⟩ : Fin 2) hrel0 hrel1)
+  have hfx := formatX2_le_α2 c2
+  have hfy0 := formatY2_0_le_α2 c2
+  have hfy1 := formatY2_1_le_α2 c2
+  have b1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p)
+      ≤ MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p + α2 c2 := by omega
+  have b0 : MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p)
+      ≤ MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p + α2 c2 := by omega
+  have bX : MultiPoly.degreeX (chainReduce c2 (bound2Mult G0 G1 p) p)
+      ≤ MultiPoly.degreeX p + α2 c2 := by omega
+  have hkey : Nat.max (Nat.max
+        (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p))
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p)))
+        (MultiPoly.degreeX (chainReduce c2 (bound2Mult G0 G1 p) p))
+      ≤ Nat.max (Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p)) (MultiPoly.degreeX p) + α2 c2 := by
+    apply Nat.max_le.mpr
+    refine ⟨Nat.max_le.mpr ⟨?_, ?_⟩, ?_⟩
+    · exact Nat.le_trans b1 (Nat.add_le_add_right
+        (Nat.le_trans (Nat.le_max_left _ _) (Nat.le_max_left _ _)) _)
+    · exact Nat.le_trans b0 (Nat.add_le_add_right
+        (Nat.le_trans (Nat.le_max_right _ _) (Nat.le_max_left _ _)) _)
+    · exact Nat.le_trans bX (Nat.add_le_add_right (Nat.le_max_right _ _) _)
+  show Nat.max (Nat.max
+        (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p))
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (chainReduce c2 (bound2Mult G0 G1 p) p)))
+        (MultiPoly.degreeX (chainReduce c2 (bound2Mult G0 G1 p) p)) + 2
+      ≤ Nat.max (Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p)) (MultiPoly.degreeX p) + 2 + α2 c2
+  omega
+
+/-- **`Bcap2` is non-increasing under the descent trim.** `dropLeadingYAt ⟨1⟩` lowers `degreeY₁` and
+doesn't raise `degreeY₀`/`degreeX`, so every digit — hence `Bcap2` — is `≤`. (`≤ Bcap2 p ≤ Bcap2 p + α2`
+gives the `hgrow` of `Ngen2_drop` in the trim arm.) -/
+theorem Bcap2_growth_trim (p : MultiPoly 2)
+    (hpos : 0 < MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p) :
+    Bcap2 (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p) ≤ Bcap2 p := by
+  have hx : MultiPoly.degreeX (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p) ≤ MultiPoly.degreeX p :=
+    degreeX_dropLeadingYAt_le (⟨1, by omega⟩ : Fin 2) p
+  have hy := degreeY_dropLeadingYAt_le_all (⟨1, by omega⟩ : Fin 2) p hpos
+  have hy0 := hy (⟨0, by omega⟩ : Fin 2)
+  have hy1 := hy (⟨1, by omega⟩ : Fin 2)
+  have hkey : Nat.max (Nat.max
+        (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p))
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)))
+        (MultiPoly.degreeX (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p))
+      ≤ Nat.max (Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p)) (MultiPoly.degreeX p) := by
+    apply Nat.max_le.mpr
+    refine ⟨Nat.max_le.mpr ⟨?_, ?_⟩, ?_⟩
+    · exact Nat.le_trans hy1 (Nat.le_trans (Nat.le_max_left _ _) (Nat.le_max_left _ _))
+    · exact Nat.le_trans hy0 (Nat.le_trans (Nat.le_max_right _ _) (Nat.le_max_left _ _))
+    · exact Nat.le_trans hx (Nat.le_max_right _ _)
+  show Nat.max (Nat.max
+        (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p))
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)))
+        (MultiPoly.degreeX (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)) + 2
+      ≤ Nat.max (Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
+        (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p)) (MultiPoly.degreeX p) + 2
+  omega
 
 end MachLib.PfaffianGeneralVehExpo
