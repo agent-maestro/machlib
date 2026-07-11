@@ -72,6 +72,18 @@ and must be a hypothesis or a disclosed axiom. This is the precise, honest locat
 5. **[Deep] libm primitive grounding** — the `RoundsW u (toR (mg_f x)) (Real.f (toR x))` specs for
    exp/log/sin/… (the 11 libm calls, the "irreducible trust"). Same status as `FPBridge`.
 
+## ✅ Update (2026-07-10) — keystone executed
+
+The recommended keystone below is **done** (`MachLib/FPGrounding.lean`):
+`Certcom.realToR` + `Certcom.real_fpbridge` (the disclosed IEEE-754 axioms) + the theorem
+`Certcom.pipeline_det_grounded` — an **unconditional** forward-error certificate on the actual
+emitted-C determinant `x·y − z·w`, `#print axioms` resting on exactly `{realToR, real_fpbridge, the
+ℝ-witnessed MachLib.Real axioms, u, u_nonneg}`, no `FPBridge` hypothesis, no `sorryAx`. Registered in
+`AxiomLedger` under a new `disclosedTrusted` category (distinct from the inert `disclosedUnwitnessed`):
+254 axioms pinned, 5 headline footprints ⊆ trusted (66), and a dead-disclosure check confirms the two
+axioms are load-bearing in the Theorem-A headline. Next: `tr1` nodes in the closed-form fold, or a
+second grounded kernel (e.g. PID), or the Flocq-scale grounding that would derive `real_fpbridge`.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
