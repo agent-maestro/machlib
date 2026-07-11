@@ -51,14 +51,14 @@ theorem dLevelA_mono_d (inner : Nat → Nat) (hinner : ∀ {B B' : Nat}, B ≤ B
 /-- **The α-generalized recursive lex-descent-length cap** for `NestedNat n` whose lower digits grow
 `≤ α` per step: one level per digit, the inner cap being the budget over the digits below. -/
 def descentBoundA (α : Nat) : (n : Nat) → Nat → Nat
-  | 0     => fun B => B + 1
+  | 0     => fun B => α * (B + 1)
   | n + 1 => fun B => dLevelA (descentBoundA α n) α B B
 
 /-- **`descentBoundA α n` is monotone in `B`** — the `invPhiG` cap requirement (`hcap`). By induction on
 depth `n`, mirroring `descentBound_mono`. -/
 theorem descentBoundA_mono (α : Nat) :
     ∀ (n : Nat) {B B' : Nat}, B ≤ B' → descentBoundA α n B ≤ descentBoundA α n B'
-  | 0, _, _, h => by show _ + 1 ≤ _ + 1; omega
+  | 0, B, B', h => by show α * (B + 1) ≤ α * (B' + 1); exact Nat.mul_le_mul (Nat.le_refl α) (by omega)
   | n + 1, B, B', h => by
       show dLevelA (descentBoundA α n) α B B ≤ dLevelA (descentBoundA α n) α B' B'
       exact Nat.le_trans
@@ -68,7 +68,7 @@ theorem descentBoundA_mono (α : Nat) :
 /-- `descentBoundA 1 = descentBound` (the tower's `≤ 1` growth is the `α = 1` instance). -/
 theorem descentBoundA_one_eq (n B : Nat) : descentBoundA 1 n B = descentBound n B := by
   induction n generalizing B with
-  | zero => rfl
+  | zero => show 1 * (B + 1) = B + 1; rw [Nat.one_mul]
   | succ n ih =>
     show dLevelA (descentBoundA 1 n) 1 B B = dLevel (descentBound n) B B
     have hfun : ∀ (d B0 : Nat), dLevelA (descentBoundA 1 n) 1 d B0 = dLevel (descentBound n) d B0 := by
