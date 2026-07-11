@@ -103,11 +103,14 @@ theorem budgetN5A_trim (α m B d' : Nat) (hα : 1 ≤ α) (trim p : MultiPoly (m
       (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) trim)))) B B
     htrim (Nat.le_refl _) (Nat.le_of_lt (rankRecA_inner_lt α m hα trim B htx hty))
 
-/-- **Reduce arm:** `budgetN5A(red at B+D) + 1 ≤ budgetN5A(p at B)`, absorbing the Rolle `+1`. The format
-`α = D` (the multiplier/relation degree bound): the reduce preserves `degreeY_top` (`htie`) and grows the
-cap by `≤ D`; the inner `rankRecA` drops by `≥ D` (`rankRecA_drop`, `B' ≤ B+D`), which both covers the `+1`
-and compensates the cap growth (`invPhiG_reduce_grow`). -/
-theorem budgetN5A_reduce (m B D d' : Nat) (hD : 1 ≤ D) (red p : MultiPoly (m + 3))
+/-- **Reduce arm:** `budgetN5A(red at B+D) + D ≤ budgetN5A(p at B)`. The format `α = D` (the
+multiplier/relation degree bound): the reduce preserves `degreeY_top` (`htie`) and grows the cap by
+`≤ D`; the inner `rankRecA` drops by `≥ D` (`rankRecA_drop`, `B' ≤ B+D`). The `+D` — not just the Rolle
+`+1` — is what the depth-`N` step's `Ndep`-monotonicity argument needs, since the reduce recurses at
+`B+D` and the `Ndep` argument `(B+D) + budgetN5A(red) ≤ B + budgetN5A(p)` demands the budget fall by the
+full `D`. `invPhiG_reduce_grow_amt` delivers it (the inner-rank `D`-drop passes straight through); the
+Rolle `+1` follows since `D ≥ 1`. -/
+theorem budgetN5A_reduce (m B D d' : Nat) (red p : MultiPoly (m + 3))
     (htie : MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) red
         = MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) p)
     (hdp : MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) p = d' + 1)
@@ -118,7 +121,7 @@ theorem budgetN5A_reduce (m B D d' : Nat) (hD : 1 ≤ D) (red p : MultiPoly (m +
           (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) p))))
     (hrx : MultiPoly.degreeX red + 2 ≤ B + D)
     (hry : ∀ i : Fin (m + 3), MultiPoly.degreeY i red ≤ B + D) :
-    budgetN5A D m (B + D) red + 1 ≤ budgetN5A D m B p := by
+    budgetN5A D m (B + D) red + D ≤ budgetN5A D m B p := by
   have hdrop : rankRecA D (m + 2) (B + D) (chainNMeasureEI m (MultiPoly.dropLastY
         (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) red))) + D
       ≤ rankRecA D (m + 2) B (chainNMeasureEI m (MultiPoly.dropLastY
@@ -127,12 +130,12 @@ theorem budgetN5A_reduce (m B D d' : Nat) (hD : 1 ≤ D) (red p : MultiPoly (m +
       (chainNMeasureEI_inner_le_allB m red (B + D) hrx hry) hEI
   unfold budgetN5A
   rw [htie, hdp]
-  exact invPhiG_reduce_grow (descentBoundA D (m + 2))
+  exact invPhiG_reduce_grow_amt (descentBoundA D (m + 2))
     (fun {_ _} hh => descentBoundA_mono D (m + 2) hh) 0 d'
     (rankRecA D (m + 2) B (chainNMeasureEI m (MultiPoly.dropLastY
       (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) p))))
     (rankRecA D (m + 2) (B + D) (chainNMeasureEI m (MultiPoly.dropLastY
       (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) red))))
-    B (B + D) (by omega) (by omega)
+    B (B + D) D (by omega) (by omega)
 
 end MachLib.IterExpDepthN

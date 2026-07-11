@@ -35,6 +35,21 @@ theorem invPhiG_reduce_grow (cap : Nat → Nat)
     (show B' + ir' + 1 ≤ B + ir + 1 from by omega)
   omega
 
+/-- **Amount-carrying growth-tolerant reduce closure.** `invPhiG_reduce_grow` outputs only the Rolle
+`+1`; the depth-`N` step's `Ndep`-monotonicity argument needs the budget to drop by the *full* format
+`k` (= the reduce's `degreeX` growth `B → B+k`), not just `1`. The same proof delivers it: the inner
+rank drop `ir' + k ≤ ir` passes straight through the `levelBudgetG` monotonicity. Recovers
+`invPhiG_reduce_grow` at `k = 1`. -/
+theorem invPhiG_reduce_grow_amt (cap : Nat → Nat)
+    (hcap : ∀ {B B' : Nat}, B ≤ B' → cap B ≤ cap B')
+    (Nleaf d ir ir' B B' k : Nat) (hir : ir' + k ≤ ir) (hBir : B' + ir' ≤ B + ir) :
+    invPhiG cap Nleaf (d + 1) ir' B' + k ≤ invPhiG cap Nleaf (d + 1) ir B := by
+  show ir' + levelBudgetG cap Nleaf d (B' + ir' + 1) + k
+       ≤ ir + levelBudgetG cap Nleaf d (B + ir + 1)
+  have hmono := levelBudgetG_mono_B cap hcap Nleaf d
+    (show B' + ir' + 1 ≤ B + ir + 1 from by omega)
+  omega
+
 /-- **Format-shaped reduce closure.** The form the general base's reduce arm consumes directly: with the
 chain format `α ≥ 1`, an inner-rank drop of at least `α` (`ir' + α ≤ ir` — the format-scaled inner rank
 falling by ≥ 1 structural unit) and cap growth of at most `α` (`B' ≤ B + α` — `degreeX` grows by ≤ the
