@@ -102,6 +102,7 @@ import MachLib.KhovanskiiReduction
 import MachLib.SingleExpKhovanskii
 import MachLib.ExpPolyEffectiveBound
 import MachLib.ExpPolyBridge
+import MachLib.ExpPolyPfaffianEffective
 import MachLib.MultiPolyCanonY
 import MachLib.MultiPolyCanonYN
 import MachLib.ChainExpPoly
