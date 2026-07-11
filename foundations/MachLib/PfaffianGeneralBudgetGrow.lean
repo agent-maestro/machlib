@@ -47,4 +47,19 @@ theorem invPhiG_reduce_format (cap : Nat → Nat)
   · omega
   · omega
 
+/-- **α-scaled reduce closure — the chain-side interface.** The chain supplies a *structural* inner rank
+`irs` (the `nestedOrder`/`rankRec` linearisation) that drops by ≥ 1 per reduce (`irs'+1 ≤ irs`) and a
+`degreeX` growth of ≤ `α` (`B' ≤ B+α`). Using the **α-scaled** rank `α·irs` in the invariant converts the
+structural `≥1` drop into the `≥α` drop `invPhiG_reduce_format` demands (`α·irs' + α = α·(irs'+1) ≤
+α·irs`), so the reduce step closes for any format `α ≥ 1`. The scaling costs a factor `α` in the bound —
+exactly the format dependence `Ngen(M, deg, α)`. -/
+theorem invPhiG_reduce_scaled (cap : Nat → Nat)
+    (hcap : ∀ {B B' : Nat}, B ≤ B' → cap B ≤ cap B')
+    (Nleaf d irs irs' B B' α : Nat) (hα : 1 ≤ α) (hstruct : irs' + 1 ≤ irs) (hB : B' ≤ B + α) :
+    invPhiG cap Nleaf (d + 1) (α * irs') B' + 1 ≤ invPhiG cap Nleaf (d + 1) (α * irs) B := by
+  refine invPhiG_reduce_format cap hcap Nleaf d (α * irs) (α * irs') B B' α hα ?_ hB
+  have hstep : α * (irs' + 1) ≤ α * irs := Nat.mul_le_mul (Nat.le_refl α) hstruct
+  rw [Nat.mul_succ] at hstep
+  exact hstep
+
 end MachLib.IterExpDepthN
