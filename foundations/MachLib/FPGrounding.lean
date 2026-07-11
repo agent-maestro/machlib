@@ -1,5 +1,7 @@
 import MachLib.AbsoluteBridge
 import MachLib.AbsoluteFold
+import MachLib.EMLToCRuntime
+import MachLib.HyperbolicLipschitz
 
 /-!
 # certcom Theorem A — grounding the Float↔Real bridge (the disclosed IEEE-754 axiom)
@@ -94,5 +96,38 @@ theorem pid_grounded (env : Env) :
       (realToR (evalC (fun _ _ => 0) (fun _ _ _ => 0) env (emitC pidRawEML)).toF)
       (exactR realToR env pidRawEML) :=
   pipeline_arith_grounded env pidRawEML isArith_pidRawEML
+
+/-! ### Grounding a transcendental: the `tanh`-saturated PID
+
+Arithmetic grounds on `FPBridge` alone. A transcendental node adds one thing — the libm primitive's
+rounding, the "irreducible trust" the T2/T3 work isolated. `tanh` is globally `1`-Lipschitz, so it
+enters the fold with no domain hypothesis; and `tanh`-saturation is a real control primitive (a smooth
+alternative to the hard `clamp`, and — unlike `clamp` — inside the certified `+/−/×/tr1` fragment). -/
+
+/-- The disclosed libm rounding bound for the runtime `tanh`. `libmonogate.h` computes `tanh` by its
+exp-decomposition (`stdI1 leanPrims .tanh`), so this is the standard model: that composite, through the
+real denotation `realToR`, is within a fixed `real_tanh_eps` of the exact `Real.tanh`. Un-witnessable in
+Lean (opaque `Float`), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
+axiom real_tanh_eps : MachLib.Real
+
+axiom real_tanh_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ real_tanh_eps
+
+/-- **A grounded transcendental control kernel.** The emitted C for `tanh(1.5·e + 0.4·i + 0.05·d)` — a
+soft-saturated PID — read through `realToR`, is within `real_tanh_eps + absErr` of the exact ℝ value
+`tanh(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge` is discharged
+by `real_fpbridge`, the runtime correspondence by the proven `std_hrt` at Lean's libm basis, and the one
+`tanh` rounding by the disclosed `real_tanh_rounds`. First grounded certificate reaching a transcendental
+layer over real `Float` bytes. `1`-Lipschitz `tanh` (`globLip_lipschitz`) amplifies the arithmetic fold's
+`absErr` by `1`. -/
+theorem pid_tanh_grounded (env : Env) :
+    AbsEnc (real_tanh_eps + 1 * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .tanh pidRawEML))).toF)
+      (tanh (exactR realToR env pidRawEML)) :=
+  pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .tanh tanh 1 real_tanh_eps
+    (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
+    pidRawEML isArith_pidRawEML (real_tanh_rounds _)
 
 end Certcom
