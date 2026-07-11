@@ -220,6 +220,7 @@ import MachLib.PfaffianGeneralLevelBudgetAlpha
 import MachLib.PfaffianGeneralRankRecAlpha
 import MachLib.PfaffianGeneralBase2Explicit
 import MachLib.PfaffianGeneralBudgetN5Alpha
+import MachLib.PfaffianGeneralChainRestrictDeg
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
