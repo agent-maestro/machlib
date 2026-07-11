@@ -45,7 +45,7 @@ trust they carry is named, not hidden among the ℝ-witnessed axioms. -/
 def disclosedTrusted : List (Name × String) := [(`Certcom.realToR, "IEEE-754 denotation Float→Real (Float opaque, no in-Lean semantics)"), (`Certcom.real_fpbridge, "standard model: every basic float op correctly rounded (rel err ≤ u), neg exact — un-witnessable in Lean; Flocq-scale to ground further")]
 
 /-- Shipped headline theorems whose footprint the gate pins. -/
-def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47, `MachLib.eml_eval_boundedZeros, `MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional, `MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit, `Certcom.pipeline_det_grounded]
+def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47, `MachLib.eml_eval_boundedZeros, `MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional, `MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit, `Certcom.pipeline_det_grounded, `Certcom.pipeline_arith_grounded, `Certcom.pid_grounded]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

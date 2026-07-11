@@ -1,4 +1,5 @@
 import MachLib.AbsoluteBridge
+import MachLib.AbsoluteFold
 
 /-!
 # certcom Theorem A — grounding the Float↔Real bridge (the disclosed IEEE-754 axiom)
@@ -55,5 +56,43 @@ theorem pipeline_det_grounded (env : Env) :
         - realToR (env "z").toF * realToR (env "w").toF) :=
   pipeline_det real_fpbridge (fun _ _ => 0) (fun _ _ _ => 0) (fun _ _ => 0) (fun _ _ _ => 0)
     (fun _ _ => rfl) (fun _ _ _ => rfl) env
+
+/-- **The whole arithmetic fragment, grounded.** For *every* `IsArith` EML tree, the value the emitted
+C computes — through the real denotation `realToR` — is within the folded absolute forward error
+`absErr` of the exact ℝ value, with **no `FPBridge` hypothesis** (discharged by `real_fpbridge`). The
+general lever: `pipeline_det_grounded` and `pid_grounded` are both instances. -/
+theorem pipeline_arith_grounded (env : Env) (e : EML) (he : IsArith e) :
+    AbsEnc (absErr realToR env e)
+      (realToR (evalC (fun _ _ => 0) (fun _ _ _ => 0) env (emitC e)).toF)
+      (exactR realToR env e) :=
+  pipeline_arith real_fpbridge (fun _ _ => 0) (fun _ _ _ => 0) (fun _ _ => 0) (fun _ _ _ => 0)
+    (fun _ _ => rfl) (fun _ _ _ => rfl) env e he
+
+/-- The raw one-step PID law `Kp·e + Ki·i + Kd·d` (before the saturating `clamp`), with the shipped
+`pid.eml` gains `Kp = 1.5`, `Ki = 0.4`, `Kd = 0.05` as literal constants and the three channels
+`e`/`i`/`d` as inputs — left-associated exactly as `FixedPoint.pid_fx_fwd_error` writes it. This is the
+arithmetic datapath of the dual-target controller that Forge compiles to the ESP32 (C) and Arty (RTL);
+`clamp = min (max · lo) hi` is a separate saturating wrapper, outside the `+/−/×` fragment. -/
+def pidRawEML : EML :=
+  .bin .add
+    (.bin .add (.bin .mul (.lit 1.5) (.var "e"))
+               (.bin .mul (.lit 0.4) (.var "i")))
+    (.bin .mul (.lit 0.05) (.var "d"))
+
+/-- `pidRawEML` is in the arithmetic fragment. -/
+theorem isArith_pidRawEML : IsArith pidRawEML :=
+  .add _ _ (.add _ _ (.mul _ _ (.lit 1.5) (.var "e")) (.mul _ _ (.lit 0.4) (.var "i")))
+    (.mul _ _ (.lit 0.05) (.var "d"))
+
+/-- **Keystone on a silicon kernel.** The value the *emitted C* computes for the raw PID law
+`1.5·e + 0.4·i + 0.05·d` — read through the real denotation `realToR` — is within `absErr` of the
+exact ℝ PID law, with **no `FPBridge` hypothesis**. The same `pid.eml` datapath Forge ships to the
+ESP32, now carrying an unconditional forward-error certificate on real `Float` bytes (modulo the one
+disclosed IEEE-754 axiom `real_fpbridge`). Instance of `pipeline_arith_grounded` at `pidRawEML`. -/
+theorem pid_grounded (env : Env) :
+    AbsEnc (absErr realToR env pidRawEML)
+      (realToR (evalC (fun _ _ => 0) (fun _ _ _ => 0) env (emitC pidRawEML)).toF)
+      (exactR realToR env pidRawEML) :=
+  pipeline_arith_grounded env pidRawEML isArith_pidRawEML
 
 end Certcom
