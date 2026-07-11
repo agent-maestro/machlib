@@ -93,4 +93,55 @@ theorem measure_le_Bcap2 (q : MultiPoly 2) :
       Nat.add_le_add_right (Nat.le_max_right _ _) 2
     exact Nat.le_trans hb this
 
+/-- **The reduce multiplier `bound2Mult` is `degreeX`-format-bounded.**
+`bound2Mult G0 G1 p = (natCast degreeY₁ p)·G1 + (natCast cdegY0)·G0`, so `degreeX = max(degreeX G0,
+degreeX G1)`; and `degreeX G = degreeX (G·varY) = degreeX (relations …) ≤ formatX2` (the `varY` factor is
+x-free). This discharges the `h_m` of `degreeX_chainReduce_le_format` for the descent reduce. -/
+theorem degreeX_bound2Mult_le (c2 : PfaffianChain 2) (G0 G1 p : MultiPoly 2)
+    (hrel0 : c2.relations (⟨0, by omega⟩ : Fin 2)
+      = MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+    (hrel1 : c2.relations (⟨1, by omega⟩ : Fin 2)
+      = MultiPoly.mul G1 (MultiPoly.varY (⟨1, by omega⟩ : Fin 2))) :
+    MultiPoly.degreeX (bound2Mult G0 G1 p)
+      ≤ MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2 := by
+  have hG0 : MultiPoly.degreeX G0
+      ≤ MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2 := by
+    have h := MachLib.PfaffianChainMod.PfaffianFn.relations_degreeX_le_formatX2 c2
+      (⟨0, by omega⟩ : Fin 2)
+    rw [hrel0] at h
+    -- degreeX (mul G0 (varY 0)) = degreeX G0 + 0
+    show MultiPoly.degreeX G0 ≤ _
+    have he : MultiPoly.degreeX (MultiPoly.mul G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)))
+        = MultiPoly.degreeX G0 := by
+      show MultiPoly.degreeX G0 + MultiPoly.degreeX (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))
+          = MultiPoly.degreeX G0
+      rw [MultiPoly.degreeX_varY, Nat.add_zero]
+    rw [he] at h; exact h
+  have hG1 : MultiPoly.degreeX G1
+      ≤ MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2 := by
+    have h := MachLib.PfaffianChainMod.PfaffianFn.relations_degreeX_le_formatX2 c2
+      (⟨1, by omega⟩ : Fin 2)
+    rw [hrel1] at h
+    show MultiPoly.degreeX G1 ≤ _
+    have he : MultiPoly.degreeX (MultiPoly.mul G1 (MultiPoly.varY (⟨1, by omega⟩ : Fin 2)))
+        = MultiPoly.degreeX G1 := by
+      show MultiPoly.degreeX G1 + MultiPoly.degreeX (MultiPoly.varY (⟨1, by omega⟩ : Fin 2))
+          = MultiPoly.degreeX G1
+      rw [MultiPoly.degreeX_varY, Nat.add_zero]
+    rw [he] at h; exact h
+  -- degreeX (bound2Mult) = max (degreeX G1) (degreeX G0)
+  show MultiPoly.degreeX
+      (MultiPoly.add
+        (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast
+          (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p))) G1)
+        (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast
+          (cdegY0 (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)))) G0))
+      ≤ MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2
+  show Nat.max
+      (MultiPoly.degreeX (MultiPoly.const _) + MultiPoly.degreeX G1)
+      (MultiPoly.degreeX (MultiPoly.const _) + MultiPoly.degreeX G0)
+      ≤ MachLib.PfaffianChainMod.PfaffianFn.formatX2 c2
+  rw [MultiPoly.degreeX_const, MultiPoly.degreeX_const]
+  exact Nat.max_le.mpr ⟨by omega, by omega⟩
+
 end MachLib.PfaffianGeneralVehExpo
