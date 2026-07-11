@@ -30,6 +30,7 @@ open MachLib.Real MachLib.PfaffianChainMod MachLib.MultiPolyMod
 open MachLib.PfaffianGeneralReduce MachLib.ChainExp2CanonMeasure MachLib.IterExpTopIdentity
 open MachLib.ChainExp2NoZeros MachLib.ChainExp2Capstone MachLib.ChainExp2Trim
 open MachLib.MultiPolyMod.MultiPoly
+open MachLib.MultiPolyReconstruct
 open MachLib.IterExpDepthN MachLib.ExplicitBound
 open MachLib.ChainExp2Explicit
 open MachLib.PfaffianChainMod.PfaffianFn (formatX2 formatY2)
@@ -283,5 +284,115 @@ theorem Bcap2_growth_trim (p : MultiPoly 2)
       ≤ Nat.max (Nat.max (MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p)
         (MultiPoly.degreeY (⟨0, by omega⟩ : Fin 2) p)) (MultiPoly.degreeX p) + 2
   omega
+
+set_option maxHeartbeats 2000000 in
+/-- **The general order-2 Pfaffian EXPLICIT Khovanskii bound.** For a positive-coherent exp-chain `c2`
+of depth 2, any `p0` not identically vanishing on `(a,b)` has `≤ Ngen2 c2 p0` zeros there — the explicit
+`N` (a `rankRecA` of the canonical measure, format-parameterised) making `pfaffian_bound2_gen` effective.
+Same WF recursion + 4-arm dispatch, carrying the `Ngen2` invariant instead of `∃N`; every arm's measure
+step feeds `Ngen2_drop` (the cracked nut), the reduce arm's Rolle `+1` absorbed since `α2 ≥ 1`. -/
+theorem pfaffian_bound2_gen_explicit (c2 : PfaffianChain 2) (hexp : IsExpChain c2) (a b : Real)
+    (hab : a < b) (hcoh : c2.IsCoherentOn a b)
+    (hpos : ∀ z, a < z → z < b → ∀ i : Fin 2, 0 < c2.evals i z)
+    (p0 : MultiPoly 2) (hne0 : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c2 p0).eval z ≠ 0) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c2 p0).eval z = 0) →
+      zeros.length ≤ Ngen2 c2 p0 := by
+  obtain ⟨⟨G0, hG0, hrel0⟩, htri0⟩ := hexp (⟨0, by omega⟩ : Fin 2)
+  obtain ⟨⟨G1, hG1, hrel1⟩, _⟩ := hexp (⟨1, by omega⟩ : Fin 2)
+  have hG0y1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) G0 = 0 := by
+    have h := htri0 (⟨1, by omega⟩ : Fin 2) Nat.zero_lt_one
+    rw [hrel0, degreeY_mul' (⟨1, by omega⟩ : Fin 2) G0 (MultiPoly.varY (⟨0, by omega⟩ : Fin 2))] at h
+    omega
+  have htri1 : ∀ (j : Fin 2), j ≠ (⟨1, by omega⟩ : Fin 2) →
+      MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) (c2.relations j) = 0 := by
+    intro j hj
+    have hj0 : j = (⟨0, by omega⟩ : Fin 2) := by
+      apply Fin.ext; show j.val = 0; have := j.isLt
+      have hne1 : j.val ≠ 1 := fun h => hj (Fin.ext h)
+      omega
+    rw [hj0]; exact htri0 (⟨1, by omega⟩ : Fin 2) Nat.zero_lt_one
+  have hreltop1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
+      (c2.relations (⟨1, by omega⟩ : Fin 2)) = 1 := by
+    rw [hrel1, degreeY_mul' (⟨1, by omega⟩ : Fin 2) G1 (MultiPoly.varY (⟨1, by omega⟩ : Fin 2)), hG1]
+    show 0 + (if (⟨1, by omega⟩ : Fin 2) = (⟨1, by omega⟩ : Fin 2) then 1 else 0) = 1
+    rw [if_pos rfl]
+  refine WellFounded.induction
+    (C := fun q => (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c2 q).eval z ≠ 0) →
+      ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ (pfaffianChainFn c2 q).eval z = 0) → zeros.length ≤ Ngen2 c2 q)
+    chain2OrderCanon_wf p0 ?_ hne0
+  clear hne0 p0
+  intro p ih hne zeros hnd hz
+  by_cases hcz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 = 0
+  · by_cases hd1 : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) p = 0
+    · -- contradiction: degreeY₁ = 0 ∧ lcY₁ canon-zero ⟹ p ≡ 0
+      exfalso
+      have hlcp : MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p = p :=
+        leadingCoeffY_eq_self_of_degreeY_zero (⟨1, by omega⟩ : Fin 2) p hd1
+      have hpz : ∀ (x : Real) (env : Fin 2 → Real), MultiPoly.eval p x env = 0 := by
+        have h := smc2_zero_eval_zero (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)
+          (MultiPoly.degreeY_leadingCoeffY (⟨1, by omega⟩ : Fin 2) p) hcz
+        rw [hlcp] at h; exact h
+      obtain ⟨z, _, _, hzne⟩ := hne
+      exact hzne (hpz z (c2.chainValues z))
+    · -- trim
+      have hlast : ∀ (x : Real) (env : Fin 2 → Real),
+          MultiPoly.eval ((MultiPoly.yCoeffsAt (⟨1, by omega⟩ : Fin 2) p).getLast
+            (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) p)) x env = 0 := by
+        intro x env
+        rw [← eval_leadingCoeffY_eq_eval_yCoeffsAt_getLast_general (⟨1, by omega⟩ : Fin 2) p
+              (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) p) x env]
+        exact smc2_zero_eval_zero (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)
+          (MultiPoly.degreeY_leadingCoeffY (⟨1, by omega⟩ : Fin 2) p) hcz x env
+      have htrim_eval : ∀ z, (pfaffianChainFn c2 p).eval z
+          = (pfaffianChainFn c2 (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)).eval z := fun z =>
+        (eval_dropLeadingYAt_of_last_canonically_zero (⟨1, by omega⟩ : Fin 2) p
+          (yCoeffsAt_nonempty (⟨1, by omega⟩ : Fin 2) p) hlast z (c2.chainValues z)).symm
+      have hne_trim : ∃ z, a < z ∧ z < b ∧
+          (pfaffianChainFn c2 (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)).eval z ≠ 0 := by
+        obtain ⟨z, hza, hzb, hzne⟩ := hne
+        exact ⟨z, hza, hzb, by rw [← htrim_eval z]; exact hzne⟩
+      have hzeros' : ∀ z ∈ zeros, a < z ∧ z < b ∧
+          (pfaffianChainFn c2 (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)).eval z = 0 := fun z hzmem => by
+        obtain ⟨ha, hb', hzero⟩ := hz z hzmem
+        exact ⟨ha, hb', by rw [← htrim_eval z]; exact hzero⟩
+      have hN := ih (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p) (chain2_trim_order p hd1)
+        hne_trim zeros hnd hzeros'
+      have hdrop := Ngen2_drop c2 p (dropLeadingYAt (⟨1, by omega⟩ : Fin 2) p)
+        (Nat.le_trans (Bcap2_growth_trim p (Nat.pos_of_ne_zero hd1)) (Nat.le_add_right _ _))
+        (measure_le_Bcap2 _) (chain2_trim_order p hd1)
+      omega
+  · rcases Classical.em (∀ z, a < z → z < b →
+        (pfaffianChainFn c2 (chainReduce c2 (bound2Mult G0 G1 p) p)).eval z = 0) with hrz | hrz
+    · -- vehicle: reduce ≡ 0 ⟹ p has no zeros
+      obtain ⟨z₀, hz₀a, hz₀b, hz₀ne⟩ := hne
+      have hnoz := pfaffianChainFn_no_zeros_of_reduct_zero_gen c2 (bound2Mult G0 G1 p) p a b hab
+        (logVehExpoAux c2 (bound2Deg p) 2 (Nat.le_refl 2)) hcoh
+        (hE_vehExpo_bound2 G0 G1 p a b hrel0 hrel1 hcoh hpos) hrz z₀ hz₀a hz₀b hz₀ne
+      cases zeros with
+      | nil => exact Nat.zero_le _
+      | cons z zs =>
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        exact absurd hzero (hnoz z ha hb')
+    · -- reduce: recurse + Rolle +1
+      have hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 ≠ 0 := hcz
+      have hne' : ∃ z, a < z ∧ z < b ∧
+          (pfaffianChainFn c2 (chainReduce c2 (bound2Mult G0 G1 p) p)).eval z ≠ 0 :=
+        Classical.byContradiction fun hcon =>
+          hrz fun z hza hzb => Classical.byContradiction fun hz0 => hcon ⟨z, hza, hzb, hz0⟩
+      have hN := ih (chainReduce c2 (bound2Mult G0 G1 p) p)
+        (chain2ReduceGen_nestedLT_canon_hnz G0 G1 hrel0 hG0 hG0y1 hrel1 hG1 htri1 hreltop1 p hnz) hne'
+      have hstep := pfaffianChainFn_reduce_step_gen c2 (bound2Mult G0 G1 p) p a b hab
+        (logVehExpoAux c2 (bound2Deg p) 2 (Nat.le_refl 2)) hcoh
+        (hE_vehExpo_bound2 G0 G1 p a b hrel0 hrel1 hcoh hpos)
+        (Ngen2 c2 (chainReduce c2 (bound2Mult G0 G1 p) p)) hN zeros hnd hz
+      -- hstep : zeros.length ≤ Ngen2 c2 (reduce) + 1
+      have hdrop := Ngen2_drop c2 p (chainReduce c2 (bound2Mult G0 G1 p) p)
+        (Bcap2_growth_reduce c2 G0 G1 p hrel0 hrel1)
+        (measure_le_Bcap2 _)
+        (chain2ReduceGen_nestedLT_canon_hnz G0 G1 hrel0 hG0 hG0y1 hrel1 hG1 htri1 hreltop1 p hnz)
+      have hα := one_le_α2 c2
+      omega
 
 end MachLib.PfaffianGeneralVehExpo
