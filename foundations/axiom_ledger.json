@@ -1,0 +1,40 @@
+{
+  "generated_by": "tools/axiom_ledger/emit_ledger.py (Lean.collectAxioms, kernel-verbatim)",
+  "total_axioms": 251,
+  "headlines": [
+    {
+      "label": "47-barrier (pure exp tower)",
+      "theorem": "MachLib.KhovanskiiConcrete.eexp_barrier_zero_count_le_47",
+      "footprint_axioms": 45,
+      "depends_on_pending_axiom": false
+    },
+    {
+      "label": "general EML barrier",
+      "theorem": "MachLib.eml_eval_boundedZeros",
+      "footprint_axioms": 48,
+      "depends_on_pending_axiom": false
+    },
+    {
+      "label": "chainN Khovanskii (unconditional)",
+      "theorem": "MachLib.IterExpDepthN.chainN_khovanskii_bound_unconditional",
+      "footprint_axioms": 45,
+      "depends_on_pending_axiom": false
+    },
+    {
+      "label": "chainN Khovanskii (explicit)",
+      "theorem": "MachLib.IterExpDepthN.chainN_khovanskii_bound_explicit",
+      "footprint_axioms": 45,
+      "depends_on_pending_axiom": false
+    }
+  ],
+  "disclosed_unwitnessed": [
+    {
+      "axiom": "MachLib.Real.erf",
+      "reason": "blocked-upstream (erf absent from Mathlib)"
+    },
+    {
+      "axiom": "MachLib.eml_tree_analytic_on_pos",
+      "reason": "pending-fix (drops the log-positivity side-condition; false as stated; in NO shipped footprint)"
+    }
+  ]
+}
