@@ -143,16 +143,24 @@ axiom analytic_finite_zeros_compact (f : Real → Real) (a b : Real) :
 
 /-! ## EML-tree analyticity (axiomatized port) -/
 
-/-- **`eml_tree_analytic_on_pos`** (axiomatized port from monogate-lean's
-`InfiniteZerosBarrier.eml_tree_analytic`).
+/-- Well-formedness for real-analyticity on `(0, ∞)`. Since
+`(eml t₁ t₂).eval x = exp (t₁.eval x) - log (t₂.eval x)`, the `log` argument of each `eml`
+node is its second child `t₂`; the tree is well-formed when every such argument stays strictly
+positive on `(0, ∞)`. This is the side condition the upstream analyticity fact requires and that
+the earlier convenience form of the axiom silently dropped. -/
+def EMLLogArgPosOnIoi : EMLTree → Prop
+  | .const _   => True
+  | .var       => True
+  | .eml t1 t2 => (∀ x : Real, 0 < x → 0 < t2.eval x) ∧ EMLLogArgPosOnIoi t1 ∧ EMLLogArgPosOnIoi t2
 
-Every well-formed EML tree `t` is real-analytic on `(0, ∞)`.
+/-- **`eml_tree_analytic_on_pos`** — a WELL-FORMED EML tree is real-analytic on `(0, ∞)`
+(axiomatized port from monogate-lean's `InfiniteZerosBarrier.eml_tree_analytic`).
 
-Well-formedness here means that every `log` argument inside the tree
-evaluates to a positive real on `(0, ∞)`. -/
-axiom eml_tree_analytic_on_pos (t : EMLTree) :
-    -- (Well-formedness condition omitted here; in a full port it would
-    -- track that every nested log argument stays in (0, ∞).)
+The `EMLLogArgPosOnIoi t` hypothesis is essential and NO LONGER dropped: an EML tree whose `log`
+argument crosses zero on the interval is not analytic there (its `log` term blows up), so the
+earlier hypothesis-free form was false as stated. With the well-formedness side condition the
+statement is the honest one. -/
+axiom eml_tree_analytic_on_pos (t : EMLTree) (hwf : EMLLogArgPosOnIoi t) :
     IsAnalyticOnReals t.eval (Ioi 0)
 
 /-! ## Why this port alone doesn't close the 2 cases
