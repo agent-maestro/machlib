@@ -212,6 +212,7 @@ import MachLib.PfaffianGeneralHnzIF
 import MachLib.PfaffianGeneralBoundUncond
 import MachLib.PfaffianGeneralWitness
 import MachLib.PfaffianGeneralBridge
+import MachLib.PfaffianGeneralFormatDegree
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
