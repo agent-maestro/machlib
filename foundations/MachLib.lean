@@ -13,6 +13,7 @@ import MachLib.HyperbolicPreservation
 import MachLib.Forge
 import MachLib.ForgeTest
 import MachLib.Ring
+import MachLib.MultiVar
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
