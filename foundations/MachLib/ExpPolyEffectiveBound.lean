@@ -240,4 +240,38 @@ theorem expPoly_effective_bound (ep : ExpPoly) (a b : Real) (hab : a < b)
       zeros.length ≤ ep.coeffs.length + sumSimplifiedDegrees ep.coeffs :=
   expPoly_bound_by_measure _ ep (Nat.le_refl _) a b hab hne
 
+/-- If every coefficient has syntactic degree `≤ D`, the simplified-degree sum is `≤ length · D`
+(`polySimplify` only lowers degree). -/
+theorem sumSimplifiedDegrees_le_length_mul (coeffs : List Poly) (D : Nat)
+    (hdeg : ∀ p ∈ coeffs, degreeUpper p ≤ D) :
+    sumSimplifiedDegrees coeffs ≤ coeffs.length * D := by
+  induction coeffs with
+  | nil => rw [sumSimplifiedDegrees_nil]; exact Nat.zero_le _
+  | cons p rest ih =>
+    rw [sumSimplifiedDegrees_cons, List.length_cons]
+    have h1 : degreeUpper (polySimplify p) ≤ D :=
+      Nat.le_trans (degreeUpper_polySimplify_le_self p) (hdeg p (List.mem_cons_self p rest))
+    have h2 : sumSimplifiedDegrees rest ≤ rest.length * D :=
+      ih (fun q hq => hdeg q (List.mem_cons_of_mem p hq))
+    have hexp : (rest.length + 1) * D = rest.length * D + D := by rw [Nat.add_mul, Nat.one_mul]
+    omega
+
+/-- **Effective count, closed form in the model parameters.** For an `ExpPoly` non-vanishing on
+`(a,b)` whose coefficients all have degree `≤ D`, the real-zero count is `≤ length · (D+1)`. With
+`length = K+1` (number of exponential modes kept) this is the explicit `(K+1)(D+1)` dependence a
+*counting* bound wants — where o-minimality gives only "finite." -/
+theorem expPoly_effective_bound_uniform (ep : ExpPoly) (D : Nat)
+    (hdeg : ∀ p ∈ ep.coeffs, degreeUpper p ≤ D)
+    (a b : Real) (hab : a < b)
+    (hne : ∃ x : Real, a < x ∧ x < b ∧ ep.eval x ≠ 0) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ ep.eval z = 0) →
+      zeros.length ≤ ep.coeffs.length * (D + 1) := by
+  intro zeros hnd hz
+  have h := expPoly_effective_bound ep a b hab hne zeros hnd hz
+  have h2 := sumSimplifiedDegrees_le_length_mul ep.coeffs D hdeg
+  have hexp : ep.coeffs.length * (D + 1) = ep.coeffs.length * D + ep.coeffs.length := by
+    rw [Nat.mul_add, Nat.mul_one]
+  omega
+
 end MachLib.SingleExpKhovanskii.ExpPoly
