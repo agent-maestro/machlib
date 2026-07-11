@@ -70,13 +70,19 @@ jobs:
             echo "No previous status-data branch yet (first run)."
           fi
 
+      # forge is a PRIVATE repo, so the default GITHUB_TOKEN (scoped to machlib
+      # only) can't clone it — that is why this workflow started failing when
+      # forge went private (404 at "Clone forge"). FORGE_RO_TOKEN is a
+      # fine-grained PAT with READ-ONLY Contents access to agent-maestro/forge
+      # (and eml-stdlib), added as a repo Actions secret. eml-stdlib is public
+      # today but uses the same token so it keeps working if it ever goes private.
       - name: Clone forge
         uses: actions/checkout@v4
         with:
           repository: agent-maestro/forge
           path: forge
           fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.FORGE_RO_TOKEN }}
 
       - name: Clone eml-stdlib
         uses: actions/checkout@v4
@@ -84,7 +90,7 @@ jobs:
           repository: agent-maestro/eml-stdlib
           path: eml-stdlib
           fetch-depth: 1
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.FORGE_RO_TOKEN }}
 
       # Note: monogate-research is private; we use the embedded copy of
       # forge_verify_audit.py at machlib/tools/status/forge_verify_audit.py
