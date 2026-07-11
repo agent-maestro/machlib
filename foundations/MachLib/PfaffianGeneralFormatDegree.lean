@@ -207,4 +207,33 @@ theorem degreeY_expMultiplier_le_relTop {n : Nat} (c : MachLib.Real) (G : MultiP
   simp only [MultiPoly.degreeY_const]
   omega
 
+/-! ## The reduce multiplier `gradedMultStep` — generic degree bounds (depth-N multiplier)
+
+`gradedMultStep G top p mLow = (natCast (degreeY top p))·G + mLow`. The depth-N reduce multiplier is
+`gradedMultStep G ⟨top⟩ p (liftLastY m')` (`m'` the recursive depth-below multiplier), so its degree is
+`≤ max (degree G) (degree mLow)` — the generic "combine" step of the recursive multiplier degree bound.
+(`degree G ≤ degree (relations top) ≤ format`; `degree mLow` recurses.) The order-2 `bound2Mult` bounds
+are the `N=2` instances. -/
+
+/-- `degreeX (gradedMultStep G top p mLow) ≤ max (degreeX G) (degreeX mLow)` — the scalar `natCast` factor
+adds nothing to `degreeX`. -/
+theorem degreeX_gradedMultStep_le {N : Nat} (G : MultiPoly N) (top : Fin N) (p mLow : MultiPoly N) :
+    MultiPoly.degreeX (MachLib.PfaffianGeneralReduce.gradedMultStep G top p mLow)
+      ≤ Nat.max (MultiPoly.degreeX G) (MultiPoly.degreeX mLow) := by
+  show Nat.max (MultiPoly.degreeX (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p)))
+      + MultiPoly.degreeX G) (MultiPoly.degreeX mLow)
+      ≤ Nat.max (MultiPoly.degreeX G) (MultiPoly.degreeX mLow)
+  rw [MultiPoly.degreeX_const, Nat.zero_add]
+  exact Nat.le_refl _
+
+/-- `degreeY i (gradedMultStep G top p mLow) ≤ max (degreeY i G) (degreeY i mLow)`. -/
+theorem degreeY_gradedMultStep_le {N : Nat} (G : MultiPoly N) (top i : Fin N) (p mLow : MultiPoly N) :
+    MultiPoly.degreeY i (MachLib.PfaffianGeneralReduce.gradedMultStep G top p mLow)
+      ≤ Nat.max (MultiPoly.degreeY i G) (MultiPoly.degreeY i mLow) := by
+  show Nat.max (MultiPoly.degreeY i (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY top p)))
+      + MultiPoly.degreeY i G) (MultiPoly.degreeY i mLow)
+      ≤ Nat.max (MultiPoly.degreeY i G) (MultiPoly.degreeY i mLow)
+  rw [MultiPoly.degreeY_const, Nat.zero_add]
+  exact Nat.le_refl _
+
 end MachLib.PfaffianChainMod.PfaffianFn
