@@ -56,4 +56,23 @@ theorem budgetN5A_mono_B (α m : Nat) (q : MultiPoly (m + 3)) {B B' : Nat} (h : 
     (rankRecA α (m + 2) B' (chainNMeasureEI m (MultiPoly.dropLastY
       (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) q)))) h
 
+/-- **Leaf arm:** `budgetN5A = 0` when `degreeY_top q = 0` (`invPhiG` at level `d = 0` is `Nleaf = 0`).
+The depth-N step's leaf hands off to the depth-below `Ndep`. -/
+theorem budgetN5A_leaf (α m B : Nat) (q : MultiPoly (m + 3))
+    (h : MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) q = 0) :
+    budgetN5A α m B q = 0 := by
+  unfold budgetN5A; rw [h]; rfl
+
+/-- **Lift arm:** `budgetN5A` is unchanged when the canonical measure ties (`degreeY_top` and the inner
+`chainNMeasureEI` both preserved) — the depth-N step's inner-lift adds no zeros and no budget. -/
+theorem budgetN5A_lift (α m B : Nat) (lift q : MultiPoly (m + 3))
+    (h1 : MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) lift
+        = MultiPoly.degreeY (⟨m + 2, by omega⟩ : Fin (m + 3)) q)
+    (h2 : chainNMeasureEI m (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) lift))
+        = chainNMeasureEI m (MultiPoly.dropLastY
+          (MultiPoly.leadingCoeffY (⟨m + 2, by omega⟩ : Fin (m + 3)) q))) :
+    budgetN5A α m B lift = budgetN5A α m B q := by
+  unfold budgetN5A; rw [h1, h2]
+
 end MachLib.IterExpDepthN
