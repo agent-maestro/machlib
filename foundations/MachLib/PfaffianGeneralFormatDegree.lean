@@ -179,4 +179,32 @@ theorem degreeY_chainReduce_le_format {n : Nat} (chain : PfaffianChain n) (i : F
   · omega
   · omega
 
+/-! ## The descent multiplier is format-bounded
+
+In the descent the reduce multiplier is `m = const (natCast (degreeY_top p)) · G`, where `G` is the
+exp-top cofactor (`relations top = G · varY top`, from `IsExpChain`). These lemmas show `m` is bounded
+by the same format as the relations, so `h_m` in the reduce degree towers is discharged automatically
+for the actual descent — the scalar `const` factor adds nothing, and the `varY top` factor in the
+relation only *helps* the inequality. -/
+
+/-- `degreeX` of the descent multiplier `const c · G` is `≤ degreeX (relations top) = degreeX (G · varY
+top)`: the scalar costs nothing (`degreeX (const c) = 0`) and `varY top` is x-free. -/
+theorem degreeX_expMultiplier_le_relTop {n : Nat} (c : MachLib.Real) (G : MultiPoly n) (top : Fin n) :
+    MultiPoly.degreeX (MultiPoly.mul (MultiPoly.const c) G)
+      ≤ MultiPoly.degreeX (MultiPoly.mul G (MultiPoly.varY top)) := by
+  show MultiPoly.degreeX (MultiPoly.const c) + MultiPoly.degreeX G
+       ≤ MultiPoly.degreeX G + MultiPoly.degreeX (MultiPoly.varY top)
+  simp only [MultiPoly.degreeX_const]
+  omega
+
+/-- `degreeY i` of the descent multiplier `const c · G` is `≤ degreeY i (relations top) = degreeY i
+(G · varY top)`: the scalar costs nothing and the extra `varY top` factor only raises the right side. -/
+theorem degreeY_expMultiplier_le_relTop {n : Nat} (c : MachLib.Real) (G : MultiPoly n) (top i : Fin n) :
+    MultiPoly.degreeY i (MultiPoly.mul (MultiPoly.const c) G)
+      ≤ MultiPoly.degreeY i (MultiPoly.mul G (MultiPoly.varY top)) := by
+  show MultiPoly.degreeY i (MultiPoly.const c) + MultiPoly.degreeY i G
+       ≤ MultiPoly.degreeY i G + MultiPoly.degreeY i (MultiPoly.varY top)
+  simp only [MultiPoly.degreeY_const]
+  omega
+
 end MachLib.PfaffianChainMod.PfaffianFn
