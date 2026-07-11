@@ -215,6 +215,7 @@ import MachLib.PfaffianGeneralBridge
 import MachLib.PfaffianGeneralFormatDegree
 import MachLib.PfaffianGeneralBudgetGrow
 import MachLib.PfaffianGeneralDescentBoundAlpha
+import MachLib.PfaffianGeneralFormat2
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
