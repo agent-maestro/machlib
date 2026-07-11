@@ -224,6 +224,7 @@ import MachLib.PfaffianGeneralChainRestrictDeg
 import MachLib.PfaffianGeneralHnzIFDeg
 import MachLib.PfaffianGeneralBudgetMaxA
 import MachLib.PfaffianGeneralStepExplicit
+import MachLib.PfaffianGeneralExplicit
 import MachLib.ChainExp2Trim
 import MachLib.ChainExp2CanonMeasure
 import MachLib.ChainExp2PolyMultRolle
