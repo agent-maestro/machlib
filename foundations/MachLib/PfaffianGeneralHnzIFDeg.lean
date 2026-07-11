@@ -136,4 +136,69 @@ theorem chainReduce_descends_hnz_gen_IF_deg (a b : Real) (D : Nat) :
           (degreeX_gradedMultStep_le G (⟨k + 2, by omega⟩ : Fin (k + 3)) q (MultiPoly.liftLastY m'))
           (Nat.max_le.mpr ⟨hGD, hlift⟩)
 
+set_option maxHeartbeats 2000000 in
+/-- `chainReduce_orderCanon_hnz_gen_IF` with the degree bound (one `gradedMultStep`/`liftLastY` layer over
+`_descends_deg`). -/
+theorem chainReduce_orderCanon_hnz_gen_IF_deg (a b : Real) (D : Nat)
+    {M : Nat} (c : PfaffianChain (M + 3)) (hexp : IsExpChain c) (hcoh : c.IsCoherentOn a b)
+    (hposit : ∀ z, a < z → z < b → ∀ i : Fin (M + 3), 0 < c.evals i z)
+    (hDdeg : ∀ i : Fin (M + 3), MultiPoly.degreeX (c.relations i) ≤ D)
+    (p : MultiPoly (M + 3))
+    (hnz : hnzTower M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) :
+    ∃ m : MultiPoly (M + 3), MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) m = 0 ∧
+      nestedOrder (M + 3) (chainNMeasureCanon M (chainReduce c m p)) (chainNMeasureCanon M p) ∧
+      (∃ E : Real → Real, ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z) ∧
+      MultiPoly.degreeX m ≤ D := by
+  obtain ⟨⟨G, hG, hrel⟩, htri⟩ := IsExpChain_top c hexp
+  obtain ⟨m', hm'0, hm'desc, ⟨E', hE'⟩, hm'deg⟩ := chainReduce_descends_hnz_gen_IF_deg a b D M (chainRestrict c)
+    (IsExpChain_chainRestrict c hexp) (chainRestrict_isCoherentOn c hexp a b hcoh)
+    (positivity_chainRestrict c a b hposit)
+    (degreeX_chainRestrict_relations_le c D hDdeg)
+    (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p)) hnz
+  refine ⟨gradedMultStep G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m'),
+    gradedMultStep_degreeY_top_zero G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m') hG
+      (MultiPoly.degreeY_top_liftLastY m'), ?_, ?_, ?_⟩
+  · have hInner : nestedOrder (M + 2)
+        (chainNMeasureEI M (chainReduce (chainRestrict c) (MultiPoly.dropLastY (MultiPoly.liftLastY m'))
+          (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))))
+        (chainNMeasureEI M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) := by
+      rw [MultiPoly.dropLastY_liftLastY]; exact hm'desc
+    show nestedOrder (M + 3)
+      (chainNMeasureCanon M (chainReduce c (gradedMultStep G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m')) p))
+      (chainNMeasureCanon M p)
+    simp only [chainNMeasureCanon]
+    exact chainReduce_syntactic_descent_gen c G hrel hG htri (MultiPoly.liftLastY m') p
+      (MultiPoly.degreeY_top_liftLastY m') hInner
+  · exact vehExpo_tower_step c G p m' a b hrel hcoh
+      (fun z hza hzb => hposit z hza hzb (⟨M + 2, by omega⟩ : Fin (M + 3))) E' hE'
+  · have hGD : MultiPoly.degreeX G ≤ D := by
+      have h := hDdeg (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))
+      rw [hrel] at h
+      have he : MultiPoly.degreeX (MultiPoly.mul G (MultiPoly.varY
+          (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3)))) = MultiPoly.degreeX G := by
+        show MultiPoly.degreeX G + MultiPoly.degreeX (MultiPoly.varY
+            (⟨M + 2, Nat.lt_succ_self (M + 2)⟩ : Fin (M + 3))) = MultiPoly.degreeX G
+        rw [MultiPoly.degreeX_varY, Nat.add_zero]
+      rw [he] at h; exact h
+    have hlift : MultiPoly.degreeX (MultiPoly.liftLastY m') ≤ D := by
+      rw [degreeX_liftLastY]; exact hm'deg
+    exact Nat.le_trans
+      (degreeX_gradedMultStep_le G (⟨M + 2, by omega⟩ : Fin (M + 3)) p (MultiPoly.liftLastY m'))
+      (Nat.max_le.mpr ⟨hGD, hlift⟩)
+
+/-- `chainReduce_order5p_hnz_gen_IF` with the degree bound (`lexProd_of_fst` over `_orderCanon_deg`). -/
+theorem chainReduce_order5p_hnz_gen_IF_deg (a b : Real) (D : Nat)
+    {M : Nat} (c : PfaffianChain (M + 3)) (hexp : IsExpChain c) (hcoh : c.IsCoherentOn a b)
+    (hposit : ∀ z, a < z → z < b → ∀ i : Fin (M + 3), 0 < c.evals i z)
+    (hDdeg : ∀ i : Fin (M + 3), MultiPoly.degreeX (c.relations i) ≤ D)
+    (p : MultiPoly (M + 3))
+    (hnz : hnzTower M (MultiPoly.dropLastY (MultiPoly.leadingCoeffY (⟨M + 2, by omega⟩ : Fin (M + 3)) p))) :
+    ∃ m : MultiPoly (M + 3), MultiPoly.degreeY (⟨M + 2, by omega⟩ : Fin (M + 3)) m = 0 ∧
+      chainNOrder5p M (chainReduce c m p) p ∧
+      (∃ E : Real → Real, ∀ z, a < z → z < b → HasDerivAt E (-(pfaffianChainFn c m).eval z) z) ∧
+      MultiPoly.degreeX m ≤ D := by
+  obtain ⟨m, hm0, hdesc, hE, hmdeg⟩ :=
+    chainReduce_orderCanon_hnz_gen_IF_deg a b D c hexp hcoh hposit hDdeg p hnz
+  exact ⟨m, hm0, lexProd_of_fst hdesc, hE, hmdeg⟩
+
 end MachLib.PfaffianGeneralReduce
