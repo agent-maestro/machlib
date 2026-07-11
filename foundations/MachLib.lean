@@ -100,6 +100,7 @@ import MachLib.KhovanskiiLemma
 import MachLib.MultiPolyToPoly
 import MachLib.KhovanskiiReduction
 import MachLib.SingleExpKhovanskii
+import MachLib.ExpPolyEffectiveBound
 import MachLib.ExpPolyBridge
 import MachLib.MultiPolyCanonY
 import MachLib.MultiPolyCanonYN
