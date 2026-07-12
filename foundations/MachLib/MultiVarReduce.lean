@@ -47,5 +47,43 @@ theorem evalCoeffs_append_singleton_zero (env : Fin 2 → Real) (as : List (Mult
   rw [evalCoeffs_append env as [b], evalCoeffs_cons, evalCoeffs_nil, hb]
   mach_ring
 
+/-! ## The reduction step (eval core) -/
+
+/-- Scale a `y`-coefficient list by a single coefficient `c` (multiply the polynomial by `c`). -/
+noncomputable def scaleCoeffs (c : MultiVar 2) (as : List (MultiVar 2)) : List (MultiVar 2) :=
+  as.map (fun b => MultiVar.mul c b)
+
+theorem evalCoeffs_scaleCoeffs (env : Fin 2 → Real) (c : MultiVar 2) (as : List (MultiVar 2)) :
+    evalCoeffs (scaleCoeffs c as) env = MultiVar.eval c env * evalCoeffs as env :=
+  evalCoeffs_mapMul env c as
+
+/-- **The pseudo-division reduction combination** `q_lead·p − p_lead·yᵏ·q` (as coefficient lists). With
+`q_lead = qs.getLast`, `p_lead = ps.getLast`, `k = deg_y p − deg_y q`, its top coefficient cancels
+(eval-zero); `dropLast` then lowers the formal degree while preserving eval. -/
+noncomputable def reduceFull (q_lead p_lead : MultiVar 2) (k : Nat) (ps qs : List (MultiVar 2)) :
+    List (MultiVar 2) :=
+  subCoeffs (scaleCoeffs q_lead ps) (shiftCoeffs k (scaleCoeffs p_lead qs))
+
+/-- **Reduction eval identity.** `evalCoeffs (reduceFull …) = q_lead·evalCoeffs ps − yᵏ·p_lead·evalCoeffs
+qs`. Pure evaluation bookkeeping (`subCoeffs`/`scale`/`shift` evals) — no `getLast`. -/
+theorem evalCoeffs_reduceFull (env : Fin 2 → Real) (q_lead p_lead : MultiVar 2) (k : Nat)
+    (ps qs : List (MultiVar 2)) :
+    evalCoeffs (reduceFull q_lead p_lead k ps qs) env
+      = MultiVar.eval q_lead env * evalCoeffs ps env
+        - MultiVar.eval (MultiVar.pow (MultiVar.var (1 : Fin 2)) k) env
+          * MultiVar.eval p_lead env * evalCoeffs qs env := by
+  show evalCoeffs (subCoeffs (scaleCoeffs q_lead ps) (shiftCoeffs k (scaleCoeffs p_lead qs))) env = _
+  rw [evalCoeffs_subCoeffs, evalCoeffs_scaleCoeffs env q_lead ps,
+    evalCoeffs_shiftCoeffs (scaleCoeffs p_lead qs) env k, evalCoeffs_scaleCoeffs env p_lead qs]
+  mach_ring
+
+/-- **The reduction vanishes at a common zero.** If `evalCoeffs ps = evalCoeffs qs = 0` (i.e. `p` and `q`
+both vanish at `env`), so does the reduction combination — the invariant every polynomial-remainder-
+sequence entry preserves. -/
+theorem reduceFull_vanish (env : Fin 2 → Real) (q_lead p_lead : MultiVar 2) (k : Nat)
+    (ps qs : List (MultiVar 2)) (hp : evalCoeffs ps env = 0) (hq : evalCoeffs qs env = 0) :
+    evalCoeffs (reduceFull q_lead p_lead k ps qs) env = 0 := by
+  rw [evalCoeffs_reduceFull, hp, hq]; mach_ring
+
 end MultiVarMod
 end MachLib
