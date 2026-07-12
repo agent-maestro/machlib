@@ -24,6 +24,7 @@ import MachLib.MultiVarEliminate
 import MachLib.MultiVarResultantLinear
 import MachLib.MultiVarResultantGen
 import MachLib.MultiVarShift
+import MachLib.MultiVarReduce
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
