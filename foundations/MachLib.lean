@@ -36,6 +36,8 @@ import MachLib.MultiVarReduceAtVanish
 import MachLib.MultiVarPRSAt
 import MachLib.MultiVarCoeffY3
 import MachLib.MultiVarResultant3
+import MachLib.MultiVarExpBridge
+import MachLib.MultiVarRung1
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
