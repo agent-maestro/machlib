@@ -18,6 +18,7 @@ import MachLib.MultiVarBezout
 import MachLib.MultiVarSubst
 import MachLib.MultiVarToPoly
 import MachLib.MultiVarBezoutFiber
+import MachLib.MultiVarCoeffY
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
