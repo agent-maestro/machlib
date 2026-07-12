@@ -20,6 +20,7 @@ import MachLib.MultiVarToPoly
 import MachLib.MultiVarBezoutFiber
 import MachLib.MultiVarCoeffY
 import MachLib.MultiVarEliminate
+import MachLib.MultiVarResultantLinear
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing

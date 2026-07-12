@@ -75,15 +75,15 @@ theorem eval_yfree :
       show MultiVar.eval p env * MultiVar.eval q env = MultiVar.eval p env' * MultiVar.eval q env'
       rw [eval_yfree p hp env env' h0, eval_yfree q hq env env' h0]
 
-/-- **Bezout obligation A, modulo a resultant certificate.** Given a certificate `u·p + v·q = R` with `R`
-`y`-free and not identically zero on the `x`-line through `env0`, the distinct `x`-coordinates of common
-zeros of `{p, q}` (each carrying a witnessing common-zero environment) number `≤ deg_x R`. A common zero
-forces `R = 0` (the identity), and `R` being `y`-free makes that a root of the univariate `R(x)` — so
-`fiber_count` in the `x`-direction bounds them. -/
-theorem certificate_xbound (p q u v R : MultiVar 2)
-    (hcert : ∀ env : Fin 2 → Real,
-      MultiVar.eval u env * MultiVar.eval p env + MultiVar.eval v env * MultiVar.eval q env
-        = MultiVar.eval R env)
+/-- **Bezout obligation A, from an eliminating polynomial `R`.** The general reduction (what brick 3
+targets): if `R` is `y`-free, not identically zero on the `x`-line through `env0`, and **vanishes at
+every common zero** of `{p, q}`, then the distinct `x`-coordinates of common zeros number `≤ deg_x R`.
+`R` being `y`-free makes its vanishing at a common zero a root of the univariate `R(x)`, so `fiber_count`
+in the `x`-direction bounds them. The vanishing hypothesis — not an explicit `u·p+v·q=R` identity — is
+all that is needed and all a constructed `R` (pseudo-remainder) provides. -/
+theorem xcoords_bound_of_vanishing (p q R : MultiVar 2)
+    (hRvanish : ∀ env : Fin 2 → Real,
+      MultiVar.eval p env = 0 → MultiVar.eval q env = 0 → MultiVar.eval R env = 0)
     (hRy : MultiVar.degVar (1 : Fin 2) R = 0)
     (a b : Real) (hab : a < b) (env0 : Fin 2 → Real)
     (hRne : ∃ x, MultiVar.eval R (fun j => if j = (0 : Fin 2) then x else env0 j) ≠ 0)
@@ -97,8 +97,25 @@ theorem certificate_xbound (p q u v R : MultiVar 2)
   have hxline0 : (fun j => if j = (0 : Fin 2) then x else env0 j) (0 : Fin 2) = envc 0 := by
     simp [henv0]
   rw [eval_yfree R hRy (fun j => if j = (0 : Fin 2) then x else env0 j) envc hxline0]
-  rw [← hcert envc, hpc, hqc]
-  mach_ring
+  exact hRvanish envc hpc hqc
+
+/-- **Bezout obligation A, from a resultant certificate `u·p + v·q = R`.** The classical-certificate
+corollary of `xcoords_bound_of_vanishing`: the Bezout identity gives the vanishing property directly
+(`R = u·0 + v·0 = 0` at a common zero). -/
+theorem certificate_xbound (p q u v R : MultiVar 2)
+    (hcert : ∀ env : Fin 2 → Real,
+      MultiVar.eval u env * MultiVar.eval p env + MultiVar.eval v env * MultiVar.eval q env
+        = MultiVar.eval R env)
+    (hRy : MultiVar.degVar (1 : Fin 2) R = 0)
+    (a b : Real) (hab : a < b) (env0 : Fin 2 → Real)
+    (hRne : ∃ x, MultiVar.eval R (fun j => if j = (0 : Fin 2) then x else env0 j) ≠ 0)
+    (xs : List Real) (hnd : xs.Nodup)
+    (hxs : ∀ x₀ ∈ xs, a < x₀ ∧ x₀ < b ∧
+      ∃ envc : Fin 2 → Real, envc 0 = x₀ ∧ MultiVar.eval p envc = 0 ∧ MultiVar.eval q envc = 0) :
+    xs.length ≤ MultiVar.degVar (0 : Fin 2) R :=
+  xcoords_bound_of_vanishing p q R
+    (fun env hp hq => by rw [← hcert env, hp, hq]; mach_ring)
+    hRy a b hab env0 hRne xs hnd hxs
 
 end MultiVarMod
 end MachLib
