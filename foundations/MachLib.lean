@@ -23,6 +23,7 @@ import MachLib.MultiVarCoeffYFree
 import MachLib.MultiVarEliminate
 import MachLib.MultiVarResultantLinear
 import MachLib.MultiVarResultantGen
+import MachLib.MultiVarShift
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
