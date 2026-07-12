@@ -85,5 +85,53 @@ theorem reduceFull_vanish (env : Fin 2 → Real) (q_lead p_lead : MultiVar 2) (k
     evalCoeffs (reduceFull q_lead p_lead k ps qs) env = 0 := by
   rw [evalCoeffs_reduceFull, hp, hq]; mach_ring
 
+/-! ## Length calculus (the reduction's formal-degree drop → termination) -/
+
+theorem length_scaleCoeffs (c : MultiVar 2) (as : List (MultiVar 2)) :
+    (scaleCoeffs c as).length = as.length := List.length_map _ _
+
+theorem length_shiftCoeffs (k : Nat) (as : List (MultiVar 2)) :
+    (shiftCoeffs k as).length = k + as.length := by
+  show (List.replicate k (MultiVar.const 0) ++ as).length = k + as.length
+  rw [List.length_append, List.length_replicate]
+
+theorem length_negCoeffs (bs : List (MultiVar 2)) : (negCoeffs bs).length = bs.length :=
+  List.length_map _ _
+
+theorem length_addCoeffs : ∀ as bs : List (MultiVar 2),
+    (addCoeffs as bs).length = max as.length bs.length
+  | [], bs => by show bs.length = max 0 bs.length; rw [Nat.zero_max]
+  | a :: as, [] => by show (a :: as).length = max (a :: as).length 0; rw [Nat.max_zero]
+  | a :: as, b :: bs => by
+      show (addCoeffs as bs).length + 1 = max (as.length + 1) (bs.length + 1)
+      rw [length_addCoeffs as bs, Nat.succ_max_succ]
+
+theorem length_subCoeffs (as bs : List (MultiVar 2)) :
+    (subCoeffs as bs).length = max as.length bs.length := by
+  show (addCoeffs as (negCoeffs bs)).length = _
+  rw [length_addCoeffs, length_negCoeffs]
+
+/-- **The reduction has the same length as `p`** — the top coefficient is present (cancelled but formal),
+so the formal degree is unchanged until the `dropLast`. Requires `|qs| ≤ |ps|` and `k = |ps| − |qs|`. -/
+theorem length_reduceFull (q_lead p_lead : MultiVar 2) (ps qs : List (MultiVar 2))
+    (h : qs.length ≤ ps.length) :
+    (reduceFull q_lead p_lead (ps.length - qs.length) ps qs).length = ps.length := by
+  show (subCoeffs (scaleCoeffs q_lead ps)
+    (shiftCoeffs (ps.length - qs.length) (scaleCoeffs p_lead qs))).length = ps.length
+  rw [length_subCoeffs, length_scaleCoeffs, length_shiftCoeffs, length_scaleCoeffs,
+    show ps.length - qs.length + qs.length = ps.length from by omega, Nat.max_self]
+
+/-- **`reduceOnce` — the reduction with its cancelled top dropped.** Formal length `|ps| − 1`: the
+polynomial-remainder step lowers the degree by exactly one. -/
+noncomputable def reduceOnce (q_lead p_lead : MultiVar 2) (ps qs : List (MultiVar 2)) :
+    List (MultiVar 2) :=
+  (reduceFull q_lead p_lead (ps.length - qs.length) ps qs).dropLast
+
+theorem length_reduceOnce (q_lead p_lead : MultiVar 2) (ps qs : List (MultiVar 2))
+    (h : qs.length ≤ ps.length) :
+    (reduceOnce q_lead p_lead ps qs).length = ps.length - 1 := by
+  show (reduceFull q_lead p_lead (ps.length - qs.length) ps qs).dropLast.length = ps.length - 1
+  rw [List.length_dropLast, length_reduceFull q_lead p_lead ps qs h]
+
 end MultiVarMod
 end MachLib
