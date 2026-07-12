@@ -45,6 +45,8 @@ import MachLib.MultiVarElimReduceVanish
 import MachLib.MultiVarElimYFree
 import MachLib.MultiVarElimPRS
 import MachLib.MultiVarElimResultant
+import MachLib.MultiVarElimPreserve
+import MachLib.MultiVarMixedElim
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
