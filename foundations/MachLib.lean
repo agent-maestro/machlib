@@ -31,6 +31,11 @@ import MachLib.MultiVarPRSYFree
 import MachLib.MultiVarResultant
 import MachLib.MultiVarBucket
 import MachLib.MultiVarBezoutGeneral
+import MachLib.MultiVarEvalAt
+import MachLib.MultiVarReduceAtVanish
+import MachLib.MultiVarPRSAt
+import MachLib.MultiVarCoeffY3
+import MachLib.MultiVarResultant3
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
