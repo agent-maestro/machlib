@@ -19,6 +19,7 @@ import MachLib.MultiVarSubst
 import MachLib.MultiVarToPoly
 import MachLib.MultiVarBezoutFiber
 import MachLib.MultiVarCoeffY
+import MachLib.MultiVarCoeffYFree
 import MachLib.MultiVarEliminate
 import MachLib.MultiVarResultantLinear
 import MachLib.MultiVarResultantGen
