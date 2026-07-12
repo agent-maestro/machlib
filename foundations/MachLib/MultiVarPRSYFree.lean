@@ -75,13 +75,16 @@ theorem prsLoop_yfree {i : Fin 2} :
   | 0, _, _, hps, _ => hps
   | fuel + 1, ps, qs, hps, hqs => by
       show ∀ x ∈ (if qs.length ≤ 1 then qs
-          else if ps.length < qs.length then prsLoop fuel qs ps
-          else prsLoop fuel qs (reduceStep ps qs)), MultiVar.degVar i x = 0
+          else if ps.length ≤ 1 then ps
+          else if ps.length ≤ qs.length then prsLoop fuel (reduceStep qs ps) ps
+          else prsLoop fuel (reduceStep ps qs) qs), MultiVar.degVar i x = 0
       split
       · exact hqs
       · split
-        · exact prsLoop_yfree fuel qs ps hqs hps
-        · exact prsLoop_yfree fuel qs (reduceStep ps qs) hqs (reduceStep_yfree ps qs hps hqs)
+        · exact hps
+        · split
+          · exact prsLoop_yfree fuel (reduceStep qs ps) ps (reduceStep_yfree qs ps hqs hps) hps
+          · exact prsLoop_yfree fuel (reduceStep ps qs) qs (reduceStep_yfree ps qs hps hqs) hqs
 
 end MultiVarMod
 end MachLib

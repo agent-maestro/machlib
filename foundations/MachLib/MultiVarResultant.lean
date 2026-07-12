@@ -73,5 +73,26 @@ theorem prsResultant_xbound (p q : MultiVar 2) (fuel : Nat)
     (fun env hp hq => prsResultant_vanish p q fuel hterm env hp hq)
     (prsResultant_yfree p q fuel) a b hab env0 hRne xs hnd hxs
 
+/-- Canonical fuel: `|coeffsY p| + |coeffsY q|` — provably enough for the PRS to eliminate `y`
+(`prsLoop_terminates`). -/
+noncomputable def prsFuel (p q : MultiVar 2) : Nat := (coeffsY p).length + (coeffsY q).length
+
+theorem prsFuel_hterm (p q : MultiVar 2) :
+    (prsLoop (prsFuel p q) (coeffsY p) (coeffsY q)).length ≤ 1 :=
+  prsLoop_terminates (prsFuel p q) (coeffsY p) (coeffsY q) (Nat.le_refl _)
+
+/-- **Bezout obligation A, UNCONDITIONAL** (no `hterm`): at the canonical fuel `prsFuel`, the PRS
+provably eliminates `y` (`prsFuel_hterm`), so the distinct x-coordinates of common zeros number `≤ deg_x`
+of the resultant — modulo only the non-degeneracy `hRne`. -/
+theorem prsResultant_xbound_uncond (p q : MultiVar 2)
+    (a b : Real) (hab : a < b) (env0 : Fin 2 → Real)
+    (hRne : ∃ x, MultiVar.eval (prsResultant p q (prsFuel p q))
+      (fun j => if j = (0 : Fin 2) then x else env0 j) ≠ 0)
+    (xs : List Real) (hnd : xs.Nodup)
+    (hxs : ∀ x₀ ∈ xs, a < x₀ ∧ x₀ < b ∧
+      ∃ envc : Fin 2 → Real, envc 0 = x₀ ∧ MultiVar.eval p envc = 0 ∧ MultiVar.eval q envc = 0) :
+    xs.length ≤ MultiVar.degVar (0 : Fin 2) (prsResultant p q (prsFuel p q)) :=
+  prsResultant_xbound p q (prsFuel p q) (prsFuel_hterm p q) a b hab env0 hRne xs hnd hxs
+
 end MultiVarMod
 end MachLib

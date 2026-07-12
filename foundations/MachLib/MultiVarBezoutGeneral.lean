@@ -55,5 +55,25 @@ theorem bezout_general_fibered (p q : MultiVar 2) (fuel : Nat)
     (MultiVar.degVar (0 : Fin 2) (prsResultant p q fuel)) hA
     (fun f hf => ⟨(hfib f hf).1, (hfib f hf).2.1, (hfib f hf).2.2.1⟩)
 
+/-- **Full multivariate Bezout, UNCONDITIONAL** (no `hterm`): at the canonical fuel `prsFuel`, the PRS
+provably eliminates `y`, so the total solution count is `≤ deg_x(resultant) · deg_y p` — modulo only the
+non-degeneracy `hRne`. This is the complete multivariate polynomial Bezout bound. -/
+theorem bezout_general_fibered_uncond (p q : MultiVar 2)
+    (a b : Real) (hab : a < b) (env0 : Fin 2 → Real)
+    (hRne : ∃ x, MultiVar.eval (prsResultant p q (prsFuel p q))
+      (fun j => if j = (0 : Fin 2) then x else env0 j) ≠ 0)
+    (fibers : List (Real × List Real))
+    (hfib_nd : (fibers.map (fun f => f.1)).Nodup)
+    (hfib : ∀ f ∈ fibers,
+      (∃ t, MultiVar.eval p (fun j => if j = (1 : Fin 2) then t else f.1) ≠ 0)
+      ∧ f.2.Nodup
+      ∧ (∀ y ∈ f.2, a < y ∧ y < b
+          ∧ MultiVar.eval p (fun j => if j = (1 : Fin 2) then y else f.1) = 0)
+      ∧ a < f.1 ∧ f.1 < b
+      ∧ ∃ envc : Fin 2 → Real, envc 0 = f.1 ∧ MultiVar.eval p envc = 0 ∧ MultiVar.eval q envc = 0) :
+    (fibers.flatMap (fun f => f.2)).length
+      ≤ MultiVar.degVar (0 : Fin 2) (prsResultant p q (prsFuel p q)) * MultiVar.degVar (1 : Fin 2) p :=
+  bezout_general_fibered p q (prsFuel p q) (prsFuel_hterm p q) a b hab env0 hRne fibers hfib_nd hfib
+
 end MultiVarMod
 end MachLib

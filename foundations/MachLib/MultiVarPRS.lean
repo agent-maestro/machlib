@@ -40,11 +40,16 @@ noncomputable def prsLoop : Nat → List (MultiVar 2) → List (MultiVar 2) → 
   | 0, ps, _ => ps
   | fuel + 1, ps, qs =>
       if qs.length ≤ 1 then qs
-      else if ps.length < qs.length then prsLoop fuel qs ps
-      else prsLoop fuel qs (reduceStep ps qs)
+      else if ps.length ≤ 1 then ps
+      else if ps.length ≤ qs.length then prsLoop fuel (reduceStep qs ps) ps
+      else prsLoop fuel (reduceStep ps qs) qs
+
+theorem length_reduceStep (ps qs : List (MultiVar 2)) (h : qs.length ≤ ps.length) :
+    (reduceStep ps qs).length = ps.length - 1 :=
+  length_reduceOnce (qs.getLastD (MultiVar.const 0)) (ps.getLastD (MultiVar.const 0)) ps qs h
 
 /-- **The PRS loop preserves vanishing at a common zero.** If `evalCoeffs ps = evalCoeffs qs = 0`, so
-does `evalCoeffs (prsLoop fuel ps qs)`. Fuel induction; the reduce arm uses `reduceStep_vanish`. -/
+does `evalCoeffs (prsLoop fuel ps qs)`. Fuel induction; the reduce arms use `reduceStep_vanish`. -/
 theorem prsLoop_vanish (env : Fin 2 → Real) :
     ∀ (fuel : Nat) (ps qs : List (MultiVar 2)),
       evalCoeffs ps env = 0 → evalCoeffs qs env = 0 →
@@ -52,18 +57,48 @@ theorem prsLoop_vanish (env : Fin 2 → Real) :
   | 0, _, _, hp, _ => hp
   | fuel + 1, ps, qs, hp, hq => by
       show evalCoeffs (if qs.length ≤ 1 then qs
-          else if ps.length < qs.length then prsLoop fuel qs ps
-          else prsLoop fuel qs (reduceStep ps qs)) env = 0
+          else if ps.length ≤ 1 then ps
+          else if ps.length ≤ qs.length then prsLoop fuel (reduceStep qs ps) ps
+          else prsLoop fuel (reduceStep ps qs) qs) env = 0
       split
       · exact hq
       · split
-        · exact prsLoop_vanish env fuel qs ps hq hp
-        · rename_i h1 h2
-          have hqs : qs ≠ [] := fun he => h1 (by rw [he]; simp)
-          have hps : ps ≠ [] := fun he => h2 (by rw [he, List.length_nil]; omega)
-          have hlen : qs.length ≤ ps.length := Nat.le_of_not_lt h2
-          exact prsLoop_vanish env fuel qs (reduceStep ps qs) hq
-            (reduceStep_vanish env ps qs hps hqs hlen hp hq)
+        · exact hp
+        · split
+          · rename_i hq1 hp1 hpq
+            have hqs : qs ≠ [] := fun he => hq1 (by rw [he]; simp)
+            have hps : ps ≠ [] := fun he => hp1 (by rw [he]; simp)
+            exact prsLoop_vanish env fuel (reduceStep qs ps) ps
+              (reduceStep_vanish env qs ps hqs hps hpq hq hp) hp
+          · rename_i hq1 hp1 hpq
+            have hqs : qs ≠ [] := fun he => hq1 (by rw [he]; simp)
+            have hps : ps ≠ [] := fun he => hp1 (by rw [he]; simp)
+            exact prsLoop_vanish env fuel (reduceStep ps qs) qs
+              (reduceStep_vanish env ps qs hps hqs (Nat.le_of_lt (Nat.lt_of_not_le hpq)) hp hq) hq
+
+/-- **The PRS loop reaches a y-free remainder (length ≤ 1) with enough fuel.** The reduce arms shrink
+`|ps| + |qs|` by one each step (`length_reduceStep`); `fuel ≥ |ps| + |qs|` suffices. This discharges the
+resultant's `hterm` unconditionally. -/
+theorem prsLoop_terminates :
+    ∀ (fuel : Nat) (ps qs : List (MultiVar 2)),
+      ps.length + qs.length ≤ fuel → (prsLoop fuel ps qs).length ≤ 1
+  | 0, ps, qs, h => by simp only [prsLoop]; omega
+  | fuel + 1, ps, qs, h => by
+      show (if qs.length ≤ 1 then qs
+          else if ps.length ≤ 1 then ps
+          else if ps.length ≤ qs.length then prsLoop fuel (reduceStep qs ps) ps
+          else prsLoop fuel (reduceStep ps qs) qs).length ≤ 1
+      split
+      · assumption
+      · split
+        · assumption
+        · split
+          · rename_i hq1 hp1 hpq
+            apply prsLoop_terminates
+            rw [length_reduceStep qs ps hpq]; omega
+          · rename_i hq1 hp1 hpq
+            apply prsLoop_terminates
+            rw [length_reduceStep ps qs (Nat.le_of_lt (Nat.lt_of_not_le hpq))]; omega
 
 end MultiVarMod
 end MachLib
