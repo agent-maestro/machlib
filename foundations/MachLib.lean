@@ -51,6 +51,7 @@ import MachLib.MultiVarMixedCount
 import MachLib.MultiVarMixedSolution
 import MachLib.MultiVarTwoExpRolle
 import MachLib.MultiVarTwoExpInstance
+import MachLib.MultiVarTwoExpSum
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
