@@ -58,6 +58,8 @@ import MachLib.MonotoneRoot
 import MachLib.BivariateDeriv
 import MachLib.TwoExpCurveCount
 import MachLib.TwoExpCurveValidation
+import MachLib.ArcCount
+import MachLib.TwoExpArcCount
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
