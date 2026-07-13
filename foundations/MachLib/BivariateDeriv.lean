@@ -26,6 +26,29 @@ namespace Real
 Opaque, like the single-variable `HasDerivAt`; pinned by the rules below. -/
 axiom HasDerivAt2 : (Real → Real → Real) → Real → Real → Real → Real → Prop
 
+/-! ## Base-case + arithmetic rules (bivariate analogs of the single-variable `HasDerivAt` axioms) -/
+
+axiom HasDerivAt2_projX (x y : Real) : HasDerivAt2 (fun a _ => a) 1 0 x y
+axiom HasDerivAt2_projY (x y : Real) : HasDerivAt2 (fun _ b => b) 0 1 x y
+axiom HasDerivAt2_const (c x y : Real) : HasDerivAt2 (fun _ _ => c) 0 0 x y
+
+axiom HasDerivAt2_add (f g : Real → Real → Real) (fx fy gx gy x y : Real) :
+    HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y →
+    HasDerivAt2 (fun a b => f a b + g a b) (fx + gx) (fy + gy) x y
+
+axiom HasDerivAt2_sub (f g : Real → Real → Real) (fx fy gx gy x y : Real) :
+    HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y →
+    HasDerivAt2 (fun a b => f a b - g a b) (fx - gx) (fy - gy) x y
+
+axiom HasDerivAt2_mul (f g : Real → Real → Real) (fx fy gx gy x y : Real) :
+    HasDerivAt2 f fx fy x y → HasDerivAt2 g gx gy x y →
+    HasDerivAt2 (fun a b => f a b * g a b) (fx * g x y + f x y * gx) (fy * g x y + f x y * gy) x y
+
+/-- Single-variable `φ` composed with a bivariate `u` (gives `exp`, `log`, … of any bivariate expression). -/
+axiom HasDerivAt2_scomp (φ : Real → Real) (φ' : Real) (u : Real → Real → Real) (ux uy x y : Real) :
+    HasDerivAt φ φ' (u x y) → HasDerivAt2 u ux uy x y →
+    HasDerivAt2 (fun a b => φ (u a b)) (φ' * ux) (φ' * uy) x y
+
 /-- **Curve chain rule** (bivariate analog of `HasDerivAt_comp`). Along a differentiable curve
 `s ↦ (γ₁ s, γ₂ s)` through `(γ₁ t, γ₂ t)`, the composition `s ↦ f (γ₁ s) (γ₂ s)` has derivative
 `fx·γ₁' + fy·γ₂'`. -/
@@ -58,6 +81,22 @@ theorem curve_tangent_and_chain (f g : Real → Real → Real) (fx fy gx gy : Re
       rw [div_def (-fx) fy hfy, ← mul_assoc, mul_comm fy (-fx), mul_assoc, mul_inv fy hfy, mul_one_ax]
     rw [h]; exact add_neg fx
   · exact HasDerivAt2_comp g gx gy (fun s => s) yc 1 (-fx / fy) x hg2 (HasDerivAt_id x) hyc
+
+/-- **Framework validation.** The joint derivative of `g(x,y) = eˣ + eʸ − d` is `(eˣ, eʸ)`, built entirely
+from the base-case + arithmetic + composition rules — so `HasDerivAt2` is genuinely constructible for a
+Pfaffian bivariate function (here the sum-instance's `g`), not just posited. -/
+theorem hasDerivAt2_exp_sum (d x y : Real) :
+    HasDerivAt2 (fun a b => exp a + exp b - d) (exp x) (exp y) x y := by
+  have hExpA : HasDerivAt2 (fun a _ => exp a) (exp x * 1) (exp x * 0) x y :=
+    HasDerivAt2_scomp exp (exp x) (fun a _ => a) 1 0 x y (HasDerivAt_exp x) (HasDerivAt2_projX x y)
+  have hExpB : HasDerivAt2 (fun _ b => exp b) (exp y * 0) (exp y * 1) x y :=
+    HasDerivAt2_scomp exp (exp y) (fun _ b => b) 0 1 x y (HasDerivAt_exp y) (HasDerivAt2_projY x y)
+  have hSum := HasDerivAt2_add _ _ _ _ _ _ x y hExpA hExpB
+  have hSub := HasDerivAt2_sub _ _ _ _ _ _ x y hSum (HasDerivAt2_const d x y)
+  have e1 : exp x * 1 + exp y * 0 - 0 = exp x := by mach_ring
+  have e2 : exp x * 0 + exp y * 1 - 0 = exp y := by mach_ring
+  rw [e1, e2] at hSub
+  exact hSub
 
 end Real
 end MachLib
