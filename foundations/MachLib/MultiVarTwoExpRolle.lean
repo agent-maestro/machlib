@@ -108,6 +108,27 @@ theorem khovanskii_rolle_multiarc {γ : Type} (arcs : List (γ × List Real)) (M
   Nat.le_trans (MultiVarMod.length_flatMap_le' (N + 1) arcs harc)
     (Nat.mul_le_mul hM (Nat.le_refl _))
 
+/-- The Khovanskii descent bound: iterating `L ↦ M·(L+1)` for `K` levels from a base. -/
+def khovBound (M : Nat) : Nat → Nat → Nat
+  | 0, base => base
+  | K + 1, base => khovBound M K (M * (base + 1))
+
+/-- **Khovanskii induction backbone.** If the intersection count at each level `i` is bounded by `M·(count
+at level i+1 + 1)` (one Khovanskii–Rolle reduction: `khovanskii_rolle_multiarc`, trading level `i`'s curves
+for level `i+1`'s Jacobian, `M` arcs each `+1`), and the bottom level `K` is bounded by `base` (the base
+case, e.g. a monotone Jacobian via `inj_zeros_le_one`), then the top level `0` is bounded by
+`khovBound M K base`. This is the descent through the Pfaffian chain — the recursion structure of
+Khovanskii's finiteness theorem, as a clean `Nat` recursion. Pure combinatorics; the per-level reduction
+`hstep` and the base are the inputs (supplied by the geometric layers). -/
+theorem khovanskii_iterate (M : Nat) (L : Nat → Nat)
+    (hstep : ∀ i, L i ≤ M * (L (i + 1) + 1)) :
+    ∀ (K base : Nat), L K ≤ base → L 0 ≤ khovBound M K base
+  | 0, _, h => h
+  | K + 1, base, h => by
+      have hLK : L K ≤ M * (base + 1) :=
+        Nat.le_trans (hstep K) (Nat.mul_le_mul (Nat.le_refl M) (show L (K + 1) + 1 ≤ base + 1 by omega))
+      exact khovanskii_iterate M L hstep K (M * (base + 1)) hLK
+
 end TwoExp
 end MultiVarMod
 end MachLib
