@@ -54,6 +54,7 @@ import MachLib.MultiVarTwoExpInstance
 import MachLib.MultiVarTwoExpSum
 import MachLib.MonotoneFromDeriv
 import MachLib.IntermediateValue
+import MachLib.MonotoneRoot
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
