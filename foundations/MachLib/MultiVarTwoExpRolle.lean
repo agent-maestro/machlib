@@ -1,5 +1,6 @@
 import MachLib.Rolle
 import MachLib.Ring
+import MachLib.MultiVarBezoutFiber
 
 /-!
 # The Khovanskii–Rolle step, parametrized (Gate 2d, two-exponential frontier, T.0)
@@ -94,6 +95,18 @@ theorem khovanskii_rolle_count
   have hg0 : gx z + gy z * yc' z = 0 := by
     rw [HasDerivAt_unique Gc (gx z + gy z * yc' z) f'' z (hGderiv z hza hzb) hderiv, hf''0]
   exact jac_cancel (fx z) (fy z) (gx z) (gy z) (yc' z) (hcurve z hza hzb) hg0
+
+/-- **Khovanskii–Rolle multi-arc bound.** The curve `{f=0}` generally splits into several arcs; the total
+number of intersections of `{f=0}` and `{g=0}` is the sum over arcs. Given `≤ M` arcs (each carrying its
+`Nodup` list of intersection points), and each arc's count `≤ N+1` (the per-arc `khovanskii_rolle_count`,
+with `N` bounding the Jacobian zeros on that arc), the total is `≤ M·(N+1)`. Fibered form (arcs given), as
+in `bezout_of_fibration`; combined with a bound `M` on the number of arcs (connected components of `{f=0}`)
+and `N` on the Jacobian zeros, this is the global Khovanskii bound for the two-curve intersection. -/
+theorem khovanskii_rolle_multiarc {γ : Type} (arcs : List (γ × List Real)) (M N : Nat)
+    (hM : arcs.length ≤ M) (harc : ∀ arc ∈ arcs, arc.2.length ≤ N + 1) :
+    (arcs.flatMap (fun arc => arc.2)).length ≤ M * (N + 1) :=
+  Nat.le_trans (MultiVarMod.length_flatMap_le' (N + 1) arcs harc)
+    (Nat.mul_le_mul hM (Nat.le_refl _))
 
 end TwoExp
 end MultiVarMod
