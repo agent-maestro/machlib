@@ -65,6 +65,36 @@ theorem khovanskii_rolle_jacobian
   exact ⟨xstar, hax, hxb,
     jac_cancel (fx xstar) (fy xstar) (gx xstar) (gy xstar) (yc' xstar) hf0 hg0⟩
 
+/-- **Khovanskii–Rolle counting step (parametrized).** On an arc of `{f=0}` (parametrized by `y=yc(x)`,
+curve-tangent `f_x + f_y·y' = 0`), the number of intersections of `{f=0}` and `{g=0}` is
+`≤ #{Jacobian zeros on the arc} + 1`. This is the inductive step of Khovanskii's theorem: it trades the
+transcendental intersections `{f=0}∩{g=0}` for the Jacobian intersections `{f=0}∩{J=0}` (one fewer
+"level"), paying a `+1` per arc. Reduces to the single-variable Rolle count `zero_count_bound_by_deriv`
+applied to `g` along the curve, each critical point mapped to a Jacobian zero by `jac_cancel`. `N` bounds
+the Jacobian zeros (the recursive/base bound); parametrization and arc taken as hypotheses (the IFT gate).
+-/
+theorem khovanskii_rolle_count
+    (Gc yc' fx fy gx gy : Real → Real) (a b : Real) (hab : a < b)
+    (hGderiv : ∀ z, a < z → z < b → HasDerivAt Gc (gx z + gy z * yc' z) z)
+    (hcurve : ∀ z, a < z → z < b → fx z + fy z * yc' z = 0)
+    (N : Nat)
+    (hJ_bound : ∀ zeros_J : List Real, zeros_J.Nodup →
+        (∀ z ∈ zeros_J, a < z ∧ z < b ∧ fx z * gy z - fy z * gx z = 0) →
+        zeros_J.length ≤ N) :
+    ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ Gc z = 0) →
+      zeros_g.length ≤ N + 1 := by
+  apply zero_count_bound_by_deriv Gc a b hab
+    (fun c hc1 hc2 => ⟨gx c + gy c * yc' c, hGderiv c hc1 hc2⟩) N
+  intro zeros_f' hnd hprops
+  apply hJ_bound zeros_f' hnd
+  intro z hz
+  obtain ⟨hza, hzb, f'', hderiv, hf''0⟩ := hprops z hz
+  refine ⟨hza, hzb, ?_⟩
+  have hg0 : gx z + gy z * yc' z = 0 := by
+    rw [HasDerivAt_unique Gc (gx z + gy z * yc' z) f'' z (hGderiv z hza hzb) hderiv, hf''0]
+  exact jac_cancel (fx z) (fy z) (gx z) (gy z) (yc' z) (hcurve z hza hzb) hg0
+
 end TwoExp
 end MultiVarMod
 end MachLib
