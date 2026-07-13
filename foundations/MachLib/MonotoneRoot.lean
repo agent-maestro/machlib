@@ -1,5 +1,7 @@
 import MachLib.MonotoneFromDeriv
 import MachLib.IntermediateValue
+import MachLib.Differentiation
+import MachLib.Ring
 
 /-!
 # The monotonic implicit function, pointwise: a monotonic function has exactly one root
@@ -47,6 +49,48 @@ theorem exists_unique_root_of_deriv_pos (f : Real → Real) (a b : Real) (hab : 
   · exfalso
     have hlt := lt_of_deriv_pos_on hdiff hpos (le_of_lt_r hac) h (le_of_lt_r hdb)
     rw [hfc, hfd] at hlt; exact lt_irrefl_ax 0 hlt
+
+private theorem mr_eq_of_sub_zero {x y : Real} (h : x - y = 0) : x = y := by
+  have h2 : x - y + y = 0 + y := by rw [h]
+  rw [show x - y + y = x from by mach_mpoly [x, y], zero_add] at h2
+  exact h2
+
+private theorem mr_sub_neg {x y : Real} (h : x < y) : x - y < 0 := by
+  have h2 := add_lt_add_left (sub_pos_of_lt h) (-(y - x))
+  rw [add_zero, show -(y - x) + (y - x) = 0 from by mach_mpoly [x, y],
+    show -(y - x) = x - y from by mach_mpoly [x, y]] at h2
+  exact h2
+
+/-- **Inverse-function value existence.** A strictly-increasing (positive-derivative) function `f` on
+`[a,b]` hits every intermediate value `y ∈ (f a, f b)` at exactly one point — the inverse-function value
+`f⁻¹(y)`. Reuses `exists_unique_root` on `f − y`. This completes the in-model monotonic-analysis toolkit
+(continuity, IVT, unique root, and now the inverse value); the inverse/implicit-function DERIVATIVE
+(`yc' = −fₓ/fᵧ`) is the bridge-axiom boundary — the opaque `HasDerivAt` gives no ε-δ handle to derive it,
+so it needs a witnessable axiom like `hasDerivAt_continuousAt`, plus a bivariate-derivative framework. -/
+theorem exists_unique_preimage_of_deriv_pos (f : Real → Real) (a b : Real) (hab : a < b)
+    (hdiff : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt f f' c)
+    (hpos : ∀ c f' : Real, a ≤ c → c ≤ b → HasDerivAt f f' c → 0 < f')
+    (y : Real) (hya : f a < y) (hyb : y < f b) :
+    ∃ c : Real, a < c ∧ c < b ∧ f c = y ∧ (∀ d : Real, a < d → d < b → f d = y → d = c) := by
+  have hdiff' : ∀ c : Real, a ≤ c → c ≤ b → ∃ f' : Real, HasDerivAt (fun t => f t - y) f' c := by
+    intro c hca hcb
+    obtain ⟨f', hf'⟩ := hdiff c hca hcb
+    refine ⟨f', ?_⟩
+    rw [show f' = f' - 0 from by mach_ring]
+    exact HasDerivAt_sub f (fun _ => y) f' 0 c hf' (HasDerivAt_const y c)
+  have hpos' : ∀ c f' : Real, a ≤ c → c ≤ b → HasDerivAt (fun t => f t - y) f' c → 0 < f' := by
+    intro c f' hca hcb hd
+    obtain ⟨f0, hf0⟩ := hdiff c hca hcb
+    have hd0 : HasDerivAt (fun t => f t - y) (f0 - 0) c :=
+      HasDerivAt_sub f (fun _ => y) f0 0 c hf0 (HasDerivAt_const y c)
+    rw [show f0 - 0 = f0 from by mach_ring] at hd0
+    rw [HasDerivAt_unique (fun t => f t - y) f' f0 c hd hd0]
+    exact hpos c f0 hca hcb hf0
+  obtain ⟨c, hac, hcb, hfc, huniq⟩ :=
+    exists_unique_root_of_deriv_pos (fun t => f t - y) a b hab hdiff' hpos'
+      (mr_sub_neg hya) (sub_pos_of_lt hyb)
+  exact ⟨c, hac, hcb, mr_eq_of_sub_zero hfc, fun d had hdb hfd => huniq d had hdb (by
+    show f d - y = 0; rw [hfd]; mach_ring)⟩
 
 end Real
 end MachLib
