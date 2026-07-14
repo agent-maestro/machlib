@@ -165,6 +165,7 @@ import MachLib.InnerKhovanskiiExp
 import MachLib.ChainExp2Instance
 import MachLib.ChainExp2PathC
 import MachLib.ChainExp2SingleExpUnconditional
+import MachLib.IterExpChainStructural
 import MachLib.TwoExpPfaffianSingleExpAdapter
 import MachLib.InnerKhovanskiiExpWF
 import MachLib.ChainExp2WFInstance
