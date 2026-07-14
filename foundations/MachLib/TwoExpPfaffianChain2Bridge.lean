@@ -570,6 +570,232 @@ structure Chain2DescentPackage
   interval_nonempty : A < B
   lower : Chain2LowerSystem F G A B M c yExpr expXExpr expYExpr sep
 
+/-- Source-ready chain-2 package. This extends the count/lower-system
+package with exactly the source hypotheses needed to form a
+`TwoExpDescentProblem` at the lightweight compiled source rank. -/
+structure Chain2CompiledDescentPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop) where
+  package : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep
+  isExp : IsExpChain c
+  coherent : c.IsCoherentOn A B
+  positive : ∀ z, A < z → z < B → ∀ i : Fin (M + 2), 0 < c.evals i z
+  jacobian_nonzero : ∃ z, A < z ∧ z < B ∧
+    (pfaffianChainFn c
+      (TwoExpBivarExpr.restrictedJacobianPoly c A B yExpr expXExpr expYExpr F G)).eval z ≠ 0
+  separator_nonzero : ∃ z, A < z ∧ z < B ∧
+    (pfaffianChainFn c
+      (PfaffianRepExpr.compilePoly c A B
+        (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))).eval z ≠ 0
+  separator_zero : ∀ z, A < z → z < B → sep z →
+    PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z = 0
+
+/-- Direct constructor for a source-ready chain-2 package from its interval,
+lower systems, and source hypotheses. This avoids forcing callers to build
+the nested `Chain2DescentPackage` record by hand. -/
+noncomputable def Chain2CompiledDescentPackage.ofLowerSystem
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (hAB : A < B)
+    (lower : Chain2LowerSystem F G A B M c yExpr expXExpr expYExpr sep)
+    (isExp : IsExpChain c)
+    (coherent : c.IsCoherentOn A B)
+    (positive : ∀ z, A < z → z < B → ∀ i : Fin (M + 2), 0 < c.evals i z)
+    (jacobian_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (TwoExpBivarExpr.restrictedJacobianPoly c A B yExpr expXExpr expYExpr F G)).eval z ≠ 0)
+    (separator_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (PfaffianRepExpr.compilePoly c A B
+          (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))).eval z ≠ 0)
+    (separator_zero : ∀ z, A < z → z < B → sep z →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z = 0) :
+    Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep :=
+  { package := { interval_nonempty := hAB, lower := lower },
+    isExp := isExp,
+    coherent := coherent,
+    positive := positive,
+    jacobian_nonzero := jacobian_nonzero,
+    separator_nonzero := separator_nonzero,
+    separator_zero := separator_zero }
+
+/-- The direct constructor stores the supplied interval proof. -/
+theorem Chain2CompiledDescentPackage.ofLowerSystem_interval_nonempty
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (hAB : A < B)
+    (lower : Chain2LowerSystem F G A B M c yExpr expXExpr expYExpr sep)
+    (isExp : IsExpChain c)
+    (coherent : c.IsCoherentOn A B)
+    (positive : ∀ z, A < z → z < B → ∀ i : Fin (M + 2), 0 < c.evals i z)
+    (jacobian_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (TwoExpBivarExpr.restrictedJacobianPoly c A B yExpr expXExpr expYExpr F G)).eval z ≠ 0)
+    (separator_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (PfaffianRepExpr.compilePoly c A B
+          (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))).eval z ≠ 0)
+    (separator_zero : ∀ z, A < z → z < B → sep z →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z = 0) :
+    (Chain2CompiledDescentPackage.ofLowerSystem hAB lower isExp coherent positive
+      jacobian_nonzero separator_nonzero separator_zero).package.interval_nonempty = hAB :=
+  rfl
+
+/-- The direct constructor stores the supplied lower system. -/
+theorem Chain2CompiledDescentPackage.ofLowerSystem_lower
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (hAB : A < B)
+    (lower : Chain2LowerSystem F G A B M c yExpr expXExpr expYExpr sep)
+    (isExp : IsExpChain c)
+    (coherent : c.IsCoherentOn A B)
+    (positive : ∀ z, A < z → z < B → ∀ i : Fin (M + 2), 0 < c.evals i z)
+    (jacobian_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (TwoExpBivarExpr.restrictedJacobianPoly c A B yExpr expXExpr expYExpr F G)).eval z ≠ 0)
+    (separator_nonzero : ∃ z, A < z ∧ z < B ∧
+      (pfaffianChainFn c
+        (PfaffianRepExpr.compilePoly c A B
+          (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F))).eval z ≠ 0)
+    (separator_zero : ∀ z, A < z → z < B → sep z →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z = 0) :
+    (Chain2CompiledDescentPackage.ofLowerSystem hAB lower isExp coherent positive
+      jacobian_nonzero separator_nonzero separator_zero).package.lower = lower :=
+  rfl
+
+/-- The compiled-source problem carried by a source-ready chain-2 package. -/
+noncomputable def Chain2CompiledDescentPackage.sourceProblem
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep :=
+  { interval_nonempty := pkg.package.interval_nonempty,
+    isExp := pkg.isExp,
+    coherent := pkg.coherent,
+    positive := pkg.positive,
+    jacobian_nonzero := pkg.jacobian_nonzero,
+    separator_nonzero := pkg.separator_nonzero,
+    separator_zero := pkg.separator_zero,
+    sourceRank := twoExpCompiledSourceRank F G A B M c yExpr expXExpr expYExpr }
+
+/-- The source-ready chain-2 package uses the lightweight compiled source
+rank. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_sourceRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.sourceRank =
+      twoExpCompiledSourceRank F G A B M c yExpr expXExpr expYExpr :=
+  rfl
+
+/-- The compiled-source problem stores the package's interval proof. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_interval_nonempty
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.interval_nonempty = pkg.package.interval_nonempty :=
+  rfl
+
+/-- The compiled-source problem stores the supplied exp-chain proof. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_isExp
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.isExp = pkg.isExp :=
+  rfl
+
+/-- The compiled-source problem stores the supplied coherence proof. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_coherent
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.coherent = pkg.coherent :=
+  rfl
+
+/-- The compiled-source problem stores the supplied positivity proof. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_positive
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.positive = pkg.positive :=
+  rfl
+
+/-- The compiled-source problem stores the supplied Jacobian nonzero
+witness. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_jacobian_nonzero
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.jacobian_nonzero = pkg.jacobian_nonzero :=
+  rfl
+
+/-- The compiled-source problem stores the supplied separator nonzero
+witness. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_separator_nonzero
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.separator_nonzero = pkg.separator_nonzero :=
+  rfl
+
+/-- The compiled-source problem stores the supplied separator-zero bridge. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_separator_zero
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.sourceProblem.separator_zero = pkg.separator_zero :=
+  rfl
+
+/-- The compiled-source problem is in the positive-rank branch. -/
+theorem Chain2CompiledDescentPackage.sourceProblem_positiveRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    0 < pkg.sourceProblem.sourceRank :=
+  twoExpCompiledSourceRank_pos F G A B M c yExpr expXExpr expYExpr
+
 /-- Certificate view of a canonical chain-2 descent package. -/
 theorem Chain2DescentPackage.certificate
     {F G : TwoExpBivarExpr}
@@ -653,6 +879,42 @@ noncomputable def Chain2DescentPackage.compiledRankObligation
   compiledWitnessRankObligation_of_lowerSystem F G A B M c yExpr expXExpr expYExpr sep
     pkg.genericLower hJrank hSrank
 
+/-- The direct compiled-rank obligation stores the package's generic
+Jacobian child rank. -/
+theorem Chain2DescentPackage.compiledRankObligation_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation hJrank hSrank).jacobianRank = pkg.genericLower.jacobianRank :=
+  rfl
+
+/-- The direct compiled-rank obligation stores the package's generic
+separator child rank. -/
+theorem Chain2DescentPackage.compiledRankObligation_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation hJrank hSrank).separatorRank = pkg.genericLower.separatorRank :=
+  rfl
+
 /-- Variant of `compiledRankObligation` stated in terms of the original
 chain-2 component ranks. -/
 noncomputable def Chain2DescentPackage.compiledRankObligation_of_chain2Ranks
@@ -676,6 +938,46 @@ noncomputable def Chain2DescentPackage.compiledRankObligation_of_chain2Ranks
     (by
       rw [pkg.genericLower_separatorRank]
       exact hSrank)
+
+/-- The chain-2-rank variant stores the original chain-2 Jacobian rank. -/
+theorem Chain2DescentPackage.compiledRankObligation_of_chain2Ranks_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_chain2Ranks hJrank hSrank).jacobianRank =
+      pkg.lower.jacobian.rank := by
+  simp [Chain2DescentPackage.compiledRankObligation_of_chain2Ranks,
+    Chain2DescentPackage.compiledRankObligation_jacobianRank,
+    Chain2DescentPackage.genericLower_jacobianRank]
+
+/-- The chain-2-rank variant stores the original chain-2 separator rank. -/
+theorem Chain2DescentPackage.compiledRankObligation_of_chain2Ranks_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_chain2Ranks hJrank hSrank).separatorRank =
+      pkg.lower.separator.rank := by
+  simp [Chain2DescentPackage.compiledRankObligation_of_chain2Ranks,
+    Chain2DescentPackage.compiledRankObligation_separatorRank,
+    Chain2DescentPackage.genericLower_separatorRank]
 
 /-- Ranked-lower-system view of a canonical chain-2 package, once the
 caller supplies the source rank and strict descent proofs for the generic
@@ -713,6 +1015,48 @@ theorem Chain2DescentPackage.rankedLower_lower
     (pkg.rankedLower sourceRank hJrank hSrank).lower = pkg.genericLower :=
   rfl
 
+/-- The ranked-lower view stores the supplied source rank. -/
+theorem Chain2DescentPackage.rankedLower_sourceRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (sourceRank : Nat)
+    (hJrank : pkg.genericLower.jacobianRank < sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < sourceRank) :
+    (pkg.rankedLower sourceRank hJrank hSrank).sourceRank = sourceRank :=
+  rfl
+
+/-- The ranked-lower view stores the package's generic Jacobian rank. -/
+theorem Chain2DescentPackage.rankedLower_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (sourceRank : Nat)
+    (hJrank : pkg.genericLower.jacobianRank < sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < sourceRank) :
+    (pkg.rankedLower sourceRank hJrank hSrank).jacobianRank = pkg.genericLower.jacobianRank :=
+  rfl
+
+/-- The ranked-lower view stores the package's generic separator rank. -/
+theorem Chain2DescentPackage.rankedLower_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (sourceRank : Nat)
+    (hJrank : pkg.genericLower.jacobianRank < sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < sourceRank) :
+    (pkg.rankedLower sourceRank hJrank hSrank).separatorRank = pkg.genericLower.separatorRank :=
+  rfl
+
 /-- Descent-result view of a canonical chain-2 package for an existing
 source problem, once the caller supplies strict descent proofs. -/
 noncomputable def Chain2DescentPackage.descentResult
@@ -741,6 +1085,34 @@ theorem Chain2DescentPackage.descentResult_lower
     (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
     (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
     (pkg.descentResult problem hJrank hSrank).lower = pkg.genericLower :=
+  rfl
+
+/-- The descent-result view stores the package's generic Jacobian rank. -/
+theorem Chain2DescentPackage.descentResult_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
+    (pkg.descentResult problem hJrank hSrank).jacobianRank = pkg.genericLower.jacobianRank :=
+  rfl
+
+/-- The descent-result view stores the package's generic separator rank. -/
+theorem Chain2DescentPackage.descentResult_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
+    (pkg.descentResult problem hJrank hSrank).separatorRank = pkg.genericLower.separatorRank :=
   rfl
 
 /-- Solved-descent view of a canonical chain-2 package for an existing
@@ -776,6 +1148,546 @@ theorem Chain2DescentPackage.solvedDescent_problem
     (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
     (pkg.solvedDescent problem hposRank hJrank hSrank).problem = problem :=
   rfl
+
+/-- The solved-descent view stores the supplied positive-rank proof. -/
+theorem Chain2DescentPackage.solvedDescent_positive_rank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
+    (pkg.solvedDescent problem hposRank hJrank hSrank).positive_rank = hposRank :=
+  rfl
+
+/-- The solved-descent view stores the package's descent-result view. -/
+theorem Chain2DescentPackage.solvedDescent_result
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank) :
+    (pkg.solvedDescent problem hposRank hJrank hSrank).result =
+      pkg.descentResult problem hJrank hSrank :=
+  rfl
+
+/-- Source-ready chain-2 packages produce a solved descent at the lightweight
+compiled source rank once their generic lower ranks are identified with the
+compiled child ranks. -/
+noncomputable def Chain2CompiledDescentPackage.solvedCompiledDescent
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpSolvedDescent F G A B M c yExpr expXExpr expYExpr sep :=
+  pkg.package.solvedDescent pkg.sourceProblem
+    pkg.sourceProblem_positiveRank
+    (by
+      rw [hJrank, Chain2CompiledDescentPackage.sourceProblem_sourceRank]
+      exact twoExpCompiledJacobianChildRank_lt_source
+        F G A B M c yExpr expXExpr expYExpr)
+    (by
+      rw [hSrank, Chain2CompiledDescentPackage.sourceProblem_sourceRank]
+      exact twoExpCompiledSeparatorChildRank_lt_source
+        F G A B M c yExpr expXExpr expYExpr)
+
+/-- Source-ready solved descent from equalities stated for the original
+chain-2 component ranks. -/
+noncomputable def Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpSolvedDescent F G A B M c yExpr expXExpr expYExpr sep :=
+  pkg.solvedCompiledDescent
+    (by
+      rw [pkg.package.genericLower_jacobianRank]
+      exact hJrank)
+    (by
+      rw [pkg.package.genericLower_separatorRank]
+      exact hSrank)
+
+/-- The chain-rank solved compiled descent stores the compiled source
+problem. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks_problem
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank).problem = pkg.sourceProblem :=
+  rfl
+
+/-- The chain-rank solved compiled descent stores the package's generic
+lower system. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks_lower
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank).result.lower =
+      pkg.package.genericLower :=
+  rfl
+
+/-- The chain-rank solved compiled descent stores the original chain-2
+Jacobian rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank).result.jacobianRank =
+      pkg.package.lower.jacobian.rank := by
+  rw [Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks,
+    Chain2CompiledDescentPackage.solvedCompiledDescent,
+    Chain2DescentPackage.solvedDescent,
+    Chain2DescentPackage.descentResult_jacobianRank,
+    Chain2DescentPackage.genericLower_jacobianRank]
+
+/-- The chain-rank solved compiled descent stores the original chain-2
+separator rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank).result.separatorRank =
+      pkg.package.lower.separator.rank := by
+  rw [Chain2CompiledDescentPackage.solvedCompiledDescent_of_chain2Ranks,
+    Chain2CompiledDescentPackage.solvedCompiledDescent,
+    Chain2DescentPackage.solvedDescent,
+    Chain2DescentPackage.descentResult_separatorRank,
+    Chain2DescentPackage.genericLower_separatorRank]
+
+/-- The solved compiled descent stores the compiled source problem. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_problem
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).problem = pkg.sourceProblem :=
+  rfl
+
+/-- The solved compiled descent stores the compiled source-rank witness. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_positive_rank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).positive_rank =
+      pkg.sourceProblem_positiveRank :=
+  rfl
+
+/-- The solved compiled descent has the lightweight compiled source rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_sourceRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).problem.sourceRank =
+      twoExpCompiledSourceRank F G A B M c yExpr expXExpr expYExpr := by
+  rw [Chain2CompiledDescentPackage.solvedCompiledDescent_problem,
+    Chain2CompiledDescentPackage.sourceProblem_sourceRank]
+
+/-- The solved compiled descent stores the package's generic lower system. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_lower
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).result.lower =
+      pkg.package.genericLower :=
+  rfl
+
+/-- The solved compiled descent stores the package's generic Jacobian rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).result.jacobianRank =
+      pkg.package.genericLower.jacobianRank :=
+  rfl
+
+/-- The solved compiled descent's Jacobian rank is the compiled Jacobian
+child rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_compiledJacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).result.jacobianRank =
+      twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr := by
+  rw [Chain2CompiledDescentPackage.solvedCompiledDescent_jacobianRank, hJrank]
+
+/-- The solved compiled descent stores the package's generic separator rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).result.separatorRank =
+      pkg.package.genericLower.separatorRank :=
+  rfl
+
+/-- The solved compiled descent's separator rank is the compiled separator
+child rank. -/
+theorem Chain2CompiledDescentPackage.solvedCompiledDescent_compiledSeparatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.solvedCompiledDescent hJrank hSrank).result.separatorRank =
+      twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr := by
+  rw [Chain2CompiledDescentPackage.solvedCompiledDescent_separatorRank, hSrank]
+
+/-- Certificate view of a source-ready chain-2 package through its solved
+compiled descent. -/
+theorem Chain2CompiledDescentPackage.certificate_of_solvedCompiledDescent
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpDescentCertificate F G A B M c yExpr expXExpr expYExpr sep :=
+  descentCertificate_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+
+/-- Compiled-rank obligation recovered from the solved compiled descent. -/
+noncomputable def Chain2CompiledDescentPackage.compiledRankObligation_of_solvedCompiledDescent
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpCompiledRankObligation F G A B M c yExpr expXExpr expYExpr :=
+  compiledRankObligation_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    (by
+      rw [Chain2CompiledDescentPackage.solvedCompiledDescent_problem]
+      exact pkg.sourceProblem_sourceRank)
+
+/-- The solved-compiled rank obligation stores the package's generic
+Jacobian rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_solvedCompiledDescent_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).jacobianRank =
+      pkg.package.genericLower.jacobianRank :=
+  rfl
+
+/-- The solved-compiled rank obligation carries the Jacobian rank-decrease
+proof against the compiled source rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_solvedCompiledDescent_jacobian_descends
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).jacobianRank <
+      twoExpCompiledSourceRank F G A B M c yExpr expXExpr expYExpr :=
+  (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).jacobian_descends
+
+/-- The solved-compiled rank obligation stores the package's generic
+separator rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_solvedCompiledDescent_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).separatorRank =
+      pkg.package.genericLower.separatorRank :=
+  rfl
+
+/-- The solved-compiled rank obligation carries the separator rank-decrease
+proof against the compiled source rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_solvedCompiledDescent_separator_descends
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).separatorRank <
+      twoExpCompiledSourceRank F G A B M c yExpr expXExpr expYExpr :=
+  (pkg.compiledRankObligation_of_solvedCompiledDescent hJrank hSrank).separator_descends
+
+/-- Direct compiled-rank obligation for a source-ready package, stated in
+terms of its generic lower-system ranks. -/
+noncomputable def Chain2CompiledDescentPackage.compiledRankObligation
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpCompiledRankObligation F G A B M c yExpr expXExpr expYExpr :=
+  pkg.package.compiledRankObligation hJrank hSrank
+
+/-- Direct compiled-rank obligation for a source-ready package, stated in
+terms of the original chain-2 component ranks. -/
+noncomputable def Chain2CompiledDescentPackage.compiledRankObligation_of_chain2Ranks
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    TwoExpCompiledRankObligation F G A B M c yExpr expXExpr expYExpr :=
+  pkg.package.compiledRankObligation_of_chain2Ranks hJrank hSrank
+
+/-- The direct compiled-rank obligation stores the source-ready package's
+generic Jacobian rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation hJrank hSrank).jacobianRank =
+      pkg.package.genericLower.jacobianRank :=
+  rfl
+
+/-- The direct compiled-rank obligation stores the source-ready package's
+generic separator rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation hJrank hSrank).separatorRank =
+      pkg.package.genericLower.separatorRank :=
+  rfl
+
+/-- The chain-2-rank direct obligation stores the original chain-2 Jacobian
+rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_chain2Ranks_jacobianRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_chain2Ranks hJrank hSrank).jacobianRank =
+      pkg.package.lower.jacobian.rank :=
+  pkg.package.compiledRankObligation_of_chain2Ranks_jacobianRank hJrank hSrank
+
+/-- The chain-2-rank direct obligation stores the original chain-2 separator
+rank. -/
+theorem Chain2CompiledDescentPackage.compiledRankObligation_of_chain2Ranks_separatorRank
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr) :
+    (pkg.compiledRankObligation_of_chain2Ranks hJrank hSrank).separatorRank =
+      pkg.package.lower.separator.rank :=
+  pkg.package.compiledRankObligation_of_chain2Ranks_separatorRank hJrank hSrank
 
 /-- Certificate view obtained from the package's solved-descent wrapper. -/
 theorem Chain2DescentPackage.certificate_of_solvedDescent
@@ -964,6 +1876,21 @@ structure Chain2BoundedDescentCertificate
     ∀ ss : List Real, ss.Nodup →
       (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ separatorBound
 
+/-- Certificate view reconstructed from the explicit bounds carried by a
+bounded chain-2 certificate. This does not use the stored `certificate`
+field; it repackages the bounded-count fields directly into the ordinary
+count-shaped certificate interface. -/
+theorem Chain2BoundedDescentCertificate.certificateFromBounds
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep) :
+    TwoExpDescentCertificate F G A B M c yExpr expXExpr expYExpr sep :=
+  { jacobianCount := ⟨bc.jacobianBound, bc.jacobianCount⟩,
+    separatorCount := ⟨bc.separatorBound, bc.separatorCount⟩ }
+
 /-- Bound pair carried by a bounded chain-2 certificate:
 separator/critical count first, Jacobian count second. -/
 noncomputable def Chain2BoundedDescentCertificate.boundPair
@@ -998,6 +1925,37 @@ theorem Chain2BoundedDescentCertificate.globalBound_eq_boundPair
     (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep) :
     bc.globalBound = (bc.boundPair.1 + 1) * (bc.boundPair.2 + 1) :=
   rfl
+
+/-- Ordinary local curve consumer for a bounded chain-2 certificate, using
+the certificate reconstructed from its explicit bounds. -/
+theorem khovanskii_rolle_curve_of_chain2_boundedCertificate_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
+    bc.certificateFromBounds yc a b hab hsub hf2 hg2 hfy_nz hid
 
 /-- Local curve consumer for a bounded chain-2 certificate. -/
 theorem khovanskii_rolle_curve_of_chain2_boundedCertificate
@@ -1109,6 +2067,77 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate
         cases hpair
         exact harcRich arc (List.mem_cons_of_mem _ harcmem)
 
+/-- Ordinary full global consumer for a bounded chain-2 certificate, using
+the certificate reconstructed from its explicit bounds. -/
+theorem khovanskii_rolle_full_of_chain2_boundedCertificate_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
+    bc.certificateFromBounds hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Ordinary full global consumer for a bounded chain-2 certificate with an
+externally supplied separator count. This keeps the bounded certificate's
+Jacobian count while allowing a sharper separator/critical bound. -/
+theorem khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_descent_certificate_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep bc.certificateFromBounds
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
 /-- Single-arc consumer for a bounded chain-2 certificate. -/
 theorem khovanskii_rolle_single_of_chain2_boundedCertificate
     (F G : TwoExpBivarExpr)
@@ -1168,6 +2197,72 @@ theorem khovanskii_rolle_single_of_chain2_boundedCertificate
       exact hzeros z hzmem)
   simpa using hglobal
 
+/-- Ordinary single-arc consumer for a bounded chain-2 certificate, using
+the certificate reconstructed from its explicit bounds. -/
+theorem khovanskii_rolle_single_of_chain2_boundedCertificate_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_descent_certificate F G A B M c yExpr expXExpr expYExpr sep
+    bc.certificateFromBounds arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Ordinary single-arc consumer for a bounded chain-2 certificate with an
+externally supplied separator count. -/
+theorem khovanskii_rolle_single_of_chain2_boundedCertificate_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (bc : Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_descent_certificate_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep bc.certificateFromBounds
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
 /-- Bundle a chain-2 descent package as a bounded certificate with the
 package's explicit syntactic bounds. -/
 noncomputable def Chain2DescentPackage.boundedCertificate
@@ -1196,6 +2291,18 @@ theorem Chain2DescentPackage.boundedCertificate_certificate
     pkg.boundedCertificate.certificate = pkg.certificate :=
   rfl
 
+/-- The bounded certificate produced from a package reconstructs the same
+ordinary certificate from its explicit bounds. -/
+theorem Chain2DescentPackage.boundedCertificate_certificateFromBounds
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.boundedCertificate.certificateFromBounds = pkg.certificate :=
+  rfl
+
 /-- The bounded certificate produced from a package carries the package's
 bound pair. -/
 theorem Chain2DescentPackage.boundedCertificate_boundPair
@@ -1219,6 +2326,122 @@ theorem Chain2DescentPackage.boundedCertificate_globalBound
     (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
     pkg.boundedCertificate.globalBound = pkg.globalBound :=
   rfl
+
+/-- Bounded-certificate view of a source-ready chain-2 package. -/
+noncomputable def Chain2CompiledDescentPackage.boundedCertificate
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    Chain2BoundedDescentCertificate F G A B M c yExpr expXExpr expYExpr sep :=
+  pkg.package.boundedCertificate
+
+/-- Explicit separator bound carried by a source-ready chain-2 package. -/
+noncomputable def Chain2CompiledDescentPackage.separatorBound
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) : Nat :=
+  pkg.package.separatorBound
+
+/-- Explicit Jacobian bound carried by a source-ready chain-2 package. -/
+noncomputable def Chain2CompiledDescentPackage.jacobianBound
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) : Nat :=
+  pkg.package.jacobianBound
+
+/-- Global KR product bound carried by a source-ready chain-2 package. -/
+noncomputable def Chain2CompiledDescentPackage.globalBound
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) : Nat :=
+  pkg.package.globalBound
+
+/-- The bounded certificate of a source-ready package is the package's
+bounded certificate. -/
+theorem Chain2CompiledDescentPackage.boundedCertificate_eq
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.boundedCertificate = pkg.package.boundedCertificate :=
+  rfl
+
+/-- The source-ready package carries the same bound pair as its underlying
+chain-2 package. -/
+theorem Chain2CompiledDescentPackage.boundPair_eq
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.boundedCertificate.boundPair = (pkg.separatorBound, pkg.jacobianBound) :=
+  rfl
+
+/-- The source-ready package's explicit bound pair agrees with the
+underlying lower-system bound pair. -/
+theorem Chain2CompiledDescentPackage.boundPair_eq_lower
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    (pkg.separatorBound, pkg.jacobianBound) = pkg.package.lower.khovBoundPair :=
+  rfl
+
+/-- The source-ready package's global bound is the KR product of its
+separator and Jacobian bounds. -/
+theorem Chain2CompiledDescentPackage.globalBound_eq
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep) :
+    pkg.globalBound = (pkg.separatorBound + 1) * (pkg.jacobianBound + 1) :=
+  rfl
+
+/-- Source-ready package Jacobian count bound. -/
+theorem Chain2CompiledDescentPackage.jacobian_count_khovBound
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (zeros : List Real) (hnd : zeros.Nodup)
+    (hz : ∀ z ∈ zeros, A < z ∧ z < B ∧
+      restrictedJacobianPred F G M c yExpr expXExpr expYExpr z) :
+    zeros.length ≤ pkg.jacobianBound :=
+  pkg.package.jacobian_count_khovBound zeros hnd hz
+
+/-- Source-ready package separator count bound. -/
+theorem Chain2CompiledDescentPackage.separator_count_khovBound
+    {F G : TwoExpBivarExpr}
+    {A B : Real}
+    {M : Nat} {c : PfaffianChain (M + 2)}
+    {yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2)}
+    {sep : Real → Prop}
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (zeros : List Real) (hnd : zeros.Nodup)
+    (hz : ∀ z ∈ zeros, A < z ∧ z < B ∧ sep z) :
+    zeros.length ≤ pkg.separatorBound :=
+  pkg.package.separator_count_khovBound zeros hnd hz
 
 /-- Package-level local curve consumer with the package's explicit Jacobian
 bound. -/
@@ -1253,6 +2476,38 @@ theorem khovanskii_rolle_curve_of_chain2_descentPackage_khovBound
     using khovanskii_rolle_curve_of_chain2_lower_system_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
       yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+
+/-- Package-level ordinary local curve consumer, routed through the bounded
+certificate exported by the package. -/
+theorem khovanskii_rolle_curve_of_chain2_descentPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_chain2_boundedCertificate_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
+    yc a b hab hsub hf2 hg2 hfy_nz hid
 
 /-- Package-level full global consumer with the package's own explicit
 syntactic bound. -/
@@ -1289,6 +2544,77 @@ theorem khovanskii_rolle_full_of_chain2_descentPackage_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
       hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
 
+/-- Package-level ordinary full global consumer, routed through the bounded
+certificate exported by the package. -/
+theorem khovanskii_rolle_full_of_chain2_descentPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_chain2_boundedCertificate_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level full global consumer with an externally supplied separator
+count and the package's compiled Jacobian certificate. -/
+theorem khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_chain2_boundedCertificate_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
 /-- Package-level single-arc consumer with the package's explicit global
 bound. -/
 theorem khovanskii_rolle_single_of_chain2_descentPackage_khovBound
@@ -1322,6 +2648,945 @@ theorem khovanskii_rolle_single_of_chain2_descentPackage_khovBound
     using khovanskii_rolle_single_of_chain2_lower_system_khovBound
       F G A B pkg.interval_nonempty M c yExpr expXExpr expYExpr sep pkg.lower
       arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level ordinary single-arc consumer, routed through the bounded
+certificate exported by the package. -/
+theorem khovanskii_rolle_single_of_chain2_descentPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_chain2_boundedCertificate_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level single-arc consumer with an externally supplied separator
+count and the package's compiled Jacobian certificate. -/
+theorem khovanskii_rolle_single_of_chain2_descentPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_chain2_boundedCertificate_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep pkg.boundedCertificate
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level local curve consumer through the package's solved-descent
+view. This is the construction-shaped endpoint for callers already carrying
+a source descent problem and rank descent proofs. -/
+theorem khovanskii_rolle_curve_of_chain2_solvedPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedDescent problem hposRank hJrank hSrank)
+    yc a b hab hsub hf2 hg2 hfy_nz hid
+
+/-- Package-level full global consumer through the package's solved-descent
+view. -/
+theorem khovanskii_rolle_full_of_chain2_solvedPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedDescent problem hposRank hJrank hSrank)
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level single-arc consumer through the package's solved-descent
+view. -/
+theorem khovanskii_rolle_single_of_chain2_solvedPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedDescent problem hposRank hJrank hSrank)
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level full global solved-descent consumer with an externally
+supplied separator count. -/
+theorem khovanskii_rolle_full_of_chain2_solvedPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedDescent problem hposRank hJrank hSrank)
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Package-level single-arc solved-descent consumer with an externally
+supplied separator count. -/
+theorem khovanskii_rolle_single_of_chain2_solvedPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2DescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (problem : TwoExpDescentProblem F G A B M c yExpr expXExpr expYExpr sep)
+    (hposRank : 0 < problem.sourceRank)
+    (hJrank : pkg.genericLower.jacobianRank < problem.sourceRank)
+    (hSrank : pkg.genericLower.separatorRank < problem.sourceRank)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedDescent problem hposRank hJrank hSrank)
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package local curve consumer with the underlying chain-2
+package's explicit Jacobian bound. This route uses the solved chain-2 count
+island directly and does not require compiled rank-identification proofs. -/
+theorem khovanskii_rolle_curve_of_chain2_compiledPackage_khovBound
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0)
+    (zeros_g : List Real) (hzeros_nd : zeros_g.Nodup)
+    (hzeros : ∀ z ∈ zeros_g,
+      a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) :
+    zeros_g.length ≤ pkg.jacobianBound + 1 :=
+  khovanskii_rolle_curve_of_chain2_descentPackage_khovBound
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    yc a b hab hsub hf2 hg2 hfy_nz hid zeros_g hzeros_nd hzeros
+
+/-- Source-ready package full global consumer with the underlying chain-2
+package's explicit global bound. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_khovBound
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ pkg.globalBound :=
+  khovanskii_rolle_full_of_chain2_descentPackage_khovBound
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer with the underlying chain-2
+package's explicit global bound. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_khovBound
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    arc.zeros.length ≤ pkg.globalBound :=
+  khovanskii_rolle_single_of_chain2_descentPackage_khovBound
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package ordinary local curve consumer through its
+underlying chain-2 package. -/
+theorem khovanskii_rolle_curve_of_chain2_compiledPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_chain2_descentPackage_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    yc a b hab hsub hf2 hg2 hfy_nz hid
+
+/-- Source-ready package ordinary full global consumer through its
+underlying chain-2 package. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_chain2_descentPackage_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package ordinary single-arc consumer through its underlying
+chain-2 package. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_certificate
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_chain2_descentPackage_certificate
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package full global consumer through its underlying
+chain-2 package, with an externally supplied separator count. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_certificate_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_chain2_descentPackage_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer through its underlying chain-2
+package, with an externally supplied separator count. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_certificate_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_chain2_descentPackage_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep pkg.package
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package local curve consumer through the compiled solved
+descent. The caller supplies only the rank-identification equalities needed
+to connect the chain-2 lower ranks to the compiled child ranks. -/
+theorem khovanskii_rolle_curve_of_chain2_compiledPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    yc a b hab hsub hf2 hg2 hfy_nz hid
+
+/-- Source-ready package full global consumer through the compiled solved
+descent. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer through the compiled solved
+descent. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package full global consumer through the compiled solved
+descent, with an externally supplied separator count. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer through the compiled solved
+descent, with an externally supplied separator count. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.genericLower.jacobianRank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.genericLower.separatorRank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent hJrank hSrank)
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package local curve consumer through the compiled solved
+descent, with rank identifications stated for the original chain-2 component
+ranks. -/
+theorem khovanskii_rolle_curve_of_chain2_compiledPackage_of_chain2Ranks
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (yc : Real → Real)
+    (a b : Real) (hab : a < b)
+    (hsub : ∀ z, a < z → z < b → A < z ∧ z < B)
+    (hf2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (yc z))
+    (hg2 : ∀ z, a < z → z < b →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (yc z))
+    (hfy_nz : ∀ z, a < z → z < b →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (yc t) = 0) :
+    ∃ N : Nat, ∀ zeros_g : List Real, zeros_g.Nodup →
+      (∀ z ∈ zeros_g, a < z ∧ z < b ∧ TwoExpBivarExpr.denote G z (yc z) = 0) →
+      zeros_g.length ≤ N + 1 :=
+  khovanskii_rolle_curve_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
+    yc a b hab hsub hf2 hg2 hfy_nz hid
+
+/-- Source-ready package full global consumer through the compiled solved
+descent, with rank identifications stated for original chain-2 component
+ranks. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
+    hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer through the compiled solved
+descent, with rank identifications stated for original chain-2 component
+ranks. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ Ncrit N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
+    arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package full global consumer through the compiled solved
+descent, with an externally supplied separator count and rank
+identifications stated for original chain-2 component ranks. -/
+theorem khovanskii_rolle_full_of_chain2_compiledPackage_of_chain2Ranks_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (hd : RepresentedCurveArc) (s : List RepresentedCurveArc)
+    (hchain : ChainSep (fun x => A < x ∧ x < B ∧ sep x) hd.rep (s.map (fun arc => arc.rep)))
+    (hinside : ∀ arc ∈ (hd :: s), A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : ∀ arc ∈ (hd :: s), arc.zeros.Nodup)
+    (hf2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ arc ∈ (hd :: s), ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ arc ∈ (hd :: s), ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ arc ∈ (hd :: s), ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat,
+      ((hd :: s).flatMap (fun arc => arc.zeros)).length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_full_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
+    Ncrit hNcrit_interval hd s hchain hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
+
+/-- Source-ready package single-arc consumer through the compiled solved
+descent, with an externally supplied separator count and rank
+identifications stated for original chain-2 component ranks. -/
+theorem khovanskii_rolle_single_of_chain2_compiledPackage_of_chain2Ranks_and_separator_count
+    (F G : TwoExpBivarExpr)
+    (A B : Real)
+    (M : Nat) (c : PfaffianChain (M + 2))
+    (yExpr expXExpr expYExpr : PfaffianRepExpr (M + 2))
+    (sep : Real → Prop)
+    (pkg : Chain2CompiledDescentPackage F G A B M c yExpr expXExpr expYExpr sep)
+    (hJrank :
+      pkg.package.lower.jacobian.rank =
+        twoExpCompiledJacobianChildRank F G A B M c yExpr expXExpr expYExpr)
+    (hSrank :
+      pkg.package.lower.separator.rank =
+        twoExpCompiledSeparatorChildRank F A B M c yExpr expXExpr expYExpr)
+    (Ncrit : Nat)
+    (hNcrit_interval : ∀ ss : List Real, ss.Nodup →
+      (∀ s ∈ ss, A < s ∧ s < B ∧ sep s) → ss.length ≤ Ncrit)
+    (arc : RepresentedCurveArc)
+    (hinside : A < arc.lo ∧ arc.lo < arc.hi ∧ arc.hi < B)
+    (hzeros_nd : arc.zeros.Nodup)
+    (hf2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote F)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr F) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z)
+        z (arc.yc z))
+    (hg2 : ∀ z, arc.lo < z → z < arc.hi →
+      HasDerivAt2 (TwoExpBivarExpr.denote G)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDX yExpr expXExpr expYExpr G) z)
+        (PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr G) z)
+        z (arc.yc z))
+    (hfy_nz : ∀ z, arc.lo < z → z < arc.hi →
+      PfaffianRepExpr.denote c (TwoExpBivarExpr.restrictDY yExpr expXExpr expYExpr F) z ≠ 0)
+    (hid : ∀ t, TwoExpBivarExpr.denote F t (arc.yc t) = 0)
+    (hzeros : ∀ z ∈ arc.zeros,
+      arc.lo < z ∧ z < arc.hi ∧ TwoExpBivarExpr.denote G z (arc.yc z) = 0) :
+    ∃ N : Nat, arc.zeros.length ≤ (Ncrit + 1) * (N + 1) :=
+  khovanskii_rolle_single_of_solved_descent_and_separator_count
+    F G A B M c yExpr expXExpr expYExpr sep
+    (pkg.solvedCompiledDescent_of_chain2Ranks hJrank hSrank)
+    Ncrit hNcrit_interval arc hinside hzeros_nd hf2 hg2 hfy_nz hid hzeros
 
 end TwoExp
 end MultiVarMod
