@@ -60,6 +60,12 @@ import MachLib.TwoExpCurveCount
 import MachLib.TwoExpCurveValidation
 import MachLib.ArcCount
 import MachLib.TwoExpArcCount
+import MachLib.TwoExpPfaffianBridge
+import MachLib.TwoExpPfaffianRepresentation
+import MachLib.TwoExpPfaffianDescent
+import MachLib.TwoExpPfaffianReductionWitness
+import MachLib.TwoExpPfaffianExpSum
+import MachLib.TwoExpPfaffianChain2Bridge
 import MachLib.Sign
 import MachLib.RingTest
 import MachLib.PolyRing
@@ -158,6 +164,7 @@ import MachLib.InnerKhovanskii
 import MachLib.InnerKhovanskiiExp
 import MachLib.ChainExp2Instance
 import MachLib.ChainExp2PathC
+import MachLib.TwoExpPfaffianSingleExpAdapter
 import MachLib.InnerKhovanskiiExpWF
 import MachLib.ChainExp2WFInstance
 import MachLib.ChainExp2SDR
