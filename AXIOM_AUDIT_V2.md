@@ -119,7 +119,7 @@ sub-claims.
   sprint's audit. Recommended for future audit passes; not Khovanskii-
   load-bearing.
 
-### F7. Khovanskii-load-bearing `[3 — zero_count_bound_classical (legacy PfaffianFunction), khovanskii_chain_step (new PfaffianFn), eml_pfaffian_validon_from_sin_equality]`
+### F7. Khovanskii-load-bearing `[2 live — zero_count_bound_classical (legacy PfaffianFunction), eml_pfaffian_validon_from_sin_equality; khovanskii_chain_step RETIRED]`
 
 These are the **specifically-named** axioms that the Khovanskii closure depends
 on. They're the focus of this audit (§2–§4 detail).
@@ -128,7 +128,20 @@ on. They're the focus of this audit (§2–§4 detail).
 
 ## §2a — Legacy PfaffianFunction Khovanskii bound: `zero_count_bound_classical`
 
-**Location:** `KhovanskiiLemma.lean:572`
+> **Status refresh (2026-07-14).** This is now the project's **sole**
+> Khovanskii-load-bearing axiom. `khovanskii_chain_step` (§2b) was **retired**
+> (no longer declared anywhere); the full `KhovanskiiReduction.lean` Step-3
+> pipeline was built afterward. The exponential specializations
+> (single / two / arbitrary-depth-N) are proven **axiom-clean of this axiom**
+> via dedicated tracks — verified by `#print axioms` on
+> `ChainExp2NoZeros.chain2_khovanskii_bound_explicit`,
+> `ChainExp2Capstone.chain2_khovanskii_bound`, and
+> `IterExpDepthN.chainN_khovanskii_bound_unconditional` (all depend only on the
+> `MachLib.Real` foundation). The **general** Pfaffian case (arbitrary
+> triangular chains, incl. `log`/`inv` atoms) still routes through this axiom.
+> See §2b for the precise remaining blocker.
+
+**Location:** `KhovanskiiLemma.lean:580`
 
 **Statement:** For a non-trivial PfaffianFunction valid on `(a, b)`, zeros
 are bounded by `PfaffianRank f` (= `f.chain.order * 1_000_000 + f.degree`).
@@ -150,52 +163,91 @@ differentiation, which is false for `exp_atom` (`(e^x)' = e^x`). The
 replacement is a direct classical bound rather than an inductive
 measure — same conclusion, no false intermediate claim.
 
-**Closure path:** complete formalization of `khovanskii_chain_step`
-(§2b) on the new `PfaffianFn` type (~600 lines, multi-session) plus a
-port of `eml_pfaffian` and `PfaffianFunction.zero_bound` consumers to
-`PfaffianFn` (~200-300 lines). After both: this axiom can be deleted
-in favor of `khovanskii_chain_step`.
+**Closure path (updated 2026-07-14):** two independent pieces, both
+still open, either of which alone is insufficient:
 
-**Risk:** low. Classically true, named, side conditions verified. The
-deletion path is the chain-explicit refactor's remaining wiring.
+1. **General witness construction (Step 3b — the hard blocker).** The
+   `PfaffianFn` bound is already constructive *given a reduction witness*
+   (`pfaffian_fn_zero_count_bound` / `khovanskii_bound_via_sdr`). The entire
+   witness pipeline is built and proven: `witness_construction` (3e, strong
+   recursion on chain length), `buildReducer` (3f, WF recursion on the lex
+   measure), `IsKhovanskiiReducible.trans`, `lexLT_wf`, and the capstone
+   `khovanskii_bound_via_sdr` (3g). It is **parametric in one unfilled input**:
+   a `PfaffianFn.StepwiseDecreaseReducer` — the strict lex-decrease. See §2c.
+2. **`PfaffianFunction → PfaffianFn` bridge.** The axiom is stated over the
+   *inductive* `PfaffianExpr`/`PfaffianFunction` type; the constructive bound
+   lives on the *chain-explicit* `PfaffianFn`/`MultiPoly` type. A structural
+   translation + eval-agreement (incl. the `comp`/`inv`/`log_atom`
+   constructors) is required to transport the bound onto the axiom's type.
+   This is orthogonal to (1) and independently bounded.
 
-**Status:** named load-bearing axiom replacing the materially-false legacy.
+**Risk:** low (classically true, named, side conditions verified). But the
+deletion is **not** near-term: it waits on §2c.
 
-## §2b — Classical Khovanskii axiom: `khovanskii_chain_step`
+**Status:** the project's sole Khovanskii-load-bearing axiom. Exponential
+specializations are already axiom-clean via separate tracks (see refresh box).
 
-**Location:** `PfaffianFnBound.lean` (added this sprint).
+## §2b — RETIRED axiom: `khovanskii_chain_step`
 
-**Statement:** For PfaffianFn with chain length n+1, zeros on (a, b) are
-bounded by `khovanskiiBound (n+1) totalDegree`.
+**Status: DELETED (Phase-15 axiom audit retirement).** No longer declared
+anywhere (`grep 'axiom.*khovanskii_chain_step'` → empty). `PfaffianFnBound.lean`
+now exposes the reduction **witness** as an explicit hypothesis
+(`IsKhovanskiiReducible`) instead of asserting the chain-step classically:
+`pfaffian_fn_zero_count_bound` is a thin, axiom-free wrapper around
+`KhovanskiiReduction.khovanskii_bound_full`. The classical content moved into
+the constructive-modulo-witness pipeline; what remains open is the *witness
+existence* proof (§2c), not a chain-step axiom.
 
-**Classical reference:** Khovanskii, A.G. *Fewnomials*. AMS Translations
-Vol. 88, 1991. Theorem 1, Chapter 3.
+## §2c — The real remaining gap (corrected 2026-07-14 after reading the shipped code)
 
-**Side conditions:** chain coherence on (a, b), triangularity, witness in
-interval. All three are in the hypothesis list; none are dropped.
+**The "canonicalizer bottleneck" the docstrings describe is STALE.** The
+`degreeUpper ∘ polySimplify` measure (which does no ring cancellation) was
+**replaced** by an eval-canonical measure and the strict-descent was **proven**.
+Concretely, the shipped `PfaffianChain.lexMeasure` (PfaffianChain.lean:855) second
+component is `polyTrueDegreeStrict ∘ polyCoeffs ∘ multiPolyToPolyForLex ∘
+leadingCoeffY_last`, and `PolynomialCanonical.lean` already proves the two
+load-bearing facts:
+- `polyTrueDegreeStrict_eq_of_evalCoeffs_eq` — **eval-equal ⟹ equal measure**
+  (the eval-canonical property the old analysis said was missing);
+- `polyTrueDegreeStrict_polyDerivativeCoeffs_lt` — the derivative strictly drops it.
 
-**MachLib-specific verification:** `IsCoherentOn` is the direct HasDerivAt-
-based encoding of "each y_i' = P_i(x, y_1, ..., y_i)". `IsTriangular` is
-direct via `degreeY j P_i = 0` for `j > i`. No silent side condition.
+Using these, `ChainExp2PathC.lean` **fully proves the SingleExp strict-decrease
+with no hypothesis**: `singleExp_h_bridge_closure` → `singleExp_reduceStep_closed`,
+and `singleExp_dispatch_step` (line 2009) is a **complete, `sorry`-free SingleExp
+`ReduceStep`** (reduce-arm + canonical-trim arm covering the
+`polyTrueDegreeStrict = 0` corner). A smoke-test instantiates it. So the SingleExp
+Step-3b is **done**, through the generic `PfaffianFn` pipeline.
 
-**Closure path:** the classical proof uses multiplication by an exponential
-factor (degree reduction in highest chain var) + iterated Rolle (x-degree
-reduction) + chain-relation substitution (chain projection). Formalizing
-requires ~600 lines split across:
-1. Extended `PfaffianFn.mul` for chain length k > 1 with eval correctness (~80).
-2. `totalDerivative : PfaffianFn → PfaffianFn` with HasDerivAt correctness (~120).
-3. Polynomial degree tracking through chain-relation substitution (~150).
-4. The actual Khovanskii reduction loop with iterated Rolle (~250).
+**What actually remains (three concrete, bounded pieces):**
 
-Multi-session. The infrastructure built this sprint (MultiPoly, PfaffianChain,
-PfaffianFn, lifts, combiners) is the prerequisite.
+1. **Eliminate the vacuous `sdr_other`. ✓ DONE (2026-07-14).**
+   `singleExp_khovanskii_bound` (ChainExp2PathC.lean:2178) proved the SingleExp
+   `PfaffianFn` bound *through* `khovanskii_bound_via_sdr` but threaded
+   `sdr_other : PfaffianFn.StepwiseDecreaseReducer` (a total SDR for *arbitrary*
+   chains — the open problem) purely for typing, making it stated-but-unusable.
+   **`MachLib/ChainExp2SingleExpUnconditional.lean` removes it:** `se_reduces`
+   builds the Khovanskii witness by a bespoke well-founded recursion on the shipped
+   `lexMeasure`, staying entirely in the `⟨1, SingleExpChain, ·⟩` shape (reduce arm
+   → `singleExp_reduceStep_closed`; trim arm → `singleExp_canonicalTrim_step`; base
+   → `dropLast`), so no `sdr_other` is needed. `singleExp_khovanskii_bound_unconditional`
+   then feeds that witness straight into `PfaffianFn.khovanskii_bound_full`.
+   **Verified `#print axioms`-clean** of `zero_count_bound_classical` (only the
+   `MachLib.Real` foundation), `sorry`-free, full `MachLib` builds green. This is
+   the first fully-closed instantiation of the generic `PfaffianFn` witness
+   pipeline — the architecture is now validated end-to-end on a real chain.
 
-**Risk:** low. Classically true (Khovanskii's published theorem),
-explicitly cited, side conditions verified. Honest framing: "future
-formalization work".
+2. **Other-chain SDRs.** Repeat the SingleExp Step-3b work for `IterExpChain`
+   (chain-2 is largely done in `ChainExp2SDR.lean`) and, the genuinely open part,
+   for chains containing `log`/`inv` atoms. This is the remaining research surface,
+   but it is now "reproduce a known, proven pattern per atom", not "invent a
+   canonicalizer".
 
-**Status:** named load-bearing axiom for the new bound theorem.
-Once formalized, `pfaffian_fn_zero_count_bound` becomes fully constructive.
+3. **`PfaffianFunction → PfaffianFn` bridge** (§2a piece 2) — transport the
+   `PfaffianFn` bound onto the axiom's inductive type. Orthogonal, structural.
+
+**Once (1)+(2)+(3):** `zero_count_bound_classical` is deleted. The exponential
+sub-cases are already axiom-clean by *separate* tracks; the value of the pipeline
+route is a single uniform proof that also covers the non-exponential chains.
 
 ---
 
@@ -375,8 +427,11 @@ that the named load-bearing axioms have been seriously stress-tested.
 | `PfaffianFunction.derivative_eval` | ✓ theorem via inv + IsValidAt | `e432c20` |
 | `PfaffianFunction.derivative_rank_lt` (was materially false) | ✓ DELETED 2026-06-12 | replaced by `zero_count_bound_classical` |
 | `PfaffianFunction.zero_count_bound_classical` (new replacement) | ⚠ axiom (classically true; Khovanskii 1991 cited) | future formalization or chain-port |
-| `pfaffian_fn_zero_count_bound` (new) | ✓ theorem modulo `khovanskii_chain_step` | this sprint |
-| `khovanskii_chain_step` (new) | ⚠ axiom (classically true; Khovanskii 1991 cited) | future formalization |
+| `pfaffian_fn_zero_count_bound` (new) | ✓ theorem, axiom-free (takes `IsKhovanskiiReducible` witness as hypothesis) | this sprint |
+| `khovanskii_chain_step` (new) | ✓ RETIRED / deleted — see §2b | Phase-15 |
+| Step-3 SingleExp `StepwiseDecreaseReducer` | ✓ PROVEN — `singleExp_dispatch_step` (ChainExp2PathC.lean:2009), `sorry`-free | shipped |
+| Unconditional SingleExp `PfaffianFn` bound | ✓ DONE — `singleExp_khovanskii_bound_unconditional`, axiom-clean, no `sdr_other` | 2026-07-14 |
+| Other-chain SDRs (`log`/`inv` atoms) + `PfaffianFunction`→`PfaffianFn` bridge | ⚠ open, see §2c(2,3) | remaining |
 | `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom (classically true) | future formalization |
 
 **Recommendation:** ship at the current honesty level with this audit
@@ -407,7 +462,7 @@ EMLPfaffian.lean              3  (1 load-bearing for Khovanskii — see §3)
 Rolle.lean                    2  (Rolle + zero-count-by-deriv)
 Linarith.lean                 2  (tactic substrate)
 IteratedExpBounds.lean        2  (helper bounds)
-PfaffianFnBound.lean          1  (khovanskii_chain_step — see §2b)
+PfaffianFnBound.lean          0  (khovanskii_chain_step RETIRED post-snapshot — see §2b)
 SinNotInEML.lean              1  (sin_pi_div_two model)
 SinNotInEMLDepth2Partial.lean 1  (pi_gt_one)
 Pfaffian.lean                 1  (operator substrate)
