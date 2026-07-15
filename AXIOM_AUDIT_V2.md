@@ -236,11 +236,36 @@ Step-3b is **done**, through the generic `PfaffianFn` pipeline.
    the first fully-closed instantiation of the generic `PfaffianFn` witness
    pipeline — the architecture is now validated end-to-end on a real chain.
 
-2. **Other-chain SDRs.** Repeat the SingleExp Step-3b work for `IterExpChain`
-   (chain-2 is largely done in `ChainExp2SDR.lean`) and, the genuinely open part,
-   for chains containing `log`/`inv` atoms. This is the remaining research surface,
-   but it is now "reproduce a known, proven pattern per atom", not "invent a
-   canonicalizer".
+2. **The `log_atom` frontier — the TRUE blocker for the featured consumers
+   (pinpointed 2026-07-14).** The axiom's real footprint is `PfaffianFunction.zero_bound`,
+   consumed by the sin/cos-not-in-EML results (`EMLPfaffian.lean:363`,
+   `CosNotInEMLAnyDepth.lean:206`) applied to `eml_pfaffian t`. But
+   `eml_pfaffian (eml t1 t2) = exp(eml_pfaffian t1) − log(eml_pfaffian t2)`
+   (EMLPfaffian.lean:105) — so **every** EML tree with an `eml` node contains
+   `log_atom`. The exp-tower bridges (single-exp, nested two-exp) therefore CANNOT
+   retire any featured consumer; `log_atom` is required.
+
+   `EMLKhovanskiiConstructive.lean` has the constructive route — reduce log-count
+   via `elim_top_log` (`exp(u − log b) = exp u / b`) toward an exp-only form — but
+   its own 2026-07-07 status note records the exact **ceiling**: when an `eml`
+   node's *exponent* subtree contains a log, elimination **buries** the log under
+   exps (already at depth 2, `eml (eml a b) c`), landing in an **exp+rational**
+   class outside `IsExpChain`. Two paths remain:
+   - **fragment-path (bounded):** finish the exp-only reduction for the log-free-
+     exponent EML fragment → reaches exp-only → the now-**unconditional** exp bound
+     (`singleExp_khovanskii_bound_unconditional` / `chain2_..._unconditional`)
+     applies. A genuine *partial* axiom-clean result; leaves the axiom only for the
+     buried-log case.
+   - **b-path (open depth):** a constructive Khovanskii bound for exp+rational
+     (≡ exp+log) chains — extend the descent's generator from `IsExpChain` to admit
+     a `1/x` (reciprocal/log) generator (cf. `PfaffianExpRecipDescent`,
+     `PfaffianExpLogRecipDescent`, `PfaffianLogGeneralDegree`, which already build
+     axiom-clean exp+recip/log descent pieces). This is the genuine remaining
+     research depth.
+
+   `IterExpChain`-through-the-generic-pipeline is a *separate*, architectural-only
+   line (the depth-N iterated-exp bound is already axiom-clean via the `chainNFn`
+   track; chain-2 lives in the bespoke `ChainExp2SDR`/`chain2Measure` framework).
 
 3. **`PfaffianFunction → PfaffianFn` bridge** (§2a piece 2) — transport the
    `PfaffianFn` bound onto the axiom's inductive type. Orthogonal, structural.
@@ -250,8 +275,15 @@ Step-3b is **done**, through the generic `PfaffianFn` pipeline.
    `SingleExpChain` (`toMP1`, `eval_toMP1`), and `expPoly_pfaffianFunction_zero_bound`
    gives an **axiom-clean** (verified: no `zero_count_bound_classical`) Khovanskii
    zero bound for single-exponential `PfaffianFunction`s via
-   `singleExp_khovanskii_bound_unconditional`. Remaining: add `log_atom`/`comp`/`inv`
-   and taller chains (needs the corresponding SDRs, §2c(2)).
+   `singleExp_khovanskii_bound_unconditional`.
+   **Nested two-exp fragment ALSO DONE (2026-07-14):**
+   `MachLib/PfaffianExprTwoExpBridge.lean` (`toMP2`, `eval_toMP2`,
+   `expExpPoly_pfaffianFunction_zero_bound`) bridges `(x, eˣ, e^(eˣ))`
+   (`e^(eˣ) = comp exp_atom exp_atom`) to `MultiPoly 2` over `IterExpChain 2` and
+   cites `chain2_khovanskii_bound_unconditional` (`ChainExp2Unconditional.lean` —
+   the chain-2 bound with the vacuous `sdr_other` removed). Both `#print axioms`-clean.
+   Remaining: the `log_atom` case — see §2c(2), which is the actual blocker for the
+   featured `eml_pfaffian` consumers (the exp fragments do NOT reach them).
 
 **Once (1)+(2)+(3):** `zero_count_bound_classical` is deleted. The exponential
 sub-cases are already axiom-clean by *separate* tracks; the value of the pipeline
@@ -439,7 +471,8 @@ that the named load-bearing axioms have been seriously stress-tested.
 | `khovanskii_chain_step` (new) | ✓ RETIRED / deleted — see §2b | Phase-15 |
 | Step-3 SingleExp `StepwiseDecreaseReducer` | ✓ PROVEN — `singleExp_dispatch_step` (ChainExp2PathC.lean:2009), `sorry`-free | shipped |
 | Unconditional SingleExp `PfaffianFn` bound | ✓ DONE — `singleExp_khovanskii_bound_unconditional`, axiom-clean, no `sdr_other` | 2026-07-14 |
-| Other-chain SDRs (`log`/`inv` atoms) + `PfaffianFunction`→`PfaffianFn` bridge | ⚠ open, see §2c(2,3) | remaining |
+| `PfaffianExpr`→`PfaffianFn` bridge, exp fragments (single-exp, nested two-exp) | ✓ DONE — axiom-clean bounds for exp/exp-exp `PfaffianFunction`s | 2026-07-14 |
+| `log_atom` case (the TRUE blocker for the featured `eml_pfaffian`/sin-cos consumers) | ⚠ open — fragment-path bounded, b-path (exp+rational chain) is the research depth, §2c(2) | remaining |
 | `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom (classically true) | future formalization |
 
 **Recommendation:** ship at the current honesty level with this audit
