@@ -430,7 +430,30 @@ depends on `t`'s exact shape, so "pick a point and get a numeric contradiction" 
 algebra trick, not a scheme that closes for every tree at once. The free-transfer fact is a genuine,
 verified, zero-new-axiom building block (`t.eval` inherits sin's regularity at the root, for free)
 but — like the EVT above — does not reach interior subtrees, for the same root-cause: only the
-ROOT is globally tied to a named, regular function; no subtree is. -/
+ROOT is globally tied to a named, regular function; no subtree is.
+
+**2026-07-15, round 5 (`EMLSmoothness.lean`): real traction, still not closed.** Attacking the
+"only the root is tied to sin" root-cause directly (rather than routing around it) turned up a
+genuine mechanism. `EMLNoCrossingAt`/`eml_hasDerivAt_of_no_crossing` show any `EMLTree` is
+differentiable at `x` given only that no internal log-argument is EXACTLY `0` there (strictly
+weaker than full validity, no circularity — needs one small new axiom, `HasDerivAt_congr`, local
+neighborhood-invariance of `HasDerivAt`, which the codebase's differentiation module had not yet
+stated). More importantly, `eml_depth2_blowup` shows: if a log-argument TWO levels down
+(`eml t1 (eml s2 s3)`, offender `s3`) takes a small enough positive value at a point `y`, the WHOLE
+depth-2 composition is forced arbitrarily NEGATIVE at `y` — regardless of `t1` and `s2`'s actual
+values, via `exp ≥ 0` absorbing each sibling and two nested applications of `log`'s unboundedness
+(`log_unbounded_below` then `log_unbounded_above`). This is the numerical contradiction mechanism
+rounds 3-4 were missing — genuinely closes the 2-level case in isolation.
+
+**What's still needed for the general axiom:** (i) generalize the blow-up to ARBITRARY depth (an
+induction along the root-to-offender path, tracking at each level whether the path goes through an
+exp-slot or a log-slot — each should propagate the blow-up, just with the sign/magnitude
+bookkeeping worked out per level); (ii) wire this into an actual EXISTENCE of a genuine crossing —
+via `eml_continuousAt_of_no_crossing` + `intermediate_value`, under a well-founded/minimal-violation
+induction (so by the time a node is handled, its own descendants are already known valid); (iii)
+assemble with `eml_hasDerivAt_of_sin_eq`'s free continuity of the root to get the final
+contradiction. Scoped, plausible, but a genuinely separate multi-step effort from what's built so
+far — see `EMLSmoothness.lean`. -/
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 

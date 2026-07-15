@@ -138,6 +138,43 @@ wherever both exist. -/
 axiom HasDerivAt_of_eq (f g : Real → Real) (a : Real) (x : Real) :
     (∀ y, f y = g y) → HasDerivAt f a x → HasDerivAt g a x
 
+/-- **Local congruence.** `HasDerivAt` depends only on `f`'s behavior in an arbitrarily small
+neighborhood of `x`: if `f` and `g` agree throughout some neighborhood of `x`, a derivative of one
+transfers to the other. This is the standard local/neighborhood-invariance property any genuine
+notion of pointwise differentiability satisfies (unlike `HasDerivAt_of_eq` above, which needs
+agreement EVERYWHERE) — MachLib's opaque axiomatization had not yet stated it. -/
+axiom HasDerivAt_congr (f g : Real → Real) (a x : Real)
+    (h : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = g y) :
+    HasDerivAt f a x → HasDerivAt g a x
+
+/-! ## `log`'s derivative on the clamped (non-positive) side
+
+MachLib's `Real.log` is piecewise: the analytic `ln` for `x > 0`, clamped to the constant `0` for
+`x ≤ 0` (`log_nonpos`, `Log.lean`). `HasDerivAt_log_pos` above covers the analytic side. On the
+clamped side, `log` is LITERALLY the constant-`0` function throughout any neighborhood that stays
+`≤ 0` — so `HasDerivAt_congr` against `HasDerivAt_const` gives its derivative there for free, no new
+axiom needed. -/
+
+/-- **`(log x)' = 0` for `x < 0`.** Derived, not axiomatized: `log` agrees with the constant-`0`
+function throughout the neighborhood `(2x, 0)` of `x` (every point there is `< 0`, hence clamped),
+so its derivative transfers from `HasDerivAt_const` via `HasDerivAt_congr`. -/
+theorem HasDerivAt_log_neg {x : Real} (hx : x < 0) : HasDerivAt Real.log 0 x := by
+  have hxpos : (0 : Real) < -x := by
+    have h2 := add_lt_add_left hx (-x)
+    rwa [neg_add_self, add_zero] at h2
+  refine HasDerivAt_congr (fun _ => (0 : Real)) Real.log 0 x ⟨-x, hxpos, fun y hy => ?_⟩
+    (HasDerivAt_const 0 x)
+  have hle : y - x ≤ abs (y - x) := by
+    rcases lt_total (y - x) 0 with h | h | h
+    · exact le_of_lt (lt_of_lt_of_le h (abs_nonneg _))
+    · rw [h]; exact abs_nonneg 0
+    · rw [abs_of_nonneg (le_of_lt h)]; exact le_refl _
+  have hlt : y - x < -x := lt_of_le_of_lt hle hy
+  have hylt : y < 0 := by
+    have h2 := add_lt_add_left hlt x
+    rwa [show x + (y - x) = y from by mach_mpoly [x, y], add_neg] at h2
+  exact (Real.log_nonpos (le_of_lt hylt)).symm
+
 end Real
 end MachLib
 
