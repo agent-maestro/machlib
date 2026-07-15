@@ -46,6 +46,13 @@ theorem BoundedZerosBy.toBoundedZeros {f : PfaffianFn} {a b : Real} {K : Nat}
     (h : BoundedZerosBy f a b K) : BoundedZeros f a b :=
   ⟨K, h⟩
 
+/-- **Monotone in the bound.** A bound of `K` is also a bound of any `K' ≥ K`. Used
+by the degree-induction to combine the four case bounds under a single dominating
+`max`. -/
+theorem BoundedZerosBy.mono {f : PfaffianFn} {a b : Real} {K K' : Nat}
+    (h : BoundedZerosBy f a b K) (hK : K ≤ K') : BoundedZerosBy f a b K' :=
+  fun zeros hnd hz => Nat.le_trans (h zeros hnd hz) hK
+
 /-- **Base case, EXPLICIT.** A depth-0 chain function `pfaffianChainFn c p`
 (`c : PfaffianChain 0`) is the univariate polynomial `mpoly0ToPoly p`, so — given
 it is not identically zero (`hne`) — its zero count on `(a, b)` is
