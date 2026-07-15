@@ -288,99 +288,15 @@ the Pfaffian family, the sin barrier proof works as originally
 structured (commit pre-086e464). No additional Khovanskii-rate axiom
 is needed. -/
 
-/-! ## Sin barrier — uniform-in-k closure via Pfaffian zero bound
+/-! ## Sin barrier — moved (2026-07-15)
 
-The proof constructs the list of zeros inline (avoiding a separate
-`pi_zeros` definition to bypass Lean-side recursion-unfolding issues).
--/
-
-/-- **Sin barrier for all depths.** For every `k : Nat`, `Real.sin`
-is NOT in `EML_k`. Re-proven 2026-06-11 under the consistent
-Pfaffian axiom system via `eml_pfaffian_below_sin_density` (which
-encodes Khovanskii's growth-rate consequence for EML representations). -/
-theorem sin_not_in_eml_any_depth (k : Nat) :
-    ¬ InEMLDepth (fun x : Real => Real.sin x) k := by
-  intro ⟨t, htd, hsin⟩
-  -- f := eml_pfaffian t.
-  let f : PfaffianFunction := eml_pfaffian t
-  have hf_def : f = eml_pfaffian t := rfl
-  -- f.eval x = sin x for all x.
-  have hf_eval : ∀ x, f.eval x = Real.sin x := by
-    intro x
-    rw [hf_def, eml_pfaffian_eval]
-    exact (hsin x).symm
-  -- f is not identically zero.
-  have hf_ne : ∃ x : Real, f.eval x ≠ 0 := by
-    refine ⟨1, ?_⟩
-    rw [hf_eval]
-    intro heq
-    have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
-    rw [heq] at hpos
-    exact lt_irrefl_ax 0 hpos
-  -- The Pfaffian bound M (uniform in interval) depending only on
-  -- (f.chain.order, f.degree).
-  let M : Nat := pfaffian_zero_count_bound f.chain.order f.degree
-  have hM_def : M = pfaffian_zero_count_bound f.chain.order f.degree := rfl
-  -- Apply the bound on the interval (0, natCast (M + 2) * pi).
-  have hb_pos : (0 : Real) < natCast (M + 2) * pi :=
-    natCast_mul_pi_pos (by omega)
-  -- New (2026-06-12 closure): zero_bound now requires a domain-validity
-  -- hypothesis and a witness IN the interval. Discharge both.
-  have hne_in : ∃ x : Real, (0 : Real) < x ∧ x < natCast (M + 2) * pi ∧
-                f.eval x ≠ 0 := by
-    refine ⟨1, zero_lt_one_ax, ?_, ?_⟩
-    · -- 1 < natCast (M + 2) * pi: chain via pi > 1 < pi < natCast(M+2)*pi.
-      -- natCast 1 = 1, so natCast 1 * pi = pi (after one_mul).
-      have h1_lt : (1 : Nat) < M + 2 := by omega
-      have h_chain : natCast 1 * pi < natCast (M + 2) * pi :=
-        natCast_mul_pi_lt h1_lt
-      have h_natCast1 : natCast 1 = (1 : Real) := by
-        rw [show (1 : Nat) = 0 + 1 by rfl, natCast_succ, natCast_zero,
-            zero_add]
-      rw [h_natCast1, one_mul_thm] at h_chain
-      -- h_chain : pi < natCast (M + 2) * pi
-      exact lt_trans_ax pi_gt_one h_chain
-    · rw [hf_eval]
-      intro heq
-      have hpos : (0 : Real) < Real.sin 1 := sin_one_pos
-      rw [heq] at hpos
-      exact lt_irrefl_ax 0 hpos
-  have h_valid : ∀ x : Real, (0 : Real) < x → x < natCast (M + 2) * pi →
-                  f.expr.IsValidAt x := by
-    -- Step 1: get EMLPfaffianValidOn from the sin equality (axiomatized
-    --   classical analytic argument; see docstring of
-    --   `eml_pfaffian_validon_from_sin_equality`).
-    have hsin' : ∀ x : Real, t.eval x = Real.sin x := fun x => (hsin x).symm
-    have hvalidon : EMLPfaffianValidOn t 0 (natCast (M + 2) * pi) :=
-      eml_pfaffian_validon_from_sin_equality t hsin'
-        (natCast (M + 2) * pi) hb_pos
-    -- Step 2: bridge to PfaffianExpr.IsValidAt (structurally proven).
-    show ∀ x, (0 : Real) < x → x < natCast (M + 2) * pi →
-          (eml_pfaffian t).expr.IsValidAt x
-    exact eml_pfaffian_isvalidat_of_validon t 0
-            (natCast (M + 2) * pi) hvalidon
-  have hbound : f.zero_count_le 0 (natCast (M + 2) * pi) M := by
-    have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos h_valid hne_in
-    rw [← hM_def] at this
-    exact this
-  -- Construct M + 1 zeros of sin at i·π for i = 1, 2, ..., M + 1.
-  let zeros : List Real :=
-    (List.range (M + 1)).map (fun i => natCast (i + 1) * pi)
-  have hzeros_len : zeros.length = M + 1 := by
-    simp [zeros, List.length_map, List.length_range]
-  have hzeros_valid : ∀ z ∈ zeros,
-      0 < z ∧ z < natCast (M + 2) * pi ∧ f.eval z = 0 := by
-    intro z hz
-    simp only [zeros, List.mem_map, List.mem_range] at hz
-    obtain ⟨i, hi_lt, hzeq⟩ := hz
-    refine ⟨?_, ?_, ?_⟩
-    · rw [← hzeq]; exact natCast_mul_pi_pos (by omega)
-    · rw [← hzeq]; exact natCast_mul_pi_lt (by omega)
-    · rw [← hzeq, hf_eval]; exact sin_natCast_mul_pi (i + 1)
-  have hzeros_nodup : zeros.Nodup := sin_zeros_list_nodup M
-  -- The bound says zeros.length ≤ M, but length = M + 1. Contradiction.
-  have hlen_le : zeros.length ≤ M := hbound zeros hzeros_nodup hzeros_valid
-  rw [hzeros_len] at hlen_le
-  omega
+`sin_not_in_eml_any_depth` used to live here, applying `PfaffianFunction.zero_bound`
+(the axiom `zero_count_bound_classical`'s thin wrapper). Both have been deleted —
+see `KhovanskiiLemma.lean`'s removal notes. The theorem now lives in
+`EMLExplicitBoundSinBarrier.lean` (same name, re-proven via the constructive
+`EMLExplicitBound.enc_combinedBound`), which imports this file for `eml_pfaffian`,
+`EMLPfaffianValidOn`, and `eml_pfaffian_validon_from_sin_equality` — kept here since
+they're still needed and moving them would risk an import cycle (that file necessarily
+imports this one). -/
 
 end MachLib

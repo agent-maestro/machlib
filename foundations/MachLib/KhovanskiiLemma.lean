@@ -531,60 +531,21 @@ theorem PfaffianFunction.derivative_eval (f : PfaffianFunction) (x : Real)
     rw [heq]
     exact hinv
 
-/-! ## Classical Khovanskii zero bound on PfaffianFunction
+/-! ## ⚠ REMOVED (2026-07-15): `PfaffianFunction.zero_count_bound_classical`
 
-**REPLACES** the prior `derivative_rank_lt` axiom (which was materially
-false on `exp_atom`).
-
-The new axiom is the direct PfaffianFunction-side statement of
-Khovanskii's classical zero bound for Pfaffian functions
-(Khovanskii 1991, Chapter 3, Theorem 1) — the same classical theorem
-also captured by `khovanskii_chain_step` in `PfaffianFnBound.lean`.
-
-The two axioms are duplicative in the spirit of incrementally migrating
-from the legacy `PfaffianFunction` type to the new chain-explicit
-`PfaffianFn` type. Once `eml_pfaffian` and consumers are ported to
-`PfaffianFn` (and `PfaffianFunction` is retired), this axiom can be
-deleted in favor of `khovanskii_chain_step`. -/
-
-/-- **Classical Khovanskii zero bound** for `PfaffianFunction`. The number
-of zeros of a non-trivial Pfaffian function on `(a, b)` is bounded by
-`PfaffianRank f` (`f.chain.order * 1_000_000 + f.degree`).
-
-**NOT LOAD-BEARING (2026-06-27 audit).** This is the GENERAL-`PfaffianFunction`
-bound. No shipped/featured result depends on it — the single-exponential bound
-(`SingleExpKhovanskii.ExpPoly.expPoly_khovanskii_bound`) and the safety-critical
-kernel applications are constructive and do NOT reach this axiom (verify with
-`#print axioms`; the only transitive consumers are the legacy general bridge
-`eml_pfaffian` and `PfaffianFunction.zero_bound`). It is kept for a future
-general-case formalization, not because anything that ships needs it.
-
-**Classical reference:** Khovanskii, A.G. *Fewnomials*. AMS Translations
-Vol. 88, 1991. Theorem 1, Chapter 3.
-
-**Side conditions:** `IsValidOn` (analytic-domain validity on the
-interval) + witness in interval (`hne_in`). Both are explicit
-in the signature.
-
-**MachLib-specific verification:** the bound formula `n * 1_000_000 + d`
-is a loose closed form; Khovanskii's tighter formula `(d+α+1)^n + n·α`
-involves chain polynomial degrees α_i which aren't tracked on
-`PfaffianFunction`. The looser bound is sound and sufficient for the
-EML downstream uses.
-
-**Closure path:** complete formalization of `khovanskii_chain_step` in
-`PfaffianFnBound.lean` (~600 lines, multi-session) plus a port of
-`eml_pfaffian` and `PfaffianFunction.zero_bound` consumers to the
-new chain-explicit `PfaffianFn` type (~200-300 lines). This axiom can
-then be deleted in favor of `khovanskii_chain_step`. -/
-axiom PfaffianFunction.zero_count_bound_classical (f : PfaffianFunction)
-    (a b : Real) (hab : a < b)
-    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
-    (hne_in : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
-    ∀ zeros : List Real,
-      zeros.Nodup →
-      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
-      zeros.length ≤ PfaffianRank f
+The classical-citation axiom (Khovanskii 1991, Ch. 3 Thm. 1, applied directly to the general
+`PfaffianFunction`/`PfaffianExpr` type) has been DELETED. Its documented closure path — port
+`eml_pfaffian` and `PfaffianFunction.zero_bound` consumers onto the chain-explicit `PfaffianFn`/
+`MultiPoly` type — is exactly what `EMLExplicitBound*.lean` (the explicit-K mixed descent,
+`combined_descent_3_explicit`, `enc_combinedBound`) built this session: a fully constructive,
+axiom-free (of `zero_count_bound_classical`) Khovanskii bound for any EML-tree-derived chain.
+`sin_not_in_eml_any_depth`/`cos_not_in_eml_any_depth` (the axiom's only two real consumers — every
+other mention in the codebase was documentary, confirmed by grep before deletion) now live in
+`EMLExplicitBoundSinBarrier.lean`/`EMLExplicitBoundCosBarrier.lean`, re-proven via
+`enc_combinedBound`. `pfaffian_zero_count_bound_classical` and `PfaffianFunction.zero_bound`
+(the axiom's two thin wrappers, also with zero other consumers) are deleted alongside it —
+see the end of this file. `PfaffianRank`, `PfaffianFunction`, and `PfaffianExpr` themselves are
+untouched; only the classical-citation bound is gone. -/
 
 /-! ## (roadmap) intended constructive Khovanskii bound via strong induction on rank -/
 
@@ -674,35 +635,9 @@ theorem pfaffian_derivative_zero_implies_nonzero_on
     rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at step
     exact step
 
-/-! ## The general-`PfaffianFunction` Khovanskii bound — via the classical axiom -/
+/-! ## ⚠ REMOVED (2026-07-15): `pfaffian_zero_count_bound_classical`
 
-/-- **The general-Pfaffian Khovanskii bound (a citation, NOT a constructive proof).**
-This is a thin wrapper around the axiom `PfaffianFunction.zero_count_bound_classical`
-(Khovanskii 1991, Ch. 3 Thm. 1) — its body is *one line*, `zero_count_bound_classical f …`.
-It is **not** proven here; it cites Khovanskii's classical theorem. (An earlier name,
-`…_constructive`, overclaimed — there is no induction here.) The intended constructive
-proof — strong induction on `PfaffianRank`, splitting on `f.derivative` — is documented
-as a roadmap below; it stalled on a *materially-false* `derivative_rank_lt` step and is
-not done. Nothing featured uses this theorem; the featured single-exp bound
-(`expPoly_khovanskii_bound`) and the constructive reduction (`khovanskii_bound_full`)
-do not depend on the classical axiom. Verify with `#print axioms`.
-
-Bound: zero count of `f` on `(a, b)` is at most `PfaffianRank f`. -/
-theorem pfaffian_zero_count_bound_classical (f : PfaffianFunction)
-    (a b : Real) (hab : a < b)
-    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
-    (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
-    ∀ zeros : List Real,
-      zeros.Nodup →
-      (∀ z ∈ zeros, a < z ∧ z < b ∧ f.eval z = 0) →
-      zeros.length ≤ PfaffianRank f :=
-  -- Direct application of the named classical Khovanskii axiom (2026-06-12).
-  -- The prior strong-induction-on-rank proof depended on the materially-false
-  -- `derivative_rank_lt`; the new chain-explicit infrastructure
-  -- (PfaffianFn + khovanskii_chain_step) is the eventual replacement.
-  -- This thin wrapper preserves the old signature while the conversion
-  -- PfaffianExpr → PfaffianFn is built out.
-  PfaffianFunction.zero_count_bound_classical f a b hab h_valid hne
+Thin wrapper around the now-deleted axiom (see the removal note above). Zero other consumers. -/
 
 /-! ## Phase C plan (documented as roadmap)
 
@@ -755,28 +690,14 @@ PfaffianChain inductive type is fleshed out (currently opaque
 axioms in Phase A).
 -/
 
-/-! ## Final closure of PfaffianFunction.zero_bound (2026-06-12)
+/-! ## ⚠ REMOVED (2026-07-15): `PfaffianFunction.zero_bound`
 
-The Pfaffian.lean axiom `PfaffianFunction.zero_bound` is now a theorem
-in this file — but proven by direct invocation of
-`pfaffian_zero_count_bound_classical`, which is itself a *citation* of the
-classical Khovanskii axiom `zero_count_bound_classical` (NOT a constructive
-proof; the strong-induction route stalled on the materially-false
-`derivative_rank_lt`). So `zero_bound` rests on that axiom transitively. The
-closure relies on `pfaffian_zero_count_bound n d = n * 1000000 + d` (the
-formula chosen in Pfaffian.lean step 4) equalling `PfaffianRank f` by
-definition. This is legacy general-`PfaffianFunction` machinery; nothing
-featured uses it (verify with `#print axioms`). -/
-theorem PfaffianFunction.zero_bound (f : PfaffianFunction) (a b : Real)
-    (hab : a < b)
-    (h_valid : ∀ x : Real, a < x → x < b → f.expr.IsValidAt x)
-    (hne : ∃ x : Real, a < x ∧ x < b ∧ f.eval x ≠ 0) :
-    f.zero_count_le a b (pfaffian_zero_count_bound f.chain.order f.degree) := by
-  intro zeros hnodup hzeros
-  have hrank := pfaffian_zero_count_bound_classical f a b hab h_valid hne
-                  zeros hnodup hzeros
-  show zeros.length ≤ f.chain.order * 1000000 + f.degree
-  exact hrank
+Was a thin theorem-wrapper (`Pfaffian.lean`'s original axiom, closed here by direct invocation of
+`pfaffian_zero_count_bound_classical`). Deleted alongside the classical-citation axiom it rested
+on transitively — see the removal note above. Zero other consumers (confirmed by grep across the
+whole codebase before deletion; every other mention of `.zero_bound` in MachLib is documentary).
+`sin_not_in_eml_any_depth`/`cos_not_in_eml_any_depth` — its only real consumers — are re-proven
+axiom-free in `EMLExplicitBoundSinBarrier.lean`/`EMLExplicitBoundCosBarrier.lean`. -/
 
 end Real
 end MachLib

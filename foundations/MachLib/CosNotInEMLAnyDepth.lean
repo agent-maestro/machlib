@@ -135,139 +135,15 @@ axiom eml_pfaffian_validon_from_cos_equality
     (b : Real) (_hb_pos : 0 < b) :
     EMLPfaffianValidOn t 0 b
 
-/-! ## Main theorem -/
+/-! ## Main theorem — moved (2026-07-15)
 
-/-- **Cos barrier for all depths.** For every `k : Nat`, `Real.cos` is
-NOT in `EML_k`. Structurally parallel to `sin_not_in_eml_any_depth`:
-the eml_pfaffian envelope's Khovanskii zero bound `M` is overrun by
-the M+1 distinct cos zeros at `i·π + π/2` for `i = 0, 1, ..., M`.
-
-Witness for "f is not identically zero" is `x = π`, where
-`cos π = -1 ≠ 0` (derived constructively below from `cos_pi` and
-`zero_lt_one_ax`). -/
-theorem cos_not_in_eml_any_depth (k : Nat) :
-    ¬ InEMLDepth (fun x : Real => Real.cos x) k := by
-  intro ⟨t, htd, hcos⟩
-  let f : PfaffianFunction := eml_pfaffian t
-  have hf_def : f = eml_pfaffian t := rfl
-  have hf_eval : ∀ x, f.eval x = Real.cos x := by
-    intro x
-    rw [hf_def, eml_pfaffian_eval]
-    exact (hcos x).symm
-  -- `-1 ≠ 0` constructively (no new axiom).
-  -- If -1 = 0, then 1 = -(-1) = -0 = 0, contradicting zero_lt_one_ax.
-  have neg_one_ne_zero : (-1 : Real) ≠ 0 := by
-    intro h
-    have h1 : (1 : Real) = 0 := by
-      have step : -(- (1 : Real)) = -(0 : Real) := by rw [h]
-      rw [neg_neg_helper, neg_zero] at step
-      exact step
-    -- Materialize zero_lt_one_ax as a local fact, then rewrite.
-    have hz : (0 : Real) < 1 := zero_lt_one_ax
-    rw [h1] at hz
-    exact lt_irrefl_ax 0 hz
-  -- f is not identically zero (cos π = -1 ≠ 0).
-  have hf_ne : ∃ x : Real, f.eval x ≠ 0 := by
-    refine ⟨pi, ?_⟩
-    rw [hf_eval, cos_pi]
-    exact neg_one_ne_zero
-  -- The Pfaffian bound M (uniform in interval).
-  let M : Nat := pfaffian_zero_count_bound f.chain.order f.degree
-  have hM_def : M = pfaffian_zero_count_bound f.chain.order f.degree := rfl
-  -- Apply the bound on the interval (0, natCast (M + 2) * pi).
-  have hb_pos : (0 : Real) < natCast (M + 2) * pi :=
-    natCast_mul_pi_pos (by omega)
-  -- Witness IN the interval: x = π. cos π = -1 ≠ 0.
-  have hne_in : ∃ x : Real, (0 : Real) < x ∧ x < natCast (M + 2) * pi ∧
-                f.eval x ≠ 0 := by
-    refine ⟨pi, pi_pos, ?_, ?_⟩
-    · -- pi < natCast (M + 2) * pi: same chain as sin's proof.
-      have h1_lt : (1 : Nat) < M + 2 := by omega
-      have h_chain : natCast 1 * pi < natCast (M + 2) * pi :=
-        natCast_mul_pi_lt h1_lt
-      have h_natCast1 : natCast 1 = (1 : Real) := by
-        rw [show (1 : Nat) = 0 + 1 by rfl, natCast_succ, natCast_zero,
-            zero_add]
-      rw [h_natCast1, one_mul_thm] at h_chain
-      exact h_chain
-    · rw [hf_eval, cos_pi]
-      exact neg_one_ne_zero
-  have h_valid : ∀ x : Real, (0 : Real) < x → x < natCast (M + 2) * pi →
-                  f.expr.IsValidAt x := by
-    have hcos' : ∀ x : Real, t.eval x = Real.cos x := fun x => (hcos x).symm
-    have hvalidon : EMLPfaffianValidOn t 0 (natCast (M + 2) * pi) :=
-      eml_pfaffian_validon_from_cos_equality t hcos'
-        (natCast (M + 2) * pi) hb_pos
-    show ∀ x, (0 : Real) < x → x < natCast (M + 2) * pi →
-          (eml_pfaffian t).expr.IsValidAt x
-    exact eml_pfaffian_isvalidat_of_validon t 0
-            (natCast (M + 2) * pi) hvalidon
-  have hbound : f.zero_count_le 0 (natCast (M + 2) * pi) M := by
-    have := f.zero_bound 0 (natCast (M + 2) * pi) hb_pos h_valid hne_in
-    rw [← hM_def] at this
-    exact this
-  -- Construct M + 1 zeros of cos at i·π + π/2 for i = 0, 1, ..., M.
-  let zeros : List Real :=
-    (List.range (M + 1)).map (fun i => natCast i * pi + pi / (1 + 1))
-  have hzeros_len : zeros.length = M + 1 := by
-    simp [zeros, List.length_map, List.length_range]
-  have hzeros_valid : ∀ z ∈ zeros,
-      0 < z ∧ z < natCast (M + 2) * pi ∧ f.eval z = 0 := by
-    intro z hz
-    simp only [zeros, List.mem_map, List.mem_range] at hz
-    obtain ⟨i, hi_lt, hzeq⟩ := hz
-    refine ⟨?_, ?_, ?_⟩
-    · -- 0 < natCast i * pi + pi/(1+1).
-      -- Decompose: 0 + 0 < natCast i * pi + pi/(1+1) via
-      --   pi/(1+1) > 0 (strict) + natCast i * pi ≥ 0 (nonneg).
-      rw [← hzeq]
-      have hi_nonneg : (0 : Real) ≤ natCast i * pi := natCast_mul_pi_nonneg i
-      have hpi_half_pos : (0 : Real) < pi / (1 + 1) := pi_div_one_plus_one_pos
-      -- Strict version: add the strict bound on the right.
-      have hstep1 : (0 : Real) < (0 : Real) + pi / (1 + 1) := by
-        rw [zero_add]; exact hpi_half_pos
-      -- Now bump the left to natCast i * pi (preserving < via ≤).
-      -- Use add_lt_add_left with the ≤ side handled by le_trans.
-      have hstep2 : (0 : Real) + pi / (1 + 1) ≤
-                    natCast i * pi + pi / (1 + 1) := by
-        -- Goal: 0 + x ≤ y + x for 0 ≤ y. Rewrite via zero_add and
-        -- a + x = a + x to reduce to 0 ≤ y.
-        rw [zero_add]
-        -- Goal: pi/(1+1) ≤ natCast i * pi + pi/(1+1).
-        -- That's 0 + pi/(1+1) ≤ natCast i * pi + pi/(1+1) after rewriting.
-        -- Use add_lt_add_left with hi_nonneg: ≤ case from add_le_add_right_helper.
-        -- MachLib has add_lt_add_left for strict; for ≤ use le_iff.
-        -- Simpler: 0 + pi/(1+1) = pi/(1+1) ≤ natCast i * pi + pi/(1+1)
-        -- via add_le_add_right (need to derive from add_lt_add_left).
-        rcases le_iff_lt_or_eq 0 (natCast i * pi) |>.mp hi_nonneg with hlt | heq
-        · have := add_lt_add_left hlt (pi / (1 + 1))
-          -- this : pi/(1+1) + 0 < pi/(1+1) + natCast i * pi
-          rw [add_zero, add_comm (pi / (1 + 1)) (natCast i * pi)] at this
-          exact le_of_lt this
-        · rw [← heq, zero_add]
-          exact le_refl _
-      -- Combine: 0 < 0 + pi/(1+1) ≤ natCast i * pi + pi/(1+1).
-      exact lt_of_lt_of_le hstep1 hstep2
-    · -- natCast i * pi + pi/(1+1) < natCast (M+2) * pi.
-      -- Chain: natCast i * pi + pi/(1+1) < natCast i * pi + pi
-      --                                 = natCast (i+1) * pi
-      --                                 < natCast (M+2) * pi  (since i+1 < M+2 = i+1+(M-i)+1, given i ≤ M).
-      rw [← hzeq]
-      have hhalf_lt_pi : pi / (1 + 1) < pi := pi_div_one_plus_one_lt_pi
-      have step1 : natCast i * pi + pi / (1 + 1) < natCast i * pi + pi :=
-        add_lt_add_left hhalf_lt_pi (natCast i * pi)
-      have step2 : natCast i * pi + pi = natCast (i + 1) * pi := by
-        rw [natCast_succ, mul_distrib_right, one_mul_thm]
-      rw [step2] at step1
-      have step3 : natCast (i + 1) * pi < natCast (M + 2) * pi :=
-        natCast_mul_pi_lt (by omega)
-      exact lt_trans_ax step1 step3
-    · -- f.eval z = cos z = 0 via cos_at_half_odd_pi.
-      rw [← hzeq, hf_eval]; exact cos_at_half_odd_pi i
-  have hzeros_nodup : zeros.Nodup := cos_zeros_list_nodup M
-  -- The bound says zeros.length ≤ M, but length = M + 1. Contradiction.
-  have hlen_le : zeros.length ≤ M := hbound zeros hzeros_nodup hzeros_valid
-  rw [hzeros_len] at hlen_le
-  omega
+`cos_not_in_eml_any_depth` used to live here, applying `PfaffianFunction.zero_bound`.
+Both it and the axiom it rested on (`zero_count_bound_classical`) have been deleted —
+see `KhovanskiiLemma.lean`'s removal notes. The theorem now lives in
+`EMLExplicitBoundCosBarrier.lean` (same name, re-proven via the constructive
+`EMLExplicitBound.enc_combinedBound`), which imports this file for `cos_at_half_odd_pi`,
+`cos_half_odd_pi_lt`, `cos_zeros_list_nodup`, `eml_pfaffian_validon_from_cos_equality`, and
+the two `pi_div_one_plus_one_*` facts — kept here since they're still needed and moving them
+would risk an import cycle (that file necessarily imports this one). -/
 
 end MachLib
