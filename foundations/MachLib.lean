@@ -167,6 +167,7 @@ import MachLib.ChainExp2PathC
 import MachLib.ChainExp2SingleExpUnconditional
 import MachLib.IterExpChainStructural
 import MachLib.PfaffianExprSingleExpBridge
+import MachLib.ChainExp2Unconditional
 import MachLib.TwoExpPfaffianSingleExpAdapter
 import MachLib.InnerKhovanskiiExpWF
 import MachLib.ChainExp2WFInstance
