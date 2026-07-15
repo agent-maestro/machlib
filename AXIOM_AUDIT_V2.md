@@ -244,6 +244,14 @@ Step-3b is **done**, through the generic `PfaffianFn` pipeline.
 
 3. **`PfaffianFunction → PfaffianFn` bridge** (§2a piece 2) — transport the
    `PfaffianFn` bound onto the axiom's inductive type. Orthogonal, structural.
+   **Single-exp fragment DONE (2026-07-14):**
+   `MachLib/PfaffianExprSingleExpBridge.lean` translates the exp fragment of
+   `PfaffianExpr` (`const/var/exp_atom/+,-,·`) to `MultiPoly 1` over
+   `SingleExpChain` (`toMP1`, `eval_toMP1`), and `expPoly_pfaffianFunction_zero_bound`
+   gives an **axiom-clean** (verified: no `zero_count_bound_classical`) Khovanskii
+   zero bound for single-exponential `PfaffianFunction`s via
+   `singleExp_khovanskii_bound_unconditional`. Remaining: add `log_atom`/`comp`/`inv`
+   and taller chains (needs the corresponding SDRs, §2c(2)).
 
 **Once (1)+(2)+(3):** `zero_count_bound_classical` is deleted. The exponential
 sub-cases are already axiom-clean by *separate* tracks; the value of the pipeline
