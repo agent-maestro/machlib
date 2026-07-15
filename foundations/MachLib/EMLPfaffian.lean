@@ -198,11 +198,45 @@ and connectivity — none of which MachLib currently has. Axiomatized
 here as a single load-bearing analytic claim, named so reviewers can
 locate it as a single auditable item. Closure path: add a Smoothness
 module with `IsSmoothOn`, `IsSmoothOn_of_eq`, `Continuous_of_HasDerivAt`,
-and a connectivity argument; ~300-500 lines, multi-session. -/
+and a connectivity argument; ~300-500 lines, multi-session.
+
+**Step 4 above is now PROVEN below (`eml_nonpos_forces_log_arg_pos`), and in a strictly more
+general form** (`≤ 0`, not just "at a zero of sin"; no reference to `sin`/`cos` at all — it's a
+pure structural fact about `eml` nodes). It needs no continuity/connectivity: whenever an `eml`
+node's OWN value is non-positive, its log-argument is forced positive, by a two-line contradiction
+(no smoothness reasoning at all). This narrows what the axiom still has to cover: steps 2, 3, 5 —
+propagating that pointwise fact across the *whole* interval at points where the outer value is
+POSITIVE (where this trick gives no contradiction) — still need the axiomatized connectivity
+argument; investigated 2026-07-15 and found to need genuinely new "log is unbounded near 0"
+infrastructure this codebase doesn't have anywhere, not just cleverness. -/
 axiom eml_pfaffian_validon_from_sin_equality
     (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
     (b : Real) (_hb_pos : 0 < b) :
     EMLPfaffianValidOn t 0 b
+
+/-- **A pure structural fact about `eml` nodes — no smoothness hypothesis, no axiom.** Whenever an
+`eml t1 t2` node's OWN value is non-positive at a point, its log-argument `t2` is forced strictly
+positive there: if `t2.eval x ≤ 0`, the clamped log evaluates to `0` (`log_nonpos`), so the node's
+value collapses to `exp(t1.eval x)`, which is always strictly positive (`exp_pos`) — contradicting
+non-positivity. This is exactly step 4 of `eml_pfaffian_validon_from_sin_equality`'s argument above,
+generalized from "at a zero of sin" to "wherever the node's value is `≤ 0`" (so it applies to `cos`
+and any other target function too, not just `sin`). It does not close that axiom — the remaining
+gap (points where the outer value is positive) genuinely needs the connectivity argument the axiom
+still cites — but it does shrink the axiom's real content to exactly that gap. -/
+theorem eml_nonpos_forces_log_arg_pos (t1 t2 : EMLTree) (x : Real)
+    (h : (EMLTree.eml t1 t2).eval x ≤ 0) : 0 < t2.eval x := by
+  by_cases hle : t2.eval x ≤ 0
+  · exfalso
+    have hlog0 : Real.log (t2.eval x) = 0 := Real.log_nonpos hle
+    have heval : (EMLTree.eml t1 t2).eval x = Real.exp (t1.eval x) := by
+      show Real.exp (t1.eval x) - Real.log (t2.eval x) = Real.exp (t1.eval x)
+      rw [hlog0, sub_zero]
+    rw [heval] at h
+    exact lt_irrefl_ax 0 (lt_of_lt_of_le_r (Real.exp_pos (t1.eval x)) h)
+  · rcases lt_total 0 (t2.eval x) with hpos | heq | hneg
+    · exact hpos
+    · exact absurd (le_of_eq heq.symm) hle
+    · exact absurd (le_of_lt hneg) hle
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
