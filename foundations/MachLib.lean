@@ -170,6 +170,7 @@ import MachLib.PfaffianExprSingleExpBridge
 import MachLib.ChainExp2Unconditional
 import MachLib.PfaffianExprTwoExpBridge
 import MachLib.EMLDepth1Fragment
+import MachLib.EMLExplicitBound
 import MachLib.TwoExpPfaffianSingleExpAdapter
 import MachLib.InnerKhovanskiiExpWF
 import MachLib.ChainExp2WFInstance
