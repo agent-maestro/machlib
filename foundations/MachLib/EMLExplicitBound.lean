@@ -1,4 +1,5 @@
 import MachLib.PfaffianExpRecipDescent
+import MachLib.WronskianProportional
 
 /-!
 # MachLib.EMLExplicitBound — explicit/uniform-K descent, brick 1 (base case)
@@ -87,6 +88,63 @@ theorem recip_arm_explicit {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real)
         (pfaffianChainFn (chainRestrict c) (clearTop (MultiPoly.dropLastY v) p)) a b K) :
     BoundedZerosBy (pfaffianChainFn c p) a b K :=
   recip_top_combined c a b v hvtf hvcoh hvpos p K hK
+
+/-- **`degreeY_top = 0` arm, EXPLICIT.** When `p` does not depend on the top chain
+variable, `pfaffianChainFn c p` collapses to the restricted chain's
+`pfaffianChainFn (chainRestrict c) (dropLastY p)`, so its explicit bound is
+exactly the depth-IH's explicit bound `Kih (dropLastY p)` — no increase. Threads
+an explicit IH bound function `Kih` in place of the existential IH of
+`pfaffianChainFn_bound_of_degreeYtop_zero`. -/
+theorem degreeYtop_zero_explicit {N : Nat} (c : PfaffianChain (N + 1)) (p : MultiPoly (N + 1))
+    (hd : MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N + 1)) p = 0) (a b : Real)
+    (Kih : MultiPoly N → Nat)
+    (IH_ex : ∀ q : MultiPoly N,
+        (∃ z, a < z ∧ z < b ∧ (pfaffianChainFn (chainRestrict c) q).eval z ≠ 0) →
+        BoundedZerosBy (pfaffianChainFn (chainRestrict c) q) a b (Kih q))
+    (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
+    BoundedZerosBy (pfaffianChainFn c p) a b (Kih (MultiPoly.dropLastY p)) := by
+  have heval : ∀ z, (pfaffianChainFn c p).eval z
+      = (pfaffianChainFn (chainRestrict c) (MultiPoly.dropLastY p)).eval z := by
+    intro z
+    show MultiPoly.eval p z (c.chainValues z)
+      = MultiPoly.eval (MultiPoly.dropLastY p) z ((chainRestrict c).chainValues z)
+    have hrestrict : (chainRestrict c).chainValues z
+        = (fun i => (c.chainValues z) ⟨i.val, Nat.lt_succ_of_lt i.isLt⟩) := by
+      funext i; exact chainRestrict_chainValues c z i
+    rw [hrestrict, MultiPoly.eval_dropLastY p hd z (c.chainValues z)]
+  have hne_proj : ∃ z, a < z ∧ z < b
+      ∧ (pfaffianChainFn (chainRestrict c) (MultiPoly.dropLastY p)).eval z ≠ 0 := by
+    obtain ⟨z, hza, hzb, hzne⟩ := hne
+    exact ⟨z, hza, hzb, by rw [← heval]; exact hzne⟩
+  intro zeros hnd hz
+  refine IH_ex (MultiPoly.dropLastY p) hne_proj zeros hnd (fun z' hz'mem => ?_)
+  obtain ⟨ha, hb', hzero⟩ := hz z' hz'mem
+  exact ⟨ha, hb', by rw [← heval]; exact hzero⟩
+
+/-- **Wronskian degenerate-leaf arm, EXPLICIT.** When two analytic functions have
+vanishing Wronskian (`Fp·G − F·Gp = 0`, i.e. proportional), every zero of `F` is a
+zero of `G` (`wronskian_zero_zeros_subset`), so `F` inherits `G`'s explicit zero
+bound `N` unchanged. This is the `∃`-free form of `wronskian_zero_bounded_zeros`
+(which returns exactly `⟨N, …⟩`). -/
+theorem wronskian_arm_explicit
+    (F G Fp Gp : Real → Real) (a b : Real) (hab : a < b)
+    (hFanalytic : IsAnalyticOnReals F (Icc a b))
+    (hGanalytic : IsAnalyticOnReals G (Icc a b))
+    (hFderiv : ∀ x, a < x → x < b → HasDerivAt F (Fp x) x)
+    (hGderiv : ∀ x, a < x → x < b → HasDerivAt G (Gp x) x)
+    (hW : ∀ x, a < x → x < b → Fp x * G x - F x * Gp x = 0)
+    (hFne : ∃ x, Ioo a b x ∧ F x ≠ 0)
+    (N : Nat)
+    (hGbound : ∀ zeros : List Real, zeros.Nodup →
+        (∀ z ∈ zeros, a < z ∧ z < b ∧ G z = 0) → zeros.length ≤ N) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ F z = 0) → zeros.length ≤ N := by
+  intro zeros hnd hz
+  refine hGbound zeros hnd (fun z hzm => ?_)
+  obtain ⟨hza, hzb, hFz⟩ := hz z hzm
+  exact ⟨hza, hzb,
+    wronskian_zero_zeros_subset F G Fp Gp a b hab hFanalytic hGanalytic
+      hFderiv hGderiv hW hFne z hza hzb hFz⟩
 
 end EMLExplicitBound
 end MachLib
