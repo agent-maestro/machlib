@@ -30,6 +30,7 @@ open MachLib.PfaffianChainMod
 open MachLib.PolynomialEvidence
 open MachLib.PolynomialRootCount
 open MachLib.PfaffianGeneralReduce
+open MachLib.PfaffianExpRecip
 open MachLib.PfaffianExpRecipW
 
 /-- Explicit-bound form of `PfaffianExpRecipW.BoundedZeros`: at most `K` zeros on
@@ -68,6 +69,24 @@ theorem base_case_of_explicit (a b : Real) (hab : a < b) (c : PfaffianChain 0) (
     (hne : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c p).eval z ≠ 0) :
     BoundedZeros (pfaffianChainFn c p) a b :=
   (base_case_explicit a b hab c p hne).toBoundedZeros
+
+/-- **Reciprocal arm, EXPLICIT — for free.** The reciprocal top step is
+bound-*preserving*: `recip_top_combined` already threads an explicit `K` from the
+cleared/restricted problem to the original with NO increase (a reciprocal top
+creates no new zeros; the cleared numerator `= v^d · p` has the same zeros where
+`v > 0`). So the reciprocal arm carries the explicit uniform bound through
+unchanged — no re-proof needed for the explicit-K refactor. -/
+theorem recip_arm_explicit {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real)
+    (v : MultiPoly (N + 1))
+    (hvtf : ∀ j : Fin (N + 1), N ≤ j.val → MultiPoly.degreeY j v = 0)
+    (hvcoh : ∀ x : Real, a < x → x < b →
+        c.evals ⟨N, Nat.lt_succ_self N⟩ x * MultiPoly.eval v x (c.chainValues x) = 1)
+    (hvpos : ∀ x : Real, a < x → x < b → 0 < MultiPoly.eval v x (c.chainValues x))
+    (p : MultiPoly (N + 1)) (K : Nat)
+    (hK : BoundedZerosBy
+        (pfaffianChainFn (chainRestrict c) (clearTop (MultiPoly.dropLastY v) p)) a b K) :
+    BoundedZerosBy (pfaffianChainFn c p) a b K :=
+  recip_top_combined c a b v hvtf hvcoh hvpos p K hK
 
 end EMLExplicitBound
 end MachLib
