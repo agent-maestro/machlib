@@ -157,6 +157,21 @@ axiom eml_pfaffian_validon_from_cos_equality
     (b : Real) (_hb_pos : 0 < b) :
     EMLPfaffianValidOn t 0 b
 
+/-- **Free derivative transfer (cos side).** Mirror of `eml_hasDerivAt_of_sin_eq`: `t.eval` inherits
+`-sin x` as its derivative at every `x`, for free, via `HasDerivAt_of_eq` + `HasDerivAt_cos`. No
+validity hypothesis, no structural analysis of `t`. See `EMLPfaffian.lean`'s dated note after
+`eml_continuousAt_of_sin_eq` for why this (like the sin side) does not scale to closing the axiom
+for arbitrary-depth `t` — the same root-cause: only the root is globally tied to a named, regular
+function. -/
+theorem eml_hasDerivAt_of_cos_eq (t : EMLTree) (hcos : ∀ x : Real, t.eval x = Real.cos x)
+    (x : Real) : HasDerivAt t.eval (-Real.sin x) x :=
+  HasDerivAt_of_eq Real.cos t.eval (-Real.sin x) x (fun y => (hcos y).symm) (HasDerivAt_cos x)
+
+/-- **Free continuity transfer (cos side).** -/
+theorem eml_continuousAt_of_cos_eq (t : EMLTree) (hcos : ∀ x : Real, t.eval x = Real.cos x)
+    (x : Real) : ContinuousAt t.eval x :=
+  hasDerivAt_continuousAt (eml_hasDerivAt_of_cos_eq t hcos x)
+
 /-! ## Main theorem — moved (2026-07-15)
 
 `cos_not_in_eml_any_depth` used to live here, applying `PfaffianFunction.zero_bound`.

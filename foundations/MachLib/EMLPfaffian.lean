@@ -5,6 +5,7 @@ import MachLib.EML
 import MachLib.EMLHierarchy
 import MachLib.Pfaffian
 import MachLib.KhovanskiiLemma
+import MachLib.IntermediateValue
 
 /-!
 # EML → Pfaffian embedding + Sin Barrier (Phase D)
@@ -388,6 +389,48 @@ the top of this section: differentiate, or use analytic continuation uniqueness)
 continuity-only patch. This matches — rather than shortens — the axiom's original "Smoothness
 module, ~300-500 lines, multi-session" estimate. `continuousAt_bddAbove_Icc` stays as useful,
 reusable infrastructure but does not by itself reduce this axiom's remaining scope. -/
+
+/-! ## A genuinely free fact: the ROOT's derivative, via `HasDerivAt_of_eq`
+
+`MachLib.Differentiation` (already transitively imported here, via `Pfaffian.lean`) axiomatizes
+`HasDerivAt` with base rules for `exp`/`log`/`sin`/`cos`, closure rules (`add`/`sub`/`mul`/`comp`/
+`inv`/`neg`), uniqueness, and — the one used below — "if two functions agree everywhere, a known
+derivative of one transfers to the other" (`HasDerivAt_of_eq`). Since `sin` unconditionally has
+derivative `cos x` at every `x` (`HasDerivAt_sin`), and `t.eval` agrees with `sin` everywhere by
+hypothesis, `t.eval` gets `HasDerivAt t.eval (cos x) x` **for free** — no structural analysis of
+`t`'s internal exp/log nesting, no validity assumption, no case split. This is NOT the same fact as
+`t.eval`'s *own* structural derivative (computed bottom-up via the chain rule through `t`'s actual
+`exp`/`log` nodes) — that computation is exactly where the circularity above bites, since it needs
+every internal `log`'s argument positive AT `x` to invoke `HasDerivAt_log_pos`. The free fact below
+sidesteps that entirely by never looking at `t`'s internal structure. -/
+
+/-- **Free derivative transfer (sin side).** No validity hypothesis needed. -/
+theorem eml_hasDerivAt_of_sin_eq (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
+    (x : Real) : HasDerivAt t.eval (Real.cos x) x :=
+  HasDerivAt_of_eq Real.sin t.eval (Real.cos x) x (fun y => (hsin y).symm) (HasDerivAt_sin x)
+
+/-- **Free continuity transfer (sin side).** Corollary of the above via `hasDerivAt_continuousAt`. -/
+theorem eml_continuousAt_of_sin_eq (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
+    (x : Real) : ContinuousAt t.eval x :=
+  hasDerivAt_continuousAt (eml_hasDerivAt_of_sin_eq t hsin x)
+
+/-! ### Why the free fact still doesn't scale to arbitrary-depth validity
+
+The natural next move is to also compute `HasDerivAt t.eval _ x` *structurally* — bottom-up through
+`t`'s actual `exp`/`sub`/`log` nodes, via `HasDerivAt_comp`/`HasDerivAt_sub`/`HasDerivAt_log_pos` —
+and use `HasDerivAt_unique` to force the structural formula to equal `cos x` from the free fact
+above. This is exactly the strategy `Differentiation.lean`'s own docstring sketches for closing 2
+*specific, fixed-shape* depth-2 sin-barrier cases (differentiate, evaluate at one concrete point,
+derive a numeric contradiction like `exp 1 = 2`).
+
+It does not generalize to THIS axiom's arbitrary, unbounded-depth `t`: (1) the structural
+computation still needs `HasDerivAt_log_pos`, which needs each internal log-argument positive AT
+`x` — i.e. the validity being proved; (2) even granting that, the resulting *formula* for `t.eval'`
+depends on `t`'s exact shape, so "pick a point and get a numeric contradiction" is a per-tree
+algebra trick, not a scheme that closes for every tree at once. The free-transfer fact is a genuine,
+verified, zero-new-axiom building block (`t.eval` inherits sin's regularity at the root, for free)
+but — like the EVT above — does not reach interior subtrees, for the same root-cause: only the
+ROOT is globally tied to a named, regular function; no subtree is. -/
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
