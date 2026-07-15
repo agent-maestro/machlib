@@ -1,5 +1,6 @@
 import MachLib.PfaffianExpRecipDescent
 import MachLib.WronskianProportional
+import MachLib.PfaffianExpWronskian
 
 /-!
 # MachLib.EMLExplicitBound — explicit/uniform-K descent, brick 1 (base case)
@@ -152,6 +153,25 @@ theorem wronskian_arm_explicit
   exact ⟨hza, hzb,
     wronskian_zero_zeros_subset F G Fp Gp a b hab hFanalytic hGanalytic
       hFderiv hGderiv hW hFne z hza hzb hFz⟩
+
+/-- **Integrating-factor arm, EXPLICIT — the case where the bound GROWS.** For a
+top-exp relation (`c.relations top = G · varY top`), if `expEliminate c G top p`
+has explicit bound `Ne` and the leading coefficient `leadingCoeffY top p` has
+explicit bound `K`, then `pfaffianChainFn c p` has explicit bound `Ne + 2*K + 1`
+(the Rolle/Wronskian `+1` plus the two factors). Direct `BoundedZerosBy`-form of
+`expEliminate_reduce_full` — which already produces exactly this explicit bound. -/
+theorem integrating_arm_explicit {N : Nat} (c : PfaffianChain N) (G : MultiPoly N) (top : Fin N)
+    (h_reltop : c.relations top = MultiPoly.mul G (MultiPoly.varY top))
+    (p : MultiPoly N) (a b : Real) (hab : a < b) (hcoh : c.IsCoherentOn a b)
+    (hyt : ∀ z, a < z → z < b → MultiPoly.eval (MultiPoly.varY top) z (c.chainValues z) ≠ 0)
+    (Ne : Nat)
+    (heN : BoundedZerosBy
+        (pfaffianChainFn c (MachLib.PfaffianExpEliminate.expEliminate c G top p)) a b Ne)
+    (K : Nat)
+    (hcD : BoundedZerosBy (pfaffianChainFn c (MultiPoly.leadingCoeffY top p)) a b K) :
+    BoundedZerosBy (pfaffianChainFn c p) a b (Ne + 2 * K + 1) :=
+  MachLib.PfaffianExpWronskian.expEliminate_reduce_full c G top h_reltop p a b hab hcoh hyt
+    Ne heN K hcD
 
 end EMLExplicitBound
 end MachLib
