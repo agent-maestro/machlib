@@ -146,7 +146,12 @@ of sin, since both functions are globally smooth and the connectivity
 argument is phase-independent).
 
 Closure path: a Smoothness module would discharge both this axiom and
-its sin sibling together; ~300-500 lines, multi-session. -/
+its sin sibling together; ~300-500 lines, multi-session.
+
+2026-07-15: see `EMLPfaffian.lean`'s dated note after `eml_gap_avoidance` for why the newly-built
+`continuousAt_bddAbove_Icc` (Extreme Value Theorem, `IntermediateValue.lean`) does not shorten this
+estimate — the same finding applies verbatim to cos (the obstruction is bound-propagation to
+interior subtrees, not a missing compactness tool). -/
 axiom eml_pfaffian_validon_from_cos_equality
     (t : EMLTree) (hcos : ∀ x : Real, t.eval x = Real.cos x)
     (b : Real) (_hb_pos : 0 < b) :

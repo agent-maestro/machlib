@@ -240,7 +240,12 @@ applied to the log-argument — which needs the log-argument CONTINUOUS on `(0,b
 continuity for an ARBITRARILY NESTED subtree, without already knowing its own internal log-arguments
 are well-formed (needed to know the composition with `log` doesn't itself have a jump), is exactly
 the circularity that remains open — propagating regularity down through unboundedly deep `exp`/`log`
-nesting without a compactness/Bolzano–Weierstrass-style tool this codebase also doesn't have. -/
+nesting. **2026-07-15: the compactness tool itself (`continuousAt_bddAbove_Icc`, an Extreme Value
+Theorem from `sup_exists`) has since been built** — see the dated note further below, after
+`eml_gap_avoidance` — **but it does not close this circularity**: the real obstruction is that no
+bound propagates from the root down to an arbitrarily nested interior subtree (bounding
+`exp(s1.eval) - log(s2.eval)` does not bound `s1.eval`/`s2.eval` individually), so the missing piece
+is a genuine differentiation/identity-theorem argument, not a compactness patch. -/
 axiom eml_pfaffian_validon_from_sin_equality
     (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
     (b : Real) (_hb_pos : 0 < b) :
@@ -355,6 +360,34 @@ theorem eml_gap_avoidance (t1 t2 : EMLTree) (x U : Real)
       · exact absurd (le_of_lt hg) hcon
     have hfin := log_lt_of_lt_exp hpos hlt
     exact lt_irrefl_ax _ (lt_trans_ax hgt hfin)
+
+/-! ## 2026-07-15: Extreme Value Theorem built — and why it still doesn't close the axiom
+
+`continuousAt_bddAbove_Icc` (continuous on `[a,b]` ⟹ bounded above there, from `sup_exists`,
+mirroring `intermediate_value`'s proof technique) is now proven in `IntermediateValue.lean` — the
+compactness tool flagged as missing above. Zero new axioms. It is genuine, reusable infrastructure.
+
+**It does not close this axiom.** Tracing through why: to validate an `eml t1 t2` node nested
+*inside* `t`, `eml_gap_avoidance` forces its log-argument `t2` to avoid the gap `(0, exp(-U))`
+*pointwise*, for any `U` bounding the node's own value. Combined with `intermediate_value` and
+continuity of `t2.eval`, "avoids the gap pointwise" upgrades to "one-sided throughout `(0,b)`" —
+this is the intended use of the new EVT (via `bdd_above_nbhd_of_continuousAt` giving the local
+bound that feeds `U`).
+
+The obstruction: establishing continuity of `t2.eval`, when `t2` is itself a nested `eml` node,
+needs `t2`'s *own* internal log-arguments already well-formed (otherwise an inner `log` hits its
+clamp boundary and `t2.eval` is not obviously continuous there) — i.e. exactly the validity being
+proved, one level deeper. And at that deeper level there is no bound available to seed
+`eml_gap_avoidance`: boundedness of the *root* (`|sin x| ≤ 1`) bounds the root's value, but
+`exp(s1.eval x) - log(s2.eval x)` staying bounded does **not** bound `s1.eval` or `s2.eval`
+individually (unlike at the root, an interior node has no anchor tying it to a known-bounded
+target function). So the induction cannot bottom out via elementary bound propagation through
+nested compositions — turning `t.eval = sin` into constraints on an arbitrarily deep interior
+subtree needs a real identity-theorem / differentiation argument (the classical route sketched at
+the top of this section: differentiate, or use analytic continuation uniqueness), not a
+continuity-only patch. This matches — rather than shortens — the axiom's original "Smoothness
+module, ~300-500 lines, multi-session" estimate. `continuousAt_bddAbove_Icc` stays as useful,
+reusable infrastructure but does not by itself reduce this axiom's remaining scope. -/
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 

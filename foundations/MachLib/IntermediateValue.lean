@@ -204,5 +204,115 @@ theorem intermediate_value_of_hasDerivAt (f : Real → Real) (a b : Real) (hab :
   intermediate_value f a b hab
     (fun z hza hzb => (hdiff z hza hzb).elim (fun _ hf' => hasDerivAt_continuousAt hf')) hfa hfb
 
+/-! ## Boundedness (Extreme Value Theorem, upper-bound half — from `sup_exists`)
+
+`c = sup {x ∈ [a,b] : f bounded above on [a,x]}` — same completeness-axiom technique as
+`intermediate_value`. Two facts about `c` close the proof: `c` itself is in the set (a bound on
+some `[a,x₀]` with `x₀` close enough to `c`, glued to the local bound from continuity at `c`), and
+`c = b` (else the local bound at `c` extends the set past `c`, contradicting `c = sup`). -/
+
+private theorem iv_pn {v : Real} (h : v < 0) : 0 < -v := by
+  have h2 := add_lt_add_left h (-v)
+  rw [neg_add_self, add_zero] at h2
+  exact h2
+
+private theorem iv_le_abs_self (t : Real) : t ≤ abs t := by
+  rcases lt_total t 0 with h | h | h
+  · rw [iv_aon h]
+    exact le_of_lt_r (lt_trans_ax h (iv_pn h))
+  · rw [h, abs_of_nonneg (iv_lerefl 0)]
+    exact iv_lerefl 0
+  · rw [abs_of_nonneg (le_of_lt_r h)]
+    exact iv_lerefl t
+
+private theorem lt_of_abs_lt {t B : Real} (h : abs t < B) : t < B :=
+  lt_of_le_of_lt_r (iv_le_abs_self t) h
+
+/-- **Local boundedness from continuity.** A function continuous at `x` stays below `f x + 1` on
+a neighborhood of `x` (the ε = 1 instance of `ContinuousAt`). -/
+theorem bdd_above_nbhd_of_continuousAt {f : Real → Real} {x : Real} (hc : ContinuousAt f x) :
+    ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y < f x + 1 := by
+  obtain ⟨δ, hδ, hy⟩ := hc 1 zero_lt_one_ax
+  refine ⟨δ, hδ, fun y hyδ => ?_⟩
+  have hlt : f y - f x < 1 := lt_of_abs_lt (hy y hyδ)
+  have h2 := add_lt_add_left hlt (f x)
+  rwa [show f x + (f y - f x) = f y from by mach_mpoly [f x, f y]] at h2
+
+/-- **Boundedness (Extreme Value Theorem, upper-bound half).** A function continuous at every
+point of `[a,b]` is bounded above there. -/
+theorem continuousAt_bddAbove_Icc (f : Real → Real) (a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z) :
+    ∃ M : Real, ∀ x : Real, a ≤ x → x ≤ b → f x ≤ M := by
+  have haS : (fun x => a ≤ x ∧ x ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x → f y ≤ M) a := by
+    refine ⟨iv_lerefl a, hab, f a, fun y hya hy_le_a => ?_⟩
+    have heq : a = y := le_antisymm hya hy_le_a
+    rw [← heq]
+    exact iv_lerefl (f a)
+  have hne : ∃ x, (fun x => a ≤ x ∧ x ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x → f y ≤ M) x :=
+    ⟨a, haS⟩
+  have hbd : BoundedAbove (fun x => a ≤ x ∧ x ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x → f y ≤ M) :=
+    ⟨b, fun x hx => hx.2.1⟩
+  obtain ⟨c, hub, hlub⟩ := sup_exists _ hne hbd
+  have hac : a ≤ c := hub a haS
+  have hcb : c ≤ b := hlub b (fun x hx => hx.2.1)
+  have hcont_c : ContinuousAt f c := hcont c hac hcb
+  obtain ⟨δ, hδ, hnbhd⟩ := bdd_above_nbhd_of_continuousAt hcont_c
+  -- Step 1: `c` itself is in the set — glue a bound on `[a, x₀]` (some `x₀ > c - δ`, which must
+  -- exist since `c - δ` is too small to be an upper bound) to the local bound at `c`.
+  have hex : ∃ x0, (a ≤ x0 ∧ x0 ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x0 → f y ≤ M) ∧ c - δ < x0 := by
+    refine Classical.byContradiction (fun hcon => ?_)
+    have hbound : ∀ x, (a ≤ x ∧ x ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x → f y ≤ M) → x ≤ c - δ := by
+      intro x hSx
+      rcases lt_total (c - δ) x with h | h | h
+      · exact absurd ⟨x, hSx, h⟩ hcon
+      · exact le_of_eq h.symm
+      · exact le_of_lt_r h
+    have hle : c ≤ c - δ := hlub (c - δ) hbound
+    exact lt_irrefl_ax c (lt_of_le_of_lt_r hle (iv_subself c hδ))
+  obtain ⟨x0, ⟨hax0, _hx0b, M0, hM0⟩, hcδx0⟩ := hex
+  have hcS : ∃ M : Real, ∀ y, a ≤ y → y ≤ c → f y ≤ M := by
+    refine ⟨max M0 (f c + 1), fun y hya hyc => ?_⟩
+    rcases lt_total x0 y with hxy | hxy | hxy
+    · have hcδy : c - δ < y := lt_trans_ax hcδx0 hxy
+      have habs : abs (y - c) < δ := by
+        rw [iv_absub hyc]
+        have h2 := add_lt_add_left hcδy δ
+        rw [show δ + (c - δ) = c from by mach_ring, add_comm δ y] at h2
+        have h3 := add_lt_add_left h2 (-y)
+        rw [show -y + c = c - y from by mach_mpoly [c, y],
+            show -y + (y + δ) = δ from by mach_mpoly [y, δ]] at h3
+        exact h3
+      exact le_of_lt_r (lt_of_lt_of_le_r (hnbhd y habs) (le_max_right M0 (f c + 1)))
+    · rw [← hxy]
+      exact iv_letrans (hM0 x0 hax0 (iv_lerefl x0)) (le_max_left M0 (f c + 1))
+    · exact iv_letrans (hM0 y hya (le_of_lt_r hxy)) (le_max_left M0 (f c + 1))
+  -- Step 2: `c = b` — else the local bound at `c` extends the set past `c`, contradicting `c = sup`.
+  have hceqb : c = b := by
+    rcases (le_iff_lt_or_eq c b).mp hcb with hclt | hceq
+    · exfalso
+      obtain ⟨M, hM⟩ := hcS
+      obtain ⟨c', hcc', hc'm⟩ := exists_between c (min (c + δ) b) (iv_ltmin (iv_ltadd c hδ) hclt)
+      have hc'b : c' ≤ b := le_of_lt_r (lt_of_lt_of_le_r hc'm (min_le_right _ _))
+      have hc'cδ : c' < c + δ := lt_of_lt_of_le_r hc'm (min_le_left _ _)
+      have hc'S : (fun x => a ≤ x ∧ x ≤ b ∧ ∃ M : Real, ∀ y, a ≤ y → y ≤ x → f y ≤ M) c' := by
+        refine ⟨iv_letrans hac (le_of_lt_r hcc'), hc'b, max M (f c + 1), fun y hya hyc' => ?_⟩
+        rcases lt_total c y with hcy | hcy | hcy
+        · have habs : abs (y - c) < δ := by
+            rw [abs_of_nonneg (le_of_lt_r (sub_pos_of_lt hcy))]
+            have h2 := add_lt_add_left (lt_of_le_of_lt_r hyc' hc'cδ) (-c)
+            rw [show -c + y = y - c from by mach_mpoly [c, y],
+                show -c + (c + δ) = δ from by mach_mpoly [c, δ]] at h2
+            exact h2
+          exact le_of_lt_r (lt_of_lt_of_le_r (hnbhd y habs) (le_max_right M (f c + 1)))
+        · rw [← hcy]
+          exact le_of_lt_r (lt_of_lt_of_le_r (iv_ltadd (f c) zero_lt_one_ax) (le_max_right M (f c + 1)))
+        · exact iv_letrans (hM y hya (le_of_lt_r hcy)) (le_max_left M (f c + 1))
+      exact lt_irrefl_ax c (lt_of_lt_of_le_r hcc' (hub c' hc'S))
+    · exact hceq
+  obtain ⟨M, hM⟩ := hcS
+  refine ⟨M, fun x hxa hxb => ?_⟩
+  rw [← hceqb] at hxb
+  exact hM x hxa hxb
+
 end Real
 end MachLib
