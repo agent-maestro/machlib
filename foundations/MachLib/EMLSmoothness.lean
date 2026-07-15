@@ -144,4 +144,45 @@ theorem eml_depth2_blowup (t1 s2 s3 : EMLTree) (y L : Real) :
     rwa [add_zero, show L + -1 = L - 1 from by mach_ring] at h4
   exact lt_trans_ax h3 hlt1
 
+/-! ## Why this does NOT generalize to arbitrary depth (a precise correction)
+
+The natural next step is to chase this mechanism up an ARBITRARY root-to-offender path (a sequence
+of "the offender's ancestor is the LEFT child" vs "... is the RIGHT child" steps) and hope it
+propagates all the way to the root, where `|sin| ≤ 1` gives the final contradiction. Tracing the
+two step types against the two "controllable" states shows it does **not**, in general.
+
+Track a hole value `v` that is *controllable* (for any target, some threshold on `v` achieves it)
+in one of two states: `A` (`v` can be forced arbitrarily LARGE) or `B` (`v` can be forced
+arbitrarily NEGATIVE — this is where `eml_depth2_blowup`'s intermediate `t2 = eml s2 s3` value
+ends up). Composing one more ancestor step:
+
+- State `A` through a LEFT step (`exp v − log sib`): `exp v → +∞` too — **stays `A`**.
+- State `A` through a RIGHT step (`exp sib − log v`): `log v → +∞` — **flips to `B`**.
+- State `B` through a LEFT step (`exp v − log sib`): `exp v → 0` (bounded, `exp` never blows up
+  downward) — the composition CONVERGES to the fixed value `−log sib`. **Dies** (no longer
+  unbounded).
+- State `B` through a RIGHT step (`exp sib − log v`): once `v` is negative enough, `log v` is
+  CLAMPED to exactly `0` regardless of magnitude, so the composition is the fixed constant
+  `exp sib`. **Dies** too.
+
+So `B` always dies after exactly one more step, whichever kind. The mandatory first step
+(offender → immediate parent) is always a RIGHT step (an offender is by definition someone's
+log-argument) and lands in state `A`. From there the signal survives any number of further LEFT
+steps, survives a first subsequent RIGHT step (flipping to `B`), and then dies on the very next
+step after that — REGARDLESS of whether that step lands on the root or not. Concretely: a
+"right-right-right" chain (an offender three log-slots below the root, nothing else) does **not**
+close, because the third step lands on a fixed constant, not a contradiction — confirmed by hand
+above and consistent with `eml_depth2_blowup` being exactly the "right, right, stop — the second
+right IS the root" case, the longest chain this mechanism can certify.
+
+**Consequence:** this is not "more elementary work will eventually get there" — it's a structural
+reach limit. Elementary bound/blow-up chasing genuinely cannot certify validity for an offender
+whose root-to-offender path has two or more RIGHT turns separated by anything (or more than two
+RIGHT turns at all) without the LAST one landing exactly on the root. Since the axiom quantifies
+over an arbitrary `t` (any left/right shape is possible), full closure needs a different technique
+— most plausibly the differentiate-and-compare-derivatives route `Differentiation.lean` already
+sketches for fixed small cases, generalized via genuine calculus (not value-bound chasing), or a
+repurposing of the existing Khovanskii/Wronskian rigidity machinery built for the (different)
+zero-counting problem. Not attempted here. -/
+
 end MachLib

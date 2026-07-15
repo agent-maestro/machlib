@@ -445,15 +445,21 @@ values, via `exp ≥ 0` absorbing each sibling and two nested applications of `l
 (`log_unbounded_below` then `log_unbounded_above`). This is the numerical contradiction mechanism
 rounds 3-4 were missing — genuinely closes the 2-level case in isolation.
 
-**What's still needed for the general axiom:** (i) generalize the blow-up to ARBITRARY depth (an
-induction along the root-to-offender path, tracking at each level whether the path goes through an
-exp-slot or a log-slot — each should propagate the blow-up, just with the sign/magnitude
-bookkeeping worked out per level); (ii) wire this into an actual EXISTENCE of a genuine crossing —
-via `eml_continuousAt_of_no_crossing` + `intermediate_value`, under a well-founded/minimal-violation
-induction (so by the time a node is handled, its own descendants are already known valid); (iii)
-assemble with `eml_hasDerivAt_of_sin_eq`'s free continuity of the root to get the final
-contradiction. Scoped, plausible, but a genuinely separate multi-step effort from what's built so
-far — see `EMLSmoothness.lean`. -/
+**CORRECTED after tracing the general case (see `EMLSmoothness.lean`'s closing note): the blow-up
+does NOT generalize to arbitrary depth.** Tracking the composition through a root-to-offender path
+as one of two "controllable" states (`A`: forceable arbitrarily large; `B`: forceable arbitrarily
+negative — where the depth-2 case's intermediate value lands) shows `B` ALWAYS dies (converges to a
+fixed, non-contradictory value) after exactly one more ancestor step, whichever kind. The mandatory
+first step out of any offender lands in state `A`; that survives any run of further "left-child"
+steps and one subsequent "right-child" step (flipping to `B`), but then dies on the very next step
+— regardless of whether that step is the root or not. `eml_depth2_blowup` is exactly the longest
+chain this mechanism can certify (right, right, stop — the second right IS the root). A
+"right-right-right" offender (three log-slots below the root) is NOT closed by it. Since the axiom
+quantifies over an arbitrary `t` (any left/right shape is possible), this is a genuine structural
+reach limit, not a matter of more elementary effort. Full closure needs a different technique —
+most plausibly actual differentiation/derivative-matching (the route `Differentiation.lean` already
+sketches for small fixed cases, generalized properly) or repurposing the existing Khovanskii/
+Wronskian rigidity machinery built for the zero-counting problem. Not attempted here. -/
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
