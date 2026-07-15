@@ -129,5 +129,26 @@ theorem eml_depth1_pfaffian_zero_bound
     rw [← eml_pfaffian_eval (EMLTree.eml t1 t2) z]; exact hfz
   exact (eml_reducedE_same_zeros t1 t2 h1 h2 z (hpos z haz hzb)).mp hz_eml
 
+/-- **Framework-facing form.** The same depth-1 bound phrased against the
+project's own `EMLPfaffianValidOn` predicate — for a leaf-children `eml t1 t2`,
+`EMLPfaffianValidOn (eml t1 t2) a b` is exactly the positivity of `t2` (its first
+two conjuncts, on leaves, are `True`). So the depth-1 fragment plugs directly into
+the domain condition every non-trivial `PfaffianFunction.zero_bound` application
+must already discharge. -/
+theorem eml_depth1_pfaffian_zero_bound_validOn
+    (t1 t2 : EMLTree) (h1 : EMLLeaf t1) (h2 : EMLLeaf t2)
+    (a b : Real) (hab : a < b)
+    (hvalid : EMLPfaffianValidOn (EMLTree.eml t1 t2) a b) :
+    ∃ (g : MultiPoly 2) (k : Nat), MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) g = 0 ∧
+      ((∀ g' j, g'.n = 0 →
+         PfaffianFn.IsKhovanskiiReducible
+           (⟨1, SingleExpChain, MultiPoly.dropLastY g⟩ : PfaffianFn) g' j →
+         ∃ x : Real, g'.eval x ≠ 0) →
+       ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
+         (∀ z ∈ zeros, a < z ∧ z < b ∧
+           (eml_pfaffian (EMLTree.eml t1 t2)).eval z = 0) →
+         zeros.length ≤ N) :=
+  eml_depth1_pfaffian_zero_bound t1 t2 h1 h2 a b hab hvalid.2.2
+
 end EMLDepth1Fragment
 end MachLib

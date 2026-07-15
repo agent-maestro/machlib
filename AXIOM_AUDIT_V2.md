@@ -251,11 +251,21 @@ Step-3b is **done**, through the generic `PfaffianFn` pipeline.
    node's *exponent* subtree contains a log, elimination **buries** the log under
    exps (already at depth 2, `eml (eml a b) c`), landing in an **exp+rational**
    class outside `IsExpChain`. Two paths remain:
-   - **fragment-path (bounded):** finish the exp-only reduction for the log-free-
-     exponent EML fragment → reaches exp-only → the now-**unconditional** exp bound
-     (`singleExp_khovanskii_bound_unconditional` / `chain2_..._unconditional`)
-     applies. A genuine *partial* axiom-clean result; leaves the axiom only for the
-     buried-log case.
+   - **fragment-path — pilot DONE, but bounded portion is NARROW (2026-07-14).**
+     `EMLDepth1Fragment.lean` lands the depth-1 leaf case
+     (`eml_depth1_pfaffian_zero_bound[_validOn]`): `eml t1 t2` with `t1,t2 ∈
+     {const,var}` reduces in ONE step to `t2 − exp(exp(t1))` = `IsExpExpPoly`,
+     bounded axiom-clean via the two-exp bridge. This is the first axiom-clean
+     `eml_pfaffian` bound. **But the re-association driver for DEEPER log-free-
+     exponent trees hits a second wall:** at depth 2 (right-spine, e.g.
+     `eml ℓ1 (eml ℓ2 ℓ3)`, all leaves) the reduct is
+     `ℓ3 − exp(exp(ℓ2) − exp(exp(ℓ1)))` — a nested exp (`exp` OF a tower-polynomial),
+     which is NOT a polynomial over the iterExp tower (so `chainN_..._bound` doesn't
+     apply) and NOT in any bounded exp fragment. Re-applying the log-elimination just
+     loops back to the same condition. So beyond depth-1 the fragment-path needs a
+     general exp-chain Pfaffian bound — effectively the same research depth as the
+     b-path. Verdict: depth-1 leaf was the sweet spot; the fragment-path does not
+     extend cheaply.
    - **b-path (open depth):** a constructive Khovanskii bound for exp+rational
      (≡ exp+log) chains — extend the descent's generator from `IsExpChain` to admit
      a `1/x` (reciprocal/log) generator (cf. `PfaffianExpRecipDescent`,
