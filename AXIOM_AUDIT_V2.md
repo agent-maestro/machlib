@@ -266,12 +266,29 @@ Step-3b is **done**, through the generic `PfaffianFn` pipeline.
      general exp-chain Pfaffian bound — effectively the same research depth as the
      b-path. Verdict: depth-1 leaf was the sweet spot; the fragment-path does not
      extend cheaply.
-   - **b-path (open depth):** a constructive Khovanskii bound for exp+rational
-     (≡ exp+log) chains — extend the descent's generator from `IsExpChain` to admit
-     a `1/x` (reciprocal/log) generator (cf. `PfaffianExpRecipDescent`,
-     `PfaffianExpLogRecipDescent`, `PfaffianLogGeneralDegree`, which already build
-     axiom-clean exp+recip/log descent pieces). This is the genuine remaining
-     research depth.
+   - **b-path — the constructive mixed EML *finiteness* is ALREADY DONE (found
+     2026-07-14).** `MachLib.eml_eval_boundedZeros_unconditional` (PfaffianExpHard.lean:243)
+     is a COMPLETE, **`#print axioms`-clean** (verified: no `zero_count_bound_classical`,
+     depends on `HasDerivAt_inv` + `HasDerivAt_log_pos`, so it genuinely covers
+     log/reciprocal) constructive Khovanskii finiteness bound for ANY EML tree with
+     positive log-arguments (`LogArgPosOn`). Both classical arms are proven — exp via
+     `PfaffianExpHard.exp_hard_proof` (integrating-factor / `exp_step_general`), log via
+     `PfaffianLogGeneralDegree.log_hard_proof` — assembled through
+     `combined_descent_3_of_exp_hard` (also axiom-clean modulo the now-discharged arms).
+     So the "exp+rational generator" IS built; the b-path's hard research is behind us.
+
+     **The actual remaining gap to DELETE the axiom is narrower and mechanical:**
+     `eml_eval_boundedZeros_unconditional` gives `∃K` **per interval** (`BoundedZeros`
+     is `∃K, …`), but `sin/cos_not_in_eml_any_depth` need an **interval-UNIFORM /
+     explicit** bound (with `∃K(a,b)`, sin's `⌊b/π⌋` zeros can just be `≤ K(b)` — no
+     contradiction; the axiom works only because its rank formula
+     `pfaffian_zero_count_bound f.chain.order f.degree` is interval-independent). So the
+     deletion needs: (i) an **explicit/uniform-K version of the mixed descent** — thread
+     a `descentBoundA`/`khovBound`-style explicit bound (the pattern already exists for
+     the pure-exp/general cases in `PfaffianGeneralExplicit` / `IterExpDepthNRankRec`)
+     through the exp+log+recip descent; (ii) a `LogArgPosOn`-from-sin/cos-equality bridge
+     for the consumers; then (iii) re-route `sin/cos_not_in_eml` off `PfaffianFunction.zero_bound`
+     and delete the axiom. Substantial but MECHANICAL, not open research.
 
    `IterExpChain`-through-the-generic-pipeline is a *separate*, architectural-only
    line (the depth-N iterated-exp bound is already axiom-clean via the `chainNFn`
@@ -482,7 +499,8 @@ that the named load-bearing axioms have been seriously stress-tested.
 | Step-3 SingleExp `StepwiseDecreaseReducer` | ✓ PROVEN — `singleExp_dispatch_step` (ChainExp2PathC.lean:2009), `sorry`-free | shipped |
 | Unconditional SingleExp `PfaffianFn` bound | ✓ DONE — `singleExp_khovanskii_bound_unconditional`, axiom-clean, no `sdr_other` | 2026-07-14 |
 | `PfaffianExpr`→`PfaffianFn` bridge, exp fragments (single-exp, nested two-exp) | ✓ DONE — axiom-clean bounds for exp/exp-exp `PfaffianFunction`s | 2026-07-14 |
-| `log_atom` case (the TRUE blocker for the featured `eml_pfaffian`/sin-cos consumers) | ⚠ open — fragment-path bounded, b-path (exp+rational chain) is the research depth, §2c(2) | remaining |
+| Constructive mixed EML (exp+log+recip) FINITENESS bound | ✓ DONE — `eml_eval_boundedZeros_unconditional`, `#print axioms`-clean of `zero_count_bound_classical` (both classical arms proven) | shipped (found 2026-07-14) |
+| DELETE the axiom: explicit/uniform-K version of the mixed descent + `LogArgPosOn`-from-sin/cos bridge + re-route `sin/cos_not_in_eml` | ⚠ remaining — MECHANICAL not research (`descentBoundA`/`khovBound` pattern exists), §2c(2) | remaining |
 | `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom (classically true) | future formalization |
 
 **Recommendation:** ship at the current honesty level with this audit
