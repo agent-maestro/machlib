@@ -121,6 +121,24 @@ def EMLPfaffianValidOn : EMLTree → Real → Real → Prop
       EMLPfaffianValidOn t2 a b ∧
       (∀ x : Real, a < x → x < b → 0 < t2.eval x)
 
+/-- **`EMLPfaffianValidOn` is monotone in the right endpoint.** Validity on the bigger interval
+`(a,B)` gives validity on any smaller `(a,b) ⊆ (a,B)` (`b ≤ B`) — the positivity constraint's
+universal quantifier just ranges over fewer points. By structural induction on `s`; the only
+content is in the `eml` case, where it's a one-line transitivity (`x < b ≤ B → x < B`).
+
+Useful for closing `eml_pfaffian_validon_from_sin_equality`-style arguments at a SMALL requested
+`b`: prove validity on some large, convenient `B` (e.g. one guaranteed to contain a zero of `sin`,
+sidestepping the case where `(0,b)` itself is too short to contain one), then downgrade via this
+lemma. Zero new axioms. -/
+theorem EMLPfaffianValidOn_mono_b {s : EMLTree} {a b B : Real} (hbB : b ≤ B)
+    (h : EMLPfaffianValidOn s a B) : EMLPfaffianValidOn s a b := by
+  induction s with
+  | const c => trivial
+  | var => trivial
+  | eml t1 t2 ih1 ih2 =>
+    obtain ⟨h1, h2, h3⟩ := h
+    exact ⟨ih1 h1, ih2 h2, fun x hxa hxb => h3 x hxa (lt_of_lt_of_le hxb hbB)⟩
+
 /-- The eval-agreement theorem. Proven by structural induction; each
 base case is `rfl` from chunk 4's structural definitions, and the
 recursive case unfolds via `PfaffianFunction.sub_eval` / `comp_eval`
@@ -204,11 +222,25 @@ and a connectivity argument; ~300-500 lines, multi-session.
 general form** (`≤ 0`, not just "at a zero of sin"; no reference to `sin`/`cos` at all — it's a
 pure structural fact about `eml` nodes). It needs no continuity/connectivity: whenever an `eml`
 node's OWN value is non-positive, its log-argument is forced positive, by a two-line contradiction
-(no smoothness reasoning at all). This narrows what the axiom still has to cover: steps 2, 3, 5 —
-propagating that pointwise fact across the *whole* interval at points where the outer value is
-POSITIVE (where this trick gives no contradiction) — still need the axiomatized connectivity
-argument; investigated 2026-07-15 and found to need genuinely new "log is unbounded near 0"
-infrastructure this codebase doesn't have anywhere, not just cleverness. -/
+(no smoothness reasoning at all).
+
+**2026-07-16: pushed further.** `log_unbounded_below` formalizes the "log blows up near `0⁺`"
+fact flagged above as missing — it turned out to be a short derivation from `exp`'s existing axioms
+(`exp_lt`, `exp_injective`, `exp_log`, `exp_pos`), not a genuinely new primitive. Combining it with
+`eml_nonpos_forces_log_arg_pos`'s trick gives `eml_gap_avoidance`: for an `eml` node bounded ABOVE by
+`U`, its log-argument can never land strictly between `0` and `exp(-U)` — it's either `≤ 0` or
+`≥ exp(-U)`. This is a genuine strengthening (a two-sided GAP the log-argument can't cross), not
+just the one-sided fact from step 4. `EMLPfaffianValidOn_mono_b` separately disposes of the
+"requested `b` is too small to contain a zero of sin/cos" edge case (prove validity on a large,
+convenient interval, downgrade to any smaller one).
+
+**What still doesn't close, even with the gap:** turning "avoids the gap everywhere" into "always
+on the same side of the gap" needs `intermediate_value` (already proven, `IntermediateValue.lean`)
+applied to the log-argument — which needs the log-argument CONTINUOUS on `(0,b)`. Establishing that
+continuity for an ARBITRARILY NESTED subtree, without already knowing its own internal log-arguments
+are well-formed (needed to know the composition with `log` doesn't itself have a jump), is exactly
+the circularity that remains open — propagating regularity down through unboundedly deep `exp`/`log`
+nesting without a compactness/Bolzano–Weierstrass-style tool this codebase also doesn't have. -/
 axiom eml_pfaffian_validon_from_sin_equality
     (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
     (b : Real) (_hb_pos : 0 < b) :
@@ -237,6 +269,92 @@ theorem eml_nonpos_forces_log_arg_pos (t1 t2 : EMLTree) (x : Real)
     · exact hpos
     · exact absurd (le_of_eq heq.symm) hle
     · exact absurd (le_of_lt hneg) hle
+
+/-! ## `log` is unbounded near `0` — the missing infrastructure, now built (2026-07-16)
+
+Chasing whether `eml_nonpos_forces_log_arg_pos` generalizes into a full closure of
+`eml_pfaffian_validon_from_sin_equality` (it doesn't — see the axiom's docstring, updated below)
+turned up this: `log` blowing up near `0⁺` is exactly the "unboundedness" fact flagged as missing
+infrastructure. It's a short derivation from facts MachLib already has (`exp_lt`, `exp_injective`,
+`exp_log`, `exp_pos`), not a new axiom. -/
+
+/-- **`exp` reflects strict order.** The converse of `exp_lt` (`a < b → exp a < exp b`): if
+`exp a < exp b` then `a < b`. By trichotomy: `a = b` would force `exp a = exp b`
+(contradicting `<`), and `b < a` would force `exp b < exp a` (also contradicting `<`, via
+`exp_lt` the other way and transitivity). -/
+theorem exp_reflect_lt {a b : Real} (h : Real.exp a < Real.exp b) : a < b := by
+  rcases lt_total a b with hlt | heq | hgt
+  · exact hlt
+  · exfalso; rw [heq] at h; exact lt_irrefl_ax _ h
+  · exfalso; exact lt_irrefl_ax _ (lt_trans_ax h (Real.exp_lt hgt))
+
+/-- **`log` reflects the `exp`-threshold.** If `0 < y` and `y < exp M`, then `log y < M`. Via
+`exp_log` (`exp (log y) = y` for `y > 0`) and `exp_reflect_lt`. -/
+theorem log_lt_of_lt_exp {y M : Real} (hy : 0 < y) (h : y < Real.exp M) : Real.log y < M := by
+  have hyeq : Real.exp (Real.log y) = y := Real.exp_log hy
+  apply exp_reflect_lt
+  rw [hyeq]
+  exact h
+
+/-- **`log` is unbounded below near `0⁺`.** For any target `M` (however negative), there is a
+threshold `δ := exp M > 0` such that every `y` strictly between `0` and `δ` has `log y < M`. This
+is the "log blows up approaching 0 from the right" fact — stated quantitatively (no limits, no
+sequences), which is all the gap-avoidance argument below needs. -/
+theorem log_unbounded_below (M : Real) :
+    ∃ δ : Real, 0 < δ ∧ ∀ y : Real, 0 < y → y < δ → Real.log y < M :=
+  ⟨Real.exp M, Real.exp_pos M, fun _ hy hyd => log_lt_of_lt_exp hy hyd⟩
+
+/-- **Gap avoidance.** For an `eml t1 t2` node whose OWN value is bounded above by `U`, its
+log-argument `t2` can never take a value strictly between `0` and `exp(-U)`: either `t2.eval x ≤ 0`,
+or `t2.eval x ≥ exp(-U)`. Proof: if `0 < t2.eval x`, the node's defining equation rearranges to
+`log(t2.eval x) = exp(t1.eval x) - (eml t1 t2).eval x`, which exceeds `-U` (since `exp(t1.eval x) >
+0` and `(eml t1 t2).eval x ≤ U`). Combined with `log_unbounded_below`'s contrapositive at threshold
+`exp(-U)` (`t2.eval x < exp(-U) → log(t2.eval x) < -U`), `t2.eval x < exp(-U)` is impossible, so
+`t2.eval x ≥ exp(-U)`.
+
+This generalizes `eml_nonpos_forces_log_arg_pos`'s trick (which is the `t2.eval x ≤ 0` disjunct
+here) using `log_unbounded_below` for the other disjunct — the SAME two ingredients the axiom's
+docstring identifies as missing (steps 4 and part of 3). It still does not close the axiom: to turn
+"avoids the gap" into "positive throughout `(0,b)`", one more ingredient is needed — that `t2.eval`
+is CONTINUOUS on `(0,b)` (so `intermediate_value` from `IntermediateValue.lean` rules out it being
+`≤ 0` at one point and `≥ exp(-U)` at another) — and establishing that continuity for an arbitrarily
+NESTED subtree, without already knowing ITS OWN log-arguments are well-formed, is exactly the
+circularity that remains open. -/
+theorem eml_gap_avoidance (t1 t2 : EMLTree) (x U : Real)
+    (hU : (EMLTree.eml t1 t2).eval x ≤ U) :
+    t2.eval x ≤ 0 ∨ Real.exp (-U) ≤ t2.eval x := by
+  by_cases hle : t2.eval x ≤ 0
+  · exact Or.inl hle
+  · right
+    have hpos : 0 < t2.eval x := by
+      rcases lt_total 0 (t2.eval x) with hp | heq | hn
+      · exact hp
+      · exact absurd (le_of_eq heq.symm) hle
+      · exact absurd (le_of_lt hn) hle
+    have heval : Real.log (t2.eval x)
+        = Real.exp (t1.eval x) - (EMLTree.eml t1 t2).eval x := by
+      show Real.log (t2.eval x)
+          = Real.exp (t1.eval x) - (Real.exp (t1.eval x) - Real.log (t2.eval x))
+      mach_ring
+    have hgt : -U < Real.log (t2.eval x) := by
+      rw [heval]
+      have h1 : (0 : Real) < Real.exp (t1.eval x) := Real.exp_pos _
+      have step1 : -U < (-U) + Real.exp (t1.eval x) := by
+        have h3 := add_lt_add_left h1 (-U)
+        rwa [add_zero] at h3
+      have step2 : (-U) + Real.exp (t1.eval x)
+          ≤ Real.exp (t1.eval x) - (EMLTree.eml t1 t2).eval x := by
+        rw [sub_def, add_comm (-U) (Real.exp (t1.eval x))]
+        exact add_le_add_left (neg_le_neg hU) (Real.exp (t1.eval x))
+      exact lt_of_lt_of_le_r step1 step2
+    refine Classical.byContradiction (fun hcon => ?_)
+    have hlt : t2.eval x < Real.exp (-U) := by
+      rcases lt_total (t2.eval x) (Real.exp (-U)) with hl | he | hg
+      · exact hl
+      · exact absurd (le_of_eq he.symm) hcon
+      · exact absurd (le_of_lt hg) hcon
+    have hfin := log_lt_of_lt_exp hpos hlt
+    exact lt_irrefl_ax _ (lt_trans_ax hgt hfin)
 
 -- (theorem sin_zeros_list_nodup moved after natCast_mul_pi_lt below)
 
