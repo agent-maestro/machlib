@@ -1,5 +1,6 @@
 import MachLib.EMLPfaffian
 import MachLib.CosNotInEML
+import MachLib.Linarith
 
 /-!
 # `cos ∉ EML_k(ℝ)` for ALL depths
@@ -12,21 +13,19 @@ the only difference is the set of zeros used to overrun the bound:
     `EMLPfaffian.sin_not_in_eml_any_depth`).
   - cos's zeros at `i·π + π/2` for `i = 0, 1, ..., M` (this file).
 
-## New axioms introduced (3, all classical-true)
+## New axioms introduced (1, classical-true)
 
 1. `eml_pfaffian_validon_from_cos_equality` — exact analog of the sin
    side axiom. Same classical smoothness-preservation argument; cos is
    smooth everywhere just like sin. A Smoothness module would discharge
    this and its sin sibling together.
 
-2. `pi_div_one_plus_one_pos : 0 < pi/(1+1)` — trivial classical fact.
-   Would be derivable in ~20 lines if MachLib had `div_pos`; lifted
-   here as a small classical-citation axiom.
+`pi_div_one_plus_one_pos`/`pi_div_one_plus_one_lt_pi` (`0 < π/2`, `π/2 < π`) were
+ORIGINALLY lifted as axioms here pending general `div_pos`-style infrastructure.
+MachLib already had everything needed (`one_div_pos_of_pos`, `mul_lt_mul_of_pos_right`,
+`div_def`, `mul_inv`) — 2026-07-15: both are now derived theorems, not axioms.
 
-3. `pi_div_one_plus_one_lt_pi : pi/(1+1) < pi` — trivial classical
-   fact (`pi/2 < pi`). Same discharge path as #2.
-
-Net axiom delta: +3. The constructive infrastructure (cos zeros at
+Net axiom delta: +1. The constructive infrastructure (cos zeros at
 half-odd-pi, distinct-list, witness chain) is proven directly.
 
 ## What this does NOT do
@@ -40,18 +39,36 @@ namespace MachLib
 
 open Real
 
-/-! ## Two small classical-citation lemmas about π/2 -/
+/-! ## Two small lemmas about π/2 — DERIVED (2026-07-15), no longer axioms -/
 
-/-- `0 < π/2`. Classically trivial (positive divided by positive).
-Lifted as an axiom since MachLib doesn't yet have a general
-`div_pos`. Same discharge path as
-`pi_div_one_plus_one_lt_pi` below — both fall out once div-ordering
-lemmas land in `Ring.lean`. -/
-axiom pi_div_one_plus_one_pos : (0 : Real) < pi / (1 + 1)
+/-- `1 < 1 + 1`, hence `0 < 1 + 1`, hence `(1+1) ≠ 0`. Reused by both lemmas below. -/
+private theorem one_lt_one_add_one : (1 : Real) < 1 + 1 := by
+  have h := add_lt_add_left zero_lt_one_ax 1
+  rwa [add_zero] at h
 
-/-- `π/2 < π`. Classically trivial (half of positive < whole).
-Same lifting rationale as `pi_div_one_plus_one_pos`. -/
-axiom pi_div_one_plus_one_lt_pi : pi / (1 + 1) < pi
+private theorem one_add_one_pos : (0 : Real) < 1 + 1 :=
+  lt_trans_ax zero_lt_one_ax one_lt_one_add_one
+
+private theorem one_add_one_ne_zero : (1 + 1 : Real) ≠ 0 :=
+  (ne_of_lt one_add_one_pos).symm
+
+/-- `0 < π/2`. Derived from `div_def` + `one_div_pos_of_pos` + `mul_pos` — no new axiom
+needed, MachLib already had everything this required. -/
+theorem pi_div_one_plus_one_pos : (0 : Real) < pi / (1 + 1) := by
+  rw [div_def pi (1 + 1) one_add_one_ne_zero]
+  exact mul_pos pi_pos (one_div_pos_of_pos one_add_one_pos)
+
+/-- `π/2 < π`. Derived: `(π/2)*(1+1) = π` (via `div_def`/`mul_inv`), and `π/2 < (π/2)*(1+1)`
+since `1 < 1+1` and `π/2 > 0` (`mul_lt_mul_of_pos_right`). -/
+theorem pi_div_one_plus_one_lt_pi : pi / (1 + 1) < pi := by
+  have hq_pos : (0 : Real) < pi / (1 + 1) := pi_div_one_plus_one_pos
+  have hdouble : (pi / (1 + 1)) * (1 + 1) = pi := by
+    rw [div_def pi (1 + 1) one_add_one_ne_zero, mul_assoc,
+      mul_comm (1 / (1 + 1)) (1 + 1), mul_inv (1 + 1) one_add_one_ne_zero, mul_one_ax]
+  have hstep : (1 : Real) * (pi / (1 + 1)) < (1 + 1) * (pi / (1 + 1)) :=
+    mul_lt_mul_of_pos_right one_lt_one_add_one hq_pos
+  rw [one_mul_thm, mul_comm (1 + 1) (pi / (1 + 1)), hdouble] at hstep
+  exact hstep
 
 /-! ## cos(k·π + π/2) = 0 for all Nat k -/
 
