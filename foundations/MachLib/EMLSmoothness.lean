@@ -2609,4 +2609,237 @@ theorem eml_pfaffian_validon_of_sin_and_witnesses (t : EMLTree)
     fun x _ _ => eml_hasDerivAt_of_sin_eq t hsin x
   exact eml_pfaffian_validon_of_witnesses t x0 b hx0b Real.cos hDd hnc hwit
 
+/-! ## The backward mirror: covering `b` smaller than the witness point
+
+`eml_pfaffian_validon_of_witnesses` reaches `[x0,b)` for `b > x0` — a witness "early" in the
+domain propagates forward. To cover `EMLPfaffianValidOn t 0 b` for `b` SMALLER than wherever a
+witness naturally sits (e.g. `π`, depth-1's free witness), the same argument run backward — via
+`sup_exists` in place of `inf_exists`, mirroring `eml_depth1_pos_of_pos_witness_backward`'s
+relationship to `eml_depth1_pos_of_pos_witness` exactly — closes the gap. -/
+
+/-- **The generalized ODE closure, backward.** Mirrors `eml_ode_closure_general` line for line,
+substituting `sup_exists`/`BoundedAbove` for `inf_exists`/`BoundedBelow` and propagating from a
+witness at the UPPER endpoint `x1` down to `(a, x1]`, exactly as
+`eml_depth1_pos_of_pos_witness_backward` does for the sin-specific case. -/
+theorem eml_ode_closure_general_backward {A B : EMLTree}
+    (a x1 : Real) (hax1 : a < x1)
+    (A' : Real → Real) (hA'd : ∀ x, a < x → x ≤ x1 → HasDerivAt A.eval (A' x) x)
+    (B' : Real → Real) (hB'd : ∀ x, a < x → x ≤ x1 → HasDerivAt B.eval (B' x) x)
+    (D : Real → Real) (hDd : ∀ x, a < x → x ≤ x1 → HasDerivAt (EMLTree.eml A B).eval (D x) x)
+    (hx1pos : 0 < B.eval x1) :
+    ∀ x, a < x → x ≤ x1 → 0 < B.eval x := by
+  intro x hx1 hx2
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hxle : B.eval x ≤ 0 := by
+    rcases lt_total 0 (B.eval x) with h | h | h
+    · exact absurd h hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hSne : ∃ y, (fun y => a < y ∧ y ≤ x1 ∧ B.eval y ≤ 0) y := ⟨x, hx1, hx2, hxle⟩
+  have hSbd : BoundedAbove (fun y => a < y ∧ y ≤ x1 ∧ B.eval y ≤ 0) := ⟨x1, fun y hy => hy.2.1⟩
+  obtain ⟨xs, hub, hlub⟩ := sup_exists _ hSne hSbd
+  have hxsx1 : xs ≤ x1 := hlub x1 (fun y hy => hy.2.1)
+  have hax : a < xs := lt_of_lt_of_le hx1 (hub x ⟨hx1, hx2, hxle⟩)
+  have hposabove : ∀ y, xs < y → y ≤ x1 → 0 < B.eval y := by
+    intro y hy1 hy2
+    refine Classical.byContradiction (fun hcony => ?_)
+    have hyle : B.eval y ≤ 0 := by
+      rcases lt_total 0 (B.eval y) with h | h | h
+      · exact absurd h hcony
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    have hya : a < y := lt_trans_ax hax hy1
+    exact lt_irrefl_ax xs (lt_of_lt_of_le hy1 (hub y ⟨hya, hy2, hyle⟩))
+  have hxsle : B.eval xs ≤ 0 := by
+    refine Classical.byContradiction (fun hxscon => ?_)
+    have hxsgt : 0 < B.eval xs := by
+      rcases lt_total (B.eval xs) 0 with h | h | h
+      · exact absurd (le_of_lt h) hxscon
+      · exact absurd (le_of_eq h) hxscon
+      · exact h
+    obtain ⟨δ, hδ, hnbhd⟩ :=
+      pos_nbhd_of_continuousAt (hasDerivAt_continuousAt (hB'd xs hax hxsx1)) hxsgt
+    have hbound2 : ∀ y, (a < y ∧ y ≤ x1 ∧ B.eval y ≤ 0) → y ≤ xs - δ := by
+      intro y hy
+      rcases lt_total y (xs - δ) with h | h | h
+      · exact le_of_lt h
+      · exact le_of_eq h
+      · exfalso
+        have hyxs : y ≤ xs := hub y hy
+        have habs : abs (y - xs) < δ := by
+          rw [iv_absub hyxs]
+          have h2 := add_lt_add_left h δ
+          rw [show δ + (xs - δ) = xs from by mach_ring,
+              show δ + y = y + δ from by mach_ring] at h2
+          have h3 := add_lt_add_left h2 (-y)
+          rw [show -y + xs = xs - y from by mach_mpoly [xs, y],
+              show -y + (y + δ) = δ from by mach_mpoly [y, δ]] at h3
+          exact h3
+        exact lt_irrefl_ax 0 (lt_of_lt_of_le (hnbhd y habs) hy.2.2)
+    exact lt_irrefl_ax xs (lt_of_le_of_lt (hlub (xs - δ) hbound2) (iv_subself xs hδ))
+  let E1 : Real → Real := fun z => Real.exp (Real.exp (A.eval z) - (EMLTree.eml A B).eval z)
+  have hE1pos : ∀ z, 0 < E1 z := fun z => Real.exp_pos _
+  let k : Real := B.eval x1 * (1 / E1 x1)
+  have hkE1x1 : k * E1 x1 = B.eval x1 := by
+    show B.eval x1 * (1 / E1 x1) * E1 x1 = B.eval x1
+    rw [mul_assoc, mul_comm (1 / E1 x1) (E1 x1), mul_inv (E1 x1) (ne_of_lt (hE1pos x1)).symm,
+        mul_one_ax]
+  have hkpos : 0 < k := mul_pos hx1pos (one_div_pos_of_pos (hE1pos x1))
+  have hBode : ∀ z, xs < z → z ≤ x1 →
+      HasDerivAt B.eval (B.eval z * (Real.exp (A.eval z) * A' z - D z)) z := by
+    intro z hz1 hz2
+    have hza : a < z := lt_trans_ax hax hz1
+    have heq := eml_ode_step_general (hDd z hza hz2) (hA'd z hza hz2) (hB'd z hza hz2)
+      (hposabove z hz1 hz2)
+    have hderiv := hB'd z hza hz2
+    rwa [heq] at hderiv
+  have hE1ode : ∀ z, xs < z → z ≤ x1 →
+      HasDerivAt E1 (E1 z * (Real.exp (A.eval z) * A' z - D z)) z := by
+    intro z hz1 hz2
+    have hza : a < z := lt_trans_ax hax hz1
+    exact eml_E_step_general (hA'd z hza hz2) (hDd z hza hz2)
+  have hzero : ∀ y, xs < y → y ≤ x1 → B.eval y - k * E1 y = 0 := by
+    intro y hy1 hy2
+    rcases (le_iff_lt_or_eq y x1).mp hy2 with hlt | heq
+    · obtain ⟨k', hk'⟩ := const_ratio_of_shared_ode B.eval E1
+        (fun z => Real.exp (A.eval z) * A' z - D z) y x1 hlt
+        (fun z hz1 hz2 => hBode z (lt_of_lt_of_le hy1 hz1) hz2)
+        (fun z hz1 hz2 => hE1ode z (lt_of_lt_of_le hy1 hz1) hz2)
+        (fun z _ _ => (ne_of_lt (hE1pos z)).symm)
+      have hkx1 : B.eval x1 = k' * E1 x1 := hk' x1 (le_of_lt hlt) (le_refl x1)
+      have hkeq : k' = k := by
+        have h2 : k' * E1 x1 = k * E1 x1 := by rw [← hkx1, hkE1x1]
+        have h3 : k' * E1 x1 * (1 / E1 x1) = k * E1 x1 * (1 / E1 x1) := by rw [h2]
+        rwa [mul_assoc, mul_assoc, mul_inv (E1 x1) (ne_of_lt (hE1pos x1)).symm,
+            mul_one_ax, mul_one_ax] at h3
+      have hky : B.eval y = k' * E1 y := hk' y (le_refl y) (le_of_lt hlt)
+      rw [hky, hkeq, sub_def, add_neg]
+    · rw [heq, hkE1x1, sub_def, add_neg]
+  have hxsE1pos : 0 < k * E1 xs := mul_pos hkpos (hE1pos xs)
+  have hxseq2 : B.eval xs = k * E1 xs := by
+    rcases (le_iff_lt_or_eq xs x1).mp hxsx1 with hxsx1lt | hxsx1eq
+    · have hcontdiff : HasDerivAt (fun z => B.eval z - k * E1 z)
+          (B' xs - (0 * E1 xs + k * (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs)))) xs :=
+        HasDerivAt_sub B.eval (fun z => k * E1 z) (B' xs)
+          (0 * E1 xs + k * (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs))) xs
+          (hB'd xs hax hxsx1)
+          (HasDerivAt_mul (fun _ => k) E1 0 (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs)) xs
+            (HasDerivAt_const k xs) (eml_E_step_general (hA'd xs hax hxsx1) (hDd xs hax hxsx1)))
+      have hxseq : B.eval xs - k * E1 xs = 0 :=
+        @eq_zero_at_of_eq_zero_above (fun z => B.eval z - k * E1 z) xs x1 hxsx1lt
+          (hasDerivAt_continuousAt hcontdiff) hzero
+      have h2 : B.eval xs - k * E1 xs + k * E1 xs = 0 + k * E1 xs := by rw [hxseq]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+    · rw [hxsx1eq, hkE1x1]
+  have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
+  exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
+
+/-- Bundled positivity + derivative, backward — mirrors `eml_ode_closure_general_hasDerivAt`. -/
+theorem eml_ode_closure_general_hasDerivAt_backward {A B : EMLTree}
+    (a x1 : Real) (hax1 : a < x1)
+    (A' : Real → Real) (hA'd : ∀ x, a < x → x ≤ x1 → HasDerivAt A.eval (A' x) x)
+    (B' : Real → Real) (hB'd : ∀ x, a < x → x ≤ x1 → HasDerivAt B.eval (B' x) x)
+    (D : Real → Real) (hDd : ∀ x, a < x → x ≤ x1 → HasDerivAt (EMLTree.eml A B).eval (D x) x)
+    (hx1pos : 0 < B.eval x1) :
+    ∀ x, a < x → x ≤ x1 →
+      0 < B.eval x ∧
+        HasDerivAt B.eval (B.eval x * (Real.exp (A.eval x) * A' x - D x)) x := by
+  have hpos := eml_ode_closure_general_backward a x1 hax1 A' hA'd B' hB'd D hDd hx1pos
+  refine fun x hx1 hx2 => ⟨hpos x hx1 hx2, ?_⟩
+  have heq := eml_ode_step_general (hDd x hx1 hx2) (hA'd x hx1 hx2) (hB'd x hx1 hx2)
+    (hpos x hx1 hx2)
+  have hderiv := hB'd x hx1 hx2
+  rwa [heq] at hderiv
+
+/-- **Full `EMLPfaffianValidOn`, backward.** Mirrors `eml_pfaffian_validon_of_witnesses` exactly,
+substituting the backward ODE-closure pieces, propagating from a witness at the upper endpoint
+`x1` down to `(a, x1]`. -/
+theorem eml_pfaffian_validon_of_witnesses_backward (t : EMLTree)
+    (a x1 : Real) (hax1 : a < x1)
+    (D : Real → Real) (hDd : ∀ x, a < x → x ≤ x1 → HasDerivAt t.eval (D x) x)
+    (hnc : ∀ x, a < x → x ≤ x1 → EMLNoCrossingAt t x)
+    (hwit : EMLWitnesses t x1) :
+    EMLPfaffianValidOn t a x1 := by
+  induction t generalizing D with
+  | const c => trivial
+  | var => trivial
+  | eml t1 t2 ih1 ih2 =>
+    obtain ⟨hwit1, hwit2, hwitt2⟩ := hwit
+    have hnct1 : ∀ x, a < x → x ≤ x1 → EMLNoCrossingAt t1 x := fun x hx1 hx2 => (hnc x hx1 hx2).1
+    have hnct2 : ∀ x, a < x → x ≤ x1 → EMLNoCrossingAt t2 x :=
+      fun x hx1 hx2 => (hnc x hx1 hx2).2.1
+    have ht2ne : ∀ x, a < x → x ≤ x1 → t2.eval x ≠ 0 := fun x hx1 hx2 => (hnc x hx1 hx2).2.2
+    let t1' : Real → Real := fun x =>
+      if h : a < x ∧ x ≤ x1 then (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x h.1 h.2)).choose
+      else 0
+    have ht1'd : ∀ x, a < x → x ≤ x1 → HasDerivAt t1.eval (t1' x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t1.eval
+        (if h : a < x ∧ x ≤ x1 then
+          (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x h.1 h.2)).choose
+        else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x hx1 hx2)).choose_spec
+    let t2' : Real → Real := fun x =>
+      if h : a < x ∧ x ≤ x1 then (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x h.1 h.2)).choose
+      else 0
+    have ht2'd : ∀ x, a < x → x ≤ x1 → HasDerivAt t2.eval (t2' x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t2.eval
+        (if h : a < x ∧ x ≤ x1 then
+          (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x h.1 h.2)).choose
+        else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x hx1 hx2)).choose_spec
+    have ht1Dex : ∀ x, a < x → x ≤ x1 → ∃ D1 : Real, HasDerivAt t1.eval D1 x := by
+      intro x hx1 hx2
+      exact eml_leftchild_hasDerivAt_general
+        (A := t1) (B := t2) (TARGET := (EMLTree.eml t1 t2).eval) (heq := fun _ => rfl)
+        (hDd x hx1 hx2) (ht2'd x hx1 hx2) (ht2ne x hx1 hx2)
+    let D1fun : Real → Real := fun x =>
+      if h : a < x ∧ x ≤ x1 then (ht1Dex x h.1 h.2).choose else 0
+    have hD1fund : ∀ x, a < x → x ≤ x1 → HasDerivAt t1.eval (D1fun x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t1.eval
+        (if h : a < x ∧ x ≤ x1 then (ht1Dex x h.1 h.2).choose else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (ht1Dex x hx1 hx2).choose_spec
+    have ht2close := eml_ode_closure_general_hasDerivAt_backward a x1 hax1 t1' ht1'd t2' ht2'd
+      D hDd hwitt2
+    let D2fun : Real → Real := fun x =>
+      t2.eval x * (Real.exp (t1.eval x) * t1' x - D x)
+    have hD2fund : ∀ x, a < x → x ≤ x1 → HasDerivAt t2.eval (D2fun x) x :=
+      fun x hx1 hx2 => (ht2close x hx1 hx2).2
+    refine ⟨ih1 D1fun hD1fund hnct1 hwit1, ih2 D2fun hD2fund hnct2 hwit2, ?_⟩
+    intro x hxa hxb
+    exact (ht2close x hxa (le_of_lt hxb)).1
+
+/-- Direct connection to the sin-equality hypothesis, backward. -/
+theorem eml_pfaffian_validon_of_sin_and_witnesses_backward (t : EMLTree)
+    (hsin : ∀ x, t.eval x = Real.sin x)
+    (a x1 : Real) (hax1 : a < x1)
+    (hnc : ∀ x, a < x → x ≤ x1 → EMLNoCrossingAt t x)
+    (hwit : EMLWitnesses t x1) :
+    EMLPfaffianValidOn t a x1 := by
+  have hDd : ∀ x, a < x → x ≤ x1 → HasDerivAt t.eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq t hsin x
+  exact eml_pfaffian_validon_of_witnesses_backward t a x1 hax1 Real.cos hDd hnc hwit
+
+/-! ## Honest status: gluing forward + backward at one witness point needs one more piece
+
+The natural last step — combine `eml_pfaffian_validon_of_sin_and_witnesses` (covers `[p,b)`) and
+`eml_pfaffian_validon_of_sin_and_witnesses_backward` (covers `(0,p]`) into `EMLPfaffianValidOn t
+0 b` for ANY `b > 0`, given one witness structure `EMLWitnesses t p` — hit a genuine gap, not a
+quick fix. `EMLPfaffianValidOn t a c`'s OWN definition is a fully OPEN interval `a < x < c`: the
+backward piece only claims `(0,p)` (NOT including `p`), the forward piece only claims `(p,b)`
+(also NOT including `p`) — so `(0,p) ∪ (p,b)` leaves the single point `x = p` uncovered, even
+though the UNDERLYING closure mechanisms (`eml_ode_closure_general`/`_backward`) individually DO
+reach `x = p` (their own conclusions use `≤`, not `<`, at the witness endpoint — it's packaging
+into `EMLPfaffianValidOn`'s fixed open-interval shape that loses it). Fixing this needs a THIRD
+combined structural induction (mirroring `eml_pfaffian_validon_of_witnesses` but running forward
+below `p`, backward above `p`, and handling `x = p` directly via either underlying mechanism's own
+`≤`-endpoint fact) rather than gluing two already-packaged `EMLPfaffianValidOn` results — a real,
+if narrow, remaining piece, not attempted here rather than patched around. Both directional
+capstones above remain independently complete, verified, and reusable regardless. -/
+
 end MachLib
