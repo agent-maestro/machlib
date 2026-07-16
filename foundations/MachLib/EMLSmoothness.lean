@@ -2023,4 +2023,100 @@ theorem eml_rrr_pos_of_pos_witness {T1 S2 S4 S5 : EMLTree}
     fun x hx1 hx2 => (hN2 x hx1 hx2).2
   exact eml_ode_closure_general x0 b hx0b S4' hS4'd S5' hS5'd D2 hD2d hS5x0pos
 
+/-! ## Generalizing right-descent chaining to arbitrary depth
+
+`eml_rrr_pos_of_pos_witness` demonstrated the mechanism chains through TWO forced right turns
+(three total, counting the mandatory one at the offender itself). This section generalizes to a
+chain of ANY length, mirroring how `leftSpine`/`leftSpine_hasDerivAt_of_target` generalized
+left-descent (rounds 15→16) — same shape of induction, but each step here genuinely needs its OWN
+positivity witness (unlike left-descent, where `eml_leftchild_explicit_value` is unconditional). -/
+
+/-- Builds a pure right-descent chain: `rightChain [A1,...,An] base = eml A1 (eml A2 (... (eml An
+base) ...))` — `A1` is the OUTERMOST (root-adjacent) sibling, matching `eml_rrr_pos_of_pos_witness`'s
+`T1`. -/
+def rightChain : List EMLTree → EMLTree → EMLTree
+  | [], base => base
+  | A :: As, base => EMLTree.eml A (rightChain As base)
+
+/-- The positivity witnesses this mechanism genuinely needs, one per intermediate accumulator node
+(every proper tail of `As`, applied to `base`) — NOT needed for the outermost node itself (that
+witness is supplied separately, at the call site, since it's about `rightChain As base` as a
+whole, already given via `hDd`'s domain). -/
+def rightChainWitnesses : List EMLTree → EMLTree → Real → Prop
+  | [], _, _ => True
+  | _ :: As, base, x0 => 0 < (rightChain As base).eval x0 ∧ rightChainWitnesses As base x0
+
+/-- **The right-descent derivative, chained through an arbitrary-length pure-right chain.** Given
+`rightChain As base` has a known derivative and a witness at every intermediate level, `base`
+(whatever sits at the bottom) ALSO gets a known derivative — by induction on `As`, peeling one
+sibling off at a time via `eml_ode_closure_general_hasDerivAt`, each step needing its own witness
+(the genuine difference from left-descent) plus a STRUCTURAL derivative for the new tail (via
+`EMLNoCrossingAt`, just for internal continuity bookkeeping — not the "smart" ODE-derived one). -/
+theorem rightChain_hasDerivAt_of_target {base : EMLTree} (As : List EMLTree)
+    (x0 b : Real) (hx0b : x0 < b)
+    (D : Real → Real)
+    (hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt (rightChain As base).eval (D x) x)
+    (Aderiv : EMLTree → Real → Real)
+    (hAderivd : ∀ A ∈ As, ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (Aderiv A x) x)
+    (hncFull : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt (rightChain As base) x)
+    (hwit : rightChainWitnesses As base x0) :
+    ∃ D' : Real → Real, ∀ x, x0 ≤ x → x < b → HasDerivAt base.eval (D' x) x := by
+  induction As generalizing D with
+  | nil => exact ⟨D, hDd⟩
+  | cons A As' ih =>
+    have hA : ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (Aderiv A x) x :=
+      fun x hx1 hx2 => hAderivd A (List.Mem.head As') x hx1 hx2
+    have hAsrest : ∀ A' ∈ As', ∀ x, x0 ≤ x → x < b → HasDerivAt A'.eval (Aderiv A' x) x :=
+      fun A' hA' x hx1 hx2 => hAderivd A' (List.Mem.tail A hA') x hx1 hx2
+    have hncTail : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt (rightChain As' base) x :=
+      fun x hx1 hx2 => (hncFull x hx1 hx2).2.1
+    have hwitTail : 0 < (rightChain As' base).eval x0 := hwit.1
+    have hwitRest : rightChainWitnesses As' base x0 := hwit.2
+    let TailDeriv : Real → Real := fun z =>
+      if h : x0 ≤ z ∧ z < b then
+        (eml_hasDerivAt_of_no_crossing (rightChain As' base) z (hncTail z h.1 h.2)).choose
+      else 0
+    have hTailDerivd : ∀ z, x0 ≤ z → z < b →
+        HasDerivAt (rightChain As' base).eval (TailDeriv z) z := by
+      intro z hz1 hz2
+      show HasDerivAt (rightChain As' base).eval
+        (if h : x0 ≤ z ∧ z < b then
+          (eml_hasDerivAt_of_no_crossing (rightChain As' base) z (hncTail z h.1 h.2)).choose
+        else 0) z
+      rw [dif_pos ⟨hz1, hz2⟩]
+      exact (eml_hasDerivAt_of_no_crossing (rightChain As' base) z (hncTail z hz1 hz2)).choose_spec
+    have hNext := eml_ode_closure_general_hasDerivAt x0 b hx0b (Aderiv A) hA TailDeriv hTailDerivd
+      D hDd hwitTail
+    let D' : Real → Real := fun x =>
+      (rightChain As' base).eval x * (Real.exp (A.eval x) * Aderiv A x - D x)
+    have hD'd : ∀ x, x0 ≤ x → x < b → HasDerivAt (rightChain As' base).eval (D' x) x :=
+      fun x hx1 hx2 => (hNext x hx1 hx2).2
+    exact ih D' hD'd hAsrest hncTail hwitRest
+
+/-- **The full right-chain closure.** If `t = rightChain As (eml Slast Offender)` agrees with
+`sin` on `[x0,b)`, every sibling in `As` has no crossing there (bundled with the tail's `≠0`
+conditions via `EMLNoCrossingAt` on the whole chain), a witness exists at EVERY intermediate
+accumulator node PLUS `Offender` itself, `Offender` stays positive throughout `[x0,b)` — for a pure
+right-descent chain of ANY length, strictly beyond what the value-blow-up mechanism can ever reach
+(round 5's proven ceiling). -/
+theorem eml_rightchain_pos_of_pos_witness {Slast Offender : EMLTree} (As : List EMLTree)
+    (x0 b : Real) (hx0b : x0 < b)
+    (hsin : ∀ x : Real, (rightChain As (EMLTree.eml Slast Offender)).eval x = Real.sin x)
+    (Aderiv : EMLTree → Real → Real)
+    (hAderivd : ∀ A ∈ As, ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (Aderiv A x) x)
+    (hncFull : ∀ x, x0 ≤ x → x < b →
+      EMLNoCrossingAt (rightChain As (EMLTree.eml Slast Offender)) x)
+    (hwit : rightChainWitnesses As (EMLTree.eml Slast Offender) x0)
+    (Slast' : Real → Real) (hSlast'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Slast.eval (Slast' x) x)
+    (Offender' : Real → Real)
+    (hOffender'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Offender.eval (Offender' x) x)
+    (hx0pos : 0 < Offender.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < Offender.eval x := by
+  have hD0d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (rightChain As (EMLTree.eml Slast Offender)).eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq _ hsin x
+  obtain ⟨D, hDd⟩ := rightChain_hasDerivAt_of_target As x0 b hx0b Real.cos hD0d
+    Aderiv hAderivd hncFull hwit
+  exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd D hDd hx0pos
+
 end MachLib
