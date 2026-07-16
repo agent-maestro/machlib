@@ -29,7 +29,7 @@ here, for free, away from crossings) but "does `t2.eval` ever actually reach `�
 namespace MachLib
 
 open Real
-open MachLib.MultiVarMod.TwoExp (neg_lt_neg)
+open MachLib.MultiVarMod.TwoExp (neg_lt_neg add_lt_add)
 
 /-- No internal `eml` node's log-argument is EXACTLY `0` at `x`. Strictly WEAKER than
 `EMLPfaffianValidOn s a b` (which needs strict POSITIVITY of every log-argument throughout an
@@ -1275,5 +1275,220 @@ and right steps, which is what the full, unrestricted axiom needs. This theorem 
 enlargement of provable territory (arbitrary depth for one large, well-defined class of shapes,
 matching depth-1's completeness for that class) but the axiom itself quantifies over ALL tree
 shapes, so it is not yet closed. -/
+
+/-! ## Extending the reach: one trailing `R` step at the root
+
+The state-machine analysis (round 5's docstring, above) says state `A` (forceable arbitrarily
+large) survives any run of `L` steps and flips to `B` on an `R` step, but `B` ALWAYS dies on the
+very next step, whichever kind. This means the value-blow-up mechanism's FULL reach — not just the
+"stop after the L's" case just closed — is `R L* R?`: the mandatory first `R`, an arbitrary run of
+`L`s, and OPTIONALLY one more trailing `R`, PROVIDED that trailing `R` is the root (nothing can
+follow it). This section builds that trailing-`R` extension: `eml D (wrapLeft Cs (eml W1 W2))`,
+offender `W2`, using `log`'s unboundedness ABOVE (`log_unbounded_above`, round 5) the same way the
+base case used it below, plus `neg_one_le_sin` for the other side of the sin bound. -/
+
+/-- Explicit-δ mirror of `log_lt_of_lt_exp`: if `y` exceeds `exp M`, `log y` exceeds `M`. Same
+derivation as `log_unbounded_above`'s internal fact, exposed directly (not behind its
+existential) so it can be chained with `chain_exact`'s own explicit output. -/
+theorem log_gt_of_gt_exp {y M : Real} (hy : Real.exp M < y) : M < Real.log y := by
+  have hypos : (0 : Real) < y := lt_trans_ax (Real.exp_pos M) hy
+  have heq : Real.exp (Real.log y) = y := Real.exp_log hypos
+  apply exp_reflect_lt
+  rw [heq]
+  exact hy
+
+/-- **The trailing-`R` step, explicit.** If a node's log-argument `N` is known to exceed a
+threshold forcing `log(N.eval y)` above `exp(D.eval y) - L`, the WHOLE `eml D N` node is forced
+BELOW `L` — the mirror image of `eml_rootstep_exceeds_exact`, one level up. `EMLTree.eval`'s `log`
+is already the clamped total function, so no positivity side-condition on `N.eval y` is needed for
+the formula itself. -/
+theorem eml_rootR_step_exact (D N : EMLTree) (y L : Real)
+    (hK : Real.exp (D.eval y) - L < Real.log (N.eval y)) :
+    (EMLTree.eml D N).eval y < L := by
+  show Real.exp (D.eval y) - Real.log (N.eval y) < L
+  have h2 := neg_lt_neg hK
+  have h3 := add_lt_add_left h2 (Real.exp (D.eval y))
+  rwa [show Real.exp (D.eval y) + -(Real.log (N.eval y)) = Real.exp (D.eval y) - Real.log (N.eval y)
+        from by mach_mpoly [Real.exp (D.eval y), Real.log (N.eval y)],
+      show Real.exp (D.eval y) + -(Real.exp (D.eval y) - L) = L
+        from by mach_mpoly [Real.exp (D.eval y), L]] at h3
+
+/-- **The trailing-`R` contradiction, explicit.** Combines `chain_exact` (forcing the whole
+left-chain `wrapLeft Cs (eml W1 W2)` arbitrarily large) with `log_gt_of_gt_exp` (forcing its log
+arbitrarily large too) and `eml_rootR_step_exact` (forcing the ROOT, `eml D (...)`, arbitrarily
+negative) — contradicting `neg_one_le_sin`, the other side of the sin bound from
+`eml_leftchain_sin_contradiction_exact`'s `sin_le_one`. -/
+theorem eml_leftchain_rootlog_sin_contradiction_exact {W1 W2 D : EMLTree} (Cs : List EMLTree)
+    (y : Real) (M : EMLTree → Real) (hM : ∀ c ∈ Cs, Real.log (c.eval y) ≤ M c)
+    (hsin : ∀ x : Real, (EMLTree.eml D (wrapLeft Cs (EMLTree.eml W1 W2))).eval x = Real.sin x)
+    (hpos : 0 < W2.eval y)
+    (hlt : W2.eval y < Real.exp (Real.exp (W1.eval y) -
+      (Real.exp (Real.exp (D.eval y) - (-1 - 1)) + listLogSum M Cs))) :
+    False := by
+  have hbase : ∀ L, 0 < W2.eval y → W2.eval y < Real.exp (Real.exp (W1.eval y) - L) →
+      L < (EMLTree.eml W1 W2).eval y :=
+    fun L hp hl => eml_rightstep_exceeds_exact W1 W2 y L hp hl
+  have h2 : Real.exp (Real.exp (D.eval y) - (-1 - 1)) <
+      (wrapLeft Cs (EMLTree.eml W1 W2)).eval y :=
+    chain_exact Cs M hM hbase (Real.exp (Real.exp (D.eval y) - (-1 - 1))) hpos hlt
+  have h3 : Real.exp (D.eval y) - (-1 - 1) < Real.log ((wrapLeft Cs (EMLTree.eml W1 W2)).eval y) :=
+    log_gt_of_gt_exp h2
+  have h4 : (EMLTree.eml D (wrapLeft Cs (EMLTree.eml W1 W2))).eval y < -1 - 1 :=
+    eml_rootR_step_exact D (wrapLeft Cs (EMLTree.eml W1 W2)) y (-1 - 1) h3
+  rw [hsin y] at h4
+  have hlt1 : (-1 : Real) - 1 < -1 := by
+    have h5 := add_lt_add_left (neg_neg_of_pos zero_lt_one_ax) (-1)
+    rwa [add_zero, show (-1 : Real) + -1 = -1 - 1 from by mach_ring] at h5
+  have hcombine : (-1 : Real) < -1 - 1 := lt_of_le_of_lt (neg_one_le_sin y) h4
+  exact lt_irrefl_ax (-1) (lt_trans_ax hcombine hlt1)
+
+/-- **Full closure for the "right-then-all-left-then-root-right" class.** Same shape as
+`eml_leftchain_pos_of_no_crossing`, but for `t = eml D (wrapLeft Cs (eml W1 W2))` — one trailing
+`R` step wrapping the whole left-chain at the root. Needs an EXTRA local bound (`D` bounded ABOVE
+near the minimal-violation point `xs`, via `bdd_above_nbhd_of_continuousAt` — the same tool
+already used for the chain siblings, just applied to `D` this time) composed with the existing `W1`
+lower bound and chain bound via TWO chained monotonicity steps instead of one. -/
+theorem eml_leftchain_rootR_pos_of_no_crossing {W1 W2 D : EMLTree} (Cs : List EMLTree)
+    (x0 b : Real) (hx0b : x0 < b)
+    (hncD : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt D x)
+    (hncW1 : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt W1 x)
+    (hncW2 : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt W2 x)
+    (hncCs : ∀ c ∈ Cs, ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt c x)
+    (hsin : ∀ x : Real, (EMLTree.eml D (wrapLeft Cs (EMLTree.eml W1 W2))).eval x = Real.sin x)
+    (hx0pos : 0 < W2.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < W2.eval x := by
+  intro x hx1 hx2
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hxle : W2.eval x ≤ 0 := by
+    rcases lt_total 0 (W2.eval x) with h | h | h
+    · exact absurd h hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hSne : ∃ y, (fun y => x0 ≤ y ∧ y < b ∧ W2.eval y ≤ 0) y := ⟨x, hx1, hx2, hxle⟩
+  have hSbd : BoundedBelow (fun y => x0 ≤ y ∧ y < b ∧ W2.eval y ≤ 0) := ⟨x0, fun y hy => hy.1⟩
+  obtain ⟨xs, hlb, hglb⟩ := inf_exists _ hSne hSbd
+  have hx0xs : x0 ≤ xs := hglb x0 (fun y hy => hy.1)
+  have hxsb : xs < b := lt_of_le_of_lt (hlb x ⟨hx1, hx2, hxle⟩) hx2
+  have hposbelow : ∀ y, x0 ≤ y → y < xs → 0 < W2.eval y := by
+    intro y hy1 hy2
+    refine Classical.byContradiction (fun hcony => ?_)
+    have hyle : W2.eval y ≤ 0 := by
+      rcases lt_total 0 (W2.eval y) with h | h | h
+      · exact absurd h hcony
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    have hyb : y < b := lt_trans_ax hy2 hxsb
+    exact lt_irrefl_ax xs (lt_of_le_of_lt (hlb y ⟨hy1, hyb, hyle⟩) hy2)
+  have hcontW2xs : ContinuousAt W2.eval xs :=
+    eml_continuousAt_of_no_crossing W2 xs (hncW2 xs hx0xs hxsb)
+  have hxsle : W2.eval xs ≤ 0 := by
+    refine Classical.byContradiction (fun hxscon => ?_)
+    have hxsgt : 0 < W2.eval xs := by
+      rcases lt_total (W2.eval xs) 0 with h | h | h
+      · exact absurd (le_of_lt h) hxscon
+      · exact absurd (le_of_eq h) hxscon
+      · exact h
+    obtain ⟨δ, hδ, hnbhd⟩ := pos_nbhd_of_continuousAt hcontW2xs hxsgt
+    have hbound2 : ∀ y, (x0 ≤ y ∧ y < b ∧ W2.eval y ≤ 0) → xs + δ ≤ y := by
+      intro y hy
+      rcases lt_total y (xs + δ) with h | h | h
+      · exfalso
+        have hyxs : xs ≤ y := hlb y hy
+        have habs : abs (y - xs) < δ := by
+          rcases (le_iff_lt_or_eq xs y).mp hyxs with hlt | heq
+          · rw [abs_of_nonneg (le_of_lt_r (sub_pos_of_lt hlt))]
+            have h2 := add_lt_add_left h (-xs)
+            rwa [show -xs + y = y - xs from by mach_mpoly [xs, y],
+                show -xs + (xs + δ) = δ from by mach_mpoly [xs, δ]] at h2
+          · rw [← heq, show xs - xs = 0 from by mach_ring,
+                abs_of_nonneg (le_refl (0 : Real))]
+            exact hδ
+        exact lt_irrefl_ax 0 (lt_of_lt_of_le (hnbhd y habs) hy.2.2)
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    exact lt_irrefl_ax xs (lt_of_lt_of_le (iv_ltadd xs hδ) (hglb (xs + δ) hbound2))
+  rcases (le_iff_lt_or_eq x0 xs).mp hx0xs with hx0xslt | hx0xseq
+  · have hxsge0 : 0 ≤ W2.eval xs :=
+      @nonneg_at_of_pos_below W2.eval x0 xs hx0xslt hcontW2xs hposbelow
+    have hxseq0 : W2.eval xs = 0 := (le_antisymm hxsge0 hxsle).symm
+    have hcontW1xs : ContinuousAt W1.eval xs :=
+      eml_continuousAt_of_no_crossing W1 xs (hncW1 xs hx0xs hxsb)
+    have hcontDxs : ContinuousAt D.eval xs :=
+      eml_continuousAt_of_no_crossing D xs (hncD xs hx0xs hxsb)
+    obtain ⟨ρ1, hρ1, hb1⟩ := bdd_below_nbhd_of_continuousAt hcontW1xs
+    obtain ⟨ρD, hρD, hbD⟩ := bdd_above_nbhd_of_continuousAt hcontDxs
+    obtain ⟨ρCs, hρCs, hbCs⟩ := chain_radius xs Cs (fun c hc => hncCs c hc xs hx0xs hxsb)
+    let M : EMLTree → Real := fun c => max 0 (Real.log (c.eval xs + 1))
+    let S : Real := listLogSum M Cs
+    have hMbound : ∀ y, abs (y - xs) < ρCs → ∀ c ∈ Cs, Real.log (c.eval y) ≤ M c := by
+      intro y hy c hc
+      exact log_le_of_le (le_of_lt (hbCs y hy c hc))
+    let Bfixed : Real := Real.exp (Real.exp (D.eval xs + 1) - (-1 - 1)) + S
+    let δfixed : Real := Real.exp (Real.exp (W1.eval xs - 1) - Bfixed)
+    have hδfixedpos : 0 < δfixed := Real.exp_pos _
+    obtain ⟨ρW2, hρW2, hnbhdW2⟩ := hcontW2xs δfixed hδfixedpos
+    have hρpos : 0 < min (min ρ1 ρD) (min ρCs ρW2) :=
+      iv_ltmin (iv_ltmin hρ1 hρD) (iv_ltmin hρCs hρW2)
+    obtain ⟨y, hy1, hy2⟩ := exists_between (max x0 (xs - min (min ρ1 ρD) (min ρCs ρW2))) xs
+      (iv_ltmax hx0xslt (iv_subself xs hρpos))
+    have hyx0 : x0 ≤ y :=
+      le_of_lt_r (lt_of_le_of_lt (le_max_left x0 (xs - min (min ρ1 ρD) (min ρCs ρW2))) hy1)
+    have hyxsrho : xs - min (min ρ1 ρD) (min ρCs ρW2) < y :=
+      lt_of_le_of_lt (le_max_right x0 (xs - min (min ρ1 ρD) (min ρCs ρW2))) hy1
+    have hyabs : abs (y - xs) < min (min ρ1 ρD) (min ρCs ρW2) := by
+      rw [iv_absub (le_of_lt_r hy2)]
+      have h2 := add_lt_add_left hyxsrho (min (min ρ1 ρD) (min ρCs ρW2))
+      rw [show min (min ρ1 ρD) (min ρCs ρW2) + (xs - min (min ρ1 ρD) (min ρCs ρW2)) = xs
+            from by mach_ring,
+          show min (min ρ1 ρD) (min ρCs ρW2) + y = y + min (min ρ1 ρD) (min ρCs ρW2)
+            from by mach_ring] at h2
+      have h3 := add_lt_add_left h2 (-y)
+      rw [show -y + xs = xs - y from by mach_mpoly [xs, y],
+          show -y + (y + min (min ρ1 ρD) (min ρCs ρW2)) = min (min ρ1 ρD) (min ρCs ρW2)
+            from by mach_mpoly [y, min (min ρ1 ρD) (min ρCs ρW2)]] at h3
+      exact h3
+    have hyρ1D : abs (y - xs) < min ρ1 ρD := lt_of_lt_of_le hyabs (min_le_left _ _)
+    have hyρCsW2 : abs (y - xs) < min ρCs ρW2 := lt_of_lt_of_le hyabs (min_le_right _ _)
+    have hyρ1 : abs (y - xs) < ρ1 := lt_of_lt_of_le hyρ1D (min_le_left ρ1 ρD)
+    have hyρD : abs (y - xs) < ρD := lt_of_lt_of_le hyρ1D (min_le_right ρ1 ρD)
+    have hyρCs : abs (y - xs) < ρCs := lt_of_lt_of_le hyρCsW2 (min_le_left ρCs ρW2)
+    have hyρW2 : abs (y - xs) < ρW2 := lt_of_lt_of_le hyρCsW2 (min_le_right ρCs ρW2)
+    have hposy : 0 < W2.eval y := hposbelow y hyx0 hy2
+    have hW2ysmall : W2.eval y < δfixed := by
+      have habs2 : abs (W2.eval y - W2.eval xs) < δfixed := hnbhdW2 y hyρW2
+      rw [hxseq0, sub_zero] at habs2
+      exact lt_of_abs_lt habs2
+    have hM_y : ∀ c ∈ Cs, Real.log (c.eval y) ≤ M c := hMbound y hyρCs
+    have hDub : D.eval y < D.eval xs + 1 := hbD y hyρD
+    have hBstep1 : Real.exp (D.eval y) < Real.exp (D.eval xs + 1) := Real.exp_lt hDub
+    have hBstep2 : Real.exp (D.eval y) - (-1 - 1) < Real.exp (D.eval xs + 1) - (-1 - 1) := by
+      have h2 := add_lt_add_left hBstep1 (-(-1 - 1))
+      rwa [show -(-1 - 1) + Real.exp (D.eval y) = Real.exp (D.eval y) - (-1 - 1)
+            from by mach_mpoly [Real.exp (D.eval y)],
+          show -(-1 - 1) + Real.exp (D.eval xs + 1) = Real.exp (D.eval xs + 1) - (-1 - 1)
+            from by mach_mpoly [Real.exp (D.eval xs + 1)]] at h2
+    have hBstep3 : Real.exp (Real.exp (D.eval y) - (-1 - 1)) <
+        Real.exp (Real.exp (D.eval xs + 1) - (-1 - 1)) := Real.exp_lt hBstep2
+    have hBcmp : Real.exp (Real.exp (D.eval y) - (-1 - 1)) + S < Bfixed := by
+      show Real.exp (Real.exp (D.eval y) - (-1 - 1)) + S
+          < Real.exp (Real.exp (D.eval xs + 1) - (-1 - 1)) + S
+      have h2 := add_lt_add_left hBstep3 S
+      rwa [add_comm S (Real.exp (Real.exp (D.eval y) - (-1 - 1))),
+          add_comm S (Real.exp (Real.exp (D.eval xs + 1) - (-1 - 1)))] at h2
+    have hW1lb : W1.eval xs - 1 < W1.eval y := hb1 y hyρ1
+    have hstep1 : Real.exp (W1.eval xs - 1) < Real.exp (W1.eval y) := Real.exp_lt hW1lb
+    have hinner : Real.exp (W1.eval xs - 1) - Bfixed <
+        Real.exp (W1.eval y) - (Real.exp (Real.exp (D.eval y) - (-1 - 1)) + S) := by
+      have h2 := add_lt_add hstep1 (neg_lt_neg hBcmp)
+      rwa [← sub_def, ← sub_def] at h2
+    have hδlt : δfixed <
+        Real.exp (Real.exp (W1.eval y) - (Real.exp (Real.exp (D.eval y) - (-1 - 1)) + S)) :=
+      Real.exp_lt hinner
+    have hfinallt : W2.eval y <
+        Real.exp (Real.exp (W1.eval y) - (Real.exp (Real.exp (D.eval y) - (-1 - 1)) + S)) :=
+      lt_trans_ax hW2ysmall hδlt
+    exact eml_leftchain_rootlog_sin_contradiction_exact Cs y M hM_y hsin hposy hfinallt
+  · rw [← hx0xseq] at hxsle
+    exact lt_irrefl_ax 0 (lt_of_lt_of_le hx0pos hxsle)
 
 end MachLib
