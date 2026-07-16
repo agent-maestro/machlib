@@ -226,22 +226,39 @@ at the witness endpoint — it's packaging into `EMLPfaffianValidOn`'s fixed sha
 real fix needs a THIRD combined structural induction, not gluing two packaged results together.
 Documented honestly rather than patched with an incorrect proof; not yet built.
 
+## Update 2026-07-16 (cont.) — the gluing gap CLOSED. Mechanism side is complete.
+
+The fix was not a third combined induction gluing two packaged results — it was avoiding the
+packaging problem entirely. Built `eml_ode_closure_general_twosided`: takes the witness at an
+INTERIOR point `p` directly and covers the whole `(a,b)` via a case split on `x` vs `p` BEFORE any
+`EMLPfaffianValidOn` packaging happens, so there's no open-interval endpoint left to lose. Ran the
+same structural induction as the forward capstone with this as the base mechanism
+(`eml_pfaffian_validon_of_witnesses_twosided`).
+
+**`eml_pfaffian_validon_of_sin_and_witness_at_point`** is the result: given a SINGLE witness
+structure `EMLWitnesses t p` at ONE point `p`, `EMLPfaffianValidOn t 0 b` holds for literally ANY
+`b > 0` — the exact shape of `eml_pfaffian_validon_from_sin_equality` itself. One small fix
+(missing explicit function arguments, a compiler-caught mechanical error). Zero new axioms.
+
+**The mechanism-building side of this whole investigation is now complete.**
+`eml_pfaffian_validon_from_sin_equality` reduces, for literally any tree and any `b>0`, to exactly
+one hypothesis: `EMLWitnesses t p`. Nothing else stands between "nothing" and the full axiom.
+
 ## Status
 
-- Mechanism-building (rounds 1–18, then 25–28 this session): BOTH directions COMPLETE, for ANY
-  tree shape — not just the special cases explored in rounds 20–24. Zero new axioms beyond
-  `HasDerivAt_congr`. Reduces the whole axiom to witness-finding, full stop, on either side of a
-  witness point.
-- Gluing-at-a-point (combining both directions from ONE witness into literally any `b>0`): a
-  real, narrow, precisely-characterized gap — needs a third combined induction, not attempted.
-- Witness-finding: open in general. Depth-2/leaf-`S2` family closed except one maximally narrow
-  residual: `T1` bounded and non-constant, `S2` constant `> 1`. Probed from three independent
-  angles (direct evaluation, growth/unboundedness, periodicity) — all either close cleanly or
-  require Khovanskii-scale machinery. This is a well-triangulated boundary, not an unexplored gap.
+- Mechanism-building (rounds 1–18, then 25–29 this session): COMPLETE — any tree shape, any
+  `b > 0`, from one witness point, zero new axioms beyond `HasDerivAt_congr`. This is the
+  endpoint of this line of attack; no further mechanism work is expected to be needed.
+- Witness-finding (`EMLWitnesses t p`): the ONE remaining hypothesis, open in general. Depth-2/
+  leaf-`S2` family closed except one maximally narrow residual: `T1` bounded and non-constant,
+  `S2` constant `> 1`. Probed from three independent angles (direct evaluation,
+  growth/unboundedness, periodicity) — all either close cleanly or require Khovanskii-scale
+  machinery. This is a well-triangulated boundary, not an unexplored gap.
 - Option A: exhausted for this tree shape at the elementary level — the remaining residual needs
   either genuinely new (Khovanskii-scale) machinery or acceptance as a named side-condition.
 - Option B: not recommended (see original rationale above).
 - Option C: attempted once, no counterexample found, produced a real generalization instead.
   Further attempts would need to target deeper/compound trees specifically, which reopens
   round-19-scale difficulty rather than being cheap.
-- This document: living draft, updated as options are acted on.
+- This document: living draft. The mechanism side is done; only the witness-finding options above
+  remain open for whoever picks this up next.
