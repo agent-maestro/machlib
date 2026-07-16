@@ -723,4 +723,100 @@ theorem eml_E_step_general {A B : EMLTree} {x a D : Real}
     (Real.exp (A.eval x) * a - D) (Real.exp (Real.exp (A.eval x) - (EMLTree.eml A B).eval x))
     x hAnew (HasDerivAt_exp _)
 
+/-! ## Toward left-descent: a node-local consistent-sign fact
+
+The witness problem (round 9.5) is specifically about pinning `B`'s SIGN, not its exact value.
+`eml_gap_avoidance` (pointwise, no continuity needed) plus the EVT (`continuousAt_bddAbove_Icc`,
+giving a LOCAL bound with no connection to `sin`/`cos` required) plus `intermediate_value`
+combine to show: ANY `eml A B` node's log-argument `B` has a CONSISTENT sign throughout any
+closed sub-interval where nothing crosses — it just doesn't (yet) say WHICH sign, for nodes with
+no external anchor. Still real progress: it turns "does B change sign" into a settled question,
+leaving only "which sign" open. -/
+
+/-- **Consistent sign.** Given no crossing anywhere in `[p,q]` (so `eml A B` and `B` are both
+continuous there), `B` is either `≤ 0` throughout `[p,q]` or `> 0` throughout — it cannot switch,
+because `eml_gap_avoidance` (using a LOCAL bound on `eml A B` from the Extreme Value Theorem)
+forbids `B` from ever landing in the gap `(0, exp(-U))`, and `intermediate_value` would force it
+through that gap if it ever switched sides. -/
+theorem eml_log_arg_consistent_sign {A B : EMLTree} {p q : Real} (hpq : p < q)
+    (hnc : ∀ x, p ≤ x → x ≤ q → EMLNoCrossingAt (EMLTree.eml A B) x) :
+    (∀ x, p ≤ x → x ≤ q → B.eval x ≤ 0) ∨ (∀ x, p ≤ x → x ≤ q → 0 < B.eval x) := by
+  have hcontN : ∀ x, p ≤ x → x ≤ q → ContinuousAt (EMLTree.eml A B).eval x :=
+    fun x hx1 hx2 => eml_continuousAt_of_no_crossing _ x (hnc x hx1 hx2)
+  obtain ⟨U, hU⟩ := continuousAt_bddAbove_Icc (EMLTree.eml A B).eval p q (le_of_lt hpq) hcontN
+  have hdichot : ∀ x, p ≤ x → x ≤ q → B.eval x ≤ 0 ∨ Real.exp (-U) ≤ B.eval x :=
+    fun x hx1 hx2 => eml_gap_avoidance A B x U (hU x hx1 hx2)
+  -- `c := exp(-U-1)` is a concrete point strictly inside the gap `(0, exp(-U))`.
+  have hcpos : (0 : Real) < Real.exp (-U - 1) := Real.exp_pos _
+  have hclt : Real.exp (-U - 1) < Real.exp (-U) := by
+    apply Real.exp_lt
+    have h2 := add_lt_add_left (neg_neg_of_pos zero_lt_one_ax) (-U)
+    rwa [show -U + -1 = -U - 1 from by mach_ring, add_zero] at h2
+  have hcontshift : ∀ x, p ≤ x → x ≤ q →
+      ContinuousAt (fun z => B.eval z - Real.exp (-U - 1)) x := by
+    intro x hx1 hx2
+    obtain ⟨b, hb⟩ := eml_hasDerivAt_of_no_crossing B x (hnc x hx1 hx2).2.1
+    exact hasDerivAt_continuousAt
+      (HasDerivAt_sub B.eval (fun _ => Real.exp (-U - 1)) b 0 x hb (HasDerivAt_const _ x))
+  have hgap_contra : ∀ c, p ≤ c → c ≤ q → B.eval c ≠ Real.exp (-U - 1) := by
+    intro c hcp hcq hBc
+    rcases hdichot c hcp hcq with h | h
+    · rw [hBc] at h; exact lt_irrefl_ax 0 (lt_of_lt_of_le hcpos h)
+    · rw [hBc] at h; exact lt_irrefl_ax _ (lt_of_le_of_lt h hclt)
+  by_cases hexle : ∃ x, p ≤ x ∧ x ≤ q ∧ B.eval x ≤ 0
+  · left
+    obtain ⟨x1, hx1a, hx1b, hx1le⟩ := hexle
+    intro x hxa hxb
+    refine Classical.byContradiction (fun hxcon => ?_)
+    have hxge : Real.exp (-U) ≤ B.eval x := by
+      rcases hdichot x hxa hxb with h | h
+      · exact absurd h hxcon
+      · exact h
+    rcases lt_total x1 x with hlt | heq | hgt
+    · obtain ⟨c, hc1, hc2, hc3⟩ :=
+        intermediate_value (fun z => B.eval z - Real.exp (-U - 1)) x1 x hlt
+          (fun z hz1 hz2 => hcontshift z (le_trans hx1a hz1) (le_trans hz2 hxb))
+          (by
+            show B.eval x1 - Real.exp (-U - 1) < 0
+            have hlt1 : B.eval x1 < Real.exp (-U - 1) := lt_of_le_of_lt hx1le hcpos
+            have h2 := add_lt_add_left hlt1 (-Real.exp (-U - 1))
+            rwa [neg_add_self, add_comm (-Real.exp (-U - 1)) (B.eval x1), ← sub_def] at h2)
+          (by
+            show 0 < B.eval x - Real.exp (-U - 1)
+            exact sub_pos_of_lt (lt_of_lt_of_le hclt hxge))
+      have hBc : B.eval c = Real.exp (-U - 1) := by
+        have h2 : B.eval c - Real.exp (-U - 1) + Real.exp (-U - 1) = 0 + Real.exp (-U - 1) := by
+          rw [hc3]
+        rwa [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+      exact hgap_contra c (le_trans hx1a (le_of_lt hc1)) (le_trans (le_of_lt hc2) hxb) hBc
+    · rw [← heq] at hxge
+      exact lt_irrefl_ax (B.eval x1)
+        (lt_of_lt_of_le (lt_of_le_of_lt hx1le (Real.exp_pos (-U))) hxge)
+    · obtain ⟨c, hc1, hc2, hc3⟩ :=
+        intermediate_value (fun z => Real.exp (-U - 1) - B.eval z) x x1 hgt
+          (fun z hz1 hz2 => by
+            obtain ⟨b, hb⟩ := eml_hasDerivAt_of_no_crossing B z (hnc z (le_trans hxa hz1)
+              (le_trans hz2 hx1b)).2.1
+            exact hasDerivAt_continuousAt
+              (HasDerivAt_sub (fun _ => Real.exp (-U - 1)) B.eval 0 b z
+                (HasDerivAt_const _ z) hb))
+          (by
+            show Real.exp (-U - 1) - B.eval x < 0
+            have hlt2 : Real.exp (-U - 1) < B.eval x := lt_of_lt_of_le hclt hxge
+            have h2 := add_lt_add_left hlt2 (-B.eval x)
+            rwa [neg_add_self, add_comm (-B.eval x) (Real.exp (-U - 1)), ← sub_def] at h2)
+          (by
+            show 0 < Real.exp (-U - 1) - B.eval x1
+            exact sub_pos_of_lt (lt_of_le_of_lt hx1le hcpos))
+      have hBc : B.eval c = Real.exp (-U - 1) := by
+        have h2 : Real.exp (-U - 1) - B.eval c + B.eval c = 0 + B.eval c := by rw [hc3]
+        rw [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+        exact h2.symm
+      exact hgap_contra c (le_trans hxa (le_of_lt hc1)) (le_trans (le_of_lt hc2) hx1b) hBc
+  · right
+    intro x hxa hxb
+    rcases hdichot x hxa hxb with h | h
+    · exact absurd ⟨x, hxa, hxb, h⟩ hexle
+    · exact lt_of_lt_of_le (Real.exp_pos (-U)) h
+
 end MachLib
