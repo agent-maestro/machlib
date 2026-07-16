@@ -33,7 +33,7 @@ private theorem iv_nnp {v : Real} (h : 0 < v) : -v < 0 := by
   rw [add_zero, neg_add_self] at h2
   exact h2
 
-private theorem iv_aon {t : Real} (h : t < 0) : abs t = -t := by
+theorem iv_aon {t : Real} (h : t < 0) : abs t = -t := by
   unfold abs
   rw [if_neg (fun hle => lt_irrefl_ax t (lt_of_lt_of_le_r h hle))]
 

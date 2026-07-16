@@ -953,4 +953,45 @@ theorem eml_leftchain_sin_contradiction {W1 W2 : EMLTree} (Cs : List EMLTree) (y
     rwa [add_zero] at h3
   exact lt_irrefl_ax 1 (lt_of_lt_of_le (lt_trans_ax h1lt2 h2) (sin_le_one y))
 
+/-- If `g` is continuous at `xs` and strictly positive throughout `[x0,xs)` (`x0 < xs`), `g xs`
+is at least `0` — mirrors `eq_zero_at_of_eq_zero_below`'s technique (sign-preservation via
+`neg_nbhd_of_continuousAt` + `exists_between`), for a `>` hypothesis instead of `=`. -/
+theorem nonneg_at_of_pos_below {g : Real → Real} {x0 xs : Real} (hx0xs : x0 < xs)
+    (hcont : ContinuousAt g xs) (hpos : ∀ y, x0 ≤ y → y < xs → 0 < g y) :
+    0 ≤ g xs := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hgltxs : g xs < 0 := by
+    rcases lt_total (g xs) 0 with h | h | h
+    · exact h
+    · exact absurd (le_of_eq h.symm) hcon
+    · exact absurd (le_of_lt h) hcon
+  obtain ⟨δ, hδ, hnbhd⟩ := neg_nbhd_of_continuousAt hcont hgltxs
+  obtain ⟨y, hy1, hy2⟩ := exists_between (max x0 (xs - δ)) xs (iv_ltmax hx0xs (iv_subself xs hδ))
+  have hyx0 : x0 ≤ y := le_trans (le_max_left x0 (xs - δ)) (le_of_lt hy1)
+  have hyxsδ : xs - δ < y := lt_of_le_of_lt (le_max_right x0 (xs - δ)) hy1
+  have hyxsneg : y - xs < 0 := by
+    have h2 := add_lt_add_left hy2 (-xs)
+    rwa [neg_add_self, add_comm (-xs) y, ← sub_def] at h2
+  have habs : abs (y - xs) < δ := by
+    rw [iv_aon hyxsneg, show -(y - xs) = xs - y from by mach_ring]
+    have h2 := add_lt_add_left hyxsδ δ
+    rw [show δ + (xs - δ) = xs from by mach_ring, show δ + y = y + δ from by mach_ring] at h2
+    have h3 := add_lt_add_left h2 (-y)
+    rwa [show -y + xs = xs - y from by mach_mpoly [xs, y],
+        show -y + (y + δ) = δ from by mach_mpoly [y, δ]] at h3
+  exact lt_irrefl_ax 0 (lt_trans_ax (hpos y hyx0 hy2) (hnbhd y habs))
+
+/-! ## Honest status: the final wiring does not yet close
+
+The natural last step — a minimal-violation-point argument (mirroring depth-1's, using
+`inf_exists` + `nonneg_at_of_pos_below` to get `W2.eval xs = 0` at the first failure, then finding
+a nearby point `y` with `0 < W2.eval y` small enough to feed `eml_leftchain_sin_contradiction`) —
+hit a genuine new obstacle: the `δ` that lemma produces is a function of the evaluation point `y`
+itself (through `W1.eval y` and the sibling bounds `M y`), so choosing `y` close enough to `xs`
+that `W2.eval y < δ(y)` is not just "close enough via continuity" — it needs `δ` to stay bounded
+AWAY from `0` as `y` ranges over a neighborhood of `xs`, which needs a TWO-SIDED bound on
+`W1.eval` near `xs` (the existing EVT only gives one side) plus tracking how `δ` depends
+monotonically on its inputs. Not attempted — a real additional piece of work, not a quick fix.
+`nonneg_at_of_pos_below` above remains a genuine, verified, reusable building block regardless. -/
+
 end MachLib
