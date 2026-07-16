@@ -1527,4 +1527,186 @@ theorem eml_leftchild_explicit_value (N C : EMLTree) (x target : Real)
   rw [← h2]
   exact (Real.log_exp (N.eval x)).symm
 
+/-! ## The left-descent closure, attempted in full
+
+`eml_leftchild_explicit_value` turns "does `(eml S2 S3)`'s log-child cross zero" into a depth-1
+shaped problem with a COMPUTED target (`log(sin x + log(C.eval x))`) standing in for `sin` — and
+`eml_ode_step_general`/`eml_E_step_general` (round 9) were already depth-independent, never
+actually requiring their known-derivative input to be `cos x` specifically. This section reuses
+BOTH exactly as-is, needing only ONE new piece: `(eml S2 S3)`'s own derivative, computed directly
+from the closed-form target (via `HasDerivAt_of_eq`) instead of via structural descent — the same
+"free transfer" trick that gave depth-1's ROOT its derivative, one level down. -/
+
+/-- **`(eml S2 S3)`'s own derivative, for free.** Given `t = eml (eml S2 S3) C` agrees with `sin`
+and `C` is differentiable with `C.eval x ≠ 0`, `(eml S2 S3)` is differentiable at `x` — computed by
+differentiating `log(sin x + log(C.eval x))` directly (chain rule through `log`, `+`, `sin`, and
+`log∘C.eval`) and transferring via `HasDerivAt_of_eq` using `eml_leftchild_explicit_value` as the
+global equality. The inner sum `sin x + log(C.eval x)` is ALWAYS strictly positive — it equals
+`exp((eml S2 S3).eval x)`, forced by `hsin` alone — so no case split is needed for the OUTER `log`,
+only for `log∘C.eval`'s own derivative (`C.eval x`'s sign, exactly as `EMLNoCrossingAt` already
+handles elsewhere). -/
+theorem eml_leftdescent_N_hasDerivAt {S2 S3 C : EMLTree} {x c : Real}
+    (hsin : ∀ z : Real, (EMLTree.eml (EMLTree.eml S2 S3) C).eval z = Real.sin z)
+    (hc : HasDerivAt C.eval c x) (hCne : C.eval x ≠ 0) :
+    ∃ D : Real, HasDerivAt (EMLTree.eml S2 S3).eval D x := by
+  have hlogC : ∃ dC, HasDerivAt (fun z => Real.log (C.eval z)) dC x := by
+    rcases lt_total (C.eval x) 0 with hlt | heq | hgt
+    · exact ⟨0 * c, HasDerivAt_comp Real.log C.eval c 0 x hc (HasDerivAt_log_neg hlt)⟩
+    · exact absurd heq hCne
+    · exact ⟨1 / C.eval x * c,
+        HasDerivAt_comp Real.log C.eval c (1 / C.eval x) x hc (HasDerivAt_log_pos _ hgt)⟩
+  obtain ⟨dC, hdC⟩ := hlogC
+  have hsum : HasDerivAt (fun z => Real.sin z + Real.log (C.eval z)) (Real.cos x + dC) x :=
+    HasDerivAt_add Real.sin (fun z => Real.log (C.eval z)) (Real.cos x) dC x (HasDerivAt_sin x) hdC
+  have hsumpos : 0 < Real.sin x + Real.log (C.eval x) := by
+    have heq2 : Real.exp ((EMLTree.eml S2 S3).eval x) = Real.sin x + Real.log (C.eval x) := by
+      have h1 : Real.exp ((EMLTree.eml S2 S3).eval x) - Real.log (C.eval x) = Real.sin x := hsin x
+      have h2 : Real.exp ((EMLTree.eml S2 S3).eval x) - Real.log (C.eval x) + Real.log (C.eval x)
+          = Real.sin x + Real.log (C.eval x) := by rw [h1]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero] at h2
+    rw [← heq2]
+    exact Real.exp_pos _
+  have hRHSderiv : HasDerivAt (fun z => Real.log (Real.sin z + Real.log (C.eval z)))
+      (1 / (Real.sin x + Real.log (C.eval x)) * (Real.cos x + dC)) x :=
+    HasDerivAt_comp Real.log (fun z => Real.sin z + Real.log (C.eval z)) (Real.cos x + dC)
+      (1 / (Real.sin x + Real.log (C.eval x))) x hsum (HasDerivAt_log_pos _ hsumpos)
+  exact ⟨1 / (Real.sin x + Real.log (C.eval x)) * (Real.cos x + dC),
+    HasDerivAt_of_eq (fun z => Real.log (Real.sin z + Real.log (C.eval z)))
+      (EMLTree.eml S2 S3).eval _ x
+      (fun z => (eml_leftchild_explicit_value (EMLTree.eml S2 S3) C z (Real.sin z) (hsin z)).symm)
+      hRHSderiv⟩
+
+/-- **Left-descent positivity propagation — the left-descent analogue of
+`eml_depth1_pos_of_pos_witness`.** If `t = eml (eml S2 S3) C` agrees with `sin` on `[x0,b)`, `C`
+never crosses zero there, `S3` is positive at the witness `x0`, and `S2`/`S3`/`C` are
+differentiable throughout `[x0,b)`, `S3` stays positive on the WHOLE of `[x0,b)`. Same
+minimal-violation-point proof shape as depth-1 (`inf_exists`, the `k·E` constant-ratio fact,
+`eq_zero_at_of_eq_zero_below`), with `(eml S2 S3)`'s free derivative (`eml_leftdescent_N_hasDerivAt`
+above) standing in for the free root derivative, and `eml_ode_step_general`/`eml_E_step_general`
+(unchanged, round 9) standing in for `eml_depth1_t2_ode`/`eml_depth1_E_deriv`. -/
+theorem eml_leftdescent_pos_of_pos_witness {S2 S3 C : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml (EMLTree.eml S2 S3) C).eval x = Real.sin x)
+    (x0 b : Real) (hx0b : x0 < b)
+    (S2' : Real → Real) (hS2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S2.eval (S2' x) x)
+    (S3' : Real → Real) (hS3'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S3.eval (S3' x) x)
+    (C' : Real → Real) (hC'd : ∀ x, x0 ≤ x → x < b → HasDerivAt C.eval (C' x) x)
+    (hCne : ∀ x, x0 ≤ x → x < b → C.eval x ≠ 0)
+    (hx0pos : 0 < S3.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < S3.eval x := by
+  have hNd : ∀ x, x0 ≤ x → x < b →
+      ∃ D : Real, HasDerivAt (EMLTree.eml S2 S3).eval D x :=
+    fun x hx1 hx2 => eml_leftdescent_N_hasDerivAt hsin (hC'd x hx1 hx2) (hCne x hx1 hx2)
+  let Dfun : Real → Real := fun z => if h : x0 ≤ z ∧ z < b then (hNd z h.1 h.2).choose else 0
+  have hDfund : ∀ z, x0 ≤ z → z < b → HasDerivAt (EMLTree.eml S2 S3).eval (Dfun z) z := by
+    intro z hz1 hz2
+    show HasDerivAt (EMLTree.eml S2 S3).eval
+      (if h : x0 ≤ z ∧ z < b then (hNd z h.1 h.2).choose else 0) z
+    rw [dif_pos ⟨hz1, hz2⟩]
+    exact (hNd z hz1 hz2).choose_spec
+  intro x hx1 hx2
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hxle : S3.eval x ≤ 0 := by
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd h hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hSne : ∃ y, (fun y => x0 ≤ y ∧ y < b ∧ S3.eval y ≤ 0) y := ⟨x, hx1, hx2, hxle⟩
+  have hSbd : BoundedBelow (fun y => x0 ≤ y ∧ y < b ∧ S3.eval y ≤ 0) := ⟨x0, fun y hy => hy.1⟩
+  obtain ⟨xs, hlb, hglb⟩ := inf_exists _ hSne hSbd
+  have hx0xs : x0 ≤ xs := hglb x0 (fun y hy => hy.1)
+  have hxsb : xs < b := lt_of_le_of_lt (hlb x ⟨hx1, hx2, hxle⟩) hx2
+  have hposbelow : ∀ y, x0 ≤ y → y < xs → 0 < S3.eval y := by
+    intro y hy1 hy2
+    refine Classical.byContradiction (fun hcony => ?_)
+    have hyle : S3.eval y ≤ 0 := by
+      rcases lt_total 0 (S3.eval y) with h | h | h
+      · exact absurd h hcony
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    have hyb : y < b := lt_trans_ax hy2 hxsb
+    exact lt_irrefl_ax xs (lt_of_le_of_lt (hlb y ⟨hy1, hyb, hyle⟩) hy2)
+  have hxsle : S3.eval xs ≤ 0 := by
+    refine Classical.byContradiction (fun hxscon => ?_)
+    have hxsgt : 0 < S3.eval xs := by
+      rcases lt_total (S3.eval xs) 0 with h | h | h
+      · exact absurd (le_of_lt h) hxscon
+      · exact absurd (le_of_eq h) hxscon
+      · exact h
+    obtain ⟨δ, hδ, hnbhd⟩ :=
+      pos_nbhd_of_continuousAt (hasDerivAt_continuousAt (hS3'd xs hx0xs hxsb)) hxsgt
+    have hbound2 : ∀ y, (x0 ≤ y ∧ y < b ∧ S3.eval y ≤ 0) → xs + δ ≤ y := by
+      intro y hy
+      rcases lt_total y (xs + δ) with h | h | h
+      · exfalso
+        have hyxs : xs ≤ y := hlb y hy
+        have habs : abs (y - xs) < δ := by
+          rcases (le_iff_lt_or_eq xs y).mp hyxs with hlt | heq
+          · rw [abs_of_nonneg (le_of_lt_r (sub_pos_of_lt hlt))]
+            have h2 := add_lt_add_left h (-xs)
+            rwa [show -xs + y = y - xs from by mach_mpoly [xs, y],
+                show -xs + (xs + δ) = δ from by mach_mpoly [xs, δ]] at h2
+          · rw [← heq, show xs - xs = 0 from by mach_ring,
+                abs_of_nonneg (le_refl (0 : Real))]
+            exact hδ
+        exact lt_irrefl_ax 0 (lt_of_lt_of_le (hnbhd y habs) hy.2.2)
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    exact lt_irrefl_ax xs (lt_of_lt_of_le (iv_ltadd xs hδ) (hglb (xs + δ) hbound2))
+  let E1 : Real → Real := fun z => Real.exp (Real.exp (S2.eval z) - (EMLTree.eml S2 S3).eval z)
+  have hE1pos : ∀ z, 0 < E1 z := fun z => Real.exp_pos _
+  let k : Real := S3.eval x0 * (1 / E1 x0)
+  have hkE1x0 : k * E1 x0 = S3.eval x0 := by
+    show S3.eval x0 * (1 / E1 x0) * E1 x0 = S3.eval x0
+    rw [mul_assoc, mul_comm (1 / E1 x0) (E1 x0), mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+        mul_one_ax]
+  have hkpos : 0 < k := mul_pos hx0pos (one_div_pos_of_pos (hE1pos x0))
+  have hS3ode : ∀ z, x0 ≤ z → z < xs →
+      HasDerivAt S3.eval (S3.eval z * (Real.exp (S2.eval z) * S2' z - Dfun z)) z := by
+    intro z hz1 hz2
+    have hzb : z < b := lt_trans_ax hz2 hxsb
+    have heq := eml_ode_step_general (hDfund z hz1 hzb) (hS2'd z hz1 hzb) (hS3'd z hz1 hzb)
+      (hposbelow z hz1 hz2)
+    have hderiv := hS3'd z hz1 hzb
+    rwa [heq] at hderiv
+  have hE1ode : ∀ z, x0 ≤ z → z < xs →
+      HasDerivAt E1 (E1 z * (Real.exp (S2.eval z) * S2' z - Dfun z)) z := by
+    intro z hz1 hz2
+    have hzb : z < b := lt_trans_ax hz2 hxsb
+    exact eml_E_step_general (hS2'd z hz1 hzb) (hDfund z hz1 hzb)
+  have hzero : ∀ y, x0 ≤ y → y < xs → S3.eval y - k * E1 y = 0 := by
+    intro y hy1 hy2
+    rcases (le_iff_lt_or_eq x0 y).mp hy1 with hlt | heq
+    · obtain ⟨k', hk'⟩ := const_ratio_of_shared_ode S3.eval E1
+        (fun z => Real.exp (S2.eval z) * S2' z - Dfun z) x0 y hlt
+        (fun z hz1 hz2 => hS3ode z hz1 (lt_of_le_of_lt hz2 hy2))
+        (fun z hz1 hz2 => hE1ode z hz1 (lt_of_le_of_lt hz2 hy2))
+        (fun z _ _ => (ne_of_lt (hE1pos z)).symm)
+      have hkx0 : S3.eval x0 = k' * E1 x0 := hk' x0 (le_refl x0) (le_of_lt hlt)
+      have hkeq : k' = k := by
+        have h2 : k' * E1 x0 = k * E1 x0 := by rw [← hkx0, hkE1x0]
+        have h3 : k' * E1 x0 * (1 / E1 x0) = k * E1 x0 * (1 / E1 x0) := by rw [h2]
+        rwa [mul_assoc, mul_assoc, mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+            mul_one_ax, mul_one_ax] at h3
+      have hky : S3.eval y = k' * E1 y := hk' y hy1 (le_refl y)
+      rw [hky, hkeq, sub_def, add_neg]
+    · rw [← heq, hkE1x0, sub_def, add_neg]
+  have hxsE1pos : 0 < k * E1 xs := mul_pos hkpos (hE1pos xs)
+  have hxseq2 : S3.eval xs = k * E1 xs := by
+    rcases (le_iff_lt_or_eq x0 xs).mp hx0xs with hx0xslt | hx0xseq
+    · have hcontdiff : HasDerivAt (fun z => S3.eval z - k * E1 z)
+          (S3' xs - (0 * E1 xs + k * (E1 xs * (Real.exp (S2.eval xs) * S2' xs - Dfun xs)))) xs :=
+        HasDerivAt_sub S3.eval (fun z => k * E1 z) (S3' xs)
+          (0 * E1 xs + k * (E1 xs * (Real.exp (S2.eval xs) * S2' xs - Dfun xs))) xs
+          (hS3'd xs hx0xs hxsb)
+          (HasDerivAt_mul (fun _ => k) E1 0 (E1 xs * (Real.exp (S2.eval xs) * S2' xs - Dfun xs)) xs
+            (HasDerivAt_const k xs) (eml_E_step_general (hS2'd xs hx0xs hxsb) (hDfund xs hx0xs hxsb)))
+      have hxseq : S3.eval xs - k * E1 xs = 0 :=
+        @eq_zero_at_of_eq_zero_below (fun z => S3.eval z - k * E1 z) x0 xs hx0xslt
+          (hasDerivAt_continuousAt hcontdiff) hzero
+      have h2 : S3.eval xs - k * E1 xs + k * E1 xs = 0 + k * E1 xs := by rw [hxseq]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+    · rw [← hx0xseq, hkE1x0]
+  have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
+  exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
+
 end MachLib
