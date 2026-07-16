@@ -1,5 +1,6 @@
 import MachLib.EMLPfaffian
 import MachLib.MultiVarTwoExpSum
+import MachLib.WronskianProportional
 
 /-!
 # Differentiability away from log-clamp crossings
@@ -184,5 +185,55 @@ over an arbitrary `t` (any left/right shape is possible), full closure needs a d
 sketches for fixed small cases, generalized via genuine calculus (not value-bound chasing), or a
 repurposing of the existing Khovanskii/Wronskian rigidity machinery built for the (different)
 zero-counting problem. Not attempted here. -/
+
+/-! ## A genuinely different mechanism: linear ODE / integrating factor (not blow-up)
+
+Differentiating `t.eval = sin` against the structural chain-rule derivative of an `eml t1 t2` node
+gives a genuine LINEAR ODE for the log-argument: `t2' = t2 · Q` with `Q := exp(t1)·t1' − cos`. `Q`
+has an EXPLICIT antiderivative built from existing primitives — `A := exp(t1) − sin` satisfies
+`A' = Q` exactly — giving an EXPLICIT, always-positive integrating factor `E := exp(A)`. Wherever
+the ODE holds, `t2/E` is a CONSTANT (via the same Wronskian-vanishing + MVT-constancy technique
+`WronskianProportional.lean` already uses for a different purpose), i.e. `t2 = k · E` exactly.
+
+Unlike the value-blow-up (`eml_depth2_blowup`) and derivative-blow-up attempts above, this does NOT
+hit a reach limit or an indeterminate form when pushed to a deeper offender: the SAME technique
+applies one level further using the now-EXPLICIT `t2 = k·E`, since `E`'s own derivative is
+computable exactly (no asymptotics), yielding a second linear ODE for the next level down with its
+own explicit integrating factor (still always positive, since it's `exp` of *something* at every
+level) — recursing cleanly to arbitrary depth. See the round-8 note in memory
+(`machlib-khovanskii-axiom-frontier.md`) for the full argument, including how the constant-ratio
+fact combines with a minimal-violation point (via completeness) to force a contradiction. This
+section builds the one genuinely reusable piece: the general "shared linear ODE ⟹ constant ratio"
+lemma, not yet specialized to EML trees. -/
+
+/-- **Constant ratio from a shared linear ODE.** If `f` and `E` both satisfy the SAME linear ODE
+`y' = y · Q` throughout `[p,q]`, and `E` never vanishes there, `f/E` is a CONSTANT throughout —
+i.e. `f = k · E` exactly, for a single `k`. Specializes `WronskianProportional.phi_deriv_zero` (the
+Wronskian `f'·E − f·E' = f·Q·E − f·E·Q` vanishes identically, since both sides use the literal same
+`Q`) combined with `eq_endpoints_of_deriv_zero` (MVT-constancy). No analyticity needed. -/
+theorem const_ratio_of_shared_ode (f E Q : Real → Real) (p q : Real) (hpq : p < q)
+    (hfderiv : ∀ x, p ≤ x → x ≤ q → HasDerivAt f (f x * Q x) x)
+    (hEderiv : ∀ x, p ≤ x → x ≤ q → HasDerivAt E (E x * Q x) x)
+    (hEne : ∀ x, p ≤ x → x ≤ q → E x ≠ 0) :
+    ∃ k : Real, ∀ x, p ≤ x → x ≤ q → f x = k * E x := by
+  have hφ0 : ∀ c, p ≤ c → c ≤ q → HasDerivAt (fun y => f y * (1 / E y)) 0 c := by
+    intro c hc1 hc2
+    exact phi_deriv_zero f E (f c * Q c) (E c * Q c) c (hEne c hc1 hc2)
+      (hfderiv c hc1 hc2) (hEderiv c hc1 hc2) (by mach_mpoly [f c, E c, Q c])
+  refine ⟨f p * (1 / E p), fun x hx1 hx2 => ?_⟩
+  rcases lt_total p x with hlt | heq | hgt
+  · have heqends : f p * (1 / E p) = f x * (1 / E x) :=
+      eq_endpoints_of_deriv_zero (fun y => f y * (1 / E y)) p x hlt
+        (fun c hc1 hc2 => hφ0 c hc1 (le_trans hc2 hx2))
+    have hEx_ne : E x ≠ 0 := hEne x hx1 hx2
+    have h2 : f p * (1 / E p) * E x = f x * (1 / E x) * E x := by rw [heqends]
+    rw [mul_assoc (f x) (1 / E x) (E x), mul_comm (1 / E x) (E x),
+        mul_inv (E x) hEx_ne, mul_one_ax] at h2
+    exact h2.symm
+  · rw [← heq]
+    have hEp_ne : E p ≠ 0 := hEne p (le_refl p) (le_of_lt hpq)
+    rw [mul_assoc (f p) (1 / E p) (E p), mul_comm (1 / E p) (E p),
+        mul_inv (E p) hEp_ne, mul_one_ax]
+  · exact absurd (lt_of_lt_of_le hgt hx1) (lt_irrefl_ax x)
 
 end MachLib
