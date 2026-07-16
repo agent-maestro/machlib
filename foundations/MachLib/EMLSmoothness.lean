@@ -1939,4 +1939,88 @@ theorem eml_leftspine_pos_of_pos_witness {Slast Offender : EMLTree} (Cs : List E
     exact (hDd z hz1 hz2).choose_spec
   exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd Dfun hDfund hx0pos
 
+/-! ## Correcting scope, and a genuinely different direction: chaining RIGHT steps
+
+`eml_leftspine_pos_of_pos_witness`'s tree shape (`leftSpine Cs (eml Slast Offender)`) turns out to
+be the SAME FAMILY `eml_leftchain_pos_of_no_crossing` (round 12, `wrapLeft`) already closed —
+`wrapLeft` also always wraps its accumulator as the new node's LEFT child, so `wrapLeft Cs base` and
+`leftSpine Cs base` range over the same shapes with `Cs` reversed. Round 12's hypotheses are
+actually a strict subset of this section's (no explicit derivative functions needed there, just
+`EMLNoCrossingAt`). So this section's arbitrary-depth left-spine result is independent
+CONFIRMATION via a different technique, not new coverage — worth having, but not what it was
+reported as.
+
+The genuinely open direction: does the ODE/constant-ratio mechanism reach past what the
+value-blow-up mechanism PROVABLY cannot (round 5's state-machine argument: state `B` always dies
+one step after the first right-turn, ruling out more than one non-terminal right turn)? Once
+`eml_ode_closure_general` establishes `B`'s positivity throughout `[x0,b)` (not just up to a
+hypothetical failure point), `B` ALSO gets its OWN known, independent derivative for free —
+`eml_ode_step_general` applied with the NOW-GLOBAL positivity — with NO circularity, since this
+derivative is expressed purely via `A`, `A'`, `D`, and `B`'s own VALUE (never `B`'s internal
+derivative structure). That known derivative is exactly the right shape to feed BACK into
+`eml_ode_closure_general` for a node one level inside `B` — chaining through a SECOND right step,
+something the blow-up mechanism cannot do at all. -/
+
+/-- **Positivity + a free derivative, bundled.** `eml_ode_closure_general`'s conclusion, plus the
+one additional fact that makes chaining possible: once `B`'s positivity holds throughout
+`[x0,b)` (not just below a hypothetical failure point), `eml_ode_step_general` applies GLOBALLY,
+giving `B` its own known, structure-independent derivative — usable as the next level's `D`. -/
+theorem eml_ode_closure_general_hasDerivAt {A B : EMLTree}
+    (x0 b : Real) (hx0b : x0 < b)
+    (A' : Real → Real) (hA'd : ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (A' x) x)
+    (B' : Real → Real) (hB'd : ∀ x, x0 ≤ x → x < b → HasDerivAt B.eval (B' x) x)
+    (D : Real → Real) (hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt (EMLTree.eml A B).eval (D x) x)
+    (hx0pos : 0 < B.eval x0) :
+    ∀ x, x0 ≤ x → x < b →
+      0 < B.eval x ∧
+        HasDerivAt B.eval (B.eval x * (Real.exp (A.eval x) * A' x - D x)) x := by
+  have hpos := eml_ode_closure_general x0 b hx0b A' hA'd B' hB'd D hDd hx0pos
+  refine fun x hx1 hx2 => ⟨hpos x hx1 hx2, ?_⟩
+  have heq := eml_ode_step_general (hDd x hx1 hx2) (hA'd x hx1 hx2) (hB'd x hx1 hx2)
+    (hpos x hx1 hx2)
+  have hderiv := hB'd x hx1 hx2
+  rwa [heq] at hderiv
+
+/-- **A genuine "right-right-right" instance.** Round 5 proved the value-blow-up mechanism
+CANNOT reach this shape (three log-slots below the root, the third turn not landing on the root) —
+"the longest chain it can certify" was exactly two. This closes it anyway via the ODE mechanism,
+chaining `eml_ode_closure_general_hasDerivAt` twice: level 0 uses the free root derivative
+(`cos x`) to close `N1 := eml S2 (eml S4 S5)` AND expose N1's own free derivative; level 1 uses
+THAT to close `N2 := eml S4 S5` and expose N2's derivative; level 2 uses THAT to close the actual
+offender `S5`. Each level needs its own positivity witness at `x0` (the witness problem — round
+9.5/10 — is not solved here, just required as a hypothesis at every level, same as everywhere
+else this session). -/
+theorem eml_rrr_pos_of_pos_witness {T1 S2 S4 S5 : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml T1 (EMLTree.eml S2 (EMLTree.eml S4 S5))).eval x = Real.sin x)
+    (x0 b : Real) (hx0b : x0 < b)
+    (T1' : Real → Real) (hT1'd : ∀ x, x0 ≤ x → x < b → HasDerivAt T1.eval (T1' x) x)
+    (N1' : Real → Real)
+    (hN1'd : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml S2 (EMLTree.eml S4 S5)).eval (N1' x) x)
+    (S2' : Real → Real) (hS2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S2.eval (S2' x) x)
+    (N2' : Real → Real)
+    (hN2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt (EMLTree.eml S4 S5).eval (N2' x) x)
+    (S4' : Real → Real) (hS4'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S4.eval (S4' x) x)
+    (S5' : Real → Real) (hS5'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S5.eval (S5' x) x)
+    (hN1x0pos : 0 < (EMLTree.eml S2 (EMLTree.eml S4 S5)).eval x0)
+    (hN2x0pos : 0 < (EMLTree.eml S4 S5).eval x0)
+    (hS5x0pos : 0 < S5.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < S5.eval x := by
+  have hD0d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml T1 (EMLTree.eml S2 (EMLTree.eml S4 S5))).eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq _ hsin x
+  have hN1 := eml_ode_closure_general_hasDerivAt x0 b hx0b T1' hT1'd N1' hN1'd
+    Real.cos hD0d hN1x0pos
+  let D1 : Real → Real := fun x => (EMLTree.eml S2 (EMLTree.eml S4 S5)).eval x *
+    (Real.exp (T1.eval x) * T1' x - Real.cos x)
+  have hD1d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml S2 (EMLTree.eml S4 S5)).eval (D1 x) x :=
+    fun x hx1 hx2 => (hN1 x hx1 hx2).2
+  have hN2 := eml_ode_closure_general_hasDerivAt x0 b hx0b S2' hS2'd N2' hN2'd D1 hD1d hN2x0pos
+  let D2 : Real → Real := fun x => (EMLTree.eml S4 S5).eval x *
+    (Real.exp (S2.eval x) * S2' x - D1 x)
+  have hD2d : ∀ x, x0 ≤ x → x < b → HasDerivAt (EMLTree.eml S4 S5).eval (D2 x) x :=
+    fun x hx1 hx2 => (hN2 x hx1 hx2).2
+  exact eml_ode_closure_general x0 b hx0b S4' hS4'd S5' hS5'd D2 hD2d hS5x0pos
+
 end MachLib
