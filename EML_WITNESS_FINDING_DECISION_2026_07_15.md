@@ -193,10 +193,31 @@ actually need IS the Khovanskii/Pfaffian-chain machinery itself — comparable i
 being closed, not a nearby shortcut. Ruled out; no code written (checking against source first
 avoided a wasted build attempt).
 
+## Update 2026-07-16 (cont.) — the mechanism side reached its own capstone; re-scoping this document
+
+After the witness-finding investigation above, the session pivoted to generalizing the ODE
+mechanism itself (rounds 25–27, `EMLSmoothness.lean`): first demonstrating it composes across
+MIXED left/right descent paths (not just pure-left or pure-right), then generalizing that to
+ANY length/shape mixed path (`eml_moves_pos_of_pos_witness`), and finally — the actual capstone —
+`eml_pfaffian_validon_of_sin_and_witnesses`, which closes `EMLPfaffianValidOn t x0 b` in FULL
+(every node, not one offender) for ANY tree shape, via structural induction on `EMLTree` itself.
+
+**This changes the scope of this document.** It's no longer "how do we find witnesses for the
+specific offender shapes closed so far" — the mechanism now handles every tree shape uniformly.
+The witness-finding options above (A/B/C) apply UNCHANGED, just now understood to be the ENTIRE
+remaining gap for the axiom in full generality, not one piece among several. The one other gap:
+`eml_pfaffian_validon_of_witnesses` only reaches `[x0, b)` for `b > x0` (forward from the witness
+point) — a backward-direction mirror (mirroring `eml_depth1_pos_of_pos_witness_backward` via
+`sup_exists`) is needed to cover `b` smaller than the witness point, i.e. literally "any `b > 0`".
+Not yet built; expected mechanical given the session's track record.
+
 ## Status
 
-- Mechanism-building (rounds 1–18 this session): essentially complete. Zero new axioms beyond
-  `HasDerivAt_congr`. ~2200 new lines in `EMLSmoothness.lean`.
+- Mechanism-building (rounds 1–18, then 25–27 this session): COMPLETE for the forward direction,
+  for ANY tree shape — not just the special cases explored in rounds 20–24. Zero new axioms beyond
+  `HasDerivAt_congr`. `eml_pfaffian_validon_of_sin_and_witnesses` reduces the whole axiom to
+  witness-finding, full stop.
+- Backward-direction mirror: not yet built, expected mechanical.
 - Witness-finding: open in general. Depth-2/leaf-`S2` family closed except one maximally narrow
   residual: `T1` bounded and non-constant, `S2` constant `> 1`. Probed from three independent
   angles (direct evaluation, growth/unboundedness, periodicity) — all either close cleanly or
