@@ -295,4 +295,24 @@ theorem eml_depth1_t2_ode {t1 t2 : EMLTree}
     rw [← hY, ← mul_assoc, mul_inv (t2.eval x) ht2ne, one_mul_thm]
   rwa [hb] at h2
 
+/-- **The depth-1 constant-ratio fact.** Assembling `eml_depth1_t2_ode` + `eml_depth1_E_deriv` via
+`const_ratio_of_shared_ode`: throughout any interval `[p,q]` where `t2` stays strictly positive
+(and both `t1`, `t2` are differentiable, via explicit derivative-functions `t1'`/`t2'`), `t2` is
+EXACTLY a constant multiple of the explicit integrating factor `exp(exp(t1) − sin)`. -/
+theorem eml_depth1_t2_const_ratio {t1 t2 : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml t1 t2).eval x = Real.sin x)
+    (p q : Real) (hpq : p < q)
+    (t1' : Real → Real) (ht1'd : ∀ x, p ≤ x → x ≤ q → HasDerivAt t1.eval (t1' x) x)
+    (t2' : Real → Real) (ht2'd : ∀ x, p ≤ x → x ≤ q → HasDerivAt t2.eval (t2' x) x)
+    (hpos : ∀ x, p ≤ x → x ≤ q → 0 < t2.eval x) :
+    ∃ k : Real, ∀ x, p ≤ x → x ≤ q →
+      t2.eval x = k * Real.exp (Real.exp (t1.eval x) - Real.sin x) :=
+  const_ratio_of_shared_ode t2.eval
+    (fun x => Real.exp (Real.exp (t1.eval x) - Real.sin x))
+    (fun x => Real.exp (t1.eval x) * t1' x - Real.cos x)
+    p q hpq
+    (fun x hx1 hx2 => eml_depth1_t2_ode hsin (ht1'd x hx1 hx2) (ht2'd x hx1 hx2) (hpos x hx1 hx2))
+    (fun x hx1 hx2 => eml_depth1_E_deriv (ht1'd x hx1 hx2))
+    (fun x _ _ => (ne_of_lt (Real.exp_pos _)).symm)
+
 end MachLib
