@@ -819,4 +819,62 @@ theorem eml_log_arg_consistent_sign {A B : EMLTree} {p q : Real} (hpq : p < q)
     · exact absurd ⟨x, hxa, hxb, h⟩ hexle
     · exact lt_of_lt_of_le (Real.exp_pos (-U)) h
 
+/-! ## Toward full generality: the "right-then-left" blow-up
+
+Round 5's value-blow-up mechanism (`eml_depth2_blowup`, "right-right") turned out to have a reach
+limit. Round 10 found a node-local sign fact that reaches left-descent but only pins WHICH sign
+for anchored nodes. Here: a DIFFERENT class of trees closes via blow-up after all — offenders
+whose ancestor path, after the mandatory first "right" step, consists ENTIRELY of "left" steps —
+because (round 8.5's state-machine finding) a value forceable arbitrarily LARGE survives any run
+of left steps (composing with a further `exp`, which is unbounded above, unlike `log`'s clamp
+which discards magnitude). This needs the sibling encountered at each left step to be BOUNDED
+(via EVT + no-crossing), not anchored to anything named. -/
+
+/-- **A node's value exceeds any target, given its log-argument is small enough.** Isolates the
+first-step mechanism inside `eml_depth2_blowup` as its own reusable fact (for ANY target `M1`, not
+just the specific one that proof needed). -/
+theorem eml_rightstep_exceeds (W1 W2 : EMLTree) (y M1 : Real) :
+    ∃ δ : Real, 0 < δ ∧ (0 < W2.eval y → W2.eval y < δ →
+      M1 < (EMLTree.eml W1 W2).eval y) := by
+  obtain ⟨δ, hδpos, hM⟩ := log_unbounded_below (Real.exp (W1.eval y) - M1)
+  refine ⟨δ, hδpos, fun hpos hlt => ?_⟩
+  have hlog : Real.log (W2.eval y) < Real.exp (W1.eval y) - M1 := hM (W2.eval y) hpos hlt
+  show M1 < Real.exp (W1.eval y) - Real.log (W2.eval y)
+  have h2 := neg_lt_neg hlog
+  have h3 := add_lt_add_left h2 (Real.exp (W1.eval y))
+  rwa [show Real.exp (W1.eval y) + -(Real.exp (W1.eval y) - M1) = M1
+        from by mach_mpoly [Real.exp (W1.eval y), M1],
+      show Real.exp (W1.eval y) + -(Real.log (W2.eval y))
+        = Real.exp (W1.eval y) - Real.log (W2.eval y)
+        from by mach_mpoly [Real.exp (W1.eval y), Real.log (W2.eval y)]] at h3
+
+/-- **A single left-step preserves "forceable arbitrarily large."** Given a node `eml W1 W2`
+whose value can be forced above any target (via `W2` landing small positive), wrapping it as the
+FIRST child of a further `eml` node — `eml (eml W1 W2) C` — is ALSO forceable arbitrarily large,
+GIVEN an upper bound `M_C` on `log(C.eval y)` (e.g. from `C` being bounded via the EVT and
+no-crossing, whether or not `C` is itself positive — a bound suffices either way). No dependence
+on `C` being anchored to anything named. -/
+theorem eml_leftstep_blowup (W1 W2 C : EMLTree) (y L M_C : Real)
+    (hC : Real.log (C.eval y) ≤ M_C) :
+    ∃ δ : Real, 0 < δ ∧ (0 < W2.eval y → W2.eval y < δ →
+      L < (EMLTree.eml (EMLTree.eml W1 W2) C).eval y) := by
+  obtain ⟨δ, hδpos, hM1⟩ := eml_rightstep_exceeds W1 W2 y (L + M_C)
+  refine ⟨δ, hδpos, fun hpos hlt => ?_⟩
+  have hWbig : L + M_C < (EMLTree.eml W1 W2).eval y := hM1 hpos hlt
+  show L < Real.exp ((EMLTree.eml W1 W2).eval y) - Real.log (C.eval y)
+  have hexp_gt : (EMLTree.eml W1 W2).eval y < Real.exp ((EMLTree.eml W1 W2).eval y) :=
+    exp_grows_strictly_thm _
+  have h1 : L + M_C < Real.exp ((EMLTree.eml W1 W2).eval y) := lt_trans_ax hWbig hexp_gt
+  have h2 : L < Real.exp ((EMLTree.eml W1 W2).eval y) - M_C := by
+    have h3 := add_lt_add_left h1 (-M_C)
+    rwa [show -M_C + (L + M_C) = L from by mach_mpoly [L, M_C],
+        show -M_C + Real.exp ((EMLTree.eml W1 W2).eval y)
+          = Real.exp ((EMLTree.eml W1 W2).eval y) - M_C
+          from by mach_mpoly [M_C, Real.exp ((EMLTree.eml W1 W2).eval y)]] at h3
+  have h4 : Real.exp ((EMLTree.eml W1 W2).eval y) - M_C
+      ≤ Real.exp ((EMLTree.eml W1 W2).eval y) - Real.log (C.eval y) := by
+    have h5 := add_le_add_left (neg_le_neg hC) (Real.exp ((EMLTree.eml W1 W2).eval y))
+    rwa [← sub_def, ← sub_def] at h5
+  exact lt_of_lt_of_le h2 h4
+
 end MachLib
