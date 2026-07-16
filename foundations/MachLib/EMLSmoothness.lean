@@ -1,6 +1,7 @@
 import MachLib.EMLPfaffian
 import MachLib.MultiVarTwoExpSum
 import MachLib.WronskianProportional
+import MachLib.SinNotInEML
 
 /-!
 # Differentiability away from log-clamp crossings
@@ -2118,5 +2119,60 @@ theorem eml_rightchain_pos_of_pos_witness {Slast Offender : EMLTree} (As : List 
   obtain ⟨D, hDd⟩ := rightChain_hasDerivAt_of_target As x0 b hx0b Real.cos hD0d
     Aderiv hAderivd hncFull hwit
   exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd D hDd hx0pos
+
+/-! ## Toward the fully general witness question: a free witness at depth 2
+
+Round 19's negative finding (no uniform invariant survives an arbitrary sibling) does NOT rule out
+a DIRECT, elementary argument for CONCRETE sibling shapes. If the offender `S3` were identically
+`≤ 0` everywhere, its log-branch collapses to the constant `0` (`Real.log_nonpos`), forcing
+`(eml S2 S3).eval x = exp(S2.eval x)` for ALL `x` — and then, via `log∘exp = id` UNCONDITIONALLY
+(no positivity needed, the same asymmetry `eml_leftchild_explicit_value` exploits), the WHOLE tree
+collapses to `exp(T1.eval x) − S2.eval x = sin x`. If `T1` is (globally) constant and `S2` is a
+leaf (constant or the identity), this is refutable by evaluating at one or two concrete points —
+giving a FREE witness for `S3`, no hypothesis needed, for this whole class of siblings. This does
+NOT resolve the general case (compound `T1`/`S2` reopen exactly the recursive difficulty found in
+round 19) but it is a genuine, unconditional result for a natural, common shape. -/
+
+/-- **A free witness at depth 2, for constant `T1` and leaf `S2`.** If `t = eml T1 (eml S2 S3)`
+agrees with `sin` globally, `T1` is (globally) constant, and `S2` is either constant or the
+identity, then `S3` (the depth-2 offender) is positive SOMEWHERE — no witness hypothesis needed.
+Proved by contradiction: assuming `S3 ≤ 0` everywhere collapses the tree to
+`exp(c) − S2.eval x = sin x`, refuted by direct evaluation (`x = 0` and `x = π/2` for constant
+`S2`, using `sin_pi_div_two`; `x = 0` alone for identity `S2`, using `exp_pos`). -/
+theorem eml_depth2_witness_of_const_var {T1 S2 S3 : EMLTree} {c : Real}
+    (hT1 : ∀ x, T1.eval x = c)
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml S2 S3)).eval x = Real.sin x)
+    (hS2 : (∃ c2, ∀ x, S2.eval x = c2) ∨ (∀ x, S2.eval x = x)) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hlog0 : ∀ x, Real.log (S3.eval x) = 0 := fun x => Real.log_nonpos (hallle x)
+  have hNeval : ∀ x, (EMLTree.eml S2 S3).eval x = Real.exp (S2.eval x) := by
+    intro x
+    show Real.exp (S2.eval x) - Real.log (S3.eval x) = Real.exp (S2.eval x)
+    rw [hlog0 x, sub_zero]
+  have hcollapse : ∀ x, Real.exp c - S2.eval x = Real.sin x := by
+    intro x
+    have h1 : Real.exp (T1.eval x) - Real.log ((EMLTree.eml S2 S3).eval x) = Real.sin x := hsin x
+    rw [hT1 x, hNeval x, Real.log_exp] at h1
+    exact h1
+  rcases hS2 with ⟨c2, hS2const⟩ | hS2var
+  · have heq0 := hcollapse 0
+    have heqhalf := hcollapse (Real.pi / (1 + 1))
+    rw [hS2const 0, Real.sin_zero] at heq0
+    rw [hS2const (Real.pi / (1 + 1)), Real.sin_pi_div_two] at heqhalf
+    rw [heq0] at heqhalf
+    have h01 : (0 : Real) < 1 := zero_lt_one_ax
+    rw [heqhalf] at h01
+    exact lt_irrefl_ax 1 h01
+  · have heq0 := hcollapse 0
+    rw [hS2var 0, Real.sin_zero] at heq0
+    have hexp0 : Real.exp c = 0 := by rw [← heq0]; mach_ring
+    exact absurd hexp0 (ne_of_lt (Real.exp_pos c)).symm
 
 end MachLib
