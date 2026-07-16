@@ -211,13 +211,29 @@ point) — a backward-direction mirror (mirroring `eml_depth1_pos_of_pos_witness
 `sup_exists`) is needed to cover `b` smaller than the witness point, i.e. literally "any `b > 0`".
 Not yet built; expected mechanical given the session's track record.
 
+## Update 2026-07-16 (cont.) — backward mirror built; a genuine gluing subtlety found, not closed
+
+Built the backward-direction mirror (`eml_pfaffian_validon_of_sin_and_witnesses_backward`,
+line-for-line mirror of the forward capstone via `sup_exists`) — mechanical, as expected, one
+small fix. Both directions are now independently complete.
+
+Attempting the natural final step — one theorem covering `EMLPfaffianValidOn t 0 b` for ANY `b>0`
+from a single witness point `p`, combining forward + backward — hit a genuine gap, not a quick
+fix: `EMLPfaffianValidOn`'s definition is a fully OPEN interval `a<x<b`. The backward piece claims
+`(0,p)`, the forward piece claims `(p,b)` — their union misses the single point `x=p`, even
+though the UNDERLYING mechanisms individually reach `x=p` (their raw conclusions use `≤`, not `<`,
+at the witness endpoint — it's packaging into `EMLPfaffianValidOn`'s fixed shape that loses it). A
+real fix needs a THIRD combined structural induction, not gluing two packaged results together.
+Documented honestly rather than patched with an incorrect proof; not yet built.
+
 ## Status
 
-- Mechanism-building (rounds 1–18, then 25–27 this session): COMPLETE for the forward direction,
-  for ANY tree shape — not just the special cases explored in rounds 20–24. Zero new axioms beyond
-  `HasDerivAt_congr`. `eml_pfaffian_validon_of_sin_and_witnesses` reduces the whole axiom to
-  witness-finding, full stop.
-- Backward-direction mirror: not yet built, expected mechanical.
+- Mechanism-building (rounds 1–18, then 25–28 this session): BOTH directions COMPLETE, for ANY
+  tree shape — not just the special cases explored in rounds 20–24. Zero new axioms beyond
+  `HasDerivAt_congr`. Reduces the whole axiom to witness-finding, full stop, on either side of a
+  witness point.
+- Gluing-at-a-point (combining both directions from ONE witness into literally any `b>0`): a
+  real, narrow, precisely-characterized gap — needs a third combined induction, not attempted.
 - Witness-finding: open in general. Depth-2/leaf-`S2` family closed except one maximally narrow
   residual: `T1` bounded and non-constant, `S2` constant `> 1`. Probed from three independent
   angles (direct evaluation, growth/unboundedness, periodicity) — all either close cleanly or
