@@ -131,11 +131,31 @@ The natural next step under Option A is pushing the same "collapse + evaluate/di
 technique to `T1`/`S2` being simple-but-not-leaf, to map out how far elementary reasoning reaches
 before the recursion genuinely bites.
 
+## Update 2026-07-16 (cont.) — the T1-constant restriction pinned down exactly
+
+Checked whether `T1`-constant was load-bearing in BOTH of the previous update's branches, or just
+one. It's only load-bearing for ONE narrow sub-case:
+
+- `eml_depth2_witness_of_var_sibling`: `S2 = var`, `T1` COMPLETELY ARBITRARY. Evaluating at `x = 0`
+  alone forces `exp(T1.eval 0) = 0` — impossible regardless of `T1`'s shape. No constant hypothesis
+  needed at all.
+- `eml_depth2_witness_of_const_le_one_sibling`: `S2` constant `c2 ≤ 1`, `T1` COMPLETELY ARBITRARY.
+  Evaluating at `x = −π/2` forces `exp(T1.eval(−π/2)) = c2 − 1 ≤ 0` — impossible for any `T1`. For
+  `c2 > 1` this specific point gives no contradiction (`c2 − 1` could be a genuine `exp` value) —
+  this is EXACTLY round 19's failure mode, now localized to a single precise sub-case rather than
+  a vague "compound siblings might defeat it."
+
+Net effect: witness-finding for the whole depth-2/leaf-sibling family is closed EXCEPT for exactly
+one sub-case — `S2` constant `> 1`, `T1` non-constant. Down from "`T1` must be constant, full
+stop" at the start of the day. Both compiled clean (one needed swapping an unavailable `set`
+tactic for the file's established `let`+`show` idiom); zero new axioms.
+
 ## Status
 
 - Mechanism-building (rounds 1–18 this session): essentially complete. Zero new axioms beyond
   `HasDerivAt_congr`. ~2200 new lines in `EMLSmoothness.lean`.
-- Witness-finding: open in general (round 19), but Option A has landed its first concrete,
-  unconditional result (round 20, above) for leaf-sibling depth-2 offenders.
+- Witness-finding: open in general (round 19). Option A has now closed the ENTIRE depth-2/leaf
+  family except one precisely-identified sub-case (`S2` constant `> 1`, `T1` non-constant) —
+  rounds 20–21, above.
 - Option C: not yet attempted.
 - This document: living draft, updated as options are acted on.
