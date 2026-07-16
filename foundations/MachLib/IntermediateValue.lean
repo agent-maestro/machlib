@@ -314,5 +314,41 @@ theorem continuousAt_bddAbove_Icc (f : Real → Real) (a b : Real) (hab : a ≤ 
   rw [← hceqb] at hxb
   exact hM x hxa hxb
 
+/-! ## Infimum (reflection of `sup_exists`)
+
+`sup_exists` gives suprema; an infimum is the negation of the supremum of the negated set
+(`inf S = -sup(-S)`) — standard reflection, no new axiom. -/
+
+def BoundedBelow (p : Real → Prop) : Prop :=
+  ∃ m : Real, ∀ x : Real, p x → m ≤ x
+
+/-- **Infimum exists**, by reflecting through `sup_exists`. -/
+theorem inf_exists (p : Real → Prop) (h_nonempty : ∃ x, p x) (h_bound : BoundedBelow p) :
+    ∃ s : Real,
+      (∀ x, p x → s ≤ x) ∧
+      (∀ s', (∀ x, p x → s' ≤ x) → s' ≤ s) := by
+  obtain ⟨m, hm⟩ := h_bound
+  obtain ⟨x0, hx0⟩ := h_nonempty
+  have hne' : ∃ y, (fun y => p (-y)) y :=
+    ⟨-x0, by show p (-(-x0)); rw [show -(-x0) = x0 from by mach_ring]; exact hx0⟩
+  have hbd' : BoundedAbove (fun y => p (-y)) := by
+    refine ⟨-m, fun y hy => ?_⟩
+    have h2 := neg_le_neg (hm (-y) hy)
+    rwa [show -(-y) = y from by mach_ring] at h2
+  obtain ⟨c, hub, hlub⟩ := sup_exists (fun y => p (-y)) hne' hbd'
+  refine ⟨-c, ?_, ?_⟩
+  · intro x hx
+    have h1 : (fun y => p (-y)) (-x) := by
+      show p (-(-x)); rw [show -(-x) = x from by mach_ring]; exact hx
+    have h2 := neg_le_neg (hub (-x) h1)
+    rwa [show -(-x) = x from by mach_ring] at h2
+  · intro s' hs'
+    have hub' : ∀ y, (fun y => p (-y)) y → y ≤ -s' := by
+      intro y hy
+      have h2 := neg_le_neg (hs' (-y) hy)
+      rwa [show -(-y) = y from by mach_ring] at h2
+    have h3 := neg_le_neg (hlub (-s') hub')
+    rwa [show -(-s') = s' from by mach_ring] at h3
+
 end Real
 end MachLib
