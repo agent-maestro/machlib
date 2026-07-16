@@ -115,10 +115,27 @@ either too weak (doesn't actually enable the proof) or too strong (excludes tree
 Option B is not recommended as the NEXT step — not because it's worthless, but because it has no
 natural stopping point and this session already gave it a genuine, focused attempt.
 
+## Update 2026-07-16 — Option A, first concrete point scored
+
+Built `eml_depth2_witness_of_const_var` (`EMLSmoothness.lean`, commit `f29390ef`): if the depth-2
+offender `S3` (in `t = eml T1 (eml S2 S3)`) were identically `≤ 0`, its log-branch collapses to the
+constant `0`, and — via `log∘exp = id` unconditionally, the same asymmetry `eml_leftchild_explicit_value`
+already exploits — the whole tree collapses to `exp(T1.eval x) − S2.eval x = sin x` for all `x`. For
+`T1` globally constant and `S2` a leaf (constant or the identity), this is refutable by direct
+evaluation at one or two points (`x = 0`, `x = π/2`). Result: a witness for `S3` with **no
+hypothesis needed at all** — the first case where witness-finding is fully resolved beyond depth-1.
+Compiled with zero errors on the first attempt; zero new axioms.
+
+This does not touch compound `T1`/`S2` — those reopen the round-19 recursive difficulty exactly.
+The natural next step under Option A is pushing the same "collapse + evaluate/differentiate"
+technique to `T1`/`S2` being simple-but-not-leaf, to map out how far elementary reasoning reaches
+before the recursion genuinely bites.
+
 ## Status
 
 - Mechanism-building (rounds 1–18 this session): essentially complete. Zero new axioms beyond
   `HasDerivAt_congr`. ~2200 new lines in `EMLSmoothness.lean`.
-- Witness-finding: open, precisely characterized (round 19) — a real mathematical question, not a
-  bookkeeping gap.
-- This document: draft only. No option has been acted on yet.
+- Witness-finding: open in general (round 19), but Option A has landed its first concrete,
+  unconditional result (round 20, above) for leaf-sibling depth-2 offenders.
+- Option C: not yet attempted.
+- This document: living draft, updated as options are acted on.
