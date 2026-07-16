@@ -678,4 +678,49 @@ theorem eml_depth1_validon_of_sin_eq {t1 t2 : EMLTree}
       (fun y hy1 hy2 => ht1'd y (lt_of_lt_of_le pi_pos hy1)) t2'
       (fun y hy1 hy2 => ht2'd y (lt_of_lt_of_le pi_pos hy1)) hwitness x (le_of_lt hgt) hx2
 
+/-! ## Toward arbitrary depth: the recursive step, generalized
+
+`eml_depth1_t2_ode`/`eml_depth1_E_deriv` are special cases of a DEPTH-INDEPENDENT pattern: given
+ONLY that the node `eml A B`'s derivative is SOME known explicit value `D` (not necessarily
+`cos x` — at depth ≥ 2, `D` comes from the PREVIOUS level's own derived ODE, not from `sin`
+directly), `B`'s derivative is forced into the same "linear ODE" shape, with an integrating
+factor built from `A` and the node's OWN value (not needing an externally-named function like
+`sin` at all). Instantiating with `eml A B := t` and `D := cos x` (the free root fact) recovers
+depth-1; instantiating with `eml A B := t2` and `D` from depth-1's OWN derived ODE reaches
+depth-2; and so on — the SAME two lemmas apply at every depth. -/
+
+/-- **General ODE step.** Generalizes `eml_depth1_t2_ode`: the node's derivative being SOME known
+`D` (of any origin) forces `B`'s derivative into the same shape. -/
+theorem eml_ode_step_general {A B : EMLTree} {x a b D : Real}
+    (hNderiv : HasDerivAt (EMLTree.eml A B).eval D x)
+    (hA : HasDerivAt A.eval a x) (hB : HasDerivAt B.eval b x) (hBpos : 0 < B.eval x) :
+    b = B.eval x * (Real.exp (A.eval x) * a - D) := by
+  have hstruct : HasDerivAt (EMLTree.eml A B).eval
+      (Real.exp (A.eval x) * a - 1 / B.eval x * b) x :=
+    eml_hasDerivAt_pos_branch hA hB hBpos
+  have heq : Real.exp (A.eval x) * a - 1 / B.eval x * b = D :=
+    HasDerivAt_unique (EMLTree.eml A B).eval _ _ x hstruct hNderiv
+  have hBne : B.eval x ≠ 0 := (ne_of_lt hBpos).symm
+  have hY : 1 / B.eval x * b = Real.exp (A.eval x) * a - D := by
+    rw [← heq]
+    mach_mpoly [Real.exp (A.eval x) * a, 1 / B.eval x * b]
+  rw [← hY, ← mul_assoc, mul_inv (B.eval x) hBne, one_mul_thm]
+
+/-- **General integrating-factor step.** Generalizes `eml_depth1_E_deriv`: the next-level
+integrating factor `exp(exp(A) − N.eval)` — built from `A` and the node's OWN value, needing no
+externally-named function — satisfies the matching ODE. -/
+theorem eml_E_step_general {A B : EMLTree} {x a D : Real}
+    (hA : HasDerivAt A.eval a x) (hNderiv : HasDerivAt (EMLTree.eml A B).eval D x) :
+    HasDerivAt (fun z => Real.exp (Real.exp (A.eval z) - (EMLTree.eml A B).eval z))
+      (Real.exp (Real.exp (A.eval x) - (EMLTree.eml A B).eval x) *
+        (Real.exp (A.eval x) * a - D)) x := by
+  have hexp : HasDerivAt (fun z => Real.exp (A.eval z)) (Real.exp (A.eval x) * a) x :=
+    HasDerivAt_comp Real.exp A.eval a (Real.exp (A.eval x)) x hA (HasDerivAt_exp _)
+  have hAnew : HasDerivAt (fun z => Real.exp (A.eval z) - (EMLTree.eml A B).eval z)
+      (Real.exp (A.eval x) * a - D) x :=
+    HasDerivAt_sub _ _ _ _ x hexp hNderiv
+  exact HasDerivAt_comp Real.exp (fun z => Real.exp (A.eval z) - (EMLTree.eml A B).eval z)
+    (Real.exp (A.eval x) * a - D) (Real.exp (Real.exp (A.eval x) - (EMLTree.eml A B).eval x))
+    x hAnew (HasDerivAt_exp _)
+
 end MachLib
