@@ -352,6 +352,37 @@ closure path.
 validity"** rather than pursue formalization in the next sprint (see §4
 decision rationale).
 
+**Update 2026-07-16 — the closure path above did not happen; a completely different one did, and
+went much further.** A long session attacking this axiom never built `IsSmoothOn`,
+`Continuous_of_HasDerivAt`, or a connectivity argument — none of steps 1–6's classical sketch
+above was followed. Instead (all in the new file `EMLSmoothness.lean`): a local, purely
+structural "no crossing" predicate (`EMLNoCrossingAt`, provable by ordinary induction, no
+circularity) gives differentiability for free; a linear-ODE/integrating-factor technique
+(`const_ratio_of_shared_ode` + `eml_ode_step_general`/`eml_E_step_general`) forces a log-argument
+into an explicit closed form wherever positivity already holds; a minimal-violation-point argument
+(via the completeness axiom `sup_exists`/`inf_exists`, already in MachLib) extends that to the
+boundary; and a genuinely new algebraic asymmetry (`log(exp v) = v` holds unconditionally, unlike
+`exp(log v) = v`, which needs `v > 0`) gives the exp-side child of ANY node an unconditional
+explicit value formula — the piece that let the whole argument generalize past one-node cases to
+arbitrary tree shapes via plain structural induction on `EMLTree`.
+
+**Net result:** `eml_pfaffian_validon_of_sin_and_witness_at_point` (`EMLSmoothness.lean`) reduces
+this axiom, for LITERALLY ANY tree shape and ANY `b > 0`, to exactly ONE hypothesis:
+`EMLWitnesses t p` — a positivity witness at a single point `p`, for every log-argument node in
+`t` (mirroring `EMLPfaffianValidOn`'s own recursive shape). Everything else — differentiability,
+positivity propagation throughout an interval, both directions (`x` above and below the witness
+point), and the recursive descent through arbitrary tree structure — is now a PROVEN theorem, zero
+new axioms beyond one small local-invariance fact (`HasDerivAt_congr`, added early in the same
+session). This is a genuine reduction, not a reformulation: the ~300–500 line Smoothness-module
+estimate below is now obsolete, and `EMLWitnesses t p`'s own difficulty has been separately
+triangulated (three independent proof attempts — direct evaluation, growth arguments, periodicity
+— all either close cleanly for natural sub-cases or require Khovanskii-scale zero-counting
+machinery to go further; see `EML_WITNESS_FINDING_DECISION_2026_07_15.md` for the full account).
+
+**Revised risk:** unchanged (low) — the remaining hypothesis is, if anything, MORE classically
+self-evident than the original smoothness argument (a positivity witness at one point, not a
+whole analytic apparatus), and the reduction to it is now a checked Lean proof, not a sketch.
+
 ---
 
 ## §4 — Decision: ship-conditional vs. continue-grinding
@@ -362,10 +393,10 @@ sub-project to close:
 
 | Axiom | Effort to close | Classical-true now? |
 |---|---|---|
-| `derivative_rank_lt` | Multi-session (~250–400 lines via PfaffianFn) | False as stated |
-| `eml_pfaffian_validon_from_sin_equality` | Multi-session (~300–500 lines, needs Smoothness module) | True (standard) |
+| `derivative_rank_lt` | Multi-session (~250–400 lines via PfaffianFn) | False as stated — **NOTE: this axiom was DELETED 2026-06-12** per the appendix table below; this row and the recommendation under it predate that and are now moot |
+| `eml_pfaffian_validon_from_sin_equality` | ~~Multi-session (~300–500 lines, needs Smoothness module)~~ **SUPERSEDED 2026-07-16 — see §3 update.** A different closure route (no Smoothness module at all) reduced this to ONE hypothesis (`EMLWitnesses t p`), fully proven otherwise, zero new axioms. What's left to close is witness-finding specifically, not the axiom's original analytic content. | True (standard) |
 
-Neither is a one-session close. The honest framing options:
+Neither original estimate held up, for different reasons — one axiom was deleted outright, the other was reduced by a cheaper route than planned. The honest framing options (historical, kept for context):
 
 - **(A)** Continue grinding. Both eventually close. Estimated 4-7 weeks of focused
   work given MachLib's bare-bones substrate (no Mathlib).
@@ -374,15 +405,27 @@ Neither is a one-session close. The honest framing options:
   comparable to Mathlib's own incremental landing pattern (results shipped
   modulo specific named gaps, gaps closed in subsequent PRs).
 
-Recommendation: **(B) for `eml_pfaffian_validon_from_sin_equality`** —
+Recommendation (historical, 2026-06-12): **(B) for `eml_pfaffian_validon_from_sin_equality`** —
 the axiom is classically true, well-named, with a clear (but expensive)
 closure path. Shipping it is honest and the publication frames the
 classical analysis as "future formalization work".
 
-Recommendation: **(A) for `derivative_rank_lt`** — the axiom is *materially
+Recommendation (historical, 2026-06-12): **(A) for `derivative_rank_lt`** — the axiom is *materially
 false* as stated. Shipping a materially-false axiom even with documentation
 is too risky. Close via the chain-explicit refactor (infrastructure is
-already in place; phase 4 is the bound proof).
+already in place; phase 4 is the bound proof). **Superseded: this axiom was deleted the same day
+and replaced by `zero_count_bound_classical` — see the appendix table.**
+
+**Update 2026-07-16:** for `eml_pfaffian_validon_from_sin_equality`, recommendation (B) above
+turned out to be the right call for the WRONG reason — not "ship conditional because closing it
+is expensive," but "the actual closure route was cheap enough to mostly finish, leaving a much
+smaller, differently-shaped residual." Current recommendation: keep shipping conditional, but
+update the framing to "modulo `EMLWitnesses t p` (a positivity witness at one point, for every
+log-argument node)" rather than "modulo a smoothness/connectivity module" — the former is both
+more accurate and, per the witness-finding investigation (`EML_WITNESS_FINDING_DECISION_2026_07_15.md`),
+better characterized: closed outright for several natural sub-cases, open only for one narrow,
+precisely-identified residual that would need Khovanskii-scale zero-counting machinery to close
+in full generality.
 
 ---
 
@@ -501,7 +544,7 @@ that the named load-bearing axioms have been seriously stress-tested.
 | `PfaffianExpr`→`PfaffianFn` bridge, exp fragments (single-exp, nested two-exp) | ✓ DONE — axiom-clean bounds for exp/exp-exp `PfaffianFunction`s | 2026-07-14 |
 | Constructive mixed EML (exp+log+recip) FINITENESS bound | ✓ DONE — `eml_eval_boundedZeros_unconditional`, `#print axioms`-clean of `zero_count_bound_classical` (both classical arms proven) | shipped (found 2026-07-14) |
 | DELETE the axiom: explicit/uniform-K version of the mixed descent + `LogArgPosOn`-from-sin/cos bridge + re-route `sin/cos_not_in_eml` | ⚠ remaining — MECHANICAL not research (`descentBoundA`/`khovBound` pattern exists), §2c(2) | remaining |
-| `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom (classically true) | future formalization |
+| `eml_pfaffian_validon_from_sin_equality` | ⚠ axiom — but REDUCED to one hypothesis (`EMLWitnesses t p`, a witness at one point) via `eml_pfaffian_validon_of_sin_and_witness_at_point`, `EMLSmoothness.lean`, axiom-clean | 2026-07-16, see §3 update; witness-finding remains |
 
 **Recommendation:** ship at the current honesty level with this audit
 attached. The "3 of 4 structural axioms closed" framing + the audit's
