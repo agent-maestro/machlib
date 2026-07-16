@@ -1491,4 +1491,40 @@ theorem eml_leftchain_rootR_pos_of_no_crossing {W1 W2 D : EMLTree} (Cs : List EM
   · rw [← hx0xseq] at hxsle
     exact lt_irrefl_ax 0 (lt_of_lt_of_le hx0pos hxsle)
 
+/-! ## Toward the left-descent witness problem: an unconditional value formula for exp-children
+
+Round 9.5/10's finding was that only right-descent nodes get explicit VALUE representations — the
+`k·E` mechanism for an offender `t2` uses `exp∘log = id` on the POSITIVE reals (`exp_log`), which
+needs `t2.eval x > 0` already established, so it can't hand out a value-based witness for free.
+
+Re-examining: the LEFT (exp) child `N` of a node `eml N C` whose OWN value is known (`= target`,
+e.g. because that node IS the root and `target = sin x`) gets an explicit value formula for a
+DIFFERENT reason — `log∘exp = id` (`log_exp`) holds UNCONDITIONALLY, for every real input, not just
+the positive ones. Rearranging `exp(N.eval x) − log(C.eval x) = target` to
+`exp(N.eval x) = target + log(C.eval x)` and taking `log` of both sides needs no side condition at
+all: this is exactly the asymmetry that makes the LEFT branch tractable where the right branch
+wasn't. This turns "does `N`'s own log-child cross zero" into a problem with a FREE explicit target
+(`log(target + log(C.eval x))` in place of `sin x`) — the same shape depth-1 already solves, one
+level removed, via `eml_ode_step_general` (which never actually required its known-derivative
+target to BE `cos x` — any known value works). Not yet assembled into a full closure theorem (that
+would mean re-deriving depth-1's whole apparatus — witness, ODE, constant-ratio, minimal-violation
+point — parametrized over an ARBITRARY known target instead of hardcoding `sin`/`cos` throughout),
+but this is the missing piece that was blocking left-descent, isolated and verified. -/
+
+/-- **Unconditional explicit value for an exp-child.** If `eml N C` (with `N` the exp/left branch)
+takes a KNOWN value `target` at `x`, `N` itself has an explicit closed form there — no positivity
+or validity assumption on `N` or `C` needed, since it uses `log∘exp = id` (`Real.log_exp`), which
+holds for every real input unconditionally (unlike `exp∘log_clamped = id`, which needs positivity
+and is exactly why the analogous fact fails for the RIGHT/log child). -/
+theorem eml_leftchild_explicit_value (N C : EMLTree) (x target : Real)
+    (heq : (EMLTree.eml N C).eval x = target) :
+    N.eval x = Real.log (target + Real.log (C.eval x)) := by
+  have h1 : Real.exp (N.eval x) - Real.log (C.eval x) = target := heq
+  have h2 : Real.exp (N.eval x) = target + Real.log (C.eval x) := by
+    have h3 : Real.exp (N.eval x) - Real.log (C.eval x) + Real.log (C.eval x)
+        = target + Real.log (C.eval x) := by rw [h1]
+    rwa [sub_def, add_assoc, neg_add_self, add_zero] at h3
+  rw [← h2]
+  exact (Real.log_exp (N.eval x)).symm
+
 end MachLib
