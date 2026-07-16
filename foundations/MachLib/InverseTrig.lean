@@ -18,9 +18,28 @@ everything below is then *derived* (no further axioms):
 
 `asin` (`arcsin`) is left out: its derivative `1/√(1−x²)` is unbounded near `±1`, so it
 needs a domain guard — the genuinely harder case for a single stdlib kernel.
--/
+
+## `arcsin` / `arccos` derivative axioms (added)
+
+The domain-guarded derivatives `HasDerivAt_arcsin` / `HasDerivAt_arccos` below close that gap:
+each takes an explicit `abs x < 1` side condition (unlike `HasDerivAt_atan`, unconditional for all
+`x`), mirroring the standard calculus facts `d/dx arcsin x = 1/√(1−x²)` and
+`d/dx arccos x = −1/√(1−x²)` on the open interval `(−1,1)`. `arccos`'s derivative is stated as the
+NEGATION of `arcsin`'s directly (not derived from an `arcsin x + arccos x = π/2` identity — that
+identity is not needed by, and is not proved by, this file) — the lowest-risk axiomatisation, exactly
+mirroring how `arcsin`/`arccos` are already independent primitives in `Trig.lean`. The domain-bounded
+local-Lipschitz bounds these support (`[-R,R]`, `R < 1`) live in `MachLib.InverseTrigBounded`. -/
 
 namespace MachLib.Real
+
+/-- `d/dx arcsin x = 1/√(1−x²)`, valid on the open interval `abs x < 1` (unbounded at `±1`). -/
+axiom HasDerivAt_arcsin (x : Real) (hx : abs x < 1) :
+    HasDerivAt arcsin (1 / sqrt (1 - x * x)) x
+
+/-- `d/dx arccos x = −1/√(1−x²)`, valid on the open interval `abs x < 1` (unbounded at `±1`). Stated
+as the independent negation of `HasDerivAt_arcsin`, not derived from an `arcsin`/`arccos` identity. -/
+axiom HasDerivAt_arccos (x : Real) (hx : abs x < 1) :
+    HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x
 
 /-- `arctan`, a primitive function. -/
 axiom atan : Real → Real
