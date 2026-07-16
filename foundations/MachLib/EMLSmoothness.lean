@@ -236,4 +236,63 @@ theorem const_ratio_of_shared_ode (f E Q : Real → Real) (p q : Real) (hpq : p 
         mul_inv (E p) hEp_ne, mul_one_ax]
   · exact absurd (lt_of_lt_of_le hgt hx1) (lt_irrefl_ax x)
 
+/-! ## Depth-1 instantiation: the explicit integrating factor and the ODE for `t2`
+
+For `t = eml t1 t2` with `t.eval = sin`, the log-argument `t2` satisfies (wherever `t2 > 0`, so the
+structural chain rule applies to the `log` branch) the linear ODE `t2' = t2 · Q₁` with
+`Q₁ := exp(t1)·t1' − cos`. `Q₁`'s explicit antiderivative `A₁ := exp(t1) − sin` gives the explicit,
+always-positive integrating factor `E₁ := exp(A₁)`. -/
+
+/-- The explicit depth-1 integrating factor's own derivative, matching the `E' = E·Q` shape
+`const_ratio_of_shared_ode` needs — built purely from `t1`'s derivative, no `t2` involved at all. -/
+theorem eml_depth1_E_deriv {t1 : EMLTree} {x a : Real} (h1 : HasDerivAt t1.eval a x) :
+    HasDerivAt (fun y => Real.exp (Real.exp (t1.eval y) - Real.sin y))
+      (Real.exp (Real.exp (t1.eval x) - Real.sin x) *
+        (Real.exp (t1.eval x) * a - Real.cos x)) x := by
+  have hexp : HasDerivAt (fun y => Real.exp (t1.eval y)) (Real.exp (t1.eval x) * a) x :=
+    HasDerivAt_comp Real.exp t1.eval a (Real.exp (t1.eval x)) x h1 (HasDerivAt_exp _)
+  have hA : HasDerivAt (fun y => Real.exp (t1.eval y) - Real.sin y)
+      (Real.exp (t1.eval x) * a - Real.cos x) x :=
+    HasDerivAt_sub _ _ _ _ x hexp (HasDerivAt_sin x)
+  exact HasDerivAt_comp Real.exp (fun y => Real.exp (t1.eval y) - Real.sin y)
+    (Real.exp (t1.eval x) * a - Real.cos x) (Real.exp (Real.exp (t1.eval x) - Real.sin x))
+    x hA (HasDerivAt_exp _)
+
+/-- The structural derivative of `eml t1 t2` on the branch where `t2.eval x > 0`, EXPLICIT (not
+existential) — the exact formula needed to combine with the free `cos x` fact via
+`HasDerivAt_unique`. -/
+theorem eml_hasDerivAt_pos_branch {t1 t2 : EMLTree} {x a b : Real}
+    (h1 : HasDerivAt t1.eval a x) (h2 : HasDerivAt t2.eval b x) (hpos : 0 < t2.eval x) :
+    HasDerivAt (EMLTree.eml t1 t2).eval
+      (Real.exp (t1.eval x) * a - 1 / t2.eval x * b) x := by
+  have hexp : HasDerivAt (fun y => Real.exp (t1.eval y)) (Real.exp (t1.eval x) * a) x :=
+    HasDerivAt_comp Real.exp t1.eval a (Real.exp (t1.eval x)) x h1 (HasDerivAt_exp _)
+  have hlog : HasDerivAt (fun y => Real.log (t2.eval y)) (1 / t2.eval x * b) x :=
+    HasDerivAt_comp Real.log t2.eval b (1 / t2.eval x) x h2 (HasDerivAt_log_pos _ hpos)
+  exact HasDerivAt_sub _ _ _ _ x hexp hlog
+
+/-- **The depth-1 ODE.** If `t = eml t1 t2` agrees with `sin` everywhere and `t2.eval x > 0`,
+`t2`'s derivative at `x` is FORCED to be `t2.eval x * Q₁ x` — combining the free root derivative
+(`eml_hasDerivAt_of_sin_eq`, unconditional) with the structural positive-branch derivative
+(`eml_hasDerivAt_pos_branch`) via `HasDerivAt_unique`. -/
+theorem eml_depth1_t2_ode {t1 t2 : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml t1 t2).eval x = Real.sin x)
+    {x a b : Real} (h1 : HasDerivAt t1.eval a x) (h2 : HasDerivAt t2.eval b x)
+    (hpos : 0 < t2.eval x) :
+    HasDerivAt t2.eval (t2.eval x * (Real.exp (t1.eval x) * a - Real.cos x)) x := by
+  have hfree : HasDerivAt (EMLTree.eml t1 t2).eval (Real.cos x) x :=
+    eml_hasDerivAt_of_sin_eq (EMLTree.eml t1 t2) hsin x
+  have hstruct : HasDerivAt (EMLTree.eml t1 t2).eval
+      (Real.exp (t1.eval x) * a - 1 / t2.eval x * b) x :=
+    eml_hasDerivAt_pos_branch h1 h2 hpos
+  have heq : Real.exp (t1.eval x) * a - 1 / t2.eval x * b = Real.cos x :=
+    HasDerivAt_unique (EMLTree.eml t1 t2).eval _ _ x hstruct hfree
+  have ht2ne : t2.eval x ≠ 0 := ne_of_lt hpos |>.symm
+  have hb : b = t2.eval x * (Real.exp (t1.eval x) * a - Real.cos x) := by
+    have hY : 1 / t2.eval x * b = Real.exp (t1.eval x) * a - Real.cos x := by
+      rw [← heq]
+      mach_mpoly [Real.exp (t1.eval x) * a, 1 / t2.eval x * b]
+    rw [← hY, ← mul_assoc, mul_inv (t2.eval x) ht2ne, one_mul_thm]
+  rwa [hb] at h2
+
 end MachLib
