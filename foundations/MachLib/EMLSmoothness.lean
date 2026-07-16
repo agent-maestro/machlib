@@ -2506,4 +2506,107 @@ theorem eml_moves_pos_of_pos_witness {Slast Offender : EMLTree} (moves : List EM
   obtain ⟨D, hDd⟩ := moves_hasDerivAt_of_target moves x0 b hx0b Real.cos hD0d hncFull hwit
   exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd D hDd hx0pos
 
+/-! ## The capstone: closing FULL `EMLPfaffianValidOn`, conditional on witnesses everywhere
+
+`eml_moves_pos_of_pos_witness` closes ONE offender at the bottom of a path. `EMLPfaffianValidOn`
+requires positivity for EVERY `eml` node's log-child throughout the whole tree — not just one.
+This section shows the SAME toolkit closes the FULL requirement, by structural induction on the
+tree itself rather than a separately-tracked move list — the induction on `t` naturally traces
+out the path, so no auxiliary `EMLMove` bookkeeping is needed here. `EMLWitnesses` mirrors
+`EMLPfaffianValidOn`'s own recursive shape, replacing "positive throughout an interval" with
+"positive at one anchor point `x0`" — the anchor is all the minimal-violation-point machinery
+inside `eml_ode_closure_general` needs to extend to the whole interval. -/
+
+/-- The witness structure `eml_pfaffian_validon_of_witnesses` needs: mirrors
+`EMLPfaffianValidOn`'s own recursive shape exactly, but only requires a SINGLE anchor point `x0`
+per node instead of positivity throughout an interval. -/
+def EMLWitnesses : EMLTree → Real → Prop
+  | .const _, _ => True
+  | .var, _ => True
+  | .eml t1 t2, x0 => EMLWitnesses t1 x0 ∧ EMLWitnesses t2 x0 ∧ 0 < t2.eval x0
+
+/-- **Full `EMLPfaffianValidOn`, conditional on a witness at every node.** Given `t`'s own known
+derivative `D` (propagated from further out — at the root, this is the free `cos`/`sin`-derived
+fact), no crossing anywhere in `t` on `[x0,b)`, and `EMLWitnesses t x0`, `EMLPfaffianValidOn t x0 b`
+holds — every `eml` node's log-child is positive throughout, not just one. Proof: structural
+induction on `t`. At an `eml t1 t2` node, `t1`'s derivative comes UNCONDITIONALLY from `t`'s own
+(via `eml_leftchild_hasDerivAt_general` — the left-step asymmetry, no witness needed); `t2`'s
+positivity AND derivative come from `t`'s own derivative plus `t2`'s own witness (via
+`eml_ode_closure_general_hasDerivAt`); then the induction hypothesis closes `t1` and `t2`
+RECURSIVELY using their freshly-derived own derivatives. -/
+theorem eml_pfaffian_validon_of_witnesses (t : EMLTree)
+    (x0 b : Real) (hx0b : x0 < b)
+    (D : Real → Real) (hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt t.eval (D x) x)
+    (hnc : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt t x)
+    (hwit : EMLWitnesses t x0) :
+    EMLPfaffianValidOn t x0 b := by
+  induction t generalizing D with
+  | const c => trivial
+  | var => trivial
+  | eml t1 t2 ih1 ih2 =>
+    obtain ⟨hwit1, hwit2, hwitt2⟩ := hwit
+    have hnct1 : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt t1 x := fun x hx1 hx2 => (hnc x hx1 hx2).1
+    have hnct2 : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt t2 x :=
+      fun x hx1 hx2 => (hnc x hx1 hx2).2.1
+    have ht2ne : ∀ x, x0 ≤ x → x < b → t2.eval x ≠ 0 := fun x hx1 hx2 => (hnc x hx1 hx2).2.2
+    let t1' : Real → Real := fun x =>
+      if h : x0 ≤ x ∧ x < b then (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x h.1 h.2)).choose
+      else 0
+    have ht1'd : ∀ x, x0 ≤ x → x < b → HasDerivAt t1.eval (t1' x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t1.eval
+        (if h : x0 ≤ x ∧ x < b then
+          (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x h.1 h.2)).choose
+        else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (eml_hasDerivAt_of_no_crossing t1 x (hnct1 x hx1 hx2)).choose_spec
+    let t2' : Real → Real := fun x =>
+      if h : x0 ≤ x ∧ x < b then (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x h.1 h.2)).choose
+      else 0
+    have ht2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt t2.eval (t2' x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t2.eval
+        (if h : x0 ≤ x ∧ x < b then
+          (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x h.1 h.2)).choose
+        else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (eml_hasDerivAt_of_no_crossing t2 x (hnct2 x hx1 hx2)).choose_spec
+    have ht1Dex : ∀ x, x0 ≤ x → x < b → ∃ D1 : Real, HasDerivAt t1.eval D1 x := by
+      intro x hx1 hx2
+      exact eml_leftchild_hasDerivAt_general
+        (A := t1) (B := t2) (TARGET := (EMLTree.eml t1 t2).eval) (heq := fun _ => rfl)
+        (hDd x hx1 hx2) (ht2'd x hx1 hx2) (ht2ne x hx1 hx2)
+    let D1fun : Real → Real := fun x =>
+      if h : x0 ≤ x ∧ x < b then (ht1Dex x h.1 h.2).choose else 0
+    have hD1fund : ∀ x, x0 ≤ x → x < b → HasDerivAt t1.eval (D1fun x) x := by
+      intro x hx1 hx2
+      show HasDerivAt t1.eval
+        (if h : x0 ≤ x ∧ x < b then (ht1Dex x h.1 h.2).choose else 0) x
+      rw [dif_pos ⟨hx1, hx2⟩]
+      exact (ht1Dex x hx1 hx2).choose_spec
+    have ht2close := eml_ode_closure_general_hasDerivAt x0 b hx0b t1' ht1'd t2' ht2'd D hDd hwitt2
+    let D2fun : Real → Real := fun x =>
+      t2.eval x * (Real.exp (t1.eval x) * t1' x - D x)
+    have hD2fund : ∀ x, x0 ≤ x → x < b → HasDerivAt t2.eval (D2fun x) x :=
+      fun x hx1 hx2 => (ht2close x hx1 hx2).2
+    refine ⟨ih1 D1fun hD1fund hnct1 hwit1, ih2 D2fun hD2fund hnct2 hwit2, ?_⟩
+    intro x hxa hxb
+    exact (ht2close x (le_of_lt hxa) hxb).1
+
+/-- **Direct connection to the sin-equality hypothesis.** `eml_pfaffian_validon_of_witnesses`
+specialized to `D := cos` via the free root-derivative transfer (`eml_hasDerivAt_of_sin_eq`) —
+the shape closest to `eml_pfaffian_validon_from_sin_equality` itself. Reduces the axiom, for ANY
+tree shape (not a special case), to exactly: no crossing anywhere, plus a witness at every node —
+the same witness-finding question rounds 19–24 characterized precisely, now known to be the ONLY
+remaining gap for the FULL statement, not merely for one offender at a time. -/
+theorem eml_pfaffian_validon_of_sin_and_witnesses (t : EMLTree)
+    (hsin : ∀ x, t.eval x = Real.sin x)
+    (x0 b : Real) (hx0b : x0 < b)
+    (hnc : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt t x)
+    (hwit : EMLWitnesses t x0) :
+    EMLPfaffianValidOn t x0 b := by
+  have hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt t.eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq t hsin x
+  exact eml_pfaffian_validon_of_witnesses t x0 b hx0b Real.cos hDd hnc hwit
+
 end MachLib
