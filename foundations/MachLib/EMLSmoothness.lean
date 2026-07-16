@@ -877,4 +877,59 @@ theorem eml_leftstep_blowup (W1 W2 C : EMLTree) (y L M_C : Real)
     rwa [← sub_def, ← sub_def] at h5
   exact lt_of_lt_of_le h2 h4
 
+/-! ## Generalizing to an arbitrary-length left-chain -/
+
+/-- The offender `W2`'s node is forceable above ANY target `L`, as `W2.eval y` lands small enough
+positive. A named predicate purely to make the chain induction below readable. -/
+def ForceableLarge (T W2 : EMLTree) (y : Real) : Prop :=
+  ∀ L : Real, ∃ δ : Real, 0 < δ ∧ (0 < W2.eval y → W2.eval y < δ → L < T.eval y)
+
+/-- Repackages `eml_rightstep_exceeds` as the base case of the chain induction. -/
+theorem forceableLarge_base (W1 W2 : EMLTree) (y : Real) : ForceableLarge (EMLTree.eml W1 W2) W2 y :=
+  fun L => eml_rightstep_exceeds W1 W2 y L
+
+/-- Repackages `eml_leftstep_blowup`'s mechanism to compose with an ARBITRARY already-forceable
+`base`, not just `eml W1 W2` specifically. -/
+theorem forceableLarge_leftstep {base C W2 : EMLTree} {y M_C : Real}
+    (hbase : ForceableLarge base W2 y) (hC : Real.log (C.eval y) ≤ M_C) :
+    ForceableLarge (EMLTree.eml base C) W2 y := by
+  intro L
+  obtain ⟨δ, hδpos, hM1⟩ := hbase (L + M_C)
+  refine ⟨δ, hδpos, fun hpos hlt => ?_⟩
+  have hWbig : L + M_C < base.eval y := hM1 hpos hlt
+  show L < Real.exp (base.eval y) - Real.log (C.eval y)
+  have hexp_gt : base.eval y < Real.exp (base.eval y) := exp_grows_strictly_thm _
+  have h1 : L + M_C < Real.exp (base.eval y) := lt_trans_ax hWbig hexp_gt
+  have h2 : L < Real.exp (base.eval y) - M_C := by
+    have h3 := add_lt_add_left h1 (-M_C)
+    rwa [show -M_C + (L + M_C) = L from by mach_mpoly [L, M_C],
+        show -M_C + Real.exp (base.eval y) = Real.exp (base.eval y) - M_C
+          from by mach_mpoly [M_C, Real.exp (base.eval y)]] at h3
+  have h4 : Real.exp (base.eval y) - M_C ≤ Real.exp (base.eval y) - Real.log (C.eval y) := by
+    have h5 := add_le_add_left (neg_le_neg hC) (Real.exp (base.eval y))
+    rwa [← sub_def, ← sub_def] at h5
+  exact lt_of_lt_of_le h2 h4
+
+/-- Wraps `base` as the first child of a succession of `eml`-nodes, one per list element,
+INNERMOST first. -/
+def wrapLeft : List EMLTree → EMLTree → EMLTree
+  | [], base => base
+  | c :: cs, base => wrapLeft cs (EMLTree.eml base c)
+
+/-- **The chain generalization.** Given a bound on EVERY sibling encountered along an
+arbitrary-length run of left-steps, `ForceableLarge` survives the WHOLE chain. -/
+theorem forceableLarge_wrapLeft {W2 : EMLTree} {y : Real} (Cs : List EMLTree)
+    (M : EMLTree → Real) (hM : ∀ c ∈ Cs, Real.log (c.eval y) ≤ M c)
+    {base : EMLTree} (hbase : ForceableLarge base W2 y) :
+    ForceableLarge (wrapLeft Cs base) W2 y := by
+  induction Cs generalizing base with
+  | nil => exact hbase
+  | cons c cs ih =>
+    have hcbound : Real.log (c.eval y) ≤ M c := hM c (List.Mem.head cs)
+    have hrest : ∀ c' ∈ cs, Real.log (c'.eval y) ≤ M c' :=
+      fun c' hc' => hM c' (List.Mem.tail c hc')
+    have hstep : ForceableLarge (EMLTree.eml base c) W2 y := forceableLarge_leftstep hbase hcbound
+    show ForceableLarge (wrapLeft cs (EMLTree.eml base c)) W2 y
+    exact ih hrest hstep
+
 end MachLib
