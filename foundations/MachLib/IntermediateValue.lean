@@ -102,10 +102,15 @@ theorem neg_nbhd_of_continuousAt {f : Real → Real} {x : Real}
 
 /-! ## The Intermediate Value Theorem (from `sup_exists`) -/
 
-private theorem iv_ltmin {a b c : Real} (h1 : c < a) (h2 : c < b) : c < min a b := by
+theorem iv_ltmin {a b c : Real} (h1 : c < a) (h2 : c < b) : c < min a b := by
   unfold min; split
   · exact h1
   · exact h2
+
+theorem iv_ltmax {a b c : Real} (h1 : a < c) (h2 : b < c) : max a b < c := by
+  unfold max; split
+  · exact h2
+  · exact h1
 
 private theorem iv_lerefl (a : Real) : a ≤ a := (le_iff_lt_or_eq a a).mpr (Or.inr rfl)
 
@@ -117,13 +122,13 @@ private theorem iv_letrans {a b c : Real} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ 
 private theorem iv_ltadd (c : Real) {δ : Real} (h : 0 < δ) : c < c + δ := by
   have h2 := add_lt_add_left h c; rw [add_zero] at h2; exact h2
 
-private theorem iv_subself (c : Real) {δ : Real} (h : 0 < δ) : c - δ < c := by
+theorem iv_subself (c : Real) {δ : Real} (h : 0 < δ) : c - δ < c := by
   have h2 := add_lt_add_left (show -δ < 0 by
     have h3 := add_lt_add_left h (-δ); rw [add_zero, neg_add_self] at h3; exact h3) c
   rw [add_zero, ← sub_def] at h2; exact h2
 
 /-- `x ≤ c ⟹ |x − c| = c − x`. -/
-private theorem iv_absub {x c : Real} (h : x ≤ c) : abs (x - c) = c - x := by
+theorem iv_absub {x c : Real} (h : x ≤ c) : abs (x - c) = c - x := by
   rw [show x - c = -(c - x) from by mach_ring, iv_an]
   apply abs_of_nonneg
   rcases (le_iff_lt_or_eq x c).mp h with hlt | heq

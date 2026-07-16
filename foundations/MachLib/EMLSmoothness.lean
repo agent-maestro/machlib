@@ -315,4 +315,58 @@ theorem eml_depth1_t2_const_ratio {t1 t2 : EMLTree}
     (fun x hx1 hx2 => eml_depth1_E_deriv (ht1'd x hx1 hx2))
     (fun x _ _ => (ne_of_lt (Real.exp_pos _)).symm)
 
+/-! ## The minimal-violation-point contradiction, assembled for depth-1
+
+The last pieces: (i) a value that is `0` throughout `[x0, xs)` and continuous AT `xs` is also `0`
+AT `xs` (sign-preservation, mirroring `intermediate_value`'s own proof style); (ii) combine with
+`eml_depth1_t2_const_ratio` and `inf_exists` to show a positivity witness at `x0` propagates to
+the WHOLE of `[x0, b)`. -/
+
+/-- If `g` vanishes throughout `[x0, xs)` and is continuous AT `xs` (with `x0 < xs`), `g` also
+vanishes AT `xs` — by sign-preservation: `g xs ≠ 0` would give a neighborhood where `g` keeps that
+sign, but arbitrarily close to `xs` from below `g` is `0`, a contradiction. -/
+theorem eq_zero_at_of_eq_zero_below {g : Real → Real} {x0 xs : Real} (hx0xs : x0 < xs)
+    (hcont : ContinuousAt g xs) (hzero : ∀ y, x0 ≤ y → y < xs → g y = 0) :
+    g xs = 0 := by
+  rcases lt_total (g xs) 0 with hlt | heq | hgt
+  · exfalso
+    obtain ⟨δ, hδ, hnbhd⟩ := neg_nbhd_of_continuousAt hcont hlt
+    obtain ⟨y, hy1, hy2⟩ := exists_between (max x0 (xs - δ)) xs
+      (iv_ltmax hx0xs (iv_subself xs hδ))
+    have hyx0 : x0 ≤ y := le_of_lt_r (lt_of_le_of_lt (le_max_left x0 (xs - δ)) hy1)
+    have hyxsδ : xs - δ < y := lt_of_le_of_lt (le_max_right x0 (xs - δ)) hy1
+    have habs : abs (y - xs) < δ := by
+      rw [iv_absub (le_of_lt_r hy2)]
+      have h2 := add_lt_add_left hyxsδ δ
+      rw [show δ + (xs - δ) = xs from by mach_ring,
+          show δ + y = y + δ from by mach_ring] at h2
+      have h3 := add_lt_add_left h2 (-y)
+      rw [show -y + xs = xs - y from by mach_mpoly [xs, y],
+          show -y + (y + δ) = δ from by mach_mpoly [y, δ]] at h3
+      exact h3
+    have hgy0 : g y = 0 := hzero y hyx0 hy2
+    have hcontra := hnbhd y habs
+    rw [hgy0] at hcontra
+    exact lt_irrefl_ax 0 hcontra
+  · exact heq
+  · exfalso
+    obtain ⟨δ, hδ, hnbhd⟩ := pos_nbhd_of_continuousAt hcont hgt
+    obtain ⟨y, hy1, hy2⟩ := exists_between (max x0 (xs - δ)) xs
+      (iv_ltmax hx0xs (iv_subself xs hδ))
+    have hyx0 : x0 ≤ y := le_of_lt_r (lt_of_le_of_lt (le_max_left x0 (xs - δ)) hy1)
+    have hyxsδ : xs - δ < y := lt_of_le_of_lt (le_max_right x0 (xs - δ)) hy1
+    have habs : abs (y - xs) < δ := by
+      rw [iv_absub (le_of_lt_r hy2)]
+      have h2 := add_lt_add_left hyxsδ δ
+      rw [show δ + (xs - δ) = xs from by mach_ring,
+          show δ + y = y + δ from by mach_ring] at h2
+      have h3 := add_lt_add_left h2 (-y)
+      rw [show -y + xs = xs - y from by mach_mpoly [xs, y],
+          show -y + (y + δ) = δ from by mach_mpoly [y, δ]] at h3
+      exact h3
+    have hgy0 : g y = 0 := hzero y hyx0 hy2
+    have hcontra := hnbhd y habs
+    rw [hgy0] at hcontra
+    exact lt_irrefl_ax 0 hcontra
+
 end MachLib
