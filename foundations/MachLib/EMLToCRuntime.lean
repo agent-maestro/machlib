@@ -52,7 +52,9 @@ structure Prims where
   pow  : Float → Float → Float
 
 /-- EML's intended unary-builtin interpretation over a primitive basis. Composites `sinh/cosh/tanh`
-are the exp-combinations (the Lean hyperbolic reference, matching `libmonogate.h`). -/
+are the exp-combinations (the Lean hyperbolic reference, matching `libmonogate.h`); `log10` is the
+`ln`-combination `Log10Lipschitz.lean` derives at the real-number level (`log10 x = log x / log 10`) —
+kept a COMPOSITE here too, not a 12th primitive, since the runtime identity mirrors the same algebra. -/
 def stdI1 (p : Prims) : Trans1 → Float → Float
   | .exp  => p.exp
   | .ln   => p.ln
@@ -67,6 +69,7 @@ def stdI1 (p : Prims) : Trans1 → Float → Float
   | .sinh => fun x => (p.exp x - p.exp (-x)) * 0.5
   | .cosh => fun x => (p.exp x + p.exp (-x)) * 0.5
   | .tanh => fun x => (p.exp x - p.exp (-x)) / (p.exp x + p.exp (-x))
+  | .log10 => fun x => p.ln x / p.ln 10
 
 /-- The C runtime keyed by `mg_*` name — a faithful transcription of `libmonogate.h`. Composite
 bodies are written as their C-source expressions; unknown names default to `0` (never emitted, since
@@ -85,6 +88,7 @@ def stdR1 (p : Prims) (name : String) : Float → Float :=
   else if name = "mg_sinh" then fun x => (p.exp x - p.exp (-x)) * 0.5
   else if name = "mg_cosh" then fun x => (p.exp x + p.exp (-x)) * 0.5
   else if name = "mg_tanh" then fun x => (p.exp x - p.exp (-x)) / (p.exp x + p.exp (-x))
+  else if name = "mg_log10" then fun x => p.ln x / p.ln 10
   else fun _ => 0.0
 
 /-- EML's intended binary-builtin interpretation. `eml(x,y)=exp(x)−ln(y)` is the EML primitive. -/

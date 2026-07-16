@@ -47,7 +47,7 @@ def BinOp.apply : BinOp → Float → Float → Float
 
 /-- Unary builtins; each routes to a `mg_*` runtime call. -/
 inductive Trans1 where
-  | exp | ln | sin | cos | tan | sqrt | abs | asin | acos | atan | sinh | cosh | tanh
+  | exp | ln | sin | cos | tan | sqrt | abs | asin | acos | atan | sinh | cosh | tanh | log10
 deriving DecidableEq, Repr
 
 /-- `mg_*` C runtime name of each unary builtin (verbatim from `c_backend._BUILTIN_TO_C`). -/
@@ -55,6 +55,7 @@ def Trans1.cName : Trans1 → String
   | .exp => "mg_exp" | .ln => "mg_ln" | .sin => "mg_sin" | .cos => "mg_cos" | .tan => "mg_tan"
   | .sqrt => "mg_sqrt" | .abs => "mg_abs" | .asin => "mg_asin" | .acos => "mg_acos"
   | .atan => "mg_atan" | .sinh => "mg_sinh" | .cosh => "mg_cosh" | .tanh => "mg_tanh"
+  | .log10 => "mg_log10"
 
 /-- Binary builtins: `eml(x,y)` and `pow(x,y)`. -/
 inductive Trans2 where

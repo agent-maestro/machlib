@@ -1,6 +1,7 @@
 import MachLib.AbsoluteFoldNestMag
 import MachLib.TransNodes
 import MachLib.SqrtNode
+import MachLib.Log10Lipschitz
 
 /-!
 # `pipeline_pos_over_arith` — the one-sided-domain primitives (`log`, `sqrt`) over an arithmetic core
@@ -31,10 +32,12 @@ excludes it). -/
 noncomputable def realOfPos : Trans1 → MachLib.Real → MachLib.Real
   | .ln => log
   | .sqrt => sqrt
+  | .log10 => log10
   | _ => id
 
-/-- The one-sided-domain primitives this pipeline covers (`ln` is EML's natural log). -/
-def PosLip (t : Trans1) : Prop := t = .ln ∨ t = .sqrt
+/-- The one-sided-domain primitives this pipeline covers (`ln` is EML's natural log; `log10` shares
+the same one-sided `[lo, ∞)` domain shape, added via `Log10Lipschitz.lean`'s derived Lipschitz bound). -/
+def PosLip (t : Trans1) : Prop := t = .ln ∨ t = .sqrt ∨ t = .log10
 
 /-- **`log`/`sqrt` over an arithmetic core, hypotheses pre-discharged except the positive lower bound.**
 For an arithmetic argument `arg` (`IsFold (fun _ => False) arg` — no `tr1` nodes) and a positive lower
@@ -64,13 +67,16 @@ theorem pipeline_pos_over_arith {toR : Float → MachLib.Real} (br : FPBridge to
     (abs_le_iff.mp (le_trans (abs_le_add_err hAbs) (add_le_add_both hMagB (le_refl E)))).2
   -- 2. cap the arithmetic core with the one-sided-domain node on [lo, M + E].
   rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 (.tr1 t arg) env]
-  rcases hP with rfl | rfl
+  rcases hP with rfl | rfl | rfl
   · show ∃ E', AbsEnc E' (toR (i1 .ln (evalEML i1 i2 env arg).toF))
                           (log (exactRn toR realOfPos env arg))
     exact ⟨_, absenc_log_local hlo hAbs hlo_fl hfl_hi hlo_xe hxe_hi (hround_t _)⟩
   · show ∃ E', AbsEnc E' (toR (i1 .sqrt (evalEML i1 i2 env arg).toF))
                           (sqrt (exactRn toR realOfPos env arg))
     exact ⟨_, absenc_sqrt_local hlo hAbs hlo_fl hfl_hi hlo_xe hxe_hi (hround_t _)⟩
+  · show ∃ E', AbsEnc E' (toR (i1 .log10 (evalEML i1 i2 env arg).toF))
+                          (log10 (exactRn toR realOfPos env arg))
+    exact ⟨_, absenc_log10_local hlo hAbs hlo_fl hfl_hi hlo_xe hxe_hi (hround_t _)⟩
 
 /-- Non-vacuity: `sqrt(x·x + c)` — `sqrt` over a genuine arithmetic core (a product plus a constant) —
 is an arithmetic-only argument, so `pipeline_pos_over_arith` applies given a positive lower bound. -/
