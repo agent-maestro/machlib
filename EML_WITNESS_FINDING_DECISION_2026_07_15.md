@@ -178,16 +178,33 @@ Net effect: the residual gap is now precisely "`T1` BOUNDED and non-constant, `S
 — narrower than "compound `T1`" was. No counterexample found (weak evidence the general claim may
 hold for this shape), but the search itself produced real, reusable infrastructure.
 
+## Update 2026-07-16 (cont.) — periodicity route checked and ruled out as a shortcut
+
+Considered whether the last residual (`T1` bounded, non-constant, `S2` constant `> 1`) could close
+via periodicity: the collapse equation forces `T1` to be `2π`-periodic (inherited from `sin`), and
+a non-constant periodic function has infinitely many critical points — which looks like it should
+contradict a "boundedly many critical points" fact for elementary/EML functions.
+
+Checked the actual infrastructure (`AnalyticFiniteZerosReal.lean`) rather than assuming it would
+work. `analytic_open_interval_bounded_zeros`'s zero-count bound is explicitly documented as
+**non-uniform** in the interval — it can grow as the interval grows, so extending the periodicity
+argument to `[0, 2Nπ]` for large `N` gives no contradiction. The uniform bound this route would
+actually need IS the Khovanskii/Pfaffian-chain machinery itself — comparable in scale to the axiom
+being closed, not a nearby shortcut. Ruled out; no code written (checking against source first
+avoided a wasted build attempt).
+
 ## Status
 
 - Mechanism-building (rounds 1–18 this session): essentially complete. Zero new axioms beyond
   `HasDerivAt_congr`. ~2200 new lines in `EMLSmoothness.lean`.
 - Witness-finding: open in general. Depth-2/leaf-`S2` family closed except one maximally narrow
-  residual: `T1` bounded and non-constant, `S2` constant `> 1`.
-- Option A: mostly exhausted for this tree shape — remaining residual needs either a genuinely
-  different argument or acceptance as a named side-condition.
+  residual: `T1` bounded and non-constant, `S2` constant `> 1`. Probed from three independent
+  angles (direct evaluation, growth/unboundedness, periodicity) — all either close cleanly or
+  require Khovanskii-scale machinery. This is a well-triangulated boundary, not an unexplored gap.
+- Option A: exhausted for this tree shape at the elementary level — the remaining residual needs
+  either genuinely new (Khovanskii-scale) machinery or acceptance as a named side-condition.
 - Option B: not recommended (see original rationale above).
-- Option C: attempted once, no counterexample found, produced a real generalization instead (see
-  above). Further attempts would need to target deeper/compound trees specifically, which reopens
+- Option C: attempted once, no counterexample found, produced a real generalization instead.
+  Further attempts would need to target deeper/compound trees specifically, which reopens
   round-19-scale difficulty rather than being cheap.
 - This document: living draft, updated as options are acted on.
