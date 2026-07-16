@@ -2208,4 +2208,43 @@ theorem eml_depth2_witness_of_var_sibling {T1 S3 : EMLTree}
   rw [hNeval0, Real.log_exp, Real.sin_zero, sub_zero] at h1
   exact absurd h1 (ne_of_lt (Real.exp_pos (T1.eval 0))).symm
 
+/-- **A free witness at depth 2, for `S2` constant `≤ 1`, `T1` COMPLETELY ARBITRARY.** The other
+half of `eml_depth2_witness_of_const_var`'s `S2`-constant branch also drops the `T1`-constant
+restriction — but only within this narrower range: evaluating the collapse equation at
+`x = -π/2` (`sin(-π/2) = -1`, via `sin_neg` + `sin_pi_div_two`) forces
+`exp(T1.eval(-π/2)) = c2 - 1 ≤ 0` whenever `c2 ≤ 1`, impossible regardless of `T1`. For `c2 > 1`
+this specific point gives no contradiction — matching round 19's finding that unconstrained
+siblings can defeat single-point arguments; `eml_depth2_witness_of_const_var` still needs `T1`
+constant to cover that range, via its two-point comparison. -/
+theorem eml_depth2_witness_of_const_le_one_sibling {T1 S3 : EMLTree} {c2 : Real} (hc2 : c2 ≤ 1)
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  let x0 : Real := -(Real.pi / (1 + 1))
+  have hsinx0 : Real.sin x0 = -1 := by
+    show Real.sin (-(Real.pi / (1 + 1))) = -1
+    rw [Real.sin_neg, Real.sin_pi_div_two]
+  have hlog0 : Real.log (S3.eval x0) = 0 := Real.log_nonpos (hallle x0)
+  have h1 : Real.exp (T1.eval x0) -
+      Real.log ((EMLTree.eml (EMLTree.const c2) S3).eval x0) = Real.sin x0 := hsin x0
+  have hNeval : (EMLTree.eml (EMLTree.const c2) S3).eval x0 = Real.exp c2 := by
+    show Real.exp c2 - Real.log (S3.eval x0) = Real.exp c2
+    rw [hlog0, sub_zero]
+  rw [hNeval, Real.log_exp, hsinx0] at h1
+  have h2 : Real.exp (T1.eval x0) - c2 + c2 = -1 + c2 := by rw [h1]
+  rw [sub_def, add_assoc, neg_add_self, add_zero,
+      show (-1 : Real) + c2 = c2 - 1 from by mach_ring] at h2
+  have hc2m1le : c2 - 1 ≤ 0 := by
+    have h3 := add_le_add_left hc2 (-1)
+    rwa [show (-1 : Real) + c2 = c2 - 1 from by mach_ring,
+        show (-1 : Real) + 1 = 0 from by mach_ring] at h3
+  have hcontra : Real.exp (T1.eval x0) ≤ 0 := h2 ▸ hc2m1le
+  exact lt_irrefl_ax 0 (lt_of_lt_of_le (Real.exp_pos _) hcontra)
+
 end MachLib
