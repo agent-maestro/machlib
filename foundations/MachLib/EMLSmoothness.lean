@@ -1709,4 +1709,234 @@ theorem eml_leftdescent_pos_of_pos_witness {S2 S3 C : EMLTree}
   have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
   exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
 
+/-! ## Generalizing left-descent to arbitrary depth
+
+`eml_leftdescent_pos_of_pos_witness`/`eml_leftdescent_N_hasDerivAt` hardcoded `Real.sin` as the
+known target, one level in from the root. Neither actually needs to: `eml_leftchild_explicit_value`
+already takes an arbitrary `target : Real`, and `eml_ode_step_general`/`eml_E_step_general` already
+take an arbitrary known derivative `D`. This section makes that genericity explicit — parametrizing
+both the derivative-propagation step and the closure theorem over an ABSTRACT known target function
+— then chains the propagation step through an arbitrary-length LEFT SPINE (a list of siblings, one
+per level), closing the offender at the BOTTOM of a left-descent of ANY depth, not just one level. -/
+
+/-- **Generalized left-child derivative.** `eml_leftdescent_N_hasDerivAt` with `Real.sin` replaced
+by an arbitrary known target function `TARGET` (with its own known derivative `d` at `x`) — same
+proof, no other changes. This is what lets the mechanism chain: the OUTPUT of one application
+(a node's own new known derivative) is exactly the right shape to be the INPUT `TARGET`/`hTarget`
+of the next. -/
+theorem eml_leftchild_hasDerivAt_general {A B : EMLTree} {x c d : Real} {TARGET : Real → Real}
+    (heq : ∀ z : Real, (EMLTree.eml A B).eval z = TARGET z)
+    (hTarget : HasDerivAt TARGET d x)
+    (hc : HasDerivAt B.eval c x) (hBne : B.eval x ≠ 0) :
+    ∃ D : Real, HasDerivAt A.eval D x := by
+  have hlogB : ∃ dB, HasDerivAt (fun z => Real.log (B.eval z)) dB x := by
+    rcases lt_total (B.eval x) 0 with hlt | heqB | hgt
+    · exact ⟨0 * c, HasDerivAt_comp Real.log B.eval c 0 x hc (HasDerivAt_log_neg hlt)⟩
+    · exact absurd heqB hBne
+    · exact ⟨1 / B.eval x * c,
+        HasDerivAt_comp Real.log B.eval c (1 / B.eval x) x hc (HasDerivAt_log_pos _ hgt)⟩
+  obtain ⟨dB, hdB⟩ := hlogB
+  have hsum : HasDerivAt (fun z => TARGET z + Real.log (B.eval z)) (d + dB) x :=
+    HasDerivAt_add TARGET (fun z => Real.log (B.eval z)) d dB x hTarget hdB
+  have hsumpos : 0 < TARGET x + Real.log (B.eval x) := by
+    have heq2 : Real.exp (A.eval x) = TARGET x + Real.log (B.eval x) := by
+      have h1 : Real.exp (A.eval x) - Real.log (B.eval x) = TARGET x := heq x
+      have h2 : Real.exp (A.eval x) - Real.log (B.eval x) + Real.log (B.eval x)
+          = TARGET x + Real.log (B.eval x) := by rw [h1]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero] at h2
+    rw [← heq2]
+    exact Real.exp_pos _
+  have hRHSderiv : HasDerivAt (fun z => Real.log (TARGET z + Real.log (B.eval z)))
+      (1 / (TARGET x + Real.log (B.eval x)) * (d + dB)) x :=
+    HasDerivAt_comp Real.log (fun z => TARGET z + Real.log (B.eval z)) (d + dB)
+      (1 / (TARGET x + Real.log (B.eval x))) x hsum (HasDerivAt_log_pos _ hsumpos)
+  exact ⟨1 / (TARGET x + Real.log (B.eval x)) * (d + dB),
+    HasDerivAt_of_eq (fun z => Real.log (TARGET z + Real.log (B.eval z)))
+      A.eval _ x
+      (fun z => (eml_leftchild_explicit_value A B z (TARGET z) (heq z)).symm)
+      hRHSderiv⟩
+
+/-- **Generalized ODE closure.** `eml_depth1_pos_of_pos_witness`/`eml_leftdescent_pos_of_pos_witness`
+with `Real.cos x`/`Dfun` replaced by an arbitrary known-derivative function `D` for `eml A B` —
+literally the SAME proof (minimal-violation point via `inf_exists`, the `k·E` constant-ratio fact,
+continuity extension), since neither `eml_ode_step_general` nor `eml_E_step_general` ever cared
+what `D` actually was. This single theorem SUBSUMES both — depth-1 is the case `D := cos`
+(free from the root), left-descent-one-level is `D := ` the output of
+`eml_leftchild_hasDerivAt_general` applied once; arbitrary left-spine depth (below) is the same `D`
+applied through the chained propagation. -/
+theorem eml_ode_closure_general {A B : EMLTree}
+    (x0 b : Real) (hx0b : x0 < b)
+    (A' : Real → Real) (hA'd : ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (A' x) x)
+    (B' : Real → Real) (hB'd : ∀ x, x0 ≤ x → x < b → HasDerivAt B.eval (B' x) x)
+    (D : Real → Real) (hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt (EMLTree.eml A B).eval (D x) x)
+    (hx0pos : 0 < B.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < B.eval x := by
+  intro x hx1 hx2
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hxle : B.eval x ≤ 0 := by
+    rcases lt_total 0 (B.eval x) with h | h | h
+    · exact absurd h hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hSne : ∃ y, (fun y => x0 ≤ y ∧ y < b ∧ B.eval y ≤ 0) y := ⟨x, hx1, hx2, hxle⟩
+  have hSbd : BoundedBelow (fun y => x0 ≤ y ∧ y < b ∧ B.eval y ≤ 0) := ⟨x0, fun y hy => hy.1⟩
+  obtain ⟨xs, hlb, hglb⟩ := inf_exists _ hSne hSbd
+  have hx0xs : x0 ≤ xs := hglb x0 (fun y hy => hy.1)
+  have hxsb : xs < b := lt_of_le_of_lt (hlb x ⟨hx1, hx2, hxle⟩) hx2
+  have hposbelow : ∀ y, x0 ≤ y → y < xs → 0 < B.eval y := by
+    intro y hy1 hy2
+    refine Classical.byContradiction (fun hcony => ?_)
+    have hyle : B.eval y ≤ 0 := by
+      rcases lt_total 0 (B.eval y) with h | h | h
+      · exact absurd h hcony
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    have hyb : y < b := lt_trans_ax hy2 hxsb
+    exact lt_irrefl_ax xs (lt_of_le_of_lt (hlb y ⟨hy1, hyb, hyle⟩) hy2)
+  have hxsle : B.eval xs ≤ 0 := by
+    refine Classical.byContradiction (fun hxscon => ?_)
+    have hxsgt : 0 < B.eval xs := by
+      rcases lt_total (B.eval xs) 0 with h | h | h
+      · exact absurd (le_of_lt h) hxscon
+      · exact absurd (le_of_eq h) hxscon
+      · exact h
+    obtain ⟨δ, hδ, hnbhd⟩ :=
+      pos_nbhd_of_continuousAt (hasDerivAt_continuousAt (hB'd xs hx0xs hxsb)) hxsgt
+    have hbound2 : ∀ y, (x0 ≤ y ∧ y < b ∧ B.eval y ≤ 0) → xs + δ ≤ y := by
+      intro y hy
+      rcases lt_total y (xs + δ) with h | h | h
+      · exfalso
+        have hyxs : xs ≤ y := hlb y hy
+        have habs : abs (y - xs) < δ := by
+          rcases (le_iff_lt_or_eq xs y).mp hyxs with hlt | heq
+          · rw [abs_of_nonneg (le_of_lt_r (sub_pos_of_lt hlt))]
+            have h2 := add_lt_add_left h (-xs)
+            rwa [show -xs + y = y - xs from by mach_mpoly [xs, y],
+                show -xs + (xs + δ) = δ from by mach_mpoly [xs, δ]] at h2
+          · rw [← heq, show xs - xs = 0 from by mach_ring,
+                abs_of_nonneg (le_refl (0 : Real))]
+            exact hδ
+        exact lt_irrefl_ax 0 (lt_of_lt_of_le (hnbhd y habs) hy.2.2)
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    exact lt_irrefl_ax xs (lt_of_lt_of_le (iv_ltadd xs hδ) (hglb (xs + δ) hbound2))
+  let E1 : Real → Real := fun z => Real.exp (Real.exp (A.eval z) - (EMLTree.eml A B).eval z)
+  have hE1pos : ∀ z, 0 < E1 z := fun z => Real.exp_pos _
+  let k : Real := B.eval x0 * (1 / E1 x0)
+  have hkE1x0 : k * E1 x0 = B.eval x0 := by
+    show B.eval x0 * (1 / E1 x0) * E1 x0 = B.eval x0
+    rw [mul_assoc, mul_comm (1 / E1 x0) (E1 x0), mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+        mul_one_ax]
+  have hkpos : 0 < k := mul_pos hx0pos (one_div_pos_of_pos (hE1pos x0))
+  have hBode : ∀ z, x0 ≤ z → z < xs →
+      HasDerivAt B.eval (B.eval z * (Real.exp (A.eval z) * A' z - D z)) z := by
+    intro z hz1 hz2
+    have hzb : z < b := lt_trans_ax hz2 hxsb
+    have heq := eml_ode_step_general (hDd z hz1 hzb) (hA'd z hz1 hzb) (hB'd z hz1 hzb)
+      (hposbelow z hz1 hz2)
+    have hderiv := hB'd z hz1 hzb
+    rwa [heq] at hderiv
+  have hE1ode : ∀ z, x0 ≤ z → z < xs →
+      HasDerivAt E1 (E1 z * (Real.exp (A.eval z) * A' z - D z)) z := by
+    intro z hz1 hz2
+    have hzb : z < b := lt_trans_ax hz2 hxsb
+    exact eml_E_step_general (hA'd z hz1 hzb) (hDd z hz1 hzb)
+  have hzero : ∀ y, x0 ≤ y → y < xs → B.eval y - k * E1 y = 0 := by
+    intro y hy1 hy2
+    rcases (le_iff_lt_or_eq x0 y).mp hy1 with hlt | heq
+    · obtain ⟨k', hk'⟩ := const_ratio_of_shared_ode B.eval E1
+        (fun z => Real.exp (A.eval z) * A' z - D z) x0 y hlt
+        (fun z hz1 hz2 => hBode z hz1 (lt_of_le_of_lt hz2 hy2))
+        (fun z hz1 hz2 => hE1ode z hz1 (lt_of_le_of_lt hz2 hy2))
+        (fun z _ _ => (ne_of_lt (hE1pos z)).symm)
+      have hkx0 : B.eval x0 = k' * E1 x0 := hk' x0 (le_refl x0) (le_of_lt hlt)
+      have hkeq : k' = k := by
+        have h2 : k' * E1 x0 = k * E1 x0 := by rw [← hkx0, hkE1x0]
+        have h3 : k' * E1 x0 * (1 / E1 x0) = k * E1 x0 * (1 / E1 x0) := by rw [h2]
+        rwa [mul_assoc, mul_assoc, mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+            mul_one_ax, mul_one_ax] at h3
+      have hky : B.eval y = k' * E1 y := hk' y hy1 (le_refl y)
+      rw [hky, hkeq, sub_def, add_neg]
+    · rw [← heq, hkE1x0, sub_def, add_neg]
+  have hxsE1pos : 0 < k * E1 xs := mul_pos hkpos (hE1pos xs)
+  have hxseq2 : B.eval xs = k * E1 xs := by
+    rcases (le_iff_lt_or_eq x0 xs).mp hx0xs with hx0xslt | hx0xseq
+    · have hcontdiff : HasDerivAt (fun z => B.eval z - k * E1 z)
+          (B' xs - (0 * E1 xs + k * (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs)))) xs :=
+        HasDerivAt_sub B.eval (fun z => k * E1 z) (B' xs)
+          (0 * E1 xs + k * (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs))) xs
+          (hB'd xs hx0xs hxsb)
+          (HasDerivAt_mul (fun _ => k) E1 0 (E1 xs * (Real.exp (A.eval xs) * A' xs - D xs)) xs
+            (HasDerivAt_const k xs) (eml_E_step_general (hA'd xs hx0xs hxsb) (hDd xs hx0xs hxsb)))
+      have hxseq : B.eval xs - k * E1 xs = 0 :=
+        @eq_zero_at_of_eq_zero_below (fun z => B.eval z - k * E1 z) x0 xs hx0xslt
+          (hasDerivAt_continuousAt hcontdiff) hzero
+      have h2 : B.eval xs - k * E1 xs + k * E1 xs = 0 + k * E1 xs := by rw [hxseq]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+    · rw [← hx0xseq, hkE1x0]
+  have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
+  exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
+
+/-- Builds the left-descent spine ROOT-first: `leftSpine [c0,c1,...,cn] base = eml (eml (... (eml
+base cn) ...) c1) c0` — the FIRST list element is the ROOT's own sibling, recursing INWARD toward
+`base`. Deliberately the opposite traversal direction from `wrapLeft` (which builds bottom-up,
+suited to the value-blow-up chain): peeling a node's value/derivative from its PARENT's needs to
+proceed root-to-base, matching this recursion exactly. -/
+def leftSpine : List EMLTree → EMLTree → EMLTree
+  | [], base => base
+  | c :: cs, base => EMLTree.eml (leftSpine cs base) c
+
+/-- **The left-descent derivative, chained through an arbitrary-length spine.** Given
+`leftSpine Cs base` agrees with a known target (with known derivative) and every sibling in `Cs`
+has no crossing, `base` gets a known derivative too — by induction on `Cs`, applying
+`eml_leftchild_hasDerivAt_general` once per level, each time feeding the PREVIOUS level's freshly
+established derivative back in as the next level's `TARGET`/`hTarget`. -/
+theorem leftSpine_hasDerivAt_of_target {base : EMLTree} (Cs : List EMLTree) {x : Real}
+    {TARGET : Real → Real} {d : Real}
+    (heq : ∀ z, (leftSpine Cs base).eval z = TARGET z)
+    (hTarget : HasDerivAt TARGET d x)
+    (hncCs : ∀ c ∈ Cs, EMLNoCrossingAt c x)
+    (hCsne : ∀ c ∈ Cs, c.eval x ≠ 0) :
+    ∃ D : Real, HasDerivAt base.eval D x := by
+  induction Cs generalizing TARGET d with
+  | nil => exact ⟨d, HasDerivAt_of_eq TARGET base.eval d x (fun z => (heq z).symm) hTarget⟩
+  | cons c cs ih =>
+    have hncc : EMLNoCrossingAt c x := hncCs c (List.Mem.head cs)
+    have hncrest : ∀ c' ∈ cs, EMLNoCrossingAt c' x := fun c' hc' => hncCs c' (List.Mem.tail c hc')
+    have hcne : c.eval x ≠ 0 := hCsne c (List.Mem.head cs)
+    have hcnerest : ∀ c' ∈ cs, c'.eval x ≠ 0 := fun c' hc' => hCsne c' (List.Mem.tail c hc')
+    obtain ⟨cc, hcc⟩ := eml_hasDerivAt_of_no_crossing c x hncc
+    obtain ⟨D', hD'⟩ := eml_leftchild_hasDerivAt_general
+      (A := leftSpine cs base) (B := c) heq hTarget hcc hcne
+    exact ih (heq := fun _ => rfl) hD' hncrest hcnerest
+
+/-- **The full left-spine closure.** If `t = leftSpine Cs (eml Slast Offender)` agrees with `sin`
+on `[x0,b)`, every sibling in `Cs` has no crossing there, and `Offender` is positive at the witness
+`x0`, `Offender` stays positive throughout `[x0,b)` — for a spine `Cs` of ANY length. Combines
+`leftSpine_hasDerivAt_of_target` (chained root-to-base derivative propagation) with
+`eml_ode_closure_general` (the minimal-violation-point closure, generic in the known derivative). -/
+theorem eml_leftspine_pos_of_pos_witness {Slast Offender : EMLTree} (Cs : List EMLTree)
+    (x0 b : Real) (hx0b : x0 < b)
+    (hsin : ∀ x : Real, (leftSpine Cs (EMLTree.eml Slast Offender)).eval x = Real.sin x)
+    (hncCs : ∀ c ∈ Cs, ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt c x)
+    (hCsne : ∀ c ∈ Cs, ∀ x, x0 ≤ x → x < b → c.eval x ≠ 0)
+    (Slast' : Real → Real) (hSlast'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Slast.eval (Slast' x) x)
+    (Offender' : Real → Real)
+    (hOffender'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Offender.eval (Offender' x) x)
+    (hx0pos : 0 < Offender.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < Offender.eval x := by
+  have hDd : ∀ x, x0 ≤ x → x < b →
+      ∃ D : Real, HasDerivAt (EMLTree.eml Slast Offender).eval D x := by
+    intro x hx1 hx2
+    exact leftSpine_hasDerivAt_of_target Cs (heq := hsin) (HasDerivAt_sin x)
+      (fun c hc => hncCs c hc x hx1 hx2) (fun c hc => hCsne c hc x hx1 hx2)
+  let Dfun : Real → Real := fun z => if h : x0 ≤ z ∧ z < b then (hDd z h.1 h.2).choose else 0
+  have hDfund : ∀ z, x0 ≤ z → z < b → HasDerivAt (EMLTree.eml Slast Offender).eval (Dfun z) z := by
+    intro z hz1 hz2
+    show HasDerivAt (EMLTree.eml Slast Offender).eval
+      (if h : x0 ≤ z ∧ z < b then (hDd z h.1 h.2).choose else 0) z
+    rw [dif_pos ⟨hz1, hz2⟩]
+    exact (hDd z hz1 hz2).choose_spec
+  exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd Dfun hDfund hx0pos
+
 end MachLib
