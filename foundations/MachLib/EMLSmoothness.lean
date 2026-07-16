@@ -2175,4 +2175,37 @@ theorem eml_depth2_witness_of_const_var {T1 S2 S3 : EMLTree} {c : Real}
     have hexp0 : Real.exp c = 0 := by rw [← heq0]; mach_ring
     exact absurd hexp0 (ne_of_lt (Real.exp_pos c)).symm
 
+/-! ## Dropping the `T1`-constant restriction: it was only load-bearing for one sub-case
+
+Re-examining `eml_depth2_witness_of_const_var`'s two branches: the "`S2` constant" branch
+genuinely NEEDS `T1` constant (comparing `exp(T1.eval x) - c2` at two different points only forces
+a contradiction if `exp(T1.eval x)` is the SAME number both times). The "`S2 = var`" branch does
+NOT — evaluating the collapse equation at `x = 0` alone gives `exp(T1.eval 0) - var.eval 0 = sin 0`,
+i.e. `exp(T1.eval 0) = 0` (since `var.eval 0 = 0` and `sin 0 = 0`), which is impossible for ANY
+`T1` whatsoever, by `exp`'s bare positivity. The constant-`T1` hypothesis was carrying no weight at
+all in that branch — dropped below. -/
+
+/-- **A free witness at depth 2, for `S2 = var`, with `T1` COMPLETELY ARBITRARY.** Strengthens the
+`S2 = var` half of `eml_depth2_witness_of_const_var`: no hypothesis on `T1` at all. Evaluating the
+collapse equation at `x = 0` alone (`var.eval 0 = 0`, `sin 0 = 0`) forces `exp(T1.eval 0) = 0`,
+impossible regardless of `T1`'s shape. -/
+theorem eml_depth2_witness_of_var_sibling {T1 S3 : EMLTree}
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml EMLTree.var S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hlog0 : Real.log (S3.eval 0) = 0 := Real.log_nonpos (hallle 0)
+  have h1 : Real.exp (T1.eval 0) - Real.log ((EMLTree.eml EMLTree.var S3).eval 0) = Real.sin 0 :=
+    hsin 0
+  have hNeval0 : (EMLTree.eml EMLTree.var S3).eval 0 = Real.exp (0 : Real) := by
+    show Real.exp (0 : Real) - Real.log (S3.eval 0) = Real.exp (0 : Real)
+    rw [hlog0, sub_zero]
+  rw [hNeval0, Real.log_exp, Real.sin_zero, sub_zero] at h1
+  exact absurd h1 (ne_of_lt (Real.exp_pos (T1.eval 0))).symm
+
 end MachLib
