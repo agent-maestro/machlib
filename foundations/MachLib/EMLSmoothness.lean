@@ -2247,4 +2247,58 @@ theorem eml_depth2_witness_of_const_le_one_sibling {T1 S3 : EMLTree} {c2 : Real}
   have hcontra : Real.exp (T1.eval x0) ≤ 0 := h2 ▸ hc2m1le
   exact lt_irrefl_ax 0 (lt_of_lt_of_le (Real.exp_pos _) hcontra)
 
+/-! ## Option C (counterexample search) redirected: the real dichotomy is bounded vs. unbounded `T1`
+
+Trying to construct an explicit counterexample tree — a candidate compound `T1` making the
+"`c2 > 1`" gap genuine — kept failing for a specific reason: natural compound `T1` choices are
+either secretly constant (e.g. `eml (const a) (const b)` collapses to a fixed number) or
+UNBOUNDED (e.g. `eml var (const 1) = exp(x)`, unbounded above). The unbounded case turns out to
+give an IMMEDIATE elementary contradiction, with no dependence on `T1`'s syntactic shape at all —
+this is the real line dividing "closes for free" from "needs `T1` constant", not "leaf vs.
+compound" as the earlier framing suggested. -/
+
+/-- **A free witness for `S2` constant, ANY `c2`, whenever `T1` is unbounded above.** Covers the
+ENTIRE `c2 > 1` gap left by `eml_depth2_witness_of_const_le_one_sibling`, for any `T1` — compound
+or not — that takes arbitrarily large values somewhere. If `S3` collapsed to `≤ 0` everywhere,
+`exp(T1.eval x) = sin x + c2 ≤ c2 + 1` for ALL `x` (via `sin_le_one`) — but picking `x` with
+`T1.eval x > c2 + 2` (from unboundedness) forces `exp(T1.eval x) > T1.eval x > c2 + 2` (via
+`exp_grows_strictly_thm`), directly contradicting the upper bound. No Khovanskii/zero-counting
+machinery needed — this is exactly the kind of elementary growth argument a counterexample search
+was hoping to defeat, and it holds unconditionally. -/
+theorem eml_depth2_witness_of_const_sibling_unbounded_T1 {T1 S3 : EMLTree} {c2 : Real}
+    (hT1unbdd : ∀ M : Real, ∃ x, M < T1.eval x)
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hcollapse : ∀ x, Real.exp (T1.eval x) - c2 = Real.sin x := by
+    intro x
+    have hlog0 : Real.log (S3.eval x) = 0 := Real.log_nonpos (hallle x)
+    have hNeval : (EMLTree.eml (EMLTree.const c2) S3).eval x = Real.exp c2 := by
+      show Real.exp c2 - Real.log (S3.eval x) = Real.exp c2
+      rw [hlog0, sub_zero]
+    have h1 : Real.exp (T1.eval x) -
+        Real.log ((EMLTree.eml (EMLTree.const c2) S3).eval x) = Real.sin x := hsin x
+    rwa [hNeval, Real.log_exp] at h1
+  obtain ⟨x, hx⟩ := hT1unbdd (c2 + (1 + 1))
+  have hexp_gt : T1.eval x < Real.exp (T1.eval x) := exp_grows_strictly_thm _
+  have hbig : c2 + (1 + 1) < Real.exp (T1.eval x) := lt_trans_ax hx hexp_gt
+  have hsmall : Real.exp (T1.eval x) ≤ c2 + 1 := by
+    have h2 : Real.exp (T1.eval x) - c2 ≤ 1 := by rw [hcollapse x]; exact sin_le_one x
+    have h3 := add_le_add_left h2 c2
+    rwa [show c2 + (Real.exp (T1.eval x) - c2) = Real.exp (T1.eval x) from by mach_ring] at h3
+  have h3 : c2 + (1 + 1) < c2 + 1 := lt_of_lt_of_le hbig hsmall
+  have h4 := add_lt_add_left h3 (-c2)
+  rw [show -c2 + (c2 + (1 + 1)) = 1 + 1 from by mach_ring,
+      show -c2 + (c2 + 1) = 1 from by mach_ring] at h4
+  have h5 : (1 : Real) < 1 + 1 := by
+    have h6 := add_lt_add_left zero_lt_one_ax 1
+    rwa [add_zero] at h6
+  exact lt_irrefl_ax (1 + 1) (lt_trans_ax h4 h5)
+
 end MachLib
