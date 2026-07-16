@@ -2301,4 +2301,66 @@ theorem eml_depth2_witness_of_const_sibling_unbounded_T1 {T1 S3 : EMLTree} {c2 :
     rwa [add_zero] at h6
   exact lt_irrefl_ax (1 + 1) (lt_trans_ax h4 h5)
 
+/-! ## Mixing the two mechanisms: a genuine "right-left-right" instance
+
+Both descent mechanisms (left-spine, rounds 15–16; right-chain, rounds 17–18) are now individually
+general to arbitrary depth. Neither, on its own, covers a tree whose root-to-offender path
+GENUINELY alternates directions more than once (the value-blow-up mechanism's own reach, rounds
+12–13, tops out at "R L* R?" via a totally different technique). This section checks the ODE
+mechanism composes across a mixed path by building one concrete instance: `R` (root), then `L`
+(one level in), then the mandatory final `R` to the offender — reusing
+`eml_ode_closure_general_hasDerivAt` for both `R` steps and `eml_leftchild_hasDerivAt_general` for
+the `L` step in between, with NO new lemma needed. -/
+
+/-- **A genuine "R L R" instance.** `t = eml A1 (eml (eml S4 Offender) C2)`: root's log-child is
+`N1 := eml (eml S4 Offender) C2` (an `R` step), `N1`'s left/exp child is `eml S4 Offender` (an `L`
+step from `N1`), and `Offender` is that node's own log-child (the mandatory final `R`). Chains:
+root's free `cos x` derivative closes `N1` (via `eml_ode_closure_general_hasDerivAt`, witness
+`hN1x0pos`) and exposes `N1`'s own derivative; that derivative transfers UNCONDITIONALLY to
+`eml S4 Offender` (via `eml_leftchild_hasDerivAt_general`, no witness — the `L`-step asymmetry);
+that closes `Offender` (via `eml_ode_closure_general`, witness `hOffenderx0pos`). -/
+theorem eml_rlr_pos_of_pos_witness {A1 C2 S4 Offender : EMLTree}
+    (hsin : ∀ x, (EMLTree.eml A1 (EMLTree.eml (EMLTree.eml S4 Offender) C2)).eval x = Real.sin x)
+    (x0 b : Real) (hx0b : x0 < b)
+    (A1' : Real → Real) (hA1'd : ∀ x, x0 ≤ x → x < b → HasDerivAt A1.eval (A1' x) x)
+    (N1' : Real → Real)
+    (hN1'd : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml (EMLTree.eml S4 Offender) C2).eval (N1' x) x)
+    (C2' : Real → Real) (hC2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt C2.eval (C2' x) x)
+    (hC2ne : ∀ x, x0 ≤ x → x < b → C2.eval x ≠ 0)
+    (S4' : Real → Real) (hS4'd : ∀ x, x0 ≤ x → x < b → HasDerivAt S4.eval (S4' x) x)
+    (Offender' : Real → Real)
+    (hOffender'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Offender.eval (Offender' x) x)
+    (hN1x0pos : 0 < (EMLTree.eml (EMLTree.eml S4 Offender) C2).eval x0)
+    (hOffenderx0pos : 0 < Offender.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < Offender.eval x := by
+  have hD0d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml A1 (EMLTree.eml (EMLTree.eml S4 Offender) C2)).eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq _ hsin x
+  have hN1 := eml_ode_closure_general_hasDerivAt x0 b hx0b A1' hA1'd N1' hN1'd
+    Real.cos hD0d hN1x0pos
+  let D1 : Real → Real := fun x =>
+    (EMLTree.eml (EMLTree.eml S4 Offender) C2).eval x *
+      (Real.exp (A1.eval x) * A1' x - Real.cos x)
+  have hD1d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (EMLTree.eml (EMLTree.eml S4 Offender) C2).eval (D1 x) x :=
+    fun x hx1 hx2 => (hN1 x hx1 hx2).2
+  have hD2ex : ∀ x, x0 ≤ x → x < b →
+      ∃ D2 : Real, HasDerivAt (EMLTree.eml S4 Offender).eval D2 x := by
+    intro x hx1 hx2
+    exact eml_leftchild_hasDerivAt_general
+      (A := EMLTree.eml S4 Offender) (B := C2)
+      (TARGET := (EMLTree.eml (EMLTree.eml S4 Offender) C2).eval)
+      (heq := fun _ => rfl)
+      (hD1d x hx1 hx2) (hC2'd x hx1 hx2) (hC2ne x hx1 hx2)
+  let D2 : Real → Real := fun x =>
+    if h : x0 ≤ x ∧ x < b then (hD2ex x h.1 h.2).choose else 0
+  have hD2d : ∀ x, x0 ≤ x → x < b → HasDerivAt (EMLTree.eml S4 Offender).eval (D2 x) x := by
+    intro x hx1 hx2
+    show HasDerivAt (EMLTree.eml S4 Offender).eval
+      (if h : x0 ≤ x ∧ x < b then (hD2ex x h.1 h.2).choose else 0) x
+    rw [dif_pos ⟨hx1, hx2⟩]
+    exact (hD2ex x hx1 hx2).choose_spec
+  exact eml_ode_closure_general x0 b hx0b S4' hS4'd Offender' hOffender'd D2 hD2d hOffenderx0pos
+
 end MachLib
