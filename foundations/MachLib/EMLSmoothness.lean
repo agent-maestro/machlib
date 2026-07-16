@@ -932,4 +932,25 @@ theorem forceableLarge_wrapLeft {W2 : EMLTree} {y : Real} (Cs : List EMLTree)
     show ForceableLarge (wrapLeft cs (EMLTree.eml base c)) W2 y
     exact ih hrest hstep
 
+/-! ## Closing the "right-then-all-left" class -/
+
+/-- **The full closure for this class of trees.** If `t = wrapLeft Cs (eml W1 W2)` (offender
+`W2`, reached by one right step then the left-chain `Cs`) agrees with `sin`, and every sibling
+along the chain has a boundable log at `y` (free via the EVT + no-crossing), then `W2.eval y`
+CANNOT land in `(0, δ)` for the `δ` this produces — landing there would force `t.eval y > 1 + 1`,
+contradicting `sin y ≤ 1`. -/
+theorem eml_leftchain_sin_contradiction {W1 W2 : EMLTree} (Cs : List EMLTree) (y : Real)
+    (M : EMLTree → Real) (hM : ∀ c ∈ Cs, Real.log (c.eval y) ≤ M c)
+    (hsin : ∀ x : Real, (wrapLeft Cs (EMLTree.eml W1 W2)).eval x = Real.sin x) :
+    ∃ δ : Real, 0 < δ ∧ ¬ (0 < W2.eval y ∧ W2.eval y < δ) := by
+  obtain ⟨δ, hδpos, hforce⟩ :=
+    forceableLarge_wrapLeft Cs M hM (forceableLarge_base W1 W2 y) (1 + 1)
+  refine ⟨δ, hδpos, fun ⟨hpos, hlt⟩ => ?_⟩
+  have h2 : 1 + 1 < (wrapLeft Cs (EMLTree.eml W1 W2)).eval y := hforce hpos hlt
+  rw [hsin y] at h2
+  have h1lt2 : (1 : Real) < 1 + 1 := by
+    have h3 := add_lt_add_left zero_lt_one_ax 1
+    rwa [add_zero] at h3
+  exact lt_irrefl_ax 1 (lt_of_lt_of_le (lt_trans_ax h1lt2 h2) (sin_le_one y))
+
 end MachLib
