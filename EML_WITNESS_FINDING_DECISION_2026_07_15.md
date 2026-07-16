@@ -150,12 +150,44 @@ one sub-case — `S2` constant `> 1`, `T1` non-constant. Down from "`T1` must be
 stop" at the start of the day. Both compiled clean (one needed swapping an unavailable `set`
 tactic for the file's established `let`+`show` idiom); zero new axioms.
 
+## Update 2026-07-16 (cont.) — both natural broadenings reopen the round-19 wall; a circularity trap identified
+
+Traced (paper only, no code) whether the "collapse + evaluate" technique extends to deeper trees
+(offender 3 levels down) or compound `S2` (`= eml P Q`). Both reopen the exact difficulty round 19
+found — the collapse trick only telescopes ONE level (`log(exp(v)) = v` simplifies cleanly;
+`log(exp(v) − w)` does not), confirmed by direct algebra, not assumption.
+
+Also checked, and REJECTED, a tempting shortcut: `sin_not_in_eml_any_depth` (already a theorem
+elsewhere in the codebase) cannot be used to argue "the axiom's hypothesis is vacuous, so it's
+trivially true" — that theorem's OWN current proof (`EMLExplicitBoundSinBarrier.lean`) depends on
+`eml_pfaffian_validon_from_sin_equality` itself. Using it here would be circular. Recorded so no
+future attempt wastes time on it.
+
+## Update 2026-07-16 (cont.) — Option C attempted: no counterexample, but a real generalization
+
+Tried to construct an explicit compound `T1` making the residual `c2 > 1` gap genuine. Every
+natural candidate failed for the same reason: compound `T1` choices tried were either secretly
+constant (collapses to a fixed number, not a real test) or UNBOUNDED — and unboundedness alone
+gives an immediate elementary contradiction, regardless of `T1`'s shape. Built
+`eml_depth2_witness_of_const_sibling_unbounded_T1` (commit `475502bf`): if `T1` is unbounded above,
+picking a point where `T1.eval x` exceeds `c2+2` forces `exp(T1.eval x)` past the range `sin`
+allows, via `exp_grows_strictly_thm` alone — no Khovanskii machinery needed. Covers the ENTIRE
+`c2 > 1` gap for compound OR non-compound unbounded `T1`. Zero new axioms.
+
+Net effect: the residual gap is now precisely "`T1` BOUNDED and non-constant, `S2` constant `> 1`"
+— narrower than "compound `T1`" was. No counterexample found (weak evidence the general claim may
+hold for this shape), but the search itself produced real, reusable infrastructure.
+
 ## Status
 
 - Mechanism-building (rounds 1–18 this session): essentially complete. Zero new axioms beyond
   `HasDerivAt_congr`. ~2200 new lines in `EMLSmoothness.lean`.
-- Witness-finding: open in general (round 19). Option A has now closed the ENTIRE depth-2/leaf
-  family except one precisely-identified sub-case (`S2` constant `> 1`, `T1` non-constant) —
-  rounds 20–21, above.
-- Option C: not yet attempted.
+- Witness-finding: open in general. Depth-2/leaf-`S2` family closed except one maximally narrow
+  residual: `T1` bounded and non-constant, `S2` constant `> 1`.
+- Option A: mostly exhausted for this tree shape — remaining residual needs either a genuinely
+  different argument or acceptance as a named side-condition.
+- Option B: not recommended (see original rationale above).
+- Option C: attempted once, no counterexample found, produced a real generalization instead (see
+  above). Further attempts would need to target deeper/compound trees specifically, which reopens
+  round-19-scale difficulty rather than being cheap.
 - This document: living draft, updated as options are acted on.
