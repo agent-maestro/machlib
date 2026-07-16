@@ -636,4 +636,46 @@ theorem eml_depth1_pos_of_pos_witness_backward {t1 t2 : EMLTree}
   have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
   exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
 
+/-! ## Capstone: full depth-1 closure, any `b > 0`
+
+Combining the `π` witness with BOTH directions covers the whole of `(0,b)` for any `b > 0` — the
+backward direction reaches `(0,π]` (covering small `b`), the forward direction reaches `[π,b)`
+(covering large `b`). This is a genuine, complete instance of `EMLPfaffianValidOn (eml t1 t2) 0 b`
+reduced to just its `t2`-positivity clause (since, for `t1`/`t2` with no crossing, the other two
+conjuncts of `EMLPfaffianValidOn` are handled by `eml_hasDerivAt_of_no_crossing` itself needing no
+further validity). -/
+
+/-- **Depth-1 closure, any `b`.** Given no crossing anywhere in `t1`/`t2` on `(0, max(b,π)]` (so
+both are everywhere differentiable there — trivially true if `t1`/`t2` are leaves), `t = eml t1 t2`
+agreeing with `sin` forces `t2` positive throughout `(0,b)`, for ANY `b > 0`. -/
+theorem eml_depth1_validon_of_sin_eq {t1 t2 : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml t1 t2).eval x = Real.sin x)
+    (b : Real) (hb : 0 < b)
+    (hnc1 : ∀ x : Real, 0 < x → EMLNoCrossingAt t1 x)
+    (hnc2 : ∀ x : Real, 0 < x → EMLNoCrossingAt t2 x) :
+    ∀ x, 0 < x → x < b → 0 < t2.eval x := by
+  let t1' : Real → Real := fun x =>
+    if h : 0 < x then (eml_hasDerivAt_of_no_crossing t1 x (hnc1 x h)).choose else 0
+  have ht1'd : ∀ x, 0 < x → HasDerivAt t1.eval (t1' x) x := by
+    intro x hx
+    show HasDerivAt t1.eval (if h : 0 < x then (eml_hasDerivAt_of_no_crossing t1 x (hnc1 x h)).choose else 0) x
+    rw [dif_pos hx]
+    exact (eml_hasDerivAt_of_no_crossing t1 x (hnc1 x hx)).choose_spec
+  let t2' : Real → Real := fun x =>
+    if h : 0 < x then (eml_hasDerivAt_of_no_crossing t2 x (hnc2 x h)).choose else 0
+  have ht2'd : ∀ x, 0 < x → HasDerivAt t2.eval (t2' x) x := by
+    intro x hx
+    show HasDerivAt t2.eval (if h : 0 < x then (eml_hasDerivAt_of_no_crossing t2 x (hnc2 x h)).choose else 0) x
+    rw [dif_pos hx]
+    exact (eml_hasDerivAt_of_no_crossing t2 x (hnc2 x hx)).choose_spec
+  have hwitness : 0 < t2.eval Real.pi := eml_depth1_t2_witness_at_pi hsin
+  intro x hx1 hx2
+  rcases lt_total x Real.pi with hlt | heq | hgt
+  · exact eml_depth1_pos_of_pos_witness_backward hsin 0 Real.pi pi_pos t1'
+      (fun y hy1 hy2 => ht1'd y hy1) t2' (fun y hy1 hy2 => ht2'd y hy1) hwitness x hx1 (le_of_lt hlt)
+  · rw [heq]; exact hwitness
+  · exact eml_depth1_pos_of_pos_witness hsin Real.pi b (lt_trans_ax hgt hx2) t1'
+      (fun y hy1 hy2 => ht1'd y (lt_of_lt_of_le pi_pos hy1)) t2'
+      (fun y hy1 hy2 => ht2'd y (lt_of_lt_of_le pi_pos hy1)) hwitness x (le_of_lt hgt) hx2
+
 end MachLib
