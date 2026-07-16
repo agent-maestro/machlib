@@ -119,7 +119,7 @@ private theorem iv_letrans {a b c : Real} (h1 : a ≤ b) (h2 : b ≤ c) : a ≤ 
   · exact le_of_lt_r (lt_of_lt_of_le_r h1 h2)
   · rw [h1]; exact h2
 
-private theorem iv_ltadd (c : Real) {δ : Real} (h : 0 < δ) : c < c + δ := by
+theorem iv_ltadd (c : Real) {δ : Real} (h : 0 < δ) : c < c + δ := by
   have h2 := add_lt_add_left h c; rw [add_zero] at h2; exact h2
 
 theorem iv_subself (c : Real) {δ : Real} (h : 0 < δ) : c - δ < c := by

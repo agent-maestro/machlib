@@ -369,4 +369,114 @@ theorem eq_zero_at_of_eq_zero_below {g : Real → Real} {x0 xs : Real} (hx0xs : 
     rw [hgy0] at hcontra
     exact lt_irrefl_ax 0 hcontra
 
+/-- **Depth-1 positivity propagation — the full contradiction.** If `t = eml t1 t2` agrees with
+`sin` on `[x0,b)`, `t2` is positive at `x0`, and both `t1`/`t2` are differentiable throughout
+`[x0,b)`, `t2` stays positive on the WHOLE of `[x0,b)`.
+
+Proof: suppose not; let `xs` be the infimum of the failure set (`inf_exists`). `t2` stays positive
+on `[x0,xs)` (else `xs` wouldn't be the infimum), so it is forced to be `k * E1` there exactly
+(`eml_depth1_t2_const_ratio`, `k := t2.eval x0 / E1 x0`, `E1 := exp(exp(t1) − sin)`). By continuity
+this extends to `xs` itself (`eq_zero_at_of_eq_zero_below`, applied to `t2 − k·E1`), giving
+`t2.eval xs = k · E1 xs > 0` (since `k > 0` and `E1 > 0`) — contradicting `xs` being a failure
+point (`t2.eval xs ≤ 0`, forced by continuity from `xs = inf` of the `≤ 0` set). -/
+theorem eml_depth1_pos_of_pos_witness {t1 t2 : EMLTree}
+    (hsin : ∀ x : Real, (EMLTree.eml t1 t2).eval x = Real.sin x)
+    (x0 b : Real) (hx0b : x0 < b)
+    (t1' : Real → Real) (ht1'd : ∀ x, x0 ≤ x → x < b → HasDerivAt t1.eval (t1' x) x)
+    (t2' : Real → Real) (ht2'd : ∀ x, x0 ≤ x → x < b → HasDerivAt t2.eval (t2' x) x)
+    (hx0pos : 0 < t2.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < t2.eval x := by
+  intro x hx1 hx2
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hxle : t2.eval x ≤ 0 := by
+    rcases lt_total 0 (t2.eval x) with h | h | h
+    · exact absurd h hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hSne : ∃ y, (fun y => x0 ≤ y ∧ y < b ∧ t2.eval y ≤ 0) y := ⟨x, hx1, hx2, hxle⟩
+  have hSbd : BoundedBelow (fun y => x0 ≤ y ∧ y < b ∧ t2.eval y ≤ 0) := ⟨x0, fun y hy => hy.1⟩
+  obtain ⟨xs, hlb, hglb⟩ := inf_exists _ hSne hSbd
+  have hx0xs : x0 ≤ xs := hglb x0 (fun y hy => hy.1)
+  have hxsb : xs < b := lt_of_le_of_lt (hlb x ⟨hx1, hx2, hxle⟩) hx2
+  have hposbelow : ∀ y, x0 ≤ y → y < xs → 0 < t2.eval y := by
+    intro y hy1 hy2
+    refine Classical.byContradiction (fun hcony => ?_)
+    have hyle : t2.eval y ≤ 0 := by
+      rcases lt_total 0 (t2.eval y) with h | h | h
+      · exact absurd h hcony
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    have hyb : y < b := lt_trans_ax hy2 hxsb
+    exact lt_irrefl_ax xs (lt_of_le_of_lt (hlb y ⟨hy1, hyb, hyle⟩) hy2)
+  have hxsle : t2.eval xs ≤ 0 := by
+    refine Classical.byContradiction (fun hxscon => ?_)
+    have hxsgt : 0 < t2.eval xs := by
+      rcases lt_total (t2.eval xs) 0 with h | h | h
+      · exact absurd (le_of_lt h) hxscon
+      · exact absurd (le_of_eq h) hxscon
+      · exact h
+    obtain ⟨δ, hδ, hnbhd⟩ :=
+      pos_nbhd_of_continuousAt (hasDerivAt_continuousAt (ht2'd xs hx0xs hxsb)) hxsgt
+    have hbound2 : ∀ y, (x0 ≤ y ∧ y < b ∧ t2.eval y ≤ 0) → xs + δ ≤ y := by
+      intro y hy
+      rcases lt_total y (xs + δ) with h | h | h
+      · exfalso
+        have hyxs : xs ≤ y := hlb y hy
+        have habs : abs (y - xs) < δ := by
+          rcases (le_iff_lt_or_eq xs y).mp hyxs with hlt | heq
+          · rw [abs_of_nonneg (le_of_lt_r (sub_pos_of_lt hlt))]
+            have h2 := add_lt_add_left h (-xs)
+            rwa [show -xs + y = y - xs from by mach_mpoly [xs, y],
+                show -xs + (xs + δ) = δ from by mach_mpoly [xs, δ]] at h2
+          · rw [← heq, show xs - xs = 0 from by mach_ring,
+                abs_of_nonneg (le_refl (0 : Real))]
+            exact hδ
+        exact lt_irrefl_ax 0 (lt_of_lt_of_le (hnbhd y habs) hy.2.2)
+      · exact le_of_eq h.symm
+      · exact le_of_lt h
+    exact lt_irrefl_ax xs (lt_of_lt_of_le (iv_ltadd xs hδ) (hglb (xs + δ) hbound2))
+  -- t2 = k * E1 exactly throughout [x0, xs), extending by continuity to xs itself
+  let E1 : Real → Real := fun z => Real.exp (Real.exp (t1.eval z) - Real.sin z)
+  have hE1pos : ∀ z, 0 < E1 z := fun z => Real.exp_pos _
+  let k : Real := t2.eval x0 * (1 / E1 x0)
+  have hkE1x0 : k * E1 x0 = t2.eval x0 := by
+    show t2.eval x0 * (1 / E1 x0) * E1 x0 = t2.eval x0
+    rw [mul_assoc, mul_comm (1 / E1 x0) (E1 x0), mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+        mul_one_ax]
+  have hkpos : 0 < k := mul_pos hx0pos (one_div_pos_of_pos (hE1pos x0))
+  have hzero : ∀ y, x0 ≤ y → y < xs → t2.eval y - k * E1 y = 0 := by
+    intro y hy1 hy2
+    rcases (le_iff_lt_or_eq x0 y).mp hy1 with hlt | heq
+    · obtain ⟨k', hk'⟩ := eml_depth1_t2_const_ratio hsin x0 y hlt t1'
+        (fun z hz1 hz2 => ht1'd z hz1 (lt_of_le_of_lt hz2 (lt_trans_ax hy2 hxsb)))
+        t2' (fun z hz1 hz2 => ht2'd z hz1 (lt_of_le_of_lt hz2 (lt_trans_ax hy2 hxsb)))
+        (fun z hz1 hz2 => hposbelow z hz1 (lt_of_le_of_lt hz2 hy2))
+      have hkx0 : t2.eval x0 = k' * E1 x0 := hk' x0 (le_refl x0) (le_of_lt hlt)
+      have hkeq : k' = k := by
+        have h2 : k' * E1 x0 = k * E1 x0 := by rw [← hkx0, hkE1x0]
+        have h3 : k' * E1 x0 * (1 / E1 x0) = k * E1 x0 * (1 / E1 x0) := by rw [h2]
+        rwa [mul_assoc, mul_assoc, mul_inv (E1 x0) (ne_of_lt (hE1pos x0)).symm,
+            mul_one_ax, mul_one_ax] at h3
+      have hky : t2.eval y = k' * E1 y := hk' y hy1 (le_refl y)
+      rw [hky, hkeq, sub_def, add_neg]
+    · rw [← heq, hkE1x0, sub_def, add_neg]
+  have hxsE1pos : 0 < k * E1 xs := mul_pos hkpos (hE1pos xs)
+  have hxseq2 : t2.eval xs = k * E1 xs := by
+    rcases (le_iff_lt_or_eq x0 xs).mp hx0xs with hx0xslt | hx0xseq
+    · have hcontdiff : HasDerivAt (fun z => t2.eval z - k * E1 z)
+          (t2' xs - (0 * E1 xs + k * (E1 xs * (Real.exp (t1.eval xs) * t1' xs - Real.cos xs)))) xs :=
+        HasDerivAt_sub t2.eval (fun z => k * E1 z) (t2' xs)
+          (0 * E1 xs + k * (E1 xs * (Real.exp (t1.eval xs) * t1' xs - Real.cos xs))) xs
+          (ht2'd xs hx0xs hxsb)
+          (HasDerivAt_mul (fun _ => k) E1 0 (E1 xs * (Real.exp (t1.eval xs) * t1' xs - Real.cos xs)) xs
+            (HasDerivAt_const k xs) (eml_depth1_E_deriv (ht1'd xs hx0xs hxsb)))
+      have hxseq : t2.eval xs - k * E1 xs = 0 :=
+        @eq_zero_at_of_eq_zero_below (fun z => t2.eval z - k * E1 z) x0 xs hx0xslt
+          (hasDerivAt_continuousAt hcontdiff) hzero
+      have h2 : t2.eval xs - k * E1 xs + k * E1 xs = 0 + k * E1 xs := by rw [hxseq]
+      rwa [sub_def, add_assoc, neg_add_self, add_zero, zero_add] at h2
+    · rw [← hx0xseq, hkE1x0]
+  have hfinal : k * E1 xs ≤ 0 := hxseq2 ▸ hxsle
+  exact lt_irrefl_ax 0 (lt_of_lt_of_le hxsE1pos hfinal)
+
 end MachLib
