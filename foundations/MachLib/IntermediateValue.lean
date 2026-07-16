@@ -230,7 +230,7 @@ private theorem iv_le_abs_self (t : Real) : t ≤ abs t := by
   · rw [abs_of_nonneg (le_of_lt_r h)]
     exact iv_lerefl t
 
-private theorem lt_of_abs_lt {t B : Real} (h : abs t < B) : t < B :=
+theorem lt_of_abs_lt {t B : Real} (h : abs t < B) : t < B :=
   lt_of_le_of_lt_r (iv_le_abs_self t) h
 
 /-- **Local boundedness from continuity.** A function continuous at `x` stays below `f x + 1` on
@@ -242,6 +242,22 @@ theorem bdd_above_nbhd_of_continuousAt {f : Real → Real} {x : Real} (hc : Cont
   have hlt : f y - f x < 1 := lt_of_abs_lt (hy y hyδ)
   have h2 := add_lt_add_left hlt (f x)
   rwa [show f x + (f y - f x) = f y from by mach_mpoly [f x, f y]] at h2
+
+/-- **Local boundedness from continuity, lower half.** A function continuous at `x` stays above
+`f x - 1` on a neighborhood of `x` — the mirror of `bdd_above_nbhd_of_continuousAt`, extracting the
+other half of the same `ε = 1` instance of `ContinuousAt`. -/
+theorem bdd_below_nbhd_of_continuousAt {f : Real → Real} {x : Real} (hc : ContinuousAt f x) :
+    ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f x - 1 < f y := by
+  obtain ⟨δ, hδ, hy⟩ := hc 1 zero_lt_one_ax
+  refine ⟨δ, hδ, fun y hyδ => ?_⟩
+  have habs2 : abs (-(f y - f x)) < 1 := by rw [iv_an]; exact hy y hyδ
+  have hlt : -(f y - f x) < 1 := lt_of_abs_lt habs2
+  have h3 : f x < f y + 1 := by
+    have h2 := add_lt_add_left hlt (f y)
+    rwa [show f y + -(f y - f x) = f x from by mach_mpoly [f x, f y]] at h2
+  have h4 := add_lt_add_left h3 (-1)
+  rwa [show -1 + f x = f x - 1 from by mach_ring,
+      show -1 + (f y + 1) = f y from by mach_ring] at h4
 
 /-- **Boundedness (Extreme Value Theorem, upper-bound half).** A function continuous at every
 point of `[a,b]` is bounded above there. -/
