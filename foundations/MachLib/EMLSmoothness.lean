@@ -2363,4 +2363,147 @@ theorem eml_rlr_pos_of_pos_witness {A1 C2 S4 Offender : EMLTree}
     exact (hD2ex x hx1 hx2).choose_spec
   exact eml_ode_closure_general x0 b hx0b S4' hS4'd Offender' hOffender'd D2 hD2d hOffenderx0pos
 
+/-! ## Generalizing the mix: arbitrary-length interleaved left/right paths
+
+`eml_rlr_pos_of_pos_witness` demonstrated the two mechanisms compose for one concrete mixed path.
+This generalizes to a path of ANY length and ANY interleaving, mirroring how `leftSpine`/
+`rightChain` themselves were built — one combined induction, branching per move, reusing
+`eml_leftchild_hasDerivAt_general` (no witness) for left moves and
+`eml_ode_closure_general_hasDerivAt` (witness needed) for right moves. A SINGLE combined
+`EMLNoCrossingAt` hypothesis on the whole composite tree supplies everything needed at every level
+(each sibling's own no-crossing, each left-move sibling's `≠ 0`) via its own recursive unfolding —
+no separate per-move side-conditions to state. -/
+
+/-- A move in the descent from root toward the offender: `left S` descends into the LEFT/exp
+child, leaving `S` as the new outer node's log-sibling; `right A` descends into the RIGHT/log
+child, leaving `A` as the new outer node's exp-sibling. -/
+inductive EMLMove : Type where
+  | left : EMLTree → EMLMove
+  | right : EMLTree → EMLMove
+
+/-- The sibling introduced by a move, regardless of its kind. -/
+def EMLMove.sibling : EMLMove → EMLTree
+  | .left S => S
+  | .right A => A
+
+/-- Builds the tree root-first: `buildMoves [m1,...,mn] base` applies `m1` OUTERMOST (closest to
+the root), recursing inward toward `base` — the same traversal direction as `leftSpine`, extended
+to mixed move kinds. -/
+def buildMoves : List EMLMove → EMLTree → EMLTree
+  | [], base => base
+  | .left S :: moves, base => EMLTree.eml (buildMoves moves base) S
+  | .right A :: moves, base => EMLTree.eml A (buildMoves moves base)
+
+/-- The positivity witnesses this mechanism needs: one per RIGHT move (the tail rooted at that
+level, at `x0`) — left moves need none (the left-child value formula is unconditional). -/
+def movesWitnesses : List EMLMove → EMLTree → Real → Prop
+  | [], _, _ => True
+  | .left _ :: moves, base, x0 => movesWitnesses moves base x0
+  | .right _ :: moves, base, x0 => 0 < (buildMoves moves base).eval x0 ∧ movesWitnesses moves base x0
+
+/-- **The mixed-path derivative, chained through an arbitrary-length interleaved sequence.**
+Given `buildMoves moves base` has a known derivative and a witness at every RIGHT move, `base`
+gets a known derivative too — by induction on `moves`, branching per move kind. A single combined
+`EMLNoCrossingAt` hypothesis on the whole tree supplies every structural fact needed (each
+sibling's own no-crossing via its own recursive unfolding, and each left-move sibling's `≠ 0`,
+exactly the third conjunct `EMLNoCrossingAt (eml A B) x` exposes for `B`). -/
+theorem moves_hasDerivAt_of_target {base : EMLTree} (moves : List EMLMove)
+    (x0 b : Real) (hx0b : x0 < b)
+    (D : Real → Real)
+    (hDd : ∀ x, x0 ≤ x → x < b → HasDerivAt (buildMoves moves base).eval (D x) x)
+    (hncFull : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt (buildMoves moves base) x)
+    (hwit : movesWitnesses moves base x0) :
+    ∃ D' : Real → Real, ∀ x, x0 ≤ x → x < b → HasDerivAt base.eval (D' x) x := by
+  induction moves generalizing D with
+  | nil => exact ⟨D, hDd⟩
+  | cons m moves' ih =>
+    cases m with
+    | left S =>
+      have hncS : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt S x :=
+        fun x hx1 hx2 => (hncFull x hx1 hx2).2.1
+      have hSne : ∀ x, x0 ≤ x → x < b → S.eval x ≠ 0 :=
+        fun x hx1 hx2 => (hncFull x hx1 hx2).2.2
+      have hncTail : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt (buildMoves moves' base) x :=
+        fun x hx1 hx2 => (hncFull x hx1 hx2).1
+      have hD2ex : ∀ x, x0 ≤ x → x < b →
+          ∃ D2 : Real, HasDerivAt (buildMoves moves' base).eval D2 x := by
+        intro x hx1 hx2
+        obtain ⟨c, hc⟩ := eml_hasDerivAt_of_no_crossing S x (hncS x hx1 hx2)
+        exact eml_leftchild_hasDerivAt_general
+          (A := buildMoves moves' base) (B := S)
+          (TARGET := (buildMoves (EMLMove.left S :: moves') base).eval)
+          (heq := fun _ => rfl)
+          (hDd x hx1 hx2) hc (hSne x hx1 hx2)
+      let D2 : Real → Real := fun x =>
+        if h : x0 ≤ x ∧ x < b then (hD2ex x h.1 h.2).choose else 0
+      have hD2d : ∀ x, x0 ≤ x → x < b →
+          HasDerivAt (buildMoves moves' base).eval (D2 x) x := by
+        intro x hx1 hx2
+        show HasDerivAt (buildMoves moves' base).eval
+          (if h : x0 ≤ x ∧ x < b then (hD2ex x h.1 h.2).choose else 0) x
+        rw [dif_pos ⟨hx1, hx2⟩]
+        exact (hD2ex x hx1 hx2).choose_spec
+      exact ih D2 hD2d hncTail hwit
+    | right A =>
+      have hncA : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt A x :=
+        fun x hx1 hx2 => (hncFull x hx1 hx2).1
+      have hncTail : ∀ x, x0 ≤ x → x < b → EMLNoCrossingAt (buildMoves moves' base) x :=
+        fun x hx1 hx2 => (hncFull x hx1 hx2).2.1
+      have hwitTail : 0 < (buildMoves moves' base).eval x0 := hwit.1
+      have hwitRest : movesWitnesses moves' base x0 := hwit.2
+      let Aderiv : Real → Real := fun x =>
+        if h : x0 ≤ x ∧ x < b then (eml_hasDerivAt_of_no_crossing A x (hncA x h.1 h.2)).choose
+        else 0
+      have hAderivd : ∀ x, x0 ≤ x → x < b → HasDerivAt A.eval (Aderiv x) x := by
+        intro x hx1 hx2
+        show HasDerivAt A.eval
+          (if h : x0 ≤ x ∧ x < b then (eml_hasDerivAt_of_no_crossing A x (hncA x h.1 h.2)).choose
+          else 0) x
+        rw [dif_pos ⟨hx1, hx2⟩]
+        exact (eml_hasDerivAt_of_no_crossing A x (hncA x hx1 hx2)).choose_spec
+      let TailDeriv : Real → Real := fun x =>
+        if h : x0 ≤ x ∧ x < b then
+          (eml_hasDerivAt_of_no_crossing (buildMoves moves' base) x (hncTail x h.1 h.2)).choose
+        else 0
+      have hTailDerivd : ∀ x, x0 ≤ x → x < b →
+          HasDerivAt (buildMoves moves' base).eval (TailDeriv x) x := by
+        intro x hx1 hx2
+        show HasDerivAt (buildMoves moves' base).eval
+          (if h : x0 ≤ x ∧ x < b then
+            (eml_hasDerivAt_of_no_crossing (buildMoves moves' base) x (hncTail x h.1 h.2)).choose
+          else 0) x
+        rw [dif_pos ⟨hx1, hx2⟩]
+        exact (eml_hasDerivAt_of_no_crossing (buildMoves moves' base) x (hncTail x hx1 hx2)).choose_spec
+      have hNext := eml_ode_closure_general_hasDerivAt x0 b hx0b Aderiv hAderivd TailDeriv hTailDerivd
+        D hDd hwitTail
+      let D2 : Real → Real := fun x =>
+        (buildMoves moves' base).eval x * (Real.exp (A.eval x) * Aderiv x - D x)
+      have hD2d : ∀ x, x0 ≤ x → x < b →
+          HasDerivAt (buildMoves moves' base).eval (D2 x) x :=
+        fun x hx1 hx2 => (hNext x hx1 hx2).2
+      exact ih D2 hD2d hncTail hwitRest
+
+/-- **The full mixed-path closure.** If `t = buildMoves moves (eml Slast Offender)` agrees with
+`sin` on `[x0,b)`, the whole tree has no crossing there, a witness exists at every RIGHT move plus
+`Offender` itself, then `Offender` stays positive throughout `[x0,b)` — for an interleaved
+left/right path of ANY length and ANY shape. Combines `moves_hasDerivAt_of_target` (chained
+derivative propagation through the mixed path) with `eml_ode_closure_general` (the final closure
+for `Offender` itself). -/
+theorem eml_moves_pos_of_pos_witness {Slast Offender : EMLTree} (moves : List EMLMove)
+    (x0 b : Real) (hx0b : x0 < b)
+    (hsin : ∀ x, (buildMoves moves (EMLTree.eml Slast Offender)).eval x = Real.sin x)
+    (hncFull : ∀ x, x0 ≤ x → x < b →
+      EMLNoCrossingAt (buildMoves moves (EMLTree.eml Slast Offender)) x)
+    (hwit : movesWitnesses moves (EMLTree.eml Slast Offender) x0)
+    (Slast' : Real → Real) (hSlast'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Slast.eval (Slast' x) x)
+    (Offender' : Real → Real)
+    (hOffender'd : ∀ x, x0 ≤ x → x < b → HasDerivAt Offender.eval (Offender' x) x)
+    (hx0pos : 0 < Offender.eval x0) :
+    ∀ x, x0 ≤ x → x < b → 0 < Offender.eval x := by
+  have hD0d : ∀ x, x0 ≤ x → x < b →
+      HasDerivAt (buildMoves moves (EMLTree.eml Slast Offender)).eval (Real.cos x) x :=
+    fun x _ _ => eml_hasDerivAt_of_sin_eq _ hsin x
+  obtain ⟨D, hDd⟩ := moves_hasDerivAt_of_target moves x0 b hx0b Real.cos hD0d hncFull hwit
+  exact eml_ode_closure_general x0 b hx0b Slast' hSlast'd Offender' hOffender'd D hDd hx0pos
+
 end MachLib
