@@ -5,6 +5,7 @@ import MachLib.SqrtNode
 import MachLib.Log10Lipschitz
 import MachLib.InverseTrigBounded
 import MachLib.HyperbolicLipschitz
+import MachLib.TanLipschitz
 
 /-!
 # A LOCAL-Lipschitz transcendental over an arithmetic subtree, through the emitted C
@@ -193,5 +194,25 @@ theorem pipeline_cosh_of_arith {toR : Float → MachLib.Real} (br : FPBridge toR
       (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (cosh (exactR toR env e)) :=
   pipeline_tr1_of_arith_local br i1 i2 r1 r2 hrt1 hrt2 env t cosh (sinh R) Eround (-R) R
     (sinh_nonneg hR0) (cosh_lip_local R) e he hflx_lo hflx_hi hxe_lo hxe_hi hround
+
+/-- **`tan` over an arithmetic subtree** (`L = 1/cos²R`, `R < π/2`, `R ≥ 0`) — SYMMETRIC domain,
+the last `Trans1` primitive. Instance of the local pipeline via `TanLipschitz.tan_lip_local`. -/
+theorem pipeline_tan_of_arith {toR : Float → MachLib.Real} (br : FPBridge toR)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
+    (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
+    (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v)
+    (env : Env) (t : Trans1) (R Eround : MachLib.Real) (hR0 : 0 ≤ R) (hR : R < pi / (1 + 1))
+    (e : EML) (he : IsArith e)
+    (hflx_lo : -R ≤ toR (evalEML i1 i2 env e).toF) (hflx_hi : toR (evalEML i1 i2 env e).toF ≤ R)
+    (hxe_lo : -R ≤ exactR toR env e) (hxe_hi : exactR toR env e ≤ R)
+    (hround : abs (toR (i1 t (evalEML i1 i2 env e).toF) - tan (toR (evalEML i1 i2 env e).toF)) ≤ Eround) :
+    AbsEnc (Eround + (1 / (cos R * cos R)) * absErr toR env e)
+      (toR (evalC r1 r2 env (emitC (tr1OfEML t e))).toF) (tan (exactR toR env e)) :=
+  pipeline_tr1_of_arith_local br i1 i2 r1 r2 hrt1 hrt2 env t tan (1 / (cos R * cos R)) Eround (-R) R
+    (le_of_lt (one_div_pos_of_pos (mul_pos
+      (cos_pos_of_abs_lt_pi_div_two (by rw [abs_of_nonneg hR0]; exact hR))
+      (cos_pos_of_abs_lt_pi_div_two (by rw [abs_of_nonneg hR0]; exact hR)))))
+    (tan_lip_local R hR0 hR) e he hflx_lo hflx_hi hxe_lo hxe_hi hround
 
 end Certcom

@@ -248,6 +248,50 @@ domain-bounded Lipschitz argument on `[-R,R]`, `R<π/2` (so `cos` stays bounded 
 either). Genuinely the harder remaining single-node item; the separately-flagged full recursive
 local-Lipschitz nesting piece is still open on top of that.
 
+## ✅ Update (2026-07-17, same session) — `tan` grounded, 14-of-14: every `Trans1` primitive done
+
+**The last primitive, and the only one in this whole arc needing genuinely new math.** Confirmed with
+the user via `AskUserQuestion` before adding anything (mirroring the one precedent for a new axiom
+elsewhere in this session's work, the Khovanskii branch-curve `hasDerivAt_implicit_local`): grounding
+`tan` needs `cos` to stay bounded away from `0` on `[-R,R]`, `R<π/2`, and nothing in `MachLib.Real`
+establishes general `sin`/`cos` sign behavior — only isolated points (`cos_zero`, `cos_pi`,
+`cos_pi_div_two`, the single-point `sin_one_pos`). User approved adding the axiom.
+
+**New file `TanLipschitz.lean`.** **One new axiom**: `sin_pos_of_pos_lt_pi_div_two (x) (0<x) (x<π/2) :
+0<sin x` — the trigonometric analogue of `cosh_pos`, and a direct generalisation of the
+already-disclosed single-point `sin_one_pos`. Everything else is DERIVED from it (0 further axioms):
+`cos_pos_of_lt_pi_div_two` (MVT between `x` and `π/2`, using `cos_pi_div_two=0` as the boundary value),
+`cos_pos_of_abs_lt_pi_div_two` (extends via `cos_neg` evenness), `cos_antitone` (MVT + the new axiom
+bounding `-sin`'s sign, the trig analogue of `cosh_mono`), `cos_ge_of_abs_le` (radial form, matching
+`sqrt_mono`'s role in `arcsin_lip_lt`), `HasDerivAt_tan` (derived as `(sin·cos⁻¹)'` exactly like
+`HasDerivAt_tanh`'s `(sinh·cosh⁻¹)'`, simplified via `pythagorean` — but transferred from the raw
+`sin·(1/cos)` lambda to `tan` via `HasDerivAt_congr`, a LOCAL δ-ball argument, not the global
+`HasDerivAt_of_eq` every other primitive used: `tan_def`'s identity only holds where `cos≠0`, so the
+two functions agree in a neighbourhood of `x`, not everywhere, unlike `tanh_eq_sinh_div_cosh` which is
+unconditional since `cosh` is never zero), then `tan_lip_lt`/`tan_lip_local`/`absenc_tan_local`
+mirroring `arcsin_lip_lt`'s exact structure (`L=1/cos²R`).
+
+`pipeline_tan_of_arith` added to `AbsoluteFoldLocal.lean`. `pid_tan_grounded` added to
+`FPGrounding.lean` — needs both `hR0:0≤R` (the `cosh`-shaped extra hypothesis) and `hR:R<π/2`. Full
+build green first try on `TanLipschitz.lean`'s math (4 small `rw`/`congrArg`-direction slips caught and
+fixed on the FIRST build attempt: an under-constrained implicit in `cos_pos_of_abs_lt_pi_div_two`'s
+negative branch needing explicit intermediate `have`s instead of inline `by rw` terms; `congrArg cos h`
+needing `h.symm` for the equality-case direction; `mach_ring` failing to close a 3-term identity
+(`x+(y-x)=y`) that `mach_mpoly` closed instead — `mach_ring` is the narrower of the two, not a general
+decision procedure; a dropped `rw`-to-`0` step in the `p=q` Lipschitz-bound case). Full project build
+green after fixes (376/376 modules). `AxiomLedger`: 298 axioms pinned (was 295), 21 headlines ⊆ trusted
+(132, was 123 — six incidental leak fixes: `HasDerivAt_congr`, `cos_neg`, `cos_pi_div_two`, `pi`, `tan`,
+`tan_def`, all already-known ℝ-witnessed, simply unexercised by any prior headline), 31 disclosed-trusted
+(was 28 — the two `real_tan_eps`/`_rounds` rounding constants plus `sin_pos_of_pos_lt_pi_div_two`
+itself, disclosed for a different reason than every other entry: not residual libm/IEEE-754 trust, but
+a foundational math fact `MachLib.Real`'s minimal trig axiomatization doesn't derive). `#print axioms`
+clean, `sorryAx`-free (`tools/sorry_audit.lean`: still exactly 3 allowlisted, no new sorries).
+
+**Every `Trans1` constructor is now grounded — Theorem A's libm-primitive-grounding item is CLOSED,
+14-of-14.** The only remaining open item in this doc is the separately-flagged full recursive
+local-Lipschitz nesting piece (a local primitive over a subtree that itself contains local
+transcendentals) — see `AbsoluteFoldLocal.lean`'s own scope note, unchanged by this update.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and

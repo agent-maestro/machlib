@@ -505,4 +505,35 @@ theorem pid_cosh_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R)
     env .cosh R real_cosh_eps hR0 pidRawEML isArith_pidRawEML
     hflx_lo hflx_hi hxe_lo hxe_hi (real_cosh_rounds _)
 
+/-! ### Grounding the fourteenth and LAST libm primitive: `tan`
+
+The one primitive needing genuinely new math (`TanLipschitz.lean`, one new axiom
+`sin_pos_of_pos_lt_pi_div_two`, user-approved). Symmetric domain `[-R,R]`, `R < π/2`, `R ≥ 0`
+(the `cosh`-shaped extra hypothesis), `L = 1/cos²R`. Completes every `Trans1` constructor. -/
+
+/-- The disclosed libm rounding bound for the runtime `tan`. Same status as every prior primitive:
+`leanPrims.tan` (`Float.tan`), through `realToR`, is within a fixed `real_tan_eps` of the exact
+`Real.tan`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_tan_eps : MachLib.Real
+
+axiom real_tan_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ real_tan_eps
+
+/-- **The fourteenth and last grounded transcendental control kernel: `tan(PID law)`.** For any
+`[-R,R]` (`R<π/2`, `R≥0`) that the PID law's computed AND exact values both land in, the emitted C for
+`tan(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `real_tan_eps + (1/cos²R)·absErr` of
+the exact ℝ value `tan(PID law)`. Instance of `pipeline_tan_of_arith` at `pidRawEML`. Every `Trans1`
+constructor is now grounded. -/
+theorem pid_tan_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R) (hR : R < pi / (1 + 1))
+    (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
+    AbsEnc (real_tan_eps + (1 / (cos R * cos R)) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .tan pidRawEML))).toF)
+      (tan (exactR realToR env pidRawEML)) :=
+  pipeline_tan_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .tan R real_tan_eps hR0 hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_tan_rounds _)
+
 end Certcom
