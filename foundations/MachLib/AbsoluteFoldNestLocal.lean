@@ -120,6 +120,51 @@ theorem pipeline_nested_local {toR : Float → MachLib.Real} (br : FPBridge toR)
   rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
   exact nested_fold_local br realOf1 Eround1 i1 i2 env hround e he
 
+/-! ## Bridges to the arithmetic fragment: lifting a plain `IsArith` kernel into the nested fold -/
+
+/-- **Every arithmetic tree is (trivially) in the nested-local fragment** — `IsArith`'s constructors
+are a strict subset of `IsFoldLocal`'s (no `tr1` case exercised). Lets a `pidRawEML`-style arithmetic
+leaf feed directly into a `tr1` node built on top of it, without re-deriving its structure by hand. -/
+theorem isFoldLocal_of_isArith {toR : Float → MachLib.Real}
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real) (env : Env) :
+    ∀ {e : EML}, IsArith e → IsFoldLocal toR i1 i2 realOf1 env e := by
+  intro e he
+  induction he with
+  | lit c => exact .lit c
+  | var s => exact .var s
+  | add a b _ _ iha ihb => exact .add _ _ iha ihb
+  | sub a b _ _ iha ihb => exact .sub _ _ iha ihb
+  | mul a b _ _ iha ihb => exact .mul _ _ iha ihb
+  | neg a _ iha => exact .neg _ iha
+
+/-- **`exactRn` agrees with the plain arithmetic `exactR` on an `IsArith` tree** — since `exactRn`'s
+non-`tr1` cases are definitionally identical to `exactR`'s, and `IsArith` never exercises `.tr1`. Lets
+a nested certificate's conclusion be stated in terms of the familiar `exactR` (as every flat
+`pid_X_grounded` already is) instead of the more general `exactRn`. -/
+theorem exactRn_eq_exactR_of_arith {toR : Float → MachLib.Real}
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real) (env : Env) :
+    ∀ {e : EML}, IsArith e → exactRn toR realOf1 env e = exactR toR env e := by
+  intro e he
+  induction he with
+  | lit c => rfl
+  | var s => rfl
+  | add a b _ _ iha ihb =>
+      show exactRn toR realOf1 env a + exactRn toR realOf1 env b
+        = exactR toR env a + exactR toR env b
+      rw [iha, ihb]
+  | sub a b _ _ iha ihb =>
+      show exactRn toR realOf1 env a - exactRn toR realOf1 env b
+        = exactR toR env a - exactR toR env b
+      rw [iha, ihb]
+  | mul a b _ _ iha ihb =>
+      show exactRn toR realOf1 env a * exactRn toR realOf1 env b
+        = exactR toR env a * exactR toR env b
+      rw [iha, ihb]
+  | neg a _ iha =>
+      show -(exactRn toR realOf1 env a) = -(exactR toR env a)
+      rw [iha]
+
 /-! ## Non-vacuity: two genuine levels of LOCAL-Lipschitz nesting -/
 
 /-- Real semantics for the two primitives the demo below nests: `.sinh ↦ sinh`, `.ln ↦ log`. -/

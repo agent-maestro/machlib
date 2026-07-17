@@ -345,6 +345,53 @@ arc is optional, forward-looking, and un-scoped: concretely instantiating `pipel
 `Certcom.realToR`/`leanPrims` for a specific multi-level kernel (mirroring `FPGrounding.lean`'s flat
 `pid_X_grounded` pattern, one level deeper) — a natural next increment, not a gap.
 
+## ✅ Update (2026-07-17, same session) — the multi-level instantiation, done
+
+**The optional next increment named above, taken.** User: "multi-level instantiation, lets do this
+please." `pid_log_cosh_grounded` (`FPGrounding.lean`) — the first (and only) headline whose footprint
+spans EVERY disclosed primitive axiom at once, and the first genuinely LOCAL-over-LOCAL kernel
+concretely grounded at the real `Certcom.realToR`/`leanPrims` artifact rather than left as the generic
+`pipeline_nested_local` combinator.
+
+**The kernel: `log(cosh(PID law))`** — the "log-cosh loss," a standard smooth, outlier-robust
+alternative to L1/L2 loss genuinely used in control/ML gain-shaping, not an arbitrary composition.
+`cosh` needs a symmetric domain `[-R,R]`; `log` needs a positive one-sided domain `[lo,hi]` — two
+different domain SHAPES stacked, the harder case flagged in `pipeline_tr1_of_arith_local`'s own
+docstring (positivity layered on top of a plain range bound), now one level deeper.
+
+**Three pieces of new infrastructure, all in service of instantiating the generic
+`nested_fold_local`/`pipeline_nested_local` at a concrete kernel**:
+1. `realOfAll14`/`Eround1All`/`hround_all` (`FPGrounding.lean`) — since `pipeline_nested_local`'s
+   `hround` is universally quantified over ALL fourteen `Trans1` constructors (not just the two the
+   kernel actually uses), a concrete instantiation needed a TOTAL real-semantics map and a TOTAL
+   disclosed-eps map across every primitive — buildable only now that all fourteen are grounded.
+   `hround_all` is a 14-way `cases t with` split, one line per primitive, each closed directly by the
+   `real_X_rounds` axiom already disclosed for it earlier this session.
+2. `isFoldLocal_of_isArith` (`AbsoluteFoldNestLocal.lean`) — lifts a plain `IsArith` proof (e.g.
+   `isArith_pidRawEML`) into `IsFoldLocal` by structural induction, since `IsFoldLocal`'s non-`tr1`
+   constructors are a verbatim copy of `IsArith`'s.
+3. `exactRn_eq_exactR_of_arith` (`AbsoluteFoldNestLocal.lean`) — proves `exactRn` agrees with the
+   familiar flat `exactR` on any `IsArith` tree (their non-`tr1` cases are definitionally identical),
+   so the final theorem's conclusion reads `log (cosh (exactR realToR env pidRawEML))` — matching
+   every flat `pid_X_grounded`'s own conclusion shape — instead of the more general `exactRn`.
+
+`pid_log_cosh_grounded` itself: builds the `IsFoldLocal` proof term for `.tr1 .ln (.tr1 .cosh
+pidRawEML)` directly (`cosh_lip_local`/`log_lip_local` supply the two Lipschitz certificates, `sinh R`
+and `1/lo` respectively), applies `pipeline_nested_local`, then rewrites the existential conclusion
+into the `exactR`-based form via the two new helpers. Full build green FIRST TRY — no proof errors at
+all, the payoff of the careful signature-matching work done grounding every individual primitive
+earlier this session. Full project build green (375/376 modules built this pass, incremental). `#print
+axioms` clean, `sorryAx`-free: `pid_log_cosh_grounded`'s footprint is exactly the union of all
+fourteen primitives' disclosed axioms plus the standard `MachLib.Real` core — nothing unexpected.
+`AxiomLedger`: 298 axioms pinned (UNCHANGED — no new axioms, everything here is theorems/defs over
+already-disclosed ones), 22 headline footprints ⊆ trusted (132, UNCHANGED — zero incidental leaks:
+every axiom this kernel touches was already made trusted by the individual primitive groundings
+earlier this session), 31 disclosed-trusted (UNCHANGED). `sorry_audit`: still exactly 3 allowlisted.
+
+**This closes the "optional, un-scoped" item named at the top of this update — certcom-A now has a
+concrete, multi-level, axiom-disclosed certificate about a real recognizable composite kernel, not
+just the flat single-primitive instances.** No further open items remain anywhere in this document.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
@@ -371,6 +418,8 @@ arithmetic fragment, satisfying before the keystone.
 `machlib/foundations/MachLib/`: `EMLToC.lean` (T1), `EMLToCRuntime.lean` (T2),
 `CompositeRuntimeError.lean` (T3), `FloatRealBridge.lean` (the `FPBridge` interface + worked kernel),
 `AbsoluteFold.lean` / `AbsoluteBridge.lean` / `AbsoluteFoldPos.lean` / `AbsoluteFoldLocal.lean` /
-`AbsoluteFoldNest.lean` / `CertifyNested.lean` (the fold family). Trust constants: `FPModel.lean`
-(`axiom u`, `RoundsW`). Ledger: `machlib/foundations/AxiomLedger.lean`; witness bridge:
-`monogate-lean/MonogateEML/AxiomWitnessBridge.lean`.
+`AbsoluteFoldNest.lean` / `AbsoluteFoldNestLocal.lean` / `CertifyNested.lean` (the fold family).
+Primitive Lipschitz lemmas: `ExpLipschitz.lean` / `TransNodes.lean` / `SqrtNode.lean` /
+`Log10Lipschitz.lean` / `InverseTrigBounded.lean` / `HyperbolicLipschitz.lean` / `TanLipschitz.lean`.
+Trust constants: `FPModel.lean` (`axiom u`, `RoundsW`). Ledger: `machlib/foundations/AxiomLedger.lean`;
+witness bridge: `monogate-lean/MonogateEML/AxiomWitnessBridge.lean`.

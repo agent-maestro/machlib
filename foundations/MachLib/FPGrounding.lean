@@ -1,6 +1,7 @@
 import MachLib.AbsoluteBridge
 import MachLib.AbsoluteFold
 import MachLib.AbsoluteFoldLocal
+import MachLib.AbsoluteFoldNestLocal
 import MachLib.EMLToCRuntime
 import MachLib.HyperbolicLipschitz
 import MachLib.InverseTrig
@@ -535,5 +536,96 @@ theorem pid_tan_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R) (hR : R 
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
     env .tan R real_tan_eps hR0 hR pidRawEML isArith_pidRawEML
     hflx_lo hflx_hi hxe_lo hxe_hi (real_tan_rounds _)
+
+/-! ### The multi-level instantiation: `log(cosh(PID law))`, through `pipeline_nested_local`
+
+Every grounding above is FLAT: one `tr1` node directly over `pidRawEML`. This is the one level deeper
+step flagged as optional after the recursive-nesting closure — a genuine LOCAL-over-LOCAL kernel,
+concretely grounded at `realToR`/`leanPrims`, not just the generic `pipeline_nested_local` combinator.
+
+The kernel: `log(cosh(PID law))` — the "log-cosh loss," a standard smooth, outlier-robust alternative
+to L1/L2 loss (`≈ x²/2` for small `x`, `≈ |x| − log 2` for large `x`) genuinely used in control/ML
+gain-shaping, not an arbitrary composition. `cosh` needs a symmetric domain `[-R,R]`; `log` needs a
+positive one-sided domain `[lo,hi]` — two DIFFERENT domain shapes stacked, exercising the harder case
+`pipeline_tr1_of_arith_local`'s own docstring calls out (`log` layering positivity on top of `exp`'s
+plain range, here `log` layering positivity on top of `cosh`'s symmetric range). -/
+
+/-- Real semantics of ALL FOURTEEN `Trans1` constructors — the totalisation `pipeline_nested_local`
+needs, since its `hround` hypothesis is universally quantified over every primitive, not just the ones
+a specific kernel happens to use. Buildable only now that every primitive is grounded. -/
+noncomputable def realOfAll14 : Trans1 → MachLib.Real → MachLib.Real
+  | .exp => exp   | .ln => log     | .sin => sin   | .cos => cos
+  | .tan => tan   | .sqrt => sqrt  | .abs => abs   | .asin => arcsin
+  | .acos => arccos | .atan => atan | .sinh => sinh | .cosh => cosh
+  | .tanh => tanh | .log10 => log10
+
+/-- The disclosed rounding constant for each of the fourteen primitives, matching `realOfAll14`. -/
+noncomputable def Eround1All : Trans1 → MachLib.Real
+  | .exp => real_exp_eps     | .ln => real_log_eps      | .sin => real_sin_eps
+  | .cos => real_cos_eps     | .tan => real_tan_eps      | .sqrt => real_sqrt_eps
+  | .abs => real_abs_eps     | .asin => real_asin_eps    | .acos => real_acos_eps
+  | .atan => real_atan_eps   | .sinh => real_sinh_eps    | .cosh => real_cosh_eps
+  | .tanh => real_tanh_eps   | .log10 => real_log10_eps
+
+/-- Every primitive's runtime call, through `realToR`, is within its own disclosed `Eround1All` of its
+`realOfAll14` semantics — a 14-way case split, one line per primitive, each closed by the `real_X_rounds`
+axiom already disclosed for it. The `hround` obligation `pipeline_nested_local` needs. -/
+theorem hround_all : ∀ (t : Trans1) (a : Float),
+    abs (realToR (stdI1 leanPrims t a) - realOfAll14 t (realToR a)) ≤ Eround1All t := by
+  intro t a
+  cases t with
+  | exp => exact real_exp_rounds a       | ln => exact real_log_rounds a
+  | sin => exact real_sin_rounds a       | cos => exact real_cos_rounds a
+  | tan => exact real_tan_rounds a       | sqrt => exact real_sqrt_rounds a
+  | abs => exact real_abs_rounds a       | asin => exact real_asin_rounds a
+  | acos => exact real_acos_rounds a     | atan => exact real_atan_rounds a
+  | sinh => exact real_sinh_rounds a     | cosh => exact real_cosh_rounds a
+  | tanh => exact real_tanh_rounds a     | log10 => exact real_log10_rounds a
+
+/-- **The multi-level grounded kernel: `log(cosh(PID law))`.** For any `[-R,R]` (`R≥0`) the PID law's
+computed AND exact values land in, and any `[lo,hi]` (`lo>0`) the RUNTIME `cosh(PID law)` value's
+computed AND exact readings land in, the emitted C for `log(cosh(1.5·e+0.4·i+0.05·d))` — the log-cosh
+loss over the raw PID law — read through `realToR`, is within SOME absolute bound of the exact ℝ value
+`log(cosh(PID law))`. One level deeper than every flat `pid_X_grounded` above: instance of
+`pipeline_nested_local` at `pidRawEML`, going through `isFoldLocal_of_isArith` to lift the arithmetic
+leaf and `exactRn_eq_exactR_of_arith` to state the conclusion in the familiar `exactR` terms every flat
+grounding already uses, rather than the more general `exactRn`. -/
+theorem pid_log_cosh_grounded (env : Env) (R lo hi : MachLib.Real) (hR0 : 0 ≤ R) (hlo : 0 < lo)
+    (hflx_lo1 : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi1 : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo1 : -R ≤ exactR realToR env pidRawEML) (hxe_hi1 : exactR realToR env pidRawEML ≤ R)
+    (hflx_lo2 : lo ≤ realToR
+      (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .cosh pidRawEML)).toF)
+    (hflx_hi2 : realToR
+      (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .cosh pidRawEML)).toF ≤ hi)
+    (hxe_lo2 : lo ≤ exactRn realToR realOfAll14 env (.tr1 .cosh pidRawEML))
+    (hxe_hi2 : exactRn realToR realOfAll14 env (.tr1 .cosh pidRawEML) ≤ hi) :
+    ∃ E, AbsEnc E
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
+        (emitC (.tr1 .ln (.tr1 .cosh pidRawEML)))).toF)
+      (log (cosh (exactR realToR env pidRawEML))) := by
+  have hxe_lo1' : -R ≤ exactRn realToR realOfAll14 env pidRawEML := by
+    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]; exact hxe_lo1
+  have hxe_hi1' : exactRn realToR realOfAll14 env pidRawEML ≤ R := by
+    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]; exact hxe_hi1
+  have he : IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfAll14 env
+      (.tr1 .ln (.tr1 .cosh pidRawEML)) :=
+    .tr1 .ln _ (1 / lo) lo hi (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
+      hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2
+      (.tr1 .cosh _ (sinh R) (-R) R (sinh_nonneg hR0) (cosh_lip_local R)
+        hflx_lo1 hflx_hi1 hxe_lo1' hxe_hi1'
+        (isFoldLocal_of_isArith (stdI1 leanPrims) (stdI2 leanPrims) realOfAll14 env
+          isArith_pidRawEML))
+  obtain ⟨E, hE⟩ := pipeline_nested_local real_fpbridge realOfAll14 Eround1All
+    (stdI1 leanPrims) (stdI2 leanPrims) (stdR1 leanPrims) (stdR2 leanPrims)
+    (std_hrt1 leanPrims) (std_hrt2 leanPrims) env hround_all
+    (.tr1 .ln (.tr1 .cosh pidRawEML)) he
+  refine ⟨E, ?_⟩
+  have heq : exactRn realToR realOfAll14 env (.tr1 .ln (.tr1 .cosh pidRawEML))
+      = log (cosh (exactR realToR env pidRawEML)) := by
+    show log (cosh (exactRn realToR realOfAll14 env pidRawEML))
+      = log (cosh (exactR realToR env pidRawEML))
+    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]
+  rwa [heq] at hE
 
 end Certcom
