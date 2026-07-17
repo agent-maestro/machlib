@@ -292,6 +292,59 @@ clean, `sorryAx`-free (`tools/sorry_audit.lean`: still exactly 3 allowlisted, no
 local-Lipschitz nesting piece (a local primitive over a subtree that itself contains local
 transcendentals) — see `AbsoluteFoldLocal.lean`'s own scope note, unchanged by this update.
 
+## ✅ Update (2026-07-17, same session) — recursive local-Lipschitz nesting CLOSED
+
+**The last open item on this whole doc.** `AbsoluteFoldLocal.lean`'s own scope note named the exact
+blocker: at a nested local-Lipschitz node, the domain condition on the COMPUTED input
+(`toR (evalEML … e).toF ∈ [lo,hi]`) is a fact about a float value produced by an arbitrarily deep
+subtree, not a leaf — the concern being that the range and the accumulated error would need to be
+propagated together via directed-rounding interval arithmetic.
+
+**The resolution turned out to be simpler than that concern implied.** New file
+`AbsoluteFoldNestLocal.lean`: `IsFoldLocal` — the nestable fragment for arithmetic plus `tr1` nodes,
+where each occurrence carries its OWN witnessed domain `[lo,hi]`, Lipschitz certificate `(L, hLnn,
+hLip)`, AND both range hypotheses (`hflx_lo/hi` on the computed value, `hxe_lo/hi` on the exact value)
+as EXPLICIT constructor data — i.e. the fix is not to derive one range from the other via interval
+arithmetic, it's to require both explicitly at every node, exactly repeating the flat
+`pipeline_tr1_of_arith_local`'s own two-hypothesis shape instead of only allowing it at the outermost
+node. Since the Lipschitz constant genuinely differs by primitive AND by the domain chosen at that
+occurrence (`exp hi`, `1/lo`, `1/(√lo+√lo)`, `1/√(1-R²)`, `cosh R`, `sinh R`, `1/cos²R`, …) with no
+single closed-form covering all of them, this per-occurrence data lives on the `tr1` constructor
+itself rather than a global `Trans1 → Real` parameter (unlike `AbsoluteFoldNest`'s `Lip1`, which could
+be global precisely because global-Lipschitz primitives need no domain at all).
+
+`nested_fold_local`/`pipeline_nested_local` — the recursive theorem and its through-the-emitted-C
+wrapper — mirror `AbsoluteFoldNest`'s `nested_fold`/`pipeline_nested` exactly: the bound stays
+EXISTENTIAL (`∃ E, AbsEnc E …`), so each node's error is whatever `absenc_add`/`absenc_lip_local`
+witnesses, composing cleanly with no closed form needed. Pure plumbing over the Lipschitz lemmas
+already proven for every primitive this session (`ExpLipschitz`, `TransNodes`, `SqrtNode`,
+`Log10Lipschitz`, `InverseTrigBounded`, `HyperbolicLipschitz`, `TanLipschitz`) — no new math, no new
+axioms. Confirmed by `#print axioms`: only Lean core + already-known `MachLib.Real` field axioms,
+nothing new — matches the pre-existing `nested_fold`/`pipeline_nested`/`pipeline_nested_glob`/
+`pipeline_nested_std` precedent (`CertifyNested.lean`), none of which are in `AxiomLedger`'s
+`headlines` either, since they're generic combinators, not certificates grounded at the real
+`Certcom.realToR`/`leanPrims` artifact — that concrete-instantiation layer stays a separate, later step
+for whichever specific nested kernel needs it, exactly as it already was for the globally-Lipschitz
+case (`pipeline_nested_glob`/`pipeline_nested_std` were never concretely instantiated at `leanPrims`
+either — this closure is at parity with, not behind, the established precedent).
+
+**Non-vacuity, not just structure**: `log(sinh(x) + y)` — a LOCAL-Lipschitz primitive over an
+arithmetic subtree that ITSELF contains another LOCAL-Lipschitz primitive, exactly the shape
+`AbsoluteFoldNest` could not cover — is proven to be in the fragment, given honest range hypotheses at
+each level, exercising two REAL, distinct per-primitive Lipschitz certificates (`sinh_lip_local`,
+`log_lip_local`) composed through the recursion.
+
+Full build green first try on the math (one `noncomputable` annotation needed on the demo's
+`realOf1`). Full project build green (377/377 modules). `AxiomLedger` unchanged (298/21/132/7/31 —
+correctly: no new disclosed axioms, nothing added to `headlines`). `sorry_audit`: still exactly 3
+allowlisted, no new sorries.
+
+**Every item flagged as open anywhere in this document is now closed**: all 14 `Trans1` primitives
+grounded, and the recursive local-Lipschitz nesting gap resolved. The only work left in this whole
+arc is optional, forward-looking, and un-scoped: concretely instantiating `pipeline_nested_local` at
+`Certcom.realToR`/`leanPrims` for a specific multi-level kernel (mirroring `FPGrounding.lean`'s flat
+`pid_X_grounded` pattern, one level deeper) — a natural next increment, not a gap.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and

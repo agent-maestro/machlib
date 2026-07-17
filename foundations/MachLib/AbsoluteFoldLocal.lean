@@ -17,13 +17,15 @@ is Lipschitz only on `[lo,hi]` and BOTH the computed input `toR (evalEML e).toF`
 `absenc_lip_local`. Concrete `exp` (`L = exp hi`) and `log` (`L = 1/lo`) instances follow from
 `ExpLipschitz`/`TransNodes`.
 
-Scope note (honest): this is ONE local transcendental layer over arithmetic — e.g. `exp(x·y − z·w)`.
-FULL recursive local-Lipschitz nesting (a local primitive over a subtree that itself contains local
-transcendentals) is genuinely harder: the domain condition at each node (`toR (evalEML e).toF ∈ [lo,hi]`)
-depends on the accumulated absolute error `E` at that node, which is existential — so the range and the
-error must be propagated together (interval arithmetic with directed rounding). That coupling is the
-remaining open piece; the globally-Lipschitz nesting (`AbsoluteFoldNest`) avoids it because those
-primitives need no domain. `sorryAx`-free.
+Scope note: this is ONE local transcendental layer over arithmetic — e.g. `exp(x·y − z·w)`. FULL
+recursive local-Lipschitz nesting (a local primitive over a subtree that itself contains local
+transcendentals) is now closed too — see `AbsoluteFoldNestLocal.lean` (`IsFoldLocal`/
+`nested_fold_local`/`pipeline_nested_local`, 2026-07-17). The resolution: rather than deriving the
+computed-value range from the exact-value range plus the accumulated error (which would need
+directed-rounding interval arithmetic), every `tr1` occurrence carries BOTH range hypotheses
+explicitly — exactly this file's own two-hypothesis shape, repeated at every node instead of only the
+outermost one — and the bound stays existential, so the recursion composes the same way
+`AbsoluteFoldNest`'s globally-Lipschitz case already did. `sorryAx`-free.
 -/
 
 namespace Certcom
