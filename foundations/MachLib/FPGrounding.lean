@@ -1,5 +1,6 @@
 import MachLib.AbsoluteBridge
 import MachLib.AbsoluteFold
+import MachLib.AbsoluteFoldLocal
 import MachLib.EMLToCRuntime
 import MachLib.HyperbolicLipschitz
 
@@ -129,5 +130,45 @@ theorem pid_tanh_grounded (env : Env) :
     env .tanh tanh 1 real_tanh_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
     pidRawEML isArith_pidRawEML (real_tanh_rounds _)
+
+/-! ### Grounding a second libm primitive: `exp`, LOCALLY Lipschitz
+
+`tanh` is globally `1`-Lipschitz, so `pid_tanh_grounded` needed no domain hypothesis. `exp` is not
+globally Lipschitz (unbounded growth), so grounding it goes through `pipeline_exp_of_arith`
+(`AbsoluteFoldLocal.lean`) instead: `L = exp hi` on any caller-supplied `[lo,hi]`, honestly conditional
+on the PID law's value actually landing in that range — the expected, correct shape for a *local*
+Lipschitz primitive, not a shortcoming relative to `tanh`'s unconditional result. -/
+
+/-- The disclosed libm rounding bound for the runtime `exp`. Same status as `real_tanh_eps`: the
+composite `libmonogate.h` computes for `exp` (here just `Float.exp` itself, `leanPrims.exp`), through
+the real denotation `realToR`, is within a fixed `real_exp_eps` of the exact `Real.exp`. Un-witnessable
+in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_exp_eps : MachLib.Real
+
+axiom real_exp_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ real_exp_eps
+
+/-- **A second grounded transcendental control kernel: `exp(PID law)`.** For any `[lo,hi]` the PID law's
+computed AND exact values both land in, the emitted C for `exp(1.5·e + 0.4·i + 0.05·d)` — an
+exponential-gain variant of the soft-saturated controller — read through `realToR`, is within
+`real_exp_eps + exp hi · absErr` of the exact ℝ value `exp(PID law)`, with **no `FPBridge` and no
+∀-primitive rounding hypothesis**: `FPBridge` is discharged by `real_fpbridge`, the runtime
+correspondence by `std_hrt1`/`std_hrt2` at Lean's libm basis, and the one `exp` rounding by the
+disclosed `real_exp_rounds`. Second grounded certificate reaching a transcendental layer over real
+`Float` bytes — the second axis of what "libm primitive grounding" (the certcom-A scoping doc's item
+5) actually means: not "grounding one universally-Lipschitz function suffices," but "each primitive
+needs its own disclosed rounding constant AND, unless globally Lipschitz, its own domain hypothesis."
+Instance of `pipeline_exp_of_arith` at `pidRawEML`. -/
+theorem pid_exp_grounded (env : Env) (lo hi : MachLib.Real)
+    (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
+    AbsEnc (real_exp_eps + exp hi * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .exp pidRawEML))).toF)
+      (exp (exactR realToR env pidRawEML)) :=
+  pipeline_exp_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .exp lo hi real_exp_eps pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_exp_rounds _)
 
 end Certcom

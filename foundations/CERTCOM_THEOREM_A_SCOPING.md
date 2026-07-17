@@ -84,6 +84,38 @@ emitted-C determinant `x·y − z·w`, `#print axioms` resting on exactly `{real
 axioms are load-bearing in the Theorem-A headline. Next: `tr1` nodes in the closed-form fold, or a
 second grounded kernel (e.g. PID), or the Flocq-scale grounding that would derive `real_fpbridge`.
 
+## ✅ Update (2026-07-17) — items 2–4 done, PLUS a second grounded transcendental (`exp`)
+
+This doc's own "Files" table above already lists most of the remaining work as *proved* (not just
+scoped) — `pipeline_arith` covers the whole arithmetic fragment including negation (item 2),
+`pipeline_{exp,log}_of_arith` covers one local-Lipschitz transcendental layer, `pipeline_nested_glob/
+std` covers full recursive nesting for globally-Lipschitz primitives — but this "Recommended first
+target" section never got updated to say so, and neither the arithmetic-fragment PID kernel
+(`pid_grounded`) nor a transcendental kernel had actually been **grounded** (disclosed axiom + concrete
+instantiation, not just the lever) until a later session did both:
+
+- **`pid_grounded`** (arithmetic fragment on the real `pid.eml` datapath) and **`pid_tanh_grounded`**
+  (first grounded transcendental kernel, `tanh`-saturated PID — globally `1`-Lipschitz, so
+  unconditional) — `Certcom.real_tanh_eps`/`real_tanh_rounds`, `MachLib/FPGrounding.lean`.
+- **`pid_exp_grounded`** (this update) — the SECOND grounded transcendental, and the first through the
+  *local*-Lipschitz lever (`pipeline_exp_of_arith`, `AbsoluteFoldLocal.lean`): `exp(PID law)`,
+  conditional on the PID's computed AND exact values landing in a caller-supplied `[lo,hi]` (the
+  honest, expected shape for a non-globally-Lipschitz primitive — `tanh`'s unconditional result was
+  the special case, not the norm). New disclosed axioms `Certcom.real_exp_eps`/`real_exp_rounds`,
+  same trust status as the `tanh` pair. `AxiomLedger`: 273 axioms pinned (was 271), 9 headline
+  footprints ⊆ trusted (84), 6 disclosed-trusted (was 4) — `pid_exp_grounded` added as a headline,
+  `#print axioms` confirms all four `Certcom.*` axioms genuinely load-bearing, `sorryAx`-free.
+
+**What's actually still open**: item 4's "genuinely harder piece" (full recursive LOCAL-Lipschitz
+nesting — a local primitive over a subtree that ITSELF contains local transcendentals, needing
+interval arithmetic with directed rounding to co-propagate range and error) remains unattempted —
+`AbsoluteFoldLocal.lean`'s own docstring already flags this precisely. Item 5 (libm grounding) is now
+2-of-11 primitives disclosed (`tanh`, `exp`) — `log`, `sin`, `cos`, `sinh`, `cosh` and the rest of the
+`Trans1`/`Trans2` basis still rest on the generic, ungrounded `FPBridge`-style trust rather than their
+own named axiom. Next: ground `log` (the OTHER concrete instance `AbsoluteFoldLocal.lean` already
+provides, `pipeline_log_of_arith`) for a third data point, or a globally-Lipschitz primitive via
+`pipeline_nested_glob/std` for the first grounded RECURSIVE kernel.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
