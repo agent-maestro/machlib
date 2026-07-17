@@ -166,6 +166,45 @@ theorem hasDerivAt2_of_multiVarExpr {k : Nat} (e : MultiVarExpr k) (env : Fin k 
       have hmul := HasDerivAt2_mul _ _ _ _ _ _ a b ih₁ ih₂
       simpa [dVar] using hmul
 
+/-! ## N.1b — the curve-tangent / chain-rule bridge, for free
+
+`BivariateDeriv.lean`'s `curve_tangent_and_chain` is already stated over GENERIC `f g : Real → Real →
+Real` — it never mentions `TwoExpBivarExpr`. So it applies to the curried `MultiVarExpr k` closures with
+NO further proof: just supply `hasDerivAt2_of_multiVarExpr` as its two `HasDerivAt2` hypotheses. This is
+exactly the corollary `khovanskii_rolle_count` (`MultiVarTwoExpRolle.lean`) needs for its `hcurve`/
+`hGderiv` hypotheses — and that theorem is itself already `Real → Real`-generic (no `HasDerivAt2` or
+`TwoExpBivarExpr` in its statement at all), so the whole existing single-point IFT/tangent apparatus
+carries over to the N-ary case with zero new lemmas beyond this one composition. -/
+
+/-- **The curve-tangent / chain-rule bridge for `MultiVarExpr k`.** For two expressions `f, g`, an active
+pair `p ≠ q`, and a curve `yc` implicitly solving `f = 0` along the arc (supplied, not constructed — the
+IFT/existence gate stays external, exactly as `curve_tangent_and_chain` and `RepresentedCurveArc.yc`
+already treat it): the tangent condition and chain rule needed by `khovanskii_rolle_count` follow, with
+partials computed syntactically by `dVar`. -/
+theorem multiVarExpr_curve_tangent_and_chain {k : Nat} (f g : MultiVarExpr k) (env : Fin k → Real)
+    (p q : Fin k) (hpq : p ≠ q) (yc : Real → Real) (x : Real)
+    (hfy : denote (dVar q f) (freeze2 env p q x (yc x)) ≠ 0)
+    (hid : ∀ s : Real, denote f (freeze2 env p q s (yc s)) = 0) :
+    HasDerivAt yc (-(denote (dVar p f) (freeze2 env p q x (yc x)))
+        / denote (dVar q f) (freeze2 env p q x (yc x))) x
+      ∧ denote (dVar p f) (freeze2 env p q x (yc x))
+          + denote (dVar q f) (freeze2 env p q x (yc x))
+            * (-(denote (dVar p f) (freeze2 env p q x (yc x)))
+                / denote (dVar q f) (freeze2 env p q x (yc x))) = 0
+      ∧ HasDerivAt (fun s => denote g (freeze2 env p q s (yc s)))
+          (denote (dVar p g) (freeze2 env p q x (yc x)) * 1
+            + denote (dVar q g) (freeze2 env p q x (yc x))
+              * (-(denote (dVar p f) (freeze2 env p q x (yc x)))
+                  / denote (dVar q f) (freeze2 env p q x (yc x)))) x :=
+  curve_tangent_and_chain
+    (fun a b => denote f (freeze2 env p q a b)) (fun a b => denote g (freeze2 env p q a b))
+    (denote (dVar p f) (freeze2 env p q x (yc x))) (denote (dVar q f) (freeze2 env p q x (yc x)))
+    (denote (dVar p g) (freeze2 env p q x (yc x))) (denote (dVar q g) (freeze2 env p q x (yc x)))
+    yc x
+    (hasDerivAt2_of_multiVarExpr f env p q hpq x (yc x))
+    (hasDerivAt2_of_multiVarExpr g env p q hpq x (yc x))
+    hfy hid
+
 end MultiVarExpr
 end MultiVarMod
 end MachLib
