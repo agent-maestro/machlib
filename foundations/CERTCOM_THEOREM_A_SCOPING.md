@@ -116,6 +116,30 @@ own named axiom. Next: ground `log` (the OTHER concrete instance `AbsoluteFoldLo
 provides, `pipeline_log_of_arith`) for a third data point, or a globally-Lipschitz primitive via
 `pipeline_nested_glob/std` for the first grounded RECURSIVE kernel.
 
+## ✅ Update (2026-07-17, same session) — `log` grounded too, item 5 now 3-of-11
+
+**`pid_log_grounded`** (`FPGrounding.lean`): `log(1.5·e + 0.4·i + 0.05·d)` — same shape as `exp`
+(local-Lipschitz lever, `pipeline_log_of_arith`, `L = 1/lo`), with one further honest cost `exp`
+didn't have: `log` needs the domain to be strictly POSITIVE (`lo > 0`), not just bounded, since `log`
+is only meaningfully Lipschitz — and only analytically defined — on `(0,∞)`. New disclosed axioms
+`Certcom.real_log_eps`/`real_log_rounds`, same trust status as the `tanh`/`exp` pairs. Built green on
+the first real attempt after fixing one naming slip (`Trans1`'s log constructor is `.ln`, not `.log`
+— `.log` is the MATH function name, `Trans1.ln` is the AST node; easy to conflate, caught immediately
+by the elaborator, not a substantive error). `AxiomLedger`: 275 axioms pinned (was 273), 10 headline
+footprints ⊆ trusted (86) (was 9), 8 disclosed-trusted (was 6) — no incidental leaked-axiom fix needed
+this time (unlike `exp`'s `exp_lt`), since `log`'s Lipschitz proof draws only on axioms already in
+`trustedFootprint` from earlier work. `#print axioms` confirms all four `Certcom.*` axioms genuinely
+load-bearing, `sorryAx`-free; full 373-module build green; `sorry_audit` unchanged (3 allowlisted).
+
+**Libm grounding is now 3-of-11** (`tanh`, `exp`, `log`) — three data points on the actual cost
+structure per primitive: a disclosed rounding constant always; a domain hypothesis unless globally
+Lipschitz (`tanh` is the one exception so far); and, for `log` specifically, a positivity
+side-condition on top of the plain range bound. Remaining primitives with no grounded rounding
+constant yet: `sin`, `cos`, `tan`, `sqrt`, `abs`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `log10` (11
+total in the `Trans1` basis, plus `eml`/`pow` in `Trans2`). The genuinely harder open piece (full
+recursive local-Lipschitz nesting) is unchanged by this update — still unattempted, still the one
+named in `AbsoluteFoldLocal.lean`'s own docstring.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and

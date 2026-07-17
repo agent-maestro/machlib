@@ -171,4 +171,43 @@ theorem pid_exp_grounded (env : Env) (lo hi : MachLib.Real)
     env .exp lo hi real_exp_eps pidRawEML isArith_pidRawEML
     hflx_lo hflx_hi hxe_lo hxe_hi (real_exp_rounds _)
 
+/-! ### Grounding a third libm primitive: `log`, LOCALLY Lipschitz on a positive domain
+
+Same shape as `exp` — not globally Lipschitz, so through the local-Lipschitz lever
+(`pipeline_log_of_arith`, `L = 1/lo`) — with one further honest cost: `log` additionally needs the
+domain to be strictly positive (`lo > 0`, not just bounded), since `log` itself is only meaningfully
+Lipschitz — and only defined analytically — on `(0,∞)`. Third data point on what "libm primitive
+grounding" (certcom-A scoping doc item 5) costs per primitive: a disclosed rounding constant always,
+plus a domain hypothesis unless the primitive happens to be globally Lipschitz like `tanh`, plus
+(for `log` specifically) a positivity side-condition on top of the plain range bound. -/
+
+/-- The disclosed libm rounding bound for the runtime `log`. Same status as `real_tanh_eps`/
+`real_exp_eps`: `leanPrims.log`, through the real denotation `realToR`, is within a fixed
+`real_log_eps` of the exact `Real.log`. Un-witnessable in Lean (opaque `Float`); the residual libm
+trust for this primitive. -/
+axiom real_log_eps : MachLib.Real
+
+axiom real_log_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ real_log_eps
+
+/-- **A third grounded transcendental control kernel: `log(PID law)`.** For any `[lo,hi]` with `lo>0`
+that the PID law's computed AND exact values both land in, the emitted C for
+`log(1.5·e + 0.4·i + 0.05·d)` — a logarithmic-gain variant of the controller (e.g. a decibel-scaled
+error signal) — read through `realToR`, is within `real_log_eps + (1/lo)·absErr` of the exact ℝ value
+`log(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge` is
+discharged by `real_fpbridge`, the runtime correspondence by `std_hrt1`/`std_hrt2`, and the one `log`
+rounding by the disclosed `real_log_rounds`. Third grounded transcendental kernel over real `Float`
+bytes. Instance of `pipeline_log_of_arith` at `pidRawEML`. -/
+theorem pid_log_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
+    (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
+    AbsEnc (real_log_eps + (1 / lo) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .ln pidRawEML))).toF)
+      (log (exactR realToR env pidRawEML)) :=
+  pipeline_log_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .ln lo hi real_log_eps hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds _)
+
 end Certcom
