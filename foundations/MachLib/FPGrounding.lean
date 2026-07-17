@@ -210,4 +210,34 @@ theorem pid_log_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
     env .ln lo hi real_log_eps hlo pidRawEML isArith_pidRawEML
     hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds _)
 
+/-! ### Grounding a fourth libm primitive: `sin`, back to GLOBALLY Lipschitz
+
+`sin` is globally `1`-Lipschitz (`TrigLipschitz.sin_lipschitz`), same shape as `tanh` — no domain
+hypothesis needed, straight through `pipeline_tr1_of_arith`. Second data point (after `tanh`) on the
+globally-Lipschitz side of the primitive basis, confirming that side really is as cheap as `tanh`
+suggested and not a one-off — unlike `exp`/`log`, no domain bookkeeping at all. -/
+
+/-- The disclosed libm rounding bound for the runtime `sin`. Same status as `real_tanh_eps`: the
+composite `leanPrims.sin`, through `realToR`, is within a fixed `real_sin_eps` of the exact `Real.sin`.
+Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_sin_eps : MachLib.Real
+
+axiom real_sin_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .sin a) - sin (realToR a)) ≤ real_sin_eps
+
+/-- **A fourth grounded transcendental control kernel: `sin(PID law)`.** The emitted C for
+`sin(1.5·e + 0.4·i + 0.05·d)` — an oscillatory-gain variant of the controller — read through
+`realToR`, is within `real_sin_eps + absErr` of the exact ℝ value `sin(PID law)`, with **no `FPBridge`
+and no ∀-primitive rounding hypothesis**, unconditionally (no domain hypothesis at all — `sin` is
+globally Lipschitz, same as `tanh`). Instance of `pipeline_tr1_of_arith` at `pidRawEML`. -/
+theorem pid_sin_grounded (env : Env) :
+    AbsEnc (real_sin_eps + 1 * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .sin pidRawEML))).toF)
+      (sin (exactR realToR env pidRawEML)) :=
+  pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .sin sin 1 real_sin_eps
+    (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact sin_lipschitz p q)
+    pidRawEML isArith_pidRawEML (real_sin_rounds _)
+
 end Certcom

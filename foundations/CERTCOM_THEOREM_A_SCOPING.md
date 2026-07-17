@@ -140,6 +140,24 @@ total in the `Trans1` basis, plus `eml`/`pow` in `Trans2`). The genuinely harder
 recursive local-Lipschitz nesting) is unchanged by this update — still unattempted, still the one
 named in `AbsoluteFoldLocal.lean`'s own docstring.
 
+## ✅ Update (2026-07-17, same session) — `sin` grounded, item 5 now 4-of-11
+
+**`pid_sin_grounded`** (`FPGrounding.lean`): `sin(1.5·e + 0.4·i + 0.05·d)` — back to the GLOBALLY
+Lipschitz side (`TrigLipschitz.sin_lipschitz`, `L=1`), same shape as `tanh` — no domain hypothesis at
+all, straight through `pipeline_tr1_of_arith`. Second data point (after `tanh`) confirming the
+globally-Lipschitz primitives really are as cheap as `tanh` suggested, not a one-off. New disclosed
+axioms `Certcom.real_sin_eps`/`real_sin_rounds`. Built green first try. `AxiomLedger`: 277 axioms
+pinned (was 275), 11 headline footprints ⊆ trusted (92) (was 86 — jump reflects a second incidental
+leak fix, `MachLib.Real.sin`/`cos`/`HasDerivAt_sin`/`pythagorean`, all already-known ℝ-witnessed
+axioms nothing had exercised as a headline before), 10 disclosed-trusted (was 8). `#print axioms`
+clean, `sorryAx`-free, full build green.
+
+**Libm grounding is now 4-of-11** (`tanh`, `sin` globally Lipschitz; `exp`, `log` locally Lipschitz).
+Remaining ungrounded: `cos`, `tan`, `sqrt`, `abs`, `asin`, `acos`, `atan`, `sinh`, `cosh`, `log10`.
+`cos`/`atan`/`abs` are the other globally-Lipschitz primitives (per `AbsoluteFold.lean`'s own
+docstring) — cheapest next targets, same `pipeline_tr1_of_arith` pattern as `tanh`/`sin`. The
+recursive-nesting piece remains the one genuinely different, harder item on this list.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
