@@ -175,6 +175,28 @@ last cheap targets before the remaining ones all need their own domain/positivit
 (`sqrt`/`asin`/`acos` bounded-domain, `sinh`/`cosh` symmetric-magnitude, `tan`/`log10` composite-
 derived). The recursive-nesting piece remains unchanged, still the one genuinely harder open item.
 
+## ✅ Update (2026-07-17, same session) — `atan` + `abs` grounded, all 5 globally-Lipschitz primitives done
+
+**`pid_atan_grounded`**/**`pid_abs_grounded`** (`FPGrounding.lean`): the last two of the five
+globally-Lipschitz primitives (`InverseTrig.atan_lipschitz`, `OperatorBasisGeneral.abs_abs_sub_le`,
+both `L=1`), identical unconditional pattern to `tanh`/`sin`/`cos`. `abs` is IEEE-754-exact in
+principle (sign-bit clear, no rounding), but disclosed the same way as every other primitive rather
+than assumed exact — the runtime call still goes through `mg_abs`/`fabs`, not a bare sign-bit op Lean
+can see. New disclosed axioms `Certcom.real_atan_eps`/`real_atan_rounds`/`real_abs_eps`/
+`real_abs_rounds`. Needed one new import (`InverseTrig`/`OperatorBasisGeneral` — `atan`/`abs_abs_sub_le`
+live outside `FPGrounding.lean`'s existing transitive closure, unlike `sin`/`cos`), fixed on the first
+rebuild. `AxiomLedger`: 283 axioms pinned (was 279), 14 headline footprints ⊆ trusted (101) (was 95 —
+one more incidental leak fix, `MachLib.Real.atan`/`HasDerivAt_atan`, needed for `atan_lipschitz`'s own
+proof; `abs` needed none), 16 disclosed-trusted (was 12). `#print axioms` clean on both, `sorryAx`-free,
+full build green.
+
+**Libm grounding is now 7-of-11** (`tanh`,`sin`,`cos`,`atan`,`abs` globally Lipschitz — ALL FIVE done;
+`exp`,`log` locally Lipschitz). Remaining: `tan`, `sqrt`, `asin`, `acos`, `sinh`, `cosh`, `log10` — every
+one of these needs its own domain/positivity bookkeeping (`sqrt`/`asin`/`acos` bounded-domain levers
+already exist per `SqrtNode.lean`/`InverseTrigBounded.lean`; `sinh`/`cosh` symmetric-magnitude per
+`HyperbolicLipschitz.lean`; `tan`/`log10` composite-derived). The recursive-nesting piece remains the
+one genuinely different, harder open item, unchanged by this update.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and

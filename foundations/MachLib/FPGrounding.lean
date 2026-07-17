@@ -3,6 +3,8 @@ import MachLib.AbsoluteFold
 import MachLib.AbsoluteFoldLocal
 import MachLib.EMLToCRuntime
 import MachLib.HyperbolicLipschitz
+import MachLib.InverseTrig
+import MachLib.OperatorBasisGeneral
 
 /-!
 # certcom Theorem A — grounding the Float↔Real bridge (the disclosed IEEE-754 axiom)
@@ -266,5 +268,64 @@ theorem pid_cos_grounded (env : Env) :
     env .cos cos 1 real_cos_eps
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact cos_lipschitz p q)
     pidRawEML isArith_pidRawEML (real_cos_rounds _)
+
+/-! ### Grounding a sixth libm primitive: `atan`, also GLOBALLY Lipschitz
+
+Fourth data point on the globally-Lipschitz side (`InverseTrig.atan_lipschitz`, `L=1`), identical
+pattern to `tanh`/`sin`/`cos`. -/
+
+/-- The disclosed libm rounding bound for the runtime `atan`. Same status as `real_cos_eps`: the
+composite `leanPrims.atan`, through `realToR`, is within a fixed `real_atan_eps` of the exact
+`Real.atan`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_atan_eps : MachLib.Real
+
+axiom real_atan_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .atan a) - atan (realToR a)) ≤ real_atan_eps
+
+/-- **A sixth grounded transcendental control kernel: `atan(PID law)`.** The emitted C for
+`atan(1.5·e + 0.4·i + 0.05·d)` read through `realToR` is within `real_atan_eps + absErr` of the exact
+ℝ value `atan(PID law)`, unconditionally — `atan` is globally Lipschitz, same as `tanh`/`sin`/`cos`.
+Instance of `pipeline_tr1_of_arith` at `pidRawEML`. -/
+theorem pid_atan_grounded (env : Env) :
+    AbsEnc (real_atan_eps + 1 * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .atan pidRawEML))).toF)
+      (atan (exactR realToR env pidRawEML)) :=
+  pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .atan atan 1 real_atan_eps
+    (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact atan_lipschitz p q)
+    pidRawEML isArith_pidRawEML (real_atan_rounds _)
+
+/-! ### Grounding a seventh libm primitive: `abs`, the LAST globally-Lipschitz one
+
+`abs` is `1`-Lipschitz (`OperatorBasisGeneral.abs_abs_sub_le`, the reverse triangle inequality) — the
+last of the five globally-Lipschitz primitives (`tanh`,`sin`,`cos`,`atan`,`abs`) `AbsoluteFold.lean`'s
+own docstring names. Closes out the cheap half of the basis; every remaining `Trans1` primitive needs
+its own domain or positivity bookkeeping (matching `exp`/`log`'s shape, not `tanh`/`sin`/`cos`/`atan`'s). -/
+
+/-- The disclosed libm rounding bound for the runtime `abs`. Same status as `real_atan_eps`: the
+composite `leanPrims.abs`, through `realToR`, is within a fixed `real_abs_eps` of the exact
+`Real.abs`. `abs` is IEEE-754-exact in principle (sign-bit clear, no rounding at all) — same honest
+posture as the `neg` field of `FPBridge` — but the residual libm trust is disclosed the same way as
+every other primitive here rather than assumed exact, since the runtime call still goes through
+`mg_abs`/`fabs`, not a bare sign-bit operation Lean can see. -/
+axiom real_abs_eps : MachLib.Real
+
+axiom real_abs_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .abs a) - abs (realToR a)) ≤ real_abs_eps
+
+/-- **A seventh grounded transcendental control kernel: `abs(PID law)`.** The emitted C for
+`abs(1.5·e + 0.4·i + 0.05·d)` — a rectified-error variant of the controller — read through `realToR`
+is within `real_abs_eps + absErr` of the exact ℝ value `abs(PID law)`, unconditionally. Instance of
+`pipeline_tr1_of_arith` at `pidRawEML`. -/
+theorem pid_abs_grounded (env : Env) :
+    AbsEnc (real_abs_eps + 1 * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .abs pidRawEML))).toF)
+      (abs (exactR realToR env pidRawEML)) :=
+  pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .abs abs 1 real_abs_eps
+    (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact abs_abs_sub_le p q)
+    pidRawEML isArith_pidRawEML (real_abs_rounds _)
 
 end Certcom
