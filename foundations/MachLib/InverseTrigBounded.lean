@@ -38,8 +38,11 @@ private theorem sq_le_of_abs_le {c R : Real} (h : abs c ≤ R) : c * c ≤ R * R
   exact le_trans (mul_le_mul_of_nonneg_right h (abs_nonneg c))
                  (mul_le_mul_of_nonneg_left h (le_trans (abs_nonneg c) h))
 
-/-- `R < 1` together with a witness `abs x ≤ R` (which forces `0 ≤ R`) gives `R·R < 1`. -/
-private theorem sq_lt_one_of_abs_le_lt_one {R : Real} (hR : R < 1) {x : Real} (hx : abs x ≤ R) :
+/-- `R < 1` together with a witness `abs x ≤ R` (which forces `0 ≤ R`) gives `R·R < 1`. Not
+`private`: reused by `AbsoluteFoldLocal.pipeline_arcsin_of_arith`/`pipeline_arccos_of_arith` to derive
+the pipeline's `0 ≤ L` hypothesis from the same in-domain witness `absenc_arcsin_local`/
+`absenc_arccos_local` already use. -/
+theorem sq_lt_one_of_abs_le_lt_one {R : Real} (hR : R < 1) {x : Real} (hx : abs x ≤ R) :
     R * R < 1 := by
   have hR0 : 0 ≤ R := le_trans (abs_nonneg x) hx
   have hRR_le_R : R * R ≤ R := by

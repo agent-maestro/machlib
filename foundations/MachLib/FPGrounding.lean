@@ -328,4 +328,181 @@ theorem pid_abs_grounded (env : Env) :
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact abs_abs_sub_le p q)
     pidRawEML isArith_pidRawEML (real_abs_rounds _)
 
+/-! ### Grounding an eighth libm primitive: `sqrt`, LOCALLY Lipschitz on a positive domain
+
+Same shape as `log` — one-sided domain, needs `lo > 0`. `L = 1/(√lo+√lo)` via
+`SqrtNode.sqrt_lip_local`. All five globally-Lipschitz primitives are done; every primitive from here
+needs its own domain/positivity bookkeeping. -/
+
+/-- The disclosed libm rounding bound for the runtime `sqrt`. Same status as every prior primitive:
+`leanPrims.sqrt` (`Float.sqrt`), through `realToR`, is within a fixed `real_sqrt_eps` of the exact
+`Real.sqrt`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_sqrt_eps : MachLib.Real
+
+axiom real_sqrt_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ real_sqrt_eps
+
+/-- **An eighth grounded transcendental control kernel: `sqrt(PID law)`.** For any `[lo,hi]` with
+`lo>0` that the PID law's computed AND exact values both land in, the emitted C for
+`sqrt(1.5·e + 0.4·i + 0.05·d)` — an RMS/magnitude-style variant — read through `realToR`, is within
+`real_sqrt_eps + (1/(√lo+√lo))·absErr` of the exact ℝ value `sqrt(PID law)`. Instance of
+`pipeline_sqrt_of_arith` at `pidRawEML`. -/
+theorem pid_sqrt_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
+    (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
+    AbsEnc (real_sqrt_eps + (1 / (sqrt lo + sqrt lo)) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .sqrt pidRawEML))).toF)
+      (sqrt (exactR realToR env pidRawEML)) :=
+  pipeline_sqrt_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .sqrt lo hi real_sqrt_eps hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_sqrt_rounds _)
+
+/-! ### Grounding a ninth libm primitive: `log10`, LOCALLY Lipschitz on a positive domain
+
+Same shape as `log`/`sqrt` — one-sided domain, `lo > 0`, `L = 1/(lo·log 10)`. Unlike every other
+primitive here, `leanPrims`'s own interpretation of `.log10` is ITSELF a composite built from `ln`
+(`fun x => p.ln x / p.ln 10`, `EMLToCRuntime.lean`), not a distinct native runtime call — the disclosed
+rounding bound covers that whole composite, same honest posture as everywhere else. -/
+
+/-- The disclosed libm rounding bound for the runtime `log10`. Same status as every prior primitive:
+the composite `leanPrims.log10` (`ln x / ln 10`), through `realToR`, is within a fixed
+`real_log10_eps` of the exact `Real.log10`. Un-witnessable in Lean (opaque `Float`); the residual libm
+trust for this primitive. -/
+axiom real_log10_eps : MachLib.Real
+
+axiom real_log10_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ real_log10_eps
+
+/-- **A ninth grounded transcendental control kernel: `log10(PID law)`.** For any `[lo,hi]` with
+`lo>0` that the PID law's computed AND exact values both land in, the emitted C for
+`log10(1.5·e + 0.4·i + 0.05·d)` — a decibel-scaled gain variant — read through `realToR`, is within
+`real_log10_eps + (1/(lo·log 10))·absErr` of the exact ℝ value `log10(PID law)`. Instance of
+`pipeline_log10_of_arith` at `pidRawEML`. -/
+theorem pid_log10_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
+    (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
+    (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
+    AbsEnc (real_log10_eps + (1 / (lo * log (natCast 10))) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .log10 pidRawEML))).toF)
+      (log10 (exactR realToR env pidRawEML)) :=
+  pipeline_log10_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .log10 lo hi real_log10_eps hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_log10_rounds _)
+
+/-! ### Grounding a tenth libm primitive: `asin` (`arcsin`), SYMMETRIC-domain Lipschitz
+
+First symmetric-domain primitive: Lipschitz only on `[-R,R]`, `R < 1` (derivative blows up at `±1`),
+`L = 1/√(1−R²)`, via `InverseTrigBounded.arcsin_lip_local`. -/
+
+/-- The disclosed libm rounding bound for the runtime `asin`. Same status as every prior primitive:
+`leanPrims.asin` (`Float.asin`), through `realToR`, is within a fixed `real_asin_eps` of the exact
+`Real.arcsin`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_asin_eps : MachLib.Real
+
+axiom real_asin_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ real_asin_eps
+
+/-- **A tenth grounded transcendental control kernel: `asin(PID law)`.** For any `[-R,R]` (`R<1`) that
+the PID law's computed AND exact values both land in, the emitted C for
+`asin(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `real_asin_eps + (1/√(1−R²))·absErr`
+of the exact ℝ value `arcsin(PID law)`. Instance of `pipeline_arcsin_of_arith` at `pidRawEML`. -/
+theorem pid_asin_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
+    (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
+    AbsEnc (real_asin_eps + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .asin pidRawEML))).toF)
+      (arcsin (exactR realToR env pidRawEML)) :=
+  pipeline_arcsin_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .asin R real_asin_eps hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_asin_rounds _)
+
+/-! ### Grounding an eleventh libm primitive: `acos` (`arccos`), same symmetric-domain shape as `asin`
+-/
+
+/-- The disclosed libm rounding bound for the runtime `acos`. Same status as `real_asin_eps`:
+`leanPrims.acos` (`Float.acos`), through `realToR`, is within a fixed `real_acos_eps` of the exact
+`Real.arccos`. -/
+axiom real_acos_eps : MachLib.Real
+
+axiom real_acos_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ real_acos_eps
+
+/-- **An eleventh grounded transcendental control kernel: `acos(PID law)`.** Same shape as
+`pid_asin_grounded`. Instance of `pipeline_arccos_of_arith` at `pidRawEML`. -/
+theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
+    (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
+    AbsEnc (real_acos_eps + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .acos pidRawEML))).toF)
+      (arccos (exactR realToR env pidRawEML)) :=
+  pipeline_arccos_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .acos R real_acos_eps hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_acos_rounds _)
+
+/-! ### Grounding a twelfth libm primitive: `sinh`, SYMMETRIC domain, unconditional on `R`
+
+`sinh` needs a domain (unlike globally-Lipschitz `tanh`) but, like `exp`, no extra sign hypothesis:
+`L = cosh R > 0` for every `R`. `leanPrims`'s `.sinh` is itself a composite of `exp` (`EMLToCRuntime.lean`
+`(p.exp x - p.exp (-x)) * 0.5`), not a distinct native call. -/
+
+/-- The disclosed libm rounding bound for the runtime `sinh`. Same status as every prior primitive:
+the composite `leanPrims.sinh`, through `realToR`, is within a fixed `real_sinh_eps` of the exact
+`Real.sinh`. -/
+axiom real_sinh_eps : MachLib.Real
+
+axiom real_sinh_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ real_sinh_eps
+
+/-- **A twelfth grounded transcendental control kernel: `sinh(PID law)`.** For any `[-R,R]` that the
+PID law's computed AND exact values both land in, the emitted C for `sinh(1.5·e + 0.4·i + 0.05·d)` read
+through `realToR`, is within `real_sinh_eps + cosh R · absErr` of the exact ℝ value `sinh(PID law)`.
+Instance of `pipeline_sinh_of_arith` at `pidRawEML`. -/
+theorem pid_sinh_grounded (env : Env) (R : MachLib.Real)
+    (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
+    AbsEnc (real_sinh_eps + cosh R * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .sinh pidRawEML))).toF)
+      (sinh (exactR realToR env pidRawEML)) :=
+  pipeline_sinh_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .sinh R real_sinh_eps pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_sinh_rounds _)
+
+/-! ### Grounding a thirteenth libm primitive: `cosh`, SYMMETRIC domain, needs `0 ≤ R`
+
+The `cosh`/`log` analog of `sinh`/`exp`: `L = sinh R` needs `R ≥ 0` on top of the plain range bounds
+(`sinh R ≥ 0` only holds for `R ≥ 0`) — one further honest cost layered on the symmetric-domain case,
+mirroring how `log` layers positivity on top of `exp`'s plain one-sided domain. THIRTEENTH grounded
+primitive — every `Trans1` constructor except `tan` is now grounded. -/
+
+/-- The disclosed libm rounding bound for the runtime `cosh`. Same status as `real_sinh_eps`: the
+composite `leanPrims.cosh`, through `realToR`, is within a fixed `real_cosh_eps` of the exact
+`Real.cosh`. -/
+axiom real_cosh_eps : MachLib.Real
+
+axiom real_cosh_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ real_cosh_eps
+
+/-- **A thirteenth grounded transcendental control kernel: `cosh(PID law)`** — the last one before
+`tan`. Instance of `pipeline_cosh_of_arith` at `pidRawEML`. -/
+theorem pid_cosh_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R)
+    (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
+    (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
+    (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
+    AbsEnc (real_cosh_eps + sinh R * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .cosh pidRawEML))).toF)
+      (cosh (exactR realToR env pidRawEML)) :=
+  pipeline_cosh_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .cosh R real_cosh_eps hR0 pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_cosh_rounds _)
+
 end Certcom

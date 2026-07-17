@@ -226,4 +226,27 @@ theorem cosh_lipschitz_bound {a b R : Real} (ha : abs a ≤ R) (hb : abs b ≤ R
         show b - b = (0 : Real) from by mach_ring, abs_zero, mul_zero])
   · rw [abs_of_nonneg (le_of_lt (sub_pos_of_lt h))]; exact step b a hb ha h
 
+/-! ## `[lo,hi]`-shaped restatements, for `AbsoluteFoldLocal`'s pipeline
+
+`sinh_lipschitz_bound`/`cosh_lipschitz_bound` are stated with `abs a ≤ R`/`abs b ≤ R` hypotheses;
+the fold's `pipeline_tr1_of_arith_local` wants the `-R ≤ p → p ≤ R → ...` shape (matching
+`sqrt_lip_local`/`log10_lip_local`/`arcsin_lip_local`). Straight `abs_le_iff` repackaging, no new
+math. -/
+
+/-- **`sinh` is `cosh R`-Lipschitz on `[-R,R]`** — the `pipeline_tr1_of_arith_local` hypothesis shape
+for `sinh`. -/
+theorem sinh_lip_local (R : Real) :
+    ∀ p q : Real, -R ≤ p → p ≤ R → -R ≤ q → q ≤ R →
+      abs (sinh p - sinh q) ≤ cosh R * abs (p - q) := by
+  intro p q hRp hpR hRq hqR
+  exact sinh_lipschitz_bound (abs_le_iff.mpr ⟨hRp, hpR⟩) (abs_le_iff.mpr ⟨hRq, hqR⟩)
+
+/-- **`cosh` is `sinh R`-Lipschitz on `[-R,R]`** — the `pipeline_tr1_of_arith_local` hypothesis shape
+for `cosh`. -/
+theorem cosh_lip_local (R : Real) :
+    ∀ p q : Real, -R ≤ p → p ≤ R → -R ≤ q → q ≤ R →
+      abs (cosh p - cosh q) ≤ sinh R * abs (p - q) := by
+  intro p q hRp hpR hRq hqR
+  exact cosh_lipschitz_bound (abs_le_iff.mpr ⟨hRp, hpR⟩) (abs_le_iff.mpr ⟨hRq, hqR⟩)
+
 end MachLib.Real

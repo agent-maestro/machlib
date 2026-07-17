@@ -197,6 +197,57 @@ already exist per `SqrtNode.lean`/`InverseTrigBounded.lean`; `sinh`/`cosh` symme
 `HyperbolicLipschitz.lean`; `tan`/`log10` composite-derived). The recursive-nesting piece remains the
 one genuinely different, harder open item, unchanged by this update.
 
+## ✅ Update (2026-07-17, same session) — `sqrt`, `log10`, `asin`, `acos`, `sinh`, `cosh` grounded — 13-of-14, only `tan` left
+
+**Six primitives in one batch**, all reusing math that already existed in the tree (no new derivative
+axioms) — the "already had the Lipschitz lemma, just needed pipeline + axiom + grounding" case, as
+opposed to `tan`'s (below).
+
+- **`pid_sqrt_grounded`** — one-sided domain (`lo>0`), `L=1/(√lo+√lo)`, via `SqrtNode.sqrt_lip_local`
+  (already existed).
+- **`pid_log10_grounded`** — one-sided domain (`lo>0`), `L=1/(lo·log 10)`, via
+  `Log10Lipschitz.log10_lip_local` (already existed). `leanPrims`'s own `.log10` interpretation is
+  itself a composite of `ln` (`ln x / ln 10`), not a native call — same honest disclosure regardless.
+- **`pid_asin_grounded`** / **`pid_acos_grounded`** — first SYMMETRIC-domain primitives (`[-R,R]`,
+  `R<1`), `L=1/√(1−R²)`, via `InverseTrigBounded.arcsin_lip_local`/`arccos_lip_local` (already
+  existed). Needed one small promotion: `sq_lt_one_of_abs_le_lt_one` was `private` in
+  `InverseTrigBounded.lean` — made public (one-line edit) so the new pipeline wrappers could reuse it
+  to derive the `0 ≤ L` obligation from the same in-domain witness `absenc_arcsin_local`/
+  `absenc_arccos_local` already use internally.
+- **`pid_sinh_grounded`** — symmetric domain, `L=cosh R`, unconditional (`cosh R>0` for every `R`, no
+  extra sign hypothesis — the `sinh`/`exp` cheap case).
+- **`pid_cosh_grounded`** — symmetric domain, `L=sinh R`, needs one extra `0≤R` hypothesis (`sinh R≥0`
+  only for `R≥0` — the `cosh`/`log` costlier case, mirroring how `log` layers positivity on `exp`'s
+  plain range bound).
+
+New math added (not just axiom+wrapper plumbing): `HyperbolicLipschitz.lean` gained
+`sinh_lip_local`/`cosh_lip_local` — `[lo,hi]`-shaped restatements of the already-proven
+`sinh_lipschitz_bound`/`cosh_lipschitz_bound` (straight `abs_le_iff` repackaging, 0 new axioms, matches
+`sqrt_lip_local`/`log10_lip_local`/`arcsin_lip_local`'s shape so `AbsoluteFoldLocal`'s generic
+`pipeline_tr1_of_arith_local` could consume them directly). Six new `pipeline_X_of_arith` wrappers
+added to `AbsoluteFoldLocal.lean`, mirroring `pipeline_exp_of_arith`/`pipeline_log_of_arith`'s shape
+exactly. Twelve new disclosed axioms (`real_sqrt_eps`/`_rounds`, `real_log10_eps`/`_rounds`,
+`real_asin_eps`/`_rounds`, `real_acos_eps`/`_rounds`, `real_sinh_eps`/`_rounds`, `real_cosh_eps`/
+`_rounds`) in `FPGrounding.lean`. Full build green first try on the whole batch (375/375 modules).
+`AxiomLedger`: 295 axioms pinned (was 283), 20 headline footprints ⊆ trusted (123) (was 101 — ten
+incidental leak fixes: `MachLib.Real.sqrt`/`sqrt_le_of_le_sq`/`sqrt_nonneg`/`sqrt_sq_nonneg`
+(shared by `sqrt`/`asin`/`acos`), `arcsin`/`HasDerivAt_arcsin`, `arccos`/`HasDerivAt_arccos`,
+`log10`/`log10_def` — all already-known ℝ-witnessed axioms simply not yet exercised by any prior
+headline), 28 disclosed-trusted (was 16). `#print axioms` clean on all six, `sorryAx`-free
+(`tools/sorry_audit.lean`: still exactly 3 allowlisted, no new sorries), full build green.
+
+**Correction to the running count:** prior updates in this doc said "X-of-11" — that was a miscount.
+`Trans1` (`EMLToC.lean`) has **14** constructors: `exp,ln,sin,cos,tan,sqrt,abs,asin,acos,atan,sinh,
+cosh,tanh,log10`. **Libm grounding is now 13-of-14** — every `Trans1` primitive except `tan` is
+grounded. `tan` is qualitatively different from this whole batch: unlike every primitive grounded so
+far, **no `HasDerivAt_tan` axiom and no Lipschitz bound exist anywhere in the tree yet** — `Trig.lean`
+only has `tan_def : cos x ≠ 0 → tan x = sin x / cos x` (an algebraic identity, not a derivative). `tan`
+needs fresh derivation: `HasDerivAt_tan` via `HasDerivAt_div` on `sin`/`cos` (needs `cos x ≠ 0`), then a
+domain-bounded Lipschitz argument on `[-R,R]`, `R<π/2` (so `cos` stays bounded away from `0`, giving
+`1/cos²` bounded by `1/cos²R` — needs a `cos`-positivity-on-`(-π/2,π/2)` fact that doesn't yet exist
+either). Genuinely the harder remaining single-node item; the separately-flagged full recursive
+local-Lipschitz nesting piece is still open on top of that.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
