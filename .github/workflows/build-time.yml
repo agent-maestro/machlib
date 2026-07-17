@@ -84,6 +84,20 @@ jobs:
       # Rolle-only), or the mixed EML barrier bound regressing to `sorryAx` or
       # the classical zero-count escape hatch. The pair of entries pins the
       # honest distinction between the two results.
+      # AxiomLedger.lean IS the trust gate (per its own docstring) but had
+      # NO CI coverage before 2026-07-16 -- it sat red locally for ~3 days
+      # (15 undisclosed axioms from the BivariateDeriv + TwoExp Gate-2d
+      # frontier work, 3 rotted entries from axioms that got proven/deleted)
+      # with nothing to catch it. Building it here enforces all 4 invariants
+      # a red run means: an axiom entered the codebase undisclosed, a ledger
+      # entry rotted, a headline's footprint leaked beyond `trustedFootprint`,
+      # or a `disclosedUnwitnessed`/`disclosedTrusted` axiom stopped being inert
+      # or went dead. `run_cmd`'s `logError` makes `lake env lean` exit
+      # non-zero on any violation, so no `|| true` here.
+      - name: Axiom ledger (trust-boundary completeness + footprint)
+        working-directory: foundations
+        run: lake env lean AxiomLedger.lean
+
       - name: Claim audit (headline prose ↔ #print axioms footprint)
         working-directory: foundations
         run: python3 tools/claim_audit/claim_audit.py
