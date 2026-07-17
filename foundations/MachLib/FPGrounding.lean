@@ -240,4 +240,31 @@ theorem pid_sin_grounded (env : Env) :
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact sin_lipschitz p q)
     pidRawEML isArith_pidRawEML (real_sin_rounds _)
 
+/-! ### Grounding a fifth libm primitive: `cos`, also GLOBALLY Lipschitz
+
+Third data point on the globally-Lipschitz side (`TrigLipschitz.cos_lipschitz`, `L=1`), identical
+pattern to `tanh`/`sin` — no domain hypothesis. -/
+
+/-- The disclosed libm rounding bound for the runtime `cos`. Same status as `real_sin_eps`: the
+composite `leanPrims.cos`, through `realToR`, is within a fixed `real_cos_eps` of the exact `Real.cos`.
+Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+axiom real_cos_eps : MachLib.Real
+
+axiom real_cos_rounds : ∀ a : Float,
+    abs (realToR (stdI1 leanPrims .cos a) - cos (realToR a)) ≤ real_cos_eps
+
+/-- **A fifth grounded transcendental control kernel: `cos(PID law)`.** The emitted C for
+`cos(1.5·e + 0.4·i + 0.05·d)` read through `realToR` is within `real_cos_eps + absErr` of the exact
+ℝ value `cos(PID law)`, unconditionally — `cos` is globally Lipschitz, same as `tanh`/`sin`. Instance
+of `pipeline_tr1_of_arith` at `pidRawEML`. -/
+theorem pid_cos_grounded (env : Env) :
+    AbsEnc (real_cos_eps + 1 * absErr realToR env pidRawEML)
+      (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .cos pidRawEML))).toF)
+      (cos (exactR realToR env pidRawEML)) :=
+  pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
+    (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
+    env .cos cos 1 real_cos_eps
+    (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact cos_lipschitz p q)
+    pidRawEML isArith_pidRawEML (real_cos_rounds _)
+
 end Certcom

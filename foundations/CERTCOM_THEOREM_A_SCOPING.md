@@ -158,6 +158,23 @@ Remaining ungrounded: `cos`, `tan`, `sqrt`, `abs`, `asin`, `acos`, `atan`, `sinh
 docstring) — cheapest next targets, same `pipeline_tr1_of_arith` pattern as `tanh`/`sin`. The
 recursive-nesting piece remains the one genuinely different, harder item on this list.
 
+## ✅ Update (2026-07-17, same session) — `cos` grounded, item 5 now 5-of-11
+
+**`pid_cos_grounded`** (`FPGrounding.lean`): `cos(1.5·e + 0.4·i + 0.05·d)` — third globally-Lipschitz
+data point (`TrigLipschitz.cos_lipschitz`, `L=1`), identical pattern to `tanh`/`sin`, unconditional.
+New disclosed axioms `Certcom.real_cos_eps`/`real_cos_rounds`. Built green first try. `AxiomLedger`:
+279 axioms pinned (was 277), 12 headline footprints ⊆ trusted (95) (was 92 — one more incidental leak
+fix, `MachLib.Real.HasDerivAt_cos`, already-known ℝ-witnessed, needed for `cos_lipschitz`'s own MVT
+proof the same way `HasDerivAt_sin` was needed for `sin`'s), 12 disclosed-trusted (was 10). `#print
+axioms` clean, `sorryAx`-free, full build green.
+
+**Libm grounding is now 5-of-11** (`tanh`, `sin`, `cos` globally Lipschitz; `exp`, `log` locally
+Lipschitz) — exactly half the `Trans1` basis. Remaining ungrounded: `tan`, `sqrt`, `abs`, `asin`,
+`acos`, `atan`, `sinh`, `cosh`, `log10`. `atan`/`abs` are the last two globally-Lipschitz primitives —
+last cheap targets before the remaining ones all need their own domain/positivity bookkeeping
+(`sqrt`/`asin`/`acos` bounded-domain, `sinh`/`cosh` symmetric-magnitude, `tan`/`log10` composite-
+derived). The recursive-nesting piece remains unchanged, still the one genuinely harder open item.
+
 ## Recommended first target — the keystone, bounded route
 
 **Name `realToR` + the single disclosed `FPBridge realToR` axiom, instantiate `pipeline_arith` (and
