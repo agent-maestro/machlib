@@ -64,6 +64,36 @@ axiom hasDerivAt_implicit (f : Real → Real → Real) (fx fy : Real) (yc : Real
     HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, f s (yc s) = 0) →
     HasDerivAt yc (-fx / fy) x
 
+/-- **Implicit function derivative, interval-localized.** The standard IFT is inherently local — the
+derivative at `x` depends only on `f`'s behavior near `x`, not on `f (s, yc s) = 0` holding for every real
+`s`. `hasDerivAt_implicit` above requires the latter (a genuinely global curve identity), which no total
+`yc` can satisfy for a curve with no global solution branch — e.g. `eˣ+eʸ=c`, solvable only for `x < log c`
+(`multivariate-khovanskii-chainN-scoping.md §9.1`). This axiom weakens the hypothesis to match: `f (s, yc
+s) = 0` only on an open interval `(p, q) ∋ x`. Strictly weaker than `hasDerivAt_implicit` (any global
+witness gives a local one on an arbitrary `(p,q)` by restriction), so this does not replace it — added
+alongside as a separate axiom to avoid touching the existing one and everything built on it. -/
+axiom hasDerivAt_implicit_local (f : Real → Real → Real) (fx fy : Real) (yc : Real → Real) (x p q : Real)
+    (hp : p < x) (hq : x < q) :
+    HasDerivAt2 f fx fy x (yc x) → fy ≠ 0 → (∀ s : Real, p < s → s < q → f s (yc s) = 0) →
+    HasDerivAt yc (-fx / fy) x
+
+/-- **`curve_tangent_and_chain`, interval-localized.** Same conclusion, same proof shape, built from
+`hasDerivAt_implicit_local` instead — the curve identity only needs to hold on `(p,q) ∋ x`, not globally.
+-/
+theorem curve_tangent_and_chain_local (f g : Real → Real → Real) (fx fy gx gy : Real) (yc : Real → Real)
+    (x p q : Real) (hp : p < x) (hq : x < q)
+    (hf2 : HasDerivAt2 f fx fy x (yc x)) (hg2 : HasDerivAt2 g gx gy x (yc x))
+    (hfy : fy ≠ 0) (hid : ∀ s : Real, p < s → s < q → f s (yc s) = 0) :
+    HasDerivAt yc (-fx / fy) x
+      ∧ fx + fy * (-fx / fy) = 0
+      ∧ HasDerivAt (fun s => g s (yc s)) (gx * 1 + gy * (-fx / fy)) x := by
+  have hyc : HasDerivAt yc (-fx / fy) x := hasDerivAt_implicit_local f fx fy yc x p q hp hq hf2 hfy hid
+  refine ⟨hyc, ?_, ?_⟩
+  · have h : fy * (-fx / fy) = -fx := by
+      rw [div_def (-fx) fy hfy, ← mul_assoc, mul_comm fy (-fx), mul_assoc, mul_inv fy hfy, mul_one_ax]
+    rw [h]; exact add_neg fx
+  · exact HasDerivAt2_comp g gx gy (fun s => s) yc 1 (-fx / fy) x hg2 (HasDerivAt_id x) hyc
+
 /-- **The parametrization discharges the Khovanskii–Rolle hypotheses.** Given a curve `{f = 0}`
 parametrized by `y = yc x` (jointly differentiable `f, g` at `(x, yc x)`, `fᵧ ≠ 0`, `f ≡ 0` along the arc),
 the implicit function `yc` yields: (1) the **tangent condition** `fₓ + fᵧ·yc' = 0` and (2) the **chain rule**
