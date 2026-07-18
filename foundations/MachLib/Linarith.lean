@@ -717,6 +717,7 @@ macro_rules
            first
            | exact abs_sin_le_one _
            | exact abs_cos_le_one _
+           | exact abs_tanh_le_one _
            | mach_abs_bound))
 
 /-! ### `mach_linarith` tactic — v1 stub
