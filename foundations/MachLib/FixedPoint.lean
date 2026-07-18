@@ -42,6 +42,15 @@ ingredients being (a) the additive multiply/constant bounds and (b) `clamp` bein
 
 Mathlib-free; rests only on `MachLib`'s `Real` axioms + `abs_add`/`abs_mul`
 (same base as `FPModel`). Companion: `FPModel`, `docs/cross_target_equivalence_*`.
+
+## `quantize`/`qmul` — deriving the leaf rounding fact instead of assuming it
+
+`fxmul_err` above takes its `s`-bound as a hypothesis. The `quantize`/`qmul_real` section
+(added for the `eml_sin.v` hardware forward-error certificate, see `SinHardwareForwardError`)
+*proves* that bound from `MachLib.Real`'s `floor` axiom instead: `quantize x D := floor(x·D)/D`
+is the real-valued model of Verilog's `x >>> FRAC`, and `quantize_err` shows it lands within
+`1/D` of the exact `x`. `qmul_err`/`qmul_err_loose` generalize `fxmul_err` to two erroneous
+operands, needed once a pipeline chains `qmul` outputs into further `qmul`s.
 -/
 
 namespace MachLib.Real
@@ -157,6 +166,129 @@ theorem fxmul_err {s c c' x m : Real}
     rw [hfac, abs_mul]
     exact mul_le_mul_of_nonneg_right hc (abs_nonneg x)
   exact add_le_add_both hcx hm
+
+/-! ## deriving the leaf rounding fact from `floor`, and composing two erroneous operands
+
+`fxmul_err` (above) takes its `s`-bounds as *hypotheses* — the caller must separately show the
+RTL's truncating multiply satisfies them. `quantize` closes that gap: it is the real-valued model
+of `floor(x·D)/D` (Verilog's `x >>> FRAC` on a value already scaled by `D = 2^FRAC`), built
+directly from `MachLib.Real`'s `floor` axiom, and `quantize_err` *proves* — rather than assumes —
+that it lands within one grid step `1/D` of the exact value. `qmul_err` then generalizes
+`fxmul_err` to the case *both* factors already carry upstream error (needed when a pipeline
+chains `qmul` outputs into further `qmul`s, e.g. `eml_sin.v`'s `x3 = qmul(x2, x1)` with `x2`
+itself already rounded) — `fxmul_err` only covers one exact operand. `qmul_err_loose` is the
+same fact loosened to clean integer-coefficient bookkeeping (`kx/D`, `ky/D`) for a bounded-input
+regime (`|xe|, |ye| ≤ 1`, `D ≥ 1`), which is what makes a multi-stage composition tractable
+without re-deriving the triangle-inequality algebra at every stage. -/
+
+/-- Truncating quantization to the `1/D` grid. -/
+noncomputable def quantize (x D : Real) : Real := floor (x * D) * (1 / D)
+
+theorem quantize_le (x D : Real) (hD : 0 < D) : quantize x D ≤ x := by
+  unfold quantize
+  have h1 : floor (x * D) ≤ x * D := floor_le (x * D)
+  have h2 : floor (x * D) * (1 / D) ≤ (x * D) * (1 / D) :=
+    mul_le_mul_of_nonneg_right h1 (le_of_lt (one_div_pos_of_pos hD))
+  have h3 : (x * D) * (1 / D) = x := by
+    rw [mul_assoc, mul_inv D (ne_of_gt hD), mul_one_ax]
+  rwa [h3] at h2
+
+theorem quantize_gt (x D : Real) (hD : 0 < D) : x - quantize x D < 1 / D := by
+  unfold quantize
+  have h1 : x * D < floor (x * D) + 1 := lt_floor_add_one (x * D)
+  have h2 : (x * D) * (1/D) < (floor (x*D) + 1) * (1/D) :=
+    mul_lt_mul_of_pos_right h1 (one_div_pos_of_pos hD)
+  have h3 : (x * D) * (1 / D) = x := by
+    rw [mul_assoc, mul_inv D (ne_of_gt hD), mul_one_ax]
+  have h4 : (floor (x*D) + 1) * (1/D) = floor (x*D) * (1/D) + 1 * (1/D) := by mach_ring
+  rw [h3, h4, one_mul_thm] at h2
+  have h5 := add_lt_add_left h2 (-(floor (x*D) * (1/D)))
+  rw [show (-(floor (x*D)*(1/D)) + (floor (x*D)*(1/D) + 1/D) : Real) = 1/D from by mach_ring] at h5
+  rw [sub_def]
+  rwa [show (x + -(floor (x*D)*(1/D)) : Real) = -(floor (x*D)*(1/D)) + x from by mach_ring]
+
+/-- **Truncating quantization is within one grid step `1/D` of the exact value** — the direct
+`abs`-bound form matching `fxmul_err`'s convention. -/
+theorem quantize_err (x D : Real) (hD : 0 < D) : abs (quantize x D - x) ≤ 1 / D := by
+  have hle : quantize x D ≤ x := quantize_le x D hD
+  have hgt : x - quantize x D < 1 / D := quantize_gt x D hD
+  have hnonpos : quantize x D - x ≤ 0 := sub_nonpos_of_le hle
+  rw [abs_of_nonpos hnonpos]
+  have heq : -(quantize x D - x) = x - quantize x D := by mach_ring
+  rw [heq]
+  exact le_of_lt hgt
+
+/-- The fixed-point multiply: exact product truncated to the `1/D` grid, matching Forge's
+emitted `(a*b) >>> FRAC`. -/
+noncomputable def qmul_real (a b D : Real) : Real := quantize (a * b) D
+
+/-- **Leaf rounding fact for `qmul`, derived (not assumed).** -/
+theorem qmul_trunc_err (a b D : Real) (hD : 0 < D) :
+    abs (qmul_real a b D - a * b) ≤ 1 / D := quantize_err (a * b) D hD
+
+/-- **General fixed-point product composition — both operands carry pre-existing error.**
+Generalizes `fxmul_err` (which fixes `x` exact) to the case both factors are themselves the
+output of upstream rounded ops. -/
+theorem qmul_err {s Ex Ey a b xe ye m : Real}
+    (hx : abs (a - xe) ≤ Ex) (hy : abs (b - ye) ≤ Ey) (hm : abs (m - a * b) ≤ s) :
+    abs (m - xe * ye) ≤ s + ((abs xe + Ex) * Ey + Ex * abs ye) := by
+  have hEx : 0 ≤ Ex := le_trans (abs_nonneg _) hx
+  have hsplit : m - xe * ye = (m - a * b) + (a * b - xe * ye) := by
+    mach_mpoly [m, a, b, xe, ye]
+  rw [hsplit]
+  refine le_trans (abs_add _ _) ?_
+  have hprod : abs (a * b - xe * ye) ≤ (abs xe + Ex) * Ey + Ex * abs ye := by
+    have hfac : a * b - xe * ye = a * (b - ye) + (a - xe) * ye := by
+      mach_mpoly [a, b, xe, ye]
+    rw [hfac]
+    refine le_trans (abs_add _ _) ?_
+    have habound : abs a ≤ abs xe + Ex := abs_le_add_err hx
+    have ha : abs (a * (b - ye)) ≤ (abs xe + Ex) * Ey := by
+      rw [abs_mul]
+      exact le_trans (mul_le_mul_of_nonneg_right habound (abs_nonneg (b - ye)))
+        (mul_le_mul_of_nonneg_left hy (le_trans (abs_nonneg a) habound))
+    have hb : abs ((a - xe) * ye) ≤ Ex * abs ye := by
+      rw [abs_mul]; exact mul_le_mul_of_nonneg_right hx (abs_nonneg ye)
+    exact add_le_add_both ha hb
+  exact add_le_add_both hm hprod
+
+/-- **Loosened qmul composition, in units of `1/D`.** If the exact operands lie in `[-1,1]`
+(the range-reduced-input regime), and the incoming errors are `kx/D`/`ky/D` for known nonneg
+coefficients `kx`/`ky`, then one more `qmul` (contributing its own `1/D` truncation) lands within
+`(1+kx+ky+kx*ky)/D` of the true product. The reusable per-stage step for threading error
+coefficients through a multi-stage fixed-point pipeline without re-deriving the triangle-
+inequality algebra at each stage. -/
+theorem qmul_err_loose {D a b xe ye m kx ky : Real}
+    (hD : 0 < D) (hD1 : 1 ≤ D)
+    (hxe : abs xe ≤ 1) (hye : abs ye ≤ 1)
+    (hkx0 : 0 ≤ kx) (hky0 : 0 ≤ ky)
+    (hx : abs (a - xe) ≤ kx * (1/D)) (hy : abs (b - ye) ≤ ky * (1/D))
+    (hm : abs (m - a * b) ≤ 1/D) :
+    abs (m - xe * ye) ≤ (1 + kx + ky + kx * ky) * (1/D) := by
+  have hinvnn : (0:Real) ≤ 1/D := one_div_nonneg_of_pos hD
+  have hDsq_le : (1/D) * (1/D) ≤ 1/D := by
+    have hd1 : (1:Real)/D ≤ 1 := div_le_one_of_le_of_pos hD hD1
+    have step := mul_le_mul_of_nonneg_left hd1 hinvnn
+    rwa [mul_one_ax] at step
+  have hraw := qmul_err hx hy hm
+  have hB : (abs xe + kx*(1/D)) * (ky*(1/D)) ≤ ky*(1/D) + kx*ky*(1/D) := by
+    have t1 : (abs xe + kx*(1/D)) ≤ 1 + kx*(1/D) := add_le_add_both hxe (le_refl _)
+    have t2 : (abs xe + kx*(1/D)) * (ky*(1/D)) ≤ (1+kx*(1/D)) * (ky*(1/D)) :=
+      mul_le_mul_of_nonneg_right t1 (mul_nonneg hky0 hinvnn)
+    have t3 : (1+kx*(1/D)) * (ky*(1/D)) = ky*(1/D) + kx*ky*((1/D)*(1/D)) := by mach_ring
+    have t4 : ky*(1/D) + kx*ky*((1/D)*(1/D)) ≤ ky*(1/D) + kx*ky*(1/D) :=
+      add_le_add_both (le_refl _) (mul_le_mul_of_nonneg_left hDsq_le (mul_nonneg hkx0 hky0))
+    rw [t3] at t2
+    exact le_trans t2 t4
+  have hC : kx*(1/D)*abs ye ≤ kx*(1/D) := by
+    have t5 : kx*(1/D)*abs ye ≤ kx*(1/D)*1 :=
+      mul_le_mul_of_nonneg_left hye (mul_nonneg hkx0 hinvnn)
+    rwa [mul_one_ax] at t5
+  have hcombine : 1/D + ((abs xe+kx*(1/D))*(ky*(1/D)) + kx*(1/D)*abs ye)
+      ≤ 1/D + (ky*(1/D) + kx*ky*(1/D) + kx*(1/D)) :=
+    add_le_add_both (le_refl (1/D)) (add_le_add_both hB hC)
+  refine le_trans hraw (le_trans hcombine ?_)
+  exact le_of_eq (by mach_ring)
 
 /-! ## the PID datapath -/
 
