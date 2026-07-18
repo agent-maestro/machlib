@@ -688,6 +688,27 @@ codomain) the integer-valued fact `⌊0⌋ = 0` is not derivable and is added he
 Closes `white_noise_at_origin_finite` (`hash2(0,0) = 0 − ⌊0⌋ = 0`). -/
 axiom floor_zero : floor 0 = 0
 
+/-! ### `fract` / `mix` / `sign` — Forge-emit support primitives (shader/noise-style builtins)
+
+Same situation as `floor` above: the Forge Lean backend emits unqualified `fract`/`mix`/`sign`
+calls when a kernel .eml uses these GLSL-style builtins (fractional-part hashing, linear
+interpolation, sign-based gradients — value/Perlin noise kernels). Unlike `floor`, none of these
+need a NEW axiom: `fract`/`mix` are plain arithmetic (`fract` reuses the existing `floor` axiom;
+`mix` is pure `+`/`-`/`*`); `sign` is a case split over the `Decidable (a < b)` instance
+(`Classical.propDecidable`) already used throughout MachLib (the same mechanism the Forge
+backend's own `NodeKind.COND` → `ite` codegen relies on). Zero new axioms, zero new trust
+surface — genuinely derived definitions, not opaque primitives. -/
+
+/-- `fract x = x − ⌊x⌋` — the fractional part (white-noise hash, value-noise cell interpolant). -/
+noncomputable def fract (x : Real) : Real := x - floor x
+
+/-- `mix a b t = a + (b − a)·t` — linear interpolation (GLSL `mix`; value/Perlin noise blending). -/
+noncomputable def mix (a b t : Real) : Real := a + (b - a) * t
+
+/-- `sign x = 1` if `x > 0`, `−1` if `x < 0`, else `0` — Perlin-noise gradient sign. -/
+noncomputable def sign (x : Real) : Real :=
+  if 0 < x then 1 else if x < 0 then -1 else 0
+
 end Real
 end MachLib
 
