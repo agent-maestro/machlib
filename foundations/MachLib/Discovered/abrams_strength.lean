@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -34,13 +37,32 @@ theorem abrams_strength_decreases_with_wc (a_intercept : Real) (k_decay : Real) 
     (h6 : (water_cement_ratio <= WC_MAX)) :
     ((compressive_strength a_intercept k_decay water_cement_ratio) >= (0 : Real)) := by
   unfold compressive_strength
-  apply mul_nonneg <;> first | assumption | exact exp_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── nurse_saul_step ──
 
 noncomputable def nurse_saul_step (temperature_c : Real) (dt_hours : Real) : Real :=
   ((temperature_c - T_DATUM) * dt_hours)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem nurse_saul_step_nonneg_above_datum (temperature_c : Real) (dt_hours : Real)
     (h1 : (temperature_c >= T_MIN_C))
     (h2 : (temperature_c <= (100.0 : Real)))
@@ -63,4 +85,20 @@ theorem aci_age_strength_factor_in_unit_interval (age_days : Real) (alpha : Real
     (h6 : (beta <= (5.0 : Real))) :
     ((age_strength_factor age_days alpha beta) >= (0 : Real)) := by
   unfold age_strength_factor
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

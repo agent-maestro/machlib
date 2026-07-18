@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,26 +25,42 @@ noncomputable def ttc_constant_velocity (range_m : Real) (range_rate : Real) : R
   ((-range_m) / range_rate)
 
 theorem ttc_positive_when_closing (range_m : Real) (range_rate : Real)
-    (h1 : (range_m >= (0 : Real)))
-    (h2 : (range_m <= RANGE_MAX))
-    (h3 : (range_rate >= (-VEL_MAX)))
-    (h4 : (range_rate <= VEL_MAX))
-    (h5 : (range_rate < (-EPS))) :
+    (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= RANGE_MAX)))
+    (h_range_rate : (((-VEL_MAX) <= range_rate) ∧ (range_rate < (-EPS)))) :
     ((ttc_constant_velocity range_m range_rate) >= (0 : Real)) := by
   unfold ttc_constant_velocity
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── ttc_constant_acceleration ──
 
 noncomputable def ttc_constant_acceleration (range_m : Real) (range_rate : Real) (rel_accel : Real) : Real :=
   (((-range_rate) - (Real.sqrt (min (max ((range_rate * range_rate) - (((2.0 : Real) * rel_accel) * range_m)) (0 : Real)) (1000000000.0 : Real)))) / (min (max rel_accel EPS) ACCEL_MAX))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ttc_constant_accel_real_when_discriminant_nonneg (range_m : Real) (range_rate : Real) (rel_accel : Real)
-    (h1 : (range_m >= (0 : Real)))
-    (h2 : (range_m <= RANGE_MAX))
-    (h3 : (range_rate >= (-VEL_MAX)))
-    (h4 : (range_rate <= VEL_MAX))
-    (h5 : ((abs rel_accel) <= ACCEL_MAX)) :
+    (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= RANGE_MAX)))
+    (h_range_rate : (((-VEL_MAX) <= range_rate) ∧ (range_rate <= VEL_MAX)))
+    (h_rel_accel : (-ACCEL_MAX ≤ rel_accel ∧ rel_accel ≤ ACCEL_MAX))
+    (h_clamp1 : (0 : Real) ≤ (1000000000.0 : Real))
+    (h_clamp2 : EPS ≤ ACCEL_MAX) :
     True := by
   trivial
 
@@ -51,10 +70,24 @@ noncomputable def stopping_distance (speed : Real) (deceleration : Real) : Real 
   ((speed * speed) / ((2.0 : Real) * deceleration))
 
 theorem stopping_distance_quadratic_in_speed (speed : Real) (deceleration : Real)
-    (h1 : (speed >= (0 : Real)))
-    (h2 : (speed <= VEL_MAX))
-    (h3 : (deceleration >= EPS))
-    (h4 : (deceleration <= ACCEL_MAX)) :
+    (h_speed : (((0 : Real) <= speed) ∧ (speed <= VEL_MAX)))
+    (h_deceleration : ((EPS <= deceleration) ∧ (deceleration <= ACCEL_MAX))) :
     ((stopping_distance speed deceleration) >= (0 : Real)) := by
   unfold stopping_distance
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,9 +30,26 @@ theorem demosaic_g_at_r_in_pixel_range (g_north : Real) (g_south : Real) (g_east
     (h6 : (g_east <= PIX_MAX))
     (h7 : (g_west >= PIX_MIN))
     (h8 : (g_west <= PIX_MAX)) :
-    ((demosaic_green_at_red g_north g_south g_east g_west) >= PIX_MIN) := by
+    (((demosaic_green_at_red g_north g_south g_east g_west) >= PIX_MIN)) ∧ (((demosaic_green_at_red g_north g_south g_east g_west) <= PIX_MAX)) := by
   unfold demosaic_green_at_red
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── demosaic_red_at_green_horiz ──
 
@@ -41,9 +61,26 @@ theorem demosaic_r_at_g_in_pixel_range (r_left : Real) (r_right : Real)
     (h2 : (r_left <= PIX_MAX))
     (h3 : (r_right >= PIX_MIN))
     (h4 : (r_right <= PIX_MAX)) :
-    ((demosaic_red_at_green_horiz r_left r_right) >= PIX_MIN) := by
+    (((demosaic_red_at_green_horiz r_left r_right) >= PIX_MIN)) ∧ (((demosaic_red_at_green_horiz r_left r_right) <= PIX_MAX)) := by
   unfold demosaic_red_at_green_horiz
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── demosaic_blue_at_red ──
 
@@ -59,9 +96,26 @@ theorem demosaic_b_at_r_in_pixel_range (b_nw : Real) (b_ne : Real) (b_sw : Real)
     (h6 : (b_sw <= PIX_MAX))
     (h7 : (b_se >= PIX_MIN))
     (h8 : (b_se <= PIX_MAX)) :
-    ((demosaic_blue_at_red b_nw b_ne b_sw b_se) >= PIX_MIN) := by
+    (((demosaic_blue_at_red b_nw b_ne b_sw b_se) >= PIX_MIN)) ∧ (((demosaic_blue_at_red b_nw b_ne b_sw b_se) <= PIX_MAX)) := by
   unfold demosaic_blue_at_red
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── white_balance_channel ──
 
@@ -72,7 +126,24 @@ theorem white_balance_scales_channel (pixel : Real) (gain : Real)
     (h1 : (pixel >= PIX_MIN))
     (h2 : (pixel <= PIX_MAX))
     (h3 : (gain >= (0.1 : Real)))
-    (h4 : (gain <= (8.0 : Real))) :
+    (h4 : (gain <= (8.0 : Real)))
+    (h_clamp1 : PIX_MIN ≤ PIX_MAX) :
     ((white_balance_channel pixel gain) >= PIX_MIN) := by
   unfold white_balance_channel
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,6 +30,9 @@ noncomputable def G_REF : Real := (1000.0 : Real)
 noncomputable def cell_current (v : Real) (photocurrent : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real) : Real :=
   (photocurrent - (saturation_current * ((Real.exp (v / (ideality * thermal_voltage))) - (1 : Real))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pv_current_decreases_with_voltage (v : Real) (photocurrent : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real)
     (h1 : (v >= (0 : Real)))
     (h2 : (v <= V_MAX))
@@ -55,10 +61,27 @@ theorem photocurrent_proportional_to_irradiance (irradiance : Real) (iph_ref : R
     (h6 : (temperature_k <= T_MAX))
     (h7 : (temperature_ref >= T_MIN))
     (h8 : (temperature_ref <= T_MAX))
-    (h9 : ((abs alpha_temp_coeff) <= (0.1 : Real))) :
+    (h9 : ((abs alpha_temp_coeff) <= (0.1 : Real)))
+    (h_clamp1 : (0 : Real) ≤ IPH_MAX) :
     ((photocurrent_under_conditions irradiance iph_ref temperature_k temperature_ref alpha_temp_coeff) >= (0 : Real)) := by
   unfold photocurrent_under_conditions
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── open_circuit_voltage ──
 
@@ -76,4 +99,20 @@ theorem voc_increases_with_photocurrent (photocurrent : Real) (saturation_curren
     (h8 : (thermal_voltage <= (0.1 : Real))) :
     ((open_circuit_voltage photocurrent saturation_current ideality thermal_voltage) >= (0 : Real)) := by
   unfold open_circuit_voltage
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

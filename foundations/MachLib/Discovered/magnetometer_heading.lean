@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,6 +24,9 @@ axiom true_heading (magnetic_heading : Real) (declination : Real) : Real  -- hel
 noncomputable def tilt_compensated_x (mag_x : Real) (mag_z : Real) (pitch : Real) : Real :=
   ((mag_x * (Real.cos pitch)) + (mag_z * (Real.sin pitch)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem tilt_x_unchanged_at_level (mag_x : Real) (mag_z : Real) (pitch : Real)
     (h1 : ((abs mag_x) <= MAG_COMPONENT_MAX))
     (h2 : ((abs mag_z) <= MAG_COMPONENT_MAX))
@@ -33,6 +39,9 @@ theorem tilt_x_unchanged_at_level (mag_x : Real) (mag_z : Real) (pitch : Real)
 noncomputable def tilt_compensated_y (mag_x : Real) (mag_y : Real) (mag_z : Real) (pitch : Real) (roll : Real) : Real :=
   ((((mag_x * (Real.sin roll)) * (Real.sin pitch)) + (mag_y * (Real.cos roll))) - ((mag_z * (Real.sin roll)) * (Real.cos pitch)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem tilt_y_unchanged_at_level (mag_x : Real) (mag_y : Real) (mag_z : Real) (pitch : Real) (roll : Real)
     (h1 : ((abs mag_x) <= MAG_COMPONENT_MAX))
     (h2 : ((abs mag_y) <= MAG_COMPONENT_MAX))
@@ -50,6 +59,23 @@ noncomputable def magnetic_heading (mag_x_h : Real) (mag_y_h : Real) : Real :=
 theorem heading_zero_due_north (mag_x_h : Real) (mag_y_h : Real)
     (h1 : ((abs mag_x_h) <= MAG_COMPONENT_MAX))
     (h2 : ((abs mag_y_h) <= MAG_COMPONENT_MAX)) :
-    ((magnetic_heading mag_x_h mag_y_h) >= (-(3.1416 : Real))) := by
+    (((magnetic_heading mag_x_h mag_y_h) >= (-(3.1416 : Real)))) ∧ (((magnetic_heading mag_x_h mag_y_h) <= (3.1416 : Real))) := by
   unfold magnetic_heading
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

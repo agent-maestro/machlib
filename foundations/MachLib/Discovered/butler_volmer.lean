@@ -2,20 +2,13 @@
 -- Source module: butler_volmer
 -- Source file:   <private>/butler_volmer.eml
 -- Verified fns:  current_density
---
--- 2026-06-14: The Forge stub theorem below is a `True` placeholder. The
--- clinically meaningful strengthening — current = 0 iff overpotential = 0
--- — is proven at
---   MachLib.Forge.ButlerVolmer.butler_volmer_zero_iff_overpotential_zero
--- in MachLib/Applications/ButlerVolmerKhovanskii.lean.
--- The Applications file redefines current_density (identical body) and
--- proves both directions of the iff via exp_injective + algebraic chain.
--- See foundations/MachLib/Applications/ButlerVolmerKhovanskii.lean for the
--- safety-critical framing (BMS, fuel cells, corrosion).
 
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -33,6 +26,9 @@ axiom current_density_symmetric (exchange_current_density : Real) (alpha : Real)
 noncomputable def current_density (exchange_current_density : Real) (alpha_anodic : Real) (alpha_cathodic : Real) (overpotential : Real) (temperature : Real) : Real :=
   (exchange_current_density * ((Real.exp (alpha_anodic * ((F_FARAD * overpotential) / (R_GAS * temperature)))) - (Real.exp ((-alpha_cathodic) * ((F_FARAD * overpotential) / (R_GAS * temperature))))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem butler_volmer_zero_at_zero_overpotential (exchange_current_density : Real) (alpha_anodic : Real) (alpha_cathodic : Real) (overpotential : Real) (temperature : Real)
     (h1 : (exchange_current_density > (0 : Real)))
     (h2 : (alpha_anodic > (0 : Real)))

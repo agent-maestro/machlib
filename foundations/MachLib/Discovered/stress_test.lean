@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ axiom worst_scenario_pnl (scenario_a : Real) (scenario_b : Real) : Real  -- help
 noncomputable def linear_pnl (delta : Real) (vega : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) : Real :=
   ((delta * spot_shock_pct) + (vega * vol_shock_abs))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem stress_pnl_linear (delta : Real) (vega : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) :
     True := by
   trivial
@@ -28,6 +34,9 @@ theorem stress_pnl_linear (delta : Real) (vega : Real) (spot_shock_pct : Real) (
 noncomputable def quadratic_pnl (delta : Real) (gamma : Real) (vega : Real) (vanna : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) : Real :=
   (((delta * spot_shock_pct) + (vega * vol_shock_abs)) + ((((HALF * gamma) * spot_shock_pct) * spot_shock_pct) + ((vanna * spot_shock_pct) * vol_shock_abs)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem stress_pnl_quadratic_dominates_linear (delta : Real) (gamma : Real) (vega : Real) (vanna : Real) (spot_shock_pct : Real) (vol_shock_abs : Real) :
     True := by
   trivial

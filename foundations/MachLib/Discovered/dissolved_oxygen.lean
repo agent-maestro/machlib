@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -33,7 +36,23 @@ theorem do_saturation_positive (temperature_k : Real)
     (h2 : (temperature_k <= T_MAX)) :
     ((fresh_water_saturation temperature_k) > (0 : Real)) := by
   unfold fresh_water_saturation
-  exact exp_pos _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── salinity_correction ──
 
@@ -43,9 +62,26 @@ noncomputable def salinity_correction (salinity_psu : Real) : Real :=
 theorem do_salinity_correction_below_one (salinity_psu : Real)
     (h1 : (salinity_psu >= (0 : Real)))
     (h2 : (salinity_psu <= SAL_MAX)) :
-    ((salinity_correction salinity_psu) > (0 : Real)) := by
+    (((salinity_correction salinity_psu) > (0 : Real))) ∧ (((salinity_correction salinity_psu) <= ONE)) := by
   unfold salinity_correction
-  exact exp_pos _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── apparent_saturation ──
 
@@ -58,6 +94,23 @@ theorem do_apparent_in_unit_interval (do_observed : Real) (do_at_equilibrium : R
     (h3 : (do_at_equilibrium > (0 : Real)))
     (h4 : (do_at_equilibrium <= DO_MAX))
     (h5 : (do_observed <= do_at_equilibrium)) :
-    ((apparent_saturation do_observed do_at_equilibrium) >= (0 : Real)) := by
+    (((apparent_saturation do_observed do_at_equilibrium) >= (0 : Real))) ∧ (((apparent_saturation do_observed do_at_equilibrium) <= ONE)) := by
   unfold apparent_saturation
-  apply div_nonneg_of_nonneg_pos <;> assumption
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

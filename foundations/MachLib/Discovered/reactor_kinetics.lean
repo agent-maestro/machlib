@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -26,20 +29,17 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def neutron_step (n : Real) (c : Real) (reactivity : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real) : Real :=
   (n + (dt * ((((reactivity - beta) / prompt_lifetime) * n) + (decay_const * c))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem n_step_zero_growth_at_critical_with_zero_c (n : Real) (c : Real) (reactivity : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real)
-    (h1 : (n >= (0 : Real)))
-    (h2 : (n <= N_MAX))
-    (h3 : (c >= (0 : Real)))
-    (h4 : (c <= C_MAX))
-    (h5 : ((abs reactivity) <= RHO_MAX))
-    (h6 : (beta >= BETA_MIN))
-    (h7 : (beta <= BETA_MAX))
-    (h8 : (prompt_lifetime >= LIFETIME_MIN))
-    (h9 : (prompt_lifetime <= LIFETIME_MAX))
-    (h10 : (decay_const >= LAMBDA_MIN))
-    (h11 : (decay_const <= LAMBDA_MAX))
-    (h12 : (dt >= (0 : Real)))
-    (h13 : (dt <= DT_MAX)) :
+    (h_n : (((0 : Real) <= n) ∧ (n <= N_MAX)))
+    (h_c : (((0 : Real) <= c) ∧ (c <= C_MAX)))
+    (h_reactivity : (-RHO_MAX ≤ reactivity ∧ reactivity ≤ RHO_MAX))
+    (h_beta : ((BETA_MIN <= beta) ∧ (beta <= BETA_MAX)))
+    (h_prompt_lifetime : ((LIFETIME_MIN <= prompt_lifetime) ∧ (prompt_lifetime <= LIFETIME_MAX)))
+    (h_decay_const : ((LAMBDA_MIN <= decay_const) ∧ (decay_const <= LAMBDA_MAX)))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -48,19 +48,16 @@ theorem n_step_zero_growth_at_critical_with_zero_c (n : Real) (c : Real) (reacti
 noncomputable def precursor_step (n : Real) (c : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real) : Real :=
   (c + (dt * (((beta / prompt_lifetime) * n) - (decay_const * c))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem precursor_step_decays_without_source (n : Real) (c : Real) (beta : Real) (prompt_lifetime : Real) (decay_const : Real) (dt : Real)
-    (h1 : (n >= (0 : Real)))
-    (h2 : (n <= N_MAX))
-    (h3 : (c >= (0 : Real)))
-    (h4 : (c <= C_MAX))
-    (h5 : (beta >= BETA_MIN))
-    (h6 : (beta <= BETA_MAX))
-    (h7 : (prompt_lifetime >= LIFETIME_MIN))
-    (h8 : (prompt_lifetime <= LIFETIME_MAX))
-    (h9 : (decay_const >= LAMBDA_MIN))
-    (h10 : (decay_const <= LAMBDA_MAX))
-    (h11 : (dt >= (0 : Real)))
-    (h12 : (dt <= DT_MAX)) :
+    (h_n : (((0 : Real) <= n) ∧ (n <= N_MAX)))
+    (h_c : (((0 : Real) <= c) ∧ (c <= C_MAX)))
+    (h_beta : ((BETA_MIN <= beta) ∧ (beta <= BETA_MAX)))
+    (h_prompt_lifetime : ((LIFETIME_MIN <= prompt_lifetime) ∧ (prompt_lifetime <= LIFETIME_MAX)))
+    (h_decay_const : ((LAMBDA_MIN <= decay_const) ∧ (decay_const <= LAMBDA_MAX)))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -69,12 +66,12 @@ theorem precursor_step_decays_without_source (n : Real) (c : Real) (beta : Real)
 noncomputable def reactor_period (reactivity : Real) (prompt_lifetime : Real) (decay_const : Real) : Real :=
   ((prompt_lifetime + (((1 : Real) - reactivity) / decay_const)) / reactivity)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem reactor_period_inverse_proportional_to_reactivity (reactivity : Real) (prompt_lifetime : Real) (decay_const : Real)
-    (h1 : (reactivity >= (1e-06 : Real)))
-    (h2 : (reactivity <= RHO_MAX))
-    (h3 : (prompt_lifetime >= LIFETIME_MIN))
-    (h4 : (prompt_lifetime <= LIFETIME_MAX))
-    (h5 : (decay_const >= LAMBDA_MIN))
-    (h6 : (decay_const <= LAMBDA_MAX)) :
+    (h_reactivity : (((1e-06 : Real) <= reactivity) ∧ (reactivity <= RHO_MAX)))
+    (h_prompt_lifetime : ((LIFETIME_MIN <= prompt_lifetime) ∧ (prompt_lifetime <= LIFETIME_MAX)))
+    (h_decay_const : ((LAMBDA_MIN <= decay_const) ∧ (decay_const <= LAMBDA_MAX))) :
     True := by
   trivial

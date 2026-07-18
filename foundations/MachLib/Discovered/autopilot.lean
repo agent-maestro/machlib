@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,9 +32,26 @@ noncomputable def autopilot_step (pitch_setpoint : Real) (pitch_measured : Real)
   (min (max (Kr * (((Kp * (pitch_setpoint - pitch_measured)) + (Ki * pitch_integral)) + (GRAVITY_GAIN * (Real.cos pitch_measured)))) ELEVATOR_MIN) ELEVATOR_MAX)
 
 theorem autopilot_command_within_limits (pitch_setpoint : Real) (pitch_measured : Real) (pitch_integral : Real)
-    (h1 : ((abs pitch_setpoint) < (1.5708 : Real)))
-    (h2 : ((abs pitch_measured) < (1.5708 : Real)))
-    (h3 : ((abs pitch_integral) < INTEGRAL_LIMIT)) :
+    (h_pitch_setpoint : (-(1.5708 : Real) < pitch_setpoint ∧ pitch_setpoint < (1.5708 : Real)))
+    (h_pitch_measured : (-(1.5708 : Real) < pitch_measured ∧ pitch_measured < (1.5708 : Real)))
+    (h_pitch_integral : (-INTEGRAL_LIMIT < pitch_integral ∧ pitch_integral < INTEGRAL_LIMIT))
+    (h_clamp1 : ELEVATOR_MIN ≤ ELEVATOR_MAX) :
     ((abs (autopilot_step pitch_setpoint pitch_measured pitch_integral)) < ELEVATOR_MAX) := by
   unfold autopilot_step
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

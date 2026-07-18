@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def OMEGA_MAX : Real := (50.0 : Real)
 noncomputable def body_linear_velocity (left_wheel : Real) (right_wheel : Real) : Real :=
   ((0.5 : Real) * (left_wheel + right_wheel))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem diff_drive_linear_velocity_average (left_wheel : Real) (right_wheel : Real)
     (h1 : ((abs left_wheel) <= WHEEL_VEL_MAX))
     (h2 : ((abs right_wheel) <= WHEEL_VEL_MAX)) :
@@ -31,6 +37,9 @@ theorem diff_drive_linear_velocity_average (left_wheel : Real) (right_wheel : Re
 noncomputable def body_angular_velocity (left_wheel : Real) (right_wheel : Real) (track_width : Real) : Real :=
   ((right_wheel - left_wheel) / track_width)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem diff_drive_angular_velocity_difference (left_wheel : Real) (right_wheel : Real) (track_width : Real)
     (h1 : ((abs left_wheel) <= WHEEL_VEL_MAX))
     (h2 : ((abs right_wheel) <= WHEEL_VEL_MAX))
@@ -44,6 +53,9 @@ theorem diff_drive_angular_velocity_difference (left_wheel : Real) (right_wheel 
 noncomputable def left_wheel_command (body_v : Real) (body_omega : Real) (track_width : Real) : Real :=
   (body_v - ((body_omega * track_width) * (0.5 : Real)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem diff_drive_inverse_consistent_with_forward (body_v : Real) (body_omega : Real) (track_width : Real)
     (h1 : ((abs body_v) <= WHEEL_VEL_MAX))
     (h2 : ((abs body_omega) <= OMEGA_MAX))
@@ -57,6 +69,9 @@ theorem diff_drive_inverse_consistent_with_forward (body_v : Real) (body_omega :
 noncomputable def right_wheel_command (body_v : Real) (body_omega : Real) (track_width : Real) : Real :=
   (body_v + ((body_omega * track_width) * (0.5 : Real)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem diff_drive_right_inverse_consistent (body_v : Real) (body_omega : Real) (track_width : Real)
     (h1 : ((abs body_v) <= WHEEL_VEL_MAX))
     (h2 : ((abs body_omega) <= OMEGA_MAX))
@@ -70,6 +85,9 @@ theorem diff_drive_right_inverse_consistent (body_v : Real) (body_omega : Real) 
 noncomputable def pose_x_step (x_prev : Real) (body_v : Real) (theta : Real) (dt : Real) : Real :=
   (x_prev + ((body_v * (Real.cos theta)) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pose_x_integration_step_linear_in_dt (x_prev : Real) (body_v : Real) (theta : Real) (dt : Real)
     (h1 : ((abs x_prev) <= (1000000.0 : Real)))
     (h2 : ((abs body_v) <= WHEEL_VEL_MAX))
@@ -84,6 +102,9 @@ theorem pose_x_integration_step_linear_in_dt (x_prev : Real) (body_v : Real) (th
 noncomputable def pose_y_step (y_prev : Real) (body_v : Real) (theta : Real) (dt : Real) : Real :=
   (y_prev + ((body_v * (Real.sin theta)) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pose_y_integration_step_linear_in_dt (y_prev : Real) (body_v : Real) (theta : Real) (dt : Real)
     (h1 : ((abs y_prev) <= (1000000.0 : Real)))
     (h2 : ((abs body_v) <= WHEEL_VEL_MAX))

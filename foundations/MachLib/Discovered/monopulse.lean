@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -17,6 +20,9 @@ axiom sum_magnitude (sum_real : Real) (sum_imag : Real) : Real  -- helper (axiom
 noncomputable def monopulse_angle (delta_real : Real) (sum_real : Real) : Real :=
   (Real.arctan (delta_real / sum_real))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem monopulse_angle_finite (delta_real : Real) (sum_real : Real)
     (h1 : (sum_real > (0 : Real))) :
     True := by

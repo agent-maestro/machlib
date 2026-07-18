@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def PITCH_MAX : Real := (1.5708 : Real)
 noncomputable def coarse_pitch (accel_x : Real) (accel_y : Real) (accel_z : Real) : Real :=
   (atan2 (-accel_x) (Real.sqrt ((accel_y * accel_y) + (accel_z * accel_z))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pitch_initial_zero_at_level (accel_x : Real) (accel_y : Real) (accel_z : Real)
     (h1 : ((abs accel_x) <= A_MAX))
     (h2 : ((abs accel_y) <= A_MAX))
@@ -32,6 +38,9 @@ theorem pitch_initial_zero_at_level (accel_x : Real) (accel_y : Real) (accel_z :
 noncomputable def coarse_roll (accel_y : Real) (accel_z : Real) : Real :=
   (atan2 accel_y accel_z)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem roll_initial_zero_at_level (accel_y : Real) (accel_z : Real)
     (h1 : ((abs accel_y) <= A_MAX))
     (h2 : ((abs accel_z) <= A_MAX)) :
@@ -43,6 +52,9 @@ theorem roll_initial_zero_at_level (accel_y : Real) (accel_z : Real)
 noncomputable def coarse_heading (gyro_y_horizontal : Real) (gyro_x_horizontal : Real) : Real :=
   (atan2 (-gyro_y_horizontal) gyro_x_horizontal)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem heading_initial_zero_due_north (gyro_y_horizontal : Real) (gyro_x_horizontal : Real)
     (h1 : ((abs gyro_y_horizontal) <= OMEGA_MAX))
     (h2 : ((abs gyro_x_horizontal) <= OMEGA_MAX)) :
@@ -54,6 +66,9 @@ theorem heading_initial_zero_due_north (gyro_y_horizontal : Real) (gyro_x_horizo
 noncomputable def gravity_residual (accel_x : Real) (accel_y : Real) (accel_z : Real) : Real :=
   ((Real.sqrt (((accel_x * accel_x) + (accel_y * accel_y)) + (accel_z * accel_z))) - G_REF)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem gravity_residual_zero_at_level_stationary (accel_x : Real) (accel_y : Real) (accel_z : Real)
     (h1 : ((abs accel_x) <= A_MAX))
     (h2 : ((abs accel_y) <= A_MAX))

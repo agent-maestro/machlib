@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,10 +27,28 @@ noncomputable def q8_quantize (x : Real) (scale : Real) : Real :=
 
 theorem q8_quantize_in_range (x : Real) (scale : Real)
     (h1 : (scale >= SCALE_MIN))
-    (h2 : (scale <= SCALE_MAX)) :
-    ((q8_quantize x scale) >= Q8_MIN) := by
+    (h2 : (scale <= SCALE_MAX))
+    (h_clamp1 : Q8_MIN ≤ Q8_MAX) :
+    (((q8_quantize x scale) >= Q8_MIN)) ∧ (((q8_quantize x scale) <= Q8_MAX)) := by
   unfold q8_quantize
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── q8_quantize_asym ──
 
@@ -38,7 +59,25 @@ theorem q8_quantize_asym_in_range (x : Real) (scale : Real) (zero_point : Real)
     (h1 : (scale >= SCALE_MIN))
     (h2 : (scale <= SCALE_MAX))
     (h3 : (zero_point >= (-(128.0 : Real))))
-    (h4 : (zero_point <= (127.0 : Real))) :
-    ((q8_quantize_asym x scale zero_point) >= (-(128.0 : Real))) := by
+    (h4 : (zero_point <= (127.0 : Real)))
+    (h_clamp1 : (-128.0 : Real) ≤ (127.0 : Real)) :
+    (((q8_quantize_asym x scale zero_point) >= (-(128.0 : Real)))) ∧ (((q8_quantize_asym x scale zero_point) <= (127.0 : Real))) := by
   unfold q8_quantize_asym
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

@@ -2,16 +2,13 @@
 -- Source module: pk_two_compartment
 -- Source file:   <private>/pk_two_compartment.eml
 -- Verified fns:  plasma_concentration, auc_inf, effect_site_step
---
--- 2026-06-14: plasma_concentration_nonneg now has a real proof inline below.
--- Companion proof at MachLib.Applications.PlasmaConcentrationNonneg documents
--- the safety-critical framing (TCI / ICU monitoring, IEC 62304 Class C).
--- auc_inf_finite_for_positive_rates and effect_site_tracks_central_compartment
--- remain as Forge-emitted sorry stubs for follow-up.
 
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,22 +24,30 @@ noncomputable def plasma_concentration (coef_a : Real) (rate_alpha : Real) (coef
   ((coef_a * (Real.exp ((-rate_alpha) * time_min))) + (coef_b * (Real.exp ((-rate_beta) * time_min))))
 
 theorem plasma_concentration_nonneg (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real) (time_min : Real)
-    (h1 : (coef_a >= (0 : Real)))
-    (h2 : (coef_a <= COEF_MAX))
-    (h3 : (rate_alpha >= RATE_MIN))
-    (h4 : (rate_alpha <= RATE_MAX))
-    (h5 : (coef_b >= (0 : Real)))
-    (h6 : (coef_b <= COEF_MAX))
-    (h7 : (rate_beta >= RATE_MIN))
-    (h8 : (rate_beta <= RATE_MAX))
-    (h9 : (time_min >= (0 : Real)))
-    (h10 : (time_min <= T_MAX)) :
+    (h_coef_a : (((0 : Real) <= coef_a) ∧ (coef_a <= COEF_MAX)))
+    (h_rate_alpha : ((RATE_MIN <= rate_alpha) ∧ (rate_alpha <= RATE_MAX)))
+    (h_coef_b : (((0 : Real) <= coef_b) ∧ (coef_b <= COEF_MAX)))
+    (h_rate_beta : ((RATE_MIN <= rate_beta) ∧ (rate_beta <= RATE_MAX)))
+    (h_time_min : (((0 : Real) <= time_min) ∧ (time_min <= T_MAX))) :
     ((plasma_concentration coef_a rate_alpha coef_b rate_beta time_min) >= (0 : Real)) := by
   unfold plasma_concentration
-  -- Sum of (non-negative coefficient) · (positive exp) terms.
-  apply add_nonneg
-  · exact mul_nonneg h1 (exp_nonneg _)
-  · exact mul_nonneg h5 (exp_nonneg _)
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── auc_inf ──
 
@@ -50,17 +55,29 @@ noncomputable def auc_inf (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (r
   ((coef_a / rate_alpha) + (coef_b / rate_beta))
 
 theorem auc_inf_finite_for_positive_rates (coef_a : Real) (rate_alpha : Real) (coef_b : Real) (rate_beta : Real)
-    (h1 : (coef_a >= (0 : Real)))
-    (h2 : (coef_a <= COEF_MAX))
-    (h3 : (rate_alpha >= RATE_MIN))
-    (h4 : (rate_alpha <= RATE_MAX))
-    (h5 : (coef_b >= (0 : Real)))
-    (h6 : (coef_b <= COEF_MAX))
-    (h7 : (rate_beta >= RATE_MIN))
-    (h8 : (rate_beta <= RATE_MAX)) :
+    (h_coef_a : (((0 : Real) <= coef_a) ∧ (coef_a <= COEF_MAX)))
+    (h_rate_alpha : ((RATE_MIN <= rate_alpha) ∧ (rate_alpha <= RATE_MAX)))
+    (h_coef_b : (((0 : Real) <= coef_b) ∧ (coef_b <= COEF_MAX)))
+    (h_rate_beta : ((RATE_MIN <= rate_beta) ∧ (rate_beta <= RATE_MAX))) :
     ((auc_inf coef_a rate_alpha coef_b rate_beta) >= (0 : Real)) := by
   unfold auc_inf
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── effect_site_step ──
 
@@ -68,14 +85,27 @@ noncomputable def effect_site_step (ce_prev : Real) (central_c : Real) (rate_keo
   (min (max (ce_prev + ((dt * rate_keo) * (central_c - ce_prev))) (0 : Real)) COEF_MAX)
 
 theorem effect_site_tracks_central_compartment (ce_prev : Real) (central_c : Real) (rate_keo : Real) (dt : Real)
-    (h1 : (ce_prev >= (0 : Real)))
-    (h2 : (ce_prev <= COEF_MAX))
-    (h3 : (central_c >= (0 : Real)))
-    (h4 : (central_c <= COEF_MAX))
-    (h5 : (rate_keo >= RATE_MIN))
-    (h6 : (rate_keo <= RATE_MAX))
-    (h7 : (dt >= (0 : Real)))
-    (h8 : (dt <= (1 : Real))) :
+    (h_ce_prev : (((0 : Real) <= ce_prev) ∧ (ce_prev <= COEF_MAX)))
+    (h_central_c : (((0 : Real) <= central_c) ∧ (central_c <= COEF_MAX)))
+    (h_rate_keo : ((RATE_MIN <= rate_keo) ∧ (rate_keo <= RATE_MAX)))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= (1 : Real))))
+    (h_clamp1 : (0 : Real) ≤ COEF_MAX) :
     ((effect_site_step ce_prev central_c rate_keo dt) >= (0 : Real)) := by
   unfold effect_site_step
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

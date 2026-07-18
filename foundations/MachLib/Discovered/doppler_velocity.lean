@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ noncomputable def PRF_MAX : Real := (1000000.0 : Real)
 noncomputable def doppler_shift_hz (radial_velocity : Real) (wavelength : Real) : Real :=
   (((2.0 : Real) * radial_velocity) / wavelength)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem doppler_shift_proportional_to_velocity (radial_velocity : Real) (wavelength : Real)
     (h1 : ((abs radial_velocity) <= VEL_MAX))
     (h2 : (wavelength >= LAMBDA_MIN))
@@ -34,6 +40,9 @@ theorem doppler_shift_proportional_to_velocity (radial_velocity : Real) (wavelen
 noncomputable def velocity_from_shift (doppler_hz : Real) (wavelength : Real) : Real :=
   (((0.5 : Real) * doppler_hz) * wavelength)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem velocity_from_shift_signed (doppler_hz : Real) (wavelength : Real)
     (h1 : ((abs doppler_hz) <= FREQ_MAX))
     (h2 : (wavelength >= LAMBDA_MIN))
@@ -53,7 +62,23 @@ theorem unambiguous_velocity_proportional_to_prf (pulse_repetition_freq : Real) 
     (h4 : (wavelength <= LAMBDA_MAX)) :
     ((unambiguous_velocity pulse_repetition_freq wavelength) > (0 : Real)) := by
   unfold unambiguous_velocity
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── velocity_resolution ──
 
@@ -69,4 +94,20 @@ theorem velocity_resolution_inverse_to_dwell (n_pulses : Real) (pulse_repetition
     (h6 : (wavelength <= LAMBDA_MAX)) :
     ((velocity_resolution n_pulses pulse_repetition_freq wavelength) >= (0 : Real)) := by
   unfold velocity_resolution
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

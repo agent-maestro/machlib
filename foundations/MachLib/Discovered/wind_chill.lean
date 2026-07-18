@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,6 +27,9 @@ noncomputable def RH_MAX : Real := (100.0 : Real)
 noncomputable def wind_chill_celsius (temperature_c : Real) (wind_speed_kmh : Real) : Real :=
   ((((13.12 : Real) + ((0.6215 : Real) * temperature_c)) - ((11.37 : Real) * (wind_speed_kmh ^ (0.16 : Real)))) + (((0.3965 : Real) * temperature_c) * (wind_speed_kmh ^ (0.16 : Real))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem wind_chill_below_air_temperature (temperature_c : Real) (wind_speed_kmh : Real)
     (h1 : (temperature_c >= T_MIN_C))
     (h2 : (temperature_c <= T_MAX_C))
@@ -37,6 +43,9 @@ theorem wind_chill_below_air_temperature (temperature_c : Real) (wind_speed_kmh 
 noncomputable def heat_index_fahrenheit (temperature_f : Real) (relative_humidity_pct : Real) : Real :=
   (((((((((-42.379 : Real) + ((2.04901523 : Real) * temperature_f)) + ((10.14333127 : Real) * relative_humidity_pct)) - (((0.22475541 : Real) * temperature_f) * relative_humidity_pct)) - ((0.00683783 : Real) * (temperature_f * temperature_f))) - ((0.05481717 : Real) * (relative_humidity_pct * relative_humidity_pct))) + (((0.00122874 : Real) * (temperature_f * temperature_f)) * relative_humidity_pct)) + (((0.00085282 : Real) * temperature_f) * (relative_humidity_pct * relative_humidity_pct))) - (((1.99e-06 : Real) * (temperature_f * temperature_f)) * (relative_humidity_pct * relative_humidity_pct)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem heat_index_above_air_temperature (temperature_f : Real) (relative_humidity_pct : Real)
     (h1 : (temperature_f >= T_MIN_F))
     (h2 : (temperature_f <= T_MAX_F))
@@ -50,6 +59,9 @@ theorem heat_index_above_air_temperature (temperature_f : Real) (relative_humidi
 noncomputable def steadman_apparent_temp (temperature_c : Real) (vapor_pressure_hpa : Real) (wind_speed_ms : Real) : Real :=
   (((temperature_c + ((0.33 : Real) * vapor_pressure_hpa)) - ((0.7 : Real) * wind_speed_ms)) - (4.0 : Real))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem apparent_temperature_linear (temperature_c : Real) (vapor_pressure_hpa : Real) (wind_speed_ms : Real)
     (h1 : (temperature_c >= T_MIN_C))
     (h2 : (temperature_c <= T_MAX_C))

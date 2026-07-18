@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,13 +27,32 @@ theorem supersaturation_zero_at_solubility (concentration : Real) (saturation_co
     (h2 : (saturation_concentration > (0 : Real))) :
     (((relative_supersaturation concentration saturation_concentration) >= (0 : Real)) ∨ (concentration < saturation_concentration)) := by
   unfold relative_supersaturation
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── absolute_supersaturation ──
 
 noncomputable def absolute_supersaturation (concentration : Real) (saturation_concentration : Real) : Real :=
   ((concentration - saturation_concentration) / saturation_concentration)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem absolute_supersaturation_zero_at_solubility (concentration : Real) (saturation_concentration : Real)
     (h1 : (concentration >= (0 : Real)))
     (h2 : (saturation_concentration > (0 : Real))) :
@@ -51,4 +73,20 @@ theorem growth_rate_nonneg_above_solubility (growth_constant : Real) (concentrat
     (h6 : (growth_exponent <= G_MAX)) :
     ((power_law_growth_rate growth_constant concentration saturation_concentration growth_exponent) >= (0 : Real)) := by
   unfold power_law_growth_rate
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

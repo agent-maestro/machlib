@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,7 +32,23 @@ theorem icp_residual_sq_nonnegative (src_x : Real) (src_y : Real) (src_z : Real)
     (h6 : ((abs tgt_z) <= COORD_MAX)) :
     ((point_to_point_residual_sq src_x src_y src_z tgt_x tgt_y tgt_z) >= (0 : Real)) := by
   unfold point_to_point_residual_sq
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── weighted_residual ──
 
@@ -39,16 +58,36 @@ noncomputable def weighted_residual (residual : Real) (delta : Real) : Real :=
 theorem huber_weighted_residual_bounded (residual : Real) (delta : Real)
     (h1 : ((abs residual) <= COORD_MAX))
     (h2 : (delta > (0 : Real)))
-    (h3 : (delta <= COORD_MAX)) :
+    (h3 : (delta <= COORD_MAX))
+    (h_clamp1 : (0 : Real) ≤ delta) :
     ((weighted_residual residual delta) >= (0 : Real)) := by
   unfold weighted_residual
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── point_to_plane_residual ──
 
 noncomputable def point_to_plane_residual (src_x : Real) (src_y : Real) (src_z : Real) (tgt_x : Real) (tgt_y : Real) (tgt_z : Real) (n_x : Real) (n_y : Real) (n_z : Real) : Real :=
   ((((src_x - tgt_x) * n_x) + ((src_y - tgt_y) * n_y)) + ((src_z - tgt_z) * n_z))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem point_to_plane_residual_signed (src_x : Real) (src_y : Real) (src_z : Real) (tgt_x : Real) (tgt_y : Real) (tgt_z : Real) (n_x : Real) (n_y : Real) (n_z : Real)
     (h1 : ((abs src_x) <= COORD_MAX))
     (h2 : ((abs src_y) <= COORD_MAX))

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -43,7 +46,23 @@ theorem terzaghi_bearing_nonneg_under_pos_inputs (cohesion : Real) (n_c : Real) 
     (h14 : (n_gamma <= N_MAX)) :
     ((ultimate_bearing cohesion n_c soil_unit_weight embedment_depth n_q footing_width n_gamma) >= (0 : Real)) := by
   unfold ultimate_bearing
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── allowable_bearing ──
 
@@ -55,6 +74,23 @@ theorem allowable_bearing_below_ultimate (ultimate_pressure : Real) (factor_of_s
     (h2 : (ultimate_pressure <= (1000000.0 : Real)))
     (h3 : (factor_of_safety >= FS_MIN))
     (h4 : (factor_of_safety <= FS_MAX)) :
-    ((allowable_bearing ultimate_pressure factor_of_safety) >= (0 : Real)) := by
+    (((allowable_bearing ultimate_pressure factor_of_safety) >= (0 : Real))) ∧ (((allowable_bearing ultimate_pressure factor_of_safety) <= ultimate_pressure)) := by
   unfold allowable_bearing
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

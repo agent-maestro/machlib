@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -41,7 +44,23 @@ theorem farquhar_ac_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
     (h11 : (o2 <= O2_MAX)) :
     ((rubisco_limited ci gamma_star vcmax kc ko o2) >= (0 : Real)) := by
   unfold rubisco_limited
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── light_limited ──
 
@@ -58,13 +77,32 @@ theorem farquhar_aj_nonneg_when_ci_above_gamma_star (ci : Real) (gamma_star : Re
     (h7 : (electron_transport <= J_MAX)) :
     ((light_limited ci gamma_star electron_transport) >= (0 : Real)) := by
   unfold light_limited
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── net_assimilation ──
 
 noncomputable def net_assimilation (rubisco_rate : Real) (light_rate : Real) (dark_respiration : Real) : Real :=
   ((min rubisco_rate light_rate) - dark_respiration)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem farquhar_net_below_min_of_limits (rubisco_rate : Real) (light_rate : Real) (dark_respiration : Real)
     (h1 : (rubisco_rate >= (0 : Real)))
     (h2 : (rubisco_rate <= VCMAX_MAX))

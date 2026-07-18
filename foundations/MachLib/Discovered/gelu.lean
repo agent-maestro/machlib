@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def gelu_tanh (x : Real) : Real :=
   ((HALF * x) * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * (x + (((GELU_CUBIC * x) * x) * x))))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem gelu_tanh_monotone_in_x (x : Real)
     (h1 : ((abs x) < GELU_X_MAX)) :
     True := by
@@ -30,6 +36,9 @@ theorem gelu_tanh_monotone_in_x (x : Real)
 noncomputable def quick_gelu (x : Real) : Real :=
   (x / ((1 : Real) + (Real.exp ((-1.702 : Real) * x))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem quick_gelu_monotone_in_x (x : Real)
     (h1 : ((abs x) < GELU_X_MAX)) :
     True := by

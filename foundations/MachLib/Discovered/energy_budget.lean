@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -32,13 +35,32 @@ theorem equilibrium_temperature_decreasing_in_albedo (solar_flux : Real) (albedo
     (h6 : (emissivity <= EPS_MAX)) :
     ((equilibrium_temperature solar_flux albedo emissivity) > (0 : Real)) := by
   unfold equilibrium_temperature
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── climate_response ──
 
 noncomputable def climate_response (forcing : Real) (lambda : Real) : Real :=
   (forcing / lambda)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem climate_response_linear_in_forcing (forcing : Real) (lambda : Real)
     (h1 : ((abs forcing) <= (100.0 : Real)))
     (h2 : (lambda > (0.05 : Real)))
@@ -51,6 +73,9 @@ theorem climate_response_linear_in_forcing (forcing : Real) (lambda : Real)
 noncomputable def toa_imbalance (solar_flux : Real) (albedo : Real) (emissivity : Real) (surface_t : Real) : Real :=
   (((((1 : Real) - albedo) * solar_flux) * QUARTER) - ((emissivity * SIGMA_SB) * (surface_t ^ (4.0 : Real))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem toa_imbalance_zero_at_equilibrium (solar_flux : Real) (albedo : Real) (emissivity : Real) (surface_t : Real)
     (h1 : (solar_flux > (0 : Real)))
     (h2 : (solar_flux <= ((4.0 : Real) * SOLAR_CONSTANT)))

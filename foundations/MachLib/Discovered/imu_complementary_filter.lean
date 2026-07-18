@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,15 +25,16 @@ axiom accel_trust (accel_mag : Real) : Real  -- helper (axiomatised in MachLib/D
 noncomputable def pitch_update (pitch_prev : Real) (gyro_y : Real) (accel_x : Real) (accel_z : Real) (dt : Real) (alpha : Real) : Real :=
   ((alpha * (pitch_prev + (gyro_y * dt))) + (((1 : Real) - alpha) * (atan2 accel_x accel_z)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem complementary_filter_bounded_drift (pitch_prev : Real) (gyro_y : Real) (accel_x : Real) (accel_z : Real) (dt : Real) (alpha : Real)
-    (h1 : ((abs pitch_prev) <= (3.1416 : Real)))
-    (h2 : ((abs gyro_y) <= RATE_MAX))
-    (h3 : ((abs accel_x) <= ((16.0 : Real) * G_REF)))
-    (h4 : ((abs accel_z) <= ((16.0 : Real) * G_REF)))
-    (h5 : (dt > (0 : Real)))
-    (h6 : (dt <= DT_MAX))
-    (h7 : (alpha >= (0 : Real)))
-    (h8 : (alpha <= (1 : Real))) :
+    (h_pitch_prev : (-(3.1416 : Real) ≤ pitch_prev ∧ pitch_prev ≤ (3.1416 : Real)))
+    (h_gyro_y : (-RATE_MAX ≤ gyro_y ∧ gyro_y ≤ RATE_MAX))
+    (h_accel_x : (-((16.0 : Real) * G_REF) ≤ accel_x ∧ accel_x ≤ ((16.0 : Real) * G_REF)))
+    (h_accel_z : (-((16.0 : Real) * G_REF) ≤ accel_z ∧ accel_z ≤ ((16.0 : Real) * G_REF)))
+    (h_dt : (((0 : Real) < dt) ∧ (dt <= DT_MAX)))
+    (h_alpha : (((0 : Real) <= alpha) ∧ (alpha <= (1 : Real)))) :
     True := by
   trivial
 
@@ -39,14 +43,15 @@ theorem complementary_filter_bounded_drift (pitch_prev : Real) (gyro_y : Real) (
 noncomputable def roll_update (roll_prev : Real) (gyro_x : Real) (accel_y : Real) (accel_z : Real) (dt : Real) (alpha : Real) : Real :=
   ((alpha * (roll_prev + (gyro_x * dt))) + (((1 : Real) - alpha) * (atan2 accel_y accel_z)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem complementary_filter_roll_bounded_drift (roll_prev : Real) (gyro_x : Real) (accel_y : Real) (accel_z : Real) (dt : Real) (alpha : Real)
-    (h1 : ((abs roll_prev) <= (3.1416 : Real)))
-    (h2 : ((abs gyro_x) <= RATE_MAX))
-    (h3 : ((abs accel_y) <= ((16.0 : Real) * G_REF)))
-    (h4 : ((abs accel_z) <= ((16.0 : Real) * G_REF)))
-    (h5 : (dt > (0 : Real)))
-    (h6 : (dt <= DT_MAX))
-    (h7 : (alpha >= (0 : Real)))
-    (h8 : (alpha <= (1 : Real))) :
+    (h_roll_prev : (-(3.1416 : Real) ≤ roll_prev ∧ roll_prev ≤ (3.1416 : Real)))
+    (h_gyro_x : (-RATE_MAX ≤ gyro_x ∧ gyro_x ≤ RATE_MAX))
+    (h_accel_y : (-((16.0 : Real) * G_REF) ≤ accel_y ∧ accel_y ≤ ((16.0 : Real) * G_REF)))
+    (h_accel_z : (-((16.0 : Real) * G_REF) ≤ accel_z ∧ accel_z ≤ ((16.0 : Real) * G_REF)))
+    (h_dt : (((0 : Real) < dt) ∧ (dt <= DT_MAX)))
+    (h_alpha : (((0 : Real) <= alpha) ∧ (alpha <= (1 : Real)))) :
     True := by
   trivial

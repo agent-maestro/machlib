@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def prey_step (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (dt : Real) : Real :=
   (prey + (dt * ((alpha * prey) - ((beta * prey) * predator))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem prey_step_nonneg_under_small_dt (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (dt : Real)
     (h1 : (prey >= (0 : Real)))
     (h2 : (prey <= POP_MAX))
@@ -38,6 +44,9 @@ theorem prey_step_nonneg_under_small_dt (prey : Real) (predator : Real) (alpha :
 noncomputable def predator_step (prey : Real) (predator : Real) (gamma : Real) (delta : Real) (dt : Real) : Real :=
   (predator + (dt * (((-gamma) * predator) + ((delta * prey) * predator))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem predator_step_decays_without_prey (prey : Real) (predator : Real) (gamma : Real) (delta : Real) (dt : Real)
     (h1 : (prey >= (0 : Real)))
     (h2 : (prey <= POP_MAX))
@@ -57,6 +66,9 @@ theorem predator_step_decays_without_prey (prey : Real) (predator : Real) (gamma
 noncomputable def lyapunov_invariant (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (gamma : Real) (delta : Real) : Real :=
   ((((delta * prey) - (gamma * (Real.log prey))) + (beta * predator)) - (alpha * (Real.log predator)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem lotka_volterra_conserves_lyapunov (prey : Real) (predator : Real) (alpha : Real) (beta : Real) (gamma : Real) (delta : Real)
     (h1 : (prey > (0 : Real)))
     (h2 : (prey <= POP_MAX))

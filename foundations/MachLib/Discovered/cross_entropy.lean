@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,10 +25,28 @@ noncomputable def bce_loss (prediction : Real) (target : Real) : Real :=
 
 theorem bce_loss_nonnegative (prediction : Real) (target : Real)
     (h1 : (target >= (0 : Real)))
-    (h2 : (target <= (1 : Real))) :
+    (h2 : (target <= (1 : Real)))
+    (h_dom1 : ((0 : Real) < prediction))
+    (h_dom2 : (prediction < (1 : Real))) :
     ((bce_loss prediction target) >= (0 : Real)) := by
   unfold bce_loss
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── bce_with_logits ──
 
@@ -35,16 +56,36 @@ noncomputable def bce_with_logits (logit : Real) (target : Real) : Real :=
 theorem bce_with_logits_equals_bce (logit : Real) (target : Real)
     (h1 : ((abs logit) < MAX_LOGIT))
     (h2 : (target >= (0 : Real)))
-    (h3 : (target <= (1 : Real))) :
+    (h3 : (target <= (1 : Real)))
+    (h_clamp1 : (0 : Real) ≤ MAX_LOGIT) :
     ((bce_with_logits logit target) >= (0 : Real)) := by
   unfold bce_with_logits
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── categorical_ce_pair ──
 
 noncomputable def categorical_ce_pair (logit : Real) (log_sum_exp_val : Real) (target_one_hot : Real) : Real :=
   (target_one_hot * (log_sum_exp_val - logit))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem categorical_ce_pair_nonnegative (logit : Real) (log_sum_exp_val : Real) (target_one_hot : Real)
     (h1 : ((abs logit) < MAX_LOGIT))
     (h2 : (target_one_hot >= (0 : Real)))

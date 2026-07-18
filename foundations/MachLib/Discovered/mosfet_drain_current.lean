@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -33,10 +36,27 @@ theorem saturation_current_quadratic_in_vgs_minus_vth (transconductance_k : Real
     (h7 : (vds >= (0 : Real)))
     (h8 : (vds <= V_MAX))
     (h9 : (lambda_clm >= (0 : Real)))
-    (h10 : (lambda_clm <= LAMBDA_MAX)) :
+    (h10 : (lambda_clm <= LAMBDA_MAX))
+    (h_clamp1 : (0 : Real) ≤ V_MAX) :
     ((saturation_current transconductance_k vgs vth vds lambda_clm) >= (0 : Real)) := by
   unfold saturation_current
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── triode_current ──
 
@@ -51,10 +71,27 @@ theorem triode_current_linear_in_vds_at_low_vds (transconductance_k : Real) (vgs
     (h5 : (vth >= VTH_MIN))
     (h6 : (vth <= VTH_MAX))
     (h7 : (vds >= (0 : Real)))
-    (h8 : (vds <= V_MAX)) :
+    (h8 : (vds <= V_MAX))
+    (h_clamp1 : (0 : Real) ≤ V_MAX) :
     ((triode_current transconductance_k vgs vth vds) >= (0 : Real)) := by
   unfold triode_current
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── drain_current_branchless ──
 
@@ -71,7 +108,25 @@ theorem branchless_matches_per_region (transconductance_k : Real) (vgs : Real) (
     (h7 : (vds >= (0 : Real)))
     (h8 : (vds <= V_MAX))
     (h9 : (lambda_clm >= (0 : Real)))
-    (h10 : (lambda_clm <= LAMBDA_MAX)) :
+    (h10 : (lambda_clm <= LAMBDA_MAX))
+    (h_clamp1 : (0 : Real) ≤ V_MAX)
+    (h_clamp2 : (0 : Real) ≤ overdrive) :
     ((drain_current_branchless transconductance_k vgs vth vds lambda_clm) >= (0 : Real)) := by
   unfold drain_current_branchless
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

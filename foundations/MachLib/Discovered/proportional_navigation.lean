@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,12 +25,13 @@ axiom closing_speed_from_rate (range_rate : Real) : Real  -- helper (axiomatised
 noncomputable def pn_command (n : Real) (closing_speed : Real) (sigma_dot : Real) : Real :=
   ((n * closing_speed) * sigma_dot)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pn_command_proportional_to_los_rate (n : Real) (closing_speed : Real) (sigma_dot : Real)
-    (h1 : (n >= N_MIN))
-    (h2 : (n <= N_MAX))
-    (h3 : (closing_speed >= (0 : Real)))
-    (h4 : (closing_speed <= V_MAX))
-    (h5 : ((abs sigma_dot) <= SIGMA_DOT_MAX)) :
+    (h_n : ((N_MIN <= n) ∧ (n <= N_MAX)))
+    (h_closing_speed : (((0 : Real) <= closing_speed) ∧ (closing_speed <= V_MAX)))
+    (h_sigma_dot : (-SIGMA_DOT_MAX ≤ sigma_dot ∧ sigma_dot ≤ SIGMA_DOT_MAX)) :
     True := by
   trivial
 
@@ -36,13 +40,14 @@ theorem pn_command_proportional_to_los_rate (n : Real) (closing_speed : Real) (s
 noncomputable def augmented_pn_command (n : Real) (closing_speed : Real) (sigma_dot : Real) (target_accel : Real) : Real :=
   (((n * closing_speed) * sigma_dot) + (((0.5 : Real) * n) * target_accel))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem augmented_pn_includes_target_accel (n : Real) (closing_speed : Real) (sigma_dot : Real) (target_accel : Real)
-    (h1 : (n >= N_MIN))
-    (h2 : (n <= N_MAX))
-    (h3 : (closing_speed >= (0 : Real)))
-    (h4 : (closing_speed <= V_MAX))
-    (h5 : ((abs sigma_dot) <= SIGMA_DOT_MAX))
-    (h6 : ((abs target_accel) <= (500.0 : Real))) :
+    (h_n : ((N_MIN <= n) ∧ (n <= N_MAX)))
+    (h_closing_speed : (((0 : Real) <= closing_speed) ∧ (closing_speed <= V_MAX)))
+    (h_sigma_dot : (-SIGMA_DOT_MAX ≤ sigma_dot ∧ sigma_dot ≤ SIGMA_DOT_MAX))
+    (h_target_accel : (-(500.0 : Real) ≤ target_accel ∧ target_accel ≤ (500.0 : Real))) :
     True := by
   trivial
 
@@ -52,8 +57,25 @@ noncomputable def los_angle (rel_x : Real) (rel_y : Real) : Real :=
   (atan2 rel_y rel_x)
 
 theorem los_angle_well_defined (rel_x : Real) (rel_y : Real)
-    (h1 : ((abs rel_x) <= (1000000.0 : Real)))
-    (h2 : ((abs rel_y) <= (1000000.0 : Real))) :
-    ((los_angle rel_x rel_y) >= (-(3.1416 : Real))) := by
+    (h_rel_x : (-(1000000.0 : Real) ≤ rel_x ∧ rel_x ≤ (1000000.0 : Real)))
+    (h_rel_y : (-(1000000.0 : Real) ≤ rel_y ∧ rel_y ≤ (1000000.0 : Real))) :
+    (((los_angle rel_x rel_y) >= (-(3.1416 : Real)))) ∧ (((los_angle rel_x rel_y) <= (3.1416 : Real))) := by
   unfold los_angle
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

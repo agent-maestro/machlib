@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,9 +28,11 @@ axiom qfe_altitude (static_pressure : Real) (field_pressure : Real) : Real  -- h
 noncomputable def pressure_to_altitude (static_pressure : Real) : Real :=
   (T0_OVER_L * ((1 : Real) - ((static_pressure / P0) ^ RL_OVER_G)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem baro_altitude_monotone_decreasing_in_pressure (static_pressure : Real)
-    (h1 : (static_pressure >= P_MIN))
-    (h2 : (static_pressure <= P_MAX)) :
+    (h_static_pressure : ((P_MIN <= static_pressure) ∧ (static_pressure <= P_MAX))) :
     True := by
   trivial
 
@@ -37,8 +42,24 @@ noncomputable def altitude_to_pressure (altitude : Real) : Real :=
   (P0 * (((1 : Real) - ((LAPSE * altitude) / T0)) ^ (5.25588 : Real)))
 
 theorem altitude_to_pressure_inverse (altitude : Real)
-    (h1 : (altitude >= (-(500.0 : Real))))
-    (h2 : (altitude <= (11000.0 : Real))) :
-    ((altitude_to_pressure altitude) >= P_MIN) := by
+    (h_altitude : (((-(500.0 : Real)) <= altitude) ∧ (altitude <= (11000.0 : Real)))) :
+    (((altitude_to_pressure altitude) >= P_MIN)) ∧ (((altitude_to_pressure altitude) <= P_MAX)) := by
   unfold altitude_to_pressure
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

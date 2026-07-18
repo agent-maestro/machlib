@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,13 +25,15 @@ noncomputable def YAW_MOMENT_MAX : Real := (5000.0 : Real)
 noncomputable def left_wheel_torque (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (min (max (((0.5 : Real) * total_drive_torque) - ((desired_yaw_moment * rolling_radius) / track_width)) (-TORQUE_MAX)) TORQUE_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem left_torque_within_limit (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real)
-    (h1 : ((abs total_drive_torque) <= TORQUE_MAX))
-    (h2 : ((abs desired_yaw_moment) <= YAW_MOMENT_MAX))
-    (h3 : (track_width >= TRACK_MIN))
-    (h4 : (track_width <= TRACK_MAX))
-    (h5 : (rolling_radius >= RADIUS_MIN))
-    (h6 : (rolling_radius <= RADIUS_MAX)) :
+    (h_total_drive_torque : (-TORQUE_MAX ≤ total_drive_torque ∧ total_drive_torque ≤ TORQUE_MAX))
+    (h_desired_yaw_moment : (-YAW_MOMENT_MAX ≤ desired_yaw_moment ∧ desired_yaw_moment ≤ YAW_MOMENT_MAX))
+    (h_track_width : ((TRACK_MIN <= track_width) ∧ (track_width <= TRACK_MAX)))
+    (h_rolling_radius : ((RADIUS_MIN <= rolling_radius) ∧ (rolling_radius <= RADIUS_MAX)))
+    (h_clamp1 : (-TORQUE_MAX) ≤ TORQUE_MAX) :
     True := by
   trivial
 
@@ -37,13 +42,15 @@ theorem left_torque_within_limit (total_drive_torque : Real) (desired_yaw_moment
 noncomputable def right_wheel_torque (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (min (max (((0.5 : Real) * total_drive_torque) + ((desired_yaw_moment * rolling_radius) / track_width)) (-TORQUE_MAX)) TORQUE_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem right_torque_complements_left (total_drive_torque : Real) (desired_yaw_moment : Real) (track_width : Real) (rolling_radius : Real)
-    (h1 : ((abs total_drive_torque) <= TORQUE_MAX))
-    (h2 : ((abs desired_yaw_moment) <= YAW_MOMENT_MAX))
-    (h3 : (track_width >= TRACK_MIN))
-    (h4 : (track_width <= TRACK_MAX))
-    (h5 : (rolling_radius >= RADIUS_MIN))
-    (h6 : (rolling_radius <= RADIUS_MAX)) :
+    (h_total_drive_torque : (-TORQUE_MAX ≤ total_drive_torque ∧ total_drive_torque ≤ TORQUE_MAX))
+    (h_desired_yaw_moment : (-YAW_MOMENT_MAX ≤ desired_yaw_moment ∧ desired_yaw_moment ≤ YAW_MOMENT_MAX))
+    (h_track_width : ((TRACK_MIN <= track_width) ∧ (track_width <= TRACK_MAX)))
+    (h_rolling_radius : ((RADIUS_MIN <= rolling_radius) ∧ (rolling_radius <= RADIUS_MAX)))
+    (h_clamp1 : (-TORQUE_MAX) ≤ TORQUE_MAX) :
     True := by
   trivial
 
@@ -52,12 +59,13 @@ theorem right_torque_complements_left (total_drive_torque : Real) (desired_yaw_m
 noncomputable def yaw_moment_from_split (left_torque : Real) (right_torque : Real) (track_width : Real) (rolling_radius : Real) : Real :=
   (((right_torque - left_torque) * track_width) / ((2.0 : Real) * rolling_radius))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem yaw_moment_zero_at_balanced_split (left_torque : Real) (right_torque : Real) (track_width : Real) (rolling_radius : Real)
-    (h1 : ((abs left_torque) <= TORQUE_MAX))
-    (h2 : ((abs right_torque) <= TORQUE_MAX))
-    (h3 : (track_width >= TRACK_MIN))
-    (h4 : (track_width <= TRACK_MAX))
-    (h5 : (rolling_radius >= RADIUS_MIN))
-    (h6 : (rolling_radius <= RADIUS_MAX)) :
+    (h_left_torque : (-TORQUE_MAX ≤ left_torque ∧ left_torque ≤ TORQUE_MAX))
+    (h_right_torque : (-TORQUE_MAX ≤ right_torque ∧ right_torque ≤ TORQUE_MAX))
+    (h_track_width : ((TRACK_MIN <= track_width) ∧ (track_width <= TRACK_MAX)))
+    (h_rolling_radius : ((RADIUS_MIN <= rolling_radius) ∧ (rolling_radius <= RADIUS_MAX))) :
     True := by
   trivial

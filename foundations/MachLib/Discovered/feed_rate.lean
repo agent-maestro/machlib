@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -30,15 +33,28 @@ noncomputable def linear_feed (num_teeth : Real) (feed_per_tooth : Real) (rpm : 
   ((num_teeth * feed_per_tooth) * rpm)
 
 theorem cnc_feed_proportional_to_rpm (num_teeth : Real) (feed_per_tooth : Real) (rpm : Real)
-    (h1 : (num_teeth >= N_MIN))
-    (h2 : (num_teeth <= N_MAX))
-    (h3 : (feed_per_tooth >= FZ_MIN))
-    (h4 : (feed_per_tooth <= FZ_MAX))
-    (h5 : (rpm >= RPM_MIN))
-    (h6 : (rpm <= RPM_MAX)) :
+    (h_num_teeth : ((N_MIN <= num_teeth) ∧ (num_teeth <= N_MAX)))
+    (h_feed_per_tooth : ((FZ_MIN <= feed_per_tooth) ∧ (feed_per_tooth <= FZ_MAX)))
+    (h_rpm : ((RPM_MIN <= rpm) ∧ (rpm <= RPM_MAX))) :
     ((linear_feed num_teeth feed_per_tooth rpm) >= (0 : Real)) := by
   unfold linear_feed
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── rpm_from_cutting_speed ──
 
@@ -46,13 +62,27 @@ noncomputable def rpm_from_cutting_speed (cutting_speed : Real) (diameter : Real
   (cutting_speed / (PI * diameter))
 
 theorem rpm_inversely_proportional_to_diameter (cutting_speed : Real) (diameter : Real)
-    (h1 : (cutting_speed >= SCUT_MIN))
-    (h2 : (cutting_speed <= SCUT_MAX))
-    (h3 : (diameter >= D_MIN))
-    (h4 : (diameter <= D_MAX)) :
+    (h_cutting_speed : ((SCUT_MIN <= cutting_speed) ∧ (cutting_speed <= SCUT_MAX)))
+    (h_diameter : ((D_MIN <= diameter) ∧ (diameter <= D_MAX))) :
     ((rpm_from_cutting_speed cutting_speed diameter) >= (0 : Real)) := by
   unfold rpm_from_cutting_speed
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── material_removal_rate ──
 
@@ -60,12 +90,25 @@ noncomputable def material_removal_rate (feed_mm_per_min : Real) (radial_engagem
   (((feed_mm_per_min * radial_engagement) * axial_depth) / (1000.0 : Real))
 
 theorem mrr_nonneg (feed_mm_per_min : Real) (radial_engagement : Real) (axial_depth : Real)
-    (h1 : (feed_mm_per_min >= (0 : Real)))
-    (h2 : (feed_mm_per_min <= (100000.0 : Real)))
-    (h3 : (radial_engagement >= (0 : Real)))
-    (h4 : (radial_engagement <= D_MAX))
-    (h5 : (axial_depth >= (0 : Real)))
-    (h6 : (axial_depth <= D_MAX)) :
+    (h_feed_mm_per_min : (((0 : Real) <= feed_mm_per_min) ∧ (feed_mm_per_min <= (100000.0 : Real))))
+    (h_radial_engagement : (((0 : Real) <= radial_engagement) ∧ (radial_engagement <= D_MAX)))
+    (h_axial_depth : (((0 : Real) <= axial_depth) ∧ (axial_depth <= D_MAX))) :
     ((material_removal_rate feed_mm_per_min radial_engagement axial_depth) >= (0 : Real)) := by
   unfold material_removal_rate
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

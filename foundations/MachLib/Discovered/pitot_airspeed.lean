@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -26,7 +29,23 @@ theorem ias_monotone_in_dynamic_pressure (dynamic_pressure : Real)
     (h2 : (dynamic_pressure <= Q_MAX)) :
     ((indicated_airspeed dynamic_pressure) >= (0 : Real)) := by
   unfold indicated_airspeed
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── true_airspeed ──
 
@@ -40,13 +59,32 @@ theorem tas_equals_ias_at_sea_level (ias : Real) (local_density : Real)
     (h4 : (local_density <= RHO_MAX)) :
     ((true_airspeed ias local_density) >= (0 : Real)) := by
   unfold true_airspeed
-  apply mul_nonneg <;> first | assumption | exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── calibrated_airspeed ──
 
 noncomputable def calibrated_airspeed (ias : Real) (position_error : Real) : Real :=
   (ias + position_error)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem cas_equals_ias_when_pec_zero (ias : Real) (position_error : Real)
     (h1 : (ias >= (0 : Real)))
     (h2 : (ias <= (1000.0 : Real)))

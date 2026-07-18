@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -30,13 +33,32 @@ theorem rmsprop_v_nonneg (prev_v : Real) (gradient : Real) (rho : Real)
     (h5 : (rho <= RHO_MAX)) :
     ((rmsprop_v_update prev_v gradient rho) >= (0 : Real)) := by
   unfold rmsprop_v_update
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── rmsprop_param_step ──
 
 noncomputable def rmsprop_param_step (theta : Real) (gradient : Real) (v : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * gradient) / ((Real.sqrt v) + eps)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rmsprop_step_descent_when_grad_signed (theta : Real) (gradient : Real) (v : Real) (lr : Real) (eps : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs gradient) <= VAL_MAX))
@@ -54,6 +76,9 @@ theorem rmsprop_step_descent_when_grad_signed (theta : Real) (gradient : Real) (
 noncomputable def adagrad_param_step (theta : Real) (gradient : Real) (g_squared_sum : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * gradient) / ((Real.sqrt g_squared_sum) + eps)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem adagrad_step_decreasing_lr_effective (theta : Real) (gradient : Real) (g_squared_sum : Real) (lr : Real) (eps : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs gradient) <= VAL_MAX))

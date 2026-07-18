@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def TWO_PI : Real := (6.283185307179586 : Real)
 noncomputable def chirp_phase (start_freq : Real) (chirp_rate : Real) (time_s : Real) : Real :=
   (TWO_PI * ((start_freq * time_s) + ((((0.5 : Real) * chirp_rate) * time_s) * time_s)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem chirp_phase_zero_at_t0 (start_freq : Real) (chirp_rate : Real) (time_s : Real)
     (h1 : (start_freq >= (0 : Real)))
     (h2 : (start_freq <= F0_MAX))
@@ -34,6 +40,9 @@ theorem chirp_phase_zero_at_t0 (start_freq : Real) (chirp_rate : Real) (time_s :
 noncomputable def chirp_instantaneous_freq (start_freq : Real) (chirp_rate : Real) (time_s : Real) : Real :=
   (start_freq + (chirp_rate * time_s))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem chirp_instantaneous_freq_linear_in_t (start_freq : Real) (chirp_rate : Real) (time_s : Real)
     (h1 : (start_freq >= (0 : Real)))
     (h2 : (start_freq <= F0_MAX))
@@ -54,6 +63,23 @@ theorem chirp_sample_bounded_by_unit (start_freq : Real) (chirp_rate : Real) (ti
     (h3 : ((abs chirp_rate) <= RATE_MAX))
     (h4 : (time_s >= (0 : Real)))
     (h5 : (time_s <= T_MAX)) :
-    ((chirp_sample start_freq chirp_rate time_s) >= (-(1 : Real))) := by
+    (((chirp_sample start_freq chirp_rate time_s) >= (-(1 : Real)))) ∧ (((chirp_sample start_freq chirp_rate time_s) <= (1 : Real))) := by
   unfold chirp_sample
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

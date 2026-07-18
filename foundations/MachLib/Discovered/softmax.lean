@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,9 +24,26 @@ theorem softmax_numerator_bounded_by_one (logit : Real) (max_logit : Real)
     (h1 : ((abs logit) < SOFTMAX_X_MAX))
     (h2 : ((abs max_logit) < SOFTMAX_X_MAX))
     (h3 : (logit <= max_logit)) :
-    ((softmax_shift_exp logit max_logit) >= (0 : Real)) := by
+    (((softmax_shift_exp logit max_logit) >= (0 : Real))) ∧ (((softmax_shift_exp logit max_logit) <= (1 : Real))) := by
   unfold softmax_shift_exp
-  exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── softmax_normalize ──
 
@@ -34,9 +54,26 @@ theorem softmax_value_in_unit_interval (numer : Real) (denom_sum : Real)
     (h1 : (numer >= (0 : Real)))
     (h2 : (denom_sum > (0 : Real)))
     (h3 : (numer <= denom_sum)) :
-    ((softmax_normalize numer denom_sum) >= (0 : Real)) := by
+    (((softmax_normalize numer denom_sum) >= (0 : Real))) ∧ (((softmax_normalize numer denom_sum) <= (1 : Real))) := by
   unfold softmax_normalize
-  apply div_nonneg_of_nonneg_pos <;> assumption
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── softmax_two_logit ──
 
@@ -46,17 +83,38 @@ noncomputable def softmax_two_logit (a : Real) (b : Real) : Real :=
 theorem softmax_two_equals_sigmoid_diff (a : Real) (b : Real)
     (h1 : ((abs a) < SOFTMAX_X_MAX))
     (h2 : ((abs b) < SOFTMAX_X_MAX)) :
-    ((softmax_two_logit a b) >= (0 : Real)) := by
+    (((softmax_two_logit a b) >= (0 : Real))) ∧ (((softmax_two_logit a b) <= (1 : Real))) := by
   unfold softmax_two_logit
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── log_sum_exp_pair ──
 
 noncomputable def log_sum_exp_pair (a : Real) (b : Real) : Real :=
   ((min (max a b) SOFTMAX_X_MAX) + (Real.log ((Real.exp (a - (min (max a b) SOFTMAX_X_MAX))) + (Real.exp (b - (min (max a b) SOFTMAX_X_MAX))))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem log_sum_exp_pair_associative (a : Real) (b : Real)
     (h1 : ((abs a) < SOFTMAX_X_MAX))
-    (h2 : ((abs b) < SOFTMAX_X_MAX)) :
+    (h2 : ((abs b) < SOFTMAX_X_MAX))
+    (h_clamp1 : b ≤ SOFTMAX_X_MAX) :
     True := by
   trivial

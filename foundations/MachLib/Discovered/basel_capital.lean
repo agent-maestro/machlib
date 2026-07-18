@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,13 +24,14 @@ noncomputable def MC_MAX : Real := (5.0 : Real)
 noncomputable def frtb_capital_charge (var_average : Real) (var_max : Real) (multiplier : Real) : Real :=
   (multiplier * (min (max var_max var_average) CAP_MAX))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem capital_max_dominates_average (var_average : Real) (var_max : Real) (multiplier : Real)
-    (h1 : (var_average >= (0 : Real)))
-    (h2 : (var_average <= CAP_MAX))
-    (h3 : (var_max >= (0 : Real)))
-    (h4 : (var_max <= CAP_MAX))
-    (h5 : (multiplier >= MC_MIN))
-    (h6 : (multiplier <= MC_MAX)) :
+    (h_var_average : (((0 : Real) <= var_average) ∧ (var_average <= CAP_MAX)))
+    (h_var_max : (((0 : Real) <= var_max) ∧ (var_max <= CAP_MAX)))
+    (h_multiplier : ((MC_MIN <= multiplier) ∧ (multiplier <= MC_MAX)))
+    (h_clamp1 : var_average ≤ CAP_MAX) :
     True := by
   trivial
 
@@ -37,26 +41,40 @@ noncomputable def ima_total_capital (capital_unstressed : Real) (capital_stresse
   (Real.sqrt ((capital_unstressed * capital_unstressed) + (capital_stressed * capital_stressed)))
 
 theorem stressed_unstressed_pythagorean (capital_unstressed : Real) (capital_stressed : Real)
-    (h1 : (capital_unstressed >= (0 : Real)))
-    (h2 : (capital_unstressed <= CAP_MAX))
-    (h3 : (capital_stressed >= (0 : Real)))
-    (h4 : (capital_stressed <= CAP_MAX)) :
+    (h_capital_unstressed : (((0 : Real) <= capital_unstressed) ∧ (capital_unstressed <= CAP_MAX)))
+    (h_capital_stressed : (((0 : Real) <= capital_stressed) ∧ (capital_stressed <= CAP_MAX))) :
     ((ima_total_capital capital_unstressed capital_stressed) >= (0 : Real)) := by
   unfold ima_total_capital
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── diversification_pair ──
 
 noncomputable def diversification_pair (cap_i : Real) (cap_j : Real) (rho : Real) : Real :=
   ((rho * cap_i) * cap_j)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem diversification_pair_signed_by_rho (cap_i : Real) (cap_j : Real) (rho : Real)
-    (h1 : (cap_i >= (0 : Real)))
-    (h2 : (cap_i <= CAP_MAX))
-    (h3 : (cap_j >= (0 : Real)))
-    (h4 : (cap_j <= CAP_MAX))
-    (h5 : (rho >= RHO_MIN))
-    (h6 : (rho <= RHO_MAX)) :
+    (h_cap_i : (((0 : Real) <= cap_i) ∧ (cap_i <= CAP_MAX)))
+    (h_cap_j : (((0 : Real) <= cap_j) ∧ (cap_j <= CAP_MAX)))
+    (h_rho : ((RHO_MIN <= rho) ∧ (rho <= RHO_MAX))) :
     True := by
   trivial
 
@@ -66,8 +84,23 @@ noncomputable def risk_aggregate_finalize (accumulated_sum : Real) : Real :=
   (Real.sqrt accumulated_sum)
 
 theorem risk_finalize_nonneg (accumulated_sum : Real)
-    (h1 : (accumulated_sum >= (0 : Real)))
-    (h2 : (accumulated_sum <= (CAP_MAX * CAP_MAX))) :
+    (h_accumulated_sum : (((0 : Real) <= accumulated_sum) ∧ (accumulated_sum <= (CAP_MAX * CAP_MAX)))) :
     ((risk_aggregate_finalize accumulated_sum) >= (0 : Real)) := by
   unfold risk_aggregate_finalize
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

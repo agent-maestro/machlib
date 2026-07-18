@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,36 +26,50 @@ noncomputable def infusion_pid_step (error : Real) (integral : Real) (derivative
   (min (max (((kp * error) + (ki * (min (max integral (-integral_limit)) integral_limit))) + (kd * derivative)) (0 : Real)) rate_max)
 
 theorem infusion_pid_within_pump_limit (error : Real) (integral : Real) (derivative : Real) (kp : Real) (ki : Real) (kd : Real) (integral_limit : Real) (rate_max : Real)
-    (h1 : ((abs error) <= ERR_MAX))
-    (h2 : ((abs integral) <= I_LIMIT_MAX))
-    (h3 : ((abs derivative) <= ERR_MAX))
-    (h4 : (kp >= (0 : Real)))
-    (h5 : (kp <= KP_MAX))
-    (h6 : (ki >= (0 : Real)))
-    (h7 : (ki <= KI_MAX))
-    (h8 : (kd >= (0 : Real)))
-    (h9 : (kd <= KD_MAX))
-    (h10 : (integral_limit >= (0 : Real)))
-    (h11 : (integral_limit <= I_LIMIT_MAX))
-    (h12 : (rate_max >= (0 : Real)))
-    (h13 : (rate_max <= RATE_MAX)) :
+    (h_error : (-ERR_MAX ≤ error ∧ error ≤ ERR_MAX))
+    (h_integral : (-I_LIMIT_MAX ≤ integral ∧ integral ≤ I_LIMIT_MAX))
+    (h_derivative : (-ERR_MAX ≤ derivative ∧ derivative ≤ ERR_MAX))
+    (h_kp : (((0 : Real) <= kp) ∧ (kp <= KP_MAX)))
+    (h_ki : (((0 : Real) <= ki) ∧ (ki <= KI_MAX)))
+    (h_kd : (((0 : Real) <= kd) ∧ (kd <= KD_MAX)))
+    (h_integral_limit : (((0 : Real) <= integral_limit) ∧ (integral_limit <= I_LIMIT_MAX)))
+    (h_rate_max : (((0 : Real) <= rate_max) ∧ (rate_max <= RATE_MAX)))
+    (h_clamp1 : (-integral_limit) ≤ integral_limit)
+    (h_clamp2 : (0 : Real) ≤ rate_max) :
     ((infusion_pid_step error integral derivative kp ki kd integral_limit rate_max) >= (0 : Real)) := by
   unfold infusion_pid_step
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── infusion_integral_step ──
 
 noncomputable def infusion_integral_step (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real) : Real :=
   (integral_prev + (((1 : Real) - saturation_active) * (((0.5 : Real) * (error + error_prev)) * dt)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem infusion_integral_held_under_saturation (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real)
-    (h1 : ((abs integral_prev) <= I_LIMIT_MAX))
-    (h2 : ((abs error) <= ERR_MAX))
-    (h3 : ((abs error_prev) <= ERR_MAX))
-    (h4 : (dt >= (0 : Real)))
-    (h5 : (dt <= (1 : Real)))
-    (h6 : (saturation_active >= (0 : Real)))
-    (h7 : (saturation_active <= (1 : Real))) :
+    (h_integral_prev : (-I_LIMIT_MAX ≤ integral_prev ∧ integral_prev ≤ I_LIMIT_MAX))
+    (h_error : (-ERR_MAX ≤ error ∧ error ≤ ERR_MAX))
+    (h_error_prev : (-ERR_MAX ≤ error_prev ∧ error_prev ≤ ERR_MAX))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= (1 : Real))))
+    (h_saturation_active : (((0 : Real) <= saturation_active) ∧ (saturation_active <= (1 : Real)))) :
     True := by
   trivial
 
@@ -61,10 +78,12 @@ theorem infusion_integral_held_under_saturation (integral_prev : Real) (error : 
 noncomputable def bis_error (target_bis : Real) (measured_bis : Real) : Real :=
   (min (max (target_bis - measured_bis) (-50.0 : Real)) (50.0 : Real))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem bis_error_bounded (target_bis : Real) (measured_bis : Real)
-    (h1 : (target_bis >= (20.0 : Real)))
-    (h2 : (target_bis <= (80.0 : Real)))
-    (h3 : (measured_bis >= (0 : Real)))
-    (h4 : (measured_bis <= (100.0 : Real))) :
+    (h_target_bis : (((20.0 : Real) <= target_bis) ∧ (target_bis <= (80.0 : Real))))
+    (h_measured_bis : (((0 : Real) <= measured_bis) ∧ (measured_bis <= (100.0 : Real))))
+    (h_clamp1 : (-50.0 : Real) ≤ (50.0 : Real)) :
     True := by
   trivial

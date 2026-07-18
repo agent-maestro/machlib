@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,16 +28,15 @@ noncomputable def POWER_MAX : Real := (1000.0 : Real)
 noncomputable def synthetic_power_command (df_dt : Real) (frequency_meas : Real) (frequency_nominal : Real) (k_inertia : Real) (k_droop : Real) : Real :=
   (((-k_inertia) * df_dt) - (k_droop * (frequency_meas - frequency_nominal)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem synthetic_inertia_response_signed (df_dt : Real) (frequency_meas : Real) (frequency_nominal : Real) (k_inertia : Real) (k_droop : Real)
-    (h1 : ((abs df_dt) <= DF_DT_MAX))
-    (h2 : (frequency_meas >= F_MIN))
-    (h3 : (frequency_meas <= F_MAX))
-    (h4 : (frequency_nominal >= F_MIN))
-    (h5 : (frequency_nominal <= F_MAX))
-    (h6 : (k_inertia >= K_INERTIA_MIN))
-    (h7 : (k_inertia <= K_INERTIA_MAX))
-    (h8 : (k_droop >= K_DROOP_MIN))
-    (h9 : (k_droop <= K_DROOP_MAX)) :
+    (h_df_dt : (-DF_DT_MAX ≤ df_dt ∧ df_dt ≤ DF_DT_MAX))
+    (h_frequency_meas : ((F_MIN <= frequency_meas) ∧ (frequency_meas <= F_MAX)))
+    (h_frequency_nominal : ((F_MIN <= frequency_nominal) ∧ (frequency_nominal <= F_MAX)))
+    (h_k_inertia : ((K_INERTIA_MIN <= k_inertia) ∧ (k_inertia <= K_INERTIA_MAX)))
+    (h_k_droop : ((K_DROOP_MIN <= k_droop) ∧ (k_droop <= K_DROOP_MAX))) :
     True := by
   trivial
 
@@ -43,13 +45,13 @@ theorem synthetic_inertia_response_signed (df_dt : Real) (frequency_meas : Real)
 noncomputable def rocof_estimate (frequency_now : Real) (frequency_prev : Real) (dt : Real) : Real :=
   ((frequency_now - frequency_prev) / dt)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rocof_zero_at_constant_frequency (frequency_now : Real) (frequency_prev : Real) (dt : Real)
-    (h1 : (frequency_now >= F_MIN))
-    (h2 : (frequency_now <= F_MAX))
-    (h3 : (frequency_prev >= F_MIN))
-    (h4 : (frequency_prev <= F_MAX))
-    (h5 : (dt > (0 : Real)))
-    (h6 : (dt <= (1 : Real))) :
+    (h_frequency_now : ((F_MIN <= frequency_now) ∧ (frequency_now <= F_MAX)))
+    (h_frequency_prev : ((F_MIN <= frequency_prev) ∧ (frequency_prev <= F_MAX)))
+    (h_dt : (((0 : Real) < dt) ∧ (dt <= (1 : Real)))) :
     True := by
   trivial
 
@@ -58,11 +60,13 @@ theorem rocof_zero_at_constant_frequency (frequency_now : Real) (frequency_prev 
 noncomputable def headroom_limited_response (desired_power : Real) (headroom_up : Real) (headroom_down : Real) : Real :=
   (min (max desired_power (-headroom_down)) headroom_up)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem headroom_limited_within_inverter_capability (desired_power : Real) (headroom_up : Real) (headroom_down : Real)
-    (h1 : ((abs desired_power) <= POWER_MAX))
-    (h2 : (headroom_up >= (0 : Real)))
-    (h3 : (headroom_up <= POWER_MAX))
-    (h4 : (headroom_down >= (0 : Real)))
-    (h5 : (headroom_down <= POWER_MAX)) :
+    (h_desired_power : (-POWER_MAX ≤ desired_power ∧ desired_power ≤ POWER_MAX))
+    (h_headroom_up : (((0 : Real) <= headroom_up) ∧ (headroom_up <= POWER_MAX)))
+    (h_headroom_down : (((0 : Real) <= headroom_down) ∧ (headroom_down <= POWER_MAX)))
+    (h_clamp1 : (-headroom_down) ≤ headroom_up) :
     True := by
   trivial

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -28,7 +31,23 @@ theorem schwarzschild_radius_proportional_to_mass (mass_kg : Real)
     (h2 : (mass_kg <= M_MAX)) :
     ((schwarzschild_radius mass_kg) >= (0 : Real)) := by
   unfold schwarzschild_radius
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── gravitational_redshift_factor ──
 
@@ -40,10 +59,27 @@ theorem redshift_unity_at_infinity (schwarzschild_r : Real) (radius : Real)
     (h2 : (schwarzschild_r <= R_MAX))
     (h3 : (radius >= R_MIN))
     (h4 : (radius <= R_MAX))
-    (h5 : (radius > schwarzschild_r)) :
+    (h5 : (radius > schwarzschild_r))
+    (h_clamp1 : (1e-09 : Real) ≤ (1 : Real)) :
     ((gravitational_redshift_factor schwarzschild_r radius) >= (1 : Real)) := by
   unfold gravitational_redshift_factor
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── newtonian_orbital_velocity ──
 
@@ -57,7 +93,23 @@ theorem orbital_velocity_decreases_with_radius (mass_kg : Real) (radius : Real)
     (h4 : (radius <= R_MAX)) :
     ((newtonian_orbital_velocity mass_kg radius) >= (0 : Real)) := by
   unfold newtonian_orbital_velocity
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── photon_sphere_radius ──
 
@@ -69,4 +121,20 @@ theorem photon_sphere_above_horizon (schwarzschild_r : Real)
     (h2 : (schwarzschild_r <= R_MAX)) :
     ((photon_sphere_radius schwarzschild_r) >= (0 : Real)) := by
   unfold photon_sphere_radius
-  apply mul_nonneg <;> first | assumption | lit_pos
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

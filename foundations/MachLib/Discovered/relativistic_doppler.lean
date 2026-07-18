@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,9 +26,26 @@ noncomputable def recession_doppler_ratio (beta : Real) : Real :=
 theorem doppler_recession_factor_below_one (beta : Real)
     (h1 : (beta >= (0 : Real)))
     (h2 : (beta <= BETA_MAX)) :
-    ((recession_doppler_ratio beta) <= ONE) := by
+    (((recession_doppler_ratio beta) <= ONE)) ∧ (((recession_doppler_ratio beta) > (0 : Real))) := by
   unfold recession_doppler_ratio
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── approach_doppler_ratio ──
 
@@ -37,7 +57,23 @@ theorem doppler_approach_factor_above_one (beta : Real)
     (h2 : (beta <= BETA_MAX)) :
     ((approach_doppler_ratio beta) >= ONE) := by
   unfold approach_doppler_ratio
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── observed_frequency ──
 
@@ -51,7 +87,23 @@ theorem doppler_observed_frequency_positive (source_frequency : Real) (doppler_r
     (h4 : (doppler_ratio <= (1000000.0 : Real))) :
     ((observed_frequency source_frequency doppler_ratio) > (0 : Real)) := by
   unfold observed_frequency
-  apply mul_pos <;> first | assumption | exact exp_pos _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── lorentz_factor ──
 
@@ -63,7 +115,23 @@ theorem lorentz_factor_at_least_one (beta : Real)
     (h2 : (beta <= BETA_MAX)) :
     ((lorentz_factor beta) >= ONE) := by
   unfold lorentz_factor
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── velocity_to_beta ──
 
@@ -73,6 +141,23 @@ noncomputable def velocity_to_beta (velocity_m_per_s : Real) : Real :=
 theorem beta_in_unit_interval_for_subluminal_v (velocity_m_per_s : Real)
     (h1 : (velocity_m_per_s >= (0 : Real)))
     (h2 : (velocity_m_per_s <= (BETA_MAX * C_LIGHT))) :
-    ((velocity_to_beta velocity_m_per_s) >= (0 : Real)) := by
+    (((velocity_to_beta velocity_m_per_s) >= (0 : Real))) ∧ (((velocity_to_beta velocity_m_per_s) <= BETA_MAX)) := by
   unfold velocity_to_beta
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

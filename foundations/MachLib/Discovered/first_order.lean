@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -28,6 +31,23 @@ theorem first_order_decay_monotone (initial_concentration : Real) (rate_constant
     (h3 : (rate_constant <= K_MAX))
     (h4 : (time >= (0 : Real)))
     (h5 : (time <= T_MAX)) :
-    ((concentration_at initial_concentration rate_constant time) >= (0 : Real)) := by
+    (((concentration_at initial_concentration rate_constant time) >= (0 : Real))) ∧ (((concentration_at initial_concentration rate_constant time) <= initial_concentration)) := by
   unfold concentration_at
-  apply mul_nonneg <;> first | assumption | exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

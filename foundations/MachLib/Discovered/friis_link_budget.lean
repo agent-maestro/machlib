@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -39,7 +42,23 @@ theorem received_power_decreases_with_distance (p_tx : Real) (g_tx : Real) (g_rx
     (h10 : (distance_m <= D_MAX)) :
     ((received_power_linear p_tx g_tx g_rx frequency_hz distance_m) >= (0 : Real)) := by
   unfold received_power_linear
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── free_space_path_loss_db ──
 
@@ -53,13 +72,32 @@ theorem fspl_db_increases_with_log_distance (distance_km : Real) (frequency_mhz 
     (h4 : (frequency_mhz <= F_MHZ_MAX)) :
     ((free_space_path_loss_db distance_km frequency_mhz) >= (0 : Real)) := by
   unfold free_space_path_loss_db
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── link_margin_db ──
 
 noncomputable def link_margin_db (p_rx_dbm : Real) (sensitivity_dbm : Real) : Real :=
   (p_rx_dbm - sensitivity_dbm)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem link_margin_signed_by_received_minus_sensitivity (p_rx_dbm : Real) (sensitivity_dbm : Real)
     (h1 : (p_rx_dbm >= P_DBM_MIN))
     (h2 : (p_rx_dbm <= P_DBM_MAX))

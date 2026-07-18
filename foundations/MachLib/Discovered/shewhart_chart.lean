@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,13 +25,13 @@ noncomputable def L_MAX : Real := (6.0 : Real)
 noncomputable def upper_control_limit (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real) : Real :=
   (centerline + ((sigma_factor * sigma) / (Real.sqrt subgroup_size)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ucl_above_centerline (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real)
-    (h1 : (sigma >= SIGMA_MIN))
-    (h2 : (sigma <= SIGMA_MAX))
-    (h3 : (subgroup_size >= N_MIN))
-    (h4 : (subgroup_size <= N_MAX))
-    (h5 : (sigma_factor >= L_MIN))
-    (h6 : (sigma_factor <= L_MAX)) :
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h_subgroup_size : ((N_MIN <= subgroup_size) ∧ (subgroup_size <= N_MAX)))
+    (h_sigma_factor : ((L_MIN <= sigma_factor) ∧ (sigma_factor <= L_MAX))) :
     True := by
   trivial
 
@@ -37,13 +40,13 @@ theorem ucl_above_centerline (centerline : Real) (sigma : Real) (subgroup_size :
 noncomputable def lower_control_limit (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real) : Real :=
   (centerline - ((sigma_factor * sigma) / (Real.sqrt subgroup_size)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem lcl_below_centerline (centerline : Real) (sigma : Real) (subgroup_size : Real) (sigma_factor : Real)
-    (h1 : (sigma >= SIGMA_MIN))
-    (h2 : (sigma <= SIGMA_MAX))
-    (h3 : (subgroup_size >= N_MIN))
-    (h4 : (subgroup_size <= N_MAX))
-    (h5 : (sigma_factor >= L_MIN))
-    (h6 : (sigma_factor <= L_MAX)) :
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h_subgroup_size : ((N_MIN <= subgroup_size) ∧ (subgroup_size <= N_MAX)))
+    (h_sigma_factor : ((L_MIN <= sigma_factor) ∧ (sigma_factor <= L_MAX))) :
     True := by
   trivial
 
@@ -52,12 +55,15 @@ theorem lcl_below_centerline (centerline : Real) (sigma : Real) (subgroup_size :
 noncomputable def process_capability (mean : Real) (sigma : Real) (lower_spec_limit : Real) (upper_spec_limit : Real) : Real :=
   ((min (max (mean - lower_spec_limit) (0 : Real)) (upper_spec_limit - mean)) / ((3.0 : Real) * sigma))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem cpk_zero_when_at_spec_boundary (mean : Real) (sigma : Real) (lower_spec_limit : Real) (upper_spec_limit : Real)
-    (h1 : (sigma >= SIGMA_MIN))
-    (h2 : (sigma <= SIGMA_MAX))
-    (h3 : (lower_spec_limit < upper_spec_limit))
-    (h4 : (mean >= lower_spec_limit))
-    (h5 : (mean <= upper_spec_limit)) :
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h1 : (lower_spec_limit < upper_spec_limit))
+    (h2 : (mean >= lower_spec_limit))
+    (h3 : (mean <= upper_spec_limit))
+    (h_clamp1 : (0 : Real) ≤ upper_margin) :
     True := by
   trivial
 
@@ -66,10 +72,11 @@ theorem cpk_zero_when_at_spec_boundary (mean : Real) (sigma : Real) (lower_spec_
 noncomputable def subgroup_z_score (subgroup_mean : Real) (target : Real) (sigma : Real) (subgroup_size : Real) : Real :=
   (((subgroup_mean - target) * (Real.sqrt subgroup_size)) / sigma)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem z_score_zero_at_target (subgroup_mean : Real) (target : Real) (sigma : Real) (subgroup_size : Real)
-    (h1 : (sigma >= SIGMA_MIN))
-    (h2 : (sigma <= SIGMA_MAX))
-    (h3 : (subgroup_size >= N_MIN))
-    (h4 : (subgroup_size <= N_MAX)) :
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h_subgroup_size : ((N_MIN <= subgroup_size) ∧ (subgroup_size <= N_MAX))) :
     True := by
   trivial

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,17 +27,15 @@ noncomputable def AREA_MAX : Real := (100.0 : Real)
 noncomputable def gross_thrust (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real) : Real :=
   ((mass_flow * exhaust_velocity) + ((exit_pressure - ambient_pressure) * exit_area))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem gross_thrust_nonneg_for_positive_mass_flow (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real)
-    (h1 : (mass_flow >= MDOT_MIN))
-    (h2 : (mass_flow <= MDOT_MAX))
-    (h3 : (exhaust_velocity >= (0 : Real)))
-    (h4 : (exhaust_velocity <= VEL_MAX))
-    (h5 : (exit_pressure >= P_MIN))
-    (h6 : (exit_pressure <= P_MAX))
-    (h7 : (ambient_pressure >= P_MIN))
-    (h8 : (ambient_pressure <= P_MAX))
-    (h9 : (exit_area >= AREA_MIN))
-    (h10 : (exit_area <= AREA_MAX)) :
+    (h_mass_flow : ((MDOT_MIN <= mass_flow) ∧ (mass_flow <= MDOT_MAX)))
+    (h_exhaust_velocity : (((0 : Real) <= exhaust_velocity) ∧ (exhaust_velocity <= VEL_MAX)))
+    (h_exit_pressure : ((P_MIN <= exit_pressure) ∧ (exit_pressure <= P_MAX)))
+    (h_ambient_pressure : ((P_MIN <= ambient_pressure) ∧ (ambient_pressure <= P_MAX)))
+    (h_exit_area : ((AREA_MIN <= exit_area) ∧ (exit_area <= AREA_MAX))) :
     True := by
   trivial
 
@@ -43,12 +44,13 @@ theorem gross_thrust_nonneg_for_positive_mass_flow (mass_flow : Real) (exhaust_v
 noncomputable def net_thrust (gross : Real) (mass_flow : Real) (freestream_velocity : Real) : Real :=
   (gross - (mass_flow * freestream_velocity))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem net_thrust_zero_when_velocity_match (gross : Real) (mass_flow : Real) (freestream_velocity : Real)
-    (h1 : ((abs gross) <= ((MDOT_MAX * VEL_MAX) + (P_MAX * AREA_MAX))))
-    (h2 : (mass_flow >= MDOT_MIN))
-    (h3 : (mass_flow <= MDOT_MAX))
-    (h4 : (freestream_velocity >= (0 : Real)))
-    (h5 : (freestream_velocity <= VEL_MAX)) :
+    (h_gross : (-((MDOT_MAX * VEL_MAX) + (P_MAX * AREA_MAX)) ≤ gross ∧ gross ≤ ((MDOT_MAX * VEL_MAX) + (P_MAX * AREA_MAX))))
+    (h_mass_flow : ((MDOT_MIN <= mass_flow) ∧ (mass_flow <= MDOT_MAX)))
+    (h_freestream_velocity : (((0 : Real) <= freestream_velocity) ∧ (freestream_velocity <= VEL_MAX))) :
     True := by
   trivial
 
@@ -58,10 +60,24 @@ noncomputable def specific_impulse (thrust : Real) (mass_flow : Real) : Real :=
   (thrust / (mass_flow * G_GRAVITY))
 
 theorem isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow : Real)
-    (h1 : (thrust >= (0 : Real)))
-    (h2 : (thrust <= (10000000.0 : Real)))
-    (h3 : (mass_flow >= (0.001 : Real)))
-    (h4 : (mass_flow <= MDOT_MAX)) :
+    (h_thrust : (((0 : Real) <= thrust) ∧ (thrust <= (10000000.0 : Real))))
+    (h_mass_flow : (((0.001 : Real) <= mass_flow) ∧ (mass_flow <= MDOT_MAX))) :
     ((specific_impulse thrust mass_flow) >= (0 : Real)) := by
   unfold specific_impulse
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

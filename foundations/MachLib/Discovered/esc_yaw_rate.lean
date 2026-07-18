@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,14 +26,14 @@ noncomputable def VCH_MAX : Real := (50.0 : Real)
 noncomputable def yaw_rate_reference (speed : Real) (steer_angle : Real) (wheelbase : Real) (char_speed : Real) : Real :=
   (((speed / wheelbase) * (Real.tan steer_angle)) / ((1 : Real) + ((speed * speed) / (char_speed * char_speed))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem yaw_rate_reference_increases_with_steer (speed : Real) (steer_angle : Real) (wheelbase : Real) (char_speed : Real)
-    (h1 : (speed >= V_MIN))
-    (h2 : (speed <= V_MAX))
-    (h3 : ((abs steer_angle) <= STEER_MAX))
-    (h4 : (wheelbase >= L_MIN))
-    (h5 : (wheelbase <= L_MAX))
-    (h6 : (char_speed >= VCH_MIN))
-    (h7 : (char_speed <= VCH_MAX)) :
+    (h_speed : ((V_MIN <= speed) ∧ (speed <= V_MAX)))
+    (h_steer_angle : (-STEER_MAX ≤ steer_angle ∧ steer_angle ≤ STEER_MAX))
+    (h_wheelbase : ((L_MIN <= wheelbase) ∧ (wheelbase <= L_MAX)))
+    (h_char_speed : ((VCH_MIN <= char_speed) ∧ (char_speed <= VCH_MAX))) :
     True := by
   trivial
 
@@ -39,9 +42,12 @@ theorem yaw_rate_reference_increases_with_steer (speed : Real) (steer_angle : Re
 noncomputable def yaw_rate_error (measured : Real) (reference : Real) : Real :=
   (measured - reference)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem yaw_error_zero_at_reference_match (measured : Real) (reference : Real)
-    (h1 : ((abs measured) <= (5.0 : Real)))
-    (h2 : ((abs reference) <= (5.0 : Real))) :
+    (h_measured : (-(5.0 : Real) ≤ measured ∧ measured ≤ (5.0 : Real)))
+    (h_reference : (-(5.0 : Real) ≤ reference ∧ reference ≤ (5.0 : Real))) :
     True := by
   trivial
 
@@ -50,10 +56,12 @@ theorem yaw_error_zero_at_reference_match (measured : Real) (reference : Real)
 noncomputable def sideslip_rate (lateral_accel : Real) (yaw_rate : Real) (speed : Real) : Real :=
   ((lateral_accel / speed) - yaw_rate)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem sideslip_rate_well_defined_at_speed (lateral_accel : Real) (yaw_rate : Real) (speed : Real)
-    (h1 : ((abs lateral_accel) <= (12.0 : Real)))
-    (h2 : ((abs yaw_rate) <= (5.0 : Real)))
-    (h3 : (speed >= V_MIN))
-    (h4 : (speed <= V_MAX)) :
+    (h_lateral_accel : (-(12.0 : Real) ≤ lateral_accel ∧ lateral_accel ≤ (12.0 : Real)))
+    (h_yaw_rate : (-(5.0 : Real) ≤ yaw_rate ∧ yaw_rate ≤ (5.0 : Real)))
+    (h_speed : ((V_MIN <= speed) ∧ (speed <= V_MAX))) :
     True := by
   trivial

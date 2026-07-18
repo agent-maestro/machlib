@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,6 +27,9 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def rotor_angle_step (delta_prev : Real) (omega : Real) (dt : Real) : Real :=
   (delta_prev + (omega * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rotor_angle_step_linear_in_dt (delta_prev : Real) (omega : Real) (dt : Real)
     (h1 : ((abs delta_prev) <= DELTA_MAX))
     (h2 : ((abs omega) <= OMEGA_MAX))
@@ -37,6 +43,9 @@ theorem rotor_angle_step_linear_in_dt (delta_prev : Real) (omega : Real) (dt : R
 noncomputable def rotor_speed_step (omega_prev : Real) (p_mechanical : Real) (p_electrical : Real) (inertia : Real) (damping : Real) (dt : Real) : Real :=
   (omega_prev + ((dt * ((p_mechanical - p_electrical) - (damping * omega_prev))) / inertia))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rotor_speed_step_balances_power (omega_prev : Real) (p_mechanical : Real) (p_electrical : Real) (inertia : Real) (damping : Real) (dt : Real)
     (h1 : ((abs omega_prev) <= OMEGA_MAX))
     (h2 : ((abs p_mechanical) <= POWER_MAX))
@@ -55,6 +64,9 @@ theorem rotor_speed_step_balances_power (omega_prev : Real) (p_mechanical : Real
 noncomputable def power_angle_curve (internal_emf : Real) (bus_voltage : Real) (reactance : Real) (rotor_angle : Real) : Real :=
   (((internal_emf * bus_voltage) * (Real.sin rotor_angle)) / reactance)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem power_angle_zero_at_zero_delta (internal_emf : Real) (bus_voltage : Real) (reactance : Real) (rotor_angle : Real)
     (h1 : (internal_emf >= (0 : Real)))
     (h2 : (internal_emf <= (5.0 : Real)))

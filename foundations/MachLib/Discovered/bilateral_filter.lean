@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -31,9 +34,26 @@ theorem bilateral_weight_in_unit_interval (dx : Real) (dy : Real) (di : Real) (s
     (h5 : (sigma_spatial <= SIGMA_MAX))
     (h6 : (sigma_range >= SIGMA_MIN))
     (h7 : (sigma_range <= SIGMA_MAX)) :
-    ((bilateral_weight dx dy di sigma_spatial sigma_range) >= (0 : Real)) := by
+    (((bilateral_weight dx dy di sigma_spatial sigma_range) >= (0 : Real))) ∧ (((bilateral_weight dx dy di sigma_spatial sigma_range) <= (1 : Real))) := by
   unfold bilateral_weight
-  exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── spatial_gaussian_weight ──
 
@@ -45,6 +65,23 @@ theorem spatial_gaussian_weight_in_unit_interval (dx : Real) (dy : Real) (sigma 
     (h2 : ((abs dy) <= COORD_MAX))
     (h3 : (sigma >= SIGMA_MIN))
     (h4 : (sigma <= SIGMA_MAX)) :
-    ((spatial_gaussian_weight dx dy sigma) >= (0 : Real)) := by
+    (((spatial_gaussian_weight dx dy sigma) >= (0 : Real))) ∧ (((spatial_gaussian_weight dx dy sigma) <= (1 : Real))) := by
   unfold spatial_gaussian_weight
-  exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,13 +30,29 @@ noncomputable def black_scholes_call (spot : Real) (strike : Real) (rate : Real)
   ((spot * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((bs_d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d1 spot strike rate vol time_to_expiry)) * (bs_d1 spot strike rate vol time_to_expiry)) * (bs_d1 spot strike rate vol time_to_expiry)))))))) - ((strike * (Real.exp ((-rate) * time_to_expiry))) * (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * (((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry))) + (((GELU_C3 * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))) * ((bs_d1 spot strike rate vol time_to_expiry) - (vol * (Real.sqrt time_to_expiry)))))))))))
 
 theorem black_scholes_call_no_arb (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (vol > (0 : Real)))
-    (h4 : (time_to_expiry > TINY_T)) :
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (strike > (0 : Real)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((black_scholes_call spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold black_scholes_call
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── black_scholes_put ──
 
@@ -41,10 +60,26 @@ noncomputable def black_scholes_put (spot : Real) (strike : Real) (rate : Real) 
   (((black_scholes_call spot strike rate vol time_to_expiry) - spot) + (strike * (Real.exp ((-rate) * time_to_expiry))))
 
 theorem black_scholes_put_via_parity (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (vol > (0 : Real)))
-    (h4 : (time_to_expiry > TINY_T)) :
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (strike > (0 : Real)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((black_scholes_put spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold black_scholes_put
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -28,13 +31,32 @@ theorem stefan_boltzmann_monotone_in_T (emissivity : Real) (temperature_k : Real
     (h4 : (temperature_k <= T_MAX)) :
     ((radiative_flux emissivity temperature_k) >= (0 : Real)) := by
   unfold radiative_flux
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── net_exchange ──
 
 noncomputable def net_exchange (emissivity : Real) (surface_t : Real) (ambient_t : Real) : Real :=
   ((emissivity * SIGMA_SB) * ((surface_t ^ (4.0 : Real)) - (ambient_t ^ (4.0 : Real))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem net_exchange_zero_at_equilibrium (emissivity : Real) (surface_t : Real) (ambient_t : Real)
     (h1 : (emissivity >= EPS_MIN))
     (h2 : (emissivity <= EPS_MAX))
@@ -55,4 +77,20 @@ theorem wien_inversely_proportional_to_T (temperature_k : Real)
     (h2 : (temperature_k <= T_MAX)) :
     ((wien_peak_wavelength temperature_k) > (0 : Real)) := by
   unfold wien_peak_wavelength
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

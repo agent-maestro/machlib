@@ -2,21 +2,13 @@
 -- Source module: defibrillator_energy
 -- Source file:   <private>/defibrillator_energy.eml
 -- Verified fns:  discharge_voltage, phase1_energy, biphasic_total_energy, impedance_compensation_v0
---
--- 2026-06-14: The Forge stub for `discharge_voltage_decays_exponentially`
--- is a `True := by trivial` placeholder. The strengthened safety-critical
--- claim — sign preservation under non-negative initial voltage (no
--- polarity inversion mid-phase) — is proven at
---   MachLib.Forge.DefibrillatorEnergy.discharge_voltage_signpreserving
--- in MachLib/Applications/DischargeVoltageSafety.lean (IEC 62304 Class C).
--- phase1_energy_nonneg and biphasic_total_energy_nonneg remain as
--- Forge-emitted sorry stubs for follow-up.
--- compensation_v0_increases_with_target_energy already has a concrete
--- proof (sqrt_nonneg) shipped in this file.
 
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -35,14 +27,14 @@ noncomputable def HALF : Real := (0.5 : Real)
 noncomputable def discharge_voltage (initial_voltage : Real) (duration : Real) (capacitance : Real) (impedance : Real) : Real :=
   (initial_voltage * (Real.exp ((-duration) / (impedance * capacitance))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem discharge_voltage_decays_exponentially (initial_voltage : Real) (duration : Real) (capacitance : Real) (impedance : Real)
-    (h1 : ((abs initial_voltage) <= V_MAX))
-    (h2 : (duration >= (0 : Real)))
-    (h3 : (duration <= T_MAX))
-    (h4 : (capacitance >= C_MIN))
-    (h5 : (capacitance <= C_MAX))
-    (h6 : (impedance >= R_MIN))
-    (h7 : (impedance <= R_MAX)) :
+    (h_initial_voltage : (-V_MAX ≤ initial_voltage ∧ initial_voltage ≤ V_MAX))
+    (h_duration : (((0 : Real) <= duration) ∧ (duration <= T_MAX)))
+    (h_capacitance : ((C_MIN <= capacitance) ∧ (capacitance <= C_MAX)))
+    (h_impedance : ((R_MIN <= impedance) ∧ (impedance <= R_MAX))) :
     True := by
   trivial
 
@@ -52,14 +44,29 @@ noncomputable def phase1_energy (initial_voltage : Real) (final_voltage : Real) 
   ((HALF * capacitance) * ((initial_voltage * initial_voltage) - (final_voltage * final_voltage)))
 
 theorem phase1_energy_nonneg (initial_voltage : Real) (final_voltage : Real) (capacitance : Real)
-    (h1 : ((abs initial_voltage) <= V_MAX))
-    (h2 : ((abs final_voltage) <= V_MAX))
-    (h3 : ((abs final_voltage) <= (abs initial_voltage)))
-    (h4 : (capacitance >= C_MIN))
-    (h5 : (capacitance <= C_MAX)) :
+    (h_initial_voltage : (-V_MAX ≤ initial_voltage ∧ initial_voltage ≤ V_MAX))
+    (h_final_voltage : (-V_MAX ≤ final_voltage ∧ final_voltage ≤ V_MAX))
+    (h_capacitance : ((C_MIN <= capacitance) ∧ (capacitance <= C_MAX)))
+    (h1 : ((abs final_voltage) <= (abs initial_voltage))) :
     ((phase1_energy initial_voltage final_voltage capacitance) >= (0 : Real)) := by
   unfold phase1_energy
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── biphasic_total_energy ──
 
@@ -67,13 +74,29 @@ noncomputable def biphasic_total_energy (initial_voltage : Real) (end_voltage : 
   ((HALF * capacitance) * (min (max ((initial_voltage * initial_voltage) - (end_voltage * end_voltage)) (0 : Real)) (V_MAX * V_MAX)))
 
 theorem biphasic_total_energy_nonneg (initial_voltage : Real) (end_voltage : Real) (capacitance : Real)
-    (h1 : ((abs initial_voltage) <= V_MAX))
-    (h2 : ((abs end_voltage) <= V_MAX))
-    (h3 : (capacitance >= C_MIN))
-    (h4 : (capacitance <= C_MAX)) :
+    (h_initial_voltage : (-V_MAX ≤ initial_voltage ∧ initial_voltage ≤ V_MAX))
+    (h_end_voltage : (-V_MAX ≤ end_voltage ∧ end_voltage ≤ V_MAX))
+    (h_capacitance : ((C_MIN <= capacitance) ∧ (capacitance <= C_MAX)))
+    (h_clamp1 : (0 : Real) ≤ (V_MAX * V_MAX)) :
     ((biphasic_total_energy initial_voltage end_voltage capacitance) >= (0 : Real)) := by
   unfold biphasic_total_energy
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── impedance_compensation_v0 ──
 
@@ -81,14 +104,27 @@ noncomputable def impedance_compensation_v0 (target_joules : Real) (capacitance 
   (Real.sqrt (((2.0 : Real) * target_joules) / (min (max (capacitance * ((1 : Real) - (Real.exp (((-2.0 : Real) * duration) / (impedance * capacitance))))) (1e-09 : Real)) (1 : Real))))
 
 theorem compensation_v0_increases_with_target_energy (target_joules : Real) (capacitance : Real) (duration : Real) (impedance : Real)
-    (h1 : (target_joules >= (0 : Real)))
-    (h2 : (target_joules <= (360.0 : Real)))
-    (h3 : (capacitance >= C_MIN))
-    (h4 : (capacitance <= C_MAX))
-    (h5 : (duration >= T_MIN))
-    (h6 : (duration <= T_MAX))
-    (h7 : (impedance >= R_MIN))
-    (h8 : (impedance <= R_MAX)) :
+    (h_target_joules : (((0 : Real) <= target_joules) ∧ (target_joules <= (360.0 : Real))))
+    (h_capacitance : ((C_MIN <= capacitance) ∧ (capacitance <= C_MAX)))
+    (h_duration : ((T_MIN <= duration) ∧ (duration <= T_MAX)))
+    (h_impedance : ((R_MIN <= impedance) ∧ (impedance <= R_MAX)))
+    (h_clamp1 : (1e-09 : Real) ≤ (1 : Real)) :
     ((impedance_compensation_v0 target_joules capacitance duration impedance) >= (0 : Real)) := by
   unfold impedance_compensation_v0
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

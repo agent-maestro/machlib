@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,32 +25,44 @@ noncomputable def tsiolkovsky_dv (exhaust_velocity : Real) (initial_mass : Real)
   (exhaust_velocity * (Real.log (initial_mass / final_mass)))
 
 theorem tsiolkovsky_dv_monotone_in_mass_ratio (exhaust_velocity : Real) (initial_mass : Real) (final_mass : Real)
-    (h1 : (exhaust_velocity >= (0 : Real)))
-    (h2 : (exhaust_velocity <= VEL_MAX))
-    (h3 : (initial_mass >= MASS_MIN))
-    (h4 : (initial_mass <= MASS_MAX))
-    (h5 : (final_mass >= MASS_MIN))
-    (h6 : (final_mass <= initial_mass)) :
+    (h_exhaust_velocity : (((0 : Real) <= exhaust_velocity) ∧ (exhaust_velocity <= VEL_MAX)))
+    (h_initial_mass : ((MASS_MIN <= initial_mass) ∧ (initial_mass <= MASS_MAX)))
+    (h_final_mass : (final_mass >= MASS_MIN))
+    (h1 : (final_mass <= initial_mass)) :
     ((tsiolkovsky_dv exhaust_velocity initial_mass final_mass) >= (0 : Real)) := by
   unfold tsiolkovsky_dv
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── rocket_gross_thrust ──
 
 noncomputable def rocket_gross_thrust (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real) : Real :=
   ((mass_flow * exhaust_velocity) + ((exit_pressure - ambient_pressure) * exit_area))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rocket_gross_thrust_nonneg_for_positive_mass_flow (mass_flow : Real) (exhaust_velocity : Real) (exit_pressure : Real) (ambient_pressure : Real) (exit_area : Real)
-    (h1 : (mass_flow >= (0 : Real)))
-    (h2 : (mass_flow <= (10000.0 : Real)))
-    (h3 : (exhaust_velocity >= (0 : Real)))
-    (h4 : (exhaust_velocity <= VEL_MAX))
-    (h5 : (exit_pressure >= (0 : Real)))
-    (h6 : (exit_pressure <= (100000000.0 : Real)))
-    (h7 : (ambient_pressure >= (0 : Real)))
-    (h8 : (ambient_pressure <= (1000000.0 : Real)))
-    (h9 : (exit_area >= (0.001 : Real)))
-    (h10 : (exit_area <= (100.0 : Real))) :
+    (h_mass_flow : (((0 : Real) <= mass_flow) ∧ (mass_flow <= (10000.0 : Real))))
+    (h_exhaust_velocity : (((0 : Real) <= exhaust_velocity) ∧ (exhaust_velocity <= VEL_MAX)))
+    (h_exit_pressure : (((0 : Real) <= exit_pressure) ∧ (exit_pressure <= (100000000.0 : Real))))
+    (h_ambient_pressure : (((0 : Real) <= ambient_pressure) ∧ (ambient_pressure <= (1000000.0 : Real))))
+    (h_exit_area : (((0.001 : Real) <= exit_area) ∧ (exit_area <= (100.0 : Real)))) :
     True := by
   trivial
 
@@ -57,10 +72,25 @@ noncomputable def rocket_specific_impulse (thrust : Real) (mass_flow : Real) : R
   (thrust / (mass_flow * G_GRAVITY))
 
 theorem rocket_isp_inverse_proportional_to_mass_flow (thrust : Real) (mass_flow : Real)
-    (h1 : (thrust >= (0 : Real)))
-    (h2 : (thrust <= (100000000.0 : Real)))
-    (h3 : (mass_flow >= (0.001 : Real)))
-    (h4 : (mass_flow <= (10000.0 : Real))) :
-    ((rocket_specific_impulse thrust mass_flow) >= (0 : Real)) := by
+    (h_thrust : (((0 : Real) <= thrust) ∧ (thrust <= (100000000.0 : Real))))
+    (h_mass_flow : (((0.001 : Real) <= mass_flow) ∧ (mass_flow <= (10000.0 : Real)))) :
+    (((rocket_specific_impulse thrust mass_flow) >= (0 : Real))) ∧ (((rocket_specific_impulse thrust mass_flow) <= ISP_MAX)) := by
   unfold rocket_specific_impulse
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

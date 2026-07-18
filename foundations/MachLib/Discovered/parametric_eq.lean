@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,6 +30,9 @@ axiom normalised_freq (f0 : Real) (sample_rate : Real) : Real  -- helper (axioma
 noncomputable def cookbook_alpha (omega : Real) (q : Real) : Real :=
   ((Real.sin omega) / ((2.0 : Real) * q))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem alpha_inverse_proportional_to_q (omega : Real) (q : Real)
     (h1 : (omega >= (0 : Real)))
     (h2 : (omega <= (6.2832 : Real)))
@@ -40,6 +46,9 @@ theorem alpha_inverse_proportional_to_q (omega : Real) (q : Real)
 noncomputable def peaking_b0 (omega : Real) (alpha : Real) (gain_amp : Real) : Real :=
   (((1 : Real) + (alpha * gain_amp)) / ((1 : Real) + (alpha / gain_amp)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem peaking_b0_unity_at_zero_gain (omega : Real) (alpha : Real) (gain_amp : Real)
     (h1 : (omega >= (0 : Real)))
     (h2 : (omega <= (6.2832 : Real)))
@@ -60,4 +69,20 @@ theorem gain_amp_unity_at_zero_db (gain_db : Real)
     (h2 : (gain_db <= GAIN_DB_MAX)) :
     ((gain_amplitude gain_db) > (0 : Real)) := by
   unfold gain_amplitude
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

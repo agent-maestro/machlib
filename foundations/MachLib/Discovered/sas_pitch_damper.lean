@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,11 +26,14 @@ noncomputable def ELEV_MAX : Real := (0.7 : Real)
 noncomputable def sas_pitch_command (pitch_rate_meas : Real) (pitch_rate_cmd : Real) (gain : Real) : Real :=
   (min (max ((-gain) * (pitch_rate_meas - pitch_rate_cmd)) (-ELEV_MAX)) ELEV_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem sas_pitch_command_signed_by_rate_error (pitch_rate_meas : Real) (pitch_rate_cmd : Real) (gain : Real)
-    (h1 : ((abs pitch_rate_meas) <= Q_MAX))
-    (h2 : ((abs pitch_rate_cmd) <= Q_MAX))
-    (h3 : (gain >= (0 : Real)))
-    (h4 : (gain <= K_BASE_MAX)) :
+    (h_pitch_rate_meas : (-Q_MAX ≤ pitch_rate_meas ∧ pitch_rate_meas ≤ Q_MAX))
+    (h_pitch_rate_cmd : (-Q_MAX ≤ pitch_rate_cmd ∧ pitch_rate_cmd ≤ Q_MAX))
+    (h_gain : (((0 : Real) <= gain) ∧ (gain <= K_BASE_MAX)))
+    (h_clamp1 : (-ELEV_MAX) ≤ ELEV_MAX) :
     True := by
   trivial
 
@@ -37,26 +43,44 @@ noncomputable def scheduled_gain (base_gain : Real) (mach : Real) (altitude : Re
   (min (max (base_gain * (((1 : Real) + (a_mach * mach)) + (a_altitude * (altitude / H_MAX)))) (0 : Real)) ((5.0 : Real) * K_BASE_MAX))
 
 theorem scheduled_gain_increases_with_dynamic_pressure (base_gain : Real) (mach : Real) (altitude : Real) (a_mach : Real) (a_altitude : Real)
-    (h1 : (base_gain >= (0 : Real)))
-    (h2 : (base_gain <= K_BASE_MAX))
-    (h3 : (mach >= (0 : Real)))
-    (h4 : (mach <= M_MAX))
-    (h5 : (altitude >= (0 : Real)))
-    (h6 : (altitude <= H_MAX))
-    (h7 : ((abs a_mach) <= A_M_MAX))
-    (h8 : ((abs a_altitude) <= A_H_MAX)) :
+    (h_base_gain : (((0 : Real) <= base_gain) ∧ (base_gain <= K_BASE_MAX)))
+    (h_mach : (((0 : Real) <= mach) ∧ (mach <= M_MAX)))
+    (h_altitude : (((0 : Real) <= altitude) ∧ (altitude <= H_MAX)))
+    (h_a_mach : (-A_M_MAX ≤ a_mach ∧ a_mach ≤ A_M_MAX))
+    (h_a_altitude : (-A_H_MAX ≤ a_altitude ∧ a_altitude ≤ A_H_MAX))
+    (h_clamp1 : (0 : Real) ≤ ((5.0 : Real) * K_BASE_MAX)) :
     ((scheduled_gain base_gain mach altitude a_mach a_altitude) >= (0 : Real)) := by
   unfold scheduled_gain
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── elevator_with_trim ──
 
 noncomputable def elevator_with_trim (sas_command : Real) (pilot_stick : Real) (trim_bias : Real) : Real :=
   (min (max ((sas_command + pilot_stick) + trim_bias) (-ELEV_MAX)) ELEV_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem trim_bias_combined_within_authority (sas_command : Real) (pilot_stick : Real) (trim_bias : Real)
-    (h1 : ((abs sas_command) <= ELEV_MAX))
-    (h2 : ((abs pilot_stick) <= ELEV_MAX))
-    (h3 : ((abs trim_bias) <= ELEV_MAX)) :
+    (h_sas_command : (-ELEV_MAX ≤ sas_command ∧ sas_command ≤ ELEV_MAX))
+    (h_pilot_stick : (-ELEV_MAX ≤ pilot_stick ∧ pilot_stick ≤ ELEV_MAX))
+    (h_trim_bias : (-ELEV_MAX ≤ trim_bias ∧ trim_bias ≤ ELEV_MAX))
+    (h_clamp1 : (-ELEV_MAX) ≤ ELEV_MAX) :
     True := by
   trivial

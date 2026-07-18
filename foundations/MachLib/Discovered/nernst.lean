@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,8 +25,11 @@ axiom pH_from_potential (e_observed : Real) (e_reference : Real) : Real  -- help
 -- ── electrode_potential ──
 
 noncomputable def electrode_potential (standard_potential : Real) (n_electrons : Real) (temperature : Real) (reaction_quotient : Real) : Real :=
-  (standard_potential - (((R_GAS * temperature) / (n_electrons * F_FARAD)) * (log reaction_quotient)))
+  (standard_potential - (((R_GAS * temperature) / (n_electrons * F_FARAD)) * (Real.log reaction_quotient)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem nernst_monotone_in_q (standard_potential : Real) (n_electrons : Real) (temperature : Real) (reaction_quotient : Real)
     (h1 : (standard_potential >= (-E0_MAX)))
     (h2 : (standard_potential <= E0_MAX))

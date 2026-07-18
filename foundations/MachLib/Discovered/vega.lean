@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,10 +27,26 @@ noncomputable def bs_vega (spot : Real) (strike : Real) (rate : Real) (vol : Rea
   ((spot * (SQRT_2_PI_INV * (Real.exp (((-HALF) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))) * (Real.sqrt time_to_expiry))
 
 theorem bs_vega_non_negative (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (vol > (0 : Real)))
-    (h4 : (time_to_expiry > TINY_T)) :
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (strike > (0 : Real)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : (time_to_expiry > TINY_T)) :
     ((bs_vega spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold bs_vega
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

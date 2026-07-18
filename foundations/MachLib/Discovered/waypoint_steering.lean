@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,10 +25,13 @@ noncomputable def LAT_ACCEL_MAX : Real := (100.0 : Real)
 noncomputable def eta_angle (cross_track : Real) (along_track : Real) (heading : Real) : Real :=
   ((atan2 cross_track along_track) - heading)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem eta_zero_when_aligned (cross_track : Real) (along_track : Real) (heading : Real)
-    (h1 : ((abs cross_track) <= RANGE_MAX))
-    (h2 : ((abs along_track) <= RANGE_MAX))
-    (h3 : ((abs heading) <= (6.2832 : Real))) :
+    (h_cross_track : (-RANGE_MAX ≤ cross_track ∧ cross_track ≤ RANGE_MAX))
+    (h_along_track : (-RANGE_MAX ≤ along_track ∧ along_track ≤ RANGE_MAX))
+    (h_heading : (-(6.2832 : Real) ≤ heading ∧ heading ≤ (6.2832 : Real))) :
     True := by
   trivial
 
@@ -34,12 +40,13 @@ theorem eta_zero_when_aligned (cross_track : Real) (along_track : Real) (heading
 noncomputable def l1_lateral_accel (speed : Real) (eta : Real) (l1_distance : Real) : Real :=
   (((((2.0 : Real) * speed) * speed) * (Real.sin eta)) / l1_distance)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem l1_lateral_accel_zero_at_eta_zero (speed : Real) (eta : Real) (l1_distance : Real)
-    (h1 : (speed >= (0 : Real)))
-    (h2 : (speed <= SPEED_MAX))
-    (h3 : ((abs eta) <= ETA_MAX))
-    (h4 : (l1_distance >= L1_MIN))
-    (h5 : (l1_distance <= L1_MAX)) :
+    (h_speed : (((0 : Real) <= speed) ∧ (speed <= SPEED_MAX)))
+    (h_eta : (-ETA_MAX ≤ eta ∧ eta ≤ ETA_MAX))
+    (h_l1_distance : ((L1_MIN <= l1_distance) ∧ (l1_distance <= L1_MAX))) :
     True := by
   trivial
 
@@ -48,12 +55,16 @@ theorem l1_lateral_accel_zero_at_eta_zero (speed : Real) (eta : Real) (l1_distan
 noncomputable def cross_track_distance (px : Real) (py : Real) (x1 : Real) (y1 : Real) (x2 : Real) (y2 : Real) : Real :=
   ((((px - x1) * (y2 - y1)) - ((py - y1) * (x2 - x1))) / (min (max (Real.sqrt (((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)))) (1e-06 : Real)) ((2.0 : Real) * RANGE_MAX)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem cross_track_zero_on_line (px : Real) (py : Real) (x1 : Real) (y1 : Real) (x2 : Real) (y2 : Real)
-    (h1 : ((abs px) <= RANGE_MAX))
-    (h2 : ((abs py) <= RANGE_MAX))
-    (h3 : ((abs x1) <= RANGE_MAX))
-    (h4 : ((abs y1) <= RANGE_MAX))
-    (h5 : ((abs x2) <= RANGE_MAX))
-    (h6 : ((abs y2) <= RANGE_MAX)) :
+    (h_px : (-RANGE_MAX ≤ px ∧ px ≤ RANGE_MAX))
+    (h_py : (-RANGE_MAX ≤ py ∧ py ≤ RANGE_MAX))
+    (h_x1 : (-RANGE_MAX ≤ x1 ∧ x1 ≤ RANGE_MAX))
+    (h_y1 : (-RANGE_MAX ≤ y1 ∧ y1 ≤ RANGE_MAX))
+    (h_x2 : (-RANGE_MAX ≤ x2 ∧ x2 ≤ RANGE_MAX))
+    (h_y2 : (-RANGE_MAX ≤ y2 ∧ y2 ≤ RANGE_MAX))
+    (h_clamp1 : (1e-06 : Real) ≤ ((2.0 : Real) * RANGE_MAX)) :
     True := by
   trivial

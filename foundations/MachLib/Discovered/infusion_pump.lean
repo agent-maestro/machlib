@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,10 +27,27 @@ noncomputable def motor_command (prescribed_rate : Real) (measured_rate : Real) 
   (min (max ((Kp * (prescribed_rate - measured_rate)) + (Ki * rate_integral)) MOTOR_MIN) MOTOR_MAX)
 
 theorem infusion_motor_command_safe (prescribed_rate : Real) (measured_rate : Real) (rate_integral : Real)
-    (h1 : (RATE_MIN <= prescribed_rate))
-    (h2 : (prescribed_rate <= RATE_MAX))
-    (h3 : ((abs measured_rate) < RATE_MAX))
-    (h4 : ((abs rate_integral) < (100.0 : Real))) :
-    (MOTOR_MIN <= (motor_command prescribed_rate measured_rate rate_integral)) := by
+    (h_prescribed_rate : ((RATE_MIN <= prescribed_rate) ∧ (prescribed_rate <= RATE_MAX)))
+    (h_measured_rate : (-RATE_MAX < measured_rate ∧ measured_rate < RATE_MAX))
+    (h_rate_integral : (-(100.0 : Real) < rate_integral ∧ rate_integral < (100.0 : Real)))
+    (h_clamp1 : MOTOR_MIN ≤ MOTOR_MAX) :
+    ((MOTOR_MIN <= (motor_command prescribed_rate measured_rate rate_integral))) ∧ (((motor_command prescribed_rate measured_rate rate_integral) <= MOTOR_MAX)) := by
   unfold motor_command
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

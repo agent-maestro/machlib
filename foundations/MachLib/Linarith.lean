@@ -263,6 +263,70 @@ theorem sub_sqrt_nonneg_of_le_sq {v S : Real} (hv : 0 ≤ v) (hS : S ≤ v * v) 
     0 ≤ v - sqrt S :=
   sub_nonneg_of_le (sqrt_le_of_le_sq hv hS)
 
+/-- `abs a ≤ sqrt D` from `a·a ≤ D`. Sign-split (`lt_total a 0`): the nonneg branch is
+`le_sqrt_of_sq_le` directly; the negative branch routes through `(-a)·(-a) = a·a` (`neg_mul_neg`)
+the same way `add_sqrt_sq_add_nonneg` above does. The `abs`-level building block for
+`abs_div_sqrt_le_one` below. -/
+theorem abs_le_sqrt_of_sq_le {a D : Real} (hD2 : a * a ≤ D) : abs a ≤ sqrt D := by
+  rcases lt_total a 0 with hlt | heq | hgt
+  · rw [abs_of_nonpos (le_of_lt hlt)]
+    exact le_sqrt_of_sq_le (le_of_lt (neg_pos_of_neg hlt)) (by rw [neg_mul_neg]; exact hD2)
+  · rw [heq, abs_zero]; exact sqrt_nonneg D
+  · rw [abs_of_nonneg (le_of_lt hgt)]
+    exact le_sqrt_of_sq_le (le_of_lt hgt) hD2
+
+/-- **Vector-component normalisation band.** `abs (a / sqrt D) ≤ 1` given `a·a ≤ D` and `0 < D`.
+The workhorse behind `x_i / sqrt(sum-of-squares + tiny)` obligations (camera look-at, IK, orbit
+position) — `abs_div_sqrt_sum3_le_one` below instantiates it at the specific 3-term-sum-of-squares
+shape the EML emitter's binop lowering actually produces. Proved via `abs_le_sqrt_of_sq_le` +
+`div_le_one_of_le_of_pos`, routed through `a/D' = a·(1/D')` (`div_def`) and `abs_mul` since this
+file has no direct `abs`-of-division lemma in scope. -/
+theorem abs_div_sqrt_le_one {a D : Real} (hD2 : a * a ≤ D) (hDpos : 0 < D) :
+    abs (a / sqrt D) ≤ 1 := by
+  have hsp : 0 < sqrt D := sqrt_pos hDpos
+  have habs : abs a ≤ sqrt D := abs_le_sqrt_of_sq_le hD2
+  have hne : sqrt D ≠ 0 := ne_of_gt hsp
+  have heq1 : a / sqrt D = a * (1 / sqrt D) := div_def a (sqrt D) hne
+  have heq2 : abs (a / sqrt D) = abs a * abs (1 / sqrt D) := by rw [heq1, abs_mul]
+  have hinv_nonneg : 0 ≤ 1 / sqrt D := one_div_nonneg_of_pos hsp
+  have heq3 : abs (1 / sqrt D) = 1 / sqrt D := abs_of_nonneg hinv_nonneg
+  rw [heq2, heq3]
+  have hstep : abs a / sqrt D ≤ 1 := div_le_one_of_le_of_pos hsp habs
+  rwa [div_def (abs a) (sqrt D) hne] at hstep
+
+/-- **3-term-sum-of-squares instance.** `abs (a / sqrt(((a·a+b·b)+c·c)+eps)) ≤ 1`, `eps > 0` —
+exactly the left-associated `((·+·)+·)+eps` shape the EML emitter produces for a normalised 3D
+vector component (`x_i / sqrt(x² + y² + z² + tiny)`: camera look-at `forward_x/y/z`, `right_x/y/z`;
+orbit `position_x/y/z` already closes via `mach_abs_bound`'s different route, this is the
+`sqrt`-normalised sibling shape `mach_abs_bound` doesn't reach). `b`/`c`'s nonnegativity is derived
+internally (`sq_nonneg`), so the only real hypothesis is the `eps > 0` domain-sanity constant. -/
+theorem abs_div_sqrt_sum3_le_one {a b c eps : Real} (heps : 0 < eps) :
+    abs (a / sqrt (((a * a + b * b) + c * c) + eps)) ≤ 1 := by
+  apply abs_div_sqrt_le_one
+  · exact le_trans (le_trans (le_add_of_nonneg_right (sq_nonneg b)) (le_add_of_nonneg_right (sq_nonneg c)))
+      (le_add_of_nonneg_right (le_of_lt heps))
+  · exact add_pos_of_nonneg_pos (add_nonneg (add_nonneg (sq_nonneg a) (sq_nonneg b)) (sq_nonneg c)) heps
+
+/-- **Middle-position sibling of `abs_div_sqrt_sum3_le_one`**: numerator is the SECOND squared
+term (`forward_y`/`right_y`-style — `b*b` sits in the middle of `(a*a+b*b)+c*c`, not the left). Same
+algebraic content, different variable bound to the numerator; `mach_positivity` tries all three
+position-variants since `exact` needs exact structural placement, not just membership. -/
+theorem abs_div_sqrt_sum3_le_one_mid {a b c eps : Real} (heps : 0 < eps) :
+    abs (b / sqrt (((a * a + b * b) + c * c) + eps)) ≤ 1 := by
+  apply abs_div_sqrt_le_one
+  · exact le_trans (le_trans (le_add_of_nonneg_left (sq_nonneg a)) (le_add_of_nonneg_right (sq_nonneg c)))
+      (le_add_of_nonneg_right (le_of_lt heps))
+  · exact add_pos_of_nonneg_pos (add_nonneg (add_nonneg (sq_nonneg a) (sq_nonneg b)) (sq_nonneg c)) heps
+
+/-- **Last-position sibling of `abs_div_sqrt_sum3_le_one`**: numerator is the THIRD squared term
+(`forward_z`/`right_z`-style). -/
+theorem abs_div_sqrt_sum3_le_one_last {a b c eps : Real} (heps : 0 < eps) :
+    abs (c / sqrt (((a * a + b * b) + c * c) + eps)) ≤ 1 := by
+  apply abs_div_sqrt_le_one
+  · exact le_trans (le_add_of_nonneg_left (add_nonneg (sq_nonneg a) (sq_nonneg b)))
+      (le_add_of_nonneg_right (le_of_lt heps))
+  · exact add_pos_of_nonneg_pos (add_nonneg (add_nonneg (sq_nonneg a) (sq_nonneg b)) (sq_nonneg c)) heps
+
 /-- Converse of `sub_nonneg_of_le`: `0 ≤ b − a → a ≤ b`. Generally useful. -/
 theorem le_of_sub_nonneg {a b : Real} (h : 0 ≤ b - a) : a ≤ b := by
   have e : a + (b - a) = b := by rw [sub_def, add_comm b (-a)]; exact add_neg_cancel_left a b
@@ -474,6 +538,12 @@ noise) — the nonlinear shape `mach_positivity` cannot reach. Declared here
 bodies follow `mach_positivity`'s syntax declaration below. -/
 syntax (name := machAbsBound) "mach_abs_bound" : tactic
 
+/-- Vector-component normalisation band: `abs(x_i / sqrt(x²+y²+z²+eps)) ≤ 1` (camera look-at
+`forward_x/y/z`/`right_x/y/z`, IK). The `sqrt`-normalised sibling of `mach_abs_bound`'s product
+shape. Declared separately (not inlined into `mach_positivity`'s own `macro_rules`) mirroring
+`mach_abs_bound`'s own structure exactly. -/
+syntax (name := machVecnorm) "mach_vecnorm" : tactic
+
 /-! ### `mach_positivity` tactic
 
 Closes `0 ≤ expr` and `0 < expr` goals by recursive structural
@@ -578,6 +648,11 @@ macro_rules
       -- Trig-amplitude band: abs(base · sin · cos …) ≤ base (orbit, wave,
       -- white_noise). The nonlinear abs-of-product shape.
       | mach_abs_bound
+      -- Vector-component normalisation band: abs(x_i / sqrt(x²+y²+z²+tiny)) ≤ 1
+      -- (camera look-at forward_x/y/z, right_x/y/z; IK). The sqrt-normalised
+      -- sibling of mach_abs_bound's product shape, for the SAME family of
+      -- "normalise a vector, bound one component" obligations.
+      | mach_vecnorm
       -- Pythagorean identity sin²+cos²=1 (the lemma already exists in Trig;
       -- closes `*_witness` equality obligations). exact, harmless elsewhere.
       | exact pythagorean _
@@ -719,6 +794,19 @@ macro_rules
            | exact abs_cos_le_one _
            | exact abs_tanh_le_one _
            | mach_abs_bound))
+
+/-- `mach_vecnorm`: try each of the three position-variants (numerator = 1st/2nd/3rd squared
+term). `apply` FIRST (unifying `?a`/`?b`/`?c`/`?eps` against the actual goal, failing cleanly if
+the goal isn't this shape at all) THEN `mach_positivity` on the now-concrete `eps > 0` side goal —
+matching every other `(apply X <;> mach_positivity)` arm's own idiom, unlike `exact X (by tac)`,
+which would elaborate the side-goal tactic against an unconstrained metavariable before unification
+even starts and can misbehave on goals this tactic was never meant to touch. -/
+macro_rules
+  | `(tactic| mach_vecnorm) => `(tactic|
+      first
+      | (apply abs_div_sqrt_sum3_le_one <;> mach_positivity)
+      | (apply abs_div_sqrt_sum3_le_one_mid <;> mach_positivity)
+      | (apply abs_div_sqrt_sum3_le_one_last <;> mach_positivity))
 
 /-! ### `mach_linarith` tactic — v1 stub
 

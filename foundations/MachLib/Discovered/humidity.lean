@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -26,7 +29,23 @@ theorem saturation_pressure_monotone_in_temperature (temperature_c : Real)
     (h2 : (temperature_c <= T_MAX_C)) :
     ((saturation_vapor_pressure temperature_c) >= (0 : Real)) := by
   unfold saturation_vapor_pressure
-  apply mul_nonneg <;> first | exact exp_nonneg _ | lit_pos
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── relative_humidity ──
 
@@ -37,16 +56,36 @@ theorem relative_humidity_in_unit_interval_magnus (vapor_pressure : Real) (satur
     (h1 : (vapor_pressure >= (0 : Real)))
     (h2 : (vapor_pressure <= (10000.0 : Real)))
     (h3 : (saturation_pressure >= (0.001 : Real)))
-    (h4 : (saturation_pressure <= (10000.0 : Real))) :
+    (h4 : (saturation_pressure <= (10000.0 : Real)))
+    (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     ((relative_humidity vapor_pressure saturation_pressure) >= (0 : Real)) := by
   unfold relative_humidity
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── dew_point ──
 
 noncomputable def dew_point (temperature_c : Real) (relative_humidity : Real) : Real :=
   ((B_MAGNUS * ((Real.log relative_humidity) + ((A_MAGNUS * temperature_c) / (B_MAGNUS + temperature_c)))) / (A_MAGNUS - ((Real.log relative_humidity) + ((A_MAGNUS * temperature_c) / (B_MAGNUS + temperature_c)))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem dew_point_below_temperature_when_rh_below_one (temperature_c : Real) (relative_humidity : Real)
     (h1 : (temperature_c >= T_MIN_C))
     (h2 : (temperature_c <= T_MAX_C))
@@ -67,4 +106,20 @@ theorem specific_humidity_increases_with_vapor (vapor_pressure : Real) (atmosphe
     (h4 : (atmospheric_pressure <= (110000.0 : Real))) :
     ((specific_humidity vapor_pressure atmospheric_pressure) >= (0 : Real)) := by
   unfold specific_humidity
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

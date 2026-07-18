@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,9 +30,26 @@ theorem reverb_envelope_decreases_with_time (time_s : Real) (rt60 : Real)
     (h2 : (time_s <= T_MAX))
     (h3 : (rt60 >= RT60_MIN))
     (h4 : (rt60 <= RT60_MAX)) :
-    ((reverb_envelope time_s rt60) >= (0 : Real)) := by
+    (((reverb_envelope time_s rt60) >= (0 : Real))) ∧ (((reverb_envelope time_s rt60) <= (1 : Real))) := by
   unfold reverb_envelope
-  exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── schroeder_gain ──
 
@@ -43,6 +63,23 @@ theorem schroeder_gain_in_unit_interval (target_decay : Real) (n_samples : Real)
     (h4 : (n_samples <= (1000000.0 : Real)))
     (h5 : (n_total >= (1 : Real)))
     (h6 : (n_total <= (1000000.0 : Real))) :
-    ((schroeder_gain target_decay n_samples n_total) >= (0 : Real)) := by
+    (((schroeder_gain target_decay n_samples n_total) >= (0 : Real))) ∧ (((schroeder_gain target_decay n_samples n_total) <= (1 : Real))) := by
   unfold schroeder_gain
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

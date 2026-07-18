@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ axiom pulse_phase (f_d : Real) (n : Real) (t_pri : Real) : Real  -- helper (axio
 noncomputable def doppler_real (s_real : Real) (s_imag : Real) (phase : Real) : Real :=
   ((s_real * (Real.cos phase)) + (s_imag * (Real.sin phase)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem doppler_real_bounded_by_magnitude (s_real : Real) (s_imag : Real) (phase : Real)
     (h1 : (phase >= (-(1000.0 : Real))))
     (h2 : (phase <= (1000.0 : Real))) :
@@ -30,6 +36,9 @@ theorem doppler_real_bounded_by_magnitude (s_real : Real) (s_imag : Real) (phase
 noncomputable def doppler_imag (s_real : Real) (s_imag : Real) (phase : Real) : Real :=
   ((s_imag * (Real.cos phase)) - (s_real * (Real.sin phase)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem doppler_imag_bounded_by_magnitude (s_real : Real) (s_imag : Real) (phase : Real)
     (h1 : (phase >= (-(1000.0 : Real))))
     (h2 : (phase <= (1000.0 : Real))) :

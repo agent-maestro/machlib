@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,6 +24,9 @@ axiom e_swish (x : Real) (beta : Real) : Real  -- helper (axiomatised in MachLib
 noncomputable def swish (x : Real) : Real :=
   (x / ((1 : Real) + (Real.exp (-x))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem swish_smooth_at_zero (x : Real)
     (h1 : ((abs x) < SWISH_X_MAX)) :
     True := by
@@ -31,7 +37,11 @@ theorem swish_smooth_at_zero (x : Real)
 noncomputable def hard_swish (x : Real) : Real :=
   ((x * (min (max (x + HARD_SWISH_OFFSET) (0 : Real)) HARD_SWISH_DENOM)) / HARD_SWISH_DENOM)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem hard_swish_bounded (x : Real)
-    (h1 : ((abs x) < SWISH_X_MAX)) :
+    (h1 : ((abs x) < SWISH_X_MAX))
+    (h_clamp1 : (0 : Real) ≤ HARD_SWISH_DENOM) :
     True := by
   trivial

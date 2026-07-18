@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ noncomputable def EPS_MAX : Real := (0.001 : Real)
 noncomputable def first_moment_update (prev_m : Real) (gradient : Real) (beta1 : Real) : Real :=
   ((beta1 * prev_m) + (((1 : Real) - beta1) * gradient))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem first_moment_convex_combination (prev_m : Real) (gradient : Real) (beta1 : Real)
     (h1 : ((abs prev_m) <= VAL_MAX))
     (h2 : ((abs gradient) <= VAL_MAX))
@@ -43,13 +49,32 @@ theorem second_moment_nonneg (prev_v : Real) (gradient : Real) (beta2 : Real)
     (h5 : (beta2 <= BETA_MAX)) :
     ((second_moment_update prev_v gradient beta2) >= (0 : Real)) := by
   unfold second_moment_update
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── adam_param_step ──
 
 noncomputable def adam_param_step (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real) : Real :=
   (theta - ((lr * m_hat) / ((Real.sqrt v_hat) + eps)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem adam_param_step_descent_when_aligned (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs m_hat) <= VAL_MAX))
@@ -67,6 +92,9 @@ theorem adam_param_step_descent_when_aligned (theta : Real) (m_hat : Real) (v_ha
 noncomputable def adamw_param_step (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real) (weight_decay : Real) : Real :=
   (theta - (lr * ((m_hat / ((Real.sqrt v_hat) + eps)) + (weight_decay * theta))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem adamw_decoupled_decay_independent_of_grad (theta : Real) (m_hat : Real) (v_hat : Real) (lr : Real) (eps : Real) (weight_decay : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs m_hat) <= VAL_MAX))

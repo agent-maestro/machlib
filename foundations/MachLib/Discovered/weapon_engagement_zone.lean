@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,14 +23,15 @@ noncomputable def ANGLE_MAX : Real := (3.1416 : Real)
 noncomputable def outer_wez_range (weapon_speed : Real) (target_speed : Real) (burn_time : Real) (aspect_angle : Real) : Real :=
   (min (max ((weapon_speed * burn_time) - ((target_speed * burn_time) * (Real.cos aspect_angle))) (0 : Real)) RANGE_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem outer_wez_decreases_with_target_speed_aligned (weapon_speed : Real) (target_speed : Real) (burn_time : Real) (aspect_angle : Real)
-    (h1 : (weapon_speed >= (0 : Real)))
-    (h2 : (weapon_speed <= V_MAX))
-    (h3 : (target_speed >= (0 : Real)))
-    (h4 : (target_speed <= V_MAX))
-    (h5 : (burn_time >= (0 : Real)))
-    (h6 : (burn_time <= T_MAX))
-    (h7 : ((abs aspect_angle) <= ANGLE_MAX)) :
+    (h_weapon_speed : (((0 : Real) <= weapon_speed) ∧ (weapon_speed <= V_MAX)))
+    (h_target_speed : (((0 : Real) <= target_speed) ∧ (target_speed <= V_MAX)))
+    (h_burn_time : (((0 : Real) <= burn_time) ∧ (burn_time <= T_MAX)))
+    (h_aspect_angle : (-ANGLE_MAX ≤ aspect_angle ∧ aspect_angle ≤ ANGLE_MAX))
+    (h_clamp1 : (0 : Real) ≤ RANGE_MAX) :
     True := by
   trivial
 
@@ -36,9 +40,11 @@ theorem outer_wez_decreases_with_target_speed_aligned (weapon_speed : Real) (tar
 noncomputable def inner_wez_range (safe_arming_distance : Real) : Real :=
   safe_arming_distance
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem inner_wez_nonneg (safe_arming_distance : Real)
-    (h1 : (safe_arming_distance >= (0 : Real)))
-    (h2 : (safe_arming_distance <= RANGE_MAX)) :
+    (h_safe_arming_distance : (((0 : Real) <= safe_arming_distance) ∧ (safe_arming_distance <= RANGE_MAX))) :
     True := by
   trivial
 
@@ -47,13 +53,14 @@ theorem inner_wez_nonneg (safe_arming_distance : Real)
 noncomputable def time_of_flight (range_m : Real) (weapon_speed : Real) (target_speed : Real) (aspect_angle : Real) : Real :=
   (range_m / (min (max (weapon_speed - (target_speed * (Real.cos aspect_angle))) (1 : Real)) V_MAX))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem tof_inverse_proportional_to_closing (range_m : Real) (weapon_speed : Real) (target_speed : Real) (aspect_angle : Real)
-    (h1 : (range_m >= (0 : Real)))
-    (h2 : (range_m <= RANGE_MAX))
-    (h3 : (weapon_speed > (0 : Real)))
-    (h4 : (weapon_speed <= V_MAX))
-    (h5 : (target_speed >= (0 : Real)))
-    (h6 : (target_speed <= V_MAX))
-    (h7 : ((abs aspect_angle) <= ANGLE_MAX)) :
+    (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= RANGE_MAX)))
+    (h_weapon_speed : (((0 : Real) < weapon_speed) ∧ (weapon_speed <= V_MAX)))
+    (h_target_speed : (((0 : Real) <= target_speed) ∧ (target_speed <= V_MAX)))
+    (h_aspect_angle : (-ANGLE_MAX ≤ aspect_angle ∧ aspect_angle ≤ ANGLE_MAX))
+    (h_clamp1 : (1 : Real) ≤ V_MAX) :
     True := by
   trivial

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ axiom henderson_hasselbalch (pka : Real) (conjugate_base_concentration : Real) (
 noncomputable def pH_from_concentration (proton_concentration : Real) : Real :=
   (-(log10 proton_concentration))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ph_decreases_with_proton_concentration (proton_concentration : Real)
     (h1 : (proton_concentration >= C_MIN))
     (h2 : (proton_concentration <= C_MAX)) :
@@ -38,4 +44,20 @@ theorem proton_concentration_positive (ph_value : Real)
     (h2 : (ph_value <= PH_MAX)) :
     ((concentration_from_pH ph_value) > (0 : Real)) := by
   unfold concentration_from_pH
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

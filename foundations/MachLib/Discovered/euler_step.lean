@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def DRAG_MAX : Real := (50.0 : Real)
 noncomputable def velocity_step (velocity : Real) (acceleration : Real) (dt : Real) : Real :=
   (velocity + (acceleration * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem euler_step_velocity_linear_in_acceleration (velocity : Real) (acceleration : Real) (dt : Real)
     (h1 : (dt >= (0 : Real)))
     (h2 : (dt <= DT_MAX))
@@ -35,6 +41,9 @@ theorem euler_step_velocity_linear_in_acceleration (velocity : Real) (accelerati
 noncomputable def position_step (position : Real) (velocity_new : Real) (dt : Real) : Real :=
   (position + (velocity_new * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem euler_step_position_linear_in_velocity (position : Real) (velocity_new : Real) (dt : Real)
     (h1 : (dt >= (0 : Real)))
     (h2 : (dt <= DT_MAX))
@@ -48,6 +57,9 @@ theorem euler_step_position_linear_in_velocity (position : Real) (velocity_new :
 noncomputable def velocity_step_with_drag (velocity : Real) (acceleration : Real) (drag_coefficient : Real) (dt : Real) : Real :=
   ((velocity * (Real.exp ((-drag_coefficient) * dt))) + (acceleration * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem euler_step_drag_decays_velocity (velocity : Real) (acceleration : Real) (drag_coefficient : Real) (dt : Real)
     (h1 : (dt >= (0 : Real)))
     (h2 : (dt <= DT_MAX))

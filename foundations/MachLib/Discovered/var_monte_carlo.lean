@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,19 +23,38 @@ noncomputable def parametric_var (mean_return : Real) (stdev_return : Real) (hor
   (((-mean_return) * horizon_days) + ((stdev_return * (Real.sqrt horizon_days)) * inv_cdf))
 
 theorem parametric_var_monotone_in_sigma (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (inv_cdf : Real)
-    (h1 : (stdev_return > (0 : Real)))
-    (h2 : (horizon_days > (0 : Real)))
-    (h3 : (inv_cdf > (0 : Real))) :
+    (h_stdev_return : (stdev_return > (0 : Real)))
+    (h_horizon_days : (horizon_days > (0 : Real)))
+    (h_inv_cdf : (inv_cdf > (0 : Real))) :
     ((parametric_var mean_return stdev_return horizon_days inv_cdf) > (0 : Real)) := by
   unfold parametric_var
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── log_return_step ──
 
 noncomputable def log_return_step (mean_return : Real) (stdev_return : Real) (z : Real) : Real :=
   (mean_return + (stdev_return * z))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem log_return_step_mean_drift (mean_return : Real) (stdev_return : Real) (z : Real)
-    (h1 : (stdev_return > (0 : Real))) :
+    (h_stdev_return : (stdev_return > (0 : Real))) :
     True := by
   trivial

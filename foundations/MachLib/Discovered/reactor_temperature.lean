@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,6 +28,9 @@ axiom required_cooling_duty (reaction_heat : Real) (safety_factor : Real) : Real
 noncomputable def reaction_heat_load (delta_h_rxn : Real) (reactor_volume : Real) (concentration_a : Real) (pre_exp_factor : Real) (activation_energy : Real) (temperature : Real) : Real :=
   (((delta_h_rxn * reactor_volume) * concentration_a) * (pre_exp_factor * (Real.exp ((-activation_energy) / (R_GAS * temperature)))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem reaction_heat_monotone_in_temperature (delta_h_rxn : Real) (reactor_volume : Real) (concentration_a : Real) (pre_exp_factor : Real) (activation_energy : Real) (temperature : Real)
     (h1 : (delta_h_rxn >= (-HRXN_MAX)))
     (h2 : (delta_h_rxn <= HRXN_MAX))

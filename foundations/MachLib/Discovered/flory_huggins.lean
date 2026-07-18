@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,8 +22,11 @@ axiom chi_critical_symmetric (degree_of_polymerisation : Real) : Real  -- helper
 -- ── delta_g_per_site ──
 
 noncomputable def delta_g_per_site (phi_1 : Real) (n_1 : Real) (phi_2 : Real) (n_2 : Real) (chi : Real) : Real :=
-  ((((phi_1 / n_1) * (log phi_1)) + ((phi_2 / n_2) * (log phi_2))) + ((chi * phi_1) * phi_2))
+  ((((phi_1 / n_1) * (Real.log phi_1)) + ((phi_2 / n_2) * (Real.log phi_2))) + ((chi * phi_1) * phi_2))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem flory_huggins_symmetric_under_phi_swap (phi_1 : Real) (n_1 : Real) (phi_2 : Real) (n_2 : Real) (chi : Real)
     (h1 : (phi_1 >= PHI_MIN))
     (h2 : (phi_1 <= (1 : Real)))

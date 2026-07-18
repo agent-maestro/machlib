@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def C2_MAX : Real := (0.05 : Real)
 noncomputable def lane_lateral_offset (x_longitudinal : Real) (c0 : Real) (c1 : Real) (c2 : Real) : Real :=
   ((((c2 * x_longitudinal) * x_longitudinal) + (c1 * x_longitudinal)) + c0)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem lane_polynomial_eval_bounded_in_corridor (x_longitudinal : Real) (c0 : Real) (c1 : Real) (c2 : Real)
     (h1 : (x_longitudinal >= (0 : Real)))
     (h2 : (x_longitudinal <= X_MAX))
@@ -34,6 +40,9 @@ theorem lane_polynomial_eval_bounded_in_corridor (x_longitudinal : Real) (c0 : R
 noncomputable def lane_departure_error (lookahead : Real) (c0_left : Real) (c1_left : Real) (c2_left : Real) (c0_right : Real) (c1_right : Real) (c2_right : Real) : Real :=
   ((0.5 : Real) * (((((c2_left * lookahead) * lookahead) + (c1_left * lookahead)) + c0_left) + ((((c2_right * lookahead) * lookahead) + (c1_right * lookahead)) + c0_right)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem lane_error_bounded_by_corridor (lookahead : Real) (c0_left : Real) (c1_left : Real) (c2_left : Real) (c0_right : Real) (c1_right : Real) (c2_right : Real)
     (h1 : (lookahead >= (0 : Real)))
     (h2 : (lookahead <= X_MAX))
@@ -51,6 +60,9 @@ theorem lane_error_bounded_by_corridor (lookahead : Real) (c0_left : Real) (c1_l
 noncomputable def lane_curvature (c1 : Real) (c2 : Real) : Real :=
   (((2.0 : Real) * c2) / (((1 : Real) + (c1 * c1)) ^ (1.5 : Real)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem curvature_zero_when_quadratic_zero (c1 : Real) (c2 : Real)
     (h1 : ((abs c1) <= C1_MAX))
     (h2 : ((abs c2) <= C2_MAX)) :

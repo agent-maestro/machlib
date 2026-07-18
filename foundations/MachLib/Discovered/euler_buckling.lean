@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -43,7 +46,23 @@ theorem euler_critical_load_nonneg (modulus : Real) (second_moment : Real) (effe
     (h8 : (unsupported_length <= L_MAX)) :
     ((critical_load modulus second_moment effective_length_factor unsupported_length) >= (0 : Real)) := by
   unfold critical_load
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── slenderness_ratio ──
 
@@ -57,9 +76,26 @@ theorem slenderness_ratio_nonneg (effective_length_factor : Real) (unsupported_l
     (h4 : (unsupported_length <= L_MAX))
     (h5 : (radius_of_gyration >= R_GYRATION_MIN))
     (h6 : (radius_of_gyration <= R_GYRATION_MAX)) :
-    ((slenderness_ratio effective_length_factor unsupported_length radius_of_gyration) >= (0 : Real)) := by
+    (((slenderness_ratio effective_length_factor unsupported_length radius_of_gyration) >= (0 : Real))) ∧ (((slenderness_ratio effective_length_factor unsupported_length radius_of_gyration) <= SLENDERNESS_MAX)) := by
   unfold slenderness_ratio
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── johnson_short_column_stress ──
 
@@ -73,6 +109,23 @@ theorem johnson_short_column_below_yield (yield_strength : Real) (slenderness : 
     (h4 : (slenderness <= SLENDERNESS_MAX))
     (h5 : (modulus >= E_MIN))
     (h6 : (modulus <= E_MAX)) :
-    ((johnson_short_column_stress yield_strength slenderness modulus) >= (0 : Real)) := by
+    (((johnson_short_column_stress yield_strength slenderness modulus) >= (0 : Real))) ∧ (((johnson_short_column_stress yield_strength slenderness modulus) <= yield_strength)) := by
   unfold johnson_short_column_stress
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

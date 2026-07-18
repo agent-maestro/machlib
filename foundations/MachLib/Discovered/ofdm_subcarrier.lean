@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ noncomputable def SPREAD_MAX : Real := (0.001 : Real)
 noncomputable def subcarrier_phase (bin_index : Real) (n_total : Real) : Real :=
   (((-6.283185307179586 : Real) * bin_index) / n_total)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem subcarrier_phase_proportional_to_bin (bin_index : Real) (n_total : Real)
     (h1 : (bin_index >= (0 : Real)))
     (h2 : (bin_index <= N_MAX))
@@ -32,6 +38,9 @@ theorem subcarrier_phase_proportional_to_bin (bin_index : Real) (n_total : Real)
 noncomputable def pilot_channel_estimate (received : Real) (transmitted : Real) : Real :=
   (received / transmitted)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pilot_correction_unity_at_known_pilot (received : Real) (transmitted : Real)
     (h1 : ((abs received) <= (1000000.0 : Real)))
     (h2 : ((abs transmitted) >= (0.001 : Real)))
@@ -51,13 +60,32 @@ theorem cp_length_proportional_to_delay_spread (delay_spread_s : Real) (sample_r
     (h4 : (sample_rate_hz <= FS_MAX)) :
     ((cyclic_prefix_min_samples delay_spread_s sample_rate_hz) >= (0 : Real)) := by
   unfold cyclic_prefix_min_samples
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── carrier_freq_offset ──
 
 noncomputable def carrier_freq_offset (phase_diff : Real) (preamble_duration_s : Real) : Real :=
   (phase_diff / ((6.283185307179586 : Real) * preamble_duration_s))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem cfo_zero_at_zero_phase_diff (phase_diff : Real) (preamble_duration_s : Real)
     (h1 : ((abs phase_diff) <= (6.2832 : Real)))
     (h2 : (preamble_duration_s >= (1e-09 : Real)))

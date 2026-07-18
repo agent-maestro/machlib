@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,6 +24,9 @@ axiom mercator_x (lon : Real) : Real  -- helper (axiomatised in MachLib/Discover
 noncomputable def mercator_y (lat : Real) : Real :=
   (Real.log (Real.tan (PI_OVER_4 + (HALF * lat))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem mercator_y_finite_in_domain (lat : Real)
     (h1 : ((abs lat) < MAX_LAT)) :
     True := by

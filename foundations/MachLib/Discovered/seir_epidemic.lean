@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -32,13 +35,32 @@ theorem seir_step_susceptible_nonincreasing (s : Real) (i : Real) (n : Real) (be
     (h8 : (dt <= DT_MAX)) :
     ((step_susceptible s i n beta dt) <= s) := by
   unfold step_susceptible
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── step_exposed ──
 
 noncomputable def step_exposed (s : Real) (e : Real) (i : Real) (n : Real) (beta : Real) (sigma : Real) (dt : Real) : Real :=
   (e + (((((beta * s) * i) / n) - (sigma * e)) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem seir_step_exposed_nonneg (s : Real) (e : Real) (i : Real) (n : Real) (beta : Real) (sigma : Real) (dt : Real)
     (h1 : (s >= (0 : Real)))
     (h2 : (e >= (0 : Real)))
@@ -60,6 +82,9 @@ theorem seir_step_exposed_nonneg (s : Real) (e : Real) (i : Real) (n : Real) (be
 noncomputable def step_infectious (e : Real) (i : Real) (sigma : Real) (gamma : Real) (dt : Real) : Real :=
   (i + (((sigma * e) - (gamma * i)) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem seir_step_infectious_nonneg (e : Real) (i : Real) (sigma : Real) (gamma : Real) (dt : Real)
     (h1 : (e >= (0 : Real)))
     (h2 : (i >= (0 : Real)))
@@ -87,7 +112,23 @@ theorem seir_step_recovered_nondecreasing (i : Real) (r : Real) (gamma : Real) (
     (h6 : (dt <= DT_MAX)) :
     ((step_recovered i r gamma dt) >= r) := by
   unfold step_recovered
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── basic_reproduction_number ──
 
@@ -101,4 +142,20 @@ theorem seir_r0_threshold_at_one (beta : Real) (gamma : Real)
     (h4 : (gamma <= RATE_MAX)) :
     ((basic_reproduction_number beta gamma) >= (0 : Real)) := by
   unfold basic_reproduction_number
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

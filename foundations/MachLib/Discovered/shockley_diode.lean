@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ axiom shockley_at_room_temp (voltage : Real) (saturation_current : Real) (ideali
 noncomputable def shockley_current (voltage : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real) : Real :=
   (saturation_current * ((Real.exp (voltage / (ideality * thermal_voltage))) - (1 : Real)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem shockley_current_monotone_in_voltage (voltage : Real) (saturation_current : Real) (ideality : Real) (thermal_voltage : Real)
     (h1 : (saturation_current > (0 : Real)))
     (h2 : (ideality >= (1 : Real)))

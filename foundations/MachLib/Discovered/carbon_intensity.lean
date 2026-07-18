@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,7 +32,23 @@ theorem carbon_intensity_nonneg (mass_co2_eq : Real) (energy_delivered : Real)
     (h4 : (energy_delivered <= ENERGY_MAX)) :
     ((intensity mass_co2_eq energy_delivered) >= (0 : Real)) := by
   unfold intensity
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── source_emissions ──
 
@@ -43,7 +62,23 @@ theorem carbon_source_contribution_nonneg (usage : Real) (source_intensity : Rea
     (h4 : (source_intensity <= INTENSITY_MAX)) :
     ((source_emissions usage source_intensity) >= (0 : Real)) := by
   unfold source_emissions
-  apply mul_nonneg <;> assumption
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── total_emissions_3way ──
 
@@ -57,6 +92,23 @@ theorem carbon_total_above_each_source (scope1 : Real) (scope2 : Real) (scope3 :
     (h4 : (scope1 <= MASS_MAX))
     (h5 : (scope2 <= MASS_MAX))
     (h6 : (scope3 <= MASS_MAX)) :
-    ((total_emissions_3way scope1 scope2 scope3) >= scope1) := by
+    (((total_emissions_3way scope1 scope2 scope3) >= scope1)) ∧ (((total_emissions_3way scope1 scope2 scope3) >= scope2)) ∧ (((total_emissions_3way scope1 scope2 scope3) >= scope3)) := by
   unfold total_emissions_3way
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

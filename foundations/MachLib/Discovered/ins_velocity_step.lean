@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def velocity_north_step (v_north_prev : Real) (accel_north : Real) (dt : Real) : Real :=
   (v_north_prev + (accel_north * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ins_vx_step_linear_in_dt (v_north_prev : Real) (accel_north : Real) (dt : Real)
     (h1 : ((abs v_north_prev) <= VEL_MAX))
     (h2 : ((abs accel_north) <= ACCEL_MAX))
@@ -33,6 +39,9 @@ theorem ins_vx_step_linear_in_dt (v_north_prev : Real) (accel_north : Real) (dt 
 noncomputable def velocity_east_step (v_east_prev : Real) (accel_east : Real) (dt : Real) : Real :=
   (v_east_prev + (accel_east * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ins_vy_step_linear_in_dt (v_east_prev : Real) (accel_east : Real) (dt : Real)
     (h1 : ((abs v_east_prev) <= VEL_MAX))
     (h2 : ((abs accel_east) <= ACCEL_MAX))
@@ -46,6 +55,9 @@ theorem ins_vy_step_linear_in_dt (v_east_prev : Real) (accel_east : Real) (dt : 
 noncomputable def velocity_down_step (v_down_prev : Real) (accel_down : Real) (dt : Real) : Real :=
   (v_down_prev + ((accel_down + G_GRAVITY) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ins_vz_step_includes_gravity (v_down_prev : Real) (accel_down : Real) (dt : Real)
     (h1 : ((abs v_down_prev) <= VEL_MAX))
     (h2 : ((abs accel_down) <= ACCEL_MAX))
@@ -59,6 +71,9 @@ theorem ins_vz_step_includes_gravity (v_down_prev : Real) (accel_down : Real) (d
 noncomputable def position_step (pos_prev : Real) (v_prev : Real) (v_curr : Real) (dt : Real) : Real :=
   (pos_prev + (((0.5 : Real) * (v_prev + v_curr)) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem position_step_trapezoidal (pos_prev : Real) (v_prev : Real) (v_curr : Real) (dt : Real)
     (h1 : ((abs pos_prev) <= (10000000.0 : Real)))
     (h2 : ((abs v_prev) <= VEL_MAX))

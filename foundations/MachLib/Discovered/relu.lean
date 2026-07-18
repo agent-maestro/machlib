@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,19 +23,41 @@ axiom prelu (x : Real) (alpha : Real) : Real  -- helper (axiomatised in MachLib/
 noncomputable def relu (x : Real) : Real :=
   (min (max x (0 : Real)) RELU_UPPER)
 
-theorem relu_nonnegative (x : Real) :
-    ((relu x) >= (0 : Real)) := by
+theorem relu_nonnegative (x : Real)
+    (h_clamp1 : (0 : Real) ≤ RELU_UPPER) :
+    (((relu x) >= (0 : Real))) ∧ (((relu x) >= x)) := by
   unfold relu
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── leaky_relu ──
 
 noncomputable def leaky_relu (x : Real) (alpha : Real) : Real :=
   (min (max x (alpha * x)) RELU_UPPER)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem leaky_relu_monotone_in_x (x : Real) (alpha : Real)
     (h1 : (alpha >= (0 : Real)))
-    (h2 : (alpha <= (1 : Real))) :
+    (h2 : (alpha <= (1 : Real)))
+    (h_clamp1 : (alpha * x) ≤ RELU_UPPER) :
     True := by
   trivial
 
@@ -41,7 +66,25 @@ theorem leaky_relu_monotone_in_x (x : Real) (alpha : Real)
 noncomputable def relu6 (x : Real) : Real :=
   (min (max x (0 : Real)) (6.0 : Real))
 
-theorem relu6_bounded (x : Real) :
-    ((relu6 x) >= (0 : Real)) := by
+theorem relu6_bounded (x : Real)
+    (h_clamp1 : (0 : Real) ≤ (6.0 : Real)) :
+    (((relu6 x) >= (0 : Real))) ∧ (((relu6 x) <= (6.0 : Real))) := by
   unfold relu6
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

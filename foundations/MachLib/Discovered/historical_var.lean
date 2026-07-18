@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -26,12 +29,13 @@ axiom standard_normal_pdf (z : Real) : Real  -- helper (axiomatised in MachLib/D
 noncomputable def parametric_var (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real) : Real :=
   ((-(pnl_mean - (z_alpha * pnl_stddev))) * portfolio_value)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem parametric_var_nonneg_when_z_positive (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real)
-    (h1 : (pnl_stddev >= (0 : Real)))
-    (h2 : (portfolio_value >= (0 : Real)))
-    (h3 : (portfolio_value <= PV_MAX))
-    (h4 : (z_alpha >= (0 : Real)))
-    (h5 : (z_alpha <= Z_MAX)) :
+    (h_pnl_stddev : (pnl_stddev >= (0 : Real)))
+    (h_portfolio_value : (((0 : Real) <= portfolio_value) ∧ (portfolio_value <= PV_MAX)))
+    (h_z_alpha : (((0 : Real) <= z_alpha) ∧ (z_alpha <= Z_MAX))) :
     True := by
   trivial
 
@@ -40,13 +44,13 @@ theorem parametric_var_nonneg_when_z_positive (pnl_mean : Real) (pnl_stddev : Re
 noncomputable def expected_shortfall (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real) (alpha : Real) : Real :=
   ((-(pnl_mean - (((ONE_OVER_SQRT_2PI * (Real.exp ((-(z_alpha * z_alpha)) * HALF))) / (ONE - alpha)) * pnl_stddev))) * portfolio_value)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem expected_shortfall_at_least_var (pnl_mean : Real) (pnl_stddev : Real) (portfolio_value : Real) (z_alpha : Real) (alpha : Real)
-    (h1 : (pnl_stddev >= (0 : Real)))
-    (h2 : (portfolio_value >= (0 : Real)))
-    (h3 : (portfolio_value <= PV_MAX))
-    (h4 : (z_alpha >= (0 : Real)))
-    (h5 : (z_alpha <= Z_MAX))
-    (h6 : (alpha >= ALPHA_MIN))
-    (h7 : (alpha <= ALPHA_MAX)) :
+    (h_pnl_stddev : (pnl_stddev >= (0 : Real)))
+    (h_portfolio_value : (((0 : Real) <= portfolio_value) ∧ (portfolio_value <= PV_MAX)))
+    (h_z_alpha : (((0 : Real) <= z_alpha) ∧ (z_alpha <= Z_MAX)))
+    (h_alpha : ((ALPHA_MIN <= alpha) ∧ (alpha <= ALPHA_MAX))) :
     True := by
   trivial

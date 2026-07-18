@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -31,7 +34,23 @@ theorem beer_lambert_linear_in_concentration (molar_absorptivity : Real) (path_l
     (h5 : (concentration <= C_MAX)) :
     ((absorbance molar_absorptivity path_length concentration) >= (0 : Real)) := by
   unfold absorbance
-  apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _)
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── transmittance ──
 
@@ -41,6 +60,23 @@ noncomputable def transmittance (absorbance_value : Real) : Real :=
 theorem transmittance_in_unit_interval (absorbance_value : Real)
     (h1 : (absorbance_value >= (0 : Real)))
     (h2 : (absorbance_value <= A_MAX)) :
-    ((transmittance absorbance_value) >= (0 : Real)) := by
+    (((transmittance absorbance_value) >= (0 : Real))) ∧ (((transmittance absorbance_value) <= (1 : Real))) := by
   unfold transmittance
-  exact exp_nonneg _
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

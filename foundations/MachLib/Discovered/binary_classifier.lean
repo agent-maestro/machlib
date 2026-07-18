@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -28,6 +31,23 @@ noncomputable def classify (x1 : Real) (x2 : Real) : Real :=
 theorem binary_classifier_probability_bounded (x1 : Real) (x2 : Real)
     (h1 : ((abs x1) < (100.0 : Real)))
     (h2 : ((abs x2) < (100.0 : Real))) :
-    ((0 : Real) <= (classify x1 x2)) := by
+    (((0 : Real) <= (classify x1 x2))) ∧ (((classify x1 x2) <= (1 : Real))) := by
   unfold classify
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

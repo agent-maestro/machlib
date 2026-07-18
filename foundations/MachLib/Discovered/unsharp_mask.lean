@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ noncomputable def THRESHOLD_MAX : Real := (1 : Real)
 noncomputable def unsharp_linear (pixel : Real) (blurred : Real) (amount : Real) : Real :=
   (pixel + (amount * (pixel - blurred)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem unsharp_linear_zero_amount_is_passthrough (pixel : Real) (blurred : Real) (amount : Real)
     (h1 : (pixel >= PIXEL_MIN))
     (h2 : (pixel <= PIXEL_MAX))
@@ -37,6 +43,9 @@ theorem unsharp_linear_zero_amount_is_passthrough (pixel : Real) (blurred : Real
 noncomputable def unsharp_detail (pixel : Real) (blurred : Real) : Real :=
   (pixel - blurred)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem unsharp_detail_zero_when_pixel_eq_blurred (pixel : Real) (blurred : Real)
     (h1 : (pixel >= PIXEL_MIN))
     (h2 : (pixel <= PIXEL_MAX))
@@ -50,6 +59,9 @@ theorem unsharp_detail_zero_when_pixel_eq_blurred (pixel : Real) (blurred : Real
 noncomputable def unsharp_threshold_blend (pixel : Real) (blurred : Real) (amount : Real) (gate : Real) : Real :=
   (pixel + ((gate * amount) * (pixel - blurred)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem unsharp_threshold_passthrough_when_gate_zero (pixel : Real) (blurred : Real) (amount : Real) (gate : Real)
     (h1 : (pixel >= PIXEL_MIN))
     (h2 : (pixel <= PIXEL_MAX))

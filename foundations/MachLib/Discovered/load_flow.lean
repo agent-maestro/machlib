@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def ANGLE_MAX : Real := (6.2832 : Real)
 noncomputable def active_injection (v_local : Real) (v_remote : Real) (g : Real) (b : Real) (angle_diff : Real) : Real :=
   ((v_local * v_remote) * ((g * (Real.cos angle_diff)) + (b * (Real.sin angle_diff))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem active_injection_zero_at_zero_voltage (v_local : Real) (v_remote : Real) (g : Real) (b : Real) (angle_diff : Real)
     (h1 : (v_local >= V_MIN))
     (h2 : (v_local <= V_MAX))
@@ -36,6 +42,9 @@ theorem active_injection_zero_at_zero_voltage (v_local : Real) (v_remote : Real)
 noncomputable def reactive_injection (v_local : Real) (v_remote : Real) (g : Real) (b : Real) (angle_diff : Real) : Real :=
   ((v_local * v_remote) * ((g * (Real.sin angle_diff)) - (b * (Real.cos angle_diff))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem reactive_injection_zero_at_zero_voltage (v_local : Real) (v_remote : Real) (g : Real) (b : Real) (angle_diff : Real)
     (h1 : (v_local >= V_MIN))
     (h2 : (v_local <= V_MAX))
@@ -52,6 +61,9 @@ theorem reactive_injection_zero_at_zero_voltage (v_local : Real) (v_remote : Rea
 noncomputable def dc_load_flow (b : Real) (angle_diff : Real) : Real :=
   (b * angle_diff)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem dc_load_flow_linear_in_angle_diff (b : Real) (angle_diff : Real)
     (h1 : ((abs b) <= Y_MAX))
     (h2 : ((abs angle_diff) <= (1 : Real))) :

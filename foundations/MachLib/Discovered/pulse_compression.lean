@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -17,6 +20,9 @@ noncomputable def TAU : Real := (6.283185307179586 : Real)
 noncomputable def pulse_tap (sample_i : Real) (sample_q : Real) (phase : Real) : Real :=
   ((sample_i * (Real.cos phase)) + (sample_q * (Real.sin phase)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pulse_tap_amplitude_bounded (sample_i : Real) (sample_q : Real) (phase : Real)
     (h1 : ((abs sample_i) < (1000000.0 : Real)))
     (h2 : ((abs sample_q) < (1000000.0 : Real)))

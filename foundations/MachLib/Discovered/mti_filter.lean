@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -17,6 +20,9 @@ noncomputable def SAMPLE_MAX : Real := (1000000.0 : Real)
 noncomputable def mti_2pulse (sample_now : Real) (sample_prev : Real) : Real :=
   (sample_now - sample_prev)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem mti_2pulse_canceller_zeros_dc (sample_now : Real) (sample_prev : Real)
     (h1 : ((abs sample_now) <= SAMPLE_MAX))
     (h2 : ((abs sample_prev) <= SAMPLE_MAX)) :
@@ -28,6 +34,9 @@ theorem mti_2pulse_canceller_zeros_dc (sample_now : Real) (sample_prev : Real)
 noncomputable def mti_3pulse (sample_now : Real) (sample_prev1 : Real) (sample_prev2 : Real) : Real :=
   ((sample_now - ((2.0 : Real) * sample_prev1)) + sample_prev2)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem mti_3pulse_canceller_zeros_dc_and_first_doppler (sample_now : Real) (sample_prev1 : Real) (sample_prev2 : Real)
     (h1 : ((abs sample_now) <= SAMPLE_MAX))
     (h2 : ((abs sample_prev1) <= SAMPLE_MAX))
@@ -40,6 +49,9 @@ theorem mti_3pulse_canceller_zeros_dc_and_first_doppler (sample_now : Real) (sam
 noncomputable def mti_4pulse_weighted (s0 : Real) (s1 : Real) (s2 : Real) (s3 : Real) : Real :=
   (((s0 - ((3.0 : Real) * s1)) + ((3.0 : Real) * s2)) - s3)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem mti_4pulse_weighted_canceller (s0 : Real) (s1 : Real) (s2 : Real) (s3 : Real)
     (h1 : ((abs s0) <= SAMPLE_MAX))
     (h2 : ((abs s1) <= SAMPLE_MAX))
@@ -60,4 +72,20 @@ theorem improvement_factor_nonneg (clutter_in_power : Real) (clutter_out_power :
     (h4 : (clutter_out_power <= (1000000000000.0 : Real))) :
     ((improvement_factor clutter_in_power clutter_out_power) >= (0 : Real)) := by
   unfold improvement_factor
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

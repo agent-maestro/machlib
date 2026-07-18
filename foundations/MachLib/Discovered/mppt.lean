@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,12 +25,27 @@ noncomputable def mppt_step (voltage_now : Real) (power_now : Real) (power_prev 
   (min (max (voltage_now + (STEP * (Real.tanh (power_now - power_prev)))) V_MIN) V_MAX)
 
 theorem mppt_voltage_command_safe (voltage_now : Real) (power_now : Real) (power_prev : Real)
-    (h1 : (V_MIN <= voltage_now))
-    (h2 : (voltage_now <= V_MAX))
-    (h3 : (POWER_MIN <= power_now))
-    (h4 : (power_now <= POWER_MAX))
-    (h5 : (POWER_MIN <= power_prev))
-    (h6 : (power_prev <= POWER_MAX)) :
-    (V_MIN <= (mppt_step voltage_now power_now power_prev)) := by
+    (h_voltage_now : ((V_MIN <= voltage_now) ∧ (voltage_now <= V_MAX)))
+    (h_power_now : ((POWER_MIN <= power_now) ∧ (power_now <= POWER_MAX)))
+    (h_power_prev : ((POWER_MIN <= power_prev) ∧ (power_prev <= POWER_MAX)))
+    (h_clamp1 : V_MIN ≤ V_MAX) :
+    ((V_MIN <= (mppt_step voltage_now power_now power_prev))) ∧ (((mppt_step voltage_now power_now power_prev) <= V_MAX)) := by
   unfold mppt_step
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

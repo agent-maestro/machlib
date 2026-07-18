@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def ACC_MAX : Real := (2147483647.0 : Real)
 noncomputable def q8_dequantize (q : Real) (scale : Real) : Real :=
   (q * scale)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem q8_dequantize_inverse_of_quantize (q : Real) (scale : Real)
     (h1 : (scale >= SCALE_MIN))
     (h2 : (scale <= SCALE_MAX)) :
@@ -31,6 +37,9 @@ theorem q8_dequantize_inverse_of_quantize (q : Real) (scale : Real)
 noncomputable def q8_dequantize_asym (q : Real) (scale : Real) (zero_point : Real) : Real :=
   ((q - zero_point) * scale)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem q8_dequantize_asym_inverse (q : Real) (scale : Real) (zero_point : Real)
     (h1 : (scale >= SCALE_MIN))
     (h2 : (scale <= SCALE_MAX))
@@ -44,6 +53,9 @@ theorem q8_dequantize_asym_inverse (q : Real) (scale : Real) (zero_point : Real)
 noncomputable def matmul_rescale (accum : Real) (input_scale : Real) (weight_scale : Real) : Real :=
   ((accum * input_scale) * weight_scale)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem matmul_rescale_preserves_sign (accum : Real) (input_scale : Real) (weight_scale : Real)
     (h1 : (input_scale >= SCALE_MIN))
     (h2 : (input_scale <= SCALE_MAX))

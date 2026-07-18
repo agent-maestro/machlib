@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,9 +32,26 @@ theorem mitscherlich_yield_below_potential (y_max : Real) (k_coefficient : Real)
     (h5 : (input_applied >= input_baseline))
     (h6 : (input_applied <= X_MAX))
     (h7 : (input_baseline >= (0 : Real))) :
-    ((yield_response y_max k_coefficient input_applied input_baseline) >= (0 : Real)) := by
+    (((yield_response y_max k_coefficient input_applied input_baseline) >= (0 : Real))) ∧ (((yield_response y_max k_coefficient input_applied input_baseline) <= y_max)) := by
   unfold yield_response
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── marginal_yield ──
 
@@ -48,4 +68,20 @@ theorem mitscherlich_marginal_yield_nonneg (y_max : Real) (k_coefficient : Real)
     (h7 : (input_baseline >= (0 : Real))) :
     ((marginal_yield y_max k_coefficient input_applied input_baseline) >= (0 : Real)) := by
   unfold marginal_yield
-  apply mul_nonneg <;> first | assumption | exact exp_nonneg _ | (apply mul_nonneg <;> first | assumption | exact exp_nonneg _)
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

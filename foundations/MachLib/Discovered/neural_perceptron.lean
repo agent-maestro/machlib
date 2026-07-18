@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,22 +25,44 @@ noncomputable def perceptron_threshold (weighted_sum : Real) (bias : Real) : Rea
 
 theorem perceptron_threshold_in_unit_interval (weighted_sum : Real) (bias : Real)
     (h1 : ((abs weighted_sum) <= SUM_MAX))
-    (h2 : ((abs bias) <= BIAS_MAX)) :
-    ((perceptron_threshold weighted_sum bias) >= (0 : Real)) := by
+    (h2 : ((abs bias) <= BIAS_MAX))
+    (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
+    (((perceptron_threshold weighted_sum bias) >= (0 : Real))) ∧ (((perceptron_threshold weighted_sum bias) <= (1 : Real))) := by
   unfold perceptron_threshold
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── two_input_perceptron ──
 
 noncomputable def two_input_perceptron (x1 : Real) (x2 : Real) (w1 : Real) (w2 : Real) (bias : Real) : Real :=
   (min (max ((((w1 * x1) + (w2 * x2)) + bias) / (0.001 : Real)) (0 : Real)) (1 : Real))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem two_input_perceptron_linear_in_weights (x1 : Real) (x2 : Real) (w1 : Real) (w2 : Real) (bias : Real)
     (h1 : ((abs x1) <= X_MAX))
     (h2 : ((abs x2) <= X_MAX))
     (h3 : ((abs w1) <= W_MAX))
     (h4 : ((abs w2) <= W_MAX))
-    (h5 : ((abs bias) <= BIAS_MAX)) :
+    (h5 : ((abs bias) <= BIAS_MAX))
+    (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
     True := by
   trivial
 
@@ -52,16 +77,36 @@ theorem rate_coded_bounded_in_max_rate (weighted_sum : Real) (threshold_v : Real
     (h3 : (max_rate >= (0 : Real)))
     (h4 : (max_rate <= (1000.0 : Real)))
     (h5 : (gain >= (0 : Real)))
-    (h6 : (gain <= (1000.0 : Real))) :
+    (h6 : (gain <= (1000.0 : Real)))
+    (h_clamp1 : (0 : Real) ≤ max_rate) :
     ((rate_coded_response weighted_sum threshold_v max_rate gain) >= (0 : Real)) := by
   unfold rate_coded_response
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── hebbian_weight_step ──
 
 noncomputable def hebbian_weight_step (weight_prev : Real) (presynaptic_rate : Real) (postsynaptic_rate : Real) (learning_rate : Real) : Real :=
   (weight_prev + ((learning_rate * presynaptic_rate) * postsynaptic_rate))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem hebbian_step_signed_by_correlation (weight_prev : Real) (presynaptic_rate : Real) (postsynaptic_rate : Real) (learning_rate : Real)
     (h1 : ((abs weight_prev) <= W_MAX))
     (h2 : (presynaptic_rate >= (0 : Real)))

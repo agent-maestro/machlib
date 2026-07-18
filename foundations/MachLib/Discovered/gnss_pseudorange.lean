@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,13 +32,32 @@ theorem range_nonneg (sat_x : Real) (sat_y : Real) (sat_z : Real) (user_x : Real
     (h6 : ((abs user_z) <= POS_MAX)) :
     ((geometric_range sat_x sat_y sat_z user_x user_y user_z) >= (0 : Real)) := by
   unfold geometric_range
-  exact sqrt_nonneg _
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── pseudorange_residual ──
 
 noncomputable def pseudorange_residual (pseudorange_obs : Real) (geometric_range : Real) (clock_bias : Real) : Real :=
   (pseudorange_obs - (geometric_range + (C_LIGHT * clock_bias)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem pseudorange_residual_zero_at_truth (pseudorange_obs : Real) (geometric_range : Real) (clock_bias : Real)
     (h1 : (pseudorange_obs >= (0 : Real)))
     (h2 : (pseudorange_obs <= POS_MAX))
@@ -54,7 +76,25 @@ theorem los_component_in_unit_interval (sat_x : Real) (user_x : Real) (geometric
     (h1 : ((abs sat_x) <= POS_MAX))
     (h2 : ((abs user_x) <= POS_MAX))
     (h3 : (geometric_range >= RANGE_MIN))
-    (h4 : (geometric_range <= POS_MAX)) :
-    ((line_of_sight_x sat_x user_x geometric_range) >= (-(1 : Real))) := by
+    (h4 : (geometric_range <= POS_MAX))
+    (h_clamp1 : (-1.0 : Real) ≤ (1 : Real)) :
+    (((line_of_sight_x sat_x user_x geometric_range) >= (-(1 : Real)))) ∧ (((line_of_sight_x sat_x user_x geometric_range) <= (1 : Real))) := by
   unfold line_of_sight_x
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

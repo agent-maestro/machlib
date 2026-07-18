@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ axiom membrane_flux (permeability : Real) (donor_concentration : Real) (receiver
 noncomputable def flux (diffusion_coefficient : Real) (concentration_gradient : Real) : Real :=
   ((-diffusion_coefficient) * concentration_gradient)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem fick_flux_opposes_gradient (diffusion_coefficient : Real) (concentration_gradient : Real)
     (h1 : (diffusion_coefficient >= (0 : Real)))
     (h2 : (diffusion_coefficient <= D_MAX)) :

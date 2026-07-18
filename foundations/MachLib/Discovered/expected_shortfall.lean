@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,18 +27,16 @@ axiom tail_loss_accumulator (prev_sum : Real) (path_loss : Real) (tail_threshold
 noncomputable def parametric_es (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (z_alpha : Real) (phi_at_z : Real) (alpha : Real) : Real :=
   (((-mean_return) * horizon_days) + (((stdev_return * phi_at_z) / ((1 : Real) - alpha)) * horizon_days))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem es_increases_with_sigma (mean_return : Real) (stdev_return : Real) (horizon_days : Real) (z_alpha : Real) (phi_at_z : Real) (alpha : Real)
-    (h1 : ((abs mean_return) <= (1 : Real)))
-    (h2 : (stdev_return >= SIGMA_MIN))
-    (h3 : (stdev_return <= SIGMA_MAX))
-    (h4 : (horizon_days >= (1 : Real)))
-    (h5 : (horizon_days <= HORIZON_MAX))
-    (h6 : (z_alpha >= (0 : Real)))
-    (h7 : (z_alpha <= (5.0 : Real)))
-    (h8 : (phi_at_z >= (0 : Real)))
-    (h9 : (phi_at_z <= PHI_MAX))
-    (h10 : (alpha >= ALPHA_MIN))
-    (h11 : (alpha <= ALPHA_MAX)) :
+    (h_mean_return : (-(1 : Real) ≤ mean_return ∧ mean_return ≤ (1 : Real)))
+    (h_stdev_return : ((SIGMA_MIN <= stdev_return) ∧ (stdev_return <= SIGMA_MAX)))
+    (h_horizon_days : (((1 : Real) <= horizon_days) ∧ (horizon_days <= HORIZON_MAX)))
+    (h_z_alpha : (((0 : Real) <= z_alpha) ∧ (z_alpha <= (5.0 : Real))))
+    (h_phi_at_z : (((0 : Real) <= phi_at_z) ∧ (phi_at_z <= PHI_MAX)))
+    (h_alpha : ((ALPHA_MIN <= alpha) ∧ (alpha <= ALPHA_MAX))) :
     True := by
   trivial
 
@@ -45,10 +46,24 @@ noncomputable def mc_es_estimate (tail_loss_sum : Real) (tail_count : Real) : Re
   (tail_loss_sum / tail_count)
 
 theorem mc_es_zero_at_zero_count (tail_loss_sum : Real) (tail_count : Real)
-    (h1 : (tail_loss_sum >= (0 : Real)))
-    (h2 : (tail_loss_sum <= (1000000000000.0 : Real)))
-    (h3 : (tail_count >= (1 : Real)))
-    (h4 : (tail_count <= (1000000000.0 : Real))) :
+    (h_tail_loss_sum : (((0 : Real) <= tail_loss_sum) ∧ (tail_loss_sum <= (1000000000000.0 : Real))))
+    (h_tail_count : (((1 : Real) <= tail_count) ∧ (tail_count <= (1000000000.0 : Real)))) :
     ((mc_es_estimate tail_loss_sum tail_count) >= (0 : Real)) := by
   unfold mc_es_estimate
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

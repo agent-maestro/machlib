@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,13 +28,30 @@ noncomputable def call_delta (spot : Real) (strike : Real) (rate : Real) (vol : 
   (HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)))))))
 
 theorem bs_call_delta_in_zero_one (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (vol > (0 : Real)))
-    (h4 : (time_to_expiry > TINY_T)) :
-    ((call_delta spot strike rate vol time_to_expiry) >= (0 : Real)) := by
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (strike > (0 : Real)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : (time_to_expiry > TINY_T)) :
+    (((call_delta spot strike rate vol time_to_expiry) >= (0 : Real))) ∧ (((call_delta spot strike rate vol time_to_expiry) <= (1 : Real))) := by
   unfold call_delta
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── put_delta ──
 
@@ -39,10 +59,27 @@ noncomputable def put_delta (spot : Real) (strike : Real) (rate : Real) (vol : R
   ((HALF * ((1 : Real) + (Real.tanh (SQRT_2_OVER_PI * ((d1 spot strike rate vol time_to_expiry) + (((GELU_C3 * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry)) * (d1 spot strike rate vol time_to_expiry))))))) - (1 : Real))
 
 theorem bs_put_delta_in_minus_one_zero (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (vol > (0 : Real)))
-    (h4 : (time_to_expiry > TINY_T)) :
-    ((put_delta spot strike rate vol time_to_expiry) >= (-(1 : Real))) := by
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (strike > (0 : Real)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : (time_to_expiry > TINY_T)) :
+    (((put_delta spot strike rate vol time_to_expiry) >= (-(1 : Real)))) ∧ (((put_delta spot strike rate vol time_to_expiry) <= (0 : Real))) := by
   unfold put_delta
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

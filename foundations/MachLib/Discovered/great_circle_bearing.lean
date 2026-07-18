@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -28,15 +31,35 @@ theorem initial_bearing_in_atan2_range (lat1 : Real) (lon1 : Real) (lat2 : Real)
     (h6 : (lon1 <= PI))
     (h7 : (lon2 >= (-PI)))
     (h8 : (lon2 <= PI)) :
-    ((initial_bearing lat1 lon1 lat2 lon2) > (-PI)) := by
+    (((initial_bearing lat1 lon1 lat2 lon2) > (-PI))) ∧ (((initial_bearing lat1 lon1 lat2 lon2) <= PI)) := by
   unfold initial_bearing
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── final_bearing ──
 
 noncomputable def final_bearing (lat1 : Real) (lon1 : Real) (lat2 : Real) (lon2 : Real) : Real :=
   ((initial_bearing lat2 lon2 lat1 lon1) + PI)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem final_bearing_reciprocal_of_reverse_initial (lat1 : Real) (lon1 : Real) (lat2 : Real) (lon2 : Real)
     (h1 : (lat1 >= (-PI_HALF)))
     (h2 : (lat1 <= PI_HALF))
@@ -54,6 +77,9 @@ theorem final_bearing_reciprocal_of_reverse_initial (lat1 : Real) (lon1 : Real) 
 noncomputable def cross_track_distance (arc_query_distance : Real) (bearing_path : Real) (bearing_query : Real) (earth_radius : Real) : Real :=
   ((arcsin ((Real.sin (arc_query_distance / earth_radius)) * (Real.sin (bearing_query - bearing_path)))) * earth_radius)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem cross_track_zero_when_query_on_path (arc_query_distance : Real) (bearing_path : Real) (bearing_query : Real) (earth_radius : Real)
     (h1 : (arc_query_distance >= (0 : Real)))
     (h2 : (arc_query_distance <= ((2.0 : Real) * (6371000.0 : Real))))

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,10 +30,27 @@ noncomputable def actuator_command (setpoint : Real) (measured : Real) (integral
   (min (max (pid_anti_windup (setpoint - measured) integral (0 : Real) Kp Ki Kd I_LIMIT U_LIMIT) ACTUATOR_MIN) ACTUATOR_MAX)
 
 theorem plc_actuator_command_safe (setpoint : Real) (measured : Real) (integral : Real)
-    (h1 : (ACTUATOR_MIN <= setpoint))
-    (h2 : (setpoint <= ACTUATOR_MAX))
-    (h3 : ((abs measured) < (1000000.0 : Real)))
-    (h4 : ((abs integral) < (1000.0 : Real))) :
-    ((ACTUATOR_MIN - (1 : Real)) <= (actuator_command setpoint measured integral)) := by
+    (h_setpoint : ((ACTUATOR_MIN <= setpoint) ∧ (setpoint <= ACTUATOR_MAX)))
+    (h_measured : (-(1000000.0 : Real) < measured ∧ measured < (1000000.0 : Real)))
+    (h_integral : (-(1000.0 : Real) < integral ∧ integral < (1000.0 : Real)))
+    (h_clamp1 : ACTUATOR_MIN ≤ ACTUATOR_MAX) :
+    (((ACTUATOR_MIN - (1 : Real)) <= (actuator_command setpoint measured integral))) ∧ (((actuator_command setpoint measured integral) <= (ACTUATOR_MAX + (1 : Real)))) := by
   unfold actuator_command
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

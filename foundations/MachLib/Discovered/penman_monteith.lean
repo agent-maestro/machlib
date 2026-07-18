@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,6 +27,9 @@ noncomputable def CP_MAX : Real := (0.0015 : Real)
 noncomputable def reference_et0 (delta_slope : Real) (net_radiation : Real) (soil_heat_flux : Real) (air_density : Real) (specific_heat : Real) (sat_vapor_pressure : Real) (actual_vapor_pressure : Real) (aero_resistance : Real) (surface_resistance : Real) (psychrometric : Real) : Real :=
   (((delta_slope * (net_radiation - soil_heat_flux)) + (((air_density * specific_heat) * (sat_vapor_pressure - actual_vapor_pressure)) / aero_resistance)) / (delta_slope + (psychrometric * (ONE + (surface_resistance / aero_resistance)))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem penman_monteith_et0_nonneg_when_radiation_above_g (delta_slope : Real) (net_radiation : Real) (soil_heat_flux : Real) (air_density : Real) (specific_heat : Real) (sat_vapor_pressure : Real) (actual_vapor_pressure : Real) (aero_resistance : Real) (surface_resistance : Real) (psychrometric : Real)
     (h1 : (delta_slope >= (0 : Real)))
     (h2 : (delta_slope <= DELTA_MAX))

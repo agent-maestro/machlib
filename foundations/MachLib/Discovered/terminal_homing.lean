@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,16 +27,15 @@ noncomputable def T_CONST_MAX : Real := (60.0 : Real)
 noncomputable def terminal_pn_command (n_terminal : Real) (closing_speed : Real) (sigma_dot : Real) (time_to_go : Real) (time_constant : Real) : Real :=
   ((((n_terminal * closing_speed) * sigma_dot) * time_to_go) / time_constant)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem terminal_pn_high_gain_at_tgo_zero (n_terminal : Real) (closing_speed : Real) (sigma_dot : Real) (time_to_go : Real) (time_constant : Real)
-    (h1 : (n_terminal >= N_TERM_MIN))
-    (h2 : (n_terminal <= N_TERM_MAX))
-    (h3 : (closing_speed >= (0 : Real)))
-    (h4 : (closing_speed <= V_MAX))
-    (h5 : ((abs sigma_dot) <= SIGMA_MAX))
-    (h6 : (time_to_go >= TGO_MIN))
-    (h7 : (time_to_go <= TGO_MAX))
-    (h8 : (time_constant >= T_CONST_MIN))
-    (h9 : (time_constant <= T_CONST_MAX)) :
+    (h_n_terminal : ((N_TERM_MIN <= n_terminal) ∧ (n_terminal <= N_TERM_MAX)))
+    (h_closing_speed : (((0 : Real) <= closing_speed) ∧ (closing_speed <= V_MAX)))
+    (h_sigma_dot : (-SIGMA_MAX ≤ sigma_dot ∧ sigma_dot ≤ SIGMA_MAX))
+    (h_time_to_go : ((TGO_MIN <= time_to_go) ∧ (time_to_go <= TGO_MAX)))
+    (h_time_constant : ((T_CONST_MIN <= time_constant) ∧ (time_constant <= T_CONST_MAX))) :
     True := by
   trivial
 
@@ -43,25 +45,39 @@ noncomputable def time_to_go_estimate (range_m : Real) (closing_speed : Real) : 
   (range_m / closing_speed)
 
 theorem tgo_inverse_proportional_to_closing (range_m : Real) (closing_speed : Real)
-    (h1 : (range_m >= (0 : Real)))
-    (h2 : (range_m <= (500000.0 : Real)))
-    (h3 : (closing_speed >= (1 : Real)))
-    (h4 : (closing_speed <= V_MAX)) :
+    (h_range_m : (((0 : Real) <= range_m) ∧ (range_m <= (500000.0 : Real))))
+    (h_closing_speed : (((1 : Real) <= closing_speed) ∧ (closing_speed <= V_MAX))) :
     ((time_to_go_estimate range_m closing_speed) >= (0 : Real)) := by
   unfold time_to_go_estimate
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── true_pn_gain ──
 
 noncomputable def true_pn_gain (n_base : Real) (time_to_go : Real) (total_time : Real) : Real :=
   (n_base * ((1 : Real) + ((total_time - time_to_go) / total_time)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem true_pn_gain_increases_at_late_phase (n_base : Real) (time_to_go : Real) (total_time : Real)
-    (h1 : (n_base >= (2.0 : Real)))
-    (h2 : (n_base <= N_TERM_MAX))
-    (h3 : (time_to_go >= (0 : Real)))
-    (h4 : (time_to_go <= TGO_MAX))
-    (h5 : (total_time >= TGO_MIN))
-    (h6 : (total_time <= TGO_MAX)) :
+    (h_n_base : (((2.0 : Real) <= n_base) ∧ (n_base <= N_TERM_MAX)))
+    (h_time_to_go : (((0 : Real) <= time_to_go) ∧ (time_to_go <= TGO_MAX)))
+    (h_total_time : ((TGO_MIN <= total_time) ∧ (total_time <= TGO_MAX))) :
     True := by
   trivial

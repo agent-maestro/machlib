@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,16 +28,31 @@ noncomputable def coulomb_count_step (soc_prev : Real) (current_a : Real) (capac
   (min (max (soc_prev - (((current_a * dt_s) / (3600.0 : Real)) / capacity_ah)) SOC_MIN) SOC_MAX)
 
 theorem soc_coulomb_count_decreases_under_discharge (soc_prev : Real) (current_a : Real) (capacity_ah : Real) (dt_s : Real)
-    (h1 : (soc_prev >= SOC_MIN))
-    (h2 : (soc_prev <= SOC_MAX))
-    (h3 : ((abs current_a) <= I_MAX))
-    (h4 : (capacity_ah >= Q_MIN))
-    (h5 : (capacity_ah <= Q_MAX))
-    (h6 : (dt_s >= (0 : Real)))
-    (h7 : (dt_s <= DT_MAX)) :
-    ((coulomb_count_step soc_prev current_a capacity_ah dt_s) >= SOC_MIN) := by
+    (h_soc_prev : ((SOC_MIN <= soc_prev) ∧ (soc_prev <= SOC_MAX)))
+    (h_current_a : (-I_MAX ≤ current_a ∧ current_a ≤ I_MAX))
+    (h_capacity_ah : ((Q_MIN <= capacity_ah) ∧ (capacity_ah <= Q_MAX)))
+    (h_dt_s : (((0 : Real) <= dt_s) ∧ (dt_s <= DT_MAX)))
+    (h_clamp1 : SOC_MIN ≤ SOC_MAX) :
+    (((coulomb_count_step soc_prev current_a capacity_ah dt_s) >= SOC_MIN)) ∧ (((coulomb_count_step soc_prev current_a capacity_ah dt_s) <= SOC_MAX)) := by
   unfold coulomb_count_step
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── lithium_ion_ocv_curve ──
 
@@ -42,11 +60,27 @@ noncomputable def lithium_ion_ocv_curve (soc : Real) : Real :=
   ((((3.0 : Real) + ((1.5 : Real) * soc)) - ((1.2 : Real) * (soc * soc))) + ((0.5 : Real) * ((soc * soc) * soc)))
 
 theorem ocv_curve_monotone_in_soc (soc : Real)
-    (h1 : (soc >= (0.05 : Real)))
-    (h2 : (soc <= (0.95 : Real))) :
-    ((lithium_ion_ocv_curve soc) >= V_MIN) := by
+    (h_soc : (((0.05 : Real) <= soc) ∧ (soc <= (0.95 : Real)))) :
+    (((lithium_ion_ocv_curve soc) >= V_MIN)) ∧ (((lithium_ion_ocv_curve soc) <= V_MAX)) := by
   unfold lithium_ion_ocv_curve
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── mixed_soc_estimate ──
 
@@ -54,12 +88,26 @@ noncomputable def mixed_soc_estimate (soc_coulomb : Real) (soc_from_ocv : Real) 
   ((alpha * soc_coulomb) + (((1 : Real) - alpha) * soc_from_ocv))
 
 theorem mixed_soc_blends_estimators (soc_coulomb : Real) (soc_from_ocv : Real) (alpha : Real)
-    (h1 : (soc_coulomb >= SOC_MIN))
-    (h2 : (soc_coulomb <= SOC_MAX))
-    (h3 : (soc_from_ocv >= SOC_MIN))
-    (h4 : (soc_from_ocv <= SOC_MAX))
-    (h5 : (alpha >= (0 : Real)))
-    (h6 : (alpha <= (1 : Real))) :
-    ((mixed_soc_estimate soc_coulomb soc_from_ocv alpha) >= SOC_MIN) := by
+    (h_soc_coulomb : ((SOC_MIN <= soc_coulomb) ∧ (soc_coulomb <= SOC_MAX)))
+    (h_soc_from_ocv : ((SOC_MIN <= soc_from_ocv) ∧ (soc_from_ocv <= SOC_MAX)))
+    (h_alpha : (((0 : Real) <= alpha) ∧ (alpha <= (1 : Real)))) :
+    (((mixed_soc_estimate soc_coulomb soc_from_ocv alpha) >= SOC_MIN)) ∧ (((mixed_soc_estimate soc_coulomb soc_from_ocv alpha) <= SOC_MAX)) := by
   unfold mixed_soc_estimate
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

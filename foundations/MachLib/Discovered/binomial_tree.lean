@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,13 +26,27 @@ noncomputable def up_factor (vol : Real) (dt : Real) : Real :=
   (Real.exp (vol * (Real.sqrt dt)))
 
 theorem binomial_up_factor_strictly_above_one (vol : Real) (dt : Real)
-    (h1 : (vol >= VOL_MIN))
-    (h2 : (vol <= VOL_MAX))
-    (h3 : (dt >= DT_MIN))
-    (h4 : (dt <= DT_MAX)) :
+    (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
+    (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX))) :
     ((up_factor vol dt) > (1 : Real)) := by
   unfold up_factor
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── down_factor ──
 
@@ -37,13 +54,28 @@ noncomputable def down_factor (vol : Real) (dt : Real) : Real :=
   (ONE / (Real.exp (vol * (Real.sqrt dt))))
 
 theorem binomial_down_factor_below_one (vol : Real) (dt : Real)
-    (h1 : (vol >= VOL_MIN))
-    (h2 : (vol <= VOL_MAX))
-    (h3 : (dt >= DT_MIN))
-    (h4 : (dt <= DT_MAX)) :
-    ((down_factor vol dt) < (1 : Real)) := by
+    (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
+    (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX))) :
+    (((down_factor vol dt) < (1 : Real))) ∧ (((down_factor vol dt) > (0 : Real))) := by
   unfold down_factor
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── risk_neutral_prob ──
 
@@ -51,15 +83,30 @@ noncomputable def risk_neutral_prob (rate : Real) (vol : Real) (dt : Real) : Rea
   (((Real.exp (rate * dt)) - (ONE / (Real.exp (vol * (Real.sqrt dt))))) / (((Real.exp (vol * (Real.sqrt dt))) - (ONE / (Real.exp (vol * (Real.sqrt dt))))) + TINY))
 
 theorem risk_neutral_prob_in_unit_interval (rate : Real) (vol : Real) (dt : Real)
-    (h1 : (vol >= VOL_MIN))
-    (h2 : (vol <= VOL_MAX))
-    (h3 : (dt >= DT_MIN))
-    (h4 : (dt <= DT_MAX))
-    (h5 : ((rate * dt) < (vol * (Real.sqrt dt))))
-    (h6 : ((rate * dt) > ((-vol) * (Real.sqrt dt)))) :
-    ((risk_neutral_prob rate vol dt) > (0 : Real)) := by
+    (h_vol : ((VOL_MIN <= vol) ∧ (vol <= VOL_MAX)))
+    (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX)))
+    (h_assume1 : ((rate * dt) < (vol * (Real.sqrt dt))))
+    (h_assume2 : ((rate * dt) > ((-vol) * (Real.sqrt dt)))) :
+    (((risk_neutral_prob rate vol dt) > (0 : Real))) ∧ (((risk_neutral_prob rate vol dt) < (1 : Real))) := by
   unfold risk_neutral_prob
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── step_back ──
 
@@ -67,12 +114,26 @@ noncomputable def step_back (rate : Real) (dt : Real) (p : Real) (value_up : Rea
   ((Real.exp ((-rate) * dt)) * ((p * value_up) + ((ONE - p) * value_down)))
 
 theorem binomial_step_back_convex_combination (rate : Real) (dt : Real) (p : Real) (value_up : Real) (value_down : Real)
-    (h1 : (p >= (0 : Real)))
-    (h2 : (p <= (1 : Real)))
-    (h3 : (dt >= DT_MIN))
-    (h4 : (dt <= DT_MAX))
-    (h5 : (value_up >= (0 : Real)))
-    (h6 : (value_down >= (0 : Real))) :
+    (h_dt : ((DT_MIN <= dt) ∧ (dt <= DT_MAX)))
+    (h_p : (((0 : Real) <= p) ∧ (p <= (1 : Real))))
+    (h_value_up : (value_up >= (0 : Real)))
+    (h_value_down : (value_down >= (0 : Real))) :
     ((step_back rate dt p value_up value_down) >= (0 : Real)) := by
   unfold step_back
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

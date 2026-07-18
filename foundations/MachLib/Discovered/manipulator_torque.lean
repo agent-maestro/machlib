@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,6 +27,9 @@ axiom coriolis_pair (h_ij : Real) (q_dot_j : Real) : Real  -- helper (axiomatise
 noncomputable def joint_torque (inertia : Real) (damping : Real) (mass : Real) (com_offset : Real) (q : Real) (q_dot : Real) (q_ddot : Real) : Real :=
   (((inertia * q_ddot) + (damping * q_dot)) + (((mass * G_GRAVITY) * com_offset) * (Real.sin q)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem joint_torque_inertia_dominant_at_high_accel (inertia : Real) (damping : Real) (mass : Real) (com_offset : Real) (q : Real) (q_dot : Real) (q_ddot : Real)
     (h1 : (inertia >= I_MIN))
     (h2 : (inertia <= I_MAX))
@@ -44,11 +50,15 @@ theorem joint_torque_inertia_dominant_at_high_accel (inertia : Real) (damping : 
 noncomputable def joint_friction (q_dot : Real) (viscous : Real) (coulomb : Real) : Real :=
   ((viscous * q_dot) + (coulomb * (min (max q_dot (-1.0 : Real)) (1 : Real))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem friction_opposes_motion (q_dot : Real) (viscous : Real) (coulomb : Real)
     (h1 : ((abs q_dot) <= QDOT_MAX))
     (h2 : (viscous >= (0 : Real)))
     (h3 : (viscous <= (1000.0 : Real)))
     (h4 : (coulomb >= (0 : Real)))
-    (h5 : (coulomb <= (1000.0 : Real))) :
+    (h5 : (coulomb <= (1000.0 : Real)))
+    (h_clamp1 : (-1.0 : Real) ≤ (1 : Real)) :
     True := by
   trivial

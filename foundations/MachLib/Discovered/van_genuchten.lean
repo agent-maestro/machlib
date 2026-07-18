@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -30,9 +33,26 @@ theorem vg_effective_saturation_in_unit_interval (psi : Real) (alpha : Real) (n_
     (h4 : (alpha <= ALPHA_MAX))
     (h5 : (n_shape >= N_MIN))
     (h6 : (n_shape <= N_MAX)) :
-    ((effective_saturation psi alpha n_shape) >= (0 : Real)) := by
+    (((effective_saturation psi alpha n_shape) >= (0 : Real))) ∧ (((effective_saturation psi alpha n_shape) <= ONE)) := by
   unfold effective_saturation
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── water_content ──
 
@@ -46,6 +66,23 @@ theorem vg_theta_within_residual_saturated_band (theta_residual : Real) (theta_s
     (h4 : (theta_saturated <= THETA_MAX))
     (h5 : (effective_sat >= (0 : Real)))
     (h6 : (effective_sat <= ONE)) :
-    ((water_content theta_residual theta_saturated effective_sat) >= theta_residual) := by
+    (((water_content theta_residual theta_saturated effective_sat) >= theta_residual)) ∧ (((water_content theta_residual theta_saturated effective_sat) <= theta_saturated)) := by
   unfold water_content
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,6 +22,9 @@ axiom update_variance (gain : Real) (p_pred : Real) : Real  -- helper (axiomatis
 noncomputable def predict_position (x_pos : Real) (x_vel : Real) (dt : Real) : Real :=
   (x_pos + (x_vel * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem track_position_predict_linear (x_pos : Real) (x_vel : Real) (dt : Real)
     (h1 : (dt >= (0 : Real))) :
     True := by
@@ -29,6 +35,9 @@ theorem track_position_predict_linear (x_pos : Real) (x_vel : Real) (dt : Real)
 noncomputable def innovation (z_meas : Real) (x_pred : Real) : Real :=
   (z_meas - x_pred)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem track_innovation_zero_when_aligned (z_meas : Real) (x_pred : Real) :
     True := by
   trivial
@@ -41,6 +50,23 @@ noncomputable def kalman_gain (p_pred : Real) (r_meas : Real) : Real :=
 theorem track_gain_in_unit_interval (p_pred : Real) (r_meas : Real)
     (h1 : (p_pred >= (0 : Real)))
     (h2 : (r_meas > (0 : Real))) :
-    ((kalman_gain p_pred r_meas) >= (0 : Real)) := by
+    (((kalman_gain p_pred r_meas) >= (0 : Real))) ∧ (((kalman_gain p_pred r_meas) <= (1 : Real))) := by
   unfold kalman_gain
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

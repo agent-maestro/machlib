@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,6 +28,9 @@ noncomputable def GBW_MAX : Real := (10000000000.0 : Real)
 noncomputable def inverting_output (v_in : Real) (r_feedback : Real) (r_input : Real) : Real :=
   ((-(r_feedback / r_input)) * v_in)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem inverting_gain_negative_proportional (v_in : Real) (r_feedback : Real) (r_input : Real)
     (h1 : ((abs v_in) <= V_IN_MAX))
     (h2 : (r_feedback >= RES_MIN))
@@ -39,6 +45,9 @@ theorem inverting_gain_negative_proportional (v_in : Real) (r_feedback : Real) (
 noncomputable def inverting_output_with_rails (v_in : Real) (r_feedback : Real) (r_input : Real) (v_pos_rail : Real) (v_neg_rail : Real) : Real :=
   (min (max ((-(r_feedback / r_input)) * v_in) v_neg_rail) v_pos_rail)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rail_clipped_within_supplies (v_in : Real) (r_feedback : Real) (r_input : Real) (v_pos_rail : Real) (v_neg_rail : Real)
     (h1 : ((abs v_in) <= V_IN_MAX))
     (h2 : (r_feedback >= RES_MIN))
@@ -48,7 +57,8 @@ theorem rail_clipped_within_supplies (v_in : Real) (r_feedback : Real) (r_input 
     (h6 : (v_pos_rail >= V_RAIL_MIN))
     (h7 : (v_pos_rail <= V_RAIL_MAX))
     (h8 : (v_neg_rail >= (-V_RAIL_MAX)))
-    (h9 : (v_neg_rail <= (-V_RAIL_MIN))) :
+    (h9 : (v_neg_rail <= (-V_RAIL_MIN)))
+    (h_clamp1 : v_neg_rail ≤ v_pos_rail) :
     True := by
   trivial
 
@@ -66,7 +76,23 @@ theorem bandwidth_decreases_with_gain (gbw : Real) (r_feedback : Real) (r_input 
     (h6 : (r_input <= RES_MAX)) :
     ((closed_loop_bandwidth gbw r_feedback r_input) >= (0 : Real)) := by
   unfold closed_loop_bandwidth
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── magnitude_at_freq ──
 
@@ -82,4 +108,20 @@ theorem magnitude_rolloff_minus3db_at_bw (g_dc_magnitude : Real) (frequency : Re
     (h6 : (bandwidth <= FREQ_MAX)) :
     ((magnitude_at_freq g_dc_magnitude frequency bandwidth) >= (0 : Real)) := by
   unfold magnitude_at_freq
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

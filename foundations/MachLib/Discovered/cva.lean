@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,11 +25,26 @@ noncomputable def cva_cell (expected_exposure : Real) (cum_hazard_prev : Real) (
   (((lgd * expected_exposure) * ((Real.exp (-cum_hazard_prev)) - (Real.exp (-cum_hazard_now)))) * (Real.exp ((-rate) * time_to_t)))
 
 theorem cva_cell_non_negative (expected_exposure : Real) (cum_hazard_prev : Real) (cum_hazard_now : Real) (rate : Real) (time_to_t : Real) (lgd : Real)
-    (h1 : (expected_exposure >= (0 : Real)))
-    (h2 : (cum_hazard_prev <= cum_hazard_now))
-    (h3 : (lgd >= (0 : Real)))
-    (h4 : (lgd <= (1 : Real)))
-    (h5 : (time_to_t >= (0 : Real))) :
+    (h_expected_exposure : (expected_exposure >= (0 : Real)))
+    (h_time_to_t : (time_to_t >= (0 : Real)))
+    (h_lgd : (((0 : Real) <= lgd) ∧ (lgd <= (1 : Real))))
+    (h1 : (cum_hazard_prev <= cum_hazard_now)) :
     ((cva_cell expected_exposure cum_hazard_prev cum_hazard_now rate time_to_t lgd) >= (0 : Real)) := by
   unfold cva_cell
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

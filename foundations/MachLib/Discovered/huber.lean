@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,20 +27,41 @@ theorem huber_loss_nonnegative (prediction : Real) (target : Real) (delta : Real
     (h1 : ((abs prediction) < MAX_RESIDUAL))
     (h2 : ((abs target) < MAX_RESIDUAL))
     (h3 : (delta > (0 : Real)))
-    (h4 : (delta <= MAX_RESIDUAL)) :
+    (h4 : (delta <= MAX_RESIDUAL))
+    (h_clamp1 : (0 : Real) ≤ delta) :
     ((huber_loss prediction target delta) >= (0 : Real)) := by
   unfold huber_loss
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── huber_grad ──
 
 noncomputable def huber_grad (prediction : Real) (target : Real) (delta : Real) : Real :=
   (min (max (prediction - target) (-delta)) delta)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem huber_grad_bounded_by_delta (prediction : Real) (target : Real) (delta : Real)
     (h1 : ((abs prediction) < MAX_RESIDUAL))
     (h2 : ((abs target) < MAX_RESIDUAL))
     (h3 : (delta > (0 : Real)))
-    (h4 : (delta <= MAX_RESIDUAL)) :
+    (h4 : (delta <= MAX_RESIDUAL))
+    (h_clamp1 : (-delta) ≤ delta) :
     True := by
   trivial

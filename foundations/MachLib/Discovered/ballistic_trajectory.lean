@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -21,11 +24,13 @@ noncomputable def DT_MAX : Real := (1 : Real)
 noncomputable def x_step (x_prev : Real) (vx : Real) (dt : Real) : Real :=
   (x_prev + (vx * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem x_step_linear_in_dt (x_prev : Real) (vx : Real) (dt : Real)
-    (h1 : ((abs x_prev) <= POS_MAX))
-    (h2 : ((abs vx) <= VEL_MAX))
-    (h3 : (dt >= (0 : Real)))
-    (h4 : (dt <= DT_MAX)) :
+    (h_x_prev : (-POS_MAX ≤ x_prev ∧ x_prev ≤ POS_MAX))
+    (h_vx : (-VEL_MAX ≤ vx ∧ vx ≤ VEL_MAX))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -34,11 +39,13 @@ theorem x_step_linear_in_dt (x_prev : Real) (vx : Real) (dt : Real)
 noncomputable def y_step (y_prev : Real) (vy : Real) (dt : Real) : Real :=
   (y_prev + (vy * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem y_step_linear_in_dt (y_prev : Real) (vy : Real) (dt : Real)
-    (h1 : ((abs y_prev) <= POS_MAX))
-    (h2 : ((abs vy) <= VEL_MAX))
-    (h3 : (dt >= (0 : Real)))
-    (h4 : (dt <= DT_MAX)) :
+    (h_y_prev : (-POS_MAX ≤ y_prev ∧ y_prev ≤ POS_MAX))
+    (h_vy : (-VEL_MAX ≤ vy ∧ vy ≤ VEL_MAX))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -47,12 +54,13 @@ theorem y_step_linear_in_dt (y_prev : Real) (vy : Real) (dt : Real)
 noncomputable def vx_step (vx_prev : Real) (drag_k : Real) (dt : Real) : Real :=
   (vx_prev - ((drag_k * vx_prev) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem vx_step_decays_with_drag (vx_prev : Real) (drag_k : Real) (dt : Real)
-    (h1 : ((abs vx_prev) <= VEL_MAX))
-    (h2 : (drag_k >= (0 : Real)))
-    (h3 : (drag_k <= KD_MAX))
-    (h4 : (dt >= (0 : Real)))
-    (h5 : (dt <= DT_MAX)) :
+    (h_vx_prev : (-VEL_MAX ≤ vx_prev ∧ vx_prev ≤ VEL_MAX))
+    (h_drag_k : (((0 : Real) <= drag_k) ∧ (drag_k <= KD_MAX)))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -61,12 +69,13 @@ theorem vx_step_decays_with_drag (vx_prev : Real) (drag_k : Real) (dt : Real)
 noncomputable def vy_step (vy_prev : Real) (drag_k : Real) (dt : Real) : Real :=
   ((vy_prev - (G_GRAVITY * dt)) - ((drag_k * vy_prev) * dt))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem vy_step_includes_gravity_and_drag (vy_prev : Real) (drag_k : Real) (dt : Real)
-    (h1 : ((abs vy_prev) <= VEL_MAX))
-    (h2 : (drag_k >= (0 : Real)))
-    (h3 : (drag_k <= KD_MAX))
-    (h4 : (dt >= (0 : Real)))
-    (h5 : (dt <= DT_MAX)) :
+    (h_vy_prev : (-VEL_MAX ≤ vy_prev ∧ vy_prev ≤ VEL_MAX))
+    (h_drag_k : (((0 : Real) <= drag_k) ∧ (drag_k <= KD_MAX)))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX))) :
     True := by
   trivial
 
@@ -76,9 +85,24 @@ noncomputable def vacuum_range (muzzle_velocity : Real) (elevation_angle : Real)
   (((muzzle_velocity * muzzle_velocity) * (Real.sin ((2.0 : Real) * elevation_angle))) / G_GRAVITY)
 
 theorem vacuum_range_max_at_45deg (muzzle_velocity : Real) (elevation_angle : Real)
-    (h1 : (muzzle_velocity >= (0 : Real)))
-    (h2 : (muzzle_velocity <= VEL_MAX))
-    (h3 : ((abs elevation_angle) <= (1.5708 : Real))) :
+    (h_muzzle_velocity : (((0 : Real) <= muzzle_velocity) ∧ (muzzle_velocity <= VEL_MAX)))
+    (h_elevation_angle : (-(1.5708 : Real) ≤ elevation_angle ∧ elevation_angle ≤ (1.5708 : Real))) :
     ((vacuum_range muzzle_velocity elevation_angle) >= (0 : Real)) := by
   unfold vacuum_range
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

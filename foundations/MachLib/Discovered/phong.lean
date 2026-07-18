@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def SHININESS_MAX : Real := (1024.0 : Real)
 noncomputable def ambient (k_ambient : Real) (light_ambient : Real) : Real :=
   (k_ambient * light_ambient)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phong_ambient_below_input (k_ambient : Real) (light_ambient : Real)
     (h1 : (k_ambient >= (0 : Real)))
     (h2 : (k_ambient <= ONE))
@@ -33,6 +39,9 @@ theorem phong_ambient_below_input (k_ambient : Real) (light_ambient : Real)
 noncomputable def diffuse (k_diffuse : Real) (n_dot_l_clamped : Real) (light_diffuse : Real) : Real :=
   ((k_diffuse * n_dot_l_clamped) * light_diffuse)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phong_diffuse_below_kd_times_id (k_diffuse : Real) (n_dot_l_clamped : Real) (light_diffuse : Real)
     (h1 : (k_diffuse >= (0 : Real)))
     (h2 : (k_diffuse <= ONE))
@@ -48,6 +57,9 @@ theorem phong_diffuse_below_kd_times_id (k_diffuse : Real) (n_dot_l_clamped : Re
 noncomputable def specular (k_specular : Real) (r_dot_v_clamped : Real) (shininess : Real) (light_specular : Real) : Real :=
   ((k_specular * (r_dot_v_clamped ^ shininess)) * light_specular)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phong_specular_below_ks_times_is (k_specular : Real) (r_dot_v_clamped : Real) (shininess : Real) (light_specular : Real)
     (h1 : (k_specular >= (0 : Real)))
     (h2 : (k_specular <= ONE))
@@ -65,6 +77,9 @@ theorem phong_specular_below_ks_times_is (k_specular : Real) (r_dot_v_clamped : 
 noncomputable def shade (ambient_i : Real) (diffuse_i : Real) (specular_i : Real) : Real :=
   ((ambient_i + diffuse_i) + specular_i)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phong_total_above_each_component (ambient_i : Real) (diffuse_i : Real) (specular_i : Real)
     (h1 : (ambient_i >= (0 : Real)))
     (h2 : (diffuse_i >= (0 : Real)))

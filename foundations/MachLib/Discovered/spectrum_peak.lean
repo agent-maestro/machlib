@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -25,13 +28,32 @@ theorem magnitude_squared_nonneg (real_part : Real) (imag_part : Real)
     (h2 : ((abs imag_part) <= COMPONENT_MAX)) :
     ((magnitude_squared real_part imag_part) >= (0 : Real)) := by
   unfold magnitude_squared
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── log_magnitude_db ──
 
 noncomputable def log_magnitude_db (power : Real) : Real :=
   (((10.0 : Real) * LN10_INV) * (Real.log power))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem log_magnitude_db_finite_above_floor (power : Real)
     (h1 : (power >= POWER_MIN))
     (h2 : (power <= POWER_MAX)) :
@@ -49,7 +71,26 @@ theorem spectrum_detect_zero_below_threshold (power : Real) (noise_floor : Real)
     (h3 : (noise_floor >= (0 : Real)))
     (h4 : (noise_floor <= POWER_MAX))
     (h5 : (margin >= (1 : Real)))
-    (h6 : (margin <= (1000000.0 : Real))) :
-    ((spectrum_detect power noise_floor margin) >= (0 : Real)) := by
+    (h6 : (margin <= (1000000.0 : Real)))
+    (h_clamp1 : (0 : Real) ≤ (1 : Real))
+    (h_clamp2 : (1e-30 : Real) ≤ (1 : Real)) :
+    (((spectrum_detect power noise_floor margin) >= (0 : Real))) ∧ (((spectrum_detect power noise_floor margin) <= (1 : Real))) := by
   unfold spectrum_detect
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

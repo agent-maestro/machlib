@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,6 +26,9 @@ noncomputable def VA_MAX : Real := (1000.0 : Real)
 noncomputable def collector_current (saturation_current : Real) (base_emitter_voltage : Real) (thermal_voltage : Real) : Real :=
   (saturation_current * ((Real.exp (base_emitter_voltage / thermal_voltage)) - (1 : Real)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ic_monotone_in_vbe (saturation_current : Real) (base_emitter_voltage : Real) (thermal_voltage : Real)
     (h1 : (saturation_current >= IS_MIN))
     (h2 : (saturation_current <= IS_MAX))
@@ -38,6 +44,9 @@ theorem ic_monotone_in_vbe (saturation_current : Real) (base_emitter_voltage : R
 noncomputable def collector_current_with_early (saturation_current : Real) (base_emitter_voltage : Real) (collector_emitter_voltage : Real) (thermal_voltage : Real) (early_voltage : Real) : Real :=
   ((saturation_current * ((Real.exp (base_emitter_voltage / thermal_voltage)) - (1 : Real))) * ((1 : Real) + (collector_emitter_voltage / early_voltage)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem ic_with_early_increases_with_vce (saturation_current : Real) (base_emitter_voltage : Real) (collector_emitter_voltage : Real) (thermal_voltage : Real) (early_voltage : Real)
     (h1 : (saturation_current >= IS_MIN))
     (h2 : (saturation_current <= IS_MAX))
@@ -64,4 +73,20 @@ theorem transconductance_proportional_to_ic (collector_current : Real) (thermal_
     (h4 : (thermal_voltage <= (0.1 : Real))) :
     ((transconductance collector_current thermal_voltage) >= (0 : Real)) := by
   unfold transconductance
-  apply div_nonneg_of_nonneg_pos <;> assumption
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

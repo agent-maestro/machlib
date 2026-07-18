@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,17 +32,30 @@ noncomputable def rho_call (spot : Real) (strike : Real) (rate : Real) (vol : Re
   (((strike * time_to_expiry) * (Real.exp ((-rate) * time_to_expiry))) * (HALF * (ONE + (Real.tanh (SQRT_2_OVER_PI * ((bs_d2 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry))))))))
 
 theorem rho_call_nonneg (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (strike <= STRIKE_MAX))
-    (h4 : (vol > (0 : Real)))
-    (h5 : (rate >= (-RATE_MAX)))
-    (h6 : (rate <= RATE_MAX))
-    (h7 : (time_to_expiry >= TINY_T))
-    (h8 : (time_to_expiry <= T_MAX)) :
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (((0 : Real) < strike) ∧ (strike <= STRIKE_MAX)))
+    (h_rate : (((-RATE_MAX) <= rate) ∧ (rate <= RATE_MAX)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : ((TINY_T <= time_to_expiry) ∧ (time_to_expiry <= T_MAX))) :
     ((rho_call spot strike rate vol time_to_expiry) >= (0 : Real)) := by
   unfold rho_call
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── rho_put ──
 
@@ -47,14 +63,27 @@ noncomputable def rho_put (spot : Real) (strike : Real) (rate : Real) (vol : Rea
   ((((-strike) * time_to_expiry) * (Real.exp ((-rate) * time_to_expiry))) * (ONE - (HALF * (ONE + (Real.tanh (SQRT_2_OVER_PI * ((bs_d2 spot strike rate vol time_to_expiry) + (((GELU_C3 * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)) * (bs_d2 spot strike rate vol time_to_expiry)))))))))
 
 theorem rho_put_nonpos (spot : Real) (strike : Real) (rate : Real) (vol : Real) (time_to_expiry : Real)
-    (h1 : (spot > (0 : Real)))
-    (h2 : (strike > (0 : Real)))
-    (h3 : (strike <= STRIKE_MAX))
-    (h4 : (vol > (0 : Real)))
-    (h5 : (rate >= (-RATE_MAX)))
-    (h6 : (rate <= RATE_MAX))
-    (h7 : (time_to_expiry >= TINY_T))
-    (h8 : (time_to_expiry <= T_MAX)) :
+    (h_spot : (spot > (0 : Real)))
+    (h_strike : (((0 : Real) < strike) ∧ (strike <= STRIKE_MAX)))
+    (h_rate : (((-RATE_MAX) <= rate) ∧ (rate <= RATE_MAX)))
+    (h_vol : (vol > (0 : Real)))
+    (h_time_to_expiry : ((TINY_T <= time_to_expiry) ∧ (time_to_expiry <= T_MAX))) :
     ((rho_put spot strike rate vol time_to_expiry) <= (0 : Real)) := by
   unfold rho_put
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

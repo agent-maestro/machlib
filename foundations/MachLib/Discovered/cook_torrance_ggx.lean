@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -31,7 +34,23 @@ theorem ggx_distribution_nonneg (n_dot_h_clamped : Real) (alpha : Real)
     (h4 : (alpha <= ALPHA_MAX)) :
     ((ggx_distribution n_dot_h_clamped alpha) >= (0 : Real)) := by
   unfold ggx_distribution
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── schlick_fresnel ──
 
@@ -43,9 +62,26 @@ theorem schlick_fresnel_in_unit_interval_when_f0_is (v_dot_h_clamped : Real) (f0
     (h2 : (v_dot_h_clamped <= ONE))
     (h3 : (f0 >= (0 : Real)))
     (h4 : (f0 <= ONE)) :
-    ((schlick_fresnel v_dot_h_clamped f0) >= f0) := by
+    (((schlick_fresnel v_dot_h_clamped f0) >= f0)) ∧ (((schlick_fresnel v_dot_h_clamped f0) <= ONE)) := by
   unfold schlick_fresnel
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── smith_schlick_geometry ──
 
@@ -59,9 +95,26 @@ theorem smith_schlick_geometry_in_unit_interval (n_dot_l_clamped : Real) (n_dot_
     (h4 : (n_dot_v_clamped <= ONE))
     (h5 : (alpha >= ALPHA_MIN))
     (h6 : (alpha <= ALPHA_MAX)) :
-    ((smith_schlick_geometry n_dot_l_clamped n_dot_v_clamped alpha) >= (0 : Real)) := by
+    (((smith_schlick_geometry n_dot_l_clamped n_dot_v_clamped alpha) >= (0 : Real))) ∧ (((smith_schlick_geometry n_dot_l_clamped n_dot_v_clamped alpha) <= ONE)) := by
   unfold smith_schlick_geometry
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── specular ──
 
@@ -80,4 +133,20 @@ theorem cook_torrance_specular_nonneg (distribution : Real) (fresnel : Real) (ge
     (h9 : (n_dot_v_clamped <= ONE)) :
     ((specular distribution fresnel geometry n_dot_l_clamped n_dot_v_clamped) >= (0 : Real)) := by
   unfold specular
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

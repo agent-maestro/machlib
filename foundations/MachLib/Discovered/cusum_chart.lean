@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,17 +25,31 @@ noncomputable def cusum_high_step (s_high_prev : Real) (sample : Real) (target :
   (min (max ((s_high_prev + ((sample - target) / sigma)) - reference_k) (0 : Real)) VALUE_MAX)
 
 theorem cusum_high_step_nonneg (s_high_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real)
-    (h1 : (s_high_prev >= (0 : Real)))
-    (h2 : (s_high_prev <= VALUE_MAX))
-    (h3 : ((abs sample) <= VALUE_MAX))
-    (h4 : ((abs target) <= VALUE_MAX))
-    (h5 : (sigma >= SIGMA_MIN))
-    (h6 : (sigma <= SIGMA_MAX))
-    (h7 : (reference_k >= (0 : Real)))
-    (h8 : (reference_k <= K_MAX)) :
+    (h_s_high_prev : (((0 : Real) <= s_high_prev) ∧ (s_high_prev <= VALUE_MAX)))
+    (h_sample : (-VALUE_MAX ≤ sample ∧ sample ≤ VALUE_MAX))
+    (h_target : (-VALUE_MAX ≤ target ∧ target ≤ VALUE_MAX))
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h_reference_k : (((0 : Real) <= reference_k) ∧ (reference_k <= K_MAX)))
+    (h_clamp1 : (0 : Real) ≤ VALUE_MAX) :
     ((cusum_high_step s_high_prev sample target sigma reference_k) >= (0 : Real)) := by
   unfold cusum_high_step
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── cusum_low_step ──
 
@@ -40,17 +57,31 @@ noncomputable def cusum_low_step (s_low_prev : Real) (sample : Real) (target : R
   (min (max ((s_low_prev - ((sample - target) / sigma)) - reference_k) (0 : Real)) VALUE_MAX)
 
 theorem cusum_low_step_nonneg (s_low_prev : Real) (sample : Real) (target : Real) (sigma : Real) (reference_k : Real)
-    (h1 : (s_low_prev >= (0 : Real)))
-    (h2 : (s_low_prev <= VALUE_MAX))
-    (h3 : ((abs sample) <= VALUE_MAX))
-    (h4 : ((abs target) <= VALUE_MAX))
-    (h5 : (sigma >= SIGMA_MIN))
-    (h6 : (sigma <= SIGMA_MAX))
-    (h7 : (reference_k >= (0 : Real)))
-    (h8 : (reference_k <= K_MAX)) :
+    (h_s_low_prev : (((0 : Real) <= s_low_prev) ∧ (s_low_prev <= VALUE_MAX)))
+    (h_sample : (-VALUE_MAX ≤ sample ∧ sample ≤ VALUE_MAX))
+    (h_target : (-VALUE_MAX ≤ target ∧ target ≤ VALUE_MAX))
+    (h_sigma : ((SIGMA_MIN <= sigma) ∧ (sigma <= SIGMA_MAX)))
+    (h_reference_k : (((0 : Real) <= reference_k) ∧ (reference_k <= K_MAX)))
+    (h_clamp1 : (0 : Real) ≤ VALUE_MAX) :
     ((cusum_low_step s_low_prev sample target sigma reference_k) >= (0 : Real)) := by
   unfold cusum_low_step
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── cusum_alarm ──
 
@@ -58,15 +89,31 @@ noncomputable def cusum_alarm (s_high : Real) (s_low : Real) (decision_h : Real)
   (min (max (((min (max (s_high - decision_h) (0 : Real)) VALUE_MAX) + (min (max (s_low - decision_h) (0 : Real)) VALUE_MAX)) / (0.001 : Real)) (0 : Real)) (1 : Real))
 
 theorem cusum_alarm_zero_when_in_control (s_high : Real) (s_low : Real) (decision_h : Real)
-    (h1 : (s_high >= (0 : Real)))
-    (h2 : (s_high <= VALUE_MAX))
-    (h3 : (s_low >= (0 : Real)))
-    (h4 : (s_low <= VALUE_MAX))
-    (h5 : (decision_h >= (0.001 : Real)))
-    (h6 : (decision_h <= H_MAX)) :
-    ((cusum_alarm s_high s_low decision_h) >= (0 : Real)) := by
+    (h_s_high : (((0 : Real) <= s_high) ∧ (s_high <= VALUE_MAX)))
+    (h_s_low : (((0 : Real) <= s_low) ∧ (s_low <= VALUE_MAX)))
+    (h_decision_h : (((0.001 : Real) <= decision_h) ∧ (decision_h <= H_MAX)))
+    (h_clamp1 : (0 : Real) ≤ VALUE_MAX)
+    (h_clamp2 : (0 : Real) ≤ (1 : Real)) :
+    (((cusum_alarm s_high s_low decision_h) >= (0 : Real))) ∧ (((cusum_alarm s_high s_low decision_h) <= (1 : Real))) := by
   unfold cusum_alarm
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── arl_approx ──
 
@@ -74,10 +121,24 @@ noncomputable def arl_approx (decision_h : Real) (reference_k : Real) : Real :=
   ((decision_h * decision_h) / (((2.0 : Real) * reference_k) * reference_k))
 
 theorem arl_increases_with_decision_interval (decision_h : Real) (reference_k : Real)
-    (h1 : (decision_h >= (0.001 : Real)))
-    (h2 : (decision_h <= H_MAX))
-    (h3 : (reference_k >= (0.001 : Real)))
-    (h4 : (reference_k <= K_MAX)) :
+    (h_decision_h : (((0.001 : Real) <= decision_h) ∧ (decision_h <= H_MAX)))
+    (h_reference_k : (((0.001 : Real) <= reference_k) ∧ (reference_k <= K_MAX))) :
     ((arl_approx decision_h reference_k) >= (0 : Real)) := by
   unfold arl_approx
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

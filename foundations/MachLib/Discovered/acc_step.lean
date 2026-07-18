@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,13 +26,13 @@ noncomputable def ACC_MAX : Real := (4.0 : Real)
 noncomputable def target_distance (ego_speed : Real) (time_headway : Real) (d_min_safe : Real) : Real :=
   ((ego_speed * time_headway) + d_min_safe)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem target_distance_increases_with_speed (ego_speed : Real) (time_headway : Real) (d_min_safe : Real)
-    (h1 : (ego_speed >= (0 : Real)))
-    (h2 : (ego_speed <= V_MAX))
-    (h3 : (time_headway >= TH_MIN))
-    (h4 : (time_headway <= TH_MAX))
-    (h5 : (d_min_safe >= (0.5 : Real)))
-    (h6 : (d_min_safe <= (10.0 : Real))) :
+    (h_ego_speed : (((0 : Real) <= ego_speed) ∧ (ego_speed <= V_MAX)))
+    (h_time_headway : ((TH_MIN <= time_headway) ∧ (time_headway <= TH_MAX)))
+    (h_d_min_safe : (((0.5 : Real) <= d_min_safe) ∧ (d_min_safe <= (10.0 : Real)))) :
     True := by
   trivial
 
@@ -38,11 +41,12 @@ theorem target_distance_increases_with_speed (ego_speed : Real) (time_headway : 
 noncomputable def distance_error (distance_meas : Real) (distance_target : Real) : Real :=
   (distance_meas - distance_target)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem distance_error_zero_at_target (distance_meas : Real) (distance_target : Real)
-    (h1 : (distance_meas >= (0 : Real)))
-    (h2 : (distance_meas <= D_MAX))
-    (h3 : (distance_target >= (0 : Real)))
-    (h4 : (distance_target <= D_MAX)) :
+    (h_distance_meas : (((0 : Real) <= distance_meas) ∧ (distance_meas <= D_MAX)))
+    (h_distance_target : (((0 : Real) <= distance_target) ∧ (distance_target <= D_MAX))) :
     True := by
   trivial
 
@@ -52,27 +56,44 @@ noncomputable def outer_speed_command (ego_speed : Real) (distance_error : Real)
   (min (max (ego_speed + (kp * distance_error)) (0 : Real)) set_speed_max)
 
 theorem speed_command_within_set_max (ego_speed : Real) (distance_error : Real) (kp : Real) (set_speed_max : Real)
-    (h1 : (ego_speed >= (0 : Real)))
-    (h2 : (ego_speed <= V_MAX))
-    (h3 : ((abs distance_error) <= D_MAX))
-    (h4 : (kp >= (0 : Real)))
-    (h5 : (kp <= KP_MAX))
-    (h6 : (set_speed_max >= (0 : Real)))
-    (h7 : (set_speed_max <= V_MAX)) :
-    ((outer_speed_command ego_speed distance_error kp set_speed_max) >= (0 : Real)) := by
+    (h_ego_speed : (((0 : Real) <= ego_speed) ∧ (ego_speed <= V_MAX)))
+    (h_distance_error : (-D_MAX ≤ distance_error ∧ distance_error ≤ D_MAX))
+    (h_kp : (((0 : Real) <= kp) ∧ (kp <= KP_MAX)))
+    (h_set_speed_max : (((0 : Real) <= set_speed_max) ∧ (set_speed_max <= V_MAX)))
+    (h_clamp1 : (0 : Real) ≤ set_speed_max) :
+    (((outer_speed_command ego_speed distance_error kp set_speed_max) >= (0 : Real))) ∧ (((outer_speed_command ego_speed distance_error kp set_speed_max) <= set_speed_max)) := by
   unfold outer_speed_command
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── comfort_accel_limiter ──
 
 noncomputable def comfort_accel_limiter (accel_cmd : Real) (accel_max : Real) (decel_max : Real) : Real :=
   (min (max accel_cmd (-decel_max)) accel_max)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem acc_command_within_comfort_band (accel_cmd : Real) (accel_max : Real) (decel_max : Real)
-    (h1 : ((abs accel_cmd) <= (ACC_MAX * (4.0 : Real))))
-    (h2 : (accel_max >= (0 : Real)))
-    (h3 : (accel_max <= ACC_MAX))
-    (h4 : (decel_max >= (0 : Real)))
-    (h5 : (decel_max <= (ACC_MAX * (2.0 : Real)))) :
+    (h_accel_cmd : (-(ACC_MAX * (4.0 : Real)) ≤ accel_cmd ∧ accel_cmd ≤ (ACC_MAX * (4.0 : Real))))
+    (h_accel_max : (((0 : Real) <= accel_max) ∧ (accel_max <= ACC_MAX)))
+    (h_decel_max : (((0 : Real) <= decel_max) ∧ (decel_max <= (ACC_MAX * (2.0 : Real)))))
+    (h_clamp1 : (-decel_max) ≤ accel_max) :
     True := by
   trivial

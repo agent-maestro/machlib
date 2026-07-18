@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -20,6 +23,9 @@ noncomputable def AMP_MAX : Real := (16.0 : Real)
 noncomputable def carrier_phase_correct_i (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real) : Real :=
   ((i_in * cos_phi) + (q_in * sin_phi))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phase_correct_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real)
     (h1 : ((abs i_in) <= COMPONENT_MAX))
     (h2 : ((abs q_in) <= COMPONENT_MAX))
@@ -33,6 +39,9 @@ theorem phase_correct_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi :
 noncomputable def carrier_phase_correct_q (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real) : Real :=
   (((-i_in) * sin_phi) + (q_in * cos_phi))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem phase_correct_q_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi : Real) (sin_phi : Real)
     (h1 : ((abs i_in) <= COMPONENT_MAX))
     (h2 : ((abs q_in) <= COMPONENT_MAX))
@@ -46,10 +55,14 @@ theorem phase_correct_q_preserves_magnitude (i_in : Real) (q_in : Real) (cos_phi
 noncomputable def nearest_qam_amplitude (sample : Real) (max_amplitude : Real) : Real :=
   (min (max sample (-max_amplitude)) max_amplitude)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem amplitude_clamp_in_range (sample : Real) (max_amplitude : Real)
     (h1 : ((abs sample) <= COMPONENT_MAX))
     (h2 : (max_amplitude >= (1 : Real)))
-    (h3 : (max_amplitude <= AMP_MAX)) :
+    (h3 : (max_amplitude <= AMP_MAX))
+    (h_clamp1 : (-max_amplitude) ≤ max_amplitude) :
     True := by
   trivial
 
@@ -58,6 +71,9 @@ theorem amplitude_clamp_in_range (sample : Real) (max_amplitude : Real)
 noncomputable def bit_llr (sample : Real) (boundary : Real) (sigma : Real) : Real :=
   (((2.0 : Real) * (sample - boundary)) / (sigma * sigma))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem bit_llr_zero_on_boundary (sample : Real) (boundary : Real) (sigma : Real)
     (h1 : ((abs sample) <= COMPONENT_MAX))
     (h2 : ((abs boundary) <= AMP_MAX))

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -24,6 +27,9 @@ axiom tafel_slope (alpha : Real) (temperature : Real) : Real  -- helper (axiomat
 noncomputable def overpotential_from_current (intercept_a : Real) (slope_b : Real) (current_density : Real) : Real :=
   (intercept_a + (slope_b * (log10 current_density)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem tafel_monotone_in_current (intercept_a : Real) (slope_b : Real) (current_density : Real)
     (h1 : (current_density > (0 : Real))) :
     True := by

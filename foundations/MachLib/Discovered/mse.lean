@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,13 +30,32 @@ theorem mse_loss_nonnegative (prediction : Real) (target : Real)
     (h2 : ((abs target) < MAX_RESIDUAL)) :
     ((mse_loss prediction target) >= (0 : Real)) := by
   unfold mse_loss
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── mse_grad ──
 
 noncomputable def mse_grad (prediction : Real) (target : Real) : Real :=
   ((2.0 : Real) * (prediction - target))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem mse_grad_sign_matches_residual (prediction : Real) (target : Real)
     (h1 : ((abs prediction) < MAX_RESIDUAL))
     (h2 : ((abs target) < MAX_RESIDUAL)) :

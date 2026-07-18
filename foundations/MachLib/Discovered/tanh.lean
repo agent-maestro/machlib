@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -19,9 +22,26 @@ noncomputable def tanh_activation (x : Real) : Real :=
 
 theorem tanh_monotone_in_x (x : Real)
     (h1 : ((abs x) < TANH_X_MAX)) :
-    ((tanh_activation x) >= (-(1 : Real))) := by
+    (((tanh_activation x) >= (-(1 : Real)))) ∧ (((tanh_activation x) <= (1 : Real))) := by
   unfold tanh_activation
-  exact le_of_lt (neg_one_lt_tanh _)
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── tanh_from_sigmoid ──
 
@@ -30,16 +50,51 @@ noncomputable def tanh_from_sigmoid (x : Real) : Real :=
 
 theorem tanh_from_sigmoid_equals_canonical (x : Real)
     (h1 : ((abs x) < TANH_X_MAX)) :
-    ((tanh_from_sigmoid x) >= (-(1 : Real))) := by
+    (((tanh_from_sigmoid x) >= (-(1 : Real)))) ∧ (((tanh_from_sigmoid x) <= (1 : Real))) := by
   unfold tanh_from_sigmoid
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── hard_tanh ──
 
 noncomputable def hard_tanh (x : Real) : Real :=
   (min (max x (-1.0 : Real)) (1 : Real))
 
-theorem hard_tanh_bounded (x : Real) :
-    ((hard_tanh x) >= (-(1 : Real))) := by
+theorem hard_tanh_bounded (x : Real)
+    (h_clamp1 : (-1.0 : Real) ≤ (1 : Real)) :
+    (((hard_tanh x) >= (-(1 : Real)))) ∧ (((hard_tanh x) <= (1 : Real))) := by
   unfold hard_tanh
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

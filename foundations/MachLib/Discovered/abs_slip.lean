@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -26,29 +29,43 @@ noncomputable def slip_ratio (vehicle_speed : Real) (wheel_omega : Real) (wheel_
   (min (max ((vehicle_speed - (wheel_omega * wheel_radius)) / vehicle_speed) (0 : Real)) SLIP_MAX)
 
 theorem slip_in_unit_interval_under_braking (vehicle_speed : Real) (wheel_omega : Real) (wheel_radius : Real)
-    (h1 : (vehicle_speed >= V_MIN))
-    (h2 : (vehicle_speed <= V_MAX))
-    (h3 : (wheel_omega >= (0 : Real)))
-    (h4 : (wheel_omega <= OMEGA_MAX))
-    (h5 : (wheel_radius >= R_MIN))
-    (h6 : (wheel_radius <= R_MAX)) :
-    ((slip_ratio vehicle_speed wheel_omega wheel_radius) >= (0 : Real)) := by
+    (h_vehicle_speed : ((V_MIN <= vehicle_speed) ∧ (vehicle_speed <= V_MAX)))
+    (h_wheel_omega : (((0 : Real) <= wheel_omega) ∧ (wheel_omega <= OMEGA_MAX)))
+    (h_wheel_radius : ((R_MIN <= wheel_radius) ∧ (wheel_radius <= R_MAX)))
+    (h_clamp1 : (0 : Real) ≤ SLIP_MAX) :
+    (((slip_ratio vehicle_speed wheel_omega wheel_radius) >= (0 : Real))) ∧ (((slip_ratio vehicle_speed wheel_omega wheel_radius) <= SLIP_MAX)) := by
   unfold slip_ratio
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── burckhardt_mu ──
 
 noncomputable def burckhardt_mu (slip : Real) (c1 : Real) (c2 : Real) (c3 : Real) : Real :=
   ((c1 * ((1 : Real) - (Real.exp ((-c2) * slip)))) - (c3 * slip))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem burckhardt_mu_zero_at_zero_slip (slip : Real) (c1 : Real) (c2 : Real) (c3 : Real)
-    (h1 : (slip >= (0 : Real)))
-    (h2 : (slip <= SLIP_MAX))
-    (h3 : (c1 >= (0 : Real)))
-    (h4 : (c1 <= (2.0 : Real)))
-    (h5 : (c2 >= (0 : Real)))
-    (h6 : (c2 <= (50.0 : Real)))
-    (h7 : (c3 >= (0 : Real)))
-    (h8 : (c3 <= (1 : Real))) :
+    (h_slip : (((0 : Real) <= slip) ∧ (slip <= SLIP_MAX)))
+    (h_c1 : (((0 : Real) <= c1) ∧ (c1 <= (2.0 : Real))))
+    (h_c2 : (((0 : Real) <= c2) ∧ (c2 <= (50.0 : Real))))
+    (h_c3 : (((0 : Real) <= c3) ∧ (c3 <= (1 : Real)))) :
     True := by
   trivial

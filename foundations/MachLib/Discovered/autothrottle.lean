@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,30 +26,48 @@ noncomputable def autothrottle_step (speed_target : Real) (speed_meas : Real) (i
   (min (max ((kp * (speed_target - speed_meas)) + (ki * integral)) (0 : Real)) THROTTLE_MAX)
 
 theorem autothrottle_within_unit_interval (speed_target : Real) (speed_meas : Real) (integral : Real) (kp : Real) (ki : Real)
-    (h1 : ((abs speed_target) <= V_MAX))
-    (h2 : ((abs speed_meas) <= V_MAX))
-    (h3 : ((abs integral) <= I_LIMIT_MAX))
-    (h4 : (kp >= (0 : Real)))
-    (h5 : (kp <= KP_MAX))
-    (h6 : (ki >= (0 : Real)))
-    (h7 : (ki <= KI_MAX)) :
-    ((autothrottle_step speed_target speed_meas integral kp ki) >= (0 : Real)) := by
+    (h_speed_target : (-V_MAX ≤ speed_target ∧ speed_target ≤ V_MAX))
+    (h_speed_meas : (-V_MAX ≤ speed_meas ∧ speed_meas ≤ V_MAX))
+    (h_integral : (-I_LIMIT_MAX ≤ integral ∧ integral ≤ I_LIMIT_MAX))
+    (h_kp : (((0 : Real) <= kp) ∧ (kp <= KP_MAX)))
+    (h_ki : (((0 : Real) <= ki) ∧ (ki <= KI_MAX)))
+    (h_clamp1 : (0 : Real) ≤ THROTTLE_MAX) :
+    (((autothrottle_step speed_target speed_meas integral kp ki) >= (0 : Real))) ∧ (((autothrottle_step speed_target speed_meas integral kp ki) <= THROTTLE_MAX)) := by
   unfold autothrottle_step
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── speed_integral_step ──
 
 noncomputable def speed_integral_step (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real) : Real :=
   (min (max (integral_prev + (((1 : Real) - saturation_active) * (((0.5 : Real) * (error + error_prev)) * dt))) (-I_LIMIT_MAX)) I_LIMIT_MAX)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem speed_integral_held_under_saturation (integral_prev : Real) (error : Real) (error_prev : Real) (dt : Real) (saturation_active : Real)
-    (h1 : ((abs integral_prev) <= I_LIMIT_MAX))
-    (h2 : ((abs error) <= V_MAX))
-    (h3 : ((abs error_prev) <= V_MAX))
-    (h4 : (dt >= (0 : Real)))
-    (h5 : (dt <= DT_MAX))
-    (h6 : (saturation_active >= (0 : Real)))
-    (h7 : (saturation_active <= (1 : Real))) :
+    (h_integral_prev : (-I_LIMIT_MAX ≤ integral_prev ∧ integral_prev ≤ I_LIMIT_MAX))
+    (h_error : (-V_MAX ≤ error ∧ error ≤ V_MAX))
+    (h_error_prev : (-V_MAX ≤ error_prev ∧ error_prev ≤ V_MAX))
+    (h_dt : (((0 : Real) <= dt) ∧ (dt <= DT_MAX)))
+    (h_saturation_active : (((0 : Real) <= saturation_active) ∧ (saturation_active <= (1 : Real))))
+    (h_clamp1 : (-I_LIMIT_MAX) ≤ I_LIMIT_MAX) :
     True := by
   trivial
 
@@ -55,14 +76,14 @@ theorem speed_integral_held_under_saturation (integral_prev : Real) (error : Rea
 noncomputable def rate_limited_throttle (cmd_new : Real) (cmd_prev : Real) (rate_limit : Real) (dt : Real) : Real :=
   (cmd_prev + (min (max (cmd_new - cmd_prev) (-(rate_limit * dt))) (rate_limit * dt)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem throttle_rate_within_limit (cmd_new : Real) (cmd_prev : Real) (rate_limit : Real) (dt : Real)
-    (h1 : (cmd_new >= (0 : Real)))
-    (h2 : (cmd_new <= THROTTLE_MAX))
-    (h3 : (cmd_prev >= (0 : Real)))
-    (h4 : (cmd_prev <= THROTTLE_MAX))
-    (h5 : (rate_limit >= (0 : Real)))
-    (h6 : (rate_limit <= (10.0 : Real)))
-    (h7 : (dt > (0 : Real)))
-    (h8 : (dt <= DT_MAX)) :
+    (h_cmd_new : (((0 : Real) <= cmd_new) ∧ (cmd_new <= THROTTLE_MAX)))
+    (h_cmd_prev : (((0 : Real) <= cmd_prev) ∧ (cmd_prev <= THROTTLE_MAX)))
+    (h_rate_limit : (((0 : Real) <= rate_limit) ∧ (rate_limit <= (10.0 : Real))))
+    (h_dt : (((0 : Real) < dt) ∧ (dt <= DT_MAX)))
+    (h_clamp1 : (-max_step) ≤ max_step) :
     True := by
   trivial

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -27,6 +30,23 @@ theorem langmuir_saturating (langmuir_constant : Real) (pressure : Real)
     (h2 : (langmuir_constant <= K_MAX))
     (h3 : (pressure >= (0 : Real)))
     (h4 : (pressure <= P_MAX)) :
-    ((coverage langmuir_constant pressure) >= (0 : Real)) := by
+    (((coverage langmuir_constant pressure) >= (0 : Real))) ∧ (((coverage langmuir_constant pressure) <= (1 : Real))) := by
   unfold coverage
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

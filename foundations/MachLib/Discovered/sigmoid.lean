@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,9 +25,26 @@ noncomputable def sigmoid (x : Real) : Real :=
 
 theorem sigmoid_monotone_in_x (x : Real)
     (h1 : ((abs x) < SIGMOID_X_MAX)) :
-    ((sigmoid x) >= (0 : Real)) := by
+    (((sigmoid x) >= (0 : Real))) ∧ (((sigmoid x) <= (1 : Real))) := by
   unfold sigmoid
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── sigmoid_alt ──
 
@@ -33,6 +53,23 @@ noncomputable def sigmoid_alt (x : Real) : Real :=
 
 theorem sigmoid_alt_equals_canonical (x : Real)
     (h1 : ((abs x) < SIGMOID_X_MAX)) :
-    ((sigmoid_alt x) >= (0 : Real)) := by
+    (((sigmoid_alt x) >= (0 : Real))) ∧ (((sigmoid_alt x) <= (1 : Real))) := by
   unfold sigmoid_alt
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

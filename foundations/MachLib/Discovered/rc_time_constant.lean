@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ noncomputable def T_MAX : Real := (100.0 : Real)
 noncomputable def capacitor_charging (v_supply : Real) (resistance : Real) (capacitance : Real) (time_s : Real) : Real :=
   (v_supply * ((1 : Real) - (Real.exp ((-time_s) / (resistance * capacitance)))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rc_charging_voltage_in_unit_interval (v_supply : Real) (resistance : Real) (capacitance : Real) (time_s : Real)
     (h1 : ((abs v_supply) <= V_MAX))
     (h2 : (resistance >= R_MIN))
@@ -38,6 +44,9 @@ theorem rc_charging_voltage_in_unit_interval (v_supply : Real) (resistance : Rea
 noncomputable def capacitor_discharging (v_initial : Real) (resistance : Real) (capacitance : Real) (time_s : Real) : Real :=
   (v_initial * (Real.exp ((-time_s) / (resistance * capacitance))))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem rc_discharging_voltage_decays_to_zero (v_initial : Real) (resistance : Real) (capacitance : Real) (time_s : Real)
     (h1 : ((abs v_initial) <= V_MAX))
     (h2 : (resistance >= R_MIN))
@@ -61,7 +70,23 @@ theorem cutoff_freq_inverse_to_rc (resistance : Real) (capacitance : Real)
     (h4 : (capacitance <= C_MAX)) :
     ((cutoff_frequency resistance capacitance) >= (0 : Real)) := by
   unfold cutoff_frequency
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover
 
 -- ── time_to_threshold ──
 
@@ -77,4 +102,20 @@ theorem time_to_threshold_increases_with_target (target_fraction : Real) (resist
     (h6 : (capacitance <= C_MAX)) :
     ((time_to_threshold target_fraction resistance capacitance) >= (0 : Real)) := by
   unfold time_to_threshold
-  sorry  -- TODO: prove against MachLib foundations
+  first
+  | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+  | apply clamp_le_hi
+  | mach_positivity
+  | mach_sign
+  | (apply convex_comb_le <;> assumption)
+  | (apply convex_comb_ge <;> assumption)
+  | (apply convex_comb3_le <;> assumption)
+  | (apply convex_comb3_ge <;> assumption)
+  | (apply convex_comb4_le <;> assumption)
+  | (apply convex_comb4_ge <;> assumption)
+  | (apply convex_comb5_le <;> assumption)
+  | (apply convex_comb5_ge <;> assumption)
+  | (apply convex_comb6_le <;> assumption)
+  | (apply convex_comb6_ge <;> assumption)
+  | rfl
+  | sorry  -- out of reach; left for the prover

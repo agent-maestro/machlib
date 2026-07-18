@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -29,9 +32,26 @@ theorem aqi_within_band_bounds (concentration : Real) (c_low : Real) (c_high : R
     (h6 : (aqi_low >= (0 : Real)))
     (h7 : (aqi_low < aqi_high))
     (h8 : (aqi_high <= AQI_MAX)) :
-    ((aqi_in_band concentration c_low c_high aqi_low aqi_high) >= aqi_low) := by
+    (((aqi_in_band concentration c_low c_high aqi_low aqi_high) >= aqi_low)) ∧ (((aqi_in_band concentration c_low c_high aqi_low aqi_high) <= aqi_high)) := by
   unfold aqi_in_band
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
 
 -- ── composite_aqi ──
 
@@ -45,6 +65,23 @@ theorem aqi_composite_above_each_input (aqi_pm25 : Real) (aqi_ozone : Real) (aqi
     (h4 : (aqi_ozone <= AQI_MAX))
     (h5 : (aqi_no2 >= (0 : Real)))
     (h6 : (aqi_no2 <= AQI_MAX)) :
-    ((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_pm25) := by
+    (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_pm25)) ∧ (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_ozone)) ∧ (((composite_aqi aqi_pm25 aqi_ozone aqi_no2) >= aqi_no2)) := by
   unfold composite_aqi
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover

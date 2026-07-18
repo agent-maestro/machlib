@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -22,6 +25,9 @@ axiom sgdw_step (theta : Real) (gradient : Real) (lr : Real) (weight_decay : Rea
 noncomputable def sgd_step (theta : Real) (gradient : Real) (lr : Real) : Real :=
   (theta - (lr * gradient))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem sgd_step_descent_when_grad_signed (theta : Real) (gradient : Real) (lr : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs gradient) <= VAL_MAX))
@@ -35,6 +41,9 @@ theorem sgd_step_descent_when_grad_signed (theta : Real) (gradient : Real) (lr :
 noncomputable def momentum_velocity_step (velocity : Real) (gradient : Real) (beta : Real) : Real :=
   ((beta * velocity) + gradient)
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem momentum_velocity_decays_with_beta (velocity : Real) (gradient : Real) (beta : Real)
     (h1 : ((abs velocity) <= VAL_MAX))
     (h2 : ((abs gradient) <= VAL_MAX))
@@ -48,6 +57,9 @@ theorem momentum_velocity_decays_with_beta (velocity : Real) (gradient : Real) (
 noncomputable def nesterov_step (theta : Real) (velocity : Real) (gradient : Real) (beta : Real) (lr : Real) : Real :=
   (theta - (lr * ((beta * velocity) + gradient)))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem nesterov_step_consistent_with_lookahead (theta : Real) (velocity : Real) (gradient : Real) (beta : Real) (lr : Real)
     (h1 : ((abs theta) <= VAL_MAX))
     (h2 : ((abs velocity) <= VAL_MAX))

@@ -6,6 +6,9 @@
 import MachLib.EML
 import MachLib.Trig
 import MachLib.Forge
+import MachLib.Linarith
+import MachLib.FixedPoint
+import MachLib.SignTactic
 
 open MachLib
 open MachLib.Real
@@ -23,6 +26,9 @@ noncomputable def DT_MAX : Real := (0.1 : Real)
 noncomputable def voltage_step (voltage : Real) (m_gate : Real) (h_gate : Real) (n_gate : Real) (g_na : Real) (g_k : Real) (g_l : Real) (e_na : Real) (e_k : Real) (e_l : Real) (i_ext : Real) (cm : Real) (dt : Real) : Real :=
   (voltage + ((dt * (((i_ext - (((g_na * ((m_gate * m_gate) * m_gate)) * h_gate) * (voltage - e_na))) - ((g_k * (((n_gate * n_gate) * n_gate) * n_gate)) * (voltage - e_k))) - (g_l * (voltage - e_l)))) / cm))
 
+-- ⚠ NO OBLIGATION: kernel declares no `ensures` and no return
+-- refinement, so this theorem is vacuously `True` (proves only
+-- well-typedness). Exclude from any close-rate / verified count.
 theorem hh_voltage_bounded_under_step (voltage : Real) (m_gate : Real) (h_gate : Real) (n_gate : Real) (g_na : Real) (g_k : Real) (g_l : Real) (e_na : Real) (e_k : Real) (e_l : Real) (i_ext : Real) (cm : Real) (dt : Real)
     (h1 : (voltage >= V_MIN))
     (h2 : (voltage <= V_MAX))
@@ -62,7 +68,25 @@ theorem gating_step_bounded_in_unit_interval (gate : Real) (alpha : Real) (beta 
     (h5 : (beta >= (0 : Real)))
     (h6 : (beta <= (1000.0 : Real)))
     (h7 : (dt > (0 : Real)))
-    (h8 : (dt <= DT_MAX)) :
-    ((gating_step gate alpha beta dt) >= (0 : Real)) := by
+    (h8 : (dt <= DT_MAX))
+    (h_clamp1 : (0 : Real) ≤ (1 : Real)) :
+    (((gating_step gate alpha beta dt) >= (0 : Real))) ∧ (((gating_step gate alpha beta dt) <= (1 : Real))) := by
   unfold gating_step
-  sorry  -- TODO: prove against MachLib foundations
+  refine ⟨?_, ?_⟩ <;>
+    first
+    | (apply lo_le_clamp <;> (first | assumption | mach_positivity))
+    | apply clamp_le_hi
+    | mach_positivity
+    | mach_sign
+    | (apply convex_comb_le <;> assumption)
+    | (apply convex_comb_ge <;> assumption)
+    | (apply convex_comb3_le <;> assumption)
+    | (apply convex_comb3_ge <;> assumption)
+    | (apply convex_comb4_le <;> assumption)
+    | (apply convex_comb4_ge <;> assumption)
+    | (apply convex_comb5_le <;> assumption)
+    | (apply convex_comb5_ge <;> assumption)
+    | (apply convex_comb6_le <;> assumption)
+    | (apply convex_comb6_ge <;> assumption)
+    | rfl
+    | sorry  -- out of reach; left for the prover
