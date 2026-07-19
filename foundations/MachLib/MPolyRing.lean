@@ -281,7 +281,7 @@ seconds. See the file header. -/
 elab "mach_mpoly" "[" xs:term,* "]" : tactic => do
   let atoms := (← xs.getElems.toList.mapM (fun t => elabTerm t.raw none)).toArray
   let goal ← getMainGoal
-  let some (_, lhs, rhs) := (← instantiateMVars (← goal.getType)).eq?
+  let some (_, lhs, rhs) := (← instantiateMVars (← goal.getType)).consumeMData.eq?
     | throwError "mach_mpoly: goal is not an equality"
   let el ← MachLib.Real.MV.reifyMPExpr atoms lhs
   let er ← MachLib.Real.MV.reifyMPExpr atoms rhs

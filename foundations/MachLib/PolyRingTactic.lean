@@ -66,7 +66,7 @@ closed. -/
 def MachLib.Real.machPolyStep (x : Expr) : TacticM Unit := do
   let goal ← getMainGoal
   let goalType ← instantiateMVars (← goal.getType)
-  let some (_, lhs, rhs) := goalType.eq?
+  let some (_, lhs, rhs) := goalType.consumeMData.eq?
     | throwError "mach_poly: goal is not an equality:\n{goalType}"
   let ea ← reifyPExpr x lhs
   let eb ← reifyPExpr x rhs
