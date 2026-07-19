@@ -41,6 +41,17 @@ as the independent negation of `HasDerivAt_arcsin`, not derived from an `arcsin`
 axiom HasDerivAt_arccos (x : Real) (hx : abs x < 1) :
     HasDerivAt arccos (-(1 / sqrt (1 - x * x))) x
 
+/-- `d/dx sqrt x = 1/(2·√x)`, valid for `x > 0` (the standard fact; `sqrt` has no derivative
+axiom of its own yet — `Trig.lean` only gives its algebraic properties). Needed to differentiate
+`arcsin`/`arccos` a SECOND time and beyond: `HasDerivAt_arcsin` gives `arcsin' = 1/√(1−x²)`
+directly as an independent axiom, but going further (the `AsinTaylorRemainder`/
+`AcosTaylorRemainder` hardware forward-error certificates need up to the 7th derivative) requires
+differentiating THROUGH the `sqrt`, which needs this general chain-rule building block — added
+here rather than a narrower one-off axiom so it composes via the existing `HasDerivAt_comp`/
+`HasDerivAt_inv` combinators at every level instead of postulating each level separately. -/
+axiom HasDerivAt_sqrt (x : Real) (hx : 0 < x) :
+    HasDerivAt sqrt (1 / (sqrt x + sqrt x)) x
+
 /-- `arctan`, a primitive function. -/
 axiom atan : Real → Real
 
