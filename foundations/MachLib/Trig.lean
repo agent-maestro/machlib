@@ -36,6 +36,13 @@ theorem tan_zero : tan 0 = 0 := by
 axiom sin_pi         : sin pi = 0
 axiom cos_pi         : cos pi = -1
 axiom pi_pos         : 0 < pi
+
+/-- Tight numeric bound on `pi`, to 6 decimal places (`3.141592 < π < 3.141593`) — standard,
+well-established mathematics, added specifically to bound `eml_acos.v`'s `HALF_PI` fixed-point
+constant (`314159/200000`, computed at RTL elaboration time, NOT exactly `π/2`) against the true
+value. The coarser `pi_gt_three`/`pi_gt_one` elsewhere are nowhere near tight enough for this. -/
+axiom pi_lower_bound : natCast 3141592 * (1 / natCast 1000000) < pi
+axiom pi_upper_bound : pi < natCast 3141593 * (1 / natCast 1000000)
 axiom pythagorean (x : Real) : sin x * sin x + cos x * cos x = 1
 axiom sin_neg        (x : Real) : sin (-x) = -(sin x)
 axiom cos_neg        (x : Real) : cos (-x) = cos x
