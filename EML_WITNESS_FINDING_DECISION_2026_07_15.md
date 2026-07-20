@@ -1075,3 +1075,60 @@ now has a precise technical reason it needs new machinery, not just more effort 
 existing one. Recorded here so whoever attempts path (1) next starts from "build a
 branch-switching chain type" rather than rediscovering, by trial, that a predicate-level patch
 can't work.
+
+## 2026-07-20 (cont.) — starting path (1) for real: the strategy traced end to end, two bricks
+## built, the true scope now concrete instead of estimated
+
+Per direct request to start on path (1). Read `enc_combinedBound`'s FULL hypothesis list
+(`EMLExplicitBoundEncoder.lean`) and its proof (`enc_coherent_and_hAnalytic`,
+`EMLEncoderAnalytic.lean`) rather than continuing to reason about it from the outside, to find
+the actual shape a branch-switching argument would need to take.
+
+**The strategy, traced concretely.** `enc_combinedBound`'s ONLY use of `LogArgPosOn` is to
+derive chain coherence (`IsCoherentOn`) and analyticity (`IsAnalyticOnReals`) for the Rolle's-
+theorem descent (`combined_descent_3_explicit`) that does the actual zero-counting. This suggests
+a genuine (if large) plan: split any interval `[a,b]` into finitely many sub-intervals on which
+`t2`'s sign is CONSTANT; on each `t2 > 0` piece, the existing machinery applies unchanged; on
+each `t2 ≤ 0` piece, `eml t1 t2` reduces EXACTLY to `eml t1 (const 1)` — a completely ordinary,
+unconditionally-valid tree (`1 > 0` always, no clamp anywhere) — so THAT piece needs only `t1`'s
+own validity, not `t2`'s at all. Bound each piece's zeros separately, glue the bounds.
+
+**The catch, traced too, not glossed over.** The number of sub-intervals is bounded by `t2`'s OWN
+zero-crossing count — and bounding an ARBITRARY compound tree's zero-crossings, without assuming
+its own `EMLPfaffianValidOn`, is EXACTLY the same difficulty this whole arc has circled, now one
+level down (recursing into `t2` instead of `T1`). Worse: `enc_combinedBound`'s `LogArgPosOn`
+hypothesis is for the WHOLE tree, every log-node, not just the top one — so a genuine
+branch-switching bound needs to split on EVERY internal log-node's sign, not just `t2`'s,
+compounding sub-intervals combinatorially (though still finitely, since each node's own
+crossing-count is separately bounded by the same recursion). The honest shape of what would
+actually close this: a strong induction on tree depth that bounds zero-CROSSINGS (not
+positivity) of an arbitrary tree, splitting recursively at each level. This is the concrete form
+of "several weeks" the original 2026-07-15 estimate gestured at — now a describable induction,
+not just a difficulty rating.
+
+**Two bricks built, both genuinely reusable, neither close anything alone**
+(`EMLExplicitBoundGlue.lean`):
+1. `BoundedZerosBy.glue` — the purely combinatorial half: given zero-count bounds `K1`, `K2` on
+   two adjacent open sub-intervals `(a,m)`, `(m,b)`, a bound `K1+K2+1` on the whole `(a,b)` (the
+   `+1` covers `z=m` itself, missed by both open pieces). Zero analytic content — pure `List`
+   combinatorics, built by reusing `length_filter_partition` (`MultiVarBucket.lean`, already in
+   the codebase for an unrelated bucketing argument). One real gotcha: `Real` has classical
+   `Decidable` instances for `<`/`≤` (`instDecLT`/`instDecLE`, `Basic.lean`) but NOT for `=` —
+   needed a locally-scoped `DecidableEq Real := fun x y => Classical.propDecidable (x=y)`; a
+   FIRST attempt supplying `Decidable` for literally every `Prop` broke `omega`'s own internal
+   reasoning (it depends on the COMPUTABLE decidability of `Nat`/`Int` propositions, which the
+   blanket classical override shadowed) — scoping the instance to exactly `Real`'s equality
+   fixed it.
+2. `eml_eval_eq_const_one_of_right_nonpos` — formalizes the "reduces to `eml t1 (const 1)`"
+   fact directly (three lines: `log_nonpos` and `log_one` both give `0`).
+
+**What remains, unstarted, named precisely.** The actual hard part — bounding an arbitrary
+tree's zero-crossing count without assuming its validity, by strong induction on depth,
+splitting on every internal log-node's sign recursively, and re-deriving `enc_combinedBound`'s
+OTHER hypotheses (`ChainTagsValid`, `ChainTagsValidAB`, `IsTriangular`, non-degeneracy) for each
+piece — is not attempted here. These two bricks are the smallest, safest, most clearly-scoped
+pieces of that structure, not a shortcut past it. Real progress on "starting the hard stuff,"
+honestly not close to finishing it.
+
+`#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
+Full `lake build MachLib` passes (396 modules) — eleven new files today.
