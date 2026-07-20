@@ -1214,3 +1214,44 @@ standing in for unfinished work.
 `#print axioms` clean throughout, `eml_pfaffian_validon_from_sin_equality` does not appear
 anywhere, zero `sorry`. Full `lake build MachLib` passes (397 modules, same file count as the
 previous entry — this extends `EMLZeroCrossingDepth1.lean` rather than adding a new file).
+
+## 2026-07-20 (cont.) — the first genuine inductive step: a compound tree reusing a smaller
+## tree's already-proven derivative-zero bound
+
+Per continued "proceed please." With the base case complete, attempted the first COMPOUND case —
+`t = eml t1 (const c)` with `t1 = eml var var` itself depth-1 — deliberately choosing `t2 = const
+c` to AVOID the hardest part of the inductive step (domain-splitting when `t2` itself is compound
+and sign-changing) while still exercising the actual mechanism the induction needs: reusing a
+SMALLER tree's already-established result, not just restating the base case one level down.
+
+**The mechanism, concretely.** `t.eval x = exp(t1.eval x) - log(c)`. Its derivative (chain rule)
+is `exp(t1.eval x) · t1'(x)` — and since `exp(anything) > 0` always, this is `0` exactly when
+`t1'(x) = 0`. `t1`'s own derivative-zero bound (`exp_sub_inv_atMostOneZero`, built as a BYPRODUCT
+of closing `t1`'s own base case, not previously exposed as a standalone reusable fact) is reused
+DIRECTLY here — no new derivative analysis of `t1` needed, exactly the "smaller tree's result
+feeds the bigger tree's proof" pattern the induction is supposed to run on. Combined with the
+`x≤0` clamp region (handled via `exp∘exp` injectivity, composing `exp_lt` with itself — no
+derivative work needed there either): `eml (eml var var) (const c)` has boundedly many zeros
+(`≤6`) on ANY interval, for ANY `c` (the sign of `c` turned out not to matter at all — caught by
+the unused-variable linter after an initial, unnecessarily cautious `c>0` hypothesis).
+
+**One real gotcha.** The first version of the `x≤0` bucket bound reused the "≤0 has no zeros"
+SHORTCUT from the base case's `eml var var` proof directly — but that shortcut only worked
+there because the WHOLE `x≤0` region was provably zero-free. Here, `z=0` itself is NOT
+automatically excluded (nothing forces `exp(exp(0)) ≠ log(c)` for arbitrary `c`), so trying to
+feed an open interval lemma a `z ≤ 0` (closed) membership fact failed at the boundary point.
+Fixed by a genuine three-way split (`<0`, `=0`, `>0`) instead of the two-way split that sufficed
+in the base case — reusing `length_le_one_of_forall_eq` (`EMLExplicitBoundGlue.lean`, built for
+an unrelated purpose two entries ago) for the `=0` slice.
+
+**Honest scope.** This is ONE compound shape, with `t2` deliberately kept simple to isolate the
+"reuse a proven sub-result" mechanism from the domain-splitting problem, which remains the
+substantially larger piece of the actual inductive step (compound `t2`, needing the full
+"collect every internal node's critical points, refine, re-validate per piece" machinery sketched
+in `EMLExplicitBoundGlue.lean`). But it is a REAL demonstration that the induction's basic
+mechanism — smaller trees' bounds feeding larger trees' proofs via the chain rule — works in
+practice, not just in the abstract strategy description.
+
+`#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
+Full `lake build MachLib` passes (398 modules) — thirteen new files today (twelve from earlier
+entries plus this one).
