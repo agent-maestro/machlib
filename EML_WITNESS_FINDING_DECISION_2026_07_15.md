@@ -1377,3 +1377,68 @@ a known derivative-zero bound), not what `t1` can be.
 (`propext`, `Classical.choice`, `Quot.sound`, `HasDerivAt`/Rolle/algebra machinery),
 `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full `lake build MachLib`
 passes (400 modules) — fifteen new files today.
+
+## 2026-07-20 (cont. 3) — MILESTONE: both children compound at once, the two mechanisms combined
+## for the first time
+
+Per continued "proceed please." Every prior result in this arc kept ONE child simple to isolate a
+single mechanism: `EMLZeroCrossingDepth2Compound.lean` allowed `t1` compound but forced `t2 =
+const c`; the domain-split files allowed `t2` compound (sign-crossing) but forced `t1 = const
+c1`. This entry closes the first instance where BOTH are depth-1 compound simultaneously —
+exactly the combination the domain-split-general entry's "honest scope note" flagged as not yet
+attempted.
+
+**The instance** (`EMLZeroCrossingBothCompound.lean`): `t1 = eml var (const c1')`, `t2 = eml var
+(const c2')`, `c2' > 1` (sign crossing, same shape as before). Genuinely new observation: `t1`
+being compound does NOT complicate the LEFT region at all — on `x < x0` (`t2 ≤ 0`), `t.eval x =
+exp(t1eval x) - 0 = exp(t1eval x)`, positive UNCONDITIONALLY (`Real.exp_pos`, regardless of
+`t1eval x`'s actual value) — the exact same one-line "clamp forces positivity" argument as every
+prior instance, with `exp c1` simply replaced by `exp(t1eval x)`. `t1`'s compoundness only bites
+on the RIGHT region, where it's actually exponentiated non-trivially.
+
+**The right region — the genuinely new computation.** `t`'s derivative there (chain + product +
+sub) is `D(x) = exp(t1eval x)·exp(x) - (1/t2eval x)·exp(x)` — a genuine DIFFERENCE, not reducible
+to a single scaled factor the way the const-`t1` case's derivative was (that one had `t1`
+constant, so its derivative term vanished entirely, leaving only the `t2`-side term). Bounding
+`D`'s zeros needed a second layer: `D(x) = 0 ↔ g(x) := exp(t1eval x)·t2eval x - 1 = 0` (clearing
+denominators, valid since `exp x ≠ 0` and `t2eval x ≠ 0` on this region), and `g`'s OWN derivative
+(product rule) factors cleanly as `g'(x) = [exp(t1eval x)·exp x] · (exp x - (log c2' - 1))` — a
+product of a manifestly positive term and a term that is positive PROVIDED `log c2' ≤ 1` (i.e.
+`c2' ≤ e`): `exp x > 0 ≥ log c2' - 1` always. Under that side condition `g` is strictly monotonic
+GLOBALLY (no domain restriction needed, mirroring `t1eval`/`t2eval`'s own domain-free smoothness),
+hence injective, hence has at most one zero anywhere. The `D=0 → g=0` bridge (a purely algebraic
+cross-multiplication, `A·E - (1/T)·E = 0 → A·T - 1 = 0` for `E,T ≠ 0`) transfers that ≤1 bound to
+`D`, and `zero_count_bound_by_deriv` (Rolle) then gives `t` itself ≤2 zeros on the right region.
+Combined with 0 (left, empty) + 1 (the `x0` boundary point, list-dedup): **`t` has at most 3 zeros
+on ANY interval — no `EMLPfaffianValidOn` assumption anywhere, `c1'` completely unrestricted.**
+
+**Why `c2' ≤ e` specifically, and what it costs.** The condition makes `g`'s derivative-sign
+argument a SINGLE monotonicity check. Without it (`c2' > e`), `g`'s bracket term `exp x - (log
+c2' - 1)` changes sign once, making `g` itself a "valley" (decreasing then increasing) rather than
+monotonic — provable via the same technique one level deeper (bound `g`'s zeros via bounding
+`g'`'s sign changes, a second Rolle layer), but not attempted here. Matches this arc's established
+discipline: close the tractable concrete case honestly, name the harder one precisely, don't force
+it in the same sitting.
+
+**Build friction — one real new gotcha, distinct from prior ones.** The `D=0 → g=0` algebraic
+bridge (`cross_cancel_bridge`) needed the SAME `1/T`-as-opaque-atom discipline flagged repeatedly
+before, but in a NEW shape: rather than a single `generalize` immediately before one `rw`, the
+bridge needed the generalized atom `R` to survive through FOUR sequential steps (subtraction
+rearrangement, left-multiplication by `E`, `mul_left_cancel`, then multiplication by `T` via the
+ORIGINAL `hRdef : 1/T = R` equation used in REVERSE to substitute back) — confirming the
+`generalize ... at hyp` pattern composes cleanly across a multi-step algebraic chain, not just a
+single rewrite, as long as every intermediate step stays in terms of the same named atom rather
+than re-introducing `1/T` syntactically. Otherwise: derivative/positivity/monotonicity pieces all
+compiled clean on the FIRST full attempt, reusing every established pattern (extract-then-apply,
+factor-then-`mul_pos`, `atMostOneZero_of_strictMono`) without new surprises — a sign the toolkit
+built up across today's session has actually converged into something reusable, not just a string
+of one-off tricks.
+
+**Honest scope.** ONE concrete `t1`/`t2` shape, both `eml var (const _)`, under `1 < c2' ≤ e`
+(`c1'` free). Does not touch: deeper trees on either side, the `c2' > e` sub-case, or a general
+"any compound `t1` + any sign-crossing `t2`" theorem (would need `t1`'s own derivative-zero
+structure abstracted as a caller-supplied parameter, mirroring how `t2` was generalized two
+entries ago — a natural next step, not attempted here). `#print axioms` clean, only base MachLib
+primitives (`propext`, `Classical.choice`, `Quot.sound`, `HasDerivAt`/Rolle/algebra), zero
+`sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib`
+passes (401 modules) — **sixteen new files in one session.**
