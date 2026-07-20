@@ -24,6 +24,15 @@ is new.
 
 **Sanity check**: `eml_evarConstC1_evarConstC2_boundedZeros` re-derived as a corollary, supplying
 `M := 1` via exactly the `g`/`cross_cancel_bridge` machinery already built.
+
+**`t1`'s derivative requirement is LOCAL, not global.** The theorem only ever invokes `t1`'s
+derivative at points already known to lie in `(x0, b)` (both call sites destructure `hz0 : x0 < z`
+and `hzb : z < b` before using it) — so `ht1deriv` only needs to hold on `(x0, b)`, matching
+`ht2deriv`'s domain restriction exactly, not everywhere. This matters concretely: `t1 = eml var
+var` (`t1eval x = exp x - log x`) is NOT differentiable at `x = 0` (`log`'s right-derivative
+diverges there), so a global requirement would have permanently excluded it as a `t1` candidate —
+even though its derivative is perfectly well-behaved on any `(x0, b)` with `x0 ≥ 0`. The local
+version keeps that door open for future work without yet walking through it (see honest scope).
 -/
 
 namespace MachLib
@@ -36,7 +45,7 @@ region before it — same `+2` accounting as the const-`t1` general theorem, `t1
 only ever affecting the right-region bound. -/
 theorem eml_genericT1_genericT2_boundedZeros
     (t1eval t1deriv t2eval t2deriv : Real → Real) (x0 a b : Real) (hx0b : x0 < b)
-    (ht1deriv : ∀ x : Real, HasDerivAt t1eval (t1deriv x) x)
+    (ht1deriv : ∀ x : Real, x0 < x → x < b → HasDerivAt t1eval (t1deriv x) x)
     (hlt_side : ∀ x : Real, x < x0 → t2eval x ≤ 0)
     (hgt_side : ∀ x : Real, x0 < x → 0 < t2eval x)
     (ht2deriv : ∀ x : Real, x0 < x → x < b → HasDerivAt t2eval (t2deriv x) x)
@@ -80,7 +89,7 @@ theorem eml_genericT1_genericT2_boundedZeros
         have hexp : HasDerivAt (fun y => Real.exp (t1eval y))
             (Real.exp (t1eval z) * t1deriv z) z :=
           HasDerivAt_comp Real.exp t1eval (t1deriv z) (Real.exp (t1eval z)) z
-            (ht1deriv z) (HasDerivAt_exp _)
+            (ht1deriv z hz0 hzb) (HasDerivAt_exp _)
         exact ⟨_, HasDerivAt_sub (fun y => Real.exp (t1eval y)) (fun y => Real.log (t2eval y))
           (Real.exp (t1eval z) * t1deriv z) (1 / t2eval z * t2deriv z) z hexp hlog⟩)
       M
@@ -96,7 +105,7 @@ theorem eml_genericT1_genericT2_boundedZeros
         have hexp : HasDerivAt (fun y => Real.exp (t1eval y))
             (Real.exp (t1eval z) * t1deriv z) z :=
           HasDerivAt_comp Real.exp t1eval (t1deriv z) (Real.exp (t1eval z)) z
-            (ht1deriv z) (HasDerivAt_exp _)
+            (ht1deriv z hz0 hzb) (HasDerivAt_exp _)
         have hderiv_eq : HasDerivAt (fun y => Real.exp (t1eval y) - Real.log (t2eval y))
             (Real.exp (t1eval z) * t1deriv z - 1 / t2eval z * t2deriv z) z :=
           HasDerivAt_sub (fun y => Real.exp (t1eval y)) (fun y => Real.log (t2eval y))
@@ -149,7 +158,7 @@ theorem eml_evarConstC1_evarConstC2_boundedZeros_via_general (c1' c2' : Real) (h
       (fun x => Real.exp x - Real.log c1') Real.exp
       (fun x => Real.exp x - Real.log c2') Real.exp
       (Real.log (Real.log c2')) a b hb
-    · intro x
+    · intro x _ _
       exact hasDerivAt_evarConstC c1' x
     · intro x hxlt
       have h := (exp_lt_log_c2_iff_lt_switch hc2').1 x hxlt
