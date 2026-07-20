@@ -99,6 +99,7 @@ import MachLib.WitnessResidualNestedTargetFamily
 import MachLib.WitnessResidualNestedTargetBWitness
 import MachLib.WitnessResidualSimpleRightChildren
 import MachLib.WitnessResidualSimpleT1Application
+import MachLib.WitnessResidualBWitnessGeneralB
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
