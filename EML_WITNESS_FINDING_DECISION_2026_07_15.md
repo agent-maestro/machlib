@@ -918,3 +918,55 @@ infrastructure), `eml_pfaffian_validon_from_sin_equality` does not appear anywhe
 shape, and the proof still doesn't need to invoke it. Zero `sorry`. Full `lake build MachLib`
 passes (392 modules) — seven new files today (`b91e770e` through this entry's commit), all
 independently verified, zero regressions.
+
+## 2026-07-20 (cont.) — attempting the fully general case; real further progress, and the wall
+## characterized precisely enough to say exactly what closing it would require
+
+Explicitly asked to attempt the general case (arbitrary `A`, `B`, not just `RightChildrenSimplePositive`
+on both) rather than stop at today's family closure. Genuine further progress came out of this,
+plus — more valuably — the sharpest characterization yet of exactly where the wall is and what
+would be needed to remove it.
+
+**Real progress** (`WitnessResidualBWitnessGeneralB.lean`, `witness_B_not_le_zero_of_A_simple`):
+the earlier `witness_B_not_le_zero_of_lo_neg` needed `nestedLo cs < 0` to close. Using TODAY's
+own whole-tree closure (`no_tree_with_simple_right_children`) recursively — applied to `A`, not
+`B`, on the branch the elementary trick doesn't reach — that restriction drops entirely: if `A`
+(not `B`) is `RightChildrenSimplePositive`, `B` cannot be `≤ 0` everywhere, for ANY well-formed
+`cs`, and `B` itself can be arbitrarily compound or adversarial. Mechanism: assume `B ≤ 0`
+everywhere; if `nestedLo cs ≤ 0`, the original `-π/2` trick closes it directly; if `nestedLo cs >
+0`, the collapse instead forces `A.eval x = nestedTarget (0::cs) x` for ALL `x` — `A` itself
+realizes a target one layer deeper in the SAME family — refuted directly by today's own closure.
+
+**Why this still doesn't reach the general case — checked directly, not assumed.** This gives
+`∃x0, 0<B.eval x0` for arbitrary `B`, but that was never actually the bottleneck for reaching
+`EMLPfaffianValidOn`: `EMLNoCrossingAt` needs `B.eval x ≠ 0` THROUGHOUT AN INTERVAL, not at one
+point, and `EMLPfaffianValidOn`'s own third conjunct needs `0 < B.eval x` throughout that same
+interval, directly, as a hard requirement (`EMLPfaffian.lean`'s definition, universally
+quantified, no relaxation). Checked specifically whether the collapse-recursion trick could be
+pushed from "one point" to "the whole interval," using periodicity: `nestedTarget cs` is
+`2π`-periodic (each log-shift layer preserves whatever period the layer inside it has, inherited
+from `sin`), so the `≤ 0` and `> 0` sub-regions of `nestedTarget cs` BOTH repeat forever, every
+`2π`. The zero-counting argument needs intervals that GROW with `M` (`T1`'s own Pfaffian-chain
+bound, unbounded in general, depends on how complex `T1` turns out to be) — so any interval large
+enough to matter re-enters BOTH kinds of sub-region arbitrarily many times, no matter how far out
+it's pushed. The pointwise collapse trick only ever pins `B`'s sign on the `≤0` sub-regions;
+nothing in this line of attack — however it's sliced — touches the `>0` sub-regions, where `B`'s
+sign is genuinely unconstrained by anything derived so far.
+
+**What this means, concretely, for whoever picks this up next.** This is not "needs more
+cleverness" — it's that `EMLPfaffianValidOn`/`enc_combinedBound`'s own definitions have zero
+tolerance for interval-wide requirements failing even on a small, isolated sub-region, and
+nothing available (here, in the 2026-07-16 cancellation counterexample, or in the two-independent-
+angles entry earlier today) supplies interval-wide sign information for a subtree whose OWN VALUE
+is otherwise unconstrained by tree shape. Two concrete paths forward, neither attempted here: (1)
+weaken `EMLPfaffianValidOn`'s own definition to tolerate finitely-many or measure-zero exceptions,
+then rebuild `enc_combinedBound`'s zero-counting argument to work under that weaker hypothesis —
+a foundational change touching `EMLPfaffian.lean`/`EMLExplicitBoundEncoder.lean`, not a small
+patch; or (2) find a genuinely different sufficient condition on `B` (weaker than "simple," but
+strong enough to give interval-wide positivity some other way) — no candidate identified. Either
+is real, multi-session research, matching the original 2026-07-15 estimate for the fully general
+case — today's work has not shortened that estimate, only sharpened exactly what it would need to
+contain.
+
+`#print axioms` clean (same base throughout), `eml_pfaffian_validon_from_sin_equality` does not
+appear, zero `sorry`. Full `lake build MachLib` passes (393 modules) — eight new files today.
