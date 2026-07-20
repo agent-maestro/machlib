@@ -97,6 +97,7 @@ import MachLib.WitnessResidualDepth2ABConjuncts
 import MachLib.WitnessResidualTargetGeneric
 import MachLib.WitnessResidualNestedTargetFamily
 import MachLib.WitnessResidualNestedTargetBWitness
+import MachLib.WitnessResidualSimpleRightChildren
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
