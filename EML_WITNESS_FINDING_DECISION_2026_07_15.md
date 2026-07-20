@@ -411,3 +411,37 @@ brainstormed idea — compiled, checked, wired into the root `MachLib.lean`.
 Does not close Option D — the depth ≥ 2 inductive step (needing the target-shift trick above
 plus `T1`'s own chain construction) is still open. But the induction now has a genuine,
 verified foothold at its base.
+
+## 2026-07-19 (cont.) — attempted the depth-2 step; found a real obstruction, not a quick win
+
+Attempted to push the depth-1 boundedness-propagation argument (above) one layer deeper: for
+`T1 = eml A B` with `A` or `B` now COMPOUND, does boundedness of `T1` still force `A` and `B`
+individually bounded, the way it did when they were leaves?
+
+**No — and this section exhibits why, concretely, rather than leaving it as an abstract
+worry.** `MachLib/WitnessResidualCancellation.lean` (commit pending): the depth-3 tree
+`T1 := eml var (eml (eml var (const (exp K))) (const 1))` has `A = var` UNBOUNDED and its own
+`B`-subtree (`exp(exp x − K)`) ALSO unbounded — yet `T1.eval x = K`, an exact CONSTANT, for
+every real `x`. Verified both numerically (Python, exact to double precision at 8 test points)
+and in Lean (`cancellation_theorem`, two applications of `log_exp` plus `mach_ring` — compiled
+clean, `#print axioms` confirms non-circular, no dependence on the axiom under investigation).
+
+**This is precisely round 19's original "bounded siblings defeat the invariant" obstruction,
+now made fully explicit rather than asserted.** The depth-1 argument worked because a LEAF
+`A` or `B` is simple enough that "exp(A) unbounded" and "log(B) unbounded" can't be shown to
+cancel — there's no room for conspiracy in a single exp or log of a leaf. Once `A`, `B` can be
+COMPOUND, EML trees can encode iterated exponentials precisely enough to cancel each other's
+growth exactly (this specific witness needs only depth 3 to do it). So: **no boundedness-only
+argument can close the depth-≥2 case in general** — cancellation is a real, constructible
+phenomenon in this system, not a hypothetical gap in the proof technique.
+
+**What this means for Option D, honestly:** the depth-≥2 inductive step cannot be closed by
+generalizing the depth-1 style argument, no matter how much more casework is thrown at it.
+Closing it needs the FULL Khovanskii/Pfaffian-chain machinery (the target-shift trick +
+`combinedBoundE`) to distinguish "bounded via cancellation" from "actually equals
+`log(c2+sin x)`'s oscillating, non-cancelling structure" — exactly the tool this thread has
+been trying to avoid needing by looking for a shortcut. There isn't one. The real remaining
+work (T1's own chain construction, feeding the inductive hypothesis into
+`enc_combinedBound`) is not optional scaffolding around an easier core argument — it IS the
+core argument. Not started this pass; this section sharpens the map rather than closing
+ground, and that sharpening is itself the honest deliverable.

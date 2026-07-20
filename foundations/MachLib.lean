@@ -90,6 +90,7 @@ import MachLib.NormalizedPolynomialRootCount
 import MachLib.HighDimensional
 import MachLib.SinNotInEML
 import MachLib.WitnessResidualDepth1
+import MachLib.WitnessResidualCancellation
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
