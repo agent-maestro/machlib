@@ -970,3 +970,38 @@ contain.
 
 `#print axioms` clean (same base throughout), `eml_pfaffian_validon_from_sin_equality` does not
 appear, zero `sorry`. Full `lake build MachLib` passes (393 modules) — eight new files today.
+
+## 2026-07-20 (cont.) — a second, independent mechanism for `B`'s positivity; the closed class
+## widens, the wall doesn't move
+
+Continued past the wall-characterization entry above per "proceed please," looking for a
+DIFFERENT sufficient condition on `B` (path (2) from that entry) rather than the foundational
+`EMLPfaffianValidOn`-weakening path (1). Found one.
+
+**The mechanism** (`WitnessResidualBOneLevelCompound.lean`): `log`'s domain-clamp cuts both
+ways. Every prior mechanism used a node's right child being POSITIVE; this one uses a node's
+right child being `≤ 1` instead — `log c ≤ 0` for `0 < c ≤ 1` (`log` increasing, `log 1 = 0`),
+so SUBTRACTING it can only INCREASE the parent's value: `(eml P (const c)).eval x = exp(P.eval
+x) - log c ≥ exp(P.eval x) > 0`, for ANY `P` whatsoever — no restriction on `P` needed for THIS
+specific fact. A genuinely different route to "compound node, provably positive" than
+`RightChildrenSimplePositive` (which needs the node to BE simple); here the node is compound
+and positive BECAUSE of that structure.
+
+**What it buys**: `no_T1_with_B_one_level_compound` — `T1 = eml A (eml P (const c))` with `0 < c
+≤ 1`, `A` and `P` both `RightChildrenSimplePositive`, closes the same way
+`no_T1_with_simple_right_children` does. `T1`'s own right child `B` is now allowed ONE level of
+compoundness (`eml P (const c)`) that was excluded entirely before — a genuine widening of the
+closed class, not a restatement of it.
+
+**What it doesn't do, honestly.** This does NOT remove the wall from the earlier entry — `A` and
+`P` are STILL restricted to `RightChildrenSimplePositive`, and `B`'s allowed shape is still one
+SPECIFIC narrow pattern (`eml (anything) (small positive constant)`), not "anything." It's
+concrete evidence the wall isn't monolithic — different mechanisms (simple-right-child;
+`≤1`-right-child) chip away at different corners of the same space — but the FULLY general case
+(`B` genuinely arbitrary, including e.g. the cancellation counterexample's shape) is exactly as
+open as before. Whether this `≤1` mechanism iterates further (does `Q = eml P' Q'` with `Q'`
+itself satisfying some bound work the same way?) was not checked this pass — a natural next
+question for whoever continues this, not attempted here.
+
+`#print axioms` clean (same base), `eml_pfaffian_validon_from_sin_equality` does not appear,
+zero `sorry`. Full `lake build MachLib` passes (394 modules) — nine new files today.
