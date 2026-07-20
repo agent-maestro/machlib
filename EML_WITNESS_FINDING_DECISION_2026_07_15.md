@@ -629,3 +629,59 @@ too.
 All new results: `#print axioms`-checked non-circular (only MachLib's standard foundational
 axiom base — `eml_pfaffian_validon_from_sin_equality` does not appear), zero `sorry`. Full
 `lake build MachLib` passes.
+
+## 2026-07-20 (cont.) — the zero-counting argument generalized over the target; one nesting
+## level pushed through concretely
+
+Per continued user request ("proceed please") after the rescoping entry above. That entry
+concluded `EMLWitnesses A/B x0` and `c2≥2` are the same difficulty because both need a proof
+that works for the WHOLE nested-target family (`log(c2+sin x)`, `log(d+log(c2+sin x))`, deeper),
+not just the one target closed so far. Took that literally: re-read
+`T1_not_eq_log_c2_plus_sin_given_validon` (`WitnessResidualChainSkeleton.lean`) closely enough to
+check how much of it is actually `log(c2+sin x)`-specific versus generic machinery that happens
+to be applied to that target.
+
+**Finding: almost none of it is target-specific.** The `M+1`-zeros-exceed-`M` argument (the
+encoder, `combinedBoundE`, the zero list at `{kπ}`) never touches the target's shape. Exactly two
+places do: the value the target takes at every `kπ` (`log(c2+sin(kπ)) = log(c2)`, a fixed level,
+via `sin(kπ)=0`) and a witness point where the target differs from that level
+(`log(c2+sin(π+1)) ≠ log(c2)`, via `sin(π+1)≠0`).
+
+**`no_tree_eq_target_given_validon`** (`WitnessResidualTargetGeneric.lean`): the same proof with
+`log(c2+sin x)` replaced by an abstract `TARGET : Real → Real` and `log c2` replaced by an
+abstract level `L`, taking those two facts as hypotheses (`hTargetKPi : ∀k≥1, TARGET(kπ)=L`,
+`hTargetPi1 : TARGET(π+1)≠L`) instead of deriving them from `sin`'s own algebra.
+`EMLPfaffianValidOn T1` is still an explicit, undischarged hypothesis, unchanged from the
+chain-skeleton file — this only removes hardcoding around the still-open induction, it doesn't
+touch the induction itself.
+
+**`T1_not_eq_nested_log_given_validon`**: the abstraction used once, for
+`TARGET(x) = log(d + log(c2+sin x))` — exactly the shape identified in the prior entry as what
+`A` would have to equal in the "`B` a large constant" escape route. Needed one new ingredient the
+un-nested proof didn't: `log_injective_pos` (already existed, `SinNotInEMLDepth2Sweep.lean`), to
+turn `log(d+log(c2+sin(π+1))) ≠ log(d+log c2)` into `sin(π+1)≠0` through TWO layers of log
+instead of one — plus a positivity side-condition (`hdc2 : 0 < d + log(c2-1)`, the minimum of
+`d+log(c2+sin x)` over all `x`) to keep the outer log from ever clamping, without which the
+target isn't a genuine two-level nesting at all. Compiled clean after two fixes: `set` isn't
+available (Mathlib-free project — the 2026-07-16 entry above already flagged this same gap;
+worked around by writing the level value out as a plain term everywhere instead of naming it,
+rather than reaching for `let`+`show` this time since no rewriting under the binder was needed);
+and `add_le_add_left`'s shifted-constant argument is EXPLICIT, not implicit the way `mul_pos`'s
+arguments are — caught by a first failed build attempt, fixed by reading the actual signature in
+`Forge.lean` rather than guessing.
+
+**Honest scope of this pass**: this does NOT discharge `hvalidon_any_b` for either target (still
+the genuinely open induction), and does NOT set up a formal induction over arbitrarily many
+nesting levels — it demonstrates, concretely, that the abstraction reaches one level deeper than
+where the mechanism previously stopped, which is real evidence the "state the induction over the
+whole nested-target family" plan is buildable rather than just plausible. The natural next step
+if this continues: define the nested-target family as an actual inductive/recursive Lean
+structure (parametrized by a list of shift constants) and restate `no_tree_eq_target_given_validon`
+as a statement quantified over that family with `hTargetKPi`/`hTargetPi1` derived generically
+(by induction on the nesting depth) rather than re-proven by hand at each level the way this pass
+did for level 2. Not started.
+
+`#print axioms` on both new theorems: only MachLib's standard foundational + already-trusted
+analytic-function axiom base (the same set `T1_not_eq_log_c2_plus_sin_given_validon` uses,
+nothing new), `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full
+`lake build MachLib` passes (388 modules).
