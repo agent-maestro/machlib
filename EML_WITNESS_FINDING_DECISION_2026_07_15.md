@@ -747,3 +747,65 @@ for that one step.
 `#print axioms` on all three new theorems: same base as the un-nested version (MachLib standard
 + already-trusted analytic-function axioms), `eml_pfaffian_validon_from_sin_equality` does not
 appear, zero `sorry`. Full `lake build MachLib` passes (389 modules).
+
+## 2026-07-20 (cont.) — the third `EMLWitnesses` conjunct, generalized to the whole family;
+## and a clear line drawn around what's actually still missing
+
+Per continued "proceed please." Went looking for what was actually special about `1<c2<2` in
+`depth2_witness_B_of_c2_between_one_two` — whether it was a real restriction or an artifact of
+that proof only having `log(c2+sin x)` available.
+
+**It was an artifact.** `x=-π/2` isn't special to that one target — it's `sin`'s own minimum
+point, and `nestedTarget_at_neg_pi_div_two` (`WitnessResidualNestedTargetBWitness.lean`) proves,
+by the same one-line induction shape as `nestedTarget_facts`, that `nestedTarget cs (-π/2) =
+nestedLo cs` for EVERY well-formed `cs` — each layer's `log` is monotone, so "achieves the
+minimum here" survives every nesting layer unchanged. Checked (not assumed) that `1<c2<2` is
+EXACTLY `nestedWF [c2] ∧ nestedLo [c2] < 0` (`nestedWF [c2]` needs `c2>1`; `nestedLo [c2] =
+log(c2-1) < 0` needs `c2<2`) — the two conditions coincide precisely.
+
+**`witness_B_not_le_zero_of_lo_neg`**: for ANY well-formed `cs` with `nestedLo cs < 0`, `T1 = eml
+A B` satisfying `T1.eval = nestedTarget cs` has `∃x0, 0<B.eval x0` — the THIRD `EMLWitnesses T1
+x0` conjunct, now closed for the whole family (every depth), not one hand-checked level. `B`
+doesn't need to be a constant either (unlike `depth2_no_T1_with_const_B_small`) — the argument
+only ever used `B`'s SIGN, never its shape, so that restriction drops out too. One build hiccup:
+`rw [h1] at hlo` initially rewrote in the wrong direction (tried to find `exp(...)`'s pattern
+inside `hlo`, which doesn't mention it) — fixed by rewriting with `← h1` instead, substituting
+`nestedLo cs` (which DOES appear in `hlo`) with the exp expression.
+
+**Why this doesn't close more than it says, and what that clarifies.** Chased whether the
+`nestedLo cs ≥ 0` case (where this elementary trick doesn't apply) could recurse usefully: if
+`B≤0` everywhere AND `nestedLo cs ≥ 0`, the collapse forces `A.eval x = log(nestedTarget cs x)`
+for all `x` — which, if `nestedLo cs > 0` strictly (so the log doesn't clamp), is EXACTLY
+`nestedTarget (0 :: cs) x` — `A` would have to realize a target ONE LAYER DEEPER in the very
+family this file's induction already covers. This is a genuine structural insight (it explains
+NEATLY why `c2≥2`'s difficulty is "the same shape, one level in" — confirmed independently of
+the earlier rescoping entry's derivation, from a completely different angle this time) but it
+does NOT escape the core recursive requirement: applying `no_tree_eq_nested_target_given_validon`
+to `A` needs `A`'s OWN `EMLPfaffianValidOn`, which is the exact same kind of hypothesis this
+whole investigation has been trying to discharge for `T1` — pushed one level down, not removed.
+Checked carefully (not just asserted) before writing this up, specifically to see if it was a
+disguised escape hatch. It isn't. The recursion bottoms out on the same wall every time: no
+matter how the target-side induction is sliced, `EMLPfaffianValidOn` for a COMPOUND tree needs
+`EMLWitnesses`, which needs the same fact for its own children — and `EMLWitnesses` is a
+property that can genuinely FAIL for legitimate trees regardless of what equation they satisfy
+(a leaf `const c` with `c ≤ 0` sitting as some node's right child breaks it structurally, with no
+dependence on any target at all) — so there is no way to bootstrap it purely from target algebra.
+This is the same wall the 2026-07-16 cancellation counterexample
+(`WitnessResidualCancellation.lean`) found from the boundedness angle; this pass finds it again
+from the nested-target angle. Two independent routes hitting the identical obstruction is itself
+useful confirmation this is a genuine wall, not a gap in either investigation's cleverness.
+
+**Where this leaves Option D, honestly, after today's four files.** The target side is now
+fully general (any nesting depth, one induction) and the elementary sub-cases within it are
+pushed as far as they go (the `nestedLo cs < 0` slice, for both the third `EMLWitnesses`
+conjunct and — via the earlier chain-skeleton work — the "no tree realizes this target" question
+itself, given validity). What remains, named as precisely as it can be without having built it:
+a strong induction on EML TREE depth (orthogonal to the target-nesting-depth induction closed
+today) establishing `EMLPfaffianValidOn` for a compound tree from ITS OWN two children's
+validity plus one anchor point — which is circular exactly at the point where `EMLWitnesses`
+needs to hold for children whose only obligation is to make some outer equation balance, with no
+further constraint pinning down their SPECIFIC recursive shape. This is not a new characterization
+of the difficulty; it is the SAME one from round 19 (2026-07 investigation start) and the
+2026-07-16 cancellation counterexample, now confirmed from a third independent angle. `#print
+axioms` clean (same base, no dependence on the axiom under investigation), zero `sorry`. Full
+`lake build MachLib` passes (390 modules).
