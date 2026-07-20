@@ -6,34 +6,39 @@ import MachLib.FieldLemmas
 import MachLib.MultiVarBucket
 
 /-!
-# The zero-crossing induction, base case: `eml var var`, with NO validity assumption
+# The zero-crossing induction, base case COMPLETE: all four depth-1 shapes, NO validity assumption
 
 Continuation of path (1) (`EML_WITNESS_FINDING_DECISION_2026_07_15.md`). The strategy traced in
 `EMLExplicitBoundGlue.lean` needs a strong induction on tree depth bounding zero-CROSSINGS of an
-arbitrary tree, without assuming its own `EMLPfaffianValidOn`. This file attempts the base case:
+arbitrary tree, without assuming its own `EMLPfaffianValidOn`. This file closes the base case:
 depth-1 trees, where the classic Pfaffian-chain encoder isn't needed at all — elementary
-calculus (Rolle/MVT, both already in the codebase) suffices directly, because a depth-1 tree's
-right child is a bare leaf, so its sign pattern is either constant (`const`) or a single
-crossing at `x=0` (`var`) — known in closed form, not something that itself needs a recursive
-validity argument.
+calculus suffices directly, because a depth-1 tree's right child is a bare leaf, so its sign
+pattern is either constant (`const`) or a single crossing at `x=0` (`var`) — known in closed
+form, not something that itself needs a recursive validity argument.
 
-**The hardest of the four depth-1 shapes, worked through completely.** `t = eml var var`:
-`t.eval x = exp(x) - log(x)` for `x>0` (clamps to `exp(x)` for `x≤0`, where it's `>0` always, so
-zero-free there). On `x>0`: `t`'s derivative is `exp(x) - 1/x`; THAT function's own derivative is
-`exp(x) + 1/x²`, manifestly positive, so `exp(x)-1/x` is strictly monotonic
-(`strictMono_of_deriv_pos`, MVT-based, already in `MonotoneFromDeriv.lean`) — hence injective,
-hence has at most one zero. Feed that into `zero_count_bound_by_deriv` (Rolle's theorem,
-`Rolle.lean`) to get: `exp(x)-log(x)` has at most `1+1=2` zeros on any `(0,B)`. Combined with
-"zero zeros on `x≤0`" (trivial), `eml var var`'s full evaluation has boundedly many zeros on ANY
-interval — proved WITHOUT ever invoking `EMLPfaffianValidOn`, `LogArgPosOn`, or the Pfaffian-chain
-encoder at all.
+**All four depth-1 shapes, worked through completely.**
+- `eml var var` (the hardest): `t.eval x = exp(x) - log(x)` for `x>0` (clamps to `exp(x) > 0` for
+  `x≤0`, zero-free there). On `x>0`, the derivative `exp(x)-1/x` has its OWN derivative
+  `exp(x)+1/x²` manifestly positive, so it is strictly monotonic (`strictMono_of_deriv_pos`, MVT-
+  based, already in `MonotoneFromDeriv.lean`) hence injective hence at most one zero; Rolle's
+  theorem (`zero_count_bound_by_deriv`, `Rolle.lean`) lifts that to at most `2` zeros for
+  `exp(x)-log(x)` itself. Glued with the `x≤0` region: `≤3` total.
+- `eml (const c1) (const c2)`: a genuine constant (`exp c1 - log c2`, no clamp-region split at
+  all — `log c2`'s value doesn't depend on `x`); given non-degeneracy, `0` zeros.
+- `eml var (const c2)`: `exp(x) - log(c2)`, again no clamp split; `exp`'s own injectivity
+  (`exp_lt`) gives at most `1` zero, no derivative work needed.
+- `eml (const c1) var`: `exp(c1) - log(x)` for `x>0` (clamps to `exp(c1) > 0` for `x≤0`); `log`'s
+  own injectivity on positives (`log_lt_log`) gives at most `1` zero there, `≤3` total after the
+  same clamp-region glue as `eml var var`.
 
-**Scope, honestly.** This is the base case of a depth-based induction, for the single hardest of
-four depth-1 shapes (the other three — both leaves constant, or one leaf `var`/one `const` — are
-easier variants of the same technique: injectivity of `exp` or `log` alone, no second-derivative
-step needed). The INDUCTIVE STEP — compound `t1`/`t2`, needing the full "split by every internal
+Each of the last three needed only injectivity of `exp` or `log` (both already axioms/theorems in
+the codebase) — no second-derivative argument, no new machinery — confirming the base case really
+was as tractable as the first (`eml var var`) case suggested.
+
+**Scope, honestly.** This closes ALL of depth-1 — a complete base case, not one illustrative
+shape. The INDUCTIVE STEP — compound `t1`/`t2`, needing the full "split by every internal
 log-node's sign, recurse" strategy sketched in `EMLExplicitBoundGlue.lean` — is not attempted
-here. This is one confirmed brick of a foundation, not the foundation.
+here. This is a complete foundation for an induction, not the induction itself.
 -/
 
 namespace MachLib
@@ -63,6 +68,29 @@ theorem atMostOneZero_of_strictMono {f : Real → Real} {c d : Real}
       · have hlt' := hmono y x hyin.1 hyin.2.1 hxin.1 hxin.2.1 hgt
         rw [hxin.2.2, hyin.2.2] at hlt'
         exact lt_irrefl_ax 0 hlt'
+
+/-- **At most one zero from pairwise injectivity on an open interval.** Generalizes
+`atMostOneZero_of_strictMono` to `f x ≠ f y` directly (not requiring a fixed direction of
+inequality) — covers both increasing and decreasing functions uniformly, needed for the depth-1
+shapes below where the natural witness is `exp`/`log` injectivity, not a derivative-sign
+argument. -/
+theorem atMostOneZero_of_injOn {f : Real → Real} {c d : Real}
+    (hinj : ∀ x y : Real, c < x → x < d → c < y → y < d → x < y → f x ≠ f y) :
+    ∀ zeros : List Real, zeros.Nodup → (∀ z ∈ zeros, c < z ∧ z < d ∧ f z = 0) → zeros.length ≤ 1
+  | [], _, _ => by simp
+  | [_], _, _ => by simp
+  | x :: y :: ys, hnd, hz => by
+      exfalso
+      have hxin := hz x (List.mem_cons_self _ _)
+      have hyin := hz y (List.mem_cons_of_mem _ (List.mem_cons_self _ _))
+      have hxney : x ≠ y := by
+        have h := List.nodup_cons.mp hnd
+        exact fun h' => h.1 (h' ▸ List.mem_cons_self _ _)
+      have hfeq : f x = f y := hxin.2.2.trans hyin.2.2.symm
+      rcases lt_total x y with hlt | heq | hgt
+      · exact (hinj x y hxin.1 hxin.2.1 hyin.1 hyin.2.1 hlt) hfeq
+      · exact hxney heq
+      · exact (hinj y x hyin.1 hyin.2.1 hxin.1 hxin.2.1 hgt) hfeq.symm
 
 /-- `(fun y => exp y - 1/y)`'s derivative at any `x > 0` is `exp x - (-1/(x*x))` — via
 `HasDerivAt_inv` on the identity function for the `1/y` piece. -/
@@ -186,6 +214,103 @@ theorem eml_var_var_boundedZeros (a b : Real) :
   have hpart : (zeros.filter (fun z => decide (z ≤ 0))).length
       + (zeros.filter (fun z => !decide (z ≤ 0))).length = zeros.length :=
     MultiVarMod.length_filter_partition (fun z => decide (z ≤ 0)) zeros
+  omega
+
+/-! ## The other three depth-1 shapes — no derivative work needed, `exp`/`log` injectivity alone -/
+
+/-- **`eml (const c1) (const c2)`: zero or infinitely many zeros, no in-between.** A constant
+function — `t.eval x = exp c1 - log c2` for every `x`, no clamp-region splitting at all (`log
+c2`'s value, clamped or not, doesn't depend on `x`). Given the non-degenerate case
+(`exp c1 ≠ log c2`), the constant is never `0`: zero zeros anywhere. -/
+theorem eml_const_const_boundedZeros (c1 c2 : Real) (hne : Real.exp c1 ≠ Real.log c2)
+    (a b : Real) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧
+        (EMLTree.eml (EMLTree.const c1) (EMLTree.const c2)).eval z = 0) →
+      zeros.length ≤ 0 := by
+  intro zeros hnd hz
+  match zeros with
+  | [] => simp
+  | x :: xs =>
+      exfalso
+      obtain ⟨_, _, hfx⟩ := hz x (List.mem_cons_self _ _)
+      have hfx' : Real.exp c1 - Real.log c2 = 0 := hfx
+      apply hne
+      have e : Real.exp c1 = (Real.exp c1 - Real.log c2) + Real.log c2 := by mach_ring
+      rw [hfx'] at e
+      have e2 : (0 : Real) + Real.log c2 = Real.log c2 := by mach_ring
+      rw [e2] at e
+      exact e
+
+/-- **`eml var (const c2)`: at most one zero, anywhere, via `exp`'s own injectivity.** `t.eval x
+= exp(x) - log(c2)` for every `x` — again no clamp-region split (`log c2` is `x`-independent).
+`exp` is strictly monotonic (`exp_lt`) hence injective, so `exp(x) = log(c2)` has at most one
+solution. -/
+theorem eml_var_const_boundedZeros (c2 : Real) (a b : Real) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (EMLTree.eml EMLTree.var (EMLTree.const c2)).eval z = 0) →
+      zeros.length ≤ 1 := by
+  apply atMostOneZero_of_injOn
+  intro x y _hxa _hxb _hya _hyb hxy hEq
+  have hEq' : Real.exp x - Real.log c2 = Real.exp y - Real.log c2 := hEq
+  have hExpEq : Real.exp x = Real.exp y := by
+    have e1 : Real.exp x = (Real.exp x - Real.log c2) + Real.log c2 := by mach_ring
+    have e2 : Real.exp y = (Real.exp y - Real.log c2) + Real.log c2 := by mach_ring
+    rw [e1, e2, hEq']
+  have hlt : Real.exp x < Real.exp y := Real.exp_lt hxy
+  rw [hExpEq] at hlt
+  exact lt_irrefl_ax _ hlt
+
+/-- **`eml (const c1) var`: at most three zeros, via `log`'s own injectivity plus the same
+clamp-region split as `eml var var`.** `t.eval x = exp(c1) - log(x)` for `x>0` (clamps to
+`exp(c1) > 0`, never zero, for `x≤0`). `log` is strictly monotonic on positives (`log_lt_log`)
+hence injective there, so `log(x) = exp(c1)` has at most one solution on `x>0`. -/
+theorem eml_const_var_boundedZeros (c1 : Real) (a b : Real) :
+    ∀ zeros : List Real, zeros.Nodup →
+      (∀ z ∈ zeros, a < z ∧ z < b ∧ (EMLTree.eml (EMLTree.const c1) EMLTree.var).eval z = 0) →
+      zeros.length ≤ 3 := by
+  intro zeros hnd hz
+  haveI : DecidableEq Real := fun x y => Classical.propDecidable (x = y)
+  have hle_empty : zeros.filter (fun z => decide (z ≤ 0)) = [] := by
+    apply List.filter_eq_nil_iff.mpr
+    intro z hzmem hzle
+    have hzle' : z ≤ 0 := of_decide_eq_true hzle
+    obtain ⟨_, _, hfz⟩ := hz z hzmem
+    have hcl : (EMLTree.eml (EMLTree.const c1) EMLTree.var).eval z = Real.exp c1 := by
+      show Real.exp c1 - Real.log z = Real.exp c1
+      rw [Real.log_nonpos hzle']; exact sub_zero _
+    rw [hcl] at hfz
+    exact lt_irrefl_ax 0 (hfz ▸ Real.exp_pos c1)
+  have hnd_hi : (zeros.filter (fun z => !decide (z ≤ 0))).Nodup := hnd.filter _
+  have hgt_bound : (zeros.filter (fun z => !decide (z ≤ 0))).length ≤ 1 := by
+    apply atMostOneZero_of_injOn (c := 0) (d := b)
+    · intro x y hx0 _hxb hy0 _hyb hxy hEq
+      have hEq' : Real.exp c1 - Real.log x = Real.exp c1 - Real.log y := hEq
+      have hLogEq : Real.log x = Real.log y := by
+        have e1 : Real.log x = Real.exp c1 - (Real.exp c1 - Real.log x) := by mach_ring
+        have e2 : Real.log y = Real.exp c1 - (Real.exp c1 - Real.log y) := by mach_ring
+        rw [e1, e2, hEq']
+      have hlt : Real.log x < Real.log y := log_lt_log hx0 hxy
+      rw [hLogEq] at hlt
+      exact lt_irrefl_ax _ hlt
+    · exact hnd_hi
+    · intro z hzmem
+      rw [List.mem_filter] at hzmem
+      obtain ⟨hzz, hzgt⟩ := hzmem
+      have hzgt' : 0 < z := by
+        have hne0 := of_decide_eq_false (show decide (z ≤ 0) = false by simpa using hzgt)
+        rcases lt_total z 0 with h | h | h
+        · exact absurd (le_of_lt h) hne0
+        · exact absurd (h ▸ le_refl (0 : Real)) hne0
+        · exact h
+      obtain ⟨_, hzb, hfz⟩ := hz z hzz
+      exact ⟨hzgt', hzb, hfz⟩
+  have hpart : (zeros.filter (fun z => decide (z ≤ 0))).length
+      + (zeros.filter (fun z => !decide (z ≤ 0))).length = zeros.length :=
+    MultiVarMod.length_filter_partition (fun z => decide (z ≤ 0)) zeros
+  rw [hle_empty] at hpart
+  have hlen_nil : ([] : List Real).length = 0 := rfl
+  rw [hlen_nil] at hpart
   omega
 
 end Real
