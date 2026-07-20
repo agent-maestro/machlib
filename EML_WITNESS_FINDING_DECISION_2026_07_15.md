@@ -809,3 +809,63 @@ of the difficulty; it is the SAME one from round 19 (2026-07 investigation start
 2026-07-16 cancellation counterexample, now confirmed from a third independent angle. `#print
 axioms` clean (same base, no dependence on the axiom under investigation), zero `sorry`. Full
 `lake build MachLib` passes (390 modules).
+
+## 2026-07-20 (cont.) — a complete, unconditional closure, for a real (if restricted) class of
+## trees. First one in the whole arc with no undischarged hypothesis.
+
+Per continued "proceed please." Every result up to this point — including the fully general
+target-side closure — left `EMLPfaffianValidOn T1` (equivalently `EMLWitnesses T1 x0`) as an
+explicit hypothesis, "confirmed from two independent angles" as the genuine remaining wall. This
+entry asks: is there a natural, checkable class of trees where that wall simply doesn't apply?
+
+**`RightChildrenSimplePositive`** (`WitnessResidualSimpleRightChildren.lean`): every right
+child, at every `eml` node throughout the WHOLE tree (recursively), is either the bare variable
+or a positive constant — never compound, never non-positive. Left children are completely
+unrestricted (arbitrarily deep, arbitrarily compound). `EMLWitnesses` and `EMLNoCrossingAt` are
+both free for this class, by the same one-line reason: right children never recurse into
+uncertain substructure, so their positivity/non-vanishing is either immediate (positive
+constant) or reduces to a single scalar condition (`x0 > 0`, for `var`).
+
+**A real subtlety, found while assembling the proof, not anticipated going in.** The natural
+first attempt — `RightChildrenSimplePositive A ∧ RightChildrenSimplePositive B` as two SEPARATE
+hypotheses, using the previous file's `witness_B_not_le_zero_of_lo_neg`/
+`witness_B_pos_at_point_of_lo_neg` to cover `B`'s positivity when `B` is compound — does not
+actually work. `EMLWitnesses`'s third conjunct only ever needs positivity at ONE point, but
+`EMLPfaffianValidOn`'s own third conjunct (`B.eval x ≠ 0`, needed via `EMLNoCrossingAt`)
+needs it THROUGHOUT AN INTERVAL — one positive point cannot supply that for a compound `B`. The
+fix: apply `RightChildrenSimplePositive` to the WHOLE tree `T1 = eml A B` at once, which
+(unfolded) is exactly `RightChildrenSimplePositive A ∧ (B = var ∨ ∃c, B = const c ∧ 0<c)` — `B`
+itself, not just its descendants, must be simple. Once it is, non-vanishing holds everywhere for
+free. A second surprise fell out of this: `nestedLo cs < 0` (needed for the elementary trick
+that would have supplied a compound `B`'s positivity) turns out not to be needed AT ALL once `B`
+is simple directly — **the closure holds for literally any well-formed `cs`, not just the
+`nestedLo cs < 0` slice.**
+
+**The result** (`no_T1_with_simple_right_children`): no finite tree `T1 = eml A B` with
+`RightChildrenSimplePositive T1` can satisfy `T1.eval = nestedTarget cs` globally, for ANY
+well-formed `cs` — proved with NO undischarged hypothesis. Built from: `nestedTargetDeriv`
+(explicit derivative formula, one `1/(c+·)` factor per nesting layer via the chain rule,
+positivity supplied by `nestedWF` + `nestedTarget_facts`'s range bound — no new positivity
+argument needed) and `nestedTarget_hasDerivAt` (the derivative actually holds, by induction,
+transported to `T1.eval` via `HasDerivAt_of_eq` and `hT1eq`); combined with `EMLWitnesses`/
+`EMLNoCrossingAt` freeness above, wired through `eml_pfaffian_validon_of_witnesses_backward` /
+`_twosided` (both already-built, GENERIC-in-target machinery from `EMLSmoothness.lean` — not
+the `sin`-hardcoded capstone, which doesn't apply here) to get `EMLPfaffianValidOn T1 0 b` for
+every `b > 0`, then `no_tree_eq_nested_target_given_validon` for the final contradiction.
+Compiled clean on the first careful attempt for every piece, including the full assembly —
+notable given how many earlier files in this arc needed 1-3 rounds of `show`/argument-order
+fixes; the earlier files' groundwork (robust `rfl` unfold lemmas, correct `HasDerivAt_comp`
+argument order worked out once and reused) paid for itself here.
+
+**Where this leaves Option D.** This is the FIRST result in the entire arc — going back to the
+very first `sin_not_in_eml_any_depth` investigation — that closes an actual instance of "no tree
+realizes this target" with ZERO remaining hypotheses, for a real (if syntactically restricted)
+class of trees. It does not touch the general case: `RightChildrenSimplePositive` genuinely
+excludes trees like `WitnessResidualCancellation.lean`'s counterexample (compound right child at
+the top node), and the wall for THOSE trees is exactly where the previous entry left it. But the
+dichotomy is now sharp and useful: either a tree encountered in this investigation has simple
+right children (closed, unconditionally, today) or it doesn't (open, needs the still-missing
+tree-depth induction). `#print axioms`: standard foundational base plus the already-trusted
+analytic/`HasDerivAt` infrastructure (same kind of axioms `EMLSmoothness.lean` itself rests on),
+`eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full `lake build MachLib`
+passes (391 modules).
