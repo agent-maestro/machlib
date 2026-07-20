@@ -1442,3 +1442,45 @@ entries ago — a natural next step, not attempted here). `#print axioms` clean,
 primitives (`propext`, `Classical.choice`, `Quot.sound`, `HasDerivAt`/Rolle/algebra), zero
 `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib`
 passes (401 modules) — **sixteen new files in one session.**
+
+## 2026-07-20 (cont. 4) — the `c2' ≤ e` restriction removed: it was never actually needed
+
+Per continued "proceed please." Re-examined the "honest scope" gap flagged above — the `c2' > e`
+sub-case, which the previous entry assumed would need a second Rolle layer ("`g` itself bounded
+via a valley argument"). Checking the actual geometry first, rather than diving straight into the
+harder proof, found the restriction was an artifact of proving MORE than needed, not a genuine
+difficulty.
+
+**What was actually true.** `g`'s derivative sign flips at `x1 := log(log c2' - 1)` (well-defined
+only when `c2' > e`, i.e. `log c2' > 1`). The previous entry's `c2' ≤ e` restriction existed to
+make the sign-check hold GLOBALLY (avoiding `x1` mattering at all). But `g` is only ever evaluated
+on `(x0, b)` — the region past `t2`'s own sign crossing, `x0 = log(log c2')` — and `x1 < x0`
+ALWAYS: `log c2' - 1 < log c2'` trivially, and `log` is monotonic, so `log(log c2' - 1) <
+log(log c2')` whenever both are in `log`'s real domain. **The point where `g`'s derivative would
+flip sign sits strictly to the LEFT of where `g` is ever actually used** — so the "valley" never
+shows up in the region that matters, for ANY `c2' > 1`, not just `c2' ≤ e`. Confirmed
+algebraically without needing `x1` at all: for `z > x0`, `exp z > exp x0 = log c2'` (via `exp`'s
+monotonicity + `exp_log`), which by itself already forces the bracket `exp z - log c2' + 1`
+positive — the SAME conclusion the `c2' ≤ e` case reached by a coarser, global argument.
+
+**The fix** (`EMLZeroCrossingBothCompound.lean`, same file, no new file): replaced `g_deriv_pos`
+(global positivity, needed `log c2' ≤ 1`) with `g_deriv_pos_right` (positivity only claimed for
+`z > x0`, using `exp z > exp x0 = log c2'` directly) and `g_atMostOneZero` (global monotonicity)
+with `g_atMostOneZero_right` (monotonicity restricted to `(x0, d)`, which is all
+`zero_count_bound_by_deriv` ever needs). The main theorem's `hc2'le : Real.log c2' ≤ 1` hypothesis
+is now GONE entirely — `eml_evarConstC1_evarConstC2_boundedZeros` holds for `c1'` completely
+unrestricted and `c2' > 1` with NO upper bound, the full natural domain for this shape. Same `≤3`
+zero bound as before (only the hypothesis got strictly weaker, not the conclusion).
+
+**The lesson, worth stating plainly.** The "second Rolle layer" difficulty flagged last entry was
+real IN GENERAL (bounding an arbitrary "valley" function's zeros does need one) but was never
+actually TRIGGERED by this specific instance, because the region where the function is evaluated
+(`x > x0`) and the region where its derivative could misbehave (`x < x1 < x0`) don't overlap. This
+is a useful category to watch for going forward: before building a harder general mechanism,
+check whether the SPECIFIC domain in play already sidesteps the difficulty — cheaper than the
+mechanism, and sometimes (as here) the honest answer.
+
+`#print axioms` clean (same axiom set as before — no new machinery, just a tighter hypothesis
+threaded through), `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full
+`lake build MachLib` passes (401 modules, same file count — a strengthening in place, not a new
+file).
