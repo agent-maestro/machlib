@@ -1484,3 +1484,47 @@ mechanism, and sometimes (as here) the honest answer.
 threaded through), `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full
 `lake build MachLib` passes (401 modules, same file count — a strengthening in place, not a new
 file).
+
+## 2026-07-20 (cont. 5) — the both-compound pattern generalized, mirroring the earlier `t2`
+## generalization exactly
+
+Per continued "proceed please." With the concrete both-compound instance closed AND strengthened
+to its full natural domain, the obvious next step (flagged as "not attempted" in both prior
+entries) is generalizing it the same way the const-`t1` domain-split result was generalized three
+entries ago: distill what actually made the instance work into a theorem parametrized by `t1`'s
+own eval/derivative and `t2`'s sign-crossing structure, rather than one hardcoded shape.
+
+**The generalization** (`EMLZeroCrossingBothCompoundGeneral.lean`,
+`eml_genericT1_genericT2_boundedZeros`): takes `t1eval`/`t1deriv` (assumed known EVERYWHERE — `t1`
+is only ever exponentiated, never itself under a `log`, so unlike `t2` it needs no domain
+restriction at all, matching what every instance in this arc has already shown), `t2`'s
+eval/derivative/sign-crossing facts exactly as before, and a caller-supplied bound `M` on the
+zeros of the COMBINED raw derivative `exp(t1eval z)·t1deriv z - (1/t2eval z)·t2deriv z` — this is
+the one genuinely new piece, and can't be reduced further in the abstract (unlike the const-`t1`
+generalization, where the `t1`-derivative term vanished entirely, leaving a bound on `t2deriv`
+alone sufficient). Result: `eml T1 t2` has at most `M+2` zeros — IDENTICAL `+2` accounting
+(clamped region, switch point) to every prior domain-split theorem, confirming `t1`'s
+compoundness truly never touches the left region, in full generality this time, not just for one
+instance.
+
+**Sanity-check corollary** re-derives `eml_evarConstC1_evarConstC2_boundedZeros` by supplying
+`M := 1` via exactly the `g_atMostOneZero_right`/`cross_cancel_bridge` machinery already built for
+the concrete instance — confirming the generalization is equivalent to, not just similar to, the
+hand-built (and since-strengthened) result.
+
+**Build friction: none new.** Compiled clean on the FIRST full attempt for both theorems — the
+"extract standalone fact, apply" pattern, the "apply generates a goal per Pi-chain hypothesis
+including ones in context" gotcha (correctly anticipated an `exact hnd` bullet this time, no
+missed-goal surprise), and the boundary-case contradiction shape were all applied correctly from
+memory of the three prior generalization rounds. A useful signal that this class of construction
+("generalize a concrete domain-split instance into a theorem parametrized by the caller's own
+zero-count bound, verify via a sanity-check corollary") has become a genuinely reusable recipe in
+this codebase, not something that needs to be rediscovered each time.
+
+**Honest scope.** Generalizes what `t2` and `t1`'s STRUCTURE can be (any known-derivative `t1`,
+any sign-crossing `t2`), but the caller still has to supply `M` themselves — this theorem doesn't
+discover `M`, it only re-packages the accounting once `M` is known. Deeper trees on either side
+(where `t1`/`t2` are themselves NOT depth-1, so their own derivative structure needs its own
+induction) remain the real open frontier. `#print axioms` clean on both theorems, only base
+MachLib primitives, zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full
+`lake build MachLib` passes (402 modules) — **seventeen new files in one session.**
