@@ -869,3 +869,52 @@ tree-depth induction). `#print axioms`: standard foundational base plus the alre
 analytic/`HasDerivAt` infrastructure (same kind of axioms `EMLSmoothness.lean` itself rests on),
 `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full `lake build MachLib`
 passes (391 modules).
+
+## 2026-07-20 (cont.) — closing the loop: a direct witness for `S3`, in the original problem's
+## own vocabulary
+
+Per continued "proceed please." Everything today up to this point was stated in terms of
+`nestedTarget cs` — the right abstraction for BUILDING the machinery, but one step removed from
+the actual question. `EMLSmoothness.lean` already has two members of a family that conclude
+`∃x0, 0<S3.eval x0` directly from `t = eml T1 (eml (const c2) S3)` agreeing with `sin`:
+`eml_depth2_witness_of_const_le_one_sibling` (`c2 ≤ 1`) and
+`eml_depth2_witness_of_const_sibling_unbounded_T1` (`T1` unbounded, any `c2`). The gap between
+them — `c2 > 1`, `T1` bounded — is EXACTLY this whole investigation's residual. Today's
+`RightChildrenSimplePositive` closure can become the THIRD member of that family, closing a real
+slice of exactly that gap, stated with no `nestedTarget` visible in the final theorem at all.
+
+**Two small pieces of connective tissue** (`WitnessResidualSimpleT1Application.lean`):
+1. `no_tree_with_simple_right_children` — the previous file's closure required its tree to be
+   literally `eml A B` at the top, an artifact of how it was built (needed to unfold
+   `RightChildrenSimplePositive` for the docstring's explanation), not a real requirement. Every
+   piece of the proof already works for an arbitrary `T1`. Restated once, generally.
+2. `eml_T1eq_of_const_sibling_le_zero` — the `S3 ≤ 0` collapse itself, derived directly,
+   mirroring `eml_depth2_witness_of_const_le_one_sibling`'s own derivation line-for-line through
+   `exp(T1.eval x) = c2 + sin x`, differing only in what happens after: `c2 ≤ 1` refutes
+   immediately at that point; `c2 > 1` instead yields the genuine equation `T1.eval x =
+   log(c2+sin x)` this whole arc has been trying to rule out.
+
+**The result** (`eml_depth2_witness_of_const_gt_one_sibling_simple_T1`): for `t = eml T1 (eml
+(const c2) S3)` agreeing with `sin`, `c2 > 1`, and `T1` satisfying `RightChildrenSimplePositive`
+— `∃x0, 0 < S3.eval x0`, directly. Genuinely the third member of the family: same shape as its
+two siblings, no trace of today's internal machinery (`nestedTarget`, `EMLWitnesses`,
+`EMLPfaffianValidOn`) in the statement, only in the proof. Compiled clean, no errors, on the
+FIRST attempt for the entire file — the derivative/witness/no-crossing infrastructure built
+earlier today was already exactly what this needed, with no new lemmas required beyond
+restating them one level more generally.
+
+**What this means for the family's coverage, honestly.** `c2 ≤ 1` (closed), `T1` unbounded any
+`c2` (closed), `c2 > 1` with `T1` having `RightChildrenSimplePositive` (closed, today). The
+remaining gap is precisely: `c2 > 1`, `T1` bounded, `T1` NOT `RightChildrenSimplePositive` (i.e.
+`T1` has some compound right-child somewhere in its structure) — exactly where
+`WitnessResidualCancellation.lean`'s counterexample lives, and exactly the wall confirmed twice
+over earlier today. Nothing about that remaining gap has changed; what's changed is that the
+"closed" region is now checkable, sizeable, AND expressed in terms someone using this family
+(rather than someone reading today's internal proof machinery) can actually invoke.
+
+`#print axioms`: same base throughout (standard + already-trusted `HasDerivAt`/analytic
+infrastructure), `eml_pfaffian_validon_from_sin_equality` does not appear anywhere in the chain
+— notable since this theorem's OWN hypothesis (`hsin`) is literally that axiom's hypothesis
+shape, and the proof still doesn't need to invoke it. Zero `sorry`. Full `lake build MachLib`
+passes (392 modules) — seven new files today (`b91e770e` through this entry's commit), all
+independently verified, zero regressions.
