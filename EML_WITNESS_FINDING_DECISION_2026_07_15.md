@@ -553,3 +553,79 @@ non-circular — purely elementary, doesn't even touch the Khovanskii/analytic l
 two conjuncts) — not attempted. `c2≥2` — not covered, recurses into the nested-target family
 described above. This is one clean slice of the remaining problem, not the whole remaining
 problem.
+
+## 2026-07-20 (cont.) — picking up after a VS Code crash; `EMLWitnesses A x0`/`B x0` attempted,
+## found to be the SAME difficulty as `c2 ≥ 2`, not a separable piece
+
+Session interrupted by a VS Code crash; picked back up from a clean `git status` (everything
+through the `1<c2<2` closure above was already committed, nothing lost) per direct user request
+to continue on `EMLWitnesses A x0`/`EMLWitnesses B x0` specifically (offered as an alternative
+to pushing `c2≥2` directly; the user picked the A/B conjuncts).
+
+**Infrastructure result (mechanized).** `EMLWitnesses` is trivially `True` at any point for a
+leaf (`const`/`var`) — direct unfold of the recursive definition's base case
+(`eml_witnesses_leaf_const`, `eml_witnesses_leaf_var`, `WitnessResidualDepth2ABConjuncts.lean`).
+Cheap, but worth having named: whenever `A` or `B` turns out to be a leaf, that conjunct is free
+and the recursion concentrates entirely on the other child.
+
+**A genuine extension (mechanized).** Tried an Option-C-style check first: can `B` be chosen
+(consistent with `T1.eval x = log(c2+sin x)`) so that `EMLWitnesses B x0` is impossible for
+every `x0`, independent of whether `B.eval` itself is positive? First candidate (`B`'s own
+right-child a negative constant, forcing `EMLWitnesses B` false structurally) turned out to
+require `B` to be exactly the ALREADY-EXCLUDED "`B ≤ 0` / collapses to a small positive
+constant" family — not a new obstruction. Formalized the sharper version of this as
+`depth2_no_T1_with_const_B_small`: for `B` a constant `b`, `T1 = eml A B` can satisfy
+`T1.eval = log(c2+sin x)` only if `b*(c2-1) > 1` — strictly wider than the earlier `B ≤ 0`
+exclusion (which is the `b*(c2-1) ≤ 0` sub-case). Bonus finding while formalizing: the proof
+never needs `c2 < 2` — Lean's unused-variable linter caught it, confirmed by dropping the
+hypothesis and re-checking the proof still closes. So this piece holds for every `c2 > 1`, not
+just the `(1,2)` slice the THIRD-conjunct closure was scoped to.
+
+**The load-bearing negative finding (paper-level, not further formalized this pass).** Pushed
+past the elementary exclusion to see what closes the gap it leaves open (`b*(c2-1) > 1`, i.e. a
+LARGE constant `B`) — and to check whether `EMLWitnesses A x0`/`B x0` might be strictly easier
+than the already-deferred `c2 ≥ 2` case. It is not. With `B` a large enough constant to survive
+the `x=-π/2` check, `T1.eval x = log(c2+sin x)` forces `exp(A.eval x) = log(c2+sin x) + log b`
+globally. At every `x = kπ` (`sin(kπ)=0`, the same spacing that drives every zero-counting
+argument in this file), this collapses to a FIXED level `log(c2) + log b` for all integers `k` —
+so `A` itself must equal `log(log(c2+sin x) + log b)`, a target of exactly the
+`log(log(c2+sin x))` shape already flagged as the `c2 ≥ 2` case's open difficulty (see the
+2026-07-19 entry above), reached here even though the OUTER `c2` is safely in `(1,2)`. Checking
+the leaf-`B` escape (`B` a leaf so `EMLWitnesses B` is free per the infrastructure result above)
+doesn't avoid this either — a leaf `B` is exactly what forces `A` to carry all of `T1`'s
+remaining depth, and a large-constant leaf `B` is exactly the case that reproduces the nested
+target.
+
+**What this means for the two "independent" next-step options offered to the user this
+session:** they are not independent. `EMLWitnesses A x0`/`B x0` and the `c2 ≥ 2` nested-target
+case both bottom out in the same unresolved object — a finite EML tree equalling
+`log(log(c2+sin x))` (or deeper nestings of the same shape) — so closing either one for real
+requires building the same piece of machinery (the strong induction over the nested-target
+family sketched 2026-07-19). Whoever picks this up next should treat them as ONE piece of work,
+not two.
+
+**Separately, an unrelated wiring gap found and fixed while doing this.** `EMLSmoothness.lean`
+— the file containing `EMLWitnesses`, `EMLPfaffianValidOn`'s witness-closure machinery, and the
+capstone `eml_pfaffian_validon_of_sin_and_witness_at_point` that this whole document treats as
+"the mechanism side is complete" — was NOT imported anywhere in `MachLib.lean`'s dependency
+tree (confirmed by grep: zero `import MachLib.EMLSmoothness` in the whole repo before this
+session). It compiled standalone (`lake build MachLib.EMLSmoothness` passed on its own) but
+nothing in the actually-built `MachLib` library — including `EMLExplicitBoundSinBarrier.lean`,
+which still directly invokes the raw `eml_pfaffian_validon_from_sin_equality` AXIOM rather than
+anything from `EMLSmoothness.lean` — could see or use its results. This is likely because every
+file in this family up to now (`WitnessResidualDepth1/Cancellation/ChainSkeleton/
+Depth2Elementary`) only needed raw existential facts (`∃x0, 0<B.eval x0`), never the
+`EMLWitnesses` predicate by name — `WitnessResidualDepth2ABConjuncts.lean` is the first file in
+the family to actually reference it, which is what surfaced the gap (a `function expected at
+EMLWitnesses` elaboration error, from the identifier being auto-bound as an implicit because it
+genuinely wasn't in scope). Fixed by adding `import MachLib.EMLSmoothness` to the new file;
+`EMLSmoothness.lean` is now reachable from `MachLib.lean`'s root for the first time. Full `lake
+build MachLib` passes (387 modules) after the fix. This does NOT mean the capstone is now WIRED
+INTO the axiom's closure (`EMLExplicitBoundSinBarrier.lean` still calls the raw axiom, unchanged
+— that swap is separate, not-yet-done work) — only that its results are now reachable by other
+files that need to build on them, which the current piece of work needed and future ones will
+too.
+
+All new results: `#print axioms`-checked non-circular (only MachLib's standard foundational
+axiom base — `eml_pfaffian_validon_from_sin_equality` does not appear), zero `sorry`. Full
+`lake build MachLib` passes.
