@@ -1255,3 +1255,54 @@ practice, not just in the abstract strategy description.
 `#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
 Full `lake build MachLib` passes (398 modules) — thirteen new files today (twelve from earlier
 entries plus this one).
+
+## 2026-07-20 (cont.) — the real domain-splitting case, finally: a compound `t2` that genuinely
+## changes sign
+
+Per continued "proceed please." Every prior result in this arc deliberately kept `t2` simple (a
+leaf) specifically to dodge this problem. This entry attacks it directly, for the first time.
+
+**Finding a tractable instance.** `t2 = eml var (const c2)` (`c2 > 1`) is compound AND genuinely
+sign-changing: `t2.eval x = exp(x) - log(c2)`, strictly increasing (derivative `exp(x) > 0`
+always), going from a negative limit as `x → -∞` to `+∞` as `x → ∞` — crosses zero EXACTLY once,
+at `x0 = log(log c2)` (checked numerically-in-spirit before formalizing: `exp(x0) = log(c2)` by
+construction, via `exp_log`). `t = eml (const c1) t2` needs its `log(t2.eval x)` branch to be
+genuinely different on either side of `x0` — clamped (constant `exp c1`) below it, the true log
+above — exactly the "split by sign, reduce on the bad region, bound each piece" strategy from
+`EMLExplicitBoundGlue.lean`, now actually carried out rather than described.
+
+**Why this instance stayed tractable despite being genuinely new.** On `x > x0`, `t`'s derivative
+works out to `-exp(x)/(exp(x)-log(c2))` — NEVER zero (`exp(x) > 0` always; the denominator is
+exactly `t2.eval x > 0` there) — so `zero_count_bound_by_deriv` applies with `N=0` directly: at
+most ONE zero on `(x0,B)`, no monotonicity or second-derivative argument needed at all (simpler
+than either the `eml var var` base case or last entry's compound-`t1` case). On `x < x0`, `t.eval`
+collapses to the constant `exp(c1)`, never zero. The genuinely new content here was establishing
+`x0` itself and the sign facts either side of it (`exp_lt` plus `exp_log` inverting `log`'s own
+definition — no converse-monotonicity lemma needed), not the zero-counting technique itself.
+
+**The result** (`eml_const_evarConstC2_boundedZeros`): `t = eml (const c1) (eml var (const
+c2))`, for `c2 > 1`, has boundedly many zeros (`≤4`) on ANY interval, with NO
+`EMLPfaffianValidOn` assumption anywhere — the first result in this whole arc built against a
+`t2` that isn't just simple-or-collapsing but ACTUALLY switches between the clamped and
+unclamped branch within the interval of interest.
+
+**Real build friction, worth recording.** (1) `apply zero_count_bound_by_deriv (...)` unifies
+cleanly against a goal of the SHAPE `∀ zeros_f, Nodup → membership → length ≤ N+1` (as when
+proving a theorem whose own statement has that shape) but NOT against an already-specialized
+goal like `(some specific filtered list).length ≤ K` — the fix was extracting the derivative
+argument as its own standalone theorem first (mirroring `exp_expSubLog_sub_log_atMostTwoZeros_pos`
+from the prior entry), then `apply`-ing THAT to the specific list, exactly the working pattern
+from every prior file — a mismatch between "proving a general theorem" and "invoking one inline"
+that's easy to hit and worth remembering. (2) `add_lt_add_left h (-r)` gives `-r+p < -r+q`
+(constant on the LEFT of an ADDITION); what was needed was `p-r < q-r` (constant on the RIGHT of
+a SUBTRACTION) — same fact, different shape, needed three times, worth a two-line reusable helper
+(`sub_lt_sub_right_of_lt`) rather than re-deriving via `mach_ring` each time. (3) Deriving `X = 0`
+from a hypothesis `0 - X = 0` via `mach_ring`-normalized algebra silently produced a USELESS,
+trivially-true restatement rather than actually using the hypothesis, because the naive
+`rw [hypothesis]`-on-the-goal approach doesn't "consume" the hypothesis's content the way
+substituting it into a separately-derived identity does — fixed via `generalize` (to make the
+opaque product a true atomic variable) plus the same "derive via `e := identity; rw[hyp] at e`"
+pattern used successfully elsewhere in this arc, rather than trying to rewrite the goal directly.
+
+`#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
+Full `lake build MachLib` passes (399 modules) — fourteen new files today.
