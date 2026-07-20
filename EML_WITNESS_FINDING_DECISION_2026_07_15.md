@@ -330,3 +330,70 @@ is a real generalization exercise, not a quick patch — likely comparable in sc
 of the mechanism-building side, possibly larger since it touches the encoder/bound layer too, not
 only `EMLSmoothness.lean`. Not started. Flagged here as Option D for whoever picks this up next,
 alongside A/B/C above.
+
+## 2026-07-19 (cont.) — Option D, step (c) worked out on paper: the target-shift trick
+
+Picked back up per continued user request to keep pursuing this. Worked the exact mechanism for
+the piece flagged above as "would need new work" — not implemented in Lean, but no longer just a
+hope; checked against the actual definitions (`EMLExplicitBoundEncoder.lean`,
+`EMLExplicitBoundSinBarrier.lean`, `MultiPoly.lean`), not assumed.
+
+**The obstacle, restated precisely.** `sin_not_in_eml_any_depth`'s actual contradiction mechanism
+(read the full proof, not just its opening) is: `sin(kπ)=0` for every integer `k`, giving `M+1`
+distinct zeros of the tree's associated Pfaffian polynomial within an interval where
+`combinedBoundE` only permits `M` — `M+1 ≤ M` via `omega`. This is elementary once you see it:
+zero-counting against a computable bound, nothing deeper. The blocker for `T1.eval = log(c2+\sin x)`
+looked like it wouldn't transfer: for `c2 ≥ 2`, `c2+\sin x ≥ c2-1 ≥ 1`, so `\log(c2+\sin x) ≥ 0`
+with equality **only possibly at `c2=2`** (a tangency, not a transversal zero) — `\log(c2+\sin x)`
+can have few or literally **zero** zeros, so "count the zeros" has nothing to count against for
+large `c2`.
+
+**The fix: don't target zero — target `\log(c2)`.** `\sin(k\pi)=0` for every integer `k`, so
+`\log(c2+\sin(k\pi)) = \log(c2+0) = \log(c2)` **for every integer `k`, regardless of `c2`'s value**
+— the exact same `k\pi`-spacing that drove the original proof, now hitting a shifted level `\log(c2)`
+instead of `0`. This works uniformly for every `c2>1` (both the `c2≥2` "no zeros" case and the
+`1<c2<2` "some zeros" case) — the argument never needs `\log(c2+\sin x)`'s own zero structure, only
+its `=\log(c2)` level-set structure at the same `k\pi` points, which is identical in form to `sin`'s
+own zero structure.
+
+**Why this is mechanically valid, not just plausible — checked against the source:**
+- `enc_combinedBound` (`EMLExplicitBoundEncoder.lean:233`) is stated for an **arbitrary**
+  `p : MultiPoly (len t N)` — `sin_not_in_eml_any_depth` happens to instantiate it with
+  `p := (enc t emlEmptyChain).2` (the polynomial representing `t.eval` itself), but nothing in the
+  theorem's statement requires that specific choice.
+- `MultiPoly` (`MultiPoly.lean:39-45`) has `const : Real → MultiPoly n` and
+  `sub : MultiPoly n → MultiPoly n → MultiPoly n` as basic constructors, with
+  `eval (sub p q) x env = eval p x env - eval q x env`. So
+  `p' := MultiPoly.sub (enc T1 chain).2 (MultiPoly.const (Real.log c2))` is a well-typed
+  `MultiPoly (len T1 N)` whose zeros are exactly the points where `T1.eval(x) = \log(c2)`.
+  Instantiating `enc_combinedBound` with `p'` (applied to `T1`, not the outer tree) gives a bound
+  on how many times `T1.eval` can equal `\log(c2)` — exactly the quantity needed.
+- The non-degeneracy witness `hne` (needed by `enc_combinedBound`, `∃z, T1.eval z ≠ \log(c2)`) is
+  now EASIER to supply than the original's `sin(\pi+1)\ne 0` (which needed a `sin\_add`/`cos\_pi`
+  identity chain): `T1.eval(\pi/2) = \log(c2+1) \ne \log(c2)` is immediate from `c2+1\ne c2`, no
+  trig identity needed at all.
+- The rest of the argument (build the `M+1`-point list `\{k\pi\}`, show each is a solution via
+  `\log(c2+\sin(k\pi))=\log(c2)`, invoke the bound, `omega`) mirrors
+  `sin_not_in_eml_any_depth` lines 86–105 essentially unchanged, modulo the target shift.
+
+**What this does NOT yet close — real remaining work, named precisely:**
+- `T1`'s own `LogArgPosOn` (needed as a hypothesis by `enc_combinedBound` applied to `T1`) has to
+  come from somewhere — this is exactly the role the INDUCTIVE HYPOTHESIS was supposed to play in
+  the broader Option D strategy (strong induction on tree depth), not yet formally set up.
+- `T1` needs its OWN Pfaffian chain/encoder (`enc T1 chain'` for some chain `chain'`, its own `M`
+  from `combinedBoundE (len T1 N) ...`) — real plumbing, distinct from and in addition to the
+  target-shift idea itself. The target-shift trick tells you WHAT to prove about `T1`; it doesn't
+  build the chain object `T1` needs to prove it about itself.
+- Not yet checked whether `Real.log`'s specific MachLib definition (total, clamped at `≤0`) needs
+  any special handling in the shifted-target argument — `c2+\sin x>0` always for `c2>1`, so the
+  clamp should never trigger, but this was reasoned, not verified against the source this pass.
+
+**Honest assessment.** This is real progress — the piece flagged as "would need new work,
+'just' new arithmetic through the same shape" turned out to have a clean, uniform resolution
+(one trick, not case-split on `c2`), verified against the actual type signatures rather than
+assumed. It does not close Option D — the induction scaffolding and `T1`'s own chain construction
+are still unbuilt, and remain comparable in scale to what was estimated before. But the piece that
+looked like it might need genuinely new mathematics (a `c2`-dependent case analysis, or a
+different technique entirely for `c2\ge 2`'s zero-free case) turned out not to — same trick,
+every `c2`. Not implemented in Lean this pass, per the paper-first discipline: the argument is
+believed correct and checked against real definitions, not yet formalized.
