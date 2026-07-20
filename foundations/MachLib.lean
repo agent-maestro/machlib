@@ -102,6 +102,7 @@ import MachLib.WitnessResidualSimpleT1Application
 import MachLib.WitnessResidualBWitnessGeneralB
 import MachLib.WitnessResidualBOneLevelCompound
 import MachLib.WitnessResidualBChainCompound
+import MachLib.EMLExplicitBoundGlue
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
