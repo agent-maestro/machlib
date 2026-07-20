@@ -1037,3 +1037,41 @@ left it — three independent, narrow mechanisms now chip at that space (simple;
 
 `#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
 Full `lake build MachLib` passes (395 modules) — ten new files today.
+
+## 2026-07-20 (cont.) — why path (1) is hard, precisely: read the encoder instead of guessing
+
+Three narrow mechanisms in a row (simple; `≤1`-one-layer; `≤1`-chain) is a signal, not just a
+feeling — flagged honestly rather than forcing a fourth. Checked the OTHER path named in the
+wall-characterization entry instead: what would it actually take to weaken `EMLPfaffianValidOn`
+to tolerate `t2 ≤ 0` somewhere, rather than assume it's hard? Read `EMLEncoder.lean`'s `stepCC`/
+`stepCD` (the log-node encoding) instead of reasoning abstractly.
+
+**What's actually there.** Encoding a `log⟦t2⟧` node doesn't just append a `log` chain variable
+— it appends a RECIPROCAL variable first (`stepCC`: `r = 1/⟦t2⟧`, with the defining relation `r'
+= -(t2)'·r²`, the standard quotient-rule identity for `1/f`), THEN the log variable (`stepCD`: `L
+= log⟦t2⟧`, with `L' = (t2)'·r` — i.e. `L' = (t2)'/t2`, the standard `d/dx log f = f'/f`
+identity, expressed VIA the reciprocal variable rather than directly). Both of these are the
+GENUINE calculus identities, and they hold ONLY when `t2 > 0` — not merely `t2 ≠ 0`. If `t2 <
+0` somewhere, MachLib's `log` convention makes `L` the CONSTANT `0` there (so `L`'s TRUE
+derivative is `0`), but `r = 1/t2` is still some genuine negative reciprocal — the chain's own
+fixed relation `L' = (t2)'·r` would then assert `0 = (t2)'·r`, false in general. The chain isn't
+merely unproven for `t2 ≤ 0`, its own algebraic relations are FALSE there.
+
+**What this means for path (1), precisely.** "Weaken `EMLPfaffianValidOn`'s definition" is not a
+predicate tweak — the SAME fixed pair of relations (`r'=-w'r²`, `L'=w'r`) cannot describe `log
+t2` correctly across a sign change, because the log's TRUE behavior genuinely bifurcates at `t2 =
+0` (analytic branch vs. constant-clamp branch) and the chain machinery has no notion of a
+relation that switches. Supporting `t2 ≤ 0` regions for real would need a Pfaffian chain
+representation that can SWITCH which relation applies on different sub-intervals (a genuinely
+new chain TYPE — `PfaffianChain` as currently defined, `PfaffianChain.lean`, has no such
+notion) and a zero-counting argument (`enc_combinedBound`) reworked to handle a chain that isn't
+uniformly one thing throughout. This is a new construction, not a modified hypothesis on the
+existing one — confirms and sharpens (with the actual mechanism, not just an estimate) what the
+wall-characterization entry called "a foundational change... not a small patch."
+
+**Where this leaves things.** Neither path is a good use of a single session: path (2) (new
+sufficient conditions on `B`) has visibly diminishing returns after three found today; path (1)
+now has a precise technical reason it needs new machinery, not just more effort inside the
+existing one. Recorded here so whoever attempts path (1) next starts from "build a
+branch-switching chain type" rather than rediscovering, by trial, that a predicate-level patch
+can't work.
