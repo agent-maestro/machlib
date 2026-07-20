@@ -532,3 +532,24 @@ target (`log(log(c2+sin x))`), and closing that recursively (rather than hitting
 elementary contradiction the way `1<c2<2` does) needs the induction to be stated over the WHOLE
 nested-target family, not just `log(c2+sin x)` — a real, nontrivial generalization exercise,
 not sketched further here.
+
+## 2026-07-20 (cont.) — the `1<c2<2` slice of `hvalidon_any_b`, closed elementarily
+
+`MachLib/WitnessResidualDepth2Elementary.lean` (commit `5420347c`):
+`depth2_witness_B_of_c2_between_one_two`. `EMLWitnesses T1 x0` for `T1 = eml A B` needs THREE
+things — `EMLWitnesses A x0`, `EMLWitnesses B x0`, `0 < B.eval x0`. This closes the THIRD,
+for `1<c2<2` specifically, by exactly the mechanism that closed the original `S2≤1` case one
+recursion level up (`eml_depth2_witness_of_const_le_one_sibling`): assume `B≤0` everywhere,
+collapse forces `exp(A.eval x)=log(c2+sin x)` for all `x`, and at `x=-π/2` this gives
+`exp(A.eval(-π/2)) = log(c2-1)` — strictly negative whenever `0<c2-1<1`, i.e. exactly
+`1<c2<2` — contradicting `exp>0`. Same point, same mechanism, one level deeper. Numerically
+spot-checked before formalizing (5 values of `c2∈(1,2)`, all giving `log(c2-1)<0` as
+predicted). Compiled clean after two real fixes: `MachLib.Real` has no `OfNat` instance for
+bare numeral `2` (every file in this codebase writes `(1+1)` for real `2` — missed initially,
+compiler caught it) and one rewrite-direction error (`rw [h1]` vs `rw [← h1]`). Axiom-checked
+non-circular — purely elementary, doesn't even touch the Khovanskii/analytic layer.
+
+**Still open, honestly**: `EMLWitnesses A x0` and `EMLWitnesses B x0` themselves (the other
+two conjuncts) — not attempted. `c2≥2` — not covered, recurses into the nested-target family
+described above. This is one clean slice of the remaining problem, not the whole remaining
+problem.
