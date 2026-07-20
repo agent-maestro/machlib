@@ -1306,3 +1306,74 @@ pattern used successfully elsewhere in this arc, rather than trying to rewrite t
 
 `#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
 Full `lake build MachLib` passes (399 modules) — fourteen new files today.
+
+## 2026-07-20 (cont. 2) — generalizing the domain-split instance to any `t2` with one sign crossing
+
+Per continued "proceed please," turning the single hand-built instance above into a reusable
+theorem parametrized by `t2`'s own eval/derivative/derivative-zero-count, then re-deriving the
+original as a corollary to check the generalization is honest (equivalent to, not just similar
+to, the hand-built result).
+
+**The general theorem** (`eml_const_genericT2_boundedZeros`, new file
+`EMLZeroCrossingDomainSplitGeneral.lean`): given `t2eval`/`t2deriv` on `(x0,b)` with `t2eval ≤ 0`
+left of `x0`, `t2eval > 0` right of it, `t2eval` differentiable with derivative `t2deriv` right of
+`x0`, and a bound `K` on how many places `t2deriv` itself can vanish there, `eml (const c1) t2`
+has at most `K+2` zeros on any sub-interval `(a,b)` — no `EMLPfaffianValidOn` assumption anywhere.
+The `+2` is exactly the same accounting as the hand-built version: at most 0 zeros left of `x0`
+(clamp forces the constant `exp c1`, never zero), at most 1 at `x0` itself (list-dedup), at most
+`K+1` right of it (`zero_count_bound_by_deriv` applied to `t`'s own derivative, which via the
+chain rule through `log` is zero exactly where `t2deriv` is zero — reusing the caller's bound `K`
+rather than re-deriving it). This is the promised shape from the prior entry's close: "any `t2`
+whose own zero-crossing structure is already known/bounded reduces to the same three-way split."
+
+**Sanity-check corollary** (`eml_const_evarConstC2_boundedZeros_via_general`): re-derives the
+original hand-built `eml_const_evarConstC2_boundedZeros` (`t2 = eml var (const c2)`, `c2>1`,
+bound `≤4`) by instantiating `t2eval = fun x => exp x - log c2`, `t2deriv = exp` (never zero, so
+`K=0`), `x0 = log(log c2)`. Confirms the generalization is not a weaker or differently-shaped
+result — it specializes exactly back to the original `≤4` bound via `K+2 = 0+2 = 2`... plus the
+outer split contributes the remaining budget: the corollary further splits on `x0` vs `b`
+(mirroring the general theorem's own internal split) since the general theorem's hypotheses are
+only stated for the region right of `x0`, giving the full `≤4` once both the `x0<b` case (general
+theorem applies directly) and the two degenerate `x0≥b` cases (whole interval left of/at `x0`,
+`zeros=[]` by the same clamp argument as the general theorem's own left-side case) are combined.
+
+**Real build friction, worth recording — three separate categories.** (1) *Same apply-vs-
+specialized-goal trap as ever*, now one level deeper: even after extracting the derivative
+argument as its own theorem (per the established fix), directly `apply`-ing it to a callback
+inside another `apply`'s remaining goal still failed with "unsolved goals" until the derivative
+fact was pulled out as a fully standalone top-level `have` (`hgt_general`) applied via full
+positional arguments including nested proof terms — extracting once was not enough; the
+extraction has to happen at the SAME nesting level the failure occurs at, not just once globally.
+(2) *`apply` against a `∀`-quantified conclusion silently produces one goal per hypothesis in the
+Pi-chain, not just the ones you expect from reading the "interesting" hypotheses* — the
+corollary's `apply eml_const_genericT2_boundedZeros ...` left behind not only the five expected
+goals (`hlt_side`, `hgt_side`, `hderiv`, `hderivBound`, the final membership fact) but a SIXTH,
+easy to miss: `zeros.Nodup` itself (already in context as `hnd`, but `apply` doesn't consult local
+context — it turns every hypothesis of the applied term's Pi-chain into a fresh goal in order,
+even ones trivially satisfiable by an existing local hypothesis). Diagnosed only by reading the
+exact `unsolved goals` dump and counting hypotheses in the theorem signature by hand; fixed with
+one `· exact hnd` bullet inserted at the right position. (3) *Multi-line tactic application
+silently truncated by indentation*: `exact absurd (foo).2.2\n    (bar)` split across two lines
+parsed as `absurd (foo).2.2` (a curried function still expecting one more argument) followed by a
+SEPARATE, syntactically invalid top-level command starting with `(bar)` — Lean 4's whitespace-
+sensitive tactic parsing does not treat a continuation line as part of the same application
+unless indentation rules are respected exactly; the fix was collapsing back onto one line rather
+than debugging indentation further. (4) *Copy-adapted contradiction reused the wrong shape*: the
+two degenerate boundary cases (`x0=b`, `b<x0`) were first drafted by pattern-matching against an
+unrelated nearby proof shape (`absurd hyb (... lt_irrefl ...)`, i.e. trying to disprove `y<b`
+itself, which is simply true and can never be a contradiction) instead of re-deriving the actual
+needed fact — that `y<x0` (from `y<b` plus `b≤x0`), used exactly like the general theorem's own
+left-side clamp argument, forces `t.eval y = exp c1 ≠ 0`. A reminder that "this looks like the
+pattern used two cases up" is not a substitute for checking what the actual goal states.
+
+**Honest scope note.** This result, like the prior one, still requires `t1 = const c1` — it does
+NOT yet combine with the compound-`t1` inductive step from `EMLZeroCrossingDepth2Compound.lean`
+two entries back. Combining "compound `t1` AND sign-changing `t2`" simultaneously remains future
+work; today's generalization widens what `t2` can be (any sign-crossing eval/derivative pair with
+a known derivative-zero bound), not what `t1` can be.
+
+`#print axioms` clean on both new theorems (`eml_const_genericT2_boundedZeros` and
+`eml_const_evarConstC2_boundedZeros_via_general`) — only base MachLib primitive axioms
+(`propext`, `Classical.choice`, `Quot.sound`, `HasDerivAt`/Rolle/algebra machinery),
+`eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full `lake build MachLib`
+passes (400 modules) — fifteen new files today.
