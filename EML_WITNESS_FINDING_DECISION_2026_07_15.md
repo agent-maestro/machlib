@@ -262,3 +262,71 @@ one hypothesis: `EMLWitnesses t p`. Nothing else stands between "nothing" and th
   round-19-scale difficulty rather than being cheap.
 - This document: living draft. The mechanism side is done; only the witness-finding options above
   remain open for whoever picks this up next.
+
+## 2026-07-19 — brainstorm: Option D, strong induction on tree depth with the target generalized
+
+Not attempted, not implemented — a candidate strategy, written down so it isn't lost, per this
+document's own convention. Grounded by re-reading the actual source (`EMLSmoothness.lean`'s
+`EMLWitnesses`/`eml_pfaffian_validon_of_witnesses`, `SinNotInEML.lean`'s `.eval`, and
+`EMLExplicitBoundSinBarrier.lean`'s proof of `sin_not_in_eml_any_depth`) rather than reconstructed
+from memory, per this project's own paper-before-Lean/measure-don't-guess discipline.
+
+**The residual, made fully explicit.** For `t = eml T1 (eml S2 S3)` with `t.eval = sin` globally,
+`S2` constant `c2 > 1`, `T1` bounded and non-constant: the witness-finding proof pattern used
+elsewhere in this family assumes `S3 ≤ 0` everywhere (for contradiction) to collapse the
+log-branch to the constant `0` (`Real.log`'s clamp), reducing the equation — via `log∘exp=id` —
+to `exp(T1.eval x) − c2 = sin x`, i.e. `exp(T1.eval x) = c2 + sin x`. For `c2 ≤ 1` this is
+refutable at `x=−π/2` (RHS `≤0`, LHS `>0`, contradiction for ANY `T1`). For `c2>1`, RHS is
+`≥ c2−1 > 0` everywhere, so **no single-point evaluation can ever refute it** — worse, it's
+*exactly solvable*: `T1.eval x = log(c2+sin x)` is a perfectly good real-analytic function
+satisfying the collapsed equation pointwise. This is precisely why every elementary trick tried so
+far (evaluation, growth, periodicity) stalls here: the collapsed equation isn't false, it's
+*almost* true — true for T1's VALUES, just not (presumably) true for any actual finite EML TREE
+shape.
+
+**The reduction this unlocks.** The residual is exactly equivalent to: **does any finite-depth EML
+tree `T1` satisfy `T1.eval x = log(c2+sin x)` for all real `x`?** If no (a generalization of
+`sin_not_in_eml_any_depth` to this target), the collapse assumption is refuted, a witness for `S3`
+exists, done. This is a much better-posed question than "T1 bounded, non-constant" — it names an
+exact target function to rule out, not a vague shape.
+
+**Why `sin_not_in_eml_any_depth` can't be reused as a black box (confirmed, not assumed, by
+reading its proof in `EMLExplicitBoundSinBarrier.lean`):** its proof (a) builds a Khovanskii/
+Pfaffian-chain zero-count bound `M` on `t` purely from `t`'s STRUCTURE (`combinedBoundE` — confirmed
+via `EMLExplicitBoundEncoder.lean`'s own docstring: "no `(a,b)` dependence anywhere," i.e. already
+generic in the target), (b) invokes `eml_pfaffian_validon_from_sin_equality` on `t` ITSELF to get
+the positivity (`EMLPfaffianValidOn`) needed to make the Pfaffian chain well-behaved, then
+(c) exhibits a concrete point (`sin(π+1)≠0` etc.) where `sin`'s own oscillation exceeds what `M`
+allows. Step (b) is the exact axiom under investigation — using this theorem on `T1` would assume
+the very thing being proven, for `T1` specifically. This is the circularity already flagged
+earlier in this document; confirmed precisely, not just recalled.
+
+**The way around it, and why it's genuinely different from the rejected shortcut:** don't reuse
+the finished theorem — re-derive the WHOLE combined package (`EMLPfaffianValidOn` + Khovanskii
+non-representability) by **strong induction on EML tree depth**, generalized over the target
+function `g` (dropping the hardcoding to `sin`). This is not circular because:
+- `eml_pfaffian_validon_of_witnesses` is ALREADY unconditional and generic in the derivative `D`
+  (confirmed: its signature takes `D : Real → Real` and `HasDerivAt t.eval (D x) x` as a plain
+  hypothesis, nothing sin-specific) — so step (b) above, for `T1` specifically, can come from the
+  INDUCTIVE HYPOTHESIS (T1 has strictly smaller depth than `t`), not from the not-yet-proven axiom.
+- `EMLWitnesses` itself is pure tree recursion with zero dependence on any target function
+  (`.const _, _ => True`; `.var, _ => True`; `.eml t1 t2, x0 => EMLWitnesses t1 x0 ∧
+  EMLWitnesses t2 x0 ∧ 0 < t2.eval x0`) — nothing here needs generalizing, it already applies
+  to `T1`'s own recursive structure unchanged.
+- `combinedBoundE`'s bound is already computed purely from tree shape, not from the target — so
+  step (a) transfers to `T1` and `g=log(c2+sin x)` with no change needed.
+- What WOULD need new work: step (c), an analogue of "`sin(π+1)≠0` exceeds the bound" for
+  `log(c2+sin x)` specifically — concrete, computable (same period, structurally analogous
+  oscillation to `sin`), not obviously harder in KIND, "just" new arithmetic through the same
+  argument shape.
+
+**Honest assessment.** This is a real, well-posed candidate — not a rehash of the already-rejected
+periodicity route (that route needed a UNIFORM zero-count bound across growing intervals with no
+tree-structural handle on it; this route gets a bound directly from `T1`'s own finite structure via
+`combinedBoundE`, which is exactly what periodicity was missing). But it is genuinely multi-round
+work if pursued: setting up a mutual/simultaneous strong induction proving two linked statements
+(witness-existence AND target non-representability) for a class of targets broader than just `sin`
+is a real generalization exercise, not a quick patch — likely comparable in scale to rounds 25–29
+of the mechanism-building side, possibly larger since it touches the encoder/bound layer too, not
+only `EMLSmoothness.lean`. Not started. Flagged here as Option D for whoever picks this up next,
+alongside A/B/C above.
