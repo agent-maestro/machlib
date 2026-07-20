@@ -445,3 +445,44 @@ work (T1's own chain construction, feeding the inductive hypothesis into
 `enc_combinedBound`) is not optional scaffolding around an easier core argument — it IS the
 core argument. Not started this pass; this section sharpens the map rather than closing
 ground, and that sharpening is itself the honest deliverable.
+
+## 2026-07-19 (cont.) — one scoping question resolved by reading the existing pattern, and an honest stop here
+
+Before pushing further, checked something that had started to worry me: does closing this
+residual actually require the FULL `EMLWitnesses T1 x0` (T1's own internal recursive witness
+structure), not just `∃x0, 0 < S3.eval x0`? If so, the scope is much bigger than "prove no tree
+equals `log(c2+sin x)`" — it's entangled with the fully general, still-open witness-existence
+question for T1's own arbitrary substructure.
+
+**Checked against the actual pattern, not assumed:** `eml_depth2_witness_of_const_le_one_sibling`
+and `eml_depth2_witness_of_const_sibling_unbounded_T1` (the two ALREADY-CLOSED depth-2 cases,
+`EMLSmoothness.lean`) both conclude exactly `∃ x0, 0 < S3.eval x0` — nothing about `T1` or `S3`'s
+own internal `EMLWitnesses`. Neither is called anywhere else in the codebase (grepped — zero
+hits). **This confirms the established pattern**: these are deliberately standalone building
+blocks, each proving one child's positivity in isolation, with the full `EMLWitnesses`
+assembly (choosing one `x0` that satisfies every conjunct across the whole tree
+simultaneously) left as later, separate work — not something each individual closure needs to
+solve itself. This session's work (target-shift trick, depth-1 exclusion, the cancellation
+counterexample) fits this exact pattern and was correctly scoped throughout — it was NOT
+missing a bigger requirement, it was matching the codebase's own established shape for this
+kind of lemma.
+
+**Where this leaves things, honestly.** Even correctly scoped, closing `∃x0, 0<S3.eval x0` for
+the `c2>1` residual still needs `LogArgPosOn T1 (Icc a b)` as a hypothesis to run
+`enc_combinedBound` on `T1` itself (mirroring `sin_not_in_eml_any_depth`'s own structure) — and
+the cancellation counterexample shows this can't be discharged by an elementary argument once
+`T1` is compound; it needs `eml_pfaffian_validon_of_witnesses`, which needs
+`EMLWitnesses T1 x0` — the SAME recursive difficulty, one level down, exactly where this whole
+investigation started (`EML_WITNESS_FINDING_DECISION_2026_07_15.md`'s original round-19
+finding). Building `T1`'s own Pfaffian chain (`enc T1 chain'` — the encoder itself IS already
+fully generic over any tree, confirmed via `EMLExplicitBoundEncoder.lean`'s own docstring, so
+this part is not new work) and threading a genuine strong induction through
+`enc_combinedBound` is real, substantial, unstarted engineering — realistically multiple more
+sessions, not a continuation of this one.
+
+**Stopping here for now, not because the thread is exhausted, but because further progress
+needs that dedicated push rather than another incremental step.** Three genuine, verified,
+non-circular results came out of this arc: the target-shift trick (mechanism identified and
+checked against source), the depth-1 exclusion (`WitnessResidualDepth1.lean`, compiled), and
+the cancellation obstruction (`WitnessResidualCancellation.lean`, compiled) — real narrowing of
+an open problem, each independently checked, none of them a false start.
