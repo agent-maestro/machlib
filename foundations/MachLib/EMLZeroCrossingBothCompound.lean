@@ -27,18 +27,22 @@ terms, not reducible to a single scaled factor the way the const-`t1` case's der
 Bounding `D`'s zeros needs a second layer: `D(x) = 0 ↔ g(x) := exp(t1eval x)·t2eval x - 1 = 0`
 (clearing denominators, valid since `exp x ≠ 0` and `t2eval x ≠ 0` there), and `g`'s own
 derivative (product rule) factors as `g'(x) = [exp(t1eval x)·exp x] · (exp x - (log c2' - 1))` —
-a product of a manifestly positive term and a term that is POSITIVE WHENEVER `log c2' ≤ 1` (i.e.
-`c2' ≤ e`): `exp x > 0 ≥ log c2' - 1`. So under that side condition, `g` is strictly monotonic
-globally (no domain restriction needed), hence injective, hence has at most one zero anywhere —
-transferring (via the `D=0 → g=0` bridge) to `D` having at most one zero on `(x0,b)`, hence (via
-`zero_count_bound_by_deriv`) `t` itself having at most two zeros there.
+a product of a manifestly positive term and a term that only needs to be checked ON `x > x0`
+(where `g` is actually evaluated): `exp x > exp x0 = log c2' > log c2' - 1` there, ALWAYS,
+regardless of `c2'`'s relationship to `e`. So `g` is strictly monotonic on `(x0, ∞)` (not
+globally, but that's all that's needed), hence injective there, hence has at most one zero on
+`(x0, b)` — transferring (via the `D=0 → g=0` bridge) to `D` having at most one zero on `(x0,b)`,
+hence (via `zero_count_bound_by_deriv`) `t` itself having at most two zeros there.
 
-**Honest scope.** This closes ONE concrete `t1`/`t2` shape (both `eml var (const _)`), under the
-side condition `1 < c2' ≤ exp 1` — chosen specifically because it makes `g`'s derivative-sign
-argument a SINGLE monotonicity check, not two (the `c2' > e` case would need `g` itself bounded
-via a "valley" argument — decreasing then increasing — a second Rolle layer not attempted here).
-`c1'` is completely unrestricted. Matches this arc's established pattern: concrete tractable
-instance first, generalization (if any) later.
+**Honest scope.** This closes ONE concrete `t1`/`t2` shape (both `eml var (const _)`) — but for
+ANY `c2' > 1` (the sign-crossing condition alone) and ANY `c1'` whatsoever, no further
+restriction. (An earlier draft of this file required `c2' ≤ e` to make `g`'s derivative-sign
+argument a global check; realizing the argument only needs to hold on `(x0, ∞)` — where `exp x >
+exp x0 = log c2'` unconditionally — removed that restriction entirely, since the point where `g`
+would otherwise flip sign always sits strictly LEFT of `x0`.) Deeper trees on either side, and a
+fully general "any compound `t1` + any sign-crossing `t2`" theorem, remain future work. Matches
+this arc's established pattern: concrete tractable instance first, generalize what's genuinely
+free to generalize.
 -/
 
 namespace MachLib
@@ -81,26 +85,27 @@ theorem hasDerivAt_g (c1' c2' z : Real) :
         + Real.exp (Real.exp z - Real.log c1') * Real.exp z := sub_zero _
   rwa [e] at hsub
 
-/-- `g`'s raw derivative value is strictly positive whenever `log c2' ≤ 1` — it factors as
-`(positive) · (exp z - (log c2' - 1))`, and the bracket is positive since `exp z > 0 ≥ log c2' -
-1`. -/
-theorem g_deriv_pos (c1' c2' z : Real) (hle : Real.log c2' ≤ 1) :
+/-- **`g`'s derivative is positive throughout `z > x0`** — the region actually used — for ANY
+`c2' > 1`, no upper restriction needed. Sharper than a global bound: `z > x0 = log(log c2')`
+gives `exp z > exp x0 = log c2'` (via `exp`'s monotonicity and `exp_log`), which already forces
+the bracket `exp z - log c2' + 1` positive. No second-derivative "valley" argument is needed —
+the derivative's sign only has to be checked where it's actually evaluated. -/
+theorem g_deriv_pos_right (c1' c2' z : Real) (hc2' : 1 < c2')
+    (hz : Real.log (Real.log c2') < z) :
     0 < Real.exp (Real.exp z - Real.log c1') * Real.exp z * (Real.exp z - Real.log c2')
         + Real.exp (Real.exp z - Real.log c1') * Real.exp z := by
   have hP : 0 < Real.exp (Real.exp z - Real.log c1') * Real.exp z :=
     mul_pos (Real.exp_pos _) (Real.exp_pos _)
-  have h0 : (0 : Real) ≤ 1 - Real.log c2' := by
-    have h := add_le_add_left hle (-(Real.log c2'))
-    have e1 : -(Real.log c2') + Real.log c2' = 0 := by mach_ring
-    have e2 : -(Real.log c2') + 1 = 1 - Real.log c2' := by mach_ring
-    rwa [e1, e2] at h
-  have hbracket : 0 < Real.exp z - Real.log c2' + 1 := by
-    have hexppos := Real.exp_pos z
-    have hsum := add_le_add_left h0 (Real.exp z)
-    have e1 : Real.exp z + 0 = Real.exp z := add_zero _
-    have e2 : Real.exp z + (1 - Real.log c2') = Real.exp z - Real.log c2' + 1 := by mach_ring
-    rw [e1, e2] at hsum
-    exact lt_of_lt_of_le hexppos hsum
+  have hlog_pos : 0 < Real.log c2' := log_pos_of_gt_one hc2'
+  have hexp_x0 : Real.exp (Real.log (Real.log c2')) = Real.log c2' := Real.exp_log hlog_pos
+  have hexpz_gt : Real.log c2' < Real.exp z := by
+    have h := Real.exp_lt hz
+    rwa [hexp_x0] at h
+  have hstep : (0 : Real) < Real.exp z - Real.log c2' := by
+    have e := sub_lt_sub_right_of_lt (r := Real.log c2') hexpz_gt
+    have e2 : Real.log c2' - Real.log c2' = 0 := by mach_ring
+    rwa [e2] at e
+  have hbracket : 0 < Real.exp z - Real.log c2' + 1 := add_pos hstep zero_lt_one_ax
   have e : Real.exp (Real.exp z - Real.log c1') * Real.exp z * (Real.exp z - Real.log c2')
         + Real.exp (Real.exp z - Real.log c1') * Real.exp z
       = (Real.exp (Real.exp z - Real.log c1') * Real.exp z) * (Real.exp z - Real.log c2' + 1) := by
@@ -108,23 +113,23 @@ theorem g_deriv_pos (c1' c2' z : Real) (hle : Real.log c2' ≤ 1) :
   rw [e]
   exact mul_pos hP hbracket
 
-/-- **`g` has at most one zero on any open interval.** Strict monotonicity from a positive
-derivative (`g_deriv_pos`), via `strictMono_of_deriv_pos` + `atMostOneZero_of_strictMono`. No
-domain restriction needed — the positivity holds everywhere given `log c2' ≤ 1`. -/
-theorem g_atMostOneZero (c1' c2' : Real) (hle : Real.log c2' ≤ 1) (c d : Real) :
+/-- **`g` has at most one zero on `(x0, d)`.** Strict monotonicity from a positive derivative
+RESTRICTED to `z > x0` (`g_deriv_pos_right`) — holds for ANY `c2' > 1`, no upper restriction on
+`c2'` needed, since only the sign on the region actually queried matters. -/
+theorem g_atMostOneZero_right (c1' c2' : Real) (hc2' : 1 < c2') (d : Real) :
     ∀ zeros : List Real, zeros.Nodup →
-      (∀ z ∈ zeros, c < z ∧ z < d ∧
+      (∀ z ∈ zeros, Real.log (Real.log c2') < z ∧ z < d ∧
         Real.exp (Real.exp z - Real.log c1') * (Real.exp z - Real.log c2') - 1 = 0) →
       zeros.length ≤ 1 := by
   apply atMostOneZero_of_strictMono
-  intro x y _hxc _hxd _hyc _hyd hxy
+  intro x y hxc _hxd _hyc _hyd hxy
   apply strictMono_of_deriv_pos
     (fun w => Real.exp (Real.exp w - Real.log c1') * (Real.exp w - Real.log c2') - 1) x y hxy
   · intro w _ _
     exact ⟨_, hasDerivAt_g c1' c2' w⟩
-  · intro w f' _ _ hderiv
+  · intro w f' hxw _hwy hderiv
     rw [HasDerivAt_unique _ _ _ w hderiv (hasDerivAt_g c1' c2' w)]
-    exact g_deriv_pos c1' c2' w hle
+    exact g_deriv_pos_right c1' c2' w hc2' (lt_of_lt_of_le hxc hxw)
 
 /-- `t2eval z = exp z - log c2'` is positive whenever `z` is past the sign crossing, converting
 the strict `log c2' < exp z` fact into the subtraction form needed downstream. -/
@@ -180,12 +185,11 @@ theorem hasDerivAt_t_right (c1' c2' z : Real) (hzpos : 0 < Real.exp z - Real.log
     (1 / (Real.exp z - Real.log c2') * Real.exp z) z hexp hlog
 
 /-- **The main result**: `eml (eml var (const c1')) (eml var (const c2'))` — BOTH children
-depth-1 compound simultaneously — has boundedly many zeros (`≤3`) on ANY interval, given `c2' > 1`
-(the sign-crossing condition) and `Real.log c2' ≤ 1` (i.e. `c2' ≤ e`, keeping `g`'s derivative
-sign a single monotonicity check). `c1'` is completely unrestricted. NO `EMLPfaffianValidOn`
-assumption anywhere. -/
+depth-1 compound simultaneously — has boundedly many zeros (`≤3`) on ANY interval, for ANY `c2' >
+1` (the sign-crossing condition alone — no upper restriction on `c2'` needed) and ANY `c1'`
+whatsoever. NO `EMLPfaffianValidOn` assumption anywhere. -/
 theorem eml_evarConstC1_evarConstC2_boundedZeros (c1' c2' : Real) (hc2' : 1 < c2')
-    (hc2'le : Real.log c2' ≤ 1) (a b : Real) :
+    (a b : Real) :
     ∀ zeros : List Real, zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧
         (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c1'))
@@ -236,7 +240,7 @@ theorem eml_evarConstC1_evarConstC2_boundedZeros (c1' c2' : Real) (hc2' : 1 < c2
             ⟨_, hasDerivAt_t_right c1' c2' z (t2eval_pos_of_gt_x0 (hgt_side z hz0))⟩)
           1
           (fun zeros_d hnd' hzd => by
-            apply g_atMostOneZero c1' c2' hc2'le x0 b
+            apply g_atMostOneZero_right c1' c2' hc2' b
             · exact hnd'
             · intro z hzmem
               obtain ⟨hz0, hzb, f'', hderiv', hf''0⟩ := hzd z hzmem
