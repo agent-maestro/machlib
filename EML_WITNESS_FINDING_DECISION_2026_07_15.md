@@ -397,3 +397,17 @@ looked like it might need genuinely new mathematics (a `c2`-dependent case analy
 different technique entirely for `c2\ge 2`'s zero-free case) turned out not to — same trick,
 every `c2`. Not implemented in Lean this pass, per the paper-first discipline: the argument is
 believed correct and checked against real definitions, not yet formalized.
+
+## 2026-07-19 (cont.) — first piece of the induction actually built and verified in Lean
+
+`MachLib/WitnessResidualDepth1.lean` (commit `1e4a0198`): proves `T1` cannot have depth ≤ 1.
+Any `eml A B` with `A,B` both leaves is either globally constant or unbounded above, checked
+for all four leaf combinations — so the residual's smallest possible `T1` has depth ≥ 2, never
+depth 0 or 1. Verified via `#print axioms`: depends only on MachLib's own foundational axiom
+base, **not** `eml_pfaffian_validon_from_sin_equality` — genuinely non-circular, zero new axioms.
+This is a real base-case fact for the strong-induction-on-depth strategy above, not just a
+brainstormed idea — compiled, checked, wired into the root `MachLib.lean`.
+
+Does not close Option D — the depth ≥ 2 inductive step (needing the target-shift trick above
+plus `T1`'s own chain construction) is still open. But the induction now has a genuine,
+verified foothold at its base.
