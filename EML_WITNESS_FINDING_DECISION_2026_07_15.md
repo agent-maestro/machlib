@@ -1005,3 +1005,35 @@ question for whoever continues this, not attempted here.
 
 `#print axioms` clean (same base), `eml_pfaffian_validon_from_sin_equality` does not appear,
 zero `sorry`. Full `lake build MachLib` passes (394 modules) — nine new files today.
+
+## 2026-07-20 (cont.) — the `≤1` mechanism, iterated to arbitrary depth
+
+Natural next question from the previous entry, answered: does the `≤1` mechanism iterate — can
+`B` be `eml (eml P' (const c')) (const c)`, arbitrarily deep, not just one layer?
+
+**Yes, cleanly** (`WitnessResidualBChainCompound.lean`). `GoodPositiveChain n t`: `t` is a leaf,
+or `t = eml P (const c)` (`0<c≤1`) with `P` satisfying `GoodPositiveChain (n-1)` — up to `n`
+nested `≤1`-layers, bottoming out in a simple leaf. Indexed by `Nat` deliberately, not by direct
+structural recursion on `EMLTree`: the witness `P` at each layer sits inside an `∃`, not reached
+by `EMLTree`'s own constructors the way the `induction` tactic expects, so a naive
+`EMLTree`-structural version would need real well-founded-recursion machinery to let a proof
+"recurse into a grandchild." Indexing by `Nat` instead sidesteps that entirely — the `Nat`
+induction's own hypothesis supplies the recursive call for `P` directly, `EMLTree` is never
+itself the induction's target. All three needed facts (value-positivity, `EMLWitnesses`-freeness,
+`EMLNoCrossingAt`-freeness) proved this way, then wired through the identical skeleton every
+other closure in this arc uses. Compiled clean, zero errors, on the FIRST attempt for the whole
+file — further confirmation that today's early groundwork (the wiring skeleton itself) is now
+routine to reuse.
+
+**Relationship to the previous entry's result, honestly.** `no_T1_with_B_one_level_compound`
+allowed `B`'s one `≤1` layer's own left branch `P` to be ANY `RightChildrenSimplePositive` tree
+(arbitrary left-spine depth, simple right children). `no_T1_with_B_chain_compound` allows
+UNBOUNDED `≤1`-layer depth, but each layer's own `P` is restricted to ANOTHER `≤1` layer or a
+leaf — narrower on that axis. The two results are complementary, neither subsumes the other:
+one trades chain depth for left-branch generality, the other trades left-branch generality for
+chain depth. Both leave the fully arbitrary `B` exactly where the wall-characterization entry
+left it — three independent, narrow mechanisms now chip at that space (simple; `≤1`-one-layer;
+`≤1`-chain), none of them close to covering it.
+
+`#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
+Full `lake build MachLib` passes (395 modules) — ten new files today.
