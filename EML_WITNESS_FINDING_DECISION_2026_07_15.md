@@ -685,3 +685,65 @@ did for level 2. Not started.
 analytic-function axiom base (the same set `T1_not_eq_log_c2_plus_sin_given_validon` uses,
 nothing new), `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`. Full
 `lake build MachLib` passes (388 modules).
+
+## 2026-07-20 (cont.) — the whole nested-target family closed by one induction, not one level
+## at a time
+
+Per continued "proceed please." The prior entry's own write-up named the natural next step: a
+real inductive nested-target family type with the two key facts (`hTargetKPi`, `hTargetPi1`)
+derived generically by induction on nesting depth, instead of hand-proving each level as it was
+needed. Built it (`WitnessResidualNestedTargetFamily.lean`).
+
+**The family.** `nestedTarget cs`, `cs : List Real` a list of shift constants:
+`nestedTarget [] = sin`; `nestedTarget (c :: cs) x = log(c + nestedTarget cs x)`. `cs = [c2]`
+is `log(c2+sin x)`; `cs = [d, c2]` is `log(d+log(c2+sin x))` — the two targets from the previous
+two files, now special cases of one list.
+
+**The induction (`nestedTarget_facts`).** By induction on `cs`, given a well-formedness
+condition (`nestedWF cs` — each layer's shift constant keeps that layer's log from ever
+clamping, checked against a bound propagated the same way as the target itself), proves THREE
+things together: `nestedTarget cs`'s range is bounded (`[nestedLo cs, nestedHi cs]`,
+propagated one log-shift per layer from `sin`'s own `[-1,1]`); its value at every `kπ` (`k≥1`)
+is a fixed level `nestedLevel cs` (`sin(kπ)=0` propagates through arbitrarily many layers
+uniformly in `k` — proved ONCE here, reused at every depth, rather than re-derived per level);
+and it differs from that level at `π+1` (via `log_injective_pos`, peeling one layer per
+induction step — this is the one place the induction does genuinely new work each level, not
+just algebra, since each layer needs its own injectivity application). The three are proved
+TOGETHER because the range fact is exactly what the next layer's own well-formedness check
+needs.
+
+**The payoff (`no_tree_eq_nested_target_given_validon`).** Combined with
+`no_tree_eq_target_given_validon`: no finite EML tree can equal ANY member of the nested-target
+family while having `EMLPfaffianValidOn` throughout — the whole family, in one proof, not one
+hand-derivation per level. A sanity-check corollary
+(`T1_not_eq_log_c2_plus_sin_given_validon_via_family`) re-derives the ORIGINAL
+`log(c2+sin x)` result (`cs=[c2]`) through the general theorem, confirming the abstraction is
+equivalent to — not just similar to — the hand-proved result it generalizes.
+
+**What this closes and what it still doesn't.** This closes the "does a finite tree realize
+*some* target in this family" side of the problem COMPLETELY — not partially, not one more
+level, the whole countable family in one induction. It does NOT close `hvalidon_any_b` itself
+(establishing a tree's own `EMLPfaffianValidOn` from its structure) — that remains the separate,
+genuinely open induction on TREE structure (as opposed to the induction on TARGET nesting depth
+closed here) that the rest of Option D's remaining work is about. The two inductions are
+independent axes: this file's induction is on how deep the shifting-log target is nested; the
+still-open one is on how deep the EML tree claiming to realize it is nested. Closing the second
+is what would let `EMLWitnesses A x0`/`EMLWitnesses B x0` (and `c2≥2`) actually discharge, not
+just be well-posed.
+
+Two real build gotchas, worth recording since they're generic to this Mathlib-free setting, not
+specific to this proof: (1) `show` inside a nested `have := by show ...; exact ...`, applied to
+goals built from `noncomputable` well-founded-recursion-compiled `def`s (the four `nestedX`
+functions here), produced spurious "type mismatch: `this`" errors even though the shown
+statement was definitionally the unfolded goal — worked around by proving explicit `rfl`-based
+equation lemmas (`nestedTarget_cons`, etc.) and using plain `rw` instead of `show`, which is
+syntactic rather than defeq-based and didn't hit the same issue. (2) `mach_ring` closed
+`(c + nestedTarget cs' (π+1)) - c = nestedTarget cs' (π+1)` but left a residual unsolved goal on
+the algebraically-identical `(c + nestedLevel cs') - c = nestedLevel cs'` — same shape, opaque
+atom either way, no explanation found; worked around with an explicit two-step derivation
+(`add_comm` then `add_sub_cancel_right`, from `Decimal.lean`) instead of relying on `mach_ring`
+for that one step.
+
+`#print axioms` on all three new theorems: same base as the un-nested version (MachLib standard
++ already-trusted analytic-function axioms), `eml_pfaffian_validon_from_sin_equality` does not
+appear, zero `sorry`. Full `lake build MachLib` passes (389 modules).
