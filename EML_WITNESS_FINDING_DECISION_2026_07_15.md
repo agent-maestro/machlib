@@ -1181,3 +1181,36 @@ different, more optimistic signal than "this needs entirely new machinery" would
 
 `#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
 Full `lake build MachLib` passes (397 modules) — twelve new files today.
+
+## 2026-07-20 (cont.) — the base case, actually COMPLETE: all four depth-1 shapes closed
+
+Per continued "proceed please." The previous entry closed `eml var var` — the hardest depth-1
+shape, chosen deliberately to show the base case is tractable — and flagged the other three as
+"easier variants" without formalizing them. Finished the job: all four depth-1 shapes now have
+proven, validity-free zero-count bounds (`EMLZeroCrossingDepth1.lean`).
+
+**The other three, and why they turned out even simpler than expected.** `eml (const c1) (const
+c2)` and `eml var (const c2)` don't even need the clamp-region split `eml var var` needed — the
+right child being a FIXED constant means `log`'s clamp status doesn't depend on `x` at all, so
+the whole formula is uniform. The former is a genuine constant (`0` zeros, given non-degeneracy);
+the latter needs only `exp`'s own injectivity (`exp_lt`, already an axiom) — no derivative work.
+`eml (const c1) var` needs the SAME clamp-region split as `eml var var` (right child is `var`,
+sign flips at `0`), but on the `x>0` side needs only `log`'s injectivity on positives
+(`log_lt_log`, already a theorem) rather than a second-derivative monotonicity argument.
+
+**One reusable generalization made along the way**: `atMostOneZero_of_strictMono` (built for the
+`eml var var` case, needing a fixed direction of inequality) generalized cleanly to
+`atMostOneZero_of_injOn` (`f x ≠ f y` directly, no fixed direction) — the natural shape for
+`exp`/`log` injectivity, which don't care about direction the way a derivative-sign argument
+does. Same proof skeleton, one line changed (`hlt'` substitution replaced by a direct `Ne`
+application).
+
+**What this confirms, concretely.** Three of the four depth-1 shapes needed ZERO new machinery
+beyond injectivity facts the codebase already had before today. Only the hardest (`eml var var`)
+needed the derivative/Rolle argument from the previous entry. This is a genuinely complete,
+closed base case for the depth-based induction the strategy needs — not a representative sample
+standing in for unfinished work.
+
+`#print axioms` clean throughout, `eml_pfaffian_validon_from_sin_equality` does not appear
+anywhere, zero `sorry`. Full `lake build MachLib` passes (397 modules, same file count as the
+previous entry — this extends `EMLZeroCrossingDepth1.lean` rather than adding a new file).
