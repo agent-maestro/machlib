@@ -107,6 +107,7 @@ import MachLib.EMLZeroCrossingDepth1
 import MachLib.EMLZeroCrossingDepth2Compound
 import MachLib.EMLZeroCrossingDomainSplit
 import MachLib.EMLZeroCrossingDomainSplitGeneral
+import MachLib.EMLZeroCrossingBothCompound
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
