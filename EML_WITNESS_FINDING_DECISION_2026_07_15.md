@@ -486,3 +486,49 @@ non-circular results came out of this arc: the target-shift trick (mechanism ide
 checked against source), the depth-1 exclusion (`WitnessResidualDepth1.lean`, compiled), and
 the cancellation obstruction (`WitnessResidualCancellation.lean`, compiled) — real narrowing of
 an open problem, each independently checked, none of them a false start.
+
+## 2026-07-20 — the chain/bound plumbing itself: built, compiled, verified
+
+Picked back up per direct user request to start on exactly the piece flagged above as
+unstarted engineering. `MachLib/WitnessResidualChainSkeleton.lean` (commit `d79e85ab`):
+`T1_not_eq_log_c2_plus_sin_given_validon` — mirrors `sin_not_in_eml_any_depth`'s exact proof
+shape, but for an arbitrary `T1` satisfying the shifted target `log(c2+sin x)`, taking `T1`'s
+own `EMLPfaffianValidOn` as an EXPLICIT hypothesis (`hvalidon_any_b : ∀ b>0,
+EMLPfaffianValidOn T1 0 b`) rather than trying to derive it — deliberately isolating the one
+piece that genuinely needs induction from everything else, to verify the REST of the
+architecture is sound first.
+
+**Result: it is.** Compiled clean on the first full attempt (after actually reading
+`PfaffianFn.eval`'s definition, `enc_eval`'s exact statement, and `MultiPoly.eval`'s linearity
+over `sub`/`const` — not guessed). `enc T1 emlEmptyChain`, the shifted polynomial
+`p' := p.sub (const (log c2))`, `combinedBoundE`, and the `M+1`-zeros-at-`kπ`-exceed-`M`
+contradiction all work exactly as designed for a fully symbolic, unconstrained `T1`. Full
+`lake build MachLib` passes. `#print axioms` confirms non-circular: only MachLib's standard
+foundational axioms plus its already-trusted analytic-function infrastructure
+(`HasDerivAt_*`, `analytic_finite_zeros_compact`, `rolle_ct`) —
+`eml_pfaffian_validon_from_sin_equality` does not appear.
+
+**What this actually buys**: the entire remaining difficulty in closing this residual is now
+concentrated in exactly ONE precisely-stated hypothesis —
+`∀b>0, EMLPfaffianValidOn T1 0 b`, i.e. establishing this via `eml_pfaffian_validon_of_witnesses`,
+which needs `EMLWitnesses T1 x0` for T1's own (unconstrained, structurally arbitrary)
+substructure. This is exactly the recursive difficulty the cancellation counterexample (above)
+already showed is real and not closeable by an elementary argument — but it is now a SINGLE,
+sharply-defined remaining gap, not a vague "needs the full machinery" description. Whoever
+picks this up next has: a working chain/bound skeleton to plug a witness-supply into, not a
+blank page.
+
+**Not yet attempted**: actually discharging `hvalidon_any_b`. The natural next step (worked out
+on paper this session, not yet built) is a strong induction on `T1`'s structure where the
+`eml A B` case recurses via the SAME "assume the right child ≤0 everywhere, collapse" strategy
+used throughout this whole file — and a genuinely useful sub-finding from that paper work: the
+"value at `kπ` is a clean constant" invariant (`sin(kπ)=0`, hence
+`log(c2+sin(kπ))=log(c2)`) PROPAGATES through arbitrarily many nested collapses
+(`log(c2'+γ)` at the same `kπ` points, for any prior clean constant `γ`) — meaning the
+target-shift trick itself generalizes cleanly across the whole nested-target family that
+recursive collapses generate. What does NOT yet have a clean resolution: the `c2 ≥ 2` sub-case
+of a right-child collapse pushes the problem to the LEFT child needing an even MORE nested
+target (`log(log(c2+sin x))`), and closing that recursively (rather than hitting an immediate
+elementary contradiction the way `1<c2<2` does) needs the induction to be stated over the WHOLE
+nested-target family, not just `log(c2+sin x)` — a real, nontrivial generalization exercise,
+not sketched further here.
