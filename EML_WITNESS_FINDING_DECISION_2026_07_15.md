@@ -1132,3 +1132,52 @@ honestly not close to finishing it.
 
 `#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
 Full `lake build MachLib` passes (396 modules) — eleven new files today.
+
+## 2026-07-20 (cont.) — the induction's base case, closed for real: `eml var var`, zero validity
+## assumption, elementary calculus only
+
+Per direct request to proceed to the induction itself, not just the strategy. Attempted the base
+case — depth-1 trees — where the Pfaffian-chain encoder isn't needed at all: a depth-1 tree's
+right child is a bare leaf, so its sign pattern is known in closed form (constant, or a single
+crossing at `x=0` for `var`), not something needing its own recursive validity argument.
+
+**`eml var var` worked through completely** (`EMLZeroCrossingDepth1.lean`, the hardest of the
+four depth-1 shapes — the other three reduce to injectivity of `exp` or `log` alone). `t.eval x =
+exp(x) - log(x)` for `x>0` (clamps to `exp(x)` for `x≤0`, unconditionally `>0` there, zero-free).
+On `x>0`: the derivative is `exp(x) - 1/x`; THAT function's own derivative is `exp(x) + 1/x²`,
+manifestly positive, so `exp(x)-1/x` is strictly monotonic (`strictMono_of_deriv_pos`,
+MVT-based, already sitting unused in `MonotoneFromDeriv.lean`) — hence injective, hence at most
+one zero (`atMostOneZero_of_strictMono`, new, general, reusable — any function pairwise-strictly-
+monotonic on an interval has at most one zero there, proved once, works for anything). Feeding
+that into `zero_count_bound_by_deriv` (Rolle's theorem, already sitting unused in `Rolle.lean`)
+gives: `exp(x)-log(x)` has at most `2` zeros on any `(0,B)`. Glue with "zero zeros on `x≤0`"
+(trivial): `eml var var`'s FULL evaluation has boundedly many zeros (`≤3`) on ANY interval —
+proved **without ever invoking `EMLPfaffianValidOn`, `LogArgPosOn`, or the Pfaffian-chain encoder
+at all.**
+
+**Confirmed via `#print axioms`, not just claimed.** The axiom list for `eml_var_var_boundedZeros`
+is exactly: standard foundational arithmetic + the `HasDerivAt` calculus rules + `rolle_ct`. Not
+one encoder/chain/validity axiom or theorem appears anywhere in the dependency graph — genuinely
+independent of the machinery this whole arc has been trying to avoid needing.
+
+**Two real build gotchas, both instructive.** `HasDerivAt_inv`'s conclusion has the numerator's
+negation OUTSIDE the division (`(-a)/(f x · f x)`, i.e. `(-1)/(x·x)` here), not the whole
+fraction negated (`-(1/(x·x))`) — mathematically equal, syntactically different, and `mach_ring`
+doesn't relate them on its own (division isn't a ring operation it normalizes through) — fixed
+via the already-existing `neg_div` lemma (`FieldLemmas.lean`) to bridge the two forms explicitly
+before letting `mach_ring` finish the rest. Second: `MultiVarBucket.lean`'s
+`length_filter_partition` (reused again from `EMLExplicitBoundGlue.lean`'s bricks) needed an
+explicit import — easy to forget when a lemma is reachable transitively in ONE file's import
+chain but not another's.
+
+**Honest scope.** This is the base case of a depth-based induction, for ONE (the hardest) of four
+depth-1 shapes. The INDUCTIVE STEP — compound `t1`/`t2`, needing the full "split by every
+internal log-node's sign, recurse" strategy from the previous entry — is not attempted here, and
+remains the actual substance of "the induction." What this DOES establish, concretely rather
+than by estimate: the base case is genuinely closeable by machinery ALREADY SITTING UNUSED in
+this codebase (`MonotoneFromDeriv.lean`, `Rolle.lean` — both apparently built for a different,
+earlier purpose and never wired into this investigation before today), which is a meaningfully
+different, more optimistic signal than "this needs entirely new machinery" would have been.
+
+`#print axioms` clean, `eml_pfaffian_validon_from_sin_equality` does not appear, zero `sorry`.
+Full `lake build MachLib` passes (397 modules) — twelve new files today.
