@@ -1528,3 +1528,32 @@ discover `M`, it only re-packages the accounting once `M` is known. Deeper trees
 induction) remain the real open frontier. `#print axioms` clean on both theorems, only base
 MachLib primitives, zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full
 `lake build MachLib` passes (402 modules) — **seventeen new files in one session.**
+
+## 2026-07-20 (cont. 6) — `t1`'s derivative requirement weakened from global to local
+
+Per continued "proceed please." Checked whether `eml_genericT1_genericT2_boundedZeros`'s
+`ht1deriv : ∀x, HasDerivAt t1eval (t1deriv x) x` (required EVERYWHERE) was actually load-bearing,
+the same question that removed last round's `c2' ≤ e` restriction. It wasn't: both call sites
+invoke `t1`'s derivative only at points `z` already known to satisfy `x0 < z ∧ z < b` — so the
+hypothesis was weakened to `∀x, x0 < x → x < b → HasDerivAt t1eval (t1deriv x) x`, matching
+`t2deriv`'s own domain restriction exactly. Two call sites updated (`ht1deriv z` →
+`ht1deriv z hz0 hzb`); the sanity-check corollary's `ht1deriv` bullet updated to `intro x _ _`
+(its instantiation, `exp x - log c1'`, is differentiable everywhere regardless, so the extra
+hypotheses are simply unused there).
+
+**Why this is more than tidying.** `t1 = eml var var` (`t1eval x = exp x - log x`) is NOT
+differentiable at `x = 0` — `log`'s right-derivative diverges as `x → 0+`, so no finite
+`HasDerivAt Real.log ? 0` exists. Under the OLD global requirement, this tree could never be fed
+into this theorem as `t1`, permanently — not "not yet done," but structurally excluded. Under the
+new local requirement, `t1 = eml var var` qualifies fine on any `(x0, b)` with `x0 ≥ 0` (its
+derivative `exp x - 1/x` is well-defined throughout `x > 0`, and `x0` itself sits OUTSIDE the open
+interval `(x0, b)` where the derivative is actually needed). This doesn't yet COMBINE `eml var
+var` with a compound `t2` — the combined derivative `exp(t1eval z)·t1deriv z - (1/t2eval
+z)·t2deriv z` would, for this `t1`, become a genuinely new expression (`t1deriv` is no longer the
+simple `exp` seen in every instance so far) needing its own fresh positivity/monotonicity
+argument, not just reuse of `exp_sub_inv_atMostOneZero`'s existing bound on `t1deriv` alone — a
+real, sized piece of work, correctly NOT attempted in this round. What this entry closes is
+narrower and honest: the theorem no longer structurally forbids the attempt.
+
+`#print axioms` unchanged (no new machinery, same axiom set). Full `lake build MachLib` passes
+(402 modules, same file count — a strengthening in place, matching last round's pattern).
