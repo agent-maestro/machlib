@@ -1,5 +1,6 @@
 import MachLib.WitnessResidualCancellationGeneral
 import MachLib.EMLZeroCrossingDomainSplit
+import MachLib.Trig
 
 /-!
 # The "bounded ⟹ constant" conjecture is FALSE: an explicit counterexample
@@ -275,6 +276,27 @@ theorem bounded_nonconstant_eml_tree_exists (c : Real) (hc : 1 < c) (hc1 : Real.
     (∃ x y, (boundedNonConstantWitness c).eval x ≠ (boundedNonConstantWitness c).eval y) :=
   ⟨fun x => boundedNonConstantWitness_upper_bound hc hc1 x,
    boundedNonConstantWitness_not_constant hc hc1⟩
+
+/-- **This specific counterexample is harmless to the witness-finding argument.** `T1` is
+strictly monotonic, hence INJECTIVE (takes each value at most once). `log(c2+sin x)` takes the
+SAME value at `x=0` and `x=π` (`sin 0 = sin π = 0`, so both give `log(c2+0)`) — it is NOT
+injective. An injective function cannot equal a non-injective one globally, so `T1` can never
+satisfy the collapsed witness-finding equation for ANY `c2` — no zero-counting, no Pfaffian
+chain, no target-shift trick needed at all for this instance. -/
+theorem boundedNonConstantWitness_ne_shifted_sin_target {c : Real} (hc : 1 < c)
+    (hc1 : Real.log c < 1) (c2 : Real) :
+    ¬ (∀ x, (boundedNonConstantWitness c).eval x = Real.log (c2 + Real.sin x)) := by
+  intro heq
+  have h0 := heq 0
+  have hpi := heq Real.pi
+  rw [Real.sin_zero] at h0
+  rw [Real.sin_pi] at hpi
+  have heq2 : (boundedNonConstantWitness c).eval 0 = (boundedNonConstantWitness c).eval Real.pi :=
+    h0.trans hpi.symm
+  have hlt : (boundedNonConstantWitness c).eval Real.pi < (boundedNonConstantWitness c).eval 0 :=
+    boundedNonConstantWitness_strictAnti hc hc1 0 Real.pi Real.pi_pos
+  rw [heq2] at hlt
+  exact lt_irrefl_ax _ hlt
 
 end Real
 end MachLib
