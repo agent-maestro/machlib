@@ -141,6 +141,7 @@ import MachLib.WitnessResidualDeepNumeric
 import MachLib.WitnessResidualDeepAssembly
 import MachLib.WitnessResidualConvexZeroBoundClosure
 import MachLib.WitnessResidualCrossingUnbounded
+import MachLib.WitnessResidualCrossingUnboundedGeneral
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
