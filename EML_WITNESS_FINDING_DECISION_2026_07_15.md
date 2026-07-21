@@ -2525,3 +2525,56 @@ underlying `Classical.byContradiction` in the two-equal-points mechanism (cont. 
 algebra, `archimedean`, and `sin`'s own basic axioms. Zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (420
 modules) — **thirty-six new files in one session.**
+
+## 2026-07-21 (cont. 25) — a structurally NEW candidate: growth-rate competition, no clamp
+anywhere; boundedness proven, non-monotonicity explicitly left open
+
+**Why look further, right after closing the whole crossing family.** Cont. 24's own honest
+scope note: the mechanism needs `T1` CONSTANT (not merely bounded) on an unbounded ray — a tree
+bounded both directions and non-monotonic WITHOUT such a stretch would escape it entirely. This
+round searches for one directly, numerically first (per house style), before any Lean.
+
+**Found one — a different mechanism than every other tree this whole arc has used.** Recall an
+early finding this session, never followed up on: `exp(exp x) - x` is non-monotonic via pure
+GROWTH-RATE competition between two smooth, never-clamping terms — but unbounded. The question:
+can the SAME mechanism, applied to two ALREADY-bounded pieces instead of `exp(exp x)` and `x`,
+stay bounded while keeping the wiggle? `growthCompetitionWitness c1 c2 := eml
+(boundedNonConstantWitness c1) (eml (boundedNonConstantWitness c2) (const 1))` evaluates (via
+`log∘exp=id`) to `exp(BNCW(x,c1)) - BNCW(x,c2)`. At `c1=2, c2=5/2`: numerically bounded in
+`[0.7785, 1.0]`, approaching `1` as `x→+∞` and `≈0.7785` as `x→-∞`, with a genuine local
+max-then-min wiggle confirmed near `x≈-0.69` on a fine grid (not a numerical artifact) — and
+`inner := exp(exp x)-log c` stays strictly positive throughout for BOTH `c1` and `c2` over a
+wide range, confirming NO `log`-clamp triggers anywhere in this tree at all.
+
+**Formalized** (`WitnessResidualGrowthCompetitionWitness.lean`, commit `a770147b`): boundedness in
+BOTH directions, for ANY valid `c1,c2` (not just the numerically-found pair) — turned out to
+need NO new machinery at all, just combining `boundedNonConstantWitness`'s ALREADY-established
+bounds additively (`1<exp(A)` and `B<U2` chain via two `sub_lt_sub_*` steps to `1-U2<exp(A)-B`;
+symmetric argument for the upper bound). Also non-`RightChildrenSimplePositive` (same
+`EMLTree.noConfusion` argument as every prior tree in this arc, inheriting the failure from the
+left child's own compound right child).
+
+**What remains explicitly, honestly open.** Non-monotonicity (and the non-constancy that would
+follow from it) is NOT formalized. The mechanism is numerically overwhelming but proving it
+needs either (a) a derivative-based sign-crossing argument — `T'(x) = exp(A(x))·A'(x) - B'(x)`,
+both `A'`,`B'` already known negative-valued formulas via `boundedNonConstantWitness_deriv_neg`,
+but their RATIO crossing `1` needs a genuinely new comparison this session hasn't built — or (b)
+careful numerical interval bounds at specific points (tedious, no shortcut found). Both are
+real, sizable undertakings in their own right, correctly scoped as the concrete next step for
+whoever continues — not attempted this round, by explicit user direction to formalize the
+STRUCTURE first and assess feasibility before committing further.
+
+**Why this matters regardless of whether non-monotonicity gets proven.** Even at this partial
+stage, this is genuinely new information: it demonstrates the crossing-family closure just built
+(cont. 24) does NOT trivially generalize to "every bounded non-monotonic EML tree" — there is at
+least one STRUCTURALLY DIFFERENT candidate mechanism (growth competition, zero clamps) that the
+existing closure cannot even see, since it has no ray of constancy anywhere to exploit. Whether
+this SPECIFIC tree turns out non-monotonic (closing the loop on a second family) or is somehow
+secretly monotonic after all (which the numerics make very unlikely) is now a precisely-posed,
+well-scoped open question, not a vague possibility.
+
+`#print axioms` clean on all three new theorems — pure algebra, no `HasDerivAt` even though the
+underlying `boundedNonConstantWitness` bounds it reuses were originally derivative-based (the
+COMBINATION step here needed none). Zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does
+not appear. Full `lake build MachLib` passes (421 modules) — **thirty-seven new files in one
+session.**
