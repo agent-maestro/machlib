@@ -1,4 +1,6 @@
 import MachLib.WitnessResidualGrowthCompetitionValidOn
+import MachLib.WitnessResidualChainSkeleton
+import MachLib.WitnessResidualSimpleT1Application
 
 /-! # Generalizing the `growthCompetitionWitness` closure route: no-clamp-anywhere ⟹ free validity
 
@@ -19,16 +21,18 @@ step is a single line (`⟨ih1 h1, ih2 h2, fun x _ _ => h3 x⟩`), since the ONL
 weakening `∀x` to `∀x ∈ (a,b)`.
 
 **Relationship to `RightChildrenSimplePositive`** (`WitnessResidualSimpleRightChildren.lean`,
-the FIRST unconditional closure in the whole arc): that predicate requires every right child to
-be a LEAF (`var` or a positive constant) — positivity is then trivial by construction, but the
-tree shape itself is heavily restricted. `RightChildrenEverywherePositive` drops the "leaf" part
-entirely — right children can be arbitrarily COMPOUND, as long as their positivity can be proven
-unconditionally by OTHER means (a derivative argument, an algebraic identity, whatever). Strictly
-more general: any `RightChildrenSimplePositive` tree trivially satisfies
-`RightChildrenEverywherePositive` too (a leaf's positivity, if it holds at all, holds
-unconditionally by definition), but the converse fails — `growthCompetitionWitness` itself is the
-witness, since its right children are genuinely compound (not leaves) yet still provably positive
-everywhere.
+the FIRST unconditional closure in the whole arc) — CORRECTED from an earlier draft of this note:
+these are INCOMPARABLE, complementary conditions, NEITHER subsuming the other. `RightChildren
+SimplePositive` explicitly allows a right child to be `var` (`t2 = EMLTree.var`, see its
+definition) — and `var.eval x = x` is positive only for `x > 0`, NOT unconditionally. That
+predicate's own closure mechanism (`eml_witnesses_of_right_children_simple_positive`) only ever
+needs a SINGLE-POINT witness (`EMLWitnesses A x0` at some `x0 > 0`), not uniform positivity — a
+genuinely different technique. So a `RightChildrenSimplePositive` tree with a bare `var` right
+child does NOT satisfy `RightChildrenEverywherePositive`. Conversely `RightChildrenEverywhere
+Positive` allows arbitrarily COMPOUND right children (not just leaves) as long as their positivity
+holds for every `x` — `growthCompetitionWitness` is the witness that this is a real, non-empty
+extension in ITS direction. The two predicates cover genuinely different, overlapping-but-neither-
+contained-in-the-other slices of the "right child is positive enough" space.
 
 **Relationship to the OTHER existing route to `EMLPfaffianValidOn`**
 (`eml_pfaffian_validon_of_witnesses_backward`/`_twosided`, `EMLSmoothness.lean`): that mechanism
@@ -45,12 +49,25 @@ general` re-derives `WitnessResidualGrowthCompetitionValidOn.lean`'s hand-built 
 through this general machinery — the generalization captures the same content, not merely a
 similar-looking one.
 
+**The closure itself is generalized too, not just the validity derivation.** `eml_depth2_witness_
+of_const_gt_one_sibling_growthCompetition` (`WitnessResidualGrowthCompetitionValidOn.lean`) never
+actually used anything specific to `growthCompetitionWitness` beyond feeding its `EMLPfaffianValidOn`
+into the SAME generic pieces (`eml_T1eq_of_const_sibling_le_zero`,
+`T1_not_eq_log_c2_plus_sin_given_validon`) that were ALREADY tree-agnostic. Restating it to take
+`RightChildrenEverywherePositive T1` directly, for an ARBITRARY `T1`, turns a two-tree result
+into an infinite-family one: `eml_depth2_witness_of_const_gt_one_sibling_right_children_
+everywhere_positive` — ANY tree satisfying the predicate, not just `growthCompetitionWitness`,
+can never be part of a counterexample. Confirmed via a second sanity-check corollary that this
+reproduces the specific `growthCompetitionWitness` closure exactly.
+
 **Open, honestly**: which OTHER trees in this arc (or future ones) actually satisfy
 `RightChildrenEverywherePositive` is not surveyed here. Every other "compound tree" investigation
 in this whole arc (`EMLZeroCrossingDomainSplit*.lean` and its many variants) deliberately explores
 trees whose right children DO cross zero — the interesting, hard case this predicate structurally
 excludes by design. Whether a genuinely NEW, non-constant tree exists that's both compound AND
-covered by this predicate (beyond `growthCompetitionWitness` itself) is unexplored. -/
+covered by this predicate (beyond `growthCompetitionWitness` itself) is unexplored — but now that
+the CLOSURE itself is general, any future such discovery gets the witness-finding result for free,
+no bespoke proof needed. -/
 
 namespace MachLib
 namespace Real
@@ -58,8 +75,10 @@ namespace Real
 open EMLTree
 
 /-- A tree where every right child, throughout the WHOLE structure, is provably positive for
-EVERY `x` — not `∀x` restricted to some interval, genuinely unconditional. Strictly more general
-than `RightChildrenSimplePositive` (drops the "must be a leaf" requirement entirely). -/
+EVERY `x` — not `∀x` restricted to some interval, genuinely unconditional. INCOMPARABLE to
+`RightChildrenSimplePositive` (see the module docstring) — allows compound right children that
+predicate excludes, but is strictly stronger about the leaf case `var` (which that predicate
+allows despite `var.eval x = x` not being everywhere positive). -/
 def RightChildrenEverywherePositive : EMLTree → Prop
   | EMLTree.const _ => True
   | EMLTree.var => True
@@ -111,6 +130,39 @@ theorem growthCompetitionWitness_EMLPfaffianValidOn_via_general {c1 c2 a b : Rea
     EMLPfaffianValidOn (growthCompetitionWitness c1 c2) a b :=
   EMLPfaffianValidOn_of_right_children_everywhere_positive
     (growthCompetitionWitness_RightChildrenEverywherePositive hc1 hc1' hc2 hc2') a b
+
+/-- **THE FULLY GENERAL CLOSURE.** ANY `T1` satisfying `RightChildrenEverywherePositive` can
+never be part of a genuine witness-finding counterexample — not just `growthCompetitionWitness`,
+any tree at all whose every log-argument positivity fact is unconditional. Supersedes
+`eml_depth2_witness_of_const_gt_one_sibling_growthCompetition`
+(`WitnessResidualGrowthCompetitionValidOn.lean`), which is kept as-is (not refactored to call
+this) since it's already shipped and its specific statement is still useful on its own. -/
+theorem eml_depth2_witness_of_const_gt_one_sibling_right_children_everywhere_positive
+    {T1 S3 : EMLTree} {c2 : Real} (hc2 : 1 < c2) (hT1valid : RightChildrenEverywherePositive T1)
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hT1eq := eml_T1eq_of_const_sibling_le_zero hc2 hallle hsin
+  have hvalidon_any_b : ∀ b : Real, 0 < b → EMLPfaffianValidOn T1 0 b :=
+    fun b _ => EMLPfaffianValidOn_of_right_children_everywhere_positive hT1valid 0 b
+  exact T1_not_eq_log_c2_plus_sin_given_validon c2 hc2 T1 hT1eq hvalidon_any_b
+
+/-- Sanity check: the general closure reproduces the `growthCompetitionWitness`-specific one. -/
+theorem eml_depth2_witness_of_const_gt_one_sibling_growthCompetition_via_general
+    {c1' c2' : Real} (hc1 : 1 < c1') (hc1' : Real.log c1' < 1)
+    (hc2' : 1 < c2') (hc2'' : Real.log c2' < 1)
+    {S3 : EMLTree} {c2 : Real} (hc2 : 1 < c2)
+    (hsin : ∀ x, (EMLTree.eml (growthCompetitionWitness c1' c2')
+      (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 :=
+  eml_depth2_witness_of_const_gt_one_sibling_right_children_everywhere_positive hc2
+    (growthCompetitionWitness_RightChildrenEverywherePositive hc1 hc1' hc2' hc2'') hsin
 
 end Real
 end MachLib
