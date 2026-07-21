@@ -2578,3 +2578,63 @@ underlying `boundedNonConstantWitness` bounds it reuses were originally derivati
 COMBINATION step here needed none). Zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does
 not appear. Full `lake build MachLib` passes (421 modules) — **thirty-seven new files in one
 session.**
+
+## 2026-07-21 (cont. 26) — into the hard stuff for real: `growthCompetitionWitness`'s
+derivative correctly derived (catching a real bug), a clean algebraic route found, the key
+convexity tool fully proven
+
+**Direct user request: "let's proceed into the hard stuff please."** Attempted the
+derivative-based sign-crossing route flagged last round as the natural next step.
+
+**Step 1 — the derivative, done on paper, CROSS-CHECKED numerically, and CORRECTED.** Composing
+`boundedNonConstantWitness`'s own known derivative and eval formulas: `T'(x) = exp(x)·S(E)`
+where `E := exp(exp x)` and (after a first hand-derivation attempt that TURNED OUT WRONG — caught
+by cross-checking against a finite-difference ground truth in Python, exactly the "verify before
+trusting" discipline this whole arc has repeatedly needed) the CORRECTED formula is `S(E) =
+log(c2)/(E-log c2) - E·log(c1)/(E-log c1)²`. The bug: mistakenly wrote `boundedNonConstantWitness`'s
+leading term as `x` instead of `exp(x)` when composing `exp(A(x))` — a one-symbol slip with a
+large downstream effect (the ORIGINAL wrong formula was POSITIVE everywhere, completely masking
+the real sign change). Confirmed correct via finite-difference match to 10 digits across the
+whole tested range.
+
+**Step 2 — clearing denominators turns a transcendental sign question into PURE ALGEBRA.**
+`S(E) < 0` iff `(q-p)·E² - pq·E + p²q < 0` where `p := log c1`, `q := log c2` — a QUADRATIC in
+`E`, the SAME algebraic object regardless of which `c1, c2` are chosen. This sidesteps needing
+ANY numeric bounds on `log(2.2)`, `log(2.7)`, etc. — the whole remaining difficulty reduces to a
+pure ordered-field fact about quadratics. Also found much better parameters (`c1=2.2, c2=2.7`,
+via a parameter sweep) than the original numerical exploration's `c1=2,c2=2.5` — comfortable
+margins on BOTH sides of the sign change (`S≈+5.4` near `E=1.05`, `S≈-0.78` near `E=1.2`) instead
+of the original's razor-thin `~0.06` margin at the negative extremum.
+
+**Step 3 — the convexity tool, fully proven** (`WitnessResidualQuadraticConvexity.lean`, commit
+`608be764`, `quadratic_neg_between`): an upward-opening quadratic negative at two points `a<b` is
+negative throughout `[a,b]`. Via the exact identity `(b-a)·quad(E) = (b-E)·quad(a) +
+(E-a)·quad(b) - k·(b-a)·(E-a)·(b-E)` — every RHS term `≤0`, at least one strictly (since `(b-E)`
+and `(E-a)` can't both vanish, their sum being the fixed positive `b-a`) — no calculus, no
+discriminant, no square roots, pure algebra. `#print axioms` clean, ordered-field only, no
+`exp`/`log`/`sin` at all — a genuinely general, standalone, reusable fact.
+
+**Two new build gotchas, both worth recording.** (1) `mach_mpoly` — usually reliable for exactly
+this kind of multi-atom identity — left a residual `-0=0` on the SPECIFIC 4-variable, degree-3
+identity needed here (closed by a follow-up `rw [neg_zero]` in the SAME tactic block); confirmed
+via an independent numerical check (5 random substitutions in Python) BEFORE debugging Lean that
+the gap was in the TACTIC, not the identity — avoiding wasted effort chasing a phantom math
+error. (2) `by_contra` is not a recognized tactic in this Mathlib-free codebase — the established
+`refine Classical.byContradiction (fun hcon => ?_)` pattern is required.
+
+**What remains, stated precisely — not vaguely "hard" anymore, but a well-defined remaining
+task.** The quadratic tool gives `S(E)<0` throughout a chosen `E`-interval; still needed: (a)
+translate the `E`-interval into an `x`-interval (via `E=exp(exp x)`, monotonic, so this is
+routine) and feed into `strictAnti_of_deriv_neg` to get `T` strictly decreasing there; (b) the
+MIRROR argument for a region where `S(E)>0` (using `strictMono_of_deriv_pos`, symmetric in
+structure — the "near E=1" positive region has an even simpler direct argument, not needing the
+quadratic tool at all, since `log(E)` there can be handled directly); (c) combine both directional
+results into the same 3-point non-monotonicity packaging used throughout this whole arc
+(`nonMonotonicWitness_not_monotone`'s own template). None of these are open MATHEMATICAL
+questions anymore — each is routine, mechanical Lean engineering using tools already proven or
+already available in the codebase. This is a genuinely different kind of "remaining work" than
+two rounds ago: then, the obstruction was not knowing HOW to close the gap; now, the path is
+fully mapped, just not yet walked.
+
+`#print axioms` clean, zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear.
+Full `lake build MachLib` passes (422 modules) — **thirty-eight new files in one session.**
