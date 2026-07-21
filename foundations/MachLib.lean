@@ -111,6 +111,7 @@ import MachLib.EMLZeroCrossingBothCompound
 import MachLib.EMLZeroCrossingBothCompoundGeneral
 import MachLib.EMLZeroCrossingBothCompoundDeeper
 import MachLib.EMLZeroCrossingConvexT1
+import MachLib.EMLZeroCrossingBothCompoundDeeperGeneral
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
