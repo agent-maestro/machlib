@@ -137,6 +137,7 @@ import MachLib.WitnessResidualRightChildrenEverywherePositive
 import MachLib.WitnessResidualGrowthCompetitionDeepWitness
 import MachLib.WitnessResidualDeepGSignControl
 import MachLib.WitnessResidualDeepDeriv
+import MachLib.WitnessResidualDeepNumeric
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
