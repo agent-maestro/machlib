@@ -2473,3 +2473,55 @@ not checked for the general case) is the natural next question.
 axioms), confirming this really is the simplest closure mechanism built this entire session.
 Zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib`
 passes (419 modules) — **thirty-five new files in one session.**
+
+## 2026-07-21 (cont. 24) — MILESTONE: the ENTIRE crossing-family closes, unconditionally, for
+ANY `c > 1` — the whole cont. 14–23 arc subsumed by one elementary argument
+
+**The generalization asked for, done in full.** Cont. 23 closed `expWrappedNonMonotonicWitnessC
+concreteC` specifically. The natural next question — does the "constant on a ray, two different
+`sin` values" mechanism generalize past that one instance — is answered YES, completely.
+
+**The one missing piece: `sin` is never eventually constant looking backward from ANY point**
+(`WitnessResidualEntireCrossingFamilyClosed.lean`, commit `401718f7`, `sin_two_different_values_le`).
+Built from `archimedean` (`∃n:Nat, x<natCast n`, already an axiom in `Basic.lean` — unused by
+this whole session until now) plus a period-shifting induction
+(`sin_sub_natCast_mul_two_pi`, mirroring `EMLPfaffian.lean`'s `sin_natCast_mul_pi` induction
+template exactly, just shifting by `2π` via `sin_periodic` instead of `π` via `sin_add`+`sin_pi`):
+for ANY target `a`, shift `0` and `π/2` far enough left (via Archimedean, using `π≥1` to convert
+a `Nat` bound into a `2π`-multiple bound) to land BOTH `≤ a` while preserving their `sin` values
+(`0` and `1` respectively) — no restriction on `a`'s sign or size at all.
+
+**Combined with two more small generalizations**: the clamped-region fact
+(`nonMonotonicWitnessC_eval_clamped_general`, previously proven separately for `1+1` and
+`concreteC` — the derivation never actually depended on the specific value, confirmed by lifting
+it to arbitrary `c > 1` directly) and the `exp`-wrap's own eval formula (trivial, `log 1 = 0`
+either way) — this closes `eml_depth2_witness_of_expwrapped_family`: **the ENTIRE
+`expWrappedNonMonotonicWitnessC c` family, for ANY `c > 1` and ANY `c2`, unconditionally.**
+
+**What this actually settles.** The whole "crossing-based construction" arc explored across
+cont. 14 through 23 — `nonMonotonicWitness` itself, its `exp`-wrap, the parametrized family, the
+positive-crossing instance, the `EMLPfaffianValidOn`-based resolution, and its correction — is
+now COMPLETELY closed as a source of potential witness-finding counterexamples, by ONE clean
+elementary argument needing no monotonicity, no boundedness, no `EMLPfaffianValidOn`, and (per
+`eml_depth2_witness_of_const_sibling_two_equal_points`, cont. 23) not even `c2 > 1`. Every
+earlier closure built for pieces of this family — unbounded above/below, strictly monotonic, the
+direct/wrapped-crossing lemmas, the heavy-machinery resolution — remains individually true and
+was NOT wasted effort (each is a genuine structural fact, and several apply well outside this one
+crossing shape) — but for THIS specific family, they are all now subsumed by this single,
+simpler mechanism.
+
+**What remains open, stated with the same care as every prior round.** This closes one large,
+natural, thoroughly-explored family — not every conceivable tree in the residual's open
+classification. The mechanism specifically needs `T1` CONSTANT (not merely bounded) on some
+unbounded ray; a tree that is bounded both directions and non-monotonic WITHOUT any such
+constant stretch — if one exists — would not be reached by it. No such tree has been found or
+ruled out anywhere in this whole arc. That remains the honest, standing open question for
+whoever continues.
+
+`#print axioms` clean on both new theorems — notably, `sin_two_different_values_le` doesn't even
+need `Classical.choice` (fully constructive); the combined family closure needs it only from the
+underlying `Classical.byContradiction` in the two-equal-points mechanism (cont. 23). No
+`HasDerivAt`, no `analytic_*`, no crossing/`EMLPfaffianValidOn` machinery — pure ordered-field
+algebra, `archimedean`, and `sin`'s own basic axioms. Zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (420
+modules) — **thirty-six new files in one session.**
