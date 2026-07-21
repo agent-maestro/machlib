@@ -3492,3 +3492,57 @@ build, but for both directions any differentiable right child could possibly tak
 foundational axioms plus `hasDerivAt_continuousAt` and `sup_exists`), no dependence on
 `EMLPfaffianValidOn`. Full `lake build MachLib` passes (436 modules, up from 435). One commit this
 round (`f5d40177`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 40) — MILESTONE: the "positive half" closed — `RightChildrenEverywherePositive`
+is essentially NECESSARY, not just sufficient, for a bounded compound tree in this grammar
+
+**Direct user request**: dig into the positive half, per its own framing at the end of cont. 39
+— extending `EMLPfaffianValidOn`-equivalent structure to non-crossing trees beyond what
+`RightChildrenEverywherePositive` already reaches. Worked through directly rather than assuming
+an answer either way; the honest conclusion is a genuine surprise: there is essentially nothing
+"beyond" it to find.
+
+**The necessary-condition theorem** (`WitnessResidualSignNecessity.lean`,
+`eml_A_B_bounded_above_sign_definite`): if `eml A B` is bounded above and `B` is differentiable
+everywhere, `B` must be SIGN-DEFINITE throughout `ℝ` — strictly positive everywhere, or
+non-positive everywhere. No third option. The proof is a direct application of the
+crossing-unboundedness machinery, packaged as a genuine necessary condition rather than a family
+of specific-shape refutations: `eml_A_B_unbounded_of_mixed_sign` shows that `B` taking BOTH a
+non-positive value (at some `p`) and a positive value (at some `q`) forces unboundedness
+regardless of which of `p, q` comes first — combining weakened versions of both directional
+crossing theorems (`B(x0) ≤ 0`, not necessarily exactly `0`, turned out to suffice — a genuine
+simplification over the exact-zero versions, discovered while building this).
+
+**Why the "non-positive everywhere" disjunct isn't genuinely new territory.** If `B ≤ 0`
+everywhere, `log(B)` clamps to `0` EVERYWHERE (`Real.log_nonpos`), so `eml A B` reduces IDENTICALLY
+to `exp(A.eval ·)` (`eml_A_B_eq_exp_A_of_nonpos`, three lines) — the entire `B`-branch is dead
+code, a disguised way to write a strictly simpler tree that drops `B` entirely. A tree built this
+way contributes nothing a tree without the `B`-branch didn't already have; its own boundedness
+becomes a question about `A` alone, recursively — not a new construction at all.
+
+**The upshot, stated as plainly as the original question.** At EVERY `eml`-node in a bounded
+compound tree, the right child must be either (a) globally positive (`RightChildrenEverywherePositive`'s
+own condition, already built) or (b) globally non-positive (degenerate, reduces the node away).
+There is nothing meaningfully "beyond `RightChildrenEverywherePositive`" within this grammar — not
+because this arc hasn't found it yet, but because the crossing-unboundedness results, now
+packaged this way, show there is nothing left of that kind to find. This closes the positive half
+of the original Option D tree-depth induction question about as definitively as the negative half
+was closed two rounds ago: not by exhausting shapes one at a time, but by characterizing the
+constraint directly and showing it's tight.
+
+**Honest scope, precisely — this is NOT the same as "the whole induction is closed."** This is a
+ONE-LEVEL necessary condition (about a single `eml A B` node's own immediate right child). Turning
+it into a full statement about an ENTIRE compound tree (recursively, at every node) needs a
+structural induction applying this same dichotomy at every level — not carried out here. What
+this round DOES establish is that the mathematical CONTENT such a recursion would need at each
+step is now a genuine theorem, not an assumption or a per-shape argument. Also left untouched:
+whether `EMLPfaffianValidOn`'s own INTERVAL-based (not global) formulation could admit trees
+bounded only on a restricted range via crossings entirely outside it — not useful for the
+residual's own purposes (which needs boundedness on all of `ℝ`, matching `sin`'s domain) but a
+genuinely distinct question from what's closed here.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: same axiom footprint as the
+crossing-unboundedness results it's built on (foundational axioms plus `hasDerivAt_continuousAt`
+and `sup_exists`) — no dependence on `EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality`
+anywhere. Full `lake build MachLib` passes (437 modules, up from 436). One commit this round
+(`46467b9a`, plus this docs commit), pushed.
