@@ -3220,3 +3220,59 @@ to plug into it (open-ended, numeric-first per house style, comparable in scope 
 No files changed, no build run — pure research/survey round, recorded here so the next session
 doesn't have to re-derive the import-graph check or re-read the ten `EMLZeroCrossing*.lean`
 signatures from scratch.
+
+## 2026-07-21 (cont. 35) — item (1) from cont. 34 built: the elementary zero-crossing family is
+now WIRED into the witness-finding closure, a second, fully independent mechanism confirmed to
+work via a genuinely fresh `#print axioms`
+
+**Direct user request**: "yes please" to starting item (1) from cont. 34's scoped next steps.
+`WitnessResidualConvexZeroBoundClosure.lean` closes it in one round.
+
+**The bound** (`convexT1_sub_const_atMostTwoZeros`): the one shape `EMLZeroCrossing*.lean` didn't
+have — generic/convex `t1`, CONSTANT `t2` (every existing generic-`t1` theorem there needs `t2`
+to have a genuine sign crossing to domain-split on; a constant `t2` has none). Turned out simpler
+than scoped: no `exp`/`log` wrapping needed at all. The cont. 34 write-up's own sketch mistakenly
+modeled the target quantity as `exp(t1eval x) - log K`, mirroring the EML-tree-eval SHAPE `eml t1
+(const K)` — but the ACTUAL quantity the target-shift argument needs a bound on is `T1eval(x) - L`
+DIRECTLY (`L := log c2`), not an `eml`-wrapped version of it. Caught this BEFORE writing any Lean,
+by re-deriving on paper what `no_tree_eq_target_given_validon` actually bounds — a genuine
+simplification, and a good instance of why "verify on paper first" catches real design errors,
+not just algebra slips. `t1eval` convex on `(c,d)` ⟹ `t1deriv` strictly increasing (from
+`t1deriv2>0`) hence injective hence `≤1` zero (`atMostOneZero_of_strictMono` +
+`strictMono_of_deriv_pos`, both pre-existing); Rolle (`zero_count_bound_by_deriv`) lifts that to
+`≤2` zeros of `t1eval - L` itself — genuinely "nearly free wiring," as scoped.
+
+**The closure** (`no_tree_eq_target_given_zero_bound`): same `M+1`-witness-points-at-`kπ`
+construction as `no_tree_eq_target_given_validon`, `M` supplied directly by the caller instead of
+derived via `enc`/`combinedBoundE` — so `EMLPfaffianValidOn`/`LogArgPosOn`/the Khovanskii encoder
+never appear anywhere. Also dropped `hTargetPi1` (the original's non-degeneracy witness) entirely
+— purely an artifact of `enc_combinedBound`'s own API; a convex/bounded-critical-point `T1eval`
+can't be identically `L`, so nothing separate is needed here. `eml_depth2_witness_of_const_gt_
+one_sibling_convexT1` mirrors `..._right_children_everywhere_positive`'s shape exactly, substituting
+this mechanism for that one.
+
+**Verified, not just claimed**: `#print axioms`, from a genuinely fresh rebuild (`rm .olean/.c` +
+rebuild + `lake env lean` on a scratch import), confirms `eml_depth2_witness_of_const_gt_one_
+sibling_convexT1` depends on nothing beyond the foundational `HasDerivAt` axiom calculus, Rolle's
+theorem, and `sin`/`pi`'s own basic axioms — grepped the FULL output for `EMLPfaffianValidOn`/
+`eml_pfaffian_validon_from_sin_equality`/`sorry`: none appear. This is a real, independent,
+COMPILED confirmation of the cont. 34 hypothesis — a second, fully disconnected mechanism
+genuinely closes this residual, for tree shapes `RightChildrenEverywherePositive` structurally
+cannot reach (convex `T1`, not built from never-clamping right-child wrappers).
+
+**Sanity check, same discipline as every prior generalization in this arc**:
+`eml_var_const_c1_witness_via_convexT1` instantiates the whole pipeline on a genuine `EMLTree`
+(`T1 := eml var (const c1)`, convex everywhere since `t1deriv=t1deriv2=exp`), confirming it
+composes end to end and not just type-checks in the abstract. Honestly NOT new residual coverage
+on its own — this `T1` is unbounded above, already closed by the far easier "unbounded-T1" case —
+its only job is confirming the machinery is real.
+
+**What's still open, unchanged from cont. 34's own honest limit**: a function convex on ALL of
+`(1,∞)` and non-constant is necessarily unbounded (basic calculus) — so reaching genuinely NEW
+residual coverage (a bounded, non-monotonic `T1` with a crossing right child, not reachable via
+`RightChildrenEverywherePositive` either) still needs a fresh concrete witness construction, not
+attempted this round. That remains item (2) from cont. 34's scoping, open-ended, comparable to
+the original `growthCompetitionWitness` hunt.
+
+Full `lake build MachLib` passes (433 modules, up from 432). One commit this round (`3f0c0d06`,
+plus this docs commit), pushed.
