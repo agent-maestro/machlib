@@ -1910,3 +1910,72 @@ continues.
 axioms (`sin_zero`, `sin_pi`, `pi_pos` — nothing new), zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (408
 modules, same file extended) — still twenty-three files today, one theorem added.
+
+## 2026-07-20 (cont. 14) — MILESTONE: answering "is every such tree monotonic" — NO, decisively,
+## with a fully verified counterexample
+
+Per direct request to attack this exact research question. Worked the answer out ENTIRELY on
+paper first (numerically checked with `python3` at every stage before writing a line of Lean),
+then formalized completely — including the boundedness half, which took a real correction
+mid-derivation (an initial "paper" step conflated an inequality with an equality; caught before
+formalizing by re-deriving carefully, not by a failed Lean proof).
+
+**The tree**: `T := eml var (eml (eml var (const 1)) (eml var (const (1+1))))` — `T`'s right
+child `B` has its OWN right child `D = eml var (const (1+1))` that genuinely crosses zero,
+triggering `log`'s clamp. This is the key structural difference from every prior instance this
+session built (all of which kept every internal log-argument permanently positive or permanently
+non-positive) — and it's exactly what breaks monotonicity.
+
+**The exact sign characterization — no derivatives, no numerics, needed at all.** Write
+`x0 := log(log(1+1))` (where `D` crosses zero) and, for `x > x0`, `v := exp(x) - log(1+1) = D.eval
+x > 0`. Two ONE-STEP facts, both proved by applying `exp` (strictly increasing) to the candidate
+inequality and using `exp∘log = id`:
+- `v > 1 ⟹ T.eval x > 0`
+- `0 < v < 1 ⟹ T.eval x < 0`
+
+Combined with `T.eval x = 0` exactly for `x ≤ x0` (the clamped region — `log(exp(exp x)) = exp x`
+cancels cleanly), three points give a `flat → down → up` VALLEY: `x_a := x0` (`T=0`), `x_b` with
+`v=1/(1+1)` (`T<0`), `x_c` with `v=1+1` (`T>0`), `x_a<x_b<x_c`. `T(x_a)>T(x_b)` refutes
+monotone-increasing; `T(x_b)<T(x_c)` refutes monotone-decreasing — simultaneously, no derivative
+of any kind, no interval-wide argument, just three explicit point evaluations via the exact
+characterization above.
+
+**Boundedness — the part that needed real care, and where the correction happened.** An initial
+attempt at a uniform upper bound tried to show `exp(exp x) - D = exp(D)` EXACTLY — this is FALSE
+(`exp(D) > D` always, by `exp_grows_strictly_thm`, so the two sides can never be equal). Caught by
+re-deriving the chain by hand a second time before writing Lean, not by a failed compile. The
+CORRECT chain is a pure INEQUALITY throughout: `log D < D` (`log_lt_self_of_pos`) gives `exp(exp
+x) - D < exp(exp x) - log D`; separately, `exp(exp x) = (1+1)·exp D` (`exp_add` + `exp_log`)
+combined with `D < exp D` gives `exp D < exp(exp x) - D`; chaining gives `exp D < exp(exp x) -
+log D`, hence (`log_lt_log` + `log_exp`) `D < log(exp(exp x) - log D)`, hence `T.eval x < exp x -
+D = log(1+1)` — a UNIFORM bound across every real `x`, not an asymptotic or numerically-estimated
+one, and needing no transcendental critical point (unlike an earlier, abandoned attempt at the
+TIGHT bound, which does need one — the loose bound sufficed and stayed fully elementary).
+
+**Two more build-friction items, both quick once found.** `set` is unavailable in this codebase
+(re-confirmed, already known) — used explicit full expressions throughout instead of a local
+abbreviation, at some cost to readability but zero cost to correctness. And two small, fully
+general, `mach_ring`-free algebraic helpers needed building (`add_sub_cancel_right_local`,
+`sub_self_sub_local`, `two_mul_eq_add_self`) — the by-now-established workaround pattern for
+`mach_ring`'s specific reordering gap, applied a fourth time today without needing to
+rediscover the diagnosis.
+
+**The result** (`bounded_nonmonotonic_eml_tree_exists`): `nonMonotonicWitness` is bounded above by
+`log(1+1)` EVERYWHERE and monotonic in NEITHER direction — a complete, airtight, fully verified
+counterexample. **This decisively answers last entry's open question: NO, the cheap
+injectivity/periodicity closure does NOT generalize to the whole residual.** Some bounded,
+non-`RightChildrenSimplePositive` EML trees genuinely oscillate, so ruling out this whole class
+(if possible) needs the heavier zero-counting machinery built earlier in this arc — there is no
+universal shortcut.
+
+**Honest scope, precisely stated.** This closes the QUESTION (not the residual itself) — it shows
+the easy path doesn't exist in general, it doesn't newly close or newly obstruct the axiom. What
+it DOES give whoever continues: a concrete, verified example of exactly the kind of non-monotonic
+bounded behavior the heavier machinery needs to handle, useful as a test case for any future
+zero-counting attempt on this specific residual.
+
+`#print axioms` clean on every new theorem including the packaged final result, only base
+MachLib primitives — notably NO `HasDerivAt`/Rolle machinery anywhere in this whole file, pure
+algebra throughout (the same was true of the previous two entries too) — zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (409
+modules) — **twenty-four new files in one session.**
