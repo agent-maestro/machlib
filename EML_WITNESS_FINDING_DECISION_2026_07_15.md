@@ -3397,3 +3397,60 @@ not a cleverer witness search.
 ordered-field/exp/log axioms, nothing else — no dependence on
 `eml_pfaffian_validon_from_sin_equality`. Full `lake build MachLib` passes (434 modules, up from
 433). One commit this round (`68a458d4`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 38) — digging into the original tree-depth induction, per direct request:
+the crossing-unboundedness result generalized to ANY EML tree, via the real IVT
+
+**Direct user request: "the original tree-depth induction from Option D's own framing — lets dig
+into this please."** Cont. 37's theorem was still tied to one concrete crossing shape (`eml var
+(const c)`); its proof mechanism (`exp(A)≥0` can't cancel `-log(B)→+∞`) never actually needed
+`B`'s specific closed form — only that `B` could be driven to hit any target value. Removing that
+dependency needed a genuine tool this arc had built but never exercised: the real Intermediate
+Value Theorem.
+
+**Found it already sitting in the codebase, unused for this purpose.** `IntermediateValue.lean`
+(375 lines) proves a COMPLETE, in-model IVT (`intermediate_value`, from the completeness axiom
+`sup_exists`, via a sup-construction and sign-preservation lemmas around `ContinuousAt`) plus a
+`HasDerivAt`-friendly wrapper (`intermediate_value_of_hasDerivAt`) — built at some earlier point
+in this codebase's history (Gate 2d / IFT gate work) but never once used anywhere in the whole
+Option D witness-finding arc until this round.
+
+**The generalized theorem** (`WitnessResidualCrossingUnboundedGeneral.lean`,
+`eml_A_crossing_B_unbounded_above`): if `B.eval` crosses zero genuinely — `B(x0)=0`, `B(x1)>0`
+for SOME `x0<x1`, differentiable throughout `[x0,x1]` — then `eml A B` is unbounded above, for
+ANY `A` and for ANY EML tree `B` whatsoever, not just `eml var (const c)`. Proof, worked out on
+paper first: for target `M`, either `exp(-(M+1)) < B(x1)` (apply IVT to `B(z)-exp(-(M+1))` on
+`[x0,x1]`, getting an EXACT point where `B` equals `exp(-(M+1))`), or `B(x1) ≤ exp(-(M+1))`
+already (in which case `x1` itself works directly via `log`'s monotonicity, no IVT needed at
+all). Either way `exp(A)≥0` unconditionally can't cancel the resulting `-log(B) ≥ M+1`.
+
+**Confirmed via a sanity-check corollary**: `eml_A_crossing_var_const_unbounded_above_via_general`
+re-derives cont. 37's hand-built theorem exactly (`B := eml var (const c)`, `x0 := log(log c)`,
+`x1 := x0+1`, reusing the pre-existing `hasDerivAt_evarConstC`) — the generalization captures the
+same content, not merely a similar-looking one.
+
+**What this settles for the induction, precisely.** Every EML tree ever built anywhere in this
+40+-file arc with a genuine finite-point right-child crossing uses `eml var (const c)` as that
+crossing — the ONLY crossing primitive this whole investigation has ever constructed. This
+theorem now shows unboundedness holds for ANY genuine crossing whatsoever, differentiable and
+sign-changing, regardless of shape or depth — meaning even a hypothetical future construction
+using some entirely different crossing primitive would hit the same wall, PROVIDED it's
+differentiable and genuinely changes sign at a finite point (the only real constraint left). This
+is the tree-depth-induction spirit of the original Option D framing, done for real: a fact about
+the `eml`-constructor's own structure (`exp≥0`, IVT for differentiable functions), not a
+shape-by-shape enumeration that needs re-doing for every new tree shape someone thinks up.
+
+**What's still, honestly, not covered by this**: a right child that ISN'T differentiable
+everywhere on the relevant interval (this codebase's own `EMLTree.eval` is always differentiable
+away from isolated non-generic points via the standard `HasDerivAt` composition machinery, so this
+is unlikely to bite in practice, but wasn't formally ruled out); and the POSITIVE side of the
+tree-depth induction (establishing `EMLPfaffianValidOn`-equivalent structure for trees whose right
+children DON'T cross, beyond `RightChildrenEverywherePositive`'s current reach) remains untouched
+— this round closes the unboundedness/negative half definitively, not the whole original question.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: depends only on foundational
+`MachLib.Real` axioms plus `hasDerivAt_continuousAt` (`IntermediateValue.lean`'s one analytic
+bridge axiom) and `sup_exists` (the completeness axiom, already trusted throughout this codebase)
+— no dependence on `EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality`. Full `lake
+build MachLib` passes (435 modules, up from 434). One commit this round (`ca5680ca`, plus this
+docs commit), pushed.
