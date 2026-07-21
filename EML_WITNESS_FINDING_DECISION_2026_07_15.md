@@ -1808,3 +1808,70 @@ primitives (`propext`, `Classical.choice`, `Quot.sound`, plus foundational `exp`
 NO `HasDerivAt`/Rolle machinery needed at all for this piece, it's pure algebra), zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (407
 modules) — **twenty-two new files in one session.**
+
+## 2026-07-20 (cont. 12) — MILESTONE: the "bounded ⟹ constant" conjecture is FALSE — an explicit,
+## fully verified counterexample
+
+Per continued "proceed please," pursued the question raised last entry. Worked the construction
+out completely on paper first, checked it numerically (`python3`, `c=2`) BEFORE writing any Lean —
+per this project's established discipline — then formalized it in full, including strict
+monotonicity via the derivative.
+
+**The tree**: `T1 := eml var (eml (eml var (const 1)) (const c))`, for `1 < c < e`. Unfolds to
+`T1.eval x = exp(x) - log(exp(exp(x)) - log c)`.
+
+**Why it's bounded, both directions, uniformly (not asymptotically).** Write `w := exp(exp(x))`,
+always `> 1`. Both bounds reduce to trivial facts by applying `exp` (strictly increasing) to a
+candidate inequality and using `exp∘log = id`:
+- Lower (`T1.eval x > 0`): reduces to `0 > -log c`, i.e. `log c > 0` — true since `c > 1`.
+- Upper (`T1.eval x < -log(1-log c)`): reduces, after multiplying through by `exp(exp x)` and
+  using `exp(log(1-log c)) = 1-log c`, to `1 < exp(exp x)` — always true.
+
+Numerically verified first (`c=2`: values run from `≈1.166` at `x=-5` down toward `0` as
+`x→+∞`, staying below the bound `≈1.181`) — the numeric check caught nothing wrong, but running
+it before formalizing (rather than after) is the discipline that matters.
+
+**Why it's non-constant — strictly, via the derivative, not just a two-point check.** A first
+attempt tried "just compare `T1.eval 0` and `T1.eval 1`" as a cheap non-constant witness — this
+does NOT work as a cheap shortcut: both bounds are compatible with either value, so a genuine
+quantitative argument is needed regardless. Went straight to the derivative instead:
+`T1'(x) = -exp(x)·log(c) / (exp(exp(x)) - log c)` — strictly negative everywhere (numerator and
+denominator both positive, `c > 1`) — giving `T1` STRICTLY DECREASING on all of `ℝ`, hence
+non-constant AND injective, via `strictAnti_of_deriv_neg` (MVT-based, already in the codebase).
+
+**A real, previously-unflagged `mach_ring` limitation, pinned down precisely this time.**
+`mach_ring` reliably fails — not sometimes, reliably — on any goal where a sub-expression (bare
+variable OR product) must be recognized as the SAME quantity after appearing multiplied into a
+larger product on one side of an equation and standing separately on the other — e.g. `a*b + (-b
++ -(a*b)) = -b` fails, but the syntactically-identical-after-substitution `X + (-b + -X) = -b`
+(with `X` a genuinely free variable from the theorem's own binders) succeeds. Confirmed this isn't
+fixed by `generalize` first either — the post-`generalize` goal LOOKS identical to the
+free-variable version but still fails, meaning `mach_ring`'s difficulty tracks something about
+*how* a term entered the context, not just its printed shape. The reliable fix, applied
+throughout this file: never let `mach_ring` see a repeated non-atomic sub-term inside a
+multi-term sum or a multiply-then-regroup identity — perform the regrouping via explicit
+`rw [mul_comm, mul_assoc, ...]` first, and use `mach_ring` only for pure distribution or 2-term
+cancellation (both confirmed reliable via isolated tests before use). Two small, fully general,
+`mach_ring`-free helper lemmas (`neg_lt_neg_local`, `sub_lt_sub_left_local`) built once and reused
+throughout, rather than re-deriving the same cancellation ad hoc at each call site.
+
+**What this settles, and what it doesn't.** The witness-finding residual's hypothesis ("`T1`
+bounded above and non-constant") is confirmed NON-VACUOUS — the conjecture from last entry is
+FALSE, refuted by an explicit, compiled, axiom-checked example. This does NOT close the residual
+— this is one family, not every possible bounded non-simple tree — but it answers the "is it even
+possible" question decisively, and does so with a MUCH stronger result than needed (full strict
+monotonicity, not just non-constancy).
+
+**The natural next step, sketched but not yet formalized.** `T1` being strictly monotonic makes it
+INJECTIVE — takes each value at most once. `log(c2+sin x)` is `2π`-PERIODIC, hence NOT injective
+for any non-constant case (`sin(x) = sin(x+2π)` for all `x`). An injective function cannot equal a
+non-injective one globally. So THIS PARTICULAR counterexample, despite refuting the general
+conjecture, is immediately ruled out as a witness-finding obstruction by a simple
+injectivity/periodicity mismatch — no zero-counting needed at all. Not formalized this round;
+a natural, well-scoped next piece for whoever continues (formalize `sin`'s periodicity gives
+non-injectivity of the shifted target, then the injective-vs-non-injective contradiction directly).
+
+`#print axioms` clean on all new theorems (including the full strict-monotonicity result), only
+base MachLib primitives (`HasDerivAt`/Rolle/algebra — no encoder/chain/validity machinery
+anywhere), zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full
+`lake build MachLib` passes (408 modules) — **twenty-three new files in one session.**
