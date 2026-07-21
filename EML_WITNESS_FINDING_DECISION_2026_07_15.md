@@ -3454,3 +3454,41 @@ bridge axiom) and `sup_exists` (the completeness axiom, already trusted througho
 — no dependence on `EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality`. Full `lake
 build MachLib` passes (435 modules, up from 434). One commit this round (`ca5680ca`, plus this
 docs commit), pushed.
+
+## 2026-07-21 (cont. 39) — closing the direction-symmetry gap: the crossing-unboundedness result
+now covers BOTH directions a right child can cross zero
+
+**Direct user request: "proceed."** While considering the cont. 38 theorem's scope, noticed every
+crossing subtree this whole arc has ever built (`eml var (const c)` and everything derived from
+it) happens to INCREASE through zero (negative-then-positive, left to right) — the theorem's
+hypotheses (`B(x0)=0, B(x1)>0` for `x0<x1`) only cover that one direction. The underlying
+mechanism is obviously direction-agnostic (`exp(A)≥0` blocks cancellation regardless of which
+side of the touch point `B` is small-and-positive on) but this was worth checking formally rather
+than assuming — especially since `boundedNonConstantWitness` is PROVEN DECREASING
+(`boundedNonConstantWitness_deriv_neg`), making a decreasing-through-zero right child (e.g.
+`eml (boundedNonConstantWitness c) (const K)` for `K` large enough) a real, buildable candidate
+worth ruling out explicitly rather than by analogy.
+
+**`eml_A_crossing_B_unbounded_above_mirror`** (`WitnessResidualCrossingUnboundedMirror.lean`): `B`
+positive at an EARLIER point `x0`, zero at a LATER point `x1` (decreasing-through-zero) — `eml A
+B` is STILL unbounded above, for any `A`. Same IVT proof shape as the increasing case, just with
+the auxiliary function's sign flipped (`h(z) := exp(-(M+1)) - B(z)` instead of `B(z) -
+exp(-(M+1))`) so `intermediate_value_of_hasDerivAt`'s required negative-then-positive order (left
+to right) is still satisfied — genuinely mechanical once the increasing case existed to mirror,
+no new mathematical content.
+
+**`eml_A_crossing_B_unbounded_above_either_direction`**: packages both directions into one
+theorem (`B(p)=0 ∧ 0<B(q)` OR `0<B(p) ∧ B(q)=0`) for callers who just know a crossing exists
+somewhere without knowing which side is which.
+
+**What this closes, precisely.** A differentiable real function crossing zero transversally is
+LOCALLY either increasing or decreasing through it — there is no third direction to check (this
+is a basic fact about ℝ, not something specific to EML trees). Between cont. 38's theorem and
+this round's mirror, the tree-depth induction's negative half is now closed EXHAUSTIVELY for
+finite-point transversal crossings — not just for the one crossing direction this arc happened to
+build, but for both directions any differentiable right child could possibly take.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: same axiom footprint as cont. 38 (only
+foundational axioms plus `hasDerivAt_continuousAt` and `sup_exists`), no dependence on
+`EMLPfaffianValidOn`. Full `lake build MachLib` passes (436 modules, up from 435). One commit this
+round (`f5d40177`, plus this docs commit), pushed.
