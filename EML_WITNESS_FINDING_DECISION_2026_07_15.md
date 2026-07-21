@@ -2821,3 +2821,65 @@ here as solved.
 
 Full `lake build MachLib` passes (426 modules). Two files this round
 (`WitnessResidualGrowthCompetitionValidOn.lean`, new), zero `sorry` anywhere in the new work.
+
+## 2026-07-21 (cont. 29) — the no-clamp `EMLPfaffianValidOn` route GENERALIZED past
+`growthCompetitionWitness`, confirmed correct via a research pass + a sanity-check corollary
+
+**Direct user request: "proceed please"**, continuing from cont. 28's flagged follow-up: is the
+"no clamp anywhere ⟹ `EMLPfaffianValidOn` is free" mechanism tied to `growthCompetitionWitness`'s
+specific shape, or genuinely general? Dispatched a research agent first (read-only, no edits) to
+survey the existing `EMLPfaffianValidOn` machinery end to end before building anything — confirmed
+no such general predicate already existed in the committed codebase, and gave a complete map of
+every file that constructs or consumes the predicate (the OTHER existing route,
+`eml_pfaffian_validon_of_witnesses_backward`/`_twosided` in `EMLSmoothness.lean`, derives validity
+from a single-point witness + no-crossing + differentiability — more powerful in principle, but
+needs exactly the crossing-analysis machinery this arc has spent weeks building one shape at a
+time; genuinely complementary to what follows, not overlapping).
+
+**`RightChildrenEverywherePositive`** (`WitnessResidualRightChildrenEverywherePositive.lean`):
+`True` at leaves; at `eml t1 t2`, both children recursively satisfy it AND `t2` is positive for
+EVERY `x` — no interval, no case split. `EMLPfaffianValidOn_of_right_children_everywhere_positive`
+converts this into `EMLPfaffianValidOn T a b` for ANY `a,b`, via one structural induction
+MIRRORING `EMLPfaffianValidOn`'s own recursive definition exactly — the induction step is a single
+line, since the only thing changing is weakening a bare `∀x` into `∀x∈(a,b)`.
+
+**One real build hiccup, worth recording precisely — a stale-cache FALSE POSITIVE.** The first
+draft compiled with "Build completed successfully" and no errors from `lake build
+MachLib.ZZZTestGeneralValidOn`, but a subsequent `#print axioms` on the SAME theorem names failed
+with "unknown constant" — the targeted build had silently read a stale cached `.olean` from an
+EARLIER, differently-named file state, not the actual current source. This is the SAME class of
+gotcha flagged before (`feedback_lake_targeted_build_stale_measurement` in memory) but caught here
+via the SAME discipline that flagged it originally: always verify with `#print axioms` from a
+FRESH import, never trust a bare "successfully built" message alone. Forcing a clean rebuild (`rm`
+the `.olean`/`.c` artifacts, rebuild) surfaced the REAL error: a mis-nested anonymous constructor
+in `boundedNonConstantWitness_RightChildrenEverywherePositive` (missing the `1<c` hypothesis
+entirely, silently absorbed by the wrong slot in the nesting). Fixed by re-deriving the EXACT
+nested `∧`-structure by hand (right-associative, matching `EMLPfaffianValidOn`'s own shape level
+by level) before re-writing the `refine`.
+
+**Relationship to `RightChildrenSimplePositive`** (the FIRST unconditional closure in the whole
+arc, `WitnessResidualSimpleRightChildren.lean`): strictly more general — that predicate ADDITIONALLY
+requires every right child to be a LEAF (`var`/positive constant); this one only needs positivity,
+allowing arbitrarily compound right children as long as their positivity is provable by OTHER
+means (a derivative argument, an algebraic identity, whatever — `growthCompetitionWitness`'s own
+right children are the concrete witness that this genuinely expands the reachable class, not just
+restates it).
+
+**Verified, not just asserted**: `growthCompetitionWitness_EMLPfaffianValidOn_via_general`
+re-derives cont. 28's hand-built result EXACTLY through the new general machinery — confirms the
+generalization captures the same content.
+
+**Honestly checked and left open**: whether any OTHER tree already built in this arc satisfies
+`RightChildrenEverywherePositive`. Every other compound-tree investigation here
+(`EMLZeroCrossingDomainSplit*.lean` and its many variants) DELIBERATELY explores trees whose right
+children DO cross zero — the interesting, hard case this predicate structurally excludes by
+design (checked the most memory-famous blocking example, the `WitnessResidualCancellation.lean`
+"conspiratorial cancellation" counterexample, but it's already known-harmless since it's CONSTANT,
+outside the residual's own hypotheses — not a genuine second application, just ruled out). Whether
+a genuinely NEW, non-constant tree exists that's compound AND covered by this predicate is real,
+unexplored future work — this round's honest scope was confirming the generalization is SOUND and
+reproduces the known result, not hunting for a second instance.
+
+Full `lake build MachLib` passes (427 modules). `#print axioms`, checked from a genuinely FRESH
+rebuild (not a stale-cache read, per the gotcha above): zero `sorryAx`, no dependence on
+`eml_pfaffian_validon_from_sin_equality`.
