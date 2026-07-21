@@ -2883,3 +2883,39 @@ reproduces the known result, not hunting for a second instance.
 Full `lake build MachLib` passes (427 modules). `#print axioms`, checked from a genuinely FRESH
 rebuild (not a stale-cache read, per the gotcha above): zero `sorryAx`, no dependence on
 `eml_pfaffian_validon_from_sin_equality`.
+
+## 2026-07-21 (cont. 30) — the CLOSURE THEOREM itself generalized: a two-tree result becomes an
+infinite-family one; a real factual error caught and fixed in the previous round's own docs
+
+**Direct user request: "proceed please."** Cont. 29 generalized the VALIDITY derivation
+(`RightChildrenEverywherePositive` ⟹ `EMLPfaffianValidOn`) but left the CLOSURE theorem itself
+(`eml_depth2_witness_of_const_gt_one_sibling_growthCompetition`) specific to
+`growthCompetitionWitness`. Checked whether that specificity was load-bearing — it wasn't:
+the proof never touches anything about `growthCompetitionWitness` beyond feeding its
+`EMLPfaffianValidOn` into `eml_T1eq_of_const_sibling_le_zero` and `T1_not_eq_log_c2_plus_sin_
+given_validon`, BOTH already tree-agnostic. Restating the closure to take `RightChildrenEverywhere
+Positive T1` directly, for an ARBITRARY `T1`, turns a two-tree result into an infinite-family one:
+`eml_depth2_witness_of_const_gt_one_sibling_right_children_everywhere_positive`. ANY tree
+satisfying the predicate — not just this one construction — can never be part of a witness-finding
+counterexample. Verified (not just asserted) via a sanity-check corollary reproducing the
+`growthCompetitionWitness`-specific closure exactly.
+
+**A real factual error caught and fixed, worth recording precisely.** Cont. 29's own docstring
+claimed `RightChildrenSimplePositive` trees "trivially satisfy" `RightChildrenEverywherePositive`
+too, calling the new predicate "strictly more general." FALSE — checked `RightChildrenSimplePositive`'s
+actual definition (`WitnessResidualSimpleRightChildren.lean`) directly rather than trusting the
+earlier characterization, and it explicitly allows a bare `var` as a right child
+(`t2 = EMLTree.var ∨ ...`). `var.eval x = x` is NOT positive for `x ≤ 0` — so a
+`RightChildrenSimplePositive` tree with a `var` right child does NOT satisfy `RightChildrenEverywhere
+Positive`. That predicate's own closure mechanism (`eml_witnesses_of_right_children_simple_positive`)
+only ever needs a SINGLE-POINT witness (`EMLWitnesses A x0` at some `x0 > 0`), not uniform
+positivity — a genuinely DIFFERENT technique, not a weaker case of this one. The two predicates
+are INCOMPARABLE — neither contains the other — not a subsumption in either direction. Corrected
+both the module docstring and the predicate's own doc-comment in the same commit. Caught by simply
+re-reading the source definition instead of trusting an earlier paraphrase — the same discipline
+("verify against source, not memory/assumption") that's paid off repeatedly throughout this whole
+arc, this time catching an error in THIS session's own prior work rather than inherited confusion.
+
+Full `lake build MachLib` passes (427 modules). `#print axioms`, checked from a genuinely fresh
+rebuild per the stale-cache lesson from cont. 29: zero `sorryAx`, no dependence on
+`eml_pfaffian_validon_from_sin_equality` on either new theorem.
