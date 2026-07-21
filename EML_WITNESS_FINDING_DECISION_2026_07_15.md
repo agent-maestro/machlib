@@ -2087,3 +2087,58 @@ pulls in `HasDerivAt`/`rolle_ct` (inherited from `boundedNonConstantWitness`'s o
 strict-monotonicity proof, not from the new theorem itself). Zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` doesn't appear. Full `lake build MachLib` passes (412
 modules) — **twenty-eight new files in one session.**
+
+## 2026-07-20 (cont. 17) — testing the residual's edges by construction; a real generalization
+found, a bigger structural question named but not attempted
+
+**The question this round actually asked.** With the residual now EXACTLY characterized (T1
+bounded both directions + non-constant + non-simple + non-monotonic), the natural next move is
+to either FIND a tree meeting all four, or find evidence none exists. Explored on paper (not all
+formalized): tried several hand constructions attempting to make `nonMonotonicWitness`'s clamp-
+triggered blow-up "cancel" instead of diverge — e.g. wrapping the blow-up in a further `exp`
+(makes it worse, doubly-exponential), trying to match growth rates between two branches sharing
+the same crossing quantity (`exp` of a diverging quantity always dominates any competing `log`
+term additively, never balances it — checked concretely for several shapes). No cancellation
+construction found; every attempt diverges in one direction or the other, same as
+`nonMonotonicWitness` itself. **This is evidence, not a proof** — a real structural obstruction
+kept reappearing (any further composition of a genuine log-blow-up never re-bounds it via the
+`exp(t1)-log(t2)` grammar), but it wasn't formalized as a general claim this round.
+
+**One separate, genuinely interesting finding along the way, not pursued further**: non-
+monotonicity does NOT require a clamp/crossing at all. `T := eml var (eml var (const 1))`
+(`T.eval x = exp(exp x) - x`) has derivative `exp(exp x)·exp(x) - 1`, negative as `x→-∞` and
+positive as `x→+∞` — a genuine sign change with NO log-clamp anywhere in the tree (`eml var
+(const 1)`'s own right child, `const 1`, never crosses zero). Purely a GROWTH-RATE competition
+between `exp(exp x)` and `x`. Not formalized (not needed — this tree is unbounded above, so it
+already closes via the existing unbounded-above theorem regardless of monotonicity), but worth
+recording: "non-monotonic" and "has an internal crossing" are NOT the same property, even though
+every counterexample built so far in this arc happens to use a crossing.
+
+**What WAS formalized: a genuine generalization, not just more exploration**
+(`WitnessResidualDirectCrossingUnboundedAbove.lean`, commit `9c08c0c3`). `nonMonotonicWitness`'s own
+inner subtree `B := eml (eml var (const 1)) (eml var (const 2))` diverges to `+∞` near its right
+child's crossing point — but nothing in that argument used `B`'s specific left child at all, only
+`exp(anything) > 0`. Generalized: `eml_unbounded_above_of_direct_crossing` — `eml P (eml var
+(const c))` is unbounded above for ANY `P` and ANY `c > 1`, same explicit closed-form witness
+technique as cont. 15 (`x := log(log c + d)` makes the crossing's value exactly `d`, chosen small
+enough that `-log d` exceeds any target `M`). Combined with the existing unbounded-above closure:
+`eml_depth2_witness_of_direct_crossing_T1` — the WHOLE FAMILY of trees shaped `eml P (eml var
+(const c))`, for ANY `P` and ANY `c > 1`, can never be a real witness-finding counterexample. Not
+one hardcoded instance (as `nonMonotonicWitness`'s own inner `B` was) — the whole shape.
+
+**Honest scope, precisely stated.** This closes the "crossing directly under the root" case in
+full generality — a genuine broadening from "we checked ONE P" to "ANY P, provably." It does NOT
+touch crossings buried DEEPER (like `nonMonotonicWitness`'s own two-level nesting) in general —
+that needs tracking a LOCAL blow-up near a specific finite point combined with the outer
+wrapper's local boundedness THERE, which in turn would need some notion of "EML tree
+continuous/bounded near a point" not yet built in this codebase. Named as the natural next
+structural target, not attempted: an induction on "crossing depth" (distance from the crossing
+to the tree's root) alternating unbounded-above/unbounded-below at each wrapping layer, which —
+if it went through — would settle the whole conjecture (crossing anywhere ⟹ unbounded somewhere
+⟹ the open residual class is EMPTY) rather than just narrowing it further. Realistically a
+multi-session undertaking, matching the scale the original 2026-07-15 doc always flagged for full
+generality.
+
+`#print axioms` clean on both new theorems, only base MachLib primitives, no `HasDerivAt`/Rolle,
+zero `sorry`. Full `lake build MachLib` passes (413 modules) — **twenty-nine new files in one
+session.**
