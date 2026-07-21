@@ -2045,3 +2045,45 @@ context before concluding it's a dead end.
 base MachLib primitives, `propext`/`Classical.choice`/`Quot.sound`, no `HasDerivAt`/Rolle, zero
 `sorry`. Full `lake build MachLib` passes (411 modules) — **twenty-seven new files in one
 session.**
+
+## 2026-07-20 (cont. 16) — the THIRD free closure, generalized: any strictly monotonic `T1`
+closes, unconditionally — the residual is now a fully general four-property characterization
+
+**The observation.** `boundedNonConstantWitness_ne_shifted_sin_target` (cont. 13) showed one
+SPECIFIC tree can't satisfy the collapsed witness-finding equation, via injectivity (strict
+monotonicity) vs. periodicity (`sin 0 = sin π = 0`, so `log(c2+sin x)` repeats). Rereading that
+proof: it never used anything about the SPECIFIC tree at all — only that it was strictly
+monotonic. That means it was always a general theorem wearing a specific instance's clothes.
+
+**Generalized and proven directly from the raw tree hypothesis**
+(`WitnessResidualStrictMonoT1.lean`, `eml_depth2_witness_of_const_sibling_strictMono_T1`): for
+ANY `T1` strictly monotonic (increasing or decreasing), the usual `S3≤0`-collapse
+(`exp(T1.eval x)-c2=sin x` for all `x`) evaluated at `x=0` and `x=π` forces `exp(T1.eval
+0)=exp(T1.eval π)=c2` — via `exp`'s injectivity (from `exp_lt` via trichotomy, no separate
+injectivity lemma needed) this gives `T1.eval 0=T1.eval π`, directly contradicting strict
+monotonicity since `0<π`. **Notably needs NO constraint on `c2` at all** — stronger in that
+respect than either unboundedness closure (both need `c2>1` in some form). Sanity-check
+corollary (`boundedNonConstantWitness_closes_via_strictMono`) re-derives the ORIGINAL cont-13
+closure directly from this general theorem, confirming equivalence not just resemblance.
+
+**What this means for the residual — now the fourth member of the `eml_depth2_witness_of_const_
+sibling_*_T1` family, and the classification is COMPLETE, not partial.** Three closures now
+cover: unbounded above (any `c2`), unbounded below (`c2>1`), strictly monotonic in either
+direction (any `c2`). Combined, the witness-finding residual's surviving open territory is now
+provably EXACTLY: **`T1` bounded in BOTH directions, non-constant, non-
+`RightChildrenSimplePositive`, and NOT strictly monotonic in either direction.** This is no
+longer "no known closure happens to cover this tree" — it's "no closure mechanism found so far
+CAN cover any tree with these four properties, provably, since all three free mechanisms are now
+stated in full generality, not as one-off instances." `nonMonotonicWitness` (cont. 14) is
+exactly the shape of tree this residual describes — bounded above, provably NOT bounded below
+(cont. 15) is irrelevant to this classification since it already fails at "not monotonic" too
+(it's not even weakly monotonic) — the honest remaining open question is whether ANY tree is
+simultaneously bounded BOTH directions and non-monotonic; `nonMonotonicWitness` itself doesn't
+qualify (fails bounded-below), so it remains an open search, not a settled counterexample.
+
+`#print axioms` clean on both new theorems — the general closure uses only base primitives (pure
+algebra, same flavor as the two unboundedness closures); the sanity-check corollary naturally
+pulls in `HasDerivAt`/`rolle_ct` (inherited from `boundedNonConstantWitness`'s own
+strict-monotonicity proof, not from the new theorem itself). Zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` doesn't appear. Full `lake build MachLib` passes (412
+modules) — **twenty-eight new files in one session.**
