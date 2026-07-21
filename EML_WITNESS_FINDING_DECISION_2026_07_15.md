@@ -2192,3 +2192,58 @@ induction itself wasn't attempted.
 `#print axioms` clean on all three new theorems, only base MachLib primitives, no
 `HasDerivAt`/Rolle, zero `sorry`. Full `lake build MachLib` passes (414 modules) — **thirty new
 files in one session.**
+
+## 2026-07-21 (cont. 19) — MILESTONE: the open classification is NOT vacuous — a concrete member
+found, fully verified
+
+**The question this settles.** Every round since `nonMonotonicWitness` narrowed the residual's
+open territory to exactly: `T1` bounded BOTH directions, non-constant, non-
+`RightChildrenSimplePositive`, non-monotonic. Every closure built (three fully general, two
+parametrized families) failed to rule out `nonMonotonicWitness` itself only because it turned
+out to be bounded in ONE direction, not two. The open question hanging over the last several
+rounds: is that four-property class actually EMPTY (in which case a strong enough closure would
+eventually rule out everything and the residual would fully close), or does it contain a real
+member? **Answer: it contains a real member.**
+
+**The construction, and why it works.** `nonMonotonicWitness` is bounded above (`< log 2`) but
+diverges to `-∞` near its clamp boundary. Applying `exp` to it fixes exactly that flaw:
+`exp` is strictly increasing (preserves every relative comparison, in particular the PROVEN
+non-monotonicity) and always strictly POSITIVE (turns `-∞` into an approach to `0` from above,
+not another divergence). `expWrappedNonMonotonicWitness := eml nonMonotonicWitness (const 1)`
+(`log 1 = 0` makes this EXACTLY `exp ∘ nonMonotonicWitness`, not merely close to it) —
+`WitnessResidualExpWrappedNonMonotonic.lean`, commit `38156e30`.
+
+**Every one of the four properties transports almost for free** from already-proven facts about
+`nonMonotonicWitness`, via `exp`'s strict monotonicity — no new hard mathematics, the entire
+insight was recognizing which EML operation repairs the one flaw:
+- **Bounded below**: `0 < eval` everywhere, trivially (`exp` is always positive, regardless of
+  what the inner tree does).
+- **Bounded above**: `eval < 1+1` everywhere, transported directly from `nonMonotonicWitness`'s
+  own upper bound through `exp_lt` + `exp_log`.
+- **Non-constant**: the two points `nonMonotonicWitness_x0` (`T=0`) and `nonMonotonicWitness_xb`
+  (`T<0`) — already known to differ — give different values after `exp` too (`exp`'s injectivity
+  via `exp_lt` + trichotomy).
+- **Not `RightChildrenSimplePositive`**: inherits the failure from its own left child — `eml
+  nonMonotonicWitness (const1)` requires `RightChildrenSimplePositive nonMonotonicWitness` too,
+  which fails immediately (`nonMonotonicWitness`'s own right child is a compound `eml` node,
+  never equal to `var`/`const c`, an `EMLTree.noConfusion` argument).
+- **Non-monotonic**: the SAME three witness points `nonMonotonicWitness_not_monotone` used,
+  transported through `exp`'s strict monotonicity — `exp` preserves every strict inequality, so
+  the flat→down→up valley shape survives intact into `exp∘nonMonotonicWitness`.
+
+**What this settles, stated with real care.** This is a genuine, concrete, fully-verified tree
+that NO closure built this session can rule out as a `T1` candidate — the classification's open
+territory is REAL, not an artifact of insufficiently general closures. **This does NOT mean the
+axiom (`eml_pfaffian_validon_from_sin_equality`) is false, and it does NOT mean this specific
+tree breaks the witness-finding argument.** It means only that the "free" shortcuts built this
+whole session — genuinely valuable, genuinely general — are now KNOWN to be insufficient for
+this tree specifically. Whether the full residual still closes for `T1 =
+expWrappedNonMonotonicWitness` via the HEAVIER zero-counting/Pfaffian-chain machinery this arc
+built earlier (before this session) remains completely open, unattempted here. This tree is now
+the canonical, concrete TEST CASE for whoever attempts that heavier machinery next — not a
+disproof of anything, a target.
+
+`#print axioms` clean — notably, STILL only base MachLib primitives (no `HasDerivAt`/Rolle
+anywhere, inherited from `nonMonotonicWitness`'s own pure-algebra proofs), zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` doesn't appear. Full `lake build MachLib` passes (415
+modules) — **thirty-one new files in one session.**
