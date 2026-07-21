@@ -2142,3 +2142,53 @@ generality.
 `#print axioms` clean on both new theorems, only base MachLib primitives, no `HasDerivAt`/Rolle,
 zero `sorry`. Full `lake build MachLib` passes (413 modules) — **twenty-nine new files in one
 session.**
+
+## 2026-07-20 (cont. 18) — the "wrap once more" lemma actually built: `nonMonotonicWitness`'s
+own mechanism generalized to arbitrary `A` and `P`
+
+**The gap cont. 17 named.** The direct-crossing lemma (`eml P (eml var (const c))` unbounded
+above, any `P`) generalized depth-1. `nonMonotonicWitness` itself sits at depth 2 — one more
+`eml A (...)` wrap around exactly that shape. Generalizing THAT wrap seemed to need a general
+"EML tree continuous/bounded near a point" theory, flagged as a real, not-yet-built piece of
+infrastructure.
+
+**The way around it, found this round** (commit `c2447a48`): don't build general continuity — use an EXPLICIT,
+checkable hypothesis instead, stated along the SAME witness path the construction already uses.
+`WitnessResidualWrappedCrossingUnboundedBelow.lean`'s `eml_unbounded_below_of_wrapped_crossing`:
+for `c > 1`, if `A` stays bounded above by some fixed `K` along `x_d := log(log c + d)` (`d ∈
+(0,1)`, the exact witness family cont. 15's original proof used) — a hypothesis anyone can
+DIRECTLY CHECK for a concrete `A` without needing a continuity theorem at all — then `eml A (eml
+P (eml var (const c)))` is unbounded BELOW, for ANY `P` (only `exp(P.eval x) > 0` is ever used,
+exactly like the depth-1 lemma). Proof mirrors cont. 15's construction almost exactly, with one
+new step (`exp_monotone` lifting the `A`-bound through `exp`) and the algebra abstracted into a
+small reusable helper (`core_wrap_bound`) to avoid repeating the giant nested witness expression
+at every step — the session's established "extract a general helper" pattern, paying off again.
+
+**Sanity check, genuinely confirms equivalence not resemblance**: instantiating at `A := var`,
+`P := eml var (const 1)`, `c := 1+1` reproduces `nonMonotonicWitness_unbounded_below`'s exact
+conclusion — `eml A (eml P (eml var (const c)))` unfolds DEFINITIONALLY to `nonMonotonicWitness`
+itself (not just "a similar tree"), and the `hAbdd` hypothesis for `A = var` is a two-line proof
+(`log(log c + d) ≤ log(log c + 1)` for `d < 1`, monotonicity of `log`). `#print axioms` on the
+instantiated corollary is IDENTICAL to the general theorem's list — confirms no hidden extra
+machinery sneaks in through the instantiation.
+
+**Combined into a full family closure** (`eml_depth2_witness_of_wrapped_crossing_T1`, combining
+with the existing unbounded-below closure): the ENTIRE "crossing wrapped exactly twice" family —
+matching `nonMonotonicWitness`'s own shape, for ANY `A` (bounded along the witness path), ANY
+`P`, ANY `c > 1`, ANY `c2 > 1` — can never be a real witness-finding counterexample. Not one
+hardcoded instance; the whole two-level shape, fully parametrized.
+
+**Honest scope, precisely stated.** This still does NOT prove the general conjecture ("any
+crossing anywhere ⟹ unbounded somewhere") — it proves it for exactly the TWO-LEVEL wrapping
+shape, with the outer wrap's boundedness stated as an explicit, path-specific hypothesis rather
+than derived from a general continuity theory. A caller with a THREE-level (or deeper) wrap, or
+an `A` that ISN'T boundable along this specific witness path (e.g., `A` itself has its own
+crossing interacting with the same region), is not covered. The crossing-depth induction named
+last round remains the real target for full generality — this round narrowed what such an
+induction's inductive step would actually need to supply (an explicit path-bound hypothesis at
+each layer, not a full continuity argument), which is itself useful groundwork even though the
+induction itself wasn't attempted.
+
+`#print axioms` clean on all three new theorems, only base MachLib primitives, no
+`HasDerivAt`/Rolle, zero `sorry`. Full `lake build MachLib` passes (414 modules) — **thirty new
+files in one session.**
