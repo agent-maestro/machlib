@@ -143,6 +143,7 @@ import MachLib.WitnessResidualConvexZeroBoundClosure
 import MachLib.WitnessResidualCrossingUnbounded
 import MachLib.WitnessResidualCrossingUnboundedGeneral
 import MachLib.WitnessResidualCrossingUnboundedMirror
+import MachLib.WitnessResidualSignNecessity
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
