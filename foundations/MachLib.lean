@@ -118,6 +118,7 @@ import MachLib.WitnessResidualBoundedNonConstant
 import MachLib.WitnessResidualNonMonotonic
 import MachLib.WitnessResidualUnboundedBelow
 import MachLib.WitnessResidualNonMonotonicClosesBelow
+import MachLib.WitnessResidualStrictMonoT1
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
