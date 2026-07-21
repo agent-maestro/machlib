@@ -116,6 +116,8 @@ import MachLib.EMLZeroCrossingBothCompoundDeeperGeneral
 import MachLib.EMLZeroCrossingDepth3Compound
 import MachLib.WitnessResidualBoundedNonConstant
 import MachLib.WitnessResidualNonMonotonic
+import MachLib.WitnessResidualUnboundedBelow
+import MachLib.WitnessResidualNonMonotonicClosesBelow
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1

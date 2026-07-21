@@ -1,4 +1,6 @@
 import MachLib.WitnessResidualBoundedNonConstant
+import MachLib.Forge
+import MachLib.Linarith
 
 /-!
 # Answering the open question: NOT every bounded, non-simple EML tree is monotonic
@@ -374,6 +376,105 @@ theorem bounded_nonmonotonic_eml_tree_exists :
     exact nonMonotonicWitness_log2_pos
   · rw [nonMonotonicWitness_eval_clamped (le_of_lt h)]
     exact nonMonotonicWitness_log2_pos
+
+/-! ## Unbounded below — this counterexample does NOT threaten a sharper conjecture
+
+`nonMonotonicWitness` is bounded ABOVE (`nonMonotonicWitness_upper_bound`), but the informal
+picture near the clamp boundary `x0` (`D.eval x → 0⁺` as `x → x0⁺`, forcing `log D → -∞`, hence
+`B.eval x → +∞`, hence `T.eval x → -∞`) suggested it is NOT bounded below. This section confirms
+that formally with an explicit, closed-form witness for every target `M` — no limits or
+continuity machinery, just direct algebra on `exp`/`log`. The upshot: this specific
+counterexample does not threaten the sharper conjecture "`T1` bounded in BOTH directions forces
+closure" (see `WitnessResidualUnboundedBelow.lean`'s
+`eml_depth2_witness_of_const_sibling_unbounded_below_T1`) — it is bounded in only ONE direction,
+exactly the direction that mirror closure needs to rule out. -/
+
+/-- **Generalized bound**: for any `0 < d < 1`, evaluating at `x := log(log(1+1) + d)` (which
+makes `D.eval x = d` exactly, by construction) gives `T.eval x < log(1+1) + 1 - log(-(log d))`.
+Proof: `B.eval x = exp(exp x) - log d > -(log d)` (dropping the positive `exp(exp x) > 0` term),
+and `-(log d) > 0` (since `d < 1`), so `log(B.eval x) > log(-(log d))` (`log_lt_log`); combined
+with `exp x = log(1+1) + d < log(1+1) + 1` (from `d < 1`), this gives the stated bound on
+`T.eval x = exp x - log(B.eval x)`. -/
+theorem nonMonotonicWitness_eval_bound_of_D_small {d : Real} (hd0 : 0 < d) (hd1 : d < 1) :
+    nonMonotonicWitness.eval (Real.log (Real.log (1 + 1) + d))
+      < Real.log (1 + 1) + 1 - Real.log (-(Real.log d)) := by
+  have hlog2pos := nonMonotonicWitness_log2_pos
+  have hsum_pos : 0 < Real.log (1 + 1) + d := add_pos hlog2pos hd0
+  have hexp_x : Real.exp (Real.log (Real.log (1 + 1) + d)) = Real.log (1 + 1) + d :=
+    Real.exp_log hsum_pos
+  have hlt_sum : Real.log (1 + 1) < Real.log (1 + 1) + d := by
+    have h := add_lt_add_left hd0 (Real.log (1 + 1))
+    rwa [add_zero] at h
+  have hx0_lt_x : nonMonotonicWitness_x0 < Real.log (Real.log (1 + 1) + d) :=
+    log_lt_log hlog2pos hlt_sum
+  rw [nonMonotonicWitness_eval_real hx0_lt_x, hexp_x]
+  have hDeqd : Real.log (1 + 1) + d - Real.log (1 + 1) = d := by
+    rw [add_comm]; exact add_sub_cancel_right_local d (Real.log (1 + 1))
+  rw [hDeqd]
+  have hlogdneg : Real.log d < 0 := log_neg_of_lt_one hd0 hd1
+  have hnegpos : 0 < -(Real.log d) := neg_pos_of_neg hlogdneg
+  have hBgt : -(Real.log d) < Real.exp (Real.log (1 + 1) + d) - Real.log d := by
+    have h := sub_lt_sub_right_of_lt (r := Real.log d)
+      (Real.exp_pos (Real.log (1 + 1) + d))
+    rw [sub_def, zero_add] at h
+    exact h
+  have hlogB : Real.log (-(Real.log d))
+      < Real.log (Real.exp (Real.log (1 + 1) + d) - Real.log d) :=
+    log_lt_log hnegpos hBgt
+  have hfinal := sub_lt_sub_left_local (Real.log (1 + 1) + d) hlogB
+  have hbound2 : Real.log (1 + 1) + d - Real.log (-(Real.log d))
+      < Real.log (1 + 1) + 1 - Real.log (-(Real.log d)) :=
+    sub_lt_sub_right_of_lt (r := Real.log (-(Real.log d))) (add_lt_add_left hd1 (Real.log (1+1)))
+  exact lt_trans_ax hfinal hbound2
+
+/-- **`nonMonotonicWitness` is unbounded BELOW.** For any target `M`, choosing
+`d := exp(-(exp(K - M)) - log(1+1))` (`K := log(1+1) + 1`) satisfies `0 < d < 1` (exponent is
+negative, `exp` of it lands strictly below `1`), and feeding it through
+`nonMonotonicWitness_eval_bound_of_D_small` collapses (after simplifying `log d` back via
+`log_exp`, and bounding `log(-(log d)) > K - M` from `-(log d) = exp(K-M) + log(1+1) >
+exp(K-M)`) to `T.eval x < M`. Confirms the informal divergence-to-`-∞` reasoning: this tree is
+bounded above but NOT bounded below, so it is not a counterexample to "`T1` bounded both
+directions closes for free". -/
+theorem nonMonotonicWitness_unbounded_below :
+    ∀ M : Real, ∃ x, nonMonotonicWitness.eval x < M := by
+  intro M
+  have hlog2pos := nonMonotonicWitness_log2_pos
+  have hEpos : 0 < Real.exp (Real.log (1 + 1) + 1 - M) := Real.exp_pos _
+  have hexpneg : -(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1) < 0 := by
+    have h1 : -(Real.exp (Real.log (1 + 1) + 1 - M)) < 0 := neg_neg_of_pos hEpos
+    have h2 := sub_lt_sub_right_of_lt (r := Real.log (1+1)) h1
+    have h3 : (0:Real) - Real.log (1+1) < 0 := by
+      rw [sub_def, zero_add]
+      exact neg_neg_of_pos hlog2pos
+    exact lt_trans_ax h2 h3
+  have hd0 : 0 < Real.exp (-(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1)) :=
+    Real.exp_pos _
+  have hd1 : Real.exp (-(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1)) < 1 := by
+    have h := Real.exp_lt hexpneg
+    rwa [Real.exp_zero] at h
+  refine ⟨Real.log (Real.log (1 + 1)
+      + Real.exp (-(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1))), ?_⟩
+  have hstep := nonMonotonicWitness_eval_bound_of_D_small hd0 hd1
+  have hlogd : Real.log (Real.exp (-(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1)))
+      = -(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1) := Real.log_exp _
+  rw [hlogd] at hstep
+  have hnegneg : -(-(Real.exp (Real.log (1 + 1) + 1 - M)) - Real.log (1 + 1))
+      = Real.exp (Real.log (1 + 1) + 1 - M) + Real.log (1 + 1) := by mach_ring
+  rw [hnegneg] at hstep
+  have hElt : Real.exp (Real.log (1 + 1) + 1 - M)
+      < Real.exp (Real.log (1 + 1) + 1 - M) + Real.log (1 + 1) := by
+    have h := add_lt_add_left hlog2pos (Real.exp (Real.log (1 + 1) + 1 - M))
+    rwa [add_zero] at h
+  have hlogElt : Real.log (Real.exp (Real.log (1 + 1) + 1 - M))
+      < Real.log (Real.exp (Real.log (1 + 1) + 1 - M) + Real.log (1 + 1)) :=
+    log_lt_log hEpos hElt
+  rw [Real.log_exp] at hlogElt
+  have hbound3 : Real.log (1+1)+1
+        - Real.log (Real.exp (Real.log (1+1)+1-M) + Real.log (1+1))
+      < Real.log (1+1)+1 - (Real.log (1+1)+1-M) := sub_lt_sub_left_local _ hlogElt
+  have hsimp : Real.log (1+1)+1 - (Real.log (1+1)+1-M) = M := by mach_ring
+  rw [hsimp] at hbound3
+  exact lt_trans_ax hstep hbound3
 
 end Real
 end MachLib
