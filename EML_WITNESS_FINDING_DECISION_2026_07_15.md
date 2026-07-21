@@ -2367,3 +2367,61 @@ no calculus at all, unlike last round's), only base MachLib primitives. Zero `so
 result is about `EMLPfaffianValidOn`'s own definition, orthogonal to the axiom under
 investigation). Full `lake build MachLib` passes (417 modules) — **thirty-three new files in one
 session.**
+
+## 2026-07-21 (cont. 22) — MILESTONE: the first tree confirmed BOTH a genuine open-class member
+AND resistant to the closure that worked before, fully verified end to end
+
+**Completing what cont. 21 deliberately deferred.** The negative result (`concreteC` is
+`EMLPfaffianValidOn`-invalid past its crossing) was accompanied by an explicit caveat: it does
+NOT establish that `expWrappedNonMonotonicWitnessC concreteC` actually belongs to the open
+classification — that boundedness-both-directions-and-non-monotonicity claim was only checked
+NUMERICALLY. This round formalizes it, completing the picture.
+
+**Mirrors `WitnessResidualNonMonotonic.lean`/`WitnessResidualExpWrappedNonMonotonic.lean`'s exact
+technique, `1+1` replaced by `concreteC := exp(exp 1)` throughout**
+(`WitnessResidualExpWrappedNonMonotonicCPositive.lean`, commit `fa477ded`). Every step transfers
+directly except ONE: the boundedness proof's `two_mul_eq_add_self` trick was specific to the
+crossing constant literally being `1+1` (`exp(exp x)=(1+1)·exp(D)` collapsing cleanly to
+`exp(D)+exp(D)`). For general `concreteC` this doesn't apply. **The fix**: `concreteC > 1+1`
+(cheap — `exp_gt_one_plus_self` applied twice, at `x=1` giving `2<e` and at `x=exp 1` giving
+`1+e<exp(e)=concreteC`, chaining to `3<concreteC`) gives `1<concreteC-1`, hence (via
+`mul_lt_mul_of_pos_right`) `exp(D)<(concreteC-1)·exp(D)` — playing EXACTLY the role the doubling
+trick did. The rest of the ~15-step boundedness chain (`log_lt_self_of_pos`, `exp_add`+`exp_log`
+factoring, the final `log_lt_log`/`sub_lt_sub_left_local` cascade) is untouched, confirming the
+technique really was about "crossing constant `>2`", not "crossing constant `=2`" specifically.
+
+**The result, combined with last round's negative result into one statement**
+(`concreteC_open_class_member_and_validon_resistant`): `expWrappedNonMonotonicWitnessC concreteC`
+is bounded in BOTH directions (`0 < eval < concreteC`, everywhere), non-constant, non-
+`RightChildrenSimplePositive`, non-monotonic — a genuine, FULLY VERIFIED member of the residual's
+open classification — AND `EMLPfaffianValidOn`-invalid past its crossing. **The first tree in this
+entire multi-week arc (not just this session) confirmed to be BOTH a real open-class member AND
+resistant to the ONE closure technique that successfully handled the negative-crossing case.**
+Every earlier "found a member" (cont. 19) resolved cleanly (cont. 20); every earlier "technique
+fails" (cont. 21) was paired with an unverified example. This round closes both gaps at once, for
+the SAME concrete tree.
+
+**What this does and deliberately does NOT claim, stated with the same care as every prior
+round.** This is NOT a disproof of `eml_pfaffian_validon_from_sin_equality`, and it does NOT show
+the witness-finding argument actually fails for this tree. It shows precisely what it shows: this
+ONE closure technique — the one built and relied on throughout the ENTIRE arc, not just this
+session — cannot reach this tree. Other techniques remain genuinely unexplored: domain-splitting
+around the crossing point (mirroring the arc's much earlier `EMLZeroCrossingDomainSplit.lean`
+work, treating the crossing as a special point and gluing pieces on either side), or a
+fundamentally new branch-switching Pfaffian chain construction (the path this whole arc's
+`EML_WITNESS_FINDING_DECISION_2026_07_15.md` has flagged since well before this session as the
+real "weeks to a month" undertaking for full generality). This tree is now the sharpest, most
+concrete target available for whoever attempts either.
+
+`#print axioms` clean on the combined statement — pure algebra throughout, no `HasDerivAt`
+anywhere (same flavor as `nonMonotonicWitness`'s own proofs), only base MachLib primitives. Zero
+`sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib`
+passes (418 modules) — **thirty-four new files in one session.**
+
+**Net honest status of the arc, after 22 rounds today.** The witness-finding residual's open
+classification is non-empty and now has a fully-verified member resistant to the arc's
+established closure technique. This is real, meaningful progress on characterizing the residual
+— but it is progress toward understanding the shape of the remaining difficulty, not toward
+discharging the axiom itself. The axiom remains neither proven nor disproven; what's changed
+today is the precision with which its remaining difficulty can be described and handed to
+whoever continues.
