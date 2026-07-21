@@ -1692,3 +1692,50 @@ the zero-count bound, with every concrete instance built today reducible to a co
 axioms` clean on both new theorems, only base MachLib primitives, zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (405
 modules) — **twenty new files in one session.**
+
+## 2026-07-20 (cont. 10) — MILESTONE: the first genuinely depth-3 tree, closed almost entirely by
+## reuse
+
+Per continued "proceed please." The capstone theorem (`eml_convexT1_conditionT2_boundedZeros`)
+takes `t1eval`/`t1deriv`/`t1deriv2` as fully ABSTRACT functions — meaning nothing in its statement
+requires `t1` to be depth-1. Checked directly whether a genuinely DEEPER `t1` could be fed in
+using only already-proven facts, rather than assuming new machinery was needed.
+
+**The observation that made this nearly free.** `T1 := eml (eml var var) (const c)` — `T1`'s own
+left child IS `eml var var`, the tree studied since the base case — has `T1.eval x = exp(t1'.eval
+x) - log c` where `t1' := eml var var`. Its derivative is `T1deriv(x) = exp(t1'.eval x)·t1'deriv
+x`. **This is LITERALLY `P(x)` from `EMLZeroCrossingConvexT1.lean`** — the exact function that
+file's `hasDerivAt_expMulDeriv`/`expMulDeriv_pos_of_convex` already fully characterize. So `T1`'s
+OWN convexity (`T1deriv`'s derivative positive, exactly what
+`eml_convexT1_conditionT2_boundedZeros` needs to accept `T1`) is `expMulDeriv_pos_of_convex`
+applied to `t1'`'s already-established facts (`hasDerivAt_exp_sub_log`, `hasDerivAt_exp_sub_inv`,
+`exp_sub_inv_deriv_pos` — all from the DEPTH-1 base case, two entries ago) — NO new positivity
+argument anywhere. The only genuinely new content is `T1eval`'s own `HasDerivAt` fact (`exp∘t1'eval`
+minus the constant `log c`) — a three-line chain-rule-then-subtract lemma
+(`hasDerivAt_expSubLogSubLogC`), reusing the SAME `exp∘t1'eval` chain-rule step
+`hasDerivAt_expMulDeriv`'s own proof already performs internally.
+
+**The result** (`EMLZeroCrossingDepth3Compound.lean`,
+`eml_evarvarConstC_evarConstC2_boundedZeros`): `eml (eml (eml var var) (const c)) (eml var (const
+c2'))` — a GENUINELY depth-3 tree — has at most `3` zeros on any interval, for ANY `c` and `c2' >
+1` with `1 ≤ log c2'` (`c2' ≥ e`, the SAME structural requirement `eml var var` has needed since
+two entries ago — unchanged by going one level deeper). NO `EMLPfaffianValidOn` assumption
+anywhere. Compiled clean on the FIRST attempt — direct confirmation that today's toolkit actually
+composes across depth, not just across sibling shape variations.
+
+**Why this matters more than the numeric bound.** Every prior result in this whole arc combined
+depth-1 pieces. This is the first time a tree ONE LEVEL DEEPER than every component built so far
+closes using ALMOST NO new mathematical content — a genuine instance of "the induction actually
+inducting": `T1`'s own zero-crossing/convexity facts, established at an earlier depth, feed
+directly into the machinery built for THAT depth, without needing to re-derive anything about
+`T1`'s internal structure. This is the shape the whole arc's "the induction" language has pointed
+toward since the base case closed.
+
+**Honest scope.** `T2` stays depth-1 (`eml var (const c2')`) — going deeper on `T2` as well (or
+combining two independently-deep sides) is not attempted. The pattern demonstrated here — "check
+whether a deeper instance is already covered by an abstract theorem before assuming new machinery
+is needed" — is itself the transferable lesson, not a claim that ALL deeper trees are this cheap;
+this one happened to be because `T1`'s derivative reduced EXACTLY to an already-characterized
+function. `#print axioms` clean, only base MachLib primitives, zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (406
+modules) — **twenty-one new files in one session.**
