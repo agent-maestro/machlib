@@ -2638,3 +2638,105 @@ fully mapped, just not yet walked.
 
 `#print axioms` clean, zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear.
 Full `lake build MachLib` passes (422 modules) — **thirty-eight new files in one session.**
+
+## 2026-07-21 (cont. 27) — `growthCompetitionWitness` FULLY CLOSED: non-monotonicity proven,
+zero `sorry`, genuine escape from the residual's closure confirmed
+
+**Direct user request: "proceed please"**, continuing straight from cont. 26's precise scoping.
+Walked the full mapped path in one continuous round: `quadratic_pos_below_vertex` (the missing
+mirror tool), the real `HasDerivAt` composition, the cleared-denominator identity connecting it to
+the quadratic, four concrete numeric facts pinning the quadratic's sign at `c1=2.2, c2=2.7`, the
+`E`-to-`x` translation, and the final `strictMono`/`strictAnti` assembly. Every piece verified
+numerically in Python before being written in Lean, per house style throughout.
+
+**Piece 1 — the mirror convexity tool** (`WitnessResidualQuadraticConvexity.lean`,
+`quadratic_pos_below_vertex`). Positivity does NOT propagate between two arbitrary points the way
+`quadratic_neg_between`'s negativity does (the dip can sit BETWEEN two positive points — that's
+the whole mechanism) — but it DOES propagate in one direction from a single point at or left of
+the vertex, via the same identity specialized (`quad(E)-quad(b) = (E-b)·(k·(E+b)+m)`, both factors
+`≤0` on the near side). Needed one new primitive, `mul_nonneg_of_nonpos_of_nonpos`, built from
+`neg_nonneg_of_nonpos` + `mul_nonneg` + the pre-existing `neg_mul_neg` (`Ring.lean`).
+
+**Piece 2 — the real derivative, composed** (`WitnessResidualGrowthCompetitionDeriv.lean`).
+`growthCompetitionWitness_hasDerivAt`: `T = exp∘A - B` via `HasDerivAt_comp` then `HasDerivAt_sub`,
+reusing `boundedNonConstantWitness_hasDerivAt` unchanged for both `A` and `B`. Then the cleared-
+denominator identity `T'(z)·(E-p)²·(E-q) = exp(z)·quad(E)`, built from three pieces: `exp_A_mul_denom`
+(`exp(A(z))·(E-p)=E`, via `exp_sub`+`exp_log`+`mul_inv`), `deriv_A_mul_denom` (a standalone
+extraction of the `hprod` step buried inside `boundedNonConstantWitness_deriv_neg`'s own proof,
+reused for both `c1` and `c2`), and `clear_denom_identity` (a fully abstract 7-atom algebra lemma,
+closed by targeted `rw` + `mach_mpoly` between substitutions — deliberately never handing
+`mach_mpoly` a raw fraction). Dividing the cleared identity back out through the known-positive
+denominator (`neg_of_mul_neg_pos`, mirroring the pre-existing `pos_of_mul_pos_right`) gives the
+two sign-bridge corollaries `growthCompetitionWitness_deriv_neg_of_quad_neg`/`_pos_of_quad_pos`.
+
+**Piece 3 — pinning the sign numerically** (`WitnessResidualGrowthCompetitionNumeric.lean`). Four
+concrete facts for `c1=2.2, c2=2.7`: `quad(1.3)<0`, `quad(2.3)<0` (feeding `quadratic_neg_between`),
+`quad(1.05)>0` plus the vertex condition at `b=1.05` (feeding `quadratic_pos_below_vertex`). All
+four derived — not axiomatized — from two new well-justified numeric axioms bracketing `log(2.2)`
+and `log(2.7)` to four decimal places (`log_2_2_bounds`, `log_2_7_bounds`; same status as
+`exp_one_lt_three`/`pi_gt_three`). Why axioms at the log level rather than the quad-value level
+directly: MachLib has no `nlinarith`-equivalent tactic (confirmed — `Linarith.lean`'s own docstring
+flags this as unbuilt future work), so a 2D interval bound has to be turned into a quadratic's sign
+BY HAND; kept the axiom surface at the semantically meaningful level (two facts about actual
+transcendentals) rather than four ad-hoc "trust this polynomial's sign" facts. Technique: bound
+each of `quad`'s three terms INDEPENDENTLY at whichever box corner is worst-case for that term
+alone (looser than joint optimization, checked numerically first that the loose bound still clears
+with real margin — e.g. `-0.050` vs. true `-0.056` at `E=1.3`).
+
+Hit a genuine `mach_decimal` gap: no general SIGNED decimal subtraction (only the `1-x` special
+case via `one_sub_decimal`). Fixed two ways — added `decimal_sub_same` to `Decimal.lean` itself
+(the general same-exponent case, mirroring how `decimal_add_same` generalizes addition: real,
+reusable infrastructure), and reformulated every `A-B+C<0` goal as `A+C<B` so the top-level
+combination never needs signed subtraction at all. Also: every literal padded to a UNIFORM
+decimal-place count (`1.3`→`1.3000`) so every product in a sum lands at the same
+`realOfScientific` exponent — `decimal_add_same` only fires on matching exponents.
+
+**Piece 4 — the `E`-to-`x` translation and final assembly**
+(`WitnessResidualGrowthCompetitionAssembly.lean`). `E:=exp(exp x)` is a strictly increasing
+bijection `ℝ→(1,∞)` with inverse `x=log(log E)` (valid whenever `E>1`); `exp_exp_log_log` is the
+inversion, `log_log_mono`/`exp_exp_mono` the two monotonicity directions. Chose `x1:=log(log 1.02)`,
+`x2:=log(log 1.05)` (increasing interval, both below the vertex `≈1.912`) and `x3:=log(log 1.3)`,
+`x4:=log(log 2.3)` (decreasing interval, between the roots `≈1.112` and `≈2.712`) — `E=1.02`/`E=1.3`
+also anchor `hApos`/`hBpos` across their WHOLE interval via monotonicity (`1.02>1.3>log(2.7)>log(2.2)`
+with comfortable margin). Fed both intervals into `strictMono_of_deriv_pos`/`strictAnti_of_deriv_neg`,
+then combined into `growthCompetitionWitness_2_2_2_7_not_monotone` — TWO disjoint point-pairs (not
+a shared 3-point pivot; the negation of "monotone" only needs one counterexample pair per
+direction, and the two intervals already give one each, which turned out simpler than the
+`nonMonotonicWitness_not_monotone` 3-point template used elsewhere in this arc).
+
+**Two new `apply`-unification gotchas, worth recording precisely.** (1) Stating a goal as
+`(fun w => BODY) x` gets silently beta-reduced by the elaborator into `BODY[w:=x]` directly, so
+`apply strictAnti_of_deriv_neg _ a b hab` (function left as `_`) fails to higher-order-unify
+against the now-non-application-shaped goal — fixed by supplying the lambda EXPLICITLY (not a
+metavariable), letting Lean check by defeq (which includes beta) instead of syntactic pattern
+matching. (2) `mach_decimal` cannot prove `(1:Real) < 1.3` directly (`1` is the raw `oneR`, not a
+`realOfScientific` literal) — fixed via the pre-existing ad-hoc bridge
+`realOfScientific_one_dot_zero : realOfScientific 10 true 1 = 1`, rewritten in first. Also needed
+a small but essential bridge lemma, `quad_forms_eq`, converting between the "subtraction" form
+(how the numeric facts and sign corollaries are stated) and the "`k·X·X+m·X+n`" addition form
+(how the convexity tools are stated) — mathematically identical but syntactically different terms,
+since `sub_def` is an axiom, not a `rfl`-reduction, in this codebase.
+
+**The closing theorem**: `growthCompetitionWitness_2_2_2_7_exists` — bounded both directions, not
+`RightChildrenSimplePositive`, non-monotonic both directions, all for the CONCRETE instance
+`c1=2.2, c2=2.7`. `#print axioms` clean: only ordered-field/exp/log/decimal/`HasDerivAt`-calculus
+axioms plus `log_2_2_bounds`/`log_2_7_bounds` — no `sorryAx`, `eml_pfaffian_validon_from_sin_equality`
+does NOT appear. This is a genuinely NEW, FULLY VERIFIED member of the witness-finding residual's
+open classification — one that escapes every closure mechanism built earlier in this whole arc (no
+`log`-clamp anywhere in the tree; the non-monotonicity here comes from pure growth-rate competition
+between two smooth, never-clamping sub-expressions, unlike every prior tree in the crossing-family).
+
+**What this means for the residual, stated precisely.** The open classification (bounded,
+non-constant, non-simple, non-monotonic EML trees exist) is no longer just a true STATEMENT — it
+now has an EXPLICIT, FULLY VERIFIED witness. Whether this closes the whole witness-finding Option D
+question (i.e. whether `growthCompetitionWitness 2.2 2.7`, or a tree built from it, can be shown to
+actually FAIL the witness-finding equation `t.eval = sin` for some `T1,S2,S3,c2`, the way
+`boundedNonConstantWitness_ne_shifted_sin_target` did via injectivity for the monotonic case) is
+the natural next question — NOT attempted this round. `growthCompetitionWitness` is not injective
+(it's non-monotonic by construction), so the injectivity trick used for the monotonic witness does
+NOT apply here; a different argument would be needed.
+
+Full `lake build MachLib` passes (425 modules). Three new files this round
+(`WitnessResidualGrowthCompetitionNumeric.lean`, `WitnessResidualGrowthCompetitionAssembly.lean`,
+plus `quadratic_pos_below_vertex`/sign-corollaries added to the two pre-existing files), one
+Decimal.lean addition (`decimal_sub_same`), zero `sorry` anywhere in the new work.
