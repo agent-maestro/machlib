@@ -3,6 +3,7 @@ import MachLib.Forge
 import MachLib.Sign
 import MachLib.Linarith
 import MachLib.EML
+import MachLib.Ring
 
 /-! # The key algebraic tool for `growthCompetitionWitness`'s non-monotonicity
 
@@ -29,12 +30,21 @@ well-definedness), `S(E) < 0` iff a QUADRATIC in `E` is negative:
 need numerical bounds on `log(2.2)`, `log(2.7)`, etc.) into a PURE ALGEBRA problem, avoidable
 without building any new numeric-bound infrastructure at all.
 
-**The tool built here**: `quadratic_neg_between` — an upward-opening quadratic (`k > 0`)
+**The tools built here.** `quadratic_neg_between` — an upward-opening quadratic (`k > 0`)
 negative at two points `a < b` is negative throughout `[a,b]`. Proof: the exact identity
 `(b-a)·quad(E) = (b-E)·quad(a) + (E-a)·quad(b) - k·(b-a)·(E-a)·(b-E)` (verified via `mach_mpoly`,
 with one `mach_mpoly`-specific gotcha — see below) makes every term on the right `≤ 0` (and at
 least one strictly, since `(b-E)` and `(E-a)` can't both vanish), giving the whole product `< 0`,
 hence (dividing by the positive `b-a`) `quad(E) < 0`.
+
+`quadratic_pos_below_vertex` handles the OTHER direction non-monotonicity needs (a region where
+`T` INCREASES, to refute "monotone decreasing everywhere" as well). Positivity does NOT propagate
+between two arbitrary points the way negativity above does — the dip could sit between them, which
+is exactly the mechanism being exploited — but it DOES propagate in one direction from a single
+point `b` at or left of the vertex, via the same identity specialised to `a := E` itself:
+`quad(E) - quad(b) = (E-b)·(k·(E+b)+m)`. For `E ≤ b ≤` vertex, both factors are `≤ 0`, so the
+product (hence the difference) is `≥ 0` — `quad` is simply monotone non-increasing on the vertex's
+near side, needing no roots or discriminant either.
 
 **Two build gotchas, both new.** (1) `mach_mpoly` — usually the "complete normaliser" for this
 kind of multi-atom polynomial identity — left a residual `-0 = 0` sub-goal on THIS specific
@@ -160,6 +170,53 @@ theorem quadratic_neg_between {k m n a b E : Real} (hk : 0 < k) (hab : a < b)
   have hprod_nonneg : 0 ≤ (b - a) * (k * E * E + m * E + n) :=
     mul_nonneg (le_of_lt hba) hqE_nonneg
   exact lt_irrefl_ax _ (lt_of_le_of_lt hprod_nonneg hfinal_num)
+
+theorem mul_nonneg_of_nonpos_of_nonpos {a b : Real} (ha : a ≤ 0) (hb : b ≤ 0) : 0 ≤ a * b := by
+  have hna : 0 ≤ -a := neg_nonneg_of_nonpos ha
+  have hnb : 0 ≤ -b := neg_nonneg_of_nonpos hb
+  have h := mul_nonneg hna hnb
+  rwa [neg_mul_neg] at h
+
+/-- **The mirror tool, for the OTHER direction of non-monotonicity.** Positivity does NOT
+propagate between two arbitrary points the way negativity does above (the dip could sit between
+them — that's the whole mechanism this arc exploits) — but it DOES propagate in one direction from
+a single point `b`, using plain monotonicity on the near side of the vertex. If `b` sits at or
+left of the vertex (`k*(b+b)+m ≤ 0`, i.e. `b ≤ -m/(2k)`) and `quad(b) > 0`, then `quad(E) > 0` for
+every `E ≤ b` — same identity technique (`quad(E) - quad(b) = (E-b)*(k*(E+b)+m)`, both factors
+`≤ 0` on this side, so the product, hence the difference, is `≥ 0`). -/
+theorem quadratic_pos_below_vertex {k m n b E : Real} (hk : 0 < k) (hEb : E ≤ b)
+    (hvertex : k * (b + b) + m ≤ 0) (hqb : 0 < k * b * b + m * b + n) :
+    0 < k * E * E + m * E + n := by
+  have hident : k * E * E + m * E + n - (k * b * b + m * b + n) = (E - b) * (k * (E + b) + m) := by
+    mach_mpoly [k, m, n, E, b]
+  have hEb0 : E - b ≤ 0 := by
+    have h1 : 0 ≤ b - E := sub_nonneg_of_le hEb
+    have h2 : -(b - E) ≤ -(0:Real) := neg_le_neg h1
+    rw [neg_zero] at h2
+    have e : -(b - E) = E - b := by mach_mpoly [b, E]
+    rwa [e] at h2
+  have hsum : b + E ≤ b + b := add_le_add_left hEb b
+  have hsum' : E + b ≤ b + b := by
+    have e1 : E + b = b + E := add_comm E b
+    rw [e1]; exact hsum
+  have hkEb : k * (E + b) ≤ k * (b + b) := mul_le_mul_of_nonneg_left hsum' (le_of_lt hk)
+  have hvert2 : k * (E + b) + m ≤ 0 := by
+    have h := add_le_add_left hkEb m
+    have e1 : m + k * (E + b) = k * (E + b) + m := add_comm m _
+    have e2 : m + k * (b + b) = k * (b + b) + m := add_comm m _
+    rw [e1, e2] at h
+    exact le_trans h hvertex
+  have hprod_nonneg : 0 ≤ (E - b) * (k * (E + b) + m) := mul_nonneg_of_nonpos_of_nonpos hEb0 hvert2
+  have hdiff_nonneg : 0 ≤ k * E * E + m * E + n - (k * b * b + m * b + n) := by
+    rw [hident]; exact hprod_nonneg
+  have hqE_ge : k * b * b + m * b + n ≤ k * E * E + m * E + n := by
+    have h := add_le_add_left hdiff_nonneg (k * b * b + m * b + n)
+    have e1 : k * b * b + m * b + n + 0 = k * b * b + m * b + n := add_zero _
+    have e2 : k * b * b + m * b + n + (k * E * E + m * E + n - (k * b * b + m * b + n))
+        = k * E * E + m * E + n := by mach_mpoly [k, m, n, E, b]
+    rw [e1, e2] at h
+    exact h
+  exact lt_of_lt_of_le hqb hqE_ge
 
 end Real
 end MachLib
