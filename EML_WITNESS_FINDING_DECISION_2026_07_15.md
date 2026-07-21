@@ -1875,3 +1875,38 @@ non-injectivity of the shifted target, then the injective-vs-non-injective contr
 base MachLib primitives (`HasDerivAt`/Rolle/algebra — no encoder/chain/validity machinery
 anywhere), zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full
 `lake build MachLib` passes (408 modules) — **twenty-three new files in one session.**
+
+## 2026-07-20 (cont. 13) — the loop closed: this counterexample is harmless, formalized
+
+Per continued "proceed please." Formalized the sketch from the end of the previous entry — cheap,
+as anticipated, no new mechanism needed.
+
+**The argument.** `boundedNonConstantWitness c` is strictly monotonic
+(`boundedNonConstantWitness_strictAnti`), hence INJECTIVE — takes each value at most once.
+`log(c2+sin x)` takes the SAME value at `x=0` and `x=π` (`sin 0 = sin π = 0`, both axioms already
+in `Trig.lean`, so both give `log(c2+0)`) — it is NOT injective, for any `c2`. An injective
+function cannot equal a non-injective one globally: assume `T1.eval x = log(c2+sin x)` for all
+`x`, specialize at `0` and `π`, get `T1.eval 0 = T1.eval π` (both equal `log(c2+0)`) — contradicts
+`T1.eval π < T1.eval 0` from strict monotonicity (`0 < π`, `pi_pos` already in `Trig.lean`).
+Four lines once the pieces existed.
+
+**What this closes, precisely.** `boundedNonConstantWitness_ne_shifted_sin_target`: for `1 < c <
+e`, this specific counterexample tree can NEVER satisfy the witness-finding residual's collapsed
+equation, for ANY `c2`. No zero-counting, no Pfaffian chain, no `combinedBoundE`, no target-shift
+trick — the whole apparatus this arc built machinery for turned out unnecessary for this
+particular instance. This is a genuinely different, MUCH CHEAPER closure mechanism
+(injectivity/periodicity mismatch) than everything else in this document, worth remembering as a
+first check for any FUTURE candidate counterexample before reaching for the heavier machinery.
+
+**Honest scope, unchanged.** This closes ONE family (this `boundedNonConstantWitness` shape), not
+the residual in general — the open question is whether EVERY bounded, non-constant,
+non-`RightChildrenSimplePositive` tree is similarly strictly monotonic (in which case THIS
+elementary argument would close the whole residual outright, a genuinely exciting possibility not
+yet checked), or whether some other such tree is NOT monotonic (needing the heavier zero-counting
+machinery after all). Not determined here — a precise, well-posed next question for whoever
+continues.
+
+`#print axioms` clean, only base MachLib primitives plus the two already-existing `sin`/`pi`
+axioms (`sin_zero`, `sin_pi`, `pi_pos` — nothing new), zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (408
+modules, same file extended) — still twenty-three files today, one theorem added.
