@@ -2919,3 +2919,83 @@ arc, this time catching an error in THIS session's own prior work rather than in
 Full `lake build MachLib` passes (427 modules). `#print axioms`, checked from a genuinely fresh
 rebuild per the stale-cache lesson from cont. 29: zero `sorryAx`, no dependence on
 `eml_pfaffian_validon_from_sin_equality` on either new theorem.
+
+## 2026-07-21 (cont. 31) — digging hard for a second concrete `RightChildrenEverywherePositive`
+tree: found, verified, structurally closed (bounded + non-simple); non-monotonicity mapped in
+full but genuinely harder than `growthCompetitionWitness`'s own, left open with a precise plan
+
+**Direct user request: "no second concrete tree... has yet been found... can we dig into this
+hard please."** Took this literally — searched the SAME limited combinatorial space
+(compositions of `boundedNonConstantWitness` and `E(c) := eml(BNCW c)(const1)`, the two "safe,
+bounded, positive" building blocks available) for a structurally different non-monotonic tree.
+
+**Two dead ends, ruled out RIGOROUSLY not just abandoned.** `eml(E c1)(E c2)` (`exp(exp(BNCW c1))
+- BNCW c2`, double-exp vs zero-exp) is numerically monotonic — the double-exp side dominates too
+strongly. `eml(BNCW c1)(BNCW c2)` directly (no wrapper) is UNBOUNDED (BNCW's own infimum is `0`,
+approached not attained, so the outer `log` blows up) — falls into the already-closed
+"unbounded-`T1`" case, not new ground. The SYMMETRIC `exp(BNCW c1) - exp(BNCW c2)` (both
+single-wrapped) looked non-monotonic on an INITIAL float64 scan across ~28 parameter pairs — but
+this was a FALSE POSITIVE, confirmed by re-checking at `mpmath` 30-digit precision: every pair
+tested was actually monotonic, matching an independent analytical proof (`∂/∂q[q/(E-q)²] =
+(E+q)/(E-q)³ > 0`, so the relevant bracket never changes sign). Numeric noise near a flat
+asymptotic tail (differences `~1e-10`) had been indistinguishable from a genuine sign change at
+float64 — a real, useful gotcha for future numeric exploration in this arc, recorded precisely.
+
+**The winning construction**: `exp(exp((BNCW c1).eval x)) - exp((BNCW c2).eval x)` — DOUBLE-exp(c1)
+vs SINGLE-exp(c2), the "one-level-asymmetric" pattern that made `growthCompetitionWitness` work,
+shifted up one level. Confirmed genuinely non-monotonic at high precision for `c1=1.5, c2=2.0`: a
+SINGLE local maximum near `x≈-2.2` (a different SHAPE from `growthCompetitionWitness`'s
+local-max-then-local-min — one hump, not two turning points), with clean closed-form asymptotic
+limits (`e-1` as `x→∞`).
+
+**Fully closed this round** (`WitnessResidualGrowthCompetitionDeepWitness.lean`): the tree's
+structure and clean `eval` formula, `RightChildrenEverywherePositive` (trivial, same building
+blocks), boundedness both directions (same crude-additive-bound technique as
+`growthCompetitionWitness`'s own), and non-`RightChildrenSimplePositive` (same
+`EMLTree.noConfusion` argument). Combined into `growthCompetitionWitnessDeep_partial_exists` —
+already sufficient, via cont. 30's GENERAL closure theorem, to show this tree can never be a
+witness-finding counterexample, for ANY valid `c1,c2`.
+
+**Substantial additional progress on non-monotonicity** (`WitnessResidualDeepGSignControl.lean`):
+derived and NUMERICALLY VERIFIED (finite differences vs. the formula, `mpmath`, matching to 15+
+digits — same discipline as `growthCompetitionWitness`'s own derivative work) the exact raw
+derivative: `T'(x) = exp(x)·E·g(E)`, `g(E) := q/(E-q)² - exp(E/(E-p))·p/(E-p)²`. Unlike
+`growthCompetitionWitness`'s analogous quantity, `g` retains a genuine transcendental factor
+`exp(E/(E-p))` that clearing denominators cannot remove — `quadratic_neg_between`/`quadratic_pos_
+below_vertex` don't apply. Built the ANALOGOUS sign-control tool via a different, arguably
+simpler route: rather than exploiting convexity, showed each of `g`'s two terms is monotonic
+(decreasing) in `E` DIRECTLY via pure order theory (no derivative of `g` needed at all) — `term1
+:=q/(E-q)²` decreasing via cross-multiplication (squaring preserves order on nonnegatives);
+`term2:=exp(E/(E-p))·p/(E-p)²` decreasing via `E/(E-p)` decreasing (cross-multiplication) then
+`exp` of a decreasing function (monotone composition) times `p/(E-p)²` (same fact as `term1`),
+product of two nonnegative decreasing functions being decreasing. `g_lower_bound_on_interval`/
+`g_upper_bound_on_interval` then bound `g` throughout an interval using the WORST-CASE corner —
+exactly `quadratic_neg_between`'s "no monotonicity of the target itself required" trick, applied
+to a genuinely transcendental function instead of a quadratic.
+
+**What remains, stated precisely** (not attempted past this point, deliberately — the numeric
+piece is a real escalation in scope, not routine engineering this time): (1) `HasDerivAt`
+composition for `T_D` (one more `exp` layer than `growthCompetitionWitness` needed, otherwise
+direct reuse of `boundedNonConstantWitness_hasDerivAt`); (2) an identity connecting the raw
+derivative to `exp(x)·E·g(E)` (more direct than `growthCompetitionWitness`'s own
+`clear_denom_identity`, since `g` is ALREADY in cleared form here — no further polynomial
+reduction needed, just the composition algebra); (3) NEW numeric axioms bounding `exp` at the
+SPECIFIC `E/(E-p)` values arising at chosen witness `E`-points — genuinely new machinery,
+`growthCompetitionWitness` never needed to bound `exp` beyond the trivial `exp(0)=1`; (4) the
+`E`-to-`x` translation and final `strictMono`/`strictAnti` assembly — a close structural match to
+`growthCompetitionWitness`'s own, reusable with parameter substitution. Piece (3) is the
+genuinely hard, new difficulty; the rest is mapped, analogous work.
+
+**A real Lean gotcha hit while building `g_lower_bound_on_interval`/`g_upper_bound_on_interval`,
+worth recording**: applying `term1_decreasing`/`term2_decreasing` with the explicit hypothesis
+arguments alone repeatedly picked the WRONG implicit `E1, E2` assignment (unifying against the
+hypotheses' own types before consulting the expected goal type) — silently producing "expected
+type X, got type Y" errors that looked like hypothesis mismatches rather than an inference-order
+issue. Fixed by supplying `E1 := ...`/`E2 := ...` explicitly at every call site rather than
+relying on inference. Combined with the discipline (from cont. 29) of forcing a clean rebuild plus
+a fresh `#print axioms` after every "Build completed successfully" — applied throughout this round
+as a precaution, catching real compile errors promptly rather than letting them surface later.
+
+Full `lake build MachLib` passes (429 modules). `#print axioms`, checked from genuinely fresh
+rebuilds throughout: zero `sorryAx`, no dependence on `eml_pfaffian_validon_from_sin_equality`
+anywhere in this round's new work.
