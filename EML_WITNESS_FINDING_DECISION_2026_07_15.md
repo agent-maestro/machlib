@@ -1979,3 +1979,69 @@ MachLib primitives — notably NO `HasDerivAt`/Rolle machinery anywhere in this 
 algebra throughout (the same was true of the previous two entries too) — zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (409
 modules) — **twenty-four new files in one session.**
+
+## 2026-07-20 (cont. 15) — the mirror closure built, and it retroactively defangs last entry's
+counterexample: `nonMonotonicWitness` turns out to be unbounded BELOW
+
+**The question.** `EMLSmoothness.lean` already has a free, unconditional closure for `T1`
+unbounded ABOVE (`eml_depth2_witness_of_const_sibling_unbounded_T1`, any `c2`). Does a MIRROR
+closure exist for `T1` unbounded BELOW? And if so — does `nonMonotonicWitness` (last entry's
+hard-won, genuinely non-monotonic counterexample) actually satisfy ITS hypothesis, given its
+formula blows up near the clamp boundary `x0` on informal inspection (`D.eval x → 0⁺` as `x →
+x0⁺`, so `log D → -∞`, so `T.eval x → -∞`)?
+
+**The mirror closure, built** (`WitnessResidualUnboundedBelow.lean`,
+`eml_depth2_witness_of_const_sibling_unbounded_below_T1`). Same collapse equation as the original
+(`S3 ≤ 0` everywhere ⟹ `exp(T1.eval x) - c2 = sin x` for all `x`), but reading it through
+`neg_one_le_sin` instead of `sin_le_one`: `exp(T1.eval x) ≥ c2 - 1` for ALL `x`. For `T1`
+unbounded below, pick `x` with `T1.eval x < log(c2-1)` — `exp`'s strict monotonicity
+(`Real.exp_lt`) plus `Real.exp_log` gives `exp(T1.eval x) < c2-1`, directly contradicting the
+lower bound. Needs `c2 > 1` explicitly (unlike the original, which needs no `c2` constraint at
+all) — but that's exactly the residual's own regime, so the constraint costs nothing. Same
+elementary-growth flavor, no zero-counting, `#print axioms` clean (base primitives only).
+
+**Is `nonMonotonicWitness` actually unbounded below? Yes — formally confirmed, not just
+informally.** Built an explicit, closed-form witness for every target `M` (no limits, no
+continuity machinery): choose `d := exp(-(exp(K-M)) - log(1+1))` where `K := log(1+1)+1`
+(algebraically forced into `(0,1)` since its defining exponent is manifestly negative), then
+`x := log(log(1+1)+d)` makes `D.eval x = d` EXACTLY (`exp_log` inverts the outer `log`
+cleanly). From there: `B.eval x = exp(exp x) - log d > -(log d)` (dropping the positive
+`exp(exp x)` term), and unwinding `log d = -(exp(K-M)) - log(1+1)` via `log_exp` shows
+`-(log d) = exp(K-M) + log(1+1) > exp(K-M)`, so `log(B.eval x) > log(exp(K-M)) = K-M`
+(`log_lt_log` twice). Chaining: `T.eval x = exp x - log(B.eval x) < K - (K-M) = M`. Pure algebra,
+one witness per `M`, `#print axioms` clean
+(`WitnessResidualNonMonotonic.lean:nonMonotonicWitness_unbounded_below`).
+
+**The loop closed** (`WitnessResidualNonMonotonicClosesBelow.lean`,
+`nonMonotonicWitness_closes_via_unbounded_below`): feeding `nonMonotonicWitness_unbounded_below`
+into the new mirror closure shows `nonMonotonicWitness` can NEVER be the `T1` of a genuine
+witness-finding counterexample, for any `c2 > 1` and any `S3` — exactly mirroring how
+`boundedNonConstantWitness` (cont. 13) was shown harmless via injectivity/periodicity instead.
+
+**What this actually settles — read carefully.** This does NOT reverse cont. 14's answer to "is
+every bounded tree monotonic" (still NO — `nonMonotonicWitness` genuinely is bounded above and
+non-monotonic, that finding stands untouched). What it adds is a SHARPER classification: bounded
+above alone is not enough to threaten closure, and neither is non-monotonicity alone — the
+counterexample also needs to be bounded BELOW, and the one built last round is not. Combined
+with the original theorem, the surviving open territory for the whole witness-finding residual
+narrows to exactly: **`T1` bounded in BOTH directions, non-constant, non-`RightChildrenSimplePositive`,
+AND non-monotonic** (monotonic-but-bounded is already closed via injectivity/periodicity, per
+cont. 13). No tree meeting all four conditions has been found or ruled out yet — this is now the
+precise target for anyone continuing this arc.
+
+**mach_ring, a genuinely surprising isolation gap, diagnosed and worked around again.** The exact
+shape `c2 + (E - c2) = E` (used successfully at `EMLSmoothness.lean:2294`) FAILS `mach_ring` in
+total isolation (`example (c2 E : Real) : c2 + (E - c2) = E := by mach_ring` leaves `c2 + (E + -c2)
+= E` unsolved) — even importing the exact same file. Reproducing the FULL surrounding proof
+context (extra unrelated hypotheses `hx`/`h2`/`h3` in scope from `add_le_add_left`) makes it
+close again, with no other change. Root cause not tracked down (plausibly `ac_rfl`'s AC-normal-form
+search behaving differently depending on ambient discrimination-tree state) — but the practical
+lesson is now doubly confirmed: don't trust `mach_ring` in a from-scratch isolated test as a
+verdict on whether it'll work in the REAL proof; when in doubt, reproduce the actual surrounding
+context before concluding it's a dead end.
+
+`#print axioms` clean on all three new theorems (`eml_depth2_witness_of_const_sibling_unbounded_below_T1`,
+`nonMonotonicWitness_unbounded_below`, `nonMonotonicWitness_closes_via_unbounded_below`) — only
+base MachLib primitives, `propext`/`Classical.choice`/`Quot.sound`, no `HasDerivAt`/Rolle, zero
+`sorry`. Full `lake build MachLib` passes (411 modules) — **twenty-seven new files in one
+session.**
