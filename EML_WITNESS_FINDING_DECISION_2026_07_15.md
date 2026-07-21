@@ -3641,3 +3641,61 @@ grammar allows.
 `EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality` anywhere. Full `lake build
 MachLib` passes (439 modules, up from 438). One commit this round (`52e4799e`, plus this docs
 commit), pushed.
+
+## 2026-07-21 (cont. 43) — attempting the actual residual closure, per direct request: two new
+techniques found, residual NOT closed, honest account of exactly where it stops
+
+**Direct user request**: try to actually close the residual using everything built in this arc —
+deriving `SupportsSignAnalysis` (or an equivalent) from the equation `T1.eval = target` itself,
+rather than assuming it, per the gap named at the end of cont. 42. This is genuinely the "weeks
+to a month" undertaking from the original June 12 decision doc. This round does not close it —
+but finds two real, verified, independently reusable techniques and sharpens exactly where the
+remaining wall is, from a new angle.
+
+**Checked a real fact before relying on it**: does `Real.log`'s clamp make it CONTINUOUS at its
+boundary (a claim this doc's own cont. 30 entry asserted)? Read `Log.lean`'s actual definition
+directly rather than trusting the earlier characterization — it does NOT. `log` returns exactly
+`0` for `x ≤ 0` while the true logarithm diverges to `-∞` as `x → 0⁺` (a deliberate design choice,
+matching this file's own comment: "GNU libc gives `-∞`, we deliberately use `0`"). This is a
+genuine DISCONTINUITY, not just non-differentiability — confirming an arbitrary, unknown EML
+tree has NO free continuity/differentiability guarantee, and that guarantee genuinely depends on
+whether its own right children avoid the clamp boundary — exactly the fact under investigation.
+The earlier "continuous at 0" claim was wrong; worth having caught before building on it.
+
+**Technique 1 — differentiability transports for free from the target's own closed form**
+(`WitnessResidualClosureAttempt.lean`, `T1_hasDerivAt_of_eq_nestedTarget`). The fix needs no
+structural argument on `T1` at all: `nestedTarget cs` is a SPECIFIC, KNOWN function, provably
+differentiable everywhere given `nestedWF cs` (`nestedTarget_hasDerivAt`, straightforward
+induction on `cs` composing `HasDerivAt_sin`/`HasDerivAt_log_pos`). Since the residual's own
+hypothesis gives `T1.eval = nestedTarget cs` GLOBALLY, `HasDerivAt_of_eq` transports that
+differentiability directly onto `T1` — sidestepping "does an arbitrary tree's structure guarantee
+differentiability" for `T1` ITSELF, with zero assumption on `T1`'s own shape.
+
+**Technique 2 — pure algebra pins down `B` pointwise, no IVT needed at all**
+(`B_eval_forced_pos_of_ne`). For `T1 = eml A B`, `T1.eval x0 = target x0` directly gives
+`log(B.eval x0) = exp(A.eval x0) - target x0`. `log`'s clamp returns EXACTLY `0` for non-positive
+arguments — so if this computed quantity is NONZERO, `B.eval x0` is FORCED strictly positive
+(in fact forced to equal `exp(exp(A.eval x0) - target x0)` EXACTLY) — no IVT, no continuity, no
+differentiability argument anywhere. Confirmed by the axiom check: depends on nothing beyond the
+most basic ordered-field facts, not even `exp_pos`. Contrapositive
+(`exp_A_eq_target_of_B_nonpos`): the ONLY way `B` can ever be non-positive is at a point where
+`A`'s exp-image hits the target exactly.
+
+**Where this leaves the residual, precisely — not overstated.** These two facts together pin
+down `B` almost everywhere: positive unconditionally EXCEPT possibly at points where
+`exp(A(x)) = target(x)` exactly (the "ambiguous set"). If that set is empty, `B` is positive
+EVERYWHERE for free, closing the case immediately via the existing `RightChildrenEverywherePositive`
+machinery. But the set's emptiness is NOT free — it depends on `A`'s own behavior, which is
+EXACTLY what the induction is trying to establish in the first place, and it does NOT transport
+the same way `T1`'s differentiability did: `A`, unlike `T1`, has no known closed form independent
+of the tree's own unknown structure (that's what makes `A` the unknown, not the target). This is
+the SAME underlying difficulty this whole arc identified from its earliest rounds ("grounded WHY
+path 1 is hard" — general compound trees mixing clamped/unclamped regions needs machinery not yet
+built) — now sharpened and CONFIRMED from a genuinely different angle (pointwise algebra and
+differentiability-transport, not the Pfaffian-chain encoding originally used to state it), rather
+than resolved. Both techniques remain independently reusable for whoever continues: transport
+works for ANY equation `T1.eval = (known closed-form target)`, not just this family; the pointwise
+determination works for ANY compound tree at all, not just nested-target-family instances.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. Full `lake build MachLib` passes (440
+modules, up from 439). One commit this round (`d7d07845`, plus this docs commit), pushed.
