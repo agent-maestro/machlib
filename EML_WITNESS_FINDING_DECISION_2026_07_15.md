@@ -3118,3 +3118,105 @@ Full `lake build MachLib` passes (432 modules). `#print axioms`, checked from ge
 rebuilds throughout (including the final assembly theorem itself): zero `sorryAx`, no dependence
 on `eml_pfaffian_validon_from_sin_equality` anywhere in this round's new work. Two commits this
 round (`66bb6f81`, `d55aaa84`, plus this docs commit), all pushed.
+
+## 2026-07-21 (cont. 34) — RESEARCH, no Lean this round: mapping the "no-clamp ⟹
+`EMLPfaffianValidOn` is free" mechanism's actual reach, per the honest open question flagged at
+the end of cont. 28/31 — finding: a SECOND, largely disconnected mechanism already exists
+
+**Direct user request**: assess "how much of the original general tree-depth induction (arbitrary
+compound trees, not just `RightChildrenEverywherePositive` ones) does the no-clamp mechanism
+actually reach" — explicitly framed as research, not routine engineering. No Lean written this
+round; this is a survey + a concrete, scoped finding for whoever picks up the next round.
+
+**Part 1 — `RightChildrenEverywherePositive`'s reach is real but structurally narrow.** Re-read
+its definition precisely (`WitnessResidualRightChildrenEverywherePositive.lean:82`): recursive
+over BOTH children (`RCEP t1 ∧ RCEP t2 ∧ ∀x,0<t2.eval x`) — meaning `var` can NEVER appear as a
+right child ANYWHERE in the tree, at any depth, since `var.eval x = x` isn't positive for `x≤0`.
+Left children (and left-spines built from them) are unrestricted in CONTENT but must themselves
+recursively satisfy the same right-child constraint. The one universally-safe recipe this arc has
+found and reused (`eml P (const 1)` is `exp(P.eval x) - log 1 = exp(P.eval x) > 0` for ANY `P`,
+no constraint on `P` needed) is why `boundedNonConstantWitness`/`E_BNCW`-style trees qualify. Net
+effect: the class is "trees where every right-branch point is capped by a positive-constant-style
+wrapper instead of exposing raw content" — real and useful (two structurally different witnesses
+now live in it), but inherently excludes any tree with a genuinely load-bearing, sign-changing
+right child anywhere — which is most of the "interesting" compound-tree space.
+
+**Part 2 — a SECOND mechanism already exists, built for exactly this gap, and it's currently
+disconnected from the witness-finding closure.** `EMLZeroCrossing*.lean` (10 files:
+`Depth1`/`Depth2Compound`/`Depth3Compound`/`DomainSplit`(+`General`)/`BothCompound`(+`Deeper`,
++`General`,+`DeeperGeneral`)/`ConvexT1`) is explicitly self-described as "Continuation of path (1)"
+— this IS the original general tree-depth induction, just via ELEMENTARY calculus (Rolle +
+derivative monotonicity) instead of the Khovanskii/Pfaffian-chain route, entirely bypassing
+`EMLPfaffianValidOn`. Its headline theorems (e.g. `eml_const_evarConstC2_boundedZeros`,
+`WitnessResidualChainSkeleton.lean`-analogue-shaped) prove `∀ a b, zeros of (eml t1 t2).eval on
+(a,b) ≤ [literal constant]` — genuinely UNIFORM, interval-length-INDEPENDENT bounds, confirmed by
+reading the actual type signatures (not just docstrings), e.g. `eml_const_evarConstC2_boundedZeros
+(c1 c2 : Real)(hc2:1<c2)(a b:Real) : ∀ zeros, ... → zeros.length ≤ 4` — `a,b` universally
+quantified, `4` a bare literal. The capstone, `eml_convexT1_conditionT2_boundedZeros`
+(`BothCompoundDeeperGeneral.lean`): `t1` convex + `t2` sign-crossing-with-a-structural-condition
+⟹ `eml T1 t2` has `≤3` zeros on ANY interval, `M` auto-discharged.
+
+**Why this matters, precisely.** `zeros of (eml T1 (const K)).eval x = 0` is EXACTLY `zeros of
+T1.eval x = log K` — the SAME quantity `WitnessResidualChainSkeleton.lean`'s `T1_not_eq_log_c2_
+plus_sin_given_validon` needs a bound on (there, supplied by `combinedBoundE`, which NEEDS
+`EMLPfaffianValidOn T1`). If ANY of these elementary bounds applied to `T1 := const K`'s role,
+plugging a LITERAL bound straight into an analogous "no validity needed" version of that theorem
+would close the residual for that `T1` shape with ZERO `EMLPfaffianValidOn` dependency — not just
+avoiding the hard case-split machinery (RightChildrenEverywherePositive's own trick), but avoiding
+`EMLPfaffianValidOn`/the Khovanskii encoder ENTIRELY.
+
+**Checked whether this composition is already wired anywhere — it is NOT.** Import-graph search:
+zero files both depend on `EMLZeroCrossing*` AND feed a bound into `WitnessResidualChainSkeleton`/
+`WitnessResidualTargetGeneric`-style closure. The two mechanisms (RightChildrenEverywherePositive
+and the elementary zero-crossing family) have run as fully independent threads since roughly
+cont. 19–24 (crossing family, elementary "constant on a ray" trick, unrelated to both) diverged
+from cont. 25+ (growthCompetitionWitness, RightChildrenEverywherePositive). `EMLZeroCrossing*`'s
+own uniform bounds have never been consumed by anything outside their own files.
+
+**The concrete gap, characterized exactly.** The family has `eml_const_genericT2_boundedZeros`
+(const `t1`, generic sign-crossing `t2`) and `eml_genericT1_genericT2_boundedZeros`/`eml_convexT1_
+conditionT2_boundedZeros` (generic/convex `t1`, generic sign-crossing `t2`) — but NO "generic
+(or convex) `t1`, CONSTANT `t2`" variant. That's the one actually needed for the `log K`-target
+application (a constant `t2` has no crossing point to domain-split on at all — a structurally
+different, in fact SIMPLER argument: `d/dx[eml T1 (const K)] = exp(T1eval x)·T1deriv(x)` exactly
+— zero iff `T1deriv(x)=0`, so if `T1` is convex on `(x0,b)`, `expMul_atMostOneZero_of_convex`
+(`EMLZeroCrossingConvexT1.lean`, ALREADY built, explicitly "independent of `log`/`eml`/this
+investigation entirely") gives `≤1` critical point directly, then `zero_count_bound_by_deriv`
+(Rolle, used everywhere in this family) lifts that to `≤2` zeros of `eml T1 (const K)` on
+`(x0,b)` — the SAME "nearly free, pure wiring" pattern `EMLZeroCrossingDepth3Compound.lean`
+already demonstrated for a different composition. Realistically ~20–50 lines, no new mathematical
+content, matching this arc's own established estimate style.
+
+**The honest limit of even that, checked before recommending it as "the" next step.** A function
+that's CONVEX on ALL of ℝ and non-constant is necessarily unbounded (basic real analysis) — so a
+`eml_convexT1_const_boundedZeros`-style theorem, built exactly as scoped above, would only ever
+supply a BOUNDED `T1` if convexity is restricted to a sub-ray `(x0,b)` (matching every existing
+theorem's own shape) with the LEFT region handled separately (clamp/constant, the same recipe used
+throughout this family) — meaning: closing a genuinely NEW witness this way still needs a
+NEW CONCRETE bounded, non-monotonic `T1` construction with a provably-eventually-convex-or-concave
+derivative and a right child that GENUINELY crosses zero (not `RightChildrenEverywherePositive`) —
+not yet searched for, numerically or otherwise. `growthCompetitionWitness`/`growthCompetitionWitness
+Deep` themselves don't qualify as NEW targets for this route (their right children are ALREADY
+globally positive by construction — that's what got them closed via the other mechanism).
+
+**Net assessment, stated as plainly as the question was asked.** The no-clamp/`RightChildrenEverywhere
+Positive` mechanism's reach is real but narrow (no `var` ever as a right child, anywhere). It does
+NOT, by itself, meaningfully close the general tree-depth induction. But a SECOND mechanism
+(elementary zero-crossing bounds, `EMLZeroCrossing*.lean`, unconnected until now) already covers a
+different, complementary slice — and even at ITS most general point (`eml_convexT1_condition
+T2_boundedZeros`), it structurally cannot reach bounded, non-monotonic `T1` with a crossing right
+child without a further "generic-`t1`-plus-const-`t2`" theorem (scoped above, not yet built) AND a
+brand-new concrete witness tree (not yet searched for). The fraction of "arbitrary compound trees"
+covered by everything built so far — RightChildrenEverywherePositive class ∪ the elementary
+zero-crossing family's actual (currently unconnected) shapes ∪ the "crossing family"/"constant
+on a ray" elementary trick — is genuinely larger than any one mechanism alone suggests, but still
+far from "arbitrary compound tree," and no single remaining piece would close it in one round.
+Two concrete, honestly-scoped next steps for whoever continues, in order of effort: (1) build
+`eml_convexT1_const_boundedZeros` + the "no validity needed" closure analogue (small, mechanical,
+high-confidence); (2) search for a genuinely new bounded/non-monotonic/crossing-right-child `T1`
+to plug into it (open-ended, numeric-first per house style, comparable in scope to the original
+`growthCompetitionWitness` hunt).
+
+No files changed, no build run — pure research/survey round, recorded here so the next session
+doesn't have to re-derive the import-graph check or re-read the ten `EMLZeroCrossing*.lean`
+signatures from scratch.
