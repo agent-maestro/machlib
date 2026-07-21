@@ -162,5 +162,61 @@ theorem growthCompetitionWitnessDeep_deriv_clear_denom (c1 c2 z : Real)
   exact deep_clear_denom_identity (exp_A_mul_denom c1 z hApos) (deriv_A_mul_denom c1 z hApos)
     (exp_A_mul_denom c2 z hBpos) (deriv_A_mul_denom c2 z hBpos)
 
+/-- **The sign bridge, negative side.** Divides the cleared identity back out through the
+known-positive `(E-p)²·(E-q)²` — same technique as `growthCompetitionWitness_deriv_neg_of_quad_neg`,
+reusing `neg_of_mul_neg_pos` (`WitnessResidualGrowthCompetitionDeriv.lean`) unchanged. -/
+theorem growthCompetitionWitnessDeep_deriv_neg_of_quad_neg (c1 c2 z : Real)
+    (hApos : 0 < Real.exp (Real.exp z) - Real.log c1)
+    (hBpos : 0 < Real.exp (Real.exp z) - Real.log c2)
+    (hquad : Real.log c2 * (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) - Real.log c1)
+        - Real.exp (Real.exp (Real.exp z) / (Real.exp (Real.exp z) - Real.log c1)) * Real.log c1
+          * (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2) < 0) :
+    Real.exp (Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1)))
+        * Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) * Real.exp z))
+      - Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c2))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) * Real.exp z))
+      < 0 := by
+  have hident := growthCompetitionWitnessDeep_deriv_clear_denom c1 c2 z hApos hBpos
+  have hrhs_neg := mul_neg_of_pos_of_neg_local
+    (mul_pos (Real.exp_pos z) (Real.exp_pos (Real.exp z))) hquad
+  rw [← hident] at hrhs_neg
+  have hBpossq : 0 < (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2) :=
+    mul_pos hBpos hBpos
+  have hdenom_pos : 0 < (Real.exp (Real.exp z) - Real.log c1)
+      * ((Real.exp (Real.exp z) - Real.log c1)
+        * ((Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2))) :=
+    mul_pos hApos (mul_pos hApos hBpossq)
+  rw [mul_assoc, mul_assoc, mul_assoc] at hrhs_neg
+  exact neg_of_mul_neg_pos hrhs_neg hdenom_pos
+
+/-- **The sign bridge, positive side.** Mirror of the above, for `strictMono_of_deriv_pos`. -/
+theorem growthCompetitionWitnessDeep_deriv_pos_of_quad_pos (c1 c2 z : Real)
+    (hApos : 0 < Real.exp (Real.exp z) - Real.log c1)
+    (hBpos : 0 < Real.exp (Real.exp z) - Real.log c2)
+    (hquad : 0 < Real.log c2 * (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) - Real.log c1)
+        - Real.exp (Real.exp (Real.exp z) / (Real.exp (Real.exp z) - Real.log c1)) * Real.log c1
+          * (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2)) :
+    0 < Real.exp (Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1)))
+        * Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) * Real.exp z))
+      - Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c2))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) * Real.exp z)) := by
+  have hident := growthCompetitionWitnessDeep_deriv_clear_denom c1 c2 z hApos hBpos
+  have hrhs_pos : 0 < Real.exp z * Real.exp (Real.exp z)
+      * (Real.log c2 * (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) - Real.log c1)
+        - Real.exp (Real.exp (Real.exp z) / (Real.exp (Real.exp z) - Real.log c1)) * Real.log c1
+          * (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2)) :=
+    mul_pos (mul_pos (Real.exp_pos z) (Real.exp_pos (Real.exp z))) hquad
+  rw [← hident] at hrhs_pos
+  have hBpossq : 0 < (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2) :=
+    mul_pos hBpos hBpos
+  have hdenom_pos : 0 < (Real.exp (Real.exp z) - Real.log c1)
+      * ((Real.exp (Real.exp z) - Real.log c1)
+        * ((Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) - Real.log c2))) :=
+    mul_pos hApos (mul_pos hApos hBpossq)
+  rw [mul_assoc, mul_assoc, mul_assoc] at hrhs_pos
+  exact pos_of_mul_pos_right hrhs_pos hdenom_pos
+
 end Real
 end MachLib
