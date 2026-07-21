@@ -1642,3 +1642,53 @@ for a FOURTH time this session without needing to rediscover the approach.
 **Build friction: none.** Compiled clean, first attempt, both theorems. `#print axioms` clean,
 only base MachLib primitives, zero `sorry`. Full `lake build MachLib` passes (404 modules) —
 **nineteen new files in one session.**
+
+## 2026-07-20 (cont. 9) — CAPSTONE: the `R`-side generalized too, and the full "both children
+## compound" theorem completed
+
+Per continued "proceed please." Completed the other half of the `D = P - R` generalization begun
+last entry, then combined both halves into the fully general "both children compound" theorem this
+whole sub-arc has been building toward.
+
+**The `R`-side condition, derived on paper.** For abstract `t2eval`/`t2deriv` (`t2deriv2` :=
+`t2deriv`'s own derivative), the quotient/product rule gives `R'(z) = -t2deriv(z)²/t2eval(z)² +
+t2deriv2(z)/t2eval(z)`. On `t2eval(z) > 0` this is negative EXACTLY when `t2deriv2(z)·t2eval(z) <
+t2deriv(z)²` — a genuine, checkable condition on any `t2`, not tied to `exp - log c2'`. Checked
+against the concrete instance (`t2deriv = t2deriv2 = exp`): the condition reduces to `exp(z)·(exp
+z - log c2') < exp(z)²`, i.e. `-log c2' < 0`, i.e. `c2' > 1` — recovering the ORIGINAL
+sign-crossing hypothesis exactly, for free, rather than needing a new one.
+
+**The capstone** (`eml_convexT1_conditionT2_boundedZeros`, new file
+`EMLZeroCrossingBothCompoundDeeperGeneral.lean`): combines the `P`-side (`t1` convex) and `R`-side
+(`t2` satisfies the quadratic condition) results by calling `eml_genericT1_genericT2_boundedZeros`
+with `M := 1` DISCHARGED AUTOMATICALLY via `D_atMostOneZero_general`, rather than left for the
+caller to supply (as `eml_genericT1_genericT2_boundedZeros` itself does). This is the fully
+general "both children compound" theorem: `t1` convex, `t2` sign-crossing with the condition ⟹
+`eml T1 t2` has `≤3` zeros, no validity assumption, both `t1` and `t2` fully abstract functions
+(not tied to any particular `EMLTree` shape). Sanity-check corollary re-derives
+`eml_evarvar_evarConstC2_boundedZeros` (confirming equivalence, `t2deriv2 := Real.exp` since
+`Real.exp` is its own derivative — `hasDerivAt_evarConstC` reused verbatim for that fact too).
+
+**Build friction — two real fixes, both quick once diagnosed.** (1) `mul_neg_of_neg_of_pos` (`a<0
+→ 0<b → a·b<0`) already exists in the codebase (`SturmNonOscillation.lean`) but isn't reachable
+transitively from this file's import chain — rather than pull in an unrelated branch of the
+codebase for one three-line fact, re-derived it locally (`neg_pos_of_neg` + `mul_pos` + `neg_mul`
++ `neg_neg_of_pos` + `neg_neg_helper`, all already reachable). (2) The `R`-side's own
+`generalize`-then-`mach_ring` step, expected (from the prior entry's identical-looking pattern) to
+need a manual commute patch, actually closed FULLY on `mach_ring` alone this time — the earlier
+manual-patch code caused an "no goals to be solved" error when left in place. Removed it. Useful
+correction to the working assumption from last entry: `mach_ring`'s ability to close a
+post-`generalize` goal isn't a fixed property of "does it involve a generalized division atom" —
+it depends on the SPECIFIC term shape, so the safe move is trying `mach_ring` alone FIRST and only
+adding the manual patch if it actually leaves a residual, not assuming the patch is needed
+up front.
+
+**Why this matters.** This closes the "both children compound" arc that opened with today's
+concrete instance, ran through strengthening (dropping `c2'≤e`) and one level of generalization
+(any sign-crossing `t2`, `t1` still `const c1`), then a genuinely deeper concrete instance
+(`eml var var`), and now arrives at the natural capstone: a single theorem taking ONLY the two
+mathematically meaningful conditions (`t1` convex, `t2`'s quadratic-type condition) and delivering
+the zero-count bound, with every concrete instance built today reducible to a corollary. `#print
+axioms` clean on both new theorems, only base MachLib primitives, zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (405
+modules) — **twenty new files in one session.**
