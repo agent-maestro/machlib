@@ -1613,3 +1613,32 @@ instance, and it closed in one sitting once the `P`/`R` decomposition was found 
 axioms` clean, only base MachLib primitives, zero `sorry`, `eml_pfaffian_validon_from_sin_
 equality` does not appear. Full `lake build MachLib` passes (403 modules) — **eighteen new files
 in one session.**
+
+## 2026-07-20 (cont. 8) — the `P`-side finding generalized: convexity, not this one tree shape
+
+Per continued "proceed please." The prior entry's core insight — `P(z) := exp(t1eval z)·t1deriv
+z` is strictly increasing whenever `t1` is CONVEX (`t1deriv` itself has positive derivative),
+REGARDLESS of `t1deriv z`'s own sign — never actually used anything specific to `t1 = eml var
+var`. Distilled it into a standalone, `t1`-agnostic lemma (`EMLZeroCrossingConvexT1.lean`,
+`expMul_atMostOneZero_of_convex`): given `t1eval`/`t1deriv`/`t1deriv2` (`t1deriv`'s own
+derivative) on `(c,d)`, and `t1deriv2 > 0` there (convexity), `exp(t1eval x)·t1deriv x` has at
+most one zero on `(c,d)` — a genuine, reusable real-analysis fact, not tied to `log`, `eml`, or
+this investigation at all.
+
+**Sanity check**: `EMLZeroCrossingBothCompoundDeeper.lean`'s `P_deriv_pos` re-derived
+(`P_deriv_pos_via_general`) by instantiating `t1eval = exp - log`, `t1deriv = fun x => exp x -
+1/x`, `t1deriv2 = fun x => exp x - (-1/(x·x))`, with convexity supplied directly by
+`exp_sub_inv_deriv_pos` (already built, reused verbatim) — confirms the generalization is
+equivalent to the hand-built fact.
+
+**Why bother generalizing a `P_deriv_pos` that already worked for the one case needed.** This
+mirrors the `t2`-generalization pattern from three entries back exactly: the mechanism (positive
+second-derivative regardless of first-derivative sign) is the actually interesting, reusable
+content — any future `t1` with a KNOWN convexity fact (not just `eml var var`) gets `P`'s ≤1-zero
+bound for free, without re-deriving the square-plus-positive-term argument. Matches the toolkit's
+now-established "generalize the reusable mechanism out of the concrete instance" recipe, applied
+for a FOURTH time this session without needing to rediscover the approach.
+
+**Build friction: none.** Compiled clean, first attempt, both theorems. `#print axioms` clean,
+only base MachLib primitives, zero `sorry`. Full `lake build MachLib` passes (404 modules) —
+**nineteen new files in one session.**
