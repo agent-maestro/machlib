@@ -2999,3 +2999,72 @@ as a precaution, catching real compile errors promptly rather than letting them 
 Full `lake build MachLib` passes (429 modules). `#print axioms`, checked from genuinely fresh
 rebuilds throughout: zero `sorryAx`, no dependence on `eml_pfaffian_validon_from_sin_equality`
 anywhere in this round's new work.
+
+## 2026-07-21 (cont. 32) — `growthCompetitionWitnessDeep`'s FULL derivative machinery built and
+verified; concrete witness points pinned down with real margins; only the final numeric-bound
+layer and E-to-x/assembly remain, precisely scoped
+
+**Direct user request: "proceed into that please"**, continuing cont. 31's precisely-scoped
+non-monotonicity work. Built essentially the ENTIRE derivative pipeline this round — matching
+cont. 26+27's whole scope for `growthCompetitionWitness`, but one `exp` layer deeper and with a
+genuinely transcendental (not pure-algebra) term surviving throughout.
+
+**`growthCompetitionWitnessDeep_hasDerivAt`** (`WitnessResidualDeepDeriv.lean`): three layers of
+`HasDerivAt_comp` (`exp(A)`, `exp(exp(A))`, `exp(B)`) then `HasDerivAt_sub`, reusing
+`boundedNonConstantWitness_hasDerivAt` unchanged for both `A` and `B`. Hit a genuinely new
+wrinkle: `HasDerivAt_comp`'s natural output associates the derivative value as `b·(a₁·a₂)` once
+`a` is itself already a product from a prior composition step — NOT `(b·a₁)·a₂`. Rather than
+fighting this per-step, used `HasDerivAt_of_eq` to re-anchor both function and value to a clean,
+uniform shape immediately after EACH composition, so associativity mismatches never compound
+across layers — a technique worth remembering for any FUTURE multi-layer composition in this
+codebase.
+
+**`growthCompetitionWitnessDeep_deriv_clear_denom`**: `T_D'(z)·(E-p)²·(E-q)² = exp(z)·E·[q·(E-p)²
+- U·p·(E-q)²]`, `U := exp(E/(E-p)) = exp(exp(A(z)))`. Verified numerically (random substitution
+respecting the four defining constraints, THEN a finite-difference ground-truth check for the
+concrete `c1=1.5,c2=2.0` instance) before any Lean. Built via an ABSTRACT `deep_clear_denom_
+identity`, `U` staying opaque throughout (genuinely transcendental — no amount of clearing removes
+it), substituting `exp(A(z)), A'(z), exp(B(z)), B'(z)` via their own already-proven multiplied-out
+facts (`exp_A_mul_denom`, `deriv_A_mul_denom` — REUSED UNCHANGED from `growthCompetitionWitness`'s
+own file, since `A, B` are the identical `boundedNonConstantWitness` objects). Needed `set_option
+maxHeartbeats 1000000` — the extra substitution layer genuinely pushes past `mach_mpoly`'s default
+budget, a real complexity increase over the original tree's identical-in-spirit identity. One
+piece `growthCompetitionWitness` never needed: `exp_A_eq_ratio`, isolating `exp(A(z)) = E/(E-p)`
+via division (not just the multiplied form) — needed to express `U` explicitly.
+
+**The sign bridge** (`growthCompetitionWitnessDeep_deriv_neg_of_quad_neg`/`_pos_of_quad_pos`):
+divides the cleared identity back out through the known-positive `(E-p)²·(E-q)²`, reusing
+`neg_of_mul_neg_pos`/`pos_of_mul_pos_right` UNCHANGED from `growthCompetitionWitness`'s own sign
+bridge.
+
+**Concrete witness points, pinned down numerically with real margins** (not yet in Lean — this is
+the piece left for next round): the naive choice of a WIDE interval for the negative region (e.g.
+`[1.3, 3.0]`, which had a comfortable margin at growthCompetitionWitness's own quadratic tool)
+turned out TOO LOOSE here — the `term1`/`term2` "worst-case corner" trick is looser for this
+transcendental `g` than for a quadratic, since `term2` (`U`-weighted) moves faster across a wide
+range. Found workable, comfortably-margined intervals by narrowing: **positive region `E ∈
+[1.02, 1.03]`** (worst-case bound `term1(1.03)-term2(1.02) ≈ +0.409`, robust across a `±0.0005`
+box on `p := log(1.5), q := log(2.0)`) and **negative region `E ∈ [1.48, 1.52]`** (worst-case
+bound `term1(1.48)-term2(1.52) ≈ -0.152`, same robustness check) — centered near `g`'s actual
+minimum (`≈-0.268` at `E≈1.5`, from the earlier numeric survey) rather than spread across
+`g`'s whole negative range, since narrower intervals give tighter (hence more robust) corner
+bounds for THIS transcendental target. The needed `exp(E/(E-p))` arguments at these witnesses
+are narrow ranges themselves (`≈1.658–1.661` at `E=1.02`; `≈1.363–1.365` at `E=1.52`) — meaning
+the FINAL numeric axioms needed are tight `exp`-value brackets at these two specific small
+ranges, on top of the already-familiar `log(1.5)`/`log(2.0)` bracket axioms.
+
+**What remains, precisely** (not attempted past this point): (1) two new numeric axioms bracketing
+`log(1.5)` and `log(2.0)` (same style as `growthCompetitionWitness`'s `log_2_2_bounds`/`log_2_7_
+bounds`); (2) two new numeric axioms bracketing `exp` at the specific narrow ranges above — the
+GENUINELY new piece, needing the log-bounds to first pin down `E/(E-p)`'s range via interval
+arithmetic through a rational function, THEN bound `exp` there; (3) instantiate `g_lower_bound_
+on_interval`/`g_upper_bound_on_interval` at the four witness `E`-values, connecting to the sign
+bridge; (4) the `E`-to-`x` translation (`exp_exp_log_log`/`log_log_mono`/`exp_exp_mono`, ALL
+already built and REUSABLE unchanged from `WitnessResidualGrowthCompetitionAssembly.lean`) and
+final `strictMono`/`strictAnti` + non-monotonicity assembly — a close structural match to
+`growthCompetitionWitness`'s own, differing only in which concrete facts get plugged in.
+
+Full `lake build MachLib` passes (430 modules). `#print axioms`, checked from genuinely fresh
+rebuilds throughout: zero `sorryAx`, no dependence on `eml_pfaffian_validon_from_sin_equality`
+anywhere in this round's new work. Three commits this round (`f3fa5d62`, `0bcd31f7`, plus this
+docs commit), all pushed.
