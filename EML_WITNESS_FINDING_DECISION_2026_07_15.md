@@ -2302,3 +2302,68 @@ via `grep` on the full `#print axioms` output, not just eyeballed — **it does 
 proof is genuinely non-circular: it doesn't smuggle in the very fact it's supposedly helping
 establish. Zero `sorryAx` either (also grep-checked explicitly). Full `lake build MachLib`
 passes (416 modules) — **thirty-two new files in one session.**
+
+## 2026-07-21 (cont. 21) — the honest follow-up question, answered: the negative-crossing
+resolution structurally CANNOT extend to a positive crossing
+
+**The question from last round's own scope note.** `expWrappedNonMonotonicWitness` closed
+because its crossing sits at negative `x`, outside the region the closure route
+(`no_tree_eq_nested_target_given_validon`, needing `EMLPfaffianValidOn T1 0 b` for ALL `b > 0`)
+ever inspects. The honest caveat: a tree in the SAME open classification with its crossing at
+POSITIVE `x` would need a genuinely different argument. Checked numerically first (python,
+`c=20` gives crossing `x0≈1.10`, tree still bounded `[0.93,1.00]` and non-monotonic — same
+qualitative shape as the `c=2` case, just shifted) before touching Lean.
+
+**Formalized: not "this session's specific proof doesn't apply" but "no proof via this route
+possibly could"** (`EMLPfaffianValidOnCrossingObstruction.lean`, commit `68686049`). `EMLPfaffianValidOn`'s
+own definition demands strict positivity of every log-argument THROUGHOUT the open interval — if
+any internal right child hits exactly `0` anywhere inside `(a,b)`, validity is FALSE there, one
+unfolding step from the definition, no induction needed
+(`eml_pfaffian_validon_false_of_crossing`). Failure at any node propagates upward through
+arbitrarily many further wrappings (`eml_pfaffian_validon_false_propagates_left`/`_right` — a
+compound tree's own validity unconditionally needs BOTH children valid). Chaining these three
+steps: for `nonMonotonicWitnessC c` / `expWrappedNonMonotonicWitnessC c` (the SAME shape as
+`nonMonotonicWitness`/`expWrappedNonMonotonicWitness`, crossing constant `c` left free instead
+of hardcoded to `1+1`), whenever `c` is large enough that the crossing point `log(log c)` is
+POSITIVE, `EMLPfaffianValidOn (expWrappedNonMonotonicWitnessC c) 0 b` is PROVABLY FALSE for
+every `b` past that crossing — the exact hypothesis `no_tree_eq_nested_target_given_validon`
+needs, unconditionally unavailable.
+
+**A concrete, parameter-free instance, not just an abstract conditional**: `c := exp(exp 1)`
+gives an EXACT crossing point `log(log c) = 1` (two applications of `log_exp`, no numerical
+approximation of `e` needed anywhere) — `concreteC_validon_false`: this specific, fully written-
+down tree is `EMLPfaffianValidOn`-invalid on `(0, 1+1)`, full stop.
+
+**Scope, stated with the same care as every other round.** This is a NEGATIVE, STRUCTURAL result
+about the `EMLPfaffianValidOn`-based route specifically — it does NOT construct a NEW verified
+counterexample to the witness-finding residual (that would additionally need FORMALLY proving
+`expWrappedNonMonotonicWitnessC c` is bounded both directions and non-monotonic for such `c`,
+which was only checked NUMERICALLY here for illustration, not formalized in Lean — a real,
+substantial undertaking on its own, deliberately not attempted this round given the negative
+result already answers the question that motivated it). What it DOES establish, rigorously: the
+resolution technique from last round is not a general-purpose tool that happens to work for
+every tree in the open classification — it structurally cannot reach ANY tree with a positive-x
+crossing. This CONFIRMS, now via a concrete verified example rather than abstract reasoning,
+something this whole multi-week arc suspected much earlier (the "why path (1) is hard,
+precisely" entry, `2026-07-20`, cont. before this session): positivity-based validity has no
+notion of a relation that switches sign, and cannot describe a tree across a sign change without
+a genuinely new branch-switching Pfaffian chain construction this codebase doesn't have yet.
+
+**Net honest status of the arc, after 21 rounds today.** The residual's open classification is
+non-empty (cont. 19); every SPECIFIC tree probed so far (by whatever mechanism available) has
+turned out either closable (both `nonMonotonicWitness` itself and
+`expWrappedNonMonotonicWitness`) or — for the deliberately-constructed harder case this round —
+genuinely resistant to the ONE technique that worked before, confirmed rigorously rather than
+assumed. No tree has yet been shown to be BOTH a genuine open-classification member AND
+unclosable by every available technique — that would need completing the "boundedness +
+non-monotonicity for general `c`" formalization this round deliberately deferred, combined with
+either a genuinely new closure mechanism or a demonstration that none exists. Realistically the
+natural target for a dedicated future session, not a continuation of today's incremental
+narrowing.
+
+`#print axioms` clean on both main theorems — pure algebra, no `HasDerivAt` (this result needs
+no calculus at all, unlike last round's), only base MachLib primitives. Zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` doesn't even appear as a DEPENDENCY risk here (this
+result is about `EMLPfaffianValidOn`'s own definition, orthogonal to the axiom under
+investigation). Full `lake build MachLib` passes (417 modules) — **thirty-three new files in one
+session.**
