@@ -2247,3 +2247,58 @@ disproof of anything, a target.
 anywhere, inherited from `nonMonotonicWitness`'s own pure-algebra proofs), zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` doesn't appear. Full `lake build MachLib` passes (415
 modules) — **thirty-one new files in one session.**
+
+## 2026-07-21 (cont. 20) — the test case resolved: `expWrappedNonMonotonicWitness` closes too,
+via the pre-existing heavy machinery, genuinely non-circular
+
+**The question left open last round.** `expWrappedNonMonotonicWitness` escapes every free
+closure this session built — the honest framing was "a test case, not a disproof": does the
+PRE-EXISTING (before-this-session) zero-counting/Pfaffian-chain machinery still close it?
+
+**Yes — fully verified, non-circular.**
+(`WitnessResidualExpWrappedNonMonotonicClosed.lean`, commit `e9f1bf18`.)
+`no_tree_with_simple_right_children` (`WitnessResidualSimpleT1Application.lean`) closes trees via
+that heavy machinery by supplying two structural facts — `EMLWitnesses T1 x0` (a positivity
+anchor threaded through every node) and `∀x>0, EMLNoCrossingAt T1 x` (no internal log-argument
+hits exactly `0`, for `x>0`) — normally obtained for free from `RightChildrenSimplePositive`.
+That freeness doesn't apply here (that's WHY this tree escaped every free closure) — but both
+facts turn out to be independently provable BY HAND, using facts ALREADY established about
+`nonMonotonicWitness` two rounds ago, no new hard analysis needed.
+
+**The key structural observation that makes this work.** `nonMonotonicWitness`'s own
+problematic zero-crossing — where its right-child chain `D := eml var (const 2)` crosses zero —
+sits at `x0 = log(log 2) ≈ -0.37`, a NEGATIVE point (proven exactly:
+`nonMonotonicWitness_x0_neg`, via `exp_gt_one_plus_self` at `x=1` giving `2 < e`, hence
+`log 2 < 1`, hence `log(log 2) < 0`). The heavy machinery only ever needs `EMLNoCrossingAt` for
+`x > 0`. The crossing that caused ALL the earlier trouble (unbounded-below divergence, the
+non-monotonic valley) simply isn't IN that region — `nonMonotonicWitness_Dpos`/
+`nonMonotonicWitness_Bpos` (both already proven, for any `x > nonMonotonicWitness_x0`) directly
+supply strict positivity for every node's log-argument throughout `x > 0`, with zero new
+case-analysis. The witness anchor reuses the SAME established point `π + π/2` the existing
+family members use.
+
+**What this settles, and what it deliberately does NOT claim.**
+`eml_depth2_witness_of_const_gt_one_sibling_expwrapped_T1`: `expWrappedNonMonotonicWitness`
+poses NO threat to the witness-finding argument, for ANY `c2 > 1`, full stop. The classification
+being non-empty (cont. 19) and the residual failing to close for a SPECIFIC member of it are
+different questions — this resolves the second one, for this one tree, in the reassuring
+direction. This does NOT prove the whole open classification closes in general — the proof is
+SPECIFIC to this tree's own structure, particularly the "crossing sits at negative `x`"
+observation, which is a property of THIS tree's specific numeric parameters, not a general fact
+about every tree in the classification. A tree in the same open class whose crossing sat at
+POSITIVE `x` (easy to construct — just shift the crossing constant) would need a genuinely
+different argument. But it is a second, independent confirmation (after `nonMonotonicWitness`'s
+own resolution vanishing act two rounds ago) that finding a member of the open class does not,
+by itself, threaten the theorem — every concrete tree probed so far in this whole arc, by
+whatever mechanism available, has turned out to be closable.
+
+**The axiom check that actually matters here, done with real care** (not just the usual
+zero-`sorry` scan): this proof pulls in the FULL heavy machinery for the first time this session
+— `HasDerivAt`, `rolle_ct`, the whole `analytic_*` family, `sup_exists` (`Real`'s completeness
+axiom) — a much longer list than every other closure built this session (which were all pure
+algebra). The one check that actually mattered: does `eml_pfaffian_validon_from_sin_equality`
+(the axiom this entire arc exists to discharge) appear ANYWHERE in that list? Checked explicitly
+via `grep` on the full `#print axioms` output, not just eyeballed — **it does not appear.** The
+proof is genuinely non-circular: it doesn't smuggle in the very fact it's supposedly helping
+establish. Zero `sorryAx` either (also grep-checked explicitly). Full `lake build MachLib`
+passes (416 modules) — **thirty-two new files in one session.**
