@@ -139,6 +139,7 @@ import MachLib.WitnessResidualDeepGSignControl
 import MachLib.WitnessResidualDeepDeriv
 import MachLib.WitnessResidualDeepNumeric
 import MachLib.WitnessResidualDeepAssembly
+import MachLib.WitnessResidualConvexZeroBoundClosure
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
