@@ -3276,3 +3276,64 @@ the original `growthCompetitionWitness` hunt.
 
 Full `lake build MachLib` passes (433 modules, up from 432). One commit this round (`3f0c0d06`,
 plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 36) — item (2) attempted: numeric exploration only, a real negative finding
+— existing crossing-family constructions are structurally the WRONG shape for the new mechanism,
+and the natural fix just reproduces the OLD mechanism instead
+
+**Direct user request: "proceed"**, continuing to item (2) from cont. 34/35's scoping — hunt a
+genuinely new bounded, non-monotonic `T1` with a crossing right child (not
+`RightChildrenEverywherePositive`) to actually exploit `WitnessResidualConvexZeroBoundClosure.lean`.
+No Lean written this round — numeric exploration (`mpmath`, 50 digits) surfaced a real structural
+obstacle worth recording before committing further rounds to this specific hunt.
+
+**A general fact, checked and confirmed numerically, not just argued**: for `eml A B` with `B`
+having a genuine, continuous sign crossing at some finite `x0` (`B(x0)=0`, `B>0` just before,
+`B≤0` just after, say), the whole tree is FORCED unbounded near `x0` from the side where `B>0`:
+`-log(B) → +∞` as `B→0+` (continuity of `B` guarantees it passes through arbitrarily small
+positive values approaching the crossing), and nothing in `exp(A)` (bounded contribution near a
+fixed point) can cancel a term diverging to `+∞`. Verified directly on `nonMonotonicWitness`
+(`WitnessResidualNonMonotonic.lean`) itself — sampled `T.eval` at `x0 + d` for `d` from `1e-6` up
+to `2`: **not bounded**, `T(x0+10⁻⁶) ≈ -2.09`, growing steadily MORE negative as `d→0` (a slow,
+log-of-log divergence, easy to miss at coarse sampling resolution — `T(x0+10⁻³) ≈ -1.53` looks
+almost like a local minimum until you sample closer). `nonMonotonicWitness` is genuinely unbounded
+below, contrary to what a casual glance at its shape (a single dip-then-recover, `T` decaying back
+to `0` on BOTH far ends) might suggest.
+
+**The natural "absorb the blow-up one level up" idea, checked and it doesn't help.** Wrapping the
+whole thing one level deeper (`T2 := eml (const k) T`) does successfully turn the divergence into
+a bounded contribution — `T`'s negativity gets CLAMPED by the outer `log`, so `T2` becomes
+literally CONSTANT (`= exp k`) throughout the WHOLE region where `T ≤ 0`. Numerically confirmed
+this region is `(-∞, x0+0.893...]` — i.e. an entire unbounded ray again (`T` dips negative right
+after `x0`, stays negative until crossing back to positive once around `x0+0.89`, never dipping
+negative again out to `x=20` in the scan). **This is exactly the "constant on an unbounded ray"
+shape the cont. 24 mechanism already closes** — so `T2` isn't new ground either, just a
+differently-dressed instance of the SAME already-covered family. The clamp-absorption trick that
+makes crossing constructions bounded seems to inherently produce eventually-constant behavior,
+not the "approaches a limit without ever being flat" shape (like `boundedNonConstantWitness`'s own
+asymptotic behavior) that would be needed to escape BOTH existing mechanisms at once.
+
+**What this suggests, stated as a hypothesis, not a proof**: escaping both `RightChildrenEverywhere
+Positive` (needs no crossing right child anywhere) and the cont. 24 "constant on a ray" mechanism
+(needs the crossing's clamp-absorbed region to be bounded, not a half-line) likely needs a right
+child with a DOUBLE zero-crossing — i.e., a subtree that goes non-positive on a BOUNDED interval
+only, sandwiched between two crossings, not a half-line. If wrapping such a doubly-crossing `B` one
+level up (`eml (const k) B'` for some derived `B'`), the resulting non-positive region would be
+bounded, not a ray — avoiding the "eventually constant" trap. NOT attempted this round: doubly-
+crossing constructions are structurally more involved (need TWO transition points tracked, likely
+non-monotonic in a more complex way than anything built so far in this arc) and deserve their own
+numeric-first exploration pass, not a rushed extension of this one.
+
+**Honest status of item (2)**: genuinely harder than the "comparable in scope to
+`growthCompetitionWitness`" estimate from cont. 34/35 suggested. That estimate was based on
+`growthCompetitionWitness`'s OWN search (which found a working construction within one round, cont.
+25) — but that search was hunting for ANY bounded non-monotonic tree with no constraint on its
+mechanism; THIS search additionally needs the tree to escape TWO already-built closure mechanisms
+simultaneously, a strictly harder target. Recommending a pause on this specific thread rather than
+continuing to force it — the double-crossing idea above is a real, scoped next attempt if picked
+back up, but warrants its own dedicated numeric exploration round, not a continuation of this one.
+
+No files changed, no build run — pure numeric research, Python only (`mpmath`, 50-digit
+precision), not committed to the repo (scratchpad only). Recorded here so the next session
+doesn't re-derive `nonMonotonicWitness`'s actual (non-obvious, slowly-divergent) unboundedness or
+re-discover that the naive one-level wrap reproduces the existing mechanism.
