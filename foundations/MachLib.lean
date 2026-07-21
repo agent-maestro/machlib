@@ -128,6 +128,7 @@ import MachLib.WitnessResidualExpWrappedNonMonotonicCPositive
 import MachLib.WitnessResidualTwoEqualPointsClosure
 import MachLib.WitnessResidualEntireCrossingFamilyClosed
 import MachLib.WitnessResidualGrowthCompetitionWitness
+import MachLib.WitnessResidualQuadraticConvexity
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
