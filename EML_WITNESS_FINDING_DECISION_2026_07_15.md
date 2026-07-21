@@ -2425,3 +2425,51 @@ established closure technique. This is real, meaningful progress on characterizi
 discharging the axiom itself. The axiom remains neither proven nor disproven; what's changed
 today is the precision with which its remaining difficulty can be described and handed to
 whoever continues.
+
+## 2026-07-21 (cont. 23) — CORRECTION: `expWrappedNonMonotonicWitnessC concreteC` closes after
+all, via a much simpler mechanism nobody tried for two rounds
+
+**What happened.** Cont. 22 closed with "the axiom remains neither proven nor disproven" and
+framed `expWrappedNonMonotonicWitnessC concreteC` as resistant to the arc's established closure.
+That framing was accurate about the ONE technique tried — but "resistant to one technique" got
+read (by me, in my own writing) as closer to "genuinely hard" than it turned out to be. Revisiting
+with fresh eyes: every closure built this whole session reaches for a GLOBAL property of `T1`
+(unboundedness, monotonicity everywhere). This tree's own defining feature — being CONSTANT on
+its entire clamped region, not just bounded there — supports a MUCH more local argument that
+nobody had tried.
+
+**The mechanism** (`WitnessResidualTwoEqualPointsClosure.lean`, commit `e218f8e5`,
+`eml_depth2_witness_of_const_sibling_two_equal_points`): if `T1` takes the SAME value at two
+points where `sin` DIFFERS, the collapsed equation (`exp(T1.eval x) - c2 = sin x`, derived the
+usual way from `S3 ≤ 0`) forces those two different `sin` values to be EQUAL — since `T1`'s
+output at both points is identical, the equation's LHS is identical too, so the RHS must be —
+immediate contradiction. **No monotonicity, no boundedness, no `c2 > 1` even** — checked
+explicitly, `c2`'s sign and size never enter the proof at all, a first for this whole family.
+
+**Applied concretely**: `expWrappedNonMonotonicWitnessC concreteC`'s clamped region extends to
+`x ≤ x0 = 1`. Both `0` and `-π/2` satisfy this trivially (`0 ≤ 1` and `-π/2 < 0 ≤ 1`, `π > 0` is
+all that's needed, no numeric bound-chasing) — `sin 0 = 0 ≠ -1 = sin(-π/2)`, closing it in a
+handful of lines, no heavy machinery, no `EMLPfaffianValidOn` anywhere.
+
+**The honest correction, stated directly.** `expWrappedNonMonotonicWitnessC concreteC` is NOT a
+genuine obstruction to witness-finding. It closes cleanly — just via a different, simpler
+technique than the one tried two rounds ago. The prior rounds' work stands as CORRECT and
+non-wasted (the `EMLPfaffianValidOn`-based route genuinely does fail for this tree, exactly as
+proven — that finding remains true and is a real, useful structural fact about that route's
+limits) but the FRAMING of the tree as "resistant" needs this correction: resistant to one
+specific technique is not the same as unclosable, and this round is a direct demonstration of
+that gap.
+
+**What remains open, honestly.** The residual's open classification is still non-empty as a
+STATEMENT about the classification (bounded+non-constant+non-simple+non-monotonic trees exist,
+cont. 19 stands). But NO tree has yet been found that survives every available technique,
+including this new one — the search for a genuine, all-technique-resistant member continues.
+Whether THIS new mechanism generalizes (any tree constant on a ray past two points with
+different `sin` values closes — plausible for the WHOLE crossing-family this session built,
+not checked for the general case) is the natural next question.
+
+`#print axioms` clean on both theorems — remarkably minimal axiom lists (no `HasDerivAt`, no
+`analytic_*`, no crossing machinery at all — pure ordered-field algebra plus `sin`'s own basic
+axioms), confirming this really is the simplest closure mechanism built this entire session.
+Zero `sorry`, `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib`
+passes (419 modules) — **thirty-five new files in one session.**
