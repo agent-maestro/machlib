@@ -130,6 +130,7 @@ import MachLib.WitnessResidualEntireCrossingFamilyClosed
 import MachLib.WitnessResidualGrowthCompetitionWitness
 import MachLib.WitnessResidualQuadraticConvexity
 import MachLib.WitnessResidualGrowthCompetitionDeriv
+import MachLib.WitnessResidualGrowthCompetitionNumeric
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1

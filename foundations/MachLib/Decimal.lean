@@ -173,6 +173,23 @@ theorem decimal_add_same (m₁ m₂ e : Nat) :
   rw [mul_distrib_right, realOfScientific_clears m₁ e, realOfScientific_clears m₂ e,
       realOfScientific_clears (m₁ + m₂) e, ← natCast_add]
 
+/-- **Same-exponent decimal subtraction: `m₁·10⁻ᵉ − m₂·10⁻ᵉ = (m₁−m₂)·10⁻ᵉ`**, for `m₂ ≤ m₁`
+(needed so the `Nat` subtraction on the RHS doesn't truncate). `one_sub_decimal` above is the
+special case `m₁ = 10ᵉ` (i.e. the literal `1`); this generalizes it to an arbitrary same-exponent
+minuend, the same way `decimal_add_same` generalizes addition. First needed by the
+witness-finding residual's numeric quadratic-sign checks (`WitnessResidualGrowthCompetitionNumeric.lean`),
+where a compound decimal expression's SIGN (not just its value) needs pinning down and the two
+sides of the subtraction don't happen to be pre-ordered the "1 minus something small" way. -/
+theorem decimal_sub_same (m₁ m₂ e : Nat) (h : m₂ ≤ m₁) :
+    realOfScientific m₁ true e - realOfScientific m₂ true e = realOfScientific (m₁ - m₂) true e := by
+  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos e (by decide)))
+  refine mul_right_cancel' hc ?_
+  have hdist : (realOfScientific m₁ true e - realOfScientific m₂ true e) * natCast (10 ^ e)
+      = realOfScientific m₁ true e * natCast (10 ^ e) - realOfScientific m₂ true e * natCast (10 ^ e) := by
+    mach_mpoly [realOfScientific m₁ true e, realOfScientific m₂ true e, natCast (10 ^ e)]
+  rw [hdist, realOfScientific_clears m₁ e, realOfScientific_clears m₂ e,
+    realOfScientific_clears (m₁ - m₂) e, natCast_sub h]
+
 /-- **`mach_decimal`** — close a decimal-literal arithmetic goal. Normalise the `+ − ×` operations to a
 single scientific literal per side (`simp` with the decimal lemmas + `decide`-discharged side
 conditions), then close by cross-multiplication (`=`, `≤`, `<`) or `rfl`. Sound: every arm reduces to a
