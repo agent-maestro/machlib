@@ -3068,3 +3068,53 @@ Full `lake build MachLib` passes (430 modules). `#print axioms`, checked from ge
 rebuilds throughout: zero `sorryAx`, no dependence on `eml_pfaffian_validon_from_sin_equality`
 anywhere in this round's new work. Three commits this round (`f3fa5d62`, `0bcd31f7`, plus this
 docs commit), all pushed.
+
+## 2026-07-21 (cont. 33) — `growthCompetitionWitnessDeep 1.5 2.0` FULLY CLOSED: second witness
+tree, transcendental derivative, non-monotonicity proven end to end
+
+**Direct user request: "proceed into that please"** (twice), continuing cont. 32's precisely
+scoped remaining work. Closed all four remaining pieces this round.
+
+**`WitnessResidualDeepNumeric.lean`** — pieces (1) and (2) from cont. 32's scope. Four numeric
+axioms: `log_1_5_bounds`, `log_2_0_bounds` (same style as the first tree's own log-bound axioms),
+plus `exp_1_7_upper : exp(1.7) < 5.4740` and `exp_1_35_lower : 3.8570 < exp(1.35)` — the genuinely
+new piece. Key simplification found this round: rather than axiomatizing `exp` at the EXACT
+irrational argument `E/(E-p)`, bound that argument by a clean round number with comfortable slack
+(`1.02/(1.02-log 1.5) < 1.7`, `1.35 < 1.52/(1.52-log 1.5)`) and axiomatize `exp` AT the round
+number instead. Avoids ever needing `exp` axiomatized at a parameter-dependent argument — a
+technique worth reusing for any future transcendental-derivative witness tree. One monotonicity
+fact discovered necessary mid-round, not anticipated in cont. 32's scoping: `term1_increasing_in_q`
+(`q/(E-q)²` increasing in `q`, not just decreasing in `E` — needed because `log(1.5)`/`log(2.0)`
+are only known via interval bounds, so the numerator argument itself needs order control too).
+`deep_g_pos_witness`/`deep_g_neg_witness` (the two corner-point sign facts) verified sorryAx-free.
+
+**`WitnessResidualDeepAssembly.lean`** — pieces (3) and (4), completing the arc. The one piece
+with NO analogue in the first tree's assembly: `g_to_hquad_pos`/`g_to_hquad_neg`, bridging `g`'s
+fractional form to the cleared `hquad` numerator form the sign-bridge theorems expect (combine
+over a common denominator via `div_sub_div`, then match quotient sign to numerator sign since the
+denominator's positivity is known unconditionally — no case split needed). `deep_g_pos_on_interval`
+/`deep_g_neg_on_interval` extend the corner-point witnesses to the FULL interval via
+`g_lower_bound_on_interval`/`g_upper_bound_on_interval` (built in cont. 31). Everything past that
+— `E`-to-`x` translation, `strictMono_of_deriv_pos`/`strictAnti_of_deriv_neg`, the two-disjoint-
+witness-pairs non-monotonicity argument, final packaging — is a DIRECT structural mirror of
+`WitnessResidualGrowthCompetitionAssembly.lean`, including reusing `exp_exp_log_log`/`log_log_mono`
+/`exp_exp_mono` UNCHANGED (generic to any `exp(exp x)`-parameterized family, not tree-specific).
+
+**`growthCompetitionWitnessDeep_1_5_2_0_exists`**: six conjuncts — bounded both directions,
+non-`RightChildrenSimplePositive`, `RightChildrenEverywherePositive`, non-monotonic both
+directions. Verified sorryAx-free from a genuinely fresh rebuild: depends only on the foundational
+`HasDerivAt`/`exp`/`log` axiom calculus, Rolle's theorem, and the four numeric axioms above —
+nothing else, no dependence on `eml_pfaffian_validon_from_sin_equality`.
+
+**Net effect on Option D**: TWO structurally distinct trees now confirmed to satisfy
+`RightChildrenEverywherePositive` with fully proven non-monotonicity — `growthCompetitionWitness`
+(pure-algebra derivative, quadratic sign argument) and `growthCompetitionWitnessDeep`
+(transcendental derivative, genuinely different closure technique). This is real evidence the
+witness-finding residual is broader than a single example, and that the "corner-bound + round-
+number `exp` axiomatization" technique built this round generalizes to future transcendental-
+derivative witnesses beyond quadratics.
+
+Full `lake build MachLib` passes (432 modules). `#print axioms`, checked from genuinely fresh
+rebuilds throughout (including the final assembly theorem itself): zero `sorryAx`, no dependence
+on `eml_pfaffian_validon_from_sin_equality` anywhere in this round's new work. Two commits this
+round (`66bb6f81`, `d55aaa84`, plus this docs commit), all pushed.
