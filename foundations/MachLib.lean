@@ -91,6 +91,7 @@ import MachLib.HighDimensional
 import MachLib.SinNotInEML
 import MachLib.WitnessResidualDepth1
 import MachLib.WitnessResidualCancellation
+import MachLib.WitnessResidualCancellationGeneral
 import MachLib.WitnessResidualChainSkeleton
 import MachLib.WitnessResidualDepth2Elementary
 import MachLib.WitnessResidualDepth2ABConjuncts
