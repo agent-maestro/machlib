@@ -1739,3 +1739,72 @@ this one happened to be because `T1`'s derivative reduced EXACTLY to an already-
 function. `#print axioms` clean, only base MachLib primitives, zero `sorry`,
 `eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (406
 modules) — **twenty-one new files in one session.**
+
+## 2026-07-20 (cont. 11) — a materially sharper reframing of "the hard stuff": is every bounded
+## EML tree constant?
+
+Per direct request to start on "the separate larger undertaking" — the general case beyond
+today's zero-crossing arc. Before writing any Lean, re-read this document's own earlier sections
+(pre-dating today) carefully enough to check whether today's work actually narrows the ACTUAL open
+residual, rather than assuming it does.
+
+**The correction, found by checking, not assuming.** The residual needs a tree `T1` that is (a)
+bounded ABOVE, (b) non-constant, (c) NOT `RightChildrenSimplePositive` (has a compound right child
+somewhere) — `RightChildrenSimplePositive` `T1` and unbounded-above `T1` are BOTH already closed
+elsewhere in this arc (`eml_depth2_witness_of_const_gt_one_sibling_simple_T1`,
+`eml_depth2_witness_of_const_sibling_unbounded_T1`). Checked every concrete `T1` shape built in
+today's whole zero-crossing arc (`eml var var`, `eml (eml var var) (const c)`, etc.) against this:
+EVERY one of them is UNBOUNDED ABOVE (the outer `exp(...)` always dominates) — meaning today's
+entire session, however genuine as real-analysis, sits inside the region ALREADY closed by the
+much simpler growth argument. It does not narrow the open residual at all. Recorded here so this
+doesn't get re-discovered the hard way by whoever picks this up next.
+
+**What actually would narrow it, checked against the one known bounded example.**
+`WitnessResidualCancellation.lean`'s counterexample (`eml var (eml (eml var (const (exp K)))
+(const 1))`, evaluating to the exact constant `K`) is the ONLY bounded, non-`RightChildrenSimple
+Positive` tree built anywhere in this multi-day investigation — and it's EXACTLY constant, not
+genuinely non-constant. Generalized it (`WitnessResidualCancellationGeneral.lean`,
+`eml_cancellation_general`): for literally ANY tree `A` and ANY real `c0`, `eml A (eml (eml A
+(const (exp c0))) (const 1))` evaluates to EXACTLY `c0`, everywhere — the SAME two-layer
+`log∘exp=id` telescope, with `A` substituted for `var` throughout (checked, not assumed: the proof
+is a direct generalization of `cancellation_theorem`'s own three-line argument). The right child
+of the outer node is NEVER a bare leaf in this family, so EVERY instance is checkably outside
+`RightChildrenSimplePositive` — and every instance is ALSO checkably constant. Sanity-check
+corollary re-derives the original `A = var` instance as a special case.
+
+**The sharper question this motivates.** Every construction mechanism actually available lands on
+a constant. This raises a materially higher-leverage question than "extend the zero-crossing
+induction": **is EVERY bounded (above) EML tree necessarily constant?** If TRUE, the residual's
+own hypothesis (bounded, non-constant) is VACUOUS — closing the entire axiom outright, without
+touching `sin`/`log(c2+sin x)` at all. If FALSE, an explicit counterexample sharply narrows the
+true residual to whatever mechanism produces it. Either answer is decisive, unlike most of this
+arc's incremental narrowing.
+
+**A genuine proof attempt, and the precise place it stalls (not glossed over).** Tried the natural
+induction on tree depth: for `T1 = eml A B`, IF both `A` and `B` are individually bounded above,
+the inductive hypothesis (strictly smaller depth) forces BOTH constant, so `T1` is trivially
+constant too — this case is easy. The actual content is when `A` and/or `B` is individually
+UNBOUNDED yet `T1` stays bounded (exactly the cancellation phenomenon). Tried the case `A`
+constant `= a`, `B` unbounded, `T1 = exp(a) - log(B.eval ·)` bounded: this needs `log(B.eval x)`
+bounded — but `log`'s clamp means this does NOT force `B.eval x` bounded as a real-valued
+function. `B` can be UNBOUNDED BELOW arbitrarily (contributing `log = 0` there, hence NOTHING to
+`T1`'s value) while behaving however it likes on that region — and wherever `B.eval x > 0`, `T1`'s
+boundedness only constrains `B` LOCALLY (bounded and bounded-away-from-zero ON that region, not
+globally). **This means "is `T1` constant" genuinely depends on `B`'s LOCAL behavior split across
+regions, not a single global bounded/unbounded dichotomy** — a materially different (and harder)
+shape of argument than every case-split this whole arc has used elsewhere (which have all been
+GLOBAL dichotomies: `c2≤1` vs `c2>1`, unbounded vs not, simple vs compound). This is a genuinely
+new obstacle, not previously identified anywhere in this document, and it is NOT resolved here.
+
+**Honest assessment, matching this document's own standard.** This is real progress: a checked
+generalization (not just an isolated instance), and a materially sharper, potentially
+axiom-closing question, with the FIRST concrete diagnosis of why a naive induction doesn't
+immediately close it (the local/global split above). It is NOT a proof, and no counterexample was
+found despite a real attempt to construct one (every natural perturbation of the cancellation
+recipe either broke boundedness outright or collapsed back to another exact constant). Whoever
+continues this should start from the local/global obstacle above, not re-attempt the same global
+dichotomy that already failed here. `#print axioms` clean on the new theorem, only base MachLib
+primitives (`propext`, `Classical.choice`, `Quot.sound`, plus foundational `exp`/algebra — notably
+NO `HasDerivAt`/Rolle machinery needed at all for this piece, it's pure algebra), zero `sorry`,
+`eml_pfaffian_validon_from_sin_equality` does not appear. Full `lake build MachLib` passes (407
+modules) — **twenty-two new files in one session.**
