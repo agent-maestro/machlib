@@ -1,6 +1,7 @@
 import MachLib.WitnessResidualGrowthCompetitionWitness
 import MachLib.WitnessResidualQuadraticConvexity
 import MachLib.MonotoneFromDeriv
+import MachLib.SturmNonOscillation
 
 /-! # `growthCompetitionWitness`'s actual derivative, connected to the quadratic tools
 
@@ -148,6 +149,55 @@ theorem growthCompetitionWitness_deriv_clear_denom (c1 c2 z : Real)
           + Real.log c1 * Real.log c1 * Real.log c2) :=
   clear_denom_identity (exp_A_mul_denom c1 z hApos) (deriv_A_mul_denom c1 z hApos)
     (deriv_A_mul_denom c2 z hBpos)
+
+theorem neg_of_mul_neg_pos {a b : Real} (h : a * b < 0) (hb : 0 < b) : a < 0 := by
+  rcases lt_total a 0 with ha | ha | ha
+  · exact ha
+  · exfalso; rw [ha, zero_mul] at h; exact lt_irrefl_ax _ h
+  · exfalso
+    have hpos := mul_pos ha hb
+    exact lt_irrefl_ax _ (lt_trans_ax hpos h)
+
+/-- **The sign bridge, negative side.** If the quadratic is negative at `E := exp(exp z)`, `T`'s
+RAW derivative value is negative too — divides the cleared identity back out through the (known
+positive) denominator `(E-p)²·(E-q)`. -/
+theorem growthCompetitionWitness_deriv_neg_of_quad_neg (c1 c2 z : Real)
+    (hApos : 0 < Real.exp (Real.exp z) - Real.log c1)
+    (hBpos : 0 < Real.exp (Real.exp z) - Real.log c2)
+    (hquad : (Real.log c2 - Real.log c1) * Real.exp (Real.exp z) * Real.exp (Real.exp z)
+          - Real.log c1 * Real.log c2 * Real.exp (Real.exp z)
+          + Real.log c1 * Real.log c1 * Real.log c2 < 0) :
+    Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) * Real.exp z))
+      - (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) * Real.exp z))
+      < 0 := by
+  have hident := growthCompetitionWitness_deriv_clear_denom c1 c2 z hApos hBpos
+  have hrhs_neg := mul_neg_of_pos_of_neg_local (Real.exp_pos z) hquad
+  rw [← hident, mul_assoc, mul_assoc] at hrhs_neg
+  have hdenom_pos : 0 < (Real.exp (Real.exp z) - Real.log c1)
+      * ((Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) - Real.log c2)) :=
+    mul_pos hApos (mul_pos hApos hBpos)
+  exact neg_of_mul_neg_pos hrhs_neg hdenom_pos
+
+/-- **The sign bridge, positive side.** Mirror of the above, for `strictMono_of_deriv_pos`. -/
+theorem growthCompetitionWitness_deriv_pos_of_quad_pos (c1 c2 z : Real)
+    (hApos : 0 < Real.exp (Real.exp z) - Real.log c1)
+    (hBpos : 0 < Real.exp (Real.exp z) - Real.log c2)
+    (hquad : 0 < (Real.log c2 - Real.log c1) * Real.exp (Real.exp z) * Real.exp (Real.exp z)
+          - Real.log c1 * Real.log c2 * Real.exp (Real.exp z)
+          + Real.log c1 * Real.log c1 * Real.log c2) :
+    0 < Real.exp (Real.exp z - Real.log (Real.exp (Real.exp z) - Real.log c1))
+        * (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) * Real.exp z))
+      - (Real.exp z - 1 / (Real.exp (Real.exp z) - Real.log c2) * (Real.exp (Real.exp z) * Real.exp z)) := by
+  have hident := growthCompetitionWitness_deriv_clear_denom c1 c2 z hApos hBpos
+  have hrhs_pos : 0 < Real.exp z * ((Real.log c2 - Real.log c1) * Real.exp (Real.exp z) * Real.exp (Real.exp z)
+          - Real.log c1 * Real.log c2 * Real.exp (Real.exp z)
+          + Real.log c1 * Real.log c1 * Real.log c2) := mul_pos (Real.exp_pos z) hquad
+  rw [← hident, mul_assoc, mul_assoc] at hrhs_pos
+  have hdenom_pos : 0 < (Real.exp (Real.exp z) - Real.log c1)
+      * ((Real.exp (Real.exp z) - Real.log c1) * (Real.exp (Real.exp z) - Real.log c2)) :=
+    mul_pos hApos (mul_pos hApos hBpos)
+  exact pos_of_mul_pos_right hrhs_pos hdenom_pos
 
 end Real
 end MachLib
