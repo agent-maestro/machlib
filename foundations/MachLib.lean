@@ -146,6 +146,7 @@ import MachLib.WitnessResidualCrossingUnboundedMirror
 import MachLib.WitnessResidualSignNecessity
 import MachLib.WitnessResidualQuantitativeBound
 import MachLib.WitnessResidualRecursiveSignLift
+import MachLib.WitnessResidualClosureAttempt
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
