@@ -3579,3 +3579,65 @@ had to look that way.
 (foundational axioms plus `hasDerivAt_continuousAt` and `sup_exists`) — no dependence on
 `EMLPfaffianValidOn`. Full `lake build MachLib` passes (438 modules, up from 437). One commit
 this round (`10d4b9ac`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 42) — MILESTONE: the recursive lift, done — the one-level fact now a genuine
+theorem about an ENTIRE compound tree's structure
+
+**Direct user request**: focus specifically on lifting the one-level fact to a full recursive
+statement, per the honest gap flagged at the end of cont. 40/41. Two real obstacles surfaced
+while attempting the natural first approach — worked through directly rather than assumed away
+or hand-waved past.
+
+**Obstacle 1 — naive top-down propagation doesn't work.** The first instinct ("`T` bounded ⟹ its
+immediate right child sign-definite; recurse into `T`'s children using the SAME bound") fails,
+and `boundedNonConstantWitness` itself is the counterexample: `T := eml var B` is bounded overall
+via a delicate CANCELLATION between `exp(x)` and `log(B(x))` as `x→±∞` — but the bare `var` playing
+`T`'s own left child is individually UNBOUNDED, and `B` need not be bounded ABOVE either (only
+bounded away from `0`, per cont. 41). Boundedness of a compound tree does not require boundedness
+of its parts — cancellation between diverging pieces is a real, load-bearing phenomenon in this
+grammar, not a corner case. The recursive theorem therefore takes an EXPLICIT per-node hypothesis
+(`SupportsSignAnalysis`), not a single top-level bound propagated automatically — matching how
+`EMLPfaffianValidOn` and `RightChildrenEverywherePositive` were ALREADY structured this whole arc,
+for reasons that are now explicit rather than just "that's the established pattern."
+
+**Obstacle 2 — found by testing against `boundedNonConstantWitness` directly, not left
+theoretical.** The natural per-node hypothesis ("every `eml`-node's own eval bounded above") is
+TOO STRONG: `boundedNonConstantWitness`'s own inner node `eml var (const 1)` (`= exp(x)`,
+literally unbounded above) fails it — even though its right child (`const 1`) is trivially
+sign-definite, needing no boundedness argument at all (a literal constant's sign is decidable
+directly via `lt_total`). `SupportsSignAnalysis` (`WitnessResidualRecursiveSignLift.lean`)
+special-cases literal-`const` right children, skipping the boundedness requirement exactly where
+it isn't actually needed — the fix that makes the hypothesis satisfiable by real constructions.
+
+**`AllRightChildrenSignDefinite`**: the recursive conclusion, mirroring
+`RightChildrenEverywherePositive`'s own shape exactly, weaker (either sign, not just positive).
+**`supportsSignAnalysis_sign_definite_and_diff`**: proven by structural induction, concluding
+BOTH sign-definiteness throughout AND differentiability everywhere TOGETHER — the differentiability
+half is what lets the induction invoke the one-level theorem again at the next level up.
+`eml_node_sign_and_diff` factors the shared "differentiable right child + this node's bound ⟹
+sign + this node's own differentiability" step, reused for both remaining cases (`var` and
+compound right children).
+
+**Confirmed against the real construction, not left as an abstract exercise.**
+`boundedNonConstantWitness_supportsSignAnalysis` verifies `boundedNonConstantWitness` — the safe
+building block this entire arc has relied on since its very first appearance — genuinely
+satisfies `SupportsSignAnalysis` (top-level bound from the already-established
+`boundedNonConstantWitness_upper_bound`; every inner node's own requirement vanishes via the
+`const`-right-child special case, exactly matching the obstacle-2 fix).
+`boundedNonConstantWitness_allRightChildrenSignDefinite` then applies the main theorem, concluding
+full sign-definiteness throughout — proven via the GENERAL machinery built this round, not by
+re-deriving positivity by hand the way every earlier file in this arc did for this exact tree.
+
+**What this closes.** The "one-level vs. whole-tree" gap explicitly flagged at the end of cont.
+40 is closed: the mathematical content a recursive argument needs at every step is now not just
+available but ASSEMBLED into one clean theorem, verified against the arc's own central
+construction. Combined with cont. 38–41, the tree-depth induction's original core question —
+negative half (crossings force unboundedness) and positive half (sign-definiteness is necessary,
+now at every level of an entire tree, not just one node) — is closed about as completely as this
+grammar allows.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: same axiom footprint as cont. 38–41
+(foundational axioms plus `hasDerivAt_continuousAt` and `sup_exists`) — no dependence on
+`EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality` anywhere. Full `lake build
+MachLib` passes (439 modules, up from 438). One commit this round (`52e4799e`, plus this docs
+commit), pushed.
