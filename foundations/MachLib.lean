@@ -122,6 +122,7 @@ import MachLib.WitnessResidualStrictMonoT1
 import MachLib.WitnessResidualDirectCrossingUnboundedAbove
 import MachLib.WitnessResidualWrappedCrossingUnboundedBelow
 import MachLib.WitnessResidualExpWrappedNonMonotonic
+import MachLib.WitnessResidualExpWrappedNonMonotonicClosed
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
