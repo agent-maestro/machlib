@@ -3337,3 +3337,63 @@ No files changed, no build run — pure numeric research, Python only (`mpmath`,
 precision), not committed to the repo (scratchpad only). Recorded here so the next session
 doesn't re-derive `nonMonotonicWitness`'s actual (non-obvious, slowly-divergent) unboundedness or
 re-discover that the naive one-level wrap reproduces the existing mechanism.
+
+## 2026-07-21 (cont. 37) — MILESTONE: item (2) closed in the NEGATIVE, PROVEN not just observed
+— a genuine right-child crossing forces unboundedness, for ANY tree built around it
+
+**Direct user request: "keep going please"**, continuing past cont. 36's negative numeric
+finding. Two things happened this round: (1) a fresh, more careful numeric construction (double
+zero-crossing, engineered so BOTH tails of `growthCompetitionWitness` land above a threshold with
+the local min dipping below it — parameters `c1=1.9, c2=2.3` found via a targeted sweep on the
+closed-form asymptote formula, `left_tail = 1/(1-log c1) + log(1-log c2)`, `right_tail` always
+exactly `1`) DID succeed at making the "constant" region genuinely BOUNDED, escaping the cont. 24
+mechanism — but a fine-resolution scan right at both crossing points showed the SAME slow,
+easy-to-miss divergence `nonMonotonicWitness` had (`T1` growing without bound: `4.27, 5.17, 5.99,
+7.11...` approaching one crossing, `3.90, 4.61, 5.17, 5.67, 6.19, ..., 6.79...` approaching the
+other) — confirming the obstruction is NOT specific to `nonMonotonicWitness`'s own construction.
+(2) That convergent numeric evidence (now from THREE independent constructions) motivated turning
+the pattern into an actual proof rather than continuing to search.
+
+**The theorem** (`WitnessResidualCrossingUnbounded.lean`,
+`eml_A_crossing_var_const_unbounded_above`): `eml A (eml var (const c))` (`c>1`) is unbounded
+ABOVE for literally ANY `A` — no constraint on `A`'s shape, boundedness, or structure whatsoever.
+The mechanism, worked out on paper before any Lean: `eml A B := exp(A) - log(B)`; `exp(A) ≥ 0`
+ALWAYS, so it can never supply the `-∞` a cancellation of `-log(B) → +∞` (as `B→0⁺`) would need —
+this part of the argument needs nothing about `A` at all. The witness is fully EXPLICIT, no
+Taylor/derivative bound on `exp` needed: `eml var (const c)` is the literal algebraic inverse of
+`log`, so for ANY target value `ε>0`, `x := log(ε + log c)` makes the right child EXACTLY `ε` (not
+merely small — exact, in closed form). Setting `ε := exp(-(M+1))` for target `M` gives
+`-log(right child) = M+1` exactly, and `exp(A.eval x) - (-(M+1)) ≥ M+1 > M`.
+
+**Confirms cont. 36's finding is forced, not a fluke of one construction**:
+`nonMonotonicWitness_N_unbounded_above` instantiates the general theorem at `A := eml var (const
+1), c := 1+1` — EXACTLY `nonMonotonicWitness`'s own `N` node — showing its slow-divergence
+unboundedness (numerically found in cont. 36) was never going to resolve with more careful
+tuning; it's structurally forced by the crossing shape itself, independent of what's on the left.
+
+**What this settles, precisely.** Item (2) from cont. 34/35's scoping — hunt a bounded,
+non-monotonic witness with a genuinely crossing right child, to exploit
+`WitnessResidualConvexZeroBoundClosure.lean` — is now CLOSED IN THE NEGATIVE for the crossing
+shape this entire arc has ever actually built with (`eml var (const c)`, the only crossing
+primitive used anywhere in the 40+-file investigation): no bounded tree can be built with this
+crossing as a right child, anywhere in the structure, under any amount of wrapping. This is a
+genuine, valuable research conclusion — not merely "we didn't find one," but "provably cannot
+exist, for this construction primitive." Doesn't rule out every conceivable crossing shape (a
+right child with a crossing but NO explicit closed-form inverse might behave differently — not
+investigated, and no such primitive exists in this codebase to test against anyway).
+
+**Net effect on Option D overall**: the residual's landscape is now sharper than at any point in
+this arc. `RightChildrenEverywherePositive` (no crossing anywhere) closes one large class. The
+"constant on an unbounded ray" mechanism (cont. 24) closes trees built from a crossing that ends
+up flattening one whole ray. THIS round closes off the remaining natural attempt (a crossing that
+DOESN'T flatten a ray) by showing it can't be bounded at all. Together these cover essentially
+every construction pattern this arc's own toolkit can build — the open frontier is now squarely
+either (a) a crossing subtree fundamentally different from `eml var (const c)` (not yet
+identified, possibly not expressible in this EML grammar) or (b) accepting the residual's fully
+general case needs the still-unresolved tree-depth induction from the ORIGINAL Option D framing,
+not a cleverer witness search.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: only foundational `MachLib.Real`
+ordered-field/exp/log axioms, nothing else — no dependence on
+`eml_pfaffian_validon_from_sin_equality`. Full `lake build MachLib` passes (434 modules, up from
+433). One commit this round (`68a458d4`, plus this docs commit), pushed.
