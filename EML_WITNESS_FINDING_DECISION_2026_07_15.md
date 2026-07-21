@@ -1557,3 +1557,59 @@ narrower and honest: the theorem no longer structurally forbids the attempt.
 
 `#print axioms` unchanged (no new machinery, same axiom set). Full `lake build MachLib` passes
 (402 modules, same file count — a strengthening in place, matching last round's pattern).
+
+## 2026-07-20 (cont. 7) — MILESTONE: `eml var var` actually combined with a compound `t2`, the
+## hardest instance in this arc so far
+
+Per continued "proceed please," walked through the door the last entry opened rather than stopping
+at "no longer structurally forbidden." `t1 = eml var var` (`t1eval x = exp x - log x`, `t1deriv x
+= exp x - 1/x`) combined with `t2 = eml var (const c2')` (`c2' > 1`, the same sign-crossing shape
+used throughout this arc) — new file `EMLZeroCrossingBothCompoundDeeper.lean`.
+
+**Why this is genuinely harder, not just "one more instance."** In every prior both-compound
+result, `t1deriv` was `exp`, sign-constant — so the combined derivative `D(z) = exp(t1eval
+z)·t1deriv z - (1/t2eval z)·t2deriv z` inherited a clean sign structure almost for free. Here
+`t1deriv z = exp z - 1/z` itself changes sign exactly once (at the transcendental Omega constant),
+so a naive approach would need to case-split `D` around THAT crossing too, compounding the
+domain-splitting problem this whole arc has fought.
+
+**The finding that avoided a third split, done on paper first.** Write `D = P - R` where `P(z) :=
+exp(t1eval z)·t1deriv z` and `R(z) := (1/t2eval z)·t2deriv z`. Computing each separately:
+
+- `P'(z) = exp(t1eval z)·[(t1deriv z)² + (exp z + 1/z²)]`. The bracket is a SQUARE plus a term
+  ALREADY established positive in `EMLZeroCrossingDepth1.lean` (`exp_sub_inv_deriv_pos` —
+  literally `t1deriv`'s own derivative, reused directly, the actual induction mechanism at work).
+  Positive regardless of `t1deriv z`'s sign — `P` is strictly increasing on `z > 0`, full stop, no
+  case-split needed despite `t1deriv` itself not being sign-constant.
+- `R'(z) = -log(c2')·exp(z)/(exp z - log c2')²`. Since `c2' > 1` gives `log c2' > 0`, this is
+  negative throughout `z > x0` — `R` is strictly decreasing.
+
+`D = P + (-R)`, a sum of two strictly increasing functions, hence strictly increasing itself —
+injective, hence at most ONE zero, `M := 1`, EXACTLY the bound every simpler instance needed.
+The apparent extra difficulty (`t1deriv`'s own sign change) turned out to not matter at all, once
+the right decomposition was found — a second instance this session of "the flagged difficulty
+doesn't actually bite," alongside the `c2' ≤ e` removal two entries back.
+
+**The one genuinely new, unavoidable side condition**: `t1eval` isn't differentiable at `x = 0`,
+so `x0 = log(log c2') ≥ 0` is required (`1 ≤ log c2'`, i.e. `c2' ≥ e`) — structural, not a
+convenience, unlike the earlier (removed) `c2' ≤ e` restriction.
+
+**Real build friction — one recurring, previously-unseen `mach_ring` limitation.** Twice in this
+file, `mach_ring` fully expanded and combined a division-heavy expression down to a residual that
+was PURE two- or three-atom commutativity (`-(A*(X*B)) = -(X*(A*B))`) and then failed to close it
+— `mach_ring` normalizes and combines but does not appear to fully canonicalize multiplication
+order across 3+ atoms once a `generalize`d division atom is in the mix. Fixed both times the same
+way: `generalize` the division into a plain atom first (as established), let `mach_ring` do the
+bulk simplification, then patch the LAST reordering step by hand via one explicit `mul_comm`/
+`mul_assoc` chain. Also extracted a tiny fully-abstract helper (`sub_pos_of_pos_of_neg : 0<a →
+b<0 → 0<a-b`) specifically to keep that pattern's own `mach_ring` call two-atom-only, avoiding
+the same failure mode when combining `P_deriv_pos`/`R_deriv_neg` into `D_deriv_pos` — a case
+where the RIGHT fix was avoiding the fragile call entirely by choosing a smaller, cleaner lemma
+shape, rather than debugging the tactic further.
+
+**Why this matters.** First result in the whole arc combining a `t1` whose OWN derivative changes
+sign with a compound sign-crossing `t2` — genuinely deeper than every prior both-compound
+instance, and it closed in one sitting once the `P`/`R` decomposition was found on paper. `#print
+axioms` clean, only base MachLib primitives, zero `sorry`, `eml_pfaffian_validon_from_sin_
+equality` does not appear. Full `lake build MachLib` passes (403 modules) — **eighteen new files
+in one session.**
