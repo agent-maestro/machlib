@@ -3546,3 +3546,36 @@ crossing-unboundedness results it's built on (foundational axioms plus `hasDeriv
 and `sup_exists`) — no dependence on `EMLPfaffianValidOn` or `eml_pfaffian_validon_from_sin_equality`
 anywhere. Full `lake build MachLib` passes (437 modules, up from 436). One commit this round
 (`46467b9a`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 41) — quantifying the sign-necessity dichotomy: `B` must be bounded AWAY
+from zero, not merely positive — connecting the abstract result back to `boundedNonConstantWitness`
+
+**Direct user request: "proceed."** Cont. 40's `eml_A_B_bounded_above_sign_definite` is a
+QUALITATIVE dichotomy (`B` positive everywhere or non-positive everywhere). Checking what more
+the SAME boundedness inequality forces — essentially for free, no new machinery — turns up a
+genuinely useful QUANTITATIVE strengthening.
+
+**`B_bounded_below_of_eml_bounded_above`** (`WitnessResidualQuantitativeBound.lean`): `eml A B`
+bounded above by `M`, `B` positive everywhere ⟹ `B` is bounded AWAY from `0`, uniformly, by
+`exp(-M)`. Direct algebra: from `exp(A.eval x) - log(B.eval x) ≤ M` and `exp(A.eval x) ≥ 0`
+unconditionally, `-M ≤ log(B.eval x)` falls out immediately; apply `exp` monotone to get
+`exp(-M) ≤ B.eval x`. `A_bounded_above_of_eml_bounded_above_nonpos` handles the dual degenerate
+case (transfers the bound directly to `exp(A.eval ·)` via the reduction identity).
+`eml_A_B_bounded_above_characterization` packages both into the full quantitative picture.
+
+**Why this is worth recording, not just a routine corollary.** This is EXACTLY the shape
+`boundedNonConstantWitness`'s own right-child machinery has used since the very start of this
+whole arc (`boundedNonConstantWitness_Bpos` establishes `0 < exp(exp z) - log c` UNCONDITIONALLY,
+and every downstream construction — `E_BNCW`, `growthCompetitionWitness`,
+`growthCompetitionWitnessDeep` — relies on right children whose INFIMUM is a strictly positive
+constant, not merely "eventually positive somewhere"). This file shows that reliance was never
+incidental engineering discovered by trial per construction — it's the precise QUANTITATIVE form
+the sign-necessity dichotomy FORCES on any bounded compound tree, derivable directly from the
+same inequality that gave the qualitative half. A satisfying, retroactive explanation for a
+pattern this arc has been using successfully for many rounds without a general account of why it
+had to look that way.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild: same axiom footprint as cont. 40
+(foundational axioms plus `hasDerivAt_continuousAt` and `sup_exists`) — no dependence on
+`EMLPfaffianValidOn`. Full `lake build MachLib` passes (438 modules, up from 437). One commit
+this round (`10d4b9ac`, plus this docs commit), pushed.
