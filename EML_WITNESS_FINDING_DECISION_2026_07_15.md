@@ -2740,3 +2740,84 @@ Full `lake build MachLib` passes (425 modules). Three new files this round
 (`WitnessResidualGrowthCompetitionNumeric.lean`, `WitnessResidualGrowthCompetitionAssembly.lean`,
 plus `quadratic_pos_below_vertex`/sign-corollaries added to the two pre-existing files), one
 Decimal.lean addition (`decimal_sub_same`), zero `sorry` anywhere in the new work.
+
+## 2026-07-21 (cont. 28) — MILESTONE: `growthCompetitionWitness` can NEVER be a witness-finding
+counterexample; a fourth `eml_depth2_witness_of_const_*` family member, closed via a route that
+sidesteps the arc's central multi-week obstruction entirely
+
+**Direct user request: "proceed into that please"**, continuing from cont. 27's flagged "natural
+next question" — does `growthCompetitionWitness` (or a tree built from it) actually BREAK the
+`t.eval=sin` equation, or does the witness-finding theorem still hold for it? Answer: **it still
+holds**, for ANY valid `c1', c2'`, not just the concrete `2.2, 2.7` instance.
+
+**The plan that was NOT used, and why.** Initial approach (worked out on paper first, per house
+style): since `growthCompetitionWitness` is non-monotonic (not injective), the "injectivity"
+trick that closed the monotonic witness doesn't apply. Sketched an alternative — find two points
+`x_a < x_b` with `T1(x_a)=T1(x_b)` (via IVT on `growthCompetitionWitness`'s increase-decrease-
+increase shape, using the already-proven monotonicity intervals from cont. 27) with `sin(x_a)≠
+sin(x_b)` (via sin's own monotonicity on those same x-ranges, since they land in disjoint sin-
+monotonic pieces), then feed into `eml_depth2_witness_of_const_sibling_two_equal_points`. Verified
+numerically that ALL the needed inequalities hold with comfortable margin (T1-range overlap ≈0.14,
+sin-range separation ≈0.061) — so the plan was mathematically sound. But every step needed NEW
+numeric bounds on deeply nested transcendental expressions (`T1` and `sin` evaluated at points
+like `log(log(1.02))`) — a substantial undertaking, likely comparable in scope to cont. 27's whole
+numeric-bounding effort, repeated for harder (nested, not polynomial) expressions.
+
+**The route that actually worked, found by re-reading `EMLPfaffianValidOn`'s definition instead
+of building more numeric machinery.** It's a plain structural recursion (`EMLPfaffian.lean:117`):
+`True` at every leaf; at `eml t1 t2`, `EMLPfaffianValidOn t1 ∧ EMLPfaffianValidOn t2 ∧ (∀x∈(a,b),
+0<t2.eval x)`. The reason this predicate has been the arc's central multi-week obstruction (see
+the `2026-07-20` "grounded WHY path (1) is hard" entry) is that GENERAL compound trees mix
+`log`-CLAMPED and unclamped regions across the interval — needing a not-yet-built branch-switching
+Pfaffian chain type, since the SAME fixed algebraic relation can't describe `log(t2)` across a
+sign change. But `growthCompetitionWitness` is built entirely from `boundedNonConstantWitness`,
+whose whole defining feature (from the very first file in this sub-arc) is that it NEVER clamps —
+`boundedNonConstantWitness_Bpos` already gives `0 < exp(exp x) - log c` UNCONDITIONALLY, for every
+`x`, no case split needed anywhere. Once every log-argument positivity condition in the tree is
+available like this, `EMLPfaffianValidOn` falls out by walking the (fixed, finite) tree shape
+ONCE — no induction on tree depth, no branch-switching machinery, no numeric point-evaluation at
+all. Genuinely faster and cleaner than the numeric plan, once seen.
+
+**Two small building blocks, both fully unconditional in the interval `(a,b)`** — no restriction,
+no case split: `boundedNonConstantWitness_EMLPfaffianValidOn` (the recursion bottoms out in
+`boundedNonConstantWitness_Bpos` plus two trivial constant-positivity facts, `0<1` and `0<c`) and
+`growthCompetitionWitness_EMLPfaffianValidOn` (reuses the above TWICE, once per inner constant
+`c1, c2`, plus one trivial `exp(...)-log 1 = exp(...) > 0` fact for the outer structure).
+
+**The closure itself** feeds these into machinery that ALREADY EXISTED in the codebase but had
+never been exercised for a genuinely compound tree: `eml_T1eq_of_const_sibling_le_zero`
+(`WitnessResidualSimpleT1Application.lean` — the `S3≤0` collapse, already fully general, no
+`RightChildrenSimplePositive` needed) derives `T1.eval x = log(c2+sin x)` from the collapse
+assumption; `T1_not_eq_log_c2_plus_sin_given_validon` (`WitnessResidualChainSkeleton.lean` — the
+generic zero-counting contradiction via `enc_combinedBound`, previously ONLY ever called with
+`hvalidon_any_b` left as an explicit UNDISCHARGED hypothesis, per that file's own stated purpose
+of "verify the rest of the architecture is sound before attacking the hard piece") now gets fed a
+genuine PROOF of that hypothesis for the first time in the whole arc.
+
+**Result**: `eml_depth2_witness_of_const_gt_one_sibling_growthCompetition` — a FOURTH member of
+the `eml_depth2_witness_of_const_*` family, alongside `_le_one_sibling` (`c2≤1`),
+`_unbounded_T1` (`T1` unbounded), and `_gt_one_sibling_simple_T1` (`RightChildrenSimplePositive`).
+Covers the exact combination none of the other three reach: `T1` bounded, non-simple, AND
+non-monotonic all at once — precisely the shape this whole `growthCompetitionWitness` sub-arc was
+built to explore. `#print axioms` confirms `eml_pfaffian_validon_from_sin_equality` does NOT
+appear in the dependency chain (genuinely non-circular), zero `sorryAx` — dependencies are exactly
+the arc's standard trusted base: the analytic-function axioms (`IsAnalyticOnReals`/`analytic_*`),
+`HasDerivAt` calculus, `rolle_ct`, sin/cos facts.
+
+**Why this may matter FAR beyond this one tree — flagged precisely, not claimed further.** This is
+the FIRST time in the ENTIRE 40+-file arc that `hvalidon_any_b` has been discharged for a
+genuinely compound, non-trivial tree WITHOUT restricting to `RightChildrenSimplePositive` (every
+right child literally `var`/positive constant) and WITHOUT building the not-yet-existing
+branch-switching chain machinery. The actual mechanism — "if every log-argument positivity fact
+in the tree is available UNCONDITIONALLY (no clamp anywhere), `EMLPfaffianValidOn` is free, by
+direct structural recursion" — is not tied to `growthCompetitionWitness`'s specific shape at all.
+It should extend to ANY tree built entirely from non-clamping pieces, which is a substantially
+LARGER class than `RightChildrenSimplePositive` (that restriction requires right children to be
+LEAVES; this mechanism only requires log-arguments to be provably positive, which compound
+non-leaf expressions can also satisfy, as this file demonstrates). Whether this closes a
+meaningfully larger fraction of the ORIGINAL general-tree-depth-induction wall is a real,
+substantial, OPEN follow-up question — genuinely promising, not yet investigated, not claimed
+here as solved.
+
+Full `lake build MachLib` passes (426 modules). Two files this round
+(`WitnessResidualGrowthCompetitionValidOn.lean`, new), zero `sorry` anywhere in the new work.
