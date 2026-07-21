@@ -126,6 +126,7 @@ import MachLib.WitnessResidualExpWrappedNonMonotonicClosed
 import MachLib.EMLPfaffianValidOnCrossingObstruction
 import MachLib.WitnessResidualExpWrappedNonMonotonicCPositive
 import MachLib.WitnessResidualTwoEqualPointsClosure
+import MachLib.WitnessResidualEntireCrossingFamilyClosed
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
