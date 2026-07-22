@@ -133,12 +133,6 @@ noncomputable def targetZero (f : Real → Real) (hcont : ∀ x : Real, Continuo
   | 0 => (target_zero_past f hcont hnp hnn 1).choose
   | (k + 1) => (target_zero_past f hcont hnp hnn (targetZero f hcont hnp hnn k)).choose
 
-theorem targetZero_zero_gt_one (f : Real → Real) (hcont : ∀ x : Real, ContinuousAt f x)
-    (hnp : ∀ R : Real, ∃ x : Real, R < x ∧ f x ≤ 0)
-    (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ f x) :
-    (1 : Real) < targetZero f hcont hnp hnn 0 :=
-  (target_zero_past f hcont hnp hnn 1).choose_spec.1
-
 theorem targetZero_succ_gt (f : Real → Real) (hcont : ∀ x : Real, ContinuousAt f x)
     (hnp : ∀ R : Real, ∃ x : Real, R < x ∧ f x ≤ 0)
     (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ f x) (k : Nat) :
@@ -212,17 +206,6 @@ noncomputable def targetZeroFrom (f : Real → Real) (hcont : ∀ x : Real, Cont
   | 0 => (target_zero_past_from f hcont a0 hnp hnn (a0 + 1)).choose
   | (k + 1) =>
       (target_zero_past_from f hcont a0 hnp hnn (targetZeroFrom f hcont a0 hnp hnn k)).choose
-
-theorem targetZeroFrom_gt_a0 (f : Real → Real) (hcont : ∀ x : Real, ContinuousAt f x)
-    (a0 : Real)
-    (hnp : ∀ R : Real, ∃ x : Real, R < x ∧ f x ≤ 0)
-    (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ f x) (k : Nat) :
-    a0 < targetZeroFrom f hcont a0 hnp hnn k := by
-  cases k with
-  | zero => exact (target_zero_past_from f hcont a0 hnp hnn (a0 + 1)).choose_spec.2.1
-  | succ m =>
-      exact (target_zero_past_from f hcont a0 hnp hnn
-        (targetZeroFrom f hcont a0 hnp hnn m)).choose_spec.2.1
 
 theorem targetZeroFrom_zero_gt_a0_add_one (f : Real → Real) (hcont : ∀ x : Real, ContinuousAt f x)
     (a0 : Real)
