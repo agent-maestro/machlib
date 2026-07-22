@@ -1,5 +1,6 @@
 import MachLib.WitnessResidualSimpleT1Application
 import MachLib.WitnessResidualNestedTargetTailSign
+import MachLib.WitnessResidualNestedTargetFullyUnconditional
 
 /-!
 # Wiring the unconditional `TailSign` closure back to the original `t.eval = sin` residual
@@ -52,5 +53,28 @@ theorem eml_depth2_witness_of_const_gt_one_sibling_unconditional
   have hT1eq : ∀ x, T1.eval x = Real.log (c2 + Real.sin x) :=
     eml_T1eq_of_const_sibling_le_zero hc2 hallle hsin
   exact no_tree_eq_log_c2_plus_sin_unconditional c2 hc2 hc2le T1 hT1eq
+
+/-- **The FULL closure: no restriction on `c2` (beyond `c2 > 1`) OR `T1`, at all.** Supersedes
+`eml_depth2_witness_of_const_gt_one_sibling_unconditional` above entirely — that theorem's own
+`c2 ≤ 1 + 1` restriction is gone, via `no_tree_eq_log_c2_plus_sin_fully_unconditional`
+(`WitnessResidualNestedTargetFullyUnconditional.lean`), which runs the SAME zero-counting argument
+entirely on a tail (`eml_eventually_valid_repr`) rather than needing validity from `0` — so it
+never needed the straddle condition `c2 ≤ 2` was standing in for. This closes the THIRD
+`EMLWitnesses` conjunct completely, for the WHOLE original depth-2 family, no restriction left on
+either side. -/
+theorem eml_depth2_witness_of_const_sibling_fully_unconditional
+    {T1 S3 : EMLTree} {c2 : Real} (hc2 : 1 < c2)
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 := by
+  refine Classical.byContradiction (fun hcon => ?_)
+  have hallle : ∀ x, S3.eval x ≤ 0 := by
+    intro x
+    rcases lt_total 0 (S3.eval x) with h | h | h
+    · exact absurd ⟨x, h⟩ hcon
+    · exact le_of_eq h.symm
+    · exact le_of_lt h
+  have hT1eq : ∀ x, T1.eval x = Real.log (c2 + Real.sin x) :=
+    eml_T1eq_of_const_sibling_le_zero hc2 hallle hsin
+  exact no_tree_eq_log_c2_plus_sin_fully_unconditional c2 hc2 T1 hT1eq
 
 end MachLib

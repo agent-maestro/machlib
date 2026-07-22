@@ -58,7 +58,13 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- this headline's footprint check (below) passes.
   `MachLib.Real.archimedean, `MachLib.Real.cos_add, `MachLib.Real.cos_zero,
   `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.pi_gt_one, `MachLib.Real.sin_pi_div_two,
-  `MachLib.Real.sup_exists]
+  `MachLib.Real.sup_exists,
+  -- Added 2026-07-22: `no_tree_eq_nestedTarget_fully_unconditional`'s own base (the
+  -- eml_eventually_valid_repr + tail-restricted zero-counting closure, no straddle condition,
+  -- no validity-from-0 hypothesis) -- needs `nestedTarget`'s 2π-periodicity directly, unlike
+  -- the sin/cos discharges which only needed periodicity's own downstream `kπ`/`half-odd-π`
+  -- consequences.
+  `MachLib.Real.sin_periodic, `MachLib.Real.sin_one_pos]
 
 /-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert. -/
 def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint"), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, "elaborator-synthesized axiom (isUnsafe=true), NOT hand-written -- `of_parts` in TwoExpPfaffianReductionWitness.lean is a plain structure-literal def with no `partial`/`sorry`/`Classical.choice` at the call site; root cause not yet identified (found + disclosed 2026-07-16, AxiomLedger self-check going red; see AxiomLedger investigation notes). Gate-2d multivariate-Khovanskii frontier work (added 2026-07-13/14), not on any shipped headline's path."), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, "same as .of_parts._elambda_1 above -- same file, same unexplained isUnsafe synthesis, same frontier, not on any headline's path."), (`MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, "same pattern again -- plain structure-literal def, no visible partial/sorry/Classical.choice; three occurrences in one file is worth a dedicated Lean-internals investigation, not yet done. Not on any headline's path.")]
@@ -85,7 +91,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- Added 2026-07-22: `sin_not_in_eml_any_depth`/`cos_not_in_eml_any_depth` re-derived as
   -- one-line corollaries of the pair above (the depth bound `k` was never inspected) --
   -- pinned so the SUBSUMPTION itself stays true on every build, not just checked once.
-  `MachLib.sin_not_in_eml_any_depth_unconditional, `MachLib.cos_not_in_eml_any_depth_unconditional]
+  `MachLib.sin_not_in_eml_any_depth_unconditional, `MachLib.cos_not_in_eml_any_depth_unconditional,
+  -- Added 2026-07-22, same day: the FULL closure -- no finite EML tree equals any well-formed
+  -- `nestedTarget cs`, no straddle condition, no restriction on the tree at all. Supersedes the
+  -- straddle-conditioned family closure and removes `RightChildrenSimplePositive T1` entirely
+  -- for the ORIGINAL depth-2 residual, for every `c2 > 1` (not just `1 < c2 ≤ 2`).
+  `MachLib.Real.no_tree_eq_nestedTarget_fully_unconditional,
+  `MachLib.eml_depth2_witness_of_const_sibling_fully_unconditional]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
