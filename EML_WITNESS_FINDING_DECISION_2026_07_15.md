@@ -5811,3 +5811,59 @@ lambda-scoped; no upstream fix attempted (not yet blocking, per the note's own s
 
 Full `lake build MachLib` green (469 modules). Not yet an `AxiomLedger` headline — no capstone to
 pin until the assembly is done.
+
+## 2026-07-22 (cont. 80) — CLOSED: the compact-interval quantitative non-approximation theorem
+
+Direct "proceed please," continuing cont. 79's checkpoint straight through to completion.
+`b282e35d`, three prior commits (`59a11c81`, `51ad4d13`, `f63dd52d`) folded into the finished
+result.
+
+**`no_tree_eps_close_to_sin_compact_interval`** (`CompactIntervalNonApproximation.lean`): no finite
+EML tree, `EMLPfaffianValidOn` across an interval containing `0`, stays within any `ε < 1` of `sin`
+on the WHOLE interval, once that interval is long enough to hold `M + 1` alternating extrema — `M`
+an EXPLICIT function of the tree's own structure (`EMLExplicitBound.combinedBoundE`), not an
+abstract "eventually" threshold. This is the theorem the cont. 76 erratum identified as C7's real
+blocker — C6/C7 are TAIL-only (silent on any bounded interval, however long); this one is silent on
+nothing, an actual quantitative bound in terms of the tree's own complexity.
+
+**The remaining pieces, built this round, completing the checkpoint's plan exactly as scoped:**
+`sin_extremum_val` (parity-indexed closed values, `sin(ext j) = 1` or `-1` by induction from the
+flip fact); `zero_exists` (combines both IVT orientations into one per-step existence statement,
+hiding the parity case-split from callers); `zeroAt`/`zeroAt_mem`/`zeroAt_strictMono` (a TOTAL
+`Nat → Real` function via `zero_exists` + `dite`, with `ext j` itself — not an arbitrary junk value
+— as the out-of-range fallback; worked out on paper that this specific choice keeps `zeroAt`
+GLOBALLY strictly monotonic, in and out of range, which is exactly what `List.Nodup.map`'s
+injectivity callback needs — confirmed against `targetZeros_list_nodup`'s own precedent that the
+callback needs monotonicity unconditionally, not just within the list's actual index range);
+`zerosList`/`zerosList_len`/`zerosList_valid`/`zerosList_nodup` (the `M+1`-element list itself); the
+final assembly (a margin point via `exists_between` so `ext 0` is a safely interior nonvanishing
+witness; `LogArgPosOn` from the explicit `EMLPfaffianValidOn` hypothesis via
+`logArgPosOn_Icc_of_validOn`; the nonvanishing witness via the same sign-forcing technique used
+throughout; the full `enc_combinedBound` application; contradiction via
+`zerosList.length = M+1 > M` closed by `omega`).
+
+**Bugs caught by the type checker in this final pass, worth naming precisely.** Used `set` twice out
+of habit — despite having JUST documented it as unavailable in `TACTIC_NOTES.md` two commits
+earlier; a good reminder that writing a gotcha down doesn't make it muscle memory yet. Fixed via
+`generalize` (genuine Lean 4 core) and by using raw expressions instead of naming values at all.
+`ext_strictMono`'s implicit arguments weren't inferring correctly from a bare `by omega` proof term
+in three separate call sites — fixed by proving ONE named `have hext0M1 : ext 0 < ext (M + 1)` up
+front and reusing it, rather than re-deriving inline each time (also just cleaner). Two missing
+`open` statements (`EMLLogArgPosBridge`, `PfaffianGeneralReduce`). One genuine logic slip — over-
+chaining `lt_trans_ax` through `hMB` when the goal only needed `hext0M1` directly — caught
+immediately by a type mismatch, not silently wrong.
+
+**Verification, the load-bearing check repeated one more time for the FINAL theorem specifically**
+(not just the machinery it rests on): `#print axioms` confirms zero `sorryAx`, and the footprint
+contains NEITHER `zero_count_bound_classical` NOR anything from the still-open `exp_hard` gap.
+Zero new `trustedFootprint` entries. Pinned as an `AxiomLedger` headline (43 total, up from 42).
+Full `lake build MachLib` green (469 modules).
+
+**What this closes, stated precisely.** C7's "Certcom handshake" now has its real mathematical
+floor: for ANY compiled EML artifact with a rounding bound `δ`, `EMLPfaffianValidOn` across an
+interval, and `δ < ε < 1`, the total error against true `sin` exceeds `ε − δ` once the artifact's
+operating interval is longer than `M(tree) + 1` extrema-widths — an EXPLICIT, tree-structure-
+computed bound, not an asymptotic one. Wiring THIS theorem together with `certcom_total_error_floor`
+(C7) into one combined statement, and wiring either into Certcom's actual rounding-axiom pipeline
+for a real compiled kernel, remain open — but the genuinely hard mathematical content (spending the
+Khovanskii bound's explicitness, per both external reviews' own framing) is done.
