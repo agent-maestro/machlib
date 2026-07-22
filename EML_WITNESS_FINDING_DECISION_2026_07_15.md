@@ -6039,3 +6039,75 @@ opaque in Lean, same reason `FPBridge` itself is a hypothesis, not a proof), not
 insufficient effort. Everything downstream of it — Certcom's real rounding pipelines, the
 compact-interval non-approximation theorem, the Lipschitz propagation, the final total-error-floor
 statement — is machine-checked, `sorryAx`-free, composed from already-proven facts.
+
+## 2026-07-22 (cont. 84) — grounded all the way down: no free hypotheses beyond Certcom's own
+disclosed axioms
+
+Direct "proceed into that please," reading cont. 83's closing framing of `round`/`hround_q` (and,
+implicitly, `hround_exp`/`hround_ln`) as `FPBridge`-shaped trust boundaries as an invitation to
+finish the parallel, not stop at it — `FPGrounding.lean` already shows this codebase doesn't stop
+at "assume some `hround`-shaped fact"; it grounds every pipeline theorem against REAL, disclosed
+axioms (`realToR`, `real_fpbridge`, `real_exp_rounds`, `real_log_rounds`, …) instantiated against
+the concrete `leanPrims` runtime basis, the exact pattern `pid_exp_grounded`/`pid_log_grounded`
+already use for a different kernel (the PID law). `eml_var_var_certcom_witness` (cont. 83) was still
+one step short of that pattern — it took `hround_exp`/`hround_ln` as abstract, `u`-relative
+hypotheses rather than the REAL, ABSOLUTE-epsilon axioms Certcom already has for exactly these two
+primitives.
+
+Built `EMLCertcomGrounded.lean`, re-deriving the whole trio directly against Certcom's actual
+grounding axioms:
+
+- **`eml_var_var_pipeline_uniform_grounded`**: `hround_exp`/`hround_ln` gone entirely — the exp/log
+  leaf bounds come straight from `real_exp_rounds`/`real_log_rounds` (already-disclosed, already in
+  `AxiomLedger`'s `trustedFootprint`) against `stdI1 leanPrims`/`stdR1 leanPrims`/`std_hrt1 leanPrims`
+  (the concrete runtime basis `FPGrounding.lean` builds `pid_exp_grounded` etc. on). These axioms are
+  ABSOLUTE-epsilon (`≤ real_exp_eps`, a fixed constant), not `u`-relative like the pipeline theorems'
+  own abstract `hround` shape — a real difference from cont. 83's version, not just a renaming; the
+  closed form changes shape accordingly (`u·((exp B+real_exp_eps)+(log B+real_log_eps)) +
+  (real_exp_eps+real_log_eps)`, still fully explicit, still uniform over `[A,B]` via the same
+  `1 ≤ A` / monotonicity argument as before).
+
+- **The new disclosed axiom pair — `floatOfR`/`real_round_eps`/`real_round_bounds`.** Certcom's
+  existing grounding vocabulary only ever runs Float→Real (it compiles EML to C and executes on
+  floats); it never needed the REVERSE direction, because it never had to turn an arbitrary
+  mathematical real into a float. That direction is needed here specifically because Option D's
+  non-approximation theorems quantify over ALL reals in an interval, not just Float-representable
+  ones — a genuinely new piece of vocabulary, not a renaming of something that already existed.
+  Given the SAME un-witnessability reason as `realToR`/`real_fpbridge` (`Float` is opaque in Lean, so
+  neither direction of the Float↔Real correspondence can be defined or proved inside Lean), it gets
+  the SAME treatment: a disclosed axiom pair, not a per-theorem hypothesis. `real_round_eps`'s
+  non-negativity is DERIVED (`real_round_eps_nonneg`, from `real_round_bounds 0` + `abs_nonneg`), not
+  a further axiom.
+
+- **`eml_var_var_quantized_pointwise_grounded`** / **`eml_var_var_certcom_witness_grounded`**: same
+  structure as cont. 83's versions, with `round`/`ρ`/`hround_q` replaced by `floatOfR`/
+  `real_round_eps`/`real_round_bounds` throughout. The final theorem's free parameters are now ONLY
+  genuine mathematical quantities (`A`, `B`, `ε`, `env`) and side conditions on them (`hA0`, `hεlt1`,
+  `hAρ`, `hδε`, `hMB`) — no further disclosed-primitive assumption of any kind.
+
+Built clean on the FIRST attempt again (no debugging loop) — the cont. 83 proofs' structure carried
+over almost mechanically once the leaf-rounding source changed from a hypothesis to a direct axiom
+application. `#print axioms` on all three: zero `sorryAx`; confirmed `Certcom.floatOfR`/
+`real_round_eps`/`real_round_bounds` appear ONLY where expected (absent from the pure Part 1, present
+in Parts 2 and 3, which actually touch quantization).
+
+**AxiomLedger.** Registered the three new axioms in `knownAxioms`, `trustedFootprint`, and
+`disclosedTrusted` (with the same justification given above), and pinned
+`eml_var_var_certcom_witness_grounded` as the 47th headline. First gate run after the edit reported
+false "vanished axiom" + "dead disclosure" errors — the `lake targeted-build stale measurement`
+gotcha (a prior `feedback_lake_targeted_build_stale_measurement` memory entry) resurfacing: I'd only
+run a TARGETED `lake build MachLib.EMLCertcomGrounded`, not a full `lake build MachLib`, before
+trusting the ledger sweep, so it read a partially-rebuilt tree. A full `lake build MachLib` (476
+modules) before re-running the gate fixed it outright — no real leak. Gate green:
+`AxiomLedger OK: 310 axioms pinned; 47 headline footprints ⊆ trusted (155); … 34 disclosed-trusted`.
+
+**Where the trust chain bottoms out, honestly.** This is as far down as it goes. Below `realToR`/
+`real_fpbridge` and now `floatOfR`/`real_round_bounds` is the same wall every `pid_*_grounded`
+theorem in this codebase already lives behind: Lean's `Float` is an opaque `@[extern]` type with no
+in-Lean semantics, so BOTH directions of the Float↔Real correspondence are axioms by necessity, not
+by choice — Flocq-scale binary64 formalization is the only way past it, and that is explicitly out
+of scope for this codebase (stated in `FPGrounding.lean`'s own docstring, unchanged by this round).
+Every other piece of this arc's Certcom connection — the pipeline composition, the uniform bound, the
+Lipschitz propagation, the compact-interval non-approximation theorem itself — is machine-checked and
+`sorryAx`-free, resting on nothing beyond that one disclosed floor plus `MachLib.Real`'s own axioms
+(separately witnessed against Mathlib's `ℝ` by Theorem B, per `project_certcom_soundness_witness`).
