@@ -213,5 +213,116 @@ private theorem zero_exists (g : Real → Real) (A B ε : Real)
     exact induced_zero_of_eps_close g A B hcont Real.sin ε hclose (ext j) (ext (j + 1))
       hAj hextj hjB hT1 hT2
 
+/-- `A < ext j` for every `j`, given it for `j = 0` — `ext` is nondecreasing in `j`. Standing
+assumption throughout the rest of this file: `A < ext 0`, so "in range" below reduces to the
+single, initial-segment-shaped condition `ext (j + 1) < B`. -/
+private theorem ext_gt_of_gt_zero (A : Real) (hA0 : A < ext 0) (j : Nat) : A < ext j := by
+  rcases Nat.eq_zero_or_pos j with hj0 | hjpos
+  · rw [hj0]; exact hA0
+  · exact lt_trans_ax hA0 (ext_strictMono hjpos)
+
+/-- `ext (i + 1) ≤ ext j` whenever `i < j`. -/
+private theorem ext_succ_le_of_lt {i j : Nat} (hij : i < j) : ext (i + 1) ≤ ext j := by
+  rcases Nat.lt_or_ge (i + 1) j with hlt | hge
+  · exact le_of_lt (ext_strictMono hlt)
+  · have heq : i + 1 = j := by omega
+    rw [heq]
+    exact le_refl (ext j)
+
+/-- "In range" is an initial segment: if `j` is in range, so is every `i < j`. -/
+private theorem inRange_of_lt {B : Real} {i j : Nat} (hij : i < j) (hjB : ext (j + 1) < B) :
+    ext (i + 1) < B :=
+  lt_of_le_of_lt (ext_succ_le_of_lt (Nat.lt_succ_of_lt hij)) hjB
+
+/-- **`zeroAt`, total.** For `j` in range (`ext (j+1) < B` — `A < ext j` holds automatically given
+the standing `A < ext 0`), the genuine induced zero from `zero_exists`. Out of range, falls back
+to `ext j` itself — NOT an arbitrary junk value: this specific choice keeps `zeroAt` globally
+strictly monotonic (proved below), which is what the `Nodup` proof needs. -/
+private noncomputable def zeroAt (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) (j : Nat) : Real :=
+  if h : ext (j + 1) < B then
+    (zero_exists g A B ε hcont hclose hεlt1 j (ext_gt_of_gt_zero A hA0 j) h).choose
+  else ext j
+
+private theorem zeroAt_mem (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) (j : Nat) (hjB : ext (j + 1) < B) :
+    ext j < zeroAt g A B ε hcont hclose hεlt1 hA0 j ∧
+    zeroAt g A B ε hcont hclose hεlt1 hA0 j < ext (j + 1) ∧
+    g (zeroAt g A B ε hcont hclose hεlt1 hA0 j) = 0 := by
+  unfold zeroAt
+  rw [dif_pos hjB]
+  exact (zero_exists g A B ε hcont hclose hεlt1 j (ext_gt_of_gt_zero A hA0 j) hjB).choose_spec
+
+/-- **`zeroAt` is globally strictly monotonic**, in AND out of range — the out-of-range fallback
+`ext j` was chosen exactly to make this hold unconditionally. Three cases: both in range (each
+sits in its own bracket, brackets ordered by `ext_succ_le_of_lt`); `i` in range, `j` not
+(`zeroAt j = ext j` directly bounds `zeroAt i` from `zeroAt i < ext (i+1) ≤ ext j`); neither in
+range (`zeroAt i = ext i < ext j = zeroAt j` directly). The fourth combination (`i` not in range,
+`j` in range) is IMPOSSIBLE by `inRange_of_lt` — `j` in range forces `i` in range too. -/
+private theorem zeroAt_strictMono (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) {i j : Nat} (hij : i < j) :
+    zeroAt g A B ε hcont hclose hεlt1 hA0 i < zeroAt g A B ε hcont hclose hεlt1 hA0 j := by
+  by_cases hjB : ext (j + 1) < B
+  · have hiB : ext (i + 1) < B := inRange_of_lt hij hjB
+    obtain ⟨_, hi2, _⟩ := zeroAt_mem g A B ε hcont hclose hεlt1 hA0 i hiB
+    obtain ⟨hj1, _, _⟩ := zeroAt_mem g A B ε hcont hclose hεlt1 hA0 j hjB
+    exact lt_trans_ax hi2 (lt_of_le_of_lt (ext_succ_le_of_lt hij) hj1)
+  · have hzj : zeroAt g A B ε hcont hclose hεlt1 hA0 j = ext j := by
+      unfold zeroAt; rw [dif_neg hjB]
+    rw [hzj]
+    by_cases hiB : ext (i + 1) < B
+    · obtain ⟨_, hi2, _⟩ := zeroAt_mem g A B ε hcont hclose hεlt1 hA0 i hiB
+      exact lt_of_lt_of_le hi2 (ext_succ_le_of_lt hij)
+    · have hzi : zeroAt g A B ε hcont hclose hεlt1 hA0 i = ext i := by
+        unfold zeroAt; rw [dif_neg hiB]
+      rw [hzi]
+      exact ext_strictMono hij
+
+/-- **The `M + 1`-element list of induced zeros.** -/
+private noncomputable def zerosList (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) (M : Nat) : List Real :=
+  (List.range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0)
+
+private theorem zerosList_len (g A B ε hcont hclose hεlt1 hA0) (M : Nat) :
+    (zerosList g A B ε hcont hclose hεlt1 hA0 M).length = M + 1 := by
+  show ((List.range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0)).length = M + 1
+  rw [List.length_map, List.length_range]
+
+private theorem zerosList_valid (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) (M : Nat) (hMB : ext (M + 1) < B) :
+    ∀ z ∈ zerosList g A B ε hcont hclose hεlt1 hA0 M, A < z ∧ z < B ∧ g z = 0 := by
+  intro z hz
+  simp only [zerosList, List.mem_map, List.mem_range] at hz
+  obtain ⟨j, hjlt, hzeq⟩ := hz
+  have hjB : ext (j + 1) < B :=
+    lt_of_le_of_lt (ext_succ_le_of_lt (by omega : j < M + 1)) hMB
+  obtain ⟨h1, h2, h3⟩ := zeroAt_mem g A B ε hcont hclose hεlt1 hA0 j hjB
+  rw [← hzeq]
+  exact ⟨lt_trans_ax (ext_gt_of_gt_zero A hA0 j) h1, lt_trans_ax h2 hjB, h3⟩
+
+private theorem zerosList_nodup (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (hA0 : A < ext 0) (M : Nat) :
+    (zerosList g A B ε hcont hclose hεlt1 hA0 M).Nodup := by
+  show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0))
+  exact (List.nodup_range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0)
+    (fun i j (_ : i ≠ j) => by
+      intro hij_eq
+      rcases Nat.lt_or_ge i j with hlt | hge
+      · exact lt_irrefl_ax _ (hij_eq ▸ zeroAt_strictMono g A B ε hcont hclose hεlt1 hA0 hlt)
+      · have hlt2 : j < i := by omega
+        exact lt_irrefl_ax _ (hij_eq ▸ zeroAt_strictMono g A B ε hcont hclose hεlt1 hA0 hlt2))
+
 end Real
 end MachLib
