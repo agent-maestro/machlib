@@ -1,5 +1,6 @@
 import MachLib.WitnessResidualNonposChainClosure
 import MachLib.WitnessResidualCrossingUnboundedGeneral
+import MachLib.EMLSmoothness
 
 /-! # Closing the mixed-sign gap for concrete crossing shapes: the boundedness/unboundedness bridge
 
@@ -44,14 +45,31 @@ that happen to be provably-unbounded (like `var`), but applicable to shapes that
 at all (e.g. a compound `B` that dips non-positive at exactly that one point without crossing
 zero elsewhere) — a genuinely different, non-overlapping coverage axis.
 
-**What is still open, stated plainly.** A fully GENERAL compound `B` — arbitrary structure, no
-promise of a known crossing shape or a known closed form — remains exactly as open as
-`WitnessResidualClosureAttempt.lean` left it. This file closes two concrete, named shapes (and one
-pointwise-general but crossing-agnostic case) by reusing existing machinery, not the fully general
-induction the residual ultimately needs. The value here is the BRIDGE lemma itself
-(`no_eml_A_B_eq_nested_target_of_unbounded_above`) — genuinely general, reusable for ANY future
-crossing shape this codebase proves unbounded, without redoing the boundedness-contradiction
-argument each time.
+**The two named shapes generalize, via infrastructure that was already sitting in the codebase.**
+`EMLSmoothness.lean` (a separate, earlier sub-arc toward closing
+`eml_pfaffian_validon_from_sin_equality` directly, predating the `WitnessResidual*` naming
+convention, already wired into a dozen `WitnessResidual*` files) proves
+`eml_hasDerivAt_of_no_crossing`: ANY `EMLTree` is differentiable at `x`, given the purely LOCAL,
+non-circular, structurally-checkable condition `EMLNoCrossingAt s x` (no internal log-argument
+lands exactly on `0` at that point — strictly weaker than `EMLPfaffianValidOn`, provable by plain
+structural induction with no reference to siblings or ancestors). Feeding this into the crossing
+machinery (`no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing`) closes the residual for ANY
+`B` — not just `var` or `eml var (const c)` — that genuinely crosses zero on some `[x0, x1]` and
+satisfies `EMLNoCrossingAt` throughout that interval. `var` and `eml var (const c)` are the two
+cases where that side condition was already known unconditionally; this generalizes the SAME
+argument to any future candidate `B` a checkable structural condition, not a from-scratch
+differentiability proof, away.
+
+**What is still open, stated plainly.** A fully GENERAL, truly UNKNOWN compound `B` — no promise
+of a genuine crossing, no promise of `EMLNoCrossingAt` on the relevant interval — remains exactly
+as open as `WitnessResidualClosureAttempt.lean` left it: `EMLNoCrossingAt` is a real hypothesis,
+not derivable from nothing, same as the crossing values themselves. This file closes two concrete
+named shapes, one pointwise-general-but-crossing-agnostic case, and one broad-but-still-
+conditional structural class — not the fully general induction the residual ultimately needs. The
+value here is the two BRIDGE lemmas (`no_eml_A_B_eq_nested_target_of_unbounded_above` and its
+`EMLNoCrossingAt` specialization) — genuinely general, reusable for ANY future crossing shape this
+codebase can establish unbounded (by hand OR via `EMLNoCrossingAt`), without redoing the
+boundedness-contradiction argument each time.
 
 `sorryAx`-free, verified via a genuinely fresh rebuild for every theorem in this file. No
 `EMLPfaffianValidOn`, no `eml_pfaffian_validon_from_sin_equality` dependence anywhere. -/
@@ -131,6 +149,23 @@ theorem no_eml_A_evarConstC_eq_nested_target
     False :=
   no_eml_A_B_eq_nested_target_of_unbounded_above A (EMLTree.eml EMLTree.var (EMLTree.const c)) cs
     hwf (eml_A_crossing_var_const_unbounded_above_via_general A c hc) hT1eq
+
+/-- **The bridge, generalized to any structurally-checkable crossing.** `eml_hasDerivAt_of_no_crossing`
+(`EMLSmoothness.lean`) gives differentiability for ANY `EMLTree`, not just hand-verified shapes,
+via the local, non-circular, checkable `EMLNoCrossingAt` condition. Feeding that into the crossing
+bridge closes the residual for ANY `B` that genuinely crosses zero on some `[x0, x1]` and satisfies
+`EMLNoCrossingAt` throughout — far broader than `var` and `eml var (const c)`, at the cost of
+`EMLNoCrossingAt` becoming an explicit hypothesis for shapes where it isn't already known free. -/
+theorem no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing
+    (A B : EMLTree) (x0 x1 : Real) (hx0x1 : x0 < x1)
+    (hBx0 : B.eval x0 = 0) (hBx1pos : 0 < B.eval x1)
+    (hnc : ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z)
+    (cs : List Real) (hwf : nestedWF cs)
+    (hT1eq : ∀ x : Real, (EMLTree.eml A B).eval x = nestedTarget cs x) : False :=
+  no_eml_A_B_eq_nested_target_of_unbounded_above A B cs hwf
+    (eml_A_crossing_B_unbounded_above A B x0 x1 hx0x1 hBx0 hBx1pos
+      (fun z hz1 hz2 => MachLib.eml_hasDerivAt_of_no_crossing B z (hnc z hz1 hz2)))
+    hT1eq
 
 end Real
 end MachLib
