@@ -3764,3 +3764,63 @@ axioms at all (this particular case needed none of the transport machinery from 
 the non-positive reduction sidesteps the ambiguity that machinery was built to handle). Full
 `lake build MachLib` passes (441 modules, up from 440). One commit this round (`8bf378f1`, plus
 this docs commit), pushed.
+
+## 2026-07-21 (cont. 45) — realizing the crossing/boundedness bridge flagged last round: two more
+concrete shapes closed unconditionally
+
+**Direct user request**: "proceed" — continuing straight off cont. 44's own flagged lead (the
+crossing/boundedness connection, written down as "unexplored, not merely unproven"). Rather than
+stop at flagging it, this round actually builds it, and finds it is both real and stronger than
+the cautious framing suggested.
+
+**The bridge, in two lines** (`no_eml_A_B_eq_nested_target_of_unbounded_above`,
+`WitnessResidualCrossingBoundednessBridge.lean`): any right child `B` that provably forces
+`eml A B` unbounded above — by ANY means — immediately rules out matching ANY member of the
+nested-target family, since the family is bounded above by `nestedHi cs`
+(`nestedTarget_facts`'s own range fact). Extract the unboundedness witness at `M := nestedHi cs`,
+substitute the equality hypothesis, contradict the range fact directly. This is the first place
+in the whole arc where the crossing-unboundedness sub-arc (cont. 37-39) and the nested-target
+boundedness sub-arc (`WitnessResidualNestedTargetFamily.lean`) connect to each other at all.
+
+**Where the earlier framing undersold it.** cont. 44's docstring assumed closing the mixed-sign
+gap would need `B`'s differentiability established for an ARBITRARY, unknown compound tree — the
+same "no known closed form to transport from" wall `WitnessResidualClosureAttempt.lean` hit. That
+wall only applies to a truly UNKNOWN `B`. For CONCRETE, SPECIFIC crossing shapes, differentiability
+is already proven in this codebase, unconditionally, no transport needed at all — the bridge just
+had to be pointed at facts that already existed:
+- **`B = var`** (`no_eml_A_var_eq_nested_target`): `var` genuinely crosses zero
+  (`var.eval 0 = 0`, `var.eval 1 = 1 > 0`) and is unconditionally differentiable (`HasDerivAt_id`
+  — `var`'s closed form literally IS `id`, known outright, not borrowed from anywhere). Closes
+  `eml A var` against the WHOLE family, for ANY `A`, regardless of `nestedLo cs`'s sign — no case
+  split on `cs` needed at all. Strictly stronger than a pointwise `nestedLo cs ≤ 0`-only variant
+  built earlier in the same round and kept in the file for its different coverage (see below).
+- **`B = eml var (const c)`, `c > 1`** (`no_eml_A_evarConstC_eq_nested_target`): the ORIGINAL
+  crossing primitive this entire 40+-file arc was built around
+  (`WitnessResidualCrossingUnbounded.lean`, cont. 37 — the very first crossing example this
+  session ever constructed), reusing the already-proven
+  `eml_A_crossing_var_const_unbounded_above_via_general` (built cont. 38) directly. Closes
+  unconditionally, ANY `A`, ANY `c > 1`.
+
+**A complementary, non-overlapping pointwise result**
+(`no_eml_eq_nested_target_of_B_neg_pi_div_two_nonpos`): re-examining `BChainNonpos`'s own
+immediate-contradiction branch (cont. 44) shows it never actually needed `B ≤ 0` EVERYWHERE —
+only at the single point `-π/2`. Generalizes to ANY `A`, ANY `B` (no crossing, no
+differentiability, nothing) whenever `nestedLo cs ≤ 0`. This covers a DIFFERENT axis than the
+bridge: shapes that dip non-positive at exactly that one point WITHOUT crossing zero anywhere
+else (so the crossing machinery wouldn't apply to them), at the cost of needing `nestedLo cs ≤ 0`
+(the bridge needs nothing about `cs` at all).
+
+**What is still open, stated plainly — this is not the full residual.** A fully GENERAL compound
+`B` — arbitrary structure, no promise of a known crossing shape, no known closed form — remains
+exactly as open as `WitnessResidualClosureAttempt.lean` left it at the end of cont. 43. This round
+closes two concrete, NAMED shapes plus one pointwise-general-but-crossing-agnostic case, by reusing
+existing machinery — not the fully general induction the residual ultimately needs, and not a
+claim that the "mixed-sign case" as a whole is closed. The lasting value is the bridge lemma
+itself: reusable for ANY future crossing shape this codebase proves unbounded, without redoing the
+boundedness-contradiction argument from scratch each time — a genuine piece of general
+infrastructure, not just two more special cases.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for every theorem in the file. No
+`EMLPfaffianValidOn`, no `eml_pfaffian_validon_from_sin_equality` dependence anywhere. Full
+`lake build MachLib` passes (442 modules, up from 441). One commit this round (`48a691f5`, plus
+this docs commit), pushed.
