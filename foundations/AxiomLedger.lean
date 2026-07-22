@@ -130,7 +130,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- no hypothesis) despite failing every EXPLICIT route near 0 (C1's wall). Zero new
   -- trustedFootprint entries (strict subset of C1's own footprint plus exp_log/log_exp,
   -- both already-proven theorems, not axioms).
-  `MachLib.log_implicit_not_explicit]
+  `MachLib.log_implicit_not_explicit,
+  -- Added 2026-07-22: Track C, item C6 -- quantitative non-approximation. TailSign already
+  -- gives something stronger than "epsilon-close on a long interval": no tree stays within
+  -- epsilon<1 of sin for ALL sufficiently large x, full stop, no interval-length bookkeeping.
+  -- Zero new trustedFootprint entries (strict subset of eml_tailSign_unconditional's own
+  -- footprint plus the nestedTarget periodicity facts, both already trusted).
+  `MachLib.Real.no_tree_eps_close_to_sin_eventually]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
