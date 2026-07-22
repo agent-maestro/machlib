@@ -4401,3 +4401,57 @@ dedicated follow-on effort, not a closed result this round.
 `sorryAx`-free, verified via a genuinely fresh rebuild for every theorem. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (447
 modules, up from 446). One commit this round (`ef0dfe12`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 57) — the missing building block, built completely: `RightChildrenEverywherePositive`
+trees eventually settle
+
+**Direct user request**: "the real fix needs a recursive normal-form construction... lets get
+into this please" — a direct push into the substantial follow-on engineering flagged at the end
+of cont. 56. Rather than attempt the FULL recursive collapse construction in one pass, identified
+and built the concrete piece it will need to invoke: `rcep_tailSign`, proving
+`RightChildrenEverywherePositive T ⟹ TailSign T.eval` COMPLETELY — not assumed, not sketched.
+
+**The mechanism, worked out on paper before writing anything.** Assume, for contradiction, a
+`RightChildrenEverywherePositive` tree does NOT eventually settle. Unfolding the negation gives
+three facts, all "arbitrarily far out": points where `T.eval ≤ 0`, points where `T.eval ≥ 0`, and
+points where `T.eval ≠ 0`. `RightChildrenEverywherePositive` gives `EMLNoCrossingAt` EVERYWHERE
+(positive right children are trivially nonzero), hence `T.eval` is differentiable everywhere
+(`eml_hasDerivAt_of_no_crossing`) — enough to run `intermediate_value_of_hasDerivAt` between a
+`≤0` point and a `≥0` point past any `R`, producing a genuine zero. Iterating this
+(`rcepZero`, a `Nat`-indexed sequence built via `Exists.choose`) gives arbitrarily many, strictly
+increasing, hence DISTINCT zeros. Meanwhile `RightChildrenEverywherePositive` also gives GLOBAL
+`EMLPfaffianValidOn` — no interval restriction at all, the reusable fact from cont. 29 — so
+`enc_combinedBound` applies on ANY interval, with a bound `M` fixed purely by `T`'s own structure.
+Constructing `M + 1` distinct zeros, all inside one interval, directly violates that bound.
+
+**The realization that made this tractable, not just plausible.** Every earlier use of
+`enc_combinedBound` in this arc needed its interval chosen BEFORE knowing where the relevant
+points would land, because validity there was tied to the SAME computation producing the bound
+(`natCast(M+3)*pi`-style padding). `RightChildrenEverywherePositive` sidesteps this entirely:
+validity holds on `(0, b)` for literally ANY `b`, so the zeros can be constructed FIRST (wherever
+the IVT process happens to put them) and the interval built AFTERWARD to contain all of them plus
+one genuinely nonzero witness point (`enc_combinedBound`'s own non-degeneracy hypothesis, needed
+separately from the constructed zeros since those are zero by definition — derived from
+`¬TailSign.zero`'s own negation, the same style as the other two negated facts, an obstacle found
+and fixed mid-construction after an early attempt tried to reuse one of the zeros itself and
+immediately failed for the obvious reason).
+
+**Two environment gotchas re-triggered and fixed.** `by_contra` and `set` are both unavailable
+tactics in this Mathlib-free setup — previously documented gotchas (`choose` the tactic vs.
+`Exists.choose`/`choose_spec` the terms, noted in the prequel investigation) that this round
+re-discovered the hard way before remembering them. Replaced with `Classical.byContradiction` and
+plain `let` throughout, respectively.
+
+**What this does and does not close, stated plainly.** `rcep_tailSign` is complete, standalone,
+reusable infrastructure — useful anywhere `RightChildrenEverywherePositive` appears in this arc,
+not just for `TailSign`. It does NOT by itself close `WitnessResidualTailSign.lean`'s own `B`
+eventually positive induction case: that still needs the recursive "eventually agrees with an RCEP
+tree" construction — building, by structural recursion, a genuinely SIMPLER representative tree
+for cases where deeper right children clamp permanently — flagged as the real remaining work at
+the end of cont. 56. This file is the building block that construction will invoke once it reaches
+a fully `RightChildrenEverywherePositive` tail; it is not the construction itself.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all thirteen theorems in the file. No
+`eml_pfaffian_validon_from_sin_equality` dependence — the axiom footprint matches this arc's
+standard Khovanskii trusted base exactly. Full `lake build MachLib` passes (448 modules, up from
+447). One commit this round (`0cebceff`, plus this docs commit), pushed.
