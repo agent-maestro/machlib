@@ -401,6 +401,7 @@ import MachLib.AbsoluteFoldNestMag
 import MachLib.CertifyNested
 import MachLib.AbsoluteFoldPos
 import MachLib.EMLCertcomBridge
+import MachLib.EMLCertcomQuantitativeBridge
 
 /-!
 # MachLib — top-level aggregator

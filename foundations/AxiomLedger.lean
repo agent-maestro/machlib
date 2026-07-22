@@ -207,7 +207,25 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- -- `certcom_total_error_floor_compact_interval`'s `compiled` is `Real → Real`, but a compiled
   -- artifact only has behavior at Float-representable inputs; bridging needs an explicit
   -- Real-to-Float quantization hypothesis, not yet built. See EMLCertcomBridge.lean's docstring.
-  `Certcom.eml_var_var_pipeline]
+  `Certcom.eml_var_var_pipeline,
+  -- Added 2026-07-22: closes both gaps `eml_var_var_pipeline` (above) left open
+  -- (EMLCertcomQuantitativeBridge.lean). (1) Uniformity: re-derives the two leaf-level roundings
+  -- directly from the primitive hround hypotheses (bypassing pipeline_nested_std's existential,
+  -- necessarily-non-closed-form bound -- AbsoluteFoldNest.lean's own docstring says the fold is
+  -- deliberately existential, not closed-form) to get a bound depending only on the interval's
+  -- own endpoints, not the evaluation point. (2) The deeper gap: certcom_total_error_floor_
+  -- compact_interval's `compiled : Real -> Real` needs a value at EVERY real in (A,B), but a
+  -- compiled artifact only has behavior at Float-representable inputs -- closed via an explicit,
+  -- honestly-disclosed Real->Float quantization hypothesis (`round`/`hround_q`, same trust
+  -- status as FPBridge itself: a standard IEEE-754 fact, hypothesis because Float is opaque in
+  -- Lean) composed with exp/log's own local-Lipschitz bounds (exp_lip_local/log_lip_local,
+  -- already-proven, propagating the quantization error through T.eval). This headline
+  -- (`eml_var_var_certcom_witness`) is a genuine instantiation of `certcom_total_error_floor_
+  -- compact_interval`'s `hround` for a real translated EMLTree, with an EXPLICIT delta -- not an
+  -- abstract stand-in. `round`/`hround_q` remain the one new disclosed hypothesis (see
+  -- disclosedTrusted-style framing in this file's own docstring); everything else composes
+  -- already-proven, already-trusted facts.
+  `Certcom.eml_var_var_certcom_witness]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

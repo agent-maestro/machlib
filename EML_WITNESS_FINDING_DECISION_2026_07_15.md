@@ -5981,3 +5981,61 @@ Reported both the type-mismatch finding and this quantification gap to the user 
 this arc's standing discipline of reporting exactly what was tried, what was found, and exactly
 where it stops — rather than either quietly declaring victory or silently stopping without
 explanation.
+
+## 2026-07-22 (cont. 83) — CLOSED: both remaining gaps, real `hround` instantiation built
+
+Direct "do both please," in response to cont. 82's report of the two open gaps (uniformity;
+Real→Float quantization). Built `EMLCertcomQuantitativeBridge.lean`, three theorems:
+
+**Part 1 — `eml_var_var_pipeline_uniform`.** Re-derives the two leaf-level roundings (exp, log)
+DIRECTLY from the primitive `hround_exp`/`hround_ln` hypotheses, bypassing `pipeline_nested_std`'s
+existential StdLip-generic bound entirely — `AbsoluteFoldNest.lean`'s own docstring says that fold
+is deliberately existential, no closed formula, so a uniform-over-interval bound isn't extractable
+from it without re-deriving the leaf case by hand. Choosing `1 ≤ A` keeps `log` non-negative
+throughout the interval, avoiding a sign split. Closed form: `δ_pointwise = u·(2+u)·(exp X + log X)`
+at the tight end, loosened to `u·(2+u)·(exp B + log B)` via `exp`/`log` monotonicity
+(`exp_monotone`, `log_le_log`) — matches the paper derivation from cont. 82 exactly.
+
+**Part 2 — `eml_var_var_quantized_pointwise`.** The honestly-disclosed quantization hypothesis:
+`round : Real → Float`, `hround_q : ∀x, abs(toR(round x) - x) ≤ ρ` — same trust status as `FPBridge`
+itself (a standard IEEE-754 fact, hypothesis because `Float` is opaque in Lean, not internally
+derived). Combines Part 1 (applied at the quantized point, on the enlarged interval `[A-ρ, B+ρ]`)
+with `exp`/`log`'s own already-proven local-Lipschitz bounds (`exp_lip_local`, `log_lip_local` —
+`ExpLipschitz.lean`/`TransNodes.lean`, built originally for `absenc_lip_local`'s hypothesis, reused
+here unchanged) to propagate the quantization error through `T.eval` itself, via the triangle
+inequality. Final bound: `u·(2+u)·(exp(B+ρ)+log(B+ρ)) + (exp(B+ρ)+1/(A-ρ))·ρ` — exactly the closed
+form worked out on paper in cont. 82, now machine-checked.
+
+**Part 3 — `eml_var_var_certcom_witness`.** Instantiates `certcom_total_error_floor_compact_
+interval`'s `T`, `compiled`, `δ`, and `hround` directly with the above — a genuine, non-abstract
+satisfaction of that theorem's central hypothesis, for a real translated `EMLTree`. `round`/
+`hround_q` remain the one new disclosed hypothesis (parameters, not axioms — don't appear in
+`#print axioms`, same as `FPBridge`/`hround_exp`/`hround_ln` never have).
+
+**Build notes.** `set` (confirmed unavailable, `TACTIC_NOTES.md`) surfaced again attempting to name
+the quantized environment/point for reuse — worked around with a plain top-level `def envAt` (not a
+tactic-mode binding, so it unfolds via `rfl`/`show` everywhere without the `rw`-transparency problem
+`let` has) instead of naming the quantized point at all (inlined `toR (round x)` throughout). Three
+more small misses, all one-line fixes once the compiler pointed at them: `log_nonneg`/`log_le_log`
+needed `import MachLib.SignTactic` (not otherwise in this file's transitive imports);
+`combinedBoundE` needed `open MachLib.EMLExplicitBound` (same requirement `CertcomCompactInterval
+Handshake.lean` already has); `sub_le_self`'s first explicit argument is the nonnegativity proof,
+not the value being subtracted from (`sub_le_self hρ`, not `sub_le_self A hρ` — the value is
+inferred from the goal's expected type). Otherwise built clean.
+
+`#print axioms` on all three: zero `sorryAx`, footprint fully covered by the EXISTING
+`trustedFootprint` (no new entries needed — `analytic_finite_zeros_compact`, `HasDerivAt_log_pos`,
+`sin_add`/`sin_pi`/`cos_pi`/`pi_pos`, etc. were already present from the compact-interval theorem's
+own footprint). Pinned `eml_var_var_certcom_witness` as the 46th `AxiomLedger` headline (the other
+two are internal building blocks, same convention as the compact-interval theorem's own helpers).
+Gate green on first run: `AxiomLedger OK: 307 axioms pinned; 46 headline footprints ⊆ trusted (152)`.
+Full `lake build MachLib` green (473 modules).
+
+**Where this leaves the Certcom-handshake thread.** Both gaps flagged in cont. 82 are closed. What
+remains is exactly the ONE thing that was always going to be a separate, honestly-disclosed
+hypothesis rather than something to derive: `round`/`hround_q`, the claim that SOME reasonable
+Real→Float quantization exists with a stated error bound. That is a genuine trust boundary (Float is
+opaque in Lean, same reason `FPBridge` itself is a hypothesis, not a proof), not a gap left open by
+insufficient effort. Everything downstream of it — Certcom's real rounding pipelines, the
+compact-interval non-approximation theorem, the Lipschitz propagation, the final total-error-floor
+statement — is machine-checked, `sorryAx`-free, composed from already-proven facts.
