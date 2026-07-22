@@ -4661,3 +4661,51 @@ depth 3+ has NOT been checked.
 `sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (452
 modules, up from 451). One commit this round (`caa42903`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 62) — an infinite tower: one unconditional closure at EVERY nesting depth
+
+**Direct user instruction**: "proceed" — the exact question cont. 61's docs left open: does depth
+3+ actually close, or was `[1, 2]` a one-off convenience?
+
+**Finding: not a one-off — `c2 = 2, d = 1` is a FIXED POINT.** `nestedLo [2] = log(2-1) = log 1 =
+0` exactly (cont. 60's boundary). Prepending another `1`: `nestedLo (1 :: cs) = log(1 + nestedLo
+cs)`. If `nestedLo cs = 0`, this is `log(1+0) = log 1 = 0` again — the EXACT SAME value, no drift
+to track, no accumulating error across levels. This means the SAME zero-fresh-numeric-facts
+argument that closed depth 2 in cont. 61 closes EVERY depth, by one induction on `Nat`, not one
+hand-check per level.
+
+**`oneShiftTower n`** (`WitnessResidualNestedTargetTower.lean`) — `n` copies of `1` prepended to
+`[1+1]`. `oneShiftTower 0 = [2]` (cont. 60's instance), `oneShiftTower 1 = [1, 2]` (cont. 61's),
+`oneShiftTower 2 = [1, 1, 2]`, and so on. `oneShiftTower_facts` proves, by induction on `n`,
+`nestedWF`, `nestedLo = 0` EXACTLY, and `0 < nestedHi` all hold at every level. `nestedHi` only
+ever needs to STAY positive at each step (`nestedTarget_cons_straddle`'s own mechanism —
+`log_lt_log` at `1 < 1+nestedHi cs`, exactly `0 < nestedHi cs`) — its actual MAGNITUDE never enters
+the argument anywhere, so bare positivity propagates up the tower with zero numeric bound needed
+at any depth, however deep.
+
+**A real bug caught before it compiled, not after.** The first draft tried to carry the WEAKER
+invariant `nestedLo (oneShiftTower n) ≤ 0` through the induction (exactly what
+`nestedTarget_cons_straddle` itself concludes) — but wellformedness one level up needs `0 < 1 +
+nestedLo cs`, which `nestedLo cs ≤ 0` alone cannot supply (`nestedLo cs` could in principle be
+`-2`, making `1 + nestedLo cs = -1 < 0`). Only the EXACT `nestedLo cs = 0` pins the next level's
+argument to exactly `1 > 0`. Fixed by tracking the stronger equality as the actual induction
+invariant, downgrading to `≤ 0` only at the very end (`no_tree_eq_oneShiftTower_unconditional`'s
+call into `no_tree_eq_nestedTarget_unconditional`, which only needs `≤`).
+
+**Payoff.** `no_tree_eq_oneShiftTower_unconditional : ∀ n, ...` — no finite EML tree's `eval`
+equals `nestedTarget (oneShiftTower n)`, for EVERY `n`, completely unconditionally. An INFINITE
+family of closed instances, not one more hand-picked point — depth is not itself an obstruction to
+this method, which was the genuinely open question after cont. 61. Fresh-rebuild `#print axioms`
+on both theorems: same standing baseline, zero `sorryAx`,
+`eml_pfaffian_validon_from_sin_equality` does not appear.
+
+**Honest scope, stated plainly.** Still one specific family — built from repeated `1`-shifts over
+the exact `c2 = 2` boundary — inside the much larger space `nestedWF cs` allows. This does NOT
+mean "every deep `cs` closes"; it means "depth alone is not the obstruction," which is a different
+(narrower, but genuinely new) claim. Whether OTHER shift sequences (not all `1`s) reach further
+into the family, or whether the tower can be varied to also cover `c2 ≠ 2` starting points, has
+NOT been checked.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (453
+modules, up from 452). One commit this round (`69db932c`, plus this docs commit), pushed.
