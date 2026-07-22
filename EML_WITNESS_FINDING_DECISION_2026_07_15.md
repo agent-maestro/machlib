@@ -3952,3 +3952,52 @@ several.
 
 No Lean written or modified this round — pure investigation, per the user's own "investigate
 first" framing, now resolved with a concrete, source-verified answer rather than left open.
+
+## 2026-07-21 (cont. 48) — the first theorem to connect both halves of the arc against each other:
+`BChainNonpos` and `RightChildrenEverywherePositive`, unified
+
+**Direct user request**: "proceed" — continuing cont. 47's clarification into concrete work. Since
+cont. 47 established that the Khovanskii/zero-counting side
+(`no_tree_eq_nested_target_given_validon`) and the structural/positivity side
+(`RightChildrenEverywherePositive`, `BChainNonpos`, the crossing bridge) were never separate
+projects, the natural next move is to check whether they connect to EACH OTHER directly, not just
+share a common ancestor theorem.
+
+**The gap.** `BChainNonpos` (cont. 44) requires `B ≤ 0` everywhere at EVERY `eml` node down a
+tree's left spine, terminating only at a `const`/`var` leaf. A tree whose spine goes non-positive
+for several levels and THEN hits a node where the remaining subtree happens to be fully
+`RightChildrenEverywherePositive` was covered by NEITHER theorem: too much non-positive structure
+for `RightChildrenEverywherePositive` (which tolerates none), not non-positive all the way to a
+leaf for `BChainNonpos`.
+
+**`BChainOrPositive`** (`WitnessResidualChainOrPositive.lean`): at each `eml A B` node, the chain
+now has TWO ways to close instead of one — EITHER the whole remaining subtree satisfies
+`RightChildrenEverywherePositive` (closed immediately by feeding
+`EMLPfaffianValidOn_of_right_children_everywhere_positive` into
+`no_tree_eq_nested_target_given_validon` — genuinely invoking the Khovanskii zero-counting bound
+for the first time from within this recent lineage), OR `B` is non-positive everywhere and the
+chain continues into `A` exactly as `BChainNonpos` already does. The resulting theorem
+STRICTLY generalizes both priors as special cases (always the right disjunct = `BChainNonpos`;
+left disjunct at the very top = `RightChildrenEverywherePositive`'s own closure) — the first time
+in this whole recent lineage (cont. 44-47) that the two named mechanisms have been combined into
+one proof rather than sitting as disjoint special cases.
+
+**Confirms cont. 47's finding concretely, not just in principle.** `#print axioms` on the new
+theorem shows it pulling in `IsAnalyticOnReals`/`analytic_*`/`rolle_ct` — the arc's standard
+Khovanskii trusted base — for the FIRST TIME in the `WitnessResidualNonposChainClosure`/
+`CrossingBoundednessBridge` lineage; every theorem built cont. 44-46 was purely elementary,
+touching neither `enc_combinedBound` nor any analytic axiom. This is a small, concrete
+demonstration that "the structural route" and "the Khovanskii route" were never actually two
+different projects — this theorem needed BOTH halves at once, cleanly, on the first attempt.
+
+**Scope, stated plainly — not oversold.** Still not the fully general residual: a tree that
+alternates non-positive/positive/non-positive down its spine remains uncovered, since the positive
+branch (`RightChildrenEverywherePositive`) has no escape hatch of its own back into a non-positive
+continuation — it's an all-or-nothing condition on the WHOLE remaining subtree. Closing the truly
+alternating case would need `RightChildrenEverywherePositive` itself generalized the same way
+`BChainNonpos` just was, which is a natural, symmetric next step but not attempted this round.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt (no
+errors, no fixes needed). No `eml_pfaffian_validon_from_sin_equality` dependence. Full
+`lake build MachLib` passes (443 modules, up from 442). One commit this round (`acca725e`, plus
+this docs commit), pushed.
