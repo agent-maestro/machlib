@@ -155,5 +155,63 @@ private theorem sin_extremum_succ_flip (m : Nat) :
     mach_mpoly [pi, natCast m]
   rw [e, sin_add_pi]
 
+/-- The `j`-th extremum, `π/2 + jπ`. -/
+private noncomputable def ext (j : Nat) : Real := pi / (1 + 1) + natCast j * pi
+
+/-- **Piece B, closed form.** `sin(ext j) = 1` for even `j`, `-1` for odd `j` — the parity-indexed
+value, derived from the flip fact by induction (no separate closed-form `(-1)^j` machinery). -/
+private theorem sin_extremum_val (j : Nat) :
+    Real.sin (ext j) = if j % 2 = 0 then (1 : Real) else -1 := by
+  induction j with
+  | zero =>
+    show Real.sin (ext 0) = if (0 : Nat) % 2 = 0 then (1 : Real) else -1
+    rw [if_pos rfl]
+    show Real.sin (pi / (1 + 1) + natCast 0 * pi) = 1
+    rw [natCast_zero, zero_mul, add_zero]
+    exact sin_pi_div_two
+  | succ m ih =>
+    show Real.sin (ext (m + 1)) = if (m + 1) % 2 = 0 then (1 : Real) else -1
+    have hflip : Real.sin (ext (m + 1)) = -(Real.sin (ext m)) := sin_extremum_succ_flip m
+    rw [hflip, ih]
+    by_cases hm : m % 2 = 0
+    · rw [if_pos hm, if_neg (by omega : ¬ (m + 1) % 2 = 0)]
+    · rw [if_neg hm, if_pos (by omega : (m + 1) % 2 = 0)]
+      mach_mpoly [(1:Real)]
+
+/-- **`ext` is strictly increasing.** -/
+private theorem ext_strictMono {i j : Nat} (hij : i < j) : ext i < ext j := by
+  show pi / (1 + 1) + natCast i * pi < pi / (1 + 1) + natCast j * pi
+  apply add_lt_add_left
+  exact mul_lt_mul_of_pos_right (natCast_lt_natCast_of_lt hij) pi_pos
+
+/-- **Piece C — the per-step induced zero, either orientation, selected by `j`'s parity.**
+Combines `induced_zero_of_eps_close`/`induced_zero_of_eps_close'` (whichever the sign at `ext j`
+calls for, via `sin_extremum_val`) into one existence statement, hiding the case split from
+callers — they only ever need "there is a zero between consecutive extrema," never which lemma
+supplied it. -/
+private theorem zero_exists (g : Real → Real) (A B ε : Real)
+    (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
+    (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
+    (hεlt1 : ε < 1) (j : Nat) (hAj : A < ext j) (hjB : ext (j + 1) < B) :
+    ∃ c : Real, ext j < c ∧ c < ext (j + 1) ∧ g c = 0 := by
+  have hextj : ext j < ext (j + 1) := ext_strictMono (Nat.lt_succ_self j)
+  have hsj := sin_extremum_val j
+  have hsj1 := sin_extremum_val (j + 1)
+  by_cases hm : j % 2 = 0
+  · -- j even: sin(ext j) = 1, sin(ext(j+1)) = -1 (positive-then-negative)
+    rw [if_pos hm] at hsj
+    rw [if_neg (by omega : ¬ (j + 1) % 2 = 0)] at hsj1
+    have hT1 : ε < Real.sin (ext j) := by rw [hsj]; exact hεlt1
+    have hT2 : Real.sin (ext (j + 1)) < -ε := by rw [hsj1]; exact neg_lt_neg' hεlt1
+    exact induced_zero_of_eps_close' g A B hcont Real.sin ε hclose (ext j) (ext (j + 1))
+      hAj hextj hjB hT1 hT2
+  · -- j odd: sin(ext j) = -1, sin(ext(j+1)) = 1 (negative-then-positive)
+    rw [if_neg hm] at hsj
+    rw [if_pos (by omega : (j + 1) % 2 = 0)] at hsj1
+    have hT1 : Real.sin (ext j) < -ε := by rw [hsj]; exact neg_lt_neg' hεlt1
+    have hT2 : ε < Real.sin (ext (j + 1)) := by rw [hsj1]; exact hεlt1
+    exact induced_zero_of_eps_close g A B hcont Real.sin ε hclose (ext j) (ext (j + 1))
+      hAj hextj hjB hT1 hT2
+
 end Real
 end MachLib
