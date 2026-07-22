@@ -29,31 +29,65 @@ immediate, needs nothing about `A` or the rest of the tree at all), or `B` non-p
 the case where the crossing disjunct is never taken; `BChainNonpos` is exactly the case where
 neither of the first two ever is.
 
+**The crossing disjunct broadened further, same round: sign change instead of exact zero.** The
+crossing bridge as first wired in needed the caller to already know an EXACT root
+(`B.eval x0 = 0`) — awkward to supply for most concrete trees, which more naturally give a sign
+CHANGE (`B.eval x0 ≤ 0`, `B.eval x1 > 0`) without knowing exactly where the crossing sits.
+`EMLNoCrossingAt` already gives `B` continuous on `[x0,x1]` (`eml_continuousAt_of_no_crossing`), so
+`intermediate_value` (already-proven IVT, `IntermediateValue.lean`) finds the exact root itself
+when `B.eval x0 < 0` strictly (`no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing`) — the
+caller only needs the WEAKER, more natural sign-change fact. `BChainTriple`'s crossing disjunct
+uses this weaker form directly, so every exact-crossing instance still qualifies (`≤0` is implied
+by `=0`) with strictly broader applicability besides.
+
 **Scope, stated plainly — still not the fully general residual.** The crossing disjunct requires
-an EXPLICIT crossing (`B.eval x0 = 0` exactly, `B.eval x1 > 0`, `EMLNoCrossingAt` throughout
-`[x0,x1]`) — a `B` that dips non-positive somewhere and rises positive elsewhere WITHOUT a clean
-zero crossing at a controllable point (e.g. touching `0` only asymptotically, or having a genuinely
-unknown/unverifiable `EMLNoCrossingAt` on the relevant interval) is still not covered by any of the
-three mechanisms. This file's contribution is combining what already existed into one theorem, not
-discovering new territory — the remaining gap is the same one named at the end of
+`B.eval x0 ≤ 0`, `B.eval x1 > 0`, and `EMLNoCrossingAt` throughout `[x0,x1]` — a `B` that dips
+non-positive somewhere and rises positive elsewhere WITHOUT verifiable `EMLNoCrossingAt` on any
+interval connecting the two (or that never actually reaches a POINT with `B.eval x1 > 0`, only
+approaching positivity in a limit) is still not covered by any of the three mechanisms. This file's
+contribution is combining and broadening what already existed, not discovering fundamentally new
+territory — the remaining gap is the same one named at the end of
 `WitnessResidualClosureAttempt.lean` (cont. 43): a truly unconstrained `B`, structurally unknown,
 with no promise of any of these three specific behaviors.
 
-`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt. No
-`eml_pfaffian_validon_from_sin_equality` dependence. -/
+`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt (both
+the three-way unification and the sign-change broadening). No `eml_pfaffian_validon_from_sin_equality`
+dependence. -/
 
 namespace MachLib
 namespace Real
 
+/-- Generalizes the crossing bridge's `B.eval x0 = 0` (exact) hypothesis to `B.eval x0 ≤ 0`: if
+`B.eval x0` isn't already exactly `0`, `EMLNoCrossingAt` gives `B` continuous on `[x0,x1]`
+(`eml_continuousAt_of_no_crossing`), so `intermediate_value` finds an EXACT root inside — no need
+for the caller to already know where `B` crosses zero, just that it changes sign. -/
+theorem no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing
+    (A B : EMLTree) (x0 x1 : Real) (hx0x1 : x0 < x1)
+    (hBx0 : B.eval x0 ≤ 0) (hBx1pos : 0 < B.eval x1)
+    (hnc : ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z)
+    (cs : List Real) (hwf : nestedWF cs)
+    (hT1eq : ∀ x : Real, (EMLTree.eml A B).eval x = nestedTarget cs x) : False := by
+  rcases lt_total (B.eval x0) 0 with hlt | heq | hgt
+  · have hcont : ∀ z : Real, x0 ≤ z → z ≤ x1 → ContinuousAt B.eval z :=
+      fun z hz1 hz2 => MachLib.eml_continuousAt_of_no_crossing B z (hnc z hz1 hz2)
+    obtain ⟨c, hc1, hc2, hc3⟩ := intermediate_value B.eval x0 x1 hx0x1 hcont hlt hBx1pos
+    have hncc : ∀ z : Real, c ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z :=
+      fun z hz1 hz2 => hnc z (le_trans (le_of_lt hc1) hz1) hz2
+    exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing A B c x1 hc2 hc3 hBx1pos hncc
+      cs hwf hT1eq
+  · exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing A B x0 x1 hx0x1 heq hBx1pos hnc
+      cs hwf hT1eq
+  · exact lt_irrefl_ax 0 (lt_of_lt_of_le hgt hBx0)
+
 /-- Three ways to close at each node instead of two: `RightChildrenEverywherePositive` (Khovanskii
-escape), `B` genuinely crosses zero with `EMLNoCrossingAt` on the crossing interval (crossing-bridge
-escape, immediate — no recursion needed), or `B` non-positive everywhere (continue the chain). -/
+escape), `B` changes sign with `EMLNoCrossingAt` on the interval (crossing-bridge escape, immediate
+— no recursion needed), or `B` non-positive everywhere (continue the chain). -/
 def BChainTriple : EMLTree → Prop
   | EMLTree.const _ => True
   | EMLTree.var => True
   | EMLTree.eml A B =>
       RightChildrenEverywherePositive (EMLTree.eml A B) ∨
-      (∃ x0 x1 : Real, x0 < x1 ∧ B.eval x0 = 0 ∧ 0 < B.eval x1 ∧
+      (∃ x0 x1 : Real, x0 < x1 ∧ B.eval x0 ≤ 0 ∧ 0 < B.eval x1 ∧
         ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z) ∨
       ((∀ x : Real, B.eval x ≤ 0) ∧ BChainTriple A)
 
@@ -73,8 +107,8 @@ theorem no_tree_eq_nested_target_of_BChainTriple :
     · have hvalidon : ∀ b : Real, 0 < b → EMLPfaffianValidOn (EMLTree.eml A B) 0 b :=
         fun b _ => EMLPfaffianValidOn_of_right_children_everywhere_positive hpos 0 b
       exact no_tree_eq_nested_target_given_validon cs hwf (EMLTree.eml A B) hT1eq hvalidon
-    · exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing A B x0 x1 hx0x1 hBx0 hBx1pos
-        hnc cs hwf hT1eq
+    · exact no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing A B x0 x1 hx0x1 hBx0
+        hBx1pos hnc cs hwf hT1eq
     · have hexpA : ∀ x : Real, Real.exp (A.eval x) = nestedTarget cs x := by
         intro x
         have hred := eml_A_B_eq_exp_A_of_nonpos A B hBnonpos x
