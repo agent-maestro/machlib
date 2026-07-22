@@ -4917,3 +4917,51 @@ or attempted this round — a real, well-scoped next step, not a vague one.
 
 Two commits this round (`461389ae`, plus this docs commit), pushed. No `sorryAx`, no new axioms —
 this round touched only accounting and documentation, no new proofs.
+
+## 2026-07-22 (cont. 67) — the `cos` sibling discharged the same way, at a fraction of the cost
+
+**Direct user question, answered directly**: "where do we go from here?" — presented two options
+(the `cos` axiom discharge, or the harder open `EMLWitnesses` conjuncts/`c2 ≥ 2` case) with the
+tradeoff stated plainly: the `cos` axiom is the highest-leverage remaining target precisely
+because the infrastructure to close it already exists. User chose it.
+
+**Why this was cheap, confirmed rather than assumed.** `eml_pfaffian_validon_from_cos_equality`
+(`CosNotInEMLAnyDepth.lean`) is the EXACT same shape as the `sin` axiom, `cos` in place of `sin`.
+`eml_tailSign_unconditional` (`∀ T, TailSign T.eval`, the arc's own capstone) is ALREADY fully
+general over the target function — nothing in its statement or proof mentions `sin` specifically.
+The only missing piece was `cos_not_tailSign`, mirroring `sin_not_tailSign` exactly. Checked
+before writing anything: BOTH ingredients `cos_not_tailSign` needs were ALREADY proven, from two
+entirely separate prior pieces of this arc — `cos_at_half_odd_pi` (`cos`'s zeros at `kπ+π/2`,
+built well before the `TailSign` detour even started, for the ORIGINAL Khovanskii-bound `cos ∉
+EML_k` proof) and `cos_natCast_mul_pi_ne_zero` (cont. 56, built as `sin_not_tailSign`'s OWN
+`.zero`-case witness — "`sin` is nonzero at `kπ+π/2`" IS "`cos` is nonzero at `kπ`," since
+`sin(kπ+π/2) = cos(kπ)`). `WitnessResidualCosTailSign.lean` compiled clean on the FIRST attempt —
+every piece was already sitting in the codebase, just never assembled in this order.
+
+**Payoff.** `no_tree_eq_cos_unconditional` and `eml_pfaffian_validon_from_cos_equality_proved` —
+same `False.elim` shape, same unconditional closure, as the `sin` side. Fresh-rebuild `#print
+axioms` on all three new theorems confirms non-circularity: neither
+`eml_pfaffian_validon_from_sin_equality` nor `eml_pfaffian_validon_from_cos_equality` appears in
+any dependency list.
+
+**Ledger + demotion, mirroring cont. 66 exactly.** Diffed the `cos` discharge's exact footprint
+against the CURRENT `trustedFootprint` programmatically — zero new entries needed, fully covered
+by the base already extended for `sin`. Added both new theorems to `AxiomLedger.lean`'s
+`headlines` (`26→28`), re-ran the gate: zero new leak/rot errors, the pre-existing unrelated
+6-axiom failure unchanged. Demoted the `cos` axiom in-place with a docstring pointing to the
+proof, same content shape as the `sin` side's, including the identical import-graph reason the
+`axiom` keyword remains (`EMLExplicitBoundCosBarrier.lean`, the one real call site, transitively
+imports the `sin` barrier file, which the discharge proof's own chain runs through).
+
+**Where this leaves the pair.** Both `eml_pfaffian_validon_from_sin_equality` and
+`eml_pfaffian_validon_from_cos_equality` — the two axioms `EMLSmoothness.lean`'s own docstring
+named together as the pair a "Smoothness module" would eventually need to discharge jointly,
+estimated at "~300-500 lines, multi-session" back when `CosNotInEMLAnyDepth.lean` was written —
+are now BOTH proven, together, in well under 100 lines combined for the `cos` side specifically
+(reusing, not rebuilding, everything the `sin` side needed). The `TailSign` detour turned out to
+be exactly the "Smoothness module" that estimate was waiting for, arrived at from a different
+angle than anticipated.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all three new theorems. Full `lake
+build MachLib` passes (456 modules, up from 455). One commit this round (`3d2505bd`, plus this
+docs commit), pushed.
