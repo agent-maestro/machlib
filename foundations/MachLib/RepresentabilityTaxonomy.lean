@@ -16,6 +16,24 @@ not invoked for `log`, and doing so now would be new strengthening work, not com
 `ExplicitlyRepresentableValidlyNear` matches EXACTLY the hypothesis shape C1 actually rules out —
 validity spanning the point in question. Naming a weaker predicate honestly is better than naming
 a strong one dishonestly.
+
+**Open question, checked and recorded rather than left for a future round to "discover" (per
+external review) — the UNCONDITIONAL separation is a genuinely distinct, unresolved gap, not
+something C1's argument already delivers.** Worked through directly: could `t.eval x = Real.log x`
+on `(0, b)`, with NO validity hypothesis at all, be ruled out the same way? No — the current proof
+of `no_tree_eq_log_positive_side_given_validon` structurally NEEDS validity to get `ContinuousAt
+t.eval 0` (via `eml_validon_continuousAt`); that continuity is the entire leverage the argument has
+against `log`'s divergence. Without it, a bare match `heq` gives no contradiction on its own — `log`
+diverging on `(0,b)` just means `t.eval` ALSO diverges there (trivially, since they're equal), and
+nothing forces `t.eval 0` itself (a well-defined, finite value — `EMLTree.eval` is total) to relate
+to that divergence in any particular way without an independent reason `t.eval` must stay bounded
+approaching `0`. `eml_eventually_valid_repr` (the unconditional-validity machinery this whole arc
+uses elsewhere) does NOT close the gap either: it supplies validity on SOME tail from an unspecified
+point `a`, with no guarantee `a < 0` — i.e. no guarantee the resulting validity interval actually
+spans the point in question. Closing the unconditional version would need either a general
+"`EMLTree.eval` is continuous everywhere except at classifiable clamp-boundary points" structural
+lemma (doesn't exist yet) or an adapted construction forcing `eml_eventually_valid_repr`'s `a` below
+`0` specifically (not attempted). Real, small, open — flagged here rather than assumed closed.
 -/
 
 namespace MachLib

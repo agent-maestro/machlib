@@ -5696,3 +5696,54 @@ Three more helpers made public after a second independent use surfaced one (`exi
 headlines (42 total, up from 39; the `_via_barrier` corollaries confirming each extraction are NOT
 separately pinned — same footprint as the general theorem, would be redundant bookkeeping). Full
 `lake build MachLib` green (468 modules, up from 465).
+
+## 2026-07-22 (cont. 78) — housekeeping: the `log_separation` open question resolved (it's real),
+## tactic/tooling gotchas centralized
+
+Both cont.77 reviews were strongly positive and converged on the same small set of concrete
+follow-ups — no math to build, just a genuine question to answer honestly and infrastructure to
+stop rediscovering per-file.
+
+**The open question, checked directly rather than assumed either way.** One review asked: does
+`log_separation`'s validity-conditioned explicit side (`ExplicitlyRepresentableValidlyNear`) leave a
+DISTINCT open item (the unconditional separation, no validity hypothesis at all), or does C1's
+argument already deliver it? Worked through it precisely (recorded in
+`RepresentabilityTaxonomy.lean`'s own docstring, not just here): **it's a real, distinct, open
+gap.** `no_tree_eq_log_positive_side_given_validon`'s proof structurally NEEDS validity to get
+`ContinuousAt t.eval 0` — that continuity is the ONLY leverage the argument has against `log`'s
+divergence. A bare match (`t.eval x = log x` on `(0,b)`, no other hypothesis) gives nothing to work
+with: `log` diverging there just means `t.eval` also diverges there (trivially, since they're
+equal), and nothing forces `t.eval 0` itself to relate to that divergence without an independent
+reason `t.eval` stays bounded approaching `0`. Checked whether `eml_eventually_valid_repr` (the
+unconditional-validity machinery this whole arc uses elsewhere) closes the gap for free — it
+doesn't: it supplies validity on SOME tail from an unspecified point `a`, with no guarantee `a < 0`,
+i.e. no guarantee the validity interval spans the point actually in question. Genuinely open; two
+paths named (a general clamp-boundary continuity classification, or forcing `eml_eventually_valid_
+repr`'s `a` below `0` specifically), neither attempted. Small — but real, and now it can't be
+"discovered" fresh by a future round.
+
+**`foundations/TACTIC_NOTES.md`, new file.** Centralizes what had become a THREE-item recurring
+cost: `by_contra`, `push_neg`, and (found this same cont.77 round) `set` are all Mathlib tactics,
+not available in this Mathlib-free codebase, each discovered via a failed build. Also records the
+`mach_mpoly` watch-list item precisely as a REVIEW recommended — TWO data points (cont. 71's
+`sub_sub_cancel_shift`, where `mach_mpoly` succeeded where `mach_ring` failed; cont. 77's
+`ContinuityDivergenceBarrier.lean`, the REVERSE — `mach_mpoly` failed with a confusing
+"unknown identifier" error where explicit algebra succeeded) in DIFFERENT directions — not yet a
+diagnosis, explicitly flagged as "if a third shape fails either tactic, treat it as a genuine
+context-sensitivity bug in the tactic itself, fix upstream, not another local workaround."
+
+No Lean code changed this round beyond the one docstring addition (`RepresentabilityTaxonomy.lean`,
+still `sorryAx`-free, unchanged proof). Fresh `lake build MachLib` green.
+
+**Where the board stands, per both reviews' own honest-status framing**: compression didn't close
+any flagged open item — compact-interval quantitative non-approximation (C7's real blocker) is
+still open and still the highest-value target; the ε-regularization closure-point leg (C2's
+alternative) is still unaccounted for; C5/C9/C10 remain multi-session as flagged; the
+`log_separation` unconditional gap is now ALSO explicitly named as open. What compression bought:
+the next census entry (`cos`, straddling `nestedTarget cs`) is a one-line corollary instead of a
+file, and future obstruction types have a template for where they live and how they're scoped.
+Both reviews suggested, as options rather than a mandate: (a) a small round writing those one-line
+corollaries plus a short public "theorem spine" doc over the three compression files (mirroring
+Track B's `EML_WITNESS_FINDING_THEOREM_MAP.md`, scoped to just the new barriers), or (b) moving
+directly at the compact-interval theorem now that the interfaces are cleaner. Left for direct
+discussion rather than decided here.
