@@ -97,7 +97,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- straddle-conditioned family closure and removes `RightChildrenSimplePositive T1` entirely
   -- for the ORIGINAL depth-2 residual, for every `c2 > 1` (not just `1 < c2 ≤ 2`).
   `MachLib.Real.no_tree_eq_nestedTarget_fully_unconditional,
-  `MachLib.eml_depth2_witness_of_const_sibling_fully_unconditional]
+  `MachLib.eml_depth2_witness_of_const_sibling_fully_unconditional,
+  -- Added 2026-07-22, same day: the muses' generalization, checked and confirmed uniform --
+  -- the tail-restricted zero-counting argument abstracted to any target with a recurring
+  -- level + recurring witness, with nestedTarget cs re-derived as a five-line instantiation
+  -- via no_tree_eq_nestedTarget_fully_unconditional_via_meta. Zero new trustedFootprint
+  -- entries needed (strict subset of the concrete version's own footprint).
+  `MachLib.Real.no_tree_eq_recurring_target_fully_unconditional]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
