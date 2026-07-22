@@ -5222,3 +5222,26 @@ generalization is currently flagged as needed anywhere in this arc.
 `sorryAx`-free, verified via a genuinely fresh rebuild for all 13 new theorems. Full `lake build
 MachLib` passes (460 modules, up from 459). One commit this round (`0c3bdf9c`, plus this docs
 commit), pushed.
+
+**Erratum, same day, `580fad4e`.** The "13 new theorems" count above was wrong — two independent
+external reviews caught it, both by tracing actual call sites rather than re-guessing. The file
+has 22 declarations (20 theorems + 2 `noncomputable def`s), not 21; 12 were individually
+`#print axioms`-checked; of the remaining 10, 8 are genuinely covered TRANSITIVELY (called from
+within an already-checked proof term — traced precisely: `sub_sub_cancel_shift` via
+`continuousAt_sub_const`, the two `def`s via multiple checked callers, `targetZero_succ_gt`/
+`targetZero_strictMono` via `targetZeros_list_nodup`, three more via `no_tree_eq_target_of_not_
+tailSign` itself), and exactly 2 (`targetZero_zero_gt_one`, `targetZeroFrom_gt_a0`) were genuinely
+uncovered — dead leftovers from the fixed-start design, superseded by the `a0`-seeded variant,
+called by nothing anywhere in the file. Deleted both rather than keeping them with a superseded
+marker (house style: delete confirmed-unused code, don't keep backward-compat scaffolding — it's
+in git history if ever wanted). Re-ran a COMPLETE fresh-rebuild `#print axioms` pass over all 19
+externally-checkable remaining declarations (the 20th, `sub_sub_cancel_shift`, is `private` —
+confirmed covered via its caller instead, since it can't be referenced by name from outside the
+file). Zero `sorryAx` throughout — the soundness claim was never at risk, only the "how much was
+individually checked vs. transitively covered" bookkeeping was imprecise. One review also
+suggested a whole-module CI guard (script `#print axioms` over every declaration in a file
+automatically, retiring this class of question for good) — flagged as a reasonable future
+enhancement to `AxiomLedger.lean`'s own mechanism, not built this round to avoid rushing a change
+to the core trust-gate tooling. `AxiomLedger.lean`'s `headlines` count unaffected (`34`, unchanged
+— neither deleted declaration was ever pinned there). Full `lake build MachLib` passes (460
+modules, unchanged).
