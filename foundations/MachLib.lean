@@ -148,6 +148,7 @@ import MachLib.WitnessResidualQuantitativeBound
 import MachLib.WitnessResidualRecursiveSignLift
 import MachLib.WitnessResidualClosureAttempt
 import MachLib.WitnessResidualNonposChainClosure
+import MachLib.WitnessResidualCrossingBoundednessBridge
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
