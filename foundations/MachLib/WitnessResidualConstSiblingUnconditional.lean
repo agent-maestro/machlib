@@ -77,4 +77,37 @@ theorem eml_depth2_witness_of_const_sibling_fully_unconditional
     eml_T1eq_of_const_sibling_le_zero hc2 hallle hsin
   exact no_tree_eq_log_c2_plus_sin_fully_unconditional c2 hc2 T1 hT1eq
 
+/-- **An honest correction, not just another corollary.** `eml_depth2_witness_of_const_sibling_
+fully_unconditional`'s HYPOTHESIS (`hsin`) already asserts a SPECIFIC tree — the WHOLE `eml T1
+(eml (const c2) S3)`, not just `T1` — equals `sin` everywhere. That is EXACTLY the shape
+`no_tree_eq_sin_unconditional` (cont. 58) refutes, directly, for ANY tree structure — so this
+conclusion follows in ONE LINE from cont. 58 ALONE, with no `1 < c2` restriction, no `S3 ≤ 0`
+case-split, no `log(c2+\sin x)` reasoning, and no dependence on `no_tree_eq_nestedTarget_fully_
+unconditional`/this file's own `..._fully_unconditional` theorem above at all. Checked directly
+(not assumed) before writing this: it type-checks and compiles clean.
+
+**What this means, stated plainly.** For THIS SPECIFIC application — closing the depth-2
+`eml_depth2_witness_of_const_*_sibling` family's third conjunct — the `nestedTarget`/`log(c2+\sin
+x)` machinery built cont. 59-69 (culminating in today's fully unconditional closure) was NOT
+strictly necessary; a one-line application of cont. 58 always sufficed, because the family's own
+hypothesis was already the "some tree equals `sin`" shape cont. 58 closes unconditionally,
+regardless of what's nested inside. This ALSO means `EMLWitnesses A x0`/`EMLWitnesses B x0` (the
+threads cont. 68 pinned as needing the constructive `EMLPfaffianValidOn` route) are moot not just
+because their ORIGINAL purpose is superseded, but because the CONCLUSION they were built toward
+follows trivially from a fact proven back in cont. 58, several rounds before `EMLWitnesses` was
+even reconsidered this session.
+
+**What this does NOT diminish.** `no_tree_eq_nestedTarget_fully_unconditional` and
+`no_tree_eq_log_c2_plus_sin_fully_unconditional` remain genuinely new, standalone facts about the
+`nestedTarget` family and `log(c2+\sin x)` specifically — useful for anyone asking "does some tree
+realize THIS target" directly, independent of the depth-2 `eml T1 (eml (const c2) S3)` wrapper.
+The wrapper just turned out to be redundant scaffolding for reaching a conclusion cont. 58 already
+reached, several rounds earlier, by a shorter path. -/
+theorem eml_depth2_witness_of_const_sibling_trivial_via_cont58
+    {T1 S3 : EMLTree} {c2 : Real}
+    (hsin : ∀ x, (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3)).eval x = Real.sin x) :
+    ∃ x0, 0 < S3.eval x0 :=
+  False.elim (no_tree_eq_sin_unconditional (EMLTree.eml T1 (EMLTree.eml (EMLTree.const c2) S3))
+    hsin)
+
 end MachLib
