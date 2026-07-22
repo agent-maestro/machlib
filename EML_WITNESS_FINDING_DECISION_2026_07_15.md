@@ -4268,3 +4268,71 @@ this residual) — it just doesn't move the wall.
 `sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (446
 modules, up from 445). One commit this round (`dfdc1678`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 55) — attempting the Taylor-coefficient/Faa-di-Bruno route and the
+validity-free Khovanskii extension; both investigated seriously, both ruled out for precise,
+checked reasons — no Lean written, pure investigation
+
+**Direct user request**: "lets get started on this please," pointing at the specific idea flagged
+at the end of cont. 54 (and originally, prequel round 7): the Taylor-coefficient/Faa-di-Bruno
+matching argument.
+
+**Part 1 — the naive Taylor-matching idea, worked out concretely before writing anything.** For
+`T1 = eml A B` in the stuck `B > 0` branch, computing `T1`'s SECOND structural derivative requires
+`B`'s second derivative as a NEW unknown — exactly one more unknown for each additional equation
+(one more derivative order). `B` is exactly as unconstrained after the computation as before it:
+matching more Taylor coefficients does not shrink the degrees of freedom, because there is no
+mechanism by which more derivatives pin down an entirely unconstrained sibling. This is a sharper,
+concrete restatement of the SAME obstruction found four times already (prequel round 19, cont. 43,
+cont. 53, cont. 54) — not a way around it. Reported to the user before proceeding, since committing
+Lean effort to a derivative-matching brick that provably doesn't reduce degrees of freedom would
+not be honest progress.
+
+**Part 2 — the validity-free Khovanskii extension, chosen instead after user confirmation.**
+`EMLKhovanskiiConstructive.lean`'s own architecture note (read earlier, cont. 47's investigation)
+flagged an unexplored "b-path": extend the constructive Khovanskii descent to an exp+rational
+(equivalently exp+log) chain class, referencing `PfaffianExpRecipDescent`/
+`PfaffianExpLogRecipDescent`/`PfaffianLogGeneralDegree` as already having "axiom-clean exp+recip/log
+pieces." `PfaffianExpLogRecipClass.lean`'s `PosExceptLog`/`IsExpLogRecipW` looked, from its own
+docstring, like EXACTLY what was needed: "every chain value is positive... EXCEPT possibly the
+log-type ones, whose own value may be signed... satisfiable by an EML encoder chain whose
+`log⟦t2⟧` nodes are genuinely SIGNED."
+
+**Checked carefully rather than taken at face value — and it does NOT provide what it appeared
+to.** Reading `IsExpLogRecipW`'s actual chain-type definition: the "log-type" disjunct only
+exempts the log NODE's OWN chain variable from needing positivity (its VALUE, `log(v)`, can be
+negative — true but never actually needed by anything). It says nothing about `v` itself (log's
+ARGUMENT). Tracing the log-type relation `log(v)' = v' · (1/v)`: the `1/v` factor MUST be tracked
+as a separate "reciprocal-type" chain variable, and the reciprocal-type disjunct in the SAME
+definition explicitly requires `∀x ∈ (a,b), 0 < eval v x` — i.e., `v` (log's argument) STILL needs
+to be strictly positive, just stated on a different (predecessor) chain variable than the one the
+docstring's own framing drew attention to. This is not an oversight in the encoding that could be
+patched — it is structurally forced: `log`'s TRUE derivative is `1/x`, so ANY Pfaffian-chain
+representation of it (which encodes a function by a polynomial DIFFERENTIAL relation) can only be
+VALID on the region where the argument avoids `0`, exactly where MachLib's clamp itself lives.
+`enc_combinedBound` (`EMLExplicitBoundEncoder.lean`) — the theorem `no_tree_eq_target_given_validon`
+is actually built on — confirms this directly: it takes `hpos : LogArgPosOn t (Icc a b)` as an
+explicit hypothesis, with no `PosExceptLog`-relaxed alternative ever wired through to it. The
+`PosExceptLog` machinery is real, verified, unconnected infrastructure — but it does not, and by
+the mathematics involved cannot, remove the positivity requirement this whole document has been
+working around.
+
+**Net assessment, now resting on genuinely convergent evidence.** Two INDEPENDENT high-level
+strategies — (a) propagating/deriving validity structurally (witness-finding, prequel rounds
+19-24; the mutual-induction attempt, cont. 53; the derivative-transfer attempt, cont. 54) and (b)
+avoiding the NEED for validity via a different zero-counting formalism (this round) — both, when
+checked carefully rather than assumed, run into the SAME fact from different directions: `log`'s
+argument staying positive is not an artifact of any particular proof technique or encoding choice
+in this codebase. It is required by the actual calculus of `log`'s derivative, and MachLib's
+CLAMPED (total) `log` makes the boundary where this can fail a genuine, first-class possibility
+that standard (partial-log) mathematics never has to consider. Closing the fully general residual
+without ASSUMING or DERIVING validity from some concrete structural hypothesis (the `RightChildrenEverywherePositive`/
+`BChainNonpos`/crossing-bridge family this whole recent lineage has been building) looks, on the
+weight of six independent, carefully-checked investigation threads now, like it needs a genuinely
+different mathematical idea this session has not found — most plausibly the dimension/complexity-
+counting argument comparable to a fragment of Wilkie's o-minimality proof, still unattempted and
+still, honestly, beyond what a further round of this document's existing techniques can reach.
+
+No Lean written or modified this round — pure investigation, both halves reported precisely,
+matching the discipline this whole document has tried to hold to throughout: report what was
+tried, what was found, and exactly where it stops, not just the parts that sound like progress.
