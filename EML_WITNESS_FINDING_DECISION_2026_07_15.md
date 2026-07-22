@@ -5747,3 +5747,67 @@ corollaries plus a short public "theorem spine" doc over the three compression f
 Track B's `EML_WITNESS_FINDING_THEOREM_MAP.md`, scoped to just the new barriers), or (b) moving
 directly at the compact-interval theorem now that the interfaces are cleaner. Left for direct
 discussion rather than decided here.
+
+## 2026-07-22 (cont. 79) — the compact-interval theorem, checkpoint: hardest piece built, list
+## construction and final assembly remain
+
+Direct request: "Compact-interval quantitative theorem" (chosen explicitly, both reviews having
+flagged it as genuinely harder than everything else in Track C — "the one item that will genuinely
+spend the Khovanskii bound's explicitness rather than routing around it").
+
+**Feasibility risk resolved first, before writing anything (`59a11c81`).** The needed ingredient —
+an EXPLICIT (not merely existential) Khovanskii-style zero-count bound, computed directly from a
+tree's own structure — turns out to already exist: `EMLExplicitBound.enc_combinedBound`/
+`combinedBoundE`, used by `EMLExplicitBoundSinBarrier.lean`'s `sin_not_in_eml_any_depth` for the
+EXACT-equality case. Verified directly via `#print axioms` — genuinely load-bearing to check, not
+assume — that `enc_combinedBound` and the `combined_descent_3_explicit` it rests on are BOTH
+`sorryAx`-free and do NOT depend on `zero_count_bound_classical` or the still-open `exp_hard` gap
+(a separate, much heavier arc, `project_log_hard_fixedD_pivot`/`project_log_g0_analytic_discharge`
+in agent memory — genuinely stuck, multi-week, high-risk on a DIFFERENT question). The "_explicit"
+route sidesteps `exp_hard` entirely by taking structural chain data explicitly rather than via the
+`IsExpLogRecipW` existential that route needs. This was THE risk that could have made the whole
+item infeasible within any reasonable scope; it isn't.
+
+**The construction, worked out on paper before any Lean.** `sin`'s zeros at `π,...,(M+1)π` are what
+the exact-equality proof counts directly (`M := combinedBoundE(...)`, computed from the tree BEFORE
+knowing anything about the target). For `ε`-approximation, the tree doesn't need an EXACT zero at
+each `jπ` — `ε`-closeness throughout an interval forces an INDUCED zero near each one instead, via a
+sign argument at the alternating extrema `π/2+jπ` (where `sin` hits exactly `±1`, alternating,
+`sin(x+π)=-sin(x)`): `ε<1` forces `T.eval` to share `sin`'s sign at each extremum, and consecutive
+extrema straddle exactly one `sin`-zero with OPPOSITE forced signs — IVT gives `T.eval` a zero
+strictly between them. `M+1` such induced zeros, automatically distinct (the housing intervals are
+pairwise disjoint) — contradicts `enc_combinedBound`'s bound of `M` once the interval is long
+enough to contain all `M+1` extrema pairs.
+
+**Built and verified clean this round** (`59a11c81`, `CompactIntervalNonApproximation.lean`, zero
+`sorryAx`, `#print axioms` checked on each): `induced_zero_of_eps_close`/`induced_zero_of_eps_close'`
+— the general IVT-induced-zero mechanism in BOTH sign orientations (needed because consecutive
+extrema alternate which one is positive), target- and tree-agnostic, reusing `intermediate_value`
+(`IntermediateValue.lean`) and a small `continuousAt_neg` helper built for the mirrored case.
+`sin_extremum_succ_flip` — the one-line alternating-sign induction.
+
+**Genuinely remaining, scoped precisely, not yet built**: (1) `sin_extremum_val`, a parity-indexed
+fact giving `sin(π/2+jπ)` explicitly as `1` or `-1` depending on `j`'s parity (currently have the
+FLIP fact, need the closed values to select which of the two IVT lemma orientations applies at each
+step); (2) the `M+1`-element induced-zero LIST — existentially obtained (no closed form, unlike
+the exact-equality proof's `natCast(i+1)*pi`), needing a `Nodup` proof from the housing intervals'
+pairwise disjointness, likely via `List.nodup_range`-style reasoning mirroring `targetZeros_list_
+nodup` (`WitnessResidualContinuousTargetMetaLemma.lean`) but adapted for existential (not
+recursively-defined) zeros; (3) `LogArgPosOn T (Icc A B)` derived from an explicit `EMLPfaffianValidOn
+T A B` hypothesis (via `logArgPosOn_Icc_of_validOn`, already used exactly this way in
+`EMLExplicitBoundSinBarrier.lean`); (4) the final numeric assembly matching `enc_combinedBound`'s
+exact interface (`emlEmptyChain`, the four vacuous hypotheses, a nonvanishing witness point) and
+concluding the interval-length contradiction. Each is comparable in scope to what's already built —
+this is a checkpoint, not a stall; the CONCEPTUALLY hard part (the sign-forcing mechanism, the
+feasibility risk) is behind it, what remains is substantial but mechanical.
+
+**One real tooling finding along the way, elevated in `TACTIC_NOTES.md` from "watch list" to
+"diagnosed."** `mach_mpoly` failed a THIRD time this session, and this time precisely enough to
+state a rule: it fails whenever an atom is bound WITHIN the tactic proof (`intro`/`fun`/`refine`)
+rather than declared in the theorem's own top-level parameter list; it works fine otherwise.
+Confirmed by contrast in the same file — `neg_lt_neg'`'s `mach_mpoly [a, b]` (`a`,`b` genuine
+theorem parameters) succeeded immediately. Worked around throughout via `mach_ring` for anything
+lambda-scoped; no upstream fix attempted (not yet blocking, per the note's own stated bar).
+
+Full `lake build MachLib` green (469 modules). Not yet an `AxiomLedger` headline — no capstone to
+pin until the assembly is done.
