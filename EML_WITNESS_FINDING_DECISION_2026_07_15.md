@@ -4455,3 +4455,75 @@ a fully `RightChildrenEverywherePositive` tail; it is not the construction itsel
 `eml_pfaffian_validon_from_sin_equality` dependence — the axiom footprint matches this arc's
 standard Khovanskii trusted base exactly. Full `lake build MachLib` passes (448 modules, up from
 447). One commit this round (`0cebceff`, plus this docs commit), pushed.
+
+## 2026-07-21/22 (cont. 58) — CLOSED: no finite EML tree equals `sin`, unconditionally
+
+**Direct user instruction, continued**: "proceed" — continuing straight from cont. 57's building
+block into the recursive normal-form construction flagged as the actual remaining work. This round
+finished it, and it closes: the `sin` instance of Option D's residual is now proven completely
+unconditionally, with zero dependence on `EMLPfaffianValidOn` holding anywhere and zero dependence
+on `eml_pfaffian_validon_from_sin_equality`.
+
+**Step 1 — generalize `rcep_tailSign` from global to tail-restricted validity.**
+`RightChildrenEverywherePositive` gives `EMLPfaffianValidOn` from `0` unconditionally, but the
+construction this round actually needs validity only on tails past an ARBITRARY fixed point `a`
+(possibly deep inside a larger tree's recursion, possibly negative). Rebuilt `rcep_tailSign`'s
+entire IVT/zero-sequence machinery parametrized by `a` (`WitnessResidualEventualValidTailSign.lean`,
+`evalid_tailSign`). The one genuine change: RCEP's interval endpoint was built additively
+(`z M + w + 1`), relying on the zeros and witness point being `> 0` (true there since everything
+sat past `1`) — no longer available once `a` can be arbitrarily negative, so the endpoint is
+instead built via a new `lt_of_lt_both` helper (a point exceeding two given reals directly, via a
+3-way `lt_total` case split, never touching `max`).
+
+**Step 2 — identify the actual missing piece.** Cont. 56 flagged, correctly, that
+`TailSign A.eval` / `TailSign B.eval` (the natural induction hypotheses for `WitnessResidualTailSign.lean`'s
+own `B`-eventually-positive case) are VALUE facts, and `evalid_tailSign` needs a VALIDITY fact.
+Strengthening the induction hypothesis to bare "eventually valid" doesn't work either — it's
+FALSE for trees with perfectly good `TailSign`: `eml var (const (-1))`'s own right child is
+negative everywhere, so `EMLPfaffianValidOn` never holds for it at ANY tail, even though its value
+is `exp x` (`TailSign.pos`, via the exact same collapse identity `tailSign_eml_of_B_eventually_nonpos`
+uses). The resolution: don't require the tree itself to be eventually valid — require it to have
+an eventually-valid REPRESENTATIVE that matches its eventual value.
+
+**Step 3 — build the representative, by structural induction (`WitnessResidualNormalFormClosure.lean`,
+`eml_eventually_valid_repr`).** For every tree `T`, produce `Trep` with `Trep` eventually
+Pfaffian-valid AND `Trep.eval` eventually equal to `T.eval` pointwise:
+- `const`/`var`: the tree is its own representative (trivially valid everywhere).
+- `eml A B`, `B` eventually non-positive: `T`'s value collapses to `exp(A.eval ·)` past the
+  threshold (the `tailSign_eml_of_B_eventually_nonpos` identity). Representative:
+  `eml Arep (const 1)` — `log 1 = 0` makes this compute to exactly `exp(Arep.eval ·)`; the
+  `const 1` slot is trivially valid AND trivially positive everywhere, so validity depends PURELY
+  on `Arep`'s (already available from the IH), with zero new obstruction from `B`.
+- `eml A B`, `B` eventually positive: representative is `eml Arep Brep` — both children's own
+  representatives, combined on a common tail built by shrinking each side's threshold down to one
+  point past all four relevant thresholds at once (`EMLPfaffianValidOn_mono_a`, a new
+  shrink-from-the-left monotonicity lemma; `lt_of_lt_four`, three chained applications of
+  `lt_of_lt_both`).
+
+The sign split needed to decide which branch applies (`TailSign B.eval`) is obtained FOR FREE at
+this point in the induction — `evalid_tailSign` on `Brep` (already constructed) plus transport
+across the eventual equality (`tailSign_congr_eventually`, a new lemma: `TailSign` is invariant
+under eventual pointwise equality of the underlying functions) — no separate induction needed.
+
+**Payoff.** `eml_tailSign_unconditional : ∀ T, TailSign T.eval` — literally no hypothesis. Combined
+with `sin_not_tailSign` (already proven, cont. 56): `no_tree_eq_sin_unconditional` — no finite EML
+tree's `eval` function equals `sin` pointwise everywhere. Fresh-rebuild `#print axioms` on all
+seven new theorems (checked individually, not just the top-level one) confirms the exact same
+standing `MachLib.Real` baseline used throughout this arc — `propext`, `Classical.choice`,
+`Quot.sound`, the `Real`-construction axioms including `archimedean`/`rolle_ct`/`exp_surj` — zero
+`sorryAx`, and `eml_pfaffian_validon_from_sin_equality` does not appear anywhere in the list.
+
+**Honest scope, stated plainly.** This closes the LITERAL-`sin` instance specifically. It is
+routed independently of `no_tree_eq_target_given_validon`'s `hvalidon_any_b` hypothesis, which
+remains entirely undischarged — this is a genuinely different path to the same conclusion for this
+one target, not a general-purpose discharge of that hypothesis for arbitrary targets.
+Generalizing to the full `nestedTarget cs` family (the actual stated goal of Option D) is the
+natural next step: the underlying "periodic ⟹ no `TailSign`" argument that closes `sin` should
+carry over, since `nestedTarget` is itself built from `sin`, but this has NOT been checked — the
+argument for a `log`/nesting-wrapped periodic function needs its own tail-sign analysis, not
+assumed to transfer automatically.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all theorems in both new files. No
+`eml_pfaffian_validon_from_sin_equality` dependence anywhere in either file. Full `lake build
+MachLib` passes (450 modules, up from 448). One commit this round (`5a96fc37`, plus this docs
+commit), pushed.
