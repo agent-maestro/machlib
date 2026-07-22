@@ -5245,3 +5245,110 @@ enhancement to `AxiomLedger.lean`'s own mechanism, not built this round to avoid
 to the core trust-gate tooling. `AxiomLedger.lean`'s `headlines` count unaffected (`34`, unchanged
 — neither deleted declaration was ever pinned there). Full `lake build MachLib` passes (460
 modules, unchanged).
+
+## 2026-07-22 — NEXT OBJECTIVES, sorted from two external reviews' proposals (not yet started)
+
+Two muses independently proposed a large set of forward-looking work after cont. 71 closed the
+arc's central line. Sorted here into three tracks with genuinely different character — engineering
+hygiene, consolidation/presentation, and new mathematics — rather than one flat list, since
+committing significant time to one track over another is a real choice, not an obvious next step.
+
+**One finding checked before sorting, not assumed.** Both reviews separately converged on "prove
+the general periodic-target barrier" as a natural next frontier — does `no_tree_eq_target_of_
+not_tailSign` already cover EVERY nonconstant continuous periodic function "for free," via `L :=
+inf(f)` (the minimum recurs by periodicity, ruling out `.pos`/`.neg`; nonconstancy gives a second
+recurring value, ruling out `.zero`)? Checked directly: the ARGUMENT is right, but it needs the
+infimum to be ATTAINED at a specific point (compactness), not merely a bound. This codebase
+currently has boundedness (`continuousAt_bddAbove_Icc`, `IntermediateValue.lean`) but NOT
+attainment (a proper Extreme Value Theorem — "continuous on a compact interval attains its min").
+So the general periodic barrier is close, not free — it needs one genuinely new piece of analysis
+machinery first, not just a wrapper around what exists.
+
+### Track A — Engineering / trust hygiene ("debt, not research" — both reviews agree)
+
+- **A1.** Whole-module `AxiomLedger` CI guard: script `#print axioms` over EVERY declaration in a
+  file automatically (not a named `headlines` list), retiring the "individually checked vs.
+  transitively covered" bookkeeping question for good. Bounded, mechanical, high leverage —
+  directly motivated by cont. 71's own erratum.
+- **A2.** Import-graph restructuring to let the proved replacements
+  (`eml_pfaffian_validon_from_sin_equality_proved`/`_cos_equality_proved`) physically supersede
+  the `axiom` keywords in `EMLPfaffian.lean`/`CosNotInEMLAnyDepth.lean` — deferred repeatedly
+  since cont. 65/66 as "zero trust gain, high churn on a foundational file." Only worth doing if
+  the physical keyword's presence is itself a problem for some external consumer, not for
+  soundness (already established: a provable axiom is conservative regardless of whether the
+  keyword is deleted).
+- **A3.** The OLD static `axiom_ledger.json`/`tools/axiom_ledger` scripts — never touched this
+  session (the REAL, working gate turned out to be `AxiomLedger.lean`). Unclear if this older
+  tooling is still maintained/relevant or itself superseded; needs a status check before deciding
+  whether it's worth updating at all.
+- **A4.** CI check forbidding NEW call sites of the legacy axioms (cheap, grep-shaped, prevents
+  regression rather than cleaning up existing state).
+
+### Track B — Consolidation and presentation (make the closed result legible)
+
+- **B1.** A target-independent interface unifying the barrier theorems — largely ALREADY DONE:
+  `no_tree_eq_target_of_not_tailSign` (cont. 71) already takes an abstract `TARGET`/`L`, with
+  `sin`/`nestedTarget cs` as instantiations. Worth double-checking whether either review's proposed
+  `TailOscillatoryTarget`-style bundling adds anything beyond what already exists, or is redundant
+  with it.
+- **B2.** Collapse the 70+ file history into a legible "theorem map" / spine document, separating
+  the final mathematical spine (`TailSign` → `eml_eventually_valid_repr` → the two meta-lemmas →
+  `sin`/`nestedTarget` corollaries → axiom discharge) from the exploratory/superseded research
+  trail (dozens of partial mechanisms, abandoned witness families, superseded `from-zero`
+  arguments) — into an explicit Archive/Experiments layer. Bookkeeping-heavy, not attempted.
+- **B3.** A written technical/research note for outsiders — distinguishing formal theorems from
+  standing analytic axioms from retired validity assumptions, and including the failed strategies
+  (jet-matching, validity-free Pfaffian encoding, graph-shape classification) as a coherent
+  narrative of why the tail invariant was the right pivot.
+- **B4.** A minimal public reproducer entry point (a single small file importing only the public
+  spine, running `#print axioms` on the three headline results, plus a plain-language README) —
+  the artifact to actually show someone outside this codebase, as opposed to the full 460-module
+  library.
+
+### Track C — New mathematics (extending the closed arc)
+
+Ranked by the reviews' own effort/value signals, cross-referenced against what's ALREADY built:
+
+- **C1. Prove the log-positivity wall as a theorem** (cheapest, complementary, doesn't block
+  anything else): no EML tree with a chain valid on an interval containing `0` evaluates to `log`
+  on the positive side — via a DIVERGENCE obstruction (chain components are bounded on compacts;
+  `log` is unbounded below near `0⁺`), a genuinely DIFFERENT obstruction type than the
+  oscillation-counting this whole arc has used. First-hour check flagged: confirm the chain-validity
+  definition actually implies boundedness on compacts (should follow from what an ODE solution is,
+  but if validity is axiomatized more weakly, that gap IS the whole proof).
+- **C2/C3/C4. Flanking attacks on the general (signed) log case** — regularized `log√(x²+ε²)`
+  (unconditionally representable, converges to `log|x|` with quantified error — characterizes
+  `log|x|` as a boundary point of the representable class, in its closure but not in it); implicit/
+  relational representability (`y=log x ↔ x=exp y`, `exp`'s chain is globally valid — turns the
+  wall into a separation theorem, explicit-representable ⊊ implicit-representable); cell
+  stratification (lowest priority per both reviews, only needed if a future consumer needs
+  exactness on the negative axis rather than `ε`-closeness).
+- **C5. Hierarchy theorem, chain-`N` ⊊ chain-`(N+1)`**: combine the census's existence side
+  (construct a function at chain 5 the barrier machinery can then obstruct at chain 4) with the
+  NOW-REUSABLE obstruction meta-theorem. Flagged as "closer than it looks" and highest ceiling.
+  Real risk named: whether the Khovanskii zero-count bound is EXPLICIT in the chain parameters
+  (needed to evaluate "chain-4's bound is `B₄`") or currently just "finite, constants untracked" —
+  if untracked, making it effective is the real work item, not a quick corollary.
+- **C6. Quantitative non-approximation**: upgrade exact-equality impossibilities to `ε`-closeness
+  impossibilities (small perturbations preserve sign changes near each zero, so the same counting
+  argument should force a contradiction for intervals long relative to the depth-`d` zero bound).
+- **C7. The Certcom handshake**: combine C6's approximation floor with Certcom's rounding-error
+  ceiling into a machine-checked TOTAL error decomposition for any EML artifact purporting to
+  compute `sin` — flagged by one review as thesis-shaped, not lemma-shaped.
+- **C8. Non-representability census**: instantiate the meta-theorem's hypotheses across a battery
+  of targets (other periodic functions, Painlevé transcendents from the chain-5 census,
+  log-periodic composites) — mechanical, low-risk, and the systematic way to probe where the
+  general-periodic-barrier boundary (see the finding above) actually sits.
+- **C9. General periodic-target barrier**: the finding above — needs Extreme Value Theorem
+  attainment (not just boundedness) built first, then the wrapper argument is exactly as described.
+  Both reviews' top-ranked frontier; genuinely reachable, not free.
+- **C10. Quantitative tail complexity**: make `eml_eventually_valid_repr`'s threshold `a`
+  EFFECTIVE — an explicit bound `R(t) ≤ F(size(t), depth(t))` — connecting to Forge-generated
+  certificates. Longer-horizon, most speculative of the C-track items.
+
+**Not sorted into an immediate priority order deliberately** — Track A is bounded engineering,
+Track B is presentation work with no mathematical risk, Track C spans a real range of effort and
+uncertainty (C1 is an afternoon; C5/C9 are genuine open questions with named first-hour risks;
+C7/C10 are longer-horizon). Which track to start on is a call about what this arc is FOR next
+(closing out cleanly vs. pushing the mathematics further vs. making it legible to others), not an
+obvious next step — left for direct discussion rather than decided here.
