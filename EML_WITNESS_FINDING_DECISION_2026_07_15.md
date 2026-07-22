@@ -4577,3 +4577,45 @@ for the non-straddling `cs` — to future work.
 `sorryAx`-free, verified via a genuinely fresh rebuild for all 9 theorems. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (451
 modules, up from 450). One commit this round (`fe22315e`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 60) — the `c2` boundary resolved exactly, hypothesis sharpened
+
+**Direct user instruction**: "proceed" — checking the exact question cont. 59's docs left open:
+does `cs = [c2]` (`c2 ≥ 2`) satisfy the straddle condition?
+
+**The computation, done precisely rather than estimated**: `nestedHi [c2] = log(c2+1)`, which is
+`> 0` for EVERY `c2 > 1` unconditionally (`c2+1 > 2 > 1`, `log` strictly increasing past `1`,
+`log_lt_log`). `nestedLo [c2] = log(c2-1)`, which is `< 0` iff `c2 < 2` — so the OLD strict
+hypothesis (`nestedLo cs < 0`) excludes `c2 = 2` exactly, even though `log(2+\sin x)` genuinely has
+no `TailSign`: it touches `0` at isolated points (`-π/2+2kπ`) but is nonzero arbitrarily far out
+elsewhere (`π/2+2kπ` gives `log 3`). This meant the boundary point was a real gap in cont. 59's
+statement, not just an unchecked instance.
+
+**The fix: relax `nestedTarget_not_tailSign`'s hypothesis from `nestedLo cs < 0` to `nestedLo cs ≤
+0`** (keeping `0 < nestedHi cs` strict — deliberately asymmetric, not a cosmetic weakening). Pure
+generalization, not a different theorem: the `TailSign.pos` case still closes with `≤` (`0 <
+nestedLo cs` directly contradicts `nestedLo cs ≤ 0`, no strictness needed there); the
+`TailSign.zero` case is rerouted through the `nestedHi` point instead of the `nestedLo` point
+(needs a genuinely NONZERO far-out witness, which the still-strict `nestedHi cs > 0` supplies even
+when `nestedLo cs = 0` exactly, closing exactly the case the old proof's `nestedLo`-routed `.zero`
+case couldn't).
+
+**Payoff**: `no_tree_eq_log_c2_plus_sin_unconditional` — closes `log(c2+\sin x)` unconditionally
+for the FULL range `1 < c2 ≤ 2`, not just `1 < c2 < 2`. And this IS the sharp boundary for this
+method, confirmed by direct computation, not assumed: for `c2 > 2` strictly, `nestedLo [c2] =
+log(c2-1) > log 1 = 0`, so `log(c2+\sin x)` is ENTIRELY positive — it has its own `TailSign.pos`,
+trivially, and no argument of this shape (or any "target has no `TailSign`" argument) can ever rule
+out a tree matching it. A tree COULD in principle match it; closing `c2 > 2` needs the ORIGINAL
+`EMLPfaffianValidOn`/Khovanskii route this whole tail-sign detour was built to avoid, not a
+stronger version of this argument.
+
+**Honest scope, stated plainly.** Only `cs = [c2]` was instantiated against the sharpened general
+theorem. Deeper nestings (`cs = [d, c2]` and beyond) were NOT checked against the relaxed straddle
+condition — the general theorem (`no_tree_eq_nestedTarget_unconditional`) is proven for the whole
+family, but working out which SPECIFIC `cs` instances satisfy `nestedLo cs ≤ 0 < nestedHi cs`
+deeper than one nesting level remains future work.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all 10 theorems (including the two
+relaxed ones). No `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib`
+passes (451 modules, unchanged — one file extended, not a new file). One commit this round
+(`2ded29ef`, plus this docs commit), pushed.
