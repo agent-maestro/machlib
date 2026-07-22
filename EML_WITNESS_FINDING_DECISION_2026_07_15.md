@@ -4965,3 +4965,66 @@ angle than anticipated.
 `sorryAx`-free, verified via a genuinely fresh rebuild for all three new theorems. Full `lake
 build MachLib` passes (456 modules, up from 455). One commit this round (`3d2505bd`, plus this
 docs commit), pushed.
+
+## 2026-07-22 (cont. 68) — the three deferred threads, resolved: one closed, two precisely
+characterized as the arc's original wall, un-closed for the reason the arc always said
+
+**Direct user instruction**: "lets do these please" — all three threads named at the end of
+cont. 67: the `sin_not_in_eml_any_depth` subsumption, the `EMLWitnesses A x0`/`B x0` conjuncts,
+and `c2 ≥ 2`.
+
+**Thread 1 — CLOSED.** Confirmed the subsumption directly: `InEMLDepth f k := ∃t, t.depth≤k ∧
+∀x,f x=t.eval x`; `no_tree_eq_sin_unconditional` rules out every `t` regardless of depth, so the
+bound `k` is never even inspected. One-line proof
+(`sin_not_in_eml_any_depth_unconditional`/`cos_not_in_eml_any_depth_unconditional`,
+`EMLAnyDepthBarrierUnconditional.lean`). Added as NEW theorems rather than editing the originals
+— the originals still cite the axioms in their own proof bodies, and fixing that in place hits the
+same import cycle deferred in cont. 65/66; twelve other files reference the originals by name,
+rewiring all of them was out of scope. Fresh-rebuild `#print axioms` clean, wired into
+`AxiomLedger.lean`'s `headlines` (`28→30`), zero new `trustedFootprint` entries needed (both are
+one-liners over already-tracked theorems).
+
+**Threads 2 and 3 — investigated precisely, found to be the SAME wall, confirmed still genuinely
+open at the scale this arc has said all along.** Before writing any code, traced what `EMLWitnesses
+A x0`/`EMLWitnesses B x0` are ACTUALLY for. Every consumer of `EMLWitnesses`/`eml_pfaffian_
+validon_of_witnesses` (`EMLSmoothness.lean`) traces back to files inside THIS SAME arc — no
+external user. Their purpose was to CONSTRUCTIVELY discharge `EMLPfaffianValidOn t 0 b` for a
+tree `t` satisfying `t.eval = sin`/`cos`, as an alternate route to the SAME axioms cont. 65-67
+just discharged VACUOUSLY. For the `sin`/`cos` axioms themselves, this route is now REDUNDANT —
+the goal it was built to reach is already reached, unconditionally, a cheaper way.
+
+**But it is NOT redundant for `c2 ≥ 2`.** Re-checked `eml_depth2_witness_of_const_gt_one_sibling_
+simple_T1` (2026-07-20, `WitnessResidualSimpleT1Application.lean`) precisely: its hypothesis is
+`1 < c2` with NO upper bound — it ALREADY covers `c2 ≥ 2`, for `T1` restricted to
+`RightChildrenSimplePositive`. The `c2 ≥ 2` gap is EXACTLY the same shape the `1 < c2 ≤ 2` gap was
+before cont. 64: removing that restriction on `T1`. Cont. 64 removed it for `1<c2≤2` using
+`TailSign`; for `c2 ≥ 2`, `TailSign` PROVABLY cannot help (cont. 60: `log(c2+\sin x)` is entirely
+positive there, has its own `TailSign.pos`, no argument of that shape can separate a tree from
+it). Removing the restriction for `c2 ≥ 2` therefore needs an actual, constructive proof of
+`EMLPfaffianValidOn T1 0 b` for an ARBITRARY tree `T1` — exactly what `EMLWitnesses`/`eml_
+pfaffian_validon_of_witnesses` was built to supply, and exactly the difficulty this arc's very
+first entries (2026-07-15/16) named: "closing depth ≥ 2 genuinely needs the full
+Khovanskii/Pfaffian-chain machinery... a strong induction on tree depth bounding zero-crossings...
+realistically multiple more sessions." Confirmed, not merely recalled: `1 < c2` with no upper
+bound is UNCONDITIONALLY quantified over an arbitrary EML tree `T1` we do NOT get to choose — the
+counterexample class this whole arc keeps circling
+(`WitnessResidualCancellation.lean`'s explicit depth-3 tree, two independently-verified compound
+children that cancel exactly) is a genuine witness that `EMLPfaffianValidOn`/`EMLWitnesses`-style
+conditions CAN fail for legitimate, otherwise-unremarkable trees — so this is not a
+proof-technique gap waiting for the right trick, it is real, open mathematical content.
+
+**Honest recommendation, not a decision made unilaterally.** Attempting to force this closed in
+one more round would either fail outright or produce a rushed, likely-wrong result — the arc has
+said "weeks to a month" at this scale since its SECOND entry, confirmed independently at least six
+separate times since (cont. 55's investigation ruling out two candidate shortcuts is the most
+recent). Two honest options: (a) commit to the multi-session Khovanskii/Pfaffian-chain induction
+this genuinely requires — a real, scoped, substantial follow-on project, not a "proceed" round;
+or (b) accept the arc's current state — the axiom the WHOLE detour existed to route around is
+proven, its `cos` sibling is proven, the depth-any-`k` barrier theorems are re-derived
+unconditionally, and `c2 ≥ 2` remains exactly as open as it has always honestly been described,
+narrowed to a precise, checkable boundary (`RightChildrenSimplePositive T1` removal) rather than
+a vague "several weeks" estimate.
+
+`sorryAx`-free (thread 1's new theorems), verified via a genuinely fresh rebuild. Full `lake build
+MachLib` passes (457 modules, up from 456). One commit this round (`41dcf022`, plus this docs
+commit), pushed.
