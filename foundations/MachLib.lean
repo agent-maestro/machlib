@@ -171,6 +171,7 @@ import MachLib.NonRepresentabilityCensusSinSq
 import MachLib.TailApproximationBarrier
 import MachLib.ContinuityDivergenceBarrier
 import MachLib.RepresentabilityTaxonomy
+import MachLib.CompactIntervalNonApproximation
 import MachLib.WitnessResidualConstSiblingUnconditional
 import MachLib.EMLPfaffianValidOnSinEqualityProved
 import MachLib.WitnessResidualCosTailSign
