@@ -5416,3 +5416,44 @@ only if the physical `axiom` keyword's presence becomes a problem for some exter
 soundness is already established regardless (A4 guards the trust surface either way).
 
 Fresh `lake build MachLib` green after both A1 and A4. Track A closed. Track B next.
+
+## 2026-07-22 (cont. 73) — Track B closed: interface confirmed sufficient, theorem map, research
+## note, minimal reproducer
+
+**B1 (confirmed, no code):** `no_tree_eq_target_of_not_tailSign` (cont. 71) was flagged as "largely
+already done" — checked whether a `TailOscillatoryTarget`-style bundled structure would add
+anything beyond the existing four curried arguments (`TARGET`, `L`, `hcont`, `hnts`). Grepped for
+existing call sites: zero, besides the file's own sanity-check instantiation
+(`no_tree_eq_sin_unconditional_via_continuous_meta`). No live repetition pressure to justify a
+bundle — the curried form stays. No further unification work needed, confirmed rather than assumed.
+
+**B2 (`a65573c3`):** `EML_WITNESS_FINDING_THEOREM_MAP.md` — the 16 spine files in dependency order,
+each with its headline declaration, plus an ASCII diagram of how the four capstones (steps 4, 10,
+14, 16) connect. Ties the map to something mechanically checked rather than a documentation claim:
+"spine" is defined as exactly `optionDSpineModules` in `AxiomLedger.lean`, the same list A1's
+whole-module guard enforces. Archive section is category-level (superseded routes, superseded
+straddle-specific results, depth-specific elementary cross-checks, the `EMLSmoothness.lean` dead
+end, the still-open explicit-bound frontier), not an exhaustive per-file catalog — deliberately, to
+stay non-invasive (no file moved, renamed, or marked deprecated).
+
+**B3 (`43db0d35`):** `EML_WITNESS_FINDING_RESEARCH_NOTE.md` — outsider-facing note. Distinguishes
+three kinds of trust explicitly (formal spine theorems / MachLib's standing analytic axioms,
+untouched by this arc / the one retired validity assumption, `eml_pfaffian_validon_from_sin_
+equality`, standing-assumption-to-proved-corollary). The "why TailSign was the right pivot" section
+was pulled from the ACTUAL documented history rather than the muses' paraphrase — re-read cont. 55
+(jet-matching and validity-free Pfaffian encoding, both ruled out for precise structural reasons)
+and cont. 19-20 (case-by-case tree-shape classification — the most productive dead end, closed most
+shapes but hit a genuine irreducible open member, `expWrappedNonMonotonicWitness`, closable only by
+a tree-specific argument) before writing anything, matching this document's own discipline of not
+asserting from memory what a grep or a re-read can confirm.
+
+**B4 (`c9ffecd7`):** `foundations/EMLWitnessFindingReproducer.lean` + companion README. Two imports
+(computed the actual transitive closure needed — 241 of ~460 `MachLib` modules — rather than
+guessing or falling back to `import MachLib`), three `#print axioms` commands on the headline
+theorems (`no_tree_eq_sin_unconditional`, `eml_pfaffian_validon_from_sin_equality_proved`,
+`no_tree_eq_nestedTarget_fully_unconditional`). Ran it for real: 83/83/82 axioms respectively,
+neither legacy discharge axiom present in any footprint — the non-circularity check, now
+independently re-runnable by anyone in a few minutes without reading this document's 73 rounds.
+
+Track A and Track B both closed. Track C (new mathematics) not started, per the explicit "a and b
+for now" scope of this whole two-round push.
