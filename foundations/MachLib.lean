@@ -150,6 +150,7 @@ import MachLib.WitnessResidualClosureAttempt
 import MachLib.WitnessResidualNonposChainClosure
 import MachLib.WitnessResidualCrossingBoundednessBridge
 import MachLib.WitnessResidualChainOrPositive
+import MachLib.WitnessResidualTripleChain
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
