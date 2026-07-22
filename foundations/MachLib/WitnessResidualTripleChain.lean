@@ -194,5 +194,38 @@ theorem no_tree_eq_nested_target_of_BChainTriple :
           rw [nestedTarget_cons, zero_add, ← hexpA x, log_exp]
         exact ihA hAchain (0 :: cs) hwf0 hAeq
 
+theorem one_lt_exp_exp_neg_one : (1 : Real) < Real.exp (Real.exp (-1)) := by
+  have h1 : (0 : Real) < Real.exp (-1) := Real.exp_pos (-1)
+  have h2 : Real.exp 0 < Real.exp (Real.exp (-1)) := Real.exp_lt h1
+  rwa [Real.exp_zero] at h2
+
+/-- **Sanity check, not just an abstract broadening.** `B := eml (const (-1)) var` is a genuinely
+NEW closeable instance the mirror crossing disjunct (cont. 51) reaches — not `var`, not
+`eml var (const c)`, a different compound shape with the crossing in the mirror direction:
+`B.eval 1 = exp(-1) > 0`, `B.eval (exp(exp(-1))) = 0` exactly (via `log_exp`), and
+`EMLNoCrossingAt B z` holds for every `z ≥ 1` (`var.eval z = z ≠ 0` there). Confirms the last two
+rounds' generalizations have real content, not just broader statements of the same two examples. -/
+theorem no_eml_A_const_neg_one_var_eq_nested_target
+    (A : EMLTree) (cs : List Real) (hwf : nestedWF cs)
+    (hT1eq : ∀ x : Real,
+      (EMLTree.eml A (EMLTree.eml (EMLTree.const (-1)) EMLTree.var)).eval x
+        = nestedTarget cs x) : False := by
+  have hBx0 : 0 < (EMLTree.eml (EMLTree.const (-1)) EMLTree.var).eval 1 := by
+    show 0 < Real.exp (-1) - Real.log (1 : Real)
+    rw [log_one, sub_zero]
+    exact Real.exp_pos (-1)
+  have hBx1 : (EMLTree.eml (EMLTree.const (-1)) EMLTree.var).eval (Real.exp (Real.exp (-1))) = 0 := by
+    show Real.exp (-1) - Real.log (Real.exp (Real.exp (-1))) = 0
+    rw [log_exp]
+    mach_ring
+  have hnc : ∀ z : Real, (1 : Real) ≤ z → z ≤ Real.exp (Real.exp (-1)) →
+      MachLib.EMLNoCrossingAt (EMLTree.eml (EMLTree.const (-1)) EMLTree.var) z := by
+    intro z hz1 _
+    refine ⟨trivial, trivial, ?_⟩
+    exact ne_of_gt (lt_of_lt_of_le zero_lt_one_ax hz1)
+  exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing_mirror A
+    (EMLTree.eml (EMLTree.const (-1)) EMLTree.var) 1 (Real.exp (Real.exp (-1)))
+    one_lt_exp_exp_neg_one hBx0 hBx1 hnc cs hwf hT1eq
+
 end Real
 end MachLib
