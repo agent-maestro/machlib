@@ -246,7 +246,27 @@ Theorem from `sup_exists`) has since been built** — see the dated note further
 `eml_gap_avoidance` — **but it does not close this circularity**: the real obstruction is that no
 bound propagates from the root down to an arbitrarily nested interior subtree (bounding
 `exp(s1.eval) - log(s2.eval)` does not bound `s1.eval`/`s2.eval` individually), so the missing piece
-is a genuine differentiation/identity-theorem argument, not a compactness patch. -/
+is a genuine differentiation/identity-theorem argument, not a compactness patch.
+
+**2026-07-22 — DISCHARGED (vacuously). Do not cite this `axiom` as a trust assumption.** This
+statement is now a PROVEN THEOREM, not an open assumption:
+`MachLib.eml_pfaffian_validon_from_sin_equality_proved`
+(`EMLPfaffianValidOnSinEqualityProved.lean`). The hypothesis `hsin` is unsatisfiable — no finite
+EML tree can equal `sin` everywhere, for ANY tree, unconditionally
+(`MachLib.Real.no_tree_eq_sin_unconditional`, `WitnessResidualNormalFormClosure.lean`, the
+Option D witness-finding arc's own capstone, `EML_WITNESS_FINDING_DECISION_2026_07_15.md` cont.
+58/65) — so the conclusion follows by `False.elim`. Fresh-rebuild `#print axioms` on the proved
+theorem confirms this axiom does NOT appear in its own dependency list (non-circular); both
+theorems are pinned in `AxiomLedger.lean`'s `headlines`, checked on every ledger run, not just
+once by hand.
+
+The `axiom` keyword here is retained ONLY because this file is foundational — the entire
+`TailSign` machinery the discharge proof is built on imports (transitively) from THIS file, so
+replacing the declaration with the proof directly would require restructuring the import graph
+(confirmed circular if attempted naively: `EMLExplicitBoundSinBarrier.lean`, this axiom's one
+remaining real call site, is itself transitively imported by the discharge proof's own
+dependency chain). This is import-graph hygiene, not an open mathematical question — the axiom
+contributes zero to the trust surface as of the above proof. -/
 axiom eml_pfaffian_validon_from_sin_equality
     (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
     (b : Real) (_hb_pos : 0 < b) :
