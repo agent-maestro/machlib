@@ -4044,3 +4044,37 @@ existed into strictly broader coverage per theorem, not discovering new closeabl
 `sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
 dependence. Full `lake build MachLib` passes (444 modules, up from 443). One commit this round
 (`c2ee4889`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 50) — the crossing disjunct broadened: exact-zero requirement replaced with
+sign-change, no new mechanism needed again
+
+**Direct user request**: "proceed" — continuing directly off cont. 49's own scope note, which
+flagged the crossing disjunct's exact-crossing requirement (`B.eval x0 = 0` precisely) as awkward
+to satisfy for most concrete trees, which more naturally give a sign CHANGE
+(`B.eval x0 ≤ 0`, `B.eval x1 > 0`) without the caller already knowing exactly where the root sits.
+
+**The fix, mechanical once seen.** `EMLNoCrossingAt` already gives `B` continuous on `[x0,x1]`
+(`eml_continuousAt_of_no_crossing`, `EMLSmoothness.lean`), and `intermediate_value`
+(`IntermediateValue.lean`, already-proven, no new axioms) finds an EXACT root given a genuine sign
+change and continuity — so `no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing` just
+applies IVT itself when `B.eval x0 < 0` strictly (recovering the exact-crossing case directly when
+`B.eval x0 = 0` already), rather than requiring the caller to supply the root. Wired directly into
+`BChainTriple`'s OWN definition (`B.eval x0 ≤ 0` replacing `B.eval x0 = 0`) rather than left as a
+separate add-on — every existing exact-crossing instance still qualifies (`≤0` is implied by `=0`
+trivially), with strictly broader applicability besides. Compiled clean on the first attempt, the
+THIRD theorem in a row in this lineage to do so (cont. 48, cont. 49, and now this) — a consistent
+pattern, not a coincidence: this arc's existing pieces (`eml_continuousAt_of_no_crossing`,
+`intermediate_value`, the crossing bridge itself) were each built general enough to compose
+directly, without needing rework at the seams.
+
+**Scope, stated plainly — same honest boundary as the last two rounds, restated because it's
+still true, not because anything changed.** The crossing disjunct still needs verifiable
+`EMLNoCrossingAt` on the connecting interval and an ACTUAL point where `B` is strictly positive
+(not merely approaching positivity in a limit, and not merely "not provably non-positive"). A `B`
+whose sign behavior can't be pinned down this concretely is covered by none of the three
+mechanisms — same wall as cont. 43, viewed from a slightly wider angle each round without actually
+moving.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
+dependence. Full `lake build MachLib` passes (444 modules — extended the existing file, no new
+module). One commit this round (`2fbbc757`, plus this docs commit), pushed.
