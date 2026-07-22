@@ -151,6 +151,7 @@ import MachLib.WitnessResidualNonposChainClosure
 import MachLib.WitnessResidualCrossingBoundednessBridge
 import MachLib.WitnessResidualChainOrPositive
 import MachLib.WitnessResidualTripleChain
+import MachLib.WitnessResidualGlobalSignDichotomy
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
