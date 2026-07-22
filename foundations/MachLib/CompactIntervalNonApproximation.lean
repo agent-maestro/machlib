@@ -38,6 +38,8 @@ namespace Real
 
 open MachLib
 open MachLib.EMLExplicitBound
+open MachLib.EMLLogArgPosBridge
+open MachLib.PfaffianGeneralReduce
 
 private theorem lt_add_of_sub_lt {a b c : Real} (h : a - b < c) : a < b + c := by
   have h2 := add_lt_add_left h b
@@ -300,7 +302,7 @@ private theorem zerosList_valid (g : Real → Real) (A B ε : Real)
     (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
     (hclose : ∀ x : Real, A < x → x < B → abs (g x - Real.sin x) < ε)
     (hεlt1 : ε < 1) (hA0 : A < ext 0) (M : Nat) (hMB : ext (M + 1) < B) :
-    ∀ z ∈ zerosList g A B ε hcont hclose hεlt1 hA0 M, A < z ∧ z < B ∧ g z = 0 := by
+    ∀ z ∈ zerosList g A B ε hcont hclose hεlt1 hA0 M, ext 0 < z ∧ z < ext (M + 1) ∧ g z = 0 := by
   intro z hz
   simp only [zerosList, List.mem_map, List.mem_range] at hz
   obtain ⟨j, hjlt, hzeq⟩ := hz
@@ -308,7 +310,11 @@ private theorem zerosList_valid (g : Real → Real) (A B ε : Real)
     lt_of_le_of_lt (ext_succ_le_of_lt (by omega : j < M + 1)) hMB
   obtain ⟨h1, h2, h3⟩ := zeroAt_mem g A B ε hcont hclose hεlt1 hA0 j hjB
   rw [← hzeq]
-  exact ⟨lt_trans_ax (ext_gt_of_gt_zero A hA0 j) h1, lt_trans_ax h2 hjB, h3⟩
+  have hlast : zeroAt g A B ε hcont hclose hεlt1 hA0 j < ext (M + 1) :=
+    lt_of_lt_of_le h2 (ext_succ_le_of_lt hjlt)
+  rcases Nat.eq_zero_or_pos j with hj0 | hjpos
+  · subst hj0; exact ⟨h1, hlast, h3⟩
+  · exact ⟨lt_trans_ax (ext_strictMono hjpos) h1, hlast, h3⟩
 
 private theorem zerosList_nodup (g : Real → Real) (A B ε : Real)
     (hcont : ∀ z : Real, A < z → z < B → ContinuousAt g z)
@@ -323,6 +329,74 @@ private theorem zerosList_nodup (g : Real → Real) (A B ε : Real)
       · exact lt_irrefl_ax _ (hij_eq ▸ zeroAt_strictMono g A B ε hcont hclose hεlt1 hA0 hlt)
       · have hlt2 : j < i := by omega
         exact lt_irrefl_ax _ (hij_eq ▸ zeroAt_strictMono g A B ε hcont hclose hεlt1 hA0 hlt2))
+
+open MachLib.EMLExplicitBound in
+/-- **The compact-interval quantitative non-approximation theorem.** No finite EML tree, valid
+across an interval containing `0`, stays within any `ε < 1` of `sin` on the WHOLE interval, once
+that interval is long enough to hold `M + 1` alternating extrema — `M` an EXPLICIT function of the
+tree's own structure (`combinedBoundE`), not an abstract "eventually" threshold. This is the
+theorem C7's real "Certcom handshake" needs and C6 doesn't supply. -/
+theorem no_tree_eps_close_to_sin_compact_interval (T : EMLTree) (A B ε : Real)
+    (hA0 : A < ext 0) (hεlt1 : ε < 1) (hvalidon : EMLPfaffianValidOn T A B)
+    (hclose : ∀ x : Real, A < x → x < B → abs (T.eval x - Real.sin x) < ε)
+    (hMB : ext (combinedBoundE (len T 0) (enc T emlEmptyChain).1
+        (encTags T emlEmptyChain ()) (enc T emlEmptyChain).2 + 1) < B) :
+    False := by
+  generalize hMeq : combinedBoundE (len T 0) (enc T emlEmptyChain).1
+    (encTags T emlEmptyChain ()) (enc T emlEmptyChain).2 = M at hMB
+  have hext0M1 : ext 0 < ext (M + 1) := ext_strictMono (show 0 < M + 1 by omega)
+  -- A margin point strictly between A and ext 0, so ext 0 itself is a safely interior witness.
+  obtain ⟨a', ha'A, ha'ext0⟩ := exists_between A (ext 0) hA0
+  have hab : a' < ext (M + 1) := lt_trans_ax ha'ext0 hext0M1
+  have hlogPos : LogArgPosOn T (Icc a' (ext (M + 1))) :=
+    logArgPosOn_Icc_of_validOn T A B a' (ext (M + 1)) ha'A hMB hvalidon
+  -- Continuity throughout (A, B), from validity.
+  have hcont : ∀ z : Real, A < z → z < B → ContinuousAt T.eval z :=
+    fun z hzA hzB => eml_validon_continuousAt T A B hvalidon z hzA hzB
+  -- Nonvanishing witness at ext 0 (strictly inside (a', ext(M+1))): sign-forced by closeness.
+  have hext0B : ext 0 < B := lt_trans_ax hext0M1 hMB
+  have hsin0 : Real.sin (ext 0) = 1 := by
+    have h := sin_extremum_val 0
+    rwa [if_pos rfl] at h
+  have hTpos : 0 < T.eval (ext 0) := by
+    have habs2 : abs (Real.sin (ext 0) - T.eval (ext 0)) < ε := by
+      rw [show Real.sin (ext 0) - T.eval (ext 0) = -(T.eval (ext 0) - Real.sin (ext 0))
+        from by mach_ring, abs_neg]
+      exact hclose (ext 0) hA0 hext0B
+    have h1 : Real.sin (ext 0) - T.eval (ext 0) < ε := lt_of_abs_lt habs2
+    rw [hsin0] at h1
+    have h2 := add_lt_add_left h1 (T.eval (ext 0) - ε)
+    have e1 : T.eval (ext 0) - ε + (1 - T.eval (ext 0)) = 1 - ε := by mach_ring
+    have e2 : T.eval (ext 0) - ε + ε = T.eval (ext 0) := by mach_ring
+    rw [e1, e2] at h2
+    have h3 : (0 : Real) < 1 - ε := by
+      have h4 := add_lt_add_left hεlt1 (-ε)
+      have e3 : -ε + ε = (0 : Real) := by mach_ring
+      have e4 : -ε + 1 = 1 - ε := by mach_ring
+      rwa [e3, e4] at h4
+    exact lt_trans_ax h3 h2
+  have hne : ∃ z : Real, a' < z ∧ z < ext (M + 1) ∧
+      (pfaffianChainFn (enc T emlEmptyChain).1 (enc T emlEmptyChain).2).eval z ≠ 0 := by
+    refine ⟨ext 0, ha'ext0, hext0M1, ?_⟩
+    rw [enc_eval]
+    exact ne_of_gt hTpos
+  have hbound := enc_combinedBound T emlEmptyChain () a' (ext (M + 1)) hab
+    trivial trivial (fun i _ hij => i.elim0) (fun _ _ _ i => i.elim0) (fun i => i.elim0)
+    hlogPos (enc T emlEmptyChain).2 hne
+  rw [hMeq] at hbound
+  have hzeros_valid : ∀ z ∈ zerosList T.eval A B ε hcont hclose hεlt1 hA0 M,
+      a' < z ∧ z < ext (M + 1) ∧
+      (pfaffianChainFn (enc T emlEmptyChain).1 (enc T emlEmptyChain).2).eval z = 0 := by
+    intro z hz
+    obtain ⟨h1, h2, h3⟩ := zerosList_valid T.eval A B ε hcont hclose hεlt1 hA0 M hMB z hz
+    refine ⟨lt_trans_ax ha'ext0 h1, h2, ?_⟩
+    rw [enc_eval]
+    exact h3
+  have hlen_le : (zerosList T.eval A B ε hcont hclose hεlt1 hA0 M).length ≤ M :=
+    hbound (zerosList T.eval A B ε hcont hclose hεlt1 hA0 M)
+      (zerosList_nodup T.eval A B ε hcont hclose hεlt1 hA0 M) hzeros_valid
+  rw [zerosList_len] at hlen_le
+  omega
 
 end Real
 end MachLib

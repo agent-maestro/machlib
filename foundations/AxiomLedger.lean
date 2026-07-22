@@ -158,7 +158,16 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   `MachLib.Real.no_continuousAt_eq_unboundedBelowNearRight,
   -- RepresentabilityTaxonomy.lean: named ExplicitlyRepresentableValidlyNear/
   -- ImplicitlyRepresentable, zero new trustedFootprint.
-  `MachLib.Real.log_separation]
+  `MachLib.Real.log_separation,
+  -- Added 2026-07-22: the compact-interval quantitative non-approximation theorem -- Track C's
+  -- real "Certcom handshake" blocker (C6/C7 only gave a TAIL/asymptotic result, silent on
+  -- bounded intervals; see the cont.76 erratum). No finite EML tree, valid across an interval
+  -- containing 0, stays within eps<1 of sin on the WHOLE interval once it's long enough to hold
+  -- M+1 alternating extrema, M an EXPLICIT function of the tree's own structure
+  -- (EMLExplicitBound.combinedBoundE) -- not an abstract "eventually" threshold. Zero new
+  -- trustedFootprint entries; footprint confirmed independent of zero_count_bound_classical and
+  -- the still-open exp_hard gap (verified directly via #print axioms before building anything).
+  `MachLib.Real.no_tree_eps_close_to_sin_compact_interval]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
