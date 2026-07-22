@@ -4789,3 +4789,71 @@ deeper nestings beyond this one depth-2 shape.
 `sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
 dependence. Full `lake build MachLib` passes (454 modules, up from 453). One commit this round
 (`293c160d`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 65) — CAPSTONE: `eml_pfaffian_validon_from_sin_equality` itself is provable
+
+**Direct user instruction**: "proceed." What actually happened this round is bigger than one more
+step in the sequence: this whole arc, from its FIRST entry, was framed as finding a route to the
+residual that does NOT need `eml_pfaffian_validon_from_sin_equality` (`EMLPfaffian.lean`) — an
+axiom stating "if a tree `t` equals `sin` everywhere, `t` has `EMLPfaffianValidOn` on `(0,b)` for
+any `b>0`." Every file cont. 44 through cont. 64 was built to AVOID this axiom. This round asks a
+different question: given `no_tree_eq_sin_unconditional` (cont. 58) now exists, is the axiom
+itself actually PROVABLE?
+
+**Yes — and it's a direct, one-line corollary, not a new construction.** The axiom's hypothesis
+(`hsin : ∀x, t.eval x = sin x`) is EXACTLY what `no_tree_eq_sin_unconditional` proves can NEVER
+hold, for ANY tree `t`. An implication with a false hypothesis holds for any conclusion — not a
+technicality, exactly what `False.elim` formalizes:
+
+```lean
+theorem eml_pfaffian_validon_from_sin_equality_proved
+    (t : EMLTree) (hsin : ∀ x : Real, t.eval x = Real.sin x)
+    (b : Real) (_hb_pos : 0 < b) :
+    EMLPfaffianValidOn t 0 b :=
+  False.elim (no_tree_eq_sin_unconditional t hsin)
+```
+
+**Verified non-circular, not assumed.** The obvious worry: does this proof secretly route back
+through the axiom itself somewhere in its own dependency chain (`eml_tailSign_unconditional` →
+`eml_eventually_valid_repr` → `evalid_tailSign` → the RCEP IVT/zero-counting machinery →
+`enc_combinedBound` → the Khovanskii-style Pfaffian chain infrastructure)? A genuinely fresh
+rebuild `#print axioms` on `eml_pfaffian_validon_from_sin_equality_proved` confirms it does NOT:
+`eml_pfaffian_validon_from_sin_equality` does not appear anywhere in the dependency list. The full
+list is exactly the same standing foundational baseline used throughout this entire arc —
+`propext`, `Classical.choice`, `Quot.sound`, the `MachLib.Real` construction axioms
+(`archimedean`, `rolle_ct`, `exp_surj`, etc.), the analytic-function axioms — zero new trust
+required, zero `sorryAx`.
+
+**What this does NOT do, stated with the same precision as every other entry in this doc.** The
+`axiom` keyword in `EMLPfaffian.lean` still physically exists — `EMLPfaffian.lean` is a
+foundational, EARLY file that the entire `TailSign` machinery is built ON TOP OF (a long
+transitive import chain), so moving this proof INTO that file would require restructuring the
+whole import graph, not attempted here. More concretely: exactly ONE real (non-docstring) call
+site remains — `EMLExplicitBoundSinBarrier.lean:37`, inside `sin_not_in_eml_any_depth`. Checked
+whether this call site could simply be swapped to use the new theorem instead (the obvious next
+move) — BLOCKED by a genuine circular import, confirmed by tracing the actual chain, not assumed:
+`EMLExplicitBoundSinBarrier.lean` is imported (transitively, via `WitnessResidualChainSkeleton.lean`,
+which `WitnessResidualTargetGeneric.lean` imports, which the whole `TailSign` arc is built on) by
+this new file's OWN dependency chain — importing the new file back into
+`EMLExplicitBoundSinBarrier.lean` would close the cycle. Retiring the `axiom` keyword itself and
+rewiring that one call site is separate, more invasive follow-on work (likely needs splitting
+`EMLExplicitBoundSinBarrier.lean`'s dependency on the chain-skeleton machinery, or relocating this
+proof to sit structurally BETWEEN the two layers) — flagged precisely, not left vague. The
+`axiom_ledger.json`/`AxiomLedger` trust-accounting system was NOT updated this round either — the
+mathematical result stands independently of that bookkeeping, but the ledger itself is now stale
+on this specific entry.
+
+**Why this is worth calling a capstone rather than just "another entry."** Every prior entry in
+this arc (cont. 44-64) was explicitly scoped as working AROUND an axiom too large to prove
+directly — narrowing cases, building alternate routes, finding restricted classes that closed
+without it. This entry inverts that framing entirely: the axiom that motivated the WHOLE
+multi-week detour is no longer trusted, unproven scaffolding — it is a proven theorem, sitting on
+the same foundational base as everything else in `MachLib`. The `sin` case of the original
+`eml_pfaffian_validon_from_sin_equality`/`_from_cos_equality` pair (`EMLSmoothness.lean`'s own
+docstring, cont. 9 of its own numbering, calls closing this "the shape closest to
+`eml_pfaffian_validon_from_sin_equality` itself") is CLOSED.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
+dependence in the new theorem's own proof (the entire point of this round, checked directly). Full
+`lake build MachLib` passes (455 modules, up from 454). One commit this round (`fd2aa2b3`, plus
+this docs commit), pushed.
