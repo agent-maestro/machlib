@@ -4619,3 +4619,45 @@ deeper than one nesting level remains future work.
 relaxed ones). No `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib`
 passes (451 modules, unchanged — one file extended, not a new file). One commit this round
 (`2ded29ef`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 61) — a reusable straddle criterion, one level at a time, plus the first
+unconditional depth-2 nested target
+
+**Direct user instruction**: "proceed" — the exact question cont. 60's docs left open: does `cs =
+[d, c2]` (and deeper) satisfy the sharpened straddle condition?
+
+**The reusable extraction, instead of one more hand-check.** Rather than repeat cont. 57-60's
+pattern of hand-verifying one more concrete level, extracted the general inductive STEP:
+`nestedTarget_cons_straddle`. Given `nestedWF (c :: cs')` (so the log argument at this level is
+already positive, from well-formedness), straddling AT THIS LEVEL reduces to pure arithmetic on
+the outer shift `c` relative to `cs'`'s OWN range bounds: `nestedLo (c::cs') ≤ 0` iff `c + nestedLo
+cs' ≤ 1`; `0 < nestedHi (c::cs')` iff `1 < c + nestedHi cs'` (`log` is monotone/order-reflecting
+around its zero at `1`, via `log_mono`/`log_lt_log`). Independent of whether `cs'` itself
+straddles — the window is defined purely by `cs'`'s own computed bounds — so this applies at
+EVERY nesting depth, not just two, reusable infrastructure rather than a one-off fact.
+
+**The concrete instance, chosen deliberately to avoid needing any fresh numeric bound on `log`.**
+`c2 = 2` (`1+1`) is the EXACT boundary cont. 60 found — `nestedLo [2] = log 1 = 0`, touching zero
+without crossing it — which collapses the outer window's `≤ 1` check to pure arithmetic (`1+0≤1`,
+trivial) instead of needing a bound on `log(c2-1)` staying away from `-1` (which a generic `1<c2<2`
+choice would have needed, and which this arc doesn't currently have available cheaply). `d = 1`
+reduces the remaining `>1` check to `0 < log 3` — already established unconditionally for `c2>1`
+in cont. 60. The whole instantiation needed ZERO fresh numeric facts about `log`'s actual values.
+
+**Payoff.** `no_tree_eq_log_one_plus_log_two_plus_sin_unconditional` — no finite EML tree's `eval`
+equals `log(1 + log(2 + sin x))`, unconditionally. This is a genuine depth-2 nested target —
+`WitnessResidualTargetGeneric.lean` flagged `log(d + log(c2+sin x))` as exactly the shape `A` must
+realize in the "`B` a large constant" escape route from the 2026-07-20 rescoping finding — the
+FIRST instance at this depth closed by the unconditional `TailSign` route (cont. 58-61) rather than
+the `EMLPfaffianValidOn`-conditional version (`T1_not_eq_nested_log_given_validon`, still gated on
+`hvalidon_any_b`) that file built by hand two months earlier in this arc's own timeline.
+
+**Honest scope, stated plainly.** One concrete depth-2 point, chosen for a clean proof (zero fresh
+numeric facts needed) rather than being representative of the whole `(d, c2)` window
+`nestedTarget_cons_straddle` characterizes — most pairs in that window would need real numeric
+bounds on `log` to verify, not yet built. Whether the general theorem reaches useful instances at
+depth 3+ has NOT been checked.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (452
+modules, up from 451). One commit this round (`caa42903`, plus this docs commit), pushed.
