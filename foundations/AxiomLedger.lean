@@ -64,7 +64,16 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- no validity-from-0 hypothesis) -- needs `nestedTarget`'s 2π-periodicity directly, unlike
   -- the sin/cos discharges which only needed periodicity's own downstream `kπ`/`half-odd-π`
   -- consequences.
-  `MachLib.Real.sin_periodic, `MachLib.Real.sin_one_pos]
+  `MachLib.Real.sin_periodic, `MachLib.Real.sin_one_pos,
+  -- Added 2026-07-22: found by the NEW whole-module spine guard (invariant 5, `spineTheorems`)
+  -- on its first run -- `MachLib.Real.sin_neg`, used by `nestedTarget_at_neg_pi_div_two`'s
+  -- base case (sin(-x) = -sin x) and its cont.59-63 downstream callers (the straddle-
+  -- conditioned nestedTarget family, `witness_B_not_le_zero_of_lo_neg`, and others), was never
+  -- added when those theorems were hand-built -- they predate this guard and were never
+  -- individually pinned as `headlines`, so the gap was invisible until whole-module checking
+  -- existed. Already `knownAxioms` (a plain Mathlib-wrapped `sin_neg` fact); no new trust, just
+  -- a bookkeeping gap the guard exists to catch.
+  `MachLib.Real.sin_neg]
 
 /-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert. -/
 def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint"), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, "elaborator-synthesized axiom (isUnsafe=true), NOT hand-written -- `of_parts` in TwoExpPfaffianReductionWitness.lean is a plain structure-literal def with no `partial`/`sorry`/`Classical.choice` at the call site; root cause not yet identified (found + disclosed 2026-07-16, AxiomLedger self-check going red; see AxiomLedger investigation notes). Gate-2d multivariate-Khovanskii frontier work (added 2026-07-13/14), not on any shipped headline's path."), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, "same as .of_parts._elambda_1 above -- same file, same unexplained isUnsafe synthesis, same frontier, not on any headline's path."), (`MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, "same pattern again -- plain structure-literal def, no visible partial/sorry/Classical.choice; three occurrences in one file is worth a dedicated Lean-internals investigation, not yet done. Not on any headline's path.")]
@@ -118,6 +127,46 @@ def liveAxioms (env : Environment) : Array Name := Id.run do
       r := r.push nm
   return r
 
+/-- **The Option D witness-finding arc's own "spine" — every module built cont. 56-71**
+(`EML_WITNESS_FINDING_DECISION_2026_07_15.md`), from `TailSign` through the two discharge axioms
+and both meta-lemmas. Unlike `headlines` (a hand-curated list of individually-pinned theorems),
+EVERY theorem-shaped declaration in these modules is checked automatically below — this is what
+retires the "individually checked vs. transitively covered" bookkeeping question cont. 71's own
+erratum ran into, for good, rather than requiring a fresh manual audit each time a file in this
+list changes. Deliberately scoped to the spine, not the full ~60-file exploratory history this
+arc also produced (superseded partial mechanisms, abandoned witness families) — those were never
+claimed as final results in the way these are, and including them would make this guard noisy
+rather than meaningful. -/
+def optionDSpineModules : List Name := [
+  `MachLib.WitnessResidualTailSign,
+  `MachLib.WitnessResidualRCEPTailSign,
+  `MachLib.WitnessResidualEventualValidTailSign,
+  `MachLib.WitnessResidualNormalFormClosure,
+  `MachLib.WitnessResidualNestedTargetTailSign,
+  `MachLib.WitnessResidualNestedTargetDepth2Straddle,
+  `MachLib.WitnessResidualNestedTargetTower,
+  `MachLib.WitnessResidualNestedTargetBWitness,
+  `MachLib.WitnessResidualConstSiblingUnconditional,
+  `MachLib.EMLPfaffianValidOnSinEqualityProved,
+  `MachLib.WitnessResidualCosTailSign,
+  `MachLib.CosNotInEMLAnyDepth,
+  `MachLib.EMLAnyDepthBarrierUnconditional,
+  `MachLib.WitnessResidualNestedTargetFullyUnconditional,
+  `MachLib.WitnessResidualRecurringTargetMetaLemma,
+  `MachLib.WitnessResidualContinuousTargetMetaLemma]
+
+/-- Every theorem-shaped declaration belonging to `optionDSpineModules`, found via the kernel's
+own module index (`env.getModuleIdxFor?`) — not name-prefix guessing, not a maintained list. -/
+def spineTheorems (env : Environment) : List Name := Id.run do
+  let mut r := []
+  for (nm, ci) in env.constants.toList do
+    if ci matches .thmInfo _ then
+      if let some idx := env.getModuleIdxFor? nm then
+        if h : idx.toNat < env.header.moduleNames.size then
+          if optionDSpineModules.contains env.header.moduleNames[idx.toNat] then
+            r := nm :: r
+  return r
+
 run_cmd do
   let env ← getEnv
   let live := liveAxioms env
@@ -149,6 +198,15 @@ run_cmd do
       if (← Lean.collectAxioms h).contains d then used := true
     unless used do
       logError m!"AxiomLedger: disclosedTrusted axiom {d} is load-bearing in NO headline (dead disclosure)"
-  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor)."
+  -- (5) whole-module guard: EVERY theorem in the Option D spine, not just the curated headlines
+  let spine := spineTheorems env
+  let mut spineLeakCount : Nat := 0
+  for nm in spine do
+    let axs ← Lean.collectAxioms nm
+    let leak := axs.toList.filter (fun a => !(trustedFootprint.contains a))
+    unless leak.isEmpty do
+      spineLeakCount := spineLeakCount + 1
+      logError m!"AxiomLedger: spine theorem {nm} footprint LEAKS {leak.length} axiom(s) beyond trustedFootprint: {leak}"
+  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking)."
 
 end AxiomLedger
