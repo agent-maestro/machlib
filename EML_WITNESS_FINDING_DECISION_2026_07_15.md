@@ -4113,3 +4113,35 @@ sign orders now available), not new closeable territory beyond that.
 `sorryAx`-free, verified via a genuinely fresh rebuild for all three new theorems. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (444 modules
 — extended the existing file). One commit this round (`dad3c7be`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 52) — a concrete sanity check: does the abstract broadening actually reach a
+new tree?
+
+**Direct user request**: "proceed" — but this round changed tack deliberately rather than
+mechanically extending again. Four rounds (48-51) broadened `BChainTriple` abstractly (unify two
+mechanisms, fold in a third, weaken exact-zero to sign-change, add the mirror order). Before
+assuming any of that translates into actual new closeable trees rather than just broader
+STATEMENTS about the same two named examples (`var`, `eml var (const c)`) this whole arc has used
+since cont. 45, this round checked directly.
+
+**It does.** `B := eml (const (-1)) var` — a genuinely different, compound shape, not either named
+example — closes via the mirror crossing disjunct added last round:
+`B.eval 1 = exp(-1) > 0`; `B.eval (exp(exp(-1))) = 0` exactly (via `log_exp`, no IVT even needed
+for this particular instance — the crossing point happens to be exactly computable); `EMLNoCrossingAt
+B z` holds for every `z ≥ 1` (`var.eval z = z ≠ 0` there, and `const`/`var` are trivially
+crossing-free). `no_eml_A_const_neg_one_var_eq_nested_target` closes `eml A (eml (const (-1)) var)`
+against the whole nested-target family, for ANY `A` — a shape that was NOT reachable before
+cont. 49 (needed the crossing disjunct at all) and specifically needed cont. 51's mirror addition
+(the sign order here is positive-then-zero, not the primary non-positive-then-positive order).
+
+**Why this matters beyond one more corollary.** The last four rounds' abstract broadenings could,
+in principle, have been broadening statements without broadening REACH — e.g. if every tree
+satisfying the weaker hypotheses also happened to satisfy the stronger ones already covered. This
+round rules that out concretely: a genuinely new, previously-unreachable tree shape is now closed.
+Confirms the generalization work has real content, the way `T1_not_eq_log_c2_plus_sin_given_validon_via_family`
+(an earlier round in this document, before cont. 1) confirmed the nested-target family abstraction
+was equivalent to, not just similar to, what it generalized.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
+dependence. Full `lake build MachLib` passes (444 modules — extended the existing file). One commit
+this round (`061107db`, plus this docs commit), pushed.
