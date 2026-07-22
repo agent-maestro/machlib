@@ -4203,3 +4203,68 @@ close the hard case, and both halves of that are reported here rather than only 
 every theorem. No `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib`
 passes (445 modules, up from 444). One commit this round (`805aace7`, plus this docs commit),
 pushed.
+
+## 2026-07-21 (cont. 54) — `A`'s derivative, unconditionally — and the sharpest characterization
+yet of why the fully general residual still resists closure
+
+**Direct user request**: "proceed into the hard stuff please" — an explicit push to keep
+attacking the fully-general, truly-unconstrained-`B` case after cont. 53's honestly-reported dead
+end, rather than stop there.
+
+**The lead.** `EMLSmoothness.lean`'s `eml_leftchild_hasDerivAt_general` — built in the PREQUEL
+investigation (rounds 14-16) for the WITNESS-FINDING side of the axiom, never repurposed for this
+document's negative-direction closure strategy until this round — gives `A`'s own derivative
+UNCONDITIONALLY at any point where `EMLNoCrossingAt (eml A B)` holds, WITHOUT branching on `B`'s
+sign at all. Mechanism, worked out precisely: rearranging `T1`'s own equation
+`exp(A.eval x) − log(B.eval x) = target x` gives `A.eval x = log(target x + log(B.eval x))`
+UNCONDITIONALLY (`eml_leftchild_explicit_value`) — the inner sum always equals `exp(A.eval x)`
+exactly, hence is always strictly positive, so the outer `log` never needs a case split on its
+own sign. If `B` is ALSO differentiable (via `B`'s own `EMLNoCrossingAt`), the whole right-hand
+side differentiates by the ordinary chain rule and transfers to `A.eval` via `HasDerivAt_of_eq` —
+sidestepping any need to know `A`'s OWN internal structure. `A_hasDerivAt_of_no_crossing_at_point`
+(`WitnessResidualLeftchildDerivative.lean`) instantiates this for the whole `nestedTarget` family.
+
+**Why this looked like real promise, and precisely where it stops.** `A`'s derivative alone does
+NOT give `EMLNoCrossingAt A` — external differentiability via composition is a different fact from
+internal structural validity, exactly the distinction cont. 43 drew for `T1` itself
+(`WitnessResidualClosureAttempt.lean`'s Technique 1). More fundamentally: `A`'s own "effective
+target" — `fun x => log(target x + log(B.eval x))`, the function it would need to match to
+recurse the way the `B ≤ 0` branch does — is NOT independent of `B`. In the `B ≤ 0` case,
+`log(B.eval x)` collapses to the CONSTANT `0` (the clamp), eliminating `B` entirely and giving
+`A.eval x = nestedTarget (0 :: cs) x` with zero `B`-dependence left. In the general case,
+`log(B.eval x)` remains a genuine, non-eliminable perturbation term — nothing about `A` can be
+pinned down without already knowing it, and nothing forces it to be known.
+
+**This is the SAME obstruction, confirmed a FOURTH independent time, from a fourth independent
+angle.** Prequel round 19 (witness-finding: "a sibling subtree that stays bounded well above the
+needed threshold everywhere defeats the propagation... a real degree of freedom"), cont. 43 (the
+"ambiguous set" where `exp(A(x)) = target(x)` exactly), cont. 53 (the `B > 0` branch of the
+`EMLNoCrossingAt`-globally mutual induction, needing `A`'s own `RightChildrenEverywherePositive`
+unavailable from the induction hypothesis), and now this. Four different proof attempts across
+this document and its prequel, four different technical framings, the same underlying fact: an
+unconstrained sibling subtree's contribution is irreducible by every elementary technique tried
+across 53 rounds here plus 30 in the prequel.
+
+**One more avenue checked and ruled out this round, not left unexamined.**
+`EMLAsymptoticBound.lean` — a SEPARATE, earlier body of work (predating even the Khovanskii
+investigation, referencing its own `OVERNIGHT_HANDOFF_2026_06_13.md`) — ships a genuine
+GROWTH-RATE bound for EML trees (`tame_eval_eventually_le`: every `Tame` tree's eval is eventually
+dominated by an iterated-exponential tower). This looked like it might control `B`'s contribution
+without needing `B`'s exact structure. Its own docstring rules this out directly: the `Tame`
+restriction exists SPECIFICALLY to exclude the clamped-log case ("the clamped-log discontinuity...
+can grow without bound... TAME excludes this case") — which is EXACTLY this residual's territory.
+Not a shortcut here either.
+
+**Assessment, stated as plainly as the evidence supports.** Closing the fully general residual
+very likely needs the genuinely new machinery flagged as far back as prequel round 7: a
+Taylor-coefficient/Faa-di-Bruno matching argument, explicitly estimated there as comparable in
+scale to formalizing a fragment of Alex Wilkie's own o-minimality proof technique for
+`(ℝ,+,×,exp)` — a dedicated, multi-session research undertaking in its own right, not a next
+increment on anything built across either this document or its prequel.
+`A_hasDerivAt_of_no_crossing_at_point` remains genuine, reusable infrastructure (differentiability
+transfer to `A` with zero dependence on `B`'s sign, usable wherever that's needed regardless of
+this residual) — it just doesn't move the wall.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (446
+modules, up from 445). One commit this round (`dfdc1678`, plus this docs commit), pushed.
