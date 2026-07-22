@@ -79,7 +79,7 @@ private theorem exists_pos_le_two (p q : Real) (hp : 0 < p) (hq : 0 < q) :
   · exact ⟨p, hp, le_refl p, h ▸ le_refl p⟩
   · exact ⟨q, hq, le_of_lt h, le_refl q⟩
 
-private theorem exists_pos_le_three (p q r : Real) (hp : 0 < p) (hq : 0 < q) (hr : 0 < r) :
+theorem exists_pos_le_three (p q r : Real) (hp : 0 < p) (hq : 0 < q) (hr : 0 < r) :
     ∃ M : Real, 0 < M ∧ M ≤ p ∧ M ≤ q ∧ M ≤ r := by
   obtain ⟨M1, hM1pos, hM1p, hM1q⟩ := exists_pos_le_two p q hp hq
   obtain ⟨M2, hM2pos, hM2M1, hM2r⟩ := exists_pos_le_two M1 r hM1pos hr

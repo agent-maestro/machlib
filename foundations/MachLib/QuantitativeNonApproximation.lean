@@ -58,7 +58,7 @@ theorem sin_one_recurring (M : Real) : ∃ x : Real, M < x ∧ Real.sin x = 1 :=
       (nestedTarget_at_pi_div_two ([] : List Real) trivial)
 
 /-- `sin` recurs to exactly `-1`, past any threshold. Mirror of `sin_one_recurring`. -/
-private theorem sin_neg_one_recurring (M : Real) : ∃ x : Real, M < x ∧ Real.sin x = -1 := by
+theorem sin_neg_one_recurring (M : Real) : ∃ x : Real, M < x ∧ Real.sin x = -1 := by
   obtain ⟨n, hn⟩ := archimedean (M + pi / (1 + 1))
   have h1 : natCast n ≤ natCast n * ((1 + 1) * pi) := natCast_le_natCast_mul_two_pi n
   have h2 : M + pi / (1 + 1) < natCast n * ((1 + 1) * pi) := lt_of_lt_of_le hn h1

@@ -168,6 +168,9 @@ import MachLib.LogImplicitRepresentability
 import MachLib.QuantitativeNonApproximation
 import MachLib.CertcomTotalErrorFloor
 import MachLib.NonRepresentabilityCensusSinSq
+import MachLib.TailApproximationBarrier
+import MachLib.ContinuityDivergenceBarrier
+import MachLib.RepresentabilityTaxonomy
 import MachLib.WitnessResidualConstSiblingUnconditional
 import MachLib.EMLPfaffianValidOnSinEqualityProved
 import MachLib.WitnessResidualCosTailSign

@@ -148,7 +148,17 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- oscillation shape (non-negative, recurring to exactly 0 AND exactly 1) instantiated
   -- through the general meta-theorem with no sin/nestedTarget-specific reasoning. Zero new
   -- trustedFootprint entries.
-  `MachLib.Real.no_tree_eq_sinSq_unconditional]
+  `MachLib.Real.no_tree_eq_sinSq_unconditional,
+  -- Added 2026-07-22: compression session (external review) -- the three C1/C3/C6 GENERAL
+  -- abstractions, pinned as the new capstones. Each file's own corollary re-deriving the
+  -- original C1/C3/C6 result is a confirmation, not pinned separately (same footprint).
+  -- TailApproximationBarrier.lean: TAIL-only (see C6's own erratum), zero new trustedFootprint.
+  `MachLib.Real.no_tree_eps_close_to_target_eventually,
+  -- ContinuityDivergenceBarrier.lean: target- and tree-agnostic, zero new trustedFootprint.
+  `MachLib.Real.no_continuousAt_eq_unboundedBelowNearRight,
+  -- RepresentabilityTaxonomy.lean: named ExplicitlyRepresentableValidlyNear/
+  -- ImplicitlyRepresentable, zero new trustedFootprint.
+  `MachLib.Real.log_separation]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
