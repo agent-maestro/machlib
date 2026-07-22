@@ -4145,3 +4145,61 @@ was equivalent to, not just similar to, what it generalized.
 `sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
 dependence. Full `lake build MachLib` passes (444 modules — extended the existing file). One commit
 this round (`061107db`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 53) — a genuinely different idea, per direct request: `EMLNoCrossingAt` forces
+a global sign dichotomy, and exactly where that stops helping
+
+**Direct user request**: after being told the `BChainTriple` extension vein looked structurally
+exhausted (not just harder), explicitly asked to revisit the truly-general residual with a
+DIFFERENT idea — "revisiting the truly-general case with a different idea, lets look into this
+please."
+
+**The idea.** `EMLSmoothness.lean`'s `eml_log_arg_consistent_sign` (round 10 of the prequel
+investigation, surfaced during cont. 46's reading but never actually used until now) gives a sign
+dichotomy for `eml A B` on any BOUNDED interval from `EMLNoCrossingAt` alone — `B` is either `≤0`
+throughout or `>0` throughout, never mixed, with NO hypothesis about which one. Stitching this
+across overlapping bounded intervals (any two points sit inside some shared interval) gives a
+genuinely GLOBAL version: `EMLNoCrossingAt (eml A B)` holding for ALL `x` forces `B`'s sign
+globally consistent, full stop (`eml_sign_dichotomy_global`,
+`WitnessResidualGlobalSignDichotomy.lean`) — a real, general, previously-unexercised fact about
+`EMLTree` structure, not specific to the nested-target family at all.
+
+**The concrete win.** `BChainTriple`'s non-positive-chain disjunct needs the caller to already
+know `∀x, B.eval x ≤ 0` — a global fact, assumed rather than derived. Given
+`EMLNoCrossingAt (eml A B)` everywhere and `B.eval x0 ≤ 0` at just ONE point, the dichotomy
+upgrades the single-point fact to the full global one for free
+(`no_eml_A_B_eq_nested_target_of_no_crossing_and_le_at_point`) — the SAME style of weakening
+already applied to the crossing disjunct (exact-zero → sign-change via IVT, cont. 50), now applied
+to the non-positive-chain disjunct via a genuinely different tool (sign-consistency, not IVT).
+
+**Pushed further, and it hit a real wall — traced precisely, not just asserted.** The natural next
+question: does `EMLNoCrossingAt T` holding globally DERIVE all of `BChainTriple T`, replacing the
+hand-supplied witness structure entirely? Set this up as a mutual induction:
+`EMLNoCrossingAt T` globally ⟹ `RightChildrenEverywherePositive T ∨ (T can't equal any
+nested-target member)`. The `B ≤ 0` branch closes cleanly, reusing `BChainTriple`'s own
+recursion-into-`A` mechanism exactly. The `B > 0` branch does NOT close: concluding
+`RightChildrenEverywherePositive (eml A B)` needs `A`'s OWN `RightChildrenEverywherePositive`
+fact — but the induction hypothesis on `A` only offers
+`RightChildrenEverywherePositive A ∨ (A can't equal any nested-target member)`, and the SECOND
+disjunct (a fact about `A` matching some OTHER, unrelated target) says nothing at all about
+whether `A` is `RightChildrenEverywherePositive` — these are independent properties, not
+complementary ones; ruling out one doesn't establish the other. This is a genuine structural gap
+in the proof obligation, confirmed by writing out what each branch would actually need to supply,
+not a case of insufficient effort — and it lines up exactly with round 19 of the prequel
+investigation (`machlib-khovanskii-axiom-frontier.md`): an unconstrained sibling really is a free
+degree of freedom this style of argument cannot close, now hit from a third independent angle
+(direct evaluation/growth/periodicity in the prequel, the "ambiguous set" in cont. 43, and now
+this mutual-induction attempt).
+
+**Net scope, honest.** `eml_sign_dichotomy_global` is genuine, general, reusable infrastructure
+regardless of the outcome — a real EMLTree fact nobody had exercised before this round. The
+concrete win removes ONE hypothesis (the non-positive chain's global fact now derivable from a
+single point) rather than removing the need for `BChainTriple`'s witness structure altogether. The
+fully general residual is exactly as open as `WitnessResidualTripleChain.lean` left it — this
+round's "different idea" genuinely found something new and useful, and also genuinely did NOT
+close the hard case, and both halves of that are reported here rather than only the first.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt for
+every theorem. No `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib`
+passes (445 modules, up from 444). One commit this round (`805aace7`, plus this docs commit),
+pushed.
