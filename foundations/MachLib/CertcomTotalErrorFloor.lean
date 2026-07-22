@@ -16,6 +16,19 @@ compiled artifact — is the genuinely thesis-shaped remaining work: it would ne
 `T` meant as a `sin`-approximation kernel, Certcom's compilation of it to C, and the rounding bound
 Certcom actually proves for that pipeline. Not attempted here.
 
+**Erratum, added after external review — a real gap, not a footnote.** The theorem below inherits
+C6's TAIL character: it only produces bad points past an ARBITRARY threshold `R`, i.e. it is
+completely silent about any fixed, bounded interval, however large. A compiled artifact evaluates
+on a BOUNDED domain in practice (range-reduced input, a fixed operating range) — nobody expects a
+finite EML tree to track `sin` as `x → ∞`, so "eventually diverges" is not the practically relevant
+question. The theorem Certcom's ACTUAL handshake needs is a COMPACT-INTERVAL quantitative bound —
+"no depth-`d` tree is `ε`-close to `sin` on any interval longer than `L(d)`, `L` explicit in `d`" —
+which is a genuinely HARDER theorem: it needs the Khovanskii zero-count bound's EXPLICITNESS (in
+tree depth/size), not the eventual/tail `TailSign` argument C6 uses. That theorem is NOT built here
+and is NOT a corollary of anything in this file. `certcom_total_error_floor` below is true and
+non-trivial, but it does not close, or substitute for, the practical Certcom handshake — see the
+decision doc's cont. 76 erratum for the full correction.
+
 **What IS built:** for ANY finite EML tree `T` and ANY `compiled : Real → Real` whose deviation
 from `T.eval` is bounded by `δ` everywhere (the SHAPE of bound Certcom's rounding theorems
 supply, held abstract rather than imported), if `δ < ε < 1`, there are points arbitrarily far out

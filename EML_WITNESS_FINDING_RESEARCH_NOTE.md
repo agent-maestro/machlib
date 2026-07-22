@@ -7,9 +7,24 @@ actually proved from what's merely trusted.*
 
 ## The question
 
-MachLib's EML tree language builds real-valued functions from a small closed set of operations
-(`exp`, a clamped `log`, addition, nesting). It's expressive — but is it *complete*? Can every
-"reasonable" target function be written as some finite EML tree?
+MachLib's EML tree language builds real-valued functions from an unusually small closed set of
+operations. Precisely: `const c`, `var` (the input `x`), and `eml t1 t2`, whose value is FIXED as
+`exp(t1.eval x) - log(t2.eval x)` (`log` clamped to `0` off the positive axis). **There is no
+addition, no multiplication, no squaring constructor anywhere in the grammar** — every compound
+value is irreducibly "a positive `exp` term minus a `log` term." This matters for reading everything
+below correctly: it was checked directly (Track C, item C2) that this grammar cannot even build
+`x²` — not proved impossible in general (that would be its own theorem, not yet attempted), but
+every hand-construction attempt failed, and nothing in the codebase's differential Pfaffian-chain
+machinery (which describes derivative RELATIONS, not a tree's own closed-form value) bridges the
+gap. State this up front rather than let a reader infer more expressive power than exists: the
+non-representability results below are about a genuinely minimal language, and that is itself part
+of what makes them informative — a richer grammar (with addition/multiplication) is a live, open
+question about SCOPE, not a design choice quietly assumed away. Every barrier theorem in this note
+should be read as "no tree IN THIS GRAMMAR" — whether it would survive adding multiplication is, for
+each theorem, a separate question not checked here.
+
+Is this narrow language *complete* relative to what it can express? Can every "reasonable" target
+function reachable by nested `exp`/clamped-`log` be written as some finite EML tree?
 
 This note answers it for one natural family: **no finite EML tree equals `sin`, `cos`, or any
 member of the `nestedTarget` family** (`sin`, `log(c + sin x)`, `log(d + log(c + sin x))`, and so
@@ -98,10 +113,21 @@ none of the three earlier routes could deliver.
 ## What this doesn't claim
 
 This result is about **exact** representability of specific target functions on **all of** the
-reals. It says nothing about: approximate representability (small `ε`-closeness — flagged as
-Track C future work, not yet attempted), other target functions not in the `sin`/`nestedTarget`
-family, or bounded-domain representability (an EML tree could still match `sin` on some finite
-interval — that's a different, easier question this result doesn't address).
+reals. Track C (2026-07-22, `EML_WITNESS_FINDING_DECISION_2026_07_15.md` cont. 74-76) extended it in
+several directions, with one gap worth stating precisely rather than glossing: **`ε`-closeness is
+closed only asymptotically, not on bounded domains.** No finite EML tree stays within any `ε < 1` of
+`sin` for ALL sufficiently large `x` (cont. 74's C6) — but this is a pure TAIL statement, silent on
+any fixed bounded interval `[0, R]`, however large. A tree could be `10⁻¹⁶`-close to `sin` on
+`[0, 1000π]` and this result says nothing, provided the tree eventually diverges afterward. The
+PRACTICALLY relevant question — "no tree of depth `d` is `ε`-close to `sin` on any interval longer
+than some explicit `L(d)`" — needs the Khovanskii zero-count bound's EXPLICITNESS in tree depth, a
+genuinely harder theorem, and remains open (see cont. 76's erratum). This gap matters concretely: a
+compiled artifact evaluates on a bounded domain, not `x → ∞`, so it is this open bounded-interval
+question, not the closed asymptotic one, that a real total-error decomposition for compiled EML
+code would need. Also open: other target functions beyond `sin`/`nestedTarget`/`sin²x` (Track C's
+census is illustrative, not exhaustive), and whether the grammar's inability to build `x²`
+(see "The question," above) is a fixed scope commitment or something a future richer grammar would
+lift — every barrier theorem here is scoped to the grammar as it stands.
 
 ## Where to go next
 

@@ -8,17 +8,26 @@ import MachLib.FPModel
 
 Track C, item C6. The muses' proposal framed this as "upgrade exact-equality impossibilities to
 `ε`-closeness impossibilities... for intervals long relative to the depth-`d` zero bound" — phrased
-in terms of the OLDER zero-counting/Khovanskii mechanism. Checked directly: `TailSign` (this
-session's own mechanism) gives something STRONGER for free, with no interval-length bookkeeping at
-all. `eml_tailSign_unconditional` says every tree's value eventually settles into exactly one of
-three behaviors (eventually positive, eventually negative, eventually exactly zero) — past SOME
-threshold, forever. `sin` never settles: it keeps returning to `1` and to `-1`, exactly, past ANY
-threshold (2π-periodicity + the existing `nestedTarget cs = []` specialization of
-`nestedTarget_at_pi_div_two`/`nestedTarget_at_neg_pi_div_two`, `WitnessResidualNestedTargetTailSign.
-lean`/`WitnessResidualNestedTargetBWitness.lean`). Any FIXED sign-definite (or zero-definite)
-eventual behavior is farther than `ε < 1` from at least one of `sin`'s own recurring extremes — so
-`ε`-closeness fails not just on long intervals, but for ALL sufficiently large `x`, unconditionally.
-No new machinery beyond what cont. 58-71 already built; this is a direct corollary.
+in terms of the OLDER zero-counting/Khovanskii mechanism. `TailSign` (this session's own mechanism)
+answers a DIFFERENT, easier question with no interval-length bookkeeping: `eml_tailSign_
+unconditional` says every tree's value eventually settles into exactly one of three behaviors
+(eventually positive, eventually negative, eventually exactly zero) — past SOME threshold, forever.
+`sin` never settles: it keeps returning to `1` and to `-1`, exactly, past ANY threshold
+(2π-periodicity + the existing `nestedTarget cs = []` specialization of `nestedTarget_at_pi_div_two`
+/`nestedTarget_at_neg_pi_div_two`). Any FIXED sign-definite (or zero-definite) eventual behavior is
+farther than `ε < 1` from at least one of `sin`'s own recurring extremes.
+
+**Erratum, added after external review — this is weaker than it first reads, not just stronger.**
+The theorem below is a pure TAIL statement: it takes an arbitrary threshold `R` as a hypothesis and
+derives a contradiction from closeness holding for ALL `x > R` — so it says NOTHING about any fixed,
+however-large bounded interval `[0, R]`. A tree could be `10⁻¹⁶`-close to `sin` on `[0, 1000π]` and
+this theorem is silent, provided the tree eventually wanders off afterward. It does NOT answer, or
+subsume, the muses' original question ("intervals long relative to the depth-`d` zero bound") — that
+is a COMPACT-interval statement needing the Khovanskii bound's EXPLICITNESS in tree depth/size, a
+genuinely harder theorem, not built here. What's below is a genuinely different, easier result
+(asymptotic non-approximation, not compact-interval non-approximation) — true and useful in its own
+right, but not a substitute for the harder theorem. See `CertcomTotalErrorFloor.lean`'s own erratum
+and the decision doc's cont. 76 entry for where this distinction actually bites (C7).
 -/
 
 namespace MachLib

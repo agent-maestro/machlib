@@ -131,17 +131,18 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- trustedFootprint entries (strict subset of C1's own footprint plus exp_log/log_exp,
   -- both already-proven theorems, not axioms).
   `MachLib.log_implicit_not_explicit,
-  -- Added 2026-07-22: Track C, item C6 -- quantitative non-approximation. TailSign already
-  -- gives something stronger than "epsilon-close on a long interval": no tree stays within
-  -- epsilon<1 of sin for ALL sufficiently large x, full stop, no interval-length bookkeeping.
-  -- Zero new trustedFootprint entries (strict subset of eml_tailSign_unconditional's own
-  -- footprint plus the nestedTarget periodicity facts, both already trusted).
+  -- Added 2026-07-22: Track C, item C6 -- quantitative non-approximation, TAIL/asymptotic
+  -- form: no tree stays within epsilon<1 of sin for ALL sufficiently large x. NOT the compact-
+  -- interval form the muses actually asked for (silent on any bounded [0,R], however large --
+  -- see LogDivergenceWall-sibling QuantitativeNonApproximation.lean's own erratum, added
+  -- 2026-07-22 after external review). Zero new trustedFootprint entries.
   `MachLib.Real.no_tree_eps_close_to_sin_eventually,
   -- Added 2026-07-22: Track C, item C7 -- the Certcom handshake, scoped honestly. Combines
-  -- C6's approximation floor with an ABSTRACT rounding-error bound (the shape Certcom's own
-  -- theorems supply, held as a hypothesis rather than imported -- wiring this to Certcom's
-  -- actual C-compilation pipeline is the genuinely thesis-shaped remaining work, not attempted).
-  -- Zero new trustedFootprint entries (strict subset of C6's own footprint).
+  -- C6's TAIL floor (not a compact-interval one -- see C6's erratum above) with an ABSTRACT
+  -- rounding-error bound. Wiring to Certcom's actual pipeline needs a genuinely harder,
+  -- NOT-yet-built compact-interval quantitative theorem (Khovanskii bound explicit in tree
+  -- depth) -- this file's own erratum (added 2026-07-22) says so plainly; do not read this
+  -- headline as "the Certcom handshake is done." Zero new trustedFootprint entries.
   `MachLib.Real.certcom_total_error_floor,
   -- Added 2026-07-22: Track C, item C8 -- one census entry, sin^2 x, a genuinely different
   -- oscillation shape (non-negative, recurring to exactly 0 AND exactly 1) instantiated

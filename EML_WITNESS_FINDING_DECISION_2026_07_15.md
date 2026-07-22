@@ -5582,3 +5582,62 @@ and set aside for concrete, checked reasons. C5, C9, C10 flagged as real, unforc
 items — two of three explicitly agreeing with the muses' own effort assessment, one (C5) found
 independently. Fresh `lake build MachLib` green throughout (465 modules, up from 460 at the start
 of Track C).
+
+## 2026-07-22 (cont. 76) — erratum: C6/C7 overclaimed relative to the practical Certcom handshake;
+## C2 elevated; one bounded feasibility check done
+
+Two more external reviews came back on cont. 74-75's Track C round. Both praised the five closures;
+one (independently corroborating the other's sharper technical points) identified a real accuracy
+problem in how C6/C7 were described — not a math error, a FRAMING error with real consequences for
+a future session's understanding of what's actually blocked. Checked every claim directly before
+touching anything, per this whole document's own discipline.
+
+**The C6/C7 correction — confirmed, not assumed.** Re-read `no_tree_eps_close_to_sin_eventually`'s
+own signature: it takes an ARBITRARY threshold `R` as a hypothesis and derives a contradiction from
+closeness holding for all `x > R`. This is a pure TAIL statement — it says NOTHING about any fixed
+bounded interval `[0, R]`, however large. A tree could be `10⁻¹⁶`-close to `sin` on `[0, 1000π]` and
+C6 is completely silent, provided the tree eventually diverges afterward. C6's own docstring had
+called this "STRONGER... no interval-length bookkeeping," which reads as superseding the muses'
+original compact-interval proposal — it does not; it answers a DIFFERENT, EASIER question. The
+practically relevant theorem — "no depth-`d` tree is `ε`-close to `sin` on any interval longer than
+some explicit `L(d)`" — needs the Khovanskii zero-count bound's EXPLICITNESS in tree depth, is
+genuinely harder, and remains completely open. This matters concretely for C7: a compiled artifact
+evaluates on a BOUNDED domain (range-reduced input, a fixed operating range), not `x → ∞`, so it is
+this open bounded-interval question, not C6's closed asymptotic one, that a real total-error
+decomposition for compiled EML code needs. **Fixed in place, not superseded by a new file**
+(matching this document's own established pattern for erratum-scale corrections): rewrote the
+docstrings in `QuantitativeNonApproximation.lean` and `CertcomTotalErrorFloor.lean` to state this
+precisely, and corrected both files' `AxiomLedger.lean` headline comments so the ledger itself
+doesn't repeat the overclaim. No Lean code changed — `#print axioms`/`lake build`/the ledger are all
+exactly as before; this was a documentation-accuracy fix, not a mathematical retraction. `sin²x`
+(C8) is unaffected — it doesn't depend on the tail/compact distinction.
+
+**The C2 elevation.** One review argued the grammar-expressiveness finding ("`EMLTree` cannot build
+`x²`, checked not assumed") is load-bearing context for the WHOLE barrier program, not a footnote
+inside one Track C file — every non-representability headline is implicitly scoped by what the
+grammar can express, and a reader's first question about "no tree equals `sin`" is reasonably "how
+expressive are trees?" Checked the research note (`EML_WITNESS_FINDING_RESEARCH_NOTE.md`) against
+this directly and found it ALREADY slightly wrong on exactly this point — its opening line described
+the grammar as having "addition, nesting," which is false (there is no addition constructor; `eml
+t1 t2` is a FIXED `exp(t1)-log(t2)`, nothing else). Fixed: the research note's "The question" section
+now states the grammar precisely up front, and "What this doesn't claim" now states the C6/C7 tail-
+vs-compact gap explicitly rather than the stale "not yet attempted" it had before this round's own
+C6/C7 work made it partially attempted.
+
+**The bounded feasibility check, done as asked.** One review asked whether the "richer Pfaffian-
+chain" alternative floated in C2's own docstring (option (b): reformulate `log√(x²+ε²)` as a
+`PfaffianChain` rather than a literal `EMLTree`) had actually been checked, even briefly, or just
+asserted. It had not — checked now. `PfaffianChain.lean`'s `structure PfaffianChain (n : Nat)` needs
+only `evals : Fin n → (Real→Real)` plus derivative RELATIONS (`MultiPoly n` polynomials) satisfying
+`IsCoherentAt`. Building `s := x²+ε²` as a one-variable chain needs `HasDerivAt (fun x=>x²+ε²) (2x) x`
+— trivial via `HasDerivAt_mul` with `f=g=id` (`HasDerivAt_id`), the EXACT pattern C8 already used for
+`sin²x`'s derivative. So the underlying function has NO deep obstruction — it's easily
+Pfaffian-chain-representable, no new axioms, no new machinery. **This sharpens rather than overturns
+the original C2 finding**: the wall is specifically about `EMLTree`'s minimal SYNTACTIC grammar (only
+`const`/`var`/`exp(t1)-log(t2)`), not about any mathematical impossibility of the target function
+itself. A Pfaffian-chain representation of `log√(x²+ε²)` would answer a DIFFERENT, BROADER question
+("is this Pfaffian-representable in general") than what C2 (and every other result in this document)
+actually asks ("is this `EMLTree`-representable") — so it would not, by itself, give the "closure
+point of the EML-representable class" characterization the original C2 proposal wanted. Recorded
+here rather than built into Lean (that would be new Track C content, a scope decision for direct
+discussion, not an erratum-scale fix).
