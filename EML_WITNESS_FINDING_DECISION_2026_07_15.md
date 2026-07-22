@@ -3881,3 +3881,74 @@ explicitly reconciled or compared for relative strength — a real next step, no
 `EMLPfaffianValidOn`, no `eml_pfaffian_validon_from_sin_equality` dependence anywhere. Full
 `lake build MachLib` passes (442 modules — this round extended an existing file rather than adding
 a new one). One commit this round (`45c734c7`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 47) — a major clarification, no new Lean: "attempt the full Khovanskii
+generalization" turns out to already be done, and this whole `WitnessResidual*` sub-arc IS its
+continuation
+
+**User request**: given cont. 46's discovery of the separate, earlier `EMLSmoothness.lean`
+sub-arc, asked to investigate whether the "Khovanskii/Wronskian rigidity machinery" lead (flagged
+as unexplored back in round 5 of that sub-arc, memory file `machlib-khovanskii-axiom-frontier.md`)
+was worth attempting, before committing effort either way. Spent this round reading, not writing:
+the full 30-round history in that memory file (a DIFFERENT project's memory directory,
+`-home-monogate-monogate-wawire`, found via a cross-project search — worth remembering this
+decision doc's own prequel lives partly outside this project's own memory), then this document's
+own opening (lines 1–463, never read this session before now), specifically the very first entry
+(2026-07-19, before what this document's numbering calls "cont. 1") titled "Option D, strong
+induction on tree depth with the target generalized."
+
+**What that entry actually proposed**, precisely: don't reuse `sin_not_in_eml_any_depth` as a black
+box (checked: doing so would be circular — its own proof needs
+`eml_pfaffian_validon_from_sin_equality` as an input). Instead, re-derive its WHOLE mechanism —
+the constructive Khovanskii zero-count bound (`combinedBoundE`/`enc_combinedBound`,
+`EMLExplicitBoundEncoder.lean`) plus a concrete "target's own oscillation exceeds the bound"
+contradiction — generalized to an ARBITRARY target function, not hardcoded to `sin`. The next
+entry (still before "cont. 1") worked out the exact missing piece ("step (c)") ON PAPER: the
+**target-shift trick** — instead of counting zeros of `T1.eval`, count solutions to
+`T1.eval x = L` for a shifted level `L` (here `L = log(c2)`), via
+`p' := MultiPoly.sub (enc T1 chain).2 (MultiPoly.const L)` fed into `enc_combinedBound` — checked
+against the real `MultiPoly`/`enc_combinedBound` type signatures, not assumed. That entry left it
+explicitly UNIMPLEMENTED, flagged as "genuinely multi-round work... possibly larger" than the
+5-round mechanism-building push that had just finished.
+
+**It was NOT left unimplemented for long — a later, still-pre-"cont. 1" round in this SAME
+document actually built it.** `WitnessResidualTargetGeneric.lean`'s `no_tree_eq_target_given_validon`
+IS the target-shift trick, fully generalized over `(TARGET, L)` rather than hardcoded to
+`(sin, 0)` or `(log(c2+sin·), log c2)` specifically — read its body directly to confirm, not
+assumed from the name: `p := (enc T1 emlEmptyChain).2`, `p' := MultiPoly.sub p (MultiPoly.const L)`,
+`M := combinedBoundE (len T1 0) (enc T1 emlEmptyChain).1 (encTags T1 emlEmptyChain ()) p'` —
+literally the exact construction sketched on paper, generalized one step further (arbitrary `L`,
+not just `log c2`) and already wired into the WHOLE `nestedTarget` family this session's cont. 34–46
+has been extending (`no_tree_eq_nested_target_given_validon`,
+`WitnessResidualNestedTargetFamily.lean`, built on top of it). **This is genuinely the full
+Khovanskii generalization from the 2026-07-19 brainstorm — already built, already the load-bearing
+foundation under every result cont. 34–46 produced this session, not a separate undertaking
+waiting to be started.**
+
+**What this means for "attempt the Khovanskii route," concretely.** The Khovanskii/zero-counting
+side of Option D is MAXED OUT — `no_tree_eq_target_given_validon`/`no_tree_eq_nested_target_given_validon`
+already close "does any tree equal this target" for the WHOLE nested-target family, for literally
+any target expressible this way, GIVEN `EMLPfaffianValidOn T1` (equivalently, `hvalidon_any_b`).
+There is no further Khovanskii-flavored generalization left to build on that side — the machinery
+already covers arbitrary targets in this family, not just `sin`/`log(c2+sin·)`. **The entire
+remaining gap — discharging `hvalidon_any_b` for an arbitrary, structurally unknown `T1` — is NOT
+a zero-counting question at all.** It's a positivity/no-crossing question (does `T1`'s own
+structure keep every internal log-argument positive), which is exactly what
+`RightChildrenEverywherePositive` (cont. 29, closing the arc's first two witnesses),
+`BChainNonpos` (cont. 44), and the crossing/boundedness bridge (cont. 45–46) have all been
+attacking directly. **This whole `WitnessResidual*` sub-arc — cont. 1 through cont. 46 — IS the
+continuation of the Khovanskii-generalization plan, specifically its `hvalidon_any_b`-discharge
+half; it was never a parallel or lesser-scoped alternative to it.**
+
+**Why this is worth a full round of investigation rather than a two-line note.** Going in, both the
+user and I were treating "attempt the Khovanskii route" and "keep extending the structural
+`hvalidon_any_b` work" as genuinely different bets with different risk profiles — one big and
+unstarted, one incremental and safe. That framing was wrong: there is no unstarted big bet here.
+The honest recommendation, now that this is actually verified against the source rather than
+inferred from a label, is to keep doing exactly what cont. 34–46 have been doing — closing more
+structural classes that discharge `hvalidon_any_b` — with the clarification that this is now
+understood to be the SOLE remaining piece of the entire multi-week program, not one option among
+several.
+
+No Lean written or modified this round — pure investigation, per the user's own "investigate
+first" framing, now resolved with a concrete, source-verified answer rather than left open.
