@@ -5108,3 +5108,61 @@ for anything currently open in this arc.
 No `eml_pfaffian_validon_from_sin_equality`/`_from_cos_equality` dependence anywhere. Full `lake
 build MachLib` passes (458 modules, up from 457). Two commits this round (`7fdf906e`, `9fe8efb9`,
 plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 70) — housekeeping + the meta-lemma both muses flagged, checked genuinely
+uniform rather than assumed
+
+**Housekeeping first.** Ran a fresh, combined `#print axioms` over all 9 headline theorems added
+across cont. 65-69 TOGETHER (not one at a time, re-verifying nothing regressed when several land
+in the same file/library) — zero `sorryAx`, no forbidden axiom, all consistent. `lake env lean
+AxiomLedger.lean` confirms the SAME pre-existing 6-axiom failure (unrelated numeric-bound work,
+present before this session started) and nothing new.
+
+**The generalization.** Two independent external reviews of cont. 69 both flagged the same thing:
+the tail-restricted zero-counting argument barely uses anything about `nestedTarget` specifically
+— it uses (a) a zero-value fact recurring at infinitely many points marching to infinity, and (b)
+a witness value recurring arbitrarily far out, exceeding each zero. Both explicitly cautioned to
+CHECK this within a bounded effort rather than assume it, since these unifications sometimes
+smuggle in a target-specific epsilon per instance rather than being genuinely uniform.
+
+**Checked, not assumed.** `no_tree_eq_recurring_target_fully_unconditional`
+(`WitnessResidualRecurringTargetMetaLemma.lean`) is a mechanical lift of `no_tree_eq_nestedTarget_
+fully_unconditional`'s own proof: `TARGET`/`L` abstracted out, the `kπ`-family replaced by an
+abstract strictly-increasing unbounded `Z : Nat → Real` with `TARGET (Z n) = L`, the
+periodicity-shifted witness replaced by an abstract `W : Nat → Real` with `Z n < W n` and
+`TARGET (W n) ≠ L`. One REAL bug surfaced in the lift, not present in the concrete original: the
+zero family needs to start ONE INDEX PAST the archimedean threshold (`Z (K+i+1)`, not `Z (K+i)`)
+— using `Z K` itself as the first zero fails, since it can't strictly exceed the inner interval's
+own left endpoint, which IS `Z K`. Fixed by shifting every index by one, which — checked
+afterward — matches the `+1` offset the ORIGINAL concrete proof already had
+(`natCast(K+i+1)*π`, never `natCast(K+i)*π`) — confirming this is a faithful lift catching a real
+edge case, not a coincidentally different construction.
+
+**The uniformity test, passed.** `no_tree_eq_nestedTarget_fully_unconditional_via_meta`
+re-derives cont. 69's own theorem as a five-line instantiation (`Z n := natCast(n+1)*π`, `W n :=
+π+1+natCast(n+2)*(2π)`), using ONLY facts already built for the concrete version
+(`nestedTarget_facts`, `nestedTarget_add_natCast_mul_two_pi`, `natCast_mul_pi_lt_natCast_mul_two_pi`)
+— no new target-specific reasoning beyond routine arithmetic bookkeeping (two small lemma-application
+fixes, caught immediately by the compiler, nothing conceptual). This is the "within an hour" signal
+both reviews named: the bookkeeping WAS genuinely uniform, not smuggling anything in. Fresh-rebuild
+`#print axioms` on both new theorems: zero `sorryAx`, neither discharge axiom appears anywhere.
+Footprint diff needed ZERO new `trustedFootprint` entries (strict subset of the concrete version's
+own base) — wired into `AxiomLedger.lean`'s `headlines` (`32→33`).
+
+**What this retroactively unifies.** `sin` (cont. 58) and the whole `nestedTarget` family
+(cont. 69) are now both instances of ONE statement, not two separately-built results that happen
+to look similar. The next target in this family — should one arise — is a five-line instantiation
+matching the pattern above, not a fresh round.
+
+**Honest scope, stated as precisely as the successes above.** This captures the EXPLICIT-zero-family
+level of generality named in the reviews, not the weaker (and strictly more general) "no `TailSign`
+relative to `L`" formulation either review also named. That weaker form would need target-side
+CONTINUITY plus an IVT-based zero CONSTRUCTION mirroring `rcep_zero_between`'s own machinery — built
+in this arc for EML trees specifically (using tree structure to get no-crossing/differentiability),
+not yet built for an arbitrary continuous function. Flagged as the natural further generalization,
+matching both reviews' own framing of it as "an opening in the good direction" — not attempted this
+round, and not needed for anything currently open in this arc.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. Full `lake build
+MachLib` passes (459 modules, up from 458). One commit this round (`03f5c038`, plus this docs
+commit), pushed.
