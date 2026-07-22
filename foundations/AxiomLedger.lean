@@ -142,7 +142,12 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- theorems supply, held as a hypothesis rather than imported -- wiring this to Certcom's
   -- actual C-compilation pipeline is the genuinely thesis-shaped remaining work, not attempted).
   -- Zero new trustedFootprint entries (strict subset of C6's own footprint).
-  `MachLib.Real.certcom_total_error_floor]
+  `MachLib.Real.certcom_total_error_floor,
+  -- Added 2026-07-22: Track C, item C8 -- one census entry, sin^2 x, a genuinely different
+  -- oscillation shape (non-negative, recurring to exactly 0 AND exactly 1) instantiated
+  -- through the general meta-theorem with no sin/nestedTarget-specific reasoning. Zero new
+  -- trustedFootprint entries.
+  `MachLib.Real.no_tree_eq_sinSq_unconditional]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

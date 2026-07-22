@@ -26,7 +26,7 @@ namespace Real
 
 open MachLib
 
-private theorem pi_div_two_pos : (0 : Real) < pi / (1 + 1) := by
+theorem pi_div_two_pos : (0 : Real) < pi / (1 + 1) := by
   have h11 : (0 : Real) < 1 + 1 := by
     have h := add_lt_add_left zero_lt_one_ax 1
     rw [add_zero] at h
@@ -37,7 +37,7 @@ private theorem pi_div_two_pos : (0 : Real) < pi / (1 + 1) := by
 `nestedTarget_add_natCast_mul_two_pi`/`nestedTarget_at_pi_div_two` at `cs := []`
 (`nestedTarget [] = Real.sin`, definitionally — `.trans` closes the goal via defeq, no `show`
 needed). -/
-private theorem sin_one_recurring (M : Real) : ∃ x : Real, M < x ∧ Real.sin x = 1 := by
+theorem sin_one_recurring (M : Real) : ∃ x : Real, M < x ∧ Real.sin x = 1 := by
   obtain ⟨n, hn⟩ := archimedean M
   have h1 : natCast n ≤ natCast n * ((1 + 1) * pi) := natCast_le_natCast_mul_two_pi n
   have h2 : M < natCast n * ((1 + 1) * pi) := lt_of_lt_of_le hn h1
