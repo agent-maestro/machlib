@@ -54,11 +54,15 @@ theorem nestedTarget_at_neg_pi_div_two (cs : List Real) (hwf : nestedWF cs) :
 /-- **`∃x0, 0 < B.eval x0`, for the whole nested-target family.** Generalizes
 `depth2_witness_B_of_c2_between_one_two` (`EMLWitnesses`'s third conjunct, previously closed
 only for `log(c2+sin x)` with `1<c2<2`) to every well-formed member of the nested family with
-`nestedLo cs < 0`. Same proof shape: assume `B ≤ 0` everywhere (so `log(B.eval x)` clamps to
+`nestedLo cs ≤ 0`. Same proof shape: assume `B ≤ 0` everywhere (so `log(B.eval x)` clamps to
 `0`), forcing `exp(A.eval x) = nestedTarget cs x` for all `x`; at `x = -π/2` this gives
-`exp(A.eval(-π/2)) = nestedLo cs < 0`, contradicting `exp > 0`. -/
+`exp(A.eval(-π/2)) = nestedLo cs`, contradicting `exp > 0` — which rules out `nestedLo cs = 0`
+just as well as `nestedLo cs < 0` (`exp` is never `0` either, not just never negative), so the
+hypothesis only needs `≤`, matching the same relaxation
+`WitnessResidualNestedTargetTailSign.lean`'s `nestedTarget_not_tailSign` made for the same reason
+(covers `c2 = 2` in the `cs = [c2]` instance, not just `c2 < 2`). -/
 theorem witness_B_not_le_zero_of_lo_neg
-    {A B : EMLTree} {cs : List Real} (hwf : nestedWF cs) (hlo : nestedLo cs < 0)
+    {A B : EMLTree} {cs : List Real} (hwf : nestedWF cs) (hlo : nestedLo cs ≤ 0)
     (hT1eq : ∀ x, (EMLTree.eml A B).eval x = nestedTarget cs x) :
     ∃ x0, 0 < B.eval x0 := by
   refine Classical.byContradiction (fun hcon => ?_)
@@ -73,8 +77,9 @@ theorem witness_B_not_le_zero_of_lo_neg
   have h1 : Real.exp (A.eval x0) - Real.log (B.eval x0) = nestedTarget cs x0 := hT1eq x0
   rw [hlog0, sub_zero] at h1
   rw [nestedTarget_at_neg_pi_div_two cs hwf] at h1
-  -- h1 : exp(A.eval x0) = nestedLo cs, contradicting exp positivity via hlo : nestedLo cs < 0
-  rw [← h1] at hlo
-  exact lt_irrefl_ax 0 (lt_trans_ax (Real.exp_pos _) hlo)
+  -- h1 : exp(A.eval x0) = nestedLo cs, contradicting exp positivity via hlo : nestedLo cs ≤ 0
+  have hstep : nestedLo cs < Real.exp (A.eval x0) := lt_of_le_of_lt hlo (Real.exp_pos _)
+  rw [h1] at hstep
+  exact lt_irrefl_ax (nestedLo cs) hstep
 
 end MachLib
