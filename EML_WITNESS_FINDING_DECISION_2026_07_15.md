@@ -4078,3 +4078,38 @@ moving.
 `sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
 dependence. Full `lake build MachLib` passes (444 modules — extended the existing file, no new
 module). One commit this round (`2fbbc757`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 51) — the mirror sign order added: crossing disjunct now allows either
+direction
+
+**Direct user request**: "proceed" — continuing the same broadening pattern one more step.
+Everything in the crossing disjunct through cont. 50 required `B` non-positive at the EARLIER
+point and positive at the LATER one. `B` positive first, dipping non-positive later, is the mirror
+image and was not covered — noticed by re-checking what `WitnessResidualCrossingUnboundedMirror.lean`
+(cont. 39) actually built: `eml_A_crossing_B_unbounded_above_mirror`/`_either_direction` already
+prove unboundedness for this direction too, sitting unused by this recent lineage until now.
+
+**Same two-step pattern as the primary direction, applied a second time.** An exact-root bridge
+(`no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing_mirror`, direct wiring of the mirror
+unboundedness theorem into the existing general bridge) then the sign-change broadening via IVT
+(`no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing_mirror`) — this time applying
+`intermediate_value` to `-B` (via `HasDerivAt_neg`, an existing axiom not previously exercised in
+this lineage), since `intermediate_value` itself only takes a negative-to-positive order and the
+mirror direction needs positive-to-negative. `BChainTriple`'s crossing disjunct now allows EITHER
+order via a top-level `∨`.
+
+**One small, quickly-caught fix.** An `lt_of_le_of_lt`/`lt_of_lt_of_le` argument-order mixup in the
+final case of the mirror sign-change proof — the compiler flagged the exact expected type
+immediately, fixed in the next edit. First non-clean-first-try compile in this particular
+sub-lineage since cont. 44, worth noting honestly rather than glossing over — four clean-first-try
+rounds in a row (cont. 47-50) was a good run, not an unbroken law.
+
+**Scope, unchanged in substance.** The crossing disjunct (either direction now) still needs
+verifiable `EMLNoCrossingAt` on the connecting interval and an ACTUAL endpoint value on the correct
+side of zero — not a limit, not an assumption. A `B` whose behavior can't be pinned down this
+concretely remains outside all mechanisms in this file. This round adds coverage symmetry (both
+sign orders now available), not new closeable territory beyond that.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all three new theorems. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (444 modules
+— extended the existing file). One commit this round (`dad3c7be`, plus this docs commit), pushed.
