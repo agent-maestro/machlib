@@ -1,5 +1,6 @@
 import MachLib.WitnessResidualChainOrPositive
 import MachLib.WitnessResidualCrossingBoundednessBridge
+import MachLib.WitnessResidualCrossingUnboundedMirror
 
 /-! # All three mechanisms unified: positive, crossing, non-positive
 
@@ -50,9 +51,20 @@ territory — the remaining gap is the same one named at the end of
 `WitnessResidualClosureAttempt.lean` (cont. 43): a truly unconstrained `B`, structurally unknown,
 with no promise of any of these three specific behaviors.
 
-`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt (both
-the three-way unification and the sign-change broadening). No `eml_pfaffian_validon_from_sin_equality`
-dependence. -/
+**The crossing disjunct broadened a second time, same round: the mirror sign order.** Everything
+above requires `B` non-positive at the EARLIER point and positive at the LATER one. `B` positive
+first, dipping non-positive later, is the mirror image and was NOT covered — `eml_pfaffian`'s
+`eml_A_crossing_B_unbounded_above_mirror`/`_either_direction`
+(`WitnessResidualCrossingUnboundedMirror.lean`, cont. 39) already prove unboundedness for this
+direction too, so the same two-step pattern (exact-root bridge, then sign-change broadening via
+IVT — this time applied to `-B` via `HasDerivAt_neg`, since `intermediate_value` itself only
+takes a negative-to-positive order) closes it the same mechanical way. `BChainTriple`'s crossing
+disjunct now allows EITHER order.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. Compiled clean on the first attempt for
+every theorem in this file except one (a `lt_of_le_of_lt`/`lt_of_lt_of_le` argument-order mixup in
+the mirror sign-change proof's final case, caught immediately by the type checker and fixed in the
+next line). No `eml_pfaffian_validon_from_sin_equality` dependence. -/
 
 namespace MachLib
 namespace Real
@@ -79,15 +91,63 @@ theorem no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing
       cs hwf hT1eq
   · exact lt_irrefl_ax 0 (lt_of_lt_of_le hgt hBx0)
 
-/-- Three ways to close at each node instead of two: `RightChildrenEverywherePositive` (Khovanskii
-escape), `B` changes sign with `EMLNoCrossingAt` on the interval (crossing-bridge escape, immediate
-— no recursion needed), or `B` non-positive everywhere (continue the chain). -/
+/-- Mirror of `no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing`: `B` positive at the
+earlier point, exactly zero at the later one. -/
+theorem no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing_mirror
+    (A B : EMLTree) (x0 x1 : Real) (hx0x1 : x0 < x1)
+    (hBx0pos : 0 < B.eval x0) (hBx1 : B.eval x1 = 0)
+    (hnc : ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z)
+    (cs : List Real) (hwf : nestedWF cs)
+    (hT1eq : ∀ x : Real, (EMLTree.eml A B).eval x = nestedTarget cs x) : False :=
+  no_eml_A_B_eq_nested_target_of_unbounded_above A B cs hwf
+    (eml_A_crossing_B_unbounded_above_mirror A B x0 x1 hx0x1 hBx0pos hBx1
+      (fun z hz1 hz2 => MachLib.eml_hasDerivAt_of_no_crossing B z (hnc z hz1 hz2)))
+    hT1eq
+
+/-- Sign-change (not exact-zero) version of the mirror direction: `B` positive at `x0`,
+non-positive at `x1`, via IVT applied to `-B` when `B.eval x1` isn't already exactly `0`. -/
+theorem no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing_mirror
+    (A B : EMLTree) (x0 x1 : Real) (hx0x1 : x0 < x1)
+    (hBx0pos : 0 < B.eval x0) (hBx1 : B.eval x1 ≤ 0)
+    (hnc : ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z)
+    (cs : List Real) (hwf : nestedWF cs)
+    (hT1eq : ∀ x : Real, (EMLTree.eml A B).eval x = nestedTarget cs x) : False := by
+  rcases lt_total (B.eval x1) 0 with hlt | heq | hgt
+  · have hcont : ∀ z : Real, x0 ≤ z → z ≤ x1 → ContinuousAt (fun w => -B.eval w) z := by
+      intro z hz1 hz2
+      obtain ⟨b, hb⟩ := MachLib.eml_hasDerivAt_of_no_crossing B z (hnc z hz1 hz2)
+      exact hasDerivAt_continuousAt (HasDerivAt_neg B.eval b z hb)
+    have hfa : (fun w => -B.eval w) x0 < 0 := by
+      show -(B.eval x0) < 0
+      exact neg_neg_of_pos hBx0pos
+    have hfb : 0 < (fun w => -B.eval w) x1 := by
+      show 0 < -(B.eval x1)
+      exact neg_pos_of_neg hlt
+    obtain ⟨c, hc1, hc2, hc3⟩ :=
+      intermediate_value (fun w => -B.eval w) x0 x1 hx0x1 hcont hfa hfb
+    have hBc0 : B.eval c = 0 := by
+      have h1 : -B.eval c = 0 := hc3
+      have h2 : B.eval c = -(-B.eval c) := by mach_ring
+      rw [h2, h1]; mach_ring
+    have hncc : ∀ z : Real, x0 ≤ z → z ≤ c → MachLib.EMLNoCrossingAt B z :=
+      fun z hz1 hz2 => hnc z hz1 (le_trans hz2 (le_of_lt hc2))
+    exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing_mirror A B x0 c hc1 hBx0pos hBc0
+      hncc cs hwf hT1eq
+  · exact no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing_mirror A B x0 x1 hx0x1 hBx0pos
+      heq hnc cs hwf hT1eq
+  · exact lt_irrefl_ax 0 (lt_of_lt_of_le hgt hBx1)
+
+/-- Four ways to close at each node instead of three: `RightChildrenEverywherePositive`
+(Khovanskii escape), `B` changes sign in EITHER order with `EMLNoCrossingAt` on the interval
+(crossing-bridge escape, immediate — no recursion needed), or `B` non-positive everywhere
+(continue the chain). -/
 def BChainTriple : EMLTree → Prop
   | EMLTree.const _ => True
   | EMLTree.var => True
   | EMLTree.eml A B =>
       RightChildrenEverywherePositive (EMLTree.eml A B) ∨
-      (∃ x0 x1 : Real, x0 < x1 ∧ B.eval x0 ≤ 0 ∧ 0 < B.eval x1 ∧
+      (∃ x0 x1 : Real, x0 < x1 ∧
+        ((B.eval x0 ≤ 0 ∧ 0 < B.eval x1) ∨ (0 < B.eval x0 ∧ B.eval x1 ≤ 0)) ∧
         ∀ z : Real, x0 ≤ z → z ≤ x1 → MachLib.EMLNoCrossingAt B z) ∨
       ((∀ x : Real, B.eval x ≤ 0) ∧ BChainTriple A)
 
@@ -103,12 +163,15 @@ theorem no_tree_eq_nested_target_of_BChainTriple :
   | var => intro _ cs hwf hT1eq; exact var_ne_nestedTarget cs hwf hT1eq
   | eml A B ihA _ihB =>
     intro hchain cs hwf hT1eq
-    rcases hchain with hpos | ⟨x0, x1, hx0x1, hBx0, hBx1pos, hnc⟩ | ⟨hBnonpos, hAchain⟩
+    rcases hchain with hpos | ⟨x0, x1, hx0x1, hdir, hnc⟩ | ⟨hBnonpos, hAchain⟩
     · have hvalidon : ∀ b : Real, 0 < b → EMLPfaffianValidOn (EMLTree.eml A B) 0 b :=
         fun b _ => EMLPfaffianValidOn_of_right_children_everywhere_positive hpos 0 b
       exact no_tree_eq_nested_target_given_validon cs hwf (EMLTree.eml A B) hT1eq hvalidon
-    · exact no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing A B x0 x1 hx0x1 hBx0
-        hBx1pos hnc cs hwf hT1eq
+    · rcases hdir with ⟨hBx0, hBx1pos⟩ | ⟨hBx0pos, hBx1⟩
+      · exact no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing A B x0 x1 hx0x1 hBx0
+          hBx1pos hnc cs hwf hT1eq
+      · exact no_eml_A_B_eq_nested_target_of_sign_change_and_no_crossing_mirror A B x0 x1 hx0x1
+          hBx0pos hBx1 hnc cs hwf hT1eq
     · have hexpA : ∀ x : Real, Real.exp (A.eval x) = nestedTarget cs x := by
         intro x
         have hred := eml_A_B_eq_exp_A_of_nonpos A B hBnonpos x
