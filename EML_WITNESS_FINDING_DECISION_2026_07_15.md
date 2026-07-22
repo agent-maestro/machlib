@@ -4857,3 +4857,63 @@ docstring, cont. 9 of its own numbering, calls closing this "the shape closest t
 dependence in the new theorem's own proof (the entire point of this round, checked directly). Full
 `lake build MachLib` passes (455 modules, up from 454). One commit this round (`fd2aa2b3`, plus
 this docs commit), pushed.
+
+## 2026-07-22 (cont. 66) — guarding the discharge: `AxiomLedger` wired, axiom demoted in-place
+
+**External input, acted on directly**: two independent "muses" reviewed cont. 65's discharge and
+converged on the same substance — the axiom is now conservative (an axiom provable in the theory
+adds zero to the trust surface, even with its `axiom` keyword still physically present), and what
+remains is import-graph hygiene, not soundness. One muse gave a prioritized cleanup list (CI
+guard, ledger update, in-place demotion, then — only if ever — a file split); the other proposed a
+full module-restructuring migration. Followed the first: guard, ledger, label, and explicitly
+DEFER the file split, matching its own reasoning almost verbatim — "a high-churn, zero-trust-delta
+refactor that introduces regressions into otherwise-closed arcs" is exactly the wrong trade for a
+result that's already fully closed on the trust question.
+
+**Discovery: a real, machine-checked axiom-trust CI gate already exists** (`AxiomLedger.lean`),
+not the possibly-stale `axiom_ledger.json`/`tools/axiom_ledger` scripts guessed at initially. It
+enumerates every live axiom (`knownAxioms`, kernel-derived via `Lean.collectAxioms`, not grep),
+pins a `trustedFootprint` allowlist, and checks each tracked `headlines` theorem's EXACT footprint
+stays inside it — on every invocation, not just once by hand. It is checked via `lake env lean
+AxiomLedger.lean` directly (not part of the `lake build MachLib` target), and was ALREADY red
+before this round, for six unrelated numeric-bound axioms (`log_2_0_bounds`, `exp_1_35_lower`,
+etc.) from separate recent work never synced into the snapshot — confirmed by running the gate
+BEFORE touching anything, so this round's own changes could be judged against a known baseline,
+not blamed for pre-existing drift. That drift is explicitly OUT OF SCOPE here — not this round's
+work, not silently absorbed into it.
+
+**The wiring, done precisely rather than by eye.** Extracted `eml_pfaffian_validon_from_sin_
+equality_proved`'s exact `#print axioms` footprint programmatically and diffed it against the
+current `trustedFootprint` in Python (not by scanning a multi-thousand-character one-line list
+visually) — found exactly 7 axioms already disclosed in `knownAxioms` but not yet allowlisted for
+headline footprints (`archimedean`, `cos_add`, `cos_zero`, `hasDerivAt_continuousAt`,
+`pi_gt_one`, `sin_pi_div_two`, `sup_exists` — all standard `MachLib.Real` primitives already used
+throughout the codebase, nothing new or hidden). Added exactly those 7 to `trustedFootprint`, and
+added both `no_tree_eq_sin_unconditional` and `eml_pfaffian_validon_from_sin_equality_proved` to
+`headlines`. Re-ran the gate: headline count `24→26`, trusted-footprint count `139→146`, zero new
+leak/rot errors, the pre-existing 6-axiom failure UNCHANGED (confirming this round introduced
+nothing new, positive or negative, to that drift).
+
+**In-place demotion.** Added a docstring directly on `axiom eml_pfaffian_validon_from_sin_equality`
+itself (`EMLPfaffian.lean`) — not just in a separate file a future reader might never open — stating
+plainly it is DISCHARGED, pointing to the proof, and explaining precisely why the `axiom` keyword
+remains (the discharge proof's own dependency chain transitively imports `EMLExplicitBoundSinBarrier.lean`,
+this axiom's one remaining real call site, so importing the proof back into that file — or moving
+the proof into this foundational file directly — closes a genuine cycle; confirmed by tracing the
+actual import chain in cont. 65, not assumed). `lake build MachLib` re-confirmed unaffected (455
+modules, unchanged — the docstring edit touches no code).
+
+**What's still explicitly deferred, by design, not oversight.** The file-split restructuring that
+would let the one real call site (`EMLExplicitBoundSinBarrier.lean:37`, inside
+`sin_not_in_eml_any_depth`) actually switch to citing the proof instead of the axiom — flagged by
+both external reviews as the natural "full" cleanup, and by both as LOW priority given the trust
+question is already closed. One review also raised a sharper alternative worth recording for
+later: `no_tree_eq_sin_unconditional` may SUBSUME `sin_not_in_eml_any_depth` outright (a
+depth-bounded existence claim vs. an unconditional non-existence claim over ALL depths) — if so,
+the fix isn't rewiring the axiom call inside that proof, it's re-deriving the theorem's STATEMENT
+as a one-line corollary of `no_tree_eq_sin_unconditional` in a new file sitting above both,
+demoting the original Khovanskii-bound-based proof to a historical/independent route. Not checked
+or attempted this round — a real, well-scoped next step, not a vague one.
+
+Two commits this round (`461389ae`, plus this docs commit), pushed. No `sorryAx`, no new axioms —
+this round touched only accounting and documentation, no new proofs.
