@@ -124,7 +124,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- tree, valid on an interval containing 0, equals Real.log on the positive side --
   -- LogDivergenceWall.lean. Zero new trustedFootprint entries needed (footprint is a strict
   -- subset: base HasDerivAt composition rules + hasDerivAt_continuousAt, nothing analytic).
-  `MachLib.no_tree_eq_log_positive_side_given_validon]
+  `MachLib.no_tree_eq_log_positive_side_given_validon,
+  -- Added 2026-07-22: Track C, item C3 -- the separation theorem. log is IMPLICITLY
+  -- representable (exp's EML representative, inverted, recovers log exactly for every x>0,
+  -- no hypothesis) despite failing every EXPLICIT route near 0 (C1's wall). Zero new
+  -- trustedFootprint entries (strict subset of C1's own footprint plus exp_log/log_exp,
+  -- both already-proven theorems, not axioms).
+  `MachLib.log_implicit_not_explicit]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

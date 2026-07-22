@@ -164,6 +164,7 @@ import MachLib.WitnessResidualNestedTargetFullyUnconditional
 import MachLib.WitnessResidualRecurringTargetMetaLemma
 import MachLib.WitnessResidualContinuousTargetMetaLemma
 import MachLib.LogDivergenceWall
+import MachLib.LogImplicitRepresentability
 import MachLib.WitnessResidualConstSiblingUnconditional
 import MachLib.EMLPfaffianValidOnSinEqualityProved
 import MachLib.WitnessResidualCosTailSign
