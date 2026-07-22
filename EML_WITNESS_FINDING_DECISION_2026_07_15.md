@@ -5867,3 +5867,38 @@ computed bound, not an asymptotic one. Wiring THIS theorem together with `certco
 (C7) into one combined statement, and wiring either into Certcom's actual rounding-axiom pipeline
 for a real compiled kernel, remain open — but the genuinely hard mathematical content (spending the
 Khovanskii bound's explicitness, per both external reviews' own framing) is done.
+
+## 2026-07-22 (cont. 81) — the two halves combined: the real compact-interval Certcom handshake
+
+Direct "proceed into that please," continuing cont. 80's "still open" list straight into its first
+item.
+
+**`certcom_total_error_floor_compact_interval`** (`CertcomCompactIntervalHandshake.lean`): combines
+`no_tree_eps_close_to_sin_compact_interval` (cont. 80) with `certcom_total_error_floor`'s own
+abstract rounding-bound combinator (C7) into ONE statement. For a compiled artifact whose rounding
+error stays within `δ` of an `EMLPfaffianValidOn` tree throughout `(A, B)` — once that interval is
+long enough for `M + 1` explicit alternating extrema — there is a point WITHIN `(A, B)`, not merely
+"arbitrarily far out," where the artifact's total deviation from true `sin` exceeds `ε − δ`. This is
+the form that actually bears on a real compiled kernel, which runs on a fixed bounded domain, not
+`x → ∞`.
+
+Proof mirrors `certcom_total_error_floor`'s own triangle-inequality argument almost exactly,
+substituting the compact-interval theorem for the tail one. Two small cross-file visibility fixes
+needed (`lt_of_not_le` in `CertcomTotalErrorFloor.lean`, `ext` in `CompactIntervalNonApproximation.
+lean` — both were `private`, needed for the first time from a DIFFERENT file); caught immediately
+by the type checker ("function expected at `ext`"), not silently.
+
+**Scope, unchanged from C7's own framing.** `hround` is still an ABSTRACT hypothesis — the shape
+Certcom's rounding theorems supply, not derived from Certcom's actual `real_*_eps`/`real_*_rounds`
+axioms for a specific compiled pipeline. That remains the thesis-shaped work; not attempted.
+
+`#print axioms`: zero `sorryAx`, standard footprint, zero new `trustedFootprint` entries. Pinned as
+the 44th `AxiomLedger` headline. Full `lake build MachLib` green (470 modules).
+
+**Where Track C's Certcom-handshake thread now stands.** The mathematical content both external
+reviews flagged as the genuinely hard, load-bearing piece — a quantitative non-approximation bound
+that actually spends the Khovanskii zero-count bound's explicitness, combined with an abstract
+rounding-error floor into one total-error statement over a REAL bounded operating interval — is
+complete and machine-checked. What's left is entirely about CONNECTING this to Certcom's actual
+compiled artifacts (a real tree, a real compilation, real rounding axioms for that specific
+pipeline) — genuinely separate, genuinely larger work, correctly still out of scope.
