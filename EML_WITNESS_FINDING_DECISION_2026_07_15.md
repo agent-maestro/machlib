@@ -4336,3 +4336,68 @@ still, honestly, beyond what a further round of this document's existing techniq
 No Lean written or modified this round — pure investigation, both halves reported precisely,
 matching the discipline this whole document has tried to hold to throughout: report what was
 tried, what was found, and exactly where it stops, not just the parts that sound like progress.
+
+## 2026-07-21 (cont. 56) — tail-sign stabilization: a genuinely different route, easy half closed,
+hard half characterized precisely
+
+**Context**: two external technical proposals ("muses") were relayed for a fresh perspective on
+the fully general residual. Both evaluated on their technical merits before writing any Lean, not
+implemented on faith.
+
+**Muse 1's four routes.** Route 1 (represent `log` via the graph of `exp`, so positivity becomes a
+theorem — `y = exp(x)` is always positive — rather than a hypothesis): checked directly against how
+`enc_combinedBound` actually works. It needs FORWARD evaluation (the `MultiPoly` fed in represents
+`T1.eval(x) - L` directly), so switching representations doesn't help — `y = log(v)` understood as
+`v = exp(y)` still has no solution when `v ≤ 0`, since `exp` never takes non-positive values. Same
+constraint, restated, not removed — the identical conclusion cont. 55 already reached checking
+`PosExceptLog`. Routes 2 and 4 (clamp-postcondition discharge; structural positivity certificates)
+are honest re-scopings of the problem rather than closures of it — real, but not what "fully
+general" means. Route 3 (cell stratification / semi-Pfaffian decomposition) is, on inspection, the
+SAME underlying idea as Muse 2's proposal from a different angle — and Muse 2's version is the more
+concrete, checkable one, since it only needs EVENTUAL (tail) stabilization, not a bound on the
+NUMBER of sign-change cells (which would reopen the same circularity route 3 otherwise has).
+
+**Muse 2's tail-sign idea, attempted for real.** Instead of proving `T1` Pfaffian-valid everywhere
+(the wall every prior route hit), prove `T1.eval` EVENTUALLY settles into one fixed sign or
+eventually vanishes as `x → ∞` (`TailSign`) — a claim a PERIODIC target can never satisfy, no
+matter how far out you go, sidestepping bounded-interval validity entirely.
+
+**What closes, fully verified.** Base cases immediate. The inductive step's `B` EVENTUALLY
+NON-POSITIVE case (`tailSign_eml_of_B_eventually_nonpos`,
+`WitnessResidualTailSign.lean`) closes with ZERO dependence on `A`'s own structure — past the
+threshold, `(eml A B).eval x = exp(A.eval x)` exactly (`BChainNonpos`'s own collapse identity),
+and `exp` is unconditionally positive. This is a genuinely DIFFERENT shape of result from
+everything else built across cont. 44-55 — every prior mechanism needed SOME information about the
+exp-side child (`A`'s differentiability, `A`'s own validity, etc.); this one needs none at all.
+`sin_not_tailSign` closes the target side COMPLETELY, built from scratch this round: `sin` has
+zeros at every `kπ` arbitrarily far out (ruling out `pos`/`neg`, via the `archimedean` axiom) and
+is nonzero at `kπ + π/2 = cos(kπ) ≠ 0` arbitrarily far out too (ruling out `zero`) — needed
+`cos_natCast_mul_pi_ne_zero`, proven by induction mirroring `sin_natCast_mul_pi`'s own shape
+(`cos((n+1)π) = -cos(nπ)`, alternating, never zero), fully verified, no gaps.
+
+**What does NOT close — characterized precisely, not glossed over.** The `B` eventually POSITIVE
+case. The natural hope from the original suggestion ("combine the recursively frozen branch
+representations... invoke the uniform zero bound") undersells a real obstruction found by tracing
+what each piece would actually need to supply: `TailSign A.eval` (available from the induction
+hypothesis) is a SIGN fact, not "`A` eventually Pfaffian-VALID," which is what the zero-counting
+bound genuinely needs. And "eventually valid" is NOT true of every tree —
+`eml var (const (-1))` is a small, concrete counterexample: its own right child is negative
+EVERYWHERE, so it PERMANENTLY clamps and never satisfies `EMLPfaffianValidOn` at any tail, even
+though its VALUE is perfectly well-behaved (`exp x`, via the same collapse identity — exactly the
+EASY case above). The right invariant is closer to "eventually agrees with SOME Pfaffian-valid
+REPRESENTATION" — a genuinely different, structurally SMALLER expression when a right child clamps
+permanently, not the original tree. Threading this recursively through arbitrary depth (where
+deeper right children can ALSO clamp partway, needing the SAME case analysis one level down) is a
+real inductive normal-form construction for EML trees under eventual clamping — substantial
+engineering, not a one-line gap. Not attempted this round.
+
+**Honest net assessment.** This route is more promising than the two ruled out in cont. 55 — the
+`B` non-positive case falling out completely for free, needing NOTHING about `A`, is a genuinely
+new SHAPE of partial result this whole investigation hasn't produced before. But the `B` positive
+case needs a real recursive construction, comparable in scope to (though more concretely aimed
+than) the dimension-counting argument flagged since prequel round 7 — a promising DIRECTION for a
+dedicated follow-on effort, not a closed result this round.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for every theorem. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (447
+modules, up from 446). One commit this round (`ef0dfe12`, plus this docs commit), pushed.
