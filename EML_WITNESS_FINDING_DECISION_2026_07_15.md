@@ -5166,3 +5166,59 @@ round, and not needed for anything currently open in this arc.
 `sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. Full `lake build
 MachLib` passes (459 modules, up from 458). One commit this round (`03f5c038`, plus this docs
 commit), pushed.
+
+## 2026-07-22 (cont. 71) — the stronger meta-lemma: continuity + no `TailSign`, no explicit zero
+family needed
+
+**Direct user instruction**: "lets proceed into this please" — the further generalization cont.
+70's own docstring flagged and deferred: instead of an explicit closed-form `Nat`-indexed zero
+family, require only that `TARGET` is CONTINUOUS and has no `TailSign` relative to some level `L`.
+
+**The new piece: IVT for an arbitrary continuous function, not an EML tree.** `rcep_zero_between`
+(cont. 57) constructs zeros via `intermediate_value_of_hasDerivAt`, using a DERIVATIVE obtained
+from EML tree structure (`eml_hasDerivAt_of_no_crossing`). For a raw `TARGET : Real → Real` with
+no tree structure to lean on, `target_zero_between` uses the PLAIN, continuity-only IVT
+(`intermediate_value`, `ContinuousAt`-based, no derivative at all) — already sitting in
+`IntermediateValue.lean`, never previously used for this purpose in this arc. `hnp_of_not_
+tailSign`/`hnn_of_not_tailSign`/`hnz_of_not_tailSign` are the SAME proofs as their RCEP namesakes,
+generalized: checked directly (not assumed) that those proofs never touch `T`'s tree structure at
+all, only treat `T.eval` as an opaque function — zero changes needed beyond the signature.
+
+**A genuine, reproducible `mach_ring` bug, found and worked around, not papered over.**
+`mach_ring` fails to close a BASIC commutative-ring identity — `(u-c)-(v-c)=u-v` — the moment an
+UNRELATED `Real → Real`-typed variable (like the target function `f`) sits in the local context,
+even though it never appears in the goal. Confirmed by isolating it in a standalone scratch file:
+the identical statement closes instantly with only `Real`-typed variables in scope, and fails the
+moment an irrelevant `f : Real → Real` is added — reproducible, not a one-off flake. Worked around
+by proving the identity as a STANDALONE lemma (`sub_sub_cancel_shift`, only `Real` variables) using
+`mach_mpoly` instead of `mach_ring` (already noted elsewhere in this codebase's own memory as "the
+complete normaliser") — `mach_mpoly` closes it cleanly, `mach_ring` does not, in the SAME polluted
+context. Applied as a term, not inlined, avoiding the polluted context entirely.
+
+**The assembly.** `no_tree_eq_target_of_not_tailSign` combines `eml_eventually_valid_repr`
+(validity on a tail from `a`, matching `T` past `R`) with a NEW `targetZeroFrom` sequence — the
+SAME `evalidZero`-style recursive construction (cont. 58) that bakes `a0 < z` into its own
+conclusion to avoid a circular dependency in the recursive definition — but seeded past
+`max(a, R)` and using `target_zero_between`'s continuity-only IVT instead of tree-derived
+differentiability. Mirrors `evalid_tailSign`'s exact assembly with the EML-tree-derived zero
+sequence swapped for a target-derived one.
+
+**Sanity check, not skipped.** `no_tree_eq_sin_unconditional_via_continuous_meta` re-derives `sin`'s
+closure as a five-line instantiation: `TARGET := sin`, `L := 0`, continuity via `HasDerivAt_sin`
+composed with `hasDerivAt_continuousAt`, `¬TailSign` via the ALREADY-PROVEN `sin_not_tailSign`
+(cont. 56) transported across `sub_zero`. Confirms this file reaches the SAME conclusion cont. 58
+reached by a different route — genuinely equivalent, not merely plausible.
+
+Fresh-rebuild `#print axioms` on all 13 new theorems: same standing baseline throughout, zero
+`sorryAx`, neither discharge axiom appears anywhere. Footprint diff needed ZERO new
+`trustedFootprint` entries. Wired into `AxiomLedger.lean`'s `headlines` (`33→34`).
+
+**What this closes out.** Both muses' named generalizations — the explicit-zero-family meta-lemma
+(cont. 70) and this stronger continuity-only form — are now built, verified, and wired into the
+trust ledger. `sin`, `nestedTarget cs` (hence the whole `c2 > 1` family), and any FUTURE continuous
+target with no `TailSign` relative to some level, are all instances of ONE theorem. No further
+generalization is currently flagged as needed anywhere in this arc.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all 13 new theorems. Full `lake build
+MachLib` passes (460 modules, up from 459). One commit this round (`0c3bdf9c`, plus this docs
+commit), pushed.
