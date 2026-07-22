@@ -11,12 +11,12 @@ unconditional` (every EML tree has SOME `TailSign`) plus `sin_not_tailSign` (`si
 natural next step, flagged explicitly in cont. 58 as unattempted: does `sin_not_tailSign`'s
 argument carry over to the whole `nestedTarget cs` family, not just `cs = []`?
 
-**Answer: yes, for `cs` whose range genuinely straddles zero** (`nestedLo cs < 0 < nestedHi cs`).
-This is a genuinely NEW hypothesis, not present in `no_tree_eq_nested_target_given_validon` — and
-necessarily so: if `nestedTarget cs`'s entire range sat on one side of zero (e.g. `nestedLo cs ≥
-0`), it would ALREADY be eventually single-signed, i.e. it WOULD have a `TailSign` of its own, and
-this route genuinely could not rule out a tree matching it (a different obstruction, not a gap in
-this argument).
+**Answer: yes, for `cs` whose range genuinely straddles zero** (`nestedLo cs ≤ 0 < nestedHi cs` —
+the SHARP form, one-sided-strict; see below). This is a genuinely NEW hypothesis, not present in
+`no_tree_eq_nested_target_given_validon` — and necessarily so: if `nestedTarget cs`'s entire range
+sat on one side of zero (e.g. `nestedLo cs > 0`), it would ALREADY be eventually single-signed,
+i.e. it WOULD have a `TailSign` of its own, and this route genuinely could not rule out a tree
+matching it (a different obstruction, not a gap in this argument).
 
 **The mechanism, mirroring `sin_not_tailSign` exactly but at the two points that generalize `kπ`/
 `π+1`.** `nestedTarget_at_neg_pi_div_two` (already proven, `WitnessResidualNestedTargetBWitness.lean`)
@@ -27,22 +27,32 @@ cs` hits its EXACT range bounds `nestedLo cs`/`nestedHi cs` at `-π/2`/`π/2`. `
 via the already-proven `sin` axiom `sin_periodic`, reusing `sin_sub_natCast_mul_two_pi`'s already-
 built `Nat`-indexed propagation machinery from `WitnessResidualEntireCrossingFamilyClosed.lean`
 rather than re-deriving it) — so both extremes recur, exactly, arbitrarily far out. Given `nestedLo
-cs < 0`, arbitrarily-far points with value `< 0` rule out `TailSign.pos`; given `0 < nestedHi cs`,
-arbitrarily-far points with value `> 0` rule out `TailSign.neg`; either alone already rules out
-`TailSign.zero` (a fixed nonzero value can't be `= 0`).
+cs ≤ 0`, arbitrarily-far points with value `≤ 0` rule out `TailSign.pos`; given `0 < nestedHi cs`,
+arbitrarily-far points with value `> 0` rule out `TailSign.neg` AND `TailSign.zero` (the `nestedHi`
+point alone is a fixed nonzero witness). The hypothesis is deliberately ASYMMETRIC (`≤` on `lo`,
+strict `<` on `hi`) rather than requiring strict `<` on both sides — the boundary case `nestedLo cs
+= 0` (touching zero at isolated points, never going negative) still has no `TailSign`, since it's
+also nonzero arbitrarily far out (at the `nestedHi` points) — and this asymmetric form turns out to
+be exactly what settles the sharp `c2 ≤ 2` boundary below, not just a cosmetic weakening.
 
 **Payoff.** `nestedTarget_not_tailSign` and `no_tree_eq_nestedTarget_unconditional` — no finite EML
-tree's `eval` equals any `nestedTarget cs` with `nestedWF cs ∧ nestedLo cs < 0 ∧ 0 < nestedHi cs`,
+tree's `eval` equals any `nestedTarget cs` with `nestedWF cs ∧ nestedLo cs ≤ 0 ∧ 0 < nestedHi cs`,
 completely unconditionally. Sanity-check corollary confirms `cs = []` recovers
-`no_tree_eq_sin_unconditional` exactly (`nestedLo [] = -1 < 0`, `nestedHi [] = 1 > 0`, `nestedWF
+`no_tree_eq_sin_unconditional` exactly (`nestedLo [] = -1 ≤ 0`, `nestedHi [] = 1 > 0`, `nestedWF
 [] = True` — the hypothesis is satisfied trivially, not vacuously excluded).
 
-**Honest scope.** The straddle hypothesis is a real restriction — `cs` with `nestedLo cs ≥ 0` (or
-`nestedHi cs ≤ 0`) are NOT covered by this file, and covering them would need a different argument
-(their `nestedTarget` genuinely could have a `TailSign` of its own). Whether every well-formed
-`cs` used elsewhere in this arc (e.g. `[c2]` for `c2 > 1`, `nestedLo [c2] = log(c2 - 1)`, negative
-iff `c2 < 2`) satisfies the straddle condition has NOT been checked here — this file proves the
-general theorem and leaves instantiating it against this arc's other open cases to future work.
+**The `c2` boundary, resolved exactly** (`no_tree_eq_log_c2_plus_sin_unconditional`). `nestedHi
+[c2] = log(c2+1) > 0` for EVERY `c2 > 1`, unconditionally — it's `nestedLo [c2] = log(c2-1)` that
+draws the line, `≤ 0` exactly when `c2 ≤ 2`. The relaxed (`≤`) hypothesis above closes `log(c2+sin
+x)` for the FULL range `1 < c2 ≤ 2`, not just `1 < c2 < 2`, and this is the SHARP boundary for this
+method: for `c2 > 2` strictly, `log(c2+sin x)` is ENTIRELY positive (has its own `TailSign.pos`,
+trivially), and no argument of this shape can rule out a tree matching it.
+
+**Honest scope.** `cs` with `nestedLo cs > 0` (or `nestedHi cs ≤ 0`) are NOT covered by this file,
+and covering them would need a genuinely different argument (their `nestedTarget` provably HAS a
+`TailSign` of its own — confirmed above for `c2 > 2` specifically, not just suspected). Whether
+OTHER well-formed `cs` used elsewhere in this arc (deeper nestings, `cs = [d, c2]` etc.) satisfy
+the relaxed straddle condition has NOT been checked — only the `[c2]` family was instantiated here.
 -/
 
 namespace MachLib
@@ -125,30 +135,30 @@ theorem nestedTarget_hi_past (cs : List Real) (hwf : nestedWF cs) (R : Real) :
 `sin_not_tailSign`'s three-way case split exactly, using `nestedLo`/`nestedHi`-valued points
 instead of `sin`'s zeros/`kπ + π/2` witness. -/
 theorem nestedTarget_not_tailSign (cs : List Real) (hwf : nestedWF cs)
-    (hlo : nestedLo cs < 0) (hhi : 0 < nestedHi cs) :
+    (hlo : nestedLo cs ≤ 0) (hhi : 0 < nestedHi cs) :
     ¬ TailSign (nestedTarget cs) := by
   intro h
   rcases h with ⟨R, hR⟩ | ⟨R, hR⟩ | ⟨R, hR⟩
   · obtain ⟨x, hxR, hxeq⟩ := nestedTarget_lo_past cs hwf R
     have hpos := hR x hxR
     rw [hxeq] at hpos
-    exact lt_irrefl_ax 0 (lt_trans_ax hpos hlo)
+    exact lt_irrefl_ax 0 (lt_of_lt_of_le hpos hlo)
   · obtain ⟨x, hxR, hxeq⟩ := nestedTarget_hi_past cs hwf R
     have hneg := hR x hxR
     rw [hxeq] at hneg
     exact lt_irrefl_ax 0 (lt_trans_ax hhi hneg)
-  · obtain ⟨x, hxR, hxeq⟩ := nestedTarget_lo_past cs hwf R
+  · obtain ⟨x, hxR, hxeq⟩ := nestedTarget_hi_past cs hwf R
     have hzero := hR x hxR
     rw [hxeq] at hzero
-    rw [hzero] at hlo
-    exact lt_irrefl_ax 0 hlo
+    rw [hzero] at hhi
+    exact lt_irrefl_ax 0 hhi
 
 /-- **No finite EML tree's `eval` function equals any straddling `nestedTarget cs` pointwise
 everywhere — unconditionally.** No dependence on `EMLPfaffianValidOn`, no dependence on
 `eml_pfaffian_validon_from_sin_equality`, no dependence on any hypothesis beyond `nestedWF cs`
 and the straddle condition. -/
 theorem no_tree_eq_nestedTarget_unconditional (cs : List Real) (hwf : nestedWF cs)
-    (hlo : nestedLo cs < 0) (hhi : 0 < nestedHi cs)
+    (hlo : nestedLo cs ≤ 0) (hhi : 0 < nestedHi cs)
     (T : EMLTree) (heq : ∀ x : Real, T.eval x = nestedTarget cs x) : False :=
   nestedTarget_not_tailSign cs hwf hlo hhi
     (tailSign_congr_eventually 0 (fun x _ => heq x) (eml_tailSign_unconditional T))
@@ -159,15 +169,62 @@ satisfied trivially rather than vacuously excluded. Confirms the generalization 
 not merely similar to, cont. 58's original result. -/
 theorem no_tree_eq_sin_unconditional_via_family (T : EMLTree)
     (heq : ∀ x : Real, T.eval x = Real.sin x) : False := by
-  have hlo : nestedLo ([] : List Real) < 0 := by
-    show (-1 : Real) < 0
+  have hlo : nestedLo ([] : List Real) ≤ 0 := by
+    show (-1 : Real) ≤ 0
     have h := sub_lt_sub_right_of_lt (r := (1 : Real)) zero_lt_one_ax
     have e1 : (0 : Real) - 1 = -1 := by mach_ring
     have e2 : (1 : Real) - 1 = 0 := by mach_ring
-    rwa [e1, e2] at h
+    rw [e1, e2] at h
+    exact le_of_lt h
   have hhi : (0 : Real) < nestedHi ([] : List Real) := zero_lt_one_ax
   have heq' : ∀ x : Real, T.eval x = nestedTarget [] x := heq
   exact no_tree_eq_nestedTarget_unconditional [] trivial hlo hhi T heq'
+
+/-- **The `c2` boundary, resolved exactly.** `nestedLo [c2] = log(c2-1)`, `nestedHi [c2] =
+log(c2+1)`. `nestedHi [c2] > 0` holds for EVERY `c2 > 1` (`c2+1 > 2 > 1`, `log` strictly
+increasing past `1`), unconditionally — it's `nestedLo` that draws the line: `≤ 0` exactly when
+`c2 ≤ 2`. So `no_tree_eq_nestedTarget_unconditional`'s relaxed (`≤`) hypothesis closes `log(c2+sin
+x)` for the FULL range `1 < c2 ≤ 2` — not just `1 < c2 < 2` as the strict version would have given
+— and this is the SHARP boundary for this method: for `c2 > 2` strictly, `nestedLo [c2] =
+log(c2-1) > log 1 = 0`, so `log(c2+sin x)` is ENTIRELY positive, has a `TailSign` of its own
+(`TailSign.pos`, trivially — never touches `≤ 0` at all), and no argument of this shape can rule
+out a tree matching it; a genuinely different route would be needed there, not a gap in this one. -/
+theorem no_tree_eq_log_c2_plus_sin_unconditional (c2 : Real) (hc2 : 1 < c2)
+    (hc2le : c2 ≤ 1 + 1)
+    (T : EMLTree) (heq : ∀ x : Real, T.eval x = Real.log (c2 + Real.sin x)) : False := by
+  have hc2m1_pos : (0 : Real) < c2 - 1 := by
+    have h01 : (0 : Real) + 1 = 1 := by mach_ring
+    exact lt_sub_of_add_lt (by rw [h01]; exact hc2)
+  have hwf : nestedWF [c2] := by
+    refine ⟨?_, trivial⟩
+    show (0 : Real) < c2 + (-1)
+    have e : c2 + (-1 : Real) = c2 - 1 := by mach_ring
+    rw [e]; exact hc2m1_pos
+  have hc2m1_le1 : c2 - 1 ≤ 1 := by
+    have h := sub_le_sub_right hc2le (1 : Real)
+    have e : (1 : Real) + 1 - 1 = 1 := by mach_ring
+    rwa [e] at h
+  have hlo : nestedLo [c2] ≤ 0 := by
+    show Real.log (c2 + nestedLo ([] : List Real)) ≤ 0
+    show Real.log (c2 + (-1)) ≤ 0
+    have e : c2 + (-1 : Real) = c2 - 1 := by mach_ring
+    rw [e, ← log_one]
+    exact log_mono hc2m1_pos hc2m1_le1
+  have hc2add1_gt1 : (1 : Real) < c2 + 1 := by
+    have h0c2 : (0 : Real) < c2 := lt_trans_ax zero_lt_one_ax hc2
+    have h := add_lt_add_left h0c2 1
+    rw [add_zero, add_comm 1 c2] at h
+    exact h
+  have hhi : (0 : Real) < nestedHi [c2] := by
+    show (0 : Real) < Real.log (c2 + nestedHi ([] : List Real))
+    show (0 : Real) < Real.log (c2 + 1)
+    rw [← log_one]
+    exact log_lt_log zero_lt_one_ax hc2add1_gt1
+  have hT1eq' : ∀ x : Real, T.eval x = nestedTarget [c2] x := by
+    intro x
+    rw [nestedTarget_cons, nestedTarget_nil]
+    exact heq x
+  exact no_tree_eq_nestedTarget_unconditional [c2] hwf hlo hhi T hT1eq'
 
 end Real
 end MachLib
