@@ -81,7 +81,11 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- unconditional` (the arc's core result) doesn't care which target function is being
   -- ruled out, so `cos_not_tailSign` was the only new proof needed. Its footprint required
   -- ZERO new `trustedFootprint` entries (fully covered by the sin discharge's own base).
-  `MachLib.Real.no_tree_eq_cos_unconditional, `MachLib.eml_pfaffian_validon_from_cos_equality_proved]
+  `MachLib.Real.no_tree_eq_cos_unconditional, `MachLib.eml_pfaffian_validon_from_cos_equality_proved,
+  -- Added 2026-07-22: `sin_not_in_eml_any_depth`/`cos_not_in_eml_any_depth` re-derived as
+  -- one-line corollaries of the pair above (the depth bound `k` was never inspected) --
+  -- pinned so the SUBSUMPTION itself stays true on every build, not just checked once.
+  `MachLib.sin_not_in_eml_any_depth_unconditional, `MachLib.cos_not_in_eml_any_depth_unconditional]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

@@ -163,6 +163,7 @@ import MachLib.WitnessResidualNestedTargetTower
 import MachLib.WitnessResidualConstSiblingUnconditional
 import MachLib.EMLPfaffianValidOnSinEqualityProved
 import MachLib.WitnessResidualCosTailSign
+import MachLib.EMLAnyDepthBarrierUnconditional
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
