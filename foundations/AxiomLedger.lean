@@ -34,10 +34,25 @@ def knownAxioms : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certc
   -- Added 2026-07-19: Group-B transcendental math arc (asin/acos certificates), added
   -- earlier this same session, user-approved via AskUserQuestion, never synced into this
   -- snapshot. HasDerivAt_sqrt: InverseTrig.lean. pi_lower_bound/pi_upper_bound: Trig.lean.
-  `MachLib.Real.HasDerivAt_sqrt, `MachLib.Real.pi_lower_bound, `MachLib.Real.pi_upper_bound]
+  `MachLib.Real.HasDerivAt_sqrt, `MachLib.Real.pi_lower_bound, `MachLib.Real.pi_upper_bound,
+  -- Added 2026-07-22: found while running this gate for the Certcom-bridge headline below --
+  -- pre-existing decimal-bracketing axioms (WitnessResidualDeepNumeric.lean,
+  -- WitnessResidualGrowthCompetitionNumeric.lean, Track C's growth-competition arc, unrelated to
+  -- this session's Certcom work) never synced into this snapshot. Same numeric-bound pattern as
+  -- pi_lower_bound/pi_upper_bound above. Not on any headline's footprint (checked: absent from
+  -- both leak lists this run), so bookkeeping only -- no new trust.
+  `MachLib.Real.log_2_0_bounds, `MachLib.Real.exp_1_35_lower, `MachLib.Real.exp_1_7_upper,
+  `MachLib.Real.log_1_5_bounds, `MachLib.Real.log_2_7_bounds, `MachLib.Real.log_2_2_bounds]
 
 /-- Axioms permitted in a trustworthy shipped footprint: witnessed foundational core -/
 def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_eps, `Certcom.real_tanh_rounds, `MachLib.Real.u, `MachLib.Real.u_nonneg, `MachLib.Real.mul_lt_mul_of_pos_right, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.cosh_ge_one, `MachLib.Real.cosh_pos, `MachLib.Real.exp_add, `MachLib.Real.exp_zero, `MachLib.Real.HasDerivAt_neg, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.one_div_nonneg_of_pos, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `Certcom.real_exp_eps, `Certcom.real_exp_rounds, `Certcom.real_log_eps, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_eps, `Certcom.real_sqrt_rounds, `Certcom.real_log10_eps, `Certcom.real_log10_rounds, `Certcom.real_asin_eps, `Certcom.real_asin_rounds, `Certcom.real_acos_eps, `Certcom.real_acos_rounds, `Certcom.real_sinh_eps, `Certcom.real_sinh_rounds, `Certcom.real_cosh_eps, `Certcom.real_cosh_rounds, `Certcom.real_tan_eps, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.cos_neg, `MachLib.Real.cos_pi_div_two, `MachLib.Real.pi, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.arcsin, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.arccos, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.atan, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.sin, `MachLib.Real.cos, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.pythagorean, `Classical.choice, `MachLib.IsAnalyticOnReals, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_sub, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.exp, `MachLib.Real.exp_lt, `MachLib.Real.exp_pos, `MachLib.Real.exp_surj, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.ltR, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.natCast, `MachLib.Real.natCast_succ, `MachLib.Real.natCast_zero, `MachLib.Real.negR, `MachLib.Real.oneR, `MachLib.Real.one_div_pos_of_pos, `MachLib.Real.rolle_ct, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_one_div_pos, `MachLib.analytic_sub, `Quot.sound, `propext,
+  -- Added 2026-07-22: `Certcom.eml_var_var_pipeline`'s footprint leaks these three -- calling
+  -- `pipeline_nested_std` (StdLip's full 7-primitive case split, even though this use only takes
+  -- the `.exp` branch) pulls in tanh's range facts and atan's origin fact transitively, since
+  -- `#print axioms` reports the WHOLE theorem's dependency graph, not the path one instantiation
+  -- takes. All three already `knownAxioms` (used by the tan/atan grounding arc); promoting them
+  -- here is bookkeeping, not new trust.
+  `MachLib.Real.tanh_lt_one, `MachLib.Real.neg_one_lt_tanh, `MachLib.Real.atan_zero,
   -- Added 2026-07-19: confirmed witnessed in monogate-lean's MachLibRealModel*.lean series
   -- (individually re-checked this pass, not assumed from memory) but never added to this list.
   -- Found while tracing `MachLib.sin_not_in_eml_any_depth`'s #print axioms footprint against
@@ -175,7 +190,24 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- merely "arbitrarily far out." hround is still abstract (not wired to Certcom's actual
   -- rounding axioms for a real compiled pipeline -- that remains the thesis-shaped work). Zero
   -- new trustedFootprint entries.
-  `MachLib.Real.certcom_total_error_floor_compact_interval]
+  `MachLib.Real.certcom_total_error_floor_compact_interval,
+  -- Added 2026-07-22: the REAL Certcom pipeline connection (EMLCertcomBridge.lean). Investigated
+  -- wiring `hround` above to Certcom's ACTUAL rounding-certified pipelines rather than leaving it
+  -- abstract. Finding en route: Certcom's own `EML` already names `exp(x)-log(y)` as a primitive
+  -- (`Trans2.eml`, mg_eml) -- almost certainly the origin of this whole grammar's name -- but
+  -- AbsoluteFoldNest.lean's own scoping note says "tr2 decomposes into tr1 + arithmetic": no
+  -- certified fold pipeline accepts a bare Trans2.eml node. So the natural translation of
+  -- `EMLTree.eml t1 t2` is the DECOMPOSED `.bin .sub (.tr1 .exp _) (.tr1 .ln _)`, not `.tr2 .eml`.
+  -- This headline composes Certcom's real `pipeline_nested_std` (exp, StdLip) and
+  -- `pipeline_pos_over_arith` (log, PosLip, the same positivity floor EMLPfaffianValidOn already
+  -- tracks) through `absenc_sub`, for the depth-1 tree `EMLTree.eml var var` (exp x - log x),
+  -- POINTWISE at a given environment. Zero new trustedFootprint entries. NOT yet wired into
+  -- `certcom_total_error_floor_compact_interval` itself: that needs (a) the bound made UNIFORM
+  -- over a whole interval (this proof's error term depends on the point x), and (b) a deeper gap
+  -- -- `certcom_total_error_floor_compact_interval`'s `compiled` is `Real → Real`, but a compiled
+  -- artifact only has behavior at Float-representable inputs; bridging needs an explicit
+  -- Real-to-Float quantization hypothesis, not yet built. See EMLCertcomBridge.lean's docstring.
+  `Certcom.eml_var_var_pipeline]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

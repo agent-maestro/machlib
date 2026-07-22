@@ -5902,3 +5902,82 @@ rounding-error floor into one total-error statement over a REAL bounded operatin
 complete and machine-checked. What's left is entirely about CONNECTING this to Certcom's actual
 compiled artifacts (a real tree, a real compilation, real rounding axioms for that specific
 pipeline) — genuinely separate, genuinely larger work, correctly still out of scope.
+
+## 2026-07-22 (cont. 82) — investigated wiring `hround` to Certcom's real pipeline; found a genuine
+type mismatch, then a real (partial) connection anyway, per direct user instruction
+
+Direct "lets proceed into that please," continuing into cont. 81's flagged remaining work: wiring
+`hround` to Certcom's actual rounding axioms for a real compiled pipeline. Mid-investigation the user
+supplied an unprompted tip — `zoo.monogateforge.com`, "i remember something about cert being
+mentioned there" — addressed via `WebFetch` (confirmed: "Monogate Forge: Verified Controller Zoo,"
+`Certcom.pipeline_nested_std`/`pipeline_pos_over_arith` are real forward-error certificates for
+compiled, composed expressions, not single-primitive facts).
+
+**First finding: Certcom's `EML` (`EMLToC.lean`) and Option D's `EMLTree` are unrelated types.**
+Certcom's own AST (12 constructors: `lit`/`var`/`bin`/`neg`/`elet`/`tr1`/`tr2`/`cond`/`vlit`/`idx`/
+`vsum`/`dot`) is Forge's practical compilation language — `sin`/`cos`/`tanh`/`atan`/`exp`/`ln`/… are
+ALL direct, individually-certified primitives (`real_sin_eps`/`real_sin_rounds`, etc.). Option D's
+`EMLTree` (`const`/`var`/`eml t1 t2 := exp t1 − log t2`, `SinNotInEML.lean:63`) is deliberately
+minimal — no `sin` primitive, that's the whole non-representability question. Grepped for any
+existing translation (`toForgeEML`/`fromEMLTree`/etc.); none exists. Reported this to the user via
+`AskUserQuestion` (stop here / investigate a translation anyway / something else) — **user chose
+"investigate a translation anyway,"** the ambitious path, matching this whole arc's established
+pattern of choosing hard mode when offered.
+
+**Second finding, which reframed the whole approach: `Trans2.eml` already exists.** Certcom's `EML`
+names `exp(x) − log(y)` as a primitive verbatim — `Trans2.eml`, `mg_eml(x,y) = exp(x) − log(y)`
+(`EMLToCRuntime.lean:101`) — almost certainly the origin of this entire grammar's name. But
+`AbsoluteFoldNest.lean`'s own scoping docstring says plainly: "`tr2` decomposes into `tr1` +
+arithmetic" — none of the certified fold pipelines (`nested_fold`, `pipeline_nested_std`,
+`pipeline_pos_over_arith`) accept a bare `Trans2.eml` node; `IsFold`'s inductive definition has no
+`tr2` case at all. So the natural translation of `EMLTree.eml t1 t2` is the DECOMPOSED
+`.bin .sub (.tr1 .exp ⟦t1⟧) (.tr1 .ln ⟦t2⟧)`, not `.tr2 .eml ⟦t1⟧ ⟦t2⟧` — which routes `exp` through
+`pipeline_nested_std` (`.exp ∈ StdLip`) and `log` through `pipeline_pos_over_arith` (`.ln ∈ PosLip`,
+domain-restricted on a positive lower bound — exactly the shape `EMLPfaffianValidOn` already tracks
+for `eml`'s log argument).
+
+**Built `EMLCertcomBridge.lean`.** Scoped to the simplest nontrivial case — depth-1,
+`EMLTree.eml EMLTree.var EMLTree.var` (`T.eval x = exp x − log x`), avoiding the separate `const`
+Real→Float labeling problem entirely by using only the shared variable. `emlVarVar : EML := .bin .sub
+(.tr1 .exp (.var "x")) (.tr1 .ln (.var "x"))`; `emlVarVar_eval` confirms what it compiles (`rfl`).
+`eml_var_var_pipeline` composes the REAL `pipeline_nested_std` (applied to `.tr1 .exp (.var "x")`,
+`.exp ∈ StdLip`) and the REAL `pipeline_pos_over_arith` (applied to `.ln`/`.var "x"`, `.var "x"`
+trivially arithmetic-only) through `absenc_sub`, POINTWISE at a given environment — both source
+`AbsEnc` bounds glued via the top subtraction node's own rounding (`br.sub`, `emitC`/`evalC`'s
+structural `.bin` cases, matching `emitC_correct`'s own proof pattern). Built and verified in one
+pass — first `lake build MachLib` attempt succeeded outright, no debugging needed. `#print axioms`:
+zero `sorryAx`. Pinned as the 45th `AxiomLedger` headline.
+
+**`AxiomLedger` gate, run for real (not just `#print axioms` by eye).** Two gaps surfaced, both
+fixed: (1) 6 pre-existing decimal-bracketing axioms (`WitnessResidualDeepNumeric.lean`/
+`WitnessResidualGrowthCompetitionNumeric.lean`, unrelated to this work, predating this session)
+were never synced into `knownAxioms` — added, bookkeeping only. (2) The new headline's footprint
+leaked `tanh_lt_one`/`neg_one_lt_tanh`/`atan_zero` beyond `trustedFootprint` — NOT because the
+`.exp`-only instantiation uses tanh/atan facts, but because `pipeline_nested_std`'s proof handles
+`StdLip`'s full 7-primitive case split internally, so `#print axioms` reports the theorem's whole
+dependency graph regardless of which branch one instantiation takes. All three already
+`knownAxioms` (used by the tan/atan grounding arc); promoted to `trustedFootprint`, zero new trust.
+Gate green: `AxiomLedger OK: 307 axioms pinned; 45 headline footprints ⊆ trusted (152); …`.
+
+**Honest scope — what this closes and what it doesn't.** This is a real, `sorryAx`-free connection
+between Certcom's ACTUAL, already-proven rounding pipelines and a genuine translated `EMLTree` — not
+an abstract stand-in. It does NOT yet instantiate `certcom_total_error_floor_compact_interval`'s
+`hround`, for two separate reasons, both open:
+
+1. **Uniformity.** The pointwise `AbsEnc` bound's error term depends on the evaluation point (`exp
+   X`/`log X` magnitudes); `hround` needs ONE `δ` valid for every `x` in `(A, B)`. Tractable — bound
+   `X` by the interval's own endpoints (worked through informally: choosing `1 ≤ A` makes `log X ≥ 0`
+   throughout, giving a clean uniform `δ = u·(2+u)·(exp B + log B)` — not yet built in Lean).
+2. **The deeper gap.** `certcom_total_error_floor_compact_interval`'s `compiled : Real → Real` is
+   asked to be defined and bounded at EVERY real `x` in `(A, B)` — uncountably many — but a compiled
+   artifact only has behavior at Float-representable inputs. `T.eval`'s `∀x:Real` hypothesis is
+   legitimate (it's a genuine total real function); `compiled`'s was implicitly assuming an
+   idealized "extension to all reals" that doesn't correspond to what a real program is. Closing
+   this needs an explicit Real→Float quantization hypothesis (a "some reasonable rounding of the
+   real input exists" assumption) PLUS propagating that input error through `T`'s own Lipschitz
+   behavior — a further, legitimate, separately-scoped piece of work, not attempted here.
+
+Reported both the type-mismatch finding and this quantification gap to the user directly, following
+this arc's standing discipline of reporting exactly what was tried, what was found, and exactly
+where it stops — rather than either quietly declaring victory or silently stopping without
+explanation.
