@@ -3699,3 +3699,68 @@ determination works for ANY compound tree at all, not just nested-target-family 
 
 `sorryAx`-free, verified via a genuinely fresh rebuild. Full `lake build MachLib` passes (440
 modules, up from 439). One commit this round (`d7d07845`, plus this docs commit), pushed.
+
+## 2026-07-21 (cont. 44) — the residual, actually closed for a real (scoped) special case: the
+non-positive left-spine
+
+**Direct user request**: "procced further please" — a bare continuation of cont. 43's residual-
+closure attempt. Rather than continue circling the "ambiguous set" wall directly, this round asks
+a narrower question: is there a clean special case of the residual that closes completely, using
+what's already built? Yes — and it turns out to be the FIRST case in this whole arc where the raw
+question ("does some tree equal a member of the nested-target family") closes with ZERO
+hypothesis beyond the tree's own shape — no `EMLPfaffianValidOn`, no assumed sign-definiteness,
+nothing borrowed from outside this file.
+
+**The case**: `B ≤ 0` everywhere, at EVERY `eml` node down the tree's own left spine
+(`BChainNonpos`, `WitnessResidualNonposChainClosure.lean`). When `B ≤ 0` everywhere at a node,
+`eml_A_B_eq_exp_A_of_nonpos` (already sitting in `WitnessResidualSignNecessity.lean` since
+cont. 40) reduces that node's eval to `exp(A.eval x)` exactly — there is no "ambiguous set" left
+to worry about, because the reduction doesn't go through the pointwise-algebra case split at all;
+it's unconditional given the hypothesis. From there the only question is whether
+`exp(A.eval x) = nestedTarget cs x` for all `x` is possible, and THAT splits cleanly on
+`nestedLo cs`: if `≤ 0`, evaluating at `x = -π/2` (`nestedTarget`'s own attained minimum — a fact
+that turned out to already exist in the codebase, `nestedTarget_at_neg_pi_div_two`, built back
+during the `WitnessResidualNestedTargetBWitness.lean` round and re-discovered by grep this round)
+forces `exp(A(-π/2)) ≤ 0`, immediate contradiction against `exp > 0`. If `nestedLo cs > 0`, `log`
+undoes the `exp` (`log_exp`), giving `A.eval x = nestedTarget (0 :: cs) x` for ALL `x` — i.e. `A`
+itself matches ONE LEVEL DEEPER into the very same family. Since `A` is a genuine, structurally
+smaller subterm of the original tree, this is real recursion, not just a restated hypothesis:
+`no_tree_eq_nested_target_of_BChainNonpos` inducts on the tree directly, terminating at `const`/
+`var` base cases (two small new lemmas needed: a constant tree can't match because the family
+takes two provably different values — at `kπ` vs. `π+1`, both already established by
+`nestedTarget_facts`; `var` can't match because the family is bounded by `nestedHi cs` but `id`
+is not).
+
+**Why this is a genuine closure, not another partial result.** Every earlier "closure" in this
+arc (starting from the original `no_tree_eq_target_given_validon`) needed `EMLPfaffianValidOn` or
+an equivalent as an explicit, undischarged hypothesis — the whole point of Option D was finding
+ways to discharge that hypothesis FROM a tree's own structure instead of assuming it. This is the
+first result in the whole arc where that hypothesis is gone entirely, replaced by a purely
+structural condition on the tree (`BChainNonpos`) that can be checked by inspection, no analysis
+needed. It is real, but it is also SCOPED: it's the "opposite extreme" from
+`RightChildrenEverywherePositive` (every right child positive, cont. 30-33) — together the two
+results now cover both ends of the sign spectrum for right children. What's still open is exactly
+the same "mixed" case flagged at the end of cont. 43: some right child that is positive somewhere
+and non-positive elsewhere.
+
+**An unexplored lead, flagged honestly as unexplored, not claimed.** A right child that takes
+both signs is, by definition, a CROSSING in the sense already built and proven in
+`WitnessResidualCrossingUnboundedGeneral.lean` (cont. 38) — and `nestedTarget cs` is BOUNDED
+(`nestedTarget_facts`'s own range fact). If the crossing machinery's differentiability hypothesis
+on `B` could be established for an arbitrary compound `B` (the same kind of question Technique 1
+answered for `T1` itself via transport, but here needed for `B` specifically, which does NOT have
+a known closed form the way `nestedTarget cs` does), the mixed case would force `T1` unbounded,
+directly contradicting `nestedTarget`'s own boundedness — potentially closing the WHOLE residual,
+not just another special case. This is written down as a lead because it connects two previously
+disjoint sub-arcs of this session (crossing-unboundedness from cont. 37-39, and sign-necessity/
+pointwise-algebra from cont. 40-43) that hadn't been checked against each other before. It has
+been checked for internal consistency only as far as this paragraph goes — not attempted in Lean,
+not even sketched on paper beyond the one-paragraph argument above. Whoever continues this should
+treat it as a real next step, not a result.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild — confirmed to depend on nothing beyond
+this codebase's base ordered-field/trig/exp axioms, no `EMLPfaffianValidOn`, no differentiability
+axioms at all (this particular case needed none of the transport machinery from cont. 43, since
+the non-positive reduction sidesteps the ambiguity that machinery was built to handle). Full
+`lake build MachLib` passes (441 modules, up from 440). One commit this round (`8bf378f1`, plus
+this docs commit), pushed.
