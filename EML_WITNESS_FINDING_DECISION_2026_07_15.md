@@ -4709,3 +4709,45 @@ NOT been checked.
 `sorryAx`-free, verified via a genuinely fresh rebuild for both new theorems. No
 `eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (453
 modules, up from 452). One commit this round (`69db932c`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 63) — checking the TailSign results against the ORIGINAL `EMLWitnesses`
+machinery surfaces a sibling relaxation
+
+**Direct user instruction**: "proceed" — rather than extend the `nestedTarget` family further
+(diminishing returns after cont. 62's tower), checked whether the NEW unconditional results
+(cont. 58-62) resolve more of the ORIGINAL, pre-existing `EMLWitnesses` residual than currently
+credited. Traced `eml_T1eq_of_const_sibling_le_zero` (`WitnessResidualSimpleT1Application.lean`)
+— the ELEMENTARY, hypothesis-free derivation `T1.eval x = log(c2+sin x)` from `S3 ≤ 0` and
+`t.eval = sin` — and confirmed cont. 60's `no_tree_eq_log_c2_plus_sin_unconditional` combines with
+it directly, giving `∃x0, 0 < S3.eval x0` for `1<c2≤2` with NO restriction on `T1` at all. But this
+duplicates, rather than extends, an ALREADY-EXISTING result:
+`witness_B_not_le_zero_of_lo_neg` (`WitnessResidualNestedTargetBWitness.lean`) already proves
+exactly this — no `T1`/`A` restriction, whole `nestedTarget` family not just `cs=[c2]` — via a
+cheaper, more elementary one-point argument (`exp(A.eval(-π/2)) = nestedLo cs`, contradicting
+`exp`'s positivity), not the heavy `TailSign` machinery.
+
+**But checking it closely enough to duplicate it surfaced a genuine gap in it**: its hypothesis
+was `nestedLo cs < 0` STRICTLY — but the argument only ever needs `exp(A.eval x0) ≠ nestedLo cs`,
+which `nestedLo cs ≤ 0` supplies just as well (`exp` is never `0` EITHER, not just never negative).
+The SAME relaxation cont. 60 made to `nestedTarget_not_tailSign`, for the identical reason, applied
+to a DIFFERENT, older, more elementary theorem this round found still had the tighter hypothesis.
+Relaxed in place (only one other file references the theorem by name, in a docstring, not as a
+call site — no downstream fixes needed).
+
+**Payoff.** `witness_B_not_le_zero_of_lo_neg` now covers `nestedLo cs = 0` exactly — the `cs =
+[2]` boundary, not just `cs = [c2]` for `c2 < 2` — extending the THIRD `EMLWitnesses` conjunct
+(`∃x0, 0 < B.eval x0`, for `T1 = eml A B`) to this boundary too, for the WHOLE nested-target
+family, with zero restriction on `A` anywhere (it was already the most general form on that axis;
+this closes the one remaining gap on the OTHER axis).
+
+**Honest scope.** This is a targeted fix to an existing theorem's hypothesis, not new
+infrastructure — the value here was in the CHECKING (comparing the new unconditional results
+against pre-existing machinery closely enough to catch a sibling gap), not in building something
+new. Did not add a fresh corollary connecting this directly back to the top-level `t.eval=sin`
+statement (the exact wiring from `EMLWitnesses`'s third conjunct back to the original problem
+needs care not rushed this round — left for a future pass to verify precisely, rather than risk
+an incorrect connection under time pressure).
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for both theorems in the file. Full `lake
+build MachLib` passes (453 modules, unchanged — no new file, one theorem's hypothesis relaxed).
+One commit this round (`6a2689de`, plus this docs commit), pushed.
