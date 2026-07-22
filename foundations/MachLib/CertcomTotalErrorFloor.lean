@@ -46,7 +46,7 @@ open MachLib
 /-- **The abstract total-error floor.** No matter how tight the rounding bound `δ` on a compiled
 artifact is (as long as `δ < ε < 1`), there are points arbitrarily far out where the compiled
 artifact's TOTAL deviation from `Real.sin` is at least `ε - δ`. -/
-private theorem lt_of_not_le {a b : Real} (h : ¬ a ≤ b) : b < a := by
+theorem lt_of_not_le {a b : Real} (h : ¬ a ≤ b) : b < a := by
   rcases lt_total a b with hab | hab | hab
   · exact absurd (le_of_lt hab) h
   · exact absurd (le_of_eq hab) h

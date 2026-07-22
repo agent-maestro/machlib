@@ -167,7 +167,15 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- (EMLExplicitBound.combinedBoundE) -- not an abstract "eventually" threshold. Zero new
   -- trustedFootprint entries; footprint confirmed independent of zero_count_bound_classical and
   -- the still-open exp_hard gap (verified directly via #print axioms before building anything).
-  `MachLib.Real.no_tree_eps_close_to_sin_compact_interval]
+  `MachLib.Real.no_tree_eps_close_to_sin_compact_interval,
+  -- Added 2026-07-22: the REAL Certcom handshake -- combines the compact-interval theorem above
+  -- with the abstract rounding-bound floor (C7) into one statement: for a compiled artifact
+  -- within delta of a validon tree throughout (A,B), once (A,B) is long enough for M+1 explicit
+  -- extrema, the TOTAL error against true sin exceeds eps-delta at a point WITHIN (A,B) -- not
+  -- merely "arbitrarily far out." hround is still abstract (not wired to Certcom's actual
+  -- rounding axioms for a real compiled pipeline -- that remains the thesis-shaped work). Zero
+  -- new trustedFootprint entries.
+  `MachLib.Real.certcom_total_error_floor_compact_interval]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

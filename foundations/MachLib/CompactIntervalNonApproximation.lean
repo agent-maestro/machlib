@@ -158,7 +158,7 @@ private theorem sin_extremum_succ_flip (m : Nat) :
   rw [e, sin_add_pi]
 
 /-- The `j`-th extremum, `π/2 + jπ`. -/
-private noncomputable def ext (j : Nat) : Real := pi / (1 + 1) + natCast j * pi
+noncomputable def ext (j : Nat) : Real := pi / (1 + 1) + natCast j * pi
 
 /-- **Piece B, closed form.** `sin(ext j) = 1` for even `j`, `-1` for odd `j` — the parity-indexed
 value, derived from the flip fact by induction (no separate closed-form `(-1)^j` machinery). -/

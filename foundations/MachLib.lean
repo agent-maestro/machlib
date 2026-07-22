@@ -172,6 +172,7 @@ import MachLib.TailApproximationBarrier
 import MachLib.ContinuityDivergenceBarrier
 import MachLib.RepresentabilityTaxonomy
 import MachLib.CompactIntervalNonApproximation
+import MachLib.CertcomCompactIntervalHandshake
 import MachLib.WitnessResidualConstSiblingUnconditional
 import MachLib.EMLPfaffianValidOnSinEqualityProved
 import MachLib.WitnessResidualCosTailSign
