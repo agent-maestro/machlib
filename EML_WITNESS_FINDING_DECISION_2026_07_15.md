@@ -5352,3 +5352,67 @@ uncertainty (C1 is an afternoon; C5/C9 are genuine open questions with named fir
 C7/C10 are longer-horizon). Which track to start on is a call about what this arc is FOR next
 (closing out cleanly vs. pushing the mathematics further vs. making it legible to others), not an
 obvious next step — left for direct discussion rather than decided here.
+
+## 2026-07-22 (cont. 72) — Track A closed: whole-module guard, legacy call-site guard, import-graph
+## assessment (not executed)
+
+Direct request: "a and b for now please" — Tracks A and B, explicitly not C. This round finishes
+Track A (`aecc2b56`, `80debe47`) and records the A2 assessment.
+
+**A3 (status check, no code):** the OLD static `axiom_ledger.json`/`tools/axiom_ledger` scripts were
+never touched by this whole session — the real, working gate turned out to be `AxiomLedger.lean`.
+Read `check_ledger.py` (a CI runner that builds `AxiomLedger.lean` and asserts green, with a
+`--self-test` canary) and `emit_ledger.py` (generates `axiom_ledger.json` from a hardcoded
+`HEADLINES` list of 4 OLD Khovanskii-specific theorems, last touched 2026-07-10, for a separate
+prose-generation pipeline unrelated to Option D). Conclusion: not stale or broken, just out of
+scope for Option D's needs. No action taken.
+
+**A1 (built, `aecc2b56`):** `AxiomLedger.lean` previously only checked a hand-curated `headlines`
+list. Added `optionDSpineModules` (the 16 cont.56-71 spine files) and `spineTheorems (env)`, which
+maps every theorem to its source module via `env.getModuleIdxFor?`/`env.header.moduleNames` — kernel
+introspection, not grep or a maintained per-theorem list. New invariant (5): every spine theorem's
+`Lean.collectAxioms` footprint must be `⊆ trustedFootprint`. First run immediately paid for itself:
+it flagged 10 theorems from the cont.59-63 straddle-conditioned nestedTarget work (predating this
+guard, never individually pinned as headlines) leaking exactly one axiom, `MachLib.Real.sin_neg` —
+already `knownAxioms`, just never added to `trustedFootprint`. Added it with a dated note. Re-run:
+spine leak count 6→0, unrelated pre-existing 6-axiom numeral-bound failure unchanged. 125 spine
+theorems now whole-module-checked on every run, not just the 34 curated headlines.
+
+**A4 (built, `80debe47`):** both legacy discharge axioms (`eml_pfaffian_validon_from_sin_equality`/
+`_cos_equality`) are now provable, but the `axiom` keywords stay (A2 below). Nothing previously
+stopped a NEW proof from citing the raw axiom form again instead of the `_proved` corollary. Swept
+`Lean.collectAxioms` over every theorem in the built graph (not grep) to get the exact ground-truth
+call-site set: exactly one, `MachLib.sin_not_in_eml_any_depth` (`EMLExplicitBoundSinBarrier.lean`,
+predates this arc; already documented in `EMLAnyDepthBarrierUnconditional.lean`'s own docstring as
+a deliberate "historical/independent route," not rewired because twelve other files cite it by
+name). Hardcoded this one-theorem set as `legacyAxiomCallSiteAllowlist`; new invariant (6) fails the
+build if any OTHER theorem's footprint cites either legacy axiom. Verified the guard actually fires
+(not a no-op): inlined a throwaway new call site into a scratch copy of the file, confirmed it was
+flagged by name, discarded the scratch copy (never committed).
+
+**A2 (assessed, deliberately NOT executed):** the docstring in `EMLPfaffian.lean` claims naive
+in-place replacement of the axiom is circular. Checked this precisely — built the actual transitive
+import graph from every file's `import` lines (not assumed from the docstring) and confirmed:
+`EMLPfaffianValidOnSinEqualityProved.lean` (the discharge proof) transitively imports
+`EMLExplicitBoundSinBarrier.lean` (the axiom's one real call site), which directly imports
+`EMLPfaffian.lean` (where the axiom lives). So replacing the `axiom` line in `EMLPfaffian.lean` with
+a `theorem ... := eml_pfaffian_validon_from_sin_equality_proved ...` body would require
+`EMLPfaffian.lean` to import a file that already transitively imports it back — genuinely circular,
+confirmed, not assumed.
+
+The concrete fix, if this is ever prioritized: `EMLPfaffianValidOn`'s bare definition (line 117) is
+the ONLY thing the whole Option D spine needs from `EMLPfaffian.lean` — none of the spine files even
+import `EMLPfaffian.lean` directly (they get the definition transitively through an earlier file),
+and none use the three helper lemmas between the definition and the axiom
+(`EMLPfaffianValidOn_mono_b`, `eml_pfaffian_eval`, `eml_pfaffian_isvalidat_of_validon` — those are
+used only by seven non-spine files: `EMLDepth1Fragment.lean`, `EMLSmoothness.lean`, and five
+`WitnessResidual*Compound`/`*Application`/`*RightChildren` files). So a clean split is available:
+extract the bare definition into a new minimal file with no axiom; have the current
+`EMLPfaffian.lean` import it and keep the three helpers + (now real, not axiom) theorem; the seven
+non-spine callers of the helpers are unaffected since they still import `EMLPfaffian.lean` as before.
+This is a real, scoped, low-risk fix — but per this item's own repeatedly-deferred history and the
+"not necessarily execute" framing of this round, it is documented here and NOT done. Worth doing
+only if the physical `axiom` keyword's presence becomes a problem for some external consumer, since
+soundness is already established regardless (A4 guards the trust surface either way).
+
+Fresh `lake build MachLib` green after both A1 and A4. Track A closed. Track B next.
