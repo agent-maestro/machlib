@@ -167,6 +167,22 @@ def spineTheorems (env : Environment) : List Name := Id.run do
             r := nm :: r
   return r
 
+/-- The two Option D discharge axioms (cont.65/67): both are now PROVABLE (vacuously, via
+`eml_pfaffian_validon_from_sin_equality_proved`/`_cos_equality_proved`), so no new proof should
+ever need to cite the raw `axiom` form again -- anything wanting the statement should cite the
+`_proved` corollary instead. The keywords stay (import-graph retirement remains deferred, see A2),
+so this can't be a "does the axiom exist" check; it has to be "did anything NEW start citing it." -/
+def legacyDischargedAxioms : List Name :=
+  [`MachLib.eml_pfaffian_validon_from_sin_equality, `MachLib.eml_pfaffian_validon_from_cos_equality]
+
+/-- Exact, ground-truth (kernel-checked via a throwaway `Lean.collectAxioms` sweep over every
+`MachLib` theorem, 2026-07-22 — not grep, not memory) set of theorems whose footprint cites either
+legacy axiom directly. Exactly one: `sin_not_in_eml_any_depth` (`EMLExplicitBoundSinBarrier.lean`,
+predates this whole arc) — kept as-is per `EMLAnyDepthBarrierUnconditional.lean`'s own docstring
+("original stays as-is, historical/independent route"; twelve other files cite it by name, so
+rewiring it was deliberately not attempted). No `cos` counterpart exists in the built graph. -/
+def legacyAxiomCallSiteAllowlist : List Name := [`MachLib.sin_not_in_eml_any_depth]
+
 run_cmd do
   let env ← getEnv
   let live := liveAxioms env
@@ -207,6 +223,17 @@ run_cmd do
     unless leak.isEmpty do
       spineLeakCount := spineLeakCount + 1
       logError m!"AxiomLedger: spine theorem {nm} footprint LEAKS {leak.length} axiom(s) beyond trustedFootprint: {leak}"
-  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking)."
+  -- (6) legacy axiom call-site guard: no NEW theorem, anywhere in the built graph, may cite
+  -- either discharged axiom directly beyond the fixed allowlist above (A4).
+  let mut newLegacySites : List Name := []
+  for (nm, ci) in env.constants.toList do
+    if ci matches .thmInfo _ then
+      if !(legacyDischargedAxioms.contains nm) && !(legacyAxiomCallSiteAllowlist.contains nm) then
+        let axs ← Lean.collectAxioms nm
+        if legacyDischargedAxioms.any (fun a => axs.contains a) then
+          newLegacySites := nm :: newLegacySites
+  unless newLegacySites.isEmpty do
+    logError m!"AxiomLedger: {newLegacySites.length} NEW call site(s) of a discharged legacy axiom (use the _proved corollary instead): {newLegacySites}"
+  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new)."
 
 end AxiomLedger
