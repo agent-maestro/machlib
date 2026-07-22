@@ -5457,3 +5457,66 @@ independently re-runnable by anyone in a few minutes without reading this docume
 
 Track A and Track B both closed. Track C (new mathematics) not started, per the explicit "a and b
 for now" scope of this whole two-round push.
+
+## 2026-07-22 (cont. 74) — Track C started: C1 and C3 closed, C2/C4 scoped-not-forced, C5 flagged
+## as a real multi-arc bridging problem before building anything
+
+Direct request: "lets dive into track c" → "work through all of them, in the doc's order."
+
+**C1 (closed, `bdbe8b3e`):** the log-divergence wall — `LogDivergenceWall.lean`. No finite EML
+tree, `EMLPfaffianValidOn` on an interval containing `0` as an interior point, equals `Real.log`
+throughout the positive side. A genuinely DIFFERENT obstruction type than every prior result in
+this arc: validity spanning `0` forces `t.eval` differentiable (hence continuous) AT `x=0` — one
+finite value — while `Real.log` diverges to `-∞` as `x→0⁺` (`log_unbounded_below`, pre-existing).
+No zero-counting, no TailSign. Built `eml_validon_hasDerivAt` by structural induction mirroring
+`eml_pfaffian_isvalidat_of_validon`'s own shape; one real bug caught (`HasDerivAt_comp`'s `(a,b)`
+argument order is `(g's derivative, f's derivative)`, not `(f's, g's)` — both call sites had it
+backwards). Reused `bdd_below_nbhd_of_continuousAt` (`IntermediateValue.lean`) and `exists_between`
+(`AnalyticFiniteZerosReal.lean`) rather than reinventing either. `#print axioms`: zero `sorryAx`,
+footprint a strict subset of already-trusted `HasDerivAt`/`hasDerivAt_continuousAt` primitives —
+zero new `trustedFootprint` entries. Pinned as an `AxiomLedger` headline.
+
+**C3 (closed, `c52c4483`):** the implicit/relational separation — `LogImplicitRepresentability.lean`.
+`exp`'s EML representative (`eml var (const 0)`, exactly `Real.exp`, no clamp ever triggers) is
+globally valid with no domain restriction; inverting it recovers `log` exactly for every `x>0`, no
+hypothesis at all — via the already-PROVEN (not axiomatized) `exp_log`/`log_exp` round-trip
+theorems in `Log.lean`. Combined with C1: `log` is implicit-representable everywhere it matters
+while failing every explicit route near `0` — a genuine, cheap separation theorem, zero new axioms.
+
+**C2 (checked, NOT built) — a real scoping finding, not a quick miss.** The muses' proposal
+(regularized `log√(x²+ε²)`, characterizing `log|x|` as a boundary point of the representable
+class) needs constructing `x²+ε²` inside an EML tree first. Checked `EMLTree`'s actual grammar
+directly (`SinNotInEML.lean`): exactly three constructors, `const`/`var`/`eml t1 t2 := exp(t1) -
+log(t2)` — no addition, no multiplication, anywhere. Every reachable closed form is irreducibly "a
+positive `exp` term minus a `log` term"; hand-construction attempts for bare `x²` did not succeed,
+and the codebase's `MultiPoly`/Pfaffian-chain machinery describes chain DERIVATIVE relations, not
+`t.eval`'s own closed form, so it doesn't bridge the gap either. Not a proof of impossibility (that
+would be its own self-contained result, not attempted) — but forcing a construction against a
+grammar that most likely can't support it would not be honest progress. Two real paths if
+prioritized later: prove `EMLTree` structurally can't build quadratics, or reformulate within the
+much richer Pfaffian-chain VALUE class from the older `log_hard`/`exp_hard` arc (a bigger scope
+decision — see C5 below, that arc is enormous).
+
+**C4 (skipped, not built):** both external reviews already flagged cell stratification as lowest
+priority, needed only if a future consumer wants exactness on the negative axis rather than
+`ε`-closeness. No such consumer identified.
+
+**C5 — investigated, NOT built, flagged as a genuine multi-arc bridging problem.** "Chain-N ⊊
+chain-(N+1)" turns out to reference TWO separate, large, PRE-EXISTING arcs, neither built by or
+for Option D: (1) `IterExpDepthN*` — a 60+ file, already-CLOSED Khovanskii zero-count bound for
+iterated-exponential TOWERS (`chainN_khovanskii_bound_unconditional`/`_explicit`, both already
+`AxiomLedger` headlines), entirely about pure-exp chains, structurally unrelated to `EMLTree`'s
+exp-log-subtract grammar; (2) the "chain-5 census" (`project_chain5_census_theta_modular_painleve`
+in agent memory) — a Painlevé/elliptic-function Liouvillian-hierarchy classification, also
+pre-existing, also unrelated to `EMLTree` specifically. C5 asks for a hierarchy theorem combining
+BOTH of these with THIS session's `no_tree_eq_target_of_not_tailSign` meta-theorem — three
+independently-built formal developments that were never designed to interoperate. The muses'
+named risk ("is the Khovanskii bound explicit in chain parameters") turns out to be the SMALLER
+question — `chainN_khovanskii_bound_explicit` already exists, so that part may already be answered
+— but reconciling what "chain-N" even MEANS across three different formalisms is real, unscoped
+investigation, not a bounded item. Flagged rather than forced; genuinely looks like the "dedicated
+multi-session push" this round's own instructions said to stop at rather than power through.
+
+Paused here to report back rather than continue into C5 (as investigated) or C6-C10 (not yet
+individually checked against the codebase — C9 is known to need new Extreme Value Theorem
+attainment machinery per the earlier finding; C6/C7/C8/C10 not yet individually scoped).
