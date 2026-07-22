@@ -153,6 +153,7 @@ import MachLib.WitnessResidualChainOrPositive
 import MachLib.WitnessResidualTripleChain
 import MachLib.WitnessResidualGlobalSignDichotomy
 import MachLib.WitnessResidualLeftchildDerivative
+import MachLib.WitnessResidualTailSign
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
