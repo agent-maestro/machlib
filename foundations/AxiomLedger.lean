@@ -103,7 +103,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- level + recurring witness, with nestedTarget cs re-derived as a five-line instantiation
   -- via no_tree_eq_nestedTarget_fully_unconditional_via_meta. Zero new trustedFootprint
   -- entries needed (strict subset of the concrete version's own footprint).
-  `MachLib.Real.no_tree_eq_recurring_target_fully_unconditional]
+  `MachLib.Real.no_tree_eq_recurring_target_fully_unconditional,
+  -- Added 2026-07-22, same day: the STRONGER form -- no explicit zero family needed, only
+  -- continuity + no TailSign relative to some level L. IVT-based zero construction
+  -- (target_zero_between, plain ContinuousAt, no derivative) built fresh for an arbitrary
+  -- continuous function, mirroring rcep_zero_between's own mechanism which was built only for
+  -- EML trees. Zero new trustedFootprint entries needed.
+  `MachLib.Real.no_tree_eq_target_of_not_tailSign]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
