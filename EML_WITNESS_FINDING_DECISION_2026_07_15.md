@@ -3824,3 +3824,60 @@ infrastructure, not just two more special cases.
 `EMLPfaffianValidOn`, no `eml_pfaffian_validon_from_sin_equality` dependence anywhere. Full
 `lake build MachLib` passes (442 modules, up from 441). One commit this round (`48a691f5`, plus
 this docs commit), pushed.
+
+## 2026-07-21 (cont. 46) — the crossing bridge generalized beyond hand-verified shapes, via
+pre-existing `EMLNoCrossingAt` infrastructure
+
+**Direct user request**: "proceed" — continuing directly off cont. 45's own two concrete closures
+(`var`, `eml var (const c)`). Before writing more hand-verified special cases, this round asked
+whether the pattern generalizes: both closures needed `B`'s differentiability, hand-proven once
+each. Is there a general tool for that instead of proving it per-shape forever?
+
+**Yes — and it already existed in the codebase, unused by this arc until now.**
+`EMLSmoothness.lean` is a large (2985-line), SEPARATE, EARLIER sub-arc toward closing
+`eml_pfaffian_validon_from_sin_equality` directly — predating the `WitnessResidual*` naming
+convention entirely, and already wired into a DOZEN `WitnessResidual*` files (including
+`WitnessResidualRightChildrenEverywherePositive.lean`, meaning the very first two witnesses closed
+at the START of this whole arc already rest on this file, unknowingly to this particular
+sub-thread until this round). It proves `EMLNoCrossingAt` — a purely LOCAL, non-circular,
+structurally-checkable predicate ("no internal log-argument lands exactly on `0` at this point",
+strictly weaker than `EMLPfaffianValidOn`) — and `eml_hasDerivAt_of_no_crossing`: ANY `EMLTree` is
+differentiable at `x`, given `EMLNoCrossingAt` there, by plain structural induction, no
+circularity, no reference to siblings or ancestors.
+
+**Before building on it, checked for accidental duplication.** `WitnessResidualBChainCompound.lean`'s
+name looked suspiciously close to cont. 44's `BChainNonpos`. Read it directly: unrelated — a
+"chain of `≤1`-bounded positive constants" mechanism (`GoodPositiveChain`), a naming coincidence
+with no actual overlap. Worth the two minutes to check before assuming novelty.
+
+**The generalized bridge**
+(`no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing`,
+`WitnessResidualCrossingBoundednessBridge.lean`, added to the same file as cont. 45's results):
+feed `eml_hasDerivAt_of_no_crossing` directly into `eml_A_crossing_B_unbounded_above`'s
+differentiability hypothesis. Closes the residual for ANY `B` — not just `var` or
+`eml var (const c)` — that genuinely crosses zero on some `[x0, x1]` AND satisfies
+`EMLNoCrossingAt` throughout that interval. `var`/`eml var (const c)` are now understood as the
+two cases where that side condition happened to be free (known outright); this makes the SAME
+argument available for any future candidate `B` a checkable structural condition away, instead of
+requiring a from-scratch differentiability proof each time.
+
+**What is still open, stated plainly — genuinely unchanged from cont. 45's own accounting.** A
+truly UNKNOWN compound `B` — no promise of a genuine crossing, no promise of `EMLNoCrossingAt` on
+the relevant interval — remains exactly as open as `WitnessResidualClosureAttempt.lean` left it at
+the end of cont. 43. `EMLNoCrossingAt` is a real hypothesis, not free for an arbitrary tree — this
+broadens the class of closeable shapes from "two named ones" to "any shape satisfying two
+checkable conditions," which is real progress on reusability, but does not touch the fully general
+induction. Worth flagging for whoever continues: `EMLSmoothness.lean` also contains
+`eml_pfaffian_validon_of_sin_and_witness_at_point`, described in its own docstring as "the closest
+form to `eml_pfaffian_validon_from_sin_equality` itself... exactly the witness-finding question...
+and nothing else" — i.e. a DIFFERENT, EARLIER reduction of the SAME overall axiom to
+`EMLNoCrossingAt` (throughout `(0,∞)`) plus `EMLWitnesses t p` (one point). This is a positive-
+direction reduction (assume the tree exists with these properties, derive full validity),
+complementary to this whole `WitnessResidual*` sub-arc's negative-direction strategy (show no tree
+with certain properties CAN equal the target at all). The two strategies have not yet been
+explicitly reconciled or compared for relative strength — a real next step, not yet attempted.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all six theorems in the file. No
+`EMLPfaffianValidOn`, no `eml_pfaffian_validon_from_sin_equality` dependence anywhere. Full
+`lake build MachLib` passes (442 modules — this round extended an existing file rather than adding
+a new one). One commit this round (`45c734c7`, plus this docs commit), pushed.
