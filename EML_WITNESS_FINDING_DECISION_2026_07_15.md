@@ -5028,3 +5028,83 @@ a vague "several weeks" estimate.
 `sorryAx`-free (thread 1's new theorems), verified via a genuinely fresh rebuild. Full `lake build
 MachLib` passes (457 modules, up from 456). One commit this round (`41dcf022`, plus this docs
 commit), pushed.
+
+## 2026-07-22 (cont. 69) — CLOSED: `c2 ≥ 2`, without the multi-session Khovanskii rebuild — plus an
+honest correction about what was actually necessary
+
+**Direct user instruction**: "lets get to work on this please" — committing to the constructive
+`EMLPfaffianValidOn` effort cont. 68 flagged as multi-session. It turned out not to be needed.
+
+**The idea, checked on paper before writing code.** `no_tree_eq_target_given_validon`'s
+zero-counting argument needs `EMLPfaffianValidOn T1` on `(0, b)` — but reading its proof closely,
+that validity is ONLY ever used to run `enc_combinedBound` on ONE bounded sub-interval, chosen to
+contain `M+1` zeros of the target (at `kπ`, giving a fixed level `L`) plus one nonzero witness (at
+`π+1`). `eml_eventually_valid_repr` (built for the `TailSign` closure, cont. 58) gives EVERY tree
+`T` a representative `Trep` that is valid on a TAIL (not from `0`) and matches `T`'s value on a
+tail too. `nestedTarget cs`'s `kπ`-level fact already holds at EVERY `k ≥ 1`, not just large `k`
+— and its `π+1` witness recurs at `π+1+2mπ` for every `m` (`nestedTarget_add_natCast_mul_two_pi`,
+cont. 59, already built). So BOTH ingredients the zero-counting argument needs are available
+arbitrarily far out — running the SAME argument entirely inside the region where `Trep` is both
+valid AND matching `T` closes it, with no straddle condition and no validity-from-`0` hypothesis
+anywhere. A tool built for one closure powered a completely different one it was never designed
+for.
+
+**`WitnessResidualNestedTargetFullyUnconditional.lean`.** Small arithmetic helpers first
+(`natCast_lt_natCast_of_lt`, `pi_lt_two_pi`, `natCast_mul_pi_lt_natCast_mul_two_pi` — comparing
+`π`-multiple zeros against the `2π`-multiple periodicity-shifted witness; `natCast_kpi_shifted_
+list_nodup` — the `kπ`-family shifted by an offset stays pairwise distinct, the same
+`List.nodup_range.map` recipe used throughout this arc). Then `no_tree_eq_nestedTarget_fully_
+unconditional`: no finite EML tree equals any well-formed `nestedTarget cs`, COMPLETELY
+UNCONDITIONALLY — no straddle condition (`nestedLo cs ≤ 0 < nestedHi cs` from cont. 60), no
+restriction on the tree at all. This supersedes cont. 59-63's straddle-conditioned version
+entirely. `no_tree_eq_log_c2_plus_sin_fully_unconditional` instantiates it at `[c2]`: closes
+`log(c2+\sin x)` for EVERY `c2 > 1`, no upper bound — superseding cont. 60's `c2 ≤ 2` boundary.
+Fresh-rebuild `#print axioms` on all 6 new theorems: same standing baseline throughout, zero
+`sorryAx`, neither the `sin` nor `cos` discharge axiom appears anywhere.
+
+**Wired directly into the original residual.** `eml_depth2_witness_of_const_sibling_fully_
+unconditional` (`WitnessResidualConstSiblingUnconditional.lean`) removes `RightChildrenSimplePositive
+T1` ENTIRELY from the original depth-2 family, for EVERY `c2 > 1` — exactly the gap cont. 68
+pinned as needing "genuine constructive `EMLPfaffianValidOn`... multi-session Khovanskii work." It
+didn't. Wired into `AxiomLedger.lean`'s `headlines` (`30→32`); footprint diff needed exactly 2 new
+`trustedFootprint` entries (`sin_periodic`, `sin_one_pos`, both already `knownAxioms`).
+
+**The honest correction — checked, not assumed, before calling this round finished.** Before
+moving on, checked whether `eml_depth2_witness_of_const_sibling_fully_unconditional`'s conclusion
+ACTUALLY needed today's new machinery, or whether it was already reachable a shorter way. It
+was: `eml_depth2_witness_of_const_sibling_trivial_via_cont58`
+(`WitnessResidualConstSiblingUnconditional.lean`) proves the SAME conclusion, for ANY `c2` (no `1
+< c2` restriction at all, stronger than today's own theorem), in ONE LINE — because the family's
+hypothesis (`hsin`) already asserts a SPECIFIC tree, `eml T1 (eml (const c2) S3)`, equals `sin`
+everywhere, which is EXACTLY the shape `no_tree_eq_sin_unconditional` (cont. 58) refutes directly,
+for ANY tree structure, regardless of what's nested inside. `False.elim` closes it immediately.
+This means, for THIS SPECIFIC application, the entire `nestedTarget`/`log(c2+\sin x)` machinery
+built cont. 59-69 was NOT strictly necessary — cont. 58 alone always sufficed. It also confirms
+`EMLWitnesses A x0`/`EMLWitnesses B x0` (cont. 68's flagged threads) are moot not merely because
+their route is superseded, but because the conclusion they targeted followed trivially from a
+fact proven several rounds earlier, before this session's `nestedTarget` work even began.
+
+**What this does NOT diminish, stated as plainly as the correction itself.** `no_tree_eq_
+nestedTarget_fully_unconditional` and `no_tree_eq_log_c2_plus_sin_fully_unconditional` remain
+genuinely new, standalone facts about the `nestedTarget` family and `log(c2+\sin x)` specifically
+— useful for anyone asking "does some tree realize THIS target" directly, independent of the
+depth-2 `eml T1 (eml (const c2) S3)` wrapper. The wrapper just turned out to be redundant
+scaffolding for reaching a conclusion cont. 58 already reached, several rounds earlier, by a
+shorter path. The mathematical content of today's closure (the tail-restricted zero-counting
+argument, a genuinely new technique in this arc) stands on its own regardless of which corollary
+turned out to need it.
+
+**Where this leaves Option D.** Both discharge axioms proven (cont. 65, 67). Depth-any-`k`
+barriers re-derived unconditionally (cont. 68). The `nestedTarget` family closed completely, no
+restriction (this entry) — closing `c2 ≥ 2` and superseding the straddle-conditioned version. The
+ORIGINAL depth-2 residual's third `EMLWitnesses` conjunct closed two independent ways, one of them
+requiring nothing built after cont. 58. `EMLWitnesses A x0`/`EMLWitnesses B x0` confirmed moot.
+The genuinely open question this session leaves, if there is one: whether `no_tree_eq_
+nestedTarget_fully_unconditional`'s TECHNIQUE (tail-restricted zero-counting via `eml_eventually_
+valid_repr`) generalizes to targets OUTSIDE the `nestedTarget` family — not attempted, not needed
+for anything currently open in this arc.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all 7 new theorems across both files.
+No `eml_pfaffian_validon_from_sin_equality`/`_from_cos_equality` dependence anywhere. Full `lake
+build MachLib` passes (458 modules, up from 457). Two commits this round (`7fdf906e`, `9fe8efb9`,
+plus this docs commit), pushed.
