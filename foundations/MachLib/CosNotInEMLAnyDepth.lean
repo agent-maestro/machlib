@@ -151,7 +151,21 @@ its sin sibling together; ~300-500 lines, multi-session.
 2026-07-15: see `EMLPfaffian.lean`'s dated note after `eml_gap_avoidance` for why the newly-built
 `continuousAt_bddAbove_Icc` (Extreme Value Theorem, `IntermediateValue.lean`) does not shorten this
 estimate — the same finding applies verbatim to cos (the obstruction is bound-propagation to
-interior subtrees, not a missing compactness tool). -/
+interior subtrees, not a missing compactness tool).
+
+**2026-07-22 — DISCHARGED (vacuously), same day and same route as the `sin` sibling. Do not cite
+this `axiom` as a trust assumption.** `MachLib.eml_pfaffian_validon_from_cos_equality_proved`
+(`WitnessResidualCosTailSign.lean`) proves this exact statement: the hypothesis `hcos` is
+unsatisfiable — no finite EML tree can equal `cos` everywhere, unconditionally
+(`MachLib.Real.no_tree_eq_cos_unconditional`) — so the conclusion follows by `False.elim`. The
+ONLY new proof this needed was `cos_not_tailSign` (mirroring `sin_not_tailSign`); `eml_tailSign_
+unconditional` (`MachLib.Real`, the arc's own capstone) is already fully general over the target
+function and needed no changes. Fresh-rebuild `#print axioms` confirms non-circularity (neither
+this axiom nor its `sin` sibling appears in the discharge proof's dependency list); both theorems
+are pinned in `AxiomLedger.lean`'s `headlines`. The `axiom` keyword remains for the same
+import-graph reason as the `sin` side: `EMLExplicitBoundCosBarrier.lean`, this axiom's one
+remaining real call site, is itself transitively imported by the discharge proof's own dependency
+chain (via `EMLExplicitBoundSinBarrier.lean`). Import-graph hygiene, not an open question. -/
 axiom eml_pfaffian_validon_from_cos_equality
     (t : EMLTree) (hcos : ∀ x : Real, t.eval x = Real.cos x)
     (b : Real) (_hb_pos : 0 < b) :

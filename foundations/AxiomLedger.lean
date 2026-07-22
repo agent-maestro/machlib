@@ -76,7 +76,12 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- ("no finite EML tree equals sin, and `eml_pfaffian_validon_from_sin_equality` is
   -- vacuously provable, not merely avoided") is CI-checked on every build, not just a fresh
   -- rebuild done once by hand this round.
-  `MachLib.Real.no_tree_eq_sin_unconditional, `MachLib.eml_pfaffian_validon_from_sin_equality_proved]
+  `MachLib.Real.no_tree_eq_sin_unconditional, `MachLib.eml_pfaffian_validon_from_sin_equality_proved,
+  -- Added 2026-07-22: the `cos` sibling of the pair above, same day -- `eml_tailSign_
+  -- unconditional` (the arc's core result) doesn't care which target function is being
+  -- ruled out, so `cos_not_tailSign` was the only new proof needed. Its footprint required
+  -- ZERO new `trustedFootprint` entries (fully covered by the sin discharge's own base).
+  `MachLib.Real.no_tree_eq_cos_unconditional, `MachLib.eml_pfaffian_validon_from_cos_equality_proved]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
