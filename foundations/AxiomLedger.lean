@@ -118,7 +118,13 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- (target_zero_between, plain ContinuousAt, no derivative) built fresh for an arbitrary
   -- continuous function, mirroring rcep_zero_between's own mechanism which was built only for
   -- EML trees. Zero new trustedFootprint entries needed.
-  `MachLib.Real.no_tree_eq_target_of_not_tailSign]
+  `MachLib.Real.no_tree_eq_target_of_not_tailSign,
+  -- Added 2026-07-22: Track C, item C1 (log-divergence wall) -- a DIFFERENT obstruction type
+  -- (continuity-at-a-point vs. divergence, not TailSign/oscillation-counting). No finite EML
+  -- tree, valid on an interval containing 0, equals Real.log on the positive side --
+  -- LogDivergenceWall.lean. Zero new trustedFootprint entries needed (footprint is a strict
+  -- subset: base HasDerivAt composition rules + hasDerivAt_continuousAt, nothing analytic).
+  `MachLib.no_tree_eq_log_positive_side_given_validon]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
