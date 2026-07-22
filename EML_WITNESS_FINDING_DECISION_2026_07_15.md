@@ -5641,3 +5641,58 @@ actually asks ("is this `EMLTree`-representable") — so it would not, by itself
 point of the EML-representable class" characterization the original C2 proposal wanted. Recorded
 here rather than built into Lean (that would be new Track C content, a scope decision for direct
 discussion, not an erratum-scale fix).
+
+## 2026-07-22 (cont. 77) — the compression session: C1/C3/C6 generalized, per direct "lets proceed
+## into that please"
+
+One of the two cont.76 reviews had also proposed extracting the abstractions implicit in C1, C3,
+C6 (a genuinely different, additive ask from the OTHER review's accuracy correction, both delivered
+in the same round). Built all three, each with the original result re-derived as a corollary to
+confirm the extraction is genuinely uniform rather than a bigger, different thing — matching this
+whole document's own discipline for every prior generalization round (cont.69→70→71's meta-lemma
+chain used the identical pattern).
+
+**C6 → `TailApproximationBarrier.lean` (`5a0f39af`):** `RecurringStraddle f vHi vLo` — `f` recurs
+to two EXACT values straddling `0`, past any threshold. `no_tree_eps_close_to_target_eventually`
+needs `ε ≤ vHi` and `ε ≤ -vLo`; for the symmetric case `vLo = -vHi` this matches the review's own
+`2ε < δ` framing exactly (`δ := vHi - vLo`). `sin` (`vHi=1, vLo=-1`) is a corollary. `cos` and any
+`nestedTarget cs` with `nestedLo cs < 0 < nestedHi cs` are one-line corollaries a future session can
+write without a new census file per target. **Scope stated explicitly, not silently narrowed**:
+still a TAIL statement (see cont.76's own erratum — this generalizes what C6 proved, not what the
+muses originally asked for), and still restricted to targets centered at `L = 0` (matching what
+`eml_tailSign_unconditional` gives `T.eval` UNCONDITIONALLY; a general `L` would need `TailSign
+(T.eval - L)`, which needs the heavier validity/IVT machinery `no_tree_eq_target_of_not_tailSign`
+already uses for EXACT equality — extending to general `L` is new work, not extracted here).
+
+**C1 → `ContinuityDivergenceBarrier.lean`:** `UnboundedBelowNearRight TARGET x0` +
+`no_continuousAt_eq_unboundedBelowNearRight` — genuinely target- and tree-agnostic, matches the
+review's own phrasing almost verbatim ("a function continuous at a finite point cannot equal a
+target unbounded along a sequence converging to that point"). `log` is a corollary via a one-line
+repackaging of `log_unbounded_below`.
+
+**C3 → `RepresentabilityTaxonomy.lean`:** named `ExplicitlyRepresentableValidlyNear`/
+`ImplicitlyRepresentable` predicates, `log_separation` combining both. Scoped HONESTLY rather than
+idealized — the explicit side matches EXACTLY the validity-scoped hypothesis C1 actually proved, not
+a stronger unconditional "some tree matches `f` everywhere" (which was never established — proving
+it would need deriving `EMLPfaffianValidOn` from a bare match via `eml_eventually_valid_repr`, the
+exact move cont.58/71 make for OTHER results but which was never invoked for `log`; doing so now
+would be new strengthening work, not compression, and was deliberately not attempted).
+
+**Two build gotchas, recorded for the next session.** `set` is a Mathlib tactic, unavailable in
+this Mathlib-free codebase — same family as the `by_contra`/`push_neg` finding from cont.76 (a THIRD
+Mathlib-tactic-not-available discovery this session; worth a standing note somewhere central rather
+than rediscovering per-file). Avoided by inlining the expression instead of naming it. `mach_mpoly`
+failed with a confusing "unknown identifier" error on a specific local-context shape inside
+`ContinuityDivergenceBarrier.lean` — root cause NOT identified (ruled out: the identifier's name,
+since `x0` alone worked fine elsewhere in the same file); worked around via explicit
+`add_assoc`/`add_left_comm`/`add_neg`/`add_zero` chains rather than spending more time debugging the
+tactic itself.
+
+Three more helpers made public after a second independent use surfaced one (`exists_pos_le_three`,
+`sin_neg_one_recurring`) — same signal as `sin_one_recurring`/`pi_div_two_pos` earlier in Track C.
+
+`#print axioms` on all three general theorems: zero `sorryAx`, zero new `trustedFootprint` entries
+(every axiom already covered by the results being generalized). All three pinned as `AxiomLedger`
+headlines (42 total, up from 39; the `_via_barrier` corollaries confirming each extraction are NOT
+separately pinned — same footprint as the general theorem, would be redundant bookkeeping). Full
+`lake build MachLib` green (468 modules, up from 465).
