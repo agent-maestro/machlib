@@ -4751,3 +4751,41 @@ an incorrect connection under time pressure).
 `sorryAx`-free, verified via a genuinely fresh rebuild for both theorems in the file. Full `lake
 build MachLib` passes (453 modules, unchanged — no new file, one theorem's hypothesis relaxed).
 One commit this round (`6a2689de`, plus this docs commit), pushed.
+
+## 2026-07-22 (cont. 64) — the wiring cont. 63 deferred, done: `RightChildrenSimplePositive`
+removed entirely for `1 < c2 ≤ 2`
+
+**Direct user instruction**: "proceed" — the exact connection cont. 63 deliberately deferred
+rather than risk getting wrong under time pressure: does cont. 58-60's unconditional closure
+actually remove a restriction from the ORIGINAL, pre-`TailSign`-detour residual?
+
+**The connection, checked precisely this time.** `eml_T1eq_of_const_sibling_le_zero`
+(`WitnessResidualSimpleT1Application.lean`, built 2026-07-20, well before this arc's `TailSign`
+turn) is PURE ALGEBRA — no hypothesis on `T1` at all: given `S3 ≤ 0` everywhere and the TOP-LEVEL
+equation `(eml T1 (eml (const c2) S3)).eval x = sin x`, it derives `T1.eval x = log(c2+\sin x)`
+for every `x`. This is EXACTLY the shape `no_tree_eq_log_c2_plus_sin_unconditional` (cont. 60)
+refutes, unconditionally, for `1 < c2 ≤ 2`. Chaining the two (both independently verified already,
+so this compiled clean on the first attempt): assuming `S3 ≤ 0` everywhere is IMPOSSIBLE for `1 <
+c2 ≤ 2`, for ANY `T1` whatsoever — no restriction needed.
+
+**Payoff.** `eml_depth2_witness_of_const_gt_one_sibling_unconditional`
+(`WitnessResidualConstSiblingUnconditional.lean`) removes the `RightChildrenSimplePositive T1`
+restriction from `eml_depth2_witness_of_const_gt_one_sibling_simple_T1` — the THIRD member of the
+`eml_depth2_witness_of_const_*_sibling` family, built 2026-07-20 — ENTIRELY, for `1 < c2 ≤ 2`.
+This is a genuine closure of a piece of the ORIGINAL residual that predates the `TailSign` detour
+by several days of this arc's own timeline, not a restatement of an already-proven fact in new
+notation: `T1` was previously restricted to a syntactically narrow class
+(`RightChildrenSimplePositive`, excluding e.g. `WitnessResidualCancellation.lean`'s own
+counterexample tree); now it can be ANY EML tree at all. Fresh-rebuild `#print axioms`: same
+standing baseline, zero `sorryAx`, `eml_pfaffian_validon_from_sin_equality` does not appear.
+
+**Honest scope, stated plainly.** Covers `1 < c2 ≤ 2` only (cont. 60's sharp boundary — `c2 > 2`
+is provably unreachable by this method). `T1` is now fully unrestricted, but this still only
+closes the THIRD `EMLWitnesses` conjunct — `EMLWitnesses A x0`/`EMLWitnesses B x0` themselves
+(named open since the 2026-07-20 rescoping entry) remain untouched by this file. Does not touch
+`c2 ≥ 2` (needs the original `EMLPfaffianValidOn`/Khovanskii route per cont. 60's finding) or
+deeper nestings beyond this one depth-2 shape.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
+dependence. Full `lake build MachLib` passes (454 modules, up from 453). One commit this round
+(`293c160d`, plus this docs commit), pushed.
