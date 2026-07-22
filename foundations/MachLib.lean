@@ -159,6 +159,7 @@ import MachLib.WitnessResidualEventualValidTailSign
 import MachLib.WitnessResidualNormalFormClosure
 import MachLib.WitnessResidualNestedTargetTailSign
 import MachLib.WitnessResidualNestedTargetDepth2Straddle
+import MachLib.WitnessResidualNestedTargetTower
 import MachLib.CosNotInEML
 import MachLib.EMLHierarchy
 import MachLib.ExpExpNotInEML1
