@@ -4001,3 +4001,46 @@ alternating case would need `RightChildrenEverywherePositive` itself generalized
 errors, no fixes needed). No `eml_pfaffian_validon_from_sin_equality` dependence. Full
 `lake build MachLib` passes (443 modules, up from 442). One commit this round (`acca725e`, plus
 this docs commit), pushed.
+
+## 2026-07-21 (cont. 49) — the third mechanism folded in: `BChainTriple` unifies
+`RightChildrenEverywherePositive`, the crossing bridge, and `BChainNonpos` in one theorem
+
+**Direct user request**: "proceed" — continuing cont. 48's own named gap directly. That entry
+flagged: the positive escape hatch (`RightChildrenEverywherePositive`) is all-or-nothing over the
+WHOLE remaining subtree, so a node whose failure to qualify is caused SPECIFICALLY by its own
+immediate right child genuinely crossing zero had no direct closure — `BChainOrPositive` could
+only escape via full positivity or continue via full non-positivity, nothing in between.
+
+**No new mechanism needed — the crossing bridge (cont. 45-46) already closes exactly this,
+more directly than either of the other two escapes.**
+`no_eml_A_B_eq_nested_target_of_crossing_and_no_crossing` derives `False` straight from
+`(eml A B).eval = nestedTarget cs` whenever `B` genuinely crosses zero on some `[x0,x1]` with
+`EMLNoCrossingAt` holding throughout — no recursion into `A` at all, unlike the positive escape
+(needs the Khovanskii bound on the WHOLE subtree) or the non-positive branch (needs to recurse one
+level deeper with a shifted target). Adding it as a third disjunct in the chain definition was
+purely mechanical: wire an existing, already-verified closure into the induction's crossing
+branch — no new proof technique invented this round.
+
+**`BChainTriple`** (`WitnessResidualTripleChain.lean`): at each `eml A B` node, three ways to
+close — `RightChildrenEverywherePositive` (Khovanskii escape), `B` crosses zero with
+`EMLNoCrossingAt` on the interval (crossing-bridge escape, immediate), or `B` non-positive
+everywhere (continue the chain, `BChainNonpos`'s reduction unchanged). `BChainOrPositive` is
+exactly the sub-case where the crossing disjunct is never taken; `BChainNonpos` is exactly the
+sub-case where neither of the first two ever is. Compiled clean on the first attempt, same as
+cont. 48's unification — a second data point that these three pieces were built compatibly with
+each other from the start, not by luck once.
+
+**Scope, stated plainly — still not the fully general residual, and this round doesn't claim
+otherwise.** All three mechanisms are now combined into one theorem, but none of them individually
+grew any more powerful this round — the crossing disjunct needs an EXPLICIT, controllable zero
+crossing (`B.eval x0 = 0` exactly, `B.eval x1 > 0`) plus verifiable `EMLNoCrossingAt` on that exact
+interval. A `B` that's non-positive somewhere and positive elsewhere WITHOUT a clean, controllable
+crossing point — e.g. touching `0` only in a limit, or with `EMLNoCrossingAt` failing to hold on
+any usable interval — remains covered by NONE of the three mechanisms. The remaining gap is
+unchanged in kind from where `WitnessResidualClosureAttempt.lean` (cont. 43) left it: a truly
+unconstrained, structurally unknown `B`. This round's contribution is combining what already
+existed into strictly broader coverage per theorem, not discovering new closeable territory.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild. No `eml_pfaffian_validon_from_sin_equality`
+dependence. Full `lake build MachLib` passes (444 modules, up from 443). One commit this round
+(`c2ee4889`, plus this docs commit), pushed.
