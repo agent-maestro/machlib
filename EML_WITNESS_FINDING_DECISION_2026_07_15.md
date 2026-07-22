@@ -4527,3 +4527,53 @@ assumed to transfer automatically.
 `eml_pfaffian_validon_from_sin_equality` dependence anywhere in either file. Full `lake build
 MachLib` passes (450 modules, up from 448). One commit this round (`5a96fc37`, plus this docs
 commit), pushed.
+
+## 2026-07-22 (cont. 59) — the closure generalized to the whole `nestedTarget` family
+
+**Direct user instruction**: "proceed" — continuing straight into the next step cont. 58 flagged
+as unattempted: does `sin_not_tailSign`'s argument carry over to `nestedTarget cs` for `cs ≠ []`?
+
+**Answer, checked rather than assumed: yes, for `cs` whose range genuinely straddles zero**
+(`nestedLo cs < 0 < nestedHi cs`). This is a genuinely NEW hypothesis, not present in
+`no_tree_eq_nested_target_given_validon` — and necessarily so, not a proof-technique gap: if
+`nestedTarget cs`'s entire range sat on one side of zero, it would ALREADY be eventually
+single-signed (it would have a `TailSign` of its own), and this route genuinely could not rule out
+a tree matching it — a different obstruction, checked on paper before building anything.
+
+**The mechanism** (`WitnessResidualNestedTargetTailSign.lean`), mirroring `sin_not_tailSign`
+exactly at the two points that generalize `sin`'s `kπ` zeros and `kπ + π/2` witness:
+`nestedTarget cs` hits its EXACT range bounds `nestedLo cs`/`nestedHi cs` at `-π/2`/`π/2`
+(`nestedTarget_at_neg_pi_div_two`, already proven in `WitnessResidualNestedTargetBWitness.lean`;
+`nestedTarget_at_pi_div_two`, new here, the same one-line induction — each layer's `log` is
+monotone, so it carries "achieves the extreme value here" through unchanged). `nestedTarget cs` is
+`2π`-periodic for ANY `cs`, well-formed or not (`nestedTarget_add/sub_natCast_mul_two_pi`, by
+induction on `cs`, base case reusing `sin_sub_natCast_mul_two_pi` — already built and verified in
+`WitnessResidualEntireCrossingFamilyClosed.lean`, not re-derived from scratch) — so both extremes
+recur, EXACTLY, arbitrarily far out. `nestedLo cs < 0` gives arbitrarily-far points with value `<0`,
+ruling out `TailSign.pos`; `0 < nestedHi cs` gives arbitrarily-far points with value `>0`, ruling
+out `TailSign.neg`; either fact alone already rules out `TailSign.zero` (a fixed nonzero value
+can't equal `0`).
+
+**Payoff.** `no_tree_eq_nestedTarget_unconditional` — no finite EML tree's `eval` function equals
+any straddling `nestedTarget cs`, completely unconditionally, same zero-hypothesis shape as
+cont. 58's `sin` result. Sanity-check corollary
+(`no_tree_eq_sin_unconditional_via_family`) confirms `cs = []` recovers cont. 58's result EXACTLY
+through the general theorem — `nestedLo [] = -1 < 0`, `nestedHi [] = 1 > 0`, `nestedWF [] = True`,
+all satisfied trivially rather than vacuously excluded, confirming the generalization is
+equivalent to, not merely similar to, the original. Fresh-rebuild `#print axioms` on all 9 new
+theorems: same standing `MachLib.Real` baseline throughout, zero `sorryAx`,
+`eml_pfaffian_validon_from_sin_equality` does not appear anywhere.
+
+**Honest scope, stated plainly.** The straddle hypothesis (`nestedLo cs < 0 < nestedHi cs`) is a
+REAL restriction, not a formality to be lifted later — `cs` with `nestedLo cs ≥ 0` (or `nestedHi
+cs ≤ 0`) are genuinely NOT covered by this route, since such a `nestedTarget` could have a fixed
+`TailSign` of its own. Whether the specific `cs` used elsewhere in this arc satisfy the straddle
+condition has NOT been checked here (e.g. `cs = [c2]` for `c2 > 1`: `nestedLo [c2] = log(c2-1)`,
+negative iff `c2 < 2` — so `1 < c2 < 2` straddles, `c2 ≥ 2` does not, by this specific criterion;
+not verified against `nestedHi [c2]`'s sign either). This file proves the general theorem and
+leaves instantiating it against this arc's other open cases — and finding a DIFFERENT argument
+for the non-straddling `cs` — to future work.
+
+`sorryAx`-free, verified via a genuinely fresh rebuild for all 9 theorems. No
+`eml_pfaffian_validon_from_sin_equality` dependence. Full `lake build MachLib` passes (451
+modules, up from 450). One commit this round (`fe22315e`, plus this docs commit), pushed.
