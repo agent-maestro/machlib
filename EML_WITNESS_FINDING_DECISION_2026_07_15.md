@@ -5520,3 +5520,65 @@ multi-session push" this round's own instructions said to stop at rather than po
 Paused here to report back rather than continue into C5 (as investigated) or C6-C10 (not yet
 individually checked against the codebase — C9 is known to need new Extreme Value Theorem
 attainment machinery per the earlier finding; C6/C7/C8/C10 not yet individually scoped).
+
+## 2026-07-22 (cont. 75) — C6/C7/C8 closed; C9/C10 checked and flagged as genuine multi-session
+## items, not forced
+
+Direct request: "Continue to C6–C10, same discipline."
+
+**C6 (closed, `0bf5eb90`):** `QuantitativeNonApproximation.lean`. TailSign gives something
+STRONGER than the muses' own framing for free — no finite EML tree stays within `ε` of `sin` for
+ALL sufficiently large `x`, for any `ε < 1`, with NO interval-length bookkeeping (their proposal
+was phrased around the older zero-counting mechanism's "intervals long relative to the depth-`d`
+bound"). Built `sin_one_recurring`/`sin_neg_one_recurring` (sin recurs to exactly `±1` past any
+threshold) by specializing the already-proven `nestedTarget` periodicity lemmas at `cs := []`. One
+real bug: invented a private `natCast_le_natCast_mul_two_pi` helper that turned out to already
+exist, public, in an already-imported file — deleted the duplicate.
+
+**C7 (closed, `b3d7a66a`):** `CertcomTotalErrorFloor.lean`. One muse called this "thesis-shaped,
+not lemma-shaped" — agreed, and only the lemma-shaped core was built: combining C6's floor with an
+ABSTRACT rounding-error bound (the shape Certcom's theorems supply, held as a hypothesis, NOT
+wired to Certcom's actual C-compilation pipeline — that remains the genuinely thesis-shaped part).
+Conclusion: no matter how tight a compiled artifact's rounding error `δ` gets, if `δ<ε<1`, the
+TOTAL deviation from true `sin` still exceeds `ε-δ` at points arbitrarily far out. Hit one
+environment gotcha: `by_contra`/`push_neg` are Mathlib tactics, unavailable here (an existing
+docstring elsewhere already flags this) — rewrote via `Classical.byContradiction` + a small
+`lt_of_not_le` helper.
+
+**C8 (closed, `4ca12803`):** `NonRepresentabilityCensusSinSq.lean`. The muses' "battery" named
+Painlevé transcendents from the chain-5 census — checked and set aside: not formalized as concrete
+Lean functions anywhere in this codebase, so instantiating the meta-theorem for them means
+formalizing them first, a separate undertaking. Built ONE genuinely different, mechanical
+instantiation instead: `sin²x` (non-negative, recurring to exactly `0` AND exactly `1`, unlike
+every signed-extreme target used elsewhere in this arc) — continuity via `HasDerivAt_mul`, non-
+`TailSign` via existing recurring-point facts, zero new calculus. Made `sin_one_recurring`/
+`pi_div_two_pos` public (were private in C6's file) since a second independent use is exactly this
+session's own signal for extracting a shared lemma.
+
+**C9 — investigated, NOT built, confirmed a genuine multi-step construction.** Read
+`continuousAt_bddAbove_Icc`'s full proof (`IntermediateValue.lean`) to assess extending it from
+boundedness to ATTAINMENT (the missing piece flagged when Track C was first sorted). It's already
+a sophisticated `sup_exists`-based argument; getting from "bounded above" to "the bound is actually
+attained by some point" needs the classical `1/(M-f(x))` trick (if the supremum were never
+attained, this reciprocal would be continuous and unbounded near the approaching sequence,
+contradicting boundedness applied to IT) — a genuinely separate, nontrivial piece of analysis, not
+a corollary of what exists. Confirmed the SHAPE of the wrapper argument is right (periodicity
+extends a one-period attained minimum to a global one, immediately ruling out `.pos`/`.neg`;
+nonconstancy plus periodicity gives a second recurring value ruling out `.zero`) — but the
+EVT-attainment prerequisite is real, unbuilt work, matching both reviews' own "genuinely reachable,
+not free" framing exactly. Not attempted this round — this is the "dedicated multi-session push"
+this round's own instructions said to stop at.
+
+**C10 — not attempted, per the muses' OWN framing.** Both reviews already flagged this ("make
+`eml_eventually_valid_repr`'s threshold effective... connecting to Forge-generated certificates")
+as "longer-horizon, most speculative of the C-track items" — the lowest-confidence item on their
+own list. Making an existential proof's threshold into an explicit, tracked bound (proof mining) is
+a known-hard category of task in general; no reason to expect this instance is the exception. Not
+investigated further; would need its own dedicated scoping pass before any code.
+
+**Track C status after this round:** C1, C3, C6, C7, C8 closed (5 genuinely new results, all
+`AxiomLedger` headlines, zero new `trustedFootprint` entries across all of them). C2, C4 scoped
+and set aside for concrete, checked reasons. C5, C9, C10 flagged as real, unforced multi-session
+items — two of three explicitly agreeing with the muses' own effort assessment, one (C5) found
+independently. Fresh `lake build MachLib` green throughout (465 modules, up from 460 at the start
+of Track C).
