@@ -6111,3 +6111,54 @@ Every other piece of this arc's Certcom connection — the pipeline composition,
 Lipschitz propagation, the compact-interval non-approximation theorem itself — is machine-checked and
 `sorryAx`-free, resting on nothing beyond that one disclosed floor plus `MachLib.Real`'s own axioms
 (separately witnessed against Mathlib's `ℝ` by Theorem B, per `project_certcom_soundness_witness`).
+
+## 2026-07-22 (cont. 85) — erratum: `real_round_bounds` was stated falsely; fixed same-day
+
+Two muses reviews on cont. 84's grounded result. Both praised the framing and the "no free
+hypotheses" result as the right target for an external auditor. The first raised a specific,
+substantive correctness finding, checked directly (not assumed) before acting:
+
+**The finding.** `real_round_bounds`'s first version — `∀x:Real, abs(realToR(floatOfR x)-x) ≤
+real_round_eps` for a single FIXED constant, no domain restriction — is false of any real
+round-to-nearest implementation. Quantization error is relative (scales with the magnitude of the
+value being rounded, half a ULP), and outside the representable range it is unbounded (overflow); an
+axiom asserting a magnitude-independent absolute bound for EVERY real is a statement no runtime
+satisfies. This matters specifically because disclosed axioms are unfalsifiable inside Lean — any
+consistent statement about an opaque `Float` type is admissible — so the axiom's STATEMENT is the
+entire trust content of the disclosure. An imprecise statement doesn't just look sloppy; it means
+"sorryAx-free, 47th headline" stops meaning what it appears to mean, which is exactly the failure
+mode the whole `disclosedTrusted`/`AxiomLedger` apparatus exists to prevent. Verified the claim
+directly (re-read the exact axiom statement in the built file) before acting, per this arc's standing
+discipline.
+
+**The fix.** Rewrote `real_round_bounds` domain-restricted: `∀(M x:Real), 0≤M → abs x≤M →
+abs(realToR(floatOfR x)-x) ≤ u*M` — reusing the SAME `u` already used for every other
+correctly-rounded float operation in this codebase (an honest relative-error model, uniformized to a
+caller-supplied range `M` the same way `exp_lip_local`'s `L := exp hi` uniformizes a per-point
+Lipschitz bound over a whole interval). Dropped the separate `real_round_eps` constant entirely — no
+longer needed, the bound is `u*M` directly. Threaded `M := B` through
+`eml_var_var_quantized_pointwise_grounded`/`eml_var_var_certcom_witness_grounded` (both theorems
+already had `A`/`B` bounding the domain; the fix costs one new explicit hypothesis, `0 ≤ B`, nothing
+structurally larger). Quantization error is now `u*B` throughout in place of the old flat
+`real_round_eps`; closed forms updated accordingly, still fully explicit.
+
+Rebuild needed one small fix (`lt_trans` → `lt_trans_ax`, the same naming slip as elsewhere in this
+arc) beyond the mechanical substitution. `#print axioms` on all three theorems: zero `sorryAx`,
+`real_round_bounds`'s new domain-restricted signature confirmed directly via `#check`.
+`AxiomLedger` updated (removed the now-nonexistent `real_round_eps` from `knownAxioms`/
+`trustedFootprint`, rewrote `real_round_bounds`'s `disclosedTrusted` description to state the
+external referent explicitly — "true of round-to-nearest-even for `|x| ≤ M`" — per the muses' own
+concrete recommendation, not just "Float is opaque"). Gate green after a full rebuild (the targeted
+build vs. full build gotcha did NOT resurface this time — full `lake build MachLib` run before
+trusting the sweep, on discipline this time, not by luck): `AxiomLedger OK: 309 axioms pinned; 47
+headline footprints ⊆ trusted (154); … 33 disclosed-trusted`.
+
+**Flagged, deliberately not fixed: `real_exp_rounds`/`real_log_rounds`.** The same precision
+question applies in principle to these PRE-EXISTING axioms (`FPGrounding.lean`, predating this
+session) — `exp` also overflows, and their bound is likewise a single unconditional constant. Left
+alone deliberately: they underpin many already-shipped headlines (`pid_exp_grounded`,
+`pid_log_grounded`, `pid_log_cosh_grounded`, …), so re-stating them is a separate, substantially
+larger, invasive change — not "cheap either way" the way the brand-new `real_round_bounds` was.
+Recorded explicitly in the `disclosedTrusted` entry itself (not just this doc) so it doesn't get
+silently forgotten. Whether to pursue that broader retroactive audit is a decision for the user, not
+something to do unilaterally given its blast radius across existing, already-audited work.
