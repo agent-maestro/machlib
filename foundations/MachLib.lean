@@ -406,6 +406,7 @@ import MachLib.EMLCertcomGrounded
 import MachLib.EMLTreeGroundedPipeline
 import MachLib.ExtremeValueAttainment
 import MachLib.GeneralPeriodicTargetBarrier
+import MachLib.EMLTowerSubsumesIterExp
 
 /-!
 # MachLib — top-level aggregator

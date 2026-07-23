@@ -6473,3 +6473,89 @@ pinned in `AxiomLedger.lean` (50 total headlines now), zero new `trustedFootprin
 
 **Track C status after this round:** C1, C3, C6, C7, C8, C9 closed. C2, C4 scoped and set aside for
 concrete, checked reasons (cont. 74). C5, C10 remain flagged as real, unforced multi-session items.
+
+## 2026-07-22 (cont. 90) — Track C, items C5 and C10 investigated in depth; one genuine new bridge
+## theorem built (C5); both confirmed to need real multi-session work beyond this round, with the
+## PRECISE technical reason now checked rather than repeated as a label
+
+Direct request: "proceed into 5 and 10 please." Both items had been flagged "genuine multi-session,
+not forced" by three separate prior rounds (cont. 74, cont. 75, the "NEXT OBJECTIVES" round) — this
+round's job was to actually dig into WHY, concretely, rather than repeat the label a fourth time,
+and to build whatever real, checked piece the digging turned up (matching the C9 pattern: find the
+tractable core, don't force the originally-imagined shape).
+
+**C5 — two real findings, one built theorem.**
+
+*Finding 1 (checked by reading source, not assumed): the "three unrelated formalisms" framing from
+cont. 74 was one formalism too pessimistic.* `EMLEncoder.lean`'s `enc` and `IterExpChain.lean`'s
+`IterExpChain` are BOTH literal instances of the SAME `PfaffianChain n` structure
+(`PfaffianChain.lean`, `structure PfaffianChain (n : Nat) where evals : Fin n → (Real → Real);
+relations : Fin n → MultiPoly n`) — `enc : (t : EMLTree) → {N : Nat} → PfaffianChain N →
+PfaffianChain (len t N) × MultiPoly (len t N)`, `IterExpChain (N : Nat) : PfaffianChain N`. "Chain
+order" genuinely has ONE uniform meaning across `EMLTree`'s own encoding and the iterated-exp-tower
+development — they were never as unrelated as cont. 74 concluded from a docstring-level read. (The
+THIRD leg, the Python/SymPy chain-5 census, remains genuinely separate — it has no Lean presence at
+all and classifies functions by a completely different, non-`PfaffianChain` method.)
+
+*Finding 2 (the actual reason a hierarchy theorem doesn't fall out for free): the muses' proposed
+obstruction mechanism — combine chain-order with `TailSign` — does not combine, because the two are
+ORTHOGONAL axes, not composable ones.* Checked directly against a concrete instance: `sin`'s own
+classical ODE (`y'' = -y`) makes it Pfaffian chain order 2 (`{sin, cos}` closes under one derivative
+each) — a LOW chain order — yet no `EMLTree` can represent it, for a reason that has nothing to do
+with chain order at all: `EMLTree`'s grammar (`exp(t1) - log(t2)`, nothing else) simply does not
+contain sin-shaped values at ANY chain order, low or high. `TailSign` obstructs based on
+oscillation/eventual-sign behavior; chain order is an algebraic-closure notion (how many auxiliary
+functions does a classical ODE need). A genuine "no chain-`N` Pfaffian function equals TARGET"
+theorem would need an obstruction sensitive to `N` itself (a growth-rate argument is the natural
+candidate — iterated exponentials outgrow any FIXED finite algebraic combination fast enough that a
+low-order chain provably can't keep up — but this is a substantial new proof in its own right, not
+attempted this round, and not guaranteed to be the right mechanism without checking).
+
+*Built: `EMLTowerSubsumesIterExp.lean` — the existence-direction bridge, the necessary prerequisite
+before any obstruction claim can even be STATED meaningfully.* `emlTower : Nat → EMLTree` via the
+`eml t (const 1)` idiom (`log 1 = 0` collapses `eml t (const 1)` to `exp(t.eval ·)` exactly,
+UNCONDITIONALLY — the `const 1` slot is positive everywhere, so `EMLPfaffianValidOn`'s log-argument
+side condition never has anything to bite on). `emlTower_eval : (emlTower n).eval x = iterExp n x`
+— no hypothesis, no eventual qualifier, a genuine everywhere-equality — proven by a two-line
+structural induction. `exists_emlTree_eq_iterExp : ∀ n, ∃ T, T.depth = n + 1 ∧ ∀ x, T.eval x =
+iterExp n x`. Payoff: `EMLTree` already reaches every level of the iterated-exponential tower
+family that `IterExpDepthN` was built to study — a real, checked, previously-unconfirmed
+connection between the two arcs, even though the full hierarchy/obstruction theorem C5 originally
+asked for was not reached. `sorryAx`-free, zero new axioms (confirmed via direct `#print axioms`
+before touching `AxiomLedger.lean`), pure structural induction plus the already-proven `log_one`.
+
+**C10 — the precise constructive obstacle, confirmed by tracing the actual proof, not inferred
+from its label.** Traced `eml_eventually_valid_repr`'s threshold (`a`/`R`) through its full
+recursive structure: the TOP-LEVEL induction (`WitnessResidualNormalFormClosure.lean`) is
+genuinely simple — at each `eml A B` node, the new threshold is just the max of four existing
+quantities via `lt_of_lt_four`/`lt_of_lt_both` (linear, mechanical, would proof-mine easily on its
+own). But one of those four quantities — the `TailSign` threshold `R` for `B.eval` — comes from
+`evalid_tailSign` (`WitnessResidualEventualValidTailSign.lean`), and THAT theorem's proof is
+`Classical.byContradiction (fun hcon => ...)`: it assumes `¬TailSign T.eval`, derives `M + 1`
+distinct zeros in a bounded region (`M := combinedBoundE(...)`, genuinely EXPLICIT, confirmed by
+reading its definition — a structurally-recursive `Nat`-valued function dispatching on the tree's
+own `ChainTags`, not an existential), and contradicts the Khovanskii zero-count bound. This proves
+`TailSign T.eval` — some fixed eventual sign exists — but by CONTRADICTION: the argument never
+constructs a value for `R`, it only shows that assuming no such `R` exists leads to too many zeros.
+This is a genuine "pure existence, not effective" obstacle, in the technical proof-mining sense the
+muses' own framing anticipated — converting it into an explicit `R(T)` would mean rebuilding
+`evalid_tailSign`'s argument in a constructive style (most plausibly: track the SPECIFIC finite
+list of zero-crossings any given non-`TailSign` tree would need and turn "too many" into an
+explicit exceeded-bound computation), not extracting a number that's already sitting in the current
+proof term. Not attempted this round — confirmed hard for a precise, checked reason (bounded by
+`combinedBoundE`'s own genuine explicitness, which is real and already gives the muses' concern
+about "is the bound explicit in tree structure" a partial YES for the zero-COUNT half of the
+question), not merely repeating "most speculative" as a label.
+
+`AxiomLedger.lean`: `MachLib.exists_emlTree_eq_iterExp` pinned (53rd headline), zero new
+`trustedFootprint` entries. Full `lake build MachLib` green (480 modules, up from 479).
+
+**Track C status after this round:** C1, C3, C6, C7, C8, C9 closed; C5 has one real new bridge
+theorem plus two precise (not speculative) findings about why the full hierarchy needs a
+genuinely different obstruction mechanism; C10 has a precise, checked account of exactly where the
+constructive/classical line sits, plus confirmation that the zero-COUNT half is already explicit
+even though the threshold itself is not. Neither C5 nor C10 is closed — both were confirmed, this
+round, to need real further mathematics (a growth-rate obstruction for C5; a constructive rebuild
+of `evalid_tailSign` for C10) that a single round should not force, matching this whole document's
+established discipline of reporting a checked "genuinely hard, here is exactly why" over a rushed
+or fabricated closure.

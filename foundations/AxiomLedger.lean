@@ -317,7 +317,22 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- confirming precedent (it already used `L = sin 0 = 0`, not `inf(sin) = -1`). Recorded rather
   -- than silently dropped, matching this document's "checked directly" discipline. Zero new
   -- trustedFootprint entries (pure `natCast`/`archimedean` scaling, both already load-bearing).
-  `MachLib.Real.no_tree_eq_periodic_target, `MachLib.Real.no_tree_eq_sin_via_periodic_barrier]
+  `MachLib.Real.no_tree_eq_periodic_target, `MachLib.Real.no_tree_eq_sin_via_periodic_barrier,
+  -- Added 2026-07-22: Track C, item C5 -- investigated, NOT force-closed (see the decision doc's
+  -- own cont.90 entry for the full technical account of why). Confirmed, by reading source rather
+  -- than assuming it, that EMLEncoder.lean's `enc` and IterExpChain.lean's `IterExpChain` are BOTH
+  -- literal instances of the SAME `PfaffianChain n` structure -- "chain order" has one uniform
+  -- meaning across both developments, contrary to this arc's own earlier "three unrelated
+  -- formalisms" framing (cont.74). Also confirmed the muses' proposed obstruction mechanism does
+  -- NOT combine as stated: TailSign and chain order are orthogonal axes (sin's own classical ODE
+  -- gives it chain order 2; EML's barrier against it has nothing to do with chain order). This
+  -- headline is the one concrete, buildable piece that investigation surfaced: the
+  -- EXISTENCE-direction bridge -- EMLTree already reaches every depth of the iterated-exponential
+  -- tower family (`emlTower n` matches `iterExp n` exactly, unconditionally, via the `eml t
+  -- (const 1)` idiom collapsing through `log 1 = 0`). A genuine chain-order-sensitive OBSTRUCTION
+  -- (the other half of "chain-N ⊊ chain-(N+1)") was not built -- flagged, not forced. Zero new
+  -- trustedFootprint entries (pure structural induction + already-proven log_one).
+  `MachLib.exists_emlTree_eq_iterExp]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
