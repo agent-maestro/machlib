@@ -46,8 +46,30 @@ namespace Certcom
 open MachLib.Real
 
 /-- The nestable fragment for LOCAL-Lipschitz primitives: arithmetic plus `tr1` nodes, where each
-occurrence carries its own witnessed domain `[lo,hi]`, Lipschitz certificate, and range obligations on
-both the computed and exact value of the subtree underneath it. -/
+occurrence carries its own witnessed domain `[lo,hi]`, Lipschitz certificate, range obligations on
+both the computed and exact value of the subtree underneath it, AND — since 2026-07-22 — its own
+point-specific rounding fact (`hround`).
+
+**Why `hround` moved from a separate, universally-quantified pipeline parameter into this
+constructor, per occurrence** (erratum-driven redesign, alongside `FPGrounding.lean`'s domain-
+restricted primitive axioms): the ORIGINAL design had `nested_fold_local`/`pipeline_nested_local`
+take one shared `hround : ∀ t a, abs (…) ≤ Eround1 t` — universally quantified over EVERY primitive
+at EVERY input, with no domain restriction, because that's what the (erroneously unconditional)
+primitive axioms made possible. Once those axioms became honestly domain-restricted, several
+primitives need an EXTRA validity condition beyond plain `lo ≤ · ≤ hi` interval membership — `log`/
+`sqrt`/`log10` need positivity (`0 < lo`), `asin`/`acos`/`tan` need their argument strictly inside
+their true domain (`R < 1`, `R < π/2`) — and these conditions are DIFFERENT per primitive, with no
+single uniform shape. A totalized `∀ t, …` dispatcher covering all 14 primitives at ARBITRARY `lo`/
+`hi` genuinely cannot exist for those six (the same overclaim the erratum fixed, just moved one level
+up); patching around it by picking an oversized fallback bound for the "invalid" branches would
+silently reintroduce the very false-axiom problem this whole redesign removes. The honest fix: since
+`pipeline_tr1_of_arith_local` (the FLAT, single-level version) already takes `hround` POINT-
+SPECIFIC — one inequality at the one input value that occurrence actually uses, not a universal
+statement — give `IsFoldLocal.tr1` the same shape, exactly alongside the Lipschitz data it already
+carries per-occurrence. The caller building an `IsFoldLocal` proof term supplies whatever rounding
+fact is appropriate for THAT primitive at THAT domain, using whatever validity condition it happens
+to need (`real_log_rounds` needs `0 < lo` in scope; `real_cosh_rounds` needs nothing extra) — no
+totalization, no universal quantification, no primitive-agnostic dispatcher required. -/
 inductive IsFoldLocal (toR : Float → MachLib.Real)
     (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
     (realOf1 : Trans1 → MachLib.Real → MachLib.Real) (env : Env) : EML → Prop
@@ -61,23 +83,31 @@ inductive IsFoldLocal (toR : Float → MachLib.Real)
       IsFoldLocal toR i1 i2 realOf1 env (.bin .mul a b)
   | neg (a : EML) : IsFoldLocal toR i1 i2 realOf1 env a →
       IsFoldLocal toR i1 i2 realOf1 env (.neg a)
-  | tr1 (t : Trans1) (a : EML) (L lo hi : MachLib.Real)
+  | tr1 (t : Trans1) (a : EML) (L lo hi Eround : MachLib.Real)
       (hLnn : 0 ≤ L)
       (hLip : ∀ p q : MachLib.Real, lo ≤ p → p ≤ hi → lo ≤ q → q ≤ hi →
           abs (realOf1 t p - realOf1 t q) ≤ L * abs (p - q))
       (hflx_lo : lo ≤ toR (evalEML i1 i2 env a).toF) (hflx_hi : toR (evalEML i1 i2 env a).toF ≤ hi)
-      (hxe_lo : lo ≤ exactRn toR realOf1 env a) (hxe_hi : exactRn toR realOf1 env a ≤ hi) :
+      (hxe_lo : lo ≤ exactRn toR realOf1 env a) (hxe_hi : exactRn toR realOf1 env a ≤ hi)
+      (hround : abs (toR (i1 t (evalEML i1 i2 env a).toF)
+          - realOf1 t (toR (evalEML i1 i2 env a).toF)) ≤ Eround) :
       IsFoldLocal toR i1 i2 realOf1 env a → IsFoldLocal toR i1 i2 realOf1 env (.tr1 t a)
 
 /-- **Absolute forward error over a nested arithmetic + LOCAL-Lipschitz transcendental tree.** For any
 `IsFoldLocal e`, T2's `evalEML` for `e`, through `toR`, is within SOME absolute bound of the exact real
 `exactRn … e` — one structural induction, `tr1` discharged by `absenc_lip_local` using the
-per-occurrence Lipschitz + range data the constructor carries. -/
+per-occurrence Lipschitz + range + rounding data the constructor carries.
+
+**No separate `hround` parameter** (erratum-driven redesign, 2026-07-22 — see `IsFoldLocal`'s own
+docstring for the full motivation): earlier this theorem took one shared, universally-quantified
+`hround : ∀ t a, abs (…) ≤ Eround1 t`, which is impossible to state honestly once several primitives
+need validity conditions beyond plain interval membership (`log` needs `0 < lo`, `asin` needs
+`R < 1`, …) that don't fit one primitive-agnostic shape. `IsFoldLocal.tr1` now carries its own
+point-specific `hround` per occurrence instead — exactly what this theorem's `tr1` case consumes
+directly, no totalization required. -/
 theorem nested_fold_local {toR : Float → MachLib.Real} (br : FPBridge toR)
-    (realOf1 : Trans1 → MachLib.Real → MachLib.Real) (Eround1 : Trans1 → MachLib.Real)
-    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) (env : Env)
-    (hround : ∀ (t : Trans1) (a : Float),
-        abs (toR (i1 t a) - realOf1 t (toR a)) ≤ Eround1 t) :
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real)
+    (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float) (env : Env) :
     ∀ e : EML, IsFoldLocal toR i1 i2 realOf1 env e →
       ∃ E, AbsEnc E (toR (evalEML i1 i2 env e).toF) (exactRn toR realOf1 env e) := by
   intro e he
@@ -99,26 +129,25 @@ theorem nested_fold_local {toR : Float → MachLib.Real} (br : FPBridge toR)
       show AbsEnc Ea (toR (-(evalEML i1 i2 env a).toF)) (-(exactRn toR realOf1 env a))
       rw [br.neg (evalEML i1 i2 env a).toF]
       exact absenc_neg iha
-  | tr1 t a L lo hi hLnn hLip hflx_lo hflx_hi hxe_lo hxe_hi _ iha =>
+  | tr1 t a L lo hi Eround hLnn hLip hflx_lo hflx_hi hxe_lo hxe_hi hround _ iha =>
       obtain ⟨Ea, iha⟩ := iha
-      exact ⟨_, absenc_lip_local hLnn hLip iha hflx_lo hflx_hi hxe_lo hxe_hi
-        (hround t (evalEML i1 i2 env a).toF)⟩
+      exact ⟨_, absenc_lip_local hLnn hLip iha hflx_lo hflx_hi hxe_lo hxe_hi hround⟩
 
 /-- **The nested LOCAL-Lipschitz pipeline, through the emitted C.** For any `IsFoldLocal e`, the value
 the emitted C computes, through `toR`, is within some absolute bound of the exact `exactRn … e` —
-arbitrary nesting of arithmetic and LOCAL-Lipschitz transcendentals, each with its own domain. -/
+arbitrary nesting of arithmetic and LOCAL-Lipschitz transcendentals, each with its own domain and its
+own point-specific rounding fact (carried by `IsFoldLocal.tr1` itself — see its docstring; no separate
+`hround` parameter needed here, unlike this theorem's pre-2026-07-22 form). -/
 theorem pipeline_nested_local {toR : Float → MachLib.Real} (br : FPBridge toR)
-    (realOf1 : Trans1 → MachLib.Real → MachLib.Real) (Eround1 : Trans1 → MachLib.Real)
+    (realOf1 : Trans1 → MachLib.Real → MachLib.Real)
     (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
     (r1 : String → Float → Float) (r2 : String → Float → Float → Float)
     (hrt1 : ∀ (t : Trans1) (v : Float), r1 t.cName v = i1 t v)
     (hrt2 : ∀ (t : Trans2) (u v : Float), r2 t.cName u v = i2 t u v) (env : Env)
-    (hround : ∀ (t : Trans1) (a : Float),
-        abs (toR (i1 t a) - realOf1 t (toR a)) ≤ Eround1 t)
     (e : EML) (he : IsFoldLocal toR i1 i2 realOf1 env e) :
     ∃ E, AbsEnc E (toR (evalC r1 r2 env (emitC e)).toF) (exactRn toR realOf1 env e) := by
   rw [emitC_correct i1 i2 r1 r2 hrt1 hrt2 e env]
-  exact nested_fold_local br realOf1 Eround1 i1 i2 env hround e he
+  exact nested_fold_local br realOf1 i1 i2 env e he
 
 /-! ## Bridges to the arithmetic fragment: lifting a plain `IsArith` kernel into the nested fold -/
 
@@ -181,22 +210,26 @@ could not cover. The range/positivity obligations at each level are supplied as 
 STRUCTURAL demonstration that two real, distinct per-primitive Lipschitz certificates (`sinh_lip_local`,
 `log_lip_local`) compose through the recursion, not a numeric instance. -/
 example {toR : Float → MachLib.Real} (i1 : Trans1 → Float → Float) (i2 : Trans2 → Float → Float → Float)
-    (env : Env) (R lo hi : MachLib.Real) (hlo : 0 < lo)
+    (env : Env) (R lo hi Eround1 Eround2 : MachLib.Real) (hlo : 0 < lo)
     (hflx_lo1 : -R ≤ toR (evalEML i1 i2 env (.var "x")).toF)
     (hflx_hi1 : toR (evalEML i1 i2 env (.var "x")).toF ≤ R)
     (hxe_lo1 : -R ≤ exactRn toR demoRealOf1 env (.var "x"))
     (hxe_hi1 : exactRn toR demoRealOf1 env (.var "x") ≤ R)
+    (hround1 : abs (toR (i1 .sinh (evalEML i1 i2 env (.var "x")).toF)
+        - sinh (toR (evalEML i1 i2 env (.var "x")).toF)) ≤ Eround1)
     (hflx_lo2 : lo ≤ toR (evalEML i1 i2 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y"))).toF)
     (hflx_hi2 : toR (evalEML i1 i2 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y"))).toF ≤ hi)
     (hxe_lo2 : lo ≤ exactRn toR demoRealOf1 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y")))
-    (hxe_hi2 : exactRn toR demoRealOf1 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y")) ≤ hi) :
+    (hxe_hi2 : exactRn toR demoRealOf1 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y")) ≤ hi)
+    (hround2 : abs (toR (i1 .ln (evalEML i1 i2 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y"))).toF)
+        - log (toR (evalEML i1 i2 env (.bin .add (.tr1 .sinh (.var "x")) (.var "y"))).toF)) ≤ Eround2) :
     IsFoldLocal toR i1 i2 demoRealOf1 env
       (.tr1 .ln (.bin .add (.tr1 .sinh (.var "x")) (.var "y"))) :=
-  .tr1 .ln _ (1 / lo) lo hi (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
-    hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2
+  .tr1 .ln _ (1 / lo) lo hi Eround2 (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
+    hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2 hround2
     (.add _ _
-      (.tr1 .sinh _ (cosh R) (-R) R (le_of_lt (cosh_pos R)) (sinh_lip_local R)
-        hflx_lo1 hflx_hi1 hxe_lo1 hxe_hi1 (.var "x"))
+      (.tr1 .sinh _ (cosh R) (-R) R Eround1 (le_of_lt (cosh_pos R)) (sinh_lip_local R)
+        hflx_lo1 hflx_hi1 hxe_lo1 hxe_hi1 hround1 (.var "x"))
       (.var "y"))
 
 end Certcom

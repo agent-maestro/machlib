@@ -6162,3 +6162,91 @@ larger, invasive change — not "cheap either way" the way the brand-new `real_r
 Recorded explicitly in the `disclosedTrusted` entry itself (not just this doc) so it doesn't get
 silently forgotten. Whether to pursue that broader retroactive audit is a decision for the user, not
 something to do unilaterally given its blast radius across existing, already-audited work.
+
+## 2026-07-22 (cont. 86) — the retroactive audit: all fourteen `Trans1` primitives, done properly
+
+User: "yes, audit and fix it" (retroactive audit) + "Generalize to Groundable" (compositional
+pipeline, queued for after — sequenced this way specifically to avoid rebuilding the generalization
+on top of axioms about to change underneath it).
+
+**Scope survey first, not a blind mechanical pass.** Read all fourteen `Trans1` primitive rounding
+axioms in `FPGrounding.lean` before touching any of them, classifying each on its own numerical
+merits:
+
+- **Genuinely broken (4): `exp`, `sinh`, `cosh`, `tanh`.** All either directly `Float.exp`-based or
+  composites built FROM it (`sinh x = (eˣ−e⁻ˣ)/2`, etc., `EMLToCRuntime.lean`). For large `|a|`,
+  `Float.exp` overflows to `±inf`; `tanh`'s composite specifically hits `inf/inf = NaN`. `realToR` of
+  either is completely unconstrained by any existing axiom — the unconditional bound was false.
+- **Domain-restricted elsewhere, rounding axiom not yet matching (6): `log`, `log10`, `sqrt`, `asin`,
+  `acos`, `tan`.** Each `pid_X_grounded` theorem ALREADY required `lo`/`hi`/`R` bounds for the
+  Lipschitz part, but the underlying `real_X_rounds` axiom was still stated unconditionally,
+  including for out-of-domain inputs that produce `NaN` (negative `sqrt`, `|x|>1` for `asin`/`acos`)
+  or diverge (`tan`'s poles).
+- **Confirmed fine, left unchanged (4): `sin`, `cos`, `atan`, `abs`.** Native `Prims` fields (not
+  exp-composites), globally bounded output, no pole. A fixed constant COULD genuinely bound their
+  error for every input — not provably false the way the other ten were. The one caveat noted in
+  their docstrings: real libm `sin`/`cos` accuracy does degrade for huge arguments (range-reduction
+  error), a real but second-order, non-catastrophic concern, unlike the other ten's `NaN`/`inf`.
+
+**Fixed the 10, reusing existing structure wherever possible.** Each domain restriction reuses a
+bound the corresponding `pid_X_grounded` theorem ALREADY required for its Lipschitz reasoning (`hi`
+for `exp`, `[lo,hi]` for `log`/`log10`/`sqrt`, `R` for the symmetric-domain primitives) — costing
+ZERO new hypotheses at any existing call site, with one exception: `tanh` previously had NO domain
+hypothesis at all (celebrated in its own docstring as "no domain bookkeeping needed," since `tanh`
+IS mathematically globally Lipschitz) — fixing its underlying exp-composite's overflow risk needed a
+genuinely NEW `R` parameter, the one place this audit adds hypothesis surface rather than just
+re-using it. All ten dropped their separate `real_X_eps` constant entirely, folding directly into
+`u`-relative bounds (`u * exp hi`, `u * (abs (log lo) + abs (log hi))`, `u * cosh R`, …) — matching
+`real_round_bounds`'s own fix rather than inventing new named constants per primitive.
+
+**Two more self-caught bugs, found while building, not after.** (1) `asin`/`acos`'s first draft was
+missing the `R < 1` domain restriction — `tan`'s `R < π/2` was correctly included from the start, but
+the SAME requirement for asin/acos (their true domain is `[-1,1]`) was initially overlooked, caught
+while designing the next piece below, fixed immediately, same day. (2) A structural discovery, not
+exactly a "bug" but load-bearing: `hround_all`/`Eround1All`/`realOfAll14` — the totalized dispatcher
+`pid_log_cosh_grounded` (the ONE nested, two-level example) used to route through `pipeline_nested_
+local` — turned out to be IMPOSSIBLE to state honestly once the ten axioms became domain-restricted.
+`log`/`sqrt`/`log10` need `0 < lo`; `asin`/`acos`/`tan` need `R < 1`/`R < π/2` — six different validity
+shapes with no single uniform "works for any `lo`/`hi`" statement. Patching around it with an
+oversized fallback bound for out-of-validity cases would have silently reintroduced the exact
+overclaim this whole round exists to remove.
+
+**The real fix: move `hround` into the constructor, per occurrence.** `IsFoldLocal.tr1` (`Absolute
+FoldNestLocal.lean`) now carries its own point-specific `hround` field, exactly alongside the
+Lipschitz data it already carried per-occurrence — mirroring how the FLAT, single-level pipelines
+(`pipeline_tr1_of_arith_local` etc.) already worked. `nested_fold_local`/`pipeline_nested_local` lost
+their separate, universally-quantified `hround`/`Eround1` parameters entirely — no longer needed,
+since rounding is supplied at `IsFoldLocal` construction time, using whatever validity condition that
+SPECIFIC occurrence needs. `pid_log_cosh_grounded` rebuilt on the new interface, supplying `real_log_
+rounds`/`real_cosh_rounds` directly at its two occurrences (using the `hlo : 0 < lo` it already
+carried) — no totalization, no `hround_all`, no `realOfAll14`, `sorryAx`-free.
+
+**Build discipline.** Built and iterated primitive-by-primitive rather than one giant edit — the 10
+flat theorems (`pid_exp_grounded` through `pid_tan_grounded`) all compiled clean on the FIRST attempt
+after each edit (confirmed via a targeted `lake build MachLib.FPGrounding` before touching the harder
+nested piece). `AbsoluteFoldNestLocal.lean`'s redesign also built clean first try. `EMLCertcom
+Grounded.lean` (Track C's own consumer of `real_exp_rounds`/`real_log_rounds`) needed a mechanical
+follow-up rewrite of its three theorems' closed-form bounds to match the new axiom shapes — done,
+verified. The `AxiomLedger` sweep hit the EXACT lake-targeted-build-stale-measurement gotcha again
+briefly, and separately a self-inflicted `python3` string-replace bug (a plain substring removal
+meant for the `List Name` syntax also matched inside `disclosedTrusted`'s tuple syntax, corrupting
+list structure) — caught immediately by the type checker, fixed by reverting the one file via `git
+checkout` and redoing the removal with properly anchored regexes (tuple-syntax entries removed
+FIRST, list-syntax entries removed second with a negative lookbehind guarding against re-matching
+tuple fragments).
+
+`#print axioms` swept across all fourteen `pid_X_grounded` theorems plus the three `EMLCertcom
+Grounded.lean` theorems plus `pid_log_cosh_grounded`: zero `sorryAx` anywhere. Full `lake build
+MachLib` green (476 modules). `AxiomLedger` gate green: `299 axioms pinned; 47 headline footprints ⊆
+trusted (144); … 23 disclosed-trusted` (down from 310/34 at the start of this round — ten stale
+`_eps` names retired, zero new trust added net).
+
+**Where this leaves the Certcom grounding program.** All fourteen `Trans1` primitives' rounding
+axioms are now either genuinely domain-restricted (10) or confirmed-and-documented as honestly
+unconditional (4) — no more silent overclaims anywhere in `FPGrounding.lean`. The one remaining
+structural change this round made — moving rounding into `IsFoldLocal.tr1` rather than a shared
+dispatcher — is better infrastructure than what it replaced, not just a workaround: any FUTURE
+multi-level nested kernel (not just `log(cosh(...))`) inherits point-specific, per-occurrence
+rounding for free, without needing its own bespoke totalization. Next: the Groundable compositional
+pipeline generalization, now building on a corrected foundation rather than one that would have
+needed rework.

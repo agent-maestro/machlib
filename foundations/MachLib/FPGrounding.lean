@@ -108,31 +108,39 @@ rounding, the "irreducible trust" the T2/T3 work isolated. `tanh` is globally `1
 enters the fold with no domain hypothesis; and `tanh`-saturation is a real control primitive (a smooth
 alternative to the hard `clamp`, and — unlike `clamp` — inside the certified `+/−/×/tr1` fragment). -/
 
-/-- The disclosed libm rounding bound for the runtime `tanh`. `libmonogate.h` computes `tanh` by its
-exp-decomposition (`stdI1 leanPrims .tanh`), so this is the standard model: that composite, through the
-real denotation `realToR`, is within a fixed `real_tanh_eps` of the exact `Real.tanh`. Un-witnessable in
-Lean (opaque `Float`), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
-axiom real_tanh_eps : MachLib.Real
-
-axiom real_tanh_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ real_tanh_eps
+/-- **The disclosed libm rounding bound for the runtime `tanh`, domain-restricted.** For any `R` and
+`a : Float` with `abs (realToR a) ≤ R`, `leanPrims.tanh`, through `realToR`, is within `u` of the exact
+`Real.tanh` — a CONSTANT bound (not scaled by `R`): `tanh`'s output is always in `(-1,1)` regardless of
+domain, so `R` here exists purely to guard the underlying implementation, not to calibrate the bound's
+size. **Not claimed unconditionally** (erratum-driven design, 2026-07-22, matching `real_exp_rounds`):
+`libmonogate.h` computes `tanh` via `stdI1 leanPrims .tanh = fun x => (p.exp x - p.exp (-x))/(p.exp x +
+p.exp (-x))`, an exp-DECOMPOSITION (`EMLToCRuntime.lean`) — for large `|a|`, `Float.exp` on one branch
+overflows to `+inf` while the other underflows to `0`, giving `inf/inf = NaN`, and `realToR (NaN)` is
+completely unconstrained by any existing axiom. `tanh` being mathematically globally-Lipschitz does NOT
+protect its Float IMPLEMENTATION from this — the composite, not the math, is what breaks. Un-witnessable
+in Lean (`Float` opaque), disclosed like `real_fpbridge`; the residual libm trust for this primitive. -/
+axiom real_tanh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
+    abs (realToR (stdI1 leanPrims .tanh a) - tanh (realToR a)) ≤ u
 
 /-- **A grounded transcendental control kernel.** The emitted C for `tanh(1.5·e + 0.4·i + 0.05·d)` — a
-soft-saturated PID — read through `realToR`, is within `real_tanh_eps + absErr` of the exact ℝ value
-`tanh(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge` is discharged
-by `real_fpbridge`, the runtime correspondence by the proven `std_hrt` at Lean's libm basis, and the one
-`tanh` rounding by the disclosed `real_tanh_rounds`. First grounded certificate reaching a transcendental
+soft-saturated PID — read through `realToR`, is within `u + absErr` of the exact ℝ value `tanh(PID
+law)`, GIVEN a bound `R` on the PID law's own value (both computed and exact — the one new hypothesis
+this theorem needs beyond the erratum-free version, to keep the underlying exp-decomposition from
+overflowing; see `real_tanh_rounds`). `FPBridge` is discharged by `real_fpbridge`, the runtime
+correspondence by the proven `std_hrt` at Lean's libm basis, and the one `tanh` rounding by the
+disclosed, domain-restricted `real_tanh_rounds`. First grounded certificate reaching a transcendental
 layer over real `Float` bytes. `1`-Lipschitz `tanh` (`globLip_lipschitz`) amplifies the arithmetic fold's
 `absErr` by `1`. -/
-theorem pid_tanh_grounded (env : Env) :
-    AbsEnc (real_tanh_eps + 1 * absErr realToR env pidRawEML)
+theorem pid_tanh_grounded (env : Env) (R : MachLib.Real)
+    (hflx : abs (realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF) ≤ R) :
+    AbsEnc (u + 1 * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .tanh pidRawEML))).toF)
       (tanh (exactR realToR env pidRawEML)) :=
   pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .tanh tanh 1 real_tanh_eps
+    env .tanh tanh 1 u
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
-    pidRawEML isArith_pidRawEML (real_tanh_rounds _)
+    pidRawEML isArith_pidRawEML (real_tanh_rounds R _ hflx)
 
 /-! ### Grounding a second libm primitive: `exp`, LOCALLY Lipschitz
 
@@ -142,37 +150,45 @@ globally Lipschitz (unbounded growth), so grounding it goes through `pipeline_ex
 on the PID law's value actually landing in that range — the expected, correct shape for a *local*
 Lipschitz primitive, not a shortcoming relative to `tanh`'s unconditional result. -/
 
-/-- The disclosed libm rounding bound for the runtime `exp`. Same status as `real_tanh_eps`: the
-composite `libmonogate.h` computes for `exp` (here just `Float.exp` itself, `leanPrims.exp`), through
-the real denotation `realToR`, is within a fixed `real_exp_eps` of the exact `Real.exp`. Un-witnessable
-in Lean (opaque `Float`); the residual libm trust for this primitive. -/
-axiom real_exp_eps : MachLib.Real
-
-axiom real_exp_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ real_exp_eps
+/-- **The disclosed libm rounding bound for the runtime `exp`, domain-restricted.** For any `hi` and
+any `a : Float` with `realToR a ≤ hi`, `leanPrims.exp`, through `realToR`, is within `u · exp hi` of
+the exact `Real.exp`. Relative-error form (the standard IEEE-754 correctly-rounded model, same `u` as
+every other correctly-rounded float operation in this codebase), uniformized over the range `hi` the
+same way `exp_lip_local`'s `L := exp hi` uniformizes a Lipschitz bound. **Not claimed unconditionally**
+(erratum-driven design, matching `EMLCertcomGrounded.lean`'s `real_round_bounds` fix, 2026-07-22):
+`Float.exp` genuinely overflows to `+inf` above `hi ≈ 709`, past which `realToR (Float.exp a)` is
+unconstrained by any existing axiom and NO fixed bound holds — an unconditional version of this axiom
+asserts something no runtime satisfies. `hi` is exactly the same bound every caller (`pid_exp_grounded`
+and Track C's `eml_var_var_*_grounded`) already carries for the Lipschitz part, so this costs no new
+hypothesis at any existing call site. Un-witnessable in Lean (`Float` opaque); the residual libm trust
+for this primitive. -/
+axiom real_exp_rounds : ∀ (hi : MachLib.Real) (a : Float), realToR a ≤ hi →
+    abs (realToR (stdI1 leanPrims .exp a) - exp (realToR a)) ≤ u * exp hi
 
 /-- **A second grounded transcendental control kernel: `exp(PID law)`.** For any `[lo,hi]` the PID law's
 computed AND exact values both land in, the emitted C for `exp(1.5·e + 0.4·i + 0.05·d)` — an
 exponential-gain variant of the soft-saturated controller — read through `realToR`, is within
-`real_exp_eps + exp hi · absErr` of the exact ℝ value `exp(PID law)`, with **no `FPBridge` and no
+`u · exp hi + exp hi · absErr` of the exact ℝ value `exp(PID law)`, with **no `FPBridge` and no
 ∀-primitive rounding hypothesis**: `FPBridge` is discharged by `real_fpbridge`, the runtime
 correspondence by `std_hrt1`/`std_hrt2` at Lean's libm basis, and the one `exp` rounding by the
-disclosed `real_exp_rounds`. Second grounded certificate reaching a transcendental layer over real
-`Float` bytes — the second axis of what "libm primitive grounding" (the certcom-A scoping doc's item
-5) actually means: not "grounding one universally-Lipschitz function suffices," but "each primitive
-needs its own disclosed rounding constant AND, unless globally Lipschitz, its own domain hypothesis."
-Instance of `pipeline_exp_of_arith` at `pidRawEML`. -/
+disclosed, domain-restricted `real_exp_rounds` — discharged at `hi` from the SAME `hflx_hi` this
+theorem already required for the Lipschitz part, no new hypothesis needed. Second grounded certificate
+reaching a transcendental layer over real `Float` bytes — the second axis of what "libm primitive
+grounding" (the certcom-A scoping doc's item 5) actually means: not "grounding one
+universally-Lipschitz function suffices," but "each primitive needs its own disclosed rounding
+constant AND, unless globally Lipschitz, its own domain hypothesis." Instance of `pipeline_exp_of_arith`
+at `pidRawEML`. -/
 theorem pid_exp_grounded (env : Env) (lo hi : MachLib.Real)
     (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
     (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
-    AbsEnc (real_exp_eps + exp hi * absErr realToR env pidRawEML)
+    AbsEnc (u * exp hi + exp hi * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .exp pidRawEML))).toF)
       (exp (exactR realToR env pidRawEML)) :=
   pipeline_exp_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .exp lo hi real_exp_eps pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_exp_rounds _)
+    env .exp lo hi (u * exp hi) pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_exp_rounds hi _ hflx_hi)
 
 /-! ### Grounding a third libm primitive: `log`, LOCALLY Lipschitz on a positive domain
 
@@ -184,34 +200,39 @@ grounding" (certcom-A scoping doc item 5) costs per primitive: a disclosed round
 plus a domain hypothesis unless the primitive happens to be globally Lipschitz like `tanh`, plus
 (for `log` specifically) a positivity side-condition on top of the plain range bound. -/
 
-/-- The disclosed libm rounding bound for the runtime `log`. Same status as `real_tanh_eps`/
-`real_exp_eps`: `leanPrims.log`, through the real denotation `realToR`, is within a fixed
-`real_log_eps` of the exact `Real.log`. Un-witnessable in Lean (opaque `Float`); the residual libm
-trust for this primitive. -/
-axiom real_log_eps : MachLib.Real
-
-axiom real_log_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ real_log_eps
+/-- **The disclosed libm rounding bound for the runtime `log`, domain-restricted.** For any
+`0 < lo ≤ hi` and `a : Float` with `lo ≤ realToR a ≤ hi`, `leanPrims.log`, through `realToR`, is
+within `u · (abs (log lo) + abs (log hi))` of the exact `Real.log` — a safe two-sided bound (log
+monotonic, so `log (realToR a) ∈ [log lo, log hi]`, and `abs (log (realToR a)) ≤ abs (log lo) +
+abs (log hi)` regardless of whether that interval straddles `0`), reusing exactly the `lo`/`hi` every
+caller (`pid_log_grounded`, Track C's `eml_var_var_*_grounded`) already carries. **Not claimed
+unconditionally** (erratum-driven design, 2026-07-22): `log` is undefined/`NaN` at or below `0`, so an
+unconditional bound over every `Float` — including non-positive ones — asserts something no runtime
+satisfies. Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+axiom real_log_rounds : ∀ (lo hi : MachLib.Real) (a : Float), 0 < lo → lo ≤ realToR a → realToR a ≤ hi →
+    abs (realToR (stdI1 leanPrims .ln a) - log (realToR a)) ≤ u * (abs (log lo) + abs (log hi))
 
 /-- **A third grounded transcendental control kernel: `log(PID law)`.** For any `[lo,hi]` with `lo>0`
 that the PID law's computed AND exact values both land in, the emitted C for
 `log(1.5·e + 0.4·i + 0.05·d)` — a logarithmic-gain variant of the controller (e.g. a decibel-scaled
-error signal) — read through `realToR`, is within `real_log_eps + (1/lo)·absErr` of the exact ℝ value
-`log(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge` is
-discharged by `real_fpbridge`, the runtime correspondence by `std_hrt1`/`std_hrt2`, and the one `log`
-rounding by the disclosed `real_log_rounds`. Third grounded transcendental kernel over real `Float`
-bytes. Instance of `pipeline_log_of_arith` at `pidRawEML`. -/
+error signal) — read through `realToR`, is within `u·(abs(log lo)+abs(log hi)) + (1/lo)·absErr` of the
+exact ℝ value `log(PID law)`, with **no `FPBridge` and no ∀-primitive rounding hypothesis**: `FPBridge`
+is discharged by `real_fpbridge`, the runtime correspondence by `std_hrt1`/`std_hrt2`, and the one
+`log` rounding by the disclosed, domain-restricted `real_log_rounds` — discharged from the SAME
+`hlo`/`hflx_lo`/`hflx_hi` this theorem already required for the Lipschitz part, no new hypothesis
+needed. Third grounded transcendental kernel over real `Float` bytes. Instance of
+`pipeline_log_of_arith` at `pidRawEML`. -/
 theorem pid_log_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
     (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
     (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
-    AbsEnc (real_log_eps + (1 / lo) * absErr realToR env pidRawEML)
+    AbsEnc (u * (abs (log lo) + abs (log hi)) + (1 / lo) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .ln pidRawEML))).toF)
       (log (exactR realToR env pidRawEML)) :=
   pipeline_log_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .ln lo hi real_log_eps hlo pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds _)
+    env .ln lo hi (u * (abs (log lo) + abs (log hi))) hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_log_rounds lo hi _ hlo hflx_lo hflx_hi)
 
 /-! ### Grounding a fourth libm primitive: `sin`, back to GLOBALLY Lipschitz
 
@@ -222,7 +243,18 @@ suggested and not a one-off — unlike `exp`/`log`, no domain bookkeeping at all
 
 /-- The disclosed libm rounding bound for the runtime `sin`. Same status as `real_tanh_eps`: the
 composite `leanPrims.sin`, through `realToR`, is within a fixed `real_sin_eps` of the exact `Real.sin`.
-Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive.
+
+**Confirmed unconditional (2026-07-22 audit, not changed)** — unlike `exp`/`sinh`/`cosh`/`tanh`,
+`sin` is a NATIVE `Prims` field (`Float.sin`), not an exp-composite, so it cannot hit the
+`inf/inf = NaN` failure those primitives' erratum fixes address. Its mathematical output is bounded
+(`abs (sin x) ≤ 1` for every real `x`), so — unlike `exp` (genuinely unbounded, no fixed constant
+works), `log`/`sqrt`/`asin`/`acos` (undefined outside a domain, `NaN` outside it), or `tan` (poles) —
+a fixed `real_sin_eps` COULD be a true statement about the real runtime for every `Float`, PROVIDED
+it's calibrated large enough to cover known accuracy degradation from large-argument range reduction
+(a real, if second-order, libm concern for huge `|a|` — a genuinely different, milder failure mode
+than the others' `NaN`/`inf`/unboundedness). Not provably false the way the ten fixed axioms were;
+left unconditional. -/
 axiom real_sin_eps : MachLib.Real
 
 axiom real_sin_rounds : ∀ a : Float,
@@ -250,7 +282,10 @@ pattern to `tanh`/`sin` — no domain hypothesis. -/
 
 /-- The disclosed libm rounding bound for the runtime `cos`. Same status as `real_sin_eps`: the
 composite `leanPrims.cos`, through `realToR`, is within a fixed `real_cos_eps` of the exact `Real.cos`.
-Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive.
+
+**Confirmed unconditional (2026-07-22 audit, not changed)** — same reasoning as `real_sin_eps`
+above: native `Prims` field, bounded output, no `inf/inf`/`NaN`/pole failure mode. -/
 axiom real_cos_eps : MachLib.Real
 
 axiom real_cos_rounds : ∀ a : Float,
@@ -277,7 +312,11 @@ pattern to `tanh`/`sin`/`cos`. -/
 
 /-- The disclosed libm rounding bound for the runtime `atan`. Same status as `real_cos_eps`: the
 composite `leanPrims.atan`, through `realToR`, is within a fixed `real_atan_eps` of the exact
-`Real.atan`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
+`Real.atan`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive.
+
+**Confirmed unconditional (2026-07-22 audit, not changed)** — same reasoning as `real_sin_eps`:
+native `Prims` field, output bounded by `π/2` for every real input, no failure mode requiring a
+domain restriction. -/
 axiom real_atan_eps : MachLib.Real
 
 axiom real_atan_rounds : ∀ a : Float,
@@ -309,7 +348,11 @@ composite `leanPrims.abs`, through `realToR`, is within a fixed `real_abs_eps` o
 `Real.abs`. `abs` is IEEE-754-exact in principle (sign-bit clear, no rounding at all) — same honest
 posture as the `neg` field of `FPBridge` — but the residual libm trust is disclosed the same way as
 every other primitive here rather than assumed exact, since the runtime call still goes through
-`mg_abs`/`fabs`, not a bare sign-bit operation Lean can see. -/
+`mg_abs`/`fabs`, not a bare sign-bit operation Lean can see.
+
+**Confirmed unconditional (2026-07-22 audit, not changed)** — `abs` is exact (no rounding at all in
+principle) and its output magnitude never exceeds the input's, so it inherits no failure mode from
+anything upstream; the weakest possible case for a domain restriction of all fourteen. -/
 axiom real_abs_eps : MachLib.Real
 
 axiom real_abs_rounds : ∀ a : Float,
@@ -335,30 +378,31 @@ Same shape as `log` — one-sided domain, needs `lo > 0`. `L = 1/(√lo+√lo)` 
 `SqrtNode.sqrt_lip_local`. All five globally-Lipschitz primitives are done; every primitive from here
 needs its own domain/positivity bookkeeping. -/
 
-/-- The disclosed libm rounding bound for the runtime `sqrt`. Same status as every prior primitive:
-`leanPrims.sqrt` (`Float.sqrt`), through `realToR`, is within a fixed `real_sqrt_eps` of the exact
-`Real.sqrt`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
-axiom real_sqrt_eps : MachLib.Real
-
-axiom real_sqrt_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ real_sqrt_eps
+/-- **The disclosed libm rounding bound for the runtime `sqrt`, domain-restricted.** For any
+`0 ≤ hi` and `a : Float` with `0 ≤ realToR a ≤ hi`, `leanPrims.sqrt`, through `realToR`, is within
+`u · sqrt hi` of the exact `Real.sqrt` (`sqrt` monotonic and non-negative, so `sqrt (realToR a) ≤
+sqrt hi`). **Not claimed unconditionally** (erratum-driven design, 2026-07-22): `Float.sqrt` of a
+negative input is `NaN` in IEEE-754, and `realToR (NaN)` is unconstrained. Un-witnessable in Lean
+(`Float` opaque); the residual libm trust for this primitive. -/
+axiom real_sqrt_rounds : ∀ (hi : MachLib.Real) (a : Float), 0 ≤ realToR a → realToR a ≤ hi →
+    abs (realToR (stdI1 leanPrims .sqrt a) - sqrt (realToR a)) ≤ u * sqrt hi
 
 /-- **An eighth grounded transcendental control kernel: `sqrt(PID law)`.** For any `[lo,hi]` with
 `lo>0` that the PID law's computed AND exact values both land in, the emitted C for
 `sqrt(1.5·e + 0.4·i + 0.05·d)` — an RMS/magnitude-style variant — read through `realToR`, is within
-`real_sqrt_eps + (1/(√lo+√lo))·absErr` of the exact ℝ value `sqrt(PID law)`. Instance of
+`u·sqrt hi + (1/(√lo+√lo))·absErr` of the exact ℝ value `sqrt(PID law)`. Instance of
 `pipeline_sqrt_of_arith` at `pidRawEML`. -/
 theorem pid_sqrt_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
     (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
     (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
-    AbsEnc (real_sqrt_eps + (1 / (sqrt lo + sqrt lo)) * absErr realToR env pidRawEML)
+    AbsEnc (u * sqrt hi + (1 / (sqrt lo + sqrt lo)) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .sqrt pidRawEML))).toF)
       (sqrt (exactR realToR env pidRawEML)) :=
   pipeline_sqrt_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .sqrt lo hi real_sqrt_eps hlo pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_sqrt_rounds _)
+    env .sqrt lo hi (u * sqrt hi) hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_sqrt_rounds hi _ (le_of_lt (lt_of_lt_of_le hlo hflx_lo)) hflx_hi)
 
 /-! ### Grounding a ninth libm primitive: `log10`, LOCALLY Lipschitz on a positive domain
 
@@ -367,71 +411,81 @@ primitive here, `leanPrims`'s own interpretation of `.log10` is ITSELF a composi
 (`fun x => p.ln x / p.ln 10`, `EMLToCRuntime.lean`), not a distinct native runtime call — the disclosed
 rounding bound covers that whole composite, same honest posture as everywhere else. -/
 
-/-- The disclosed libm rounding bound for the runtime `log10`. Same status as every prior primitive:
-the composite `leanPrims.log10` (`ln x / ln 10`), through `realToR`, is within a fixed
-`real_log10_eps` of the exact `Real.log10`. Un-witnessable in Lean (opaque `Float`); the residual libm
-trust for this primitive. -/
-axiom real_log10_eps : MachLib.Real
-
-axiom real_log10_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ real_log10_eps
+/-- **The disclosed libm rounding bound for the runtime `log10`, domain-restricted.** For any
+`0 < lo ≤ hi` and `a : Float` with `lo ≤ realToR a ≤ hi`, `leanPrims.log10`, through `realToR`, is
+within `u · (abs (log10 lo) + abs (log10 hi))` of the exact `Real.log10` — same two-sided shape as
+`real_log_rounds` (`log10` is `log`'s monotone rescaling, so the same argument applies). **Not
+claimed unconditionally** (erratum-driven design, 2026-07-22): same positivity failure as `log` (the
+composite is `ln x / ln 10`). Un-witnessable in Lean (`Float` opaque); the residual libm trust for
+this primitive. -/
+axiom real_log10_rounds : ∀ (lo hi : MachLib.Real) (a : Float),
+    0 < lo → lo ≤ realToR a → realToR a ≤ hi →
+    abs (realToR (stdI1 leanPrims .log10 a) - log10 (realToR a)) ≤ u * (abs (log10 lo) + abs (log10 hi))
 
 /-- **A ninth grounded transcendental control kernel: `log10(PID law)`.** For any `[lo,hi]` with
 `lo>0` that the PID law's computed AND exact values both land in, the emitted C for
 `log10(1.5·e + 0.4·i + 0.05·d)` — a decibel-scaled gain variant — read through `realToR`, is within
-`real_log10_eps + (1/(lo·log 10))·absErr` of the exact ℝ value `log10(PID law)`. Instance of
-`pipeline_log10_of_arith` at `pidRawEML`. -/
+`u·(abs(log10 lo)+abs(log10 hi)) + (1/(lo·log 10))·absErr` of the exact ℝ value `log10(PID law)`.
+Instance of `pipeline_log10_of_arith` at `pidRawEML`. -/
 theorem pid_log10_grounded (env : Env) (lo hi : MachLib.Real) (hlo : 0 < lo)
     (hflx_lo : lo ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ hi)
     (hxe_lo : lo ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ hi) :
-    AbsEnc (real_log10_eps + (1 / (lo * log (natCast 10))) * absErr realToR env pidRawEML)
+    AbsEnc (u * (abs (log10 lo) + abs (log10 hi))
+        + (1 / (lo * log (natCast 10))) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .log10 pidRawEML))).toF)
       (log10 (exactR realToR env pidRawEML)) :=
   pipeline_log10_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .log10 lo hi real_log10_eps hlo pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_log10_rounds _)
+    env .log10 lo hi (u * (abs (log10 lo) + abs (log10 hi))) hlo pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_log10_rounds lo hi _ hlo hflx_lo hflx_hi)
 
 /-! ### Grounding a tenth libm primitive: `asin` (`arcsin`), SYMMETRIC-domain Lipschitz
 
 First symmetric-domain primitive: Lipschitz only on `[-R,R]`, `R < 1` (derivative blows up at `±1`),
 `L = 1/√(1−R²)`, via `InverseTrigBounded.arcsin_lip_local`. -/
 
-/-- The disclosed libm rounding bound for the runtime `asin`. Same status as every prior primitive:
-`leanPrims.asin` (`Float.asin`), through `realToR`, is within a fixed `real_asin_eps` of the exact
-`Real.arcsin`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
-axiom real_asin_eps : MachLib.Real
-
-axiom real_asin_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ real_asin_eps
+/-- **The disclosed libm rounding bound for the runtime `asin`, domain-restricted.** For any `R < 1`
+and `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.asin`, through `realToR`, is within `u · (pi/2)`
+of the exact `Real.arcsin` — a CONSTANT bound (`arcsin`'s output is always in `[-π/2,π/2]` regardless
+of domain). **Not claimed unconditionally** (erratum-driven design, 2026-07-22, self-caught while
+designing `hround_all`'s generic dispatcher below — `R < 1` was missing from this axiom's first draft,
+the same mistake `real_exp_rounds`'s erratum fixed for `exp`): `Float.asin` of `abs x > 1` is `NaN` in
+IEEE-754, and `realToR (NaN)` is unconstrained — a version of this axiom without `R < 1` is EXACTLY
+as false as the original unconditional `real_asin_eps` was, just with the failure boundary moved from
+"no bound at all" to "no bound past `abs x = 1`," which is still outside what `abs (realToR a) ≤ R`
+alone rules out for `R ≥ 1`. Un-witnessable in Lean (`Float` opaque); the residual libm trust for
+this primitive. -/
+axiom real_asin_rounds : ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R →
+    abs (realToR (stdI1 leanPrims .asin a) - arcsin (realToR a)) ≤ u * (pi / (1 + 1))
 
 /-- **A tenth grounded transcendental control kernel: `asin(PID law)`.** For any `[-R,R]` (`R<1`) that
 the PID law's computed AND exact values both land in, the emitted C for
-`asin(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `real_asin_eps + (1/√(1−R²))·absErr`
-of the exact ℝ value `arcsin(PID law)`. Instance of `pipeline_arcsin_of_arith` at `pidRawEML`. -/
+`asin(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `u·(pi/2) + (1/√(1−R²))·absErr` of
+the exact ℝ value `arcsin(PID law)`. Instance of `pipeline_arcsin_of_arith` at `pidRawEML`. -/
 theorem pid_asin_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
     (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
     (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
-    AbsEnc (real_asin_eps + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
+    AbsEnc (u * (pi / (1 + 1)) + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .asin pidRawEML))).toF)
       (arcsin (exactR realToR env pidRawEML)) :=
   pipeline_arcsin_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .asin R real_asin_eps hR pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_asin_rounds _)
+    env .asin R (u * (pi / (1 + 1))) hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_asin_rounds R _ hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding an eleventh libm primitive: `acos` (`arccos`), same symmetric-domain shape as `asin`
 -/
 
-/-- The disclosed libm rounding bound for the runtime `acos`. Same status as `real_asin_eps`:
-`leanPrims.acos` (`Float.acos`), through `realToR`, is within a fixed `real_acos_eps` of the exact
-`Real.arccos`. -/
-axiom real_acos_eps : MachLib.Real
-
-axiom real_acos_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ real_acos_eps
+/-- **The disclosed libm rounding bound for the runtime `acos`, domain-restricted.** For any `R < 1`
+and `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.acos`, through `realToR`, is within `u · pi` of
+the exact `Real.arccos` — CONSTANT (`arccos`'s output is always in `[0,π]`), same shape as
+`real_asin_rounds` (including the same `R < 1` fix). **Not claimed unconditionally** (erratum-driven
+design, 2026-07-22): same out-of-domain `NaN` risk as `asin`. Un-witnessable in Lean (`Float`
+opaque); the residual libm trust for this primitive. -/
+axiom real_acos_rounds : ∀ (R : MachLib.Real) (a : Float), R < 1 → abs (realToR a) ≤ R →
+    abs (realToR (stdI1 leanPrims .acos a) - arccos (realToR a)) ≤ u * pi
 
 /-- **An eleventh grounded transcendental control kernel: `acos(PID law)`.** Same shape as
 `pid_asin_grounded`. Instance of `pipeline_arccos_of_arith` at `pidRawEML`. -/
@@ -439,13 +493,13 @@ theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
     (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
     (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
-    AbsEnc (real_acos_eps + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
+    AbsEnc (u * pi + (1 / sqrt (1 - R * R)) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .acos pidRawEML))).toF)
       (arccos (exactR realToR env pidRawEML)) :=
   pipeline_arccos_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .acos R real_acos_eps hR pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_acos_rounds _)
+    env .acos R (u * pi) hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi (real_acos_rounds R _ hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding a twelfth libm primitive: `sinh`, SYMMETRIC domain, unconditional on `R`
 
@@ -453,29 +507,33 @@ theorem pid_acos_grounded (env : Env) (R : MachLib.Real) (hR : R < 1)
 `L = cosh R > 0` for every `R`. `leanPrims`'s `.sinh` is itself a composite of `exp` (`EMLToCRuntime.lean`
 `(p.exp x - p.exp (-x)) * 0.5`), not a distinct native call. -/
 
-/-- The disclosed libm rounding bound for the runtime `sinh`. Same status as every prior primitive:
-the composite `leanPrims.sinh`, through `realToR`, is within a fixed `real_sinh_eps` of the exact
-`Real.sinh`. -/
-axiom real_sinh_eps : MachLib.Real
-
-axiom real_sinh_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ real_sinh_eps
+/-- **The disclosed libm rounding bound for the runtime `sinh`, domain-restricted.** For any `R` and
+`a : Float` with `abs (realToR a) ≤ R`, `leanPrims.sinh`, through `realToR`, is within `u · cosh R` of
+the exact `Real.sinh` — reusing `cosh R` as the safe magnitude bound (`abs (sinh x) ≤ cosh x ≤ cosh R`
+for `abs x ≤ R`), exactly the SAME quantity `pid_sinh_grounded` already uses as its Lipschitz constant,
+so this costs no new hypothesis at that call site. **Not claimed unconditionally** (erratum-driven
+design, 2026-07-22): `leanPrims.sinh` is itself an exp-composite (`(p.exp x - p.exp (-x)) * 0.5`,
+`EMLToCRuntime.lean`) with the same overflow risk `real_exp_rounds`'s erratum note describes. Un-
+witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+axiom real_sinh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
+    abs (realToR (stdI1 leanPrims .sinh a) - sinh (realToR a)) ≤ u * cosh R
 
 /-- **A twelfth grounded transcendental control kernel: `sinh(PID law)`.** For any `[-R,R]` that the
 PID law's computed AND exact values both land in, the emitted C for `sinh(1.5·e + 0.4·i + 0.05·d)` read
-through `realToR`, is within `real_sinh_eps + cosh R · absErr` of the exact ℝ value `sinh(PID law)`.
+through `realToR`, is within `u · cosh R + cosh R · absErr` of the exact ℝ value `sinh(PID law)`.
 Instance of `pipeline_sinh_of_arith` at `pidRawEML`. -/
 theorem pid_sinh_grounded (env : Env) (R : MachLib.Real)
     (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
     (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
-    AbsEnc (real_sinh_eps + cosh R * absErr realToR env pidRawEML)
+    AbsEnc (u * cosh R + cosh R * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .sinh pidRawEML))).toF)
       (sinh (exactR realToR env pidRawEML)) :=
   pipeline_sinh_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .sinh R real_sinh_eps pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_sinh_rounds _)
+    env .sinh R (u * cosh R) pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_sinh_rounds R _ (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding a thirteenth libm primitive: `cosh`, SYMMETRIC domain, needs `0 ≤ R`
 
@@ -484,13 +542,14 @@ The `cosh`/`log` analog of `sinh`/`exp`: `L = sinh R` needs `R ≥ 0` on top of 
 mirroring how `log` layers positivity on top of `exp`'s plain one-sided domain. THIRTEENTH grounded
 primitive — every `Trans1` constructor except `tan` is now grounded. -/
 
-/-- The disclosed libm rounding bound for the runtime `cosh`. Same status as `real_sinh_eps`: the
-composite `leanPrims.cosh`, through `realToR`, is within a fixed `real_cosh_eps` of the exact
-`Real.cosh`. -/
-axiom real_cosh_eps : MachLib.Real
-
-axiom real_cosh_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ real_cosh_eps
+/-- **The disclosed libm rounding bound for the runtime `cosh`, domain-restricted.** For any `R` and
+`a : Float` with `abs (realToR a) ≤ R`, `leanPrims.cosh`, through `realToR`, is within `u · cosh R` of
+the exact `Real.cosh` (`cosh` monotonic in `abs ·`, so `cosh x ≤ cosh R` for `abs x ≤ R`) — reusing the
+SAME `cosh R`/`sinh R` shape `pid_cosh_grounded` already needs. **Not claimed unconditionally**
+(erratum-driven design, 2026-07-22): same exp-composite overflow risk as `sinh`/`real_sinh_rounds`.
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+axiom real_cosh_rounds : ∀ (R : MachLib.Real) (a : Float), abs (realToR a) ≤ R →
+    abs (realToR (stdI1 leanPrims .cosh a) - cosh (realToR a)) ≤ u * cosh R
 
 /-- **A thirteenth grounded transcendental control kernel: `cosh(PID law)`** — the last one before
 `tan`. Instance of `pipeline_cosh_of_arith` at `pidRawEML`. -/
@@ -498,13 +557,14 @@ theorem pid_cosh_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R)
     (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
     (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
-    AbsEnc (real_cosh_eps + sinh R * absErr realToR env pidRawEML)
+    AbsEnc (u * cosh R + sinh R * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .cosh pidRawEML))).toF)
       (cosh (exactR realToR env pidRawEML)) :=
   pipeline_cosh_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .cosh R real_cosh_eps hR0 pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_cosh_rounds _)
+    env .cosh R (u * cosh R) hR0 pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_cosh_rounds R _ (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### Grounding the fourteenth and LAST libm primitive: `tan`
 
@@ -512,30 +572,33 @@ The one primitive needing genuinely new math (`TanLipschitz.lean`, one new axiom
 `sin_pos_of_pos_lt_pi_div_two`, user-approved). Symmetric domain `[-R,R]`, `R < π/2`, `R ≥ 0`
 (the `cosh`-shaped extra hypothesis), `L = 1/cos²R`. Completes every `Trans1` constructor. -/
 
-/-- The disclosed libm rounding bound for the runtime `tan`. Same status as every prior primitive:
-`leanPrims.tan` (`Float.tan`), through `realToR`, is within a fixed `real_tan_eps` of the exact
-`Real.tan`. Un-witnessable in Lean (opaque `Float`); the residual libm trust for this primitive. -/
-axiom real_tan_eps : MachLib.Real
-
-axiom real_tan_rounds : ∀ a : Float,
-    abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ real_tan_eps
+/-- **The disclosed libm rounding bound for the runtime `tan`, domain-restricted.** For any `R < π/2`,
+`R ≥ 0`, and `a : Float` with `abs (realToR a) ≤ R`, `leanPrims.tan`, through `realToR`, is within
+`u · tan R` of the exact `Real.tan` (`tan` odd and monotonic increasing on `[0,π/2)`, so `abs (tan x)
+≤ tan R` for `abs x ≤ R < π/2`) — reusing the SAME `R` `pid_tan_grounded` already carries. **Not
+claimed unconditionally** (erratum-driven design, 2026-07-22): `tan` has poles at `±π/2 + kπ`, where
+it is genuinely unbounded — no fixed constant, and no `R`-independent bound, holds past that point.
+Un-witnessable in Lean (`Float` opaque); the residual libm trust for this primitive. -/
+axiom real_tan_rounds : ∀ (R : MachLib.Real) (a : Float), 0 ≤ R → R < pi / (1 + 1) →
+    abs (realToR a) ≤ R → abs (realToR (stdI1 leanPrims .tan a) - tan (realToR a)) ≤ u * tan R
 
 /-- **The fourteenth and last grounded transcendental control kernel: `tan(PID law)`.** For any
 `[-R,R]` (`R<π/2`, `R≥0`) that the PID law's computed AND exact values both land in, the emitted C for
-`tan(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `real_tan_eps + (1/cos²R)·absErr` of
+`tan(1.5·e + 0.4·i + 0.05·d)` read through `realToR`, is within `u·tan R + (1/cos²R)·absErr` of
 the exact ℝ value `tan(PID law)`. Instance of `pipeline_tan_of_arith` at `pidRawEML`. Every `Trans1`
 constructor is now grounded. -/
 theorem pid_tan_grounded (env : Env) (R : MachLib.Real) (hR0 : 0 ≤ R) (hR : R < pi / (1 + 1))
     (hflx_lo : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
     (hxe_lo : -R ≤ exactR realToR env pidRawEML) (hxe_hi : exactR realToR env pidRawEML ≤ R) :
-    AbsEnc (real_tan_eps + (1 / (cos R * cos R)) * absErr realToR env pidRawEML)
+    AbsEnc (u * tan R + (1 / (cos R * cos R)) * absErr realToR env pidRawEML)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (tr1OfEML .tan pidRawEML))).toF)
       (tan (exactR realToR env pidRawEML)) :=
   pipeline_tan_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    env .tan R real_tan_eps hR0 hR pidRawEML isArith_pidRawEML
-    hflx_lo hflx_hi hxe_lo hxe_hi (real_tan_rounds _)
+    env .tan R (u * tan R) hR0 hR pidRawEML isArith_pidRawEML
+    hflx_lo hflx_hi hxe_lo hxe_hi
+    (real_tan_rounds R _ hR0 hR (abs_le_iff.mpr ⟨hflx_lo, hflx_hi⟩))
 
 /-! ### The multi-level instantiation: `log(cosh(PID law))`, through `pipeline_nested_local`
 
@@ -550,37 +613,9 @@ positive one-sided domain `[lo,hi]` — two DIFFERENT domain shapes stacked, exe
 `pipeline_tr1_of_arith_local`'s own docstring calls out (`log` layering positivity on top of `exp`'s
 plain range, here `log` layering positivity on top of `cosh`'s symmetric range). -/
 
-/-- Real semantics of ALL FOURTEEN `Trans1` constructors — the totalisation `pipeline_nested_local`
-needs, since its `hround` hypothesis is universally quantified over every primitive, not just the ones
-a specific kernel happens to use. Buildable only now that every primitive is grounded. -/
-noncomputable def realOfAll14 : Trans1 → MachLib.Real → MachLib.Real
-  | .exp => exp   | .ln => log     | .sin => sin   | .cos => cos
-  | .tan => tan   | .sqrt => sqrt  | .abs => abs   | .asin => arcsin
-  | .acos => arccos | .atan => atan | .sinh => sinh | .cosh => cosh
-  | .tanh => tanh | .log10 => log10
-
-/-- The disclosed rounding constant for each of the fourteen primitives, matching `realOfAll14`. -/
-noncomputable def Eround1All : Trans1 → MachLib.Real
-  | .exp => real_exp_eps     | .ln => real_log_eps      | .sin => real_sin_eps
-  | .cos => real_cos_eps     | .tan => real_tan_eps      | .sqrt => real_sqrt_eps
-  | .abs => real_abs_eps     | .asin => real_asin_eps    | .acos => real_acos_eps
-  | .atan => real_atan_eps   | .sinh => real_sinh_eps    | .cosh => real_cosh_eps
-  | .tanh => real_tanh_eps   | .log10 => real_log10_eps
-
-/-- Every primitive's runtime call, through `realToR`, is within its own disclosed `Eround1All` of its
-`realOfAll14` semantics — a 14-way case split, one line per primitive, each closed by the `real_X_rounds`
-axiom already disclosed for it. The `hround` obligation `pipeline_nested_local` needs. -/
-theorem hround_all : ∀ (t : Trans1) (a : Float),
-    abs (realToR (stdI1 leanPrims t a) - realOfAll14 t (realToR a)) ≤ Eround1All t := by
-  intro t a
-  cases t with
-  | exp => exact real_exp_rounds a       | ln => exact real_log_rounds a
-  | sin => exact real_sin_rounds a       | cos => exact real_cos_rounds a
-  | tan => exact real_tan_rounds a       | sqrt => exact real_sqrt_rounds a
-  | abs => exact real_abs_rounds a       | asin => exact real_asin_rounds a
-  | acos => exact real_acos_rounds a     | atan => exact real_atan_rounds a
-  | sinh => exact real_sinh_rounds a     | cosh => exact real_cosh_rounds a
-  | tanh => exact real_tanh_rounds a     | log10 => exact real_log10_rounds a
+/-- Real semantics of the two primitives `pid_log_cosh_grounded` nests: `.cosh ↦ cosh`, `.ln ↦ log`. -/
+noncomputable def realOfLogCosh : Trans1 → MachLib.Real → MachLib.Real
+  | .cosh => cosh | .ln => log | _ => id
 
 /-- **The multi-level grounded kernel: `log(cosh(PID law))`.** For any `[-R,R]` (`R≥0`) the PID law's
 computed AND exact values land in, and any `[lo,hi]` (`lo>0`) the RUNTIME `cosh(PID law)` value's
@@ -589,7 +624,20 @@ loss over the raw PID law — read through `realToR`, is within SOME absolute bo
 `log(cosh(PID law))`. One level deeper than every flat `pid_X_grounded` above: instance of
 `pipeline_nested_local` at `pidRawEML`, going through `isFoldLocal_of_isArith` to lift the arithmetic
 leaf and `exactRn_eq_exactR_of_arith` to state the conclusion in the familiar `exactR` terms every flat
-grounding already uses, rather than the more general `exactRn`. -/
+grounding already uses, rather than the more general `exactRn`.
+
+**Rebuilt 2026-07-22, erratum-driven.** The original version routed through a totalized `hround_all`/
+`Eround1All` — one shared rounding fact for ALL FOURTEEN `Trans1` primitives, unconditionally
+quantified over every domain. That totalization is no longer possible to state honestly: several
+primitives (`log` among them — the one THIS kernel actually uses) need a validity condition beyond
+plain interval membership (`0 < lo`, here), and a single primitive-agnostic dispatcher can't encode
+different conditions for different primitives without either (a) reintroducing an oversized,
+falsely-unconditional fallback bound for the primitives this kernel never touches — exactly the
+overclaim the whole erratum fixed — or (b) `IsFoldLocal` carrying the rounding obligation itself, per
+occurrence (done — see `AbsoluteFoldNestLocal.lean`'s redesign). This version supplies `real_log_
+rounds`/`real_cosh_rounds` DIRECTLY at the two `IsFoldLocal.tr1` occurrences that need them, using
+exactly the `lo`/`hi`/`R` (and `hlo : 0 < lo`) this theorem already carries — no totalization, no
+`hround_all`, no `realOfAll14`. -/
 theorem pid_log_cosh_grounded (env : Env) (R lo hi : MachLib.Real) (hR0 : 0 ≤ R) (hlo : 0 < lo)
     (hflx_lo1 : -R ≤ realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF)
     (hflx_hi1 : realToR (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env pidRawEML).toF ≤ R)
@@ -598,34 +646,36 @@ theorem pid_log_cosh_grounded (env : Env) (R lo hi : MachLib.Real) (hR0 : 0 ≤ 
       (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .cosh pidRawEML)).toF)
     (hflx_hi2 : realToR
       (evalEML (stdI1 leanPrims) (stdI2 leanPrims) env (.tr1 .cosh pidRawEML)).toF ≤ hi)
-    (hxe_lo2 : lo ≤ exactRn realToR realOfAll14 env (.tr1 .cosh pidRawEML))
-    (hxe_hi2 : exactRn realToR realOfAll14 env (.tr1 .cosh pidRawEML) ≤ hi) :
+    (hxe_lo2 : lo ≤ exactRn realToR realOfLogCosh env (.tr1 .cosh pidRawEML))
+    (hxe_hi2 : exactRn realToR realOfLogCosh env (.tr1 .cosh pidRawEML) ≤ hi) :
     ∃ E, AbsEnc E
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env
         (emitC (.tr1 .ln (.tr1 .cosh pidRawEML)))).toF)
       (log (cosh (exactR realToR env pidRawEML))) := by
-  have hxe_lo1' : -R ≤ exactRn realToR realOfAll14 env pidRawEML := by
-    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]; exact hxe_lo1
-  have hxe_hi1' : exactRn realToR realOfAll14 env pidRawEML ≤ R := by
-    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]; exact hxe_hi1
-  have he : IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfAll14 env
+  have hxe_lo1' : -R ≤ exactRn realToR realOfLogCosh env pidRawEML := by
+    rw [exactRn_eq_exactR_of_arith realOfLogCosh env isArith_pidRawEML]; exact hxe_lo1
+  have hxe_hi1' : exactRn realToR realOfLogCosh env pidRawEML ≤ R := by
+    rw [exactRn_eq_exactR_of_arith realOfLogCosh env isArith_pidRawEML]; exact hxe_hi1
+  have he : IsFoldLocal realToR (stdI1 leanPrims) (stdI2 leanPrims) realOfLogCosh env
       (.tr1 .ln (.tr1 .cosh pidRawEML)) :=
-    .tr1 .ln _ (1 / lo) lo hi (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
-      hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2
-      (.tr1 .cosh _ (sinh R) (-R) R (sinh_nonneg hR0) (cosh_lip_local R)
+    .tr1 .ln _ (1 / lo) lo hi (u * (abs (log lo) + abs (log hi)))
+      (le_of_lt (one_div_pos_of_pos hlo)) (log_lip_local lo hi hlo)
+      hflx_lo2 hflx_hi2 hxe_lo2 hxe_hi2 (real_log_rounds lo hi _ hlo hflx_lo2 hflx_hi2)
+      (.tr1 .cosh _ (sinh R) (-R) R (u * cosh R) (sinh_nonneg hR0) (cosh_lip_local R)
         hflx_lo1 hflx_hi1 hxe_lo1' hxe_hi1'
-        (isFoldLocal_of_isArith (stdI1 leanPrims) (stdI2 leanPrims) realOfAll14 env
+        (real_cosh_rounds R _ (abs_le_iff.mpr ⟨hflx_lo1, hflx_hi1⟩))
+        (isFoldLocal_of_isArith (stdI1 leanPrims) (stdI2 leanPrims) realOfLogCosh env
           isArith_pidRawEML))
-  obtain ⟨E, hE⟩ := pipeline_nested_local real_fpbridge realOfAll14 Eround1All
+  obtain ⟨E, hE⟩ := pipeline_nested_local real_fpbridge realOfLogCosh
     (stdI1 leanPrims) (stdI2 leanPrims) (stdR1 leanPrims) (stdR2 leanPrims)
-    (std_hrt1 leanPrims) (std_hrt2 leanPrims) env hround_all
+    (std_hrt1 leanPrims) (std_hrt2 leanPrims) env
     (.tr1 .ln (.tr1 .cosh pidRawEML)) he
   refine ⟨E, ?_⟩
-  have heq : exactRn realToR realOfAll14 env (.tr1 .ln (.tr1 .cosh pidRawEML))
+  have heq : exactRn realToR realOfLogCosh env (.tr1 .ln (.tr1 .cosh pidRawEML))
       = log (cosh (exactR realToR env pidRawEML)) := by
-    show log (cosh (exactRn realToR realOfAll14 env pidRawEML))
+    show log (cosh (exactRn realToR realOfLogCosh env pidRawEML))
       = log (cosh (exactR realToR env pidRawEML))
-    rw [exactRn_eq_exactR_of_arith realOfAll14 env isArith_pidRawEML]
+    rw [exactRn_eq_exactR_of_arith realOfLogCosh env isArith_pidRawEML]
   rwa [heq] at hE
 
 end Certcom

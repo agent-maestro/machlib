@@ -63,30 +63,35 @@ axiom real_round_bounds : ∀ M x : Real, 0 ≤ M → abs x ≤ M → abs (realT
 
 /-- **Part 1, grounded.** `eml_var_var_pipeline_uniform`, with the abstract `u`-relative `hround_exp`/
 `hround_ln` hypotheses replaced by the REAL, already-disclosed `real_exp_rounds`/`real_log_rounds`
-axioms against the concrete `leanPrims` runtime basis — no `∀`-primitive rounding hypothesis. -/
+axioms against the concrete `leanPrims` runtime basis — no `∀`-primitive rounding hypothesis.
+(2026-07-22, erratum: uses the domain-restricted axiom forms — `real_exp_rounds` now takes `hi`
+directly, `real_log_rounds` takes `lo hi`, matching `FPGrounding.lean`'s fix — `A`/`B` here play
+exactly that role.) -/
 theorem eml_var_var_pipeline_uniform_grounded (env : Env) (A B : MachLib.Real) (hA1 : 1 ≤ A)
     (hlo : A ≤ realToR (env "x").toF) (hhi : realToR (env "x").toF ≤ B) :
-    AbsEnc (u * ((exp B + real_exp_eps) + (log B + real_log_eps)) + (real_exp_eps + real_log_eps))
+    AbsEnc (u * ((exp B + u * exp B) + (log B + u * (abs (log A) + abs (log B))))
+        + (u * exp B + u * (abs (log A) + abs (log B))))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF)
       (exp (realToR (env "x").toF) - log (realToR (env "x").toF)) := by
   have hX1 : (1 : MachLib.Real) ≤ realToR (env "x").toF := le_trans hA1 hlo
   have hX0 : (0 : MachLib.Real) < realToR (env "x").toF := lt_of_lt_of_le zero_lt_one_ax hX1
-  have hE1 : AbsEnc real_exp_eps
+  have hA0 : (0 : MachLib.Real) < A := lt_of_lt_of_le zero_lt_one_ax hA1
+  have hE1 : AbsEnc (u * exp B)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .exp (.var "x")))).toF)
       (exp (realToR (env "x").toF)) := by
     have heq : (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .exp (.var "x")))).toF
         = stdI1 leanPrims .exp (env "x").toF := by
       show stdR1 leanPrims (Trans1.exp).cName (env "x").toF = stdI1 leanPrims .exp (env "x").toF
       exact std_hrt1 leanPrims .exp (env "x").toF
-    rw [heq]; exact real_exp_rounds (env "x").toF
-  have hE2 : AbsEnc real_log_eps
+    rw [heq]; exact real_exp_rounds B (env "x").toF hhi
+  have hE2 : AbsEnc (u * (abs (log A) + abs (log B)))
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF)
       (log (realToR (env "x").toF)) := by
     have heq : (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF
         = stdI1 leanPrims .ln (env "x").toF := by
       show stdR1 leanPrims (Trans1.ln).cName (env "x").toF = stdI1 leanPrims .ln (env "x").toF
       exact std_hrt1 leanPrims .ln (env "x").toF
-    rw [heq]; exact real_log_rounds (env "x").toF
+    rw [heq]; exact real_log_rounds A B (env "x").toF hA0 hlo hhi
   have hsub : RoundsW u (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC emlVarVar)).toF)
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .exp (.var "x")))).toF
         - realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) env (emitC (.tr1 .ln (.var "x")))).toF) := by
@@ -102,13 +107,16 @@ theorem eml_var_var_pipeline_uniform_grounded (env : Env) (A B : MachLib.Real) (
   have hElog : abs (log (realToR (env "x").toF)) = log (realToR (env "x").toF) :=
     abs_of_nonneg (log_nonneg hX1)
   rw [hEexp, hElog] at htight
-  have hloosen : u * ((exp (realToR (env "x").toF) + real_exp_eps)
-        + (log (realToR (env "x").toF) + real_log_eps)) + (real_exp_eps + real_log_eps)
-      ≤ u * ((exp B + real_exp_eps) + (log B + real_log_eps)) + (real_exp_eps + real_log_eps) := by
-    have hstep : exp (realToR (env "x").toF) + real_exp_eps + (log (realToR (env "x").toF) + real_log_eps)
-        ≤ exp B + real_exp_eps + (log B + real_log_eps) :=
-      add_le_add (add_le_add (exp_monotone hhi) (le_refl real_exp_eps))
-        (add_le_add (log_le_log hX0 hhi) (le_refl real_log_eps))
+  have hloosen : u * ((exp (realToR (env "x").toF) + u * exp B)
+        + (log (realToR (env "x").toF) + u * (abs (log A) + abs (log B))))
+        + (u * exp B + u * (abs (log A) + abs (log B)))
+      ≤ u * ((exp B + u * exp B) + (log B + u * (abs (log A) + abs (log B))))
+        + (u * exp B + u * (abs (log A) + abs (log B))) := by
+    have hstep : exp (realToR (env "x").toF) + u * exp B
+          + (log (realToR (env "x").toF) + u * (abs (log A) + abs (log B)))
+        ≤ exp B + u * exp B + (log B + u * (abs (log A) + abs (log B))) :=
+      add_le_add (add_le_add (exp_monotone hhi) (le_refl (u * exp B)))
+        (add_le_add (log_le_log hX0 hhi) (le_refl (u * (abs (log A) + abs (log B)))))
     exact add_le_add (mul_le_mul_of_nonneg_left hstep u_nonneg) (le_refl _)
   unfold AbsEnc at htight ⊢
   exact le_trans htight hloosen
@@ -122,8 +130,9 @@ theorem eml_var_var_quantized_pointwise_grounded (env : Env) (A B : MachLib.Real
     (hAρ : 1 ≤ A - u * B) (x : Real) (hxA : A < x) (hxB : x < B) :
     abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
         (emitC emlVarVar)).toF - (EMLTree.eml EMLTree.var EMLTree.var).eval x)
-      ≤ u * ((exp (B + u * B) + real_exp_eps) + (log (B + u * B) + real_log_eps))
-          + (real_exp_eps + real_log_eps)
+      ≤ u * ((exp (B + u * B) + u * exp (B + u * B))
+            + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+          + (u * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
         + (exp (B + u * B) + 1 / (A - u * B)) * (u * B) := by
   have huB : (0 : MachLib.Real) ≤ u * B := mul_nonneg u_nonneg hB0
   have hAρ' : (0 : MachLib.Real) < A - u * B := lt_of_lt_of_le zero_lt_one_ax hAρ
@@ -207,8 +216,9 @@ quantities (`hA0`, `hεlt1`, `hB0`, `hAρ`, `hδε`, `hMB`) — not a further di
 assumption. -/
 theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
     (hA0 : A < ext 0) (hεlt1 : ε < 1) (hB0 : 0 ≤ B) (hAρ : 1 ≤ A - u * B)
-    (hδε : u * ((exp (B + u * B) + real_exp_eps) + (log (B + u * B) + real_log_eps))
-          + (real_exp_eps + real_log_eps)
+    (hδε : u * ((exp (B + u * B) + u * exp (B + u * B))
+            + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+          + (u * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
         + (exp (B + u * B) + 1 / (A - u * B)) * (u * B) < ε)
     (hMB : ext (combinedBoundE
         (len (EMLTree.eml EMLTree.var EMLTree.var) 0)
@@ -216,8 +226,9 @@ theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
         (encTags (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain ())
         (enc (EMLTree.eml EMLTree.var EMLTree.var) emlEmptyChain).2 + 1) < B) :
     ∃ x : MachLib.Real, A < x ∧ x < B ∧
-      ε - (u * ((exp (B + u * B) + real_exp_eps) + (log (B + u * B) + real_log_eps))
-            + (real_exp_eps + real_log_eps)
+      ε - (u * ((exp (B + u * B) + u * exp (B + u * B))
+              + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+            + (u * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
           + (exp (B + u * B) + 1 / (A - u * B)) * (u * B))
         ≤ abs (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
             (emitC emlVarVar)).toF - Real.sin x) := by
@@ -226,8 +237,9 @@ theorem eml_var_var_certcom_witness_grounded (env : Env) (A B ε : MachLib.Real)
   have hvalidon : EMLPfaffianValidOn (EMLTree.eml EMLTree.var EMLTree.var) A B :=
     ⟨trivial, trivial, fun x hxA _ => lt_of_lt_of_le hA0' (le_of_lt hxA)⟩
   exact certcom_total_error_floor_compact_interval (EMLTree.eml EMLTree.var EMLTree.var) A B ε
-    (u * ((exp (B + u * B) + real_exp_eps) + (log (B + u * B) + real_log_eps))
-        + (real_exp_eps + real_log_eps)
+    (u * ((exp (B + u * B) + u * exp (B + u * B))
+          + (log (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B)))))
+        + (u * exp (B + u * B) + u * (abs (log (A - u * B)) + abs (log (B + u * B))))
       + (exp (B + u * B) + 1 / (A - u * B)) * (u * B))
     hA0 hεlt1 hδε hvalidon
     (fun x => realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envAt env floatOfR x)
