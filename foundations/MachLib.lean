@@ -408,6 +408,33 @@ import MachLib.ExtremeValueAttainment
 import MachLib.GeneralPeriodicTargetBarrier
 import MachLib.EMLTowerSubsumesIterExp
 
+-- Wired in 2026-07-23: scripts/check_aggregator.sh's "no ungated orphan
+-- modules" gate caught these 13 as reachable from nothing -- written,
+-- compiling clean, but never imported by MachLib.lean, so `lake build`
+-- (and therefore AxiomLedger.lean's axiom-footprint check, which only
+-- sees what the aggregator reaches) had never actually seen them. Each
+-- is a real capstone/instance result, not scaffolding -- folded in
+-- rather than added to the gate's KNOWN_ORPHANS allowlist, which is
+-- for documented legacy exceptions, not new work.
+import MachLib.IterExpDepth3Bound
+import MachLib.IterExpDepthNBound
+import MachLib.MultiVarExpr
+import MachLib.TwoExpBranchCurveInstance
+import MachLib.TwoExpLogTypeInstance
+import MachLib.EMLExplicitBoundCosBarrier
+import MachLib.CoshHardwareForwardError
+import MachLib.SinhHardwareForwardError
+import MachLib.TanhHardwareForwardError
+import MachLib.ComposedTrigCertificate
+import MachLib.FinanceAmortization
+import MachLib.FinanceDayCount
+import MachLib.FinanceEnvelope
+import MachLib.AbsoluteFoldBounded
+import MachLib.AcosHardwareForwardError
+import MachLib.AtanHardwareForwardError
+import MachLib.ChainExp2ReduceDescent
+import MachLib.CompiledClosedLoop
+
 /-!
 # MachLib — top-level aggregator
 

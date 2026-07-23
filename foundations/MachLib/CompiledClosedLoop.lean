@@ -105,7 +105,7 @@ open MachLib.Real
 /-- **The minimal single-variable saturating controller kernel: `tanh(y)`.** The smallest possible
 instance of `pid_tanh_grounded`'s own recipe: no arithmetic subtree, just `.var "y"` directly, chosen
 for this composite instead of the 3-variable `pidRawEML` to keep the tracking corollary below free of
-two unused PID terms. Reuses `real_tanh_eps`/`real_tanh_rounds` verbatim — zero new disclosed axioms. -/
+two unused PID terms. Reuses `u`/`real_tanh_rounds` verbatim — zero new disclosed axioms. -/
 def tanhVarEML : EML := .tr1 .tanh (.var "y")
 
 theorem isArith_var_y : IsArith (EML.var "y") := .var "y"
@@ -115,47 +115,56 @@ def envOfY (y : Float) : Env := fun name => if name = "y" then .scalar y else .s
 
 /-- **`tanh(y)`, grounded.** Since `.var "y"` carries no arithmetic, `absErr` is exactly `0`
 (`absErr`'s own `.var` case) and `exactR` is exactly `realToR y` — the cleanest possible certcom
-instance, with no residual arithmetic-fold term to carry through the tracking argument. -/
-theorem pid_tanhVar_grounded (y : Float) :
-    AbsEnc real_tanh_eps
+instance, with no residual arithmetic-fold term to carry through the tracking argument.
+
+Domain-restricted since the 2026-07-22 erratum-driven redesign of `real_tanh_rounds`
+(`FPGrounding.lean`): the caller now supplies `R`/`hflx`, exactly mirroring `pid_tanh_grounded`'s
+own fix for the identical issue (the same file, same day) -- `tanh` is genuinely globally
+Lipschitz, but the DISCLOSED rounding axiom still needs a stated range on its input, so this
+theorem is honestly conditional rather than unconditional. -/
+theorem pid_tanhVar_grounded (y : Float) (R : MachLib.Real) (hflx : abs (realToR y) ≤ R) :
+    AbsEnc u
       (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF)
       (tanh (realToR y)) := by
   have h := pipeline_tr1_of_arith real_fpbridge (stdI1 leanPrims) (stdI2 leanPrims)
     (stdR1 leanPrims) (stdR2 leanPrims) (std_hrt1 leanPrims) (std_hrt2 leanPrims)
-    (envOfY y) .tanh tanh 1 real_tanh_eps
+    (envOfY y) .tanh tanh 1 u
     (le_of_lt zero_lt_one_ax) (fun p q => by rw [one_mul_thm]; exact tanh_lipschitz p q)
-    (.var "y") isArith_var_y (real_tanh_rounds _)
+    (.var "y") isArith_var_y (real_tanh_rounds R _ hflx)
   have h1 : absErr realToR (envOfY y) (EML.var "y") = 0 := rfl
   have h2 : exactR realToR (envOfY y) (EML.var "y") = realToR y := rfl
   rw [h1, h2, mul_zero, add_zero] at h
   exact h
 
-/-- `real_tanh_eps` is nonnegative — derived from any single `AbsEnc` instance (`abs (⋅) ≥ 0`
-always), not assumed. -/
-theorem real_tanh_eps_nonneg : 0 ≤ real_tanh_eps :=
-  le_trans (abs_nonneg _) (pid_tanhVar_grounded 0.0)
-
 /-- **The `hE` hypothesis `clamp_guarded_tracking` needs, for the gain-`κ`-scaled compiled `tanh`
 controller.** The gain is modeled as an exact scalar applied outside the compiled kernel — e.g. a
 fixed low-error gain stage separate from the transcendental's own rounding, a natural simplification
 for a first worked instance, not a limitation of `clamp_guarded_tracking` itself (which accepts ANY
-certcom-grounded `(C, L, E)` triple, gain-scaled or not). -/
-theorem tanhVar_gain_error (κ : MachLib.Real) (y : Float) :
+certcom-grounded `(C, L, E)` triple, gain-scaled or not).
+
+Takes the same `R`/`hflx` `pid_tanhVar_grounded` needs — see that theorem's docstring. -/
+theorem tanhVar_gain_error (κ : MachLib.Real) (y : Float) (R : MachLib.Real)
+    (hflx : abs (realToR y) ≤ R) :
     abs (κ * realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF
-      - κ * tanh (realToR y)) ≤ abs κ * real_tanh_eps := by
+      - κ * tanh (realToR y)) ≤ abs κ * u := by
   rw [gain_scale_helper κ
         (realToR (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY y) (emitC tanhVarEML)).toF)
         (tanh (realToR y)),
       abs_mul]
-  exact mul_le_mul_of_nonneg_left (pid_tanhVar_grounded y) (abs_nonneg κ)
+  exact mul_le_mul_of_nonneg_left (pid_tanhVar_grounded y R hflx) (abs_nonneg κ)
 
 /-- **Worked instance: the compiled, gain-`κ`-scaled `tanh` controller tracks its ideal
 infinite-precision counterpart.** For any plant gain `a` and controller gain `κ` with `|a|+|κ| < 1`,
 the compiled closed loop's state tracks the ideal `κ·tanh(y)`-controlled loop's state within
-`|κ|·real_tanh_eps / (1 − |a| − |κ|)` in the long run — a concrete, disclosed-axiom-backed instance
-of `clamp_guarded_tracking`. -/
+`|κ|·u / (1 − |a| − |κ|)` in the long run — a concrete, disclosed-axiom-backed instance
+of `clamp_guarded_tracking`.
+
+`hyf` is the same `R`-bound `pid_tanhVar_grounded` needs, now uniform over the whole compiled
+trajectory `yf` rather than a single point — the honest cost of `real_tanh_rounds`'s 2026-07-22
+domain restriction reaching a theorem about an unbounded sequence. -/
 theorem tanhVar_controller_tracking {x xf : Nat → MachLib.Real} {yf : Nat → Float}
-    {vc w : Nat → MachLib.Real} {a κ U : MachLib.Real}
+    {vc w : Nat → MachLib.Real} {a κ U R : MachLib.Real}
+    (hyf : ∀ k, abs (realToR (yf k)) ≤ R)
     (hxf : ∀ k, xf k = realToR (yf k))
     (hvc : ∀ k, vc k = κ * realToR
       (evalC (stdR1 leanPrims) (stdR2 leanPrims) (envOfY (yf k)) (emitC tanhVarEML)).toF)
@@ -163,13 +172,13 @@ theorem tanhVar_controller_tracking {x xf : Nat → MachLib.Real} {yf : Nat → 
     (hplantxf : ∀ k, xf (k + 1) = a * xf k + clamp (vc k) (-U) U + w k) :
     ∀ n, abs (xf n - x n)
       ≤ npow n (abs a + abs κ) * abs (xf 0 - x 0)
-        + (abs κ * real_tanh_eps) * geom (abs a + abs κ) n := by
+        + (abs κ * u) * geom (abs a + abs κ) n := by
   refine clamp_guarded_tracking (C := fun y => κ * tanh y)
-    (abs_nonneg κ) (mul_nonneg (abs_nonneg κ) real_tanh_eps_nonneg)
+    (abs_nonneg κ) (mul_nonneg (abs_nonneg κ) u_nonneg)
     (fun p q => by
       rw [gain_scale_helper κ (tanh p) (tanh q), abs_mul]
       exact mul_le_mul_of_nonneg_left (tanh_lipschitz p q) (abs_nonneg κ))
-    (fun k => by rw [hvc k, hxf k]; exact tanhVar_gain_error κ (yf k))
+    (fun k => by rw [hvc k, hxf k]; exact tanhVar_gain_error κ (yf k) R (hyf k))
     hplantx hplantxf
 
 end Certcom
