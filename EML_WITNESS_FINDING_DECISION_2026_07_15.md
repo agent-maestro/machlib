@@ -6322,3 +6322,79 @@ Certcom pipeline connection automatically, with an explicit, machine-computed er
 theorem proven once. The `const` extension (real→Float quantization propagated recursively through
 nested exp/log towers) remains the honestly-scoped, deliberately-deferred next piece — not attempted
 here, flagged clearly, matching this whole arc's standing discipline.
+
+## 2026-07-22 (cont. 88) — `const` closed: the FULL `EMLTree` grammar, one theorem
+
+Direct "lets get into this please," picking up the exact deferral cont. 87 flagged: `const`, and the
+recursive constant-quantization propagation through nested `exp`/`log` layers that made it "genuine,
+separate complexity" rather than a quick addition.
+
+**The key structural insight that made it tractable, found before writing any proof.** The `var`+
+`eml`-only theorem's SECOND conjunct was `exactRn t = t.eval x` — an exact EQUALITY, true only
+because no constant ever entered the recursion (a bare `.var` read carries zero rounding error at
+the exact-real layer). Once `const` enters, `exactRn (.const c translated) = realToR (floatOfR c) ≠
+c` in general (off by `real_round_bounds`'s quantization error) — so a SEPARATE, second recursive
+error function tracking "exact-vs-true" error, propagated independently through the tree via its own
+Lipschitz composition, looked necessary at first. It ISN'T: `emlTreeErrorBound`'s EXISTING recursive
+formula — UNCHANGED from the `var`+`eml`-only version — is built from Lipschitz-composition of `E1`/
+`E2` PLUS extra non-negative primitive-rounding terms (`u·exp hi1`, `u·(...)`) added on top at every
+level. Those extra terms make `emlTreeErrorBound t x` an upper bound not just for the compiled-vs-
+exact error, but for the (strictly smaller) exact-vs-true error too — provable by a parallel, SIMPLER
+argument (pure Lipschitz composition of the SAME `E1`/`E2`, no primitive rounding, since `exactRn` is
+a real-valued computation, not a floating one) that always comes out ≤ the existing formula. One
+recursive function, reused for two purposes, rather than two functions built in parallel.
+
+**Changes to `EMLTreeGroundedPipeline.lean`, precisely scoped:**
+
+- `toCertcomEML`: `.const c ↦ .lit (floatOfR c)` (was an unreachable placeholder `.lit 0.0`). Now
+  `noncomputable` — `floatOfR` has no executable code (an axiom), so the compiler correctly refuses
+  to generate code for a function that calls it.
+- `emlTreeErrorBound`: `.const c, x ↦ u · abs c` (was `0`, unreachable). The `.eml` case's formula is
+  LITERALLY UNCHANGED — it was already generic in `E1`/`E2` regardless of where they came from.
+- `EMLTreeValid` (renamed from `EMLTreeVarValid`): `const c` case added, trivially valid (no domain
+  condition — a literal has no positivity/range requirement of its own).
+- `emlTreeErrorBound_nonneg`: `const c` case added, `u·abs c ≥ 0` trivially (`mul_nonneg u_nonneg
+  (abs_nonneg c)`).
+- `eml_tree_grounded` (renamed from `eml_tree_var_grounded`): the capstone. Second conjunct
+  restructured from `exactRn t = t.eval x` to `abs (exactRn t − t.eval x) ≤ emlTreeErrorBound t x`.
+  New `const c` base case: `IsFoldLocal.lit (floatOfR c)` directly, both conjuncts discharged by ONE
+  call each to `real_round_bounds (abs c) c (abs_nonneg c) (le_refl (abs c))` (tight — `M := abs c`
+  exactly). The `.eml` case's proof gained a genuinely new block: `hexact_tri` (the pure-Lipschitz
+  triangle-inequality argument for the exact-error conjunct, `exp_lip_local`/`log_lip_local` applied
+  directly to `exactRn t1`/`exactRn t2` against `t1.eval x`/`t2.eval x`, no `absenc_lip_local`/
+  primitive rounding involved) and `hexact_loosen` (showing the resulting bound `exp(hi1)·E1 +
+  (1/lo2)·E2` is ≤ `emlTreeErrorBound`'s full formula, via the SAME "drop non-negative extra terms"
+  argument used throughout this arc). The OLD `h1xe_lo`/`h1xe_hi`/`h2xe_lo`/`h2xe_hi` derivations
+  (bounding `exactRn t1`/`exactRn t2`) switched from `rw [hexact1]`-on-an-equality to the SAME
+  `abs_le_iff`-based two-sided-bound pattern the computed-value bounds already used — mechanical,
+  not conceptually new.
+
+**Non-vacuity, concretely, twice.** `eml_tree_grounded_depth2_instance` re-confirms the var-only
+depth-2 case still works post-restructure (regression check). `eml_tree_grounded_const_instance`
+applies the FULL theorem to `eml (const c) var` — `exp(c) − log(x)`, for an ARBITRARY real `c` — the
+exact kernel `eml_var_var_pipeline_uniform_grounded` (`EMLCertcomGrounded.lean`) was hand-built for
+at depth 1, now reached as an ordinary instance of the fully general theorem, confirming `const`
+genuinely composes through the same machinery as `var`/`eml` rather than needing special-casing.
+
+**Build discipline — two real misses, both self-contained, both caught immediately.** (1)
+`toCertcomEML` needed `noncomputable` once it called `floatOfR` (an axiom, no executable code) — the
+compiler's IR check caught it precisely, one-line fix. (2) The `hexact_tri` proof's algebraic
+reordering step (`(A−B)−(C−D) = (A−C)−(B−D)`) was mistakenly closed with `rfl` — NOT a definitional
+identity, it needs ring reasoning — caught by a type mismatch; fixed by splitting into a `show` (the
+`rfl`-legal part: unfolding `realOfEML`'s pattern match) followed by `mach_ring` (the genuinely
+algebraic part). Every other piece — the `const` base case, the nonneg case, the two non-vacuity
+instances — built clean on the FIRST attempt, reusing the `var`+`eml` file's own patterns directly.
+
+`#print axioms` on `eml_tree_grounded` and both instance theorems: zero `sorryAx`. Footprint grew by
+exactly two entries relative to the `var`+`eml`-only version — `Certcom.floatOfR`,
+`Certcom.real_round_bounds` — BOTH already disclosed (the earlier `eml_var_var_certcom_witness_
+grounded` round, two commits back), not new trust, just the axioms this wider scope genuinely needs.
+Full `lake build MachLib` green (477 modules). `AxiomLedger` gate green, `eml_tree_grounded` supersedes
+`eml_tree_var_grounded` as the pinned headline (same slot, renamed), zero new `trustedFootprint`
+entries (both dependencies were already present from the earlier round).
+
+**Where this leaves the compositional handshake.** Complete, for the WHOLE `EMLTree` grammar this
+whole arc has studied — `const`, `var`, `eml`, arbitrary depth, arbitrary shape — not a fragment of
+it. Any tree built from these three constructors inherits a grounded Certcom pipeline connection
+automatically, with an explicit, machine-computed closed-form error bound, from one theorem proven
+once. This is now genuinely the full statement muse 2 asked for, not a scoped subset of it.
