@@ -403,6 +403,7 @@ import MachLib.AbsoluteFoldPos
 import MachLib.EMLCertcomBridge
 import MachLib.EMLCertcomQuantitativeBridge
 import MachLib.EMLCertcomGrounded
+import MachLib.EMLTreeGroundedPipeline
 
 /-!
 # MachLib — top-level aggregator

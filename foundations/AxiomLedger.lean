@@ -280,7 +280,18 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- disclosed-primitive assumption. This is as far down as this arc's trust chain goes -- below
   -- floatOfR/real_round_bounds is the same wall as below realToR/real_fpbridge (Float is opaque in
   -- Lean), not a gap left by insufficient effort.
-  `Certcom.eml_var_var_certcom_witness_grounded]
+  `Certcom.eml_var_var_certcom_witness_grounded,
+  -- Added 2026-07-22: the compositional Certcom handshake -- generalizes eml_var_var_certcom_
+  -- witness_grounded (above, ONE hand-built tree) to ANY EMLTree built from var/eml alone
+  -- (arbitrary depth, arbitrary shape), via one structural induction, matching muse 2's own
+  -- stated success criterion: "adding a supported EML constructor requires one reusable
+  -- primitive-grounding lemma, after which arbitrary trees inherit the grounded theorem
+  -- automatically." Scoped to var+eml (no const -- see EMLTreeGroundedPipeline.lean's own
+  -- docstring for why: constant quantization compounding through nested exp/log layers is
+  -- real, separate complexity, deliberately left for a follow-up). Footprint identical to the
+  -- single-tree witness above (realToR/real_fpbridge/real_exp_rounds/real_log_rounds) -- zero
+  -- new trustedFootprint entries, confirming the generalization adds no new trust, only scope.
+  `Certcom.eml_tree_var_grounded]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

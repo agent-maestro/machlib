@@ -6250,3 +6250,75 @@ multi-level nested kernel (not just `log(cosh(...))`) inherits point-specific, p
 rounding for free, without needing its own bespoke totalization. Next: the Groundable compositional
 pipeline generalization, now building on a corrected foundation rather than one that would have
 needed rework.
+
+## 2026-07-22 (cont. 87) — the compositional Certcom handshake: any `var`+`eml` `EMLTree`, one lemma
+
+Direct "proceed into that please," continuing into muse 2's own stated highest-value next step —
+lift `eml_var_var_certcom_witness_grounded` (ONE hand-built tree) to a reusable class, matching their
+own success criterion verbatim: "adding a supported EML constructor requires one reusable primitive-
+grounding lemma, after which arbitrary trees using it inherit the grounded theorem automatically."
+
+**Scoped deliberately to `var`+`eml`, no `const`.** `EMLTree.const : Real → EMLTree` needs `floatOfR`
+to translate, and — unlike the single `.var` read the depth-1 tree used, which carries zero rounding
+error — every `const` LEAF in a general tree would carry its OWN quantization error, compounding
+through however many `exp`/`log` layers sit above it. That is genuine, separate complexity (full
+recursive constant-quantization propagation), not present in anything built so far this session, and
+deliberately left for a follow-up — exactly the same scope decision `EMLCertcomBridge.lean` made at
+depth 1, extended structurally rather than reopened. The `var`+`eml` fragment alone is already an
+unbounded, arbitrary-shape family — genuinely general, not a toy restriction.
+
+**Built `EMLTreeGroundedPipeline.lean`, four pieces:**
+
+1. `toCertcomEML : EMLTree → EML` — the recursive translation, `eml t1 t2 ↦ exp(⟦t1⟧) − log(⟦t2⟧)`,
+   decomposed exactly like `emlVarVar` at every level.
+2. `emlTreeErrorBound : EMLTree → Real → Real` — **the one reusable primitive-grounding lemma**,
+   computed recursively: at each `eml t1 t2` node, `t1`'s own error `E1` gives a magnitude envelope
+   `[xe1−E1, xe1+E1]` for `exp`'s Lipschitz domain; `t2`'s error `E2` gives `[xe2−E2, xe2+E2]` for
+   `log`'s. The formula is `absenc_lip_local` (Lipschitz-amplify + primitive round) composed twice,
+   then `absenc_sub`'s cross term — literally the SAME shape `eml_var_var_pipeline_uniform_grounded`
+   derives by hand for one fixed tree, here produced automatically for any tree via recursion.
+3. `EMLTreeVarValid` — pointwise validity (the pointwise analogue of `EMLPfaffianValidOn`), requiring
+   at every `eml` node that `t2`'s own error stay strictly inside its positivity margin
+   (`emlTreeErrorBound t2 x < t2.eval x`) — sharper than plain `0 < t2.eval x`, since it also accounts
+   for the compiled artifact's own rounding slop, not just the exact value's sign.
+4. `eml_tree_var_grounded` — the capstone: for ANY `var`+`eml` tree, valid at a point, `toCertcomEML`
+   is in Certcom's own `IsFoldLocal` fragment, its exact semantics match `t.eval x` EXACTLY (zero
+   approximation at the exact-real layer — no constants means no rounding enters there at all), and
+   its compiled evaluation is within the EXPLICIT `emlTreeErrorBound t x` of `t.eval x`. One
+   induction on `EMLTreeVarValid`; the `eml` case composes `absenc_lip_local`/`absenc_sub` DIRECTLY
+   (not through `pipeline_nested_local`'s own existential, so the bound comes out in
+   `emlTreeErrorBound`'s exact closed form, not merely "some" bound) while ALSO building `IsFoldLocal`
+   alongside as a reusable witness for anyone wanting the emitted-C connection separately.
+
+**Non-vacuity, concretely.** `eml_tree_var_grounded_depth2_instance` applies the capstone to
+`eml (eml var var) var` (`exp(exp x − log x) − log x`) — a tree `EMLCertcomGrounded.lean`'s hand-built
+version was never built for (that file covers ONLY depth 1) — with NO new proof, just the general
+theorem applied. This is the generality claim demonstrated as a working instance, not merely stated.
+
+**Build discipline — real debugging, not a clean run this time.** Unlike most of this session's
+files, this one needed real iteration: (1) a giant hand-written `show` goal in the first nonneg-proof
+attempt caused a parse error (`unexpected token 'sorry'`) from a subtle multi-line indentation issue
+— abandoned in favor of building the goal up from `have`s instead of restating it wholesale; (2)
+`mach_mpoly` failed exactly per its documented rule (`t1`/`t2` bound by `induction ... with`, not
+theorem parameters) — switched to `mach_ring`, then a blind find-replace left `mach_ring [...]`
+(invalid — `mach_ring` takes no bracket argument, unlike `mach_mpoly`), caught immediately and fixed;
+(3) an early `absenc_lip_local` call mismatched `exactRn`-based bounds against `t.eval`-based ones
+(the AbsEnc hypothesis fixes which one `xe` unifies to) — fixed by deriving a second, direct set of
+`t.eval`-based bounds alongside the `exactRn`-based ones `IsFoldLocal.tr1`'s own fields need; (4) the
+`abs(log y) ≤ abs(log lo)+abs(log hi)` loosening step needed `le_add_of_nonneg_left`, not
+`add_le_add_right` (which doesn't exist in this codebase) — found by checking what's actually
+defined rather than guessing. Every one caught by the type checker immediately, none silent.
+
+`#print axioms` on `eml_tree_var_grounded`: zero `sorryAx`, footprint IDENTICAL to
+`eml_var_var_certcom_witness_grounded`'s own (`realToR`/`real_fpbridge`/`real_exp_rounds`/
+`real_log_rounds` — nothing else) — confirming the generalization from one tree to an unbounded
+family added genuine scope with ZERO new trust. Full `lake build MachLib` green (477 modules).
+`AxiomLedger` gate green, `eml_tree_var_grounded` pinned as the 48th headline, zero new
+`trustedFootprint` entries needed (same reason).
+
+**What this turns the Certcom handshake into.** Before this round: one hand-proven fact about one
+specific tree. After: infrastructure — any `var`+`eml` `EMLTree`, at any depth, inherits a grounded
+Certcom pipeline connection automatically, with an explicit, machine-computed error bound, from one
+theorem proven once. The `const` extension (real→Float quantization propagated recursively through
+nested exp/log towers) remains the honestly-scoped, deliberately-deferred next piece — not attempted
+here, flagged clearly, matching this whole arc's standing discipline.
