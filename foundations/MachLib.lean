@@ -404,6 +404,8 @@ import MachLib.EMLCertcomBridge
 import MachLib.EMLCertcomQuantitativeBridge
 import MachLib.EMLCertcomGrounded
 import MachLib.EMLTreeGroundedPipeline
+import MachLib.ExtremeValueAttainment
+import MachLib.GeneralPeriodicTargetBarrier
 
 /-!
 # MachLib — top-level aggregator

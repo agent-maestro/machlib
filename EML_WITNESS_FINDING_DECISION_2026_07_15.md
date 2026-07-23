@@ -6398,3 +6398,78 @@ whole arc has studied — `const`, `var`, `eml`, arbitrary depth, arbitrary shap
 it. Any tree built from these three constructors inherits a grounded Certcom pipeline connection
 automatically, with an explicit, machine-computed closed-form error bound, from one theorem proven
 once. This is now genuinely the full statement muse 2 asked for, not a scoped subset of it.
+
+## 2026-07-22 (cont. 89) — Track C, item C9 closed: EVT-attainment built, general periodic-target
+## barrier closed, EVT itself found NOT load-bearing for it (erratum caught while building)
+
+Direct request, after a reflective "is this a breakthrough or are we on the way?" exchange: "lets
+proceed into that please," disambiguated via a direct question into C9 specifically — the only
+remaining Track C item both external reviews independently ranked as their own top frontier
+("genuinely reachable, not free") and that cont. 75 confirmed needed real, unbuilt analysis
+machinery rather than a corollary of what already existed.
+
+**Part 1 — Extreme Value Theorem, attainment (`ExtremeValueAttainment.lean`, new).** This codebase
+had `continuousAt_bddAbove_Icc` (boundedness) but not attainment — read its full proof (cont. 75)
+before attempting anything, confirming this precisely rather than assuming it. Built from scratch:
+`continuousAt_inv_sub_of_lt` (§1, the reciprocal `1/(M−f)` is continuous wherever `f` stays
+strictly below `M` — no generic `ContinuousAt` arithmetic-combinator library existed in this
+codebase before this file; `exists_between` supplies a margin `m` between `0` and `M−f x₀` to keep
+the denominator bounded away from zero on a neighborhood, turning the numerator's `ε`-closeness
+into the quotient's), then `continuousAt_attains_max_Icc` (§2, the classical argument: if the least
+upper bound `L` were never attained, `1/(L−f)` would itself be continuous everywhere on `[a,b]`,
+hence bounded by some `K`, yielding `L−1/K` as a SMALLER upper bound — contradicting leastness),
+then `continuousAt_attains_min_Icc` (§3, mirrors §2 via `f ↦ −f`, negated back).
+
+One real tactic-mechanics obstacle, diagnosed and fixed rather than worked around blindly:
+`mach_mpoly`'s documented lambda/`obtain`-bound-atom failure hit repeatedly (`m` from
+`exists_between`, `y` from the outer `fun y hy => ?_`), and — new data point beyond what
+`TACTIC_NOTES.md` already recorded — plain `mach_ring` did NOT always rescue these cases either;
+twice it left an associativity-shaped residual it couldn't close (`M + (f x0 + (-m + -f x0)) = M +
+-m`, not literally the identity form `mach_ring`'s normalizer expects). The fix that worked both
+times: lift the needed identity into a tiny standalone lemma with fresh TOP-LEVEL parameters
+(`evt_shift1`, `evt_shift2`) and apply it at the call site — `mach_mpoly` closes these instantly
+once the atoms are genuine theorem parameters, not tactic-local ones. Recorded as a refinement of
+the existing gotcha: the workaround isn't just "switch to `mach_ring`," it's "when even `mach_ring`
+leaves a residual on a tactic-bound goal, factor the identity out as its own lemma."
+
+`sorryAx`-free, zero new axioms — everything derived from `sup_exists`/`ContinuousAt`, both already
+load-bearing in `IntermediateValue.lean`. Verified via a direct `lake env lean` `#print axioms`
+sweep on all three headline theorems before touching `AxiomLedger.lean`.
+
+**Part 2 — the general periodic-target barrier (`GeneralPeriodicTargetBarrier.lean`, new) — and an
+erratum found while building it, not assumed going in.** The original framing (this document's own
+"NEXT OBJECTIVES" round) was: `L := inf(TARGET)`, attained by EVT, recurs by periodicity, ruling
+out `.pos`/`.neg`; nonconstancy gives a second recurring value, ruling out `.zero`. Building the
+actual theorem exposed that EVT-attainment is NOT the binding constraint here: `TailSign.pos`/
+`.neg` are refuted by finding a point, arbitrarily far out, where `TARGET x − L` is EXACTLY `0` —
+and periodicity makes **every** value of `TARGET` recur arbitrarily far out, not just an extremal
+one. `L := TARGET 0` (an arbitrary basepoint) does the job exactly as well as `L := inf(TARGET)`.
+The already-proven `sin_not_tailSign` (cont. 56, `WitnessResidualTailSign.lean`) is itself a
+confirming precedent, in hindsight: it uses `L = sin 0 = 0`, never `inf(sin) = −1`. Built
+`Periodic f p := ∀x, f(x+p)=f x`, `periodic_add_natCast_mul` (extends to every `Nat` multiple of
+the period by induction — one more `mach_mpoly`-on-`induction...with`-bound-atom case, fixed the
+same way, `periodic_shift_local` as a top-level lemma), and `periodic_push_past` (Archimedean
+scaling of `(R−x₀)/p`, generic in the period — the same idea `sin_not_tailSign` already used,
+hand-specialized to `2π`, now factored out). `no_tree_eq_periodic_target` then closes in about a
+dozen lines: push the basepoint past whichever `R` the `.pos`/`.neg` case supplies (recurs to
+exactly `L`, refuting both); for `.zero`, nonconstancy (`∃x₁ x₂, TARGET x₁ ≠ TARGET x₂`) forces at
+least one of them to differ from `L` (else they'd agree with each other), push THAT point past `R`
+instead. Confirmed via a sanity-check corollary (`no_tree_eq_sin_via_periodic_barrier`) that `sin`
+instantiates cleanly through the already-disclosed `sin_periodic` axiom, `2π`-periodicity, and
+`sin 0 ≠ sin(π/2)` for nonconstancy — reaching the same conclusion the hand-built `sin`-specific
+route already reached, confirming the generalization is genuine rather than merely plausible.
+
+This is recorded as an erratum rather than silently reframed, matching this document's own
+"checked directly, report deviations" discipline (cf. cont. 76). `ExtremeValueAttainment.lean`
+still stands as a genuine, correctly-motivated, separate result — it closes exactly the gap both
+external reviews flagged, and is real machinery this codebase lacked — it simply turns out, on
+actually building the downstream theorem, not to be what THIS specific barrier needed. Left
+in place rather than deleted: honest, reusable analysis infrastructure a genuinely extremal
+argument (unlike this one) would need.
+
+`sorryAx`-free, zero new axioms — pure `natCast`/`archimedean` scaling. Both headline theorems
+pinned in `AxiomLedger.lean` (50 total headlines now), zero new `trustedFootprint` entries. Full
+`lake build MachLib` green (479 modules, up from 477).
+
+**Track C status after this round:** C1, C3, C6, C7, C8, C9 closed. C2, C4 scoped and set aside for
+concrete, checked reasons (cont. 74). C5, C10 remain flagged as real, unforced multi-session items.

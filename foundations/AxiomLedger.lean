@@ -296,7 +296,28 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- inequality using the same bound function. New trustedFootprint dependencies: `floatOfR`,
   -- `real_round_bounds` -- ALREADY-disclosed (the earlier `eml_var_var_certcom_witness_grounded`
   -- round), not new trust, just the axioms this wider scope genuinely needs.
-  `Certcom.eml_tree_grounded]
+  `Certcom.eml_tree_grounded,
+  -- Added 2026-07-22: Track C, item C9 -- Extreme Value Theorem attainment, built from scratch
+  -- (ExtremeValueAttainment.lean). This codebase had boundedness (`continuousAt_bddAbove_Icc`)
+  -- but not attainment; both external reviews flagged this as the prerequisite for "prove the
+  -- general periodic-target barrier." Classical `1/(M-f)` argument: if the least upper bound
+  -- were never attained, its reciprocal-shifted function would ALSO be bounded, yielding a
+  -- strictly smaller upper bound -- contradicting leastness. `continuousAt_attains_min_Icc`
+  -- mirrors the max case via negation. Zero new trustedFootprint entries (built entirely from
+  -- `sup_exists`/`ContinuousAt`, both already load-bearing in IntermediateValue.lean).
+  `MachLib.Real.continuousAt_attains_max_Icc, `MachLib.Real.continuousAt_attains_min_Icc,
+  -- Added 2026-07-22: Track C, item C9's actual payoff -- the general periodic-target barrier
+  -- (GeneralPeriodicTargetBarrier.lean). No finite EML tree equals ANY nonconstant,
+  -- everywhere-continuous, periodic target -- generalizing `sin_not_tailSign`'s hand-built
+  -- argument uniformly. ERRATUM caught while building this, not assumed going in: the EVT-
+  -- attainment machinery above turns out NOT to be the binding constraint for this specific
+  -- theorem -- periodicity alone makes EVERY value of TARGET recur arbitrarily far out, not
+  -- just an extremal one, so `L := TARGET 0` (an arbitrary basepoint) works exactly as well as
+  -- `L := inf(TARGET)` for refuting all three TailSign cases. `sin_not_tailSign` itself is a
+  -- confirming precedent (it already used `L = sin 0 = 0`, not `inf(sin) = -1`). Recorded rather
+  -- than silently dropped, matching this document's "checked directly" discipline. Zero new
+  -- trustedFootprint entries (pure `natCast`/`archimedean` scaling, both already load-bearing).
+  `MachLib.Real.no_tree_eq_periodic_target, `MachLib.Real.no_tree_eq_sin_via_periodic_barrier]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]
