@@ -26,10 +26,11 @@ each theorem, a separate question not checked here.
 Is this narrow language *complete* relative to what it can express? Can every "reasonable" target
 function reachable by nested `exp`/clamped-`log` be written as some finite EML tree?
 
-This note answers it for one natural family: **no finite EML tree equals `sin`, `cos`, or any
-member of the `nestedTarget` family** (`sin`, `log(c + sin x)`, `log(d + log(c + sin x))`, and so
-on, arbitrarily nested) — **exactly**, at every real `x`, for any finite tree depth. Not "no tree
-found yet." Not "no tree under some bound." No tree, period, unconditionally.
+This note answers it for one natural family, since generalized to a much wider one (see "How far
+this now reaches," below): **no finite EML tree equals `sin`, `cos`, or any member of the
+`nestedTarget` family** (`sin`, `log(c + sin x)`, `log(d + log(c + sin x))`, and so on, arbitrarily
+nested) — **exactly**, at every real `x`, for any finite tree depth. Not "no tree found yet." Not
+"no tree under some bound." No tree, period, unconditionally.
 
 ## Three kinds of trust — kept explicitly separate
 
@@ -110,28 +111,74 @@ needed. `sin` (and the whole `nestedTarget` family) provably has none of the thr
 is the entire proof, and it applies to every finite tree uniformly — which is exactly the property
 none of the three earlier routes could deliver.
 
-## What this doesn't claim
+## How far this now reaches (updated past the original `sin`/`nestedTarget` result)
 
-This result is about **exact** representability of specific target functions on **all of** the
-reals. Track C (2026-07-22, `EML_WITNESS_FINDING_DECISION_2026_07_15.md` cont. 74-76) extended it in
-several directions, with one gap worth stating precisely rather than glossing: **`ε`-closeness is
-closed only asymptotically, not on bounded domains.** No finite EML tree stays within any `ε < 1` of
-`sin` for ALL sufficiently large `x` (cont. 74's C6) — but this is a pure TAIL statement, silent on
-any fixed bounded interval `[0, R]`, however large. A tree could be `10⁻¹⁶`-close to `sin` on
-`[0, 1000π]` and this result says nothing, provided the tree eventually diverges afterward. The
-PRACTICALLY relevant question — "no tree of depth `d` is `ε`-close to `sin` on any interval longer
-than some explicit `L(d)`" — needs the Khovanskii zero-count bound's EXPLICITNESS in tree depth, a
-genuinely harder theorem, and remains open (see cont. 76's erratum). This gap matters concretely: a
-compiled artifact evaluates on a bounded domain, not `x → ∞`, so it is this open bounded-interval
-question, not the closed asymptotic one, that a real total-error decomposition for compiled EML
-code would need. Also open: other target functions beyond `sin`/`nestedTarget`/`sin²x` (Track C's
-census is illustrative, not exhaustive), and whether the grammar's inability to build `x²`
-(see "The question," above) is a fixed scope commitment or something a future richer grammar would
-lift — every barrier theorem here is scoped to the grammar as it stands.
+Everything above this section describes the arc as it stood the morning of 2026-07-22. The same day
+and the days after, two things happened that change what a reader should take away — recorded here
+rather than left for the theorem map or decision doc alone to carry, since both bear directly on
+"what this result claims."
+
+**The bounded-domain gap below is CLOSED, not open — an earlier version of this note said
+otherwise.** The first cut of this arc's `ε`-closeness result (Track C item C6) was a pure TAIL
+statement: no tree stays within `ε < 1` of `sin` for ALL sufficiently large `x`, silent on any fixed
+bounded interval, however long. That gap mattered concretely, because a compiled artifact evaluates
+on a bounded domain, not `x → ∞`. It has since been closed (`no_tree_eps_close_to_sin_compact_
+interval`, decision doc cont. 79–80): no finite EML tree, valid across an interval containing `0`,
+stays within `ε < 1` of `sin` on the WHOLE interval once it is longer than an EXPLICIT function of
+the tree's own structure (`EMLExplicitBound.combinedBoundE` — a genuine closed-form bound in tree
+depth and size, not an abstract "eventually," and not blocked on the harder `exp_hard` Khovanskii
+frontier this arc had originally expected to need).
+
+**The abstract result now connects to a real compiled artifact, with real IEEE-754 rounding.**
+Everything described so far is about `EMLTree.eval`, a mathematical function — it says nothing
+about what happens once a tree is actually compiled and run. The Certcom compositional handshake
+(decision doc cont. 82–88) closes that gap for the FULL grammar this arc studies (`const`/`var`/
+`eml`, any depth or shape): `Certcom.eml_tree_grounded` gives an explicit, machine-computed
+closed-form error bound between (a) `T.eval`, the exact mathematical value, (b) the exact real
+value of the compiled expression before rounding, and (c) the actual `Float`-rounded output of a
+Certcom-compiled program — grounded against Certcom's own disclosed IEEE-754 rounding axioms for
+every one of the 14 transcendental primitives it uses (a full retroactive audit, cont. 86, found and
+fixed 10 of those 14 axioms, which had quietly asserted something FALSE of real rounding before this
+arc's own external review caught it — see cont. 85's erratum). Nothing about `EMLTree.eval`'s own
+non-representability claims changed; what's new is that the trust chain now reaches all the way from
+"no finite EML tree equals `sin`" down to "and here is the exact, bounded error of a real compiled
+program that tries anyway."
+
+**The `sin`/`nestedTarget`-specific result generalizes to every nonconstant, continuous, periodic
+target, not just that one family.** `no_tree_eq_periodic_target` (Track C item C9, decision doc
+cont. 89) proves the general case directly: no finite EML tree equals ANY nonconstant,
+everywhere-continuous, periodic function — `sin` and the whole `nestedTarget` tower are now
+instances of one theorem, not the theorem itself. Built via genuinely new Extreme Value Theorem
+attainment machinery this codebase lacked before — though, in an honest erratum caught while
+building the actual barrier theorem (not assumed going in), that EVT machinery turned out not to be
+what the generalization needed: periodicity alone makes every value of a periodic target recur
+arbitrarily far out, not just an extremal one, so an arbitrary basepoint does the same job the
+infimum was originally thought to require. (`sin_not_tailSign`, the original hand-built argument
+this note describes above, is itself a confirming precedent in hindsight — it already used
+`sin 0 = 0`, never `inf(sin) = −1`.)
+
+## What this still doesn't claim
+
+The core scope statement from "The question" above is unchanged: this is about **exact**
+representability on **all** of the reals, for the grammar as it stands, and the non-representability
+results are specific to targets that are periodic (or otherwise fail `TailSign`) — a target that
+settles into one eventual sign or eventually vanishes is NOT covered by any theorem in this arc,
+and could, for all this arc shows, be representable. Two chain-order-shaped extensions were
+investigated in depth and remain genuinely open, not merely unattempted (decision doc cont. 90):
+whether a chain-order-SENSITIVE obstruction (distinct from the periodicity-based `TailSign` used
+throughout) could separate what a bounded-order Pfaffian chain can represent from what a
+higher-order one can (`sin` itself is chain order 2 classically, so `TailSign` and chain order are
+confirmed orthogonal axes, not composable ones as originally hoped) — and whether the validity
+threshold inside `eml_tailSign_unconditional`'s own proof can be made an EXPLICIT function of tree
+structure, which traces to a `Classical.byContradiction` core that proves the threshold exists
+without ever constructing it. Also still open: other target functions beyond the periodic family
+covered here (Track C's census-style instantiations are illustrative, not exhaustive), and whether
+the grammar's inability to build `x²` (see "The question," above) is a fixed scope commitment or
+something a future richer grammar would lift.
 
 ## Where to go next
 
-- **The spine, in dependency order:** `EML_WITNESS_FINDING_THEOREM_MAP.md`.
+- **The spine, in dependency order, plus everything built since:** `EML_WITNESS_FINDING_THEOREM_MAP.md`.
 - **The full chronological record**, including every dead end with its own reasoning (not just
   the three summarized above): `EML_WITNESS_FINDING_DECISION_2026_07_15.md`.
 - **A minimal reproducer** importing only the public spine and printing the axiom footprint of the

@@ -6559,3 +6559,45 @@ round, to need real further mathematics (a growth-rate obstruction for C5; a con
 of `evalid_tailSign` for C10) that a single round should not force, matching this whole document's
 established discipline of reporting a checked "genuinely hard, here is exactly why" over a rushed
 or fabricated closure.
+
+## 2026-07-22 (cont. 91) — Track B refresh: the theorem map and research note were stale relative
+## to everything built since cont. 74; brought current, one real correction made along the way
+
+Direct request, after a reflective "where do we go from here??" exchange: land on a bounded
+finishing pass rather than push further into C5/C10 (both confirmed genuinely open, no clear next
+tractable step) or pivot away entirely. Track B's own artifacts (`EML_WITNESS_FINDING_THEOREM_MAP.md`,
+`EML_WITNESS_FINDING_RESEARCH_NOTE.md`, `foundations/EMLWitnessFindingReproducer.lean` + README)
+were all written cont. 72–73, before Track C existed — a reader landing on any of them today would
+get a 2026-07-22-morning picture of an arc that kept growing for two more weeks of rounds.
+
+**Theorem map**: added a new section, "Beyond the spine," rather than touching `optionDSpineModules`
+itself (that list stays frozen at the 16 cont.56–71 files by design — extending it is a separate
+decision this round didn't make). Covers, in order: the six closed Track C items (C1, C3, C6, C7,
+C8, C9) each with their headline theorem and file; a dependency-chain diagram for the compact-
+interval theorem → Certcom compositional handshake (cont. 79–88), the single largest and most
+externally-relevant addition since the spine itself; and a one-paragraph-each honest account of
+C2/C4 (scoped, not pursued) and C5/C10 (investigated in depth, genuinely still open, precise
+reasons given rather than re-flagged).
+
+**Research note — one real correction, not just an addition.** The existing "what this doesn't
+claim" section stated the bounded-domain `ε`-closeness question was open (accurate as of cont. 74's
+C6, which was a pure tail/asymptotic result). It no longer is — the compact-interval theorem
+(cont. 79–80) closed exactly that question with an EXPLICIT tree-structure bound, two rounds after
+the research note was written, and the note never caught up. Fixed by splitting into "How far this
+now reaches" (the compact-interval closure, the Certcom handshake's connection to a real compiled
+artifact, and C9's generalization from `sin`/`nestedTarget` to any periodic target — three real
+advances a reader would otherwise miss entirely) and a rewritten "What this still doesn't claim"
+(C5/C10's precise open status, replacing the stale bounded-domain gap that no longer applies).
+
+**Reproducer**: extended from 3 to 5 `#print axioms` headlines — added `no_tree_eq_periodic_target`
+(the C9 generalization) and `Certcom.eml_tree_grounded` (the Certcom handshake capstone). Ran it for
+real rather than asserting counts: 83/83/82/70/54 axioms respectively, neither legacy discharge
+axiom (`eml_pfaffian_validon_from_sin_equality`/`_cos_equality`) in any of the five footprints —
+confirmed the same non-circularity check the original three headlines had, still holds for the two
+new ones. Recomputed the module-count claim the same direct way the original did (parsing `import`
+lines and following the transitive closure, not guessing): 279 of 478 modules needed, up from the
+original "~240 of ~460" now that the library has grown.
+
+No Lean proofs touched this round — pure documentation legibility work, exactly the bounded task
+this was scoped as. Full `lake build MachLib` unaffected (still 480 modules); `AxiomLedger.lean`
+unaffected (still 53 headlines, 299 axioms).

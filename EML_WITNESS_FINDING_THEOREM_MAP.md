@@ -123,3 +123,97 @@ the full narrative of each):
 
 No file in this category was deleted, moved, or marked deprecated as part of this document —
 consistent with the "non-invasive" framing of the B2 task this document answers.
+
+## Beyond the spine: what's been built since (cont. 74–90)
+
+`optionDSpineModules` was deliberately frozen at the 16 files above when this guard was built
+(cont. 72) — extending it is a separate decision, not made here, and everything below is real,
+`sorryAx`-free, individually pinned as an `AxiomLedger.lean` headline (not whole-module-guarded the
+way the spine is) rather than folded into the spine list itself. This section exists so a reader of
+THIS map isn't left with a 2026-07-22-morning picture of the arc — a great deal was built the same
+day and the days after, none of it superseding the spine above, all of it extending what it reaches.
+
+**Track C — general-purpose extensions of the spine's own machinery, six closed:**
+
+- **C1 — `LogDivergenceWall.lean`.** No finite EML tree valid on an interval containing `0` equals
+  `Real.log` on the positive side — a DIFFERENT obstruction (continuity-at-a-point vs. `log`'s own
+  divergence near `0`), not `TailSign`/oscillation-counting.
+- **C3 — `LogImplicitRepresentability.lean`.** `log` is IMPLICITLY representable everywhere `x > 0`
+  (invert `exp`'s own EML representative) despite C1's wall on every EXPLICIT route — a genuine
+  separation theorem between the two notions of "representable."
+- **C6 — `QuantitativeNonApproximation.lean`.** No finite EML tree stays within any `ε < 1` of `sin`
+  for ALL sufficiently large `x` — closed, then SUPERSEDED on the practically relevant question by
+  the compact-interval theorem below (cont. 79–80), which the research note's own "what this
+  doesn't claim" section used to flag as open. It no longer is; see the research note's own update.
+- **C7 — `CertcomTotalErrorFloor.lean`.** The lemma-shaped core of "no compiled artifact gets
+  arbitrarily close to `sin` forever," combining C6's floor with an abstract rounding-error bound —
+  superseded on its own practical form by the Certcom handshake below.
+- **C8 — `NonRepresentabilityCensusSinSq.lean`.** One additional target instantiation, `sin²x` — a
+  genuinely different oscillation shape (non-negative, recurring to `0` AND `1`) through the same
+  general meta-lemma (step 16 above), zero target-specific calculus.
+- **C9 — `ExtremeValueAttainment.lean` + `GeneralPeriodicTargetBarrier.lean`.** The general
+  form the spine's own `sin`/`nestedTarget` results were always an instance of:
+  `no_tree_eq_periodic_target` — **no finite EML tree equals ANY nonconstant, everywhere-continuous,
+  periodic target**, full stop, not just `sin` and its nested-log relatives. Built genuine Extreme
+  Value Theorem attainment machinery to get there, then found (erratum, not assumed) that EVT isn't
+  actually what the theorem needed — periodicity alone makes every value recur arbitrarily far out,
+  the same fact `sin_not_tailSign` already exploited by hand. `no_tree_eq_sin_via_periodic_barrier`
+  confirms the general theorem re-derives step 4's `sin` conclusion, not just a plausible-looking
+  generalization of it.
+- **C2, C4 — investigated, deliberately not built.** C2 (can the grammar be extended to build
+  `x²`?) is checked-not-assumed scope, already stated up front in the research note. C4 (cell
+  stratification for exactness on the negative axis) has no identified consumer; both external
+  reviews that proposed Track C ranked it lowest priority themselves.
+- **C5, C10 — investigated in depth, genuinely still open, not just re-flagged.** C5 (a
+  chain-order hierarchy theorem) found that `EMLTree`'s own encoder and the separate
+  `IterExpDepthN` iterated-exponential-tower development are literal instances of the same
+  `PfaffianChain n` type (a real, previously-unconfirmed bridge — see `EMLTowerSubsumesIterExp.lean`
+  for the one concrete piece this turned into: EML reaches every depth of that tower family
+  exactly) — but also found the muses' proposed obstruction mechanism (`TailSign` + chain order)
+  doesn't combine, because they're orthogonal axes (`sin` is chain order 2 classically, yet EML
+  can't represent it for reasons that have nothing to do with chain order). C10 (make a validity
+  threshold explicit) traced to a `Classical.byContradiction` core inside `evalid_tailSign` — it
+  proves the threshold exists without ever constructing it, a genuine constructive/classical
+  obstacle, not a "just hasn't been done yet" gap. See decision doc cont. 90 for the full technical
+  account of both.
+
+**The compact-interval theorem and the Certcom handshake — the practically-relevant closure C6/C7
+were originally reaching for, now actually reached (cont. 79–88):**
+
+```
+no_tree_eps_close_to_sin_compact_interval (cont. 79-80)
+  — the REAL answer to "how long can a tree stay ε-close to sin on a BOUNDED interval" —
+    M an EXPLICIT function of tree structure (EMLExplicitBound.combinedBoundE), not
+    an abstract "eventually" threshold
+        |
+        v
+certcom_total_error_floor_compact_interval (cont. 81)
+  — combined with an ABSTRACT rounding-error bound: total error against true sin exceeds
+    ε−δ WITHIN the interval once it's long enough — still abstract in `hround`
+        |
+        v
+eml_var_var_pipeline / eml_var_var_certcom_witness (cont. 82-83)
+  — wires the abstract `hround` to Certcom's REAL compiled pipeline for one hand-built tree
+    (eml var var), closing the uniformity + Real→Float quantization gaps
+        |
+        v
+eml_var_var_certcom_witness_grounded (cont. 84-86)
+  — grounded against Certcom's ACTUAL disclosed rounding axioms, then a full retroactive
+    audit fixed 10 of 14 primitive rounding axioms that were quietly false/imprecise
+    before this round (cont. 86) — no free hypothesis left beyond genuine math quantities
+    or Certcom's own disclosed IEEE-754 trust floor
+        |
+        v
+eml_tree_grounded (cont. 87-88)  ◄── the capstone
+  — generalizes from ONE hand-built tree to the FULL EMLTree grammar (const/var/eml, any
+    depth/shape) via one structural induction — any tree this arc studies inherits a
+    grounded Certcom pipeline connection automatically, with an explicit, machine-computed
+    closed-form error bound
+```
+
+This is the one piece of the whole arc that connects an ABSTRACT non-representability result to an
+ACTUAL compiled artifact with real IEEE-754 rounding — genuinely the most externally-relevant
+addition since the spine itself, and worth a reader's attention even though (by design) it lives
+entirely outside `optionDSpineModules`.
+
+Full narrative, every round dated: `EML_WITNESS_FINDING_DECISION_2026_07_15.md`, cont. 74 onward.
