@@ -131,4 +131,14 @@ jobs:
           fi
           git add .github/build-time.json
           git commit -m "ci(build-time): refresh cold-build badge to ${BUILD_SECONDS}s [skip ci]"
-          git push
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}/5) -- another commit landed on master while this run was building, rebasing and retrying"
+            git fetch origin master
+            git rebase origin/master
+            sleep $((RANDOM % 5 + 1))
+          done
+          echo "::error::failed to push the badge JSON after 5 rebase-retry attempts"
+          exit 1
