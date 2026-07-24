@@ -705,5 +705,369 @@ theorem exists_global_max_bound (f : Real → Real) (b : Real) (hb0 : 0 ≤ b)
   · rw [meshPoint_zero_one_zero b]; exact hx1
   · rw [meshPoint_zero_one_one b]; exact hx2
 
+/-! ## §8 — epsilon-splitting arithmetic toolkit, for the final assembly's 3-way error budget -/
+
+private theorem pos_add_one (X : Real) (hX : 0 ≤ X) : 0 < X + 1 := by
+  have h1 := add_le_add_both hX (le_refl (1:Real))
+  rw [show (0:Real) + 1 = 1 from by mach_mpoly [(1:Real)]] at h1
+  exact lt_of_lt_of_le zero_lt_one_ax h1
+
+private theorem le_self_add_one (X : Real) : X ≤ X + 1 :=
+  le_add_of_nonneg_right (le_of_lt zero_lt_one_ax)
+
+/-- Halving: `X/2 + X/2 = X`. Parametrized (not `let`-bound) so it composes safely with
+`mach_mpoly` at every use site — the established house rule this whole arc. -/
+private theorem half_sum (X : Real) : X / (1 + 1) + X / (1 + 1) = X := by
+  rw [← mul_two_eq_add_self (X / (1 + 1))]
+  exact div_mul_cancel (ne_of_gt two_pos)
+
+/-- The specific 3-way split the assembly needs: a gap-budget `ε/2`, plus two independent
+quarter-budgets `ε/4` (one for the uniform-continuity slack, one for the `M·q` overlap slack),
+summing back to exactly `ε`. -/
+private theorem eps_three_way (ε : Real) :
+    ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) = ε := by
+  rw [half_sum (ε / (1 + 1)), half_sum ε]
+
+/-- Given a fixed multiplier `X ≥ 0` and a target `> 0`, there is a nonneg `ε'` with
+`ε' * X < target`. Generalizes `riemann_integral_mono_interval`'s inline `ε'`-choice
+(`ε' := ε''/(a+1)`, giving `ε'*a<ε''`) into a reusable lemma. -/
+private theorem eps_mul_lt (X target : Real) (hX0 : 0 ≤ X) (htarget : 0 < target) :
+    ∃ ε' : Real, 0 < ε' ∧ ε' * X < target := by
+  have hX1pos : 0 < X + 1 := pos_add_one X hX0
+  have hε'pos : 0 < target / (X + 1) := div_pos_of_pos_pos htarget hX1pos
+  refine ⟨target / (X + 1), hε'pos, ?_⟩
+  have hcancel : target / (X + 1) * (X + 1) = target := div_mul_cancel (ne_of_gt hX1pos)
+  have h1 : target / (X + 1) * X + target / (X + 1) = target := by
+    rw [show target / (X + 1) * X + target / (X + 1) = target / (X + 1) * (X + 1)
+        from by mach_mpoly [target / (X + 1), X]]
+    exact hcancel
+  have h2 := add_lt_add_left hε'pos (target / (X + 1) * X)
+  rw [h1] at h2
+  rwa [show target / (X + 1) * X + 0 = target / (X + 1) * X
+      from by mach_mpoly [target / (X + 1) * X]] at h2
+
+/-- Given `M ≥ 0`, a target `> 0`, and `q` bounded above by `target/(M+1)`, then `M*q ≤ target`.
+Avoids any "divide an inequality" lemma by cross-multiplying through `(M+1)*q ≤ target` instead
+(reusing only `div_mul_cancel`, already available) and then dropping from `(M+1)*q` to `M*q` via
+`M ≤ M+1`. -/
+private theorem M_mul_bound (M T q : Real) (hMnn : 0 ≤ M) (hT : 0 < T) (hqnn : 0 ≤ q)
+    (hqle : q ≤ T / (M + 1)) :
+    M * q ≤ T := by
+  have hM1pos : 0 < M + 1 := pos_add_one M hMnn
+  have hcancel : (M + 1) * (T / (M + 1)) = T := by
+    rw [mul_comm (M + 1) (T / (M + 1))]
+    exact div_mul_cancel (ne_of_gt hM1pos)
+  have h1 : (M + 1) * q ≤ (M + 1) * (T / (M + 1)) :=
+    mul_le_mul_of_nonneg_left hqle (le_of_lt hM1pos)
+  rw [hcancel] at h1
+  have h2 : M * q ≤ (M + 1) * q := mul_le_mul_of_nonneg_right (le_self_add_one M) hqnn
+  exact le_trans h2 h1
+
+/-! ## §9 — the tail's crossing index, DERIVED from the head's -/
+
+private theorem sub_le_sub_left_anti {x y : Real} (h : x ≤ y) (c : Real) : c - y ≤ c - x := by
+  have h1 := add_le_add_both (le_refl c) (neg_le_neg h)
+  rwa [← sub_def c y, ← sub_def c x] at h1
+
+private theorem natCast_succ_mul_sub (m : Nat) (q : Real) :
+    natCast (m + 1) * q - q = natCast m * q := by
+  rw [natCast_m_succ]
+  mach_mpoly [natCast m, q]
+
+/-- The tail's own width-crossing index (for width `b-a`) can't be found independently via
+`least_nq_gt` — doing so could make the head+tail coarse windows fail to exactly cover `[0,2^K)`.
+It must instead be DERIVED from the head's width-crossing index `m_a` (for width `a`) via
+`m_tail := 2^K - m_a - 1`, expressed here additively as `m_a+1+m_tail=2^K` to avoid Nat
+truncated-subtraction pitfalls. Worked out by hand across several follow-ups this arc; this is
+the Lean transcription. -/
+private theorem tail_crossing (a b q : Real) (m_a m_tail K : Nat)
+    (hcross_a : natCast m_a * q ≤ a) (hratio_a : a ≤ natCast (m_a + 1) * q)
+    (hsplit : m_a + 1 + m_tail = 2 ^ K) (hqb : natCast (2 ^ K) * q = b) :
+    natCast m_tail * q ≤ b - a ∧ b - a ≤ natCast (m_tail + 1) * q := by
+  have hsum : natCast (m_a + 1) * q + natCast m_tail * q = b := by
+    rw [← hsplit, natCast_add (m_a + 1) m_tail] at hqb
+    rw [← hqb]
+    mach_mpoly [natCast (m_a + 1), natCast m_tail, q]
+  have h1 : natCast m_tail * q = b - natCast (m_a + 1) * q := by
+    rw [← hsum]
+    mach_mpoly [natCast (m_a + 1) * q, natCast m_tail * q]
+  refine ⟨?_, ?_⟩
+  · rw [h1]
+    exact sub_le_sub_left_anti hratio_a b
+  · have h2 : natCast (m_tail + 1) * q = b - natCast m_a * q := by
+      rw [natCast_m_succ, show (natCast m_tail + 1) * q = natCast m_tail * q + q
+          from by mach_mpoly [natCast m_tail, q]]
+      rw [h1]
+      rw [show b - natCast (m_a + 1) * q + q = b - (natCast (m_a + 1) * q - q)
+          from by mach_mpoly [b, natCast (m_a + 1) * q, q]]
+      rw [natCast_succ_mul_sub m_a q]
+    rw [h2]
+    exact sub_le_sub_left_anti hcross_a b
+
+private theorem distrib_mul (X Y q : Real) : (X + Y) * q = X * q + Y * q := by
+  mach_mpoly [X, Y, q]
+
+/-- Regroups `(A+B)+(C+D)` into `(A+C)+(B+D)` — pure associativity/commutativity, but hoisted so
+the MAIN proof never has to hand a `mach_mpoly` call a Real atom built from `have`/`obtain`-bound
+locals (the house rule from earlier this arc: complex terms as ARGUMENTS to a pre-proven generic
+lemma are safe; the same terms as ATOMS inside a fresh `mach_mpoly` call are not). -/
+private theorem regroup4 (A B C D : Real) : (A + B) + (C + D) = (A + C) + (B + D) := by
+  mach_mpoly [A, B, C, D]
+
+private theorem eps_split_add (ε' a b : Real) : ε' * a + ε' * (b - a) = ε' * b := by
+  mach_mpoly [ε', a, b]
+
+/-- Right-sided companion to the axiom `add_lt_add_left` (which only adds on the left). -/
+private theorem add_lt_add_right_weak {X Y : Real} (h : X < Y) (c : Real) : X + c < Y + c := by
+  rw [add_comm X c, add_comm Y c]
+  exact add_lt_add_left h c
+
+/-- The exact 3-way regroup+resum the assembly's final step needs:
+`I_b + ε_gap + ε_q + ε_q = I_b + ε`, where `ε_gap := ε/2`, `ε_q := ε/4` (both inline, matching
+`eps_three_way`'s split up to reordering). -/
+private theorem final_combine (I_b ε : Real) :
+    I_b + ε / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) = I_b + ε := by
+  have h1 : ε / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) = ε := by
+    rw [show ε / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1)
+        = ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1)
+        from by mach_mpoly [ε / (1 + 1), ε / (1 + 1) / (1 + 1)]]
+    exact eps_three_way ε
+  rw [show I_b + ε / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1)
+      = I_b + (ε / (1 + 1) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1))
+      from by mach_mpoly [I_b, ε / (1 + 1), ε / (1 + 1) / (1 + 1)]]
+  rw [h1]
+
+/-- Congruence for `upperSumCont`/`lowerSumCont` in their Nat resolution argument, local copies of
+the private `upperSumCont_congr`/`lowerSumCont_congr` from `RiemannIntegralRefine.lean` (not
+accessible from here). Needed because `K` is `let`-bound to `K0+N1+N2`, but `upperSumCont_dyadic_anti`
+et al. produce terms indexed by `2^(K0+(N1+N2))` — propositionally, not syntactically, the same
+exponent (associativity), so a raw `rw` on the exponent hits a dependent-motive failure; this
+congruence lemma sidesteps that by rewriting the WHOLE `upperSumCont`/`lowerSumCont` application at
+once via `N1=N2 → upperSumCont ... N1 h1 = upperSumCont ... N2 h2`. -/
+private theorem upperSumCont_congr_local (f : Real → Real) (a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z) :
+    ∀ {N1 N2 : Nat}, N1 = N2 → ∀ (h1 : 0 < N1) (h2 : 0 < N2),
+      upperSumCont f a b hab hcont N1 h1 = upperSumCont f a b hab hcont N2 h2
+  | _, _, rfl, _, _ => rfl
+
+private theorem lowerSumCont_congr_local (f : Real → Real) (a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z) :
+    ∀ {N1 N2 : Nat}, N1 = N2 → ∀ (h1 : 0 < N1) (h2 : 0 < N2),
+      lowerSumCont f a b hab hcont N1 h1 = lowerSumCont f a b hab hcont N2 h2
+  | _, _, rfl, _, _ => rfl
+
+/-- Congruence for `upperSumCont` in its Real upper-endpoint argument. Needed because
+`upperSumCont_transfer_windowed`, called with `p:=0,w:=a`, produces a conclusion about
+`upperSumCont f 0 (0+a) ...` — propositionally but not syntactically `upperSumCont f 0 a ...`
+(`Real` addition is opaque/axiomatized, not computed) — same dependent-motive risk as above, same
+fix: rewrite the whole application via a purpose-built congruence lemma instead of a raw `rw`. -/
+private theorem upperSumCont_congr_val (f : Real → Real) (p : Real) :
+    ∀ {b1 b2 : Real}, b1 = b2 → ∀ (hab1 : p ≤ b1) (hab2 : p ≤ b2)
+      (hcont1 : ∀ z : Real, p ≤ z → z ≤ b1 → ContinuousAt f z)
+      (hcont2 : ∀ z : Real, p ≤ z → z ≤ b2 → ContinuousAt f z)
+      (n : Nat) (hn : 0 < n),
+      upperSumCont f p b1 hab1 hcont1 n hn = upperSumCont f p b2 hab2 hcont2 n hn
+  | _, _, rfl, _, _, _, _, _, _ => rfl
+
+/-- Additive-index wrapper for `partialSum_two_window_eq`, avoiding Nat truncated subtraction in
+its statement (the head/tail split is naturally additive: `m_a+1+m_tail=2^K`). -/
+private theorem partialSum_two_window_eq_add (g : Nat → Real) (m_a m_tail K : Nat)
+    (hsplit : m_a + 1 + m_tail = 2 ^ K) :
+    partialSum g (m_a + 1) + partialSum (fun j => g (m_a + j)) (m_tail + 1)
+      = partialSum g (2 ^ K) + g m_a := by
+  have h := partialSum_two_window_eq g m_a (2 ^ K) (by omega)
+  rwa [show 2 ^ K - m_a = m_tail + 1 from by omega] at h
+
+/-- `upperSumCont_transfer_windowed`/`lowerSumCont_transfer_general` at `mp:=0` produce
+`fun j => g (0+j)`, not `g` itself — `0+j` is only PROPOSITIONALLY, not syntactically, `j`. Bridges
+this so the head's window sum can be identified with the plain `partialSum g (m_a+1)` that
+`partialSum_two_window_eq_add` expects. -/
+private theorem partialSum_zero_offset (g : Nat → Real) : ∀ n : Nat,
+    partialSum (fun j => g (0 + j)) n = partialSum g n
+  | 0 => rfl
+  | k + 1 => by
+      show partialSum (fun j => g (0 + j)) k + g (0 + k) = partialSum g k + g k
+      rw [partialSum_zero_offset g k, Nat.zero_add]
+
+/-! ## §10 — the headline: interval additivity for the Riemann integral, upper-bound direction -/
+
+/-- `I_a + I_w ≤ I_b`, half of interval additivity. Takes `a < b` STRICTLY — the `a = b` case
+(where `[a,b]` degenerates to a point) is handled separately by the public headline theorem, via
+`riemann_integral_unique` instead of this ε-argument. -/
+private theorem riemann_integral_additivity_le (f : Real → Real) (a b : Real)
+    (ha0 : 0 ≤ a) (hab_lt : a < b) (hb0 : 0 ≤ b)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont_a : ∀ z : Real, 0 ≤ z → z ≤ a → ContinuousAt f z)
+    (hcont_w : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hnonneg : ∀ z : Real, 0 ≤ z → z ≤ b → 0 ≤ f z)
+    (I_a I_w I_b : Real)
+    (hIa_up : ∀ k, I_a ≤ upperSumCont f 0 a ha0 hcont_a (2 ^ k) (two_pow_pos k))
+    (hIa_gap : ∀ ε : Real, 0 < ε → ∃ k, upperSumCont f 0 a ha0 hcont_a (2 ^ k) (two_pow_pos k)
+        - lowerSumCont f 0 a ha0 hcont_a (2 ^ k) (two_pow_pos k) < ε)
+    (hIw_up : ∀ k, I_w ≤ upperSumCont f a b (le_of_lt hab_lt) hcont_w (2 ^ k) (two_pow_pos k))
+    (hIw_gap : ∀ ε : Real, 0 < ε → ∃ k, upperSumCont f a b (le_of_lt hab_lt) hcont_w (2 ^ k) (two_pow_pos k)
+        - lowerSumCont f a b (le_of_lt hab_lt) hcont_w (2 ^ k) (two_pow_pos k) < ε)
+    (hIb_low : ∀ k, lowerSumCont f 0 b hb0 hcont (2 ^ k) (two_pow_pos k) ≤ I_b)
+    (hIb_gap : ∀ ε : Real, 0 < ε → ∃ k, upperSumCont f 0 b hb0 hcont (2 ^ k) (two_pow_pos k)
+        - lowerSumCont f 0 b hb0 hcont (2 ^ k) (two_pow_pos k) < ε) :
+    I_a + I_w ≤ I_b := by
+  have hab : a ≤ b := le_of_lt hab_lt
+  apply le_of_forall_pos_lt_add
+  intro ε hε
+  have hε_gap_pos : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  have hε_q_pos : 0 < ε / (1 + 1) / (1 + 1) := div_pos_of_pos_pos hε_gap_pos two_pos
+  obtain ⟨M, hMnn, hMub⟩ := exists_global_max_bound f b hb0 hcont hnonneg
+  obtain ⟨K0, hK0⟩ := hIb_gap (ε / (1 + 1)) hε_gap_pos
+  obtain ⟨ε', hε'pos, hε'b⟩ := eps_mul_lt b (ε / (1 + 1) / (1 + 1)) hb0 hε_q_pos
+  obtain ⟨δ, hδpos, hδ⟩ := heine_cantor_uniform_continuity hb0 hcont ε' hε'pos
+  obtain ⟨N1, hN1⟩ := meshWidth_dyadic_lt_target b hb0 δ hδpos
+  have hMq_target_pos : 0 < ε / (1 + 1) / (1 + 1) / (M + 1) :=
+    div_pos_of_pos_pos hε_q_pos (pos_add_one M hMnn)
+  obtain ⟨N2, hN2⟩ := meshWidth_dyadic_lt_target b hb0
+    (ε / (1 + 1) / (1 + 1) / (M + 1)) hMq_target_pos
+  let K := K0 + N1 + N2
+  have hKeq : K = K0 + N1 + N2 := rfl
+  have hK : 0 < 2 ^ K := two_pow_pos K
+  have hwidthK_δ : meshWidth 0 b (2 ^ K) < δ :=
+    lt_of_le_of_lt (meshWidth_dyadic_le_of_ge b hb0 N1 K (by omega)) hN1
+  have hwidthK_Mq : meshWidth 0 b (2 ^ K) < ε / (1 + 1) / (1 + 1) / (M + 1) :=
+    lt_of_le_of_lt (meshWidth_dyadic_le_of_ge b hb0 N2 K (by omega)) hN2
+  have hgapK : upperSumCont f 0 b hb0 hcont (2 ^ K) hK
+      - lowerSumCont f 0 b hb0 hcont (2 ^ K) hK < ε / (1 + 1) := by
+    have hu := upperSumCont_dyadic_anti f 0 b hb0 hcont K0 (N1 + N2) (two_pow_pos K0)
+    have hl := lowerSumCont_dyadic_mono f 0 b hb0 hcont K0 (N1 + N2) (two_pow_pos K0)
+    have hneg : -lowerSumCont f 0 b hb0 hcont (2 ^ (K0 + (N1 + N2))) (two_pow_pos (K0 + (N1 + N2)))
+        ≤ -lowerSumCont f 0 b hb0 hcont (2 ^ K0) (two_pow_pos K0) := neg_le_neg hl
+    have hsum := add_le_add_both hu hneg
+    rw [← sub_def (upperSumCont f 0 b hb0 hcont (2 ^ (K0 + (N1 + N2))) (two_pow_pos (K0 + (N1 + N2))))
+          (lowerSumCont f 0 b hb0 hcont (2 ^ (K0 + (N1 + N2))) (two_pow_pos (K0 + (N1 + N2)))),
+        ← sub_def (upperSumCont f 0 b hb0 hcont (2 ^ K0) (two_pow_pos K0))
+          (lowerSumCont f 0 b hb0 hcont (2 ^ K0) (two_pow_pos K0))] at hsum
+    have hpow_eq : (2:Nat) ^ K = 2 ^ (K0 + (N1 + N2)) := by rw [show K = K0 + (N1 + N2) from by omega]
+    rw [upperSumCont_congr_local f 0 b hb0 hcont hpow_eq hK (two_pow_pos (K0 + (N1 + N2))),
+        lowerSumCont_congr_local f 0 b hb0 hcont hpow_eq hK (two_pow_pos (K0 + (N1 + N2)))]
+    exact lt_of_le_of_lt hsum hK0
+  have hqnn : 0 ≤ meshWidth 0 b (2 ^ K) := meshWidth_nonneg hb0 (2 ^ K)
+  have hqb : natCast (2 ^ K) * meshWidth 0 b (2 ^ K) = b := by
+    have h1 := natCast_mul_meshWidth 0 b (2 ^ K) hK
+    rwa [sub_zero_local b] at h1
+  have haltN : a < natCast (2 ^ K) * meshWidth 0 b (2 ^ K) := by rw [hqb]; exact hab_lt
+  obtain ⟨n, hnle, hn1, hn2⟩ := least_nq_gt a (meshWidth 0 b (2 ^ K)) (2 ^ K) haltN
+  have hnne : n ≠ 0 := by
+    intro hn0
+    rw [hn0, natCast_zero, zero_mul] at hn1
+    exact lt_irrefl_ax 0 (lt_of_le_of_lt ha0 hn1)
+  obtain ⟨m_a, hm_a⟩ := Nat.exists_eq_succ_of_ne_zero hnne
+  rw [hm_a] at hnle hn1 hn2
+  have hcross_a : natCast m_a * meshWidth 0 b (2 ^ K) ≤ a := by
+    obtain hz | hz := hn2
+    · omega
+    · rwa [show m_a + 1 - 1 = m_a from by omega] at hz
+  have hratio_a : a ≤ natCast (m_a + 1) * meshWidth 0 b (2 ^ K) := le_of_lt hn1
+  have hjK_a : m_a + 1 ≤ 2 ^ K := hnle
+  obtain ⟨m_tail, hsplit⟩ := Nat.le.dest hjK_a
+  obtain ⟨hcross_w_tail, hratio_w_tail⟩ :=
+    tail_crossing a b (meshWidth 0 b (2 ^ K)) m_a m_tail K hcross_a hratio_a hsplit hqb
+  -- HEAD: p=0, w=a, m=m_a, mp=0
+  have hcont_p_head : ∀ z : Real, 0 ≤ z → z ≤ 0 + a → ContinuousAt f z := fun z hz1 hz2 =>
+    hcont_a z hz1 (by rwa [zero_add] at hz2)
+  have hp0_head : (0:Real) ≤ 0 := le_refl 0
+  have hpwc_head : (0:Real) + a ≤ b := by rw [zero_add]; exact hab
+  have hcross_p_head : natCast 0 * meshWidth 0 b (2 ^ K) ≤ (0:Real) := by
+    rw [natCast_zero, zero_mul]; exact le_refl 0
+  have hratio_p_head : (0:Real) ≤ natCast (0 + 1) * meshWidth 0 b (2 ^ K) := by
+    rw [show (0 + 1 : Nat) = 1 from rfl, natCast_one_local2]
+    rwa [show (1:Real) * meshWidth 0 b (2 ^ K) = meshWidth 0 b (2 ^ K)
+        from by mach_mpoly [meshWidth 0 b (2 ^ K)]]
+  have htransfer_head := upperSumCont_transfer_windowed f b hb0 hcont hnonneg 0 a hp0_head ha0
+    hpwc_head hcont_p_head m_a 0 K hK (by omega) (meshWidth 0 b (2 ^ K)) rfl hqnn hcross_a hratio_a
+    hcross_p_head hratio_p_head δ ε' hδpos hwidthK_δ (le_of_lt hε'pos) hδ
+  rw [upperSumCont_congr_val f 0 (zero_add a) (le_add_of_nonneg_right ha0) ha0 hcont_p_head hcont_a
+    (m_a + 1) (by omega)] at htransfer_head
+  -- TAIL: p=a, w=b-a, m=m_tail, mp=m_a
+  have hba : (0:Real) ≤ b - a := sub_nonneg_of_le hab
+  have hab_eq : a + (b - a) = b := by mach_mpoly [a, b]
+  have hpwc_tail : a + (b - a) ≤ b := by rw [hab_eq]; exact le_refl b
+  have hcont_p_tail : ∀ z : Real, a ≤ z → z ≤ a + (b - a) → ContinuousAt f z := fun z hz1 hz2 =>
+    hcont_w z hz1 (by rwa [hab_eq] at hz2)
+  have htransfer_tail := upperSumCont_transfer_windowed f b hb0 hcont hnonneg a (b - a) ha0 hba
+    hpwc_tail hcont_p_tail m_tail m_a K hK (by omega) (meshWidth 0 b (2 ^ K)) rfl hqnn
+    hcross_w_tail hratio_w_tail hcross_a hratio_a δ ε' hδpos hwidthK_δ (le_of_lt hε'pos) hδ
+  rw [upperSumCont_congr_val f a hab_eq (le_add_of_nonneg_right hba) hab hcont_p_tail hcont_w
+    (m_tail + 1) (by omega)] at htransfer_tail
+  -- I_a, I_w bound by the fine upper sums at these EXACT resolutions
+  have hIa_le := le_upperSumCont_any f 0 a ha0 hcont_a I_a hIa_up hIa_gap (m_a + 1) (by omega)
+  have hIw_le := le_upperSumCont_any f a b hab hcont_w I_w hIw_up hIw_gap (m_tail + 1) (by omega)
+  have hIa_bound := le_trans hIa_le htransfer_head
+  have hIw_bound := le_trans hIw_le htransfer_tail
+  have hsum_bound := add_le_add_both hIa_bound hIw_bound
+  -- bridge the head's `fun j => g(0+j)` window down to the plain `g` that partialSum_two_window_eq_add expects
+  rw [show partialSum (fun j => maxSub f 0 b hb0 hcont (2 ^ K) hK (0 + j)) (m_a + 1)
+      = partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (m_a + 1)
+      from partialSum_zero_offset (maxSub f 0 b hb0 hcont (2 ^ K) hK) (m_a + 1)] at hsum_bound
+  -- hsum_bound : I_a+I_w ≤ (W1q+ε'*a)+(W2q+ε'*(b-a)); regroup so eps_split_add's pattern is adjacent
+  rw [regroup4
+      (partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (m_a + 1) * meshWidth 0 b (2 ^ K)) (ε' * a)
+      (partialSum (fun j => maxSub f 0 b hb0 hcont (2 ^ K) hK (m_a + j)) (m_tail + 1)
+        * meshWidth 0 b (2 ^ K)) (ε' * (b - a))] at hsum_bound
+  rw [eps_split_add ε' a b] at hsum_bound
+  -- window-sum combination: W1*q + W2*q = FULL*q + maxSub_coarse(m_a)*q
+  have hWeq := partialSum_two_window_eq_add (maxSub f 0 b hb0 hcont (2 ^ K) hK) m_a m_tail K hsplit
+  have hWeq_scaled : partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (m_a + 1) * meshWidth 0 b (2 ^ K)
+      + partialSum (fun j => maxSub f 0 b hb0 hcont (2 ^ K) hK (m_a + j)) (m_tail + 1)
+        * meshWidth 0 b (2 ^ K)
+      = partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (2 ^ K) * meshWidth 0 b (2 ^ K)
+        + maxSub f 0 b hb0 hcont (2 ^ K) hK m_a * meshWidth 0 b (2 ^ K) := by
+    rw [← distrib_mul (partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (m_a + 1))
+        (partialSum (fun j => maxSub f 0 b hb0 hcont (2 ^ K) hK (m_a + j)) (m_tail + 1))
+        (meshWidth 0 b (2 ^ K)), hWeq,
+      distrib_mul (partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (2 ^ K))
+        (maxSub f 0 b hb0 hcont (2 ^ K) hK m_a) (meshWidth 0 b (2 ^ K))]
+  rw [hWeq_scaled] at hsum_bound
+  -- hsum_bound : I_a+I_w ≤ (FULLq + g(m_a)*q) + ε'*b
+  have hoverlap : maxSub f 0 b hb0 hcont (2 ^ K) hK m_a * meshWidth 0 b (2 ^ K) ≤ M * meshWidth 0 b (2 ^ K) :=
+    mul_le_mul_of_nonneg_right (maxSub_le_global_bound f 0 b hb0 hcont M hMub (2 ^ K) hK m_a) hqnn
+  have hMqbound : M * meshWidth 0 b (2 ^ K) ≤ ε / (1 + 1) / (1 + 1) :=
+    M_mul_bound M (ε / (1 + 1) / (1 + 1)) (meshWidth 0 b (2 ^ K)) hMnn hε_q_pos hqnn
+      (le_of_lt hwidthK_Mq)
+  have hstep1 := le_trans hsum_bound
+    (add_le_add_both
+      (add_le_add_both (le_refl (partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (2 ^ K)
+        * meshWidth 0 b (2 ^ K))) hoverlap)
+      (le_refl (ε' * b)))
+  have hstep2 := le_trans hstep1
+    (add_le_add_both
+      (add_le_add_both (le_refl (partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (2 ^ K)
+        * meshWidth 0 b (2 ^ K))) hMqbound)
+      (le_refl (ε' * b)))
+  have hFULLq : partialSum (maxSub f 0 b hb0 hcont (2 ^ K) hK) (2 ^ K) * meshWidth 0 b (2 ^ K)
+      = upperSumCont f 0 b hb0 hcont (2 ^ K) hK := rfl
+  rw [hFULLq] at hstep2
+  -- hstep2 : I_a+I_w ≤ (upperSumCont(K) + ε_q) + ε'*b
+  have hgapK' : upperSumCont f 0 b hb0 hcont (2 ^ K) hK
+      < lowerSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) := by
+    have h3 := add_lt_add_left hgapK (lowerSumCont f 0 b hb0 hcont (2 ^ K) hK)
+    rwa [show lowerSumCont f 0 b hb0 hcont (2 ^ K) hK
+        + (upperSumCont f 0 b hb0 hcont (2 ^ K) hK - lowerSumCont f 0 b hb0 hcont (2 ^ K) hK)
+        = upperSumCont f 0 b hb0 hcont (2 ^ K) hK
+        from by mach_mpoly [lowerSumCont f 0 b hb0 hcont (2 ^ K) hK,
+          upperSumCont f 0 b hb0 hcont (2 ^ K) hK]] at h3
+  have hIbge : lowerSumCont f 0 b hb0 hcont (2 ^ K) hK ≤ I_b := hIb_low K
+  have hstep3 : upperSumCont f 0 b hb0 hcont (2 ^ K) hK < I_b + ε / (1 + 1) :=
+    lt_of_lt_of_le hgapK' (add_le_add_both hIbge (le_refl (ε / (1 + 1))))
+  have hstep5 : upperSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) / (1 + 1) + ε' * b
+      < upperSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) :=
+    add_lt_add_left hε'b (upperSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) / (1 + 1))
+  have hstep6 := lt_of_le_of_lt hstep2 hstep5
+  -- hstep6 : I_a+I_w < upperSumCont(K) + ε_q + ε_q
+  have hstep7 : upperSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) / (1 + 1)
+      < (I_b + ε / (1 + 1)) + ε / (1 + 1) / (1 + 1) :=
+    add_lt_add_right_weak hstep3 (ε / (1 + 1) / (1 + 1))
+  have hstep8 : upperSumCont f 0 b hb0 hcont (2 ^ K) hK + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1)
+      < (I_b + ε / (1 + 1)) + ε / (1 + 1) / (1 + 1) + ε / (1 + 1) / (1 + 1) :=
+    add_lt_add_right_weak hstep7 (ε / (1 + 1) / (1 + 1))
+  have hstep9 := lt_trans_ax hstep6 hstep8
+  rwa [final_combine I_b ε] at hstep9
+
 end Real
 end MachLib
