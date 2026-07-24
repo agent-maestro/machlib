@@ -434,6 +434,7 @@ import MachLib.AcosHardwareForwardError
 import MachLib.AtanHardwareForwardError
 import MachLib.ChainExp2ReduceDescent
 import MachLib.CompiledClosedLoop
+import MachLib.EMLWeierstrassGrowthComparison
 
 /-!
 # MachLib — top-level aggregator
