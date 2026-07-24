@@ -496,5 +496,369 @@ theorem weierstrass_sum_hasDerivAt (t : Real) (ht : 0 < t) :
   · exact weierstrass_deriv_estimate t ht W D hW_uniform hDspec hSumA1_ub hSumA1_lub hSumA2_ub hε
       hδSumA2 hδpos hne hy
 
+/-! ## §7 — Generic substrate: the same machinery, parametrized by an arbitrary term family.
+Reusable at every derivative order, not just `k=0→k=1`. Direct generalizations of §5-6 above
+(`term`/`term'` replace `weierstrassTerm t`/`weierstrassTerm1 t` as explicit parameters). -/
+
+theorem genericSN_mvt_lt {term term' : Nat → Real → Real}
+    (hderiv : ∀ n z, HasDerivAt (term n) (term' n z) z) (N : Nat) {x y : Real} (hxy : x < y) :
+    ∃ c : Real, x < c ∧ c < y ∧
+      partialSum (fun i => term i y) N - partialSum (fun i => term i x) N
+        = partialSum (fun i => term' i c) N * (y - x) := by
+  obtain ⟨c, f', hac, hcb, hderivc, heqmvt⟩ := mean_value_theorem_ct
+    (fun z => partialSum (fun i => term i z) N) x y hxy
+    (fun z _ _ => ⟨partialSum (fun i => term' i z) N, partialSum_hasDerivAt hderiv N z⟩)
+  have hunique : f' = partialSum (fun i => term' i c) N :=
+    HasDerivAt_unique _ _ _ _ hderivc (partialSum_hasDerivAt hderiv N c)
+  exact ⟨c, hac, hcb, by rw [← hunique]; exact heqmvt⟩
+
+theorem genericSN_mvt {term term' : Nat → Real → Real}
+    (hderiv : ∀ n z, HasDerivAt (term n) (term' n z) z) (N : Nat) {x y : Real} (hxy : x ≠ y) :
+    ∃ c : Real, abs (c - x) ≤ abs (y - x) ∧
+      partialSum (fun i => term i y) N - partialSum (fun i => term i x) N
+        = partialSum (fun i => term' i c) N * (y - x) := by
+  rcases lt_total x y with hlt | heq | hgt
+  · obtain ⟨c, hxc, hcy, heqmvt⟩ := genericSN_mvt_lt hderiv N hlt
+    exact ⟨c, wtbt_x_lt_c_le hxc hcy, heqmvt⟩
+  · exact absurd heq hxy
+  · obtain ⟨c, hyc, hcx, heqmvt⟩ := genericSN_mvt_lt hderiv N hgt
+    refine ⟨c, ?_, ?_⟩
+    · have h1 : abs (x - c) = x - c := wtbt_abs_sub_eq_of_lt hcx
+      have h2 : abs (x - y) = x - y := wtbt_abs_sub_eq_of_lt hgt
+      have h3 : x - c ≤ x - y := sub_le_sub_left (le_of_lt_r hyc) x
+      rw [show abs (c - x) = abs (x - c) from abs_sub_comm c x, h1,
+          show abs (y - x) = abs (x - y) from abs_sub_comm y x, h2]
+      exact h3
+    · have hstep : -(partialSum (fun i => term i x) N - partialSum (fun i => term i y) N)
+          = -(partialSum (fun i => term' i c) N * (x - y)) := by rw [heqmvt]
+      rwa [wtbt_neg_sub_ring (partialSum (fun i => term i x) N) (partialSum (fun i => term i y) N),
+          show -(partialSum (fun i => term' i c) N * (x - y))
+            = partialSum (fun i => term' i c) N * (y - x) from by
+            mach_mpoly [partialSum (fun i => term' i c) N, x, y]] at hstep
+
+theorem genericD_N_lipschitz {term' : Nat → Real → Real} {Amp2 : Nat → Real}
+    (hterm'_lip : ∀ n c x, abs (term' n c - term' n x) ≤ Amp2 n * abs (c - x))
+    {N : Nat} {SumA2 : Real} (hSumA2_ub : ∀ k, partialSum Amp2 k ≤ SumA2) (c x : Real) :
+    abs (partialSum (fun i => term' i c) N - partialSum (fun i => term' i x) N) ≤ SumA2 * abs (c - x) := by
+  rw [← partialSum_sub]
+  refine le_trans (abs_partialSum_le _ N) ?_
+  have h1 : partialSum (fun i => abs (term' i c - term' i x)) N ≤ partialSum (fun i => Amp2 i * abs (c - x)) N :=
+    partialSum_le_of_le (fun i => hterm'_lip i c x) N
+  rw [wtbt_const_mul_partialSum Amp2 (abs (c - x)) N] at h1
+  exact le_trans h1 (mul_le_mul_of_nonneg_right (hSumA2_ub N) (abs_nonneg _))
+
+theorem genericTailDiff_le {term term' : Nat → Real → Real}
+    (hderiv : ∀ n z, HasDerivAt (term n) (term' n z) z)
+    (W : Real → Real)
+    (hW_uniform : ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ z, abs (W z - partialSum (fun i => term i z) n) < ε)
+    (Nc : Nat) {B : Real}
+    (hB : ∀ n, Nc ≤ n → ∀ z, abs (partialSum (fun i => term' i z) n - partialSum (fun i => term' i z) Nc) ≤ B)
+    {x y : Real} (hxy : x ≠ y) :
+    abs ((W y - partialSum (fun i => term i y) Nc) - (W x - partialSum (fun i => term i x) Nc))
+      ≤ B * abs (y - x) := by
+  apply le_of_forall_pos_lt_add
+  intro η hη
+  have hη2 : 0 < η / (1 + 1) := div_pos_of_pos_pos hη h11pos
+  obtain ⟨N'', hN''⟩ := hW_uniform (η / (1 + 1)) hη2
+  obtain ⟨n, hnNc, hnN''⟩ : ∃ n, Nc ≤ n ∧ N'' ≤ n :=
+    ⟨Nc + N'', Nat.le_add_right Nc N'', Nat.le_add_left N'' Nc⟩
+  have hderiv_diff : ∀ z, HasDerivAt
+      (fun w => partialSum (fun i => term i w) n - partialSum (fun i => term i w) Nc)
+      (partialSum (fun i => term' i z) n - partialSum (fun i => term' i z) Nc) z :=
+    fun z => HasDerivAt_sub _ _ _ _ z (partialSum_hasDerivAt hderiv n z) (partialSum_hasDerivAt hderiv Nc z)
+  have hBbound : ∀ z, abs (partialSum (fun i => term' i z) n - partialSum (fun i => term' i z) Nc) ≤ B :=
+    fun z => hB n hnNc z
+  have hmvt := mvt_bound hderiv_diff hxy hBbound
+  have hWn_y : abs (W y - partialSum (fun i => term i y) n) < η / (1 + 1) := hN'' n hnN'' y
+  have hWn_x : abs (W x - partialSum (fun i => term i x) n) < η / (1 + 1) := hN'' n hnN'' x
+  have hregroup := wtbt_regroup (W y) (W x) (partialSum (fun i => term i y) n)
+    (partialSum (fun i => term i x) n) (partialSum (fun i => term i y) Nc) (partialSum (fun i => term i x) Nc)
+  rw [hregroup]
+  have htri := abs_add
+    (W y - partialSum (fun i => term i y) n - (W x - partialSum (fun i => term i x) n))
+    (partialSum (fun i => term i y) n - partialSum (fun i => term i y) Nc
+      - (partialSum (fun i => term i x) n - partialSum (fun i => term i x) Nc))
+  refine lt_of_le_of_lt htri ?_
+  have hpart1 := abs_sub_le_local (W y - partialSum (fun i => term i y) n) (W x - partialSum (fun i => term i x) n)
+  have hpart1' : abs (W y - partialSum (fun i => term i y) n - (W x - partialSum (fun i => term i x) n))
+      < η / (1 + 1) + η / (1 + 1) := lt_of_le_of_lt hpart1 (add_lt_add_local hWn_y hWn_x)
+  have heta_eq : η / (1 + 1) + η / (1 + 1) = η := by
+    rw [div_add_div_same h11ne, show η + η = (1 + 1) * η from by mach_ring]
+    exact mul_div_cancel_left' h11ne
+  have hpart1'' : abs (W y - partialSum (fun i => term i y) n - (W x - partialSum (fun i => term i x) n)) < η := by
+    rwa [heta_eq] at hpart1'
+  have hstepA := add_lt_add_right_local hpart1''
+    (abs (partialSum (fun i => term i y) n - partialSum (fun i => term i y) Nc
+      - (partialSum (fun i => term i x) n - partialSum (fun i => term i x) Nc)))
+  have hstepB := add_le_add_left hmvt η
+  have hfinal := lt_of_lt_of_le hstepA hstepB
+  rwa [show η + B * abs (y - x) = B * abs (y - x) + η from by mach_mpoly [η, B, abs (y - x)]] at hfinal
+
+/-- **Generic term-by-term differentiation estimate.** The core of `weierstrass_deriv_estimate`,
+generalized: works for ANY term family `term` (with derivative `term'`) dominated by nonneg
+summable majorants `Amp1` (bounding `term'` termwise, driving the Cauchy-tail argument) and `Amp2`
+(a Lipschitz bound on `term'`, driving the finite-`N` MVT estimate). Reusable at every derivative
+order — apply once per `k → k+1` step, no need to re-derive this whole argument each time. -/
+theorem generic_deriv_estimate {term term' : Nat → Real → Real}
+    (hderiv : ∀ n z, HasDerivAt (term n) (term' n z) z)
+    (W D : Real → Real)
+    (hW_uniform : ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ z, abs (W z - partialSum (fun i => term i z) n) < ε)
+    (hDspec : ∀ z, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → abs (D z - partialSum (fun i => term' i z) n) < ε)
+    {Amp1 Amp2 : Nat → Real} (hAmp1nn : ∀ n, 0 ≤ Amp1 n)
+    (hterm'_dom : ∀ n z, abs (term' n z) ≤ Amp1 n)
+    (hterm'_lip : ∀ n c x, abs (term' n c - term' n x) ≤ Amp2 n * abs (c - x))
+    {SumA1 SumA2 : Real}
+    (hSumA1_ub : ∀ k, partialSum Amp1 k ≤ SumA1) (hSumA1_lub : ∀ s', (∀ k, partialSum Amp1 k ≤ s') → SumA1 ≤ s')
+    (hSumA2_ub : ∀ k, partialSum Amp2 k ≤ SumA2)
+    {x : Real} {ε : Real} (hε : 0 < ε) {δ : Real}
+    (hδSumA2 : SumA2 * δ ≤ ε / (1 + 1 + 1)) (hδpos : 0 < δ)
+    {y : Real} (hxy : x ≠ y) (hyδ : abs (y - x) < δ) :
+    abs (W y - W x - D x * (y - x)) ≤ ε * abs (y - x) := by
+  have h3pos : (0:Real) < 1 + 1 + 1 := by
+    have h1 : (0:Real) < 1 + 1 := h11pos
+    exact add_pos h1 one_pos
+  have hε3 : 0 < ε / (1 + 1 + 1) := div_pos_of_pos_pos hε h3pos
+  obtain ⟨Na, hNa⟩ := tail_lt_of_sup hAmp1nn hSumA1_lub hε3
+  obtain ⟨Nd, hNd⟩ := hDspec x (ε / (1 + 1 + 1)) hε3
+  obtain ⟨Nc, hNcNa, hNcNd⟩ : ∃ Nc, Na ≤ Nc ∧ Nd ≤ Nc :=
+    ⟨Na + Nd, Nat.le_add_right Na Nd, Nat.le_add_left Nd Na⟩
+  have hAyx : (0:Real) ≤ abs (y - x) := abs_nonneg _
+  have hB : ∀ n, Nc ≤ n → ∀ z, abs (partialSum (fun i => term' i z) n
+      - partialSum (fun i => term' i z) Nc) ≤ ε / (1 + 1 + 1) := by
+    intro n hn z
+    have hblock := partialSum_block_le (fun i => hterm'_dom i z) hAmp1nn hn hSumA1_ub
+    have htail : SumA1 - partialSum Amp1 Nc < ε / (1 + 1 + 1) := hNa Nc hNcNa
+    exact le_trans hblock (le_of_lt htail)
+  have hterm2 := genericTailDiff_le hderiv W hW_uniform Nc hB hxy
+  obtain ⟨c, hcx_le, heqmvt⟩ := genericSN_mvt hderiv Nc hxy
+  have hlip := genericD_N_lipschitz (N := Nc) hterm'_lip hSumA2_ub c x
+  have hterm1eq : partialSum (fun i => term i y) Nc - partialSum (fun i => term i x) Nc
+      - partialSum (fun i => term' i x) Nc * (y - x)
+      = (partialSum (fun i => term' i c) Nc - partialSum (fun i => term' i x) Nc) * (y - x) := by
+    rw [heqmvt]
+    exact wtbt_mvt_factor (partialSum (fun i => term' i c) Nc) (partialSum (fun i => term' i x) Nc) (y - x)
+  have hterm1 : abs (partialSum (fun i => term i y) Nc - partialSum (fun i => term i x) Nc
+      - partialSum (fun i => term' i x) Nc * (y - x)) ≤ SumA2 * abs (y - x) * abs (y - x) := by
+    rw [hterm1eq, abs_mul]
+    have h1 := mul_le_mul_of_nonneg_right hlip hAyx
+    have h2 : SumA2 * abs (c - x) * abs (y - x) ≤ SumA2 * abs (y - x) * abs (y - x) :=
+      mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hcx_le
+        (show (0:Real) ≤ SumA2 from hSumA2_ub 0)) hAyx
+    exact le_trans h1 h2
+  have hδyx : abs (y - x) ≤ δ := le_of_lt hyδ
+  have hterm1' : SumA2 * abs (y - x) * abs (y - x) ≤ (ε / (1 + 1 + 1)) * abs (y - x) := by
+    have h1 : SumA2 * abs (y - x) ≤ SumA2 * δ := mul_le_mul_of_nonneg_left hδyx
+      (show (0:Real) ≤ SumA2 from hSumA2_ub 0)
+    have h2 : SumA2 * abs (y - x) ≤ ε / (1 + 1 + 1) := le_trans h1 hδSumA2
+    exact mul_le_mul_of_nonneg_right h2 hAyx
+  have hterm1final := le_trans hterm1 hterm1'
+  have hDx_eq : D x * (y - x) - partialSum (fun i => term' i x) Nc * (y - x)
+      = (D x - partialSum (fun i => term' i x) Nc) * (y - x) :=
+    wtbt_mvt_factor (D x) (partialSum (fun i => term' i x) Nc) (y - x)
+  have hDtail : abs (D x - partialSum (fun i => term' i x) Nc) < ε / (1 + 1 + 1) := hNd Nc hNcNd
+  have hDtail' : abs (D x * (y - x) - partialSum (fun i => term' i x) Nc * (y - x))
+      ≤ (ε / (1 + 1 + 1)) * abs (y - x) := by
+    rw [hDx_eq, abs_mul]
+    exact mul_le_mul_of_nonneg_right (le_of_lt hDtail) hAyx
+  have hDtail'' : abs (partialSum (fun i => term' i x) Nc * (y - x) - D x * (y - x))
+      ≤ (ε / (1 + 1 + 1)) * abs (y - x) := by rwa [abs_sub_comm] at hDtail'
+  have hbig : abs (W y - W x - D x * (y - x)) ≤
+      abs (W y - partialSum (fun i => term i y) Nc - (W x - partialSum (fun i => term i x) Nc))
+      + (abs (partialSum (fun i => term i y) Nc - partialSum (fun i => term i x) Nc
+        - partialSum (fun i => term' i x) Nc * (y - x))
+      + abs (partialSum (fun i => term' i x) Nc * (y - x) - D x * (y - x))) := by
+    have heq := wtbt_final_regroup (W y) (W x) (partialSum (fun i => term i y) Nc)
+      (partialSum (fun i => term i x) Nc) (partialSum (fun i => term' i x) Nc * (y - x)) (D x * (y - x))
+    rw [heq]
+    exact le_trans (abs_add _ _) (add_le_add_left (abs_add _ _) _)
+  refine le_trans hbig ?_
+  have hcomb1 := add_le_add_both hterm1final hDtail''
+  have hcomb2 := add_le_add_both hterm2 hcomb1
+  have heq2 : ε / (1 + 1 + 1) * abs (y - x) + (ε / (1 + 1 + 1) * abs (y - x) + ε / (1 + 1 + 1) * abs (y - x))
+      = ε * abs (y - x) := by
+    rw [show ε / (1+1+1) * abs (y-x) + (ε / (1+1+1) * abs (y-x) + ε / (1+1+1) * abs (y-x))
+          = (ε/(1+1+1) + ε/(1+1+1) + ε/(1+1+1)) * abs (y - x) from by
+        mach_mpoly [ε / (1+1+1), abs (y - x)],
+        div_add_div_same (ne_of_gt h3pos), div_add_div_same (ne_of_gt h3pos),
+        show ε + ε + ε = (1+1+1) * ε from by mach_ring, mul_div_cancel_left' (ne_of_gt h3pos)]
+  rwa [heq2] at hcomb2
+
+/-! ## §8 — Second derivative: `D` is itself differentiable -/
+
+/-- Chain rule: derivative of `y ↦ sin(K·y)` is `cos(K·x)·K`. Mirrors `HasDerivAt_scaled_cos`. -/
+theorem HasDerivAt_scaled_sin (K x : Real) :
+    HasDerivAt (fun y => Real.sin (K * y)) (Real.cos (K * x) * K) x :=
+  HasDerivAt_comp Real.sin (fun y => K * y) K (Real.cos (K * x)) x
+    (HasDerivAt_scaled_id K x) (HasDerivAt_sin (K * x))
+
+/-- Product rule with a constant amplitude: derivative of `y ↦ C·sin(K·y)` is `C·(cos(K·x)·K)`.
+Mirrors `HasDerivAt_const_mul_cos`. -/
+theorem HasDerivAt_const_mul_sin (C K x : Real) :
+    HasDerivAt (fun y => C * Real.sin (K * y)) (C * (Real.cos (K * x) * K)) x := by
+  have h := HasDerivAt_mul (fun _ => C) (fun y => Real.sin (K * y)) 0 (Real.cos (K * x) * K) x
+    (HasDerivAt_const C x) (HasDerivAt_scaled_sin K x)
+  rwa [show (0 : Real) * Real.sin (K * x) + C * (Real.cos (K * x) * K) = C * (Real.cos (K * x) * K)
+        from by mach_ring] at h
+
+/-- `Aₙ·Kₙ³` — the `k=3` majorant, closed form. -/
+noncomputable def weierstrassAmp3 (t : Real) (n : Nat) : Real :=
+  weierstrassAmplitude t n * weierstrassFreq n * weierstrassFreq n * weierstrassFreq n
+
+/-- The actual `n`-th SECOND derivative term (derivative of `weierstrassTerm1`). -/
+noncomputable def weierstrassTerm2 (t : Real) (n : Nat) (x : Real) : Real :=
+  -(weierstrassAmp2 t n * Real.cos (weierstrassFreq n * x))
+
+theorem weierstrassAmp3_nonneg (t : Real) (n : Nat) : 0 ≤ weierstrassAmp3 t n :=
+  mul_nonneg (mul_nonneg (mul_nonneg (weierstrassAmplitude_nonneg t n) (le_of_lt (weierstrassFreq_pos n)))
+    (le_of_lt (weierstrassFreq_pos n))) (le_of_lt (weierstrassFreq_pos n))
+
+theorem weierstrassAmp3_hasBoundedPartialSums (t : Real) (ht : 0 < t) :
+    HasBoundedPartialSums (weierstrassAmp3 t) := by
+  have h := weierstrass_term_hasBoundedPartialSums t ht 3
+  have heq : (fun n => npow 3 pi * npow n (1 / (1 + 1)) * npow (n * 3) (1 + 1 + 1)
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 (1 + 1 + 1)))))
+      = weierstrassAmp3 t := by
+    funext n
+    show npow 3 pi * npow n (1 / (1 + 1)) * npow (n * 3) (1 + 1 + 1)
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 (1 + 1 + 1))))
+      = weierstrassAmp3 t n
+    unfold weierstrassAmp3 weierstrassAmplitude weierstrassFreq
+    rw [show npow 3 pi = pi * pi * pi from by
+          show pi * (pi * (pi * npow 0 pi)) = pi * pi * pi; rw [show npow 0 pi = 1 from rfl]; mach_ring,
+        show n * 3 = n + n + n from by omega, npow_add, npow_add]
+    mach_ring
+  rwa [heq] at h
+
+private theorem wt2_eq (A K y : Real) :
+    (-(A * K)) * Real.sin (K * y) = A * (-Real.sin (K * y) * K) := by
+  mach_mpoly [A, K, Real.sin (K * y)]
+
+private theorem wt2_val_eq (A K x : Real) :
+    (-(A * K)) * (Real.cos (K * x) * K) = -(A * K * K * Real.cos (K * x)) := by
+  mach_mpoly [A, K, Real.cos (K * x)]
+
+theorem weierstrassTerm1_hasDerivAt (t : Real) (n : Nat) (x : Real) :
+    HasDerivAt (weierstrassTerm1 t n) (weierstrassTerm2 t n x) x := by
+  have hbase := HasDerivAt_const_mul_sin (-(weierstrassAmplitude t n * weierstrassFreq n)) (weierstrassFreq n) x
+  have hfeq : ∀ y, (-(weierstrassAmplitude t n * weierstrassFreq n)) * Real.sin (weierstrassFreq n * y)
+      = weierstrassTerm1 t n y := fun y => wt2_eq (weierstrassAmplitude t n) (weierstrassFreq n) y
+  have htransfer := HasDerivAt_of_eq _ _ _ x hfeq hbase
+  have hval : (-(weierstrassAmplitude t n * weierstrassFreq n)) * (Real.cos (weierstrassFreq n * x) * weierstrassFreq n)
+      = weierstrassTerm2 t n x := by
+    unfold weierstrassTerm2 weierstrassAmp2
+    rw [wt2_val_eq (weierstrassAmplitude t n) (weierstrassFreq n) x]
+  rwa [hval] at htransfer
+
+theorem weierstrassTerm2_dom (t : Real) (n : Nat) (x : Real) :
+    abs (weierstrassTerm2 t n x) ≤ weierstrassAmp2 t n := by
+  unfold weierstrassTerm2
+  rw [abs_neg, abs_mul, abs_of_nonneg (weierstrassAmp2_nonneg t n)]
+  have h := abs_cos_le_one (weierstrassFreq n * x)
+  have h2 := mul_le_mul_of_nonneg_left h (weierstrassAmp2_nonneg t n)
+  rwa [mul_one_ax (weierstrassAmp2 t n)] at h2
+
+theorem weierstrassTerm2_lipschitz (t : Real) (n : Nat) (c x : Real) :
+    abs (weierstrassTerm2 t n c - weierstrassTerm2 t n x) ≤ weierstrassAmp3 t n * abs (c - x) := by
+  unfold weierstrassTerm2
+  rw [show -(weierstrassAmp2 t n * Real.cos (weierstrassFreq n * c)) - -(weierstrassAmp2 t n * Real.cos (weierstrassFreq n * x))
+        = weierstrassAmp2 t n * (Real.cos (weierstrassFreq n * x) - Real.cos (weierstrassFreq n * c)) from by
+      mach_mpoly [weierstrassAmp2 t n, Real.cos (weierstrassFreq n * c), Real.cos (weierstrassFreq n * x)],
+      abs_mul, abs_of_nonneg (weierstrassAmp2_nonneg t n)]
+  have hstep1 := cos_lipschitz (weierstrassFreq n * x) (weierstrassFreq n * c)
+  have hstep2 : weierstrassFreq n * x - weierstrassFreq n * c = weierstrassFreq n * (x - c) := by
+    mach_mpoly [weierstrassFreq n, x, c]
+  rw [hstep2, abs_mul, abs_of_nonneg (le_of_lt (weierstrassFreq_pos n))] at hstep1
+  have hstep3 := mul_le_mul_of_nonneg_left hstep1 (weierstrassAmp2_nonneg t n)
+  rw [show weierstrassAmp2 t n * (weierstrassFreq n * abs (x - c)) = weierstrassAmp3 t n * abs (x - c) from by
+        unfold weierstrassAmp2 weierstrassAmp3
+        mach_mpoly [weierstrassAmplitude t n, weierstrassFreq n, abs (x - c)],
+      show abs (x - c) = abs (c - x) from abs_sub_comm x c] at hstep3
+  exact hstep3
+
+/-- **Shared core**: given any term family (`term`/`term'`) with the right uniform/pointwise
+convergence and domination/Lipschitz data, `HasDerivAt W (D x) x` — the delta-construction and
+`x=y` case-split packaged once, reusable at every derivative order via `generic_deriv_estimate`. -/
+theorem wtbt_deriv_of_generic {term term' : Nat → Real → Real}
+    (hderiv : ∀ n z, HasDerivAt (term n) (term' n z) z)
+    (W D : Real → Real)
+    (hW_uniform : ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ z, abs (W z - partialSum (fun i => term i z) n) < ε)
+    (hDspec : ∀ z, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → abs (D z - partialSum (fun i => term' i z) n) < ε)
+    {Amp1 Amp2 : Nat → Real} (hAmp1nn : ∀ n, 0 ≤ Amp1 n)
+    (hterm'_dom : ∀ n z, abs (term' n z) ≤ Amp1 n)
+    (hterm'_lip : ∀ n c x, abs (term' n c - term' n x) ≤ Amp2 n * abs (c - x))
+    {SumA1 SumA2 : Real}
+    (hSumA1_ub : ∀ k, partialSum Amp1 k ≤ SumA1) (hSumA1_lub : ∀ s', (∀ k, partialSum Amp1 k ≤ s') → SumA1 ≤ s')
+    (hSumA2_ub : ∀ k, partialSum Amp2 k ≤ SumA2) (x : Real) :
+    HasDerivAt W (D x) x := by
+  apply HasDerivAt_of_eps_delta
+  intro ε hε
+  have hSumA2nn : (0:Real) ≤ SumA2 := hSumA2_ub 0
+  have h3pos : (0:Real) < 1 + 1 + 1 := by
+    have h1 : (0:Real) < 1 + 1 := h11pos
+    exact add_pos h1 one_pos
+  have hε3 : 0 < ε / (1 + 1 + 1) := div_pos_of_pos_pos hε h3pos
+  have hSumA2_lt : SumA2 < SumA2 + 1 := by
+    have h := add_lt_add_left one_pos SumA2
+    rwa [add_zero] at h
+  have hSumA2_1_pos : (0:Real) < SumA2 + 1 := lt_of_le_of_lt hSumA2nn hSumA2_lt
+  have hSumA2_le : SumA2 ≤ SumA2 + 1 := le_of_lt hSumA2_lt
+  let δ : Real := (ε / (1 + 1 + 1)) / (SumA2 + 1)
+  have hδpos : 0 < δ := div_pos_of_pos_pos hε3 hSumA2_1_pos
+  have hδSumA2 : SumA2 * δ ≤ ε / (1 + 1 + 1) := by
+    show SumA2 * ((ε / (1 + 1 + 1)) / (SumA2 + 1)) ≤ ε / (1 + 1 + 1)
+    have h1 : SumA2 * ((ε / (1 + 1 + 1)) / (SumA2 + 1)) ≤ (SumA2 + 1) * ((ε / (1 + 1 + 1)) / (SumA2 + 1)) :=
+      mul_le_mul_of_nonneg_right hSumA2_le (le_of_lt (div_pos_of_pos_pos hε3 hSumA2_1_pos))
+    rwa [mul_div_cancel_left (ne_of_gt hSumA2_1_pos)] at h1
+  refine ⟨δ, hδpos, fun y hy => ?_⟩
+  rcases Classical.em (x = y) with heq | hne
+  · rw [← heq, show x - x = (0:Real) from by mach_ring,
+        show W x - W x - D x * (0:Real) = (0:Real) from by mach_mpoly [W x, D x],
+        show abs (0:Real) = 0 from abs_of_nonneg (le_refl 0), show ε * (0:Real) = 0 from by mach_ring]
+    exact le_refl 0
+  · exact generic_deriv_estimate hderiv W D hW_uniform hDspec hAmp1nn hterm'_dom hterm'_lip
+      hSumA1_ub hSumA1_lub hSumA2_ub hε hδSumA2 hδpos hne hy
+
+/-- **`W` has derivatives up to order 2.** `D` is `W`'s derivative (built with genuine UNIFORM
+convergence this time, via `continuousSum_of_uniform_dominated` + the now-available
+`weierstrassTerm1_hasDerivAt` — needed to reuse the same machinery one level deeper), and `D2`
+(the already-summable `k=2` term series' sum) is `D`'s derivative in turn. -/
+theorem weierstrass_sum_hasDerivAt2 (t : Real) (ht : 0 < t) :
+    ∃ W D D2 : Real → Real,
+      (∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ x,
+        abs (W x - partialSum (fun i => weierstrassTerm t i x) n) < ε)
+      ∧ (∀ x0, ContinuousAt W x0)
+      ∧ (∀ x0, HasDerivAt W (D x0) x0)
+      ∧ (∀ x0, HasDerivAt D (D2 x0) x0) := by
+  obtain ⟨W, hW_uniform, hW_cont⟩ := weierstrass_sum_continuous t ht
+  obtain ⟨SumA1, hSumA1_ub, hSumA1_lub⟩ :=
+    series_sum_exists_of_bounded (weierstrassAmp1_nonneg t) (weierstrassAmp1_hasBoundedPartialSums t ht)
+  obtain ⟨SumA2, hSumA2_ub, hSumA2_lub⟩ :=
+    series_sum_exists_of_bounded (weierstrassAmp2_nonneg t) (weierstrassAmp2_hasBoundedPartialSums t ht)
+  obtain ⟨SumA3, hSumA3_ub, _⟩ :=
+    series_sum_exists_of_bounded (weierstrassAmp3_nonneg t) (weierstrassAmp3_hasBoundedPartialSums t ht)
+  obtain ⟨D, hD_uniform, hD_cont⟩ := continuousSum_of_uniform_dominated
+    (weierstrassAmp1_nonneg t) (weierstrassAmp1_hasBoundedPartialSums t ht)
+    (weierstrassTerm1_dom t) (weierstrassTerm1_hasDerivAt t)
+  have hDspec : ∀ x, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n →
+      abs (D x - partialSum (fun i => weierstrassTerm1 t i x) n) < ε := by
+    intro x ε hε
+    obtain ⟨N, hN⟩ := hD_uniform ε hε
+    exact ⟨N, fun n hn => hN n hn x⟩
+  have hD2ex : ∀ x, ∃ s : Real, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n →
+      abs (s - partialSum (fun i => weierstrassTerm2 t i x) n) < ε :=
+    fun x => exists_pointwise_sum_of_dominated (weierstrassAmp2_nonneg t)
+      (weierstrassAmp2_hasBoundedPartialSums t ht) (fun n => weierstrassTerm2_dom t n x)
+  let D2 : Real → Real := fun x => Classical.choose (hD2ex x)
+  have hD2spec : ∀ x, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n →
+      abs (D2 x - partialSum (fun i => weierstrassTerm2 t i x) n) < ε :=
+    fun x => Classical.choose_spec (hD2ex x)
+  refine ⟨W, D, D2, hW_uniform, hW_cont, fun x => ?_, fun x => ?_⟩
+  · exact wtbt_deriv_of_generic (weierstrassTerm_hasDerivAt' t) W D hW_uniform hDspec
+      (weierstrassAmp1_nonneg t) (weierstrassTerm1_dom t) (weierstrassTerm1_lipschitz t)
+      hSumA1_ub hSumA1_lub hSumA2_ub x
+  · exact wtbt_deriv_of_generic (weierstrassTerm1_hasDerivAt t) D D2 hD_uniform hD2spec
+      (weierstrassAmp2_nonneg t) (weierstrassTerm2_dom t) (weierstrassTerm2_lipschitz t)
+      hSumA2_ub hSumA2_lub hSumA3_ub x
+
 end Real
 end MachLib
