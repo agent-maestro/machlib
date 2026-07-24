@@ -175,5 +175,215 @@ theorem maxSub_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 ≤ c)
       have h1 := add_le_add_both hspec hε'nn
       rwa [show f x + 0 = f x from by mach_mpoly [f x]] at h1
 
+/-- Symmetric counterpart of `maxSub_transfer_general`: the coarse `[0,c]` extremum (min) at index
+`mp+j` is bounded ABOVE by the fine `[p,p+w]` extremum (min) at index `j`, up to `ε'`. Needed
+because additivity is an EQUALITY, so both the upper-sum and lower-sum directions are required
+(unlike `riemann_integral_mono_interval`'s one-directional inequality, which only needed the max
+side). -/
+theorem minSub_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 ≤ c)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ c → ContinuousAt f z)
+    (p w : Real) (hp0 : 0 ≤ p) (hpw : 0 ≤ w) (hpwc : p + w ≤ c)
+    (hcont_p : ∀ z : Real, p ≤ z → z ≤ p + w → ContinuousAt f z)
+    (m mp K : Nat) (hK : 0 < 2 ^ K) (j : Nat) (hj : j ≤ m) (hjK : mp + m + 1 ≤ 2 ^ K)
+    (q : Real) (hq : meshWidth 0 c (2 ^ K) = q) (hqnn : 0 ≤ q)
+    (hcross_w : natCast m * q ≤ w) (hratio_w : w ≤ natCast (m + 1) * q)
+    (hcross_p : natCast mp * q ≤ p) (hratio_p : p ≤ natCast (mp + 1) * q)
+    (δ ε' : Real) (hδpos : 0 < δ) (hwidth : q < δ) (hε'nn : 0 ≤ ε')
+    (hδ : ∀ y z : Real, 0 ≤ y → y ≤ c → 0 ≤ z → z ≤ c → abs (y - z) < δ → abs (f y - f z) < ε') :
+    minSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)
+      ≤ minSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega) j + ε' := by
+  have hpw' : p ≤ p + w := le_add_of_nonneg_right hpw
+  have hjm1 : j < m + 1 := by omega
+  have hcoarse0 : mp + j < 2 ^ K := by omega
+  have hmem := minSub_mem f p (p + w) hpw' hcont_p (m + 1) (by omega) j hjm1
+  let x := Classical.choose (evt_exists_min f p (p + w) hpw' hcont_p (m + 1) (by omega) j hjm1)
+  have hxeq : minSub f p (p + w) hpw' hcont_p (m + 1) (by omega) j = f x :=
+    minSub_eq f p (p + w) hpw' hcont_p (m + 1) (by omega) j hjm1
+  have hx1 : p + natCast j * (w / natCast (m + 1)) ≤ x := by
+    rw [← meshPoint_offset p w (m + 1) j]; exact hmem.1
+  have hx2 : x ≤ p + natCast (j + 1) * (w / natCast (m + 1)) := by
+    rw [← meshPoint_offset p w (m + 1) (j + 1)]; exact hmem.2
+  have hwnn : (0:Real) ≤ w / natCast (m + 1) := div_nonneg hpw (le_of_lt (natCast_pos (by omega)))
+  have hx0 : 0 ≤ x := by
+    have h1 : (0:Real) ≤ natCast j * (w / natCast (m + 1)) := mul_nonneg (natCast_nonneg j) hwnn
+    have h2 := add_le_add_both hp0 h1
+    rw [zero_add (0:Real)] at h2
+    exact le_trans h2 hx1
+  have hxc : x ≤ c := by
+    have h1 : natCast (j + 1) * (w / natCast (m + 1)) ≤ natCast (m + 1) * (w / natCast (m + 1)) :=
+      mul_le_mul_of_nonneg_right (natCast_le_of_nat_le (by omega)) hwnn
+    rw [mul_div_self_cancel w m] at h1
+    have h2 := add_le_add_both (le_refl p) h1
+    exact le_trans hx2 (le_trans h2 hpwc)
+  have hceq0 : meshPoint 0 c (2 ^ K) (mp + j) = natCast (mp + j) * q := by
+    show (0:Real) + natCast (mp + j) * meshWidth 0 c (2 ^ K) = natCast (mp + j) * q
+    rw [hq]; mach_mpoly [natCast (mp + j), q]
+  have hceq1 : meshPoint 0 c (2 ^ K) (mp + j + 1) = natCast (mp + j + 1) * q := by
+    show (0:Real) + natCast (mp + j + 1) * meshWidth 0 c (2 ^ K) = natCast (mp + j + 1) * q
+    rw [hq]; mach_mpoly [natCast (mp + j + 1), q]
+  have hzcast : natCast (mp + j) * q ≤ natCast (mp + j + 1) * q :=
+    mul_le_mul_of_nonneg_right (natCast_le_of_nat_le (by omega)) hqnn
+  by_cases hleft : x < natCast (mp + j) * q
+  · -- CASE LEFT
+    have hdb := drift_bound w q m j hj hcross_w hratio_w
+    have hdb' : natCast j * q - q ≤ natCast j * (w / natCast (m + 1)) := sub_le_swap _ _ _ hdb
+    have hstep : natCast mp * q + (natCast j * q - q) ≤ x := by
+      have h1 := add_le_add_both hcross_p hdb'
+      exact le_trans h1 hx1
+    have heqmpj : natCast mp * q + (natCast j * q - q) = natCast (mp + j) * q - q := by
+      rw [natCast_add mp j]
+      mach_mpoly [natCast mp, natCast j, q]
+    rw [heqmpj] at hstep
+    have hdrift : natCast (mp + j) * q - x ≤ q := sub_le_swap (natCast (mp + j) * q) q x hstep
+    have hposdiff : (0:Real) ≤ natCast (mp + j) * q - x := sub_nonneg_of_le (le_of_lt hleft)
+    have habs1 : abs (natCast (mp + j) * q - x) < δ := by
+      rw [abs_of_nonneg hposdiff]; exact lt_of_le_of_lt hdrift hwidth
+    have hzb : natCast (mp + j) * q ≤ c := by
+      have h1 : natCast (mp + j) * q ≤ natCast (mp + j + 1) * q := hzcast
+      have h2Kb := natCast_mul_meshWidth 0 c (2 ^ K) hK
+      rw [hq] at h2Kb
+      have heqc : c - 0 = c := by mach_mpoly [c]
+      rw [heqc] at h2Kb
+      have h3 : natCast (mp + j + 1) * q ≤ natCast (2 ^ K) * q :=
+        mul_le_mul_of_nonneg_right (natCast_le_of_nat_le (by omega)) hqnn
+      rw [h2Kb] at h3
+      exact le_trans h1 h3
+    have hz0 : (0:Real) ≤ natCast (mp + j) * q := mul_nonneg (natCast_nonneg (mp + j)) hqnn
+    have hftrans := hδ (natCast (mp + j) * q) x hz0 hzb hx0 hxc habs1
+    have hflt := lt_add_of_abs_sub_lt (f (natCast (mp + j) * q)) (f x) ε' hε'nn hftrans
+    have hzmem2 : natCast (mp + j) * q ≤ meshPoint 0 c (2 ^ K) (mp + j + 1) := by
+      rw [hceq1]; exact hzcast
+    have hzspec := minSub_spec f 0 c hc0 hcont (2 ^ K) hK (mp + j) hcoarse0 (natCast (mp + j) * q)
+      (by rw [hceq0]; exact le_refl _) hzmem2
+    rw [hxeq]
+    exact le_trans hzspec (le_of_lt hflt)
+  · by_cases hright : natCast (mp + j + 1) * q < x
+    · -- CASE RIGHT
+      have hawq : w / natCast (m + 1) ≤ q := a_div_le_q w q m hratio_w
+      have hstep1 : natCast (j + 1) * (w / natCast (m + 1)) ≤ natCast (j + 1) * q :=
+        mul_le_mul_of_nonneg_left hawq (natCast_nonneg (j + 1))
+      have hstep2 : p + natCast (j + 1) * (w / natCast (m + 1)) ≤ natCast (mp + 1) * q + natCast (j + 1) * q :=
+        add_le_add_both hratio_p hstep1
+      have heqmpj2 : natCast (mp + 1) * q + natCast (j + 1) * q = natCast (mp + j + 2) * q := by
+        rw [show mp + j + 2 = (mp + 1) + (j + 1) from by omega, natCast_add (mp + 1) (j + 1)]
+        mach_mpoly [natCast (mp + 1), natCast (j + 1), q]
+      rw [heqmpj2] at hstep2
+      have hxupper : x ≤ natCast (mp + j + 2) * q := le_trans hx2 hstep2
+      have heqmpj3 : natCast (mp + j + 2) * q - natCast (mp + j + 1) * q = q := by
+        rw [show mp + j + 2 = (mp + j + 1) + 1 from by omega, natCast_add (mp + j + 1) 1, natCast_one_local2]
+        mach_mpoly [natCast (mp + j + 1), q]
+      have hdrift : x - natCast (mp + j + 1) * q ≤ q := by
+        have h1 := add_le_add_both hxupper (le_refl (-(natCast (mp + j + 1) * q)))
+        rw [← sub_def x (natCast (mp + j + 1) * q)] at h1
+        rw [← sub_def (natCast (mp + j + 2) * q) (natCast (mp + j + 1) * q)] at h1
+        rwa [heqmpj3] at h1
+      have hposdiff : (0:Real) ≤ x - natCast (mp + j + 1) * q := sub_nonneg_of_le (le_of_lt hright)
+      have habs1 : abs (x - natCast (mp + j + 1) * q) < δ := by
+        rw [abs_of_nonneg hposdiff]; exact lt_of_le_of_lt hdrift hwidth
+      have habs2 : abs (natCast (mp + j + 1) * q - x) < δ := by rw [abs_sub_comm]; exact habs1
+      have hz1c : natCast (mp + j + 1) * q ≤ c := by
+        have h2Kb := natCast_mul_meshWidth 0 c (2 ^ K) hK
+        rw [hq] at h2Kb
+        have heqc : c - 0 = c := by mach_mpoly [c]
+        rw [heqc] at h2Kb
+        have h3 : natCast (mp + j + 1) * q ≤ natCast (2 ^ K) * q :=
+          mul_le_mul_of_nonneg_right (natCast_le_of_nat_le (by omega)) hqnn
+        rwa [h2Kb] at h3
+      have hz10 : (0:Real) ≤ natCast (mp + j + 1) * q := mul_nonneg (natCast_nonneg (mp + j + 1)) hqnn
+      have hftrans := hδ (natCast (mp + j + 1) * q) x hz10 hz1c hx0 hxc habs2
+      have hflt := lt_add_of_abs_sub_lt (f (natCast (mp + j + 1) * q)) (f x) ε' hε'nn hftrans
+      have hzmem1 : meshPoint 0 c (2 ^ K) (mp + j) ≤ natCast (mp + j + 1) * q := by
+        rw [hceq0]; exact hzcast
+      have hzspec := minSub_spec f 0 c hc0 hcont (2 ^ K) hK (mp + j) hcoarse0 (natCast (mp + j + 1) * q)
+        hzmem1 (by rw [hceq1]; exact le_refl _)
+      rw [hxeq]
+      exact le_trans hzspec (le_of_lt hflt)
+    · -- CASE MIDDLE
+      have hcm1 : meshPoint 0 c (2 ^ K) (mp + j) ≤ x := by
+        rw [hceq0]; exact le_of_not_lt_mono hleft
+      have hcm2 : x ≤ meshPoint 0 c (2 ^ K) (mp + j + 1) := by
+        rw [hceq1]; exact le_of_not_lt_mono hright
+      have hspec := minSub_spec f 0 c hc0 hcont (2 ^ K) hK (mp + j) hcoarse0 x hcm1 hcm2
+      rw [hxeq]
+      have h1 := add_le_add_both hspec hε'nn
+      rwa [show minSub f 0 c hc0 hcont (2 ^ K) hK (mp + j) + 0
+          = minSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)
+          from by mach_mpoly [minSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)]] at h1
+
+/-! ## §4 — summing the per-term transfer into an upper/lower-sum bound -/
+
+/-- The "window sum" `Σ_{j<n} g(mp+j)` never exceeds the full sum `Σ_{i<N} g(i)`, for nonnegative
+`g` and `mp+n≤N`: the terms before `mp` are dropped (nonneg, so dropping only shrinks the sum) and
+the terms from `mp+n` to `N-1` are dropped the same way. -/
+theorem partialSum_window_le {g : Nat → Real} (hg : ∀ i, 0 ≤ g i) (mp n N : Nat) (hmpnN : mp + n ≤ N) :
+    partialSum (fun j => g (mp + j)) n ≤ partialSum g N := by
+  have hmple : mp ≤ N := by omega
+  have hsplit := partialSum_add g mp (N - mp)
+  rw [show mp + (N - mp) = N from by omega] at hsplit
+  have hpsmpnn : (0:Real) ≤ partialSum g mp := partialSum_nonneg hg mp
+  have hwindow_le : partialSum (fun j => g (mp + j)) n ≤ partialSum (fun j => g (mp + j)) (N - mp) :=
+    partialSum_mono (fun j => hg (mp + j)) (by omega)
+  rw [hsplit]
+  have h1 := add_le_add_both hpsmpnn hwindow_le
+  rwa [zero_add] at h1
+
+theorem upperSumCont_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 ≤ c)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ c → ContinuousAt f z)
+    (hnonneg : ∀ z : Real, 0 ≤ z → z ≤ c → 0 ≤ f z)
+    (p w : Real) (hp0 : 0 ≤ p) (hpw : 0 ≤ w) (hpwc : p + w ≤ c)
+    (hcont_p : ∀ z : Real, p ≤ z → z ≤ p + w → ContinuousAt f z)
+    (m mp K : Nat) (hK : 0 < 2 ^ K) (hjK : mp + m + 1 ≤ 2 ^ K)
+    (q : Real) (hq : meshWidth 0 c (2 ^ K) = q) (hqnn : 0 ≤ q)
+    (hcross_w : natCast m * q ≤ w) (hratio_w : w ≤ natCast (m + 1) * q)
+    (hcross_p : natCast mp * q ≤ p) (hratio_p : p ≤ natCast (mp + 1) * q)
+    (δ ε' : Real) (hδpos : 0 < δ) (hwidth : q < δ) (hε'nn : 0 ≤ ε')
+    (hδ : ∀ y z : Real, 0 ≤ y → y ≤ c → 0 ≤ z → z ≤ c → abs (y - z) < δ → abs (f y - f z) < ε') :
+    upperSumCont f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega)
+      ≤ upperSumCont f 0 c hc0 hcont (2 ^ K) hK + ε' * w := by
+  show partialSum (maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega)) (m + 1)
+      * meshWidth p (p + w) (m + 1)
+    ≤ partialSum (maxSub f 0 c hc0 hcont (2 ^ K) hK) (2 ^ K) * meshWidth 0 c (2 ^ K) + ε' * w
+  rw [hq, meshWidth_offset p w (m + 1)]
+  have htermwise : ∀ j, j < m + 1 →
+      maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega) j
+        ≤ (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j) + ε') j := by
+    intro j hj
+    exact maxSub_transfer_general f c hc0 hcont p w hp0 hpw hpwc hcont_p m mp K hK j (by omega) hjK
+      q hq hqnn hcross_w hratio_w hcross_p hratio_p δ ε' hδpos hwidth hε'nn hδ
+  have hstep1 := partialSum_le_of_termwise_le (m + 1) htermwise
+  rw [partialSum_add_const (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) ε' (m + 1)] at hstep1
+  have hwnn : (0:Real) ≤ w / natCast (m + 1) := div_nonneg hpw (le_of_lt (natCast_pos (by omega)))
+  have hstep2 : partialSum (maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega))
+      (m + 1) * (w / natCast (m + 1))
+      ≤ (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) + natCast (m + 1) * ε')
+      * (w / natCast (m + 1)) :=
+    mul_le_mul_of_nonneg_right hstep1 hwnn
+  have hpartc_nonneg : ∀ i : Nat, 0 ≤ maxSub f 0 c hc0 hcont (2 ^ K) hK i :=
+    fun i => maxSub_nonneg f 0 c hc0 hcont hnonneg (2 ^ K) hK i
+  have hwindow : partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+      ≤ partialSum (maxSub f 0 c hc0 hcont (2 ^ K) hK) (2 ^ K) :=
+    partialSum_window_le hpartc_nonneg mp (m + 1) (2 ^ K) hjK
+  have hexpand : (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+      + natCast (m + 1) * ε') * (w / natCast (m + 1))
+      = partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * (w / natCast (m + 1))
+        + ε' * w := by
+    rw [show (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+        + natCast (m + 1) * ε') * (w / natCast (m + 1))
+        = partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * (w / natCast (m + 1))
+          + ε' * (natCast (m + 1) * (w / natCast (m + 1)))
+        from by mach_mpoly [partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1),
+          w / natCast (m + 1), natCast (m + 1), ε']]
+    rw [mul_div_self_cancel w m]
+  rw [hexpand] at hstep2
+  have hstep4 : partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * (w / natCast (m + 1))
+      ≤ partialSum (maxSub f 0 c hc0 hcont (2 ^ K) hK) (2 ^ K) * (w / natCast (m + 1)) :=
+    mul_le_mul_of_nonneg_right hwindow hwnn
+  have hstep5 : partialSum (maxSub f 0 c hc0 hcont (2 ^ K) hK) (2 ^ K) * (w / natCast (m + 1))
+      ≤ partialSum (maxSub f 0 c hc0 hcont (2 ^ K) hK) (2 ^ K) * q := by
+    apply mul_le_mul_of_nonneg_left (a_div_le_q w q m hratio_w)
+    exact partialSum_nonneg hpartc_nonneg (2 ^ K)
+  have h1 := le_trans hstep2 (add_le_add_both hstep4 (le_refl (ε' * w)))
+  exact le_trans h1 (add_le_add_both hstep5 (le_refl (ε' * w)))
+
 end Real
 end MachLib
