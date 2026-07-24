@@ -327,6 +327,31 @@ theorem partialSum_window_le {g : Nat → Real} (hg : ∀ i, 0 ≤ g i) (mp n N 
   have h1 := add_le_add_both hpsmpnn hwindow_le
   rwa [zero_add] at h1
 
+/-- Companion to `partialSum_window_le`, opposite direction: a HEAD window `[0,mp+1)` and a TAIL
+window `[mp,N)` — overlapping in exactly the single cell `mp` — together cover `[0,N)`, so their
+sum bounds the full sum from ABOVE (the overlap only contributes one extra nonneg term). Needed to
+recombine additivity's head/tail coarse-window bounds back into a single full coarse sum. -/
+theorem partialSum_two_window_cover {g : Nat → Real} (hg : ∀ i, 0 ≤ g i) (mp N : Nat)
+    (hmpN : mp ≤ N) :
+    partialSum g N ≤ partialSum g (mp + 1) + partialSum (fun j => g (mp + j)) (N - mp) := by
+  have hsplit := partialSum_add g mp (N - mp)
+  rw [show mp + (N - mp) = N from by omega] at hsplit
+  have hext : partialSum g mp ≤ partialSum g (mp + 1) := partialSum_mono hg (by omega)
+  rw [hsplit]
+  exact add_le_add_both hext (le_refl _)
+
+/-- The EXACT version of `partialSum_two_window_cover`: the two windows' combined sum equals the
+full sum PLUS the single overlap term `g mp`, counted twice. Needed for the upper-bound direction
+of additivity's assembly, where the overlap must be bounded ABOVE by a global max `M`, not just
+dropped as nonneg. -/
+theorem partialSum_two_window_eq (g : Nat → Real) (mp N : Nat) (hmpN : mp ≤ N) :
+    partialSum g (mp + 1) + partialSum (fun j => g (mp + j)) (N - mp)
+      = partialSum g N + g mp := by
+  have hsplit := partialSum_add g mp (N - mp)
+  rw [show mp + (N - mp) = N from by omega] at hsplit
+  rw [partialSum_succ g mp, hsplit]
+  mach_mpoly [partialSum g mp, g mp, partialSum (fun j => g (mp + j)) (N - mp)]
+
 theorem upperSumCont_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 ≤ c)
     (hcont : ∀ z : Real, 0 ≤ z → z ≤ c → ContinuousAt f z)
     (hnonneg : ∀ z : Real, 0 ≤ z → z ≤ c → 0 ≤ f z)
@@ -385,6 +410,63 @@ theorem upperSumCont_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 �
   have h1 := le_trans hstep2 (add_le_add_both hstep4 (le_refl (ε' * w)))
   exact le_trans h1 (add_le_add_both hstep5 (le_refl (ε' * w)))
 
+/-- Un-loosened companion to `upperSumCont_transfer_general`: keeps the coarse bound in
+WINDOWED form (`partialSum` over just the `m+1` cells `[mp,mp+m+1)`) instead of loosening it to
+the full `[0,c]` coarse sum via `partialSum_window_le`. Needed for additivity's assembly, where
+the head and tail windows must be recombined via `partialSum_two_window_eq` — loosening each
+piece to the full sum independently (as the `_general` version does) would double-count. -/
+theorem upperSumCont_transfer_windowed (f : Real → Real) (c : Real) (hc0 : 0 ≤ c)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ c → ContinuousAt f z)
+    (hnonneg : ∀ z : Real, 0 ≤ z → z ≤ c → 0 ≤ f z)
+    (p w : Real) (hp0 : 0 ≤ p) (hpw : 0 ≤ w) (hpwc : p + w ≤ c)
+    (hcont_p : ∀ z : Real, p ≤ z → z ≤ p + w → ContinuousAt f z)
+    (m mp K : Nat) (hK : 0 < 2 ^ K) (hjK : mp + m + 1 ≤ 2 ^ K)
+    (q : Real) (hq : meshWidth 0 c (2 ^ K) = q) (hqnn : 0 ≤ q)
+    (hcross_w : natCast m * q ≤ w) (hratio_w : w ≤ natCast (m + 1) * q)
+    (hcross_p : natCast mp * q ≤ p) (hratio_p : p ≤ natCast (mp + 1) * q)
+    (δ ε' : Real) (hδpos : 0 < δ) (hwidth : q < δ) (hε'nn : 0 ≤ ε')
+    (hδ : ∀ y z : Real, 0 ≤ y → y ≤ c → 0 ≤ z → z ≤ c → abs (y - z) < δ → abs (f y - f z) < ε') :
+    upperSumCont f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega)
+      ≤ partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * q + ε' * w := by
+  show partialSum (maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega)) (m + 1)
+      * meshWidth p (p + w) (m + 1)
+    ≤ partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * q + ε' * w
+  rw [meshWidth_offset p w (m + 1)]
+  have htermwise : ∀ j, j < m + 1 →
+      maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega) j
+        ≤ (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j) + ε') j := by
+    intro j hj
+    exact maxSub_transfer_general f c hc0 hcont p w hp0 hpw hpwc hcont_p m mp K hK j (by omega) hjK
+      q hq hqnn hcross_w hratio_w hcross_p hratio_p δ ε' hδpos hwidth hε'nn hδ
+  have hstep1 := partialSum_le_of_termwise_le (m + 1) htermwise
+  rw [partialSum_add_const (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) ε' (m + 1)] at hstep1
+  have hwnn : (0:Real) ≤ w / natCast (m + 1) := div_nonneg hpw (le_of_lt (natCast_pos (by omega)))
+  have hstep2 : partialSum (maxSub f p (p + w) (le_add_of_nonneg_right hpw) hcont_p (m + 1) (by omega))
+      (m + 1) * (w / natCast (m + 1))
+      ≤ (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) + natCast (m + 1) * ε')
+      * (w / natCast (m + 1)) :=
+    mul_le_mul_of_nonneg_right hstep1 hwnn
+  have hpartc_nonneg : ∀ i : Nat, 0 ≤ maxSub f 0 c hc0 hcont (2 ^ K) hK i :=
+    fun i => maxSub_nonneg f 0 c hc0 hcont hnonneg (2 ^ K) hK i
+  have hexpand : (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+      + natCast (m + 1) * ε') * (w / natCast (m + 1))
+      = partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * (w / natCast (m + 1))
+        + ε' * w := by
+    rw [show (partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+        + natCast (m + 1) * ε') * (w / natCast (m + 1))
+        = partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * (w / natCast (m + 1))
+          + ε' * (natCast (m + 1) * (w / natCast (m + 1)))
+        from by mach_mpoly [partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1),
+          w / natCast (m + 1), natCast (m + 1), ε']]
+    rw [mul_div_self_cancel w m]
+  rw [hexpand] at hstep2
+  have hstep5w : partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1)
+      * (w / natCast (m + 1))
+      ≤ partialSum (fun j => maxSub f 0 c hc0 hcont (2 ^ K) hK (mp + j)) (m + 1) * q := by
+    apply mul_le_mul_of_nonneg_left (a_div_le_q w q m hratio_w)
+    exact partialSum_nonneg (fun j => hpartc_nonneg (mp + j)) (m + 1)
+  exact le_trans hstep2 (add_le_add_both hstep5w (le_refl (ε' * w)))
+
 private theorem partialSum_const_val (M : Real) : ∀ n : Nat, partialSum (fun _ => M) n = natCast n * M
   | 0 => by show (0:Real) = natCast 0 * M; rw [natCast_zero]; mach_mpoly [M]
   | k + 1 => by
@@ -405,6 +487,24 @@ theorem minSub_le_global_bound (f : Real → Real) (a b : Real) (hab : a ≤ b)
     · exact le_trans (meshPoint_mem a b n i hab hn (Nat.le_of_lt hi)).1 hmem.1
     · exact le_trans hmem.2 (meshPoint_mem a b n (i + 1) hab hn hi).2
   · unfold minSub
+    rw [dif_neg hi]
+    exact hMub a (le_refl a) hab
+
+/-- `maxSub` (any base interval) never exceeds a global bound valid on a larger interval
+containing it. Mirrors `minSub_le_global_bound` exactly (both `minSub`/`maxSub` equal `f` at some
+point in-range via `_eq`, so a global bound on `f` transfers unchanged). Needed for additivity's
+assembly: the head/tail window-overlap term `maxSub_coarse(m_a)` needs a global bound `M` too. -/
+theorem maxSub_le_global_bound (f : Real → Real) (a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (M : Real) (hMub : ∀ x : Real, a ≤ x → x ≤ b → f x ≤ M) (n : Nat) (hn : 0 < n) (i : Nat) :
+    maxSub f a b hab hcont n hn i ≤ M := by
+  by_cases hi : i < n
+  · rw [maxSub_eq f a b hab hcont n hn i hi]
+    have hmem := maxSub_mem f a b hab hcont n hn i hi
+    apply hMub
+    · exact le_trans (meshPoint_mem a b n i hab hn (Nat.le_of_lt hi)).1 hmem.1
+    · exact le_trans hmem.2 (meshPoint_mem a b n (i + 1) hab hn hi).2
+  · unfold maxSub
     rw [dif_neg hi]
     exact hMub a (le_refl a) hab
 
@@ -520,6 +620,90 @@ theorem lowerSumCont_transfer_general (f : Real → Real) (c : Real) (hc0 : 0 �
     (partialSum (minSub f p (p + w) hpw' hcont_p (m + 1) (by omega)) (m + 1)
       * (w / natCast (m + 1)))
     (M * q) (ε' * w) (ε' * q)] at h7
+
+/-! ## §6 — dyadic mesh width, generalized: shrinks below any target, monotone in the exponent -/
+
+/-- `meshWidth 0 b (2^N)` shrinks below any positive target `T`, for some `N`. Generalizes the
+inline `hwidthK1`-style derivation from `riemann_integral_mono_interval` (there specialized to
+`T=δ`) so it can be reused for additivity's SECOND independent target (bounding the `M·q` overlap
+slack), not just the uniform-continuity `δ`. -/
+theorem meshWidth_dyadic_lt_target (b : Real) (hb0 : 0 ≤ b) (T : Real) (hT : 0 < T) :
+    ∃ N : Nat, meshWidth 0 b (2 ^ N) < T := by
+  obtain ⟨N, hN⟩ := archimedean (b / T)
+  have hNpos : 0 < N := by
+    obtain h0 | hpos := Nat.eq_zero_or_pos N
+    · exfalso
+      have hnn : 0 ≤ b / T := div_nonneg hb0 (le_of_lt hT)
+      rw [h0, natCast_zero] at hN
+      exact lt_irrefl_ax 0 (lt_of_le_of_lt hnn hN)
+    · exact hpos
+  have hNle2N : N ≤ 2 ^ N := nat_le_two_pow N
+  have hNcast : natCast N ≤ natCast (2 ^ N) := natCast_le_of_nat_le hNle2N
+  refine ⟨N, ?_⟩
+  show (b - 0) / natCast (2 ^ N) < T
+  rw [sub_zero_local b]
+  have hstep1 : b / natCast (2 ^ N) ≤ b / natCast N :=
+    div_le_div_pos hb0 (le_refl b) (natCast_pos hNpos) hNcast
+  have hstep2 : b / natCast N < T := by
+    have hcross : b < T * natCast N := by
+      have hmul := mul_lt_mul_of_pos_right hN hT
+      rw [div_mul_cancel (ne_of_gt hT)] at hmul
+      rwa [mul_comm (natCast N) T] at hmul
+    exact div_lt_of_lt_mul hcross (natCast_pos hNpos)
+  exact lt_of_le_of_lt hstep1 hstep2
+
+/-- `meshWidth 0 b (2^K)` only shrinks (weakly) as the exponent grows. Generalizes the inline
+`hwidthK`-style derivation from `riemann_integral_mono_interval` (there specialized to a single
+extra factor `N`) to an arbitrary `N ≤ K`, so it composes with several independent
+`meshWidth_dyadic_lt_target` targets at once (additivity needs two: `δ` and the `M·q` bound). -/
+theorem meshWidth_dyadic_le_of_ge (b : Real) (hb0 : 0 ≤ b) (N K : Nat) (hNK : N ≤ K) :
+    meshWidth 0 b (2 ^ K) ≤ meshWidth 0 b (2 ^ N) := by
+  have hle : natCast (2 ^ N) ≤ natCast (2 ^ K) := by
+    apply natCast_le_of_nat_le
+    obtain ⟨j, hj⟩ := Nat.le.dest hNK
+    rw [← hj]
+    calc 2 ^ N ≤ 2 ^ N * 2 ^ j := Nat.le_mul_of_pos_right (2 ^ N) (two_pow_pos j)
+      _ = 2 ^ (N + j) := by rw [← Nat.pow_add]
+  have hstep1 : b / natCast (2 ^ K) ≤ b / natCast (2 ^ N) :=
+    div_le_div_pos hb0 (le_refl b) (natCast_pos (two_pow_pos N)) hle
+  have heqK : meshWidth 0 b (2 ^ K) = b / natCast (2 ^ K) := by
+    show (b - 0) / natCast (2 ^ K) = b / natCast (2 ^ K)
+    rw [sub_zero_local b]
+  have heqN : meshWidth 0 b (2 ^ N) = b / natCast (2 ^ N) := by
+    show (b - 0) / natCast (2 ^ N) = b / natCast (2 ^ N)
+    rw [sub_zero_local b]
+  rw [heqK, heqN]
+  exact hstep1
+
+/-! ## §7 — a global upper bound on `f`, cheaply, via EVT at the trivial 1-cell partition -/
+
+private theorem meshPoint_zero_one_zero (b : Real) : meshPoint 0 b 1 0 = 0 := by
+  show (0:Real) + natCast 0 * meshWidth 0 b 1 = 0
+  rw [natCast_zero]
+  mach_mpoly [meshWidth 0 b 1]
+
+private theorem meshPoint_zero_one_one (b : Real) : meshPoint 0 b 1 1 = b := by
+  show (0:Real) + natCast 1 * meshWidth 0 b 1 = b
+  have heq := natCast_mul_meshWidth 0 b 1 (by omega)
+  rw [sub_zero_local b] at heq
+  rw [heq]
+  mach_mpoly [b]
+
+/-- A continuous, nonnegative `f` on `[0,b]` has a global upper bound `M`, obtained cheaply via
+EVT at the trivial 1-cell partition (`n=1`, so `meshPoint 0 b 1 0 = 0` and `meshPoint 0 b 1 1 = b`
+cover the whole interval in a single cell) rather than a fresh construction. Needed for
+additivity's assembly: the head/tail window-overlap term (`maxSub_coarse(m_a)` or
+`minSub_coarse(m_a)`) needs a bound that does not depend on the coarse resolution `K`. -/
+theorem exists_global_max_bound (f : Real → Real) (b : Real) (hb0 : 0 ≤ b)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ b → ContinuousAt f z)
+    (hnonneg : ∀ z : Real, 0 ≤ z → z ≤ b → 0 ≤ f z) :
+    ∃ M : Real, 0 ≤ M ∧ ∀ x : Real, 0 ≤ x → x ≤ b → f x ≤ M := by
+  have h1 : (0:Nat) < 1 := by omega
+  refine ⟨maxSub f 0 b hb0 hcont 1 h1 0, maxSub_nonneg f 0 b hb0 hcont hnonneg 1 h1 0, ?_⟩
+  intro x hx1 hx2
+  refine maxSub_spec f 0 b hb0 hcont 1 h1 0 (by omega) x ?_ ?_
+  · rw [meshPoint_zero_one_zero b]; exact hx1
+  · rw [meshPoint_zero_one_one b]; exact hx2
 
 end Real
 end MachLib
