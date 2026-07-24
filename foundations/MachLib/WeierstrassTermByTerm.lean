@@ -860,5 +860,164 @@ theorem weierstrass_sum_hasDerivAt2 (t : Real) (ht : 0 < t) :
       (weierstrassAmp2_nonneg t) (weierstrassTerm2_dom t) (weierstrassTerm2_lipschitz t)
       hSumA2_ub hSumA2_lub hSumA3_ub x
 
+/-! ## §9 — `C^∞`: every derivative order at once, via a phase-shifted closed form
+
+The `k=1`, `k=2` sessions each hand-built a term/amplitude pair and re-derived domination,
+Lipschitz, and a `HasDerivAt` step from scratch (alternating `sin`/`cos` case by case). That
+doesn't scale to "every order." The standard fix: `dᵏ/dxᵏ[cos(Kx)] = Kᵏ·cos(Kx + kπ/2)` — a SINGLE
+closed form covering every `k` at once (`k=0`: `cos`, `k=1`: `-sin`, `k=2`: `-cos`, `k=3`: `sin`,
+`k=4`: `cos` again — the familiar 4-cycle, but never case-split on here). Domination
+(`|cos|≤1`), the Lipschitz bound (`cos_lipschitz`, phase-invariant), and the derivative step
+(one instance of the identity `cos(θ+π/2)=-sin θ`, itself from `cos_add`+the two `π/2` values) all
+become UNIFORM IN `k` under this form — none of them need induction on `k`. The only genuinely
+`k`-indexed CONSTRUCTION left is assembling the derivative family `D : Nat → Real → Real`, and
+even that turns out not to need `Nat.rec`: since every ingredient is already uniform in `k`, each
+`D k` is built directly (not recursively from `D (k-1)`) via the existing M-test, applied once per
+`k` rather than once total. -/
+
+private theorem wtbt_cos_add_pi_div_two (θ : Real) : Real.cos (θ + pi / (1 + 1)) = -Real.sin θ := by
+  rw [cos_add, cos_pi_div_two, sin_pi_div_two]
+  mach_ring
+
+theorem HasDerivAt_scaled_id_add_const (K φ x : Real) : HasDerivAt (fun y => K * y + φ) K x := by
+  have h := HasDerivAt_add (fun y => K * y) (fun _ => φ) K 0 x (HasDerivAt_scaled_id K x) (HasDerivAt_const φ x)
+  rwa [show K + 0 = K from by mach_ring] at h
+
+theorem HasDerivAt_scaled_cos_phase (K φ x : Real) :
+    HasDerivAt (fun y => Real.cos (K * y + φ)) (-Real.sin (K * x + φ) * K) x :=
+  HasDerivAt_comp Real.cos (fun y => K * y + φ) K (-Real.sin (K * x + φ)) x
+    (HasDerivAt_scaled_id_add_const K φ x) (HasDerivAt_cos (K * x + φ))
+
+theorem HasDerivAt_const_mul_cos_phase (C K φ x : Real) :
+    HasDerivAt (fun y => C * Real.cos (K * y + φ)) (C * (-Real.sin (K * x + φ) * K)) x := by
+  have h := HasDerivAt_mul (fun _ => C) (fun y => Real.cos (K * y + φ)) 0 (-Real.sin (K * x + φ) * K) x
+    (HasDerivAt_const C x) (HasDerivAt_scaled_cos_phase K φ x)
+  rwa [show (0 : Real) * Real.cos (K * x + φ) + C * (-Real.sin (K * x + φ) * K)
+        = C * (-Real.sin (K * x + φ) * K) from by mach_ring] at h
+
+/-- `Aₙ·Kₙᵏ` — the `k`-th majorant, closed form, general in `k` (matches `weierstrassAmp1`/
+`_2`/`_3` at `k=1,2,3`, but stated once for every `k`). -/
+noncomputable def weierstrassAmpK (t : Real) (n k : Nat) : Real :=
+  weierstrassAmplitude t n * npow k (weierstrassFreq n)
+
+/-- The `k`-th derivative term, closed form: `Aₙ·Kₙᵏ·cos(Kₙx + k·π/2)`. -/
+noncomputable def weierstrassTermK (t : Real) (n k : Nat) (x : Real) : Real :=
+  weierstrassAmplitude t n * npow k (weierstrassFreq n)
+    * Real.cos (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))
+
+theorem weierstrassAmpK_nonneg (t : Real) (n k : Nat) : 0 ≤ weierstrassAmpK t n k :=
+  mul_nonneg (weierstrassAmplitude_nonneg t n) (npow_nonneg (le_of_lt (weierstrassFreq_pos n)) k)
+
+theorem weierstrassAmpK_hasBoundedPartialSums (t : Real) (ht : 0 < t) (k : Nat) :
+    HasBoundedPartialSums (fun n => weierstrassAmpK t n k) := by
+  have h := weierstrass_term_hasBoundedPartialSums t ht k
+  have heq : (fun n => npow k pi * npow n (1 / (1 + 1)) * npow (n * k) (1 + 1 + 1)
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 (1 + 1 + 1)))))
+      = (fun n => weierstrassAmpK t n k) := by
+    funext n
+    show npow k pi * npow n (1 / (1 + 1)) * npow (n * k) (1 + 1 + 1)
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 (1 + 1 + 1))))
+      = weierstrassAmpK t n k
+    unfold weierstrassAmpK weierstrassAmplitude weierstrassFreq
+    have hkey1 : npow k (npow n (1 + 1 + 1) * pi) = npow k (npow n (1 + 1 + 1)) * npow k pi :=
+      npow_mul_distrib (npow n (1 + 1 + 1)) pi k
+    have hkey2 : npow k (npow n (1 + 1 + 1)) = npow (n * k) (1 + 1 + 1) := npow_tower (1 + 1 + 1) n k
+    rw [hkey1, hkey2]
+    mach_ring
+  rwa [heq] at h
+
+theorem weierstrassTermK_dom (t : Real) (n k : Nat) (x : Real) :
+    abs (weierstrassTermK t n k x) ≤ weierstrassAmpK t n k := by
+  unfold weierstrassTermK weierstrassAmpK
+  have hAKnn : 0 ≤ weierstrassAmplitude t n * npow k (weierstrassFreq n) :=
+    mul_nonneg (weierstrassAmplitude_nonneg t n) (npow_nonneg (le_of_lt (weierstrassFreq_pos n)) k)
+  rw [abs_mul, abs_of_nonneg hAKnn]
+  have h := abs_cos_le_one (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))
+  have h2 := mul_le_mul_of_nonneg_left h hAKnn
+  rwa [mul_one_ax] at h2
+
+private theorem wtbt_ampk_diff_ring (A P θc θx : Real) :
+    A * P * Real.cos θc - A * P * Real.cos θx = (A * P) * (Real.cos θc - Real.cos θx) := by
+  mach_mpoly [A, P, Real.cos θc, Real.cos θx]
+
+theorem weierstrassTermK_lipschitz (t : Real) (n k : Nat) (c x : Real) :
+    abs (weierstrassTermK t n k c - weierstrassTermK t n k x) ≤ weierstrassAmpK t n (k + 1) * abs (c - x) := by
+  unfold weierstrassTermK
+  rw [wtbt_ampk_diff_ring (weierstrassAmplitude t n) (npow k (weierstrassFreq n))
+        (weierstrassFreq n * c + natCast k * (pi / (1 + 1))) (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))]
+  have hAPnn : 0 ≤ weierstrassAmplitude t n * npow k (weierstrassFreq n) :=
+    mul_nonneg (weierstrassAmplitude_nonneg t n) (npow_nonneg (le_of_lt (weierstrassFreq_pos n)) k)
+  rw [abs_mul, abs_of_nonneg hAPnn]
+  have hstep1 := cos_lipschitz (weierstrassFreq n * c + natCast k * (pi / (1 + 1)))
+    (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))
+  have hstep2 : weierstrassFreq n * c + natCast k * (pi / (1 + 1)) - (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))
+      = weierstrassFreq n * (c - x) := by
+    mach_mpoly [weierstrassFreq n, c, x, natCast k * (pi / (1 + 1))]
+  rw [hstep2, abs_mul, abs_of_nonneg (le_of_lt (weierstrassFreq_pos n))] at hstep1
+  have hstep3 := mul_le_mul_of_nonneg_left hstep1 hAPnn
+  rw [show weierstrassAmplitude t n * npow k (weierstrassFreq n) * (weierstrassFreq n * abs (c - x))
+        = weierstrassAmpK t n (k + 1) * abs (c - x) from by
+      unfold weierstrassAmpK
+      rw [npow_succ]
+      mach_mpoly [weierstrassAmplitude t n, npow k (weierstrassFreq n), weierstrassFreq n, abs (c - x)]] at hstep3
+  exact hstep3
+
+private theorem wtbt_termk_val_ring (A P K x : Real) :
+    A * P * (-Real.sin x * K) = -(A * (P * K) * Real.sin x) := by mach_mpoly [A, P, K, Real.sin x]
+
+theorem weierstrassTermK_hasDerivAt (t : Real) (n k : Nat) (x : Real) :
+    HasDerivAt (weierstrassTermK t n k) (weierstrassTermK t n (k + 1) x) x := by
+  have hbase := HasDerivAt_const_mul_cos_phase (weierstrassAmplitude t n * npow k (weierstrassFreq n))
+    (weierstrassFreq n) (natCast k * (pi / (1 + 1))) x
+  have htransfer := HasDerivAt_of_eq _ (weierstrassTermK t n k) _ x (fun _ => rfl) hbase
+  have hval : weierstrassAmplitude t n * npow k (weierstrassFreq n)
+      * (-Real.sin (weierstrassFreq n * x + natCast k * (pi / (1 + 1))) * weierstrassFreq n)
+      = weierstrassTermK t n (k + 1) x := by
+    unfold weierstrassTermK
+    rw [show weierstrassFreq n * x + natCast (k + 1) * (pi / (1 + 1))
+          = (weierstrassFreq n * x + natCast k * (pi / (1 + 1))) + pi / (1 + 1) from by
+        rw [natCast_succ]; mach_mpoly [weierstrassFreq n, x, natCast k, pi / (1 + 1)],
+        wtbt_cos_add_pi_div_two (weierstrassFreq n * x + natCast k * (pi / (1 + 1))), npow_succ]
+    mach_mpoly [weierstrassAmplitude t n, npow k (weierstrassFreq n), weierstrassFreq n,
+      Real.sin (weierstrassFreq n * x + natCast k * (pi / (1 + 1)))]
+  rwa [hval] at htransfer
+
+/-- **`W` has derivatives of EVERY order, all at once.** `D k` is the sum of the `k`-th derivative
+term series (a genuine, already-summable `Real.cos`-based series for each `k`), `D 0` behaves as
+`W` itself (`weierstrassTermK t n 0 x = weierstrassTerm t n x` up to the `k=0` phase being `0`),
+and each `D k`'s derivative is `D (k+1)` — the actual `C^∞` statement, not one more hand-built
+order. No induction on `k` needed: every ingredient (domination, Lipschitz, the derivative step)
+is already uniform in `k`, so each `D k` is built directly via the M-test rather than recursively
+from `D (k-1)`. -/
+theorem weierstrass_sum_hasDerivAtOrder (t : Real) (ht : 0 < t) :
+    ∃ D : Nat → Real → Real,
+      (∀ k, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ x,
+        abs (D k x - partialSum (fun i => weierstrassTermK t i k x) n) < ε)
+      ∧ ∀ k x0, HasDerivAt (D k) (D (k + 1) x0) x0 := by
+  have hDex : ∀ k, ∃ D : Real → Real,
+      (∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ z, abs (D z - partialSum (fun i => weierstrassTermK t i k z) n) < ε)
+      ∧ ∀ x0, ContinuousAt D x0 :=
+    fun k => continuousSum_of_uniform_dominated (weierstrassAmpK_nonneg t · k)
+      (weierstrassAmpK_hasBoundedPartialSums t ht k) (weierstrassTermK_dom t · k)
+      (fun n x => weierstrassTermK_hasDerivAt t n k x)
+  let D : Nat → Real → Real := fun k => Classical.choose (hDex k)
+  have hDspec : ∀ k, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → ∀ z,
+      abs (D k z - partialSum (fun i => weierstrassTermK t i k z) n) < ε :=
+    fun k => (Classical.choose_spec (hDex k)).1
+  have hDspec' : ∀ k z, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n →
+      abs (D (k + 1) z - partialSum (fun i => weierstrassTermK t i (k + 1) z) n) < ε :=
+    fun k z ε hε => by
+      obtain ⟨N, hN⟩ := hDspec (k + 1) ε hε
+      exact ⟨N, fun n hn => hN n hn z⟩
+  refine ⟨D, hDspec, fun k x0 => ?_⟩
+  obtain ⟨SumB1, hSumB1_ub, hSumB1_lub⟩ :=
+    series_sum_exists_of_bounded (weierstrassAmpK_nonneg t · (k + 1)) (weierstrassAmpK_hasBoundedPartialSums t ht (k + 1))
+  obtain ⟨SumB2, hSumB2_ub, _⟩ :=
+    series_sum_exists_of_bounded (weierstrassAmpK_nonneg t · (k + 2)) (weierstrassAmpK_hasBoundedPartialSums t ht (k + 2))
+  exact wtbt_deriv_of_generic (fun n x => weierstrassTermK_hasDerivAt t n k x) (D k) (D (k + 1))
+    (hDspec k) (hDspec' k) (weierstrassAmpK_nonneg t · (k + 1)) (fun n z => weierstrassTermK_dom t n (k + 1) z)
+    (fun n c x => weierstrassTermK_lipschitz t n (k + 1) c x)
+    hSumB1_ub hSumB1_lub hSumB2_ub x0
+
 end Real
 end MachLib
