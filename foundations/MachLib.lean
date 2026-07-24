@@ -185,6 +185,7 @@ import MachLib.ElementaryEMLErf
 import MachLib.RiemannIntegralMonotone
 import MachLib.HeineCantorUniformContinuity
 import MachLib.RiemannIntegralContinuous
+import MachLib.RiemannIntegralRefine
 import MachLib.RiemannIntegralFTC
 import MachLib.GaussianIntegral
 import MachLib.GaussianImproperIntegral
