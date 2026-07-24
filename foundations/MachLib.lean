@@ -187,6 +187,7 @@ import MachLib.HeineCantorUniformContinuity
 import MachLib.RiemannIntegralContinuous
 import MachLib.RiemannIntegralFTC
 import MachLib.GaussianIntegral
+import MachLib.GaussianImproperIntegral
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
