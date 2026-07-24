@@ -147,6 +147,31 @@ axiom HasDerivAt_congr (f g : Real → Real) (a x : Real)
     (h : ∃ δ : Real, 0 < δ ∧ ∀ y : Real, abs (y - x) < δ → f y = g y) :
     HasDerivAt f a x → HasDerivAt g a x
 
+/-- **Derivative from its epsilon-delta linear-approximation characterization.** `HasDerivAt` is
+otherwise fully opaque here — it has NO epsilon-delta unfolding anywhere in the codebase (unlike
+`ContinuousAt`, which is a transparent `def`). Every existing fact about `HasDerivAt` goes through
+the closure axioms above, built up from finitely many applications of `exp`/`log`/`sin`/`cos`/
+`+`/`-`/`×`/`∘`/`⁻¹` on the primitives — a closure that cannot reach an infinite series (e.g. a
+pointwise sum built via `sup_exists`, as in `UniformConvergence.lean`). This axiom is the actual
+analytic (Fréchet, 1-D) definition of the derivative — the standard "linear approximation"
+characterization, provably equivalent to the usual difference-quotient limit for `y ≠ x` and
+trivially true at `y = x` (both sides vanish) — supplied as a genuine bridge INTO `HasDerivAt`,
+so anything satisfying the epsilon-delta property is recognized as having a derivative, not just
+the finitely-many-elementary-functions closure.
+
+Added 2026-07-23 for the EML Weierstrass term-by-term differentiation arc
+(`WeierstrassTermByTerm.lean`): proving the heat-mollified Weierstrass sum's actual derivative
+equals the (already-summable) derivative series needs `HasDerivAt` of a genuine infinite sum,
+which the pre-existing closure cannot reach. User weighed this against a zero-new-axiom
+alternative (a parallel, unconnected differentiability predicate) and explicitly chose to add
+this one axiom instead, to keep the result compatible with the rest of the codebase's
+`HasDerivAt`-based machinery (via `AskUserQuestion`, both options stated plainly). Classically
+true — this is the textbook definition, not a new mathematical claim. -/
+axiom HasDerivAt_of_eps_delta {f : Real → Real} {f' x : Real}
+    (h : ∀ ε : Real, 0 < ε → ∃ δ : Real, 0 < δ ∧
+      ∀ y : Real, abs (y - x) < δ → abs (f y - f x - f' * (y - x)) ≤ ε * abs (y - x)) :
+    HasDerivAt f f' x
+
 /-! ## `log`'s derivative on the clamped (non-positive) side
 
 MachLib's `Real.log` is piecewise: the analytic `ln` for `x > 0`, clamped to the constant `0` for

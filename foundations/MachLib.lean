@@ -439,6 +439,7 @@ import MachLib.EMLWeierstrassTermBound
 import MachLib.Summability
 import MachLib.UniformConvergence
 import MachLib.WeierstrassSumContinuous
+import MachLib.WeierstrassTermByTerm
 
 /-!
 # MachLib — top-level aggregator

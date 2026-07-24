@@ -344,5 +344,122 @@ theorem continuousSum_of_uniform_dominated
              show ε + ε + ε = (1 + 1 + 1) * ε from by mach_ring]
          exact mul_div_cancel_left' h3ne] at hs
 
+/-! ## §6 — Further general utilities (added for the term-by-term differentiation arc):
+a single-point (no `x`, no uniformity, no continuity) version of the M-test, `HasDerivAt` of a
+finite partial sum, and a block-sum (partial-sum-difference) magnitude bound. -/
+
+/-- **Pointwise M-test**, no `x`-dependence. The simplest form: a nonneg summable majorant `A`
+dominating `f` termwise gives `f` a genuine sum `s` with the standard tail-bound property. Same
+posPart/negPart argument as `continuousSum_of_uniform_dominated`'s uniform half, without the
+outer `∀x` quantification or the continuity conclusion — used pointwise, once per `x`, when only
+existence (not continuity as a function of `x`) is needed. -/
+theorem exists_pointwise_sum_of_dominated
+    {A : Nat → Real} (hAnn : ∀ n, 0 ≤ A n) (hAbdd : HasBoundedPartialSums A)
+    {f : Nat → Real} (hdom : ∀ n, abs (f n) ≤ A n) :
+    ∃ s : Real, ∀ ε : Real, 0 < ε → ∃ N, ∀ n, N ≤ n → abs (s - partialSum f n) < ε := by
+  obtain ⟨SumA, hSumA_ub, hSumA_lub⟩ := series_sum_exists_of_bounded hAnn hAbdd
+  have hGex : ∃ s : Real, (∀ n, partialSum (fun i => posPart (f i)) n ≤ s) ∧
+      ∀ s', (∀ n, partialSum (fun i => posPart (f i)) n ≤ s') → s ≤ s' :=
+    series_sum_exists_of_bounded (fun n => posPart_nonneg (f n))
+      (hasBoundedPartialSums_of_le (fun n => le_trans (posPart_le_abs (f n)) (hdom n)) hAbdd)
+  have hHex : ∃ s : Real, (∀ n, partialSum (fun i => negPart (f i)) n ≤ s) ∧
+      ∀ s', (∀ n, partialSum (fun i => negPart (f i)) n ≤ s') → s ≤ s' :=
+    series_sum_exists_of_bounded (fun n => negPart_nonneg (f n))
+      (hasBoundedPartialSums_of_le (fun n => le_trans (negPart_le_abs (f n)) (hdom n)) hAbdd)
+  let Gsum : Real := Classical.choose hGex
+  let Hsum : Real := Classical.choose hHex
+  have hGspec := Classical.choose_spec hGex
+  have hHspec := Classical.choose_spec hHex
+  refine ⟨Gsum - Hsum, fun ε hε => ?_⟩
+  have hε2 : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε h11pos
+  obtain ⟨N, hN⟩ := tail_lt_of_sup hAnn hSumA_lub hε2
+  refine ⟨N, fun n hn => ?_⟩
+  have hPtail : Gsum - partialSum (fun i => posPart (f i)) n ≤ SumA - partialSum A n :=
+    tail_le_tail_of_dominated (fun i => posPart_nonneg (f i))
+      (fun i => le_trans (posPart_le_abs (f i)) (hdom i)) hGspec.2 hSumA_ub n
+  have hQtail : Hsum - partialSum (fun i => negPart (f i)) n ≤ SumA - partialSum A n :=
+    tail_le_tail_of_dominated (fun i => negPart_nonneg (f i))
+      (fun i => le_trans (negPart_le_abs (f i)) (hdom i)) hHspec.2 hSumA_ub n
+  have hPnn : 0 ≤ Gsum - partialSum (fun i => posPart (f i)) n := sub_nonneg_of_le (hGspec.1 n)
+  have hQnn : 0 ≤ Hsum - partialSum (fun i => negPart (f i)) n := sub_nonneg_of_le (hHspec.1 n)
+  have hAtail : SumA - partialSum A n < ε / (1 + 1) := hN n hn
+  have hPlt := lt_of_le_of_lt hPtail hAtail
+  have hQlt := lt_of_le_of_lt hQtail hAtail
+  have hf_eq : partialSum f n
+      = partialSum (fun i => posPart (f i)) n - partialSum (fun i => negPart (f i)) n := by
+    rw [← partialSum_sub]
+    exact partialSum_congr (fun i => (posPart_sub_negPart (f i)).symm) n
+  show abs ((Gsum - Hsum) - partialSum f n) < ε
+  rw [hf_eq,
+      show (Gsum - Hsum) - (partialSum (fun i => posPart (f i)) n - partialSum (fun i => negPart (f i)) n)
+          = (Gsum - partialSum (fun i => posPart (f i)) n) - (Hsum - partialSum (fun i => negPart (f i)) n)
+        from by mach_mpoly [Gsum, Hsum, partialSum (fun i => posPart (f i)) n,
+          partialSum (fun i => negPart (f i)) n]]
+  have habs := abs_sub_le_local (Gsum - partialSum (fun i => posPart (f i)) n)
+    (Hsum - partialSum (fun i => negPart (f i)) n)
+  rw [abs_of_nonneg hPnn, abs_of_nonneg hQnn] at habs
+  refine lt_of_le_of_lt habs ?_
+  have h := add_lt_add_local hPlt hQlt
+  rwa [show ε / (1 + 1) + ε / (1 + 1) = ε from by
+         rw [div_add_div_same h11ne, show ε + ε = (1 + 1) * ε from by mach_ring]
+         exact mul_div_cancel_left' h11ne] at h
+
+/-- **`HasDerivAt` of a finite partial sum**, at any point `z`. Built by induction on `N` using
+`HasDerivAt_add` at each step (base case `HasDerivAt_const`) — the same pattern
+`continuousSum_of_uniform_dominated` uses internally, extracted here as a standalone reusable
+fact (needed at multiple points, not just at one fixed `x`). -/
+theorem partialSum_hasDerivAt {term term' : Nat → Real → Real}
+    (hderiv : ∀ n x, HasDerivAt (term n) (term' n x) x) (N : Nat) (z : Real) :
+    HasDerivAt (fun y => partialSum (fun i => term i y) N) (partialSum (fun i => term' i z) N) z := by
+  induction N with
+  | zero => exact HasDerivAt_const 0 z
+  | succ n ih =>
+      exact HasDerivAt_add (fun y => partialSum (fun i => term i y) n) (term n) _ _ z ih (hderiv n z)
+
+/-- **Abs of a partial sum is bounded by the partial sum of abs values** — the finite triangle
+inequality, by induction. -/
+theorem abs_partialSum_le (h : Nat → Real) :
+    ∀ n, abs (partialSum h n) ≤ partialSum (fun i => abs (h i)) n
+  | 0 => by
+      rw [show partialSum h 0 = 0 from rfl, show partialSum (fun i => abs (h i)) 0 = 0 from rfl,
+          show abs (0:Real) = 0 from abs_of_nonneg (le_refl 0)]
+      exact le_refl 0
+  | n + 1 => by
+      rw [partialSum_succ, partialSum_succ]
+      exact le_trans (abs_add (partialSum h n) (h n))
+        (add_le_add_right_local (abs_partialSum_le h n) (abs (h n)))
+
+/-- **Block-sum magnitude bound.** The magnitude of a finite block `partialSum h n - partialSum h m`
+(`m ≤ n`) is bounded by the corresponding tail slack of a dominating nonneg summable majorant `g`
+with sup `S` — reusable Cauchy-style estimate: `|h`'s block from `m` to `n`| ≤ `S - partialSum g m`,
+independent of `n`. The key estimate behind the uniform-Cauchy step of term-by-term
+differentiation. -/
+private theorem block_sub_ring (a b : Real) : (a + b) - a = b := by mach_mpoly [a, b]
+private theorem block_addneg_ring (a b : Real) : a + -b = a - b := by mach_mpoly [a, b]
+
+theorem partialSum_block_le {h g : Nat → Real} (hdom : ∀ i, abs (h i) ≤ g i) (hgnn : ∀ i, 0 ≤ g i)
+    {m n : Nat} (hmn : m ≤ n) {S : Real} (hS : ∀ p, partialSum g p ≤ S) :
+    abs (partialSum h n - partialSum h m) ≤ S - partialSum g m := by
+  obtain ⟨j, hj⟩ := Nat.le.dest hmn
+  have hsplit_h : partialSum h n = partialSum h m + partialSum (fun i => h (m + i)) j := by
+    rw [← hj]; exact partialSum_split h m j
+  have hsplit_g : partialSum g n = partialSum g m + partialSum (fun i => g (m + i)) j := by
+    rw [← hj]; exact partialSum_split g m j
+  have heq1 : partialSum h n - partialSum h m = partialSum (fun i => h (m + i)) j := by
+    rw [hsplit_h]; exact block_sub_ring (partialSum h m) (partialSum (fun i => h (m + i)) j)
+  rw [heq1]
+  have h1 := abs_partialSum_le (fun i => h (m + i)) j
+  have h2 : partialSum (fun i => abs (h (m + i))) j ≤ partialSum (fun i => g (m + i)) j :=
+    partialSum_le_of_le (fun i => hdom (m + i)) j
+  have h4 : partialSum g n - partialSum g m ≤ S - partialSum g m := by
+    have h5 := add_le_add_right_local (hS n) (-(partialSum g m))
+    rwa [block_addneg_ring (partialSum g n) (partialSum g m),
+         block_addneg_ring S (partialSum g m)] at h5
+  have heq2 : partialSum (fun i => g (m + i)) j = partialSum g n - partialSum g m := by
+    rw [hsplit_g]; exact (block_sub_ring (partialSum g m) (partialSum (fun i => g (m + i)) j)).symm
+  have h3 : partialSum (fun i => abs (h (m + i))) j ≤ partialSum g n - partialSum g m := by
+    rw [← heq2]; exact h2
+  exact le_trans h1 (le_trans h3 h4)
+
 end Real
 end MachLib
