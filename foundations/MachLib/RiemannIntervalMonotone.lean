@@ -25,7 +25,7 @@ namespace Real
 
 /-! ## §1 — small Nat/Real helpers -/
 
-private theorem le_of_not_lt_mono {x y : Real} (h : ¬ x < y) : y ≤ x := by
+theorem le_of_not_lt_mono {x y : Real} (h : ¬ x < y) : y ≤ x := by
   obtain h1 | h1 | h1 := lt_total x y
   · exact absurd h1 h
   · rw [le_iff_lt_or_eq]; exact Or.inr h1.symm
@@ -33,7 +33,7 @@ private theorem le_of_not_lt_mono {x y : Real} (h : ¬ x < y) : y ≤ x := by
 
 /-- Bounded search for the least `n ≤ N` with `a < n·q`: either `n = 0` works trivially, or
 `n-1` fails (`(n-1)·q ≤ a`) while `n` succeeds. -/
-private theorem least_nq_gt (a q : Real) : ∀ N : Nat, a < natCast N * q →
+theorem least_nq_gt (a q : Real) : ∀ N : Nat, a < natCast N * q →
     ∃ n : Nat, n ≤ N ∧ a < natCast n * q ∧ (n = 0 ∨ natCast (n - 1) * q ≤ a)
   | 0, h => ⟨0, Nat.le_refl 0, h, Or.inl rfl⟩
   | (k + 1), h => by
@@ -45,10 +45,10 @@ private theorem least_nq_gt (a q : Real) : ∀ N : Nat, a < natCast N * q →
         rw [Nat.add_sub_cancel]
         exact le_of_not_lt_mono hk
 
-private theorem natCast_one_local2 : natCast 1 = 1 := by
+theorem natCast_one_local2 : natCast 1 = 1 := by
   rw [natCast_succ, natCast_zero]; exact zero_add 1
 
-private theorem partialSum_add_const (g : Nat → Real) (c : Real) : ∀ n : Nat,
+theorem partialSum_add_const (g : Nat → Real) (c : Real) : ∀ n : Nat,
     partialSum (fun j => g j + c) n = partialSum g n + natCast n * c
   | 0 => by show (0:Real) = 0 + natCast 0 * c; rw [natCast_zero]; mach_mpoly [c]
   | k + 1 => by
@@ -58,11 +58,11 @@ private theorem partialSum_add_const (g : Nat → Real) (c : Real) : ∀ n : Nat
 
 /-! ## §2 — the drift bound: `[0,a]`'s j-th mesh point is within `q` of `[0,b]`'s -/
 
-private theorem natCast_m_succ (m : Nat) : natCast (m + 1) = natCast m + 1 := by
+theorem natCast_m_succ (m : Nat) : natCast (m + 1) = natCast m + 1 := by
   rw [natCast_add m 1, natCast_one_local2]
 
 /-- `(m+1)·(a/(m+1)) = a`, i.e. dividing by `m+1` and multiplying back cancels. -/
-private theorem mul_div_self_cancel (a : Real) (m : Nat) :
+theorem mul_div_self_cancel (a : Real) (m : Nat) :
     natCast (m + 1) * (a / natCast (m + 1)) = a := by
   have hne : natCast (m + 1) ≠ 0 := ne_of_gt (natCast_pos (by omega))
   rw [div_def a (natCast (m + 1)) hne]
@@ -71,7 +71,7 @@ private theorem mul_div_self_cancel (a : Real) (m : Nat) :
       from by mach_mpoly [natCast (m + 1), a, 1 / natCast (m + 1)]]
   rw [mul_inv (natCast (m + 1)) hne, mul_one_ax]
 
-private theorem a_div_le_q (a q : Real) (m : Nat) (hratio : a ≤ natCast (m + 1) * q) :
+theorem a_div_le_q (a q : Real) (m : Nat) (hratio : a ≤ natCast (m + 1) * q) :
     a / natCast (m + 1) ≤ q := by
   have hne : natCast (m + 1) ≠ 0 := ne_of_gt (natCast_pos (by omega))
   have h1 : a * (1 / natCast (m + 1)) ≤ (natCast (m + 1) * q) * (1 / natCast (m + 1)) :=
@@ -82,7 +82,7 @@ private theorem a_div_le_q (a q : Real) (m : Nat) (hratio : a ≤ natCast (m + 1
   rw [mul_inv (natCast (m + 1)) hne, mul_one_ax] at h1
   rwa [div_def a (natCast (m + 1)) hne]
 
-private theorem drift_bound (a q : Real) (m j : Nat) (hj : j ≤ m)
+theorem drift_bound (a q : Real) (m j : Nat) (hj : j ≤ m)
     (hcross : natCast m * q ≤ a) (hratio : a ≤ natCast (m + 1) * q) :
     natCast j * q - natCast j * (a / natCast (m + 1)) ≤ q := by
   have hnn : (0:Real) ≤ q - a / natCast (m + 1) := sub_nonneg_of_le (a_div_le_q a q m hratio)
@@ -118,25 +118,25 @@ private theorem drift_bound (a q : Real) (m j : Nat) (hj : j ≤ m)
 
 /-! ## §3 — the coarse `[0,b]` extremum bounds the nearby fine `[0,a]` extremum -/
 
-private theorem sub_zero_local (x : Real) : x - 0 = x := by mach_mpoly [x]
+theorem sub_zero_local (x : Real) : x - 0 = x := by mach_mpoly [x]
 
-private theorem meshWidth_zero_base (c : Real) (n : Nat) : meshWidth 0 c n = c / natCast n := by
+theorem meshWidth_zero_base (c : Real) (n : Nat) : meshWidth 0 c n = c / natCast n := by
   show (c - 0) / natCast n = c / natCast n
   rw [sub_zero_local c]
 
-private theorem meshPoint_zero_base (c : Real) (n i : Nat) :
+theorem meshPoint_zero_base (c : Real) (n i : Nat) :
     meshPoint 0 c n i = natCast i * (c / natCast n) := by
   show (0:Real) + natCast i * meshWidth 0 c n = natCast i * (c / natCast n)
   rw [meshWidth_zero_base c n]
   mach_mpoly [natCast i, c / natCast n]
 
-private theorem lt_zero_of_not_nonneg (X : Real) (h : ¬ 0 ≤ X) : X < 0 := by
+theorem lt_zero_of_not_nonneg (X : Real) (h : ¬ 0 ≤ X) : X < 0 := by
   obtain h1 | h1 | h1 := lt_total X 0
   · exact h1
   · exact absurd ((le_iff_lt_or_eq 0 X).mpr (Or.inr h1.symm)) h
   · exact absurd ((le_iff_lt_or_eq 0 X).mpr (Or.inl h1)) h
 
-private theorem lt_of_not_le_mono {x y : Real} (h : ¬ x ≤ y) : y < x := by
+theorem lt_of_not_le_mono {x y : Real} (h : ¬ x ≤ y) : y < x := by
   obtain h1 | h1 | h1 := lt_total x y
   · exact absurd ((le_iff_lt_or_eq x y).mpr (Or.inl h1)) h
   · exact absurd ((le_iff_lt_or_eq x y).mpr (Or.inr h1)) h
@@ -144,7 +144,7 @@ private theorem lt_of_not_le_mono {x y : Real} (h : ¬ x ≤ y) : y < x := by
 
 /-- Extract a one-sided bound from an `abs`-difference bound: the standard "closeness in absolute
 value gives a closeness in each direction" transfer, specialized to the direction this file needs. -/
-private theorem lt_add_of_abs_sub_lt (X Y ε' : Real) (hε'nn : 0 ≤ ε') (h : abs (X - Y) < ε') :
+theorem lt_add_of_abs_sub_lt (X Y ε' : Real) (hε'nn : 0 ≤ ε') (h : abs (X - Y) < ε') :
     X < Y + ε' := by
   unfold abs at h
   by_cases hs : 0 ≤ X - Y
@@ -327,15 +327,15 @@ theorem minSub_nonneg (f : Real → Real) (a b : Real) (hab : a ≤ b)
     rw [dif_neg hi]
     exact hnonneg a (le_refl a) hab
 
-private theorem mul_two_eq_add_self (X : Real) : X * (1 + 1) = X + X := by mach_mpoly [X]
+theorem mul_two_eq_add_self (X : Real) : X * (1 + 1) = X + X := by mach_mpoly [X]
 
-private theorem add_lt_add_both {p q r s : Real} (h1 : p < q) (h2 : r < s) : p + r < q + s := by
+theorem add_lt_add_both {p q r s : Real} (h1 : p < q) (h2 : r < s) : p + r < q + s := by
   have ha := add_lt_add_left h1 r
   rw [show r + p = p + r from by mach_mpoly [p, r], show r + q = q + r from by mach_mpoly [q, r]] at ha
   have hb := add_lt_add_left h2 q
   exact lt_trans_ax ha hb
 
-private theorem zero_lt_of_le_of_ne {a : Real} (h0 : 0 ≤ a) (hne : a ≠ 0) : 0 < a := by
+theorem zero_lt_of_le_of_ne {a : Real} (h0 : 0 ≤ a) (hne : a ≠ 0) : 0 < a := by
   obtain h1 | h1 | h1 := lt_total 0 a
   · exact h1
   · exact absurd h1.symm hne
