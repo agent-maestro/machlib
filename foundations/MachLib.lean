@@ -183,6 +183,7 @@ import MachLib.ExpExpNotInEML1
 import MachLib.ElementaryEML
 import MachLib.ElementaryEMLErf
 import MachLib.RiemannIntegralMonotone
+import MachLib.HeineCantorUniformContinuity
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
