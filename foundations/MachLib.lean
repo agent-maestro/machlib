@@ -436,6 +436,7 @@ import MachLib.ChainExp2ReduceDescent
 import MachLib.CompiledClosedLoop
 import MachLib.EMLWeierstrassGrowthComparison
 import MachLib.EMLWeierstrassTermBound
+import MachLib.Summability
 
 /-!
 # MachLib — top-level aggregator
