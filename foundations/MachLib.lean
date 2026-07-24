@@ -188,6 +188,7 @@ import MachLib.RiemannIntegralContinuous
 import MachLib.RiemannIntegralRefine
 import MachLib.RiemannIntervalMonotone
 import MachLib.RiemannIntegralFTC
+import MachLib.RiemannIntegralTranslation
 import MachLib.GaussianIntegral
 import MachLib.GaussianImproperIntegral
 import MachLib.GaussianRadialIntegral
