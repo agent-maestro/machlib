@@ -321,9 +321,10 @@ private theorem hasDerivAt_scaledAnti (mu c k x : Real) (hck : c * k = 1) :
       gaussianISigned ((x - mu) * k)], hck, one_mul_thm] at hmul
   exact hmul
 
-/-- The scaled kernel `exp(-((x-μ)·k)²)` is continuous. -/
-private theorem continuousAt_scaledKernel (mu k x : Real) :
-    ContinuousAt (fun y => Real.exp (-(((y - mu) * k) * ((y - mu) * k)))) x := by
+/-- The scaled kernel's derivative: `d/dx exp(-((x-μ)·k)²) = -2k²(x-μ)·exp(-((x-μ)·k)²)`. -/
+private theorem hasDerivAt_scaledKernel (mu k x : Real) :
+    HasDerivAt (fun y => Real.exp (-(((y - mu) * k) * ((y - mu) * k))))
+      (Real.exp (-(((x - mu) * k) * ((x - mu) * k))) * -((1 + 1) * ((x - mu) * (k * k)))) x := by
   have hp := hasDerivAt_innerAffine mu k x
   have hpp := HasDerivAt_mul (fun y => (y - mu) * k) (fun y => (y - mu) * k) k k x hp hp
   have hneg := HasDerivAt_neg (fun y => (y - mu) * k * ((y - mu) * k))
@@ -331,7 +332,14 @@ private theorem continuousAt_scaledKernel (mu k x : Real) :
   have hexp := HasDerivAt_comp Real.exp (fun y => -((y - mu) * k * ((y - mu) * k)))
     (-(k * ((x - mu) * k) + (x - mu) * k * k)) (Real.exp (-((x - mu) * k * ((x - mu) * k)))) x
     hneg (HasDerivAt_exp _)
-  exact hasDerivAt_continuousAt hexp
+  rwa [show Real.exp (-((x - mu) * k * ((x - mu) * k))) * -(k * ((x - mu) * k) + (x - mu) * k * k)
+      = Real.exp (-(((x - mu) * k) * ((x - mu) * k))) * -((1 + 1) * ((x - mu) * (k * k))) from by
+    mach_mpoly [Real.exp (-(((x - mu) * k) * ((x - mu) * k))), x, mu, k]] at hexp
+
+/-- The scaled kernel `exp(-((x-μ)·k)²)` is continuous. -/
+private theorem continuousAt_scaledKernel (mu k x : Real) :
+    ContinuousAt (fun y => Real.exp (-(((y - mu) * k) * ((y - mu) * k)))) x :=
+  hasDerivAt_continuousAt (hasDerivAt_scaledKernel mu k x)
 
 /-- The scaled kernel's symmetric finite integral in closed form, by FTC on the everywhere-
 antiderivative. -/
@@ -557,6 +565,55 @@ theorem gaussianDensity_symInt_tendsto_one (mu sig2 : Real) (hsig2 : 0 < sig2) :
       (gaussianISigned ((-R - mu) * (1 / sqrt ((1 + 1) * sig2)))) gaussianImproperIntegral
       (sqrt ((1 + 1) * sig2)) (sqrt pi) (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) hNinv himp)
     hA hB
+
+/-! ## §6 — the Stein-type derivative of the density (S5)
+
+`d/dx gaussianDensity μ σ² x = -((x-μ)/σ²)·gaussianDensity μ σ² x`. Chain rule on the scaled
+kernel (`-2k²(x-μ)` with `k := 1/√(2σ²)`) times the constant normalizer, then `2k² = 1/σ²`. The
+building block for the variance formula (S6). -/
+
+private theorem two_mul_one_div_two_mul {a : Real} (ha : 0 < a) :
+    (1 + 1) * (1 / ((1 + 1) * a)) = 1 / a := by
+  have hne : (1 + 1) * a ≠ 0 := ne_of_gt (mul_pos two_pos ha)
+  apply mul_right_cancel' hne
+  rw [show (1 + 1) * (1 / ((1 + 1) * a)) * ((1 + 1) * a)
+      = (1 + 1) * (1 / ((1 + 1) * a) * ((1 + 1) * a)) from by mach_ring, div_mul_cancel hne,
+    mul_one_ax, show 1 / a * ((1 + 1) * a) = (1 + 1) * (1 / a * a) from by mach_ring,
+    div_mul_cancel (ne_of_gt ha), mul_one_ax]
+
+private theorem two_k_sq_eq {sig2 : Real} (hsig2 : 0 < sig2) :
+    (1 + 1) * (1 / sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2))) = 1 / sig2 := by
+  rw [one_div_mul_one_div (sqrt_pos (two_sig2_pos hsig2)),
+    sqrt_sq_nonneg _ (le_of_lt (two_sig2_pos hsig2))]
+  exact two_mul_one_div_two_mul hsig2
+
+/-- Abstract coefficient identity for the Stein derivative (abstract atoms so `mach_mpoly` avoids
+the shared-`sqrt` overlapping-atom bug). -/
+private theorem stein_coeff_key (E iN xm kk invS : Real) (h : (1 + 1) * kk = invS) :
+    E * -((1 + 1) * (xm * kk)) * iN + E * 0 = -(xm * invS) * (E * iN) := by
+  rw [show (1 + 1) * (xm * kk) = xm * ((1 + 1) * kk) from by mach_mpoly [xm, kk], h]
+  mach_mpoly [E, iN, xm, invS]
+
+theorem hasDerivAt_gaussianDensity (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    HasDerivAt (gaussianDensity mu sig2) (-((x - mu) / sig2) * gaussianDensity mu sig2 x) x := by
+  have hmul := HasDerivAt_mul
+    (fun y => Real.exp (-(((y - mu) * (1 / sqrt ((1 + 1) * sig2)))
+      * ((y - mu) * (1 / sqrt ((1 + 1) * sig2))))))
+    (fun _ => 1 / (sqrt pi * sqrt ((1 + 1) * sig2)))
+    (Real.exp (-(((x - mu) * (1 / sqrt ((1 + 1) * sig2)))
+      * ((x - mu) * (1 / sqrt ((1 + 1) * sig2)))))
+      * -((1 + 1) * ((x - mu) * (1 / sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2))))))
+    0 x (hasDerivAt_scaledKernel mu (1 / sqrt ((1 + 1) * sig2)) x)
+    (HasDerivAt_const (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) x)
+  rw [gaussianDensity_eq_kernel_mul mu sig2 hsig2]
+  rw [stein_coeff_key
+    (Real.exp (-(((x - mu) * (1 / sqrt ((1 + 1) * sig2)))
+      * ((x - mu) * (1 / sqrt ((1 + 1) * sig2))))))
+    (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) (x - mu)
+    (1 / sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2))) (1 / sig2) (two_k_sq_eq hsig2),
+    show -((x - mu) * (1 / sig2)) = -((x - mu) / sig2) from by
+      rw [div_def (x - mu) sig2 (ne_of_gt hsig2)]] at hmul
+  exact hmul
 
 end Real
 end MachLib
