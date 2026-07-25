@@ -198,6 +198,7 @@ import MachLib.GaussianDiskSandwich
 import MachLib.GaussianLaplaceRoute
 import MachLib.RiemannIntegralAddition
 import MachLib.GaussianDensityIntegral
+import MachLib.GaussianConjugacy
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
