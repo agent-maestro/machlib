@@ -413,5 +413,247 @@ theorem eq_of_hasDerivAt_eq_open_of_eq_at_left {f F1 F2 : Real → Real} {a b : 
   rw [half_add_half_laplace ε] at hsum
   exact lt_of_le_of_lt htri hsum
 
+/-! ## §4 — `intUpTo`: a general "`gaussianI`-shaped" total-integral wrapper, reusable for any
+continuous integrand with a global upper bound and nonnegativity. Needed for the linear
+substitution lemma's RHS, and again for the fixed-bounds Leibniz rule. Mirrors `gaussianI`'s own
+construction in `GaussianDiskSandwich.lean` exactly, generalized. -/
+
+noncomputable def intUpTo (g : Real → Real) (hgcont : ∀ x, ContinuousAt g x) (s : Real) : Real :=
+  if h : 0 ≤ s then Classical.choose (continuous_riemann_integrable g 0 s h (fun z _ _ => hgcont z))
+  else 0
+
+theorem intUpTo_eq (g : Real → Real) (hgcont : ∀ x, ContinuousAt g x) (s : Real) (hs : 0 ≤ s) :
+    intUpTo g hgcont s = Classical.choose (continuous_riemann_integrable g 0 s hs
+      (fun z _ _ => hgcont z)) := by
+  show (if h : 0 ≤ s then Classical.choose (continuous_riemann_integrable g 0 s h
+      (fun z _ _ => hgcont z)) else 0)
+      = Classical.choose (continuous_riemann_integrable g 0 s hs (fun z _ _ => hgcont z))
+  rw [dif_pos hs]
+
+theorem intUpTo_zero_eq (g : Real → Real) (hgcont : ∀ x, ContinuousAt g x) :
+    intUpTo g hgcont 0 = 0 := by
+  have hgspec := Classical.choose_spec (continuous_riemann_integrable g 0 0 (le_refl 0)
+    (fun z _ _ => hgcont z))
+  have hupz : upperSumCont g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) = 0 := by
+    show partialSum (maxSub g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0))
+        (2 ^ 0) * meshWidth 0 0 (2 ^ 0) = 0
+    have hw0 : meshWidth 0 0 (2 ^ 0) = 0 := by
+      show ((0:Real) - 0) / natCast (2 ^ 0) = 0
+      rw [sub_self, zero_div]
+    rw [hw0, mul_zero]
+  have hlowz : lowerSumCont g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) = 0 := by
+    show partialSum (minSub g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0))
+        (2 ^ 0) * meshWidth 0 0 (2 ^ 0) = 0
+    have hw0 : meshWidth 0 0 (2 ^ 0) = 0 := by
+      show ((0:Real) - 0) / natCast (2 ^ 0) = 0
+      rw [sub_self, zero_div]
+    rw [hw0, mul_zero]
+  have h1 : lowerSumCont g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)
+      ≤ intUpTo g hgcont 0 := by rw [intUpTo_eq g hgcont 0 (le_refl 0)]; exact (hgspec.1 0).1
+  have h2 : intUpTo g hgcont 0
+      ≤ upperSumCont g 0 0 (le_refl 0) (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) := by
+    rw [intUpTo_eq g hgcont 0 (le_refl 0)]; exact (hgspec.1 0).2
+  rw [hupz] at h2
+  rw [hlowz] at h1
+  exact le_antisymm h2 h1
+
+theorem intUpTo_le_bound_mul {g : Real → Real} (hgcont : ∀ x, ContinuousAt g x) {M : Real}
+    (hgbound : ∀ x, g x ≤ M) (s : Real) (hs : 0 ≤ s) : intUpTo g hgcont s ≤ M * s := by
+  have hgspec := Classical.choose_spec (continuous_riemann_integrable g 0 s hs
+    (fun z _ _ => hgcont z))
+  have h1 : intUpTo g hgcont s
+      ≤ upperSumCont g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) := by
+    rw [intUpTo_eq g hgcont s hs]; exact (hgspec.1 0).2
+  have hmaxle : maxSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 ≤ M :=
+    maxSub_le_global_bound g 0 s hs (fun z _ _ => hgcont z) M (fun z _ _ => hgbound z)
+      (2 ^ 0) (two_pow_pos 0) 0
+  have hus : upperSumCont g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)
+      = maxSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 s (2 ^ 0) := by
+    show partialSum (maxSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0)
+        * meshWidth 0 s (2 ^ 0)
+      = maxSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 s (2 ^ 0)
+    rw [partialSum_one]
+  rw [meshWidth_zero_one_pow] at hus
+  rw [hus] at h1
+  have hbound : maxSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 * s ≤ M * s :=
+    mul_le_mul_of_nonneg_right hmaxle hs
+  exact le_trans h1 hbound
+
+theorem intUpTo_nonneg {g : Real → Real} (hgcont : ∀ x, ContinuousAt g x) (hgnn : ∀ x, 0 ≤ g x)
+    (s : Real) (hs : 0 ≤ s) : 0 ≤ intUpTo g hgcont s := by
+  have hgspec := Classical.choose_spec (continuous_riemann_integrable g 0 s hs
+    (fun z _ _ => hgcont z))
+  have h1 : lowerSumCont g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)
+      ≤ intUpTo g hgcont s := by rw [intUpTo_eq g hgcont s hs]; exact (hgspec.1 0).1
+  have hminge : 0 ≤ minSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 :=
+    minSub_ge_global_bound g 0 s hs (fun z _ _ => hgcont z) 0 (fun z _ _ => hgnn z)
+      (2 ^ 0) (two_pow_pos 0) 0
+  have hls : lowerSumCont g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)
+      = minSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 s (2 ^ 0) := by
+    show partialSum (minSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0)
+        * meshWidth 0 s (2 ^ 0)
+      = minSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 s (2 ^ 0)
+    rw [partialSum_one]
+  rw [hls] at h1
+  have hbound : (0:Real) ≤ minSub g 0 s hs (fun z _ _ => hgcont z) (2 ^ 0) (two_pow_pos 0) 0
+      * meshWidth 0 s (2 ^ 0) := mul_nonneg hminge (meshWidth_nonneg hs (2 ^ 0))
+  exact le_trans hbound h1
+
+theorem intUpTo_continuousAt_zero {g : Real → Real} (hgcont : ∀ x, ContinuousAt g x) {M : Real}
+    (hgbound : ∀ x, g x ≤ M) (hgnn : ∀ x, 0 ≤ g x) (hMnn : 0 ≤ M) :
+    ContinuousAt (intUpTo g hgcont) 0 := by
+  intro ε hε
+  have hM1pos : 0 < M + 1 := add_pos_of_nonneg_pos hMnn one_pos
+  refine ⟨ε / (M + 1), div_pos_of_pos_pos hε hM1pos, ?_⟩
+  intro y hy
+  show abs (intUpTo g hgcont y - intUpTo g hgcont 0) < ε
+  rw [intUpTo_zero_eq, sub_zero]
+  by_cases hy0 : 0 ≤ y
+  · rw [abs_of_nonneg (intUpTo_nonneg hgcont hgnn y hy0)]
+    have hyabs : abs (y - 0) < ε / (M + 1) := hy
+    rw [sub_zero] at hyabs
+    rw [abs_of_nonneg hy0] at hyabs
+    have hbound := intUpTo_le_bound_mul hgcont hgbound y hy0
+    have hMy : M * y ≤ (M + 1) * y :=
+      mul_le_mul_of_nonneg_right (le_add_of_nonneg_right (le_of_lt one_pos)) hy0
+    have hstep : (M + 1) * y < (M + 1) * (ε / (M + 1)) := mul_lt_mul_of_pos_left hyabs hM1pos
+    rw [mul_comm (M + 1) (ε / (M + 1)), div_mul_cancel (ne_of_gt hM1pos)] at hstep
+    exact lt_of_le_of_lt (le_trans hbound hMy) hstep
+  · have hyneg : y < 0 := lt_of_not_le_mono hy0
+    show (if h : 0 ≤ y then Classical.choose (continuous_riemann_integrable g 0 y h
+      (fun z _ _ => hgcont z)) else 0).abs < ε
+    rw [dif_neg hy0, abs_zero]
+    exact hε
+
+theorem intUpTo_hasDerivAt_pos {g : Real → Real} (hgcont : ∀ x, ContinuousAt g x)
+    (hgnn : ∀ x, 0 ≤ g x) (s0 : Real) (hs0 : 0 < s0) :
+    HasDerivAt (intUpTo g hgcont) (g s0) s0 := by
+  have hc0 : (0 : Real) ≤ s0 + 1 := le_trans (le_of_lt hs0) (le_add_of_nonneg_right (le_of_lt one_pos))
+  have hcont_x : ∀ x : Real, 0 ≤ x → x ≤ s0 + 1 → ∀ z : Real, 0 ≤ z → z ≤ x → ContinuousAt g z :=
+    fun _ _ _ z _ _ => hgcont z
+  have hIlow : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ s0 + 1, ∀ k : Nat,
+      lowerSumCont g 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k) ≤ intUpTo g hgcont x := by
+    intro x hx0 hxc k
+    rw [intUpTo_eq g hgcont x hx0]
+    exact (Classical.choose_spec (continuous_riemann_integrable g 0 x hx0
+      (fun z _ _ => hgcont z))).1 k |>.1
+  have hIup : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ s0 + 1, ∀ k : Nat,
+      intUpTo g hgcont x ≤ upperSumCont g 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k) := by
+    intro x hx0 hxc k
+    rw [intUpTo_eq g hgcont x hx0]
+    exact (Classical.choose_spec (continuous_riemann_integrable g 0 x hx0
+      (fun z _ _ => hgcont z))).1 k |>.2
+  have hIgap : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ s0 + 1, ∀ ε : Real, 0 < ε → ∃ k : Nat,
+      upperSumCont g 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont g 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k) < ε :=
+    fun x hx0 _ ε hε => (Classical.choose_spec (continuous_riemann_integrable g 0 x hx0
+      (fun z _ _ => hgcont z))).2 ε hε
+  have hs0_lt : s0 < s0 + 1 := by
+    have h := add_lt_add_left one_pos s0
+    rwa [add_zero] at h
+  exact ftc_part1 g (s0 + 1) hc0 (fun z _ _ => hgcont z) hcont_x (fun z _ _ => hgnn z)
+    (intUpTo g hgcont) hIlow hIup hIgap s0 hs0 hs0_lt
+
+/-! ## §5 — the linear substitution lemma: `gaussianI(t) = t·∫₀¹exp(-(tx)²)dx` -/
+
+/-- `gaussianI` and `intUpTo` applied to the SAME gaussian kernel are definitionally the same
+construction (proof irrelevance makes `Classical.choose` of two proofs of the same proposition
+defeq), so `gaussianI`'s own `HasDerivAt` fact is available for free via `intUpTo_hasDerivAt_pos`. -/
+theorem gaussianI_eq_intUpTo :
+    gaussianI = intUpTo (fun t => Real.exp (-(t * t))) gaussian_continuous := by
+  funext t
+  rfl
+
+theorem gaussianI_zero_eq : gaussianI 0 = 0 := by
+  rw [gaussianI_eq_intUpTo]; exact intUpTo_zero_eq (fun t => Real.exp (-(t * t))) gaussian_continuous
+
+theorem gaussianI_hasDerivAt_pos {t0 : Real} (ht0 : 0 < t0) :
+    HasDerivAt gaussianI (Real.exp (-(t0 * t0))) t0 := by
+  rw [gaussianI_eq_intUpTo]
+  exact intUpTo_hasDerivAt_pos gaussian_continuous (fun z => le_of_lt (exp_pos _)) t0 ht0
+
+theorem hasDerivAt_scaled_gaussian (t x : Real) :
+    HasDerivAt (fun y => Real.exp (-((t * y) * (t * y))))
+      (Real.exp (-((t * x) * (t * x))) * -(t * (t * x) + t * x * t)) x := by
+  have htx : HasDerivAt (fun y => t * y) t x := by
+    have h := HasDerivAt_mul (fun _ => t) (fun y => y) 0 1 x (HasDerivAt_const t x) (HasDerivAt_id x)
+    rwa [show (0:Real) * x + t * 1 = t from by mach_mpoly [t, x]] at h
+  have htx2 : HasDerivAt (fun y => (t * y) * (t * y)) (t * (t * x) + t * x * t) x :=
+    HasDerivAt_mul (fun y => t * y) (fun y => t * y) t t x htx htx
+  have hneg : HasDerivAt (fun y => -((t * y) * (t * y))) (-(t * (t * x) + t * x * t)) x :=
+    HasDerivAt_neg (fun y => (t * y) * (t * y)) (t * (t * x) + t * x * t) x htx2
+  exact HasDerivAt_comp Real.exp (fun y => -((t * y) * (t * y)))
+    (-(t * (t * x) + t * x * t)) (Real.exp (-((t * x) * (t * x)))) x hneg
+    (HasDerivAt_exp (-((t * x) * (t * x))))
+
+theorem hcont_scaled_gaussian (t : Real) :
+    ∀ x, ContinuousAt (fun y => Real.exp (-((t * y) * (t * y)))) x :=
+  fun x => hasDerivAt_continuousAt (hasDerivAt_scaled_gaussian t x)
+
+theorem scaled_gaussian_le_one (t x : Real) : Real.exp (-((t * x) * (t * x))) ≤ 1 := by
+  have h1 : -((t * x) * (t * x)) ≤ 0 := neg_nonpos_of_nonneg (mul_self_nonneg (t * x))
+  have h2 := exp_monotone h1
+  rwa [Real.exp_zero] at h2
+
+/-- **The linear substitution lemma.** `gaussianI(t) = t·∫₀¹exp(-(tx)²)dx` for `t>0`, via
+`eq_of_hasDerivAt_eq_open_of_eq_at_left`: both sides, as functions of `s∈[0,1]` (with `t` fixed),
+have derivative `t·exp(-(ts)²)` on `(0,1]` — the LHS `gaussianI(t·s)` via the chain rule (using
+`gaussianI_hasDerivAt_pos` at the interior point `t·s>0`, needing NO Leibniz rule since `t·s` is
+just `gaussianI`'s own moving upper limit); the RHS `t·K(s)` via `intUpTo_hasDerivAt_pos` applied
+DIRECTLY to `K`'s own defining integrand (again no Leibniz rule — `s` is `K`'s own moving upper
+limit, `t` is a genuinely fixed parameter throughout this lemma). Both sides are `0` at `s=0`. -/
+theorem gaussianI_eq_t_mul_intUpTo (t : Real) (ht : 0 < t) :
+    gaussianI t = t * intUpTo (fun x => Real.exp (-((t * x) * (t * x))))
+      (hcont_scaled_gaussian t) 1 := by
+  have hcontf : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+      ContinuousAt (fun s => t * Real.exp (-((t * s) * (t * s)))) z :=
+    fun z _ _ => continuousAt_mul (continuousAt_const t z) (hcont_scaled_gaussian t z)
+  have hF1 : ∀ z : Real, 0 < z → z ≤ 1 →
+      HasDerivAt (fun s => gaussianI (t * s)) (t * Real.exp (-((t * z) * (t * z)))) z := by
+    intro z hz0 _
+    have htzpos : 0 < t * z := mul_pos ht hz0
+    have htzderiv : HasDerivAt (fun y => t * y) t z := by
+      have h := HasDerivAt_mul (fun _ => t) (fun y => y) 0 1 z (HasDerivAt_const t z) (HasDerivAt_id z)
+      rwa [show (0:Real) * z + t * 1 = t from by mach_mpoly [t, z]] at h
+    have hcomp := HasDerivAt_comp gaussianI (fun y => t * y) t
+      (Real.exp (-((t * z) * (t * z)))) z htzderiv (gaussianI_hasDerivAt_pos htzpos)
+    rwa [mul_comm (Real.exp (-((t * z) * (t * z)))) t] at hcomp
+  have hF2 : ∀ z : Real, 0 < z → z ≤ 1 →
+      HasDerivAt (fun s => t * intUpTo (fun x => Real.exp (-((t * x) * (t * x))))
+        (hcont_scaled_gaussian t) s) (t * Real.exp (-((t * z) * (t * z)))) z := by
+    intro z hz0 _
+    have hK := intUpTo_hasDerivAt_pos (hcont_scaled_gaussian t)
+      (fun x => le_of_lt (exp_pos _)) z hz0
+    have hmul := HasDerivAt_mul (fun _ => t)
+      (intUpTo (fun x => Real.exp (-((t * x) * (t * x)))) (hcont_scaled_gaussian t))
+      0 (Real.exp (-((t * z) * (t * z)))) z (HasDerivAt_const t z) hK
+    rwa [show (0:Real) * intUpTo (fun x => Real.exp (-((t * x) * (t * x))))
+        (hcont_scaled_gaussian t) z + t * Real.exp (-((t * z) * (t * z)))
+        = t * Real.exp (-((t * z) * (t * z))) from by
+      mach_mpoly [intUpTo (fun x => Real.exp (-((t * x) * (t * x)))) (hcont_scaled_gaussian t) z,
+        t, Real.exp (-((t * z) * (t * z)))]] at hmul
+  have hgz : (fun y : Real => t * y) 0 = 0 := by show t * (0:Real) = 0; mach_mpoly [t]
+  have hcontF1 : ContinuousAt (fun s => gaussianI (t * s)) 0 := by
+    have hgcont0 : ContinuousAt (fun y => t * y) 0 := hasDerivAt_continuousAt (by
+      have h := HasDerivAt_mul (fun _ => t) (fun y => y) 0 1 (0:Real) (HasDerivAt_const t 0)
+        (HasDerivAt_id 0)
+      rwa [show (0:Real) * (0:Real) + t * 1 = t from by mach_mpoly [t]] at h)
+    have hfcont0 : ContinuousAt gaussianI (t * 0) := by
+      rw [show t * (0:Real) = 0 from by mach_mpoly [t]]
+      exact gaussianI_continuousAt_zero
+    exact continuousAt_comp hgcont0 hfcont0
+  have hcontF2 : ContinuousAt (fun s => t * intUpTo (fun x => Real.exp (-((t * x) * (t * x))))
+      (hcont_scaled_gaussian t) s) 0 := by
+    have hKcont0 := intUpTo_continuousAt_zero (hcont_scaled_gaussian t)
+      (fun x => scaled_gaussian_le_one t x) (fun x => le_of_lt (exp_pos _)) (le_of_lt one_pos)
+    exact continuousAt_mul (continuousAt_const t 0) hKcont0
+  have hstart : gaussianI (t * 0) = t * intUpTo (fun x => Real.exp (-((t * x) * (t * x))))
+      (hcont_scaled_gaussian t) 0 := by
+    rw [show t * (0:Real) = 0 from by mach_mpoly [t], gaussianI_zero_eq,
+      intUpTo_zero_eq (fun x => Real.exp (-((t * x) * (t * x)))) (hcont_scaled_gaussian t),
+      mul_zero]
+  have hconcl := eq_of_hasDerivAt_eq_open_of_eq_at_left one_pos hcontf hF1 hF2 hcontF1 hcontF2 hstart
+  rwa [mul_one_ax] at hconcl
+
 end Real
 end MachLib
