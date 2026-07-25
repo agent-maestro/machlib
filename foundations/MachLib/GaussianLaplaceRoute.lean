@@ -1126,5 +1126,618 @@ theorem GFn_pointwise_bound {t0 T L : Real} (hTpos : 0 < T) (ht0T : abs t0 ≤ T
   have hfinal := le_trans (mul_le_mul_of_nonneg_right hlip hqpnn) hstep1
   rwa [← hLeq] at hfinal
 
+/-! ## §12 — `GFn`/`GderivFn` sandwich + gap access, exposing their `Classical.choose_spec`
+directly (mirrors the `intUpTo_hasDerivAt_pos` idiom). -/
+
+theorem GFn_sandwich (t : Real) (k : Nat) :
+    lowerSumCont (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_p t z) (2 ^ k) (two_pow_pos k) ≤ GFn t
+      ∧ GFn t ≤ upperSumCont (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_p t z) (2 ^ k) (two_pow_pos k) := by
+  unfold GFn
+  exact (Classical.choose_spec (continuous_riemann_integrable
+    (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+    (fun z _ _ => hcont_p t z))).1 k
+
+theorem GFn_gap (t ε : Real) (hε : 0 < ε) : ∃ k : Nat,
+    upperSumCont (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_p t z) (2 ^ k) (two_pow_pos k)
+      - lowerSumCont (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_p t z) (2 ^ k) (two_pow_pos k) < ε :=
+  (Classical.choose_spec (continuous_riemann_integrable
+    (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+    (fun z _ _ => hcont_p t z))).2 ε hε
+
+theorem GderivFn_sandwich (t : Real) (k : Nat) :
+    lowerSumCont (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_q t z) (2 ^ k) (two_pow_pos k) ≤ GderivFn t
+      ∧ GderivFn t ≤ upperSumCont (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t z) (2 ^ k) (two_pow_pos k) := by
+  unfold GderivFn
+  exact (Classical.choose_spec (continuous_riemann_integrable
+    (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+    (fun z _ _ => hcont_q t z))).1 k
+
+theorem GderivFn_gap (t ε : Real) (hε : 0 < ε) : ∃ k : Nat,
+    upperSumCont (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_q t z) (2 ^ k) (two_pow_pos k)
+      - lowerSumCont (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t z) (2 ^ k) (two_pow_pos k) < ε :=
+  (Classical.choose_spec (continuous_riemann_integrable
+    (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+    (fun z _ _ => hcont_q t z))).2 ε hε
+
+/-! ## §13 — `continuousAt_add`, the last generic continuity combinator needed (standard ε/2+ε/2
+triangle-inequality argument — simpler than `continuousAt_mul`, no products to bound). -/
+
+private theorem add_sub_add_split (fy gy fx gx : Real) :
+    fy + gy - (fx + gx) = (fy - fx) + (gy - gx) := by
+  mach_mpoly [fy, gy, fx, gx]
+
+theorem continuousAt_add {f g : Real → Real} {x : Real} (hf : ContinuousAt f x)
+    (hg : ContinuousAt g x) : ContinuousAt (fun y => f y + g y) x := by
+  intro ε hε
+  have hε2 : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  obtain ⟨δf, hδfpos, hδf⟩ := hf (ε / (1 + 1)) hε2
+  obtain ⟨δg, hδgpos, hδg⟩ := hg (ε / (1 + 1)) hε2
+  refine ⟨min δf δg, lt_min_of_lt_of_lt hδfpos hδgpos, ?_⟩
+  intro y hy
+  have hyf : abs (y - x) < δf := lt_of_lt_of_le hy (min_le_left δf δg)
+  have hyg : abs (y - x) < δg := lt_of_lt_of_le hy (min_le_right δf δg)
+  have h1 := hδf y hyf
+  have h2 := hδg y hyg
+  show abs (f y + g y - (f x + g x)) < ε
+  rw [add_sub_add_split (f y) (g y) (f x) (g x)]
+  have htri := abs_add (f y - f x) (g y - g x)
+  have hsum : abs (f y - f x) + abs (g y - g x) < ε / (1 + 1) + ε / (1 + 1) := add_lt_add_both h1 h2
+  rw [half_add_half_laplace ε] at hsum
+  exact lt_of_le_of_lt htri hsum
+
+private theorem neg_sub_neg_split (fy fx : Real) : -fy - -fx = -(fy - fx) := by mach_mpoly [fy, fx]
+
+theorem continuousAt_neg {f : Real → Real} {x : Real} (hf : ContinuousAt f x) :
+    ContinuousAt (fun y => -f y) x := by
+  intro ε hε
+  obtain ⟨δ, hδpos, hδ⟩ := hf ε hε
+  refine ⟨δ, hδpos, ?_⟩
+  intro y hy
+  show abs (-f y - -f x) < ε
+  rw [neg_sub_neg_split (f y) (f x), abs_neg]
+  exact hδ y hy
+
+/-! ## §14 — algebra + Darboux-sum "affine combine" helpers for the Leibniz eps-delta argument
+
+Four one-directional algebra lemmas convert the `abs (A-B-C) ≤ D` shape produced by
+`GFn_pointwise_bound` into the two bound directions needed with EITHER `A` or `B` isolated
+(the two branches `t0 < y` / `y < t0` need opposite isolations — see `GFn_diff_bound` below).
+Plus two Darboux-sum lemmas specialised to `[0,1]` that combine a base function, a linear-in-`x`
+correction `m(x)·c` (`c ≥ 0`), and a constant `M` into a single upper/lower Darboux-sum bound —
+built from `upperSumCont_add_le`/`lowerSumCont_add_ge`, `upperSumCont_mul_const`/
+`lowerSumCont_mul_const`, and `upperSumCont_const_eq`/`lowerSumCont_const_eq`. -/
+
+private theorem le_add_of_sub_sub_le (A B C D : Real) (h : A - B - C ≤ D) : A ≤ B + C + D := by
+  have h2 := add_le_add_both h (le_refl (B + C))
+  rwa [show A - B - C + (B + C) = A from by mach_mpoly [A, B, C],
+    show D + (B + C) = B + C + D from by mach_mpoly [B, C, D]] at h2
+
+private theorem add_sub_le_of_neg_le_sub_sub (A B C D : Real) (h : -D ≤ A - B - C) :
+    B + C + -D ≤ A := by
+  have h2 := add_le_add_both h (le_refl (B + C))
+  rwa [show -D + (B + C) = B + C + -D from by mach_mpoly [B, C, D],
+    show A - B - C + (B + C) = A from by mach_mpoly [A, B, C]] at h2
+
+private theorem sub_sub_le_of_le' (A B C D : Real) (h : A - B - C ≤ D) : A + -C + -D ≤ B := by
+  have h2 := add_le_add_both h (le_refl (B + -D))
+  rwa [show A - B - C + (B + -D) = A + -C + -D from by mach_mpoly [A, B, C, D],
+    show D + (B + -D) = B from by mach_mpoly [B, D]] at h2
+
+private theorem neg_le_sub_sub_of_le' (A B C D : Real) (h : -D ≤ A - B - C) : B ≤ A + -C + D := by
+  have h2 := add_le_add_both h (le_refl (B + D))
+  rwa [show -D + (B + D) = B from by mach_mpoly [B, D],
+    show A - B - C + (B + D) = A + -C + D from by mach_mpoly [A, B, C, D]] at h2
+
+private theorem upperSumCont_const_eq01 (c : Real)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun _ : Real => c) z) (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun _ : Real => c) 0 1 (le_of_lt one_pos) hcont n hn = c := by
+  rw [upperSumCont_const_eq c 0 1 (le_of_lt one_pos) hcont n hn, sub_zero, mul_one_ax]
+
+private theorem lowerSumCont_const_eq01 (c : Real)
+    (hcont : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun _ : Real => c) z) (n : Nat) (hn : 0 < n) :
+    lowerSumCont (fun _ : Real => c) 0 1 (le_of_lt one_pos) hcont n hn = c := by
+  rw [lowerSumCont_const_eq c 0 1 (le_of_lt one_pos) hcont n hn, sub_zero, mul_one_ax]
+
+private theorem upperSumCont_affine01_le {h m : Real → Real} {c M : Real} (hc : 0 ≤ c)
+    (hcont_h : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt h z)
+    (hcont_m : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt m z)
+    (hcont_mc : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => m x * c) z)
+    (hcont_hm : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => h x + m x * c) z)
+    (hcont_M : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun _ : Real => M) z)
+    (hcont_g : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => h x + m x * c + M) z)
+    (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun x => h x + m x * c + M) 0 1 (le_of_lt one_pos) hcont_g n hn
+      ≤ upperSumCont h 0 1 (le_of_lt one_pos) hcont_h n hn
+        + upperSumCont m 0 1 (le_of_lt one_pos) hcont_m n hn * c + M := by
+  have h1 := upperSumCont_add_le (le_of_lt one_pos) hcont_hm hcont_M hcont_g n hn
+  rw [upperSumCont_const_eq01 M hcont_M n hn] at h1
+  have h2 := upperSumCont_add_le (le_of_lt one_pos) hcont_h hcont_mc hcont_hm n hn
+  rw [upperSumCont_mul_const hc (le_of_lt one_pos) hcont_m hcont_mc n hn] at h2
+  exact le_trans h1 (add_le_add_both h2 (le_refl M))
+
+private theorem lowerSumCont_affine01_ge {h m : Real → Real} {c M : Real} (hc : 0 ≤ c)
+    (hcont_h : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt h z)
+    (hcont_m : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt m z)
+    (hcont_mc : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => m x * c) z)
+    (hcont_hm : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => h x + m x * c) z)
+    (hcont_M : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun _ : Real => M) z)
+    (hcont_g : ∀ z : Real, 0 ≤ z → z ≤ 1 → ContinuousAt (fun x => h x + m x * c + M) z)
+    (n : Nat) (hn : 0 < n) :
+    lowerSumCont h 0 1 (le_of_lt one_pos) hcont_h n hn
+        + lowerSumCont m 0 1 (le_of_lt one_pos) hcont_m n hn * c + M
+      ≤ lowerSumCont (fun x => h x + m x * c + M) 0 1 (le_of_lt one_pos) hcont_g n hn := by
+  have h1 := lowerSumCont_add_ge (le_of_lt one_pos) hcont_h hcont_mc hcont_hm n hn
+  rw [lowerSumCont_mul_const hc (le_of_lt one_pos) hcont_m hcont_mc n hn] at h1
+  have h2 := lowerSumCont_add_ge (le_of_lt one_pos) hcont_hm hcont_M hcont_g n hn
+  rw [lowerSumCont_const_eq01 M hcont_M n hn] at h2
+  exact le_trans (add_le_add_both h1 (le_refl M)) h2
+
+/-- The converse direction of `le_add_of_sub_sub_le`: needed once the Darboux-sum chain has
+produced a bound of the shape `A ≤ B+C+D` and the target goal wants it back in `A-B-C≤D` form. -/
+private theorem sub_sub_le_of_le_add (A B C D : Real) (h : A ≤ B + C + D) : A - B - C ≤ D := by
+  have h2 := add_le_add_both h (le_refl (-B + -C))
+  rwa [show B + C + D + (-B + -C) = D from by mach_mpoly [B, C, D],
+    show A + (-B + -C) = A - B - C from by mach_mpoly [A, B, C]] at h2
+
+/-- Shape `P+Q+(-R) ≤ S`, needed for the lower-bound direction (`GderivFn`'s `-εg` correction
+lands as an ADDED negative, not a subtraction, once distributed). -/
+private theorem add_neg_le_of_le (P Q R S : Real) (h : P + Q + -R ≤ S) : -R ≤ S - P - Q := by
+  have h2 := add_le_add_both h (le_refl (-P + -Q))
+  rwa [show P + Q + -R + (-P + -Q) = -R from by mach_mpoly [P, Q, R],
+    show S + (-P + -Q) = S - P - Q from by mach_mpoly [P, Q, S]] at h2
+
+/-- **The gap-controlled upper bound**: if the Darboux gap at level `k` is `< εg` and `L ≤ I`
+(the value's own lower-sum sandwich), then `U ≤ I + εg`. Generic in `U,L,I,εg` — reused for both
+`p(t0,·)`/`GFn t0` and `q(t0,·)`/`GderivFn t0`. -/
+private theorem upperSum_le_add_gap {U L I εg : Real} (hgap : U - L < εg) (hL : L ≤ I) :
+    U ≤ I + εg := by
+  have h1 := add_le_add_both (le_of_lt hgap) hL
+  rwa [show U - L + L = U from by mach_mpoly [U, L], show εg + I = I + εg from by mach_mpoly [εg, I]]
+    at h1
+
+/-- The mirror gap-controlled LOWER bound: `I - εg ≤ L`. -/
+private theorem sub_gap_le_lowerSum {U L I εg : Real} (hgap : U - L < εg) (hU : I ≤ U) :
+    I - εg ≤ L := by
+  have h1 : I - εg ≤ U - εg := by
+    have h2 := add_le_add_both hU (le_refl (-εg))
+    rwa [show I + -εg = I - εg from by mach_mpoly [I, εg],
+      show U + -εg = U - εg from by mach_mpoly [U, εg]] at h2
+  have h3 : U - εg ≤ L := by
+    have h4 := add_le_add_both (le_of_lt hgap) (le_refl (L - εg))
+    rwa [show U - L + (L - εg) = U - εg from by mach_mpoly [U, L, εg],
+      show εg + (L - εg) = L from by mach_mpoly [εg, L]] at h4
+  exact le_trans h1 h3
+
+/-! ## §14b — Darboux-sum negation duality (`maxSub(-f) = -minSub f`, lifted to `upperSumCont`)
+
+Needed for the `y < t0` branch of `GFn_diff_bound`: `qFn_lipschitz`'s gap/sandwich hypotheses are
+stated for `q(t0,·)`, but that branch's affine correction term needs `m := -q(t0,·)` (the sign
+flips because `t0` is now the RIGHT endpoint of the MVT interval). Rather than re-deriving a
+separate gap/sandwich story for `m`, transport the existing `q(t0,·)` ones across via this duality
+— `maxSub`/`minSub` swap under negation by the same "cross-comparison via `le_antisymm`" technique
+as `maxSub_mul_const` (`GaussianDiskSandwich.lean` §7). -/
+
+private theorem le_of_neg_le_neg_laplace {a b : Real} (h : -b ≤ -a) : a ≤ b := by
+  have h2 := add_le_add_both h (le_refl (a + b))
+  rwa [show -b + (a + b) = a from by mach_mpoly [a, b],
+    show -a + (a + b) = b from by mach_mpoly [a, b]] at h2
+
+private theorem maxSub_neg_eq {f : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -f x) z)
+    (n : Nat) (hn : 0 < n) (i : Nat) :
+    maxSub (fun x => -f x) a b hab hcont' n hn i = -minSub f a b hab hcont n hn i := by
+  by_cases hi : i < n
+  · rw [maxSub_eq (fun x => -f x) a b hab hcont' n hn i hi, minSub_eq f a b hab hcont n hn i hi]
+    obtain ⟨h1lo, h1hi, h1max⟩ :=
+      Classical.choose_spec (evt_exists_max (fun x => -f x) a b hab hcont' n hn i hi)
+    obtain ⟨h2lo, h2hi, h2min⟩ := Classical.choose_spec (evt_exists_min f a b hab hcont n hn i hi)
+    have hcross1 := le_of_neg_le_neg_laplace (h1max _ h2lo h2hi)
+    have hcross2 := h2min _ h1lo h1hi
+    rw [le_antisymm hcross1 hcross2]
+  · unfold maxSub minSub
+    rw [dif_neg hi, dif_neg hi]
+
+private theorem minSub_neg_eq {f : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -f x) z)
+    (n : Nat) (hn : 0 < n) (i : Nat) :
+    minSub (fun x => -f x) a b hab hcont' n hn i = -maxSub f a b hab hcont n hn i := by
+  by_cases hi : i < n
+  · rw [minSub_eq (fun x => -f x) a b hab hcont' n hn i hi, maxSub_eq f a b hab hcont n hn i hi]
+    obtain ⟨h1lo, h1hi, h1min⟩ :=
+      Classical.choose_spec (evt_exists_min (fun x => -f x) a b hab hcont' n hn i hi)
+    obtain ⟨h2lo, h2hi, h2max⟩ := Classical.choose_spec (evt_exists_max f a b hab hcont n hn i hi)
+    have hcross1 := h2max _ h1lo h1hi
+    have hcross2 := le_of_neg_le_neg_laplace (h1min _ h2lo h2hi)
+    rw [le_antisymm hcross1 hcross2]
+  · unfold minSub maxSub
+    rw [dif_neg hi, dif_neg hi]
+
+private theorem partialSum_neg_termwise (g : Nat → Real) :
+    ∀ n, partialSum (fun i => -g i) n = -partialSum g n
+  | 0 => by show (0 : Real) = -(0 : Real); rw [neg_zero]
+  | k + 1 => by
+      rw [partialSum_succ, partialSum_succ, partialSum_neg_termwise g k]
+      show -partialSum g k + -g k = -(partialSum g k + g k)
+      mach_mpoly [partialSum g k, g k]
+
+theorem upperSumCont_neg_eq {f : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -f x) z)
+    (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun x => -f x) a b hab hcont' n hn = -lowerSumCont f a b hab hcont n hn := by
+  show partialSum (maxSub (fun x => -f x) a b hab hcont' n hn) n * meshWidth a b n
+      = -(partialSum (minSub f a b hab hcont n hn) n * meshWidth a b n)
+  rw [partialSum_congr (fun i => maxSub_neg_eq hab hcont hcont' n hn i) n,
+    partialSum_neg_termwise (minSub f a b hab hcont n hn) n]
+  mach_mpoly [partialSum (minSub f a b hab hcont n hn) n, meshWidth a b n]
+
+theorem lowerSumCont_neg_eq {f : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -f x) z)
+    (n : Nat) (hn : 0 < n) :
+    lowerSumCont (fun x => -f x) a b hab hcont' n hn = -upperSumCont f a b hab hcont n hn := by
+  show partialSum (minSub (fun x => -f x) a b hab hcont' n hn) n * meshWidth a b n
+      = -(partialSum (maxSub f a b hab hcont n hn) n * meshWidth a b n)
+  rw [partialSum_congr (fun i => minSub_neg_eq hab hcont hcont' n hn i) n,
+    partialSum_neg_termwise (maxSub f a b hab hcont n hn) n]
+  mach_mpoly [partialSum (maxSub f a b hab hcont n hn) n, meshWidth a b n]
+
+/-! ## §15 — `GFn_diff_bound`: the pointwise MVT+Lipschitz bound (`GFn_pointwise_bound`) lifted to
+an actual bound on `GFn y - GFn t0 - GderivFn t0·(y-t0)`, via the Darboux-sum sandwiches for
+`GFn t0`/`GderivFn t0` (gap-controlled at a caller-chosen level `k`) and `GFn y` (any level).
+Case-splits on `t0 ≶ y` internally — the two directions genuinely differ (which endpoint is
+"known/gap-controlled" vs "unknown" flips), so the two branches are mirror images, not literally
+the same code. -/
+
+theorem GFn_diff_bound {t0 T L : Real} (hTpos : 0 < T) (ht0T : abs t0 ≤ T)
+    (hLeq : L = (1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T)
+    (y : Real) (hyT : abs y ≤ T) (εg : Real) (hεg : 0 < εg) (k : Nat)
+    (hgapP : upperSumCont (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_p t0 z) (2 ^ k) (two_pow_pos k)
+      - lowerSumCont (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_p t0 z) (2 ^ k) (two_pow_pos k) < εg)
+    (hgapQ : upperSumCont (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) (2 ^ k) (two_pow_pos k)
+      - lowerSumCont (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) (2 ^ k) (two_pow_pos k) < εg) :
+    abs (GFn y - GFn t0 - GderivFn t0 * (y - t0))
+      ≤ εg + εg * abs (y - t0) + L * abs (y - t0) * abs (y - t0) := by
+  have hGFnT0 := GFn_sandwich t0 k
+  have hGderivT0 := GderivFn_sandwich t0 k
+  rcases lt_total t0 y with hlt | heq | hlt
+  · -- t0 < y : p := t0, q := y
+    rw [abs_of_nonneg (sub_nonneg_of_le (le_of_lt hlt))]
+    have hqpnn : (0 : Real) ≤ y - t0 := sub_nonneg_of_le (le_of_lt hlt)
+    have hGFnY := GFn_sandwich y k
+    have hpt : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        abs (Real.exp (-(y * y * (1 + x * x))) * kFn x
+            - Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            - -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0))
+          ≤ L * (y - t0) * (y - t0) :=
+      fun x hx0 hx1 => GFn_pointwise_bound hTpos ht0T hLeq t0 ht0T x hx0 hx1 t0 y hlt (Or.inl rfl)
+        ht0T hyT
+    have hptU : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        Real.exp (-(y * y * (1 + x * x))) * kFn x
+          ≤ Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            + -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)
+            + L * (y - t0) * (y - t0) :=
+      fun x hx0 hx1 => le_add_of_sub_sub_le _ _ _ _ (abs_le_iff.mp (hpt x hx0 hx1)).2
+    have hptL : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            + -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)
+            + -(L * (y - t0) * (y - t0))
+          ≤ Real.exp (-(y * y * (1 + x * x))) * kFn x :=
+      fun x hx0 hx1 => add_sub_le_of_neg_le_sub_sub _ _ _ _ (abs_le_iff.mp (hpt x hx0 hx1)).1
+    have hcont_h : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) z :=
+      fun z _ _ => hcont_p t0 z
+    have hcont_m : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) z :=
+      fun z _ _ => hcont_q t0 z
+    have hcont_mc : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)) z :=
+      fun z _ _ => continuousAt_mul (hcont_q t0 z) (continuousAt_const (y - t0) z)
+    have hcont_hm : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_p t0 z) (hcont_mc z hz0 hz1)
+    have hcont_M : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun _ : Real => L * (y - t0) * (y - t0)) z :=
+      fun z _ _ => continuousAt_const (L * (y - t0) * (y - t0)) z
+    have hcont_g : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)
+          + L * (y - t0) * (y - t0)) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_hm z hz0 hz1) (hcont_M z hz0 hz1)
+    have hcont_negM : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun _ : Real => -(L * (y - t0) * (y - t0))) z :=
+      fun z _ _ => continuousAt_const (-(L * (y - t0) * (y - t0))) z
+    have hcont_gL : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (y - t0)
+          + -(L * (y - t0) * (y - t0))) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_hm z hz0 hz1) (hcont_negM z hz0 hz1)
+    have hcont_y : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(y * y * (1 + x * x))) * kFn x) z :=
+      fun z _ _ => hcont_p y z
+    have hUp1 := upperSumCont_le_of_pointwise_le (le_of_lt one_pos) hcont_y hcont_g hptU (2 ^ k)
+      (two_pow_pos k)
+    have hUp2 := upperSumCont_affine01_le hqpnn hcont_h hcont_m hcont_mc hcont_hm hcont_M hcont_g
+      (2 ^ k) (two_pow_pos k)
+    have hUp := le_trans hUp1 hUp2
+    have hLow1 := lowerSumCont_le_of_pointwise_le (le_of_lt one_pos) hcont_gL hcont_y hptL (2 ^ k)
+      (two_pow_pos k)
+    have hLow2 := lowerSumCont_affine01_ge hqpnn hcont_h hcont_m hcont_mc hcont_hm hcont_negM
+      hcont_gL (2 ^ k) (two_pow_pos k)
+    have hLow := le_trans hLow2 hLow1
+    have hUP_P := upperSum_le_add_gap hgapP hGFnT0.1
+    have hUP_Q := upperSum_le_add_gap hgapQ hGderivT0.1
+    have hcombineUp := add_le_add_both (add_le_add_both hUP_P (mul_le_mul_of_nonneg_right hUP_Q
+      hqpnn)) (le_refl (L * (y - t0) * (y - t0)))
+    have hUpFinal := le_trans hGFnY.2 (le_trans hUp hcombineUp)
+    rw [show (GFn t0 + εg) + (GderivFn t0 + εg) * (y - t0) + L * (y - t0) * (y - t0)
+        = GFn t0 + GderivFn t0 * (y - t0) + (εg + εg * (y - t0) + L * (y - t0) * (y - t0))
+        from by mach_mpoly [GFn t0, GderivFn t0, εg, y, t0, L]] at hUpFinal
+    have hUpper := sub_sub_le_of_le_add _ _ _ _ hUpFinal
+    have hLOW_P := sub_gap_le_lowerSum hgapP hGFnT0.2
+    have hLOW_Q := sub_gap_le_lowerSum hgapQ hGderivT0.2
+    have hcombineLow := add_le_add_both (add_le_add_both hLOW_P (mul_le_mul_of_nonneg_right hLOW_Q
+      hqpnn)) (le_refl (-(L * (y - t0) * (y - t0))))
+    have hLowFinal := le_trans hcombineLow (le_trans hLow hGFnY.1)
+    rw [show (GFn t0 - εg) + (GderivFn t0 - εg) * (y - t0) + -(L * (y - t0) * (y - t0))
+        = GFn t0 + GderivFn t0 * (y - t0) + -(εg + εg * (y - t0) + L * (y - t0) * (y - t0))
+        from by mach_mpoly [GFn t0, GderivFn t0, εg, y, t0, L]] at hLowFinal
+    have hLower := add_neg_le_of_le _ _ _ _ hLowFinal
+    exact abs_le_iff.mpr ⟨hLower, hUpper⟩
+  · rw [← heq]
+    rw [show GFn t0 - GFn t0 - GderivFn t0 * (t0 - t0) = 0 from by
+      mach_mpoly [GFn t0, GderivFn t0, t0]]
+    rw [abs_zero]
+    have hLnn : 0 ≤ L := by
+      rw [hLeq]
+      exact le_of_lt (lt_of_lt_of_le two_pos (le_add_of_nonneg_right (mul_nonneg
+        (mul_nonneg (le_of_lt eight_pos_laplace) (le_of_lt hTpos)) (le_of_lt hTpos))))
+    exact add_nonneg (add_nonneg (le_of_lt hεg) (mul_nonneg (le_of_lt hεg) (abs_nonneg _)))
+      (mul_nonneg (mul_nonneg hLnn (abs_nonneg _)) (abs_nonneg _))
+  · -- y < t0 : p := y, q := t0
+    have hyt0neg : y - t0 < 0 := by
+      have h := add_lt_add_left hlt (-t0)
+      rwa [show -t0 + y = y - t0 from by mach_mpoly [t0, y], neg_add_self t0] at h
+    have habsflip : abs (y - t0) = t0 - y := by
+      rw [iv_aon hyt0neg, show -(y - t0) = t0 - y from by mach_mpoly [t0, y]]
+    rw [habsflip]
+    have hqpnn : (0 : Real) ≤ t0 - y := sub_nonneg_of_le (le_of_lt hlt)
+    have hGFnY := GFn_sandwich y k
+    have hpt : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        abs (Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            - Real.exp (-(y * y * (1 + x * x))) * kFn x
+            - -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (t0 - y))
+          ≤ L * (t0 - y) * (t0 - y) :=
+      fun x hx0 hx1 => GFn_pointwise_bound hTpos ht0T hLeq t0 ht0T x hx0 hx1 y t0 hlt (Or.inr rfl)
+        hyT ht0T
+    have hptU : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        Real.exp (-(y * y * (1 + x * x))) * kFn x
+          ≤ Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            + -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+            + L * (t0 - y) * (t0 - y) := by
+      intro x hx0 hx1
+      have h := neg_le_sub_sub_of_le' _ _ _ _ (abs_le_iff.mp (hpt x hx0 hx1)).1
+      rwa [show -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (t0 - y))
+          = -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+          from by mach_mpoly [t0, x, (t0 - y : Real), Real.exp (-(t0 * t0 * (1 + x * x)))]] at h
+    have hptL : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+        Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+            + -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+            + -(L * (t0 - y) * (t0 - y))
+          ≤ Real.exp (-(y * y * (1 + x * x))) * kFn x := by
+      intro x hx0 hx1
+      have h := sub_sub_le_of_le' _ _ _ _ (abs_le_iff.mp (hpt x hx0 hx1)).2
+      rwa [show -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (t0 - y))
+          = -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+          from by mach_mpoly [t0, x, (t0 - y : Real), Real.exp (-(t0 * t0 * (1 + x * x)))]] at h
+    have hcont_h : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) z :=
+      fun z _ _ => hcont_p t0 z
+    have hcont_m : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))))) z :=
+      fun z _ _ => continuousAt_neg (hcont_q t0 z)
+    have hcont_mc : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)) z :=
+      fun z hz0 hz1 => continuousAt_mul (hcont_m z hz0 hz1) (continuousAt_const (t0 - y) z)
+    have hcont_hm : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_p t0 z) (hcont_mc z hz0 hz1)
+    have hcont_M : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun _ : Real => L * (t0 - y) * (t0 - y)) z :=
+      fun z _ _ => continuousAt_const (L * (t0 - y) * (t0 - y)) z
+    have hcont_g : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+          + L * (t0 - y) * (t0 - y)) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_hm z hz0 hz1) (hcont_M z hz0 hz1)
+    have hcont_negM : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun _ : Real => -(L * (t0 - y) * (t0 - y))) z :=
+      fun z _ _ => continuousAt_const (-(L * (t0 - y) * (t0 - y))) z
+    have hcont_gL : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x
+          + -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) * (t0 - y)
+          + -(L * (t0 - y) * (t0 - y))) z :=
+      fun z hz0 hz1 => continuousAt_add (hcont_hm z hz0 hz1) (hcont_negM z hz0 hz1)
+    have hcont_y : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+        ContinuousAt (fun x => Real.exp (-(y * y * (1 + x * x))) * kFn x) z :=
+      fun z _ _ => hcont_p y z
+    have hUp1 := upperSumCont_le_of_pointwise_le (le_of_lt one_pos) hcont_y hcont_g hptU (2 ^ k)
+      (two_pow_pos k)
+    have hUp2 := upperSumCont_affine01_le hqpnn hcont_h hcont_m hcont_mc hcont_hm hcont_M hcont_g
+      (2 ^ k) (two_pow_pos k)
+    have hUp := le_trans hUp1 hUp2
+    have hLow1 := lowerSumCont_le_of_pointwise_le (le_of_lt one_pos) hcont_gL hcont_y hptL (2 ^ k)
+      (two_pow_pos k)
+    have hLow2 := lowerSumCont_affine01_ge hqpnn hcont_h hcont_m hcont_mc hcont_hm hcont_negM
+      hcont_gL (2 ^ k) (two_pow_pos k)
+    have hLow := le_trans hLow2 hLow1
+    have hUP_P := upperSum_le_add_gap hgapP hGFnT0.1
+    have hUP_M : upperSumCont (fun x => -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))))) 0 1
+        (le_of_lt one_pos) hcont_m (2 ^ k) (two_pow_pos k) ≤ -GderivFn t0 + εg := by
+      rw [upperSumCont_neg_eq (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) hcont_m (2 ^ k)
+        (two_pow_pos k)]
+      have h2 := neg_le_neg (sub_gap_le_lowerSum hgapQ hGderivT0.2)
+      rwa [show -(GderivFn t0 - εg) = -GderivFn t0 + εg from by mach_mpoly [GderivFn t0, εg]] at h2
+    have hcombineUp := add_le_add_both (add_le_add_both hUP_P (mul_le_mul_of_nonneg_right hUP_M
+      hqpnn)) (le_refl (L * (t0 - y) * (t0 - y)))
+    have hUpFinal := le_trans hGFnY.2 (le_trans hUp hcombineUp)
+    rw [show (GFn t0 + εg) + (-GderivFn t0 + εg) * (t0 - y) + L * (t0 - y) * (t0 - y)
+        = GFn t0 + GderivFn t0 * (y - t0) + (εg + εg * (t0 - y) + L * (t0 - y) * (t0 - y))
+        from by mach_mpoly [GFn t0, GderivFn t0, εg, y, t0, L]] at hUpFinal
+    have hUpper := sub_sub_le_of_le_add _ _ _ _ hUpFinal
+    have hLOW_P := sub_gap_le_lowerSum hgapP hGFnT0.2
+    have hLOW_M : -GderivFn t0 - εg
+        ≤ lowerSumCont (fun x => -(-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))))) 0 1
+          (le_of_lt one_pos) hcont_m (2 ^ k) (two_pow_pos k) := by
+      rw [lowerSumCont_neg_eq (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) hcont_m (2 ^ k)
+        (two_pow_pos k)]
+      have h2 := neg_le_neg (upperSum_le_add_gap hgapQ hGderivT0.1)
+      rwa [show -(GderivFn t0 + εg) = -GderivFn t0 - εg from by mach_mpoly [GderivFn t0, εg]] at h2
+    have hcombineLow := add_le_add_both (add_le_add_both hLOW_P (mul_le_mul_of_nonneg_right hLOW_M
+      hqpnn)) (le_refl (-(L * (t0 - y) * (t0 - y))))
+    have hLowFinal := le_trans hcombineLow (le_trans hLow hGFnY.1)
+    rw [show (GFn t0 - εg) + (-GderivFn t0 - εg) * (t0 - y) + -(L * (t0 - y) * (t0 - y))
+        = GFn t0 + GderivFn t0 * (y - t0) + -(εg + εg * (t0 - y) + L * (t0 - y) * (t0 - y))
+        from by mach_mpoly [GFn t0, GderivFn t0, εg, y, t0, L]] at hLowFinal
+    have hLower := add_neg_le_of_le _ _ _ _ hLowFinal
+    exact abs_le_iff.mpr ⟨hLower, hUpper⟩
+
+/-! ## §16 — `hasDerivAt_GFn`: the actual Leibniz differentiation-under-the-integral-sign theorem
+
+Wires `GFn_diff_bound` into `HasDerivAt_of_eps_delta`. `T := |t0|+1`, `L := 2+8T²` fixed once. For a
+given `ε`, `δ := min 1 (ε/3/L)` — the `≤1` cap keeps every `y` in the `δ`-neighbourhood inside
+`[-T,T]` (needed by `GFn_diff_bound`'s `hyT`) and keeps `|y-t0|<1` (needed below); the `ε/3/L` cap
+controls the `L|y-t0|²` term. The gap target `εg := (ε/3)·|y-t0|` is chosen INSIDE the `∀y` scope
+(legally — `k` only needs to work for THIS `y`), scaled to `|y-t0|` — a global fixed `εg` would give
+a bound that doesn't shrink proportionally to `|y-t0|` as `y→t0` (see the `project_sqrtpi_laplace_
+route_2026_07_25` memory note, "Key finding #3"). Two separate `k`'s (one per gap target, from
+`GFn_gap`/`GderivFn_gap`) are unified via `K:=Nat.max k1 k2` using dyadic anti/mono-tonicity — refining
+the partition only tightens both gaps simultaneously. -/
+
+private theorem sub_le_sub_of_le_of_le {A A' B B' : Real} (h1 : A' ≤ A) (h2 : B ≤ B') :
+    A' - B' ≤ A - B := by
+  have h3 := add_le_add_both h1 (neg_le_neg h2)
+  rwa [show A' + -B' = A' - B' from by mach_mpoly [A', B'],
+    show A + -B = A - B from by mach_mpoly [A, B]] at h3
+
+private theorem mul_lt_mul_of_pos_right_laplace {a b c : Real} (h : a < b) (hc : 0 < c) :
+    a * c < b * c := by
+  rw [mul_comm a c, mul_comm b c]
+  exact mul_lt_mul_of_pos_left h hc
+
+theorem hasDerivAt_GFn (t0 : Real) : HasDerivAt GFn (GderivFn t0) t0 := by
+  apply HasDerivAt_of_eps_delta
+  intro ε hε
+  have hTpos : (0 : Real) < abs t0 + 1 := by
+    have h := add_le_add_both (abs_nonneg t0) (le_refl (1 : Real))
+    rw [zero_add] at h
+    exact lt_of_lt_of_le one_pos h
+  have ht0T : abs t0 ≤ abs t0 + 1 := le_add_of_nonneg_right (le_of_lt one_pos)
+  have hLpos : (0 : Real) <
+      (1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1) :=
+    lt_of_lt_of_le two_pos (le_add_of_nonneg_right (mul_nonneg
+      (mul_nonneg (le_of_lt eight_pos_laplace) (le_of_lt hTpos)) (le_of_lt hTpos)))
+  have three_pos_laplace : (0 : Real) < 1 + 1 + 1 := add_pos_of_nonneg_pos (le_of_lt two_pos) one_pos
+  have hε3 : 0 < ε / (1 + 1 + 1) := div_pos_of_pos_pos hε three_pos_laplace
+  have hδ2pos : 0 < ε / (1 + 1 + 1)
+      / ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1)) :=
+    div_pos_of_pos_pos hε3 hLpos
+  refine ⟨min 1 (ε / (1 + 1 + 1)
+    / ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1))),
+    lt_min_of_lt_of_lt one_pos hδ2pos, ?_⟩
+  intro y hy
+  by_cases hyeq : y = t0
+  · rw [hyeq, show GFn t0 - GFn t0 - GderivFn t0 * (t0 - t0) = 0 from by
+      mach_mpoly [GFn t0, GderivFn t0, t0], show t0 - t0 = (0 : Real) from by mach_mpoly [t0],
+      abs_zero, mul_zero]
+    exact le_refl 0
+  · have hyt0pos : 0 < abs (y - t0) := by
+      rcases lt_total y t0 with hc | hc | hc
+      · have h1 : y - t0 < 0 := by
+          have h := add_lt_add_left hc (-t0)
+          rwa [show -t0 + y = y - t0 from by mach_mpoly [t0, y], neg_add_self t0] at h
+        rw [iv_aon h1]
+        exact neg_pos_of_neg h1
+      · exact absurd hc hyeq
+      · rw [abs_of_nonneg (le_of_lt (sub_pos_of_lt hc))]
+        exact sub_pos_of_lt hc
+    have hylt1 : abs (y - t0) < 1 := lt_of_lt_of_le hy (min_le_left 1 _)
+    have hyltδ2 : abs (y - t0) < ε / (1 + 1 + 1)
+        / ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1)) :=
+      lt_of_lt_of_le hy (min_le_right 1 _)
+    have hyT : abs y ≤ abs t0 + 1 := by
+      have h1 := abs_add t0 (y - t0)
+      rw [show t0 + (y - t0) = y from by mach_mpoly [t0, y]] at h1
+      exact le_trans h1 (add_le_add_both (le_refl (abs t0)) (le_of_lt hylt1))
+    have hεgpos : 0 < ε / (1 + 1 + 1) * abs (y - t0) := by
+      have h := mul_lt_mul_of_pos_left hyt0pos hε3
+      rwa [mul_zero] at h
+    obtain ⟨k1, hk1⟩ := GFn_gap t0 (ε / (1 + 1 + 1) * abs (y - t0)) hεgpos
+    obtain ⟨k2, hk2⟩ := GderivFn_gap t0 (ε / (1 + 1 + 1) * abs (y - t0)) hεgpos
+    obtain ⟨d1, hd1⟩ := Nat.le.dest (Nat.le_max_left k1 k2)
+    obtain ⟨d2, hd2⟩ := Nat.le.dest (Nat.le_max_right k1 k2)
+    have hgapP_K : upperSumCont (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_p t0 z) (2 ^ Nat.max k1 k2) (two_pow_pos (Nat.max k1 k2))
+      - lowerSumCont (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_p t0 z) (2 ^ Nat.max k1 k2) (two_pow_pos (Nat.max k1 k2))
+      < ε / (1 + 1 + 1) * abs (y - t0) := by
+      have hanti := upperSumCont_dyadic_anti (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x)
+        0 1 (le_of_lt one_pos) (fun z _ _ => hcont_p t0 z) k1 d1 (two_pow_pos k1)
+      have hmono := lowerSumCont_dyadic_mono (fun x => Real.exp (-(t0 * t0 * (1 + x * x))) * kFn x)
+        0 1 (le_of_lt one_pos) (fun z _ _ => hcont_p t0 z) k1 d1 (two_pow_pos k1)
+      rw [hd1] at hanti hmono
+      exact lt_of_le_of_lt (sub_le_sub_of_le_of_le hanti hmono) hk1
+    have hgapQ_K : upperSumCont (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) (2 ^ Nat.max k1 k2) (two_pow_pos (Nat.max k1 k2))
+      - lowerSumCont (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1
+        (le_of_lt one_pos) (fun z _ _ => hcont_q t0 z) (2 ^ Nat.max k1 k2) (two_pow_pos (Nat.max k1 k2))
+      < ε / (1 + 1 + 1) * abs (y - t0) := by
+      have hanti := upperSumCont_dyadic_anti
+        (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_q t0 z) k2 d2 (two_pow_pos k2)
+      have hmono := lowerSumCont_dyadic_mono
+        (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+        (fun z _ _ => hcont_q t0 z) k2 d2 (two_pow_pos k2)
+      rw [hd2] at hanti hmono
+      exact lt_of_le_of_lt (sub_le_sub_of_le_of_le hanti hmono) hk2
+    have hbound := GFn_diff_bound hTpos ht0T rfl y hyT (ε / (1 + 1 + 1) * abs (y - t0)) hεgpos
+      (Nat.max k1 k2) hgapP_K hgapQ_K
+    have hLA : (1 + 1 + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1))
+        * abs (y - t0) ≤ ε / (1 + 1 + 1) := by
+      have h := mul_lt_mul_of_pos_right_laplace hyltδ2 hLpos
+      rw [div_mul_cancel (ne_of_gt hLpos), mul_comm (abs (y - t0))
+        ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1))] at h
+      exact le_of_lt h
+    have hTerm3 : (1 + 1 + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * (abs t0 + 1) * (abs t0 + 1))
+        * abs (y - t0) * abs (y - t0) ≤ ε / (1 + 1 + 1) * abs (y - t0) :=
+      mul_le_mul_of_nonneg_right hLA (abs_nonneg (y - t0))
+    have hTerm2 : ε / (1 + 1 + 1) * abs (y - t0) * abs (y - t0) ≤ ε / (1 + 1 + 1) * abs (y - t0) := by
+      have h := mul_le_mul_of_nonneg_left (le_of_lt hylt1) (le_of_lt hεgpos)
+      rwa [mul_one_ax] at h
+    have hcombine := add_le_add_both (add_le_add_both (le_refl (ε / (1 + 1 + 1) * abs (y - t0)))
+      hTerm2) hTerm3
+    have hfin := le_trans hbound hcombine
+    rw [show ε / (1 + 1 + 1) * abs (y - t0) + ε / (1 + 1 + 1) * abs (y - t0)
+        + ε / (1 + 1 + 1) * abs (y - t0) = ε / (1 + 1 + 1) * (1 + 1 + 1) * abs (y - t0)
+        from by mach_mpoly [ε / (1 + 1 + 1), abs (y - t0)],
+      div_mul_cancel (ne_of_gt three_pos_laplace)] at hfin
+    exact hfin
+
 end Real
 end MachLib
