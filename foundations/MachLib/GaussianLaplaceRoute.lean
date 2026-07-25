@@ -655,5 +655,124 @@ theorem gaussianI_eq_t_mul_intUpTo (t : Real) (ht : 0 < t) :
   have hconcl := eq_of_hasDerivAt_eq_open_of_eq_at_left one_pos hcontf hF1 hF2 hcontF1 hcontF2 hstart
   rwa [mul_one_ax] at hconcl
 
+/-! ## §6 — one-directional Darboux-sum additivity, and constant-function integrals
+
+Needed for the Leibniz rule below: general "`∫(f+g)=∫f+∫g`" additivity for Riemann integrals is
+NOT available and would be genuinely hard to build (comparable to `riemann_integral_additivity`'s
+domain-additivity — the natural termwise Darboux bound only gives ONE direction). But the Leibniz
+bound only needs that ONE direction (an inequality, not an equality), which is easy: at `f+g`'s own
+extremum point, each of `f`,`g` individually is bounded by ITS OWN `maxSub`/`minSub`, so their sum
+bounds `f+g`'s extremum too. -/
+
+private theorem distrib_mul_local_laplace (X Y q : Real) : (X + Y) * q = X * q + Y * q := by
+  mach_mpoly [X, Y, q]
+
+private theorem partialSum_add_termwise (f g : Nat → Real) :
+    ∀ n, partialSum (fun i => f i + g i) n = partialSum f n + partialSum g n
+  | 0 => by show (0 : Real) = 0 + 0; mach_ring
+  | n + 1 => by
+      rw [partialSum_succ, partialSum_succ, partialSum_succ, partialSum_add_termwise f g n]
+      show (partialSum f n + partialSum g n) + (f n + g n)
+        = (partialSum f n + f n) + (partialSum g n + g n)
+      mach_ring
+
+private theorem partialSum_const_laplace (c : Real) :
+    ∀ n, partialSum (fun _ : Nat => c) n = natCast n * c
+  | 0 => by show (0 : Real) = natCast 0 * c; rw [natCast_zero, zero_mul]
+  | k + 1 => by
+      show partialSum (fun _ : Nat => c) k + c = natCast (k + 1) * c
+      rw [partialSum_const_laplace c k, natCast_succ]
+      mach_mpoly [natCast k, c]
+
+theorem upperSumCont_add_le {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hgcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfgcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x + g x) z)
+    (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun x => f x + g x) a b hab hfgcont n hn
+      ≤ upperSumCont f a b hab hfcont n hn + upperSumCont g a b hab hgcont n hn := by
+  show partialSum (maxSub (fun x => f x + g x) a b hab hfgcont n hn) n * meshWidth a b n
+      ≤ partialSum (maxSub f a b hab hfcont n hn) n * meshWidth a b n
+        + partialSum (maxSub g a b hab hgcont n hn) n * meshWidth a b n
+  have hterm : ∀ i, i < n →
+      maxSub (fun x => f x + g x) a b hab hfgcont n hn i
+        ≤ (fun j => maxSub f a b hab hfcont n hn j + maxSub g a b hab hgcont n hn j) i := by
+    intro i hi
+    rw [maxSub_eq (fun x => f x + g x) a b hab hfgcont n hn i hi]
+    obtain ⟨h1lo, h1hi, _⟩ := Classical.choose_spec
+      (evt_exists_max (fun x => f x + g x) a b hab hfgcont n hn i hi)
+    have hf := maxSub_spec f a b hab hfcont n hn i hi _ h1lo h1hi
+    have hg := maxSub_spec g a b hab hgcont n hn i hi _ h1lo h1hi
+    exact add_le_add_both hf hg
+  have hsum := partialSum_le_of_termwise_le n hterm
+  rw [partialSum_add_termwise (maxSub f a b hab hfcont n hn) (maxSub g a b hab hgcont n hn) n]
+    at hsum
+  have hbound : partialSum (maxSub (fun x => f x + g x) a b hab hfgcont n hn) n * meshWidth a b n
+      ≤ (partialSum (maxSub f a b hab hfcont n hn) n + partialSum (maxSub g a b hab hgcont n hn) n)
+        * meshWidth a b n :=
+    mul_le_mul_of_nonneg_right hsum (meshWidth_nonneg hab n)
+  rwa [distrib_mul_local_laplace (partialSum (maxSub f a b hab hfcont n hn) n)
+    (partialSum (maxSub g a b hab hgcont n hn) n) (meshWidth a b n)] at hbound
+
+theorem lowerSumCont_add_ge {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hgcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfgcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x + g x) z)
+    (n : Nat) (hn : 0 < n) :
+    lowerSumCont f a b hab hfcont n hn + lowerSumCont g a b hab hgcont n hn
+      ≤ lowerSumCont (fun x => f x + g x) a b hab hfgcont n hn := by
+  show partialSum (minSub f a b hab hfcont n hn) n * meshWidth a b n
+      + partialSum (minSub g a b hab hgcont n hn) n * meshWidth a b n
+      ≤ partialSum (minSub (fun x => f x + g x) a b hab hfgcont n hn) n * meshWidth a b n
+  have hterm : ∀ i, i < n →
+      (fun j => minSub f a b hab hfcont n hn j + minSub g a b hab hgcont n hn j) i
+        ≤ minSub (fun x => f x + g x) a b hab hfgcont n hn i := by
+    intro i hi
+    rw [minSub_eq (fun x => f x + g x) a b hab hfgcont n hn i hi]
+    obtain ⟨h1lo, h1hi, _⟩ := Classical.choose_spec
+      (evt_exists_min (fun x => f x + g x) a b hab hfgcont n hn i hi)
+    have hf := minSub_spec f a b hab hfcont n hn i hi _ h1lo h1hi
+    have hg := minSub_spec g a b hab hgcont n hn i hi _ h1lo h1hi
+    exact add_le_add_both hf hg
+  have hsum := partialSum_le_of_termwise_le n hterm
+  rw [partialSum_add_termwise (minSub f a b hab hfcont n hn) (minSub g a b hab hgcont n hn) n]
+    at hsum
+  have hbound : (partialSum (minSub f a b hab hfcont n hn) n + partialSum (minSub g a b hab hgcont n hn) n)
+      * meshWidth a b n
+      ≤ partialSum (minSub (fun x => f x + g x) a b hab hfgcont n hn) n * meshWidth a b n :=
+    mul_le_mul_of_nonneg_right hsum (meshWidth_nonneg hab n)
+  rwa [distrib_mul_local_laplace (partialSum (minSub f a b hab hfcont n hn) n)
+    (partialSum (minSub g a b hab hgcont n hn) n) (meshWidth a b n)] at hbound
+
+theorem upperSumCont_const_eq (c a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun _ : Real => c) z) (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun _ : Real => c) a b hab hcont n hn = c * (b - a) := by
+  show partialSum (maxSub (fun _ : Real => c) a b hab hcont n hn) n * meshWidth a b n = c * (b - a)
+  have hmax : ∀ i, maxSub (fun _ : Real => c) a b hab hcont n hn i = (fun _ : Nat => c) i := by
+    intro i
+    by_cases hi : i < n
+    · rw [maxSub_eq (fun _ : Real => c) a b hab hcont n hn i hi]
+    · unfold maxSub
+      rw [dif_neg hi]
+  rw [partialSum_congr hmax n, partialSum_const_laplace c n]
+  rw [show natCast n * c * meshWidth a b n = c * (natCast n * meshWidth a b n) from by
+    mach_mpoly [natCast n, c, meshWidth a b n]]
+  rw [natCast_mul_meshWidth a b n hn]
+
+theorem lowerSumCont_const_eq (c a b : Real) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun _ : Real => c) z) (n : Nat) (hn : 0 < n) :
+    lowerSumCont (fun _ : Real => c) a b hab hcont n hn = c * (b - a) := by
+  show partialSum (minSub (fun _ : Real => c) a b hab hcont n hn) n * meshWidth a b n = c * (b - a)
+  have hmin : ∀ i, minSub (fun _ : Real => c) a b hab hcont n hn i = (fun _ : Nat => c) i := by
+    intro i
+    by_cases hi : i < n
+    · rw [minSub_eq (fun _ : Real => c) a b hab hcont n hn i hi]
+    · unfold minSub
+      rw [dif_neg hi]
+  rw [partialSum_congr hmin n, partialSum_const_laplace c n]
+  rw [show natCast n * c * meshWidth a b n = c * (natCast n * meshWidth a b n) from by
+    mach_mpoly [natCast n, c, meshWidth a b n]]
+  rw [natCast_mul_meshWidth a b n hn]
+
 end Real
 end MachLib
