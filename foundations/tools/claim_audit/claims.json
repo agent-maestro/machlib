@@ -332,6 +332,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The sqrt(pi) project's finish line: the improper Gaussian integral, proven from scratch in MachLib's Mathlib-free real-analysis base via a Laplace/Feynman parameter-differentiation trick, zero new axioms anywhere in the ~30-push arc. Invariant: sorryAx-free.",
+      "id": "gaussian-improper-integral-sqrt-pi-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+        "ZERO new axioms anywhere in the arc that built this"
+      ],
+      "module": "MachLib.GaussianLaplaceRoute",
+      "theorem": "MachLib.Real.gaussianImproperIntegral_eq_sqrt_pi_div_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

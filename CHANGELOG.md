@@ -5,6 +5,27 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-07-25
+
+### New — `∫₀^∞exp(-t²)dt = √π/2`, from scratch, zero new axioms (`MachLib/GaussianLaplaceRoute.lean`)
+
+**`gaussianImproperIntegral_eq_sqrt_pi_div_two`**: `gaussianImproperIntegral = sqrt pi / (1 + 1)` —
+the classical Gaussian integral, proven end to end in MachLib's Mathlib-free real-analysis base.
+Built via a Laplace/Feynman parameter-differentiation trick: `F(t) := gaussianI(t)²`,
+`G(t) := ∫₀¹exp(-t²(1+x²))/(1+x²)dx`, `F' = -G'` via a from-scratch Leibniz differentiation-
+under-the-integral-sign theorem (`hasDerivAt_GFn`), hence `F+G` constant on `[0,∞)` (an
+open-interval FTC-uniqueness argument extends it down through the boundary kink at `t=0`, where
+`gaussianI` — hence `F` — has no two-sided derivative), hence
+`gaussianImproperIntegral² = F(0)+G(0) = 0 + π/4`, hence the result via `sqrt_sq` +
+`mul_left_cancel`. `π` enters ONLY as a bare trig fact (`cos(π/2)=0`/`sin(π/2)=1`) — `atan(1)=π/4`
+is DERIVED, not axiomatized, via a double application of `ftc_riemann` to the same trivial
+integral `∫₀^{π/4}1dθ`. `sorryAx`-free, ZERO new axioms anywhere in the arc that built this (300
+pinned, unchanged from before this project started). ~2144 lines / 138 theorems/defs, built
+across roughly 30 pushes. The earlier disk/square-sandwich route (`GaussianDiskSandwich.lean`,
+`D(R)≤S(R)≤D(R√2)`) remains a complete, correct, standalone result — abandoned as the critical
+path only because its own derivative needs genuine 2D polar coordinates this 1D-only codebase
+doesn't have.
+
 ## [Unreleased] — 2026-07-09
 
 ### New — absolute, cancellation-tolerant forward-error fold (`MachLib/AbsoluteError.lean`)
