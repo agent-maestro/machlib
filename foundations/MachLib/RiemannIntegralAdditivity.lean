@@ -900,7 +900,7 @@ private theorem lowerSumCont_congr_local (f : Real → Real) (a b : Real) (hab :
 `upperSumCont f 0 (0+a) ...` — propositionally but not syntactically `upperSumCont f 0 a ...`
 (`Real` addition is opaque/axiomatized, not computed) — same dependent-motive risk as above, same
 fix: rewrite the whole application via a purpose-built congruence lemma instead of a raw `rw`. -/
-private theorem upperSumCont_congr_val (f : Real → Real) (p : Real) :
+theorem upperSumCont_congr_val (f : Real → Real) (p : Real) :
     ∀ {b1 b2 : Real}, b1 = b2 → ∀ (hab1 : p ≤ b1) (hab2 : p ≤ b2)
       (hcont1 : ∀ z : Real, p ≤ z → z ≤ b1 → ContinuousAt f z)
       (hcont2 : ∀ z : Real, p ≤ z → z ≤ b2 → ContinuousAt f z)
@@ -909,7 +909,7 @@ private theorem upperSumCont_congr_val (f : Real → Real) (p : Real) :
   | _, _, rfl, _, _, _, _, _, _ => rfl
 
 /-- `lowerSumCont` counterpart of `upperSumCont_congr_val`. -/
-private theorem lowerSumCont_congr_val (f : Real → Real) (p : Real) :
+theorem lowerSumCont_congr_val (f : Real → Real) (p : Real) :
     ∀ {b1 b2 : Real}, b1 = b2 → ∀ (hab1 : p ≤ b1) (hab2 : p ≤ b2)
       (hcont1 : ∀ z : Real, p ≤ z → z ≤ b1 → ContinuousAt f z)
       (hcont2 : ∀ z : Real, p ≤ z → z ≤ b2 → ContinuousAt f z)
