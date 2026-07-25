@@ -1054,5 +1054,77 @@ theorem lowerSumCont_le_of_pointwise_le {f g : Real → Real} {a b : Real} (hab 
     (partialSum_le_of_termwise_le n (fun i _ => minSub_le_of_pointwise_le hab hfcont hgcont hfg n hn i))
     (meshWidth_nonneg hab n)
 
+/-! ## §11 — the pointwise MVT+Lipschitz bound on `p(y,x)`, the core Leibniz-rule ingredient -/
+
+private theorem sub_mul_rearrange_laplace (A B w : Real) : A * w - B * w = (A - B) * w := by
+  mach_mpoly [A, B, w]
+
+private theorem mul_reassoc_laplace (A X w : Real) : A * (X * w) = A * X * w := by
+  mach_mpoly [A, X, w]
+
+private theorem neg_lt_neg_laplace {a b : Real} (h : a < b) : -b < -a := by
+  have h1 := add_lt_add_left h (-a + -b)
+  rwa [show -a + -b + a = -b from by mach_mpoly [a, b],
+    show -a + -b + b = -a from by mach_mpoly [a, b]] at h1
+
+/-- **The core pointwise bound**: `p(y,x)` and its linear (in `t`, around `t0`) approximation
+using `q(t0,x)` differ by at most `L·(y-t0)²`, where `L:=2+8T²` bounds `q`'s Lipschitz constant on
+`[-T,T]`. Via MVT (either on `[t0,y]` or `[y,t0]` depending on ordering — the resulting algebraic
+form is IDENTICAL either way) plus `qFn_lipschitz_in_t`. -/
+theorem GFn_pointwise_bound {t0 T L : Real} (hTpos : 0 < T) (ht0T : abs t0 ≤ T)
+    (hLeq : L = (1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T)
+    (y : Real) (hyT : abs y ≤ T) (x : Real) (hx0 : 0 ≤ x) (hx1 : x ≤ 1) (p q : Real)
+    (hpq : p < q) (hpt0 : p = t0 ∨ q = t0) (hpT : abs p ≤ T) (hqT : abs q ≤ T) :
+    abs (Real.exp (-(q * q * (1 + x * x))) * kFn x - Real.exp (-(p * p * (1 + x * x))) * kFn x
+      - -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))) * (q - p))
+      ≤ L * (q - p) * (q - p) := by
+  have hc0 : (0:Real) ≤ 1 + x * x := le_of_lt (one_add_sq_pos x)
+  have hc2 : (1:Real) + x * x ≤ 1 + 1 := by
+    have h := add_le_add_left (mul_le_mul' hx0 hx1 hx0 hx1) 1
+    rwa [mul_one_ax] at h
+  obtain ⟨cc, f', hc1, hc2', hderiv, heqv⟩ :=
+    mean_value_theorem_ct (fun s => Real.exp (-(s * s * (1 + x * x))) * kFn x) p q hpq
+      (fun z _ _ => ⟨-(1 + 1) * z * Real.exp (-(z * z * (1 + x * x))), hasDerivAt_p_t z x⟩)
+  rw [HasDerivAt_unique (fun s => Real.exp (-(s * s * (1 + x * x))) * kFn x) f'
+    (-(1 + 1) * cc * Real.exp (-(cc * cc * (1 + x * x)))) cc hderiv (hasDerivAt_p_t cc x)] at heqv
+  have hccT : abs cc ≤ T := by
+    have hp1 := (abs_le_iff.mp hpT).1
+    have hq2 := (abs_le_iff.mp hqT).2
+    exact abs_le_iff.mpr ⟨le_trans hp1 (le_of_lt hc1), le_of_lt (lt_of_lt_of_le hc2' hq2)⟩
+  have habscc : abs (cc - t0) ≤ q - p := by
+    rcases hpt0 with hpt0 | hpt0
+    · rw [← hpt0]
+      rw [abs_of_nonneg (sub_nonneg_of_le (le_of_lt hc1))]
+      have h1 := add_lt_add_left hc2' (-p)
+      rw [show -p + cc = cc - p from by mach_mpoly [cc, p],
+        show -p + q = q - p from by mach_mpoly [q, p]] at h1
+      exact le_of_lt h1
+    · rw [← hpt0]
+      rw [abs_of_nonpos (sub_nonpos_of_le (le_of_lt hc2'))]
+      have h1 : -cc < -p := neg_lt_neg_laplace hc1
+      have h2 := add_lt_add_left h1 q
+      rw [show q + -cc = -(cc - q) from by mach_mpoly [cc, q],
+        show q + -p = q - p from by mach_mpoly [q, p]] at h2
+      exact le_of_lt h2
+  rw [heqv]
+  have hlip := qFn_lipschitz_in_t hc0 hc2 (le_of_lt hTpos) hccT ht0T
+  have hqpnn : 0 ≤ q - p := sub_nonneg_of_le (le_of_lt hpq)
+  have hrearrange := sub_mul_rearrange_laplace (-(1 + 1) * cc * Real.exp (-(cc * cc * (1 + x * x))))
+    (-(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x)))) (q - p)
+  rw [hrearrange, abs_mul, abs_of_nonneg hqpnn]
+  have hLnn : (0:Real) ≤ (1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T :=
+    le_of_lt (lt_of_lt_of_le two_pos (le_add_of_nonneg_right (mul_nonneg
+      (mul_nonneg (le_of_lt eight_pos_laplace) (le_of_lt hTpos)) (le_of_lt hTpos))))
+  have hstep1 : ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T) * abs (cc - t0) * (q - p)
+      ≤ ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T) * (q - p) * (q - p) := by
+    have h := mul_le_mul_of_nonneg_right habscc hqpnn
+    have h2 := mul_le_mul_of_nonneg_left h hLnn
+    rw [mul_reassoc_laplace ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T) (abs (cc - t0))
+        (q - p),
+      mul_reassoc_laplace ((1 + 1) + (1 + 1 + 1 + 1 + 1 + 1 + 1 + 1) * T * T) (q - p) (q - p)] at h2
+    exact h2
+  have hfinal := le_trans (mul_le_mul_of_nonneg_right hlip hqpnn) hstep1
+  rwa [← hLeq] at hfinal
+
 end Real
 end MachLib
