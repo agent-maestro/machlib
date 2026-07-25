@@ -114,5 +114,24 @@ theorem nr_scaled_err_bound (b y s by' y' : Real) (hs : 0 ≤ s)
     rw [hA]; exact add_le_add_l (add_le_add_l (le_refl _) hB) hC
   exact le_trans (le_trans t1 t2) t3
 
+private theorem add_mul_r (X Y s : Real) : X * s + Y * s = (X + Y) * s := by mach_mpoly [X, Y, s]
+
+/-- **The contraction step**: under the convergence invariant `|1 − b·y| ≤ 1/2`, one truncated NR
+step *halves* the scaled error and adds the truncation floor:
+`|1 − b·y'| ≤ |1 − b·y|/2 + (|b·y| + |b|)·s`. The halving comes from `e² ≤ |e|·(1/2)` when
+`|e| ≤ 1/2`; iterating this four times drives the error to the `(|b·y|+|b|)·s` floor. -/
+theorem nr_contract_step (b y s by' y' : Real) (hs : 0 ≤ s)
+    (h1 : abs (by' - b * y) ≤ s) (h2 : abs (y' - y * ((1 + 1) - by')) ≤ s)
+    (hinv : abs (1 - b * y) ≤ 1 / (1 + 1)) :
+    abs (1 - b * y')
+      ≤ abs (1 - b * y) * (1 / (1 + 1)) + (abs (b * y) + abs b) * s := by
+  have hsq : (1 - b * y) * (1 - b * y) ≤ abs (1 - b * y) * (1 / (1 + 1)) := by
+    have he2 : abs (1 - b * y) * abs (1 - b * y) = (1 - b * y) * (1 - b * y) := by
+      rw [← abs_mul]; exact abs_of_nonneg (mul_self_nonneg _)
+    rw [← he2]; exact mul_le_mul_of_nonneg_left hinv (abs_nonneg _)
+  apply le_trans (nr_scaled_err_bound b y s by' y' hs h1 h2)
+  rw [← add_mul_r (abs (b * y)) (abs b) s, add_assoc]
+  exact add_le_add_right_l hsq _
+
 end Real
 end MachLib
