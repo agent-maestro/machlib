@@ -195,6 +195,7 @@ import MachLib.GaussianIntegral
 import MachLib.GaussianImproperIntegral
 import MachLib.GaussianRadialIntegral
 import MachLib.GaussianDiskSandwich
+import MachLib.GaussianLaplaceRoute
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
