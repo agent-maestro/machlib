@@ -283,5 +283,280 @@ theorem symExpNegSqInt_tendsto_sqrt_pi : ∀ ε : Real, 0 < ε → ∃ R₀ : Re
   have h2 := mul_lt_mul_of_pos_left hclose two_pos
   rwa [mul_div_cancel' two_ne_zero] at h2
 
+/-! ## §5 — the normalized Gaussian density integrates to 1 (S3, the milestone)
+
+`gaussianDensity μ σ² x := exp(-(x-μ)²/(2σ²)) / sqrt(2πσ²)`. Its symmetric finite integral tends to
+`1` as `R → ∞`: the antiderivative of the un-normalized kernel is `Φ(x) := c·gaussianISigned((x-μ)·k)`
+with `c := sqrt(2σ²)`, `k := 1/c` (so `c·k = 1`), giving `Φ' = exp(-((x-μ)·k)²)` by the chain rule
+(`c·k` cancels). The normalizer `sqrt(2πσ²) = √π·c` is pulled out with `riemann_integral_mul_const`,
+and the two endpoint limits `gaussianISigned((±R-μ)·k) → ±√π/2` (argument → ±∞) come from the √π
+arc's `gaussianI_close_to_improper` — no substitution lemma, no new axiom. -/
+
+/-- Inner affine map `(y-μ)·k` has derivative `k`. -/
+private theorem hasDerivAt_innerAffine (mu k x : Real) :
+    HasDerivAt (fun y => (y - mu) * k) k x := by
+  have hsub : HasDerivAt (fun y => y - mu) (1 - 0) x :=
+    HasDerivAt_sub (fun y => y) (fun _ => mu) 1 0 x (HasDerivAt_id x) (HasDerivAt_const mu x)
+  rw [sub_zero] at hsub
+  have hinner := HasDerivAt_mul (fun y => y - mu) (fun _ => k) 1 0 x hsub (HasDerivAt_const k x)
+  rwa [show (1 : Real) * k + (x - mu) * 0 = k from by mach_mpoly [k, x, mu]] at hinner
+
+/-- The everywhere-antiderivative of the affinely-scaled kernel `exp(-((x-μ)·k)²)`, namely
+`c·gaussianISigned((x-μ)·k)`, when `c·k = 1`. -/
+private theorem hasDerivAt_scaledAnti (mu c k x : Real) (hck : c * k = 1) :
+    HasDerivAt (fun y => c * gaussianISigned ((y - mu) * k))
+      (Real.exp (-(((x - mu) * k) * ((x - mu) * k)))) x := by
+  have hinner := hasDerivAt_innerAffine mu k x
+  have hgs := hasDerivAt_gaussianISigned ((x - mu) * k)
+  have hcomp : HasDerivAt (fun y => gaussianISigned ((y - mu) * k))
+      (Real.exp (-(((x - mu) * k) * ((x - mu) * k))) * k) x :=
+    HasDerivAt_comp gaussianISigned (fun y => (y - mu) * k) k
+      (Real.exp (-(((x - mu) * k) * ((x - mu) * k)))) x hinner hgs
+  have hmul := HasDerivAt_mul (fun _ => c) (fun y => gaussianISigned ((y - mu) * k))
+    0 (Real.exp (-(((x - mu) * k) * ((x - mu) * k))) * k) x (HasDerivAt_const c x) hcomp
+  rw [show (0 : Real) * gaussianISigned ((x - mu) * k)
+      + c * (Real.exp (-(((x - mu) * k) * ((x - mu) * k))) * k)
+      = c * k * Real.exp (-(((x - mu) * k) * ((x - mu) * k))) from by
+    mach_mpoly [c, k, Real.exp (-(((x - mu) * k) * ((x - mu) * k))),
+      gaussianISigned ((x - mu) * k)], hck, one_mul_thm] at hmul
+  exact hmul
+
+/-- The scaled kernel `exp(-((x-μ)·k)²)` is continuous. -/
+private theorem continuousAt_scaledKernel (mu k x : Real) :
+    ContinuousAt (fun y => Real.exp (-(((y - mu) * k) * ((y - mu) * k)))) x := by
+  have hp := hasDerivAt_innerAffine mu k x
+  have hpp := HasDerivAt_mul (fun y => (y - mu) * k) (fun y => (y - mu) * k) k k x hp hp
+  have hneg := HasDerivAt_neg (fun y => (y - mu) * k * ((y - mu) * k))
+    (k * ((x - mu) * k) + (x - mu) * k * k) x hpp
+  have hexp := HasDerivAt_comp Real.exp (fun y => -((y - mu) * k * ((y - mu) * k)))
+    (-(k * ((x - mu) * k) + (x - mu) * k * k)) (Real.exp (-((x - mu) * k * ((x - mu) * k)))) x
+    hneg (HasDerivAt_exp _)
+  exact hasDerivAt_continuousAt hexp
+
+/-- The scaled kernel's symmetric finite integral in closed form, by FTC on the everywhere-
+antiderivative. -/
+private theorem integral_scaledKernel_symmetric (mu c k : Real) (hck : c * k = 1) {R : Real}
+    (hR : 0 < R) :
+    Classical.choose (continuous_riemann_integrable
+        (fun x => Real.exp (-(((x - mu) * k) * ((x - mu) * k)))) (-R) R
+        (le_of_lt (lt_trans_ax (neg_neg_of_pos hR) hR))
+        (fun z _ _ => continuousAt_scaledKernel mu k z))
+      = c * gaussianISigned ((R - mu) * k) - c * gaussianISigned ((-R - mu) * k) := by
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hspec := Classical.choose_spec (continuous_riemann_integrable
+    (fun x => Real.exp (-(((x - mu) * k) * ((x - mu) * k)))) (-R) R (le_of_lt hab)
+    (fun z _ _ => continuousAt_scaledKernel mu k z))
+  exact ftc_riemann (fun x => Real.exp (-(((x - mu) * k) * ((x - mu) * k))))
+    (fun y => c * gaussianISigned ((y - mu) * k)) (-R) R hab
+    (fun z _ _ => continuousAt_scaledKernel mu k z)
+    (fun z _ _ => hasDerivAt_scaledAnti mu c k z hck) _
+    (fun j => (hspec.1 j).1) (fun j => (hspec.1 j).2) hspec.2
+
+/-- `gaussianISigned S → gaussianImproperIntegral (= √π/2)` as `S → +∞`. -/
+theorem gaussianISigned_tendsto_pos_inf : ∀ ε : Real, 0 < ε → ∃ S₀ : Real, 0 ≤ S₀ ∧
+    ∀ S : Real, S₀ ≤ S → abs (gaussianISigned S - gaussianImproperIntegral) < ε := by
+  intro ε hε
+  obtain ⟨T, hT0, hT⟩ := gaussianI_close_to_improper ε hε
+  refine ⟨T, hT0, ?_⟩
+  intro S hS
+  have hS0 : 0 ≤ S := le_trans hT0 hS
+  rw [gaussianISigned_pos hS0, abs_of_nonpos
+    (sub_nonpos_of_le (gaussianI_le_gaussianImproperIntegral hS0)),
+    neg_sub_swap' (gaussianI S) gaussianImproperIntegral]
+  exact hT S hS
+
+/-- `gaussianISigned S → -gaussianImproperIntegral (= -√π/2)` as `S → -∞`. -/
+theorem gaussianISigned_tendsto_neg_inf : ∀ ε : Real, 0 < ε → ∃ S₀ : Real, S₀ < 0 ∧
+    ∀ S : Real, S ≤ S₀ → abs (gaussianISigned S + gaussianImproperIntegral) < ε := by
+  intro ε hε
+  obtain ⟨T, hT0, hT⟩ := gaussianI_close_to_improper ε hε
+  refine ⟨-(T + 1), neg_neg_of_pos (add_pos_of_nonneg_pos hT0 one_pos), ?_⟩
+  intro S hS
+  have hSneg : S < 0 := lt_of_le_of_lt hS (neg_neg_of_pos (add_pos_of_nonneg_pos hT0 one_pos))
+  have hnST : T ≤ -S := by
+    have h1 : T + 1 ≤ -S := by
+      have h := neg_le_neg hS
+      rwa [neg_neg_local (T + 1)] at h
+    exact le_trans (le_add_of_nonneg_right (le_of_lt one_pos)) h1
+  rw [gaussianISigned_neg_arg hSneg]
+  rw [show -gaussianI (-S) + gaussianImproperIntegral = gaussianImproperIntegral - gaussianI (-S)
+    from by mach_mpoly [gaussianI (-S), gaussianImproperIntegral]]
+  rw [abs_of_nonneg (sub_nonneg_of_le (gaussianI_le_gaussianImproperIntegral (le_of_lt
+    (neg_pos_of_neg hSneg))))]
+  exact hT (-S) hnST
+
+/-- **The scalar Gaussian probability density** `N(μ, σ²)`. Written with the scale factored inside
+the square (`(x-μ)·(1/√(2σ²))`) and the normalizer `√π·√(2σ²) = √(2πσ²)` — manifestly a Gaussian,
+and in exactly the scaled-kernel form the FTC antiderivative uses. -/
+noncomputable def gaussianDensity (mu sig2 x : Real) : Real :=
+  Real.exp (-(((x - mu) * (1 / sqrt ((1 + 1) * sig2))) * ((x - mu) * (1 / sqrt ((1 + 1) * sig2)))))
+    / (sqrt pi * sqrt ((1 + 1) * sig2))
+
+/-- Local copy of the `Classical.choose`-across-equal-integrands congruence (the version in
+`GaussianLaplaceRoute` is `private`). By `Prop` proof-irrelevance the two continuity witnesses
+give defeq integrability propositions once the functions coincide. -/
+private theorem cri_congr {f g : Real → Real} (hfg : f = g) {a b : Real} (hab : a ≤ b)
+    (hcontf : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcontg : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z) :
+    Classical.choose (continuous_riemann_integrable f a b hab hcontf)
+      = Classical.choose (continuous_riemann_integrable g a b hab hcontg) := by
+  subst hfg; rfl
+
+private theorem two_sig2_pos {sig2 : Real} (hsig2 : 0 < sig2) : 0 < (1 + 1) * sig2 :=
+  mul_pos two_pos hsig2
+
+private theorem density_norm_pos {sig2 : Real} (hsig2 : 0 < sig2) :
+    0 < sqrt pi * sqrt ((1 + 1) * sig2) :=
+  mul_pos (sqrt_pos pi_pos) (sqrt_pos (two_sig2_pos hsig2))
+
+/-- `gaussianDensity μ σ² = scaledKernel · (1/N)` as functions — the bridge to `riemann_integral_
+mul_const`. -/
+private theorem gaussianDensity_eq_kernel_mul (mu sig2 : Real) (hsig2 : 0 < sig2) :
+    gaussianDensity mu sig2
+      = fun x => Real.exp (-(((x - mu) * (1 / sqrt ((1 + 1) * sig2)))
+          * ((x - mu) * (1 / sqrt ((1 + 1) * sig2)))))
+          * (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) := by
+  funext x
+  exact div_def _ _ (ne_of_gt (density_norm_pos hsig2))
+
+private theorem continuousAt_gaussianDensity (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    ContinuousAt (gaussianDensity mu sig2) x := by
+  rw [gaussianDensity_eq_kernel_mul mu sig2 hsig2]
+  exact continuousAt_mul (continuousAt_scaledKernel mu (1 / sqrt ((1 + 1) * sig2)) x)
+    (continuousAt_const _ x)
+
+/-- `∫_{-R}^R gaussianDensity μ σ² dx` as a total function (`0` off `R > 0`). -/
+noncomputable def gaussianDensitySymInt (mu sig2 : Real) (hsig2 : 0 < sig2) (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z))
+  else 0
+
+private theorem gaussianDensitySymInt_eq (mu sig2 : Real) (hsig2 : 0 < sig2) {R : Real} (hR : 0 < R) :
+    gaussianDensitySymInt mu sig2 hsig2 R
+      = (sqrt ((1 + 1) * sig2) * gaussianISigned ((R - mu) * (1 / sqrt ((1 + 1) * sig2)))
+          - sqrt ((1 + 1) * sig2) * gaussianISigned ((-R - mu) * (1 / sqrt ((1 + 1) * sig2))))
+        * (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) := by
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hck : sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2)) = 1 := mul_inv _ (ne_of_gt hc)
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hkercont : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => Real.exp (-(((y - mu) * (1 / sqrt ((1 + 1) * sig2)))
+        * ((y - mu) * (1 / sqrt ((1 + 1) * sig2)))))) z :=
+    fun z _ _ => continuousAt_scaledKernel mu (1 / sqrt ((1 + 1) * sig2)) z
+  have hprodcont : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun x => Real.exp (-(((x - mu) * (1 / sqrt ((1 + 1) * sig2)))
+        * ((x - mu) * (1 / sqrt ((1 + 1) * sig2)))))
+        * (1 / (sqrt pi * sqrt ((1 + 1) * sig2)))) z :=
+    fun z hz0 hz1 => continuousAt_mul (hkercont z hz0 hz1) (continuousAt_const _ z)
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2)
+      (-R) R (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z)) else 0) = _
+  rw [dif_pos hR]
+  rw [cri_congr (gaussianDensity_eq_kernel_mul mu sig2 hsig2)
+    (le_of_lt hab) (fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z) hprodcont]
+  rw [riemann_integral_mul_const (le_of_lt hab) hkercont hprodcont]
+  rw [integral_scaledKernel_symmetric mu (sqrt ((1 + 1) * sig2)) (1 / sqrt ((1 + 1) * sig2)) hck hR]
+
+/-- **`∫_{-∞}^∞ gaussianDensity μ σ² dx = 1`** — the scalar Gaussian density is normalized. Stated
+as an ε–R₀ limit of the symmetric finite integral (S3, the arc's first "probability" milestone).
+The normalizer `√(2πσ²)` exactly cancels the `c·√π` the two endpoint limits of `gaussianISigned`
+produce. -/
+-- Algebra helpers for the final assembly (abstract vars to avoid the overlapping-atom mach_mpoly
+-- bug, since `1/c`, `1/(√π·c)` syntactically contain `c`).
+private theorem sub_from_add_le {a b R : Real} (h : a + b ≤ R) : b ≤ R - a := by
+  have h2 := add_le_add_both h (le_refl (-a))
+  rwa [show a + b + -a = b from by mach_mpoly [a, b],
+    show R + -a = R - a from by mach_mpoly [R, a]] at h2
+
+private theorem arg_lower_helper {Sp mu R c : Real} (hc : 0 < c) (hcinv : c * (1 / c) = 1)
+    (h : mu + Sp * c ≤ R) : Sp ≤ (R - mu) * (1 / c) := by
+  have h2 := mul_le_mul_of_nonneg_right (sub_from_add_le h) (le_of_lt (one_div_pos_of_pos hc))
+  rwa [mul_assoc Sp c (1 / c), hcinv, mul_one_ax] at h2
+
+private theorem arg_upper_helper {Sm mu R c : Real} (hc : 0 < c) (hcinv : c * (1 / c) = 1)
+    (h : -mu - Sm * c ≤ R) : (-R - mu) * (1 / c) ≤ Sm := by
+  have h1 : -R - mu ≤ Sm * c := by
+    have h2 := add_le_add_both h (le_refl (Sm * c - R))
+    rwa [show -mu - Sm * c + (Sm * c - R) = -R - mu from by mach_mpoly [mu, Sm, c, R],
+      show R + (Sm * c - R) = Sm * c from by mach_mpoly [R, Sm, c]] at h2
+  have h2 := mul_le_mul_of_nonneg_right h1 (le_of_lt (one_div_pos_of_pos hc))
+  rwa [mul_assoc Sm c (1 / c), hcinv, mul_one_ax] at h2
+
+private theorem density_value_key (A B imp c sp inv : Real)
+    (hinv : sp * c * inv = 1) (himp : sp = imp + imp) :
+    ((c * A - c * B) * inv - 1) * sp = A - imp - (B + imp) := by
+  rw [show ((c * A - c * B) * inv - 1) * sp = (A - B) * (sp * c * inv) - sp from by
+    mach_mpoly [A, B, c, inv, sp], hinv, himp]
+  mach_mpoly [A, B, imp]
+
+private theorem half_add_half (X : Real) : X / (1 + 1) + X / (1 + 1) = X := by
+  rw [← mul_two_eq_add_self (X / (1 + 1))]
+  exact div_mul_cancel (ne_of_gt two_pos)
+
+/-- Given `(V-1)·sp = (A-imp) - (B+imp)` with both `|A-imp|` and `|B+imp| < ε·sp/2`, conclude
+`|V-1| < ε` (cancel the positive `sp`). -/
+private theorem final_bound (V A B imp sp ε : Real) (hsp : 0 < sp)
+    (hkey : (V - 1) * sp = A - imp - (B + imp))
+    (hA : abs (A - imp) < ε * sp / (1 + 1)) (hB : abs (B + imp) < ε * sp / (1 + 1)) :
+    abs (V - 1) < ε := by
+  have habs1 : abs ((V - 1) * sp) = abs (V - 1) * sp := by
+    rw [abs_mul, abs_of_nonneg (le_of_lt hsp)]
+  have hchain : abs (V - 1) * sp = abs (A - imp - (B + imp)) := by rw [← habs1, hkey]
+  have htri : abs (A - imp - (B + imp)) ≤ abs (A - imp) + abs (B + imp) := by
+    have h := abs_add (A - imp) (-(B + imp))
+    rwa [show A - imp + -(B + imp) = A - imp - (B + imp) from by mach_mpoly [A, imp, B], abs_neg] at h
+  have hsum : abs (A - imp) + abs (B + imp) < ε * sp := by
+    have h := add_lt_add_both hA hB
+    rwa [half_add_half (ε * sp)] at h
+  have hlt : abs (V - 1) * sp < ε * sp := by rw [hchain]; exact lt_of_le_of_lt htri hsum
+  exact lt_of_mul_lt_mul_right_pos hlt hsp
+
+/-- **`∫_{-∞}^∞ gaussianDensity μ σ² dx = 1`** — the scalar Gaussian density is normalized. Stated
+as an ε–R₀ limit of the symmetric finite integral (S3, the arc's first "probability" milestone).
+The normalizer `√(2πσ²)` exactly cancels the `c·√π` the two endpoint limits of `gaussianISigned`
+produce. -/
+theorem gaussianDensity_symInt_tendsto_one (mu sig2 : Real) (hsig2 : 0 < sig2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧
+      ∀ R : Real, R₀ ≤ R → abs (gaussianDensitySymInt mu sig2 hsig2 R - 1) < ε := by
+  intro ε hε
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hcinv : sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2)) = 1 := mul_inv _ (ne_of_gt hc)
+  have hspi : 0 < sqrt pi := sqrt_pos pi_pos
+  have hN : 0 < sqrt pi * sqrt ((1 + 1) * sig2) := mul_pos hspi hc
+  have hNinv : sqrt pi * sqrt ((1 + 1) * sig2) * (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) = 1 :=
+    mul_inv _ (ne_of_gt hN)
+  have himp : sqrt pi = gaussianImproperIntegral + gaussianImproperIntegral := by
+    rw [gaussianImproperIntegral_eq_sqrt_pi_div_two, ← mul_two_eq_add_self,
+      div_mul_cancel (ne_of_gt two_pos)]
+  -- δ := ε·√π/2, split evenly between the two endpoint limits
+  have hδ : 0 < ε * sqrt pi / (1 + 1) := div_pos_of_pos_pos (mul_pos hε hspi) two_pos
+  obtain ⟨Sp, _, hSp⟩ := gaussianISigned_tendsto_pos_inf (ε * sqrt pi / (1 + 1)) hδ
+  obtain ⟨Sm, _, hSm⟩ := gaussianISigned_tendsto_neg_inf (ε * sqrt pi / (1 + 1)) hδ
+  refine ⟨max (max (mu + Sp * sqrt ((1 + 1) * sig2)) (-mu - Sm * sqrt ((1 + 1) * sig2))) 1,
+    lt_of_lt_of_le one_pos (le_max_right _ 1), ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le one_pos (le_trans (le_max_right _ 1) hR)
+  have hRp : mu + Sp * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_left _ _) (le_max_left _ 1)) hR
+  have hRm : -mu - Sm * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_right _ _) (le_max_left _ 1)) hR
+  rw [gaussianDensitySymInt_eq mu sig2 hsig2 hRpos]
+  -- A := gsigned((R-μ)/c), B := gsigned((-R-μ)/c); the two endpoint limits + the algebra identity.
+  have hA := hSp _ (arg_lower_helper hc hcinv hRp)
+  have hB := hSm _ (arg_upper_helper hc hcinv hRm)
+  exact final_bound
+    ((sqrt ((1 + 1) * sig2) * gaussianISigned ((R - mu) * (1 / sqrt ((1 + 1) * sig2)))
+        - sqrt ((1 + 1) * sig2) * gaussianISigned ((-R - mu) * (1 / sqrt ((1 + 1) * sig2))))
+      * (1 / (sqrt pi * sqrt ((1 + 1) * sig2))))
+    (gaussianISigned ((R - mu) * (1 / sqrt ((1 + 1) * sig2))))
+    (gaussianISigned ((-R - mu) * (1 / sqrt ((1 + 1) * sig2)))) gaussianImproperIntegral
+    (sqrt pi) ε hspi
+    (density_value_key (gaussianISigned ((R - mu) * (1 / sqrt ((1 + 1) * sig2))))
+      (gaussianISigned ((-R - mu) * (1 / sqrt ((1 + 1) * sig2)))) gaussianImproperIntegral
+      (sqrt ((1 + 1) * sig2)) (sqrt pi) (1 / (sqrt pi * sqrt ((1 + 1) * sig2))) hNinv himp)
+    hA hB
+
 end Real
 end MachLib
