@@ -389,5 +389,84 @@ theorem continuousAt_mul {f g : Real → Real} {x : Real} (hf : ContinuousAt f x
     rwa [hhalfhalf] at h1
   exact lt_of_lt_of_le hfin hεhalf_le
 
+/-! ## §5 — `gaussianIntegral`/`gaussianI` are monotone in their own upper limit -/
+
+theorem gaussianI_nonneg (t : Real) (ht : 0 ≤ t) : 0 ≤ gaussianI t := by
+  rw [gaussianI_eq t ht]
+  exact gaussianIntegral_nonneg t ht
+
+/-- `gaussianIntegral` is nondecreasing in its upper limit — direct application of
+`riemann_integral_mono_interval` to the gaussian kernel, reusing the same
+`Classical.choose_spec` sandwich data `gaussianIntegral`/`gaussianI_continuousAt` already draw on. -/
+theorem gaussianIntegral_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) :
+    gaussianIntegral a ha ≤ gaussianIntegral b (le_trans ha hab) := by
+  have hb : 0 ≤ b := le_trans ha hab
+  have hgaspec := Classical.choose_spec (gaussian_integral_exists a ha)
+  have hgbspec := Classical.choose_spec (gaussian_integral_exists b hb)
+  exact riemann_integral_mono_interval (fun t => Real.exp (-(t * t))) a b ha hab hb
+    (fun z _ _ => gaussian_continuous z) (fun z _ _ => gaussian_continuous z)
+    (fun z _ _ => le_of_lt (exp_pos _))
+    (gaussianIntegral a ha) (gaussianIntegral b hb)
+    (fun k => (hgaspec.1 k).2) hgaspec.2 (fun k => (hgbspec.1 k).1) hgbspec.2
+
+theorem gaussianI_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) : gaussianI a ≤ gaussianI b := by
+  have hb : 0 ≤ b := le_trans ha hab
+  rw [gaussianI_eq a ha, gaussianI_eq b hb]
+  exact gaussianIntegral_mono ha hab
+
+/-! ## §6 — the quarter-disk integral `D(R)` -/
+
+private theorem sq_mono {a b : Real} (ha : 0 ≤ a) (hab : a ≤ b) : a * a ≤ b * b :=
+  mul_le_mul_both_nonneg ha hab ha hab
+
+private theorem disk_radicand_continuousAt (R x : Real) :
+    ContinuousAt (fun y => R * R - y * y) x :=
+  hasDerivAt_continuousAt (HasDerivAt_sub (fun _ => R * R) (fun y => y * y) 0 (1 * x + x * 1) x
+    (HasDerivAt_const (R * R) x)
+    (HasDerivAt_mul (fun y => y) (fun y => y) 1 1 x (HasDerivAt_id x) (HasDerivAt_id x)))
+
+private theorem disk_radicand_nonneg {R z : Real} (hz0 : 0 ≤ z) (hzR : z ≤ R) :
+    0 ≤ R * R - z * z :=
+  sub_nonneg_of_le (sq_mono hz0 hzR)
+
+private theorem sqrt_disk_radicand_continuousAt {R z : Real} (hz0 : 0 ≤ z) (hzR : z ≤ R) :
+    ContinuousAt (fun y => sqrt (R * R - y * y)) z :=
+  continuousAt_comp (disk_radicand_continuousAt R z)
+    (sqrt_continuousAt (R * R - z * z) (disk_radicand_nonneg hz0 hzR))
+
+private theorem gaussianI_sqrt_disk_continuousAt {R z : Real} (hz0 : 0 ≤ z) (hzR : z ≤ R) :
+    ContinuousAt (fun y => gaussianI (sqrt (R * R - y * y))) z :=
+  continuousAt_comp (sqrt_disk_radicand_continuousAt hz0 hzR)
+    (gaussianI_continuousAt (sqrt (R * R - z * z)) (sqrt_nonneg _))
+
+/-- Continuity of the disk integrand `x ↦ exp(-x²)·gaussianI(√(R²-x²))` at every `z ∈ [0,R]` — the
+prerequisite for `continuous_riemann_integrable` to apply. Assembled from `gaussian_continuous`
+(the `exp(-x²)` factor) and `gaussianI_sqrt_disk_continuousAt` (the `gaussianI(√(R²-x²))` factor)
+via `continuousAt_mul`. -/
+theorem diskIntegrand_continuousAt (R : Real) {z : Real} (hz0 : 0 ≤ z) (hzR : z ≤ R) :
+    ContinuousAt (fun y => Real.exp (-(y * y)) * gaussianI (sqrt (R * R - y * y))) z :=
+  continuousAt_mul (gaussian_continuous z) (gaussianI_sqrt_disk_continuousAt hz0 hzR)
+
+theorem disk_integral_exists (R : Real) (hR : 0 ≤ R) :
+    ∃ I : Real,
+      (∀ k, lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x))) 0 R hR
+          (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) (2 ^ k) (two_pow_pos k) ≤ I ∧
+        I ≤ upperSumCont (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x))) 0 R hR
+          (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) (2 ^ k) (two_pow_pos k)) ∧
+      (∀ ε : Real, 0 < ε → ∃ k,
+        upperSumCont (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x))) 0 R hR
+          (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x))) 0 R hR
+          (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) (2 ^ k) (two_pow_pos k) < ε) :=
+  continuous_riemann_integrable (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x)))
+    0 R hR (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR)
+
+/-- `D(R) := ∫₀ᴿ exp(-x²)·gaussianI(√(R²-x²))dx` — the Cartesian iterated (Fubini-style)
+quarter-disk integral. Comparing `D(R)` to `S(R):=gaussianIntegral(R)²` via the sandwich
+`D(R)≤S(R)≤D(R√2)` is Poisson's classical trick for pinning `I²=∫₀^∞exp(-t²)dt` squared; see the
+`project_sqrtpi_disk_sandwich_design_2026_07_24` memory note for the full paper design. -/
+noncomputable def D (R : Real) (hR : 0 ≤ R) : Real :=
+  Classical.choose (disk_integral_exists R hR)
+
 end Real
 end MachLib
