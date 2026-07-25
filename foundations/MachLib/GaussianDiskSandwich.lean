@@ -623,5 +623,113 @@ theorem disk_le_square (R : Real) (hR : 0 ≤ R) : D R hR ≤ S R hR := by
     (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) hcont_h hgh
     (D R hR) (S R hR) hIgup hIhlow hgaph
 
+/-! ## §9 — `S(R) ≤ D(R√2)`, the second half of the sandwich -/
+
+/-- `R√2`, expressed without ever introducing `√2` as its own object: `Rs2 R := √(R²+R²)`, so
+`(Rs2 R)² = R²+R²` is immediate from `sqrt_sq_nonneg` — sidesteps needing any algebraic properties
+of `√2` itself. -/
+noncomputable def Rs2 (R : Real) : Real := sqrt (R * R + R * R)
+
+theorem Rs2_nonneg (R : Real) : 0 ≤ Rs2 R := sqrt_nonneg _
+
+theorem Rs2_sq (R : Real) : Rs2 R * Rs2 R = R * R + R * R :=
+  sqrt_sq_nonneg (R * R + R * R) (add_nonneg (mul_self_nonneg R) (mul_self_nonneg R))
+
+theorem R_le_Rs2 (R : Real) (hR : 0 ≤ R) : R ≤ Rs2 R :=
+  le_sqrt_of_sq_le hR (le_add_of_nonneg_right (mul_self_nonneg R))
+
+private theorem add_sub_assoc_local (a b c : Real) : a + b - c = a + (b - c) := by
+  mach_mpoly [a, b, c]
+
+theorem square_le_disk_sqrt2 (R : Real) (hR : 0 ≤ R) : S R hR ≤ D (Rs2 R) (Rs2_nonneg R) := by
+  have hRs2 := Rs2_nonneg R
+  have hRRs2 : R ≤ Rs2 R := R_le_Rs2 R hR
+  have hcg := Classical.choose_spec (gaussian_integral_exists R hR)
+  have hcD2 := Classical.choose_spec (disk_integral_exists (Rs2 R) hRs2)
+  have hcont_full : ∀ z : Real, 0 ≤ z → z ≤ Rs2 R →
+      ContinuousAt (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) z :=
+    fun z hz0 hzRs2 => diskIntegrand_continuousAt (Rs2 R) hz0 hzRs2
+  have hcont_a : ∀ z : Real, 0 ≤ z → z ≤ R →
+      ContinuousAt (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) z :=
+    fun z hz0 hzR => diskIntegrand_continuousAt (Rs2 R) hz0 (le_trans hzR hRRs2)
+  have hcont_w : ∀ z : Real, R ≤ z → z ≤ Rs2 R →
+      ContinuousAt (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) z :=
+    fun z hzR hzRs2 => diskIntegrand_continuousAt (Rs2 R) (le_trans hR hzR) hzRs2
+  have hnonneg_full : ∀ z : Real, 0 ≤ z → z ≤ Rs2 R →
+      0 ≤ Real.exp (-(z * z)) * gaussianI (sqrt (Rs2 R * Rs2 R - z * z)) :=
+    fun z _ _ => mul_nonneg (le_of_lt (exp_pos _)) (gaussianI_nonneg _ (sqrt_nonneg _))
+  have hIa_ex := Classical.choose_spec (continuous_riemann_integrable
+    (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) 0 R hR hcont_a)
+  have hIw_ex := Classical.choose_spec (continuous_riemann_integrable
+    (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) R (Rs2 R) hRRs2 hcont_w)
+  have hcont_gconst : ∀ z : Real, 0 ≤ z → z ≤ R →
+      ContinuousAt (fun x => Real.exp (-(x * x)) * gaussianI R) z :=
+    fun z _ _ => continuousAt_mul_const (gaussian_continuous z) (gaussianI R)
+  have hgh : ∀ t : Real, 0 ≤ t → t ≤ R →
+      Real.exp (-(t * t)) * gaussianI R
+        ≤ Real.exp (-(t * t)) * gaussianI (sqrt (Rs2 R * Rs2 R - t * t)) := by
+    intro t ht0 htR
+    have hxR : t * t ≤ R * R := sq_mono ht0 htR
+    have hRRx : R * R ≤ Rs2 R * Rs2 R - t * t := by
+      rw [Rs2_sq]
+      have h2 : 0 ≤ R * R - t * t := sub_nonneg_of_le hxR
+      rw [add_sub_assoc_local (R * R) (R * R) (t * t)]
+      exact le_add_of_nonneg_right h2
+    have hradge : R ≤ sqrt (Rs2 R * Rs2 R - t * t) := le_sqrt_of_sq_le hR hRRx
+    exact mul_le_mul_of_nonneg_left (gaussianI_mono hR hradge) (le_of_lt (exp_pos _))
+  have hIgup : ∀ k, S R hR ≤ upperSumCont (fun x => Real.exp (-(x * x)) * gaussianI R)
+      0 R hR hcont_gconst (2 ^ k) (two_pow_pos k) := by
+    intro k
+    rw [upperSumCont_mul_const (gaussianI_nonneg R hR) hR (fun z _ _ => gaussian_continuous z)
+      hcont_gconst (2 ^ k) (two_pow_pos k)]
+    have h1 : gaussianI R ≤ upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR
+        (fun z _ _ => gaussian_continuous z) (2 ^ k) (two_pow_pos k) := by
+      rw [gaussianI_eq R hR]; exact (hcg.1 k).2
+    exact mul_le_mul_of_nonneg_right h1 (gaussianI_nonneg R hR)
+  have hSleIa : S R hR ≤ Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) 0 R hR hcont_a) :=
+    riemann_integral_mono (fun x => Real.exp (-(x * x)) * gaussianI R)
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) 0 R hR
+      hcont_gconst hcont_a hgh (S R hR) _
+      hIgup (fun k => (hIa_ex.1 k).1) hIa_ex.2
+  have hIw_nonneg : 0 ≤ Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+      R (Rs2 R) hRRs2 hcont_w) := by
+    have h1 := (hIw_ex.1 0).1
+    have hminge : 0 ≤ minSub (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+        R (Rs2 R) hRRs2 hcont_w (2 ^ 0) (two_pow_pos 0) 0 :=
+      minSub_ge_global_bound (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+        R (Rs2 R) hRRs2 hcont_w 0 (fun x _ _ => mul_nonneg (le_of_lt (exp_pos _))
+          (gaussianI_nonneg _ (sqrt_nonneg _))) (2 ^ 0) (two_pow_pos 0) 0
+    have hls : lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+        R (Rs2 R) hRRs2 hcont_w (2 ^ 0) (two_pow_pos 0)
+        = minSub (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+          R (Rs2 R) hRRs2 hcont_w (2 ^ 0) (two_pow_pos 0) 0 * meshWidth R (Rs2 R) (2 ^ 0) := by
+      show partialSum (minSub (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+          R (Rs2 R) hRRs2 hcont_w (2 ^ 0) (two_pow_pos 0)) (2 ^ 0) * meshWidth R (Rs2 R) (2 ^ 0)
+        = minSub (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+          R (Rs2 R) hRRs2 hcont_w (2 ^ 0) (two_pow_pos 0) 0 * meshWidth R (Rs2 R) (2 ^ 0)
+      rw [partialSum_one]
+    rw [hls] at h1
+    have hbound := mul_nonneg hminge (meshWidth_nonneg hRRs2 (2 ^ 0))
+    exact le_trans hbound h1
+  have hadd : Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) 0 R hR hcont_a)
+      + Classical.choose (continuous_riemann_integrable
+        (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+        R (Rs2 R) hRRs2 hcont_w)
+      = D (Rs2 R) hRs2 :=
+    riemann_integral_additivity (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x)))
+      R (Rs2 R) hR hRRs2 hRs2 hcont_full hcont_a hcont_w hnonneg_full
+      _ _ (D (Rs2 R) hRs2)
+      (fun k => (hIa_ex.1 k).1) (fun k => (hIa_ex.1 k).2) hIa_ex.2
+      (fun k => (hIw_ex.1 k).1) (fun k => (hIw_ex.1 k).2) hIw_ex.2
+      (fun k => (hcD2.1 k).1) (fun k => (hcD2.1 k).2) hcD2.2
+  have hIa_le : Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (Rs2 R * Rs2 R - x * x))) 0 R hR hcont_a)
+      ≤ D (Rs2 R) hRs2 := by
+    rw [← hadd]; exact le_add_of_nonneg_right hIw_nonneg
+  exact le_trans hSleIa hIa_le
+
 end Real
 end MachLib
