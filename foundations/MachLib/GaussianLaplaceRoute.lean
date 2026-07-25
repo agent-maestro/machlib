@@ -293,7 +293,10 @@ theorem eq_of_hasDerivAt_eq_of_eq_at_left {f F1 F2 : Real → Real} {a b : Real}
   rw [hstart] at h3
   exact eq_of_sub_eq_sub_laplace h3
 
-private theorem eq_of_forall_pos_abs_sub_lt {a b : Real} (h : ∀ ε : Real, 0 < ε → abs (a - b) < ε) :
+/-- **The general "arbitrarily close ⟹ equal" squeeze.** Public (not `private`) since it's a
+general-purpose real-number utility, reused outside this file (e.g. `RiemannIntegralAddition.lean`'s
+`riemann_integral_add`) — not specific to the Gaussian/√π content this file is otherwise about. -/
+theorem eq_of_forall_pos_abs_sub_lt {a b : Real} (h : ∀ ε : Real, 0 < ε → abs (a - b) < ε) :
     a = b := by
   have hab : a ≤ b := le_of_forall_pos_lt_add (fun η hη => by
     have hh := (abs_lt_split (h η hη)).1
@@ -1296,15 +1299,17 @@ private theorem add_neg_le_of_le (P Q R S : Real) (h : P + Q + -R ≤ S) : -R �
 
 /-- **The gap-controlled upper bound**: if the Darboux gap at level `k` is `< εg` and `L ≤ I`
 (the value's own lower-sum sandwich), then `U ≤ I + εg`. Generic in `U,L,I,εg` — reused for both
-`p(t0,·)`/`GFn t0` and `q(t0,·)`/`GderivFn t0`. -/
-private theorem upperSum_le_add_gap {U L I εg : Real} (hgap : U - L < εg) (hL : L ≤ I) :
+`p(t0,·)`/`GFn t0` and `q(t0,·)`/`GderivFn t0`, and (public, not `private`) for
+`RiemannIntegralAddition.lean`'s `riemann_integral_add`. -/
+theorem upperSum_le_add_gap {U L I εg : Real} (hgap : U - L < εg) (hL : L ≤ I) :
     U ≤ I + εg := by
   have h1 := add_le_add_both (le_of_lt hgap) hL
   rwa [show U - L + L = U from by mach_mpoly [U, L], show εg + I = I + εg from by mach_mpoly [εg, I]]
     at h1
 
-/-- The mirror gap-controlled LOWER bound: `I - εg ≤ L`. -/
-private theorem sub_gap_le_lowerSum {U L I εg : Real} (hgap : U - L < εg) (hU : I ≤ U) :
+/-- The mirror gap-controlled LOWER bound: `I - εg ≤ L`. Public for the same reason as
+`upperSum_le_add_gap` above. -/
+theorem sub_gap_le_lowerSum {U L I εg : Real} (hgap : U - L < εg) (hU : I ≤ U) :
     I - εg ≤ L := by
   have h1 : I - εg ≤ U - εg := by
     have h2 := add_le_add_both hU (le_refl (-εg))
