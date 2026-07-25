@@ -432,7 +432,7 @@ private theorem gaussianDensity_eq_kernel_mul (mu sig2 : Real) (hsig2 : 0 < sig2
   funext x
   exact div_def _ _ (ne_of_gt (density_norm_pos hsig2))
 
-private theorem continuousAt_gaussianDensity (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+theorem continuousAt_gaussianDensity (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
     ContinuousAt (gaussianDensity mu sig2) x := by
   rw [gaussianDensity_eq_kernel_mul mu sig2 hsig2]
   exact continuousAt_mul (continuousAt_scaledKernel mu (1 / sqrt ((1 + 1) * sig2)) x)

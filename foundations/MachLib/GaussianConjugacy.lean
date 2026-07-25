@@ -288,5 +288,100 @@ theorem postMean_eq_kalman (mu sig2 r2 y : Real) :
     postMean mu sig2 r2 y = mu + sig2 / (sig2 + r2) * (y - mu) := by
   rw [postMean, kGain]
 
+/-! ## §6 — the marginal is Gaussian (S10-proper) -/
+
+/-- Local copy of the integrand-congruence for `Classical.choose` (private upstream). -/
+private theorem cri_congr {f g : Real → Real} (hfg : f = g) {a b : Real} (hab : a ≤ b)
+    (hcontf : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcontg : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z) :
+    Classical.choose (continuous_riemann_integrable f a b hab hcontf)
+      = Classical.choose (continuous_riemann_integrable g a b hab hcontg) := by
+  subst hfg; rfl
+
+/-- As a function of `x` (fixed `y`), the joint density is a constant times the posterior density —
+so it is continuous, hence Riemann-integrable. -/
+private theorem continuousAt_jointDensity_x (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    (z : Real) : ContinuousAt (fun x => jointDensity mu sig2 r2 x y) z := by
+  have hfun : (fun x => jointDensity mu sig2 r2 x y)
+      = (fun x => gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) x
+          * gaussianDensity mu (margVar sig2 r2) y) := by
+    funext x; rw [jointDensity_conjugacy mu sig2 r2 x y hsig2 hr2, mul_comm]
+  rw [hfun]
+  exact continuousAt_mul_const (continuousAt_gaussianDensity (postMean mu sig2 r2 y)
+    (postVar sig2 r2) (postVar_pos sig2 r2 hsig2 hr2) z) _
+
+/-- `∫_{-R}^R jointDensity μ σ² r² x y dx` — the marginal integral over `x` at `Y=y`. -/
+noncomputable def jointDensitySymInt (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable (fun x => jointDensity mu sig2 r2 x y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_jointDensity_x mu sig2 r2 y hsig2 hr2 z))
+  else 0
+
+/-- The marginal integral factors: `∫jointDensity dx = (∫posterior dx)·(marginal density)` — the
+posterior (a genuine density) is pulled through `riemann_integral_mul_const`, the marginal density
+is constant in `x`. -/
+private theorem jointDensitySymInt_eq (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    {R : Real} (hR : 0 < R) :
+    jointDensitySymInt mu sig2 r2 y hsig2 hr2 R
+      = gaussianDensitySymInt (postMean mu sig2 r2 y) (postVar sig2 r2)
+          (postVar_pos sig2 r2 hsig2 hr2) R
+        * gaussianDensity mu (margVar sig2 r2) y := by
+  have hpv := postVar_pos sig2 r2 hsig2 hr2
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hcg : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2)) z :=
+    fun z _ _ => continuousAt_gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) hpv z
+  have hcp : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun x => gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) x
+        * gaussianDensity mu (margVar sig2 r2) y) z :=
+    fun z hz0 hz1 => continuousAt_mul_const (hcg z hz0 hz1) _
+  have hfun : (fun x => jointDensity mu sig2 r2 x y)
+      = (fun x => gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) x
+          * gaussianDensity mu (margVar sig2 r2) y) := by
+    funext x; rw [jointDensity_conjugacy mu sig2 r2 x y hsig2 hr2, mul_comm]
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun x => jointDensity mu sig2 r2 x y) (-R) R _ _) else 0) = _
+  rw [dif_pos hR,
+    cri_congr hfun (le_of_lt hab)
+      (fun z _ _ => continuousAt_jointDensity_x mu sig2 r2 y hsig2 hr2 z) hcp,
+    riemann_integral_mul_const (le_of_lt hab) hcg hcp]
+  show _ * _ = gaussianDensitySymInt (postMean mu sig2 r2 y) (postVar sig2 r2) hpv R * _
+  rw [gaussianDensitySymInt, dif_pos hR]
+
+/-- Coefficient-scaling closer: `|S-1| < ε/(|m|+1)` ⇒ `|S·m - m| < ε`. -/
+private theorem marg_final_bound (S m ε : Real) (hS : abs (S - 1) < ε / (abs m + 1)) :
+    abs (S * m - m) < ε := by
+  have hcoef : 0 < abs m + 1 := add_pos_of_nonneg_pos (abs_nonneg m) one_pos
+  rw [show S * m - m = (S - 1) * m from by mach_mpoly [S, m], abs_mul]
+  have h1 : abs (S - 1) * (abs m + 1) < ε := by
+    have h := mul_lt_mul_of_pos_right hS hcoef
+    rwa [div_mul_cancel (ne_of_gt hcoef)] at h
+  exact lt_of_le_of_lt
+    (mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (le_of_lt one_pos)) (abs_nonneg _)) h1
+
+/-- **The marginal is Gaussian (S10)**: integrating `x` out of the joint density leaves the marginal
+`Y ~ N(μ, σ²+r²)` — `∫_{-R}^R jointDensity μ σ² r² x y dx → gaussianDensity μ (σ²+r²) y`. No new
+Gaussian-integral identity is needed: the conjugacy factorization plus `∫posterior = 1` (S3) suffice.
+-/
+theorem jointDensity_marginal_tendsto (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧ ∀ R : Real, R₀ ≤ R →
+      abs (jointDensitySymInt mu sig2 r2 y hsig2 hr2 R
+            - gaussianDensity mu (margVar sig2 r2) y) < ε := by
+  intro ε hε
+  have hpv := postVar_pos sig2 r2 hsig2 hr2
+  have hm : 0 < abs (gaussianDensity mu (margVar sig2 r2) y) + 1 :=
+    add_pos_of_nonneg_pos (abs_nonneg _) one_pos
+  obtain ⟨R0, hR0p, hR0⟩ := gaussianDensity_symInt_tendsto_one (postMean mu sig2 r2 y)
+    (postVar sig2 r2) hpv (ε / (abs (gaussianDensity mu (margVar sig2 r2) y) + 1))
+    (div_pos_of_pos_pos hε hm)
+  refine ⟨max R0 1, lt_of_lt_of_le one_pos (le_max_right R0 1), ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le one_pos (le_trans (le_max_right R0 1) hR)
+  rw [jointDensitySymInt_eq mu sig2 r2 y hsig2 hr2 hRpos]
+  exact marg_final_bound (gaussianDensitySymInt (postMean mu sig2 r2 y) (postVar sig2 r2) hpv R)
+    (gaussianDensity mu (margVar sig2 r2) y) ε (hR0 R (le_trans (le_max_left R0 1) hR))
+
 end Real
 end MachLib
