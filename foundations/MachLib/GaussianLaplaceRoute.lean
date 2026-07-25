@@ -774,5 +774,134 @@ theorem lowerSumCont_const_eq (c a b : Real) (hab : a ≤ b)
     mach_mpoly [natCast n, c, meshWidth a b n]]
   rw [natCast_mul_meshWidth a b n hn]
 
+/-! ## §7 — `q(t,x) := ∂p/∂t` is Lipschitz in `t`, uniformly in `x∈[0,1]`
+
+The MVT+Lipschitz ingredient the Leibniz bound needs — built via `q`'s OWN `t`-derivative (the
+integrand's SECOND `t`-derivative) plus an explicit magnitude bound on it. -/
+
+private theorem hasDerivAt_qFn_t (c t : Real) :
+    HasDerivAt (fun s => -(1+1) * s * Real.exp (-(s * s * c)))
+      (-(1+1) * Real.exp (-(t * t * c)) + (1+1+1+1) * t * t * c * Real.exp (-(t * t * c))) t := by
+  have h1 : HasDerivAt (fun s => s * s) (1 * t + t * 1) t :=
+    HasDerivAt_mul (fun s => s) (fun s => s) 1 1 t (HasDerivAt_id t) (HasDerivAt_id t)
+  have h2 : HasDerivAt (fun s => s * s * c) ((1 * t + t * 1) * c + t * t * 0) t :=
+    HasDerivAt_mul (fun s => s * s) (fun _ => c) (1 * t + t * 1) 0 t h1 (HasDerivAt_const c t)
+  have h3 : HasDerivAt (fun s => -(s * s * c)) (-((1 * t + t * 1) * c + t * t * 0)) t :=
+    HasDerivAt_neg (fun s => s * s * c) ((1 * t + t * 1) * c + t * t * 0) t h2
+  have h4 : HasDerivAt (fun s => Real.exp (-(s * s * c)))
+      (Real.exp (-(t * t * c)) * -((1 * t + t * 1) * c + t * t * 0)) t :=
+    HasDerivAt_comp Real.exp (fun s => -(s * s * c)) (-((1 * t + t * 1) * c + t * t * 0))
+      (Real.exp (-(t * t * c))) t h3 (HasDerivAt_exp (-(t * t * c)))
+  have h5 : HasDerivAt (fun s => -(1+1) * s) (0 * t + -(1+1) * 1) t :=
+    HasDerivAt_mul (fun _ => (-(1+1):Real)) (fun s => s) 0 1 t (HasDerivAt_const (-(1+1)) t) (HasDerivAt_id t)
+  have h6 := HasDerivAt_mul (fun s => -(1+1) * s) (fun s => Real.exp (-(s * s * c)))
+    (0 * t + -(1+1) * 1) (Real.exp (-(t * t * c)) * -((1 * t + t * 1) * c + t * t * 0)) t h5 h4
+  rwa [show (0 * t + -(1+1) * 1) * Real.exp (-(t * t * c))
+      + (-(1+1) * t) * (Real.exp (-(t * t * c)) * -((1 * t + t * 1) * c + t * t * 0))
+      = -(1+1) * Real.exp (-(t * t * c)) + (1+1+1+1) * t * t * c * Real.exp (-(t * t * c))
+      from by mach_mpoly [t, c, Real.exp (-(t * t * c))]] at h6
+
+private theorem four_pos_laplace : (0:Real) < 1 + 1 + 1 + 1 := by
+  have h1 : (0:Real) < 1 + 1 := two_pos
+  have h2 := add_lt_add_both h1 h1
+  rw [add_zero] at h2
+  rwa [show (1 + 1 : Real) + (1 + 1) = 1 + 1 + 1 + 1 from by mach_mpoly [(1:Real)]] at h2
+
+private theorem eight_pos_laplace : (0:Real) < 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 := by
+  have h1 := four_pos_laplace
+  have h2 := add_lt_add_both h1 h1
+  rw [add_zero] at h2
+  rwa [show (1 + 1 + 1 + 1 : Real) + (1 + 1 + 1 + 1) = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
+      from by mach_mpoly [(1:Real)]] at h2
+
+private theorem abs_neg_two_local : abs (-(1+1) : Real) = (1+1) := by
+  rw [abs_of_nonpos (neg_nonpos_of_nonneg (le_of_lt two_pos))]; mach_ring
+
+private theorem qFn_deriv_bound {c t T : Real} (hc0 : 0 ≤ c) (hc2 : c ≤ (1+1)) (hT : 0 ≤ T)
+    (htT : abs t ≤ T) :
+    abs (-(1+1) * Real.exp (-(t * t * c)) + (1+1+1+1) * t * t * c * Real.exp (-(t * t * c)))
+      ≤ (1+1) + (1+1+1+1+1+1+1+1) * T * T := by
+  have hE0 : 0 ≤ Real.exp (-(t * t * c)) := le_of_lt (exp_pos _)
+  have hE1 : Real.exp (-(t * t * c)) ≤ 1 := by
+    have h1 : -(t * t * c) ≤ 0 := neg_nonpos_of_nonneg (mul_nonneg (mul_self_nonneg t) hc0)
+    have h2 := exp_monotone h1
+    rwa [Real.exp_zero] at h2
+  have httT : t * t ≤ T * T := by
+    have h1 : t * t = abs t * abs t := by
+      rw [← abs_mul]; exact (abs_of_nonneg (mul_self_nonneg t)).symm
+    rw [h1]
+    exact mul_le_mul' (abs_nonneg t) htT (abs_nonneg t) htT
+  have htri := abs_add ((-(1+1):Real) * Real.exp (-(t * t * c)))
+    ((1+1+1+1) * t * t * c * Real.exp (-(t * t * c)))
+  have hb1 : abs ((-(1+1):Real) * Real.exp (-(t * t * c))) ≤ (1+1) := by
+    rw [abs_mul, abs_neg_two_local, abs_of_nonneg hE0]
+    have h := mul_le_mul_of_nonneg_left hE1 (le_of_lt two_pos)
+    rwa [mul_one_ax] at h
+  have hb2 : abs ((1+1+1+1) * t * t * c * Real.exp (-(t * t * c))) ≤ (1+1+1+1+1+1+1+1) * T * T := by
+    rw [show (1+1+1+1:Real) * t * t * c * Real.exp (-(t * t * c))
+        = (1+1+1+1) * (t * t * (c * Real.exp (-(t * t * c)))) from by
+      mach_mpoly [t, c, Real.exp (-(t * t * c))]]
+    have hcE : c * Real.exp (-(t * t * c)) ≤ (1+1) := by
+      have h := mul_le_mul' hc0 hc2 hE0 hE1
+      rwa [mul_one_ax] at h
+    have hcEnn : 0 ≤ c * Real.exp (-(t * t * c)) := mul_nonneg hc0 hE0
+    have httTc : t * t * (c * Real.exp (-(t * t * c))) ≤ T * T * (1+1) :=
+      mul_le_mul' (mul_self_nonneg t) httT hcEnn hcE
+    have httTcnn : 0 ≤ t * t * (c * Real.exp (-(t * t * c))) :=
+      mul_nonneg (mul_self_nonneg t) hcEnn
+    rw [abs_of_nonneg (mul_nonneg (le_of_lt four_pos_laplace) httTcnn)]
+    have h := mul_le_mul_of_nonneg_left httTc (le_of_lt four_pos_laplace)
+    rwa [show (1+1+1+1:Real) * (T * T * (1+1)) = (1+1+1+1+1+1+1+1) * T * T from by mach_mpoly [T]] at h
+  have hsum := add_le_add_both hb1 hb2
+  rw [show ((1+1):Real) + (1+1+1+1+1+1+1+1) * T * T = (1+1) + (1+1+1+1+1+1+1+1) * T * T from rfl] at hsum
+  exact le_trans htri hsum
+
+/-- **`q(t,x)` is Lipschitz in `t` on `[-T,T]`, uniformly in `x`, with constant `(1+1)+8T²`.** -/
+theorem qFn_lipschitz_in_t {c t1 t2 T : Real} (hc0 : 0 ≤ c) (hc2 : c ≤ (1+1)) (hT : 0 ≤ T)
+    (ht1 : abs t1 ≤ T) (ht2 : abs t2 ≤ T) :
+    abs (-(1+1) * t1 * Real.exp (-(t1 * t1 * c)) - -(1+1) * t2 * Real.exp (-(t2 * t2 * c)))
+      ≤ ((1+1) + (1+1+1+1+1+1+1+1) * T * T) * abs (t1 - t2) := by
+  have hstep : ∀ p q : Real, p < q → abs p ≤ T → abs q ≤ T →
+      abs (-(1+1) * q * Real.exp (-(q * q * c)) - -(1+1) * p * Real.exp (-(p * p * c)))
+        ≤ ((1+1) + (1+1+1+1+1+1+1+1) * T * T) * (q - p) := by
+    intro p q hpq hpT hqT
+    obtain ⟨cc, f', hc1, hc2', hderiv, heqv⟩ :=
+      mean_value_theorem_ct (fun s => -(1+1) * s * Real.exp (-(s * s * c))) p q hpq
+        (fun z _ _ => ⟨-(1+1) * Real.exp (-(z * z * c)) + (1+1+1+1) * z * z * c * Real.exp (-(z * z * c)),
+          hasDerivAt_qFn_t c z⟩)
+    rw [HasDerivAt_unique (fun s => -(1+1) * s * Real.exp (-(s * s * c))) f'
+      (-(1+1) * Real.exp (-(cc * cc * c)) + (1+1+1+1) * cc * cc * c * Real.exp (-(cc * cc * c))) cc hderiv
+      (hasDerivAt_qFn_t c cc)] at heqv
+    have hccT : abs cc ≤ T := by
+      have hp1 := (abs_le_iff.mp hpT).1
+      have hq2 := (abs_le_iff.mp hqT).2
+      exact abs_le_iff.mpr ⟨le_trans hp1 (le_of_lt hc1), le_of_lt (lt_of_lt_of_le hc2' hq2)⟩
+    have hbound := qFn_deriv_bound hc0 hc2 hT hccT
+    have hqpnn : 0 ≤ q - p := sub_nonneg_of_le (le_of_lt hpq)
+    have hgoal : abs ((-(1+1) * Real.exp (-(cc * cc * c)) + (1+1+1+1) * cc * cc * c * Real.exp (-(cc * cc * c)))
+        * (q - p)) ≤ ((1+1) + (1+1+1+1+1+1+1+1) * T * T) * (q - p) := by
+      rw [abs_mul, abs_of_nonneg hqpnn]
+      exact mul_le_mul_of_nonneg_right hbound hqpnn
+    show abs (-(1+1) * q * Real.exp (-(q * q * c)) - -(1+1) * p * Real.exp (-(p * p * c))) ≤ _
+    rw [heqv]
+    exact hgoal
+  rcases lt_total t1 t2 with hlt | heqv | hlt
+  · have h := hstep t1 t2 hlt ht1 ht2
+    rw [show -(1+1) * t1 * Real.exp (-(t1 * t1 * c)) - -(1+1) * t2 * Real.exp (-(t2 * t2 * c))
+        = -(-(1+1) * t2 * Real.exp (-(t2 * t2 * c)) - -(1+1) * t1 * Real.exp (-(t1 * t1 * c)))
+        from by mach_mpoly [t1, t2, Real.exp (-(t1 * t1 * c)), Real.exp (-(t2 * t2 * c))]]
+    rw [abs_neg]
+    rw [show abs (t1 - t2) = t2 - t1 from by
+      rw [show t1 - t2 = -(t2 - t1) from by mach_mpoly [t1, t2], abs_neg,
+        abs_of_nonneg (sub_nonneg_of_le (le_of_lt hlt))]]
+    exact h
+  · rw [heqv]
+    rw [show -(1+1) * t2 * Real.exp (-(t2 * t2 * c)) - -(1+1) * t2 * Real.exp (-(t2 * t2 * c)) = (0:Real)
+      from by mach_mpoly [t2, Real.exp (-(t2 * t2 * c))]]
+    rw [abs_zero, show t2 - t2 = (0:Real) from by mach_mpoly [t2], abs_zero, mul_zero]
+    exact le_refl 0
+  · have h := hstep t2 t1 hlt ht2 ht1
+    rwa [show abs (t1 - t2) = t1 - t2 from abs_of_nonneg (sub_nonneg_of_le (le_of_lt hlt))]
+
 end Real
 end MachLib
