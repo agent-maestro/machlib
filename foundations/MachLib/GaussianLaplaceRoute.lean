@@ -1896,5 +1896,249 @@ theorem GderivFn_eq_gaussianI (t0 : Real) (ht0 : 0 < t0) :
   mach_mpoly [Real.exp (-(t0 * t0)), t0,
     intUpTo (fun x => Real.exp (-((t0 * x) * (t0 * x)))) (hcont_scaled_gaussian t0) 1]
 
+/-! ## §19 — `FFn(t) := gaussianI(t)²`, `HasDerivAt (FFn+GFn) 0 t0` for `t0>0`
+
+`F' = 2·exp(-t²)·gaussianI(t)` via the product rule + `gaussianI_hasDerivAt_pos`. Combined with
+`hasDerivAt_GFn`+`GderivFn_eq_gaussianI`, `F'+G' = 0` — the algebraic content of the whole Laplace
+trick, now fully assembled. -/
+
+noncomputable def FFn (t : Real) : Real := gaussianI t * gaussianI t
+
+theorem hasDerivAt_FFn_pos {t0 : Real} (ht0 : 0 < t0) :
+    HasDerivAt FFn ((1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0) t0 := by
+  have h := HasDerivAt_mul gaussianI gaussianI (Real.exp (-(t0 * t0))) (Real.exp (-(t0 * t0))) t0
+    (gaussianI_hasDerivAt_pos ht0) (gaussianI_hasDerivAt_pos ht0)
+  rwa [show Real.exp (-(t0 * t0)) * gaussianI t0 + gaussianI t0 * Real.exp (-(t0 * t0))
+      = (1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0 from by
+    mach_mpoly [Real.exp (-(t0 * t0)), gaussianI t0]] at h
+
+theorem hasDerivAt_HFn_pos {t0 : Real} (ht0 : 0 < t0) :
+    HasDerivAt (fun t => FFn t + GFn t) 0 t0 := by
+  have h := HasDerivAt_add FFn GFn ((1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0) (GderivFn t0) t0
+    (hasDerivAt_FFn_pos ht0) (hasDerivAt_GFn t0)
+  rw [GderivFn_eq_gaussianI t0 ht0] at h
+  rwa [show (1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0
+      + -(1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0 = (0 : Real) from by
+    mach_mpoly [Real.exp (-(t0 * t0)), gaussianI t0]] at h
+
+/-! ## §20 — `FFn + GFn` is constant on `[0,∞)`
+
+The SAME open-interval FTC-uniqueness device from §3 (`gaussianI`, hence `FFn`, has no two-sided
+derivative exactly at `t=0` — only mere CONTINUITY, established via `gaussianI_continuousAt_zero`
+and `hasDerivAt_continuousAt (hasDerivAt_GFn 0)` (which, unlike `FFn`, genuinely has a derivative at
+`0` too — only `FFn`'s kink forces the open-interval route). -/
+
+theorem HFn_const {b : Real} (hb : 0 < b) : FFn b + GFn b = FFn 0 + GFn 0 := by
+  have hcontFFn0 : ContinuousAt FFn 0 :=
+    continuousAt_mul gaussianI_continuousAt_zero gaussianI_continuousAt_zero
+  have hcontGFn0 : ContinuousAt GFn 0 := hasDerivAt_continuousAt (hasDerivAt_GFn 0)
+  have hcontH0 : ContinuousAt (fun t => FFn t + GFn t) 0 := continuousAt_add hcontFFn0 hcontGFn0
+  exact eq_of_hasDerivAt_eq_open_of_eq_at_left hb (fun z _ _ => continuousAt_const (0 : Real) z)
+    (fun z hz0 _ => hasDerivAt_HFn_pos hz0) (fun z _ _ => HasDerivAt_const (FFn 0 + GFn 0) z)
+    hcontH0 (continuousAt_const (FFn 0 + GFn 0) 0) rfl
+
+/-! ## §21 — the `t → ∞` limit: `gaussianImproperIntegral` (defined here for the first time),
+`GFn(t) → 0`, `FFn(t) → gaussianImproperIntegral²` -/
+
+noncomputable def gaussianImproperIntegral : Real :=
+  Classical.choose gaussianImproperIntegral_exists
+
+theorem gaussianImproperIntegral_ub (x : Real) (hx : 0 ≤ x) :
+    gaussianIntegral x hx ≤ gaussianImproperIntegral :=
+  (Classical.choose_spec gaussianImproperIntegral_exists).1 x hx
+
+theorem gaussianImproperIntegral_approx (ε : Real) (hε : 0 < ε) :
+    ∃ x, ∃ hx : 0 ≤ x, gaussianImproperIntegral - ε < gaussianIntegral x hx :=
+  (Classical.choose_spec gaussianImproperIntegral_exists).2 ε hε
+
+theorem gaussianI_le_gaussianImproperIntegral {t : Real} (ht : 0 ≤ t) :
+    gaussianI t ≤ gaussianImproperIntegral := by
+  rw [gaussianI_eq t ht]
+  exact gaussianImproperIntegral_ub t ht
+
+theorem gaussianImproperIntegral_nonneg : 0 ≤ gaussianImproperIntegral :=
+  le_trans (gaussianIntegral_nonneg 0 (le_refl 0)) (gaussianImproperIntegral_ub 0 (le_refl 0))
+
+private theorem sub_lt_of_sub_lt (A B ε : Real) (h : A - ε < B) : A - B < ε := by
+  have h2 := add_lt_add_left h (ε - B)
+  rwa [show ε - B + (A - ε) = A - B from by mach_mpoly [A, B, ε],
+    show ε - B + B = ε from by mach_mpoly [B, ε]] at h2
+
+theorem gaussianI_close_to_improper (ε : Real) (hε : 0 < ε) :
+    ∃ T : Real, 0 ≤ T ∧ ∀ t : Real, T ≤ t → gaussianImproperIntegral - gaussianI t < ε := by
+  obtain ⟨x0, hx0, hlt⟩ := gaussianImproperIntegral_approx ε hε
+  refine ⟨x0, hx0, ?_⟩
+  intro t ht
+  have h1 : gaussianIntegral x0 hx0 ≤ gaussianIntegral t (le_trans hx0 ht) :=
+    gaussianIntegral_mono hx0 ht
+  rw [← gaussianI_eq t (le_trans hx0 ht)] at h1
+  exact sub_lt_of_sub_lt gaussianImproperIntegral (gaussianI t) ε (lt_of_lt_of_le hlt h1)
+
+private theorem kFn_nonneg (x : Real) : 0 ≤ kFn x :=
+  le_of_lt (div_pos_of_pos_pos one_pos (one_add_sq_pos x))
+
+private theorem kFn_le_one (x : Real) : kFn x ≤ 1 := by
+  have hmc : kFn x * (1 + x * x) = 1 := div_mul_cancel (ne_of_gt (one_add_sq_pos x))
+  have h1 : (1 : Real) ≤ 1 + x * x := by
+    have h := add_le_add_left (mul_self_nonneg x) 1
+    rwa [add_zero] at h
+  have h2 := mul_le_mul_of_nonneg_left h1 (kFn_nonneg x)
+  rw [mul_one_ax, hmc] at h2
+  exact h2
+
+theorem GFn_nonneg (t : Real) : 0 ≤ GFn t := by
+  have hp : ∀ x : Real, 0 ≤ x → x ≤ 1 → (0 : Real) ≤ Real.exp (-(t * t * (1 + x * x))) * kFn x :=
+    fun x _ _ => mul_nonneg (le_of_lt (exp_pos _)) (kFn_nonneg x)
+  have h := lowerSumCont_le_of_pointwise_le (le_of_lt one_pos)
+    (fun z _ _ => continuousAt_const (0 : Real) z) (fun z _ _ => hcont_p t z) hp (2 ^ 0)
+    (two_pow_pos 0)
+  rw [lowerSumCont_const_eq01 0 (fun z _ _ => continuousAt_const (0 : Real) z) (2 ^ 0)
+    (two_pow_pos 0)] at h
+  exact le_trans h (GFn_sandwich t 0).1
+
+theorem GFn_le_exp_neg_sq (t : Real) : GFn t ≤ Real.exp (-(t * t)) := by
+  have hp : ∀ x : Real, 0 ≤ x → x ≤ 1 →
+      Real.exp (-(t * t * (1 + x * x))) * kFn x ≤ Real.exp (-(t * t)) := by
+    intro x hx0 hx1
+    have h1 : t * t ≤ t * t * (1 + x * x) := by
+      have h2 : (1 : Real) ≤ 1 + x * x := by
+        have h := add_le_add_left (mul_self_nonneg x) 1
+        rwa [add_zero] at h
+      have h3 := mul_le_mul_of_nonneg_left h2 (mul_self_nonneg t)
+      rwa [mul_one_ax] at h3
+    have h4 : Real.exp (-(t * t * (1 + x * x))) ≤ Real.exp (-(t * t)) := exp_monotone (neg_le_neg h1)
+    have h5 := mul_le_mul_of_nonneg_left (kFn_le_one x) (le_of_lt (exp_pos (-(t * t * (1 + x * x)))))
+    rw [mul_one_ax] at h5
+    exact le_trans h5 h4
+  have h := upperSumCont_le_of_pointwise_le (le_of_lt one_pos) (fun z _ _ => hcont_p t z)
+    (fun z _ _ => continuousAt_const (Real.exp (-(t * t))) z) hp (2 ^ 0) (two_pow_pos 0)
+  rw [upperSumCont_const_eq01 (Real.exp (-(t * t)))
+    (fun z _ _ => continuousAt_const (Real.exp (-(t * t))) z) (2 ^ 0) (two_pow_pos 0)] at h
+  exact le_trans (GFn_sandwich t 0).2 h
+
+theorem GFn_small (ε : Real) (hε : 0 < ε) : ∃ T : Real, 0 ≤ T ∧ ∀ t : Real, T ≤ t → GFn t < ε := by
+  obtain ⟨x0, hx0pos, hx0⟩ := exp_neg_sq_small ε hε
+  refine ⟨x0, le_of_lt hx0pos, ?_⟩
+  intro t ht
+  have h1 : x0 * x0 ≤ t * t := mul_le_mul' (le_of_lt hx0pos) ht (le_of_lt hx0pos) ht
+  have h2 : Real.exp (-(t * t)) ≤ Real.exp (-(x0 * x0)) := exp_monotone (neg_le_neg h1)
+  exact lt_of_le_of_lt (le_trans (GFn_le_exp_neg_sq t) h2) hx0
+
+/-! ## §22 — the finish line: `FFn 0 + GFn 0 = gaussianImproperIntegral²`, then `√π/2` -/
+
+private theorem diff_of_squares_helper (A B : Real) : A * A - B * B = (A - B) * (A + B) := by
+  mach_mpoly [A, B]
+
+private theorem neg_sub_eq_sub_helper (A B : Real) : -(A - B) = B - A := by mach_mpoly [A, B]
+
+private theorem add_sub_rearrange_helper (A B C : Real) : A + B - C = (A - C) + B := by
+  mach_mpoly [A, B, C]
+
+theorem FFn0_add_GFn0_eq_gaussianImproperIntegral_sq :
+    FFn 0 + GFn 0 = gaussianImproperIntegral * gaussianImproperIntegral := by
+  apply eq_of_forall_pos_abs_sub_lt
+  intro ε hε
+  have hε2 : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  have h2Ipos : 0 < (1 + 1) * gaussianImproperIntegral + 1 :=
+    add_pos_of_nonneg_pos (mul_nonneg (le_of_lt two_pos) gaussianImproperIntegral_nonneg) one_pos
+  have hδpos : 0 < ε / (1 + 1) / ((1 + 1) * gaussianImproperIntegral + 1) :=
+    div_pos_of_pos_pos hε2 h2Ipos
+  obtain ⟨T1, hT1nn, hT1⟩ := GFn_small (ε / (1 + 1)) hε2
+  obtain ⟨T2, hT2nn, hT2⟩ :=
+    gaussianI_close_to_improper (ε / (1 + 1) / ((1 + 1) * gaussianImproperIntegral + 1)) hδpos
+  let T := max (max T1 T2) 1
+  have hTge1 : (1 : Real) ≤ T := le_max_right (max T1 T2) 1
+  have hTpos : 0 < T := lt_of_lt_of_le one_pos hTge1
+  have hTgeT1 : T1 ≤ T := le_trans (le_max_left T1 T2) (le_max_left (max T1 T2) 1)
+  have hTgeT2 : T2 ≤ T := le_trans (le_max_right T1 T2) (le_max_left (max T1 T2) 1)
+  have hgIle : gaussianI T ≤ gaussianImproperIntegral :=
+    gaussianI_le_gaussianImproperIntegral (le_of_lt hTpos)
+  have hgInn : 0 ≤ gaussianI T := gaussianI_nonneg T (le_of_lt hTpos)
+  have hclose := hT2 T hTgeT2
+  have hGsmall := hT1 T hTgeT1
+  have hGnn := GFn_nonneg T
+  have hfactor : FFn T - gaussianImproperIntegral * gaussianImproperIntegral
+      = (gaussianI T - gaussianImproperIntegral) * (gaussianI T + gaussianImproperIntegral) :=
+    diff_of_squares_helper (gaussianI T) gaussianImproperIntegral
+  have habs1 : abs (gaussianI T - gaussianImproperIntegral) = gaussianImproperIntegral - gaussianI T := by
+    rw [abs_of_nonpos (sub_nonpos_of_le hgIle)]
+    exact neg_sub_eq_sub_helper (gaussianI T) gaussianImproperIntegral
+  have hsumnn : 0 ≤ gaussianI T + gaussianImproperIntegral :=
+    add_nonneg hgInn gaussianImproperIntegral_nonneg
+  have hsumle : gaussianI T + gaussianImproperIntegral ≤ (1 + 1) * gaussianImproperIntegral + 1 := by
+    have h1 := add_le_add_both hgIle (le_refl gaussianImproperIntegral)
+    have h2 : gaussianImproperIntegral + gaussianImproperIntegral
+        ≤ (1 + 1) * gaussianImproperIntegral + 1 := by
+      have heq : gaussianImproperIntegral + gaussianImproperIntegral
+          = (1 + 1) * gaussianImproperIntegral := by mach_mpoly [gaussianImproperIntegral]
+      rw [heq]
+      have h3 := add_le_add_left (le_of_lt one_pos) ((1 + 1) * gaussianImproperIntegral)
+      rwa [add_zero] at h3
+    exact le_trans h1 h2
+  have habsF : abs (FFn T - gaussianImproperIntegral * gaussianImproperIntegral)
+      ≤ (gaussianImproperIntegral - gaussianI T) * ((1 + 1) * gaussianImproperIntegral + 1) := by
+    rw [hfactor, abs_mul, habs1, abs_of_nonneg hsumnn]
+    exact mul_le_mul_of_nonneg_left hsumle (sub_nonneg_of_le hgIle)
+  have hFbound : abs (FFn T - gaussianImproperIntegral * gaussianImproperIntegral) < ε / (1 + 1) := by
+    have hstep := mul_lt_mul_of_pos_right_laplace hclose h2Ipos
+    rw [div_mul_cancel (ne_of_gt h2Ipos)] at hstep
+    exact lt_of_le_of_lt habsF hstep
+  have hconst := HFn_const hTpos
+  rw [← hconst]
+  have hsplit : FFn T + GFn T - gaussianImproperIntegral * gaussianImproperIntegral
+      = (FFn T - gaussianImproperIntegral * gaussianImproperIntegral) + GFn T :=
+    add_sub_rearrange_helper (FFn T) (GFn T) (gaussianImproperIntegral * gaussianImproperIntegral)
+  rw [hsplit]
+  have htri := abs_add (FFn T - gaussianImproperIntegral * gaussianImproperIntegral) (GFn T)
+  rw [abs_of_nonneg hGnn] at htri
+  have hsum := add_lt_add_both hFbound hGsmall
+  rw [half_add_half_laplace ε] at hsum
+  exact lt_of_le_of_lt htri hsum
+
+theorem FFn_zero_eq : FFn 0 = 0 := by
+  show gaussianI 0 * gaussianI 0 = 0
+  rw [gaussianI_zero_eq, mul_zero]
+
+/-- `GFn 0 = π/4` — bridges to `integral_kFn_eq_piQuarter` via `continuous_riemann_integral_congr`,
+since `GFn 0`'s integrand `exp(-(0·0·(1+x²)))·kFn x` is only PROPOSITIONALLY (not definitionally)
+equal to `kFn x`. -/
+theorem GFn_zero_eq : GFn 0 = pi / (1 + 1) / (1 + 1) := by
+  have hfeq : (fun x => Real.exp (-((0 : Real) * 0 * (1 + x * x))) * kFn x) = kFn := by
+    funext x
+    rw [show (0 : Real) * 0 * (1 + x * x) = 0 from by mach_mpoly [x], neg_zero, Real.exp_zero,
+      one_mul_thm]
+  have hcongr := continuous_riemann_integral_congr hfeq (le_of_lt one_pos) (fun z _ _ => hcont_p 0 z)
+    (fun z _ _ => continuousAt_kFn z)
+  unfold GFn
+  rw [hcongr]
+  exact integral_kFn_eq_piQuarter
+
+/-- **`∫₀^∞ exp(-t²) dt = √π/2`.** The finish line of the whole √π project: combine the F+G
+constant fact with the boundary values `F(0)=0`/`G(0)=π/4` to pin `gaussianImproperIntegral²=π/4`,
+then extract the square root via `sqrt_sq` (clearing the `/2/2` denominator first via
+`div_mul_cancel`) and `mul_left_cancel`. -/
+theorem gaussianImproperIntegral_eq_sqrt_pi_div_two :
+    gaussianImproperIntegral = sqrt pi / (1 + 1) := by
+  have hsq : gaussianImproperIntegral * gaussianImproperIntegral = pi / (1 + 1) / (1 + 1) := by
+    have h := FFn0_add_GFn0_eq_gaussianImproperIntegral_sq
+    rw [FFn_zero_eq, GFn_zero_eq, zero_add] at h
+    exact h.symm
+  have hclear : (1 + 1) * (1 + 1) * (pi / (1 + 1) / (1 + 1)) = pi := by
+    rw [show (1 + 1) * (1 + 1) * (pi / (1 + 1) / (1 + 1))
+        = pi / (1 + 1) / (1 + 1) * (1 + 1) * (1 + 1) from by
+      mach_mpoly [pi / (1 + 1) / (1 + 1)], div_mul_cancel two_ne_zero, div_mul_cancel two_ne_zero]
+  have h4Iinf : (1 + 1) * gaussianImproperIntegral * ((1 + 1) * gaussianImproperIntegral) = pi := by
+    rw [show (1 + 1) * gaussianImproperIntegral * ((1 + 1) * gaussianImproperIntegral)
+        = (1 + 1) * (1 + 1) * (gaussianImproperIntegral * gaussianImproperIntegral) from by
+      mach_mpoly [gaussianImproperIntegral], hsq, hclear]
+  have hz_nonneg : 0 ≤ (1 + 1) * gaussianImproperIntegral :=
+    mul_nonneg (le_of_lt two_pos) gaussianImproperIntegral_nonneg
+  have hsqrt := sqrt_sq hz_nonneg
+  rw [h4Iinf] at hsqrt
+  have htarget : (1 + 1) * gaussianImproperIntegral = (1 + 1) * (sqrt pi / (1 + 1)) := by
+    rw [mul_div_cancel' two_ne_zero]
+    exact hsqrt.symm
+  exact mul_left_cancel two_ne_zero htarget
+
 end Real
 end MachLib
