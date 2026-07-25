@@ -1739,5 +1739,162 @@ theorem hasDerivAt_GFn (t0 : Real) : HasDerivAt GFn (GderivFn t0) t0 := by
       div_mul_cancel (ne_of_gt three_pos_laplace)] at hfin
     exact hfin
 
+/-! ## §17 — scalar multiples of Riemann integrals (VALUE-level, any sign)
+
+Needed to relate `GderivFn t0` (an integral of `-2t0·exp(-t0²(1+x²))`) to `gaussianI t0` (via the
+substitution lemma, which only knows about `exp(-t0²(1+x²)) = exp(-t0²)·exp(-t0²x²)`'s integral
+WITHOUT the constant factors pulled out). `upperSumCont_mul_const`/`lowerSumCont_mul_const`
+(`GaussianDiskSandwich.lean`) only handle the Darboux-SUM level and only for `c≥0`; this section
+lifts to the actual `Classical.choose` VALUE, for a constant of ANY sign, via the same
+"arbitrarily-close ⟹ equal" squeeze (`eq_of_forall_pos_abs_sub_lt`, §3) used throughout this file. -/
+
+private theorem abs_sub_le_of_mem_interval {X Y L U : Real}
+    (hXL : L ≤ X) (hXU : X ≤ U) (hYL : L ≤ Y) (hYU : Y ≤ U) : abs (X - Y) ≤ U - L := by
+  rcases lt_total X Y with h | h | h
+  · rw [abs_of_nonpos (sub_nonpos_of_le (le_of_lt h))]
+    have h1 := add_le_add_both hYU (neg_le_neg hXL)
+    rwa [show Y + -X = -(X - Y) from by mach_mpoly [X, Y],
+      show U + -L = U - L from by mach_mpoly [U, L]] at h1
+  · rw [h, sub_self, abs_zero]
+    exact sub_nonneg_of_le (le_trans hXL hXU)
+  · rw [abs_of_nonneg (sub_nonneg_of_le (le_of_lt h))]
+    have h1 := add_le_add_both hXU (neg_le_neg hYL)
+    rwa [show X + -Y = X - Y from by mach_mpoly [X, Y],
+      show U + -L = U - L from by mach_mpoly [U, L]] at h1
+
+/-- `Classical.choose` is a function of the underlying PROPOSITION only (Lean's proof irrelevance
+makes ALL proofs of a fixed `Prop` — including `∃`-statements — definitionally equal), so
+substituting an EQUAL integrand transports the chosen value for free once the functions coincide
+literally (`subst`). -/
+private theorem continuous_riemann_integral_congr {f g : Real → Real} (hfg : f = g) {a b : Real}
+    (hab : a ≤ b) (hcontf : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcontg : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z) :
+    Classical.choose (continuous_riemann_integrable f a b hab hcontf)
+      = Classical.choose (continuous_riemann_integrable g a b hab hcontg) := by
+  subst hfg
+  rfl
+
+theorem riemann_integral_neg_eq {f : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -f x) z) :
+    Classical.choose (continuous_riemann_integrable (fun x => -f x) a b hab hcont')
+      = -Classical.choose (continuous_riemann_integrable f a b hab hcont) := by
+  have hXspec := Classical.choose_spec (continuous_riemann_integrable (fun x => -f x) a b hab hcont')
+  have hYspec := Classical.choose_spec (continuous_riemann_integrable f a b hab hcont)
+  apply eq_of_forall_pos_abs_sub_lt
+  intro ε hε
+  obtain ⟨k, hk⟩ := hYspec.2 ε hε
+  have hXlo := (hXspec.1 k).1
+  have hXhi := (hXspec.1 k).2
+  rw [upperSumCont_neg_eq hab hcont hcont' (2 ^ k) (two_pow_pos k)] at hXhi
+  rw [lowerSumCont_neg_eq hab hcont hcont' (2 ^ k) (two_pow_pos k)] at hXlo
+  have hnYlo := neg_le_neg (hYspec.1 k).2
+  have hnYhi := neg_le_neg (hYspec.1 k).1
+  have hbound := abs_sub_le_of_mem_interval hXlo hXhi hnYlo hnYhi
+  rw [show -lowerSumCont f a b hab hcont (2 ^ k) (two_pow_pos k)
+      - -upperSumCont f a b hab hcont (2 ^ k) (two_pow_pos k)
+      = upperSumCont f a b hab hcont (2 ^ k) (two_pow_pos k)
+        - lowerSumCont f a b hab hcont (2 ^ k) (two_pow_pos k)
+      from by mach_mpoly [upperSumCont f a b hab hcont (2 ^ k) (two_pow_pos k),
+        lowerSumCont f a b hab hcont (2 ^ k) (two_pow_pos k)]] at hbound
+  exact lt_of_le_of_lt hbound hk
+
+theorem riemann_integral_mul_const_nonneg {g : Real → Real} {a b c : Real} (hab : a ≤ b) (hc : 0 ≤ c)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => g x * c) z) :
+    Classical.choose (continuous_riemann_integrable (fun x => g x * c) a b hab hcont')
+      = Classical.choose (continuous_riemann_integrable g a b hab hcont) * c := by
+  have hXspec := Classical.choose_spec (continuous_riemann_integrable (fun x => g x * c) a b hab hcont')
+  have hYspec := Classical.choose_spec (continuous_riemann_integrable g a b hab hcont)
+  apply eq_of_forall_pos_abs_sub_lt
+  intro ε hε
+  have hcp1 : 0 < c + 1 := add_pos_of_nonneg_pos hc one_pos
+  obtain ⟨k, hk⟩ := hYspec.2 (ε / (c + 1)) (div_pos_of_pos_pos hε hcp1)
+  have hXlo := (hXspec.1 k).1
+  have hXhi := (hXspec.1 k).2
+  rw [upperSumCont_mul_const hc hab hcont hcont' (2 ^ k) (two_pow_pos k)] at hXhi
+  rw [lowerSumCont_mul_const hc hab hcont hcont' (2 ^ k) (two_pow_pos k)] at hXlo
+  have hYlo' := mul_le_mul_of_nonneg_right (hYspec.1 k).1 hc
+  have hYhi' := mul_le_mul_of_nonneg_right (hYspec.1 k).2 hc
+  have hbound := abs_sub_le_of_mem_interval hXlo hXhi hYlo' hYhi'
+  rw [show upperSumCont g a b hab hcont (2 ^ k) (two_pow_pos k) * c
+      - lowerSumCont g a b hab hcont (2 ^ k) (two_pow_pos k) * c
+      = (upperSumCont g a b hab hcont (2 ^ k) (two_pow_pos k)
+        - lowerSumCont g a b hab hcont (2 ^ k) (two_pow_pos k)) * c
+      from by mach_mpoly [upperSumCont g a b hab hcont (2 ^ k) (two_pow_pos k),
+        lowerSumCont g a b hab hcont (2 ^ k) (two_pow_pos k), c]] at hbound
+  have hgapC := mul_le_mul_of_nonneg_right (le_of_lt hk) hc
+  have hlast : ε / (c + 1) * c < ε := by
+    have h1 : c < c + 1 := by
+      have h := add_lt_add_left one_pos c
+      rwa [add_zero] at h
+    have h2 := mul_lt_mul_of_pos_left h1 (div_pos_of_pos_pos hε hcp1)
+    rwa [div_mul_cancel (ne_of_gt hcp1)] at h2
+  exact lt_of_le_of_lt (le_trans hbound hgapC) hlast
+
+private theorem mul_eq_neg_mul_neg (A c : Real) : A * c = -(A * -c) := by mach_mpoly [A, c]
+
+theorem riemann_integral_mul_const {g : Real → Real} {a b c : Real} (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => g x * c) z) :
+    Classical.choose (continuous_riemann_integrable (fun x => g x * c) a b hab hcont')
+      = Classical.choose (continuous_riemann_integrable g a b hab hcont) * c := by
+  rcases lt_total c 0 with hc | hc | hc
+  · have hnc : 0 ≤ -c := neg_nonneg_of_nonpos (le_of_lt hc)
+    have hcont'' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => g x * -c) z :=
+      fun z hz0 hz1 => continuousAt_mul (hcont z hz0 hz1) (continuousAt_const (-c) z)
+    have hstep := riemann_integral_mul_const_nonneg hab hnc hcont hcont''
+    have hcont3 : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => -(g x * -c)) z :=
+      fun z hz0 hz1 => continuousAt_neg (hcont'' z hz0 hz1)
+    have hneg := riemann_integral_neg_eq hab hcont'' hcont3
+    have hfuneq : (fun x => g x * c) = (fun x => -(g x * -c)) := by
+      funext x
+      exact mul_eq_neg_mul_neg (g x) c
+    rw [continuous_riemann_integral_congr hfuneq hab hcont' hcont3, hneg, hstep]
+    mach_mpoly [Classical.choose (continuous_riemann_integrable g a b hab hcont), c]
+  · subst hc
+    exact riemann_integral_mul_const_nonneg hab (le_refl 0) hcont hcont'
+  · exact riemann_integral_mul_const_nonneg hab (le_of_lt hc) hcont hcont'
+
+/-! ## §18 — `GderivFn t0` in closed form, via `gaussianI`
+
+`exp(-t0²(1+x²)) = exp(-t0²)·exp(-(t0x)²)` (`exp_add`) turns `GderivFn`'s integrand into a constant
+(`-2t0·exp(-t0²)`) times the SAME scaled-gaussian kernel `gaussianI_eq_t_mul_intUpTo` already
+related to `gaussianI`. Pull the constant out via `riemann_integral_mul_const`, bridge
+`Classical.choose` to `intUpTo` via `intUpTo_eq`, then substitute. -/
+
+private theorem mul_swap_middle_helper (c t E1 E2 : Real) : c * t * (E1 * E2) = E2 * (c * t * E1) := by
+  mach_mpoly [c, t, E1, E2]
+
+theorem GderivFn_eq_gaussianI (t0 : Real) (ht0 : 0 < t0) :
+    GderivFn t0 = -(1 + 1) * Real.exp (-(t0 * t0)) * gaussianI t0 := by
+  have hfeq : (fun x => -(1 + 1) * t0 * Real.exp (-(t0 * t0 * (1 + x * x))))
+      = (fun x => Real.exp (-((t0 * x) * (t0 * x))) * (-(1 + 1) * t0 * Real.exp (-(t0 * t0)))) := by
+    funext x
+    rw [show -(t0 * t0 * (1 + x * x)) = -(t0 * t0) + -((t0 * x) * (t0 * x)) from by
+      mach_mpoly [t0, x], exp_add]
+    exact mul_swap_middle_helper (-(1 + 1)) t0 (Real.exp (-(t0 * t0)))
+      (Real.exp (-((t0 * x) * (t0 * x))))
+  have hcont_g : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+      ContinuousAt (fun x => Real.exp (-((t0 * x) * (t0 * x)))) z :=
+    fun z _ _ => hcont_scaled_gaussian t0 z
+  have hcont_gc : ∀ z : Real, 0 ≤ z → z ≤ 1 →
+      ContinuousAt (fun x => Real.exp (-((t0 * x) * (t0 * x)))
+        * (-(1 + 1) * t0 * Real.exp (-(t0 * t0)))) z :=
+    fun z hz0 hz1 => continuousAt_mul (hcont_g z hz0 hz1)
+      (continuousAt_const (-(1 + 1) * t0 * Real.exp (-(t0 * t0))) z)
+  have hcongr := continuous_riemann_integral_congr hfeq (le_of_lt one_pos)
+    (fun z _ _ => hcont_q t0 z) hcont_gc
+  have hmul := riemann_integral_mul_const (le_of_lt one_pos) hcont_g hcont_gc
+  have hchooseeq : Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-((t0 * x) * (t0 * x)))) 0 1 (le_of_lt one_pos) hcont_g)
+      = intUpTo (fun x => Real.exp (-((t0 * x) * (t0 * x)))) (hcont_scaled_gaussian t0) 1 :=
+    (intUpTo_eq (fun x => Real.exp (-((t0 * x) * (t0 * x)))) (hcont_scaled_gaussian t0) 1
+      (le_of_lt one_pos)).symm
+  unfold GderivFn
+  rw [hcongr, hmul, hchooseeq, gaussianI_eq_t_mul_intUpTo t0 ht0]
+  mach_mpoly [Real.exp (-(t0 * t0)), t0,
+    intUpTo (fun x => Real.exp (-((t0 * x) * (t0 * x)))) (hcont_scaled_gaussian t0) 1]
+
 end Real
 end MachLib
