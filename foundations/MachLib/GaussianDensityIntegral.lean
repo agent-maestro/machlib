@@ -149,6 +149,8 @@ private theorem factor_w_sub (a c : Real) : a - a * c = a * (1 - c) := by mach_m
 private theorem neg_sub_reorder (g y : Real) : -g - y = -y - g := by mach_mpoly [g, y]
 private theorem neg_sub_swap' (a b : Real) : -(a - b) = b - a := by mach_mpoly [a, b]
 private theorem sub_zero_one_mul (A y : Real) : A - 0 - 1 * (y - 0) = A - y := by mach_mpoly [A, y]
+private theorem two_mul_sub_helper (a c : Real) :
+    (1 + 1) * a - (1 + 1) * c = -((1 + 1) * (c - a)) := by mach_mpoly [a, c]
 
 private theorem one_sub_exp_le_sq (w : Real) : 1 - Real.exp (-(w * w)) ≤ w * w := by
   have h := one_add_le_exp (-(w * w))
@@ -235,6 +237,51 @@ theorem integral_exp_neg_sq_symmetric {R : Real} (hR : 0 < R) :
     (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2) hspec.2
   rw [hftc, gaussianISigned_pos (le_of_lt hR), gaussianISigned_neg_of_nonneg (le_of_lt hR)]
   mach_mpoly [gaussianI R]
+
+/-! ## §4 — the full-line integral `∫_{-∞}^∞ exp(-x²) dx = √π` (S2)
+
+A total wrapper `symExpNegSqInt R := ∫_{-R}^R exp(-x²)` (`0` for `R ≤ 0`), which equals
+`2·gaussianI(R)` by §3, converges to `√π` as `R → ∞` — reusing the √π arc's own
+`gaussianI_close_to_improper` (`gaussianI(R) → gaussianImproperIntegral = √π/2`). Stated as a
+genuine ε–R₀ limit, since MachLib has no two-sided improper-integral object and this is the honest
+convergence statement. -/
+
+/-- `∫_{-R}^R exp(-x²) dx` as a total function (`0` off `R > 0`). -/
+noncomputable def symExpNegSqInt (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable (fun x => Real.exp (-(x * x))) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h)) (fun z _ _ => gaussian_continuous z))
+  else 0
+
+theorem symExpNegSqInt_eq {R : Real} (hR : 0 < R) : symExpNegSqInt R = (1 + 1) * gaussianI R := by
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun x => Real.exp (-(x * x))) (-R) R (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => gaussian_continuous z)) else 0) = (1 + 1) * gaussianI R
+  rw [dif_pos hR]
+  exact integral_exp_neg_sq_symmetric hR
+
+/-- **`∫_{-∞}^∞ exp(-x²) dx = √π`**, as an ε–R₀ limit of the symmetric finite integral. -/
+theorem symExpNegSqInt_tendsto_sqrt_pi : ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧
+    ∀ R : Real, R₀ ≤ R → abs (symExpNegSqInt R - sqrt pi) < ε := by
+  intro ε hε
+  have hε2 : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  obtain ⟨T, hT0, hT⟩ := gaussianI_close_to_improper (ε / (1 + 1)) hε2
+  refine ⟨T + 1, add_pos_of_nonneg_pos hT0 one_pos, ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le (add_pos_of_nonneg_pos hT0 one_pos) hR
+  have hRT : T ≤ R := le_trans (le_add_of_nonneg_right (le_of_lt one_pos)) hR
+  rw [symExpNegSqInt_eq hRpos]
+  have hsqrtpi : (1 + 1) * gaussianImproperIntegral = sqrt pi := by
+    rw [gaussianImproperIntegral_eq_sqrt_pi_div_two]; exact mul_div_cancel' two_ne_zero
+  have hclose := hT R hRT
+  have hle := gaussianI_le_gaussianImproperIntegral (le_of_lt hRpos)
+  have hdiff : (1 + 1) * gaussianI R - sqrt pi
+      = -((1 + 1) * (gaussianImproperIntegral - gaussianI R)) := by
+    rw [← hsqrtpi]; exact two_mul_sub_helper (gaussianI R) gaussianImproperIntegral
+  rw [hdiff, abs_neg,
+    abs_of_nonneg (mul_nonneg (le_of_lt two_pos) (sub_nonneg_of_le hle))]
+  have h2 := mul_lt_mul_of_pos_left hclose two_pos
+  rwa [mul_div_cancel' two_ne_zero] at h2
 
 end Real
 end MachLib
