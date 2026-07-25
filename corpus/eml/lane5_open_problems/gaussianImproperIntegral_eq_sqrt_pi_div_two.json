@@ -1,0 +1,108 @@
+{
+    "schema_version": "1.0.0",
+    "theorem": {
+        "id": "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+        "base_id": "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+        "variant_strategy": null,
+        "statement": {
+            "informal": "The improper Gaussian integral ∫₀^∞ exp(-t²) dt equals √π/2 -- proven from scratch in MachLib's Mathlib-free real-analysis base, zero new axioms. Built via a Laplace/Feynman parameter-differentiation trick: F(t) := gaussianI(t)², G(t) := ∫₀¹ exp(-t²(1+x²))/(1+x²) dx, F' = -G' via a from-scratch Leibniz differentiation-under-the-integral-sign theorem, hence F+G is constant on [0,∞), hence gaussianImproperIntegral² = F(0)+G(0) = 0 + π/4. π enters ONLY as a bare trig fact (cos(π/2)=0 / sin(π/2)=1) -- atan(1)=π/4 is DERIVED, not axiomatized, via a double application of the FTC to the same trivial integral. This is the normalizing constant behind the standard-normal density and, downstream, every Gaussian-noise estimation result (see structural_siblings).",
+            "formal_lean": "theorem gaussianImproperIntegral_eq_sqrt_pi_div_two :\n    gaussianImproperIntegral = sqrt pi / (1 + 1) := ...",
+            "formal_eml_lang": null
+        },
+        "domain": "eml",
+        "lane": 5,
+        "tags": [
+            "real-analysis",
+            "gaussian-integral",
+            "leibniz-rule",
+            "mathlib-free",
+            "zero-new-axioms",
+            "lane-5"
+        ]
+    },
+    "proofs": [
+        {
+            "id": "p1",
+            "tactics": [
+                "hasDerivAt_GFn",
+                "GderivFn_eq_gaussianI",
+                "HFn_const",
+                "gaussianI_close_to_improper",
+                "GFn_small",
+                "sqrt_sq",
+                "mul_left_cancel"
+            ],
+            "tactic_count": 138,
+            "eml_node_cost": null,
+            "style": "analytic",
+            "is_optimal": false,
+            "discovered_by": "agent-maestro",
+            "discovery_date": "2026-07-25"
+        }
+    ],
+    "difficulty": {
+        "lane": 5,
+        "label": "expert",
+        "calibrated_from_attempts": 1,
+        "average_hint_level_at_solve": 0.0,
+        "prerequisite_skills": [
+            "ftc_riemann",
+            "mean_value_theorem_ct",
+            "HasDerivAt_of_eps_delta",
+            "darboux_sums",
+            "sqrt_sq_nonneg"
+        ]
+    },
+    "common_mistakes": [
+        {
+            "tactic": "polar-coordinate disk/square sandwich (D(R)<=S(R)<=D(R√2))",
+            "why_fails": "Correct and fully proved as a standalone result (GaussianDiskSandwich.lean), but its OWN derivative in R doesn't close without genuine 2D polar coordinates (Jacobian r dr dθ) -- a 1D-only real-analysis base has no such machinery. Abandoned as the critical path after paper analysis, not because anything about it was wrong -- see forge_mined convention above: documenting a correct-but-stranded route is deliberate, not an omission.",
+            "frequency": 1
+        },
+        {
+            "tactic": "axiomatizing atan(1)=pi/4 directly",
+            "why_fails": "Would make the whole theorem an elaborate restatement of the assumption -- pi never gets to 'meet' the integral through any real argument. Derived instead via two applications of ftc_riemann to the same trivial integral, using only pre-existing bare trig facts (cos(pi/2)=0, sin(pi/2)=1).",
+            "frequency": 1
+        }
+    ],
+    "tactic_trace": {
+        "successful": {},
+        "failed": {},
+        "success_rate_by_tactic": {}
+    },
+    "structural_profile": {
+        "chain_order": 1,
+        "cost_class": null,
+        "eml_depth": null,
+        "dynamics": {
+            "oscillations": 0,
+            "decays": 1
+        },
+        "drift_risk": "LOW",
+        "fpga_estimate": null
+    },
+    "relationships": {
+        "parent": null,
+        "siblings": [],
+        "depends_on": [
+            "hasDerivAt_GFn",
+            "GderivFn_eq_gaussianI",
+            "integral_kFn_eq_piQuarter",
+            "atan_one_eq_piQuarter"
+        ],
+        "structural_siblings": [
+            "forge__gaussian_peak__gaussian_area_normalised__structural_class",
+            "forge__gaussian_peak__gaussian_density__structural_class",
+            "forge__kalman_track__kalman_gain__structural_class",
+            "gaussianDiskSquareSandwich"
+        ]
+    },
+    "metadata": {
+        "verified": true,
+        "verification_method": "lean4_kernel",
+        "generated_by": "human",
+        "creation_date": "2026-07-25",
+        "source_eml_file": null,
+        "source_function": "MachLib.Real.gaussianImproperIntegral_eq_sqrt_pi_div_two"
+    }
+}

@@ -1,0 +1,101 @@
+{
+    "schema_version": "1.0.0",
+    "theorem": {
+        "id": "gaussianDiskSquareSandwich",
+        "base_id": "gaussianDiskSquareSandwich",
+        "variant_strategy": null,
+        "statement": {
+            "informal": "The classical Poisson disk/square sandwich D(R) ≤ S(R) ≤ D(R√2), where D(R) is the Cartesian iterated quarter-disk integral ∫₀ᴿ exp(-x²)·gaussianI(√(R²-x²)) dx and S(R) := gaussianI(R)². This is the FIRST HALF of the standard two-dimensional proof that ∫₀^∞ exp(-t²)dt = √π/2 (squeeze D(R) and D(R√2) between the SAME S(R) as R→∞, using polar coordinates to evaluate D directly). Proven completely and correctly in MachLib's Mathlib-free base (disk_le_square, square_le_disk_sqrt2, GaussianDiskSandwich.lean) -- but STRANDED as a route to √π: closing the classical argument needs D(R)'s OWN derivative in R, which requires genuine two-dimensional polar-coordinate integration (the Jacobian r dr dθ transforming BOTH integration variables at once). MachLib's real-analysis base is one-dimensional only and has no such machinery. The theorem stands as a correct, complete, standalone result; the project's actual finish line (gaussianImproperIntegral_eq_sqrt_pi_div_two) instead used a Laplace/Feynman parameter-differentiation trick that never leaves one dimension.",
+            "formal_lean": "theorem disk_le_square (R : Real) (hR : 0 ≤ R) : D R hR ≤ S R hR := ...\ntheorem square_le_disk_sqrt2 (R : Real) (hR : 0 ≤ R) : S R hR ≤ D (Rs2 R) (Rs2_nonneg R) := ...",
+            "formal_eml_lang": null
+        },
+        "domain": "eml",
+        "lane": 5,
+        "tags": [
+            "real-analysis",
+            "gaussian-integral",
+            "polar-coordinates",
+            "stranded-route",
+            "mathlib-free",
+            "lane-5"
+        ]
+    },
+    "proofs": [
+        {
+            "id": "p1",
+            "tactics": [
+                "riemann_integral_mono",
+                "upperSumCont_mul_const",
+                "lowerSumCont_mul_const",
+                "gaussianI_mono",
+                "sqrt_le_of_le_sq"
+            ],
+            "tactic_count": 0,
+            "eml_node_cost": null,
+            "style": "analytic",
+            "is_optimal": true,
+            "discovered_by": "agent-maestro",
+            "discovery_date": "2026-07-24"
+        }
+    ],
+    "difficulty": {
+        "lane": 5,
+        "label": "expert",
+        "calibrated_from_attempts": 1,
+        "average_hint_level_at_solve": 1.0,
+        "prerequisite_skills": [
+            "riemann_integral_mono",
+            "darboux_sums",
+            "gaussianI_mono"
+        ]
+    },
+    "common_mistakes": [
+        {
+            "tactic": "attempting to finish sqrt(pi) via D(R)'s own derivative in R (angle substitution x=Rsin(theta))",
+            "why_fails": "The substitution itself is clean (existing FTC/chain-rule machinery), but d/dR of the resulting integrand leaves a residual term with gaussianI(Rcos(theta)) still present, non-elementary, not telescoping to anything recognizable -- the real classical argument needs genuine 2D polar coordinates (transforming BOTH integration variables via the Jacobian r dr dtheta), which a 1D-only real-analysis base does not have. A partial 1D substitution on just the outer variable is not a substitute for that. Confirmed via paper analysis BEFORE attempting the Lean proof -- do not re-attempt without first building genuine multivariable/polar integration.",
+            "frequency": 1
+        },
+        {
+            "tactic": "treating this as wasted work once the pivot happened",
+            "why_fails": "It is not -- disk_le_square and square_le_disk_sqrt2 are both complete, sorryAx-free, zero-new-axiom theorems in their own right, useful for anyone who DOES build 2D polar integration later. Abandoning a route because its OWN extension is hard is different from the route being wrong; the sandwich itself is correct.",
+            "frequency": 1
+        }
+    ],
+    "tactic_trace": {
+        "successful": {},
+        "failed": {},
+        "success_rate_by_tactic": {}
+    },
+    "structural_profile": {
+        "chain_order": 1,
+        "cost_class": null,
+        "eml_depth": null,
+        "dynamics": {
+            "oscillations": 0,
+            "decays": 1
+        },
+        "drift_risk": "LOW",
+        "fpga_estimate": null
+    },
+    "relationships": {
+        "parent": null,
+        "siblings": [],
+        "depends_on": [
+            "gaussianI_mono",
+            "riemann_integral_mono",
+            "upperSumCont_mul_const",
+            "lowerSumCont_mul_const"
+        ],
+        "structural_siblings": [
+            "gaussianImproperIntegral_eq_sqrt_pi_div_two"
+        ]
+    },
+    "metadata": {
+        "verified": true,
+        "verification_method": "lean4_kernel",
+        "generated_by": "human",
+        "creation_date": "2026-07-24",
+        "source_eml_file": null,
+        "source_function": "MachLib.Real.disk_le_square / MachLib.Real.square_le_disk_sqrt2"
+    }
+}
