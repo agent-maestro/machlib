@@ -417,6 +417,11 @@ private theorem density_norm_pos {sig2 : Real} (hsig2 : 0 < sig2) :
     0 < sqrt pi * sqrt ((1 + 1) * sig2) :=
   mul_pos (sqrt_pos pi_pos) (sqrt_pos (two_sig2_pos hsig2))
 
+theorem gaussianDensity_pos (mu sig2 : Real) (hsig2 : 0 < sig2) (z : Real) :
+    0 < gaussianDensity mu sig2 z := by
+  rw [gaussianDensity]
+  exact div_pos_of_pos_pos (exp_pos _) (density_norm_pos hsig2)
+
 /-- `gaussianDensity μ σ² = scaledKernel · (1/N)` as functions — the bridge to `riemann_integral_
 mul_const`. -/
 private theorem gaussianDensity_eq_kernel_mul (mu sig2 : Real) (hsig2 : 0 < sig2) :
@@ -889,6 +894,130 @@ theorem gaussianVarSymInt_tendsto_sigma2 (mu sig2 : Real) (hsig2 : 0 < sig2) :
   exact var_final_bound (-(sig2 * ((R - mu) * gaussianDensity mu sig2 R)))
     (-(sig2 * ((-R - mu) * gaussianDensity mu sig2 (-R))))
     (gaussianDensitySymInt mu sig2 hsig2 R * sig2) sig2 ε hGR hGnR hW
+
+/-! ## §9 — the parallel-axis theorem `∫(x-c)²·gaussianDensity μ σ² dx = σ² + (c-μ)²` (S7)
+
+Generalizes the variance (S6, the `c=μ` case). Expand `(x-c)² = (x-μ)² + 2(x-μ)(μ-c) + (μ-c)²` and
+integrate: the mean term `∫(x-μ)·dens = 0` (its antiderivative `-σ²·dens` is elementary, and
+`dens → 0` at ±∞), plus `∫(x-μ)²·dens = σ²` (S6) and `∫dens = 1` (S3). The key MMSE-optimality
+inner-integral fact: the mean-squared error of a constant estimator `c` is `σ² + (bias)²`. -/
+
+private theorem abs_exp_neg_sq_small (ε : Real) (hε : 0 < ε) :
+    ∃ W : Real, 0 < W ∧ ∀ w : Real, W ≤ abs w → Real.exp (-(w * w)) < ε := by
+  obtain ⟨x0, hx0, hx0e⟩ := exp_neg_sq_small ε hε
+  refine ⟨x0, hx0, ?_⟩
+  intro w hw
+  have hww : x0 * x0 ≤ w * w := by
+    have h := mul_le_mul' (le_of_lt hx0) hw (le_of_lt hx0) hw
+    rwa [← abs_mul, abs_of_nonneg (mul_self_nonneg w)] at h
+  exact lt_of_le_of_lt (exp_monotone (neg_le_neg hww)) hx0e
+
+/-- `gaussianDensity μ σ² z → 0` as `|(z-μ)/√(2σ²)| → ∞`. -/
+private theorem gaussianDensity_small (mu sig2 : Real) (hsig2 : 0 < sig2) (ε : Real) (hε : 0 < ε) :
+    ∃ D : Real, 0 < D ∧ ∀ z : Real,
+      D ≤ abs ((z - mu) * (1 / sqrt ((1 + 1) * sig2))) → gaussianDensity mu sig2 z < ε := by
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hspi : 0 < sqrt pi := sqrt_pos pi_pos
+  have hN : 0 < sqrt pi * sqrt ((1 + 1) * sig2) := mul_pos hspi hc
+  obtain ⟨W, hW, hWspec⟩ := abs_exp_neg_sq_small (ε * (sqrt pi * sqrt ((1 + 1) * sig2))) (mul_pos hε hN)
+  refine ⟨W, hW, ?_⟩
+  intro z hz
+  rw [gaussianDensity]
+  rw [div_def _ _ (ne_of_gt hN)]
+  have hexp := hWspec ((z - mu) * (1 / sqrt ((1 + 1) * sig2))) hz
+  have hlt := mul_lt_mul_of_pos_right hexp (one_div_pos_of_pos hN)
+  rwa [mul_assoc ε (sqrt pi * sqrt ((1 + 1) * sig2)) (1 / (sqrt pi * sqrt ((1 + 1) * sig2))),
+    mul_inv _ (ne_of_gt hN), mul_one_ax] at hlt
+
+private theorem meanAnti_coeff (d xm sig2 invsig : Real) (hinv : sig2 * invsig = 1) :
+    -(0 * d + sig2 * (-(xm * invsig) * d)) = xm * d := by
+  rw [show -(0 * d + sig2 * (-(xm * invsig) * d)) = xm * d * (sig2 * invsig) from by
+    mach_mpoly [d, xm, sig2, invsig], hinv, mul_one_ax]
+
+/-- Elementary antiderivative of `(x-μ)·gaussianDensity`: `-σ²·gaussianDensity(x)` (Stein again). -/
+theorem hasDerivAt_meanAnti (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    HasDerivAt (fun y => -(sig2 * gaussianDensity mu sig2 y))
+      ((x - mu) * gaussianDensity mu sig2 x) x := by
+  have hmul := HasDerivAt_mul (fun _ => sig2) (gaussianDensity mu sig2) 0
+    (-((x - mu) / sig2) * gaussianDensity mu sig2 x) x (HasDerivAt_const sig2 x)
+    (hasDerivAt_gaussianDensity mu sig2 hsig2 x)
+  have hneg := HasDerivAt_neg (fun y => sig2 * gaussianDensity mu sig2 y)
+    (0 * gaussianDensity mu sig2 x
+      + sig2 * (-((x - mu) / sig2) * gaussianDensity mu sig2 x)) x hmul
+  rw [div_def (x - mu) sig2 (ne_of_gt hsig2),
+    meanAnti_coeff (gaussianDensity mu sig2 x) (x - mu) sig2 (1 / sig2)
+      (mul_inv sig2 (ne_of_gt hsig2))] at hneg
+  exact hneg
+
+private theorem continuousAt_meanInt (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    ContinuousAt (fun y => (y - mu) * gaussianDensity mu sig2 y) x :=
+  continuousAt_mul (continuousAt_xmu mu x) (continuousAt_gaussianDensity mu sig2 hsig2 x)
+
+/-- `∫_{-R}^R (x-μ)·gaussianDensity μ σ² dx` as a total function (`0` off `R > 0`). -/
+noncomputable def gaussianMeanSymInt (mu sig2 : Real) (hsig2 : 0 < sig2) (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z))
+  else 0
+
+private theorem gaussianMeanSymInt_eq (mu sig2 : Real) (hsig2 : 0 < sig2) {R : Real} (hR : 0 < R) :
+    gaussianMeanSymInt mu sig2 hsig2 R
+      = -(sig2 * gaussianDensity mu sig2 R) - -(sig2 * gaussianDensity mu sig2 (-R)) := by
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hspec := Classical.choose_spec (continuous_riemann_integrable
+    (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R (le_of_lt hab)
+    (fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z))
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z)) else 0) = _
+  rw [dif_pos hR]
+  exact ftc_riemann (fun y => (y - mu) * gaussianDensity mu sig2 y)
+    (fun y => -(sig2 * gaussianDensity mu sig2 y)) (-R) R hab
+    (fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z)
+    (fun z _ _ => hasDerivAt_meanAnti mu sig2 hsig2 z) _
+    (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2) hspec.2
+
+private theorem mean_final_bound (A B ε : Real) (hA : abs A < ε / (1 + 1))
+    (hB : abs B < ε / (1 + 1)) : abs (-A - -B) < ε := by
+  rw [show -A - -B = -A + B from by mach_mpoly [A, B]]
+  have h1 : abs (-A + B) ≤ abs A + abs B := by
+    have h := abs_add (-A) B; rwa [abs_neg] at h
+  have h2 : abs A + abs B < ε := by
+    have h := add_lt_add_both hA hB; rwa [half_add_half ε] at h
+  exact lt_of_le_of_lt h1 h2
+
+/-- **`∫_{-∞}^∞ (x-μ)·gaussianDensity μ σ² dx = 0`** — the mean of `N(μ,σ²)` is `μ`. Stated as an
+ε–R₀ limit; the antiderivative `-σ²·dens` is elementary and vanishes at ±∞. -/
+theorem gaussianMeanSymInt_tendsto_zero (mu sig2 : Real) (hsig2 : 0 < sig2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧
+      ∀ R : Real, R₀ ≤ R → abs (gaussianMeanSymInt mu sig2 hsig2 R) < ε := by
+  intro ε hε
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hcinv : sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2)) = 1 := mul_inv _ (ne_of_gt hc)
+  have hε2 : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  have hε2s : 0 < ε / (1 + 1) / sig2 := div_pos_of_pos_pos hε2 hsig2
+  obtain ⟨D, hD, hDspec⟩ := gaussianDensity_small mu sig2 hsig2 (ε / (1 + 1) / sig2) hε2s
+  refine ⟨max (max (mu + D * sqrt ((1 + 1) * sig2)) (-mu + D * sqrt ((1 + 1) * sig2))) 1,
+    lt_of_lt_of_le one_pos (le_max_right _ 1), ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le one_pos (le_trans (le_max_right _ 1) hR)
+  have hRp : mu + D * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_left _ _) (le_max_left _ 1)) hR
+  have hRm : -mu + D * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_right _ _) (le_max_left _ 1)) hR
+  rw [gaussianMeanSymInt_eq mu sig2 hsig2 hRpos]
+  have hbnd : ∀ z : Real, D ≤ abs ((z - mu) * (1 / sqrt ((1 + 1) * sig2))) →
+      abs (sig2 * gaussianDensity mu sig2 z) < ε / (1 + 1) := by
+    intro z hz
+    rw [abs_of_nonneg (le_of_lt (mul_pos hsig2 (gaussianDensity_pos mu sig2 hsig2 z)))]
+    have h := mul_lt_mul_of_pos_left (hDspec z hz) hsig2
+    rwa [mul_div_cancel_left (ne_of_gt hsig2)] at h
+  exact mean_final_bound (sig2 * gaussianDensity mu sig2 R)
+    (sig2 * gaussianDensity mu sig2 (-R))
+    ε (hbnd R (abs_arg_lower_pos hc hcinv hD hRp)) (hbnd (-R) (abs_arg_lower_neg hc hcinv hD hRm))
 
 end Real
 end MachLib
