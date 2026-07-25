@@ -383,5 +383,167 @@ theorem jointDensity_marginal_tendsto (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (
   exact marg_final_bound (gaussianDensitySymInt (postMean mu sig2 r2 y) (postVar sig2 r2) hpv R)
     (gaussianDensity mu (margVar sig2 r2) y) ε (hR0 R (le_trans (le_max_left R0 1) hR))
 
+/-! ## §7 — the optimal estimator's total MSE is τ² (unconditional value, S13)
+
+For the posterior-mean (Kalman) estimator `m(·)`, the conditional MSE at each `y` is exactly `τ²`
+(parallel-axis with `c = m(y)`, so the `(c-m(y))²` term vanishes). Hence the total-MSE integrand is
+`margDensity(y)·τ²`, and the total MSE — the outer `y`-integral — is `τ²·∫margDensity = τ²`. Every
+other estimate is at least as bad at every `y` (`posterior_mean_mmse`), so `τ²` is the minimum
+achievable mean-squared error. -/
+
+/-- `0 < margVar σ² r²`. -/
+theorem margVar_pos (sig2 r2 : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2) : 0 < margVar sig2 r2 := by
+  rw [margVar]; exact add_pos hsig2 hr2
+
+/-- `∫_{-R}^R margDensity(y)·τ² dy` — the outer integral of the optimal estimator's (constant-`τ²`)
+conditional MSE. -/
+noncomputable def optimalMSESymInt (mu sig2 r2 : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable
+      (fun y => gaussianDensity mu (margVar sig2 r2) y * postVar sig2 r2) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_mul_const
+        (continuousAt_gaussianDensity mu (margVar sig2 r2) (margVar_pos sig2 r2 hsig2 hr2) z) _))
+  else 0
+
+/-- The optimal total-MSE integral factors as `(∫margDensity)·τ²`. -/
+private theorem optimalMSESymInt_eq (mu sig2 r2 : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    {R : Real} (hR : 0 < R) :
+    optimalMSESymInt mu sig2 r2 hsig2 hr2 R
+      = gaussianDensitySymInt mu (margVar sig2 r2) (margVar_pos sig2 r2 hsig2 hr2) R
+        * postVar sig2 r2 := by
+  have hmarg := margVar_pos sig2 r2 hsig2 hr2
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hcg : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (gaussianDensity mu (margVar sig2 r2)) z :=
+    fun z _ _ => continuousAt_gaussianDensity mu (margVar sig2 r2) hmarg z
+  have hcp : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => gaussianDensity mu (margVar sig2 r2) y * postVar sig2 r2) z :=
+    fun z hz0 hz1 => continuousAt_mul_const (hcg z hz0 hz1) _
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun y => gaussianDensity mu (margVar sig2 r2) y * postVar sig2 r2) (-R) R _ _) else 0) = _
+  rw [dif_pos hR, riemann_integral_mul_const (le_of_lt hab) hcg hcp]
+  show _ * _ = gaussianDensitySymInt mu (margVar sig2 r2) hmarg R * _
+  rw [gaussianDensitySymInt, dif_pos hR]
+
+/-- **The optimal (posterior-mean/Kalman) estimator achieves total MSE `τ²` (S13, unconditional
+value)**: `∫_{-R}^R margDensity(y)·τ² dy → τ²`. This is the minimum mean-squared error —
+`posterior_mean_mmse` shows every other estimate is at least as bad at every `y`. -/
+theorem optimalMSE_tendsto (mu sig2 r2 : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧ ∀ R : Real, R₀ ≤ R →
+      abs (optimalMSESymInt mu sig2 r2 hsig2 hr2 R - postVar sig2 r2) < ε := by
+  intro ε hε
+  have hmarg := margVar_pos sig2 r2 hsig2 hr2
+  have hm : 0 < abs (postVar sig2 r2) + 1 := add_pos_of_nonneg_pos (abs_nonneg _) one_pos
+  obtain ⟨R0, hR0p, hR0⟩ := gaussianDensity_symInt_tendsto_one mu (margVar sig2 r2) hmarg
+    (ε / (abs (postVar sig2 r2) + 1)) (div_pos_of_pos_pos hε hm)
+  refine ⟨max R0 1, lt_of_lt_of_le one_pos (le_max_right R0 1), ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le one_pos (le_trans (le_max_right R0 1) hR)
+  rw [optimalMSESymInt_eq mu sig2 r2 hsig2 hr2 hRpos]
+  exact marg_final_bound (gaussianDensitySymInt mu (margVar sig2 r2) hmarg R) (postVar sig2 r2) ε
+    (hR0 R (le_trans (le_max_left R0 1) hR))
+
+/-! ## §8 — no continuous estimator beats τ² (unconditional lower bound, S13) -/
+
+private theorem sub_eq_add_neg_l (a b : Real) : a - b = a + -b := by mach_mpoly [a, b]
+
+/-- Continuity of a difference of continuous functions (`sub = add ∘ neg`). -/
+private theorem continuousAt_sub {f g : Real → Real} {z : Real} (hf : ContinuousAt f z)
+    (hg : ContinuousAt g z) : ContinuousAt (fun y => f y - g y) z := by
+  have h : (fun y => f y - g y) = (fun y => f y + -(g y)) := by
+    funext y; exact sub_eq_add_neg_l (f y) (g y)
+  rw [h]; exact continuousAt_add hf (continuousAt_neg hg)
+
+/-- `y ↦ postMean μ σ² r² y` is continuous (it is affine in `y`). -/
+private theorem continuousAt_postMean (mu sig2 r2 z : Real) :
+    ContinuousAt (fun y => postMean mu sig2 r2 y) z := by
+  have h : (fun y => postMean mu sig2 r2 y) = (fun y => mu + kGain sig2 r2 * (y - mu)) := by
+    funext y; rw [postMean]
+  rw [h]
+  exact continuousAt_add (continuousAt_const mu z)
+    (continuousAt_mul (continuousAt_const (kGain sig2 r2) z)
+      (continuousAt_sub (hasDerivAt_continuousAt (HasDerivAt_id z)) (continuousAt_const mu z)))
+
+/-- Continuity of the total-MSE integrand `margDensity(y)·(τ²+(φy-m y)²)` for continuous `φ`. -/
+private theorem continuousAt_mseIntegrand (mu sig2 r2 : Real) (phi : Real → Real) (hsig2 : 0 < sig2)
+    (hr2 : 0 < r2) (hphi : ∀ z, ContinuousAt phi z) (z : Real) :
+    ContinuousAt (fun y => gaussianDensity mu (margVar sig2 r2) y
+      * (postVar sig2 r2 + (phi y - postMean mu sig2 r2 y) * (phi y - postMean mu sig2 r2 y))) z := by
+  have hsub : ContinuousAt (fun y => phi y - postMean mu sig2 r2 y) z :=
+    continuousAt_sub (hphi z) (continuousAt_postMean mu sig2 r2 z)
+  exact continuousAt_mul
+    (continuousAt_gaussianDensity mu (margVar sig2 r2) (margVar_pos sig2 r2 hsig2 hr2) z)
+    (continuousAt_add (continuousAt_const _ z) (continuousAt_mul hsub hsub))
+
+/-- `∫_{-R}^R margDensity(y)·(τ²+(φy-m y)²) dy` — the total MSE of a continuous estimator `φ`, as the
+outer `y`-integral of its conditional MSE `τ²+(φy-m y)²` (the inner `x`-integral, `posteriorMSE`). -/
+noncomputable def mseSymInt (mu sig2 r2 : Real) (phi : Real → Real) (hphi : ∀ z, ContinuousAt phi z)
+    (hsig2 : 0 < sig2) (hr2 : 0 < r2) (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable
+      (fun y => gaussianDensity mu (margVar sig2 r2) y
+        * (postVar sig2 r2 + (phi y - postMean mu sig2 r2 y) * (phi y - postMean mu sig2 r2 y)))
+      (-R) R (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_mseIntegrand mu sig2 r2 phi hsig2 hr2 hphi z))
+  else 0
+
+/-- **The optimal estimator dominates at every window (S13)**: for any continuous estimator `φ` and
+any `R`, `optimalMSESymInt ≤ mseSymInt φ` — pointwise the conditional MSE `τ²+(φy-m y)²` is `≥ τ²`,
+so Riemann-integral monotonicity gives it window by window. -/
+theorem optimalMSESymInt_le_mseSymInt (mu sig2 r2 : Real) (phi : Real → Real) (hsig2 : 0 < sig2)
+    (hr2 : 0 < r2) (hphi : ∀ z, ContinuousAt phi z) {R : Real} (hR : 0 < R) :
+    optimalMSESymInt mu sig2 r2 hsig2 hr2 R ≤ mseSymInt mu sig2 r2 phi hphi hsig2 hr2 R := by
+  have hmarg := margVar_pos sig2 r2 hsig2 hr2
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hcg : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => gaussianDensity mu (margVar sig2 r2) y * postVar sig2 r2) z :=
+    fun z _ _ => continuousAt_mul_const (continuousAt_gaussianDensity mu (margVar sig2 r2) hmarg z) _
+  have hch : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => gaussianDensity mu (margVar sig2 r2) y
+        * (postVar sig2 r2 + (phi y - postMean mu sig2 r2 y)
+          * (phi y - postMean mu sig2 r2 y))) z :=
+    fun z _ _ => continuousAt_mseIntegrand mu sig2 r2 phi hsig2 hr2 hphi z
+  have hpt : ∀ t : Real, -R ≤ t → t ≤ R →
+      gaussianDensity mu (margVar sig2 r2) t * postVar sig2 r2
+        ≤ gaussianDensity mu (margVar sig2 r2) t
+          * (postVar sig2 r2
+            + (phi t - postMean mu sig2 r2 t) * (phi t - postMean mu sig2 r2 t)) :=
+    fun t _ _ => mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (mul_self_nonneg _))
+      (le_of_lt (gaussianDensity_pos mu (margVar sig2 r2) hmarg t))
+  have hgspec := Classical.choose_spec (continuous_riemann_integrable
+    (fun y => gaussianDensity mu (margVar sig2 r2) y * postVar sig2 r2) (-R) R (le_of_lt hab) hcg)
+  have hhspec := Classical.choose_spec (continuous_riemann_integrable
+    (fun y => gaussianDensity mu (margVar sig2 r2) y
+      * (postVar sig2 r2 + (phi y - postMean mu sig2 r2 y) * (phi y - postMean mu sig2 r2 y)))
+    (-R) R (le_of_lt hab) hch)
+  rw [optimalMSESymInt, dif_pos hR, mseSymInt, dif_pos hR]
+  exact riemann_integral_mono _ _ (-R) R (le_of_lt hab) hcg hch hpt _ _
+    (fun k => (hgspec.1 k).2) (fun k => (hhspec.1 k).1) hhspec.2
+
+/-- From `|a - b| < ε`, the lower bound `b - ε < a`. -/
+private theorem lower_of_abs_lt {a b ε : Real} (h : abs (a - b) < ε) : b - ε < a := by
+  have hba : abs (b - a) < ε := by rw [abs_sub_comm b a]; exact h
+  have h3 := add_lt_add_left (lt_of_abs_lt hba) (a - ε)
+  rwa [show a - ε + (b - a) = b - ε from by mach_mpoly [a, b, ε],
+    show a - ε + ε = a from by mach_mpoly [a, ε]] at h3
+
+/-- **No continuous estimator beats τ² (S13, unconditional MMSE lower bound)**: for every continuous
+`φ` and every ε, its total-MSE window integral is eventually `> τ² - ε`. Together with
+`optimalMSE_tendsto` (the posterior-mean estimator *achieves* `τ²`), this is the unconditional
+statement that the scalar Kalman update is the minimum-mean-squared-error estimator. -/
+theorem mse_lower_bound (mu sig2 r2 : Real) (phi : Real → Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+    (hphi : ∀ z, ContinuousAt phi z) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧ ∀ R : Real, R₀ ≤ R →
+      postVar sig2 r2 - ε < mseSymInt mu sig2 r2 phi hphi hsig2 hr2 R := by
+  intro ε hε
+  obtain ⟨R0, hR0p, hR0⟩ := optimalMSE_tendsto mu sig2 r2 hsig2 hr2 ε hε
+  refine ⟨max R0 1, lt_of_lt_of_le one_pos (le_max_right R0 1), ?_⟩
+  intro R hR
+  have hRpos : 0 < R := lt_of_lt_of_le one_pos (le_trans (le_max_right R0 1) hR)
+  exact lt_of_lt_of_le (lower_of_abs_lt (hR0 R (le_trans (le_max_left R0 1) hR)))
+    (optimalMSESymInt_le_mseSymInt mu sig2 r2 phi hsig2 hr2 hphi hRpos)
+
 end Real
 end MachLib
