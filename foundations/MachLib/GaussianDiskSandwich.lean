@@ -305,5 +305,89 @@ theorem gaussianI_continuousAt (t0 : Real) (ht0 : 0 ≤ t0) : ContinuousAt gauss
   · rw [← ht0eq]
     exact gaussianI_continuousAt_zero
 
+/-! ## §4 — product of continuous functions is continuous -/
+
+private theorem mul_sub_mul_split (A B C D : Real) : A * B - C * D = A * (B - D) + D * (A - C) := by
+  mach_mpoly [A, B, C, D]
+
+private theorem distrib_mul_local (X Y q : Real) : (X + Y) * q = X * q + Y * q := by
+  mach_mpoly [X, Y, q]
+
+private theorem add_lt_add_of_lt_of_le_local {a b c d : Real} (h1 : a < b) (h2 : c ≤ d) :
+    a + c < b + d := by
+  have step1 : a + c ≤ a + d := add_le_add_both (le_refl a) h2
+  have step2 : d + a < d + b := add_lt_add_left h1 d
+  rw [add_comm d a, add_comm d b] at step2
+  exact lt_of_le_of_lt step1 step2
+
+/-- Standard ε-δ argument: `f(y)g(y)-f(x)g(x) = f(y)(g(y)-g(x)) + g(x)(f(y)-f(x))`, bound each
+term using a common target `ε/(2(|f x|+|g x|+1))` (also capped at `1` so `|f(y)|` stays bounded
+near `x`). Needed because `gaussianI` (built via `ftc_part1`/`continuousAt_comp`, not the
+elementary `HasDerivAt` closure) only has `ContinuousAt`, not `HasDerivAt` — so the product rule's
+usual `HasDerivAt_mul` route is unavailable for the disk integrand. -/
+theorem continuousAt_mul {f g : Real → Real} {x : Real} (hf : ContinuousAt f x)
+    (hg : ContinuousAt g x) : ContinuousAt (fun y => f y * g y) x := by
+  intro ε hε
+  have hMpos : 0 < abs (f x) + abs (g x) + 1 :=
+    add_pos_of_nonneg_pos (add_nonneg (abs_nonneg (f x)) (abs_nonneg (g x))) one_pos
+  have htarget_pos : 0 < ε / (1 + 1) / (abs (f x) + abs (g x) + 1) :=
+    div_pos_of_pos_pos (div_pos_of_pos_pos hε two_pos) hMpos
+  have hε'pos : 0 < min 1 (ε / (1 + 1) / (abs (f x) + abs (g x) + 1)) :=
+    lt_min_of_lt_of_lt one_pos htarget_pos
+  obtain ⟨δf, hδfpos, hδf⟩ := hf (min 1 (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))) hε'pos
+  obtain ⟨δg, hδgpos, hδg⟩ := hg (min 1 (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))) hε'pos
+  refine ⟨min δf δg, lt_min_of_lt_of_lt hδfpos hδgpos, ?_⟩
+  intro y hy
+  have hyf : abs (y - x) < δf := lt_of_lt_of_le hy (min_le_left δf δg)
+  have hyg : abs (y - x) < δg := lt_of_lt_of_le hy (min_le_right δf δg)
+  have hfydiff := hδf y hyf
+  have hgydiff := hδg y hyg
+  have hfy_lt1 : abs (f y - f x) < 1 := lt_of_lt_of_le hfydiff (min_le_left 1 _)
+  have hfy_target : abs (f y - f x) < ε / (1 + 1) / (abs (f x) + abs (g x) + 1) :=
+    lt_of_lt_of_le hfydiff (min_le_right 1 _)
+  have hgy_target : abs (g y - g x) < ε / (1 + 1) / (abs (f x) + abs (g x) + 1) :=
+    lt_of_lt_of_le hgydiff (min_le_right 1 _)
+  have hfy_le : abs (f y) ≤ abs (f x) + abs (f y - f x) := by
+    have h := abs_add (f x) (f y - f x)
+    rwa [add_sub_self_local (f y) (f x)] at h
+  have hfy_bound : abs (f y) < abs (f x) + 1 :=
+    lt_of_le_of_lt hfy_le (add_lt_add_left hfy_lt1 (abs (f x)))
+  have hterm1 : abs (f y) * abs (g y - g x) < (abs (f x) + 1) * (ε / (1 + 1) / (abs (f x) + abs (g x) + 1)) := by
+    have hstep1 : abs (f y) * abs (g y - g x) ≤ (abs (f x) + 1) * abs (g y - g x) :=
+      mul_le_mul_of_nonneg_right (le_of_lt hfy_bound) (abs_nonneg _)
+    have hstep2 : (abs (f x) + 1) * abs (g y - g x)
+        < (abs (f x) + 1) * (ε / (1 + 1) / (abs (f x) + abs (g x) + 1)) :=
+      mul_lt_mul_of_pos_left hgy_target (add_pos_of_nonneg_pos (abs_nonneg (f x)) one_pos)
+    exact lt_of_le_of_lt hstep1 hstep2
+  have hterm2 : abs (g x) * abs (f y - f x) ≤ abs (g x) * (ε / (1 + 1) / (abs (f x) + abs (g x) + 1)) :=
+    mul_le_mul_of_nonneg_left (le_of_lt hfy_target) (abs_nonneg (g x))
+  have hsplit : f y * g y - f x * g x = f y * (g y - g x) + g x * (f y - f x) :=
+    mul_sub_mul_split (f y) (g y) (f x) (g x)
+  show abs (f y * g y - f x * g x) < ε
+  rw [hsplit]
+  have htri : abs (f y * (g y - g x) + g x * (f y - f x))
+      ≤ abs (f y * (g y - g x)) + abs (g x * (f y - f x)) :=
+    abs_add (f y * (g y - g x)) (g x * (f y - f x))
+  rw [abs_mul, abs_mul] at htri
+  have hcombine := add_lt_add_of_lt_of_le_local hterm1 hterm2
+  have hfin := lt_of_le_of_lt htri hcombine
+  have heqhalf : (abs (f x) + 1) * (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))
+      + abs (g x) * (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))
+      = ε / (1 + 1) := by
+    rw [← distrib_mul_local (abs (f x) + 1) (abs (g x)) (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))]
+    rw [show abs (f x) + 1 + abs (g x) = abs (f x) + abs (g x) + 1 from by
+      mach_mpoly [abs (f x), abs (g x)]]
+    rw [mul_comm (abs (f x) + abs (g x) + 1) (ε / (1 + 1) / (abs (f x) + abs (g x) + 1))]
+    exact div_mul_cancel (ne_of_gt hMpos)
+  rw [heqhalf] at hfin
+  have hhalfhalf : ε / (1 + 1) + ε / (1 + 1) = ε := by
+    rw [← mul_two_eq_add_self (ε / (1 + 1))]
+    exact div_mul_cancel (ne_of_gt two_pos)
+  have hεhalf_le : ε / (1 + 1) ≤ ε := by
+    have h1 : ε / (1 + 1) ≤ ε / (1 + 1) + ε / (1 + 1) :=
+      le_add_of_nonneg_right (le_of_lt (div_pos_of_pos_pos hε two_pos))
+    rwa [hhalfhalf] at h1
+  exact lt_of_lt_of_le hfin hεhalf_le
+
 end Real
 end MachLib
