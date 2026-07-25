@@ -468,5 +468,160 @@ quarter-disk integral. Comparing `D(R)` to `S(R):=gaussianIntegral(R)²` via the
 noncomputable def D (R : Real) (hR : 0 ≤ R) : Real :=
   Classical.choose (disk_integral_exists R hR)
 
+/-! ## §7 — pulling a nonnegative constant factor out of a Riemann integral
+
+Needed to connect `S(R):=gaussianI(R)²` to the integral `∫₀ᴿexp(-x²)·gaussianI(R)dx` (a constant
+`gaussianI(R)` times the plain gaussian kernel), which is what `riemann_integral_mono` actually
+compares `D(R)` against. Built in the "`f x * c`" order throughout (constant on the RIGHT) since
+that's the shape the disk sandwich needs; the mirror "`c * f x`" order was not built, not needed. -/
+
+theorem continuousAt_const (c x : Real) : ContinuousAt (fun _ => c) x :=
+  hasDerivAt_continuousAt (HasDerivAt_const c x)
+
+theorem continuousAt_mul_const {f : Real → Real} {x : Real} (hf : ContinuousAt f x) (c : Real) :
+    ContinuousAt (fun y => f y * c) x :=
+  continuousAt_mul hf (continuousAt_const c x)
+
+private theorem maxSub_mul_const {f : Real → Real} {c a b : Real} (hc : 0 ≤ c) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x * c) z)
+    (n : Nat) (hn : 0 < n) (i : Nat) :
+    maxSub (fun x => f x * c) a b hab hcont' n hn i = maxSub f a b hab hcont n hn i * c := by
+  by_cases hi : i < n
+  · rw [maxSub_eq (fun x => f x * c) a b hab hcont' n hn i hi, maxSub_eq f a b hab hcont n hn i hi]
+    obtain ⟨h1lo, h1hi, h1max⟩ :=
+      Classical.choose_spec (evt_exists_max (fun x => f x * c) a b hab hcont' n hn i hi)
+    obtain ⟨h2lo, h2hi, h2max⟩ := Classical.choose_spec (evt_exists_max f a b hab hcont n hn i hi)
+    have hcross1 := h2max _ h1lo h1hi
+    have hcross2 := h1max _ h2lo h2hi
+    exact le_antisymm (mul_le_mul_of_nonneg_right hcross1 hc) hcross2
+  · unfold maxSub
+    rw [dif_neg hi, dif_neg hi]
+
+private theorem minSub_mul_const {f : Real → Real} {c a b : Real} (hc : 0 ≤ c) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x * c) z)
+    (n : Nat) (hn : 0 < n) (i : Nat) :
+    minSub (fun x => f x * c) a b hab hcont' n hn i = minSub f a b hab hcont n hn i * c := by
+  by_cases hi : i < n
+  · rw [minSub_eq (fun x => f x * c) a b hab hcont' n hn i hi, minSub_eq f a b hab hcont n hn i hi]
+    obtain ⟨h1lo, h1hi, h1min⟩ :=
+      Classical.choose_spec (evt_exists_min (fun x => f x * c) a b hab hcont' n hn i hi)
+    obtain ⟨h2lo, h2hi, h2min⟩ := Classical.choose_spec (evt_exists_min f a b hab hcont n hn i hi)
+    have hA := h1min _ h2lo h2hi
+    have hB := h2min _ h1lo h1hi
+    exact le_antisymm hA (mul_le_mul_of_nonneg_right hB hc)
+  · unfold minSub
+    rw [dif_neg hi, dif_neg hi]
+
+private theorem partialSum_mul_const (c : Real) (g : Nat → Real) (n : Nat) :
+    partialSum (fun i => g i * c) n = partialSum g n * c := by
+  have heq : (fun i => g i * c) = (fun i => c * g i) := funext (fun i => mul_comm (g i) c)
+  rw [heq, partialSum_const_mul c g n, mul_comm c (partialSum g n)]
+
+private theorem mul_swap_assoc_local (x c w : Real) : x * c * w = x * w * c := by
+  mach_mpoly [x, c, w]
+
+theorem upperSumCont_mul_const {f : Real → Real} {c a b : Real} (hc : 0 ≤ c) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x * c) z)
+    (n : Nat) (hn : 0 < n) :
+    upperSumCont (fun x => f x * c) a b hab hcont' n hn = upperSumCont f a b hab hcont n hn * c := by
+  show partialSum (maxSub (fun x => f x * c) a b hab hcont' n hn) n * meshWidth a b n
+      = partialSum (maxSub f a b hab hcont n hn) n * meshWidth a b n * c
+  rw [partialSum_congr (fun i => maxSub_mul_const hc hab hcont hcont' n hn i) n,
+    partialSum_mul_const c (maxSub f a b hab hcont n hn) n]
+  exact mul_swap_assoc_local (partialSum (maxSub f a b hab hcont n hn) n) c (meshWidth a b n)
+
+theorem lowerSumCont_mul_const {f : Real → Real} {c a b : Real} (hc : 0 ≤ c) (hab : a ≤ b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hcont' : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt (fun x => f x * c) z)
+    (n : Nat) (hn : 0 < n) :
+    lowerSumCont (fun x => f x * c) a b hab hcont' n hn = lowerSumCont f a b hab hcont n hn * c := by
+  show partialSum (minSub (fun x => f x * c) a b hab hcont' n hn) n * meshWidth a b n
+      = partialSum (minSub f a b hab hcont n hn) n * meshWidth a b n * c
+  rw [partialSum_congr (fun i => minSub_mul_const hc hab hcont hcont' n hn i) n,
+    partialSum_mul_const c (minSub f a b hab hcont n hn) n]
+  exact mul_swap_assoc_local (partialSum (minSub f a b hab hcont n hn) n) c (meshWidth a b n)
+
+/-! ## §8 — `D(R) ≤ S(R)`, the first half of the sandwich -/
+
+private theorem sub_mul_distrib_local (X Y c : Real) : (X - Y) * c = X * c - Y * c := by
+  mach_mpoly [X, Y, c]
+
+/-- `S(R) := gaussianI(R)²` — the Cartesian SQUARE of the improper Gaussian integral up to `R`,
+the other side of Poisson's sandwich. -/
+noncomputable def S (R : Real) (hR : 0 ≤ R) : Real := gaussianI R * gaussianI R
+
+theorem disk_le_square (R : Real) (hR : 0 ≤ R) : D R hR ≤ S R hR := by
+  have hcD := Classical.choose_spec (disk_integral_exists R hR)
+  have hcg := Classical.choose_spec (gaussian_integral_exists R hR)
+  have hcont_h : ∀ z : Real, 0 ≤ z → z ≤ R →
+      ContinuousAt (fun x => Real.exp (-(x * x)) * gaussianI R) z :=
+    fun z _ _ => continuousAt_mul_const (gaussian_continuous z) (gaussianI R)
+  have hgh : ∀ t : Real, 0 ≤ t → t ≤ R →
+      Real.exp (-(t * t)) * gaussianI (sqrt (R * R - t * t)) ≤ Real.exp (-(t * t)) * gaussianI R := by
+    intro t ht0 htR
+    have hradle : sqrt (R * R - t * t) ≤ R := sqrt_le_of_le_sq hR (sub_le_self (mul_self_nonneg t))
+    exact mul_le_mul_of_nonneg_left (gaussianI_mono (sqrt_nonneg _) hradle) (le_of_lt (exp_pos _))
+  have hIgup : ∀ k, D R hR ≤ upperSumCont
+      (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x))) 0 R hR
+      (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) (2 ^ k) (two_pow_pos k) :=
+    fun k => (hcD.1 k).2
+  have hIhlow : ∀ k, lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR hcont_h
+      (2 ^ k) (two_pow_pos k) ≤ S R hR := by
+    intro k
+    rw [lowerSumCont_mul_const (gaussianI_nonneg R hR) hR (fun z _ _ => gaussian_continuous z)
+      hcont_h (2 ^ k) (two_pow_pos k)]
+    have h1 : lowerSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+        (2 ^ k) (two_pow_pos k) ≤ gaussianI R := by
+      rw [gaussianI_eq R hR]; exact (hcg.1 k).1
+    exact mul_le_mul_of_nonneg_right h1 (gaussianI_nonneg R hR)
+  have hgaph : ∀ ε : Real, 0 < ε → ∃ k,
+      upperSumCont (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR hcont_h
+        (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR hcont_h
+          (2 ^ k) (two_pow_pos k) < ε := by
+    intro ε hε
+    have hcp1 : 0 < gaussianI R + 1 := add_pos_of_nonneg_pos (gaussianI_nonneg R hR) one_pos
+    obtain ⟨k, hk⟩ := hcg.2 (ε / (gaussianI R + 1)) (div_pos_of_pos_pos hε hcp1)
+    refine ⟨k, ?_⟩
+    have hgapeq : upperSumCont (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR hcont_h
+        (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR hcont_h
+          (2 ^ k) (two_pow_pos k)
+        = (upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+            (2 ^ k) (two_pow_pos k)
+          - lowerSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+            (2 ^ k) (two_pow_pos k)) * gaussianI R := by
+      rw [upperSumCont_mul_const (gaussianI_nonneg R hR) hR (fun z _ _ => gaussian_continuous z)
+        hcont_h (2 ^ k) (two_pow_pos k),
+        lowerSumCont_mul_const (gaussianI_nonneg R hR) hR (fun z _ _ => gaussian_continuous z)
+        hcont_h (2 ^ k) (two_pow_pos k)]
+      exact (sub_mul_distrib_local _ _ (gaussianI R)).symm
+    rw [hgapeq]
+    have hgapnn : 0 ≤ upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR
+        (fun z _ _ => gaussian_continuous z) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+          (2 ^ k) (two_pow_pos k) :=
+      sub_nonneg_of_le (lowerSumCont_le_upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR
+        (fun z _ _ => gaussian_continuous z) (2 ^ k) (two_pow_pos k))
+    have hstep1 : (upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR
+        (fun z _ _ => gaussian_continuous z) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+          (2 ^ k) (two_pow_pos k)) * gaussianI R
+        ≤ (upperSumCont (fun x => Real.exp (-(x * x))) 0 R hR
+        (fun z _ _ => gaussian_continuous z) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun x => Real.exp (-(x * x))) 0 R hR (fun z _ _ => gaussian_continuous z)
+          (2 ^ k) (two_pow_pos k)) * (gaussianI R + 1) :=
+      mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (le_of_lt one_pos) (a := gaussianI R)) hgapnn
+    have hstep2 := mul_lt_mul_of_pos_right hk hcp1
+    rw [div_mul_cancel (ne_of_gt hcp1)] at hstep2
+    exact lt_of_le_of_lt hstep1 hstep2
+  exact riemann_integral_mono (fun x => Real.exp (-(x * x)) * gaussianI (sqrt (R * R - x * x)))
+    (fun x => Real.exp (-(x * x)) * gaussianI R) 0 R hR
+    (fun z hz0 hzR => diskIntegrand_continuousAt R hz0 hzR) hcont_h hgh
+    (D R hR) (S R hR) hIgup hIhlow hgaph
+
 end Real
 end MachLib
