@@ -1019,5 +1019,167 @@ theorem gaussianMeanSymInt_tendsto_zero (mu sig2 : Real) (hsig2 : 0 < sig2) :
     (sig2 * gaussianDensity mu sig2 (-R))
     ε (hbnd R (abs_arg_lower_pos hc hcinv hD hRp)) (hbnd (-R) (abs_arg_lower_neg hc hcinv hD hRm))
 
+/-! ### The full parallel-axis theorem, via the mean/variance/normalization tendsto's. -/
+
+private theorem varC_split (x c mu d : Real) :
+    (x - c) * (x - c) * d
+      = (x - mu) * (x - mu) * d + (x - mu) * d * ((1 + 1) * (mu - c)) + d * ((mu - c) * (mu - c)) := by
+  mach_mpoly [x, c, mu, d]
+
+private theorem continuousAt_meanIntC (mu sig2 : Real) (hsig2 : 0 < sig2) (cc : Real) (x : Real) :
+    ContinuousAt (fun y => (y - mu) * gaussianDensity mu sig2 y * cc) x :=
+  continuousAt_mul (continuousAt_meanInt mu sig2 hsig2 x) (continuousAt_const cc x)
+
+private theorem continuousAt_densC (mu sig2 : Real) (hsig2 : 0 < sig2) (cc : Real) (x : Real) :
+    ContinuousAt (fun y => gaussianDensity mu sig2 y * cc) x :=
+  continuousAt_mul (continuousAt_gaussianDensity mu sig2 hsig2 x) (continuousAt_const cc x)
+
+private theorem continuousAt_varCInt (mu sig2 : Real) (hsig2 : 0 < sig2) (c : Real) (x : Real) :
+    ContinuousAt (fun y => (y - c) * (y - c) * gaussianDensity mu sig2 y) x :=
+  continuousAt_mul (continuousAt_mul (continuousAt_xmu c x) (continuousAt_xmu c x))
+    (continuousAt_gaussianDensity mu sig2 hsig2 x)
+
+/-- `∫_{-R}^R (x-c)²·gaussianDensity μ σ² dx` as a total function (`0` off `R > 0`). -/
+noncomputable def gaussianVarCSymInt (mu sig2 : Real) (hsig2 : 0 < sig2) (c R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable
+      (fun y => (y - c) * (y - c) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_varCInt mu sig2 hsig2 c z))
+  else 0
+
+private theorem gaussianVarCSymInt_eq (mu sig2 : Real) (hsig2 : 0 < sig2) (c : Real) {R : Real}
+    (hR : 0 < R) :
+    gaussianVarCSymInt mu sig2 hsig2 c R
+      = gaussianVarSymInt mu sig2 hsig2 R
+          + gaussianMeanSymInt mu sig2 hsig2 R * ((1 + 1) * (mu - c))
+        + gaussianDensitySymInt mu sig2 hsig2 R * ((mu - c) * (mu - c)) := by
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hle := le_of_lt hab
+  -- continuity witnesses
+  have hV : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) z :=
+    fun z _ _ => continuousAt_varInt mu sig2 hsig2 z
+  have hM : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * gaussianDensity mu sig2 y * ((1 + 1) * (mu - c))) z :=
+    fun z _ _ => continuousAt_meanIntC mu sig2 hsig2 ((1 + 1) * (mu - c)) z
+  have hDc : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => gaussianDensity mu sig2 y * ((mu - c) * (mu - c))) z :=
+    fun z _ _ => continuousAt_densC mu sig2 hsig2 ((mu - c) * (mu - c)) z
+  have hVM : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        + (y - mu) * gaussianDensity mu sig2 y * ((1 + 1) * (mu - c))) z :=
+    fun z hz0 hz1 => continuousAt_add (hV z hz0 hz1) (hM z hz0 hz1)
+  have hVMD : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => ((y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        + (y - mu) * gaussianDensity mu sig2 y * ((1 + 1) * (mu - c)))
+        + gaussianDensity mu sig2 y * ((mu - c) * (mu - c))) z :=
+    fun z hz0 hz1 => continuousAt_add (hVM z hz0 hz1) (hDc z hz0 hz1)
+  have hVC : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - c) * (y - c) * gaussianDensity mu sig2 y) z :=
+    fun z _ _ => continuousAt_varCInt mu sig2 hsig2 c z
+  -- dens & meanInt continuity for mul_const
+  have hd : ∀ z : Real, -R ≤ z → z ≤ R → ContinuousAt (gaussianDensity mu sig2) z :=
+    fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z
+  have hmi : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * gaussianDensity mu sig2 y) z :=
+    fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z
+  have hfeq : (fun y => (y - c) * (y - c) * gaussianDensity mu sig2 y)
+      = (fun y => ((y - mu) * (y - mu) * gaussianDensity mu sig2 y
+          + (y - mu) * gaussianDensity mu sig2 y * ((1 + 1) * (mu - c)))
+        + gaussianDensity mu sig2 y * ((mu - c) * (mu - c))) := by
+    funext y; exact varC_split y c mu (gaussianDensity mu sig2 y)
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun y => (y - c) * (y - c) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_varCInt mu sig2 hsig2 c z)) else 0) = _
+  have e1 : gaussianVarSymInt mu sig2 hsig2 R = Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) (-R) R hle hV) := by
+    show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+        (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) (-R) R
+        (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+        (fun z _ _ => continuousAt_varInt mu sig2 hsig2 z)) else 0)
+      = Classical.choose (continuous_riemann_integrable
+        (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) (-R) R hle hV)
+    rw [dif_pos hR]
+  have e2 : gaussianMeanSymInt mu sig2 hsig2 R = Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R hle hmi) := by
+    show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+        (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R
+        (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+        (fun z _ _ => continuousAt_meanInt mu sig2 hsig2 z)) else 0)
+      = Classical.choose (continuous_riemann_integrable
+        (fun y => (y - mu) * gaussianDensity mu sig2 y) (-R) R hle hmi)
+    rw [dif_pos hR]
+  have e3 : gaussianDensitySymInt mu sig2 hsig2 R = Classical.choose (continuous_riemann_integrable
+      (gaussianDensity mu sig2) (-R) R hle hd) := by
+    show (if h : 0 < R then Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2)
+        (-R) R (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+        (fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z)) else 0)
+      = Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2) (-R) R hle hd)
+    rw [dif_pos hR]
+  rw [dif_pos hR, cri_congr hfeq hle hVC hVMD, riemann_integral_add hle hVM hDc hVMD,
+    riemann_integral_add hle hV hM hVM, riemann_integral_mul_const hle hmi hM,
+    riemann_integral_mul_const hle hd hDc, ← e1, ← e2, ← e3]
+
+private theorem varC_final_bound (V M Dn sig2 mc ε : Real) (hV : abs (V - sig2) < ε / (1 + 1 + 1))
+    (hM : abs M * (abs ((1 + 1) * mc) + 1) < ε / (1 + 1 + 1))
+    (hDn : abs (Dn - 1) * (mc * mc + 1) < ε / (1 + 1 + 1)) :
+    abs (V + M * ((1 + 1) * mc) + Dn * (mc * mc) - (sig2 + mc * mc)) < ε := by
+  rw [show V + M * ((1 + 1) * mc) + Dn * (mc * mc) - (sig2 + mc * mc)
+      = V - sig2 + M * ((1 + 1) * mc) + (Dn - 1) * (mc * mc) from by
+    mach_mpoly [V, M, Dn, sig2, mc]]
+  have hMb : abs (M * ((1 + 1) * mc)) < ε / (1 + 1 + 1) := by
+    rw [abs_mul]
+    exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (le_of_lt one_pos))
+      (abs_nonneg M)) hM
+  have hDnb : abs ((Dn - 1) * (mc * mc)) < ε / (1 + 1 + 1) := by
+    rw [abs_mul, abs_of_nonneg (mul_self_nonneg mc)]
+    exact lt_of_le_of_lt (mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (le_of_lt one_pos))
+      (abs_nonneg (Dn - 1))) hDn
+  have htri : abs (V - sig2 + M * ((1 + 1) * mc) + (Dn - 1) * (mc * mc))
+      ≤ abs (V - sig2) + abs (M * ((1 + 1) * mc)) + abs ((Dn - 1) * (mc * mc)) := by
+    have t1 := abs_add (V - sig2 + M * ((1 + 1) * mc)) ((Dn - 1) * (mc * mc))
+    have t2 := abs_add (V - sig2) (M * ((1 + 1) * mc))
+    exact le_trans t1 (add_le_add_both t2 (le_refl _))
+  have hsum : abs (V - sig2) + abs (M * ((1 + 1) * mc)) + abs ((Dn - 1) * (mc * mc)) < ε := by
+    have h := add_lt_add_both (add_lt_add_both hV hMb) hDnb
+    rwa [third_add_third_add_third ε] at h
+  exact lt_of_le_of_lt htri hsum
+
+/-- **`∫_{-∞}^∞ (x-c)²·gaussianDensity μ σ² dx = σ² + (c-μ)²`** — the parallel-axis / bias-variance
+decomposition for `N(μ,σ²)` (S7). The mean-squared error of the constant estimator `c` is the
+variance plus the squared bias. This is the MMSE-optimality inner-integral fact. -/
+theorem gaussianVarCSymInt_tendsto (mu sig2 c : Real) (hsig2 : 0 < sig2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧
+      ∀ R : Real, R₀ ≤ R →
+        abs (gaussianVarCSymInt mu sig2 hsig2 c R - (sig2 + (c - mu) * (c - mu))) < ε := by
+  intro ε hε
+  have hε3 : 0 < ε / (1 + 1 + 1) := div_pos_of_pos_pos hε
+    (add_pos_of_nonneg_pos (le_of_lt two_pos) one_pos)
+  have hcoef1 : 0 < abs ((1 + 1) * (mu - c)) + 1 := add_pos_of_nonneg_pos (abs_nonneg _) one_pos
+  have hcoef2 : 0 < (mu - c) * (mu - c) + 1 := add_pos_of_nonneg_pos (mul_self_nonneg _) one_pos
+  obtain ⟨R1, hR1p, hR1⟩ := gaussianVarSymInt_tendsto_sigma2 mu sig2 hsig2 (ε / (1 + 1 + 1)) hε3
+  obtain ⟨R2, hR2p, hR2⟩ := gaussianMeanSymInt_tendsto_zero mu sig2 hsig2
+    (ε / (1 + 1 + 1) / (abs ((1 + 1) * (mu - c)) + 1)) (div_pos_of_pos_pos hε3 hcoef1)
+  obtain ⟨R3, hR3p, hR3⟩ := gaussianDensity_symInt_tendsto_one mu sig2 hsig2
+    (ε / (1 + 1 + 1) / ((mu - c) * (mu - c) + 1)) (div_pos_of_pos_pos hε3 hcoef2)
+  refine ⟨max (max R1 R2) (max R3 1), lt_of_lt_of_le one_pos
+    (le_trans (le_max_right R3 1) (le_max_right _ _)), ?_⟩
+  intro R hR
+  have hRpos : 0 < R :=
+    lt_of_lt_of_le one_pos (le_trans (le_trans (le_max_right R3 1) (le_max_right _ _)) hR)
+  have hRR1 : R1 ≤ R := le_trans (le_trans (le_max_left R1 R2) (le_max_left _ _)) hR
+  have hRR2 : R2 ≤ R := le_trans (le_trans (le_max_right R1 R2) (le_max_left _ _)) hR
+  have hRR3 : R3 ≤ R := le_trans (le_trans (le_max_left R3 1) (le_max_right _ _)) hR
+  rw [gaussianVarCSymInt_eq mu sig2 hsig2 c hRpos,
+    show (c - mu) * (c - mu) = (mu - c) * (mu - c) from by mach_mpoly [c, mu]]
+  refine varC_final_bound (gaussianVarSymInt mu sig2 hsig2 R) (gaussianMeanSymInt mu sig2 hsig2 R)
+    (gaussianDensitySymInt mu sig2 hsig2 R) sig2 (mu - c) ε (hR1 R hRR1) ?_ ?_
+  · have h := mul_lt_mul_of_pos_right (hR2 R hRR2) hcoef1
+    rwa [div_mul_cancel (ne_of_gt hcoef1)] at h
+  · have h := mul_lt_mul_of_pos_right (hR3 R hRR3) hcoef2
+    rwa [div_mul_cancel (ne_of_gt hcoef2)] at h
+
 end Real
 end MachLib
