@@ -44,7 +44,7 @@ private theorem neg_le_abs_self (t : Real) : -t ≤ abs t := by
     exact le_refl (-t)
 
 /-- The two one-sided bounds packed inside `abs t < B`. -/
-private theorem abs_lt_split {t B : Real} (h : abs t < B) : t < B ∧ -B < t := by
+theorem abs_lt_split {t B : Real} (h : abs t < B) : t < B ∧ -B < t := by
   refine ⟨lt_of_abs_lt h, ?_⟩
   have h1 : -t < B := lt_of_le_of_lt (neg_le_abs_self t) h
   have h2 := add_lt_add_left h1 t
@@ -55,7 +55,7 @@ private theorem abs_lt_split {t B : Real} (h : abs t < B) : t < B ∧ -B < t := 
 
 /-! ## §2 — strict positivity of a `min` -/
 
-private theorem lt_min_of_lt_of_lt {a b c : Real} (h1 : c < a) (h2 : c < b) : c < min a b := by
+theorem lt_min_of_lt_of_lt {a b c : Real} (h1 : c < a) (h2 : c < b) : c < min a b := by
   unfold min
   by_cases h : a ≤ b
   · rw [if_pos h]; exact h1
