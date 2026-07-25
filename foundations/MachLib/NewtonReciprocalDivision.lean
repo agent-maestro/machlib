@@ -133,5 +133,56 @@ theorem nr_contract_step (b y s by' y' : Real) (hs : 0 ≤ s)
   rw [← add_mul_r (abs (b * y)) (abs b) s, add_assoc]
   exact add_le_add_right_l hsq _
 
+/-! ## §3 — the 4-stage composition and division combinator (Q_n part 3) -/
+
+/-- **The 4-fold contraction bound**: chaining `a_{k+1} ≤ a_k·h + c` four times gives
+`a_4 ≤ a_0·h⁴ + c·(1 + h + h² + h³)`. Instantiated at `h = 1/2` (the `nr_contract_step` halving)
+this is `a_4 ≤ a_0/16 + (15/8)·c`; with `a_0 ≤ 1/2` (the 1-bit initial estimate) the reciprocal's
+scaled error is `≤ 1/32 + (15/8)·c`, `c` the uniform truncation floor `(3/2+|b|)·s`. -/
+theorem contract4_bound (a0 a1 a2 a3 a4 h c : Real) (hh : 0 ≤ h)
+    (h1 : a1 ≤ a0 * h + c) (h2 : a2 ≤ a1 * h + c)
+    (h3 : a3 ≤ a2 * h + c) (h4 : a4 ≤ a3 * h + c) :
+    a4 ≤ a0 * (h * h * h * h) + c * (1 + h + h * h + h * h * h) := by
+  have b2 : a2 ≤ (a0 * h + c) * h + c :=
+    le_trans h2 (add_le_add_right_l (mul_le_mul_of_nonneg_right h1 hh) c)
+  have b3 : a3 ≤ ((a0 * h + c) * h + c) * h + c :=
+    le_trans h3 (add_le_add_right_l (mul_le_mul_of_nonneg_right b2 hh) c)
+  have b4 : a4 ≤ (((a0 * h + c) * h + c) * h + c) * h + c :=
+    le_trans h4 (add_le_add_right_l (mul_le_mul_of_nonneg_right b3 hh) c)
+  rwa [show (((a0 * h + c) * h + c) * h + c) * h + c
+      = a0 * (h * h * h * h) + c * (1 + h + h * h + h * h * h) from by mach_mpoly [a0, h, c]] at b4
+
+private theorem mul_sub_l (b r inv : Real) : b * (r - inv) = b * r - b * inv := by
+  mach_mpoly [b, r, inv]
+
+/-- **Scaled → absolute reciprocal error**: `|1 − b·r| = |b|·|r − 1/b|` (`b ≠ 0`). Converts the
+scaled error the NR analysis bounds into the absolute reciprocal error the division needs. -/
+theorem recip_scaled_to_abs (b r : Real) (hb : b ≠ 0) :
+    abs (1 - b * r) = abs b * abs (r - 1 / b) := by
+  have key : 1 - b * r = -(b * (r - 1 / b)) := by
+    rw [mul_sub_l b r (1 / b), mul_inv b hb]; mach_mpoly [(b * r : Real)]
+  rw [key, abs_neg, abs_mul]
+
+private theorem abs_sub_comm_l (x y : Real) : abs (x - y) = abs (y - x) := by
+  rw [show x - y = -(y - x) from by mach_mpoly [x, y], abs_neg]
+
+/-- **The NR reciprocal as an `FxErr` quantity**: given the (absolute) reciprocal error bound
+`|recip_e − 1/b| ≤ Eabs`, package it in the `FixedPointCertifier` framework with exact value `1/b`
+and evaluated value `recip_e`. `Eabs` is supplied by `contract4_bound` (scaled error) composed with
+`recip_scaled_to_abs` (÷|b|); this is the bridge from the NR analysis to `FxErr`/`fx_sound`. -/
+theorem fxerr_recip (b recip_e Eabs : Real) (habs : abs (recip_e - 1 / b) ≤ Eabs) :
+    FxErr (abs recip_e) Eabs (1 / b) recip_e :=
+  ⟨le_refl _, by rw [abs_sub_comm_l (1 / b) recip_e]; exact habs⟩
+
+/-- **The fixed-point division combinator**: `a / b` is certified as `qmul(a, recip(b))` — a single
+truncating multiply of the dividend by the NR reciprocal (`fxerr_recip`). This is exactly
+`fxerr_mul` with the reciprocal as the second operand, so division inherits the certifier's whole
+`+`/`×`/`clamp` machinery; the ~135 EML kernels that use `÷` are covered by feeding this into
+`fx_sound`. `vr = 1/vb` (exact reciprocal), `rr = recip_e` (NR output). -/
+theorem fxerr_div {s Mx Ex vx xe Mr Er vr rr p : Real} (hs : 0 ≤ s)
+    (hx : FxErr Mx Ex vx xe) (hr : FxErr Mr Er vr rr) (hp : TruncW s p (vx * vr)) :
+    FxErr (Mx * Mr) (Mx * Er + Mr * Ex + Ex * Er + s) p (xe * rr) :=
+  fxerr_mul hs hx hr hp
+
 end Real
 end MachLib
