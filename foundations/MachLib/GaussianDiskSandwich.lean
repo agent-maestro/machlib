@@ -132,5 +132,178 @@ theorem sqrt_continuousAt (x0 : Real) (hx0 : 0 ≤ x0) : ContinuousAt sqrt x0 :=
   · rw [← hx0eq]
     exact sqrt_continuousAt_zero
 
+/-! ## §2 — composition of continuous functions is continuous -/
+
+/-- Standard ε-δ composition: if `g` is continuous at `x` and `f` is continuous at `g x`, then
+`f∘g` is continuous at `x`. -/
+theorem continuousAt_comp {f g : Real → Real} {x : Real} (hg : ContinuousAt g x)
+    (hf : ContinuousAt f (g x)) : ContinuousAt (fun y => f (g y)) x := by
+  intro ε hε
+  obtain ⟨δf, hδfpos, hδf⟩ := hf ε hε
+  obtain ⟨δg, hδgpos, hδg⟩ := hg δf hδfpos
+  exact ⟨δg, hδgpos, fun y hy => hδf (g y) (hδg y hy)⟩
+
+/-! ## §3 — `gaussianIntegral` is continuous in its own upper limit, everywhere on `[0,∞)` -/
+
+theorem gaussian_le_one (z : Real) : Real.exp (-(z * z)) ≤ 1 := by
+  have h1 : -(z * z) ≤ 0 := neg_nonpos_of_nonneg (mul_self_nonneg z)
+  have h2 := exp_monotone h1
+  rwa [Real.exp_zero] at h2
+
+theorem gaussianIntegral_zero_eq : gaussianIntegral 0 (le_refl 0) = 0 := by
+  have hgspec := Classical.choose_spec (gaussian_integral_exists 0 (le_refl 0))
+  have hupz : upperSumCont (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+      (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0) = 0 := by
+    show partialSum (maxSub (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+        (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0)
+        * meshWidth 0 0 (2 ^ 0) = 0
+    have hw0 : meshWidth 0 0 (2 ^ 0) = 0 := by
+      show ((0:Real) - 0) / natCast (2 ^ 0) = 0
+      rw [sub_self, zero_div]
+    rw [hw0, mul_zero]
+  have hlowz : lowerSumCont (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+      (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0) = 0 := by
+    show partialSum (minSub (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+        (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0)
+        * meshWidth 0 0 (2 ^ 0) = 0
+    have hw0 : meshWidth 0 0 (2 ^ 0) = 0 := by
+      show ((0:Real) - 0) / natCast (2 ^ 0) = 0
+      rw [sub_self, zero_div]
+    rw [hw0, mul_zero]
+  have h1 : lowerSumCont (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+      (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0)
+      ≤ gaussianIntegral 0 (le_refl 0) := (hgspec.1 0).1
+  have h2 : gaussianIntegral 0 (le_refl 0)
+      ≤ upperSumCont (fun t => Real.exp (-(t * t))) 0 0 (le_refl 0)
+        (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0) := (hgspec.1 0).2
+  rw [hupz] at h2
+  rw [hlowz] at h1
+  exact le_antisymm h2 h1
+
+private theorem div_one_local (t : Real) : t / 1 = t := by
+  have h := div_mul_cancel (a := t) (b := (1:Real)) one_ne_zero
+  rwa [mul_one_ax] at h
+
+theorem meshWidth_zero_one_pow (t : Real) : meshWidth 0 t (2 ^ 0) = t := by
+  rw [meshWidth_zero_base]
+  show t / natCast 1 = t
+  rw [natCast_one_local2]
+  exact div_one_local t
+
+/-- `gaussianIntegral t ht ≤ t` — the `n=1` upper Darboux sum, using the uniform bound
+`exp(-s²)≤1`. Gives a direct Lipschitz-style estimate near `t=0`. -/
+theorem gaussianIntegral_le_self (t : Real) (ht : 0 ≤ t) : gaussianIntegral t ht ≤ t := by
+  have hgspec := Classical.choose_spec (gaussian_integral_exists t ht)
+  have h1 : gaussianIntegral t ht
+      ≤ upperSumCont (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+        (2 ^ 0) (two_pow_pos 0) := (hgspec.1 0).2
+  have hmaxle : maxSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0) 0 ≤ 1 :=
+    maxSub_le_global_bound (fun s => Real.exp (-(s * s))) 0 t ht
+      (fun z _ _ => gaussian_continuous z) 1 (fun z _ _ => gaussian_le_one z) (2 ^ 0)
+      (two_pow_pos 0) 0
+  have hus : upperSumCont (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0)
+      = maxSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+        (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 t (2 ^ 0) := by
+    show partialSum (maxSub (fun s => Real.exp (-(s * s))) 0 t ht
+        (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0) * meshWidth 0 t (2 ^ 0)
+      = maxSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+        (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 t (2 ^ 0)
+    rw [partialSum_one]
+  rw [meshWidth_zero_one_pow] at hus
+  rw [hus] at h1
+  have hbound : maxSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0) 0 * t ≤ 1 * t :=
+    mul_le_mul_of_nonneg_right hmaxle ht
+  rw [one_mul_thm] at hbound
+  exact le_trans h1 hbound
+
+theorem gaussianIntegral_nonneg (t : Real) (ht : 0 ≤ t) : 0 ≤ gaussianIntegral t ht := by
+  have hgspec := Classical.choose_spec (gaussian_integral_exists t ht)
+  have h1 : lowerSumCont (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0) ≤ gaussianIntegral t ht := (hgspec.1 0).1
+  have hminge : 0 ≤ minSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0) 0 :=
+    minSub_ge_global_bound (fun s => Real.exp (-(s * s))) 0 t ht
+      (fun z _ _ => gaussian_continuous z) 0 (fun z _ _ => le_of_lt (exp_pos _)) (2 ^ 0)
+      (two_pow_pos 0) 0
+  have hls : lowerSumCont (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+      (2 ^ 0) (two_pow_pos 0)
+      = minSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+        (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 t (2 ^ 0) := by
+    show partialSum (minSub (fun s => Real.exp (-(s * s))) 0 t ht
+        (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0)) (2 ^ 0) * meshWidth 0 t (2 ^ 0)
+      = minSub (fun s => Real.exp (-(s * s))) 0 t ht (fun z _ _ => gaussian_continuous z)
+        (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 t (2 ^ 0)
+    rw [partialSum_one]
+  rw [hls] at h1
+  have hbound : (0:Real) ≤ minSub (fun s => Real.exp (-(s * s))) 0 t ht
+      (fun z _ _ => gaussian_continuous z) (2 ^ 0) (two_pow_pos 0) 0 * meshWidth 0 t (2 ^ 0) :=
+    mul_nonneg hminge (meshWidth_nonneg ht (2 ^ 0))
+  exact le_trans hbound h1
+
+/-- Total-function wrapper for `gaussianIntegral`, extended by `0` off `[0,∞)`, so it can be used
+as an `I : Real → Real` argument to `ftc_part1` (which needs a genuine total function, with the
+sandwich hypotheses only pinning its behavior on the relevant range). -/
+noncomputable def gaussianI (t : Real) : Real :=
+  if h : 0 ≤ t then gaussianIntegral t h else 0
+
+theorem gaussianI_eq (t : Real) (ht : 0 ≤ t) : gaussianI t = gaussianIntegral t ht := by
+  show (if h : 0 ≤ t then gaussianIntegral t h else 0) = gaussianIntegral t ht
+  rw [dif_pos ht]
+
+theorem gaussianI_continuousAt_zero : ContinuousAt gaussianI 0 := by
+  intro ε hε
+  refine ⟨ε, hε, ?_⟩
+  intro y hy
+  show abs (gaussianI y - gaussianI 0) < ε
+  rw [gaussianI_eq 0 (le_refl 0), gaussianIntegral_zero_eq, sub_zero_local (gaussianI y)]
+  by_cases hy0 : 0 ≤ y
+  · rw [gaussianI_eq y hy0, abs_of_nonneg (gaussianIntegral_nonneg y hy0)]
+    have hyabs : abs (y - 0) < ε := hy
+    rw [sub_zero_local y] at hyabs
+    rw [abs_of_nonneg hy0] at hyabs
+    exact lt_of_le_of_lt (gaussianIntegral_le_self y hy0) hyabs
+  · have hyneg : y < 0 := lt_of_not_le_mono hy0
+    show (if h : 0 ≤ y then gaussianIntegral y h else 0).abs < ε
+    rw [dif_neg hy0, abs_zero]
+    exact hε
+
+theorem gaussianI_continuousAt_pos (t0 : Real) (ht0 : 0 < t0) : ContinuousAt gaussianI t0 := by
+  have hc0 : (0:Real) ≤ t0 + 1 := le_trans (le_of_lt ht0) (le_add_of_nonneg_right (le_of_lt one_pos))
+  have hcont_x : ∀ x : Real, 0 ≤ x → x ≤ t0 + 1 → ∀ z : Real, 0 ≤ z → z ≤ x →
+      ContinuousAt (fun s => Real.exp (-(s * s))) z := fun _ _ _ z _ _ => gaussian_continuous z
+  have hIlow : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ t0 + 1, ∀ k : Nat,
+      lowerSumCont (fun s => Real.exp (-(s * s))) 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k)
+        ≤ gaussianI x := by
+    intro x hx0 hxc k
+    rw [gaussianI_eq x hx0]
+    exact (Classical.choose_spec (gaussian_integral_exists x hx0)).1 k |>.1
+  have hIup : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ t0 + 1, ∀ k : Nat,
+      gaussianI x ≤ upperSumCont (fun s => Real.exp (-(s * s))) 0 x hx0 (hcont_x x hx0 hxc)
+        (2 ^ k) (two_pow_pos k) := by
+    intro x hx0 hxc k
+    rw [gaussianI_eq x hx0]
+    exact (Classical.choose_spec (gaussian_integral_exists x hx0)).1 k |>.2
+  have hIgap : ∀ x : Real, ∀ hx0 : 0 ≤ x, ∀ hxc : x ≤ t0 + 1, ∀ ε : Real, 0 < ε → ∃ k : Nat,
+      upperSumCont (fun s => Real.exp (-(s * s))) 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k) (two_pow_pos k)
+        - lowerSumCont (fun s => Real.exp (-(s * s))) 0 x hx0 (hcont_x x hx0 hxc) (2 ^ k)
+          (two_pow_pos k) < ε :=
+    fun x hx0 _ ε hε => (Classical.choose_spec (gaussian_integral_exists x hx0)).2 ε hε
+  have ht0_lt : t0 < t0 + 1 := by
+    have h := add_lt_add_left one_pos t0
+    rwa [add_zero] at h
+  have hderiv := ftc_part1 (fun s => Real.exp (-(s * s))) (t0 + 1) hc0
+    (fun z _ _ => gaussian_continuous z) hcont_x (fun z _ _ => le_of_lt (exp_pos _))
+    gaussianI hIlow hIup hIgap t0 ht0 ht0_lt
+  exact hasDerivAt_continuousAt hderiv
+
+theorem gaussianI_continuousAt (t0 : Real) (ht0 : 0 ≤ t0) : ContinuousAt gaussianI t0 := by
+  obtain ht0pos | ht0eq := (le_iff_lt_or_eq 0 t0).mp ht0
+  · exact gaussianI_continuousAt_pos t0 ht0pos
+  · rw [← ht0eq]
+    exact gaussianI_continuousAt_zero
+
 end Real
 end MachLib

@@ -88,7 +88,7 @@ theorem meshWidth_offset_one (p w : Real) : meshWidth p (p + w) 1 = w := by
   rwa [show (1:Real) * meshWidth p (p + w) 1 = meshWidth p (p + w) 1
       from by mach_mpoly [meshWidth p (p + w) 1]] at heq
 
-private theorem partialSum_one (g : Nat → Real) : partialSum g 1 = g 0 := by
+theorem partialSum_one (g : Nat → Real) : partialSum g 1 = g 0 := by
   show (0:Real) + g 0 = g 0
   rw [zero_add]
 
