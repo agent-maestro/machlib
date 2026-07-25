@@ -119,7 +119,11 @@ def trustedFootprint : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `
   -- `knownAxioms` — no new trust added, this is bookkeeping so the new headline's footprint
   -- check (below) passes.
   `MachLib.Real.div_zero, `MachLib.Real.exp_gt_one_plus_self, `MachLib.Real.le_sqrt_of_sq_le,
-  `MachLib.Real.HasDerivAt_of_eps_delta]
+  `MachLib.Real.HasDerivAt_of_eps_delta,
+  -- Added 2026-07-25: the Kalman/MMSE arc's `optimalMSE_tendsto` footprint leaks one axiom no prior
+  -- headline touched: `one_add_le_exp` (the basic `1+x ≤ exp x` bound, used in the Gaussian tail-
+  -- decay lemmas the density-integral limits rest on). Already `knownAxioms` — no new trust.
+  `MachLib.Real.one_add_le_exp]
 
 /-- Unwitnessed-but-disclosed axioms + machine-readable reason. Must stay inert. -/
 def disclosedUnwitnessed : List (Name × String) := [(`MachLib.Real.erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.erf_le_one, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.Real.neg_one_le_erf, "blocked-upstream (erf absent from Mathlib)"), (`MachLib.eml_tree_analytic_on_pos, "unwitnessed-but-SOUND: EMLLogArgPosOnIoi side-condition restored (was false-as-stated, fixed); real-analyticity of well-formed EML trees not yet proven in machlib; in NO footprint"), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, "elaborator-synthesized axiom (isUnsafe=true), NOT hand-written -- `of_parts` in TwoExpPfaffianReductionWitness.lean is a plain structure-literal def with no `partial`/`sorry`/`Classical.choice` at the call site; root cause not yet identified (found + disclosed 2026-07-16, AxiomLedger self-check going red; see AxiomLedger investigation notes). Gate-2d multivariate-Khovanskii frontier work (added 2026-07-13/14), not on any shipped headline's path."), (`MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, "same as .of_parts._elambda_1 above -- same file, same unexplained isUnsafe synthesis, same frontier, not on any headline's path."), (`MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, "same pattern again -- plain structure-literal def, no visible partial/sorry/Classical.choice; three occurrences in one file is worth a dedicated Lean-internals investigation, not yet done. Not on any headline's path.")]
@@ -357,7 +361,15 @@ def headlines : List Name := [`MachLib.KhovanskiiConcrete.eexp_barrier_zero_coun
   -- trick (`GaussianLaplaceRoute.lean`). Zero NEW axioms added anywhere in the ~30-push arc that
   -- built this (300 axioms pinned, unchanged); four already-`knownAxioms` entries promoted to
   -- `trustedFootprint` above since no prior headline's trail had touched them.
-  `MachLib.Real.gaussianImproperIntegral_eq_sqrt_pi_div_two]
+  `MachLib.Real.gaussianImproperIntegral_eq_sqrt_pi_div_two,
+  -- Added 2026-07-25: the scalar Kalman/Gaussian MMSE-optimality arc (`GaussianConjugacy.lean`,
+  -- on the second-moment theory of `GaussianDensityIntegral.lean`). `jointDensity_conjugacy` is the
+  -- Bayesian conjugacy factorization (joint = marginal × posterior via completing the square);
+  -- `posterior_mean_mmse` and `optimalMSE_tendsto` are the MMSE-optimality (the posterior/Kalman
+  -- mean minimizes mean-squared error, achieving the posterior variance τ²). Built with ZERO new
+  -- axioms (300 pinned, unchanged); footprints ⊆ the same base the √π headline uses.
+  `MachLib.Real.jointDensity_conjugacy, `MachLib.Real.posterior_mean_mmse,
+  `MachLib.Real.optimalMSE_tendsto]
 
 def liveAxioms (env : Environment) : Array Name := Id.run do
   let mut r := #[]

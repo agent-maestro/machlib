@@ -346,6 +346,48 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "Kalman/Gaussian MMSE-optimality arc: the Bayesian conjugacy factorization (joint = marginal x posterior via completing the square), proven from scratch in MachLib's Mathlib-free base, zero new axioms. Invariant: sorryAx-free.",
+      "id": "kalman-conjugacy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "jointDensity_conjugacy",
+        "ZERO new axioms"
+      ],
+      "module": "MachLib.GaussianConjugacy",
+      "theorem": "MachLib.Real.jointDensity_conjugacy",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The scalar Kalman/posterior mean minimizes the conditional MSE (tau2 <= tau2+(c-m)^2), achieving the posterior variance. Parallel-axis at the posterior. Invariant: sorryAx-free.",
+      "id": "kalman-posterior-mmse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "posterior_mean_mmse",
+        "minimum-mean-squared-error estimator"
+      ],
+      "module": "MachLib.GaussianConjugacy",
+      "theorem": "MachLib.Real.posterior_mean_mmse",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The posterior-mean (Kalman) estimator's total unconditional MSE is exactly tau2 (the posterior variance); mse_lower_bound shows nothing continuous beats it. Iterated-integral device, no 2-D integration. Invariant: sorryAx-free.",
+      "id": "kalman-optimal-mse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "optimalMSE_tendsto",
+        "no measure theory"
+      ],
+      "module": "MachLib.GaussianConjugacy",
+      "theorem": "MachLib.Real.optimalMSE_tendsto",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

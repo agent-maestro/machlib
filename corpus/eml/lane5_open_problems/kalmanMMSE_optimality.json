@@ -1,0 +1,125 @@
+{
+    "schema_version": "1.0.0",
+    "theorem": {
+        "id": "kalmanMMSE_optimality",
+        "base_id": "kalmanMMSE_optimality",
+        "variant_strategy": null,
+        "statement": {
+            "informal": "The scalar Gaussian-conjugate Bayesian (Kalman) update is the minimum-mean-squared-error estimator -- proven from scratch in MachLib's Mathlib-free real-analysis base, ZERO new axioms, no measure theory. Model: prior X~N(mu,sig2), measurement Y=X+N with noise N~N(0,r2) independent (the joint density is a bare PRODUCT of two 1-D densities -- independence by construction, no bivariate Gaussian, no covariance matrix). Completing the square (jointDensity_conjugacy) factors the joint density as marginal Y~N(mu,sig2+r2) TIMES posterior X|Y=y ~ N(m(y),tau2), where m(y)=mu+K(y-mu), K=sig2/(sig2+r2) is the Kalman gain and tau2=sig2*r2/(sig2+r2) the posterior variance. The exponent identity reduces to the polynomial identity p^2 t(s+t)+(q-p)^2 s(s+t)=q^2 st+(ps+pt-sq)^2; the normalizers match because both sqrt(2pi*sig2)sqrt(2pi*r2) and sqrt(2pi(sig2+r2))sqrt(2pi*tau2) equal 2pi*sig*r. MMSE-optimality is then the parallel-axis theorem (S7) instantiated at the posterior: posterior_mean_mmse gives tau2 <= tau2+(c-m(y))^2 (the posterior mean minimizes the conditional MSE, min=tau2); optimalMSE_tendsto gives the posterior-mean estimator's total (unconditional) MSE = tau2 exactly; mse_lower_bound gives that no continuous estimator beats tau2 (window-by-window Riemann-integral monotonicity). The unconditional result uses the iterated-integral device: the inner x-integral is closed-form by parallel-axis, leaving a single 1-D outer y-integral -- NO 2-D integration. postMean_eq_kalman cross-checks the optimal gain against the pre-existing purely-algebraic kalman_gain. Honest scope: SCALAR state+measurement; 'any estimator' = any continuous phi:Real->Real (MachLib has no measurable-function type).",
+            "formal_lean": "theorem posterior_mean_mmse (mu sig2 r2 y c : Real) :\n    postVar sig2 r2 <= postVar sig2 r2 + (c - postMean mu sig2 r2 y) * (c - postMean mu sig2 r2 y) := ...\n\ntheorem optimalMSE_tendsto (mu sig2 r2 : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2) :\n    <total MSE of the posterior-mean estimator tends to postVar sig2 r2> := ...\n\ntheorem jointDensity_conjugacy (mu sig2 r2 x y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2) :\n    jointDensity mu sig2 r2 x y\n      = gaussianDensity mu (margVar sig2 r2) y * gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) x := ...",
+            "formal_eml_lang": null
+        },
+        "domain": "eml",
+        "lane": 5,
+        "tags": [
+            "real-analysis",
+            "probability",
+            "gaussian",
+            "bayesian-conjugacy",
+            "kalman-filter",
+            "mmse-optimality",
+            "completing-the-square",
+            "parallel-axis",
+            "mathlib-free",
+            "zero-new-axioms",
+            "no-measure-theory",
+            "lane-5"
+        ]
+    },
+    "proofs": [
+        {
+            "id": "p1",
+            "tactics": [
+                "jointDensity_conjugacy",
+                "conjugacy_expArg",
+                "conjugacy_normalizer",
+                "gaussianVarCSymInt_tendsto",
+                "posteriorMSE_tendsto",
+                "posterior_mean_mmse",
+                "optimalMSE_tendsto",
+                "mse_lower_bound",
+                "riemann_integral_mono",
+                "riemann_integral_mul_const"
+            ],
+            "tactic_count": 31,
+            "eml_node_cost": null,
+            "style": "analytic",
+            "is_optimal": false,
+            "discovered_by": "agent-maestro",
+            "discovery_date": "2026-07-25"
+        }
+    ],
+    "difficulty": {
+        "lane": 5,
+        "label": "expert",
+        "calibrated_from_attempts": 1,
+        "average_hint_level_at_solve": 0.0,
+        "prerequisite_skills": [
+            "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+            "gaussianVarCSymInt_tendsto",
+            "riemann_integral_add",
+            "completing_the_square",
+            "riemann_integral_mono",
+            "ftc_riemann"
+        ]
+    },
+    "common_mistakes": [
+        {
+            "tactic": "direct mach_mpoly on the cleared exponent identity in (x,mu,y) form",
+            "why_fails": "The subtractions (x-mu),(y-x),(y-mu) make mach_mpoly leave spurious `-0=0` / `1=-0+1` coefficient leaves. Fix: reduce to the (p,q,s,t)-abstract conjugacy_poly (which normalises cleanly) by first rewriting y-x -> (y-mu)-(x-mu). Same family as the overlapping-atom rule: keep atoms abstract, feed real terms by application.",
+            "frequency": 1
+        },
+        {
+            "tactic": "modelling the unconditional MSE as a genuine 2-D integral",
+            "why_fails": "MachLib has no 2-D integration and no Fubini. The iterated-integral device avoids it: take the inner x-integral first (closed-form via parallel-axis = tau2+(phi(y)-m(y))^2), leaving a single 1-D outer y-integral. optimalMSE_tendsto and mse_lower_bound are then ordinary 1-D improper-integral facts.",
+            "frequency": 1
+        },
+        {
+            "tactic": "claiming full (measurable) generality for 'any estimator'",
+            "why_fails": "MachLib has no measurable-function type to quantify over. mse_lower_bound is honestly stated for any CONTINUOUS phi:Real->Real (enough to invoke continuous_riemann_integrable + riemann_integral_mono); the conditional posterior_mean_mmse holds for any point estimate c with no regularity at all.",
+            "frequency": 1
+        }
+    ],
+    "tactic_trace": {
+        "successful": {},
+        "failed": {},
+        "success_rate_by_tactic": {}
+    },
+    "structural_profile": {
+        "chain_order": 1,
+        "cost_class": null,
+        "eml_depth": null,
+        "dynamics": {
+            "oscillations": 0,
+            "decays": 1
+        },
+        "drift_risk": "LOW",
+        "fpga_estimate": null
+    },
+    "relationships": {
+        "parent": null,
+        "siblings": [],
+        "depends_on": [
+            "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+            "gaussianVarCSymInt_tendsto",
+            "gaussianDensity_symInt_tendsto_one",
+            "riemann_integral_add",
+            "riemann_integral_mono"
+        ],
+        "structural_siblings": [
+            "gaussianImproperIntegral_eq_sqrt_pi_div_two",
+            "forge__kalman_track__kalman_gain__structural_class",
+            "forge__gaussian_peak__gaussian_density__structural_class",
+            "gaussianDiskSquareSandwich"
+        ]
+    },
+    "metadata": {
+        "verified": true,
+        "verification_method": "lean4_kernel",
+        "generated_by": "human",
+        "creation_date": "2026-07-25",
+        "source_eml_file": null,
+        "source_function": "MachLib.Real.posterior_mean_mmse",
+        "runtime_witness": "kalmanMMSE_witness.py"
+    }
+}

@@ -26,6 +26,34 @@ across roughly 30 pushes. The earlier disk/square-sandwich route (`GaussianDiskS
 path only because its own derivative needs genuine 2D polar coordinates this 1D-only codebase
 doesn't have.
 
+### New — the scalar Kalman/Gaussian update is MMSE-optimal, from scratch, zero new axioms (`MachLib/GaussianConjugacy.lean`)
+
+On top of the √π result and a full from-scratch second-moment theory of the scalar Gaussian
+(`MachLib/GaussianDensityIntegral.lean`: `∫dens=1`, mean `μ`, variance `σ²`, and the parallel-axis
+decomposition `∫(x-c)²dens = σ²+(c-μ)²`), MachLib now proves the scalar Gaussian-conjugate Bayesian
+(Kalman) update is the **minimum-mean-squared-error estimator** — with no measure theory, no 2-D
+integration, and ZERO new axioms (300 pinned, unchanged).
+
+- **`jointDensity_conjugacy`**: the Bayesian conjugacy factorization. For prior `X~N(μ,σ²)` and
+  measurement `Y=X+N` with independent noise `N~N(0,r²)`, completing the square factors the joint
+  density as marginal `Y~N(μ,σ²+r²)` times posterior `X|Y=y ~ N(m(y),τ²)`, where `m(y)=μ+K(y-μ)`,
+  `K=σ²/(σ²+r²)` (Kalman gain), `τ²=σ²r²/(σ²+r²)`.
+- **`jointDensity_marginal_tendsto`**: integrating `x` out leaves the marginal `Y~N(μ,σ²+r²)` — no
+  new Gaussian-integral identity needed (validates the scalar-density scoping).
+- **`posterior_mean_mmse`** / **`posteriorMSE_tendsto`**: the posterior/Kalman mean minimizes the
+  conditional MSE `τ²+(c-m(y))²`, achieving the minimum posterior variance `τ²` (parallel-axis at
+  the posterior).
+- **`optimalMSE_tendsto`** / **`mse_lower_bound`**: the posterior-mean estimator's total
+  (unconditional) MSE is exactly `τ²`, and no continuous estimator beats it — via the iterated-
+  integral device (inner `x`-integral closed-form by parallel-axis, single 1-D outer `y`-integral).
+- **`postMean_eq_kalman`**: cross-checks the optimal gain against the pre-existing purely-algebraic
+  `kalman_gain`.
+
+`sorryAx`-free. Honest scope: scalar state+measurement; "any estimator" = any continuous
+`φ:Real→Real` (MachLib has no measurable-function type). Runtime witness:
+`corpus/eml/lane5_open_problems/kalmanMMSE_witness.py` (quadrature confirms every closed form and
+that the posterior mean is the numerically-verified MMSE estimator, min MSE = `τ²`).
+
 ## [Unreleased] — 2026-07-09
 
 ### New — absolute, cancellation-tolerant forward-error fold (`MachLib/AbsoluteError.lean`)
