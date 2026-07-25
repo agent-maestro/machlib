@@ -286,6 +286,7 @@ import MachLib.Tactic.LeadingCoeffY
 import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
+import MachLib.NewtonReciprocalDivision
 import MachLib.Iteration
 import MachLib.ErrorAlgebra
 import MachLib.ErrorAlgebraTrans
