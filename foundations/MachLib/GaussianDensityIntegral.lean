@@ -615,5 +615,280 @@ theorem hasDerivAt_gaussianDensity (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real
       rw [div_def (x - mu) sig2 (ne_of_gt hsig2)]] at hmul
   exact hmul
 
+/-! ## §7 — tail decay: `(x-μ)·gaussianDensity μ σ² x → 0` as `|x| → ∞` (S4)
+
+The boundary term of the variance formula's integration by parts. Reduces to `u·exp(-u²) → 0`
+(`u := (x-μ)/√(2σ²)`), which follows from `exp(u²) > u²` (`exp_grows_strictly`). -/
+
+private theorem u_exp_neg_sq_small (ε : Real) (hε : 0 < ε) :
+    ∃ U : Real, 0 < U ∧ ∀ u : Real, U ≤ u → u * Real.exp (-(u * u)) < ε := by
+  refine ⟨1 / ε, one_div_pos_of_pos hε, ?_⟩
+  intro u hu
+  have hupos : 0 < u := lt_of_lt_of_le (one_div_pos_of_pos hε) hu
+  have heu : 1 ≤ ε * u := by
+    have h := mul_le_mul_of_nonneg_left hu (le_of_lt hε)
+    rwa [mul_inv ε (ne_of_gt hε)] at h
+  have hule : u ≤ ε * (u * u) := by
+    have h := mul_le_mul_of_nonneg_right heu (le_of_lt hupos)
+    rwa [one_mul_thm, show ε * u * u = ε * (u * u) from by mach_mpoly [ε, u]] at h
+  have hlt : u < ε * Real.exp (u * u) :=
+    lt_of_le_of_lt hule (mul_lt_mul_of_pos_left (exp_grows_strictly (u * u)) hε)
+  rw [exp_neg_inv, ← div_def u (Real.exp (u * u)) (ne_of_gt (exp_pos _))]
+  exact div_lt_of_lt_mul hlt (exp_pos _)
+
+/-- Two-sided version: `|u·exp(-u²)| < ε` once `|u| ≥ U`. -/
+private theorem abs_u_exp_neg_sq_small (ε : Real) (hε : 0 < ε) :
+    ∃ U : Real, 0 < U ∧ ∀ u : Real, U ≤ abs u → abs (u * Real.exp (-(u * u))) < ε := by
+  obtain ⟨U, hU, hUspec⟩ := u_exp_neg_sq_small ε hε
+  refine ⟨U, hU, ?_⟩
+  intro u hu
+  rw [abs_mul, abs_of_nonneg (le_of_lt (exp_pos _))]
+  have huu : u * u = abs u * abs u := by
+    rw [← abs_mul]; exact (abs_of_nonneg (mul_self_nonneg u)).symm
+  rw [huu]
+  exact hUspec (abs u) hu
+
+/-- Abstract identity `zmu·(E/(spi·c)) = (zmu·k)·E·(1/spi)` given `c·k = 1` — reduces the density
+tail `(z-μ)·gaussianDensity(z)` to `w·exp(-w²)/√π` with `w = (z-μ)·k`. Abstract atoms so `mach_ring`
+avoids the shared-`sqrt` overlapping-atom bug. -/
+private theorem density_tail_id (zmu E c k spi : Real) (hc : c ≠ 0) (hspi : spi ≠ 0)
+    (hck : c * k = 1) :
+    zmu * (E * (1 / (spi * c))) = zmu * k * E * (1 / spi) := by
+  have hspic : spi * c ≠ 0 := mul_ne_zero hspi hc
+  apply mul_right_cancel' hspic
+  rw [show zmu * (E * (1 / (spi * c))) * (spi * c) = zmu * E * (1 / (spi * c) * (spi * c)) from by
+      mach_ring, div_mul_cancel hspic, mul_one_ax,
+    show zmu * k * E * (1 / spi) * (spi * c) = zmu * k * E * c * (1 / spi * spi) from by mach_ring,
+    div_mul_cancel hspi, mul_one_ax,
+    show zmu * k * E * c = zmu * E * (c * k) from by mach_ring, hck, mul_one_ax]
+
+/-- Tail decay of `(z-μ)·gaussianDensity μ σ² z`: `< ε` once `|(z-μ)/√(2σ²)| ≥ D`. -/
+private theorem abs_xmu_gaussianDensity_small (mu sig2 : Real) (hsig2 : 0 < sig2) (ε : Real)
+    (hε : 0 < ε) : ∃ D : Real, 0 < D ∧
+      ∀ z : Real, D ≤ abs ((z - mu) * (1 / sqrt ((1 + 1) * sig2))) →
+        abs ((z - mu) * gaussianDensity mu sig2 z) < ε := by
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hspi : 0 < sqrt pi := sqrt_pos pi_pos
+  obtain ⟨U, hU, hUspec⟩ := abs_u_exp_neg_sq_small (ε * sqrt pi) (mul_pos hε hspi)
+  refine ⟨U, hU, ?_⟩
+  intro z hz
+  rw [gaussianDensity_eq_kernel_mul mu sig2 hsig2,
+    density_tail_id (z - mu)
+      (Real.exp (-(((z - mu) * (1 / sqrt ((1 + 1) * sig2)))
+        * ((z - mu) * (1 / sqrt ((1 + 1) * sig2))))))
+      (sqrt ((1 + 1) * sig2)) (1 / sqrt ((1 + 1) * sig2)) (sqrt pi) (ne_of_gt hc) (ne_of_gt hspi)
+      (mul_inv _ (ne_of_gt hc))]
+  -- goal: |w·exp(-w²)·(1/√π)| < ε, w = (z-μ)·k
+  rw [abs_mul, abs_of_nonneg (le_of_lt (one_div_pos_of_pos hspi))]
+  have hw := hUspec ((z - mu) * (1 / sqrt ((1 + 1) * sig2))) hz
+  -- |w·exp(-w²)| < ε·√π ⟹ |w·exp(-w²)|·(1/√π) < ε
+  have hlt := mul_lt_mul_of_pos_right hw (one_div_pos_of_pos hspi)
+  rwa [show ε * sqrt pi * (1 / sqrt pi) = ε from by
+    rw [show ε * sqrt pi * (1 / sqrt pi) = ε * (sqrt pi * (1 / sqrt pi)) from by mach_ring,
+      mul_inv (sqrt pi) (ne_of_gt hspi), mul_one_ax]] at hlt
+
+/-! ## §8 — the variance formula `∫(x-μ)²·gaussianDensity μ σ² dx = σ²` (S6, second milestone)
+
+Integration by parts: `G(x) := -σ²·(x-μ)·gaussianDensity(x)` has, via the product rule + the Stein
+derivative (S5), `G'(x) = (x-μ)²·gaussianDensity(x) - σ²·gaussianDensity(x)`. So `(x-μ)²·dens =
+G' + σ²·dens`, and integrating `[-R,R]`: `∫(x-μ)²dens = (G(R)-G(-R)) + σ²·∫dens` (S0 additivity +
+`riemann_integral_mul_const` + `ftc_riemann`). As `R→∞`: `G(±R)→0` (tail decay S4), `∫dens→1` (S3),
+so the variance is `σ²`. -/
+
+/-- Abstract coefficient identity for `G`'s derivative (`σ²·(1/σ²)=1` via `hinv`; abstract atoms
+avoid the overlapping-atom bug). -/
+private theorem Gderiv_coeff (d xm sig2 invsig A : Real) (hinv : sig2 * invsig = 1) :
+    -(0 * A + sig2 * (1 * d + xm * (-(xm * invsig) * d))) = xm * xm * d - d * sig2 := by
+  rw [show -(0 * A + sig2 * (1 * d + xm * (-(xm * invsig) * d)))
+      = xm * xm * d * (sig2 * invsig) - d * sig2 from by mach_mpoly [d, xm, sig2, invsig, A],
+    hinv, mul_one_ax]
+
+theorem hasDerivAt_Gfn (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    HasDerivAt (fun y => -(sig2 * ((y - mu) * gaussianDensity mu sig2 y)))
+      ((x - mu) * (x - mu) * gaussianDensity mu sig2 x - gaussianDensity mu sig2 x * sig2) x := by
+  have hsub : HasDerivAt (fun y => y - mu) (1 - 0) x :=
+    HasDerivAt_sub (fun y => y) (fun _ => mu) 1 0 x (HasDerivAt_id x) (HasDerivAt_const mu x)
+  rw [sub_zero] at hsub
+  have hprod := HasDerivAt_mul (fun y => y - mu) (gaussianDensity mu sig2) 1
+    (-((x - mu) / sig2) * gaussianDensity mu sig2 x) x hsub
+    (hasDerivAt_gaussianDensity mu sig2 hsig2 x)
+  have hsig := HasDerivAt_mul (fun _ => sig2) (fun y => (y - mu) * gaussianDensity mu sig2 y)
+    0 (1 * gaussianDensity mu sig2 x
+      + (x - mu) * (-((x - mu) / sig2) * gaussianDensity mu sig2 x)) x
+    (HasDerivAt_const sig2 x) hprod
+  have hneg := HasDerivAt_neg (fun y => sig2 * ((y - mu) * gaussianDensity mu sig2 y))
+    (0 * ((x - mu) * gaussianDensity mu sig2 x)
+      + sig2 * (1 * gaussianDensity mu sig2 x
+        + (x - mu) * (-((x - mu) / sig2) * gaussianDensity mu sig2 x))) x hsig
+  rw [div_def (x - mu) sig2 (ne_of_gt hsig2),
+    Gderiv_coeff (gaussianDensity mu sig2 x) (x - mu) sig2 (1 / sig2)
+      ((x - mu) * gaussianDensity mu sig2 x) (mul_inv sig2 (ne_of_gt hsig2))] at hneg
+  exact hneg
+
+private theorem continuousAt_xmu (mu x : Real) : ContinuousAt (fun y => y - mu) x :=
+  hasDerivAt_continuousAt
+    (HasDerivAt_sub (fun y => y) (fun _ => mu) 1 0 x (HasDerivAt_id x) (HasDerivAt_const mu x))
+
+private theorem continuousAt_varInt (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) x :=
+  continuousAt_mul (continuousAt_mul (continuousAt_xmu mu x) (continuousAt_xmu mu x))
+    (continuousAt_gaussianDensity mu sig2 hsig2 x)
+
+private theorem continuousAt_densSig2 (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    ContinuousAt (fun y => gaussianDensity mu sig2 y * sig2) x :=
+  continuousAt_mul (continuousAt_gaussianDensity mu sig2 hsig2 x) (continuousAt_const sig2 x)
+
+private theorem continuousAt_Gderiv (mu sig2 : Real) (hsig2 : 0 < sig2) (x : Real) :
+    ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+      - gaussianDensity mu sig2 y * sig2) x := by
+  rw [show (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        - gaussianDensity mu sig2 y * sig2)
+      = (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        + -(gaussianDensity mu sig2 y * sig2)) from by funext y; exact sub_def _ _]
+  exact continuousAt_add (continuousAt_varInt mu sig2 hsig2 x)
+    (continuousAt_neg (continuousAt_densSig2 mu sig2 hsig2 x))
+
+private theorem varInt_split (xm d sig2 : Real) : xm * xm * d = xm * xm * d - d * sig2 + d * sig2 := by
+  mach_mpoly [xm, d, sig2]
+
+/-- `∫_{-R}^R (x-μ)²·gaussianDensity μ σ² dx` as a total function (`0` off `R > 0`). -/
+noncomputable def gaussianVarSymInt (mu sig2 : Real) (hsig2 : 0 < sig2) (R : Real) : Real :=
+  if h : 0 < R then
+    Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_varInt mu sig2 hsig2 z))
+  else 0
+
+private theorem gaussianVarSymInt_eq (mu sig2 : Real) (hsig2 : 0 < sig2) {R : Real} (hR : 0 < R) :
+    gaussianVarSymInt mu sig2 hsig2 R
+      = -(sig2 * ((R - mu) * gaussianDensity mu sig2 R))
+          - -(sig2 * ((-R - mu) * gaussianDensity mu sig2 (-R)))
+        + gaussianDensitySymInt mu sig2 hsig2 R * sig2 := by
+  have hab : -R < R := lt_trans_ax (neg_neg_of_pos hR) hR
+  have hgd : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        - gaussianDensity mu sig2 y * sig2) z :=
+    fun z _ _ => continuousAt_Gderiv mu sig2 hsig2 z
+  have hds : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => gaussianDensity mu sig2 y * sig2) z :=
+    fun z _ _ => continuousAt_densSig2 mu sig2 hsig2 z
+  have hd : ∀ z : Real, -R ≤ z → z ≤ R → ContinuousAt (gaussianDensity mu sig2) z :=
+    fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z
+  have hsum : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => ((y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        - gaussianDensity mu sig2 y * sig2) + gaussianDensity mu sig2 y * sig2) z :=
+    fun z hz0 hz1 => continuousAt_add (hgd z hz0 hz1) (hds z hz0 hz1)
+  have hvar : ∀ z : Real, -R ≤ z → z ≤ R →
+      ContinuousAt (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) z :=
+    fun z _ _ => continuousAt_varInt mu sig2 hsig2 z
+  have hfeq : (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y)
+      = (fun y => ((y - mu) * (y - mu) * gaussianDensity mu sig2 y
+        - gaussianDensity mu sig2 y * sig2) + gaussianDensity mu sig2 y * sig2) := by
+    funext y; exact varInt_split (y - mu) (gaussianDensity mu sig2 y) sig2
+  show (if h : 0 < R then Classical.choose (continuous_riemann_integrable
+      (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y) (-R) R
+      (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+      (fun z _ _ => continuousAt_varInt mu sig2 hsig2 z)) else 0) = _
+  rw [dif_pos hR]
+  rw [cri_congr hfeq (le_of_lt hab) hvar hsum]
+  rw [riemann_integral_add (le_of_lt hab) hgd hds hsum]
+  -- ∫Gderiv = Gfn R - Gfn(-R) via FTC
+  have hspecG := Classical.choose_spec (continuous_riemann_integrable
+    (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+      - gaussianDensity mu sig2 y * sig2) (-R) R (le_of_lt hab) hgd)
+  rw [ftc_riemann (fun y => (y - mu) * (y - mu) * gaussianDensity mu sig2 y
+      - gaussianDensity mu sig2 y * sig2) (fun y => -(sig2 * ((y - mu) * gaussianDensity mu sig2 y)))
+    (-R) R hab hgd (fun z _ _ => hasDerivAt_Gfn mu sig2 hsig2 z) _
+    (fun k => (hspecG.1 k).1) (fun k => (hspecG.1 k).2) hspecG.2]
+  -- ∫(dens·sig2) = (∫dens)·sig2 via mul_const; ∫dens = gaussianDensitySymInt
+  rw [riemann_integral_mul_const (le_of_lt hab) hd hds]
+  rw [show gaussianDensitySymInt mu sig2 hsig2 R = Classical.choose (continuous_riemann_integrable
+      (gaussianDensity mu sig2) (-R) R (le_of_lt hab) hd) from by
+    show (if h : 0 < R then Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2)
+        (-R) R (le_of_lt (lt_trans_ax (neg_neg_of_pos h) h))
+        (fun z _ _ => continuousAt_gaussianDensity mu sig2 hsig2 z)) else 0)
+      = Classical.choose (continuous_riemann_integrable (gaussianDensity mu sig2) (-R) R
+        (le_of_lt hab) hd)
+    rw [dif_pos hR]]
+
+private theorem abs_arg_lower_pos {D mu R c : Real} (hc : 0 < c) (hcinv : c * (1 / c) = 1)
+    (hD : 0 < D) (h : mu + D * c ≤ R) : D ≤ abs ((R - mu) * (1 / c)) := by
+  have h1 : D ≤ (R - mu) * (1 / c) := arg_lower_helper hc hcinv h
+  rwa [abs_of_nonneg (le_trans (le_of_lt hD) h1)]
+
+private theorem abs_arg_lower_neg {D mu R c : Real} (hc : 0 < c) (hcinv : c * (1 / c) = 1)
+    (hD : 0 < D) (h : -mu + D * c ≤ R) : D ≤ abs ((-R - mu) * (1 / c)) := by
+  have h1 : D ≤ (R - -mu) * (1 / c) := arg_lower_helper hc hcinv h
+  rw [show (-R - mu) * (1 / c) = -((R - -mu) * (1 / c)) from by
+      mach_mpoly [R, mu, (1 / c : Real)], abs_neg, abs_of_nonneg (le_trans (le_of_lt hD) h1)]
+  exact h1
+
+private theorem third_add_third_add_third (ε : Real) :
+    ε / (1 + 1 + 1) + ε / (1 + 1 + 1) + ε / (1 + 1 + 1) = ε := by
+  rw [show ε / (1 + 1 + 1) + ε / (1 + 1 + 1) + ε / (1 + 1 + 1) = (1 + 1 + 1) * (ε / (1 + 1 + 1))
+      from by mach_mpoly [ε / (1 + 1 + 1)],
+    mul_div_cancel' (ne_of_gt (add_pos_of_nonneg_pos (le_of_lt two_pos) one_pos))]
+
+private theorem var_final_bound (GR GnR Wsig sig2 ε : Real)
+    (hGR : abs GR < ε / (1 + 1 + 1)) (hGnR : abs GnR < ε / (1 + 1 + 1))
+    (hW : abs (Wsig - sig2) < ε / (1 + 1 + 1)) : abs (GR - GnR + Wsig - sig2) < ε := by
+  rw [show GR - GnR + Wsig - sig2 = GR - GnR + (Wsig - sig2) from by
+    mach_mpoly [GR, GnR, Wsig, sig2]]
+  have h1 : abs (GR - GnR + (Wsig - sig2)) ≤ abs GR + abs GnR + abs (Wsig - sig2) := by
+    have t1 := abs_add (GR - GnR) (Wsig - sig2)
+    have t2 := abs_add GR (-GnR)
+    rw [show GR + -GnR = GR - GnR from by mach_mpoly [GR, GnR], abs_neg] at t2
+    exact le_trans t1 (add_le_add_both t2 (le_refl (abs (Wsig - sig2))))
+  have h2 : abs GR + abs GnR + abs (Wsig - sig2) < ε := by
+    have h := add_lt_add_both (add_lt_add_both hGR hGnR) hW
+    rwa [third_add_third_add_third ε] at h
+  exact lt_of_le_of_lt h1 h2
+
+/-- **`∫_{-∞}^∞ (x-μ)²·gaussianDensity μ σ² dx = σ²`** — the variance of `N(μ,σ²)` is `σ²`. Stated as
+an ε–R₀ limit of the symmetric finite integral (S6, the arc's second milestone). -/
+theorem gaussianVarSymInt_tendsto_sigma2 (mu sig2 : Real) (hsig2 : 0 < sig2) :
+    ∀ ε : Real, 0 < ε → ∃ R₀ : Real, 0 < R₀ ∧
+      ∀ R : Real, R₀ ≤ R → abs (gaussianVarSymInt mu sig2 hsig2 R - sig2) < ε := by
+  intro ε hε
+  have hc : 0 < sqrt ((1 + 1) * sig2) := sqrt_pos (two_sig2_pos hsig2)
+  have hcinv : sqrt ((1 + 1) * sig2) * (1 / sqrt ((1 + 1) * sig2)) = 1 := mul_inv _ (ne_of_gt hc)
+  have hε3 : 0 < ε / (1 + 1 + 1) := div_pos_of_pos_pos hε
+    (add_pos_of_nonneg_pos (le_of_lt two_pos) one_pos)
+  have hε3s : 0 < ε / (1 + 1 + 1) / sig2 := div_pos_of_pos_pos hε3 hsig2
+  obtain ⟨D, hD, hDspec⟩ := abs_xmu_gaussianDensity_small mu sig2 hsig2 (ε / (1 + 1 + 1) / sig2) hε3s
+  obtain ⟨R1, hR1pos, hR1⟩ :=
+    gaussianDensity_symInt_tendsto_one mu sig2 hsig2 (ε / (1 + 1 + 1) / sig2) hε3s
+  refine ⟨max (max (mu + D * sqrt ((1 + 1) * sig2)) (-mu + D * sqrt ((1 + 1) * sig2)))
+    (max R1 1), lt_of_lt_of_le one_pos (le_trans (le_max_right R1 1) (le_max_right _ _)), ?_⟩
+  intro R hR
+  have hRpos : 0 < R :=
+    lt_of_lt_of_le one_pos (le_trans (le_trans (le_max_right R1 1) (le_max_right _ _)) hR)
+  have hRp : mu + D * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_left _ _) (le_max_left _ _)) hR
+  have hRm : -mu + D * sqrt ((1 + 1) * sig2) ≤ R :=
+    le_trans (le_trans (le_max_right _ _) (le_max_left _ _)) hR
+  have hRR1 : R1 ≤ R := le_trans (le_trans (le_max_left R1 1) (le_max_right _ _)) hR
+  rw [gaussianVarSymInt_eq mu sig2 hsig2 hRpos]
+  -- bound the two boundary terms via tail decay + the density term via S3
+  have hGR : abs (-(sig2 * ((R - mu) * gaussianDensity mu sig2 R))) < ε / (1 + 1 + 1) := by
+    rw [abs_neg, abs_mul, abs_of_nonneg (le_of_lt hsig2)]
+    have h := mul_lt_mul_of_pos_left (hDspec R (abs_arg_lower_pos hc hcinv hD hRp)) hsig2
+    rwa [mul_div_cancel_left (ne_of_gt hsig2)] at h
+  have hGnR : abs (-(sig2 * ((-R - mu) * gaussianDensity mu sig2 (-R)))) < ε / (1 + 1 + 1) := by
+    rw [abs_neg, abs_mul, abs_of_nonneg (le_of_lt hsig2)]
+    have h := mul_lt_mul_of_pos_left (hDspec (-R) (abs_arg_lower_neg hc hcinv hD hRm)) hsig2
+    rwa [mul_div_cancel_left (ne_of_gt hsig2)] at h
+  have hW : abs (gaussianDensitySymInt mu sig2 hsig2 R * sig2 - sig2) < ε / (1 + 1 + 1) := by
+    rw [show gaussianDensitySymInt mu sig2 hsig2 R * sig2 - sig2
+        = (gaussianDensitySymInt mu sig2 hsig2 R - 1) * sig2 from by
+      mach_mpoly [gaussianDensitySymInt mu sig2 hsig2 R, sig2], abs_mul,
+      abs_of_nonneg (le_of_lt hsig2)]
+    have h := mul_lt_mul_of_pos_right (hR1 R hRR1) hsig2
+    rwa [div_mul_cancel (ne_of_gt hsig2)] at h
+  exact var_final_bound (-(sig2 * ((R - mu) * gaussianDensity mu sig2 R)))
+    (-(sig2 * ((-R - mu) * gaussianDensity mu sig2 (-R))))
+    (gaussianDensitySymInt mu sig2 hsig2 R * sig2) sig2 ε hGR hGnR hW
+
 end Real
 end MachLib
