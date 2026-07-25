@@ -903,5 +903,102 @@ theorem qFn_lipschitz_in_t {c t1 t2 T : Real} (hc0 : 0 ≤ c) (hc2 : c ≤ (1+1)
   · have h := hstep t2 t1 hlt ht2 ht1
     rwa [show abs (t1 - t2) = t1 - t2 from abs_of_nonneg (sub_nonneg_of_le (le_of_lt hlt))]
 
+/-! ## §8 — `G(t) := ∫₀¹p(t,x)dx`, `Gderiv(t) := ∫₀¹q(t,x)dx`, well-posed for EVERY real `t` (no
+boundary-kink construction needed — `p`,`q` are honestly defined for all `t`, positive or
+negative, unlike `gaussianI`'s total-wrapper). -/
+
+private theorem hasDerivAt_p_exp_x (t x : Real) :
+    HasDerivAt (fun y => Real.exp (-(t * t * (1 + y * y))))
+      (Real.exp (-(t * t * (1 + x * x))) * -(t * t * (0 + (1 * x + x * 1)))) x := by
+  have h1 : HasDerivAt (fun y => y * y) (1 * x + x * 1) x :=
+    HasDerivAt_mul (fun y => y) (fun y => y) 1 1 x (HasDerivAt_id x) (HasDerivAt_id x)
+  have h2 : HasDerivAt (fun y => 1 + y * y) (0 + (1 * x + x * 1)) x :=
+    HasDerivAt_add (fun _ => 1) (fun y => y * y) 0 (1 * x + x * 1) x (HasDerivAt_const 1 x) h1
+  have h3 : HasDerivAt (fun y => t * t * (1 + y * y))
+      (0 * (1 + x * x) + t * t * (0 + (1 * x + x * 1))) x :=
+    HasDerivAt_mul (fun _ => t * t) (fun y => 1 + y * y) 0 (0 + (1 * x + x * 1)) x
+      (HasDerivAt_const (t * t) x) h2
+  have h4 : HasDerivAt (fun y => -(t * t * (1 + y * y)))
+      (-(0 * (1 + x * x) + t * t * (0 + (1 * x + x * 1)))) x :=
+    HasDerivAt_neg (fun y => t * t * (1 + y * y)) (0 * (1 + x * x) + t * t * (0 + (1 * x + x * 1))) x h3
+  have h5 := HasDerivAt_comp Real.exp (fun y => -(t * t * (1 + y * y)))
+    (-(0 * (1 + x * x) + t * t * (0 + (1 * x + x * 1)))) (Real.exp (-(t * t * (1 + x * x)))) x h4
+    (HasDerivAt_exp (-(t * t * (1 + x * x))))
+  rwa [show Real.exp (-(t * t * (1 + x * x))) * -(0 * (1 + x * x) + t * t * (0 + (1 * x + x * 1)))
+      = Real.exp (-(t * t * (1 + x * x))) * -(t * t * (0 + (1 * x + x * 1))) from by
+    mach_mpoly [Real.exp (-(t * t * (1 + x * x))), t, x]] at h5
+
+private theorem hcont_p_exp (t : Real) :
+    ∀ x, ContinuousAt (fun y => Real.exp (-(t * t * (1 + y * y)))) x :=
+  fun x => hasDerivAt_continuousAt (hasDerivAt_p_exp_x t x)
+
+private theorem hcont_p (t : Real) :
+    ∀ x, ContinuousAt (fun y => Real.exp (-(t * t * (1 + y * y))) * kFn y) x :=
+  fun x => continuousAt_mul (hcont_p_exp t x) (continuousAt_kFn x)
+
+private theorem hcont_q (t : Real) :
+    ∀ x, ContinuousAt (fun y => -(1 + 1) * t * Real.exp (-(t * t * (1 + y * y)))) x :=
+  fun x => continuousAt_mul (continuousAt_const (-(1 + 1) * t) x) (hcont_p_exp t x)
+
+/-- `G(t) := ∫₀¹ exp(-t²(1+x²))/(1+x²) dx`. Well-defined for EVERY real `t` — no total-wrapper
+extension needed, since the integrand is honestly defined for all `t`. -/
+noncomputable def GFn (t : Real) : Real :=
+  Classical.choose (continuous_riemann_integrable
+    (fun x => Real.exp (-(t * t * (1 + x * x))) * kFn x) 0 1 (le_of_lt one_pos) (fun z _ _ => hcont_p t z))
+
+/-- `Gderiv(t) := ∫₀¹ q(t,x) dx = ∫₀¹ -2t·exp(-t²(1+x²)) dx` — the pointwise-in-`t`-derivative's
+own integral, the target for `G`'s FTC-derivative. -/
+noncomputable def GderivFn (t : Real) : Real :=
+  Classical.choose (continuous_riemann_integrable
+    (fun x => -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) 0 1 (le_of_lt one_pos)
+    (fun z _ _ => hcont_q t z))
+
+/-! ## §9 — `p(t,x)`'s pointwise `t`-derivative is `q(t,x)` exactly
+
+The `(1+x²)` from differentiating the exponential cancels EXACTLY against `kFn(x)=1/(1+x²)` — this
+cancellation is the whole reason `p`'s `x`-integral against `kFn` was worth building in the first
+place (a bare `exp(-t²(1+x²))` integrand would carry an un-cancelled `(1+x²)` factor in its
+`t`-derivative, breaking the match against `qFn_lipschitz_in_t`, which is stated for the bare
+`-2t·exp(...)` form). -/
+
+private theorem hasDerivAt_exp_neg_sq_mul_c (c t : Real) :
+    HasDerivAt (fun s => Real.exp (-(s * s * c)))
+      (Real.exp (-(t * t * c)) * -((1 * t + t * 1) * c + t * t * 0)) t := by
+  have h1 : HasDerivAt (fun s => s * s) (1 * t + t * 1) t :=
+    HasDerivAt_mul (fun s => s) (fun s => s) 1 1 t (HasDerivAt_id t) (HasDerivAt_id t)
+  have h2 : HasDerivAt (fun s => s * s * c) ((1 * t + t * 1) * c + t * t * 0) t :=
+    HasDerivAt_mul (fun s => s * s) (fun _ => c) (1 * t + t * 1) 0 t h1 (HasDerivAt_const c t)
+  have h3 : HasDerivAt (fun s => -(s * s * c)) (-((1 * t + t * 1) * c + t * t * 0)) t :=
+    HasDerivAt_neg (fun s => s * s * c) ((1 * t + t * 1) * c + t * t * 0) t h2
+  exact HasDerivAt_comp Real.exp (fun s => -(s * s * c)) (-((1 * t + t * 1) * c + t * t * 0))
+    (Real.exp (-(t * t * c))) t h3 (HasDerivAt_exp (-(t * t * c)))
+
+private theorem cancel_one_add_xx (x A : Real) : A * (1 + x * x) * (1 / (1 + x * x)) = A := by
+  rw [show A * (1 + x * x) * (1 / (1 + x * x)) = A * ((1 / (1 + x * x)) * (1 + x * x)) from by
+    mach_mpoly [A, (1 + x * x : Real), (1 / (1 + x * x) : Real)]]
+  rw [div_mul_cancel (ne_of_gt (one_add_sq_pos x)), mul_one_ax]
+
+theorem hasDerivAt_p_t (t x : Real) :
+    HasDerivAt (fun s => Real.exp (-(s * s * (1 + x * x))) * kFn x)
+      (-(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))) t := by
+  have h1 := hasDerivAt_exp_neg_sq_mul_c (1 + x * x) t
+  have h2 := HasDerivAt_mul (fun s => Real.exp (-(s * s * (1 + x * x)))) (fun _ => kFn x)
+    (Real.exp (-(t * t * (1 + x * x))) * -((1 * t + t * 1) * (1 + x * x) + t * t * 0)) 0 t h1
+    (HasDerivAt_const (kFn x) t)
+  have hval : (Real.exp (-(t * t * (1 + x * x))) * -((1 * t + t * 1) * (1 + x * x) + t * t * 0))
+      * kFn x + Real.exp (-(t * t * (1 + x * x))) * 0
+      = -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x))) := by
+    show (Real.exp (-(t * t * (1 + x * x))) * -((1 * t + t * 1) * (1 + x * x) + t * t * 0))
+        * (1 / (1 + x * x)) + Real.exp (-(t * t * (1 + x * x))) * 0
+        = -(1 + 1) * t * Real.exp (-(t * t * (1 + x * x)))
+    rw [show (Real.exp (-(t * t * (1 + x * x))) * -((1 * t + t * 1) * (1 + x * x) + t * t * 0))
+        * (1 / (1 + x * x)) + Real.exp (-(t * t * (1 + x * x))) * 0
+        = (Real.exp (-(t * t * (1 + x * x))) * (-(1 + 1) * t)) * (1 + x * x) * (1 / (1 + x * x))
+        from by
+      mach_mpoly [Real.exp (-(t * t * (1 + x * x))), t, (1 + x * x : Real), (1 / (1 + x * x) : Real)]]
+    rw [cancel_one_add_xx x (Real.exp (-(t * t * (1 + x * x))) * (-(1 + 1) * t))]
+    mach_mpoly [Real.exp (-(t * t * (1 + x * x))), t]
+  rwa [hval] at h2
+
 end Real
 end MachLib
