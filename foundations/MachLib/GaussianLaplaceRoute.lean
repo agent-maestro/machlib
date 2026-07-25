@@ -268,5 +268,150 @@ theorem integral_kFn_eq_piQuarter :
       (fun z _ _ => HasDerivAt_atan z) _ (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2) hspec.2
   rw [hE, atan_zero, sub_zero, atan_one_eq_piQuarter]
 
+/-! ## §3 — FTC-uniqueness helpers (closed-interval and open-at-the-left-endpoint), needed for the
+linear substitution lemma and, later, the final `F+G` assembly. -/
+
+private theorem eq_of_sub_eq_sub_laplace {a b c : Real} (h : a - c = b - c) : a = b := by
+  have h1 : a - c + c = a := by mach_mpoly [a, c]
+  have h2 : b - c + c = b := by mach_mpoly [b, c]
+  rw [← h1, ← h2, h]
+
+/-- **Two antiderivatives of the same function that agree at the left endpoint agree
+everywhere.** Combines two applications of `ftc_riemann` sharing the same (unique) Riemann
+integral value. -/
+theorem eq_of_hasDerivAt_eq_of_eq_at_left {f F1 F2 : Real → Real} {a b : Real} (hab : a < b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hF1 : ∀ z : Real, a ≤ z → z ≤ b → HasDerivAt F1 (f z) z)
+    (hF2 : ∀ z : Real, a ≤ z → z ≤ b → HasDerivAt F2 (f z) z)
+    (hstart : F1 a = F2 a) : F1 b = F2 b := by
+  have hspec := Classical.choose_spec (continuous_riemann_integrable f a b (le_of_lt hab) hcont)
+  have h1 := ftc_riemann f F1 a b hab hcont hF1 _ (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2)
+    hspec.2
+  have h2 := ftc_riemann f F2 a b hab hcont hF2 _ (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2)
+    hspec.2
+  have h3 : F1 b - F1 a = F2 b - F2 a := h1.symm.trans h2
+  rw [hstart] at h3
+  exact eq_of_sub_eq_sub_laplace h3
+
+private theorem eq_of_forall_pos_abs_sub_lt {a b : Real} (h : ∀ ε : Real, 0 < ε → abs (a - b) < ε) :
+    a = b := by
+  have hab : a ≤ b := le_of_forall_pos_lt_add (fun η hη => by
+    have hh := (abs_lt_split (h η hη)).1
+    have h2 := add_lt_add_left hh b
+    rwa [show b + (a - b) = a from by mach_mpoly [a, b]] at h2)
+  have hba : b ≤ a := le_of_forall_pos_lt_add (fun η hη => by
+    have hh := (abs_lt_split (h η hη)).2
+    have h2 := add_lt_add_left hh (b - a)
+    rw [show (b - a) + (a - b) = (0:Real) from by mach_mpoly [a, b]] at h2
+    have h3 := add_lt_add_left h2 η
+    rw [show η + ((b - a) + -η) = b - a from by mach_mpoly [a, b, η], add_zero] at h3
+    have h4 := add_lt_add_left h3 a
+    rwa [show a + (b - a) = b from by mach_mpoly [a, b]] at h4)
+  exact le_antisymm hab hba
+
+private theorem sub_sub_rearrange_laplace (p q r s : Real) : p - q - (r - s) = p - r - (q - s) := by
+  mach_mpoly [p, q, r, s]
+
+private theorem add_sub_self_laplace (p d : Real) : p + d - p = d := by mach_mpoly [p, d]
+
+private theorem sub_eq_sub_sub_sub_laplace (X Y Q : Real) : X - Y = (X - Q) - (Y - Q) := by
+  mach_mpoly [X, Y, Q]
+
+private theorem add_neg_eq_sub_sub_laplace (X P Y Q : Real) :
+    X - P + -(Y - Q) = (X - P) - (Y - Q) := by
+  mach_mpoly [X, P, Y, Q]
+
+private theorem half_add_half_laplace (X : Real) : X / (1 + 1) + X / (1 + 1) = X := by
+  rw [← mul_two_eq_add_self (X / (1 + 1))]
+  exact div_mul_cancel (ne_of_gt two_pos)
+
+private theorem half_lt_self_laplace {X : Real} (hX : 0 < X) : X / (1 + 1) < X := by
+  have hhalfpos : 0 < X / (1 + 1) := div_pos_of_pos_pos hX two_pos
+  have h2 := add_lt_add_left hhalfpos (X / (1 + 1))
+  rw [add_zero, half_add_half_laplace X] at h2
+  exact h2
+
+/-- **Two antiderivatives of the same function that agree at the left endpoint agree everywhere —
+OPEN-interval version.** Only needs the derivative match on `(a,b]`, plus mere CONTINUITY (not
+differentiability) of both functions at the left endpoint `a` itself. Needed because functions like
+`gaussianI` (built via `if h:0≤t then ... else 0`, extended by 0 for negative inputs) are
+continuous but NOT two-sidedly differentiable exactly at their extension point — the same "kink"
+that broke an earlier, abandoned attempt at this project's disk-sandwich route. Proof: apply the
+CLOSED-interval version on `[a+δ,b]` for every `δ>0` (safely interior, no kink there), getting
+`F1(b)-F2(b) = F1(a+δ)-F2(a+δ)` exactly for every `δ`; then squeeze `δ→0⁺` using continuity of
+`F1`,`F2` at `a` to conclude `F1(b)-F2(b) = F1(a)-F2(a) = 0`. -/
+theorem eq_of_hasDerivAt_eq_open_of_eq_at_left {f F1 F2 : Real → Real} {a b : Real} (hab : a < b)
+    (hcont : ∀ z : Real, a ≤ z → z ≤ b → ContinuousAt f z)
+    (hF1 : ∀ z : Real, a < z → z ≤ b → HasDerivAt F1 (f z) z)
+    (hF2 : ∀ z : Real, a < z → z ≤ b → HasDerivAt F2 (f z) z)
+    (hcontF1 : ContinuousAt F1 a) (hcontF2 : ContinuousAt F2 a)
+    (hstart : F1 a = F2 a) : F1 b = F2 b := by
+  have hkey : ∀ δ : Real, 0 < δ → δ < b - a → F1 b - F2 b = F1 (a + δ) - F2 (a + δ) := by
+    intro δ hδ hδb
+    have haδ : a < a + δ := by
+      have h := add_lt_add_left hδ a
+      rwa [add_zero] at h
+    have haδb : a + δ < b := by
+      have h := add_lt_add_left hδb a
+      rwa [show a + (b - a) = b from by mach_mpoly [a, b]] at h
+    have hcont' : ∀ z : Real, a + δ ≤ z → z ≤ b → ContinuousAt f z :=
+      fun z hz1 hz2 => hcont z (le_of_lt (lt_of_lt_of_le haδ hz1)) hz2
+    have hF1' : ∀ z : Real, a + δ ≤ z → z ≤ b → HasDerivAt F1 (f z) z :=
+      fun z hz1 hz2 => hF1 z (lt_of_lt_of_le haδ hz1) hz2
+    have hF2' : ∀ z : Real, a + δ ≤ z → z ≤ b → HasDerivAt F2 (f z) z :=
+      fun z hz1 hz2 => hF2 z (lt_of_lt_of_le haδ hz1) hz2
+    have hspec := Classical.choose_spec
+      (continuous_riemann_integrable f (a + δ) b (le_of_lt haδb) hcont')
+    have h1 := ftc_riemann f F1 (a + δ) b haδb hcont' hF1' _
+      (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2) hspec.2
+    have h2 := ftc_riemann f F2 (a + δ) b haδb hcont' hF2' _
+      (fun k => (hspec.1 k).1) (fun k => (hspec.1 k).2) hspec.2
+    have heq3 : F1 b - F1 (a + δ) = F2 b - F2 (a + δ) := h1.symm.trans h2
+    have h4 : F1 b - F2 b - (F1 (a + δ) - F2 (a + δ))
+        = F1 b - F1 (a + δ) - (F2 b - F2 (a + δ)) :=
+      sub_sub_rearrange_laplace (F1 b) (F2 b) (F1 (a + δ)) (F2 (a + δ))
+    have h3 : F1 b - F1 (a + δ) - (F2 b - F2 (a + δ)) = 0 := by
+      rw [heq3]; exact sub_self (F2 b - F2 (a + δ))
+    rw [← h4] at h3
+    exact eq_of_sub_eq_zero_laplace h3
+  refine eq_of_forall_pos_abs_sub_lt (fun ε hε => ?_)
+  have hgap : 0 < b - a := sub_pos_of_lt hab
+  have hεh : 0 < ε / (1 + 1) := div_pos_of_pos_pos hε two_pos
+  obtain ⟨δg, hδgpos, hδg⟩ := hcontF1 (ε / (1 + 1)) hεh
+  obtain ⟨δg2, hδg2pos, hδg2⟩ := hcontF2 (ε / (1 + 1)) hεh
+  have hm1pos : 0 < min δg δg2 := lt_min_of_lt_of_lt hδgpos hδg2pos
+  have hm2pos : 0 < (b - a) / (1 + 1) := div_pos_of_pos_pos hgap two_pos
+  have hmpos : 0 < min (min δg δg2) ((b - a) / (1 + 1)) := lt_min_of_lt_of_lt hm1pos hm2pos
+  let δ0 := min (min δg δg2) ((b - a) / (1 + 1)) / (1 + 1)
+  have hδpos : 0 < δ0 := div_pos_of_pos_pos hmpos two_pos
+  have hδltm : δ0 < min (min δg δg2) ((b - a) / (1 + 1)) := half_lt_self_laplace hmpos
+  have hδleδg : δ0 < δg :=
+    lt_of_lt_of_le hδltm (le_trans (min_le_left _ _) (min_le_left δg δg2))
+  have hδleδg2 : δ0 < δg2 :=
+    lt_of_lt_of_le hδltm (le_trans (min_le_left _ _) (min_le_right δg δg2))
+  have hδltba : δ0 < b - a :=
+    lt_of_lt_of_le hδltm (le_trans (min_le_right (min δg δg2) ((b - a) / (1 + 1)))
+      (le_of_lt (half_lt_self_laplace hgap)))
+  have hkeyδ := hkey δ0 hδpos hδltba
+  have hd1 : abs (a + δ0 - a) < δg := by
+    rw [add_sub_self_laplace a δ0]
+    rwa [abs_of_nonneg (le_of_lt hδpos)]
+  have hd2 : abs (a + δ0 - a) < δg2 := by
+    rw [add_sub_self_laplace a δ0]
+    rwa [abs_of_nonneg (le_of_lt hδpos)]
+  have hb1 := hδg (a + δ0) hd1
+  have hb2 := hδg2 (a + δ0) hd2
+  rw [hkeyδ]
+  have heq2 : F1 (a + δ0) - F2 (a + δ0) = (F1 (a + δ0) - F1 a) - (F2 (a + δ0) - F2 a) := by
+    rw [hstart]
+    exact sub_eq_sub_sub_sub_laplace (F1 (a + δ0)) (F2 (a + δ0)) (F2 a)
+  rw [heq2]
+  have htri := abs_add (F1 (a + δ0) - F1 a) (-(F2 (a + δ0) - F2 a))
+  rw [add_neg_eq_sub_sub_laplace (F1 (a + δ0)) (F1 a) (F2 (a + δ0)) (F2 a)] at htri
+  rw [abs_neg] at htri
+  have hsum := add_lt_add_both hb1 hb2
+  rw [half_add_half_laplace ε] at hsum
+  exact lt_of_le_of_lt htri hsum
+
 end Real
 end MachLib
