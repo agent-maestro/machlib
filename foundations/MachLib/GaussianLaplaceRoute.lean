@@ -1000,5 +1000,59 @@ theorem hasDerivAt_p_t (t x : Real) :
     mach_mpoly [Real.exp (-(t * t * (1 + x * x))), t]
   rwa [hval] at h2
 
+/-! ## §10 — pointwise `≤` lifts to `maxSub`/`minSub`/`upperSumCont`/`lowerSumCont` `≤`
+
+The last piece of generic Darboux-sum infrastructure the Leibniz assembly needs: a MONOTONICITY
+fact (not additivity) — if `f≤g` pointwise, the same holds for every Darboux quantity. Cheap: at
+`f`'s own extremum point, `f≤g` there directly gives the bound. -/
+
+private theorem maxSub_le_of_pointwise_le {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt f z) (hgcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfg : ∀ z, a ≤ z → z ≤ b → f z ≤ g z) (n : Nat) (hn : 0 < n) (i : Nat) :
+    maxSub f a b hab hfcont n hn i ≤ maxSub g a b hab hgcont n hn i := by
+  by_cases hi : i < n
+  · rw [maxSub_eq f a b hab hfcont n hn i hi]
+    obtain ⟨h1lo, h1hi, _⟩ := Classical.choose_spec (evt_exists_max f a b hab hfcont n hn i hi)
+    have hpt := hfg _ (le_trans (meshPoint_mem a b n i hab hn (Nat.le_of_lt hi)).1 h1lo)
+      (le_trans h1hi (meshPoint_mem a b n (i + 1) hab hn hi).2)
+    exact le_trans hpt (maxSub_spec g a b hab hgcont n hn i hi _ h1lo h1hi)
+  · unfold maxSub
+    rw [dif_neg hi, dif_neg hi]
+    exact hfg a (le_refl a) hab
+
+theorem upperSumCont_le_of_pointwise_le {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt f z) (hgcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfg : ∀ z, a ≤ z → z ≤ b → f z ≤ g z) (n : Nat) (hn : 0 < n) :
+    upperSumCont f a b hab hfcont n hn ≤ upperSumCont g a b hab hgcont n hn := by
+  show partialSum (maxSub f a b hab hfcont n hn) n * meshWidth a b n
+      ≤ partialSum (maxSub g a b hab hgcont n hn) n * meshWidth a b n
+  exact mul_le_mul_of_nonneg_right
+    (partialSum_le_of_termwise_le n (fun i _ => maxSub_le_of_pointwise_le hab hfcont hgcont hfg n hn i))
+    (meshWidth_nonneg hab n)
+
+private theorem minSub_le_of_pointwise_le {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt f z) (hgcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfg : ∀ z, a ≤ z → z ≤ b → f z ≤ g z) (n : Nat) (hn : 0 < n) (i : Nat) :
+    minSub f a b hab hfcont n hn i ≤ minSub g a b hab hgcont n hn i := by
+  by_cases hi : i < n
+  · rw [minSub_eq g a b hab hgcont n hn i hi]
+    obtain ⟨h1lo, h1hi, _⟩ := Classical.choose_spec (evt_exists_min g a b hab hgcont n hn i hi)
+    have hpt := hfg _ (le_trans (meshPoint_mem a b n i hab hn (Nat.le_of_lt hi)).1 h1lo)
+      (le_trans h1hi (meshPoint_mem a b n (i + 1) hab hn hi).2)
+    exact le_trans (minSub_spec f a b hab hfcont n hn i hi _ h1lo h1hi) hpt
+  · unfold minSub
+    rw [dif_neg hi, dif_neg hi]
+    exact hfg a (le_refl a) hab
+
+theorem lowerSumCont_le_of_pointwise_le {f g : Real → Real} {a b : Real} (hab : a ≤ b)
+    (hfcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt f z) (hgcont : ∀ z, a ≤ z → z ≤ b → ContinuousAt g z)
+    (hfg : ∀ z, a ≤ z → z ≤ b → f z ≤ g z) (n : Nat) (hn : 0 < n) :
+    lowerSumCont f a b hab hfcont n hn ≤ lowerSumCont g a b hab hgcont n hn := by
+  show partialSum (minSub f a b hab hfcont n hn) n * meshWidth a b n
+      ≤ partialSum (minSub g a b hab hgcont n hn) n * meshWidth a b n
+  exact mul_le_mul_of_nonneg_right
+    (partialSum_le_of_termwise_le n (fun i _ => minSub_le_of_pointwise_le hab hfcont hgcont hfg n hn i))
+    (meshWidth_nonneg hab n)
+
 end Real
 end MachLib
