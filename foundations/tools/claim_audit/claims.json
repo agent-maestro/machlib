@@ -430,6 +430,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The COUPLED half: the estimate (m) recursion fixed-point error. The estimate update is a time-varying affine map whose computed and exact orbits follow DIFFERENT maps (computed gain Kc vs exact Ke). Proven via nearby_maps_trajectory_bound (two orbits under nearby L-Lipschitz maps stay close), instantiated at Ac n x = x + Kc n*(z n - x). The gain-error x innovation bound rho carries the coupling to the variance error; sigma the update round-off. |mc n - me n| <= (sigma+rho)*geom L n. Invariant: sorryAx-free.",
+      "id": "kalman-estimate-recursion-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_estimate_recursion_fixed_point",
+        "coupled half of the recursive fixed-point error"
+      ],
+      "module": "MachLib.KalmanEstimateRecursion",
+      "theorem": "MachLib.Real.kalman_estimate_recursion_fixed_point",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The general backbone lemma the estimate recursion needs: two orbits under NEARBY L-Lipschitz maps (computed map Ac n L-Lipschitz + agreeing with exact map Ae n on the exact orbit to rho + computed orbit following Ac up to round-off sigma) stay within (sigma+rho)*geom L n. Generalizes local_lipschitz_trajectory_bound from same-map to different-map -- the perturbation bound for a linear time-varying recursion with perturbed coefficients. Invariant: sorryAx-free.",
+      "id": "nearby-maps-trajectory-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "nearby_maps_trajectory_bound",
+        "two orbits under nearby"
+      ],
+      "module": "MachLib.AffineContraction",
+      "theorem": "MachLib.Real.nearby_maps_trajectory_bound",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

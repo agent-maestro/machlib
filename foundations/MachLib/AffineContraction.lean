@@ -114,4 +114,41 @@ theorem local_lipschitz_trajectory_bound {f : Real → Real} {L ε : Real}
         (le_of_eq (add_comm ε (L * abs (xc k - xe k)))))
   exact contraction_certificate (fun n => abs (xc n - xe n)) hL0 hε h0 hrec n
 
+/-- **Nearby time-varying maps stay close.** The two orbits need not follow the
+*same* map: the computed orbit iterates `Ac n` (each `L`-Lipschitz) up to per-step
+round-off `σ`, the exact orbit iterates `Ae n`, and the two maps agree *on the
+exact orbit* to within `ρ` (`|Ac n (xe n) − Ae n (xe n)| ≤ ρ`). Then the trajectory
+error is `≤ (σ+ρ)·geom L n`. This is the perturbation bound for a **linear
+time-varying recursion whose coefficients are themselves perturbed** — exactly the
+Kalman *estimate* recursion, where the computed gain `Kc n` differs from the exact
+gain `Ke n` (the map perturbation `ρ`, which is where coupling to the variance
+error enters) on top of the datapath round-off `σ`. `local_lipschitz_trajectory_bound`
+is the special case `Ac n = Ae n = f`, `ρ = 0` folded into `σ`. -/
+theorem nearby_maps_trajectory_bound {L σ ρ : Real}
+    {xc xe : Nat → Real} {Ac Ae : Nat → Real → Real}
+    (hL0 : 0 ≤ L) (hσ : 0 ≤ σ) (hρ : 0 ≤ ρ)
+    (hlip : ∀ n x y, abs (Ac n x - Ac n y) ≤ L * abs (x - y))
+    (hclose : ∀ n, abs (Ac n (xe n) - Ae n (xe n)) ≤ ρ)
+    (h0 : abs (xc 0 - xe 0) ≤ 0)
+    (hexact : ∀ n, xe (n + 1) = Ae n (xe n))
+    (hcomp : ∀ n, abs (xc (n + 1) - Ac n (xc n)) ≤ σ)
+    (n : Nat) :
+    abs (xc n - xe n) ≤ (σ + ρ) * geom L n ∧ (1 - L) * ((σ + ρ) * geom L n) ≤ σ + ρ := by
+  have hrec : ∀ k, (fun n => abs (xc n - xe n)) (k + 1)
+      ≤ L * (fun n => abs (xc n - xe n)) k + (σ + ρ) := by
+    intro k
+    show abs (xc (k + 1) - xe (k + 1)) ≤ L * abs (xc k - xe k) + (σ + ρ)
+    rw [hexact k,
+        show xc (k + 1) - Ae k (xe k)
+          = (xc (k + 1) - Ac k (xc k))
+            + ((Ac k (xc k) - Ac k (xe k)) + (Ac k (xe k) - Ae k (xe k)))
+          from by mach_mpoly [xc (k + 1), Ac k (xc k), Ac k (xe k), Ae k (xe k)]]
+    refine le_trans (abs_add _ _) ?_
+    refine le_trans (add_le_add_both (hcomp k) (abs_add _ _)) ?_
+    refine le_trans
+      (add_le_add_both (le_refl σ) (add_le_add_both (hlip k (xc k) (xe k)) (hclose k))) ?_
+    exact le_of_eq (by mach_mpoly [σ, ρ, L, abs (xc k - xe k)])
+  exact contraction_certificate (fun n => abs (xc n - xe n)) hL0
+    (le_trans hσ (le_add_of_nonneg_right hρ)) h0 hrec n
+
 end MachLib.Real

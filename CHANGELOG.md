@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — the Kalman **estimate recursion** fixed-point error, coupled (`MachLib/KalmanEstimateRecursion.lean`)
+
+**`kalman_estimate_recursion_fixed_point`** and **`kalman_estimate_recursion_nonexpansive`**: the
+coupled half of the recursive fixed-point error — the *estimate* `m`, not just the variance `P`. Unlike
+the autonomous variance map, the estimate update `m_n = (1−K_n)·m_{n-1} + K_n·z_n` is a *time-varying*
+affine map, and the computed and exact orbits follow *different* maps (computed gain `Kc_n` vs exact
+`Ke_n`). Expanding the error gives `δm_n = (1−Kc_n)·δm_{n-1} + (Kc_n−Ke_n)(z_n−m⋆_{n-1}) + τ_n`, so two
+forcings ride on the contraction: the gain error `Kc_n−Ke_n` (**where coupling to the variance error
+enters** — `K` is a Lipschitz function of `P`) and the update round-off `τ_n`. Proven by a new general
+backbone lemma **`nearby_maps_trajectory_bound`** (two orbits under nearby `L`-Lipschitz maps stay close:
+`|xc n − xe n| ≤ (σ+ρ)·geom L n`), which generalizes `local_lipschitz_trajectory_bound` from same-map to
+different-map — instantiated at `Ac n x = x + Kc n·(z n − x)`, `Ae n x = x + Ke n·(z n − x)`. The
+gain-error×innovation bound `ρ` is the hypothesis carrying the coupling (the honest interface, exactly as
+`kalman_update_1d_fwd_error` takes `E_recip` as a hypothesis); `σ` the estimate update's own round-off.
+At gains in `[0,1]` the accumulation is additive `(σ+ρ)·n`; for a strict contraction it is bounded
+uniformly at `(σ+ρ)/(1−L)`. Together with the variance bound this completes the recursion's fixed-point
+error, both halves. `sorryAx`-free, ZERO new axioms.
+
 ### New — the Kalman **variance recursion** has a bounded RECURSIVE fixed-point error (`MachLib/KalmanVarianceRecursion.lean`)
 
 **`kalman_variance_recursion_fixed_point`** and **`kalman_variance_recursion_nonexpansive`**: the
