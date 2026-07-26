@@ -458,6 +458,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The coupling made NUMERIC: the fully-coupled estimate recursion bound where rho is no longer a hypothesis but derived from the variance error. Composes kalman_gain_error_bound (variance error -> gain error via the gain map's r/(b+r)^2-Lipschitz constant, K=g/r) with kalman_estimate_recursion_fixed_point. |mc n - me n| <= (sigma + (gamma + (r/(b+r)^2)*DP)*Z)*geom L n. The variance -> gain -> estimate coupling machine-checked end to end. Invariant: sorryAx-free.",
+      "id": "kalman-estimate-coupled-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_estimate_recursion_coupled",
+        "coupling is then made"
+      ],
+      "module": "MachLib.KalmanEstimateRecursion",
+      "theorem": "MachLib.Real.kalman_estimate_recursion_coupled",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The gain map K(P)=P/(P+r) is r/(b+r)^2-Lipschitz on {P>=b} -- the variance map's r^2/(b+r)^2 divided by r (g = r*K). This is the gain's sensitivity to the variance, the link that carries a variance error into the gain error. Invariant: sorryAx-free.",
+      "id": "kalman-gain-map-lipschitz-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_gain_map_lipschitz",
+        "Lipschitz"
+      ],
+      "module": "MachLib.KalmanEstimateRecursion",
+      "theorem": "MachLib.Real.kalman_gain_map_lipschitz",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

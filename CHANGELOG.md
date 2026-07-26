@@ -25,6 +25,14 @@ At gains in `[0,1]` the accumulation is additive `(σ+ρ)·n`; for a strict cont
 uniformly at `(σ+ρ)/(1−L)`. Together with the variance bound this completes the recursion's fixed-point
 error, both halves. `sorryAx`-free, ZERO new axioms.
 
+The coupling is then made **numeric**, not a hypothesis: **`kalman_gain_map_lipschitz`** proves the gain
+`K(P)=P/(P+r)` is `r/(b+r)²`-Lipschitz on `{P≥b}` (the variance map's `r²/(b+r)²` divided by `r`, since
+`g=r·K`), so **`kalman_gain_error_bound`** derives `|Kc−Ke| ≤ γ + (r/(b+r)²)·|δP|` (gain round-off `γ`
+plus the *variance* error propagated through the gain), and **`kalman_estimate_recursion_coupled`**
+composes it with the estimate bound to give `|mc n − me n| ≤ (σ + (γ + (r/(b+r)²)·DP)·Z)·geom L n` — `ρ`
+fully derived from the variance error `DP`, the innovation bound `Z`, and the two round-offs. The
+variance → gain → estimate coupling is now machine-checked end to end. `sorryAx`-free, ZERO new axioms.
+
 ### New — the Kalman **variance recursion** has a bounded RECURSIVE fixed-point error (`MachLib/KalmanVarianceRecursion.lean`)
 
 **`kalman_variance_recursion_fixed_point`** and **`kalman_variance_recursion_nonexpansive`**: the
