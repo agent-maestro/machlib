@@ -486,6 +486,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The AXI4-Stream wrapper control FSM (idle/busy/present Moore machine around the multi-cycle Kalman core) cannot deadlock, drop a sample, or re-trigger the core mid-run. conservation: accepted = emitted + occ(state), occ in {0,1}, input accepted only from idle -> no dropped sample. round_trip: bounded single-beat cycle. validIn_pulse: 1-cycle pulse, timing contract respected. Pure discrete Bool/Nat reasoning, no MachLib.Real, sorryAx-free. Invariant: sorryAx-free.",
+      "id": "axi-wrapper-conservation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "conservation",
+        "no dropped sample"
+      ],
+      "module": "MachLib.AxiStreamWrapper",
+      "theorem": "MachLib.Axi.conservation",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "Bounded, single-beat round trip of the AXI-Stream wrapper: from idle, once the three handshake signals arrive, it accepts one input, runs the core, emits exactly one output, and returns to idle -- accepted/emitted each +1. The deadlock-freedom / no-lock-up guarantee. sorryAx-free (in fact zero MachLib axioms). Invariant: sorryAx-free.",
+      "id": "axi-wrapper-round-trip-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "round_trip",
+        "returns to `idle`"
+      ],
+      "module": "MachLib.AxiStreamWrapper",
+      "theorem": "MachLib.Axi.round_trip",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

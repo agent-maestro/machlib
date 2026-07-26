@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — the AXI-Stream wrapper control FSM is deadlock-free + drop-free, proven (`MachLib/AxiStreamWrapper.lean`)
+
+**`conservation`**, **`round_trip`**, **`validIn_pulse`**, **`no_stuck_state`** (+ the `*_leaves_on_*` /
+`*_holds` lemmas): to feed the 100 MHz Kalman kernel live sensor data it needs a standard AXI4-Stream
+`ready`/`valid` bus with backpressure — and the risk a hand-written wrapper carries is exactly that its
+control FSM could **deadlock, drop a sample, or re-trigger the multi-cycle core mid-computation**. This
+proves it can't. The wrapper is a 3-state Moore machine (`idle`/`busy`/`present`) around the multi-cycle
+core; the proofs are **pure discrete reasoning over `Bool`/`Nat` — no `MachLib.Real`, zero MachLib axioms**
+(`no_stuck_state` depends on no axioms at all; the rest only on Lean core). SAFETY: `validIn_pulse` — the
+core's `valid_in` is a 1-cycle pulse, never re-asserted mid-run (timing contract respected);
+`conservation` — `accepted n = emitted n + occ(state)` with `occ ∈ {0,1}`, so at most one sample in flight
+and, since input is accepted only from `idle`, an in-flight sample is never overwritten (**no dropped
+sample**, `no_drop`); `present_holds` — the output is held with `tvalid` asserted under downstream
+backpressure (AXI no-retraction). LIVENESS: each waiting state `*_leaves_on_*` its enabling signal and
+`*_holds` correctly meanwhile; `no_stuck_state` — no absorbing state; `round_trip` — from `idle`, once the
+three signals arrive the wrapper accepts one input, runs the core, emits **exactly one** output, and
+returns to `idle` in a bounded window, with `accepted`/`emitted` each advanced by one. The same FSM the
+RTL wrapper implements — proof and circuit share one definition. `sorryAx`-free, ZERO new axioms.
+
 ### New — the Kalman **estimate recursion** fixed-point error, coupled (`MachLib/KalmanEstimateRecursion.lean`)
 
 **`kalman_estimate_recursion_fixed_point`** and **`kalman_estimate_recursion_nonexpansive`**: the
