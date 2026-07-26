@@ -556,6 +556,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The 2x2 Kalman state update forward error: x'_i = x_i + (K_i0*y0 + K_i1*y1), prior plus gain-row-dot-innovation. Folds fxerr_dot2 (K*y) and fxerr_add (+x) over the gain entries' FxErr (carrying inversion error) -> the estimate path inverse->gain->x' is forward-error-bounded end to end for the 2-measurement 2x2 update. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "kalman2-state-update-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman2_state_update_fxerr",
+        "estimate path"
+      ],
+      "module": "MachLib.Matrix2InverseFixedPoint",
+      "theorem": "MachLib.Real.kalman2_state_update_fxerr",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

@@ -156,4 +156,28 @@ theorem kalman2_gain_entry_via_inverse
     (matrix2_inv_entry_fxerr e0 w recip b0 sinv Erec Mb0 hrec hq0 hmag0) hp0
     hm1 (matrix2_inv_entry_fxerr e1 w recip b1 sinv Erec Mb1 hrec hq1 hmag1) hp1 hpa
 
+/-- **The 2×2 Kalman state update, forward error.** One updated estimate component
+`x'_i = x_i + (K_i0·y0 + K_i1·y1)` — prior estimate plus the gain row dotted with the
+innovation `y = z − H·x`. Given the gain entries' `FxErr` (from
+`kalman2_gain_entry_via_inverse`, so they carry the inversion error), the innovation entries'
+`FxErr`, and the prior's `FxErr`, the updated estimate's fixed-point error is bounded — the
+estimate path `inverse → gain → x'` closed end to end. (The covariance update is the same
+kind of fold; its positive-semidefiniteness is the separate structural guarantee
+`kalman2d_joseph_psd`.) -/
+theorem kalman2_state_update_fxerr
+    {sk0 sk1 sd sx : Real}
+    {MK0 EK0 K0 Ke0 My0 Ey0 y0 ye0 pk0 : Real}
+    {MK1 EK1 K1 Ke1 My1 Ey1 y1 ye1 pk1 : Real}
+    {pd Mx Ex x xe px : Real}
+    (hsk0 : 0 ≤ sk0) (hsk1 : 0 ≤ sk1) (hsd : 0 ≤ sd) (hsx : 0 ≤ sx)
+    (hK0 : FxErr MK0 EK0 K0 Ke0) (hy0 : FxErr My0 Ey0 y0 ye0) (hpk0 : TruncW sk0 pk0 (K0 * y0))
+    (hK1 : FxErr MK1 EK1 K1 Ke1) (hy1 : FxErr My1 Ey1 y1 ye1) (hpk1 : TruncW sk1 pk1 (K1 * y1))
+    (hpd : TruncW sd pd (pk0 + pk1))
+    (hx : FxErr Mx Ex x xe) (hpx : TruncW sx px (x + pd)) :
+    FxErr (Mx + (MK0 * My0 + MK1 * My1))
+          (Ex + ((MK0 * Ey0 + My0 * EK0 + EK0 * Ey0 + sk0)
+                  + (MK1 * Ey1 + My1 * EK1 + EK1 * Ey1 + sk1) + sd) + sx)
+          px (xe + (Ke0 * ye0 + Ke1 * ye1)) :=
+  fxerr_add hsx hx (fxerr_dot2 hsk0 hsk1 hsd hK0 hy0 hpk0 hK1 hy1 hpk1 hpd) hpx
+
 end MachLib.Real

@@ -32,9 +32,17 @@ inverse entry as an `FxErr` (magnitude + the `s+|cofactor|·Erec` error); **`kal
 plugs the two inverse-column entries (built from the shared reciprocal, carrying `Erec`) into the gain dot
 product and bounds the gain entry's fixed-point error — with `Erec` appearing explicitly, so the inversion
 error is shown to propagate into the gain with no hidden amplification. `sorryAx`-free, ZERO new axioms.
+
+**State-update forward error** (same file): **`kalman2_state_update_fxerr`** closes the estimate path
+`inverse → gain → x'`. One updated estimate component `x'_i = x_i + (K_i0·y0 + K_i1·y1)` — the prior plus
+the gain row dotted with the innovation `y = z − H·x` — has bounded fixed-point error, folding `fxerr_dot2`
+(the `K·y` dot) and `fxerr_add` (`+ x_i`) over the gain entries' `FxErr` (which carry the inversion error).
+So for the 2-measurement 2×2 update the whole estimate path is now forward-error-bounded end to end. (The
+covariance update is the same kind of fold; its PSD is the separate structural `kalman2d_joseph_psd`.)
+`sorryAx`-free, ZERO new axioms.
 (General n×n inversion-stability via Cholesky/LDLT remains the larger arc; at fixed 2×2 the closed form is
-equivalent and lands on the current FPGA substrate. Next: the full 2×2 update forward-error + matrix
-MMSE-optimality + a small-n unrolled RTL kernel.)
+equivalent and lands on the current FPGA substrate. Next: matrix MMSE-optimality + a small-n unrolled RTL
+kernel.)
 
 ### New — the AXI-Stream wrapper control FSM is deadlock-free + drop-free, proven (`MachLib/AxiStreamWrapper.lean`)
 
