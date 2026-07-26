@@ -292,6 +292,7 @@ import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
 import MachLib.NewtonReciprocalDivision
 import MachLib.KalmanUpdateFixedPoint
+import MachLib.KalmanVarianceRecursion
 import MachLib.Iteration
 import MachLib.ErrorAlgebra
 import MachLib.ErrorAlgebraTrans

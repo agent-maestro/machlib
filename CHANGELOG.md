@@ -7,6 +7,21 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — the Kalman **variance recursion** has a bounded RECURSIVE fixed-point error (`MachLib/KalmanVarianceRecursion.lean`)
+
+**`kalman_variance_recursion_fixed_point`** and **`kalman_variance_recursion_nonexpansive`**: the
+*accumulated* fixed-point error over the recursion, not just one step — what a `filter` needs beyond a
+`measurement update`. The posterior-variance map `g(P) = P·r/(P+r)` is autonomous (depends on neither the
+estimate nor the measurement), so its recursion is a clean scalar contraction with no coupling. Writing
+`w = 1/(P+r)` gives `g(P) = r − r²·w`, hence `g(P) − g(P⋆) = r²·(P−P⋆)·w·w⋆`, so `g` is
+`r²/(b+r)²`-Lipschitz on `{P ≥ b}` (**`kalman_var_map_lipschitz`**): nonexpansive (`L=1`) at `b=0`,
+strictly contracting (`L<1`) for `b>0`. This drops straight into the pre-existing contraction backbone
+(`local_lipschitz_trajectory_bound` / `contraction_certificate`): the Q16.16 variance recursion stays
+within `ε·geom L n` of the exact real recursion over `n` steps — `≤ ε·n` at `b=0` (additive `≈N·ulp`
+growth, unconditional), and bounded UNIFORMLY for all `n` at `ε/(1−L)` when `b>0`. The estimate (`m`)
+recursion is the coupled follow-on (its per-step error feeds on the variance error through the gain);
+the variance bound here is its prerequisite. `sorryAx`-free, ZERO new axioms.
+
 ### New — the fixed-point Kalman kernel is near-MMSE-OPTIMAL, machine-checked (`MachLib/KalmanUpdateFixedPoint.lean`)
 
 **`kalman_update_1d_fx_near_mmse`** and **`kalman_update_1d_conditional_mse_near_optimal`**: the

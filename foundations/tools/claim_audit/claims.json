@@ -402,6 +402,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The RECURSIVE fixed-point error of the Kalman variance recursion -- what a filter needs beyond a single measurement update. The autonomous variance map g(P)=P*r/(P+r) is a scalar contraction (r^2/(b+r)^2-Lipschitz on {P>=b}), so the Q16.16 recursion stays within eps*geom(L,n) of the exact recursion over n steps: eps*n at b=0 (nonexpansive), and uniformly bounded for all n at b>0 (strict contraction). Instantiates the pre-existing contraction backbone; the estimate (m) recursion is the coupled follow-on. Invariant: sorryAx-free.",
+      "id": "kalman-variance-recursion-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_variance_recursion_fixed_point",
+        "bounded RECURSIVE fixed-point error"
+      ],
+      "module": "MachLib.KalmanVarianceRecursion",
+      "theorem": "MachLib.Real.kalman_variance_recursion_fixed_point",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The nonexpansive (b=0) corollary: the variance recursion accumulates error additively at eps*n -- the honest ~N*ulp linear growth, unconditional (needs only both variances >= 0). Invariant: sorryAx-free.",
+      "id": "kalman-variance-nonexpansive-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_variance_recursion_nonexpansive",
+        "additive"
+      ],
+      "module": "MachLib.KalmanVarianceRecursion",
+      "theorem": "MachLib.Real.kalman_variance_recursion_nonexpansive",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
