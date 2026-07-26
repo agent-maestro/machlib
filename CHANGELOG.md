@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — fixed-point stability of the 2×2 symmetric matrix inverse (`MachLib/Matrix2InverseFixedPoint.lean`)
+
+**`matrix2_sym_inverse_fwd_error`** + **`matrix2_inverse_conditioning`**: the scoped-honest first step
+of "scale the math to matrices" — a **fixed-size** inverse (no dynamic loops, no general Cholesky/LDLT),
+at exactly the dimension the existing matrix Kalman uses (the EKF innovation covariance `S=H·P·Hᵀ+R` and
+`kalman2d` covariance are 2×2, so the gain needs a 2×2 inverse). For symmetric `A=[[a,b],[b,d]]`,
+`A⁻¹ = (1/det)·[[d,−b],[−b,a]]` — one reciprocal (of `det`) plus qmuls — so its fixed-point error composes
+exactly like the scalar reciprocal forward-error (`kalman_update_1d_fwd_error`), `w:=1/det` carried
+abstractly. `matrix2_inv_entry_fwd_error`: each entry `qmul(cofactor, recip)` is within `s + |cofactor|·Erec`
+of the exact `cofactor/det`; `matrix2_sym_inverse_fwd_error` bundles all three distinct entries.
+`matrix2_inverse_conditioning` is the **divergence bound**: `recip` really approximates `1/det_fx` (the
+*computed* determinant), so as an approximation of the exact `1/det` its error is
+`≤ Erec0 + Edet·|wf|·|w|` with `|wf|·|w| = 1/(|det_fx|·|det|)` — bounded exactly when the matrix is
+well-conditioned (`det` away from 0), diverging as `det→0`. This is the precise sense in which fixed-point
+rounding does not make the filter diverge — the numerical-stability companion to the existing
+`kalman2d_joseph_psd` structural (PSD) stability. `sorryAx`-free, ZERO new axioms. (General n×n
+inversion-stability via Cholesky/LDLT remains the larger arc; at fixed 2×2 the closed form is equivalent
+and lands on the current FPGA substrate.)
+
 ### New — the AXI-Stream wrapper control FSM is deadlock-free + drop-free, proven (`MachLib/AxiStreamWrapper.lean`)
 
 **`conservation`**, **`round_trip`**, **`validIn_pulse`**, **`no_stuck_state`** (+ the `*_leaves_on_*` /

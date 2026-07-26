@@ -514,6 +514,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "Fixed-point forward error of the 2x2 symmetric matrix inverse (the dimension the EKF/kalman2d gain actually uses). A^-1 = (1/det)[[d,-b],[-b,a]] = one reciprocal + qmuls, so each entry qmul(cofactor,recip) is within s + |cofactor|*Erec of cofactor/det. Fixed-size, no dynamic loops, no Cholesky/LDLT. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "matrix2-inverse-fwd-error-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "matrix2_sym_inverse_fwd_error",
+        "fixed-point error composes"
+      ],
+      "module": "MachLib.Matrix2InverseFixedPoint",
+      "theorem": "MachLib.Real.matrix2_sym_inverse_fwd_error",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The divergence bound: the 2x2 inverse's reciprocal approximates 1/det_fx (computed determinant); as an approximation of the exact 1/det its error is <= Erec0 + Edet*|wf|*|w| with |wf|*|w| = 1/(|det_fx|*|det|), bounded iff the matrix is well-conditioned (det away from 0) -- the precise sense in which fixed-point rounding doesn't make the filter diverge. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "matrix2-inverse-conditioning-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "matrix2_inverse_conditioning",
+        "divergence bound"
+      ],
+      "module": "MachLib.Matrix2InverseFixedPoint",
+      "theorem": "MachLib.Real.matrix2_inverse_conditioning",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
