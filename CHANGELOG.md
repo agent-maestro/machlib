@@ -7,6 +7,21 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — 2-D Kalman MMSE-optimality, trace loss (`MachLib/Matrix2KalmanMMSE.lean`)
+
+**`matrix2_posterior_mean_mmse`** + **`matrix2_mmse_excess`**: the vector analogue of
+`posterior_mean_mmse` — for a 2-D state the MMSE-optimal estimator is the posterior-mean vector,
+minimizing `E[|X−c|²]` (the trace of the error covariance). The key that keeps it tractable in the
+Mathlib-free base (no 2-D integration / Fubini): the trace loss **separates per component**,
+`E[|X−c|²] = Σᵢ E[(Xᵢ−cᵢ)²]`, so the vector optimality is exactly the sum of the per-component scalar
+conjugate MMSE — no new integral. `matrix2_posterior_mean_mmse`: the optimal total conditional MSE
+`tr(Σ_post) = postVar₀+postVar₁` (attained by the posterior-mean vector) is `≤` any estimate's total
+conditional MSE (`add_le_add_both` of two `posterior_mean_mmse`). `matrix2_mmse_excess`: the excess risk
+of `(c₀,c₁)` over the optimum is *exactly* `|c−m|² = (c₀−m₀)²+(c₁−m₁)²` — a sum of squares, `≥ 0`
+(`matrix2_mmse_excess_nonneg`) and `0` iff `c=m`, so the posterior-mean vector is the *unique* minimizer.
+`sorryAx`-free, ZERO new axioms. (Trace/Euclidean loss, the standard MMSE criterion; the per-component
+reduction is why the vector case needs no 2-D integration.)
+
 ### New — fixed-point stability of the 2×2 symmetric matrix inverse (`MachLib/Matrix2InverseFixedPoint.lean`)
 
 **`matrix2_sym_inverse_fwd_error`** + **`matrix2_inverse_conditioning`**: the scoped-honest first step

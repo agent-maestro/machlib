@@ -570,6 +570,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "2-D Kalman MMSE-optimality (trace loss): the posterior-mean vector minimizes E[|X-c|^2]. The trace loss separates per component, so the vector optimality is the sum of two scalar posterior_mean_mmse -- no 2-D integration. matrix2_posterior_mean_mmse: tr(Sigma_post) <= any estimate's total conditional MSE. matrix2_mmse_excess: excess risk is exactly |c-m|^2, so the mean vector is the unique minimizer. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "matrix2-kalman-mmse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "matrix2_posterior_mean_mmse",
+        "trace loss"
+      ],
+      "module": "MachLib.Matrix2KalmanMMSE",
+      "theorem": "MachLib.Real.matrix2_posterior_mean_mmse",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
