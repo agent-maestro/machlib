@@ -300,7 +300,7 @@ private theorem cri_congr {f g : Real → Real} (hfg : f = g) {a b : Real} (hab 
 
 /-- As a function of `x` (fixed `y`), the joint density is a constant times the posterior density —
 so it is continuous, hence Riemann-integrable. -/
-private theorem continuousAt_jointDensity_x (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
+theorem continuousAt_jointDensity_x (mu sig2 r2 y : Real) (hsig2 : 0 < sig2) (hr2 : 0 < r2)
     (z : Real) : ContinuousAt (fun x => jointDensity mu sig2 r2 x y) z := by
   have hfun : (fun x => jointDensity mu sig2 r2 x y)
       = (fun x => gaussianDensity (postMean mu sig2 r2 y) (postVar sig2 r2) x

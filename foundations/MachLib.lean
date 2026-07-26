@@ -201,6 +201,8 @@ import MachLib.GaussianDensityIntegral
 import MachLib.GaussianConjugacy
 import MachLib.GaussianMGF
 import MachLib.GaussianFisher
+import MachLib.GaussianConvolution
+import MachLib.KalmanRecursive
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
