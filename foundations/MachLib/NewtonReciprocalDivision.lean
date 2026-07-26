@@ -195,7 +195,19 @@ induction the bench handoff (`HANDOFF_nr_reciprocal_bench.md`) validates in para
 The whole argument stays free of fraction arithmetic by keeping the invariant bound `M`, the
 contraction rate `H`, and the truncation floor `c` **symbolic**: the only "numeric" fact used is the
 polynomial identity `M·H + M·(1−H) = M` (in atoms `M, H`), which `mach_mpoly` closes without ever
-reducing `1/2`, `1/4`, `1/16`, or `15/8`. -/
+reducing `1/2`, `1/4`, `1/16`, or `15/8`.
+
+**Bench-validated hypothesis (2026-07-25).** The load-bearing hypothesis is `hinv0 : |1 − b·y_0| ≤
+1/2` — the initial estimate must be at least a 1-bit approximation. The bench (Arty A7-100T, xsim
+991/991 + 16-point silicon anchor; monogate-research `.../nr_reciprocal/FINDINGS.md`) found the
+ORIGINAL emitted `eml_reciprocal.v` seed (`y_0 = 2^(−k)`, the octave *upper edge*) only delivered
+this on the lower half of each octave — `e_0` ran 0→~1 and crossed `1/2` above `b = 1.5·2^k`, so the
+4-stage NR stalled near octave tops (silicon-confirmed `b=1.992 → E=0.882`). The fix was on the
+*hardware* side, not here: Forge's `eml_reciprocal.v` now uses a 2-term minimax linear seed
+`y_0 = 2^(−k)·(24/17 − (8/17)·m)` (`m` the mantissa in `[1,2)`), giving `|e_0| ≤ 1/17 < 1/2` across
+the whole octave, so `hinv0` holds everywhere in-regime and this proof applies unchanged. The lemmas
+below were never in question — the bench confirmed they match the measured per-stage errors exactly;
+only the antecedent needed the hardware to meet it. -/
 
 /-- **Invariant maintenance** (abstract): if the current scaled error is `≤ M`, the contraction rate
 is `H ≥ 0`, and the truncation floor satisfies the regime `c ≤ M·(1−H)`, then one contraction step
