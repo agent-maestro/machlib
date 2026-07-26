@@ -218,9 +218,9 @@ theorem, being conditional on `hinv0`, simply makes no claim there; callers must
 `e590166a`): 0 in-regime violations of A or C across the full sweep (was 445 / 175), 16/16 divisors
 `silicon == golden`, octave tops `b=1.9,1.992` converge (E `0.185→7.5e-6`, `0.882→1.5e-5`).
 
-(4 stages is now over-provisioned — `|e_0| ≤ 1/17` reaches 16 bits by stage 2 — but this proof and
-the emitted RTL both stay at 4 to keep the backend's fixed 4-cycle latency; a 2-stage variant would
-need its own `contract2_bound`.) -/
+Because `|e_0| ≤ 1/17` reaches 16 bits by stage 2, Forge dropped the emitted RTL to **2 NR stages**
+(see `nr_reciprocal_2stage` below and the `### 2-stage variant` note); `nr_reciprocal_4stage` is kept
+as the general result. -/
 
 /-- **Invariant maintenance** (abstract): if the current scaled error is `≤ M`, the contraction rate
 is `H ≥ 0`, and the truncation floor satisfies the regime `c ≤ M·(1−H)`, then one contraction step
@@ -297,6 +297,81 @@ theorem nr_reciprocal_4stage
   exact contract4_bound (abs (1 - b * y0)) (abs (1 - b * y1)) (abs (1 - b * y2))
     (abs (1 - b * y3)) (abs (1 - b * y4)) (1 / (1 + 1))
     ((1 + 1 / (1 + 1) + abs b) * s) hHnn r1 r2 r3 r4
+
+/-! ### 2-stage variant — the shipped configuration
+
+The bench re-anchor showed the linear seed delivers `|e_0| ≤ 1/17`, which reaches 16 bits by stage 2,
+so Forge's `eml_reciprocal.v` dropped to **2 NR stages** (halving latency + reclaiming ~4 DSPs; the
+4-stage bound above still holds and is kept as the general result). Two stages cannot go through the
+*halving* `nr_stage_uniform`/`contract4_bound` route — `e_0·(1/2)² ≈ 1/68` is only ~6 bits. It needs
+the *exact squaring* the truncated recurrence already gives (`nr_scaled_err_bound`: `|e'| ≤ e² + …`),
+so `e_2 ≤ (e_0² + c)² + c`, and `e_0 ≤ 1/17 ⟹ e_0⁴ ≈ 1/83521 ≪ 2⁻¹⁶`. -/
+
+/-- **One stage keeping the square** (uniform floor). Like `nr_stage_uniform` but does NOT downgrade
+`e²` to `|e|·(1/2)` — it keeps `nr_scaled_err_bound`'s quadratic term, only upgrading the truncation
+floor to the uniform `c = (3/2+|b|)·s` (via `|b·y| ≤ 3/2` under `|1−b·y| ≤ 1/2`). This is what lets
+2 stages reach 16 bits: the square, not the halving, is the fast convergence. -/
+theorem nr_square_step (b y s by' y' : Real) (hs : 0 ≤ s)
+    (h1 : abs (by' - b * y) ≤ s) (h2 : abs (y' - y * ((1 + 1) - by')) ≤ s)
+    (hinv : abs (1 - b * y) ≤ 1 / (1 + 1)) :
+    abs (1 - b * y')
+      ≤ (1 - b * y) * (1 - b * y) + (1 + 1 / (1 + 1) + abs b) * s := by
+  have hby : abs (b * y) ≤ 1 + 1 / (1 + 1) := by
+    have e : (1 : Real) - (1 - b * y) = b * y := by mach_mpoly [b, y]
+    have tri := abs_sub_le_l (1 : Real) (1 - b * y)
+    rw [e, abs_one] at tri
+    exact le_trans tri (add_le_add_left hinv 1)
+  have hfloor : (abs (b * y) + abs b) * s ≤ (1 + 1 / (1 + 1) + abs b) * s :=
+    mul_le_mul_of_nonneg_right (add_le_add_right_l hby (abs b)) hs
+  have hb := nr_scaled_err_bound b y s by' y' hs h1 h2
+  rw [add_assoc, add_mul_r (abs (b * y)) (abs b) s] at hb
+  exact le_trans hb (add_le_add_left hfloor ((1 - b * y) * (1 - b * y)))
+
+/-- **The concrete 2-stage reciprocal error** (the shipped `eml_reciprocal.v`). Given two truncated NR
+stages `y_0 → y_1 → y_2`, the linear-seed estimate `|1 − b·y_0| ≤ 1/2`, and the regime
+`(3/2+|b|)·s ≤ 1/4`, the scaled error is bounded by the nested square
+
+    |1 − b·y_2| ≤ (e_0² + c)² + c,   e_0 = 1 − b·y_0,  c = (3/2+|b|)·s
+
+Proof: `nr_square_step` twice (its second `hinv` from `e_0² ≤ |e_0|·(1/2)` + `inv_maintain`), then
+square the stage-1 bound (`|e_1| ≤ e_0²+c`, both sides `≥ 0`). With the linear seed's `e_0 ≤ 1/17`,
+`(e_0²+c)² ≤ (1/289 + c)²` — 16-bit accurate with two stages. -/
+theorem nr_reciprocal_2stage
+    (b y0 y1 y2 by0 by1 s : Real) (hs : 0 ≤ s)
+    (hinv0 : abs (1 - b * y0) ≤ 1 / (1 + 1))
+    (hb0 : abs (by0 - b * y0) ≤ s) (hy1 : abs (y1 - y0 * ((1 + 1) - by0)) ≤ s)
+    (hb1 : abs (by1 - b * y1) ≤ s) (hy2 : abs (y2 - y1 * ((1 + 1) - by1)) ≤ s)
+    (hreg : (1 + 1 / (1 + 1) + abs b) * s ≤ (1 / (1 + 1)) * (1 - 1 / (1 + 1))) :
+    abs (1 - b * y2)
+      ≤ ((1 - b * y0) * (1 - b * y0) + (1 + 1 / (1 + 1) + abs b) * s)
+        * ((1 - b * y0) * (1 - b * y0) + (1 + 1 / (1 + 1) + abs b) * s)
+        + (1 + 1 / (1 + 1) + abs b) * s := by
+  have hHnn : (0 : Real) ≤ 1 / (1 + 1) :=
+    div_nonneg (le_of_lt one_pos) (add_nonneg (le_of_lt one_pos) (le_of_lt one_pos))
+  have r1 := nr_square_step b y0 s by0 y1 hs hb0 hy1 hinv0
+  -- invariant: |e_1| ≤ 1/2, via e_0² ≤ |e_0|·(1/2) then inv_maintain
+  have hinv1 : abs (1 - b * y1) ≤ 1 / (1 + 1) := by
+    refine le_trans r1 (le_trans ?_ (inv_maintain (1 / (1 + 1)) (1 / (1 + 1))
+      (abs (1 - b * y0)) ((1 + 1 / (1 + 1) + abs b) * s) hHnn hinv0 hreg))
+    apply add_le_add_right_l
+    have he2 : abs (1 - b * y0) * abs (1 - b * y0) = (1 - b * y0) * (1 - b * y0) := by
+      rw [← abs_mul]; exact abs_of_nonneg (mul_self_nonneg _)
+    rw [← he2]; exact mul_le_mul_of_nonneg_left hinv0 (abs_nonneg _)
+  have r2 := nr_square_step b y1 s by1 y2 hs hb1 hy2 hinv1
+  -- square the stage-1 bound: (1−b·y_1)² = |e_1|² ≤ (e_0²+c)²  (both sides ≥ 0)
+  have hcnn : (0 : Real) ≤ (1 + 1 / (1 + 1) + abs b) * s :=
+    mul_nonneg (add_nonneg (add_nonneg (le_of_lt one_pos) hHnn) (abs_nonneg b)) hs
+  have hBnn : (0 : Real) ≤ (1 - b * y0) * (1 - b * y0) + (1 + 1 / (1 + 1) + abs b) * s :=
+    add_nonneg (mul_self_nonneg _) hcnn
+  have he1sq : (1 - b * y1) * (1 - b * y1)
+      ≤ ((1 - b * y0) * (1 - b * y0) + (1 + 1 / (1 + 1) + abs b) * s)
+        * ((1 - b * y0) * (1 - b * y0) + (1 + 1 / (1 + 1) + abs b) * s) := by
+    have he2 : abs (1 - b * y1) * abs (1 - b * y1) = (1 - b * y1) * (1 - b * y1) := by
+      rw [← abs_mul]; exact abs_of_nonneg (mul_self_nonneg _)
+    rw [← he2]
+    exact le_trans (mul_le_mul_of_nonneg_right r1 (abs_nonneg _))
+      (mul_le_mul_of_nonneg_left r1 hBnn)
+  exact le_trans r2 (add_le_add_right_l he1sq ((1 + 1 / (1 + 1) + abs b) * s))
 
 private theorem le_div_of_mul_le_pos_l {a b c : Real} (h : b * a ≤ c) (hb : 0 < b) :
     a ≤ c / b := by
