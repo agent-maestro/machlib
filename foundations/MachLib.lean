@@ -200,6 +200,7 @@ import MachLib.RiemannIntegralAddition
 import MachLib.GaussianDensityIntegral
 import MachLib.GaussianConjugacy
 import MachLib.GaussianMGF
+import MachLib.GaussianFisher
 import MachLib.SinNotInEMLDepth2Partial
 import MachLib.SinNotInEMLDepth2Sweep
 import MachLib.IteratedExpBounds
