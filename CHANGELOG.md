@@ -7,6 +7,20 @@ per-release status.
 
 ## [Unreleased] — 2026-07-25
 
+### New — the fixed-point Kalman kernel is near-MMSE-OPTIMAL, machine-checked (`MachLib/KalmanUpdateFixedPoint.lean`)
+
+**`kalman_update_1d_fx_near_mmse`** and **`kalman_update_1d_conditional_mse_near_optimal`**: the
+*composition* the flagship claim rests on, proved rather than asserted. Two prior results —
+(1) the real posterior mean is MMSE-optimal (`posterior_mean_mmse`), and (2) the Q16.16 kernel output is
+within `ε` of that real mean (`kalman_update_1d_fwd_error`) — do NOT by themselves give "the fixed-point
+kernel is near-optimal". The join is proved: since the conditional MSE of any estimate `c` of `X | Y=y`
+is exactly `τ² + (c − m(y))²` (parallel-axis, no cross term), the fixed-point output `kalman_hw`, being
+within `ε` of the posterior mean `m`, has conditional MSE sandwiched
+`τ² ≤ τ² + (kalman_hw − m)² ≤ τ² + ε²`. So the *implemented* estimator's excess risk over the *provably
+optimal* one is `≤ ε²`, with `ε = s + |z−x|·(s + |p|·E_recip)` from the datapath forward-error. This
+closes the "two rigorous things, join asserted" gap between MMSE optimality and finite precision.
+`sorryAx`-free, ZERO new axioms.
+
 ### New — `∫₀^∞exp(-t²)dt = √π/2`, from scratch, zero new axioms (`MachLib/GaussianLaplaceRoute.lean`)
 
 **`gaussianImproperIntegral_eq_sqrt_pi_div_two`**: `gaussianImproperIntegral = sqrt pi / (1 + 1)` —

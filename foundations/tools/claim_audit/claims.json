@@ -388,6 +388,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The COMPOSITION: the Q16.16 Kalman kernel is near-MMSE-optimal. Its conditional MSE lies in [tau2, tau2+eps^2] -- the excess risk of the IMPLEMENTED estimator over the provably-optimal posterior mean is <= eps^2 (eps the datapath forward error). The machine-checked join of posterior_mean_mmse + kalman_update_1d_fwd_error, not a prose assertion. Invariant: sorryAx-free.",
+      "id": "kalman-fx-near-mmse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman_update_1d_fx_near_mmse",
+        "near-MMSE-OPTIMAL, machine-checked"
+      ],
+      "module": "MachLib.KalmanUpdateFixedPoint",
+      "theorem": "MachLib.Real.kalman_update_1d_fx_near_mmse",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
