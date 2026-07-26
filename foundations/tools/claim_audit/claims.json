@@ -542,6 +542,20 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The gain/update composition: the Kalman gain K=P*H^T*S^-1 is a matrix product, so a gain entry is a dot product of a P*H^T row with an S^-1 column. kalman2_gain_entry_via_inverse folds fxerr_dot2 (two fxerr_mul + fxerr_add) with the two inverse-column entries (built from the shared reciprocal, carrying inversion error Erec) plugged in -> the gain entry's fixed-point error is bounded, Erec appearing explicitly. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "kalman2-gain-via-inverse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman2_gain_entry_via_inverse",
+        "propagate into the gain"
+      ],
+      "module": "MachLib.Matrix2InverseFixedPoint",
+      "theorem": "MachLib.Real.kalman2_gain_entry_via_inverse",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

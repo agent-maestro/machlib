@@ -22,9 +22,19 @@ of the exact `cofactor/det`; `matrix2_sym_inverse_fwd_error` bundles all three d
 `≤ Erec0 + Edet·|wf|·|w|` with `|wf|·|w| = 1/(|det_fx|·|det|)` — bounded exactly when the matrix is
 well-conditioned (`det` away from 0), diverging as `det→0`. This is the precise sense in which fixed-point
 rounding does not make the filter diverge — the numerical-stability companion to the existing
-`kalman2d_joseph_psd` structural (PSD) stability. `sorryAx`-free, ZERO new axioms. (General n×n
-inversion-stability via Cholesky/LDLT remains the larger arc; at fixed 2×2 the closed form is equivalent
-and lands on the current FPGA substrate.)
+`kalman2d_joseph_psd` structural (PSD) stability. `sorryAx`-free, ZERO new axioms.
+
+**Gain/update composition** (same file): the gain `K = P·Hᵀ·S⁻¹` is a matrix product, so each entry is a
+dot product of a `P·Hᵀ` row with an `S⁻¹` column — and the inverse error just bounded flows into it,
+boundedly. `fxerr_dot2` (reusable) folds two `fxerr_mul`s + one `fxerr_add` (the `FixedPointCertifier`
+additive error algebra) into a perturbed-operand dot product; `matrix2_inv_entry_fxerr` repackages an
+inverse entry as an `FxErr` (magnitude + the `s+|cofactor|·Erec` error); **`kalman2_gain_entry_via_inverse`**
+plugs the two inverse-column entries (built from the shared reciprocal, carrying `Erec`) into the gain dot
+product and bounds the gain entry's fixed-point error — with `Erec` appearing explicitly, so the inversion
+error is shown to propagate into the gain with no hidden amplification. `sorryAx`-free, ZERO new axioms.
+(General n×n inversion-stability via Cholesky/LDLT remains the larger arc; at fixed 2×2 the closed form is
+equivalent and lands on the current FPGA substrate. Next: the full 2×2 update forward-error + matrix
+MMSE-optimality + a small-n unrolled RTL kernel.)
 
 ### New — the AXI-Stream wrapper control FSM is deadlock-free + drop-free, proven (`MachLib/AxiStreamWrapper.lean`)
 

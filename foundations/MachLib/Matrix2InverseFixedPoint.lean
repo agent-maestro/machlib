@@ -1,4 +1,5 @@
 import MachLib.KalmanUpdateFixedPoint
+import MachLib.FixedPointCertifier
 
 /-!
 # Fixed-point stability of the 2×2 symmetric matrix inverse
@@ -97,5 +98,62 @@ theorem matrix2_inverse_conditioning
   rw [hid, abs_mul, abs_mul]
   exact mul_le_mul_of_nonneg_right
     (mul_le_mul_of_nonneg_right hedet (abs_nonneg _)) (abs_nonneg _)
+
+/-! ## Gain / update composition — the inverse error flows into the gain, bounded
+
+The Kalman gain `K = P·Hᵀ·S⁻¹` is a matrix product; each gain entry is a dot product of a row
+of `P·Hᵀ` with a column of `S⁻¹`. The `S⁻¹` entries carry the inversion error just bounded, so
+the gain error is a fold of `FixedPointCertifier`'s `fxerr_mul`/`fxerr_add` (the additive
+fixed-point error algebra) with those entries plugged in — the inversion error `Erec`
+propagates into the gain boundedly. -/
+
+/-- **Fixed-point dot product of two perturbed operands** (reusable): `p ≈ x0·y0 + x1·y1`,
+each factor carrying a `FxErr`, each `qmul` and the add truncating. The forward-error fold
+of two `fxerr_mul`s and one `fxerr_add`. -/
+theorem fxerr_dot2
+    {s0 s1 sa Mx0 Ex0 vx0 xe0 My0 Ey0 vy0 ye0 p0
+     Mx1 Ex1 vx1 xe1 My1 Ey1 vy1 ye1 p1 pa : Real}
+    (hs0 : 0 ≤ s0) (hs1 : 0 ≤ s1) (hsa : 0 ≤ sa)
+    (hx0 : FxErr Mx0 Ex0 vx0 xe0) (hy0 : FxErr My0 Ey0 vy0 ye0) (hp0 : TruncW s0 p0 (vx0 * vy0))
+    (hx1 : FxErr Mx1 Ex1 vx1 xe1) (hy1 : FxErr My1 Ey1 vy1 ye1) (hp1 : TruncW s1 p1 (vx1 * vy1))
+    (hpa : TruncW sa pa (p0 + p1)) :
+    FxErr (Mx0 * My0 + Mx1 * My1)
+          ((Mx0 * Ey0 + My0 * Ex0 + Ex0 * Ey0 + s0)
+            + (Mx1 * Ey1 + My1 * Ex1 + Ex1 * Ey1 + s1) + sa)
+          pa (xe0 * ye0 + xe1 * ye1) :=
+  fxerr_add hsa (fxerr_mul hs0 hx0 hy0 hp0) (fxerr_mul hs1 hx1 hy1 hp1) hpa
+
+/-- **A symmetric-2×2 inverse entry as an `FxErr`.** Repackages `matrix2_inv_entry_fwd_error`
+(error `s + |e|·Erec`) with a magnitude bound so it can feed the `FxErr` fold above. -/
+theorem matrix2_inv_entry_fxerr (e w recip e_fx s Erec M : Real)
+    (hrec : abs (recip - w) ≤ Erec) (hq : abs (e_fx - e * recip) ≤ s)
+    (hmag : abs (e * w) ≤ M) :
+    FxErr M (s + abs e * Erec) e_fx (e * w) :=
+  ⟨hmag, matrix2_inv_entry_fwd_error e w recip e_fx s Erec hrec hq⟩
+
+/-- **A gain entry, through the inverse.** `K = (row of P·Hᵀ)·(column of S⁻¹)`. The two column
+entries `b0,b1` are `S⁻¹` entries built from the shared reciprocal `recip ≈ w = 1/det`
+(cofactors `e0,e1`), so they carry the inversion error `Erec`; the row entries `m0,m1` carry
+their own `FxErr`. The gain entry's fixed-point error is bounded — with `Erec` appearing
+explicitly, i.e. the inversion error propagates into the gain and no further amplification is
+hidden. -/
+theorem kalman2_gain_entry_via_inverse
+    {Mm0 Em0 m0 me0 Mm1 Em1 m1 me1 : Real}
+    {e0 e1 w recip b0 b1 sinv Erec Mb0 Mb1 : Real}
+    {s0 s1 sa p0 p1 pa : Real}
+    (hs0 : 0 ≤ s0) (hs1 : 0 ≤ s1) (hsa : 0 ≤ sa)
+    (hm0 : FxErr Mm0 Em0 m0 me0) (hm1 : FxErr Mm1 Em1 m1 me1)
+    (hrec : abs (recip - w) ≤ Erec)
+    (hq0 : abs (b0 - e0 * recip) ≤ sinv) (hmag0 : abs (e0 * w) ≤ Mb0)
+    (hq1 : abs (b1 - e1 * recip) ≤ sinv) (hmag1 : abs (e1 * w) ≤ Mb1)
+    (hp0 : TruncW s0 p0 (m0 * b0)) (hp1 : TruncW s1 p1 (m1 * b1))
+    (hpa : TruncW sa pa (p0 + p1)) :
+    FxErr (Mm0 * Mb0 + Mm1 * Mb1)
+          ((Mm0 * (sinv + abs e0 * Erec) + Mb0 * Em0 + Em0 * (sinv + abs e0 * Erec) + s0)
+            + (Mm1 * (sinv + abs e1 * Erec) + Mb1 * Em1 + Em1 * (sinv + abs e1 * Erec) + s1) + sa)
+          pa (me0 * (e0 * w) + me1 * (e1 * w)) :=
+  fxerr_dot2 hs0 hs1 hsa hm0
+    (matrix2_inv_entry_fxerr e0 w recip b0 sinv Erec Mb0 hrec hq0 hmag0) hp0
+    hm1 (matrix2_inv_entry_fxerr e1 w recip b1 sinv Erec Mb1 hrec hq1 hmag1) hp1 hpa
 
 end MachLib.Real
