@@ -205,9 +205,22 @@ this on the lower half of each octave — `e_0` ran 0→~1 and crossed `1/2` abo
 4-stage NR stalled near octave tops (silicon-confirmed `b=1.992 → E=0.882`). The fix was on the
 *hardware* side, not here: Forge's `eml_reciprocal.v` now uses a 2-term minimax linear seed
 `y_0 = 2^(−k)·(24/17 − (8/17)·m)` (`m` the mantissa in `[1,2)`), giving `|e_0| ≤ 1/17 < 1/2` across
-the whole octave, so `hinv0` holds everywhere in-regime and this proof applies unchanged. The lemmas
-below were never in question — the bench confirmed they match the measured per-stage errors exactly;
-only the antecedent needed the hardware to meet it. -/
+the whole octave, so `hinv0` holds everywhere in the theorem's regime and this proof applies
+unchanged. The lemmas below were never in question — the bench confirmed they match the measured
+per-stage errors exactly; only the antecedent needed the hardware to meet it.
+
+**Regime (explicit side condition, per the re-anchor).** `hinv0` is delivered by the seed for
+`|b| ∈ [2^−8, 2^14]` (`|e_0| ≤ 1/17`, degrading to `≤ 1/4` only at the `2^14` Q16.16 precision edge).
+*Outside* that window — the tiny/large-`|b|` shift-clamp saturation branches, three orders of
+magnitude below the regime floor — the seed does NOT meet `hinv0` (`e_0` reaches ~0.88), so this
+theorem, being conditional on `hinv0`, simply makes no claim there; callers must keep `|b|` in regime
+(the Forge backend's `a/b` scope). Re-anchor (2026-07-25, Arty A7-100T silicon, monogate-research
+`e590166a`): 0 in-regime violations of A or C across the full sweep (was 445 / 175), 16/16 divisors
+`silicon == golden`, octave tops `b=1.9,1.992` converge (E `0.185→7.5e-6`, `0.882→1.5e-5`).
+
+(4 stages is now over-provisioned — `|e_0| ≤ 1/17` reaches 16 bits by stage 2 — but this proof and
+the emitted RTL both stay at 4 to keep the backend's fixed 4-cycle latency; a 2-stage variant would
+need its own `contract2_bound`.) -/
 
 /-- **Invariant maintenance** (abstract): if the current scaled error is `≤ M`, the contraction rate
 is `H ≥ 0`, and the truncation floor satisfies the regime `c ≤ M·(1−H)`, then one contraction step
