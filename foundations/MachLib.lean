@@ -297,6 +297,7 @@ import MachLib.KalmanEstimateRecursion
 import MachLib.AxiStreamWrapper
 import MachLib.Matrix2InverseFixedPoint
 import MachLib.Matrix2KalmanMMSE
+import MachLib.Matrix2JosephPSD
 import MachLib.Iteration
 import MachLib.ErrorAlgebra
 import MachLib.ErrorAlgebraTrans

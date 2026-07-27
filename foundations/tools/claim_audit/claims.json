@@ -584,6 +584,34 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The Joseph-form 2x2 covariance update P+ = (I-K)P(I-K)^T + KRK^T stays symmetric PSD for ANY gain K -- the numerical-robustness guarantee for a recursive covariance filter. Scoped to 2x2, quadratic-form PSD predicate (Psd2), congruence + sum preservation. sorryAx-free, zero new axioms. Invariant: sorryAx-free.",
+      "id": "joseph2-psd-any-gain-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "kalman2_joseph_psd",
+        "stays symmetric positive-semidefinite for any gain K"
+      ],
+      "module": "MachLib.Matrix2JosephPSD",
+      "theorem": "MachLib.Real.kalman2_joseph_psd",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The full-width scheduled MAC (seq_mac_fw) keeps products exact and truncates ONCE per dot, so its forward error is a single rounding (<= 2^-F) -- a factor-K improvement over per-product truncation. fxerr_dot2 with the truncation moved off the products onto the final add. sorryAx-free. Invariant: sorryAx-free.",
+      "id": "fxerr-dot2-fullwidth-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "fxerr_dot2_fullwidth",
+        "truncates ONCE per dot"
+      ],
+      "module": "MachLib.Matrix2JosephPSD",
+      "theorem": "MachLib.Real.fxerr_dot2_fullwidth",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

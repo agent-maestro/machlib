@@ -5,6 +5,24 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-07-26
+
+### New — 2×2 Joseph covariance update: structural PSD + full-width dot bound (`MachLib/Matrix2JosephPSD.lean`)
+
+**`kalman2_joseph_psd`** + **`fxerr_dot2_fullwidth`**: the proof spine for the scheduled-linear-algebra /
+Joseph arc (Forge `docs/scheduled_linear_algebra.md`), certifying two obligations *before* the datapath is
+built. `kalman2_joseph_psd`: the Joseph-form posterior `P⁺ = (I−K) P (I−K)ᵀ + K R Kᵀ` stays symmetric
+positive-semidefinite for any gain K — the numerical-robustness guarantee that makes a recursive covariance
+update safe (no gain, and no round-off in the gain, can drive the covariance indefinite; this is *why* real
+filters use the Joseph form). Scoped to 2×2 with a Mathlib-free PSD predicate — the quadratic form on entries
+(`Psd2`): a congruence `G X Gᵀ` preserves PSD (`psd2_congruence`: its quadratic form at `v` is `X`'s at
+`Gᵀv`) and a sum of PSD is PSD (`psd2_add`), so the Joseph update is `psd2_add` of two congruences (`G₁ =
+I−K`, `G₂ = K`). `fxerr_dot2_fullwidth`: the full-width scheduled MAC (`seq_mac_fw`) keeps its products
+exact and truncates ONCE per dot, so its forward error is a single rounding (≤ 2⁻ᶠ) — a factor-`K`
+improvement on the per-product engine's `K·2⁻ᶠ`; it is exactly `fxerr_dot2` with the truncation moved off the
+products onto the final add. `sorryAx`-free, ZERO new axioms (Real arithmetic + `mach_ring` + the existing
+FxErr algebra; `Real` exposes `OfNat` only for 0/1, so the coefficient 2 is written `(1 + 1)`).
+
 ## [Unreleased] — 2026-07-25
 
 ### New — 2-D Kalman MMSE-optimality, trace loss (`MachLib/Matrix2KalmanMMSE.lean`)
