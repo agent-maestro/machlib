@@ -1,5 +1,6 @@
 import MachLib.Basic
 import MachLib.EML
+import MachLib.BallCubeRatio
 
 /-!
 # High-Dimensional EML Obligations
@@ -14,11 +15,17 @@ namespace HighDimensional
 
 open MachLib.Real
 
-/-- Minimal local convergence predicate for MachLib's zero-Mathlib setting. -/
-axiom TendstoTo : (Nat -> Real) -> Real -> Prop
+/-- Convergence predicate. **Was an opaque axiom until 2026-07-28**, which is exactly why
+`high_dim_ball_cube_ratio_tends_zero` below carried a `sorry` for a month: there is nothing to
+prove about an uninterpreted symbol. It is now `MachLib.Real.TendstoTo`, the ordinary ε–N
+definition (`Limits.lean`). The `sorry` was a gap in the VOCABULARY, not in the argument. -/
+abbrev TendstoTo : (Nat -> Real) -> Real -> Prop := MachLib.Real.TendstoTo
 
-/-- Volume ratio target: unit d-ball divided by the cube `[-1,1]^d`. -/
-axiom ballCubeRatio : Nat -> Real
+/-- Volume ratio: unit d-ball divided by the cube `[-1,1]^d`. **Also formerly an opaque axiom**;
+now `MachLib.Real.bcRatio`, defined by the standard recurrence `r(d) = r(d-2)·π/(2d)`. That
+recurrence is where the geometry enters and is stated as such in `BallCubeRatio.lean`; it was
+checked numerically against `π^(d/2)/Γ(d/2+1)` at d = 1..12 (agreement < 1e-12). -/
+noncomputable abbrev ballCubeRatio : Nat -> Real := MachLib.Real.bcRatio
 
 /-- Cube boundary-shell probability for a fixed shell width. -/
 axiom cubeBoundaryShellProbability : Real -> Nat -> Real
@@ -375,8 +382,8 @@ axiom saturation_deshelf_intervention_obligation
 
 /-- The volume ratio `V(unit_ball_d) / V([-1,1]^d)` tends to zero. -/
 theorem high_dim_ball_cube_ratio_tends_zero :
-    TendstoTo ballCubeRatio 0 := by
-  sorry
+    TendstoTo ballCubeRatio 0 :=
+  MachLib.Real.bcRatio_tendsto_zero
 
 /-- For fixed `eps` in `(0,1)`, the cube boundary-shell probability tends to one. -/
 theorem cube_boundary_shell_probability_tends_one

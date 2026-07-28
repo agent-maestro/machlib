@@ -303,6 +303,8 @@ import MachLib.Matrix2InverseFixedPoint
 import MachLib.Matrix2KalmanMMSE
 import MachLib.Matrix2JosephPSD
 import MachLib.Iteration
+import MachLib.Limits
+import MachLib.BallCubeRatio
 import MachLib.ErrorAlgebra
 import MachLib.ErrorAlgebraTrans
 import MachLib.ForwardError
