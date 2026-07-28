@@ -292,6 +292,7 @@ import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
 import MachLib.NewtonReciprocalDivision
 import MachLib.KalmanUpdateFixedPoint
+import MachLib.Ekf2MeasModelFwdError
 import MachLib.KalmanVarianceRecursion
 import MachLib.KalmanEstimateRecursion
 import MachLib.AxiStreamWrapper
