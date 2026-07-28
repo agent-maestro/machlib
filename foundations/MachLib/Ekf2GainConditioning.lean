@@ -184,6 +184,37 @@ theorem psd2_det_add_ge {na nb nd ra rb rd : Real}
       from by mach_mpoly [ra, rd, rb]))
     (add_le_add_both (le_refl _) (add_nonneg hdn hmx))
 
+/-- **The sharper form: `det (N + R) ≥ det N + det R`.** Same expansion as `psd2_det_add_ge`, but
+keeping `det N` instead of throwing it away. Only `psd2_mixed_nonneg` is needed. This is the version
+the gain stage actually requires — see `ekf2_det_S_lower_tight` and the note there on why the weaker
+form, though sound, is useless in practice. -/
+theorem psd2_det_add_ge_both {na nb nd ra rb rd : Real}
+    (hn : Psd2 na nb nd) (hr : Psd2 ra rb rd) :
+    (na * nd - nb * nb) + (ra * rd - rb * rb)
+      ≤ (na + ra) * (nd + rd) - (nb + rb) * (nb + rb) := by
+  have hmx : 0 ≤ na * rd + nd * ra - (1 + 1) * (nb * rb) := psd2_mixed_nonneg hn hr
+  rw [show (na + ra) * (nd + rd) - (nb + rb) * (nb + rb)
+        = ((na * nd - nb * nb) + (ra * rd - rb * rb))
+          + (na * rd + nd * ra - (1 + 1) * (nb * rb))
+        from by mach_mpoly [na, nb, nd, ra, rb, rd]]
+  exact le_trans (le_of_eq (show (na * nd - nb * nb) + (ra * rd - rb * rb)
+      = ((na * nd - nb * nb) + (ra * rd - rb * rb)) + 0
+      from by mach_mpoly [(na * nd - nb * nb : Real), (ra * rd - rb * rb : Real)]))
+    (add_le_add_both (le_refl _) hmx)
+
+set_option maxHeartbeats 2000000 in
+/-- **`det (G X Gᵀ) = det(G)² · det X`** on the `psd2_congruence` entries — a pure polynomial
+identity, so `mach_mpoly` closes it outright. This is what turns the useless conditioning constant
+into a useful one: `det (H P Hᵀ)` is not some unknown nonnegative quantity, it is `(det H)²·det P`,
+and for the range-bearing model `det H = 1/r` exactly. -/
+theorem psd2_congruence_det (p q r g00 g01 g10 g11 : Real) :
+    (g00 * g00 * p + (1 + 1) * (g00 * g01) * q + g01 * g01 * r)
+      * (g10 * g10 * p + (1 + 1) * (g10 * g11) * q + g11 * g11 * r)
+    - (g00 * g10 * p + (g00 * g11 + g01 * g10) * q + g01 * g11 * r)
+      * (g00 * g10 * p + (g00 * g11 + g01 * g10) * q + g01 * g11 * r)
+    = (g00 * g11 - g01 * g10) * (g00 * g11 - g01 * g10) * (p * r - q * q) := by
+  mach_mpoly [p, q, r, g00, g01, g10, g11]
+
 /-! ## The EKF instance -/
 
 /-- **`det S ≥ det R` for the EKF innovation covariance.** `S = H P Hᵀ + R` with `P` the (PSD) prior
@@ -207,5 +238,35 @@ theorem ekf2_det_S_lower {h00 h01 h10 h11 pa pb pd ra rb rd : Real}
           * ((h00 * h10 * pa + (h00 * h11 + h01 * h10) * pb + h01 * h11 * pd) + rb) :=
   psd2_det_add_ge
     (psd2_congruence (g00 := h00) (g01 := h01) (g10 := h10) (g11 := h11) hP) hR
+
+/-- **The conditioning constant the gain stage can actually use: `det S ≥ (det H)²·det P + det R`.**
+
+`ekf2_det_S_lower` above is sound and, at this anchor, **280× too loose to be worth anything** —
+measured `det S = 1.120e-02` against a bound of `det R = 4.00e-05`. Because `1/det` enters the gain's
+forward error and is then multiplied through the whole update, that 280× inflates the composed
+per-step bound by roughly **1e5**, and the end-to-end check came back *vacuous* rather than merely
+conservative. The pre-registration's non-vacuity clause called that a negative result to report, so
+it was reported — and this is the fix it pointed at.
+
+Keeping `det N` instead of discarding it, and evaluating it by `psd2_congruence_det`, gives
+`det N = (det H)²·det P`. For the range-bearing model `det H = 1/r` **exactly**, so the constant is
+`det P / r² + det R` — state-dependent, but bounded by the same `r_max` the domain already supplies.
+Measured looseness at the anchor's step 0: **1.16×** instead of 280×.
+
+The lesson is worth keeping separate from the fix: *a sound bound derived from the tuning constants
+alone was not merely conservative, it was useless, and only instantiating it against the artifact
+showed that.* A bound nobody instantiates is not known to be a bound. -/
+theorem ekf2_det_S_lower_tight {h00 h01 h10 h11 pa pb pd ra rb rd : Real}
+    (hP : Psd2 pa pb pd) (hR : Psd2 ra rb rd) :
+    (h00 * h11 - h01 * h10) * (h00 * h11 - h01 * h10) * (pa * pd - pb * pb)
+      + (ra * rd - rb * rb)
+      ≤ ((h00 * h00 * pa + (1 + 1) * (h00 * h01) * pb + h01 * h01 * pd) + ra)
+        * ((h10 * h10 * pa + (1 + 1) * (h10 * h11) * pb + h11 * h11 * pd) + rd)
+        - ((h00 * h10 * pa + (h00 * h11 + h01 * h10) * pb + h01 * h11 * pd) + rb)
+          * ((h00 * h10 * pa + (h00 * h11 + h01 * h10) * pb + h01 * h11 * pd) + rb) := by
+  have key := psd2_det_add_ge_both
+    (psd2_congruence (g00 := h00) (g01 := h01) (g10 := h10) (g11 := h11) hP) hR
+  rw [psd2_congruence_det pa pb pd h00 h01 h10 h11] at key
+  exact key
 
 end MachLib.Real

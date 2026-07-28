@@ -294,6 +294,7 @@ import MachLib.NewtonReciprocalDivision
 import MachLib.KalmanUpdateFixedPoint
 import MachLib.Ekf2MeasModelFwdError
 import MachLib.Ekf2GainConditioning
+import MachLib.Ekf2UpdateFwdError
 import MachLib.KalmanVarianceRecursion
 import MachLib.KalmanEstimateRecursion
 import MachLib.AxiStreamWrapper
