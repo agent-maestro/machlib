@@ -1,0 +1,8 @@
+artifact tree : 844 .olean
+source tree   : 896 .lean
+ORPHANED      : 0   (artifact with no source)
+unbuilt       : 52   (source with no artifact -- informational)
+
+ARTIFACT-DRIFT TRIPWIRE: PASS -- every artifact has a source.
+  Scope: this checks the source↔artifact CORRESPONDENCE only. Whether the corresponding
+  artifacts replay clean is check_kernel_replay.py's job -- tripwire, then checker.

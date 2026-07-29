@@ -3,12 +3,24 @@
 
   Walks every MachLib theorem/def and flags any that (transitively) depend on `sorryAx` —
   catching exactly the case where a tactic (e.g. the all-`try` `mach_ring`) silently swallows an
-  unclosable goal into a `sorry` that compiles green. The three documented, intentional exceptions
-  (a RED/GREEN teaching pair + the explicitly-disclaimed High-Dimensional draft queue) are
-  allowlisted; ANY other `sorryAx` is a regression and fails the build (non-zero exit).
+  unclosable goal into a `sorry` that compiles green. The one documented, intentional exception
+  (a RED/GREEN teaching pair in ForgeTest.lean) is allowlisted; ANY other `sorryAx` is a regression
+  and fails the build (non-zero exit).
+
+  BOTH DIRECTIONS, added 2026-07-29. The allowlist must correspond EXACTLY to what actually carries
+  `sorryAx` — an entry for a declaration that is now clean is a standing licence for the sorry to
+  come back unnoticed, and it rots in the direction that feels safe (someone closed a proof; nobody
+  went back to prune). So a stale entry now FAILS the gate and says which remedy applies (present +
+  proven -> prune; absent -> deleted or renamed).
+
+  FIRING SPECIMEN, historical rather than synthetic: on the run that introduced the check the gate
+  went RED immediately on `guarded_lowering_preserves_domain_annotations`, allowlisted as "NOT
+  closable as stated" and then closed anyway with footprint `[propext]`. The licence had outlived
+  the sorry. Pruned; gate returns 0.
 
   Run:  cd foundations && lake env lean tools/sorry_audit.lean
-  Exit: 0 on PASS, 1 on FAIL (verified 2026-07-28 in both directions).
+  Exit: 0 on PASS, 1 on FAIL (verified 2026-07-28 in both directions; the rot direction verified
+        2026-07-29, RED on the real stale entry then GREEN after pruning).
 
   SCOPE LIMIT, found 2026-07-28 by a canary that DID NOT fire. The walk filters on
   `(`MachLib).isPrefixOf n`, so it sees declarations under `MachLib.*` and NOTHING ELSE. An
@@ -24,7 +36,7 @@ open Lean
 /-- Intentional, documented sorry-bearing declarations. Anything else is a regression. -/
 def allowedSorry : List Name := [
   -- ForgeTest.lean: RED skeleton paired with the GREEN `halve_in_unit` right below it
-  `MachLib.Real.halve_in_unit_sorry,
+  `MachLib.Real.halve_in_unit_sorry
   -- HighDimensional.lean module disclaimer: "intentionally carry `sorry`; formalization targets,
   -- not completed proof claims." Not in the public front door (what_is_proven.md); orphan.
   --
@@ -33,14 +45,16 @@ def allowedSorry : List Name := [
   -- silent licence for it to regress -- the gate would accept the sorry coming back. The allowlist
   -- must track what is actually broken, not what was ever broken.
   --
-  -- The one that remains is NOT closable as stated: `ReplayPacket`, `ValidGuards` and
-  -- `DomainPreserved` are all opaque placeholders with zero content, so `ValidGuards p ->
-  -- DomainPreserved p` is an implication between two uninterpreted predicates. Closing it means
-  -- SPECIFYING the IR's guard semantics -- a different project, and arguably one that belongs in
-  -- Forge rather than machlib. Adding a "foothold axiom" to discharge it (the idiom the rest of
-  -- that file uses) would be strictly WORSE than the sorry: it moves a visible gap into the
-  -- invisible axiom ledger.
-  `MachLib.HighDimensional.guarded_lowering_preserves_domain_annotations ]
+  -- 2026-07-29: `MachLib.HighDimensional.guarded_lowering_preserves_domain_annotations` REMOVED for
+  -- the same reason, and it is worth recording that the paragraph above did not prevent it. It was
+  -- allowlisted as "NOT closable as stated" -- and then closed anyway, by
+  -- `GuardedLowering.guarded_lowering_preserves_domain`, footprint `[propext]`, no foothold axiom.
+  -- Nobody pruned the entry, so the licence outlived the sorry by an unknown number of commits.
+  -- Found by the pre-migration baseline capture, from a count disagreement: the gate said 1 sorryAx
+  -- decl while the allowlist said 2 entries and `AUDIT_SORRY.md` prose said 2 carried it. Hence the
+  -- ROT CHECK below -- a comment asking for pruning is not a mechanism, and this list is now
+  -- required to correspond EXACTLY.
+  ]
 
 run_cmd do
   let env ← getEnv
@@ -55,7 +69,15 @@ run_cmd do
           allSorry := allSorry.push n
           unless allowedSorry.contains n do bad := bad.push n
       | _ => pure ()
-  if bad.isEmpty then
-    logInfo m!"SORRY-AUDIT PASS — {allSorry.size} sorryAx decls, all allowlisted ({allowedSorry.length} entries) (documented drafts/tests); no hidden sorries across MachLib."
-  else
+  -- BOTH DIRECTIONS, added 2026-07-29. The allowlist is a correspondence claim ("these decls carry
+  -- sorry, on purpose"), so it rots the same way every other correspondence in this repo rots -- and
+  -- it rots in the direction that FEELS SAFE: an entry for a declaration that is now clean is a
+  -- standing licence for the sorry to come back unnoticed. The file's own comment said exactly this
+  -- one entry earlier and it happened anyway, which is why it is now the GATE's job and not a note.
+  let stale := allowedSorry.filter (fun n => !allSorry.contains n)
+  if bad.isEmpty && stale.isEmpty then
+    logInfo m!"SORRY-AUDIT PASS — {allSorry.size} sorryAx decls, allowlist {allowedSorry.length} entries, EXACT correspondence (documented drafts/tests); no hidden sorries across MachLib."
+  else if !bad.isEmpty then
     throwError m!"SORRY-AUDIT FAIL — {bad.size} NON-allowlisted sorryAx decl(s): {bad.toList}"
+  else
+    throwError m!"SORRY-AUDIT FAIL — ALLOWLIST ROT: {stale.length} entr{if stale.length == 1 then "y" else "ies"} no longer carr{if stale.length == 1 then "ies" else "y"} sorryAx: {stale.map fun n => if (env.find? n).isSome then s!"{n} [present, now PROVEN -- prune it]" else s!"{n} [ABSENT from the environment -- deleted or renamed]"}. An allowlist entry for a clean declaration licenses the sorry to return silently. Prune it."

@@ -53,21 +53,42 @@ import subprocess
 import sys
 
 FOUND = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CHECKER = os.path.expanduser("~/lean4checker")
-BIN = os.path.join(CHECKER, ".lake", "build", "bin", "lean4checker")
+
+
+def resolve_checker(want: str) -> str:
+    """ONE CHECKER PER STOP, because the migration rolls back.
+
+    Added 2026-07-29 for the toolchain bump. The checker must match the pin exactly -- that rule is
+    unchanged and enforced below. What changes is *where* it lives: `~/lean4checker-v4.16.0` is
+    preferred over `~/lean4checker` when it exists.
+
+    Why not just re-`checkout` the one directory at each stop: the frozen baseline's replay log would
+    stop being reproducible the moment the instrument that produced it was overwritten, and every
+    fallback position (`BUMP_PLAN.md`: each clean intermediate is one) would need a checker rebuild
+    before it could be re-verified. Keeping them side by side makes rollback a `git checkout`, not a
+    rebuild.
+    """
+    ver = want.split(":")[-1]
+    versioned = os.path.expanduser(f"~/lean4checker-{ver}")
+    return versioned if os.path.exists(versioned) else os.path.expanduser("~/lean4checker")
 
 
 def main() -> int:
+    want = open(os.path.join(FOUND, "TOOLCHAIN.lock")).read().split()[0]
+    CHECKER = resolve_checker(want)
+    BIN = os.path.join(CHECKER, ".lake", "build", "bin", "lean4checker")
+    print(f"checker path     : {CHECKER}")
     if not os.path.exists(BIN):
+        ver = want.split(":")[-1]
         print(f"[CHECKER_ABSENT] no lean4checker at {BIN}")
         print("  UNAVAILABLE IS FAILURE. Build it:")
-        print("    git clone https://github.com/leanprover/lean4checker ~/lean4checker")
-        print("    cd ~/lean4checker && git checkout v4.14.0 && lake build")
+        print(f"    git clone --branch {ver} --depth 1 \\")
+        print(f"        https://github.com/leanprover/lean4checker ~/lean4checker-{ver}")
+        print(f"    cd ~/lean4checker-{ver} && lake build && ./test.sh")
         print("  The tag MUST match TOOLCHAIN.lock -- a checker built against a different kernel")
         print("  is a different instrument.")
         return 1
 
-    want = open(os.path.join(FOUND, "TOOLCHAIN.lock")).read().split()[0]
     have = open(os.path.join(CHECKER, "lean-toolchain")).read().strip()
     print(f"checker toolchain: {have}")
     print(f"ledger  toolchain: {want}")
