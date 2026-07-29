@@ -296,6 +296,7 @@ import MachLib.Ekf2MeasModelFwdError
 import MachLib.Ekf2GainConditioning
 import MachLib.Ekf2UpdateFwdError
 import MachLib.Ekf2GainBounded
+import MachLib.Ekf2GainPriorBound
 import MachLib.KalmanVarianceRecursion
 import MachLib.KalmanEstimateRecursion
 import MachLib.AxiStreamWrapper
