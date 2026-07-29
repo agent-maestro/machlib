@@ -121,8 +121,6 @@ abbrev PacketHasTransition :
 /-- Packet transition entropy metric exported by Forge/electronics evidence. -/
 axiom packetTransitionEntropy : BoundaryRunPacket -> Real
 
-/-- Transition graph is well-formed for the packet trace. -/
-axiom ValidTransitionGraph : BoundaryRunPacket -> Prop
 
 /-- Reviewer-facing semantic tier for rescue operators.
 `semanticRewrite` is intentionally not assigned to any v0 rescue operator. -/
@@ -156,8 +154,6 @@ abbrev PairHasRescueTransition :
 /-- Finite survival did not regress in the pairwise benchmark. -/
 abbrev PairNonregressingSurvival : BoundaryInterventionPair -> Prop := NonregressingSurvival
 
-/-- Obligation predicates attached to taxonomy classes. -/
-axiom BaselineReplayValid : BoundaryRunPacket -> Prop
 axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
 axiom BoundedEvaluationObligation : BoundaryRunPacket -> Prop
 /-- **OWED, not discharged.** The original axiom established only that the obligation falls
@@ -172,7 +168,6 @@ abbrev OutputSafetyObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObl
 /-- **OWED, not discharged.** The original axiom established only that the obligation falls
 due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
 abbrev PositiveCoordinateObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.positiveCoordinate
-axiom BoundaryDynamicsObligation : BoundaryRunPacket -> Prop
 axiom InterventionSoundnessObligation : BoundaryInterventionPair -> Prop
 abbrev PositiveCoordinateInterventionObligation (p : BoundaryInterventionPair) : Prop :=
   DeclaresObligation p InterventionObligation.positiveCoordinate
@@ -308,11 +303,12 @@ axiom boundary_dominates_center_from_packet
     packetCenterHits p <= packetBoundaryHits p ->
     BoundaryDominatesCenter p
 
-axiom interior_sample_obligation
+theorem interior_sample_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.interiorSample ->
-    BaselineReplayValid p
+    BaselineReplayValid p :=
+  fun hv _ => baselineReplayValid_of_valid hv
 
 axiom domain_wall_obligation
     (p : BoundaryRunPacket) :
@@ -326,35 +322,40 @@ axiom overflow_wall_obligation
     PacketHasEvent p BoundaryEventClass.overflowWall ->
     BoundedEvaluationObligation p
 
-axiom saturation_shelf_obligation
+theorem saturation_shelf_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.saturationShelf ->
-    ClampInvariantObligation p
+    ClampInvariantObligation p :=
+  fun hv _ => valid_owes_clampInvariant hv
 
-axiom phantom_attractor_obligation
+theorem phantom_attractor_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.phantomAttractor ->
-    PrecisionSensitivityObligation p
+    PrecisionSensitivityObligation p :=
+  fun hv _ => valid_owes_precisionSensitivity hv
 
-axiom guard_rescue_obligation
+theorem guard_rescue_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.guardRescue ->
-    OutputSafetyObligation p
+    OutputSafetyObligation p :=
+  fun hv _ => valid_owes_outputSafety hv
 
-axiom log_domain_rescue_obligation
+theorem log_domain_rescue_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasEvent p BoundaryEventClass.logDomainRescue ->
-    PositiveCoordinateObligation p
+    PositiveCoordinateObligation p :=
+  fun hv _ => valid_owes_positiveCoordinate hv
 
-axiom transition_graph_obligation
+theorem transition_graph_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     ValidTransitionGraph p ->
-    BoundaryDynamicsObligation p
+    BoundaryDynamicsObligation p :=
+  fun hv _ => boundaryDynamics_of_valid hv
 
 theorem domain_to_log_domain_rescue_obligation
     (p : BoundaryRunPacket) :

@@ -101,14 +101,20 @@ structure RunPacket where
 
 /-- The classes the schema requires a well-formed run to exhibit. -/
 def requiredEvents : List BoundaryEventClass :=
-  [BoundaryEventClass.interiorSample, BoundaryEventClass.domainWall, BoundaryEventClass.overflowWall,
-   BoundaryEventClass.saturationShelf, BoundaryEventClass.phantomAttractor, BoundaryEventClass.guardRescue,
-   BoundaryEventClass.logDomainRescue]
+  [BoundaryEventClass.interiorSample, BoundaryEventClass.cornerConcentration,
+   BoundaryEventClass.domainWall, BoundaryEventClass.overflowWall,
+   BoundaryEventClass.saturationShelf, BoundaryEventClass.phantomAttractor,
+   BoundaryEventClass.guardRescue, BoundaryEventClass.logDomainRescue]
 
-/-- The rescue transitions the schema requires: each wall must be observed reaching its rescue. -/
+/-- The rescue transitions the schema requires — **all FOUR lanes** of
+`proof_carrying_rescue_suite.v0`, not the two that happened to be needed first. Extending this was
+what let the `saturation_shelf` / `phantom_attractor` obligations be discharged: they were
+underivable only because the required set was short of the manifest's own. -/
 def requiredTransitions : List (BoundaryEventClass × BoundaryEventClass) :=
   [(BoundaryEventClass.domainWall, BoundaryEventClass.logDomainRescue),
-   (BoundaryEventClass.overflowWall, BoundaryEventClass.guardRescue)]
+   (BoundaryEventClass.overflowWall, BoundaryEventClass.guardRescue),
+   (BoundaryEventClass.phantomAttractor, BoundaryEventClass.interiorSample),
+   (BoundaryEventClass.saturationShelf, BoundaryEventClass.cornerConcentration)]
 
 /-- **Packet validity** — exactly the schema's own invariants, and *nothing about geometry*.
 Deliberately does NOT assert `centerHits ≤ boundaryHits`: that is the empirical claim, and putting
@@ -118,6 +124,13 @@ structure ValidRun (p : RunPacket) : Prop where
   failuresBounded : p.domainFailures ≤ p.sampleCount
   hasRequired : ∀ e ∈ requiredEvents, e ∈ p.events
   hasTransitions : ∀ t ∈ requiredTransitions, t ∈ p.transitions
+  /-- **Graph well-formedness**: every observed transition's endpoints are observed events. The
+  benchmark builds transitions by pairing consecutive frames, so this holds by construction — but
+  it was never stated, and `ValidTransitionGraph` was an axiom for want of it. -/
+  graphWellFormed : ∀ t ∈ p.transitions, t.1 ∈ p.events ∧ t.2 ∈ p.events
+  /-- **Count consistency**: a frame is center-hit or boundary-hit, never both, so the two counts
+  cannot exceed the sample count. The invariant `BaselineReplayValid` was standing in for. -/
+  countsConsistent : p.centerHits + p.boundaryHits ≤ p.sampleCount
 
 /-- Packet contains an event of the given class. -/
 def HasEvent (p : RunPacket) (e : BoundaryEventClass) : Prop := e ∈ p.events
@@ -129,7 +142,39 @@ def HasTransition (p : RunPacket) (a b : BoundaryEventClass) : Prop := (a, b) �
 noncomputable def finiteSurvivalRate (p : RunPacket) : Real :=
   natCast (p.sampleCount - p.domainFailures) / natCast p.sampleCount
 
+/-- **Transition graph well-formedness** — every edge's endpoints are observed events. -/
+def ValidTransitionGraph (p : RunPacket) : Prop :=
+  ∀ t ∈ p.transitions, t.1 ∈ p.events ∧ t.2 ∈ p.events
+
+/-- **Baseline replay validity** — the counts a replay would re-derive are internally consistent.
+Not a claim that the replay *was run*; a claim that the numbers admit one. -/
+def BaselineReplayValid (p : RunPacket) : Prop :=
+  p.centerHits + p.boundaryHits ≤ p.sampleCount
+
+/-- **The run exhibits dynamics at all** — at least one transition. Vacuous-looking until you note
+that a packet of isolated events with no transitions would satisfy every *other* invariant. -/
+def BoundaryDynamicsObligation (p : RunPacket) : Prop :=
+  p.transitions ≠ []
+
 /-! ## (1) STRUCTURAL facts — retired from the trust boundary -/
+
+theorem validTransitionGraph_of_valid {p : RunPacket} (h : ValidRun p) :
+    ValidTransitionGraph p := h.graphWellFormed
+
+theorem baselineReplayValid_of_valid {p : RunPacket} (h : ValidRun p) :
+    BaselineReplayValid p := h.countsConsistent
+
+/-- A valid run has dynamics, because it must contain the required rescue transitions. Note the
+`ValidTransitionGraph` hypothesis of the original axiom is **redundant** — validity already gives
+both. Third time in this audit an axiom assumed something derivable. -/
+theorem boundaryDynamics_of_valid {p : RunPacket} (h : ValidRun p) :
+    BoundaryDynamicsObligation p := by
+  intro hnil
+  have hmem := h.hasTransitions
+    (BoundaryEventClass.domainWall, BoundaryEventClass.logDomainRescue)
+    (List.mem_cons_self _ _)
+  rw [hnil] at hmem
+  cases hmem
 
 /-- **The survival rate is nonnegative.** Was two axioms (`guarded_…` and `log_domain_…`), one per
 boundary mode — and the mode was never used by either. It is a nonneg numerator over a positive
@@ -164,11 +209,19 @@ theorem hasTransition_of_valid {p : RunPacket} {a b : BoundaryEventClass}
 /-- The two named rescue transitions, discharged concretely. -/
 theorem domain_wall_reaches_log_domain_rescue {p : RunPacket} (h : ValidRun p) :
     HasTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue :=
-  hasTransition_of_valid h (List.mem_cons_self _ _)
+  hasTransition_of_valid h (by decide)
 
 theorem overflow_wall_reaches_guard_rescue {p : RunPacket} (h : ValidRun p) :
     HasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue :=
-  hasTransition_of_valid h (List.mem_cons_of_mem _ (List.mem_cons_self _ _))
+  hasTransition_of_valid h (by decide)
+
+theorem phantom_attractor_reaches_interior_sample {p : RunPacket} (h : ValidRun p) :
+    HasTransition p BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample :=
+  hasTransition_of_valid h (by decide)
+
+theorem saturation_shelf_reaches_corner_concentration {p : RunPacket} (h : ValidRun p) :
+    HasTransition p BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration :=
+  hasTransition_of_valid h (by decide)
 
 /-! ## (2) The EMPIRICAL claim, kept as an assumption — and shown to be independent
 
@@ -188,7 +241,9 @@ theorem centerDominant_valid : ValidRun centerDominant :=
   { samplesPositive := by decide
     failuresBounded := by decide
     hasRequired := fun _ h => h
-    hasTransitions := fun _ h => h }
+    hasTransitions := fun _ h => h
+    graphWellFormed := by decide
+    countsConsistent := by decide }
 
 /-- **The independence witness.** A valid packet with `boundaryHits < centerHits`, so boundary
 dominance does NOT follow from `ValidRun`. This is the check that keeps the concentration result

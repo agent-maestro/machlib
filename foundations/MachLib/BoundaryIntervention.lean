@@ -186,7 +186,10 @@ private theorem okRun_valid {f : Nat} (h : f ≤ 10) : ValidRun (okRun f) :=
   { samplesPositive := (by decide : (0:Nat) < 10)
     failuresBounded := h
     hasRequired := fun _ hm => hm
-    hasTransitions := fun _ hm => hm }
+    hasTransitions := fun _ hm => hm
+    graphWellFormed :=
+      (by decide : ∀ t ∈ requiredTransitions, t.1 ∈ requiredEvents ∧ t.2 ∈ requiredEvents)
+    countsConsistent := (by decide : (1:Nat) + 9 ≤ 10) }
 
 /-- A valid pair whose "rescue" REGRESSES survival to ZERO: 0 failures before, all 10 after. -/
 def regressingPair : InterventionPair :=

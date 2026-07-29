@@ -125,4 +125,12 @@ theorem valid_owes_outputSafety {p : RunPacket} (h : ValidRun p) :
     Owes p RescueObligation.outputSafety :=
   owes_outputSafety_of_transition (overflow_wall_reaches_guard_rescue h)
 
+theorem valid_owes_precisionSensitivity {p : RunPacket} (h : ValidRun p) :
+    Owes p RescueObligation.precisionSensitivity :=
+  phantom_attractor_reaches_interior_sample h
+
+theorem valid_owes_clampInvariant {p : RunPacket} (h : ValidRun p) :
+    Owes p RescueObligation.clampInvariant :=
+  saturation_shelf_reaches_corner_concentration h
+
 end MachLib.HighDimensional
