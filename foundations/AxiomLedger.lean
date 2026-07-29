@@ -69,14 +69,18 @@ but the check is in place before the sweep creates the interlocking opportunitie
 | `MachLib.Real.zero_ne_one_ax` | `zero_lt_one_ax`, `lt_irrefl_ax` | `zero_ne_one_derivable` |
 | `MachLib.Real.archimedean` | `sup_exists` (Dedekind completeness) | `archimedean_derivable` |
 | `MachLib.Real.one_div_pos_of_pos` | `mul_inv`, `mul_pos`, `lt_total`, distributivity | `one_div_pos_derivable` |
+| `MachLib.Real.HasDerivAt_neg` | `HasDerivAt_mul`, `_const`, `_of_eq` | `hasDerivAt_neg_derivable` |
+| `MachLib.Real.HasDerivAt_sub` | `HasDerivAt_add`, `_mul`, `_const`, `_of_eq` | `hasDerivAt_sub_derivable` |
 
 `archimedean` is the one that matters: load-bearing for every convergence result in the library, and
 pinned as an independent assumption when it is a **theorem** of completeness. Effective independent
-axiom count is **three lower** than the pinned count — and that is now a gated claim. -/
+axiom count is **five lower** than the pinned count — and that is now a gated claim. -/
 def derivableAxioms : List (Name × Name) :=
   [(`MachLib.Real.zero_ne_one_ax, `MachLib.Real.zero_ne_one_derivable),
    (`MachLib.Real.archimedean, `MachLib.Real.archimedean_derivable),
-   (`MachLib.Real.one_div_pos_of_pos, `MachLib.Real.one_div_pos_derivable)]
+   (`MachLib.Real.one_div_pos_of_pos, `MachLib.Real.one_div_pos_derivable),
+   (`MachLib.Real.HasDerivAt_neg, `MachLib.Real.hasDerivAt_neg_derivable),
+   (`MachLib.Real.HasDerivAt_sub, `MachLib.Real.hasDerivAt_sub_derivable)]
 
 /-- Searched, nothing found. NOT a claim of independence — see the note above. -/
 def noDerivationFoundAxioms : List (Name × String) := []
