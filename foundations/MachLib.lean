@@ -87,6 +87,7 @@ import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
 import MachLib.NormalizedPolynomialRootCount
+import MachLib.AffineArithmetic
 import MachLib.AxiomMinimality
 import MachLib.RescueObligation
 import MachLib.GeometricDecay
