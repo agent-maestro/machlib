@@ -86,7 +86,8 @@ was looking for.
 | pin bumped | **NOT DONE** — scoped as a project |
 | independent kernel re-check | **DONE** — `check_kernel_replay.py`, MachLib replays clean, exit 0 |
 | ↳ grade | **SECOND OPINION**, *not* independent kernel — see the caveat below |
-| Lean4Lean (genuine independence) | **NOT DONE** — what would earn the stronger phrase |
+| Lean4Lean (genuine independence) | **BLOCKED on the bump** — never pinned v4.14.0 (history jumps 4.13 → 4.16) |
+| ↳ consequence | the bump is a **prerequisite** for "independent kernel", not a parallel improvement |
 | Collatz exploit as a firing specimen | **NOT OBTAINED** — see below |
 
 ## The independence caveat, recorded so the blindness column stays honest
@@ -103,6 +104,37 @@ through both, and the registry row must say **which is running**.
 > So the earned phrase today is **"second opinion"**. **"Independent kernel"** is not earned by
 > lean4checker alone, and the difference is not cosmetic — it is *which class of defect two
 > implementations would have to share*.
+
+### And Lean4Lean CANNOT run against this pin — which reorders the plan
+
+Attempted 2026-07-29. Lean4Lean's `lean-toolchain` history, enumerated over all commits that ever
+touched that file:
+
+```
+  v4.1.0-rc1 · v4.2.0-rc4 · v4.3.0-rc2 · v4.4.0-rc1 · v4.7.0-rc2 · v4.8.0-rc1
+  v4.10.0-rc2 · v4.12.0-rc1 · v4.13.0-rc3 · v4.13.0 · v4.16.0 · v4.19.0
+  v4.20.1 · v4.23.0 · v4.26.0 · v4.27.0-rc1 · v4.29.0
+```
+
+**It goes v4.13.0 (2024-11-02) → v4.16.0. It never pinned v4.14.0.** `.olean` format is
+version-locked, so a neighbouring release cannot read our environment — there is no commit to check
+out that would work.
+
+**The consequence inverts part of the ordering.** "Checker first, bump second" held for the *weak*
+checker, which had an exact `v4.14.0` tag. For the *strong* one it does not:
+
+> **The pin bump is a PREREQUISITE for genuine kernel independence, not merely an improvement
+> alongside it.**
+
+That makes the bump's value larger than "retire #14576 plus eighteen versions of drift". It is what
+unlocks the second half of the sentence — and it now has an acceptance gate it did not have this
+morning: **replay-before / replay-after** with lean4checker, which exists at both ends (v4.14.0 and
+v4.32.2 both have tags).
+
+*Deliberately not attempted: running a v4.13 or v4.16 Lean4Lean against v4.14 artifacts. It would
+fail on olean version, and if some coercion made it load, a two-year-old research snapshot of a
+partial kernel would give a guarantee weaker than its name suggests. An instrument that does not
+match the artifact is not a second opinion.*
 
 **On the exploit as a specimen.** A published exploit would be the ideal firing witness — historical
 beats synthetic, and the patched kernel *and* an external checker must both reject it. **It is still not recorded, and it is no longer needed for the row to be complete** —
