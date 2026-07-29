@@ -2,6 +2,7 @@ import MachLib.Basic
 import MachLib.EML
 import MachLib.BallCubeRatio
 import MachLib.GuardedLowering
+import MachLib.BoundaryRun
 
 /-!
 # High-Dimensional EML Obligations
@@ -59,11 +60,11 @@ definitionally implied by `ValidGuards` — an unguarded lane is dropped by `low
 `GuardedLowering.badPacket_not_preserved` exhibits a packet where this FAILS. -/
 abbrev DomainPreserved : ReplayPacket -> Prop := GuardedLowering.DomainPreserved
 
-/-- Course 006 Optimization Boundary Lab packet placeholder. -/
-axiom BoundaryRunPacket : Type
+/-- Now `BoundaryRun.RunPacket` — `forge.optimizer.boundary_run_benchmark.v1` made concrete. -/
+abbrev BoundaryRunPacket : Type := RunPacket
 
 /-- Packet validity: schema, simulated boundary flags, and replay fields agree. -/
-axiom ValidBoundaryRunPacket : BoundaryRunPacket -> Prop
+abbrev ValidBoundaryRunPacket : BoundaryRunPacket -> Prop := ValidRun
 
 /-- Packet mode says the run used guarded EML evaluation. -/
 axiom GuardedBoundaryMode : BoundaryRunPacket -> Prop
@@ -72,48 +73,39 @@ axiom GuardedBoundaryMode : BoundaryRunPacket -> Prop
 axiom LogDomainBoundaryMode : BoundaryRunPacket -> Prop
 
 /-- Packet finite-survival metric, as exported by Forge/electronics evidence. -/
-axiom packetFiniteSurvivalRate : BoundaryRunPacket -> Real
+noncomputable abbrev packetFiniteSurvivalRate : BoundaryRunPacket -> Real := finiteSurvivalRate
 
 /-- Packet boundary-hit count, abstracted as a real for ratio obligations. -/
-axiom packetBoundaryHits : BoundaryRunPacket -> Real
+noncomputable def packetBoundaryHits (p : BoundaryRunPacket) : Real := natCast p.boundaryHits
 
 /-- Packet center-hit count, abstracted as a real for ratio obligations. -/
-axiom packetCenterHits : BoundaryRunPacket -> Real
+noncomputable def packetCenterHits (p : BoundaryRunPacket) : Real := natCast p.centerHits
 
 /-- Guarded packets have a nonnegative finite-survival metric. -/
-axiom guarded_boundary_packet_finite_survival_nonneg
+theorem guarded_boundary_packet_finite_survival_nonneg
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     GuardedBoundaryMode p ->
-    0 <= packetFiniteSurvivalRate p
+    0 <= packetFiniteSurvivalRate p :=
+  fun hv _ => finiteSurvivalRate_nonneg hv
 
 /-- Log-domain candidate packets preserve the finite-survival metric lower bound. -/
-axiom log_domain_boundary_packet_finite_survival_nonneg
+theorem log_domain_boundary_packet_finite_survival_nonneg
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     LogDomainBoundaryMode p ->
-    0 <= packetFiniteSurvivalRate p
+    0 <= packetFiniteSurvivalRate p :=
+  fun hv _ => finiteSurvivalRate_nonneg hv
 
 /-- Benchmark-observed boundary dominance relation for one replay packet. -/
 axiom BoundaryDominatesCenter : BoundaryRunPacket -> Prop
 
-/-- Boundary-event class labels shared by Forge and Course 006 packets. -/
-inductive BoundaryEventClass where
-  | interiorSample
-  | cornerConcentration
-  | domainWall
-  | overflowWall
-  | saturationShelf
-  | phantomAttractor
-  | guardRescue
-  | logDomainRescue
-
 /-- Packet contains at least one event of the given class. -/
-axiom PacketHasEvent : BoundaryRunPacket -> BoundaryEventClass -> Prop
+abbrev PacketHasEvent : BoundaryRunPacket -> BoundaryEventClass -> Prop := HasEvent
 
 /-- Packet contains at least one transition from one event class to another. -/
-axiom PacketHasTransition :
-    BoundaryRunPacket -> BoundaryEventClass -> BoundaryEventClass -> Prop
+abbrev PacketHasTransition :
+    BoundaryRunPacket -> BoundaryEventClass -> BoundaryEventClass -> Prop := HasTransition
 
 /-- Packet transition entropy metric exported by Forge/electronics evidence. -/
 axiom packetTransitionEntropy : BoundaryRunPacket -> Real
