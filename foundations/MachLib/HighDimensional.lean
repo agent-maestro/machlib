@@ -3,6 +3,7 @@ import MachLib.EML
 import MachLib.BallCubeRatio
 import MachLib.GuardedLowering
 import MachLib.BoundaryRun
+import MachLib.BoundaryIntervention
 
 /-!
 # High-Dimensional EML Obligations
@@ -113,13 +114,6 @@ axiom packetTransitionEntropy : BoundaryRunPacket -> Real
 /-- Transition graph is well-formed for the packet trace. -/
 axiom ValidTransitionGraph : BoundaryRunPacket -> Prop
 
-/-- Named intervention operators over boundary-event dynamics. -/
-inductive BoundaryIntervention where
-  | logDomainLift
-  | guardClamp
-  | precisionEscape
-  | saturationDeshelf
-
 /-- Reviewer-facing semantic tier for rescue operators.
 `semanticRewrite` is intentionally not assigned to any v0 rescue operator. -/
 inductive RescueSemanticTier where
@@ -136,20 +130,21 @@ def rescueSemanticTier : BoundaryIntervention -> RescueSemanticTier
   | BoundaryIntervention.saturationDeshelf => RescueSemanticTier.concreteSampleInvariant
 
 /-- Packet pair witnessing one raw/intervened benchmark comparison. -/
-axiom BoundaryInterventionPair : Type
+abbrev BoundaryInterventionPair : Type := InterventionPair
 
 /-- Pair validity: same dimension/depth/sample/seed comparison, simulated only. -/
-axiom ValidInterventionPair : BoundaryInterventionPair -> Prop
+abbrev ValidInterventionPair : BoundaryInterventionPair -> Prop := ValidPair
 
 /-- The named intervention used by a pair. -/
-axiom PairUsesIntervention : BoundaryInterventionPair -> BoundaryIntervention -> Prop
+abbrev PairUsesIntervention : BoundaryInterventionPair -> BoundaryIntervention -> Prop := UsesIntervention
 
 /-- The pair exhibits a from-event to to-event rescue transition. -/
-axiom PairHasRescueTransition :
-    BoundaryInterventionPair -> BoundaryEventClass -> BoundaryEventClass -> Prop
+abbrev PairHasRescueTransition :
+    BoundaryInterventionPair -> BoundaryEventClass -> BoundaryEventClass -> Prop :=
+    HasRescueTransition
 
 /-- Finite survival did not regress in the pairwise benchmark. -/
-axiom PairNonregressingSurvival : BoundaryInterventionPair -> Prop
+abbrev PairNonregressingSurvival : BoundaryInterventionPair -> Prop := NonregressingSurvival
 
 /-- Obligation predicates attached to taxonomy classes. -/
 axiom BaselineReplayValid : BoundaryRunPacket -> Prop
@@ -161,10 +156,14 @@ axiom OutputSafetyObligation : BoundaryRunPacket -> Prop
 axiom PositiveCoordinateObligation : BoundaryRunPacket -> Prop
 axiom BoundaryDynamicsObligation : BoundaryRunPacket -> Prop
 axiom InterventionSoundnessObligation : BoundaryInterventionPair -> Prop
-axiom PositiveCoordinateInterventionObligation : BoundaryInterventionPair -> Prop
-axiom OutputSafetyInterventionObligation : BoundaryInterventionPair -> Prop
-axiom PrecisionEscapeInterventionObligation : BoundaryInterventionPair -> Prop
-axiom ClampDeshelfInterventionObligation : BoundaryInterventionPair -> Prop
+abbrev PositiveCoordinateInterventionObligation (p : BoundaryInterventionPair) : Prop :=
+  DeclaresObligation p InterventionObligation.positiveCoordinate
+abbrev OutputSafetyInterventionObligation (p : BoundaryInterventionPair) : Prop :=
+  DeclaresObligation p InterventionObligation.outputSafety
+abbrev PrecisionEscapeInterventionObligation (p : BoundaryInterventionPair) : Prop :=
+  DeclaresObligation p InterventionObligation.precisionSensitivity
+abbrev ClampDeshelfInterventionObligation (p : BoundaryInterventionPair) : Prop :=
+  DeclaresObligation p InterventionObligation.clampInvariant
 
 /-- Concrete v0 log-domain witness extracted from a Forge rescue trace.
 This is intentionally smaller than `BoundaryRunPacket`: it records only the
@@ -351,33 +350,37 @@ axiom overflow_to_guard_rescue_obligation
     PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
     OutputSafetyObligation p
 
-axiom log_domain_lift_intervention_obligation
+theorem log_domain_lift_intervention_obligation
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
     PairUsesIntervention p BoundaryIntervention.logDomainLift ->
     PairHasRescueTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
-    PositiveCoordinateInterventionObligation p
+    PositiveCoordinateInterventionObligation p :=
+  fun hv hi _ => log_domain_lift_declares_positive_coordinate hv hi
 
-axiom guard_clamp_intervention_obligation
+theorem guard_clamp_intervention_obligation
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
     PairUsesIntervention p BoundaryIntervention.guardClamp ->
     PairHasRescueTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
-    OutputSafetyInterventionObligation p
+    OutputSafetyInterventionObligation p :=
+  fun hv hi _ => guard_clamp_declares_output_safety hv hi
 
-axiom precision_escape_intervention_obligation
+theorem precision_escape_intervention_obligation
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
     PairUsesIntervention p BoundaryIntervention.precisionEscape ->
     PairHasRescueTransition p BoundaryEventClass.phantomAttractor BoundaryEventClass.interiorSample ->
-    PrecisionEscapeInterventionObligation p
+    PrecisionEscapeInterventionObligation p :=
+  fun hv hi _ => precision_escape_declares_precision_sensitivity hv hi
 
-axiom saturation_deshelf_intervention_obligation
+theorem saturation_deshelf_intervention_obligation
     (p : BoundaryInterventionPair) :
     ValidInterventionPair p ->
     PairUsesIntervention p BoundaryIntervention.saturationDeshelf ->
     PairHasRescueTransition p BoundaryEventClass.saturationShelf BoundaryEventClass.cornerConcentration ->
-    ClampDeshelfInterventionObligation p
+    ClampDeshelfInterventionObligation p :=
+  fun hv hi _ => saturation_deshelf_declares_clamp_invariant hv hi
 
 /-- The volume ratio `V(unit_ball_d) / V([-1,1]^d)` tends to zero. -/
 theorem high_dim_ball_cube_ratio_tends_zero :

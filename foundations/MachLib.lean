@@ -87,6 +87,7 @@ import MachLib.AnalyticIdentityFeasibility
 import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
 import MachLib.NormalizedPolynomialRootCount
+import MachLib.BoundaryIntervention
 import MachLib.BoundaryRun
 import MachLib.GuardedLowering
 import MachLib.HighDimensional
