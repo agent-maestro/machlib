@@ -1,6 +1,7 @@
 import MachLib.Basic
 import MachLib.EML
 import MachLib.BallCubeRatio
+import MachLib.GuardedLowering
 
 /-!
 # High-Dimensional EML Obligations
@@ -43,14 +44,20 @@ axiom firstLayerSurvival_decay
     (d : Nat) :
     firstLayerSurvival d = realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1)))
 
-/-- Replay packet placeholder for EML IR guard-preservation obligations. -/
-axiom ReplayPacket : Type
+/-- Replay packet. **Was an opaque axiom until 2026-07-29** — the same defect that kept
+`high_dim_ball_cube_ratio_tends_zero` open for a month: three uninterpreted symbols and a theorem
+relating them, so there was nothing to prove. Now `GuardedLowering.Packet`, modelled on the manifest
+Forge already emits and replays (`forge.optimizer.proof_carrying_rescue_suite.v0`, four lanes, one
+named obligation each). -/
+abbrev ReplayPacket : Type := GuardedLowering.Packet
 
-/-- Guard validity placeholder supplied by the EML IR replay substrate. -/
-axiom ValidGuards : ReplayPacket -> Prop
+/-- Guard validity: every lane carries its guard. -/
+abbrev ValidGuards : ReplayPacket -> Prop := GuardedLowering.ValidGuards
 
-/-- Domain-preservation placeholder supplied by guarded lowering semantics. -/
-axiom DomainPreserved : ReplayPacket -> Prop
+/-- Domain preservation: every obligation declared in the source survives the lowering. NOT
+definitionally implied by `ValidGuards` — an unguarded lane is dropped by `lower`, and
+`GuardedLowering.badPacket_not_preserved` exhibits a packet where this FAILS. -/
+abbrev DomainPreserved : ReplayPacket -> Prop := GuardedLowering.DomainPreserved
 
 /-- Course 006 Optimization Boundary Lab packet placeholder. -/
 axiom BoundaryRunPacket : Type
@@ -400,8 +407,8 @@ theorem eml_first_layer_log_domain_survival_decay
 /-- Guarded lowering preserves declared positive-domain obligations through replay packets. -/
 theorem guarded_lowering_preserves_domain_annotations
     (p : ReplayPacket) :
-    ValidGuards p -> DomainPreserved p := by
-  sorry
+    ValidGuards p -> DomainPreserved p :=
+  GuardedLowering.guarded_lowering_preserves_domain p
 
 /-- Course 006 guarded simulator packets expose a nonnegative survival metric. -/
 theorem guarded_boundary_packet_survival_nonnegative
