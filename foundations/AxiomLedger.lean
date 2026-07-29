@@ -29,25 +29,61 @@ open Lean Elab Command
 
 namespace AxiomLedger
 
-/-- **DERIVABLE AXIOMS — pinned, but NOT independent.**
+/-- **THE TRUST BOUNDARY IS THREE-VALUED, NOT TWO.**
 
-An axiom that is provable from the others costs exactly as much trust in this ledger as a real one
-and buys nothing. These are still declared (deleting them would break every proof that names them,
-for no gain) but the trust boundary should state what is *actually assumed*, so each is recorded
-here with the theorem that derives it. Evidence: `MachLib/AxiomMinimality.lean`, verified
-non-circular by `#print axioms`.
+A declared axiom is not automatically an assumption, and a failed search is not a proof of
+independence. Three statuses, because collapsing them overstates the boundary in one direction and
+understates it in the other:
+
+* **`derivableAxioms`** — a witness exists. `X` is a theorem of *the retained base*, with the
+  deriving theorem named. Gated by `tools/axiom_ledger/check_derivable.py`.
+* **`noDerivationFoundAxioms`** — searched on a recorded date, nothing found. **This is NOT
+  independence.** A found derivation is a witness; a failed search is not a countermodel, and
+  independence proper needs model theory that is deliberately out of scope here.
+* **`derivableInPrinciplePinned`** — clearly theorems, whose derivations would need `norm_num`-class
+  machinery MachLib deliberately lacks. **The trust cost is accepted to keep the kernel small.**
+  That is a different statement from "independent" and a different one from "redundant", and saying
+  so is the point of having a third value.
+
+## Why this needs a gate and not a comment
+
+`derivableAxioms` is a **correspondence claim** — "X is a theorem of the base minus X, via T" — and
+correspondence claims drift under edits to *either* side. Strengthen `sup_exists`, weaken it, or
+touch a deriving theorem, and the ledger silently misdescribes the boundary. That is the AxiomLedger
+incident in miniature, and the fix is the standard one: a gate that recompiles each deriving theorem
+and checks its `#print axioms` footprint.
+
+## And why the check is on the RETAINED base, not per-entry
+
+**Derivability does not compose pairwise.** If `A` derives using `B` and `B` derives using `A`, both
+pass an individual "does not use itself" check and the effective count *double-discounts* — each
+entry is true and the joint claim "base minus {A, B} suffices" is false. So the gate requires each
+footprint to lie in **(declared − ALL derivable)**, not merely (declared − itself). That is what
+licenses the effective count as a number rather than a bound.
+
+The two current entries are safe by inspection — both derive from axioms nobody proposes removing —
+but the check is in place before the sweep creates the interlocking opportunities.
 
 | axiom | derivable from | theorem |
 |---|---|---|
 | `MachLib.Real.zero_ne_one_ax` | `zero_lt_one_ax`, `lt_irrefl_ax` | `zero_ne_one_derivable` |
 | `MachLib.Real.archimedean` | `sup_exists` (Dedekind completeness) | `archimedean_derivable` |
+| `MachLib.Real.one_div_pos_of_pos` | `mul_inv`, `mul_pos`, `lt_total`, distributivity | `one_div_pos_derivable` |
 
-`archimedean` is the one that matters: it is load-bearing for every convergence result in the
-library (`npow_half_tendsto_zero`, `npow_tendsto_zero`, and everything routed through them), and it
-was pinned as an independent assumption when it is a **theorem** of completeness. The effective
-independent axiom count is therefore **two lower** than the pinned count reports. -/
-def derivableAxioms : List Name :=
-  [`MachLib.Real.zero_ne_one_ax, `MachLib.Real.archimedean]
+`archimedean` is the one that matters: load-bearing for every convergence result in the library, and
+pinned as an independent assumption when it is a **theorem** of completeness. Effective independent
+axiom count is **three lower** than the pinned count — and that is now a gated claim. -/
+def derivableAxioms : List (Name × Name) :=
+  [(`MachLib.Real.zero_ne_one_ax, `MachLib.Real.zero_ne_one_derivable),
+   (`MachLib.Real.archimedean, `MachLib.Real.archimedean_derivable),
+   (`MachLib.Real.one_div_pos_of_pos, `MachLib.Real.one_div_pos_derivable)]
+
+/-- Searched, nothing found. NOT a claim of independence — see the note above. -/
+def noDerivationFoundAxioms : List (Name × String) := []
+
+/-- Clearly theorems; derivation needs machinery MachLib deliberately lacks. The trust cost is
+ACCEPTED to keep the kernel small. -/
+def derivableInPrinciplePinned : List (Name × String) := []
 
 /-- Snapshot of every axiom under `MachLib`/`Real` (ground truth at pin time). -/
 def knownAxioms : List Name := [`Certcom.realToR, `Certcom.real_fpbridge, `Certcom.real_tanh_rounds, `MachLib.HighDimensional.BoundaryDominatesCenter, `MachLib.HighDimensional.overflow_wall_obligation, `MachLib.HighDimensional.domain_wall_obligation, `MachLib.HighDimensional.BoundedEvaluationObligation, `MachLib.HighDimensional.DomainPreservationObligation, `MachLib.HighDimensional.InterventionSoundnessObligation, `MachLib.HighDimensional.boundary_dominates_center_from_packet, `MachLib.HighDimensional.packetTransitionEntropy, `MachLib.IsAnalyticOnReals, `MachLib.Model.intModel._elambda_1, `MachLib.Model.intModel._elambda_2, `MachLib.Model.intModel._elambda_3, `MachLib.Model.intModel._elambda_4, `MachLib.Model.intModel._elambda_5, `MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.of_parts._elambda_1, `MachLib.MultiVarMod.TwoExp.PfaffianExpSDRReductionSolver.reducer._elambda_1, `MachLib.MultiVarMod.TwoExp.twoExpLowerReductionSolver_of_predicateSolver._elambda_1, `MachLib.Real, `MachLib.Real.HasDerivAt, `MachLib.Real.HasDerivAt_add, `MachLib.Real.HasDerivAt_arccos, `MachLib.Real.HasDerivAt_arcsin, `MachLib.Real.HasDerivAt_atan, `MachLib.Real.HasDerivAt_comp, `MachLib.Real.HasDerivAt_const, `MachLib.Real.HasDerivAt_cos, `MachLib.Real.HasDerivAt_exp, `MachLib.Real.HasDerivAt_id, `MachLib.Real.HasDerivAt_inv, `MachLib.Real.HasDerivAt_log_pos, `MachLib.Real.HasDerivAt_mul, `MachLib.Real.HasDerivAt_neg, `MachLib.Real.HasDerivAt_of_eq, `MachLib.Real.HasDerivAt_sin, `MachLib.Real.HasDerivAt_sub, `MachLib.Real.HasDerivAt_unique, `MachLib.Real.HasDerivAt2, `MachLib.Real.HasDerivAt2_add, `MachLib.Real.HasDerivAt2_comp, `MachLib.Real.HasDerivAt2_const, `MachLib.Real.HasDerivAt2_mul, `MachLib.Real.HasDerivAt2_projX, `MachLib.Real.HasDerivAt2_projY, `MachLib.Real.HasDerivAt2_scomp, `MachLib.Real.HasDerivAt2_sub, `MachLib.Real.HasDerivAt_congr, `MachLib.Real.hasDerivAt_continuousAt, `MachLib.Real.hasDerivAt_implicit, `MachLib.Real.hasDerivAt_implicit_local, `Certcom.real_exp_rounds, `Certcom.real_log_rounds, `Certcom.real_sin_eps, `Certcom.real_sin_rounds, `Certcom.real_cos_eps, `Certcom.real_cos_rounds, `Certcom.real_atan_eps, `Certcom.real_atan_rounds, `Certcom.real_abs_eps, `Certcom.real_abs_rounds, `Certcom.real_sqrt_rounds, `Certcom.real_log10_rounds, `Certcom.real_asin_rounds, `Certcom.real_acos_rounds, `Certcom.real_sinh_rounds, `Certcom.real_cosh_rounds, `Certcom.real_tan_rounds, `MachLib.Real.sin_pos_of_pos_lt_pi_div_two, `MachLib.Real.addR, `MachLib.Real.add_assoc, `MachLib.Real.add_comm, `MachLib.Real.add_lt_add_left, `MachLib.Real.add_neg, `MachLib.Real.add_zero, `MachLib.Real.arccos, `MachLib.Real.arccos_le_pi, `MachLib.Real.arccos_nonneg, `MachLib.Real.arccos_one, `MachLib.Real.arccos_zero, `MachLib.Real.archimedean, `MachLib.Real.arcsin, `MachLib.Real.arcsin_one, `MachLib.Real.arcsin_zero, `MachLib.Real.arctan, `MachLib.Real.arctan_lt_pi_div_two, `MachLib.Real.atan, `MachLib.Real.atan2, `MachLib.Real.atan2_le_pi, `MachLib.Real.atan2_one_zero, `MachLib.Real.atan2_zero_one, `MachLib.Real.atan_zero, `MachLib.Real.cos, `MachLib.Real.cos_add, `MachLib.Real.cos_arccos, `MachLib.Real.cos_neg, `MachLib.Real.cos_periodic, `MachLib.Real.cos_pi, `MachLib.Real.cos_pi_div_two, `MachLib.Real.cos_zero, `MachLib.Real.cosh, `MachLib.Real.cosh_eq, `MachLib.Real.cosh_ge_one, `MachLib.Real.cosh_pos, `MachLib.Real.divR, `MachLib.Real.div_def, `MachLib.Real.div_lt_one_of_pos_lt, `MachLib.Real.div_zero, `MachLib.Real.erf, `MachLib.Real.erf_le_one, `MachLib.Real.exp, `MachLib.Real.exp10, `MachLib.Real.exp10_def, `MachLib.Real.exp10_log10_inverse, `MachLib.Real.exp10_zero, `MachLib.Real.exp_add, `MachLib.Real.exp_exp_minus_exp_strictly_increasing, `MachLib.Real.exp_gt_one_plus_self, `MachLib.Real.exp_gt_two_x, `MachLib.Real.exp_lt, `MachLib.Real.exp_one_lt_three, `MachLib.Real.exp_pos, `MachLib.Real.exp_surj, `MachLib.Real.exp_zero, `MachLib.Real.floor, `MachLib.Real.floor_le, `MachLib.Real.floor_zero, `MachLib.Real.interval_scale_unit_lit_le, `MachLib.Real.interval_weight_sum_le, `MachLib.Real.leR, `MachLib.Real.le_iff_lt_or_eq, `MachLib.Real.le_sqrt_of_sq_le, `MachLib.Real.lit_one_eq, `MachLib.Real.lit_zero_eq, `MachLib.Real.log10, `MachLib.Real.log10_def, `MachLib.Real.log10_zero, `MachLib.Real.ltR, `MachLib.Real.lt_floor_add_one, `MachLib.Real.lt_irrefl_ax, `MachLib.Real.lt_total, `MachLib.Real.lt_trans_ax, `MachLib.Real.mulR, `MachLib.Real.mul_assoc, `MachLib.Real.mul_comm, `MachLib.Real.mul_distrib, `MachLib.Real.mul_inv, `MachLib.Real.mul_lt_mul_of_pos_right, `MachLib.Real.mul_one_ax, `MachLib.Real.mul_pos, `MachLib.Real.natCast, `MachLib.Real.natCast_succ, `MachLib.Real.natCast_zero, `MachLib.Real.negR, `MachLib.Real.neg_one_le_erf, `MachLib.Real.neg_one_lt_tanh, `MachLib.Real.neg_pi_div_two_lt_arctan, `MachLib.Real.neg_pi_lt_atan2, `MachLib.Real.oneR, `MachLib.Real.one_add_le_exp, `MachLib.Real.one_div_nonneg_of_pos, `MachLib.Real.one_div_pos_of_pos, `MachLib.Real.pi, `MachLib.Real.pi_gt_one, `MachLib.Real.pi_gt_three, `MachLib.Real.pi_pos, `MachLib.Real.pythagorean, `MachLib.Real.realOfScientific, `MachLib.Real.realOfScientific_clears, `MachLib.Real.realOfScientific_le_of_nat, `MachLib.Real.realOfScientific_lt_of_nat, `MachLib.Real.realOfScientific_one_dot_zero, `MachLib.Real.realOfScientific_pos, `MachLib.Real.realOfScientific_three_dot_zero, `MachLib.Real.realOfScientific_two_dot_zero, `MachLib.Real.realPow, `MachLib.Real.realPow_nonneg, `MachLib.Real.realPow_one, `MachLib.Real.realPow_pos, `MachLib.Real.realPow_zero, `MachLib.Real.rolle_ct, `MachLib.Real.sin, `MachLib.Real.sin_add, `MachLib.Real.sin_arcsin, `MachLib.Real.sin_neg, `MachLib.Real.sin_one_pos, `MachLib.Real.sin_periodic, `MachLib.Real.sin_pi, `MachLib.Real.sin_pi_div_two, `MachLib.Real.sin_zero, `MachLib.Real.sinh, `MachLib.Real.sinh_eq, `MachLib.Real.sqrt, `MachLib.Real.sqrt_le_of_le_sq, `MachLib.Real.sqrt_neg_zero, `MachLib.Real.sqrt_nonneg, `MachLib.Real.sqrt_one, `MachLib.Real.sqrt_sq_nonneg, `MachLib.Real.sqrt_zero, `MachLib.Real.subR, `MachLib.Real.sub_def, `MachLib.Real.sup_exists, `MachLib.Real.tan, `MachLib.Real.tan_def, `MachLib.Real.tan_half_pos, `MachLib.Real.tanh, `MachLib.Real.tanh_eq_sinh_div_cosh, `MachLib.Real.tanh_lt_one, `MachLib.Real.tanh_neg, `MachLib.Real.tanh_zero, `MachLib.Real.u, `MachLib.Real.u_le_one, `MachLib.Real.u_nonneg, `MachLib.Real.zeroR, `MachLib.Real.zero_lt_one_ax, `MachLib.Real.zero_ne_one_ax, `MachLib.analytic_add, `MachLib.analytic_comp, `MachLib.analytic_const, `MachLib.analytic_exp, `MachLib.analytic_finite_zeros_compact, `MachLib.analytic_id, `MachLib.analytic_log_pos, `MachLib.analytic_mul, `MachLib.analytic_ne_zero_nbhd, `MachLib.analytic_one_div_pos, `MachLib.analytic_sin, `MachLib.analytic_sub, `MachLib.chain_algebraic_dependence, `MachLib.emlEmptyChain._elambda_1, `MachLib.emlEmptyChain._elambda_2, `MachLib.eml_pfaffian_validon_from_cos_equality, `MachLib.eml_pfaffian_validon_from_sin_equality, `MachLib.eml_tree_analytic_on_pos, `MachLib.exp_tangent_line_strict, `MachLib.lambertW, `MachLib.lambertW_one_lt_one, `MachLib.lambertW_one_pos, `MachLib.lambertW_zero,

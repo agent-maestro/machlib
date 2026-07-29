@@ -39,6 +39,26 @@ gain — the point is the **ledger**: an axiom that is derivable should be recor
 the trust boundary states what is actually assumed rather than what happens to be declared. The
 theorems here are the evidence for that annotation.
 
+## 3. A PRE-REGISTERED PREDICTION, recorded before the attempt
+
+`one_div_pos_of_pos : 0 < a → 0 < 1/a` is the next candidate, and it is chosen because it **tests
+the observation the Archimedean proof produced**. Its textbook argument runs through trichotomy —
+suppose `1/a ≤ 0`, multiply, contradict — which is a case split, and MachLib has no `by_cases`.
+
+**Prediction (fixed before attempting): it goes through.** The reason is specific rather than
+optimistic: `lt_total` is stated in this base as a *disjunction*, `a < b ∨ a = b ∨ b < a`. Case
+analysis on a disjunction is `Or.elim` — honest constructive reasoning, not a classical principle —
+so the split is available without `by_cases`. Had trichotomy been axiomatised as decidability or as
+`¬(a < b) → b ≤ a`, this would be the first candidate where the Mathlib-free constraint **blocks**
+rather than improves.
+
+**Either outcome is informative**, which is why it is written down first. The Archimedean proof
+showed the austerity constraint *sharpening* an argument; the sweep should record where it does the
+opposite, because *"which classical principles does the base actually consume"* is itself a
+trust-boundary fact this ledger is now positioned to state.
+
+**Scored below.**
+
 `sorryAx`-free. Uses only other `MachLib.Real` axioms — that is the entire claim.
 -/
 
@@ -117,5 +137,69 @@ theorem archimedean_derivable (x : Real) : ∃ n : Nat, x < natCast n := by
       rw [natCast_succ] at hsucc
       exact le_sub_one_of_succ_le hsucc
     exact lt_irrefl_ax s (lt_of_le_of_lt' (hleast (s - 1) hub') (sub_one_lt s))
+
+/-! ## Scoring the prediction -/
+
+/-- `0 + a = a`, from `add_comm` and `add_zero`. -/
+private theorem zero_add' (a : Real) : 0 + a = a := by
+  rw [add_comm]; exact add_zero a
+
+/-- `-a + a = 0`. -/
+private theorem neg_add' (a : Real) : -a + a = 0 := by
+  rw [add_comm]; exact add_neg a
+
+/-- `a * 0 = 0` — not an axiom in this base; it falls out of distributivity and cancellation. -/
+private theorem mul_zero' (a : Real) : a * 0 = 0 := by
+  have h : a * 0 = a * 0 + a * 0 := by
+    have hd := mul_distrib a 0 0
+    rwa [add_zero] at hd
+  have hc : a * 0 + -(a * 0) = a * 0 + a * 0 + -(a * 0) := by rw [← h]
+  rw [add_neg, add_assoc, add_neg, add_zero] at hc
+  exact hc.symm
+
+/-- `a * (-b) = -(a * b)`. -/
+private theorem mul_neg' (a b : Real) : a * -b = -(a * b) := by
+  have h : a * b + a * -b = 0 := by
+    rw [← mul_distrib, add_neg, mul_zero']
+  have hc : -(a * b) + (a * b + a * -b) = -(a * b) + 0 := by rw [h]
+  rw [← add_assoc, neg_add', zero_add', add_zero] at hc
+  exact hc
+
+/-- `0 < a → a ≠ 0`, from irreflexivity. -/
+private theorem ne_of_pos {a : Real} (h : 0 < a) : a ≠ 0 := by
+  intro he
+  rw [he] at h
+  exact lt_irrefl_ax 0 h
+
+/-- **PREDICTION CONFIRMED: `one_div_pos_of_pos` is derivable, and the case split is constructive.**
+
+The prediction's stated reason was the right one: `lt_total` is a **disjunction** in this base, so
+`rcases` on it is `Or.elim` — honest constructive reasoning, no `by_cases` needed. Two branches are
+impossible:
+
+* `1/a = 0` makes `a · (1/a) = 0`, but `mul_inv` says it is `1`.
+* `1/a < 0` makes `a · (1/a) < 0`, but it is `1`, and `0 < 1`.
+
+Note what the derivation actually consumed: `mul_zero'` and `mul_neg'` are **not axioms** in this
+base — they had to be derived from distributivity and cancellation first. So the honest reading is
+that the base is *thinner* than the textbook argument assumes, not that the argument was hard. -/
+theorem one_div_pos_derivable {a : Real} (ha : 0 < a) : 0 < 1 / a := by
+  have hinv : a * (1 / a) = 1 := mul_inv a (ne_of_pos ha)
+  rcases lt_total 0 (1 / a) with hpos | hzero | hneg
+  · exact hpos
+  · exfalso
+    rw [← hzero, mul_zero'] at hinv
+    -- `hinv : 0 = 1`, closed by this file's OWN first result. The two findings compose.
+    exact zero_ne_one_derivable hinv
+  · exfalso
+    have hnegpos : 0 < -(1 / a) := by
+      have h := add_lt_add_left hneg (-(1 / a))
+      rwa [neg_add', add_zero] at h
+    have hprod : 0 < a * -(1 / a) := mul_pos ha hnegpos
+    rw [mul_neg', hinv] at hprod
+    -- 0 < -1, so 1 + 0 < 1 + -1, i.e. 1 < 0; with 0 < 1 that is 0 < 0
+    have h1 := add_lt_add_left hprod (1 : Real)
+    rw [add_zero, add_neg] at h1
+    exact lt_irrefl_ax 0 (lt_trans_ax zero_lt_one_ax h1)
 
 end MachLib.Real
