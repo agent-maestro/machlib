@@ -88,6 +88,7 @@ import MachLib.FiniteZeroPacket
 import MachLib.PolynomialRootCount
 import MachLib.NormalizedPolynomialRootCount
 import MachLib.AffineArithmetic
+import MachLib.DerivDefinition
 import MachLib.DerivMinimality
 import MachLib.AxiomMinimality
 import MachLib.RescueObligation
