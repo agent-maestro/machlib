@@ -153,4 +153,61 @@ theorem hasDerivAtL_sub (f g : Real → Real) (a b x : Real)
   exact hasDerivAtL_of_eq (fun y => f y + -g y) (fun y => f y - g y) (a - b) x
     (fun y => by mach_ring) hs
 
+/-! ## Local boundedness — the prerequisite `mul` and `comp` were waiting on
+
+A differentiable function is bounded near the point. Obvious, and it has to be *proved* before the
+product rule can be, because the product rule's error term carries a `g y` that must be controlled
+uniformly over the neighbourhood. -/
+
+/-- `|u| ≤ |u − v| + |v|`, from the triangle inequality. -/
+private theorem abs_le_abs_sub_add (u v : Real) : abs u ≤ abs (u - v) + abs v := by
+  have h := abs_add (u - v) v
+  rwa [show u - v + v = u from by mach_ring] at h
+
+/-- **A differentiable function is bounded on a neighbourhood.** Instantiating the definition at
+`ε = 1` gives `|g y − g x| ≤ (1 + |b|)·|y − x|`, and `δ` caps `|y − x|`. -/
+theorem hasDerivAtL_bounded_near {g : Real → Real} {b x : Real} (hg : HasDerivAtL g b x) :
+    ∃ δ : Real, 0 < δ ∧ ∀ y, abs (y - x) ≤ δ → abs (g y) ≤ abs (g x) + (1 + abs b) * δ := by
+  obtain ⟨δ, hδ, hb⟩ := hg 1 zero_lt_one_ax
+  refine ⟨δ, hδ, fun y hy => ?_⟩
+  have h := hb y hy
+  rw [one_mul_thm] at h
+  -- |g y - g x| ≤ |g y - g x - b(y-x)| + |b(y-x)| ≤ |y-x| + |b||y-x|
+  have hgap : abs (g y - g x) ≤ (1 + abs b) * abs (y - x) := by
+    have h1 := abs_le_abs_sub_add (g y - g x) (b * (y - x))
+    rw [show g y - g x - b * (y - x) = g y - g x - b * (y - x) from rfl] at h1
+    refine le_trans h1 ?_
+    rw [abs_mul]
+    have : abs (y - x) + abs b * abs (y - x) = (1 + abs b) * abs (y - x) := by mach_ring
+    rw [← this]
+    exact add_le_add_both h (le_refl _)
+  refine le_trans (abs_le_abs_sub_add (g y) (g x)) ?_
+  rw [add_comm (abs (g x)) ((1 + abs b) * δ)]
+  refine add_le_add_both (le_trans hgap ?_) (le_refl (abs (g x)))
+  exact mul_le_mul_of_nonneg_left hy
+    (le_trans (le_of_lt zero_lt_one_ax) (le_add_of_nonneg_right (abs_nonneg b)))
+
+/-- **The product rule's error, decomposed.** The whole conceptual content of `mul`, and it is an
+identity rather than an estimate:
+
+```
+  f y·g y − f x·g x − (a·g x + f x·b)(y−x)
+      =  g y · Rf  +  a(y−x)(g y − g x)  +  f x · Rg
+```
+
+with `Rf = f y − f x − a(y−x)` and `Rg = g y − g x − b(y−x)` the two residuals the hypotheses bound.
+Each of the three pieces is then controlled by something already available: `Rf` and `Rg` by the
+hypotheses, `g y` by `hasDerivAtL_bounded_near`, and `g y − g x` by the same `(1+|b|)|y−x|` estimate
+that lemma's proof produces.
+
+**What remains for `mul` is ε-bookkeeping, not mathematics** — splitting ε three ways and choosing δ
+small enough that the middle term's `|a|(1+|b|)δ` fits. Recorded here so the next attempt starts from
+the decomposition rather than rediscovering it. -/
+theorem mul_error_decomposition (f g : Real → Real) (a b x y : Real) :
+    f y * g y - f x * g x - (a * g x + f x * b) * (y - x)
+      = g y * (f y - f x - a * (y - x))
+        + a * (y - x) * (g y - g x)
+        + f x * (g y - g x - b * (y - x)) := by
+  mach_mpoly [f y, f x, g y, g x, a, b, y, x]
+
 end MachLib.Real
