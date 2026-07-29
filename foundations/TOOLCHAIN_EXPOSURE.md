@@ -55,6 +55,28 @@ pass**. Same move as the DA2 dual-egress: two physically independent channels fo
 
 Note the asymmetry: bumping the pin fixes *this* bug. Independent re-checking fixes *the class*.
 
+## What the external checker found on its FIRST run
+
+Not a soundness violation — but a real defect the normal build cannot see:
+
+```
+lean4checker found a problem in MachLib.ZZZTestSign
+uncaught exception: (kernel) constant has already been declared
+  'MachLib.Real.growthCompetitionWitness_deriv_pos_of_quad_pos'
+```
+
+**26 orphaned `.olean` files** in `.lake/build/lib/MachLib/` with **no source and no importer** —
+`ZZZTest*` scratch modules plus `CapstoneGen`, `PidEmitted`, `PidShipped`, `ProbeDot3`. One of them
+still declared a theorem that has since **moved** to `WitnessResidualGrowthCompetitionDeriv`, so
+replaying the build tree produced a duplicate.
+
+**The live build never notices, because nothing imports them.** That is precisely the class only an
+independent replay finds: the build directory contained declarations that no longer exist in source,
+and anyone auditing or shipping that tree would have got them. Removed; replay then exits 0.
+
+This is the argument for the checker in one paragraph — it fired on contact, on something no gate here
+was looking for.
+
 ## Status
 
 | | |
@@ -62,11 +84,29 @@ Note the asymmetry: bumping the pin fixes *this* bug. Independent re-checking fi
 | toolchain recorded as instrument identity | **done** (this file, + ledger gate) |
 | exposure to #14576 | **OPEN — unknown, not ruled out** |
 | pin bumped | **NOT DONE** — scoped as a project |
-| independent kernel re-check in CI | **NOT DONE** — the durable fix, and the next thing to build |
+| independent kernel re-check | **DONE** — `check_kernel_replay.py`, MachLib replays clean, exit 0 |
+| ↳ grade | **SECOND OPINION**, *not* independent kernel — see the caveat below |
+| Lean4Lean (genuine independence) | **NOT DONE** — what would earn the stronger phrase |
 | Collatz exploit as a firing specimen | **NOT OBTAINED** — see below |
 
+## The independence caveat, recorded so the blindness column stays honest
+
+`lean4checker` **shares the kernel's C++ lineage in part.** Against **environment manipulation** —
+tactics smuggling unchecked declarations in — it defends at full strength, and its five negative tests
+(`AddFalse`, `AddFalseConstructor`, `ReplaceAxiom`, `UseFalseConstructor --fresh`, `ReduceBool`) are
+exactly that class; all five verified firing here. Against **kernel-implementation bugs** its
+independence is **partial**, because it re-uses the same kernel implementation to do the checking.
+
+**Lean4Lean** is the genuinely independent re-implementation. The strongest configuration is replay
+through both, and the registry row must say **which is running**.
+
+> So the earned phrase today is **"second opinion"**. **"Independent kernel"** is not earned by
+> lean4checker alone, and the difference is not cosmetic — it is *which class of defect two
+> implementations would have to share*.
+
 **On the exploit as a specimen.** A published exploit would be the ideal firing witness — historical
-beats synthetic, and the patched kernel *and* an external checker must both reject it. **It is not
-recorded as a specimen here because it has not been obtained and run.** A specimen that has not fired
-in this repo is not a specimen; that is the registry's own standard and it applies to this row like
-any other.
+beats synthetic, and the patched kernel *and* an external checker must both reject it. **It is still not recorded, and it is no longer needed for the row to be complete** —
+lean4checker's own five negative tests are pre-built historical witnesses of the environment-
+manipulation class, and they were verified firing *here* before the gate was trusted. The Collatz
+artifact would add a witness for the *kernel-bug* class specifically, which is the class where
+lean4checker's independence is only partial; that makes it a **Lean4Lean** row, not this one.
