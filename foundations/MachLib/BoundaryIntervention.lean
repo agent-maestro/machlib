@@ -179,7 +179,8 @@ intervention makes survival *worse* — so `NonregressingSurvival` is genuine co
 benchmark must measure, not something the schema hands over. -/
 
 private def okRun (fails : Nat) : RunPacket :=
-  { sampleCount := 10, domainFailures := fails, centerHits := 1, boundaryHits := 9,
+  { mode := BoundaryMode.baseline,
+    sampleCount := 10, domainFailures := fails, centerHits := 1, boundaryHits := 9,
     events := requiredEvents, transitions := requiredTransitions }
 
 private theorem okRun_valid {f : Nat} (h : f ≤ 10) : ValidRun (okRun f) :=

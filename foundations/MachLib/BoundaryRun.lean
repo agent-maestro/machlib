@@ -89,9 +89,17 @@ inductive BoundaryEventClass where
   | logDomainRescue
 deriving DecidableEq, Repr
 
-/-- **A boundary-run packet**, as the benchmark emits it: counts over sampled frames, plus the
-observed event classes and the transitions between them. -/
+/-- The run modes the benchmark labels a sweep with (`run["mode"]`). -/
+inductive BoundaryMode where
+  | baseline
+  | guarded
+  | logDomain
+deriving DecidableEq, Repr
+
+/-- **A boundary-run packet**, as the benchmark emits it: counts over sampled frames, the mode it
+was swept in, plus the observed event classes and the transitions between them. -/
 structure RunPacket where
+  mode : BoundaryMode
   sampleCount : Nat
   domainFailures : Nat
   centerHits : Nat
@@ -141,6 +149,18 @@ def HasTransition (p : RunPacket) (a b : BoundaryEventClass) : Prop := (a, b) �
 /-- `(sample_count − domain_failures) / sample_count`, as the benchmark computes it. -/
 noncomputable def finiteSurvivalRate (p : RunPacket) : Real :=
   natCast (p.sampleCount - p.domainFailures) / natCast p.sampleCount
+
+/-- `run["mode"] == "guarded"`. Was an opaque predicate for want of a `mode` field. -/
+def GuardedBoundaryMode (p : RunPacket) : Prop := p.mode = BoundaryMode.guarded
+
+/-- `run["mode"] == "log_domain"`. -/
+def LogDomainBoundaryMode (p : RunPacket) : Prop := p.mode = BoundaryMode.logDomain
+
+/-- The modes are mutually exclusive — worth one line, since the two survival theorems each took a
+mode hypothesis and neither proof ever used it. -/
+theorem modes_exclusive {p : RunPacket} (h : GuardedBoundaryMode p) : ¬ LogDomainBoundaryMode p := by
+  intro h2
+  exact BoundaryMode.noConfusion (h.symm.trans h2)
 
 /-- **Transition graph well-formedness** — every edge's endpoints are observed events. -/
 def ValidTransitionGraph (p : RunPacket) : Prop :=
@@ -234,7 +254,8 @@ would be unconstructible and the concentration claim would be proving itself. -/
 /-- A valid packet in which the CENTER dominates — geometrically wrong for high `d`, structurally
 fine. Its existence is what shows the empirical claim is independent of validity. -/
 def centerDominant : RunPacket :=
-  { sampleCount := 10, domainFailures := 0, centerHits := 9, boundaryHits := 1,
+  { mode := BoundaryMode.baseline,
+    sampleCount := 10, domainFailures := 0, centerHits := 9, boundaryHits := 1,
     events := requiredEvents, transitions := requiredTransitions }
 
 theorem centerDominant_valid : ValidRun centerDominant :=

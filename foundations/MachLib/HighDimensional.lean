@@ -77,11 +77,7 @@ abbrev BoundaryRunPacket : Type := RunPacket
 /-- Packet validity: schema, simulated boundary flags, and replay fields agree. -/
 abbrev ValidBoundaryRunPacket : BoundaryRunPacket -> Prop := ValidRun
 
-/-- Packet mode says the run used guarded EML evaluation. -/
-axiom GuardedBoundaryMode : BoundaryRunPacket -> Prop
 
-/-- Packet mode says the run used log-domain candidate coordinates. -/
-axiom LogDomainBoundaryMode : BoundaryRunPacket -> Prop
 
 /-- Packet finite-survival metric, as exported by Forge/electronics evidence. -/
 noncomputable abbrev packetFiniteSurvivalRate : BoundaryRunPacket -> Real := finiteSurvivalRate
@@ -154,7 +150,14 @@ abbrev PairHasRescueTransition :
 /-- Finite survival did not regress in the pairwise benchmark. -/
 abbrev PairNonregressingSurvival : BoundaryInterventionPair -> Prop := NonregressingSurvival
 
+/-- **UNGROUNDED — no referent exists.** Searched every `.py`, `.json` and `.md` in Forge on
+2026-07-29: this name appears NOWHERE. The obligations Forge actually emits are exactly the four
+rescue ones (`PositiveCoordinate`, `OutputSafety`, `PrecisionSensitivity`, `ClampInvariant`, plus
+their `Intervention` and `Concrete` variants), all of which are now definitions. This one was
+declared here and never produced there. Kept as an axiom because inventing a referent would be worse
+than admitting there is none. -/
 axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
+/-- **UNGROUNDED — no referent exists.** See `DomainPreservationObligation`. -/
 axiom BoundedEvaluationObligation : BoundaryRunPacket -> Prop
 /-- **OWED, not discharged.** The original axiom established only that the obligation falls
 due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
@@ -168,6 +171,8 @@ abbrev OutputSafetyObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObl
 /-- **OWED, not discharged.** The original axiom established only that the obligation falls
 due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
 abbrev PositiveCoordinateObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.positiveCoordinate
+/-- **UNGROUNDED — no referent exists.** See `DomainPreservationObligation`. Note nothing in this
+file concludes in it either, so it is a placeholder with neither a producer nor a consumer. -/
 axiom InterventionSoundnessObligation : BoundaryInterventionPair -> Prop
 abbrev PositiveCoordinateInterventionObligation (p : BoundaryInterventionPair) : Prop :=
   DeclaresObligation p InterventionObligation.positiveCoordinate
