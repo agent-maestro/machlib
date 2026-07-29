@@ -43,6 +43,9 @@ rules, so the swap is worth doing, and here is the evidence.*
 
 namespace MachLib.Real
 
+private theorem one_add_abs_nonneg (b : Real) : (0 : Real) ≤ 1 + abs b :=
+  add_nonneg (le_of_lt zero_lt_one_ax) (abs_nonneg b)
+
 /-- **The derivative, defined.** Linear approximation with a multiplicative error term — no
 division, no `y ≠ x` side condition. -/
 def HasDerivAtL (f : Real → Real) (a x : Real) : Prop :=
@@ -223,5 +226,115 @@ theorem mul_error_decomposition (f g : Real → Real) (a b x y : Real) :
         + a * (y - x) * (g y - g x)
         + f x * (g y - g x - b * (y - x)) := by
   mach_mpoly [f y, f x, g y, g x, a, b, y, x]
+
+/-! ## The product rule
+
+**One division, not three** — and that is not a style choice. Every quotient in this base is a proof
+obligation (`C > 0`, the division lemmas, the telescope), so a second quotient is three more places
+the positivity side-conditions multiply. `δ ≤ ε/C` does the second quotient's job: the middle term's
+`|a|(1+|b|)·δ` is then `≤ |a|(1+|b|)·ε/C`, which is what makes the coefficient **telescope** instead
+of forcing a max-of-three-epsilons argument.
+
+**And the constant is NAMED.** A five-term expression written out at ten occurrences does not unify
+across them, and `_` asks the elaborator to guess. `set` is a tactic this base lacks; a `def` is term
+level and it has always had those. The expansion happens once, inside `mulBound`. -/
+
+/-- Hoisted: `mach_mpoly`'s atom list is elaborated OUTSIDE the tactic block. **Fifth instance in
+this library** — the list should simply be treated as top-level scope, always. -/
+private theorem collect_three (A B C Q W : Real) :
+    A * (Q * W) + B * (Q * W) + C * (Q * W) = (A + B + C) * Q * W := by
+  mach_mpoly [A, B, C, Q, W]
+
+private theorem reorder_plus_one (p q r : Real) : p + q + r + 1 - (p + r + q) = 1 := by
+  mach_mpoly [p, q, r]
+
+/-- The product rule's constant, named so every occurrence has one unifiable head. The trailing `+ 1`
+carries strictness: it makes `mulBound` positive without any hypothesis on `f x` or `a`, and it is
+the slack that turns `≤ ε` into the telescope below. -/
+private noncomputable def mulBound (Mg fx a b : Real) : Real :=
+  Mg + abs fx + abs a * (1 + abs b) + 1
+
+private theorem mulBound_pos {Mg fx a b : Real} (hMg : 0 ≤ Mg) : 0 < mulBound Mg fx a b := by
+  unfold mulBound
+  refine lt_of_lt_of_le zero_lt_one_ax (le_add_of_nonneg_left ?_)
+  exact add_nonneg (add_nonneg hMg (abs_nonneg fx))
+    (mul_nonneg (abs_nonneg a) (one_add_abs_nonneg b))
+
+/-- `S ≤ C` and `C > 0` give `S·(e/C) ≤ e`. The only numeric step the product rule needs. -/
+private theorem telescope {S C e : Real} (hC : 0 < C) (hS : S ≤ C) (he : 0 ≤ e) :
+    S * (e / C) ≤ e := by
+  refine le_trans (mul_le_mul_of_nonneg_right hS (div_nonneg_of_nonneg_pos he hC)) ?_
+  rw [mul_comm C (e / C), div_mul_cancel (ne_of_gt hC)]
+  exact le_refl e
+
+/-- **Product rule.** `mul_error_decomposition` supplies the identity; the three pieces are bounded
+by the hypotheses, `hasDerivAtL_bounded_near` and `hasDerivAtL_gap_bound`. -/
+theorem hasDerivAtL_mul (f g : Real → Real) (a b x : Real)
+    (hf : HasDerivAtL f a x) (hg : HasDerivAtL g b x) :
+    HasDerivAtL (fun y => f y * g y) (a * g x + f x * b) x := by
+  intro ε hε
+  obtain ⟨d0, hd0, hbnd⟩ := hasDerivAtL_bounded_near hg
+  obtain ⟨dg, hdg, hgap⟩ := hasDerivAtL_gap_bound hg
+  have hMg : (0 : Real) ≤ abs (g x) + (1 + abs b) * d0 :=
+    add_nonneg (abs_nonneg _)
+      (mul_nonneg (one_add_abs_nonneg b) (le_of_lt hd0))
+  have hC : 0 < mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b := mulBound_pos hMg
+  have hq : 0 < ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b := div_pos_of_pos_pos hε hC
+  obtain ⟨d1, hd1, hb1⟩ := hf _ hq
+  obtain ⟨d2, hd2, hb2⟩ := hg _ hq
+  refine ⟨min d0 (min dg (min d1 (min d2
+      (ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b)))),
+    min_pos' hd0 (min_pos' hdg (min_pos' hd1 (min_pos' hd2 hq))), fun y hy => ?_⟩
+  have e0 : abs (y - x) ≤ d0 := le_trans hy (min_le_l _ _)
+  have eG : abs (y - x) ≤ dg := le_trans hy (le_trans (min_le_r _ _) (min_le_l _ _))
+  have e1 : abs (y - x) ≤ d1 :=
+    le_trans hy (le_trans (min_le_r _ _) (le_trans (min_le_r _ _) (min_le_l _ _)))
+  have e2 : abs (y - x) ≤ d2 :=
+    le_trans hy (le_trans (min_le_r _ _) (le_trans (min_le_r _ _)
+      (le_trans (min_le_r _ _) (min_le_l _ _))))
+  have eQ : abs (y - x) ≤ ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b :=
+    le_trans hy (le_trans (min_le_r _ _) (le_trans (min_le_r _ _)
+      (le_trans (min_le_r _ _) (min_le_r _ _))))
+  have hax : (0 : Real) ≤ abs (y - x) := abs_nonneg _
+  rw [mul_error_decomposition f g a b x y]
+  refine le_trans (abs_add _ _) (le_trans (add_le_add_both (abs_add _ _) (le_refl _)) ?_)
+  -- three pieces
+  have hT1 : abs (g y * (f y - f x - a * (y - x)))
+      ≤ (abs (g x) + (1 + abs b) * d0)
+        * (ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b * abs (y - x)) := by
+    rw [abs_mul]
+    exact mul_le_mul' (abs_nonneg _) (hbnd y e0) (abs_nonneg _) (hb1 y e1)
+  have hT2 : abs (a * (y - x) * (g y - g x))
+      ≤ abs a * (1 + abs b)
+        * (ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b * abs (y - x)) := by
+    rw [abs_mul, abs_mul]
+    have step : abs a * abs (y - x) * abs (g y - g x)
+        ≤ abs a * abs (y - x) * ((1 + abs b) * abs (y - x)) :=
+      mul_le_mul_of_nonneg_left (hgap y eG)
+        (mul_nonneg (abs_nonneg a) hax)
+    refine le_trans step ?_
+    have reassoc : abs a * abs (y - x) * ((1 + abs b) * abs (y - x))
+        = abs a * (1 + abs b) * (abs (y - x) * abs (y - x)) := by mach_ring
+    rw [reassoc]
+    exact mul_le_mul_of_nonneg_left
+      (mul_le_mul_of_nonneg_right eQ hax)
+      (mul_nonneg (abs_nonneg a) (one_add_abs_nonneg b))
+  have hT3 : abs (f x * (g y - g x - b * (y - x)))
+      ≤ abs (f x)
+        * (ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b * abs (y - x)) := by
+    rw [abs_mul]
+    exact mul_le_mul_of_nonneg_left (hb2 y e2) (abs_nonneg _)
+  refine le_trans (add_le_add_both (add_le_add_both hT1 hT2) hT3) ?_
+  -- collect: S * (q * |y-x|) with S = C - 1
+  have hcollect := collect_three (abs (g x) + (1 + abs b) * d0) (abs a * (1 + abs b))
+    (abs (f x)) (ε / mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b) (abs (y - x))
+  rw [hcollect]
+  have hSC : (abs (g x) + (1 + abs b) * d0) + abs a * (1 + abs b) + abs (f x)
+      ≤ mulBound (abs (g x) + (1 + abs b) * d0) (f x) a b := by
+    unfold mulBound
+    refine le_of_sub_nonneg ?_
+    rw [reorder_plus_one (abs (g x) + (1 + abs b) * d0) (abs (f x)) (abs a * (1 + abs b))]
+    exact le_of_lt zero_lt_one_ax
+  exact mul_le_mul_of_nonneg_right (telescope hC hSC (le_of_lt hε)) hax
 
 end MachLib.Real
