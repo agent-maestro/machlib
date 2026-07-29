@@ -164,6 +164,20 @@ private theorem abs_le_abs_sub_add (u v : Real) : abs u ≤ abs (u - v) + abs v 
   have h := abs_add (u - v) v
   rwa [show u - v + v = u from by mach_ring] at h
 
+/-- **The increment bound**, extracted because `mul` needs it directly and the boundedness proof
+was already computing it: `|g y − g x| ≤ (1 + |b|)·|y − x|` near `x`. -/
+theorem hasDerivAtL_gap_bound {g : Real → Real} {b x : Real} (hg : HasDerivAtL g b x) :
+    ∃ δ : Real, 0 < δ ∧ ∀ y, abs (y - x) ≤ δ → abs (g y - g x) ≤ (1 + abs b) * abs (y - x) := by
+  obtain ⟨δ, hδ, hb⟩ := hg 1 zero_lt_one_ax
+  refine ⟨δ, hδ, fun y hy => ?_⟩
+  have h := hb y hy
+  rw [one_mul_thm] at h
+  refine le_trans (abs_le_abs_sub_add (g y - g x) (b * (y - x))) ?_
+  rw [abs_mul]
+  have hid : abs (y - x) + abs b * abs (y - x) = (1 + abs b) * abs (y - x) := by mach_ring
+  rw [← hid]
+  exact add_le_add_both h (le_refl _)
+
 /-- **A differentiable function is bounded on a neighbourhood.** Instantiating the definition at
 `ε = 1` gives `|g y − g x| ≤ (1 + |b|)·|y − x|`, and `δ` caps `|y − x|`. -/
 theorem hasDerivAtL_bounded_near {g : Real → Real} {b x : Real} (hg : HasDerivAtL g b x) :
