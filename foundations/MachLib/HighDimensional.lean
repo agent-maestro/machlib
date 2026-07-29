@@ -2,6 +2,7 @@ import MachLib.Basic
 import MachLib.EML
 import MachLib.BallCubeRatio
 import MachLib.GuardedLowering
+import MachLib.RescueObligation
 import MachLib.GeometricDecay
 import MachLib.BoundaryRun
 import MachLib.BoundaryIntervention
@@ -159,10 +160,18 @@ abbrev PairNonregressingSurvival : BoundaryInterventionPair -> Prop := Nonregres
 axiom BaselineReplayValid : BoundaryRunPacket -> Prop
 axiom DomainPreservationObligation : BoundaryRunPacket -> Prop
 axiom BoundedEvaluationObligation : BoundaryRunPacket -> Prop
-axiom ClampInvariantObligation : BoundaryRunPacket -> Prop
-axiom PrecisionSensitivityObligation : BoundaryRunPacket -> Prop
-axiom OutputSafetyObligation : BoundaryRunPacket -> Prop
-axiom PositiveCoordinateObligation : BoundaryRunPacket -> Prop
+/-- **OWED, not discharged.** The original axiom established only that the obligation falls
+due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
+abbrev ClampInvariantObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.clampInvariant
+/-- **OWED, not discharged.** The original axiom established only that the obligation falls
+due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
+abbrev PrecisionSensitivityObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.precisionSensitivity
+/-- **OWED, not discharged.** The original axiom established only that the obligation falls
+due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
+abbrev OutputSafetyObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.outputSafety
+/-- **OWED, not discharged.** The original axiom established only that the obligation falls
+due; `RescueObligation.owing_does_not_discharge` proves that is strictly weaker than proven. -/
+abbrev PositiveCoordinateObligation (p : BoundaryRunPacket) : Prop := Owes p RescueObligation.positiveCoordinate
 axiom BoundaryDynamicsObligation : BoundaryRunPacket -> Prop
 axiom InterventionSoundnessObligation : BoundaryInterventionPair -> Prop
 abbrev PositiveCoordinateInterventionObligation (p : BoundaryInterventionPair) : Prop :=
@@ -347,17 +356,19 @@ axiom transition_graph_obligation
     ValidTransitionGraph p ->
     BoundaryDynamicsObligation p
 
-axiom domain_to_log_domain_rescue_obligation
+theorem domain_to_log_domain_rescue_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasTransition p BoundaryEventClass.domainWall BoundaryEventClass.logDomainRescue ->
-    PositiveCoordinateObligation p
+    PositiveCoordinateObligation p :=
+  fun hv _ => valid_owes_positiveCoordinate hv
 
-axiom overflow_to_guard_rescue_obligation
+theorem overflow_to_guard_rescue_obligation
     (p : BoundaryRunPacket) :
     ValidBoundaryRunPacket p ->
     PacketHasTransition p BoundaryEventClass.overflowWall BoundaryEventClass.guardRescue ->
-    OutputSafetyObligation p
+    OutputSafetyObligation p :=
+  fun hv _ => valid_owes_outputSafety hv
 
 theorem log_domain_lift_intervention_obligation
     (p : BoundaryInterventionPair) :
