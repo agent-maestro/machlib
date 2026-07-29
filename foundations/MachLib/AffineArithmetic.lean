@@ -110,4 +110,120 @@ theorem secant_numerator_bound {a b x : Real} :
     mach_mpoly [a, b, x]
   exact le_of_sub_nonneg (by rw [hid]; exact hsq)
 
+/-! ## 3. The affine FORM — where shared symbols actually buy something
+
+The two lemmas above bound what each *operation* discards. They say nothing about the structure the
+whole method rests on: that a noise symbol appearing in two places is **the same symbol**, so its
+contributions add algebraically and can cancel.
+
+That is the entire difference from the entrywise fold, so it is the thing that has to be stated.
+
+A form is a centre plus a coefficient per symbol index; `eval` interprets it against a **shared**
+assignment `e : Nat → Real` with `|e i| ≤ 1`. Sharing is not a convention here — it is forced by
+`eval` taking one `e` for both operands. -/
+
+/-- Coefficient list, read against symbol indices `i, i+1, …`. -/
+noncomputable def evalDev : List Real → Nat → (Nat → Real) → Real
+  | [], _, _ => 0
+  | c :: rest, i, e => c * e i + evalDev rest (i + 1) e
+
+/-- The radius: sum of `|coefficient|`. -/
+noncomputable def radDev : List Real → Real
+  | [] => 0
+  | c :: rest => abs c + radDev rest
+
+/-- Coefficientwise addition, padding the shorter list. **Index `i` meets index `i`** — this
+definition is where "the same symbol" becomes a mathematical fact rather than a naming discipline. -/
+noncomputable def addDev : List Real → List Real → List Real
+  | [], m => m
+  | a :: l, [] => a :: l
+  | a :: l, b :: m => (a + b) :: addDev l m
+
+/-- Hoisted for `mach_mpoly`, whose atom list is elaborated OUTSIDE the tactic block — so names
+bound by `cases`/`intro` are invisible there. **Fourth instance of this trap in this library**;
+the fix is always the same, and stating the identity generically also keeps the goal small. -/
+private theorem affine_cons_id (a b x L M : Real) :
+    (a + b) * x + (L + M) = (a * x + L) + (b * x + M) := by
+  mach_mpoly [a, b, x, L, M]
+
+/-- A valid noise assignment: every symbol in `[-1, 1]`. -/
+def ValidNoise (e : Nat → Real) : Prop := ∀ i, abs (e i) ≤ 1
+
+/-- **SOUNDNESS: the radius bounds the deviation.** Without this the whole method is decoration. -/
+theorem evalDev_le_radDev (e : Nat → Real) (he : ValidNoise e) (l : List Real) :
+    ∀ i : Nat, abs (evalDev l i e) ≤ radDev l := by
+  induction l with
+  | nil =>
+      intro i
+      rw [show evalDev [] i e = 0 from rfl, show radDev [] = 0 from rfl, abs_zero]
+      exact le_refl 0
+  | cons c rest ih =>
+      intro i
+      rw [show evalDev (c :: rest) i e = c * e i + evalDev rest (i + 1) e from rfl,
+          show radDev (c :: rest) = abs c + radDev rest from rfl]
+      refine le_trans (abs_add _ _) (add_le_add_both ?_ (ih (i + 1)))
+      rw [abs_mul]
+      have h := mul_le_mul_of_nonneg_left (he i) (abs_nonneg c)
+      rwa [mul_one_ax] at h
+
+/-- **THE HOMOMORPHISM — the theorem that states what affine arithmetic buys.**
+
+`evalDev (addDev l m) = evalDev l + evalDev m`, with **one shared `e`**. Coefficients at the same
+index are added *before* being multiplied by their symbol, so opposite contributions cancel
+algebraically. The entrywise fold has no way to express this step: it would bound `|l|` and `|m|`
+separately and add the bounds. -/
+theorem evalDev_addDev (e : Nat → Real) (l : List Real) :
+    ∀ (m : List Real) (i : Nat), evalDev (addDev l m) i e = evalDev l i e + evalDev m i e := by
+  induction l with
+  | nil =>
+      intro m i
+      rw [show addDev [] m = m from rfl, show evalDev ([] : List Real) i e = 0 from rfl,
+          add_comm, add_zero]
+  | cons a l ih =>
+      intro m i
+      cases m with
+      | nil =>
+          rw [show addDev (a :: l) [] = a :: l from rfl,
+              show evalDev ([] : List Real) i e = 0 from rfl, add_zero]
+      | cons b m =>
+          rw [show addDev (a :: l) (b :: m) = (a + b) :: addDev l m from rfl,
+              show evalDev ((a + b) :: addDev l m) i e
+                = (a + b) * e i + evalDev (addDev l m) (i + 1) e from rfl,
+              ih m (i + 1),
+              show evalDev (a :: l) i e = a * e i + evalDev l (i + 1) e from rfl,
+              show evalDev (b :: m) i e = b * e i + evalDev m (i + 1) e from rfl]
+          exact affine_cons_id a b (e i) (evalDev l (i + 1) e) (evalDev m (i + 1) e)
+
+/-- **THE CANCELLATION, made formal.** A form added to its own negation has value **exactly zero**,
+at every valid assignment — not "bounded by twice the radius".
+
+This is the property the entrywise fold cannot represent, in one line. It is why `x · recip(x)`
+collapses toward `1` while `x · recip(y)` does not, and therefore why the EKF bound moved 4700× when
+nothing else did: `P`'s perturbation enters `K`'s numerator and denominator on the SAME symbols. -/
+theorem evalDev_cancels (e : Nat → Real) (l : List Real) (i : Nat) :
+    evalDev (addDev l (List.map (fun c => -c) l)) i e = 0 := by
+  induction l generalizing i with
+  | nil => rfl
+  | cons a rest ih =>
+      rw [show List.map (fun c => -c) (a :: rest) = (-a) :: List.map (fun c => -c) rest from rfl,
+          show addDev (a :: rest) ((-a) :: List.map (fun c => -c) rest)
+            = (a + -a) :: addDev rest (List.map (fun c => -c) rest) from rfl,
+          show evalDev ((a + -a) :: addDev rest (List.map (fun c => -c) rest)) i e
+            = (a + -a) * e i + evalDev (addDev rest (List.map (fun c => -c) rest)) (i+1) e from rfl,
+          ih (i + 1), add_neg]
+      rw [show (0 : Real) * e i = 0 from by mach_ring, add_zero]
+
+/-- And the entrywise fold's answer for the same quantity: `rad l + rad (-l) = 2·rad l`. So on a
+form of radius `r`, affine arithmetic gives **0** and the fold gives **2r** — the gap is the whole
+method. -/
+theorem radDev_neg_doubles (l : List Real) :
+    radDev (List.map (fun c => -c) l) = radDev l := by
+  induction l with
+  | nil => rfl
+  | cons a rest ih =>
+      rw [show List.map (fun c => -c) (a :: rest) = (-a) :: List.map (fun c => -c) rest from rfl,
+          show radDev ((-a) :: List.map (fun c => -c) rest)
+            = abs (-a) + radDev (List.map (fun c => -c) rest) from rfl,
+          abs_neg, ih, show radDev (a :: rest) = abs a + radDev rest from rfl]
+
 end MachLib.Real
