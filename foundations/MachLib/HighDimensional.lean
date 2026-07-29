@@ -2,6 +2,7 @@ import MachLib.Basic
 import MachLib.EML
 import MachLib.BallCubeRatio
 import MachLib.GuardedLowering
+import MachLib.GeometricDecay
 import MachLib.BoundaryRun
 import MachLib.BoundaryIntervention
 
@@ -30,21 +31,29 @@ recurrence is where the geometry enters and is stated as such in `BallCubeRatio.
 checked numerically against `π^(d/2)/Γ(d/2+1)` at d = 1..12 (agreement < 1e-12). -/
 noncomputable abbrev ballCubeRatio : Nat -> Real := MachLib.Real.bcRatio
 
-/-- Cube boundary-shell probability for a fixed shell width. -/
-axiom cubeBoundaryShellProbability : Real -> Nat -> Real
+/-- Cube boundary-shell probability: `1 − (1−ε)^d`, the complement being the concentric cube of
+side `1−ε`. **Was an opaque axiom** — and unlike the packet placeholders this one needed a PROOF,
+not a definition. -/
+noncomputable abbrev cubeBoundaryShellProbability : Real -> Nat -> Real :=
+  MachLib.Real.cubeShell
 
-/-- Foothold axiom: geometric cube boundary-shell probability tends to one. -/
-axiom cubeBoundaryShellProbability_tends_one
+/-- **Concentration of measure**, proven in `GeometricDecay.lean` from a division-free Bernoulli
+step. Essentially all of a high-dimensional cube lies near its surface. -/
+theorem cubeBoundaryShellProbability_tends_one
     (eps : Real) (heps : 0 < eps ∧ eps < 1) :
-    TendstoTo (cubeBoundaryShellProbability eps) 1
+    TendstoTo (cubeBoundaryShellProbability eps) 1 :=
+  MachLib.Real.cubeShell_tendsto_one heps.1 heps.2
 
-/-- Raw first-layer EML log-domain survival probability. -/
-axiom firstLayerSurvival : Nat -> Real
+/-- Raw first-layer EML log-domain survival: `(1/2)^(2^(d−1))`, independent symmetric leaves.
+**Was an axiom together with its own "decay" fact** — and the fact was the DEFINITION, so pinning
+both meant the ledger carried an entry for `x = x`. -/
+noncomputable def firstLayerSurvival (d : Nat) : Real :=
+  realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1)))
 
-/-- Foothold axiom: independent symmetric first-layer log-domain survival. -/
-axiom firstLayerSurvival_decay
+/-- Definitional, now that `firstLayerSurvival` has a definition. -/
+theorem firstLayerSurvival_decay
     (d : Nat) :
-    firstLayerSurvival d = realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1)))
+    firstLayerSurvival d = realPow (1 / natCast 2 : Real) (natCast (2 ^ (d - 1))) := rfl
 
 /-- Replay packet. **Was an opaque axiom until 2026-07-29** — the same defect that kept
 `high_dim_ball_cube_ratio_tends_zero` open for a month: three uninterpreted symbols and a theorem
