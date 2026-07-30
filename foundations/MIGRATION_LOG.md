@@ -431,6 +431,69 @@ in a second file). Regex alone would have left them to surface two rounds later,
 
 ---
 
+## Stop 4 — `v4.23.0` (kernel commit `50aaf682e9b7`)
+
+**Clean build, first attempt, ZERO MachLib edits** — 121s, 0 errors, 0 deprecation warnings. Three
+versions of drift (v4.20.1 → v4.23.0) and not one proof needed touching. The first stop where the
+migration cost nothing but compute.
+
+Instruments prepared before the pin moved, per the boundary rule: lean4checker `v4.23.0` (five negative
+tests confirmed firing) and Lean4Lean `4faf514`.
+
+### IT HALTED ON TWO GATES — one spurious, one a real finding about our own trust number
+
+**Criterion 7 — SPURIOUS, attributed to the instrument.** Lean4Lean `4faf514` rejected three modules
+with *"universe level of type_of(arg #2) of 'InnerKhovanskii.mk' is too big for the corresponding
+inductive datatype"*. **Three witnesses say our declaration is fine:** the C++ kernel accepted it
+(criterion 1 passed), Lean4Lean **`93abda0`** — the *first* commit in the same v4.23.0 window — accepts
+the **same environment** exit 0, and the arithmetic agrees (`MachLib.Real : Type`, the structure at
+`Type 1`, and arg #2's type `T → Real → Real` in `Type 0`). `4faf514` is
+`chore: initial refactoring for typed defeq`; the regression is in the refactor. **This is the
+walk-back fallback firing exactly as the rule prescribes** — and note the environment was held fixed
+while the checker varied, which is what made it a controlled experiment rather than a guess.
+
+**Criterion 3 — REAL, and it is about the project's headline trust number.** *"10 ledger entries name a
+vanished axiom (rot)"*, all `_elambda_N`:
+
+| what | evidence |
+|---|---|
+| all 10 were genuinely **`.axiomInfo`** at v4.20.1 | observed directly in a `git worktree` rebuild of `toolchain-stop/v4.20.1` — **not** inferred from `emit_ledger.py`'s filter |
+| they are **lambda-lifted fields of structure-instance `def`s** | `intModel._elambda_1 : Int → Int`, `emlEmptyChain._elambda_2 : Fin 0 → Real → Real`, two SDR-solver lifts, one lower-solver lift |
+| **no headline ever cited one** | 0 citations across **all six** frozen snapshots' `footprints.json` |
+| **no real declaration cites one** | all **17** transitive citers under `MachLib` are `_cstage1`/`_cstage2`/`_closed_N._cstage2` compiler IR |
+| why they vanished | v4.23.0's compiler stopped emitting them |
+
+> **So "252 axioms pinned" counted 10 compiler artifacts as trust assumptions. The honest number is
+> 242, and it always was.** `.axiomInfo` does not distinguish a human's assumption from the code
+> generator's closure, and a name-prefix filter cannot either.
+
+**Fixed three ways, because fixing only the list would have left the producer producing:**
+
+1. **The list**: 10 entries removed, `knownAxioms` = **242**.
+2. **The structure**: `liveAxioms` *and* `emit_ledger.py` now both exclude compiler artifacts by name
+   predicate — the miscount is **unrepresentable**, not merely corrected. `emit_ledger.py` is where the
+   10 entered, so patching only the checker would have left the generator free to re-add them.
+3. **The audit trail**: `snapshots/count_amendments.json` records `252 → 242` with date, stop, reason,
+   all five evidence lines, and an explicit `not_a_drift` note. `checkpoint.py` treats a **matching**
+   amendment as expected and **still halts on any unlisted count change** — deliberately an audit
+   trail, not the `--accept-anyway` this tool still refuses to have. The frozen baseline keeps saying
+   252; the amendment explains why 242 is right. **Neither number is erased.**
+
+**And this is the same coverage shape as stop 2's gate-file gap.** No gate asks *"does any non-headline
+declaration depend on an axiom nobody pinned?"* — the leak check covers the 57 headlines, `spineTheorems`
+covers the Option-D modules, guard (6) covers two specific discharged axioms. The 10 sat outside every
+frame for as long as they existed. Recorded as open item 5.
+
+**The last-commit rule needed its empirical form on first reuse.** At v4.20.1 the twelve commits after
+the first were fixes, so *last* was right. At v4.23.0 the last commit pinning the version is
+`chore: initial refactoring for typed defeq` — a mid-refactor state, not a stabilised one. So the rule
+is not "read the commit messages and judge":
+
+> **Default to the LAST commit pinning the version; walk backwards if the instrument fails to build or
+> crashes.** The gate's `INSTRUMENT_ABSENT` / `INSTRUMENT_CRASH` codes drive the fallback, which keeps
+> the choice mechanical instead of interpretive. (Here `4faf514` built and ran, so no walk-back was
+> needed — but the rule now says what to do when it isn't.)
+
 ## Stop 3 — `v4.20.1` (kernel commit `b02228b03f65`)
 
 **One version, one drift site in MachLib — and five defects in the instruments.** That ratio is the
@@ -662,7 +725,8 @@ extra command per stop, front-loading the destination configuration's debugging 
 |---|---|---|---|
 | 1 | Does `mach_ring`'s permutative catch-all carry a **latent cost cliff** independent of the bump — did it get slower, or did phase 1 hand it a harder goal? | **worked around, mechanism partly unattributed** | Needs a **built v4.14.0 tree** to compare; `lake clean` at stop 1 removed it (correct for kernel hygiene, and it cost this measurement). Cheapest settlement: a `git worktree` at `dec74242` with its own toolchain, built once, and the two probes replayed there. Do it **before stop 4**, not after — a second 9-atom identity anywhere on the route will hit the same cliff, and it will present as "unsolved goals" |
 | 2 | `mach_ring` **cannot distinguish "outside my fragment" from "out of budget"** — `try (first | … )` swallows the timeout | **designed, not implemented** — design note below | Implementing it touches the tactic used by hundreds of proofs, mid-migration, which the scope guard forbids. Deferred to after the destination *with the design fixed now*, so it is a coding task and not a rediscovery |
-| 3 | Lean4Lean maiden run | **unblocked at stop 1, not attempted** | Protocol above. Do it against the green tree |
+| 3 | Lean4Lean maiden run | **DONE at stop 1, validated both directions; criterion 7 live from stop 3** | — |
+| 5 | **No gate asks "does any NON-headline declaration depend on an axiom nobody pinned?"** The leak check covers the 57 headlines, `spineTheorems` covers the Option-D modules, guard (6) covers two specific discharged axioms. The 10 `_elambda` non-axioms sat outside every frame for as long as they existed | **open** | A whole-namespace sweep would catch it, but that is guard (6)'s cost profile (~11 min) again — so it belongs with open item 4's module-scoping work, where the sweep gets cheap enough to widen. Same coverage shape as stop 2's gate-file gap: the instrument watched what it was pointed at |
 | 4 | `AxiomLedger.lean` guard (6) sweeps `collectAxioms` over **every theorem in the environment**, so criterion 3's cost is denominated in **core's** theorem count — which doubled (20,874 → 43,907) across v4.16 → v4.19, taking the gate past 15 minutes | **attributed, fix deferred** | Fix: scope by module like `spineTheorems` does (covers `Certcom.*` decls in our modules, excludes core, weakens nothing — a core theorem cannot cite a MachLib axiom). **Deferred to after the destination**: narrowing a pass-bar gate between stops makes the stops incomparable. Gets more valuable every stop, since core keeps growing |
 
 ## DESIGN NOTE (open item 2) — make the swallowed timeout speak

@@ -28,13 +28,24 @@ DISCLOSED = [
      "pending-fix (drops the log-positivity side-condition; false as stated; in NO shipped footprint)"),
 ]
 
+# The same compiler-artifact exclusion AxiomLedger.lean's `liveAxioms` applies, and for the same
+# reason: this generator is where the 10 `_elambda` non-axioms entered `knownAxioms` in the first
+# place (2026-07-29 finding, v4.23.0 bump). Two enumerations of the same set must not disagree about
+# what counts -- that is the cross-derivation rule, applied to the pair that produced the miscount.
 FACTS_LEAN = """import MachLib
 open Lean Elab Command
+
+def isCompilerArtifact (n : Name) : Bool :=
+  let s := n.toString
+  ["_elambda", "_cstage", "_closed", "_unsafe_rec", "_lam_", "_spec_", "_boxed", "_rarg"].any
+    (fun m => (s.splitOn m).length > 1)
+
 run_cmd do
   let env ← getEnv
   let mut total := 0
   for (nm, ci) in env.constants.toList do
-    if (ci matches .axiomInfo _) && ((`MachLib).isPrefixOf nm || (`Real).isPrefixOf nm) then
+    if (ci matches .axiomInfo _) && !(isCompilerArtifact nm)
+        && ((`MachLib).isPrefixOf nm || (`Real).isPrefixOf nm) then
       total := total + 1
   logInfo m!"FACT total {total}"
   for h in [%NAMES%] do

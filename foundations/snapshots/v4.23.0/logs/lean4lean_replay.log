@@ -1,0 +1,17 @@
+lean4lean path   : /home/monogate/lean4lean-v4.23.0
+lean4lean toolchain: leanprover/lean4:v4.23.0
+ledger toolchain   : leanprover/lean4:v4.23.0
+
+1 INSTRUMENT REJECTS (lean4checker's AddFalse smuggling specimen must FAIL)
+    PASS -- rejected with a kernel error, naming it
+
+2 ENVIRONMENT REPLAYS through the second implementation
+    REPLAY_FAIL -- the checker rejected our environment. This IS a finding.
+    m in MachLib.InnerKhovanskiiExp:
+(kernel) universe level of type_of(arg #2) of 'MachLib.InnerKhovanskiiExpMod.InnerKhovanskiiExp.mk' is too big for the corresponding inductive datatype
+lean4lean found a problem in MachLib.InnerKhovanskiiExpWF:
+(kernel) universe level of type_of(arg #2) of 'MachLib.InnerKhovanskiiExpWFMod.InnerKhovanskiiExpWFR.mk' is too big for the corresponding inductive datatype
+lean4lean found a problem in MachLib.InnerKhovanskii:
+(kernel) universe level of type_of(arg #2) of 'MachLib.InnerKhovanskiiMod.InnerKhovanskii.mk' is too big for the corresponding inductive datatype
+
+LEAN4LEAN-REPLAY GATE: FAIL

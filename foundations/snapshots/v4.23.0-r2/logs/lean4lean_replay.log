@@ -1,0 +1,15 @@
+lean4lean path   : /home/monogate/lean4lean-v4.23.0
+lean4lean toolchain: leanprover/lean4:v4.23.0
+ledger toolchain   : leanprover/lean4:v4.23.0
+
+1 INSTRUMENT REJECTS (lean4checker's AddFalse smuggling specimen must FAIL)
+    PASS -- rejected with a kernel error, naming it
+
+2 ENVIRONMENT REPLAYS through the second implementation
+    PASS -- MachLib re-checks clean
+
+LEAN4LEAN-REPLAY GATE: PASS
+  Grade: SECOND IMPLEMENTATION, SHARED LINEAGE -- not 'independent kernel'. Lean4Lean is
+  a port of the C++ kernel by its author's own statement, and it carried #14576 until
+  2026-07-29. This catches porting divergence and environment manipulation; it does NOT
+  make a shared defect visible. See BUMP_PLAN.md's Amendment 2 finding.

@@ -203,11 +203,28 @@ def compare(cur: dict, base_dir: str) -> int:
                     os.path.join(SNAPS, cur["label"], "footprints.json")])
     print(out.strip())
 
-    drift = [f"{k}: {base['counts'][k]} -> {cur['counts'][k]}"
-             for k in COUNTS if base["counts"].get(k) != cur["counts"].get(k)]
+    # AUDITED AMENDMENTS. A count that was WRONG must be correctable without either rewriting a frozen
+    # baseline or disabling this comparison -- so `snapshots/count_amendments.json` records from/to plus
+    # the evidence, and a MATCHING entry is reported as amended rather than as drift. Anything unlisted
+    # still halts the stop; this is an audit trail, not an override flag.
+    amend_path = os.path.join(SNAPS, "count_amendments.json")
+    amendments = json.load(open(amend_path)) if os.path.exists(amend_path) else {}
+    drift, amended = [], []
+    for k in COUNTS:
+        b, c = base["counts"].get(k), cur["counts"].get(k)
+        if b == c:
+            continue
+        match = next((a for a in amendments.get(k, []) if a.get("from") == b and a.get("to") == c), None)
+        if match:
+            amended.append((k, b, c, match))
+        else:
+            drift.append(f"{k}: {b} -> {c}")
     print(f"\ncount equality vs baseline: {'PASS' if not drift else 'FAIL'}")
     for d in drift:
-        print(f"  ~ {d}")
+        print(f"  ~ {d}  (UNLISTED -- no amendment on file)")
+    for k, b, c, a in amended:
+        print(f"  ~ {k}: {b} -> {c}  AMENDED {a['date']}: {a['reason'][:80]}...")
+        print(f"      not_a_drift: {a.get('not_a_drift', '')[:96]}")
 
     fails = [n for n, _, _ in GATES if cur["gates"][n] != 0]
     print(f"gates green: {'PASS' if not fails else 'FAIL — ' + ', '.join(fails)}")
