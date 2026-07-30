@@ -40,6 +40,7 @@ with phantom type parameters"*), not a count, so it is written down here rather 
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import re
@@ -232,6 +233,11 @@ def main() -> int:
               open(STATE, "w"), indent=1)
 
     print()
+    # Printed BEFORE the verdict branches, on purpose: the first version sat in the exit-0
+    # path only, so the two verdicts that actually mean 'something moved' were the two that
+    # skipped the reminder. A reminder reachable from one branch is not a reminder.
+    print_scheduled_reverifications()
+    print()
     if both:
         print(f"INTERSECTION OPEN at {fmt(pin)} — THE DECISION HAS EXPIRED.")
         print("  Both checkers reach a kernel carrying the fix. The dual-kernel and patched-kernel")
@@ -260,7 +266,33 @@ def main() -> int:
     print("STILL EMPTY — the decision holds, and the wait remains monitored rather than standing.")
     print("  Cheapest way to open it from our side: contribute the lean4checker tag upstream. Its")
     print("  history is mechanical per release, so it is plausibly a PR, not a project.")
+    print()
     return 0
+
+
+def print_scheduled_reverifications() -> None:
+    """Other things that expire on this watch's cadence, printed so they cannot be quietly skipped.
+
+    Added 2026-07-30. monogate.org/accountability grades this project against the Leiden Declaration,
+    and a grade is only as current as the last time a human re-read it against its artifact. The link
+    gate (`blog/scripts/check_accountability.py`) proves the artifacts still RESOLVE on every CI run;
+    it cannot prove a grade is still CORRECT. That second half is human work on a clock, and a clock
+    with no alarm is a wish -- so the alarm lives here, next to the other thing this project promised
+    to re-check quarterly rather than remember.
+    """
+    print("SCHEDULED RE-VERIFICATIONS (this watch's cadence, not just the intersection):")
+    for name, due, how in (
+        ("accountability page grades", "2026-10-29",
+         "re-run blog/scripts/check_accountability.py, re-read each grade against its artifact, "
+         "bump last_verified; downgrade anything whose evidence moved"),
+    ):
+        try:
+            days = (dt.date.fromisoformat(due) - dt.date.today()).days
+            when = f"in {days}d" if days >= 0 else f"OVERDUE by {-days}d"
+        except Exception:  # noqa: BLE001
+            when = "?"
+        print(f"  · {name:<28} due {due}  ({when})")
+        print(f"      {how}")
 
 
 if __name__ == "__main__":
