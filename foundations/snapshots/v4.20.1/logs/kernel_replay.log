@@ -1,0 +1,15 @@
+checker path     : /home/monogate/lean4checker-v4.20.1
+checker toolchain: leanprover/lean4:v4.20.1
+ledger  toolchain: leanprover/lean4:v4.20.1
+
+1 INSTRUMENT WORKS (lean4checker's own 5 negative tests must all FAIL correctly)
+    PASS -- all five rejected as expected
+
+2 ENVIRONMENT REPLAYS through the external kernel
+    PASS -- MachLib re-checks clean
+
+KERNEL-REPLAY GATE: PASS
+  Grade: SECOND OPINION, not INDEPENDENT KERNEL. lean4checker shares the kernel's
+  C++ lineage in part -- full strength against environment manipulation, PARTIAL
+  independence against kernel-implementation bugs. Lean4Lean would earn the
+  stronger phrase and is not yet running.

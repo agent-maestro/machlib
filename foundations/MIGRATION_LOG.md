@@ -431,6 +431,90 @@ in a second file). Regex alone would have left them to surface two rounds later,
 
 ---
 
+## Stop 3 — `v4.20.1` (kernel commit `b02228b03f65`)
+
+**One version, one drift site in MachLib — and five defects in the instruments.** That ratio is the
+finding, so the two are listed separately and by owner.
+
+### MachLib drift: exactly one site
+
+`TwoExpNonlinearCurveInstance.lean:188` — **`decide` now refuses a goal whose expected type contains
+free variables** (*"expected type must not contain free variables … Use the '+revert' option"*). The
+type was `¬⟨2, hv⟩ = ⟨1, _⟩`; the `by omega` proof terms inside the `Fin` literals drag the local
+context in.
+
+**The compiler's suggestion was declined**: `decide +revert` would make the proof depend on exactly the
+behaviour that just changed. Routed through the file's own `fin3_ne_of_val_ne` instead — **and that
+first attempt failed identically**, because the helper wants `p.val ≠ q.val`, so the goal became
+`↑⟨2, hv⟩ ≠ ↑⟨1, _⟩`, still carrying the proof term. *The helper moves where the free variables appear;
+it does not remove them.* `by simp` closes it by reducing the coercions away. Both the fix and the
+failed reasoning are recorded at the site.
+
+### Five instrument defects, four of them mine
+
+| # | defect | failed in the… |
+|---|---|---|
+| 1 | error-count regex assumed **relative** paths; v4.20.1's Lake prints absolute ones | **reassuring** direction — reported `errors: 0` on a **failing** build |
+| 2 | criterion-7 specimen `.olean` written to the olean root, not the module path | loud (checker could not find it) |
+| 3 | criterion-7 step 1 classifier called an **instrument error** an **acceptance of `False`** | **alarming** direction — a false accusation |
+| 4 | `cleanup()` deleted from the *old* buggy olean path, so the specimen **survived** | **contaminating** — see below |
+| 5 | picked the **FIRST** commit pinning a version instead of the **LAST** | loud, eventually — a deterministic `double free` in the checker |
+
+**Defect 4 is the instructive one: a gate that fails to clean up contaminates its own next check.**
+The leftover `MachLib/ZZZSpecimenAddFalse.olean` — *a compiled proof of `False`* — was still on the
+search path when step 2 replayed `MachLib`, so step 2 dutifully reported a smuggled `False`. And then
+defect 3's classifier mislabelled *that* as a crash, because `uncaught exception:` is how lean4lean
+reports ordinary rejections.
+
+> **RULE, learned three times in one gate: classify by MECHANISM, not by message text.** A memory fault
+> aborts the process (`SIGABRT`/`SIGSEGV` → negative returncode, or 134/139); a rejection is an orderly
+> non-zero exit. Substring matching on error text got the verdict wrong in three different directions
+> before the returncode test got it right.
+
+**Defect 5 gives a rule for every remaining stop:** Lean4Lean's `7cc5a77` is the *first* commit pinning
+v4.20.1 — a bare `chore: update lean` — and **twelve later commits still pin v4.20.1**, including
+`fix: panic in error reporting`, `fix: duplicate declaration errors`, and `fix: more panics in error
+reporting`. At `7cc5a77` the replay died with a deterministic `free(): double free detected in tcache 2`
+on an environment that had replayed **clean** at v4.19.0. At `143d58a` — the last v4.20.1 commit — it
+passes.
+
+> **RULE: take the LAST commit that pins a version, not the first.** The first is the start of the
+> support window, before that window's own fixes. This applies to Lean4Lean at every remaining stop.
+
+### VERDICT: **STOP ACCEPTED** (2026-07-29) — first stop with a second kernel
+
+```
+snapshots/v4.20.1/   digest 5025a9ade66a727a134ed2271b13783f0a08a43ee4e566fb91a86a99967b6393
+```
+
+| criterion | gate | v4.14.0 → v4.20.1 |
+|---|---|---|
+| 1 | `check_kernel_replay.py` (lean4checker v4.20.1) | **exit 0** |
+| **7** | **`check_lean4lean_replay.py`** (Lean4Lean `143d58a`) | **exit 0** — specimen rejected, MachLib replays clean. **First dual-kernel stop on this route** |
+| 2 | 57-footprint equality vs baseline | **PASS — 0 changed, 0 lost, 0 gained** |
+| 3 | ledger | **exit 0** — 252 axioms |
+| 4 | derivable | **exit 0** — 5 derivations |
+| 5 | sorry audit | **exit 0** — 1 decl, exact |
+| 6 | artifact drift | **exit 0** — after cleaning up criterion 7's own litter |
+| — | toolchain | **exit 0** — pin = lock = `v4.20.1` @ `b02228b03f65` |
+
+**Six versions from the baseline. Zero changed axiom footprints, still.** Grade for this stop:
+**two implementations, shared lineage** — the strongest phrase the evidence supports, and deliberately
+not "independent kernel".
+
+`git tag toolchain-stop/v4.20.1` — third fallback position. Route: **3 of 6 stops** on the amended
+(v4.32.2) plan.
+
+### And criterion 6 is the only gate that can catch criterion 7's litter
+
+The smuggled declaration sits at the **root** namespace, so the ledger's prefix-filtered axiom
+enumeration misses it; **nothing depends on it**, so no footprint moves; and it is **not a `sorry`**.
+Only the source↔artifact tripwire sees it. **`artifact_drift` must therefore run AFTER
+`lean4lean_replay`** — now recorded as load-bearing in `checkpoint.py`'s gate order rather than left as
+an accident of how the list was typed.
+
+---
+
 ## Lean4Lean maiden run (2026-07-29, on the green v4.19.0 tree) — **VALIDATED, and it refuted the plan**
 
 Run before the pin advanced, per *an instrument does not join a measurement midway*. Commit `f8cd3d3`

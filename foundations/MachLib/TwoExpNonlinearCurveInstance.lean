@@ -185,7 +185,18 @@ theorem nonlinearCurveChain_isExpChain (c : Real) : IsExpChain (nonlinearCurveCh
         + MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) (MultiPoly.varY ⟨1, by omega⟩) = 0
       rw [MultiPoly.degreeY_const]
       show 0 + (if (⟨2, by omega⟩ : Fin 3) = ⟨1, by omega⟩ then 1 else 0) = 0
-      rw [if_neg (by decide)]
+      -- v4.20.1: `decide` now REFUSES a goal whose expected type contains free variables --
+      -- "expected type must not contain free variables … Use the '+revert' option". Here the type is
+      -- `¬⟨2, hv⟩ = ⟨1, _⟩`, and the `by omega` proof terms inside the Fin literals are what drag the
+      -- local context in. The compiler suggests `decide +revert`; taking it would make the proof
+      -- depend on how `decide` handles free variables, which is the thing that just changed.
+      -- So: route through this file's own `fin3_ne_of_val_ne` (used identically 6 lines above) and
+      -- close the value inequality with `simp`, which reduces the `Fin.val` coercions away instead of
+      -- deciding a proposition whose type still mentions `hv`.
+      -- (First attempt used `decide` under the helper and FAILED the same way: `fin3_ne_of_val_ne`
+      -- wants `p.val ≠ q.val`, so the goal was `↑⟨2, hv⟩ ≠ ↑⟨1, _⟩` -- still carrying the proof term.
+      -- The helper moves where the free variables appear; it does not remove them.)
+      rw [if_neg (fin3_ne_of_val_ne (by simp))]
     · intro j hij
       have hn : (2:Nat) < j.val := hij
       omega

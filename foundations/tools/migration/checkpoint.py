@@ -65,9 +65,20 @@ ANSI = re.compile(r"\x1b\[[0-9;]*m")
 # criterion numbers refer to BUMP_PLAN.md's pass-bar table
 GATES = [
     ("kernel_replay", 1, [PY, "tools/axiom_ledger/check_kernel_replay.py"]),
+    # Criterion 7 joined at stop 3 (v4.20.1) -- at a stop BOUNDARY, before this pin's first capture,
+    # per "an instrument does not join a measurement midway". Its trigger (Lean4Lean's maiden run
+    # firing in both directions) was met at v4.19.0. Grade is "second implementation, shared lineage",
+    # NOT "independent kernel" -- see BUMP_PLAN.md Amendment 2.
+    ("lean4lean_replay", 7, [PY, "tools/axiom_ledger/check_lean4lean_replay.py"]),
     ("ledger", 3, [PY, "tools/axiom_ledger/check_ledger.py"]),
     ("derivable", 4, [PY, "tools/axiom_ledger/check_derivable.py"]),
     ("sorry_audit", 5, ["lake", "env", "lean", "tools/sorry_audit.lean"]),
+    # ORDER IS LOAD-BEARING: criterion 7 PLANTS a compiled proof of `False` (lean4checker's AddFalse
+    # specimen) and removes it again, and criterion 6 is the ONLY gate that would catch a failed
+    # cleanup -- the smuggled declaration sits at the root namespace, so the ledger's prefix-filtered
+    # axiom enumeration misses it; nothing depends on it, so no footprint moves; and it is not a
+    # `sorry`. This is not hypothetical: the cleanup DID fail once (wrong olean path), leaving
+    # `MachLib/ZZZSpecimenAddFalse.olean` in the build tree. Keep artifact_drift AFTER lean4lean_replay.
     ("artifact_drift", 6, [PY, "tools/axiom_ledger/check_artifact_drift.py"]),
     ("toolchain", 0, [PY, "tools/axiom_ledger/check_toolchain.py"]),
 ]
