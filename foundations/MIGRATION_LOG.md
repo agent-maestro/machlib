@@ -314,6 +314,55 @@ environment size and representation. Its elapsed time is now **tracked per stop*
 `timing_profile.py` (gate files added at this stop; see below), giving a canary for *"the environment
 got weird"* that no per-module criterion can see.
 
+### THE PROFILE'S FIRST DIFF FOUND TWO FINDINGS POINTING OPPOSITE WAYS
+
+`timing_profile.py --diff snapshots/timing/v4.16.0.json snapshots/timing/v4.19.0.json`, and **neither
+half of this would have been visible to any gate.**
+
+**1. v4.19 removed a pathology in the Pfaffian modules. The library got ~4.8× faster.**
+
+| module | v4.16.0 | v4.19.0 | |
+|---|---|---|---|
+| `PfaffianGeneralSingleExpDescent` | **291.70s** | **0.65s** | ~450× |
+| `PfaffianGeneralSingleExpCanon` | 148.65s | 1.35s | ~110× |
+| `PfaffianGeneralSingleExp` | 118.16s | 3.60s | ~33× |
+| `PfaffianGeneralBase` | 70.62s | 1.65s | ~43× |
+| **41-module total** | **940.44s** | **196.59s** | **4.8×** |
+
+**A number that good is a measurement bug until proven otherwise**, so it was checked before being
+believed — the same scepticism a regression gets:
+
+* **Same work?** `git diff toolchain-stop/v4.16.0 HEAD` on all five files: **empty**. Untouched by the
+  ~180-site sweeps, so both numbers measure identical source.
+* **Not a cache keyed on module identity?** An identical copy under a *fresh* module name
+  (`ZZZTimingProbe`) also ran in **0.65s**.
+* **Independent witness?** The clean builds: v4.16.0 needed **682s** to reach its first failure wall;
+  v4.19.0 reached its own in **39s**, and the whole 574-module tree finished across all six rounds in
+  well under half of v4.16's single pass.
+
+> **Mechanism UNATTRIBUTED.** Something between v4.17 and v4.19 removed a pathological cost in those
+> descent modules; *which* change is not known and was not chased. Recorded as measured-and-corroborated
+> with the cause open — not as a v4.19 win we can explain.
+
+**2. Meanwhile the ledger gate went the other way, and now dominates everything.**
+
+```
+modules   940.44s -> 196.59s     (-743.85s, the library got faster)
+gates          --  -> 1109.57s   (AxiomLedger.lean 1032.81s + sorry_audit 76.76s)
+TOTAL     940.44s -> 1306.16s
+```
+
+**`AxiomLedger.lean` alone is now 79% of all measured elaboration cost on this project.** That reframes
+open item 4 from housekeeping to the single largest cost item on the route — while the code it guards
+got nearly five times cheaper to check.
+
+**Precision about what is measured vs inferred**, because the coverage gap only just closed: the
+**1032.81s is the first MEASURED ledger number** (v4.16.0's profile has no gate-file entry, which is why
+`--diff` honestly reports it as *newly budget-sensitive* rather than as a regression). The claim that it
+*roughly doubled* rests on the checkpoint durations (~5 min total at v4.16 vs >15 min for this gate
+alone at v4.19) plus core's theorem count going 20,874 → 43,907 — **inference, corroborated, not a
+before/after measurement.** From stop 3 the diff is real.
+
 ### THE GATE-FILE COVERAGE GAP — the instrument was not watching the instruments
 
 `timing_profile.py` profiled what `lake build` builds. **`AxiomLedger.lean` and `tools/sorry_audit.lean`
