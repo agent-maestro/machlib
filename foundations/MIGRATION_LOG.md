@@ -453,6 +453,88 @@ arrived as warnings; left alone they would have become hard errors somewhere fur
 to whatever stop tripped over them rather than to the version that deprecated them. Clearing them where
 they appear keeps attribution honest and costs one regex per name.
 
+## DESTINATION — `v4.32.2` (kernel commit `f3b06c705e6c`) — **the bump is complete**
+
+`v4.14.0 → v4.16.0 → v4.19.0 → v4.20.1 → v4.23.0 → v4.26.0 → v4.28.0 → v4.32.2`. The pin now carries
+the **#14577 kernel fix** that this entire migration was launched to reach.
+
+**THE NUMBER THE MIGRATION EXISTS FOR — eighteen minor versions, end-to-end, never chained:**
+
+| | |
+|---|---|
+| footprints | enumerated 57, captured 57, missing 0; cross-derived **57 / 57 / 57 AGREE** |
+| `v4.14.0 → v4.32.2` | **CHANGED 0 · lost 0 · gained 0** |
+| verdict | **FOOTPRINT EQUALITY: PASS — same theorems, same axioms, different kernel** |
+| counts vs baseline | PASS — 242 axioms pinned, 5 derivations, 1 allowlisted `sorryAx` |
+
+**Registry downgrade, recorded in the same commit that moves the pin — no silent grade change:**
+
+> **`v4.32.2`: PINNED, PATCHED KERNEL, INTERNALLY GREEN, EXTERNALLY UNREPLAYED — pending instrument
+> availability.** Criterion 1 `CHECKER_VERSION_MISMATCH` (lean4checker's stable tags stop at v4.28.0);
+> criterion 7 `INSTRUMENT_ABSENT` (no Lean4Lean runs at any version we could use). Both cited to
+> Amendment 5, which pre-registered this exact grade **before** the hop was walked. Upgrade triggers
+> on `digama0/lean4lean#17` closing or a lean4checker tag ≥ v4.29; owned by `watch_kernel_support.py`.
+
+**The last externally-certified pin is `v4.28.0`**, sealed and hash-verifiable. Every
+*"was this environment ever independently verified?"* question points there.
+
+### What four dark versions actually cost
+
+**21 errors across 11 files, five build rounds, and ZERO deprecation warnings.** The zero is the
+finding. Stops 2 and 5 were warned by their own compiler before anything broke; this hop could not be,
+because **every failure was a tactic-behaviour change and there is no deprecation cycle for "this
+tactic stops tolerating making no progress."**
+
+| class | sites | repair |
+|---|---|---|
+| `simp only []` / `dsimp only at h` now errors when it makes no progress | 12 | removed — they provably did nothing |
+| `simpa [List.map_map]` leaves the composition unreduced | 5 | `Function.comp_def` added |
+| `rw`'s implicit closing `rfl` stopped firing | 1 | closing step stated explicitly |
+| `omega` exhausts recursion on a 1000000 literal | 1 | `Nat.add_le_add`; both summand inequalities were already in hand |
+| a `simpa` standing in for a **definitional equality** | 2 | `exact sys.nonzero` |
+
+The last one is the lesson. `TwoExpPfaffianChain2Bridge` bridged two `PfaffianFn`s differing only in
+`relations`, and `.eval` **never reads `relations`** — the file's own docstring said so. The `simpa`
+was doing unfolding, not reasoning. **The first instinct — feed it a bigger simp set — was wrong and
+failed;** the fix was to read the definitions and state the fact.
+
+### Two instruments broke at the destination, and one of them stopped itself
+
+**`tools/sorry_audit.lean`** used `CollectAxioms.collect`, which v4.32.2 made **private**. The public
+`Lean.collectAxioms` existed all along — the gate was reaching into an implementation detail, and the
+repair also removes the reason it can break again. Instrument breakage, not a subject regression: the
+library built clean with its one allowlisted `sorry` while the gate could not compile.
+
+**`checkpoint.py` refused to compare**, and this is the behaviour to keep: it reported
+*"count 'allowlisted sorryAx decls' NOT EXTRACTED from sorry_audit — a count that cannot be derived is
+an instrument failure, not a zero"* and **did not attempt the footprint comparison**. A gate that
+declines to render a verdict it cannot support is the whole thesis of this repo, arriving unprompted.
+
+### `AxiomLedger` guard (6): 874.77s → 4.17s, and why that needed proving
+
+Open item 4 recorded guard (6)'s cost as denominated in **core's** theorem count, past 15 minutes and
+worsening, with module-scoping deferred as the fix. At v4.32.2 it elaborates in seconds.
+
+**Identical gate output was NOT accepted as evidence of identical coverage.** `"0 new legacy call
+sites"` reads the same whether the sweep visited 43,907 theorems or 500, and v4.32 ships Lean's new
+module system — a silently narrowed `env.constants` was a live hypothesis. So it was measured:
+
+    env.constants total = 220108;  thmInfo = 98560;  MachLib-prefixed = 13253
+
+Core had 43,907 theorems at v4.19. The sweep now sees **98,560** — coverage did not shrink, it more
+than doubled, over a 210× speedup. **Open item 4's cost problem is retired by upstream, not by us**,
+and the deferred module-scoping work is no longer needed for that reason.
+
+*(Probe deleted in the same breath it was run — it was an instrument, not an artifact.)*
+
+**One measurement caveat, filed against the profiler:** the first destination timing run recorded
+`tools/sorry_audit.lean` at `1.31s, exit 1` — time-to-error, not time-to-elaborate. The JSON stores
+the exit code honestly, but `total_seconds` sums failed runs alongside clean ones, so a reader
+comparing totals compares a broken run against working ones. The re-capture is clean (43 modules, no
+non-zero exits); `timing_profile.py` should exclude non-zero-exit modules from its total.
+
+---
+
 ### What step 1b actually bought, counted as a schedule fact
 
 Positive controls were added at 09:00 on 2026-07-30. At 12:28 the same day they answered the route's

@@ -320,7 +320,6 @@ theorem Rasin7_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin7 (gAsin8 c) 
     (fun y => hAsinPow 13 y) _ _ c hN7 (hD_hAsinPow 13 c hx)
   have hfull := HasDerivAt_sub _ (fun _ => natCast 225) _ _ c hMain (HasDerivAt_const (natCast 225) c)
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold gAsin8
   rw [← hAsinPow_shift2 13 hx]
   have e6 : natCast 4320 = (1 + 1 + 1 + 1 + 1 + 1) * natCast 720 := (six_mul_natCast 720).symm
@@ -402,7 +401,6 @@ theorem Rasin6_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin6 (Rasin7 c) 
     (HasDerivAt_const (natCast 225) c) (HasDerivAt_id c)
   have hfull := HasDerivAt_sub _ (fun y => natCast 225 * y) _ _ c hMain hy1
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold Rasin7
   rw [← hAsinPow_shift2 11 hx]
   have e5 : natCast 600 = (1 + 1 + 1 + 1 + 1) * natCast 120 := (five_mul_natCast 120).symm
@@ -466,7 +464,6 @@ theorem Rasin5_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin5 (Rasin6 c) 
   have hfull0 := HasDerivAt_sub _ (fun y => natCast 225 * (1 / (1 + 1)) * (y * y)) _ _ c hMain hy2'
   have hfull := HasDerivAt_sub _ (fun _ => natCast 9) _ _ c hfull0 (HasDerivAt_const (natCast 9) c)
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold Rasin6
   rw [← hAsinPow_shift2 9 hx]
   have e4 : natCast 96 = (1 + 1 + 1 + 1) * natCast 24 := (four_mul_natCast 24).symm
@@ -529,7 +526,6 @@ theorem Rasin4_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin4 (Rasin5 c) 
   have hfull0 := HasDerivAt_sub _ (fun y => natCast 75 * (1 / (1 + 1)) * (y * y * y)) _ _ c hMain hy3'
   have hfull := HasDerivAt_sub _ (fun y => natCast 9 * y) _ _ c hfull0 hy1
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold Rasin5
   rw [← hAsinPow_shift2 7 hx]
   have e3 : natCast 18 = (1 + 1 + 1) * natCast 6 := (three_mul_natCast 6).symm
@@ -606,7 +602,6 @@ theorem Rasin3_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin3 (Rasin4 c) 
   have hfull := HasDerivAt_sub _ (fun y => natCast 75 * (1 / natCast 8) * (y * y * y * y)) _ _ c
     hfull1 hy4'
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold Rasin4
   rw [← hAsinPow_shift2 5 hx]
   have e2 : natCast 4 = (1 + 1) * natCast 2 := (two_mul_natCast 2).symm
@@ -678,7 +673,6 @@ theorem Rasin2_deriv (c : Real) (hx : abs c < 1) : HasDerivAt Rasin2 (Rasin3 c) 
   have hfull := HasDerivAt_sub _ (fun y => natCast 15 * (1 / natCast 8) * (y * y * y * y * y)) _ _ c
     hfull1 hy5'
   refine hasDerivAt_congr_val hfull ?_
-  simp only []
   unfold Rasin3
   rw [← hAsinPow_shift2 3 hx]
   have hsum2 : natCast 2 + 1 = natCast 3 := by

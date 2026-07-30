@@ -245,7 +245,11 @@ theorem pfaffian_zero_count_bound_monotone
     pfaffian_zero_count_bound n d ≤ pfaffian_zero_count_bound n' d' := by
   unfold pfaffian_zero_count_bound
   have : n * 1000000 ≤ n' * 1000000 := Nat.mul_le_mul_right 1000000 hn
-  omega
+  -- `omega` closed this until v4.32.2, where it exhausts the recursion budget on the 1000000
+  -- literal. Not worth a bigger `maxRecDepth`: both summand inequalities are already in hand, so
+  -- the goal is one structural step and never needed a decision procedure. Faster, and it cannot
+  -- regress on a future literal-handling change.
+  exact Nat.add_le_add this hd
 
 /-- A `Real → Prop` predicate counting zeros (cardinality bounded).
 

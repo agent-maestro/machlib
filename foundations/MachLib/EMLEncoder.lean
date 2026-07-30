@@ -129,6 +129,9 @@ theorem eval_encLift : (t : EMLTree) → {N : Nat} → (p : MultiPoly N) → (x 
       rw [eval_liftLastYBy 3 (encLift t1 (encLift t2 p)) x env,
           eval_encLift t1 (encLift t2 p) x _,
           eval_encLift t2 p x _]
+      -- rw's implicit closing `rfl` stopped firing at v4.32.2; the residual is two `Fin.mk`
+      -- towers equal by `(Fin.mk a h).val = a` plus proof irrelevance. State it.
+      rfl
 
 /-! ## The eml step's Pfaffian relations
 

@@ -62,12 +62,14 @@ noncomputable def pfaffianPredicateSystem_of_chain2
     isExp := IterExpChainNorm_isExp 2,
     coherent := IterExpChainNorm_coh 2 A B,
     positive := IterExpChainNorm_pos 2 A B,
-    nonzero := by
-      simpa [chain2Fn, pfaffianChainFn, IterExpChainNorm] using sys.nonzero,
-    predicate_zero := by
-      intro z hA hB hP
-      simpa [chain2Fn, pfaffianChainFn, IterExpChainNorm] using
-        sys.predicate_zero z hA hB hP }
+    -- `.eval` reads only `poly` and `chain.evals` (never `relations`), and `IterExpChainNorm 2`
+    -- shares its `evals` with `IterExpChain 2` BY DEFINITION -- which is exactly what the docstring
+    -- above says. So these two types are definitionally equal and need no rewriting at all.
+    -- Until v4.32.2 a `simpa` happened to bridge them; it was doing unfolding, not reasoning, and
+    -- when simp stopped unfolding that far the fix was to state the fact rather than to hunt for a
+    -- bigger simp set. `exact` does the defeq check the proof always relied on.
+    nonzero := sys.nonzero,
+    predicate_zero := fun z hA hB hP => sys.predicate_zero z hA hB hP }
 
 /-- The generic Pfaffian rank of the normalized-chain view agrees with the
 lightweight chain-2 rank. -/
@@ -442,7 +444,7 @@ theorem khovanskii_rolle_full_of_chain2_lower_system_khovBound
       arc.zeros (hzeros_nd arc harcmem) (hzeros arc harcmem)
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full (fun x => A < x ∧ x < B ∧ sep x)
     (ChainExp2NoZeros.khovBound lower.separator.poly)
     (ChainExp2NoZeros.khovBound lower.jacobian.poly)
@@ -2048,7 +2050,7 @@ theorem khovanskii_rolle_full_of_chain2_boundedCertificate
       arc.zeros (hzeros_nd arc harcmem) (hzeros arc harcmem)
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full (fun x => A < x ∧ x < B ∧ sep x)
     bc.separatorBound bc.jacobianBound
     (fun ss hnd hss => bc.separatorCount ss hnd (fun x hx => hss x hx))

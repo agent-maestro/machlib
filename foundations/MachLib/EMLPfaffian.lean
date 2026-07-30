@@ -535,7 +535,6 @@ theorem sin_zeros_list_nodup (M : Nat) :
   exact (List.nodup_range).map (fun i => natCast (i + 1) * pi)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
-      dsimp only at hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge
       · have h := natCast_mul_pi_lt (show i + 1 < j + 1 from by omega)
         rw [hij_eq] at h

@@ -79,7 +79,6 @@ theorem natCast_kpi_shifted_list_nodup (K M : Nat) :
   exact (List.nodup_range).map (fun i => natCast (K + i + 1) * pi)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
-      dsimp only at hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge
       · have h := natCast_mul_pi_lt (show K + i + 1 < K + j + 1 by omega)
         rw [hij_eq] at h

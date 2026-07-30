@@ -706,7 +706,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data
   refine ⟨Ncrit, N, ?_⟩
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full (fun x => A < x ∧ x < B ∧ sep x) Ncrit N
     (fun ss hnd hss => hNcrit_interval ss hnd (fun x hx => hss x hx))
     (hd.rep, hd.zeros) (s.map (fun arc => (arc.rep, arc.zeros))) hchainPairs ?_
@@ -802,7 +802,7 @@ theorem khovanskii_rolle_full_of_bivar_expr_arc_data
   refine ⟨Ncrit, N, ?_⟩
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full (fun x => A < x ∧ x < B ∧ sep x) Ncrit N
     (fun ss hnd hss => hNcrit_interval ss hnd (fun x hx => hss x hx))
     (hd.rep, hd.zeros) (s.map (fun arc => (arc.rep, arc.zeros))) hchainPairs ?_
@@ -875,7 +875,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data_and_separator_count
   refine ⟨N, ?_⟩
   have hchainPairs : ChainSep sep (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full sep Ncrit N hNcrit
     (hd.rep, hd.zeros) (s.map (fun arc => (arc.rep, arc.zeros))) hchainPairs ?_
   · have htail :

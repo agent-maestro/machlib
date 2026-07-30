@@ -64,8 +64,13 @@ run_cmd do
     if (`MachLib).isPrefixOf n then
       match ci with
       | .thmInfo _ | .defnInfo _ =>
-        let (_, s) := ((CollectAxioms.collect n).run env).run {}
-        if s.axioms.contains ``sorryAx then
+        -- v4.32.2 made `CollectAxioms.collect` private, so this reached into an implementation
+        -- detail until upstream closed it. `Lean.collectAxioms` is the public interface and always
+        -- was; switching to it is the repair AND removes the reason this can break again.
+        -- INSTRUMENT breakage, not a subject regression: the library built clean with its one
+        -- allowlisted `sorry` while this gate could not compile.
+        let axs ← Lean.collectAxioms n
+        if axs.contains ``sorryAx then
           allSorry := allSorry.push n
           unless allowedSorry.contains n do bad := bad.push n
       | _ => pure ()
