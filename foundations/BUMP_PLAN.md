@@ -253,3 +253,27 @@ So `checkpoint.py` asserts the 57 **three** ways (Python bracket-parse of `headl
 halts the stop before any footprint is compared**. Every other count (252 axioms, 5 derivations, 2
 allowlisted `sorryAx`) is parsed from the gate that derived it and compared to **the baseline's**
 value — never to a literal in the script, which would just be a fourth place for the numbers to rot.
+
+---
+
+# AMENDMENT 1 — conditional **criterion 7**: dual replay at stops 3–5
+
+**Recorded 2026-07-29, after stop 1 was accepted. Provenance: authorised in-session by the project
+owner**, on the reasoning that the marginal cost is one command per stop and it front-loads the
+destination configuration's debugging by three stops. It lives in *this* file rather than the log
+because it changes the **pass bar**, and the pass bar's home is here. **Nothing above is amended** —
+criterion 7 is *additive* and *conditional*, so the pre-registered bar stands unaltered for stops 1–2.
+
+**Why it became available three stops early:** Lean4Lean pins `v4.16.0`. From stop 1 onward the
+genuinely independent kernel can read our environment, which the plan did not expect until v4.26.0.
+
+| | |
+|---|---|
+| **trigger** | Lean4Lean's maiden run at v4.16.0 fires **in both directions** — rejects a negative specimen *and* accepts `MachLib`. Protocol: `MIGRATION_LOG.md`, "Lean4Lean maiden run" |
+| **if triggered** | **criterion 7** = *MachLib replays clean through Lean4Lean as well*, applied at stops **3 (v4.20.1), 4 (v4.23.0), 5 (v4.26.0)** |
+| **if not triggered** | bar unchanged. `INSTRUMENT_UNVALIDATED` **outranks any replay result** — an unfired checker's PASS and its FAIL are equally uninformative |
+| **stop 2 (v4.19.0)** | keeps the pre-registered bar **even if the trigger fires during it**. An instrument does not join a measurement midway; it joins at the next stop boundary — same rule that kept every stop-1 instrument change ahead of the pin |
+
+**What it does NOT change:** the destination stays v4.26.0, the decision record stands, and the
+expiry condition is untouched. Earning *"independent kernel"* earlier changes when the phrase can be
+said — not which kernel carries the fix, which is what the expiry condition is watching.

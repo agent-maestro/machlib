@@ -113,20 +113,36 @@ v4.16 does not, so the goal kept an unreduced `denote (restrictDX ..)` — and t
 printed it verbatim, which is what made this a five-minute diagnosis rather than an hour.
 **Fix: name the composites in the simp sets.**
 
-**4. `Ekf2GainPriorBound.lean:158` — `mach_ring`'s `ac_rfl` closer stopped closing.**
-The Joseph-form congruence identity (9 atoms, degree 4) normalises to a large AC residue that
-`mach_ring`'s final `ac_rfl` used to close. At v4.16 it spends 21s and leaves the goal.
+**4. `Ekf2GainPriorBound.lean:158` — `mach_ring`'s phase-2 catch-all hit a cost cliff.**
 **Fix: `mach_mpoly [pa, pb, pd, k00, k01, h00, h01, h10, h11]` — 6.4s, faster than the failure.**
-This is the standing house rule anyway: `mach_ring` is the weak all-`try` normaliser, `mach_mpoly`
-the complete one for identities needing cancellation.
 
-> **The transferable finding, and it is a reading rule for the remaining four stops:
-> ONE failure produced THREE errors.** `maxHeartbeats` is per-*declaration*, so `hidp` exhausting the
-> 4M budget made `hidr` (line 159) and the theorem's own `whnf` (line 144) time out as collateral.
-> Both pass untouched — `hidr` in **0.5s on the DEFAULT budget**. Isolating each into a scratch file
-> took two minutes and turned a three-error module into a one-line fix. **Attribute the first failure
-> in a declaration before believing anything reported after it**, or the eighteen-version haystack
-> gets padded with phantoms.
+The first version of this entry said *"the `ac_rfl` closer stopped closing"*. **That was wrong**, and
+it was caught by asking the right question of a green checkmark: a custom tactic falling off a cliff
+across a version boundary is not a migration casualty to route around, because the next 9-atom
+identity finds the same cliff. Probed with the scratch-file procedure:
+
+| phase-2 alternative | v4.16.0 behaviour |
+|---|---|
+| `ac_rfl` | **fails in 0.59s** — and never was the closer: after phase 1 the two sides differ by *more* than AC (nested negations), so `ac_rfl` cannot close this goal in any version |
+| catch-all `simp [add_comm, add_assoc, add_left_comm, mul_comm, mul_assoc, …]` | **exhausts 4,000,000 heartbeats in 73s** |
+
+So the mechanism is a **cost cliff in the permutative catch-all** — combinatorial in term size, hence
+a budget question rather than a soundness or fragment one.
+
+> **And `mach_ring` swallows it.** Phase 2 is `try (first | rfl | … | simp [AC..])`, so a timeout
+> *inside* the `try` re-surfaces as a bare **"unsolved goals"**. The tactic **cannot distinguish
+> "outside my fragment" from "out of budget"** — which is why this first read as a fragment miss, and
+> which is also the engine of the phantom errors below. Do not trust a `mach_ring` failure message to
+> tell you which of the two happened.
+
+**Demoted honestly — the remainder is UNATTRIBUTED:** whether the catch-all itself got slower across
+the bump, or whether phase 1's normal form changed and handed it a harder goal. Separating those needs
+a **built v4.14.0 tree**, which this migration no longer has (the `lake clean` at stop 1 was the right
+call for kernel hygiene and it cost this measurement). Recorded as open rather than left implied-solved
+by a green build — see *Open items*.
+
+The reading rule this produced is written up as a standing procedure below — it is the most reusable
+thing stop 1 generated, and stop 2 is the largest jump on the route.
 
 None of the four touched a statement, an axiom, or the austerity constraints — which is what
 criterion 2 is for, and it is checked below rather than asserted here.
@@ -172,3 +188,74 @@ CLI and replay time is strictly cheaper here, against a green tree, than discove
 destination while also holding four stops of drift in your head. If it replays clean, that is the
 first evidence in this project's history for the phrase *independent kernel*, three stops before the
 plan expected it.
+
+---
+
+# Standing procedures earned at stop 1
+
+## SCOPE POISONING — attribute the first failure in a shared-resource scope
+
+**One failure produced three errors.** `maxHeartbeats` is per-**declaration**, so `hidp` exhausting the
+4M budget made `hidr` (line 159) and the theorem's own `whnf` (line 144) time out as collateral. Both
+pass untouched; `hidr` in **0.5s on the DEFAULT budget**. Two of three reported failures were phantoms.
+
+> **RULE: a failure that exhausts a shared resource invalidates every report downstream of it in the
+> same scope.** Attribute the *first* failure in a scope before believing anything reported after it,
+> where **scope = whatever unit shares the exhausted resource** — a Lean declaration for heartbeats, a
+> process for file descriptors, a shell for `$?` (the pipe-exit-code trap: an observer reading a
+> register the failure already clobbered), a build for a lock, a test run for a poisoned fixture.
+
+The generalisation is what makes it worth a rule rather than a note: this is not a Lean fact. It is the
+observer reading state that the first failure already destroyed, which this project has now hit in at
+least three unrelated substrates.
+
+**Why it matters more at stop 2 than it did here:** three versions of drift, the largest jump on the
+route, so multi-error modules are the expected case. Unattributed, each is a three-fix afternoon.
+Attributed, each is one fix and two dismissals.
+
+## The two-minute isolation procedure (named, so that it gets used)
+
+1. Copy the **failing `have`/goal alone** into `foundations/scratch_<topic>.lean`, importing only what
+   it needs (`MachLib.Ring`, `MachLib.MPolyRing`, … — not `MachLib`), inside the right `namespace`.
+2. Give it the **default** budget first. A goal that passes at default proves it was collateral.
+3. Vary **one** thing per run — the tactic, or the budget, never both — and `time` each run.
+4. To attribute a composite tactic, **run its alternatives individually** (this is how `ac_rfl` was
+   cleared and the catch-all convicted at stop 1); a `try`-wrapped alternative hides its own reason.
+5. Delete the scratch file in the same commit as the fix. It is a probe, not an artifact.
+
+Cost at stop 1: **~2 minutes per finding**, against a 40s incremental rebuild per blind attempt and a
+three-error module that looked like three problems.
+
+---
+
+# Lean4Lean maiden run — protocol pre-registered BEFORE the instrument is trusted
+
+A fresh instrument's first failure is **ambiguous between "found a defect" and "I built it wrong"**, and
+that ambiguity is worth exactly nothing at a trust boundary. So the maiden run is gated the same way
+every other instrument here was:
+
+1. **Its own negative tests first.** If Lean4Lean ships them, run them; if it does not, feed it
+   lean4checker's five specimens (`AddFalse`, `AddFalseConstructor`, `ReplaceAxiom`,
+   `UseFalseConstructor --fresh`, `ReduceBool`) — historical witnesses beat synthetic ones, and they
+   are already built here.
+2. **Then the environment.** `MachLib` at v4.16.0, on the green tree.
+3. **Reason codes on the verdict**, so the row cannot be read as more than it is: `INSTRUMENT_ABSENT`
+   / `INSTRUMENT_UNVALIDATED` (negative tests did not fire) / `VERSION_MISMATCH` / `REPLAY_FAIL`
+   (defect in our environment) / `REPLAY_PASS`. **`INSTRUMENT_UNVALIDATED` outranks any replay result**
+   — an unfired checker's PASS and FAIL are equally uninformative.
+4. **Both directions before it counts**, per the standing gate rule: seen to reject something, and
+   seen to accept our environment. Until then the registry says *second opinion*, unchanged.
+
+**Then, and only then, criterion 7 activates for stops 3–5** — dual replay through both kernels, one
+extra command per stop, front-loading the destination configuration's debugging by three stops. See
+`BUMP_PLAN.md`; it is pre-registered there as conditional, not adopted here by momentum.
+
+---
+
+# Open items
+
+| # | item | status | why deferred, and what settles it |
+|---|---|---|---|
+| 1 | Does `mach_ring`'s permutative catch-all carry a **latent cost cliff** independent of the bump — did it get slower, or did phase 1 hand it a harder goal? | **worked around, mechanism partly unattributed** | Needs a **built v4.14.0 tree** to compare; `lake clean` at stop 1 removed it (correct for kernel hygiene, and it cost this measurement). Cheapest settlement: a `git worktree` at `dec74242` with its own toolchain, built once, and the two probes replayed there. Do it **before stop 4**, not after — a second 9-atom identity anywhere on the route will hit the same cliff, and it will present as "unsolved goals" |
+| 2 | `mach_ring` **cannot distinguish "outside my fragment" from "out of budget"** — `try (first | … )` swallows the timeout | **recorded, not fixed** | A real repair means restructuring the tactic (e.g. run the catch-all outside `try`, or bound it with its own `maxHeartbeats` and report the distinction). That is a tactic change, and the scope guard says the migration does not modernise tactics. File it for after the destination |
+| 3 | Lean4Lean maiden run | **unblocked at stop 1, not attempted** | Protocol above. Do it against the green v4.16.0 tree |
