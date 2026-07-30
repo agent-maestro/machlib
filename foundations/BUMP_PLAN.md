@@ -330,9 +330,60 @@ Those are different questions and the second one is the one the class/instance a
 watch that tracks pins and tags would have reported STILL EMPTY on the very day the relevant thing
 changed.
 
-**Status: the destination is now an OPEN DECISION for the project owner**, not a settled plan. The route
-is unaffected up to v4.26.0 — every candidate destination lies beyond v4.20.1, so stops 3 onward are
-destination-agnostic work either way.
+---
+
+# AMENDMENT 2 — **DESTINATION CHANGED TO v4.32.2** (2026-07-29)
+
+**Provenance: chosen by the project owner**, presented with the three-way table above, *after* the
+independence premise was refuted. This reverses the destination in the decision record, and the reversal
+is recorded here rather than by editing that record — **it stands as written, including its now-false
+premise, because a plan that quietly rewrites its own reasoning teaches nothing.**
+
+**Why the reversal is coherent rather than a change of mind:** the original argument rejected v4.32.2
+because *"a false proof must be a defect in the type theory as understood by two independent authors."*
+That barrier does not exist — the two checkers are one implementation ported into two languages, and
+they shared this exact defect until 2026-07-29. **Take the patch, which is real, over independence,
+which was not.**
+
+## What this costs, stated plainly
+
+At v4.32.2 **no external checker can read our environment at all** (lean4checker ≤ v4.28.0,
+Lean4Lean ≤ v4.29.0). So we lose more than the dual-kernel grade:
+
+* **The #14576 instance is covered** — by the kernel itself. This is the gain, and it is the one thing
+  no configuration below the fix can give us today.
+* **Environment-manipulation replay is LOST.** That was lean4checker's *full-strength* class — the one
+  where its partial independence never mattered, and the class whose first run here found 26 orphaned
+  `.olean`s. Nothing at v4.32.2 replaces it.
+* **Grade at the destination: `single kernel, patched, no external replay`.** The registry must say
+  exactly that. Not "verified by two kernels", not "independently checked".
+
+## The route now ends with its own strongest verification point
+
+The intermediates were chosen for *checker availability*, so the route extends rather than truncates —
+and the last two stops are deliberately where the instruments run out, in order:
+
+| stop | lean4checker | Lean4Lean | note |
+|---|---|---|---|
+| **v4.20.1** ← next | stable tag ✓ | pins it ✓ | criterion 7 live (both) |
+| **v4.23.0** | stable tag ✓ | pins it ✓ | criterion 7 live (both) |
+| **v4.26.0** | stable tag ✓ | pins it ✓ | **was the destination**; now a stop |
+| **v4.28.0** *(recommended)* | stable tag ✓ — **the last one** | no pin | last stop with a version-matched stable lean4checker |
+| **v4.29.0** | rc tags only | **`0c38ab8`, PATCHED** ✓ | **the strongest single verification point on the whole route**: replay through a checker that CARRIES the #14577 check, against a kernel that does not. If our environment contains the exploit class, this is the stop that finds it |
+| **v4.32.2** | ✗ | ✗ | destination. Dark hop: footprint equality + criteria 3–6, no external replay |
+
+**The final hop's bar** — pre-registered here, before it is walked: replay clean at the **near** end
+(v4.29.0, through patched Lean4Lean), **57-footprint equality against the frozen v4.14.0 baseline**
+(end-to-end, never chained), criteria 3–6 green, and **an explicit registry downgrade** recorded in the
+same commit that moves the pin. No silent grade change.
+
+## Restoring external replay is now a named deliverable, not a nice-to-have
+
+`leg 2`'s note said contributing the lean4checker tag upstream was *"plausibly a PR, not a project"*.
+With the destination at v4.32.2 that PR is **the only path back to any external replay**: bump
+`lean-toolchain` + `lake-manifest.json`, confirm the five negative tests still fire, tag. Promoted from
+opportunity to **follow-up deliverable**, and `watch_kernel_support.py`'s question becomes *"has any
+checker reached v4.32.2 yet"* — the same watch, now watching for restoration rather than for permission.
 
 ---
 
