@@ -1,8 +1,10 @@
 {
- "observed_at": "2026-07-29T16:41:23-0700",
+ "observed_at": "2026-07-29T20:11:23-0700",
  "threshold": "v4.32.2",
  "checker_max": "v4.28.0",
  "checker_tag_count": 23,
  "l4l_pin": "v4.29.0",
+ "l4l_carries_fix": true,
+ "checker_carries_fix": false,
  "intersection_open": false
 }

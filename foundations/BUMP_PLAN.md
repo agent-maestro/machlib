@@ -280,6 +280,62 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# ⚠ FINDING THAT REFUTES THIS PLAN'S CENTRAL PREMISE (2026-07-29, before stop 3)
+
+**The decision record above argues that v4.26.0's dual-kernel configuration is worth more than
+v4.32.2's patch because "a false proof must be a defect in the type theory as understood by two
+independent authors". THAT PREMISE IS FALSE, and it is refuted by primary sources, not by argument.**
+
+**1. Lean4Lean disclaims independence, in its own README:**
+
+> *"It is derived directly from the C++ kernel implementation, and as such **likely shares some
+> implementation bugs with it (it's not really an independent implementation)**, although it also
+> benefits from the same algorithmic performance improvements existing in the C++ Lean kernel."*
+
+The plan asserted it "re-derives the typing rules from the theory rather than the implementation".
+**Its author says the opposite.** The assertion was never checked against the source — this is the
+`assert_normalised_cleanly` shape applied to a trust argument, which is exactly what
+`TOOLCHAIN_EXPOSURE.md` warned about *for this very bug*.
+
+**2. And for #14576 specifically the defect was SHARED — confirmed by Lean4Lean's own fix commit:**
+
+```
+0c38ab8  2026-07-29 14:36  fix: soundness bug from leanprover/lean4#14577
+         Lean4Lean/Inductive/Add.lean | 19 +++++-------
+```
+
+One day after the C++ fix merged, in `ElimNestedInductive`, threading a `LocalContext` through so the
+nested parametric arguments can be type-checked — **the same defect, in the same code path, fixed by
+reference to the same PR.** Lean4Lean had the bug too.
+
+> **So dual replay at v4.26.0 would NOT have covered #14576.** Its Lean4Lean commit is `6bca7f6`
+> (2026-01-09), seven months before either fix. Two checkers, one ported defect, zero coverage of the
+> instance the whole tradeoff was argued around. *"Independence covers the class"* was not wrong as a
+> principle — it was **inapplicable, because these two implementations are not independent.**
+
+**3. What is now true, and it changes the option set:** a **patched Lean4Lean exists** (`0c38ab8`), and
+it pins **v4.29.0**. So at v4.29.0 the configuration is *unpatched C++ kernel + **patched** Lean4Lean* —
+the second checker would actually **detect** a #14576-class exploit in our environment, by carrying the
+check rather than by being assumed to have re-derived it.
+
+| destination | C++ kernel | Lean4Lean | lean4checker | covers #14576 in OUR env? |
+|---|---|---|---|---|
+| **v4.26.0** (current plan) | unpatched | `6bca7f6`, **unpatched** | v4.26.0 ✓ | **NO — shared defect** |
+| **v4.29.0** | unpatched | `0c38ab8`, **PATCHED** | rc tags only | **YES — via the second checker** |
+| **v4.32.2** | **patched** | cannot read it | none | YES — via the kernel |
+
+**4. The watch script had a matching blind spot, now fixed.** `watch_kernel_support.py` asked *"does a
+checker exist at a version ≥ the fix?"* — it never asked *"does the checker itself carry the fix?"*
+Those are different questions and the second one is the one the class/instance argument depends on. A
+watch that tracks pins and tags would have reported STILL EMPTY on the very day the relevant thing
+changed.
+
+**Status: the destination is now an OPEN DECISION for the project owner**, not a settled plan. The route
+is unaffected up to v4.26.0 — every candidate destination lies beyond v4.20.1, so stops 3 onward are
+destination-agnostic work either way.
+
+---
+
 # FINDING AGAINST THE SCOPE GUARD (stop 2) — the austerity asset is narrower than claimed
 
 The scope guard above says *"MachLib's Mathlib-free discipline is the asset here … a base that

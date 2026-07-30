@@ -51,8 +51,25 @@ import urllib.request
 
 FIX = (4, 32, 2)  # first release containing #14577; see docstring
 CHECKER_REPO = "https://github.com/leanprover/lean4checker"
+L4L_REPO = "https://github.com/digama0/lean4lean"
 L4L_PIN_URL = "https://raw.githubusercontent.com/digama0/lean4lean/master/lean-toolchain"
 STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "watch_state.json")
+
+# BLIND SPOT FOUND 2026-07-29, and it mattered the same day.
+#
+# This watch originally asked only "does a checker EXIST at a version >= the fix?" -- a question about
+# pins and tags. It never asked "does the checker itself CARRY the fix?", which is the question the
+# whole class/instance argument depends on. Those come apart exactly when it counts:
+#
+#   Lean4Lean commit 0c38ab8 (2026-07-29) = "fix: soundness bug from leanprover/lean4#14577".
+#   It PORTS the #14577 check while still pinning v4.29.0 -- i.e. a checker that carries the fix at a
+#   toolchain BELOW the fix. The old logic would have reported STILL EMPTY on the day a patched
+#   independent-ish checker first became available.
+#
+# So the watch now also greps the checkers' own commit logs for the fix. A checker that carries the
+# check can detect the exploit class regardless of which kernel it is replaying against, which is the
+# entire point of running a second implementation.
+FIX_PR_MARKERS = ("14577", "14576")
 
 
 def ver(s: str) -> tuple[int, ...]:
@@ -83,6 +100,25 @@ def l4l_pin() -> tuple[str, tuple[int, ...] | None]:
     return raw, (ver(m.group(1)) if m else None)
 
 
+def carries_fix(repo: str) -> tuple[bool, str]:
+    """Does this checker's own history contain the #14577 port? -- the question pins cannot answer.
+
+    A checker that carries the check detects the exploit class whatever kernel it replays against, so
+    this is what the class/instance argument actually rests on. Returns (carries, evidence).
+    """
+    owner_repo = repo.rstrip("/").split("github.com/")[-1]
+    url = f"https://api.github.com/repos/{owner_repo}/commits?per_page=100"
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json",
+                                               "User-Agent": "machlib-kernel-watch"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        commits = json.loads(r.read().decode())
+    for c in commits:
+        msg = (c.get("commit", {}).get("message") or "").splitlines()[0]
+        if any(m in msg for m in FIX_PR_MARKERS):
+            return True, f"{c['sha'][:7]}  {c['commit']['committer']['date'][:10]}  {msg[:60]}"
+    return False, f"no commit referencing {'/'.join(FIX_PR_MARKERS)} in the last {len(commits)}"
+
+
 def load_state() -> dict:
     return json.load(open(STATE)) if os.path.exists(STATE) else {}
 
@@ -111,6 +147,18 @@ def main() -> int:
     checker_max = tags[-1]
     print(f"lean4checker stable tags : {len(tags)}, newest {fmt(checker_max)}")
     print(f"Lean4Lean pin (master)   : {raw_pin}")
+
+    # The question pins cannot answer -- see the blind-spot note at the top of this file.
+    try:
+        l4l_fix, l4l_ev = carries_fix(L4L_REPO)
+        chk_fix, chk_ev = carries_fix(CHECKER_REPO)
+    except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+        print(f"\n[FIX_PORT_UNKNOWN] could not read commit histories: {type(e).__name__}: {e}")
+        print("  The pin/tag verdict below stands, but 'does the checker CARRY the fix' is UNKNOWN.")
+        l4l_fix = chk_fix = False
+        l4l_ev = chk_ev = "UNKNOWN -- history unavailable, do not read as 'no'"
+    print(f"Lean4Lean carries #14577 : {'YES' if l4l_fix else 'no '}   {l4l_ev}")
+    print(f"lean4checker  carries it : {'YES' if chk_fix else 'no '}   {chk_ev}")
     print()
     report_movement(load_state(), checker_max, pin)
 
@@ -124,6 +172,7 @@ def main() -> int:
     json.dump({"observed_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "threshold": fmt(FIX), "checker_max": fmt(checker_max),
                "checker_tag_count": len(tags), "l4l_pin": fmt(pin) if pin else raw_pin,
+               "l4l_carries_fix": l4l_fix, "checker_carries_fix": chk_fix,
                "intersection_open": both},
               open(STATE, "w"), indent=1)
 
@@ -135,6 +184,16 @@ def main() -> int:
         print("  retarget the destination to the newest member of the intersection, and note in the")
         print("  record that the tradeoff it defends no longer exists.")
         return 3
+    if l4l_fix or chk_fix:
+        which = "Lean4Lean" if l4l_fix else "lean4checker"
+        print(f"FIX PORTED INTO A CHECKER — {which} carries the #14577 check itself.")
+        print("  This is a DIFFERENT state from 'a checker exists at a kernel >= the fix', and it is")
+        print("  the one the class/instance argument actually needs: a checker carrying the check can")
+        print("  DETECT the exploit class whatever kernel it replays against. So a dual-replay stop")
+        print("  below the fix threshold can now cover the instance -- by the second checker having")
+        print("  the check, not by an assumption that it re-derived it.")
+        print("  RE-READ BUMP_PLAN.md's destination table before the next pin advance.")
+        return 2
     if checker_ok or l4l_ok:
         which = "lean4checker" if checker_ok else "Lean4Lean"
         print(f"PARTIAL — {which} reaches the fix; the other does not.")

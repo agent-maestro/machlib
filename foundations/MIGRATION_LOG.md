@@ -431,6 +431,45 @@ in a second file). Regex alone would have left them to surface two rounds later,
 
 ---
 
+## Lean4Lean maiden run (2026-07-29, on the green v4.19.0 tree) — **VALIDATED, and it refuted the plan**
+
+Run before the pin advanced, per *an instrument does not join a measurement midway*. Commit `f8cd3d3`
+(the one pinning v4.19.0), `lake build lean4lean`, dependency `batteries` — no Mathlib.
+
+**Protocol result, with reason codes:**
+
+| step | outcome |
+|---|---|
+| its own negative tests | **none shipped** — protocol anticipated this: use lean4checker's specimens |
+| **negative specimen** — lean4checker's `AddFalse` smuggling test, ported into a MachLib module | **REJECTED, exit 1**, naming it: *"(kernel) declaration type mismatch, 'false' has type Prop but is expected to have type False"*. lean4checker rejects it identically |
+| orphan check on its own build tree | clean (fresh clone, single build) |
+| **replay `MachLib`** | **exit 0 — clean** |
+| **verdict** | **`REPLAY_PASS`, instrument VALIDATED in both directions** |
+
+Specimen removed afterwards and criterion 6 re-run: 0 orphans. The tree that produced this is the same
+tree stop 2 was accepted on.
+
+### But the maiden run's real finding is documentary, not experimental
+
+**Lean4Lean's README disclaims independence** — *"derived directly from the C++ kernel implementation…
+likely shares some implementation bugs with it (it's not really an independent implementation)"* — and
+**its commit `0c38ab8` (2026-07-29 14:36) is `fix: soundness bug from leanprover/lean4#14577`**, one day
+after the C++ fix, in `ElimNestedInductive`, threading a `LocalContext` through so nested parametric
+arguments get type-checked. **The same defect, the same code path, fixed by reference to the same PR.**
+
+> **The plan's central claim is refuted.** Dual replay at v4.26.0 (Lean4Lean `6bca7f6`, 2026-01-09)
+> would have been **two checkers sharing one ported defect** — not "a defect in the type theory as
+> understood by two independent authors". See the ⚠ finding at the top of `BUMP_PLAN.md` for the
+> three-way destination table this opens, including **v4.29.0**, where the C++ kernel is unpatched but
+> Lean4Lean **carries the check**.
+
+**And the watch had the matching blind spot**, now closed: it asked *"does a checker exist at a kernel ≥
+the fix?"* and never *"does the checker carry the fix?"*. It now greps both checkers' commit histories,
+and today reports **`FIX PORTED INTO A CHECKER` (exit 2)** where yesterday's logic said `STILL EMPTY`.
+A watch that tracks pins and tags would have missed the day the answer changed.
+
+---
+
 # Standing procedures earned at stop 1
 
 ## SCOPE POISONING — attribute the first failure in a shared-resource scope
