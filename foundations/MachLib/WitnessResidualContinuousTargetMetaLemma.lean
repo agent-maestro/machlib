@@ -165,7 +165,7 @@ theorem targetZeros_list_nodup (f : Real → Real) (hcont : ∀ x : Real, Contin
     (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ f x) (M : Nat) :
     ((List.range (M + 1)).map (targetZero f hcont hnp hnn)).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (targetZero f hcont hnp hnn))
-  exact (List.nodup_range (M + 1)).map (targetZero f hcont hnp hnn)
+  exact (List.nodup_range).map (targetZero f hcont hnp hnn)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge
@@ -333,7 +333,7 @@ theorem no_tree_eq_target_of_not_tailSign
       exact hfz
   have hzeros_nodup : zeros.Nodup := by
     show List.Pairwise (· ≠ ·) zeros
-    exact (List.nodup_range (M + 1)).map z
+    exact (List.nodup_range).map z
       (fun i j (_hij_neq : i ≠ j) => by
         intro hij_eq
         rcases Nat.lt_or_ge i j with hlt | hge

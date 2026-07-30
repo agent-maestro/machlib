@@ -122,7 +122,7 @@ theorem cos_zeros_list_nodup (M : Nat) :
     ((List.range (M + 1)).map (fun i => natCast i * pi + pi / (1 + 1))).Nodup := by
   show List.Pairwise (· ≠ ·)
     ((List.range (M + 1)).map (fun i => natCast i * pi + pi / (1 + 1)))
-  exact (List.nodup_range (M + 1)).map (fun i => natCast i * pi + pi / (1 + 1))
+  exact (List.nodup_range).map (fun i => natCast i * pi + pi / (1 + 1))
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       dsimp only at hij_eq

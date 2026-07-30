@@ -118,7 +118,7 @@ theorem degreeY_reconstructY_le {n : Nat} (i : Fin n)
         (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)))
       (MultiPoly.degreeY i (reconstructY i cs (k + 1))) ≤
       k + (cs.length + 1)
-    have h_c : MultiPoly.degreeY i c = 0 := h_free c (List.mem_cons_self _ _)
+    have h_c : MultiPoly.degreeY i c = 0 := h_free c (List.mem_cons_self)
     have h_cs : ∀ c' ∈ cs, MultiPoly.degreeY i c' = 0 := fun c' hc' =>
       h_free c' (List.mem_cons_of_mem _ hc')
     have h_left : MultiPoly.degreeY i
@@ -150,7 +150,7 @@ theorem degreeY_reconstructY_lt {n : Nat} (i : Fin n)
       (MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)))
       (MultiPoly.degreeY i (reconstructY i cs (k + 1))) <
       k + (c :: cs).length
-    have h_c : MultiPoly.degreeY i c = 0 := h_free c (List.mem_cons_self _ _)
+    have h_c : MultiPoly.degreeY i c = 0 := h_free c (List.mem_cons_self)
     have h_left : MultiPoly.degreeY i
                     (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
       change MultiPoly.degreeY i c +
@@ -177,7 +177,7 @@ theorem degreeY_reconstructY_lt {n : Nat} (i : Fin n)
       apply Nat.max_lt.mpr
       refine ⟨?_, ?_⟩
       · -- k < k + cs.length + 1
-        have : cs.length ≥ 1 := List.length_pos.mpr h_cs_empty
+        have : cs.length ≥ 1 := List.length_pos_iff.mpr h_cs_empty
         omega
       · -- degreeY (reconstructY cs (k+1)) < k + cs.length + 1
         omega
@@ -309,7 +309,7 @@ theorem listMulN_length_lt {n : Nat} (l1 l2 : List (MultiPoly n))
       (MachLib.MultiPolyMod.MultiPoly.listScaleN p l2)
       (MultiPoly.const 0 :: MachLib.MultiPolyMod.MultiPoly.listMulN ps l2)
     rw [listScaleN_length] at h_add
-    have h_l2_pos : l2.length > 0 := List.length_pos.mpr h2
+    have h_l2_pos : l2.length > 0 := List.length_pos_iff.mpr h2
     apply Nat.lt_of_le_of_lt h_add
     refine Nat.max_lt.mpr ⟨?_, ?_⟩
     · -- l2.length < (p :: ps).length + l2.length
@@ -603,13 +603,13 @@ theorem listMulN_length_eq {n : Nat} (A B : List (MultiPoly n))
       show Nat.max B.length (([] : List (MultiPoly n)).length + 1) =
            (([] : List (MultiPoly n)).length + 1) + B.length - 1
       show Nat.max B.length 1 = 0 + 1 + B.length - 1
-      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_B_pos : B.length ≥ 1 := List.length_pos_iff.mpr hB
       have h_max : Nat.max B.length 1 = B.length := Nat.max_eq_left h_B_pos
       omega
     · have h_ih := ih h_as_empty
       rw [h_ih]
-      have h_as_pos : as.length ≥ 1 := List.length_pos.mpr h_as_empty
-      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_as_pos : as.length ≥ 1 := List.length_pos_iff.mpr h_as_empty
+      have h_B_pos : B.length ≥ 1 := List.length_pos_iff.mpr hB
       show Nat.max B.length (as.length + B.length - 1 + 1) =
            as.length + 1 + B.length - 1
       have h_eq : as.length + B.length - 1 + 1 = as.length + B.length := by omega
@@ -703,9 +703,9 @@ theorem listAddN_ne_of_left_ne {n : Nat} (A B : List (MultiPoly n))
     (hA : A ≠ []) : MachLib.MultiPolyMod.MultiPoly.listAddN A B ≠ [] := by
   intro h
   have h_zero : (MachLib.MultiPolyMod.MultiPoly.listAddN A B).length = 0 :=
-    List.length_eq_zero.mpr h
+    List.length_eq_zero_iff.mpr h
   rw [listAddN_length_eq] at h_zero
-  have h_pos : A.length > 0 := List.length_pos.mpr hA
+  have h_pos : A.length > 0 := List.length_pos_iff.mpr hA
   have h_le : A.length ≤ Nat.max A.length B.length := Nat.le_max_left _ _
   omega
 
@@ -863,10 +863,10 @@ theorem listMulN_ne_of_both_ne {n : Nat} (A B : List (MultiPoly n))
     MachLib.MultiPolyMod.MultiPoly.listMulN A B ≠ [] := by
   intro h
   have h_zero : (MachLib.MultiPolyMod.MultiPoly.listMulN A B).length = 0 :=
-    List.length_eq_zero.mpr h
+    List.length_eq_zero_iff.mpr h
   rw [listMulN_length_eq _ _ hA hB] at h_zero
-  have h_A_pos : A.length ≥ 1 := List.length_pos.mpr hA
-  have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+  have h_A_pos : A.length ≥ 1 := List.length_pos_iff.mpr hA
+  have h_B_pos : B.length ≥ 1 := List.length_pos_iff.mpr hB
   omega
 
 /-- getLast of listMulN A B (eval) = (A.getLast.eval) * (B.getLast.eval)
@@ -901,7 +901,7 @@ theorem listMulN_getLast_eval {n : Nat} :
       rw [listScaleN_length]
       -- Goal now: ITE on B.length vs [const 0].length. [const 0].length = 1 (definitional).
       have h_const_len : ([MultiPoly.const 0] : List (MultiPoly n)).length = 1 := rfl
-      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_B_pos : B.length ≥ 1 := List.length_pos_iff.mpr hB
       by_cases h_B_eq : B.length = 1
       · -- Equal length case (B.length = 1).
         rw [if_neg (by show ¬ B.length > 1; omega),
@@ -947,8 +947,8 @@ theorem listMulN_getLast_eval {n : Nat} :
       -- Inner length: (const 0 :: listMulN (a' :: as') B).length = (listMulN ...).length + 1
       --                                                          = ((a' :: as').length + B.length - 1) + 1
       --                                                          = (a' :: as').length + B.length.
-      have h_as'_pos : (a' :: as').length ≥ 1 := List.length_pos.mpr h_as'_ne
-      have h_B_pos : B.length ≥ 1 := List.length_pos.mpr hB
+      have h_as'_pos : (a' :: as').length ≥ 1 := List.length_pos_iff.mpr h_as'_ne
+      have h_B_pos : B.length ≥ 1 := List.length_pos_iff.mpr hB
       have h_inner_len : (MultiPoly.const 0 ::
                           MachLib.MultiPolyMod.MultiPoly.listMulN (a' :: as') B :
                           List (MultiPoly n)).length =
@@ -980,9 +980,9 @@ theorem listSubN_ne_of_left_ne {n : Nat} (A B : List (MultiPoly n))
     (hA : A ≠ []) : MachLib.MultiPolyMod.MultiPoly.listSubN A B ≠ [] := by
   intro h
   have h_zero : (MachLib.MultiPolyMod.MultiPoly.listSubN A B).length = 0 :=
-    List.length_eq_zero.mpr h
+    List.length_eq_zero_iff.mpr h
   rw [listSubN_length_eq] at h_zero
-  have h_pos : A.length > 0 := List.length_pos.mpr hA
+  have h_pos : A.length > 0 := List.length_pos_iff.mpr hA
   have h_le : A.length ≤ Nat.max A.length B.length := Nat.le_max_left _ _
   omega
 

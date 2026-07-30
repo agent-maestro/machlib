@@ -443,7 +443,7 @@ theorem listEvalAux_eq_evalAux_via_polyList
          Poly.eval (MultiPoly1ToPoly c) x *
            Real.exp ((Real.natCast offset) * x) +
          evalAux (List.map MultiPoly1ToPoly rest) (offset + 1) x
-    have h_c_free : MultiPoly.degreeY 0 c = 0 := h_free c (List.mem_cons_self _ _)
+    have h_c_free : MultiPoly.degreeY 0 c = 0 := h_free c (List.mem_cons_self)
     have h_rest_free :
         ∀ c' ∈ rest, MultiPoly.degreeY 0 c' = 0 := by
       intro c' hc'

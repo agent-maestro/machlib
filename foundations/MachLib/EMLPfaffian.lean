@@ -532,7 +532,7 @@ no duplicates. PROVEN via `List.Pairwise.map` + injectivity from
 theorem sin_zeros_list_nodup (M : Nat) :
     ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi)).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (fun i => natCast (i + 1) * pi))
-  exact (List.nodup_range (M + 1)).map (fun i => natCast (i + 1) * pi)
+  exact (List.nodup_range).map (fun i => natCast (i + 1) * pi)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       dsimp only at hij_eq

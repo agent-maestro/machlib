@@ -191,6 +191,197 @@ plan expected it.
 
 ---
 
+## Stop 2 — `v4.19.0` (kernel commit `6caaee842e94`)
+
+Clean build. **Three versions — the largest jump on the route — and the drift is almost entirely ONE
+class**, which is not the class stop 1 taught us to expect.
+
+Checker: `~/lean4checker-v4.19.0`, five negative tests confirmed firing before the pin moved.
+Timing baseline for the *departure* point captured first (`snapshots/timing/v4.16.0.json`, 940.44s
+across 41 modules) — the new archive-before-hygiene step, doing its job on its first outing.
+
+### The class: Lean **core stdlib** API churn, ~180 call sites
+
+Not tactic behaviour, not elaboration semantics — **binder signatures and names in `List`/`Nat`**:
+
+| change | kind | sites |
+|---|---|---|
+| `List.mem_cons_self a l` → `List.mem_cons_self` | explicit → implicit | **~140** |
+| `List.not_mem_nil a` → `List.not_mem_nil` | explicit → implicit | ~34 |
+| `List.getLast?_eq_getLast l h` → `… h` | first arg implicit | 6 |
+| `List.length_map l f` → `List.length_map f` | first arg implicit | 5 |
+| `List.mem_map_of_mem f h` → `… h` | first arg implicit | 2 |
+| `List.length_reverse _`, `List.head?_reverse l`, `List.nodup_range n`, `List.filter_sublist l` | args implicit | 6 |
+| `Nat.pos_pow_of_pos n h` → `Nat.pow_pos h` | implicit **+ deprecated rename** | 12 |
+| `List.length_eq_zero` / `_eq_one` / `_pos` → `…_iff` | deprecated renames | 33 |
+
+**This refines the plan's scope-guard claim, and the refinement is worth having.** `BUMP_PLAN.md` says
+*"MachLib's Mathlib-free discipline is the asset here"* — true, and it held completely for the
+*elaborator* surface at stop 1. But **austerity does not insulate a project from Lean CORE's API**, and
+core is exactly where the churn was over these three versions. The asset is narrower than stated:
+Mathlib-free buys freedom from *library-semantics* drift, not from *core-API* drift.
+
+### Two behaviour changes alongside it
+
+**`dsimp only` became a no-op in `CoreModel.lean` (11 sites) and therefore an ERROR** — *"dsimp made no
+progress"*. The `Int` model instance's field proofs were `by dsimp only; omega`; at v4.19 the goals
+arrive already in that form. **Fixed by dropping `dsimp only`, deliberately NOT by wrapping it in
+`try`.** A `try` would make the tree insensitive to the goal shape changing again, and the whole value
+of stepping is knowing what changed when. `omega` remains the closer, so the failure mode stays loud.
+
+**Structure-instance notation now collapses under eta** (`IterExpChainStructural.lean`, 2 proofs). The
+idiom was *eta-expand, rewrite the fields, collapse*:
+
+```
+calc X = { evals := X.evals, relations := X.relations } := rfl
+  _    = { evals := Y.evals, relations := Y.relations } := by rw [he, hr]
+```
+
+At v4.19 `{ evals := X.evals, relations := X.relations }` **elaborates straight back to `X`**, so the
+middle goal arrived as `X = Y` with no projections in it and `rw [he]` had nothing to find. Writing the
+constructor explicitly (`PfaffianChain.mk X.evals X.relations`) keeps them. This one was **on the
+plan's predicted list** — "structure-instance syntax" — so it cost minutes.
+
+### THE STOP HALTED FIRST — criterion 6, and it was the INSTRUMENT, not the tree
+
+The first capture at v4.19.0 (`snapshots/v4.19.0/`, digest `2464fe0b…`) reports **STOP HALTED**. It is
+left frozen exactly as it is: **a halt is evidence, not a mistake to erase.** Criteria 1–5 and the
+footprints were green; criterion 6 exited 1.
+
+**The numbers gave it away before any name did:**
+
+```
+artifact tree : 572 .olean      ORPHANED : 572   (every single one)
+source tree   : 896 .lean       unbuilt  : 896   (every single one)
+```
+
+> **When a correspondence gate reports EVERYTHING on both sides, suspect the KEY — not the trees.**
+> Total failure on both sides is not drift; it is a comparison that matched nothing. A gate that had
+> mismatched *half* the tree would have been far more expensive to diagnose than one that mismatched
+> all of it.
+
+**Attributed: Lake moved the olean output at v4.19.0.** `.lake/build/lib/MachLib/X.olean` became
+`.lake/build/lib/lean/MachLib/X.olean`. The gate keyed on `relative_to(.lake/build/lib)`, so every key
+silently gained a `lean/` component — visible in the orphan list as `lean/MachLib/AbsoluteBridge`.
+
+**Fixed by deriving the root instead of assuming it:** locate the directory holding the top-level
+`MachLib.olean`. Works under the old layout, the new one, and the next one — Lake has now changed this
+once, so hardcoding it a second time would be choosing to be surprised again.
+
+**Both directions verified, because a repaired gate that has not been seen to fire is not a gate:**
+clean tree → **PASS** (0 orphans of 572); planted `MachLib/ZZZDriftSpecimen.olean` → **FAIL, naming
+it**; specimen removed → **PASS**. Same discipline as the allowlist-rot check at stop 0.
+
+**Then re-captured at `snapshots/v4.19.0-r2/`** — a second capture at the same pin, with the repaired
+instrument, against a byte-identical tree (only Python gates and documentation changed between the two).
+The failure semantics permitted exactly this: outcome (1), *attributed and benign — cause understood,
+invariant intact → record the attribution, advance.* What it did **not** permit was editing the gate
+and quietly re-reading the old verdict as a pass.
+
+### THE LEDGER GATE'S COST IS DENOMINATED IN **CORE'S** SIZE, and core doubled
+
+Criterion 3 went from part of a ~5-minute checkpoint to **>15 minutes on its own**. Discriminated
+before the number was filed as "just the stop-2 ledger cost", because the two candidate owners have
+very different consequences — and **the answer was neither of the obvious ones**:
+
+| measurement (at v4.19.0) | result |
+|---|---|
+| `.olean`s vs source modules | **572 / 581** — no artifact inflation; environment growth from build drift **ruled out** |
+| `import MachLib` | **1.31s** |
+| + one `collectAxioms` query | **1.20s** — a single query is free |
+| + all **57** footprint queries | **3.35s** — *criterion 2 is cheap*; memoising it would buy nothing |
+| `env.constants.toList` (335,762 constants) | **1.84s** — materialising the whole environment is cheap. **The first attribution written here blamed this, and it was wrong** |
+| **Lean CORE theorem count, v4.16.0 → v4.19.0** | **20,874 → 43,907 — 2.10×** |
+
+The cost is **guard (6)**, `AxiomLedger.lean:566`: it calls `Lean.collectAxioms` on **every theorem in
+the entire environment** — core, `Std`, everything — to catch new call sites of a discharged legacy
+axiom. Its runtime is therefore **O(theorems in core + ours)**, and core's theorem count *doubled* over
+these three versions.
+
+> **Nothing in MachLib got slower. The library we sit on got twice as big.** A guard whose cost is
+> denominated in someone else's release cadence will get slower at every future bump, forever, with no
+> change on our side.
+
+**The fix is obvious and DEFERRED, deliberately** (open item 4): scope guard (6) by **module**, the way
+`spineTheorems` already does — which still covers `Certcom.*` declarations defined in *our* modules
+while excluding core, and weakens nothing, because a core theorem cannot cite a MachLib axiom.
+**Not done mid-route**: narrowing a pass-bar gate between stops would make the stops incomparable,
+which is the same rule that keeps instruments out of measurements they did not start.
+
+**And the nuisance converts into a free instrument.** `AxiomLedger.lean` is the project's *only*
+whole-environment traversal, which makes it — involuntarily — the most sensitive thing on the route to
+environment size and representation. Its elapsed time is now **tracked per stop** by
+`timing_profile.py` (gate files added at this stop; see below), giving a canary for *"the environment
+got weird"* that no per-module criterion can see.
+
+### THE GATE-FILE COVERAGE GAP — the instrument was not watching the instruments
+
+`timing_profile.py` profiled what `lake build` builds. **`AxiomLedger.lean` and `tools/sorry_audit.lean`
+are not in that set** — they are elaborated only by the gates that run them — so the ledger's runtime
+could double with nothing watching. That is the coverage lesson landing on the defence layer:
+
+> **Gates are subjects too.** Anything the pass bar depends on gets the same instrumentation as the
+> code the pass bar judges.
+
+Closed at this stop: `GATE_FILES` is profiled sequentially after the module pool (a 15-minute
+single-threaded sweep run alongside a 4-worker pool would inflate its number *and* its neighbours').
+The v4.16.0 profile has no gate-file entries, so the first `--diff` will honestly report them as
+**newly measured** rather than as regressions — two reference points from stop 3 onward.
+
+### VERDICT: **STOP ACCEPTED** (2026-07-29, second capture)
+
+```
+snapshots/v4.19.0/      HALTED  digest 2464fe0b025e80fdc23347dff5e56e0388d0d24baa9411151497f9d7e7390642
+snapshots/v4.19.0-r2/   ACCEPTED digest 8b0e5e264a015a0f31cd04bcf8677aba71ecf0114d87fd59919e3e36fe29e871
+```
+
+**Both frozen. Both kept.** The pair *is* the record: a stop that halted on an instrument defect, and
+the same stop accepted after the instrument was repaired and shown to fire in both directions.
+
+| criterion | gate | v4.14.0 → v4.19.0 |
+|---|---|---|
+| 1 | `check_kernel_replay.py` via `~/lean4checker-v4.19.0` | **exit 0** |
+| 2 | **57-footprint equality vs the frozen baseline** | **PASS — 0 changed, 0 lost, 0 gained** |
+| 3 | `check_ledger.py` | **exit 0** — 252 axioms (in >15 min; see the cost finding) |
+| 4 | `check_derivable.py` | **exit 0** — 5 derivations |
+| 5 | `sorry_audit.lean` | **exit 0** — 1 sorryAx decl, exact correspondence |
+| 6 | `check_artifact_drift.py` | **exit 0** — 0 orphans of 572, *after* the key repair |
+| — | `check_toolchain.py` | **exit 0** — pin = lock = `v4.19.0` @ `6caaee842e94` |
+
+**Five versions of accumulated drift from the baseline, ~180 mechanical edits, two dead idioms, one
+broken gate — and still ZERO changed axiom footprints.** The 57 agrees across all three derivations at
+both pins.
+
+`git tag toolchain-stop/v4.19.0` — second fallback position. Route: **2 of 5 stops done.**
+
+### PATTERNS THAT DIED AT v4.19 — a list the destination's documentation wants anyway
+
+A build error is loud. **An idiom that has become a no-op by construction is silent**, and it will be
+reached for again by anyone who learned it from the surrounding code. So the technique gets recorded as
+dead, separately from the two proofs that happened to break:
+
+| dead idiom | why it is dead, not merely broken |
+|---|---|
+| **eta-expand → rewrite the fields → collapse** (`calc X = { f := X.f, g := X.g } := rfl; _ = { f := Y.f, g := Y.g } := by rw [hf, hg]`) | structure-instance notation whose fields are all projections of one term now **elaborates straight back to that term**. The middle goal arrives with no projections in it, so there is nothing for `rw` to find. The technique cannot work at v4.19+; write the constructor explicitly (`S.mk X.f X.g`) when you need the projections to survive |
+| **`dsimp only` as a load-bearing normalisation step** | when it has nothing to do it *errors*, so it is not a safe no-op to leave in a proof across versions. Where the goal already arrives normalised, delete it — and let the real closer (`omega`, here) be the thing that fails loudly if the shape changes back |
+
+### SIX ROUNDS, and that is structural rather than sloppy
+
+66 errors → 18 → 1 → 2 → 3 → 0. **A failing module masks its dependents**, so every error inventory
+during a migration is a **lower bound**, never an estimate of remaining work.
+
+> **RULE: never size the remaining work from the current error count.** Fix the class, rebuild, re-read.
+> The count going 66 → 18 → 1 → 2 → 3 is not thrash; it is dependents becoming visible as their
+> dependencies compile.
+
+**Bulk-fix procedure, and the sweep is not optional.** The mechanical fixes were applied by regex —
+correct for ~180 sites — and **every apply was followed by a grep for survivors**. The survivors were
+*always* the same shape: **parenthesized arguments** the token-class regex could not see
+(`List.mem_cons_self a (lower rest)`, `Nat.pos_pow_of_pos (e₁ + e₂) …`, `List.length_reverse _`
+in a second file). Regex alone would have left them to surface two rounds later, attributed to nothing.
+
+---
+
 # Standing procedures earned at stop 1
 
 ## SCOPE POISONING — attribute the first failure in a shared-resource scope
@@ -299,7 +490,8 @@ extra command per stop, front-loading the destination configuration's debugging 
 |---|---|---|---|
 | 1 | Does `mach_ring`'s permutative catch-all carry a **latent cost cliff** independent of the bump — did it get slower, or did phase 1 hand it a harder goal? | **worked around, mechanism partly unattributed** | Needs a **built v4.14.0 tree** to compare; `lake clean` at stop 1 removed it (correct for kernel hygiene, and it cost this measurement). Cheapest settlement: a `git worktree` at `dec74242` with its own toolchain, built once, and the two probes replayed there. Do it **before stop 4**, not after — a second 9-atom identity anywhere on the route will hit the same cliff, and it will present as "unsolved goals" |
 | 2 | `mach_ring` **cannot distinguish "outside my fragment" from "out of budget"** — `try (first | … )` swallows the timeout | **designed, not implemented** — design note below | Implementing it touches the tactic used by hundreds of proofs, mid-migration, which the scope guard forbids. Deferred to after the destination *with the design fixed now*, so it is a coding task and not a rediscovery |
-| 3 | Lean4Lean maiden run | **unblocked at stop 1, not attempted** | Protocol above. Do it against the green v4.16.0 tree |
+| 3 | Lean4Lean maiden run | **unblocked at stop 1, not attempted** | Protocol above. Do it against the green tree |
+| 4 | `AxiomLedger.lean` guard (6) sweeps `collectAxioms` over **every theorem in the environment**, so criterion 3's cost is denominated in **core's** theorem count — which doubled (20,874 → 43,907) across v4.16 → v4.19, taking the gate past 15 minutes | **attributed, fix deferred** | Fix: scope by module like `spineTheorems` does (covers `Certcom.*` decls in our modules, excludes core, weakens nothing — a core theorem cannot cite a MachLib axiom). **Deferred to after the destination**: narrowing a pass-bar gate between stops makes the stops incomparable. Gets more valuable every stop, since core keeps growing |
 
 ## DESIGN NOTE (open item 2) — make the swallowed timeout speak
 

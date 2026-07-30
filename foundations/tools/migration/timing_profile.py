@@ -59,6 +59,24 @@ def flagged_modules() -> list[str]:
     return out
 
 
+# GATE FILES: the pass bar's own instruments. Added at stop 2 (2026-07-29) after the coverage gap
+# showed up the hard way -- `lake build` does not build these, so the profile above could not see
+# them, and the ledger gate's runtime doubled with nobody watching. THE INSTRUMENT WATCHING THE
+# MIGRATION WAS NOT WATCHING THE INSTRUMENTS; gates are subjects too.
+#
+# Not derived, because there is no marker to derive from: these are named by the pass bar itself
+# (criteria 3 and 5) and the list changes only when the pass bar does.
+#
+# `AxiomLedger.lean` earns a permanent place beyond its own cost: it is the project's ONLY
+# whole-environment traversal, which makes it -- involuntarily -- the most sensitive instrument on
+# the route to environment size and representation. A per-stop ledger elapsed time is a canary for
+# "the environment got weird" that no per-module criterion can see. Stop 2's number is the first
+# reference point (core's theorem count went 20,874 -> 43,907 across v4.16->v4.19, and guard (6)
+# sweeps `collectAxioms` over every theorem in the environment, so the cost is denominated in
+# CORE's size, not ours).
+GATE_FILES = ["AxiomLedger.lean", "tools/sorry_audit.lean"]
+
+
 def time_one(mod: str) -> tuple[str, float, int]:
     t0 = time.monotonic()
     p = subprocess.run(["lake", "env", "lean", mod], cwd=FOUND,
@@ -75,6 +93,14 @@ def capture(workers: int) -> dict:
         for mod, secs, code in ex.map(time_one, mods):
             results[mod] = {"seconds": secs, "exit": code}
             print(f"  {secs:7.2f}s  exit {code}  {mod}")
+
+    # Gate files go LAST and SEQUENTIALLY. AxiomLedger.lean is a ~15-minute single-threaded sweep at
+    # v4.19.0; running it alongside the pool would inflate both its number and its neighbours'.
+    print(f"\ngate files (the pass bar's own instruments), sequential:")
+    for g in GATE_FILES:
+        _, secs, code = time_one(g)
+        results[g] = {"seconds": secs, "exit": code, "gate_file": True}
+        print(f"  {secs:7.2f}s  exit {code}  {g}")
     toolchain = open(os.path.join(FOUND, "lean-toolchain")).read().strip()
     total = round(sum(r["seconds"] for r in results.values()), 2)
     print(f"\ntotal {total}s across {len(results)} modules")

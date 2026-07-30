@@ -50,13 +50,13 @@ theorem yCoeffsAt0_entries_degreeY1_zero (q : MultiPoly 2) :
     change c' ∈ ([MultiPoly.const c] : List (MultiPoly 2)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varX =>
     intro _ c' hc'
     change c' ∈ ([MultiPoly.varX] : List (MultiPoly 2)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varY j =>
     intro hy1 c' hc'
     by_cases hji : j = (⟨0, by omega⟩ : Fin 2)
@@ -158,7 +158,7 @@ theorem degreeY1_reconstructY0_zero (L : List (MultiPoly 2))
       show MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2) c
           + MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
               (MultiPoly.pow (MultiPoly.varY (⟨0, by omega⟩ : Fin 2)) k) = 0
-      rw [hL c (List.mem_cons_self _ _), degreeY1_pow_varY0]
+      rw [hL c (List.mem_cons_self), degreeY1_pow_varY0]
     have htail : MultiPoly.degreeY (⟨1, by omega⟩ : Fin 2)
                    (reconstructY (⟨0, by omega⟩ : Fin 2) cs (k + 1)) = 0 :=
       ih (fun c' hc' => hL c' (List.mem_cons_of_mem _ hc')) (k + 1)

@@ -142,7 +142,7 @@ theorem evalidZeros_list_nodup (T : EMLTree) (a : Real)
     (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ T.eval x) (M : Nat) :
     ((List.range (M + 1)).map (evalidZero T a hvalidon hnp hnn)).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (evalidZero T a hvalidon hnp hnn))
-  exact (List.nodup_range (M + 1)).map (evalidZero T a hvalidon hnp hnn)
+  exact (List.nodup_range).map (evalidZero T a hvalidon hnp hnn)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge

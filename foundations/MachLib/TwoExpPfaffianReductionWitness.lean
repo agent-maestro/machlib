@@ -1193,7 +1193,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness_bound
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair

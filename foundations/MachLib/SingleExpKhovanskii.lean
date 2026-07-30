@@ -1100,7 +1100,7 @@ theorem expPoly_auto_bound_with_propagation_aux :
     have hlen : ep.coeffs.length = 0 := by
       have h := Nat.zero_le (sumSimplifiedDegrees ep.coeffs)
       omega
-    have hempty : ep.coeffs = [] := List.length_eq_zero.mp hlen
+    have hempty : ep.coeffs = [] := List.length_eq_zero_iff.mp hlen
     exfalso
     obtain ⟨x, hx⟩ := hne
     apply hx

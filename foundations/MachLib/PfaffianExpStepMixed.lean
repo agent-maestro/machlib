@@ -62,7 +62,7 @@ theorem exp_reduce_step_bounded {n : Nat} (c : PfaffianChain n) (m p : MultiPoly
     cases zeros with
     | nil => exact Nat.le_refl 0
     | cons z zs =>
-      obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+      obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
       exact absurd hzero (hnoz z ha hb')
   · -- reduct bounded: Rolle transfer adds one zero.
     exact ⟨Nr + 1, pfaffianChainFn_reduce_step_gen c m p a b hab E hcoh hE Nr hNr⟩

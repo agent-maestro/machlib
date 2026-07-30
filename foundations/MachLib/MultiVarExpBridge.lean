@@ -60,7 +60,7 @@ theorem evalAux_map_mvToPoly (x : Real) :
               (fun j => if j = (0 : Fin 2) then x else exp x)
       rw [evalCoeffs_nil]; mach_ring
   | c :: cs, o, hc => by
-      have hc0 : MultiVar.degVar (1 : Fin 2) c = 0 := hc c (List.mem_cons_self c cs)
+      have hc0 : MultiVar.degVar (1 : Fin 2) c = 0 := hc c (List.mem_cons_self)
       have hcs : ∀ d ∈ cs, MultiVar.degVar (1 : Fin 2) d = 0 :=
         fun d hd => hc d (List.mem_cons_of_mem c hd)
       show Poly.eval (mvToPoly c) x * exp (natCast o * x)

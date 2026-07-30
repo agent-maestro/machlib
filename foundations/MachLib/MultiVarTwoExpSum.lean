@@ -54,8 +54,8 @@ theorem inj_zeros_le_one (J : Real → Real) (hinj : ∀ x y, J x = J y → x = 
       have hxy : x ≠ y := fun h =>
         (List.nodup_cons.mp hnd).1 (List.mem_cons.mpr (Or.inl h))
       exact hxy (hinj x y (by
-        rw [hz x (List.mem_cons_self _ _),
-          hz y (List.mem_cons_of_mem _ (List.mem_cons_self _ _))]))
+        rw [hz x (List.mem_cons_self),
+          hz y (List.mem_cons_of_mem _ (List.mem_cons_self))]))
 
 /-- The sum-case Jacobian `J(x) = e^{c−x} − eˣ` is strictly decreasing. -/
 theorem sumJac_antitone (c : Real) :

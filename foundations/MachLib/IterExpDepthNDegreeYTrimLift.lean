@@ -38,7 +38,7 @@ theorem degreeY_reconstructY_le_ne {n : Nat} (i jt : Fin n) (hij : jt ≠ i) (D 
       refine Nat.max_le.mpr ⟨?_, ?_⟩
       · show degreeY jt c + degreeY jt (pow (varY i) k) ≤ D
         rw [degreeY_pow_varY_ne i jt hij]
-        have hc := h c (List.mem_cons_self c cs)
+        have hc := h c (List.mem_cons_self)
         omega
       · exact degreeY_reconstructY_le_ne i jt hij D cs (k + 1)
           (fun c' hc' => h c' (List.mem_cons_of_mem c hc'))

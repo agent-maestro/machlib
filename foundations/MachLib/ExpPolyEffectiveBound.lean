@@ -106,7 +106,7 @@ theorem expPoly_bound_by_measure :
     -- measure ≤ 0 ⟹ length = 0 ⟹ ep ≡ 0, contradicting hne_in
     obtain ⟨x, _, _, hx⟩ := hne_in
     have hlen : ep.coeffs.length = 0 := by omega
-    have : ep.coeffs = [] := List.length_eq_zero.mp hlen
+    have : ep.coeffs = [] := List.length_eq_zero_iff.mp hlen
     exact absurd (by show evalAux ep.coeffs 0 x = 0; rw [this]; rfl) hx
   | succ M' ih =>
     intro ep hM a b hab hne_in zeros hnodup hzeros
@@ -138,7 +138,7 @@ theorem expPoly_bound_by_measure :
         have : zeros = [] := by
           rcases zeros with _ | ⟨z, zs⟩
           · rfl
-          · obtain ⟨hz1, hz2, hz3⟩ := hzeros z (List.mem_cons_self z zs)
+          · obtain ⟨hz1, hz2, hz3⟩ := hzeros z (List.mem_cons_self)
             exact absurd hz3 (hno z hz1 hz2)
         rw [this]; exact Nat.zero_le _
       · -- Case B: the reduction is non-vanishing somewhere on (a,b)
@@ -250,7 +250,7 @@ theorem sumSimplifiedDegrees_le_length_mul (coeffs : List Poly) (D : Nat)
   | cons p rest ih =>
     rw [sumSimplifiedDegrees_cons, List.length_cons]
     have h1 : degreeUpper (polySimplify p) ≤ D :=
-      Nat.le_trans (degreeUpper_polySimplify_le_self p) (hdeg p (List.mem_cons_self p rest))
+      Nat.le_trans (degreeUpper_polySimplify_le_self p) (hdeg p (List.mem_cons_self))
     have h2 : sumSimplifiedDegrees rest ≤ rest.length * D :=
       ih (fun q hq => hdeg q (List.mem_cons_of_mem p hq))
     have hexp : (rest.length + 1) * D = rest.length * D + D := by rw [Nat.add_mul, Nat.one_mul]

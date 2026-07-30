@@ -373,7 +373,7 @@ theorem pfaffian_bound2_gen_explicit (c2 : PfaffianChain 2) (hexp : IsExpChain c
       cases zeros with
       | nil => exact Nat.zero_le _
       | cons z zs =>
-        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
         exact absurd hzero (hnoz z ha hb')
     · -- reduce: recurse + Rolle +1
       have hnz : (singleExpMeasureCanon (MultiPoly.leadingCoeffY (⟨1, by omega⟩ : Fin 2) p)).2 ≠ 0 := hcz

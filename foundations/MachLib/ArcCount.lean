@@ -38,8 +38,8 @@ theorem interleave_sep (sep : Real → Prop) :
   induction s generalizing hd with
   | nil =>
     intro _
-    exact ⟨[], List.nodup_nil, fun c hc => absurd hc (List.not_mem_nil c),
-      fun c hc => absurd hc (List.not_mem_nil c), by simp⟩
+    exact ⟨[], List.nodup_nil, fun c hc => absurd hc (List.not_mem_nil),
+      fun c hc => absurd hc (List.not_mem_nil), by simp⟩
   | cons z1 rest ih =>
     intro hchain
     obtain ⟨⟨hhd_z1, w0, hw0_lo, hw0_hi, hw0_sep⟩, hchain_tail⟩ := hchain

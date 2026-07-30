@@ -99,7 +99,7 @@ theorem dropWhile_all {α : Type} (p : α → Bool) :
   | [], _ => rfl
   | a :: as, h => by
     rw [List.dropWhile_cons]
-    have hpa : p a = true := h a (List.mem_cons_self _ _)
+    have hpa : p a = true := h a (List.mem_cons_self)
     rw [if_pos hpa]
     exact dropWhile_all p as (fun b hb => h b (List.mem_cons_of_mem _ hb))
 
@@ -151,7 +151,7 @@ theorem all_canonZero_of_listSubN_nil :
     rcases List.mem_cons.mp hc with hcq | hcqs
     · subst hcq
       have := coeffCanonZeroB_eq_of_sub_canonZero (MultiPoly.const 0) c
-                (h _ (List.mem_cons_self _ _))
+                (h _ (List.mem_cons_self))
       rw [coeffCanonZeroB_const0] at this
       exact this.symm
     · exact all_canonZero_of_listSubN_nil qs
@@ -173,7 +173,7 @@ theorem rdw_eq_of_listSubN :
     rfl
   | p :: ps, q :: qs, hsub => by
     rw [listSubN_cons_cons] at hsub
-    have hpq : coeffCanonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : coeffCanonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : coeffCanonZeroB p = coeffCanonZeroB q :=
       coeffCanonZeroB_eq_of_sub_canonZero p q hpq
     have hih := rdw_eq_of_listSubN ps qs
@@ -252,7 +252,7 @@ theorem rdwHead_eval0_eq_of_listSubN :
   | p :: ps, q :: qs, hsub => by
     intro x
     rw [listSubN_cons_cons] at hsub
-    have hpq : coeffCanonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : coeffCanonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : coeffCanonZeroB p = coeffCanonZeroB q :=
       coeffCanonZeroB_eq_of_sub_canonZero p q hpq
     have htail : ∀ c ∈ listSubN ps qs, coeffCanonZeroB c = true :=

@@ -100,7 +100,7 @@ theorem coeffCanonZeroB1_true_iff (c : MultiPoly 2) :
         rw [eval_yCoeffsAt (⟨0, by omega⟩ : Fin 2) c x (env0 y), hvanish x y] at hbridge
         rw [← hmapy]; exact hbridge.symm
       exact evalCoeffs_zero_iff_all_zero _ hall (MultiPoly.eval e x (fun _ => 0))
-        (List.mem_map_of_mem _ he)
+        (List.mem_map_of_mem he)
     unfold coeffCanonZeroB
     exact decide_eq_true ((canonZero_iff_eval_zero_at_0 e).mpr hgoal)
 
@@ -158,7 +158,7 @@ theorem all_canonZero1_of_listSubN_nil :
     rcases List.mem_cons.mp hc with hcq | hcqs
     · subst hcq
       have := coeffCanonZeroB1_eq_of_sub_canonZero (MultiPoly.const 0) c
-                (h _ (List.mem_cons_self _ _))
+                (h _ (List.mem_cons_self))
       rw [coeffCanonZeroB1_const0] at this
       exact this.symm
     · exact all_canonZero1_of_listSubN_nil qs
@@ -180,7 +180,7 @@ theorem rdw_eq_of_listSubN1 :
     rfl
   | p :: ps, q :: qs, hsub => by
     rw [listSubN_cons_cons] at hsub
-    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : coeffCanonZeroB1 p = coeffCanonZeroB1 q :=
       coeffCanonZeroB1_eq_of_sub_canonZero p q hpq
     have hih := rdw_eq_of_listSubN1 ps qs
@@ -251,7 +251,7 @@ theorem rdwHead_envEnv0_eq_of_listSubN1 :
   | p :: ps, q :: qs, hsub => by
     intro x y0
     rw [listSubN_cons_cons] at hsub
-    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : coeffCanonZeroB1 (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : coeffCanonZeroB1 p = coeffCanonZeroB1 q :=
       coeffCanonZeroB1_eq_of_sub_canonZero p q hpq
     have htail : ∀ c ∈ listSubN ps qs, coeffCanonZeroB1 c = true :=
@@ -293,7 +293,7 @@ theorem canonLcY1_degreeY1_zero (q : MultiPoly 2) :
     have he : e ∈ yCoeffsAt (⟨1, by omega⟩ : Fin 2) q := by
       have hmem : e ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse := by
         have hd : e ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1 := by
-          rw [hL]; exact List.mem_cons_self _ _
+          rw [hL]; exact List.mem_cons_self
         exact mem_of_mem_dropWhile' _ _ e hd
       exact List.mem_reverse.mp hmem
     exact yCoeffsAt_entries_degreeY_zero (⟨1, by omega⟩ : Fin 2) q e he
@@ -372,8 +372,8 @@ re-declared (private in `ChainExp2SingleExpDescent`). -/
 
 private theorem reverse_head_eq_getLast {α : Type} (L : List α) (hne : L ≠ [])
     {a : α} {t : List α} (hrev : L.reverse = a :: t) : a = L.getLast hne := by
-  have hh : L.reverse.head? = L.getLast? := List.head?_reverse L
-  rw [hrev, List.head?_cons, List.getLast?_eq_getLast L hne] at hh
+  have hh : L.reverse.head? = L.getLast? := List.head?_reverse
+  rw [hrev, List.head?_cons, List.getLast?_eq_getLast hne] at hh
   exact Option.some.inj hh
 
 private theorem rdw_full_of_getLast_neg {α : Type} (p : α → Bool) (L : List α) (hne : L ≠ [])
@@ -398,7 +398,7 @@ private theorem rdw_lt_of_getLast_pos {α : Type} (p : α → Bool) (L : List α
     (L.reverse.dropWhile p).length < L.length := by
   rcases hrev : L.reverse with _ | ⟨a, t⟩
   · exact absurd (List.reverse_eq_nil_iff.mp hrev) hne
-  · have hpos : 0 < L.length := Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero.mp h))
+  · have hpos : 0 < L.length := Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero_iff.mp h))
     have htlen : t.length = L.length - 1 := by
       have hc := congrArg List.length hrev
       rw [List.length_reverse, List.length_cons] at hc

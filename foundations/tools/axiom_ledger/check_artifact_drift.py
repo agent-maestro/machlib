@@ -44,15 +44,41 @@ import pathlib
 import sys
 
 FOUND = pathlib.Path(__file__).resolve().parent.parent.parent
-LIB = FOUND / ".lake" / "build" / "lib"
+BUILD_LIB = FOUND / ".lake" / "build" / "lib"
 SRC = FOUND
 
 
+def olean_root() -> pathlib.Path | None:
+    """Find the directory the module hierarchy is rooted at -- DERIVED, not assumed.
+
+    Lake moved the olean output at **v4.19.0**: `.lake/build/lib/MachLib/X.olean` became
+    `.lake/build/lib/lean/MachLib/X.olean`. This gate keyed on `relative_to(.lake/build/lib)`, so
+    every key silently gained a `lean/` component, NOTHING matched, and it reported
+    **572 orphans out of 572 oleans and 896 unbuilt out of 896 sources** -- i.e. a total
+    correspondence failure dressed up as total drift.
+
+    IT FAILED LOUDLY, WHICH IS THE ONLY REASON THIS WAS CHEAP. The tell was in the numbers, not the
+    names: when a correspondence gate reports EVERYTHING on both sides, suspect the KEY, not the
+    trees. A gate that matched half would have been far more expensive to diagnose.
+
+    So the root is now located by finding the top-level `MachLib.olean` rather than by hardcoding a
+    layout that Lake has already changed once. Works under both layouts, and under the next one.
+    """
+    if not BUILD_LIB.exists():
+        return None
+    for p in sorted(BUILD_LIB.rglob("MachLib.olean")):
+        return p.parent
+    return None
+
+
 def main() -> int:
-    if not LIB.exists():
-        print(f"[NO_BUILD] {LIB} missing -- nothing to compare. Build first; an unbuilt tree is "
-              f"not a clean tree.")
+    LIB = olean_root()
+    if LIB is None:
+        print(f"[NO_BUILD] no MachLib.olean under {BUILD_LIB} -- nothing to compare. Build first; "
+              f"an unbuilt tree is not a clean tree.")
         return 1
+    if LIB != BUILD_LIB:
+        print(f"olean root     : {LIB.relative_to(FOUND)}  (derived, not assumed)")
 
     # Enumerate BOTH trees recursively. The earlier manual pass compared only top-level files and
     # a hand-typed label claimed "no subdirs" while MachLib/Tactic and MachLib/Applications exist.

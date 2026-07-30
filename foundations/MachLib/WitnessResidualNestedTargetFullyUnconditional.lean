@@ -76,7 +76,7 @@ theorem natCast_mul_pi_lt_natCast_mul_two_pi {j k : Nat} (hjk : j < k) :
 theorem natCast_kpi_shifted_list_nodup (K M : Nat) :
     ((List.range (M + 1)).map (fun i => natCast (K + i + 1) * pi)).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (fun i => natCast (K + i + 1) * pi))
-  exact (List.nodup_range (M + 1)).map (fun i => natCast (K + i + 1) * pi)
+  exact (List.nodup_range).map (fun i => natCast (K + i + 1) * pi)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       dsimp only at hij_eq

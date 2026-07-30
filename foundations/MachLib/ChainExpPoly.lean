@@ -223,7 +223,7 @@ theorem sumWithPowers_map_dropLastY_eval_eq_sumWithPowers_map_eval
            (rest.map (fun c => MultiPoly.eval c x env))
            (k + 1) (env ⟨N, Nat.lt_succ_self N⟩)
     have h_c_free : MultiPoly.degreeY (MultiPoly.lastIdx N) c = 0 :=
-      h_free c (List.mem_cons_self _ _)
+      h_free c (List.mem_cons_self)
     have h_rest_free :
         ∀ c' ∈ rest, MultiPoly.degreeY (MultiPoly.lastIdx N) c' = 0 := by
       intro c' hc'
@@ -680,7 +680,7 @@ theorem chainExpPolyAutoBound_succ_y_free
   have h_rest : rest = [] := by
     rw [h_list] at h_len
     have : rest.length = 0 := by simpa using h_len
-    exact List.length_eq_zero.mp this
+    exact List.length_eq_zero_iff.mp this
   subst h_rest
   refine ⟨q, ?_⟩
   rw [multiPolyToChainExpPolyT_succ, h_list]

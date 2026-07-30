@@ -48,7 +48,7 @@ theorem line_meets_exp_eq_le_one (c a b : Real) (hab : a < b) :
     | nil => exact Nat.le_refl 0
     | cons z rest =>
       exfalso
-      obtain ⟨_, _, hjz⟩ := hJ z (List.mem_cons_self z rest)
+      obtain ⟨_, _, hjz⟩ := hJ z (List.mem_cons_self)
       have hsum : (0 : Real) < exp z + exp (c - z) := by
         have h1 : exp z + 0 < exp z + exp (c - z) := add_lt_add_left (exp_pos (c - z)) (exp z)
         rw [add_zero] at h1

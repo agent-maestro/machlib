@@ -91,7 +91,7 @@ theorem all_canonZero_of_listSubN_nil {n : Nat} :
     intro c hc
     rcases List.mem_cons.mp hc with hcq | hcqs
     · subst hcq
-      have hh := canonZeroB_eq_of_sub_canonZero (MultiPoly.const 0) c (h _ (List.mem_cons_self _ _))
+      have hh := canonZeroB_eq_of_sub_canonZero (MultiPoly.const 0) c (h _ (List.mem_cons_self))
       rw [canonZeroB_const0] at hh
       exact hh.symm
     · exact all_canonZero_of_listSubN_nil qs (fun d hd => h d (List.mem_cons_of_mem _ hd)) c hcqs
@@ -109,7 +109,7 @@ theorem rdw_eq_of_listSubN {n : Nat} :
     rw [rdw_zero_of_all canonZeroB (p :: ps) hsub]; rfl
   | p :: ps, q :: qs, hsub => by
     rw [listSubN_cons_cons] at hsub
-    have hpq : canonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : canonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : canonZeroB p = canonZeroB q := canonZeroB_eq_of_sub_canonZero p q hpq
     have hih := rdw_eq_of_listSubN ps qs (fun c hc => hsub c (List.mem_cons_of_mem _ hc))
     rw [rdw_cons canonZeroB p ps, rdw_cons canonZeroB q qs, hcpq, hih]
@@ -189,7 +189,7 @@ theorem rdwHead_eval_eq_of_listSubN {n : Nat} :
   | p :: ps, q :: qs, hsub => by
     intro x env
     rw [listSubN_cons_cons] at hsub
-    have hpq : canonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self _ _)
+    have hpq : canonZeroB (MultiPoly.sub p q) = true := hsub _ (List.mem_cons_self)
     have hcpq : canonZeroB p = canonZeroB q := canonZeroB_eq_of_sub_canonZero p q hpq
     have htail : ∀ c ∈ listSubN ps qs, canonZeroB c = true :=
       fun c hc => hsub c (List.mem_cons_of_mem _ hc)
@@ -218,7 +218,7 @@ theorem canonLcYAt_degreeY_zero {n : Nat} (i : Fin n) (q : MultiPoly n) :
     have he : e ∈ yCoeffsAt i q := by
       have hmem : e ∈ (yCoeffsAt i q).reverse := by
         have hd : e ∈ (yCoeffsAt i q).reverse.dropWhile canonZeroB := by
-          rw [hL]; exact List.mem_cons_self _ _
+          rw [hL]; exact List.mem_cons_self
         exact mem_of_mem_dropWhile' _ _ e hd
       exact List.mem_reverse.mp hmem
     exact yCoeffsAt_entries_degreeY_zero i q e he

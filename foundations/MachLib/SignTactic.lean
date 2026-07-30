@@ -86,7 +86,7 @@ theorem log_nonneg {x : Real} (h : 1 ≤ x) : 0 ≤ log x := by
 
 /-- The decimal zero `0.0…0` *is* `0` — cleared via `realOfScientific_clears` (`0·10ᵉ = 0`). -/
 theorem rOS_zero (e : Nat) : realOfScientific 0 true e = 0 := by
-  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos e (by decide)))
+  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   rw [realOfScientific_clears 0 e, natCast_zero, zero_mul]
 

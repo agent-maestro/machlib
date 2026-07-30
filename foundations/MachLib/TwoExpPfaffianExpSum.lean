@@ -964,7 +964,7 @@ theorem expSum_no_fy_critical_separators :
   | [], _, _ => by simp
   | s :: rest, _, hsep => by
       exfalso
-      exact one_ne_zero (hsep s (List.mem_cons_self _ _))
+      exact one_ne_zero (hsep s (List.mem_cons_self))
 
 /-- Interval-shaped version of `expSum_no_fy_critical_separators`, matching
 the separator-count bridge shape used for global arc-count inputs. -/

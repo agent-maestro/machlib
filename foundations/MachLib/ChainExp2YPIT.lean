@@ -150,6 +150,6 @@ theorem yCoeffsAt_entry_eval_zero_of_eval_zero {n : Nat} (i : Fin n) (q : MultiP
     exact hbridge.symm
   intro c hc
   exact evalCoeffs_zero_iff_all_zero _ hall (MultiPoly.eval c x env)
-    (List.mem_map_of_mem _ hc)
+    (List.mem_map_of_mem hc)
 
 end MachLib.ChainExp2YPIT

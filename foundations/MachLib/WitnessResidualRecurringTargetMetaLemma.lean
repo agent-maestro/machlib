@@ -124,7 +124,7 @@ theorem no_tree_eq_recurring_target_fully_unconditional
       mach_ring
   have hzeros_nodup : zeros.Nodup := by
     show List.Pairwise (· ≠ ·) zeros
-    exact (List.nodup_range (M + 1)).map (fun i => Z (K + i + 1))
+    exact (List.nodup_range).map (fun i => Z (K + i + 1))
       (fun i j (_hij_neq : i ≠ j) => by
         intro hij_eq
         dsimp only at hij_eq

@@ -140,7 +140,7 @@ theorem prod_delta_bound {w : Real} (hw0 : 0 ≤ w) :
         rw [show (1 : Real) - 1 = 0 from by mach_ring, abs_of_nonneg (le_refl (0 : Real))]
       exact le_of_eq h
   | d :: ds, hmem => by
-      have hd : abs d ≤ w := hmem d (List.mem_cons_self d ds)
+      have hd : abs d ≤ w := hmem d (List.mem_cons_self)
       have ih := prod_delta_bound hw0 ds (fun d' hd' => hmem d' (List.mem_cons_of_mem d hd'))
       have hPmag : abs (prodDelta ds) ≤ npow ds.length (1 + w) := by
         have ht := abs_le_add_err ih

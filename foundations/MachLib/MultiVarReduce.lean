@@ -88,7 +88,7 @@ theorem reduceFull_vanish (env : Fin 2 → Real) (q_lead p_lead : MultiVar 2) (k
 /-! ## Length calculus (the reduction's formal-degree drop → termination) -/
 
 theorem length_scaleCoeffs (c : MultiVar 2) (as : List (MultiVar 2)) :
-    (scaleCoeffs c as).length = as.length := List.length_map _ _
+    (scaleCoeffs c as).length = as.length := List.length_map _
 
 theorem length_shiftCoeffs (k : Nat) (as : List (MultiVar 2)) :
     (shiftCoeffs k as).length = k + as.length := by
@@ -96,7 +96,7 @@ theorem length_shiftCoeffs (k : Nat) (as : List (MultiVar 2)) :
   rw [List.length_append, List.length_replicate]
 
 theorem length_negCoeffs (bs : List (MultiVar 2)) : (negCoeffs bs).length = bs.length :=
-  List.length_map _ _
+  List.length_map _
 
 theorem length_addCoeffs : ∀ as bs : List (MultiVar 2),
     (addCoeffs as bs).length = max as.length bs.length

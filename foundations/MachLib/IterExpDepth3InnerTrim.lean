@@ -115,7 +115,7 @@ theorem yCoeffsAt_entries_other_degreeY_zero {n : Nat} (i j : Fin n) :
       · rw [h]; rfl
       · rcases List.mem_cons.mp h with h2 | h2
         · rw [h2]; rfl
-        · exact absurd h2 (List.not_mem_nil _)
+        · exact absurd h2 (List.not_mem_nil)
     · change c' ∈ (if k = i then ([MultiPoly.const 0, MultiPoly.const 1] : List (MultiPoly n))
                     else [MultiPoly.varY k]) at hc'
       rw [if_neg hki, List.mem_singleton] at hc'
@@ -181,7 +181,7 @@ theorem degreeY_reconstructY_other_zero {n : Nat} (i j : Fin n) (hij : j ≠ i) 
                  (MultiPoly.degreeY j (reconstructY i cs (k + 1))) = 0
     have hhead : MultiPoly.degreeY j (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = 0 := by
       show MultiPoly.degreeY j c + MultiPoly.degreeY j (MultiPoly.pow (MultiPoly.varY i) k) = 0
-      rw [hL c (List.mem_cons_self _ _), degreeY_pow_varY_other i j hij]
+      rw [hL c (List.mem_cons_self), degreeY_pow_varY_other i j hij]
     have htail : MultiPoly.degreeY j (reconstructY i cs (k + 1)) = 0 :=
       ih (fun c' hc' => hL c' (List.mem_cons_of_mem _ hc')) (k + 1)
     rw [hhead, htail]; exact Nat.max_self 0
@@ -230,7 +230,7 @@ theorem degreeY2_innerTrim3_le (p : MultiPoly 3) :
       = (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).length := by
     rw [List.length_append, List.length_dropLast, List.length_singleton]
     have hlen_pos : 0 < (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).length :=
-      List.length_pos.mpr (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)
+      List.length_pos_iff.mpr (MultiPoly.yCoeffsAt_nonempty (⟨2, by omega⟩ : Fin 3) p)
     omega
   have hlen_eq : (MultiPoly.yCoeffsAt (⟨2, by omega⟩ : Fin 3) p).length
       = MultiPoly.degreeY (⟨2, by omega⟩ : Fin 3) p + 1 :=
@@ -273,7 +273,7 @@ theorem degreeY_reconstructY_exact_cons {n : Nat} (i : Fin n) :
   | nil =>
     intro hfree k
     rw [reconstructY_cons, reconstructY_nil]
-    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self)
     have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
       show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
       rw [hc, degreeY_pow_varY_self, Nat.zero_add]
@@ -285,7 +285,7 @@ theorem degreeY_reconstructY_exact_cons {n : Nat} (i : Fin n) :
   | cons d ds ih =>
     intro hfree k
     rw [reconstructY_cons]
-    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self)
     have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
       show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
       rw [hc, degreeY_pow_varY_self, Nat.zero_add]
@@ -312,7 +312,7 @@ theorem leadingCoeffY_reconstructY_cons {n : Nat} (i : Fin n) :
   | nil =>
     intro hfree k hpos
     have hk : 0 < k := by simpa using hpos
-    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self)
     have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
       show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
       rw [hc, degreeY_pow_varY_self, Nat.zero_add]
@@ -325,7 +325,7 @@ theorem leadingCoeffY_reconstructY_cons {n : Nat} (i : Fin n) :
     rfl
   | cons d ds ih =>
     intro hfree k _
-    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self _ _)
+    have hc : MultiPoly.degreeY i c = 0 := hfree c (List.mem_cons_self)
     have hhead : MultiPoly.degreeY i (MultiPoly.mul c (MultiPoly.pow (MultiPoly.varY i) k)) = k := by
       show MultiPoly.degreeY i c + MultiPoly.degreeY i (MultiPoly.pow (MultiPoly.varY i) k) = k
       rw [hc, degreeY_pow_varY_self, Nat.zero_add]

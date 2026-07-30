@@ -1218,7 +1218,7 @@ theorem khovanskii_rolle_full_of_descent_certificate
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair
@@ -1294,7 +1294,7 @@ theorem khovanskii_rolle_full_of_descent_certificate_and_separator_count
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair

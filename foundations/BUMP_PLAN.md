@@ -280,6 +280,38 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# FINDING AGAINST THE SCOPE GUARD (stop 2) — the austerity asset is narrower than claimed
+
+The scope guard above says *"MachLib's Mathlib-free discipline is the asset here … a base that
+axiomatises `Real` and forbids `by_contra` exposes far less surface to elaborator drift"*, and predicts
+the cost lands in the custom machinery. **Stop 1 confirmed that exactly.** **Stop 2 did not.**
+
+At v4.19.0 the drift was **~180 call sites of Lean CORE `List`/`Nat` API churn** — explicit binders
+becoming implicit (`List.mem_cons_self`, `List.not_mem_nil`, `List.length_map`, …) and `_iff` renames
+(`List.length_eq_zero` → `List.length_eq_zero_iff`, `Nat.pos_pow_of_pos` → `Nat.pow_pos`). Not one of
+those is a Mathlib coupling, an elaborator quirk, or a tactic.
+
+> **Refinement, not a correction: austerity buys freedom from LIBRARY-SEMANTICS drift, not from
+> CORE-API drift.** Mathlib-free means nothing chose those `List` lemmas for us — we chose them, and
+> they are still someone else's API on someone else's release cadence.
+
+**BOTH HALVES BELONG IN THE FINDING, or stop 3's expectations get calibrated to the scarier reading.**
+
+* **The ~180 sites are SHALLOW drift.** Mechanical, bulk-attributable, fixed by regex plus a survivor
+  sweep, and **no proof content moved** — a renamed lemma and an implicit binder are not mathematics.
+* **The DEEP kind — what the guard was actually about — arrived exactly twice**: `dsimp only` becoming
+  a no-op-and-therefore-an-error, and structure-instance notation collapsing under eta. **Both
+  attributed, neither semantic.**
+
+> **So the guard failed as stated and its INTENT held: the mathematics did not move, the surface did.**
+> Three versions of drift, ~180 mechanical edits, two behaviour changes, and — per criterion 2 — zero
+> changed axiom footprints.
+
+Left as an amendment rather than an edit to the pre-registered text above, which stands. Full
+attribution table in `MIGRATION_LOG.md`, stop 2.
+
+---
+
 # NAMED RULE — an instrument does not join a measurement midway
 
 Promoted from a table row because it governs three separate decisions on this route and will be under

@@ -232,7 +232,7 @@ theorem eml_evarvar_evarConstC2_boundedZeros_via_general (c2' : Real) (hc2' : 1 
       | [], _, _ => rfl
       | y :: ys, _, hzf =>
           exfalso
-          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self _ _)
+          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self)
           have hylt : y < Real.log (Real.log c2') := by rw [hb]; exact hyb
           have ht2le : Real.exp y - Real.log c2' ≤ 0 := by
             have h := (exp_lt_log_c2_iff_lt_switch hc2').1 y hylt
@@ -252,7 +252,7 @@ theorem eml_evarvar_evarConstC2_boundedZeros_via_general (c2' : Real) (hc2' : 1 
       | [], _, _ => rfl
       | y :: ys, _, hzf =>
           exfalso
-          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self _ _)
+          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self)
           have hylt : y < Real.log (Real.log c2') := lt_trans_ax hyb hb
           have ht2le : Real.exp y - Real.log c2' ≤ 0 := by
             have h := (exp_lt_log_c2_iff_lt_switch hc2').1 y hylt

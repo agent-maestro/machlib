@@ -718,7 +718,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair
@@ -814,7 +814,7 @@ theorem khovanskii_rolle_full_of_bivar_expr_arc_data
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair
@@ -886,7 +886,7 @@ theorem khovanskii_rolle_full_of_represented_arc_data_and_separator_count
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair

@@ -44,12 +44,12 @@ theorem length_le_one_of_forall_eq {v : Real} :
   | [_], _, _ => by simp
   | x :: y :: ys, hnd, hmem => by
       exfalso
-      have hx : x = v := hmem x (List.mem_cons_self _ _)
-      have hy : y = v := hmem y (List.mem_cons_of_mem _ (List.mem_cons_self _ _))
+      have hx : x = v := hmem x (List.mem_cons_self)
+      have hy : y = v := hmem y (List.mem_cons_of_mem _ (List.mem_cons_self))
       have hxy : x = y := hx.trans hy.symm
       have hxney : x ≠ y := by
         have := List.nodup_cons.mp hnd
-        exact fun h => this.1 (h ▸ List.mem_cons_self _ _)
+        exact fun h => this.1 (h ▸ List.mem_cons_self)
       exact hxney hxy
 
 /-- **Gluing `BoundedZerosBy` across a midpoint.** Purely combinatorial: any nodup list of zeros

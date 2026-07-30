@@ -53,7 +53,7 @@ theorem sumAbs_le {B : Real} (hB : 0 ≤ B) :
       rw [show (0 : Real) * B = 0 from by mach_ring]; exact le_refl 0
   | x :: xs, hbd => by
       show abs x + sumAbs xs ≤ (1 + nterms xs) * B
-      have hx : abs x ≤ B := hbd x (List.mem_cons_self x xs)
+      have hx : abs x ≤ B := hbd x (List.mem_cons_self)
       have hih : sumAbs xs ≤ nterms xs * B :=
         sumAbs_le hB (fun c hc => hbd c (List.mem_cons_of_mem x hc))
       calc abs x + sumAbs xs ≤ B + nterms xs * B := add_le_add_both hx hih
@@ -67,7 +67,7 @@ theorem sumSq_le {B : Real} (hB : 0 ≤ B) :
       rw [show (0 : Real) * (B * B) = 0 from by mach_ring]; exact le_refl 0
   | x :: xs, hbd => by
       show x * x + sumSq xs ≤ (1 + nterms xs) * (B * B)
-      have hx : abs x ≤ B := hbd x (List.mem_cons_self x xs)
+      have hx : abs x ≤ B := hbd x (List.mem_cons_self)
       have hxx : x * x ≤ B * B := by
         rw [← abs_of_nonneg (sq_nonneg x), abs_mul]
         exact le_trans (mul_le_mul_of_nonneg_right hx (abs_nonneg x))

@@ -1,0 +1,9 @@
+olean root     : .lake/build/lib/lean  (derived, not assumed)
+artifact tree : 572 .olean
+source tree   : 896 .lean
+ORPHANED      : 0   (artifact with no source)
+unbuilt       : 324   (source with no artifact -- informational)
+
+ARTIFACT-DRIFT TRIPWIRE: PASS -- every artifact has a source.
+  Scope: this checks the source↔artifact CORRESPONDENCE only. Whether the corresponding
+  artifacts replay clean is check_kernel_replay.py's job -- tripwire, then checker.

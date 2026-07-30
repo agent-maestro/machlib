@@ -99,7 +99,7 @@ theorem exp_c1_sub_log_expSubLogC2_atMostOneZero (c1 c2 x0 B : Real) (hx0B : x0 
     | [], _ => simp
     | w :: ws, hzf' =>
         exfalso
-        obtain ⟨hw0, hwb, f'', hderiv, hf''0⟩ := hzf' w (List.mem_cons_self _ _)
+        obtain ⟨hw0, hwb, f'', hderiv, hf''0⟩ := hzf' w (List.mem_cons_self)
         have hwpos : 0 < Real.exp w - Real.log c2 := by
           have h := hgt_side w hw0
           have e := sub_lt_sub_right_of_lt (r := Real.log c2) h

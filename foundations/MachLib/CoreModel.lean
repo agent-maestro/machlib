@@ -142,10 +142,10 @@ def intModel : RealCoreSpec where
   zero := (0 : Int)
   one  := (1 : Int)
   abs  := fun x => (x.natAbs : Int)
-  add_comm    := fun a b => by dsimp only; omega
-  add_assoc   := fun a b c => by dsimp only; omega
-  add_zero    := fun a => by dsimp only; omega
-  add_neg     := fun a => by dsimp only; omega
+  add_comm    := fun a b => by omega
+  add_assoc   := fun a b c => by omega
+  add_zero    := fun a => by omega
+  add_neg     := fun a => by omega
   mul_comm    := Int.mul_comm
   mul_assoc   := Int.mul_assoc
   mul_one     := Int.mul_one
@@ -153,15 +153,15 @@ def intModel : RealCoreSpec where
   neg_mul     := Int.neg_mul
   mul_neg     := Int.mul_neg
   neg_neg     := Int.neg_neg
-  sub_def     := fun a b => by dsimp only; omega
-  lt_total    := fun a b => by dsimp only; omega
-  lt_trans    := fun a b c => by dsimp only; omega
-  lt_irrefl   := fun a => by dsimp only; omega
-  le_iff_lt_or_eq := fun a b => by dsimp only; omega
-  add_lt_add_left := fun a b c => by dsimp only; omega
+  sub_def     := fun a b => by omega
+  lt_total    := fun a b => by omega
+  lt_trans    := fun a b c => by omega
+  lt_irrefl   := fun a => by omega
+  le_iff_lt_or_eq := fun a b => by omega
+  add_lt_add_left := fun a b c => by omega
   mul_pos     := fun _ _ => Int.mul_pos
   mul_lt_mul_pos_rht := fun _ _ _ h hc => Int.mul_lt_mul_of_pos_right h hc
-  zero_lt_one := by dsimp only; omega
+  zero_lt_one := by omega
   abs_neg := fun x => by
     show ((-x).natAbs : Int) = (x.natAbs : Int); rw [Int.natAbs_neg]
   abs_add := fun a b => by

@@ -1,0 +1,42 @@
+artifact tree : 572 .olean
+source tree   : 896 .lean
+ORPHANED      : 572   (artifact with no source)
+unbuilt       : 896   (source with no artifact -- informational)
+
+ORPHANS -- these declarations exist in the build tree and NOWHERE in source:
+    lean/MachLib
+    lean/MachLib/AbsoluteBridge
+    lean/MachLib/AbsoluteError
+    lean/MachLib/AbsoluteFold
+    lean/MachLib/AbsoluteFoldBounded
+    lean/MachLib/AbsoluteFoldLocal
+    lean/MachLib/AbsoluteFoldNest
+    lean/MachLib/AbsoluteFoldNestLocal
+    lean/MachLib/AbsoluteFoldNestMag
+    lean/MachLib/AbsoluteFoldPos
+    lean/MachLib/AcosHardwareForwardError
+    lean/MachLib/AcosTaylorRemainder
+    lean/MachLib/AffineArithmetic
+    lean/MachLib/AffineContraction
+    lean/MachLib/AnalyticFiniteZeros
+    lean/MachLib/AnalyticFiniteZerosReal
+    lean/MachLib/AnalyticIdentityFeasibility
+    lean/MachLib/ArcCount
+    lean/MachLib/AsinHardwareForwardError
+    lean/MachLib/AsinTaylorRemainder
+    lean/MachLib/Asymptotics
+    lean/MachLib/AtanHardwareForwardError
+    lean/MachLib/AtanTaylorRemainder
+    lean/MachLib/AxiStreamWrapper
+    lean/MachLib/AxiomMinimality
+    lean/MachLib/BackwardError
+    lean/MachLib/BallCubeRatio
+    lean/MachLib/Basic
+    lean/MachLib/BitVecMul
+    lean/MachLib/BivariateDeriv
+    ... and 542 more
+
+ARTIFACT-DRIFT TRIPWIRE: FAIL
+  The build tree asserts declarations the source tree does not make. Anyone
+  auditing or reproducing from this tree would receive them.
+  Fix: `lake clean && lake build`, or delete the specific stale artifacts.

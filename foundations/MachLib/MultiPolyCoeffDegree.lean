@@ -93,7 +93,7 @@ theorem getD_mul_split_eval {n : Nat} : ∀ (A B : List (MultiPoly n)) (m nn : N
   | a :: as, B, m, nn, hA, hB, x, env => by
       cases m with
       | zero =>
-        have has : as = [] := List.length_eq_zero.mp (Nat.le_zero.mp (Nat.le_of_succ_le_succ hA))
+        have has : as = [] := List.length_eq_zero_iff.mp (Nat.le_zero.mp (Nat.le_of_succ_le_succ hA))
         subst has
         rw [getD_listMulN_cons_eval a [] B (0 + nn) x env, Nat.zero_add]
         have hz : MultiPoly.eval ((MultiPoly.const 0 :: listMulN ([] : List (MultiPoly n)) B).getD nn (MultiPoly.const 0)) x env = 0 := by

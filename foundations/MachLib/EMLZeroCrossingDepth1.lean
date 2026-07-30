@@ -55,11 +55,11 @@ theorem atMostOneZero_of_strictMono {f : Real → Real} {c d : Real}
   | [_], _, _ => by simp
   | x :: y :: ys, hnd, hz => by
       exfalso
-      have hxin := hz x (List.mem_cons_self _ _)
-      have hyin := hz y (List.mem_cons_of_mem _ (List.mem_cons_self _ _))
+      have hxin := hz x (List.mem_cons_self)
+      have hyin := hz y (List.mem_cons_of_mem _ (List.mem_cons_self))
       have hxney : x ≠ y := by
         have h := List.nodup_cons.mp hnd
-        exact fun h' => h.1 (h' ▸ List.mem_cons_self _ _)
+        exact fun h' => h.1 (h' ▸ List.mem_cons_self)
       rcases lt_total x y with hlt | heq | hgt
       · have hlt' := hmono x y hxin.1 hxin.2.1 hyin.1 hyin.2.1 hlt
         rw [hxin.2.2, hyin.2.2] at hlt'
@@ -81,11 +81,11 @@ theorem atMostOneZero_of_injOn {f : Real → Real} {c d : Real}
   | [_], _, _ => by simp
   | x :: y :: ys, hnd, hz => by
       exfalso
-      have hxin := hz x (List.mem_cons_self _ _)
-      have hyin := hz y (List.mem_cons_of_mem _ (List.mem_cons_self _ _))
+      have hxin := hz x (List.mem_cons_self)
+      have hyin := hz y (List.mem_cons_of_mem _ (List.mem_cons_self))
       have hxney : x ≠ y := by
         have h := List.nodup_cons.mp hnd
-        exact fun h' => h.1 (h' ▸ List.mem_cons_self _ _)
+        exact fun h' => h.1 (h' ▸ List.mem_cons_self)
       have hfeq : f x = f y := hxin.2.2.trans hyin.2.2.symm
       rcases lt_total x y with hlt | heq | hgt
       · exact (hinj x y hxin.1 hxin.2.1 hyin.1 hyin.2.1 hlt) hfeq
@@ -233,7 +233,7 @@ theorem eml_const_const_boundedZeros (c1 c2 : Real) (hne : Real.exp c1 ≠ Real.
   | [] => simp
   | x :: xs =>
       exfalso
-      obtain ⟨_, _, hfx⟩ := hz x (List.mem_cons_self _ _)
+      obtain ⟨_, _, hfx⟩ := hz x (List.mem_cons_self)
       have hfx' : Real.exp c1 - Real.log c2 = 0 := hfx
       apply hne
       have e : Real.exp c1 = (Real.exp c1 - Real.log c2) + Real.log c2 := by mach_ring

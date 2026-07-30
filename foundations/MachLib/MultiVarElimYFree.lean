@@ -25,7 +25,7 @@ theorem addC_ifree {k : Nat} {i : Fin k} : ∀ as bs : List (MultiVar k),
       intro c hc
       rcases List.mem_cons.mp hc with rfl | hc'
       · show Nat.max (MultiVar.degVar i a) (MultiVar.degVar i b) = 0
-        rw [has a (List.mem_cons_self _ _), hbs b (List.mem_cons_self _ _)]; decide
+        rw [has a (List.mem_cons_self), hbs b (List.mem_cons_self)]; decide
       · exact addC_ifree as bs (fun c hc => has c (List.mem_cons_of_mem _ hc))
           (fun c hc => hbs c (List.mem_cons_of_mem _ hc)) c hc'
 
@@ -48,7 +48,7 @@ theorem mulC_ifree {k : Nat} {i : Fin k} : ∀ as bs : List (MultiVar k),
     ∀ c ∈ mulC as bs, MultiVar.degVar i c = 0
   | [], _, _, _ => by intro c hc; simp [mulC] at hc
   | a :: as, bs, has, hbs => by
-      have ha : MultiVar.degVar i a = 0 := has a (List.mem_cons_self _ _)
+      have ha : MultiVar.degVar i a = 0 := has a (List.mem_cons_self)
       refine addC_ifree (bs.map (fun b => MultiVar.mul a b))
         (MultiVar.const 0 :: mulC as bs) ?_ ?_
       · intro c hc

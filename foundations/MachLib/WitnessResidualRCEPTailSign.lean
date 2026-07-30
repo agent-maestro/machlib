@@ -145,7 +145,7 @@ theorem rcepZeros_list_nodup (T : EMLTree) (hT : RightChildrenEverywherePositive
     (hnn : ∀ R : Real, ∃ x : Real, R < x ∧ 0 ≤ T.eval x) (M : Nat) :
     ((List.range (M + 1)).map (rcepZero T hT hnp hnn)).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (rcepZero T hT hnp hnn))
-  exact (List.nodup_range (M + 1)).map (rcepZero T hT hnp hnn)
+  exact (List.nodup_range).map (rcepZero T hT hnp hnn)
     (fun i j (_hij_neq : i ≠ j) => by
       intro hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge

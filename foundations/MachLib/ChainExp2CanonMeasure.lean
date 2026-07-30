@@ -95,7 +95,7 @@ theorem cdegY0_le_degreeY0 (q : MultiPoly 2) :
     calc ((yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB).length
           ≤ (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).reverse.length :=
             length_dropWhile_le _ _
-      _ = (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).length := List.length_reverse _
+      _ = (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).length := List.length_reverse
   have h2 := yCoeffsAt_length_le (⟨0, by omega⟩ : Fin 2) q
   omega
 

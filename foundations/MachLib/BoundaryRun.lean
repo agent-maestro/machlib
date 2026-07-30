@@ -192,7 +192,7 @@ theorem boundaryDynamics_of_valid {p : RunPacket} (h : ValidRun p) :
   intro hnil
   have hmem := h.hasTransitions
     (BoundaryEventClass.domainWall, BoundaryEventClass.logDomainRescue)
-    (List.mem_cons_self _ _)
+    (List.mem_cons_self)
   rw [hnil] at hmem
   cases hmem
 
