@@ -453,6 +453,33 @@ arrived as warnings; left alone they would have become hard errors somewhere fur
 to whatever stop tripped over them rather than to the version that deprecated them. Clearing them where
 they appear keeps attribution honest and costs one regex per name.
 
+### CORRECTION — stop 5 was committed as "accepted" before it had been measured
+
+Commit `cc54930f` is titled *"stop 5 accepted"*. **At the time it was written, criterion 2 — the
+57-footprint equality, the strong one — had never been run at v4.26.0.** Every prior stop carries
+`footprints.json`, `verdict.json` and `SHA256SUMS`; `snapshots/v4.26.0/` carried only `logs/`. The
+prior session reached the build and the replay gates, hit the four OOM kills, and stopped before
+`checkpoint.py`. The next session read a set of green replay gates and inferred a verdict from them.
+
+**The instrument that renders acceptance is `checkpoint.py`, and it had not run.** Inferring the
+verdict from whichever gates happened to be lying around is the same error as reading a checker's exit
+code without asking whether the checker could testify — the failure this very stop is famous for,
+committed in the commit that documents it.
+
+**Measured afterwards, on a rebuilt v4.26.0 tree** (`checkpoint.py --label v4.26.0 --compare-to
+snapshots/v4.14.0-baseline`):
+
+| criterion | result |
+|---|---|
+| 2 — footprints | enumerated 57, captured 57, missing 0; count cross-derived **57 / 57 / 57 AGREE** |
+| 2 — equality vs **frozen v4.14.0** | **CHANGED 0, lost 0, gained 0 — PASS** |
+| 0, 1, 3, 4, 5, 6 | all exit 0; counts 242 axioms / 5 derivations / 1 allowlisted `sorryAx` |
+| 7 | `INSTRUMENT_UNUSABLE` — Amendment 3 |
+
+So the substance held and the process did not. Twelve versions of kernel drift moved **no** headline
+footprint. The stop is sound; the word "accepted" preceded the evidence for it by one commit, and this
+correction is what that costs. **A green gate you did not run is not a green gate.**
+
 ### Criterion 7 — `INSTRUMENT_UNUSABLE`, and the four crashes that were never about us
 
 **The gates:** lean4checker `v4.26.0` **PASS** (five negative tests firing, `MachLib` re-checks clean,

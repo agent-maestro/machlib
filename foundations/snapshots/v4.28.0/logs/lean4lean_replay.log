@@ -1,0 +1,6 @@
+lean4lean path   : /home/monogate/lean4lean
+lean4lean commit : UNKNOWN (not a git checkout)
+LEAN_NUM_THREADS : (unset -- one task per core)
+[INSTRUMENT_ABSENT] no lean4lean at /home/monogate/lean4lean/.lake/build/bin/lean4lean
+  git clone https://github.com/digama0/lean4lean ~/lean4lean-v4.28.0
+  cd ~/lean4lean-v4.28.0 && git checkout <commit pinning v4.28.0> && lake build lean4lean

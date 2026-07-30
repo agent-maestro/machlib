@@ -280,6 +280,101 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# AMENDMENT 4 — the acceptance instrument learns to say **VOID** (2026-07-30)
+
+**Recorded after Amendment 3's verdict could not be expressed by the instrument that renders verdicts.
+Provenance: authorised in-session by the project owner**, on the reasoning below. Pass-bar change, so
+it lives here.
+
+**What forced it.** `checkpoint.py` computes acceptance as `code == 0 and not drift and not fails`,
+where `fails` is *every gate whose exit is non-zero*. It therefore has vocabulary for **convicted**
+and for **acquitted**, and none for **unmeasurable**. At stop 5 that is not a nuance: criteria 0–6 are
+green, footprint equality against the frozen v4.14.0 baseline is **PASS with zero changed footprints**,
+and the stop halts on criterion 7 — which Amendment 3 already established is a void belonging to the
+instrument, proven upstream of the subject.
+
+**This is the same asymmetry Amendment 3's finding named, one layer up.** The registry could not
+outrank an unearned conviction; now the *acceptance* instrument cannot distinguish a gate that
+convicted from a gate that could not testify. Every prior remedy on this route assumed a failed gate
+was fixable — v4.23.0's criterion-7 failure was repaired and recaptured as `v4.23.0-r2`. No `-r2` can
+exist for stop 5, because no Lean4Lean build at v4.26.0 can replay `Init.Core`.
+
+| | |
+|---|---|
+| **VOID** | a gate that exits non-zero **and** whose output carries an instrument-void reason code: `INSTRUMENT_UNUSABLE`, `INSTRUMENT_ABSENT`, `INSTRUMENT_UNVALIDATED`, `VERSION_MISMATCH` |
+| **VOID still HALTS** | by default, and is reported as *unmeasurable*, never as green. A void is a hole in the evidence, and a hole is not a pass |
+| **to pass a void** | the authorising amendment must be **cited explicitly** on the command line, and it is written into `verdict.json`. A human decision, recorded, per the pre-registration doctrine |
+| **cannot launder a failure** | `REPLAY_FAIL` carries no void code, and neither does a footprint drift or a count mismatch. The only thing this can reclassify is a gate that declared its own incapacity |
+| **measurement untouched** | footprints, counts, gate exit codes and the comparison logic are unchanged. Verdict layer only |
+
+**The claim "verdict layer only" is verified, not asserted.** `snapshots/v4.26.0/footprints.json` was
+captured by the *unmodified* instrument and preserved before this change; the post-change capture must
+be **byte-identical** to it. If it is not, the change touched measurement and this amendment is void
+itself. That check is the amendment's own acceptance criterion, and it is the same discipline the
+registry now demands of every gate: a can-convict specimen *and* a can-acquit specimen.
+
+`verdict.json` is diffed too, and the expected delta is **exactly the citation field and nothing
+else**. Confirming the diff is precisely that one field is cheaper than trusting that it is, and the
+two are different claims: *"the amendment changed what it said it would"* versus *"the amendment
+changed what we happened to look at."*
+
+## THE NO-LAUNDERING CLAUSE IS WHY THIS IS SAFE TO HAVE AT ALL
+
+A VOID mechanism **without** it would be the single most dangerous thing on this route. Introduce an
+exit that does not halt the migration and every future instrument hiccup gravitates toward it —
+until `REPLAY_FAIL` starts arriving dressed as `INSTRUMENT_UNUSABLE`, and the weakest verdict is also
+the cheapest one to claim. Three things together prevent that, and none is sufficient alone:
+
+1. **VOID binds to specific instrument-error signatures**, emitted by the gate about *itself*. Not to
+   an exit code, not to a message the operator supplies.
+2. **The authorising amendment is cited on the command line and written into `verdict.json`.** A void
+   that nobody signed for does not exist; a void that someone signed for names them.
+3. **Subject-defect codes are permanently ineligible.** `REPLAY_FAIL`, footprint drift and count
+   mismatch can never be reclassified, by anyone, with any flag.
+
+Together they make the weaker acceptance **expensive to claim**, and that expense is the whole
+mechanism. A bar that can be lowered cheaply is not a bar.
+
+**The general form, worth reusing:** the change that weakens a bar must prove it changed nothing else.
+Amendment 4 weakens acceptance in exactly one direction and carries a byte-comparison that fails the
+amendment if anything else moved. That is how to amend a pass bar **without teaching the system to
+amend pass bars.**
+
+---
+
+# ACCEPTANCE GRADES — an acceptance permanently carries the shape of its evidence
+
+Stops 1–4 and stops 5–6 were measured by **different-sized instruments**. A grade that flattens that
+difference is not being generous; it is **claiming an equivalence nobody measured**. So the route's
+acceptances are graded, and the grade is a description rather than a judgement:
+
+| stop | grade |
+|---|---|
+| 1–4 | **ACCEPTED** — every criterion **in scope for that stop** measured green |
+| 5 (v4.26.0) | **ACCEPTED, criterion 7 unmeasured — instrument unusable independent of subject, Amendment 3 cited** |
+| 6 (v4.28.0) | **ACCEPTED** — criterion 7 is **out of scope** here, per Amendment 1's own table (stops 3–5). Its `INSTRUMENT_ABSENT` is recorded in `verdict.json` for provenance, and is **not** a hole in stop 6's evidence |
+
+**Stop 5 and stop 6 are different, and the difference is the whole reason the grade exists.** Stop 5
+was *owed* criterion 7 and did not get it — a hole. Stop 6 was never owed it — Amendment 1 scoped
+criterion 7 to stops 3–5 before this route was walked, so its absence at stop 6 is the plan working,
+not evidence missing. Recording both as "criterion 7 unmeasured" would flatten *owed-and-missing*
+into *never-owed*, which is the same error in the opposite direction: inventing a debt the
+pre-registration never incurred.
+
+That sentence is not a diplomatic hedge. It is what happened. This registry's entire vocabulary —
+`SECOND OPINION` vs `INDEPENDENT KERNEL`, `INSTRUMENT_UNVALIDATED` vs `REPLAY_FAIL` — exists because
+*"accepted" flat was never one thing*. This is the first time the route's **own acceptances** need
+that distinction, and the precedent it sets is the pre-registration doctrine completing itself: a
+verdict records the evidence available when it was rendered, permanently.
+
+**It also self-repairs.** When the destination's instrument question is answered, stops 5–6 can be
+**upgraded retroactively** — recorded as *new evidence about old stops*, with its own date and reason
+code, per the rule fixed in Amendment 1's discussion. That upgrade path exists **only because the
+grade preserved what was missing**. A flat "accepted" would have nothing to upgrade, and no way to
+know it had been owed anything.
+
+---
+
 # AMENDMENT 3 — criterion 7 recorded **`INSTRUMENT_UNUSABLE` at stop 5** (2026-07-30)
 
 **Recorded after stop 5's build and lean4checker gate both passed. Provenance: authorised in-session

@@ -194,7 +194,76 @@ def verify(target: str) -> int:
     return 1 if bad else 0
 
 
-def compare(cur: dict, base_dir: str) -> int:
+# BUMP_PLAN.md Amendment 4. A gate can fail for two reasons that are not the same reason: it found
+# something wrong with US, or it could not testify at all. Before this, `fails` was every non-zero
+# exit, so the acceptance instrument had words for CONVICTED and ACQUITTED and none for UNMEASURABLE
+# -- the same asymmetry the reason-code registry had, one layer up, surfacing the moment a gate broke
+# in a way no re-run could repair (stop 5: no Lean4Lean build at v4.26.0 can replay `Init.Core`).
+#
+# THE NO-LAUNDERING CLAUSE IS THE POINT. An exit that does not halt the migration is the exit every
+# future instrument hiccup will drift toward, until REPLAY_FAIL arrives dressed as INSTRUMENT_UNUSABLE
+# and the weakest verdict is also the cheapest to claim. Three properties prevent that, and none is
+# sufficient alone:
+#   1. VOID binds to signatures the gate emits ABOUT ITSELF -- never to an exit code, never to
+#      anything the operator supplies on the command line.
+#   2. The authorising amendment is cited and lands in verdict.json. A void nobody signed for does
+#      not exist; one that someone signed for names them.
+#   3. Subject-defect verdicts are PERMANENTLY INELIGIBLE. There is no flag, for anyone, that turns
+#      REPLAY_FAIL or a footprint drift into a void.
+# The weaker acceptance is therefore expensive to claim, and that expense IS the mechanism. A bar
+# that can be lowered cheaply is not a bar.
+VOID_CODES = ("[INSTRUMENT_UNUSABLE]", "[INSTRUMENT_ABSENT]",
+              "[INSTRUMENT_UNVALIDATED]", "[VERSION_MISMATCH]", "[CHECKER_ABSENT]",
+              "[CHECKER_VERSION_MISMATCH]")
+
+def declared_code(out: str) -> str | None:
+    """The reason code the gate DECLARED, read from its structured verdict — never from its prose.
+
+    CLASSIFY BY DECLARATION, NOT BY SUBSTRING. The first version of this function searched the whole
+    output for the token, and misfiled a genuine `INSTRUMENT_UNUSABLE` as a subject failure because
+    the gate's *explanatory text* contains the sentence "and REPLAY_FAIL is the most expensive
+    verdict here". The gate was warning about the very mistake the reader then made — which is the
+    third time on this route that a classifier has been fooled by text that merely mentions a verdict.
+
+    Two shapes, both LINE-ANCHORED, matching how the gates actually emit:
+        `<NAME> GATE: FAIL [CODE -- ...]`   the summary, when the gate reached its summary
+        `[CODE] ...`                        an early exit, printed at line start, no summary reached
+    A code appearing anywhere else is discussion, and discussion is not a verdict.
+    """
+    summary = None
+    for line in out.splitlines():
+        s = line.strip()
+        if " GATE:" in s:
+            summary = s                      # last summary line wins; gates print exactly one
+        elif s.startswith("[") and "]" in s and not summary:
+            m = re.match(r"\[([A-Z_]+)\]", s)
+            if m:
+                return m.group(1)
+    if summary:
+        m = re.search(r"\[([A-Z_]+)", summary)
+        return m.group(1) if m else None      # `GATE: FAIL` with no code = a verdict about US
+    return None
+
+
+def classify_failures(codes: dict[str, int], outs: dict[str, str]) -> tuple[list[str], dict[str, str]]:
+    """Split non-zero gates into genuine FAILS and instrument VOIDs, by what the gate DECLARED.
+
+    Anything that is not an explicitly declared void code is a FAIL. That default direction is
+    load-bearing: an unrecognised failure must never drift toward the exit that does not halt.
+    """
+    fails, voids = [], {}
+    for name, _, _ in GATES:
+        if codes.get(name, 0) == 0:
+            continue
+        code = declared_code(outs.get(name, ""))
+        if code and f"[{code}]" in VOID_CODES:
+            voids[name] = code
+        else:
+            fails.append(name)
+    return fails, voids
+
+
+def compare(cur: dict, base_dir: str, void_ok: dict[str, str] | None = None) -> int:
     base = json.load(open(os.path.join(base_dir, "verdict.json")))
     print(f"\n{'='*78}\nCOMPARE  {base['toolchain']}  ->  {cur['toolchain']}\n{'='*78}")
 
@@ -226,13 +295,43 @@ def compare(cur: dict, base_dir: str) -> int:
         print(f"  ~ {k}: {b} -> {c}  AMENDED {a['date']}: {a['reason'][:80]}...")
         print(f"      not_a_drift: {a.get('not_a_drift', '')[:96]}")
 
-    fails = [n for n, _, _ in GATES if cur["gates"][n] != 0]
+    # A voided gate must be counted ONCE, as a void. The first version defaulted `fails` to "every
+    # non-zero exit" whenever the key was absent -- and the key is absent precisely when there are no
+    # fails, so a cleanly-voided stop recomputed the void back into `fails` and halted itself while
+    # printing the citation that authorised it. Read the classification from the snapshot when the
+    # snapshot HAS one; only fall back for records written before Amendment 4 existed.
+    if "voids" in cur or "fails" in cur:
+        fails, voids = cur.get("fails", []), cur.get("voids", {})
+    else:
+        fails, voids = [n for n, _, _ in GATES if cur["gates"][n] != 0], {}
+    void_ok = void_ok or {}
     print(f"gates green: {'PASS' if not fails else 'FAIL — ' + ', '.join(fails)}")
 
-    ok = code == 0 and not drift and not fails
+    # A void halts unless its authorising amendment is cited. Citing it does not make the criterion
+    # green -- it records that the hole is known, named, and signed for.
+    unjustified = [g for g in voids if g not in void_ok]
+    for g, reason in sorted(voids.items()):
+        cite = void_ok.get(g)
+        print(f"gate VOID: {g} — {reason}" +
+              (f"   [{cite} cited]" if cite else "   UNJUSTIFIED — cite the authorising amendment"))
+
+    ok = code == 0 and not drift and not fails and not unjustified
     print(f"\n{'='*78}")
     if ok:
         print("STOP ACCEPTED — same theorems, same axioms, same trust boundary, newer kernel.")
+        # GRADED acceptance. Stops measured by different-sized instruments do not get the same word:
+        # flattening that difference claims an equivalence nobody measured. ONE acceptance path, so
+        # the grade can never diverge from the exit code -- the first version gave the graded branch
+        # its own prints and no `return 0`, and it printed ACCEPTED while returning 1. A verdict and
+        # its exit code disagreeing is worse than either being wrong, because each is someone's
+        # evidence: the log says accepted, the CI says halted, and both are quoting this function.
+        for g, reason in sorted(voids.items()):
+            crit = next((c for n, c, _ in GATES if n == g), "?")
+            print(f"  GRADE: criterion {crit} UNMEASURED — {reason}, {void_ok[g]} cited.")
+        if voids:
+            print("  This acceptance permanently carries the shape of its evidence. It is upgradeable")
+            print("  as new-evidence-about-old-stops if the instrument question is later answered —")
+            print("  which is possible ONLY because the grade preserved what was missing.")
         print("This stop is now a fallback position: commit it before touching the next pin.")
         # ARCHIVE BEFORE HYGIENE: the next stop's `lake clean` destroys this tree, and with it the
         # only thing that can answer "did X get slower across this stop". Reminder, not a gate.
@@ -257,7 +356,12 @@ def main() -> int:
     ap.add_argument("--compare-to", help="a frozen baseline directory to accept against")
     ap.add_argument("--freeze", action="store_true", help="hash + chmod read-only when done")
     ap.add_argument("--verify", help="re-check a frozen directory's SHA256SUMS and exit")
+    # BUMP_PLAN.md Amendment 4. Repeatable: --void-ok lean4lean_replay=Amendment-3
+    ap.add_argument("--void-ok", action="append", default=[], metavar="GATE=AMENDMENT",
+                    help="accept a gate's INSTRUMENT VOID, citing the amendment that authorises it. "
+                         "Cannot apply to a subject-defect verdict (REPLAY_FAIL, footprint drift).")
     a = ap.parse_args()
+    void_ok = dict(kv.split("=", 1) for kv in a.void_ok if "=" in kv)
 
     if a.verify:
         return verify(a.verify)
@@ -281,12 +385,21 @@ def main() -> int:
     counts, errs = parse_counts(outs)
     errs += cross_derive_57(fp, counts)
 
+    fails, voids = classify_failures(codes, outs)
     verdict = {"label": a.label, "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                "toolchain": toolchain, "lock": lock,
                "gates": codes, "counts": counts,
                "footprints": {"enumerated": fp.get("enumerated"), "captured": fp.get("captured"),
                               "missing": fp.get("missing", [])},
                "instrument_errors": errs}
+    # Amendment 4 fields are appended AFTER the pre-existing ones and only when non-empty, so a stop
+    # with no voids serialises byte-identically to what the unmodified instrument wrote. The
+    # amendment's own acceptance criterion depends on that.
+    if fails:
+        verdict["fails"] = fails
+    if voids:
+        verdict["voids"] = voids
+        verdict["voids_cited"] = {g: void_ok[g] for g in voids if g in void_ok}
     open(os.path.join(target, "verdict.json"), "w").write(json.dumps(verdict, indent=1) + "\n")
 
     print("\ncounts (each parsed from the gate that derived it):")
@@ -302,7 +415,7 @@ def main() -> int:
             print(f"  * {e}")
         return 1
 
-    rc = compare(verdict, a.compare_to) if a.compare_to else 0
+    rc = compare(verdict, a.compare_to, void_ok) if a.compare_to else 0
     if a.compare_to is None:
         print("\nno --compare-to: captured as a reference point, nothing accepted or rejected.")
 

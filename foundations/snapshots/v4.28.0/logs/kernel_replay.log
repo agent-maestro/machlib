@@ -1,10 +1,10 @@
-checker path     : /home/monogate/lean4checker-v4.26.0
-checker toolchain: leanprover/lean4:v4.26.0
-ledger  toolchain: leanprover/lean4:v4.26.0
+checker path     : /home/monogate/lean4checker-v4.28.0
+checker toolchain: leanprover/lean4:v4.28.0
+ledger  toolchain: leanprover/lean4:v4.28.0
 
 1 INSTRUMENT WORKS (lean4checker's own suite -- negatives must FAIL, self-check must PASS)
-    harness          : test.sh
-    negatives fired  : 1  ReplaceAxiom
+    harness          : lake test
+    negatives fired  : 4  AddFalse, AddFalseConstructor, PrivateConflictC, ReplaceAxiom
     can-acquit specimen: YES -- replays its own codebase
     PASS -- suite green, counts derived above
 
