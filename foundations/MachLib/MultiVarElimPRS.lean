@@ -18,7 +18,7 @@ open MachLib.MultiVarMod.MultiVar
 
 theorem getLastD_eq_getLast {k : Nat} {l : List (MultiVar k)} (h : l ≠ []) (a : MultiVar k) :
     l.getLastD a = l.getLast h := by
-  rw [List.getLastD_eq_getLast?, List.getLast?_eq_getLast h]; rfl
+  rw [List.getLastD_eq_getLast?, List.getLast?_eq_some_getLast h]; rfl
 
 /-- One PRS step, leading coefficients via `getLastD`. -/
 noncomputable def reduceStepK {k : Nat} (ps qs : List (MultiVar k)) : List (MultiVar k) :=

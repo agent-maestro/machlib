@@ -71,6 +71,11 @@ STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "watch_state.js
 # entire point of running a second implementation.
 FIX_PR_MARKERS = ("14577", "14576")
 
+# Titles that would indicate the v4.26.0 instrument breakage is being tracked upstream. Matched on
+# the SYMPTOM names rather than an issue number, because the number does not exist until it is filed
+# and a watch that only recognises our own issue would miss someone else reporting it first.
+INSTRUMENT_BUG_MARKERS = ("String.ofList", "Char.ofNat", "unknown constant")
+
 
 def ver(s: str) -> tuple[int, ...]:
     return tuple(int(x) for x in s.lstrip("v").split("."))
@@ -119,6 +124,40 @@ def carries_fix(repo: str) -> tuple[bool, str]:
     return False, f"no commit referencing {'/'.join(FIX_PR_MARKERS)} in the last {len(commits)}"
 
 
+def l4l_instrument_bug() -> tuple[str, str]:
+    """Is the v4.26.0 instrument breakage fixed upstream yet? -- REPORTED, never exit-code-bearing.
+
+    Added 2026-07-30. The pins above answer *which version Lean4Lean claims to support*; they cannot
+    answer *whether it works there*, and stop 5 proved those are different questions: three builds all
+    pinning v4.26.0, none able to replay `Init.Core`. A pin is a claim; a positive control is a
+    measurement.
+
+    This matters to the destination, not to the past. The v4.32.2 configuration wants this instrument
+    working, so the cheapest way to make that more likely is to have the bug reported with a minimal
+    repro and then to watch the tracker for movement. See `docs/lean4lean_string_literal_bug.md`.
+
+    DELIBERATELY NOT A THRESHOLD: this returns a line to print. The watch's exit codes belong to the
+    expiry condition and to nothing else -- widening what they mean would make two runs of this watch
+    incomparable, which is the same error the gate-scoping deferrals keep refusing.
+    """
+    url = ("https://api.github.com/repos/digama0/lean4lean/issues"
+           "?state=all&per_page=100&sort=updated")
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json",
+                                               "User-Agent": "machlib-kernel-watch"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            issues = json.loads(r.read().decode())
+    except Exception as e:  # noqa: BLE001 -- an unreadable tracker must not read as "no bug filed"
+        return "COULD NOT READ", f"{type(e).__name__}: {e}"
+    hits = [i for i in issues
+            if any(m in (i.get("title") or "") for m in INSTRUMENT_BUG_MARKERS)]
+    if not hits:
+        return "NOT FILED", "no issue matching the string-literal breakage -- file it (see docs/)"
+    top = hits[0]
+    return (top.get("state", "?").upper(),
+            f"#{top['number']} {(top.get('title') or '')[:58]}")
+
+
 def load_state() -> dict:
     return json.load(open(STATE)) if os.path.exists(STATE) else {}
 
@@ -158,6 +197,10 @@ def main() -> int:
         l4l_fix = chk_fix = False
         l4l_ev = chk_ev = "UNKNOWN -- history unavailable, do not read as 'no'"
     print(f"Lean4Lean carries #14577 : {'YES' if l4l_fix else 'no '}   {l4l_ev}")
+    bug_state, bug_ev = l4l_instrument_bug()
+    print(f"Lean4Lean v4.26 bug      : {bug_state:<13}  {bug_ev}")
+    print("  (reported only -- a pin says which version it CLAIMS; only a positive control measures")
+    print("   whether it works there. Stop 5: three builds pinning v4.26.0, none replayed Init.Core)")
     print(f"lean4checker  carries it : {'YES' if chk_fix else 'no '}   {chk_ev}")
     print()
     report_movement(load_state(), checker_max, pin)

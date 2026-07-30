@@ -280,6 +280,46 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# AMENDMENT 3 — criterion 7 recorded **`INSTRUMENT_UNUSABLE` at stop 5** (2026-07-30)
+
+**Recorded after stop 5's build and lean4checker gate both passed. Provenance: authorised in-session
+by the project owner**, on the reasoning below. It lives here because it touches the **pass bar**, and
+because a pre-registered criterion that cannot be met is amended in the open or not at all — the 4′
+precedent: **VOID is the amendment path, never a silent drop.**
+
+**Criterion 7 is not waived at stop 5. It is recorded as UNMEASURABLE, for instrument reasons proven
+upstream of the subject.** The distinction is the whole content of this amendment: a waiver says *we
+chose not to look*; `INSTRUMENT_UNUSABLE` says *we looked, and the instrument could not answer* — and
+names the evidence that puts the void on the instrument's side of the boundary.
+
+| | |
+|---|---|
+| **what was run** | the replay gate's new step **1b** (positive controls), against **every** Lean4Lean build that exists at `v4.26.0` |
+| **`f37aeab`** (pinned) | `Init.Core` → `unknown constant 'String.ofList'`; `MachLib.Sign` → SIGSEGV |
+| **`6bca7f6`** (last commit on the version) | `Init.Core` → `unknown constant 'Nat'`; `MachLib.Sign` → `unknown constant 'LE.le'` |
+| **`56d4dc5`** (`arena-v4.26.0`, probed per the owner's bounded-probe instruction) | `Init.Core` → `unknown constant 'String.ofList'`; `MachLib.Sign` → SIGSEGV |
+| **the decisive control** | **`Init.Core` is Lean's own core library.** Three independent builds cannot replay it. MachLib is not in the hypothesis space |
+| **the licensing premise** | `lean4checker v4.26.0` replayed **this same olean tree** clean at 06:17 the same morning. That is what makes "the tree is fine" a premise rather than a hope |
+| **verdict** | criterion 7: `INSTRUMENT_UNUSABLE` — **no verdict about MachLib, in either direction** |
+
+**Why (b) and not (c) — hold stop 5 until v4.32.2.** Holding would couple this migration's completion
+to an upstream project's release cadence, and **that coupling is already owned** by the expiry watch.
+The destination asks the instrument question again regardless, so deferring buys exactly one fewer
+asking, at the price of an open-ended stall against a repo we do not control.
+
+**Why the probe was worth 30 minutes anyway.** `arena-v4.26.0` existing on origin is evidence someone
+upstream hit trouble at this version and tried something. Had it passed 1b, criterion 7 would have
+been *satisfied* at stop 5 with an annotation that the instrument came from a non-default branch —
+recorded and defensible, and strictly better than an amendment. It failed, fast and honestly, which is
+what a bounded probe is for. **Cost: one build, three gate runs, ~15 seconds each.**
+
+**What this does NOT license.** Stop 5 is accepted on criteria 1–6 and the lean4checker replay, which
+is exactly the bar stops 1–2 were accepted under. The `SECOND OPINION` grade stands unchanged; nothing
+in this stop earns *"independent kernel"*, and the ⚠ finding below already established that the phrase
+was not on offer at this version regardless.
+
+---
+
 # ⚠ FINDING THAT REFUTES THIS PLAN'S CENTRAL PREMISE (2026-07-29, before stop 3)
 
 **The decision record above argues that v4.26.0's dual-kernel configuration is worth more than

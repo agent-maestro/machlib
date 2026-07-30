@@ -20,7 +20,7 @@ open MachLib.MultiVarMod.MultiVar
 /-- `getLastD` equals `getLast` on a nonempty list. -/
 theorem getLastD_eq_getLast {l : List (MultiVar 2)} (h : l ≠ []) (a : MultiVar 2) :
     l.getLastD a = l.getLast h := by
-  rw [List.getLastD_eq_getLast?, List.getLast?_eq_getLast h]; rfl
+  rw [List.getLastD_eq_getLast?, List.getLast?_eq_some_getLast h]; rfl
 
 /-- One PRS step on coefficient lists, leading coefficients via `getLastD`. -/
 noncomputable def reduceStep (ps qs : List (MultiVar 2)) : List (MultiVar 2) :=

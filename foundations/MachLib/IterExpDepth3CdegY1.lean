@@ -373,7 +373,7 @@ re-declared (private in `ChainExp2SingleExpDescent`). -/
 private theorem reverse_head_eq_getLast {α : Type} (L : List α) (hne : L ≠ [])
     {a : α} {t : List α} (hrev : L.reverse = a :: t) : a = L.getLast hne := by
   have hh : L.reverse.head? = L.getLast? := List.head?_reverse
-  rw [hrev, List.head?_cons, List.getLast?_eq_getLast hne] at hh
+  rw [hrev, List.head?_cons, List.getLast?_eq_some_getLast hne] at hh
   exact Option.some.inj hh
 
 private theorem rdw_full_of_getLast_neg {α : Type} (p : α → Bool) (L : List α) (hne : L ≠ [])

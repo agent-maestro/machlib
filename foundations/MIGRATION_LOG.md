@@ -431,6 +431,79 @@ in a second file). Regex alone would have left them to surface two rounds later,
 
 ---
 
+## Stop 5 — `v4.26.0` (kernel commit `d8204c9fd894`) — **the old destination, arriving as a waypoint**
+
+Clean build first attempt, **zero proof edits**, 128s. Instruments prepared before the pin moved:
+lean4checker `v4.26.0` (five negative tests firing) and Lean4Lean `f37aeab`.
+
+**Eight deprecation warnings, three names, all cleared at the version that raised them:**
+
+| deprecated | replacement | sites |
+|---|---|---|
+| `List.getLast?_eq_getLast` | `List.getLast?_eq_some_getLast` | 5 |
+| `List.sorted_mergeSort` | `List.pairwise_mergeSort` | 2 |
+| `Int.ediv_add_emod` | `Int.mul_ediv_add_emod` | 1 |
+
+`List.getLast?_eq_getLast` is **the same lemma whose binder change cost a fix at stop 2** — now renamed
+as well, two stops later. That is the core-API churn pattern the scope-guard finding named: a small set
+of `List` lemmas keeps moving, first in binders, then in names.
+
+**Why deprecations get fixed at the version that warns, not later:** at v4.19.0 the `_iff` renames
+arrived as warnings; left alone they would have become hard errors somewhere further along, attributed
+to whatever stop tripped over them rather than to the version that deprecated them. Clearing them where
+they appear keeps attribution honest and costs one regex per name.
+
+### Criterion 7 — `INSTRUMENT_UNUSABLE`, and the four crashes that were never about us
+
+**The gates:** lean4checker `v4.26.0` **PASS** (five negative tests firing, `MachLib` re-checks clean,
+06:17). Lean4Lean: **no verdict, in either direction.**
+
+Lean4Lean v4.26.0 cannot replay **`Init.Core`** — Lean's own core library — on any of the three builds
+that exist at this version (`f37aeab`, `6bca7f6`, `arena-v4.26.0`/`56d4dc5`). See `BUMP_PLAN.md`
+Amendment 3 for the evidence table and the reasoning that chose recording over deferral.
+
+**The failing names locate the bug:** `String.ofList` and `Char.ofNat` are exactly the pair
+`Main.lean`'s string-literal special case inserts when a declaration contains a string literal. That
+code path is broken at this version, which is also **why breakage is feature-conditional** and why 1b
+now carries two specimens rather than one: an instrument that replays core fine could still choke on
+whichever literal forms a given library happens to exercise. Ours exercises them; `FloatRealBridge`
+failed on `Char.ofNat` specifically.
+
+**Four OOM kills on 2026-07-30 (06:32, 06:44, 06:55, 07:09 — 59.0 to 90.4 GiB anon-rss) were a
+symptom, not the fault.** `6bca7f6` does not crash; it fails to build its environment and then churns
+through 572 modules emitting a phantom "problem" for each, at 61 GiB within 50 seconds. The memory was
+the garbage, not the work. Two hypotheses were entertained and both were wrong: that the cause was
+lean4lean's unbounded `IO.asTask` fan-out (refuted — `LEAN_NUM_THREADS` ∈ {1,2,4,8,16,unset} all fail
+in 2–6s), and that the checkout was not the variable (refuted — it selects *which* failure mode).
+
+**The near-miss is recorded in full under SCOPE POISONING**, as the newest substrate and its worked
+example. Short form: an orderly non-zero exit carrying `unknown constant 'Nat'` is precisely what the
+classifier read as `REPLAY_FAIL`, and only the OOM kill stopped this gate from convicting a tree
+lean4checker had passed forty minutes earlier. **A crash prevented a lie.**
+
+**Gate changes earned here**, both live before stop 5 was recorded:
+* **step 1b, positive controls** — `Init.Core` + `MachLib.Sign` must PASS, or the gate halts at
+  `INSTRUMENT_UNUSABLE` and step 2 never runs. ~15s, and it would have replaced all four OOM kills.
+* **the foreign-constant backstop** — any `unknown constant` naming a non-`MachLib` constant is an
+  `INSTRUMENT_ERROR`, never a `REPLAY_FAIL`. Verified not to mask a genuine finding: an unknown
+  constant under `MachLib.` still reaches `REPLAY_FAIL` untouched.
+* **`INSTRUMENT_OOM` / `INSTRUMENT_KILLED`** — a resource kill is not a fault. SIGKILL is uncatchable,
+  so an OOM'd checker prints *nothing*; the empty output tail in `lean4lean_replay.f37aeab-CRASH.log`
+  was the unread tell. OOM is now confirmed against the **kernel's** log by pid, never inferred from
+  the signal, and it carries the `anon-rss` figure.
+
+### The destination reversal cost nothing already spent
+
+v4.26.0 was chosen as the destination because it is the newest version where **both** checkers exist,
+on the argument that dual replay would force a false proof to be *"a defect in the type theory as
+understood by two independent authors"*. That premise was refuted at stop 3, so v4.26.0 lost its reason
+to be an endpoint and became a step toward the patch.
+
+**Every stop up to here is identical work under either plan.** That is not luck: the intermediates were
+picked for *checker availability*, which is a property of the versions themselves rather than of the
+endpoint. A route planned by proximity to v4.26.0 would have had to be re-planned; a route planned by
+where the instruments exist did not.
+
 ## Stop 4 — `v4.23.0` (kernel commit `50aaf682e9b7`)
 
 **Clean build, first attempt, ZERO MachLib edits** — 121s, 0 errors, 0 deprecation warnings. Three
@@ -635,6 +708,39 @@ The generalisation is what makes it worth a rule rather than a note: this is not
 observer reading state that the first failure already destroyed, which this project has now hit in at
 least three unrelated substrates.
 
+### Newest substrate: **an instrument, scoped to its own environment** (2026-07-30)
+
+The shared resource is the checker's *constructed environment*, and the observer is the gate reading a
+verdict out of it. Lean4Lean v4.26.0 fails to build its own environment — `unknown constant 'Nat'`,
+`'Eq'`, `'String.ofList'` — and then dutifully reports a "problem" in every module it visits. Each
+report is downstream of one failure, so all of them are phantoms, and the exit code carrying them is
+an orderly non-zero: **the exact signature the gate read as `REPLAY_FAIL`**.
+
+**The worked example, because the isolation procedure is what unwound it** — each step removing one
+term from the hypothesis space rather than accumulating guesses:
+
+| step | question | result |
+|---|---|---|
+| 1. config sweep | is the assumed lever real? | `LEAN_NUM_THREADS` ∈ {1,2,4,8,16,unset} → SIGSEGV in 2–6s, every one. **The lever was imaginary** |
+| 2. differential | is the checkout the variable? | `f37aeab` SIGSEGV / `6bca7f6` runs and emits garbage. **Yes — it selects the failure mode** |
+| 3. minimisation | is it scale or fan-out? | one small module, `MachLib.Sign`, reproduces both. **Neither** |
+| 4. decisive control | is MachLib in it at all? | `Init.Core` — **Lean's own core** — fails identically. **MachLib removed from the hypothesis space entirely** |
+
+Step 4 is the one that ends the argument, and it is only licensed because **lean4checker had passed
+this same olean tree at 06:17 that morning**. That is what made "the tree is fine" a premise rather
+than a hope; without it, step 4 shows only that two things are broken together.
+
+**What the near-miss actually was.** Only the OOM kill stood between this gate and
+`REPLAY_FAIL — the checker rejected our environment. This IS a finding.` A false accusation against a
+clean tree, sourced from an instrument that cannot read `Nat`, and it would have been *believed* —
+halting the stop and opening a MachLib soundness audit against a phantom. **A crash prevented a lie.**
+
+This is the reassuring error's dangerous sibling: the **alarming** error, which is worse precisely
+because it is not reassuring. A reassuring error buys false comfort and is caught the next time
+someone looks hard. An alarming error *triggers real work* — it recruits the team's diligence against
+a ghost, and the harder they look the more the phantom's authority is confirmed by the effort spent
+on it. Nobody audits an alarm for being wrong; they audit the subject it names.
+
 **Why it matters more at stop 2 than it did here:** three versions of drift, the largest jump on the
 route, so multi-error modules are the expected case. Unattributed, each is a three-fix afternoon.
 Attributed, each is one fix and two dismissals.
@@ -705,13 +811,34 @@ every other instrument here was:
    to *independent kernel* costs.
 3. **Then the environment.** `MachLib` at v4.16.0, on the green tree.
 4. **Reason codes on the verdict**, so the row cannot be read as more than it is: `INSTRUMENT_ABSENT`
-   / `INSTRUMENT_UNVALIDATED` (negative tests did not fire) / `INSTRUMENT_TREE_DIRTY` (its own build
-   tree has orphans) / `VERSION_MISMATCH` / `REPLAY_FAIL` (defect in our environment) / `REPLAY_PASS`.
+   / `INSTRUMENT_UNVALIDATED` (negative tests did not fire) / `INSTRUMENT_UNUSABLE` (positive controls
+   did not pass) / `INSTRUMENT_TREE_DIRTY` (its own build tree has orphans) / `VERSION_MISMATCH` /
+   `REPLAY_FAIL` (defect in our environment) / `REPLAY_PASS`.
    **`INSTRUMENT_UNVALIDATED` outranks any replay result** — an unfired checker's PASS and its FAIL are
    equally uninformative, and a PASS from an unvalidated instrument is the reassuring-error class
-   wearing a kernel's authority.
+   wearing a kernel's authority. **`INSTRUMENT_UNUSABLE` likewise outranks `REPLAY_FAIL`.**
+
+   > **THE ASYMMETRY THIS REGISTRY WAS BUILT WITH, AND THE HALF IT WAS MISSING.** Every code above
+   > guarded against an **unearned acquittal** — `INSTRUMENT_UNVALIDATED` exists precisely so an
+   > unfired checker cannot hand us a `REPLAY_PASS` we did not earn. *Nothing outranked
+   > `REPLAY_FAIL`.* The registry was built by people worried about being reassured, and an
+   > instrument that convicts does not feel reassuring, so the symmetric hole went unnoticed until an
+   > instrument that could not resolve `Nat` came within one OOM kill of convicting a clean tree.
+   >
+   > **RULE: every verdict-rendering gate needs both a can-convict specimen and a can-acquit
+   > specimen.** Negative controls prove the instrument can fire; positive controls prove it can hold
+   > fire. A gate with only the first can distinguish "guilty" from "broken" in exactly one
+   > direction, and it is the *cheap* direction. This is general — it is not a fact about kernel
+   > replay — and **the gate census has only ever demanded the first**, so every gate in this repo is
+   > presumed half-validated until its positive control is named.
 5. **Both directions before it counts**, per the standing gate rule: seen to reject something, and
    seen to accept our environment. Until then the registry says *second opinion*, unchanged.
+
+   > This clause was **stated correctly and enforced by nothing** from 2026-07-29 to 2026-07-30. The
+   > gate read "seen to accept our environment" as *step 2 exits 0* — but step 2 is the measurement,
+   > and a measurement cannot also be its own validation. The acceptance half needs a specimen whose
+   > answer is known in advance, exactly as the rejection half always had. Written rules are not
+   > controls; only firing specimens are.
 
 **Then, and only then, criterion 7 activates for stops 3–5** — dual replay through both kernels, one
 extra command per stop, front-loading the destination configuration's debugging by three stops. See

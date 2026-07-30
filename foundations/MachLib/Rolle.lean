@@ -355,7 +355,7 @@ theorem zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
   have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ f z = 0 :=
     fun z hz => hzero z (hperm.mem_iff.mp hz)
   have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
-    List.sorted_mergeSort leB_trans leB_total zeros_f
+    List.pairwise_mergeSort leB_trans leB_total zeros_f
   rw [← hlen]
   generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
   cases s with
@@ -477,7 +477,7 @@ theorem zero_count_bound_by_deriv_with_bad (f : Real → Real) (isBad : Real →
   have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ ¬ isBad z ∧ f z = 0 :=
     fun z hz => hzero z (hperm.mem_iff.mp hz)
   have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
-    List.sorted_mergeSort leB_trans leB_total zeros_f
+    List.pairwise_mergeSort leB_trans leB_total zeros_f
   rw [← hlen]
   generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
   cases s with

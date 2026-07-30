@@ -65,7 +65,7 @@ def roundHalfEven (num den : Int) : Int :=
 theorem roundHalfEven_half_ulp (num den : Int) (hden : 0 < den) :
     -den ≤ 2 * (den * roundHalfEven num den - num)
       ∧ 2 * (den * roundHalfEven num den - num) ≤ den := by
-  have hdm : den * num.ediv den + num.emod den = num := Int.ediv_add_emod num den
+  have hdm : den * num.ediv den + num.emod den = num := Int.mul_ediv_add_emod num den
   have hr0 : 0 ≤ num.emod den := Int.emod_nonneg num (by omega)
   have hr1 : num.emod den < den := Int.emod_lt_of_pos num hden
   have hsucc : den * (num.ediv den + 1) = den * num.ediv den + den := by
