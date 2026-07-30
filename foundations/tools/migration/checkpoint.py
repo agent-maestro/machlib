@@ -206,6 +206,15 @@ def compare(cur: dict, base_dir: str) -> int:
     if ok:
         print("STOP ACCEPTED — same theorems, same axioms, same trust boundary, newer kernel.")
         print("This stop is now a fallback position: commit it before touching the next pin.")
+        # ARCHIVE BEFORE HYGIENE: the next stop's `lake clean` destroys this tree, and with it the
+        # only thing that can answer "did X get slower across this stop". Reminder, not a gate.
+        prof = os.path.join(SNAPS, "timing", cur["toolchain"].split(":")[-1] + ".json")
+        if not os.path.exists(prof):
+            print("\n[NO TIMING BASELINE for this pin] Before advancing, run:")
+            print("    python3 tools/migration/timing_profile.py")
+            print("  The next `lake clean` destroys this tree. Stop 1 learned that the hard way:")
+            print("  correct hygiene deleted the only tree that could answer whether a tactic got")
+            print("  slower, turning a diff into a scheduled excavation.")
         return 0
     print("STOP HALTED — this is a FINDING, not a diff to accept.")
     print("  The step does not advance until every delta above is ATTRIBUTED: which change in")

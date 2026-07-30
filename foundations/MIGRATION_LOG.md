@@ -226,6 +226,39 @@ Attributed, each is one fix and two dismissals.
 Cost at stop 1: **~2 minutes per finding**, against a 40s incremental rebuild per blind attempt and a
 three-error module that looked like three problems.
 
+## ARCHIVE BEFORE HYGIENE — a measurement baseline is an artifact
+
+Stop 1's `lake clean` was **correct** (no v4.14.0 `.olean` may survive to be read by a v4.16.0 kernel)
+and it **destroyed the only tree that could answer** *"did the catch-all get slower?"*. That is this
+project's own build-artifact-drift lesson **running in reverse**: there, artifacts outlived the source
+that justified them; here, an artifact a gate would need was deleted by justified hygiene.
+
+> **RULE: artifacts that a later question will need are snapshotted BEFORE hygiene destroys them.**
+> The route has three `lake clean`s left, and each one destroys another potential baseline.
+
+**So the stop-acceptance procedure grows a step, and it runs *before* the pin advances:**
+
+```
+python3 tools/migration/timing_profile.py          # -> snapshots/timing/<pin>.json
+```
+
+Wall-clock elaboration of every module that raises its own heartbeat budget — **41 at v4.16.0**, and the
+set is **derived** from `set_option maxHeartbeats`, never listed, so it maintains itself. Then
+*"did X get slower across stop N"* is `--diff` of two files:
+
+```
+python3 tools/migration/timing_profile.py --diff snapshots/timing/v4.16.0.json snapshots/timing/v4.19.0.json
+```
+
+**This is evidence, not a gate.** A slower module does not fail a stop; it answers a question that
+otherwise costs a rebuilt tree. Comparability protocol: same machine, same `--workers` (recorded in the
+file; a different count is a different instrument and `--diff` refuses).
+
+**What it partly recovers:** the v4.16.0 profile is captured *now*, on the green tree, so when the
+9-atom cliff surfaces again anywhere on the route the "slower or harder?" question costs minutes at
+every boundary from here on. It cannot recover the v4.14.0 → v4.16.0 answer — that one still needs the
+worktree in *Open items*.
+
 ---
 
 # Lean4Lean maiden run — protocol pre-registered BEFORE the instrument is trusted
@@ -238,12 +271,20 @@ every other instrument here was:
    lean4checker's five specimens (`AddFalse`, `AddFalseConstructor`, `ReplaceAxiom`,
    `UseFalseConstructor --fresh`, `ReduceBool`) — historical witnesses beat synthetic ones, and they
    are already built here.
-2. **Then the environment.** `MachLib` at v4.16.0, on the green tree.
-3. **Reason codes on the verdict**, so the row cannot be read as more than it is: `INSTRUMENT_ABSENT`
-   / `INSTRUMENT_UNVALIDATED` (negative tests did not fire) / `VERSION_MISMATCH` / `REPLAY_FAIL`
-   (defect in our environment) / `REPLAY_PASS`. **`INSTRUMENT_UNVALIDATED` outranks any replay result**
-   — an unfired checker's PASS and FAIL are equally uninformative.
-4. **Both directions before it counts**, per the standing gate rule: seen to reject something, and
+2. **Then the orphan check on Lean4Lean's OWN build tree**, before trusting anything it says about
+   ours. It is a Lake project like any other and accumulates `.olean`s like any other, and *the
+   instrument that caught our build-artifact drift is not immune to the class it detects*. The 26
+   orphaned modules found here on 2026-07-29 were found in a tree nobody suspected either.
+   **Instruments get the same hygiene as subjects** — that is part of what upgrading *second opinion*
+   to *independent kernel* costs.
+3. **Then the environment.** `MachLib` at v4.16.0, on the green tree.
+4. **Reason codes on the verdict**, so the row cannot be read as more than it is: `INSTRUMENT_ABSENT`
+   / `INSTRUMENT_UNVALIDATED` (negative tests did not fire) / `INSTRUMENT_TREE_DIRTY` (its own build
+   tree has orphans) / `VERSION_MISMATCH` / `REPLAY_FAIL` (defect in our environment) / `REPLAY_PASS`.
+   **`INSTRUMENT_UNVALIDATED` outranks any replay result** — an unfired checker's PASS and its FAIL are
+   equally uninformative, and a PASS from an unvalidated instrument is the reassuring-error class
+   wearing a kernel's authority.
+5. **Both directions before it counts**, per the standing gate rule: seen to reject something, and
    seen to accept our environment. Until then the registry says *second opinion*, unchanged.
 
 **Then, and only then, criterion 7 activates for stops 3–5** — dual replay through both kernels, one
@@ -257,5 +298,34 @@ extra command per stop, front-loading the destination configuration's debugging 
 | # | item | status | why deferred, and what settles it |
 |---|---|---|---|
 | 1 | Does `mach_ring`'s permutative catch-all carry a **latent cost cliff** independent of the bump — did it get slower, or did phase 1 hand it a harder goal? | **worked around, mechanism partly unattributed** | Needs a **built v4.14.0 tree** to compare; `lake clean` at stop 1 removed it (correct for kernel hygiene, and it cost this measurement). Cheapest settlement: a `git worktree` at `dec74242` with its own toolchain, built once, and the two probes replayed there. Do it **before stop 4**, not after — a second 9-atom identity anywhere on the route will hit the same cliff, and it will present as "unsolved goals" |
-| 2 | `mach_ring` **cannot distinguish "outside my fragment" from "out of budget"** — `try (first | … )` swallows the timeout | **recorded, not fixed** | A real repair means restructuring the tactic (e.g. run the catch-all outside `try`, or bound it with its own `maxHeartbeats` and report the distinction). That is a tactic change, and the scope guard says the migration does not modernise tactics. File it for after the destination |
+| 2 | `mach_ring` **cannot distinguish "outside my fragment" from "out of budget"** — `try (first | … )` swallows the timeout | **designed, not implemented** — design note below | Implementing it touches the tactic used by hundreds of proofs, mid-migration, which the scope guard forbids. Deferred to after the destination *with the design fixed now*, so it is a coding task and not a rediscovery |
 | 3 | Lean4Lean maiden run | **unblocked at stop 1, not attempted** | Protocol above. Do it against the green v4.16.0 tree |
+
+## DESIGN NOTE (open item 2) — make the swallowed timeout speak
+
+**Three incidents, one root**, which by this project's arithmetic makes it structural rather than
+unlucky: a `sorry` swallowed by `mach_ring`'s `try`, the phantom errors at stop 1, and the
+misattribution in this very log. **`try (first | A | … | Z)` collapses "outside my fragment" and "out of
+budget" into the same silence**, and every one of those three incidents is that single lie propagating.
+
+The isolation procedure finds the truth in two minutes. **An instrument would have prevented the false
+filing in zero** — so the scope-poisoning table should end up with an instrument, not only a procedure.
+
+**Mechanism, fixed now so implementing it later is typing rather than thinking.** The heartbeat timeout
+arrives as an ordinary `Exception.error` whose message contains *"deterministic timeout"*, which is why
+`first`/`try` catch it like any failure. Two viable repairs, in preference order:
+
+1. **Catch, inspect, re-throw.** Wrap phase 2 in an elab-level combinator that `tryCatch`es, tests the
+   message for the timeout signature, and **re-throws on timeout while swallowing genuine failure**.
+   Then "out of budget" surfaces as itself and "outside my fragment" still degrades gracefully. Costs
+   ~20 lines of `Lean.Elab.Tactic` and turns `mach_ring`'s failure message into evidence.
+2. **Bound the catch-all separately.** Give the permutative alternative its own small budget
+   (`set_option maxHeartbeats <n> in`), so exhausting it fails *that alternative* rather than the
+   declaration, and the declaration's remaining budget survives to elaborate the rest. This kills the
+   **scope poisoning** as a side effect — the phantom errors were the declaration's budget being spent
+   by one alternative — but it does not by itself distinguish the two failure modes, so it is the
+   cheaper half-measure. Doing both is right.
+
+**Crude interim, available at zero risk to the library:** the alternatives can be run individually in a
+scratch file (step 4 of the isolation procedure). That is exactly how `ac_rfl` was cleared and the
+catch-all convicted, and it needs no change to any tactic.

@@ -277,3 +277,48 @@ genuinely independent kernel can read our environment, which the plan did not ex
 **What it does NOT change:** the destination stays v4.26.0, the decision record stands, and the
 expiry condition is untouched. Earning *"independent kernel"* earlier changes when the phrase can be
 said — not which kernel carries the fix, which is what the expiry condition is watching.
+
+---
+
+# NAMED RULE — an instrument does not join a measurement midway
+
+Promoted from a table row because it governs three separate decisions on this route and will be under
+the most pressure at the end of it.
+
+> **An instrument joins at a stop boundary, never inside a stop.** Every instrument change is completed,
+> and re-verified at the *old* reference point, before the pin moves.
+
+Three applications, one already exercised:
+
+* **Stop 1 (done).** The per-version checker resolver was edited, then the replay gate was re-run **at
+  v4.14.0** to establish verdict stability across the tooling edit, and only then did the pin move.
+  Same for `lean4checker v4.16.0`: built and its five negative tests confirmed firing *before* the bump,
+  so a stop-1 failure could not be confused with an unvalidated checker.
+* **Stop 2.** Keeps its pre-registered bar **even if criterion 7's trigger fires while stop 2 is in
+  flight.** Lean4Lean joins at stop 3.
+* **The destination, where this will be hardest.** When the strong checker is finally validated here,
+  there will be real temptation to let it **retroactively bless stops 1–2**. It must not.
+
+> **Stops 1–2 were accepted under their pre-registered bars, and that is what their acceptance means.**
+> Re-checking them with Lean4Lean afterwards is **new evidence about old stops** — recorded as new
+> evidence, with its own date and reason code. It is *not* a retroactive amendment to what those
+> acceptances meant, and it cannot be, because the bar a stop passed is a historical fact about that
+> stop. (If a later Lean4Lean replay *fails* on a stop that passed, that is a finding about the stop
+> and about the two checkers' disagreement — which is precisely the evidence dual replay exists to
+> produce, and it is worth far more than a re-labelled checkmark.)
+
+## And the corollary for baselines: archive before hygiene
+
+Stop 1's `lake clean` was correct and destroyed the tree that could have answered *"did the catch-all
+get slower?"*. **A measurement baseline is an artifact, so artifacts a later question will need are
+snapshotted before hygiene destroys them.** The stop-acceptance procedure therefore grows a step, run
+**before** each pin advance:
+
+```
+python3 tools/migration/timing_profile.py     # -> snapshots/timing/<pin>.json
+```
+
+Wall-clock elaboration of every module that raises its own heartbeat budget — the set **derived** from
+`set_option maxHeartbeats`, so it maintains itself. Three `lake clean`s remain on this route; each one
+would otherwise destroy another baseline. **Evidence, not a gate** — a slower module does not fail a
+stop.
