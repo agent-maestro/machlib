@@ -356,6 +356,12 @@ def main() -> int:
     ap.add_argument("--compare-to", help="a frozen baseline directory to accept against")
     ap.add_argument("--freeze", action="store_true", help="hash + chmod read-only when done")
     ap.add_argument("--verify", help="re-check a frozen directory's SHA256SUMS and exit")
+    # Freeze a snapshot that is already captured, WITHOUT re-running the gates. Added 2026-07-30 for
+    # v4.28.0, the last externally-certified pin the project will occupy until an upstream instrument
+    # exists. Re-capturing to obtain a hash would replace the artifact being hashed, which is the one
+    # thing a freeze must not do: you would be sealing a different measurement than the one accepted.
+    ap.add_argument("--freeze-existing", metavar="DIR",
+                    help="hash + seal an already-captured snapshot in place; no gates are run")
     # BUMP_PLAN.md Amendment 4. Repeatable: --void-ok lean4lean_replay=Amendment-3
     ap.add_argument("--void-ok", action="append", default=[], metavar="GATE=AMENDMENT",
                     help="accept a gate's INSTRUMENT VOID, citing the amendment that authorises it. "
@@ -365,6 +371,24 @@ def main() -> int:
 
     if a.verify:
         return verify(a.verify)
+    if a.freeze_existing:
+        t = a.freeze_existing
+        if not os.path.isdir(t):
+            print(f"[NO SUCH SNAPSHOT] {t}")
+            return 1
+        if os.path.exists(os.path.join(t, "SHA256SUMS")):
+            print(f"[ALREADY FROZEN] {t}")
+            return 1
+        digest = write_hashes(t)
+        # Count the manifest's own lines, not the directory: walking it after write_hashes() counts
+        # SHA256SUMS itself, which the manifest deliberately excludes -- so the freeze printed 11
+        # where --verify printed 10. Two derivations of one number must agree, and the one that is
+        # a property of the artifact wins over the one that is a property of when you looked.
+        n = len(open(os.path.join(t, "SHA256SUMS")).read().strip().splitlines())
+        freeze(t)
+        print(f"FROZEN {t}\n  {n} files hashed, manifest digest {digest[:16]}…\n"
+              f"  Re-check any time with:  --verify {t}")
+        return 0
     if not a.label:
         ap.error("--label is required unless --verify is given")
 

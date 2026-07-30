@@ -1,7 +1,15 @@
 # Upstream report — Lean4Lean at `v4.26.0` cannot replay `Init.Core`
 
-**Status: DRAFTED, NOT YET FILED.** Filing posts to a third party's public tracker under the project
-owner's identity, so it waits for a go-ahead. Everything below is ready to paste.
+**Status: FILED 2026-07-30 — https://github.com/digama0/lean4lean/issues/17**
+
+Filed as a **blocking report**, not a bug report: there is no buildable `lean4lean` at `v4.26.0` or
+later that can check anything we can measure, which means **master's patched kernel is unverifiable by
+their own tool** — the detail most likely to make it urgent to them.
+
+**This thread is load-bearing.** Per `BUMP_PLAN.md` Amendment 5 the destination lands EXTERNALLY
+UNREPLAYED, and its grade upgrades on either this issue closing or lean4checker growing a tag ≥ v4.29.
+`watch_kernel_support.py` tracks it by number (so a retitle cannot read as "no longer filed") and by
+symptom (so someone else reporting it first still counts).
 
 **Why we care, stated plainly in the report:** the destination configuration (`v4.32.2`) wants this
 instrument working. Reporting it with a minimal repro is the cheapest way to make that more likely —
@@ -40,7 +48,25 @@ $ lake env .lake/build/bin/lean4lean Lean4Lean      # this repo's own library
 # exit 139 (SIGSEGV), no output
 ```
 
-**Affected commits — all three builds that exist at this version:**
+**v4.29.0 IS ALSO AFFECTED, and more severely** — including `0c38ab8`, the commit whose subject is
+*"fix: soundness bug from leanprover/lean4#14577"*. There the failure is a silent SIGSEGV on
+**`Init.Prelude`**, so it is not specific to string literals and not specific to large environments:
+
+```console
+$ cd ~/lean4lean-v4.29.0 && git checkout 0c38ab8 && lake build lean4lean
+$ cat lean-toolchain
+leanprover/lean4:v4.29.0
+
+$ lake env .lake/build/bin/lean4lean Init.Prelude   # exit 139 (SIGSEGV), no output
+$ lake env .lake/build/bin/lean4lean Init.Core      # exit 139 (SIGSEGV), no output
+$ lake env .lake/build/bin/lean4lean Lean4Lean      # exit 139 (SIGSEGV), no output
+```
+
+`Init.Prelude` is about the smallest environment the checker can be pointed at, which suggests the
+v4.29.0 fault is upstream of whatever the v4.26.0 string-literal path does — possibly a different bug
+sharing a symptom. Reported together because they bracket the same window; split them if they diverge.
+
+**Affected commits — all three builds that exist at v4.26.0, plus v4.29.0:**
 
 | commit | branch | `Init.Core` | a small downstream module |
 |---|---|---|---|

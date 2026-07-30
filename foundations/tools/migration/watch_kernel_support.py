@@ -71,10 +71,17 @@ STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "watch_state.js
 # entire point of running a second implementation.
 FIX_PR_MARKERS = ("14577", "14576")
 
-# Titles that would indicate the v4.26.0 instrument breakage is being tracked upstream. Matched on
-# the SYMPTOM names rather than an issue number, because the number does not exist until it is filed
-# and a watch that only recognises our own issue would miss someone else reporting it first.
-INSTRUMENT_BUG_MARKERS = ("String.ofList", "Char.ofNat", "unknown constant")
+# Titles that would indicate the instrument breakage is being tracked upstream. Matched on SYMPTOM
+# names as well as our own issue number, because a watch that only recognised our issue would miss
+# someone else reporting it first -- and one that only recognised symptoms would miss a retitle.
+#
+# FILED 2026-07-30 as digama0/lean4lean#17 (v4.26.0 + v4.29.0, SIGSEGV on Init.Prelude and
+# `unknown constant 'String.ofList'`). THIS THREAD IS NOW LOAD-BEARING: per BUMP_PLAN.md Amendment 5
+# the destination lands EXTERNALLY UNREPLAYED, and its grade upgrade triggers on either this issue
+# closing or lean4checker growing a tag >= v4.29. The watch is literally watching that thread.
+INSTRUMENT_BUG_ISSUE = 17
+INSTRUMENT_BUG_MARKERS = ("String.ofList", "Char.ofNat", "unknown constant",
+                          "Init.Prelude", "Init.Core")
 
 
 def ver(s: str) -> tuple[int, ...]:
@@ -149,13 +156,18 @@ def l4l_instrument_bug() -> tuple[str, str]:
             issues = json.loads(r.read().decode())
     except Exception as e:  # noqa: BLE001 -- an unreadable tracker must not read as "no bug filed"
         return "COULD NOT READ", f"{type(e).__name__}: {e}"
+    # Ours by NUMBER first -- a retitle upstream must not read as "no longer filed".
+    ours = next((i for i in issues if i.get("number") == INSTRUMENT_BUG_ISSUE), None)
     hits = [i for i in issues
             if any(m in (i.get("title") or "") for m in INSTRUMENT_BUG_MARKERS)]
-    if not hits:
-        return "NOT FILED", "no issue matching the string-literal breakage -- file it (see docs/)"
-    top = hits[0]
-    return (top.get("state", "?").upper(),
-            f"#{top['number']} {(top.get('title') or '')[:58]}")
+    top = ours or (hits[0] if hits else None)
+    if not top:
+        return "NOT FILED", "no issue matching the instrument breakage -- file it (see docs/)"
+    state = top.get("state", "?").upper()
+    note = f"#{top['number']} {(top.get('title') or '')[:52]}"
+    if state == "CLOSED":
+        note += "  <- CLOSED: re-probe the instrument, the destination grade may upgrade"
+    return state, note
 
 
 def load_state() -> dict:

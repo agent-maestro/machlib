@@ -280,6 +280,72 @@ said — not which kernel carries the fix, which is what the expiry condition is
 
 ---
 
+# AMENDMENT 5 — **v4.29.0 dropped**; v4.28.0 is the near end; the destination's arrival grade is pre-registered (2026-07-30)
+
+**Provenance: authorised in-session by the project owner**, after the finding below. Route change and
+pass-bar change, so it lives here.
+
+## The finding that forced it
+
+**Lean4Lean at v4.29.0 — including `0c38ab8`, whose subject is literally *"fix: soundness bug from
+leanprover/lean4#14577"* — SIGSEGVs on `Init.Prelude`.** Silently, no output. `Init.Prelude` is about
+the smallest environment a checker can be pointed at, so this is not the v4.26.0 string-literal path;
+it is upstream of it. `0c38ab8` is master HEAD, so there is no later commit to try.
+
+lean4checker at v4.29.0 has **rc tags only**, and `check_kernel_replay.py` rejects an rc-built checker
+as a different instrument. So **v4.29.0 has no external kernel at all.**
+
+## Why v4.29.0 is DROPPED rather than walked dark
+
+**The route's stops were never attribution conveniences that happened to have checkers. They were
+certified fallback positions** — points the migration could stand on if the next hop broke. This
+route's selection criterion was checker availability, and v4.29.0's availability was *"patched
+Lean4Lean"*, which is now falsified. Its reason to exist is gone.
+
+**A dark stop inverts what a stop is for.** Advancing the pin to v4.29.0 means leaving a certified
+point to stand on an uncertified one; and if the v4.29.0 → v4.32.2 hop then broke badly, the fallback
+would be a position with no external kernel — you would retreat *through* it to v4.28.0 anyway.
+
+**Attribution is a build question; certification is a pin question, and they separate cleanly.** The
+only thing walking v4.29.0 would have bought is easier elaborator-drift attribution across a 4-version
+hop. That is recoverable **without moving the pin**: if the dark hop's fix rounds get confusing, build
+v4.29.0 in a scratch `git worktree`, attribute the breakage there, and never advance the pin to it.
+Same twenty minutes, paid only if actually needed.
+
+> **INVARIANT PRESERVED: every pin this route has ever occupied was externally replayed.** That is
+> worth more than pre-attributed deprecations, because it is the sentence the migration gets to say
+> about itself when it is finished.
+
+**Route, final form:** `… → v4.26.0 → v4.28.0 → v4.32.2`. One certified point, one dark hop, one
+destination waiting on upstream light.
+
+## The destination's arrival grade, PRE-REGISTERED (not discovered on arrival)
+
+Lean4Lean is broken at v4.26.0, at v4.29.0, and at master HEAD; lean4checker's stable tags stop at
+v4.28.0. **Therefore v4.32.2 currently has no external kernel either.** The dark hop does not end in
+light. Stating that here, before it is walked, is the whole point:
+
+| the destination lands as | |
+|---|---|
+| **grade** | **pinned, patched kernel, internally green, EXTERNALLY UNREPLAYED — pending instrument availability** |
+| criterion 1 analog | `INSTRUMENT_ABSENT` (no lean4checker tag ≥ v4.29) |
+| criterion 7 analog | `INSTRUMENT_ABSENT` (Lean4Lean cannot run at any version we could use) |
+| what still holds | 57-footprint equality against the frozen v4.14.0 baseline, criteria 3–6, patched kernel |
+| upgrade trigger | **either** Lean4Lean's segfault is fixed **or** lean4checker grows a ≥ v4.29 tag. Owned by `watch_kernel_support.py` |
+
+This prevents the worst version of arrival: reaching v4.32.2, finding the grade *weaker than the
+route's own intermediates*, and having that read as a surprise rather than as a condition recorded
+before departure.
+
+## What this makes v4.28.0
+
+Not merely the near end of the last hop — **the last externally-certified pin the project will occupy
+for an unknown duration.** Every future *"was this environment ever independently verified?"* question
+points back to it. So it is captured with unusual thoroughness before departure: full artifact
+snapshot, hashed, sealed read-only (`--freeze-existing`), verifiable at any time with `--verify`.
+
+---
+
 # AMENDMENT 4 — the acceptance instrument learns to say **VOID** (2026-07-30)
 
 **Recorded after Amendment 3's verdict could not be expressed by the instrument that renders verdicts.

@@ -453,6 +453,26 @@ arrived as warnings; left alone they would have become hard errors somewhere fur
 to whatever stop tripped over them rather than to the version that deprecated them. Clearing them where
 they appear keeps attribution honest and costs one regex per name.
 
+### What step 1b actually bought, counted as a schedule fact
+
+Positive controls were added at 09:00 on 2026-07-30. At 12:28 the same day they answered the route's
+largest open question in **five seconds**: Lean4Lean at v4.29.0 — `0c38ab8`, the commit carrying the
+#14577 fix — SIGSEGVs on `Init.Prelude`. That killed *"the strongest single verification point on the
+whole route"* before the pin ever moved toward it (see `BUMP_PLAN.md` Amendment 5).
+
+**Count the counterfactual precisely, because it is the argument for can-acquit specimens generally.**
+Without 1b the sequence was: advance the pin to v4.29.0 → run stop 7 → silent SIGSEGV, no output →
+and the ambiguity *arrives with the pin already moved*, on an uncertified position, with the previous
+morning's four-OOM-kill diagnostic cycle as the price of unwinding **which** of the two candidate
+causes it was.
+
+So the five-second control did not merely save time. **It moved the discovery to the cheap side of the
+pin advance** — which is the entire design intent of a positive control, stated as a schedule fact
+rather than as a principle. That is the line to give anyone who asks why a gate needs a can-acquit
+specimen and not just a can-convict one:
+
+> **It converted a stranded migration into an amendment.**
+
 ### CORRECTION — stop 5 was committed as "accepted" before it had been measured
 
 Commit `cc54930f` is titled *"stop 5 accepted"*. **At the time it was written, criterion 2 — the
