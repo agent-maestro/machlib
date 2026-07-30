@@ -83,6 +83,92 @@ cannot be confused with an unvalidated checker.
 
 ---
 
-## Stop 1 — `v4.16.0`
+## Stop 1 — `v4.16.0` (kernel commit `128a1e6b0a82`)
 
-*(in progress — entry completed when the stop is accepted or halted)*
+Clean build (`lake clean` first, so no v4.14.0 `.olean` could survive to be read by a v4.16.0
+kernel). **682s to first full pass, 4 modules failing out of 574.**
+
+Checker for this stop: `~/lean4checker-v4.16.0`, tag `v4.16.0`, five negative tests confirmed firing
+**before** the pin moved.
+
+### Drift attributions — 4 modules, 3 distinct causes, all inside the pre-registered expected set
+
+**1. `NormalizedPolynomialRootCount.lean:288` — `simp` no longer unfolds a `let`-bound alias.**
+The proof did `let rest := normalizeCoeff cs; by_cases hrest : rest = []`, then closed the negative
+case with `simp [hrest] at h`, where `h`'s condition mentions `normalizeCoeff cs` — the alias's
+*value*, not the alias. v4.14 bridged that gap; v4.16 does not, so the goal survived.
+**Fix: split on the term itself and drop the alias.** Not a simp-config change — removing the
+indirection makes the proof independent of how far the elaborator will zeta-reduce.
+
+**2. `TanhTaylorRemainder.lean:323` — `mach_mpoly` crossed the default heartbeat budget.**
+5 atoms, coefficients to 129024, inside 200000 heartbeats at v4.14.0 and over them at v4.16.0.
+**Fix: `set_option maxHeartbeats 400000`** — deliberately *not* the 1000000 its sibling
+`Rtanh6_deriv` already carries, so the number keeps reporting what the drift actually cost
+(>200k, ≤400k). Proof untouched.
+
+**3. `TwoExpPfaffianExpSum.lean:1068,1074,1081` — three `simpa` sets naming the parts but not the composite.**
+The sets listed `restrict`, `dX`, `dY`; the goals contain `restrictDX`/`restrictDY`, which are plain
+`noncomputable def`s over those. v4.14 unfolded them anyway while matching `denote`'s equations;
+v4.16 does not, so the goal kept an unreduced `denote (restrictDX ..)` — and the type mismatch
+printed it verbatim, which is what made this a five-minute diagnosis rather than an hour.
+**Fix: name the composites in the simp sets.**
+
+**4. `Ekf2GainPriorBound.lean:158` — `mach_ring`'s `ac_rfl` closer stopped closing.**
+The Joseph-form congruence identity (9 atoms, degree 4) normalises to a large AC residue that
+`mach_ring`'s final `ac_rfl` used to close. At v4.16 it spends 21s and leaves the goal.
+**Fix: `mach_mpoly [pa, pb, pd, k00, k01, h00, h01, h10, h11]` — 6.4s, faster than the failure.**
+This is the standing house rule anyway: `mach_ring` is the weak all-`try` normaliser, `mach_mpoly`
+the complete one for identities needing cancellation.
+
+> **The transferable finding, and it is a reading rule for the remaining four stops:
+> ONE failure produced THREE errors.** `maxHeartbeats` is per-*declaration*, so `hidp` exhausting the
+> 4M budget made `hidr` (line 159) and the theorem's own `whnf` (line 144) time out as collateral.
+> Both pass untouched — `hidr` in **0.5s on the DEFAULT budget**. Isolating each into a scratch file
+> took two minutes and turned a three-error module into a one-line fix. **Attribute the first failure
+> in a declaration before believing anything reported after it**, or the eighteen-version haystack
+> gets padded with phantoms.
+
+None of the four touched a statement, an axiom, or the austerity constraints — which is what
+criterion 2 is for, and it is checked below rather than asserted here.
+
+### VERDICT: **STOP ACCEPTED** (2026-07-29)
+
+```
+snapshots/v4.16.0/     SHA256SUMS digest bad51be6f5a8a848e2033eb401e52640f9f9db6ff6234d5981f5b40a8d68585e
+```
+
+| criterion | gate | v4.14.0 → v4.16.0 |
+|---|---|---|
+| 1 | `check_kernel_replay.py` via `~/lean4checker-v4.16.0` | **exit 0** — five negative tests fire, MachLib replays clean |
+| 2 | **57-footprint equality vs the frozen baseline** | **PASS — 0 changed, 0 lost, 0 gained** |
+| 3 | `check_ledger.py` | **exit 0** — 252 axioms, unchanged |
+| 4 | `check_derivable.py` | **exit 0** — 5 derivations, unchanged |
+| 5 | `sorry_audit.lean` | **exit 0** — 1 sorryAx decl, exact correspondence |
+| 6 | `check_artifact_drift.py` | **exit 0** |
+| — | `check_toolchain.py` | **exit 0** — pin = lock = `v4.16.0` @ `128a1e6b0a82` |
+
+Every count identical to the baseline; the 57 still agrees across all three derivations. **Two
+versions of elaborator drift moved four proofs and not one dependency** — which is exactly the claim
+criterion 2 exists to make checkable, and the reason a "it still builds" bar would have been worth
+nothing here: all four failures were *build* failures, and the interesting question was whether the
+repairs changed what anything rests on. They did not.
+
+Total cost: 682s first pass + 40s incremental after the fixes + four repairs, one of which was the
+only real one.
+
+`git tag toolchain-stop/v4.16.0` — this stop is now a fallback position.
+
+### Newly unblocked at this stop, and NOT taken: Lean4Lean
+
+Lean4Lean pins `v4.16.0` — one of the six versions it has ever pinned. **As of this stop the genuinely
+independent kernel can, for the first time, read our environment.** It is deliberately *not* run here:
+criterion 1 is lean4checker, the route's destination (v4.26.0) is where both checkers are meant to run,
+and adding an unvalidated instrument mid-route would muddy exactly the attribution this log exists to
+keep clean.
+
+**Recommendation for the next session, as a decision rather than a default:** run Lean4Lean **once at
+v4.16.0 as a smoke test of the instrument** — not as a gate. Debugging a from-scratch kernel's build,
+CLI and replay time is strictly cheaper here, against a green tree, than discovering its quirks at the
+destination while also holding four stops of drift in your head. If it replays clean, that is the
+first evidence in this project's history for the phrase *independent kernel*, three stops before the
+plan expected it.

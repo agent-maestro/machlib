@@ -1045,6 +1045,11 @@ theorem curve_exp_sum_via_expr_jacobian (c d a b : Real) (hab : a < b) :
 formulas `F = x + y - c` and `G = exp x + exp y - d` are differentiated
 syntactically, restricted to the line `y = c - x`, compiled to a Pfaffian
 Jacobian witness, and then passed to Khovanskii-Rolle. -/
+-- v4.16.0 note: the three `simpa` sets below named `restrict`, `dX` and `dY` but NOT the composites
+-- `restrictDX`/`restrictDY` that actually appear in the goal. v4.14 unfolded those anyway while
+-- matching `denote`'s equations; v4.16 does not, so the goal kept an unreduced
+-- `denote (restrictDX ..)` and the type mismatch listed it verbatim. Naming the composites is the
+-- fix: the unfolding no longer depends on how far the elaborator is willing to delta-reduce.
 theorem curve_exp_sum_via_bivar_expr_jacobian (c d a b : Real) (hab : a < b) :
     ∃ N : Nat, ∀ zeros : List Real, zeros.Nodup →
       (∀ z ∈ zeros, a < z ∧ z < b ∧ (fun s => Real.exp s + Real.exp (c - s) - d) z = 0) →
@@ -1067,19 +1072,22 @@ theorem curve_exp_sum_via_bivar_expr_jacobian (c d a b : Real) (hab : a < b) :
           show (0 : Real) + 1 - 0 = 1 from by mach_ring] at hsub
       simpa [expSumF_bivar, expSumLineY_expr, TwoExpBivarExpr.denote,
         TwoExpBivarExpr.dX, TwoExpBivarExpr.dY, TwoExpBivarExpr.restrict,
+        TwoExpBivarExpr.restrictDX, TwoExpBivarExpr.restrictDY,
         PfaffianRepExpr.denote,
         show (1 : Real) + 0 - 0 = 1 from by mach_ring,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using hsub)
     (fun z _ _ => by
       simpa [expSumG_bivar, expSumLineY_expr, TwoExpBivarExpr.denote,
         TwoExpBivarExpr.dX, TwoExpBivarExpr.dY, TwoExpBivarExpr.restrict,
+        TwoExpBivarExpr.restrictDX, TwoExpBivarExpr.restrictDY,
         PfaffianRepExpr.denote, expSumLineChain, expSumLineEval,
         show (0 : Real) + Real.exp (c - z) - 0 = Real.exp (c - z) from by mach_ring,
         show Real.exp z + 0 - 0 = Real.exp z from by mach_ring] using
         hasDerivAt2_exp_sum d z (c - z))
     (fun z _ _ => by
       simpa [expSumF_bivar, expSumLineY_expr, TwoExpBivarExpr.dY,
-        TwoExpBivarExpr.restrict, PfaffianRepExpr.denote,
+        TwoExpBivarExpr.restrict, TwoExpBivarExpr.restrictDY,
+        PfaffianRepExpr.denote,
         show (0 : Real) + 1 - 0 = 1 from by mach_ring] using one_ne_zero)
     (expSumF_bivar_line_zero c)
 

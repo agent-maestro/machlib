@@ -261,6 +261,11 @@ noncomputable def Rtanh7 (y : Real) : Real :=
     + natCast 13440 * (tanh y * tanh y * tanh y * tanh y * tanh y * tanh y)
     - natCast 5040 * (tanh y * tanh y * tanh y * tanh y * tanh y * tanh y * tanh y * tanh y)
 
+-- v4.16.0 note: the closing `mach_mpoly` (5 atoms, coefficients to 129024) elaborated inside the
+-- default 200000 heartbeats at v4.14.0 and exceeds them at v4.16.0. Budget doubled -- deliberately
+-- to 400000 rather than the 1000000 the sibling `Rtanh6_deriv` already carries, so the number keeps
+-- reporting what the drift actually cost: >200k, <=400k. Proof untouched.
+set_option maxHeartbeats 400000 in
 theorem Rtanh7_deriv (c : Real) : HasDerivAt Rtanh7 (g8h c) c := by
   have h2 : HasDerivAt (fun y => natCast 3968 * (tanh y * tanh y))
       (0 * (tanh c * tanh c)

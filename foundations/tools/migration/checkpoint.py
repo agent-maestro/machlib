@@ -273,7 +273,9 @@ def main() -> int:
         h = write_hashes(target)
         freeze(target)
         print(f"\nFROZEN  {target}\n  SHA256SUMS digest: {h}")
-        print("  read-only on disk; `--verify` re-checks it. Every later stop diffs against this.")
+        print("  read-only on disk; `--verify` re-checks it. Note that later stops diff against the")
+        print("  v4.14.0 BASELINE, not against this -- chaining comparisons through intermediates")
+        print("  would let a drift launder itself across two of them.")
     return rc
 
 

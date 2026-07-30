@@ -83,7 +83,8 @@ was looking for.
 |---|---|
 | toolchain recorded as instrument identity | **done** (this file, + ledger gate) |
 | exposure to #14576 | **OPEN — unknown, not ruled out** |
-| pin bumped | **NOT DONE** — scoped as a project |
+| pin bumped | **IN PROGRESS** — branch `toolchain-bump`, route + pass bar in [`BUMP_PLAN.md`](BUMP_PLAN.md), stop-by-stop record in [`MIGRATION_LOG.md`](MIGRATION_LOG.md) |
+| ↳ destination | **v4.26.0 — deliberately still unpatched.** The decision record in `BUMP_PLAN.md` states why (dual independent kernels beat one patched one) and carries its own **expiry condition**: preferred only until `fix ∩ lean4checker ∩ Lean4Lean ≠ ∅`, monitored by `tools/migration/watch_kernel_support.py` |
 | independent kernel re-check | **DONE** — `check_kernel_replay.py`, MachLib replays clean, exit 0 |
 | ↳ grade | **SECOND OPINION**, *not* independent kernel — see the caveat below |
 | Lean4Lean (genuine independence) | **BLOCKED on the bump** — never pinned v4.14.0 (history jumps 4.13 → 4.16) |

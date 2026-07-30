@@ -40,7 +40,7 @@ LEDGER = os.path.join(FOUND, "AxiomLedger.lean")
 
 
 def headline_names() -> list[str]:
-    """Extract the list by BRACKET COUNTING, not a non-greedy regex.
+    r"""Extract the list by BRACKET COUNTING, not a non-greedy regex.
 
     The first attempt used `\[(.*?)\]\s*\n` and overshot: the list spans many lines with `--`
     comments inside, and its closing `]` is followed by more text on the same line, so the regex

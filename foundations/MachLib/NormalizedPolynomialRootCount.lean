@@ -274,16 +274,18 @@ theorem eval_eq_zero_of_normalizeCoeff_eq_nil {p : CoeffPoly}
       rfl
   | cons c cs ih =>
       unfold normalizeCoeff at h
-      let rest := normalizeCoeff cs
-      by_cases hrest : rest = []
+      -- v4.16.0 note: this case-split used to go through `let rest := normalizeCoeff cs`, and
+      -- `simp [hrest] at h` closed the negative case by rewriting the `if` condition. Under v4.16
+      -- simp no longer unfolds the let-bound alias to reach the condition's actual term, so the
+      -- goal survived. Splitting on the term ITSELF removes the alias rather than tuning simp --
+      -- statement, dependencies and footprint unchanged.
+      by_cases hrest : normalizeCoeff cs = []
       · by_cases hc : c = 0
         · unfold eval
           rw [hc, zero_add]
-          have htail : normalizeCoeff cs = [] := by
-            simpa [rest] using hrest
+          have htail : normalizeCoeff cs = [] := hrest
           rw [ih htail x, mul_zero]
-        · have htail : normalizeCoeff cs = [] := by
-            simpa [rest] using hrest
+        · have htail : normalizeCoeff cs = [] := hrest
           simp [htail, hc] at h
       · simp [hrest] at h
 
