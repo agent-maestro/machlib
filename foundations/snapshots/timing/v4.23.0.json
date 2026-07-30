@@ -1,0 +1,182 @@
+{
+ "toolchain": "leanprover/lean4:v4.23.0",
+ "captured_at": "2026-07-30T06:08:48-0700",
+ "workers": 4,
+ "total_seconds": 744.41,
+ "modules": {
+  "MachLib/AsinTaylorRemainder.lean": {
+   "seconds": 11.11,
+   "exit": 0
+  },
+  "MachLib/ChainExp2LcY0CTD.lean": {
+   "seconds": 1.61,
+   "exit": 0
+  },
+  "MachLib/ChainExp2NoZeros.lean": {
+   "seconds": 1.34,
+   "exit": 0
+  },
+  "MachLib/EMLExplicitBoundComposition.lean": {
+   "seconds": 0.82,
+   "exit": 0
+  },
+  "MachLib/EMLExplicitBoundExpArm.lean": {
+   "seconds": 1.38,
+   "exit": 0
+  },
+  "MachLib/EMLExplicitBoundLogArm.lean": {
+   "seconds": 1.59,
+   "exit": 0
+  },
+  "MachLib/Ekf2GainBounded.lean": {
+   "seconds": 7.71,
+   "exit": 0
+  },
+  "MachLib/Ekf2GainConditioning.lean": {
+   "seconds": 5.91,
+   "exit": 0
+  },
+  "MachLib/Ekf2GainPriorBound.lean": {
+   "seconds": 4.54,
+   "exit": 0
+  },
+  "MachLib/IterExpDepth3Assembly.lean": {
+   "seconds": 0.92,
+   "exit": 0
+  },
+  "MachLib/IterExpDepth3Vehicle.lean": {
+   "seconds": 1.83,
+   "exit": 0
+  },
+  "MachLib/IterExpDepthNAssembly.lean": {
+   "seconds": 0.82,
+   "exit": 0
+  },
+  "MachLib/IterExpDepthNCapstone.lean": {
+   "seconds": 0.83,
+   "exit": 0
+  },
+  "MachLib/IterExpDepthNEstablishHnz.lean": {
+   "seconds": 1.06,
+   "exit": 0
+  },
+  "MachLib/IterExpDepthNTopIdentity.lean": {
+   "seconds": 0.93,
+   "exit": 0
+  },
+  "MachLib/IterExpDepthNVehicleNoZeros.lean": {
+   "seconds": 1.0,
+   "exit": 0
+  },
+  "MachLib/IterExpTopIdentity.lean": {
+   "seconds": 3.03,
+   "exit": 0
+  },
+  "MachLib/MPolyRing.lean": {
+   "seconds": 6.25,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBase.lean": {
+   "seconds": 1.14,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBase2Explicit.lean": {
+   "seconds": 0.95,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBaseHnz.lean": {
+   "seconds": 0.92,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBound2.lean": {
+   "seconds": 0.89,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBoundPos.lean": {
+   "seconds": 0.74,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralBoundUncond.lean": {
+   "seconds": 0.92,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralCTDCongr.lean": {
+   "seconds": 0.96,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralExplicit.lean": {
+   "seconds": 0.79,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralHnz.lean": {
+   "seconds": 0.96,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralHnzIF.lean": {
+   "seconds": 1.07,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralHnzIFDeg.lean": {
+   "seconds": 1.21,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralHnzWF.lean": {
+   "seconds": 0.86,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralReduce.lean": {
+   "seconds": 1.17,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralSingleExp.lean": {
+   "seconds": 2.72,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralSingleExpCanon.lean": {
+   "seconds": 0.89,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralSingleExpDescent.lean": {
+   "seconds": 0.8,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralStepExplicit.lean": {
+   "seconds": 1.07,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralVehExpoConnect.lean": {
+   "seconds": 0.86,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralVehExpoTower.lean": {
+   "seconds": 0.94,
+   "exit": 0
+  },
+  "MachLib/PfaffianGeneralWF.lean": {
+   "seconds": 1.02,
+   "exit": 0
+  },
+  "MachLib/PolyRingTactic.lean": {
+   "seconds": 1.67,
+   "exit": 0
+  },
+  "MachLib/TanhTaylorRemainder.lean": {
+   "seconds": 7.75,
+   "exit": 0
+  },
+  "MachLib/WitnessResidualDeepDeriv.lean": {
+   "seconds": 8.54,
+   "exit": 0
+  },
+  "AxiomLedger.lean": {
+   "seconds": 577.89,
+   "exit": 0,
+   "gate_file": true
+  },
+  "tools/sorry_audit.lean": {
+   "seconds": 75.0,
+   "exit": 0,
+   "gate_file": true
+  }
+ }
+}
