@@ -4681,4 +4681,91 @@ theorem eml_minusLog_const_eventually_negative
   have e2 : -(Real.log d) + Real.log d = 0 := by mach_ring
   rwa [e1, e2] at t
 
+/-! ## Phase 25 — completing the predicate pair
+
+`EventuallyAtMost` (Phase 18) bounds the divisor ABOVE, which is what a large dividend needs: it stops
+the divisor's log from running away. Its dual bounds the divisor BELOW, which is what a SMALL dividend
+needs: it stops the divisor's log from vanishing. Phase 24's ordering predicts this — a vanishing
+dividend loses to any divisor whose log is bounded away from zero, and `EventuallyAboveOne` alone does
+not give that, because `log (g x)` may be positive and still arbitrarily small. -/
+
+/-- `f` is eventually at least `L`. The dual of `EventuallyAtMost`, and the other half of the pair. -/
+def EventuallyAtLeast (L : Real) (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → L ≤ f x
+
+/-- **Phase 25 — `MinusLog × AboveOne` closes, given a divisor bounded away from 1.**
+
+The last cell reachable by this session's method. `exp (f x) = 1/x` vanishes; `L ≤ g x` with `1 < L`
+puts `0 < log L ≤ log (g x)`; and `1/x < log L` once `x > 1/log L`. So the result is eventually
+negative.
+
+**`EventuallyAboveOne` alone is NOT enough here, and that is the content.** It gives `0 < log (g x)`
+pointwise, but the bound may shrink toward zero as `x` grows, and a vanishing dividend cannot be
+guaranteed to beat a vanishing divisor-log. `EventuallyAtLeast` supplies the uniform gap. This is the
+same lesson as Phase 17's, one level down: a pointwise inequality is not a bound. -/
+theorem eml_minusLog_atLeast_eventually_negative
+    {f g : Real → Real} {L : Real}
+    (hf : EventuallyMinusLog f)
+    (hL : 1 < L)
+    (hg : EventuallyAtLeast L g) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  have hLpos : 0 < L := lt_trans_ax one_pos hL
+  -- log L > 0 from 1 < L: log 1 = 0 and log is strictly monotone (log_lt_log, reachable).
+  have hlogL : 0 < Real.log L := by
+    have h := log_lt_log one_pos hL
+    rwa [log_one] at h
+  refine ⟨max (max N1 N2) (max 1 (1 / Real.log L + 1)), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) _) hx
+  have hxB : max 1 (1 / Real.log L + 1) ≤ x := Real.le_trans (le_max_right (max N1 N2) _) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_left 1 _) hxB
+  have hxbig : 1 / Real.log L + 1 ≤ x := Real.le_trans (le_max_right 1 _) hxB
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  have hval : Real.exp (f x) = 1 / x := by
+    rw [h1 x hxN1, exp_neg_inv, exp_log hxpos]
+  -- log L ≤ log (g x), from L ≤ g x
+  have hloggx : Real.log L ≤ Real.log (g x) := by
+    rcases (le_iff_lt_or_eq L (g x)).mp (h2 x hxN2) with hlt | heq
+    · exact le_of_lt (log_lt_log hLpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- 1/x < log L, exactly as in Phase 24
+  have hlt : 1 / x < Real.log L := by
+    have hself : 1 / Real.log L < 1 / Real.log L + 1 := by
+      have t := add_lt_add_left one_pos (1 / Real.log L)
+      rwa [add_zero] at t
+    have hstrict : 1 / Real.log L < x := lt_of_lt_of_le hself hxbig
+    have hmul : 1 < x * Real.log L := by
+      have t := mul_lt_mul_of_pos_right hstrict hlogL
+      have e : 1 / Real.log L * Real.log L = 1 := div_mul_cancel (ne_of_gt hlogL)
+      rwa [e] at t
+    rcases lt_total (1 / x) (Real.log L) with hh | heq | hgt
+    · exact hh
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hEq : Real.log L * x = 1 := by rw [← heq, hcan]
+      exact absurd (by rw [Real.mul_comm x (Real.log L)]; exact hEq) (ne_of_gt hmul)
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hm2 : Real.log L * x < 1 / x * x := mul_lt_mul_of_pos_right hgt hxpos
+      rw [hcan] at hm2
+      have hlt1 : x * Real.log L < 1 := by rw [Real.mul_comm x (Real.log L)]; exact hm2
+      exact absurd rfl (ne_of_gt (lt_trans_ax hmul hlt1))
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, hval]
+  -- 1/x - log (g x) < log L - log L = 0
+  have s1 : 1 / x - Real.log (g x) < Real.log L - Real.log (g x) := by
+    have t := add_lt_add_left hlt (-(Real.log (g x)))
+    have e1 : -(Real.log (g x)) + 1 / x = 1 / x - Real.log (g x) := by mach_ring
+    have e2 : -(Real.log (g x)) + Real.log L = Real.log L - Real.log (g x) := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : Real.log L - Real.log (g x) ≤ 0 := by
+    have t := add_le_add_left hloggx (-(Real.log (g x)))
+    have e1 : -(Real.log (g x)) + Real.log L = Real.log L - Real.log (g x) := by mach_ring
+    have e2 : -(Real.log (g x)) + Real.log (g x) = 0 := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le s1 s2
+
 end MachLib
