@@ -4610,4 +4610,75 @@ theorem eml_negative_const_eventually_negative
     rwa [e1, e2] at t
   exact lt_of_lt_of_le s1 s2
 
+/-- **Phase 24 — `MinusLog × Const` closes. The mirroring extends to the second deferred row.**
+
+Phase 17 deferred the `MinusLog` row to the per-shape `K/x` machinery alongside `Negative`. Phase 23
+showed the `Negative` deferral had aged out; this shows the same for `MinusLog`, and by a sharper
+route — because here the dividend does not merely have a ceiling, it VANISHES.
+
+`f x = -log x` gives `exp (f x) = exp (-log x) = 1 / exp (log x) = 1 / x` exactly (`exp_neg_inv` then
+`exp_log`), so the dividend is `1/x`: positive, and eventually below any positive constant. Against a
+constant divisor with `0 < log d` (i.e. `d > 1`) the result is eventually negative, and the threshold
+is explicit rather than asymptotic — `x > 1 / log d` suffices.
+
+Note the condition is **strictly weaker than Phase 23's**. `Negative × Const` needed `1 ≤ log d`
+because `exp (f x)` was only known `< 1`; here `exp (f x) = 1/x` shrinks, so `0 < log d` is enough.
+A vanishing dividend buys a weaker hypothesis than a merely bounded one — which is the same ordering
+Phases 20/21 found on the other side, where an unbounded dividend needed no hypothesis at all. -/
+theorem eml_minusLog_const_eventually_negative
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyMinusLog f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hd : 0 < Real.log d) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  -- threshold: past N1, N2, and past 1/log d so that 1/x < log d
+  refine ⟨max (max N1 N2) (max 1 (1 / Real.log d + 1)), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) _) hx
+  have hxB : max 1 (1 / Real.log d + 1) ≤ x := Real.le_trans (le_max_right (max N1 N2) _) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_left 1 _) hxB
+  have hxbig : 1 / Real.log d + 1 ≤ x := Real.le_trans (le_max_right 1 _) hxB
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  -- exp (f x) = 1 / x, exactly
+  have hval : Real.exp (f x) = 1 / x := by
+    rw [h1 x hxN1, exp_neg_inv, exp_log hxpos]
+  -- 1 / x < log d, from x > 1 / log d
+  have hlt : 1 / x < Real.log d := by
+    have hself : 1 / Real.log d < 1 / Real.log d + 1 := by
+      have t := add_lt_add_left one_pos (1 / Real.log d)
+      rwa [add_zero] at t
+    have hstrict : 1 / Real.log d < x := lt_of_lt_of_le hself hxbig
+    have h1d : 0 < 1 / Real.log d := div_pos_of_pos_pos one_pos hd
+    -- 1/x < log d  ⟺  1 < x * log d, and x > 1/log d gives exactly that
+    have hmul : 1 < x * Real.log d := by
+      have t := mul_lt_mul_of_pos_right hstrict hd
+      have e : 1 / Real.log d * Real.log d = 1 := div_mul_cancel (ne_of_gt hd)
+      rwa [e] at t
+    -- 1/x < log d, by comparing after multiplying through by x (>0). No `div_lt_of_lt_mul`
+    -- on this chain -- the reachable-lemma index says it lives in WitnessResidualDeepNumeric --
+    -- so it is re-derived here from lt_total, matching the wgc_/ebc_ convention.
+    rcases lt_total (1 / x) (Real.log d) with hlt | heq | hgt
+    · exact hlt
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have : Real.log d * x = 1 := by rw [← heq, hcan]
+      have hne : x * Real.log d ≠ 1 := ne_of_gt hmul
+      exact hne (by rw [Real.mul_comm x (Real.log d)]; exact this)
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hmul2 : Real.log d * x < 1 / x * x := mul_lt_mul_of_pos_right hgt hxpos
+      rw [hcan] at hmul2
+      have : x * Real.log d < 1 := by rw [Real.mul_comm x (Real.log d)]; exact hmul2
+      -- 1 < x·log d and x·log d < 1 give 1 < 1; `ne_of_gt` turns that into 1 ≠ 1.
+      exact absurd rfl (ne_of_gt (lt_trans_ax hmul this))
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2, hval]
+  have t := add_lt_add_left hlt (-(Real.log d))
+  have e1 : -(Real.log d) + 1 / x = 1 / x - Real.log d := by mach_ring
+  have e2 : -(Real.log d) + Real.log d = 0 := by mach_ring
+  rwa [e1, e2] at t
+
 end MachLib
