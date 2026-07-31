@@ -666,4 +666,188 @@ theorem subTree_eval_needs_positivity :
   rw [h1, h2] at h
   exact absurd h.symm (ne_of_lt one_pos)
 
+/-! Small rearrangement lemmas, factored out because `mach_mpoly` resolves its atom list against the
+enclosing *statement's* binders and cannot see variables introduced by `intro`/`obtain` inside a proof.
+Stating them at top level is the cheapest way to keep the atoms in scope. -/
+
+private theorem neg_add_eq_sub (a b : Real) : -b + a = a - b := by mach_mpoly [a, b]
+private theorem negSubOne_add_self (y : Real) : -y - 1 + y = -1 := by mach_mpoly [y]
+private theorem neg_one_add_one : (-1 : Real) + 1 = 0 := by mach_mpoly []
+private theorem neg_negSubOne_sub_one (y : Real) : -(-y - 1) - 1 = y := by mach_mpoly [y]
+
+/-! ### Is depth 4 minimal? The necessary condition, and depth 2 closed
+
+`x_plus_one_not_in_eml_1` closes depth ≤ 1 by enumeration; the witness sits at depth 4; **depths 2 and
+3 were left unexamined**, which means the file shipped a witness and no bound. This section closes
+depth 2 and states exactly what depth 3 needs.
+
+The move that avoids the 36-case explosion the original scoping note budgeted for: **do not enumerate
+the shapes — constrain the divisor.** Any witness at all, of any shape, must have a divisor subtree
+that grows at least like `exp (−x − 1)` as `x → −∞`, and that single inequality does the work that
+case analysis was being asked to do. -/
+
+/-- **The necessary condition on every witness, enumeration-free.** If `eml t1 t2` evaluates to `x + 1`
+at some `x < −1`, then `t2.eval x ≥ exp (−x − 1)`.
+
+The proof is three lines of content: `exp` of the dividend is positive, so `log (t2.eval x)` exceeds
+`−x − 1`, which is itself positive when `x < −1`; a non-positive `t2.eval x` would make that `log` equal
+`0` by MachLib's convention and contradict it; so `t2.eval x` is positive and `exp ∘ log` inverts.
+
+**The totalization convention is load-bearing here in the helpful direction** — `log ≤ 0 ↦ 0` is what
+lets a positivity fact be *derived* rather than assumed. -/
+theorem witness_divisor_ge {t1 t2 : EMLTree} {x : Real}
+    (hx : x < -1) (h : (EMLTree.eml t1 t2).eval x = x + 1) :
+    Real.exp (-x - 1) ≤ t2.eval x := by
+  simp only [EMLTree.eval] at h
+  have hkey : Real.log (t2.eval x) = Real.exp (t1.eval x) - (x + 1) := by
+    rw [← h]; mach_mpoly [Real.exp (t1.eval x), Real.log (t2.eval x), x]
+  have hxpos : (0 : Real) < -x - 1 := by
+    have h1 : x + 1 < 0 := by
+      have := add_lt_add_left hx 1
+      have e1 : (1 : Real) + x = x + 1 := by mach_mpoly [x]
+      have e2 : (1 : Real) + -1 = 0 := by mach_mpoly []
+      rw [e1, e2] at this; exact this
+    have := add_lt_add_left h1 (-x - 1)
+    have e3 : -x - 1 + (x + 1) = 0 := by mach_mpoly [x]
+    have e4 : -x - 1 + 0 = -x - 1 := by mach_mpoly [x]
+    rw [e3, e4] at this; exact this
+  have hlog : -x - 1 < Real.log (t2.eval x) := by
+    rw [hkey]
+    have hp : (0 : Real) < Real.exp (t1.eval x) := exp_pos _
+    have := add_lt_add_left hp (-(x + 1))
+    have e5 : -(x + 1) + 0 = -x - 1 := by mach_mpoly [x]
+    have e6 : -(x + 1) + Real.exp (t1.eval x) = Real.exp (t1.eval x) - (x + 1) := by
+      mach_mpoly [x, Real.exp (t1.eval x)]
+    rw [e5, e6] at this; exact this
+  have ht2pos : 0 < t2.eval x := by
+    rcases lt_total 0 (t2.eval x) with hp | he | hn
+    · exact hp
+    · exfalso
+      rw [log_nonpos (le_of_eq he.symm)] at hlog
+      exact lt_irrefl_ax 0 (lt_trans_ax hxpos hlog)
+    · exfalso
+      rw [log_nonpos (le_of_lt hn)] at hlog
+      exact lt_irrefl_ax 0 (lt_trans_ax hxpos hlog)
+  calc Real.exp (-x - 1) ≤ Real.exp (Real.log (t2.eval x)) := exp_monotone (le_of_lt hlog)
+    _ = t2.eval x := exp_log ht2pos
+
+/-- Every tree of depth ≤ 1 is **bounded above by a constant on the negative axis**. Four real shapes
+survive the depth bound, and on `x < 0` each collapses: `log x` is `0` by convention, and `exp x ≤ 1`. -/
+theorem depth_le_one_bounded_above (t : EMLTree) (ht : t.depth ≤ 1) :
+    ∃ M : Real, ∀ x : Real, x < 0 → t.eval x ≤ M := by
+  cases t with
+  | const c => exact ⟨c, fun _ _ => le_refl c⟩
+  | var => exact ⟨0, fun _ hx => le_of_lt hx⟩
+  | eml a b =>
+    simp only [EMLTree.depth] at ht
+    have hab : max a.depth b.depth = 0 := by omega
+    have ha : a.depth = 0 := by
+      have := Nat.le_max_left a.depth b.depth; omega
+    have hb : b.depth = 0 := by
+      have := Nat.le_max_right a.depth b.depth; omega
+    cases a with
+    | eml _ _ => simp only [EMLTree.depth] at ha; omega
+    | const c =>
+      cases b with
+      | eml _ _ => simp only [EMLTree.depth] at hb; omega
+      | const d => exact ⟨Real.exp c - Real.log d, fun _ _ => le_refl _⟩
+      | var =>
+        refine ⟨Real.exp c, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval, log_nonpos (le_of_lt hx), sub_zero]
+        exact le_refl _
+    | var =>
+      cases b with
+      | eml _ _ => simp only [EMLTree.depth] at hb; omega
+      | const d =>
+        refine ⟨1 - Real.log d, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval]
+        have h1 : Real.exp x ≤ 1 := exp_le_one_of_nonpos (le_of_lt hx)
+        have := add_le_add_left h1 (-Real.log d)
+        rw [neg_add_eq_sub, neg_add_eq_sub] at this; exact this
+      | var =>
+        refine ⟨1, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval, log_nonpos (le_of_lt hx), sub_zero]
+        exact exp_le_one_of_nonpos (le_of_lt hx)
+
+/-- **`x + 1 ∉ EML` at depth ≤ 2.** Not by enumerating 36 shapes: the divisor of any witness must
+outgrow `exp (−x − 1)`, a depth-≤1 divisor is bounded by a constant, and `exp` beats every constant. -/
+theorem x_plus_one_not_in_eml_2 (t : EMLTree) (ht : t.depth ≤ 2) :
+    ¬ (∀ x : Real, t.eval x = x + 1) := by
+  intro hsum
+  cases t with
+  | const c => exact x_plus_one_not_in_eml_0 (.const c) (by simp [EMLTree.depth]) hsum
+  | var => exact x_plus_one_not_in_eml_0 .var (by simp [EMLTree.depth]) hsum
+  | eml t1 t2 =>
+    simp only [EMLTree.depth] at ht
+    have hd2 : t2.depth ≤ 1 := by
+      have := Nat.le_max_right t1.depth t2.depth; omega
+    obtain ⟨M, hM⟩ := depth_le_one_bounded_above t2 hd2
+    -- pick `y > 0` with `M < exp y`, then evaluate at `x = -y - 1 < -1`.
+    obtain ⟨y, hy0, hyM⟩ : ∃ y : Real, 0 < y ∧ M < Real.exp y := by
+      rcases lt_total M 0 with hm | hm | hm
+      · exact ⟨1, one_pos, lt_trans_ax hm (lt_trans_ax one_pos (exp_grows_strictly_thm 1))⟩
+      · exact ⟨1, one_pos, hm ▸ lt_trans_ax one_pos (exp_grows_strictly_thm 1)⟩
+      · refine ⟨M + 1, ?_, ?_⟩
+        · exact add_pos hm one_pos
+        · have h1 : M < M + 1 := by
+            have := add_lt_add_left one_pos M
+            have e : M + 0 = M := by mach_mpoly [M]
+            rw [e] at this; exact this
+          exact lt_trans_ax h1 (exp_grows_strictly_thm (M + 1))
+    have hxlt : -y - 1 < -1 := by
+      have := add_lt_add_left hy0 (-y - 1)
+      rw [add_zero, negSubOne_add_self] at this; exact this
+    have hxneg : -y - 1 < 0 :=
+      lt_trans_ax hxlt (by
+        have := add_lt_add_left one_pos (-1 : Real)
+        rw [add_zero, neg_one_add_one] at this; exact this)
+    have hge := witness_divisor_ge hxlt (hsum (-y - 1))
+    have hey : Real.exp (-(-y - 1) - 1) = Real.exp y := by
+      rw [neg_negSubOne_sub_one]
+    rw [hey] at hge
+    exact absurd (lt_of_lt_of_le hyM (le_trans hge (hM _ hxneg))) (lt_irrefl_ax M)
+
+/-! ### Depth 3: what is left, and why it is a separate session rather than a longer one
+
+**Minimality is NOT established.** `x_plus_one_not_in_eml_2` plus the depth-4 witness leaves depth 3
+open, so the honest statement is *"a witness exists at depth 4 and none exists below depth 3"* — not
+*"4 is minimal"*.
+
+`witness_divisor_ge` still applies at depth 3 and still does the enumeration-free half: the divisor is a
+tree of depth ≤ 2 and must satisfy `t2.eval x ≥ exp (−x − 1)`. What breaks is the *other* half.
+`depth_le_one_bounded_above` does not lift, and the reason is precisely the negation gadget this file
+just shipped:
+
+```
+(eml t1 (eml var (const 1))).eval x = exp (t1.eval x) − x
+```
+
+which is **unbounded above on the negative axis**. So depth-≤2 trees are not constant-bounded, and the
+one-line "exp beats every constant" finish is unavailable.
+
+**The bound that should replace it**, with the shape it has to have:
+
+> `∀ t, t.depth ≤ 2 → ∃ A N, ∀ x ≤ N, t.eval x ≤ A − x`
+
+— at most *linear* growth as `x → −∞`, against the divisor's required *exponential* growth. The
+dividend half factors cleanly (`exp` is monotone, so `depth_le_one_bounded_above` bounds
+`exp (t1.eval x)` by a constant). The divisor half needs `log (t2.eval x) ≥ x + C` for depth-≤1 `t2`,
+and **that is where the `N` becomes necessary rather than cosmetic**: for `t2 = eml var (const b)` with
+`log b > 0`, `t2.eval x = exp x − log b` passes through `0` at a finite `x`, sending `log` to `−∞` there.
+The bound only holds once `x` is negative enough that `exp x − log b` has gone negative and MachLib's
+convention clamps the `log` to `0`.
+
+So the missing lemma is an *eventually*-shaped statement about the `x → −∞` end, and MachLib's
+asymptotic vocabulary (`EventuallyAtMost` and friends in `EMLAsymptoticClass`) is built for `x → +∞`.
+Closing depth 3 means either mirroring that vocabulary or inlining the threshold, plus a super-linear
+growth fact for `exp` — `exp y > 2y − 2` for `y > 1`, available from the `two_lt_exp_one` this file
+already imports.
+
+**Recorded as scoped, not attempted.** The estimate is one focused session; the reason it is not this
+one is that it is a different piece of work with a different failure mode, and bolting it on would make
+a clean depth-2 result and a half-finished depth-3 result share a commit. -/
+
 end MachLib
