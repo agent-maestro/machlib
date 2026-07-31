@@ -1,4 +1,5 @@
 import MachLib.EMLWeierstrassGrowthComparison
+import MachLib.GeometricDecay
 import MachLib.Trig
 import MachLib.Log
 import MachLib.FieldLemmas
@@ -284,6 +285,74 @@ theorem weierstrass_term_eventually_lt_one (t : Real) (ht : 0 < t) (k : Nat) :
         * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) := by
     mach_ring
   rwa [erw] at key
+
+
+/-! ## Beyond the heat kernel — an ARBITRARY smooth kernel
+
+The results above all lean on the Gaussian: the heat multiplier `e^{−tξ²}` damps the `n`-th frequency
+by `e^{−t·b^{2n}}`, which is *double*-exponential in `n`, and that is why the smoothed series comes out
+real-analytic rather than merely `C^∞`.
+
+An arbitrary smooth kernel has no such gift, so the mechanism must change. What smoothness buys is
+**rapid decay of the transform**: for every `m` there is `C_m` with `|K̂(ξ)| ≤ C_m·(1+|ξ|)^{−m}`. At
+frequency `bⁿ` that is `b^{−nm}` — only *single*-exponential in `n`. The `k`-th derivative term is then
+
+  `π^k · aⁿ · b^{nk} · C_m·b^{−nm}  =  C_m·π^k · (a·b^{k−m})ⁿ`,
+
+and because `b > 1` one may choose `m` with `b^{m−k} > a`, making the ratio `< 1`. So the argument
+becomes **geometric decay beating a constant**, where the heat case was double-exponential beating
+single-exponential — a genuinely different mechanism reaching a genuinely weaker conclusion.
+
+The multiplier enters as an abstract sequence with a geometric bound, which is exactly what the
+rapid-decay hypothesis supplies after `m` is chosen. Nothing here knows the kernel is Gaussian, and
+that is the point. -/
+
+/-- `a/b < 1` from `a < b`, `b > 0`. Re-derived locally rather than importing
+`WitnessResidualDeepNumeric` for one inequality — the codebase's standing convention for pulling a
+single fact out of a distant module (cf. the `wgc_` lemmas above). -/
+theorem ebc_div_lt_one {a b : Real} (hb : 0 < b) (h : a < b) : a / b < 1 := by
+  rcases lt_total (a / b) 1 with hlt | heq | hgt
+  · exact hlt
+  · -- a/b = 1 forces a = b, contradicting a < b
+    have hmul : a / b * b = 1 * b := by rw [heq]
+    rw [div_mul_cancel (ne_of_gt hb), one_mul_thm] at hmul
+    exact absurd h (wgc_not_lt_of_le (le_of_eq hmul.symm))
+  · -- 1 < a/b forces b ≤ a, contradicting a < b
+    have h2 : 1 * b ≤ a / b * b := mul_le_mul_of_nonneg_right (le_of_lt hgt) (le_of_lt hb)
+    rw [div_mul_cancel (ne_of_gt hb), one_mul_thm] at h2
+    exact absurd h (wgc_not_lt_of_le h2)
+
+/-- **A constant times a sub-unit geometric is eventually `< 1`.** The engine for the general-kernel
+case, in the same shape as `exp_beats_geometric` is the engine for the heat case. -/
+theorem geometric_beats_const {R C : Real} (hR : 0 < R) (hR1 : R < 1) (hC : 0 < C) :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n → C * npow n R < 1 := by
+  have hCC : 0 < C + C := add_pos hC hC
+  have hCCne : C + C ≠ 0 := ne_of_gt hCC
+  have hh : 0 < (1 - R) / R := div_pos_of_pos_pos (sub_pos_of_lt hR1) hR
+  -- R·(1 + (1−R)/R) = 1, by clearing the single division with `div_mul_cancel`.
+  have hrh : R * (1 + (1 - R) / R) = 1 := by
+    have hRne : R ≠ 0 := ne_of_gt hR
+    have hcan : (1 - R) / R * R = 1 - R := div_mul_cancel hRne
+    have : R * (1 + (1 - R) / R) = R + (1 - R) / R * R := by mach_ring
+    rw [this, hcan]; mach_ring
+  have hε : 0 < 1 / (C + C) := div_pos_of_pos_pos one_pos hCC
+  obtain ⟨N, hN⟩ := npow_tendsto_zero hR (le_of_lt hR1) hh hrh (1 / (C + C)) hε
+  refine ⟨N, fun n hn => ?_⟩
+  have hb := hN n hn
+  have hpow_nonneg : 0 ≤ npow n R := npow_nonneg (le_of_lt hR) n
+  rw [show npow n R - 0 = npow n R from by mach_ring, abs_of_nonneg hpow_nonneg] at hb
+  have h1 : C * npow n R ≤ C * (1 / (C + C)) :=
+    mul_le_mul_of_nonneg_left hb (le_of_lt hC)
+  have h2 : C * (1 / (C + C)) < 1 := by
+    have hEq : C * (1 / (C + C)) = C / (C + C) := by
+      rw [div_def C (C + C) hCCne]; mach_ring
+    rw [hEq]
+    -- C < 1·(C+C) since C > 0
+    have hCsum : C < C + C := by
+      have h := add_lt_add_left hC C
+      rwa [add_zero] at h
+    exact ebc_div_lt_one hCC hCsum
+  exact lt_of_le_of_lt h1 h2
 
 end Real
 end MachLib
