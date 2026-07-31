@@ -4312,4 +4312,41 @@ theorem var_good_class_via_dominates :
   right; left
   exact var_eventually_dominates_any.eventually_above_one
 
+/-! ## Phase 18 — the `AboveOne` COLUMN: bounding the divisor's log above
+
+Phase 17 resolved the `Dominates` column and named the obstruction for the three remaining `?` cells,
+`{Const, AboveOne, Dominates} × AboveOne`. The obstruction is real and worth stating precisely:
+`EventuallyAboveOne t2` gives `1 < t2`, hence `0 < log t2`, but says **nothing about how large
+`log t2` gets**. Since `eml x y = exp x - log y`, an unbounded `log t2` drags the result down without
+limit while a tiny one leaves it essentially untouched. One hypothesis, two opposite answers — which
+is exactly what "indeterminate" means, and why no rule can exist for the bare cell.
+
+Phase 17 proposed the repair as a predicate PAIR. `EventuallyDominatesAny` already exists and drives
+the divisor's log up (forcing `Negative`, the resolved column). This is its dual: bound the divisor
+**above**, so its log is bounded above, and the dividend's class survives. -/
+
+/-- `f` is eventually at most `K`: `f x ≤ K` for all `x ≥ N`. The dual of `EventuallyDominatesAny`,
+and the missing half of the pair Phase 17 identified. -/
+def EventuallyAtMost (K : Real) (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → f x ≤ K
+
+/-- **`EventuallyAtMost` bounds the log above.** The one fact the closure rule needs: on the tail,
+`log (f x) ≤ log K`. Requires `0 < f x` there, which `EventuallyAboveOne` supplies. -/
+theorem EventuallyAtMost.log_le
+    {K : Real} {f : Real → Real}
+    (hK : EventuallyAtMost K f) (hpos : EventuallyAboveOne f) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → Real.log (f x) ≤ Real.log K := by
+  obtain ⟨N1, h1⟩ := hK
+  obtain ⟨N2, h2⟩ := hpos
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hfpos : 0 < f x := lt_trans_ax one_pos (h2 x hxN2)
+  -- `≤` from the reachable strict `log_lt_log`. SignTactic has `log_le_log` but is not on this
+  -- file's import chain; re-deriving one step beats importing a distant module, per the convention
+  -- the `wgc_`/`ebc_` lemmas elsewhere already follow.
+  rcases (le_iff_lt_or_eq (f x) K).mp (h1 x hxN1) with hlt | heq
+  · exact le_of_lt (log_lt_log hfpos hlt)
+  · rw [heq]; exact le_of_eq rfl
+
 end MachLib
