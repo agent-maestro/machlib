@@ -4954,4 +4954,59 @@ tree could fail to be `1/x` while still decaying to `0`. Whether that reformulat
 same problem wearing new clothes is **open, and is the first thing a successor route should settle**,
 because it decides whether the class programme is repairable at all. -/
 
+/-! ## E5-quater session 1 — the adversarial pass succeeds. `e/x` IS an EML tree.
+
+The pre-registration's exit 3 was "a valid EML tree decaying to `0` exists". It does, and the witness
+is smaller than the E5-ter one:
+
+    T := eml (eml (const 0) var) (const 1)
+
+    inner  = exp 0 − log x        = 1 − log x
+    T      = exp (1 − log x) − log 1
+           = e · exp (−log x) − 0 = **e / x**, exactly.
+
+So `T.eval ∈ EventuallyKOverX e`. It decays to `0`, is never `0`, and satisfies neither disjunct of the
+lower-bound invariant. **The E5-quater target is false, in session 1, by construction rather than by
+argument.**
+
+### And this reframes the whole programme
+
+`EventuallyKOverX K` is REACHABLE by EML trees — for a family of `K`. The general shape
+
+    eml (eml (const a) var) (const b)   evaluates to   exp (exp a) / x − log b
+
+gives `K = exp (exp a)`, and since `exp a > 0` always, **`K = exp (exp a) > 1` always** for this shape.
+It can never produce `K = 1`.
+
+That is why the framework's disjointness lemma is `not_eventually_K_over_x_one` and not
+`not_eventually_K_over_x`: **`K = 1` is special, and the specialness is real, not an artefact of how
+someone stated it.** To hit `K = 1` by this shape one needs `exp (exp a) = 1`, i.e. `exp a = 0`, which
+is impossible; alternatively `eml t (const 1) = 1/x` requires `t.eval = −log x` exactly — the
+`EventuallyMinusLog` class, which no `eml` node can produce, since `exp t1 − log t2 = −log x` would
+need `exp t1 = 0`.
+
+**So `1/x ∉ EML` survives session 1 and is now better understood, not weaker:** the obstruction is
+that `1` sits below the reachable constant floor, and every near-miss the programme kept hitting was a
+`K > 1` neighbour. -/
+
+/-- The adversarial witness: a valid EML tree whose eval decays to `0`. -/
+noncomputable def eOverX : EMLTree := .eml (.eml (.const 0) .var) (.const 1)
+
+/-- **`eOverX.eval x = e / x`, exactly, for `x > 0`.** Falsifies the E5-quater lower-bound target. -/
+theorem eOverX_eval {x : Real} (hx : 0 < x) : eOverX.eval x = Real.exp 1 / x := by
+  show Real.exp (Real.exp 0 - Real.log x) - Real.log 1 = Real.exp 1 / x
+  rw [log_one, exp_zero]
+  have hsplit : Real.exp (1 - Real.log x) = Real.exp 1 * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have hd : Real.exp 1 * (1 / x) = Real.exp 1 / x := by
+    rw [div_def (Real.exp 1) x (ne_of_gt hx)]; mach_ring
+  rw [hd]; mach_ring
+
+/-- **`e/x` is an EML tree eval — so `EventuallyKOverX e` is REACHABLE.** The disjointness lemma is
+stated for `K = 1` for a reason: `1` is below the floor this construction can reach. -/
+theorem eOverX_is_K_over_x : EventuallyKOverX (Real.exp 1) eOverX.eval := by
+  refine ⟨1, fun x hx => ?_⟩
+  exact eOverX_eval (lt_of_lt_of_le one_pos hx)
+
 end MachLib
