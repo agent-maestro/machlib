@@ -5009,4 +5009,44 @@ theorem eOverX_is_K_over_x : EventuallyKOverX (Real.exp 1) eOverX.eval := by
   refine ⟨1, fun x hx => ?_⟩
   exact eOverX_eval (lt_of_lt_of_le one_pos hx)
 
+/-! ### The reachable constant floor, for the shape session 1 exposed -/
+
+/-- The general `K/x` shape: `eml (eml (const a) var) (const 1)`. -/
+noncomputable def kOverXTree (a : Real) : EMLTree := .eml (.eml (.const a) .var) (.const 1)
+
+/-- **Its eval is `exp (exp a) / x`.** So the reachable constant is `K = exp (exp a)`. -/
+theorem kOverXTree_eval {a x : Real} (hx : 0 < x) :
+    (kOverXTree a).eval x = Real.exp (Real.exp a) / x := by
+  show Real.exp (Real.exp a - Real.log x) - Real.log 1 = Real.exp (Real.exp a) / x
+  rw [log_one]
+  have hsplit : Real.exp (Real.exp a - Real.log x)
+      = Real.exp (Real.exp a) * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have hd : Real.exp (Real.exp a) * (1 / x) = Real.exp (Real.exp a) / x := by
+    rw [div_def (Real.exp (Real.exp a)) x (ne_of_gt hx)]; mach_ring
+  rw [hd]; mach_ring
+
+/-- **THE FLOOR — and it was already proved, 4,400 lines up.**
+
+`1 < exp (exp a)` for every real `a` is `one_lt_exp_exp_local` (line ~612), itself a local copy of
+`one_lt_exp_exp` from `InvXNotInEML.lean`, with `exp_exp_ne_one_local` right beneath it. **This target
+did not need a new theorem; it needed someone to notice the one that existed and say what it means.**
+
+What is new is the READING. Those two lemmas have sat here since Phase 3 as arithmetic helpers for
+pattern-matching depth-2 cases. Session 1 showed `exp (exp a)` is exactly the constant the `K/x` shape
+produces — so `one_lt_exp_exp_local` is not a helper, it is **the floor theorem**: the constants this
+shape can build are bounded strictly below by `1`, and `1` is unreachable by it for every `a`, with no
+limiting case to appeal to (the shape approaches `1` from above as `a → −∞` and never arrives).
+
+So the localisation the target wanted is: **the difficulty in `1/x ∉ EML` is that `1` sits below the
+floor of the constants `eml` can build** — not that `1/x` is hard to approximate. -/
+theorem kOverXTree_constant_gt_one (a : Real) : 1 < Real.exp (Real.exp a) :=
+  one_lt_exp_exp_local a
+
+/-- `K = 1` is not reachable by this shape, for any `a`. Also already present, as
+`exp_exp_ne_one_local`; restated here under the name the floor result deserves. -/
+theorem kOverXTree_never_one (a : Real) : Real.exp (Real.exp a) ≠ 1 :=
+  exp_exp_ne_one_local a
+
 end MachLib
