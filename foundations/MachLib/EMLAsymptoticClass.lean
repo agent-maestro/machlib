@@ -5049,4 +5049,38 @@ theorem kOverXTree_constant_gt_one (a : Real) : 1 < Real.exp (Real.exp a) :=
 theorem kOverXTree_never_one (a : Real) : Real.exp (Real.exp a) ≠ 1 :=
   exp_exp_ne_one_local a
 
+/-! ### Does the floor generalise? The halt point, tested — and the sub-result that survives it
+
+The depth-2 shape's floor is settled. The general question is: does **every** tree with eval `K/x`
+have `K > 1`? Chasing it one step shows why the pre-registered halt point fires.
+
+A tree with eval `K/x` must be `eml t1 t2`, so `exp (t1.eval x) − log (t2.eval x) = K/x`.
+Take the natural branch `t2 = const 1`: then `t1.eval x = log K − log x`, and `t1` must itself be an
+`eml` node, so `exp (s1.eval x) − log (s2.eval x) = log K − log x`. Taking `s2 = var` closes it:
+`exp (s1.eval x) = log K`, a constant — **which is where the floor lives**, and the theorem below kills
+`K ≤ 1` outright on that branch.
+
+**But `s2` need not be `var`.** In general `log (s2.eval x) = exp (s1.eval x) − log K + log x`, i.e.
+`s2.eval x = x · exp (exp (s1.eval x)) / K` — so the branch survives only if some EML tree evaluates to
+a constant multiple of `x`. Deciding *that* is deciding which functions EML reaches, which is the
+original hard problem. **HALT, per the pre-registered halt point: the general floor does not get to
+smuggle in the claim it was supposed to localise.**
+
+What survives the halt is the branch result, and it is worth having on its own. -/
+
+/-- **`K ≤ 1` is unreachable on the `s2 = var` branch**, because it would require `exp a = log K` with
+`log K ≤ 0`, and `exp` is strictly positive. This is the floor stated as an impossibility rather than a
+bound, and it is the exact point at which `K = 1` fails: not by a hair, but because the equation asks
+`exp` to take a non-positive value. -/
+theorem no_exp_eq_log_of_le_one {K : Real} (hK0 : 0 < K) (hK1 : K ≤ 1) (a : Real) :
+    Real.exp a ≠ Real.log K := by
+  have hlog_nonpos : Real.log K ≤ 0 := by
+    rcases (le_iff_lt_or_eq K 1).mp hK1 with hlt | heq
+    · exact le_of_lt (log_neg_of_lt_one hK0 hlt)
+    · rw [heq, log_one]; exact le_of_eq rfl
+  intro hEq
+  have hpos : 0 < Real.exp a := exp_pos a
+  rw [hEq] at hpos
+  exact absurd rfl (ne_of_gt (lt_of_lt_of_le hpos hlog_nonpos))
+
 end MachLib
