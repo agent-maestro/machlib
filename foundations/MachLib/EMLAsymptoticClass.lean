@@ -4426,4 +4426,64 @@ theorem eml_const_atMost_witness
       rwa [e3, e4] at t2
     exact lt_trans_ax hB hA
 
+/-- **Phase 20 — `Dominates × AboveOne` closes, and UNCONDITIONALLY.**
+
+Where Phase 19's `Const × AboveOne` needed a side condition, this one does not, and the asymmetry is
+the point: a constant dividend can be swamped by the divisor's log, so the two must be compared
+(`1 < exp c - log K`). A *dominating* dividend cannot be swamped by anything bounded — `exp (f x)`
+outruns every fixed `log K` — so bounding the divisor above is the whole hypothesis and no numeric
+side condition survives.
+
+`EventuallyAtMost` is doing real work here: without it the divisor's log is unbounded and the cell is
+genuinely indeterminate (Phase 17). With it, the result dominates any constant. -/
+theorem eml_dominates_atMost_eventually_dominates
+    {f g : Real → Real} {K : Real}
+    (hf : EventuallyDominatesAny f)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g) :
+    EventuallyDominatesAny (fun x => eml (f x) (g x)) := by
+  intro M
+  -- Ask `f` to beat `max (M + log K) 0`: the `0` is not decoration — `x < exp x` is available
+  -- only for `x ≥ 0`, so the dividend must be pushed positive before `exp` can be used on it.
+  obtain ⟨N4, h4⟩ := id_eventually_lt_exp
+  -- `f` must be pushed past N4, not past 0: `id_eventually_lt_exp` guarantees `x < exp x` only
+  -- from SOME threshold, and its proof happening to use 0 is not part of its statement. Reading
+  -- a threshold off a proof rather than off the theorem is how a bound gets assumed into existence.
+  obtain ⟨N1, h1⟩ := hf (max (M + Real.log K) N4)
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) (max N3 N4), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) (max N3 N4)) hx
+  have hxB : max N3 N4 ≤ x := Real.le_trans (le_max_right (max N1 N2) (max N3 N4)) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_left N3 N4) hxB
+  have hfx : max (M + Real.log K) N4 < f x := h1 x hxN1
+  have hfx_N4 : N4 ≤ f x := le_of_lt (lt_of_le_of_lt (le_max_right (M + Real.log K) N4) hfx)
+  have hfx_big : M + Real.log K < f x := lt_of_le_of_lt (le_max_left (M + Real.log K) N4) hfx
+  have hexp : f x < Real.exp (f x) := h4 (f x) hfx_N4
+  -- log (g x) ≤ log K
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- assemble: exp (f x) - log (g x) ≥ exp (f x) - log K > (M + log K) - log K = M
+  show M < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl]
+  have step1 : M + Real.log K < Real.exp (f x) := lt_trans_ax hfx_big hexp
+  have step2 : M < Real.exp (f x) - Real.log K := by
+    have t := add_lt_add_left step1 (-(Real.log K))
+    have e1 : -(Real.log K) + (M + Real.log K) = M := by mach_ring
+    have e2 : -(Real.log K) + Real.exp (f x) = Real.exp (f x) - Real.log K := by mach_ring
+    rwa [e1, e2] at t
+  have step3 : Real.exp (f x) - Real.log K ≤ Real.exp (f x) - Real.log (g x) := by
+    have base : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp (f x) - Real.log K := by mach_ring
+    have base2 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp (f x) - Real.log (g x) := by mach_ring
+    have m := add_le_add_left hlog (Real.exp (f x) - Real.log K - Real.log (g x))
+    rwa [base, base2] at m
+  exact lt_of_lt_of_le step2 step3
+
 end MachLib
