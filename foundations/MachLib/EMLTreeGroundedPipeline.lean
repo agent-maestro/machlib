@@ -674,5 +674,32 @@ theorem EMLTreeValid.not_divisor_nonpos {x : Real} {t1 t2 : EMLTree}
   exact absurd (EMLTreeValid.divisor_pos h) (fun hp => absurd rfl
     (ne_of_gt (lt_of_lt_of_le hp hle)))
 
+/-! ## E5-ter session 1 — validity COUPLES the two arms, and that breaks the induction's shape
+
+`EMLTreeValid.divisor_pos` says a valid tree's divisor is positive. Applied to a divisor that is
+itself an `eml` node, it says something sharper, because `eml`'s value unfolds:
+
+  `0 < (.eml t1 t2).eval x`  ⟺  `log (t2.eval x) < exp (t1.eval x)`
+
+**The two arms are coupled by position.** Nothing in the class of `t1` or the class of `t2` implies
+this; it is imposed by where the node SITS. That is exactly the relation the two indeterminate cells
+(`AboveOne × Dominates`, `Dominates × Dominates`) need and cannot get from classes alone — both are
+`∞ − ∞` and resolve either way depending on relative rates. -/
+
+/-- **Validity at the parent constrains the child's two arms against each other.** -/
+theorem EMLTreeValid.inner_arms_coupled {x : Real} {s t1 t2 : EMLTree}
+    (h : EMLTreeValid x (.eml s (.eml t1 t2))) :
+    Real.log (t2.eval x) < Real.exp (t1.eval x) := by
+  have hpos : 0 < (EMLTree.eml t1 t2).eval x := EMLTreeValid.divisor_pos h
+  have hunfold : (EMLTree.eml t1 t2).eval x = Real.exp (t1.eval x) - Real.log (t2.eval x) := rfl
+  rw [hunfold] at hpos
+  -- 0 < exp - log  ⟹  log < exp
+  have t := add_lt_add_left hpos (Real.log (t2.eval x))
+  have e1 : Real.log (t2.eval x) + 0 = Real.log (t2.eval x) := by mach_ring
+  have e2 : Real.log (t2.eval x) + (Real.exp (t1.eval x) - Real.log (t2.eval x))
+      = Real.exp (t1.eval x) := by mach_ring
+  rwa [e1, e2] at t
+
+
 
 end Certcom
