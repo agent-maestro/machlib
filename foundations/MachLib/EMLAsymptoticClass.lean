@@ -4349,4 +4349,81 @@ theorem EventuallyAtMost.log_le
   · exact le_of_lt (log_lt_log hfpos hlt)
   · rw [heq]; exact le_of_eq rfl
 
+/-- **Phase 19 — the first closure rule on `EventuallyAtMost`: `Const × AboveOne`.**
+
+`eml x y = exp x - log y`. With `f` eventually the constant `c` and `1 < g ≤ K` on the tail, the
+result sits in `[exp c - log K, exp c)`: bounded, and bounded by quantities that do not depend on `x`.
+So the cell closes **conditionally** — on `1 < exp c - log K`, the worst case being `g` pinned at its
+ceiling `K`.
+
+**The side condition is the cell's content, not a blemish.** Phase 17 showed the bare cell is
+indeterminate; a rule without a side condition would therefore have to be false. What `EventuallyAtMost`
+buys is that the indeterminacy becomes a single checkable inequality between `c` and `K` rather than an
+open question about `g`'s behaviour. Phase 12 shipped a conditional closure in the same spirit
+(`log b ≥ 0`), and this follows that precedent.
+
+Stated on arbitrary functions rather than on `EMLTree`, because the matrix is a statement about
+CLASSES; any tree whose arms land in these classes inherits it. -/
+theorem eml_const_atMost_eventually_above_one
+    {f g : Real → Real} {c K : Real}
+    (hf : ∃ N : Real, ∀ x : Real, N ≤ x → f x = c)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g)
+    (hside : 1 < Real.exp c - Real.log K) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) N3, fun x hx => ?_⟩
+  have hx12 : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) N3) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx12
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx12
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_right (max N1 N2) N3) hx
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  -- log (g x) ≤ log K, one step from the reachable strict form
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- so exp c - log K ≤ exp c - log (g x), and the side condition carries
+  have hmono : Real.exp c - Real.log K ≤ Real.exp c - Real.log (g x) := by
+    have := add_le_add_left hlog (Real.exp c - Real.log K - Real.log (g x))
+    have hrw : Real.exp c - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp c - Real.log K := by mach_ring
+    have hrw2 : Real.exp c - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp c - Real.log (g x) := by mach_ring
+    rwa [hrw, hrw2] at this
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h1 x hxN1]
+  exact lt_of_lt_of_le hside hmono
+
+/-- **Non-vacuity witness for the Phase 19 rule.** `hside : 1 < exp c - log K` constrains `c` and `K`
+against each other, so joint satisfiability with `1 < g ≤ K` is a real question — and the registry
+lists "a vacuous proof of a true statement" as a standing blindness. Instance: `f ≡ 1`, `g ≡ 1+1`,
+`K = 1+1`. Then `exp 1 - log 2 > 1` because `exp 1 > 1 + 1` and `log 2 < 1`. -/
+theorem eml_const_atMost_witness
+    (hexp : 1 + 1 < Real.exp 1) (hlog : Real.log (1 + 1) < 1) :
+    EventuallyAboveOne (fun x => eml ((fun _ => (1:Real)) x) ((fun _ => (1:Real) + 1) x)) := by
+  refine eml_const_atMost_eventually_above_one (c := 1) (K := 1 + 1)
+    ⟨0, fun x _ => rfl⟩ ⟨0, fun x _ => ?_⟩ ⟨0, fun x _ => le_of_eq rfl⟩ ?_
+  · show (1:Real) < 1 + 1
+    have h := add_lt_add_left one_pos 1
+    rwa [add_zero] at h
+  · -- 1 < exp 1 - log 2, from exp 1 > 2 and log 2 < 1
+    -- Only `add_lt_add_left` exists here (no `_right`), so both steps go through it.
+    -- hA : (1+1) - log 2 < exp 1 - log 2, by adding -(log 2) on the left of hexp
+    have hA : (1:Real) + 1 - Real.log (1 + 1) < Real.exp 1 - Real.log (1 + 1) := by
+      have t := add_lt_add_left hexp (-(Real.log (1 + 1)))
+      have e1 : -(Real.log (1 + 1)) + ((1:Real) + 1) = 1 + 1 - Real.log (1 + 1) := by mach_ring
+      have e2 : -(Real.log (1 + 1)) + Real.exp 1 = Real.exp 1 - Real.log (1 + 1) := by mach_ring
+      rwa [e1, e2] at t
+    -- hB : 1 < (1+1) - log 2, from log 2 < 1 by the same move
+    have hB : (1:Real) < 1 + 1 - Real.log (1 + 1) := by
+      have t1 : (1:Real) + Real.log (1 + 1) < 1 + 1 := add_lt_add_left hlog 1
+      have t2 := add_lt_add_left t1 (-(Real.log (1 + 1)))
+      have e3 : -(Real.log (1 + 1)) + ((1:Real) + Real.log (1 + 1)) = 1 := by mach_ring
+      have e4 : -(Real.log (1 + 1)) + ((1:Real) + 1) = 1 + 1 - Real.log (1 + 1) := by mach_ring
+      rwa [e3, e4] at t2
+    exact lt_trans_ax hB hA
+
 end MachLib
