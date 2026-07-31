@@ -874,4 +874,64 @@ up front*; the reason it is not this one is that it is a different piece of work
 failure mode, and bolting it on would make a clean depth-2 result and a half-finished depth-3 result
 share a commit. -/
 
+/-! ### Audit consequence: two documented routes in the corpus are dead
+
+The negation gadget did not only refute the `x + 1` conjecture. Two *other* arguments in the research
+corpus reason from "EML has no native addition", and this section settles both by construction rather
+than by argument.
+
+**Route 1 — the Lambert-W any-depth barrier.** From
+`exploration/lambert_w_any_depth_obstacle_analysis_2026_06_13/FINDINGS.md`, which reduces the barrier to
+one question and then makes the barrier depend on its answer:
+
+> **Key sub-question:** Can the EML grammar express `f(x) + log(f(x))` for an arbitrary `f` already
+> expressed by an EMLTree? … If the answer is NO at any finite depth (for general `f`), then the
+> functional equation can't be satisfied by any finite-depth EMLTree expression for `W`. **This would
+> close the Lambert-W any-depth barrier.**
+
+**The answer is YES**, wherever `f` is positive — see `selfPlusLog_eval`. Note that `logTree` is
+*unconditional*, so the `log f` half costs nothing; the only hypothesis is the one `addTree` already
+carries. **The proposed route to the barrier is therefore closed off**, and closed in the direction that
+gives no theorem: expressing `f + log f` says nothing about whether any tree *solves* `t + log t = log x`,
+which is a fixed-point question the grammar does not answer. The barrier is neither closed nor opened —
+its stated route is simply refuted.
+
+**Route 2 — products and quotients.** From
+`exploration/lambert_w_all_candidates_attempt_2026_06_13/FINDINGS.md`, on EML closure under
+differentiation:
+
+> `exp(t1)·t1'`: product of exp with a derivative. EML expresses products via `a·b = exp(log a + log b)`.
+> But the "+log b" part **requires native addition** in the inner expression. … `t2'/t2`: quotient via
+> `a/b = exp(log a - log b)`. **Same addition issue.**
+
+The addition is available, so the stated obstruction is not one — see `mulTree_eval`. **The hypotheses
+are real and are not hidden**: the construction needs `1 < a.eval x` (so that `log a` is positive and
+`addTree` applies) as well as `0 < b.eval x`. So this refutes the *reasoning*, not the conclusion:
+whether the differentiation-closure argument survives depends on whether its trees satisfy those bounds,
+which nobody has checked. -/
+
+/-- **`f + log f` IS expressible**, wherever `f` is positive — the Lambert-W obstacle analysis's key
+sub-question, answered YES. -/
+noncomputable def selfPlusLog (t : EMLTree) : EMLTree := addTree t (logTree t)
+
+theorem selfPlusLog_eval {t : EMLTree} {x : Real} (ht : 0 < t.eval x) :
+    (selfPlusLog t).eval x = t.eval x + Real.log (t.eval x) := by
+  rw [selfPlusLog, addTree_eval (logTree t) ht, logTree_eval]
+
+/-- **Products are expressible** via `a·b = exp (log a + log b)`, given `1 < a.eval x` and
+`0 < b.eval x`. The first hypothesis is what makes `log a` positive so `addTree` applies; the second is
+what makes `exp (log b) = b`. Both are stated rather than absorbed, because the corpus argument this
+refutes deserves to be refuted precisely. -/
+noncomputable def mulTree (a b : EMLTree) : EMLTree := expOf (addTree (logTree a) (logTree b))
+
+theorem mulTree_eval {a b : EMLTree} {x : Real} (ha : 1 < a.eval x) (hb : 0 < b.eval x) :
+    (mulTree a b).eval x = a.eval x * b.eval x := by
+  have ha0 : 0 < a.eval x := lt_trans_ax one_pos ha
+  have hloga : 0 < Real.log (a.eval x) := by
+    have h := log_lt_log one_pos ha
+    rw [log_one] at h; exact h
+  have hpos : 0 < (logTree a).eval x := by rw [logTree_eval]; exact hloga
+  rw [mulTree, expOf_eval, addTree_eval (logTree b) hpos, logTree_eval, logTree_eval,
+      exp_add, exp_log ha0, exp_log hb]
+
 end MachLib
