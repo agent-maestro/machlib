@@ -4934,4 +4934,24 @@ theorem goodClassCounterexample_not_negative :
     add_pos (div_pos_of_pos_pos (exp_pos 1) hx) (div_pos_of_pos_pos one_pos h11)
   exact absurd rfl (ne_of_gt (lt_trans_ax hpos hlt))
 
+/-! ### What the counterexample tells a repair to do — and why it is not free
+
+The omitted band is "evals decaying to a limit in `(0,1)`". A naive repair adds a fifth class for it.
+**That repair cannot work as stated, and the reason is the whole value of the counterexample.**
+
+`EMLGoodClass`'s job is to be DISJOINT from `EventuallyKOverX 1`. But `1/x` is itself eventually
+inside `(0,1)`. So a class defined as *"eventually in `(0,1)`"* would contain `1/x`, disjointness
+would fail, and the main theorem would not follow from it.
+
+The band therefore has to be split by LIMIT, not by range:
+
+  * limit in `(0,1)`  — the counterexample `e/x + 1/2`. Safe: it is bounded away from `0`.
+  * limit `0`         — where `1/x` lives. Not safe, and must be excluded.
+
+So a corrected taxonomy must prove that **no valid EML tree decays to `0`**. That is `1/x ∉ EML`
+restated — possibly better-posed, since "decays to 0" is a coarser target than "equals `1/x`", and a
+tree could fail to be `1/x` while still decaying to `0`. Whether that reformulation is easier or the
+same problem wearing new clothes is **open, and is the first thing a successor route should settle**,
+because it decides whether the class programme is repairable at all. -/
+
 end MachLib
