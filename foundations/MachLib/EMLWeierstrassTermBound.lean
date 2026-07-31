@@ -164,6 +164,60 @@ theorem npow_tower (x : Real) (n : Nat) : ∀ k : Nat, npow k (npow n x) = npow 
   | k + 1 => by
       rw [npow_succ, npow_tower x n k, Nat.mul_succ, npow_add, mul_comm]
 
+/-! ## The general family bound -/
+
+/-- **The family-level term bound.** For ANY coefficient base `a > 0` and frequency base `b > 1`,
+every `k`-th derivative term of the heat-smoothed lacunary cosine series
+`Σ aⁿ cos(bⁿ x)` is eventually `< 1` in magnitude.
+
+**Why this is the general statement and not a repackaging.** The 2026-07-23 paper lemma
+(`monogate-research/exploration/eml_weierstrass_general_2026_07_23/`) proved the mechanism for the
+whole lacunary family; Lean had it only at the classical Weierstrass constants `a = ½, b = 3`. The
+gap was never mathematical — inspecting the specific proof shows it consumes exactly TWO facts about
+those constants, `0 < a` and `1 < b²` — so the constants were load-bearing in the statement and inert
+in the argument. This theorem states what was actually proved.
+
+**Note `a` is unconstrained above.** No `ab > 1`, no `a < 1`. The classical Weierstrass hypotheses
+are about the series being nowhere-differentiable at `t = 0`; they are irrelevant to the smoothing
+claim, because the damping `exp(−c·b^{2n})` is double-exponential in `n` and beats any
+single-exponential `aⁿ` whatever `a` is. Requiring `a < 1` here would import a hypothesis from a
+different theorem — which is how a formalisation quietly becomes weaker than its paper. -/
+theorem weierstrass_term_eventually_lt_one_general
+    (a b t : Real) (ha : 0 < a) (hb : 1 < b) (ht : 0 < t) (k : Nat) :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n →
+      npow k pi * npow n a * npow (n * k) b
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) < 1 := by
+  have h11_pos : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hb_pos : 0 < b := lt_trans_ax one_pos hb
+  have hD : 1 < npow 2 b := by
+    have h1 : npow 2 b = b * b := by
+      show b * (b * 1) = b * b; mach_ring
+    rw [h1]
+    have hstep : 1 * 1 < b * b := by
+      have h1lt : (1:Real) * 1 < b * 1 := mul_lt_mul_of_pos_right hb one_pos
+      have h2lt : b * 1 < b * b := wgc_mul_lt_mul_of_pos_left hb hb_pos
+      exact lt_trans_ax h1lt h2lt
+    rwa [show (1:Real)*1 = 1 by mach_ring] at hstep
+  have hc : 0 < pi * pi * t / (1 + 1) := by
+    have hpp : 0 < pi * pi := mul_pos pi_pos pi_pos
+    have hppt : 0 < pi * pi * t := mul_pos hpp ht
+    exact div_pos_of_pos_pos hppt h11_pos
+  have hC : 0 < npow k pi := npow_pos pi_pos k
+  have hR : 0 < a * npow k b := mul_pos ha (npow_pos hb_pos k)
+  obtain ⟨N, hN⟩ := exp_beats_geometric (R := a * npow k b) (D := npow 2 b)
+    (c := pi * pi * t / (1 + 1)) (C := npow k pi) hR hD hc hC
+  refine ⟨N, fun n hn => ?_⟩
+  have key := hN n hn
+  have eR : npow n (a * npow k b) = npow n a * npow (n * k) b := by
+    rw [npow_mul_distrib, npow_tower, Nat.mul_comm k n]
+  rw [eR] at key
+  have erw : npow k pi * (npow n a * npow (n * k) b)
+      * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b)))
+      = npow k pi * npow n a * npow (n * k) b
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) := by
+    mach_ring
+  rwa [erw] at key
+
 /-! ## The concrete Weierstrass instantiation -/
 
 /-- **The term-magnitude claim**, connecting `exp_beats_geometric` to
