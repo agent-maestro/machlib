@@ -278,7 +278,11 @@ open Lean Elab Tactic Meta in
 listed atoms via a single nested-`MPoly` normalisation. Scales where the
 recursive `mach_poly` cannot: the 8-variable four-square identity closes in
 seconds. See the file header. -/
-elab "mach_mpoly" "[" xs:term,* "]" : tactic => do
+elab "mach_mpoly" "[" xs:term,* "]" : tactic => withMainContext do
+  -- `withMainContext` is load-bearing, and its absence was a real trap. Without it the atom terms
+  -- elaborate against the local context as it stood when the tactic block was entered, so an atom
+  -- naming a variable introduced by `intro`/`obtain` inside the proof fails with
+  -- "Unknown identifier x" on a variable that is plainly in scope at the call site. Do not remove it.
   let atoms := (← xs.getElems.toList.mapM (fun t => elabTerm t.raw none)).toArray
   let goal ← getMainGoal
   let some (_, lhs, rhs) := (← instantiateMVars (← goal.getType)).consumeMData.eq?

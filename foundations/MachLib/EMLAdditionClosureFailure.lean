@@ -666,15 +666,6 @@ theorem subTree_eval_needs_positivity :
   rw [h1, h2] at h
   exact absurd h.symm (ne_of_lt one_pos)
 
-/-! Small rearrangement lemmas, factored out because `mach_mpoly` resolves its atom list against the
-enclosing *statement's* binders and cannot see variables introduced by `intro`/`obtain` inside a proof.
-Stating them at top level is the cheapest way to keep the atoms in scope. -/
-
-private theorem neg_add_eq_sub (a b : Real) : -b + a = a - b := by mach_mpoly [a, b]
-private theorem negSubOne_add_self (y : Real) : -y - 1 + y = -1 := by mach_mpoly [y]
-private theorem neg_one_add_one : (-1 : Real) + 1 = 0 := by mach_mpoly []
-private theorem neg_negSubOne_sub_one (y : Real) : -(-y - 1) - 1 = y := by mach_mpoly [y]
-
 /-! ### Is depth 4 minimal? The necessary condition, and depth 2 closed
 
 `x_plus_one_not_in_eml_1` closes depth ≤ 1 by enumeration; the witness sits at depth 4; **depths 2 and
@@ -694,7 +685,16 @@ The proof is three lines of content: `exp` of the dividend is positive, so `log 
 `0` by MachLib's convention and contradict it; so `t2.eval x` is positive and `exp ∘ log` inverts.
 
 **The totalization convention is load-bearing here in the helpful direction** — `log ≤ 0 ↦ 0` is what
-lets a positivity fact be *derived* rather than assumed. -/
+lets a positivity fact be *derived* rather than assumed.
+
+**TOTALIZATION AUDIT (this statement, not the convention in general).** The totalized `log` is
+load-bearing in this proof, and the derived positivity `0 < t2.eval x` means **the totalized and the
+partial readings agree on this statement**: on the branch the theorem actually reaches, `log` is being
+applied to a positive argument, so the conclusion is a fact of real mathematics rather than a fact
+about the convention. The audit is worth writing down because the same convention generated five
+degenerate cells and a falsified framework in the E5 arm — a totalization is neither friendly nor
+hostile, it is a fixed semantics, and each theorem must state whether it is proving the intended claim
+or the convention's shadow. Here: the intended claim. -/
 theorem witness_divisor_ge {t1 t2 : EMLTree} {x : Real}
     (hx : x < -1) (h : (EMLTree.eml t1 t2).eval x = x + 1) :
     Real.exp (-x - 1) ≤ t2.eval x := by
@@ -765,7 +765,10 @@ theorem depth_le_one_bounded_above (t : EMLTree) (ht : t.depth ≤ 1) :
         simp only [EMLTree.eval]
         have h1 : Real.exp x ≤ 1 := exp_le_one_of_nonpos (le_of_lt hx)
         have := add_le_add_left h1 (-Real.log d)
-        rw [neg_add_eq_sub, neg_add_eq_sub] at this; exact this
+        have e1 : -Real.log d + Real.exp x = Real.exp x - Real.log d := by
+          mach_mpoly [Real.exp x, Real.log d]
+        have e2 : -Real.log d + 1 = 1 - Real.log d := by mach_mpoly [Real.log d]
+        rw [e1, e2] at this; exact this
       | var =>
         refine ⟨1, ?_⟩
         intro x hx
@@ -799,14 +802,17 @@ theorem x_plus_one_not_in_eml_2 (t : EMLTree) (ht : t.depth ≤ 2) :
           exact lt_trans_ax h1 (exp_grows_strictly_thm (M + 1))
     have hxlt : -y - 1 < -1 := by
       have := add_lt_add_left hy0 (-y - 1)
-      rw [add_zero, negSubOne_add_self] at this; exact this
+      have e : -y - 1 + y = -1 := by mach_mpoly [y]
+      rw [add_zero, e] at this; exact this
     have hxneg : -y - 1 < 0 :=
       lt_trans_ax hxlt (by
         have := add_lt_add_left one_pos (-1 : Real)
-        rw [add_zero, neg_one_add_one] at this; exact this)
+        have e : (-1 : Real) + 1 = 0 := by mach_mpoly []
+        rw [add_zero, e] at this; exact this)
     have hge := witness_divisor_ge hxlt (hsum (-y - 1))
     have hey : Real.exp (-(-y - 1) - 1) = Real.exp y := by
-      rw [neg_negSubOne_sub_one]
+      have e : -(-y - 1) - 1 = y := by mach_mpoly [y]
+      rw [e]
     rw [hey] at hge
     exact absurd (lt_of_lt_of_le hyM (le_trans hge (hM _ hxneg))) (lt_irrefl_ax M)
 
@@ -846,8 +852,26 @@ Closing depth 3 means either mirroring that vocabulary or inlining the threshold
 growth fact for `exp` — `exp y > 2y − 2` for `y > 1`, available from the `two_lt_exp_one` this file
 already imports.
 
-**Recorded as scoped, not attempted.** The estimate is one focused session; the reason it is not this
-one is that it is a different piece of work with a different failure mode, and bolting it on would make
-a clean depth-2 result and a half-finished depth-3 result share a commit. -/
+### The decision that must be made in the route slot, not mid-proof
+
+MachLib's asymptotic vocabulary faces `+∞`; this claim is eventually-shaped at `−∞`. There are two
+ways to close that gap and **they are not the same size**:
+
+* **mirror the vocabulary** — add `EventuallyAtMostNeg`-style definitions and re-prove the handful of
+  facts about them at the `−∞` end; or
+* **substitute `x ↦ −x`** — define the reflected tree/eval and reuse the existing `+∞` machinery
+  wholesale.
+
+This is a small infrastructure decision with a large cost multiplier, and it is exactly the kind of
+choice that turns one session into three when it is made implicitly, halfway through, after the first
+route has already accumulated sunk lemmas. **It belongs in the depth-3 session's pre-registered route
+slot.** The current reading is that the substitution is cheaper — the reflection is a definition and a
+congruence lemma, against a duplicated vocabulary — but that is a prediction to be recorded and scored,
+not a conclusion.
+
+**Recorded as scoped, not attempted.** The estimate is one focused session *given that decision is made
+up front*; the reason it is not this one is that it is a different piece of work with a different
+failure mode, and bolting it on would make a clean depth-2 result and a half-finished depth-3 result
+share a commit. -/
 
 end MachLib
