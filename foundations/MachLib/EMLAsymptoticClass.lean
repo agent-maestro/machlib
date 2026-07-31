@@ -4871,4 +4871,67 @@ theorem eml_minusLog_nonpos_is_inv_x
   show eml (f x) (g x) = 1 / x
   rw [hc x hxNc, h1 x hxN1, exp_neg_inv, exp_log hxpos]
 
+/-! ## E5-ter session 2 — a COUNTEREXAMPLE to the Phase 15B frontier
+
+The framework's stated goal (line ~3834) is `∀ t : EMLTree, EMLGoodClass t.eval`, from which
+`∀ t, ¬ EventuallyKOverX 1 t.eval` would follow. **That goal is false**, and the witness is small.
+
+    t := eml (eml (const 0) var) (const (exp (-(1/2))))
+
+    inner = exp 0 − log x            = 1 − log x
+    outer = exp (1 − log x) − log (exp (−1/2))
+          = e·exp(−log x) + 1/2      = e/x + 1/2
+
+So the eval tends to `1/2` **from above** and is eventually trapped strictly inside `(0,1)`:
+
+* not `EventuallyConstant` — it strictly decreases;
+* not `EventuallyAboveOne` — `e/x + 1/2 < 1` once `x > 2e`;
+* not `EventuallyNegative` — it is always positive;
+* not `EventuallyMinusLog` — at `x = 1` it is `e + 1/2`, while `−log 1 = 0`.
+
+**The four classes are not exhaustive over `EMLTree`.** They omit the whole band of evals that decay
+to a limit in `(0,1)` — and `eml` reaches that band easily, because `exp` of anything tending to `−∞`
+contributes a vanishing positive term that a constant divisor can offset to any level.
+
+**This is stronger than "the route failed".** It does not say the class-induction was unwalked; it says
+the induction's conclusion is FALSE, so no strengthening of the induction hypothesis can rescue it.
+Repair (a) is dead, not untested.
+
+**The claim `1/x ∉ EML` is untouched.** It was never tested by this route — and note the witness is
+*not* a counterexample to it: `e/x + 1/2` is not `1/x`. What died is the instrument. -/
+
+/-- The counterexample tree's eval, computed. -/
+noncomputable def goodClassCounterexample : EMLTree :=
+  .eml (.eml (.const 0) .var) (.const (Real.exp (-(1/(1+1)))))
+
+/-- **`eval = e/x + 1/2` for `x > 0`.** The whole counterexample rests on this identity. -/
+theorem goodClassCounterexample_eval {x : Real} (hx : 0 < x) :
+    goodClassCounterexample.eval x = Real.exp 1 / x + 1 / (1 + 1) := by
+  have h11 : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hlogc : Real.log (Real.exp (-(1/(1+1)))) = -(1/(1+1)) := log_exp _
+  show Real.exp (Real.exp 0 - Real.log x) - Real.log (Real.exp (-(1/(1+1))))
+      = Real.exp 1 / x + 1 / (1 + 1)
+  rw [hlogc, exp_zero]
+  have hsplit : Real.exp (1 - Real.log x) = Real.exp 1 * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have : Real.exp 1 * (1 / x) = Real.exp 1 / x := by
+    rw [div_def (Real.exp 1) x (ne_of_gt hx)]; mach_ring
+  rw [this]; mach_ring
+
+/-- **Not `EventuallyNegative`:** `e/x + 1/2 > 0` for every `x > 0`, so no tail is negative. -/
+theorem goodClassCounterexample_not_negative :
+    ¬ EventuallyNegative goodClassCounterexample.eval := by
+  intro h
+  obtain ⟨N, hN⟩ := h
+  have hx : (0:Real) < max N 1 := lt_of_lt_of_le one_pos (le_max_right N 1)
+  have hval := goodClassCounterexample_eval hx
+  have hlt := hN (max N 1) (le_max_left N 1)
+  rw [hval] at hlt
+  -- but e/x + 1/2 > 0
+  have h11 : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hpos : (0:Real) < Real.exp 1 / max N 1 + 1 / (1 + 1) :=
+    add_pos (div_pos_of_pos_pos (exp_pos 1) hx) (div_pos_of_pos_pos one_pos h11)
+  exact absurd rfl (ne_of_gt (lt_trans_ax hpos hlt))
+
 end MachLib
