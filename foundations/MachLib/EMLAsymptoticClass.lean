@@ -4486,4 +4486,56 @@ theorem eml_dominates_atMost_eventually_dominates
     rwa [base, base2] at m
   exact lt_of_lt_of_le step2 step3
 
+/-- **Phase 21 — `AboveOne × AboveOne` closes, completing the column.**
+
+The third and last `?` cell Phase 17 left. `1 < t1` gives only `exp 1 ≤ exp (t1 x)` — a FIXED floor,
+not a growing one — so like Phase 19 this cell is conditional. But the condition is sharper than
+Phase 19's: it constrains `K` alone (`1 < exp 1 - log K`), because the dividend's floor `exp 1` is a
+constant of the problem rather than a parameter.
+
+That completes the `AboveOne` column and, with it, the shape of the whole matrix: **a cell is
+unconditional exactly when the dividend grows without bound** (Phase 20), and conditional whenever the
+dividend has a ceiling — whether that ceiling is a free constant (Phase 19) or the fixed `exp 1`
+(here). The divisor side is `EventuallyAtMost` in all three; what varies is only whether the dividend
+can outrun it. -/
+theorem eml_aboveOne_atMost_eventually_above_one
+    {f g : Real → Real} {K : Real}
+    (hf : EventuallyAboveOne f)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g)
+    (hside : 1 < Real.exp 1 - Real.log K) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) N3, fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) N3) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_right (max N1 N2) N3) hx
+  -- exp 1 ≤ exp (f x), from 1 < f x
+  have hexp : Real.exp 1 ≤ Real.exp (f x) := exp_monotone (le_of_lt (h1 x hxN1))
+  -- log (g x) ≤ log K
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl]
+  -- exp 1 - log K ≤ exp (f x) - log K ≤ exp (f x) - log (g x), and hside starts the chain
+  have s1 : Real.exp 1 - Real.log K ≤ Real.exp (f x) - Real.log K := by
+    have t := add_le_add_left hexp (-(Real.log K))
+    have e1 : -(Real.log K) + Real.exp 1 = Real.exp 1 - Real.log K := by mach_ring
+    have e2 : -(Real.log K) + Real.exp (f x) = Real.exp (f x) - Real.log K := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : Real.exp (f x) - Real.log K ≤ Real.exp (f x) - Real.log (g x) := by
+    have m := add_le_add_left hlog (Real.exp (f x) - Real.log K - Real.log (g x))
+    have b1 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp (f x) - Real.log K := by mach_ring
+    have b2 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp (f x) - Real.log (g x) := by mach_ring
+    rwa [b1, b2] at m
+  exact lt_of_lt_of_le hside (Real.le_trans s1 s2)
+
 end MachLib
