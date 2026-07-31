@@ -4538,4 +4538,36 @@ theorem eml_aboveOne_atMost_eventually_above_one
     rwa [b1, b2] at m
   exact lt_of_lt_of_le hside (Real.le_trans s1 s2)
 
+/-- **Phase 22 — `AboveOne × Const`.**
+
+Phase 17's prose named the remaining cells as `{Const, AboveOne} × {AboveOne}`, but its own table also
+carries a `?` at `AboveOne × Const`. Recounting the table's ticks against the stated 11 confirms the
+table: four cells were open, not three. This closes the fourth.
+
+The proof is the Phase 21 argument with the divisor pinned: `1 < f x` gives the fixed floor
+`exp 1 ≤ exp (f x)`, and a constant divisor `d` contributes the constant `log d`. Conditional, on
+`1 < exp 1 - log d`, and it is worth noting the condition is **automatically satisfied whenever
+`d ≤ 1`** (then `log d ≤ 0`, so `exp 1 - log d ≥ exp 1 > 1`) — the hypothesis only bites for divisors
+above 1, which is exactly where a divisor can fight back. -/
+theorem eml_aboveOne_const_eventually_above_one
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyAboveOne f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hside : 1 < Real.exp 1 - Real.log d) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hexp : Real.exp 1 ≤ Real.exp (f x) := exp_monotone (le_of_lt (h1 x hxN1))
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2]
+  have s1 : Real.exp 1 - Real.log d ≤ Real.exp (f x) - Real.log d := by
+    have t := add_le_add_left hexp (-(Real.log d))
+    have e1 : -(Real.log d) + Real.exp 1 = Real.exp 1 - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + Real.exp (f x) = Real.exp (f x) - Real.log d := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le hside s1
+
 end MachLib
