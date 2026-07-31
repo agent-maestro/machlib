@@ -644,4 +644,35 @@ theorem eml_tree_grounded_const_instance (env : Env) (c : Real)
         ≤ emlTreeErrorBound (EMLTree.eml (EMLTree.const c) EMLTree.var) (realToR (env "x").toF) :=
   eml_tree_grounded env _ hv
 
+/-! ## The degenerate-divisor question, answered at the TREE level
+
+`EMLAsymptoticClass`'s Phase-26 finding is that the *totalized* `eml` with a non-positive divisor
+collapses to `exp ∘ f`, and with a `MinusLog` dividend produces exactly `1/x` — the function the
+`1/x ∉ EML` programme exists to exclude. That finding is about the CLASS abstraction, where a divisor
+is an arbitrary function and nothing forbids it going negative.
+
+**At the tree level the configuration is already impossible, and it was impossible before anyone
+noticed the artifact.** `EMLTreeValid`'s `eml` constructor carries
+`hmargin : emlTreeErrorBound t2 x < t2.eval x`, and the bound is non-negative on valid subtrees, so a
+valid tree's divisor is *strictly positive* — with margin, not merely non-zero.
+
+So the totalization artifact is **confined to the class abstraction**: it cannot be realised by any
+valid `EMLTree`, and the tree-level `1/x ∉ EML` claim is not exposed to it. This is the theorem that
+says so, rather than an argument that it is probably fine. -/
+theorem EMLTreeValid.divisor_pos {x : Real} {t1 t2 : EMLTree}
+    (h : EMLTreeValid x (.eml t1 t2)) : 0 < t2.eval x := by
+  cases h with
+  | eml _ _ hmargin hv1 hv2 =>
+    exact lt_of_le_of_lt (emlTreeErrorBound_nonneg hv2) hmargin
+
+/-- **Corollary: the Phase-26 collapse hypothesis is unsatisfiable for valid trees.** No valid tree's
+divisor is eventually non-positive at a point where it is valid, so
+`eml_collapse_of_divisor_nonpos` has no valid-tree instance. -/
+theorem EMLTreeValid.not_divisor_nonpos {x : Real} {t1 t2 : EMLTree}
+    (h : EMLTreeValid x (.eml t1 t2)) : ¬ (t2.eval x ≤ 0) := by
+  intro hle
+  exact absurd (EMLTreeValid.divisor_pos h) (fun hp => absurd rfl
+    (ne_of_gt (lt_of_lt_of_le hp hle)))
+
+
 end Certcom
