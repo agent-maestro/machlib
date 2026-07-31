@@ -4570,4 +4570,44 @@ theorem eml_aboveOne_const_eventually_above_one
     rwa [e1, e2] at t
   exact lt_of_lt_of_le hside s1
 
+/-- **Phase 23 — `Negative × Const` closes, opening the `Negative` row.**
+
+Phase 17 marked the whole `Negative` row "risky" and deferred it to the per-shape `K/x` machinery.
+It need not be: the row has the same structure as the ones already closed, read from the other side.
+
+`f x < 0` gives `exp (f x) < 1` — a fixed CEILING, where `AboveOne` gave a fixed floor. So a constant
+divisor `d` with `1 ≤ log d` (i.e. `d ≥ e`) drives the whole expression below zero:
+`eml = exp (f x) - log d < 1 - 1 = 0`.
+
+The symmetry with Phase 21/22 is exact and worth stating: a bounded dividend closes a cell against a
+constant divisor **in whichever direction the bound points**. `AboveOne` bounds below and yields
+`AboveOne` on `1 < exp 1 - log d`; `Negative` bounds above and yields `Negative` on `1 ≤ log d`. The
+"risky" label was about the per-shape route, not about the cell. -/
+theorem eml_negative_const_eventually_negative
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyNegative f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hside : 1 ≤ Real.log d) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hexp : Real.exp (f x) < 1 := exp_lt_one (h1 x hxN1)
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2]
+  -- exp (f x) - log d < 1 - log d ≤ 1 - 1 = 0
+  have s1 : Real.exp (f x) - Real.log d < 1 - Real.log d := by
+    have t := add_lt_add_left hexp (-(Real.log d))
+    have e1 : -(Real.log d) + Real.exp (f x) = Real.exp (f x) - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + 1 = 1 - Real.log d := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : (1:Real) - Real.log d ≤ 0 := by
+    have t := add_le_add_left hside (-(Real.log d))
+    have e1 : -(Real.log d) + 1 = 1 - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + Real.log d = 0 := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le s1 s2
+
 end MachLib
