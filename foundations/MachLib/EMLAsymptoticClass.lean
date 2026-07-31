@@ -4768,4 +4768,107 @@ theorem eml_minusLog_atLeast_eventually_negative
     rwa [e1, e2] at t
   exact lt_of_lt_of_le s1 s2
 
+/-! ## Phase 26 — the degenerate column: is it mathematics, or is it the totalization?
+
+`MachLib.Real.log` is TOTAL: `log x = 0` for `x ≤ 0` (`Log.lean`, the `else` branch). That is a
+formalization convention, not a theorem about logarithms — and it means the five matrix cells whose
+DIVISOR is `Negative` or `MinusLog` may be measuring the junk branch rather than the intended
+expression. The closure matrix scores the formalized `eml`; for these cells the formalization and the
+intention have come apart, which is instrument-relativity in its purest form: the number is real, and
+it is a number about a different object than the one the taxonomy was built for.
+
+The question is therefore TERNARY, not "sixth class or ceiling":
+
+  (i)   a genuine sixth asymptotic class of the totalized semantics — the taxonomy extends and the
+        cells close under it;
+  (ii)  a totalization artifact — the cells are about junk values, marked BLOCKED-BY-CONVENTION, and
+        the matrix's honest headline becomes "18 of 18 non-degenerate cells closed, 5 degenerate by
+        totalization, matrix conditioned on divisor sign";
+  (iii) closable within the existing taxonomy after all, VIA the collapse.
+
+The lemma below discriminates all three cheaply. Once `eml (f x) (g x) = exp (f x)` on the tail, the
+question "what class do these cells land in" becomes "what class does `exp ∘ f` demand" — a lookup
+against the existing five rather than an open problem. -/
+
+/-- **The degenerate collapse.** When the divisor is eventually non-positive, `eml` collapses to
+`exp ∘ f` on the tail, because `log` is totalized to `0` there.
+
+Stated as an eventual EQUALITY rather than a class claim on purpose: the equality is a fact about the
+formalized `eml` and is true regardless of which of (i)/(ii)/(iii) holds. What it does NOT assert is
+that this says anything about `eml` as an operator on the reals where `log` is partial — that reading
+is exactly hypothesis (ii), and this lemma is deliberately silent on it. -/
+theorem eml_collapse_of_divisor_nonpos
+    {f g : Real → Real}
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → eml (f x) (g x) = Real.exp (f x) := by
+  obtain ⟨N, hN⟩ := hg
+  refine ⟨N, fun x hx => ?_⟩
+  show Real.exp (f x) - Real.log (g x) = Real.exp (f x)
+  rw [log_nonpos (hN x hx)]
+  mach_ring
+
+/-- `EventuallyNegative` divisors are eventually non-positive — the sign lemma for that row. -/
+theorem EventuallyNegative.nonpos {g : Real → Real} (h : EventuallyNegative g) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0 := by
+  obtain ⟨N, hN⟩ := h
+  exact ⟨N, fun x hx => le_of_lt (hN x hx)⟩
+
+/-- `EventuallyMinusLog` divisors are eventually non-positive: `-log x ≤ 0` once `x ≥ 1`. -/
+theorem EventuallyMinusLog.nonpos {g : Real → Real} (h : EventuallyMinusLog g) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0 := by
+  obtain ⟨N, hN⟩ := h
+  refine ⟨max N 1, fun x hx => ?_⟩
+  have hxN : N ≤ x := Real.le_trans (le_max_left N 1) hx
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_right N 1) hx
+  rw [hN x hxN]
+  -- log x ≥ 0 for x ≥ 1, so -log x ≤ 0
+  have hlog : (0:Real) ≤ Real.log x := by
+    rcases (le_iff_lt_or_eq 1 x).mp hx1 with hlt | heq
+    · have h := log_lt_log one_pos hlt
+      rw [log_one] at h
+      exact le_of_lt h
+    · rw [← heq, log_one]; exact le_of_eq rfl
+  have t := add_le_add_left hlog (-(Real.log x))
+  have e1 : -(Real.log x) + 0 = -Real.log x := by mach_ring
+  have e2 : -(Real.log x) + Real.log x = 0 := by mach_ring
+  rwa [e1, e2] at t
+
+/-- **THE LOOKUP, and it does not come out where the taxonomy would like.**
+
+Apply the collapse with a `MinusLog` dividend: `eml (f x) (g x) = exp (-log x) = 1/x` **exactly**. So
+the two cells `MinusLog × {Negative, MinusLog}` land in `EventuallyKOverX 1` — a class the taxonomy
+already has, which is hypothesis (iii)…
+
+…and `EventuallyKOverX 1` is **the class of `1/x`**: precisely the function this whole program exists
+to prove is NOT reachable by EML. The totalized `eml` manufactures it from the junk branch of `log`.
+
+**What this does and does not establish.** It does NOT show `1/x ∈ EML`, and no existing proof is
+impugned. It shows that the *totalized* `eml`, evaluated with a non-positive divisor, produces `1/x` —
+and that `MachLib.Real.log`'s `else 0` branch is load-bearing for that, not incidental. Whether any
+`EMLTree` can simultaneously realise a `MinusLog` dividend and a non-positive divisor is a SEPARATE
+question this lemma does not answer and which `EMLDomainSafety` explicitly does not cover ("deliberately
+narrow… without claiming complete EML safety").
+
+**So the ternary resolves as (ii), and consequentially.** These cells are a totalization artifact, they
+must be marked BLOCKED-BY-CONVENTION rather than closed, and the matrix headline must be conditioned
+on divisor sign. Reporting them as closed would enter `1/x`-in-the-image into the record via a
+convention, on the one question where that is most expensive. **The obstruction touches the
+general-depth claim directly** — which is the answer to the amendment's second question, and it is
+worth more than the two cells it costs. -/
+theorem eml_minusLog_nonpos_is_inv_x
+    {f g : Real → Real}
+    (hf : EventuallyMinusLog f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0) :
+    EventuallyKOverX 1 (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨Nc, hc⟩ := eml_collapse_of_divisor_nonpos (f := f) hg
+  refine ⟨max (max N1 Nc) 1, fun x hx => ?_⟩
+  have hxA : max N1 Nc ≤ x := Real.le_trans (le_max_left (max N1 Nc) 1) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 Nc) hxA
+  have hxNc : Nc ≤ x := Real.le_trans (le_max_right N1 Nc) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_right (max N1 Nc) 1) hx
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  show eml (f x) (g x) = 1 / x
+  rw [hc x hxNc, h1 x hxN1, exp_neg_inv, exp_log hxpos]
+
 end MachLib
