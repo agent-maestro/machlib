@@ -2,12 +2,21 @@
 #
 # LF-normalised because this package draws from two repositories that check out with
 # different line endings, and the rb_ekf evidence packet already shipped one hash in the
-# wrong normalisation for exactly that reason. Verify one file with:
+# wrong normalisation for exactly that reason. Verify the whole package with:
+#     python3 check_manifest.py
+# or one file with:
 #     python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n')).hexdigest())" <file>
 #
-# 17 files, enumerated and counted by the tool that wrote this line.
+# check_manifest.py is excluded: a checker cannot record its own hash without a
+# chicken-and-egg edit on every change to itself.
+#
+# 21 files, enumerated and counted by the tool that wrote this line.
 
 862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793        19  .gitignore
+3ed731b65d06150c138e2dadb0be0697550888a6b47eb8c45ecc9adba8b8e9bd        37  .pytest_cache/.gitignore
+37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4       191  .pytest_cache/CACHEDIR.TAG
+73fd6fccdd802c419a6b2d983d6c3173b7da97558ac4b589edec2dfe443db9ad       302  .pytest_cache/README.md
+47545b440663f086673b5d870c35dcea0be0e96b901af7c817697d4d62bcbaae       984  .pytest_cache/v/cache/nodeids
 6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
 7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/hardware/modules/transcendental/tests/test_eml_atan_wide_certificate.py
 3174315d008b3b5b01998231490398e498af9cbb1e3fb2dbfe12dcf369e2120c      5052  certificate/tests/qkernels.py
@@ -15,7 +24,7 @@
 31c4eedd44307984e80b3f9923aa0c27ca9d6f07e8e482c5a83d97c157ddfad9      1518  kernel/ekf_range_bearing.eml
 d8665daa3ce09c7c7282ab94c46f5f9acd4c36d77e401676752c91c2bab66996      5917  normalization/test_autodiff_normalisation.py
 86df203555d3053cdeae62a57eb24707cfb7b6a57df2d3c644dba21137d9c5ef      4945  normalization/test_normalise_fallback_chain.py
-b0b1ad844d920a43f3052896eb64878b9bd600073a28987bdc84562169c8ab41      4792  normalization/test_normalize_verify.py
+e320cc85b3bf4c5bfa4f9a71289a6e6818d1d846a7886823c3b66e7d481c325e      5489  normalization/test_normalize_verify.py
 746922a3bbb7c32aeae421606ed32a2260c4d6cdf0de337dfae1e3a16a36716a      1358  silicon/evidence/rb_acceptance_output.txt
 abfb5fddac52630d23b061e9d2726d9423a87ce0cb2656d585c6582f4a87a963      6087  silicon/evidence/rb_ekf_anchor_evidence.json
 1e2b2a2dda58ac06a3518d9f035fadb25a98b055b7e75da8c9b0a84d2983861f     52374  silicon/evidence/rb_ekf_trace.jsonl

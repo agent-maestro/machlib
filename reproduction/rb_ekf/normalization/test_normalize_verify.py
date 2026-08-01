@@ -92,7 +92,16 @@ def test_normalize_c_runs_to_unit_vector() -> None:
             ' printf("%.10f %.10f %.10f\\n", r.e[0], r.e[1], sq); return 0; }\n'
         )
         exe = Path(d) / "n"
-        inc = Path(__file__).resolve().parents[1] / "software" / "runtime" / "c"
+        # Resolve the C runtime from the IMPORTED package, not from this file's position in a
+        # source tree. The old form (`parents[1] / "software" / "runtime" / "c"`) only worked
+        # from a forge checkout; run against an INSTALLED monogate-forge -- which is how a
+        # reproducer runs it -- it pointed at a directory that does not exist, and the failure
+        # surfaced as `fatal error: libmonogate.h: No such file or directory`, indistinguishable
+        # from the header being missing from the wheel. It was ALSO missing from the wheel
+        # (fixed in the same release), and the two defects masked each other: fixing either
+        # alone still fails.
+        import software.runtime as _rt
+        inc = Path(_rt.__file__).resolve().parent / "c"
         subprocess.run(
             ["cc", "-O2", f"-I{inc}", str(src), "-o", str(exe), "-lm"],
             check=True,
