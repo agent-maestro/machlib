@@ -300,6 +300,7 @@ import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
 import MachLib.NewtonReciprocalDivision
+import MachLib.ReciprocalFormatInstantiation
 import MachLib.KalmanUpdateFixedPoint
 import MachLib.Ekf2MeasModelFwdError
 import MachLib.Ekf2GainConditioning
