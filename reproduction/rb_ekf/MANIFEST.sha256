@@ -4,19 +4,18 @@
 # different line endings, and the rb_ekf evidence packet already shipped one hash in the
 # wrong normalisation for exactly that reason. Verify the whole package with:
 #     python3 check_manifest.py
-# or one file with:
-#     python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n')).hexdigest())" <file>
 #
-# check_manifest.py is excluded: a checker cannot record its own hash without a
+# ENUMERATED FROM `git ls-files`, NOT FROM THE FILESYSTEM. The first version walked the
+# directory and recorded four .pytest_cache/ files left by a local test run -- files that
+# do not exist in a fresh clone, so the checker failed for every reader but its author.
+# The repository is what gets published; the working directory is not.
+#
+# check_manifest.py excludes itself: a checker cannot record its own hash without a
 # chicken-and-egg edit on every change to itself.
 #
-# 21 files, enumerated and counted by the tool that wrote this line.
+# 17 files, enumerated and counted by the tool that wrote this line.
 
-862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793        19  .gitignore
-3ed731b65d06150c138e2dadb0be0697550888a6b47eb8c45ecc9adba8b8e9bd        37  .pytest_cache/.gitignore
-37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4       191  .pytest_cache/CACHEDIR.TAG
-73fd6fccdd802c419a6b2d983d6c3173b7da97558ac4b589edec2dfe443db9ad       302  .pytest_cache/README.md
-47545b440663f086673b5d870c35dcea0be0e96b901af7c817697d4d62bcbaae       984  .pytest_cache/v/cache/nodeids
+6f4ff2992c4e2558837e2e09c39ed2bba140658755b22d046aab810ea2c90ca0        34  .gitignore
 6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
 7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/hardware/modules/transcendental/tests/test_eml_atan_wide_certificate.py
 3174315d008b3b5b01998231490398e498af9cbb1e3fb2dbfe12dcf369e2120c      5052  certificate/tests/qkernels.py
