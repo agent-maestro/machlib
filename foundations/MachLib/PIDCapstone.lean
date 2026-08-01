@@ -48,7 +48,7 @@ theorem fxpid_trunc_lt_3ulp (Kp Ki Kd e i d : List Bool) :
     (toNat Kp * toNat e + toNat Ki * toNat i + toNat Kd * toNat d)
       - toNat (fxpid Kp Ki Kd e i d) * 2 ^ FRAC < 3 * 2 ^ FRAC := by
   rw [fxpid_correct]
-  have hP : 0 < 2 ^ FRAC := Nat.pos_pow_of_pos FRAC (by decide)
+  have hP : 0 < 2 ^ FRAC := Nat.pow_pos (by decide)
   generalize toNat Kp * toNat e = A
   generalize toNat Ki * toNat i = B
   generalize toNat Kd * toNat d = C

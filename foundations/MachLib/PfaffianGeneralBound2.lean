@@ -125,7 +125,7 @@ theorem pfaffian_bound2_gen (c2 : PfaffianChain 2) (hexp : IsExpChain c2) (a b :
       cases zeros with
       | nil => exact Nat.le_refl 0
       | cons z zs =>
-        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
         exact absurd hzero (hnoz z ha hb')
     · have hne' : ∃ z, a < z ∧ z < b ∧
           (pfaffianChainFn c2 (chainReduce c2 (bound2Mult G0 G1 p) p)).eval z ≠ 0 :=

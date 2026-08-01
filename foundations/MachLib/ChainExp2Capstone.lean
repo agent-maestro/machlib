@@ -51,7 +51,7 @@ private theorem dropWhile_head_neg {α : Type} (p : α → Bool) :
 /-- If `dropWhile p M = []` then every entry of `M` satisfies `p`. -/
 private theorem dropWhile_nil_all {α : Type} (p : α → Bool) :
     ∀ (M : List α), M.dropWhile p = [] → ∀ c ∈ M, p c = true
-  | [], _, c, hc => absurd hc (List.not_mem_nil c)
+  | [], _, c, hc => absurd hc (List.not_mem_nil)
   | a :: as, h, c, hc => by
     rw [List.dropWhile_cons] at h
     cases hpa : p a with
@@ -70,7 +70,7 @@ private theorem listEvalAuxN_zero_of_entries_zero {n : Nat} (i : Fin n) (L : Lis
   | cons c cs ih =>
     show MultiPoly.eval c x env * MultiPoly.eval (MultiPoly.pow (MultiPoly.varY i) k) x env
            + listEvalAuxN i cs (k + 1) x env = 0
-    rw [hL c (List.mem_cons_self _ _),
+    rw [hL c (List.mem_cons_self),
         ih (fun c' hc' => hL c' (List.mem_cons_of_mem _ hc')) (k + 1)]
     mach_ring
 

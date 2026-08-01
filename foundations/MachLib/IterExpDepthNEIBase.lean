@@ -56,7 +56,7 @@ theorem cdegY1_le_degreeY1 (q : MultiPoly 2) :
       ≤ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).length :=
     calc ((yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1).length
           ≤ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.length := length_dropWhile_le _ _
-      _ = (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).length := List.length_reverse _
+      _ = (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).length := List.length_reverse
   have h2 := yCoeffsAt_length_le (⟨1, by omega⟩ : Fin 2) q
   omega
 
@@ -69,7 +69,7 @@ theorem canonLcY1_mem_or_zero (q : MultiPoly 2) :
   | cons a t =>
       right
       have ha_dw : a ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB1 := by
-        rw [h]; exact List.mem_cons_self a t
+        rw [h]; exact List.mem_cons_self
       have ha_rev : a ∈ (yCoeffsAt (⟨1, by omega⟩ : Fin 2) q).reverse :=
         mem_of_mem_dropWhile coeffCanonZeroB1 _ a ha_dw
       exact List.mem_reverse.mp ha_rev

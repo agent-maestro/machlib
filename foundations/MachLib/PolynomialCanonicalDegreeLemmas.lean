@@ -72,8 +72,8 @@ theorem canonicallyZero_listAddR_of_both
     | cons q qs' =>
       rw [listAddR_cons_cons] at hc
       rcases List.mem_cons.mp hc with h_head | h_tail
-      · have hp_zero : p = 0 := h1 p (List.mem_cons_self _ _)
-        have hq_zero : q = 0 := h2 q (List.mem_cons_self _ _)
+      · have hp_zero : p = 0 := h1 p (List.mem_cons_self)
+        have hq_zero : q = 0 := h2 q (List.mem_cons_self)
         subst h_head
         rw [hp_zero, hq_zero, add_zero]
       · apply ih_p qs'
@@ -93,7 +93,7 @@ theorem canonicallyZero_listScaleR_of_canonicallyZero
     rw [listScaleR_cons] at hc'
     rcases List.mem_cons.mp hc' with h_head | h_tail
     · subst h_head
-      have hq_zero : q = 0 := h q (List.mem_cons_self _ _)
+      have hq_zero : q = 0 := h q (List.mem_cons_self)
       rw [hq_zero, mul_zero]
     · apply ih
       · intro c'' hc''; exact h c'' (List.mem_cons_of_mem _ hc'')
@@ -142,7 +142,7 @@ private theorem coeffAt_of_canonicallyZero (L : List Real)
       cases k with
       | zero =>
         rw [coeffAt_cons_zero]
-        exact h c (List.mem_cons_self _ _)
+        exact h c (List.mem_cons_self)
       | succ k' =>
         rw [coeffAt_cons_succ]
         apply ih_cs

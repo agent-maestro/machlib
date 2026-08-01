@@ -519,7 +519,7 @@ theorem listAdd_entries_y_free (l1 l2 : List (MultiPoly 1))
       | head =>
         -- c = add p q.
         show Nat.max (degreeY 0 p) (degreeY 0 q) = 0
-        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rw [h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
@@ -536,7 +536,7 @@ theorem listSub_entries_y_free (l1 l2 : List (MultiPoly 1))
     | nil =>
       intro c hc
       rw [listSub_nil_nil] at hc
-      exact absurd hc (List.not_mem_nil _)
+      exact absurd hc (List.not_mem_nil)
     | cons q qs ihq =>
       intro c hc
       rw [listSub_nil_cons] at hc
@@ -545,7 +545,7 @@ theorem listSub_entries_y_free (l1 l2 : List (MultiPoly 1))
         -- c = sub (const 0) q.
         show Nat.max (degreeY 0 (const 0 : MultiPoly 1))
                      (degreeY 0 q) = 0
-        rw [h2 q (List.mem_cons_self _ _)]
+        rw [h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ihq (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
@@ -562,7 +562,7 @@ theorem listSub_entries_y_free (l1 l2 : List (MultiPoly 1))
       | head =>
         -- c = sub p q.
         show Nat.max (degreeY 0 p) (degreeY 0 q) = 0
-        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rw [h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
@@ -577,7 +577,7 @@ theorem listScale_entries_y_free (p : MultiPoly 1)
   | nil =>
     intro c hc
     rw [listScale_nil] at hc
-    exact absurd hc (List.not_mem_nil _)
+    exact absurd hc (List.not_mem_nil)
   | cons q qs ih =>
     intro c hc
     rw [listScale_cons] at hc
@@ -585,7 +585,7 @@ theorem listScale_entries_y_free (p : MultiPoly 1)
     | head =>
       -- c = mul p q.
       show degreeY 0 p + degreeY 0 q = 0
-      rw [hp, hl q (List.mem_cons_self _ _)]
+      rw [hp, hl q (List.mem_cons_self)]
     | tail _ hc' =>
       exact ih (fun c hc => hl c (List.mem_cons_of_mem _ hc)) c hc'
 
@@ -598,7 +598,7 @@ theorem listMul_entries_y_free (l1 l2 : List (MultiPoly 1))
   | nil =>
     intro c hc
     rw [listMul_nil] at hc
-    exact absurd hc (List.not_mem_nil _)
+    exact absurd hc (List.not_mem_nil)
   | cons p ps ih =>
     intro c hc
     rw [listMul_cons] at hc
@@ -606,7 +606,7 @@ theorem listMul_entries_y_free (l1 l2 : List (MultiPoly 1))
     apply listAdd_entries_y_free
         (listScale p l2) (const 0 :: listMul ps l2)
     · -- listScale p l2 entries are y-free.
-      exact listScale_entries_y_free p (h1 p (List.mem_cons_self _ _))
+      exact listScale_entries_y_free p (h1 p (List.mem_cons_self))
               l2 h2
     · -- const 0 :: listMul ps l2 entries.
       intro c' hc'
@@ -627,13 +627,13 @@ theorem yCoeffs_entries_y_free (p : MultiPoly 1) :
     change c' ∈ ([const c] : List (MultiPoly 1)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varX =>
     intro c' hc'
     change c' ∈ ([varX] : List (MultiPoly 1)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varY j =>
     intro c' hc'
     change c' ∈ ([const 0, const 1] : List (MultiPoly 1)) at hc'
@@ -642,7 +642,7 @@ theorem yCoeffs_entries_y_free (p : MultiPoly 1) :
     | tail _ h =>
       cases h with
       | head => rfl
-      | tail _ h' => exact absurd h' (List.not_mem_nil _)
+      | tail _ h' => exact absurd h' (List.not_mem_nil)
   | add p q ihp ihq =>
     intro c hc
     change c ∈ listAdd (yCoeffs p) (yCoeffs q) at hc

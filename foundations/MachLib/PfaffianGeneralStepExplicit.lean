@@ -168,7 +168,7 @@ theorem pfaffian_bound_step_explicit {M : Nat} (c : PfaffianChain (M + 3)) (hexp
           cases zeros with
           | nil => exact Nat.zero_le _
           | cons z zs =>
-            obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+            obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
             exact absurd hzero (hnoz z ha hb')
         · have hne' : ∃ z, a < z ∧ z < b ∧
               (pfaffianChainFn c (chainReduce c m p)).eval z ≠ 0 :=

@@ -97,7 +97,6 @@ theorem psd2_det_nonneg {a b d : Real} (h : Psd2 a b d) : 0 ≤ a * d - b * b :=
           intro hz
           exact hbne (by
             have := congrArg (fun z => z * (1 / (1 + 1))) hz
-            simp only at this
             rw [show (1 + 1) * b * (1 / (1 + 1)) = b * ((1 + 1) * (1 / (1 + 1)))
                   from by mach_ring, mul_inv (1 + 1) two_ne_zero,
                 show b * 1 = b from by mach_ring,

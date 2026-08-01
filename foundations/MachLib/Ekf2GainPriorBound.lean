@@ -155,7 +155,30 @@ theorem ekf2_gain_energy_le_prior
           + pd * ((-(k00*h01 + k01*h11)) * (-(k00*h01 + k01*h11)))
         = (1 - (k00*h00 + k01*h10)) * (1 - (k00*h00 + k01*h10)) * pa
           + (1+1) * ((1 - (k00*h00 + k01*h10)) * (-(k00*h01 + k01*h11))) * pb
-          + (k00*h01 + k01*h11) * (k00*h01 + k01*h11) * pd := by mach_ring
+          + (k00*h01 + k01*h11) * (k00*h01 + k01*h11) * pd := by
+      -- v4.16.0: `mach_ring` no longer closes this, and the mechanism is ATTRIBUTED (probe run,
+      -- 2026-07-29) rather than worked around blind:
+      --   * NOT `ac_rfl`. That alternative fails in 0.59s and never closed this goal -- after phase
+      --     1 the two sides differ by more than AC (nested negations), so it was never the closer.
+      --   * The closer was phase 2's CATCH-ALL: the permutative simp set (add_comm / mul_comm /
+      --     add_left_comm plus cancellation). At v4.16 it exhausts 4,000,000 heartbeats in 73s on
+      --     this 9-atom degree-4 goal. Permutative rewriting is combinatorial in term size, so this
+      --     is a cost cliff, not a soundness or fragment question.
+      --   * And `mach_ring` SWALLOWS that. Phase 2 is `try (first | ... | simp [AC..])`, so a
+      --     timeout inside it re-surfaces as plain "unsolved goals" -- the tactic cannot distinguish
+      --     "outside my fragment" from "out of budget", which is exactly why this first read as a
+      --     fragment miss. Worth knowing before trusting any `mach_ring` failure message.
+      -- `mach_mpoly` with the atoms named closes it in 6.4s, per the standing house rule:
+      -- `mach_ring` is the weak all-`try` normaliser, `mach_mpoly` the complete one.
+      -- STILL UNATTRIBUTED: whether the catch-all itself got slower across the bump, or phase 1's
+      -- normal form changed and handed it a harder goal. Separating those needs a BUILT v4.14.0
+      -- tree, which this migration no longer has -- recorded as open in MIGRATION_LOG.md rather
+      -- than left implied-solved by a green build.
+      -- Worth recording for the next stop: this single failure produced THREE errors in the build
+      -- log. maxHeartbeats is per-DECLARATION, so exhausting it here made `hidr` below and the
+      -- theorem's own `whnf` time out as collateral -- both pass untouched (hidr in 0.5s, on the
+      -- DEFAULT budget). Attribute the first failure in a declaration before believing the rest.
+      mach_mpoly [pa, pb, pd, k00, k01, h00, h01, h10, h11]
     have hidr : ra * (k00 * k00) + (1 + 1) * rb * (k00 * k01) + rd * (k01 * k01)
         = k00*k00*ra + (1+1)*(k00*k01)*rb + k01*k01*rd := by mach_ring
     rw [hidp] at hp

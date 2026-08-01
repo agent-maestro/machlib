@@ -87,8 +87,8 @@ private theorem length_dropWhile_le {α : Type} (p : α → Bool) :
 /-- The head of `L.reverse` is `L.getLast` (packaged for the `rcases` below). -/
 private theorem reverse_head_eq_getLast {α : Type} (L : List α) (hne : L ≠ [])
     {a : α} {t : List α} (hrev : L.reverse = a :: t) : a = L.getLast hne := by
-  have hh : L.reverse.head? = L.getLast? := List.head?_reverse L
-  rw [hrev, List.head?_cons, List.getLast?_eq_getLast L hne] at hh
+  have hh : L.reverse.head? = L.getLast? := List.head?_reverse
+  rw [hrev, List.head?_cons, List.getLast?_eq_some_getLast hne] at hh
   exact Option.some.inj hh
 
 /-- If a nonempty list's last entry fails the drop predicate, `reverse.dropWhile` drops nothing. -/
@@ -107,7 +107,7 @@ private theorem rdw_lt_of_getLast_pos {α : Type} (p : α → Bool) (L : List α
   rcases hrev : L.reverse with _ | ⟨a, t⟩
   · exact absurd (List.reverse_eq_nil_iff.mp hrev) hne
   · have hpos : 0 < L.length :=
-      Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero.mp h))
+      Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero_iff.mp h))
     have htlen : t.length = L.length - 1 := by
       have hc := congrArg List.length hrev
       rw [List.length_reverse, List.length_cons] at hc
@@ -180,7 +180,7 @@ theorem canonLcY0_eq_const0_of_top_deg0 (q : MultiPoly 2)
                 (yCoeffsAt_nonempty (⟨0, by omega⟩ : Fin 2) q) hlast
   rw [yCoeffsAt_length_eq, hdeg] at hlt
   have hnil : (yCoeffsAt (⟨0, by omega⟩ : Fin 2) q).reverse.dropWhile coeffCanonZeroB = [] :=
-    List.length_eq_zero.mp (by omega)
+    List.length_eq_zero_iff.mp (by omega)
   rw [hnil]; rfl
 
 /-! ### Connecting glue: `mP2PFL`-coefficients evaluate at the zero environment -/

@@ -1159,7 +1159,7 @@ where
       cases k with
       | zero =>
         rw [coeffAt_cons_zero]
-        exact h c (List.mem_cons_self _ _)
+        exact h c (List.mem_cons_self)
       | succ k' =>
         rw [coeffAt_cons_succ]
         apply ih_cs k' (by simp at hk; omega)
@@ -1220,7 +1220,7 @@ theorem canonicallyZero_iff_all_coeffs_zero (L : List Real) :
     induction L with
     | nil => exact evalCoeffs_nil x
     | cons c cs ih =>
-      have h_c : c = 0 := h c (List.mem_cons_self _ _)
+      have h_c : c = 0 := h c (List.mem_cons_self)
       have h_cs : ∀ c' ∈ cs, c' = 0 := fun c' hc' =>
         h c' (List.mem_cons_of_mem _ hc')
       rw [evalCoeffs_cons, h_c, zero_add]

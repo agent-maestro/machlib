@@ -370,7 +370,7 @@ theorem zero_count_transfer
       zeros.length ≤ N := by
   intro Z hZnd hZ
   have hpos : ∀ z ∈ Z, 0 < z := fun z hz => lt_trans_ax ha (hZ z hz).1
-  have hmap : (Z.map log).length = Z.length := List.length_map Z log
+  have hmap : (Z.map log).length = Z.length := List.length_map log
   rw [← hmap]
   apply hgbound (Z.map log)
   · rw [List.Nodup, List.pairwise_map]

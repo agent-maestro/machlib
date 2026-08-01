@@ -1,0 +1,38 @@
+{
+ "label": "v4.32.2",
+ "captured_at": "2026-07-30T15:00:01-0700",
+ "toolchain": "leanprover/lean4:v4.32.2",
+ "lock": [
+  "leanprover/lean4:v4.32.2",
+  "f3b06c705e6c"
+ ],
+ "gates": {
+  "kernel_replay": 1,
+  "lean4lean_replay": 1,
+  "ledger": 0,
+  "derivable": 0,
+  "sorry_audit": 0,
+  "artifact_drift": 0,
+  "toolchain": 0
+ },
+ "counts": {
+  "axioms_pinned": 242,
+  "headline_footprints": 57,
+  "derivations": 5,
+  "sorry_decls": 1
+ },
+ "footprints": {
+  "enumerated": 57,
+  "captured": 57,
+  "missing": []
+ },
+ "instrument_errors": [],
+ "voids": {
+  "kernel_replay": "CHECKER_VERSION_MISMATCH",
+  "lean4lean_replay": "INSTRUMENT_ABSENT"
+ },
+ "voids_cited": {
+  "kernel_replay": "Amendment-5-destination-externally-unreplayed",
+  "lean4lean_replay": "Amendment-5-destination-externally-unreplayed"
+ }
+}

@@ -264,7 +264,7 @@ theorem log_cTD_zero_bounded {N : Nat} (c : PfaffianChain N) (p : MultiPoly N) (
   cases zeros with
   | nil => exact Nat.le_refl 0
   | cons z zs =>
-    obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+    obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
     exact absurd hzero (hnoz z ha hb')
 
 /-! ## Trim bridges for the constant-c_D fragment log_step -/
@@ -726,7 +726,7 @@ theorem exp_step_const {N : Nat} (c : PfaffianChain (N + 1)) (a b : Real) (hab :
       cases zeros with
       | nil => exact Nat.le_refl 0
       | cons z zs =>
-        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
         exact absurd hzero (hnoz z ha hb')
     · have hne_rd : ∃ z, a < z ∧ z < b ∧ (pfaffianChainFn c (chainReduce c (MultiPoly.mul (MultiPoly.const (MachLib.Real.natCast (MultiPoly.degreeY (⟨N, Nat.lt_succ_self N⟩ : Fin (N+1)) p))) G) p)).eval z ≠ 0 :=
         Classical.byContradiction fun hcon =>

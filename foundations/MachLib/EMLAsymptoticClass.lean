@@ -4312,4 +4312,775 @@ theorem var_good_class_via_dominates :
   right; left
   exact var_eventually_dominates_any.eventually_above_one
 
+/-! ## Phase 18 — the `AboveOne` COLUMN: bounding the divisor's log above
+
+Phase 17 resolved the `Dominates` column and named the obstruction for the three remaining `?` cells,
+`{Const, AboveOne, Dominates} × AboveOne`. The obstruction is real and worth stating precisely:
+`EventuallyAboveOne t2` gives `1 < t2`, hence `0 < log t2`, but says **nothing about how large
+`log t2` gets**. Since `eml x y = exp x - log y`, an unbounded `log t2` drags the result down without
+limit while a tiny one leaves it essentially untouched. One hypothesis, two opposite answers — which
+is exactly what "indeterminate" means, and why no rule can exist for the bare cell.
+
+Phase 17 proposed the repair as a predicate PAIR. `EventuallyDominatesAny` already exists and drives
+the divisor's log up (forcing `Negative`, the resolved column). This is its dual: bound the divisor
+**above**, so its log is bounded above, and the dividend's class survives. -/
+
+/-- `f` is eventually at most `K`: `f x ≤ K` for all `x ≥ N`. The dual of `EventuallyDominatesAny`,
+and the missing half of the pair Phase 17 identified. -/
+def EventuallyAtMost (K : Real) (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → f x ≤ K
+
+/-- **`EventuallyAtMost` bounds the log above.** The one fact the closure rule needs: on the tail,
+`log (f x) ≤ log K`. Requires `0 < f x` there, which `EventuallyAboveOne` supplies. -/
+theorem EventuallyAtMost.log_le
+    {K : Real} {f : Real → Real}
+    (hK : EventuallyAtMost K f) (hpos : EventuallyAboveOne f) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → Real.log (f x) ≤ Real.log K := by
+  obtain ⟨N1, h1⟩ := hK
+  obtain ⟨N2, h2⟩ := hpos
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hfpos : 0 < f x := lt_trans_ax one_pos (h2 x hxN2)
+  -- `≤` from the reachable strict `log_lt_log`. SignTactic has `log_le_log` but is not on this
+  -- file's import chain; re-deriving one step beats importing a distant module, per the convention
+  -- the `wgc_`/`ebc_` lemmas elsewhere already follow.
+  rcases (le_iff_lt_or_eq (f x) K).mp (h1 x hxN1) with hlt | heq
+  · exact le_of_lt (log_lt_log hfpos hlt)
+  · rw [heq]; exact le_of_eq rfl
+
+/-- **Phase 19 — the first closure rule on `EventuallyAtMost`: `Const × AboveOne`.**
+
+`eml x y = exp x - log y`. With `f` eventually the constant `c` and `1 < g ≤ K` on the tail, the
+result sits in `[exp c - log K, exp c)`: bounded, and bounded by quantities that do not depend on `x`.
+So the cell closes **conditionally** — on `1 < exp c - log K`, the worst case being `g` pinned at its
+ceiling `K`.
+
+**The side condition is the cell's content, not a blemish.** Phase 17 showed the bare cell is
+indeterminate; a rule without a side condition would therefore have to be false. What `EventuallyAtMost`
+buys is that the indeterminacy becomes a single checkable inequality between `c` and `K` rather than an
+open question about `g`'s behaviour. Phase 12 shipped a conditional closure in the same spirit
+(`log b ≥ 0`), and this follows that precedent.
+
+Stated on arbitrary functions rather than on `EMLTree`, because the matrix is a statement about
+CLASSES; any tree whose arms land in these classes inherits it. -/
+theorem eml_const_atMost_eventually_above_one
+    {f g : Real → Real} {c K : Real}
+    (hf : ∃ N : Real, ∀ x : Real, N ≤ x → f x = c)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g)
+    (hside : 1 < Real.exp c - Real.log K) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) N3, fun x hx => ?_⟩
+  have hx12 : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) N3) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx12
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx12
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_right (max N1 N2) N3) hx
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  -- log (g x) ≤ log K, one step from the reachable strict form
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- so exp c - log K ≤ exp c - log (g x), and the side condition carries
+  have hmono : Real.exp c - Real.log K ≤ Real.exp c - Real.log (g x) := by
+    have := add_le_add_left hlog (Real.exp c - Real.log K - Real.log (g x))
+    have hrw : Real.exp c - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp c - Real.log K := by mach_ring
+    have hrw2 : Real.exp c - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp c - Real.log (g x) := by mach_ring
+    rwa [hrw, hrw2] at this
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h1 x hxN1]
+  exact lt_of_lt_of_le hside hmono
+
+/-- **Non-vacuity witness for the Phase 19 rule.** `hside : 1 < exp c - log K` constrains `c` and `K`
+against each other, so joint satisfiability with `1 < g ≤ K` is a real question — and the registry
+lists "a vacuous proof of a true statement" as a standing blindness. Instance: `f ≡ 1`, `g ≡ 1+1`,
+`K = 1+1`. Then `exp 1 - log 2 > 1` because `exp 1 > 1 + 1` and `log 2 < 1`. -/
+theorem eml_const_atMost_witness
+    (hexp : 1 + 1 < Real.exp 1) (hlog : Real.log (1 + 1) < 1) :
+    EventuallyAboveOne (fun x => eml ((fun _ => (1:Real)) x) ((fun _ => (1:Real) + 1) x)) := by
+  refine eml_const_atMost_eventually_above_one (c := 1) (K := 1 + 1)
+    ⟨0, fun x _ => rfl⟩ ⟨0, fun x _ => ?_⟩ ⟨0, fun x _ => le_of_eq rfl⟩ ?_
+  · show (1:Real) < 1 + 1
+    have h := add_lt_add_left one_pos 1
+    rwa [add_zero] at h
+  · -- 1 < exp 1 - log 2, from exp 1 > 2 and log 2 < 1
+    -- Only `add_lt_add_left` exists here (no `_right`), so both steps go through it.
+    -- hA : (1+1) - log 2 < exp 1 - log 2, by adding -(log 2) on the left of hexp
+    have hA : (1:Real) + 1 - Real.log (1 + 1) < Real.exp 1 - Real.log (1 + 1) := by
+      have t := add_lt_add_left hexp (-(Real.log (1 + 1)))
+      have e1 : -(Real.log (1 + 1)) + ((1:Real) + 1) = 1 + 1 - Real.log (1 + 1) := by mach_ring
+      have e2 : -(Real.log (1 + 1)) + Real.exp 1 = Real.exp 1 - Real.log (1 + 1) := by mach_ring
+      rwa [e1, e2] at t
+    -- hB : 1 < (1+1) - log 2, from log 2 < 1 by the same move
+    have hB : (1:Real) < 1 + 1 - Real.log (1 + 1) := by
+      have t1 : (1:Real) + Real.log (1 + 1) < 1 + 1 := add_lt_add_left hlog 1
+      have t2 := add_lt_add_left t1 (-(Real.log (1 + 1)))
+      have e3 : -(Real.log (1 + 1)) + ((1:Real) + Real.log (1 + 1)) = 1 := by mach_ring
+      have e4 : -(Real.log (1 + 1)) + ((1:Real) + 1) = 1 + 1 - Real.log (1 + 1) := by mach_ring
+      rwa [e3, e4] at t2
+    exact lt_trans_ax hB hA
+
+/-- **Phase 20 — `Dominates × AboveOne` closes, and UNCONDITIONALLY.**
+
+Where Phase 19's `Const × AboveOne` needed a side condition, this one does not, and the asymmetry is
+the point: a constant dividend can be swamped by the divisor's log, so the two must be compared
+(`1 < exp c - log K`). A *dominating* dividend cannot be swamped by anything bounded — `exp (f x)`
+outruns every fixed `log K` — so bounding the divisor above is the whole hypothesis and no numeric
+side condition survives.
+
+`EventuallyAtMost` is doing real work here: without it the divisor's log is unbounded and the cell is
+genuinely indeterminate (Phase 17). With it, the result dominates any constant. -/
+theorem eml_dominates_atMost_eventually_dominates
+    {f g : Real → Real} {K : Real}
+    (hf : EventuallyDominatesAny f)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g) :
+    EventuallyDominatesAny (fun x => eml (f x) (g x)) := by
+  intro M
+  -- Ask `f` to beat `max (M + log K) 0`: the `0` is not decoration — `x < exp x` is available
+  -- only for `x ≥ 0`, so the dividend must be pushed positive before `exp` can be used on it.
+  obtain ⟨N4, h4⟩ := id_eventually_lt_exp
+  -- `f` must be pushed past N4, not past 0: `id_eventually_lt_exp` guarantees `x < exp x` only
+  -- from SOME threshold, and its proof happening to use 0 is not part of its statement. Reading
+  -- a threshold off a proof rather than off the theorem is how a bound gets assumed into existence.
+  obtain ⟨N1, h1⟩ := hf (max (M + Real.log K) N4)
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) (max N3 N4), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) (max N3 N4)) hx
+  have hxB : max N3 N4 ≤ x := Real.le_trans (le_max_right (max N1 N2) (max N3 N4)) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_left N3 N4) hxB
+  have hfx : max (M + Real.log K) N4 < f x := h1 x hxN1
+  have hfx_N4 : N4 ≤ f x := le_of_lt (lt_of_le_of_lt (le_max_right (M + Real.log K) N4) hfx)
+  have hfx_big : M + Real.log K < f x := lt_of_le_of_lt (le_max_left (M + Real.log K) N4) hfx
+  have hexp : f x < Real.exp (f x) := h4 (f x) hfx_N4
+  -- log (g x) ≤ log K
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- assemble: exp (f x) - log (g x) ≥ exp (f x) - log K > (M + log K) - log K = M
+  show M < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl]
+  have step1 : M + Real.log K < Real.exp (f x) := lt_trans_ax hfx_big hexp
+  have step2 : M < Real.exp (f x) - Real.log K := by
+    have t := add_lt_add_left step1 (-(Real.log K))
+    have e1 : -(Real.log K) + (M + Real.log K) = M := by mach_ring
+    have e2 : -(Real.log K) + Real.exp (f x) = Real.exp (f x) - Real.log K := by mach_ring
+    rwa [e1, e2] at t
+  have step3 : Real.exp (f x) - Real.log K ≤ Real.exp (f x) - Real.log (g x) := by
+    have base : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp (f x) - Real.log K := by mach_ring
+    have base2 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp (f x) - Real.log (g x) := by mach_ring
+    have m := add_le_add_left hlog (Real.exp (f x) - Real.log K - Real.log (g x))
+    rwa [base, base2] at m
+  exact lt_of_lt_of_le step2 step3
+
+/-- **Phase 21 — `AboveOne × AboveOne` closes, completing the column.**
+
+The third and last `?` cell Phase 17 left. `1 < t1` gives only `exp 1 ≤ exp (t1 x)` — a FIXED floor,
+not a growing one — so like Phase 19 this cell is conditional. But the condition is sharper than
+Phase 19's: it constrains `K` alone (`1 < exp 1 - log K`), because the dividend's floor `exp 1` is a
+constant of the problem rather than a parameter.
+
+That completes the `AboveOne` column and, with it, the shape of the whole matrix: **a cell is
+unconditional exactly when the dividend grows without bound** (Phase 20), and conditional whenever the
+dividend has a ceiling — whether that ceiling is a free constant (Phase 19) or the fixed `exp 1`
+(here). The divisor side is `EventuallyAtMost` in all three; what varies is only whether the dividend
+can outrun it. -/
+theorem eml_aboveOne_atMost_eventually_above_one
+    {f g : Real → Real} {K : Real}
+    (hf : EventuallyAboveOne f)
+    (hg1 : EventuallyAboveOne g)
+    (hgK : EventuallyAtMost K g)
+    (hside : 1 < Real.exp 1 - Real.log K) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg1
+  obtain ⟨N3, h3⟩ := hgK
+  refine ⟨max (max N1 N2) N3, fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) N3) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hxN3 : N3 ≤ x := Real.le_trans (le_max_right (max N1 N2) N3) hx
+  -- exp 1 ≤ exp (f x), from 1 < f x
+  have hexp : Real.exp 1 ≤ Real.exp (f x) := exp_monotone (le_of_lt (h1 x hxN1))
+  -- log (g x) ≤ log K
+  have hgpos : 0 < g x := lt_trans_ax one_pos (h2 x hxN2)
+  have hlog : Real.log (g x) ≤ Real.log K := by
+    rcases (le_iff_lt_or_eq (g x) K).mp (h3 x hxN3) with hlt | heq
+    · exact le_of_lt (log_lt_log hgpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl]
+  -- exp 1 - log K ≤ exp (f x) - log K ≤ exp (f x) - log (g x), and hside starts the chain
+  have s1 : Real.exp 1 - Real.log K ≤ Real.exp (f x) - Real.log K := by
+    have t := add_le_add_left hexp (-(Real.log K))
+    have e1 : -(Real.log K) + Real.exp 1 = Real.exp 1 - Real.log K := by mach_ring
+    have e2 : -(Real.log K) + Real.exp (f x) = Real.exp (f x) - Real.log K := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : Real.exp (f x) - Real.log K ≤ Real.exp (f x) - Real.log (g x) := by
+    have m := add_le_add_left hlog (Real.exp (f x) - Real.log K - Real.log (g x))
+    have b1 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log (g x)
+        = Real.exp (f x) - Real.log K := by mach_ring
+    have b2 : Real.exp (f x) - Real.log K - Real.log (g x) + Real.log K
+        = Real.exp (f x) - Real.log (g x) := by mach_ring
+    rwa [b1, b2] at m
+  exact lt_of_lt_of_le hside (Real.le_trans s1 s2)
+
+/-- **Phase 22 — `AboveOne × Const`.**
+
+Phase 17's prose named the remaining cells as `{Const, AboveOne} × {AboveOne}`, but its own table also
+carries a `?` at `AboveOne × Const`. Recounting the table's ticks against the stated 11 confirms the
+table: four cells were open, not three. This closes the fourth.
+
+The proof is the Phase 21 argument with the divisor pinned: `1 < f x` gives the fixed floor
+`exp 1 ≤ exp (f x)`, and a constant divisor `d` contributes the constant `log d`. Conditional, on
+`1 < exp 1 - log d`, and it is worth noting the condition is **automatically satisfied whenever
+`d ≤ 1`** (then `log d ≤ 0`, so `exp 1 - log d ≥ exp 1 > 1`) — the hypothesis only bites for divisors
+above 1, which is exactly where a divisor can fight back. -/
+theorem eml_aboveOne_const_eventually_above_one
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyAboveOne f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hside : 1 < Real.exp 1 - Real.log d) :
+    EventuallyAboveOne (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hexp : Real.exp 1 ≤ Real.exp (f x) := exp_monotone (le_of_lt (h1 x hxN1))
+  show 1 < eml (f x) (g x)
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2]
+  have s1 : Real.exp 1 - Real.log d ≤ Real.exp (f x) - Real.log d := by
+    have t := add_le_add_left hexp (-(Real.log d))
+    have e1 : -(Real.log d) + Real.exp 1 = Real.exp 1 - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + Real.exp (f x) = Real.exp (f x) - Real.log d := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le hside s1
+
+/-- **Phase 23 — `Negative × Const` closes, opening the `Negative` row.**
+
+Phase 17 marked the whole `Negative` row "risky" and deferred it to the per-shape `K/x` machinery.
+It need not be: the row has the same structure as the ones already closed, read from the other side.
+
+`f x < 0` gives `exp (f x) < 1` — a fixed CEILING, where `AboveOne` gave a fixed floor. So a constant
+divisor `d` with `1 ≤ log d` (i.e. `d ≥ e`) drives the whole expression below zero:
+`eml = exp (f x) - log d < 1 - 1 = 0`.
+
+The symmetry with Phase 21/22 is exact and worth stating: a bounded dividend closes a cell against a
+constant divisor **in whichever direction the bound points**. `AboveOne` bounds below and yields
+`AboveOne` on `1 < exp 1 - log d`; `Negative` bounds above and yields `Negative` on `1 ≤ log d`. The
+"risky" label was about the per-shape route, not about the cell. -/
+theorem eml_negative_const_eventually_negative
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyNegative f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hside : 1 ≤ Real.log d) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  refine ⟨max N1 N2, fun x hx => ?_⟩
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hx
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hx
+  have hexp : Real.exp (f x) < 1 := exp_lt_one (h1 x hxN1)
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2]
+  -- exp (f x) - log d < 1 - log d ≤ 1 - 1 = 0
+  have s1 : Real.exp (f x) - Real.log d < 1 - Real.log d := by
+    have t := add_lt_add_left hexp (-(Real.log d))
+    have e1 : -(Real.log d) + Real.exp (f x) = Real.exp (f x) - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + 1 = 1 - Real.log d := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : (1:Real) - Real.log d ≤ 0 := by
+    have t := add_le_add_left hside (-(Real.log d))
+    have e1 : -(Real.log d) + 1 = 1 - Real.log d := by mach_ring
+    have e2 : -(Real.log d) + Real.log d = 0 := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le s1 s2
+
+/-- **Phase 24 — `MinusLog × Const` closes. The mirroring extends to the second deferred row.**
+
+Phase 17 deferred the `MinusLog` row to the per-shape `K/x` machinery alongside `Negative`. Phase 23
+showed the `Negative` deferral had aged out; this shows the same for `MinusLog`, and by a sharper
+route — because here the dividend does not merely have a ceiling, it VANISHES.
+
+`f x = -log x` gives `exp (f x) = exp (-log x) = 1 / exp (log x) = 1 / x` exactly (`exp_neg_inv` then
+`exp_log`), so the dividend is `1/x`: positive, and eventually below any positive constant. Against a
+constant divisor with `0 < log d` (i.e. `d > 1`) the result is eventually negative, and the threshold
+is explicit rather than asymptotic — `x > 1 / log d` suffices.
+
+Note the condition is **strictly weaker than Phase 23's**. `Negative × Const` needed `1 ≤ log d`
+because `exp (f x)` was only known `< 1`; here `exp (f x) = 1/x` shrinks, so `0 < log d` is enough.
+A vanishing dividend buys a weaker hypothesis than a merely bounded one — which is the same ordering
+Phases 20/21 found on the other side, where an unbounded dividend needed no hypothesis at all. -/
+theorem eml_minusLog_const_eventually_negative
+    {f g : Real → Real} {d : Real}
+    (hf : EventuallyMinusLog f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x = d)
+    (hd : 0 < Real.log d) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  -- threshold: past N1, N2, and past 1/log d so that 1/x < log d
+  refine ⟨max (max N1 N2) (max 1 (1 / Real.log d + 1)), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) _) hx
+  have hxB : max 1 (1 / Real.log d + 1) ≤ x := Real.le_trans (le_max_right (max N1 N2) _) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_left 1 _) hxB
+  have hxbig : 1 / Real.log d + 1 ≤ x := Real.le_trans (le_max_right 1 _) hxB
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  -- exp (f x) = 1 / x, exactly
+  have hval : Real.exp (f x) = 1 / x := by
+    rw [h1 x hxN1, exp_neg_inv, exp_log hxpos]
+  -- 1 / x < log d, from x > 1 / log d
+  have hlt : 1 / x < Real.log d := by
+    have hself : 1 / Real.log d < 1 / Real.log d + 1 := by
+      have t := add_lt_add_left one_pos (1 / Real.log d)
+      rwa [add_zero] at t
+    have hstrict : 1 / Real.log d < x := lt_of_lt_of_le hself hxbig
+    have h1d : 0 < 1 / Real.log d := div_pos_of_pos_pos one_pos hd
+    -- 1/x < log d  ⟺  1 < x * log d, and x > 1/log d gives exactly that
+    have hmul : 1 < x * Real.log d := by
+      have t := mul_lt_mul_of_pos_right hstrict hd
+      have e : 1 / Real.log d * Real.log d = 1 := div_mul_cancel (ne_of_gt hd)
+      rwa [e] at t
+    -- 1/x < log d, by comparing after multiplying through by x (>0). No `div_lt_of_lt_mul`
+    -- on this chain -- the reachable-lemma index says it lives in WitnessResidualDeepNumeric --
+    -- so it is re-derived here from lt_total, matching the wgc_/ebc_ convention.
+    rcases lt_total (1 / x) (Real.log d) with hlt | heq | hgt
+    · exact hlt
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have : Real.log d * x = 1 := by rw [← heq, hcan]
+      have hne : x * Real.log d ≠ 1 := ne_of_gt hmul
+      exact hne (by rw [Real.mul_comm x (Real.log d)]; exact this)
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hmul2 : Real.log d * x < 1 / x * x := mul_lt_mul_of_pos_right hgt hxpos
+      rw [hcan] at hmul2
+      have : x * Real.log d < 1 := by rw [Real.mul_comm x (Real.log d)]; exact hmul2
+      -- 1 < x·log d and x·log d < 1 give 1 < 1; `ne_of_gt` turns that into 1 ≠ 1.
+      exact absurd rfl (ne_of_gt (lt_trans_ax hmul this))
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, h2 x hxN2, hval]
+  have t := add_lt_add_left hlt (-(Real.log d))
+  have e1 : -(Real.log d) + 1 / x = 1 / x - Real.log d := by mach_ring
+  have e2 : -(Real.log d) + Real.log d = 0 := by mach_ring
+  rwa [e1, e2] at t
+
+/-! ## Phase 25 — completing the predicate pair
+
+`EventuallyAtMost` (Phase 18) bounds the divisor ABOVE, which is what a large dividend needs: it stops
+the divisor's log from running away. Its dual bounds the divisor BELOW, which is what a SMALL dividend
+needs: it stops the divisor's log from vanishing. Phase 24's ordering predicts this — a vanishing
+dividend loses to any divisor whose log is bounded away from zero, and `EventuallyAboveOne` alone does
+not give that, because `log (g x)` may be positive and still arbitrarily small. -/
+
+/-- `f` is eventually at least `L`. The dual of `EventuallyAtMost`, and the other half of the pair. -/
+def EventuallyAtLeast (L : Real) (f : Real → Real) : Prop :=
+  ∃ N : Real, ∀ x : Real, N ≤ x → L ≤ f x
+
+/-- **Phase 25 — `MinusLog × AboveOne` closes, given a divisor bounded away from 1.**
+
+The last cell reachable by this session's method. `exp (f x) = 1/x` vanishes; `L ≤ g x` with `1 < L`
+puts `0 < log L ≤ log (g x)`; and `1/x < log L` once `x > 1/log L`. So the result is eventually
+negative.
+
+**`EventuallyAboveOne` alone is NOT enough here, and that is the content.** It gives `0 < log (g x)`
+pointwise, but the bound may shrink toward zero as `x` grows, and a vanishing dividend cannot be
+guaranteed to beat a vanishing divisor-log. `EventuallyAtLeast` supplies the uniform gap. This is the
+same lesson as Phase 17's, one level down: a pointwise inequality is not a bound. -/
+theorem eml_minusLog_atLeast_eventually_negative
+    {f g : Real → Real} {L : Real}
+    (hf : EventuallyMinusLog f)
+    (hL : 1 < L)
+    (hg : EventuallyAtLeast L g) :
+    EventuallyNegative (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨N2, h2⟩ := hg
+  have hLpos : 0 < L := lt_trans_ax one_pos hL
+  -- log L > 0 from 1 < L: log 1 = 0 and log is strictly monotone (log_lt_log, reachable).
+  have hlogL : 0 < Real.log L := by
+    have h := log_lt_log one_pos hL
+    rwa [log_one] at h
+  refine ⟨max (max N1 N2) (max 1 (1 / Real.log L + 1)), fun x hx => ?_⟩
+  have hxA : max N1 N2 ≤ x := Real.le_trans (le_max_left (max N1 N2) _) hx
+  have hxB : max 1 (1 / Real.log L + 1) ≤ x := Real.le_trans (le_max_right (max N1 N2) _) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 N2) hxA
+  have hxN2 : N2 ≤ x := Real.le_trans (le_max_right N1 N2) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_left 1 _) hxB
+  have hxbig : 1 / Real.log L + 1 ≤ x := Real.le_trans (le_max_right 1 _) hxB
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  have hval : Real.exp (f x) = 1 / x := by
+    rw [h1 x hxN1, exp_neg_inv, exp_log hxpos]
+  -- log L ≤ log (g x), from L ≤ g x
+  have hloggx : Real.log L ≤ Real.log (g x) := by
+    rcases (le_iff_lt_or_eq L (g x)).mp (h2 x hxN2) with hlt | heq
+    · exact le_of_lt (log_lt_log hLpos hlt)
+    · rw [heq]; exact le_of_eq rfl
+  -- 1/x < log L, exactly as in Phase 24
+  have hlt : 1 / x < Real.log L := by
+    have hself : 1 / Real.log L < 1 / Real.log L + 1 := by
+      have t := add_lt_add_left one_pos (1 / Real.log L)
+      rwa [add_zero] at t
+    have hstrict : 1 / Real.log L < x := lt_of_lt_of_le hself hxbig
+    have hmul : 1 < x * Real.log L := by
+      have t := mul_lt_mul_of_pos_right hstrict hlogL
+      have e : 1 / Real.log L * Real.log L = 1 := div_mul_cancel (ne_of_gt hlogL)
+      rwa [e] at t
+    rcases lt_total (1 / x) (Real.log L) with hh | heq | hgt
+    · exact hh
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hEq : Real.log L * x = 1 := by rw [← heq, hcan]
+      exact absurd (by rw [Real.mul_comm x (Real.log L)]; exact hEq) (ne_of_gt hmul)
+    · exfalso
+      have hcan : 1 / x * x = 1 := div_mul_cancel (ne_of_gt hxpos)
+      have hm2 : Real.log L * x < 1 / x * x := mul_lt_mul_of_pos_right hgt hxpos
+      rw [hcan] at hm2
+      have hlt1 : x * Real.log L < 1 := by rw [Real.mul_comm x (Real.log L)]; exact hm2
+      exact absurd rfl (ne_of_gt (lt_trans_ax hmul hlt1))
+  show eml (f x) (g x) < 0
+  rw [show eml (f x) (g x) = Real.exp (f x) - Real.log (g x) from rfl, hval]
+  -- 1/x - log (g x) < log L - log L = 0
+  have s1 : 1 / x - Real.log (g x) < Real.log L - Real.log (g x) := by
+    have t := add_lt_add_left hlt (-(Real.log (g x)))
+    have e1 : -(Real.log (g x)) + 1 / x = 1 / x - Real.log (g x) := by mach_ring
+    have e2 : -(Real.log (g x)) + Real.log L = Real.log L - Real.log (g x) := by mach_ring
+    rwa [e1, e2] at t
+  have s2 : Real.log L - Real.log (g x) ≤ 0 := by
+    have t := add_le_add_left hloggx (-(Real.log (g x)))
+    have e1 : -(Real.log (g x)) + Real.log L = Real.log L - Real.log (g x) := by mach_ring
+    have e2 : -(Real.log (g x)) + Real.log (g x) = 0 := by mach_ring
+    rwa [e1, e2] at t
+  exact lt_of_lt_of_le s1 s2
+
+/-! ## Phase 26 — the degenerate column: is it mathematics, or is it the totalization?
+
+`MachLib.Real.log` is TOTAL: `log x = 0` for `x ≤ 0` (`Log.lean`, the `else` branch). That is a
+formalization convention, not a theorem about logarithms — and it means the five matrix cells whose
+DIVISOR is `Negative` or `MinusLog` may be measuring the junk branch rather than the intended
+expression. The closure matrix scores the formalized `eml`; for these cells the formalization and the
+intention have come apart, which is instrument-relativity in its purest form: the number is real, and
+it is a number about a different object than the one the taxonomy was built for.
+
+The question is therefore TERNARY, not "sixth class or ceiling":
+
+  (i)   a genuine sixth asymptotic class of the totalized semantics — the taxonomy extends and the
+        cells close under it;
+  (ii)  a totalization artifact — the cells are about junk values, marked BLOCKED-BY-CONVENTION, and
+        the matrix's honest headline becomes "18 of 18 non-degenerate cells closed, 5 degenerate by
+        totalization, matrix conditioned on divisor sign";
+  (iii) closable within the existing taxonomy after all, VIA the collapse.
+
+The lemma below discriminates all three cheaply. Once `eml (f x) (g x) = exp (f x)` on the tail, the
+question "what class do these cells land in" becomes "what class does `exp ∘ f` demand" — a lookup
+against the existing five rather than an open problem. -/
+
+/-- **The degenerate collapse.** When the divisor is eventually non-positive, `eml` collapses to
+`exp ∘ f` on the tail, because `log` is totalized to `0` there.
+
+Stated as an eventual EQUALITY rather than a class claim on purpose: the equality is a fact about the
+formalized `eml` and is true regardless of which of (i)/(ii)/(iii) holds. What it does NOT assert is
+that this says anything about `eml` as an operator on the reals where `log` is partial — that reading
+is exactly hypothesis (ii), and this lemma is deliberately silent on it. -/
+theorem eml_collapse_of_divisor_nonpos
+    {f g : Real → Real}
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → eml (f x) (g x) = Real.exp (f x) := by
+  obtain ⟨N, hN⟩ := hg
+  refine ⟨N, fun x hx => ?_⟩
+  show Real.exp (f x) - Real.log (g x) = Real.exp (f x)
+  rw [log_nonpos (hN x hx)]
+  mach_ring
+
+/-- `EventuallyNegative` divisors are eventually non-positive — the sign lemma for that row. -/
+theorem EventuallyNegative.nonpos {g : Real → Real} (h : EventuallyNegative g) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0 := by
+  obtain ⟨N, hN⟩ := h
+  exact ⟨N, fun x hx => le_of_lt (hN x hx)⟩
+
+/-- `EventuallyMinusLog` divisors are eventually non-positive: `-log x ≤ 0` once `x ≥ 1`. -/
+theorem EventuallyMinusLog.nonpos {g : Real → Real} (h : EventuallyMinusLog g) :
+    ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0 := by
+  obtain ⟨N, hN⟩ := h
+  refine ⟨max N 1, fun x hx => ?_⟩
+  have hxN : N ≤ x := Real.le_trans (le_max_left N 1) hx
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_right N 1) hx
+  rw [hN x hxN]
+  -- log x ≥ 0 for x ≥ 1, so -log x ≤ 0
+  have hlog : (0:Real) ≤ Real.log x := by
+    rcases (le_iff_lt_or_eq 1 x).mp hx1 with hlt | heq
+    · have h := log_lt_log one_pos hlt
+      rw [log_one] at h
+      exact le_of_lt h
+    · rw [← heq, log_one]; exact le_of_eq rfl
+  have t := add_le_add_left hlog (-(Real.log x))
+  have e1 : -(Real.log x) + 0 = -Real.log x := by mach_ring
+  have e2 : -(Real.log x) + Real.log x = 0 := by mach_ring
+  rwa [e1, e2] at t
+
+/-- **THE LOOKUP, and it does not come out where the taxonomy would like.**
+
+Apply the collapse with a `MinusLog` dividend: `eml (f x) (g x) = exp (-log x) = 1/x` **exactly**. So
+the two cells `MinusLog × {Negative, MinusLog}` land in `EventuallyKOverX 1` — a class the taxonomy
+already has, which is hypothesis (iii)…
+
+…and `EventuallyKOverX 1` is **the class of `1/x`**: precisely the function this whole program exists
+to prove is NOT reachable by EML. The totalized `eml` manufactures it from the junk branch of `log`.
+
+**What this does and does not establish.** It does NOT show `1/x ∈ EML`, and no existing proof is
+impugned. It shows that the *totalized* `eml`, evaluated with a non-positive divisor, produces `1/x` —
+and that `MachLib.Real.log`'s `else 0` branch is load-bearing for that, not incidental. Whether any
+`EMLTree` can simultaneously realise a `MinusLog` dividend and a non-positive divisor is a SEPARATE
+question this lemma does not answer and which `EMLDomainSafety` explicitly does not cover ("deliberately
+narrow… without claiming complete EML safety").
+
+**So the ternary resolves as (ii), and consequentially.** These cells are a totalization artifact, they
+must be marked BLOCKED-BY-CONVENTION rather than closed, and the matrix headline must be conditioned
+on divisor sign. Reporting them as closed would enter `1/x`-in-the-image into the record via a
+convention, on the one question where that is most expensive. **The obstruction touches the
+general-depth claim directly** — which is the answer to the amendment's second question, and it is
+worth more than the two cells it costs. -/
+theorem eml_minusLog_nonpos_is_inv_x
+    {f g : Real → Real}
+    (hf : EventuallyMinusLog f)
+    (hg : ∃ N : Real, ∀ x : Real, N ≤ x → g x ≤ 0) :
+    EventuallyKOverX 1 (fun x => eml (f x) (g x)) := by
+  obtain ⟨N1, h1⟩ := hf
+  obtain ⟨Nc, hc⟩ := eml_collapse_of_divisor_nonpos (f := f) hg
+  refine ⟨max (max N1 Nc) 1, fun x hx => ?_⟩
+  have hxA : max N1 Nc ≤ x := Real.le_trans (le_max_left (max N1 Nc) 1) hx
+  have hxN1 : N1 ≤ x := Real.le_trans (le_max_left N1 Nc) hxA
+  have hxNc : Nc ≤ x := Real.le_trans (le_max_right N1 Nc) hxA
+  have hx1 : (1:Real) ≤ x := Real.le_trans (le_max_right (max N1 Nc) 1) hx
+  have hxpos : (0:Real) < x := lt_of_lt_of_le one_pos hx1
+  show eml (f x) (g x) = 1 / x
+  rw [hc x hxNc, h1 x hxN1, exp_neg_inv, exp_log hxpos]
+
+/-! ## E5-ter session 2 — a COUNTEREXAMPLE to the Phase 15B frontier
+
+The framework's stated goal (line ~3834) is `∀ t : EMLTree, EMLGoodClass t.eval`, from which
+`∀ t, ¬ EventuallyKOverX 1 t.eval` would follow. **That goal is false**, and the witness is small.
+
+    t := eml (eml (const 0) var) (const (exp (-(1/2))))
+
+    inner = exp 0 − log x            = 1 − log x
+    outer = exp (1 − log x) − log (exp (−1/2))
+          = e·exp(−log x) + 1/2      = e/x + 1/2
+
+So the eval tends to `1/2` **from above** and is eventually trapped strictly inside `(0,1)`:
+
+* not `EventuallyConstant` — it strictly decreases;
+* not `EventuallyAboveOne` — `e/x + 1/2 < 1` once `x > 2e`;
+* not `EventuallyNegative` — it is always positive;
+* not `EventuallyMinusLog` — at `x = 1` it is `e + 1/2`, while `−log 1 = 0`.
+
+**The four classes are not exhaustive over `EMLTree`.** They omit the whole band of evals that decay
+to a limit in `(0,1)` — and `eml` reaches that band easily, because `exp` of anything tending to `−∞`
+contributes a vanishing positive term that a constant divisor can offset to any level.
+
+**This is stronger than "the route failed".** It does not say the class-induction was unwalked; it says
+the induction's conclusion is FALSE, so no strengthening of the induction hypothesis can rescue it.
+Repair (a) is dead, not untested.
+
+**The claim `1/x ∉ EML` is untouched.** It was never tested by this route — and note the witness is
+*not* a counterexample to it: `e/x + 1/2` is not `1/x`. What died is the instrument. -/
+
+/-- The counterexample tree's eval, computed. -/
+noncomputable def goodClassCounterexample : EMLTree :=
+  .eml (.eml (.const 0) .var) (.const (Real.exp (-(1/(1+1)))))
+
+/-- **`eval = e/x + 1/2` for `x > 0`.** The whole counterexample rests on this identity. -/
+theorem goodClassCounterexample_eval {x : Real} (hx : 0 < x) :
+    goodClassCounterexample.eval x = Real.exp 1 / x + 1 / (1 + 1) := by
+  have h11 : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hlogc : Real.log (Real.exp (-(1/(1+1)))) = -(1/(1+1)) := log_exp _
+  show Real.exp (Real.exp 0 - Real.log x) - Real.log (Real.exp (-(1/(1+1))))
+      = Real.exp 1 / x + 1 / (1 + 1)
+  rw [hlogc, exp_zero]
+  have hsplit : Real.exp (1 - Real.log x) = Real.exp 1 * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have : Real.exp 1 * (1 / x) = Real.exp 1 / x := by
+    rw [div_def (Real.exp 1) x (ne_of_gt hx)]; mach_ring
+  rw [this]; mach_ring
+
+/-- **Not `EventuallyNegative`:** `e/x + 1/2 > 0` for every `x > 0`, so no tail is negative. -/
+theorem goodClassCounterexample_not_negative :
+    ¬ EventuallyNegative goodClassCounterexample.eval := by
+  intro h
+  obtain ⟨N, hN⟩ := h
+  have hx : (0:Real) < max N 1 := lt_of_lt_of_le one_pos (le_max_right N 1)
+  have hval := goodClassCounterexample_eval hx
+  have hlt := hN (max N 1) (le_max_left N 1)
+  rw [hval] at hlt
+  -- but e/x + 1/2 > 0
+  have h11 : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hpos : (0:Real) < Real.exp 1 / max N 1 + 1 / (1 + 1) :=
+    add_pos (div_pos_of_pos_pos (exp_pos 1) hx) (div_pos_of_pos_pos one_pos h11)
+  exact absurd rfl (ne_of_gt (lt_trans_ax hpos hlt))
+
+/-! ### What the counterexample tells a repair to do — and why it is not free
+
+The omitted band is "evals decaying to a limit in `(0,1)`". A naive repair adds a fifth class for it.
+**That repair cannot work as stated, and the reason is the whole value of the counterexample.**
+
+`EMLGoodClass`'s job is to be DISJOINT from `EventuallyKOverX 1`. But `1/x` is itself eventually
+inside `(0,1)`. So a class defined as *"eventually in `(0,1)`"* would contain `1/x`, disjointness
+would fail, and the main theorem would not follow from it.
+
+The band therefore has to be split by LIMIT, not by range:
+
+  * limit in `(0,1)`  — the counterexample `e/x + 1/2`. Safe: it is bounded away from `0`.
+  * limit `0`         — where `1/x` lives. Not safe, and must be excluded.
+
+So a corrected taxonomy must prove that **no valid EML tree decays to `0`**. That is `1/x ∉ EML`
+restated — possibly better-posed, since "decays to 0" is a coarser target than "equals `1/x`", and a
+tree could fail to be `1/x` while still decaying to `0`. Whether that reformulation is easier or the
+same problem wearing new clothes is **open, and is the first thing a successor route should settle**,
+because it decides whether the class programme is repairable at all. -/
+
+/-! ## E5-quater session 1 — the adversarial pass succeeds. `e/x` IS an EML tree.
+
+The pre-registration's exit 3 was "a valid EML tree decaying to `0` exists". It does, and the witness
+is smaller than the E5-ter one:
+
+    T := eml (eml (const 0) var) (const 1)
+
+    inner  = exp 0 − log x        = 1 − log x
+    T      = exp (1 − log x) − log 1
+           = e · exp (−log x) − 0 = **e / x**, exactly.
+
+So `T.eval ∈ EventuallyKOverX e`. It decays to `0`, is never `0`, and satisfies neither disjunct of the
+lower-bound invariant. **The E5-quater target is false, in session 1, by construction rather than by
+argument.**
+
+### And this reframes the whole programme
+
+`EventuallyKOverX K` is REACHABLE by EML trees — for a family of `K`. The general shape
+
+    eml (eml (const a) var) (const b)   evaluates to   exp (exp a) / x − log b
+
+gives `K = exp (exp a)`, and since `exp a > 0` always, **`K = exp (exp a) > 1` always** for this shape.
+It can never produce `K = 1`.
+
+That is why the framework's disjointness lemma is `not_eventually_K_over_x_one` and not
+`not_eventually_K_over_x`: **`K = 1` is special, and the specialness is real, not an artefact of how
+someone stated it.** To hit `K = 1` by this shape one needs `exp (exp a) = 1`, i.e. `exp a = 0`, which
+is impossible; alternatively `eml t (const 1) = 1/x` requires `t.eval = −log x` exactly — the
+`EventuallyMinusLog` class, which no `eml` node can produce, since `exp t1 − log t2 = −log x` would
+need `exp t1 = 0`.
+
+**So `1/x ∉ EML` survives session 1 and is now better understood, not weaker:** the obstruction is
+that `1` sits below the reachable constant floor, and every near-miss the programme kept hitting was a
+`K > 1` neighbour. -/
+
+/-- The adversarial witness: a valid EML tree whose eval decays to `0`. -/
+noncomputable def eOverX : EMLTree := .eml (.eml (.const 0) .var) (.const 1)
+
+/-- **`eOverX.eval x = e / x`, exactly, for `x > 0`.** Falsifies the E5-quater lower-bound target. -/
+theorem eOverX_eval {x : Real} (hx : 0 < x) : eOverX.eval x = Real.exp 1 / x := by
+  show Real.exp (Real.exp 0 - Real.log x) - Real.log 1 = Real.exp 1 / x
+  rw [log_one, exp_zero]
+  have hsplit : Real.exp (1 - Real.log x) = Real.exp 1 * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have hd : Real.exp 1 * (1 / x) = Real.exp 1 / x := by
+    rw [div_def (Real.exp 1) x (ne_of_gt hx)]; mach_ring
+  rw [hd]; mach_ring
+
+/-- **`e/x` is an EML tree eval — so `EventuallyKOverX e` is REACHABLE.** The disjointness lemma is
+stated for `K = 1` for a reason: `1` is below the floor this construction can reach. -/
+theorem eOverX_is_K_over_x : EventuallyKOverX (Real.exp 1) eOverX.eval := by
+  refine ⟨1, fun x hx => ?_⟩
+  exact eOverX_eval (lt_of_lt_of_le one_pos hx)
+
+/-! ### The reachable constant floor, for the shape session 1 exposed -/
+
+/-- The general `K/x` shape: `eml (eml (const a) var) (const 1)`. -/
+noncomputable def kOverXTree (a : Real) : EMLTree := .eml (.eml (.const a) .var) (.const 1)
+
+/-- **Its eval is `exp (exp a) / x`.** So the reachable constant is `K = exp (exp a)`. -/
+theorem kOverXTree_eval {a x : Real} (hx : 0 < x) :
+    (kOverXTree a).eval x = Real.exp (Real.exp a) / x := by
+  show Real.exp (Real.exp a - Real.log x) - Real.log 1 = Real.exp (Real.exp a) / x
+  rw [log_one]
+  have hsplit : Real.exp (Real.exp a - Real.log x)
+      = Real.exp (Real.exp a) * Real.exp (-(Real.log x)) := by
+    rw [← exp_add]; congr 1; mach_ring
+  rw [hsplit, exp_neg_inv, exp_log hx]
+  have hd : Real.exp (Real.exp a) * (1 / x) = Real.exp (Real.exp a) / x := by
+    rw [div_def (Real.exp (Real.exp a)) x (ne_of_gt hx)]; mach_ring
+  rw [hd]; mach_ring
+
+/-- **THE FLOOR — and it was already proved, 4,400 lines up.**
+
+`1 < exp (exp a)` for every real `a` is `one_lt_exp_exp_local` (line ~612), itself a local copy of
+`one_lt_exp_exp` from `InvXNotInEML.lean`, with `exp_exp_ne_one_local` right beneath it. **This target
+did not need a new theorem; it needed someone to notice the one that existed and say what it means.**
+
+What is new is the READING. Those two lemmas have sat here since Phase 3 as arithmetic helpers for
+pattern-matching depth-2 cases. Session 1 showed `exp (exp a)` is exactly the constant the `K/x` shape
+produces — so `one_lt_exp_exp_local` is not a helper, it is **the floor theorem**: the constants this
+shape can build are bounded strictly below by `1`, and `1` is unreachable by it for every `a`, with no
+limiting case to appeal to (the shape approaches `1` from above as `a → −∞` and never arrives).
+
+So the localisation the target wanted is: **the difficulty in `1/x ∉ EML` is that `1` sits below the
+floor of the constants `eml` can build** — not that `1/x` is hard to approximate. -/
+theorem kOverXTree_constant_gt_one (a : Real) : 1 < Real.exp (Real.exp a) :=
+  one_lt_exp_exp_local a
+
+/-- `K = 1` is not reachable by this shape, for any `a`. Also already present, as
+`exp_exp_ne_one_local`; restated here under the name the floor result deserves. -/
+theorem kOverXTree_never_one (a : Real) : Real.exp (Real.exp a) ≠ 1 :=
+  exp_exp_ne_one_local a
+
+/-! ### Does the floor generalise? The halt point, tested — and the sub-result that survives it
+
+The depth-2 shape's floor is settled. The general question is: does **every** tree with eval `K/x`
+have `K > 1`? Chasing it one step shows why the pre-registered halt point fires.
+
+A tree with eval `K/x` must be `eml t1 t2`, so `exp (t1.eval x) − log (t2.eval x) = K/x`.
+Take the natural branch `t2 = const 1`: then `t1.eval x = log K − log x`, and `t1` must itself be an
+`eml` node, so `exp (s1.eval x) − log (s2.eval x) = log K − log x`. Taking `s2 = var` closes it:
+`exp (s1.eval x) = log K`, a constant — **which is where the floor lives**, and the theorem below kills
+`K ≤ 1` outright on that branch.
+
+**But `s2` need not be `var`.** In general `log (s2.eval x) = exp (s1.eval x) − log K + log x`, i.e.
+`s2.eval x = x · exp (exp (s1.eval x)) / K` — so the branch survives only if some EML tree evaluates to
+a constant multiple of `x`. Deciding *that* is deciding which functions EML reaches, which is the
+original hard problem. **HALT, per the pre-registered halt point: the general floor does not get to
+smuggle in the claim it was supposed to localise.**
+
+What survives the halt is the branch result, and it is worth having on its own. -/
+
+/-- **`K ≤ 1` is unreachable on the `s2 = var` branch**, because it would require `exp a = log K` with
+`log K ≤ 0`, and `exp` is strictly positive. This is the floor stated as an impossibility rather than a
+bound, and it is the exact point at which `K = 1` fails: not by a hair, but because the equation asks
+`exp` to take a non-positive value. -/
+theorem no_exp_eq_log_of_le_one {K : Real} (hK0 : 0 < K) (hK1 : K ≤ 1) (a : Real) :
+    Real.exp a ≠ Real.log K := by
+  have hlog_nonpos : Real.log K ≤ 0 := by
+    rcases (le_iff_lt_or_eq K 1).mp hK1 with hlt | heq
+    · exact le_of_lt (log_neg_of_lt_one hK0 hlt)
+    · rw [heq, log_one]; exact le_of_eq rfl
+  intro hEq
+  have hpos : 0 < Real.exp a := exp_pos a
+  rw [hEq] at hpos
+  exact absurd rfl (ne_of_gt (lt_of_lt_of_le hpos hlog_nonpos))
+
 end MachLib

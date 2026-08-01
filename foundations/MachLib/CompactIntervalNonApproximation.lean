@@ -322,7 +322,7 @@ private theorem zerosList_nodup (g : Real → Real) (A B ε : Real)
     (hεlt1 : ε < 1) (hA0 : A < ext 0) (M : Nat) :
     (zerosList g A B ε hcont hclose hεlt1 hA0 M).Nodup := by
   show List.Pairwise (· ≠ ·) ((List.range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0))
-  exact (List.nodup_range (M + 1)).map (zeroAt g A B ε hcont hclose hεlt1 hA0)
+  exact (List.nodup_range).map (zeroAt g A B ε hcont hclose hεlt1 hA0)
     (fun i j (_ : i ≠ j) => by
       intro hij_eq
       rcases Nat.lt_or_ge i j with hlt | hge

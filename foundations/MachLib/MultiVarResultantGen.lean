@@ -102,7 +102,7 @@ theorem resLin_yfree (q0 q1 : MultiVar 2)
       MultiVar.degVar (1 : Fin 2) (resLin ps q0 q1) = 0
   | [], _ => rfl
   | p0 :: ps', hps => by
-      have hp0 : MultiVar.degVar (1 : Fin 2) p0 = 0 := hps p0 (List.mem_cons_self _ _)
+      have hp0 : MultiVar.degVar (1 : Fin 2) p0 = 0 := hps p0 (List.mem_cons_self)
       have hrest := resLin_yfree q0 q1 hq0 hq1 ps' (fun c hc => hps c (List.mem_cons_of_mem _ hc))
       have h1 : MultiVar.degVar (1 : Fin 2) (MultiVar.mul (MultiVar.pow q1 ps'.length) p0) = 0 := by
         show MultiVar.degVar (1 : Fin 2) (MultiVar.pow q1 ps'.length)

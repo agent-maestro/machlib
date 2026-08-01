@@ -123,7 +123,7 @@ theorem chainN_bound_step_explicit (m : Nat) (Ndep : Nat → Nat)
           cases zeros with
           | nil => exact Nat.zero_le _
           | cons z zs =>
-            obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+            obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
             exact absurd hzero (hnoz z ha hb')
         · have hne' : ∃ z, a < z ∧ z < b ∧
               (chainNFn (m + 3) (chainNReduce (m + 1) (fullMult (m + 1) p) p)).eval z ≠ 0 :=

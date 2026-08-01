@@ -131,7 +131,7 @@ theorem degreeY0_reconstructY1_le (D : Nat) :
       · show degreeY (⟨0, by omega⟩ : Fin 2) c
             + degreeY (⟨0, by omega⟩ : Fin 2) (pow (varY (⟨1, by omega⟩ : Fin 2)) k) ≤ D
         rw [degreeY0_pow_varY1_zero]
-        have hc := h c (List.mem_cons_self c cs)
+        have hc := h c (List.mem_cons_self)
         omega
       · exact degreeY0_reconstructY1_le D cs (k + 1)
           (fun c' hc' => h c' (List.mem_cons_of_mem c hc'))
@@ -148,7 +148,7 @@ theorem listAddN_entries_degreeY0_le (l1 l2 : List (MultiPoly 2)) (D : Nat)
     | cons q qs =>
       intro c hc; rw [listAddN_cons_cons] at hc
       cases hc with
-      | head => exact Nat.max_le.mpr ⟨h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)⟩
+      | head => exact Nat.max_le.mpr ⟨h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)⟩
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
                  (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
@@ -160,12 +160,12 @@ theorem listSubN_entries_degreeY0_le (l1 l2 : List (MultiPoly 2)) (D : Nat)
   induction l1 generalizing l2 with
   | nil =>
     induction l2 with
-    | nil => intro c hc; exact absurd hc (List.not_mem_nil _)
+    | nil => intro c hc; exact absurd hc (List.not_mem_nil)
     | cons q qs ihq =>
       intro c hc
       change c ∈ (sub (const 0) q :: listSubN [] qs) at hc
       cases hc with
-      | head => exact Nat.max_le.mpr ⟨Nat.zero_le _, h2 q (List.mem_cons_self _ _)⟩
+      | head => exact Nat.max_le.mpr ⟨Nat.zero_le _, h2 q (List.mem_cons_self)⟩
       | tail _ hc' => exact ihq (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
   | cons p ps ih =>
     cases l2 with
@@ -173,7 +173,7 @@ theorem listSubN_entries_degreeY0_le (l1 l2 : List (MultiPoly 2)) (D : Nat)
     | cons q qs =>
       intro c hc; change c ∈ (sub p q :: listSubN ps qs) at hc
       cases hc with
-      | head => exact Nat.max_le.mpr ⟨h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)⟩
+      | head => exact Nat.max_le.mpr ⟨h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)⟩
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
                  (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
@@ -183,11 +183,11 @@ theorem listScaleN_entries_degreeY0_le (p : MultiPoly 2) (Dp : Nat)
     (l : List (MultiPoly 2)) (D : Nat) (hl : ∀ c ∈ l, degreeY (⟨0, by omega⟩ : Fin 2) c ≤ D) :
     ∀ c ∈ listScaleN p l, degreeY (⟨0, by omega⟩ : Fin 2) c ≤ Dp + D := by
   induction l with
-  | nil => intro c hc; rw [listScaleN_nil] at hc; exact absurd hc (List.not_mem_nil _)
+  | nil => intro c hc; rw [listScaleN_nil] at hc; exact absurd hc (List.not_mem_nil)
   | cons q qs ih =>
     intro c hc; rw [listScaleN_cons] at hc
     cases hc with
-    | head => exact Nat.add_le_add hp (hl q (List.mem_cons_self _ _))
+    | head => exact Nat.add_le_add hp (hl q (List.mem_cons_self))
     | tail _ hc' => exact ih (fun c hc => hl c (List.mem_cons_of_mem _ hc)) c hc'
 
 theorem listMulN_entries_degreeY0_le (l1 l2 : List (MultiPoly 2)) (D1 D2 : Nat)
@@ -195,12 +195,12 @@ theorem listMulN_entries_degreeY0_le (l1 l2 : List (MultiPoly 2)) (D1 D2 : Nat)
     (h2 : ∀ c ∈ l2, degreeY (⟨0, by omega⟩ : Fin 2) c ≤ D2) :
     ∀ c ∈ listMulN l1 l2, degreeY (⟨0, by omega⟩ : Fin 2) c ≤ D1 + D2 := by
   induction l1 with
-  | nil => intro c hc; rw [listMulN_nil] at hc; exact absurd hc (List.not_mem_nil _)
+  | nil => intro c hc; rw [listMulN_nil] at hc; exact absurd hc (List.not_mem_nil)
   | cons p ps ih =>
     intro c hc; rw [listMulN_cons] at hc
     refine listAddN_entries_degreeY0_le (listScaleN p l2) (const 0 :: listMulN ps l2) (D1 + D2)
       ?_ ?_ c hc
-    · exact listScaleN_entries_degreeY0_le p D1 (h1 p (List.mem_cons_self _ _)) l2 D2 h2
+    · exact listScaleN_entries_degreeY0_le p D1 (h1 p (List.mem_cons_self)) l2 D2 h2
     · intro c' hc'
       cases hc' with
       | head => exact Nat.zero_le _

@@ -124,7 +124,7 @@ theorem chain2_khovanskii_bound_explicit (Dx : Nat) (a b : Real) (hab : a < b) :
       cases zeros with
       | nil => exact Nat.zero_le _
       | cons z zs =>
-        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+        obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
         exact absurd hzero (hnoz z ha hb')
     · -- reduce ≢ 0: recurse and add 1 (Rolle)
       have hne' : ∃ z, a < z ∧ z < b ∧ (chain2Fn (chain2Reduce c p)).eval z ≠ 0 :=

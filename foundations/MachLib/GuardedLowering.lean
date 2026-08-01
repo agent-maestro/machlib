@@ -95,10 +95,10 @@ theorem mem_lower_of_guarded {l : Lane} {p : Packet}
   induction p with
   | nil => cases hmem
   | cons a rest ih =>
-      have ha : a.guarded = true := hall a (List.mem_cons_self a rest)
+      have ha : a.guarded = true := hall a (List.mem_cons_self)
       rw [lower, if_pos ha]
       rcases List.mem_cons.mp hmem with h | h
-      · exact h ▸ List.mem_cons_self a (lower rest)
+      · exact h ▸ List.mem_cons_self
       · exact List.mem_cons_of_mem a (ih h (fun x hx => hall x (List.mem_cons_of_mem a hx)))
 
 /-- **Guarded lowering preserves declared domain obligations.**
@@ -122,7 +122,7 @@ def goodPacket : Packet := [{ obl := Obligation.positiveCoordinate, guarded := t
 theorem badPacket_not_valid : ¬ ValidGuards badPacket := by
   intro h
   have := h { obl := Obligation.positiveCoordinate, guarded := false }
-    (List.mem_cons_self _ _)
+    (List.mem_cons_self)
   exact Bool.noConfusion this
 
 /-- **And it genuinely loses the obligation**: lowering it yields the empty packet, so the
@@ -135,7 +135,7 @@ theorem badPacket_loses_obligation : lower badPacket = [] := by
 theorem badPacket_not_preserved : ¬ DomainPreserved badPacket := by
   intro h
   have hmem := h { obl := Obligation.positiveCoordinate, guarded := false }
-    (List.mem_cons_self _ _)
+    (List.mem_cons_self)
   rw [badPacket_loses_obligation] at hmem
   cases hmem
 

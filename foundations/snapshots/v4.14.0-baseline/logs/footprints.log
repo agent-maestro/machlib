@@ -1,0 +1,4 @@
+/home/monogate/monogate/machlib/foundations/tools/axiom_ledger/footprint_snapshot.py:43: SyntaxWarning: invalid escape sequence '\['
+  """Extract the list by BRACKET COUNTING, not a non-greedy regex.
+
+// toolchain leanprover/lean4:v4.14.0: enumerated 57, captured 57, missing 0

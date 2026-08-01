@@ -1,0 +1,36 @@
+{
+ "label": "v4.28.0",
+ "captured_at": "2026-07-30T12:15:19-0700",
+ "toolchain": "leanprover/lean4:v4.28.0",
+ "lock": [
+  "leanprover/lean4:v4.28.0",
+  "7e01a1bf5c70"
+ ],
+ "gates": {
+  "kernel_replay": 0,
+  "lean4lean_replay": 1,
+  "ledger": 0,
+  "derivable": 0,
+  "sorry_audit": 0,
+  "artifact_drift": 0,
+  "toolchain": 0
+ },
+ "counts": {
+  "axioms_pinned": 242,
+  "headline_footprints": 57,
+  "derivations": 5,
+  "sorry_decls": 1
+ },
+ "footprints": {
+  "enumerated": 57,
+  "captured": 57,
+  "missing": []
+ },
+ "instrument_errors": [],
+ "voids": {
+  "lean4lean_replay": "INSTRUMENT_ABSENT"
+ },
+ "voids_cited": {
+  "lean4lean_replay": "Amendment-1-criterion-7-scoped-to-stops-3-5"
+ }
+}

@@ -80,7 +80,7 @@ theorem interval_has_distinct_points :
   induction n with
   | zero =>
     intro a b _hab
-    exact ⟨[], List.nodup_nil, rfl, by intro x hx; exact absurd hx (List.not_mem_nil x)⟩
+    exact ⟨[], List.nodup_nil, rfl, by intro x hx; exact absurd hx (List.not_mem_nil)⟩
   | succ k ih =>
     intro a b hab
     obtain ⟨m, ham, hmb⟩ := exists_between a b hab

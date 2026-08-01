@@ -1,0 +1,29 @@
+{
+ "label": "v4.16.0",
+ "captured_at": "2026-07-29T17:15:02-0700",
+ "toolchain": "leanprover/lean4:v4.16.0",
+ "lock": [
+  "leanprover/lean4:v4.16.0",
+  "128a1e6b0a82"
+ ],
+ "gates": {
+  "kernel_replay": 0,
+  "ledger": 0,
+  "derivable": 0,
+  "sorry_audit": 0,
+  "artifact_drift": 0,
+  "toolchain": 0
+ },
+ "counts": {
+  "axioms_pinned": 252,
+  "headline_footprints": 57,
+  "derivations": 5,
+  "sorry_decls": 1
+ },
+ "footprints": {
+  "enumerated": 57,
+  "captured": 57,
+  "missing": []
+ },
+ "instrument_errors": []
+}

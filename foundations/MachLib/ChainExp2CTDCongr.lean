@@ -200,7 +200,6 @@ theorem hasDerivAt_eval_partialY0 (r : MultiPoly 2) (x : Real) (env : Fin 2 → 
       (fun v => MultiPoly.eval q x (fun j => if j = (⟨0, by omega⟩ : Fin 2) then v else env j))
       (MultiPoly.eval (partialY0 p) x env) (MultiPoly.eval (partialY0 q) x env)
       (env (⟨0, by omega⟩ : Fin 2)) ihp ihq
-    dsimp only [] at hmul
     rw [upd0_self] at hmul
     rw [show MultiPoly.eval (partialY0 (MultiPoly.mul p q)) x env
           = MultiPoly.eval (partialY0 p) x env * MultiPoly.eval q x env
@@ -250,7 +249,6 @@ theorem hasDerivAt_eval_partialX (r : MultiPoly 2) (x : Real) (env : Fin 2 → R
     have hmul := MachLib.Real.HasDerivAt_mul
       (fun t => MultiPoly.eval p t env) (fun t => MultiPoly.eval q t env)
       (MultiPoly.eval (partialX p) x env) (MultiPoly.eval (partialX q) x env) x ihp ihq
-    dsimp only [] at hmul
     rw [show MultiPoly.eval (partialX (MultiPoly.mul p q)) x env
           = MultiPoly.eval (partialX p) x env * MultiPoly.eval q x env
             + MultiPoly.eval p x env * MultiPoly.eval (partialX q) x env from by

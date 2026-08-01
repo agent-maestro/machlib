@@ -1,0 +1,24 @@
+lean4lean path   : /home/monogate/lean4lean-v4.26.0
+lean4lean commit : f37aeab
+LEAN_NUM_THREADS : (unset -- one task per core)
+lean4lean toolchain: leanprover/lean4:v4.26.0
+ledger toolchain   : leanprover/lean4:v4.26.0
+
+1 INSTRUMENT REJECTS (lean4checker's AddFalse smuggling specimen must FAIL)
+    PASS -- rejected with a kernel error, naming it
+
+1b INSTRUMENT HOLDS FIRE (known-good specimens must PASS -- both directions, not one)
+    FAIL  Init.Core        core   -- can the instrument read Lean itself?
+          cannot resolve non-MachLib constants: String.ofList
+    FAIL  MachLib.Sign     ours   -- can it read our environment's encoding?
+          died by signal (rc=139; SIGSEGV/SIGABRT -- a fault inside the checker)
+
+    [INSTRUMENT_UNUSABLE] the checker cannot replay Init.Core, MachLib.Sign.
+    Init.Core is LEAN'S OWN CORE -- MachLib is not in the hypothesis space. The void
+    is the instrument's, not the environment's, and it is proven so UPSTREAM of the
+    subject. Criterion 7 is UNMEASURABLE at this version, which is not the same as
+    waived: record it, do not silently drop it.
+    Step 2 is NOT run: a checker that cannot accept a known-good environment can only
+    produce an unearned conviction, and REPLAY_FAIL is the most expensive verdict here.
+
+LEAN4LEAN-REPLAY GATE: FAIL [INSTRUMENT_UNUSABLE -- no verdict about MachLib]

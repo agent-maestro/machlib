@@ -31,7 +31,7 @@ theorem length_flatMap_le' {α γ : Type} (B : Nat) :
       (fibers.flatMap (fun f => f.2)).length ≤ fibers.length * B
   | [], _ => by simp
   | f :: fs, h => by
-      have h0 : f.2.length ≤ B := h f (List.mem_cons_self f fs)
+      have h0 : f.2.length ≤ B := h f (List.mem_cons_self)
       have hrest := length_flatMap_le' B fs (fun x hx => h x (List.mem_cons_of_mem f hx))
       show (f.2 ++ fs.flatMap (fun f => f.2)).length ≤ (fs.length + 1) * B
       rw [List.length_append, Nat.succ_mul]

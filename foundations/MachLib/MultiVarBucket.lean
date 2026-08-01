@@ -36,7 +36,7 @@ theorem length_le_bucket {α β : Type} (key : α → β) (B : Nat) :
       have hl : l = [] := by
         cases l with
         | nil => rfl
-        | cons a as => exact absurd (hcov a (List.mem_cons_self a as)) (List.not_mem_nil _)
+        | cons a as => exact absurd (hcov a (List.mem_cons_self)) (List.not_mem_nil)
       rw [hl]; simp
   | k :: keys', l, hcov, hfib => by
       have hpart := length_filter_partition (fun a => decide (key a = k)) l
@@ -53,7 +53,7 @@ theorem length_le_bucket {α β : Type} (key : α → β) (B : Nat) :
           ((l.filter (fun a => !decide (key a = k))).filter (fun a => decide (key a = k'))).length ≤ B :=
         fun k' => Nat.le_trans
           (List.Sublist.length_le
-            (List.Sublist.filter (fun a => decide (key a = k')) (List.filter_sublist l)))
+            (List.Sublist.filter (fun a => decide (key a = k')) (List.filter_sublist)))
           (hfib k')
       have hrec := length_le_bucket key B keys' (l.filter (fun a => !decide (key a = k))) hcov' hfib'
       calc l.length

@@ -1904,7 +1904,7 @@ theorem poly_root_count_bound_eff_aux :
       cases zeros with
       | nil => rw [hn]; exact Nat.zero_le _
       | cons z rest =>
-        have hz_in : z ∈ z :: rest := List.mem_cons_self _ _
+        have hz_in : z ∈ z :: rest := List.mem_cons_self
         have := hzeros z hz_in
         exact absurd this.2.2 (hp_ne z)
     · -- Inductive step: n > 0.
@@ -1921,7 +1921,7 @@ theorem poly_root_count_bound_eff_aux :
         cases zeros with
         | nil => exact Nat.zero_le _
         | cons z rest =>
-          have hz_in : z ∈ z :: rest := List.mem_cons_self _ _
+          have hz_in : z ∈ z :: rest := List.mem_cons_self
           have := hzeros z hz_in
           exact absurd this.2.2 (hp_ne z)
       · -- polyDerivative p has NonzeroWitness (extract classically).

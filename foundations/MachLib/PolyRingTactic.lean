@@ -100,7 +100,10 @@ partial def MachLib.Real.machPolyRec : List Expr → TacticM Unit
 polynomial identity over the listed atoms through the PolyRing reflective
 normaliser. Handles leading-term cancellation. See the file header for scope and
 cost. -/
-elab "mach_poly" xs:term,+ : tactic => do
+elab "mach_poly" xs:term,+ : tactic => withMainContext do
+  -- `withMainContext` for the same reason as `mach_mpoly` (see MPolyRing.lean): without it the atom
+  -- terms elaborate against the context at block entry, and an atom naming an `intro`/`obtain`-bound
+  -- variable fails with "Unknown identifier" on a variable that is in scope. Do not remove it.
   let atoms ← xs.getElems.toList.mapM (fun t => elabTerm t.raw none)
   machPolyRec atoms
 

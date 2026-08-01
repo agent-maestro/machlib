@@ -1,0 +1,9 @@
+derivableAxioms: 5 entries
+  ok  zero_ne_one_ax         via zero_ne_one_derivable      (6 axioms, retained-base clean)
+  ok  archimedean            via archimedean_derivable      (25 axioms, retained-base clean)
+  ok  one_div_pos_of_pos     via one_div_pos_derivable      (20 axioms, retained-base clean)
+  ok  HasDerivAt_neg         via hasDerivAt_neg_derivable   (17 axioms, retained-base clean)
+  ok  HasDerivAt_sub         via hasDerivAt_sub_derivable   (20 axioms, retained-base clean)
+
+DERIVABLE-AXIOM GATE: PASS -- 5 derivations verified against the RETAINED base.
+  Effective independent axiom count is 5 lower than the pinned count.

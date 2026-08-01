@@ -77,7 +77,7 @@ quantity. -/
 theorem fxmul_trunc_lt_ulp (a b : List Bool) :
     toNat a * toNat b - toNat (fxmul a b) * 2 ^ FRAC < 2 ^ FRAC := by
   rw [fxmul_correct]
-  have hpos : 0 < 2 ^ FRAC := Nat.pos_pow_of_pos FRAC (by decide)
+  have hpos : 0 < 2 ^ FRAC := Nat.pow_pos (by decide)
   have hdm := Nat.div_add_mod (toNat a * toNat b) (2 ^ FRAC)
   have hlt := Nat.mod_lt (toNat a * toNat b) hpos
   have hc := Nat.mul_comm (toNat a * toNat b / 2 ^ FRAC) (2 ^ FRAC)

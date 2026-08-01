@@ -147,7 +147,7 @@ theorem branch_intersection_le_one (c a b : Real) (hc : 0 < c) (hab : a < b) (hb
     rcases zeros_J with _ | ⟨z0, rest⟩
     · exact Nat.le_refl 0
     · exfalso
-      obtain ⟨_, hz0b, hJ0⟩ := hz z0 (List.mem_cons_self z0 rest)
+      obtain ⟨_, hz0b, hJ0⟩ := hz z0 (List.mem_cons_self)
       have hlt := branch_jacobian_neg c z0 (lt_trans_ax hz0b hbc) hc
       rw [hJ0] at hlt
       exact lt_irrefl_ax 0 hlt

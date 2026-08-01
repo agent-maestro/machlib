@@ -1,0 +1,6 @@
+lock  : leanprover/lean4:v4.16.0  128a1e6b0a82
+in use: leanprover/lean4:v4.16.0  128a1e6b0a82
+
+TOOLCHAIN GATE: PASS -- the instrument in use is the instrument on record.
+  NOTE: this gate checks IDENTITY, not soundness. It cannot see a kernel bug; that is
+  what independent re-checking is for. See TOOLCHAIN_EXPOSURE.md.

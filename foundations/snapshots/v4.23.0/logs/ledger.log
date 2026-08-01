@@ -1,0 +1,2 @@
+AXIOM-LEDGER FAIL — the trust boundary drifted:
+    /home/monogate/monogate/machlib/foundations/AxiomLedger.lean:523:0: error: AxiomLedger: 10 ledger entr(y/ies) name a vanished axiom (rot): [MachLib.Model.intModel._elambda_1,

@@ -1,0 +1,14 @@
+lean4lean path   : /home/monogate/lean4lean-v4.26.0
+lean4lean toolchain: leanprover/lean4:v4.26.0
+ledger toolchain   : leanprover/lean4:v4.26.0
+
+1 INSTRUMENT REJECTS (lean4checker's AddFalse smuggling specimen must FAIL)
+    PASS -- rejected with a kernel error, naming it
+
+2 ENVIRONMENT REPLAYS through the second implementation
+    [INSTRUMENT_CRASH] the checker died; this says NOTHING about our environment.
+    Do not read as REPLAY_FAIL. Try the LAST commit pinning this version (the first
+    one is the start of the support window, before that window's own fixes).
+    
+
+LEAN4LEAN-REPLAY GATE: FAIL

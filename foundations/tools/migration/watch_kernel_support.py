@@ -1,0 +1,299 @@
+"""WATCH: has the kernel-configuration decision expired yet?
+
+## Why this file exists
+
+`BUMP_PLAN.md`'s decision record chooses **v4.26.0 — unpatched kernel, two independent checkers** over
+**v4.32.2 — patched kernel, one checker**, and the whole argument rests on one empirical fact:
+
+    fix ∩ lean4checker ∩ Lean4Lean = ∅        (true on 2026-07-29)
+
+**That is a fact about July 2026, not a fact about software.** A decision recorded as permanent when it
+is calendar-contingent rots in the reassuring direction — the record keeps reading "considered, with
+the tradeoff owned" long after the consideration expired. So the expiry condition is *monitored*:
+
+    python3 tools/migration/watch_kernel_support.py
+
+    exit 0  nothing has opened; the decision still holds (movement below the threshold is reported)
+    exit 2  PARTIAL — one external checker reaches the fix. Leg 2 can launch; grade needs a re-read
+    exit 3  OPEN — the intersection is non-empty. The decision has EXPIRED; re-read BUMP_PLAN.md
+    exit 1  the watch could not run
+
+## UNAVAILABLE IS FAILURE
+
+An offline run must never be readable as *"still empty"*. That is the same reassuring-direction error
+the whole record is written against, so a network failure exits **1** and says so, and never prints a
+verdict about the intersection it could not observe.
+
+## What counts as "supported", and why the two sources are asymmetric
+
+* **lean4checker** publishes a tag per release, so its support set is *the set of stable tags*.
+  Release-candidate tags are excluded: a checker built from an `-rc` toolchain is a different
+  instrument from the stable kernel it would be checking, and `check_kernel_replay.py` rejects exactly
+  that mismatch.
+* **Lean4Lean** has no tags for this purpose; `.olean` format is version-locked, so it supports
+  **exactly the version its `lean-toolchain` pins** — not a range. Hence its support set is a
+  singleton, read from the file at `master`.
+
+The threshold — the first release carrying the #14577 kernel fix — is a **historical constant with
+provenance** (v4.32.2 release notes: *"fixes a soundness bug in the kernel… nested inductive types
+with phantom type parameters"*), not a count, so it is written down here rather than derived.
+"""
+from __future__ import annotations
+
+import datetime as dt
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+
+FIX = (4, 32, 2)  # first release containing #14577; see docstring
+CHECKER_REPO = "https://github.com/leanprover/lean4checker"
+L4L_REPO = "https://github.com/digama0/lean4lean"
+L4L_PIN_URL = "https://raw.githubusercontent.com/digama0/lean4lean/master/lean-toolchain"
+STATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "watch_state.json")
+
+# BLIND SPOT FOUND 2026-07-29, and it mattered the same day.
+#
+# This watch originally asked only "does a checker EXIST at a version >= the fix?" -- a question about
+# pins and tags. It never asked "does the checker itself CARRY the fix?", which is the question the
+# whole class/instance argument depends on. Those come apart exactly when it counts:
+#
+#   Lean4Lean commit 0c38ab8 (2026-07-29) = "fix: soundness bug from leanprover/lean4#14577".
+#   It PORTS the #14577 check while still pinning v4.29.0 -- i.e. a checker that carries the fix at a
+#   toolchain BELOW the fix. The old logic would have reported STILL EMPTY on the day a patched
+#   independent-ish checker first became available.
+#
+# So the watch now also greps the checkers' own commit logs for the fix. A checker that carries the
+# check can detect the exploit class regardless of which kernel it is replaying against, which is the
+# entire point of running a second implementation.
+FIX_PR_MARKERS = ("14577", "14576")
+
+# Titles that would indicate the instrument breakage is being tracked upstream. Matched on SYMPTOM
+# names as well as our own issue number, because a watch that only recognised our issue would miss
+# someone else reporting it first -- and one that only recognised symptoms would miss a retitle.
+#
+# FILED 2026-07-30 as digama0/lean4lean#17 (v4.26.0 + v4.29.0, SIGSEGV on Init.Prelude and
+# `unknown constant 'String.ofList'`). THIS THREAD IS NOW LOAD-BEARING: per BUMP_PLAN.md Amendment 5
+# the destination lands EXTERNALLY UNREPLAYED, and its grade upgrade triggers on either this issue
+# closing or lean4checker growing a tag >= v4.29. The watch is literally watching that thread.
+INSTRUMENT_BUG_ISSUE = 17
+INSTRUMENT_BUG_MARKERS = ("String.ofList", "Char.ofNat", "unknown constant",
+                          "Init.Prelude", "Init.Core")
+
+
+def ver(s: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in s.lstrip("v").split("."))
+
+
+def fmt(v: tuple[int, ...]) -> str:
+    return "v" + ".".join(str(x) for x in v)
+
+
+def checker_stable_tags() -> list[tuple[int, ...]]:
+    p = subprocess.run(["git", "ls-remote", "--tags", CHECKER_REPO],
+                       capture_output=True, text=True, timeout=120)
+    if p.returncode != 0:
+        raise RuntimeError(f"git ls-remote {CHECKER_REPO} failed: {p.stderr.strip()[:200]}")
+    tags = set()
+    for m in re.finditer(r"refs/tags/v(\d+\.\d+(?:\.\d+)?)$", p.stdout, re.M):
+        tags.add(ver(m.group(1)))
+    if not tags:
+        raise RuntimeError("no stable vX.Y.Z tags parsed — the tag scheme changed, or the parse did")
+    return sorted(tags)
+
+
+def l4l_pin() -> tuple[str, tuple[int, ...] | None]:
+    with urllib.request.urlopen(L4L_PIN_URL, timeout=60) as r:
+        raw = r.read().decode().strip()
+    m = re.search(r"v(\d+\.\d+(?:\.\d+)?)$", raw)
+    return raw, (ver(m.group(1)) if m else None)
+
+
+def carries_fix(repo: str) -> tuple[bool, str]:
+    """Does this checker's own history contain the #14577 port? -- the question pins cannot answer.
+
+    A checker that carries the check detects the exploit class whatever kernel it replays against, so
+    this is what the class/instance argument actually rests on. Returns (carries, evidence).
+    """
+    owner_repo = repo.rstrip("/").split("github.com/")[-1]
+    url = f"https://api.github.com/repos/{owner_repo}/commits?per_page=100"
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json",
+                                               "User-Agent": "machlib-kernel-watch"})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        commits = json.loads(r.read().decode())
+    for c in commits:
+        msg = (c.get("commit", {}).get("message") or "").splitlines()[0]
+        if any(m in msg for m in FIX_PR_MARKERS):
+            return True, f"{c['sha'][:7]}  {c['commit']['committer']['date'][:10]}  {msg[:60]}"
+    return False, f"no commit referencing {'/'.join(FIX_PR_MARKERS)} in the last {len(commits)}"
+
+
+def l4l_instrument_bug() -> tuple[str, str]:
+    """Is the v4.26.0 instrument breakage fixed upstream yet? -- REPORTED, never exit-code-bearing.
+
+    Added 2026-07-30. The pins above answer *which version Lean4Lean claims to support*; they cannot
+    answer *whether it works there*, and stop 5 proved those are different questions: three builds all
+    pinning v4.26.0, none able to replay `Init.Core`. A pin is a claim; a positive control is a
+    measurement.
+
+    This matters to the destination, not to the past. The v4.32.2 configuration wants this instrument
+    working, so the cheapest way to make that more likely is to have the bug reported with a minimal
+    repro and then to watch the tracker for movement. See `docs/lean4lean_string_literal_bug.md`.
+
+    DELIBERATELY NOT A THRESHOLD: this returns a line to print. The watch's exit codes belong to the
+    expiry condition and to nothing else -- widening what they mean would make two runs of this watch
+    incomparable, which is the same error the gate-scoping deferrals keep refusing.
+    """
+    url = ("https://api.github.com/repos/digama0/lean4lean/issues"
+           "?state=all&per_page=100&sort=updated")
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github+json",
+                                               "User-Agent": "machlib-kernel-watch"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            issues = json.loads(r.read().decode())
+    except Exception as e:  # noqa: BLE001 -- an unreadable tracker must not read as "no bug filed"
+        return "COULD NOT READ", f"{type(e).__name__}: {e}"
+    # Ours by NUMBER first -- a retitle upstream must not read as "no longer filed".
+    ours = next((i for i in issues if i.get("number") == INSTRUMENT_BUG_ISSUE), None)
+    hits = [i for i in issues
+            if any(m in (i.get("title") or "") for m in INSTRUMENT_BUG_MARKERS)]
+    top = ours or (hits[0] if hits else None)
+    if not top:
+        return "NOT FILED", "no issue matching the instrument breakage -- file it (see docs/)"
+    state = top.get("state", "?").upper()
+    note = f"#{top['number']} {(top.get('title') or '')[:52]}"
+    if state == "CLOSED":
+        note += "  <- CLOSED: re-probe the instrument, the destination grade may upgrade"
+    return state, note
+
+
+def load_state() -> dict:
+    return json.load(open(STATE)) if os.path.exists(STATE) else {}
+
+
+def report_movement(prev: dict, checker_max: tuple[int, ...], pin: tuple[int, ...] | None) -> None:
+    if not prev:
+        print("no previous observation on file — this run establishes the reference point.")
+        return
+    print(f"since {prev['observed_at'][:10]}:")
+    for label, was, now in (("lean4checker max stable tag", prev.get("checker_max"), fmt(checker_max)),
+                            ("Lean4Lean pin", prev.get("l4l_pin"), fmt(pin) if pin else "unparsed")):
+        print(f"  {label:<28} {was} -> {now}" + ("   (moved)" if was != now else "   (unchanged)"))
+
+
+def main() -> int:
+    print(f"KERNEL-SUPPORT WATCH   threshold = {fmt(FIX)} (first release with the #14577 fix)\n")
+    try:
+        tags = checker_stable_tags()
+        raw_pin, pin = l4l_pin()
+    except (subprocess.TimeoutExpired, urllib.error.URLError, OSError, RuntimeError) as e:
+        print(f"[WATCH_UNAVAILABLE] {type(e).__name__}: {e}")
+        print("\nUNAVAILABLE IS FAILURE. This run observed NOTHING and asserts nothing about the")
+        print("intersection. Re-run with network access; do not read this as 'still empty'.")
+        return 1
+
+    checker_max = tags[-1]
+    print(f"lean4checker stable tags : {len(tags)}, newest {fmt(checker_max)}")
+    print(f"Lean4Lean pin (master)   : {raw_pin}")
+
+    # The question pins cannot answer -- see the blind-spot note at the top of this file.
+    try:
+        l4l_fix, l4l_ev = carries_fix(L4L_REPO)
+        chk_fix, chk_ev = carries_fix(CHECKER_REPO)
+    except (urllib.error.URLError, OSError, KeyError, ValueError) as e:
+        print(f"\n[FIX_PORT_UNKNOWN] could not read commit histories: {type(e).__name__}: {e}")
+        print("  The pin/tag verdict below stands, but 'does the checker CARRY the fix' is UNKNOWN.")
+        l4l_fix = chk_fix = False
+        l4l_ev = chk_ev = "UNKNOWN -- history unavailable, do not read as 'no'"
+    print(f"Lean4Lean carries #14577 : {'YES' if l4l_fix else 'no '}   {l4l_ev}")
+    bug_state, bug_ev = l4l_instrument_bug()
+    print(f"Lean4Lean v4.26 bug      : {bug_state:<13}  {bug_ev}")
+    print("  (reported only -- a pin says which version it CLAIMS; only a positive control measures")
+    print("   whether it works there. Stop 5: three builds pinning v4.26.0, none replayed Init.Core)")
+    print(f"lean4checker  carries it : {'YES' if chk_fix else 'no '}   {chk_ev}")
+    print()
+    report_movement(load_state(), checker_max, pin)
+
+    checker_ok = checker_max >= FIX
+    l4l_ok = pin is not None and pin >= FIX
+    both = pin is not None and pin in tags and pin >= FIX
+
+    print(f"\nlean4checker reaches the fix : {'YES ' + fmt(checker_max) if checker_ok else 'no'}")
+    print(f"Lean4Lean reaches the fix    : {'YES ' + fmt(pin) if l4l_ok else 'no'}")
+
+    json.dump({"observed_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+               "threshold": fmt(FIX), "checker_max": fmt(checker_max),
+               "checker_tag_count": len(tags), "l4l_pin": fmt(pin) if pin else raw_pin,
+               "l4l_carries_fix": l4l_fix, "checker_carries_fix": chk_fix,
+               "intersection_open": both},
+              open(STATE, "w"), indent=1)
+
+    print()
+    # Printed BEFORE the verdict branches, on purpose: the first version sat in the exit-0
+    # path only, so the two verdicts that actually mean 'something moved' were the two that
+    # skipped the reminder. A reminder reachable from one branch is not a reminder.
+    print_scheduled_reverifications()
+    print()
+    if both:
+        print(f"INTERSECTION OPEN at {fmt(pin)} — THE DECISION HAS EXPIRED.")
+        print("  Both checkers reach a kernel carrying the fix. The dual-kernel and patched-kernel")
+        print("  configurations are no longer alternatives: re-read BUMP_PLAN.md's decision record,")
+        print("  retarget the destination to the newest member of the intersection, and note in the")
+        print("  record that the tradeoff it defends no longer exists.")
+        return 3
+    if l4l_fix or chk_fix:
+        which = "Lean4Lean" if l4l_fix else "lean4checker"
+        print(f"FIX PORTED INTO A CHECKER — {which} carries the #14577 check itself.")
+        print("  This is a DIFFERENT state from 'a checker exists at a kernel >= the fix', and it is")
+        print("  the one the class/instance argument actually needs: a checker carrying the check can")
+        print("  DETECT the exploit class whatever kernel it replays against. So a dual-replay stop")
+        print("  below the fix threshold can now cover the instance -- by the second checker having")
+        print("  the check, not by an assumption that it re-derived it.")
+        print("  RE-READ BUMP_PLAN.md's destination table before the next pin advance.")
+        return 2
+    if checker_ok or l4l_ok:
+        which = "lean4checker" if checker_ok else "Lean4Lean"
+        print(f"PARTIAL — {which} reaches the fix; the other does not.")
+        print("  Leg 2's launch condition (at least one external checker at the destination) is MET,")
+        print("  so the migration may proceed to the fix — but the grade drops to whatever that one")
+        print("  checker earns. If it is lean4checker alone, that is SECOND OPINION, not independent")
+        print("  kernel, and the registry row must say so.")
+        return 2
+    print("STILL EMPTY — the decision holds, and the wait remains monitored rather than standing.")
+    print("  Cheapest way to open it from our side: contribute the lean4checker tag upstream. Its")
+    print("  history is mechanical per release, so it is plausibly a PR, not a project.")
+    print()
+    return 0
+
+
+def print_scheduled_reverifications() -> None:
+    """Other things that expire on this watch's cadence, printed so they cannot be quietly skipped.
+
+    Added 2026-07-30. monogate.org/accountability grades this project against the Leiden Declaration,
+    and a grade is only as current as the last time a human re-read it against its artifact. The link
+    gate (`blog/scripts/check_accountability.py`) proves the artifacts still RESOLVE on every CI run;
+    it cannot prove a grade is still CORRECT. That second half is human work on a clock, and a clock
+    with no alarm is a wish -- so the alarm lives here, next to the other thing this project promised
+    to re-check quarterly rather than remember.
+    """
+    print("SCHEDULED RE-VERIFICATIONS (this watch's cadence, not just the intersection):")
+    for name, due, how in (
+        ("accountability page grades", "2026-10-29",
+         "re-run blog/scripts/check_accountability.py, re-read each grade against its artifact, "
+         "bump last_verified; downgrade anything whose evidence moved"),
+    ):
+        try:
+            days = (dt.date.fromisoformat(due) - dt.date.today()).days
+            when = f"in {days}d" if days >= 0 else f"OVERDUE by {-days}d"
+        except Exception:  # noqa: BLE001
+            when = "?"
+        print(f"  · {name:<28} due {due}  ({when})")
+        print(f"      {how}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

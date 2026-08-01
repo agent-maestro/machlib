@@ -87,7 +87,7 @@ its mantissa via `realOfScientific_clears`, and close `10ᵉ − m = (10ᵉ − 
 Every concrete decimal pole→offset (`1−0.99=0.01`, `1−0.996=0.004`, …) is now a one-line corollary. -/
 theorem one_sub_decimal (m e : Nat) (h : m ≤ 10 ^ e) :
     (1 : Real) - realOfScientific m true e = realOfScientific (10 ^ e - m) true e := by
-  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos e (by decide)))
+  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_left_cancel hc ?_
   rw [mul_one_sub,
       mul_comm (natCast (10 ^ e)) (realOfScientific m true e), realOfScientific_clears m e,
@@ -107,7 +107,7 @@ theorem decimal_mul (m₁ e₁ m₂ e₂ : Nat) :
     realOfScientific m₁ true e₁ * realOfScientific m₂ true e₂
       = realOfScientific (m₁ * m₂) true (e₁ + e₂) := by
   have hC : natCast (10 ^ (e₁ + e₂)) ≠ 0 :=
-    ne_of_gt (natCast_pos (Nat.pos_pow_of_pos (e₁ + e₂) (by decide)))
+    ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hC ?_
   rw [realOfScientific_clears (m₁ * m₂) (e₁ + e₂), natCast_mul m₁ m₂,
       Nat.pow_add, natCast_mul (10 ^ e₁) (10 ^ e₂), mul4_rearrange,
@@ -118,7 +118,7 @@ its canonical mantissa/exponent (`80·10⁻⁴ = 8·10⁻³`). Same clear-and-ca
 theorem decimal_normalize (m e : Nat) :
     realOfScientific (m * 10) true (e + 1) = realOfScientific m true e := by
   have hc : natCast (10 ^ (e + 1)) ≠ 0 :=
-    ne_of_gt (natCast_pos (Nat.pos_pow_of_pos (e + 1) (by decide)))
+    ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   rw [realOfScientific_clears (m * 10) (e + 1), natCast_mul m 10,
       Nat.pow_succ, natCast_mul (10 ^ e) 10, ← mul_assoc, realOfScientific_clears m e]
@@ -157,7 +157,7 @@ are equal iff their mantissas agree after clearing to a common denominator. The 
 theorem realOfScientific_eq_of_nat {m₁ e₁ m₂ e₂ : Nat} (h : m₁ * 10 ^ e₂ = m₂ * 10 ^ e₁) :
     realOfScientific m₁ true e₁ = realOfScientific m₂ true e₂ := by
   have hc : natCast (10 ^ (e₁ + e₂)) ≠ 0 :=
-    ne_of_gt (natCast_pos (Nat.pos_pow_of_pos (e₁ + e₂) (by decide)))
+    ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   rw [decimal_scaled m₁ e₁ (e₁ + e₂) (Nat.le_add_right e₁ e₂),
       decimal_scaled m₂ e₂ (e₁ + e₂) (Nat.le_add_left e₂ e₁),
@@ -168,7 +168,7 @@ sums (`1.0 + 2.0 = 3.0`, the `K + 2.0` shape). Different-exponent sums are handl
 cross-multiplication, once each side is a single literal. -/
 theorem decimal_add_same (m₁ m₂ e : Nat) :
     realOfScientific m₁ true e + realOfScientific m₂ true e = realOfScientific (m₁ + m₂) true e := by
-  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos e (by decide)))
+  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   rw [mul_distrib_right, realOfScientific_clears m₁ e, realOfScientific_clears m₂ e,
       realOfScientific_clears (m₁ + m₂) e, ← natCast_add]
@@ -182,7 +182,7 @@ where a compound decimal expression's SIGN (not just its value) needs pinning do
 sides of the subtraction don't happen to be pre-ordered the "1 minus something small" way. -/
 theorem decimal_sub_same (m₁ m₂ e : Nat) (h : m₂ ≤ m₁) :
     realOfScientific m₁ true e - realOfScientific m₂ true e = realOfScientific (m₁ - m₂) true e := by
-  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos e (by decide)))
+  have hc : natCast (10 ^ e) ≠ 0 := ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   have hdist : (realOfScientific m₁ true e - realOfScientific m₂ true e) * natCast (10 ^ e)
       = realOfScientific m₁ true e * natCast (10 ^ e) - realOfScientific m₂ true e * natCast (10 ^ e) := by
@@ -221,7 +221,7 @@ theorem motor_envelope_relation : ((1 : Real) - 0.996) * 2.0 = 0.008 := by mach_
 `Basic.lean` rather than merely sitting beside them — evidence it is the right single foundation. -/
 theorem one_dot_zero_from_clears : realOfScientific 10 true 1 = 1 := by
   have h := realOfScientific_clears 10 1
-  have hc : natCast (10 ^ 1) ≠ 0 := ne_of_gt (natCast_pos (Nat.pos_pow_of_pos 1 (by decide)))
+  have hc : natCast (10 ^ 1) ≠ 0 := ne_of_gt (natCast_pos (Nat.pow_pos (by decide)))
   refine mul_right_cancel' hc ?_
   rw [one_mul_thm]; exact h
 

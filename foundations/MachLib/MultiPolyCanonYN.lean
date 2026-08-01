@@ -193,7 +193,7 @@ theorem listAddN_entries_degreeY_zero {n : Nat} (i : Fin n)
       cases hc with
       | head =>
         show Nat.max (degreeY i p) (degreeY i q) = 0
-        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rw [h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
@@ -210,7 +210,7 @@ theorem listSubN_entries_degreeY_zero {n : Nat} (i : Fin n)
     induction l2 with
     | nil =>
       intro c hc
-      exact absurd hc (List.not_mem_nil _)
+      exact absurd hc (List.not_mem_nil)
     | cons q qs ihq =>
       intro c hc
       -- listSubN [] (q::qs) = sub (const 0) q :: listSubN [] qs.
@@ -220,7 +220,7 @@ theorem listSubN_entries_degreeY_zero {n : Nat} (i : Fin n)
       | head =>
         show Nat.max (degreeY i (const 0 : MultiPoly n))
                      (degreeY i q) = 0
-        rw [h2 q (List.mem_cons_self _ _)]
+        rw [h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ihq (fun c hc => h2 c (List.mem_cons_of_mem _ hc)) c hc'
@@ -236,7 +236,7 @@ theorem listSubN_entries_degreeY_zero {n : Nat} (i : Fin n)
       cases hc with
       | head =>
         show Nat.max (degreeY i p) (degreeY i q) = 0
-        rw [h1 p (List.mem_cons_self _ _), h2 q (List.mem_cons_self _ _)]
+        rw [h1 p (List.mem_cons_self), h2 q (List.mem_cons_self)]
         rfl
       | tail _ hc' =>
         exact ih qs (fun c hc => h1 c (List.mem_cons_of_mem _ hc))
@@ -252,14 +252,14 @@ theorem listScaleN_entries_degreeY_zero {n : Nat} (i : Fin n)
   | nil =>
     intro c hc
     rw [listScaleN_nil] at hc
-    exact absurd hc (List.not_mem_nil _)
+    exact absurd hc (List.not_mem_nil)
   | cons q qs ih =>
     intro c hc
     rw [listScaleN_cons] at hc
     cases hc with
     | head =>
       show degreeY i p + degreeY i q = 0
-      rw [hp, hl q (List.mem_cons_self _ _)]
+      rw [hp, hl q (List.mem_cons_self)]
     | tail _ hc' =>
       exact ih (fun c hc => hl c (List.mem_cons_of_mem _ hc)) c hc'
 
@@ -273,14 +273,14 @@ theorem listMulN_entries_degreeY_zero {n : Nat} (i : Fin n)
   | nil =>
     intro c hc
     rw [listMulN_nil] at hc
-    exact absurd hc (List.not_mem_nil _)
+    exact absurd hc (List.not_mem_nil)
   | cons p ps ih =>
     intro c hc
     rw [listMulN_cons] at hc
     apply listAddN_entries_degreeY_zero i
             (listScaleN p l2) (const 0 :: listMulN ps l2)
     · exact listScaleN_entries_degreeY_zero i p
-              (h1 p (List.mem_cons_self _ _)) l2 h2
+              (h1 p (List.mem_cons_self)) l2 h2
     · intro c' hc'
       cases hc' with
       | head => rfl
@@ -580,13 +580,13 @@ theorem yCoeffsAt_entries_degreeY_zero {n : Nat} (i : Fin n)
     change c' ∈ ([const c] : List (MultiPoly n)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varX =>
     intro c' hc'
     change c' ∈ ([varX] : List (MultiPoly n)) at hc'
     cases hc' with
     | head => rfl
-    | tail _ h => exact absurd h (List.not_mem_nil _)
+    | tail _ h => exact absurd h (List.not_mem_nil)
   | varY j =>
     intro c' hc'
     -- yCoeffsAt i (varY j) = if j = i then [const 0, const 1] else [varY j].
@@ -685,11 +685,11 @@ theorem yCoeffsAt_length_one_when_y_free {n : Nat} (i : Fin n)
     have hp_rest : rest_p = [] := by
       rw [hp] at hp_len
       have : rest_p.length = 0 := by simpa using hp_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     have hq_rest : rest_q = [] := by
       rw [hq] at hq_len
       have : rest_q.length = 0 := by simpa using hq_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     subst hp_rest; subst hq_rest
     show (listAddN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
     rw [hp, hq]
@@ -710,11 +710,11 @@ theorem yCoeffsAt_length_one_when_y_free {n : Nat} (i : Fin n)
     have hp_rest : rest_p = [] := by
       rw [hp] at hp_len
       have : rest_p.length = 0 := by simpa using hp_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     have hq_rest : rest_q = [] := by
       rw [hq] at hq_len
       have : rest_q.length = 0 := by simpa using hq_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     subst hp_rest; subst hq_rest
     show (listSubN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
     rw [hp, hq]
@@ -732,11 +732,11 @@ theorem yCoeffsAt_length_one_when_y_free {n : Nat} (i : Fin n)
     have hp_rest : rest_p = [] := by
       rw [hp] at hp_len
       have : rest_p.length = 0 := by simpa using hp_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     have hq_rest : rest_q = [] := by
       rw [hq] at hq_len
       have : rest_q.length = 0 := by simpa using hq_len
-      exact List.length_eq_zero.mp this
+      exact List.length_eq_zero_iff.mp this
     subst hp_rest; subst hq_rest
     show (listMulN (yCoeffsAt i p) (yCoeffsAt i q)).length = 1
     rw [hp, hq]

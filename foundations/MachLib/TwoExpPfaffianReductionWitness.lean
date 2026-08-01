@@ -1178,7 +1178,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness_bound
       arc.zeros (hzeros_nd arc harcmem) (hzeros arc harcmem)
   have hchainPairs : ChainSep (fun x => A < x ∧ x < B ∧ sep x) (hd.rep, hd.zeros).1
       ((s.map (fun arc => (arc.rep, arc.zeros))).map (fun pair => pair.1)) := by
-    simpa [List.map_map] using hchain
+    simpa [List.map_map, Function.comp_def] using hchain
   have hglobal := khovanskii_rolle_full (fun x => A < x ∧ x < B ∧ sep x)
     wit.separatorBound wit.jacobianBound
     (fun ss hnd hss =>
@@ -1193,7 +1193,7 @@ theorem khovanskii_rolle_full_of_lower_reductionWitness_bound
   · intro pair hpairmem
     cases hpairmem with
     | head =>
-        exact harcRich hd (List.mem_cons_self _ _)
+        exact harcRich hd (List.mem_cons_self)
     | tail _ hp =>
         obtain ⟨arc, harcmem, hpair⟩ := List.mem_map.mp hp
         cases hpair

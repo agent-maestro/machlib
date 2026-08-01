@@ -146,7 +146,7 @@ theorem chain3_khovanskii_bound_unconditional (p : MultiPoly 3) (a b : Real) (ha
         cases zeros with
         | nil => exact Nat.le_refl 0
         | cons z zs =>
-          obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self _ _)
+          obtain ⟨ha, hb', hzero⟩ := hz z (List.mem_cons_self)
           exact absurd hzero (hnoz z ha hb')
       · -- reduce value ≢ 0: recurse and add 1 (Rolle).
         have hne' : ∃ z, a < z ∧ z < b ∧

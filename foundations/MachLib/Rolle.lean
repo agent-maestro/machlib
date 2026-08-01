@@ -287,19 +287,19 @@ private theorem interleave_from (f : Real → Real) (a b : Real)
   induction s generalizing hd with
   | nil =>
     intro _ _ _
-    exact ⟨[], List.nodup_nil, by intro c hc; exact absurd hc (List.not_mem_nil c),
-      by intro c hc; exact absurd hc (List.not_mem_nil c), Nat.le_refl 1⟩
+    exact ⟨[], List.nodup_nil, by intro c hc; exact absurd hc (List.not_mem_nil),
+      by intro c hc; exact absurd hc (List.not_mem_nil), Nat.le_refl 1⟩
   | cons z1 rest ih =>
     intro hpair hnodup hzero
     rw [List.pairwise_cons] at hpair
     obtain ⟨hhd_le, hpair_tail⟩ := hpair
     rw [List.nodup_cons] at hnodup
     obtain ⟨hhd_notin, hnodup_tail⟩ := hnodup
-    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self z1 rest
+    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self
     have hhd_le_z1 : hd ≤ z1 := (leB_iff hd z1).mp (hhd_le z1 hz1_mem)
     have hhd_ne_z1 : hd ≠ z1 := fun h => hhd_notin (h ▸ hz1_mem)
     have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
-    obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
+    obtain ⟨ha_hd, hhd_b, hf_hd⟩ := hzero hd (List.mem_cons_self)
     obtain ⟨ha_z1, hz1_b, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
     have hdiff' : ∀ c : Real, hd ≤ c → c ≤ z1 → ∃ f' : Real, HasDerivAt f f' c :=
       fun c hc1 hc2 => hdiff c (lt_of_lt_of_le_r ha_hd hc1) (lt_of_le_of_lt_r hc2 hz1_b)
@@ -355,7 +355,7 @@ theorem zero_count_bound_by_deriv (f : Real → Real) (a b : Real) (hab : a < b)
   have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ f z = 0 :=
     fun z hz => hzero z (hperm.mem_iff.mp hz)
   have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
-    List.sorted_mergeSort leB_trans leB_total zeros_f
+    List.pairwise_mergeSort leB_trans leB_total zeros_f
   rw [← hlen]
   generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
   cases s with
@@ -395,21 +395,21 @@ private theorem interleave_dual (f : Real → Real) (isBad : Real → Prop) (a b
   | nil =>
     intro _ _ _
     exact ⟨[], [], List.nodup_nil, List.nodup_nil,
-      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
-      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
-      (by intro c hc; exact absurd hc (List.not_mem_nil c)),
-      (by intro c hc; exact absurd hc (List.not_mem_nil c)), Nat.le_refl 1⟩
+      (by intro c hc; exact absurd hc (List.not_mem_nil)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil)),
+      (by intro c hc; exact absurd hc (List.not_mem_nil)), Nat.le_refl 1⟩
   | cons z1 rest ih =>
     intro hpair hnodup hzero
     rw [List.pairwise_cons] at hpair
     obtain ⟨hhd_le, hpair_tail⟩ := hpair
     rw [List.nodup_cons] at hnodup
     obtain ⟨hhd_notin, hnodup_tail⟩ := hnodup
-    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self z1 rest
+    have hz1_mem : z1 ∈ (z1 :: rest) := List.mem_cons_self
     have hhd_le_z1 : hd ≤ z1 := (leB_iff hd z1).mp (hhd_le z1 hz1_mem)
     have hhd_ne_z1 : hd ≠ z1 := fun h => hhd_notin (h ▸ hz1_mem)
     have hhd_lt_z1 : hd < z1 := lt_of_le_of_ne' hhd_le_z1 hhd_ne_z1
-    obtain ⟨ha_hd, hhd_b, hnb_hd, hf_hd⟩ := hzero hd (List.mem_cons_self hd _)
+    obtain ⟨ha_hd, hhd_b, hnb_hd, hf_hd⟩ := hzero hd (List.mem_cons_self)
     obtain ⟨ha_z1, hz1_b, hnb_z1, hf_z1⟩ := hzero z1 (List.mem_cons_of_mem hd hz1_mem)
     obtain ⟨csC', csB', hcsC'_nd, hcsB'_nd, hcsC'_props, hcsB'_props, hcsC'_gt, hcsB'_gt, hlen'⟩ :=
       ih z1 hpair_tail hnodup_tail (fun z hz => hzero z (List.mem_cons_of_mem hd hz))
@@ -477,7 +477,7 @@ theorem zero_count_bound_by_deriv_with_bad (f : Real → Real) (isBad : Real →
   have hzero_s : ∀ z ∈ zeros_f.mergeSort leB, a < z ∧ z < b ∧ ¬ isBad z ∧ f z = 0 :=
     fun z hz => hzero z (hperm.mem_iff.mp hz)
   have hpair_s : List.Pairwise (fun x y => leB x y = true) (zeros_f.mergeSort leB) :=
-    List.sorted_mergeSort leB_trans leB_total zeros_f
+    List.pairwise_mergeSort leB_trans leB_total zeros_f
   rw [← hlen]
   generalize hs : zeros_f.mergeSort leB = s at hnodup_s hzero_s hpair_s ⊢
   cases s with

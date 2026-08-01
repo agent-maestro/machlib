@@ -1,0 +1,27 @@
+{
+ "_what": "Audited, attributed changes to a baseline-recorded count. checkpoint.py treats a MATCHING entry as expected rather than as drift, and still FAILS on any unlisted change. This exists so that correcting a number that was WRONG does not require either rewriting a frozen baseline or disabling the comparison -- both of which would destroy the evidence the comparison provides.",
+ "_rules": [
+  "An amendment records from/to and WHY, with the evidence that settled it.",
+  "It never edits a frozen snapshot. The baseline keeps saying 252; this file explains why 242 is right.",
+  "An unlisted count change still halts the stop. This is not an override flag.",
+  "One entry per correction. If a count changes twice, that is two entries, and the chain must connect."
+ ],
+ "axioms_pinned": [
+  {
+   "from": 252,
+   "to": 242,
+   "date": "2026-07-29",
+   "found_at_stop": "v4.23.0",
+   "reason": "10 of the 252 were COMPILER BACKEND ARTIFACTS, not trust assumptions: lambda-lifted fields of structure-instance defs (intModel._elambda_1..5, emlEmptyChain._elambda_1..2, two SDR-solver _elambda_1s, twoExpLowerReductionSolver_of_predicateSolver._elambda_1). The code generator emits them as genuinely .axiomInfo constants, so liveAxioms' prefix filter swept them in. v4.23.0's compiler stopped emitting them, which is what made the ledger's rot check fire.",
+   "evidence": [
+    "All 10 were .axiomInfo at v4.20.1 -- observed directly in a git-worktree rebuild of tag toolchain-stop/v4.20.1, not inferred from the filter.",
+    "Their types are code-generation shapes: Int -> Int, Int -> Int -> Int, Fin 0 -> MultiPoly 0, Fin 0 -> Real -> Real.",
+    "ZERO of the 57 headline footprints ever cited one, across all six frozen snapshots (v4.14.0 baseline, v4.16.0, v4.19.0, v4.19.0-r2, v4.20.1, v4.23.0).",
+    "ZERO real declarations cite one: all 17 transitive citers under MachLib are _cstage1/_cstage2/_closed_N._cstage2 compiler IR artifacts.",
+    "So no mathematics ever depended on them, and 242 was the honest count of user-declared trust assumptions all along."
+   ],
+   "structural_fix": "liveAxioms (AxiomLedger.lean) and emit_ledger.py now both exclude compiler artifacts by name predicate, so the miscount is unrepresentable rather than merely corrected. Deleting ten list entries alone would have left the next compiler-emitted axiom-shaped closure free to walk back in.",
+   "not_a_drift": "No axiom was added to or removed from the trust boundary by the migration. The DESCRIPTION was wrong; the boundary did not move. This is a finding the bump surfaced, not damage the bump caused."
+  }
+ ]
+}

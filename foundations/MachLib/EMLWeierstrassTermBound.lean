@@ -1,4 +1,5 @@
 import MachLib.EMLWeierstrassGrowthComparison
+import MachLib.GeometricDecay
 import MachLib.Trig
 import MachLib.Log
 import MachLib.FieldLemmas
@@ -164,6 +165,60 @@ theorem npow_tower (x : Real) (n : Nat) : ∀ k : Nat, npow k (npow n x) = npow 
   | k + 1 => by
       rw [npow_succ, npow_tower x n k, Nat.mul_succ, npow_add, mul_comm]
 
+/-! ## The general family bound -/
+
+/-- **The family-level term bound.** For ANY coefficient base `a > 0` and frequency base `b > 1`,
+every `k`-th derivative term of the heat-smoothed lacunary cosine series
+`Σ aⁿ cos(bⁿ x)` is eventually `< 1` in magnitude.
+
+**Why this is the general statement and not a repackaging.** The 2026-07-23 paper lemma
+(`monogate-research/exploration/eml_weierstrass_general_2026_07_23/`) proved the mechanism for the
+whole lacunary family; Lean had it only at the classical Weierstrass constants `a = ½, b = 3`. The
+gap was never mathematical — inspecting the specific proof shows it consumes exactly TWO facts about
+those constants, `0 < a` and `1 < b²` — so the constants were load-bearing in the statement and inert
+in the argument. This theorem states what was actually proved.
+
+**Note `a` is unconstrained above.** No `ab > 1`, no `a < 1`. The classical Weierstrass hypotheses
+are about the series being nowhere-differentiable at `t = 0`; they are irrelevant to the smoothing
+claim, because the damping `exp(−c·b^{2n})` is double-exponential in `n` and beats any
+single-exponential `aⁿ` whatever `a` is. Requiring `a < 1` here would import a hypothesis from a
+different theorem — which is how a formalisation quietly becomes weaker than its paper. -/
+theorem weierstrass_term_eventually_lt_one_general
+    (a b t : Real) (ha : 0 < a) (hb : 1 < b) (ht : 0 < t) (k : Nat) :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n →
+      npow k pi * npow n a * npow (n * k) b
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) < 1 := by
+  have h11_pos : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hb_pos : 0 < b := lt_trans_ax one_pos hb
+  have hD : 1 < npow 2 b := by
+    have h1 : npow 2 b = b * b := by
+      show b * (b * 1) = b * b; mach_ring
+    rw [h1]
+    have hstep : 1 * 1 < b * b := by
+      have h1lt : (1:Real) * 1 < b * 1 := mul_lt_mul_of_pos_right hb one_pos
+      have h2lt : b * 1 < b * b := wgc_mul_lt_mul_of_pos_left hb hb_pos
+      exact lt_trans_ax h1lt h2lt
+    rwa [show (1:Real)*1 = 1 by mach_ring] at hstep
+  have hc : 0 < pi * pi * t / (1 + 1) := by
+    have hpp : 0 < pi * pi := mul_pos pi_pos pi_pos
+    have hppt : 0 < pi * pi * t := mul_pos hpp ht
+    exact div_pos_of_pos_pos hppt h11_pos
+  have hC : 0 < npow k pi := npow_pos pi_pos k
+  have hR : 0 < a * npow k b := mul_pos ha (npow_pos hb_pos k)
+  obtain ⟨N, hN⟩ := exp_beats_geometric (R := a * npow k b) (D := npow 2 b)
+    (c := pi * pi * t / (1 + 1)) (C := npow k pi) hR hD hc hC
+  refine ⟨N, fun n hn => ?_⟩
+  have key := hN n hn
+  have eR : npow n (a * npow k b) = npow n a * npow (n * k) b := by
+    rw [npow_mul_distrib, npow_tower, Nat.mul_comm k n]
+  rw [eR] at key
+  have erw : npow k pi * (npow n a * npow (n * k) b)
+      * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b)))
+      = npow k pi * npow n a * npow (n * k) b
+        * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) := by
+    mach_ring
+  rwa [erw] at key
+
 /-! ## The concrete Weierstrass instantiation -/
 
 /-- **The term-magnitude claim**, connecting `exp_beats_geometric` to
@@ -230,6 +285,153 @@ theorem weierstrass_term_eventually_lt_one (t : Real) (ht : 0 < t) (k : Nat) :
         * Real.exp (-(pi * pi * t / (1 + 1) * npow n (npow 2 b))) := by
     mach_ring
   rwa [erw] at key
+
+
+/-! ## Beyond the heat kernel — an ARBITRARY smooth kernel
+
+The results above all lean on the Gaussian: the heat multiplier `e^{−tξ²}` damps the `n`-th frequency
+by `e^{−t·b^{2n}}`, which is *double*-exponential in `n`, and that is why the smoothed series comes out
+real-analytic rather than merely `C^∞`.
+
+An arbitrary smooth kernel has no such gift, so the mechanism must change. What smoothness buys is
+**rapid decay of the transform**: for every `m` there is `C_m` with `|K̂(ξ)| ≤ C_m·(1+|ξ|)^{−m}`. At
+frequency `bⁿ` that is `b^{−nm}` — only *single*-exponential in `n`. The `k`-th derivative term is then
+
+  `π^k · aⁿ · b^{nk} · C_m·b^{−nm}  =  C_m·π^k · (a·b^{k−m})ⁿ`,
+
+and because `b > 1` one may choose `m` with `b^{m−k} > a`, making the ratio `< 1`. So the argument
+becomes **geometric decay beating a constant**, where the heat case was double-exponential beating
+single-exponential — a genuinely different mechanism reaching a genuinely weaker conclusion.
+
+The multiplier enters as an abstract sequence with a geometric bound, which is exactly what the
+rapid-decay hypothesis supplies after `m` is chosen. Nothing here knows the kernel is Gaussian, and
+that is the point. -/
+
+/-- `a/b < 1` from `a < b`, `b > 0`. Re-derived locally rather than importing
+`WitnessResidualDeepNumeric` for one inequality — the codebase's standing convention for pulling a
+single fact out of a distant module (cf. the `wgc_` lemmas above). -/
+theorem ebc_div_lt_one {a b : Real} (hb : 0 < b) (h : a < b) : a / b < 1 := by
+  rcases lt_total (a / b) 1 with hlt | heq | hgt
+  · exact hlt
+  · -- a/b = 1 forces a = b, contradicting a < b
+    have hmul : a / b * b = 1 * b := by rw [heq]
+    rw [div_mul_cancel (ne_of_gt hb), one_mul_thm] at hmul
+    exact absurd h (wgc_not_lt_of_le (le_of_eq hmul.symm))
+  · -- 1 < a/b forces b ≤ a, contradicting a < b
+    have h2 : 1 * b ≤ a / b * b := mul_le_mul_of_nonneg_right (le_of_lt hgt) (le_of_lt hb)
+    rw [div_mul_cancel (ne_of_gt hb), one_mul_thm] at h2
+    exact absurd h (wgc_not_lt_of_le h2)
+
+/-- **A constant times a sub-unit geometric is eventually `< 1`.** The engine for the general-kernel
+case, in the same shape as `exp_beats_geometric` is the engine for the heat case. -/
+theorem geometric_beats_const {R C : Real} (hR : 0 < R) (hR1 : R < 1) (hC : 0 < C) :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n → C * npow n R < 1 := by
+  have hCC : 0 < C + C := add_pos hC hC
+  have hCCne : C + C ≠ 0 := ne_of_gt hCC
+  have hh : 0 < (1 - R) / R := div_pos_of_pos_pos (sub_pos_of_lt hR1) hR
+  -- R·(1 + (1−R)/R) = 1, by clearing the single division with `div_mul_cancel`.
+  have hrh : R * (1 + (1 - R) / R) = 1 := by
+    have hRne : R ≠ 0 := ne_of_gt hR
+    have hcan : (1 - R) / R * R = 1 - R := div_mul_cancel hRne
+    have : R * (1 + (1 - R) / R) = R + (1 - R) / R * R := by mach_ring
+    rw [this, hcan]; mach_ring
+  have hε : 0 < 1 / (C + C) := div_pos_of_pos_pos one_pos hCC
+  obtain ⟨N, hN⟩ := npow_tendsto_zero hR (le_of_lt hR1) hh hrh (1 / (C + C)) hε
+  refine ⟨N, fun n hn => ?_⟩
+  have hb := hN n hn
+  have hpow_nonneg : 0 ≤ npow n R := npow_nonneg (le_of_lt hR) n
+  rw [show npow n R - 0 = npow n R from by mach_ring, abs_of_nonneg hpow_nonneg] at hb
+  have h1 : C * npow n R ≤ C * (1 / (C + C)) :=
+    mul_le_mul_of_nonneg_left hb (le_of_lt hC)
+  have h2 : C * (1 / (C + C)) < 1 := by
+    have hEq : C * (1 / (C + C)) = C / (C + C) := by
+      rw [div_def C (C + C) hCCne]; mach_ring
+    rw [hEq]
+    -- C < 1·(C+C) since C > 0
+    have hCsum : C < C + C := by
+      have h := add_lt_add_left hC C
+      rwa [add_zero] at h
+    exact ebc_div_lt_one hCC hCsum
+  exact lt_of_le_of_lt h1 h2
+
+/-- **The general-kernel term bound.** For ANY smoothing kernel whose Fourier multiplier decays
+geometrically along the lacunary frequencies, every `k`-th derivative term of the smoothed series
+`Σ aⁿ cos(bⁿ x)` is eventually `< 1` in magnitude.
+
+**This is restriction (i) of T2.C's open target**, discharged for the geometric-decay class. The
+kernel appears ONLY as the abstract sequence `mult n = K̂(bⁿ)` with the hypothesis
+`|mult n| ≤ C·rⁿ` — nothing here knows it is Gaussian, and that is the content. The rapid-decay
+property of a smooth kernel supplies exactly this bound once the decay order `m` is chosen: taking
+`r = b^{−m}` gives `|K̂(bⁿ)| ≤ C_m·b^{−nm} = C_m·rⁿ`.
+
+**`hsmall` is the choice of `m`, not an extra assumption.** It asks `a·b^k·r < 1`, and since `b > 1`
+one may always take `m` large enough that `b^{m−k} > a`. It is stated as a hypothesis rather than
+derived because MachLib has no `logb`/`ceil` to pick `m` internally; the caller picks the decay order,
+which is what the analysis does anyway.
+
+**Weaker than the heat case, deliberately.** `exp_beats_geometric` gives real-analyticity because the
+Gaussian's damping is double-exponential in `n`. Here the damping is only single-exponential, so the
+conclusion is the `C^∞`-grade term bound and no more. Claiming analyticity from a general smooth
+kernel would be importing the Gaussian's gift into a theorem that does not have it. -/
+theorem smoothed_term_eventually_lt_one
+    (a b C r : Real) (k : Nat)
+    (ha : 0 < a) (hb : 1 < b) (hC : 0 < C) (hr : 0 < r)
+    (mult : Nat → Real)
+    (hmult : ∀ n : Nat, abs (mult n) ≤ C * npow n r)
+    (hsmall : a * npow k b * r < 1) :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n →
+      npow k pi * npow n a * npow (n * k) b * abs (mult n) < 1 := by
+  have hb_pos : 0 < b := lt_trans_ax one_pos hb
+  have hbk : 0 < npow k b := npow_pos hb_pos k
+  have hR : 0 < a * npow k b * r := mul_pos (mul_pos ha hbk) hr
+  have hCpi : 0 < npow k pi * C := mul_pos (npow_pos pi_pos k) hC
+  obtain ⟨N, hN⟩ := geometric_beats_const (R := a * npow k b * r)
+    (C := npow k pi * C) hR hsmall hCpi
+  refine ⟨N, fun n hn => ?_⟩
+  -- the prefactor is nonnegative, so the multiplier bound transports through it
+  have hXnn : 0 ≤ npow k pi * npow n a * npow (n * k) b :=
+    mul_nonneg (mul_nonneg (npow_nonneg (le_of_lt pi_pos) k) (npow_nonneg (le_of_lt ha) n))
+      (npow_nonneg (le_of_lt hb_pos) (n * k))
+  have hstep : npow k pi * npow n a * npow (n * k) b * abs (mult n)
+      ≤ npow k pi * npow n a * npow (n * k) b * (C * npow n r) :=
+    mul_le_mul_of_nonneg_left (hmult n) hXnn
+  -- and the right-hand side IS the geometric the engine bounds
+  have hgeo : npow k pi * npow n a * npow (n * k) b * (C * npow n r)
+      = npow k pi * C * npow n (a * npow k b * r) := by
+    have e1 : npow n (a * npow k b * r) = npow n (a * npow k b) * npow n r :=
+      npow_mul_distrib (a * npow k b) r n
+    have e2 : npow n (a * npow k b) = npow n a * npow (n * k) b := by
+      rw [npow_mul_distrib, npow_tower, Nat.mul_comm k n]
+    rw [e1, e2]; mach_ring
+  rw [hgeo] at hstep
+  exact lt_of_le_of_lt hstep (hN n hn)
+
+/-- **Satisfiability witness for `smoothed_term_eventually_lt_one`.**
+
+A theorem whose hypotheses cannot be jointly satisfied is vacuously true and worth nothing, and the
+gate registry names exactly this failure ("a vacuous proof of a true statement") as a blindness of the
+physics-assertion class. `hsmall` and `hmult` constrain the same `r` from opposite directions, so the
+question is real rather than pedantic. Here is an explicit instance: coefficient base `a = 1`,
+frequency base `b = 1+1`, decay `r = 1/(1+1)`, `C = 1`, multiplier `K̂(bⁿ) = rⁿ`, derivative order
+`k = 0`. Machine-checked, so the non-vacuity is a proof rather than a claim. -/
+example :
+    ∃ N : Nat, ∀ n : Nat, N ≤ n →
+      npow 0 pi * npow n 1 * npow (n * 0) (1 + 1)
+        * abs ((fun m => npow m (1 / (1 + 1))) n) < 1 := by
+  have h11 : (0:Real) < 1 + 1 := add_pos one_pos one_pos
+  have hb : (1:Real) < 1 + 1 := by
+    have h := add_lt_add_left one_pos 1
+    rwa [add_zero] at h
+  have hr : (0:Real) < 1 / (1 + 1) := div_pos_of_pos_pos one_pos h11
+  refine smoothed_term_eventually_lt_one 1 (1 + 1) 1 (1 / (1 + 1)) 0
+    one_pos hb one_pos hr (fun m => npow m (1 / (1 + 1))) ?_ ?_
+  · intro n
+    rw [abs_of_nonneg (npow_nonneg (le_of_lt hr) n), one_mul_thm]
+    exact le_of_eq rfl
+  · -- 1 * (1+1)^0 * (1/(1+1)) = 1/(1+1) < 1
+    rw [show npow 0 ((1:Real) + 1) = 1 from rfl]
+    rw [show (1:Real) * 1 * (1 / (1 + 1)) = 1 / (1 + 1) from by mach_ring]
+    exact ebc_div_lt_one h11 hb
 
 end Real
 end MachLib

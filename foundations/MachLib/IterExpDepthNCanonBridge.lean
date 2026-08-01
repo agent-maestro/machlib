@@ -34,8 +34,8 @@ open MachLib.MultiPolyReconstruct
 
 private theorem reverse_head_eq_getLast {α : Type} (L : List α) (hne : L ≠ [])
     {a : α} {t : List α} (hrev : L.reverse = a :: t) : a = L.getLast hne := by
-  have hh : L.reverse.head? = L.getLast? := List.head?_reverse L
-  rw [hrev, List.head?_cons, List.getLast?_eq_getLast L hne] at hh
+  have hh : L.reverse.head? = L.getLast? := List.head?_reverse
+  rw [hrev, List.head?_cons, List.getLast?_eq_some_getLast hne] at hh
   exact Option.some.inj hh
 
 private theorem length_dropWhile_le'' {α : Type} (p : α → Bool) :
@@ -58,7 +58,7 @@ private theorem rdw_lt_of_getLast_pos {α : Type} (p : α → Bool) (L : List α
     (hlast : p (L.getLast hne) = true) : (L.reverse.dropWhile p).length < L.length := by
   rcases hrev : L.reverse with _ | ⟨a, t⟩
   · exact absurd (List.reverse_eq_nil_iff.mp hrev) hne
-  · have hpos0 : 0 < L.length := Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero.mp h))
+  · have hpos0 : 0 < L.length := Nat.pos_of_ne_zero (fun h => hne (List.length_eq_zero_iff.mp h))
     have htlen : t.length = L.length - 1 := by
       have hc := congrArg List.length hrev
       rw [List.length_reverse, List.length_cons] at hc

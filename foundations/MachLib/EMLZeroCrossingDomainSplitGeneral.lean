@@ -160,7 +160,7 @@ theorem eml_const_evarConstC2_boundedZeros_via_general (c1 c2 : Real) (hc2 : 1 <
     · intro zeros_d hnd' hzd
       match zeros_d, hzd with
       | [], _ => simp
-      | w :: ws, hzd' => exact absurd (hzd' w (List.mem_cons_self _ _)).2.2 (ne_of_gt (Real.exp_pos w))
+      | w :: ws, hzd' => exact absurd (hzd' w (List.mem_cons_self)).2.2 (ne_of_gt (Real.exp_pos w))
     · exact hnd
     · intro z hzmem
       obtain ⟨hza, hzb, hfz⟩ := hz z hzmem
@@ -174,7 +174,7 @@ theorem eml_const_evarConstC2_boundedZeros_via_general (c1 c2 : Real) (hc2 : 1 <
       | [], _, _ => rfl
       | y :: ys, _, hzf =>
           exfalso
-          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self _ _)
+          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self)
           have hylt : y < Real.log (Real.log c2) := by rw [hb]; exact hyb
           have ht2le : Real.exp y - Real.log c2 ≤ 0 := by
             have h := (exp_lt_log_c2_iff_lt_switch hc2).1 y hylt
@@ -194,7 +194,7 @@ theorem eml_const_evarConstC2_boundedZeros_via_general (c1 c2 : Real) (hc2 : 1 <
       | [], _, _ => rfl
       | y :: ys, _, hzf =>
           exfalso
-          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self _ _)
+          obtain ⟨_, hyb, hfy⟩ := hzf y (List.mem_cons_self)
           have hylt : y < Real.log (Real.log c2) := lt_trans_ax hyb hb
           have ht2le : Real.exp y - Real.log c2 ≤ 0 := by
             have h := (exp_lt_log_c2_iff_lt_switch hc2).1 y hylt

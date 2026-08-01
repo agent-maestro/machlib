@@ -31,7 +31,7 @@ trips a dependent-motive `rw`). -/
 theorem topfree_getD0_eval {N : Nat} (top : Fin N) (r : MultiPoly N)
     (hfree : MultiPoly.degreeY top r = 0) (x : Real) (env : Fin N → Real) :
     MultiPoly.eval ((yCoeffsAt top r).getD 0 (MultiPoly.const 0)) x env = MultiPoly.eval r x env := by
-  obtain ⟨a, ha⟩ := List.length_eq_one.mp (yCoeffsAt_length_one_when_y_free top r hfree)
+  obtain ⟨a, ha⟩ := List.length_eq_one_iff.mp (yCoeffsAt_length_one_when_y_free top r hfree)
   rw [ha]
   show MultiPoly.eval a x env = MultiPoly.eval r x env
   have hrec := eval_reconstructY_yCoeffsAt top r x env
@@ -46,7 +46,7 @@ theorem topfree_getD0_eval {N : Nat} (top : Fin N) (r : MultiPoly N)
 theorem topfree_getD_succ_eval {N : Nat} (top : Fin N) (r : MultiPoly N)
     (hfree : MultiPoly.degreeY top r = 0) (d : Nat) (x : Real) (env : Fin N → Real) :
     MultiPoly.eval ((yCoeffsAt top r).getD (d + 1) (MultiPoly.const 0)) x env = 0 := by
-  obtain ⟨a, ha⟩ := List.length_eq_one.mp (yCoeffsAt_length_one_when_y_free top r hfree)
+  obtain ⟨a, ha⟩ := List.length_eq_one_iff.mp (yCoeffsAt_length_one_when_y_free top r hfree)
   rw [ha]; rfl
 
 end MultiPoly

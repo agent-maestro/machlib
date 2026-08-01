@@ -100,7 +100,7 @@ theorem reduceFullK_vanish {k : Nat} (i : Fin k) (env : Fin k → Real) (q_lead 
 /-! ## Length calculus -/
 
 theorem length_scaleC {k : Nat} (c : MultiVar k) (as : List (MultiVar k)) :
-    (scaleC c as).length = as.length := List.length_map _ _
+    (scaleC c as).length = as.length := List.length_map _
 
 theorem length_shiftC {k : Nat} (n : Nat) (as : List (MultiVar k)) :
     (shiftC n as).length = n + as.length := by
@@ -108,7 +108,7 @@ theorem length_shiftC {k : Nat} (n : Nat) (as : List (MultiVar k)) :
   rw [List.length_append, List.length_replicate]
 
 theorem length_negC {k : Nat} (bs : List (MultiVar k)) : (negC bs).length = bs.length :=
-  List.length_map _ _
+  List.length_map _
 
 theorem length_addC {k : Nat} : ∀ as bs : List (MultiVar k),
     (addC as bs).length = max as.length bs.length

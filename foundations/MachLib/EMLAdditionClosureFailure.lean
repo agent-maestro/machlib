@@ -16,11 +16,19 @@ Since `const 1` and `var` are both in EML (at depth 0), this
 PROVES that EML is NOT closed under addition AT DEPTH ≤ 1 — there's
 no EMLTree of depth ≤ 1 that expresses the sum of `const 1` and `var`.
 
+**SUPERSEDED 2026-07-31 — READ THIS BEFORE THE REST OF THE FILE.**
 The any-depth case (whether `x + 1` is expressible at ANY finite
-EMLTree depth) is the structural conjecture surfaced by the
-Lambert-W investigation. It remains OPEN; see
-`exploration/lambert_w_all_candidates_attempt_2026_06_13/FINDINGS.md`
-for the obstacle analysis.
+EMLTree depth) was the structural conjecture surfaced by the
+Lambert-W investigation. **It is FALSE.** `x + 1` is an EML tree at
+depth 4; see `x_plus_one_in_eml` at the end of this file. EML IS
+closed under adding an arbitrary real constant
+(`eml_const_offset_closure`).
+
+The depth-≤1 results below remain TRUE and are unaffected — they are
+correct statements about depth ≤ 1 that simply do not extend. The
+prose in the middle of this file that treats the any-depth case as
+open is left in place, marked, because the file is also the record of
+how the wrong expectation was held.
 
 ## What this DOES
 
@@ -32,7 +40,11 @@ for the obstacle analysis.
 
 ## What this does NOT do
 
-- Does NOT close the any-depth case. That requires either:
+- Did NOT close the any-depth case when written. **It is now closed,
+  negatively, at the end of this file** — neither (a) nor (b) below
+  was needed, because the conjecture was false and a depth-4 witness
+  settles it. Both routes are preserved as written, because both
+  presupposed the conjecture was true:
   (a) A structural induction argument that handles arbitrary
       depth without case explosion (currently no clean path
       identified — see the Lambert-W candidate analysis).
@@ -469,12 +481,19 @@ axiom for the parallel Lambert-W depth-1 disproof). NO new axioms
 introduced in this file — just structural reuse of the same
 classical fact.
 
-## The any-depth conjecture (open)
+## The any-depth conjecture (REFUTED 2026-07-31 — see end of file)
 
 For depth k ≥ 2, the case analysis explodes (depth-2 has 36
 subcases, depth-k has ~2^k). Whether `x + 1 ∉ EML` at any depth is
 the OPEN structural conjecture that, if resolved positively, would
 prove EML is not closed under addition at any finite depth.
+
+**It was not resolved positively. `x_plus_one_in_eml` exhibits a
+depth-4 witness, so the case explosion below was an explosion in a
+direction with no theorem at the end of it.** The paragraph above is
+kept verbatim rather than rewritten: it is an accurate record of why
+the search went the way it did, and the 36-subcase count is still
+correct.
 
 See `monogate-research/exploration/lambert_w_all_candidates_attempt_2026_06_13/`
 for the obstacle analysis showing why structural induction is hard:
@@ -487,5 +506,432 @@ that the Lambert-W investigation surfaced: extends EML's
 expressiveness story with a concrete "this specific function is
 not in EML at small depths" theorem.
 -/
+
+/-! ## THE ANY-DEPTH CONJECTURE IS FALSE — `x + 1 ∈ EML` at depth 4
+
+**Added 2026-07-31 (E2 session 1).** The file above closes `x + 1 ∉ EML` at depth ≤ 1 and scopes the
+remaining depth-2 subcases; the surrounding notes state the any-depth case as an open structural
+conjecture. **It is false, and the witness is small.**
+
+### The gadget: `eml` can NEGATE a subtree
+
+`eml` offers `exp` of its first argument and `−log` of its second. Since `log ∘ exp = id`, wrapping a
+tree `t` so that its value passes through `exp` and then lands in a *divisor* position returns the value
+itself, with a minus sign:
+
+```
+negOffset c t  :=  eml (const c) (eml t (const 1))
+eval           =   exp c − log (exp (t.eval x) − log 1)
+               =   exp c − t.eval x                        -- EXACTLY, for all real x
+```
+
+No positivity side-condition: `exp (t.eval x) > 0` always, so the `log` is never clamped and the
+identity is unconditional.
+
+### Why the intuition said otherwise
+
+The obstacle analysis reasoned that EML has no addition constructor and that `log` only ever appears
+*subtracted*, so a `+x` term has nowhere to come from. That is right about one application and wrong
+about two. **You cannot add, but you can negate — and negating twice adds.** `x + 1` is
+`2 − (1 − x)`, and each subtraction is one `negOffset`. Depth cost is `+2` per negation, so the
+witness sits at depth 4.
+
+This is the depth-1 result's own lesson read at the wrong scale: the case analysis at depth ≤ 1 is
+genuinely exhaustive, and it created an impression of an obstruction that the depth-2 scoping note
+then inherited. The 24 open subcases were never the frontier. -/
+
+/-- `exp` of a tree, with the divisor neutralised: `eml t (const 1)` evaluates to `exp (t.eval x)`,
+because `log 1 = 0`. The building block of the negation gadget. -/
+noncomputable def expOf (t : EMLTree) : EMLTree := .eml t (.const 1)
+
+theorem expOf_eval (t : EMLTree) (x : Real) : (expOf t).eval x = Real.exp (t.eval x) := by
+  simp [expOf, EMLTree.eval, log_one, sub_zero]
+
+theorem expOf_depth (t : EMLTree) : (expOf t).depth = 1 + t.depth := by
+  simp [expOf, EMLTree.depth]
+
+/-- **The negation gadget.** `negOffset c t` evaluates to `exp c − t.eval x`, exactly and for every
+real `x`. This is the constructor the addition-closure obstacle analysis assumed EML did not have. -/
+noncomputable def negOffset (c : Real) (t : EMLTree) : EMLTree := .eml (.const c) (expOf t)
+
+theorem negOffset_eval (c : Real) (t : EMLTree) (x : Real) :
+    (negOffset c t).eval x = Real.exp c - t.eval x := by
+  simp only [negOffset, expOf, EMLTree.eval, log_one, sub_zero, log_exp]
+
+theorem negOffset_depth (c : Real) (t : EMLTree) : (negOffset c t).depth = 2 + t.depth := by
+  simp only [negOffset, expOf, EMLTree.depth, Nat.zero_max, Nat.max_zero]
+  omega
+
+/-- The witness: `2 − (1 − x)`. -/
+noncomputable def xPlusOneTree : EMLTree := negOffset (Real.log (1 + 1)) (negOffset 0 .var)
+
+/-- **`x + 1` IS an EML tree.** Exact, for every real `x`, with no side-condition. -/
+theorem xPlusOneTree_eval (x : Real) : xPlusOneTree.eval x = x + 1 := by
+  rw [xPlusOneTree, negOffset_eval, negOffset_eval]
+  rw [exp_zero, exp_log (add_pos one_pos one_pos)]
+  simp only [EMLTree.eval]
+  mach_ring
+
+theorem xPlusOneTree_depth : xPlusOneTree.depth = 4 := by
+  simp [xPlusOneTree, negOffset_depth, EMLTree.depth]
+
+/-- **The any-depth conjecture, refuted.** There is no depth at which `x + 1` becomes unreachable,
+because it is reachable at depth 4. Contrast `x_plus_one_not_in_eml_1` above, which remains true: the
+depth-≤1 result is correct and simply does not extend. -/
+theorem x_plus_one_in_eml : ∃ t : EMLTree, (∀ x : Real, t.eval x = x + 1) ∧ t.depth = 4 :=
+  ⟨xPlusOneTree, xPlusOneTree_eval, xPlusOneTree_depth⟩
+
+/-- **The general form: EML is closed under adding an arbitrary real constant**, at a cost of depth 4.
+Given any tree `t`, `negOffset (log (K + c)) (negOffset (log K) t)` evaluates to `t.eval x + c` provided
+both `K > 0` and `K + c > 0` — and such a `K` exists for every real `c`, so the closure is unrestricted.
+Stated with the two constants explicit rather than chosen, because the choice is the only content. -/
+theorem eml_const_offset_closure (t : EMLTree) {K c : Real} (hK : 0 < K) (hKc : 0 < K + c) (x : Real) :
+    (negOffset (Real.log (K + c)) (negOffset (Real.log K) t)).eval x = t.eval x + c := by
+  rw [negOffset_eval, negOffset_eval, exp_log hK, exp_log hKc]
+  mach_mpoly [K, c, t.eval x]
+
+/-- Such a `K` always exists, so `eml_const_offset_closure` is genuinely unrestricted in `c`:
+take `K = 1` when `c ≥ 0`, and `K = 1 − c` when `c < 0`. -/
+theorem eml_const_offset_witness (c : Real) : ∃ K : Real, 0 < K ∧ 0 < K + c := by
+  rcases lt_total c 0 with h | h | h
+  · refine ⟨1 - c, sub_pos_of_lt (lt_trans_ax h one_pos), ?_⟩
+    have heq : (1 : Real) - c + c = 1 := by mach_mpoly [c]
+    rw [heq]; exact one_pos
+  · refine ⟨1, one_pos, ?_⟩
+    rw [h, add_zero]; exact one_pos
+  · exact ⟨1, one_pos, add_pos one_pos h⟩
+
+/-! ### The general form: EML IS closed under addition when one summand is positive
+
+The `x + 1` witness is a special case of something larger, and the larger statement is what the
+2026-06-13 exploration note actually conjectured against. From
+`exploration/lambert_w_all_candidates_attempt_2026_06_13/FINDINGS.md`:
+
+> **Sub-sub-problem:** can EML express addition `a + b` of two arbitrary EML expressions a, b? …
+> **Result:** EML's grammar appears to NOT support general addition. Specifically, I conjecture but
+> cannot prove that `EMLTree.eval` is closed under `+` only in restricted cases.
+
+**It supports general addition, subject to one positivity side-condition.** The note's own attempt
+stalled at `p = log(a + b + log q)` and called it circular — which it is, along that route. The
+non-circular route goes through `log ∘ exp = id` instead, and needs `exp ∘ log = id`, which is where
+positivity enters and is the only place it enters. -/
+
+/-- `log` of a subtree, exactly and unconditionally: `1 − (1 − log (t.eval x))`. -/
+noncomputable def logTree (t : EMLTree) : EMLTree := negOffset 0 (.eml (.const 0) t)
+
+theorem logTree_eval (t : EMLTree) (x : Real) :
+    (logTree t).eval x = Real.log (t.eval x) := by
+  rw [logTree, negOffset_eval]
+  simp only [EMLTree.eval, exp_zero]
+  mach_mpoly [Real.log (t.eval x)]
+
+/-- **Exact subtraction**, given that the left operand is positive. Positivity is needed for
+`exp (log a) = a` and nowhere else — the `−b` half is unconditional, since `log (exp b) = b` always. -/
+noncomputable def subTree (a b : EMLTree) : EMLTree := .eml (logTree a) (expOf b)
+
+theorem subTree_eval {a : EMLTree} (b : EMLTree) {x : Real} (ha : 0 < a.eval x) :
+    (subTree a b).eval x = a.eval x - b.eval x := by
+  simp only [subTree, EMLTree.eval, logTree_eval, expOf_eval, log_exp, exp_log ha]
+
+/-- **Exact addition.** `a + b = (a − (1 − b)) + 1`, with the outer `+1` supplied by the negation
+gadget applied twice. Same single side-condition: `a` positive at the point of evaluation. -/
+noncomputable def addTree (a b : EMLTree) : EMLTree :=
+  negOffset (Real.log (1 + 1)) (negOffset 0 (subTree a (negOffset 0 b)))
+
+/-- **EML IS closed under addition wherever the left summand is positive** — refuting the
+"EML's grammar appears to NOT support general addition" conjecture of 2026-06-13 in its general form,
+not merely for the `x + 1` instance. By commutativity of `+` it is enough that *either* summand be
+positive: apply this with the arguments swapped. -/
+theorem addTree_eval {a : EMLTree} (b : EMLTree) {x : Real} (ha : 0 < a.eval x) :
+    (addTree a b).eval x = a.eval x + b.eval x := by
+  rw [addTree, negOffset_eval, negOffset_eval, subTree_eval (negOffset 0 b) ha,
+    negOffset_eval]
+  rw [exp_zero, exp_log (add_pos one_pos one_pos)]
+  mach_mpoly [a.eval x, b.eval x]
+
+/-- Where the positivity is NOT removable, stated so the result is not read as stronger than it is.
+`exp (log u) = u` fails for `u ≤ 0` because `MachLib.Real.log` is total and returns a junk value there
+— the same totalization artifact the E5 arm characterised. So `subTree`/`addTree` are exact
+**pointwise, wherever `a` is positive**, and say nothing at points where it is not. A tree unbounded
+below (e.g. `1 − x`) therefore cannot serve as the left summand globally, and no constant shift repairs
+that, since shifting changes the sum. -/
+theorem subTree_eval_needs_positivity :
+    ∃ (a b : EMLTree) (x : Real), (subTree a b).eval x ≠ a.eval x - b.eval x := by
+  refine ⟨.const 0, .const 0, 0, ?_⟩
+  simp only [subTree, EMLTree.eval, logTree_eval, expOf_eval, log_exp]
+  rw [log_zero, exp_zero]
+  intro h
+  have h1 : (1 : Real) - 0 = 1 := by mach_mpoly []
+  have h2 : (0 : Real) - 0 = 0 := by mach_mpoly []
+  rw [h1, h2] at h
+  exact absurd h.symm (ne_of_lt one_pos)
+
+/-! ### Is depth 4 minimal? The necessary condition, and depth 2 closed
+
+`x_plus_one_not_in_eml_1` closes depth ≤ 1 by enumeration; the witness sits at depth 4; **depths 2 and
+3 were left unexamined**, which means the file shipped a witness and no bound. This section closes
+depth 2 and states exactly what depth 3 needs.
+
+The move that avoids the 36-case explosion the original scoping note budgeted for: **do not enumerate
+the shapes — constrain the divisor.** Any witness at all, of any shape, must have a divisor subtree
+that grows at least like `exp (−x − 1)` as `x → −∞`, and that single inequality does the work that
+case analysis was being asked to do. -/
+
+/-- **The necessary condition on every witness, enumeration-free.** If `eml t1 t2` evaluates to `x + 1`
+at some `x < −1`, then `t2.eval x ≥ exp (−x − 1)`.
+
+The proof is three lines of content: `exp` of the dividend is positive, so `log (t2.eval x)` exceeds
+`−x − 1`, which is itself positive when `x < −1`; a non-positive `t2.eval x` would make that `log` equal
+`0` by MachLib's convention and contradict it; so `t2.eval x` is positive and `exp ∘ log` inverts.
+
+**The totalization convention is load-bearing here in the helpful direction** — `log ≤ 0 ↦ 0` is what
+lets a positivity fact be *derived* rather than assumed.
+
+**TOTALIZATION AUDIT (this statement, not the convention in general).** The totalized `log` is
+load-bearing in this proof, and the derived positivity `0 < t2.eval x` means **the totalized and the
+partial readings agree on this statement**: on the branch the theorem actually reaches, `log` is being
+applied to a positive argument, so the conclusion is a fact of real mathematics rather than a fact
+about the convention. The audit is worth writing down because the same convention generated five
+degenerate cells and a falsified framework in the E5 arm — a totalization is neither friendly nor
+hostile, it is a fixed semantics, and each theorem must state whether it is proving the intended claim
+or the convention's shadow. Here: the intended claim. -/
+theorem witness_divisor_ge {t1 t2 : EMLTree} {x : Real}
+    (hx : x < -1) (h : (EMLTree.eml t1 t2).eval x = x + 1) :
+    Real.exp (-x - 1) ≤ t2.eval x := by
+  simp only [EMLTree.eval] at h
+  have hkey : Real.log (t2.eval x) = Real.exp (t1.eval x) - (x + 1) := by
+    rw [← h]; mach_mpoly [Real.exp (t1.eval x), Real.log (t2.eval x), x]
+  have hxpos : (0 : Real) < -x - 1 := by
+    have h1 : x + 1 < 0 := by
+      have := add_lt_add_left hx 1
+      have e1 : (1 : Real) + x = x + 1 := by mach_mpoly [x]
+      have e2 : (1 : Real) + -1 = 0 := by mach_mpoly []
+      rw [e1, e2] at this; exact this
+    have := add_lt_add_left h1 (-x - 1)
+    have e3 : -x - 1 + (x + 1) = 0 := by mach_mpoly [x]
+    have e4 : -x - 1 + 0 = -x - 1 := by mach_mpoly [x]
+    rw [e3, e4] at this; exact this
+  have hlog : -x - 1 < Real.log (t2.eval x) := by
+    rw [hkey]
+    have hp : (0 : Real) < Real.exp (t1.eval x) := exp_pos _
+    have := add_lt_add_left hp (-(x + 1))
+    have e5 : -(x + 1) + 0 = -x - 1 := by mach_mpoly [x]
+    have e6 : -(x + 1) + Real.exp (t1.eval x) = Real.exp (t1.eval x) - (x + 1) := by
+      mach_mpoly [x, Real.exp (t1.eval x)]
+    rw [e5, e6] at this; exact this
+  have ht2pos : 0 < t2.eval x := by
+    rcases lt_total 0 (t2.eval x) with hp | he | hn
+    · exact hp
+    · exfalso
+      rw [log_nonpos (le_of_eq he.symm)] at hlog
+      exact lt_irrefl_ax 0 (lt_trans_ax hxpos hlog)
+    · exfalso
+      rw [log_nonpos (le_of_lt hn)] at hlog
+      exact lt_irrefl_ax 0 (lt_trans_ax hxpos hlog)
+  calc Real.exp (-x - 1) ≤ Real.exp (Real.log (t2.eval x)) := exp_monotone (le_of_lt hlog)
+    _ = t2.eval x := exp_log ht2pos
+
+/-- Every tree of depth ≤ 1 is **bounded above by a constant on the negative axis**. Four real shapes
+survive the depth bound, and on `x < 0` each collapses: `log x` is `0` by convention, and `exp x ≤ 1`. -/
+theorem depth_le_one_bounded_above (t : EMLTree) (ht : t.depth ≤ 1) :
+    ∃ M : Real, ∀ x : Real, x < 0 → t.eval x ≤ M := by
+  cases t with
+  | const c => exact ⟨c, fun _ _ => le_refl c⟩
+  | var => exact ⟨0, fun _ hx => le_of_lt hx⟩
+  | eml a b =>
+    simp only [EMLTree.depth] at ht
+    have hab : max a.depth b.depth = 0 := by omega
+    have ha : a.depth = 0 := by
+      have := Nat.le_max_left a.depth b.depth; omega
+    have hb : b.depth = 0 := by
+      have := Nat.le_max_right a.depth b.depth; omega
+    cases a with
+    | eml _ _ => simp only [EMLTree.depth] at ha; omega
+    | const c =>
+      cases b with
+      | eml _ _ => simp only [EMLTree.depth] at hb; omega
+      | const d => exact ⟨Real.exp c - Real.log d, fun _ _ => le_refl _⟩
+      | var =>
+        refine ⟨Real.exp c, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval, log_nonpos (le_of_lt hx), sub_zero]
+        exact le_refl _
+    | var =>
+      cases b with
+      | eml _ _ => simp only [EMLTree.depth] at hb; omega
+      | const d =>
+        refine ⟨1 - Real.log d, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval]
+        have h1 : Real.exp x ≤ 1 := exp_le_one_of_nonpos (le_of_lt hx)
+        have := add_le_add_left h1 (-Real.log d)
+        have e1 : -Real.log d + Real.exp x = Real.exp x - Real.log d := by
+          mach_mpoly [Real.exp x, Real.log d]
+        have e2 : -Real.log d + 1 = 1 - Real.log d := by mach_mpoly [Real.log d]
+        rw [e1, e2] at this; exact this
+      | var =>
+        refine ⟨1, ?_⟩
+        intro x hx
+        simp only [EMLTree.eval, log_nonpos (le_of_lt hx), sub_zero]
+        exact exp_le_one_of_nonpos (le_of_lt hx)
+
+/-- **`x + 1 ∉ EML` at depth ≤ 2.** Not by enumerating 36 shapes: the divisor of any witness must
+outgrow `exp (−x − 1)`, a depth-≤1 divisor is bounded by a constant, and `exp` beats every constant. -/
+theorem x_plus_one_not_in_eml_2 (t : EMLTree) (ht : t.depth ≤ 2) :
+    ¬ (∀ x : Real, t.eval x = x + 1) := by
+  intro hsum
+  cases t with
+  | const c => exact x_plus_one_not_in_eml_0 (.const c) (by simp [EMLTree.depth]) hsum
+  | var => exact x_plus_one_not_in_eml_0 .var (by simp [EMLTree.depth]) hsum
+  | eml t1 t2 =>
+    simp only [EMLTree.depth] at ht
+    have hd2 : t2.depth ≤ 1 := by
+      have := Nat.le_max_right t1.depth t2.depth; omega
+    obtain ⟨M, hM⟩ := depth_le_one_bounded_above t2 hd2
+    -- pick `y > 0` with `M < exp y`, then evaluate at `x = -y - 1 < -1`.
+    obtain ⟨y, hy0, hyM⟩ : ∃ y : Real, 0 < y ∧ M < Real.exp y := by
+      rcases lt_total M 0 with hm | hm | hm
+      · exact ⟨1, one_pos, lt_trans_ax hm (lt_trans_ax one_pos (exp_grows_strictly_thm 1))⟩
+      · exact ⟨1, one_pos, hm ▸ lt_trans_ax one_pos (exp_grows_strictly_thm 1)⟩
+      · refine ⟨M + 1, ?_, ?_⟩
+        · exact add_pos hm one_pos
+        · have h1 : M < M + 1 := by
+            have := add_lt_add_left one_pos M
+            have e : M + 0 = M := by mach_mpoly [M]
+            rw [e] at this; exact this
+          exact lt_trans_ax h1 (exp_grows_strictly_thm (M + 1))
+    have hxlt : -y - 1 < -1 := by
+      have := add_lt_add_left hy0 (-y - 1)
+      have e : -y - 1 + y = -1 := by mach_mpoly [y]
+      rw [add_zero, e] at this; exact this
+    have hxneg : -y - 1 < 0 :=
+      lt_trans_ax hxlt (by
+        have := add_lt_add_left one_pos (-1 : Real)
+        have e : (-1 : Real) + 1 = 0 := by mach_mpoly []
+        rw [add_zero, e] at this; exact this)
+    have hge := witness_divisor_ge hxlt (hsum (-y - 1))
+    have hey : Real.exp (-(-y - 1) - 1) = Real.exp y := by
+      have e : -(-y - 1) - 1 = y := by mach_mpoly [y]
+      rw [e]
+    rw [hey] at hge
+    exact absurd (lt_of_lt_of_le hyM (le_trans hge (hM _ hxneg))) (lt_irrefl_ax M)
+
+/-! ### Depth 3: what is left, and why it is a separate session rather than a longer one
+
+**Minimality is NOT established.** `x_plus_one_not_in_eml_2` plus the depth-4 witness leaves depth 3
+open, so the honest statement is *"a witness exists at depth 4 and none exists below depth 3"* — not
+*"4 is minimal"*.
+
+`witness_divisor_ge` still applies at depth 3 and still does the enumeration-free half: the divisor is a
+tree of depth ≤ 2 and must satisfy `t2.eval x ≥ exp (−x − 1)`. What breaks is the *other* half.
+`depth_le_one_bounded_above` does not lift, and the reason is precisely the negation gadget this file
+just shipped:
+
+```
+(eml t1 (eml var (const 1))).eval x = exp (t1.eval x) − x
+```
+
+which is **unbounded above on the negative axis**. So depth-≤2 trees are not constant-bounded, and the
+one-line "exp beats every constant" finish is unavailable.
+
+**The bound that should replace it**, with the shape it has to have:
+
+> `∀ t, t.depth ≤ 2 → ∃ A N, ∀ x ≤ N, t.eval x ≤ A − x`
+
+— at most *linear* growth as `x → −∞`, against the divisor's required *exponential* growth. The
+dividend half factors cleanly (`exp` is monotone, so `depth_le_one_bounded_above` bounds
+`exp (t1.eval x)` by a constant). The divisor half needs `log (t2.eval x) ≥ x + C` for depth-≤1 `t2`,
+and **that is where the `N` becomes necessary rather than cosmetic**: for `t2 = eml var (const b)` with
+`log b > 0`, `t2.eval x = exp x − log b` passes through `0` at a finite `x`, sending `log` to `−∞` there.
+The bound only holds once `x` is negative enough that `exp x − log b` has gone negative and MachLib's
+convention clamps the `log` to `0`.
+
+So the missing lemma is an *eventually*-shaped statement about the `x → −∞` end, and MachLib's
+asymptotic vocabulary (`EventuallyAtMost` and friends in `EMLAsymptoticClass`) is built for `x → +∞`.
+Closing depth 3 means either mirroring that vocabulary or inlining the threshold, plus a super-linear
+growth fact for `exp` — `exp y > 2y − 2` for `y > 1`, available from the `two_lt_exp_one` this file
+already imports.
+
+### The decision that must be made in the route slot, not mid-proof
+
+MachLib's asymptotic vocabulary faces `+∞`; this claim is eventually-shaped at `−∞`. There are two
+ways to close that gap and **they are not the same size**:
+
+* **mirror the vocabulary** — add `EventuallyAtMostNeg`-style definitions and re-prove the handful of
+  facts about them at the `−∞` end; or
+* **substitute `x ↦ −x`** — define the reflected tree/eval and reuse the existing `+∞` machinery
+  wholesale.
+
+This is a small infrastructure decision with a large cost multiplier, and it is exactly the kind of
+choice that turns one session into three when it is made implicitly, halfway through, after the first
+route has already accumulated sunk lemmas. **It belongs in the depth-3 session's pre-registered route
+slot.** The current reading is that the substitution is cheaper — the reflection is a definition and a
+congruence lemma, against a duplicated vocabulary — but that is a prediction to be recorded and scored,
+not a conclusion.
+
+**Recorded as scoped, not attempted.** The estimate is one focused session *given that decision is made
+up front*; the reason it is not this one is that it is a different piece of work with a different
+failure mode, and bolting it on would make a clean depth-2 result and a half-finished depth-3 result
+share a commit. -/
+
+/-! ### Audit consequence: two documented routes in the corpus are dead
+
+The negation gadget did not only refute the `x + 1` conjecture. Two *other* arguments in the research
+corpus reason from "EML has no native addition", and this section settles both by construction rather
+than by argument.
+
+**Route 1 — the Lambert-W any-depth barrier.** From
+`exploration/lambert_w_any_depth_obstacle_analysis_2026_06_13/FINDINGS.md`, which reduces the barrier to
+one question and then makes the barrier depend on its answer:
+
+> **Key sub-question:** Can the EML grammar express `f(x) + log(f(x))` for an arbitrary `f` already
+> expressed by an EMLTree? … If the answer is NO at any finite depth (for general `f`), then the
+> functional equation can't be satisfied by any finite-depth EMLTree expression for `W`. **This would
+> close the Lambert-W any-depth barrier.**
+
+**The answer is YES**, wherever `f` is positive — see `selfPlusLog_eval`. Note that `logTree` is
+*unconditional*, so the `log f` half costs nothing; the only hypothesis is the one `addTree` already
+carries. **The proposed route to the barrier is therefore closed off**, and closed in the direction that
+gives no theorem: expressing `f + log f` says nothing about whether any tree *solves* `t + log t = log x`,
+which is a fixed-point question the grammar does not answer. The barrier is neither closed nor opened —
+its stated route is simply refuted.
+
+**Route 2 — products and quotients.** From
+`exploration/lambert_w_all_candidates_attempt_2026_06_13/FINDINGS.md`, on EML closure under
+differentiation:
+
+> `exp(t1)·t1'`: product of exp with a derivative. EML expresses products via `a·b = exp(log a + log b)`.
+> But the "+log b" part **requires native addition** in the inner expression. … `t2'/t2`: quotient via
+> `a/b = exp(log a - log b)`. **Same addition issue.**
+
+The addition is available, so the stated obstruction is not one — see `mulTree_eval`. **The hypotheses
+are real and are not hidden**: the construction needs `1 < a.eval x` (so that `log a` is positive and
+`addTree` applies) as well as `0 < b.eval x`. So this refutes the *reasoning*, not the conclusion:
+whether the differentiation-closure argument survives depends on whether its trees satisfy those bounds,
+which nobody has checked. -/
+
+/-- **`f + log f` IS expressible**, wherever `f` is positive — the Lambert-W obstacle analysis's key
+sub-question, answered YES. -/
+noncomputable def selfPlusLog (t : EMLTree) : EMLTree := addTree t (logTree t)
+
+theorem selfPlusLog_eval {t : EMLTree} {x : Real} (ht : 0 < t.eval x) :
+    (selfPlusLog t).eval x = t.eval x + Real.log (t.eval x) := by
+  rw [selfPlusLog, addTree_eval (logTree t) ht, logTree_eval]
+
+/-- **Products are expressible** via `a·b = exp (log a + log b)`, given `1 < a.eval x` and
+`0 < b.eval x`. The first hypothesis is what makes `log a` positive so `addTree` applies; the second is
+what makes `exp (log b) = b`. Both are stated rather than absorbed, because the corpus argument this
+refutes deserves to be refuted precisely. -/
+noncomputable def mulTree (a b : EMLTree) : EMLTree := expOf (addTree (logTree a) (logTree b))
+
+theorem mulTree_eval {a b : EMLTree} {x : Real} (ha : 1 < a.eval x) (hb : 0 < b.eval x) :
+    (mulTree a b).eval x = a.eval x * b.eval x := by
+  have ha0 : 0 < a.eval x := lt_trans_ax one_pos ha
+  have hloga : 0 < Real.log (a.eval x) := by
+    have h := log_lt_log one_pos ha
+    rw [log_one] at h; exact h
+  have hpos : 0 < (logTree a).eval x := by rw [logTree_eval]; exact hloga
+  rw [mulTree, expOf_eval, addTree_eval (logTree b) hpos, logTree_eval, logTree_eval,
+      exp_add, exp_log ha0, exp_log hb]
 
 end MachLib

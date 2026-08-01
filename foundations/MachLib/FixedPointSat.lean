@@ -63,7 +63,7 @@ theorem ones_toNat : ∀ n, toNat (ones n) = 2 ^ n - 1
   | 0     => by decide
   | n + 1 => by
       have ih := ones_toNat n
-      have hp : 1 ≤ 2 ^ n := Nat.pos_pow_of_pos n (by decide)
+      have hp : 1 ≤ 2 ^ n := Nat.pow_pos (by decide)
       have hs : 2 ^ (n + 1) = 2 ^ n * 2 := Nat.pow_succ 2 n
       rw [show toNat (ones (n + 1)) = bitVal true + 2 * toNat (ones n) from rfl, bitVal_true, ih]
       omega
@@ -74,7 +74,7 @@ theorem ones_toNat : ∀ n, toNat (ones n) = 2 ^ n - 1
 def fitsW (W : Nat) (x : List Bool) : Bool := allZero (x.drop W)
 
 theorem fitsW_iff (W : Nat) (x : List Bool) : fitsW W x = true ↔ toNat x < 2 ^ W := by
-  have hpos : 0 < 2 ^ W := Nat.pos_pow_of_pos W (by decide)
+  have hpos : 0 < 2 ^ W := Nat.pow_pos (by decide)
   rw [fitsW, allZero_iff, drop_toNat]
   have hdm := Nat.div_add_mod (toNat x) (2 ^ W)
   have hlt := Nat.mod_lt (toNat x) hpos

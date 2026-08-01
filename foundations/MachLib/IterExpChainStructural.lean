@@ -54,9 +54,13 @@ theorem IterExpChain_one_eq_SingleExpChain :
     show (IterExpChain 1).relations i = MultiPoly.varY 0
     rw [IterExpChain_relations, hi0]
     rfl
+  -- v4.19.0: `{ evals := X.evals, relations := X.relations }` now COLLAPSES back to `X` during
+  -- elaboration (structure eta applied to instance notation), so the middle step's goal arrived as
+  -- `X = Y` with no projections in it and `rw [he]` had nothing to find. Writing the constructor
+  -- explicitly keeps the projections in the term. Same theorem, same two field equalities.
   calc IterExpChain 1
-      = { evals := (IterExpChain 1).evals, relations := (IterExpChain 1).relations } := rfl
-    _ = { evals := SingleExpChain.evals, relations := SingleExpChain.relations } := by rw [he, hr]
+      = PfaffianChain.mk (IterExpChain 1).evals (IterExpChain 1).relations := rfl
+    _ = PfaffianChain.mk SingleExpChain.evals SingleExpChain.relations := by rw [he, hr]
     _ = SingleExpChain := rfl
 
 /-- **The iterated-exp tower is closed under chain-level `dropLast`.**
@@ -76,10 +80,10 @@ theorem IterExpChain_dropLast (M : Nat) :
     rw [IterExpChain_relations, IterExpChain_relations]
     exact MachLib.IterExpDepthN.dropLastY_prodVarYUpTo M i.val i.isLt
   calc PfaffianChain.dropLast (IterExpChain (M + 2))
-      = { evals := (PfaffianChain.dropLast (IterExpChain (M + 2))).evals,
-          relations := (PfaffianChain.dropLast (IterExpChain (M + 2))).relations } := rfl
-    _ = { evals := (IterExpChain (M + 1)).evals,
-          relations := (IterExpChain (M + 1)).relations } := by rw [he, hr]
+      = PfaffianChain.mk (PfaffianChain.dropLast (IterExpChain (M + 2))).evals
+          (PfaffianChain.dropLast (IterExpChain (M + 2))).relations := rfl
+    _ = PfaffianChain.mk (IterExpChain (M + 1)).evals
+          (IterExpChain (M + 1)).relations := by rw [he, hr]
     _ = IterExpChain (M + 1) := rfl
 
 end IterExpChainStructural
