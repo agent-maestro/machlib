@@ -11,8 +11,15 @@ signatures pin a format**.
 This file packages the bound for a format described by its **denominator** `D = 2^FRAC`, with
 `s = 1/D`.
 
-**Deliberately no numerals.** Writing `256` into Lean would bake Q8.8 into the file and reproduce the
-one mistake the corpus avoided everywhere else. `D` stays a variable: the format is an input.
+**Deliberately no numerals, and the counterfactual is the argument.** Writing `256` into this
+signature would have made it **the first of 224 hardware theorem signatures to pin a format**, undoing
+corpus-wide the exact property that made this step cost *zero new proofs*. `D` stays a variable.
+
+**Format-as-one-argument means `W=12`, `W=20`, or whatever a future shuttle's economics prefer are
+INSTANTIATIONS, NOT PROJECTS** — and the Q8.8 discharge below is the price list. This is the
+parameterise-over-hypotheses architecture from the EKF bound scoping, now proven a second time: **the
+theorem stays unconditional, the instantiation carries the grade, and `hinv0` exists so the measurement
+has somewhere to attach.**
 
 ## Discharging the hypotheses at Q8.8 (`D = 256`), for the record
 
@@ -27,9 +34,17 @@ it**, and it is carried as a hypothesis precisely so the measurement has somewhe
 honest reading of the Q8.8 bound is therefore: **conditional on a bench-measured seed margin, and no
 stronger than that measurement.**
 
-**Consistency note.** The regime admits `|b| ≤ 62.5`, but the measured usable domain at Q8.8 is
-`|b| ∈ [0.125, 16)` — 7 octaves (`chip/NARROW_KERNEL_RESULT.md`). **Representability binds first, not
-the regime**: the proof is not the limiting factor at this format.
+**Consistency note — an unarranged cross-derivation.** The regime admits `|b| ≤ 62.5`; the measured
+usable domain at Q8.8 is `|b| ∈ [0.125, 16)`, 7 octaves (`chip/NARROW_KERNEL_RESULT.md`). The two were
+built by different methods in different substrates, **neither aware it was checking the other**, and
+they agree: **representability binds first, the algorithm regime is slack.** That is the two-envelope
+split of `eml_reciprocal.v`'s header, confirmed empirically at a second format by independent
+derivation rather than by construction.
+
+**Design corollary, and it should stop a future session:** the regime has roughly **4× headroom sitting
+idle**. So **any future domain expansion is a WIDTH question, never a PROOF question** — nobody should
+spend a session widening this Lean bound hoping to widen the usable domain. The bound is not what is
+holding it.
 
 ## HALTED: the regime-simplification bridge
 
@@ -43,6 +58,11 @@ obstruction is stated as a lemma-shaped claim rather than a narrative:
 > lemmas to save callers one arithmetic step is the wrong trade.
 
 Callers discharge `hreg` directly. The bridge is a convenience, not a gap in the certification.
+
+**TRIPWIRE, not a task.** `one_div_pos_of_pos` is on the axiom-sweep's derivability candidate list from
+the trust-boundary audit, and `mul_pos` would likely fall in the same pass. **If that sweep ever
+resumes and lands either, this bridge becomes nearly free.** Recorded so the connection survives until
+someone is there anyway — nobody should start the sweep *for* this.
 -/
 
 namespace MachLib
