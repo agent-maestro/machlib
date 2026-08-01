@@ -5,11 +5,13 @@
 # wrong normalisation for exactly that reason. Verify one file with:
 #     python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n')).hexdigest())" <file>
 #
-# 15 files, enumerated and counted by the tool that wrote this line.
+# 17 files, enumerated and counted by the tool that wrote this line.
 
 862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793        19  .gitignore
 6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
-7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/test_eml_atan_wide_certificate.py
+7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/hardware/modules/transcendental/tests/test_eml_atan_wide_certificate.py
+3174315d008b3b5b01998231490398e498af9cbb1e3fb2dbfe12dcf369e2120c      5052  certificate/tests/qkernels.py
+7c1ca5dba52cacf2ed28fe19a8098362f31ddd3efb10f58758fd1350bb4969f4      6429  certificate/tests/test_ekf.py
 31c4eedd44307984e80b3f9923aa0c27ca9d6f07e8e482c5a83d97c157ddfad9      1518  kernel/ekf_range_bearing.eml
 d8665daa3ce09c7c7282ab94c46f5f9acd4c36d77e401676752c91c2bab66996      5917  normalization/test_autodiff_normalisation.py
 86df203555d3053cdeae62a57eb24707cfb7b6a57df2d3c644dba21137d9c5ef      4945  normalization/test_normalise_fallback_chain.py
