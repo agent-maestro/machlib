@@ -13,10 +13,11 @@
 # check_manifest.py excludes itself: a checker cannot record its own hash without a
 # chicken-and-egg edit on every change to itself.
 #
-# 17 files, enumerated and counted by the tool that wrote this line.
+# 18 files, enumerated and counted by the tool that wrote this line.
 
 6f4ff2992c4e2558837e2e09c39ed2bba140658755b22d046aab810ea2c90ca0        34  .gitignore
 6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
+a6303fc434fa40876c0afa67fe48e62719e57956d177f18b3a14c93a6e6b9f0a     10766  REPRODUCING.md
 7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/hardware/modules/transcendental/tests/test_eml_atan_wide_certificate.py
 3174315d008b3b5b01998231490398e498af9cbb1e3fb2dbfe12dcf369e2120c      5052  certificate/tests/qkernels.py
 7c1ca5dba52cacf2ed28fe19a8098362f31ddd3efb10f58758fd1350bb4969f4      6429  certificate/tests/test_ekf.py
