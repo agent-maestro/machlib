@@ -1,0 +1,151 @@
+name: Reproduction walk (x86-64, public artifacts only)
+
+# WHAT THIS IS, AND WHY IT IS NOT JUST ANOTHER TEST JOB.
+#
+# `reproduction/rb_ekf/REPRODUCING.md` tells a stranger they can rebuild the rb-EKF trail from
+# public artifacts. That claim was verified once, by hand, on 2026-08-01 -- ON arm64 ONLY. A
+# verified-once claim is a snapshot, and snapshots rot: the stale PyPI wheel that started this whole
+# exercise was a correct artifact that quietly stopped being correct while nobody re-checked.
+#
+# This job makes the reproduction a REGRESSION CHECK instead:
+#
+#   * it runs on GitHub's x86-64 runners, closing the disclosed architecture gap in
+#     REPRODUCING.md -- the reviewer's architecture gets tested before the reviewer does;
+#   * it installs the compiler FROM PyPI, not from a checkout, so a bad release breaks this job;
+#   * it clones this repo from the PUBLIC remote rather than using the checked-out workspace, so a
+#     file that exists locally but was never committed cannot make the walk pass.
+#
+# The third point is the one that has bitten repeatedly: the manifest generator, the wheel gate and
+# the evidence package each shipped a version that read the working directory instead of the
+# repository, and each passed for its author and failed for everyone else.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"          # Mondays 06:17 UTC — weekly is enough to catch rot, cheap enough to ignore
+  push:
+    paths:
+      - "reproduction/**"
+      - ".github/workflows/reproduction-walk.yml"
+  pull_request:
+    paths:
+      - "reproduction/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  walk:
+    name: Walk the trail as a stranger
+    runs-on: ubuntu-latest        # x86-64 — the point
+    timeout-minutes: 45
+    steps:
+      - name: Record the architecture under test
+        run: |
+          echo "arch: $(uname -m)"
+          echo "os:   $(. /etc/os-release; echo "$PRETTY_NAME")"
+          test "$(uname -m)" = "x86_64" || { echo "expected x86-64; this job exists to test it"; exit 1; }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # NOT actions/checkout. A stranger clones the public remote; anything reachable only from the
+      # workspace is not part of what they get.
+      - name: Clone from the PUBLIC remote, as a stranger would
+        run: |
+          git clone --depth 1 "https://github.com/${GITHUB_REPOSITORY}.git" stranger-clone
+          cd stranger-clone && echo "cloned $(git rev-parse --short HEAD)"
+
+      - name: Package integrity — the shipped files match their manifest
+        working-directory: stranger-clone/reproduction/rb_ekf
+        run: python3 check_manifest.py
+
+      - name: Install the compiler from PyPI
+        run: |
+          python -m venv venv
+          ./venv/bin/pip install --upgrade pip >/dev/null
+          ./venv/bin/pip install monogate-forge eml-cost pytest
+          ./venv/bin/pip show monogate-forge | grep ^Version
+
+      - name: 'Rung 1 — emit the rb kernel and diff against the pinned emission'
+        working-directory: stranger-clone/reproduction/rb_ekf
+        run: |
+          ../../../venv/bin/python - <<'PY'
+          import hashlib, sys
+          from hardware.allocator import FPGAAllocator
+          from hardware.hdl_gen.verilog_backend import VerilogBackend, EMISSION_FAILURES
+          from lang.parser import parse_source
+          from lang.profiler import Profiler
+          from lang.optimizer import autodiff
+
+          EXPECTED = "f47f6c8181723a2878fad488cec5486fb4322fe46b630a36bb8f1df188d51998"
+          mod = parse_source(open("kernel/ekf_range_bearing.eml").read(), "ekf_range_bearing.eml")
+          Profiler().profile_module(mod)
+          v = VerilogBackend().compile(mod, FPGAAllocator().allocate(mod))
+          got = hashlib.sha256(v.encode()).hexdigest()
+          print(f"lines={len(v.splitlines())} sha256={got}")
+          fails = []
+          if len(v.splitlines()) != 786:      fails.append(f"line count {len(v.splitlines())} != 786")
+          if got != EXPECTED:                 fails.append(f"sha256 {got} != {EXPECTED}")
+          if autodiff.NORMALISE_FALLBACKS:    fails.append(f"NORMALISE_FALLBACKS={autodiff.NORMALISE_FALLBACKS}")
+          if EMISSION_FAILURES:               fails.append(f"EMISSION_FAILURES={EMISSION_FAILURES}")
+          if fails:
+              print("RUNG 1 FAIL:"); [print("  -", f) for f in fails]; sys.exit(1)
+          print("RUNG 1 PASS")
+          PY
+
+      - name: 'Rung 2 — normalization soundness suite'
+        working-directory: stranger-clone/reproduction/rb_ekf
+        run: ../../../venv/bin/python -m pytest normalization/ -q
+
+      - name: 'Rung 3b — atan ENUMERATION certificate'
+        working-directory: stranger-clone/reproduction/rb_ekf
+        run: ../../../venv/bin/python -m pytest certificate/ -q
+
+      - name: 'Rung 4 — replay the golden against the silicon captures'
+        working-directory: stranger-clone/reproduction/rb_ekf
+        run: |
+          out=$(python3 silicon/scripts/analyze_rb_ekf_anchor.py silicon/evidence/rb_ekf_trace.jsonl)
+          echo "$out" | tail -12
+          echo "$out" | grep -q "ACCEPTANCE: PASS" || { echo "RUNG 4 FAIL: no ACCEPTANCE: PASS"; exit 1; }
+          echo "$out" | grep -q "PHYSICS GATE: PASS" || { echo "RUNG 4 FAIL: physics gate did not pass"; exit 1; }
+
+      - name: Install the Lean toolchain pinned by this repo
+        working-directory: stranger-clone
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o elan-init.sh
+          sh elan-init.sh -y --default-toolchain "$(cat foundations/lean-toolchain)"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Build MachLib
+        working-directory: stranger-clone/foundations
+        run: lake build
+
+      - name: 'Rung 3a — reciprocal certificate re-derives sorryAx-free'
+        working-directory: stranger-clone/foundations
+        run: |
+          printf 'import MachLib.ReciprocalFormatInstantiation\n#print axioms MachLib.nr_reciprocal_2stage_at_format\n' > /tmp/r.lean
+          lake env lean /tmp/r.lean | tee /tmp/r.out
+          # `sorryAx` in the footprint means the theorem is not proved. Absence of output would
+          # ALSO be wrong, so assert the footprint was actually printed.
+          grep -q "depends on axioms" /tmp/r.out || { echo "RUNG 3a FAIL: no axiom footprint printed"; exit 1; }
+          if grep -q sorryAx /tmp/r.out; then echo "RUNG 3a FAIL: sorryAx in footprint"; exit 1; fi
+          echo "RUNG 3a PASS"
+
+      - name: 'Rung 5 — 57 headline axiom footprints'
+        working-directory: stranger-clone
+        run: |
+          set +e
+          python3 foundations/tools/axiom_ledger/check_ledger.py
+          rc=$?
+          set -e
+          # Exit taxonomy: 0 measured-pass, 1 measured-fail, 2 could-not-measure. On this path a 2
+          # must fail the job -- a reproduction claim cannot rest on a check that did not run.
+          [ "$rc" -eq 0 ] || { echo "RUNG 5 FAIL (exit $rc; 2 = gate could not run)"; exit 1; }
+
+      - name: 'Rung 2 — the Lean-gated tests, now that a matching toolchain exists'
+        working-directory: stranger-clone/reproduction/rb_ekf
+        env:
+          MACHLIB_ROOT: ${{ github.workspace }}/stranger-clone
+        run: ../../../venv/bin/python -m pytest normalization/ -q

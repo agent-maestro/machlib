@@ -12,9 +12,16 @@ captures.
 >
 > **All five steps completed. The results below are what that container printed.**
 
-**Disclosed limits.** The walk ran on **arm64** and has not been repeated on x86-64. The silicon
-captures are committed artifacts: checking them establishes consistency with the golden and with the
-physics, **not** that they came off a die.
+**Disclosed limits.** The silicon captures are committed artifacts: checking them establishes
+consistency with the golden and with the physics, **not** that they came off a die.
+
+**This page is a regression check, not a snapshot.** The hand walk ran on arm64; every step is now
+also run weekly on **x86-64** by
+[`reproduction-walk.yml`](../../.github/workflows/reproduction-walk.yml), which clones this repo
+from the *public* remote and installs the compiler from PyPI — so a bad release, a file that was
+never committed, or a silently-rotting artifact breaks the job rather than waiting for you to find
+it. A verified-once claim rots; the stale wheel that started this exercise was correct when it was
+published.
 
 ## What the grades mean
 
