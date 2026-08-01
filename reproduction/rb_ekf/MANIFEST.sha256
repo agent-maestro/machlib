@@ -1,0 +1,24 @@
+# MANIFEST — sha256 of every file, computed on LF-NORMALISED bytes.
+#
+# LF-normalised because this package draws from two repositories that check out with
+# different line endings, and the rb_ekf evidence packet already shipped one hash in the
+# wrong normalisation for exactly that reason. Verify one file with:
+#     python3 -c "import hashlib,sys;print(hashlib.sha256(open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n')).hexdigest())" <file>
+#
+# 15 files, enumerated and counted by the tool that wrote this line.
+
+862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793        19  .gitignore
+6b5176964404c6a0127546159e0e2b37f905fc69a9143552c5adb5b9bcc85afc      5216  README.md
+7345527ce605c36e75cb2053dd489d51315b5a97647ed20adbc84b7ededa4a7b     10231  certificate/test_eml_atan_wide_certificate.py
+31c4eedd44307984e80b3f9923aa0c27ca9d6f07e8e482c5a83d97c157ddfad9      1518  kernel/ekf_range_bearing.eml
+d8665daa3ce09c7c7282ab94c46f5f9acd4c36d77e401676752c91c2bab66996      5917  normalization/test_autodiff_normalisation.py
+86df203555d3053cdeae62a57eb24707cfb7b6a57df2d3c644dba21137d9c5ef      4945  normalization/test_normalise_fallback_chain.py
+b0b1ad844d920a43f3052896eb64878b9bd600073a28987bdc84562169c8ab41      4792  normalization/test_normalize_verify.py
+746922a3bbb7c32aeae421606ed32a2260c4d6cdf0de337dfae1e3a16a36716a      1358  silicon/evidence/rb_acceptance_output.txt
+abfb5fddac52630d23b061e9d2726d9423a87ce0cb2656d585c6582f4a87a963      6087  silicon/evidence/rb_ekf_anchor_evidence.json
+1e2b2a2dda58ac06a3518d9f035fadb25a98b055b7e75da8c9b0a84d2983861f     52374  silicon/evidence/rb_ekf_trace.jsonl
+e103dfab111a067fc9688f12aa39b25ad853987f882ad66c7df49aa7f678ee70      2158  silicon/evidence/rb_golden_trajectory.txt
+ef8f331dbadc7470f4915ba9197939d9472ac75c8ca69bc5947d764d6a09ec4d      6638  silicon/rtl/rb_ekf_anchor_top.v
+812c8dd32db4887e108bf3c54dbb4673160d5f542ec2480815743a690a60333e     11138  silicon/scripts/analyze_rb_ekf_anchor.py
+484aa2c22377fcaf99ea15b7f00f0c225722532147fcbdc6ca42cafb3906b6d0     14596  silicon/scripts/rb_filter_golden.py
+3a741eb6af7c364aaea5eb2e9a1f4cd4e0b9137ffaf918f87c94330034e1cc3f     18059  tools/physics_gate.py

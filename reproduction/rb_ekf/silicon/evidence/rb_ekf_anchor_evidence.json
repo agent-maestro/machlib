@@ -1,0 +1,255 @@
+{
+  "schema": "arty-ekf-filter.evidence/v1",
+  "dut": "rb_ekf_arty/rtl/rb_track_emitted.v :: track_pipeline -- COMPILER-EMITTED from forge examples/ekf_range_bearing.eml. Range-bearing radar model h=(sqrt(x0^2+x1^2), atan(x1/x0)); Jacobian derived by autodiff through sqrt/pow/div/atan and normalised to lowest terms; wide transcendental kernels (eml_sqrt_wide, eml_atan_wide) + eml_reciprocal on the die",
+  "board": "Arty A7-100T (xc7a100tcsg324-1)",
+  "n_frames": 301,
+  "n_unparseable": 0,
+  "n_frames_checked": 301,
+  "n_value_mismatches": 0,
+  "n_steps_expected": 8,
+  "n_steps_captured": 8,
+  "missing_steps": [],
+  "rom_and_prior_vs_golden": {
+    "checked": true,
+    "match": true,
+    "z_rom_match": true,
+    "prior_match": true,
+    "n_steps": 8
+  },
+  "all_bit_exact": true,
+  "note": "recursive EKF: (x,P) evolves under a NONLINEAR measurement h(x)=z^2 whose Jacobian H the COMPILER derived (emitted track_meas, not the hand-written ekf_meas_z2 -- that is what this anchor adds over ekf_filter_arty). Each step's state is checked against the golden trajectory by index m; the z stream + prior (x0,P0,Q,R) are statically verified (verify_rom). EKF is first-order (not MMSE-optimal); what is guaranteed is the fixed-point bound, Joseph PSD, and the symbolically-exact compiler Jacobian. DSP count + timing + cycles/step come from the Vivado reports.",
+  "per_step": [
+    {
+      "step": 0,
+      "captured": true,
+      "frames": 32,
+      "silicon": [
+        "0x00024e47",
+        "0x0004fbce",
+        "0x0000091a",
+        "0xfffffce6",
+        "0xfffffcea",
+        "0x0000073b"
+      ],
+      "golden": [
+        "0x00024e47",
+        "0x0004fbce",
+        "0x0000091a",
+        "0xfffffce6",
+        "0xfffffcea",
+        "0x0000073b"
+      ],
+      "x_real": [
+        2.3057708740234375,
+        4.983612060546875
+      ],
+      "err": 0.3062097189192012,
+      "trace_P": 0.0637969970703125,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 1,
+      "captured": true,
+      "frames": 32,
+      "silicon": [
+        "0x00022d59",
+        "0x0004fd10",
+        "0x0000058b",
+        "0xfffffe46",
+        "0xfffffe48",
+        "0x00000394"
+      ],
+      "golden": [
+        "0x00022d59",
+        "0x0004fd10",
+        "0x0000058b",
+        "0xfffffe46",
+        "0xfffffe48",
+        "0x00000394"
+      ],
+      "x_real": [
+        2.1771392822265625,
+        4.988525390625
+      ],
+      "err": 0.17751054044211179,
+      "trace_P": 0.0356292724609375,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 2,
+      "captured": true,
+      "frames": 33,
+      "silicon": [
+        "0x00021d5d",
+        "0x0004fde9",
+        "0x0000041d",
+        "0xfffffecd",
+        "0xfffffecd",
+        "0x00000278"
+      ],
+      "golden": [
+        "0x00021d5d",
+        "0x0004fde9",
+        "0x0000041d",
+        "0xfffffecd",
+        "0xfffffecd",
+        "0x00000278"
+      ],
+      "x_real": [
+        2.1147003173828125,
+        4.9918365478515625
+      ],
+      "err": 0.11499045507648775,
+      "trace_P": 0.0257110595703125,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 3,
+      "captured": true,
+      "frames": 34,
+      "silicon": [
+        "0x0002148f",
+        "0x0004fe57",
+        "0x0000035a",
+        "0xffffff13",
+        "0xffffff13",
+        "0x000001f5"
+      ],
+      "golden": [
+        "0x0002148f",
+        "0x0004fe57",
+        "0x0000035a",
+        "0xffffff13",
+        "0xffffff13",
+        "0x000001f5"
+      ],
+      "x_real": [
+        2.0803070068359375,
+        4.9935150146484375
+      ],
+      "err": 0.08056842050057388,
+      "trace_P": 0.0207366943359375,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 4,
+      "captured": true,
+      "frames": 34,
+      "silicon": [
+        "0x00020fb8",
+        "0x0004fe92",
+        "0x000002da",
+        "0xffffff41",
+        "0xffffff41",
+        "0x000001a7"
+      ],
+      "golden": [
+        "0x00020fb8",
+        "0x0004fe92",
+        "0x000002da",
+        "0xffffff41",
+        "0xffffff41",
+        "0x000001a7"
+      ],
+      "x_real": [
+        2.0614013671875,
+        4.994415283203125
+      ],
+      "err": 0.061654821013408995,
+      "trace_P": 0.0175933837890625,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 5,
+      "captured": true,
+      "frames": 34,
+      "silicon": [
+        "0x00020c99",
+        "0x0004feb2",
+        "0x00000286",
+        "0xffffff5e",
+        "0xffffff5f",
+        "0x00000177"
+      ],
+      "golden": [
+        "0x00020c99",
+        "0x0004feb2",
+        "0x00000286",
+        "0xffffff5e",
+        "0xffffff5f",
+        "0x00000177"
+      ],
+      "x_real": [
+        2.0492095947265625,
+        4.994903564453125
+      ],
+      "err": 0.049472799278350715,
+      "trace_P": 0.0155792236328125,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 6,
+      "captured": true,
+      "frames": 34,
+      "silicon": [
+        "0x00020a69",
+        "0x0004fec7",
+        "0x0000024b",
+        "0xffffff74",
+        "0xffffff74",
+        "0x00000158"
+      ],
+      "golden": [
+        "0x00020a69",
+        "0x0004fec7",
+        "0x0000024b",
+        "0xffffff74",
+        "0xffffff74",
+        "0x00000158"
+      ],
+      "x_real": [
+        2.0406646728515625,
+        4.9952239990234375
+      ],
+      "err": 0.040944179115629246,
+      "trace_P": 0.0142059326171875,
+      "bit_exact": true,
+      "distinct": 1
+    },
+    {
+      "step": 7,
+      "captured": true,
+      "frames": 68,
+      "silicon": [
+        "0x0002083c",
+        "0x0004fee1",
+        "0x0000022c",
+        "0xffffff81",
+        "0xffffff82",
+        "0x0000014d"
+      ],
+      "golden": [
+        "0x0002083c",
+        "0x0004fee1",
+        "0x0000022c",
+        "0xffffff81",
+        "0xffffff82",
+        "0x0000014d"
+      ],
+      "x_real": [
+        2.03216552734375,
+        4.9956207275390625
+      ],
+      "err": 0.03246227312725735,
+      "trace_P": 0.0135650634765625,
+      "bit_exact": true,
+      "distinct": 1
+    }
+  ]
+}

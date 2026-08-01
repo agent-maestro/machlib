@@ -1,0 +1,28 @@
+// Range-bearing radar EKF, emitted from its measurement model alone.
+//
+// The canonical Extended Kalman Filter example: a target tracked through a NONLINEAR measurement
+// h(x) = (range, bearing) = (sqrt(x0^2 + x1^2), atan(x1/x0)). You write only h; `form =
+// "ekf2d_filter"` makes Forge derive the Jacobian
+//
+//     H = [[ x0/r,    x1/r  ],
+//          [ -x1/r^2, x0/r^2 ]]        r = sqrt(x0^2 + x1^2)
+//
+// by symbolic differentiation through sqrt, a fractional power, a division and atan -- no
+// hand-coded Jacobian -- and emit the whole recursive filter around it.
+//
+// `transcendentals = "wide"` is NOT optional here and is not a tuning knob. The default eml_atan
+// is a 4-term Taylor with no range reduction: outside |x| <= 1 it DIVERGES with the wrong sign
+// (atan(2) -> -12.55), and a bearing argument above 1 is an ordinary radar geometry. The default
+// eml_sqrt is SCAFFOLD and carries ~8% at a radar's r^2. The wide kernels fix both; see
+// hardware/modules/transcendental/tests/test_kernel_domains.py for what the defaults actually do.
+//
+// Honest boundary: first-order filter, so MMSE-optimality does NOT carry. What does: a
+// symbolically exact compiler-derived Jacobian, Joseph PSD, fixed-point bounds (sqrt structural
+// < 1 ULP; atan enumerated core + bounded composition, 6.16e-2 rad worst case at the band edge).
+
+module rb_ekf;
+
+@target(fpga, form = "ekf2d_filter", transcendentals = "wide")
+fn track(x0: Real, x1: Real) -> (Real, Real) {
+    (sqrt(x0 * x0 + x1 * x1), atan(x1 / x0))
+}

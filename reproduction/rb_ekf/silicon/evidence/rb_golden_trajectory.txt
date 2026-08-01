@@ -1,0 +1,24 @@
+# range-bearing EKF trajectory (Q16.16) -- h(x) = (sqrt(x0^2+x1^2), atan(x1/x0))
+# truth (2.0, 5.0)  prior x=[3.0, 4.0]  P0(row-major)=[0.5, 0.1, 0.1, 0.5]  Q(row-major)=[0.001, 0.0, 0.0, 0.001]  R(row-major)=[0.02, 0.0, 0.0, 0.002]  <- R ASYMMETRIC: range var 0.02, bearing var 0.002 (different units)
+# z = (5.385162, 1.190292)  = (range, bearing) of the truth; bearing arg |x1/x0| = 2.500 -> FOLDS
+  step 0: x=( 2.3058, 4.9836)  err=0.30621  trace(P)=0.06380  |x1/x0|=2.161  [P=0000091a fffffce6 fffffcea 0000073b]
+  step 1: x=( 2.1771, 4.9885)  err=0.17751  trace(P)=0.03563  |x1/x0|=2.291  [P=0000058b fffffe46 fffffe48 00000394]
+  step 2: x=( 2.1147, 4.9918)  err=0.11499  trace(P)=0.02571  |x1/x0|=2.361  [P=0000041d fffffecd fffffecd 00000278]
+  step 3: x=( 2.0803, 4.9935)  err=0.08057  trace(P)=0.02074  |x1/x0|=2.400  [P=0000035a ffffff13 ffffff13 000001f5]
+  step 4: x=( 2.0614, 4.9944)  err=0.06165  trace(P)=0.01759  |x1/x0|=2.423  [P=000002da ffffff41 ffffff41 000001a7]
+  step 5: x=( 2.0492, 4.9949)  err=0.04947  trace(P)=0.01558  |x1/x0|=2.437  [P=00000286 ffffff5e ffffff5f 00000177]
+  step 6: x=( 2.0407, 4.9952)  err=0.04094  trace(P)=0.01421  |x1/x0|=2.448  [P=0000024b ffffff74 ffffff74 00000158]
+  step 7: x=( 2.0322, 4.9956)  err=0.03246  trace(P)=0.01357  |x1/x0|=2.458  [P=0000022c ffffff81 ffffff82 0000014d]
+
+# --- z ROM (paste into rb_ekf_anchor_top.v; 2 words/step) ---
+            4'd0: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd1: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd2: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd3: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd4: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd5: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd6: begin z0=32'h0005629A; z1=32'h000130B7; end
+            4'd7: begin z0=32'h0005629A; z1=32'h000130B7; end
+            default: begin z0=32'h0005629A; z1=32'h000130B7; end
+
+# X0 = ['00030000', '00040000']  P0 = ['00008000', '0000199a', '0000199a', '00008000']  Q = ['00000042', '00000000', '00000000', '00000042']  R = ['0000051f', '00000000', '00000000', '00000083']
