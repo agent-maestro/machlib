@@ -1,5 +1,12 @@
 # MachLib — for machines, by machines
 
+> **Branch note.** `toolchain-bump` is a **permanent record branch**, not a feature branch awaiting
+> merge: it holds the *process* of the v4.14.0 → v4.32.2 migration — 18 versions of kernel drift, five
+> recorded amendments, and the corrections the record kept rather than amended away. The *outcome*
+> lives on `master`, and the accountability page cites the frozen tag
+> `toolchain-bump/v4.32.2-record`, never a branch head. **It is not merged, and that is the decision,
+> not a backlog item.**
+
 [![cold build](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/agent-maestro/machlib/master/.github/build-time.json)](.github/workflows/build-time.yml)
 
 A machine-native Lean/EML library with zero Mathlib dependency in the current
