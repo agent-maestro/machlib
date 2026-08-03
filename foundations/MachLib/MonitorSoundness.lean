@@ -1,4 +1,5 @@
 import MachLib.Iteration
+import MachLib.AffineContraction
 
 /-!
 # Monitor soundness — composition over a multiplicative chain
@@ -89,5 +90,39 @@ theorem monitor_compose_mul (r : Nat → Real) (c : Real) (hc : 0 ≤ c)
   have e2 : -(1 - P) = P - 1 := by mach_ring
   rw [e2] at hbound
   exact hbound
+
+/-! ## Bar 3, ITERATIVE half — where the output feeds the next step's operand -/
+
+/-- **Monitor silence, converted to a per-step DEVIATION.**
+
+If a step computes `g * y` where `y` is a monitored reciprocal of `b` (`b * binv = 1` exactly),
+then silence bounds the deviation from the exact step by `c` times the *exact step's own
+magnitude* — because the residual IS the relative error. Division-free. -/
+theorem monitor_deviation_bound (g b binv y c : Real)
+    (hinv : b * binv = 1)
+    (hres : abs (1 - b * y) ≤ c) :
+    abs (g * y - g * binv) ≤ abs (g * binv) * c := by
+  have key : g * y - g * binv = (g * binv) * -(1 - b * y) := by
+    have h : (g * binv) * -(1 - b * y) = g * ((b * binv) * y) - g * binv := by
+      mach_mpoly [g, b, binv, y]
+    rw [h, hinv]; mach_mpoly [g, y, binv]
+  rw [key, abs_mul, abs_neg]
+  exact mul_le_mul_of_nonneg_left hres (abs_nonneg _)
+
+/-- **BAR 3, ITERATIVE half.** A monitored kernel inside a state-feedback loop
+`x_{k+1} = f(x_k)`: silence at every step gives a trace bound `(c·M) · geom L n`.
+
+**The contraction hypothesis does NOT vanish here — it RELOCATES.** `L` is the Lipschitz
+constant of **the surrounding system's step map**, not of the reciprocal and not of the monitor.
+The bound is finite as `n → ∞` iff `L < 1`, and that is a fact about the application. -/
+theorem monitor_compose_iter {f : Real → Real} {L c M : Real} {xc xe : Nat → Real}
+    (hL0 : 0 ≤ L) (hcM : 0 ≤ c * M)
+    (hlip : ∀ x y, abs (f x - f y) ≤ L * abs (x - y))
+    (h0 : abs (xc 0 - xe 0) ≤ 0)
+    (hexact : ∀ k, xe (k + 1) = f (xe k))
+    (hstep : ∀ k, abs (xc (k + 1) - f (xc k)) ≤ c * M)
+    (n : Nat) :
+    abs (xc n - xe n) ≤ (c * M) * geom L n :=
+  (lipschitz_trajectory_bound hL0 hcM hlip h0 hexact hstep n).1
 
 end MachLib
