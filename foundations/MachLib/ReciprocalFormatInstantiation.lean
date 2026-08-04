@@ -5,8 +5,16 @@ import MachLib.NewtonReciprocalDivision
 
 `NewtonReciprocalDivision` proves the 2-stage Newton bound with the truncation quantum `s` as a
 **free variable**. That genericity is why a narrower format costs no new proofs — see
-`monogate-research/chip/PROOF_DEBT_CLASSIFICATION.md`, which found **zero of 223 hardware theorem
-signatures pin a format**.
+`monogate-research/chip/PROOF_DEBT_CLASSIFICATION.md`, which enumerated **18 hardware /
+forward-error files, 223 theorem signatures**, and found **ZERO OF THE 18 FILES pin a format into a
+theorem statement** (line 81); **67 of the 223 theorems quantify over a format parameter
+explicitly** (line 83).
+
+**Denominator corrected 2026-08-04.** This docstring previously read *"zero of 223 signatures pin a
+format"* — welding the FILE-count zero onto the SIGNATURE-count denominator. Two different
+quantities from two different lines of the same table. **The direction was right and the denominator
+was wrong**, which is the mixed-denominator defect the rule family exists to catch, found inside our
+own corpus by auditing a claim before it was said publicly.
 
 This file packages the bound for a format described by its **denominator** `D = 2^FRAC`, with
 `s = 1/D`.
