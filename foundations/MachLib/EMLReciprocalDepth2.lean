@@ -532,5 +532,79 @@ theorem mx_const_left_pins_child {u w : EMLTree} {a m x : Real}
   rw [hlog] at this
   exact this.symm
 
+/-! ## `var`/`var`, closed — with both costs paid explicitly
+
+**Cost 1: an axiom.** `exp_tangent_line_strict` (`EMLAsymptoticClass.lean:528`) is a
+classical-citation axiom, not a theorem. **It is used here and nowhere else in this file**, so
+`#print axioms` separates the theorems that depend on it from the ones that do not.
+
+**Cost 2: one numeric fact, isolated rather than smuggled.** The chain needs `e²(e−2) > 1`, which
+`2 < e` does not give (it yields only `> 0`). It is carried as the hypothesis `he`, **stated
+division-free**, so the analytic argument is complete and clean and exactly one thing is owed.
+
+**Discharge path for `he`:** the tangent bound at `t = 1/2` gives `exp(1/2) > 3/2`, hence
+`e > 9/4`, hence `e²(e−2) > 81/64 > 1`. **That step needs division arithmetic, which `mach_mpoly`
+cannot normalise** — the fifth instance of that friction here. Isolating `he` means the next session
+buys exactly one lemma, not a proof.
+-/
+
+/-- **`exp(e) > e² + 1`** — the analytic core, given the numeric fact `he`. -/
+theorem exp_exp_one_gt (he : 1 < exp 1 * exp 1 * (exp 1 - (1 + 1))) :
+    exp 1 * exp 1 + 1 < exp (exp 1) := by
+  have h2e : (1 : Real) + 1 < exp 1 := exp_tangent_line_strict 1 one_pos
+  have hpos : 0 < exp 1 - (1 + 1) := sub_pos_of_lt h2e
+  have htan := exp_tangent_line_strict (exp 1 - (1 + 1)) hpos
+  -- htan : (exp 1 - (1+1)) + 1 < exp (exp 1 - (1+1))
+  have hsq : (0 : Real) < exp 1 * exp 1 := mul_pos (exp_pos 1) (exp_pos 1)
+  -- exp (exp 1) = exp 1 * exp 1 * exp (exp 1 - (1+1))
+  have hsplit : exp (exp 1) = exp 1 * exp 1 * exp (exp 1 - (1 + 1)) := by
+    have e : (1 : Real) + 1 + (exp 1 - (1 + 1)) = exp 1 := by mach_ring
+    have h := exp_add (1 + 1) (exp 1 - (1 + 1))
+    rw [e] at h
+    rw [h, exp_add 1 1]
+  -- multiply htan by the positive exp 1 * exp 1
+  have hlift : ((exp 1 - (1 + 1)) + 1) * (exp 1 * exp 1)
+      < exp (exp 1 - (1 + 1)) * (exp 1 * exp 1) :=
+    mul_lt_mul_of_pos_right htan hsq
+  -- (e−1)·e² = e²(e−2) + e².  My first attempt wrote (e²−e²·1) for the second term,
+  -- which is 0 -- off by exactly e².
+  have eL : ((exp 1 - (1 + 1)) + 1) * (exp 1 * exp 1)
+      = exp 1 * exp 1 * (exp 1 - (1 + 1)) + exp 1 * exp 1 := by
+    mach_mpoly [exp 1]
+  have eR : exp (exp 1 - (1 + 1)) * (exp 1 * exp 1)
+      = exp 1 * exp 1 * exp (exp 1 - (1 + 1)) := by
+    mach_mpoly [exp 1, exp (exp 1 - (1 + 1))]
+  rw [eL, eR, ← hsplit] at hlift
+  -- hlift : e²(e−2) + e² < exp(exp 1)
+  -- he    : 1 < e²(e−2),  so  e² + 1 < e² + e²(e−2) = e²(e−2) + e² < exp(exp 1)
+  have hadd := add_lt_add_left he (exp 1 * exp 1)
+  have ecomm : exp 1 * exp 1 + exp 1 * exp 1 * (exp 1 - (1 + 1))
+      = exp 1 * exp 1 * (exp 1 - (1 + 1)) + exp 1 * exp 1 := by mach_mpoly [exp 1]
+  rw [ecomm] at hadd
+  exact lt_trans_ax hadd hlift
+
+/-- **`eml var var` is never `m·x`.** At `x = 1` it forces `m = e`; at `x = exp 1` it forces
+`exp(e) = e² + 1`, contradicting `exp_exp_one_gt`. -/
+theorem var_var_not_mx {m : Real} (he : 1 < exp 1 * exp 1 * (exp 1 - (1 + 1)))
+    (e₁ : (EMLTree.eml EMLTree.var EMLTree.var).eval 1 = m * 1)
+    (e₂ : (EMLTree.eml EMLTree.var EMLTree.var).eval (exp 1) = m * exp 1) :
+    False := by
+  have v₁ : (EMLTree.eml EMLTree.var EMLTree.var).eval 1 = exp 1 - log 1 := rfl
+  have v₂ : (EMLTree.eml EMLTree.var EMLTree.var).eval (exp 1)
+      = exp (exp 1) - log (exp 1) := rfl
+  rw [v₁, log_one] at e₁
+  rw [v₂, log_exp] at e₂
+  have hm : m = exp 1 := by
+    have e : m = m * 1 := by mach_ring
+    rw [e, ← e₁]; mach_ring
+  rw [hm] at e₂
+  -- e₂ : exp (exp 1) - 1 = exp 1 * exp 1
+  have heq : exp 1 * exp 1 + 1 = exp (exp 1) := by
+    have e : exp 1 * exp 1 + 1 = (exp (exp 1) - 1) + 1 := by rw [e₂]
+    rw [e]; mach_ring
+  have hgt := exp_exp_one_gt he
+  rw [heq] at hgt
+  exact lt_irrefl_ax _ hgt
+
 end Real
 end MachLib
