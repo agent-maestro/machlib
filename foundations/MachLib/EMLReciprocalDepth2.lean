@@ -751,5 +751,29 @@ theorem kx_node_const_left_forces_varying_right {u w : EMLTree} {a K x y : Real}
   apply hK
   rw [← ex]; mach_ring
 
+/-! ## The case split I built a scope around **does not exist**
+
+`const_left_pins_child` carries `hu : u.eval x = a`. **Instantiate `a` at `u.eval x` and that
+hypothesis is `rfl`.** The lemma was never restricted to constant-valued left children — the
+hypothesis is NAMING, not restriction.
+
+**`TERMINATION_SCOPE.md`'s obligation A2 — *"the branch where the left child is not constant-valued
+has no pinning"* — is FALSE.** Pinning is unconditional. -/
+
+/-- **The right child is pinned by the left, for ANY `u`.** One line from
+`const_left_pins_child`, because its `hu` was never a restriction. -/
+theorem pins_right (u w : EMLTree) {f x : Real} (hw : 0 < w.eval x)
+    (e : (EMLTree.eml u w).eval x = f) :
+    w.eval x = exp (exp (u.eval x) - f) :=
+  const_left_pins_child rfl hw e
+
+/-- **Functional form.** For a node equal to `f` at every positive point, the right child is
+determined at every positive point by the left. -/
+theorem pins_right_forall {u w : EMLTree} {f : Real → Real}
+    (hw : ∀ x : Real, 0 < x → 0 < w.eval x)
+    (e : ∀ x : Real, 0 < x → (EMLTree.eml u w).eval x = f x) :
+    ∀ x : Real, 0 < x → w.eval x = exp (exp (u.eval x) - f x) :=
+  fun x hx => pins_right u w (hw x hx) (e x hx)
+
 end Real
 end MachLib
