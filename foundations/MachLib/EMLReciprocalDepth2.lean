@@ -144,5 +144,43 @@ theorem left_var_K_gt_one {t : EMLTree} {c K x₁ x₂ : Real}
   rw [hK]
   exact one_lt_exp (exp_pos _)
 
+/-! ## The target, stated directly: `1/x` is not in this family
+
+The bounds above say `K > 1`. **`1/x` is `K = 1`**, so it is excluded — but a reader should not have
+to derive that, and stating it directly exposes exactly where the contradiction lands.
+-/
+
+/-- **`1/x` is NOT `eml (eml t var) (const c)`, for ANY `t` agreeing at two points.**
+
+The contradiction is sharp: agreement forces `exp (exp (t.eval x₁)) = 1`, and `exp` of anything is
+`> 1` when its argument is `> 0` — which `exp (t.eval x₁)` always is.
+
+**The obstruction is not that `1` is a hard value to hit. It is that `exp` cannot reach `0`.** -/
+theorem one_over_x_not_left_var {t : EMLTree} {c x₁ x₂ : Real}
+    (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) (EMLTree.const c)).eval x₁ = 1)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) (EMLTree.const c)).eval x₂ = 1) :
+    False := by
+  have h := left_var_K_gt_one h₁ h₂ hne hagree e₁ e₂
+  exact lt_irrefl_ax _ h
+
+/-! ## Two sharpenings the statements above needed, found while writing this corollary
+
+**1. `K = 0` is a trivial escape and must be excluded by hypothesis, not by hope.**
+`eml (const a) (const c)` with `exp a = log c` evaluates to the CONSTANT `0`, so `x · eval x = 0` for
+every `x`. That is `K = 0 ≤ 1` — but it is the zero function, not `0/x` in any useful sense. **The
+theorems above are safe because their shape is `eml (eml t var) (const c)`, which this is not**; a
+general "every `K/x` tree has `K > 1`" claim would be FALSE without excluding `K = 0`.
+
+**2. Two-point agreement is strictly weaker than `= K/x` everywhere, and that is fine HERE.**
+Trees exist whose `x · eval x` coincides at two points with `K ≤ 1` — e.g. `eml var (const c)` with
+`c` chosen from `x₁, x₂`. **The theorems above are not weakened by this**, because their conclusion is
+about the shape they name. And for the target it is exactly enough: **`1/x` agrees everywhere, so it
+agrees at two points, so the exclusion bites.**
+
+**Recorded because a future session reading only the statements would not see either.**
+-/
+
 end Real
 end MachLib
