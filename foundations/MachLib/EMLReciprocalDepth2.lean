@@ -853,5 +853,42 @@ theorem clamped_not_log_ratio {u w : EMLTree} {K x : Real}
     rw [e0] at h; exact h
   exact lt_irrefl_ax _ (lt_of_lt_of_le hpos hle)
 
+/-! ## Eliminating the positive branch's free parameter — partially, as a BOUND
+
+The positive pin is `w.eval x = exp (exp (u.eval x) − f)` with `u.eval x` undetermined. **But
+`exp (u.eval x) > 0` regardless of `u`**, so the exponent exceeds `−f` and `exp` is strictly
+monotone.
+
+> **`exp (−f) < w.eval x`, with no reference to `u` at all.**
+
+**That is the answer to *"can the free parameter be eliminated?"* — partially, one-sided, and
+unconditionally.** -/
+
+/-- **Parameter-free lower bound on the right child.** Independent of `u`, any depth. -/
+theorem positive_branch_lower_bound {u w : EMLTree} {f x : Real}
+    (hw : 0 < w.eval x)
+    (e : (EMLTree.eml u w).eval x = f) :
+    exp (-f) < w.eval x := by
+  have hpin := pins_right u w hw e
+  have hgt : -f < exp (u.eval x) - f := by
+    have hp := exp_pos (u.eval x)
+    have hadd := add_lt_add_left hp (-f)
+    have eL : (-f) + 0 = -f := by mach_ring
+    have eR : (-f) + exp (u.eval x) = exp (u.eval x) - f := by mach_ring
+    rw [eL, eR] at hadd; exact hadd
+  rw [hpin]
+  exact exp_lt hgt
+
+/-- **Applied to `K/x`.** A node hitting `K/x` on the positive branch has
+`exp (−K/x) < w.eval x` — again with no dependence on the left child.
+
+**As `x → ∞` the bound tends to `1` from below, so the right child is eventually bounded below by
+something approaching `1`.** Stated pointwise; the asymptotic reading is a remark, not a theorem. -/
+theorem kx_right_child_lower_bound {u w : EMLTree} {K x : Real}
+    (hw : 0 < w.eval x)
+    (e : (EMLTree.eml u w).eval x = K / x) :
+    exp (-(K / x)) < w.eval x :=
+  positive_branch_lower_bound hw e
+
 end Real
 end MachLib
