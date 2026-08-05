@@ -334,7 +334,12 @@ same value at the two test points. `const c` on the right is the special case wh
 theorem left_var_gen_K_gt_one {t t₂ : EMLTree} {K x₁ x₂ : Real}
     (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
     (hagree : t.eval x₁ = t.eval x₂)
-    (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    -- WEAKENED 2026-08-05: the proof reads only `log (t₂.eval ·)`, never `t₂.eval ·`.
+    -- That is not a cosmetic weakening HERE, because this corpus TOTALISES `log`: two
+    -- genuinely different non-positive values share a `log`, and such trees satisfy this
+    -- hypothesis while failing the equality one. They were excluded for no reason the
+    -- proof needed.
+    (h2agree : log (t₂.eval x₁) = log (t₂.eval x₂))
     (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₁ = K)
     (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₂ = K) :
     1 < K := by
@@ -362,7 +367,8 @@ theorem left_var_gen_K_gt_one {t t₂ : EMLTree} {K x₁ x₂ : Real}
 /-- **`1/x` excluded with both children arbitrary.** -/
 theorem one_over_x_not_left_var_gen {t t₂ : EMLTree} {x₁ x₂ : Real}
     (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
-    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (h2agree : log (t₂.eval x₁) = log (t₂.eval x₂))
     (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₁ = 1)
     (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₂ = 1) :
     False :=
@@ -398,7 +404,8 @@ theorem mul_mul_exp_sub_log_mul {u m x : Real} (hm : 0 < m) (hx : 0 < x) :
 test points. The conclusion is `1 < m · K` — **weaker than `1 < K`, and correctly so.** -/
 theorem left_scaled_K {t t₂ v : EMLTree} {K m x₁ x₂ : Real}
     (hm : 0 < m) (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
-    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (h2agree : log (t₂.eval x₁) = log (t₂.eval x₂))
     (hv₁ : v.eval x₁ = m * x₁) (hv₂ : v.eval x₂ = m * x₂)
     (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₁ = K)
     (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₂ = K) :
@@ -446,7 +453,8 @@ theorem left_scaled_K {t t₂ v : EMLTree} {K m x₁ x₂ : Real}
 found at all, this is the floor's remaining load-bearing gap, stated exactly. -/
 theorem one_over_x_forces_m_gt_one {t t₂ v : EMLTree} {m x₁ x₂ : Real}
     (hm : 0 < m) (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
-    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (h2agree : log (t₂.eval x₁) = log (t₂.eval x₂))
     (hv₁ : v.eval x₁ = m * x₁) (hv₂ : v.eval x₂ = m * x₂)
     (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₁ = 1)
     (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₂ = 1) :
