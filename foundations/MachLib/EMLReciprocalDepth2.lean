@@ -368,5 +368,92 @@ theorem one_over_x_not_left_var_gen {t t₂ : EMLTree} {x₁ x₂ : Real}
     False :=
   lt_irrefl_ax _ (left_var_gen_K_gt_one h₁ h₂ hne hagree h2agree e₁ e₂)
 
+/-! ## The last constructor: the left child's right slot need not be `var` either
+
+`left_var_gen_K_gt_one` still writes `var` in one place. **Re-reading the proof, what it uses is that
+`x · exp(A − log (v.eval x))` is independent of `x`** — which needs `v.eval x = m · x` for a constant
+`m`. **`var` is `m = 1`.**
+
+**And this one is NOT free.** With a general `m` the conclusion weakens from `1 < K` to `1 < m · K`:
+a large `m` would let `K` drop to `1`. **So the floor's last line of defence is that `m · x` is not
+reachable** — and an adversarial search over depth ≤ 3, ≤ 3 constant slots, 17-value grid found
+**ZERO** `eml`-rooted trees evaluating to `m · x` for any `m` whatsoever. `var` itself is the only
+witness, at `m = 1`. Evidence, not proof.
+-/
+
+/-- `m · (x · exp (u − log (m·x))) = exp u`, for `0 < m`, `0 < x`. Division-free. -/
+theorem mul_mul_exp_sub_log_mul {u m x : Real} (hm : 0 < m) (hx : 0 < x) :
+    m * (x * exp (u - log (m * x))) = exp u := by
+  have hmx : 0 < m * x := mul_pos hm hx
+  have h1 : exp (log (m * x)) * exp (u - log (m * x)) = exp u := by
+    rw [← exp_add]
+    have e : log (m * x) + (u - log (m * x)) = u := by mach_ring
+    rw [e]
+  rw [exp_log hmx] at h1
+  have e : m * (x * exp (u - log (m * x))) = m * x * exp (u - log (m * x)) := by
+    mach_mpoly [m, x, exp (u - log (m * x))]
+  rw [e, h1]
+
+/-- **The scale-`m` generalisation.** `t`, `t₂`, `v` all arbitrary; `v` evaluates to `m·x` at the two
+test points. The conclusion is `1 < m · K` — **weaker than `1 < K`, and correctly so.** -/
+theorem left_scaled_K {t t₂ v : EMLTree} {K m x₁ x₂ : Real}
+    (hm : 0 < m) (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (hv₁ : v.eval x₁ = m * x₁) (hv₂ : v.eval x₂ = m * x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₁ = K)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₂ = K) :
+    1 < m * K := by
+  have step : ∀ y : Real, 0 < y → v.eval y = m * y →
+      m * (y * (EMLTree.eml (EMLTree.eml t v) t₂).eval y)
+        = exp (exp (t.eval y)) - m * (y * log (t₂.eval y)) := by
+    intro y hy hvy
+    show m * (y * (exp ((EMLTree.eml t v).eval y) - log (t₂.eval y))) = _
+    show m * (y * (exp (exp (t.eval y) - log (v.eval y)) - log (t₂.eval y))) = _
+    rw [hvy]
+    have e : m * (y * (exp (exp (t.eval y) - log (m * y)) - log (t₂.eval y)))
+        = m * (y * exp (exp (t.eval y) - log (m * y))) - m * (y * log (t₂.eval y)) := by
+      mach_mpoly [m, y, exp (exp (t.eval y) - log (m * y)), log (t₂.eval y)]
+    rw [e, mul_mul_exp_sub_log_mul hm hy]
+  have E₁ := step x₁ h₁ hv₁
+  have E₂ := step x₂ h₂ hv₂
+  rw [e₁] at E₁; rw [e₂, ← hagree, ← h2agree] at E₂
+  have h := E₁.symm.trans E₂
+  have hsub : (m * x₂ - m * x₁) * log (t₂.eval x₁) = 0 := by
+    have e : (m * x₂ - m * x₁) * log (t₂.eval x₁)
+        = (exp (exp (t.eval x₁)) - m * (x₁ * log (t₂.eval x₁)))
+          - (exp (exp (t.eval x₁)) - m * (x₂ * log (t₂.eval x₁))) := by
+      mach_mpoly [m, x₁, x₂, log (t₂.eval x₁), exp (exp (t.eval x₁))]
+    rw [e, h]; mach_mpoly [exp (exp (t.eval x₁)), m, x₂, log (t₂.eval x₁)]
+  have hx : m * x₂ - m * x₁ ≠ 0 := by
+    intro hz; apply hne
+    have hmne : m ≠ 0 := ne_of_gt hm
+    have e : m * (x₂ - x₁) = m * x₂ - m * x₁ := by mach_mpoly [m, x₁, x₂]
+    rw [← e] at hz
+    have hd : x₂ - x₁ = 0 := Classical.byContradiction (fun hd => (mul_ne_zero hmne hd) hz)
+    have e2 : x₁ = x₂ - (x₂ - x₁) := by mach_ring
+    rw [e2, hd]; mach_ring
+  have hL : log (t₂.eval x₁) = 0 :=
+    Classical.byContradiction (fun hL => (mul_ne_zero hx hL) hsub)
+  rw [hL] at E₁
+  have hK : m * K = exp (exp (t.eval x₁)) := by
+    have e : exp (exp (t.eval x₁)) - m * (x₁ * 0) = exp (exp (t.eval x₁)) := by
+      mach_mpoly [m, x₁, exp (exp (t.eval x₁))]
+    rw [e] at E₁; exact E₁
+  rw [hK]
+  exact one_lt_exp (exp_pos _)
+
+/-- **`1/x` from this shape forces `m > 1`.** Since no `eml`-rooted tree evaluating to `m·x` was
+found at all, this is the floor's remaining load-bearing gap, stated exactly. -/
+theorem one_over_x_forces_m_gt_one {t t₂ v : EMLTree} {m x₁ x₂ : Real}
+    (hm : 0 < m) (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (hv₁ : v.eval x₁ = m * x₁) (hv₂ : v.eval x₂ = m * x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₁ = 1)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t v) t₂).eval x₂ = 1) :
+    1 < m := by
+  have h := left_scaled_K hm h₁ h₂ hne hagree h2agree hv₁ hv₂ e₁ e₂
+  have e : m * 1 = m := by mach_ring
+  rw [e] at h; exact h
+
 end Real
 end MachLib
