@@ -214,5 +214,89 @@ theorem const_const_forces_K_zero {a c K x₁ x₂ : Real} (hne : x₁ ≠ x₂)
   · have e : exp a = (exp a - log c) + log c := by mach_ring
     rw [e, hv]; mach_ring
 
+/-! ## Root cases 2, 4, 5 — closed for the TARGET, and the census's word "mechanical" corrected
+
+The census called these *"reduces, mechanical"*. **Writing them showed that was too optimistic.**
+None closes by the generic two-point move — that move only *determines* the free constant instead of
+contradicting it. **Each closes for `1/x` specifically, by evaluating at points chosen so the
+arithmetic collapses.** That is a different and weaker claim than the census made, and the difference
+was found by doing the work rather than by estimating it.
+-/
+
+/-- **Case 5** — `eml var var`. Immediate: at `x = 1` the tree is `exp 1`, and `1/1 = 1 < exp 1`. -/
+theorem one_over_x_not_var_var
+    (e₁ : (EMLTree.eml EMLTree.var EMLTree.var).eval 1 = 1) : False := by
+  have ev : (EMLTree.eml EMLTree.var EMLTree.var).eval 1 = exp 1 - log 1 := rfl
+  rw [ev, log_one] at e₁
+  have h1 : exp 1 = 1 := by
+    have e : exp 1 = exp 1 - 0 := by mach_ring
+    rw [e, e₁]
+  have h := one_lt_exp_one
+  rw [h1] at h
+  exact lt_irrefl_ax 1 h
+
+/-- **Case 4** — `eml var (const c)`. Two points force `exp 1 − exp (1+1) = 1/(1+1)`, but the left
+side is **negative**: `exp(1+1) = exp 1 · exp 1 > exp 1` because `exp 1 > 1`. -/
+theorem one_over_x_not_var_const {c : Real}
+    (e₁ : (EMLTree.eml EMLTree.var (EMLTree.const c)).eval 1 = 1)
+    (e₂ : (1 + 1) * (EMLTree.eml EMLTree.var (EMLTree.const c)).eval (1 + 1) = 1) : False := by
+  have v₁ : (EMLTree.eml EMLTree.var (EMLTree.const c)).eval 1 = exp 1 - log c := rfl
+  have v₂ : (EMLTree.eml EMLTree.var (EMLTree.const c)).eval (1 + 1)
+      = exp (1 + 1) - log c := rfl
+  rw [v₁] at e₁; rw [v₂] at e₂
+  -- exp(1+1) = exp 1 * exp 1, and exp 1 > 1, so exp(1+1) > exp 1
+  have hgrow : exp 1 < exp (1 + 1) := by
+    rw [exp_add]
+    have key : 1 * exp 1 < exp 1 * exp 1 :=
+      mul_lt_mul_of_pos_right one_lt_exp_one (exp_pos 1)
+    have e : 1 * exp 1 = exp 1 := by mach_ring
+    rw [e] at key
+    exact key
+  -- No usable linear-arithmetic tactic over these atoms in this corpus, so the
+  -- cancellation is done by hand: substitute log c, then read off a positive quantity
+  -- forced to equal a negative one.
+  have hc : log c = exp 1 - 1 := by
+    have e : log c = exp 1 - (exp 1 - log c) := by mach_ring
+    rw [e, e₁]; mach_ring
+  rw [hc] at e₂
+  have hpos : 0 < exp (1 + 1) - exp 1 := sub_pos_of_lt hgrow
+  have htwo : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hmul : 0 < (1 + 1) * (exp (1 + 1) - exp 1) := mul_pos htwo hpos
+  -- but e₂ forces that same quantity to be 1 - (1+1) = -1
+  have hneg : (1 + 1) * (exp (1 + 1) - exp 1) = 1 - (1 + 1) := by
+    have e : (1 + 1) * (exp (1 + 1) - exp 1)
+        = (1 + 1) * (exp (1 + 1) - (exp 1 - 1)) - (1 + 1) := by
+      mach_mpoly [exp (1 + 1), exp 1]
+    rw [e, e₂]; mach_ring
+  rw [hneg] at hmul
+  -- hmul : 0 < 1 - (1+1).  Add 1 on the left: 1 + 0 < 1 + (1 - (1+1)) = 0, so 1 < 0.
+  have hadd := add_lt_add_left hmul 1
+  have eL : (1 : Real) + 0 = 1 := by mach_ring
+  have eR : (1 : Real) + (1 - (1 + 1)) = 0 := by mach_ring
+  rw [eL, eR] at hadd
+  exact lt_irrefl_ax 0 (lt_trans_ax one_pos hadd)
+
+/-- **Case 2** — `eml (const a) var`. Evaluating at `1` and at `exp 1` (where `log` is `1`) forces
+`0 = 1 / exp 1`, and `exp 1 > 0`. -/
+theorem one_over_x_not_const_var {a : Real}
+    (e₁ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval 1 = 1)
+    (e₂ : exp 1 * (EMLTree.eml (EMLTree.const a) EMLTree.var).eval (exp 1) = 1) : False := by
+  have v₁ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval 1 = exp a - log 1 := rfl
+  have v₂ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval (exp 1)
+      = exp a - log (exp 1) := rfl
+  rw [v₁, log_one] at e₁
+  rw [v₂, log_exp] at e₂
+  -- e₁ : exp a - 0 = 1  ⟹  exp a = 1;  e₂ : exp 1 * (exp a - 1) = 1  ⟹  0 = 1
+  have ha : exp a = 1 := by
+    have e : exp a = exp a - 0 := by mach_ring
+    rw [e, e₁]
+  rw [ha] at e₂
+  have hz : exp 1 * (1 - 1) = 0 := by mach_ring
+  rw [hz] at e₂
+  -- e₂ : (0 : Real) = 1
+  have h := one_pos
+  rw [← e₂] at h
+  exact lt_irrefl_ax 0 h
+
 end Real
 end MachLib
