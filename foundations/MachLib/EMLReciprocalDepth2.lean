@@ -650,5 +650,35 @@ theorem neg_log_not_via_var {p : EMLTree} {x : Real}
   have h := eml_var_forces_exp_eq e
   exact absurd h (ne_of_gt (exp_pos _))
 
+/-! ## The clamped branch reproduces the SAME floor
+
+A clamped node is `exp (u.eval x)` — no subtraction. For it to be `K/x` its left child must hit
+`log K − log x`. **And `eml_var_forces_exp_eq` already says what that costs:** the `log x` cancels and
+`log K` must be the value of an exponential, hence **positive**, hence `K > 1`.
+
+**The clamped path does not offer a cheaper route to `1/x`. It offers the same one.** That is why the
+clamped search produced 3,929 new functions and not one of them is `K/x`. -/
+
+/-- **`K > 1` on the CLAMPED branch too.**
+
+A clamped node evaluates to `exp (u.eval x)`; with `u = eml p var` and the node equal to `K/x`
+(division-free: `x · node = K`), the same identity that drove the positive branch applies —
+`K = exp (exp (p.eval x))`, and `exp` of a positive number exceeds `1`.
+
+**No axiom, no numeric fact, any depth of `p`.** -/
+theorem clamped_K_over_x_gt_one {p : EMLTree} {K x : Real} (hx : 0 < x)
+    (e : x * exp ((EMLTree.eml p EMLTree.var).eval x) = K) :
+    1 < K := by
+  have v : (EMLTree.eml p EMLTree.var).eval x = exp (p.eval x) - log x := rfl
+  rw [v, mul_exp_sub_log hx] at e
+  rw [← e]
+  exact one_lt_exp (exp_pos _)
+
+/-- **`1/x` is not a clamped node over `eml p var`, at any depth.** -/
+theorem one_over_x_not_clamped_var {p : EMLTree} {x : Real} (hx : 0 < x)
+    (e : x * exp ((EMLTree.eml p EMLTree.var).eval x) = 1) :
+    False :=
+  lt_irrefl_ax _ (clamped_K_over_x_gt_one hx e)
+
 end Real
 end MachLib
