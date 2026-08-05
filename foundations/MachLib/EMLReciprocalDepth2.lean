@@ -680,5 +680,76 @@ theorem one_over_x_not_clamped_var {p : EMLTree} {x : Real} (hx : 0 < x)
     False :=
   lt_irrefl_ax _ (clamped_K_over_x_gt_one hx e)
 
+/-! ## FUNCTIONAL reasoning — the arm's first statements quantified over all `x`
+
+Every theorem above is **pointwise**: hypotheses at specific `x` values. That technique produced
+25 results and is **provably exhausted** (`METHOD_BARRIER.md`): three evaluation points give three
+equations in seven unknowns, and each further point adds one equation and two unknowns.
+
+**The residue needs statements about all `x` at once.** These are the first.
+
+**The easy direction closes; the hard one is named at the end.**
+-/
+
+/-- **Functional: a constant-valued node with a constant-valued LEFT child has a constant-valued
+RIGHT child.**
+
+`exp a − log (w x) = c` for every `x` pins `log (w x) = exp a − c`, the same value at every point;
+`w` is positive, so `exp` of both sides recovers `w` itself. -/
+theorem const_node_const_left_forces_const_right {u w : EMLTree} {a c : Real}
+    (hu : ∀ x : Real, 0 < x → u.eval x = a)
+    (hpos : ∀ x : Real, 0 < x → 0 < w.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml u w).eval x = c) :
+    ∀ x y : Real, 0 < x → 0 < y → w.eval x = w.eval y := by
+  have pin : ∀ z : Real, 0 < z → log (w.eval z) = exp a - c := by
+    intro z hz
+    have v : (EMLTree.eml u w).eval z = exp (u.eval z) - log (w.eval z) := rfl
+    have hz' := h z hz
+    rw [v, hu z hz] at hz'
+    have e : log (w.eval z) = exp a - (exp a - log (w.eval z)) := by mach_ring
+    rw [e, hz']
+  intro x y hx hy
+  have hxl := pin x hx
+  have hyl := pin y hy
+  have hlog : log (w.eval x) = log (w.eval y) := by rw [hxl, hyl]
+  have ex := exp_log (hpos x hx)
+  have ey := exp_log (hpos y hy)
+  rw [← ex, ← ey, hlog]
+
+/-- **Functional: the same, for a `K/x` node.** If the left child is constant-valued and the node is
+`K/x`, the right child's `log` is pinned to `exp a − K/x` — which VARIES. **So the right child of a
+`K/x` node with constant-valued left child is NEVER constant-valued for `K ≠ 0`.**
+
+**This is the exact opposite of the unblocking lemma's easy case, and it is worth stating because it
+shows the lemma cannot be proved by finding constancy on the right.** -/
+theorem kx_node_const_left_forces_varying_right {u w : EMLTree} {a K x y : Real}
+    (hne : x ≠ y) (hK : K ≠ 0)
+    (hux : u.eval x = a) (huy : u.eval y = a)
+    (ex : x * (EMLTree.eml u w).eval x = K)
+    (ey : y * (EMLTree.eml u w).eval y = K) :
+    w.eval x ≠ w.eval y := by
+  intro heq
+  -- equal right values ⟹ the node takes the same value at x and y ⟹ K/x = K/y ⟹ x = y
+  have vx : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  have vy : (EMLTree.eml u w).eval y = exp (u.eval y) - log (w.eval y) := rfl
+  rw [vx, hux, heq] at ex
+  rw [vy, huy] at ey
+  -- ex : x * (exp a - log (w.eval y)) = K,  ey : y * (exp a - log (w.eval y)) = K
+  have h := ex.trans ey.symm
+  have hsub : (x - y) * (exp a - log (w.eval y)) = 0 := by
+    have e : (x - y) * (exp a - log (w.eval y))
+        = x * (exp a - log (w.eval y)) - y * (exp a - log (w.eval y)) := by
+      mach_mpoly [x, y, exp a, log (w.eval y)]
+    rw [e, h]; mach_mpoly [y, exp a, log (w.eval y)]
+  have hxy : x - y ≠ 0 := by
+    intro hz; apply hne
+    have e : x = y + (x - y) := by mach_ring
+    rw [e, hz]; mach_ring
+  have hv : exp a - log (w.eval y) = 0 :=
+    Classical.byContradiction (fun hv => (mul_ne_zero hxy hv) hsub)
+  rw [hv] at ex
+  apply hK
+  rw [← ex]; mach_ring
+
 end Real
 end MachLib
