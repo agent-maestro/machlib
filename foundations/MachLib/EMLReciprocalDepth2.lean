@@ -463,5 +463,43 @@ theorem one_over_x_forces_m_gt_one {t t₂ v : EMLTree} {m x₁ x₂ : Real}
   have e : m * 1 = m := by mach_ring
   rw [e] at h; exact h
 
+/-- **`eml (const a) var` is never `m·x` for `m > 0`.**
+
+Evaluating at `1` and at `exp 1` (where `log` is `1`) gives `m = 1 + m · exp 1`. But `exp 1 > 1` and
+`m > 0` force `m · exp 1 > m`, so the right side exceeds `m` — **`m > m`.**
+
+**`m > 0` is not a convenience hypothesis:** `v.eval x = m·x` sits under a `log` in the parent, so a
+non-positive `m·x` is outside the intended domain anyway. -/
+theorem const_var_not_mx {a m : Real} (hm : 0 < m)
+    (e₁ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval 1 = m * 1)
+    (e₂ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval (exp 1) = m * exp 1) :
+    False := by
+  have v₁ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval 1 = exp a - log 1 := rfl
+  have v₂ : (EMLTree.eml (EMLTree.const a) EMLTree.var).eval (exp 1)
+      = exp a - log (exp 1) := rfl
+  rw [v₁, log_one] at e₁
+  rw [v₂, log_exp] at e₂
+  -- e₁ : exp a - 0 = m * 1  ⟹  exp a = m
+  have ha : exp a = m := by
+    have e : exp a = exp a - 0 := by mach_ring
+    rw [e, e₁]; mach_ring
+  rw [ha] at e₂
+  -- e₂ : m - 1 = m * exp 1
+  have hmm : m < m * exp 1 := by
+    -- only `mul_lt_mul_of_pos_right` is reachable from this import root, so commute
+    have key : 1 * m < exp 1 * m := mul_lt_mul_of_pos_right one_lt_exp_one hm
+    have e1 : 1 * m = m := by mach_ring
+    have e2 : exp 1 * m = m * exp 1 := by mach_ring
+    rw [e1, e2] at key; exact key
+  -- but e₂ says m * exp 1 = m - 1, which is less than m
+  have hlt : m * exp 1 < m := by
+    have e : m * exp 1 = m - 1 := e₂.symm
+    rw [e]
+    have key := add_lt_add_left one_pos (m - 1)
+    have eL : (m - 1) + 0 = m - 1 := by mach_ring
+    have eR : (m - 1) + 1 = m := by mach_ring
+    rw [eL, eR] at key; exact key
+  exact lt_irrefl_ax _ (lt_trans_ax hmm hlt)
+
 end Real
 end MachLib
