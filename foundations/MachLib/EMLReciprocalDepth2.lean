@@ -613,5 +613,42 @@ theorem var_var_not_mx {m : Real} (he : 1 < exp 1 * exp 1 * (exp 1 - (1 + 1)))
   rw [heq] at hgt
   exact lt_irrefl_ax _ hgt
 
+/-! ## The CLAMPED branch — territory the searches never covered
+
+`MachLib.Real.log` is **clamped**: `log_nonpos : x ≤ 0 → log x = 0`. So a node whose right child
+goes non-positive is **not undefined — it collapses to `exp (u.eval x)`**, a pure exponential with
+no subtraction.
+
+**Every numerical search in this arm discarded that case** (79.5 % of pairs), because the guard
+`if b ≤ 0 then reject` was written for floating-point safety and, against a totalised `log`, deletes
+a defined case instead of skipping an undefined one.
+
+**`1/x` from the clamped branch needs `exp (u.eval x) = 1/x`, i.e. `u` evaluating to `−log x`.**
+The lemmas below are the entrance to that question: **three of its four sub-cases die on `exp_pos`
+alone.**
+-/
+
+/-- If `eml p var` hits `A − log x`, then `exp (p.eval x) = A`. **The `log x` cancels; whatever is
+left must be the value of an exponential.** -/
+theorem eml_var_forces_exp_eq {p : EMLTree} {A x : Real}
+    (e : (EMLTree.eml p EMLTree.var).eval x = A - log x) :
+    exp (p.eval x) = A := by
+  have v : (EMLTree.eml p EMLTree.var).eval x = exp (p.eval x) - log x := rfl
+  rw [v] at e
+  have h : exp (p.eval x) = (exp (p.eval x) - log x) + log x := by mach_ring
+  rw [h, e]; mach_ring
+
+/-- **`−log x` is not `eml p var`, for ANY `p`.**
+
+`A = 0` there, so the node would force `exp (p.eval x) = 0` — and `exp` is never zero.
+
+**This kills one of the four sub-cases of the clamped branch outright**, at every depth, with no
+axiom and no numeric fact. -/
+theorem neg_log_not_via_var {p : EMLTree} {x : Real}
+    (e : (EMLTree.eml p EMLTree.var).eval x = 0 - log x) :
+    False := by
+  have h := eml_var_forces_exp_eq e
+  exact absurd h (ne_of_gt (exp_pos _))
+
 end Real
 end MachLib
