@@ -807,5 +807,51 @@ theorem node_pins_a_child (u w : EMLTree) {f x : Real}
   · exact Or.inr (clamped_pins_left (le_of_eq heq) e)
   · exact Or.inl (pins_right u w hgt e)
 
+/-! ## The two branches are NOT symmetric, and the clamped one is the sharp one
+
+**Positive branch:** `w.eval x = exp (exp (u.eval x) − f)` — the pinned target contains `u.eval x`,
+which is **not determined**. The pin is *parametric*: it names a family, not a function.
+
+**Clamped branch:** `u.eval x = log f` — **no free parameter.** The pin is a function of the target
+alone, so the recursion `f ↦ log f` is clean.
+
+**And a clean recursion can be killed.** `exp` is positive, so a clamped node can only hit a
+**positive** target; iterating, a clamped spine needs `f`, `log f`, `log log f`, … all positive.
+**Against `f = K/x` that fails as soon as `x ≥ K`.**
+-/
+
+/-- **A clamped node can only hit a POSITIVE target.** `exp` is never `≤ 0`. -/
+theorem clamped_forces_pos {u w : EMLTree} {f x : Real}
+    (hw : w.eval x ≤ 0)
+    (e : (EMLTree.eml u w).eval x = f) :
+    0 < f := by
+  have v : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  rw [v, log_nonpos hw] at e
+  have hexp : exp (u.eval x) = f := by
+    have e2 : exp (u.eval x) = (exp (u.eval x) - 0) := by mach_ring
+    rw [e2, e]
+  rw [← hexp]; exact exp_pos _
+
+/-- **A clamped node cannot hit `log K − log x` once `log x ≥ log K`.**
+
+Written first with hypotheses saying `u` is itself a clamped node; **the linter showed both unused**
+— eighth instance today. The theorem needs neither. **A clamped node simply cannot hit a
+non-positive target, and `log K − log x` goes non-positive at `x = K`.**
+
+This is what kills a clamped spine: step one pins `u.eval x = log K − log x` (division-free
+`log (K/x)`), and step two cannot accept it. -/
+theorem clamped_not_log_ratio {u w : EMLTree} {K x : Real}
+    (hw : w.eval x ≤ 0)
+    (hlog : log K ≤ log x)
+    (e : (EMLTree.eml u w).eval x = log K - log x) :
+    False := by
+  have hpos : 0 < log K - log x := clamped_forces_pos hw e
+  -- but log K ≤ log x makes it ≤ 0
+  have hle : log K - log x ≤ 0 := by
+    have h := sub_le_sub_right hlog (log x)
+    have e0 : log x - log x = 0 := by mach_ring
+    rw [e0] at h; exact h
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hpos hle)
+
 end Real
 end MachLib
