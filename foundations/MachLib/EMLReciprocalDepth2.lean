@@ -298,5 +298,75 @@ theorem one_over_x_not_const_var {a : Real}
   rw [← e₂] at h
   exact lt_irrefl_ax 0 h
 
+/-! ## The syntactic hypothesis was never needed either — `t₂` only has to be constant-VALUED
+
+Every theorem above requires the root's right child to *be* `const c`. **The argument never used
+that.** What it used is that `log (t₂.eval x)` takes the same value at the two test points — which
+`const c` supplies syntactically and which **any tree agreeing at those points supplies
+semantically**.
+
+**This is not a cosmetic weakening.** The numerical search found real hits whose right child is a
+genuine subtree that happens to evaluate to a constant — e.g. `(c ⊕ c)` with `c = (0, 1)` evaluates
+to `exp 0 − log 1 = 1`. Those were outside every statement above and are inside this one.
+
+**Census cases 3, 6 and 9 are therefore closed whenever `t₂` agrees at the two points.** What remains
+is only `t₂` genuinely varying with `x`.
+-/
+
+/-- `x · eval (eml (eml t var) t₂) x = exp (exp (t.eval x)) − x · log (t₂.eval x)`, for **any** `t`
+and **any** `t₂`. -/
+theorem left_var_gen_eval_scaled (t t₂ : EMLTree) (x : Real) (hx : 0 < x) :
+    x * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x
+      = exp (exp (t.eval x)) - x * log (t₂.eval x) := by
+  show x * (exp ((EMLTree.eml t EMLTree.var).eval x) - log (t₂.eval x)) = _
+  show x * (exp (exp (t.eval x) - log x) - log (t₂.eval x)) = _
+  have h : x * (exp (exp (t.eval x) - log x) - log (t₂.eval x))
+      = x * exp (exp (t.eval x) - log x) - x * log (t₂.eval x) := by
+    mach_mpoly [x, exp (exp (t.eval x) - log x), log (t₂.eval x)]
+  rw [h, mul_exp_sub_log hx]
+
+/-- **`K > 1` with BOTH children arbitrary trees.**
+
+`t` and `t₂` are unrestricted — any shape, any depth. The only hypotheses are that each takes the
+same value at the two test points. `const c` on the right is the special case where that is free.
+
+**This closes census cases 3, 6 and 9 for every constant-valued `t₂`, however it is built.** -/
+theorem left_var_gen_K_gt_one {t t₂ : EMLTree} {K x₁ x₂ : Real}
+    (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₁ = K)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₂ = K) :
+    1 < K := by
+  rw [left_var_gen_eval_scaled t t₂ x₁ h₁] at e₁
+  rw [left_var_gen_eval_scaled t t₂ x₂ h₂, ← hagree, ← h2agree] at e₂
+  have h := e₁.trans e₂.symm
+  have hsub : (x₂ - x₁) * log (t₂.eval x₁) = 0 := by
+    have e : (x₂ - x₁) * log (t₂.eval x₁)
+        = (exp (exp (t.eval x₁)) - x₁ * log (t₂.eval x₁))
+          - (exp (exp (t.eval x₁)) - x₂ * log (t₂.eval x₁)) := by
+      mach_mpoly [x₁, x₂, log (t₂.eval x₁), exp (exp (t.eval x₁))]
+    rw [e, h]; mach_mpoly [exp (exp (t.eval x₁)), x₂, log (t₂.eval x₁)]
+  have hx : x₂ - x₁ ≠ 0 := by
+    intro hz; apply hne
+    have e : x₁ = x₂ - (x₂ - x₁) := by mach_ring
+    rw [e, hz]; mach_ring
+  have hL : log (t₂.eval x₁) = 0 :=
+    Classical.byContradiction (fun hL => (mul_ne_zero hx hL) hsub)
+  rw [hL] at e₁
+  have hK : K = exp (exp (t.eval x₁)) := by
+    rw [← e₁]; mach_mpoly [x₁, exp (exp (t.eval x₁))]
+  rw [hK]
+  exact one_lt_exp (exp_pos _)
+
+/-- **`1/x` excluded with both children arbitrary.** -/
+theorem one_over_x_not_left_var_gen {t t₂ : EMLTree} {x₁ x₂ : Real}
+    (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂) (h2agree : t₂.eval x₁ = t₂.eval x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₁ = 1)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) t₂).eval x₂ = 1) :
+    False :=
+  lt_irrefl_ax _ (left_var_gen_K_gt_one h₁ h₂ hne hagree h2agree e₁ e₂)
+
 end Real
 end MachLib
