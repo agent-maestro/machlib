@@ -182,5 +182,37 @@ agrees at two points, so the exclusion bites.**
 **Recorded because a future session reading only the statements would not see either.**
 -/
 
+/-! ## Root-case census: the leaf/leaf case, closed completely
+
+`eml (const a) (const c)` evaluates to a value **independent of `x`**. So `x · eval x` can be
+constant only if that value is `0` — and then `K = 0`.
+
+**This formalises the `K = 0` escape noted above**: it is not merely *a* degenerate case, it is the
+*only* thing this root shape can produce. -/
+theorem const_const_forces_K_zero {a c K x₁ x₂ : Real} (hne : x₁ ≠ x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.const a) (EMLTree.const c)).eval x₁ = K)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.const a) (EMLTree.const c)).eval x₂ = K) :
+    K = 0 ∧ exp a = log c := by
+  have ev : ∀ y : Real,
+      (EMLTree.eml (EMLTree.const a) (EMLTree.const c)).eval y = exp a - log c := fun _ => rfl
+  rw [ev x₁] at e₁
+  rw [ev x₂] at e₂
+  have h := e₁.trans e₂.symm
+  have hsub : (x₁ - x₂) * (exp a - log c) = 0 := by
+    have e : (x₁ - x₂) * (exp a - log c)
+        = x₁ * (exp a - log c) - x₂ * (exp a - log c) := by
+      mach_mpoly [x₁, x₂, exp a, log c]
+    rw [e, h]; mach_mpoly [x₂, exp a, log c]
+  have hx : x₁ - x₂ ≠ 0 := by
+    intro hz; apply hne
+    have e : x₁ = x₂ + (x₁ - x₂) := by mach_ring
+    rw [e, hz]; mach_ring
+  have hv : exp a - log c = 0 :=
+    Classical.byContradiction (fun hv => (mul_ne_zero hx hv) hsub)
+  refine ⟨?_, ?_⟩
+  · rw [← e₁, hv]; mach_ring
+  · have e : exp a = (exp a - log c) + log c := by mach_ring
+    rw [e, hv]; mach_ring
+
 end Real
 end MachLib
