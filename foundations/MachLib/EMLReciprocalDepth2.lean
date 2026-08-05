@@ -89,5 +89,60 @@ theorem depth2_K_over_x_gt_one {a c K x₁ x₂ : Real}
   rw [hK]
   exact one_lt_exp (exp_pos a)
 
+/-! ## Unbounded depth: the left subtree need not be `const a`
+
+The depth-2 proof used `eml (const a) var` on the left. **Nothing in it needed the `const`.**
+What it needed was that the left subtree's inner value be the SAME at the two test points --
+which `const a` supplies trivially and which any tree agreeing at two points supplies too.
+
+**So the same argument closes an unbounded-depth family**, and the search that suggested the
+depth-2 shape had nothing to do with reaching it: this came from reading the algebra after the
+search was found blind above `K ≈ 1.4e11`.
+-/
+
+/-- `x · eval (eml (eml t var) (const c)) x = exp (exp (t.eval x)) − x · log c`, for **any** `t`. -/
+theorem left_var_eval_scaled (t : EMLTree) (c x : Real) (hx : 0 < x) :
+    x * (EMLTree.eml (EMLTree.eml t EMLTree.var) (EMLTree.const c)).eval x
+      = exp (exp (t.eval x)) - x * log c := by
+  show x * (exp ((EMLTree.eml t EMLTree.var).eval x) - log c) = _
+  show x * (exp (exp (t.eval x) - log x) - log c) = _
+  have h : x * (exp (exp (t.eval x) - log x) - log c)
+      = x * exp (exp (t.eval x) - log x) - x * log c := by
+    mach_mpoly [x, exp (exp (t.eval x) - log x), log c]
+  rw [h, mul_exp_sub_log hx]
+
+/-- **`K > 1` at UNBOUNDED DEPTH.**
+
+For **any** EML tree `t` whatsoever — no depth bound, no shape restriction — if
+`eml (eml t var) (const c)` agrees with `K/x` at two distinct positive points **at which `t` takes
+the same value**, then `K = exp (exp (t.eval x₁)) > 1`.
+
+`const a` is the special case where the agreement hypothesis is free. **The floor is `exp` being
+unable to reach `0`, and that has nothing to do with how deep the tree is.** -/
+theorem left_var_K_gt_one {t : EMLTree} {c K x₁ x₂ : Real}
+    (h₁ : 0 < x₁) (h₂ : 0 < x₂) (hne : x₁ ≠ x₂)
+    (hagree : t.eval x₁ = t.eval x₂)
+    (e₁ : x₁ * (EMLTree.eml (EMLTree.eml t EMLTree.var) (EMLTree.const c)).eval x₁ = K)
+    (e₂ : x₂ * (EMLTree.eml (EMLTree.eml t EMLTree.var) (EMLTree.const c)).eval x₂ = K) :
+    1 < K := by
+  rw [left_var_eval_scaled t c x₁ h₁] at e₁
+  rw [left_var_eval_scaled t c x₂ h₂, ← hagree] at e₂
+  have h := e₁.trans e₂.symm
+  have hsub : (x₂ - x₁) * log c = 0 := by
+    have e : (x₂ - x₁) * log c
+        = (exp (exp (t.eval x₁)) - x₁ * log c) - (exp (exp (t.eval x₁)) - x₂ * log c) := by
+      mach_mpoly [x₁, x₂, log c, exp (exp (t.eval x₁))]
+    rw [e, h]; mach_mpoly [exp (exp (t.eval x₁)), x₂, log c]
+  have hx : x₂ - x₁ ≠ 0 := by
+    intro hz; apply hne
+    have e : x₁ = x₂ - (x₂ - x₁) := by mach_ring
+    rw [e, hz]; mach_ring
+  have hL : log c = 0 := Classical.byContradiction (fun hL => (mul_ne_zero hx hL) hsub)
+  rw [hL] at e₁
+  have hK : K = exp (exp (t.eval x₁)) := by
+    rw [← e₁]; mach_mpoly [x₁, exp (exp (t.eval x₁))]
+  rw [hK]
+  exact one_lt_exp (exp_pos _)
+
 end Real
 end MachLib
