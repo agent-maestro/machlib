@@ -501,5 +501,36 @@ theorem const_var_not_mx {a m : Real} (hm : 0 < m)
     rw [eL, eR] at key; exact key
   exact lt_irrefl_ax _ (lt_trans_ax hmm hlt)
 
+/-! ## The recursion, made explicit
+
+Every remaining case has been described as *"recurses"*. **That is a remark, not a result.** The
+lemma below turns it into one: it names, exactly, the next family a prover would have to handle.
+
+**The halt is not "we do not know what happens next". It is "the next target is
+`exp (exp a − m·x)`, and nothing in the corpus says whether that is reachable."** Stating it this way
+means the next session attacks a named function rather than an open-ended reduction.
+-/
+
+/-- **One step of the recursion, as a theorem.**
+
+If `eml u w` evaluates to `m·x` at a point where `u` takes the value `a` and `w` is positive, then
+`w` is pinned there: `w.eval x = exp (exp a − m·x)`.
+
+So *"`m·x` with a constant-valued left child"* is **exactly** the question *"is `C · exp(−m·x)`
+reachable?"* — a new family, named, with no hand-waving in between. -/
+theorem mx_const_left_pins_child {u w : EMLTree} {a m x : Real}
+    (hu : u.eval x = a) (hw : 0 < w.eval x)
+    (e : (EMLTree.eml u w).eval x = m * x) :
+    w.eval x = exp (exp a - m * x) := by
+  have v : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  rw [v, hu] at e
+  -- e : exp a - log (w.eval x) = m * x
+  have hlog : log (w.eval x) = exp a - m * x := by
+    have e2 : log (w.eval x) = exp a - (exp a - log (w.eval x)) := by mach_ring
+    rw [e2, e]
+  have := exp_log hw          -- exp (log (w.eval x)) = w.eval x
+  rw [hlog] at this
+  exact this.symm
+
 end Real
 end MachLib
