@@ -511,21 +511,28 @@ lemma below turns it into one: it names, exactly, the next family a prover would
 means the next session attacks a named function rather than an open-ended reduction.
 -/
 
-/-- **One step of the recursion, as a theorem.**
+/-- **One step of the recursion, as a theorem — for ANY target.**
 
-If `eml u w` evaluates to `m·x` at a point where `u` takes the value `a` and `w` is positive, then
-`w` is pinned there: `w.eval x = exp (exp a − m·x)`.
+`m · x` was over-strong: the proof never uses what the target IS. **Fourth instance of the pattern
+in this file** — a hypothesis written as a specific expression when the argument needs only a value.
 
-So *"`m·x` with a constant-valued left child"* is **exactly** the question *"is `C · exp(−m·x)`
-reachable?"* — a new family, named, with no hand-waving in between. -/
-theorem mx_const_left_pins_child {u w : EMLTree} {a m x : Real}
+If `eml u w` hits **any** value `f` at a point where `u` is `a` and `w` is positive, the right child
+is pinned: `w.eval x = exp (exp a − f)`.
+
+**This is the regress ENGINE.** Applied to `1/x` it names `m·x`; applied to `m·x` it names
+`C·exp(−m·x)`; applied to that it names `exp(A − C·exp(−m·x))`. **Each step wraps the previous
+target in another `exp`/`log` layer — the targets grow while the tree shrinks.**
+
+> **That opposition is the shape of a termination argument, and it is the first route this arm has
+> had to a general result rather than another case.** -/
+theorem const_left_pins_child {u w : EMLTree} {a f x : Real}
     (hu : u.eval x = a) (hw : 0 < w.eval x)
-    (e : (EMLTree.eml u w).eval x = m * x) :
-    w.eval x = exp (exp a - m * x) := by
+    (e : (EMLTree.eml u w).eval x = f) :
+    w.eval x = exp (exp a - f) := by
   have v : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
   rw [v, hu] at e
   -- e : exp a - log (w.eval x) = m * x
-  have hlog : log (w.eval x) = exp a - m * x := by
+  have hlog : log (w.eval x) = exp a - f := by
     have e2 : log (w.eval x) = exp a - (exp a - log (w.eval x)) := by mach_ring
     rw [e2, e]
   have := exp_log hw          -- exp (log (w.eval x)) = w.eval x
