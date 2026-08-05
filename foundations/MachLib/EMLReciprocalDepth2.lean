@@ -775,5 +775,37 @@ theorem pins_right_forall {u w : EMLTree} {f : Real → Real}
     ∀ x : Real, 0 < x → w.eval x = exp (exp (u.eval x) - f x) :=
   fun x hx => pins_right u w (hw x hx) (e x hx)
 
+/-! ## EVERY node pins a child
+
+`pins_right` needs `0 < w.eval x`. **The other branch is not a gap — it pins the LEFT child
+instead.** When `w.eval x ≤ 0` the clamp gives `log (w.eval x) = 0`, so the node is `exp (u.eval x)`,
+and hitting `f` forces `u.eval x = log f`.
+
+> **So at every node, whichever branch holds, ONE CHILD IS DETERMINED.** That is the engine a
+> spine-following induction needs: descend into the pinned child, and the target transforms. -/
+
+/-- **Clamped branch pins the LEFT child.** -/
+theorem clamped_pins_left {u w : EMLTree} {f x : Real}
+    (hw : w.eval x ≤ 0)
+    (e : (EMLTree.eml u w).eval x = f) :
+    u.eval x = log f := by
+  have v : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  rw [v, log_nonpos hw] at e
+  have hexp : exp (u.eval x) = f := by
+    have e2 : exp (u.eval x) = (exp (u.eval x) - 0) := by mach_ring
+    rw [e2, e]
+  rw [← hexp, log_exp]
+
+/-- **Every node pins a child.** Positive right child ⟹ the right is determined; non-positive ⟹ the
+left is. **No third case.** -/
+theorem node_pins_a_child (u w : EMLTree) {f x : Real}
+    (e : (EMLTree.eml u w).eval x = f) :
+    w.eval x = exp (exp (u.eval x) - f) ∨ u.eval x = log f := by
+  -- no `le_or_lt` in this corpus; `lt_total` is the axiom that exists
+  rcases lt_total (w.eval x) 0 with hlt | heq | hgt
+  · exact Or.inr (clamped_pins_left (le_of_lt hlt) e)
+  · exact Or.inr (clamped_pins_left (le_of_eq heq) e)
+  · exact Or.inl (pins_right u w hgt e)
+
 end Real
 end MachLib
