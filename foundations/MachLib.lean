@@ -302,6 +302,7 @@ import MachLib.FixedPointCertifier
 import MachLib.FixedPointRange
 import MachLib.KalmanRangeEnvelope
 import MachLib.KalmanRangeQ88
+import MachLib.KalmanRangeInduction
 import MachLib.MonitorSoundness
 import MachLib.EMLReciprocalDepth2
 import MachLib.KalmanFormatInstantiation
