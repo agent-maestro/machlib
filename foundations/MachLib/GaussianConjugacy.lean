@@ -29,10 +29,10 @@ namespace Real
 
 /-- Kalman gain `K = σ²/(σ²+r²)`.
 
-⚠ **ALSO KNOWN AS `KalmanEstimateRecursion.kalmanGainMap r P`** — the same function with the
-arguments swapped. `KalmanRangeMultiply.kalmanGainMap_eq_kGain` bridges them by `rfl`.
-**Kept as two names deliberately** — see `MachLib/AliasDecisions.lean` for the measurement and the
-ruling. **Do not add a third: bridge to one of these instead.** -/
+**CANONICAL.** `KalmanEstimateRecursion.kalmanGainMap r P` is an **alias** of this
+(arguments swapped for the recursion layer's reading order); `kalmanGainMap_eq_kGain` closes by
+`rfl`. Merged 2026-08-06 — see `MachLib/AliasDecisions.lean`.
+**Do not add a third name: bridge to this one.** -/
 noncomputable def kGain (sig2 r2 : Real) : Real := sig2 / (sig2 + r2)
 
 /-- Posterior mean `m(y) = μ + K·(y-μ)`. -/
@@ -40,10 +40,10 @@ noncomputable def postMean (mu sig2 r2 y : Real) : Real := mu + kGain sig2 r2 * 
 
 /-- Posterior variance `τ² = σ²r²/(σ²+r²)`.
 
-⚠ **ALSO KNOWN AS `KalmanVarianceRecursion.kalmanVarMap r P`** — the same function with the
-arguments swapped. `KalmanRangeInduction.kalmanVarMap_eq_postVar` bridges them by `rfl`.
-**Kept as two names deliberately** — see `MachLib/AliasDecisions.lean`.
-**Do not add a third: bridge to one of these instead.** -/
+**CANONICAL.** `KalmanVarianceRecursion.kalmanVarMap r P` is an **alias** of this
+(arguments swapped for the recursion layer's reading order); `kalmanVarMap_eq_postVar` closes by
+`rfl`. Merged 2026-08-06 — see `MachLib/AliasDecisions.lean`.
+**Do not add a third name: bridge to this one.** -/
 noncomputable def postVar (sig2 r2 : Real) : Real := sig2 * r2 / (sig2 + r2)
 
 /-- Marginal variance of `Y`: `σ²+r²`. -/

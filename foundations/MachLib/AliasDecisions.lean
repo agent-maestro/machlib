@@ -1,18 +1,23 @@
 import MachLib.KalmanRangeMultiply
 
 /-!
-# Alias decisions — four names, two functions, and the ruling is NOT to merge
+# Alias decisions — MERGED 2026-08-06, and my cost estimate was wrong
 
-The corpus carries two functions under two names each:
+The corpus carried two functions under two names each. **They are now one definition each**, with
+the recursion-layer names kept as **transparent aliases**:
 
-| function | names | bridged by |
-|---|---|---|
-| `P·r/(P+r)` | `GaussianConjugacy.postVar` · `KalmanVarianceRecursion.kalmanVarMap` | `kalmanVarMap_eq_postVar` (`rfl`) |
-| `P/(P+r)` | `GaussianConjugacy.kGain` · `KalmanEstimateRecursion.kalmanGainMap` | `kalmanGainMap_eq_kGain` (`rfl`) |
+| function | canonical | alias | bridge |
+|---|---|---|---|
+| `P·r/(P+r)` | `GaussianConjugacy.postVar` | `KalmanVarianceRecursion.kalmanVarMap r P := postVar P r` | `kalmanVarMap_eq_postVar` (`rfl`) |
+| `P/(P+r)` | `GaussianConjugacy.kGain` | `KalmanEstimateRecursion.kalmanGainMap r P := kGain P r` | `kalmanGainMap_eq_kGain` (`rfl`) |
 
-Each pair is the **same function with the arguments swapped**, and both bridges close by `rfl`.
+**The aliases stay because the recursion layer reads naturally with noise first and state second**
+(`kalmanVarMap R P`), while the probability layer reads naturally the other way (`postVar σ² r²`).
+Two *spellings* of one *definition* is a different thing from two definitions.
 
-## The measurement
+## ▸ THE HISTORY, kept because I got the decision wrong first
+
+**I measured the merge and ruled against it.** The measurement:
 
 | name | files | references | `unfold`/`rw` sites |
 |---|---:|---:|---:|
@@ -21,41 +26,36 @@ Each pair is the **same function with the arguments swapped**, and both bridges 
 | `kGain` | 2 | 8 | 2 |
 | `kalmanGainMap` | 2 | 21 | 1 |
 
-**A merge touches ~150 references and 10 unfolding sites, several of them inside the MMSE chain**
-(`posterior_mean_mmse`, `postMean_eq_kalman`, the recursion files) — the flagship claim.
+and the ruling was *"~150 references and 10 unfolding sites through the MMSE chain — a bad trade
+for tidiness."* **The orchestrator overrode it, and the override was right.**
 
-## ▸ THE RULING: do not merge. Cross-reference instead.
+> ### The estimate was wrong because it priced ONE merge strategy: rewriting every call site to the surviving name and swapping argument order.
+>
+> **Turning the duplicate `def` into an ALIAS achieves the same thing — one definition per
+> function — and touches ZERO call sites.** The build went from 585 jobs to 585 jobs with no
+> errors, because a `def` that unfolds to the same term is definitionally what the old one was.
+> Even the `show` steps inside `kalman_var_map_lipschitz` and `kalman_gain_map_lipschitz`, which
+> unfold the definition mid-proof, still elaborate.
 
-**The safety a merge would buy is already bought.** The risk of two names is that something proved
-about one fails to apply to the other; **the `rfl` bridges eliminate exactly that** — any result
-transfers in a single rewrite.
+**The lesson is not "merge more". It is that a refactor's cost is a property of the STRATEGY, not
+of the reference count** — and I had let a reference count stand in for a cost estimate without
+checking whether a cheaper strategy existed.
 
-**What a merge would buy is tidiness. What it would cost is a 150-reference refactor through the
-project's flagship proof.** That is a bad trade, and it stays a bad trade until some concrete
-proof is actually blocked by the split. **None is.**
+## What is still true from the original analysis
 
-### What the real failure mode was, and what fixes it
+**The real failure mode was PROLIFERATION, not duplication** — the definition sites did not mention
+each other, so each layer independently invented the name it needed. **That is fixed by the
+cross-references now at all four sites, not by the merge.** Both were worth doing; only one of them
+was what I initially proposed.
 
-**The duplication did not arise from a decision — it arose because the definition sites did not
-mention each other.** Someone in the probability layer wrote `postVar`; someone in the recursion
-layer needed the same map and wrote `kalmanVarMap`, with no way to discover the first. **That is a
-proliferation problem, not a duplication problem, and merging does not fix it — cross-referencing
-does.**
-
-All four definition sites now name their twin, name the bridge, and say **"do not add a third."**
-
-> **Revisit this ruling if, and only if, a proof is actually blocked by the split.** Tidiness is not
-> a reason to refactor a flagship chain.
-
-This file exists so the decision is recorded once and not re-litigated by the next reader who
-notices the redundancy. It contains no theorems on purpose.
+**Do not add a third name for either function. Bridge to the canonical one.**
 -/
 
 namespace MachLib
 namespace Real
 
-/-- Both alias bridges in one place, so a reader who finds this file can act on it immediately.
-Restates `kalmanVarMap_eq_postVar` and `kalmanGainMap_eq_kGain` as a single pair. -/
+/-- Both alias bridges in one place. Each closes by `rfl` — now trivially so, since the aliases
+*are* the canonical definitions. -/
 theorem alias_bridges (r P : Real) :
     kalmanVarMap r P = postVar P r ∧ kalmanGainMap r P = kGain P r :=
   ⟨kalmanVarMap_eq_postVar r P, kalmanGainMap_eq_kGain r P⟩
