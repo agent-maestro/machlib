@@ -119,11 +119,23 @@ The barrier says every scale-invariant property is blind. **The contrapositive i
 the open problem itself**, and it is sharper than the original phrasing:
 
 > ### `e/x ∈ EML`. And `1/x = (1/e) · (e/x)`.
-> ### **So `1/x ∉ EML` says exactly: EML is NOT closed under multiplication by the positive scalar `1/e`.**
+> ### **So `1/x ∉ EML` IMPLIES: EML is NOT closed under multiplication by the positive scalar `1/e`.**
 
-**That converts a question about one function into a question about a CLOSURE PROPERTY of the
-class** — and closure properties are the kind of thing an induction over tree structure can
-address, which a single function's membership is not.
+> ## ⚠ CORRECTED 2026-08-06 — an earlier draft of this file said **"IS EXACTLY"**. It is an
+> ## IMPLICATION, not an equivalence, and the difference is the whole value of the reformulation.
+>
+> `1/x ∉ EML` ⟹ closure fails. **The converse does NOT hold**: closure could fail at some *other*
+> tree, telling us nothing about `1/x`.
+>
+> **And it does.** `scale_closed_gives_mx` below: scale-closure applied to `var` demands `m·x ∈ EML`
+> for every `m > 0` — **the census's own open sub-question**, for which it records *"ZERO
+> `eml`-rooted trees evaluate to `m·x` for ANY `m`; `var` itself is the only witness, at `m = 1`"*.
+>
+> ### So the closure property almost certainly fails at `var`, for reasons that have NOTHING to do with `1/x` — and knowing it fails therefore buys nothing.
+>
+> **The reformulation is a change of clothes.** The structural-induction attack it seemed to open
+> **stalls at the FIRST base case**, on a question already known to be open. Recorded because a
+> negative result about a proposed method is worth more than the method.
 
 `e/x ∈ EML` is proved in the research record
 (`monogate-research/.../E5QUATER_RESULT.md`) but has **no tree witness in this corpus**, so it
@@ -156,6 +168,29 @@ theorem inv_x_in_eml_of_scale_closed
   refine ⟨s, fun x hx => ?_⟩
   rw [hs x hx, hex x hx]
   exact inv_e_scale_of_e_over_x x (ne_of_gt hx)
+
+/-- **WHERE THE INDUCTION STALLS — the first base case.**
+
+The reformulation suggested attacking scale-closure by induction over tree structure. Run it:
+`const a` is trivial (`const (c·a)`), and the very next base case is **`var`**, which demands
+`m·x ∈ EML` for every `m > 0`.
+
+**That is the census's own open sub-question** — `ROOT_CASE_CENSUS.md` records *"ZERO `eml`-rooted
+trees evaluate to `m·x` for ANY `m` whatsoever; `var` itself is the only witness, at `m = 1`"*, and
+`const_var_not_mx` (`EMLReciprocalDepth2.lean`) proves one shape cannot.
+
+> **So the induction does not reach the `eml` node. It stops at `var`, on a question the arm
+> already knew was open — and one whose expected answer (`m·x ∉ EML` for `m ≠ 1`) makes
+> scale-closure FALSE for reasons unrelated to `1/x`.**
+
+**This is the theorem that costs the reformulation its value, and it is stated as such.** -/
+theorem scale_closed_gives_mx
+    (hscale : ∀ (t : EMLTree) (c : Real), 0 < c →
+      ∃ s : EMLTree, ∀ x : Real, 0 < x → s.eval x = c * t.eval x)
+    {m : Real} (hm : 0 < m) :
+    ∃ s : EMLTree, ∀ x : Real, 0 < x → s.eval x = m * x := by
+  obtain ⟨s, hs⟩ := hscale EMLTree.var m hm
+  exact ⟨s, fun x hx => hs x hx⟩
 
 end Real
 end MachLib
