@@ -306,6 +306,7 @@ import MachLib.KalmanRangeQ88
 import MachLib.KalmanRangeInduction
 import MachLib.KalmanRangeMultiply
 import MachLib.AliasDecisions
+import MachLib.TailSignCriterion
 import MachLib.MonitorSoundness
 import MachLib.EMLReciprocalDepth2
 import MachLib.KalmanFormatInstantiation

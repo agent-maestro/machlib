@@ -1,0 +1,126 @@
+import MachLib.WitnessResidualContinuousTargetMetaLemma
+
+/-!
+# A reusable criterion for EML exclusion — and the two existing instances become corollaries
+
+`no_tree_eq_target_of_not_tailSign` is **fully generic**: any continuous `TARGET` whose residual
+`TARGET − L` lacks `TailSign` is not an EML tree, at any depth. **Yet in the whole corpus only two
+functions had ever been shown to lack `TailSign` — `sin` and `cos` — each by a hand-rolled proof
+that repeats the same Archimedean argument.**
+
+This file factors that argument out once.
+
+## The criterion
+
+`TailSign f` is *eventually positive* ∨ *eventually negative* ∨ *eventually zero*. Refuting all
+three at once needs exactly two facts, and they are the two the `sin` proof actually used:
+
+> ### **zeros arbitrarily far out** kills `pos` and `neg`; **nonzeros arbitrarily far out** kills `zero`.
+
+Nothing about periodicity, derivatives, or Pfaffian validity enters. **A target that keeps
+returning to a level and keeps leaving it is excluded, however irregularly it does so** — the
+witnesses need not be evenly spaced, which a period-based criterion would have required.
+
+## ▸ A note on the exclusion taxonomy, which this corrects
+
+`monogate-research/exploration/eml_exclusion_taxonomy/TAXONOMY.md` describes the working exclusion
+family as *"Pfaffian/Khovanskii bounds any EML tree's zeros … target exhibits `M+1` distinct
+zeros"*. **That route was RETIRED** — its axiom `zero_count_bound_classical` was deleted and both
+theorems re-proven through `TailSign` (`KhovanskiiLemma.lean`'s removal notes,
+`EMLAnyDepthBarrierUnconditional.lean`). **The live mechanism counts nothing; it is a sign
+argument.** The taxonomy is updated alongside this file.
+
+No new axioms. No `sorry`.
+-/
+
+namespace MachLib
+namespace Real
+
+/-- **THE CRITERION.** A function with zeros arbitrarily far out *and* nonzeros arbitrarily far out
+has no eventual sign.
+
+Each hypothesis kills exactly the branches it must: a zero beyond every `R` refutes *eventually
+positive* and *eventually negative*; a nonzero beyond every `R` refutes *eventually zero*. -/
+theorem not_tailSign_of_zeros_and_nonzeros {f : Real → Real}
+    (hz : ∀ R : Real, ∃ x : Real, R < x ∧ f x = 0)
+    (hn : ∀ R : Real, ∃ x : Real, R < x ∧ f x ≠ 0) :
+    ¬ TailSign f := by
+  intro h
+  rcases h with ⟨R, hR⟩ | ⟨R, hR⟩ | ⟨R, hR⟩
+  · obtain ⟨x, hx, hfx⟩ := hz R
+    have := hR x hx
+    rw [hfx] at this
+    exact lt_irrefl_ax 0 this
+  · obtain ⟨x, hx, hfx⟩ := hz R
+    have := hR x hx
+    rw [hfx] at this
+    exact lt_irrefl_ax 0 this
+  · obtain ⟨x, hx, hfx⟩ := hn R
+    exact hfx (hR x hx)
+
+/-- **The criterion, composed with the meta-lemma.** The one-stop exclusion route: exhibit a level
+`L`, continuity, and the two witness families, and the target is outside EML at every depth. -/
+theorem no_tree_eq_of_zeros_and_nonzeros
+    (TARGET : Real → Real) (L : Real) (hcont : ∀ x : Real, ContinuousAt TARGET x)
+    (hz : ∀ R : Real, ∃ x : Real, R < x ∧ TARGET x - L = 0)
+    (hn : ∀ R : Real, ∃ x : Real, R < x ∧ TARGET x - L ≠ 0)
+    (T : EMLTree) (heq : ∀ x : Real, T.eval x = TARGET x) : False :=
+  no_tree_eq_target_of_not_tailSign TARGET L hcont
+    (not_tailSign_of_zeros_and_nonzeros hz hn) T heq
+
+/-! ## The witness families for `sin`, extracted once
+
+Both are the Archimedean argument the hand proofs inlined: `nπ` for the zeros, `nπ + π/2` for the
+nonzeros. Stated separately so any `sin`-shaped target can reuse them. -/
+
+/-- `sin` has a zero beyond every `R` — at `nπ`, via Archimedes. -/
+theorem sin_zero_beyond (R : Real) : ∃ x : Real, R < x ∧ Real.sin x = 0 := by
+  obtain ⟨n, hn⟩ := archimedean R
+  exact ⟨natCast n * pi, lt_of_lt_of_le hn (natCast_le_natCast_mul_pi n), sin_natCast_mul_pi n⟩
+
+/-- `π/2 > 0`, pulled out of the inlined proofs that needed it. -/
+theorem pi_div_two_pos : (0 : Real) < pi / (1 + 1) := by
+  have h11 : (0 : Real) < 1 + 1 := by
+    have h := add_lt_add_left zero_lt_one_ax 1
+    rw [add_zero] at h
+    exact lt_trans_ax zero_lt_one_ax h
+  exact div_pos_of_pos_pos pi_pos h11
+
+/-- `sin` is nonzero beyond every `R` — at `nπ + π/2`, where it equals `cos(nπ) = ±1`. -/
+theorem sin_nonzero_beyond (R : Real) : ∃ x : Real, R < x ∧ Real.sin x ≠ 0 := by
+  obtain ⟨n, hn⟩ := archimedean R
+  have hlt1 : R < natCast n * pi := lt_of_lt_of_le hn (natCast_le_natCast_mul_pi n)
+  have hlt2 : R < natCast n * pi + pi / (1 + 1) := by
+    have h := add_lt_add_left pi_div_two_pos (natCast n * pi)
+    rw [add_zero] at h
+    exact lt_trans_ax hlt1 h
+  refine ⟨natCast n * pi + pi / (1 + 1), hlt2, ?_⟩
+  intro hzero
+  rw [Real.sin_add, sin_natCast_mul_pi, sin_pi_div_two, cos_pi_div_two,
+    mul_zero, zero_add, mul_one_ax] at hzero
+  exact cos_natCast_mul_pi_ne_zero n hzero
+
+/-- **`sin` lacks `TailSign`, re-derived from the criterion.** Subsumes the hand proof in
+`WitnessResidualTailSign.lean` — same conclusion, no inlined Archimedean argument. -/
+theorem sin_not_tailSign_via_criterion : ¬ TailSign Real.sin :=
+  not_tailSign_of_zeros_and_nonzeros sin_zero_beyond sin_nonzero_beyond
+
+/-! ## The payoff: a NEW infinite family, at no extra cost
+
+`a · sin` for every `a ≠ 0`. The zeros are `sin`'s zeros (scaling fixes `0`), and the nonzeros stay
+nonzero because a product of nonzeros is nonzero. **One theorem, uncountably many targets** —
+where the corpus previously had two functions, each hand-proved. -/
+
+/-- **`a · sin` lacks `TailSign` for every `a ≠ 0`.** -/
+theorem const_mul_sin_not_tailSign {a : Real} (ha : a ≠ 0) :
+    ¬ TailSign (fun x => a * Real.sin x) := by
+  refine not_tailSign_of_zeros_and_nonzeros ?_ ?_
+  · intro R
+    obtain ⟨x, hx, hfx⟩ := sin_zero_beyond R
+    exact ⟨x, hx, by show a * Real.sin x = 0; rw [hfx, mul_zero]⟩
+  · intro R
+    obtain ⟨x, hx, hfx⟩ := sin_nonzero_beyond R
+    exact ⟨x, hx, by show a * Real.sin x ≠ 0; exact mul_ne_zero ha hfx⟩
+
+end Real
+end MachLib
