@@ -300,6 +300,7 @@ import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
 import MachLib.FixedPointRange
+import MachLib.FixedPointWrapGrounding
 import MachLib.KalmanRangeEnvelope
 import MachLib.KalmanRangeQ88
 import MachLib.KalmanRangeInduction
