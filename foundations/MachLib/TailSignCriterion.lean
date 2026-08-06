@@ -1,14 +1,26 @@
 import MachLib.WitnessResidualContinuousTargetMetaLemma
+import MachLib.GaussianDiskSandwich
 
 /-!
 # A reusable criterion for EML exclusion — and the two existing instances become corollaries
 
 `no_tree_eq_target_of_not_tailSign` is **fully generic**: any continuous `TARGET` whose residual
-`TARGET − L` lacks `TailSign` is not an EML tree, at any depth. **Yet in the whole corpus only two
-functions had ever been shown to lack `TailSign` — `sin` and `cos` — each by a hand-rolled proof
-that repeats the same Archimedean argument.**
+`TARGET − L` lacks `TailSign` is not an EML tree, at any depth.
 
-This file factors that argument out once.
+> ## ⚠ WHAT THIS FILE IS FOR — corrected 2026-08-06, after a wrong first answer
+>
+> **My first draft claimed the meta-lemma had only two instances (`sin`, `cos`) and that `a·sin`
+> was new reach. Both were false.** `GeneralPeriodicTargetBarrier.no_tree_eq_periodic_target`
+> already excludes **every nonconstant continuous periodic function** — which covers `sin`, `cos`,
+> `sin²`, `a·sin`, `c + a·sin`, and every other periodic target at once.
+>
+> **I had grepped for the naming convention `*_not_tailSign` instead of for the meta-lemma's
+> CALLERS**, and concluded coverage from a name pattern.
+>
+> **What this file actually adds is the NON-PERIODIC case.** `no_tree_eq_periodic_target` requires
+> `Periodic TARGET p`; the criterion below requires only that the target keeps meeting a level and
+> keeps leaving it — **arbitrarily spaced witnesses, no period.** `x · sin x` is the demonstration:
+> its amplitude grows without bound, so no periodic barrier reaches it.
 
 ## The criterion
 
@@ -78,13 +90,9 @@ theorem sin_zero_beyond (R : Real) : ∃ x : Real, R < x ∧ Real.sin x = 0 := b
   obtain ⟨n, hn⟩ := archimedean R
   exact ⟨natCast n * pi, lt_of_lt_of_le hn (natCast_le_natCast_mul_pi n), sin_natCast_mul_pi n⟩
 
-/-- `π/2 > 0`, pulled out of the inlined proofs that needed it. -/
-theorem pi_div_two_pos : (0 : Real) < pi / (1 + 1) := by
-  have h11 : (0 : Real) < 1 + 1 := by
-    have h := add_lt_add_left zero_lt_one_ax 1
-    rw [add_zero] at h
-    exact lt_trans_ax zero_lt_one_ax h
-  exact div_pos_of_pos_pos pi_pos h11
+-- `pi_div_two_pos` is NOT redefined here: it already exists in the corpus and became reachable
+-- once this file imported `GaussianDiskSandwich` for `continuousAt_mul`. A first draft duplicated
+-- it -- instantiate, don't rebuild, caught by the compiler rather than by me.
 
 /-- `sin` is nonzero beyond every `R` — at `nπ + π/2`, where it equals `cos(nπ) = ±1`. -/
 theorem sin_nonzero_beyond (R : Real) : ∃ x : Real, R < x ∧ Real.sin x ≠ 0 := by
@@ -105,13 +113,18 @@ theorem sin_nonzero_beyond (R : Real) : ∃ x : Real, R < x ∧ Real.sin x ≠ 0
 theorem sin_not_tailSign_via_criterion : ¬ TailSign Real.sin :=
   not_tailSign_of_zeros_and_nonzeros sin_zero_beyond sin_nonzero_beyond
 
-/-! ## The payoff: a NEW infinite family, at no extra cost
+/-! ## Two instances, and only the second is new reach
 
-`a · sin` for every `a ≠ 0`. The zeros are `sin`'s zeros (scaling fixes `0`), and the nonzeros stay
-nonzero because a product of nonzeros is nonzero. **One theorem, uncountably many targets** —
-where the corpus previously had two functions, each hand-proved. -/
+`a · sin` (below) is **NOT new** — it is periodic and nonconstant, so
+`no_tree_eq_periodic_target` already had it. It is kept as a *cheapness* demonstration: the
+criterion discharges it in four lines with no periodicity argument.
 
-/-- **`a · sin` lacks `TailSign` for every `a ≠ 0`.** -/
+**`x · sin x` is the one that matters.** Its amplitude grows without bound, so it is not periodic
+and **no periodic barrier reaches it** — the criterion does, because it never asked for a period. -/
+
+/-- **`a · sin` lacks `TailSign` for every `a ≠ 0`.** Already covered by the periodic barrier;
+included to show the criterion costs four lines where the periodic route costs a period and a
+nonconstancy witness. -/
 theorem const_mul_sin_not_tailSign {a : Real} (ha : a ≠ 0) :
     ¬ TailSign (fun x => a * Real.sin x) := by
   refine not_tailSign_of_zeros_and_nonzeros ?_ ?_
@@ -121,6 +134,55 @@ theorem const_mul_sin_not_tailSign {a : Real} (ha : a ≠ 0) :
   · intro R
     obtain ⟨x, hx, hfx⟩ := sin_nonzero_beyond R
     exact ⟨x, hx, by show a * Real.sin x ≠ 0; exact mul_ne_zero ha hfx⟩
+
+/-- **`x · sin x` lacks `TailSign` — and THIS one the periodic barrier cannot reach.**
+
+Zeros are `sin`'s zeros (`x · 0 = 0`). For the nonzeros the witness `nπ + π/2` must additionally be
+shown **strictly positive**, so that the leading factor is nonzero — `natCast n · π ≥ 0` and
+`π/2 > 0`. That extra step is the only difference from `a · sin`, and it is exactly what a growing
+amplitude costs.
+
+**Its amplitude is unbounded, so it is not periodic and `no_tree_eq_periodic_target` does not
+apply.** *(That last sentence is an observation, not a theorem in this file — what is proved here
+is the `TailSign` refutation.)* -/
+theorem x_mul_sin_not_tailSign : ¬ TailSign (fun x => x * Real.sin x) := by
+  refine not_tailSign_of_zeros_and_nonzeros ?_ ?_
+  · intro R
+    obtain ⟨x, hx, hfx⟩ := sin_zero_beyond R
+    exact ⟨x, hx, by show x * Real.sin x = 0; rw [hfx, mul_zero]⟩
+  · intro R
+    obtain ⟨n, hn⟩ := archimedean R
+    have hlt1 : R < natCast n * pi := lt_of_lt_of_le hn (natCast_le_natCast_mul_pi n)
+    have hstep : natCast n * pi < natCast n * pi + pi / (1 + 1) := by
+      have h := add_lt_add_left pi_div_two_pos (natCast n * pi)
+      rwa [add_zero] at h
+    have hxpos : (0 : Real) < natCast n * pi + pi / (1 + 1) :=
+      lt_of_le_of_lt (mul_nonneg (natCast_nonneg n) (le_of_lt pi_pos)) hstep
+    refine ⟨natCast n * pi + pi / (1 + 1), lt_trans_ax hlt1 hstep, ?_⟩
+    show (natCast n * pi + pi / (1 + 1)) * Real.sin (natCast n * pi + pi / (1 + 1)) ≠ 0
+    refine mul_ne_zero (ne_of_gt hxpos) ?_
+    intro hzero
+    rw [Real.sin_add, sin_natCast_mul_pi, sin_pi_div_two, cos_pi_div_two,
+      mul_zero, zero_add, mul_one_ax] at hzero
+    exact cos_natCast_mul_pi_ne_zero n hzero
+
+/-- `fun y => y` is continuous — take `δ := ε`. Not in the corpus; one line here rather than a
+detour, since `continuousAt_mul` (imported) supplies the product half. -/
+theorem continuousAt_id (x : Real) : ContinuousAt (fun y : Real => y) x :=
+  fun ε hε => ⟨ε, hε, fun _ hy => hy⟩
+
+/-- **The exclusion, end to end, for `x · sin x`.** No finite EML tree equals it, at any depth —
+via the criterion, with no periodicity anywhere in the argument. -/
+theorem no_tree_eq_x_mul_sin (T : EMLTree)
+    (heq : ∀ x : Real, T.eval x = x * Real.sin x) : False :=
+  no_tree_eq_target_of_not_tailSign (fun x => x * Real.sin x) 0
+    (fun x => continuousAt_mul (continuousAt_id x)
+      (hasDerivAt_continuousAt (HasDerivAt_sin x)))
+    (by
+      have h := x_mul_sin_not_tailSign
+      intro hts
+      exact h (tailSign_congr_eventually 0 (fun x _ => sub_zero (x * Real.sin x)) hts))
+    T heq
 
 end Real
 end MachLib
