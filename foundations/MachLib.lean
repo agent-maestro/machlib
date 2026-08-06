@@ -300,6 +300,7 @@ import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
 import MachLib.FixedPointRange
+import MachLib.KalmanRangeEnvelope
 import MachLib.MonitorSoundness
 import MachLib.EMLReciprocalDepth2
 import MachLib.KalmanFormatInstantiation
