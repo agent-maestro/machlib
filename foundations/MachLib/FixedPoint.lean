@@ -25,6 +25,13 @@ From the kernels under `monogate-research/electronics_intake/.../emitted/*.v`:
   truncation of the 64-bit product back to the grid, so `|fxmul a b − a·b| ≤ s`.
 * **Add / sub** lower to plain integer `±` — **exact**, no rounding (and no
   overflow in the PID's regime: `|inputs| ≤ 100`, `|raw| ≤ 195 ≪ 2¹⁵`).
+
+  > **⚠ 2026-08-05 — that parenthesis is a PRECONDITION, and downstream files dropped it.**
+  > It is scoped to *the PID's regime* and reads as an aside; `KalmanUpdateFixedPoint.lean`
+  > inherited *"the adds are exact"* with unbounded free variables, and a `Q8.8` sweep of the
+  > shipped RTL measured both of its adds wrapping in reachable operation. **The condition is now
+  > a first-class predicate** — `Fits` / `WrapAdd` in `MachLib/FixedPointRange.lean` — so a
+  > consumer of "exact" has something to discharge rather than a parenthesis to notice.
 * **Constants** are quantized to the grid: `|c_fx − c| ≤ s`.
 
 (The hand-written Arty A7 wrapper stub assumed **Q1.31**; the emitted RTL is

@@ -29,7 +29,28 @@ Forge lowers the kernel to (Q16.16, `s = 2⁻¹⁶` the grid step):
 
 Because the two adds are **exact** in fixed point, the reciprocal sees the exact `p+r` (no `1/s²`
 input-error amplification), and the whole error is the reciprocal's `E_recip` plus the two `qmul`
-truncations. A three-term triangle split gives the bound below; `E_recip` is supplied by the 2-stage
+truncations.
+
+> ### ⚠ CORRECTION 2026-08-05 — **"exact" carries a precondition this file dropped.**
+>
+> `FixedPoint.lean` states it, but parenthetically and scoped to one kernel: *"Add / sub lower to
+> plain integer ± — exact, no rounding **(and no overflow in the PID's regime: `|inputs| ≤ 100`,
+> `|raw| ≤ 195 ≪ 2¹⁵`)**"*. **This file inherited the claim without the caveat, and its `p, r, z, x`
+> are unbounded free variables.**
+>
+> **Both adds are measured to wrap in reachable operation.** A `Q8.8` sweep of the shipped RTL
+> (`monogate-research/exploration/joint_texture_2026_08_05/`, 3.2 × 10⁹ points, real RTL and an
+> independent integer model bit-identical on every one) found **110,935,140 + 7,225,349** points
+> where this bound is violated with every hardware status bit silent — `p + r` wrapping, and
+> `z − x` wrapping.
+>
+> **The theorems below are NOT affected. They quantify over `Real`, which does not wrap, and they
+> are sound.** What was missing is the hypothesis that licenses *instantiating* them at a die.
+>
+> **`MachLib/FixedPointRange.lean` supplies it**: `Fits`/`WrapAdd`,
+> `kalman_update_1d_fwd_error_representable` (this bound with the adds' exactness *derived* rather
+> than assumed), and `wrap_error_catastrophic` — **out of range the discrepancy is at least a full
+> register span, so overflow is not a small error a larger `E_recip` could absorb.** A three-term triangle split gives the bound below; `E_recip` is supplied by the 2-stage
 NR analysis (`nr_reciprocal_2stage` + `nr_reciprocal_abs_error`, `E_recip = ((e_0²+c)²+c)/|p+r|`).
 
 `sorryAx`-free, no new axioms.

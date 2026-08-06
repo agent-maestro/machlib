@@ -299,6 +299,10 @@ import MachLib.Tactic.LeadingCoeffY
 import MachLib.FPModel
 import MachLib.FixedPoint
 import MachLib.FixedPointCertifier
+import MachLib.FixedPointRange
+import MachLib.MonitorSoundness
+import MachLib.EMLReciprocalDepth2
+import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
 import MachLib.KalmanUpdateFixedPoint
