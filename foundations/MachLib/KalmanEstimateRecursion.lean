@@ -93,6 +93,9 @@ This closes the variance → gain → estimate coupling — machine-checked, not
 /-- The scalar Kalman **gain** map `K(P) = P/(P+r)`. (`= kalmanVarMap r P / r`; the variance map is
 `r · K`.) -/
 noncomputable def kalmanGainMap (r P : Real) : Real := P / (P + r)
+-- ⚠ ALSO KNOWN AS `GaussianConjugacy.kGain P r` (arguments swapped); bridged by `rfl` in
+-- `KalmanRangeMultiply.kalmanGainMap_eq_kGain`. Two names kept deliberately -- see
+-- `MachLib/AliasDecisions.lean`. Do not add a third.
 
 /-- Contraction core for the gain map (division-free, coefficient `r` where the variance had `r²`):
 `P·w − P⋆·w⋆ = (r·w·w⋆)·(P − P⋆)`. -/

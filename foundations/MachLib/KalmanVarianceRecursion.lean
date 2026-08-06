@@ -40,6 +40,9 @@ namespace MachLib.Real
 /-- The scalar Kalman posterior-**variance** map `g(P) = P·r/(P+r)`. Autonomous (no dependence on
 the estimate or the measurement), which is what makes its recursion a clean scalar contraction. -/
 noncomputable def kalmanVarMap (r P : Real) : Real := P * r / (P + r)
+-- ⚠ ALSO KNOWN AS `GaussianConjugacy.postVar P r` (arguments swapped); bridged by `rfl` in
+-- `KalmanRangeInduction.kalmanVarMap_eq_postVar`. Two names kept deliberately -- see
+-- `MachLib/AliasDecisions.lean`. Do not add a third.
 
 /-- **Contraction core (division-free).** With `w, w⋆` abstract reciprocals of `P+r`, `P⋆+r`
 (`(P+r)·w = 1`, `(P⋆+r)·w⋆ = 1`), the difference `P·r·w − P⋆·r·w⋆` equals `(r²·w·w⋆)·(P − P⋆)`, so

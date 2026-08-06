@@ -27,13 +27,23 @@ namespace Real
 
 /-! ## §1 — the Kalman quantities and the standard-form density -/
 
-/-- Kalman gain `K = σ²/(σ²+r²)`. -/
+/-- Kalman gain `K = σ²/(σ²+r²)`.
+
+⚠ **ALSO KNOWN AS `KalmanEstimateRecursion.kalmanGainMap r P`** — the same function with the
+arguments swapped. `KalmanRangeMultiply.kalmanGainMap_eq_kGain` bridges them by `rfl`.
+**Kept as two names deliberately** — see `MachLib/AliasDecisions.lean` for the measurement and the
+ruling. **Do not add a third: bridge to one of these instead.** -/
 noncomputable def kGain (sig2 r2 : Real) : Real := sig2 / (sig2 + r2)
 
 /-- Posterior mean `m(y) = μ + K·(y-μ)`. -/
 noncomputable def postMean (mu sig2 r2 y : Real) : Real := mu + kGain sig2 r2 * (y - mu)
 
-/-- Posterior variance `τ² = σ²r²/(σ²+r²)`. -/
+/-- Posterior variance `τ² = σ²r²/(σ²+r²)`.
+
+⚠ **ALSO KNOWN AS `KalmanVarianceRecursion.kalmanVarMap r P`** — the same function with the
+arguments swapped. `KalmanRangeInduction.kalmanVarMap_eq_postVar` bridges them by `rfl`.
+**Kept as two names deliberately** — see `MachLib/AliasDecisions.lean`.
+**Do not add a third: bridge to one of these instead.** -/
 noncomputable def postVar (sig2 r2 : Real) : Real := sig2 * r2 / (sig2 + r2)
 
 /-- Marginal variance of `Y`: `σ²+r²`. -/
