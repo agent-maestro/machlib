@@ -37,6 +37,20 @@ the wrapping model.
 a full span.** Overflow is therefore **not** a small additive error that a wider `Erec` could
 absorb — which is exactly why `mon_fire_range` is a separate status bit and not a looser bound.
 
+> ### ⚠ CORRECTION 2026-08-06 — this file's scope section said the multiply path was *"unaffected by range"*. **That is wrong.**
+>
+> `mac_q = mac_p_q[WIDTH+FRAC-1:FRAC]` is a **bit slice**, so the MAC output wraps exactly like the
+> adds. Measured on the shipped datapath over a stride-7 sample of plane A: the slice wraps
+> **4,518** times for `K`, **16,774** for `dx`, **53,831,328** for `P'`.
+>
+> **The correction has a good ending, though: every one of those is at or above the `S`-overflow
+> line — ZERO below it, out of 76,702,866 sampled points.** And that is forced rather than lucky,
+> because `K = P⁻/(P⁻+R) ∈ [0,1]` makes every MAC a **convex weight** applied to a quantity that
+> already fits.
+>
+> **So the multiply path is not unaffected by range — it is PROTECTED BY THE SAME range condition.**
+> One obligation, three protections. See `MachLib/KalmanRangeMultiply.lean`.
+
 No new axioms. No `sorry`.
 -/
 
