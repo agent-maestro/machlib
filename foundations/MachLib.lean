@@ -316,6 +316,7 @@ import MachLib.EMLNamedTarget
 import MachLib.EMLDeepestNode
 import MachLib.EMLDepth2Case9RowU2
 import MachLib.EMLDepth2Case9RowU1
+import MachLib.EMLFreeScaleElimination
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
