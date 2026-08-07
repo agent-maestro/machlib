@@ -639,5 +639,110 @@ theorem rightBounded_fails_everywhere (X : Real) :
   rw [hval] at hle
   exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hle)
 
+/-! ## Why the method STALLS: the two obligations are in TENSION
+
+`one_point_generic` needs `LeftGrowsAt u X` **and** `RightBoundedAt w X`. **They are not
+independent.** The master equation `X·exp (u.eval X) = X·log (w.eval X) + K` says a large right
+child *forces* a large left child — so the easiest route to hypothesis 1 is a large `w`, and that is
+exactly what hypothesis 2 forbids.
+
+> ### The very condition that guarantees hypothesis 1 REFUTES hypothesis 2. So "supply the two bounds" is not a plan: **a depth-≥3 argument must get hypothesis 1 from the left child's own structure, not from the balance.** -/
+
+/-- `exp a ≤ exp b → a ≤ b`. -/
+theorem le_of_exp_le {a b : Real} (h : exp a ≤ exp b) : a ≤ b := by
+  rcases lt_total a b with hab | hab | hab
+  · exact le_of_lt hab
+  · exact le_of_eq hab
+  · exact absurd h (by
+      intro hle
+      exact lt_irrefl_ax _ (lt_of_lt_of_le (exp_lt hab) hle))
+
+/-- `c·a ≤ c·b → a ≤ b` for `c > 0`. -/
+theorem le_of_mul_le_mul_pos_left {a b c : Real} (hc : 0 < c) (h : c * a ≤ c * b) : a ≤ b := by
+  rcases lt_total a b with hab | hab | hab
+  · exact le_of_lt hab
+  · exact le_of_eq hab
+  · exact absurd h (by
+      intro hle
+      exact lt_irrefl_ax _ (lt_of_lt_of_le (mul_lt_mul_pos_left hab hc) hle))
+
+/-- **The balance lemma.** For `K ≥ 0`, `exp T ≤ log (w.eval X)` forces `T ≤ u.eval X`.
+
+**A big right child does not buy the tree freedom; it forces the left child up too.** -/
+theorem balance_forces_left {u w : EMLTree} {K X T : Real}
+    (hX : 0 < X) (hK : 0 ≤ K)
+    (hbig : exp T ≤ log (w.eval X))
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    T ≤ u.eval X := by
+  have v : (EMLTree.eml u w).eval X = exp (u.eval X) - log (w.eval X) := rfl
+  rw [v] at e
+  have edist : X * (exp (u.eval X) - log (w.eval X))
+      = X * exp (u.eval X) - X * log (w.eval X) := by
+    mach_mpoly [X, exp (u.eval X), log (w.eval X)]
+  rw [edist] at e
+  have heq : X * exp (u.eval X) = K + X * log (w.eval X) := by
+    have ee : X * exp (u.eval X)
+        = (X * exp (u.eval X) - X * log (w.eval X)) + X * log (w.eval X) := by
+      mach_mpoly [X, exp (u.eval X), log (w.eval X)]
+    rw [ee, e]
+  have hstep : X * exp T ≤ X * log (w.eval X) := by
+    rcases (le_iff_lt_or_eq (exp T) (log (w.eval X))).mp hbig with h | h
+    · exact le_of_lt (mul_lt_mul_pos_left h hX)
+    · rw [h]; exact le_refl _
+  have hKadd : X * log (w.eval X) ≤ K + X * log (w.eval X) := by
+    rcases (le_iff_lt_or_eq 0 K).mp hK with h | h
+    · apply le_of_lt
+      have hh := lt_add_of_pos_right (a := X * log (w.eval X)) h
+      have ec : X * log (w.eval X) + K = K + X * log (w.eval X) := by mach_ring
+      rw [ec] at hh
+      exact hh
+    · rw [← h]
+      have ec : (0 : Real) + X * log (w.eval X) = X * log (w.eval X) := by mach_ring
+      rw [ec]
+      exact le_refl _
+  have hge : X * exp T ≤ X * exp (u.eval X) := by
+    rw [heq]
+    exact le_trans hstep hKadd
+  exact le_of_exp_le (le_of_mul_le_mul_pos_left hX hge)
+
+/-- **`LeftGrowsAt` comes free when the right child is big enough.** -/
+theorem leftGrows_of_big_right {u w : EMLTree} {K X : Real}
+    (hX : 0 < X) (hK : 0 ≤ K)
+    (hbig : exp (X + X) ≤ log (w.eval X))
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    LeftGrowsAt u X :=
+  balance_forces_left hX hK hbig e
+
+/-- **…and the SAME hypothesis refutes `RightBoundedAt`.**
+
+`log (w.eval X) ≥ exp (X+X)` gives `w.eval X ≥ exp (exp (X+X)) > exp X`.
+
+> ### The condition that guarantees hypothesis 1 destroys hypothesis 2. The two obligations of `one_point_generic` are in TENSION — which is why the method stalls at depth ≥ 3 rather than merely lacking a lemma. -/
+theorem bigRight_refutes_rightBounded {w : EMLTree} {X : Real}
+    (hX : 0 < X) (hwpos : 0 < w.eval X)
+    (hbig : exp (X + X) ≤ log (w.eval X)) :
+    ¬ RightBoundedAt w X := by
+  intro h
+  have hle : w.eval X ≤ exp X := h.2
+  -- w.eval X = exp (log (w.eval X)) ≥ exp (exp (X+X)) > exp X
+  have hexp : exp (exp (X + X)) ≤ w.eval X := by
+    have h1 : exp (exp (X + X)) ≤ exp (log (w.eval X)) := exp_monotone hbig
+    rw [exp_log hwpos] at h1
+    exact h1
+  have hgt : exp X < exp (exp (X + X)) := by
+    apply exp_lt
+    apply lt_trans_ax _ (exp_grows_strictly_thm (X + X))
+    exact lt_add_of_pos_right hX
+  exact lt_irrefl_ax _ (lt_of_lt_of_le (lt_of_lt_of_le hgt hexp) hle)
+
+/-- **The tension, as one statement.** Under the hypothesis that makes `LeftGrowsAt` free,
+`RightBoundedAt` is false — so `one_point_generic` cannot be discharged this way. -/
+theorem one_point_obligations_in_tension {u w : EMLTree} {K X : Real}
+    (hX : 0 < X) (hK : 0 ≤ K) (hwpos : 0 < w.eval X)
+    (hbig : exp (X + X) ≤ log (w.eval X))
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    LeftGrowsAt u X ∧ ¬ RightBoundedAt w X :=
+  ⟨leftGrows_of_big_right hX hK hbig e, bigRight_refutes_rightBounded hX hwpos hbig⟩
+
 end Real
 end MachLib
