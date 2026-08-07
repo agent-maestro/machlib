@@ -744,5 +744,118 @@ theorem one_point_obligations_in_tension {u w : EMLTree} {K X : Real}
     LeftGrowsAt u X ∧ ¬ RightBoundedAt w X :=
   ⟨leftGrows_of_big_right hX hK hbig e, bigRight_refutes_rightBounded hX hwpos hbig⟩
 
+/-! ## What makes a tree GROW — `LeftGrowsAt` is decided by the left spine
+
+The tension result says `LeftGrowsAt` must come from the left child's own structure. **So: which
+trees have it?**
+
+For `u = eml u₁ u₂` the descent is `X + X + log (u₂.eval X) ≤ exp (u₁.eval X)`, and taking `log`
+weakens it to `log (X + X) ≤ u₁.eval X`.
+
+> ### The requirement WEAKENS LOGARITHMICALLY at each step down the left spine — `2X`, `log 2X`, `log log 2X`, … — so growth is decided by **where the left spine ENDS**. `var` can meet the weakened form; `const` cannot, once `X` passes it. -/
+
+/-- **`var` never grows.** `X + X ≤ X` is false for every `X > 0`. -/
+theorem leftGrowsAt_var_false {X : Real} (hX : 0 < X) : ¬ LeftGrowsAt EMLTree.var X := by
+  intro h
+  have hv : (EMLTree.var).eval X = X := rfl
+  have hle : X + X ≤ X := by rw [← hv]; exact h
+  exact lt_irrefl_ax X (lt_of_lt_of_le (lt_add_of_pos_right hX) hle)
+
+/-- **`const c` stops growing once `X` passes `c`.** -/
+theorem leftGrowsAt_const_false {c X : Real} (hX : 0 < X) (hc : c ≤ X) :
+    ¬ LeftGrowsAt (EMLTree.const c) X := by
+  intro h
+  have hv : (EMLTree.const c).eval X = c := rfl
+  have hle : X + X ≤ c := by rw [← hv]; exact h
+  exact lt_irrefl_ax X (lt_of_lt_of_le (lt_of_lt_of_le (lt_add_of_pos_right hX) hle) hc)
+
+/-- **The descent, unconditional.** Growth at a node bounds its LEFT child's `exp` from below. -/
+theorem leftGrows_descends {u₁ u₂ : EMLTree} {X : Real}
+    (h : LeftGrowsAt (EMLTree.eml u₁ u₂) X) :
+    X + X + log (u₂.eval X) ≤ exp (u₁.eval X) := by
+  have hv : (EMLTree.eml u₁ u₂).eval X = exp (u₁.eval X) - log (u₂.eval X) := rfl
+  have hle : X + X ≤ exp (u₁.eval X) - log (u₂.eval X) := by rw [← hv]; exact h
+  rcases (le_iff_lt_or_eq (X + X) (exp (u₁.eval X) - log (u₂.eval X))).mp hle with hlt | heq
+  · apply le_of_lt
+    apply lt_of_sub_pos
+    have ee : exp (u₁.eval X) - (X + X + log (u₂.eval X))
+        = (exp (u₁.eval X) - log (u₂.eval X)) - (X + X) := by
+      mach_mpoly [exp (u₁.eval X), log (u₂.eval X), X]
+    rw [ee]
+    exact sub_pos_of_lt hlt
+  · apply le_of_eq
+    have ee : X + X + log (u₂.eval X)
+        = (exp (u₁.eval X) - log (u₂.eval X)) + log (u₂.eval X) := by rw [← heq]
+    rw [ee]
+    mach_mpoly [exp (u₁.eval X), log (u₂.eval X)]
+
+/-- **And it WEAKENS logarithmically.** When the right child is at least `1`, growth at the node only
+requires the left child to reach `log (X + X)` — not `X + X`.
+
+> ### `2X` becomes `log 2X` one level down. That is why a long left spine can carry growth all the way to a `var` leaf. -/
+theorem leftGrows_weakens {u₁ u₂ : EMLTree} {X : Real} (hX : 0 < X)
+    (hu₂ : (1 : Real) ≤ u₂.eval X)
+    (h : LeftGrowsAt (EMLTree.eml u₁ u₂) X) :
+    log (X + X) ≤ u₁.eval X := by
+  have hlog₂ : (0 : Real) ≤ log (u₂.eval X) := by
+    have h1 := log_le_log_of_le zero_lt_one_ax hu₂
+    rw [log_one] at h1
+    exact h1
+  have hd := leftGrows_descends h
+  have hmid : X + X ≤ X + X + log (u₂.eval X) := by
+    rcases (le_iff_lt_or_eq 0 (log (u₂.eval X))).mp hlog₂ with hl | hl
+    · exact le_of_lt (lt_add_of_pos_right hl)
+    · rw [← hl]
+      have ec : X + X + (0 : Real) = X + X := by mach_ring
+      rw [ec]
+      exact le_refl _
+  have hstep : X + X ≤ exp (u₁.eval X) := le_trans hmid hd
+  have h2 := log_le_log_of_le (add_pos_real hX hX) hstep
+  rw [log_exp] at h2
+  exact h2
+
+/-! ## V4 — this retro-explains the depth-2 table
+
+The table's rows split into "cheap" (`u1`, `u2`) and "doubly-exponential" (`u3`, `u4`). **That split
+was never about the row — it was about ONE LEAF, two levels down.** -/
+
+/-- **A `const` at the left-left slot cannot grow**, once `X` passes `exp a`. This is `u1` and `u2`:
+both have `const` there, and neither ever grew. -/
+theorem leftGrowsAt_const_left_false {a X : Real} {w : EMLTree}
+    (hX : 0 < X) (hw : (1 : Real) ≤ w.eval X) (ha : exp a ≤ X) :
+    ¬ LeftGrowsAt (EMLTree.eml (EMLTree.const a) w) X := by
+  intro h
+  have hd := leftGrows_descends h
+  have hva : (EMLTree.const a).eval X = a := rfl
+  rw [hva] at hd
+  have hlog : (0 : Real) ≤ log (w.eval X) := by
+    have h1 := log_le_log_of_le zero_lt_one_ax hw
+    rw [log_one] at h1
+    exact h1
+  have hmid : X + X ≤ X + X + log (w.eval X) := by
+    rcases (le_iff_lt_or_eq 0 (log (w.eval X))).mp hlog with hl | hl
+    · exact le_of_lt (lt_add_of_pos_right hl)
+    · rw [← hl]
+      have ec : X + X + (0 : Real) = X + X := by mach_ring
+      rw [ec]; exact le_refl _
+  exact lt_irrefl_ax X (lt_of_lt_of_le (lt_add_of_pos_right hX)
+    (le_trans (le_trans hmid hd) ha))
+
+/-- **A `var` at the left-left slot DOES grow** — at the very point the `u3` row already uses. This
+is `u3` and `u4`: both have `var` there, and both were the doubly-exponential rows. -/
+theorem leftGrowsAt_var_left_holds (c K M : Real) :
+    LeftGrowsAt (EMLTree.eml EMLTree.var (EMLTree.const c)) (u3PointS (log c) K M) := by
+  show u3PointS (log c) K M + u3PointS (log c) K M
+    ≤ exp (u3PointS (log c) K M) - log c
+  apply le_of_lt
+  apply lt_of_sub_pos
+  have ee : (exp (u3PointS (log c) K M) - log c)
+      - (u3PointS (log c) K M + u3PointS (log c) K M)
+      = exp (u3PointS (log c) K M)
+        - ((u3PointS (log c) K M + u3PointS (log c) K M) + log c) := by
+    mach_mpoly [exp (u3PointS (log c) K M), u3PointS (log c) K M, log c]
+  rw [ee]
+  exact sub_pos_of_lt (u3PointS_dominates (log c) K M)
+
 end Real
 end MachLib
