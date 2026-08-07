@@ -296,5 +296,222 @@ theorem u3_w4_absurd {c₂ K : Real}
   rw [m] at hfinal
   exact lt_irrefl_ax _ hfinal
 
+/-! ## `u3 × w3`-small — the LAST cell of the depth-2 table
+
+Its child `W x = exp x − L′` **has a parameter**, and for `L′ < 0` it EXCEEDS `exp x`, so
+`u3 × w4`'s parameter-free bound `log (W X) < X` fails. **The fix is a third exponential in the
+point and a slack term in the bound.**
+
+> ### ⚠ Closing this settles **depth-2 case 9 ONLY.** Case 9 at depth ≥ 3 is untouched, and `1/x ∉ EML` stays exactly as open. A finite table being finished is not the frontier moving. -/
+
+/-- The point with slack: `4 + exp L + exp K + exp M`. A `def`, so the normaliser sees one atom. -/
+noncomputable def u3PointS (L K M : Real) : Real :=
+  (1 + 1) + ((1 + 1) + exp L + exp K + exp M)
+
+theorem two_lt_u3PointS (L K M : Real) : (1 : Real) + 1 < u3PointS L K M := by
+  show (1 : Real) + 1 < (1 + 1) + ((1 + 1) + exp L + exp K + exp M)
+  exact lt_add_of_pos_right (add_pos_real (add_pos_real (add_pos_real one_add_one_pos
+    (exp_pos L)) (exp_pos K)) (exp_pos M))
+
+theorem u3PointS_pos (L K M : Real) : 0 < u3PointS L K M :=
+  lt_trans_ax one_add_one_pos (two_lt_u3PointS L K M)
+
+theorem one_lt_u3PointS (L K M : Real) : (1 : Real) < u3PointS L K M :=
+  lt_trans_ax one_lt_one_plus_one (two_lt_u3PointS L K M)
+
+/-- `X + X + L < exp X` at the slack point. Same shape as `u3Point_dominates`; the extra `exp M`
+only helps. -/
+theorem u3PointS_dominates (L K M : Real) :
+    u3PointS L K M + u3PointS L K M + L < exp (u3PointS L K M) := by
+  have hb : (0 : Real) < (1 + 1) + exp L + exp K + exp M :=
+    add_pos_real (add_pos_real (add_pos_real one_add_one_pos (exp_pos L)) (exp_pos K)) (exp_pos M)
+  have hsplit : exp (u3PointS L K M) = exp (1 + 1) * exp ((1 + 1) + exp L + exp K + exp M) := by
+    show exp ((1 + 1) + ((1 + 1) + exp L + exp K + exp M)) = _
+    exact exp_add _ _
+  rw [hsplit]
+  have h4b : ((1 + 1 : Real) * (1 + 1)) * ((1 + 1) + exp L + exp K + exp M)
+      < exp (1 + 1) * exp ((1 + 1) + exp L + exp K + exp M) :=
+    lt_trans_ax (mul_lt_mul_of_pos_right exp_two_gt_four hb)
+      (mul_lt_mul_pos_left (exp_grows_strictly_thm ((1 + 1) + exp L + exp K + exp M))
+        (exp_pos (1 + 1)))
+  apply lt_trans_ax _ h4b
+  show ((1 + 1) + ((1 + 1) + exp L + exp K + exp M))
+    + ((1 + 1) + ((1 + 1) + exp L + exp K + exp M)) + L < _
+  apply lt_of_sub_pos
+  have e : ((1 + 1 : Real) * (1 + 1)) * ((1 + 1) + exp L + exp K + exp M)
+      - (((1 + 1 : Real) + ((1 + 1) + exp L + exp K + exp M))
+        + ((1 + 1 : Real) + ((1 + 1) + exp L + exp K + exp M)) + L)
+      = ((exp L + exp L) - L) + (exp K + exp K) + (exp M + exp M) := by
+    mach_mpoly [exp L, exp K, exp M, L]
+  rw [e]
+  exact add_pos_real (add_pos_real (sub_pos_of_lt (two_exp_gt_self L))
+    (add_pos_real (exp_pos K) (exp_pos K))) (add_pos_real (exp_pos M) (exp_pos M))
+
+/-- **`exp X + D < exp (X + D)`** for `0 < D` and `1 < exp X`.
+
+**The strict `1 < exp X` is load-bearing:** at `exp X = 1` the final step reads `D < D` and the
+statement fails. Caught by the elaborator, not by review.
+
+`exp (X+D) = exp X · exp D > exp X · (1 + D) = exp X + D·exp X ≥ exp X + D`. **Uses
+`exp_gt_one_plus_self` directly** — the disclosed tangent axiom, deliberately. -/
+theorem exp_add_slack {X D : Real} (hD : 0 < D) (hX : (1 : Real) < exp X) :
+    exp X + D < exp (X + D) := by
+  rw [exp_add]
+  have h1 : exp X * (1 + D) < exp X * exp D :=
+    mul_lt_mul_pos_left (exp_gt_one_plus_self D hD) (exp_pos X)
+  apply lt_trans_ax _ h1
+  apply lt_of_sub_pos
+  have e : exp X * (1 + D) - (exp X + D) = (exp X * D) - D := by
+    mach_mpoly [exp X, D]
+  rw [e]
+  apply sub_pos_of_lt
+  have hh := mul_lt_mul_of_pos_right hX hD
+  have e1 : (1 : Real) * D = D := by mach_ring
+  rw [e1] at hh
+  exact hh
+
+/-- **The assembly with slack.** `X·A − X·B > X³ − X² − X·D = X·(X² − X − D) > K`. -/
+theorem final_assembly_slack {X A B K D : Real} (hX : 0 < X)
+    (hbig : X * X < A) (hsmall : B < X + D) (hK : K < X * ((X * X) - X - D)) :
+    K < X * A - X * B := by
+  apply lt_of_sub_pos
+  have e : (X * A - X * B) - K
+      = (X * (X + D) - X * B) + (X * A - X * (X * X)) + (X * ((X * X) - X - D) - K) := by
+    mach_mpoly [X, A, B, K, D]
+  rw [e]
+  exact add_pos_real (add_pos_real (sub_pos_of_lt (mul_lt_mul_pos_left hsmall hX))
+    (sub_pos_of_lt (mul_lt_mul_pos_left hbig hX))) (sub_pos_of_lt hK)
+
+/-- **`u3` over `w3` is impossible on the small branch too** — **the last cell of the depth-2 table.**
+
+Point `X := 4 + exp L + exp K + exp (−L′)`. The child may EXCEED `exp X` (when `L′ < 0`), so the
+bound carries a slack: `log (W X) < X + exp (−L′)`. -/
+theorem u3_w3_small_absurd {c₂ c' K : Real} (hc : log c' ≤ exp 1)
+    (e : u3PointS (log c₂) K (-log c')
+          * (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c₂))
+              (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval
+            (u3PointS (log c₂) K (-log c')) = K) :
+    False := by
+  have hX := u3PointS_pos (log c₂) K (-log c')
+  have hX2 := two_lt_u3PointS (log c₂) K (-log c')
+  have hD : (0 : Real) < exp (-log c') := exp_pos _
+  have m := u3_master _ e
+  have wv : (EMLTree.eml EMLTree.var (EMLTree.const c')).eval (u3PointS (log c₂) K (-log c'))
+      = exp (u3PointS (log c₂) K (-log c')) - log c' := rfl
+  rw [wv] at m
+  -- exp X > 1, and exp X > exp 1 ≥ log c', so the child is positive
+  have hexpX1 : (1 : Real) < exp (u3PointS (log c₂) K (-log c')) := by
+    have h := exp_lt hX
+    rw [exp_zero] at h
+    exact h
+  have hexpXgt : exp 1 < exp (u3PointS (log c₂) K (-log c')) :=
+    exp_lt (one_lt_u3PointS (log c₂) K (-log c'))
+  have hWpos : (0 : Real) < exp (u3PointS (log c₂) K (-log c')) - log c' :=
+    sub_pos_of_lt (lt_of_le_of_lt hc hexpXgt)
+  -- log (W X) < X + D
+  have hsmall : log (exp (u3PointS (log c₂) K (-log c')) - log c')
+      < u3PointS (log c₂) K (-log c') + exp (-log c') := by
+    have hstep : exp (u3PointS (log c₂) K (-log c')) - log c'
+        < exp (u3PointS (log c₂) K (-log c') + exp (-log c')) := by
+      apply lt_trans_ax _ (exp_add_slack hD hexpX1)
+      apply lt_of_sub_pos
+      have ee : (exp (u3PointS (log c₂) K (-log c')) + exp (-log c'))
+          - (exp (u3PointS (log c₂) K (-log c')) - log c')
+          = exp (-log c') + log c' := by
+        mach_mpoly [exp (u3PointS (log c₂) K (-log c')), exp (-log c'), log c']
+      rw [ee]
+      apply lt_of_sub_pos
+      have ee2 : (exp (-log c') + log c') - 0 = exp (-log c') - (-log c') := by
+        mach_mpoly [exp (-log c'), log c']
+      rw [ee2]
+      exact sub_pos_of_lt (exp_grows_strictly_thm (-log c'))
+    have h := log_lt_log hWpos hstep
+    rw [log_exp] at h
+    exact h
+  -- X·X < exp (exp X − L)
+  have hbig : u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c')
+      < exp (exp (u3PointS (log c₂) K (-log c')) - log c₂) := by
+    have hgap : u3PointS (log c₂) K (-log c') + u3PointS (log c₂) K (-log c')
+        < exp (u3PointS (log c₂) K (-log c')) - log c₂ := by
+      apply lt_of_sub_pos
+      have ee : (exp (u3PointS (log c₂) K (-log c')) - log c₂)
+          - (u3PointS (log c₂) K (-log c') + u3PointS (log c₂) K (-log c'))
+          = exp (u3PointS (log c₂) K (-log c'))
+            - ((u3PointS (log c₂) K (-log c') + u3PointS (log c₂) K (-log c')) + log c₂) := by
+        mach_mpoly [exp (u3PointS (log c₂) K (-log c')), u3PointS (log c₂) K (-log c'), log c₂]
+      rw [ee]
+      exact sub_pos_of_lt (u3PointS_dominates (log c₂) K (-log c'))
+    apply lt_trans_ax _ (exp_lt hgap)
+    rw [exp_add]
+    exact square_lt_square hX (exp_grows_strictly_thm (u3PointS (log c₂) K (-log c')))
+  -- K < X·(X² − X − D)
+  have hXgtD : exp (-log c') + (1 + 1) + 1 + 1 < u3PointS (log c₂) K (-log c') := by
+    show _ < (1 + 1) + ((1 + 1) + exp (log c₂) + exp K + exp (-log c'))
+    apply lt_of_sub_pos
+    have ee : ((1 + 1 : Real) + ((1 + 1) + exp (log c₂) + exp K + exp (-log c')))
+        - (exp (-log c') + (1 + 1) + 1 + 1) = exp (log c₂) + exp K := by
+      mach_mpoly [exp (log c₂), exp K, exp (-log c')]
+    rw [ee]
+    exact add_pos_real (exp_pos _) (exp_pos K)
+  have hcore : (1 : Real) < (u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c'))
+      - u3PointS (log c₂) K (-log c') - exp (-log c') := by
+    -- X² > X·(D + 4) ≥ X·D + 4X ≥ D + X + 1 + 1
+    have hXbig : exp (-log c') + (1 + 1) + 1 + 1 < u3PointS (log c₂) K (-log c') := hXgtD
+    have hsq : u3PointS (log c₂) K (-log c') * (exp (-log c') + (1 + 1) + 1 + 1)
+        < u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c') :=
+      mul_lt_mul_pos_left hXbig hX
+    apply lt_trans_ax _ (by
+      apply lt_of_sub_pos
+      have ee : ((u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c'))
+          - u3PointS (log c₂) K (-log c') - exp (-log c'))
+          - ((u3PointS (log c₂) K (-log c') * (exp (-log c') + (1 + 1) + 1 + 1))
+            - u3PointS (log c₂) K (-log c') - exp (-log c'))
+          = (u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c'))
+            - (u3PointS (log c₂) K (-log c') * (exp (-log c') + (1 + 1) + 1 + 1)) := by
+        mach_mpoly [u3PointS (log c₂) K (-log c'), exp (-log c')]
+      rw [ee]
+      exact sub_pos_of_lt hsq)
+    -- 1 < X·(D+4) − X − D
+    apply lt_of_sub_pos
+    have ee : ((u3PointS (log c₂) K (-log c') * (exp (-log c') + (1 + 1) + 1 + 1))
+        - u3PointS (log c₂) K (-log c') - exp (-log c')) - 1
+        = (u3PointS (log c₂) K (-log c') * exp (-log c') - exp (-log c'))
+          + (u3PointS (log c₂) K (-log c') + u3PointS (log c₂) K (-log c'))
+          + (u3PointS (log c₂) K (-log c') - 1) := by
+      mach_mpoly [u3PointS (log c₂) K (-log c'), exp (-log c')]
+    rw [ee]
+    have hd1 : exp (-log c') * 1 < exp (-log c') * u3PointS (log c₂) K (-log c') :=
+      mul_lt_mul_pos_left (one_lt_u3PointS (log c₂) K (-log c')) hD
+    have hd2 : (0 : Real) < u3PointS (log c₂) K (-log c') * exp (-log c') - exp (-log c') := by
+      apply sub_pos_of_lt
+      have e1 : exp (-log c') * 1 = exp (-log c') := by mach_ring
+      have e2 : exp (-log c') * u3PointS (log c₂) K (-log c')
+          = u3PointS (log c₂) K (-log c') * exp (-log c') := by mach_ring
+      rw [e1, e2] at hd1
+      exact hd1
+    exact add_pos_real (add_pos_real hd2 (add_pos_real hX hX))
+      (sub_pos_of_lt (one_lt_u3PointS (log c₂) K (-log c')))
+  have hK : K < u3PointS (log c₂) K (-log c')
+      * ((u3PointS (log c₂) K (-log c') * u3PointS (log c₂) K (-log c'))
+        - u3PointS (log c₂) K (-log c') - exp (-log c')) := by
+    have hKX : K < u3PointS (log c₂) K (-log c') := by
+      apply lt_trans_ax (exp_grows_strictly_thm K)
+      show exp K < (1 + 1) + ((1 + 1) + exp (log c₂) + exp K + exp (-log c'))
+      apply lt_of_sub_pos
+      have ee : ((1 + 1 : Real) + ((1 + 1) + exp (log c₂) + exp K + exp (-log c'))) - exp K
+          = ((1 + 1) + (1 + 1)) + exp (log c₂) + exp (-log c') := by
+        mach_mpoly [exp (log c₂), exp K, exp (-log c')]
+      rw [ee]
+      exact add_pos_real (add_pos_real (add_pos_real one_add_one_pos one_add_one_pos)
+        (exp_pos _)) (exp_pos _)
+    apply lt_trans_ax hKX
+    have h := mul_lt_mul_pos_left hcore hX
+    have e1 : u3PointS (log c₂) K (-log c') * 1 = u3PointS (log c₂) K (-log c') := by mach_ring
+    rw [e1] at h
+    exact h
+  have hfinal := final_assembly_slack hX hbig hsmall hK
+  rw [m] at hfinal
+  exact lt_irrefl_ax _ hfinal
+
 end Real
 end MachLib
