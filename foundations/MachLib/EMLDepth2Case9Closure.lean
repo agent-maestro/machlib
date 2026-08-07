@@ -1005,5 +1005,157 @@ theorem depth3_case9_absurd {a b c d K : Real}
     exact lt_trans_ax hKX hcube
   exact one_point_of_bounds hX hL hR hK e
 
+/-! ## From one shape to a CLASS — at every depth
+
+`depth3_case9_absurd` closes one shape. Its two ingredients are stated on the **tree**, not on a
+chosen point, so they abstract. -/
+
+/-- **`u` grows at arbitrarily large points.** -/
+def GrowsUnboundedly (u : EMLTree) : Prop := ∀ Y : Real, ∃ X : Real, Y < X ∧ LeftGrowsAt u X
+
+/-- **THE CLASS THEOREM — any depth.** A tree that grows unboundedly, over a constant-valued positive
+right child, reaches no `K/x`.
+
+The point is chosen **after** the parameters: `Y := β + exp K + 1 + 1`, and any `X > Y` discharges
+all three obligations at once. -/
+theorem case9_no_Kx_of_growsUnboundedly {u w : EMLTree} {β K : Real}
+    (hβ : 0 < β) (hwconst : ∀ x : Real, w.eval x = β)
+    (hgrow : GrowsUnboundedly u)
+    (e : ∀ x : Real, 0 < x → x * (EMLTree.eml u w).eval x = K) :
+    False := by
+  obtain ⟨X, hYX, hL⟩ := hgrow (β + exp K + 1 + 1)
+  -- X exceeds each of β, exp K, and 1+1
+  have hβX : β < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp K + 1 + 1) - β = exp K + 1 + 1 := by mach_mpoly [β, exp K]
+    rw [ee]
+    exact add_pos_real (add_pos_real (exp_pos K) zero_lt_one_ax) zero_lt_one_ax
+  have hKX : exp K < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp K + 1 + 1) - exp K = β + 1 + 1 := by mach_mpoly [β, exp K]
+    rw [ee]
+    exact add_pos_real (add_pos_real hβ zero_lt_one_ax) zero_lt_one_ax
+  have h2X : (1 : Real) + 1 < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp K + 1 + 1) - (1 + 1) = β + exp K := by mach_mpoly [β, exp K]
+    rw [ee]
+    exact add_pos_real hβ (exp_pos K)
+  have hX : 0 < X := lt_trans_ax one_add_one_pos h2X
+  -- the three obligations
+  have hR : RightBoundedAt w X := by
+    refine ⟨by rw [hwconst]; exact hβ, ?_⟩
+    rw [hwconst]
+    exact le_of_lt (lt_trans_ax hβX (exp_grows_strictly_thm X))
+  have hK : K < X * (X * X) - X * X := by
+    have hcube := lt_cube_of_two_lt h2X
+    have ecube : (X * X) * (X - 1) = X * (X * X) - X * X := by mach_mpoly [X]
+    rw [ecube] at hcube
+    exact lt_trans_ax (lt_trans_ax (exp_grows_strictly_thm K) hKX) hcube
+  exact one_point_of_bounds hX hL hR hK (e X hX)
+
+/-- **Base case: `eml var (const c)` grows unboundedly.** -/
+theorem growsUnboundedly_base (c : Real) :
+    GrowsUnboundedly (EMLTree.eml EMLTree.var (EMLTree.const c)) := by
+  intro Y
+  refine ⟨u3PointS (log c) 0 Y, ?_, leftGrowsAt_var_left_holds c 0 Y⟩
+  show Y < (1 + 1) + ((1 + 1) + exp (log c) + exp 0 + exp Y)
+  apply lt_trans_ax (exp_grows_strictly_thm Y)
+  apply lt_of_sub_pos
+  have ee : ((1 + 1 : Real) + ((1 + 1) + exp (log c) + exp 0 + exp Y)) - exp Y
+      = ((1 + 1) + (1 + 1)) + exp (log c) + exp 0 := by
+    mach_mpoly [exp (log c), exp 0, exp Y]
+  rw [ee]
+  exact add_pos_real (add_pos_real (add_pos_real one_add_one_pos one_add_one_pos)
+    (exp_pos _)) (exp_pos 0)
+
+/-- **PROPAGATION: the class is closed under `eml · (const d)`.**
+
+`exp (u.eval X) ≥ exp X · exp X > X·X`, and `X·X ≥ X + X + log d` once `X` passes
+`(1+1) + exp (log d)`. **So a `var`-rooted left spine with `const` right children grows at EVERY
+depth.** -/
+theorem growsUnboundedly_eml_const {u : EMLTree} (d : Real)
+    (h : GrowsUnboundedly u) : GrowsUnboundedly (EMLTree.eml u (EMLTree.const d)) := by
+  intro Y
+  obtain ⟨X, hYX, hL⟩ := h (exp Y + exp (log d) + (1 + 1) + (1 + 1))
+  -- X exceeds Y, 1+1, and log d + 2
+  have hY : Y < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y)
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (exp Y + exp (log d) + (1 + 1) + (1 + 1)) - exp Y
+        = exp (log d) + (1 + 1) + (1 + 1) := by mach_mpoly [exp Y, exp (log d)]
+    rw [ee]
+    exact add_pos_real (add_pos_real (exp_pos _) one_add_one_pos) one_add_one_pos
+  have h2X : (1 : Real) + 1 < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (exp Y + exp (log d) + (1 + 1) + (1 + 1)) - (1 + 1)
+        = exp Y + exp (log d) + (1 + 1) := by mach_mpoly [exp Y, exp (log d)]
+    rw [ee]
+    exact add_pos_real (add_pos_real (exp_pos Y) (exp_pos _)) one_add_one_pos
+  have hX : 0 < X := lt_trans_ax one_add_one_pos h2X
+  have hX1 : (1 : Real) ≤ X := le_of_lt (lt_trans_ax one_lt_one_plus_one h2X)
+  have hdX : log d < X - (1 + 1) := by
+    apply lt_trans_ax (exp_grows_strictly_thm (log d))
+    apply lt_of_sub_pos
+    have ee : (X - (1 + 1)) - exp (log d) = X - (exp (log d) + (1 + 1)) := by
+      mach_mpoly [X, exp (log d)]
+    rw [ee]
+    apply sub_pos_of_lt
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee2 : (exp Y + exp (log d) + (1 + 1) + (1 + 1)) - (exp (log d) + (1 + 1))
+        = exp Y + (1 + 1) := by mach_mpoly [exp Y, exp (log d)]
+    rw [ee2]
+    exact add_pos_real (exp_pos Y) one_add_one_pos
+  -- X·X > X + X + log d
+  have hXX : X + X + log d < X * X := by
+    apply lt_of_sub_pos
+    have ee : X * X - (X + X + log d) = (X * (X - (1 + 1)) - (X - (1 + 1)))
+        + ((X - (1 + 1)) - log d) := by mach_mpoly [X, log d]
+    rw [ee]
+    have hstep : (0 : Real) ≤ X * (X - (1 + 1)) - (X - (1 + 1)) := by
+      apply sub_nonneg_of_le
+      have hpos : (0 : Real) < X - (1 + 1) := sub_pos_of_lt h2X
+      rcases (le_iff_lt_or_eq 1 X).mp hX1 with hlt | heq
+      · have hh := mul_lt_mul_of_pos_right hlt hpos
+        have e1 : (1 : Real) * (X - (1 + 1)) = X - (1 + 1) := by mach_ring
+        rw [e1] at hh
+        exact le_of_lt hh
+      · have e2 : X * (X - (1 + 1)) = X - (1 + 1) := by rw [← heq]; mach_ring
+        rw [e2]
+        exact le_refl _
+    exact add_pos_of_nonneg_of_pos hstep (sub_pos_of_lt hdX)
+  -- assemble
+  refine ⟨X, hY, ?_⟩
+  show X + X ≤ exp (u.eval X) - log d
+  apply le_of_lt
+  apply lt_of_sub_pos
+  have ee : (exp (u.eval X) - log d) - (X + X)
+      = exp (u.eval X) - (X + X + log d) := by
+    mach_mpoly [exp (u.eval X), X, log d]
+  rw [ee]
+  apply sub_pos_of_lt
+  apply lt_trans_ax hXX
+  have hsq : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+  have hadd : exp X * exp X = exp (X + X) := (exp_add X X).symm
+  rw [hadd] at hsq
+  exact lt_of_lt_of_le hsq (exp_monotone hL)
+
+/-- **Consequence: instances at every depth.** The depth-2 member is `eml var (const c)`; each
+`eml · (const d)` adds a level. `depth3_case9_absurd`'s left child is the depth-2 member. -/
+theorem growsUnboundedly_tower_depth2 (c d : Real) :
+    GrowsUnboundedly (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c)) (EMLTree.const d)) :=
+  growsUnboundedly_eml_const d (growsUnboundedly_base c)
+
+/-- One more level, to show the tower does not stop. -/
+theorem growsUnboundedly_tower_depth3 (c d e : Real) :
+    GrowsUnboundedly (EMLTree.eml (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c))
+      (EMLTree.const d)) (EMLTree.const e)) :=
+  growsUnboundedly_eml_const e (growsUnboundedly_tower_depth2 c d)
+
 end Real
 end MachLib
