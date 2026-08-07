@@ -1530,5 +1530,129 @@ theorem expBoundedEventually_const_var (a : Real) :
     ExpBoundedEventually (EMLTree.eml (EMLTree.const a) EMLTree.var) :=
   expBoundedEventually_eml (subLinearEventually_const a) logNonnegEventually_var
 
+/-! ## The last descent level — and COMPLEMENTARITY -/
+
+/-- `v.eval X ≤ log X` from some point on. -/
+def SubLogEventually (v : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → v.eval X ≤ log X
+
+/-- `const c` is sub-log: `log X ≥ c` once `X > exp c`. -/
+theorem subLogEventually_const (c : Real) : SubLogEventually (EMLTree.const c) :=
+  ⟨exp c, fun X hX => by
+    have hv : (EMLTree.const c).eval X = c := rfl
+    rw [hv]
+    have hXpos : (0 : Real) < X := lt_trans_ax (exp_pos c) hX
+    have h := log_le_log_of_le (exp_pos c) (le_of_lt hX)
+    rw [log_exp] at h
+    exact h⟩
+
+/-- **The descent, one level deeper.** -/
+theorem subLinearEventually_eml {v₁ v₂ : EMLTree}
+    (h₁ : SubLogEventually v₁) (h₂ : LogNonnegEventually v₂) :
+    SubLinearEventually (EMLTree.eml v₁ v₂) := by
+  obtain ⟨Y₁, hY₁⟩ := h₁
+  obtain ⟨Y₂, hY₂⟩ := h₂
+  refine ⟨exp Y₁ + exp Y₂, fun X hX => ?_⟩
+  have hX1 : Y₁ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₁)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂) - exp Y₁ = exp Y₂ := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]; exact exp_pos Y₂
+  have hX2 : Y₂ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₂)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂) - exp Y₂ = exp Y₁ := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]; exact exp_pos Y₁
+  have hXpos : (0 : Real) < X :=
+    lt_trans_ax (add_pos_real (exp_pos Y₁) (exp_pos Y₂)) hX
+  show exp (v₁.eval X) - log (v₂.eval X) ≤ X
+  have hleft : exp (v₁.eval X) ≤ X := by
+    have h := exp_monotone (hY₁ X hX1)
+    rw [exp_log hXpos] at h
+    exact h
+  have hright : (0 : Real) ≤ log (v₂.eval X) := hY₂ X hX2
+  apply le_trans _ hleft
+  rcases (le_iff_lt_or_eq 0 (log (v₂.eval X))).mp hright with h | h
+  · apply le_of_lt
+    apply lt_of_sub_pos
+    have ee : exp (v₁.eval X) - (exp (v₁.eval X) - log (v₂.eval X))
+        = log (v₂.eval X) := by mach_mpoly [exp (v₁.eval X), log (v₂.eval X)]
+    rw [ee]; exact h
+  · rw [← h]
+    have ee : exp (v₁.eval X) - (0 : Real) = exp (v₁.eval X) := by mach_ring
+    rw [ee]; exact le_refl _
+
+/-- The core of B3, **over bare reals** — the point is an atom, so `mach_mpoly` copes.
+
+`exp X − L > X` whenever `X > 4`, `L < X`, and `exp X > 4(X−2)`. -/
+theorem not_sublinear_core {X L : Real}
+    (h4 : ((1 + 1 : Real) * (1 + 1)) < X) (hL : L < X)
+    (hgap : ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) < exp X) :
+    X < exp X - L := by
+  apply lt_of_sub_pos
+  have ee : (exp X - L) - X
+      = (exp X - ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)))
+        + (((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - X - X)
+        + (X - L) := by
+    mach_mpoly [exp X, X, L]
+  rw [ee]
+  have hmid : (0 : Real) < ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - X - X := by
+    apply lt_of_sub_pos
+    have ee2 : (((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - X - X) - 0
+        = (1 + 1 : Real) * (X - ((1 + 1 : Real) * (1 + 1))) := by
+      mach_mpoly [X]
+    rw [ee2]
+    exact mul_pos one_add_one_pos (sub_pos_of_lt h4)
+  exact add_pos_real (add_pos_real (sub_pos_of_lt hgap) hmid) (sub_pos_of_lt hL)
+
+/-- The point used for B3. **A `def`, so it is one atom.** -/
+noncomputable def b3Point (Y L : Real) : Real :=
+  exp Y + exp L + ((1 + 1) * (1 + 1)) + 1
+
+theorem lt_b3Point_Y (Y L : Real) : Y < b3Point Y L := by
+  apply lt_trans_ax (exp_grows_strictly_thm Y)
+  show exp Y < exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1) - exp Y
+      = exp L + ((1 + 1) * (1 + 1)) + 1 := by mach_mpoly [exp Y, exp L]
+  rw [ee]
+  exact add_pos_real (add_pos_real (exp_pos L) (mul_pos one_add_one_pos one_add_one_pos))
+    zero_lt_one_ax
+
+theorem lt_b3Point_four (Y L : Real) : ((1 + 1 : Real) * (1 + 1)) < b3Point Y L := by
+  show ((1 + 1 : Real) * (1 + 1)) < exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1) - ((1 + 1 : Real) * (1 + 1))
+      = exp Y + exp L + 1 := by mach_mpoly [exp Y, exp L]
+  rw [ee]
+  exact add_pos_real (add_pos_real (exp_pos Y) (exp_pos L)) zero_lt_one_ax
+
+theorem lt_b3Point_L (Y L : Real) : L < b3Point Y L := by
+  apply lt_trans_ax (exp_grows_strictly_thm L)
+  show exp L < exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp L + ((1 + 1 : Real) * (1 + 1)) + 1) - exp L
+      = exp Y + ((1 + 1) * (1 + 1)) + 1 := by mach_mpoly [exp Y, exp L]
+  rw [ee]
+  exact add_pos_real (add_pos_real (exp_pos Y) (mul_pos one_add_one_pos one_add_one_pos))
+    zero_lt_one_ax
+
+/-- **B3 — `eml var (const c)` is NOT sub-linear.** `exp X` outruns `X`.
+
+*(It IS `exp`-bounded when `0 ≤ log c` — `exp`-bounded is the weaker condition, and that is the
+whole point of the hierarchy.)* -/
+theorem not_subLinearEventually_var_const (c : Real) :
+    ¬ SubLinearEventually (EMLTree.eml EMLTree.var (EMLTree.const c)) := by
+  rintro ⟨Y, hY⟩
+  have hle := hY (b3Point Y (log c)) (lt_b3Point_Y Y (log c))
+  have hv : (EMLTree.eml EMLTree.var (EMLTree.const c)).eval (b3Point Y (log c))
+      = exp (b3Point Y (log c)) - log c := rfl
+  rw [hv] at hle
+  exact lt_irrefl_ax _ (lt_of_lt_of_le
+    (not_sublinear_core (lt_b3Point_four Y (log c)) (lt_b3Point_L Y (log c))
+      (exp_gt_four_sub_two (b3Point Y (log c)))) hle)
+
 end Real
 end MachLib
