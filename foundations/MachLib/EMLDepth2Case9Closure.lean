@@ -2022,5 +2022,94 @@ theorem case9_no_Kx_of_grows_and_logBounded {u w : EMLTree} {K : Real}
     exact lt_trans_ax hKX hcube
   exact one_point_log hX hL (hY X hYX) hK (e X hX)
 
+/-! ## ▶ `1/x` **IS** `m·x` — the residue was the problem all along
+
+Construction supplied by an outside reader; hand-checked numerically before formalising.
+
+With `c := log (log m)` (so `exp c = log m`, needing `m > 1`), **one tree shape does both
+directions**:
+
+```
+eml (eml (const c) S) (const 0)
+```
+
+> ### The outer `const 0` right child is load-bearing **via TOTALISATION** — `log 0 = 0` makes the outer node a bare `exp`. The convention that has been a nuisance all arm here supplies the construction. -/
+
+/-- `log 0 = 0` — the totalisation, isolated because the constructions below turn on it. -/
+theorem log_zero_totalised : log (0 : Real) = 0 := log_nonpos (le_refl 0)
+
+/-- **`m·x ∈ EML` ⟹ `1/x ∈ EML`.** -/
+theorem inv_x_of_mx {T : EMLTree} {m : Real} (hm : 1 < m)
+    (hT : ∀ x : Real, 0 < x → T.eval x = m * x) :
+    ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const (log (log m))) T) (EMLTree.const 0)).eval x
+        = 1 / x := by
+  intro x hx
+  have hmpos : (0 : Real) < m := lt_trans_ax zero_lt_one_ax hm
+  have hlogm : (0 : Real) < log m := by
+    have h := log_lt_log zero_lt_one_ax hm
+    rw [log_one] at h
+    exact h
+  -- inner node = −log x
+  have hinner : (EMLTree.eml (EMLTree.const (log (log m))) T).eval x = -log x := by
+    show exp (log (log m)) - log (T.eval x) = -log x
+    rw [exp_log hlogm, hT x hx, log_mul hmpos hx]
+    mach_mpoly [log m, log x]
+  -- outer node = exp(−log x) = 1/x
+  show exp ((EMLTree.eml (EMLTree.const (log (log m))) T).eval x)
+    - log ((EMLTree.const (0 : Real)).eval x) = 1 / x
+  have hz : (EMLTree.const (0 : Real)).eval x = 0 := rfl
+  rw [hinner, hz, log_zero_totalised, exp_neg_inv, exp_log hx]
+  mach_ring
+
+/-- **`1/x ∈ EML` ⟹ `m·x ∈ EML`, for EVERY `m > 1`.** -/
+theorem mx_of_inv_x {R : EMLTree} {m : Real} (hm : 1 < m)
+    (hR : ∀ x : Real, 0 < x → R.eval x = 1 / x) :
+    ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const (log (log m))) R) (EMLTree.const 0)).eval x
+        = m * x := by
+  intro x hx
+  have hmpos : (0 : Real) < m := lt_trans_ax zero_lt_one_ax hm
+  have hlogm : (0 : Real) < log m := by
+    have h := log_lt_log zero_lt_one_ax hm
+    rw [log_one] at h
+    exact h
+  -- log (1/x) = −log x
+  have hloginv : log ((1 : Real) / x) = -log x := by
+    have e : (1 : Real) / x = exp (-log x) := by rw [exp_neg_inv, exp_log hx]
+    rw [e, log_exp]
+  -- inner node = log (m·x)
+  have hinner : (EMLTree.eml (EMLTree.const (log (log m))) R).eval x = log (m * x) := by
+    show exp (log (log m)) - log (R.eval x) = log (m * x)
+    rw [exp_log hlogm, hR x hx, hloginv, log_mul hmpos hx]
+    mach_mpoly [log m, log x]
+  show exp ((EMLTree.eml (EMLTree.const (log (log m))) R).eval x)
+    - log ((EMLTree.const (0 : Real)).eval x) = m * x
+  have hz : (EMLTree.const (0 : Real)).eval x = 0 := rfl
+  rw [hinner, hz, log_zero_totalised, exp_log (mul_pos hmpos hx)]
+  mach_ring
+
+/-- **THE EQUIVALENCE, and the ALL-OR-NOTHING slope dichotomy.**
+
+> ### `1/x ∈ EML` ⟺ some slope `m > 1` is reachable ⟺ EVERY slope `m > 1` is reachable.
+>
+> **So `m·x` is not a residue of the `1/x` question — it IS the question**, and either no slope
+> above 1 is reachable or all of them are. -/
+theorem inv_x_iff_some_mx :
+    (∃ R : EMLTree, ∀ x : Real, 0 < x → R.eval x = 1 / x)
+      ↔ (∃ (T : EMLTree) (m : Real), 1 < m ∧ ∀ x : Real, 0 < x → T.eval x = m * x) := by
+  constructor
+  · rintro ⟨R, hR⟩
+    exact ⟨_, 1 + 1, lt_add_of_pos_right zero_lt_one_ax,
+      mx_of_inv_x (lt_add_of_pos_right zero_lt_one_ax) hR⟩
+  · rintro ⟨T, m, hm, hT⟩
+    exact ⟨_, inv_x_of_mx hm hT⟩
+
+/-- **Every slope, from any one slope.** -/
+theorem all_mx_of_some_mx {T : EMLTree} {m : Real} (hm : 1 < m)
+    (hT : ∀ x : Real, 0 < x → T.eval x = m * x) (m' : Real) (hm' : 1 < m') :
+    ∃ T' : EMLTree, ∀ x : Real, 0 < x → T'.eval x = m' * x :=
+  ⟨_, mx_of_inv_x hm' (inv_x_of_mx hm hT)⟩
+
 end Real
 end MachLib
