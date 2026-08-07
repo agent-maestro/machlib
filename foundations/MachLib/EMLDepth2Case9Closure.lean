@@ -857,5 +857,153 @@ theorem leftGrowsAt_var_left_holds (c K M : Real) :
   rw [ee]
   exact sub_pos_of_lt (u3PointS_dominates (log c) K M)
 
+/-! ## The DUAL — and it shows the tension is a route, not a wall
+
+`RightBoundedAt` constrains **`w`**; `LeftGrowsAt` constrains **`u`**. **Different subtrees.** So
+there is no structural conflict: the tension of `one_point_obligations_in_tension` rules out getting
+`LeftGrowsAt` **from a huge `w`**, and says nothing against getting it from `u`'s own spine.
+
+**Leaves satisfy `RightBoundedAt`** — the exact reverse of growth, where leaves fail. -/
+
+/-- **`var` is bounded**: `X ≤ exp X` always. -/
+theorem rightBounded_var {X : Real} (hX : 0 < X) : RightBoundedAt EMLTree.var X :=
+  ⟨hX, le_of_lt (exp_grows_strictly_thm X)⟩
+
+/-- **A positive `const` is bounded** once `c ≤ exp X`. -/
+theorem rightBounded_const {c X : Real} (hc : 0 < c) (hle : c ≤ exp X) :
+    RightBoundedAt (EMLTree.const c) X := ⟨hc, hle⟩
+
+/-- **The dual descent.** Boundedness at a node bounds its left child's `exp` from above. -/
+theorem rightBounded_descends {w₁ w₂ : EMLTree} {X : Real}
+    (h : RightBoundedAt (EMLTree.eml w₁ w₂) X) :
+    exp (w₁.eval X) ≤ exp X + log (w₂.eval X) := by
+  have hv : (EMLTree.eml w₁ w₂).eval X = exp (w₁.eval X) - log (w₂.eval X) := rfl
+  have hle : exp (w₁.eval X) - log (w₂.eval X) ≤ exp X := by rw [← hv]; exact h.2
+  rcases (le_iff_lt_or_eq (exp (w₁.eval X) - log (w₂.eval X)) (exp X)).mp hle with hlt | heq
+  · apply le_of_lt
+    apply lt_of_sub_pos
+    have ee : (exp X + log (w₂.eval X)) - exp (w₁.eval X)
+        = exp X - (exp (w₁.eval X) - log (w₂.eval X)) := by
+      mach_mpoly [exp X, exp (w₁.eval X), log (w₂.eval X)]
+    rw [ee]
+    exact sub_pos_of_lt hlt
+  · apply le_of_eq
+    have ee : exp (w₁.eval X) = (exp (w₁.eval X) - log (w₂.eval X)) + log (w₂.eval X) := by
+      mach_mpoly [exp (w₁.eval X), log (w₂.eval X)]
+    rw [ee, heq]
+
+/-! ## ▸ A DEPTH-3 CASE-9 CELL — the first one
+
+```
+u := eml (eml var (const c)) (const d)   — left spine ends in `var`, so it GROWS
+w := eml (const a) (const b)             — constant-valued, so it is BOUNDED
+node := eml u w                          — depth 3, both children subtrees
+```
+
+**The two obligations live on different children, so both discharge at one point.** -/
+
+/-- **`u := eml (eml var (const c)) (const d)` grows at the `u3PointS` point.**
+
+`exp X > X + X + log c + log d` gives `exp X − log c > X + X + log d`, and `exp y > y` lifts it. -/
+theorem depth3_left_grows (c d K M : Real) :
+    LeftGrowsAt (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c)) (EMLTree.const d))
+      (u3PointS (log c + log d) K M) := by
+  have hdom := u3PointS_dominates (log c + log d) K M
+  show u3PointS (log c + log d) K M + u3PointS (log c + log d) K M
+    ≤ exp (exp (u3PointS (log c + log d) K M) - log c) - log d
+  apply le_of_lt
+  apply lt_of_sub_pos
+  -- inner : exp X − log c > X + X + log d
+  have hinner : u3PointS (log c + log d) K M + u3PointS (log c + log d) K M + log d
+      < exp (u3PointS (log c + log d) K M) - log c := by
+    apply lt_of_sub_pos
+    have ee : (exp (u3PointS (log c + log d) K M) - log c)
+        - (u3PointS (log c + log d) K M + u3PointS (log c + log d) K M + log d)
+        = exp (u3PointS (log c + log d) K M)
+          - (u3PointS (log c + log d) K M + u3PointS (log c + log d) K M + (log c + log d)) := by
+      mach_mpoly [exp (u3PointS (log c + log d) K M), u3PointS (log c + log d) K M, log c, log d]
+    rw [ee]
+    exact sub_pos_of_lt hdom
+  have houter := lt_trans_ax hinner
+    (exp_grows_strictly_thm (exp (u3PointS (log c + log d) K M) - log c))
+  have ee2 : (exp (exp (u3PointS (log c + log d) K M) - log c) - log d)
+      - (u3PointS (log c + log d) K M + u3PointS (log c + log d) K M)
+      = exp (exp (u3PointS (log c + log d) K M) - log c)
+        - (u3PointS (log c + log d) K M + u3PointS (log c + log d) K M + log d) := by
+    mach_mpoly [exp (exp (u3PointS (log c + log d) K M) - log c),
+      u3PointS (log c + log d) K M, log d]
+  rw [ee2]
+  exact sub_pos_of_lt houter
+
+/-- **A DEPTH-3 CASE-9 CELL, CLOSED.**
+
+`eml (eml (eml var (const c)) (const d)) (eml (const a) (const b))` — depth 3, both children
+subtrees — reaches no `K/x`, given that its right child is positive.
+
+**The first depth-3 result in this arm.** It works because the two obligations of
+`one_point_generic` live on **different children**, so the tension never arises. -/
+theorem depth3_case9_absurd {a b c d K : Real}
+    (hβ : 0 < exp a - log b)
+    (e : u3PointS (log c + log d) K (exp a - log b)
+          * (EMLTree.eml
+              (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c)) (EMLTree.const d))
+              (EMLTree.eml (EMLTree.const a) (EMLTree.const b))).eval
+            (u3PointS (log c + log d) K (exp a - log b)) = K) :
+    False := by
+  have hX := u3PointS_pos (log c + log d) K (exp a - log b)
+  have hX2 := two_lt_u3PointS (log c + log d) K (exp a - log b)
+  -- LeftGrowsAt
+  have hL := depth3_left_grows c d K (exp a - log b)
+  -- RightBoundedAt: the child is the constant exp a − log b
+  have hwv : (EMLTree.eml (EMLTree.const a) (EMLTree.const b)).eval
+      (u3PointS (log c + log d) K (exp a - log b)) = exp a - log b := rfl
+  have hβltX : exp a - log b < u3PointS (log c + log d) K (exp a - log b) := by
+    apply lt_trans_ax (exp_grows_strictly_thm (exp a - log b))
+    show exp (exp a - log b) < (1 + 1) + ((1 + 1) + exp (log c + log d) + exp K
+      + exp (exp a - log b))
+    apply lt_of_sub_pos
+    have ee : ((1 + 1 : Real) + ((1 + 1) + exp (log c + log d) + exp K + exp (exp a - log b)))
+        - exp (exp a - log b)
+        = ((1 + 1) + (1 + 1)) + exp (log c + log d) + exp K := by
+      mach_mpoly [exp (log c + log d), exp K, exp (exp a - log b)]
+    rw [ee]
+    exact add_pos_real (add_pos_real (add_pos_real one_add_one_pos one_add_one_pos)
+      (exp_pos _)) (exp_pos K)
+  have hR : RightBoundedAt (EMLTree.eml (EMLTree.const a) (EMLTree.const b))
+      (u3PointS (log c + log d) K (exp a - log b)) := by
+    refine ⟨by rw [hwv]; exact hβ, ?_⟩
+    rw [hwv]
+    exact le_of_lt (lt_trans_ax hβltX
+      (exp_grows_strictly_thm (u3PointS (log c + log d) K (exp a - log b))))
+  -- K < X³ − X²
+  have hK : K < u3PointS (log c + log d) K (exp a - log b)
+      * (u3PointS (log c + log d) K (exp a - log b)
+        * u3PointS (log c + log d) K (exp a - log b))
+      - u3PointS (log c + log d) K (exp a - log b)
+        * u3PointS (log c + log d) K (exp a - log b) := by
+    have hKX : K < u3PointS (log c + log d) K (exp a - log b) := by
+      apply lt_trans_ax (exp_grows_strictly_thm K)
+      show exp K < (1 + 1) + ((1 + 1) + exp (log c + log d) + exp K + exp (exp a - log b))
+      apply lt_of_sub_pos
+      have ee : ((1 + 1 : Real) + ((1 + 1) + exp (log c + log d) + exp K + exp (exp a - log b)))
+          - exp K = ((1 + 1) + (1 + 1)) + exp (log c + log d) + exp (exp a - log b) := by
+        mach_mpoly [exp (log c + log d), exp K, exp (exp a - log b)]
+      rw [ee]
+      exact add_pos_real (add_pos_real (add_pos_real one_add_one_pos one_add_one_pos)
+        (exp_pos _)) (exp_pos _)
+    have hcube := lt_cube_of_two_lt hX2
+    have ecube : (u3PointS (log c + log d) K (exp a - log b)
+        * u3PointS (log c + log d) K (exp a - log b))
+        * (u3PointS (log c + log d) K (exp a - log b) - 1)
+        = u3PointS (log c + log d) K (exp a - log b)
+          * (u3PointS (log c + log d) K (exp a - log b)
+            * u3PointS (log c + log d) K (exp a - log b))
+          - u3PointS (log c + log d) K (exp a - log b)
+            * u3PointS (log c + log d) K (exp a - log b) := by
+      mach_mpoly [u3PointS (log c + log d) K (exp a - log b)]
+    rw [ecube] at hcube
+    exact lt_trans_ax hKX hcube
+  exact one_point_of_bounds hX hL hR hK e
+
 end Real
 end MachLib
