@@ -513,5 +513,131 @@ theorem u3_w3_small_absurd {c₂ c' K : Real} (hc : log c' ≤ exp 1)
   rw [m] at hfinal
   exact lt_irrefl_ax _ hfinal
 
+/-! ## Is the one-point method depth-dependent? — **No.**
+
+Every one-point proof above fixes a shape for `u` and `w`. **Re-reading them, the shapes are used
+for nothing except supplying two bounds.** Stripped of the shapes, the argument is
+`one_point_generic` below: **arbitrary `u`, arbitrary `w`, arbitrary depth.**
+
+> ### Depth entered the depth-2 proofs only through VERIFYING the bounds — never through the argument. So case 9 at depth ≥ 3 is a **bound-supply problem**, not an argument problem.
+
+⚠ **That is infrastructure, not a depth-3 result.** A lemma that *would* close a cell given bounds is
+not a closed cell, and `one_point_generic`'s hypotheses are **not** supplied generically here —
+hypothesis 1 needs `u.eval` to grow, hypothesis 2 needs `w.eval ≤ exp X`, and a tree can fail
+either. **Whether every case-9 tree admits a point satisfying both is open.** -/
+
+/-- `log` is monotone (non-strict) on the positives. -/
+theorem log_le_log_of_le {a b : Real} (ha : 0 < a) (hab : a ≤ b) : log a ≤ log b := by
+  rcases (le_iff_lt_or_eq a b).mp hab with h | h
+  · exact le_of_lt (log_lt_log ha h)
+  · rw [h]; exact le_refl _
+
+/-- **THE ONE-POINT ARGUMENT, DEPTH-INDEPENDENT.**
+
+Arbitrary `u`, arbitrary `w`, arbitrary depth. The only hypotheses about the children are the two
+bounds at the single point `X`:
+
+* `X + X ≤ u.eval X` — the left child is at least `2X` there;
+* `0 < w.eval X ≤ exp X` — the right child is positive and at most `exp X` there.
+
+Then `exp (u.eval X) ≥ exp X · exp X > X·X` while `log (w.eval X) ≤ X`, so
+`X · eval > X·(X·X) − X·X`, which exceeds `K`.
+
+**Every depth-2 cell closed by one point is an instance of this**; `u3PointS_dominates` is exactly
+"discharge hypothesis 1 at the chosen point". -/
+theorem one_point_generic {u w : EMLTree} {K X : Real}
+    (hX : 0 < X)
+    (hu : X + X ≤ u.eval X)
+    (hwpos : 0 < w.eval X) (hwle : w.eval X ≤ exp X)
+    (hK : K < X * (X * X) - X * X)
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    False := by
+  have v : (EMLTree.eml u w).eval X = exp (u.eval X) - log (w.eval X) := rfl
+  rw [v] at e
+  -- exp (u.eval X) > X·X
+  have hbig : X * X < exp (u.eval X) := by
+    have h1 : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+    have h2 : exp X * exp X = exp (X + X) := (exp_add X X).symm
+    rw [h2] at h1
+    exact lt_of_lt_of_le h1 (exp_monotone hu)
+  -- log (w.eval X) ≤ X
+  have hsmall : log (w.eval X) ≤ X := by
+    have h := log_le_log_of_le hwpos hwle
+    rw [log_exp] at h
+    exact h
+  -- assemble
+  have hfinal : K < X * exp (u.eval X) - X * log (w.eval X) := by
+    apply lt_of_sub_pos
+    have ee : (X * exp (u.eval X) - X * log (w.eval X)) - K
+        = (X * X - X * log (w.eval X)) + (X * exp (u.eval X) - X * (X * X))
+          + ((X * (X * X) - X * X) - K) := by
+      mach_mpoly [X, exp (u.eval X), log (w.eval X), K]
+    rw [ee]
+    have s1 : X * log (w.eval X) ≤ X * X := by
+      rcases (le_iff_lt_or_eq (log (w.eval X)) X).mp hsmall with h | h
+      · exact le_of_lt (mul_lt_mul_pos_left h hX)
+      · rw [h]; exact le_refl _
+    exact add_pos_real (add_pos_of_nonneg_of_pos (sub_nonneg_of_le s1)
+      (sub_pos_of_lt (mul_lt_mul_pos_left hbig hX))) (sub_pos_of_lt hK)
+  have edist : X * (exp (u.eval X) - log (w.eval X))
+      = X * exp (u.eval X) - X * log (w.eval X) := by
+    mach_mpoly [X, exp (u.eval X), log (w.eval X)]
+  rw [edist] at e
+  rw [e] at hfinal
+  exact lt_irrefl_ax _ hfinal
+
+/-- **The depth-2 work fits it.** `u3PointS_dominates` says exactly that hypothesis 1 of
+`one_point_generic` holds at the chosen point for a `u3`-shaped left child — modulo the `− L` that
+`u3`'s own `exp` absorbs. Recorded as a shape-check, not a re-proof. -/
+theorem u3PointS_dominates_is_hypothesis_one (L K M : Real) :
+    u3PointS L K M + u3PointS L K M < exp (u3PointS L K M) - L :=
+  lt_of_sub_pos (by
+    have ee : (exp (u3PointS L K M) - L) - (u3PointS L K M + u3PointS L K M)
+        = exp (u3PointS L K M) - ((u3PointS L K M + u3PointS L K M) + L) := by
+      mach_mpoly [exp (u3PointS L K M), u3PointS L K M, L]
+    rw [ee]
+    exact sub_pos_of_lt (u3PointS_dominates L K M))
+
+/-! ## The remaining obligation, named — and it is NOT vacuous -/
+
+/-- Hypothesis 1 of `one_point_generic`, named: the left child reaches `2X` at `X`. -/
+def LeftGrowsAt (u : EMLTree) (X : Real) : Prop := X + X ≤ u.eval X
+
+/-- Hypothesis 2 of `one_point_generic`, named: the right child is positive and at most `exp X`. -/
+def RightBoundedAt (w : EMLTree) (X : Real) : Prop := 0 < w.eval X ∧ w.eval X ≤ exp X
+
+/-- **The one-point argument, in the named form.** Case 9 at any depth reduces to finding a point
+where both hold. -/
+theorem one_point_of_bounds {u w : EMLTree} {K X : Real}
+    (hX : 0 < X) (hL : LeftGrowsAt u X) (hR : RightBoundedAt w X)
+    (hK : K < X * (X * X) - X * X)
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    False :=
+  one_point_generic hX hL hR.1 hR.2 hK e
+
+/-- **`RightBoundedAt` FAILS AT EVERY POINT for a perfectly ordinary depth-2 right child.**
+
+`eml (eml var (const 1)) (const 1)` evaluates to `exp (exp x)` — because `log 1 = 0` twice — and
+`exp (exp X) > exp X` for every `X`.
+
+> ### So the second obligation is not a formality: a depth-2 subtree can already outrun `exp X` everywhere, and then the one-point method has no point to stand on. **This is exactly why depth ≥ 3 is not "the same argument again".** -/
+theorem rightBounded_fails_everywhere (X : Real) :
+    ¬ RightBoundedAt (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.const 1)) X := by
+  intro h
+  have hval : (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const 1)).eval X = exp (exp X) := by
+    show exp (exp X - log (1 : Real)) - log (1 : Real) = exp (exp X)
+    rw [log_one]
+    have e : exp X - (0 : Real) = exp X := by mach_ring
+    rw [e]
+    have e2 : exp (exp X) - (0 : Real) = exp (exp X) := by mach_ring
+    exact e2
+  have hgt : exp X < exp (exp X) := exp_lt (exp_grows_strictly_thm X)
+  have hle : (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const 1)).eval X ≤ exp X := h.2
+  rw [hval] at hle
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hle)
+
 end Real
 end MachLib
