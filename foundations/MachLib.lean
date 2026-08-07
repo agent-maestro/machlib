@@ -311,6 +311,7 @@ import MachLib.EMLScalingBarrier
 import MachLib.MonitorSoundness
 import MachLib.EMLReciprocalDepth2
 import MachLib.EMLTerminationRoute
+import MachLib.EMLBranchPigeonhole
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
