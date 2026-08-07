@@ -2111,5 +2111,76 @@ theorem all_mx_of_some_mx {T : EMLTree} {m : Real} (hm : 1 < m)
     ∃ T' : EMLTree, ∀ x : Real, 0 < x → T'.eval x = m' * x :=
   ⟨_, mx_of_inv_x hm' (inv_x_of_mx hm hT)⟩
 
+-- ===================================================================
+-- ▸ THE WITNESS — `1/x ∈ EML`.  The conjecture is REFUTED.
+--
+-- The arm assumed the grammar "only ever supplies `−log b`", so that `+log x`
+-- in an exponent was unreachable without already having `1/x`.  That premise
+-- is FALSE.  Applied to a child that already carries `−log x`, the `−log b`
+-- slot RESTORES `+log x`.  See `PREREGISTRATION_WITNESS.md`.
+-- ===================================================================
+
+/-- The known depth-2 tree for `e/x`. -/
+noncomputable def witW : EMLTree :=
+  EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var) (EMLTree.const 1)
+
+/-- **`log (witW x) = 1 − log x`** — for EVERY real `x`, no positivity needed,
+because `log_exp` is total. This is the sign-flip the arm assumed unavailable. -/
+theorem witW_log (x : Real) : log (witW.eval x) = 1 - log x := by
+  have hin : (EMLTree.eml (EMLTree.const (0 : Real)) EMLTree.var).eval x = 1 - log x := by
+    show exp ((EMLTree.const (0 : Real)).eval x) - log (EMLTree.var.eval x) = 1 - log x
+    have h0 : (EMLTree.const (0 : Real)).eval x = 0 := rfl
+    have hv : EMLTree.var.eval x = x := rfl
+    rw [h0, hv, exp_zero]
+  show log (exp ((EMLTree.eml (EMLTree.const (0 : Real)) EMLTree.var).eval x)
+      - log ((EMLTree.const (1 : Real)).eval x)) = 1 - log x
+  have h1 : (EMLTree.const (1 : Real)).eval x = 1 := rfl
+  rw [hin, h1, log_one]
+  have hz : exp (1 - log x) - (0 : Real) = exp (1 - log x) := by mach_ring
+  rw [hz, log_exp]
+
+/-- `+log x` IS in EML: `witU c` realises `c + log x` whenever `0 < c + 1`. -/
+noncomputable def witU (c : Real) : EMLTree := EMLTree.eml (EMLTree.const (log (c + 1))) witW
+
+theorem witU_eval {c : Real} (hc : 0 < c + 1) (x : Real) :
+    (witU c).eval x = c + log x := by
+  show exp ((EMLTree.const (log (c + 1))).eval x) - log (witW.eval x) = c + log x
+  have hcst : (EMLTree.const (log (c + 1))).eval x = log (c + 1) := rfl
+  rw [hcst, exp_log hc, witW_log]
+  mach_ring
+
+/-- The depth-4 tree for `m·x`. The outer `const 0` uses TOTALISATION. -/
+noncomputable def witT (m : Real) : EMLTree := EMLTree.eml (witU (log m)) (EMLTree.const 0)
+
+theorem witT_eval {m : Real} (hm : 0 < m) (hc : 0 < log m + 1) (x : Real) (hx : 0 < x) :
+    (witT m).eval x = m * x := by
+  show exp ((witU (log m)).eval x) - log ((EMLTree.const (0 : Real)).eval x) = m * x
+  have hz : (EMLTree.const (0 : Real)).eval x = 0 := rfl
+  rw [witU_eval hc x, hz, log_zero_totalised, exp_add, exp_log hm, exp_log hx]
+  mach_ring
+
+/-- **`m·x ∈ EML` for every `m > 1`** — an explicit depth-4 witness. -/
+theorem mx_mem_EML {m : Real} (hm : 1 < m) :
+    ∃ T : EMLTree, ∀ x : Real, 0 < x → T.eval x = m * x := by
+  have hmpos : (0 : Real) < m := lt_trans_ax zero_lt_one_ax hm
+  have hlogm : (0 : Real) < log m := by
+    have h := log_lt_log zero_lt_one_ax hm
+    rw [log_one] at h
+    exact h
+  exact ⟨_, fun x hx => witT_eval hmpos (add_pos hlogm zero_lt_one_ax) x hx⟩
+
+/-- # `1/x ∈ EML`.
+**The conjecture `1/x ∉ EML` is REFUTED**, by an explicit depth-6 tree. -/
+theorem inv_x_mem_EML : ∃ R : EMLTree, ∀ x : Real, 0 < x → R.eval x = 1 / x := by
+  have hm : (1 : Real) < exp 1 := by
+    have step : exp 0 < exp 1 := exp_lt zero_lt_one_ax
+    rw [exp_zero] at step
+    exact step
+  have hmpos : (0 : Real) < exp 1 := lt_trans_ax zero_lt_one_ax hm
+  have hc : (0 : Real) < log (exp 1) + 1 := by
+    rw [log_exp]
+    exact add_pos zero_lt_one_ax zero_lt_one_ax
+  exact ⟨_, inv_x_of_mx hm (fun x hx => witT_eval hmpos hc x hx)⟩
+
 end Real
 end MachLib
