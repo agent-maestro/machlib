@@ -1766,5 +1766,124 @@ theorem expBoundedEventually_const_const (a b : Real) :
       rw [ee]
       exact le_of_lt (sub_pos_of_lt h1)⟩
 
+/-! ## ▶ THE ACTUAL RESIDUE: `m·x`
+
+`left_scaled_K` reduces `1/x` to *"is `m·x` reachable with `m > 1`?"*, and the census leaves that
+question's **"anything over a subtree"** row open.
+
+> ### The one-point method's lower bound is QUADRATIC (`X·X − X`); `m·x` is LINEAR. **The target being `K/x` was never essential** — the same machinery excludes `m·x`. -/
+
+/-- **The one-point method against a LINEAR target.** Same two bounds on the children; the only
+change is that `K` becomes `m·X`. -/
+theorem one_point_mx {u w : EMLTree} {m X : Real}
+    (hX : 0 < X)
+    (hu : X + X ≤ u.eval X)
+    (hwpos : 0 < w.eval X) (hwle : w.eval X ≤ exp X)
+    (hm : m * X < X * X - X)
+    (e : (EMLTree.eml u w).eval X = m * X) :
+    False := by
+  have v : (EMLTree.eml u w).eval X = exp (u.eval X) - log (w.eval X) := rfl
+  rw [v] at e
+  have hbig : X * X < exp (u.eval X) := by
+    have h1 : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+    have h2 : exp X * exp X = exp (X + X) := (exp_add X X).symm
+    rw [h2] at h1
+    exact lt_of_lt_of_le h1 (exp_monotone hu)
+  have hsmall : log (w.eval X) ≤ X := by
+    have h := log_le_log_of_le hwpos hwle
+    rw [log_exp] at h
+    exact h
+  have hgt : m * X < exp (u.eval X) - log (w.eval X) := by
+    apply lt_trans_ax hm
+    apply lt_of_sub_pos
+    have ee : (exp (u.eval X) - log (w.eval X)) - (X * X - X)
+        = (X - log (w.eval X)) + (exp (u.eval X) - X * X) := by
+      mach_mpoly [exp (u.eval X), log (w.eval X), X]
+    rw [ee]
+    exact add_pos_of_nonneg_of_pos (sub_nonneg_of_le hsmall) (sub_pos_of_lt hbig)
+  rw [e] at hgt
+  exact lt_irrefl_ax _ hgt
+
+/-- **THE CLASS VERSION — new ground on the census's open `m·x` row.**
+
+A tree that grows unboundedly, over a **constant-valued positive** right child, evaluates to `m·x`
+nowhere. That configuration sits inside *"anything over a subtree"*, which the census marks open.
+
+**`m` is arbitrary** — no `m > 1` hypothesis is needed. -/
+theorem no_mx_of_growsUnboundedly {u w : EMLTree} {m β : Real}
+    (hβ : 0 < β) (hwconst : ∀ x : Real, w.eval x = β)
+    (hgrow : GrowsUnboundedly u)
+    (e : ∀ x : Real, 0 < x → (EMLTree.eml u w).eval x = m * x) :
+    False := by
+  obtain ⟨X, hYX, hL⟩ := hgrow (β + exp m + 1 + 1)
+  have hβX : β < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp m + 1 + 1) - β = exp m + 1 + 1 := by mach_mpoly [β, exp m]
+    rw [ee]
+    exact add_pos_real (add_pos_real (exp_pos m) zero_lt_one_ax) zero_lt_one_ax
+  have hmX : exp m + 1 < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp m + 1 + 1) - (exp m + 1) = β + 1 := by mach_mpoly [β, exp m]
+    rw [ee]
+    exact add_pos_real hβ zero_lt_one_ax
+  have h2X : (1 : Real) + 1 < X := by
+    apply lt_trans_ax _ hYX
+    apply lt_of_sub_pos
+    have ee : (β + exp m + 1 + 1) - (1 + 1) = β + exp m := by mach_mpoly [β, exp m]
+    rw [ee]
+    exact add_pos_real hβ (exp_pos m)
+  have hX : 0 < X := lt_trans_ax one_add_one_pos h2X
+  -- m < X − 1
+  have hmlt : m < X - 1 := by
+    apply lt_trans_ax (exp_grows_strictly_thm m)
+    apply lt_of_sub_pos
+    have ee : (X - 1) - exp m = X - (exp m + 1) := by mach_mpoly [X, exp m]
+    rw [ee]
+    exact sub_pos_of_lt hmX
+  -- hence m·X < X·X − X
+  have hm : m * X < X * X - X := by
+    have h := mul_lt_mul_pos_left hmlt hX
+    have eL : X * m = m * X := by mach_ring
+    have eR : X * (X - 1) = X * X - X := by mach_mpoly [X]
+    rw [eL, eR] at h
+    exact h
+  exact one_point_mx hX hL (by rw [hwconst]; exact hβ)
+    (by rw [hwconst]; exact le_of_lt (lt_trans_ax hβX (exp_grows_strictly_thm X)))
+    hm (e X hX)
+
+/-- **`mx_needs_varying_child`** — a theorem the census marked ✅ **that was never written.**
+
+Found during consolidation: `git log -S` and `-G` across all history return **nothing** for this
+name, yet `ROOT_CASE_CENSUS.md` lists it as *"✅ CLOSED IN LEAN"* with its statement in a code block.
+*(Its companion `mx_const_left_pins_child` was genuinely superseded by `const_left_pins_child`, which
+does exist — that one is documented naming drift, not a gap.)*
+
+**Now actually proved**, with the statement the census gave it: if both children agree at two
+distinct points — for `w` only through `log`, matching the corpus's weakening idiom — then the node
+is constant there, and a constant equal to `m·x` at two distinct points forces `m = 0`. -/
+theorem mx_needs_varying_child {u w : EMLTree} {m x₁ x₂ : Real}
+    (hne : x₁ ≠ x₂)
+    (hu : u.eval x₁ = u.eval x₂)
+    (hw : log (w.eval x₁) = log (w.eval x₂))
+    (e₁ : (EMLTree.eml u w).eval x₁ = m * x₁)
+    (e₂ : (EMLTree.eml u w).eval x₂ = m * x₂) :
+    m = 0 := by
+  have v₁ : (EMLTree.eml u w).eval x₁ = exp (u.eval x₁) - log (w.eval x₁) := rfl
+  have v₂ : (EMLTree.eml u w).eval x₂ = exp (u.eval x₂) - log (w.eval x₂) := rfl
+  rw [v₁] at e₁
+  rw [v₂, ← hu, ← hw] at e₂
+  -- both sides now name the same quantity
+  have hmm : m * x₁ = m * x₂ := e₁.symm.trans e₂
+  have hz : m * (x₁ - x₂) = 0 := by
+    have ee : m * (x₁ - x₂) = m * x₁ - m * x₂ := by mach_mpoly [m, x₁, x₂]
+    rw [ee, hmm]; mach_ring
+  have hx : x₁ - x₂ ≠ 0 := by
+    intro h; apply hne
+    have ee : x₁ = x₂ + (x₁ - x₂) := by mach_ring
+    rw [ee, h]; mach_ring
+  exact Classical.byContradiction (fun hm => (mul_ne_zero hm hx) hz)
+
 end Real
 end MachLib
