@@ -1885,5 +1885,142 @@ theorem mx_needs_varying_child {u w : EMLTree} {m x₁ x₂ : Real}
     rw [ee, h]; mach_ring
   exact Classical.byContradiction (fun hm => (mul_ne_zero hm hx) hz)
 
+/-! ## Dropping a hypothesis that was never used
+
+`one_point_generic` and `one_point_mx` take `0 < w.eval X` **and** `w.eval X ≤ exp X`. **Neither
+proof uses positivity except to derive `log (w.eval X) ≤ X`** — and `log_le_iff_le_exp` gives that
+from the bound alone, for **every** real `w.eval X`.
+
+> ### Stating the hypothesis on the VALUE rather than on its `log` cost these theorems the whole clamped branch (`w.eval X ≤ 0`, where `log = 0 ≤ X` holds trivially). **Third instance of this pattern in the arm.** -/
+
+/-- **The one-point method, `log` form.** No positivity — and it covers the clamped branch. -/
+theorem one_point_log {u w : EMLTree} {K X : Real}
+    (hX : 0 < X) (hu : X + X ≤ u.eval X)
+    (hlog : log (w.eval X) ≤ X)
+    (hK : K < X * (X * X) - X * X)
+    (e : X * (EMLTree.eml u w).eval X = K) :
+    False := by
+  have v : (EMLTree.eml u w).eval X = exp (u.eval X) - log (w.eval X) := rfl
+  rw [v] at e
+  have hbig : X * X < exp (u.eval X) := by
+    have h1 : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+    have h2 : exp X * exp X = exp (X + X) := (exp_add X X).symm
+    rw [h2] at h1
+    exact lt_of_lt_of_le h1 (exp_monotone hu)
+  have hfinal : K < X * exp (u.eval X) - X * log (w.eval X) := by
+    apply lt_of_sub_pos
+    have ee : (X * exp (u.eval X) - X * log (w.eval X)) - K
+        = (X * X - X * log (w.eval X)) + (X * exp (u.eval X) - X * (X * X))
+          + ((X * (X * X) - X * X) - K) := by
+      mach_mpoly [X, exp (u.eval X), log (w.eval X), K]
+    rw [ee]
+    have s1 : X * log (w.eval X) ≤ X * X := by
+      rcases (le_iff_lt_or_eq (log (w.eval X)) X).mp hlog with h | h
+      · exact le_of_lt (mul_lt_mul_pos_left h hX)
+      · rw [h]; exact le_refl _
+    exact add_pos_real (add_pos_of_nonneg_of_pos (sub_nonneg_of_le s1)
+      (sub_pos_of_lt (mul_lt_mul_pos_left hbig hX))) (sub_pos_of_lt hK)
+  have edist : X * (exp (u.eval X) - log (w.eval X))
+      = X * exp (u.eval X) - X * log (w.eval X) := by
+    mach_mpoly [X, exp (u.eval X), log (w.eval X)]
+  rw [edist] at e
+  rw [e] at hfinal
+  exact lt_irrefl_ax _ hfinal
+
+/-- **The `m·x` one-point method, `log` form.** -/
+theorem one_point_mx_log {u w : EMLTree} {m X : Real}
+    (hX : 0 < X) (hu : X + X ≤ u.eval X)
+    (hlog : log (w.eval X) ≤ X)
+    (hm : m * X < X * X - X)
+    (e : (EMLTree.eml u w).eval X = m * X) :
+    False := by
+  have v : (EMLTree.eml u w).eval X = exp (u.eval X) - log (w.eval X) := rfl
+  rw [v] at e
+  have hbig : X * X < exp (u.eval X) := by
+    have h1 : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+    have h2 : exp X * exp X = exp (X + X) := (exp_add X X).symm
+    rw [h2] at h1
+    exact lt_of_lt_of_le h1 (exp_monotone hu)
+  have hgt : m * X < exp (u.eval X) - log (w.eval X) := by
+    apply lt_trans_ax hm
+    apply lt_of_sub_pos
+    have ee : (exp (u.eval X) - log (w.eval X)) - (X * X - X)
+        = (X - log (w.eval X)) + (exp (u.eval X) - X * X) := by
+      mach_mpoly [exp (u.eval X), log (w.eval X), X]
+    rw [ee]
+    exact add_pos_of_nonneg_of_pos (sub_nonneg_of_le hlog) (sub_pos_of_lt hbig)
+  rw [e] at hgt
+  exact lt_irrefl_ax _ hgt
+
+/-- Pick a point beyond three bounds at once. -/
+theorem grows_meets_bound {u : EMLTree} (hgrow : GrowsUnboundedly u) (Y S : Real) :
+    ∃ X : Real, Y < X ∧ S < X ∧ 0 < X ∧ LeftGrowsAt u X := by
+  obtain ⟨X, hX, hL⟩ := hgrow (exp Y + exp S)
+  refine ⟨X, ?_, ?_, ?_, hL⟩
+  · apply lt_trans_ax (exp_grows_strictly_thm Y)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y + exp S) - exp Y = exp S := by mach_mpoly [exp Y, exp S]
+    rw [ee]; exact exp_pos S
+  · apply lt_trans_ax (exp_grows_strictly_thm S)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y + exp S) - exp S = exp Y := by mach_mpoly [exp Y, exp S]
+    rw [ee]; exact exp_pos Y
+  · exact lt_trans_ax (add_pos_real (exp_pos Y) (exp_pos S)) hX
+
+/-- **`m·x` excluded for ANY `log`-bounded right child** — not just constant-valued ones.
+
+This is most of the census's open *"anything over a subtree"* row: `LogBoundedEventually` has a
+descent and leaf cases already proved. -/
+theorem no_mx_of_grows_and_logBounded {u w : EMLTree} {m : Real}
+    (hgrow : GrowsUnboundedly u) (hbound : LogBoundedEventually w)
+    (e : ∀ x : Real, 0 < x → (EMLTree.eml u w).eval x = m * x) :
+    False := by
+  obtain ⟨Y, hY⟩ := hbound
+  obtain ⟨X, hYX, hSX, hX, hL⟩ := grows_meets_bound hgrow Y (exp m + 1 + 1)
+  have hmlt : m < X - 1 := by
+    apply lt_trans_ax (exp_grows_strictly_thm m)
+    apply lt_of_sub_pos
+    have ee : (X - 1) - exp m = X - (exp m + 1) := by mach_mpoly [X, exp m]
+    rw [ee]
+    apply sub_pos_of_lt
+    apply lt_trans_ax _ hSX
+    apply lt_of_sub_pos
+    have ee2 : (exp m + 1 + 1) - (exp m + 1) = 1 := by mach_mpoly [exp m]
+    rw [ee2]; exact zero_lt_one_ax
+  have hm : m * X < X * X - X := by
+    have h := mul_lt_mul_pos_left hmlt hX
+    have eL : X * m = m * X := by mach_ring
+    have eR : X * (X - 1) = X * X - X := by mach_mpoly [X]
+    rw [eL, eR] at h
+    exact h
+  exact one_point_mx_log hX hL (hY X hYX) hm (e X hX)
+
+/-- **And the same upgrade for `K/x`** — the class theorem no longer needs `w` constant-valued. -/
+theorem case9_no_Kx_of_grows_and_logBounded {u w : EMLTree} {K : Real}
+    (hgrow : GrowsUnboundedly u) (hbound : LogBoundedEventually w)
+    (e : ∀ x : Real, 0 < x → x * (EMLTree.eml u w).eval x = K) :
+    False := by
+  obtain ⟨Y, hY⟩ := hbound
+  obtain ⟨X, hYX, hSX, hX, hL⟩ := grows_meets_bound hgrow Y (exp K + 1 + 1)
+  have h2X : (1 : Real) + 1 < X := by
+    apply lt_trans_ax _ hSX
+    apply lt_of_sub_pos
+    have ee : (exp K + 1 + 1) - (1 + 1) = exp K := by mach_mpoly [exp K]
+    rw [ee]; exact exp_pos K
+  have hKX : K < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm K)
+    apply lt_trans_ax _ hSX
+    apply lt_of_sub_pos
+    have ee : (exp K + 1 + 1) - exp K = 1 + 1 := by mach_mpoly [exp K]
+    rw [ee]; exact one_add_one_pos
+  have hK : K < X * (X * X) - X * X := by
+    have hcube := lt_cube_of_two_lt h2X
+    have ecube : (X * X) * (X - 1) = X * (X * X) - X * X := by mach_mpoly [X]
+    rw [ecube] at hcube
+    exact lt_trans_ax hKX hcube
+  exact one_point_log hX hL (hY X hYX) hK (e X hX)
+
 end Real
 end MachLib
