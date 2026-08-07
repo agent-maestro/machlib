@@ -1157,5 +1157,173 @@ theorem growsUnboundedly_tower_depth3 (c d e : Real) :
       (EMLTree.const d)) (EMLTree.const e)) :=
   growsUnboundedly_eml_const e (growsUnboundedly_tower_depth2 c d)
 
+/-! ## Characterising `GrowsUnboundedly` — the `const` right child was stronger than needed
+
+The tower's proofs use only that the right child's `log` stays under `X`. -/
+
+/-- **The condition**: `log (w.eval X) ≤ X` from some point on. -/
+def LogBoundedEventually (w : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → log (w.eval X) ≤ X
+
+/-- `const c` is `log`-bounded: `log c` is constant. -/
+theorem logBoundedEventually_const (c : Real) : LogBoundedEventually (EMLTree.const c) :=
+  ⟨log c, fun X hX => by
+    have hv : (EMLTree.const c).eval X = c := rfl
+    rw [hv]
+    exact le_of_lt hX⟩
+
+/-- `var` is `log`-bounded: `log X < X` always. -/
+theorem logBoundedEventually_var : LogBoundedEventually EMLTree.var :=
+  ⟨0, fun X hX => by
+    have hv : (EMLTree.var).eval X = X := rfl
+    rw [hv]
+    have h := exp_grows_strictly_thm (log X)
+    rw [exp_log hX] at h
+    exact le_of_lt h⟩
+
+/-- `exp X > 4·(X − 2)` for every `X` — so `exp X ≥ 3X` once `X ≥ 8`. -/
+theorem exp_gt_four_sub_two (X : Real) :
+    ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) < exp X := by
+  have hsplit : exp X = exp (1 + 1) * exp (X - (1 + 1)) := by
+    rw [← exp_add]
+    have e : (1 + 1 : Real) + (X - (1 + 1)) = X := by mach_ring
+    rw [e]
+  rw [hsplit]
+  have h1 : ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1))
+      < ((1 + 1 : Real) * (1 + 1)) * exp (X - (1 + 1)) :=
+    mul_lt_mul_pos_left (exp_grows_strictly_thm (X - (1 + 1)))
+      (mul_pos one_add_one_pos one_add_one_pos)
+  apply lt_trans_ax h1
+  exact mul_lt_mul_of_pos_right exp_two_gt_four (exp_pos (X - (1 + 1)))
+
+/-- **The base's core, over bare reals.** `exp X > 4(X−2) ≥ 3X ≥ X + X + L` for `X > 8`, `L ≤ X`. -/
+theorem base_growth_core {X L : Real}
+    (hX8 : ((1 + 1 : Real) * (1 + 1)) * (1 + 1) < X) (hL : L ≤ X) :
+    X + X ≤ exp X - L := by
+  apply le_of_lt
+  apply lt_of_sub_pos
+  have ee : (exp X - L) - (X + X)
+      = (X - L) + ((exp X - ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)))
+        + (((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - (1 + 1 + 1) * X)) := by
+    mach_mpoly [exp X, X, L]
+  rw [ee]
+  have hmid : (0 : Real) < ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - (1 + 1 + 1) * X := by
+    have e2 : ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - (1 + 1 + 1) * X
+        = X - ((1 + 1 : Real) * (1 + 1)) * (1 + 1) := by mach_mpoly [X]
+    rw [e2]
+    exact sub_pos_of_lt hX8
+  exact add_pos_of_nonneg_of_pos (sub_nonneg_of_le hL)
+    (add_pos_real (sub_pos_of_lt (exp_gt_four_sub_two X)) hmid)
+
+/-- **The step's core, over bare reals.** `A > X·X ≥ 3X ≥ X + X + L` for `X > 3`, `L ≤ X`. -/
+theorem step_growth_core {X L A : Real}
+    (hX3 : (1 + 1 + 1 : Real) < X) (hL : L ≤ X) (hA : X * X < A) :
+    X + X ≤ A - L := by
+  have hX : (0 : Real) < X := lt_trans_ax three_pos hX3
+  apply le_of_lt
+  apply lt_of_sub_pos
+  have ee : (A - L) - (X + X)
+      = (X - L) + ((A - X * X) + (X * X - (1 + 1 + 1) * X)) := by
+    mach_mpoly [A, X, L]
+  rw [ee]
+  have hmid : (0 : Real) < X * X - (1 + 1 + 1) * X := by
+    have e2 : X * X - (1 + 1 + 1) * X = X * (X - (1 + 1 + 1)) := by mach_mpoly [X]
+    rw [e2]
+    exact mul_pos hX (sub_pos_of_lt hX3)
+  exact add_pos_of_nonneg_of_pos (sub_nonneg_of_le hL)
+    (add_pos_real (sub_pos_of_lt hA) hmid)
+
+/-- The point used by the generalised base and step. **A `def`, so the normaliser sees one atom.** -/
+noncomputable def growPoint (Y Y₀ S : Real) : Real := exp Y + exp Y₀ + S
+
+theorem lt_growPoint_left (Y Y₀ S : Real) (hS : 0 < S) : Y < growPoint Y Y₀ S := by
+  apply lt_trans_ax (exp_grows_strictly_thm Y)
+  show exp Y < exp Y + exp Y₀ + S
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp Y₀ + S) - exp Y = exp Y₀ + S := by mach_mpoly [exp Y, exp Y₀, S]
+  rw [ee]
+  exact add_pos_real (exp_pos Y₀) hS
+
+theorem lt_growPoint_mid (Y Y₀ S : Real) (hS : 0 < S) : Y₀ < growPoint Y Y₀ S := by
+  apply lt_trans_ax (exp_grows_strictly_thm Y₀)
+  show exp Y₀ < exp Y + exp Y₀ + S
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp Y₀ + S) - exp Y₀ = exp Y + S := by mach_mpoly [exp Y, exp Y₀, S]
+  rw [ee]
+  exact add_pos_real (exp_pos Y) hS
+
+theorem lt_growPoint_right (Y Y₀ S : Real) : S < growPoint Y Y₀ S := by
+  show S < exp Y + exp Y₀ + S
+  apply lt_of_sub_pos
+  have ee : (exp Y + exp Y₀ + S) - S = exp Y + exp Y₀ := by mach_mpoly [exp Y, exp Y₀, S]
+  rw [ee]
+  exact add_pos_real (exp_pos Y) (exp_pos Y₀)
+
+/-- **The generalised BASE.** `eml var w` grows whenever `w` is `log`-bounded — the right child no
+longer has to be a `const`. -/
+theorem growsUnboundedly_var_of_logBounded {w : EMLTree}
+    (hw : LogBoundedEventually w) : GrowsUnboundedly (EMLTree.eml EMLTree.var w) := by
+  obtain ⟨Y₀, hY₀⟩ := hw
+  intro Y
+  have hS : (0 : Real) < ((1 + 1 : Real) * (1 + 1)) * (1 + 1) :=
+    mul_pos (mul_pos one_add_one_pos one_add_one_pos) one_add_one_pos
+  refine ⟨growPoint Y Y₀ (((1 + 1 : Real) * (1 + 1)) * (1 + 1)),
+    lt_growPoint_left Y Y₀ _ hS, ?_⟩
+  show growPoint Y Y₀ _ + growPoint Y Y₀ _
+    ≤ exp (growPoint Y Y₀ _) - log (w.eval (growPoint Y Y₀ _))
+  exact base_growth_core (lt_growPoint_right Y Y₀ _)
+    (hY₀ _ (lt_growPoint_mid Y Y₀ _ hS))
+
+/-- **The generalised STEP.** `eml u w` grows whenever `u` grows and `w` is `log`-bounded. -/
+theorem growsUnboundedly_step {u w : EMLTree}
+    (hu : GrowsUnboundedly u) (hw : LogBoundedEventually w) :
+    GrowsUnboundedly (EMLTree.eml u w) := by
+  obtain ⟨Y₀, hY₀⟩ := hw
+  intro Y
+  obtain ⟨X, hXgt, hL⟩ := hu (growPoint Y Y₀ (1 + 1 + 1))
+  have hS : (0 : Real) < (1 + 1 + 1 : Real) := three_pos
+  have hY : Y < X := lt_trans_ax (lt_growPoint_left Y Y₀ _ hS) hXgt
+  have hY₀X : Y₀ < X := lt_trans_ax (lt_growPoint_mid Y Y₀ _ hS) hXgt
+  have hX3 : (1 + 1 + 1 : Real) < X := lt_trans_ax (lt_growPoint_right Y Y₀ _) hXgt
+  have hX : (0 : Real) < X := lt_trans_ax three_pos hX3
+  have hA : X * X < exp (u.eval X) := by
+    have h1 : X * X < exp X * exp X := square_lt_square hX (exp_grows_strictly_thm X)
+    have h2 : exp X * exp X = exp (X + X) := (exp_add X X).symm
+    rw [h2] at h1
+    exact lt_of_lt_of_le h1 (exp_monotone hL)
+  exact ⟨X, hY, step_growth_core hX3 (hY₀ X hY₀X) hA⟩
+
+/-- **The `const`-only tower is a special case.** -/
+theorem growsUnboundedly_base' (c : Real) :
+    GrowsUnboundedly (EMLTree.eml EMLTree.var (EMLTree.const c)) :=
+  growsUnboundedly_var_of_logBounded (logBoundedEventually_const c)
+
+/-- **And `var` right children are now allowed too** — outside the old tower. -/
+theorem growsUnboundedly_var_var : GrowsUnboundedly (EMLTree.eml EMLTree.var EMLTree.var) :=
+  growsUnboundedly_var_of_logBounded logBoundedEventually_var
+
+/-- **The condition is NOT vacuous.** `eml var (const c)` with `log c < 0` exceeds `exp X`
+everywhere, so its `log` exceeds `X` at **every** point. -/
+theorem not_logBoundedEventually_of_neg {c : Real} (hc : log c < 0) :
+    ¬ LogBoundedEventually (EMLTree.eml EMLTree.var (EMLTree.const c)) := by
+  intro h
+  obtain ⟨Y, hY⟩ := h
+  have hXpos : (0 : Real) < exp Y + 1 := add_pos_real (exp_pos Y) zero_lt_one_ax
+  have hYlt : Y < exp Y + 1 :=
+    lt_trans_ax (exp_grows_strictly_thm Y) (lt_add_of_pos_right zero_lt_one_ax)
+  have hbound := hY _ hYlt
+  have hv : (EMLTree.eml EMLTree.var (EMLTree.const c)).eval (exp Y + 1)
+      = exp (exp Y + 1) - log c := rfl
+  rw [hv] at hbound
+  have hgt : exp (exp Y + 1) < exp (exp Y + 1) - log c := by
+    apply lt_of_sub_pos
+    have ee : (exp (exp Y + 1) - log c) - exp (exp Y + 1) = 0 - log c := by
+      mach_mpoly [exp (exp Y + 1), log c]
+    rw [ee]
+    exact sub_pos_of_lt hc
+  have hlog := log_lt_log (exp_pos (exp Y + 1)) hgt
+  rw [log_exp] at hlog
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlog hbound)
+
 end Real
 end MachLib
