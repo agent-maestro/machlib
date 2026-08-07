@@ -303,5 +303,262 @@ theorem u4_w4_absurd {K : Real}
     exact add_pos_real (add_pos_real (sub_pos_of_lt h2ee) (sub_pos_of_lt h_ee)) zero_lt_one_ax
   exact lt_irrefl_ax _ (lt_trans_ax hLHS (m₂ ▸ hRHS))
 
+/-! ## `w3`-small — three points, a bounded left side against an astronomical right side
+
+The last `u4` cell. Its child `exp x − L′` is **positive throughout** (for `L′ ≤ exp 1`), so the
+non-positive route is unavailable. **A second difference at `1, 2, 3` kills `K` and leaves**
+
+```
+log W₁ − 4·log W₂ + 3·log W₃  =  exp (exp 1) − 2·exp (exp 2) + exp (exp 3)
+```
+
+with `L′` the only survivor — **left side below 6, right side above 14.** -/
+
+/-- `log (e − L′) ≤ log (e² − L′)` for `L′ ≤ e`.
+
+**Two cases, and the split is forced by totalisation:** at `L′ = e` the smaller child is exactly `0`,
+so `log` of it is `0` and `log_lt_log` does not apply. -/
+theorem log_w1_le_log_w2 {L : Real} (hL : L ≤ exp 1) :
+    log (exp 1 - L) ≤ log (exp (1 + 1) - L) := by
+  have hA : (1 : Real) < exp (1 + 1) - exp 1 := by
+    apply lt_of_sub_pos
+    have e : exp (1 + 1 : Real) - exp 1 - 1 = exp (1 + 1) - (exp 1 + 1) := by
+      mach_mpoly [exp (1 + 1), exp 1]
+    rw [e]
+    apply sub_pos_of_lt
+    rw [exp_add 1 1]
+    have h1 : exp 1 + 1 < exp 1 + exp 1 := add_lt_add_left one_lt_exp_one (exp 1)
+    have h2 : exp 1 + exp 1 < exp 1 * exp 1 := by
+      have hh := mul_lt_mul_pos_left two_lt_exp_one (exp_pos 1)
+      have e2 : exp 1 * ((1 : Real) + 1) = exp 1 + exp 1 := by mach_mpoly [exp 1]
+      rw [e2] at hh
+      exact hh
+    exact lt_trans_ax h1 h2
+  have hW2 : (1 : Real) < exp (1 + 1) - L := by
+    apply lt_of_sub_pos
+    have e : exp (1 + 1 : Real) - L - 1 = (exp (1 + 1) - exp 1 - 1) + (exp 1 - L) := by
+      mach_mpoly [exp (1 + 1), exp 1, L]
+    rw [e]
+    rcases (le_iff_lt_or_eq L (exp 1)).mp hL with h | h
+    · exact add_pos_real (sub_pos_of_lt hA) (sub_pos_of_lt h)
+    · rw [h]
+      have ez : exp 1 - exp 1 = (0 : Real) := by mach_ring
+      rw [ez]
+      have ez2 : exp (1 + 1 : Real) - exp 1 - 1 + 0 = exp (1 + 1) - exp 1 - 1 := by mach_ring
+      rw [ez2]
+      exact sub_pos_of_lt hA
+  have hW2pos : (0 : Real) < exp (1 + 1) - L := lt_trans_ax zero_lt_one_ax hW2
+  rcases lt_total (exp 1 - L) 0 with h | h | h
+  · rw [log_nonpos (le_of_lt h)]
+    have hlog : (0 : Real) < log (exp (1 + 1) - L) := by
+      have hh := log_lt_log zero_lt_one_ax hW2
+      rw [log_one] at hh
+      exact hh
+    exact le_of_lt hlog
+  · rw [log_nonpos (le_of_eq h)]
+    have hlog : (0 : Real) < log (exp (1 + 1) - L) := by
+      have hh := log_lt_log zero_lt_one_ax hW2
+      rw [log_one] at hh
+      exact hh
+    exact le_of_lt hlog
+  · apply le_of_lt
+    apply log_lt_log h
+    apply lt_of_sub_pos
+    have e : (exp (1 + 1 : Real) - L) - (exp 1 - L) = exp (1 + 1) - exp 1 := by
+      mach_mpoly [exp (1 + 1), exp 1, L]
+    rw [e]
+    exact sub_pos_of_lt (exp_lt (lt_add_of_pos_right zero_lt_one_ax))
+
+/-- **`e³ − L′ < e²·(e² − L′)` for `L′ ≤ e`.**
+
+Written as a polynomial in `E := exp 1`, the difference is `(E⁴ − 2E³ + E) + (E − L′)(E² − 1)`:
+the first bracket is `E·(E²(E−2) + 1) > 0` because `E > 2`, and the second is a product of a
+non-negative and a positive. -/
+theorem cube_sub_lt_sq_mul {L : Real} (hL : L ≤ exp 1) :
+    exp (1 + 1 + 1) - L < exp (1 + 1) * (exp (1 + 1) - L) := by
+  have e2 : exp (1 + 1 : Real) = exp 1 * exp 1 := exp_add 1 1
+  have e3 : exp (1 + 1 + 1 : Real) = exp 1 * exp 1 * exp 1 := by
+    rw [exp_add (1 + 1) 1, e2]
+  apply lt_of_sub_pos
+  rw [e2, e3]
+  have esplit : (exp 1 * exp 1) * ((exp 1 * exp 1) - L) - ((exp 1 * exp 1 * exp 1) - L)
+      = (exp 1 * (exp 1 * exp 1 * (exp 1 - (1 + 1)) + 1))
+        + (exp 1 - L) * (exp 1 * exp 1 - 1) := by
+    mach_mpoly [exp 1, L]
+  rw [esplit]
+  have hE2 : (1 : Real) < exp 1 * exp 1 := by
+    rw [← e2]
+    exact lt_trans_ax (lt_trans_ax one_lt_one_plus_one two_lt_four) exp_two_gt_four
+  have hfirst : (0 : Real) < exp 1 * (exp 1 * exp 1 * (exp 1 - (1 + 1)) + 1) :=
+    mul_pos (exp_pos 1)
+      (add_pos_real (mul_pos (mul_pos (exp_pos 1) (exp_pos 1)) (sub_pos_of_lt two_lt_exp_one))
+        zero_lt_one_ax)
+  have hsecond : (0 : Real) ≤ (exp 1 - L) * (exp 1 * exp 1 - 1) := by
+    rcases (le_iff_lt_or_eq L (exp 1)).mp hL with h | h
+    · exact le_of_lt (mul_pos (sub_pos_of_lt h) (sub_pos_of_lt hE2))
+    · rw [h]
+      have ez : exp 1 - exp 1 = (0 : Real) := by mach_ring
+      rw [ez]
+      have ez2 : (0 : Real) * (exp 1 * exp 1 - 1) = 0 := by mach_ring
+      rw [ez2]
+      exact le_refl 0
+  rcases (le_iff_lt_or_eq 0 ((exp 1 - L) * (exp 1 * exp 1 - 1))).mp hsecond with h | h
+  · exact add_pos_real hfirst h
+  · have e0 : exp 1 * (exp 1 * exp 1 * (exp 1 - (1 + 1)) + 1)
+        + (exp 1 - L) * (exp 1 * exp 1 - 1)
+        = exp 1 * (exp 1 * exp 1 * (exp 1 - (1 + 1)) + 1) := by
+      rw [← h]; mach_ring
+    rw [e0]
+    exact hfirst
+
+/-- `log (e³ − L′) < 2 + log (e² − L′)` for `L′ ≤ e`. -/
+theorem log_w3_lt_two_add_log_w2 {L : Real} (hL : L ≤ exp 1)
+    (hW2 : (0 : Real) < exp (1 + 1) - L) :
+    log (exp (1 + 1 + 1) - L) < (1 + 1) + log (exp (1 + 1) - L) := by
+  have hpos3 : (0 : Real) < exp (1 + 1 + 1) - L :=
+    lt_trans_ax hW2 (by
+      apply lt_of_sub_pos
+      have e : (exp (1 + 1 + 1 : Real) - L) - (exp (1 + 1) - L)
+          = exp (1 + 1 + 1) - exp (1 + 1) := by
+        mach_mpoly [exp (1 + 1 + 1), exp (1 + 1), L]
+      rw [e]
+      exact sub_pos_of_lt (exp_lt (lt_add_of_pos_right zero_lt_one_ax)))
+  have h := log_lt_log hpos3 (cube_sub_lt_sq_mul hL)
+  rw [log_mul (exp_pos (1 + 1)) hW2, log_exp] at h
+  exact h
+
+/-- `0 ≤ a → 0 < b → 0 < a + b`. -/
+theorem add_pos_of_nonneg_of_pos {a b : Real} (ha : 0 ≤ a) (hb : 0 < b) : 0 < a + b := by
+  rcases (le_iff_lt_or_eq 0 a).mp ha with h | h
+  · exact add_pos_real h hb
+  · rw [← h]
+    have e : (0 : Real) + b = b := by mach_ring
+    rw [e]
+    exact hb
+
+/-- `exp 3 − exp 2 > 2`, since `e³ − e² = e²·(e − 1) > 4·1`. -/
+theorem exp_three_sub_exp_two_gt_two : (1 + 1 : Real) < exp (1 + 1 + 1) - exp (1 + 1) := by
+  have hsplit : exp (1 + 1 + 1 : Real) - exp (1 + 1) = exp (1 + 1) * (exp 1 - 1) := by
+    rw [exp_add (1 + 1) 1]; mach_mpoly [exp (1 + 1), exp 1]
+  rw [hsplit]
+  have hE1 : (1 : Real) < exp 1 - 1 := by
+    apply lt_of_sub_pos
+    have e : exp 1 - 1 - 1 = exp 1 - (1 + 1) := by mach_ring
+    rw [e]; exact sub_pos_of_lt two_lt_exp_one
+  have h1 : ((1 + 1 : Real) * (1 + 1)) * (exp 1 - 1) < exp (1 + 1) * (exp 1 - 1) :=
+    mul_lt_mul_of_pos_right exp_two_gt_four (lt_trans_ax zero_lt_one_ax hE1)
+  have h2 : (1 + 1 : Real) < ((1 + 1 : Real) * (1 + 1)) * (exp 1 - 1) := by
+    have hh := mul_lt_mul_pos_left hE1 (mul_pos one_add_one_pos one_add_one_pos)
+    have e : ((1 + 1 : Real) * (1 + 1)) * 1 = (1 + 1) + (1 + 1) := by mach_ring
+    rw [e] at hh
+    exact lt_trans_ax (lt_add_of_pos_right one_add_one_pos) hh
+  exact lt_trans_ax h2 h1
+
+/-- `exp (exp 3) > 3 · exp (exp 2)`. -/
+theorem three_exp_exp_two_lt_exp_exp_three :
+    (1 + 1 + 1 : Real) * exp (exp (1 + 1)) < exp (exp (1 + 1 + 1)) := by
+  have hratio : (1 + 1 + 1 : Real) < exp (exp (1 + 1 + 1) - exp (1 + 1)) := by
+    have h := exp_lt exp_three_sub_exp_two_gt_two
+    have h4 : (1 + 1 + 1 : Real) < exp (1 + 1) := by
+      have e4 : (1 + 1 : Real) * (1 + 1) = (1 + 1 + 1) + 1 := by mach_ring
+      have hh := exp_two_gt_four
+      rw [e4] at hh
+      exact lt_trans_ax (lt_add_of_pos_right zero_lt_one_ax) hh
+    exact lt_trans_ax h4 h
+  have hsplit : exp (exp (1 + 1 + 1 : Real))
+      = exp (exp (1 + 1)) * exp (exp (1 + 1 + 1) - exp (1 + 1)) := by
+    rw [← exp_add]
+    have e : exp (1 + 1 : Real) + (exp (1 + 1 + 1) - exp (1 + 1)) = exp (1 + 1 + 1) := by
+      mach_mpoly [exp (1 + 1), exp (1 + 1 + 1)]
+    rw [e]
+  rw [hsplit]
+  have hh := mul_lt_mul_pos_left hratio (exp_pos (exp (1 + 1 : Real)))
+  have e : exp (exp (1 + 1 : Real)) * ((1 : Real) + 1 + 1)
+      = (1 + 1 + 1 : Real) * exp (exp (1 + 1)) := by mach_ring
+  rw [e] at hh
+  exact hh
+
+/-- **`u4` over `w3` is impossible on the small branch too** (`log c′ ≤ exp 1`).
+
+The child is positive throughout, so the non-positive route is unavailable. **Three points; the
+second difference kills `K` and leaves a bounded left side against an astronomical right side.** -/
+theorem u4_w3_small_absurd {c' K : Real} (hc : log c' ≤ exp 1)
+    (e₁ : (1 : Real) * (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+            (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval 1 = K)
+    (e₂ : ((1 : Real) + 1) * (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+            (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval (1 + 1) = K)
+    (e₃ : ((1 : Real) + 1 + 1) * (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+            (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval (1 + 1 + 1) = K) :
+    False := by
+  have m₁ := u4_master _ zero_lt_one_ax e₁
+  have m₂ := u4_master _ one_add_one_pos e₂
+  have m₃ := u4_master _ three_pos e₃
+  have wv : ∀ y : Real, (EMLTree.eml EMLTree.var (EMLTree.const c')).eval y
+      = exp y - log c' := fun _ => rfl
+  rw [wv] at m₁ m₂ m₃
+  -- W₂ > 0
+  have hW2pos : (0 : Real) < exp (1 + 1) - log c' := by
+    apply lt_of_sub_pos
+    have e : exp (1 + 1 : Real) - log c' - 0 = (exp (1 + 1) - exp 1) + (exp 1 - log c') := by
+      mach_mpoly [exp (1 + 1), exp 1, log c']
+    rw [e]
+    rcases (le_iff_lt_or_eq (log c') (exp 1)).mp hc with h | h
+    · exact add_pos_real (sub_pos_of_lt (exp_lt (lt_add_of_pos_right zero_lt_one_ax)))
+        (sub_pos_of_lt h)
+    · rw [h]
+      have ez : exp 1 - exp 1 = (0 : Real) := by mach_ring
+      rw [ez]
+      have ez2 : exp (1 + 1 : Real) - exp 1 + 0 = exp (1 + 1) - exp 1 := by mach_ring
+      rw [ez2]
+      exact sub_pos_of_lt (exp_lt (lt_add_of_pos_right zero_lt_one_ax))
+  -- the second difference
+  have hsd : (1 : Real) * log (exp 1 - log c')
+      - (1 + 1) * (((1 : Real) + 1) * log (exp (1 + 1) - log c'))
+      + ((1 : Real) + 1 + 1) * log (exp (1 + 1 + 1) - log c')
+      = exp (exp 1) - (1 + 1) * exp (exp (1 + 1)) + exp (exp (1 + 1 + 1)) := by
+    rw [m₁, m₂, m₃]; mach_mpoly [exp (exp 1), exp (exp (1 + 1)), exp (exp (1 + 1 + 1)), K]
+  -- LEFT side < 6
+  have hleft : (1 : Real) * log (exp 1 - log c')
+      - (1 + 1) * (((1 : Real) + 1) * log (exp (1 + 1) - log c'))
+      + ((1 : Real) + 1 + 1) * log (exp (1 + 1 + 1) - log c')
+      < (1 + 1 + 1) * (1 + 1) := by
+    have hA := log_w1_le_log_w2 hc
+    have hB := log_w3_lt_two_add_log_w2 hc hW2pos
+    apply lt_of_sub_pos
+    have e : ((1 + 1 + 1 : Real) * (1 + 1))
+        - ((1 : Real) * log (exp 1 - log c')
+          - (1 + 1) * (((1 : Real) + 1) * log (exp (1 + 1) - log c'))
+          + ((1 : Real) + 1 + 1) * log (exp (1 + 1 + 1) - log c'))
+        = (log (exp (1 + 1) - log c') - log (exp 1 - log c'))
+          + (1 + 1 + 1) * (((1 + 1) + log (exp (1 + 1) - log c'))
+              - log (exp (1 + 1 + 1) - log c')) := by
+      mach_mpoly [log (exp 1 - log c'), log (exp (1 + 1) - log c'),
+        log (exp (1 + 1 + 1) - log c')]
+    rw [e]
+    exact add_pos_of_nonneg_of_pos (sub_nonneg_of_le hA) (mul_pos three_pos (sub_pos_of_lt hB))
+  -- RIGHT side > 6
+  have hright : ((1 : Real) + 1 + 1) * (1 + 1)
+      < exp (exp 1) - (1 + 1) * exp (exp (1 + 1)) + exp (exp (1 + 1 + 1)) := by
+    apply lt_of_sub_pos
+    have e : (exp (exp 1) - (1 + 1) * exp (exp (1 + 1)) + exp (exp (1 + 1 + 1)))
+        - ((1 : Real) + 1 + 1) * (1 + 1)
+        = (exp (exp (1 + 1 + 1)) - (1 + 1 + 1) * exp (exp (1 + 1)))
+          + (exp (exp (1 + 1)) - (1 + 1 + 1))
+          + (exp (exp 1) - (1 + 1 + 1)) := by
+      mach_mpoly [exp (exp 1), exp (exp (1 + 1)), exp (exp (1 + 1 + 1))]
+    rw [e]
+    have h3 : (1 + 1 + 1 : Real) < exp (1 + 1) := by
+      have e4 : (1 + 1 : Real) * (1 + 1) = (1 + 1 + 1) + 1 := by mach_ring
+      have hh := exp_two_gt_four
+      rw [e4] at hh
+      exact lt_trans_ax (lt_add_of_pos_right zero_lt_one_ax) hh
+    have hexp2gt2 : (1 + 1 : Real) < exp (1 + 1) := lt_trans_ax two_lt_four exp_two_gt_four
+    have hA : (1 + 1 + 1 : Real) < exp (exp (1 + 1)) := lt_trans_ax h3 (exp_lt hexp2gt2)
+    have hB : (1 + 1 + 1 : Real) < exp (exp 1) := lt_trans_ax h3 (exp_lt two_lt_exp_one)
+    exact add_pos_real (add_pos_real (sub_pos_of_lt three_exp_exp_two_lt_exp_exp_three)
+      (sub_pos_of_lt hA)) (sub_pos_of_lt hB)
+  rw [hsd] at hleft
+  exact lt_irrefl_ax _ (lt_trans_ax hleft hright)
+
 end Real
 end MachLib
