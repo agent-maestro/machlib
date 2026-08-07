@@ -1421,5 +1421,114 @@ theorem expExp_fails_both :
   have h := expBounded_fails_of_outruns expExp_outruns
   exact ⟨h, fun hl => h ((logBoundedEventually_iff_expBounded _).mp hl)⟩
 
+/-! ## Descending the boundary — and one shape DECIDED -/
+
+/-- `w.eval X ≤ X` from some point on. -/
+def SubLinearEventually (w : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → w.eval X ≤ X
+
+/-- `0 ≤ log (w.eval X)` from some point on. **Stated on `log`, not on `w.eval ≥ 1`**, so the
+totalised region (`w.eval ≤ 0`, where `log = 0`) qualifies. -/
+def LogNonnegEventually (w : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → 0 ≤ log (w.eval X)
+
+theorem subLinearEventually_var : SubLinearEventually EMLTree.var :=
+  ⟨0, fun X _ => le_refl _⟩
+
+theorem subLinearEventually_const (c : Real) : SubLinearEventually (EMLTree.const c) :=
+  ⟨c, fun X hX => le_of_lt hX⟩
+
+theorem logNonnegEventually_var : LogNonnegEventually EMLTree.var :=
+  ⟨1, fun X hX => by
+    have hv : (EMLTree.var).eval X = X := rfl
+    rw [hv]
+    have h := log_le_log_of_le zero_lt_one_ax (le_of_lt hX)
+    rw [log_one] at h
+    exact h⟩
+
+theorem logNonnegEventually_const {c : Real} (hc : 0 ≤ log c) :
+    LogNonnegEventually (EMLTree.const c) := ⟨0, fun X _ => hc⟩
+
+/-- **THE DESCENT.** A sub-linear left child and a `log`-non-negative right child make the node
+`exp`-bounded. -/
+theorem expBoundedEventually_eml {w₁ w₂ : EMLTree}
+    (h₁ : SubLinearEventually w₁) (h₂ : LogNonnegEventually w₂) :
+    ExpBoundedEventually (EMLTree.eml w₁ w₂) := by
+  obtain ⟨Y₁, hY₁⟩ := h₁
+  obtain ⟨Y₂, hY₂⟩ := h₂
+  refine ⟨exp Y₁ + exp Y₂, fun X hX => ?_⟩
+  have hX1 : Y₁ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₁)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂) - exp Y₁ = exp Y₂ := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]; exact exp_pos Y₂
+  have hX2 : Y₂ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₂)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂) - exp Y₂ = exp Y₁ := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]; exact exp_pos Y₁
+  show exp (w₁.eval X) - log (w₂.eval X) ≤ exp X
+  have hleft : exp (w₁.eval X) ≤ exp X := exp_monotone (hY₁ X hX1)
+  have hright : (0 : Real) ≤ log (w₂.eval X) := hY₂ X hX2
+  apply le_trans _ hleft
+  rcases (le_iff_lt_or_eq 0 (log (w₂.eval X))).mp hright with h | h
+  · apply le_of_lt
+    apply lt_of_sub_pos
+    have ee : exp (w₁.eval X) - (exp (w₁.eval X) - log (w₂.eval X))
+        = log (w₂.eval X) := by mach_mpoly [exp (w₁.eval X), log (w₂.eval X)]
+    rw [ee]; exact h
+  · rw [← h]
+    have ee : exp (w₁.eval X) - (0 : Real) = exp (w₁.eval X) := by mach_ring
+    rw [ee]; exact le_refl _
+
+/-- **A3 — the hierarchy TERMINATES.** One level below sub-linear the requirement is `≤ log X`, and
+`var` fails it: `log X < X` always.
+
+> ### So the descent bottoms out after two levels. Below that, only `const`-headed spines stay bounded — unlike the growth hierarchy, which continues indefinitely. -/
+theorem var_not_subLog :
+    ¬ ∃ Y : Real, ∀ X : Real, Y < X → (EMLTree.var).eval X ≤ log X := by
+  rintro ⟨Y, hY⟩
+  have hXpos : (0 : Real) < exp Y + 1 := add_pos_real (exp_pos Y) zero_lt_one_ax
+  have hYX : Y < exp Y + 1 :=
+    lt_trans_ax (exp_grows_strictly_thm Y) (lt_add_of_pos_right zero_lt_one_ax)
+  have h := hY _ hYX
+  have hv : (EMLTree.var).eval (exp Y + 1) = exp Y + 1 := rfl
+  rw [hv] at h
+  have hlt : log (exp Y + 1) < exp Y + 1 := by
+    have hh := exp_grows_strictly_thm (log (exp Y + 1))
+    rw [exp_log hXpos] at hh
+    exact hh
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt h)
+
+/-- **A4 — one shape DECIDED, and it is the arm's first `iff`.**
+
+`eml var (const c)` is `exp`-bounded **exactly when** `0 ≤ log c`. The forward direction is
+`not_logBoundedEventually_of_neg` through the loop identity; the reverse is the descent.
+
+**`c ≤ 0` qualifies**, because the totalisation gives `log c = 0`. -/
+theorem expBoundedEventually_eml_var_const_iff (c : Real) :
+    ExpBoundedEventually (EMLTree.eml EMLTree.var (EMLTree.const c)) ↔ 0 ≤ log c := by
+  constructor
+  · intro h
+    rcases lt_total (log c) 0 with hlt | heq | hgt
+    · exact absurd ((logBoundedEventually_iff_expBounded _).mpr h)
+        (not_logBoundedEventually_of_neg hlt)
+    · exact le_of_eq heq.symm
+    · exact le_of_lt hgt
+  · intro h
+    exact expBoundedEventually_eml subLinearEventually_var (logNonnegEventually_const h)
+
+/-- `eml var var` is `exp`-bounded — both descent hypotheses hold at a leaf. -/
+theorem expBoundedEventually_var_var :
+    ExpBoundedEventually (EMLTree.eml EMLTree.var EMLTree.var) :=
+  expBoundedEventually_eml subLinearEventually_var logNonnegEventually_var
+
+/-- `eml (const a) var` is `exp`-bounded. -/
+theorem expBoundedEventually_const_var (a : Real) :
+    ExpBoundedEventually (EMLTree.eml (EMLTree.const a) EMLTree.var) :=
+  expBoundedEventually_eml (subLinearEventually_const a) logNonnegEventually_var
+
 end Real
 end MachLib
