@@ -1325,5 +1325,101 @@ theorem not_logBoundedEventually_of_neg {c : Real} (hc : log c < 0) :
   rw [log_exp] at hlog
   exact lt_irrefl_ax _ (lt_of_lt_of_le hlog hbound)
 
+/-! ## Closing the loop: growth's side condition IS the one-point method's obligation 2
+
+Two sessions produced what looked like two obstructions — `not_logBoundedEventually_of_neg` and
+`rightBounded_fails_everywhere`. **They are one.** -/
+
+/-- **The pointwise identity, for EVERY real `v` — totalisation included.**
+
+`v ≤ 0`: both sides are true (`log v = 0 ≤ X` and `v ≤ 0 < exp X`). `v > 0`: `exp_log` plus
+monotonicity. -/
+theorem log_le_iff_le_exp {v X : Real} (hX : 0 < X) : log v ≤ X ↔ v ≤ exp X := by
+  constructor
+  · intro h
+    rcases lt_total 0 v with hv | hv | hv
+    · have he : exp (log v) ≤ exp X := exp_monotone h
+      rw [exp_log hv] at he
+      exact he
+    · exact le_of_lt (by rw [← hv]; exact exp_pos X)
+    · exact le_of_lt (lt_trans_ax hv (exp_pos X))
+  · intro h
+    rcases lt_total 0 v with hv | hv | hv
+    · have hl := log_le_log_of_le hv h
+      rw [log_exp] at hl
+      exact hl
+    · rw [← hv, log_nonpos (le_refl 0)]
+      exact le_of_lt hX
+    · rw [log_nonpos (le_of_lt hv)]
+      exact le_of_lt hX
+
+/-- The obligation-2 condition, in eventual form. -/
+def ExpBoundedEventually (w : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → w.eval X ≤ exp X
+
+/-- **THE LOOP CLOSES: the two conditions are the SAME.**
+
+`LogBoundedEventually` is growth's side condition (`RESULT_STRUCTURE.md`); `ExpBoundedEventually` is
+the eventual form of `RightBoundedAt`'s bound, the one-point method's obligation 2.
+
+> ### One condition wearing two names. The arm has a single boundary — **does this tree outrun `exp X`?** — governing both. -/
+theorem logBoundedEventually_iff_expBounded (w : EMLTree) :
+    LogBoundedEventually w ↔ ExpBoundedEventually w := by
+  constructor
+  · rintro ⟨Y, hY⟩
+    refine ⟨exp Y, fun X hX => ?_⟩
+    have hXpos : (0 : Real) < X := lt_trans_ax (exp_pos Y) hX
+    have hYX : Y < X := lt_trans_ax (exp_grows_strictly_thm Y) hX
+    exact (log_le_iff_le_exp hXpos).mp (hY X hYX)
+  · rintro ⟨Y, hY⟩
+    refine ⟨exp Y, fun X hX => ?_⟩
+    have hXpos : (0 : Real) < X := lt_trans_ax (exp_pos Y) hX
+    have hYX : Y < X := lt_trans_ax (exp_grows_strictly_thm Y) hX
+    exact (log_le_iff_le_exp hXpos).mpr (hY X hYX)
+
+/-- Leaves satisfy it — restated on the `exp` side. -/
+theorem expBoundedEventually_const (c : Real) : ExpBoundedEventually (EMLTree.const c) :=
+  (logBoundedEventually_iff_expBounded _).mp (logBoundedEventually_const c)
+
+theorem expBoundedEventually_var : ExpBoundedEventually EMLTree.var :=
+  (logBoundedEventually_iff_expBounded _).mp logBoundedEventually_var
+
+/-- **Z4 — the two witnesses fail for ONE reason.**
+
+`rightBounded_fails_everywhere` used `eml (eml var (const 1)) (const 1) = exp (exp x)`;
+`not_logBoundedEventually_of_neg` used `eml var (const c)` with `log c < 0`. **Both outrun `exp X`,
+and by the identity that is the single reason either fails.** -/
+theorem expBounded_fails_of_outruns {w : EMLTree}
+    (h : ∀ X : Real, exp X < w.eval X) : ¬ ExpBoundedEventually w := by
+  rintro ⟨Y, hY⟩
+  have hlt := h (exp Y + 1)
+  have hle := hY (exp Y + 1)
+    (lt_trans_ax (exp_grows_strictly_thm Y) (lt_add_of_pos_right zero_lt_one_ax))
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hle)
+
+/-- The `exp (exp x)` witness, restated through the single boundary. -/
+theorem expExp_outruns (X : Real) :
+    exp X < (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const 1)).eval X := by
+  have hval : (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+      (EMLTree.const 1)).eval X = exp (exp X) := by
+    show exp (exp X - log (1 : Real)) - log (1 : Real) = exp (exp X)
+    rw [log_one]
+    have e : exp X - (0 : Real) = exp X := by mach_ring
+    rw [e]
+    have e2 : exp (exp X) - (0 : Real) = exp (exp X) := by mach_ring
+    exact e2
+  rw [hval]
+  exact exp_lt (exp_grows_strictly_thm X)
+
+/-- …and therefore it fails BOTH conditions, by one argument. -/
+theorem expExp_fails_both :
+    ¬ ExpBoundedEventually (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.const 1))
+    ∧ ¬ LogBoundedEventually (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 1))
+        (EMLTree.const 1)) := by
+  have h := expBounded_fails_of_outruns expExp_outruns
+  exact ⟨h, fun hl => h ((logBoundedEventually_iff_expBounded _).mp hl)⟩
+
 end Real
 end MachLib
