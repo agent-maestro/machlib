@@ -334,5 +334,45 @@ theorem u1_w4_absurd {c₁ c₂ K : Real}
   rw [v₁, log_exp] at hsd
   exact sd_contradiction logW2_lt_two logV_add_logV_gt_five hsd
 
+/-! ## The FOUR-point system — stating the remaining obligation precisely
+
+`u1_second_difference` uses the points `1, 2, 3`. Since `x · log (W x)` is **affine**, its second
+difference vanishes at **any** three equally spaced points — so `2, 3, 4` gives a *second,
+independent* relation, and the two together are what the open cells need.
+
+> ### The remaining obligation is not "more points". Numerically the two relations already separate: at the only root of the `1,2,3` relation on the branch `L′ ≤ e` (`L* ≈ 2.6213`) the `2,3,4` relation takes the value `≈ 0.883`. **What is missing is a proof that two transcendental functions have no COMMON root** — a root-separation problem, not a bookkeeping one. -/
+
+/-- **The second difference at `2, 3, 4`** — independent of the one at `1, 2, 3`.
+
+Together with `u1_second_difference` this is the four-point system. **Neither closes the open cells
+on its own; stating both is what makes the remaining obligation precise.** -/
+theorem u1_second_difference_234 {α K : Real} {u w : EMLTree}
+    (hu₂ : u.eval (1 + 1) = α) (hu₃ : u.eval (1 + 1 + 1) = α)
+    (hu₄ : u.eval (1 + 1 + 1 + 1) = α)
+    (e₂ : ((1 : Real) + 1) * (EMLTree.eml u w).eval (1 + 1) = K)
+    (e₃ : ((1 : Real) + 1 + 1) * (EMLTree.eml u w).eval (1 + 1 + 1) = K)
+    (e₄ : ((1 : Real) + 1 + 1 + 1) * (EMLTree.eml u w).eval (1 + 1 + 1 + 1) = K) :
+    ((1 : Real) + 1) * log (w.eval (1 + 1))
+      - (1 + 1) * (((1 : Real) + 1 + 1) * log (w.eval (1 + 1 + 1)))
+      + ((1 : Real) + 1 + 1 + 1) * log (w.eval (1 + 1 + 1 + 1)) = 0 := by
+  have m₂ := u1_master hu₂ e₂
+  have m₃ := u1_master hu₃ e₃
+  have m₄ := u1_master hu₄ e₄
+  rw [m₂, m₃, m₄]
+  mach_mpoly [exp α, K]
+
+/-- **`F` is DISCONTINUOUS at `L′ = exp 1`, because `log` is totalised.**
+
+At `L′ = exp 1` the child `exp 1 − L′` is exactly `0`, and `log 0 = 0` — not the `−∞` a genuine
+logarithm would give. **So the three-point relation's value jumps at that parameter**, and the
+`L′ = exp 1` endpoint is not a limit of the interior.
+
+Recorded because the hand-computation that first located the relation's root **got its sign and its
+location wrong**, and this discontinuity is why sampling near the endpoint misleads. -/
+theorem log_child_at_endpoint : log (exp 1 - exp 1) = 0 := by
+  have e : exp 1 - exp 1 = (0 : Real) := by mach_ring
+  rw [e]
+  exact log_nonpos (le_refl 0)
+
 end Real
 end MachLib
