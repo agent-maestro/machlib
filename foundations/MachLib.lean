@@ -313,6 +313,7 @@ import MachLib.EMLReciprocalDepth2
 import MachLib.EMLTerminationRoute
 import MachLib.EMLBranchPigeonhole
 import MachLib.EMLNamedTarget
+import MachLib.EMLDeepestNode
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
