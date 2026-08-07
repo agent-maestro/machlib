@@ -1654,5 +1654,117 @@ theorem not_subLinearEventually_var_const (c : Real) :
     (not_sublinear_core (lt_b3Point_four Y (log c)) (lt_b3Point_L Y (log c))
       (exp_gt_four_sub_two (b3Point Y (log c)))) hle)
 
+/-! ## The bounding condition was CONSERVATIVE — and the symmetry it was hiding
+
+`expBoundedEventually_eml` requires `LogNonnegEventually v₂`, which excludes right children in
+`(0,1)`. **They should not be excluded**: a value in `(0,1)` makes `log` negative, so
+`exp (v₁.eval X) − log (v₂.eval X)` merely *adds* a bounded amount.
+
+> ### GROWTH bounds the right child's `log` ABOVE (`≤ X`). BOUNDING bounds it BELOW (`≥ −X`). `LogNonneg` was hiding that symmetry — **the second time an over-assumption has cost this arm reach.** -/
+
+/-- `−X ≤ log (v.eval X)` from some point on. **The mirror of `LogBoundedEventually`.** -/
+def LogBoundedBelowEventually (v : EMLTree) : Prop :=
+  ∃ Y : Real, ∀ X : Real, Y < X → -X ≤ log (v.eval X)
+
+/-- `X + X ≤ exp X` for `X > 4`, via `X + X ≤ 4(X−2) < exp X`. -/
+theorem two_mul_le_exp {X : Real} (h4 : ((1 + 1 : Real) * (1 + 1)) < X) : X + X ≤ exp X := by
+  apply le_of_lt
+  apply lt_trans_ax _ (exp_gt_four_sub_two X)
+  apply lt_of_sub_pos
+  have ee : ((1 + 1 : Real) * (1 + 1)) * (X - (1 + 1)) - (X + X)
+      = (1 + 1 : Real) * (X - ((1 + 1 : Real) * (1 + 1))) := by mach_mpoly [X]
+  rw [ee]
+  exact mul_pos one_add_one_pos (sub_pos_of_lt h4)
+
+theorem add_nonneg_real {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) : 0 ≤ a + b := by
+  rcases (le_iff_lt_or_eq 0 b).mp hb with h | h
+  · exact le_of_lt (add_pos_of_nonneg_of_pos ha h)
+  · rw [← h]
+    have e : a + (0 : Real) = a := by mach_ring
+    rw [e]; exact ha
+
+/-- **The bounding core, over bare reals.** `A ≤ X` and `−X ≤ L` give `A − L ≤ exp X` for `X > 4`. -/
+theorem expBounded_core {X A L : Real} (h4 : ((1 + 1 : Real) * (1 + 1)) < X)
+    (hA : A ≤ X) (hL : -X ≤ L) : A - L ≤ exp X := by
+  apply le_trans _ (two_mul_le_exp h4)
+  apply le_of_sub_nonneg
+  have ee : (X + X) - (A - L) = (X - A) + (X + L) := by mach_mpoly [X, A, L]
+  rw [ee]
+  have h2 : (0 : Real) ≤ X + L := by
+    have h := sub_nonneg_of_le hL
+    have e : L - -X = X + L := by mach_mpoly [X, L]
+    rw [e] at h
+    exact h
+  exact add_nonneg_real (sub_nonneg_of_le hA) h2
+
+/-- **The SECOND bounding route** — weaker on the right child, stronger on the left.
+
+`SubLogEventually v₁` (so `exp (v₁.eval X) ≤ X`) plus `LogBoundedBelowEventually v₂`.
+
+> ### ⚠ This is a TRADE, not a strict widening. With `SubLinearEventually v₁` the right child really does need `LogNonneg`; buying the weaker right-child condition costs a stronger left-child one. **The two routes are INCOMPARABLE**, and my pre-registration's "`LogNonneg` was conservative" was only half right. -/
+theorem expBoundedEventually_eml_below {v₁ v₂ : EMLTree}
+    (h₁ : SubLogEventually v₁) (h₂ : LogBoundedBelowEventually v₂) :
+    ExpBoundedEventually (EMLTree.eml v₁ v₂) := by
+  obtain ⟨Y₁, hY₁⟩ := h₁
+  obtain ⟨Y₂, hY₂⟩ := h₂
+  refine ⟨exp Y₁ + exp Y₂ + ((1 + 1) * (1 + 1)), fun X hX => ?_⟩
+  have hX1 : Y₁ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₁)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂ + ((1 + 1 : Real) * (1 + 1))) - exp Y₁
+        = exp Y₂ + ((1 + 1) * (1 + 1)) := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]
+    exact add_pos_real (exp_pos Y₂) (mul_pos one_add_one_pos one_add_one_pos)
+  have hX2 : Y₂ < X := by
+    apply lt_trans_ax (exp_grows_strictly_thm Y₂)
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂ + ((1 + 1 : Real) * (1 + 1))) - exp Y₂
+        = exp Y₁ + ((1 + 1) * (1 + 1)) := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]
+    exact add_pos_real (exp_pos Y₁) (mul_pos one_add_one_pos one_add_one_pos)
+  have h4 : ((1 + 1 : Real) * (1 + 1)) < X := by
+    apply lt_trans_ax _ hX
+    apply lt_of_sub_pos
+    have ee : (exp Y₁ + exp Y₂ + ((1 + 1 : Real) * (1 + 1))) - ((1 + 1 : Real) * (1 + 1))
+        = exp Y₁ + exp Y₂ := by mach_mpoly [exp Y₁, exp Y₂]
+    rw [ee]
+    exact add_pos_real (exp_pos Y₁) (exp_pos Y₂)
+  have hXpos : (0 : Real) < X := lt_trans_ax (mul_pos one_add_one_pos one_add_one_pos) h4
+  show exp (v₁.eval X) - log (v₂.eval X) ≤ exp X
+  have hA : exp (v₁.eval X) ≤ X := by
+    have h := exp_monotone (hY₁ X hX1)
+    rw [exp_log hXpos] at h
+    exact h
+  exact expBounded_core h4 hA (hY₂ X hX2)
+
+/-- **`LogNonneg` implies the weaker bound** — so the new route subsumes the old one's right-child
+condition, even though the routes as a whole are incomparable. -/
+theorem logBoundedBelow_of_logNonneg {v : EMLTree} (h : LogNonnegEventually v) :
+    LogBoundedBelowEventually v := by
+  obtain ⟨Y, hY⟩ := h
+  refine ⟨exp Y, fun X hX => ?_⟩
+  have hXpos : (0 : Real) < X := lt_trans_ax (exp_pos Y) hX
+  have hYX : Y < X := lt_trans_ax (exp_grows_strictly_thm Y) hX
+  apply le_trans _ (hY X hYX)
+  apply le_of_sub_nonneg
+  have ee : (0 : Real) - -X = X := by mach_mpoly [X]
+  rw [ee]
+  exact le_of_lt hXpos
+
+/-- **A constant right child in `(0,1)` is now reachable** — the old route excluded it. -/
+theorem expBoundedEventually_const_const (a b : Real) :
+    ExpBoundedEventually (EMLTree.eml (EMLTree.const a) (EMLTree.const b)) :=
+  expBoundedEventually_eml_below (subLogEventually_const a)
+    ⟨exp (-log b), fun X hX => by
+      have hv : (EMLTree.const b).eval X = b := rfl
+      rw [hv]
+      have h1 : -log b < X := lt_trans_ax (exp_grows_strictly_thm (-log b)) hX
+      apply le_of_sub_nonneg
+      have ee : log b - -X = X - -log b := by mach_mpoly [X, log b]
+      rw [ee]
+      exact le_of_lt (sub_pos_of_lt h1)⟩
+
 end Real
 end MachLib
