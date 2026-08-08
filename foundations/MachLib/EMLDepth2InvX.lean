@@ -1380,4 +1380,104 @@ theorem right_child_determined {u t2 : EMLTree}
     mach_ring
   rw [← hdiv, exp_log hpos]
 
+-- ===================================================================
+-- ▸ THE GENERAL MASTER EQUATION — all left-child shapes, all depths
+--
+-- `left_eml_var_mul` worked because `log (var) = log x` cancels the `x`.
+-- Without that cancellation the identity is still exact, just with `w` in it.
+-- ===================================================================
+
+/-- **Master equation, `w` positive.** For left child `eml u w` at any depth:
+`x · exp (exp (u x)) = w x · (1 + x · log (t2 x))`. -/
+theorem master_eq_pos {u w t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u w) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) (hw : 0 < w.eval x) :
+    x * exp (exp (u.eval x)) = w.eval x * (1 + x * log (t2.eval x)) := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have hlv : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  have hexp : exp ((EMLTree.eml u w).eval x) = exp (exp (u.eval x)) * (1 / w.eval x) := by
+    rw [hlv, sub_def, exp_add, exp_neg_inv, exp_log hw]
+  have he : exp ((EMLTree.eml u w).eval x) - log (t2.eval x) = 1 / x := h x hx
+  rw [hexp] at he
+  -- multiply by x * w
+  have hmul : (x * w.eval x) * (exp (exp (u.eval x)) * (1 / w.eval x) - log (t2.eval x))
+      = (x * w.eval x) * (1 / x) := by rw [he]
+  have hL : (x * w.eval x) * (exp (exp (u.eval x)) * (1 / w.eval x) - log (t2.eval x))
+      = x * exp (exp (u.eval x)) * (w.eval x * (1 / w.eval x))
+        - w.eval x * (x * log (t2.eval x)) := by
+    mach_mpoly [x, w.eval x, exp (exp (u.eval x)), log (t2.eval x), 1 / w.eval x]
+  have hR : (x * w.eval x) * (1 / x) = w.eval x * (x * (1 / x)) := by
+    mach_mpoly [x, w.eval x, 1 / x]
+  rw [hL, hR, mul_inv x hxne, mul_inv (w.eval x) (ne_of_gt hw)] at hmul
+  have e1 : x * exp (exp (u.eval x)) * 1 - w.eval x * (x * log (t2.eval x))
+      = x * exp (exp (u.eval x)) - w.eval x * (x * log (t2.eval x)) := by
+    mach_mpoly [x, w.eval x, exp (exp (u.eval x)), log (t2.eval x)]
+  rw [e1] at hmul
+  -- hmul : x·E − w·(x·L) = w·1
+  have final : x * exp (exp (u.eval x))
+      = w.eval x * (1 + x * log (t2.eval x)) := by
+    have t : (x * exp (exp (u.eval x)) - w.eval x * (x * log (t2.eval x)))
+        + w.eval x * (x * log (t2.eval x))
+        = w.eval x * 1 + w.eval x * (x * log (t2.eval x)) := by rw [hmul]
+    have l : (x * exp (exp (u.eval x)) - w.eval x * (x * log (t2.eval x)))
+        + w.eval x * (x * log (t2.eval x)) = x * exp (exp (u.eval x)) := by
+      mach_mpoly [x, w.eval x, exp (exp (u.eval x)), log (t2.eval x)]
+    have r : w.eval x * 1 + w.eval x * (x * log (t2.eval x))
+        = w.eval x * (1 + x * log (t2.eval x)) := by
+      mach_mpoly [x, w.eval x, log (t2.eval x)]
+    rw [l, r] at t
+    exact t
+  exact final
+
+/-- **Master equation, `w` clamped.** Where `w x ≤ 0` the totalised `log` gives `0`, and the
+equation is `x · exp (exp (u x)) − x · log (t2 x) = 1`. -/
+theorem master_eq_clamped {u w t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u w) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) (hw : w.eval x ≤ 0) :
+    x * exp (exp (u.eval x)) - x * log (t2.eval x) = 1 := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have hlv : (EMLTree.eml u w).eval x = exp (u.eval x) - log (w.eval x) := rfl
+  have hexp : exp ((EMLTree.eml u w).eval x) = exp (exp (u.eval x)) := by
+    rw [hlv, log_nonpos hw]
+    have e : exp (u.eval x) - (0 : Real) = exp (u.eval x) := by mach_ring
+    rw [e]
+  have he : exp ((EMLTree.eml u w).eval x) - log (t2.eval x) = 1 / x := h x hx
+  rw [hexp] at he
+  have hmul : x * (exp (exp (u.eval x)) - log (t2.eval x)) = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp (exp (u.eval x)) - log (t2.eval x))
+      = x * exp (exp (u.eval x)) - x * log (t2.eval x) := by
+    mach_mpoly [x, exp (exp (u.eval x)), log (t2.eval x)]
+  rw [hd] at hmul
+  exact hmul
+
+/-- **Depth-free constraint for EVERY left-child shape** (where `w` is positive):
+`x · log (t2 x) > −1`. Because the left side of the master equation is strictly positive. -/
+theorem right_child_log_gt_neg_one {u w t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u w) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) (hw : 0 < w.eval x) :
+    -1 < x * log (t2.eval x) := by
+  have hm := master_eq_pos h x hx hw
+  have hlhs : 0 < x * exp (exp (u.eval x)) := mul_pos hx (exp_pos _)
+  rw [hm] at hlhs
+  -- 0 < w · (1 + x·L) with w > 0 forces 0 < 1 + x·L
+  have hfac : 0 < 1 + x * log (t2.eval x) := by
+    rcases lt_total 0 (1 + x * log (t2.eval x)) with hp | hz | hn
+    · exact hp
+    · exfalso
+      rw [← hz] at hlhs
+      have e : w.eval x * (0 : Real) = 0 := by mach_ring
+      rw [e] at hlhs; exact lt_irrefl_ax 0 hlhs
+    · exfalso
+      have := mul_lt_mul_pos_left_wit hn hw
+      have e : w.eval x * (0 : Real) = 0 := by mach_ring
+      rw [e] at this
+      exact lt_irrefl_ax 0 (lt_trans_ax hlhs this)
+  have s := add_lt_add_left hfac (-1 : Real)
+  have e1 : (-1 : Real) + 0 = -1 := by mach_ring
+  have e2 : (-1 : Real) + (1 + x * log (t2.eval x)) = x * log (t2.eval x) := by
+    mach_mpoly [x, log (t2.eval x)]
+  rw [e1, e2] at s
+  exact s
+
 end MachLib
