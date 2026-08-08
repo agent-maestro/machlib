@@ -325,6 +325,7 @@ import MachLib.EMLDifferentiationClosureRefuted
 import MachLib.EMLRingClosure
 import MachLib.EMLDerivClosure
 import MachLib.EMLCharacterisation
+import MachLib.EMLDepthCost
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
