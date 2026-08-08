@@ -1565,4 +1565,68 @@ theorem inv_x_mem_EML_depth_four :
     ∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = 1 / x :=
   ⟨invX4, invX4_depth, invX4_eval⟩
 
+-- ===================================================================
+-- ▸ TOWARD DEPTH 3: how big can a shallow tree be near `0`?
+--
+-- `right_child_determined` forces the right child to be `exp(K/x)` — a
+-- super-exponential blow-up at `0`. Shallow trees cannot do that, and the
+-- reusable reason is that every depth-≤1 tree is at most `M − log x`.
+-- ===================================================================
+
+/-- **Every depth-≤1 tree is `≤ M − log x` on `(0,1]`**, for a constant `M` depending only on the
+tree. The `−log x` is the fastest growth available that shallow. -/
+theorem depth_le_one_upper_bound (T : EMLTree) (hT : T.depth ≤ 1) :
+    ∃ M : Real, ∀ x : Real, 0 < x → x ≤ 1 → T.eval x ≤ M - log x := by
+  have key : ∀ (M : Real) (x : Real), 0 < x → x ≤ 1 → M ≤ M - log x := by
+    intro M x hx h1
+    have hl : log x ≤ 0 := log_nonpos_of_le_one hx h1
+    have s := add_le_add_wit (le_refl M) (by
+      have t := add_le_add_left hl (-log x)
+      have e1 : -log x + log x = (0 : Real) := by mach_ring
+      have e2 : -log x + 0 = -log x := by mach_ring
+      rw [e1, e2] at t
+      exact t : (0 : Real) ≤ -log x)
+    have e1 : M + 0 = M := by mach_ring
+    have e2 : M + -log x = M - log x := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  cases T with
+  | const c => exact ⟨c, fun x hx h1 => key c x hx h1⟩
+  | var =>
+      refine ⟨1, fun x hx h1 => ?_⟩
+      show x ≤ 1 - log x
+      exact le_trans h1 (key 1 x hx h1)
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q => exact ⟨exp p - log q, fun x hx h1 => key _ x hx h1⟩
+          | var =>
+              refine ⟨exp p, fun x hx h1 => ?_⟩
+              show exp p - log x ≤ exp p - log x
+              exact le_refl _
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨exp 1 - log q, fun x hx h1 => ?_⟩
+              show exp x - log q ≤ exp 1 - log q - log x
+              have he : exp x ≤ exp 1 := exp_monotone h1
+              have s := add_le_add_wit he (le_refl (-log q))
+              have e1 : exp x + -log q = exp x - log q := by mach_ring
+              have e2 : exp 1 + -log q = exp 1 - log q := by mach_ring
+              rw [e1, e2] at s
+              exact le_trans s (key (exp 1 - log q) x hx h1)
+          | var =>
+              refine ⟨exp 1, fun x hx h1 => ?_⟩
+              show exp x - log x ≤ exp 1 - log x
+              have he : exp x ≤ exp 1 := exp_monotone h1
+              have s := add_le_add_wit he (le_refl (-log x))
+              have e1 : exp x + -log x = exp x - log x := by mach_ring
+              have e2 : exp 1 + -log x = exp 1 - log x := by mach_ring
+              rw [e1, e2] at s
+              exact s
+
 end MachLib
