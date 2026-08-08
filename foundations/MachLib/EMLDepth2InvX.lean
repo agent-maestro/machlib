@@ -282,4 +282,186 @@ theorem inv_x_not_depth2_right_var (t1 : EMLTree) (ht : t1.depth ≤ 1) :
           simp only [EMLTree.depth] at ht
           omega
 
+-- ===================================================================
+-- ▸ THE CONSTANT-`t2` COLUMN, closed by ONE monotonicity criterion
+--
+-- With `t2` constant-valued the two-point system at `x = 1, 1+1` collapses to
+--     E₂ + E₂ = E₁ + E₁ − 1        (Eᵢ := exp (t1.eval i))
+-- so any `t1` that does NOT strictly decrease from `1` to `1+1` dies at once.
+-- ===================================================================
+
+theorem log_two_lt_one_wit : log ((1 : Real) + 1) < 1 := by
+  have h := log_lt_log (add_pos one_pos one_pos) two_lt_exp_one
+  rw [log_exp] at h
+  exact h
+
+theorem add_le_add_wit {a b c d : Real} (h1 : a ≤ b) (h2 : c ≤ d) : a + c ≤ b + d := by
+  have s1 : c + a ≤ c + b := add_le_add_left h1 c
+  have s2 : b + c ≤ b + d := add_le_add_left h2 b
+  have e1 : c + a = a + c := by mach_ring
+  have e2 : c + b = b + c := by mach_ring
+  rw [e1, e2] at s1
+  exact le_trans s1 s2
+
+/-- Reduction for constant-valued `t2`: `x·exp(t1 x) = 1 + log V · x`. -/
+theorem depth2_constval_reduce {t1 t2 : EMLTree} {V : Real}
+    (hV : ∀ x : Real, t2.eval x = V)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) :
+    x * exp (t1.eval x) = 1 + log V * x := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have he : exp (t1.eval x) - log (t2.eval x) = 1 / x := h x hx
+  rw [hV] at he
+  have hmul : x * (exp (t1.eval x) - log V) = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp (t1.eval x) - log V)
+      = x * exp (t1.eval x) - log V * x := by
+    mach_mpoly [x, exp (t1.eval x), log V]
+  rw [hd] at hmul
+  have e2 : x * exp (t1.eval x) - log V * x + log V * x = 1 + log V * x := by rw [hmul]
+  have e3 : x * exp (t1.eval x) - log V * x + log V * x = x * exp (t1.eval x) := by
+    mach_mpoly [x, exp (t1.eval x), log V]
+  rw [e3] at e2
+  exact e2
+
+/-- **The criterion.** If `t2` is constant-valued and `t1` does not decrease from `1` to `1+1`,
+`1/x` is impossible. -/
+theorem depth2_constval_mono_absurd {t1 t2 : EMLTree} {V : Real}
+    (hV : ∀ x : Real, t2.eval x = V)
+    (hmono : t1.eval 1 ≤ t1.eval (1 + 1))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False := by
+  have r1 := depth2_constval_reduce hV h 1 one_pos
+  have r2 := depth2_constval_reduce hV h (1 + 1) (add_pos one_pos one_pos)
+  have hL : log V = exp (t1.eval 1) - 1 := by
+    have e : (1 : Real) * exp (t1.eval 1) - 1 = 1 + log V * 1 - 1 := by rw [r1]
+    have e1 : (1 : Real) * exp (t1.eval 1) - 1 = exp (t1.eval 1) - 1 := by mach_ring
+    have e2 : (1 : Real) + log V * 1 - 1 = log V := by mach_ring
+    rw [e1, e2] at e
+    exact e.symm
+  rw [hL] at r2
+  -- r2 : (1+1) * E₂ = 1 + (E₁ - 1) * (1+1)
+  have key : exp (t1.eval (1 + 1)) + exp (t1.eval (1 + 1))
+      = exp (t1.eval 1) + exp (t1.eval 1) - 1 := by
+    have a1 : (1 + 1 : Real) * exp (t1.eval (1 + 1))
+        = exp (t1.eval (1 + 1)) + exp (t1.eval (1 + 1)) := by mach_ring
+    have a2 : (1 : Real) + (exp (t1.eval 1) - 1) * (1 + 1)
+        = exp (t1.eval 1) + exp (t1.eval 1) - 1 := by mach_ring
+    rw [a1, a2] at r2
+    exact r2
+  have hE : exp (t1.eval 1) ≤ exp (t1.eval (1 + 1)) := exp_monotone hmono
+  have hsum : exp (t1.eval 1) + exp (t1.eval 1)
+      ≤ exp (t1.eval (1 + 1)) + exp (t1.eval (1 + 1)) := add_le_add_wit hE hE
+  rw [key] at hsum
+  -- hsum : E₁ + E₁ ≤ E₁ + E₁ - 1
+  have hbad : (0 : Real) ≤ -1 := by
+    have e : exp (t1.eval 1) + exp (t1.eval 1) + (-1)
+        = exp (t1.eval 1) + exp (t1.eval 1) - 1 := by mach_ring
+    have s := add_le_add_left hsum (-(exp (t1.eval 1) + exp (t1.eval 1)))
+    have e1 : -(exp (t1.eval 1) + exp (t1.eval 1)) + (exp (t1.eval 1) + exp (t1.eval 1))
+        = (0 : Real) := by mach_ring
+    have e2 : -(exp (t1.eval 1) + exp (t1.eval 1))
+        + (exp (t1.eval 1) + exp (t1.eval 1) - 1) = -1 := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  have : (-1 : Real) < 0 := by
+    have h1 := add_lt_add_left zero_lt_one_ax (-1 : Real)
+    have e1 : (-1 : Real) + 0 = -1 := by mach_ring
+    have e2 : (-1 : Real) + 1 = 0 := by mach_ring
+    rw [e1, e2] at h1; exact h1
+  exact lt_irrefl_ax 0 (lt_of_le_of_lt hbad this)
+
+/-- `t1 = eml (const a) var` is the one shape that DECREASES on `[1, 1+1]`, so the criterion
+misses it — but `depth2_reduce` already pins it: `x·log V` must be constant, forcing `log V = 0`
+and then `exp (exp a) = 1`. -/
+theorem depth2_constval_left_const_var_absurd {a V : Real} {t2 : EMLTree}
+    (hV : ∀ x : Real, t2.eval x = V)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const a) EMLTree.var) t2).eval x = 1 / x) : False := by
+  have h1 := depth2_reduce h 1 one_pos
+  have h2 := depth2_reduce h (1 + 1) (add_pos one_pos one_pos)
+  rw [hV] at h1 h2
+  have hlog : log V = 0 := by
+    have d : (exp (exp a) - 1 * log V) - (exp (exp a) - (1 + 1) * log V) = log V := by
+      mach_mpoly [exp (exp a), log V]
+    rw [h1, h2] at d
+    have e : (1 : Real) - 1 = 0 := by mach_ring
+    rw [e] at d
+    exact d.symm
+  rw [hlog] at h1
+  have e : exp (exp a) - (1 : Real) * 0 = exp (exp a) := by mach_ring
+  rw [e] at h1
+  exact exp_exp_eq_one_absurd h1
+
+/-- `exp 1 ≤ exp (1+1) − log (1+1)` — the numeric step for `t1 = eml var var`. -/
+theorem exp_one_le_exp_two_sub_log_two : exp 1 ≤ exp (1 + 1) - log ((1 : Real) + 1) := by
+  have hsplit : exp ((1 : Real) + 1) = exp 1 * exp 1 := exp_add 1 1
+  have hgt : exp 1 + exp 1 < exp 1 * exp 1 := by
+    have := mul_lt_mul_of_pos_right two_lt_exp_one (exp_pos 1)
+    have e : ((1 : Real) + 1) * exp 1 = exp 1 + exp 1 := by mach_ring
+    rw [e] at this; exact this
+  have hstep : exp 1 + 1 < exp (1 + 1) := by
+    have h1 : exp 1 + 1 < exp 1 + exp 1 := by
+      have := add_le_add_left (le_of_lt (lt_trans_ax one_lt_one_plus_one_local two_lt_exp_one))
+        (exp 1)
+      have hlt := add_lt_add_left (lt_trans_ax one_lt_one_plus_one_local two_lt_exp_one) (exp 1)
+      exact hlt
+    rw [hsplit]
+    exact lt_trans_ax h1 hgt
+  -- log (1+1) < 1 and exp 1 + 1 < exp (1+1) give the claim
+  have hlog := log_two_lt_one_wit
+  have : exp 1 + log ((1 : Real) + 1) < exp (1 + 1) := by
+    have h2 : exp 1 + log ((1 : Real) + 1) < exp 1 + 1 := add_lt_add_left hlog (exp 1)
+    exact lt_trans_ax h2 hstep
+  have s := add_lt_add_left this (-log ((1 : Real) + 1))
+  have e1 : -log ((1 : Real) + 1) + (exp 1 + log ((1 : Real) + 1)) = exp 1 := by mach_ring
+  have e2 : -log ((1 : Real) + 1) + exp (1 + 1) = exp (1 + 1) - log ((1 : Real) + 1) := by
+    mach_ring
+  rw [e1, e2] at s
+  exact le_of_lt s
+
+/-- # **The constant-`t2` column, closed for every depth-≤1 left child.** -/
+theorem inv_x_not_depth2_right_constval {t1 t2 : EMLTree} {V : Real}
+    (ht : t1.depth ≤ 1) (hV : ∀ x : Real, t2.eval x = V) :
+    ¬ (∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) := by
+  intro h
+  cases t1 with
+  | const c =>
+      refine depth2_constval_mono_absurd hV ?_ h
+      show c ≤ c
+      exact le_refl c
+  | var =>
+      refine depth2_constval_mono_absurd hV ?_ h
+      show (1 : Real) ≤ 1 + 1
+      exact le_of_lt one_lt_one_plus_one_local
+  | eml p q =>
+      cases p with
+      | const a =>
+          cases q with
+          | const b =>
+              refine depth2_constval_mono_absurd hV ?_ h
+              show exp a - log b ≤ exp a - log b
+              exact le_refl (exp a - log b)
+          | var => exact depth2_constval_left_const_var_absurd hV h
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at ht; omega
+      | var =>
+          cases q with
+          | const b =>
+              refine depth2_constval_mono_absurd hV ?_ h
+              show exp 1 - log b ≤ exp (1 + 1) - log b
+              have hx : exp 1 ≤ exp (1 + 1) :=
+                exp_monotone (le_of_lt one_lt_one_plus_one_local)
+              have s := add_le_add_wit hx (le_refl (-log b))
+              have e1 : exp 1 + -log b = exp 1 - log b := by mach_ring
+              have e2 : exp (1 + 1) + -log b = exp (1 + 1) - log b := by mach_ring
+              rw [e1, e2] at s; exact s
+          | var =>
+              refine depth2_constval_mono_absurd hV ?_ h
+              show exp 1 - log 1 ≤ exp (1 + 1) - log ((1 : Real) + 1)
+              rw [log_one]
+              have e : exp 1 - (0 : Real) = exp 1 := by mach_ring
+              rw [e]
+              exact exp_one_le_exp_two_sub_log_two
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at ht; omega
+      | eml _ _ => exfalso; simp only [EMLTree.depth] at ht; omega
+
 end MachLib
