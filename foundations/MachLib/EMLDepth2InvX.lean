@@ -1629,4 +1629,48 @@ theorem depth_le_one_upper_bound (T : EMLTree) (hT : T.depth ≤ 1) :
               rw [e1, e2] at s
               exact s
 
+/-- `L·exp(−L−1) ≤ 1` for `L > 0`, from `L < exp (L+1)`. A division-free way to pick a cutoff
+below both `1` and `L`. -/
+theorem shrink_le_one {L : Real} (hL : 0 < L) : L * exp (-L - 1) ≤ 1 := by
+  have hlt : L < exp (L + 1) := by
+    have h1 : L < exp L := exp_grows_strictly_thm L
+    have h2 : exp L < exp (L + 1) := by
+      refine exp_lt ?_
+      have s := add_lt_add_left one_pos L
+      have e : L + 0 = L := by mach_ring
+      rw [e] at s; exact s
+    exact lt_trans_ax h1 h2
+  -- L * exp(-L-1) ≤ 1  ⟸  L ≤ exp(L+1)
+  have hinv : exp (-L - 1) = 1 / exp (L + 1) := by
+    have e : -L - 1 = -(L + 1) := by mach_ring
+    rw [e, exp_neg_inv]
+  rw [hinv]
+  have hpos : 0 < exp (L + 1) := exp_pos _
+  have hd : L * (1 / exp (L + 1)) = L / exp (L + 1) :=
+    (div_def L (exp (L + 1)) (ne_of_gt hpos)).symm
+  rw [hd]
+  exact le_of_lt (div_lt_one_of_pos_lt hpos hlt)
+
+theorem shrink_pos {L : Real} (hL : 0 < L) : 0 < L * exp (-L - 1) := mul_pos hL (exp_pos _)
+
+theorem shrink_lt {L : Real} (hL : 0 < L) : L * exp (-L - 1) < L := by
+  have h1 : exp (-L - 1) < 1 := by
+    have hneg : -L - 1 < 0 := by
+      have hm1 : (-1 : Real) < 0 := by
+        have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+        have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+        have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+        rw [f1, f2] at t; exact t
+      have s := add_lt_add_left hL (-L - 1)
+      have e1 : -L - 1 + 0 = -L - 1 := by mach_ring
+      have e2 : -L - 1 + L = -1 := by mach_ring
+      rw [e1, e2] at s
+      exact lt_trans_ax s hm1
+    have hlt : exp (-L - 1) < exp 0 := exp_lt hneg
+    rw [exp_zero] at hlt; exact hlt
+  have s := mul_lt_mul_pos_left_wit h1 hL
+  have e : L * (1 : Real) = L := by mach_ring
+  rw [e] at s
+  exact s
+
 end MachLib
