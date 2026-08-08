@@ -1338,4 +1338,46 @@ theorem right_child_gt_one_of_left_eml_var {u t2 : EMLTree}
     rw [log_one] at this
     exact lt_irrefl_ax 0 (lt_of_lt_of_le hlog this)
 
+/-- **`x · log (t2 x) = exp (exp (u x)) − 1`** — the reduction, solved for the right child. -/
+theorem right_child_log_eq {u t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u EMLTree.var) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) :
+    x * log (t2.eval x) = exp (exp (u.eval x)) - 1 := by
+  have hr := reduce_left_eml_var h x hx
+  have t : (exp (exp (u.eval x)) - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = 1 + (x * log (t2.eval x) - 1) := by rw [hr]
+  have l : (exp (exp (u.eval x)) - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = exp (exp (u.eval x)) - 1 := by
+    mach_mpoly [x, exp (exp (u.eval x)), log (t2.eval x)]
+  have r : (1 : Real) + (x * log (t2.eval x) - 1) = x * log (t2.eval x) := by
+    mach_mpoly [x, log (t2.eval x)]
+  rw [l, r] at t
+  exact t.symm
+
+/-- # **The right child is DETERMINED by the left.**
+
+For left child `eml u var` — any `u`, any depth — a tree realising `1/x` forces
+
+```
+t2 x = exp ((exp (exp (u x)) − 1) / x)
+```
+
+**pointwise on `(0,∞)`.** There is no freedom left in `t2` at all: choosing `u` chooses `t2`. -/
+theorem right_child_determined {u t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u EMLTree.var) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) :
+    t2.eval x = exp ((exp (exp (u.eval x)) - 1) / x) := by
+  have hgt := right_child_gt_one_of_left_eml_var h x hx
+  have hpos : 0 < t2.eval x := lt_trans_ax one_pos hgt
+  have hlog := right_child_log_eq h x hx
+  have hxne : x ≠ 0 := ne_of_gt hx
+  -- log (t2 x) = (E − 1)/x
+  have hdiv : log (t2.eval x) = (exp (exp (u.eval x)) - 1) / x := by
+    rw [div_def _ _ hxne, ← hlog]
+    have e : x * log (t2.eval x) * (1 / x) = log (t2.eval x) * (x * (1 / x)) := by
+      mach_mpoly [x, log (t2.eval x), 1 / x]
+    rw [e, mul_inv x hxne]
+    mach_ring
+  rw [← hdiv, exp_log hpos]
+
 end MachLib
