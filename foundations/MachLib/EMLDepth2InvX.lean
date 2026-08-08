@@ -1020,4 +1020,236 @@ theorem inv_x_not_depth2_left_leaf {t1 t2 : EMLTree}
               | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
           | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
 
+-- ===================================================================
+-- ▸ ASSEMBLY: the arm's case-9 cells, in `x·f(x) = K` form, applied at K = 1
+-- ===================================================================
+
+/-- The adapter. Everything the arm proved about `x·f(x) = K` applies at `K = 1`. -/
+theorem mulK_of_inv {T : EMLTree} (h : ∀ x : Real, 0 < x → T.eval x = 1 / x)
+    {x : Real} (hx : 0 < x) : x * T.eval x = 1 := by
+  rw [h x hx]
+  exact mul_inv x (ne_of_gt hx)
+
+theorem depth2_u4_w2_absurd {a' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+          (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval x = 1 / x) : False :=
+  u4_w2_absurd (mulK_of_inv h (exp_pos _)) (mulK_of_inv h (exp_pos _))
+
+theorem depth2_u4_w4_absurd
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+          (EMLTree.eml EMLTree.var EMLTree.var)).eval x = 1 / x) : False :=
+  u4_w4_absurd (mulK_of_inv h one_pos) (mulK_of_inv h (exp_pos 1))
+
+theorem depth2_u4_w3_absurd {c' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var)
+          (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval x = 1 / x) : False := by
+  have hp2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hp3 : (0 : Real) < 1 + 1 + 1 := add_pos hp2 one_pos
+  rcases lt_total (exp 1) (log c') with hbig | heq | hsmall
+  · -- big branch: the second sample point is `log (log c')`, which is positive here
+    have h1e : (1 : Real) < exp 1 := lt_trans_ax one_lt_one_plus_one_local two_lt_exp_one
+    have h1 : (1 : Real) < log c' := lt_trans_ax h1e hbig
+    have hpos : (0 : Real) < log (log c') := by
+      have t := log_lt_log one_pos h1
+      rw [log_one] at t; exact t
+    exact u4_w3_big_absurd hbig (mulK_of_inv h one_pos) (mulK_of_inv h hpos)
+  · exact u4_w3_small_absurd (le_of_eq heq.symm) (mulK_of_inv h one_pos)
+      (mulK_of_inv h hp2) (mulK_of_inv h hp3)
+  · exact u4_w3_small_absurd (le_of_lt hsmall) (mulK_of_inv h one_pos)
+      (mulK_of_inv h hp2) (mulK_of_inv h hp3)
+
+theorem loglog_pos_of_one_lt {c' : Real} (h1 : (1 : Real) < log c') : 0 < log (log c') := by
+  have t := log_lt_log one_pos h1
+  rw [log_one] at t; exact t
+
+theorem one_lt_exp_one_wit : (1 : Real) < exp 1 :=
+  lt_trans_ax one_lt_one_plus_one_local two_lt_exp_one
+
+-- ▸ u1 row: left child `eml (const c₁) (const c₂)`
+theorem depth2_u1_w2_absurd {c₁ c₂ a' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const c₁) (EMLTree.const c₂))
+          (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval x = 1 / x) : False :=
+  u1_w2_absurd (mulK_of_inv h (exp_pos _)) (mulK_of_inv h (exp_pos _))
+
+theorem depth2_u1_w4_absurd {c₁ c₂ : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const c₁) (EMLTree.const c₂))
+          (EMLTree.eml EMLTree.var EMLTree.var)).eval x = 1 / x) : False :=
+  u1_w4_absurd (mulK_of_inv h one_pos)
+    (mulK_of_inv h (add_pos one_pos one_pos))
+    (mulK_of_inv h (add_pos (add_pos one_pos one_pos) one_pos))
+
+theorem depth2_u1_w3_absurd {c₁ c₂ c' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const c₁) (EMLTree.const c₂))
+          (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval x = 1 / x) : False := by
+  rcases lt_total (exp 1) (log c') with hbig | heq | hsmall
+  · exact u1_w3_big_absurd hbig (mulK_of_inv h one_pos)
+      (mulK_of_inv h (loglog_pos_of_one_lt (lt_trans_ax one_lt_exp_one_wit hbig)))
+  · exact u1_w3_small_absurd (le_of_eq heq.symm)
+      (mulK_of_inv h (add_pos (add_pos (add_pos (exp_pos _) (exp_pos _)) one_pos) one_pos))
+  · exact u1_w3_small_absurd (le_of_lt hsmall)
+      (mulK_of_inv h (add_pos (add_pos (add_pos (exp_pos _) (exp_pos _)) one_pos) one_pos))
+
+-- ▸ u2 row: left child `eml (const a) var`; its cells conclude `1 < K`
+theorem depth2_u2_w2_absurd {a a' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const a) EMLTree.var)
+          (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval x = 1 / x) : False :=
+  lt_irrefl_ax 1 (u2_w2_K_gt_one (mulK_of_inv h (exp_pos _)))
+
+theorem depth2_u2_w4_absurd {a : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const a) EMLTree.var)
+          (EMLTree.eml EMLTree.var EMLTree.var)).eval x = 1 / x) : False :=
+  u2_w4_absurd (mulK_of_inv h one_pos) (mulK_of_inv h (exp_pos 1))
+
+theorem depth2_u2_w3_absurd {a c' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml (EMLTree.const a) EMLTree.var)
+          (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval x = 1 / x) : False := by
+  rcases lt_total (1 : Real) (log c') with hbig | heq | hsmall
+  · exact lt_irrefl_ax 1
+      (u2_w3_big_K_gt_one hbig (mulK_of_inv h (loglog_pos_of_one_lt hbig)))
+  · exact u2_w3_small_absurd (le_of_eq heq.symm) (mulK_of_inv h one_pos)
+      (mulK_of_inv h (add_pos one_pos one_pos))
+  · exact u2_w3_small_absurd (le_of_lt hsmall) (mulK_of_inv h one_pos)
+      (mulK_of_inv h (add_pos one_pos one_pos))
+
+-- ▸ u3 row: left child `eml var (const c₂)`
+theorem depth2_u3_w2_absurd {c₂ a' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c₂))
+          (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval x = 1 / x) : False :=
+  u3_w2_absurd (mulK_of_inv h (exp_pos _)) (mulK_of_inv h (exp_pos _))
+
+theorem depth2_u3_w4_absurd {c₂ : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c₂))
+          (EMLTree.eml EMLTree.var EMLTree.var)).eval x = 1 / x) : False :=
+  u3_w4_absurd (mulK_of_inv h (u3Point_pos (log c₂) 1))
+
+theorem depth2_u3_w3_absurd {c₂ c' : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const c₂))
+          (EMLTree.eml EMLTree.var (EMLTree.const c'))).eval x = 1 / x) : False := by
+  rcases lt_total (exp 1) (log c') with hbig | heq | hsmall
+  · exact u3_w3_big_absurd hbig (mulK_of_inv h one_pos)
+      (mulK_of_inv h (loglog_pos_of_one_lt (lt_trans_ax one_lt_exp_one_wit hbig)))
+  · exact u3_w3_small_absurd (le_of_eq heq.symm)
+      (mulK_of_inv h (u3PointS_pos (log c₂) 1 (-log c')))
+  · exact u3_w3_small_absurd (le_of_lt hsmall)
+      (mulK_of_inv h (u3PointS_pos (log c₂) 1 (-log c')))
+
+-- ===================================================================
+-- ▸ THE DEPTH-2 THEOREM
+-- ===================================================================
+
+/-- Depth-0 trees: `const c` and `var` are not `1/x`. -/
+theorem depth0_absurd {t : EMLTree} (ht : t.depth = 0)
+    (h : ∀ x : Real, 0 < x → t.eval x = 1 / x) : False := by
+  have hp2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hlt : (1 : Real) / (1 + 1) < 1 := div_lt_one_of_pos_lt hp2 one_lt_one_plus_one_local
+  cases t with
+  | eml p q => exfalso; simp only [EMLTree.depth] at ht; omega
+  | const c =>
+      have h1 := h 1 one_pos
+      have h2 := h (1 + 1) hp2
+      have e1 : (EMLTree.const c).eval (1 : Real) = c := rfl
+      have e2 : (EMLTree.const c).eval ((1 : Real) + 1) = c := rfl
+      rw [e1, one_div_one] at h1
+      rw [e2, h1] at h2
+      rw [← h2] at hlt
+      exact lt_irrefl_ax 1 hlt
+  | var =>
+      have h2 := h (1 + 1) hp2
+      have e2 : (EMLTree.var).eval ((1 : Real) + 1) = 1 + 1 := rfl
+      rw [e2] at h2
+      rw [← h2] at hlt
+      exact lt_irrefl_ax 1 (lt_trans_ax one_lt_one_plus_one_local hlt)
+
+/-- Left child `eml`-rooted (case 9) — the arm's table, assembled. -/
+theorem depth2_left_eml_absurd {p q t2 : EMLTree}
+    (hp : p.depth = 0) (hq : q.depth = 0) (ht2 : t2.depth ≤ 1)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml p q) t2).eval x = 1 / x) : False := by
+  have hcv : ∀ V : Real, (∀ x : Real, t2.eval x = V) → False := fun V hV =>
+    inv_x_not_depth2_right_constval (t1 := EMLTree.eml p q) (V := V)
+      (by simp only [EMLTree.depth] at hp hq ⊢; omega) hV h
+  cases t2 with
+  | const b => exact hcv b (fun _ => rfl)
+  | var =>
+      exact inv_x_not_depth2_right_var (EMLTree.eml p q)
+        (by simp only [EMLTree.depth] at hp hq ⊢; omega) h
+  | eml r sq =>
+      cases p with
+      | eml _ _ => exfalso; simp only [EMLTree.depth] at hp; omega
+      | const c₁ =>
+          cases q with
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at hq; omega
+          | const c₂ =>
+              cases r with
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+              | const a' =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const b' => exact hcv (exp a' - log b') (fun _ => rfl)
+                  | var => exact depth2_u1_w2_absurd h
+              | var =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const c' => exact depth2_u1_w3_absurd h
+                  | var => exact depth2_u1_w4_absurd h
+          | var =>
+              cases r with
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+              | const a' =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const b' => exact hcv (exp a' - log b') (fun _ => rfl)
+                  | var => exact depth2_u2_w2_absurd h
+              | var =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const c' => exact depth2_u2_w3_absurd h
+                  | var => exact depth2_u2_w4_absurd h
+      | var =>
+          cases q with
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at hq; omega
+          | const c₂ =>
+              cases r with
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+              | const a' =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const b' => exact hcv (exp a' - log b') (fun _ => rfl)
+                  | var => exact depth2_u3_w2_absurd h
+              | var =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const c' => exact depth2_u3_w3_absurd h
+                  | var => exact depth2_u3_w4_absurd h
+          | var =>
+              cases r with
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+              | const a' =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const b' => exact hcv (exp a' - log b') (fun _ => rfl)
+                  | var => exact depth2_u4_w2_absurd h
+              | var =>
+                  cases sq with
+                  | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+                  | const c' => exact depth2_u4_w3_absurd h
+                  | var => exact depth2_u4_w4_absurd h
+
+/-- # **`1/x ∉ EML₂`.** No tree of depth ≤ 2 realises `1/x` on the positive reals. -/
+theorem inv_x_not_in_eml_depth_le_2 (t : EMLTree) (ht : t.depth ≤ 2) :
+    ¬ (∀ x : Real, 0 < x → t.eval x = 1 / x) := by
+  intro h
+  cases t with
+  | const c => exact depth0_absurd (t := EMLTree.const c) rfl h
+  | var => exact depth0_absurd (t := EMLTree.var) rfl h
+  | eml t1 t2 =>
+      have h1 : t1.depth ≤ 1 := by simp only [EMLTree.depth] at ht; omega
+      have h2 : t2.depth ≤ 1 := by simp only [EMLTree.depth] at ht; omega
+      cases t1 with
+      | const c => exact inv_x_not_depth2_left_leaf (t1 := EMLTree.const c) rfl h2 h
+      | var => exact inv_x_not_depth2_left_leaf (t1 := EMLTree.var) rfl h2 h
+      | eml p q =>
+          have hp : p.depth = 0 := by simp only [EMLTree.depth] at h1; omega
+          have hq : q.depth = 0 := by simp only [EMLTree.depth] at h1; omega
+          exact depth2_left_eml_absurd hp hq h2 h
+
 end MachLib
