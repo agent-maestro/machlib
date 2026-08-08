@@ -1480,4 +1480,89 @@ theorem right_child_log_gt_neg_one {u w t2 : EMLTree}
   rw [e1, e2] at s
   exact s
 
+-- ===================================================================
+-- ▸ A DEPTH-4 WITNESS FOR `1/x` — the master equation, read forwards
+--
+-- `right_child_determined` says the right child must be `exp(c/x)`-shaped.
+-- That is CHEAP: `e/x` is depth 2, so `exp(e/x)` is depth 3, so the whole tree
+-- is depth 4. The depth-6 chain went the long way round.
+-- ===================================================================
+
+/-- `x · exp (A − log x) = exp A`, for any real `A` and `x > 0`. -/
+theorem mul_exp_sub_log {A x : Real} (hx : 0 < x) : x * exp (A - log x) = exp A := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  rw [sub_def, exp_add, exp_neg_inv, exp_log hx]
+  have e : x * (exp A * (1 / x)) = exp A * (x * (1 / x)) := by
+    mach_mpoly [x, exp A, 1 / x]
+  rw [e, mul_inv x hxne]
+  mach_ring
+
+theorem eq_inv_of_mul_eq_one {v x : Real} (hx : 0 < x) (h : x * v = 1) : v = 1 / x := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have e : v * (x * (1 / x)) = (x * v) * (1 / x) := by mach_mpoly [x, v, 1 / x]
+  rw [mul_inv x hxne, h] at e
+  have e2 : v * (1 : Real) = v := by mach_ring
+  have e3 : (1 : Real) * (1 / x) = 1 / x := by mach_ring
+  rw [e2, e3] at e
+  exact e
+
+/-- **The depth-4 witness.** `c := log (log (1 + exp 1))`, so `exp (exp c) = 1 + exp 1`. -/
+noncomputable def invX4 : EMLTree :=
+  EMLTree.eml
+    (EMLTree.eml (EMLTree.const (log (log (1 + exp 1)))) EMLTree.var)
+    (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var) (EMLTree.const 1))
+      (EMLTree.const 1))
+
+theorem invX4_depth : invX4.depth = 4 := by rfl
+
+theorem invX4_eval : ∀ x : Real, 0 < x → invX4.eval x = 1 / x := by
+  intro x hx
+  have h1e : (0 : Real) < 1 + exp 1 := add_pos one_pos (exp_pos 1)
+  have hlog1 : (0 : Real) < log (1 + exp 1) := by
+    have s : log 1 < log (1 + exp 1) := by
+      refine log_lt_log one_pos ?_
+      have t := add_lt_add_left (exp_pos 1) (1 : Real)
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at t; exact t
+    rw [log_one] at s; exact s
+  have hc : exp (exp (log (log (1 + exp 1)))) = 1 + exp 1 := by
+    rw [exp_log hlog1, exp_log h1e]
+  -- the right child's log is `exp (1 − log x)`
+  have hW : (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var) (EMLTree.const 1)).eval x
+      = exp (1 - log x) := by
+    show exp ((EMLTree.eml (EMLTree.const (0 : Real)) EMLTree.var).eval x)
+        - log ((EMLTree.const (1 : Real)).eval x) = _
+    show exp (exp (0 : Real) - log x) - log (1 : Real) = _
+    rw [exp_zero, log_one]
+    mach_mpoly [exp (1 - log x)]
+  have hR : log ((EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var)
+        (EMLTree.const 1)) (EMLTree.const 1)).eval x) = exp (1 - log x) := by
+    show log (exp ((EMLTree.eml (EMLTree.eml (EMLTree.const (0:Real)) EMLTree.var)
+          (EMLTree.const 1)).eval x) - log ((EMLTree.const (1:Real)).eval x)) = _
+    rw [hW]
+    show log (exp (exp (1 - log x)) - log (1 : Real)) = _
+    rw [log_one]
+    have e : exp (exp (1 - log x)) - (0 : Real) = exp (exp (1 - log x)) := by mach_ring
+    rw [e, log_exp]
+  -- value
+  have hval : invX4.eval x
+      = exp (exp (log (log (1 + exp 1))) - log x) - exp (1 - log x) := by
+    show exp ((EMLTree.eml (EMLTree.const (log (log (1 + exp 1)))) EMLTree.var).eval x)
+        - log ((EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) EMLTree.var)
+            (EMLTree.const 1)) (EMLTree.const 1)).eval x) = _
+    rw [hR]
+    rfl
+  refine eq_inv_of_mul_eq_one hx ?_
+  rw [hval]
+  have hd : x * (exp (exp (log (log (1 + exp 1))) - log x) - exp (1 - log x))
+      = x * exp (exp (log (log (1 + exp 1))) - log x) - x * exp (1 - log x) := by
+    mach_mpoly [x, exp (exp (log (log (1 + exp 1))) - log x), exp (1 - log x)]
+  rw [hd, mul_exp_sub_log hx, mul_exp_sub_log hx, hc]
+  mach_ring
+
+/-- # **`1/x ∈ EML₄`** — and with `inv_x_not_in_eml_depth_le_2`, **`d(1/x) ∈ {3, 4}`.** -/
+theorem inv_x_mem_EML_depth_four :
+    ∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = 1 / x :=
+  ⟨invX4, invX4_depth, invX4_eval⟩
+
 end MachLib
