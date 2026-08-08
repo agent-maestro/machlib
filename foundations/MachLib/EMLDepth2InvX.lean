@@ -464,4 +464,147 @@ theorem inv_x_not_depth2_right_constval {t1 t2 : EMLTree} {V : Real}
           | eml _ _ => exfalso; simp only [EMLTree.depth] at ht; omega
       | eml _ _ => exfalso; simp only [EMLTree.depth] at ht; omega
 
+-- ===================================================================
+-- ▸ THE 6 CELLS NOBODY HAS: `t1 ∈ {const c, var}` × varying `t2`
+--
+-- Case 9 (both children `eml`-rooted) is covered by the arm's u1..u4 × w1..w4
+-- table; the columns above cover leaf-valued `t2`. What is left is a BOUNDED
+-- left child against a right child that is ≥ 1 at a small point.
+-- ===================================================================
+
+/-- **The small-point criterion.** If at some `x > 0` the left child is small enough that
+`x·exp(t1 x) < 1`, while `log (t2 x) ≥ 0`, then `1/x` is impossible — because the equation forces
+`x·exp(t1 x) = 1 + x·log(t2 x) ≥ 1`. -/
+theorem depth2_small_point_absurd {t1 t2 : EMLTree} {x : Real}
+    (hx : 0 < x)
+    (hsmall : x * exp (t1.eval x) < 1)
+    (hlog : 0 ≤ log (t2.eval x))
+    (h : ∀ y : Real, 0 < y → (EMLTree.eml t1 t2).eval y = 1 / y) : False := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have he : exp (t1.eval x) - log (t2.eval x) = 1 / x := h x hx
+  have hmul : x * (exp (t1.eval x) - log (t2.eval x)) = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp (t1.eval x) - log (t2.eval x))
+      = x * exp (t1.eval x) - x * log (t2.eval x) := by
+    mach_mpoly [x, exp (t1.eval x), log (t2.eval x)]
+  rw [hd] at hmul
+  -- x·E − x·L = 1, with x·L ≥ 0, so x·E ≥ 1
+  have hxL : 0 ≤ x * log (t2.eval x) := mul_nonneg (le_of_lt hx) hlog
+  have hge : (1 : Real) ≤ x * exp (t1.eval x) := by
+    have s := add_le_add_wit (le_refl (1 : Real)) hxL
+    have e1 : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e1] at s
+    have e2 : x * exp (t1.eval x) - x * log (t2.eval x) + x * log (t2.eval x)
+        = x * exp (t1.eval x) := by mach_mpoly [x, exp (t1.eval x), log (t2.eval x)]
+    have s2 : (1 : Real) + x * log (t2.eval x) = x * exp (t1.eval x) := by
+      rw [← hmul]; exact e2.symm ▸ rfl
+    rw [s2] at s
+    exact s
+  exact lt_irrefl_ax 1 (lt_of_le_of_lt hge hsmall)
+
+/-- `0 < x ≤ 1 → log x ≤ 0`. -/
+theorem log_nonpos_of_le_one {x : Real} (hx : 0 < x) (h1 : x ≤ 1) : log x ≤ 0 := by
+  have h := log_le_log hx h1
+  rw [log_one] at h
+  exact h
+
+/-- `t2 = eml var var` is `≥ 1` at any `0 < x ≤ 1`, so its log is `≥ 0` there. -/
+theorem evv_log_nonneg {x : Real} (hx : 0 < x) (h1 : x ≤ 1) :
+    0 ≤ log ((EMLTree.eml EMLTree.var EMLTree.var).eval x) := by
+  have hval : (EMLTree.eml EMLTree.var EMLTree.var).eval x = exp x - log x := rfl
+  have hex : (1 : Real) < exp x := by
+    have h := exp_lt hx
+    rw [exp_zero] at h; exact h
+  have hlx : log x ≤ 0 := log_nonpos_of_le_one hx h1
+  have hge : (1 : Real) ≤ exp x - log x := by
+    have s := add_le_add_wit (le_of_lt hex) (by
+      have := add_le_add_left hlx (-log x)
+      have e1 : -log x + log x = (0 : Real) := by mach_ring
+      have e2 : -log x + 0 = -log x := by mach_ring
+      rw [e1, e2] at this
+      exact this : (0 : Real) ≤ -log x)
+    have e1 : (1 : Real) + 0 = 1 := by mach_ring
+    have e2 : exp x + -log x = exp x - log x := by mach_ring
+    rw [e1, e2] at s; exact s
+  rw [hval]
+  have h := log_le_log one_pos hge
+  rw [log_one] at h
+  exact h
+
+/-- **`t1 = const c`, `t2 = eml var var`.** Witness point `x = exp (−exp c − 1)`: no division. -/
+theorem depth2_const_evv_absurd {c : Real}
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml (EMLTree.const c) (EMLTree.eml EMLTree.var EMLTree.var)).eval y = 1 / y) :
+    False := by
+  have hx : 0 < exp (-exp c - 1) := exp_pos _
+  have hneg : -exp c - 1 < 0 := by
+    have hc := exp_pos c
+    have s := add_lt_add_left hc (-exp c - 1)
+    have e1 : -exp c - 1 + 0 = -exp c - 1 := by mach_ring
+    rw [e1] at s
+    have e2 : -exp c - 1 + exp c = -1 := by mach_ring
+    rw [e2] at s
+    have hm1 : (-1 : Real) < 0 := by
+      have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+      have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+      have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+      rw [f1, f2] at t; exact t
+    exact lt_trans_ax s hm1
+  have hx1 : exp (-exp c - 1) ≤ 1 := by
+    have hlt : exp (-exp c - 1) < exp 0 := exp_lt hneg
+    rw [exp_zero] at hlt
+    exact le_of_lt hlt
+  have hsmall : exp (-exp c - 1) * exp ((EMLTree.const c).eval (exp (-exp c - 1))) < 1 := by
+    have hcv : (EMLTree.const c).eval (exp (-exp c - 1)) = c := rfl
+    rw [hcv, ← exp_add]
+    have hexp : -exp c - 1 + c < 0 := by
+      have hcc : c < exp c := exp_grows_strictly_thm c
+      have s := add_lt_add_left hcc (-exp c - 1)
+      have e1 : -exp c - 1 + c = -exp c - 1 + c := by mach_ring
+      have e2 : -exp c - 1 + exp c = -1 := by mach_ring
+      rw [e2] at s
+      have hm1 : (-1 : Real) < 0 := by
+        have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+        have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+        have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+        rw [f1, f2] at t; exact t
+      exact lt_trans_ax s hm1
+    have hlt : exp (-exp c - 1 + c) < exp 0 := exp_lt hexp
+    rw [exp_zero] at hlt
+    exact hlt
+  exact depth2_small_point_absurd hx hsmall (evv_log_nonneg hx hx1) h
+
+/-- **`t1 = var`, `t2 = eml var var`.** Witness point `x = exp (−(1+1))`. -/
+theorem depth2_var_evv_absurd
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml EMLTree.var (EMLTree.eml EMLTree.var EMLTree.var)).eval y = 1 / y) :
+    False := by
+  have hneg : -(1 + 1 : Real) < 0 := by
+    have t := add_lt_add_left (add_pos one_pos one_pos) (-(1 + 1) : Real)
+    have f1 : (-(1 + 1) : Real) + 0 = -(1 + 1) := by mach_ring
+    have f2 : (-(1 + 1) : Real) + (1 + 1) = 0 := by mach_ring
+    rw [f1, f2] at t; exact t
+  have hx : 0 < exp (-(1 + 1) : Real) := exp_pos _
+  have hx1' : exp (-(1 + 1) : Real) < 1 := by
+    have hlt : exp (-(1 + 1) : Real) < exp 0 := exp_lt hneg
+    rw [exp_zero] at hlt; exact hlt
+  have hx1 : exp (-(1 + 1) : Real) ≤ 1 := le_of_lt hx1'
+  have hsmall : exp (-(1 + 1) : Real)
+      * exp ((EMLTree.var).eval (exp (-(1 + 1) : Real))) < 1 := by
+    have hv : (EMLTree.var).eval (exp (-(1 + 1) : Real)) = exp (-(1 + 1) : Real) := rfl
+    rw [hv, ← exp_add]
+    have hsum : -(1 + 1 : Real) + exp (-(1 + 1) : Real) < 0 := by
+      have s := add_lt_add_left hx1' (-(1 + 1) : Real)
+      have e : (-(1 + 1) : Real) + 1 = -1 := by mach_ring
+      rw [e] at s
+      have hm1 : (-1 : Real) < 0 := by
+        have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+        have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+        have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+        rw [f1, f2] at t; exact t
+      exact lt_trans_ax s hm1
+    have hlt : exp (-(1 + 1 : Real) + exp (-(1 + 1) : Real)) < exp 0 := exp_lt hsum
+    rw [exp_zero] at hlt; exact hlt
+  exact depth2_small_point_absurd hx hsmall (evv_log_nonneg hx hx1) h
+
 end MachLib
