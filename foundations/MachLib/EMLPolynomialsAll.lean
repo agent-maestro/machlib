@@ -59,10 +59,23 @@ The per-coefficient increment is **exactly 77** (verified by the depth recurrenc
 every `rfl`-checked value in `EMLDepthCost`), so `x²` as `polyTree [0,0,1]` is **depth 231** —
 against **24** through `mulPos` and **54** through `mulGen` directly.
 
-**That larger figure is NOT stated as a theorem here, for an honest reason:** `mulGen` duplicates its
-arguments, so the tree's NODE COUNT grows exponentially even though its depth grows linearly. The
-three-coefficient term is too large to build, let alone `rfl`-check. **Generic encodings are not
-cheap encodings, and this one is worse in size than in depth.** -/
+`mulGen` DUPLICATES its arguments, so NODE COUNT grows exponentially — measured at **~72× per
+coefficient**: 5 653 nodes at one, 412 597 at two, **29 712 565 at three**. Depth grows linearly;
+size does not. **Generic encodings are not cheap encodings, and this one is far worse in size than
+in depth.** -/
 theorem polyTree_one_coeff_depth : (polyTree [1]).depth = 77 := by rfl
+
+set_option maxRecDepth 2000000 in
+/-- Two coefficients: **depth 154**, `rfl`-checked over ~412 000 nodes. -/
+theorem polyTree_two_coeff_depth : (polyTree [0, 1]).depth = 154 := by rfl
+
+set_option maxRecDepth 40000000 in
+/-- **`x²` as a generic polynomial: depth 231** — `rfl`-checked over **29 712 565 nodes**
+(1.4 s, ~1.1 GB peak). Against **24** through `mulPos` and **54** through `mulGen` directly.
+
+I first asserted this figure was *"too large to build, let alone `rfl`-check."* **Both halves were
+false** — I inferred a capability limit from a 120-second TOOL timeout. It builds, and it checks in
+under two seconds. **The exponential size is real; the impossibility was not.** -/
+theorem polyTree_three_coeff_depth : (polyTree [0, 0, 1]).depth = 231 := by rfl
 
 end MachLib
