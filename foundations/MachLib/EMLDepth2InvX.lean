@@ -103,4 +103,183 @@ theorem depth2_t2_const_absurd {a b : Real}
   rw [e] at h1
   exact exp_exp_eq_one_absurd h1
 
+-- ===================================================================
+-- ▸ THE `t2 = var` ROW, CLOSED FOR EVERY DEPTH-≤1 LEFT CHILD
+--
+-- At `x = 1` the equation forces `exp (t1.eval 1) = 1` whatever `t1` is —
+-- and three of the six shapes contradict that outright.
+-- ===================================================================
+
+theorem one_lt_one_plus_one_local : (1 : Real) < 1 + 1 := by
+  have step := add_lt_add_left zero_lt_one_ax 1
+  have e1 : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e1] at step; exact step
+
+theorem one_div_one : (1 : Real) / 1 = 1 := by
+  have h := mul_inv (1 : Real) (ne_of_gt one_pos)
+  have e : (1 : Real) * (1 / 1) = 1 / 1 := by mach_ring
+  rw [e] at h; exact h
+
+/-- **The pin.** Any `t1` with `eml t1 var = 1/x` satisfies `exp (t1.eval 1) = 1`. -/
+theorem t2_var_pins {t1 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 EMLTree.var).eval x = 1 / x) :
+    exp (t1.eval 1) = 1 := by
+  have h1 := h 1 one_pos
+  have hu : (EMLTree.eml t1 EMLTree.var).eval 1 = exp (t1.eval 1) - log 1 := rfl
+  rw [hu, log_one, one_div_one] at h1
+  have e : exp (t1.eval 1) - (0 : Real) = exp (t1.eval 1) := by mach_ring
+  rw [e] at h1; exact h1
+
+/-- Shapes whose value at `1` is `exp (something)`: `exp (exp _) = 1` is absurd. -/
+theorem t2_var_left_expexp_absurd {t1 : EMLTree} {a : Real}
+    (hval : t1.eval 1 = exp a)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 EMLTree.var).eval x = 1 / x) : False := by
+  have hp := t2_var_pins h
+  rw [hval] at hp
+  exact exp_exp_eq_one_absurd hp
+
+/-- `t1 = var`. -/
+theorem t2_var_left_var_absurd
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var EMLTree.var).eval x = 1 / x) : False := by
+  have hp := t2_var_pins h
+  have hv : (EMLTree.var).eval (1 : Real) = 1 := rfl
+  rw [hv] at hp
+  have hlt : (1 : Real) < exp 1 := by
+    have step : exp 0 < exp 1 := exp_lt zero_lt_one_ax
+    rw [exp_zero] at step; exact step
+  rw [hp] at hlt
+  exact lt_irrefl_ax 1 hlt
+
+/-- `t1 = eml (const a) var`, i.e. `t1.eval 1 = exp a`. -/
+theorem t2_var_left_const_var_absurd {a : Real}
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const a) EMLTree.var) EMLTree.var).eval x = 1 / x) :
+    False :=
+  t2_var_left_expexp_absurd (by show exp a - log 1 = exp a; rw [log_one]; mach_ring) h
+
+/-- `t1 = eml var var`, i.e. `t1.eval 1 = exp 1`. -/
+theorem t2_var_left_var_var_absurd
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) EMLTree.var).eval x = 1 / x) :
+    False :=
+  t2_var_left_expexp_absurd (a := 1)
+    (by show exp ((EMLTree.var).eval (1:Real)) - log ((EMLTree.var).eval (1:Real)) = exp 1
+        show exp (1:Real) - log (1:Real) = exp 1
+        rw [log_one]; mach_ring) h
+
+/-- **`t1` constant-valued.** The pin gives `exp K = 1`, so the tree is `1 − log x`;
+`x = exp 1` then forces `0 = 1 / exp 1`, and `1 / exp 1 > 0`. -/
+theorem t2_var_left_constval_absurd {t1 : EMLTree} {K : Real}
+    (hconst : ∀ x : Real, t1.eval x = K)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 EMLTree.var).eval x = 1 / x) : False := by
+  have hp := t2_var_pins h
+  rw [hconst 1] at hp
+  have he := h (exp 1) (exp_pos 1)
+  have hu : (EMLTree.eml t1 EMLTree.var).eval (exp 1)
+      = exp (t1.eval (exp 1)) - log (exp 1) := rfl
+  rw [hu, hconst (exp 1), hp, log_exp] at he
+  -- he : 1 - 1 = 1 / exp 1
+  have e : (1 : Real) - 1 = 0 := by mach_ring
+  rw [e] at he
+  have hpos : (0 : Real) < 1 / exp 1 := one_div_pos_of_pos (exp_pos 1)
+  rw [← he] at hpos
+  exact lt_irrefl_ax 0 hpos
+
+theorem t2_var_left_const_absurd {c : Real}
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.const c) EMLTree.var).eval x = 1 / x) : False :=
+  t2_var_left_constval_absurd (K := c) (fun _ => rfl) h
+
+theorem t2_var_left_const_const_absurd {a b : Real}
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const a) (EMLTree.const b)) EMLTree.var).eval x
+        = 1 / x) : False :=
+  t2_var_left_constval_absurd (K := exp a - log b) (fun _ => rfl) h
+
+/-- **The last cell of the row: `t1 = eml var (const b)`.**
+The pin forces `log b = exp 1`; then `x = exp 1` gives
+`exp (exp (exp 1) − exp 1) − 1 = 1 / exp 1`, whose left side exceeds `1` and whose right side is
+below `1`. This is the only cell in the row needing a numeric chain. -/
+theorem t2_var_left_var_const_absurd {b : Real}
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const b)) EMLTree.var).eval x = 1 / x) :
+    False := by
+  have hp := t2_var_pins h
+  have hv1 : (EMLTree.eml EMLTree.var (EMLTree.const b)).eval (1 : Real) = exp 1 - log b := rfl
+  rw [hv1] at hp
+  -- exp (exp 1 − log b) = 1 = exp 0, so log b = exp 1
+  have hz : exp 1 - log b = 0 := by
+    have h0 : exp (exp 1 - log b) = exp 0 := by rw [hp, exp_zero]
+    exact exp_injective h0
+  have hlogb : log b = exp 1 := by
+    have e : exp 1 - log b + log b = exp 1 := by mach_ring
+    rw [hz] at e
+    have e2 : (0 : Real) + log b = log b := by mach_ring
+    rw [e2] at e
+    exact e
+  -- evaluate at x = exp 1
+  have he := h (exp 1) (exp_pos 1)
+  have hv2 : (EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const b)) EMLTree.var).eval (exp 1)
+      = exp (exp (exp 1) - log b) - log (exp 1) := rfl
+  rw [hv2, hlogb, log_exp] at he
+  -- he : exp (exp (exp 1) − exp 1) − 1 = 1 / exp 1
+  have hgap : (1 : Real) < exp (exp 1) - exp 1 := by
+    have hb := exp_gt_one_plus_self (exp 1) (exp_pos 1)
+    have e : 1 + exp 1 - exp 1 = (1 : Real) := by mach_ring
+    have step : 1 + exp 1 - exp 1 < exp (exp 1) - exp 1 := by
+      have := add_lt_add_left hb (-(exp 1))
+      have e1 : -(exp 1) + (1 + exp 1) = 1 + exp 1 - exp 1 := by mach_ring
+      have e2 : -(exp 1) + exp (exp 1) = exp (exp 1) - exp 1 := by mach_ring
+      rw [e1, e2] at this; exact this
+    rw [e] at step; exact step
+  have hbig : exp 1 < exp (exp (exp 1) - exp 1) := exp_lt hgap
+  have h2e : (1 : Real) < exp 1 := lt_trans_ax one_lt_one_plus_one_local two_lt_exp_one
+  have hlhs : (1 : Real) < exp (exp (exp 1) - exp 1) - 1 := by
+    have step : exp 1 - 1 < exp (exp (exp 1) - exp 1) - 1 := by
+      have := add_lt_add_left hbig (-(1 : Real))
+      have e1 : -(1 : Real) + exp 1 = exp 1 - 1 := by mach_ring
+      have e2 : -(1 : Real) + exp (exp (exp 1) - exp 1)
+          = exp (exp (exp 1) - exp 1) - 1 := by mach_ring
+      rw [e1, e2] at this; exact this
+    have hone : (1 : Real) < exp 1 - 1 := by
+      have := add_lt_add_left two_lt_exp_one (-(1 : Real))
+      have e1 : -(1 : Real) + (1 + 1 : Real) = 1 := by mach_ring
+      have e2 : -(1 : Real) + exp 1 = exp 1 - 1 := by mach_ring
+      rw [e1, e2] at this; exact this
+    exact lt_trans_ax hone step
+  have hrhs : (1 : Real) / exp 1 < 1 := div_lt_one_of_pos_lt (exp_pos 1) h2e
+  rw [he] at hlhs
+  exact lt_irrefl_ax 1 (lt_trans_ax hlhs hrhs)
+
+/-- # **`1/x` is not `eml t1 var` for ANY depth-≤1 left child.**
+The complete `t2 = var` row of the depth-2 table — all six shapes. -/
+theorem inv_x_not_depth2_right_var (t1 : EMLTree) (ht : t1.depth ≤ 1) :
+    ¬ (∀ x : Real, 0 < x → (EMLTree.eml t1 EMLTree.var).eval x = 1 / x) := by
+  intro h
+  cases t1 with
+  | const c => exact t2_var_left_const_absurd h
+  | var => exact t2_var_left_var_absurd h
+  | eml a b =>
+      cases a with
+      | const c1 =>
+          cases b with
+          | const c2 => exact t2_var_left_const_const_absurd h
+          | var => exact t2_var_left_const_var_absurd h
+          | eml p q =>
+              exfalso
+              simp only [EMLTree.depth] at ht
+              omega
+      | var =>
+          cases b with
+          | const c2 => exact t2_var_left_var_const_absurd h
+          | var => exact t2_var_left_var_var_absurd h
+          | eml p q =>
+              exfalso
+              simp only [EMLTree.depth] at ht
+              omega
+      | eml p q =>
+          exfalso
+          simp only [EMLTree.depth] at ht
+          omega
+
 end MachLib
