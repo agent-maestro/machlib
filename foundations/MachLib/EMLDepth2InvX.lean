@@ -867,4 +867,157 @@ theorem log_exp_sub_le {X β : Real} (hX : 0 ≤ X) :
     rw [log_exp] at hl
     exact hl
 
+-- ▸ Inequality bookkeeping helpers (this corpus has no `linarith`).
+
+theorem mul_lt_mul_pos_left_wit {a b c : Real} (h : a < b) (hc : 0 < c) : c * a < c * b := by
+  have s := mul_lt_mul_of_pos_right h hc
+  have e1 : a * c = c * a := mul_comm a c
+  have e2 : b * c = c * b := mul_comm b c
+  rw [e1, e2] at s
+  exact s
+
+theorem sub_le_sub_left_wit {a b c : Real} (h : b ≤ c) : a - c ≤ a - b := by
+  have s := add_le_add_left h (a - b - c)
+  have e1 : a - b - c + b = a - c := by mach_mpoly [a, b, c]
+  have e2 : a - b - c + c = a - b := by mach_mpoly [a, b, c]
+  rw [e1, e2] at s
+  exact s
+
+theorem one_lt_sub_of_add_one_lt {p q : Real} (h : p + 1 < q) : 1 < q - p := by
+  have s := add_lt_add_left h (-p)
+  have e1 : -p + (p + 1) = (1 : Real) := by mach_mpoly [p]
+  have e2 : -p + q = q - p := by mach_mpoly [p, q]
+  rw [e1, e2] at s
+  exact s
+
+theorem four_lt_exp_two : ((1 : Real) + 1) * (1 + 1) < exp (1 + 1) := by
+  have hp : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have s1 : ((1 : Real) + 1) * (1 + 1) < exp 1 * (1 + 1) :=
+    mul_lt_mul_of_pos_right two_lt_exp_one hp
+  have s2 : exp 1 * ((1 : Real) + 1) < exp 1 * exp 1 :=
+    mul_lt_mul_pos_left_wit two_lt_exp_one (exp_pos 1)
+  have hsplit : exp ((1 : Real) + 1) = exp 1 * exp 1 := exp_add 1 1
+  rw [hsplit]
+  exact lt_trans_ax s1 s2
+
+theorem lt_of_sub_pos_wit {a b : Real} (h : 0 < b - a) : a < b := by
+  have s := add_lt_add_left h a
+  have e1 : a + 0 = a := by mach_mpoly [a]
+  have e2 : a + (b - a) = b := by mach_mpoly [a, b]
+  rw [e1, e2] at s
+  exact s
+
+/-- # **`t1 = var`, `t2 = eml var (const b')` — the LAST of the six.**
+
+With `u := exp (−log b')` and `X := u + 2`: `log_exp_sub_le` caps the child's log at `X + u`, and
+`exp X = exp u · exp 2 > (1+u)·4 > X + u + 1` — so the tree's value exceeds `1`, while `1/X < 1`. -/
+theorem depth2_var_evc_absurd {b' : Real}
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml EMLTree.var (EMLTree.eml EMLTree.var (EMLTree.const b'))).eval y = 1 / y) :
+    False := by
+  have hu : (0 : Real) < exp (-log b') := exp_pos _
+  have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hX : (0 : Real) < exp (-log b') + (1 + 1) := add_pos hu h2
+  have hXgt1 : (1 : Real) < exp (-log b') + (1 + 1) := by
+    refine lt_of_sub_pos_wit ?_
+    have e : exp (-log b') + (1 + 1) - 1 = exp (-log b') + 1 := by mach_mpoly [exp (-log b')]
+    rw [e]
+    exact add_pos hu one_pos
+  -- exp X > (1+u)*4 > X + u + 1
+  have hone_u : 1 + exp (-log b') < exp (exp (-log b')) :=
+    exp_gt_one_plus_self (exp (-log b')) hu
+  have hpos1u : (0 : Real) < 1 + exp (-log b') := add_pos one_pos hu
+  have c1 : (1 + exp (-log b')) * (((1 : Real) + 1) * (1 + 1))
+      < (1 + exp (-log b')) * exp (1 + 1) :=
+    mul_lt_mul_pos_left_wit four_lt_exp_two hpos1u
+  have c2 : (1 + exp (-log b')) * exp ((1 : Real) + 1)
+      < exp (exp (-log b')) * exp (1 + 1) :=
+    mul_lt_mul_of_pos_right hone_u (exp_pos (1 + 1))
+  have hsplit : exp (exp (-log b') + (1 + 1)) = exp (exp (-log b')) * exp (1 + 1) :=
+    exp_add _ _
+  have cbig : (1 + exp (-log b')) * (((1 : Real) + 1) * (1 + 1))
+      < exp (exp (-log b') + (1 + 1)) := by
+    rw [hsplit]; exact lt_trans_ax c1 c2
+  have hlin : exp (-log b') + (1 + 1) + exp (-log b') + 1
+      < (1 + exp (-log b')) * (((1 : Real) + 1) * (1 + 1)) := by
+    refine lt_of_sub_pos_wit ?_
+    have e : (1 + exp (-log b')) * (((1 : Real) + 1) * (1 + 1))
+        - (exp (-log b') + (1 + 1) + exp (-log b') + 1)
+        = exp (-log b') + exp (-log b') + 1 := by mach_mpoly [exp (-log b')]
+    rw [e]
+    exact add_pos (add_pos hu hu) one_pos
+  have hexpX : exp (-log b') + (1 + 1) + exp (-log b') + 1
+      < exp (exp (-log b') + (1 + 1)) := lt_trans_ax hlin cbig
+  -- the uniform log bound
+  have hb := log_exp_sub_le (X := exp (-log b') + (1 + 1)) (β := log b') (le_of_lt hX)
+  have hstep : exp (exp (-log b') + (1 + 1))
+      - (exp (-log b') + (1 + 1) + exp (-log b'))
+      ≤ exp (exp (-log b') + (1 + 1))
+        - log (exp (exp (-log b') + (1 + 1)) - log b') := sub_le_sub_left_wit hb
+  have hone : (1 : Real) < exp (exp (-log b') + (1 + 1))
+      - (exp (-log b') + (1 + 1) + exp (-log b')) := one_lt_sub_of_add_one_lt hexpX
+  have hgt1 : (1 : Real) < exp (exp (-log b') + (1 + 1))
+      - log (exp (exp (-log b') + (1 + 1)) - log b') := lt_of_lt_of_le hone hstep
+  -- but the value is 1/X < 1
+  have he := h _ hX
+  have hval : (EMLTree.eml EMLTree.var
+      (EMLTree.eml EMLTree.var (EMLTree.const b'))).eval (exp (-log b') + (1 + 1))
+      = exp (exp (-log b') + (1 + 1))
+        - log (exp (exp (-log b') + (1 + 1)) - log b') := rfl
+  rw [hval] at he
+  rw [he] at hgt1
+  exact lt_irrefl_ax 1 (lt_trans_ax hgt1 (div_lt_one_of_pos_lt hX hXgt1))
+
+/-- # **`1/x` is not `eml t1 t2` for ANY LEAF `t1` and any depth-≤1 `t2`.**
+
+The complement of case 9 on the left: all 12 such cells, in one statement. -/
+theorem inv_x_not_depth2_left_leaf {t1 t2 : EMLTree}
+    (ht1 : t1.depth = 0) (ht2 : t2.depth ≤ 1) :
+    ¬ (∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) := by
+  intro h
+  cases t1 with
+  | eml p q => exfalso; simp only [EMLTree.depth] at ht1; omega
+  | const c =>
+      cases t2 with
+      | const b =>
+          exact inv_x_not_depth2_right_constval (t2 := EMLTree.const b) (V := b)
+            (by simp only [EMLTree.depth]; omega) (fun _ => rfl) h
+      | var => exact t2_var_left_const_absurd h
+      | eml r s =>
+          cases r with
+          | const a' =>
+              cases s with
+              | const b' =>
+                  exact inv_x_not_depth2_right_constval
+                    (V := exp a' - log b') (by simp only [EMLTree.depth]; omega) (fun _ => rfl) h
+              | var => exact depth2_const_ecv_absurd h
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+          | var =>
+              cases s with
+              | const b' => exact depth2_const_evc_absurd h
+              | var => exact depth2_const_evv_absurd h
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+  | var =>
+      cases t2 with
+      | const b =>
+          exact inv_x_not_depth2_right_constval (t2 := EMLTree.const b) (V := b)
+            (by simp only [EMLTree.depth]; omega) (fun _ => rfl) h
+      | var => exact t2_var_left_var_absurd h
+      | eml r s =>
+          cases r with
+          | const a' =>
+              cases s with
+              | const b' =>
+                  exact inv_x_not_depth2_right_constval
+                    (V := exp a' - log b') (by simp only [EMLTree.depth]; omega) (fun _ => rfl) h
+              | var => exact depth2_var_ecv_absurd h
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+          | var =>
+              cases s with
+              | const b' => exact depth2_var_evc_absurd h
+              | var => exact depth2_var_evv_absurd h
+              | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+          | eml _ _ => exfalso; simp only [EMLTree.depth] at ht2; omega
+
 end MachLib
