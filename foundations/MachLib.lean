@@ -326,6 +326,7 @@ import MachLib.EMLRingClosure
 import MachLib.EMLDerivClosure
 import MachLib.EMLCharacterisation
 import MachLib.EMLDepthCost
+import MachLib.EMLPolynomialsAll
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
