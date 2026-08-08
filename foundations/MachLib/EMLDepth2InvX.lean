@@ -607,4 +607,151 @@ theorem depth2_var_evv_absurd
     rw [exp_zero] at hlt; exact hlt
   exact depth2_small_point_absurd hx hsmall (evv_log_nonneg hx hx1) h
 
+/-- For `t2 = eml (const a') var` at the point `exp w`, `log (t2 ·) ≥ 0` whenever `w ≤ exp a' − 1`. -/
+theorem ecv_log_nonneg {a' w : Real} (hw : w ≤ exp a' - 1) :
+    0 ≤ log ((EMLTree.eml (EMLTree.const a') EMLTree.var).eval (exp w)) := by
+  have hval : (EMLTree.eml (EMLTree.const a') EMLTree.var).eval (exp w)
+      = exp a' - log (exp w) := rfl
+  rw [hval, log_exp]
+  have hge : (1 : Real) ≤ exp a' - w := by
+    have s := add_le_add_left hw (-w + 1)
+    have e1 : -w + 1 + w = (1 : Real) := by mach_ring
+    have e2 : -w + 1 + (exp a' - 1) = exp a' - w := by mach_ring
+    rw [e1, e2] at s; exact s
+  have h := log_le_log one_pos hge
+  rw [log_one] at h; exact h
+
+/-- `y − exp y − 1 < 0` for every real `y` — the arm's canonical "exp dominates" bound. -/
+theorem sub_exp_sub_one_neg (y : Real) : y - exp y - 1 < 0 := by
+  have hy := exp_grows_strictly_thm y
+  have s := add_lt_add_left hy (-exp y - 1 + -y)
+  have e1 : -exp y - 1 + -y + y = -exp y - 1 := by mach_ring
+  have e2 : -exp y - 1 + -y + exp y = -y - 1 := by mach_ring
+  rw [e1, e2] at s
+  -- s : -exp y - 1 < -y - 1 ; want y - exp y - 1 < 0
+  have s2 := add_lt_add_left s (y + 1)
+  have f1 : y + 1 + (-exp y - 1) = y - exp y := by mach_ring
+  have f2 : y + 1 + (-y - 1) = (0 : Real) := by mach_ring
+  rw [f1, f2] at s2
+  -- s2 : y - exp y < 0
+  have s3 := add_lt_add_left s2 (-1 : Real)
+  have g1 : (-1 : Real) + (y - exp y) = y - exp y - 1 := by mach_ring
+  have g2 : (-1 : Real) + 0 = -1 := by mach_ring
+  rw [g1, g2] at s3
+  have hm1 : (-1 : Real) < 0 := by
+    have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+    have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+    have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+    rw [f1, f2] at t; exact t
+  exact lt_trans_ax s3 hm1
+
+/-- **`t1 = const c`, `t2 = eml (const a') var`.** -/
+theorem depth2_const_ecv_absurd {c a' : Real}
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml (EMLTree.const c) (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval y
+        = 1 / y) : False := by
+  have hx : 0 < exp (exp a' - 1 - exp (exp a' - 1 + c) - 1) := exp_pos _
+  have hle : exp a' - 1 - exp (exp a' - 1 + c) - 1 ≤ exp a' - 1 := by
+    have hp : (0 : Real) < exp (exp a' - 1 + c) := exp_pos _
+    have s := add_lt_add_left hp (exp a' - 1 - exp (exp a' - 1 + c) - 1)
+    have e1 : exp a' - 1 - exp (exp a' - 1 + c) - 1 + 0
+        = exp a' - 1 - exp (exp a' - 1 + c) - 1 := by mach_ring
+    have e2 : exp a' - 1 - exp (exp a' - 1 + c) - 1 + exp (exp a' - 1 + c)
+        = exp a' - 1 - 1 := by mach_ring
+    rw [e1, e2] at s
+    have hstep : exp a' - 1 - 1 ≤ exp a' - 1 := by
+      have t := add_lt_add_left zero_lt_one_ax (exp a' - 1 - 1)
+      have f1 : exp a' - 1 - 1 + 0 = exp a' - 1 - 1 := by mach_ring
+      have f2 : exp a' - 1 - 1 + 1 = exp a' - 1 := by mach_ring
+      rw [f1, f2] at t; exact le_of_lt t
+    exact le_trans (le_of_lt s) hstep
+  have hsmall : exp (exp a' - 1 - exp (exp a' - 1 + c) - 1)
+      * exp ((EMLTree.const c).eval (exp (exp a' - 1 - exp (exp a' - 1 + c) - 1))) < 1 := by
+    have hcv : (EMLTree.const c).eval
+        (exp (exp a' - 1 - exp (exp a' - 1 + c) - 1)) = c := rfl
+    rw [hcv, ← exp_add]
+    have hneg : exp a' - 1 - exp (exp a' - 1 + c) - 1 + c < 0 := by
+      have hb := sub_exp_sub_one_neg (exp a' - 1 + c)
+      have e : exp a' - 1 + c - exp (exp a' - 1 + c) - 1
+          = exp a' - 1 - exp (exp a' - 1 + c) - 1 + c := by mach_ring
+      rw [e] at hb; exact hb
+    have hlt : exp (exp a' - 1 - exp (exp a' - 1 + c) - 1 + c) < exp 0 := exp_lt hneg
+    rw [exp_zero] at hlt; exact hlt
+  exact depth2_small_point_absurd hx hsmall (ecv_log_nonneg hle) h
+
+/-- **`t1 = var`, `t2 = eml (const a') var`.** Witness `exp w` with `w := A − exp(A+1) − 1`,
+`A := exp a' − 1`; then `w < −2`, so `w + exp w < −1 < 0`. -/
+theorem depth2_var_ecv_absurd {a' : Real}
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml EMLTree.var (EMLTree.eml (EMLTree.const a') EMLTree.var)).eval y = 1 / y) :
+    False := by
+  have hx : 0 < exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1) := exp_pos _
+  have hle : exp a' - 1 - exp (exp a' - 1 + 1) - 1 ≤ exp a' - 1 := by
+    have hp : (0 : Real) < exp (exp a' - 1 + 1) := exp_pos _
+    have s := add_lt_add_left hp (exp a' - 1 - exp (exp a' - 1 + 1) - 1)
+    have e1 : exp a' - 1 - exp (exp a' - 1 + 1) - 1 + 0
+        = exp a' - 1 - exp (exp a' - 1 + 1) - 1 := by mach_ring
+    have e2 : exp a' - 1 - exp (exp a' - 1 + 1) - 1 + exp (exp a' - 1 + 1)
+        = exp a' - 1 - 1 := by mach_ring
+    rw [e1, e2] at s
+    have hstep : exp a' - 1 - 1 ≤ exp a' - 1 := by
+      have t := add_lt_add_left zero_lt_one_ax (exp a' - 1 - 1)
+      have f1 : exp a' - 1 - 1 + 0 = exp a' - 1 - 1 := by mach_ring
+      have f2 : exp a' - 1 - 1 + 1 = exp a' - 1 := by mach_ring
+      rw [f1, f2] at t; exact le_of_lt t
+    exact le_trans (le_of_lt s) hstep
+  -- w < −1, hence exp w < 1 and w + exp w < 0
+  have hwneg : exp a' - 1 - exp (exp a' - 1 + 1) - 1 < -1 := by
+    have hb := exp_grows_strictly_thm (exp a' - 1 + 1)
+    have s := add_lt_add_left hb (-exp (exp a' - 1 + 1) - 1 + -(exp a' - 1 + 1))
+    have e1 : -exp (exp a' - 1 + 1) - 1 + -(exp a' - 1 + 1) + (exp a' - 1 + 1)
+        = -exp (exp a' - 1 + 1) - 1 := by mach_ring
+    have e2 : -exp (exp a' - 1 + 1) - 1 + -(exp a' - 1 + 1) + exp (exp a' - 1 + 1)
+        = -(exp a' - 1 + 1) - 1 := by mach_ring
+    rw [e1, e2] at s
+    have s2 := add_lt_add_left s (exp a' - 1 + 1)
+    have f1 : exp a' - 1 + 1 + (-exp (exp a' - 1 + 1) - 1)
+        = exp a' - 1 - exp (exp a' - 1 + 1) - 1 + 1 := by mach_ring
+    have f2 : exp a' - 1 + 1 + (-(exp a' - 1 + 1) - 1) = -1 := by mach_ring
+    rw [f1, f2] at s2
+    have s3 := add_lt_add_left s2 (-1 : Real)
+    have g1 : (-1 : Real) + (exp a' - 1 - exp (exp a' - 1 + 1) - 1 + 1)
+        = exp a' - 1 - exp (exp a' - 1 + 1) - 1 := by mach_ring
+    have g2 : (-1 : Real) + -1 = -(1 + 1 : Real) := by mach_ring
+    rw [g1, g2] at s3
+    have hm : -(1 + 1 : Real) < -1 := by
+      have t := add_lt_add_left zero_lt_one_ax (-(1 + 1) : Real)
+      have p1 : (-(1 + 1) : Real) + 0 = -(1 + 1) := by mach_ring
+      have p2 : (-(1 + 1) : Real) + 1 = -1 := by mach_ring
+      rw [p1, p2] at t; exact t
+    exact lt_trans_ax s3 hm
+  have hsmall : exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1)
+      * exp ((EMLTree.var).eval (exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1))) < 1 := by
+    have hv : (EMLTree.var).eval (exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1))
+        = exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1) := rfl
+    rw [hv, ← exp_add]
+    have hexp1 : exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1) < 1 := by
+      have hneg : exp a' - 1 - exp (exp a' - 1 + 1) - 1 < 0 := by
+        have hm1 : (-1 : Real) < 0 := by
+          have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+          have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+          have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+          rw [f1, f2] at t; exact t
+        exact lt_trans_ax hwneg hm1
+      have hlt : exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1) < exp 0 := exp_lt hneg
+      rw [exp_zero] at hlt; exact hlt
+    have hsum : exp a' - 1 - exp (exp a' - 1 + 1) - 1
+        + exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1) < 0 := by
+      have s := add_lt_add_left hexp1 (exp a' - 1 - exp (exp a' - 1 + 1) - 1)
+      have s2 := add_lt_add_left hwneg (1 : Real)
+      have q1 : (1 : Real) + (exp a' - 1 - exp (exp a' - 1 + 1) - 1)
+          = exp a' - 1 - exp (exp a' - 1 + 1) - 1 + 1 := by mach_ring
+      have q2 : (1 : Real) + -1 = (0 : Real) := by mach_ring
+      rw [q1, q2] at s2
+      exact lt_trans_ax s s2
+    have hlt : exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1
+        + exp (exp a' - 1 - exp (exp a' - 1 + 1) - 1)) < exp 0 := exp_lt hsum
+    rw [exp_zero] at hlt; exact hlt
+  exact depth2_small_point_absurd hx hsmall (ecv_log_nonneg hle) h
+
 end MachLib
