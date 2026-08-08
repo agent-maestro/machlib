@@ -754,4 +754,117 @@ theorem depth2_var_ecv_absurd {a' : Real}
     rw [exp_zero] at hlt; exact hlt
   exact depth2_small_point_absurd hx hsmall (ecv_log_nonneg hle) h
 
+/-- **`t1 = const c`, `t2 = eml var (const b')`** — at a point where the child is already huge.
+
+The small-point criterion cannot reach this cell: `exp x − log b'` is bounded near `0`, so its log
+may be negative or (by totalisation) clamped. **Go the other way.** At a large `X` the child
+`exp X − log b'` is positive and exceeds `exp (exp c)`, so `log (child) > exp c` and the tree's value
+is NEGATIVE — while `1/X > 0`. -/
+theorem depth2_const_evc_at {c b' X : Real} (hX : 0 < X)
+    (hbig : exp (exp c) < exp X - log b')
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml (EMLTree.const c) (EMLTree.eml EMLTree.var (EMLTree.const b'))).eval y
+        = 1 / y) : False := by
+  have he := h X hX
+  have hval : (EMLTree.eml (EMLTree.const c)
+      (EMLTree.eml EMLTree.var (EMLTree.const b'))).eval X
+      = exp c - log (exp X - log b') := rfl
+  rw [hval] at he
+  have hlog : exp c < log (exp X - log b') := by
+    have hl := log_lt_log (exp_pos (exp c)) hbig
+    rw [log_exp] at hl
+    exact hl
+  have hneg : exp c - log (exp X - log b') < 0 := by
+    have s := add_lt_add_left hlog (-log (exp X - log b'))
+    have e1 : -log (exp X - log b') + exp c = exp c - log (exp X - log b') := by mach_ring
+    have e2 : -log (exp X - log b') + log (exp X - log b') = (0 : Real) := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  have hposv : 0 < (1 : Real) / X := one_div_pos_of_pos hX
+  rw [he] at hneg
+  exact lt_irrefl_ax 0 (lt_trans_ax hposv hneg)
+
+/-- The witness: `X := exp (exp (exp c) + log b')`. Then `exp X > X > exp (exp c) + log b'`,
+by `exp y > y` applied twice. -/
+theorem depth2_const_evc_absurd {c b' : Real}
+    (h : ∀ y : Real, 0 < y →
+      (EMLTree.eml (EMLTree.const c) (EMLTree.eml EMLTree.var (EMLTree.const b'))).eval y
+        = 1 / y) : False := by
+  have hX : 0 < exp (exp (exp c) + log b') := exp_pos _
+  have step1 : exp (exp c) + log b' < exp (exp (exp c) + log b') :=
+    exp_grows_strictly_thm _
+  have step2 : exp (exp (exp c) + log b') < exp (exp (exp (exp c) + log b')) :=
+    exp_grows_strictly_thm _
+  have hchain : exp (exp c) + log b' < exp (exp (exp (exp c) + log b')) :=
+    lt_trans_ax step1 step2
+  have hbig : exp (exp c) < exp (exp (exp (exp c) + log b')) - log b' := by
+    have s := add_lt_add_left hchain (-log b')
+    have e1 : -log b' + (exp (exp c) + log b') = exp (exp c) := by mach_ring
+    have e2 : -log b' + exp (exp (exp (exp c) + log b'))
+        = exp (exp (exp (exp c) + log b')) - log b' := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  exact depth2_const_evc_at hX hbig h
+
+/-- **Uniform upper bound on the child's log:** `log (exp X − β) ≤ X + exp (−β)` for `X ≥ 0`,
+for EVERY real `β`. This is what the small-point criterion could not supply. -/
+theorem log_exp_sub_le {X β : Real} (hX : 0 ≤ X) :
+    log (exp X - β) ≤ X + exp (-β) := by
+  -- E := exp (exp (-β)) - 1 exceeds -β
+  have hz : exp (-β) < exp (exp (-β)) := exp_grows_strictly_thm _
+  have hnb : -β < exp (-β) := exp_grows_strictly_thm _
+  have hE : -β < exp (exp (-β)) - 1 := by
+    have h1 : 1 + exp (-β) < exp (exp (-β)) :=
+      exp_gt_one_plus_self (exp (-β)) (exp_pos _)
+    have s := add_lt_add_left h1 (-1 : Real)
+    have e1 : (-1 : Real) + (1 + exp (-β)) = exp (-β) := by mach_ring
+    have e2 : (-1 : Real) + exp (exp (-β)) = exp (exp (-β)) - 1 := by mach_ring
+    rw [e1, e2] at s
+    exact lt_trans_ax hnb s
+  have hEpos : (0 : Real) ≤ exp (exp (-β)) - 1 := by
+    have h1 : 1 + exp (-β) < exp (exp (-β)) :=
+      exp_gt_one_plus_self (exp (-β)) (exp_pos _)
+    have s := add_lt_add_left h1 (-1 : Real)
+    have e1 : (-1 : Real) + (1 + exp (-β)) = exp (-β) := by mach_ring
+    have e2 : (-1 : Real) + exp (exp (-β)) = exp (exp (-β)) - 1 := by mach_ring
+    rw [e1, e2] at s
+    exact le_of_lt (lt_trans_ax (exp_pos (-β)) s)
+  -- exp X ≥ 1 scales it up
+  have hX1 : (1 : Real) ≤ exp X := one_le_exp hX
+  have hscale : exp (exp (-β)) - 1 ≤ exp X * (exp (exp (-β)) - 1) := by
+    have s := mul_le_mul_of_nonneg_right hX1 hEpos
+    have e : (1 : Real) * (exp (exp (-β)) - 1) = exp (exp (-β)) - 1 := by mach_ring
+    rw [e] at s
+    exact s
+  have hkey : -β ≤ exp X * (exp (exp (-β)) - 1) := le_trans (le_of_lt hE) hscale
+  -- hence exp X − β ≤ exp (X + exp (−β))
+  have hprod : exp X - β ≤ exp (X + exp (-β)) := by
+    rw [exp_add]
+    have e : exp X * exp (exp (-β)) = exp X + exp X * (exp (exp (-β)) - 1) := by
+      mach_mpoly [exp X, exp (exp (-β))]
+    rw [e]
+    have s := add_le_add_wit (le_refl (exp X)) hkey
+    have f : exp X + -β = exp X - β := by mach_ring
+    rw [f] at s
+    exact s
+  -- monotone log, and log (exp ·) = ·
+  rcases lt_total (exp X - β) 0 with hlt | heq | hgt
+  · rw [log_nonpos (le_of_lt hlt)]
+    have : (0 : Real) ≤ X + exp (-β) :=
+      le_trans hX (le_of_lt (by
+        have s := add_lt_add_left (exp_pos (-β)) X
+        have e : X + 0 = X := by mach_ring
+        rw [e] at s; exact s))
+    exact this
+  · rw [heq, log_nonpos (le_refl (0 : Real))]
+    have : (0 : Real) ≤ X + exp (-β) :=
+      le_trans hX (le_of_lt (by
+        have s := add_lt_add_left (exp_pos (-β)) X
+        have e : X + 0 = X := by mach_ring
+        rw [e] at s; exact s))
+    exact this
+  · have hl := log_le_log hgt hprod
+    rw [log_exp] at hl
+    exact hl
+
 end MachLib
