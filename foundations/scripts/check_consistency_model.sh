@@ -22,7 +22,18 @@ open MachLib.Model
 #print axioms intModel
 EOF
 
-OUT="$(env LEAN_PATH=./.lake/build/lib LD_LIBRARY_PATH= "$LEAN" "$TMP/check.lean" -R . 2>&1)"
+# Lake nests the olean tree under lib/lean/ since the v4.32.2 bump; older layouts
+# put it directly in lib/. Accept either, and FAIL LOUDLY if lean itself errors —
+# a gate that cannot run is not a gate that passed.
+LIB="./.lake/build/lib/lean"
+[ -d "$LIB" ] || LIB="./.lake/build/lib"
+
+if ! OUT="$(env LEAN_PATH="$LIB" LD_LIBRARY_PATH= "$LEAN" "$TMP/check.lean" -R . 2>&1)"; then
+  echo "[check-consistency] FAIL: could not RUN the check (lean exited non-zero)."
+  echo "                    LEAN=$LEAN  LEAN_PATH=$LIB"
+  echo "$OUT" | sed 's/^/                      /'
+  exit 1
+fi
 
 if echo "$OUT" | grep -q "MachLib\.Real"; then
   echo "[check-consistency] FAIL: intModel depends on a MachLib axiom — the consistency"
