@@ -1252,4 +1252,90 @@ theorem inv_x_not_in_eml_depth_le_2 (t : EMLTree) (ht : t.depth ≤ 2) :
           have hq : q.depth = 0 := by simp only [EMLTree.depth] at h1; omega
           exact depth2_left_eml_absurd hp hq h2 h
 
+-- ===================================================================
+-- ▸ DEPTH-FREE: the reduction never needed the left child to be shallow
+--
+-- `left_child_mul` used `eml (const a) var`; nothing in it depended on the
+-- `const`. With an ARBITRARY subtree `u` in that slot the identity still holds,
+-- and it constrains the right child at EVERY depth.
+-- ===================================================================
+
+/-- `x · exp((eml u var).eval x) = exp (exp (u.eval x))` — exactly, for any `u`, any depth. -/
+theorem left_eml_var_mul {u : EMLTree} {x : Real} (hx : 0 < x) :
+    x * exp ((EMLTree.eml u EMLTree.var).eval x) = exp (exp (u.eval x)) := by
+  have hv : (EMLTree.var).eval x = x := rfl
+  have hval : (EMLTree.eml u EMLTree.var).eval x = exp (u.eval x) - log x := by
+    show exp (u.eval x) - log ((EMLTree.var).eval x) = _
+    rw [hv]
+  have hxne : x ≠ 0 := ne_of_gt hx
+  rw [hval, sub_def, exp_add, exp_neg_inv, exp_log hx]
+  have step : x * (exp (exp (u.eval x)) * (1 / x))
+      = exp (exp (u.eval x)) * (x * (1 / x)) := by
+    mach_mpoly [x, exp (exp (u.eval x)), 1 / x]
+  rw [step, mul_inv x hxne]
+  mach_ring
+
+/-- **The reduction, at any depth.** -/
+theorem reduce_left_eml_var {u t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u EMLTree.var) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) :
+    exp (exp (u.eval x)) - x * log (t2.eval x) = 1 := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have he : exp ((EMLTree.eml u EMLTree.var).eval x) - log (t2.eval x) = 1 / x := h x hx
+  have hmul : x * (exp ((EMLTree.eml u EMLTree.var).eval x) - log (t2.eval x))
+      = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp ((EMLTree.eml u EMLTree.var).eval x) - log (t2.eval x))
+      = x * exp ((EMLTree.eml u EMLTree.var).eval x) - x * log (t2.eval x) := by
+    mach_mpoly [x, exp ((EMLTree.eml u EMLTree.var).eval x), log (t2.eval x)]
+  rw [hd, left_eml_var_mul hx] at hmul
+  exact hmul
+
+/-- # **A depth-free structural constraint.**
+
+If the left child has the shape `eml u var` — for **any** subtree `u`, at **any** depth — then a tree
+realising `1/x` forces its RIGHT child to exceed `1` at every positive point.
+
+Because `exp (exp (u x)) > 1` always, the reduction gives `x · log (t2 x) > 0`, hence `t2 x > 1`. -/
+theorem right_child_gt_one_of_left_eml_var {u t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.eml u EMLTree.var) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) : 1 < t2.eval x := by
+  have hr := reduce_left_eml_var h x hx
+  have hgt : 1 < exp (exp (u.eval x)) := one_lt_exp_exp (u.eval x)
+  have hxl : 0 < x * log (t2.eval x) := by
+    have t : (exp (exp (u.eval x)) - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+        = 1 + (x * log (t2.eval x) - 1) := by rw [hr]
+    have l : (exp (exp (u.eval x)) - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+        = exp (exp (u.eval x)) - 1 := by
+      mach_mpoly [x, exp (exp (u.eval x)), log (t2.eval x)]
+    have r : (1 : Real) + (x * log (t2.eval x) - 1) = x * log (t2.eval x) := by
+      mach_mpoly [x, log (t2.eval x)]
+    rw [l, r] at t
+    rw [← t]
+    exact sub_pos_of_lt hgt
+  -- so log (t2 x) > 0, i.e. t2 x > 1
+  have hlog : 0 < log (t2.eval x) := by
+    rcases lt_total 0 (log (t2.eval x)) with hp | hz | hn
+    · exact hp
+    · exfalso; rw [← hz] at hxl
+      have e : x * (0 : Real) = 0 := by mach_ring
+      rw [e] at hxl; exact lt_irrefl_ax 0 hxl
+    · exfalso
+      have := mul_lt_mul_pos_left_wit hn hx
+      have e : x * (0 : Real) = 0 := by mach_ring
+      rw [e] at this
+      exact lt_irrefl_ax 0 (lt_trans_ax hxl this)
+  have hpos : 0 < t2.eval x := by
+    rcases lt_total 0 (t2.eval x) with hp | hz | hn
+    · exact hp
+    · exfalso; rw [← hz, log_nonpos (le_refl (0:Real))] at hlog; exact lt_irrefl_ax 0 hlog
+    · exfalso; rw [log_nonpos (le_of_lt hn)] at hlog; exact lt_irrefl_ax 0 hlog
+  rcases lt_total 1 (t2.eval x) with hg | he1 | hl
+  · exact hg
+  · exfalso; rw [← he1, log_one] at hlog; exact lt_irrefl_ax 0 hlog
+  · exfalso
+    have := log_le_log hpos (le_of_lt hl)
+    rw [log_one] at this
+    exact lt_irrefl_ax 0 (lt_of_lt_of_le hlog this)
+
 end MachLib
