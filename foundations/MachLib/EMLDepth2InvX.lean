@@ -3101,4 +3101,63 @@ theorem depth_two_const_left_bounded_const {A B : EMLTree} {α L : Real}
       exact s
     exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hle)
 
+/-- # **Step 1, unbounded-left case at `∞`.**
+
+If the left child eventually dominates `x`, then `exp (A x) ≥ 2x` outruns the depth-1 linear log
+bound `log (B x) ≤ x + C`, and the tree is unbounded above. -/
+theorem depth_two_unbounded_of_left_ge_id {A B : EMLTree} (hB : B.depth ≤ 1)
+    (hA : ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → x ≤ A.eval x) :
+    ∀ M : Real, ∃ x : Real, 0 < x ∧ M < (EMLTree.eml A B).eval x := by
+  obtain ⟨C, hC⟩ := depth_le_one_log_bound_at_infty B hB
+  obtain ⟨X₀, hX₀, hdom⟩ := hA
+  intro M
+  refine ⟨X₀ + exp (M + C), ?_, ?_⟩
+  · exact add_pos (lt_of_lt_of_le one_pos hX₀) (exp_pos (M + C))
+  · have hx1 : (1 : Real) ≤ X₀ + exp (M + C) := by
+      have s := add_le_add_wit hX₀ (le_of_lt (exp_pos (M + C)))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at s; exact s
+    have hxX : X₀ ≤ X₀ + exp (M + C) := by
+      have s := add_le_add_wit (le_refl X₀) (le_of_lt (exp_pos (M + C)))
+      have e : X₀ + 0 = X₀ := by mach_ring
+      rw [e] at s; exact s
+    -- exp (A x) ≥ exp x ≥ 2x
+    have hAx := hdom _ hxX
+    have hexpA : exp (X₀ + exp (M + C)) ≤ exp (A.eval (X₀ + exp (M + C))) :=
+      exp_monotone hAx
+    have h2x : (X₀ + exp (M + C)) + (X₀ + exp (M + C)) ≤ exp (X₀ + exp (M + C)) :=
+      exp_ge_two_mul hx1
+    -- log (B x) ≤ x + C
+    have hlogB := hC _ hx1
+    -- combine
+    have hlow : (X₀ + exp (M + C)) - C
+        ≤ exp (A.eval (X₀ + exp (M + C))) - log (B.eval (X₀ + exp (M + C))) := by
+      have s := add_le_add_wit (le_trans h2x hexpA) (neg_le_neg_wit hlogB)
+      have e1 : (X₀ + exp (M + C)) + (X₀ + exp (M + C)) + -((X₀ + exp (M + C)) + C)
+          = (X₀ + exp (M + C)) - C := by mach_ring
+      have e2 : exp (A.eval (X₀ + exp (M + C))) + -log (B.eval (X₀ + exp (M + C)))
+          = exp (A.eval (X₀ + exp (M + C))) - log (B.eval (X₀ + exp (M + C))) := by
+        mach_ring
+      rw [e1, e2] at s
+      exact s
+    have hgap : (0 : Real) < exp (M + C) - (M + C) := by
+      have s := add_lt_add_left (exp_grows_strictly_thm (M + C)) (-(M + C))
+      have f1 : -(M + C) + (M + C) = (0 : Real) := by mach_mpoly [M, C]
+      have f2 : -(M + C) + exp (M + C) = exp (M + C) - (M + C) := by
+        mach_mpoly [M, C, exp (M + C)]
+      rw [f1, f2] at s
+      exact s
+    have hMlt : M < X₀ + exp (M + C) - C := by
+      refine lt_of_sub_pos_wit ?_
+      have e : X₀ + exp (M + C) - C - M = X₀ + (exp (M + C) - (M + C)) := by
+        mach_mpoly [X₀, M, C, exp (M + C)]
+      rw [e]
+      exact add_pos (lt_of_lt_of_le one_pos hX₀) hgap
+    exact lt_of_lt_of_le hMlt hlow
+
+/-- `A = var` dominates `x` trivially, so any depth-2 tree with left child `var` is unbounded. -/
+theorem depth_two_left_var_unbounded {B : EMLTree} (hB : B.depth ≤ 1) :
+    ∀ M : Real, ∃ x : Real, 0 < x ∧ M < (EMLTree.eml EMLTree.var B).eval x :=
+  depth_two_unbounded_of_left_ge_id hB ⟨1, le_refl 1, fun x _ => le_refl x⟩
+
 end MachLib
