@@ -1905,4 +1905,42 @@ theorem depth_le_two_growth_ceiling (T : EMLTree) (hT : T.depth ≤ 2) :
               (add_le_add_wit (mul_le_exp_of_le_one hx hx1) (neg_x_log_x_le_one hx))
           exact add_le_add_wit hL hR
 
+/-- `exp t ≥ t + t` for `t ≥ 1`, from `exp t = e·exp(t−1) ≥ e·t` and `e > 2`. -/
+theorem exp_ge_two_mul {t : Real} (ht : 1 ≤ t) : t + t ≤ exp t := by
+  have hsplit : exp t = exp 1 * exp (t - 1) := by
+    rw [← exp_add]
+    have e : (1 : Real) + (t - 1) = t := by mach_ring
+    rw [e]
+  have h1 : (1 : Real) + (t - 1) ≤ exp (t - 1) := by
+    rcases (le_iff_lt_or_eq (1 : Real) t).mp ht with hlt | heq
+    · have hp : (0 : Real) < t - 1 := by
+        refine lt_of_sub_pos_wit ?_
+        have e : t - 1 - 0 = t - 1 := by mach_ring
+        rw [e]
+        refine lt_of_sub_pos_wit ?_
+        have e2 : t - 1 - 0 = t - 1 := by mach_ring
+        rw [e2]
+        have s := add_lt_add_left hlt (-1 : Real)
+        have f1 : (-1 : Real) + 1 = 0 := by mach_ring
+        have f2 : (-1 : Real) + t = t - 1 := by mach_ring
+        rw [f1, f2] at s; exact s
+      exact le_of_lt (exp_gt_one_plus_self (t - 1) hp)
+    · rw [← heq]
+      have e : (1 : Real) + (1 - 1) = 1 := by mach_ring
+      have e2 : (1 : Real) - 1 = 0 := by mach_ring
+      rw [e, e2, exp_zero]
+      exact le_refl 1
+  have ht0 : (0 : Real) < t := lt_of_lt_of_le one_pos ht
+  have h2 : t + t ≤ exp 1 * t := by
+    have hs : ((1 : Real) + 1) * t ≤ exp 1 * t :=
+      mul_le_mul_of_nonneg_right (le_of_lt two_lt_exp_one) (le_of_lt ht0)
+    have e : ((1 : Real) + 1) * t = t + t := by mach_mpoly [t]
+    rw [e] at hs; exact hs
+  have h3 : exp 1 * t ≤ exp 1 * exp (t - 1) := by
+    have e : (1 : Real) + (t - 1) = t := by mach_ring
+    rw [e] at h1
+    exact mul_le_mul_of_nonneg_left h1 (le_of_lt (exp_pos 1))
+  rw [hsplit]
+  exact le_trans h2 h3
+
 end MachLib
