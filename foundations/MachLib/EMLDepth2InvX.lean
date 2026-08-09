@@ -2587,4 +2587,61 @@ theorem regime3_floor_var_expvar {x : Real} (hx : 0 < x) :
     exact s
   exact le_trans hmul hstep
 
+/-- Regime-3 floor, case `A = var`, `B` constant (coincidence forces `log β = 1`). -/
+theorem regime3_floor_var_const {x : Real} (hx : 0 < x) : x ≤ exp x - 1 := by
+  have h := exp_gt_one_plus_self x hx
+  have s := add_lt_add_left h (-1 : Real)
+  have f1 : (-1 : Real) + (1 + x) = x := by mach_ring
+  have f2 : (-1 : Real) + exp x = exp x - 1 := by mach_ring
+  rw [f1, f2] at s
+  exact le_of_lt s
+
+/-- Regime-3 floor, case `A = eml var (const q)`, `B` constant. Coincidence forces
+`log β = exp (1 − q)`, and the tree factors as `exp(1−q)·(exp(exp x − 1) − 1)`. -/
+theorem regime3_floor_expvar_const {q x : Real} (hx : 0 < x) :
+    exp (1 - q) * x ≤ exp (exp x - q) - exp (1 - q) := by
+  have hw : (0 : Real) < exp x - 1 := lt_of_lt_of_le hx (regime3_floor_var_const hx)
+  have hsplit : exp (exp x - q) = exp (1 - q) * exp (exp x - 1) := by
+    rw [← exp_add]
+    have e : (1 - q) + (exp x - 1) = exp x - q := by mach_ring
+    rw [e]
+  have hinner : exp x - 1 ≤ exp (exp x - 1) - 1 := by
+    have h := exp_gt_one_plus_self (exp x - 1) hw
+    have s := add_lt_add_left h (-1 : Real)
+    have f1 : (-1 : Real) + (1 + (exp x - 1)) = exp x - 1 := by mach_ring
+    have f2 : (-1 : Real) + exp (exp x - 1) = exp (exp x - 1) - 1 := by mach_ring
+    rw [f1, f2] at s
+    exact le_of_lt s
+  have hchain : x ≤ exp (exp x - 1) - 1 := le_trans (regime3_floor_var_const hx) hinner
+  have hm := mul_le_mul_of_nonneg_left hchain (le_of_lt (exp_pos (1 - q)))
+  have e : exp (1 - q) * (exp (exp x - 1) - 1) = exp (1 - q) * exp (exp x - 1) - exp (1 - q) := by
+    mach_mpoly [exp (1 - q), exp (exp x - 1)]
+  rw [e, ← hsplit] at hm
+  exact hm
+
+/-- **Quadratic vanishing is also enough.** The boundary sub-case of the last shape pair vanishes to
+second order; a `K·x²` floor still bounds `x · log (T x)`. -/
+theorem dual_bound_of_quadratic_lower {T : EMLTree} {K : Real} (hK : 0 < K)
+    (h : ∀ x : Real, 0 < x → x ≤ 1 → K * (x * x) ≤ T.eval x) :
+    ∀ x : Real, 0 < x → x ≤ 1 → -(exp (-log K) + 1 + 1) ≤ x * log (T.eval x) := by
+  intro x hx h1
+  have hxx : (0 : Real) < x * x := mul_pos hx hx
+  have hKxx : (0 : Real) < K * (x * x) := mul_pos hK hxx
+  have hlog : log (K * (x * x)) ≤ log (T.eval x) := log_le_log hKxx (h x hx h1)
+  rw [log_mul hK hxx, log_mul hx hx] at hlog
+  have hm := mul_le_mul_of_nonneg_left hlog (le_of_lt hx)
+  have hsplit : x * (log K + (log x + log x)) = x * log K + (x * log x + x * log x) := by
+    mach_mpoly [x, log K, log x]
+  rw [hsplit] at hm
+  have hA : -exp (-log K) ≤ x * log K := mul_ge_neg_exp_of_le_one hx h1
+  have hB : (-1 : Real) ≤ x * log x := by
+    have hh := neg_le_neg_wit (neg_x_log_x_le_one hx)
+    have e : -(x * -log x) = x * log x := by mach_mpoly [x, log x]
+    rw [e] at hh
+    exact hh
+  have hsum := add_le_add_wit hA (add_le_add_wit hB hB)
+  have e : -exp (-log K) + (-1 + -1) = -(exp (-log K) + 1 + 1) := by mach_ring
+  rw [e] at hsum
+  exact le_trans hsum hm
+
 end MachLib
