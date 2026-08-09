@@ -3502,4 +3502,96 @@ theorem leaf_pin_upper {c : Real} {t2 : EMLTree}
   · rw [← hz]; exact le_of_lt (exp_pos (exp c))
   · exact le_trans (le_of_lt hn) (le_of_lt (exp_pos (exp c)))
 
+/-- The leaf pin bounds its right child **below**. `t2 x > 0` at every point except possibly
+`x = exp (−c)`, where the totalised `log` may clamp — so one explicit constant covers everything. -/
+theorem leaf_pin_lower {c : Real} {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.const c) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) :
+    -exp (-(t2.eval (exp (-c)))) - exp (t2.eval (exp (-c))) - 1 ≤ t2.eval x := by
+  have hLneg : -exp (-(t2.eval (exp (-c)))) - exp (t2.eval (exp (-c))) - 1 < 0 := by
+    refine lt_of_sub_pos_wit ?_
+    have e : (0 : Real) - (-exp (-(t2.eval (exp (-c)))) - exp (t2.eval (exp (-c))) - 1)
+        = exp (-(t2.eval (exp (-c)))) + exp (t2.eval (exp (-c))) + 1 := by
+      mach_mpoly [exp (-(t2.eval (exp (-c)))), exp (t2.eval (exp (-c)))]
+    rw [e]
+    exact add_pos (add_pos (exp_pos _) (exp_pos _)) one_pos
+  have hLv : -exp (-(t2.eval (exp (-c)))) - exp (t2.eval (exp (-c))) - 1
+      ≤ t2.eval (exp (-c)) := by
+    refine le_of_lt (lt_of_sub_pos_wit ?_)
+    have e : t2.eval (exp (-c))
+        - (-exp (-(t2.eval (exp (-c)))) - exp (t2.eval (exp (-c))) - 1)
+        = (t2.eval (exp (-c)) + exp (-(t2.eval (exp (-c)))))
+          + (exp (t2.eval (exp (-c))) + 1) := by
+      mach_mpoly [t2.eval (exp (-c)), exp (-(t2.eval (exp (-c)))),
+        exp (t2.eval (exp (-c)))]
+    rw [e]
+    refine add_pos ?_ (add_pos (exp_pos _) one_pos)
+    have hg := exp_grows_strictly_thm (-(t2.eval (exp (-c))))
+    have s := add_lt_add_left hg (t2.eval (exp (-c)))
+    have f1 : t2.eval (exp (-c)) + -(t2.eval (exp (-c))) = (0 : Real) := by
+      mach_mpoly [t2.eval (exp (-c))]
+    rw [f1] at s
+    exact s
+  rcases lt_total 0 (t2.eval x) with hp | hz | hn
+  · exact le_of_lt (lt_trans_ax hLneg hp)
+  · rw [← hz]; exact le_of_lt hLneg
+  · -- t2 x < 0 forces x = exp (−c)
+    have hpin := leaf_const_pin h x hx
+    rw [log_nonpos (le_of_lt hn)] at hpin
+    have hxe : x = exp (-c) := by
+      have e0 : x * (0 : Real) = 0 := by mach_ring
+      rw [e0] at hpin
+      -- 0 = x·exp c − 1, so x·exp c = 1
+      have hxc : x * exp c = 1 := by
+        have t : (0 : Real) + 1 = x * exp c - 1 + 1 := by rw [hpin]
+        have e1 : (0 : Real) + 1 = 1 := by mach_ring
+        have e2 : x * exp c - 1 + 1 = x * exp c := by mach_ring
+        rw [e1, e2] at t
+        exact t.symm
+      have hem : exp c * exp (-c) = 1 := by
+        rw [← exp_add]
+        have e : c + -c = (0 : Real) := by mach_ring
+        rw [e, exp_zero]
+      have t : x * exp c * exp (-c) = 1 * exp (-c) := by rw [hxc]
+      have e1 : x * exp c * exp (-c) = x * (exp c * exp (-c)) := by
+        mach_mpoly [x, exp c, exp (-c)]
+      have e2 : (1 : Real) * exp (-c) = exp (-c) := by mach_ring
+      rw [e1, hem, e2] at t
+      have e3 : x * (1 : Real) = x := by mach_ring
+      rw [e3] at t
+      exact t
+    rw [hxe]
+    exact hLv
+
+/-- # **Depth 3, leaf-`const` branch: IMPOSSIBLE.**
+
+The pin bounds the right child in `(L, exp(exp c))`; a bounded depth-2 tree is constant (step 1);
+and a constant right child contradicts the pin at two points. -/
+theorem depth3_leaf_const_absurd {c : Real} {t2 : EMLTree} (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.const c) t2).eval x = 1 / x) : False := by
+  have hconst : (∃ k : Real, ∀ x : Real, 0 < x → t2.eval x = k) → False := by
+    intro hk
+    obtain ⟨k, hk⟩ := hk
+    refine leaf_pin_const_absurd (c := c) (k := k) ?_ ?_
+    · have p1 := leaf_const_pin h 1 one_pos
+      rw [hk 1 one_pos] at p1
+      exact p1
+    · have p2 := leaf_const_pin h (1 + 1) (add_pos one_pos one_pos)
+      rw [hk (1 + 1) (add_pos one_pos one_pos)] at p2
+      exact p2
+  cases t2 with
+  | const k => exact hconst ⟨k, fun _ _ => rfl⟩
+  | var =>
+      have hb := leaf_pin_upper h (exp (exp c) + 1) (add_pos (exp_pos _) one_pos)
+      have hlt : exp (exp c) < exp (exp c) + 1 := by
+        have t := add_lt_add_left one_pos (exp (exp c))
+        have e : exp (exp c) + 0 = exp (exp c) := by mach_ring
+        rw [e] at t; exact t
+      exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hb)
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by simp only [EMLTree.depth] at ht2; omega
+      have hB : B.depth ≤ 1 := by simp only [EMLTree.depth] at ht2; omega
+      exact hconst (depth_two_bounded_const hA hB (leaf_pin_lower h) (leaf_pin_upper h))
+
 end MachLib
