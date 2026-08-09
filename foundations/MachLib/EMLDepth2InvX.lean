@@ -2454,4 +2454,45 @@ theorem dual_bound_of_linear_lower {T : EMLTree} {K : Real} (hK : 0 < K)
   rw [e] at hsum
   exact le_trans hsum hm
 
+theorem log_nonpos_of_le_one' {y : Real} (hy : y ≤ 1) : log y ≤ 0 := by
+  rcases lt_total 0 y with hp | hz | hn
+  · have h := log_le_log hp hy
+    rw [log_one] at h; exact h
+  · rw [← hz, log_nonpos (le_refl (0 : Real))]
+    exact le_refl 0
+  · rw [log_nonpos (le_of_lt hn)]
+    exact le_refl 0
+
+/-- **Dual ceiling, regime 1: the right operand is `≤ 1`.** Then `−log (B x) ≥ 0`, so the tree is at
+least `exp (A x) ≥ exp m`, and the bound is immediate. -/
+theorem dual_bound_regime_one {A B : EMLTree} {m x : Real}
+    (hx : 0 < x) (h1 : x ≤ 1) (hmA : m ≤ A.eval x) (hB : B.eval x ≤ 1) :
+    -exp (-m) ≤ x * log ((EMLTree.eml A B).eval x) := by
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  have hlogB : log (B.eval x) ≤ 0 := log_nonpos_of_le_one' hB
+  have hge : exp m ≤ (EMLTree.eml A B).eval x := by
+    rw [hval]
+    have s := add_le_add_wit (exp_monotone hmA) (neg_le_neg_wit hlogB)
+    have e1 : exp m + -(0 : Real) = exp m := by mach_ring
+    have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+      mach_ring
+    rw [e1, e2] at s
+    exact s
+  have hpos : (0 : Real) < (EMLTree.eml A B).eval x := lt_of_lt_of_le (exp_pos m) hge
+  have hlog : m ≤ log ((EMLTree.eml A B).eval x) := by
+    have h := log_le_log (exp_pos m) hge
+    rw [log_exp] at h
+    exact h
+  have hm := mul_le_mul_of_nonneg_left hlog (le_of_lt hx)
+  exact le_trans (mul_ge_neg_exp_of_le_one hx h1) hm
+
+/-- **Dual ceiling, regime 2: the tree is `≤ 0`.** Totalisation clamps its log to `0`. -/
+theorem dual_bound_regime_two {A B : EMLTree} {x : Real}
+    (hT : (EMLTree.eml A B).eval x ≤ 0) :
+    (0 : Real) ≤ x * log ((EMLTree.eml A B).eval x) := by
+  rw [log_nonpos hT]
+  have e : x * (0 : Real) = 0 := by mach_ring
+  rw [e]
+  exact le_refl 0
+
 end MachLib
