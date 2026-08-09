@@ -2495,4 +2495,96 @@ theorem dual_bound_regime_two {A B : EMLTree} {x : Real}
   rw [e]
   exact le_refl 0
 
+/-- # **A regime-3 floor, in the hardest representative case.**
+
+`A = var`, `B = eml var (const c')` with the coincidence `log c' = 1 − e`, so the tree is
+`exp x − log (exp x − 1 + e)` — both terms growing, nearly cancelling, value `→ 0` at `0`.
+
+Factoring `exp x − 1 + e = e·(1 + (exp x − 1)·e⁻¹)` and applying `log y ≤ y − 1` (**the derivable
+half**, since the factor is `≥ 1`) gives a clean **linear** floor. -/
+theorem regime3_floor_var_expvar {x : Real} (hx : 0 < x) :
+    (1 - exp (-1)) * x ≤ exp x - log (exp x - 1 + exp 1) := by
+  have hem : exp 1 * exp (-1) = 1 := by
+    rw [← exp_add]
+    have e : (1 : Real) + -1 = 0 := by mach_ring
+    rw [e, exp_zero]
+  have hxg : (1 : Real) + x < exp x := exp_gt_one_plus_self x hx
+  have hu1 : (1 : Real) ≤ 1 + (exp x - 1) * exp (-1) := by
+    have hp : (0 : Real) ≤ (exp x - 1) * exp (-1) := by
+      refine le_of_lt (mul_pos ?_ (exp_pos _))
+      refine lt_of_sub_pos_wit ?_
+      have e : exp x - 1 - 0 = exp x - 1 := by mach_ring
+      rw [e]
+      refine lt_of_sub_pos_wit ?_
+      have e2 : exp x - 1 - 0 = exp x - 1 := by mach_ring
+      rw [e2]
+      have s := add_lt_add_left (lt_trans_ax (by
+        have t := add_lt_add_left hx (1 : Real)
+        have f : (1 : Real) + 0 = 1 := by mach_ring
+        rw [f] at t; exact t) hxg) (-1 : Real)
+      have f1 : (-1 : Real) + 1 = 0 := by mach_ring
+      have f2 : (-1 : Real) + exp x = exp x - 1 := by mach_ring
+      rw [f1, f2] at s
+      exact s
+    have s := add_le_add_wit (le_refl (1 : Real)) hp
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at s
+    exact s
+  have hfac : exp x - 1 + exp 1 = exp 1 * (1 + (exp x - 1) * exp (-1)) := by
+    have e : exp 1 * (1 + (exp x - 1) * exp (-1))
+        = exp 1 + (exp x - 1) * (exp 1 * exp (-1)) := by
+      mach_mpoly [exp 1, exp x, exp (-1)]
+    rw [e, hem]
+    mach_mpoly [exp 1, exp x]
+  have hupper : log (exp x - 1 + exp 1) ≤ 1 + (exp x - 1) * exp (-1) := by
+    rw [hfac, log_mul (exp_pos 1) (lt_of_lt_of_le one_pos hu1), log_exp]
+    have hl := log_le_sub_one_of_one_le hu1
+    have e : (1 : Real) + (1 + (exp x - 1) * exp (-1)) - 1
+        = 1 + (exp x - 1) * exp (-1) := by mach_mpoly [exp x, exp (-1)]
+    have s := add_le_add_wit (le_refl (1 : Real)) hl
+    have e2 : (1 : Real) + ((1 + (exp x - 1) * exp (-1)) - 1)
+        = 1 + (exp x - 1) * exp (-1) := by mach_mpoly [exp x, exp (-1)]
+    rw [e2] at s
+    exact s
+  -- exp x − log(...) ≥ (exp x − 1)(1 − exp(−1)) ≥ (1 − exp(−1))·x
+  have hstep : (exp x - 1) * (1 - exp (-1)) ≤ exp x - log (exp x - 1 + exp 1) := by
+    have s := sub_le_sub_left_wit (a := exp x) hupper
+    have e : exp x - (1 + (exp x - 1) * exp (-1)) = (exp x - 1) * (1 - exp (-1)) := by
+      mach_mpoly [exp x, exp (-1)]
+    rw [e] at s
+    exact s
+  have hK : (0 : Real) ≤ 1 - exp (-1) := by
+    refine le_of_lt (lt_of_sub_pos_wit ?_)
+    have e : (1 : Real) - exp (-1) - 0 = 1 - exp (-1) := by mach_ring
+    rw [e]
+    refine lt_of_sub_pos_wit ?_
+    have e2 : (1 : Real) - exp (-1) - 0 = 1 - exp (-1) := by mach_ring
+    rw [e2]
+    have hlt : exp (-1 : Real) < 1 := by
+      have hn : (-1 : Real) < 0 := by
+        have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+        have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+        have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+        rw [f1, f2] at t; exact t
+      have h := exp_lt hn
+      rw [exp_zero] at h; exact h
+    have s := add_lt_add_left hlt (-exp (-1 : Real))
+    have f1 : -exp (-1 : Real) + exp (-1) = (0 : Real) := by mach_ring
+    have f2 : -exp (-1 : Real) + 1 = 1 - exp (-1) := by mach_ring
+    rw [f1, f2] at s
+    exact s
+  have hxle : x ≤ exp x - 1 := by
+    have s := add_lt_add_left hxg (-1 : Real)
+    have f1 : (-1 : Real) + (1 + x) = x := by mach_ring
+    have f2 : (-1 : Real) + exp x = exp x - 1 := by mach_ring
+    rw [f1, f2] at s
+    exact le_of_lt s
+  have hmul : (1 - exp (-1)) * x ≤ (exp x - 1) * (1 - exp (-1)) := by
+    have s := mul_le_mul_of_nonneg_left hxle hK
+    have e : (1 - exp (-1)) * (exp x - 1) = (exp x - 1) * (1 - exp (-1)) := by
+      mach_mpoly [exp x, exp (-1)]
+    rw [e] at s
+    exact s
+  exact le_trans hmul hstep
+
 end MachLib
