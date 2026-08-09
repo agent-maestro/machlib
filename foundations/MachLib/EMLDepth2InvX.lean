@@ -3594,4 +3594,49 @@ theorem depth3_leaf_const_absurd {c : Real} {t2 : EMLTree} (ht2 : t2.depth ≤ 2
       have hB : B.depth ≤ 1 := by simp only [EMLTree.depth] at ht2; omega
       exact hconst (depth_two_bounded_const hA hB (leaf_pin_lower h) (leaf_pin_upper h))
 
+theorem le_of_mul_le_mul_pos_left {x u v : Real} (hx : 0 < x) (h : x * u ≤ x * v) : u ≤ v := by
+  rcases lt_total v u with hlt | heq | hgt
+  · exfalso
+    have s := mul_lt_mul_pos_left_wit hlt hx
+    exact lt_irrefl_ax _ (lt_of_lt_of_le s h)
+  · exact le_of_eq heq.symm
+  · exact le_of_lt hgt
+
+/-- # **The leaf-`var` branch does NOT yield to step 1.**
+
+Its pin forces `t2 x ≥ exp (exp x − 1)` for `x ≥ 1`, so the right child is **unbounded above** —
+unlike the leaf-`const` branch, where the pin bounded it inside `(0, exp(exp c))`.
+`depth_two_bounded_const` is therefore unavailable here. -/
+theorem leaf_var_pin_unbounded {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x)
+    (x : Real) (hx1 : 1 ≤ x) : exp (exp x - 1) ≤ t2.eval x := by
+  have hx : (0 : Real) < x := lt_of_lt_of_le one_pos hx1
+  have hpin := leaf_var_pin h x hx
+  -- x·log (t2 x) = x·exp x − 1 ≥ x·(exp x − 1)
+  have hge : x * (exp x - 1) ≤ x * log (t2.eval x) := by
+    rw [hpin]
+    have e : x * (exp x - 1) = x * exp x - x := by mach_mpoly [x, exp x]
+    rw [e]
+    exact sub_le_sub_left_wit hx1
+  have hlog : exp x - 1 ≤ log (t2.eval x) := le_of_mul_le_mul_pos_left hx hge
+  -- and log (t2 x) > 0, so t2 x > 0 and the exponential bound transfers
+  have hpos : (0 : Real) < log (t2.eval x) := by
+    have hgt : (0 : Real) < exp x - 1 := by
+      refine lt_of_sub_pos_wit ?_
+      have e : exp x - 1 - 0 = exp x - 1 := by mach_ring
+      rw [e]
+      have hlt : (1 : Real) < exp x := lt_of_lt_of_le (by
+        have t := exp_lt (lt_of_lt_of_le one_pos hx1)
+        rw [exp_zero] at t; exact t) (le_refl _)
+      have s := add_lt_add_left hlt (-1 : Real)
+      have f1 : (-1 : Real) + 1 = 0 := by mach_ring
+      have f2 : (-1 : Real) + exp x = exp x - 1 := by mach_ring
+      rw [f1, f2] at s
+      exact s
+    exact lt_of_lt_of_le hgt hlog
+  have ht2pos : (0 : Real) < t2.eval x := lt_trans_ax one_pos (one_lt_of_log_pos hpos)
+  have hm := exp_monotone hlog
+  rw [exp_log ht2pos] at hm
+  exact hm
+
 end MachLib
