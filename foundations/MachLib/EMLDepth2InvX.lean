@@ -3059,4 +3059,46 @@ theorem depth_le_one_log_bound_at_infty (B : EMLTree) (hB : B.depth ≤ 1) :
               rw [log_one] at h
               exact h
 
+/-- Unboundedness passes through `log`: if `B` is unbounded above so is `log ∘ B`. -/
+theorem unbounded_log_of_unbounded {B : EMLTree}
+    (h : ∀ M : Real, ∃ x : Real, 0 < x ∧ M < B.eval x) :
+    ∀ M : Real, ∃ x : Real, 0 < x ∧ M < log (B.eval x) := by
+  intro M
+  obtain ⟨x, hx, hgt⟩ := h (exp M)
+  refine ⟨x, hx, ?_⟩
+  have hl := log_lt_log (exp_pos M) hgt
+  rw [log_exp] at hl
+  exact hl
+
+/-- # **Step 1, constant-left-child case.**
+
+If the left child is constant-valued and the tree is bounded **below**, the tree is constant.
+The dichotomy forces the right child to be constant too — otherwise `log (B x)` is unbounded above
+and drags the tree to `−∞`. -/
+theorem depth_two_const_left_bounded_const {A B : EMLTree} {α L : Real}
+    (hA : ∀ x : Real, 0 < x → A.eval x = α) (hB : B.depth ≤ 1)
+    (hbdd : ∀ x : Real, 0 < x → L ≤ (EMLTree.eml A B).eval x) :
+    ∃ c : Real, ∀ x : Real, 0 < x → (EMLTree.eml A B).eval x = c := by
+  rcases depth_le_one_const_or_unbounded B hB with hconst | hunb
+  · obtain ⟨β, hβ⟩ := hconst
+    refine ⟨exp α - log β, fun x hx => ?_⟩
+    show exp (A.eval x) - log (B.eval x) = exp α - log β
+    rw [hA x hx, hβ x hx]
+  · exfalso
+    obtain ⟨x, hx, hgt⟩ := unbounded_log_of_unbounded hunb (exp α - L)
+    have hval : (EMLTree.eml A B).eval x = exp α - log (B.eval x) := by
+      show exp (A.eval x) - log (B.eval x) = exp α - log (B.eval x)
+      rw [hA x hx]
+    have hT := hbdd x hx
+    rw [hval] at hT
+    -- L ≤ exp α − log (B x)  ⟹  log (B x) ≤ exp α − L, contradicting hgt
+    have hle : log (B.eval x) ≤ exp α - L := by
+      have s := add_le_add_left hT (log (B.eval x) - L)
+      have e1 : log (B.eval x) - L + L = log (B.eval x) := by mach_ring
+      have e2 : log (B.eval x) - L + (exp α - log (B.eval x)) = exp α - L := by
+        mach_ring
+      rw [e1, e2] at s
+      exact s
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hle)
+
 end MachLib
