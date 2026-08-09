@@ -1943,4 +1943,139 @@ theorem exp_ge_two_mul {t : Real} (ht : 1 ≤ t) : t + t ≤ exp t := by
   rw [hsplit]
   exact le_trans h2 h3
 
+-- ▸ Small helpers for the depth-3 separation, each verified before use.
+
+theorem mul_exp_neg_eq {K T : Real} (hK : 0 < K) : K * exp (-T) = exp (log K - T) := by
+  rw [sub_def, exp_add, exp_log hK]
+
+theorem sub_le_of_sub_le {a b c : Real} (h : a - c ≤ b) : a - b ≤ c := by
+  have s := add_le_add_left h (c - b)
+  have e1 : c - b + (a - c) = a - b := by mach_mpoly [a, b, c]
+  have e2 : c - b + b = c := by mach_mpoly [b, c]
+  rw [e1, e2] at s
+  exact s
+
+/-- `exp (-T) · L = 1 → L = exp T`. -/
+theorem eq_exp_of_exp_neg_mul {T L : Real} (h : exp (-T) * L = 1) : L = exp T := by
+  have hne : exp (-T) ≠ 0 := ne_of_gt (exp_pos _)
+  have hmul : exp (-T) * L = exp (-T) * exp T := by
+    rw [h, ← exp_add]
+    have e : -T + T = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  exact mul_left_cancel hne hmul
+
+/-- `C < K · exp (exp T − T)` whenever `K > 0` and `T ≥ 1` and `T > log C − log K`. -/
+theorem beats_const {K C T : Real} (hK : 0 < K) (hT1 : 1 ≤ T)
+    (hTC : log C - log K < T) : C < K * exp (exp T - T) := by
+  have hstep : exp T ≤ exp (exp T - T) := by
+    refine exp_monotone ?_
+    have h2 := exp_ge_two_mul hT1
+    have s := add_le_add_left h2 (-T)
+    have e1 : -T + (T + T) = T := by mach_mpoly [T]
+    have e2 : -T + exp T = exp T - T := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  have hKexp : K * exp T ≤ K * exp (exp T - T) := mul_le_mul_of_nonneg_left hstep (le_of_lt hK)
+  have hform : K * exp T = exp (log K + T) := by rw [exp_add, exp_log hK]
+  rcases lt_total 0 C with hCp | hCz | hCn
+  · have hlt : log C < log K + T := by
+      have s := add_lt_add_left hTC (log K)
+      have e1 : log K + (log C - log K) = log C := by mach_mpoly [log C, log K]
+      rw [e1] at s
+      exact s
+    have hex : exp (log C) < exp (log K + T) := exp_lt hlt
+    rw [exp_log hCp] at hex
+    rw [hform] at hKexp
+    exact lt_of_lt_of_le hex hKexp
+  · rw [← hCz]
+    exact lt_of_lt_of_le (mul_pos hK (exp_pos _)) (le_refl _)
+  · exact lt_of_lt_of_le hCn (le_of_lt (mul_pos hK (exp_pos _)))
+
+/-- The algebraic core of the depth-3 separation, with the sample point `K·exp(−T)` supplied. -/
+theorem depth3_sep_core {c : Real} {t2 : EMLTree} {C T : Real}
+    (hT1 : 1 ≤ T) (hTC : log C - log (exp (exp c) - 1) < T)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const c) EMLTree.var) t2).eval x = 1 / x)
+    (hceil : ((exp (exp c) - 1) * exp (-T))
+      * t2.eval ((exp (exp c) - 1) * exp (-T)) ≤ C) : False := by
+  have hK : (0 : Real) < exp (exp c) - 1 := sub_pos_of_lt (one_lt_exp_exp c)
+  have hX0 : (0 : Real) < (exp (exp c) - 1) * exp (-T) := mul_pos hK (exp_pos _)
+  -- the pin, at this point
+  have hpin := right_child_log_eq h _ hX0
+  have hcv : (EMLTree.const c).eval ((exp (exp c) - 1) * exp (-T)) = c := rfl
+  rw [hcv] at hpin
+  -- cancel K
+  have hcancel : exp (-T) * log (t2.eval ((exp (exp c) - 1) * exp (-T))) = 1 := by
+    refine mul_left_cancel (ne_of_gt hK) ?_
+    have e1 : (exp (exp c) - 1)
+        * (exp (-T) * log (t2.eval ((exp (exp c) - 1) * exp (-T))))
+        = ((exp (exp c) - 1) * exp (-T))
+          * log (t2.eval ((exp (exp c) - 1) * exp (-T))) := by
+      mach_mpoly [exp (exp c), exp (-T), log (t2.eval ((exp (exp c) - 1) * exp (-T)))]
+    have e2 : (exp (exp c) - 1) * (1 : Real) = exp (exp c) - 1 := by mach_ring
+    rw [e1, e2, hpin]
+  have hL : log (t2.eval ((exp (exp c) - 1) * exp (-T))) = exp T :=
+    eq_exp_of_exp_neg_mul hcancel
+  -- so the right child is exp (exp T)
+  have hgt1 := right_child_gt_one_of_left_eml_var h _ hX0
+  have hval : t2.eval ((exp (exp c) - 1) * exp (-T)) = exp (exp T) := by
+    rw [← hL, exp_log (lt_trans_ax one_pos hgt1)]
+  -- and the product is K · exp (exp T − T)
+  have hprod : ((exp (exp c) - 1) * exp (-T))
+      * t2.eval ((exp (exp c) - 1) * exp (-T))
+      = (exp (exp c) - 1) * exp (exp T - T) := by
+    rw [hval]
+    have e1 : ((exp (exp c) - 1) * exp (-T)) * exp (exp T)
+        = (exp (exp c) - 1) * (exp (-T) * exp (exp T)) := by
+      mach_mpoly [exp (exp c), exp (-T), exp (exp T)]
+    rw [e1, ← exp_add]
+    have e2 : -T + exp T = exp T - T := by mach_ring
+    rw [e2]
+  rw [hprod] at hceil
+  exact lt_irrefl_ax C (lt_of_lt_of_le (beats_const hK hT1 hTC) hceil)
+
+/-- # **Depth 3, branch `t1 = eml (const c) var`: IMPOSSIBLE.**
+
+The determination forces the right child to be `exp(exp T)` at `K·exp(−T)`, so the product is
+`K·exp(exp T − T)` — which outgrows the depth-≤2 ceiling. `T` is chosen so that **both** demands
+(beat `C`, stay under the cutoff `d`) hold at once; they are co-monotone, so no `min` is needed. -/
+theorem depth3_left_const_var_absurd {c : Real} {t2 : EMLTree} (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const c) EMLTree.var) t2).eval x = 1 / x) : False := by
+  obtain ⟨C, d, hd0, hd1, hC⟩ := depth_le_two_growth_ceiling t2 ht2
+  have hK : (0 : Real) < exp (exp c) - 1 := sub_pos_of_lt (one_lt_exp_exp c)
+  have hA : (0 : Real) < exp (log C - log (exp (exp c) - 1)) := exp_pos _
+  have hB : (0 : Real) < exp (log (exp (exp c) - 1) - log d) := exp_pos _
+  refine depth3_sep_core (C := C) (T := 1 + exp (log C - log (exp (exp c) - 1))
+      + exp (log (exp (exp c) - 1) - log d)) ?_ ?_ h ?_
+  · -- 1 ≤ T
+    have s := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt hA)) (le_of_lt hB)
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  · -- log C − log K < T
+    have h1 := exp_grows_strictly_thm (log C - log (exp (exp c) - 1))
+    have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos)
+      (le_refl (exp (log C - log (exp (exp c) - 1))))) (le_of_lt hB)
+    have e : (0 : Real) + exp (log C - log (exp (exp c) - 1)) + 0
+        = exp (log C - log (exp (exp c) - 1)) := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le h1 s
+  · -- the ceiling applies at this point
+    refine hC _ (mul_pos hK (exp_pos _)) ?_
+    rw [mul_exp_neg_eq hK]
+    -- log K − log d ≤ T
+    have hTd : log (exp (exp c) - 1) - log d
+        ≤ 1 + exp (log C - log (exp (exp c) - 1))
+          + exp (log (exp (exp c) - 1) - log d) := by
+      have h1 := exp_grows_strictly_thm (log (exp (exp c) - 1) - log d)
+      have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos) (le_of_lt hA))
+        (le_refl (exp (log (exp (exp c) - 1) - log d)))
+      have e : (0 : Real) + 0 + exp (log (exp (exp c) - 1) - log d)
+          = exp (log (exp (exp c) - 1) - log d) := by mach_ring
+      rw [e] at s
+      exact le_of_lt (lt_of_lt_of_le h1 s)
+    have hmono := exp_monotone (sub_le_of_sub_le hTd)
+    rw [exp_log hd0] at hmono
+    exact hmono
+
 end MachLib
