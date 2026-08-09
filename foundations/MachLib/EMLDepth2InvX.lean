@@ -2384,4 +2384,74 @@ theorem vanishing_forces_right_gt_one {A B : EMLTree} {x : Real}
   have hpos : (0 : Real) < log (B.eval x) := by rw [hlog]; exact exp_pos _
   exact one_lt_of_log_pos hpos
 
+theorem mul_ge_neg_exp_of_le_one {x M : Real} (hx : 0 < x) (h1 : x ≤ 1) :
+    -exp (-M) ≤ x * M := by
+  have hMe : -exp (-M) ≤ M := by
+    have hh := neg_le_neg_wit (le_of_lt (exp_grows_strictly_thm (-M)))
+    have e : -(-M) = M := by mach_ring
+    rw [e] at hh
+    exact hh
+  have hzero : -exp (-M) ≤ 0 := by
+    have hh := neg_le_neg_wit (le_of_lt (exp_pos (-M)))
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at hh
+    exact hh
+  rcases lt_total M 0 with hn | hz | hp
+  · have hx1 : x - 1 ≤ 0 := by
+      have s := add_le_add_left h1 (-1 : Real)
+      have e1 : (-1 : Real) + x = x - 1 := by mach_ring
+      have e2 : (-1 : Real) + 1 = 0 := by mach_ring
+      rw [e1, e2] at s; exact s
+    have hA : (0 : Real) ≤ -(x - 1) := by
+      have hh := neg_le_neg_wit hx1
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at hh; exact hh
+    have hB : (0 : Real) ≤ -M := by
+      have hh := neg_le_neg_wit (le_of_lt hn)
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at hh; exact hh
+    have hnn : (0 : Real) ≤ (x - 1) * M := by
+      have hp2 := mul_nonneg hA hB
+      have e : -(x - 1) * -M = (x - 1) * M := by mach_mpoly [x, M]
+      rw [e] at hp2; exact hp2
+    have s3 := add_le_add_left hnn M
+    have e7 : M + 0 = M := by mach_ring
+    have e8 : M + (x - 1) * M = x * M := by mach_mpoly [x, M]
+    rw [e7, e8] at s3
+    exact le_trans hMe s3
+  · rw [hz]
+    have e : x * (0 : Real) = 0 := by mach_ring
+    have e2 : -(0 : Real) = 0 := by mach_ring
+    rw [e, e2]
+    have hh := neg_le_neg_wit (le_of_lt (exp_pos (0 : Real)))
+    rw [e2] at hh
+    exact hh
+  · exact le_trans hzero (le_of_lt (mul_pos hx hp))
+
+/-- # **Linear vanishing is enough.** If `T x ≥ K·x` near `0` then the dual ceiling holds.
+
+This is why the delicate case is finishable: the cancellation in `exp(A x) − log(B x)` is at worst
+**polynomial**, and even the crudest polynomial rate — linear — already bounds `x · log (T x)`. -/
+theorem dual_bound_of_linear_lower {T : EMLTree} {K : Real} (hK : 0 < K)
+    (h : ∀ x : Real, 0 < x → x ≤ 1 → K * x ≤ T.eval x) :
+    ∀ x : Real, 0 < x → x ≤ 1 → -(exp (-log K) + 1) ≤ x * log (T.eval x) := by
+  intro x hx h1
+  have hKx : (0 : Real) < K * x := mul_pos hK hx
+  have hlog : log (K * x) ≤ log (T.eval x) := log_le_log hKx (h x hx h1)
+  rw [log_mul hK hx] at hlog
+  have hm := mul_le_mul_of_nonneg_left hlog (le_of_lt hx)
+  have hsplit : x * (log K + log x) = x * log K + x * log x := by
+    mach_mpoly [x, log K, log x]
+  rw [hsplit] at hm
+  have hA : -exp (-log K) ≤ x * log K := mul_ge_neg_exp_of_le_one hx h1
+  have hB : (-1 : Real) ≤ x * log x := by
+    have hh := neg_le_neg_wit (neg_x_log_x_le_one hx)
+    have e : -(x * -log x) = x * log x := by mach_mpoly [x, log x]
+    rw [e] at hh
+    exact hh
+  have hsum := add_le_add_wit hA hB
+  have e : -exp (-log K) + -1 = -(exp (-log K) + 1) := by mach_ring
+  rw [e] at hsum
+  exact le_trans hsum hm
+
 end MachLib
