@@ -2813,4 +2813,94 @@ theorem exp_not_affine {c a K : Real}
   have h0 : exp c = exp 0 := by rw [hE1, exp_zero]
   exact exp_injective h0
 
+-- ===================================================================
+-- ▸ MUSE STEP 1: the depth-≤1 dichotomy
+--   Every depth-≤1 tree is CONSTANT-valued or UNBOUNDED ABOVE on (0,∞).
+--   This is the base of "bounded depth-≤2 ⟹ constant".
+-- ===================================================================
+
+theorem depth_le_one_const_or_unbounded (T : EMLTree) (hT : T.depth ≤ 1) :
+    (∃ c : Real, ∀ x : Real, 0 < x → T.eval x = c)
+    ∨ (∀ M : Real, ∃ x : Real, 0 < x ∧ M < T.eval x) := by
+  cases T with
+  | const c => exact Or.inl ⟨c, fun _ _ => rfl⟩
+  | var =>
+      refine Or.inr (fun M => ⟨exp M, exp_pos M, ?_⟩)
+      exact exp_grows_strictly_thm M
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q => exact Or.inl ⟨exp p - log q, fun _ _ => rfl⟩
+          | var =>
+              -- exp p − log x, unbounded as x → 0⁺
+              refine Or.inr (fun M => ⟨exp (exp p - M - 1), exp_pos _, ?_⟩)
+              show M < exp p - log (exp (exp p - M - 1))
+              rw [log_exp]
+              refine lt_of_sub_pos_wit ?_
+              have e : exp p - (exp p - M - 1) - M = 1 := by mach_ring
+              rw [e]
+              exact one_pos
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              -- exp x − log q, unbounded as x → ∞
+              refine Or.inr (fun M => ⟨exp (M + log q), exp_pos _, ?_⟩)
+              show M < exp (exp (M + log q)) - log q
+              have h1 : M + log q < exp (M + log q) := exp_grows_strictly_thm _
+              have h2 : exp (M + log q) < exp (exp (M + log q)) :=
+                exp_grows_strictly_thm _
+              have hchain : M + log q < exp (exp (M + log q)) := lt_trans_ax h1 h2
+              refine lt_of_sub_pos_wit ?_
+              have e : exp (exp (M + log q)) - log q - M
+                  = exp (exp (M + log q)) - (M + log q) := by mach_ring
+              rw [e]
+              refine lt_of_sub_pos_wit ?_
+              have e2 : exp (exp (M + log q)) - (M + log q) - 0
+                  = exp (exp (M + log q)) - (M + log q) := by mach_ring
+              rw [e2]
+              have s := add_lt_add_left hchain (-(M + log q))
+              have f1 : -(M + log q) + (M + log q) = (0 : Real) := by mach_ring
+              have f2 : -(M + log q) + exp (exp (M + log q))
+                  = exp (exp (M + log q)) - (M + log q) := by mach_ring
+              rw [f1, f2] at s
+              exact s
+          | var =>
+              -- exp x − log x, unbounded as x → ∞ (via exp x ≥ 2x and log x ≤ x − 1)
+              refine Or.inr (fun M => ⟨exp M + 1, ?_, ?_⟩)
+              · exact add_pos (exp_pos M) one_pos
+              · show M < exp (exp M + 1) - log (exp M + 1)
+                have hx1 : (1 : Real) ≤ exp M + 1 := by
+                  have s := add_le_add_wit (le_of_lt (exp_pos M)) (le_refl (1 : Real))
+                  have e : (0 : Real) + 1 = 1 := by mach_ring
+                  rw [e] at s; exact s
+                have hlog : log (exp M + 1) ≤ exp M + 1 - 1 :=
+                  log_le_sub_one_of_one_le hx1
+                have hexp : (exp M + 1) + (exp M + 1) ≤ exp (exp M + 1) :=
+                  exp_ge_two_mul hx1
+                -- exp X − log X ≥ 2X − (X−1) = X + 1 > M
+                have hstep : exp M + 1 + 1 ≤ exp (exp M + 1) - log (exp M + 1) := by
+                  have s := add_le_add_wit hexp (neg_le_neg_wit hlog)
+                  have e1 : (exp M + 1) + (exp M + 1) + -(exp M + 1 - 1)
+                      = exp M + 1 + 1 := by mach_ring
+                  have e2 : exp (exp M + 1) + -log (exp M + 1)
+                      = exp (exp M + 1) - log (exp M + 1) := by mach_ring
+                  rw [e1, e2] at s
+                  exact s
+                have hM : M < exp M + 1 + 1 := by
+                  have h := exp_grows_strictly_thm M
+                  have s := add_lt_add_left h (1 + 1 : Real)
+                  have f1 : (1 + 1 : Real) + M = M + (1 + 1) := by mach_ring
+                  have f2 : (1 + 1 : Real) + exp M = exp M + 1 + 1 := by mach_ring
+                  rw [f1, f2] at s
+                  have hMlt : M < M + (1 + 1) := by
+                    have t := add_lt_add_left (add_pos one_pos one_pos) M
+                    have g : M + 0 = M := by mach_ring
+                    rw [g] at t; exact t
+                  exact lt_trans_ax hMlt s
+                exact lt_of_lt_of_le hM hstep
+
 end MachLib
