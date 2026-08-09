@@ -2300,4 +2300,28 @@ theorem leaf_const_forces_small {c : Real} {t2 : EMLTree}
   rw [f1, f2] at s
   exact s
 
+/-- **The DUAL ceiling at depth ≤ 1**: `x · log (T x) ≥ −C` near `0`. No depth-≤1 tree is as small
+as `exp(−c/x)`. This follows from the companion bound; the depth-≤2 case does **not**. -/
+theorem depth_le_one_dual_ceiling (T : EMLTree) (hT : T.depth ≤ 1) :
+    ∃ C δ : Real, 0 < δ ∧ δ ≤ 1 ∧
+      ∀ x : Real, 0 < x → x ≤ δ → -C ≤ x * log (T.eval x) := by
+  obtain ⟨N, d, hd0, hd1, hN⟩ := depth_le_one_neglog_bound T hT
+  refine ⟨exp N + 1, d, hd0, hd1, fun x hx hxd => ?_⟩
+  have hx1 : x ≤ 1 := le_trans hxd hd1
+  -- x·(−log (T x)) ≤ exp N + 1
+  have hm := mul_le_mul_of_nonneg_left (hN x hx hxd) (le_of_lt hx)
+  have hs : x * (N - log x) = x * N + x * -log x := by mach_mpoly [x, N, log x]
+  rw [hs] at hm
+  have hub : x * -log (T.eval x) ≤ exp N + 1 :=
+    le_trans hm (add_le_add_wit (mul_le_exp_of_le_one hx hx1) (neg_x_log_x_le_one hx))
+  -- rewrite as a lower bound on x·log (T x)
+  have he : x * -log (T.eval x) = -(x * log (T.eval x)) := by
+    mach_mpoly [x, log (T.eval x)]
+  rw [he] at hub
+  have s := neg_le_neg_wit hub
+  have e : -(-(x * log (T.eval x))) = x * log (T.eval x) := by
+    mach_mpoly [x, log (T.eval x)]
+  rw [e] at s
+  exact s
+
 end MachLib
