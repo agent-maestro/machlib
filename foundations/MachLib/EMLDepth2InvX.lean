@@ -2078,4 +2078,165 @@ theorem depth3_left_const_var_absurd {c : Real} {t2 : EMLTree} (ht2 : t2.depth �
     rw [exp_log hd0] at hmono
     exact hmono
 
+/-- **Every depth-≤1 tree is bounded BELOW by a constant on `(0,1]`.** No cutoff needed here — the
+`−log x` that made the upper bound grow only helps a lower bound. -/
+theorem depth_le_one_lower_bound (T : EMLTree) (hT : T.depth ≤ 1) :
+    ∃ m : Real, ∀ x : Real, 0 < x → x ≤ 1 → m ≤ T.eval x := by
+  have hnl : ∀ x : Real, 0 < x → x ≤ 1 → (0 : Real) ≤ -log x := by
+    intro x hx h1
+    have hh := neg_le_neg_wit (log_nonpos_of_le_one hx h1)
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at hh; exact hh
+  cases T with
+  | const c => exact ⟨c, fun x hx h1 => le_refl c⟩
+  | var => exact ⟨0, fun x hx h1 => le_of_lt hx⟩
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q => exact ⟨exp p - log q, fun x hx h1 => le_refl _⟩
+          | var =>
+              refine ⟨exp p, fun x hx h1 => ?_⟩
+              show exp p ≤ exp p - log x
+              have s := add_le_add_wit (le_refl (exp p)) (hnl x hx h1)
+              have e1 : exp p + 0 = exp p := by mach_ring
+              have e2 : exp p + -log x = exp p - log x := by mach_ring
+              rw [e1, e2] at s; exact s
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨1 - log q, fun x hx h1 => ?_⟩
+              show (1 : Real) - log q ≤ exp x - log q
+              have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (le_refl (-log q))
+              have e1 : (1 : Real) + -log q = 1 - log q := by mach_ring
+              have e2 : exp x + -log q = exp x - log q := by mach_ring
+              rw [e1, e2] at s; exact s
+          | var =>
+              refine ⟨1, fun x hx h1 => ?_⟩
+              show (1 : Real) ≤ exp x - log x
+              have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (hnl x hx h1)
+              have e1 : (1 : Real) + 0 = 1 := by mach_ring
+              have e2 : exp x + -log x = exp x - log x := by mach_ring
+              rw [e1, e2] at s; exact s
+
+theorem one_le_of_mul_ge {K u : Real} (hK : 0 < K) (h : K ≤ K * u) : 1 ≤ u := by
+  rcases lt_total u 1 with hlt | heq | hgt
+  · exfalso
+    have s := mul_lt_mul_pos_left_wit hlt hK
+    have e : K * (1 : Real) = K := by mach_ring
+    rw [e] at s
+    exact lt_irrefl_ax K (lt_of_le_of_lt h s)
+  · rw [heq]
+    exact le_refl 1
+  · exact le_of_lt hgt
+
+theorem exp_le_of_exp_neg_mul_ge {T L : Real} (h : 1 ≤ exp (-T) * L) : exp T ≤ L := by
+  have hm := mul_le_mul_of_nonneg_left h (le_of_lt (exp_pos T))
+  have e1 : exp T * (1 : Real) = exp T := by mach_ring
+  have e2 : exp T * (exp (-T) * L) = (exp T * exp (-T)) * L := by
+    mach_mpoly [exp T, exp (-T), L]
+  rw [e1, e2, ← exp_add] at hm
+  have e3 : T + -T = (0 : Real) := by mach_ring
+  rw [e3, exp_zero] at hm
+  have e4 : (1 : Real) * L = L := by mach_ring
+  rw [e4] at hm
+  exact hm
+
+/-- The separation core in **inequality** form — the pin only needs to be a lower bound. -/
+theorem depth3_sep_core_ge {t2 : EMLTree} {C T K : Real} (hK : 0 < K)
+    (hT1 : 1 ≤ T) (hTC : log C - log K < T)
+    (hpin : K ≤ (K * exp (-T)) * log (t2.eval (K * exp (-T))))
+    (hgt : 0 < t2.eval (K * exp (-T)))
+    (hceil : (K * exp (-T)) * t2.eval (K * exp (-T)) ≤ C) : False := by
+  have hassoc : (K * exp (-T)) * log (t2.eval (K * exp (-T)))
+      = K * (exp (-T) * log (t2.eval (K * exp (-T)))) := by
+    mach_mpoly [K, exp (-T), log (t2.eval (K * exp (-T)))]
+  rw [hassoc] at hpin
+  have hL := exp_le_of_exp_neg_mul_ge (one_le_of_mul_ge hK hpin)
+  have hval : exp (exp T) ≤ t2.eval (K * exp (-T)) := by
+    have hm := exp_monotone hL
+    rw [exp_log hgt] at hm
+    exact hm
+  have hX0 : (0 : Real) < K * exp (-T) := mul_pos hK (exp_pos _)
+  have hprod : K * exp (exp T - T) ≤ (K * exp (-T)) * t2.eval (K * exp (-T)) := by
+    have hm := mul_le_mul_of_nonneg_left hval (le_of_lt hX0)
+    have e1 : (K * exp (-T)) * exp (exp T) = K * (exp (-T) * exp (exp T)) := by
+      mach_mpoly [K, exp (-T), exp (exp T)]
+    rw [e1, ← exp_add] at hm
+    have e2 : -T + exp T = exp T - T := by mach_ring
+    rw [e2] at hm
+    exact hm
+  exact lt_irrefl_ax C (lt_of_lt_of_le (beats_const hK hT1 hTC) (le_trans hprod hceil))
+
+/-- # **Depth 3: NO left child of shape `eml a var` works — for ANY depth-≤1 `a`.**
+
+Generalises `depth3_left_const_var_absurd`. The lower bound on `a` makes the pin an inequality,
+which is all the separation core needs. -/
+theorem depth3_left_eml_var_absurd {a t2 : EMLTree} (ha : a.depth ≤ 1) (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml a EMLTree.var) t2).eval x = 1 / x) : False := by
+  obtain ⟨m, hm⟩ := depth_le_one_lower_bound a ha
+  obtain ⟨C, d, hd0, hd1, hC⟩ := depth_le_two_growth_ceiling t2 ht2
+  have hK : (0 : Real) < exp (exp m) - 1 := sub_pos_of_lt (one_lt_exp_exp m)
+  have hA : (0 : Real) < exp (log C - log (exp (exp m) - 1)) := exp_pos _
+  have hB : (0 : Real) < exp (log (exp (exp m) - 1) - log d) := exp_pos _
+  -- the point sits under the cutoff
+  have hXd : (exp (exp m) - 1)
+      * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+        + exp (log (exp (exp m) - 1) - log d))) ≤ d := by
+    rw [mul_exp_neg_eq hK]
+    have hTd : log (exp (exp m) - 1) - log d
+        ≤ 1 + exp (log C - log (exp (exp m) - 1))
+          + exp (log (exp (exp m) - 1) - log d) := by
+      have h1 := exp_grows_strictly_thm (log (exp (exp m) - 1) - log d)
+      have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos) (le_of_lt hA))
+        (le_refl (exp (log (exp (exp m) - 1) - log d)))
+      have e : (0 : Real) + 0 + exp (log (exp (exp m) - 1) - log d)
+          = exp (log (exp (exp m) - 1) - log d) := by mach_ring
+      rw [e] at s
+      exact le_of_lt (lt_of_lt_of_le h1 s)
+    have hmono := exp_monotone (sub_le_of_sub_le hTd)
+    rw [exp_log hd0] at hmono
+    exact hmono
+  have hX0 : (0 : Real) < (exp (exp m) - 1)
+      * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+        + exp (log (exp (exp m) - 1) - log d))) := mul_pos hK (exp_pos _)
+  have hX1 : (exp (exp m) - 1)
+      * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+        + exp (log (exp (exp m) - 1) - log d))) ≤ 1 := le_trans hXd hd1
+  refine depth3_sep_core_ge (C := C) hK ?_ ?_ ?_ ?_ (hC _ hX0 hXd)
+  · have s := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt hA)) (le_of_lt hB)
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  · have h1 := exp_grows_strictly_thm (log C - log (exp (exp m) - 1))
+    have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos)
+      (le_refl (exp (log C - log (exp (exp m) - 1))))) (le_of_lt hB)
+    have e : (0 : Real) + exp (log C - log (exp (exp m) - 1)) + 0
+        = exp (log C - log (exp (exp m) - 1)) := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le h1 s
+  · -- the pin, as a lower bound
+    have hpin := right_child_log_eq h _ hX0
+    rw [hpin]
+    have hge : exp (exp m) ≤ exp (exp (a.eval ((exp (exp m) - 1)
+        * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+          + exp (log (exp (exp m) - 1) - log d)))))) :=
+      exp_monotone (exp_monotone (hm ((exp (exp m) - 1)
+        * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+          + exp (log (exp (exp m) - 1) - log d)))) hX0 hX1))
+    have s := add_le_add_wit hge (le_refl (-1 : Real))
+    have e1 : exp (exp m) + -1 = exp (exp m) - 1 := by mach_ring
+    have e2 : exp (exp (a.eval ((exp (exp m) - 1)
+        * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+          + exp (log (exp (exp m) - 1) - log d)))))) + -1
+        = exp (exp (a.eval ((exp (exp m) - 1)
+        * exp (-(1 + exp (log C - log (exp (exp m) - 1))
+          + exp (log (exp (exp m) - 1) - log d)))))) - 1 := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  · exact lt_trans_ax one_pos (right_child_gt_one_of_left_eml_var h _ hX0)
+
 end MachLib
