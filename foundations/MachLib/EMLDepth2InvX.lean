@@ -2239,4 +2239,65 @@ theorem depth3_left_eml_var_absurd {a t2 : EMLTree} (ha : a.depth ≤ 1) (ht2 : 
     exact s
   · exact lt_trans_ax one_pos (right_child_gt_one_of_left_eml_var h _ hX0)
 
+/-- **Pin for a LEAF left child.** `t1 = const c` forces `x · log (t2 x) = x·exp c − 1` — so
+`x · log (t2 x) → −1`, whereas any *bounded-below* right child would give `→ 0`. -/
+theorem leaf_const_pin {c : Real} {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.const c) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) : x * log (t2.eval x) = x * exp c - 1 := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have he : exp c - log (t2.eval x) = 1 / x := h x hx
+  have hmul : x * (exp c - log (t2.eval x)) = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp c - log (t2.eval x)) = x * exp c - x * log (t2.eval x) := by
+    mach_mpoly [x, exp c, log (t2.eval x)]
+  rw [hd] at hmul
+  -- x·exp c − x·L = 1  ⟹  x·L = x·exp c − 1
+  have t : (x * exp c - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = 1 + (x * log (t2.eval x) - 1) := by rw [hmul]
+  have l : (x * exp c - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = x * exp c - 1 := by mach_mpoly [x, exp c, log (t2.eval x)]
+  have r : (1 : Real) + (x * log (t2.eval x) - 1) = x * log (t2.eval x) := by
+    mach_mpoly [x, log (t2.eval x)]
+  rw [l, r] at t
+  exact t.symm
+
+/-- Same for `t1 = var`: `x · log (t2 x) = x·exp x − 1`. -/
+theorem leaf_var_pin {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) : x * log (t2.eval x) = x * exp x - 1 := by
+  have hxne : x ≠ 0 := ne_of_gt hx
+  have he : exp x - log (t2.eval x) = 1 / x := h x hx
+  have hmul : x * (exp x - log (t2.eval x)) = x * (1 / x) := by rw [he]
+  rw [mul_inv x hxne] at hmul
+  have hd : x * (exp x - log (t2.eval x)) = x * exp x - x * log (t2.eval x) := by
+    mach_mpoly [x, exp x, log (t2.eval x)]
+  rw [hd] at hmul
+  have t : (x * exp x - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = 1 + (x * log (t2.eval x) - 1) := by rw [hmul]
+  have l : (x * exp x - x * log (t2.eval x)) + (x * log (t2.eval x) - 1)
+      = x * exp x - 1 := by mach_mpoly [x, exp x, log (t2.eval x)]
+  have r : (1 : Real) + (x * log (t2.eval x) - 1) = x * log (t2.eval x) := by
+    mach_mpoly [x, log (t2.eval x)]
+  rw [l, r] at t
+  exact t.symm
+
+/-- **The leaf branch forces the right child BELOW `1` near `0`** — indeed `log (t2 x) < 0`
+whenever `x·exp c < 1`. This is the opposite of `right_child_gt_one_of_left_eml_var`, and it is why
+the small-point criterion cannot reach this branch. -/
+theorem leaf_const_forces_small {c : Real} {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.const c) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) (hsm : x * exp c < 1) : x * log (t2.eval x) < 0 := by
+  rw [leaf_const_pin h x hx]
+  refine lt_of_sub_pos_wit ?_
+  have e : (0 : Real) - (x * exp c - 1) = 1 - x * exp c := by mach_mpoly [x, exp c]
+  rw [e]
+  refine lt_of_sub_pos_wit ?_
+  have e2 : (1 : Real) - x * exp c - 0 = 1 - x * exp c := by mach_mpoly [x, exp c]
+  rw [e2]
+  have s := add_lt_add_left hsm (-(x * exp c))
+  have f1 : -(x * exp c) + x * exp c = (0 : Real) := by mach_mpoly [x, exp c]
+  have f2 : -(x * exp c) + 1 = 1 - x * exp c := by mach_mpoly [x, exp c]
+  rw [f1, f2] at s
+  exact s
+
 end MachLib
