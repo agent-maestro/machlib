@@ -2752,4 +2752,65 @@ theorem dual_ceiling_regime_one_easy {A B : EMLTree} {m x : Real}
   rw [e1, e2] at s
   exact s
 
+-- ===================================================================
+-- ▸ CANONICAL-FORM MISMATCH (muse route): `exp(c/x)` is not `a + K/x`
+--
+-- Substituting `z = 1/x`, this is "`exp(cz)` is affine in `z` only if `c = 0`".
+-- Three points and a second difference: `E³ − 2E² + E = E(E−1)² = 0`.
+-- ===================================================================
+
+theorem sq_eq_zero {y : Real} (h : y * y = 0) : y = 0 := by
+  rcases lt_total 0 y with hp | hz | hn
+  · exfalso
+    have := mul_pos hp hp
+    rw [h] at this
+    exact lt_irrefl_ax 0 this
+  · exact hz.symm
+  · exfalso
+    have hn' : (0 : Real) < -y := by
+      have hh := neg_le_neg_wit (le_of_lt hn)
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at hh
+      rcases (le_iff_lt_or_eq (0 : Real) (-y)).mp hh with hlt | heq
+      · exact hlt
+      · exfalso
+        have hy : y = 0 := by
+          have t : -(-y) = -(0 : Real) := by rw [← heq]
+          have e1 : -(-y) = y := by mach_ring
+          have e2 : -(0 : Real) = 0 := by mach_ring
+          rw [e1, e2] at t; exact t
+        rw [hy] at hn; exact lt_irrefl_ax 0 hn
+    have := mul_pos hn' hn'
+    have e : -y * -y = y * y := by mach_mpoly [y]
+    rw [e, h] at this
+    exact lt_irrefl_ax 0 this
+
+/-- **`exp` is not affine.** If `E := exp c` satisfies the three affine samples, then `c = 0`. -/
+theorem exp_not_affine {c a K : Real}
+    (h1 : exp c = a + K)
+    (h2 : exp c * exp c = a + (K + K))
+    (h3 : exp c * exp c * exp c = a + (K + K + K)) : c = 0 := by
+  -- second difference vanishes: E³ − 2E² + E = 0
+  have hsd : exp c * ((exp c - 1) * (exp c - 1)) = 0 := by
+    have e : exp c * ((exp c - 1) * (exp c - 1))
+        = (exp c * exp c * exp c - (a + (K + K + K)))
+          - (exp c * exp c - (a + (K + K)))
+          - ((exp c * exp c - (a + (K + K))) - (exp c - (a + K))) := by
+      mach_mpoly [exp c, a, K]
+    rw [e, h3, h2, h1]
+    mach_mpoly [a, K]
+  have hE : (exp c - 1) * (exp c - 1) = 0 := by
+    refine mul_left_cancel (ne_of_gt (exp_pos c)) ?_
+    have e : exp c * (0 : Real) = 0 := by mach_ring
+    rw [hsd, e]
+  have hE1 : exp c = 1 := by
+    have h := sq_eq_zero hE
+    have t : exp c - 1 + 1 = 0 + 1 := by rw [h]
+    have e1 : exp c - 1 + 1 = exp c := by mach_ring
+    have e2 : (0 : Real) + 1 = 1 := by mach_ring
+    rw [e1, e2] at t
+    exact t
+  have h0 : exp c = exp 0 := by rw [hE1, exp_zero]
+  exact exp_injective h0
+
 end MachLib
