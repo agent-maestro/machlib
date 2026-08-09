@@ -1673,4 +1673,146 @@ theorem shrink_lt {L : Real} (hL : 0 < L) : L * exp (-L - 1) < L := by
   rw [e] at s
   exact s
 
+theorem neg_le_neg_wit {a b : Real} (h : a ≤ b) : -b ≤ -a := by
+  have s := add_le_add_left h (-a - b)
+  have e1 : -a - b + a = -b := by mach_mpoly [a, b]
+  have e2 : -a - b + b = -a := by mach_mpoly [a, b]
+  rw [e1, e2] at s
+  exact s
+
+theorem le_sub_log_of_le_one (M : Real) {x : Real} (hx : 0 < x) (h1 : x ≤ 1) :
+    M ≤ M - log x := by
+  have hl : log x ≤ 0 := log_nonpos_of_le_one hx h1
+  have s := add_le_add_wit (le_refl M) (neg_le_neg_wit hl)
+  have e1 : M + -(0 : Real) = M := by mach_ring
+  have e2 : M + -log x = M - log x := by mach_ring
+  rw [e1, e2] at s
+  exact s
+
+/-- `−log v ≤ −log w` when `0 < w ≤ v`. -/
+theorem neg_log_le_of_ge {v w : Real} (hw : 0 < w) (h : w ≤ v) : -log v ≤ -log w :=
+  neg_le_neg_wit (log_le_log hw h)
+
+/-- **The companion bound, in its cutoff form.** For every depth-≤1 tree there are `N` and a cutoff
+`δ ∈ (0,1]` with `−log (T x) ≤ N − log x` on `(0, δ]`. The cutoff is unavoidable: `eml var (const q)`
+has a zero inside `(0,1]` when `log q ∈ (1, e)`. -/
+theorem depth_le_one_neglog_bound (T : EMLTree) (hT : T.depth ≤ 1) :
+    ∃ N δ : Real, 0 < δ ∧ δ ≤ 1 ∧
+      ∀ x : Real, 0 < x → x ≤ δ → -log (T.eval x) ≤ N - log x := by
+  cases T with
+  | const c =>
+      exact ⟨-log c, 1, one_pos, le_refl 1, fun x hx h1 => le_sub_log_of_le_one _ hx h1⟩
+  | var =>
+      refine ⟨0, 1, one_pos, le_refl 1, fun x hx h1 => ?_⟩
+      show -log x ≤ 0 - log x
+      have e : (0 : Real) - log x = -log x := by mach_ring
+      rw [e]
+      exact le_refl _
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              exact ⟨-log (exp p - log q), 1, one_pos, le_refl 1,
+                fun x hx h1 => le_sub_log_of_le_one _ hx h1⟩
+          | var =>
+              refine ⟨-p, 1, one_pos, le_refl 1, fun x hx h1 => ?_⟩
+              show -log (exp p - log x) ≤ -p - log x
+              have hge : exp p ≤ exp p - log x := by
+                have hl : log x ≤ 0 := log_nonpos_of_le_one hx h1
+                have s := add_le_add_wit (le_refl (exp p)) (neg_le_neg_wit hl)
+                have e1 : exp p + -(0 : Real) = exp p := by mach_ring
+                have e2 : exp p + -log x = exp p - log x := by mach_ring
+                rw [e1, e2] at s; exact s
+              have hb := neg_log_le_of_ge (exp_pos p) hge
+              rw [log_exp] at hb
+              exact le_trans hb (le_sub_log_of_le_one (-p) hx h1)
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hT (by simp only [EMLTree.depth]; omega)
+          | var =>
+              refine ⟨0, 1, one_pos, le_refl 1, fun x hx h1 => ?_⟩
+              show -log (exp x - log x) ≤ 0 - log x
+              have hone : (1 : Real) ≤ exp x - log x := by
+                have hex : (1 : Real) ≤ exp x := one_le_exp (le_of_lt hx)
+                have hl : log x ≤ 0 := log_nonpos_of_le_one hx h1
+                have s := add_le_add_wit hex (neg_le_neg_wit hl)
+                have e1 : (1 : Real) + -(0 : Real) = 1 := by mach_ring
+                have e2 : exp x + -log x = exp x - log x := by mach_ring
+                rw [e1, e2] at s; exact s
+              have hb := neg_log_le_of_ge one_pos hone
+              rw [log_one] at hb
+              have e : -(0 : Real) = 0 := by mach_ring
+              rw [e] at hb
+              exact le_trans hb (le_sub_log_of_le_one 0 hx h1)
+          | const q =>
+              rcases lt_total (log q) 1 with hsm | heq | hbg
+              · -- log q < 1 : value ≥ 1 − log q > 0 everywhere
+                refine ⟨-log (1 - log q), 1, one_pos, le_refl 1, fun x hx h1 => ?_⟩
+                show -log (exp x - log q) ≤ -log (1 - log q) - log x
+                have hpos : (0 : Real) < 1 - log q := by
+                  refine lt_of_sub_pos_wit ?_
+                  have e : (1 : Real) - log q - 0 = 1 - log q := by mach_ring
+                  rw [e]
+                  refine lt_of_sub_pos_wit ?_
+                  have e2 : (1 : Real) - log q - 0 = 1 - log q := by mach_ring
+                  rw [e2]
+                  have s := add_lt_add_left hsm (-log q)
+                  have f1 : -log q + log q = (0 : Real) := by mach_ring
+                  have f2 : -log q + 1 = 1 - log q := by mach_ring
+                  rw [f1, f2] at s; exact s
+                have hge : (1 : Real) - log q ≤ exp x - log q := by
+                  have hex : (1 : Real) ≤ exp x := one_le_exp (le_of_lt hx)
+                  have s := add_le_add_wit hex (le_refl (-log q))
+                  have e1 : (1 : Real) + -log q = 1 - log q := by mach_ring
+                  have e2 : exp x + -log q = exp x - log q := by mach_ring
+                  rw [e1, e2] at s; exact s
+                exact le_trans (neg_log_le_of_ge hpos hge)
+                  (le_sub_log_of_le_one _ hx h1)
+              · -- log q = 1 : value = exp x − 1 ≥ x
+                refine ⟨0, 1, one_pos, le_refl 1, fun x hx h1 => ?_⟩
+                show -log (exp x - log q) ≤ 0 - log x
+                have hge : x ≤ exp x - log q := by
+                  rw [heq]
+                  have hb := exp_gt_one_plus_self x hx
+                  have s := add_lt_add_left hb (-1 : Real)
+                  have e1 : (-1 : Real) + (1 + x) = x := by mach_ring
+                  have e2 : (-1 : Real) + exp x = exp x - 1 := by mach_ring
+                  rw [e1, e2] at s
+                  exact le_of_lt s
+                have hb := neg_log_le_of_ge hx hge
+                have e : (0 : Real) - log x = -log x := by mach_ring
+                rw [e]
+                exact hb
+              · -- log q > 1 : below the cutoff the value is NEGATIVE and log clamps to 0
+                have hL : (0 : Real) < log (log q) := by
+                  have hq : (0 : Real) < log q := lt_trans_ax one_pos hbg
+                  have t := log_lt_log one_pos hbg
+                  rw [log_one] at t; exact t
+                refine ⟨0, log (log q) * exp (-log (log q) - 1), shrink_pos hL,
+                  shrink_le_one hL, fun x hx hd => ?_⟩
+                show -log (exp x - log q) ≤ 0 - log x
+                have hq : (0 : Real) < log q := lt_trans_ax one_pos hbg
+                have hxL : x < log (log q) := lt_of_le_of_lt hd (shrink_lt hL)
+                have hneg : exp x - log q ≤ 0 := by
+                  have s : exp x < exp (log (log q)) := exp_lt hxL
+                  rw [exp_log hq] at s
+                  have t := add_lt_add_left s (-log q)
+                  have e1 : -log q + exp x = exp x - log q := by mach_ring
+                  have e2 : -log q + log q = (0 : Real) := by mach_ring
+                  rw [e1, e2] at t
+                  exact le_of_lt t
+                rw [log_nonpos hneg]
+                have e1 : -(0 : Real) = 0 := by mach_ring
+                have e2 : (0 : Real) - log x = -log x := by mach_ring
+                rw [e1, e2]
+                have hl : log x ≤ 0 := log_nonpos_of_le_one hx
+                  (le_trans hd (shrink_le_one hL))
+                have hh := neg_le_neg_wit hl
+                have e3 : -(0 : Real) = 0 := by mach_ring
+                rw [e3] at hh
+                exact hh
+
 end MachLib
