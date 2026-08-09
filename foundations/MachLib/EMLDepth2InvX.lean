@@ -3429,4 +3429,77 @@ theorem depth_two_bounded_const {A B : EMLTree} (hA : A.depth ≤ 1) (hB : B.dep
                 rw [e] at t; exact t
               exact le_trans hxx s
 
+-- ===================================================================
+-- ▸ THE LEAF BRANCH CLOSES: its right child is BOUNDED, so step 1 bites
+--
+-- `leaf_const_pin` gives `x·log(t2 x) = x·exp c − 1`, i.e. `t2 x = exp(exp c)·exp(−1/x)`,
+-- which lives in `(0, exp(exp c))`. A bounded depth-2 tree is constant — and a
+-- constant right child contradicts the pin at two points.
+-- ===================================================================
+
+/-- A constant right child cannot satisfy the leaf pin: two points force `0 = −1`. -/
+theorem leaf_pin_const_absurd {c k : Real}
+    (h1 : (1 : Real) * log k = 1 * exp c - 1)
+    (h2 : ((1 : Real) + 1) * log k = (1 + 1) * exp c - 1) : False := by
+  have hlk : log k = exp c - 1 := by
+    have e1 : (1 : Real) * log k = log k := by mach_ring
+    have e2 : (1 : Real) * exp c - 1 = exp c - 1 := by mach_ring
+    rw [e1, e2] at h1
+    exact h1
+  rw [hlk] at h2
+  -- (1+1)(exp c − 1) = (1+1) exp c − 1  ⟹  0 = 1
+  have hbad : (0 : Real) = 1 := by
+    have e : ((1 : Real) + 1) * exp c - 1 - ((1 + 1) * (exp c - 1)) = 1 := by
+      mach_mpoly [exp c]
+    have t : ((1 : Real) + 1) * (exp c - 1) - ((1 + 1) * (exp c - 1)) = 1 := by
+      rw [h2] at e ⊢
+      exact e
+    have e2 : ((1 : Real) + 1) * (exp c - 1) - ((1 + 1) * (exp c - 1)) = 0 := by
+      mach_mpoly [exp c]
+    rw [e2] at t
+    exact t
+  have h0 : (0 : Real) < 0 := by
+    have t := one_pos
+    rw [← hbad] at t
+    exact t
+  exact lt_irrefl_ax 0 h0
+
+/-- The leaf pin bounds its right child **above** by `exp (exp c)`. -/
+theorem leaf_pin_upper {c : Real} {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml (EMLTree.const c) t2).eval x = 1 / x)
+    (x : Real) (hx : 0 < x) : t2.eval x ≤ exp (exp c) := by
+  rcases lt_total 0 (t2.eval x) with hp | hz | hn
+  · -- log (t2 x) = exp c − 1/x < exp c
+    have hpin := leaf_const_pin h x hx
+    have hxne : x ≠ 0 := ne_of_gt hx
+    have hlog : log (t2.eval x) < exp c := by
+      refine lt_of_sub_pos_wit ?_
+      have hmul : x * (exp c - log (t2.eval x)) = 1 := by
+        have e : x * (exp c - log (t2.eval x)) = x * exp c - x * log (t2.eval x) := by
+          mach_mpoly [x, exp c, log (t2.eval x)]
+        rw [e, hpin]
+        mach_mpoly [x, exp c]
+      rcases lt_total 0 (exp c - log (t2.eval x)) with hq | hr | hs
+      · exact hq
+      · exfalso
+        rw [← hr] at hmul
+        have e : x * (0 : Real) = 0 := by mach_ring
+        rw [e] at hmul
+        have h0 : (0 : Real) < 0 := by
+          have t := one_pos
+          rw [← hmul] at t
+          exact t
+        exact lt_irrefl_ax 0 h0
+      · exfalso
+        have hneg := mul_lt_mul_pos_left_wit hs hx
+        have e : x * (0 : Real) = 0 := by mach_ring
+        rw [e] at hneg
+        rw [hmul] at hneg
+        exact lt_irrefl_ax 0 (lt_trans_ax one_pos hneg)
+    have hmono := exp_monotone (le_of_lt hlog)
+    rw [exp_log hp] at hmono
+    exact hmono
+  · rw [← hz]; exact le_of_lt (exp_pos (exp c))
+  · exact le_trans (le_of_lt hn) (le_of_lt (exp_pos (exp c)))
+
 end MachLib
