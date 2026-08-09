@@ -1815,4 +1815,94 @@ theorem depth_le_one_neglog_bound (T : EMLTree) (hT : T.depth ≤ 1) :
                 rw [e3] at hh
                 exact hh
 
+theorem log_lt_self {y : Real} (hy : 0 < y) : log y < y := by
+  have h := exp_grows_strictly_thm (log y)
+  rw [exp_log hy] at h
+  exact h
+
+theorem log_one_div {x : Real} (hx : 0 < x) : log (1 / x) = -log x := by
+  have hinv : (0 : Real) < 1 / x := one_div_pos_of_pos hx
+  have hm : log ((1 / x) * x) = log (1 / x) + log x := log_mul hinv hx
+  have e : (1 / x) * x = 1 := by
+    have h := mul_inv x (ne_of_gt hx)
+    have c : (1 / x) * x = x * (1 / x) := mul_comm (1 / x) x
+    rw [c, h]
+  rw [e, log_one] at hm
+  -- hm : 0 = log (1/x) + log x
+  have t : (0 : Real) - log x = log (1 / x) + log x - log x := by rw [← hm]
+  have l : log (1 / x) + log x - log x = log (1 / x) := by mach_mpoly [log (1 / x), log x]
+  have r : (0 : Real) - log x = -log x := by mach_ring
+  rw [l, r] at t
+  exact t.symm
+
+/-- `−x·log x ≤ 1` on `(0,∞)`, from `log y < y` at `y = 1/x`. -/
+theorem neg_x_log_x_le_one {x : Real} (hx : 0 < x) : x * -log x ≤ 1 := by
+  have hinv : (0 : Real) < 1 / x := one_div_pos_of_pos hx
+  have h := log_lt_self hinv
+  rw [log_one_div hx] at h
+  have s := mul_lt_mul_pos_left_wit h hx
+  rw [mul_inv x (ne_of_gt hx)] at s
+  exact le_of_lt s
+
+/-- `x · M ≤ exp M` for `0 < x ≤ 1` — the three sign cases of `M`. -/
+theorem mul_le_exp_of_le_one {x M : Real} (hx : 0 < x) (h1 : x ≤ 1) : x * M ≤ exp M := by
+  rcases lt_total 0 M with hp | hz | hn
+  · have t := mul_le_mul_of_nonneg_right h1 (le_of_lt hp)
+    have e : (1 : Real) * M = M := by mach_ring
+    rw [e] at t
+    exact le_trans t (le_of_lt (exp_grows_strictly_thm M))
+  · rw [← hz]
+    have e : x * (0 : Real) = 0 := by mach_ring
+    rw [e]
+    exact le_of_lt (exp_pos 0)
+  · have t := mul_le_mul_of_nonneg_left (le_of_lt hn) (le_of_lt hx)
+    have e : x * (0 : Real) = 0 := by mach_ring
+    rw [e] at t
+    exact le_trans t (le_of_lt (exp_pos M))
+
+/-- **The depth-≤2 growth ceiling.** `x · T x ≤ C` near `0` — a depth-≤2 tree cannot outgrow `C/x`. -/
+theorem depth_le_two_growth_ceiling (T : EMLTree) (hT : T.depth ≤ 2) :
+    ∃ C δ : Real, 0 < δ ∧ δ ≤ 1 ∧ ∀ x : Real, 0 < x → x ≤ δ → x * T.eval x ≤ C := by
+  have fromUpper : ∀ (S : EMLTree) (M : Real),
+      (∀ x : Real, 0 < x → x ≤ 1 → S.eval x ≤ M - log x) →
+      ∀ x : Real, 0 < x → x ≤ 1 → x * S.eval x ≤ exp M + 1 := by
+    intro S M hM x hx h1
+    have h2 : x * S.eval x ≤ x * (M - log x) :=
+      mul_le_mul_of_nonneg_left (hM x hx h1) (le_of_lt hx)
+    have hsplit : x * (M - log x) = x * M + x * -log x := by mach_mpoly [x, M, log x]
+    rw [hsplit] at h2
+    exact le_trans h2 (add_le_add_wit (mul_le_exp_of_le_one hx h1) (neg_x_log_x_le_one hx))
+  cases Nat.lt_or_ge T.depth 2 with
+  | inl hlt =>
+      obtain ⟨M, hM⟩ := depth_le_one_upper_bound T (by omega)
+      exact ⟨exp M + 1, 1, one_pos, le_refl 1, fun x hx h1 => fromUpper T M hM x hx h1⟩
+  | inr hge =>
+      cases T with
+      | const c => exact absurd hge (by simp only [EMLTree.depth]; omega)
+      | var => exact absurd hge (by simp only [EMLTree.depth]; omega)
+      | eml A B =>
+          have hA : A.depth ≤ 1 := by simp only [EMLTree.depth] at hT; omega
+          have hB : B.depth ≤ 1 := by simp only [EMLTree.depth] at hT; omega
+          obtain ⟨MA, hMA⟩ := depth_le_one_upper_bound A hA
+          obtain ⟨NB, d, hd0, hd1, hNB⟩ := depth_le_one_neglog_bound B hB
+          refine ⟨exp MA + (exp NB + 1), d, hd0, hd1, fun x hx hxd => ?_⟩
+          have hx1 : x ≤ 1 := le_trans hxd hd1
+          show x * (exp (A.eval x) - log (B.eval x)) ≤ _
+          have hsplit : x * (exp (A.eval x) - log (B.eval x))
+              = x * exp (A.eval x) + x * -log (B.eval x) := by
+            mach_mpoly [x, exp (A.eval x), log (B.eval x)]
+          rw [hsplit]
+          have hL : x * exp (A.eval x) ≤ exp MA := by
+            have he : exp (A.eval x) ≤ exp (MA - log x) := exp_monotone (hMA x hx hx1)
+            have hm := mul_le_mul_of_nonneg_left he (le_of_lt hx)
+            rw [mul_exp_sub_log hx] at hm
+            exact hm
+          have hR : x * -log (B.eval x) ≤ exp NB + 1 := by
+            have hm := mul_le_mul_of_nonneg_left (hNB x hx hxd) (le_of_lt hx)
+            have hs : x * (NB - log x) = x * NB + x * -log x := by mach_mpoly [x, NB, log x]
+            rw [hs] at hm
+            exact le_trans hm
+              (add_le_add_wit (mul_le_exp_of_le_one hx hx1) (neg_x_log_x_le_one hx))
+          exact add_le_add_wit hL hR
+
 end MachLib
