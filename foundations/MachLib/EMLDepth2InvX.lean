@@ -3639,4 +3639,90 @@ theorem leaf_var_pin_unbounded {t2 : EMLTree}
   rw [exp_log ht2pos] at hm
   exact hm
 
+/-- Leaf-`var` branch, right child `var`: one point kills it (`x = 1` forces `exp 1 = 1`). -/
+theorem leaf_var_right_var_absurd
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var EMLTree.var).eval x = 1 / x) :
+    False := by
+  have hpin := leaf_var_pin (t2 := EMLTree.var) h 1 one_pos
+  have hv : (EMLTree.var).eval (1 : Real) = 1 := rfl
+  rw [hv, log_one] at hpin
+  -- 1 * 0 = 1 * exp 1 − 1  ⟹  exp 1 = 1
+  have he1 : exp 1 = 1 := by
+    have e1 : (1 : Real) * 0 = 0 := by mach_ring
+    rw [e1] at hpin
+    have t : (0 : Real) + 1 = 1 * exp 1 - 1 + 1 := by rw [hpin]
+    have e2 : (0 : Real) + 1 = 1 := by mach_ring
+    have e3 : (1 : Real) * exp 1 - 1 + 1 = exp 1 := by mach_ring
+    rw [e2, e3] at t
+    exact t.symm
+  have hlt : (1 : Real) < exp 1 := by
+    have t := exp_lt zero_lt_one_ax
+    rw [exp_zero] at t; exact t
+  rw [he1] at hlt
+  exact lt_irrefl_ax 1 hlt
+
+/-- Leaf-`var` branch, right child constant: two points force `2·exp 2 − 2·exp 1 + 1 = 0`,
+impossible since `exp 2 = exp 1 · exp 1 > exp 1`. -/
+theorem leaf_var_right_const_absurd {k : Real}
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml EMLTree.var (EMLTree.const k)).eval x = 1 / x) : False := by
+  have p1 := leaf_var_pin (t2 := EMLTree.const k) h 1 one_pos
+  have p2 := leaf_var_pin (t2 := EMLTree.const k) h (1 + 1) (add_pos one_pos one_pos)
+  have hc : ∀ y : Real, (EMLTree.const k).eval y = k := fun _ => rfl
+  rw [hc] at p1 p2
+  -- log k = exp 1 − 1, then substitute
+  have hlk : log k = exp 1 - 1 := by
+    have e1 : (1 : Real) * log k = log k := by mach_ring
+    have e2 : (1 : Real) * exp 1 - 1 = exp 1 - 1 := by mach_ring
+    rw [e1, e2] at p1
+    exact p1
+  rw [hlk] at p2
+  -- (1+1)(exp 1 − 1) = (1+1) exp (1+1) − 1
+  have hsplit : exp ((1 : Real) + 1) = exp 1 * exp 1 := exp_add 1 1
+  rw [hsplit] at p2
+  -- so (1+1)·exp 1·exp 1 − (1+1)·exp 1 + 1 = 0, but the left side is positive
+  have hpos : (0 : Real) < (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 + 1 := by
+    have hgt : exp 1 < exp 1 * exp 1 := by
+      have h1 : (1 : Real) < exp 1 := by
+        have t := exp_lt zero_lt_one_ax
+        rw [exp_zero] at t; exact t
+      have s := mul_lt_mul_pos_left_wit h1 (exp_pos 1)
+      have e : exp 1 * (1 : Real) = exp 1 := by mach_ring
+      rw [e] at s
+      exact s
+    have hd : (0 : Real) < (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 := by
+      refine lt_of_sub_pos_wit ?_
+      have e : (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 - 0
+          = (1 + 1) * (exp 1 * exp 1 - exp 1) := by
+        mach_mpoly [exp 1]
+      rw [e]
+      refine mul_pos (add_pos one_pos one_pos) ?_
+      refine lt_of_sub_pos_wit ?_
+      have e2 : exp 1 * exp 1 - exp 1 - 0 = exp 1 * exp 1 - exp 1 := by
+        mach_mpoly [exp 1]
+      rw [e2]
+      refine lt_of_sub_pos_wit ?_
+      have e3 : exp 1 * exp 1 - exp 1 - 0 = exp 1 * exp 1 - exp 1 := by
+        mach_mpoly [exp 1]
+      rw [e3]
+      have s := add_lt_add_left hgt (-exp 1)
+      have f1 : -exp 1 + exp 1 = (0 : Real) := by mach_ring
+      have f2 : -exp 1 + exp 1 * exp 1 = exp 1 * exp 1 - exp 1 := by
+        mach_mpoly [exp 1]
+      rw [f1, f2] at s
+      exact s
+    have s := add_lt_add_left one_pos ((1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1)
+    have e : (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 + 0
+        = (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 := by mach_mpoly [exp 1]
+    rw [e] at s
+    exact lt_trans_ax hd s
+  have hzero : (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 + 1 = 0 := by
+    have e : (1 + 1) * (exp 1 * exp 1) - (1 + 1) * exp 1 + 1
+        = ((1 + 1) * (exp 1 * exp 1) - 1) - ((1 + 1) * (exp 1 - 1)) := by
+      mach_mpoly [exp 1]
+    rw [e, ← p2]
+    mach_mpoly [exp 1]
+  rw [hzero] at hpos
+  exact lt_irrefl_ax 0 hpos
+
 end MachLib
