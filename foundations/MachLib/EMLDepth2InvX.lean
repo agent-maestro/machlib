@@ -2715,4 +2715,41 @@ theorem regime3_floor_expvar_expvar {q x : Real} (hx : 0 < x)
   le_trans (mul_le_mul_of_nonneg_left (regime3_floor_var_const hx) hpos)
     (regime3_expvar_expvar_bound hx)
 
+/-- # **The dual ceiling's residue is exactly `0 < T x < 1`.**
+
+If the tree is `≤ 0` the totalised log clamps; if it is `≥ 1` its log is non-negative. **Either way
+`x · log (T x) ≥ 0`, with no reference to the tree's shape, depth, or the value of `x`.** -/
+theorem dual_ceiling_easy_cases {T : EMLTree} {x : Real} (hx : 0 < x)
+    (hcase : T.eval x ≤ 0 ∨ 1 ≤ T.eval x) :
+    (0 : Real) ≤ x * log (T.eval x) := by
+  rcases hcase with hle | hge
+  · rw [log_nonpos hle]
+    have e : x * (0 : Real) = 0 := by mach_ring
+    rw [e]
+    exact le_refl 0
+  · have hlog : (0 : Real) ≤ log (T.eval x) := by
+      have h := log_le_log one_pos hge
+      rw [log_one] at h
+      exact h
+    have hm := mul_le_mul_of_nonneg_left hlog (le_of_lt hx)
+    have e : x * (0 : Real) = 0 := by mach_ring
+    rw [e] at hm
+    exact hm
+
+/-- Regime 1 lands in the easy cases whenever `exp m ≥ 1`, i.e. `m ≥ 0`. -/
+theorem dual_ceiling_regime_one_easy {A B : EMLTree} {m x : Real}
+    (hx : 0 < x) (hm : 0 ≤ m) (hmA : m ≤ A.eval x) (hB : B.eval x ≤ 1) :
+    (0 : Real) ≤ x * log ((EMLTree.eml A B).eval x) := by
+  refine dual_ceiling_easy_cases hx (Or.inr ?_)
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  have hlogB : log (B.eval x) ≤ 0 := log_nonpos_of_le_one' hB
+  have hone : (1 : Real) ≤ exp (A.eval x) := one_le_exp (le_trans hm hmA)
+  rw [hval]
+  have s := add_le_add_wit hone (neg_le_neg_wit hlogB)
+  have e1 : (1 : Real) + -(0 : Real) = 1 := by mach_ring
+  have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+    mach_ring
+  rw [e1, e2] at s
+  exact s
+
 end MachLib
