@@ -3226,4 +3226,133 @@ theorem depth_le_one_log_upper_near_zero (B : EMLTree) (hB : B.depth ≤ 1) :
     · rw [log_nonpos (le_of_lt hn)]
       exact le_trans (le_of_lt one_pos) hge1
 
+/-- From a product lower bound at the sample point `exp (−t)`, read off a value lower bound.
+`v ≥ exp t · (K − exp(−t)(N+t)) = K·exp t − (N+t) ≥ exp t − N − t ≥ t − N`. -/
+theorem lower_from_product {v K N t : Real} (hK : 1 ≤ K) (ht1 : 1 ≤ t)
+    (hprod : K - exp (-t) * (N + t) ≤ exp (-t) * v) : t - N ≤ v := by
+  have hem : exp t * exp (-t) = 1 := by
+    rw [← exp_add]
+    have e : t + -t = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  have hm := mul_le_mul_of_nonneg_left hprod (le_of_lt (exp_pos t))
+  have eR : exp t * (exp (-t) * v) = (exp t * exp (-t)) * v := by
+    mach_mpoly [exp t, exp (-t), v]
+  have eL : exp t * (K - exp (-t) * (N + t))
+      = K * exp t - (exp t * exp (-t)) * (N + t) := by
+    mach_mpoly [exp t, exp (-t), K, N, t]
+  rw [eL, eR, hem] at hm
+  have e1 : (1 : Real) * v = v := by mach_ring
+  have e2 : (1 : Real) * (N + t) = N + t := by mach_ring
+  rw [e1, e2] at hm
+  -- K·exp t − (N+t) ≥ exp t − (N+t) ≥ (t+t) − (N+t) = t − N
+  have hKe : exp t ≤ K * exp t := by
+    have s := mul_le_mul_of_nonneg_right hK (le_of_lt (exp_pos t))
+    have e : (1 : Real) * exp t = exp t := by mach_ring
+    rw [e] at s; exact s
+  have h2t : t + t ≤ exp t := exp_ge_two_mul ht1
+  have hchain : t - N ≤ K * exp t - (N + t) := by
+    have s := add_le_add_wit (le_trans h2t hKe) (le_refl (-(N + t)))
+    have e1 : t + t + -(N + t) = t - N := by mach_mpoly [t, N]
+    have e2 : K * exp t + -(N + t) = K * exp t - (N + t) := by mach_ring
+    rw [e1, e2] at s
+    exact s
+  exact le_trans hchain hm
+
+/-- # **Step 1, unbounded-left case at `0⁺`.**
+
+Left child `eml (const p) var`, so `x·exp(A x) = exp (exp p) =: K > 1` **exactly**. Since
+`x·log(B x) → 0` for depth-≤1 `B`, the product `x·T x` stays near `K`, and `T x ≈ K/x` is unbounded.
+Sampling at `x = exp(−t)` turns the whole argument into `T x ≥ K·exp t − N − t`. -/
+theorem depth_two_left_const_var_unbounded {p : Real} {B : EMLTree} (hB : B.depth ≤ 1) :
+    ∀ M : Real, ∃ x : Real, 0 < x ∧
+      M < (EMLTree.eml (EMLTree.eml (EMLTree.const p) EMLTree.var) B).eval x := by
+  obtain ⟨N, d, hd0, hd1, hN⟩ := depth_le_one_log_upper_near_zero B hB
+  intro M
+  -- the sample point
+  refine ⟨exp (-(1 + exp (M + N) + exp (-log d))), exp_pos _, ?_⟩
+  have ht1 : (1 : Real) ≤ 1 + exp (M + N) + exp (-log d) := by
+    have s := add_le_add_wit (add_le_add_wit (le_refl (1 : Real))
+      (le_of_lt (exp_pos (M + N)))) (le_of_lt (exp_pos (-log d)))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  have hx0 : (0 : Real) < exp (-(1 + exp (M + N) + exp (-log d))) := exp_pos _
+  have hxd : exp (-(1 + exp (M + N) + exp (-log d))) ≤ d := by
+    have hstep : -(1 + exp (M + N) + exp (-log d)) ≤ log d := by
+      have hge : -log d ≤ 1 + exp (M + N) + exp (-log d) := by
+        have h1 := le_of_lt (exp_grows_strictly_thm (-log d))
+        have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos)
+          (le_of_lt (exp_pos (M + N)))) (le_refl (exp (-log d)))
+        have e : (0 : Real) + 0 + exp (-log d) = exp (-log d) := by mach_ring
+        rw [e] at s
+        exact le_trans h1 s
+      have s := neg_le_neg_wit hge
+      have e : -(-log d) = log d := by mach_ring
+      rw [e] at s
+      exact s
+    have h := exp_monotone hstep
+    rw [exp_log hd0] at h
+    exact h
+  have hx1 : exp (-(1 + exp (M + N) + exp (-log d))) ≤ 1 := le_trans hxd hd1
+  -- the exact product identity for the left child
+  have hprodA : exp (-(1 + exp (M + N) + exp (-log d)))
+      * exp ((EMLTree.eml (EMLTree.const p) EMLTree.var).eval
+          (exp (-(1 + exp (M + N) + exp (-log d)))))
+      = exp (exp p) := by
+    have h := left_eml_var_mul (u := EMLTree.const p) hx0
+    have e : (EMLTree.const p).eval (exp (-(1 + exp (M + N) + exp (-log d)))) = p := rfl
+    rw [e] at h
+    exact h
+  -- log (B x) ≤ N + t, hence the product bound
+  have hlogX : log (exp (-(1 + exp (M + N) + exp (-log d))))
+      = -(1 + exp (M + N) + exp (-log d)) := log_exp _
+  have hlogB : log (B.eval (exp (-(1 + exp (M + N) + exp (-log d)))))
+      ≤ N + (1 + exp (M + N) + exp (-log d)) := by
+    have h := hN _ hx0 hxd
+    rw [hlogX] at h
+    have e : N - -(1 + exp (M + N) + exp (-log d))
+        = N + (1 + exp (M + N) + exp (-log d)) := by mach_ring
+    rw [e] at h
+    exact h
+  have hprod : exp (exp p)
+      - exp (-(1 + exp (M + N) + exp (-log d)))
+        * (N + (1 + exp (M + N) + exp (-log d)))
+      ≤ exp (-(1 + exp (M + N) + exp (-log d)))
+        * (EMLTree.eml (EMLTree.eml (EMLTree.const p) EMLTree.var) B).eval
+            (exp (-(1 + exp (M + N) + exp (-log d)))) := by
+    show _ ≤ exp (-(1 + exp (M + N) + exp (-log d)))
+      * (exp ((EMLTree.eml (EMLTree.const p) EMLTree.var).eval
+          (exp (-(1 + exp (M + N) + exp (-log d))))) - log (B.eval _))
+    have hsplit : exp (-(1 + exp (M + N) + exp (-log d)))
+        * (exp ((EMLTree.eml (EMLTree.const p) EMLTree.var).eval
+            (exp (-(1 + exp (M + N) + exp (-log d)))))
+          - log (B.eval (exp (-(1 + exp (M + N) + exp (-log d))))))
+        = exp (-(1 + exp (M + N) + exp (-log d)))
+            * exp ((EMLTree.eml (EMLTree.const p) EMLTree.var).eval
+              (exp (-(1 + exp (M + N) + exp (-log d)))))
+          - exp (-(1 + exp (M + N) + exp (-log d)))
+            * log (B.eval (exp (-(1 + exp (M + N) + exp (-log d))))) := by
+      mach_mpoly [exp (-(1 + exp (M + N) + exp (-log d))),
+        exp ((EMLTree.eml (EMLTree.const p) EMLTree.var).eval
+          (exp (-(1 + exp (M + N) + exp (-log d))))),
+        log (B.eval (exp (-(1 + exp (M + N) + exp (-log d)))))]
+    rw [hsplit, hprodA]
+    exact sub_le_sub_left_wit
+      (mul_le_mul_of_nonneg_left hlogB (le_of_lt hx0))
+  have hfin := lower_from_product (le_of_lt (one_lt_exp_exp p)) ht1 hprod
+  -- t − N > M
+  have hMt : M < (1 + exp (M + N) + exp (-log d)) - N := by
+    refine lt_of_sub_pos_wit ?_
+    have e : (1 + exp (M + N) + exp (-log d)) - N - M
+        = 1 + (exp (M + N) - (M + N)) + exp (-log d) := by
+      mach_mpoly [M, N, exp (M + N), exp (-log d)]
+    rw [e]
+    refine add_pos (add_pos one_pos ?_) (exp_pos _)
+    have s := add_lt_add_left (exp_grows_strictly_thm (M + N)) (-(M + N))
+    have f1 : -(M + N) + (M + N) = (0 : Real) := by mach_mpoly [M, N]
+    have f2 : -(M + N) + exp (M + N) = exp (M + N) - (M + N) := by
+      mach_mpoly [M, N, exp (M + N)]
+    rw [f1, f2] at s
+    exact s
+  exact lt_of_lt_of_le hMt hfin
+
 end MachLib
