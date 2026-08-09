@@ -2324,4 +2324,31 @@ theorem depth_le_one_dual_ceiling (T : EMLTree) (hT : T.depth ≤ 1) :
   rw [e] at s
   exact s
 
+/-- **The tangent bound for `log`, on `[1,∞)`:** `log y ≤ y − 1`.
+
+⚠ **The `0 < y < 1` half is NOT derivable here.** It needs `1 + z ≤ exp z` for **negative** `z`, and
+the corpus only has the positive-argument form (`exp_gt_one_plus_self`, `exp_tangent_line_strict`).
+Every route from the positive version back to the negative one goes through the statement itself. -/
+theorem log_le_sub_one_of_one_le {y : Real} (hy : 1 ≤ y) : log y ≤ y - 1 := by
+  rcases (le_iff_lt_or_eq (1 : Real) y).mp hy with hlt | heq
+  · have hp : (0 : Real) < y - 1 := by
+      refine lt_of_sub_pos_wit ?_
+      have e : y - 1 - 0 = y - 1 := by mach_ring
+      rw [e]
+      have s := add_lt_add_left hlt (-1 : Real)
+      have f1 : (-1 : Real) + 1 = 0 := by mach_ring
+      have f2 : (-1 : Real) + y = y - 1 := by mach_ring
+      rw [f1, f2] at s
+      exact s
+    have h := exp_gt_one_plus_self (y - 1) hp
+    have e : (1 : Real) + (y - 1) = y := by mach_ring
+    rw [e] at h
+    have hl := log_le_log (lt_of_lt_of_le one_pos hy) (le_of_lt h)
+    rw [log_exp] at hl
+    exact hl
+  · rw [← heq, log_one]
+    have e : (1 : Real) - 1 = 0 := by mach_ring
+    rw [e]
+    exact le_refl 0
+
 end MachLib
