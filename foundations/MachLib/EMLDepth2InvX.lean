@@ -3355,4 +3355,78 @@ theorem depth_two_left_const_var_unbounded {p : Real} {B : EMLTree} (hB : B.dept
     exact s
   exact lt_of_lt_of_le hMt hfin
 
+/-- # **MUSE STEP 1, COMPLETE: a bounded depth-2 tree is constant.**
+
+Dispatch over the six left-child shapes. Two are constant-valued and use the **lower** bound; the
+other four are unbounded above — at `∞` for the `var`-left shapes, at `0⁺` for `eml (const p) var` —
+and contradict the **upper** bound. -/
+theorem depth_two_bounded_const {A B : EMLTree} (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    {L U : Real}
+    (hlow : ∀ x : Real, 0 < x → L ≤ (EMLTree.eml A B).eval x)
+    (hup : ∀ x : Real, 0 < x → (EMLTree.eml A B).eval x ≤ U) :
+    ∃ c : Real, ∀ x : Real, 0 < x → (EMLTree.eml A B).eval x = c := by
+  have contra : (∀ M : Real, ∃ x : Real, 0 < x ∧ M < (EMLTree.eml A B).eval x) → False := by
+    intro h
+    obtain ⟨x, hx, hgt⟩ := h U
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt (hup x hx))
+  cases A with
+  | const c =>
+      exact depth_two_const_left_bounded_const (α := c) (fun _ _ => rfl) hB hlow
+  | var =>
+      exact absurd (depth_two_left_var_unbounded hB) contra
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              exact depth_two_const_left_bounded_const (α := exp p - log q)
+                (fun _ _ => rfl) hB hlow
+          | var => exact absurd (depth_two_left_const_var_unbounded hB) contra
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine absurd (depth_two_unbounded_of_left_ge_id hB
+                ⟨1 + exp (log q), ?_, ?_⟩) contra
+              · have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos (log q)))
+                have e : (1 : Real) + 0 = 1 := by mach_ring
+                rw [e] at s; exact s
+              · intro x hxge
+                show x ≤ exp x - log q
+                have hx1 : (1 : Real) ≤ x := le_trans (by
+                  have s := add_le_add_wit (le_refl (1 : Real))
+                    (le_of_lt (exp_pos (log q)))
+                  have e : (1 : Real) + 0 = 1 := by mach_ring
+                  rw [e] at s; exact s) hxge
+                have hq : log q ≤ x := le_trans (by
+                  have h := le_of_lt (exp_grows_strictly_thm (log q))
+                  have s := add_le_add_wit (le_of_lt one_pos) (le_refl (exp (log q)))
+                  have e : (0 : Real) + exp (log q) = exp (log q) := by mach_ring
+                  rw [e] at s
+                  exact le_trans h s) hxge
+                have h2x : x + x ≤ exp x := exp_ge_two_mul hx1
+                have s := add_le_add_wit h2x (neg_le_neg_wit hq)
+                have e1 : x + x + -x = x := by mach_mpoly [x]
+                have e2 : exp x + -log q = exp x - log q := by mach_ring
+                rw [e1, e2] at s
+                exact s
+          | var =>
+              refine absurd (depth_two_unbounded_of_left_ge_id hB
+                ⟨1, le_refl 1, ?_⟩) contra
+              intro x hx1
+              show x ≤ exp x - log x
+              have h2x : x + x ≤ exp x := exp_ge_two_mul hx1
+              have hlx : log x ≤ x - 1 := log_le_sub_one_of_one_le hx1
+              have s := add_le_add_wit h2x (neg_le_neg_wit hlx)
+              have e1 : x + x + -(x - 1) = x + 1 := by mach_mpoly [x]
+              have e2 : exp x + -log x = exp x - log x := by mach_ring
+              rw [e1, e2] at s
+              have hxx : x ≤ x + 1 := by
+                have t := add_le_add_wit (le_refl x) (le_of_lt one_pos)
+                have e : x + 0 = x := by mach_ring
+                rw [e] at t; exact t
+              exact le_trans hxx s
+
 end MachLib
