@@ -2903,4 +2903,160 @@ theorem depth_le_one_const_or_unbounded (T : EMLTree) (hT : T.depth ≤ 1) :
                   exact lt_trans_ax hMlt s
                 exact lt_of_lt_of_le hM hstep
 
+/-- `y ≤ exp x · D` with `D ≥ 1` and `x ≥ 1` gives `log y ≤ x + log D` — including the clamped
+branch, since `x + log D ≥ 1 > 0`. -/
+theorem log_le_of_le_exp_mul {y x D : Real} (hx : 1 ≤ x) (hD : 1 ≤ D)
+    (h : y ≤ exp x * D) : log y ≤ x + log D := by
+  have hD0 : (0 : Real) < D := lt_of_lt_of_le one_pos hD
+  have hlogD : (0 : Real) ≤ log D := by
+    have t := log_le_log one_pos hD
+    rw [log_one] at t; exact t
+  have hsum : (0 : Real) ≤ x + log D := by
+    have s := add_le_add_wit (le_of_lt (lt_of_lt_of_le one_pos hx)) hlogD
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at s; exact s
+  rcases lt_total 0 y with hp | hz | hn
+  · have hl := log_le_log hp h
+    rw [log_mul (exp_pos x) hD0, log_exp] at hl
+    exact hl
+  · rw [← hz, log_nonpos (le_refl (0 : Real))]; exact hsum
+  · rw [log_nonpos (le_of_lt hn)]; exact hsum
+
+/-- **The `∞`-side companion bound:** every depth-≤1 tree has `log (B x) ≤ x + C` for `x ≥ 1`.
+Together with the `0⁺` bounds this is what "bounded ⟹ constant" needs at both endpoints. -/
+theorem depth_le_one_log_bound_at_infty (B : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ x + C := by
+  have hone : ∀ y x : Real, 1 ≤ x → y ≤ exp x * 1 → log y ≤ x + log 1 :=
+    fun y x hx h => log_le_of_le_exp_mul hx (le_refl 1) h
+  have hexp1 : ∀ x : Real, 1 ≤ x → (1 : Real) ≤ exp x :=
+    fun x hx => one_le_exp (le_of_lt (lt_of_lt_of_le one_pos hx))
+  cases B with
+  | const c =>
+      refine ⟨log (1 + exp c), fun x hx => ?_⟩
+      refine log_le_of_le_exp_mul hx ?_ ?_
+      · have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos c))
+        have e : (1 : Real) + 0 = 1 := by mach_ring
+        rw [e] at s; exact s
+      · show c ≤ exp x * (1 + exp c)
+        have h1 : c ≤ exp c := le_of_lt (exp_grows_strictly_thm c)
+        have h2 : exp c ≤ exp x * (1 + exp c) := by
+          have s := mul_le_mul_of_nonneg_right (hexp1 x hx) (le_of_lt (exp_pos c))
+          have e : (1 : Real) * exp c = exp c := by mach_ring
+          rw [e] at s
+          have t := mul_le_mul_of_nonneg_left (by
+            have u := add_le_add_wit (le_of_lt one_pos) (le_refl (exp c))
+            have e2 : (0 : Real) + exp c = exp c := by mach_ring
+            rw [e2] at u; exact u) (le_of_lt (exp_pos x))
+          exact le_trans s t
+        exact le_trans h1 h2
+  | var =>
+      refine ⟨0, fun x hx => ?_⟩
+      show log x ≤ x + 0
+      have h := log_le_sub_one_of_one_le hx
+      have e : x - 1 ≤ x + 0 := by
+        have s := add_le_add_wit (le_refl x) (neg_le_neg_wit (le_of_lt one_pos))
+        have e1 : x + -(1 : Real) = x - 1 := by mach_ring
+        have e2 : x + -(0 : Real) = x + 0 := by mach_ring
+        rw [e1, e2] at s; exact s
+      exact le_trans h e
+  | eml a b =>
+      -- every remaining shape is `≤ exp x · D` for an explicit `D ≥ 1`
+      cases a with
+      | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨log (1 + exp (exp p - log q)), fun x hx => ?_⟩
+              refine log_le_of_le_exp_mul hx ?_ ?_
+              · have s := add_le_add_wit (le_refl (1 : Real))
+                  (le_of_lt (exp_pos (exp p - log q)))
+                have e : (1 : Real) + 0 = 1 := by mach_ring
+                rw [e] at s; exact s
+              · show exp p - log q ≤ exp x * (1 + exp (exp p - log q))
+                have h1 : exp p - log q ≤ exp (exp p - log q) :=
+                  le_of_lt (exp_grows_strictly_thm _)
+                have h2 : exp (exp p - log q) ≤ exp x * (1 + exp (exp p - log q)) := by
+                  have s := mul_le_mul_of_nonneg_right (hexp1 x hx)
+                    (le_of_lt (exp_pos (exp p - log q)))
+                  have e : (1 : Real) * exp (exp p - log q) = exp (exp p - log q) := by
+                    mach_ring
+                  rw [e] at s
+                  have t := mul_le_mul_of_nonneg_left (by
+                    have u := add_le_add_wit (le_of_lt one_pos)
+                      (le_refl (exp (exp p - log q)))
+                    have e2 : (0 : Real) + exp (exp p - log q)
+                        = exp (exp p - log q) := by mach_ring
+                    rw [e2] at u; exact u) (le_of_lt (exp_pos x))
+                  exact le_trans s t
+                exact le_trans h1 h2
+          | var =>
+              refine ⟨log (1 + exp (exp p)), fun x hx => ?_⟩
+              refine log_le_of_le_exp_mul hx ?_ ?_
+              · have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos (exp p)))
+                have e : (1 : Real) + 0 = 1 := by mach_ring
+                rw [e] at s; exact s
+              · show exp p - log x ≤ exp x * (1 + exp (exp p))
+                have hlx : (0 : Real) ≤ log x := by
+                  have t := log_le_log one_pos hx
+                  rw [log_one] at t; exact t
+                have hle : exp p - log x ≤ exp p := by
+                  have s := add_le_add_wit (le_refl (exp p)) (neg_le_neg_wit hlx)
+                  have e1 : exp p + -log x = exp p - log x := by mach_ring
+                  have e2 : exp p + -(0 : Real) = exp p := by mach_ring
+                  rw [e1, e2] at s; exact s
+                have h2 : exp p ≤ exp x * (1 + exp (exp p)) := by
+                  have hpe : exp p ≤ exp (exp p) := le_of_lt (exp_grows_strictly_thm _)
+                  have s := mul_le_mul_of_nonneg_right (hexp1 x hx)
+                    (le_of_lt (exp_pos (exp p)))
+                  have e : (1 : Real) * exp (exp p) = exp (exp p) := by mach_ring
+                  rw [e] at s
+                  have t := mul_le_mul_of_nonneg_left (by
+                    have u := add_le_add_wit (le_of_lt one_pos) (le_refl (exp (exp p)))
+                    have e2 : (0 : Real) + exp (exp p) = exp (exp p) := by mach_ring
+                    rw [e2] at u; exact u) (le_of_lt (exp_pos x))
+                  exact le_trans hpe (le_trans s t)
+                exact le_trans hle h2
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨log (1 + exp (-log q)), fun x hx => ?_⟩
+              refine log_le_of_le_exp_mul hx ?_ ?_
+              · have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos (-log q)))
+                have e : (1 : Real) + 0 = 1 := by mach_ring
+                rw [e] at s; exact s
+              · show exp x - log q ≤ exp x * (1 + exp (-log q))
+                have hq : -log q ≤ exp (-log q) := le_of_lt (exp_grows_strictly_thm _)
+                have hstep : exp x - log q ≤ exp x + exp (-log q) := by
+                  have s := add_le_add_wit (le_refl (exp x)) hq
+                  have e : exp x + -log q = exp x - log q := by mach_ring
+                  rw [e] at s; exact s
+                have hstep2 : exp x + exp (-log q) ≤ exp x * (1 + exp (-log q)) := by
+                  have e : exp x * (1 + exp (-log q)) = exp x + exp x * exp (-log q) := by
+                    mach_mpoly [exp x, exp (-log q)]
+                  rw [e]
+                  have s := mul_le_mul_of_nonneg_right (hexp1 x hx)
+                    (le_of_lt (exp_pos (-log q)))
+                  have e2 : (1 : Real) * exp (-log q) = exp (-log q) := by mach_ring
+                  rw [e2] at s
+                  exact add_le_add_wit (le_refl (exp x)) s
+                exact le_trans hstep hstep2
+          | var =>
+              refine ⟨0, fun x hx => ?_⟩
+              show log (exp x - log x) ≤ x + 0
+              have hlx : (0 : Real) ≤ log x := by
+                have t := log_le_log one_pos hx
+                rw [log_one] at t; exact t
+              have hle : exp x - log x ≤ exp x * 1 := by
+                have e : exp x * (1 : Real) = exp x := by mach_ring
+                rw [e]
+                have s := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hlx)
+                have e1 : exp x + -log x = exp x - log x := by mach_ring
+                have e2 : exp x + -(0 : Real) = exp x := by mach_ring
+                rw [e1, e2] at s; exact s
+              have h := log_le_of_le_exp_mul hx (le_refl (1 : Real)) hle
+              rw [log_one] at h
+              exact h
+
 end MachLib
