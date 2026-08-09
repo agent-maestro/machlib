@@ -2351,4 +2351,37 @@ theorem log_le_sub_one_of_one_le {y : Real} (hy : 1 ≤ y) : log y ≤ y - 1 := 
     rw [e]
     exact le_refl 0
 
+theorem one_lt_of_log_pos {y : Real} (h : 0 < log y) : 1 < y := by
+  rcases lt_total 1 y with hg | he | hl
+  · exact hg
+  · exfalso; rw [← he, log_one] at h; exact lt_irrefl_ax 0 h
+  · exfalso
+    rcases lt_total 0 y with hp | hz | hn
+    · have hle := log_le_log hp (le_of_lt hl)
+      rw [log_one] at hle
+      exact lt_irrefl_ax 0 (lt_of_lt_of_le h hle)
+    · rw [← hz, log_nonpos (le_refl (0 : Real))] at h; exact lt_irrefl_ax 0 h
+    · rw [log_nonpos (le_of_lt hn)] at h; exact lt_irrefl_ax 0 h
+
+/-- # **The axiom gap was illusory.**
+
+Wherever a depth-2 tree `eml A B` VANISHES, its right operand exceeds `1`:
+`log (B x) = exp (A x) > 0` forces `B x > 1`.
+
+**So the delicate case never needs the tangent bound below `1`** — the very condition that defines
+it (`exp (A x) = log (B x)`, i.e. the tree vanishing) puts `B` in exactly the region where
+`log_le_sub_one_of_one_le` applies. -/
+theorem vanishing_forces_right_gt_one {A B : EMLTree} {x : Real}
+    (hzero : exp (A.eval x) - log (B.eval x) = 0) : 1 < B.eval x := by
+  have hlog : log (B.eval x) = exp (A.eval x) := by
+    have t : exp (A.eval x) - log (B.eval x) + log (B.eval x)
+        = 0 + log (B.eval x) := by rw [hzero]
+    have l : exp (A.eval x) - log (B.eval x) + log (B.eval x) = exp (A.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    have r : (0 : Real) + log (B.eval x) = log (B.eval x) := by mach_ring
+    rw [l, r] at t
+    exact t.symm
+  have hpos : (0 : Real) < log (B.eval x) := by rw [hlog]; exact exp_pos _
+  exact one_lt_of_log_pos hpos
+
 end MachLib
