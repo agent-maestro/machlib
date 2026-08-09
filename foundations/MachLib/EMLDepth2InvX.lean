@@ -3160,4 +3160,70 @@ theorem depth_two_left_var_unbounded {B : EMLTree} (hB : B.depth ≤ 1) :
     ∀ M : Real, ∃ x : Real, 0 < x ∧ M < (EMLTree.eml EMLTree.var B).eval x :=
   depth_two_unbounded_of_left_ge_id hB ⟨1, le_refl 1, fun x _ => le_refl x⟩
 
+/-- **The `0⁺` mirror of `depth_le_one_log_bound_at_infty`:** `log (B x) ≤ M − log x` near `0`.
+
+The cutoff `exp (M − 2 − exp (M − 1))` sits below **both** `exp (M − 1)` (so that `M − log x ≥ 1`,
+putting the tangent bound in its derivable range) and `1`. -/
+theorem depth_le_one_log_upper_near_zero (B : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ N δ : Real, 0 < δ ∧ δ ≤ 1 ∧
+      ∀ x : Real, 0 < x → x ≤ δ → log (B.eval x) ≤ N - log x := by
+  obtain ⟨M, hM⟩ := depth_le_one_upper_bound B hB
+  have hcut1 : M - (1 + 1) - exp (M - 1) ≤ M - 1 := by
+    have hp : (0 : Real) < 1 + exp (M - 1) := add_pos one_pos (exp_pos _)
+    have s := add_le_add_left (le_of_lt hp) (M - (1 + 1) - exp (M - 1))
+    have e1 : M - (1 + 1) - exp (M - 1) + 0 = M - (1 + 1) - exp (M - 1) := by
+      mach_mpoly [M, exp (M - 1)]
+    have e2 : M - (1 + 1) - exp (M - 1) + (1 + exp (M - 1)) = M - 1 := by
+      mach_mpoly [M, exp (M - 1)]
+    rw [e1, e2] at s
+    exact s
+  have hcut0 : M - (1 + 1) - exp (M - 1) ≤ 0 := by
+    have h := exp_grows_strictly_thm (M - 1)
+    have s := add_lt_add_left h (-1 - exp (M - 1))
+    have e1 : -1 - exp (M - 1) + (M - 1) = M - (1 + 1) - exp (M - 1) := by
+      mach_mpoly [M, exp (M - 1)]
+    have e2 : -1 - exp (M - 1) + exp (M - 1) = (-1 : Real) := by
+      mach_mpoly [exp (M - 1)]
+    rw [e1, e2] at s
+    have hm1 : (-1 : Real) ≤ 0 := by
+      have t := add_lt_add_left zero_lt_one_ax (-1 : Real)
+      have f1 : (-1 : Real) + 0 = -1 := by mach_ring
+      have f2 : (-1 : Real) + 1 = 0 := by mach_ring
+      rw [f1, f2] at t; exact le_of_lt t
+    exact le_trans (le_of_lt s) hm1
+  refine ⟨M, exp (M - (1 + 1) - exp (M - 1)), exp_pos _, ?_, ?_⟩
+  · have h := exp_monotone hcut0
+    rw [exp_zero] at h
+    exact h
+  · intro x hx hxd
+    have hx1 : x ≤ 1 := le_trans hxd (by
+      have h := exp_monotone hcut0
+      rw [exp_zero] at h
+      exact h)
+    have hlogx : log x ≤ M - 1 := by
+      have h := log_le_log hx (le_trans hxd (exp_monotone hcut1))
+      rw [log_exp] at h
+      exact h
+    have hge1 : (1 : Real) ≤ M - log x := by
+      have s := add_le_add_wit (le_refl M) (neg_le_neg_wit hlogx)
+      have e1 : M + -(M - 1) = (1 : Real) := by mach_mpoly [M]
+      have e2 : M + -log x = M - log x := by mach_ring
+      rw [e1, e2] at s
+      exact s
+    have hBle : B.eval x ≤ M - log x := hM x hx hx1
+    rcases lt_total 0 (B.eval x) with hp | hz | hn
+    · have h1 := log_le_log hp hBle
+      have h2 := log_le_sub_one_of_one_le hge1
+      have h3 : M - log x - 1 ≤ M - log x := by
+        have s := add_le_add_wit (le_refl (M - log x)) (neg_le_neg_wit (le_of_lt one_pos))
+        have e1 : M - log x + -(1 : Real) = M - log x - 1 := by mach_ring
+        have e2 : M - log x + -(0 : Real) = M - log x := by mach_ring
+        rw [e1, e2] at s
+        exact s
+      exact le_trans h1 (le_trans h2 h3)
+    · rw [← hz, log_nonpos (le_refl (0 : Real))]
+      exact le_trans (le_of_lt one_pos) hge1
+    · rw [log_nonpos (le_of_lt hn)]
+      exact le_trans (le_of_lt one_pos) hge1
+
 end MachLib
