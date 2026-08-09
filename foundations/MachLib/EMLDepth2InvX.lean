@@ -2644,4 +2644,75 @@ theorem dual_bound_of_quadratic_lower {T : EMLTree} {K : Real} (hK : 0 < K)
   rw [e] at hsum
   exact le_trans hsum hm
 
+/-- # **Regime-3 bound for the LAST shape pair — and it subsumes case v.**
+
+`A = eml var (const q)`, `B = eml var (const r)` with the coincidence forcing
+`1 − r = exp c`, `c := exp (1 − q)`. Stated with `exp x − 1` on the left so it holds
+**unconditionally in the sign of `c − exp (−c)`**; the linear floor follows when that is `≥ 0`. -/
+theorem regime3_expvar_expvar_bound {q x : Real} (hx : 0 < x) :
+    (exp (1 - q) - exp (-exp (1 - q))) * (exp x - 1)
+      ≤ exp (exp x - q) - log (exp x - 1 + exp (exp (1 - q))) := by
+  have hc : (0 : Real) < exp (1 - q) := exp_pos _
+  have hw : (0 : Real) < exp x - 1 := lt_of_lt_of_le hx (regime3_floor_var_const hx)
+  have hem : exp (exp (1 - q)) * exp (-exp (1 - q)) = 1 := by
+    rw [← exp_add]
+    have e : exp (1 - q) + -exp (1 - q) = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  -- left term: exp (exp x − q) ≥ c · exp x
+  have hsplit : exp (exp x - q) = exp (1 - q) * exp (exp x - 1) := by
+    rw [← exp_add]
+    have e : (1 - q) + (exp x - 1) = exp x - q := by mach_ring
+    rw [e]
+  have hge1 : exp x ≤ exp (exp x - 1) := by
+    have h := exp_gt_one_plus_self (exp x - 1) hw
+    have e : (1 : Real) + (exp x - 1) = exp x := by mach_ring
+    rw [e] at h
+    exact le_of_lt h
+  have hL : exp (1 - q) * exp x ≤ exp (exp x - q) := by
+    rw [hsplit]
+    exact mul_le_mul_of_nonneg_left hge1 (le_of_lt hc)
+  -- right term: log (exp x − 1 + exp c) ≤ c + (exp x − 1)·exp(−c)
+  have hu1 : (1 : Real) ≤ 1 + (exp x - 1) * exp (-exp (1 - q)) := by
+    have hp := le_of_lt (mul_pos hw (exp_pos (-exp (1 - q))))
+    have s := add_le_add_wit (le_refl (1 : Real)) hp
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at s
+    exact s
+  have hfac : exp x - 1 + exp (exp (1 - q))
+      = exp (exp (1 - q)) * (1 + (exp x - 1) * exp (-exp (1 - q))) := by
+    have e : exp (exp (1 - q)) * (1 + (exp x - 1) * exp (-exp (1 - q)))
+        = exp (exp (1 - q))
+          + (exp x - 1) * (exp (exp (1 - q)) * exp (-exp (1 - q))) := by
+      mach_mpoly [exp (exp (1 - q)), exp x, exp (-exp (1 - q))]
+    rw [e, hem]
+    mach_mpoly [exp (exp (1 - q)), exp x]
+  have hupper : log (exp x - 1 + exp (exp (1 - q)))
+      ≤ exp (1 - q) + (exp x - 1) * exp (-exp (1 - q)) := by
+    rw [hfac, log_mul (exp_pos _) (lt_of_lt_of_le one_pos hu1), log_exp]
+    have hl := log_le_sub_one_of_one_le hu1
+    have s := add_le_add_wit (le_refl (exp (1 - q))) hl
+    have e : exp (1 - q) + ((1 + (exp x - 1) * exp (-exp (1 - q))) - 1)
+        = exp (1 - q) + (exp x - 1) * exp (-exp (1 - q)) := by
+      mach_mpoly [exp (1 - q), exp x, exp (-exp (1 - q))]
+    rw [e] at s
+    exact s
+  -- combine
+  have hcomb := add_le_add_wit hL (neg_le_neg_wit hupper)
+  have e1 : exp (1 - q) * exp x + -(exp (1 - q) + (exp x - 1) * exp (-exp (1 - q)))
+      = (exp (1 - q) - exp (-exp (1 - q))) * (exp x - 1) := by
+    mach_mpoly [exp (1 - q), exp x, exp (-exp (1 - q))]
+  have e2 : exp (exp x - q) + -log (exp x - 1 + exp (exp (1 - q)))
+      = exp (exp x - q) - log (exp x - 1 + exp (exp (1 - q))) := by mach_ring
+  rw [e1, e2] at hcomb
+  exact hcomb
+
+/-- The linear floor for the last pair, when the coefficient is non-negative. (When it is negative
+the tree DECREASES from `0`, so regime 3 is never entered — the case is vacuous, not unbounded.) -/
+theorem regime3_floor_expvar_expvar {q x : Real} (hx : 0 < x)
+    (hpos : 0 ≤ exp (1 - q) - exp (-exp (1 - q))) :
+    (exp (1 - q) - exp (-exp (1 - q))) * x
+      ≤ exp (exp x - q) - log (exp x - 1 + exp (exp (1 - q))) :=
+  le_trans (mul_le_mul_of_nonneg_left (regime3_floor_var_const hx) hpos)
+    (regime3_expvar_expvar_bound hx)
+
 end MachLib
