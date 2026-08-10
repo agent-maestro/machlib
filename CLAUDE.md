@@ -49,19 +49,23 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ## How to run the gates
 
-**All five run from `foundations/`, not the repo root** (this is what CI does):
+**All six run from `foundations/`, not the repo root** (this is what CI does):
 
 ```bash
 cd foundations
 lake build                                     # 619 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
+bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
 python3 tools/claim_audit/claim_audit.py       # "all 41 claims resolve against #print axioms"
 ```
 
-`lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate.
-The gate set is exactly the five above (`.github/workflows/build-time.yml`).
+`lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
+and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
+`Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
+77.1% at the last sweep), not pass/fail. The CI gate set is exactly the six above
+(`.github/workflows/build-time.yml`).
 
 ## Gotchas
 
@@ -93,7 +97,7 @@ The gate set is exactly the five above (`.github/workflows/build-time.yml`).
 
 ## Status
 
-Lean `v4.32.2`, `master`. All five gates green (619 build jobs). `sorryAx`: 1, allowlisted.
+Lean `v4.32.2`, `master`. All six gates green (619 build jobs). `sorryAx`: 1, allowlisted.
 **242 axioms pinned — unchanged across the whole 2026-08 EML arc.**
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then

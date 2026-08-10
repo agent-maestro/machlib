@@ -54,9 +54,15 @@ import os, re, sys, glob
 
 # ── MachLib/Discovered/ is DELIBERATELY outside the aggregator: each file
 #    is self-contained (defines its own constants) and they cannot be
-#    imported together. It is the Forge @verify(lean) corpus and has its
-#    own harness, scripts/closerate.sh. Excluded by prefix rather than
-#    allow-listed 294 times.
+#    imported together. Excluded by prefix rather than allow-listed 294
+#    times.
+#
+#    2026-08-10: this note used to say "has its own harness,
+#    scripts/closerate.sh" and stop there, which OVERCLAIMED — closerate
+#    is a MEASUREMENT harness (it reports a close-rate, not pass/fail) and
+#    CI does not run it. Those 294 files were outside every automated
+#    check. `scripts/check_discovered_compiles.sh` is the minimum honest
+#    guard and is now wired into CI; closerate.sh remains a manual sweep.
 EXCLUDED_PREFIXES = ("MachLib.Discovered.",)
 
 # ── Unreachable modules known at the 2026-08-10 audit. All BUILD; none
@@ -143,6 +149,7 @@ if stale:
 
 print(f"[check-aggregator] PASS: {len(seen)} of {len(files)} modules reachable from "
       f"MachLib.lean by transitive closure; {len(KNOWN_UNREACHABLE)} documented "
-      f"unreachable; Discovered/ excluded (own harness: scripts/closerate.sh).")
+      f"unreachable; Discovered/ excluded (guarded separately by "
+      f"check_discovered_compiles.sh).")
 sys.exit(0)
 PYEOF
