@@ -3832,4 +3832,27 @@ theorem leaf_var_floor_absurd {t2 : EMLTree} {K d : Real} (hK : 0 < K)
     rw [e] at s
     exact lt_of_lt_of_le h1 s
 
+/-- # **Any CONSTANT-VALUED left child is impossible — not just `const c`.**
+
+If `t1.eval x = C` on `(0,∞)` then `eml t1 t2` agrees pointwise with `eml (const C) t2` there, so
+`depth3_leaf_const_absurd` applies verbatim. **No new proof, no duplicated machinery** — and the
+left child may be of any depth. -/
+theorem depth3_const_left_absurd {t1 t2 : EMLTree} {C : Real} (ht2 : t2.depth ≤ 2)
+    (hC : ∀ x : Real, 0 < x → t1.eval x = C)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False := by
+  refine depth3_leaf_const_absurd (c := C) ht2 ?_
+  intro x hx
+  have e : (EMLTree.eml (EMLTree.const C) t2).eval x = (EMLTree.eml t1 t2).eval x := by
+    show exp C - log (t2.eval x) = exp (t1.eval x) - log (t2.eval x)
+    rw [hC x hx]
+  rw [e]
+  exact h x hx
+
+/-- Third family, the constant-valued shape: `t1 = eml (const p) (const q)`. -/
+theorem depth3_left_const_const_absurd {p q : Real} {t2 : EMLTree} (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml (EMLTree.const p) (EMLTree.const q)) t2).eval x = 1 / x) :
+    False :=
+  depth3_const_left_absurd (C := exp p - log q) ht2 (fun _ _ => rfl) h
+
 end MachLib
