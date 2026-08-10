@@ -159,7 +159,7 @@ private theorem snap_lo_le_result
       error integral deriv kp ki kd u_min u_max rate_limit jerk_limit snap_limit
       prev_result prev_prev_result prev_prev_prev_result := by
   unfold actuator_command_snap_body
-  apply le_min
+  apply MachLib.Forge.AerospaceActuatorGuardBandRate.le_min
   · exact le_max_right _ _
   · exact snap_lo_le_snap_hi
       prev_result prev_prev_result prev_prev_prev_result snap_limit h_snap_nonneg

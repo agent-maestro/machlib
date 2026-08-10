@@ -160,7 +160,7 @@ private theorem lo_le_result
       error integral deriv kp ki kd u_min u_max rate_limit jerk_limit
       prev_result prev_prev_result := by
   unfold actuator_command_jerk_body
-  apply le_min
+  apply MachLib.Forge.AerospaceActuatorGuardBandRate.le_min
   · exact le_max_right _ _
   · exact lo_le_hi prev_result prev_prev_result jerk_limit h_jerk_nonneg
 

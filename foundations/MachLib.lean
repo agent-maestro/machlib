@@ -519,6 +519,20 @@ import MachLib.Summability
 import MachLib.UniformConvergence
 import MachLib.WeierstrassSumContinuous
 import MachLib.WeierstrassTermByTerm
+-- Applications/ — aerospace actuator guard chain + Forge @verify discharges.
+-- Folded in 2026-08-10: was an unreachable island of 12 (5 of them broken).
+import MachLib.Applications.GuardedActuatorCommand
+import MachLib.Applications.ActuatorCommandWithinBand
+import MachLib.Applications.ActuatorCommandBandWithRateLimit
+import MachLib.Applications.ActuatorCommandWithJerkLimit
+import MachLib.Applications.ActuatorCommandWithSnapLimit
+import MachLib.Applications.ActuatorCommandWithCrackleLimit
+import MachLib.Applications.DegradedModeSwitcher
+import MachLib.Applications.FaultDetectionAndIsolationGuard
+import MachLib.Applications.ButlerVolmerKhovanskii
+import MachLib.Applications.DischargeVoltageSafety
+import MachLib.Applications.PlasmaConcentrationNonneg
+import MachLib.Applications.SpringCriticallyDamped
 
 /-!
 # MachLib — top-level aggregator

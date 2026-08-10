@@ -32,7 +32,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 607 jobs, ~3 s warm
+lake build                                     # 619 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
@@ -49,17 +49,16 @@ The gate set is exactly the five above (`.github/workflows/build-time.yml`).
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**604 of 922 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**616 of 922 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
 - **Deep `rfl` needs `set_option maxRecDepth`** (29 M-node terms check fine at 40 000 000).
 - **Axiom-absence claims must be read off `#print axioms`, never a name-grep** — `exp_gt_one_plus_self`
   and `exp_tangent_line_strict` are the same content under two names.
-- **`MachLib/Applications/` (12 modules) is reachable from nothing, and 5 of them do not build** —
-  `apply le_min` is ambiguous between `MachLib.Real.le_min` and the namespace-local
-  `AerospaceActuatorGuardBandRate.le_min`. Allow-listed in `check_aggregator.sh` with the reason.
-  These are aerospace actuator guard proofs; picking a `le_min` is a semantic decision, not a rename.
+- **`open MachLib.Real` + `open …AerospaceActuatorGuardBandRate (le_min …)` collide.** Both export a
+  `le_min`; a bare `apply le_min` is then ambiguous. Qualify it. (This broke 5 `Applications/`
+  modules for an unknown length of time — they were in an unreachable island, so no gate saw it.)
 - **These order lemmas do NOT exist here**: `lt_or_ge`, `lt_trans`, `lt_irrefl`,
   `mul_lt_mul_of_pos_left`, `le_or_lt`, `add_lt_add_right`. The local idioms are
   `rcases lt_total`, `lt_of_lt_of_le … (le_of_lt …)`, `(ne_of_lt h) rfl`, `mul_lt_mul_pos_left`,
@@ -73,7 +72,7 @@ The gate set is exactly the five above (`.github/workflows/build-time.yml`).
 
 ## Status
 
-Lean `v4.32.2`, `master`. All five gates green (607 build jobs). `sorryAx`: 1, allowlisted.
+Lean `v4.32.2`, `master`. All five gates green (619 build jobs). `sorryAx`: 1, allowlisted.
 **242 axioms pinned — unchanged across the whole 2026-08 EML arc.**
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then

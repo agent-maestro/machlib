@@ -19,6 +19,7 @@
 #      TOP-LEVEL modules were ever examined — while the header claimed
 #      to cover "any .lean under MachLib/". 308 of 922 files live in
 #      subdirectories and were invisible.
+
 #
 #  (2) ISLANDS — the deeper one. Reachability was tested as "is this
 #      module imported by ANY .lean under MachLib/". That is not
@@ -30,7 +31,17 @@
 #      documented as entry points, with their members left unnamed.
 #
 #      The check is now a genuine transitive closure from MachLib.lean.
-#      Reachable modules: 604 of 922.
+#
+#      Applications/ RESOLVED the same day rather than left allow-listed:
+#      the five broken modules failed on three `apply le_min` sites, in
+#      files that `open MachLib.Real` AND
+#      `open …AerospaceActuatorGuardBandRate (le_min …)`. Both `le_min`s
+#      are the SAME theorem — identical statement and proof, and the local
+#      one's docstring says "GLB intro for MachLib.Real.min" — so
+#      qualifying is semantically neutral, not a guess. All 12 build and
+#      are now in the aggregator.
+#
+#      Reachable modules: 616 of 922 (604 + the 12 folded-in Applications).
 #
 # Usage (from foundations/):   bash scripts/check_aggregator.sh
 # Exit codes:  0 = clean   1 = a new unreachable module appeared
@@ -48,32 +59,10 @@ import os, re, sys, glob
 #    allow-listed 294 times.
 EXCLUDED_PREFIXES = ("MachLib.Discovered.",)
 
-# ── Unreachable modules known at the 2026-08-10 audit. All BUILD unless
-#    marked; none contains a real `sorry` (every `sorry` match under these
-#    paths was checked individually and is prose in a docstring).
-#
-#    Applications/ is an ISLAND: 12 modules importing each other, reached
-#    from the aggregator by nothing. FIVE of them do not build —
-#    `apply le_min` is ambiguous between `MachLib.Real.le_min` and the
-#    namespace-local `AerospaceActuatorGuardBandRate.le_min`, precisely the
-#    "isolated-elaboration ambiguity" this header used to anticipate.
-#    They are aerospace actuator guard proofs; choosing a `le_min` is a
-#    semantic decision, not a rename, so it is left to a deliberate pass.
+# ── Unreachable modules known at the 2026-08-10 audit. All BUILD; none
+#    contains a real `sorry` (every `sorry` match under these paths was
+#    checked individually and is prose in a docstring).
 KNOWN_UNREACHABLE = {
-    # --- Applications island (12) -- BROKEN: Jerk, Snap, Crackle,
-    #     DegradedModeSwitcher, FaultDetectionAndIsolationGuard
-    "MachLib.Applications.ActuatorCommandBandWithRateLimit",
-    "MachLib.Applications.ActuatorCommandWithCrackleLimit",
-    "MachLib.Applications.ActuatorCommandWithJerkLimit",
-    "MachLib.Applications.ActuatorCommandWithSnapLimit",
-    "MachLib.Applications.ActuatorCommandWithinBand",
-    "MachLib.Applications.ButlerVolmerKhovanskii",
-    "MachLib.Applications.DegradedModeSwitcher",
-    "MachLib.Applications.DischargeVoltageSafety",
-    "MachLib.Applications.FaultDetectionAndIsolationGuard",
-    "MachLib.Applications.GuardedActuatorCommand",
-    "MachLib.Applications.PlasmaConcentrationNonneg",
-    "MachLib.Applications.SpringCriticallyDamped",
     # --- top-level orphans documented at the 2026-06-26 audit (8)
     "MachLib.CatVision",
     "MachLib.ChainExp2NatMeasure",

@@ -178,7 +178,7 @@ private theorem crackle_lo_le_result
       crackle_limit prev_result prev_prev_result prev_prev_prev_result
       prev_prev_prev_prev_result := by
   unfold actuator_command_crackle_body
-  apply le_min
+  apply MachLib.Forge.AerospaceActuatorGuardBandRate.le_min
   · exact le_max_right _ _
   · exact crackle_lo_le_crackle_hi
       prev_result prev_prev_result prev_prev_prev_result prev_prev_prev_prev_result
