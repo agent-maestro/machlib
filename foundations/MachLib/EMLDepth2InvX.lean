@@ -7365,4 +7365,62 @@ theorem depth_le_two_const_right_floor {A B : EMLTree} {β d : Real}
       mach_mpoly [exp (A.eval x), log β]
     rw [l, r] at u; exact u
 
+/-- **`exp` clears any additive constant, eventually — on a whole ray, not at one point.**
+`exp_beats_linear` names a single point; a *floor* needs the inequality to hold throughout, which is
+what this supplies. `exp_ge_three_mul` does the work: past `4`, `exp v ≥ 3v = v + 2v`, and `2v`
+outgrows a fixed `β` as soon as `v ≥ β`. -/
+theorem exp_ge_add_const (β : Real) :
+    ∀ v : Real, 1 + 1 + 1 + 1 + exp β ≤ v → v + β ≤ exp v := by
+  intro v hv
+  have h4 : (1 + 1 + 1 + 1 : Real) ≤ v := by
+    have s := add_le_add_wit (le_refl (1 + 1 + 1 + 1 : Real)) (le_of_lt (exp_pos β))
+    have e : (1 + 1 + 1 + 1 : Real) + 0 = 1 + 1 + 1 + 1 := by mach_ring
+    rw [e] at s; exact le_trans s hv
+  have hβv : β ≤ v := by
+    have s := add_le_add_wit
+      (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos))
+      (le_of_lt (exp_grows_strictly_thm β))
+    have e : (0 : Real) + β = β := by mach_ring
+    rw [e] at s
+    exact le_trans s hv
+  have h3 := exp_ge_three_mul h4
+  refine le_trans ?_ h3
+  have s := add_le_add_wit (le_refl (v + v)) hβv
+  have l : v + v + β = v + β + v := by mach_mpoly [v, β]
+  have r : v + v + v = v + v + v := rfl
+  rw [l] at s
+  -- `v + β ≤ v + β + v`? no: use `v + β + 0 ≤ v + β + v` via `0 ≤ v`
+  have hv0 : (0 : Real) ≤ v := le_trans (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos)
+    one_pos) one_pos)) h4
+  have u := add_le_add_wit (le_refl (v + β)) hv0
+  have l2 : v + β + (0 : Real) = v + β := by mach_mpoly [v, β]
+  rw [l2] at u
+  exact le_trans u s
+
+/-- **Rung 2, moving right child, the `B = var` shape.** `log (B x) = log x → −∞`, so the subtracted
+term *adds* and the tree is above `1` past `exp (−1)` — a constant floor, and positivity is not even
+needed. The easy end of the moving case. -/
+theorem depth_le_two_var_right_floor {A : EMLTree} :
+    ∀ x : Real, 0 < x → x ≤ exp (-1) →
+      (1 : Real) * x ≤ (EMLTree.eml A EMLTree.var).eval x := by
+  intro x hx hxd
+  show (1 : Real) * x ≤ exp (A.eval x) - log x
+  have hx1 : x ≤ 1 := le_trans hxd (le_of_lt exp_neg_one_lt_one)
+  have e : (1 : Real) * x = x := by mach_mpoly [x]
+  rw [e]
+  -- `−log x ≥ 1` below `exp (−1)`
+  have hlog : (1 : Real) ≤ -log x := by
+    have h1 : log x ≤ -1 := by
+      have s := log_le_log hx hxd
+      rwa [log_exp] at s
+    have s := neg_le_neg_wit h1
+    have el : -(-1 : Real) = 1 := by mach_ring
+    rw [el] at s; exact s
+  have s := add_le_add_wit (le_of_lt (exp_pos (A.eval x))) hlog
+  have l : (0 : Real) + 1 = 1 := by mach_ring
+  have r : exp (A.eval x) + -log x = exp (A.eval x) - log x := by
+    mach_mpoly [exp (A.eval x), log x]
+  rw [l, r] at s
+  exact le_trans hx1 s
+
 end MachLib
