@@ -3999,6 +3999,44 @@ theorem depth_le_one_bound_at_infty (A : EMLTree) (hA : A.depth ≤ 1) :
               rw [e1, e2] at s
               exact s
 
+/-! ## ▸ **The size question, in the metric that is priced**
+
+`docs/cost_theory.md` T38-NNP prices **size**, not depth. Everything above is stated in depth;
+these two transfer it. -/
+
+/-- **The first size LOWER bound on `1/x`: `s(1/x) ≥ 7`.**
+
+`size ≤ 6` plus oddness gives `size ≤ 5`, then `2·depth + 1 ≤ 5` gives `depth ≤ 2`, and
+`inv_x_not_in_eml_depth_le_2` closes it. So **two `eml` gates can never compute a reciprocal.** -/
+theorem inv_x_size_ge_seven (t : EMLTree) (h : ∀ x : Real, 0 < x → t.eval x = 1 / x) :
+    7 ≤ t.size := by
+  obtain ⟨k, hk⟩ := size_odd t
+  have hd := two_mul_depth_succ_le_size t
+  rcases Nat.lt_or_ge t.size 7 with hlt | hge
+  · exact absurd h (inv_x_not_in_eml_depth_le_2 t (by omega))
+  · exact hge
+
+/-- # **`s(1/x) ∈ {7, 9, 11}`** — proved.
+
+A **minimal** EML reciprocal has size `7`, `9`, or `11`: at least `7` by `inv_x_size_ge_seven`, at
+most `11` because `invX4` is a witness of that size, and `8`/`10` are impossible because
+`size_odd` says sizes are always `2k+1`.
+
+Three values, i.e. **three, four, or five `eml` gates.** (The numerical search over all 528
+configurations at 3 and 4 gates found no witness — but that is evidence, not proof, so `7` and `9`
+are not excluded here.) -/
+theorem inv_x_min_size_seven_nine_or_eleven (t : EMLTree)
+    (h : ∀ x : Real, 0 < x → t.eval x = 1 / x)
+    (hmin : ∀ u : EMLTree, (∀ x : Real, 0 < x → u.eval x = 1 / x) → t.size ≤ u.size) :
+    t.size = 7 ∨ t.size = 9 ∨ t.size = 11 := by
+  have hlow := inv_x_size_ge_seven t h
+  have hup : t.size ≤ 11 := by
+    have h11 : invX4.size = 11 := by rfl
+    have hle := hmin invX4 invX4_eval
+    rwa [h11] at hle
+  obtain ⟨k, hk⟩ := size_odd t
+  omega
+
 /-! ## ▸ The clamp, turned into a contradiction
 
 The totalised `log` has been this arm's most persistent obstacle: wherever a tree goes non-positive,
