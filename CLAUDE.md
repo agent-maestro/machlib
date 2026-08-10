@@ -20,6 +20,27 @@ disclosed in **`foundations/axiom_ledger.json`**): there is no Mathlib, no `Comp
 frequent source of surprise. Custom tactics **`mach_ring`** and **`mach_mpoly`** replace `ring`/
 `linarith`.
 
+## The axiom count, reconciled (do not re-derive this)
+
+`lake env lean AxiomLedger.lean` reports **242 axioms pinned**. That number decomposes exactly, and
+grepping the sources will *not* reproduce it:
+
+```
+220  MachLib.*   axioms in the environment after `import MachLib`
+ 22  Certcom.*   IEEE-754 floor axioms
+---
+242  = what the ledger pins
+```
+
+A further **15** axioms are present but *not* pinned — they are Lean's own kernel/compiler trust
+base, not project axioms: `propext`, `Classical.choice`, `Quot.sound`, `sorryAx`, `Quot.lcInv`,
+`Lean.{ofReduceBool,ofReduceNat,trustCompiler}`, `isScalarObj`, and the `lc*` compiler internals.
+
+**Why grep disagrees:** `grep -c '^ *axiom '` over `MachLib/*.lean` returns **277**, of which **16
+are prose inside docstrings** (261 real) and **17 sit in unreachable modules** (244), and unreachable
+modules are not in the environment at all. Use the environment (`getEnv`, `.axiomInfo`), never grep —
+this is the same rule as *"axiom-absence claims must be read off `#print axioms`."*
+
 ## Where the content comes from
 
 Self-contained. EML semantics live in `MachLib/SinNotInEML.lean` (the `EMLTree` type and `eval`);
