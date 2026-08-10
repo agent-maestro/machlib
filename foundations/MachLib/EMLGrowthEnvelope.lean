@@ -134,6 +134,61 @@ theorem depth_gt_of_outgrows (f : Real → Real) (k : Nat)
   have h1 : f x ≤ envelope k M x := by rw [← heq x hx hx1]; exact hM x hx hx1
   exact (ne_of_lt (lt_of_lt_of_le hlt h1)) rfl
 
+/-! ## ▸ The envelope in the metric that is priced
+
+T38-NNP prices **size**, not depth. `two_mul_depth_succ_le_size` transfers the envelope: a size
+bound implies a depth bound, so the whole ladder reads in node count. Stated with `2k+1` so **no
+Nat division appears**. -/
+
+/-- **Size-indexed envelope.** A log-safe tree of at most `2k+1` nodes is under rung `k`. -/
+theorem size_envelope (t : EMLTree) (k : Nat) (hn : t.size ≤ 2 * k + 1) (hs : LogSafe 1 t) :
+    ∃ M : Real, ∀ x : Real, 0 < x → x ≤ 1 → t.eval x ≤ envelope k M x := by
+  have hb := two_mul_depth_succ_le_size t
+  exact growth_envelope t k (by omega) hs
+
+/-- **A size LOWER bound from a growth argument** — the first in this arm. A target outgrowing
+rung `k` cannot be computed by any log-safe tree of `2k+1` nodes or fewer. -/
+theorem size_gt_of_outgrows (f : Real → Real) (k : Nat)
+    (hf : ∀ M : Real, ∃ x : Real, 0 < x ∧ x ≤ 1 ∧ envelope k M x < f x)
+    (t : EMLTree) (hs : LogSafe 1 t) (heq : ∀ x : Real, 0 < x → x ≤ 1 → t.eval x = f x) :
+    2 * k + 1 < t.size := by
+  rcases Nat.lt_or_ge (2 * k + 1) t.size with hgt | hle
+  · exact hgt
+  · exfalso
+    obtain ⟨M, hM⟩ := size_envelope t k hle hs
+    obtain ⟨x, hx, hx1, hlt⟩ := hf M
+    have h1 : f x ≤ envelope k M x := by rw [← heq x hx hx1]; exact hM x hx hx1
+    exact (ne_of_lt (lt_of_lt_of_le hlt h1)) rfl
+
+/-- Sharpened by oddness: `> 2k+1` is `≥ 2k+3`, since sizes are never even. -/
+theorem size_ge_of_outgrows (f : Real → Real) (k : Nat)
+    (hf : ∀ M : Real, ∃ x : Real, 0 < x ∧ x ≤ 1 ∧ envelope k M x < f x)
+    (t : EMLTree) (hs : LogSafe 1 t) (heq : ∀ x : Real, 0 < x → x ≤ 1 → t.eval x = f x) :
+    2 * k + 3 ≤ t.size := by
+  have h := size_gt_of_outgrows f k hf t hs heq
+  obtain ⟨j, hj⟩ := size_odd t
+  omega
+
+/-- **The transfer is one-directional, with a specimen.** A *size* bound gives a *depth* bound
+(above); a *depth* bound gives **no** size bound. Both trees below have depth `3`; one has `7` nodes
+and the other `15`. So there is no size envelope indexed by depth. -/
+theorem depth_does_not_bound_size :
+    (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+        (EMLTree.const 0)) (EMLTree.const 0)).depth = 3
+    ∧ (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+        (EMLTree.const 0)) (EMLTree.const 0)).size = 7
+    ∧ (EMLTree.eml
+        (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+          (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)))
+        (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+          (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)))).depth = 3
+    ∧ (EMLTree.eml
+        (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+          (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)))
+        (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0))
+          (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)))).size = 15 :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
 /-! ## ▸ Worked example: `1/x²` needs more than one rung
 
 `envelope 1 M x = exp(M − log x)`, and `x · exp(M − log x) = exp M`. So `x²·envelope 1 M x = x·exp M`,
@@ -164,6 +219,15 @@ theorem inv_x_sq_not_log_safe_depth_one (t : EMLTree) (hd : t.depth ≤ 1) (hs :
     rwa [hprod] at s
   rw [heq w hwpos hwle] at hstep
   exact (ne_of_lt (lt_of_le_of_lt hstep hlt)) rfl
+
+/-- **`1/x²` needs at least 5 nodes** (if log-safe) — the size reading of the example above.
+Weak, because rung 1 is low; the point is that the *mechanism* now lands in node count. -/
+theorem inv_x_sq_size_ge_five (t : EMLTree) (hs : LogSafe 1 t)
+    (heq : ∀ x : Real, 0 < x → x ≤ 1 → x * (x * t.eval x) = 1) : 5 ≤ t.size := by
+  have hb := two_mul_depth_succ_le_size t
+  rcases Nat.lt_or_ge t.depth 2 with hlt | hge
+  · exact absurd heq (inv_x_sq_not_log_safe_depth_one t (by omega) hs)
+  · omega
 
 /-! ## ▸ And the honest limit: `1/x` is INSIDE the first rung
 
