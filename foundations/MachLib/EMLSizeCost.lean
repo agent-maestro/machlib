@@ -94,6 +94,24 @@ theorem two_mul_depth_succ_le_size (t : EMLTree) : 2 * t.depth + 1 ≤ t.size :=
         Nat.max_le.mpr ⟨Nat.le_add_right _ _, Nat.le_add_left _ _⟩
       omega
 
+/-- **Size is always odd.** Every `eml` node has exactly two children, so a tree with `k` gates has
+`k+1` leaves and `size = 2k+1`. Sizes are `1, 3, 5, 7, 9, 11, …` — never even. -/
+theorem size_odd (t : EMLTree) : ∃ k : Nat, t.size = 2 * k + 1 := by
+  induction t with
+  | const c => exact ⟨0, rfl⟩
+  | var => exact ⟨0, rfl⟩
+  | eml a b iha ihb =>
+      obtain ⟨ka, hka⟩ := iha
+      obtain ⟨kb, hkb⟩ := ihb
+      refine ⟨ka + kb + 1, ?_⟩
+      simp only [EMLTree.size, hka, hkb]; omega
+
+/-- **Beating `invX4` costs at most 4 gates.** `size < 11` and oddness force `size ≤ 9`; the bridge
+then forces `depth ≤ 4`. Together with `inv_x_not_in_eml_depth_le_2` (which closes `size ≤ 5`) the
+open space is exactly the trees with **3 or 4 `eml` gates**. -/
+theorem size_lt_eleven_le_nine (t : EMLTree) (h : t.size < 11) : t.size ≤ 9 := by
+  obtain ⟨k, hk⟩ := size_odd t; omega
+
 /-- **The finiteness corollary.** Anything strictly cheaper than `invX4`'s 11 nodes has depth ≤ 4.
 So every tree of depth ≥ 5 is ruled out *for free*, and `s(1/x) = 11` reduces to three slices:
 depth ≤ 2 (**closed**, `inv_x_not_in_eml_depth_le_2`), depth 3 (the open arm), and depth 4 with

@@ -1561,6 +1561,75 @@ theorem invX4_eval : ∀ x : Real, 0 < x → invX4.eval x = 1 / x := by
   rw [hd, mul_exp_sub_log hx, mul_exp_sub_log hx, hc]
   mach_ring
 
+/-! ### `invX4` is not isolated — it sits on a ONE-PARAMETER FAMILY
+
+Found by the size-bounded search's **positive control**: asked to recover the known witness, the
+optimiser returned machine-precision constants that were **not** the known ones. Working out why
+gave the family below. A control that reproduces the answer exactly proves the optimiser can
+memorise; one that finds a *different* exact answer proves it is searching. -/
+
+/-- The depth-4 reciprocal with both free constants exposed. `invX4 = invX4gen (log (log (1+e))) 0`. -/
+noncomputable def invX4gen (c0 c1 : Real) : EMLTree :=
+  EMLTree.eml
+    (EMLTree.eml (EMLTree.const c0) EMLTree.var)
+    (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const c1) EMLTree.var) (EMLTree.const 1))
+      (EMLTree.const 1))
+
+theorem invX4_is_invX4gen : invX4 = invX4gen (log (log (1 + exp 1))) 0 := rfl
+
+theorem invX4gen_size (c0 c1 : Real) : (invX4gen c0 c1).size = 11 := by rfl
+
+theorem invX4gen_depth (c0 c1 : Real) : (invX4gen c0 c1).depth = 4 := by rfl
+
+/-- **The whole family.** The two `const 1` leaves make their `log`s vanish, so the tree collapses
+to `(exp(exp c0) − exp(exp c1))/x`. One equation on two constants ⟹ **a curve of witnesses.** -/
+theorem invX4gen_eval {c0 c1 : Real} (hfam : exp (exp c0) - exp (exp c1) = 1) :
+    ∀ x : Real, 0 < x → (invX4gen c0 c1).eval x = 1 / x := by
+  intro x hx
+  have hW : (EMLTree.eml (EMLTree.eml (EMLTree.const c1) EMLTree.var) (EMLTree.const 1)).eval x
+      = exp (exp c1 - log x) := by
+    show exp ((EMLTree.eml (EMLTree.const c1) EMLTree.var).eval x)
+        - log ((EMLTree.const (1 : Real)).eval x) = _
+    show exp (exp c1 - log x) - log (1 : Real) = _
+    rw [log_one]; mach_mpoly [exp (exp c1 - log x)]
+  have hR : log ((EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const c1) EMLTree.var)
+        (EMLTree.const 1)) (EMLTree.const 1)).eval x) = exp (exp c1 - log x) := by
+    show log (exp ((EMLTree.eml (EMLTree.eml (EMLTree.const c1) EMLTree.var)
+          (EMLTree.const 1)).eval x) - log ((EMLTree.const (1 : Real)).eval x)) = _
+    rw [hW]
+    show log (exp (exp (exp c1 - log x)) - log (1 : Real)) = _
+    rw [log_one]
+    have e : exp (exp (exp c1 - log x)) - (0 : Real) = exp (exp (exp c1 - log x)) := by mach_ring
+    rw [e, log_exp]
+  have hval : (invX4gen c0 c1).eval x = exp (exp c0 - log x) - exp (exp c1 - log x) := by
+    show exp ((EMLTree.eml (EMLTree.const c0) EMLTree.var).eval x)
+        - log ((EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const c1) EMLTree.var)
+            (EMLTree.const 1)) (EMLTree.const 1)).eval x) = _
+    rw [hR]; rfl
+  refine eq_inv_of_mul_eq_one hx ?_
+  rw [hval]
+  have hd : x * (exp (exp c0 - log x) - exp (exp c1 - log x))
+      = x * exp (exp c0 - log x) - x * exp (exp c1 - log x) := by
+    mach_mpoly [x, exp (exp c0 - log x), exp (exp c1 - log x)]
+  rw [hd, mul_exp_sub_log hx, mul_exp_sub_log hx]
+  exact hfam
+
+/-- **`1/x` has a continuum of size-11 depth-4 realisations**, one for each `c1`: solve
+`exp(exp c0) = 1 + exp(exp c1)`, which is always possible since the right side exceeds `1`. -/
+theorem invX4gen_witness_for_any_c1 (c1 : Real) :
+    ∃ c0 : Real, ∀ x : Real, 0 < x → (invX4gen c0 c1).eval x = 1 / x := by
+  have h1 : (1 : Real) < 1 + exp (exp c1) := by
+    have t := add_lt_add_left (exp_pos (exp c1)) (1 : Real)
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at t; exact t
+  have hpos : (0 : Real) < 1 + exp (exp c1) := lt_of_lt_of_le one_pos (le_of_lt h1)
+  have hlpos : (0 : Real) < log (1 + exp (exp c1)) := by
+    have s : log 1 < log (1 + exp (exp c1)) := log_lt_log one_pos h1
+    rw [log_one] at s; exact s
+  refine ⟨log (log (1 + exp (exp c1))), invX4gen_eval ?_⟩
+  rw [exp_log hlpos, exp_log hpos]
+  mach_ring
+
 /-- # **`1/x ∈ EML₄`** — and with `inv_x_not_in_eml_depth_le_2`, **`d(1/x) ∈ {3, 4}`.** -/
 theorem inv_x_mem_EML_depth_four :
     ∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = 1 / x :=
