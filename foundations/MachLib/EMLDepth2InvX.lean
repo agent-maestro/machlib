@@ -1,4 +1,5 @@
 import MachLib.EMLDepthCost
+import MachLib.EMLSizeCost
 
 /-!
 # `1/x` at depth 2 — the uniform reduction, and the `t2`-leaf cases
@@ -3928,5 +3929,19 @@ theorem depth_le_one_bound_at_infty (A : EMLTree) (hA : A.depth ≤ 1) :
               have e2 : exp x + -(0 : Real) = exp x := by mach_ring
               rw [e1, e2] at s
               exact s
+
+/-- # **The canonical reciprocal: `(size, depth) = (11, 4)`.**
+
+`invX4` beats the original `invXTree` on **both** axes — and **size is the axis that is priced**
+(`docs/cost_theory.md`, T38-NNP: *"composing operators is purely additive — no interface/depth
+overhead"*). So this is the number a consumer wants.
+
+⚠ **Best known, NOT proved optimal.** Optimality quantifies over every tree with `≤ 10` nodes —
+which **includes depth-3 trees**, since a depth-3 reciprocal would sit at roughly 9 nodes and
+strictly undercut this one. **`1/x ∉ EML₃` is therefore the lower-bound lemma protecting this
+claim**, not the unrelated curiosity I had called it. -/
+theorem invX4_size : invX4.size = 11 := by rfl
+
+theorem invXTree_size : invXTree.size = 13 := by rfl
 
 end MachLib

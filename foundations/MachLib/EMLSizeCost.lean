@@ -76,4 +76,47 @@ set_option maxRecDepth 40000000 in
 /-- **29 712 565 nodes** for `x²` as a generic polynomial — `~72×` per coefficient. -/
 theorem size_polyTree_three : (polyTree [0, 0, 1]).size = 29712565 := by rfl
 
+/-! ## The size–depth bridge — the size question is FINITE in depth
+
+`docs/cost_theory.md` T38-NNP prices **size**, not depth. That made the depth work look like a
+detached curiosity. It is not: **size ≤ 10 forces depth ≤ 4**, so the size question is the depth
+question plus one narrow extra slice. -/
+
+/-- Minimum size at depth `d` is `2d + 1`: each extra level costs one `eml` node and at least one
+new leaf. Proof needs **no case split on which child is deeper** — `da + db ≥ max da db` suffices. -/
+theorem two_mul_depth_succ_le_size (t : EMLTree) : 2 * t.depth + 1 ≤ t.size := by
+  induction t with
+  | const c => simp [EMLTree.depth, EMLTree.size]
+  | var => simp [EMLTree.depth, EMLTree.size]
+  | eml a b iha ihb =>
+      simp only [EMLTree.depth, EMLTree.size]
+      have h : max a.depth b.depth ≤ a.depth + b.depth :=
+        Nat.max_le.mpr ⟨Nat.le_add_right _ _, Nat.le_add_left _ _⟩
+      omega
+
+/-- **The finiteness corollary.** Anything strictly cheaper than `invX4`'s 11 nodes has depth ≤ 4.
+So every tree of depth ≥ 5 is ruled out *for free*, and `s(1/x) = 11` reduces to three slices:
+depth ≤ 2 (**closed**, `inv_x_not_in_eml_depth_le_2`), depth 3 (the open arm), and depth 4 with
+size ∈ {9, 10}. -/
+theorem size_le_ten_depth_le_four (t : EMLTree) (h : t.size ≤ 10) : t.depth ≤ 4 := by
+  have := two_mul_depth_succ_le_size t; omega
+
+/-- Contrapositive, in the form a cost model wants: deep trees are never cheap. -/
+theorem depth_ge_five_size_ge_eleven (t : EMLTree) (h : 5 ≤ t.depth) : 11 ≤ t.size := by
+  have := two_mul_depth_succ_le_size t; omega
+
+/-- **H3 — the bound is tight.** A caterpillar realises `2d + 1` at each depth, so the bridge cannot
+be improved. (`d = 0..4`; the shape generalises.) -/
+theorem bridge_tight_0 : (EMLTree.const 0).size = 2 * (EMLTree.const 0).depth + 1 := by rfl
+theorem bridge_tight_1 : (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)).size
+    = 2 * (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)).depth + 1 := by rfl
+theorem bridge_tight_2 : (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)).size
+    = 2 * (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)).depth + 1 := by rfl
+theorem bridge_tight_3 : (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)).size
+    = 2 * (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)).depth + 1 := by rfl
+theorem bridge_tight_4 :
+    (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)).size
+    = 2 * (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.eml (EMLTree.const 0) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)) (EMLTree.const 0)).depth + 1 := by
+  rfl
+
 end MachLib
