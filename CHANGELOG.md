@@ -5,7 +5,56 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
-## [Unreleased] — 2026-07-26
+## [Unreleased] — 2026-08-10
+
+### EML complexity: the reciprocal in the metric that is priced
+
+- **`MachLib.inv_x_size_ge_seven`** — **two `eml` gates can never compute a reciprocal.**
+  `size ≤ 6` plus `size_odd` gives `size ≤ 5`; the bridge `2·depth + 1 ≤ size` then gives
+  `depth ≤ 2`, which `inv_x_not_in_eml_depth_le_2` closes. With `invX4` as a witness at 11 nodes and
+  oddness ruling out 8 and 10, a **minimal EML reciprocal has size 7, 9, or 11** —
+  `inv_x_min_size_seven_nine_or_eleven`. First result of this arc stated natively in the axis
+  `docs/cost_theory.md` T38-NNP actually prices. sorryAx-free, zero new axioms.
+  **NOT proved: `s(1/x) = 11`.** Sizes 7 and 9 are open; a 528-configuration numerical search over
+  all 3- and 4-gate shapes found no witness, but that is evidence, not proof.
+
+- **`MachLib.two_mul_depth_succ_le_size`** — `2·depth + 1 ≤ size`, tight at every depth. Hence
+  `size ≤ 10 ⟹ depth ≤ 4`: **the size question is finite in depth**, since any tree of depth ≥ 5
+  already costs ≥ 11 nodes. Footprint is `propext, Real, Quot.sound` — pure tree combinatorics, no
+  `Classical.choice` and no analysis.
+
+- **`MachLib.growth_envelope`** — a depth-indexed growth ceiling
+  `envelope 0 M x = M − log x`, `envelope (k+1) M x = exp (envelope k M x)`. One induction on the
+  tree replaces the six ad-hoc shape cases and the cutoff of the earlier depth-1 and depth-2
+  ceilings. `depth_gt_of_outgrows` is the contrapositive lower-bound tool, and `size_envelope`
+  restates it in node count. Carries a **`LogSafe`** side condition (every `eml` right child `≥ 1`);
+  removing it needs finiteness of sign changes for exp-log expressions, a Khovanskii/Pfaffian input.
+
+- **`MachLib.inv_x_within_envelope_one`** — the honest limit: `1/x ≤ envelope 1 0 x`, so the
+  reciprocal sits **inside the first rung** and **no growth argument at any rung can exclude it**.
+  EML depth is gate complexity, not growth complexity; `d(1/x)` is frozen at `{3,4}`.
+
+- **`MachLib.invX4gen_eval`** — the depth-4 witness is **not isolated**. With both `const 1` leaves
+  making their `log`s vanish the tree collapses to `(exp(exp c0) − exp(exp c1))/x`, so the witness
+  condition is one equation on two constants: a **curve** of size-11 depth-4 reciprocals.
+  `invX4 = invX4gen (log (log (1+e))) 0`.
+
+### Trust gates
+
+- **`scripts/check_aggregator.sh` had two scope defects and now does a real transitive closure.**
+  It iterated `find MachLib -maxdepth 1` (308 of 922 files invisible) and tested "imported by any
+  `.lean`" rather than reachability, so an **island** of mutually-importing modules passed
+  trivially. Found by an axiom count that would not reconcile. Reachable: **616 of 922**. Validated
+  with two firing specimens — a subdirectory orphan and a two-module island — each of which the old
+  gate passed and the new one fails.
+
+- **`MachLib/Applications/` (12 modules) folded into the aggregator.** It was an unreachable island
+  and five of its modules did not build: a bare `apply le_min` was ambiguous between
+  `MachLib.Real.le_min` and the namespace-local `AerospaceActuatorGuardBandRate.le_min`. The two are
+  the same theorem — identical statement and proof — so qualifying is semantically neutral. No
+  hidden `sorry`: every match under those paths was prose in a docstring.
+
+## [2026-07-26]
 
 ### New — 2×2 Joseph covariance update: structural PSD + full-width dot bound (`MachLib/Matrix2JosephPSD.lean`)
 

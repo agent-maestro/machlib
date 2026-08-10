@@ -612,6 +612,75 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "Two eml gates can never compute a reciprocal: size<=6 -> (oddness) size<=5 -> (bridge) depth<=2 -> contradiction. Invariant: sorryAx-free.",
+      "id": "inv-x-size-ge-seven-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "two `eml` gates can never compute a reciprocal",
+        "minimal EML reciprocal has size 7, 9, or 11"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.inv_x_size_ge_seven",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "Size-depth bridge 2*depth+1 <= size; makes the size question finite in depth. Pure tree combinatorics. Invariant: sorryAx-free.",
+      "id": "size-depth-bridge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the size question is finite in depth"
+      ],
+      "module": "MachLib.EMLSizeCost",
+      "theorem": "MachLib.two_mul_depth_succ_le_size",
+      "forbid_axioms": [
+        "sorryAx",
+        "Classical.choice"
+      ]
+    },
+    {
+      "_comment": "Depth-indexed growth envelope; one induction replaces six shape cases. Carries the LogSafe side condition. Invariant: sorryAx-free.",
+      "id": "growth-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "One induction on the",
+        "tree replaces the six ad-hoc shape cases"
+      ],
+      "module": "MachLib.EMLGrowthEnvelope",
+      "theorem": "MachLib.growth_envelope",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "1/x sits inside envelope rung 1, so no growth argument at any rung excludes it. Invariant: sorryAx-free.",
+      "id": "inv-x-within-envelope-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no growth argument at any rung can exclude it"
+      ],
+      "module": "MachLib.EMLGrowthEnvelope",
+      "theorem": "MachLib.inv_x_within_envelope_one",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "invX4 is one point on a curve of size-11 depth-4 reciprocals: exp(exp c0)-exp(exp c1)=1. Invariant: sorryAx-free.",
+      "id": "invx4-family-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the depth-4 witness is **not isolated**",
+        "a **curve** of size-11 depth-4 reciprocals"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.invX4gen_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }
