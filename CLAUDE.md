@@ -7,9 +7,13 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **612 modules / ~158 k lines / 5 569 theorems**, all
-re-exported through the aggregator **`foundations/MachLib.lean`** — a module not imported there is
-**invisible to the gates**, which is the single most common way to ship dead work. The numeric
+material). `foundations/MachLib/` holds **922 `.lean` files** (614 top-level + 308 in subdirectories) /
+**~187 k lines** / **5 851 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** (512 imports) — a module not reachable from there is **invisible to
+`lake build` and to every gate**, which is the single most common way to ship dead work.
+**`MachLib/Discovered/` (294 files) is deliberately outside the aggregator**: each file is
+self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
+its own harness, `scripts/closerate.sh`. The numeric
 substrate is **`MachLib.Real`**, an *axiomatised* real field (274 `axiom` declarations, every one
 disclosed in **`foundations/axiom_ledger.json`**): there is no Mathlib, no `Complex`, and
 `Real.log` is **totalised** — `log y = 0` for `y ≤ 0`, which is load-bearing in EML proofs and a
@@ -28,7 +32,7 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ```bash
 cd foundations
-lake build                                     # 605 jobs, ~3 s warm
+lake build                                     # 607 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
@@ -50,9 +54,28 @@ The gate set is exactly the five above (`.github/workflows/build-time.yml`).
 - **Deep `rfl` needs `set_option maxRecDepth`** (29 M-node terms check fine at 40 000 000).
 - **Axiom-absence claims must be read off `#print axioms`, never a name-grep** — `exp_gt_one_plus_self`
   and `exp_tangent_line_strict` are the same content under two names.
+- **`MachLib/Applications/` (12 modules) is reachable from nothing, and 5 of them do not build** —
+  `apply le_min` is ambiguous between `MachLib.Real.le_min` and the namespace-local
+  `AerospaceActuatorGuardBandRate.le_min`. Allow-listed in `check_aggregator.sh` with the reason.
+  These are aerospace actuator guard proofs; picking a `le_min` is a semantic decision, not a rename.
+- **These order lemmas do NOT exist here**: `lt_or_ge`, `lt_trans`, `lt_irrefl`,
+  `mul_lt_mul_of_pos_left`, `le_or_lt`, `add_lt_add_right`. The local idioms are
+  `rcases lt_total`, `lt_of_lt_of_le … (le_of_lt …)`, `(ne_of_lt h) rfl`, `mul_lt_mul_pos_left`,
+  `add_le_add_wit`, `add_lt_add_left`.
+- **A new module needs `open Real`** inside `namespace MachLib`, or `exp`/`log` are unknown.
+- **Casing on a tree then applying a lemma with an implicit tree argument leaves a metavariable** —
+  pass `(A := EMLTree.const c)` explicitly, or the shape-specific proof term fails to typecheck.
+- **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
+- **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
+  below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
 
 ## Status
 
-Lean `v4.32.2`, `master`. All five gates green. `sorryAx`: 1, allowlisted.
-Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ` —
-`monogate-research/exploration/inv_x_termination_route_2026_08_06/EML_STATUS.md`.
+Lean `v4.32.2`, `master`. All five gates green (607 build jobs). `sorryAx`: 1, allowlisted.
+**242 axioms pinned — unchanged across the whole 2026-08 EML arc.**
+
+Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
+**`s(1/x) ∈ {7,9,11}` proved** (two `eml` gates can never compute a reciprocal), `d(1/x)` frozen at
+`{3,4}`, and a depth- and size-indexed **growth envelope** built. Start here:
+`monogate-research/exploration/inv_x_termination_route_2026_08_06/EML_STATUS.md`, and
+`FRONTIER_BRIEF_3.md` for the open questions.
