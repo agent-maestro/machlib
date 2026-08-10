@@ -3778,4 +3778,58 @@ theorem leaf_var_arith {t v w Kl : Real} (ht1 : 1 ≤ t)
     exact u
   exact lt_irrefl_ax _ (lt_of_lt_of_le hbig hfin)
 
+/-- # **Leaf-`var`: a linear floor on the right child is fatal.**
+
+Instantiates `leaf_var_arith` at `x = exp(−t)` with `t := 1 + exp(exp 1 − log K) + exp(−log d)`,
+which is simultaneously `≥ 1`, above `exp 1 − log K`, and small enough that `x ≤ d`. -/
+theorem leaf_var_floor_absurd {t2 : EMLTree} {K d : Real} (hK : 0 < K)
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hfloor : ∀ x : Real, 0 < x → x ≤ d → K * x ≤ t2.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have ht1 : (1 : Real) ≤ 1 + exp (exp 1 - log K) + exp (-log d) := by
+    have s := add_le_add_wit (add_le_add_wit (le_refl (1 : Real))
+      (le_of_lt (exp_pos (exp 1 - log K)))) (le_of_lt (exp_pos (-log d)))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  have hx0 : (0 : Real) < exp (-(1 + exp (exp 1 - log K) + exp (-log d))) := exp_pos _
+  have hxd : exp (-(1 + exp (exp 1 - log K) + exp (-log d))) ≤ d := by
+    have hge : -log d ≤ 1 + exp (exp 1 - log K) + exp (-log d) := by
+      have h1 := le_of_lt (exp_grows_strictly_thm (-log d))
+      have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos)
+        (le_of_lt (exp_pos (exp 1 - log K)))) (le_refl (exp (-log d)))
+      have e : (0 : Real) + 0 + exp (-log d) = exp (-log d) := by mach_ring
+      rw [e] at s
+      exact le_trans h1 s
+    have hstep : -(1 + exp (exp 1 - log K) + exp (-log d)) ≤ log d := by
+      have s := neg_le_neg_wit hge
+      have e : -(-log d) = log d := by mach_ring
+      rw [e] at s
+      exact s
+    have hh := exp_monotone hstep
+    rw [exp_log hd] at hh
+    exact hh
+  have hx1 : exp (-(1 + exp (exp 1 - log K) + exp (-log d))) ≤ 1 := le_trans hxd hd1
+  refine leaf_var_arith (t := 1 + exp (exp 1 - log K) + exp (-log d))
+    (v := log (t2.eval (exp (-(1 + exp (exp 1 - log K) + exp (-log d))))))
+    (w := exp (exp (-(1 + exp (exp 1 - log K) + exp (-log d)))))
+    (Kl := log K) ht1 ?_ ?_ ?_ ?_
+  · exact leaf_var_pin h _ hx0
+  · -- the floor, pushed through log
+    have hKx : (0 : Real) < K * exp (-(1 + exp (exp 1 - log K) + exp (-log d))) :=
+      mul_pos hK hx0
+    have hl := log_le_log hKx (hfloor _ hx0 hxd)
+    rw [log_mul hK hx0, log_exp] at hl
+    have e : log K + -(1 + exp (exp 1 - log K) + exp (-log d))
+        = log K - (1 + exp (exp 1 - log K) + exp (-log d)) := by mach_ring
+    rw [e] at hl
+    exact hl
+  · exact exp_monotone hx1
+  · -- exp 1 − log K < t
+    have h1 := exp_grows_strictly_thm (exp 1 - log K)
+    have s := add_le_add_wit (add_le_add_wit (le_of_lt one_pos)
+      (le_refl (exp (exp 1 - log K)))) (le_of_lt (exp_pos (-log d)))
+    have e : (0 : Real) + exp (exp 1 - log K) + 0 = exp (exp 1 - log K) := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le h1 s
+
 end MachLib
