@@ -7571,4 +7571,94 @@ theorem eml_var_var_ge_neg_log :
   have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
   rw [l, r] at s; exact s
 
+/-- The `L ≤ 1` half: no clamp on `(0,d]`, so `x ↦ exp α − log (exp x − L)` is **non-increasing**
+and its value at the right endpoint floors the whole interval. -/
+theorem const_left_expvar_right_floor_nolclamp {A B : EMLTree} {α L d : Real}
+    (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hd : 0 < d) (hd1 : d ≤ 1) (hL : L ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < (EMLTree.eml A B).eval x) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ (EMLTree.eml A B).eval x := by
+  have hval : ∀ x : Real, 0 < x →
+      (EMLTree.eml A B).eval x = exp α - log (exp x - L) := by
+    intro x hx
+    show exp (A.eval x) - log (B.eval x) = exp α - log (exp x - L)
+    rw [hA x hx, hB x hx]
+  -- `exp x − L > 0` on the positives, since `exp x > 1 ≥ L`
+  have hBpos : ∀ x : Real, 0 < x → 0 < exp x - L := by
+    intro x hx
+    have h1 : (1 : Real) < exp x := by
+      have t := exp_lt hx; rwa [exp_zero] at t
+    have u := add_lt_add_left (lt_of_le_of_lt hL h1) (-L)
+    have l : -L + L = (0 : Real) := by mach_ring
+    have r : -L + exp x = exp x - L := by mach_mpoly [L, exp x]
+    rw [l, r] at u; exact u
+  refine ⟨(EMLTree.eml A B).eval d, d, hpos d hd (le_refl d), hd, le_refl d,
+    fun x hx hxd => ?_⟩
+  -- monotone: `log (exp x − L) ≤ log (exp d − L)`
+  have hmono : (EMLTree.eml A B).eval d ≤ (EMLTree.eml A B).eval x := by
+    rw [hval x hx, hval d hd]
+    have hlog : log (exp x - L) ≤ log (exp d - L) := by
+      refine log_le_log (hBpos x hx) ?_
+      have s := add_le_add_wit (exp_monotone hxd) (le_refl (-L))
+      have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+      have r : exp d + -L = exp d - L := by mach_mpoly [exp d, L]
+      rw [l, r] at s; exact s
+    have s := add_le_add_wit (le_refl (exp α)) (neg_le_neg_wit hlog)
+    have l : exp α + -log (exp d - L) = exp α - log (exp d - L) := by
+      mach_mpoly [exp α, log (exp d - L)]
+    have r : exp α + -log (exp x - L) = exp α - log (exp x - L) := by
+      mach_mpoly [exp α, log (exp x - L)]
+    rw [l, r] at s; exact s
+  refine le_trans ?_ hmono
+  have hx1 : x ≤ 1 := le_trans hxd hd1
+  have s := mul_le_mul_of_nonneg_left hx1 (le_of_lt (hpos d hd (le_refl d)))
+  have e : (EMLTree.eml A B).eval d * (1 : Real) = (EMLTree.eml A B).eval d := by
+    mach_mpoly [(EMLTree.eml A B).eval d]
+  rw [e] at s; exact s
+
+/-- # ▸ **The last row, first sub-case: a constant-valued left child needs no `γ/κ` analysis.**
+
+`t x = exp α − log (exp x − L)` is **non-increasing** — the right child rises, so subtracting its
+log can only pull the tree down. Positivity at the *right endpoint* therefore floors the whole
+interval, and the coincidence analysis never starts.
+
+The clamp splits it and helps on both sides: for `L ≤ 1` there is no clamp and monotonicity runs;
+for `L > 1` the tree is **outright constant** `exp α` below `log L`, which is a better floor still.
+The same observation that closed the constant-`A` shapes of the leaf-`var` branch — there against
+the pin's *increasing* direction, here against positivity. -/
+theorem depth_le_two_const_left_expvar_right_floor {A B : EMLTree} {α L d : Real}
+    (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < (EMLTree.eml A B).eval x) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ (EMLTree.eml A B).eval x := by
+  rcases lt_total 1 L with hL | hL | hL
+  · -- `L > 1`: below `log L` the log is clamped and the tree is the constant `exp α`
+    have hLpos : (0 : Real) < L := lt_trans_ax one_pos hL
+    obtain ⟨w, hwpos, hwd, hwL⟩ := two_bound_witness' hd (log_pos_of_one_lt hL)
+    refine ⟨exp α, w, exp_pos α, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+    have hclamp : log (B.eval x) = 0 := by
+      refine log_nonpos ?_
+      rw [hB x hx]
+      have hlt : exp x < L := by
+        have s := exp_lt (lt_of_le_of_lt hxw hwL)
+        rwa [exp_log hLpos] at s
+      have u := add_le_add_wit (le_of_lt hlt) (le_refl (-L))
+      have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+      have r : L + -L = (0 : Real) := by mach_ring
+      rw [l, r] at u; exact u
+    show exp α * x ≤ exp (A.eval x) - log (B.eval x)
+    rw [hA x hx, hclamp]
+    have e : exp α - (0 : Real) = exp α := by mach_ring
+    rw [e]
+    have hx1 : x ≤ 1 := le_trans hxw (le_trans (le_of_lt hwd) hd1)
+    have s := mul_le_mul_of_nonneg_left hx1 (le_of_lt (exp_pos α))
+    have e2 : exp α * (1 : Real) = exp α := by mach_mpoly [exp α]
+    rw [e2] at s; exact s
+  · exact const_left_expvar_right_floor_nolclamp hA hB hd hd1 (le_of_eq hL.symm) hpos
+  · exact const_left_expvar_right_floor_nolclamp hA hB hd hd1 (le_of_lt hL) hpos
+
 end MachLib
