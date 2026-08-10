@@ -6035,7 +6035,12 @@ theorem exp_quad_lower {s : Real} (hs : 0 ≤ s) : 1 + (s + s) + s * s ≤ exp (
   rw [l]
   exact le_trans s1 s2
 
-/-- `exp u − 1 − u ≥ (u/2)²` for `u ≥ 0` — the quadratic gap the coincidence lives in. -/
+/-- `exp u − 1 − u ≥ (u/2)²` — the quadratic gap the coincidence lives in.
+
+⚠ **`u ≥ 0` is load-bearing, not decoration.** The inequality is FALSE for `u ≲ −2.5`: at `u = −4`
+the left side is `3.018` and the right is `4`. Every summary of the Ω argument must carry the
+hypothesis with it. (At the call site `u = exp x − 1 ≥ 0` for `x > 0`, so the domain is genuinely
+met — but the bound is not a two-sided Taylor fact and must not be quoted as one.) -/
 theorem exp_sub_one_sub_self_ge_quad {u : Real} (hu : 0 ≤ u) :
     u * (1 / (1 + 1)) * (u * (1 / (1 + 1))) ≤ exp u - 1 - u := by
   have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
@@ -8096,9 +8101,18 @@ theorem depth_le_two_cancel_kappa_neg_absurd {A B : EMLTree} {G L d : Real}
 
 /-- # ▸ **The Ω-point: `γ = 0` and `κ = 0`, where the floor is QUADRATIC.**
 
-`G·exp G = 1`. Both the constant and the linear term cancel exactly, and what survives is
-`G·(exp u − 1 − u) ≥ G·(u/2)² ≥ (G/4)·x²`. This is the last case of rung 2, and the only one in the
-entire ladder that is genuinely second order — which is why `exp_quad_lower` had to be built at all.
+`G·exp G = 1`. **The constant and first-order terms vanish exactly, so the leading contribution is
+second order**: `G·(exp u − 1 − u) ≥ G·(u/2)² ≥ (G/4)·x²`, on `u := exp x − 1 ≥ 0`. This is the last
+case of rung 2 and the only one in the ladder whose leading term is quadratic — which is why
+`exp_quad_lower` had to be built at all.
+
+> The quadratic floor is **forced, not a technical strengthening**. `γ = 0` kills the constant term
+> and `κ = 0` kills the linear one, so the proof architecture mirrors the expression's own Taylor
+> structure rather than working around an automation limit.
+
+⚠ `exp u − 1 − u ≥ (u/2)²` **requires `u ≥ 0`** — it fails for `u ≲ −2.5`. Here `u = exp x − 1 ≥ 0`
+for `x > 0`, so the domain is met, but the bound is not two-sided and must not be summarised as if
+it were.
 
 The derivation is `leaf_var_expvar_const_gamma_zero_zero_absurd`'s, kept whole; only its ending
 changes, from feeding `leaf_var_quad_floor_absurd` to simply *being* the floor. -/
@@ -8157,5 +8171,82 @@ theorem depth_le_two_cancel_kappa_zero_floor {A B : EMLTree} {G L d : Real}
       = G * (x * (1 / (1 + 1)) * (x * (1 / (1 + 1)))) := by
     mach_mpoly [G, x, (1 / (1 + 1) : Real)]
   rw [e]; exact hGstep
+
+/-- A linear floor is a quadratic one on `(0,1]`, since `x·x ≤ x` there. Lets the rung-2 rows that
+produce constant or linear certificates be stated in the single output shape the classification
+uses. -/
+theorem linear_floor_to_quad {t : EMLTree} {K d : Real} (hK : 0 < K) (hd1 : d ≤ 1)
+    (h : ∀ x : Real, 0 < x → x ≤ d → K * x ≤ t.eval x) :
+    ∀ x : Real, 0 < x → x ≤ d → K * (x * x) ≤ t.eval x := by
+  intro x hx hxd
+  have hx1 : x ≤ 1 := le_trans hxd hd1
+  have hxx : x * x ≤ x := by
+    have s := mul_le_mul_of_nonneg_left hx1 (le_of_lt hx)
+    have e : x * (1 : Real) = x := by mach_mpoly [x]
+    rw [e] at s; exact s
+  exact le_trans (mul_le_mul_of_nonneg_left hxx (le_of_lt hK)) (h x hx hxd)
+
+/-- # ▸ **Rung 2's hardest row, as ONE classification.**
+
+Every configuration of `t = eml A B` with `B x = exp x − L` either **carries a certified quadratic
+floor** or **cannot stay positive** — and which, is decided by three parameters:
+
+| | condition | certificate |
+|---|---|---|
+| `L > 1` | the log clamps | constant floor |
+| `L = 1` | the log runs to `−∞` | constant floor |
+| `L < 1`, `γ > 0` | tree settles above `0` | constant floor |
+| `L < 1`, `γ < 0` | tree settles below `0` | **positivity refuted** |
+| `L < 1`, `γ = 0`, `κ > 0` | first order survives | linear floor |
+| `L < 1`, `γ = 0`, `κ < 0` | first order is negative | **positivity refuted** |
+| `L < 1`, `γ = 0`, `κ = 0` | `G = Ω`; first two orders vanish | **quadratic floor** |
+
+`γ := G − log(1−L)` is the tree's limiting value at `0`; `κ := G − exp(−G)` is its first-order
+coefficient once `γ` vanishes. So the ladder *constant → linear → quadratic → impossible* is indexed
+by how many leading Taylor coefficients cancel, which is what makes this a classification rather
+than a case list.
+
+`hnec` asks for the exact form of `exp (A x)` **only when `κ = 0`**, because that is the only branch
+needing it — and `A = var`, which cannot supply it, has `G = 1` and therefore `κ = 1 − e⁻¹ > 0`, so
+it discharges the hypothesis vacuously. -/
+theorem rung2_expvar_right_floor {A B : EMLTree} {G L d : Real}
+    (hG : 0 < G)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (A.eval x))
+    (hupp : ∀ x : Real, 0 < x → exp (A.eval x) ≤ G * exp (exp x - 1))
+    (hnec : exp (-G) = G → ∀ x : Real, 0 < x → exp (A.eval x) = G * exp (exp x - 1))
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < (EMLTree.eml A B).eval x) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * (x * x) ≤ (EMLTree.eml A B).eval x := by
+  rcases lt_total 1 L with hL | hL | hL
+  · obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+      depth_le_two_expvar_right_clamped_floor hG hL hB hlow hd hd1
+    exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+  · obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+      depth_le_two_expvar_right_one_floor hG (fun x hx => by
+        have h := hB x hx
+        rw [← hL] at h
+        exact h) hlow hd hd1
+    exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+  · have hM : (0 : Real) < 1 - L := by
+      have u := add_lt_add_left hL (-L)
+      have l : -L + L = (0 : Real) := by mach_ring
+      have r : -L + 1 = 1 - L := by mach_mpoly [L]
+      rw [l, r] at u; exact u
+    have hLM : L = 1 - (1 - L) := by mach_ring
+    rcases lt_total (log (1 - L)) G with hg | hg | hg
+    · exact depth_le_two_cancel_gamma_pos_floor hG hM hLM hg hB hlow hd hd1
+    · -- `γ = 0`, so `1 − L = exp G`
+      have hMe : (1 : Real) - L = exp G := by
+        have t := exp_log hM
+        rw [hg] at t
+        exact t.symm
+      have hLG : L = 1 - exp G := by rw [← hMe]; mach_ring
+      rcases lt_total (exp (-G)) G with hk | hk | hk
+      · exact depth_le_two_cancel_kappa_pos_floor hLG hk hB hlow hd hd1
+      · exact depth_le_two_cancel_kappa_zero_floor hG hLG hk hB (hnec hk) hd hd1
+      · exact (depth_le_two_cancel_kappa_neg_absurd hG hLG hk hB hupp hd hd1 hpos).elim
+    · exact (depth_le_two_cancel_gamma_neg_absurd hG hM hLM hg hB hupp hd hd1 hpos).elim
 
 end MachLib
