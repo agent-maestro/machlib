@@ -7423,4 +7423,86 @@ theorem depth_le_two_var_right_floor {A : EMLTree} :
   rw [l, r] at s
   exact le_trans hx1 s
 
+/-- # ▸ **Rung 2 when the LEFT child diverges: a floor, for every right child at once.**
+
+Setting out to close the "`B → +∞`" row showed the hypothesis that actually does the work is about
+`A`, not `B`: once `A x ≥ c₀ − log x`, the `log` ceiling
+(`depth_le_one_log_upper_near_zero`, valid for *any* depth-≤1 `B`) is outrun and the tree sits above
+`1`. So this one theorem covers every right child, and the `B`-shape split is only needed when `A`
+stays bounded.
+
+In `u := −log x` the estimate is `exp (c₀ + u) − N − u ≥ 1`, which is exactly the ray form
+`exp_ge_add_const` was built for — the point version would have given a contradiction, not a
+floor. -/
+theorem depth_le_two_diverging_left_floor {A B : EMLTree} {c₀ d : Real}
+    (hB : B.depth ≤ 1) (hd : 0 < d) (hd1 : d ≤ 1)
+    (hAlow : ∀ x : Real, 0 < x → x ≤ d → c₀ - log x ≤ A.eval x) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ (EMLTree.eml A B).eval x := by
+  obtain ⟨N, δ, hδ0, hδ1, hN⟩ := depth_le_one_log_upper_near_zero B hB
+  -- cut below `d`, below `δ`, and far enough out that `exp` has cleared the constant
+  obtain ⟨w, hwpos, hwd, hwδ⟩ := two_bound_witness' hd hδ0
+  obtain ⟨w2, hw2pos, hw2w, hw2e⟩ :=
+    two_bound_witness' hwpos
+      (exp_pos (c₀ - (1 + 1 + 1 + 1) - exp (N + 1 - c₀)))
+  refine ⟨1, w2, one_pos, hw2pos, le_trans (le_of_lt hw2w) (le_of_lt hwd),
+    fun x hx hxw => ?_⟩
+  have hxw' : x ≤ w := le_trans hxw (le_of_lt hw2w)
+  have hxd : x ≤ d := le_trans hxw' (le_of_lt hwd)
+  have hxδ : x ≤ δ := le_trans hxw' (le_of_lt hwδ)
+  have hx1 : x ≤ 1 := le_trans hxd hd1
+  -- `c₀ − log x` is past the ray's threshold
+  have hfar : (1 + 1 + 1 + 1 : Real) + exp (N + 1 - c₀) ≤ c₀ - log x := by
+    have hlt : x < exp (c₀ - (1 + 1 + 1 + 1) - exp (N + 1 - c₀)) :=
+      lt_of_le_of_lt hxw hw2e
+    have hlog : log x < c₀ - (1 + 1 + 1 + 1) - exp (N + 1 - c₀) := by
+      have s := log_lt_log_strict hx hlt
+      rwa [log_exp] at s
+    have s := add_lt_add_left hlog ((1 + 1 + 1 + 1 : Real) + exp (N + 1 - c₀) - log x)
+    have l : (1 + 1 + 1 + 1 : Real) + exp (N + 1 - c₀) - log x + log x
+        = (1 + 1 + 1 + 1 : Real) + exp (N + 1 - c₀) := by
+      mach_mpoly [exp (N + 1 - c₀), log x]
+    have r : (1 + 1 + 1 + 1 : Real) + exp (N + 1 - c₀) - log x
+          + (c₀ - (1 + 1 + 1 + 1) - exp (N + 1 - c₀))
+        = c₀ - log x := by
+      mach_mpoly [exp (N + 1 - c₀), log x, c₀]
+    rw [l, r] at s
+    exact le_of_lt s
+  -- the ray bound, then the log ceiling
+  have hray := exp_ge_add_const (N + 1 - c₀) (c₀ - log x) hfar
+  have hAx : exp (c₀ - log x) ≤ exp (A.eval x) := exp_monotone (hAlow x hx hxd)
+  have hlogB : log (B.eval x) ≤ N - log x := hN x hx hxδ
+  have hge : (1 : Real) ≤ (EMLTree.eml A B).eval x := by
+    show (1 : Real) ≤ exp (A.eval x) - log (B.eval x)
+    have s := add_le_add_wit (le_trans hray hAx) (neg_le_neg_wit hlogB)
+    have l : c₀ - log x + (N + 1 - c₀) + -(N - log x) = 1 := by
+      mach_mpoly [c₀, log x, N]
+    have r : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    rw [l, r] at s; exact s
+  have e : (1 : Real) * x = x := by mach_mpoly [x]
+  rw [e]
+  exact le_trans hx1 hge
+
+/-- `A = eml (const p) var` supplies the divergence hypothesis with `c₀ = exp p`, exactly. -/
+theorem depth_le_two_const_var_left_floor {p d : Real} {B : EMLTree}
+    (hB : B.depth ≤ 1) (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' →
+        K * x ≤ (EMLTree.eml (EMLTree.eml (EMLTree.const p) EMLTree.var) B).eval x :=
+  depth_le_two_diverging_left_floor (c₀ := exp p) hB hd hd1 (fun _ _ _ => le_refl _)
+
+/-- `A = eml var var` supplies it with `c₀ = 1`, since `exp x ≥ 1` on the positives. -/
+theorem depth_le_two_var_var_left_floor {d : Real} {B : EMLTree}
+    (hB : B.depth ≤ 1) (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' →
+        K * x ≤ (EMLTree.eml (EMLTree.eml EMLTree.var EMLTree.var) B).eval x := by
+  refine depth_le_two_diverging_left_floor (c₀ := 1) hB hd hd1 (fun x hx _ => ?_)
+  show (1 : Real) - log x ≤ exp x - log x
+  have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (le_refl (-log x))
+  have l : (1 : Real) + -log x = 1 - log x := by mach_mpoly [log x]
+  have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+  rw [l, r] at s; exact s
+
 end MachLib
