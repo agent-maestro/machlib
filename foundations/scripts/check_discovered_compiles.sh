@@ -46,6 +46,12 @@ DISC="MachLib/Discovered"
 
 # Known-broken at the 2026-08-10 audit, with the actual first error. These are
 # emitted by Forge; fix the GENERATOR, then delete the entry here.
+# Root cause for mul_mat4 is diagnosed in
+#   forge/reports/BUG_lean_backend_theorem_name_collision.md
+# — LeanBackend takes @verify(theorem=…) verbatim and never checks whether the
+# name was already emitted in the module. mat4.eml and quat.eml reuse names too
+# but escape because their kernels are vector-valued and the per-component path
+# injects an index into the name; mul_mat4's cells are scalar, so 16 collide.
 #   mul_mat4.lean:37    `mul_mat4_cell_components` has already been declared
 #                       (the same theorem emitted twice)
 #   vec3.lean:140       tactic `simp` failed with a nested error
