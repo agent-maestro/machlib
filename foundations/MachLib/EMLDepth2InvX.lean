@@ -7661,4 +7661,108 @@ theorem depth_le_two_const_left_expvar_right_floor {A B : EMLTree} {α L d : Rea
   · exact const_left_expvar_right_floor_nolclamp hA hB hd hd1 (le_of_eq hL.symm) hpos
   · exact const_left_expvar_right_floor_nolclamp hA hB hd hd1 (le_of_lt hL) hpos
 
+/-! ### The last row's `L ≥ 1` regimes: constant floors, no `γ` needed
+
+With `B x = exp x − L`, the parameter `L` decides whether the right child is bounded away from `0`
+at the origin. Only `L < 1` leaves it bounded and *positive* — the divergent-cancellation regime
+where `γ/κ` is unavoidable. The other two regimes give constant floors outright, and are recorded
+here so the residue is exactly `L < 1`. -/
+
+/-- `L > 1`: the right child is `≤ 0` below `log L`, the log clamps, and the tree is just
+`exp (A x) ≥ G`. -/
+theorem depth_le_two_expvar_right_clamped_floor {A B : EMLTree} {G L d : Real}
+    (hG : 0 < G) (hL : 1 < L)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (A.eval x))
+    (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ (EMLTree.eml A B).eval x := by
+  have hLpos : (0 : Real) < L := lt_trans_ax one_pos hL
+  obtain ⟨w, hwpos, hwd, hwL⟩ := two_bound_witness' hd (log_pos_of_one_lt hL)
+  refine ⟨G, w, hG, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+  have hclamp : log (B.eval x) = 0 := by
+    refine log_nonpos ?_
+    rw [hB x hx]
+    have hlt : exp x < L := by
+      have s := exp_lt (lt_of_le_of_lt hxw hwL)
+      rwa [exp_log hLpos] at s
+    have u := add_le_add_wit (le_of_lt hlt) (le_refl (-L))
+    have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+    have r : L + -L = (0 : Real) := by mach_ring
+    rw [l, r] at u; exact u
+  show G * x ≤ exp (A.eval x) - log (B.eval x)
+  rw [hclamp]
+  have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+  rw [e]
+  have hx1 : x ≤ 1 := le_trans hxw (le_trans (le_of_lt hwd) hd1)
+  have s := mul_le_mul_of_nonneg_left hx1 (le_of_lt hG)
+  have e2 : G * (1 : Real) = G := by mach_mpoly [G]
+  rw [e2] at s
+  refine le_trans s (le_trans ?_ (hlow x hx))
+  have t := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hx)) (le_of_lt hG)
+  have e3 : G * (1 : Real) = G := by mach_mpoly [G]
+  rw [e3] at t; exact t
+
+/-- `L = 1`: the right child is `exp x − 1 → 0⁺`, so its log runs to `−∞` and the tree runs **up**.
+`exp x − 1 ≤ x·e` turns that into `t x ≥ G − 1 − log x`, and past `exp (G − 2)` that clears `1`. -/
+theorem depth_le_two_expvar_right_one_floor {A B : EMLTree} {G d : Real}
+    (hG : 0 < G)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - 1)
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (A.eval x))
+    (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ (EMLTree.eml A B).eval x := by
+  obtain ⟨w, hwpos, hwd, hwe⟩ := two_bound_witness' hd (exp_pos (G - (1 + 1)))
+  refine ⟨1, w, one_pos, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+  have hx1 : x ≤ 1 := le_trans hxw (le_trans (le_of_lt hwd) hd1)
+  -- `log (exp x − 1) ≤ log x + 1`
+  have hupos : (0 : Real) < exp x - 1 := by
+    have s : (1 : Real) < exp x := by
+      have t := exp_lt hx; rwa [exp_zero] at t
+    have u := add_lt_add_left s (-1 : Real)
+    have l : (-1 : Real) + 1 = 0 := by mach_ring
+    have r : (-1 : Real) + exp x = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hlogu : log (exp x - 1) ≤ log x + 1 := by
+    have hule : exp x - 1 ≤ x * exp 1 :=
+      le_trans exp_sub_one_le_mul_exp
+        (mul_le_mul_of_nonneg_left (exp_monotone hx1) (le_of_lt hx))
+    have s := log_le_log hupos hule
+    rwa [log_mul hx (exp_pos 1), log_exp] at s
+  -- `−log x ≥ 2 − G` below `exp (G − 2)`
+  have hlogx : (1 + 1 : Real) - G ≤ -log x := by
+    have hlt : x < exp (G - (1 + 1)) := lt_of_le_of_lt hxw hwe
+    have hl : log x < G - (1 + 1) := by
+      have s := log_lt_log_strict hx hlt
+      rwa [log_exp] at s
+    have s := add_lt_add_left hl ((1 + 1 : Real) - G - log x)
+    have l : (1 + 1 : Real) - G - log x + log x = 1 + 1 - G := by
+      mach_mpoly [G, log x]
+    have r : (1 + 1 : Real) - G - log x + (G - (1 + 1)) = -log x := by
+      mach_mpoly [G, log x]
+    rw [l, r] at s
+    exact le_of_lt s
+  have hGle : G ≤ exp (A.eval x) := by
+    refine le_trans ?_ (hlow x hx)
+    have t := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hx)) (le_of_lt hG)
+    have e : G * (1 : Real) = G := by mach_mpoly [G]
+    rw [e] at t; exact t
+  show (1 : Real) * x ≤ exp (A.eval x) - log (B.eval x)
+  rw [hB x hx]
+  have e : (1 : Real) * x = x := by mach_mpoly [x]
+  rw [e]
+  have hge : (1 : Real) ≤ exp (A.eval x) - log (exp x - 1) := by
+    have s := add_le_add_wit hGle (neg_le_neg_wit hlogu)
+    have l : G + -(log x + 1) = G - 1 - log x := by mach_mpoly [G, log x]
+    have r : exp (A.eval x) + -log (exp x - 1)
+        = exp (A.eval x) - log (exp x - 1) := by
+      mach_mpoly [exp (A.eval x), log (exp x - 1)]
+    rw [l, r] at s
+    refine le_trans ?_ s
+    have u := add_le_add_wit (le_refl (G - 1)) hlogx
+    have l2 : G - 1 + (1 + 1 - G) = 1 := by mach_mpoly [G]
+    have r2 : G - 1 + -log x = G - 1 - log x := by mach_mpoly [G, log x]
+    rw [l2, r2] at u; exact u
+  exact le_trans hx1 hge
+
 end MachLib
