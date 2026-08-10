@@ -7505,4 +7505,70 @@ theorem depth_le_two_var_var_left_floor {d : Real} {B : EMLTree}
   have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
   rw [l, r] at s; exact s
 
+/-- **Rung 2's fourth row: a bounded left child cannot survive a diverging right child.**
+
+If `exp (A x) ≤ W` while `B x ≥ −log x`, then `log (B x)` climbs past `W` and the tree goes
+*negative* — so the positivity hypothesis is contradicted outright and no floor question arises.
+The point where it happens is named: below `exp (−exp W)`, since there `−log x > exp W` and `log` of
+that already exceeds `W`.
+
+Note the double `log` in the threshold. `B` diverges only like `−log x`, so `log (B x)` diverges
+like `log (−log x)` — the slowest divergence in this grammar, and the reason the cutoff is a tower
+of two rather than one. -/
+theorem depth_le_two_bounded_left_diverging_right_absurd {A B : EMLTree} {W d : Real}
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hW : ∀ x : Real, 0 < x → x ≤ d → exp (A.eval x) ≤ W)
+    (hBlow : ∀ x : Real, 0 < x → x ≤ d → -log x ≤ B.eval x)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < (EMLTree.eml A B).eval x) : False := by
+  obtain ⟨w, hwpos, hwd, hwe⟩ := two_bound_witness' hd (exp_pos (-exp W))
+  -- `−log w > exp W`
+  have hlogw : exp W < -log w := by
+    have hlt : w < exp (-exp W) := hwe
+    have hlog : log w < -exp W := by
+      have s := log_lt_log_strict hwpos hlt
+      rwa [log_exp] at s
+    have s := add_lt_add_left hlog (exp W - log w)
+    have l : exp W - log w + log w = exp W := by mach_mpoly [exp W, log w]
+    have r : exp W - log w + -exp W = -log w := by mach_mpoly [exp W, log w]
+    rw [l, r] at s; exact s
+  -- `W < log (B w)`
+  have hWlt : W < log (B.eval w) := by
+    have h1 : log (exp W) < log (-log w) :=
+      log_lt_log_strict (exp_pos W) hlogw
+    rw [log_exp] at h1
+    have h2 : log (-log w) ≤ log (B.eval w) :=
+      log_le_log (lt_trans_ax (exp_pos W) hlogw) (hBlow w hwpos (le_of_lt hwd))
+    exact lt_of_lt_of_le h1 h2
+  -- so the tree is negative at `w`
+  have hneg : (EMLTree.eml A B).eval w < 0 := by
+    show exp (A.eval w) - log (B.eval w) < 0
+    have hle : exp (A.eval w) < log (B.eval w) :=
+      lt_of_le_of_lt (hW w hwpos (le_of_lt hwd)) hWlt
+    have s := add_lt_add_left hle (-log (B.eval w))
+    have l : -log (B.eval w) + exp (A.eval w) = exp (A.eval w) - log (B.eval w) := by
+      mach_mpoly [exp (A.eval w), log (B.eval w)]
+    have r : -log (B.eval w) + log (B.eval w) = (0 : Real) := by mach_ring
+    rw [l, r] at s; exact s
+  exact lt_irrefl_ax _ (lt_trans_ax (hpos w hwpos (le_of_lt hwd)) hneg)
+
+/-- `B = eml (const p) var` diverges at least as fast as `−log x`. -/
+theorem eml_const_var_ge_neg_log {p : Real} :
+    ∀ x : Real, 0 < x → -log x ≤ (EMLTree.eml (EMLTree.const p) EMLTree.var).eval x := by
+  intro x _
+  show -log x ≤ exp p - log x
+  have s := add_le_add_wit (le_of_lt (exp_pos p)) (le_refl (-log x))
+  have l : (0 : Real) + -log x = -log x := by mach_ring
+  have r : exp p + -log x = exp p - log x := by mach_mpoly [exp p, log x]
+  rw [l, r] at s; exact s
+
+/-- `B = eml var var` likewise. -/
+theorem eml_var_var_ge_neg_log :
+    ∀ x : Real, 0 < x → -log x ≤ (EMLTree.eml EMLTree.var EMLTree.var).eval x := by
+  intro x _
+  show -log x ≤ exp x - log x
+  have s := add_le_add_wit (le_of_lt (exp_pos x)) (le_refl (-log x))
+  have l : (0 : Real) + -log x = -log x := by mach_ring
+  have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+  rw [l, r] at s; exact s
+
 end MachLib
