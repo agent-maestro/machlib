@@ -7765,4 +7765,153 @@ theorem depth_le_two_expvar_right_one_floor {A B : EMLTree} {G d : Real}
     rw [l2, r2] at u; exact u
   exact le_trans hx1 hge
 
+/-! ### The `L < 1` regime: `γ ≠ 0` ports to floors, leaving only the coincidence
+
+Write `M := 1 − L > 0`, so the right child is `M + (exp x − 1)` and `γ := G − log M` is the tree's
+value in the limit at `0`. The two `γ ≠ 0` cases are the bulk of the parameter space and both port
+from the leaf-`var` proofs directly — keeping their floor derivations, which never used the pin, and
+replacing the branch that called `leaf_var_neg_point_absurd` with the positivity hypothesis, which
+refutes exactly that branch. -/
+
+/-- `γ > 0`: the tree settles above a positive constant, so a constant floor works. -/
+theorem depth_le_two_cancel_gamma_pos_floor {A B : EMLTree} {G L M d : Real}
+    (hG : 0 < G) (hM : 0 < M) (hLM : L = 1 - M) (hgam : log M < G)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (A.eval x))
+    (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * (x * x) ≤ (EMLTree.eml A B).eval x := by
+  have hBpos : ∀ z : Real, 0 < z → 0 < exp z - L := by
+    intro z hz
+    have s : (1 : Real) < exp z := by
+      have t := exp_lt hz; rwa [exp_zero] at t
+    have hu : (0 : Real) < exp z - 1 := by
+      have u := add_lt_add_left s (-1 : Real)
+      have l : (-1 : Real) + 1 = 0 := by mach_ring
+      have r : (-1 : Real) + exp z = exp z - 1 := by mach_mpoly [exp z]
+      rw [l, r] at u; exact u
+    have hsum : (0 : Real) < (exp z - 1) + M := add_pos hu hM
+    have e : (exp z - 1) + M = exp z - L := by rw [hLM]; mach_mpoly [exp z, M]
+    rw [e] at hsum; exact hsum
+  have hGle : ∀ x : Real, 0 < x → G ≤ exp (A.eval x) := by
+    intro x hx
+    refine le_trans ?_ (hlow x hx)
+    have s := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hx)) (le_of_lt hG)
+    have e : G * (1 : Real) = G := by mach_mpoly [G]
+    rw [e] at s; exact s
+  have hMlt : M < exp G := by
+    have s := exp_lt hgam
+    rwa [exp_log hM] at s
+  have hZ : (1 : Real) < exp G + L := by
+    rw [hLM]
+    have u := add_lt_add_left hMlt (1 - M)
+    have l : (1 - M) + M = (1 : Real) := by mach_mpoly [M]
+    have r : (1 - M) + exp G = exp G + (1 - M) := by mach_mpoly [M, exp G]
+    rw [l, r] at u; exact u
+  have hZpos : (0 : Real) < exp G + L := lt_trans_ax one_pos hZ
+  obtain ⟨w, hwpos, hwd, hwZ⟩ := two_bound_witness' hd (log_pos_of_one_lt hZ)
+  have hBwlt : exp w - L < exp G := by
+    have s := exp_lt hwZ
+    rw [exp_log hZpos] at s
+    have u := add_lt_add_left s (-L)
+    have l : -L + exp w = exp w - L := by mach_mpoly [exp w, L]
+    have r : -L + (exp G + L) = exp G := by mach_mpoly [exp G, L]
+    rw [l, r] at u; exact u
+  have hlogw : log (exp w - L) < G := by
+    have s := log_lt_log_strict (hBpos w hwpos) hBwlt
+    rwa [log_exp] at s
+  have hc : (0 : Real) < G - log (exp w - L) := by
+    have u := add_lt_add_left hlogw (-log (exp w - L))
+    have l : -log (exp w - L) + log (exp w - L) = (0 : Real) := by mach_ring
+    have r : -log (exp w - L) + G = G - log (exp w - L) := by
+      mach_mpoly [G, log (exp w - L)]
+    rw [l, r] at u; exact u
+  refine ⟨G - log (exp w - L), w, hc, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+  have hx1 : x ≤ 1 := le_trans hxw (le_trans (le_of_lt hwd) hd1)
+  show (G - log (exp w - L)) * (x * x) ≤ exp (A.eval x) - log (B.eval x)
+  rw [hB x hx]
+  -- the constant floor
+  have hfloor : G - log (exp w - L) ≤ exp (A.eval x) - log (exp x - L) := by
+    have h2 : log (exp x - L) ≤ log (exp w - L) := by
+      refine log_le_log (hBpos x hx) ?_
+      have s := add_le_add_wit (exp_monotone hxw) (le_refl (-L))
+      have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+      have r : exp w + -L = exp w - L := by mach_mpoly [exp w, L]
+      rw [l, r] at s; exact s
+    have s := add_le_add_wit (hGle x hx) (neg_le_neg_wit h2)
+    have l : G + -log (exp w - L) = G - log (exp w - L) := by
+      mach_mpoly [G, log (exp w - L)]
+    have r : exp (A.eval x) + -log (exp x - L) = exp (A.eval x) - log (exp x - L) := by
+      mach_mpoly [exp (A.eval x), log (exp x - L)]
+    rw [l, r] at s; exact s
+  refine le_trans ?_ hfloor
+  -- `c·(x·x) ≤ c` since `x·x ≤ 1`
+  have hxx : x * x ≤ 1 := by
+    have s := mul_le_mul_of_nonneg_right hx1 (le_of_lt hx)
+    have e : (1 : Real) * x = x := by mach_mpoly [x]
+    rw [e] at s
+    exact le_trans s hx1
+  have s := mul_le_mul_of_nonneg_left hxx (le_of_lt hc)
+  have e : (G - log (exp w - L)) * (1 : Real) = G - log (exp w - L) := by
+    mach_mpoly [G, log (exp w - L)]
+  rw [e] at s; exact s
+
+/-- `γ < 0`: the tree dips **below zero**, so the positivity hypothesis is refuted — the same point
+construction as `leaf_var_expvar_const_gamma_neg_absurd`, with `hpos` in place of the pin. -/
+theorem depth_le_two_cancel_gamma_neg_absurd {A B : EMLTree} {G L M d : Real}
+    (hG : 0 < G) (hM : 0 < M) (hLM : L = 1 - M) (hgam : G < log M)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hupp : ∀ x : Real, 0 < x → exp (A.eval x) ≤ G * exp (exp x - 1))
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < (EMLTree.eml A B).eval x) : False := by
+  have hlogMpos : (0 : Real) < log M := lt_trans_ax hG hgam
+  have hS : log G < log (log M) := log_lt_log_strict hG hgam
+  have hSpos : (0 : Real) < log (log M) - log G := by
+    have u := add_lt_add_left hS (-log G)
+    have l : -log G + log G = (0 : Real) := by mach_ring
+    have r : -log G + log (log M) = log (log M) - log G := by
+      mach_mpoly [log G, log (log M)]
+    rw [l, r] at u; exact u
+  have h1S : (1 : Real) < 1 + (log (log M) - log G) := by
+    have u := add_lt_add_left hSpos (1 : Real)
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  have h1Spos : (0 : Real) < 1 + (log (log M) - log G) := lt_trans_ax one_pos h1S
+  obtain ⟨w, hwpos, hwd, hwS⟩ := two_bound_witness' hd (log_pos_of_one_lt h1S)
+  have huS : exp w - 1 < log (log M) - log G := by
+    have s := exp_lt hwS
+    rw [exp_log h1Spos] at s
+    have u := add_lt_add_left s (-1 : Real)
+    have l : (-1 : Real) + exp w = exp w - 1 := by mach_mpoly [exp w]
+    have r : (-1 : Real) + (1 + (log (log M) - log G)) = log (log M) - log G := by
+      mach_mpoly [log (log M), log G]
+    rw [l, r] at u; exact u
+  have hkey : G * exp (exp w - 1) < log M := by
+    have s : log G + (exp w - 1) < log (log M) := by
+      have u := add_lt_add_left huS (log G)
+      have l : log G + (log (log M) - log G) = log (log M) := by
+        mach_mpoly [log G, log (log M)]
+      rw [l] at u; exact u
+    have t := exp_lt s
+    rw [exp_add, exp_log hG, exp_log hlogMpos] at t
+    exact t
+  have hlogge : log M ≤ log (B.eval w) := by
+    refine log_le_log hM ?_
+    rw [hB w hwpos]
+    have s : (1 : Real) ≤ exp w := one_le_exp (le_of_lt hwpos)
+    have u := add_le_add_wit s (le_refl (M - 1))
+    have l : (1 : Real) + (M - 1) = M := by mach_mpoly [M]
+    have r : exp w + (M - 1) = exp w - L := by rw [hLM]; mach_mpoly [exp w, M]
+    rw [l, r] at u; exact u
+  have hneg : (EMLTree.eml A B).eval w < 0 := by
+    show exp (A.eval w) - log (B.eval w) < 0
+    have hlt : exp (A.eval w) < log (B.eval w) :=
+      lt_of_le_of_lt (hupp w hwpos) (lt_of_lt_of_le hkey hlogge)
+    have s := add_lt_add_left hlt (-log (B.eval w))
+    have l : -log (B.eval w) + exp (A.eval w) = exp (A.eval w) - log (B.eval w) := by
+      mach_mpoly [exp (A.eval w), log (B.eval w)]
+    have r : -log (B.eval w) + log (B.eval w) = (0 : Real) := by mach_ring
+    rw [l, r] at s; exact s
+  exact lt_irrefl_ax _ (lt_trans_ax (hpos w hwpos (le_of_lt hwd)) hneg)
+
 end MachLib
