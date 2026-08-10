@@ -746,6 +746,32 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "Positive depth-<=1 tree has a linear floor near 0; base rung of the decay ladder. Invariant: sorryAx-free.",
+      "id": "decay-floor-depth-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a positive depth-\u22641 tree has a linear floor near\n  `0`"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.depth_le_one_positive_floor",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "Infinity-side rank mismatch closes the growing half of the last depth-3 family. Invariant: sorryAx-free.",
+      "id": "depth3-rank-mismatch-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "closes the shapes where `A` grows at\n  `\u221e`"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.depth3_left_unbounded_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

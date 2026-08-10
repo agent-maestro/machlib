@@ -39,6 +39,37 @@ faster than any polynomial, yet its `−log` is exactly `1/x`, which sits inside
   The entropy cluster now carries all four classical facts: Legendre duality, Fenchel–Young,
   `KL ≥ 0`, cross-entropy ≥ entropy, and MaxEnt.
 
+### EML depth 3: the last family, and the decay-by-depth ladder
+
+- **Four of the six `A`-shapes of the last depth-3 family, closed by a RANK MISMATCH.** Read at
+  either end, the equation is `exp(t1 x) = 1/x + log(t2 x)` — `exp` of a depth-2 tree against `log`
+  of one, **two rungs apart**. `depth3_left_unbounded_absurd` closes the shapes where `A` grows at
+  `∞`; `depth3_left_pole_at_zero_absurd` closes `A = eml (const p) var`, a pole at `0`. The
+  substitution `x = exp(−t)` turns every `1/x` into `exp t`, so the pole problem *becomes* the growth
+  problem and one instrument covers both ends, division-free. **No configuration enumeration and no
+  parameter regimes** — neither argument asks what the constants are.
+
+- **`MachLib.depth_le_one_positive_floor`** — **a positive depth-≤1 tree has a linear floor near
+  `0`.** The base rung of the decay-by-depth ladder, and **sharp**: the only shape whose value
+  actually reaches `0` is `eml var (const q)` at `log q = 1`, where `t x = exp x − 1 ≥ x` — linear,
+  with no quadratic correction needed at this depth. Positivity is a *hypothesis*, not derived from
+  a pin, which is what makes it reusable and is precisely what the leaf-`var` branch could not do:
+  its floors were entangled with its own equation.
+
+  > This is the theorem family **both** remaining open items point at. Removing `LogSafe` wants a
+  > decay bound at all depths (weak); the last depth-3 case wants one at depth 2 (sharp). Two open
+  > problems, one ladder.
+
+- **The bounded-left core, generalised rather than re-derived.** `leaf_var_arith`,
+  `leaf_var_floor_absurd`, `leaf_var_quad_arith` and `leaf_var_quad_floor_absurd` turn out to be the
+  `W = exp 1` instances of `bounded_left_*` — every load-bearing lemma of that branch used only the
+  bound `exp (t1 x) ≤ W`, never the shape `t1 = var`. Also `exp_beats_linear`/`_past` (`exp` outruns
+  any line **at a point we can name**), `depth_le_one_neg_log_bound_at_infty`,
+  `depth_le_two_bound_at_infty`, `log_le_of_le_exp_mul'`.
+
+  **`d(1/x)` is UNCHANGED at `{3,4}`.** The remaining case is `A` constant-valued, where the
+  arithmetic is now fully discharged and only `t2`'s shape analysis is left.
+
 ### EML depth 3: the `t1 = var` family is CLOSED
 
 - **`MachLib.leaf_var_absurd`** — **no depth-≤2 right child lets `eml var t2` be `1/x`.** The first

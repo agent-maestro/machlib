@@ -7035,4 +7035,109 @@ theorem bounded_left_quad_floor_absurd {t1 t2 : EMLTree} {C d W : Real} (hC : 0 
     rw [e] at s
     exact lt_of_lt_of_le h1 s
 
+/-! ## ▸ **Decay by depth, base case: a POSITIVE depth-≤1 tree has a linear floor**
+
+The theorem family both open items point at. `LogSafe`'s removal wants *how fast can a positive
+depth-≤j term approach 0*, and the last depth-3 case wants the same at depth 2. This is the rung-1
+base, and it is sharp: the only shape whose value actually reaches `0` at the origin is
+`eml var (const q)` at `log q = 1`, where `t x = exp x − 1 ≥ x` — **linear, and no quadratic
+correction is needed at this depth.** The quadratic case appears only one rung up.
+
+Positivity is a *hypothesis* here, not something derived from a pin — which is exactly what makes
+the statement reusable, and what the leaf-`var` branch could not do because its floors were
+entangled with its own equation. -/
+theorem depth_le_one_positive_floor (t : EMLTree) (ht : t.depth ≤ 1) {d : Real}
+    (hd : 0 < d) (hd1 : d ≤ 1) (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < t.eval x) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * x ≤ t.eval x := by
+  -- a constant-valued tree: its own value is the floor, since `x ≤ 1`
+  have hconst : ∀ v : Real, 0 < v → ∀ x : Real, 0 < x → x ≤ d → v * x ≤ v := by
+    intro v hv x _ hxd
+    have hx1 : x ≤ 1 := le_trans hxd hd1
+    have s := mul_le_mul_of_nonneg_left hx1 (le_of_lt hv)
+    have e : v * (1 : Real) = v := by mach_mpoly [v]
+    rw [e] at s; exact s
+  -- `x ≤ exp x − 1`, the linear floor at the one shape that reaches `0`
+  have hxu : ∀ x : Real, x ≤ exp x - 1 := by
+    intro x
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hnl : ∀ x : Real, 0 < x → x ≤ d → log x ≤ 0 := by
+    intro x hx hxd
+    exact log_nonpos_of_le_one hx (le_trans hxd hd1)
+  cases t with
+  | const c =>
+      refine ⟨c, d, hpos d hd (le_refl d), hd, le_refl d, fun x hx hxd => ?_⟩
+      exact hconst c (hpos d hd (le_refl d)) x hx hxd
+  | var =>
+      refine ⟨1, d, one_pos, hd, le_refl d, fun x _ _ => ?_⟩
+      show (1 : Real) * x ≤ x
+      have e : (1 : Real) * x = x := by mach_mpoly [x]
+      rw [e]; exact le_refl _
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd ht (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd ht (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨exp p - log q, d, hpos d hd (le_refl d), hd, le_refl d,
+                fun x hx hxd => ?_⟩
+              exact hconst _ (hpos d hd (le_refl d)) x hx hxd
+          | var =>
+              -- `exp p − log x ≥ exp p` on `(0,1]`, so the constant `exp p` is a floor
+              refine ⟨exp p, d, exp_pos p, hd, le_refl d, fun x hx hxd => ?_⟩
+              show exp p * x ≤ exp p - log x
+              refine le_trans (hconst (exp p) (exp_pos p) x hx hxd) ?_
+              have s := add_le_add_wit (le_refl (exp p)) (neg_le_neg_wit (hnl x hx hxd))
+              have l : exp p + -(0 : Real) = exp p := by mach_ring
+              have r : exp p + -log x = exp p - log x := by mach_mpoly [exp p, log x]
+              rw [l, r] at s; exact s
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd ht (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              -- `exp x − log q`: positivity forces `log q ≤ 1`, and then `≥ exp x − 1 ≥ x`
+              have hL : log q ≤ 1 := by
+                rcases lt_total (log q) 1 with hp | hz | hn
+                · exact le_of_lt hp
+                · exact le_of_eq hz
+                · exfalso
+                  obtain ⟨w, hwpos, hwd, hwL⟩ :=
+                    two_bound_witness' hd (log_pos_of_one_lt hn)
+                  have hlt : exp w < log q := by
+                    have s := exp_lt hwL
+                    rwa [exp_log (lt_trans_ax one_pos hn)] at s
+                  have hneg : exp w - log q < 0 := by
+                    have s := add_lt_add_left hlt (-log q)
+                    have l : -log q + exp w = exp w - log q := by
+                      mach_mpoly [exp w, log q]
+                    have r : -log q + log q = (0 : Real) := by mach_ring
+                    rw [l, r] at s; exact s
+                  exact lt_irrefl_ax _
+                    (lt_trans_ax (hpos w hwpos (le_of_lt hwd)) hneg)
+              refine ⟨1, d, one_pos, hd, le_refl d, fun x _ _ => ?_⟩
+              show (1 : Real) * x ≤ exp x - log q
+              have e : (1 : Real) * x = x := by mach_mpoly [x]
+              rw [e]
+              refine le_trans (hxu x) ?_
+              have s := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hL)
+              have l : exp x + -(1 : Real) = exp x - 1 := by mach_mpoly [exp x]
+              have r : exp x + -log q = exp x - log q := by mach_mpoly [exp x, log q]
+              rw [l, r] at s; exact s
+          | var =>
+              -- `exp x − log x ≥ 2 ≥ x` on `(0,1]`
+              refine ⟨1, d, one_pos, hd, le_refl d, fun x hx hxd => ?_⟩
+              show (1 : Real) * x ≤ exp x - log x
+              have e : (1 : Real) * x = x := by mach_mpoly [x]
+              rw [e]
+              have s := add_le_add_wit (le_of_lt (exp_grows_strictly_thm x))
+                (neg_le_neg_wit (hnl x hx hxd))
+              have l : x + -(0 : Real) = x := by mach_ring
+              have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+              rw [l, r] at s; exact s
+
 end MachLib
