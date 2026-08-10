@@ -3855,4 +3855,18 @@ theorem depth3_left_const_const_absurd {p q : Real} {t2 : EMLTree} (ht2 : t2.dep
     False :=
   depth3_const_left_absurd (C := exp p - log q) ht2 (fun _ _ => rfl) h
 
+/-- # **The third family reduces to UNBOUNDED left children.**
+
+A bounded depth-2 tree is constant (`depth_two_bounded_const`), and a constant-valued left child is
+already impossible (`depth3_const_left_absurd`). So in `eml (eml A B) t2` **only an unbounded left
+child can survive** — no case analysis on `A`, `B` at all. -/
+theorem depth3_left_bounded_absurd {A B t2 : EMLTree} {L U : Real}
+    (hA : A.depth ≤ 1) (hB : B.depth ≤ 1) (ht2 : t2.depth ≤ 2)
+    (hlow : ∀ x : Real, 0 < x → L ≤ (EMLTree.eml A B).eval x)
+    (hup : ∀ x : Real, 0 < x → (EMLTree.eml A B).eval x ≤ U)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml A B) t2).eval x = 1 / x) : False := by
+  obtain ⟨C, hC⟩ := depth_two_bounded_const hA hB hlow hup
+  exact depth3_const_left_absurd ht2 hC h
+
 end MachLib
