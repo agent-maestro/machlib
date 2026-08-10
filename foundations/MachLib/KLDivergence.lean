@@ -125,5 +125,56 @@ theorem cross_entropy_ge_entropy {d : List (Real × Real)} (h : Pos d)
     (hmass : psum d = qsum d) : shannonEntropy d ≤ crossEntropy d :=
   le_of_sub_nonneg (by rw [kl_eq_cross_sub_entropy h]; exact kl_nonneg h hmass)
 
+/-! ## MaxEnt — the uniform distribution maximises entropy
+
+`H(p) ≤ log n`, the last of the four classical facts this cluster is built to carry. It needs **no
+new machinery at all**: taking `q` uniform, `log n − H(p)` *is* `KL(p ‖ uniform)`, and `KL ≥ 0` is
+already machine-checked above. The only work is evaluating the cross-entropy against a constant `q`,
+which is one list induction.
+
+Stated in `u`, the common uniform weight, rather than a cardinality `n` — no `Nat` cast is needed,
+and `−log u = log(1/u)` is the **perplexity** form, `1/u` being the effective number of equally
+likely outcomes. For an `n`-point support with `qsum = 1` that is literally `log n`. -/
+
+/-- Every `qᵢ` equals the same `u` — a uniform reference distribution. -/
+def UnifQ (u : Real) (d : List (Real × Real)) : Prop :=
+  d.foldr (fun c acc => c.2 = u ∧ acc) True
+
+/-- Against a constant `q ≡ u`, the cross-entropy sum collapses: `Σ pᵢ·log u = (Σ pᵢ)·log u`. -/
+theorem ncrossH_const {u : Real} : ∀ {d : List (Real × Real)}, UnifQ u d →
+    ncrossH d = psum d * Real.log u
+  | [], _ => by show (0 : Real) = 0 * Real.log u; mach_ring
+  | (c :: r), h => by
+      obtain ⟨hc, hr⟩ := h
+      show c.1 * Real.log c.2 + ncrossH r = (c.1 + psum r) * Real.log u
+      rw [hc, ncrossH_const hr]; mach_ring
+
+/-- **MaxEnt: `H(p) ≤ −log u` for any `p` of unit mass against the uniform `q ≡ u`.**
+
+The entropy of a finite distribution is bounded by that of the uniform one on the same support —
+*why entropy is maximised by the uniform distribution*, and the finite-support half of the principle
+that makes MaxEnt select the exponential family. A corollary of `kl_nonneg`, at the cost of one
+induction. -/
+theorem maxent {d : List (Real × Real)} {u : Real} (h : Pos d) (hu : UnifQ u d)
+    (hp : psum d = 1) (hmass : psum d = qsum d) :
+    shannonEntropy d ≤ -Real.log u := by
+  have hc : crossEntropy d = -Real.log u := by
+    show -ncrossH d = -Real.log u
+    rw [ncrossH_const hu, hp]; mach_ring
+  rw [← hc]
+  exact cross_entropy_ge_entropy h hmass
+
+/-- The perplexity form: `H(p) ≤ log (1/u)`. For an `n`-point uniform reference this is `log n`,
+without needing a `Nat` cast into `Real`. -/
+theorem maxent_log_perplexity {d : List (Real × Real)} {u : Real} (hupos : 0 < u)
+    (h : Pos d) (hu : UnifQ u d) (hp : psum d = 1) (hmass : psum d = qsum d) :
+    shannonEntropy d ≤ Real.log (1 / u) := by
+  have e : Real.log (1 / u) = -Real.log u := by
+    have h1 : Real.exp (-Real.log u) = 1 / u := by
+      rw [exp_neg_inv, exp_log hupos]
+    rw [← h1, log_exp]
+  rw [e]
+  exact maxent h hu hp hmass
+
 end Real
 end MachLib

@@ -17,12 +17,37 @@ and the general statement is one induction, with **no shape analysis and no cuto
 
 The step is `t = eml a b`, `t x = exp(a x) − log(b x)`. The `exp(a x)` half follows from the IH.
 The `−log(b x)` half does not: for `0 < b x < 1` it is positive and **unbounded**, so no ceiling on
-`b` controls it. That is the arm's **dual ceiling**, and removing it in general needs to know a
-shallow tree cannot be arbitrarily small while staying positive — i.e. finiteness of sign changes
-for exp-log expressions, a **Khovanskii/Pfaffian** input.
+`b` controls it.
 
 So the envelope carries `LogSafe`: every `eml` right child stays `≥ 1`. Then `log (b x) ≥ 0`, the
 bad half vanishes, and the induction closes.
+
+## ⚠ CORRECTION 2026-08-10 — what removing `LogSafe` actually needs
+
+An earlier version of this header said removal needs *"a shallow tree cannot be arbitrarily small
+while staying positive — i.e. finiteness of sign changes, a Khovanskii/Pfaffian input"*. **Both
+halves of that were wrong**, and the error was published in three briefs before an outside reader
+caught it.
+
+1. **Zero-counting cannot give a positive floor.** `exp(−x)` is positive on `(0,∞)`, has no zeros
+   at all, and still has infimum `0`. So "finitely many sign changes" does not upgrade `f > 0` to
+   `f ≥ ε > 0`, and no Pfaffian zero-count theorem discharges the side condition. The citation was
+   simply the wrong theorem.
+2. **The induction does not need a positive floor either.** `LogSafe` is consumed at *exactly one*
+   step below (`hlog`), and only to **discard** `−log(b x)`. What suffices is an upper bound on
+   `−log(b x)`, i.e. a lower bound on the right child of **tower form**, `b x ≥ exp(−E_j x)` — then
+   the discarded term is itself under a rung and costs one more level, rather than having to vanish.
+
+So the exact restricted lemma this wants is a **quantitative decay bound by depth** — *how fast can
+a depth-≤j exp-log term approach 0 from above?* — not a zero count and not a uniform floor. That is
+Khovanskii-adjacent (effective bounds by Pfaffian format, cf. Gabrielov–Vorobjov's survey), with the
+caveat that **totalised `log` breaks Pfaffian-ness**: these terms are only *piecewise* Pfaffian,
+analytic between sign changes of log arguments, so any citation applies per piece and the piece
+count needs its own induction.
+
+**Status: no axiom spent, and possibly none needed.** Whether the decay bound is provable internally
+is open — note `exp(−1/x)` is in EML and decays faster than any polynomial, yet its `−log` is
+exactly `1/x`, which sits inside rung 1. The compensation may be structural.
 
 ## `1/x` is NOT excluded by this
 

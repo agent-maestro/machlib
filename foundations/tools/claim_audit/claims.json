@@ -733,6 +733,19 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "MaxEnt H(p) <= -log u for a uniform reference; a corollary of kl_nonneg. Invariant: sorryAx-free.",
+      "id": "maxent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`log n \u2212 H(p)` *is* `KL(p \u2016 uniform)`"
+      ],
+      "module": "MachLib.KLDivergence",
+      "theorem": "MachLib.Real.maxent",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

@@ -7,6 +7,38 @@ per-release status.
 
 ## [Unreleased] — 2026-08-10
 
+### ⚠ CORRECTION — the `LogSafe` removal was attributed to the wrong theorem
+
+The growth envelope's header, and three frontier briefs, said that removing the `LogSafe` side
+condition needs *"a shallow tree cannot be arbitrarily small while staying positive — i.e.
+finiteness of sign changes, a Khovanskii/Pfaffian input"*. **Both halves were wrong.** Caught by an
+outside reader, verified against the source, corrected in
+`MachLib/EMLGrowthEnvelope.lean`'s header:
+
+- **A zero count cannot give a positive floor.** `exp(−x)` is positive on `(0,∞)`, has no zeros at
+  all, and still has infimum `0`. No Pfaffian zero-counting theorem discharges the condition — it
+  was the wrong theorem, not merely an unproved one.
+- **The induction does not need a positive floor.** `LogSafe` is consumed at exactly one step, and
+  only to *discard* `−log(b x)`. What suffices is a lower bound on the right child of **tower form**
+  (`b x ≥ exp(−E_j x)`), which costs one extra rung — a quantitative *decay-by-depth* bound, not a
+  zero count. That is the exact restricted lemma to aim at, and it is Khovanskii-*adjacent* (effective
+  bounds by Pfaffian format) with the caveat that **totalised `log` breaks Pfaffian-ness**: these
+  terms are only piecewise Pfaffian and any citation applies per piece.
+
+**No axiom was spent, and it is now unclear that one is needed** — `exp(−1/x)` is in EML and decays
+faster than any polynomial, yet its `−log` is exactly `1/x`, which sits inside rung 1.
+
+### MaxEnt: the uniform distribution maximises entropy
+
+- **`MachLib.Real.maxent`** / **`maxent_log_perplexity`** (`MachLib/KLDivergence.lean`) — `H(p) ≤
+  −log u = log(1/u)` for any unit-mass `p` against a uniform reference `q ≡ u`. **No new machinery:**
+  `log n − H(p)` *is* `KL(p ‖ uniform)`, and `kl_nonneg` was already machine-checked, so the only
+  work is `ncrossH_const` — one list induction collapsing `Σ pᵢ·log u` to `(Σ pᵢ)·log u`. Stated in
+  the uniform weight `u` rather than a cardinality, so no `Nat` cast is needed; `log(1/u)` is the
+  perplexity form and is literally `log n` on an `n`-point support. `sorryAx`-free, zero new axioms.
+  The entropy cluster now carries all four classical facts: Legendre duality, Fenchel–Young,
+  `KL ≥ 0`, cross-entropy ≥ entropy, and MaxEnt.
+
 ### EML depth 3: the `t1 = var` family is CLOSED
 
 - **`MachLib.leaf_var_absurd`** — **no depth-≤2 right child lets `eml var t2` be `1/x`.** The first
@@ -63,6 +95,9 @@ per-release status.
   ceilings. `depth_gt_of_outgrows` is the contrapositive lower-bound tool, and `size_envelope`
   restates it in node count. Carries a **`LogSafe`** side condition (every `eml` right child `≥ 1`);
   removing it needs finiteness of sign changes for exp-log expressions, a Khovanskii/Pfaffian input.
+  **⚠ That last sentence is WRONG and is corrected below (2026-08-10) — `exp(−x)` is positive with
+  no zeros and infimum `0`, so a zero count cannot yield a positive floor, and the induction does
+  not need a positive floor anyway.** See `MachLib/EMLGrowthEnvelope.lean`'s header.
 
 - **`MachLib.inv_x_within_envelope_one`** — the honest limit: `1/x ≤ envelope 1 0 x`, so the
   reciprocal sits **inside the first rung** and **no growth argument at any rung can exclude it**.
