@@ -47,7 +47,9 @@ The gate set is exactly the five above (`.github/workflows/build-time.yml`).
 - **`lake` from `foundations/`.** From the repo root it silently resolves the wrong toolchain (v4.14).
 - **Stale `.olean`s.** `lake env lean Foo.lean` typechecks against *old* dependencies; run
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
-- **A new module must be added to `MachLib.lean`** or it builds but is ungated.
+- **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
+  Being imported by a sibling is **not** enough — an island of mutually-importing modules is
+  unreachable. `check_aggregator.sh` does a real transitive closure (**604 of 922 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.

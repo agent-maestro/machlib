@@ -1,115 +1,159 @@
 #!/usr/bin/env bash
-# scripts/check_aggregator.sh — fail if a foundation module is ORPHANED
-# (reachable from nothing), so the "module exists but `lake build` never
+# scripts/check_aggregator.sh — fail if a foundation module is UNREACHABLE
+# from the aggregator root, so the "module exists but `lake build` never
 # sees it" failure mode cannot silently recur.
 #
 # Why this exists:
 #
 # `lake build` builds `MachLib` = MachLib.lean + its TRANSITIVE imports.
-# A `MachLib/*.lean` that neither the aggregator nor any other module
-# imports is never built, never gated — it can break or grow a `sorry`
-# unnoticed. An audit found a cluster of such orphans. This is a STATIC
-# check (grep only — no compilation), so it has no false positives from
+# A `MachLib/**.lean` outside that cone is never built, never gated — it
+# can break or grow a `sorry` unnoticed. This is a STATIC check (import
+# lines only, no compilation), so it has no false positives from
 # isolated-elaboration ambiguity (`lake env lean <file>` is NOT
 # equivalent to `lake build` and must not be used as a per-file gate).
 #
-# A module is "reachable" if any .lean under MachLib/ imports it. The
-# allowlist below freezes the orphans known at audit time (2026-06-26);
-# a NEW orphan — a module reachable from nothing and not allow-listed —
-# fails the gate. Shrink the allowlist as orphans are folded into the
-# aggregator or deleted.
+# ── 2026-08-10: TWO SCOPE DEFECTS FIXED. Both made the gate pass
+#    truthfully about a set much smaller than the one it described.
 #
-# 2026-08-10 — MAXDEPTH BLIND SPOT FIXED. This script iterated
-# `find MachLib -maxdepth 1`, so it only ever checked TOP-LEVEL modules,
-# while its own description claims to check "any .lean under MachLib/".
-# An orphan in a subdirectory could never fail it. Found by counting:
-# 922 .lean files under MachLib/, 614 top-level, and the gate green.
-# It now walks the whole tree, with two documented exclusions below.
+#  (1) MAXDEPTH. The loop was `find MachLib -maxdepth 1`, so only
+#      TOP-LEVEL modules were ever examined — while the header claimed
+#      to cover "any .lean under MachLib/". 308 of 922 files live in
+#      subdirectories and were invisible.
 #
-# Usage (from foundations/):
-#   bash scripts/check_aggregator.sh
+#  (2) ISLANDS — the deeper one. Reachability was tested as "is this
+#      module imported by ANY .lean under MachLib/". That is not
+#      reachability. A cluster of modules that import each other, which
+#      nothing in the aggregator's cone imports, passes trivially: every
+#      member is imported by a sibling. MachLib/Applications/ is exactly
+#      such an island (12 modules), and four more top-level modules
+#      turned out to be satellites of already-allowlisted orphans —
+#      documented as entry points, with their members left unnamed.
 #
-# Exit codes:
-#   0  no un-allowlisted orphan modules
-#   1  a new orphan module appeared (printed)
+#      The check is now a genuine transitive closure from MachLib.lean.
+#      Reachable modules: 604 of 922.
+#
+# Usage (from foundations/):   bash scripts/check_aggregator.sh
+# Exit codes:  0 = clean   1 = a new unreachable module appeared
 
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 
-# Known orphans at audit time — exist + compile clean, but reachable
-# from nothing. Documented here rather than silently un-gated. TODO:
-# fold into the aggregator (resolving any isolated-elaboration ambiguity)
-# or delete; then remove from this list.
-KNOWN_ORPHANS="CatVision ChainExp2NatMeasure ChainExp2WFRPrecondInstance \
-GammaBarrier LambertWFunctionalEquation PolynomialCanonicalDegreeLemmas \
-Seal Test"
+exec python3 - "$@" <<'PYEOF'
+import os, re, sys, glob
 
-# MachLib/Discovered/ is DELIBERATELY out of the aggregator: each file is
-# self-contained (defines its own constants) and they cannot be imported
-# together. It is the Forge @verify(lean) corpus and has its own harness,
-# `scripts/closerate.sh`. Excluded here rather than allow-listed 294 times.
-EXCLUDED_DIRS="MachLib/Discovered"
+# ── MachLib/Discovered/ is DELIBERATELY outside the aggregator: each file
+#    is self-contained (defines its own constants) and they cannot be
+#    imported together. It is the Forge @verify(lean) corpus and has its
+#    own harness, scripts/closerate.sh. Excluded by prefix rather than
+#    allow-listed 294 times.
+EXCLUDED_PREFIXES = ("MachLib.Discovered.",)
 
-# Subdirectory orphans known at the 2026-08-10 audit. The Applications/
-# cluster is reachable from nothing AND five of its twelve modules do not
-# build — `apply le_min` is ambiguous between `MachLib.Real.le_min` and the
-# namespace-local `AerospaceActuatorGuardBandRate.le_min`. That is exactly
-# the "isolated-elaboration ambiguity" this script's header anticipated.
-# These are aerospace actuator guard proofs; resolving the ambiguity is a
-# semantic decision, not a rename, so it is left to a deliberate pass.
-#   BUILDS : GuardedActuatorCommand ActuatorCommandWithinBand
-#            ActuatorCommandBandWithRateLimit ButlerVolmerKhovanskii
-#            DischargeVoltageSafety PlasmaConcentrationNonneg
-#            SpringCriticallyDamped
-#   BROKEN : ActuatorCommandWithJerkLimit ActuatorCommandWithSnapLimit
-#            ActuatorCommandWithCrackleLimit DegradedModeSwitcher
-#            FaultDetectionAndIsolationGuard
-KNOWN_SUBDIR_ORPHANS="MachLib.Applications.ActuatorCommandBandWithRateLimit \
-MachLib.Applications.ActuatorCommandWithCrackleLimit \
-MachLib.Applications.ActuatorCommandWithJerkLimit \
-MachLib.Applications.ActuatorCommandWithSnapLimit \
-MachLib.Applications.ActuatorCommandWithinBand \
-MachLib.Applications.ButlerVolmerKhovanskii \
-MachLib.Applications.DegradedModeSwitcher \
-MachLib.Applications.DischargeVoltageSafety \
-MachLib.Applications.FaultDetectionAndIsolationGuard \
-MachLib.Applications.GuardedActuatorCommand \
-MachLib.Applications.PlasmaConcentrationNonneg \
-MachLib.Applications.SpringCriticallyDamped"
+# ── Unreachable modules known at the 2026-08-10 audit. All BUILD unless
+#    marked; none contains a real `sorry` (every `sorry` match under these
+#    paths was checked individually and is prose in a docstring).
+#
+#    Applications/ is an ISLAND: 12 modules importing each other, reached
+#    from the aggregator by nothing. FIVE of them do not build —
+#    `apply le_min` is ambiguous between `MachLib.Real.le_min` and the
+#    namespace-local `AerospaceActuatorGuardBandRate.le_min`, precisely the
+#    "isolated-elaboration ambiguity" this header used to anticipate.
+#    They are aerospace actuator guard proofs; choosing a `le_min` is a
+#    semantic decision, not a rename, so it is left to a deliberate pass.
+KNOWN_UNREACHABLE = {
+    # --- Applications island (12) -- BROKEN: Jerk, Snap, Crackle,
+    #     DegradedModeSwitcher, FaultDetectionAndIsolationGuard
+    "MachLib.Applications.ActuatorCommandBandWithRateLimit",
+    "MachLib.Applications.ActuatorCommandWithCrackleLimit",
+    "MachLib.Applications.ActuatorCommandWithJerkLimit",
+    "MachLib.Applications.ActuatorCommandWithSnapLimit",
+    "MachLib.Applications.ActuatorCommandWithinBand",
+    "MachLib.Applications.ButlerVolmerKhovanskii",
+    "MachLib.Applications.DegradedModeSwitcher",
+    "MachLib.Applications.DischargeVoltageSafety",
+    "MachLib.Applications.FaultDetectionAndIsolationGuard",
+    "MachLib.Applications.GuardedActuatorCommand",
+    "MachLib.Applications.PlasmaConcentrationNonneg",
+    "MachLib.Applications.SpringCriticallyDamped",
+    # --- top-level orphans documented at the 2026-06-26 audit (8)
+    "MachLib.CatVision",
+    "MachLib.ChainExp2NatMeasure",
+    "MachLib.ChainExp2WFRPrecondInstance",
+    "MachLib.GammaBarrier",
+    "MachLib.LambertWFunctionalEquation",
+    "MachLib.PolynomialCanonicalDegreeLemmas",
+    "MachLib.Seal",
+    "MachLib.Test",
+    # --- satellites of those orphans, found 2026-08-10 by transitive
+    #     closure. Each is imported ONLY by a module in the list above, so
+    #     the old "imported by someone" test passed them.
+    #     LambertWAsymptotics carries 7 theorems and 2 axioms that are
+    #     therefore NOT in the axiom ledger (unreachable ⇒ not in the
+    #     environment ⇒ nothing can depend on them).
+    "MachLib.ChainExp2ListMeasuredInstance",
+    "MachLib.InnerKhovanskiiExpListMeasured",
+    "MachLib.InnerKhovanskiiExpWFRPrecond",
+    "MachLib.LambertWAsymptotics",
+}
 
-new_orphan=0
-while IFS= read -r f; do
-    # skip deliberately-separate trees
-    skip=0
-    for d in $EXCLUDED_DIRS; do
-        case "$f" in "$d"/*) skip=1 ;; esac
-    done
-    [[ "$skip" -eq 1 ]] && continue
+IMPORT_RE = re.compile(r"^import\s+([A-Za-z0-9_.]+)")
 
-    # MachLib/A/B/Foo.lean -> MachLib.A.B.Foo
-    rel="${f#MachLib/}"; rel="${rel%.lean}"
-    mod="MachLib.${rel//\//.}"
-    short="$(basename "$f" .lean)"
+def mod_of(path):
+    return "MachLib." + path[len("MachLib/"):-len(".lean")].replace("/", ".")
 
-    # Reachable if ANY .lean under MachLib imports it (recursive).
-    if grep -rqE "^import ${mod//./\\.}\b" MachLib.lean MachLib/ 2>/dev/null; then
+def imports_of(path):
+    out = []
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                m = IMPORT_RE.match(line)
+                if m:
+                    out.append(m.group(1))
+    except OSError:
+        pass
+    return out
+
+files = {mod_of(f): f for f in glob.glob("MachLib/**/*.lean", recursive=True)}
+if not files:
+    print("[check-aggregator] FAIL: no modules found — wrong working directory?",
+          file=sys.stderr)
+    sys.exit(1)
+
+# transitive closure from the aggregator root
+seen, stack = set(), [m for m in imports_of("MachLib.lean") if m in files]
+while stack:
+    m = stack.pop()
+    if m in seen:
         continue
-    fi
-    case " $KNOWN_ORPHANS " in
-        *" $short "*) continue ;;          # known top-level, documented
-    esac
-    case " $KNOWN_SUBDIR_ORPHANS " in
-        *" $mod "*) continue ;;            # known subdirectory, documented
-    esac
-    echo "[check-aggregator] NEW ORPHAN: ${f} is imported by nothing" >&2
-    echo "[check-aggregator]   → add 'import ${mod}' to MachLib.lean (or to a" >&2
-    echo "[check-aggregator]     module the aggregator reaches), or it ships ungated." >&2
-    new_orphan=1
-done < <(find MachLib -name '*.lean' | sort)
+    seen.add(m)
+    stack.extend(i for i in imports_of(files[m]) if i in files and i not in seen)
 
-if [[ "$new_orphan" -ne 0 ]]; then
-    echo "[check-aggregator] FAIL: an un-allowlisted orphan module appeared." >&2
-    exit 1
-fi
-echo "[check-aggregator] PASS: every module under MachLib/ is reachable (or a documented orphan); Discovered/ excluded (own harness: scripts/closerate.sh)."
-exit 0
+new = sorted(
+    m for m in set(files) - seen
+    if not m.startswith(EXCLUDED_PREFIXES) and m not in KNOWN_UNREACHABLE
+)
+
+if new:
+    for m in new:
+        print(f"[check-aggregator] NEW UNREACHABLE: {files[m]}", file=sys.stderr)
+        print(f"[check-aggregator]   → add 'import {m}' to MachLib.lean (or to a module",
+              file=sys.stderr)
+        print("[check-aggregator]     the aggregator already reaches), or it ships ungated.",
+              file=sys.stderr)
+        print("[check-aggregator]   NOTE: being imported by a sibling is NOT enough — an",
+              file=sys.stderr)
+        print("[check-aggregator]     island of mutually-importing modules is unreachable.",
+              file=sys.stderr)
+    print(f"[check-aggregator] FAIL: {len(new)} module(s) unreachable from MachLib.lean.",
+          file=sys.stderr)
+    sys.exit(1)
+
+stale = sorted(m for m in KNOWN_UNREACHABLE if m in seen or m not in files)
+if stale:
+    print("[check-aggregator] NOTE: allowlist entries now reachable or deleted — "
+          "remove them: " + ", ".join(stale), file=sys.stderr)
+
+print(f"[check-aggregator] PASS: {len(seen)} of {len(files)} modules reachable from "
+      f"MachLib.lean by transitive closure; {len(KNOWN_UNREACHABLE)} documented "
+      f"unreachable; Discovered/ excluded (own harness: scripts/closerate.sh).")
+sys.exit(0)
+PYEOF
