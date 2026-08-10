@@ -8094,4 +8094,68 @@ theorem depth_le_two_cancel_kappa_neg_absurd {A B : EMLTree} {G L d : Real}
     rw [e] at t; exact t
   exact lt_irrefl_ax _ (lt_of_lt_of_le (hpos w hwpos (le_of_lt hwd)) hneg)
 
+/-- # ▸ **The Ω-point: `γ = 0` and `κ = 0`, where the floor is QUADRATIC.**
+
+`G·exp G = 1`. Both the constant and the linear term cancel exactly, and what survives is
+`G·(exp u − 1 − u) ≥ G·(u/2)² ≥ (G/4)·x²`. This is the last case of rung 2, and the only one in the
+entire ladder that is genuinely second order — which is why `exp_quad_lower` had to be built at all.
+
+The derivation is `leaf_var_expvar_const_gamma_zero_zero_absurd`'s, kept whole; only its ending
+changes, from feeding `leaf_var_quad_floor_absurd` to simply *being* the floor. -/
+theorem depth_le_two_cancel_kappa_zero_floor {A B : EMLTree} {G L d : Real}
+    (hG : 0 < G) (hLM : L = 1 - exp G) (hkap : exp (-G) = G)
+    (hB : ∀ x : Real, 0 < x → B.eval x = exp x - L)
+    (hexact : ∀ x : Real, 0 < x → exp (A.eval x) = G * exp (exp x - 1))
+    (hd : 0 < d) (hd1 : d ≤ 1) :
+    ∃ K d' : Real, 0 < K ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → K * (x * x) ≤ (EMLTree.eml A B).eval x := by
+  have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hhpos : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos h2
+  refine ⟨G * (1 / (1 + 1) * (1 / (1 + 1))), d,
+    mul_pos hG (mul_pos hhpos hhpos), hd, le_refl d, fun x hx hxd => ?_⟩
+  show G * (1 / (1 + 1) * (1 / (1 + 1))) * (x * x)
+      ≤ exp (A.eval x) - log (B.eval x)
+  rw [hB x hx, hexact x hx]
+  have hBeq : exp x - L = exp G + (exp x - 1) := by
+    rw [hLM]; mach_mpoly [exp x, exp G]
+  rw [hBeq]
+  have hu0 : (0 : Real) ≤ exp x - 1 := by
+    have s : (1 : Real) ≤ exp x := one_le_exp (le_of_lt hx)
+    have u := add_le_add_wit s (le_refl (-1 : Real))
+    have l : (1 : Real) + -1 = 0 := by mach_ring
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hxu : x ≤ exp x - 1 := by
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hgap := exp_sub_one_sub_self_ge_quad hu0
+  have hGgap := mul_le_mul_of_nonneg_left hgap (le_of_lt hG)
+  have hceil := log_shift_ceiling (g := G) hu0
+  rw [hkap] at hceil
+  have s := add_le_add_wit (le_refl (G * exp (exp x - 1))) (neg_le_neg_wit hceil)
+  have l : G * exp (exp x - 1) + -(G + (exp x - 1) * G)
+      = G * (exp (exp x - 1) - 1 - (exp x - 1)) := by
+    mach_mpoly [G, exp (exp x - 1), exp x]
+  have r : G * exp (exp x - 1) + -log (exp G + (exp x - 1))
+      = G * exp (exp x - 1) - log (exp G + (exp x - 1)) := by
+    mach_mpoly [G, exp (exp x - 1), log (exp G + (exp x - 1))]
+  rw [l, r] at s
+  refine le_trans ?_ (le_trans hGgap s)
+  have hstep : x * (1 / (1 + 1)) * (x * (1 / (1 + 1)))
+      ≤ (exp x - 1) * (1 / (1 + 1)) * ((exp x - 1) * (1 / (1 + 1))) := by
+    have hx2 : x * (1 / (1 + 1)) ≤ (exp x - 1) * (1 / (1 + 1)) :=
+      mul_le_mul_of_nonneg_right hxu (le_of_lt hhpos)
+    have hxn : (0 : Real) ≤ x * (1 / (1 + 1)) := mul_nonneg (le_of_lt hx) (le_of_lt hhpos)
+    have hun : (0 : Real) ≤ (exp x - 1) * (1 / (1 + 1)) := mul_nonneg hu0 (le_of_lt hhpos)
+    exact le_trans (mul_le_mul_of_nonneg_right hx2 hxn)
+      (mul_le_mul_of_nonneg_left hx2 hun)
+  have hGstep := mul_le_mul_of_nonneg_left hstep (le_of_lt hG)
+  have e : G * (1 / (1 + 1) * (1 / (1 + 1))) * (x * x)
+      = G * (x * (1 / (1 + 1)) * (x * (1 / (1 + 1)))) := by
+    mach_mpoly [G, x, (1 / (1 + 1) : Real)]
+  rw [e]; exact hGstep
+
 end MachLib
