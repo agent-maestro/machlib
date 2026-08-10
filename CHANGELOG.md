@@ -7,6 +7,40 @@ per-release status.
 
 ## [Unreleased] — 2026-08-10
 
+### EML depth 3: the `t1 = var` family is CLOSED
+
+- **`MachLib.leaf_var_absurd`** — **no depth-≤2 right child lets `eml var t2` be `1/x`.** The first
+  *complete family* of the depth-3 arm, closing the residue
+  `t2 = eml A (eml var (const q))` that the previous two passes were left resting on. 28 new
+  theorems, `sorryAx` 0, **zero new axioms** (ledger 242 unchanged).
+  **This does not move `d(1/x)`**, which stays `{3,4}`: the other depth-3 family (`t1 = eml a b`,
+  `b ≠ var`, unbounded left child) is untouched and could still hold a witness.
+
+- **`MachLib.leaf_var_right_strict_mono`** — the reusable half. **The right child of a leaf-`var`
+  reciprocal is strictly INCREASING below the cutoff**, for any `t2` at any depth: the equation
+  gives `log (t2 x) = exp x − 1/x` pointwise and both terms rise. Every earlier closure in this arm
+  read a *floor* off the tree; this reads a **direction**, which is what the shapes where the two
+  terms cancel need — there the floor is `0` and carries no information. It kills both
+  constant-valued `A` shapes outright, citing no floor dispatcher at all.
+
+- **`MachLib.leaf_var_quad_floor_absurd`** + **`MachLib.exp_ge_three_mul`** — a **quadratic** floor
+  on the right child is fatal too. Needed because the coincidence stratifies further than the
+  constant-`B` case did: with a *moving* `log` the linear coefficient is `κ := G − exp(−G)`, whose
+  sign is independent of `γ`, and at **`G·exp G = 1` (`G = Ω`, the omega constant) both `γ` and `κ`
+  vanish** and the tree is second order, `≍ (G/4)·x²`. `leaf_var_arith` cannot take that floor —
+  its last step is `exp t ≥ t + t`, which ties exactly against the `2t` a square contributes — so
+  the peeling trick was applied at `k = 2` instead of `k = 1`: `exp t ≥ e²(t−1) > 4(t−1) ≥ 3t` for
+  `t ≥ 4`, on the single numeric input `2 < e` squared.
+
+  > The previous pass found that for **constant-valued** `B` the tangent bound supplies the linear
+  > term for free, so the three-way `γ` split collapses to two. **That lesson does not survive a
+  > moving `log`** — recorded because it was registered as a prediction and it failed in the
+  > direction that mattered.
+
+- **`MachLib.log_shift_ceiling`** / **`MachLib.log_shift_floor`** — two-sided linear bounds on
+  `log (exp g + u)` around the cancellation point, both division-free (`exp(−g)` in place of `1/M`)
+  and both from the same tangent bound applied to `v := log (exp g + u) − g`.
+
 ### EML complexity: the reciprocal in the metric that is priced
 
 - **`MachLib.inv_x_size_ge_seven`** — **two `eml` gates can never compute a reciprocal.**

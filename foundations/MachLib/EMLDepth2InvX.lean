@@ -4765,4 +4765,1227 @@ theorem invX4_size : invX4.size = 11 := by rfl
 
 theorem invXTree_size : invXTree.size = 13 := by rfl
 
+/-! ## ▸ **The last shape of the leaf-`var` branch: `t2 = eml A (eml var (const q))`**
+
+`B x = exp x − log q` is the **only** non-constant depth-≤1 right child that stays *bounded* at `0`.
+Every other shape either runs to `+∞` (and `leaf_var_right_eml_absurd` kills it) or runs to `0`
+(`B = var`, which hands the parent a free `−log x`). Here neither term runs away and the two nearly
+cancel — the genuine divergent-cancellation case, which is why the previous two passes left it.
+
+The new instrument is a **direction**, not a floor. Every closure in this arm so far read a *lower
+bound* off the tree; the one fact that kills the shapes where the two terms cancel is that the pin
+forces the right child to be **strictly increasing**. -/
+
+/-- `0 < z ⟹ 0 < 1/z`, from `mul_inv` alone (this corpus has no ordered-field API for `/`). -/
+theorem one_div_pos_of_pos {z : Real} (hz : 0 < z) : 0 < 1 / z := by
+  rcases lt_total 0 (1 / z) with hp | hzz | hn
+  · exact hp
+  · exfalso
+    have e : z * (1 / z) = 1 := mul_inv z (ne_of_gt hz)
+    rw [← hzz] at e
+    have e0 : z * (0 : Real) = 0 := by mach_ring
+    rw [e0] at e
+    exact (ne_of_lt one_pos) e
+  · exfalso
+    have s : z * (1 / z) < z * 0 := mul_lt_mul_pos_left_wit hn hz
+    rw [mul_inv z (ne_of_gt hz)] at s
+    have e0 : z * (0 : Real) = 0 := by mach_ring
+    rw [e0] at s
+    exact lt_irrefl_ax 0 (lt_trans_ax one_pos s)
+
+/-- `0 < x < y ⟹ 1/y < 1/x`. Proved by *reversal*: `1/x ≤ 1/y` gives
+`1 = x·(1/x) ≤ x·(1/y) < y·(1/y) = 1`. -/
+theorem one_div_lt_one_div_of_lt {x y : Real} (hx : 0 < x) (hxy : x < y) :
+    1 / y < 1 / x := by
+  have hy : (0 : Real) < y := lt_trans_ax hx hxy
+  have hbpos : (0 : Real) < 1 / y := one_div_pos_of_pos hy
+  rcases lt_total (1 / y) (1 / x) with hp | hz | hn
+  · exact hp
+  · exfalso
+    have s : x * (1 / y) < y * (1 / y) := mul_lt_mul_of_pos_right hxy hbpos
+    rw [mul_inv y (ne_of_gt hy)] at s
+    rw [hz] at s
+    rw [mul_inv x (ne_of_gt hx)] at s
+    exact lt_irrefl_ax 1 s
+  · exfalso
+    have s1 : x * (1 / x) ≤ x * (1 / y) :=
+      mul_le_mul_of_nonneg_left (le_of_lt hn) (le_of_lt hx)
+    have s2 : x * (1 / y) < y * (1 / y) := mul_lt_mul_of_pos_right hxy hbpos
+    rw [mul_inv x (ne_of_gt hx)] at s1
+    rw [mul_inv y (ne_of_gt hy)] at s2
+    exact lt_irrefl_ax 1 (lt_of_le_of_lt s1 s2)
+
+/-- # **The right child of a leaf-`var` reciprocal is STRICTLY INCREASING below the cutoff.**
+
+Shape-free and depth-free, like `leaf_var_right_pos`. The equation gives
+`log (t2 x) = exp x − 1/x` pointwise, and **both** terms of the right-hand side increase — `exp`
+because it is `exp`, and `−1/x` because `x ↦ 1/x` decreases. So `log ∘ t2` is strictly increasing,
+and `t2 > 0` (from `leaf_var_right_pos`) lets that be pulled back through `log`.
+
+> Every earlier closure in this arm read a *floor* off the tree. This reads a **direction** — which
+> is what the cancelling shapes need, because there the floor is `0` and carries no information. -/
+theorem leaf_var_right_strict_mono {t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x)
+    {x y : Real} (hx : 0 < x) (hxy : x < y) (hy : y < exp (-1)) :
+    t2.eval x < t2.eval y := by
+  have hyp : (0 : Real) < y := lt_trans_ax hx hxy
+  have hxlt : x < exp (-1) := lt_trans_ax hxy hy
+  have hpy : (0 : Real) < t2.eval y := leaf_var_right_pos_near_zero h hyp hy
+  have ex : exp x - log (t2.eval x) = 1 / x := h x hx
+  have ey : exp y - log (t2.eval y) = 1 / y := h y hyp
+  have hE : exp x < exp y := exp_lt hxy
+  have hI : 1 / y < 1 / x := one_div_lt_one_div_of_lt hx hxy
+  -- `exp y − log(t2 y) < exp x − log(t2 x)`, then insert `exp x < exp y` on the left
+  have s2 : exp y - log (t2.eval y) < exp x - log (t2.eval x) := by
+    rw [ex, ey]; exact hI
+  have s1 : -log (t2.eval y) + exp x < -log (t2.eval y) + exp y :=
+    add_lt_add_left hE _
+  have s1' : exp x - log (t2.eval y) < exp y - log (t2.eval y) := by
+    have l : -log (t2.eval y) + exp x = exp x - log (t2.eval y) := by
+      mach_mpoly [exp x, log (t2.eval y)]
+    have r : -log (t2.eval y) + exp y = exp y - log (t2.eval y) := by
+      mach_mpoly [exp y, log (t2.eval y)]
+    rw [l, r] at s1; exact s1
+  have s3 : exp x - log (t2.eval y) < exp x - log (t2.eval x) := lt_trans_ax s1' s2
+  have hlog : log (t2.eval x) < log (t2.eval y) := by
+    have s := add_lt_add_left s3 (log (t2.eval x) + log (t2.eval y) - exp x)
+    have l : log (t2.eval x) + log (t2.eval y) - exp x + (exp x - log (t2.eval y))
+        = log (t2.eval x) := by mach_mpoly [log (t2.eval x), log (t2.eval y), exp x]
+    have r : log (t2.eval x) + log (t2.eval y) - exp x + (exp x - log (t2.eval x))
+        = log (t2.eval y) := by mach_mpoly [log (t2.eval x), log (t2.eval y), exp x]
+    rw [l, r] at s; exact s
+  rcases lt_total (t2.eval x) (t2.eval y) with hp | hz | hn
+  · exact hp
+  · exfalso; rw [hz] at hlog; exact lt_irrefl_ax _ hlog
+  · exfalso
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlog (log_le_log hpy (le_of_lt hn)))
+
+/-- **A right child that fails to increase anywhere below the cutoff is absurd.** The
+contrapositive of `leaf_var_right_strict_mono`, in dispatcher form. -/
+theorem leaf_var_nonincreasing_absurd {t2 : EMLTree} {x y : Real}
+    (hx : 0 < x) (hxy : x < y) (hy : y < exp (-1))
+    (hmono : t2.eval y ≤ t2.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False :=
+  lt_irrefl_ax _ (lt_of_lt_of_le (leaf_var_right_strict_mono h hx hxy hy) hmono)
+
+/-- `y ≤ Y` and `1 ≤ Y` give `log y ≤ Y − 1` — **for the totalised `log`, with no case split at the
+call site.** The clamp is handled inside: `y ≤ 1` (including `y ≤ 0`) gives `log y ≤ 0 ≤ Y − 1`. -/
+theorem log_le_of_le_upper {y Y : Real} (hY : 1 ≤ Y) (hy : y ≤ Y) : log y ≤ Y - 1 := by
+  have hY1 : (0 : Real) ≤ Y - 1 := sub_nonneg_of_le hY
+  rcases lt_total 1 y with h1 | h1 | h1
+  · have s := log_le_sub_one_of_one_le (le_of_lt h1)
+    have t : y - 1 ≤ Y - 1 := by
+      have u := add_le_add_wit hy (le_refl (-1 : Real))
+      have l : y + -1 = y - 1 := by mach_ring
+      have r : Y + -1 = Y - 1 := by mach_ring
+      rw [l, r] at u; exact u
+    exact le_trans s t
+  · rw [← h1, log_one]; exact hY1
+  · exact le_trans (log_nonpos_of_le_one' (le_of_lt h1)) hY1
+
+/-- **A uniform ceiling for the residue's right child, with no `max` and no regime split.**
+
+`log (exp x − L) ≤ exp (exp 1 − L)` on `(0,1]`. The trick is the choice `Y := 1 + exp (exp 1 − L)`,
+which is `≥ 1` *by construction* — so the one hypothesis `log_le_of_le_upper` needs is free, and the
+`L`-regimes (which decide whether `exp x − L` is positive at all) never have to be entered. -/
+theorem exp_sub_const_log_ceiling {L x : Real} (hx1 : x ≤ 1) :
+    log (exp x - L) ≤ exp (exp 1 - L) := by
+  have hY : (1 : Real) ≤ 1 + exp (exp 1 - L) := by
+    have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos (exp 1 - L)))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  have hy : exp x - L ≤ 1 + exp (exp 1 - L) := by
+    have h1 : exp x - L ≤ exp 1 - L := by
+      have s := add_le_add_wit (exp_monotone hx1) (le_refl (-L))
+      have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+      have r : exp 1 + -L = exp 1 - L := by mach_mpoly [exp 1, L]
+      rw [l, r] at s; exact s
+    have h2 : exp 1 - L < exp (exp 1 - L) := exp_grows_strictly_thm _
+    have h3 : exp (exp 1 - L) ≤ 1 + exp (exp 1 - L) := by
+      have s := add_le_add_wit (le_of_lt one_pos) (le_refl (exp (exp 1 - L)))
+      have e : (0 : Real) + exp (exp 1 - L) = exp (exp 1 - L) := by mach_ring
+      rw [e] at s; exact s
+    exact le_trans h1 (le_trans (le_of_lt h2) h3)
+  have s := log_le_of_le_upper hY hy
+  have e : (1 : Real) + exp (exp 1 - L) - 1 = exp (exp 1 - L) := by
+    mach_mpoly [exp (exp 1 - L)]
+  rw [e] at s; exact s
+
+/-- # **Constant-valued `A` — killed by direction alone, with no floor.**
+
+`t2 x = K − log (exp x − L)` is **non-increasing**: `exp x − L` rises with `x`, so subtracting its
+log can only pull `t2` down. But `leaf_var_right_strict_mono` says the right child must *rise*. Two
+points settle it, and `K` is never inspected.
+
+The only care is that the *totalised* `log` is not globally monotone (`log 0.5 < 0 = log (−1)`), so
+both points must sit on the same side of the clamp boundary `x = log L`:
+
+* `L ≤ 1` — `exp x − L > 0` for every `x > 0`, so the log is genuinely increasing; the fixed points
+  `exp(−3) < exp(−2)` work.
+* `1 < L` — put both points below `log L` (via `two_bound_witness`); there **both clamp to `0`**, so
+  `t2` is outright *constant*, which is still not increasing. -/
+theorem leaf_var_expvar_const_left_const_absurd {t2 : EMLTree} {K L : Real}
+    (hval : ∀ x : Real, 0 < x → t2.eval x = K - log (exp x - L))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  -- from `log (B x₁) ≤ log (B x₂)` to `t2 x₂ ≤ t2 x₁`
+  have hstep : ∀ x y : Real, 0 < x → 0 < y →
+      log (exp x - L) ≤ log (exp y - L) → t2.eval y ≤ t2.eval x := by
+    intro x y hx hy hlog
+    rw [hval x hx, hval y hy]
+    have s := add_le_add_wit (le_refl K) (neg_le_neg_wit hlog)
+    have l : K + -log (exp y - L) = K - log (exp y - L) := by
+      mach_mpoly [K, log (exp y - L)]
+    have r : K + -log (exp x - L) = K - log (exp x - L) := by
+      mach_mpoly [K, log (exp x - L)]
+    rw [l, r] at s; exact s
+  -- `L ≤ 1`: no clamp anywhere on `(0,∞)`, so the log is genuinely increasing
+  have hmain : L ≤ 1 → False := by
+    intro hLle
+    have hm32 : (-1 - 1 - 1 : Real) < -1 - 1 := by
+      have s := add_lt_add_left one_pos (-1 - 1 - 1 : Real)
+      have l : (-1 - 1 - 1 : Real) + 0 = -1 - 1 - 1 := by mach_ring
+      have r : (-1 - 1 - 1 : Real) + 1 = -1 - 1 := by mach_ring
+      rw [l, r] at s; exact s
+    have hm21 : (-1 - 1 : Real) < -1 := by
+      have s := add_lt_add_left one_pos (-1 - 1 : Real)
+      have l : (-1 - 1 : Real) + 0 = -1 - 1 := by mach_ring
+      have r : (-1 - 1 : Real) + 1 = -1 := by mach_ring
+      rw [l, r] at s; exact s
+    have hBpos : ∀ z : Real, 0 < z → 0 < exp z - L := by
+      intro z hz
+      have s : (1 : Real) < exp z := by
+        have t := exp_lt hz; rwa [exp_zero] at t
+      have u := add_lt_add_left (lt_of_le_of_lt hLle s) (-L)
+      have l : -L + L = (0 : Real) := by mach_ring
+      have r : -L + exp z = exp z - L := by mach_mpoly [L, exp z]
+      rw [l, r] at u; exact u
+    refine leaf_var_nonincreasing_absurd (exp_pos (-1 - 1 - 1))
+      (exp_lt hm32) (exp_lt hm21) ?_ h
+    refine hstep _ _ (exp_pos (-1 - 1 - 1)) (exp_pos (-1 - 1)) ?_
+    refine log_le_log (hBpos _ (exp_pos _)) ?_
+    have s := exp_monotone (le_of_lt (exp_lt hm32))
+    have u := add_le_add_wit s (le_refl (-L))
+    have l : exp (exp (-1 - 1 - 1)) + -L = exp (exp (-1 - 1 - 1)) - L := by
+      mach_mpoly [exp (exp (-1 - 1 - 1)), L]
+    have r : exp (exp (-1 - 1)) + -L = exp (exp (-1 - 1)) - L := by
+      mach_mpoly [exp (exp (-1 - 1)), L]
+    rw [l, r] at u; exact u
+  rcases lt_total 1 L with hL | hL | hL
+  · -- `1 < L`: both points below `log L`, where the clamp makes `t2` outright constant
+    have hLpos : (0 : Real) < L := lt_trans_ax one_pos hL
+    obtain ⟨w, hwpos, hw1, hwL⟩ := two_bound_witness' (exp_pos (-1)) (log_pos_of_one_lt hL)
+    have hx1pos : (0 : Real) < w * exp (-1) := mul_pos hwpos (exp_pos (-1))
+    have hlt12 : w * exp (-1) < w := by
+      have s := mul_lt_mul_pos_left_wit exp_neg_one_lt_one hwpos
+      have r : w * (1 : Real) = w := by mach_mpoly [w]
+      rw [r] at s; exact s
+    have hclamp : ∀ z : Real, z < log L → log (exp z - L) = 0 := by
+      intro z hz
+      refine log_nonpos ?_
+      have s : exp z < L := by
+        have t := exp_lt hz
+        rwa [exp_log hLpos] at t
+      have u := add_le_add_wit (le_of_lt s) (le_refl (-L))
+      have l : exp z + -L = exp z - L := by mach_mpoly [exp z, L]
+      have r : L + -L = (0 : Real) := by mach_ring
+      rw [l, r] at u; exact u
+    have hc1 := hclamp _ (lt_trans_ax hlt12 hwL)
+    have hc2 := hclamp _ hwL
+    refine leaf_var_nonincreasing_absurd hx1pos hlt12 hw1 ?_ h
+    refine hstep _ _ hx1pos hwpos (le_of_eq ?_)
+    rw [hc1, hc2]
+  · exact hmain (le_of_eq hL.symm)
+  · exact hmain (le_of_lt hL)
+
+/-- # **Unbounded `A` — one dispatch, both shapes.**
+
+`exp p − log x` and `exp x − log x` both dominate `c − log x`; the tangent bound lifts that through
+`exp`, and `exp_sub_const_log_ceiling` caps the `log` term by a constant. So the parent dominates
+`(1 + c − N) − log x` with `N := exp (exp 1 − L)`, and no `L`-regime is ever entered. -/
+theorem leaf_var_expvar_const_unbdd_absurd {t2 : EMLTree} {Av : Real → Real} {c L : Real}
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hdom : ∀ x : Real, 0 < x → x ≤ 1 → c - log x ≤ Av x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  refine leaf_var_dominates_neglog_absurd (c₀ := 1 + c - exp (exp 1 - L))
+    (fun x hx hx1 => ?_) h
+  rw [hval x hx]
+  have h1 : 1 + (c - log x) ≤ exp (Av x) :=
+    le_trans (add_le_add_wit (le_refl (1 : Real)) (hdom x hx hx1)) (one_add_le_exp (Av x))
+  have s := add_le_add_wit h1 (neg_le_neg_wit (exp_sub_const_log_ceiling (L := L) hx1))
+  have l : 1 + (c - log x) + -exp (exp 1 - L) = 1 + c - exp (exp 1 - L) - log x := by
+    mach_mpoly [c, log x, exp (exp 1 - L)]
+  have r : exp (Av x) + -log (exp x - L) = exp (Av x) - log (exp x - L) := by
+    mach_mpoly [exp (Av x), log (exp x - L)]
+  rw [l, r] at s; exact s
+
+/-! ### The bounded, non-constant shapes
+
+`A = var` and `A = eml var (const q')` are the two that neither settle to a constant nor blow up.
+Both are captured by a pair of bounds on `exp (A x)` around the same constant `G := exp (A 0⁺)`:
+
+```
+G · exp x  ≤  exp (A x)  ≤  G · exp (exp x − 1)
+```
+
+For `A = eml var (const q')` both hold with **equality** (`exp(exp x − log q') = G·exp(exp x − 1)`);
+for `A = var` they are `exp x ≤ exp x` and `x ≤ exp x − 1`. Writing `u := exp x − 1`, the left bound
+is `G·(1+u)` and the right is `G·exp u`. -/
+
+/-- `L > 1`: below `log L` the log term is clamped to `0`, so the tree is just `exp (A x) ≥ G`. -/
+theorem leaf_var_expvar_const_clamped_absurd {t2 : EMLTree} {Av : Real → Real} {G L : Real}
+    (hG : 0 < G) (hL : 1 < L)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (Av x))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hLpos : (0 : Real) < L := lt_trans_ax one_pos hL
+  obtain ⟨w, hwpos, hw1, hwL⟩ := two_bound_witness' one_pos (log_pos_of_one_lt hL)
+  refine leaf_var_const_floor_absurd hG hwpos (le_of_lt hw1) (fun x hx hxw => ?_) h
+  rw [hval x hx]
+  -- the clamp: `x ≤ w < log L` forces `exp x − L ≤ 0`
+  have hclamp : log (exp x - L) = 0 := by
+    refine log_nonpos ?_
+    have s : exp x < L := by
+      have t := exp_lt (lt_of_le_of_lt hxw hwL)
+      rwa [exp_log hLpos] at t
+    have u := add_le_add_wit (le_of_lt s) (le_refl (-L))
+    have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+    have r : L + -L = (0 : Real) := by mach_ring
+    rw [l, r] at u; exact u
+  rw [hclamp]
+  have hge : G ≤ exp (Av x) := by
+    refine le_trans ?_ (hlow x hx)
+    have s := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hx)) (le_of_lt hG)
+    have e : G * (1 : Real) = G := by mach_mpoly [G]
+    rw [e] at s; exact s
+  have e : exp (Av x) - (0 : Real) = exp (Av x) := by mach_ring
+  rw [e]; exact hge
+
+/-- `exp x − 1 ≤ x · exp x`, from `1 − x ≤ exp (−x)`. The bound that turns the `L = 1` case's
+`log (exp x − 1)` into `log x + 1`. -/
+theorem exp_sub_one_le_mul_exp {x : Real} : exp x - 1 ≤ x * exp x := by
+  have h1 : 1 + -x ≤ exp (-x) := one_add_le_exp (-x)
+  have s := mul_le_mul_of_nonneg_left h1 (le_of_lt (exp_pos x))
+  have l : exp x * (1 + -x) = exp x - x * exp x := by mach_mpoly [exp x, x]
+  have r : exp x * exp (-x) = 1 := by
+    rw [← exp_add]
+    have e : x + -x = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  rw [l, r] at s
+  have u := add_le_add_wit s (le_refl (x * exp x - 1))
+  have l2 : exp x - x * exp x + (x * exp x - 1) = exp x - 1 := by mach_mpoly [exp x, x]
+  have r2 : (1 : Real) + (x * exp x - 1) = x * exp x := by mach_mpoly [x, exp x]
+  rw [l2, r2] at u; exact u
+
+/-- `L = 1`: the log argument is `exp x − 1`, which vanishes at `0`, so the tree runs to `+∞` —
+`log (exp x − 1) ≤ log x + 1` on `(0,1]` turns it into domination of `(G − 1) − log x`. -/
+theorem leaf_var_expvar_const_one_absurd {t2 : EMLTree} {Av : Real → Real} {G : Real}
+    (hG : 0 < G)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - 1))
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (Av x))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  refine leaf_var_dominates_neglog_absurd (c₀ := G - 1) (fun x hx hx1 => ?_) h
+  rw [hval x hx]
+  -- `0 < exp x − 1 ≤ x · exp 1`
+  have hupos : (0 : Real) < exp x - 1 := by
+    have s : (1 : Real) < exp x := by
+      have t := exp_lt hx; rwa [exp_zero] at t
+    have u := add_lt_add_left s (-1 : Real)
+    have l : (-1 : Real) + 1 = 0 := by mach_ring
+    have r : (-1 : Real) + exp x = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hule : exp x - 1 ≤ x * exp 1 :=
+    le_trans exp_sub_one_le_mul_exp
+      (mul_le_mul_of_nonneg_left (exp_monotone hx1) (le_of_lt hx))
+  -- `log (exp x − 1) ≤ log x + 1`
+  have hlog : log (exp x - 1) ≤ log x + 1 := by
+    have s := log_le_log hupos hule
+    rwa [log_mul hx (exp_pos 1), log_exp] at s
+  have hge : G ≤ exp (Av x) := by
+    refine le_trans ?_ (hlow x hx)
+    have s := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hx)) (le_of_lt hG)
+    have e : G * (1 : Real) = G := by mach_mpoly [G]
+    rw [e] at s; exact s
+  have s := add_le_add_wit hge (neg_le_neg_wit hlog)
+  have l : G + -(log x + 1) = G - 1 - log x := by mach_mpoly [G, log x]
+  have r : exp (Av x) + -log (exp x - 1) = exp (Av x) - log (exp x - 1) := by
+    mach_mpoly [exp (Av x), log (exp x - 1)]
+  rw [l, r] at s; exact s
+
+/-- **The shifted tangent.** `log (exp g + u) ≤ g + u·exp(−g)` for `u ≥ 0` — the linear ceiling on
+the log *at the point where the two terms cancel*, written division-free (`exp(−g)` for `1/M`).
+
+Proof: put `v := log (exp g + u) − g`. Then `exp g · exp v = exp g + u`, so
+`u = exp g · (exp v − 1) ≥ exp g · v` by the tangent bound, and multiplying by `exp(−g)` gives
+`v ≤ u·exp(−g)`. Same peeling idea as `exp_e_mul_le`, applied to `log` instead of `exp`. -/
+theorem log_shift_ceiling {g u : Real} (hu : 0 ≤ u) : log (exp g + u) ≤ g + u * exp (-g) := by
+  have hpos : (0 : Real) < exp g + u := by
+    have s := add_le_add_wit (le_refl (exp g)) hu
+    have e : exp g + (0 : Real) = exp g := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le (exp_pos g) s
+  have hemg : exp (-g) * exp g = 1 := exp_neg_self_mul g
+  -- `exp g · exp v = exp g + u`
+  have hsplit : exp g * exp (log (exp g + u) - g) = exp g + u := by
+    rw [← exp_add]
+    have e : g + (log (exp g + u) - g) = log (exp g + u) := by
+      mach_mpoly [g, log (exp g + u)]
+    rw [e, exp_log hpos]
+  -- `exp g · v ≤ u`
+  have hgv : exp g * (log (exp g + u) - g) ≤ u := by
+    have ht := one_add_le_exp (log (exp g + u) - g)
+    have s := mul_le_mul_of_nonneg_left ht (le_of_lt (exp_pos g))
+    rw [hsplit] at s
+    have l : exp g * (1 + (log (exp g + u) - g)) = exp g + exp g * (log (exp g + u) - g) := by
+      mach_mpoly [exp g, log (exp g + u), g]
+    rw [l] at s
+    have u2 := add_le_add_wit s (le_refl (-exp g))
+    have l2 : exp g + exp g * (log (exp g + u) - g) + -exp g
+        = exp g * (log (exp g + u) - g) := by
+      mach_mpoly [exp g, log (exp g + u), g]
+    have r2 : exp g + u + -exp g = u := by mach_mpoly [exp g, u]
+    rw [l2, r2] at u2; exact u2
+  -- multiply by `exp(−g) > 0`
+  have hv : log (exp g + u) - g ≤ u * exp (-g) := by
+    have s := mul_le_mul_of_nonneg_left hgv (le_of_lt (exp_pos (-g)))
+    have l : exp (-g) * (exp g * (log (exp g + u) - g))
+        = (exp (-g) * exp g) * (log (exp g + u) - g) := by
+      mach_mpoly [exp (-g), exp g, log (exp g + u), g]
+    rw [l, hemg] at s
+    have l2 : (1 : Real) * (log (exp g + u) - g) = log (exp g + u) - g := by
+      mach_mpoly [log (exp g + u), g]
+    have r2 : exp (-g) * u = u * exp (-g) := mul_comm _ _
+    rw [l2, r2] at s; exact s
+  have s := add_le_add_wit hv (le_refl g)
+  have l : log (exp g + u) - g + g = log (exp g + u) := by
+    mach_mpoly [log (exp g + u), g]
+  have r : u * exp (-g) + g = g + u * exp (-g) := by mach_mpoly [u, exp (-g), g]
+  rw [l, r] at s; exact s
+
+/-- `L < 1`, `γ := G − log M > 0` (`M := 1 − L`): the tree has a positive constant floor. -/
+theorem leaf_var_expvar_const_gamma_pos_absurd {t2 : EMLTree} {Av : Real → Real} {G L M : Real}
+    (hG : 0 < G) (hM : 0 < M) (hLM : L = 1 - M) (hgam : log M < G)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (Av x))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hBpos : ∀ z : Real, 0 < z → 0 < exp z - L := by
+    intro z hz
+    have s : (1 : Real) < exp z := by
+      have t := exp_lt hz; rwa [exp_zero] at t
+    have hu : (0 : Real) < exp z - 1 := by
+      have u := add_lt_add_left s (-1 : Real)
+      have l : (-1 : Real) + 1 = 0 := by mach_ring
+      have r : (-1 : Real) + exp z = exp z - 1 := by mach_mpoly [exp z]
+      rw [l, r] at u; exact u
+    have hsum : (0 : Real) < (exp z - 1) + M := add_pos hu hM
+    have e : (exp z - 1) + M = exp z - L := by rw [hLM]; mach_mpoly [exp z, M]
+    rw [e] at hsum; exact hsum
+  have hGle : ∀ z : Real, 0 < z → G ≤ exp (Av z) := by
+    intro z hz
+    refine le_trans ?_ (hlow z hz)
+    have s := mul_le_mul_of_nonneg_left (one_le_exp (le_of_lt hz)) (le_of_lt hG)
+    have e : G * (1 : Real) = G := by mach_mpoly [G]
+    rw [e] at s; exact s
+  have hMlt : M < exp G := by
+    have s := exp_lt hgam
+    rwa [exp_log hM] at s
+  have hZ : (1 : Real) < exp G + L := by
+    rw [hLM]
+    have u := add_lt_add_left hMlt (1 - M)
+    have l : (1 - M) + M = (1 : Real) := by mach_mpoly [M]
+    have r : (1 - M) + exp G = exp G + (1 - M) := by mach_mpoly [M, exp G]
+    rw [l, r] at u; exact u
+  have hZpos : (0 : Real) < exp G + L := lt_trans_ax one_pos hZ
+  obtain ⟨w, hwpos, hw1, hwZ⟩ := two_bound_witness' one_pos (log_pos_of_one_lt hZ)
+  have hBwlt : exp w - L < exp G := by
+    have s := exp_lt hwZ
+    rw [exp_log hZpos] at s
+    have u := add_lt_add_left s (-L)
+    have l : -L + exp w = exp w - L := by mach_mpoly [exp w, L]
+    have r : -L + (exp G + L) = exp G := by mach_mpoly [exp G, L]
+    rw [l, r] at u; exact u
+  have hlogw : log (exp w - L) < G := by
+    have s := log_lt_log_strict (hBpos w hwpos) hBwlt
+    rwa [log_exp] at s
+  have hc : (0 : Real) < G - log (exp w - L) := by
+    have u := add_lt_add_left hlogw (-log (exp w - L))
+    have l : -log (exp w - L) + log (exp w - L) = (0 : Real) := by mach_ring
+    have r : -log (exp w - L) + G = G - log (exp w - L) := by
+      mach_mpoly [G, log (exp w - L)]
+    rw [l, r] at u; exact u
+  refine leaf_var_const_floor_absurd hc hwpos (le_of_lt hw1) (fun x hx hxw => ?_) h
+  rw [hval x hx]
+  have h2 : log (exp x - L) ≤ log (exp w - L) := by
+    refine log_le_log (hBpos x hx) ?_
+    have s := add_le_add_wit (exp_monotone hxw) (le_refl (-L))
+    have l : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+    have r : exp w + -L = exp w - L := by mach_mpoly [exp w, L]
+    rw [l, r] at s; exact s
+  have s := add_le_add_wit (hGle x hx) (neg_le_neg_wit h2)
+  have l : G + -log (exp w - L) = G - log (exp w - L) := by
+    mach_mpoly [G, log (exp w - L)]
+  have r : exp (Av x) + -log (exp x - L) = exp (Av x) - log (exp x - L) := by
+    mach_mpoly [exp (Av x), log (exp x - L)]
+  rw [l, r] at s; exact s
+
+/-- `L < 1`, `γ := G − log M < 0`: the tree is *negative* at a point below the cutoff, which
+`leaf_var_right_pos` forbids. The point is found by taking logs — `u < log(log M) − log G` gives
+`G·exp u < log M` — so no division is needed to locate it. -/
+theorem leaf_var_expvar_const_gamma_neg_absurd {t2 : EMLTree} {Av : Real → Real} {G L M : Real}
+    (hG : 0 < G) (hM : 0 < M) (hLM : L = 1 - M) (hgam : G < log M)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hupp : ∀ x : Real, 0 < x → exp (Av x) ≤ G * exp (exp x - 1))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hlogMpos : (0 : Real) < log M := lt_trans_ax hG hgam
+  have hS : log G < log (log M) := log_lt_log_strict hG hgam
+  have hSpos : (0 : Real) < log (log M) - log G := by
+    have u := add_lt_add_left hS (-log G)
+    have l : -log G + log G = (0 : Real) := by mach_ring
+    have r : -log G + log (log M) = log (log M) - log G := by
+      mach_mpoly [log G, log (log M)]
+    rw [l, r] at u; exact u
+  have h1S : (1 : Real) < 1 + (log (log M) - log G) := by
+    have u := add_lt_add_left hSpos (1 : Real)
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  have h1Spos : (0 : Real) < 1 + (log (log M) - log G) := lt_trans_ax one_pos h1S
+  obtain ⟨w, hwpos, hw1, hwS⟩ :=
+    two_bound_witness' (exp_pos (-1)) (log_pos_of_one_lt h1S)
+  have huS : exp w - 1 < log (log M) - log G := by
+    have s := exp_lt hwS
+    rw [exp_log h1Spos] at s
+    have u := add_lt_add_left s (-1 : Real)
+    have l : (-1 : Real) + exp w = exp w - 1 := by mach_mpoly [exp w]
+    have r : (-1 : Real) + (1 + (log (log M) - log G)) = log (log M) - log G := by
+      mach_mpoly [log (log M), log G]
+    rw [l, r] at u; exact u
+  have hkey : G * exp (exp w - 1) < log M := by
+    have s : log G + (exp w - 1) < log (log M) := by
+      have u := add_lt_add_left huS (log G)
+      have l : log G + (log (log M) - log G) = log (log M) := by
+        mach_mpoly [log G, log (log M)]
+      rw [l] at u; exact u
+    have t := exp_lt s
+    rw [exp_add, exp_log hG, exp_log hlogMpos] at t
+    exact t
+  refine leaf_var_neg_point_absurd hwpos hw1 ?_ h
+  rw [hval w hwpos]
+  have hlogge : log M ≤ log (exp w - L) := by
+    refine log_le_log hM ?_
+    have s : (1 : Real) ≤ exp w := one_le_exp (le_of_lt hwpos)
+    have u := add_le_add_wit s (le_refl (M - 1))
+    have l : (1 : Real) + (M - 1) = M := by mach_mpoly [M]
+    have r : exp w + (M - 1) = exp w - L := by rw [hLM]; mach_mpoly [exp w, M]
+    rw [l, r] at u; exact u
+  have hlt : exp (Av w) < log (exp w - L) :=
+    lt_of_le_of_lt (hupp w hwpos) (lt_of_lt_of_le hkey hlogge)
+  have u := add_lt_add_left hlt (-log (exp w - L))
+  have l : -log (exp w - L) + exp (Av w) = exp (Av w) - log (exp w - L) := by
+    mach_mpoly [exp (Av w), log (exp w - L)]
+  have r : -log (exp w - L) + log (exp w - L) = (0 : Real) := by mach_ring
+  rw [l, r] at u; exact le_of_lt u
+
+/-! ### The coincidence `γ = 0`, i.e. `M = exp G`
+
+`RESULT_LEAF_VAR_ASSEMBLY.md` found that for *constant-valued* `B` the coincidence needs nothing
+extra: the tangent bound hands over a positive linear term whether or not `γ` is zero, so the
+three-way split collapses to two. **That does not survive a moving `log`.** Here the linear
+coefficient is `κ := G − exp(−G)`, and its sign is independent of `γ`:
+
+| `κ` | tree near `0` | instrument |
+|---|---|---|
+| `> 0` | `≍ κ·x` | affine floor — the previous session's route |
+| `< 0` | `≍ κ·x < 0` | a negative point |
+| `= 0` | `≍ (G/4)·x²` | **a quadratic floor, which needs a new arithmetic core** |
+
+`κ = 0` is `G·exp G = 1`, i.e. `G = Ω`, the omega constant — one transcendental parameter value,
+and reachable, so it cannot be waved away. -/
+
+/-- `γ = 0`, `κ > 0`: an affine floor, exactly as in the constant-`B` closure. -/
+theorem leaf_var_expvar_const_gamma_zero_pos_absurd {t2 : EMLTree} {Av : Real → Real} {G L : Real}
+    (hLM : L = 1 - exp G) (hkap : exp (-G) < G)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (Av x))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hK : (0 : Real) < G - exp (-G) := by
+    have u := add_lt_add_left hkap (-exp (-G))
+    have l : -exp (-G) + exp (-G) = (0 : Real) := by mach_ring
+    have r : -exp (-G) + G = G - exp (-G) := by mach_mpoly [G, exp (-G)]
+    rw [l, r] at u; exact u
+  refine leaf_var_affine_floor_absurd hK (le_refl (0 : Real)) (fun x hx _ => ?_) h
+  rw [hval x hx]
+  have hBeq : exp x - L = exp G + (exp x - 1) := by
+    rw [hLM]; mach_mpoly [exp x, exp G]
+  rw [hBeq]
+  have hu0 : (0 : Real) ≤ exp x - 1 := by
+    have s : (1 : Real) ≤ exp x := one_le_exp (le_of_lt hx)
+    have u := add_le_add_wit s (le_refl (-1 : Real))
+    have l : (1 : Real) + -1 = 0 := by mach_ring
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hceil := log_shift_ceiling (g := G) hu0
+  have s := add_le_add_wit (hlow x hx) (neg_le_neg_wit hceil)
+  -- `G·exp x − G − (exp x − 1)·exp(−G) = (exp x − 1)·(G − exp(−G))`
+  have l : G * exp x + -(G + (exp x - 1) * exp (-G))
+      = (exp x - 1) * (G - exp (-G)) := by
+    mach_mpoly [G, exp x, exp (-G)]
+  have r : exp (Av x) + -log (exp G + (exp x - 1))
+      = exp (Av x) - log (exp G + (exp x - 1)) := by
+    mach_mpoly [exp (Av x), log (exp G + (exp x - 1))]
+  rw [l, r] at s
+  refine le_trans ?_ s
+  have hxu : x ≤ exp x - 1 := by
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l2 : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r2 : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l2, r2] at u; exact u
+  have s2 := mul_le_mul_of_nonneg_right hxu (le_of_lt hK)
+  have e : (0 : Real) + (G - exp (-G)) * x = x * (G - exp (-G)) := by
+    mach_mpoly [G, exp (-G), x]
+  rw [e]; exact s2
+
+/-- **`3t ≤ exp t` for `t ≥ 4`** — the arithmetic a *quadratic* floor needs, and which
+`exp_ge_two_mul` cannot supply (it gives exactly `2t`, which ties).
+
+Peeling at `k = 2` instead of `k = 1`: `exp t = exp 2 · exp (t−2) ≥ exp 2 · (t−1) > 4(t−1) ≥ 3t`
+once `t ≥ 4`. The only numeric input is `2 < e` squared — no sharper bound on `e` is needed, which
+is why `t ≥ 4` rather than `t ≥ 2` is the threshold. -/
+theorem exp_ge_three_mul {t : Real} (ht : (1 + 1 + 1 + 1 : Real) ≤ t) : t + t + t ≤ exp t := by
+  have h14 : (1 : Real) ≤ 1 + 1 + 1 + 1 := by
+    have s := add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl (1 : Real))
+      (le_of_lt one_pos)) (le_of_lt one_pos)) (le_of_lt one_pos)
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  have ht1 : (0 : Real) ≤ t - 1 := sub_nonneg_of_le (le_trans h14 ht)
+  have hfour : ((1 : Real) + 1) * (1 + 1) < exp (1 + 1) := by
+    have s1 : ((1 : Real) + 1) * (1 + 1) < exp 1 * (1 + 1) :=
+      mul_lt_mul_of_pos_right two_lt_exp_one (add_pos one_pos one_pos)
+    have s2 : exp 1 * ((1 : Real) + 1) < exp 1 * exp 1 :=
+      mul_lt_mul_pos_left_wit two_lt_exp_one (exp_pos 1)
+    have e : exp ((1 : Real) + 1) = exp 1 * exp 1 := exp_add 1 1
+    rw [e]; exact lt_trans_ax s1 s2
+  have hstep : exp ((1 : Real) + 1) * (t - 1) ≤ exp t := by
+    have hlow : t - 1 ≤ exp (t - (1 + 1)) := by
+      have s := one_add_le_exp (t - (1 + 1))
+      have l : (1 : Real) + (t - (1 + 1)) = t - 1 := by mach_mpoly [t]
+      rw [l] at s; exact s
+    have s := mul_le_mul_of_nonneg_left hlow (le_of_lt (exp_pos (1 + 1)))
+    rw [← exp_add] at s
+    have e : ((1 : Real) + 1) + (t - (1 + 1)) = t := by mach_mpoly [t]
+    rw [e] at s; exact s
+  have hbig : ((1 : Real) + 1) * (1 + 1) * (t - 1) ≤ exp (1 + 1) * (t - 1) :=
+    mul_le_mul_of_nonneg_right (le_of_lt hfour) ht1
+  have hfin : t + t + t ≤ ((1 : Real) + 1) * (1 + 1) * (t - 1) := by
+    have hd : (0 : Real) ≤ t - (1 + 1 + 1 + 1) := sub_nonneg_of_le ht
+    have s := add_le_add_wit hd (le_refl (t + t + t))
+    have l : (0 : Real) + (t + t + t) = t + t + t := by mach_mpoly [t]
+    have r : (t - (1 + 1 + 1 + 1)) + (t + t + t) = ((1 : Real) + 1) * (1 + 1) * (t - 1) := by
+      mach_mpoly [t]
+    rw [l, r] at s; exact s
+  exact le_trans hfin (le_trans hbig hstep)
+
+/-- The arithmetic core for a **quadratic** floor. Identical in shape to `leaf_var_arith`, except
+that `C·x²` contributes `t + t` where `K·x` contributed `t` — so the final absorption needs
+`exp_ge_three_mul`, and `t` must be pushed past `4`. -/
+theorem leaf_var_quad_arith {t v w Cl : Real} (ht4 : (1 + 1 + 1 + 1 : Real) ≤ t)
+    (hpin : exp (-t) * v = exp (-t) * w - 1)
+    (hLv : Cl - (t + t) ≤ v) (hw : w ≤ exp 1) (hbig : exp 1 - Cl < t) : False := by
+  have hem : exp t * exp (-t) = 1 := by
+    rw [← exp_add]
+    have e : t + -t = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  have hv : v = w - exp t := by
+    have hmul : exp t * (exp (-t) * v) = exp t * (exp (-t) * w - 1) := by rw [hpin]
+    have e1 : exp t * (exp (-t) * v) = (exp t * exp (-t)) * v := by
+      mach_mpoly [exp t, exp (-t), v]
+    have e2 : exp t * (exp (-t) * w - 1) = (exp t * exp (-t)) * w - exp t := by
+      mach_mpoly [exp t, exp (-t), w]
+    rw [e1, e2, hem] at hmul
+    have e3 : (1 : Real) * v = v := by mach_ring
+    have e4 : (1 : Real) * w = w := by mach_ring
+    rw [e3, e4] at hmul
+    exact hmul
+  rw [hv] at hLv
+  have hstep : exp t ≤ exp 1 - Cl + (t + t) := by
+    have s1 : Cl - (t + t) ≤ exp 1 - exp t := by
+      have s := add_le_add_wit hw (le_refl (-exp t))
+      have e1 : w + -exp t = w - exp t := by mach_ring
+      have e2 : exp 1 + -exp t = exp 1 - exp t := by mach_ring
+      rw [e1, e2] at s
+      exact le_trans hLv s
+    have s := add_le_add_left s1 (exp t - Cl + (t + t))
+    have e1 : exp t - Cl + (t + t) + (Cl - (t + t)) = exp t := by
+      mach_mpoly [exp t, Cl, t]
+    have e2 : exp t - Cl + (t + t) + (exp 1 - exp t) = exp 1 - Cl + (t + t) := by
+      mach_mpoly [exp t, exp 1, Cl, t]
+    rw [e1, e2] at s
+    exact s
+  have h3t : t + t + t ≤ exp t := exp_ge_three_mul ht4
+  have hfin : t ≤ exp 1 - Cl := by
+    have s := le_trans h3t hstep
+    have u := add_le_add_left s (-(t + t))
+    have e1 : -(t + t) + (t + t + t) = t := by mach_mpoly [t]
+    have e2 : -(t + t) + (exp 1 - Cl + (t + t)) = exp 1 - Cl := by
+      mach_mpoly [exp 1, Cl, t]
+    rw [e1, e2] at u
+    exact u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hbig hfin)
+
+/-- **A quadratic floor on the right child is fatal too.** `leaf_var_floor_absurd` with `C·x²` in
+place of `K·x`, instantiated at `t := 4 + exp (exp 1 − log C) + exp (−log d)`. -/
+theorem leaf_var_quad_floor_absurd {t2 : EMLTree} {C d : Real} (hC : 0 < C)
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hfloor : ∀ x : Real, 0 < x → x ≤ d → C * (x * x) ≤ t2.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have ht4 : (1 + 1 + 1 + 1 : Real)
+      ≤ 1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d) := by
+    have s := add_le_add_wit (add_le_add_wit (le_refl (1 + 1 + 1 + 1 : Real))
+      (le_of_lt (exp_pos (exp 1 - log C)))) (le_of_lt (exp_pos (-log d)))
+    have e : (1 + 1 + 1 + 1 : Real) + 0 + 0 = 1 + 1 + 1 + 1 := by mach_ring
+    rw [e] at s; exact s
+  have hx0 : (0 : Real)
+      < exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))) := exp_pos _
+  have hxd : exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))) ≤ d := by
+    have hge : -log d ≤ 1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d) := by
+      have h1 := le_of_lt (exp_grows_strictly_thm (-log d))
+      have s := add_le_add_wit (add_le_add_wit
+        (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos))
+        (le_of_lt (exp_pos (exp 1 - log C)))) (le_refl (exp (-log d)))
+      have e : (0 : Real) + 0 + exp (-log d) = exp (-log d) := by mach_ring
+      rw [e] at s
+      exact le_trans h1 s
+    have hstep : -(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)) ≤ log d := by
+      have s := neg_le_neg_wit hge
+      have e : -(-log d) = log d := by mach_ring
+      rw [e] at s
+      exact s
+    have hh := exp_monotone hstep
+    rw [exp_log hd] at hh
+    exact hh
+  have hx1 : exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))) ≤ 1 :=
+    le_trans hxd hd1
+  refine leaf_var_quad_arith
+    (t := 1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))
+    (v := log (t2.eval (exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))))))
+    (w := exp (exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)))))
+    (Cl := log C) ht4 ?_ ?_ ?_ ?_
+  · exact leaf_var_pin h _ hx0
+  · -- the quadratic floor, pushed through `log`: `log (C·x·x) = log C − (t + t)`
+    have hsq : (0 : Real)
+        < exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)))
+          * exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))) := mul_pos hx0 hx0
+    have hCx : (0 : Real) < C * (exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)))
+        * exp (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)))) := mul_pos hC hsq
+    have hl := log_le_log hCx (hfloor _ hx0 hxd)
+    rw [log_mul hC hsq, log_mul hx0 hx0, log_exp] at hl
+    have e : log C + (-(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))
+        + -(1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d)))
+        = log C - ((1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))
+          + (1 + 1 + 1 + 1 + exp (exp 1 - log C) + exp (-log d))) := by
+      mach_mpoly [log C, exp (exp 1 - log C), exp (-log d)]
+    rw [e] at hl
+    exact hl
+  · exact exp_monotone hx1
+  · have h1 := exp_grows_strictly_thm (exp 1 - log C)
+    have s := add_le_add_wit (add_le_add_wit
+      (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos))
+      (le_refl (exp (exp 1 - log C)))) (le_of_lt (exp_pos (-log d)))
+    have e : (0 : Real) + exp (exp 1 - log C) + 0 = exp (exp 1 - log C) := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le h1 s
+
+/-- `1/2 + 1/2 = 1`, from `mul_inv`. This corpus has no numeral `2`, so the halving that a
+second-order tangent bound needs has to be built. -/
+theorem half_add_half : (1 / (1 + 1) : Real) + 1 / (1 + 1) = 1 := by
+  have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have s := mul_inv (1 + 1 : Real) (ne_of_gt h2)
+  have e : ((1 : Real) + 1) * (1 / (1 + 1)) = 1 / (1 + 1) + 1 / (1 + 1) := by
+    mach_mpoly [(1 / (1 + 1) : Real)]
+  rw [e] at s; exact s
+
+/-- **The second-order tangent, by squaring the first.** `exp (s+s) = (exp s)² ≥ (1+s)²`. Stated in
+`s` rather than in `u = s+s` precisely so that no division appears in the statement. -/
+theorem exp_quad_lower {s : Real} (hs : 0 ≤ s) : 1 + (s + s) + s * s ≤ exp (s + s) := by
+  have h1s : (0 : Real) ≤ 1 + s := by
+    have t := add_le_add_wit (le_of_lt one_pos) hs
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at t; exact t
+  have ht := one_add_le_exp s
+  have s1 : (1 + s) * (1 + s) ≤ exp s * (1 + s) := mul_le_mul_of_nonneg_right ht h1s
+  have s2 : exp s * (1 + s) ≤ exp s * exp s :=
+    mul_le_mul_of_nonneg_left ht (le_of_lt (exp_pos s))
+  have e : exp (s + s) = exp s * exp s := exp_add s s
+  rw [e]
+  have l : 1 + (s + s) + s * s = (1 + s) * (1 + s) := by mach_mpoly [s]
+  rw [l]
+  exact le_trans s1 s2
+
+/-- `exp u − 1 − u ≥ (u/2)²` for `u ≥ 0` — the quadratic gap the coincidence lives in. -/
+theorem exp_sub_one_sub_self_ge_quad {u : Real} (hu : 0 ≤ u) :
+    u * (1 / (1 + 1)) * (u * (1 / (1 + 1))) ≤ exp u - 1 - u := by
+  have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hhpos : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos h2
+  have hs0 : (0 : Real) ≤ u * (1 / (1 + 1)) := mul_nonneg hu (le_of_lt hhpos)
+  have hss : u * (1 / (1 + 1)) + u * (1 / (1 + 1)) = u := by
+    have e : u * (1 / (1 + 1)) + u * (1 / (1 + 1)) = u * (1 / (1 + 1) + 1 / (1 + 1)) := by
+      mach_mpoly [u, (1 / (1 + 1) : Real)]
+    rw [e, half_add_half]; mach_mpoly [u]
+  have hq := exp_quad_lower hs0
+  rw [hss] at hq
+  have s := add_le_add_wit hq (le_refl (-1 - u))
+  have l : 1 + u + u * (1 / (1 + 1)) * (u * (1 / (1 + 1))) + (-1 - u)
+      = u * (1 / (1 + 1)) * (u * (1 / (1 + 1))) := by
+    mach_mpoly [u, (1 / (1 + 1) : Real)]
+  have r : exp u + (-1 - u) = exp u - 1 - u := by mach_mpoly [exp u, u]
+  rw [l, r] at s; exact s
+
+/-- # **The Ω-point: `γ = 0` AND `κ = 0`.**
+
+`G = exp(−G)`, i.e. `G·exp G = 1`, i.e. `G = Ω`. Both the constant and the linear term cancel
+*exactly*, and what is left is second order: `t2 x ≥ G·(u/2)² ≥ (G/4)·x²`.
+
+> This is where the previous session's lesson stops. There the tangent bound supplied a positive
+> linear term for free; here the moving `log` cancels it, and only the **quadratic** gap survives —
+> which is why `leaf_var_quad_floor_absurd` had to be built. -/
+theorem leaf_var_expvar_const_gamma_zero_zero_absurd {t2 : EMLTree} {Av : Real → Real}
+    {G L : Real} (hG : 0 < G) (hLM : L = 1 - exp G) (hkap : exp (-G) = G)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hexact : ∀ x : Real, 0 < x → exp (Av x) = G * exp (exp x - 1))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have h2 : (0 : Real) < 1 + 1 := add_pos one_pos one_pos
+  have hhpos : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos h2
+  have hC : (0 : Real) < G * (1 / (1 + 1) * (1 / (1 + 1))) := mul_pos hG (mul_pos hhpos hhpos)
+  refine leaf_var_quad_floor_absurd hC one_pos (le_refl 1) (fun x hx _ => ?_) h
+  rw [hval x hx, hexact x hx]
+  have hBeq : exp x - L = exp G + (exp x - 1) := by
+    rw [hLM]; mach_mpoly [exp x, exp G]
+  rw [hBeq]
+  have hu0 : (0 : Real) ≤ exp x - 1 := by
+    have s : (1 : Real) ≤ exp x := one_le_exp (le_of_lt hx)
+    have u := add_le_add_wit s (le_refl (-1 : Real))
+    have l : (1 : Real) + -1 = 0 := by mach_ring
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hxu : x ≤ exp x - 1 := by
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  -- the quadratic gap, scaled by `G`
+  have hgap := exp_sub_one_sub_self_ge_quad hu0
+  have hGgap := mul_le_mul_of_nonneg_left hgap (le_of_lt hG)
+  -- the log ceiling, with `exp(−G) = G`
+  have hceil := log_shift_ceiling (g := G) hu0
+  rw [hkap] at hceil
+  -- `G·exp u − (G + u·G) = G·(exp u − 1 − u)`
+  have s := add_le_add_wit (le_refl (G * exp (exp x - 1))) (neg_le_neg_wit hceil)
+  have l : G * exp (exp x - 1) + -(G + (exp x - 1) * G)
+      = G * (exp (exp x - 1) - 1 - (exp x - 1)) := by
+    mach_mpoly [G, exp (exp x - 1), exp x]
+  have r : G * exp (exp x - 1) + -log (exp G + (exp x - 1))
+      = G * exp (exp x - 1) - log (exp G + (exp x - 1)) := by
+    mach_mpoly [G, exp (exp x - 1), log (exp G + (exp x - 1))]
+  rw [l, r] at s
+  refine le_trans ?_ (le_trans hGgap s)
+  -- `(x/2)² ≤ (u/2)²`, then multiply by `G`
+  have hstep : x * (1 / (1 + 1)) * (x * (1 / (1 + 1)))
+      ≤ (exp x - 1) * (1 / (1 + 1)) * ((exp x - 1) * (1 / (1 + 1))) := by
+    have hx2 : x * (1 / (1 + 1)) ≤ (exp x - 1) * (1 / (1 + 1)) :=
+      mul_le_mul_of_nonneg_right hxu (le_of_lt hhpos)
+    have hxn : (0 : Real) ≤ x * (1 / (1 + 1)) := mul_nonneg (le_of_lt hx) (le_of_lt hhpos)
+    have hun : (0 : Real) ≤ (exp x - 1) * (1 / (1 + 1)) := mul_nonneg hu0 (le_of_lt hhpos)
+    exact le_trans (mul_le_mul_of_nonneg_right hx2 hxn)
+      (mul_le_mul_of_nonneg_left hx2 hun)
+  have hGstep := mul_le_mul_of_nonneg_left hstep (le_of_lt hG)
+  have e : G * (1 / (1 + 1) * (1 / (1 + 1))) * (x * x)
+      = G * (x * (1 / (1 + 1)) * (x * (1 / (1 + 1)))) := by
+    mach_mpoly [G, x, (1 / (1 + 1) : Real)]
+  rw [e]; exact hGstep
+
+/-- The matching **floor** for `log_shift_ceiling`: `log (exp g + u) ≥ g + z − z²` with
+`z := u·exp(−g)`. Both bounds come from the same two facts — `exp v − 1 ≤ v·exp v` gives
+`z ≤ v·(1+z)`, and `log (1+z) ≤ z` gives `v ≤ z`; substituting the second into the first turns
+`v ≥ z − v·z` into `v ≥ z − z²`, with no division. -/
+theorem log_shift_floor {g u : Real} (hu : 0 ≤ u) :
+    g + u * exp (-g) - u * exp (-g) * (u * exp (-g)) ≤ log (exp g + u) := by
+  have hpos : (0 : Real) < exp g + u := by
+    have s := add_le_add_wit (le_refl (exp g)) hu
+    have e : exp g + (0 : Real) = exp g := by mach_ring
+    rw [e] at s
+    exact lt_of_lt_of_le (exp_pos g) s
+  have hz0 : (0 : Real) ≤ u * exp (-g) := mul_nonneg hu (le_of_lt (exp_pos (-g)))
+  -- `exp v = 1 + z` for `v := log (exp g + u) − g`
+  have hev : exp (log (exp g + u) - g) = 1 + u * exp (-g) := by
+    have esplit : log (exp g + u) - g = log (exp g + u) + -g := by mach_ring
+    rw [esplit, exp_add, exp_log hpos]
+    have e : (exp g + u) * exp (-g) = exp g * exp (-g) + u * exp (-g) := by
+      mach_mpoly [exp g, u, exp (-g)]
+    rw [e]
+    have e2 : exp g * exp (-g) = 1 := by
+      rw [← exp_add]
+      have e3 : g + -g = (0 : Real) := by mach_ring
+      rw [e3, exp_zero]
+    rw [e2]
+  -- `v ≤ z`
+  have hvz : log (exp g + u) - g ≤ u * exp (-g) := by
+    have hv := log_le_sub_one_of_one_le (y := 1 + u * exp (-g)) (by
+      have s := add_le_add_wit (le_refl (1 : Real)) hz0
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at s; exact s)
+    have e : log (1 + u * exp (-g)) = log (exp g + u) - g := by
+      rw [← hev, log_exp]
+    rw [e] at hv
+    have e2 : (1 : Real) + u * exp (-g) - 1 = u * exp (-g) := by
+      mach_mpoly [u, exp (-g)]
+    rw [e2] at hv; exact hv
+  -- `z ≤ v·(1+z)`
+  have hzv : u * exp (-g) ≤ (log (exp g + u) - g) * (1 + u * exp (-g)) := by
+    have s := exp_sub_one_le_mul_exp (x := log (exp g + u) - g)
+    rw [hev] at s
+    have e : (1 : Real) + u * exp (-g) - 1 = u * exp (-g) := by mach_mpoly [u, exp (-g)]
+    rw [e] at s; exact s
+  -- `v·z ≤ z·z`, so `v ≥ z − z²`
+  have hvzz : (log (exp g + u) - g) * (u * exp (-g)) ≤ u * exp (-g) * (u * exp (-g)) :=
+    mul_le_mul_of_nonneg_right hvz hz0
+  have hfin : u * exp (-g) - u * exp (-g) * (u * exp (-g)) ≤ log (exp g + u) - g := by
+    -- `z − v·z ≤ v`, from `z ≤ v·(1+z)`
+    have step1 : u * exp (-g) - (log (exp g + u) - g) * (u * exp (-g))
+        ≤ log (exp g + u) - g := by
+      have s := add_le_add_wit hzv (le_refl (-((log (exp g + u) - g) * (u * exp (-g)))))
+      have l : u * exp (-g) + -((log (exp g + u) - g) * (u * exp (-g)))
+          = u * exp (-g) - (log (exp g + u) - g) * (u * exp (-g)) := by
+        mach_mpoly [u, exp (-g), log (exp g + u), g]
+      have r : (log (exp g + u) - g) * (1 + u * exp (-g))
+            + -((log (exp g + u) - g) * (u * exp (-g)))
+          = log (exp g + u) - g := by
+        mach_mpoly [u, exp (-g), log (exp g + u), g]
+      rw [l, r] at s; exact s
+    -- `z − z² ≤ z − v·z`, from `v·z ≤ z²`
+    have step2 : u * exp (-g) - u * exp (-g) * (u * exp (-g))
+        ≤ u * exp (-g) - (log (exp g + u) - g) * (u * exp (-g)) := by
+      have s := add_le_add_wit (le_refl (u * exp (-g))) (neg_le_neg_wit hvzz)
+      have l : u * exp (-g) + -(u * exp (-g) * (u * exp (-g)))
+          = u * exp (-g) - u * exp (-g) * (u * exp (-g)) := by
+        mach_mpoly [u, exp (-g)]
+      have r : u * exp (-g) + -((log (exp g + u) - g) * (u * exp (-g)))
+          = u * exp (-g) - (log (exp g + u) - g) * (u * exp (-g)) := by
+        mach_mpoly [u, exp (-g), log (exp g + u), g]
+      rw [l, r] at s; exact s
+    exact le_trans step2 step1
+  have s := add_le_add_wit hfin (le_refl g)
+  have l : u * exp (-g) - u * exp (-g) * (u * exp (-g)) + g
+      = g + u * exp (-g) - u * exp (-g) * (u * exp (-g)) := by
+    mach_mpoly [u, exp (-g), g]
+  have r : log (exp g + u) - g + g = log (exp g + u) := by
+    mach_mpoly [log (exp g + u), g]
+  rw [l, r] at s; exact s
+
+/-- `γ = 0`, `κ < 0`: the tree dips *below zero*. The linear term now points the wrong way, and the
+quadratic correction `−z²` from `log_shift_floor` is small enough not to rescue it — provided the
+point is chosen with `u·(G·e + exp(−G)²) < exp(−G) − G`, which `mul_exp_neg_lt_one` supplies
+without division. -/
+theorem leaf_var_expvar_const_gamma_zero_neg_absurd {t2 : EMLTree} {Av : Real → Real}
+    {G L : Real} (hG : 0 < G) (hLM : L = 1 - exp G) (hkap : G < exp (-G))
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hupp : ∀ x : Real, 0 < x → exp (Av x) ≤ G * exp (exp x - 1))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hD : (0 : Real) < exp (-G) - G := by
+    have u := add_lt_add_left hkap (-G)
+    have l : -G + G = (0 : Real) := by mach_ring
+    have r : -G + exp (-G) = exp (-G) - G := by mach_mpoly [G, exp (-G)]
+    rw [l, r] at u; exact u
+  have hb : (0 : Real) < G * exp 1 + exp (-G) * exp (-G) :=
+    add_pos (mul_pos hG (exp_pos 1)) (mul_pos (exp_pos (-G)) (exp_pos (-G)))
+  -- `u₀ < 1` and `u₀·b < D`
+  obtain ⟨u₀, hu0pos, hu01, hu0D⟩ :=
+    two_bound_witness' one_pos (mul_pos hD (exp_pos (-(G * exp 1 + exp (-G) * exp (-G)))))
+  have hu0b : u₀ * (G * exp 1 + exp (-G) * exp (-G)) < exp (-G) - G := by
+    have s := mul_lt_mul_of_pos_right hu0D hb
+    have e : (exp (-G) - G) * exp (-(G * exp 1 + exp (-G) * exp (-G)))
+          * (G * exp 1 + exp (-G) * exp (-G))
+        = (exp (-G) - G) * ((G * exp 1 + exp (-G) * exp (-G))
+          * exp (-(G * exp 1 + exp (-G) * exp (-G)))) := by
+      mach_mpoly [exp (-G), G, exp 1, exp (-(G * exp 1 + exp (-G) * exp (-G)))]
+    rw [e] at s
+    have t := mul_lt_mul_pos_left_wit (mul_exp_neg_lt_one hb) hD
+    have e2 : (exp (-G) - G) * (1 : Real) = exp (-G) - G := by mach_mpoly [exp (-G), G]
+    rw [e2] at t
+    exact lt_trans_ax s t
+  -- the point `w`, small enough that `u := exp w − 1 ≤ u₀`
+  obtain ⟨w, hwpos, hw1, hwu⟩ :=
+    two_bound_witness' (exp_pos (-1)) (mul_pos hu0pos (exp_pos (-1)))
+  have hwle1 : w ≤ 1 := le_of_lt (lt_trans_ax hw1 exp_neg_one_lt_one)
+  have huu0 : exp w - 1 ≤ u₀ := by
+    have s1 : exp w - 1 ≤ w * exp w := exp_sub_one_le_mul_exp
+    have s2 : w * exp w ≤ w * exp 1 :=
+      mul_le_mul_of_nonneg_left (exp_monotone hwle1) (le_of_lt hwpos)
+    have s3 : w * exp 1 < u₀ * exp (-1) * exp 1 :=
+      mul_lt_mul_of_pos_right hwu (exp_pos 1)
+    have e : u₀ * exp (-1) * exp 1 = u₀ := by
+      have e2 : u₀ * exp (-1) * exp 1 = u₀ * (exp (-1) * exp 1) := by
+        mach_mpoly [u₀, exp (-1), exp 1]
+      rw [e2, exp_neg_self_mul]
+      mach_mpoly [u₀]
+    rw [e] at s3
+    exact le_trans s1 (le_trans s2 (le_of_lt s3))
+  have hu0' : (0 : Real) ≤ exp w - 1 := by
+    have s : (1 : Real) ≤ exp w := one_le_exp (le_of_lt hwpos)
+    have u := add_le_add_wit s (le_refl (-1 : Real))
+    have l : (1 : Real) + -1 = 0 := by mach_ring
+    have r : exp w + -1 = exp w - 1 := by mach_mpoly [exp w]
+    rw [l, r] at u; exact u
+  refine leaf_var_neg_point_absurd hwpos hw1 ?_ h
+  rw [hval w hwpos]
+  have hBeq : exp w - L = exp G + (exp w - 1) := by
+    rw [hLM]; mach_mpoly [exp w, exp G]
+  rw [hBeq]
+  -- upper bound on the tree: `G·exp u ≤ G + G·u·exp u₀`
+  have hupper : exp (Av w) ≤ G + G * ((exp w - 1) * exp u₀) := by
+    refine le_trans (hupp w hwpos) ?_
+    have s1 : exp (exp w - 1) - 1 ≤ (exp w - 1) * exp (exp w - 1) := exp_sub_one_le_mul_exp
+    have s2 : (exp w - 1) * exp (exp w - 1) ≤ (exp w - 1) * exp u₀ :=
+      mul_le_mul_of_nonneg_left (exp_monotone huu0) hu0'
+    have s3 : exp (exp w - 1) ≤ 1 + (exp w - 1) * exp u₀ := by
+      have t := add_le_add_wit (le_trans s1 s2) (le_refl (1 : Real))
+      have l : exp (exp w - 1) - 1 + 1 = exp (exp w - 1) := by
+        mach_mpoly [exp (exp w - 1)]
+      have r : (exp w - 1) * exp u₀ + 1 = 1 + (exp w - 1) * exp u₀ := by
+        mach_mpoly [exp w, exp u₀]
+      rw [l, r] at t; exact t
+    have t := mul_le_mul_of_nonneg_left s3 (le_of_lt hG)
+    have e : G * (1 + (exp w - 1) * exp u₀) = G + G * ((exp w - 1) * exp u₀) := by
+      mach_mpoly [G, exp w, exp u₀]
+    rw [e] at t; exact t
+  have hfloor := log_shift_floor (g := G) hu0'
+  have s := add_le_add_wit hupper (neg_le_neg_wit hfloor)
+  have r : exp (Av w) + -log (exp G + (exp w - 1))
+      = exp (Av w) - log (exp G + (exp w - 1)) := by
+    mach_mpoly [exp (Av w), log (exp G + (exp w - 1))]
+  have l : G + G * ((exp w - 1) * exp u₀)
+        + -(G + (exp w - 1) * exp (-G)
+          - (exp w - 1) * exp (-G) * ((exp w - 1) * exp (-G)))
+      = (exp w - 1) * (G * exp u₀ - exp (-G)
+          + (exp w - 1) * (exp (-G) * exp (-G))) := by
+    mach_mpoly [G, exp w, exp u₀, exp (-G)]
+  rw [l, r] at s
+  refine le_trans s ?_
+  -- the bracket is `≤ 0`
+  have hbr : G * exp u₀ - exp (-G) + (exp w - 1) * (exp (-G) * exp (-G)) ≤ 0 := by
+    have hexpu0 : exp u₀ - 1 ≤ u₀ * exp 1 :=
+      le_trans exp_sub_one_le_mul_exp
+        (mul_le_mul_of_nonneg_left (exp_monotone (le_of_lt hu01)) (le_of_lt hu0pos))
+    have s1 : G * (exp u₀ - 1) ≤ G * (u₀ * exp 1) :=
+      mul_le_mul_of_nonneg_left hexpu0 (le_of_lt hG)
+    have s2 : (exp w - 1) * (exp (-G) * exp (-G)) ≤ u₀ * (exp (-G) * exp (-G)) :=
+      mul_le_mul_of_nonneg_right huu0
+        (le_of_lt (mul_pos (exp_pos (-G)) (exp_pos (-G))))
+    have s3 := add_le_add_wit s1 s2
+    have s4 : G * (u₀ * exp 1) + u₀ * (exp (-G) * exp (-G))
+        = u₀ * (G * exp 1 + exp (-G) * exp (-G)) := by
+      mach_mpoly [G, u₀, exp 1, exp (-G)]
+    rw [s4] at s3
+    have s5 := lt_of_le_of_lt s3 hu0b
+    -- `G(exp u₀ − 1) + (exp w −1)·exp(−G)² < exp(−G) − G`
+    have u := add_lt_add_left s5 (G - exp (-G))
+    have l2 : G - exp (-G) + (G * (exp u₀ - 1) + (exp w - 1) * (exp (-G) * exp (-G)))
+        = G * exp u₀ - exp (-G) + (exp w - 1) * (exp (-G) * exp (-G)) := by
+      mach_mpoly [G, exp u₀, exp w, exp (-G)]
+    have r2 : G - exp (-G) + (exp (-G) - G) = (0 : Real) := by
+      mach_mpoly [G, exp (-G)]
+    rw [l2, r2] at u
+    exact le_of_lt u
+  have t := mul_le_mul_of_nonneg_left hbr hu0'
+  have e : (exp w - 1) * (0 : Real) = 0 := by mach_ring
+  rw [e] at t; exact t
+
+/-- **`A = eml var (const q')`, assembled.** The shape whose `exp (A x)` is *exactly* `G·exp u`.
+Four regimes of `L`, and inside the last one three of `κ` — the full stratification, and every
+boundary between them is transcendental. -/
+theorem leaf_var_expvar_const_bdd_absurd {t2 : EMLTree} {Av : Real → Real} {G L : Real}
+    (hG : 0 < G)
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp (Av x) - log (exp x - L))
+    (hexact : ∀ x : Real, 0 < x → exp (Av x) = G * exp (exp x - 1))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hxu : ∀ x : Real, x ≤ exp x - 1 := by
+    intro x
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hlow : ∀ x : Real, 0 < x → G * exp x ≤ exp (Av x) := by
+    intro x hx
+    rw [hexact x hx]
+    exact mul_le_mul_of_nonneg_left (exp_monotone (hxu x)) (le_of_lt hG)
+  have hupp : ∀ x : Real, 0 < x → exp (Av x) ≤ G * exp (exp x - 1) :=
+    fun x hx => le_of_eq (hexact x hx)
+  rcases lt_total 1 L with hL | hL | hL
+  · exact leaf_var_expvar_const_clamped_absurd hG hL hval hlow h
+  · rw [← hL] at hval
+    exact leaf_var_expvar_const_one_absurd hG hval hlow h
+  · have hM : (0 : Real) < 1 - L := by
+      have u := add_lt_add_left hL (-L)
+      have l : -L + L = (0 : Real) := by mach_ring
+      have r : -L + 1 = 1 - L := by mach_mpoly [L]
+      rw [l, r] at u; exact u
+    have hLM : L = 1 - (1 - L) := by mach_ring
+    rcases lt_total (log (1 - L)) G with hg | hg | hg
+    · exact leaf_var_expvar_const_gamma_pos_absurd hG hM hLM hg hval hlow h
+    · have hMe : (1 : Real) - L = exp G := by rw [← hg]; exact (exp_log hM).symm
+      have hLG : L = 1 - exp G := by rw [← hMe]; mach_ring
+      rcases lt_total (exp (-G)) G with hk | hk | hk
+      · exact leaf_var_expvar_const_gamma_zero_pos_absurd hLG hk hval hlow h
+      · exact leaf_var_expvar_const_gamma_zero_zero_absurd hG hLG hk hval hexact h
+      · exact leaf_var_expvar_const_gamma_zero_neg_absurd hG hLG hk hval hupp h
+    · exact leaf_var_expvar_const_gamma_neg_absurd hG hM hLM hg hval hupp h
+
+/-- **`A = var`, assembled.** Here `G = 1`, so the coincidence `γ = 0` forces `M = e` and then
+`κ = 1 − e⁻¹ > 0`: **this shape can never reach the Ω-point.** That is why it needs no sharp lower
+bound on `exp (A x)`, and why the quadratic core is only ever invoked by the other shape. -/
+theorem leaf_var_expvar_const_left_var_absurd {t2 : EMLTree} {L : Real}
+    (hval : ∀ x : Real, 0 < x → t2.eval x = exp x - log (exp x - L))
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  have hxu : ∀ x : Real, x ≤ exp x - 1 := by
+    intro x
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  have hlow : ∀ x : Real, 0 < x → (1 : Real) * exp x ≤ exp x := by
+    intro x _
+    have e : (1 : Real) * exp x = exp x := by mach_mpoly [exp x]
+    rw [e]; exact le_refl _
+  have hupp : ∀ x : Real, 0 < x → exp x ≤ (1 : Real) * exp (exp x - 1) := by
+    intro x _
+    have e : (1 : Real) * exp (exp x - 1) = exp (exp x - 1) := by
+      mach_mpoly [exp (exp x - 1)]
+    rw [e]
+    exact exp_monotone (hxu x)
+  rcases lt_total 1 L with hL | hL | hL
+  · exact leaf_var_expvar_const_clamped_absurd (Av := fun x => x) (G := 1) one_pos hL
+      hval hlow h
+  · rw [← hL] at hval
+    exact leaf_var_expvar_const_one_absurd (Av := fun x => x) (G := 1) one_pos hval hlow h
+  · have hM : (0 : Real) < 1 - L := by
+      have u := add_lt_add_left hL (-L)
+      have l : -L + L = (0 : Real) := by mach_ring
+      have r : -L + 1 = 1 - L := by mach_mpoly [L]
+      rw [l, r] at u; exact u
+    have hLM : L = 1 - (1 - L) := by mach_ring
+    rcases lt_total (log (1 - L)) 1 with hg | hg | hg
+    · exact leaf_var_expvar_const_gamma_pos_absurd (Av := fun x => x) (G := 1)
+        one_pos hM hLM hg hval hlow h
+    · -- `γ = 0` ⟹ `M = e`; and `κ = 1 − e⁻¹ > 0`, so the affine floor always suffices
+      have hMe : (1 : Real) - L = exp 1 := by
+        have t := exp_log hM
+        rw [hg] at t
+        exact t.symm
+      have hLG : L = 1 - exp 1 := by rw [← hMe]; mach_ring
+      exact leaf_var_expvar_const_gamma_zero_pos_absurd (Av := fun x => x) (G := 1)
+        hLG exp_neg_one_lt_one hval hlow h
+    · exact leaf_var_expvar_const_gamma_neg_absurd (Av := fun x => x) (G := 1)
+        one_pos hM hLM hg hval hupp h
+
+/-- # **The last shape of the leaf-`var` branch is impossible.**
+
+`t2 = eml A (eml var (const q))`, `A` any depth-≤1 tree, `q` free. All six shapes of `A`:
+
+| `A` | route |
+|---|---|
+| `const c`, `eml (const p) (const q')` | two-point **monotonicity** — no floor |
+| `eml (const p) var`, `eml var var` | dominates `c₀ − log x` |
+| `var` | `γ`-split; `κ > 0` always, so never reaches the Ω-point |
+| `eml var (const q')` | `γ`-split **and** `κ`-split, including the quadratic Ω-point | -/
+theorem leaf_var_right_eml_var_const_absurd {A : EMLTree} {q : Real} (hA : A.depth ≤ 1)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml EMLTree.var
+        (EMLTree.eml A (EMLTree.eml EMLTree.var (EMLTree.const q)))).eval x = 1 / x) : False := by
+  cases A with
+  | const c =>
+      exact leaf_var_expvar_const_left_const_absurd (K := exp c) (L := log q)
+        (fun _ _ => rfl) h
+  | var =>
+      exact leaf_var_expvar_const_left_var_absurd (L := log q) (fun _ _ => rfl) h
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q' =>
+              exact leaf_var_expvar_const_left_const_absurd (K := exp (exp p - log q'))
+                (L := log q) (fun _ _ => rfl) h
+          | var =>
+              exact leaf_var_expvar_const_unbdd_absurd (Av := fun x => exp p - log x)
+                (c := exp p) (L := log q) (fun _ _ => rfl) (fun _ _ _ => le_refl _) h
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q' =>
+              refine leaf_var_expvar_const_bdd_absurd (Av := fun x => exp x - log q')
+                (G := exp (1 - log q')) (L := log q) (exp_pos _)
+                (fun _ _ => rfl) (fun x _ => ?_) h
+              rw [← exp_add]
+              have e : (1 - log q') + (exp x - 1) = exp x - log q' := by
+                mach_mpoly [log q', exp x]
+              rw [e]
+          | var =>
+              refine leaf_var_expvar_const_unbdd_absurd (Av := fun x => exp x - log x)
+                (c := 1) (L := log q) (fun _ _ => rfl) (fun x hx _ => ?_) h
+              have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (le_refl (-log x))
+              have l : (1 : Real) + -log x = 1 - log x := by mach_mpoly [log x]
+              have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+              rw [l, r] at s; exact s
+
+/-- # ▸ **`t1 = var` is CLOSED — the first complete family of the depth-3 arm.**
+
+No depth-≤2 right child lets `eml var t2` be `1/x`. Assembled from `leaf_var_right_const_absurd`
+(`t2` a constant), `leaf_var_right_var_absurd` (`t2 = var`), `leaf_var_right_eml_absurd` (every
+`eml A B` with `B` not `eml var (const q)`), and the residue closed above.
+
+**This does NOT move `d(1/x)`**, which stays `{3,4}`: the other depth-3 family — `t1 = eml a b`
+with `b ≠ var` and an unbounded left child — is untouched, and either could still hold a witness. -/
+theorem leaf_var_absurd {t2 : EMLTree} (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False := by
+  cases t2 with
+  | const k => exact leaf_var_right_const_absurd h
+  | var => exact leaf_var_right_var_absurd h
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht2
+        have := Nat.le_max_left A.depth B.depth
+        omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht2
+        have := Nat.le_max_right A.depth B.depth
+        omega
+      cases B with
+      | const k =>
+          exact leaf_var_right_eml_absurd hA hB (fun _ hc => EMLTree.noConfusion hc) h
+      | var =>
+          exact leaf_var_right_eml_absurd hA hB (fun _ hc => EMLTree.noConfusion hc) h
+      | eml a b =>
+          cases a with
+          | const p =>
+              refine leaf_var_right_eml_absurd hA hB (fun _ hc => ?_) h
+              injection hc with h1 _
+              exact EMLTree.noConfusion h1
+          | eml _ _ =>
+              refine leaf_var_right_eml_absurd hA hB (fun _ hc => ?_) h
+              injection hc with h1 _
+              exact EMLTree.noConfusion h1
+          | var =>
+              cases b with
+              | const q => exact leaf_var_right_eml_var_const_absurd hA h
+              | var =>
+                  refine leaf_var_right_eml_absurd hA hB (fun _ hc => ?_) h
+                  injection hc with _ h2
+                  exact EMLTree.noConfusion h2
+              | eml _ _ =>
+                  refine leaf_var_right_eml_absurd hA hB (fun _ hc => ?_) h
+                  injection hc with _ h2
+                  exact EMLTree.noConfusion h2
+
 end MachLib

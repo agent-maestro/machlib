@@ -206,7 +206,7 @@
       ]
     },
     {
-      "_comment": "The full mixed exp/log/reciprocal EML barrier bound. It LEGITIMATELY uses the analytic identity theorem + log/reciprocal (for the degenerate proportional leaves), so those are NOT forbidden here — the invariant is only that it stays free of hidden `sorry` and of the classical zero-count escape hatch. Contrast the pure-exp entry above: the pair pins the honest distinction.",
+      "_comment": "The full mixed exp/log/reciprocal EML barrier bound. It LEGITIMATELY uses the analytic identity theorem + log/reciprocal (for the degenerate proportional leaves), so those are NOT forbidden here \u2014 the invariant is only that it stays free of hidden `sorry` and of the classical zero-count escape hatch. Contrast the pure-exp entry above: the pair pins the honest distinction.",
       "id": "eml-eval-boundedzeros-unconditional-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -224,7 +224,7 @@
       ]
     },
     {
-      "_comment": "The concrete showcase: e^(e^x) − x·e^x has ≤ 47 real zeros, a machine-checked instance of the pure-exp explicit bound. Stays in the ROLLE-ONLY class (it is a pure-exp barrier), and — because the bound value is a KERNEL-checked `decide` on Ndep 0 1 = 47 — must NOT regress to `native_decide` (which would add `ofReduceBool` and move the '47' out of the kernel-checked footprint).",
+      "_comment": "The concrete showcase: e^(e^x) \u2212 x\u00b7e^x has \u2264 47 real zeros, a machine-checked instance of the pure-exp explicit bound. Stays in the ROLLE-ONLY class (it is a pure-exp barrier), and \u2014 because the bound value is a KERNEL-checked `decide` on Ndep 0 1 = 47 \u2014 must NOT regress to `native_decide` (which would add `ofReduceBool` and move the '47' out of the kernel-checked footprint).",
       "id": "eexp-barrier-le-47-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -246,12 +246,12 @@
       ]
     },
     {
-      "_comment": "The mixed-capstone showcase: e^x − log x has finitely many zeros. A genuine exp+log function, so — unlike the pure-exp '47' entry — it LEGITIMATELY uses the analytic identity theorem + log; those are NOT forbidden. The invariant is only that this concrete instance stays free of hidden `sorry` and the classical zero-count escape hatch, i.e. it inherits exactly the mixed capstone's honest footprint.",
+      "_comment": "The mixed-capstone showcase: e^x \u2212 log x has finitely many zeros. A genuine exp+log function, so \u2014 unlike the pure-exp '47' entry \u2014 it LEGITIMATELY uses the analytic identity theorem + log; those are NOT forbidden. The invariant is only that this concrete instance stays free of hidden `sorry` and the classical zero-count escape hatch, i.e. it inherits exactly the mixed capstone's honest footprint.",
       "id": "eml-barrier-bounded-zeros-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "eml_barrier_bounded_zeros",
-        "e^x − log x"
+        "e^x \u2212 log x"
       ],
       "module": "MachLib.KhovanskiiConcrete",
       "theorem": "MachLib.KhovanskiiConcrete.eml_barrier_bounded_zeros",
@@ -269,7 +269,7 @@
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "absenc_sub_rounded",
-        "u·(2+u)·(|xe|+|ye|)"
+        "u\u00b7(2+u)\u00b7(|xe|+|ye|)"
       ],
       "module": "MachLib.AbsoluteError",
       "theorem": "MachLib.Real.absenc_sub_rounded",
@@ -297,7 +297,7 @@
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "pipeline_arith",
-        "ARBITRARY literal/variable/`+`/`−`/`×` EML tree"
+        "ARBITRARY literal/variable/`+`/`\u2212`/`\u00d7` EML tree"
       ],
       "module": "MachLib.AbsoluteFold",
       "theorem": "Certcom.pipeline_arith",
@@ -320,7 +320,7 @@
       ]
     },
     {
-      "_comment": "FULL local-Lipschitz nesting for the symmetric-domain locals (exp), via magnitude propagation — exp nested to arbitrary depth over cancelling arithmetic. Invariant: sorryAx-free (magnitude fold + absenc_lip_local at R=M+E + exp_lip_local/exp_monotone).",
+      "_comment": "FULL local-Lipschitz nesting for the symmetric-domain locals (exp), via magnitude propagation \u2014 exp nested to arbitrary depth over cancelling arithmetic. Invariant: sorryAx-free (magnitude fold + absenc_lip_local at R=M+E + exp_lip_local/exp_monotone).",
       "id": "pipeline-nested-exp-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -678,6 +678,58 @@
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.invX4gen_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The t1 = var family of depth 3 is completely closed: no depth-<=2 right child works. Invariant: sorryAx-free.",
+      "id": "leaf-var-family-closed-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no depth-\u22642 right child lets `eml var t2` be `1/x`"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.leaf_var_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "The shape-free direction invariant: the right child must be strictly increasing below the cutoff. Invariant: sorryAx-free.",
+      "id": "leaf-var-strict-mono-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "strictly INCREASING below the cutoff"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.leaf_var_right_strict_mono",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "A quadratic floor on the right child is absurd; needed for the omega-point where gamma and kappa both vanish. Invariant: sorryAx-free.",
+      "id": "leaf-var-quad-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a **quadratic** floor\n  on the right child is fatal too"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.leaf_var_quad_floor_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "3t <= exp t for t >= 4, from peeling at k=2; the only numeric input is 2 < e squared. Invariant: sorryAx-free.",
+      "id": "exp-ge-three-mul-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "on the single numeric input\n  `2 < e` squared"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.exp_ge_three_mul",
       "forbid_axioms": [
         "sorryAx"
       ]
