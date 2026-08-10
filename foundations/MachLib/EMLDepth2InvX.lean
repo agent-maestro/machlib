@@ -4868,6 +4868,87 @@ theorem leaf_var_nonincreasing_absurd {t2 : EMLTree} {x y : Real}
     (h : ∀ x : Real, 0 < x → (EMLTree.eml EMLTree.var t2).eval x = 1 / x) : False :=
   lt_irrefl_ax _ (lt_of_lt_of_le (leaf_var_right_strict_mono h hx hxy hy) hmono)
 
+/-! ## ▸ **The direction lemma, in general form**
+
+`leaf_var_right_strict_mono` above was stated for `t1 = var`, but **nothing in its proof uses that**.
+The equation `exp(t1 x) − log(t2 x) = 1/x` gives `log(t2 x) = exp(t1 x) − 1/x` pointwise for *any*
+`t1`, and `−1/x` rises on its own. So the left child only has to fail to *fall* for the right child
+to be forced strictly up.
+
+Stated once here, shape-free and depth-free, so it can be reached for deliberately rather than
+rediscovered. The mechanism is **equational order reflection**: an equation pins the transformed
+value, one side is strictly increasing, and `log` reflects order on its positive branch — so the
+direction transfers back to the hidden subtree. Note this is *not* an appeal to piecewise
+monotonicity of definable functions; it is elementary and gives a strict conclusion. -/
+
+/-- **The general direction lemma.** If the left child does not decrease between two points, the
+right child must strictly increase — for `t1`, `t2` of *any* shape and *any* depth. Only positivity
+at the right-hand point is needed, and `leaf_var_right_pos` supplies that below the cutoff. -/
+theorem depth3_right_strict_mono {t1 t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x)
+    {x y : Real} (hx : 0 < x) (hxy : x < y)
+    (hmono : t1.eval x ≤ t1.eval y) (hpy : 0 < t2.eval y) :
+    t2.eval x < t2.eval y := by
+  have hyp : (0 : Real) < y := lt_trans_ax hx hxy
+  have ex : exp (t1.eval x) - log (t2.eval x) = 1 / x := h x hx
+  have ey : exp (t1.eval y) - log (t2.eval y) = 1 / y := h y hyp
+  have hE : exp (t1.eval x) ≤ exp (t1.eval y) := exp_monotone hmono
+  have hI : 1 / y < 1 / x := one_div_lt_one_div_of_lt hx hxy
+  have s2 : exp (t1.eval y) - log (t2.eval y) < exp (t1.eval x) - log (t2.eval x) := by
+    rw [ex, ey]; exact hI
+  have s1 : -log (t2.eval y) + exp (t1.eval x) ≤ -log (t2.eval y) + exp (t1.eval y) :=
+    add_le_add_left hE _
+  have s1' : exp (t1.eval x) - log (t2.eval y) ≤ exp (t1.eval y) - log (t2.eval y) := by
+    have l : -log (t2.eval y) + exp (t1.eval x) = exp (t1.eval x) - log (t2.eval y) := by
+      mach_mpoly [exp (t1.eval x), log (t2.eval y)]
+    have r : -log (t2.eval y) + exp (t1.eval y) = exp (t1.eval y) - log (t2.eval y) := by
+      mach_mpoly [exp (t1.eval y), log (t2.eval y)]
+    rw [l, r] at s1; exact s1
+  have s3 : exp (t1.eval x) - log (t2.eval y) < exp (t1.eval x) - log (t2.eval x) :=
+    lt_of_le_of_lt s1' s2
+  have hlog : log (t2.eval x) < log (t2.eval y) := by
+    have s := add_lt_add_left s3 (log (t2.eval x) + log (t2.eval y) - exp (t1.eval x))
+    have l : log (t2.eval x) + log (t2.eval y) - exp (t1.eval x)
+          + (exp (t1.eval x) - log (t2.eval y)) = log (t2.eval x) := by
+      mach_mpoly [log (t2.eval x), log (t2.eval y), exp (t1.eval x)]
+    have r : log (t2.eval x) + log (t2.eval y) - exp (t1.eval x)
+          + (exp (t1.eval x) - log (t2.eval x)) = log (t2.eval y) := by
+      mach_mpoly [log (t2.eval x), log (t2.eval y), exp (t1.eval x)]
+    rw [l, r] at s; exact s
+  rcases lt_total (t2.eval x) (t2.eval y) with hp | hz | hn
+  · exact hp
+  · exfalso; rw [hz] at hlog; exact lt_irrefl_ax _ hlog
+  · exfalso
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlog (log_le_log hpy (le_of_lt hn)))
+
+/-- **The eliminator.** Two points where the left child does not fall but the right child does not
+rise kill the tree outright — no shape analysis, no depth bound, no parameter regimes. This is the
+whole-family instrument: it prices a candidate by *behaviour* rather than by enumerating its
+configurations. -/
+theorem depth3_nonincreasing_absurd {t1 t2 : EMLTree} {x y : Real}
+    (hx : 0 < x) (hxy : x < y) (hmono : t1.eval x ≤ t1.eval y) (hpy : 0 < t2.eval y)
+    (hfail : t2.eval y ≤ t2.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False :=
+  lt_irrefl_ax _ (lt_of_lt_of_le (depth3_right_strict_mono h hx hxy hmono hpy) hfail)
+
+/-- **The general clamp pin**, the analogue of `leaf_var_right_pos` for an arbitrary left child.
+Where the right child is non-positive the totalised `log` collapses to `0`, and the equation then
+pins the *left* child exactly: `x · exp(t1 x) = 1`. So a non-positive right child is not merely
+awkward — it forces `t1 x = −log x` at that point, which for a fixed shallow `t1` can happen only on
+the zero set of `t1 + log`. **This is the place where a zero-counting theorem would legitimately
+apply** — counting solutions of an equation, which is what Khovanskii-type results are actually
+about. -/
+theorem depth3_left_pinned_of_right_nonpos {t1 t2 : EMLTree}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x)
+    {x : Real} (hx : 0 < x) (hle : t2.eval x ≤ 0) : x * exp (t1.eval x) = 1 := by
+  have hz : log (t2.eval x) = 0 := log_nonpos hle
+  have e : exp (t1.eval x) - log (t2.eval x) = 1 / x := h x hx
+  rw [hz] at e
+  have e2 : exp (t1.eval x) - (0 : Real) = exp (t1.eval x) := by mach_ring
+  rw [e2] at e
+  have hxne : x ≠ 0 := ne_of_gt hx
+  rw [e, mul_inv x hxne]
+
 /-- `y ≤ Y` and `1 ≤ Y` give `log y ≤ Y − 1` — **for the totalised `log`, with no case split at the
 call site.** The clamp is handled inside: `y ≤ 1` (including `y ≤ 0`) gives `log y ≤ 0 ≤ Y − 1`. -/
 theorem log_le_of_le_upper {y Y : Real} (hY : 1 ≤ Y) (hy : y ≤ Y) : log y ≤ Y - 1 := by

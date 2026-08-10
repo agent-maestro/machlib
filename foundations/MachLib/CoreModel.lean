@@ -35,7 +35,11 @@ and give it **two** instances:
   `propext`/`Quot.sound`/`Classical.choice`).
 
 Together: the flagship closure is satisfied by `ℤ` ⇒ it cannot prove `False` ⇒ the
-flagship results are **not vacuous**. The full 292-axiom base additionally needs
+flagship results are **not vacuous**. ⚠ **This covers the SPINE, not the whole base — the
+distinction is load-bearing and a summary that drops it overstates the claim.** In particular every
+`exp`/`log` axiom the EML expressiveness work rests on is *outside* the modelled fragment.
+The full pinned base (**242** declarations — 220 `MachLib.*` + 22 `Certcom.*`; see `CLAUDE.md`,
+where the figure is reconciled, and do not re-derive it by grep) additionally needs
 the *field* axioms (`mul_inv`, `div`) and the *analytic* axioms (`sin`/`cos`/`exp`,
 derivatives, MVT); those are modelled by `ℝ` (Mathlib), not by `ℤ` — which is
 exactly why they are separate axioms — and are out of this Mathlib-free file's
