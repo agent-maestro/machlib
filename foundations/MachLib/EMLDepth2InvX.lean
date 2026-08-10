@@ -3869,4 +3869,64 @@ theorem depth3_left_bounded_absurd {A B t2 : EMLTree} {L U : Real}
   obtain ⟨C, hC⟩ := depth_two_bounded_const hA hB hlow hup
   exact depth3_const_left_absurd ht2 hC h
 
+/-- **`∞`-side bound on the tree itself:** every depth-≤1 tree satisfies `A x ≤ exp x + C` for
+`x ≥ 1`. Unlike the `log` bounds this needs **no cutoff** — every shape is dominated by `exp x`
+plus a constant outright. -/
+theorem depth_le_one_bound_at_infty (A : EMLTree) (hA : A.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → A.eval x ≤ exp x + C := by
+  have hnn : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x hx
+    have t := log_le_log one_pos hx
+    rw [log_one] at t; exact t
+  have hadd : ∀ (v C x : Real), v ≤ C → (0 : Real) < exp x → v ≤ exp x + C := by
+    intro v C x hv hx
+    have s := add_le_add_wit (le_of_lt hx) hv
+    have e : (0 : Real) + v = v := by mach_ring
+    rw [e] at s; exact s
+  cases A with
+  | const c => exact ⟨c, fun x _ => hadd c c x (le_refl c) (exp_pos x)⟩
+  | var =>
+      refine ⟨0, fun x _ => ?_⟩
+      show x ≤ exp x + 0
+      have e : exp x + (0 : Real) = exp x := by mach_ring
+      rw [e]
+      exact le_of_lt (exp_grows_strictly_thm x)
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              exact ⟨exp p - log q, fun x _ =>
+                hadd _ _ x (le_refl (exp p - log q)) (exp_pos x)⟩
+          | var =>
+              refine ⟨exp p, fun x hx => ?_⟩
+              show exp p - log x ≤ exp x + exp p
+              refine hadd _ _ x ?_ (exp_pos x)
+              have s := add_le_add_wit (le_refl (exp p)) (neg_le_neg_wit (hnn x hx))
+              have e1 : exp p + -log x = exp p - log x := by mach_ring
+              have e2 : exp p + -(0 : Real) = exp p := by mach_ring
+              rw [e1, e2] at s
+              exact s
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              refine ⟨-log q, fun x _ => ?_⟩
+              show exp x - log q ≤ exp x + -log q
+              have e : exp x + -log q = exp x - log q := by mach_ring
+              rw [e]
+              exact le_refl _
+          | var =>
+              refine ⟨0, fun x hx => ?_⟩
+              show exp x - log x ≤ exp x + 0
+              have e : exp x + (0 : Real) = exp x := by mach_ring
+              rw [e]
+              have s := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit (hnn x hx))
+              have e1 : exp x + -log x = exp x - log x := by mach_ring
+              have e2 : exp x + -(0 : Real) = exp x := by mach_ring
+              rw [e1, e2] at s
+              exact s
+
 end MachLib
