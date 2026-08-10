@@ -3727,16 +3727,20 @@ theorem leaf_var_right_const_absurd {k : Real}
 
 /-- The arithmetic core of the leaf-`var` kill, over bare reals.
 
-Multiplying the pin by `exp t` linearises it to `v = w − exp t`; with `v ≥ L` and `w ≤ exp 1` that
-forces `exp t ≤ exp 1 − L`, which `exp t ≥ t + t ≥ t + 1` contradicts once `t > exp 1 − L`. -/
-theorem leaf_var_arith {t v w L : Real} (ht1 : 1 ≤ t)
+⚠ **The floor's `L` depends on `t`** (`L = log K − t`), so the usable hypothesis is
+`exp 1 − log K < t` — a condition on `t`. An earlier version took `L` free and required
+`exp 1 − L < t`, which for `L = log K − t` degenerates to `exp 1 < log K`: **true, but never
+satisfiable by the intended instantiation.**
+
+Multiplying the pin by `exp t` linearises it to `v = w − exp t`; then `exp t ≤ exp 1 − log K + t`,
+which `exp t ≥ t + t` contradicts once `t > exp 1 − log K`. -/
+theorem leaf_var_arith {t v w Kl : Real} (ht1 : 1 ≤ t)
     (hpin : exp (-t) * v = exp (-t) * w - 1)
-    (hLv : L ≤ v) (hw : w ≤ exp 1) (hbig : exp 1 - L < t) : False := by
+    (hLv : Kl - t ≤ v) (hw : w ≤ exp 1) (hbig : exp 1 - Kl < t) : False := by
   have hem : exp t * exp (-t) = 1 := by
     rw [← exp_add]
     have e : t + -t = (0 : Real) := by mach_ring
     rw [e, exp_zero]
-  -- v = w − exp t
   have hv : v = w - exp t := by
     have hmul : exp t * (exp (-t) * v) = exp t * (exp (-t) * w - 1) := by rw [hpin]
     have e1 : exp t * (exp (-t) * v) = (exp t * exp (-t)) * v := by
@@ -3748,33 +3752,30 @@ theorem leaf_var_arith {t v w L : Real} (ht1 : 1 ≤ t)
     have e4 : (1 : Real) * w = w := by mach_ring
     rw [e3, e4] at hmul
     exact hmul
-  -- L ≤ w − exp t ≤ exp 1 − exp t
   rw [hv] at hLv
-  have hle : exp t ≤ exp 1 - L := by
-    have s := add_le_add_wit hLv (le_refl (exp t - L))
-    have e1 : L + (exp t - L) = exp t := by mach_ring
-    have e2 : w - exp t + (exp t - L) = w - L := by mach_ring
+  -- Kl − t ≤ w − exp t ≤ exp 1 − exp t  ⟹  exp t ≤ exp 1 − Kl + t
+  have hstep : exp t ≤ exp 1 - Kl + t := by
+    have s1 : Kl - t ≤ exp 1 - exp t := by
+      have s := add_le_add_wit hw (le_refl (-exp t))
+      have e1 : w + -exp t = w - exp t := by mach_ring
+      have e2 : exp 1 + -exp t = exp 1 - exp t := by mach_ring
+      rw [e1, e2] at s
+      exact le_trans hLv s
+    have s := add_le_add_left s1 (exp t - Kl + t)
+    have e1 : exp t - Kl + t + (Kl - t) = exp t := by mach_mpoly [exp t, Kl, t]
+    have e2 : exp t - Kl + t + (exp 1 - exp t) = exp 1 - Kl + t := by
+      mach_mpoly [exp t, exp 1, Kl, t]
     rw [e1, e2] at s
-    have s2 := add_le_add_wit hw (le_refl (-L))
-    have e3 : w + -L = w - L := by mach_ring
-    have e4 : exp 1 + -L = exp 1 - L := by mach_ring
-    rw [e3, e4] at s2
-    exact le_trans s s2
-  -- but exp t ≥ t + t ≥ t + 1 > exp 1 − L
-  have h2t : t + t ≤ exp t := exp_ge_two_mul ht1
-  have ht1' : t + 1 ≤ t + t := by
-    have s := add_le_add_wit (le_refl t) ht1
     exact s
-  have hgt : exp 1 - L < t + 1 := by
-    have s := add_lt_add_left hbig (1 : Real)
-    have e1 : (1 : Real) + (exp 1 - L) = exp 1 - L + 1 := by mach_ring
-    have e2 : (1 : Real) + t = t + 1 := by mach_ring
-    rw [e1, e2] at s
-    have hlt : exp 1 - L < exp 1 - L + 1 := by
-      have u := add_lt_add_left one_pos (exp 1 - L)
-      have e : exp 1 - L + 0 = exp 1 - L := by mach_ring
-      rw [e] at u; exact u
-    exact lt_trans_ax hlt s
-  exact lt_irrefl_ax _ (lt_of_lt_of_le hgt (le_trans ht1' (le_trans h2t hle)))
+  -- exp t ≥ t + t forces t ≤ exp 1 − Kl
+  have h2t : t + t ≤ exp t := exp_ge_two_mul ht1
+  have hfin : t ≤ exp 1 - Kl := by
+    have s := le_trans h2t hstep
+    have u := add_le_add_left s (-t)
+    have e1 : -t + (t + t) = t := by mach_mpoly [t]
+    have e2 : -t + (exp 1 - Kl + t) = exp 1 - Kl := by mach_mpoly [exp 1, Kl, t]
+    rw [e1, e2] at u
+    exact u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hbig hfin)
 
 end MachLib
