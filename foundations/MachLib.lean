@@ -329,6 +329,7 @@ import MachLib.EMLDepthCost
 import MachLib.EMLPolynomialsAll
 import MachLib.EMLSizeCost
 import MachLib.EMLDepth2InvX
+import MachLib.EMLGrowthEnvelope
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision
 import MachLib.ReciprocalFormatInstantiation
