@@ -8757,4 +8757,132 @@ theorem depth3_log_pole_at_absurd {t1 t2 : EMLTree} {c₀ C T : Real}
   exact exp_pole_contradiction hcpos (lt_of_lt_of_le one_pos hC1) hT
     (le_trans hlogt2 (log_le_of_le_exp_mul' hT0 hC1 ht2up))
 
+/-- **The pole theorem's threshold, once and for all.** Produces a `T` meeting all four obligations
+of `depth3_log_pole_at_absurd` simultaneously. Every constraint is met by a *sum of positive terms*
+— this corpus has no `max`, and a sum dominating each summand is how it does that. -/
+theorem pole_threshold_exists (c₀ C d₁ d₂ : Real) (hc₀ : 0 < c₀) (hd₁ : 0 < d₁) (hd₂ : 0 < d₂) :
+    ∃ T : Real, 0 ≤ T
+      ∧ ((1 + 1 + 1 + 1 : Real) + exp (log C - log (exp c₀ - 1) + 1)
+          ≤ log (exp c₀ - 1) + T)
+      ∧ exp (-T) ≤ d₁ ∧ exp (-T) ≤ d₂ := by
+  have hcpos : (0 : Real) < exp c₀ - 1 := by
+    have h1 : (1 : Real) < exp c₀ := by
+      have t := exp_lt hc₀; rwa [exp_zero] at t
+    have u := add_lt_add_left h1 (-1 : Real)
+    have l : (-1 : Real) + 1 = 0 := by mach_ring
+    have r : (-1 : Real) + exp c₀ = exp c₀ - 1 := by mach_mpoly [exp c₀]
+    rw [l, r] at u; exact u
+  refine ⟨(1 + 1 + 1 + 1 : Real) + exp (-log d₁) + exp (-log d₂)
+      + exp (log C - log (exp c₀ - 1) + 1) + exp (-log (exp c₀ - 1)), ?_, ?_, ?_, ?_⟩
+  · exact le_of_lt (add_pos (add_pos (add_pos (add_pos
+      (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos)
+      (exp_pos _)) (exp_pos _)) (exp_pos _)) (exp_pos _))
+  · -- the surplus is `log c + exp (−log c)` plus two positives
+    have hkey : (0 : Real) < log (exp c₀ - 1) + exp (-log (exp c₀ - 1)) := by
+      have s := exp_grows_strictly_thm (-log (exp c₀ - 1))
+      have u := add_lt_add_left s (log (exp c₀ - 1))
+      have l : log (exp c₀ - 1) + -log (exp c₀ - 1) = (0 : Real) := by mach_ring
+      rw [l] at u; exact u
+    have hsum : (0 : Real) < exp (-log d₁) + exp (-log d₂)
+        + (log (exp c₀ - 1) + exp (-log (exp c₀ - 1))) :=
+      add_pos (add_pos (exp_pos _) (exp_pos _)) hkey
+    have u := add_le_add_wit (le_refl ((1 + 1 + 1 + 1 : Real)
+      + exp (log C - log (exp c₀ - 1) + 1))) (le_of_lt hsum)
+    have l : (1 + 1 + 1 + 1 : Real) + exp (log C - log (exp c₀ - 1) + 1) + 0
+        = (1 + 1 + 1 + 1 : Real) + exp (log C - log (exp c₀ - 1) + 1) := by
+      mach_mpoly [exp (log C - log (exp c₀ - 1) + 1)]
+    have r : (1 + 1 + 1 + 1 : Real) + exp (log C - log (exp c₀ - 1) + 1)
+          + (exp (-log d₁) + exp (-log d₂)
+            + (log (exp c₀ - 1) + exp (-log (exp c₀ - 1))))
+        = log (exp c₀ - 1) + ((1 + 1 + 1 + 1 : Real) + exp (-log d₁) + exp (-log d₂)
+          + exp (log C - log (exp c₀ - 1) + 1) + exp (-log (exp c₀ - 1))) := by
+      mach_mpoly [exp (log C - log (exp c₀ - 1) + 1), exp (-log d₁), exp (-log d₂),
+        log (exp c₀ - 1), exp (-log (exp c₀ - 1))]
+    rw [l, r] at u; exact u
+  · -- `exp (−T) ≤ d₁`
+    refine le_trans (exp_monotone ?_) (le_of_eq (exp_log hd₁))
+    have s := add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit
+      (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos))
+      (le_of_lt (exp_grows_strictly_thm (-log d₁)))) (le_of_lt (exp_pos (-log d₂))))
+      (le_of_lt (exp_pos (log C - log (exp c₀ - 1) + 1))))
+      (le_of_lt (exp_pos (-log (exp c₀ - 1))))
+    have e : (0 : Real) + -log d₁ + 0 + 0 + 0 = -log d₁ := by mach_ring
+    rw [e] at s
+    have u := neg_le_neg_wit s
+    have el : -(-log d₁) = log d₁ := by mach_ring
+    rw [el] at u; exact u
+  · refine le_trans (exp_monotone ?_) (le_of_eq (exp_log hd₂))
+    have s := add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit
+      (le_of_lt (add_pos (add_pos (add_pos one_pos one_pos) one_pos) one_pos))
+      (le_of_lt (exp_pos (-log d₁)))) (le_of_lt (exp_grows_strictly_thm (-log d₂))))
+      (le_of_lt (exp_pos (log C - log (exp c₀ - 1) + 1))))
+      (le_of_lt (exp_pos (-log (exp c₀ - 1))))
+    have e : (0 : Real) + 0 + -log d₂ + 0 + 0 = -log d₂ := by mach_ring
+    rw [e] at s
+    have u := neg_le_neg_wit s
+    have el : -(-log d₂) = log d₂ := by mach_ring
+    rw [el] at u; exact u
+
+/-- # ▸▸▸▸ **THE LAST DEPTH-3 SHAPE.** `t1 = eml A (eml var (const q))`, `A` constant-valued,
+`log q = 1`.
+
+Here `B x = exp x − 1 → 0⁺`, so `t1 x = exp α − log (exp x − 1)` runs to `+∞` like `−log x`. Below a
+cutoff `δ < exp α`, `exp x − 1 ≤ x·exp δ` gives
+
+`t1 x ≥ (exp α − δ) − log x`
+
+with the constant `exp α − δ` **strictly positive** — which is exactly what
+`depth3_log_pole_at_absurd` needs. The strictness is the whole content: `exp α > 0` for every `α`,
+so a `δ` below it always exists, and the pole's residue never vanishes. -/
+theorem depth3_const_left_expvar_one_absurd {α q : Real} {A B t2 : EMLTree}
+    (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hBq : ∀ x : Real, 0 < x → B.eval x = exp x - log q) (hq : log q = 1)
+    (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml A B) t2).eval x = 1 / x) : False := by
+  obtain ⟨δ, hδpos, hδ1, hδα⟩ := two_bound_witness' one_pos (exp_pos α)
+  obtain ⟨C, δ₂, hδ₂0, hδ₂1, hC⟩ := depth_le_two_growth_ceiling t2 ht2
+  have hC1 : (1 : Real) ≤ 1 + exp C := by
+    have s := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos C))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at s; exact s
+  have hc₀ : (0 : Real) < exp α - δ := by
+    have u := add_lt_add_left hδα (-δ)
+    have l : -δ + δ = (0 : Real) := by mach_ring
+    have r : -δ + exp α = exp α - δ := by mach_mpoly [δ, exp α]
+    rw [l, r] at u; exact u
+  obtain ⟨T, hT0, hT, hTδ, hTδ₂⟩ :=
+    pole_threshold_exists (exp α - δ) (1 + exp C) δ δ₂ hc₀ hδpos hδ₂0
+  have hx0 : (0 : Real) < exp (-T) := exp_pos _
+  refine depth3_log_pole_at_absurd hc₀ hC1 hT0 hT ?_ ?_ h
+  · -- `t1 (exp (−T)) ≥ (exp α − δ) + T`
+    show exp α - δ + T ≤ exp (A.eval (exp (-T))) - log (B.eval (exp (-T)))
+    rw [hA _ hx0, hBq _ hx0, hq]
+    have hupos : (0 : Real) < exp (exp (-T)) - 1 := by
+      have s : (1 : Real) < exp (exp (-T)) := by
+        have t := exp_lt hx0; rwa [exp_zero] at t
+      have u := add_lt_add_left s (-1 : Real)
+      have l : (-1 : Real) + 1 = 0 := by mach_ring
+      have r : (-1 : Real) + exp (exp (-T)) = exp (exp (-T)) - 1 := by
+        mach_mpoly [exp (exp (-T))]
+      rw [l, r] at u; exact u
+    -- `exp x − 1 ≤ x·exp x ≤ x·exp δ` below `δ`
+    have hle : exp (exp (-T)) - 1 ≤ exp (-T) * exp δ :=
+      le_trans exp_sub_one_le_mul_exp
+        (mul_le_mul_of_nonneg_left (exp_monotone hTδ) (le_of_lt hx0))
+    have hlog : log (exp (exp (-T)) - 1) ≤ -T + δ := by
+      have s := log_le_log hupos hle
+      rwa [log_mul hx0 (exp_pos δ), log_exp, log_exp] at s
+    have s := add_le_add_wit (le_refl (exp α)) (neg_le_neg_wit hlog)
+    have l : exp α + -(-T + δ) = exp α - δ + T := by mach_mpoly [exp α, T, δ]
+    have r : exp α + -log (exp (exp (-T)) - 1)
+        = exp α - log (exp (exp (-T)) - 1) := by
+      mach_mpoly [exp α, log (exp (exp (-T)) - 1)]
+    rw [l, r] at s; exact s
+  · -- the ceiling, enlarged to `1 + exp C`
+    refine le_trans (hC _ hx0 hTδ₂) ?_
+    have u := add_le_add_wit (le_of_lt one_pos) (le_of_lt (exp_grows_strictly_thm C))
+    have e : (0 : Real) + C = C := by mach_ring
+    rw [e] at u; exact u
+
 end MachLib
