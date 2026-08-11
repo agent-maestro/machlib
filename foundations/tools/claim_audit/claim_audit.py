@@ -249,6 +249,65 @@ def parsed_axioms(text: str) -> set:
     return {a.strip() for a in m.group(1).split(",") if a.strip()}
 
 
+# ── Level 5: relation integrity ─────────────────────────────────────────────────────────────────
+#
+# The rungs above are all string questions about a printed form. "Does the statement assert THIS
+# RELATION between these objects" is not, and pretending a substring search answers it would be the
+# same error this whole ladder exists to catch.
+#
+# So the relation is not verified — it is made BINDING. Declaring a relation obliges the claim to
+# carry the structural checks that relation entails, and the prose is GENERATED from the record
+# rather than checked against it. You cannot write a sentence stronger than the record, because the
+# sentence *is* the record; and you cannot declare a strong relation while quietly omitting the
+# obligations, because the vocabulary names them.
+#
+# Each entry: (template, obligations that MUST be present in the claim record).
+RELATIONS = {
+    "implementation_error_bound": (
+        "The {bound} bound on {subject}'s implementation error holds in {object}.",
+        ["conclusion_mentions", "hypotheses_count"],
+    ),
+    "end_to_end_tracking": (
+        "{subject} tracks {object} to within {bound}, with the bound derived from the "
+        "implementation rather than assumed.",
+        ["conclusion_mentions", "hypotheses_count", "proof_uses"],
+    ),
+}
+
+EPISTEMIC = {"PROVED", "MEASURED", "ASSUMED", "ATTESTED", "COMPUTED", "CHECKED", "DERIVED"}
+
+
+def render_claim(c: dict) -> str:
+    """The sentence a typed claim licenses. Generated, never hand-written."""
+    tmpl, _ = RELATIONS[c["relation"]]
+    return tmpl.format(subject=c["subject"], object=c["object"], bound=c["bound"])
+
+
+def check_relation(c: dict) -> list:
+    """Relation integrity: vocabulary, mandatory obligations, epistemic type, rendered prose."""
+    problems = []
+    rel = c["relation"]
+    if rel not in RELATIONS:
+        return [f"unknown relation `{rel}` — the vocabulary is closed on purpose; adding a relation "
+                f"means deciding what it obliges, not just naming it"]
+    if c.get("epistemic_type") not in EPISTEMIC:
+        problems.append(f"claim declares no valid epistemic_type (one of {sorted(EPISTEMIC)})")
+    _, obligations = RELATIONS[rel]
+    for ob in obligations:
+        if ob not in c:
+            problems.append(
+                f"relation `{rel}` obliges `{ob}`, and the claim does not carry it — a strong "
+                f"relation may not be declared while its structural obligations are omitted")
+    # the doc must contain the RENDERED sentence, not an author's paraphrase of it
+    src = os.path.join(REPO, c["source_file"])
+    if os.path.exists(src):
+        if _norm(render_claim(c)) not in _norm(open(src, encoding="utf-8").read()):
+            problems.append(
+                f"the sentence this claim licenses is absent from {c['source_file']}:\n"
+                + DIM + "    " + render_claim(c) + RST)
+    return problems
+
+
 def check_claim(c: dict) -> list:
     """Return a list of problem strings (empty = the claim holds)."""
     problems = []
@@ -336,6 +395,10 @@ def check_claim(c: dict) -> list:
                     problems.append(
                         f"proof of {c['theorem']} does not invoke `{ident}` — the prose credits a "
                         f"composition the proof does not perform")
+
+    # (H) relation integrity: obligations follow from the declared relation.
+    if "relation" in c:
+        problems.extend(check_relation(c))
 
     # (G) strength integrity: the theorem's hypothesis count must be what the prose was written for.
     want_n = c.get("hypotheses_count")
@@ -465,6 +528,21 @@ def self_test() -> int:
         return 1
     print(f"{GREEN}[self-test] canary 6 fires: {len(a)} hypothesis on the end-to-end theorem vs "
           f"{len(b)} on the capstone — the counter distinguishes theorem strength. ✓{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 7: a strong relation may not shed its obligations …{RST}")
+    rogue = {"id": "_canary", "source_file": "CHANGELOG.md",
+             "subject": "X", "object": "Y", "bound": "Z",
+             "relation": "end_to_end_tracking", "epistemic_type": "PROVED"}
+    probs = check_relation(rogue)
+    missing_obs = [p for p in probs if "obliges" in p]
+    if len(missing_obs) != 3:
+        print(f"{RED}[self-test] FAILED: declaring `end_to_end_tracking` without its obligations "
+              f"raised {len(missing_obs)} objections, expected 3.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 7 fires: `end_to_end_tracking` declared bare is REJECTED for "
+          f"all three of its obligations. ✓{RST}")
+    print(f"{DIM}           The relation is not verified — it is BINDING. Naming a stronger "
+          f"relation buys stronger\n           obligations, not a stronger sentence.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

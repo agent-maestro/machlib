@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Claim audit level 5: relation integrity — the prose is now GENERATED
+
+- The rungs below are all string questions about a printed form. *"Does the statement assert this
+  relation between these objects"* is not one, and pretending a substring search answers it would be
+  the same error the ladder exists to catch. So the relation is **not verified — it is made
+  binding.**
+
+  A claim declares `subject / relation / object / bound / epistemic_type` from a **closed
+  vocabulary**, and the relation names the structural obligations it entails. Declaring
+  `end_to_end_tracking` obliges `conclusion_mentions`, `hypotheses_count` **and** `proof_uses`;
+  omitting any of them is rejected. **Naming a stronger relation buys stronger obligations, not a
+  stronger sentence.**
+
+- **The prose is rendered from the record**, and the auditor requires the *generated* sentence to
+  appear in the source document — not an author's paraphrase of it. That reverses the architecture:
+  instead of *human prose → try to validate it*, it is *checked record → generate prose*. The two
+  sentences the current records license:
+
+  > The 3 ULP bound on fxpid's implementation error holds in the real domain.
+
+  > The fixed-point affine datapath tracks the exact real trajectory to within one ULP per step, with the bound derived from the implementation rather than assumed.
+
+- **Firing specimen**: `end_to_end_tracking` declared bare raises exactly three objections, one per
+  shed obligation.
+
 ### Claim audit level 4: strength integrity
 
 - **`hypotheses_count`** — the theorem's top-level antecedent count must be what the prose was
