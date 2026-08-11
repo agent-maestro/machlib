@@ -772,6 +772,45 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "d(1/x)=4: no depth-<=3 tree is 1/x. Invariant: sorryAx-free.",
+      "id": "depth-three-exclusion-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no depth-\u22643 tree is `1/x` on the positives"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.inv_x_not_in_eml_depth_le_3",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "Rung 2: positive depth-<=2 tree has a quadratic floor. Invariant: sorryAx-free.",
+      "id": "rung2-positive-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Every positive depth-\u22642 tree is\n  bounded below by `C\u00b7x\u00b2` near `0`"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.rung2_positive_floor",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
+    },
+    {
+      "_comment": "Size bracket sharpened to {9,11}. Invariant: sorryAx-free.",
+      "id": "size-nine-or-eleven-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`s(1/x) \u2208 {9, 11}`"
+      ],
+      "module": "MachLib.EMLDepth2InvX",
+      "theorem": "MachLib.inv_x_size_ge_nine",
+      "forbid_axioms": [
+        "sorryAx"
+      ]
     }
   ]
 }

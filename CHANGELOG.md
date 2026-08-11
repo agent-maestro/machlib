@@ -7,6 +7,42 @@ per-release status.
 
 ## [Unreleased] — 2026-08-10
 
+### ▸▸ `d(1/x) = 4` — the depth question is SETTLED
+
+- **`MachLib.inv_x_not_in_eml_depth_le_3`** — **no depth-≤3 tree is `1/x` on the positives.** With
+  `invX4` a depth-4 reciprocal, `inv_x_depth_eq_four` closes the bracket the arm has carried since
+  it began: 28 sessions trying to prove `1/x ∉ EML` at any depth (false — `inv_x_mem_EML` refuted it
+  with a depth-6 witness), then `invX4` at depth 4, then `2 ≤ d`, `3 ≤ d`, and now `4 ≤ d`.
+
+  The proof dispatches an arbitrary depth-≤2 left child into one of six behavioural classes, each
+  closed separately and **none by enumerating configurations**:
+
+  | left child | instrument |
+  |---|---|
+  | `const c`, `var` | leaf theorems |
+  | `eml A B`, `A` grows at `∞` | `∞`-side rank mismatch |
+  | `eml (const p) var`-headed | `0⁺`-side rank mismatch (a `1/x` pole) |
+  | `eml a var` | leaf-var-right |
+  | `eml A B`, `A` constant, `B` off `0` | bounded left child + **rung 2** |
+  | `eml A (eml var (const q))`, `log q = 1` | log-scale pole |
+
+- **`MachLib.inv_x_size_ge_nine`** / **`inv_x_size_nine_or_eleven`** — the size bracket sharpens to
+  **`s(1/x) ∈ {9, 11}`**, since `2·depth + 1 ≤ size` turns `depth ≥ 4` into `size ≥ 9` and oddness
+  kills 10. **Still not `s = 11`**: a 9-node depth-4 reciprocal would undercut `invX4`, and the depth
+  arm cannot exclude it because 9 nodes permit depth 4. Flagged before the depth work began; it
+  survives exactly as flagged.
+
+- **`MachLib.rung2_positive_floor`** — the load-bearing input. *Every positive depth-≤2 tree is
+  bounded below by `C·x²` near `0`*, so nothing at depth 2 can be positive and decay faster than
+  quadratically — in particular nothing can imitate `exp(−1/x)`. A statement about the **grammar**,
+  with the depth-3 case as a corollary rather than its motivation.
+
+- **Three pole regimes, and they are genuinely distinct.** `exp (t1 x)` bounded; `t1 ≍ 1/x` (a
+  *double* exponential); and `t1 ≍ −log x`, which sits between them and is fatal only because
+  `exp c₀ > 1` **strictly** leaves a residue after the equation's own `1/x` is subtracted. The last
+  shape of the arm fell through the first two for exactly that reason.
+
+
 ### ⚠ CORRECTION — the `LogSafe` removal was attributed to the wrong theorem
 
 The growth envelope's header, and three frontier briefs, said that removing the `LogSafe` side

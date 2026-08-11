@@ -8885,4 +8885,128 @@ theorem depth3_const_left_expvar_one_absurd {α q : Real} {A B t2 : EMLTree}
     have e : (0 : Real) + C = C := by mach_ring
     rw [e] at u; exact u
 
+/-- The constant-valued-left-child branch of the depth-3 dispatch, factored out so both shapes that
+produce a constant value (`const c` and `eml (const p) (const q)`) share it. -/
+theorem depth3_const_left_dispatch {α : Real} {A B t2 : EMLTree}
+    (hA1 : A.depth ≤ 1) (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hB : B.depth ≤ 1) (ht2 : t2.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x →
+      (EMLTree.eml (EMLTree.eml A B) t2).eval x = 1 / x) : False := by
+  have hswap : ∀ x : Real, 0 < x →
+      (EMLTree.eml A B).eval x = (EMLTree.eml (EMLTree.const α) B).eval x := by
+    intro x hx
+    show exp (A.eval x) - log (B.eval x) = exp α - log (B.eval x)
+    rw [hA x hx]
+  rcases const_left_bounded_or_gap α B hB with ⟨W, d, hd, hd1, hW⟩ | hBv | ⟨q, hBq, hq⟩
+  · refine depth3_bounded_left_absurd (W := W) ht2 hd hd1 (fun x hx hxd => ?_) h
+    rw [hswap x hx]
+    exact hW x hx hxd
+  · subst hBv
+    exact depth3_left_eml_var_absurd hA1 ht2 h
+  · subst hBq
+    exact depth3_const_left_expvar_one_absurd hA (fun _ _ => rfl) hq ht2 h
+
+/-- # ▸▸▸▸▸ **`1/x ∉ EML₃`.**
+
+Every depth-≤3 tree fails to be `1/x` on the positives. The dispatch sends an arbitrary depth-≤2
+left child into exactly one of the behavioural classes proved above; nothing here is new
+mathematics, only the case analysis that shows the classes are exhaustive.
+
+Together with `inv_x_mem_EML` (a depth-6 witness) and `inv_x_not_in_eml_depth_le_2`, this settles
+**`d(1/x) = 4`** — the depth question the arm has carried since it began. -/
+theorem inv_x_not_in_eml_depth_le_3 (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = 1 / x) : False := by
+  cases t with
+  | const c => exact inv_x_not_in_eml_depth_le_2 _ (by simp only [EMLTree.depth]; omega) h
+  | var => exact inv_x_not_in_eml_depth_le_2 _ (by simp only [EMLTree.depth]; omega) h
+  | eml t1 t2 =>
+      have ht1 : t1.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left t1.depth t2.depth
+        omega
+      have ht2 : t2.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right t1.depth t2.depth
+        omega
+      cases t1 with
+      | const c => exact depth3_leaf_const_absurd ht2 h
+      | var => exact leaf_var_absurd ht2 h
+      | eml A B =>
+          have hA : A.depth ≤ 1 := by
+            simp only [EMLTree.depth] at ht1
+            have := Nat.le_max_left A.depth B.depth
+            omega
+          have hB : B.depth ≤ 1 := by
+            simp only [EMLTree.depth] at ht1
+            have := Nat.le_max_right A.depth B.depth
+            omega
+          cases A with
+          | const c =>
+              exact depth3_const_left_dispatch (α := c) hA (fun _ _ => rfl) hB ht2 h
+          | var => exact depth3_left_var_left_absurd hB ht2 h
+          | eml a b =>
+              cases a with
+              | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+              | const p =>
+                  cases b with
+                  | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+                  | const q =>
+                      exact depth3_const_left_dispatch (α := exp p - log q) hA
+                        (fun _ _ => rfl) hB ht2 h
+                  | var => exact depth3_left_pole_at_zero_absurd hB ht2 h
+              | var =>
+                  have hb : b.depth ≤ 1 := by
+                    simp only [EMLTree.depth] at hA
+                    have := Nat.le_max_right EMLTree.var.depth b.depth
+                    omega
+                  exact depth3_left_eml_var_left_absurd hb hB ht2 h
+
+/-- # ▸▸▸▸▸▸ **`d(1/x) = 4`.**
+
+The depth question this arm has carried since it began. `invX4` is a depth-4 reciprocal
+(`invX4_eval`, `invX4_depth`), and no tree of depth ≤ 3 is one — so 4 is attained and minimal.
+
+The bracket's history: the arm spent 28 sessions trying to prove `1/x ∉ EML` at *any* depth, which
+was false; `inv_x_mem_EML` refuted it with a depth-6 witness, `invX4` improved that to 4, and the
+question turned from expressibility into complexity. `2 ≤ d` came first, then `3 ≤ d`, and the last
+step was the depth-3 exclusion above. -/
+theorem inv_x_depth_eq_four :
+    (∀ x : Real, 0 < x → invX4.eval x = 1 / x) ∧ invX4.depth = 4
+    ∧ ∀ t : EMLTree, t.depth ≤ 3 → ¬ (∀ x : Real, 0 < x → t.eval x = 1 / x) :=
+  ⟨invX4_eval, invX4_depth, fun t ht h => inv_x_not_in_eml_depth_le_3 t ht h⟩
+
+/-- # ▸ **`s(1/x) ∈ {9, 11}`** — the size bracket, sharpened by the depth result.
+
+`inv_x_size_ge_seven` came from `depth ≤ 2` being impossible. With `depth ≤ 3` now impossible too,
+the bridge `2·depth + 1 ≤ size` gives `size ≥ 9` directly, and `size_odd` rules out 10. `invX4`
+caps it at 11.
+
+**Still not `s = 11`.** A 9-node depth-4 reciprocal would undercut `invX4` and nothing here excludes
+it — the depth arm cannot, since 9 nodes permit depth 4. That was flagged before the depth work
+began and it survives the depth work exactly as flagged. -/
+theorem inv_x_size_ge_nine (t : EMLTree) (h : ∀ x : Real, 0 < x → t.eval x = 1 / x) :
+    9 ≤ t.size := by
+  obtain ⟨k, hk⟩ := size_odd t
+  have hd := two_mul_depth_succ_le_size t
+  rcases Nat.lt_or_ge t.size 9 with hlt | hge
+  · exfalso
+    -- `size < 9` with `size` odd gives `size ≤ 7`, hence `depth ≤ 3`
+    have hs7 : t.size ≤ 7 := by omega
+    have hdep : t.depth ≤ 3 := by omega
+    exact inv_x_not_in_eml_depth_le_3 t hdep h
+  · exact hge
+
+/-- The size bracket, with both ends. -/
+theorem inv_x_size_nine_or_eleven (t : EMLTree)
+    (h : ∀ x : Real, 0 < x → t.eval x = 1 / x)
+    (hmin : ∀ u : EMLTree, (∀ x : Real, 0 < x → u.eval x = 1 / x) → t.size ≤ u.size) :
+    t.size = 9 ∨ t.size = 11 := by
+  have hlow := inv_x_size_ge_nine t h
+  have hup : t.size ≤ 11 := by
+    have h11 : invX4.size = 11 := by rfl
+    have := hmin invX4 invX4_eval
+    omega
+  obtain ⟨k, hk⟩ := size_odd t
+  omega
+
 end MachLib
