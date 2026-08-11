@@ -8348,4 +8348,231 @@ theorem depth3_bounded_left_of_rung2 {t1 t2 : EMLTree} {W d : Real}
   exact bounded_left_quad_floor_absurd hC hd'0 (le_trans hd'd hd1)
     (fun x hx hxd => hW x hx (le_trans hxd hd'd)) hfl h
 
+/-! ## ▸ Classifying the children once, instead of 36 nested branches
+
+The rung-2 assembly needs `A` and `B` dispatched by *behaviour*, not by constructor. Classifying
+each side once turns a 6×6 constructor match into 1 + 4 + 4 dispatches — and the classifications
+are reusable in their own right. -/
+
+/-- **Every depth-≤1 tree is one of three things at `0`:** it diverges like `−log x`, it is
+constant-valued, or it is one of the two shapes that stay bounded while moving — for which the
+whole `G`-parameterisation (`hlow`/`hupp`, and `hexact` exactly when `κ = 0` needs it) is available.
+
+`A = var` discharges the `hnec` implication vacuously, since `exp (−1) < 1 = G`. -/
+theorem depth_le_one_trichotomy (A : EMLTree) (hA : A.depth ≤ 1) :
+    (∃ c₀ : Real, ∀ x : Real, 0 < x → x ≤ 1 → c₀ - log x ≤ A.eval x)
+    ∨ (∃ α : Real, ∀ x : Real, 0 < x → A.eval x = α)
+    ∨ (∃ G : Real, 0 < G ∧ (∀ x : Real, 0 < x → G * exp x ≤ exp (A.eval x))
+        ∧ (∀ x : Real, 0 < x → exp (A.eval x) ≤ G * exp (exp x - 1))
+        ∧ (exp (-G) = G → ∀ x : Real, 0 < x → exp (A.eval x) = G * exp (exp x - 1))) := by
+  have hxu : ∀ x : Real, x ≤ exp x - 1 := by
+    intro x
+    have t := one_add_le_exp x
+    have u := add_le_add_wit t (le_refl (-1 : Real))
+    have l : (1 : Real) + x + -1 = x := by mach_mpoly [x]
+    have r : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+    rw [l, r] at u; exact u
+  cases A with
+  | const c => exact Or.inr (Or.inl ⟨c, fun _ _ => rfl⟩)
+  | var =>
+      refine Or.inr (Or.inr ⟨1, one_pos, ?_, ?_, ?_⟩)
+      · intro x _
+        show (1 : Real) * exp x ≤ exp x
+        have e : (1 : Real) * exp x = exp x := by mach_mpoly [exp x]
+        rw [e]; exact le_refl _
+      · intro x _
+        show exp x ≤ (1 : Real) * exp (exp x - 1)
+        have e : (1 : Real) * exp (exp x - 1) = exp (exp x - 1) := by
+          mach_mpoly [exp (exp x - 1)]
+        rw [e]; exact exp_monotone (hxu x)
+      · intro hc
+        exact absurd hc (fun he => lt_irrefl_ax _
+          (lt_of_lt_of_le exp_neg_one_lt_one (le_of_eq he.symm)))
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q => exact Or.inr (Or.inl ⟨exp p - log q, fun _ _ => rfl⟩)
+          | var => exact Or.inl ⟨exp p, fun _ _ _ => le_refl _⟩
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hA (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              -- `exp (exp x − log q) = exp (1 − log q) · exp (exp x − 1)`, exactly
+              have hex : ∀ x : Real, 0 < x →
+                  exp ((EMLTree.eml EMLTree.var (EMLTree.const q)).eval x)
+                    = exp (1 - log q) * exp (exp x - 1) := by
+                intro x _
+                show exp (exp x - log q) = exp (1 - log q) * exp (exp x - 1)
+                rw [← exp_add]
+                have e : (1 - log q) + (exp x - 1) = exp x - log q := by
+                  mach_mpoly [log q, exp x]
+                rw [e]
+              refine Or.inr (Or.inr ⟨exp (1 - log q), exp_pos _, ?_, ?_, fun _ => hex⟩)
+              · intro x hx
+                rw [hex x hx]
+                exact mul_le_mul_of_nonneg_left (exp_monotone (hxu x))
+                  (le_of_lt (exp_pos _))
+              · intro x hx
+                rw [hex x hx]; exact le_refl _
+          | var =>
+              refine Or.inl ⟨1, fun x hx _ => ?_⟩
+              show (1 : Real) - log x ≤ exp x - log x
+              have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (le_refl (-log x))
+              have l : (1 : Real) + -log x = 1 - log x := by mach_mpoly [log x]
+              have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+              rw [l, r] at s; exact s
+
+/-- **Every depth-≤1 right child is one of four things at `0`:** constant-valued, `var` itself,
+divergent (`≥ −log x`), or the one bounded-but-moving shape `exp x − L`. -/
+theorem depth_le_one_right_tetrachotomy (B : EMLTree) (hB : B.depth ≤ 1) :
+    (∃ β : Real, ∀ x : Real, 0 < x → B.eval x = β)
+    ∨ (∀ x : Real, 0 < x → B.eval x = x)
+    ∨ (∀ x : Real, 0 < x → -log x ≤ B.eval x)
+    ∨ (∃ L : Real, ∀ x : Real, 0 < x → B.eval x = exp x - L) := by
+  cases B with
+  | const q => exact Or.inl ⟨q, fun _ _ => rfl⟩
+  | var => exact Or.inr (Or.inl (fun _ _ => rfl))
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q => exact Or.inl ⟨exp p - log q, fun _ _ => rfl⟩
+          | var => exact Or.inr (Or.inr (Or.inl (fun x hx => eml_const_var_ge_neg_log x hx)))
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q => exact Or.inr (Or.inr (Or.inr ⟨log q, fun _ _ => rfl⟩))
+          | var => exact Or.inr (Or.inr (Or.inl (fun x hx => eml_var_var_ge_neg_log x hx)))
+
+/-- # ▸▸ **RUNG 2, ASSEMBLED: a positive depth-≤2 tree has a quadratic floor near `0`.**
+
+The decay-by-depth ladder at depth 2. Every positive depth-≤2 tree is bounded below by `C·x²` on
+some `(0,d']` — so nothing in this grammar can be positive and decay faster than quadratically at
+depth 2, and in particular nothing can imitate `exp(−1/x)`.
+
+Assembled from the classifications: `A` diverging covers every `B` at once; otherwise the four
+`B`-behaviours dispatch, with the bounded-and-moving corner going to `rung2_expvar_right_floor`,
+whose own eleven-way split is where the Ω-point lives. -/
+theorem rung2_positive_floor (t : EMLTree) (ht : t.depth ≤ 2) {d : Real}
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < t.eval x) :
+    ∃ C d' : Real, 0 < C ∧ 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → C * (x * x) ≤ t.eval x := by
+  have hxx1 : ∀ x : Real, 0 < x → x ≤ 1 → x * x ≤ 1 := by
+    intro x hx hx1
+    have s := mul_le_mul_of_nonneg_right hx1 (le_of_lt hx)
+    have e : (1 : Real) * x = x := by mach_mpoly [x]
+    rw [e] at s; exact le_trans s hx1
+  -- the `B = var` corner, needed under two of the three `A`-classes
+  have hvarfloor : ∀ A' B' : EMLTree, (∀ x : Real, 0 < x → B'.eval x = x) →
+      ∃ C d' : Real, 0 < C ∧ 0 < d' ∧ d' ≤ d ∧
+        ∀ x : Real, 0 < x → x ≤ d' → C * (x * x) ≤ (EMLTree.eml A' B').eval x := by
+    intro A' B' hBv
+    obtain ⟨w, hwpos, hwd, hwe⟩ := two_bound_witness' hd (exp_pos (-1))
+    refine ⟨1, w, one_pos, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+    show (1 : Real) * (x * x) ≤ exp (A'.eval x) - log (B'.eval x)
+    rw [hBv x hx]
+    have hx1 : x ≤ 1 := le_trans hxw (le_trans (le_of_lt hwd) hd1)
+    have hlog : (1 : Real) ≤ -log x := by
+      have hlt : x < exp (-1) := lt_of_le_of_lt hxw hwe
+      have h1 : log x < -1 := by
+        have s := log_lt_log_strict hx hlt
+        rwa [log_exp] at s
+      have s := add_lt_add_left h1 (-log x + 1)
+      have l : -log x + 1 + log x = 1 := by mach_mpoly [log x]
+      have r : -log x + 1 + -1 = -log x := by mach_mpoly [log x]
+      rw [l, r] at s; exact le_of_lt s
+    have s := add_le_add_wit (le_of_lt (exp_pos (A'.eval x))) hlog
+    have l : (0 : Real) + 1 = 1 := by mach_ring
+    have r : exp (A'.eval x) + -log x = exp (A'.eval x) - log x := by
+      mach_mpoly [exp (A'.eval x), log x]
+    rw [l, r] at s
+    have e : (1 : Real) * (x * x) = x * x := by mach_mpoly [x]
+    rw [e]
+    exact le_trans (hxx1 x hx hx1) s
+  cases t with
+  | const c =>
+      have hc : (0 : Real) < c := hpos d hd (le_refl d)
+      refine ⟨c, d, hc, hd, le_refl d, fun x hx hxd => ?_⟩
+      show c * (x * x) ≤ c
+      have s := mul_le_mul_of_nonneg_left (hxx1 x hx (le_trans hxd hd1)) (le_of_lt hc)
+      have e : c * (1 : Real) = c := by mach_mpoly [c]
+      rw [e] at s; exact s
+  | var =>
+      refine ⟨1, d, one_pos, hd, le_refl d, fun x hx hxd => ?_⟩
+      show (1 : Real) * (x * x) ≤ x
+      have e : (1 : Real) * (x * x) = x * x := by mach_mpoly [x]
+      rw [e]
+      have s := mul_le_mul_of_nonneg_left (le_trans hxd hd1) (le_of_lt hx)
+      have e2 : x * (1 : Real) = x := by mach_mpoly [x]
+      rw [e2] at s; exact s
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth
+        omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth
+        omega
+      rcases depth_le_one_trichotomy A hA with ⟨c₀, hc₀⟩ | ⟨α, hα⟩ | ⟨G, hG, hlow, hupp, hnec⟩
+      · -- `A` diverges: one theorem, every `B`
+        obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+          depth_le_two_diverging_left_floor (c₀ := c₀) hB hd hd1
+            (fun x hx hxd => hc₀ x hx (le_trans hxd hd1))
+        exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+      · -- `A` constant-valued
+        rcases depth_le_one_right_tetrachotomy B hB with
+          ⟨β, hβ⟩ | hBv | hBd | ⟨L, hBL⟩
+        · obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+            depth_le_two_const_right_floor hA hβ hd hd1 hpos
+          exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+        · exact hvarfloor A B hBv
+        · exact (depth_le_two_bounded_left_diverging_right_absurd (W := exp α) hd hd1
+            (fun x hx _ => by rw [hα x hx]; exact le_refl _)
+            (fun x hx _ => hBd x hx) hpos).elim
+        · obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+            depth_le_two_const_left_expvar_right_floor hα hBL hd hd1 hpos
+          exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+      · -- `A` bounded and moving
+        rcases depth_le_one_right_tetrachotomy B hB with
+          ⟨β, hβ⟩ | hBv | hBd | ⟨L, hBL⟩
+        · obtain ⟨K, d', hK, hd'0, hd'd, hfl⟩ :=
+            depth_le_two_const_right_floor hA hβ hd hd1 hpos
+          exact ⟨K, d', hK, hd'0, hd'd, linear_floor_to_quad hK (le_trans hd'd hd1) hfl⟩
+        · exact hvarfloor A B hBv
+        · refine (depth_le_two_bounded_left_diverging_right_absurd
+            (W := G * exp (exp 1 - 1)) hd hd1 (fun x hx hxd => ?_)
+            (fun x hx _ => hBd x hx) hpos).elim
+          refine le_trans (hupp x hx) ?_
+          refine mul_le_mul_of_nonneg_left (exp_monotone ?_) (le_of_lt hG)
+          have s := add_le_add_wit (exp_monotone (le_trans hxd hd1)) (le_refl (-1 : Real))
+          have l : exp x + -1 = exp x - 1 := by mach_mpoly [exp x]
+          have r : exp 1 + -1 = exp 1 - 1 := by mach_mpoly [exp 1]
+          rw [l, r] at s; exact s
+        · exact rung2_expvar_right_floor hG hBL hlow hupp hnec hd hd1 hpos
+
+/-- # ▸▸▸ **The depth-3 bounded-left case is CLOSED, unconditionally.**
+
+`rung2_positive_floor` discharges the hypothesis of `depth3_bounded_left_of_rung2`, so a left child
+that stays bounded near `0` cannot produce `1/x` at depth 3 — no shape analysis of `t2` at the call
+site, and no residual hypothesis.
+
+With the two rank-mismatch theorems (`depth3_left_unbounded_absurd` at `∞`,
+`depth3_left_pole_at_zero_absurd` at `0⁺`) covering the diverging left children, this is the third
+and last behavioural class of depth-3 left child. -/
+theorem depth3_bounded_left_absurd {t1 t2 : EMLTree} {W d : Real}
+    (ht2 : t2.depth ≤ 2) (hd : 0 < d) (hd1 : d ≤ 1)
+    (hW : ∀ x : Real, 0 < x → x ≤ d → exp (t1.eval x) ≤ W)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False :=
+  depth3_bounded_left_of_rung2 hd hd1 hW
+    (fun d₀ hd₀0 hd₀d hposr =>
+      rung2_positive_floor t2 ht2 hd₀0 (le_trans hd₀d hd1) hposr)
+    h
+
 end MachLib
