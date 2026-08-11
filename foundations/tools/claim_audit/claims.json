@@ -830,7 +830,8 @@
       ],
       "conclusion_mentions": [
         "fxpid"
-      ]
+      ],
+      "hypotheses_count": 0
     },
     {
       "_comment": "End-to-end for the affine plant kernel: the netlist trajectory tracks the exact real one, with epsilon = the datapath's own ulp. fxaffine enters via fxTraj's DEFINITION, so this claim uses statement_mentions_deep \u2014 the false negative that motivated that check.",
@@ -859,7 +860,8 @@
       "proof_uses": [
         "affine_trajectory_bound",
         "fxaffine_step_error"
-      ]
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

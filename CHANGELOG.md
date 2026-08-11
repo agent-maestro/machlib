@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Claim audit level 4: strength integrity
+
+- **`hypotheses_count`** — the theorem's top-level antecedent count must be what the prose was
+  written for. `hypotheses_of` keeps what `conclusion_of` discards, because the number and shape of
+  a theorem's hypotheses **is** its strength.
+
+  This catches the **mirror** of the flagship failure: not prose that outruns a theorem, but a
+  theorem quietly *weakened* later — a hypothesis added — while the prose describing it stays put.
+  Decidable both ways, since the antecedents are a syntactic prefix of the printed type.
+
+- **Firing specimen** checks the counter *discriminates*: 1 hypothesis on `fxaffine_traj_tracks_exact`
+  versus 6 on `pid_trajectory_from_bits`. A counter that always returned the same number would pass
+  a strength check vacuously, so the specimen asserts a difference rather than a value.
+
+- Registered: the end-to-end theorem at **1** hypothesis (`0 ≤ qval c`), and
+  `fxpid_real_trunc_lt_3ulp` at **0** — mechanically confirming the "both are unconditional, the
+  `Nat` premise is discharged inside rather than assumed" claim made when the bridge landed.
+
 ### Claim audit level 6: composition integrity
 
 - **`proof_uses`** — the proof must actually go through the lemmas the prose credits. Extracted

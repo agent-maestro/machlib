@@ -186,6 +186,46 @@ def conclusion_of(stmt: str) -> str:
     return body
 
 
+def hypotheses_of(stmt: str) -> list:
+    """The theorem's top-level antecedents, in order.
+
+    Quantifier/strength integrity. `conclusion_of` throws these away; this keeps them, because the
+    number and shape of a theorem's hypotheses IS its strength. The failure this catches is the
+    mirror of the flagship one: not prose that outruns a theorem, but a theorem quietly WEAKENED
+    later — a hypothesis added — while the prose describing it stays put.
+
+    Decidable both ways: the antecedents are a syntactic prefix of the printed type.
+    """
+    body = stmt.split(" : ", 1)[1] if " : " in stmt else stmt
+    body = re.sub(r"\s+", " ", body).strip()
+    hyps, changed = [], True
+    while changed:
+        changed = False
+        if body.startswith("∀"):
+            depth = 0
+            for i, ch in enumerate(body):
+                if ch in _OPEN:
+                    depth += 1
+                elif ch in _CLOSE:
+                    depth -= 1
+                elif ch == "," and depth == 0:
+                    body, changed = body[i + 1:].strip(), True
+                    break
+            if changed:
+                continue
+        depth = 0
+        for i, ch in enumerate(body):
+            if ch in _OPEN:
+                depth += 1
+            elif ch in _CLOSE:
+                depth -= 1
+            elif ch == "→" and depth == 0:
+                hyps.append(body[:i].strip())
+                body, changed = body[i + 1:].strip(), True
+                break
+    return hyps
+
+
 def statement_resolved(text: str) -> bool:
     """Did `#check` actually print a type (vs. an error)?"""
     return " : " in text and "error" not in text.lower()
@@ -297,6 +337,20 @@ def check_claim(c: dict) -> list:
                         f"proof of {c['theorem']} does not invoke `{ident}` — the prose credits a "
                         f"composition the proof does not perform")
 
+    # (G) strength integrity: the theorem's hypothesis count must be what the prose was written for.
+    want_n = c.get("hypotheses_count")
+    if want_n is not None:
+        stmt = statement_of(c["module"], c["theorem"])
+        if not statement_resolved(stmt):
+            problems.append(f"could not resolve the STATEMENT of {c['theorem']} (build error?)")
+        else:
+            got = hypotheses_of(stmt)
+            if len(got) != want_n:
+                problems.append(
+                    f"{c['theorem']} now has {len(got)} top-level hypotheses, not {want_n} — "
+                    f"the theorem's STRENGTH changed under prose written for the old one"
+                    + (f"; hypotheses: {got}" if len(got) <= 8 else ""))
+
     return problems
 
 
@@ -398,6 +452,19 @@ def self_test() -> int:
     print(f"{DIM}           The flagship claim now fails independently at THREE levels — subject, "
           f"conclusion, and\n           composition. One gate can be fooled; three agreeing is "
           f"evidence the gap is real.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 6: the hypothesis counter must DISCRIMINATE …{RST}")
+    a = hypotheses_of(statement_of("MachLib.FixedPointRealBridge",
+                                   "MachLib.Real.fxaffine_traj_tracks_exact"))
+    b = hypotheses_of(statement_of("MachLib.PIDCapstone",
+                                   "MachLib.Real.pid_trajectory_from_bits"))
+    if len(a) == 0 or len(b) == 0 or len(a) >= len(b):
+        print(f"{RED}[self-test] FAILED: counter does not discriminate "
+              f"(end-to-end={len(a)}, capstone={len(b)}); a counter that always returns the same "
+              f"number would pass a strength check vacuously.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 6 fires: {len(a)} hypothesis on the end-to-end theorem vs "
+          f"{len(b)} on the capstone — the counter distinguishes theorem strength. ✓{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
