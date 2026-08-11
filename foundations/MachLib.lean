@@ -368,6 +368,7 @@ import MachLib.ConditionNumber
 import MachLib.RippleCarry
 import MachLib.BitVecMul
 import MachLib.FixedPointRTL
+import MachLib.FixedPointRealBridge
 import MachLib.BackwardError
 import MachLib.ForwardBackwardKappa
 import MachLib.ClosedLoopSafety

@@ -43,11 +43,12 @@ exactly that gap, and how we close it.
 
 **What is NOT proved — two joins, both currently carried by prose:**
 
-1. **`Nat` → `Real`.** `fxpid_trunc_lt_3ulp` bounds a count of *integer units*.
-   The reading "`< 3 ULP = 3·2⁻ᶠᴿᴬᶜ` in the real domain" is a scaling convention
-   applied in comments; **no theorem states it.** The same gap sits under
-   `fxmul_trunc_lt_ulp`, whose docstring says it "is exactly Leg A's
-   `|fxmul a b − a·b| ≤ 2⁻ᶠᴿᴬᶜ`" — also not a theorem.
+1. ~~**`Nat` → `Real`.**~~ **CLOSED, same day** — `MachLib/FixedPointRealBridge.lean`.
+   `fxmul_real_trunc_lt_ulp` and `fxpid_real_trunc_lt_3ulp` state the truncation
+   bounds over `MachLib.Real`, derived from the `Nat` versions through
+   `natCast_lt_mono` (proved here from `natCast_succ`). Both are unconditional —
+   the `Nat` premise is discharged inside, not assumed. Reading them in Q-format
+   is now ordinary ordered-field algebra rather than a convention in a comment.
 2. **Controller → closed loop.** `fxpid_trunc_lt_3ulp` bounds the *controller's
    multiply-add*. `pid_trajectory_from_bits` needs a bound on the *closed-loop
    state update*, `|xc (k+1) − (c·xc k + d)| ≤ ε`, which it takes as a
@@ -61,9 +62,14 @@ object at all. The name is aspirational.
 **Why this matters more than a wording fix.** The composition — implementation
 error *derived from the shipped datapath* and *consumed by* a physical-system
 guarantee — is the programme's most distinctive claim, and the thing outside
-readers identified as potentially publishable. Closing these two joins is
-therefore the highest-value verification work available, and until it is closed
-the honest statement is: **two solid halves, an unformalised bridge.**
+readers identified as potentially publishable.
+
+**Status: one join closed, one open.** The remaining gap is join 2, and it is a
+missing *modelling layer* rather than a missing lemma: it needs a plant model
+relating the controller's multiply-add to the closed-loop state update. Until
+that exists the honest statement is **two solid halves and one of two bridges**,
+and `pid_trajectory_from_bits` should not be described as carrying a bit-level
+quantity — it still quantifies `ε` universally.
 
 ---
 
