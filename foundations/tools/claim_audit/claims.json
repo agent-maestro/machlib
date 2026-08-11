@@ -830,7 +830,7 @@
       ]
     },
     {
-      "_comment": "End-to-end for the affine plant kernel: the netlist trajectory tracks the exact real one, with epsilon = the datapath's own ulp. NOTE the statement names fxTraj; fxaffine enters one delta-step away, inside fxTraj's definition \u2014 statement_mentions is syntactic and does not follow definitions.",
+      "_comment": "End-to-end for the affine plant kernel: the netlist trajectory tracks the exact real one, with epsilon = the datapath's own ulp. fxaffine enters via fxTraj's DEFINITION, so this claim uses statement_mentions_deep \u2014 the false negative that motivated that check.",
       "id": "fxaffine-traj-endtoend-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -845,6 +845,9 @@
         "fxTraj",
         "ulp",
         "qval"
+      ],
+      "statement_mentions_deep": [
+        "MachLib.RTL.fxaffine"
       ]
     }
   ]

@@ -80,6 +80,50 @@ def statement_of(module: str, theorem: str) -> str:
     return print_axioms_output(f"import {module}\n#check @{theorem}\n")
 
 
+_IDENT = re.compile(r"MachLib\.[A-Za-z0-9_.']+")
+_deep_cache: dict = {}
+
+
+def statement_mentions_deep(module: str, theorem: str, targets: list,
+                            max_defs: int = 24) -> tuple:
+    """Subject integrity **modulo definitional unfolding**.
+
+    `statement_mentions` is syntactic on the printed type, so it cannot see a constant that enters
+    one δ-step away — e.g. `fxaffine_traj_tracks_exact` names `fxTraj`, whose *definition* is what
+    calls `RTL.fxaffine`. That is a false negative in the safe direction, documented when the
+    theorem was registered; this closes it.
+
+    Walks the theorem's type, then the printed body of each `MachLib.*` constant it names, to a
+    bounded budget. Returns `(missing, truncated)`. **`truncated` is reported, never swallowed** —
+    a budget-limited search that finds nothing has not shown absence.
+    """
+    key = (module, theorem, max_defs, tuple(sorted(targets)))
+    if key not in _deep_cache:
+        seen, texts, frontier, spent = set(), [], [theorem], 0
+        found_all = False
+        while frontier and spent < max_defs and not found_all:
+            nxt = []
+            for decl in frontier:
+                if decl in seen or spent >= max_defs:
+                    continue
+                seen.add(decl)
+                spent += 1
+                t = print_axioms_output(f"import {module}\n#print {decl}\n")
+                texts.append(t)
+                # stop the moment every target is accounted for: a search that FOUND what it
+                # sought is complete regardless of budget. Truncation only matters for absence.
+                if all(x in "\n".join(texts) for x in targets):
+                    found_all = True
+                    break
+                for m in sorted(set(_IDENT.findall(t))):
+                    if m not in seen:
+                        nxt.append(m)
+            frontier = nxt
+        _deep_cache[key] = ("\n".join(texts), (spent >= max_defs) and not found_all)
+    blob, truncated = _deep_cache[key]
+    return ([t for t in targets if t not in blob], truncated)
+
+
 def statement_resolved(text: str) -> bool:
     """Did `#check` actually print a type (vs. an error)?"""
     return " : " in text and "error" not in text.lower()
@@ -148,6 +192,20 @@ def check_claim(c: dict) -> list:
                         f"STATEMENT of {c['theorem']} does not mention `{ident}` — "
                         f"the prose claims a dependency the theorem does not express")
 
+    # (D) subject integrity modulo unfolding: catches constants that enter via a definition.
+    deep = c.get("statement_mentions_deep", [])
+    if deep:
+        missing, truncated = statement_mentions_deep(c["module"], c["theorem"], deep)
+        for ident in missing:
+            problems.append(
+                f"`{ident}` does not occur in {c['theorem']}'s statement even after unfolding "
+                f"definitions — the prose claims a subject the theorem does not reach")
+        if truncated and not missing:
+            problems.append(
+                f"unfolding budget exhausted while checking {c['theorem']} — a bounded search that "
+                f"found everything may still have missed a counterexample; raise max_defs or "
+                f"narrow the claim")
+
     return problems
 
 
@@ -191,6 +249,31 @@ def self_test() -> int:
           f"           this with a RELATION check (does the statement assert the error SOURCE?) and a\n"
           f"           COMPOSITION check (is fxpid_real_trunc_lt_3ulp's conclusion the quantity the\n"
           f"           trajectory bound consumes?). Staged, not satisfied.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 3: the DEEP check must see through a definition …{RST}")
+    shallow = statement_of("MachLib.FixedPointRealBridge",
+                           "MachLib.Real.fxaffine_traj_tracks_exact")
+    if not statement_resolved(shallow):
+        print(f"{RED}[self-test] FAILED: could not resolve the specimen statement{RST}")
+        return 1
+    if "fxaffine" in shallow.replace("fxaffine_traj_tracks_exact", ""):
+        print(f"{RED}[self-test] FAILED: specimen no longer discriminates — `fxaffine` is now "
+              f"syntactically present, so it no longer exercises the deep check.{RST}")
+        return 1
+    missing, trunc = statement_mentions_deep(
+        "MachLib.FixedPointRealBridge", "MachLib.Real.fxaffine_traj_tracks_exact",
+        ["MachLib.RTL.fxaffine"])
+    if trunc or missing:
+        print(f"{RED}[self-test] FAILED: the deep check could not reach `fxaffine` through "
+              f"`fxTraj`'s definition (missing={missing}, truncated={trunc}).{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 3 fires: `fxaffine` is INVISIBLE to the syntactic check and "
+          f"VISIBLE to the deep one — level 2 does something level 1 cannot. ✓{RST}")
+    print(f"{DIM}           ⚠ Asymmetry, and it is not an implementation limit: bounded unfolding "
+          f"can certify PRESENCE\n           (stop when found) but never ABSENCE (budget exhausted "
+          f"≠ unreachable). So the flagship\n           specimen stays on the SYNTACTIC check, "
+          f"which is decisive for the statement as printed.\n           Same lesson this corpus "
+          f"learned from grid search: a bounded search cannot prove a negative.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

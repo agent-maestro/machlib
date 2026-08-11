@@ -27,11 +27,17 @@ per-release status.
   controller's output to the plant's state update needs a closed-loop model that does not exist
   here. The `--self-test` specimen therefore still fires, correctly.
 
-- **Known limitation of the level-1 claim gate, found while registering this.**
-  `statement_mentions` is syntactic on the printed type. This theorem's statement names `fxTraj`;
-  `fxaffine` enters one δ-step away, inside `fxTraj`'s *definition*. So the check cannot see it —
-  a false negative in the safe direction, and an argument for the relation-level check the outside
-  reader proposed.
+- **Level 2: subject integrity modulo unfolding.** `statement_mentions_deep` walks the theorem's
+  type and then the printed bodies of the constants it names, so it sees a subject that enters one
+  δ-step away. `fxaffine` is **invisible** to the syntactic check and **visible** to this one —
+  which is the specimen that validates it.
+
+  **The two directions are not symmetric, and this is not an implementation limit.** Bounded
+  unfolding can certify *presence* (stop the moment the target is found) but never *absence*
+  (budget exhausted ≠ unreachable). So absence claims — including the flagship firing specimen —
+  stay on the syntactic check, which is decisive for the statement as printed. Same lesson this
+  corpus already learned from grid search: a bounded search cannot prove a negative. The auditor
+  reports `truncated` explicitly rather than passing a search that found nothing.
 
 ## [Unreleased] — 2026-08-10
 
