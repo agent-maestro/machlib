@@ -7,6 +7,46 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Level 7 hardening: the relation vocabulary is now a pinned artifact
+
+An outside reader found a real defect and named the pressure point correctly.
+
+- **DEFECT, confirmed and fixed.** Canary 7 asserted `len(objections) == 3` — *cardinality*. A
+  quietly weakened obligation list that swaps one obligation for a feebler one **at constant
+  count** sailed straight through it. It now pins the obligation **names**. `canary 9` is the
+  swap it previously certified: `proof_uses` (the composition obligation, the one that caught the
+  flagship gap) → `statement_mentions`, count unchanged at 3.
+
+- **`relations.lock.json`.** Once level 7 traded semantics for set membership, all remaining trust
+  moved into the sentence templates and the obligation lists — and a template that renders prose
+  stronger than its obligations warrant is the original overclaim one layer down, with a green
+  checkmark. **No check can catch that**; it is the question level 7 deleted rather than solved.
+  So it is not verified, it is made **expensive**: `RELATIONS` + `ENTAILS` are pinned by sha256,
+  and any edit fails the **shipping path** until `--bless-relations` is run deliberately.
+  Injection test (template strengthened to "*is fully verified … on real silicon*", obligations
+  untouched): shipping-path exit **1**, naming the template. Reachability witness asserted first.
+
+- **`ENTAILS`, deliberately empty.** `asymptotic_upper_bound` genuinely implies
+  `pointwise_upper_bound`, and their obligation lists are *identical* — so a monotonicity check
+  would admit it. The machinery still refuses, because the pair was never declared (`canary 10`).
+  A specimen built on a **true** implication is the only kind that shows the refusal is about
+  declaration rather than about correctness. Declared entailments are additionally checked for
+  obligation-monotonicity.
+
+- **A second independent renderer was suggested and is NOT being built.** Two renderers over the
+  same table produce the same sentence from the same overclaiming template: agreement is
+  guaranteed and says nothing about the concern that motivated it. The correlation lives in the
+  *table*, not the rendering, so the answer is a pin and a ceremony.
+
+- **Verbatim-only is permanent, not a tunable.** The cost is machine-stilted flagship sentences.
+  Loosening to "paraphrase allowed if adjacent to the licensed form" is a one-way door.
+
+- The phenomenon now has a name: **proof–claim drift** — `Valid(T)` does not give `Licensed(C,T)`.
+  `tools/claim_audit/README.md` rewritten around it (the ladder is 7 levels, not 6, and level 3
+  is documented as unable to certify absence).
+
+- 10 canaries fire; seven gates green; ledger 242 unchanged; `sorryAx` 0.
+
 ### The `LogSafe` reduction: rung 2 replaces the tower-form requirement
 
 - `depth_le_two_neg_log_bound` — a **positive depth-≤2 right child** satisfies

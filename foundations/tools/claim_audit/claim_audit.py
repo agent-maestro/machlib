@@ -26,6 +26,7 @@ Exit 0 = every claim's footprint matches its prose. Non-zero = a headline outran
 footprint (or, in --self-test, the canary was NOT caught, i.e. the gate is broken).
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -301,6 +302,103 @@ RELATIONS = {
 
 EPISTEMIC = {"PROVED", "MEASURED", "ASSUMED", "ATTESTED", "COMPUTED", "CHECKED", "DERIVED"}
 
+# ---------------------------------------------------------------------------
+# Relation entailment: DECLARED, never inferred.
+#
+# A human reading `asymptotic_upper_bound` and `pointwise_upper_bound` will infer that the first
+# implies the second — it is even true. The machinery must not act on that inference. Every
+# entailment a claim may rely on lives here as an explicit pair, and a declared entailment is
+# checked for obligation-monotonicity: if R1 ⇒ R2 then R2's obligations must be a SUBSET of R1's,
+# or the "stronger" relation would license a sentence while carrying fewer duties.
+#
+# Deliberately EMPTY. Nothing in the corpus needs an entailment yet, and an unused table that
+# already refuses the obvious inference is the point: the default is no hierarchy at all.
+# ---------------------------------------------------------------------------
+ENTAILS: set = set()
+
+
+def entails(strong: str, weak: str) -> bool:
+    """Does `strong` license `weak`? Only if someone declared it. No transitive closure either —
+    a chain R1⇒R2⇒R3 does not give R1⇒R3 unless that pair is also declared."""
+    return (strong, weak) in ENTAILS
+
+
+def check_entailment_table() -> list:
+    problems = []
+    for strong, weak in sorted(ENTAILS):
+        for r in (strong, weak):
+            if r not in RELATIONS:
+                problems.append(f"entailment names unknown relation `{r}`")
+        if strong in RELATIONS and weak in RELATIONS:
+            so, wo = set(RELATIONS[strong][1]), set(RELATIONS[weak][1])
+            if not wo <= so:
+                problems.append(
+                    f"declared entailment `{strong}` ⇒ `{weak}` is not obligation-monotone: "
+                    f"{sorted(wo - so)} obliged by the weaker relation and not by the stronger")
+    return problems
+
+
+# ---------------------------------------------------------------------------
+# The relation table is an AUTHORITY-BEARING ARTIFACT, so it is pinned like the axiom base.
+#
+# Level 5 replaced "is this prose faithful?" with "does the doc contain the licensed sentence?".
+# That trade moves all the remaining trust into two places: the sentence TEMPLATES and the
+# OBLIGATION LISTS. A template that renders prose stronger than its obligations warrant is the
+# original overclaim, one layer down, wearing a green checkmark — and no check can catch it,
+# because "is this sentence stronger than these three checks warrant?" is the same unanswerable
+# semantics question level 5 deleted rather than solved.
+#
+# So it is not verified. It is made EXPENSIVE. Editing a template or an obligation list breaks the
+# pin and fails the gate until `--bless-relations` is run deliberately, exactly as extending the
+# axiom base is a ceremony rather than a commit.
+# ---------------------------------------------------------------------------
+RELATIONS_LOCK = os.path.join(os.path.dirname(os.path.abspath(__file__)), "relations.lock.json")
+
+
+def relations_digest() -> tuple:
+    """Canonical serialisation of the authority-bearing table, and its digest."""
+    canon = {r: {"template": t, "obligations": list(o)} for r, (t, o) in sorted(RELATIONS.items())}
+    canon["_entails"] = sorted(list(x) for x in ENTAILS)
+    blob = json.dumps(canon, sort_keys=True, ensure_ascii=False, indent=2)
+    return canon, hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def check_relations_pin() -> list:
+    canon, digest = relations_digest()
+    if not os.path.exists(RELATIONS_LOCK):
+        return [f"relations lock missing: {RELATIONS_LOCK} — run --bless-relations"]
+    lock = json.load(open(RELATIONS_LOCK, encoding="utf-8"))
+    if lock.get("sha256") == digest:
+        return []
+    problems = [f"RELATION TABLE CHANGED without ceremony (lock {lock.get('sha256','?')[:12]}, "
+                f"computed {digest[:12]}) — a template or an obligation list was edited"]
+    old = lock.get("relations", {})
+    for r in sorted(set(old) | set(k for k in canon if k != "_entails")):
+        o, n = old.get(r), canon.get(r)
+        if o is None:
+            problems.append(f"  + relation `{r}` ADDED — obligations {n['obligations']}")
+        elif n is None:
+            problems.append(f"  - relation `{r}` REMOVED")
+        else:
+            if o["obligations"] != n["obligations"]:
+                problems.append(f"  ~ `{r}` obligations {o['obligations']} → {n['obligations']}")
+            if o["template"] != n["template"]:
+                problems.append(f"  ~ `{r}` TEMPLATE changed — the licensed sentence is now "
+                                f"different prose under the same name")
+    return problems
+
+
+def bless_relations() -> int:
+    canon, digest = relations_digest()
+    json.dump({"_comment": "Pinned relation vocabulary. Regenerate ONLY with intent: each entry "
+                           "is a sentence this system is willing to assert on its own authority.",
+               "sha256": digest, "relations": {k: v for k, v in canon.items() if k != "_entails"},
+               "entails": canon["_entails"]},
+              open(RELATIONS_LOCK, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    open(RELATIONS_LOCK, "a", encoding="utf-8").write("\n")
+    print(f"{GREEN}relations blessed: {digest}{RST}")
+    return 0
+
 
 def render_claim(c: dict) -> str:
     """The sentence a typed claim licenses. Generated, never hand-written."""
@@ -560,12 +658,19 @@ def self_test() -> int:
              "relation": "end_to_end_tracking", "epistemic_type": "PROVED"}
     probs = check_relation(rogue)
     missing_obs = [p for p in probs if "obliges" in p]
-    if len(missing_obs) != 3:
-        print(f"{RED}[self-test] FAILED: declaring `end_to_end_tracking` without its obligations "
-              f"raised {len(missing_obs)} objections, expected 3.{RST}")
+    # Pin the obligation NAMES, not their number. Cardinality is a weak proxy: swapping one
+    # obligation for a feebler one at constant count sails past a count check. Named by an outside
+    # reader, and they were right — this specimen previously asserted `len(...) != 3` and would
+    # have certified exactly that swap. Canary 9 below is the swap it now catches.
+    want = {"conclusion_mentions", "hypotheses_count", "proof_uses"}
+    got = {ob for ob in want | {"statement_mentions", "statement_mentions_deep"}
+           if any(f"`{ob}`" in p for p in missing_obs)}
+    if got != want:
+        print(f"{RED}[self-test] FAILED: `end_to_end_tracking` declared bare was objected to for "
+              f"{sorted(got)}, expected exactly {sorted(want)}.{RST}")
         return 1
-    print(f"{GREEN}[self-test] canary 7 fires: `end_to_end_tracking` declared bare is REJECTED for "
-          f"all three of its obligations. ✓{RST}")
+    print(f"{GREEN}[self-test] canary 7 fires: `end_to_end_tracking` declared bare is REJECTED, "
+          f"by NAME, for each of {sorted(want)}. ✓{RST}")
     print(f"{DIM}           The relation is not verified — it is BINDING. Naming a stronger "
           f"relation buys stronger\n           obligations, not a stronger sentence.{RST}")
 
@@ -591,6 +696,52 @@ def self_test() -> int:
     print(f"{DIM}           Both specimens are true theorems. The gate separates them by STRENGTH, "
           f"not by\n           truth — which is the failure mode prose actually has.{RST}")
 
+    print(f"{YELLOW}{BOLD}[self-test] canary 9: a CONSTANT-COUNT obligation swap must be caught …{RST}")
+    # The attack canary 7 used to miss. Replace `proof_uses` — the composition obligation, the one
+    # that caught the flagship gap — with a feebler `statement_mentions`. Count unchanged at 3.
+    saved = RELATIONS["end_to_end_tracking"]
+    try:
+        RELATIONS["end_to_end_tracking"] = (
+            saved[0], ["conclusion_mentions", "hypotheses_count", "statement_mentions"])
+        weakened = check_relations_pin()
+        _, dig_after = relations_digest()
+    finally:
+        RELATIONS["end_to_end_tracking"] = saved
+    _, dig_before = relations_digest()
+    if dig_after == dig_before:
+        print(f"{RED}[self-test] FAILED: the digest is blind to an obligation swap.{RST}")
+        return 1
+    if not any("obligations" in w and "proof_uses" in w for w in weakened):
+        print(f"{RED}[self-test] FAILED: the pin did not name the swapped obligation; it reported "
+              f"{weakened}{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 9 fires: swapping `proof_uses` → `statement_mentions` at "
+          f"constant count breaks the pin, and the pin NAMES the loss. ✓{RST}")
+    print(f"{DIM}           The templates and obligation lists are where all the trust went once "
+          f"level 5 traded\n           semantics for set membership. They are pinned like the axiom "
+          f"base, not checked — because\n           'is this sentence stronger than these checks "
+          f"warrant?' is the question level 5 deleted.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 10: an OBVIOUS entailment must still be refused …{RST}")
+    # `asymptotic_upper_bound` really does imply `pointwise_upper_bound`, and their obligation lists
+    # are identical, so a monotonicity check would happily admit it. The machinery must still say
+    # no, because the pair was never declared. A specimen built on a TRUE implication is the only
+    # kind that shows the refusal is about declaration rather than about correctness.
+    if entails("asymptotic_upper_bound", "pointwise_upper_bound"):
+        print(f"{RED}[self-test] FAILED: an undeclared entailment was granted.{RST}")
+        return 1
+    if set(RELATIONS["asymptotic_upper_bound"][1]) != set(RELATIONS["pointwise_upper_bound"][1]):
+        print(f"{RED}[self-test] BROKEN: specimen assumes identical obligation lists.{RST}")
+        return 1
+    if check_entailment_table():
+        print(f"{RED}[self-test] FAILED: the entailment table is inconsistent.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 10 fires: a TRUE implication between two relations with "
+          f"IDENTICAL obligations is still refused, because nobody declared it. ✓{RST}")
+    print(f"{DIM}           No implicit hierarchy. Otherwise a reader eventually infers an ordering "
+          f"the machinery\n           never checked — and inference is exactly what this layer "
+          f"exists to stop being free.{RST}")
+
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
     text = print_axioms_output(canary_src)
@@ -612,9 +763,18 @@ def main() -> int:
                     help="also inject a canary and prove the gate goes red on a known violation")
     ap.add_argument("--registry", default=REGISTRY,
                     help="path to the claims registry (default: claims.json next to this script)")
+    ap.add_argument("--bless-relations", action="store_true",
+                    help="re-pin the relation vocabulary; a ceremony, not a fixup")
     args = ap.parse_args()
 
+    if args.bless_relations:
+        return bless_relations()
+
     rc = 0
+    # The authority-bearing table is checked on the SHIPPING PATH, not only under --self-test.
+    for problem in check_relations_pin() + check_entailment_table():
+        print(f"{RED}{BOLD}✗ relation vocabulary{RST}  {RED}{problem}{RST}")
+        rc = 1
     if args.self_test:
         rc |= self_test()
     claims = json.load(open(args.registry, encoding="utf-8"))["claims"]

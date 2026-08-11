@@ -1,0 +1,36 @@
+{
+  "_comment": "Pinned relation vocabulary. Regenerate ONLY with intent: each entry is a sentence this system is willing to assert on its own authority.",
+  "sha256": "f34274ddaf872de8fb9e77602354509bc492698ab259ff38eb91a331ffe7a321",
+  "relations": {
+    "asymptotic_upper_bound": {
+      "template": "{subject} is bounded above by {bound} on a neighbourhood of 0 whose existence the theorem asserts rather than assumes.",
+      "obligations": [
+        "conclusion_mentions",
+        "hypotheses_count"
+      ]
+    },
+    "end_to_end_tracking": {
+      "template": "{subject} tracks {object} to within {bound}, with the bound derived from the implementation rather than assumed.",
+      "obligations": [
+        "conclusion_mentions",
+        "hypotheses_count",
+        "proof_uses"
+      ]
+    },
+    "implementation_error_bound": {
+      "template": "The {bound} bound on {subject}'s implementation error holds in {object}.",
+      "obligations": [
+        "conclusion_mentions",
+        "hypotheses_count"
+      ]
+    },
+    "pointwise_upper_bound": {
+      "template": "{subject} is bounded above by {bound} on {object}.",
+      "obligations": [
+        "conclusion_mentions",
+        "hypotheses_count"
+      ]
+    }
+  },
+  "entails": []
+}
