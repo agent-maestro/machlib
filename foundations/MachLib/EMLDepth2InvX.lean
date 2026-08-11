@@ -8249,4 +8249,103 @@ theorem rung2_expvar_right_floor {A B : EMLTree} {G L d : Real}
       · exact (depth_le_two_cancel_kappa_neg_absurd hG hLG hk hB hupp hd hd1 hpos).elim
     · exact (depth_le_two_cancel_gamma_neg_absurd hG hM hLM hg hB hupp hd hd1 hpos).elim
 
+/-! ## ▸ **The lift: rung 2 ⟹ the depth-3 bounded-left case**
+
+Rather than continue case-by-case, this makes the *architecture* explicit. Two connectives turn a
+completed rung 2 into a depth-3 elimination:
+
+1. a bounded left child forces the right child **positive** near `0` (below), and
+2. a positive depth-≤2 right child has a **quadratic floor** (rung 2), which
+   `bounded_left_quad_floor_absurd` then kills.
+
+So the remaining depth-3 work is not a case analysis at all — it is exactly the assembly of rung 2
+over depth-≤2 trees, and `depth3_bounded_left_of_rung2` below states that reduction as a theorem
+rather than as a plan. -/
+
+/-- **A bounded left child forces the right child positive near `0`.**
+
+`depth3_left_pinned_of_right_nonpos` says a non-positive right child pins `x·exp (t1 x) = 1`. With
+`exp (t1 x) ≤ W` that forces `x·W ≥ 1`, so below `1/W` the right child cannot be non-positive. The
+cutoff is written `exp (−log W)` to keep it division-free. -/
+theorem depth3_right_pos_of_bounded_left {t1 t2 : EMLTree} {W d : Real}
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x)
+    (hd : 0 < d) (hW : ∀ x : Real, 0 < x → x ≤ d → exp (t1.eval x) ≤ W) :
+    ∃ d' : Real, 0 < d' ∧ d' ≤ d ∧ ∀ x : Real, 0 < x → x ≤ d' → 0 < t2.eval x := by
+  -- `W` is positive: it dominates an `exp`
+  have hWpos : (0 : Real) < W :=
+    lt_of_lt_of_le (exp_pos (t1.eval d)) (hW d hd (le_refl d))
+  obtain ⟨w, hwpos, hwd, hwe⟩ := two_bound_witness' hd (exp_pos (-log W))
+  refine ⟨w, hwpos, le_of_lt hwd, fun x hx hxw => ?_⟩
+  rcases lt_total 0 (t2.eval x) with hp | hz | hn
+  · exact hp
+  · exfalso
+    exact absurd (depth3_left_pinned_of_right_nonpos h hx (le_of_eq hz.symm))
+      (by
+        intro hpin
+        -- `x·W < 1` below the cutoff, contradicting `x·exp (t1 x) = 1 ≤ x·W`
+        have hxW : x * W < 1 := by
+          have hlt : x < exp (-log W) := lt_of_le_of_lt hxw hwe
+          have hlog : log x < -log W := by
+            have s := log_lt_log_strict hx hlt
+            rwa [log_exp] at s
+          have hsum : log (x * W) < 0 := by
+            rw [log_mul hx hWpos]
+            have s := add_lt_add_left hlog (log W)
+            have l : log W + -log W = (0 : Real) := by mach_ring
+            have r : log W + log x = log x + log W := by mach_mpoly [log W, log x]
+            rw [l, r] at s; exact s
+          have t := exp_lt hsum
+          rw [exp_log (mul_pos hx hWpos), exp_zero] at t
+          exact t
+        have hge : (1 : Real) ≤ x * W := by
+          have s := mul_le_mul_of_nonneg_left (hW x hx (le_trans hxw (le_of_lt hwd)))
+            (le_of_lt hx)
+          rw [hpin] at s
+          exact s
+        exact lt_irrefl_ax _ (lt_of_lt_of_le hxW hge))
+  · exfalso
+    have hpin := depth3_left_pinned_of_right_nonpos h hx (le_of_lt hn)
+    have hxW : x * W < 1 := by
+      have hlt : x < exp (-log W) := lt_of_le_of_lt hxw hwe
+      have hlog : log x < -log W := by
+        have s := log_lt_log_strict hx hlt
+        rwa [log_exp] at s
+      have hsum : log (x * W) < 0 := by
+        rw [log_mul hx hWpos]
+        have s := add_lt_add_left hlog (log W)
+        have l : log W + -log W = (0 : Real) := by mach_ring
+        have r : log W + log x = log x + log W := by mach_mpoly [log W, log x]
+        rw [l, r] at s; exact s
+      have t := exp_lt hsum
+      rw [exp_log (mul_pos hx hWpos), exp_zero] at t
+      exact t
+    have hge : (1 : Real) ≤ x * W := by
+      have s := mul_le_mul_of_nonneg_left (hW x hx (le_trans hxw (le_of_lt hwd)))
+        (le_of_lt hx)
+      rw [hpin] at s
+      exact s
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hxW hge)
+
+/-- # ▸ **THE LIFT.** A completed rung 2 eliminates the depth-3 bounded-left case.
+
+`hrung2` is exactly the rung-2 statement for `t2` — *positive near `0` implies a quadratic floor*.
+Given it, a bounded left child is impossible, with no further case analysis: positivity comes from
+the clamp pin, the floor comes from rung 2, and `bounded_left_quad_floor_absurd` closes.
+
+**This is the reduction, stated as a theorem rather than as a plan.** What remains of depth 3 is now
+literally the assembly of rung 2 over depth-≤2 trees — nothing else. -/
+theorem depth3_bounded_left_of_rung2 {t1 t2 : EMLTree} {W d : Real}
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hW : ∀ x : Real, 0 < x → x ≤ d → exp (t1.eval x) ≤ W)
+    (hrung2 : ∀ d₀ : Real, 0 < d₀ → d₀ ≤ d →
+      (∀ x : Real, 0 < x → x ≤ d₀ → 0 < t2.eval x) →
+      ∃ C d' : Real, 0 < C ∧ 0 < d' ∧ d' ≤ d₀ ∧
+        ∀ x : Real, 0 < x → x ≤ d' → C * (x * x) ≤ t2.eval x)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False := by
+  obtain ⟨d₀, hd₀0, hd₀d, hposr⟩ := depth3_right_pos_of_bounded_left h hd hW
+  obtain ⟨C, d', hC, hd'0, hd'd₀, hfl⟩ := hrung2 d₀ hd₀0 hd₀d hposr
+  have hd'd : d' ≤ d := le_trans hd'd₀ hd₀d
+  exact bounded_left_quad_floor_absurd hC hd'0 (le_trans hd'd hd1)
+    (fun x hx hxd => hW x hx (le_trans hxd hd'd)) hfl h
+
 end MachLib
