@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The second arrow: DAG → scheduled datapath. Depth survives, area dies.
+
+`schedule_ge_wdepth` — for any schedule `s` in which an `eml` instruction's result is available no
+earlier than `L` after both operands (`SchedValid`), **`L · depth ≤ s i`**. Hence
+**`inv_x_schedule_ge_four_L`: no schedule computes `1/x` in fewer than `4·L`** — however many blocks
+it allocates, *including one*. At the measured `L = 5` cycles that is **20 cycles**.
+
+This is the arrow on which the measured **×4.00 area multiplier dies.** A time-multiplexed datapath
+reuses one block across cycles (forge already does this — the shared-MAC matmul is ~4 DSPs constant
+in size), so area becomes `O(1)` in depth while the latency floor is untouched. The forge report's
+area row has been amended: ×4.00 is a property of the *unshared* lowering, not of the quantity.
+
+**The invariant ledger, two arrows deep:**
+
+| quantity | tree → DAG (sharing) | DAG → schedule (resource sharing) |
+|---|---|---|
+| **depth / latency** | preserved exactly (`netDepth_eq_depth`) | **floor survives** (`schedule_ge_wdepth`) |
+| **size / area** | destroyed — exponential (`sqProg_size`) | destroyed — one block serves every node |
+| critical path | preserved (per-stage) | preserved (per-stage) |
+
+**Depth is the only quantity that survives both.** Twice today the *area* figure has been the
+misleading one — first as the wrong instantiation of the weighted-cost socket, then as the ×4.00 a
+scheduler erases. Area agrees with depth exactly when the lowering happens not to share, which is a
+fact about the lowering.
+
+`schedule_ge_wdepth` uses the weighted machinery directly (`wdepth 0 0 L`), so the socket earns its
+keep rather than sitting unused. `sorryAx` 0; ledger 242 unchanged.
+
 ### The weighted socket has a trap, and measuring found it
 
 `forge` now measures the block (`forge/reports/eml_block_cost_2026_08_11.md`, yosys 0.40 +

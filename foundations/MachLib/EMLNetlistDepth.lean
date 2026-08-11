@@ -55,6 +55,21 @@ A weight that is not path-additive in the physical artifact makes the conclusion
 the theorem true. Latency is path-additive; combinational depth stops being so the moment a register
 is inserted; area never was.
 
+**The invariant ledger, now for two arrows.** Asking *what survives each compiler transformation?*
+is the general form of this module's question, and two arrows are answered:
+
+| quantity | tree → DAG (sharing) | DAG → schedule (resource sharing) |
+|---|---|---|
+| **depth / latency** | preserved exactly (`netDepth_eq_depth`) | **floor survives** (`schedule_ge_wdepth`) |
+| **size / area** | destroyed — exponential (`sqProg_size`) | destroyed — one block can serve every node |
+| critical path | preserved (a per-stage quantity) | preserved (a per-stage quantity) |
+
+**Depth is the only quantity that survives both.** The second arrow is where the measured `×4.00`
+area multiplier dies: a time-multiplexed datapath reuses one block across cycles, so area becomes
+`O(1)` in depth while latency cannot fall below `L ·  d` however many blocks are allocated
+(`inv_x_schedule_ge_four_L`). Area's apparent agreement with the depth bound in the unshared
+lowering was a property of *that* lowering, not of the quantity.
+
 **Scope.** "Datapath" here means a straight-line program over the EML primitive
 `(a, b) ↦ exp a − log b`, which is the block Forge's hardware lane emits. Nothing here bounds
 gate-depth *inside* a block, and nothing here is a lower bound against arbitrary circuits — that
@@ -467,6 +482,86 @@ theorem sqProg_size (n : Nat) : (unfoldAt sqProg n).size + 1 = 2 ^ (n + 1) :=
 theorem sqProg_gap_at_four : (unfoldAt sqProg 4).depth = 4 ∧ (unfoldAt sqProg 4).size = 31 := by
   refine ⟨sqProg_depth 4, ?_⟩
   have h := sqProg_size 4
+  omega
+
+-- ▸ The next arrow: DAG → SCHEDULED datapath.
+
+/-- A schedule records when each instruction's result is available. -/
+def SchedValid (p : Nat → EMLInstr) (L : Nat) (s : Nat → Nat) : Prop :=
+  ∀ i a b : Nat, p i = EMLInstr.eml a b → s a + L ≤ s i ∧ s b + L ≤ s i
+
+/-- `wdepth 0 0 L` is just `L ·  depth`. -/
+theorem wdepth_scaled (L : Nat) : ∀ t : EMLTree, t.wdepth 0 0 L = L * t.depth := by
+  intro t
+  induction t with
+  | const c => show (0 : Nat) = L * 0; omega
+  | var => show (0 : Nat) = L * 0; omega
+  | eml a b iha ihb =>
+    show L + max (a.wdepth 0 0 L) (b.wdepth 0 0 L) = L * (1 + max a.depth b.depth)
+    rw [iha, ihb]
+    rcases Nat.le_total a.depth b.depth with hle | hle
+    · rw [Nat.max_eq_right hle, Nat.max_eq_right (Nat.mul_le_mul_left L hle)]
+      have hdist : L * (1 + b.depth) = L + L * b.depth := by rw [Nat.mul_add, Nat.mul_one]
+      omega
+    · rw [Nat.max_eq_left hle, Nat.max_eq_left (Nat.mul_le_mul_left L hle)]
+      have hdist : L * (1 + a.depth) = L + L * a.depth := by rw [Nat.mul_add, Nat.mul_one]
+      omega
+
+/-- **Depth is a latency floor no schedule can beat.** Whatever a scheduler does — however many
+blocks it allocates, in whatever order — an instruction's result cannot be available before
+`L ·  (its depth)`. This is the arrow `DAG → scheduled datapath`, and it is the arrow on which the
+*area* multiplier dies: one time-multiplexed block can serve every node, so area becomes `O(1)` in
+depth. Latency survives; area does not. -/
+theorem schedule_ge_wdepth (p : Nat → EMLInstr) (hwf : ProgWf p) (L : Nat) (s : Nat → Nat)
+    (hs : SchedValid p L s) :
+    ∀ f i : Nat, i < f → (unfold p f i).wdepth 0 0 L ≤ s i := by
+  intro f
+  induction f with
+  | zero => intro i h; exact absurd h (Nat.not_lt_zero i)
+  | succ f ih =>
+    intro i hi
+    show EMLTree.wdepth 0 0 L (match p i with
+          | EMLInstr.const c => EMLTree.const c
+          | EMLInstr.var => EMLTree.var
+          | EMLInstr.eml a b => EMLTree.eml (unfold p f a) (unfold p f b)) ≤ s i
+    cases hp : p i with
+    | const c => exact Nat.zero_le (s i)
+    | var => exact Nat.zero_le (s i)
+    | eml a b =>
+      have hab := hwf i a b hp
+      have haf : a < f := Nat.lt_of_lt_of_le hab.1 (Nat.le_of_lt_succ hi)
+      have hbf : b < f := Nat.lt_of_lt_of_le hab.2 (Nat.le_of_lt_succ hi)
+      have hsa := (hs i a b hp).1
+      have hsb := (hs i a b hp).2
+      have ha := ih a haf
+      have hb := ih b hbf
+      have hm : max ((unfold p f a).wdepth 0 0 L) ((unfold p f b).wdepth 0 0 L) + L ≤ s i := by
+        rcases Nat.le_total ((unfold p f a).wdepth 0 0 L) ((unfold p f b).wdepth 0 0 L) with h1 | h1
+        · rw [Nat.max_eq_right h1]; omega
+        · rw [Nat.max_eq_left h1]; omega
+      show L + max ((unfold p f a).wdepth 0 0 L) ((unfold p f b).wdepth 0 0 L) ≤ s i
+      omega
+
+/-- **No schedule computes `1/x` in fewer than `4·L`.** At the measured `L = 5` cycles per block
+(`forge/reports/eml_block_cost_2026_08_11.md`) that is **20 cycles**, and it holds however many
+blocks the scheduler allocates — including one. -/
+theorem inv_x_schedule_ge_four_L (p : Nat → EMLInstr) (hwf : ProgWf p) (L : Nat) (s : Nat → Nat)
+    (hs : SchedValid p L s) (i : Nat)
+    (hp : ∀ x : Real, 0 < x → progEvalAt p i x = 1 / x) :
+    4 * L ≤ s i := by
+  have hw := schedule_ge_wdepth p hwf L s hs (i + 1) i (Nat.lt_succ_self i)
+  rw [wdepth_scaled] at hw
+  -- `unfoldAt p i` is by definition `unfold p (i+1) i`, but omega keys on syntax, so the two
+  -- forms become distinct atoms unless they are bridged here.
+  have hw2 : L * (unfoldAt p i).depth ≤ s i := hw
+  have hd : 4 ≤ (unfoldAt p i).depth := by
+    have h : ∀ x : Real, 0 < x → (unfoldAt p i).eval x = 1 / x := by
+      intro x hx; rw [← progEvalAt_eq_unfoldAt_eval]; exact hp x hx
+    have hno : ¬ ((unfoldAt p i).depth ≤ 3) :=
+      fun h3 => inv_x_not_in_eml_depth_le_3 (unfoldAt p i) h3 h
+    omega
+  have hmul : L * 4 ≤ L * (unfoldAt p i).depth := Nat.mul_le_mul_left L hd
+  have hcomm : L * 4 = 4 * L := Nat.mul_comm L 4
   omega
 
 end MachLib

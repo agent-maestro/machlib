@@ -1071,6 +1071,28 @@
         "3"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The scheduling latency floor. The claim that survives resource sharing — i.e. the one that still holds when the area multiplier is gone.",
+      "id": "schedule-latency-floor",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no schedule computes `1/x` in fewer than `4·L`"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.inv_x_schedule_ge_four_L",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "SchedValid",
+        "progEvalAt",
+        "ProgWf"
+      ],
+      "conclusion_mentions": [
+        "4"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
