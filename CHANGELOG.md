@@ -7,6 +7,42 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### `MachLib.EMLNetlistDepth`: which tree bounds survive SHARING
+
+The question that decides whether the reciprocal lower-bound programme means anything downstream:
+hardware is a DAG, not a tree, and every real datapath shares subexpressions. **Which tree bounds
+survive?** The answer is asymmetric, and it inverts the naive guess.
+
+- **Depth survives exactly.** A straight-line EML program is modelled directly (`EMLInstr`,
+  `ProgWf`: an instruction may only read strictly earlier results). `netDepth` is defined on the
+  *program*, `EMLTree.depth` on the *unfolding*, and `netDepth_eq_depth` proves them equal with **no
+  hypothesis at all** — which is exactly the statement that sharing is invisible to depth.
+  Consequently `inv_x_not_in_eml_depth_le_3` transfers verbatim:
+  **`inv_x_netlist_depth_ge_four`** — no straight-line EML datapath computes `1/x` with
+  combinational block-depth `< 4`. And since each level drops the index by at least one
+  (`unfold_depth_le_index`), **`inv_x_netlist_index_ge_four`**: the output cannot sit before index
+  4, so at least **five instruction slots**.
+
+- **Size does not survive at all.** `sqProg` — `n+1` instructions, each reading the previous one
+  twice — unfolds to a tree of depth `n` and `2^(n+1) − 1` nodes (`sqProg_size`). Concretely
+  (`sqProg_gap_at_four`): **5 instructions, 31 nodes.** So a lower bound of `9` on tree *nodes* is
+  consistent with a datapath of four blocks. Sharing is precisely the operation that makes node
+  counts lie.
+
+- **Therefore `s(1/x) ∈ {9,11}` is a fact about the tree encoding and not about any datapath, while
+  `d(1/x) = 4` is a resource bound.** That inverts what the two arms looked like from the inside:
+  the depth arm cost 28 sessions and a refuted conjecture, the size arm looked like the sharper
+  number. Neither was chosen for this reason. Recorded because the useful one was not the one that
+  looked useful.
+
+- **Scope, stated rather than implied.** "Datapath" means a straight-line program over the EML
+  primitive `(a,b) ↦ exp a − log b`, the block Forge's hardware lane emits. Nothing here bounds gate
+  depth *inside* a block, and nothing here is a lower bound against arbitrary circuits — that would
+  be a circuit-complexity claim and this is not one.
+
+- `netDepth_eq_depth` needs only `[MachLib.Real, MachLib.Real.zeroR]`; the transfer theorems carry
+  the ordinary `MachLib.Real` base. `sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Level 7 hardening: the relation vocabulary is now a pinned artifact
 
 An outside reader found a real defect and named the pressure point correctly.

@@ -943,6 +943,71 @@
       "relation": "pointwise_upper_bound",
       "epistemic_type": "PROVED",
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Depth transfers through sharing. The claim that makes d(1/x)=4 a hardware statement. NOTE: a statement_mentions_deep on EMLTree.depth was registered and REJECTED — netDepthAt does not unfold to EMLTree.depth, the two recursions are independent. That rejection is the evidence that netDepth_eq_depth is a theorem and not a restatement.",
+      "id": "netlist-depth-transfer-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no straight-line EML datapath computes `1/x` with\n  combinational block-depth `< 4`"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.inv_x_netlist_depth_ge_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "ProgWf",
+        "unfoldAt",
+        "netDepthAt"
+      ],
+      "conclusion_mentions": [
+        "netDepthAt"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "Sharing is invisible to depth. No hypothesis on the program -- that IS the content, so hypotheses_count 0 is load-bearing here, not incidental.",
+      "id": "netdepth-eq-depth-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "proves them equal with **no\n  hypothesis at all**"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.netDepth_eq_depth",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "netDepth",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "netDepth"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Size does NOT transfer: the concrete gap. Guards the negative half, which is the half a reader is most likely to take on trust.",
+      "id": "sqprog-size-gap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**5 instructions, 31 nodes.**"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.sqProg_gap_at_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "sqProg",
+        ".size",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        ".size"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
