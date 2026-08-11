@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### `s(1/x) = 9?` becomes a finite question about PATHS — and one branch closes
+
+`MachLib.EMLSizeNineShape`. The last open integer in the reciprocal arm is now known to be about the
+*tree encoding* only, which makes it a clean self-contained problem. This makes "finite" concrete.
+
+- **`minimal_size_isPath`** — a tree meeting `2·depth + 1 ≤ size` with equality is a **path**: every
+  `eml` node has a leaf child. General, any depth.
+- **`inv_x_size_nine_isPath`** — `d(1/x) = 4` forces `depth ≥ 4` and `9 = 2·4+1` forces `depth ≤ 4`,
+  so **a 9-node solution is a depth-4 path**. `2⁴·2⁴·2 = 512` shapes with ≤ 5 real parameters.
+- **`inv_x_size_nine_split`** — only two top-level splits survive: `(1,7)` and `(7,1)`. The
+  intermediate `(3,5)` and `(5,3)` are impossible; neither child could reach depth 3.
+- **`invX4_not_isPath`** — the known 11-node witness is *not* a path. It spends its extra 2 nodes
+  branching, so the 9-node family is a genuinely different shape, not a tightening of the known one.
+
+**A growth companion to rung 2, and the first branch closed:**
+
+- **`depth_le_one_upper_log_bound`** — a depth-≤1 tree grows at most like `E − log x` on `(0,1]`.
+  The *upper* companion to `depth_le_one_right_tetrachotomy`, which supplies lower bounds.
+- **`depth_le_two_log_decay_floor`** — a depth-≤2 tree falls at most logarithmically at `0⁺`:
+  `F + log x ≤ t.eval x`. **No positivity hypothesis** — `exp ≥ 0` caps the first term and the
+  lemma above caps the second. Where `rung2_positive_floor` needs positivity and bounds by `C·x²`,
+  this needs nothing and bounds the value itself.
+- **`shifted_inv_not_in_eml_depth_le_2`** — **`K − 1/x` is out of reach at depth 2, for every `K`.**
+  A pole cannot be manufactured two levels up, because `−1/x` falls faster than any logarithm.
+
+That closes one named branch of split A: `t = eml (const c) (eml R₂ (leaf₂))` with `log(leaf₂) = 0`
+requires `R₂ x = K − 1/x` at depth 2, which is now impossible.
+
+**What is not closed, stated plainly:** every other branch — `log(leaf₂) ≠ 0`, `leaf₂ = var`, the
+right-branching depth-3 paths, `ℓ = var`, and all of split B. The `leaf₂ = var` branch *looks* easy
+(a sign clash near `0`), and looking easy is not a proof; it is not claimed. **No counting argument
+can finish this**: 9 nodes genuinely permit depth 4, so every remaining refutation must be semantic.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### The second arrow: DAG → scheduled datapath. Depth survives, area dies.
 
 `schedule_ge_wdepth` — for any schedule `s` in which an `eml` instruction's result is available no

@@ -1093,6 +1093,49 @@
         "4"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The path reduction: what makes the 9-node question finite.",
+      "id": "size-nine-is-a-path",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a 9-node solution is a depth-4 path"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.inv_x_size_nine_isPath",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "isPath",
+        ".size",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "isPath"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The branch actually closed. hypotheses_count 3 pins that it holds for EVERY K (K is a bound variable, not a hypothesis).",
+      "id": "shifted-inv-not-depth-two",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`K − 1/x` is out of reach at depth 2, for every `K`.**"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.shifted_inv_not_in_eml_depth_le_2",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
