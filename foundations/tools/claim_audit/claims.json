@@ -206,7 +206,7 @@
       ]
     },
     {
-      "_comment": "The full mixed exp/log/reciprocal EML barrier bound. It LEGITIMATELY uses the analytic identity theorem + log/reciprocal (for the degenerate proportional leaves), so those are NOT forbidden here \u2014 the invariant is only that it stays free of hidden `sorry` and of the classical zero-count escape hatch. Contrast the pure-exp entry above: the pair pins the honest distinction.",
+      "_comment": "The full mixed exp/log/reciprocal EML barrier bound. It LEGITIMATELY uses the analytic identity theorem + log/reciprocal (for the degenerate proportional leaves), so those are NOT forbidden here — the invariant is only that it stays free of hidden `sorry` and of the classical zero-count escape hatch. Contrast the pure-exp entry above: the pair pins the honest distinction.",
       "id": "eml-eval-boundedzeros-unconditional-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -224,7 +224,7 @@
       ]
     },
     {
-      "_comment": "The concrete showcase: e^(e^x) \u2212 x\u00b7e^x has \u2264 47 real zeros, a machine-checked instance of the pure-exp explicit bound. Stays in the ROLLE-ONLY class (it is a pure-exp barrier), and \u2014 because the bound value is a KERNEL-checked `decide` on Ndep 0 1 = 47 \u2014 must NOT regress to `native_decide` (which would add `ofReduceBool` and move the '47' out of the kernel-checked footprint).",
+      "_comment": "The concrete showcase: e^(e^x) − x·e^x has ≤ 47 real zeros, a machine-checked instance of the pure-exp explicit bound. Stays in the ROLLE-ONLY class (it is a pure-exp barrier), and — because the bound value is a KERNEL-checked `decide` on Ndep 0 1 = 47 — must NOT regress to `native_decide` (which would add `ofReduceBool` and move the '47' out of the kernel-checked footprint).",
       "id": "eexp-barrier-le-47-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -246,12 +246,12 @@
       ]
     },
     {
-      "_comment": "The mixed-capstone showcase: e^x \u2212 log x has finitely many zeros. A genuine exp+log function, so \u2014 unlike the pure-exp '47' entry \u2014 it LEGITIMATELY uses the analytic identity theorem + log; those are NOT forbidden. The invariant is only that this concrete instance stays free of hidden `sorry` and the classical zero-count escape hatch, i.e. it inherits exactly the mixed capstone's honest footprint.",
+      "_comment": "The mixed-capstone showcase: e^x − log x has finitely many zeros. A genuine exp+log function, so — unlike the pure-exp '47' entry — it LEGITIMATELY uses the analytic identity theorem + log; those are NOT forbidden. The invariant is only that this concrete instance stays free of hidden `sorry` and the classical zero-count escape hatch, i.e. it inherits exactly the mixed capstone's honest footprint.",
       "id": "eml-barrier-bounded-zeros-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "eml_barrier_bounded_zeros",
-        "e^x \u2212 log x"
+        "e^x − log x"
       ],
       "module": "MachLib.KhovanskiiConcrete",
       "theorem": "MachLib.KhovanskiiConcrete.eml_barrier_bounded_zeros",
@@ -269,7 +269,7 @@
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "absenc_sub_rounded",
-        "u\u00b7(2+u)\u00b7(|xe|+|ye|)"
+        "u·(2+u)·(|xe|+|ye|)"
       ],
       "module": "MachLib.AbsoluteError",
       "theorem": "MachLib.Real.absenc_sub_rounded",
@@ -297,7 +297,7 @@
       "source_file": "CHANGELOG.md",
       "claim_text": [
         "pipeline_arith",
-        "ARBITRARY literal/variable/`+`/`\u2212`/`\u00d7` EML tree"
+        "ARBITRARY literal/variable/`+`/`−`/`×` EML tree"
       ],
       "module": "MachLib.AbsoluteFold",
       "theorem": "Certcom.pipeline_arith",
@@ -320,7 +320,7 @@
       ]
     },
     {
-      "_comment": "FULL local-Lipschitz nesting for the symmetric-domain locals (exp), via magnitude propagation \u2014 exp nested to arbitrary depth over cancelling arithmetic. Invariant: sorryAx-free (magnitude fold + absenc_lip_local at R=M+E + exp_lip_local/exp_monotone).",
+      "_comment": "FULL local-Lipschitz nesting for the symmetric-domain locals (exp), via magnitude propagation — exp nested to arbitrary depth over cancelling arithmetic. Invariant: sorryAx-free (magnitude fold + absenc_lip_local at R=M+E + exp_lip_local/exp_monotone).",
       "id": "pipeline-nested-exp-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -687,7 +687,7 @@
       "id": "leaf-var-family-closed-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "no depth-\u22642 right child lets `eml var t2` be `1/x`"
+        "no depth-≤2 right child lets `eml var t2` be `1/x`"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.leaf_var_absurd",
@@ -739,7 +739,7 @@
       "id": "maxent-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "`log n \u2212 H(p)` *is* `KL(p \u2016 uniform)`"
+        "`log n − H(p)` *is* `KL(p ‖ uniform)`"
       ],
       "module": "MachLib.KLDivergence",
       "theorem": "MachLib.Real.maxent",
@@ -752,7 +752,7 @@
       "id": "decay-floor-depth-one-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "a positive depth-\u22641 tree has a linear floor near\n  `0`"
+        "a positive depth-≤1 tree has a linear floor near\n  `0`"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.depth_le_one_positive_floor",
@@ -765,7 +765,7 @@
       "id": "depth3-rank-mismatch-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "closes the shapes where `A` grows at\n  `\u221e`"
+        "closes the shapes where `A` grows at\n  `∞`"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.depth3_left_unbounded_absurd",
@@ -778,7 +778,7 @@
       "id": "depth-three-exclusion-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "no depth-\u22643 tree is `1/x` on the positives"
+        "no depth-≤3 tree is `1/x` on the positives"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.inv_x_not_in_eml_depth_le_3",
@@ -791,7 +791,7 @@
       "id": "rung2-positive-floor-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "Every positive depth-\u22642 tree is\n  bounded below by `C\u00b7x\u00b2` near `0`"
+        "Every positive depth-≤2 tree is\n  bounded below by `C·x²` near `0`"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.rung2_positive_floor",
@@ -804,7 +804,7 @@
       "id": "size-nine-or-eleven-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "`s(1/x) \u2208 {9, 11}`"
+        "`s(1/x) ∈ {9, 11}`"
       ],
       "module": "MachLib.EMLDepth2InvX",
       "theorem": "MachLib.inv_x_size_ge_nine",
@@ -813,7 +813,7 @@
       ]
     },
     {
-      "_comment": "The real-domain PID truncation bound is about the ACTUAL datapath \u2014 its statement mentions fxpid. Uses the statement_mentions check added 2026-08-10.",
+      "_comment": "The real-domain PID truncation bound is about the ACTUAL datapath — its statement mentions fxpid. Uses the statement_mentions check added 2026-08-10.",
       "id": "fxpid-real-bridge-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -839,11 +839,11 @@
       "epistemic_type": "PROVED"
     },
     {
-      "_comment": "End-to-end for the affine plant kernel: the netlist trajectory tracks the exact real one, with epsilon = the datapath's own ulp. fxaffine enters via fxTraj's DEFINITION, so this claim uses statement_mentions_deep \u2014 the false negative that motivated that check.",
+      "_comment": "End-to-end for the affine plant kernel: the netlist trajectory tracks the exact real one, with epsilon = the datapath's own ulp. fxaffine enters via fxTraj's DEFINITION, so this claim uses statement_mentions_deep — the false negative that motivated that check.",
       "id": "fxaffine-traj-endtoend-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "`\u03b5` is `ulp`, produced by the netlist"
+        "`ε` is `ulp`, produced by the netlist"
       ],
       "module": "MachLib.FixedPointRealBridge",
       "theorem": "MachLib.Real.fxaffine_traj_tracks_exact",
@@ -872,6 +872,77 @@
       "bound": "one ULP per step",
       "relation": "end_to_end_tracking",
       "epistemic_type": "PROVED"
+    },
+    {
+      "_comment": "LogSafe reduction. The -log bound for a positive depth-<=2 child. Registered against BOTH the changelog and the module header, because the header is where the requirement was overstated twice.",
+      "id": "logsafe-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a **positive depth-≤2 right child** satisfies\n  `-log (b.eval x) ≤ N - log x - log x` near `0`"
+      ],
+      "module": "MachLib.EMLGrowthEnvelope",
+      "theorem": "MachLib.depth_le_two_neg_log_bound",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        ".log"
+      ],
+      "conclusion_mentions": [
+        "∃",
+        ".log"
+      ],
+      "subject": "The negated log of a positive depth-≤2 EML tree",
+      "object": "a neighbourhood of 0",
+      "bound": "N − 2·log x",
+      "relation": "asymptotic_upper_bound",
+      "epistemic_type": "PROVED",
+      "hypotheses_count": 4
+    },
+    {
+      "_comment": "Guards the MODULE HEADER prose, not the changelog: the LogSafe requirement was overstated in this exact docstring twice (positive floor, then tower bound). If the header claims depth<=3 is quantitatively closed, this theorem must exist and be sorryAx-free.",
+      "id": "logsafe-reduction-header",
+      "source_file": "foundations/MachLib/EMLGrowthEnvelope.lean",
+      "claim_text": [
+        "the quantitative half is now CLOSED for depth ≤ 3",
+        "nothing quantitative is missing there"
+      ],
+      "module": "MachLib.EMLGrowthEnvelope",
+      "theorem": "MachLib.depth_le_two_neg_log_bound",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions_deep": [
+        "MachLib.rung2_positive_floor"
+      ]
+    },
+    {
+      "_comment": "The discarded term is under rung 1. Guards the 'costs one extra level' quantification.",
+      "id": "logsafe-discard-under-rung-one",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the\n  discarded term is bounded by **rung one regardless of `N`**"
+      ],
+      "module": "MachLib.EMLGrowthEnvelope",
+      "theorem": "MachLib.neg_log_bound_under_rung_one",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "envelope",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "envelope"
+      ],
+      "subject": "The discarded −2·log x term",
+      "object": "(0,1]",
+      "bound": "rung one of the growth envelope",
+      "relation": "pointwise_upper_bound",
+      "epistemic_type": "PROVED",
+      "hypotheses_count": 2
     }
   ]
 }

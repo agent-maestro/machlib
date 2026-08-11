@@ -7,6 +7,39 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The `LogSafe` reduction: rung 2 replaces the tower-form requirement
+
+- `depth_le_two_neg_log_bound` — a **positive depth-≤2 right child** satisfies
+  `-log (b.eval x) ≤ N - log x - log x` near `0`. It follows from `rung2_positive_floor`'s quadratic
+  floor `b x ≥ C·x²` by monotonicity of `log`.
+
+- **Why this retires the quantitative half of the open item.** The corrected note on `LogSafe` said
+  removing it needs a **tower-form** decay bound `b x ≥ exp(-E_j x)`. Rung 2 gives strictly more, and
+  gave it already: a *polynomial* floor, whose `log` is a **log-scale** bound. A depth-≤3 tree has a
+  depth-≤2 right child, so at depth ≤ 3 **nothing quantitative is missing**. The requirement was
+  overstated by a whole scale, twice — first as a positive floor, then as a tower bound — and what
+  fixed it was a theorem proved for an unrelated reason.
+
+- `neg_log_bound_under_rung_one` — `N - log x - log x ≤ envelope 1 (log (exp N + 2)) x`, so the
+  discarded term is bounded by **rung one regardless of `N`**. "Costs one extra level" is now a
+  number, not a hand-wave.
+
+- **What actually remains is sign stability, not a bound.** Rung 2 needs the right child positive on
+  an *interval*; a pointwise sign fact gives that only if the child does not oscillate near `0`. That
+  residue is a tameness statement — and it is where an o-minimality / Khovanskii citation **genuinely
+  applies**, for *finiteness of sign changes*, which is what those theorems actually give. The
+  original attribution asked them for a positive floor, which they cannot give. Same literature,
+  different proposition, and this time the implication holds.
+
+
+- **Typed claims** (relation `asymptotic_upper_bound` / `pointwise_upper_bound`, both new).
+  These sentences are GENERATED from the claim objects, not written:
+
+  > The negated log of a positive depth-≤2 EML tree is bounded above by N − 2·log x on a neighbourhood of 0 whose existence the theorem asserts rather than assumes.
+
+  > The discarded −2·log x term is bounded above by rung one of the growth envelope on (0,1].
+- `sorryAx` 0; ledger 242 unchanged; six gates green.
+
 ### Claim audit level 5: relation integrity — the prose is now GENERATED
 
 - The rungs below are all string questions about a printed form. *"Does the statement assert this

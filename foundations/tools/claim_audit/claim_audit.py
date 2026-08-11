@@ -173,6 +173,12 @@ def conclusion_of(stmt: str) -> str:
                     break
             if changed:
                 continue
+        # An `∃` at depth 0 opens a body that runs to the end of the type: every `→` after it is
+        # INSIDE that body, not a top-level antecedent. Without this guard the splitter walks into
+        # the existential and reports a subterm as the conclusion — which is how a theorem that
+        # PRODUCES a neighbourhood was read as one that merely bounds a value pointwise.
+        if body.startswith("∃"):
+            break
         # drop the first top-level `→` antecedent
         depth = 0
         for i, ch in enumerate(body):
@@ -213,6 +219,12 @@ def hypotheses_of(stmt: str) -> list:
                     break
             if changed:
                 continue
+        # An `∃` at depth 0 opens a body that runs to the end of the type: every `→` after it is
+        # INSIDE that body, not a top-level antecedent. Without this guard the splitter walks into
+        # the existential and reports a subterm as the conclusion — which is how a theorem that
+        # PRODUCES a neighbourhood was read as one that merely bounds a value pointwise.
+        if body.startswith("∃"):
+            break
         depth = 0
         for i, ch in enumerate(body):
             if ch in _OPEN:
@@ -271,6 +283,19 @@ RELATIONS = {
         "{subject} tracks {object} to within {bound}, with the bound derived from the "
         "implementation rather than assumed.",
         ["conclusion_mentions", "hypotheses_count", "proof_uses"],
+    ),
+    # Near-0 bounds come in two strengths, and the difference is the whole content of an
+    # asymptotic claim: does the theorem PRODUCE the neighbourhood, or is it handed one?
+    # `asymptotic_` obliges `conclusion_mentions` precisely so the existential can be demanded
+    # there; a theorem that takes its interval as a hypothesis cannot satisfy it.
+    "asymptotic_upper_bound": (
+        "{subject} is bounded above by {bound} on a neighbourhood of 0 whose existence the "
+        "theorem asserts rather than assumes.",
+        ["conclusion_mentions", "hypotheses_count"],
+    ),
+    "pointwise_upper_bound": (
+        "{subject} is bounded above by {bound} on {object}.",
+        ["conclusion_mentions", "hypotheses_count"],
     ),
 }
 
@@ -543,6 +568,28 @@ def self_test() -> int:
           f"all three of its obligations. ✓{RST}")
     print(f"{DIM}           The relation is not verified — it is BINDING. Naming a stronger "
           f"relation buys stronger\n           obligations, not a stronger sentence.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 8: `asymptotic_` must reject a POINTWISE theorem …{RST}")
+    # The distinction the relation exists to enforce: producing the neighbourhood vs being given
+    # one. `neg_log_bound_under_rung_one` is a genuine, sorryAx-free bound near 0 — and it is
+    # pointwise, so it must NOT be able to wear the asymptotic relation. A specimen drawn from a
+    # FALSE theorem would only prove the auditor rejects nonsense; this one is true and still
+    # rejected, which is what shows the two strengths are actually distinguished.
+    concl = conclusion_of(statement_of("MachLib.EMLGrowthEnvelope",
+                                       "MachLib.neg_log_bound_under_rung_one"))
+    strong = conclusion_of(statement_of("MachLib.EMLGrowthEnvelope",
+                                        "MachLib.depth_le_two_neg_log_bound"))
+    if not concl.strip() or not strong.strip():
+        print(f"{RED}[self-test] BROKEN: could not extract the specimen conclusions.{RST}")
+        return 1
+    if "∃" in concl or "∃" not in strong:
+        print(f"{RED}[self-test] FAILED: the existential test does not discriminate — pointwise "
+              f"conclusion {concl!r} vs asymptotic {strong!r}.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 8 fires: a true-but-pointwise bound cannot claim "
+          f"`asymptotic_upper_bound`; only the theorem that PRODUCES its interval can. ✓{RST}")
+    print(f"{DIM}           Both specimens are true theorems. The gate separates them by STRENGTH, "
+          f"not by\n           truth — which is the failure mode prose actually has.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
