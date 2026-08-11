@@ -45,9 +45,18 @@ caveat that **totalised `log` breaks Pfaffian-ness**: these terms are only *piec
 analytic between sign changes of log arguments, so any citation applies per piece and the piece
 count needs its own induction.
 
-**Status: no axiom spent, and possibly none needed.** Whether the decay bound is provable internally
-is open — note `exp(−1/x)` is in EML and decays faster than any polynomial, yet its `−log` is
-exactly `1/x`, which sits inside rung 1. The compensation may be structural.
+**Status: no axiom spent, and the quantitative half is now CLOSED for depth ≤ 3.** See the
+reduction at the end of this file. `rung2_positive_floor` gives a *positive* depth-≤2 right child
+the floor `b x ≥ C·x²`, which through `log` is a **log-scale** bound on `−log (b x)` — strictly
+stronger than the tower-form bound asked for above, and already proved. Since a depth-≤3 tree has a
+depth-≤2 right child, nothing quantitative is missing there.
+
+**What remains of `LogSafe` is SIGN STABILITY, not a bound.** Rung 2 needs the right child positive
+on an *interval*; a pointwise sign fact yields that only if the child does not oscillate near `0`.
+That residue is a tameness statement — and it is where an o-minimality / Khovanskii citation
+genuinely applies, for finiteness of sign changes, which is what those theorems actually give. The
+original attribution asked them for a positive floor, which they cannot give. Same literature,
+different proposition, and this time the implication holds.
 
 ## `1/x` is NOT excluded by this
 
@@ -267,5 +276,101 @@ theorem inv_x_within_envelope_one (x : Real) (hx : 0 < x) :
   have hinv : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx)
   have heq : x * (1 / x) = x * exp ((0 : Real) - log x) := by rw [hinv, hexp]
   exact le_of_mul_le_mul_pos_left hx (le_of_eq heq)
+
+/-! ## ▸▸ The `LogSafe` reduction: rung 2 replaces the tower-form requirement
+
+The correction above said removing `LogSafe` wants a **tower-form** decay bound,
+`b x ≥ exp(−E_j x)`. **Rung 2 gives far more than that**, and it is already proved:
+`rung2_positive_floor` says a *positive* depth-≤2 tree satisfies `b x ≥ C·x²`. Feeding that through
+`log` turns the discarded term into
+
+`−log (b x) ≤ N − log x − log x`
+
+— a **log-scale** bound, not a tower-scale one. For any tree of depth ≤ 3 the right child has depth
+≤ 2, so the quantitative half of the `LogSafe` question is now closed outright.
+
+> ### What is left of `LogSafe` is not a bound at all. It is **sign stability**: rung 2 needs the right child positive on an *interval*, and a pointwise sign fact only yields that if the child does not oscillate near `0`.
+
+That residue is a **tameness** statement, and it is where an o-minimality / Khovanskii citation
+genuinely applies — for a *different* proposition than the one this file used to name. The original
+attribution asked zero-counting for a positive floor, which it cannot give; this one asks it for
+finiteness of sign changes, which is exactly what it does give. -/
+
+/-- **A positive depth-≤2 right child's `−log` is bounded on a log scale.**
+
+`b x ≥ C·x²` (rung 2) gives `log (b x) ≥ log C + log x + log x`, hence the bound below. This is the
+quantitative content the envelope's discard step needs, and it is strictly stronger than the
+tower-form bound the file previously asked for. -/
+theorem depth_le_two_neg_log_bound (b : EMLTree) (hb : b.depth ≤ 2) {d : Real}
+    (hd : 0 < d) (hd1 : d ≤ 1)
+    (hpos : ∀ x : Real, 0 < x → x ≤ d → 0 < b.eval x) :
+    ∃ N d' : Real, 0 < d' ∧ d' ≤ d ∧
+      ∀ x : Real, 0 < x → x ≤ d' → -log (b.eval x) ≤ N - log x - log x := by
+  obtain ⟨C, d', hC, hd'0, hd'd, hfl⟩ := rung2_positive_floor b hb hd hd1 hpos
+  refine ⟨-log C, d', hd'0, hd'd, fun x hx hxd => ?_⟩
+  have hxx : (0 : Real) < x * x := mul_pos hx hx
+  have hCxx : (0 : Real) < C * (x * x) := mul_pos hC hxx
+  -- `log (C·x²) ≤ log (b x)`
+  have hlog : log (C * (x * x)) ≤ log (b.eval x) := log_le_log hCxx (hfl x hx hxd)
+  rw [log_mul hC hxx, log_mul hx hx] at hlog
+  -- negate
+  have s := neg_le_neg_wit hlog
+  have l : -(log C + (log x + log x)) = -log C - log x - log x := by
+    mach_mpoly [log C, log x]
+  rw [l] at s
+  exact s
+
+/-- **The discarded term sits under rung 1.** `N − log x − log x ≤ envelope 1 M x` for an explicit
+`M`, so absorbing it costs exactly one extra level — which is what "the discard becomes a bound"
+means quantitatively. Uses only `1 ≤ 1/x` on `(0,1]` and `log u ≤ u − 1`. -/
+theorem neg_log_bound_under_rung_one (N : Real) :
+    ∀ x : Real, 0 < x → x ≤ 1 →
+      N - log x - log x ≤ envelope 1 (log (exp N + 1 + 1)) x := by
+  intro x hx hx1
+  have hEpos : (0 : Real) < exp N + 1 + 1 :=
+    add_pos (add_pos (exp_pos N) one_pos) one_pos
+  have hipos : (0 : Real) < 1 / x := one_div_pos_of_pos hx
+  -- `1 ≤ 1/x` on `(0,1]`, directly from `x·(1/x) = 1`
+  have hxinv1 : (1 : Real) ≤ 1 / x := by
+    have s : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx)
+    have t := mul_le_mul_of_nonneg_right hx1 (le_of_lt hipos)
+    rw [s] at t
+    have e : (1 : Real) * (1 / x) = 1 / x := by mach_mpoly [(1 / x : Real)]
+    rw [e] at t; exact t
+  -- `−log x = log (1/x) ≤ 1/x − 1`
+  have hinv : -log x = log (1 / x) := by
+    have e : exp (-log x) = 1 / x := by rw [exp_neg_inv, exp_log hx]
+    rw [← e, log_exp]
+  have hlog1 : -log x ≤ 1 / x - 1 := by
+    rw [hinv]; exact log_le_sub_one_of_one_le hxinv1
+  -- `envelope 1 M x = (exp N + 2)·(1/x)`
+  have henv : envelope 1 (log (exp N + 1 + 1)) x = (exp N + 1 + 1) * (1 / x) := by
+    show exp (envelope 0 (log (exp N + 1 + 1)) x) = _
+    show exp (log (exp N + 1 + 1) - log x) = _
+    have e : log (exp N + 1 + 1) - log x = log (exp N + 1 + 1) + -log x := by mach_ring
+    rw [e, exp_add, exp_log hEpos, exp_neg_inv, exp_log hx]
+  rw [henv]
+  -- step 1: replace `N` and the two `−log x` by their bounds
+  have s1 : N - log x - log x ≤ exp N + (1 / x - 1) + (1 / x - 1) := by
+    have hN : N ≤ exp N := le_of_lt (exp_grows_strictly_thm N)
+    have u := add_le_add_wit (add_le_add_wit hN hlog1) hlog1
+    have l : N + -log x + -log x = N - log x - log x := by mach_mpoly [N, log x]
+    rw [l] at u; exact u
+  refine le_trans s1 ?_
+  -- step 2: `exp N ≤ exp N·(1/x)` and `1/x − 1 ≤ 1/x`
+  have hexpx : exp N ≤ exp N * (1 / x) := by
+    have t := mul_le_mul_of_nonneg_left hxinv1 (le_of_lt (exp_pos N))
+    have e : exp N * (1 : Real) = exp N := by mach_mpoly [exp N]
+    rw [e] at t; exact t
+  have hdrop : (1 : Real) / x - 1 ≤ 1 / x := by
+    have u := add_le_add_wit (le_refl (1 / x : Real)) (neg_le_neg_wit (le_of_lt one_pos))
+    have l : (1 : Real) / x + -1 = 1 / x - 1 := by mach_mpoly [(1 / x : Real)]
+    have r : (1 : Real) / x + -(0 : Real) = 1 / x := by mach_mpoly [(1 / x : Real)]
+    rw [l, r] at u; exact u
+  have s2 := add_le_add_wit (add_le_add_wit hexpx hdrop) hdrop
+  refine le_trans s2 ?_
+  have e : exp N * (1 / x) + 1 / x + 1 / x = (exp N + 1 + 1) * (1 / x) := by
+    mach_mpoly [exp N, (1 / x : Real)]
+  rw [e]; exact le_refl _
 
 end MachLib
