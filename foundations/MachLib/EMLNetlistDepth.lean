@@ -16,22 +16,39 @@ The answer is asymmetric, and it inverts the naive guess.
   with combinational block-depth `< 4` (`inv_x_netlist_depth_ge_four`), and therefore its output
   cannot sit before index 4 — at least five instruction slots (`inv_x_netlist_index_ge_four`).
 
-* **Size does not survive at all.** `sqProg` is `n+1` instructions whose unfolding has
-  `2^(n+1) - 1` nodes (`sqProg_size`). A lower bound of `9` on tree nodes is consistent with a
-  netlist of four blocks. Sharing is exactly the operation that makes node counts lie, and the
-  reciprocal's *size* question — `s(1/x) ∈ {9,11}` — is therefore a statement about the tree
-  encoding and **not** about any datapath.
+* **Size survives only as a logarithmic shadow.** `sqProg` is `n+1` instructions whose unfolding
+  has `2^(n+1) - 1` nodes (`sqProg_size`); concretely `sqProg_gap_at_four` — 5 instructions, 31
+  nodes. Sharing is exactly the operation that makes node counts lie. It is **not** true that the
+  size bound transfers nothing: `unfold_size_le` bounds the unfolding by `2^(i+1)`, so
+  `s(1/x) ≥ 9` does force an output index `≥ 3` (`inv_x_netlist_index_ge_three_from_size`). But the
+  depth route forces `≥ 4`, so **the size bound is real and strictly dominated**. The reciprocal's
+  size question — `s(1/x) ∈ {9,11}` — therefore refines a quantity about the tree encoding that no
+  datapath bound depends on.
 
-That asymmetry is the point of this module. The depth arm, which cost far more effort, is the one
-carrying hardware meaning; the size arm, which looks like the sharper number, carries none. Neither
-was chosen for that reason, and it is worth recording that the useful one was not the one that
-looked useful.
+**Two things this rests on, both explicit rather than implicit.**
+
+`progEval_eq_unfold_eval` — the datapath's own semantics (read earlier results, share them) agrees
+with its unfolding's. Without it `unfoldAt` would be a definition nobody had to accept, and a tree
+lower bound would constrain nothing; every transfer theorem below takes its hypothesis on
+`progEvalAt`, i.e. on the *program*.
+
+`netWDepth_eq_wdepth` — the depth invariance is not special to unit weights. **Any path-additive
+cost survives sharing exactly**, because `(+, max)` is blind to sharing while node-counting is not.
+That is the algebraic reason for the whole asymmetry, and it is the socket a measured per-block
+latency, LUT-depth or energy figure plugs into without re-proving the bridge.
 
 **Scope.** "Datapath" here means a straight-line program over the EML primitive
 `(a, b) ↦ exp a − log b`, which is the block Forge's hardware lane emits. Nothing here bounds
 gate-depth *inside* a block, and nothing here is a lower bound against arbitrary circuits — that
 would be a circuit-complexity claim and this is not one. What is proved is that within the class of
 EML-structured datapaths, tree depth is a faithful cost and tree size is not.
+
+**The overclaim this must never become.** If a synthesised block measures 6 ns, `d(1/x) = 4` does
+*not* give "every reciprocal circuit needs 24 ns". Four serial *abstract* EML dependencies is what
+is proved; nothing here rules out retiming, pipelining, a different internal implementation, or a
+different technology. A universal nanosecond floor would be physical circuit complexity and is not
+in reach. What a measurement licenses is a statement about *one synthesised artifact*, reported
+alongside the structural bound and never fused with it.
 -/
 
 namespace MachLib
@@ -180,15 +197,172 @@ theorem netDepthAt_le_index (p : Nat → EMLInstr) (hwf : ProgWf p) (i : Nat) :
   rw [netDepthAt_eq_depth]
   exact unfold_depth_le_index p hwf (i + 1) i (Nat.lt_succ_self i)
 
+
+-- ▸ The datapath's OWN semantics, and the fact that unfolding preserves it.
+
+/-- Evaluate the program the way hardware does: read the results of earlier instructions, sharing
+them. Nothing is duplicated here — this is the DAG's semantics, not the tree's. -/
+noncomputable def progEval (p : Nat → EMLInstr) : Nat → Nat → Real → Real
+  | 0, _, _ => 0
+  | Nat.succ f, i, x =>
+    match p i with
+    | EMLInstr.const c => c
+    | EMLInstr.var => x
+    | EMLInstr.eml a b => Real.exp (progEval p f a x) - Real.log (progEval p f b x)
+
+noncomputable def progEvalAt (p : Nat → EMLInstr) (i : Nat) (x : Real) : Real :=
+  progEval p (i + 1) i x
+
+/-- **Unfolding preserves semantics.** Load-bearing for every transfer below: without it,
+`unfoldAt` would be a definition nobody had to accept, and a tree lower bound would constrain
+nothing. With it, the datapath and its unfolding compute the same function, so tree lower bounds
+descend to programs. -/
+theorem progEval_eq_unfold_eval (p : Nat → EMLInstr) :
+    ∀ f i : Nat, ∀ x : Real, progEval p f i x = (unfold p f i).eval x := by
+  intro f
+  induction f with
+  | zero => intro i x; rfl
+  | succ f ih =>
+    intro i x
+    show (match p i with
+          | EMLInstr.const c => c
+          | EMLInstr.var => x
+          | EMLInstr.eml a b => Real.exp (progEval p f a x) - Real.log (progEval p f b x)) = _
+    show _ = EMLTree.eval (match p i with
+          | EMLInstr.const c => EMLTree.const c
+          | EMLInstr.var => EMLTree.var
+          | EMLInstr.eml a b => EMLTree.eml (unfold p f a) (unfold p f b)) x
+    cases hp : p i with
+    | const c => rfl
+    | var => rfl
+    | eml a b =>
+      show Real.exp (progEval p f a x) - Real.log (progEval p f b x)
+             = (EMLTree.eml (unfold p f a) (unfold p f b)).eval x
+      rw [ih a x, ih b x]; rfl
+
+theorem progEvalAt_eq_unfoldAt_eval (p : Nat → EMLInstr) (i : Nat) (x : Real) :
+    progEvalAt p i x = (unfoldAt p i).eval x := progEval_eq_unfold_eval p (i + 1) i x
+
+-- ▸ Weighted critical path: the durable form.
+
+/-- Critical-path cost of a tree under per-kind block weights. `wdepth 0 0 1` is `depth`. -/
+def EMLTree.wdepth (wc wv we : Nat) : EMLTree → Nat
+  | EMLTree.const _ => wc
+  | EMLTree.var => wv
+  | EMLTree.eml a b => we + max (a.wdepth wc wv we) (b.wdepth wc wv we)
+
+/-- The same cost read off the program. -/
+def netWDepth (p : Nat → EMLInstr) (wc wv we : Nat) : Nat → Nat → Nat
+  | 0, _ => wc   -- `unfold` at zero fuel yields `const 0`, so the base case must agree with `wc`
+  | Nat.succ f, i =>
+    match p i with
+    | EMLInstr.const _ => wc
+    | EMLInstr.var => wv
+    | EMLInstr.eml a b => we + max (netWDepth p wc wv we f a) (netWDepth p wc wv we f b)
+
+/-- **Any path-additive cost survives sharing exactly** — not just the unit-weight depth. This is
+the socket a measured per-block latency, LUT-depth, or energy figure plugs into without re-proving
+the structural bridge. Still no hypothesis on the program: `(+, max)` is simply blind to sharing. -/
+theorem netWDepth_eq_wdepth (p : Nat → EMLInstr) (wc wv we : Nat) :
+    ∀ f i : Nat, netWDepth p wc wv we f i = (unfold p f i).wdepth wc wv we := by
+  intro f
+  induction f with
+  | zero => intro i; rfl
+  | succ f ih =>
+    intro i
+    show (match p i with
+          | EMLInstr.const _ => wc
+          | EMLInstr.var => wv
+          | EMLInstr.eml a b => we + max (netWDepth p wc wv we f a) (netWDepth p wc wv we f b)) = _
+    show _ = EMLTree.wdepth wc wv we (match p i with
+          | EMLInstr.const c => EMLTree.const c
+          | EMLInstr.var => EMLTree.var
+          | EMLInstr.eml a b => EMLTree.eml (unfold p f a) (unfold p f b))
+    cases hp : p i with
+    | const c => rfl
+    | var => rfl
+    | eml a b =>
+      show we + max (netWDepth p wc wv we f a) (netWDepth p wc wv we f b)
+             = (EMLTree.eml (unfold p f a) (unfold p f b)).wdepth wc wv we
+      rw [ih a, ih b]; rfl
+
+/-- The unit-weight instance is the ordinary depth, so `netDepth_eq_depth` is the `(0,0,1)` case of
+the weighted theorem and not an independent fact. -/
+theorem wdepth_unit_eq_depth : ∀ t : EMLTree, t.wdepth 0 0 1 = t.depth := by
+  intro t
+  induction t with
+  | const c => rfl
+  | var => rfl
+  | eml a b iha ihb =>
+    show 1 + max (a.wdepth 0 0 1) (b.wdepth 0 0 1) = 1 + max a.depth b.depth
+    rw [iha, ihb]
+
+-- ▸ What the SIZE bound really transfers: a logarithmic shadow.
+
+/-- Unfolding at index `i` can at most double per level, so the tree it produces has fewer than
+`2^(i+1)` nodes. This is the exact sense in which a tree-size bound survives sharing — with
+exponential loss. -/
+theorem unfold_size_le (p : Nat → EMLInstr) (hwf : ProgWf p) :
+    ∀ f i : Nat, i < f → (unfold p f i).size + 1 ≤ 2 ^ (i + 1) := by
+  intro f
+  induction f with
+  | zero => intro i h; exact absurd h (Nat.not_lt_zero i)
+  | succ f ih =>
+    intro i hi
+    show EMLTree.size (match p i with
+          | EMLInstr.const c => EMLTree.const c
+          | EMLInstr.var => EMLTree.var
+          | EMLInstr.eml a b => EMLTree.eml (unfold p f a) (unfold p f b)) + 1 ≤ 2 ^ (i + 1)
+    have hpow1 : (2 : Nat) ^ 1 ≤ 2 ^ (i + 1) :=
+      Nat.pow_le_pow_right (by omega) (by omega)
+    cases hp : p i with
+    | const c => show 1 + 1 ≤ 2 ^ (i + 1); omega
+    | var => show 1 + 1 ≤ 2 ^ (i + 1); omega
+    | eml a b =>
+      have hab := hwf i a b hp
+      have haf : a < f := Nat.lt_of_lt_of_le hab.1 (Nat.le_of_lt_succ hi)
+      have hbf : b < f := Nat.lt_of_lt_of_le hab.2 (Nat.le_of_lt_succ hi)
+      have ha := ih a haf
+      have hb := ih b hbf
+      have hai : (2 : Nat) ^ (a + 1) ≤ 2 ^ i := Nat.pow_le_pow_right (by omega) (by omega)
+      have hbi : (2 : Nat) ^ (b + 1) ≤ 2 ^ i := Nat.pow_le_pow_right (by omega) (by omega)
+      have hsplit : (2 : Nat) ^ (i + 1) = 2 ^ i + 2 ^ i := by
+        rw [Nat.pow_succ]; omega
+      show 1 + (unfold p f a).size + (unfold p f b).size + 1 ≤ 2 ^ (i + 1)
+      omega
+
+/-- **The size bound's shadow, and its strict domination.** `s(1/x) ≥ 9` forces the output index to
+be at least **3**; the depth route forces at least **4**. So tree size does transfer — with
+exponential loss, into a bound the depth bound already beats. "Carries nothing" would be wrong;
+"carries a logarithmic shadow, strictly dominated" is right. -/
+theorem inv_x_netlist_index_ge_three_from_size (p : Nat → EMLInstr) (hwf : ProgWf p) (i : Nat)
+    (h : ∀ x : Real, 0 < x → progEvalAt p i x = 1 / x) :
+    3 ≤ i := by
+  have hev : ∀ x : Real, 0 < x → (unfoldAt p i).eval x = 1 / x := by
+    intro x hx; rw [← progEvalAt_eq_unfoldAt_eval]; exact h x hx
+  have h9 : 9 ≤ (unfoldAt p i).size := inv_x_size_ge_nine (unfoldAt p i) hev
+  have hle : (unfoldAt p i).size + 1 ≤ 2 ^ (i + 1) :=
+    unfold_size_le p hwf (i + 1) i (Nat.lt_succ_self i)
+  rcases Nat.lt_or_ge i 3 with hlt | hge
+  · exfalso
+    have hb : (2 : Nat) ^ (i + 1) ≤ 2 ^ 3 := Nat.pow_le_pow_right (by omega) (by omega)
+    have h8 : (2 : Nat) ^ 3 = 8 := rfl
+    have hchain : (unfoldAt p i).size + 1 ≤ 8 :=
+      Nat.le_trans hle (Nat.le_trans hb (Nat.le_of_eq h8))
+    omega
+  · exact hge
+
 -- ▸ The transfer.
 
 /-- **`1/x` needs combinational block-depth ≥ 4 in any straight-line EML datapath.**
 
 `inv_x_not_in_eml_depth_le_3` is a statement about trees; `netDepth_eq_depth` is what makes it a
 statement about hardware. Sharing cannot help, because sharing does not change depth. -/
-theorem inv_x_netlist_depth_ge_four (p : Nat → EMLInstr) (hwf : ProgWf p) (i : Nat)
-    (h : ∀ x : Real, 0 < x → (unfoldAt p i).eval x = 1 / x) :
+theorem inv_x_netlist_depth_ge_four (p : Nat → EMLInstr) (i : Nat)
+    (hp : ∀ x : Real, 0 < x → progEvalAt p i x = 1 / x) :
     4 ≤ netDepthAt p i := by
+  have h : ∀ x : Real, 0 < x → (unfoldAt p i).eval x = 1 / x := by
+    intro x hx; rw [← progEvalAt_eq_unfoldAt_eval]; exact hp x hx
   rw [netDepthAt_eq_depth]
   have hno : ¬ ((unfoldAt p i).depth ≤ 3) :=
     fun h3 => inv_x_not_in_eml_depth_le_3 (unfoldAt p i) h3 h
@@ -197,9 +371,9 @@ theorem inv_x_netlist_depth_ge_four (p : Nat → EMLInstr) (hwf : ProgWf p) (i :
 /-- **…hence its output cannot sit before index 4:** at least five instruction slots. A resource
 statement about the program, obtained from a statement about trees. -/
 theorem inv_x_netlist_index_ge_four (p : Nat → EMLInstr) (hwf : ProgWf p) (i : Nat)
-    (h : ∀ x : Real, 0 < x → (unfoldAt p i).eval x = 1 / x) :
+    (hp : ∀ x : Real, 0 < x → progEvalAt p i x = 1 / x) :
     4 ≤ i := by
-  have hd := inv_x_netlist_depth_ge_four p hwf i h
+  have hd := inv_x_netlist_depth_ge_four p i hp
   have hi := netDepthAt_le_index p hwf i
   omega
 

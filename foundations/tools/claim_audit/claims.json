@@ -945,7 +945,7 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "Depth transfers through sharing. The claim that makes d(1/x)=4 a hardware statement. NOTE: a statement_mentions_deep on EMLTree.depth was registered and REJECTED — netDepthAt does not unfold to EMLTree.depth, the two recursions are independent. That rejection is the evidence that netDepth_eq_depth is a theorem and not a restatement.",
+      "_comment": "Depth transfers through sharing. Hypothesis is on progEvalAt — the PROGRAM's own semantics — not on the unfolding, so the bound constrains datapaths and not a definition of my choosing. ProgWf was DROPPED (the depth bound does not need it); the auditor flagged that strength change, which is the check working. A statement_mentions_deep on EMLTree.depth was registered and REJECTED — netDepthAt does not unfold to EMLTree.depth, the two recursions are independent, which is the evidence that netDepth_eq_depth is a theorem.",
       "id": "netlist-depth-transfer-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -957,14 +957,13 @@
         "sorryAx"
       ],
       "statement_mentions": [
-        "ProgWf",
-        "unfoldAt",
+        "progEvalAt",
         "netDepthAt"
       ],
       "conclusion_mentions": [
         "netDepthAt"
       ],
-      "hypotheses_count": 2
+      "hypotheses_count": 1
     },
     {
       "_comment": "Sharing is invisible to depth. No hypothesis on the program -- that IS the content, so hypotheses_count 0 is load-bearing here, not incidental.",
@@ -992,7 +991,7 @@
       "id": "sqprog-size-gap-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "**5 instructions, 31 nodes.**"
+        "**5 instructions,\n  31 nodes**"
       ],
       "module": "MachLib.EMLNetlistDepth",
       "theorem": "MachLib.sqProg_gap_at_four",
@@ -1008,6 +1007,70 @@
         ".size"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Unfolding preserves semantics. Without this the whole transfer is vacuous, so it gets its own claim rather than living implicitly.",
+      "id": "unfold-preserves-semantics",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "proves it agrees with the unfolding"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.progEval_eq_unfold_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "progEval",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "progEval",
+        ".eval"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Weighted critical path: the durable socket. hypotheses_count 0 is load-bearing — the invariance holds for ARBITRARY weights with no side condition.",
+      "id": "weighted-critical-path-survives",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "generalises the invariance to per-kind block weights"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.netWDepth_eq_wdepth",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "netWDepth",
+        "wdepth"
+      ],
+      "conclusion_mentions": [
+        "netWDepth"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The CORRECTION: size does transfer, logarithmically. Registered so the corrected wording cannot silently revert to 'carries nothing'.",
+      "id": "size-shadow-dominated",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "does* force an output index\n  `≥ 3`"
+      ],
+      "module": "MachLib.EMLNetlistDepth",
+      "theorem": "MachLib.inv_x_netlist_index_ge_three_from_size",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "ProgWf",
+        "progEvalAt"
+      ],
+      "conclusion_mentions": [
+        "3"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

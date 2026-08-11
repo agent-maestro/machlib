@@ -23,14 +23,31 @@ survive?** The answer is asymmetric, and it inverts the naive guess.
   (`unfold_depth_le_index`), **`inv_x_netlist_index_ge_four`**: the output cannot sit before index
   4, so at least **five instruction slots**.
 
-- **Size does not survive at all.** `sqProg` — `n+1` instructions, each reading the previous one
-  twice — unfolds to a tree of depth `n` and `2^(n+1) − 1` nodes (`sqProg_size`). Concretely
-  (`sqProg_gap_at_four`): **5 instructions, 31 nodes.** So a lower bound of `9` on tree *nodes* is
-  consistent with a datapath of four blocks. Sharing is precisely the operation that makes node
-  counts lie.
+- **Size survives only as a logarithmic shadow — CORRECTED.** An earlier draft of this entry said
+  size "does not survive at all". That is overstated, and an outside reader caught it.
+  `unfold_size_le` bounds the unfolding by `2^(i+1)`, so `s(1/x) ≥ 9` *does* force an output index
+  `≥ 3` (**`inv_x_netlist_index_ge_three_from_size`**) — a true bound, which the depth route's `≥ 4`
+  **strictly dominates**. The right statement is "carries a logarithmic shadow, strictly dominated",
+  not "carries nothing". The exponential loss is concrete: `sqProg_gap_at_four` — **5 instructions,
+  31 nodes**.
 
-- **Therefore `s(1/x) ∈ {9,11}` is a fact about the tree encoding and not about any datapath, while
-  `d(1/x) = 4` is a resource bound.** That inverts what the two arms looked like from the inside:
+- **Unfolding preserves semantics, and it is now a named theorem.** `progEval` evaluates the program
+  the way hardware does — reading earlier results, sharing them — and **`progEval_eq_unfold_eval`**
+  proves it agrees with the unfolding. This is load-bearing: without it `unfoldAt` is a definition
+  nobody had to accept and a tree lower bound constrains nothing. Every transfer theorem now takes
+  its hypothesis on `progEvalAt`, i.e. on the *program*. `inv_x_netlist_depth_ge_four` consequently
+  **dropped its `ProgWf` hypothesis** — well-formedness is needed for the index bound, not the depth
+  bound. The claim auditor flagged the strength change on the next run.
+
+- **Any path-additive cost survives sharing, not just unit depth.** **`netWDepth_eq_wdepth`**
+  generalises the invariance to per-kind block weights `(wc, wv, we)`, with
+  `wdepth_unit_eq_depth` recovering ordinary depth at `(0,0,1)`. `(+, max)` is blind to sharing
+  while node-counting is not — that is the algebraic reason for the whole asymmetry, and it is the
+  socket a measured per-block latency, LUT-depth or energy figure plugs into without re-proving the
+  bridge.
+
+- **Therefore `s(1/x) ∈ {9,11}` refines a tree-encoding quantity that no datapath bound depends on,
+  while `d(1/x) = 4` is a resource bound.** That inverts what the two arms looked like from the inside:
   the depth arm cost 28 sessions and a refuted conjecture, the size arm looked like the sharper
   number. Neither was chosen for this reason. Recorded because the useful one was not the one that
   looked useful.
@@ -39,6 +56,13 @@ survive?** The answer is asymmetric, and it inverts the naive guess.
   primitive `(a,b) ↦ exp a − log b`, the block Forge's hardware lane emits. Nothing here bounds gate
   depth *inside* a block, and nothing here is a lower bound against arbitrary circuits — that would
   be a circuit-complexity claim and this is not one.
+
+- **The overclaim this must never become.** If a synthesised block measures 6 ns, `d(1/x) = 4` does
+  *not* license "every reciprocal circuit needs 24 ns". Four serial *abstract* EML dependencies is
+  what is proved; retiming, pipelining, a different internal implementation and a different
+  technology are all untouched. A measurement licenses a statement about **one synthesised
+  artifact**, reported alongside the structural bound and never fused with it. Written into the
+  module header so it survives the next reader.
 
 - `netDepth_eq_depth` needs only `[MachLib.Real, MachLib.Real.zeroR]`; the transfer theorems carry
   the ordinary `MachLib.Real` base. `sorryAx` 0; ledger 242 unchanged; seven gates green.
