@@ -37,6 +37,24 @@ cost survives sharing exactly**, because `(+, max)` is blind to sharing while no
 That is the algebraic reason for the whole asymmetry, and it is the socket a measured per-block
 latency, LUT-depth or energy figure plugs into without re-proving the bridge.
 
+**What may be plugged into that socket — a trap found by measuring.** The weight must be a quantity
+that genuinely accumulates along a **serial dependency chain**. Three natural instantiations, one
+correct (`forge/reports/eml_block_cost_2026_08_11.md`, yosys + verilator):
+
+* `we` = **cycles per block** → `netWDepth` is total latency. **Correct.** A measured 5-cycle block
+  gives `≥ 20` cycles for `1/x`.
+* `we` = **combinational logic levels** → `netWDepth` returns `4 × 90 = 360`, a true fact about a
+  weighted tree that **is not the physical critical path**: a measured 4-deep chain has the same
+  critical path as one block (**×1.00**), because registers break it. This theorem does not know
+  registers exist.
+* **area** → not a critical-path quantity at all. It sums over *blocks*, not along the *longest
+  path*, and needs a distinct-node count — precisely the quantity that does **not** survive sharing.
+  Wrong theorem, and the one whose measured ratio (**×4.00**) looks most like a confirmation.
+
+A weight that is not path-additive in the physical artifact makes the conclusion false while leaving
+the theorem true. Latency is path-additive; combinational depth stops being so the moment a register
+is inserted; area never was.
+
 **Scope.** "Datapath" here means a straight-line program over the EML primitive
 `(a, b) ↦ exp a − log b`, which is the block Forge's hardware lane emits. Nothing here bounds
 gate-depth *inside* a block, and nothing here is a lower bound against arbitrary circuits — that

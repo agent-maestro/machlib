@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The weighted socket has a trap, and measuring found it
+
+`forge` now measures the block (`forge/reports/eml_block_cost_2026_08_11.md`, yosys 0.40 +
+verilator 5.024, generic gate mapping, Taylor-scaffold kernels). One block at Q16.16: **37,853
+cells, 90 logic levels, 5 cycles**, functionally verified before being costed. A 4-deep serial
+chain: **area ×4.00, critical path ×1.00**.
+
+That ×1.00 is the finding. `netWDepth_eq_wdepth` says any path-additive cost survives sharing for
+arbitrary weights — true, and it invites plugging in any measured per-block number. Three natural
+instantiations, **one correct**:
+
+- `we` = **cycles per block** → total latency. **Correct**; `d(1/x) = 4` gives `≥ 20` cycles.
+- `we` = **logic levels** → returns `4 × 90 = 360`, a true fact about a weighted tree that **is not
+  the physical critical path** (measured: 90). The theorem does not know registers exist.
+- **area** → not a critical-path quantity at all; it sums over *blocks*, not along the *longest
+  path*. Wrong theorem — and the one whose measured ratio (×4.00) looks most like a confirmation.
+
+**A weight that is not path-additive in the physical artifact makes the conclusion false while
+leaving the theorem true.** Written into `EMLNetlistDepth`'s header, next to the socket it qualifies,
+because the failure mode is using a sound theorem on the wrong quantity — which no gate in this
+repo can catch.
+
 ### `MachLib.EMLNetlistDepth`: which tree bounds survive SHARING
 
 The question that decides whether the reciprocal lower-bound programme means anything downstream:
