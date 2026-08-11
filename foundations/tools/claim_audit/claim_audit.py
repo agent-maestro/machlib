@@ -127,6 +127,24 @@ def statement_mentions_deep(module: str, theorem: str, targets: list,
 _OPEN, _CLOSE = "([{⟨", ")]}⟩"
 
 
+def proof_term_of(module: str, theorem: str) -> str:
+    """The theorem's PROOF TERM — everything after `:=` in `#print thm`.
+
+    A **third** question, distinct from the two the auditor already asks:
+
+      `#print axioms`  what could this rest on          (trust base)
+      statement/concl  what does this talk about        (subject)
+      proof term       what does this actually go through (composition)
+
+    Asymmetry, opposite in direction to the unfolding check: a lemma *named* here was genuinely
+    invoked, so presence is decisive for DIRECT use. Absence is **not** decisive for non-use — the
+    lemma could be reached transitively through another. So `proof_uses` is a positive obligation
+    only; never read a passing `proof_uses` as "nothing else was involved".
+    """
+    out = print_axioms_output(f"import {module}\n#print {theorem}\n")
+    return out.split(":=", 1)[1] if ":=" in out else ""
+
+
 def conclusion_of(stmt: str) -> str:
     """The CONCLUSION of a printed type: strip top-level `∀ …,` binders and `→` antecedents.
 
@@ -266,6 +284,19 @@ def check_claim(c: dict) -> list:
                         f"(it may appear only in a hypothesis) — the prose claims the theorem "
                         f"concludes something about it, and it does not")
 
+    # (F) composition integrity: the proof must actually go through the lemmas the prose credits.
+    uses = c.get("proof_uses", [])
+    if uses:
+        term = proof_term_of(c["module"], c["theorem"])
+        if not term.strip():
+            problems.append(f"could not extract a proof term for {c['theorem']}")
+        else:
+            for ident in uses:
+                if ident not in term:
+                    problems.append(
+                        f"proof of {c['theorem']} does not invoke `{ident}` — the prose credits a "
+                        f"composition the proof does not perform")
+
     return problems
 
 
@@ -351,6 +382,22 @@ def self_test() -> int:
     print(f"{GREEN}[self-test] canary 4 fires: `t1` occurs in the STATEMENT of "
           f"depth3_bounded_left_absurd but NOT in its conclusion (`False`), so a claim that the "
           f"theorem concludes something about `t1` is REJECTED. ✓{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 5: the flagship gap must also be caught at the "
+          f"COMPOSITION level …{RST}")
+    term = proof_term_of("MachLib.PIDCapstone", "MachLib.Real.pid_trajectory_from_bits")
+    if not term.strip():
+        print(f"{RED}[self-test] FAILED: could not extract the specimen proof term{RST}")
+        return 1
+    if "fxpid_trunc_lt_3ulp" in term:
+        print(f"{RED}[self-test] FAILED: pid_trajectory_from_bits now invokes "
+              f"fxpid_trunc_lt_3ulp — retire this specimen and re-audit the flagship claim.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 5 fires: pid_trajectory_from_bits's proof never invokes "
+          f"fxpid_trunc_lt_3ulp, so a 'composes bits with trajectory' claim is REJECTED. ✓{RST}")
+    print(f"{DIM}           The flagship claim now fails independently at THREE levels — subject, "
+          f"conclusion, and\n           composition. One gate can be fooled; three agreeing is "
+          f"evidence the gap is real.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

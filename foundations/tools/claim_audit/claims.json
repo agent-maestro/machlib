@@ -855,6 +855,10 @@
       "conclusion_mentions": [
         "ulp",
         "fxTraj"
+      ],
+      "proof_uses": [
+        "affine_trajectory_bound",
+        "fxaffine_step_error"
       ]
     }
   ]

@@ -7,6 +7,32 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Claim audit level 6: composition integrity
+
+- **`proof_uses`** — the proof must actually go through the lemmas the prose credits. Extracted
+  from the proof term (`#print thm`, everything after `:=`). A **third** question, distinct from the
+  two the auditor already asked:
+
+  | check | question |
+  |---|---|
+  | `#print axioms` | what could this rest on — the trust base |
+  | `statement` / `conclusion` | what does this talk about — the subject |
+  | `proof_uses` | what does this actually go through — the composition |
+
+- **Asymmetry, opposite in direction to level 2.** A lemma *named* in a proof term was genuinely
+  invoked, so presence is decisive for **direct** use. Absence is **not** decisive for non-use — the
+  lemma could be reached transitively. So `proof_uses` is a positive obligation only; a passing
+  `proof_uses` never means "nothing else was involved".
+
+- **Firing specimen**: `pid_trajectory_from_bits`'s proof never invokes `fxpid_trunc_lt_3ulp`.
+  **The flagship claim now fails independently at three levels** — subject, conclusion, and
+  composition. One gate can be fooled; three agreeing is evidence the gap is real rather than an
+  artifact of how any single check is written.
+
+- Registered on the end-to-end claim: `fxaffine_traj_tracks_exact` must invoke both
+  `affine_trajectory_bound` and `fxaffine_step_error`. It does — so the composition is now
+  mechanically attested, not asserted.
+
 ### Claim audit level 3: conclusion integrity
 
 - **`conclusion_mentions`** — the artifact must appear in what the theorem **concludes**, not merely
