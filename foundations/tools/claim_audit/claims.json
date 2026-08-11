@@ -811,6 +811,23 @@
       "forbid_axioms": [
         "sorryAx"
       ]
+    },
+    {
+      "_comment": "The real-domain PID truncation bound is about the ACTUAL datapath \u2014 its statement mentions fxpid. Uses the statement_mentions check added 2026-08-10.",
+      "id": "fxpid-real-bridge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "state the truncation\n  bounds over `MachLib.Real`"
+      ],
+      "module": "MachLib.FixedPointRealBridge",
+      "theorem": "MachLib.Real.fxpid_real_trunc_lt_3ulp",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "fxpid",
+        "natCast"
+      ]
     }
   ]
 }

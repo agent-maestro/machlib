@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-10
 
+### Trust gates: the auditor now checks what a theorem SAYS, not only what it rests on
+
+- **A seventh check, and the failure that forced it.** `pid_trajectory_from_bits` was documented as
+  carrying the bit-level truncation into the closed-loop bound. Its statement mentions **no
+  bit-level object at all** — it quantifies `ε` universally and takes the per-step bound as a
+  hypothesis. `sorryAx`, the axiom ledger and the claim auditor all passed, because every one of
+  them asks *what does this theorem depend on*, never *does the prose describe the theorem that
+  exists*.
+
+  `claim_audit.py` gains **`statement_mentions`**: a claim naming an artifact must be backed by a
+  theorem whose **type** references it. `#check @thm`, not `#print axioms thm`. Had it existed, the
+  flagship claim would have been rejected on the day it was written.
+
+  Firing specimen in `--self-test` (house rule: a gate without one is unvalidated) — it asserts
+  `pid_trajectory_from_bits`'s statement has no `fxpid` in it, and *fails loudly if that ever stops
+  being true*, which is precisely the day the claim becomes legitimate.
+
+- **`MachLib/FixedPointRealBridge.lean`** — join 1 of the flagship chain, closed.
+  `fxmul_real_trunc_lt_ulp` / `fxpid_real_trunc_lt_3ulp` state the truncation
+  bounds over `MachLib.Real`, derived from the `Nat` versions via `natCast_lt_mono`
+  (proved here from `natCast_succ`; the corpus had monotonicity only as a file-local lemma and no
+  strict version). Both unconditional — the `Nat` premise is discharged, not assumed. Join 2
+  (controller error → closed-loop state-update error) needs a plant model and remains open.
+
+
 ### ▸▸ `d(1/x) = 4` — the depth question is SETTLED
 
 - **`MachLib.inv_x_not_in_eml_depth_le_3`** — **no depth-≤3 tree is `1/x` on the positives.** With

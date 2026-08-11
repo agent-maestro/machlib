@@ -65,6 +65,26 @@ def axiom_footprint(module: str, theorem: str) -> str:
     return print_axioms_output(f"import {module}\n#print axioms {theorem}\n")
 
 
+def statement_of(module: str, theorem: str) -> str:
+    """The theorem's TYPE, via `#check @thm`.
+
+    Distinct from `axiom_footprint` on purpose. The footprint says what a theorem RESTS ON; this
+    says what it TALKS ABOUT. A claim of the form "guarantee G is derived from artifact A" is only
+    backed if `A` appears in the STATEMENT — if it appears solely in the proof, or nowhere, the
+    theorem does not say what the prose says.
+
+    Added 2026-08-10 after exactly that failure: `pid_trajectory_from_bits` was documented as
+    carrying the bit-level truncation into the trajectory bound, and its statement mentions no
+    bit-level object at all (it quantifies `ε` universally). Every existing check passed.
+    """
+    return print_axioms_output(f"import {module}\n#check @{theorem}\n")
+
+
+def statement_resolved(text: str) -> bool:
+    """Did `#check` actually print a type (vs. an error)?"""
+    return " : " in text and "error" not in text.lower()
+
+
 def resolved(text: str) -> bool:
     """Did `#print axioms` actually run (vs. a build/resolve error)?"""
     return ("depends on axioms" in text) or ("does not depend on any axioms" in text)
@@ -113,6 +133,21 @@ def check_claim(c: dict) -> list:
             if ax in names:
                 problems.append(f"FORBIDDEN axiom `{ax}` (exact) present in footprint of {c['theorem']}")
 
+    # (C) statement-drift: a claim that names an artifact must be backed by a theorem whose
+    # STATEMENT mentions it. Catches "G is derived from A" where the theorem never mentions A.
+    want = c.get("statement_mentions", [])
+    if want:
+        stmt = statement_of(c["module"], c["theorem"])
+        if not statement_resolved(stmt):
+            problems.append(f"could not resolve the STATEMENT of {c['theorem']} (build error?)\n"
+                            + DIM + "\n".join(stmt.strip().splitlines()[-6:]) + RST)
+        else:
+            for ident in want:
+                if ident not in stmt:
+                    problems.append(
+                        f"STATEMENT of {c['theorem']} does not mention `{ident}` — "
+                        f"the prose claims a dependency the theorem does not express")
+
     return problems
 
 
@@ -138,6 +173,18 @@ def audit(claims: list) -> int:
 def self_test() -> int:
     """Prove the gate goes RED: a deliberately-sorry theorem claimed `sorryAx`-free MUST be caught.
     A gate that never fails on a known violation is decoration (the repo's own rule)."""
+    print(f"{YELLOW}{BOLD}[self-test] canary 2: a claim asserting a statement mentions what it does not …{RST}")
+    stmt = statement_of("MachLib.PIDCapstone", "MachLib.Real.pid_trajectory_from_bits")
+    if not statement_resolved(stmt):
+        print(f"{RED}[self-test] FAILED: could not resolve the specimen statement{RST}")
+        return 1
+    if "fxpid" in stmt:
+        print(f"{RED}[self-test] FAILED: specimen no longer fires — "
+              f"pid_trajectory_from_bits now mentions fxpid, so pick a new specimen{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 2 fires: pid_trajectory_from_bits's statement has no "
+          f"bit-level object, so a 'derived from the datapath' claim on it is REJECTED.{RST}")
+
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
     text = print_axioms_output(canary_src)
