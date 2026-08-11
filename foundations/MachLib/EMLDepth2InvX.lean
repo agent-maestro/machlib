@@ -8662,4 +8662,23 @@ theorem const_left_bounded_or_gap (α : Real) (B : EMLTree) (hB : B.depth ≤ 1)
               have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
               rw [l, r] at s; exact s
 
+/-- The endgame shared by the pole arguments: `c·exp T ≤ T + log CC` is impossible once `T` is past
+an explicit threshold. The `+1` in the threshold is what makes the contradiction **strict** —
+without it `exp_ge_add_const` and the hypothesis are merely compatible at equality. -/
+theorem exp_pole_contradiction {c CC T : Real} (hc : 0 < c) (hCC : 0 < CC)
+    (hT : (1 + 1 + 1 + 1 : Real) + exp (log CC - log c + 1) ≤ log c + T)
+    (hfin : c * exp T ≤ T + log CC) : False := by
+  have hrw : c * exp T = exp (log c + T) := by rw [exp_add, exp_log hc]
+  rw [hrw] at hfin
+  have hbeat := exp_ge_add_const (log CC - log c + 1) (log c + T) hT
+  have e : log c + T + (log CC - log c + 1) = T + log CC + 1 := by
+    mach_mpoly [log c, T, log CC]
+  rw [e] at hbeat
+  have s := le_trans hbeat hfin
+  have u := add_le_add_wit s (le_refl (-(T + log CC)))
+  have l : T + log CC + 1 + -(T + log CC) = 1 := by mach_mpoly [T, log CC]
+  have r : T + log CC + -(T + log CC) = (0 : Real) := by mach_ring
+  rw [l, r] at u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le one_pos u)
+
 end MachLib
