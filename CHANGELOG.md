@@ -5,6 +5,34 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-11
+
+### ▸▸ Join 2 closed for the affine plant: the datapath's own error drives the trajectory bound
+
+- **`MachLib.Real.fxaffine_traj_tracks_exact`** — for every bit-vector trajectory the netlist
+  produces, its Q-value stays within `ulp · geom (qval c) n` of the exact real affine trajectory,
+  and `(1 − qval c)·(ulp · geom …) ≤ ulp` makes that `n`-independent when the plant contracts.
+
+  **The `ε` is `ulp`, produced by the netlist** — `fxaffine_step_error` derives it from
+  `fxmul_real_trunc_lt_ulp`, and the theorem quantifies over `List Bool`, not over a free real.
+  This is the composition the flagship sentence asserted and did not have.
+
+- **The right subject was `fxaffine`, not `fxpid`.** The trajectory theorem's plant is the affine
+  map `c·x + d`, and `FixedPointRTL` already documents `fxaffine` as "the PID plant / EMA / RC
+  kernel"; `fxpid` is the *controller's* multiply-add. Part of why the chain never composed is that
+  the two halves were about different datapaths.
+
+- **Scope.** This closes the chain for the **affine plant kernel**. It does **not** close it for
+  `fxpid`: `pid_trajectory_from_bits` still quantifies `ε` universally, and connecting the
+  controller's output to the plant's state update needs a closed-loop model that does not exist
+  here. The `--self-test` specimen therefore still fires, correctly.
+
+- **Known limitation of the level-1 claim gate, found while registering this.**
+  `statement_mentions` is syntactic on the printed type. This theorem's statement names `fxTraj`;
+  `fxaffine` enters one δ-step away, inside `fxTraj`'s *definition*. So the check cannot see it —
+  a false negative in the safe direction, and an argument for the relation-level check the outside
+  reader proposed.
+
 ## [Unreleased] — 2026-08-10
 
 ### Trust gates: the auditor now checks what a theorem SAYS, not only what it rests on

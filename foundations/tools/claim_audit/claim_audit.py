@@ -184,6 +184,13 @@ def self_test() -> int:
         return 1
     print(f"{GREEN}[self-test] canary 2 fires: pid_trajectory_from_bits's statement has no "
           f"bit-level object, so a 'derived from the datapath' claim on it is REJECTED.{RST}")
+    print(f"{DIM}           ⚠ When this specimen expires it means ONLY that the first semantic gate\n"
+          f"           has been crossed — `fxpid` now occurs in the statement. It does NOT mean the\n"
+          f"           'derived from the datapath' claim became true: an unused hypothesis mentioning\n"
+          f"           `fxpid` would expire the specimen while changing nothing. On expiry, replace\n"
+          f"           this with a RELATION check (does the statement assert the error SOURCE?) and a\n"
+          f"           COMPOSITION check (is fxpid_real_trunc_lt_3ulp's conclusion the quantity the\n"
+          f"           trajectory bound consumes?). Staged, not satisfied.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

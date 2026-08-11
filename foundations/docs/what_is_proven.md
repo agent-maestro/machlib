@@ -49,11 +49,18 @@ exactly that gap, and how we close it.
    `natCast_lt_mono` (proved here from `natCast_succ`). Both are unconditional —
    the `Nat` premise is discharged inside, not assumed. Reading them in Q-format
    is now ordinary ordered-field algebra rather than a convention in a comment.
-2. **Controller → closed loop.** `fxpid_trunc_lt_3ulp` bounds the *controller's
-   multiply-add*. `pid_trajectory_from_bits` needs a bound on the *closed-loop
-   state update*, `|xc (k+1) − (c·xc k + d)| ≤ ε`, which it takes as a
-   **hypothesis** with `ε` universally quantified. Nothing derives one from the
-   other; that needs a plant model this corpus does not yet have.
+2. **Datapath → closed loop.** **CLOSED for the affine PLANT kernel** —
+   `MachLib.Real.fxaffine_traj_tracks_exact`. The netlist's own trajectory stays
+   within `ulp · geom (qval c) n` of the exact real one, with `ε = ulp` *derived*
+   from `fxaffine_step_error`, not supplied. The theorem quantifies over
+   `List Bool`, so the subject really is the datapath.
+
+   **Still open for `fxpid`.** The trajectory theorem's plant is the affine map
+   `c·x + d`, and `fxaffine` is that kernel; `fxpid` is the *controller's*
+   multiply-add. Connecting the controller's output to the plant's state update
+   needs a closed-loop model this corpus does not have — and
+   `pid_trajectory_from_bits` itself still quantifies `ε` universally, so the
+   auditor's firing specimen still fires, correctly.
 
 Inspect the proof term and the gap is immediate — `pid_trajectory_from_bits`
 elaborates to `fun … => affine_trajectory_bound …`, mentioning no bit-level
@@ -64,12 +71,17 @@ error *derived from the shipped datapath* and *consumed by* a physical-system
 guarantee — is the programme's most distinctive claim, and the thing outside
 readers identified as potentially publishable.
 
-**Status: one join closed, one open.** The remaining gap is join 2, and it is a
-missing *modelling layer* rather than a missing lemma: it needs a plant model
-relating the controller's multiply-add to the closed-loop state update. Until
-that exists the honest statement is **two solid halves and one of two bridges**,
-and `pid_trajectory_from_bits` should not be described as carrying a bit-level
-quantity — it still quantifies `ε` universally.
+**Status: the composition EXISTS, for the affine plant kernel.**
+`fxaffine_traj_tracks_exact` is the end-to-end statement — implementation error
+derived from the shipped datapath and consumed by a trajectory guarantee, in one
+theorem whose statement names the datapath. That is what the section originally
+claimed and did not have.
+
+What remains is narrower and should be stated as such: the same composition for
+the **controller** path (`fxpid`), which needs a closed-loop model relating
+controller output to plant state. `pid_trajectory_from_bits` is untouched by this
+work and still quantifies `ε` universally; do not cite *it* as the end-to-end
+result. Cite `fxaffine_traj_tracks_exact`.
 
 ---
 
