@@ -7,6 +7,22 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Claim audit level 3: conclusion integrity
+
+- **`conclusion_mentions`** — the artifact must appear in what the theorem **concludes**, not merely
+  somewhere in its statement. Strips top-level `∀ …,` binders and `→` antecedents (depth-tracked, so
+  arrows inside a hypothesis's own type are ignored) and checks the consequent.
+
+  This blocks the attack the outside reader named: *an unused hypothesis mentioning `fxpid` would
+  pass the subject check while changing nothing.* It would not pass this one.
+
+- **Firing specimen**: `depth3_bounded_left_absurd` mentions `t1` in its statement and concludes
+  `False`. So a claim that it concludes something about `t1` is rejected — statement ✓, conclusion ✗.
+  The specimen retires itself if `t1` ever reaches the conclusion.
+
+- Registered on both bridge claims: `fxaffine_traj_tracks_exact` must conclude about `ulp` and
+  `fxTraj`; `fxpid_real_trunc_lt_3ulp` must conclude about `fxpid`. Both do.
+
 ### ▸▸ Join 2 closed for the affine plant: the datapath's own error drives the trajectory bound
 
 - **`MachLib.Real.fxaffine_traj_tracks_exact`** — for every bit-vector trajectory the netlist

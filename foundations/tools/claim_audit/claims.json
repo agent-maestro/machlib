@@ -827,6 +827,9 @@
       "statement_mentions": [
         "fxpid",
         "natCast"
+      ],
+      "conclusion_mentions": [
+        "fxpid"
       ]
     },
     {
@@ -848,6 +851,10 @@
       ],
       "statement_mentions_deep": [
         "MachLib.RTL.fxaffine"
+      ],
+      "conclusion_mentions": [
+        "ulp",
+        "fxTraj"
       ]
     }
   ]

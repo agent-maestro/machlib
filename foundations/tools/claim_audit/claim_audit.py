@@ -124,6 +124,50 @@ def statement_mentions_deep(module: str, theorem: str, targets: list,
     return ([t for t in targets if t not in blob], truncated)
 
 
+_OPEN, _CLOSE = "([{⟨", ")]}⟩"
+
+
+def conclusion_of(stmt: str) -> str:
+    """The CONCLUSION of a printed type: strip top-level `∀ …,` binders and `→` antecedents.
+
+    Why this is a different question from `statement_mentions`. A constant occurring in a
+    *hypothesis* is not something the theorem concludes about — and an **unused** hypothesis
+    mentioning it changes nothing at all while making the subject check pass. That attack was named
+    by an outside reader; this is the check that blocks it.
+
+    Depth-tracked so arrows inside a hypothesis's own type (`(h : ∀ k, P k → Q k)`) are ignored.
+    """
+    body = stmt.split(" : ", 1)[1] if " : " in stmt else stmt
+    body = re.sub(r"\s+", " ", body).strip()
+    changed = True
+    while changed:
+        changed = False
+        # drop a leading `∀ …,` binder at depth 0
+        if body.startswith("∀"):
+            depth = 0
+            for i, ch in enumerate(body):
+                if ch in _OPEN:
+                    depth += 1
+                elif ch in _CLOSE:
+                    depth -= 1
+                elif ch == "," and depth == 0:
+                    body, changed = body[i + 1:].strip(), True
+                    break
+            if changed:
+                continue
+        # drop the first top-level `→` antecedent
+        depth = 0
+        for i, ch in enumerate(body):
+            if ch in _OPEN:
+                depth += 1
+            elif ch in _CLOSE:
+                depth -= 1
+            elif ch == "→" and depth == 0:
+                body, changed = body[i + 1:].strip(), True
+                break
+    return body
+
+
 def statement_resolved(text: str) -> bool:
     """Did `#check` actually print a type (vs. an error)?"""
     return " : " in text and "error" not in text.lower()
@@ -206,6 +250,22 @@ def check_claim(c: dict) -> list:
                 f"found everything may still have missed a counterexample; raise max_defs or "
                 f"narrow the claim")
 
+    # (E) conclusion integrity: the artifact must appear in what the theorem CONCLUDES,
+    # not merely somewhere in its statement. Blocks the unused-hypothesis attack.
+    concl_want = c.get("conclusion_mentions", [])
+    if concl_want:
+        stmt = statement_of(c["module"], c["theorem"])
+        if not statement_resolved(stmt):
+            problems.append(f"could not resolve the STATEMENT of {c['theorem']} (build error?)")
+        else:
+            concl = conclusion_of(stmt)
+            for ident in concl_want:
+                if ident not in concl:
+                    problems.append(
+                        f"`{ident}` is absent from the CONCLUSION of {c['theorem']} "
+                        f"(it may appear only in a hypothesis) — the prose claims the theorem "
+                        f"concludes something about it, and it does not")
+
     return problems
 
 
@@ -274,6 +334,23 @@ def self_test() -> int:
           f"≠ unreachable). So the flagship\n           specimen stays on the SYNTACTIC check, "
           f"which is decisive for the statement as printed.\n           Same lesson this corpus "
           f"learned from grid search: a bounded search cannot prove a negative.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 4: hypothesis-only occurrences must be REJECTED …{RST}")
+    st = statement_of("MachLib.EMLDepth2InvX", "MachLib.depth3_bounded_left_absurd")
+    if not statement_resolved(st):
+        print(f"{RED}[self-test] FAILED: could not resolve the specimen statement{RST}")
+        return 1
+    cc = conclusion_of(st)
+    if "t1" not in st:
+        print(f"{RED}[self-test] FAILED: specimen no longer mentions `t1` at all{RST}")
+        return 1
+    if "t1" in cc:
+        print(f"{RED}[self-test] FAILED: specimen no longer discriminates — `t1` is now in the "
+              f"conclusion, so it does not exercise the conclusion check.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 4 fires: `t1` occurs in the STATEMENT of "
+          f"depth3_bounded_left_absurd but NOT in its conclusion (`False`), so a claim that the "
+          f"theorem concludes something about `t1` is REJECTED. ✓{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
