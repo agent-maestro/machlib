@@ -8575,4 +8575,91 @@ theorem depth3_bounded_left_absurd {t1 t2 : EMLTree} {W d : Real}
       rung2_positive_floor t2 ht2 hd₀0 (le_trans hd₀d hd1) hposr)
     h
 
+/-- **Where a constant-valued left child fails to stay bounded.**
+
+`t1 = eml (const α) B` has `exp (t1 x) = exp(exp α)/B x`, so it is bounded near `0` exactly when `B`
+stays off `0`. Running `B`'s six shapes finds precisely two escapes: `B = var`, and
+`B = eml var (const q)` at `log q = 1` — the two shapes whose value *reaches* `0` at the origin.
+Everything else is bounded, by a positive floor on `B` or by the clamp. -/
+theorem const_left_bounded_or_gap (α : Real) (B : EMLTree) (hB : B.depth ≤ 1) :
+    (∃ W d : Real, 0 < d ∧ d ≤ 1 ∧ ∀ x : Real, 0 < x → x ≤ d →
+        exp ((EMLTree.eml (EMLTree.const α) B).eval x) ≤ W)
+    ∨ (B = EMLTree.var)
+    ∨ (∃ q : Real, B = EMLTree.eml EMLTree.var (EMLTree.const q) ∧ log q = 1) := by
+  -- a constant-valued `B` with a positive value, or clamped
+  have hsplit : ∀ β : Real, (∀ x : Real, 0 < x → B.eval x = β) →
+      (∃ W d : Real, 0 < d ∧ d ≤ 1 ∧ ∀ x : Real, 0 < x → x ≤ d →
+        exp ((EMLTree.eml (EMLTree.const α) B).eval x) ≤ W) := by
+    intro β hβ
+    rcases lt_total 0 β with hp | hz | hn
+    · exact ⟨exp (exp α - log β), 1, one_pos, le_refl 1,
+        exp_const_left_bounded hp (fun x hx _ => le_of_eq (hβ x hx).symm)⟩
+    · exact ⟨exp (exp α), 1, one_pos, le_refl 1,
+        exp_const_left_bounded_clamped (fun x hx _ => by rw [hβ x hx, ← hz]; exact le_refl _)⟩
+    · exact ⟨exp (exp α), 1, one_pos, le_refl 1,
+        exp_const_left_bounded_clamped (fun x hx _ => by rw [hβ x hx]; exact le_of_lt hn)⟩
+  cases B with
+  | const q => exact Or.inl (hsplit q (fun _ _ => rfl))
+  | var => exact Or.inr (Or.inl rfl)
+  | eml a b =>
+      cases a with
+      | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+      | const p =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q => exact Or.inl (hsplit (exp p - log q) (fun _ _ => rfl))
+          | var =>
+              -- `exp p − log x ≥ exp p > 0` on `(0,1]`
+              refine Or.inl ⟨exp (exp α - log (exp p)), 1, one_pos, le_refl 1, ?_⟩
+              refine exp_const_left_bounded (exp_pos p) (fun x hx hx1 => ?_)
+              show exp p ≤ exp p - log x
+              have s := add_le_add_wit (le_refl (exp p))
+                (neg_le_neg_wit (log_nonpos_of_le_one hx hx1))
+              have l : exp p + -(0 : Real) = exp p := by mach_ring
+              have r : exp p + -log x = exp p - log x := by mach_mpoly [exp p, log x]
+              rw [l, r] at s; exact s
+      | var =>
+          cases b with
+          | eml _ _ => exact absurd hB (by simp only [EMLTree.depth]; omega)
+          | const q =>
+              rcases lt_total (log q) 1 with hq | hq | hq
+              · -- `exp x − log q ≥ 1 − log q > 0`
+                have hb0 : (0 : Real) < 1 - log q := by
+                  have u := add_lt_add_left hq (-log q)
+                  have l : -log q + log q = (0 : Real) := by mach_ring
+                  have r : -log q + 1 = 1 - log q := by mach_mpoly [log q]
+                  rw [l, r] at u; exact u
+                refine Or.inl ⟨exp (exp α - log (1 - log q)), 1, one_pos, le_refl 1, ?_⟩
+                refine exp_const_left_bounded hb0 (fun x hx _ => ?_)
+                show (1 : Real) - log q ≤ exp x - log q
+                have s := add_le_add_wit (one_le_exp (le_of_lt hx)) (le_refl (-log q))
+                have l : (1 : Real) + -log q = 1 - log q := by mach_mpoly [log q]
+                have r : exp x + -log q = exp x - log q := by mach_mpoly [exp x, log q]
+                rw [l, r] at s; exact s
+              · exact Or.inr (Or.inr ⟨q, rfl, hq⟩)
+              · -- `log q > 1`: clamped below `log (log q)`
+                have hlq : (0 : Real) < log q := lt_trans_ax one_pos hq
+                obtain ⟨w, hwpos, hw1, hwL⟩ :=
+                  two_bound_witness' one_pos (log_pos_of_one_lt hq)
+                refine Or.inl ⟨exp (exp α), w, hwpos, le_of_lt hw1, ?_⟩
+                refine exp_const_left_bounded_clamped (fun x hx hxw => ?_)
+                show exp x - log q ≤ 0
+                have hlt : exp x < log q := by
+                  have s := exp_lt (lt_of_le_of_lt hxw hwL)
+                  rwa [exp_log hlq] at s
+                have u := add_le_add_wit (le_of_lt hlt) (le_refl (-log q))
+                have l : exp x + -log q = exp x - log q := by mach_mpoly [exp x, log q]
+                have r : log q + -log q = (0 : Real) := by mach_ring
+                rw [l, r] at u; exact u
+          | var =>
+              -- `exp x − log x ≥ 1` on `(0,1]`
+              refine Or.inl ⟨exp (exp α - log 1), 1, one_pos, le_refl 1, ?_⟩
+              refine exp_const_left_bounded one_pos (fun x hx hx1 => ?_)
+              show (1 : Real) ≤ exp x - log x
+              have s := add_le_add_wit (one_le_exp (le_of_lt hx))
+                (neg_le_neg_wit (log_nonpos_of_le_one hx hx1))
+              have l : (1 : Real) + -(0 : Real) = 1 := by mach_ring
+              have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+              rw [l, r] at s; exact s
+
 end MachLib
