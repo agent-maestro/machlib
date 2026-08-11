@@ -371,29 +371,119 @@ theorem shifted_inv_not_in_eml_depth_le_2 (K : Real) (t : EMLTree) (ht : t.depth
 
 /-! ## ▸ What this closes in the 9-node question, and what it does not
 
-`inv_x_size_nine_split` leaves exactly two top-level shapes. Write `t = eml L R` with `t.eval = 1/x`
-on `(0,∞)`.
+`inv_x_size_nine_split` leaves exactly two top-level shapes. Write `t = eml L R` with
+`t.eval = 1/x` on `(0,∞)`.
 
 **Split A — `t = eml (leaf) R`, `R` a depth-3 path of size 7.** Then
 `exp(ℓ x) − log(R x) = 1/x`, and `R x > 0` throughout (otherwise the totalised `log` forces
-`exp(ℓ x) = 1/x` identically, impossible for `ℓ` a leaf). So `R x = exp(exp(ℓ x) − 1/x)`.
+`exp(ℓ x) = 1/x` identically, impossible for a leaf `ℓ`). So `R x = exp(exp(ℓ x) − 1/x)`.
 
-Take `ℓ = const c`, so `R x = exp(K − 1/x)` with `K = exp c > 0`, and take the depth-3 path to
-branch left: `R = eml R₂ (leaf₂)` with `R₂` of depth 2. Then
-`exp(R₂ x) − log(leaf₂) = exp(K − 1/x)`.
+Take `ℓ = const c`, so `R x = exp(K − 1/x)` with `K = exp c > 0`, and let the depth-3 path branch
+left: `R = eml R₂ (leaf₂)`, `R₂` of depth 2. Then `exp(R₂ x) − log(leaf₂) = exp(K − 1/x)`, and the
+four possibilities for `log(leaf₂)` now stand as:
 
-*If `log(leaf₂) = 0`* — that is, `leaf₂ = const q` with `q ≤ 0`, or `q = 1` — this says
-`R₂ x = K − 1/x` with `R₂` of depth 2. **`shifted_inv_not_in_eml_depth_le_2` closes it.**
+| `leaf₂` | `log(leaf₂)` | status |
+|---|---|---|
+| `var` | `log x` | **dead** — `split_a_leaf_var_absurd`, *any* depth |
+| `const q`, `0 < q < 1` | `< 0` | **dead** — `split_a_leaf_const_neg_absurd`, *any* depth |
+| `const q`, `q = 1` or `q ≤ 0` | `= 0` | **dead** — `shifted_inv_not_in_eml_depth_le_2`, needs depth 2 |
+| `const q`, `q > 1` | `> 0` | **open** |
 
-**What is NOT closed.** Everything else: `log(leaf₂) ≠ 0`, `leaf₂ = var`, the right-branching
-depth-3 paths, `ℓ = var`, and the whole of split B (`t = eml L (leaf)`, where `exp(L x) = 1/x + κ`
-puts the pole inside an `exp` rather than a `log`). Those need their own arguments, and the
-`leaf₂ = var` one looks easy — `exp(R₂ x) = exp(K − 1/x) + log x` has a negative right-hand side
-near `0` and a positive left-hand side — but *looks easy* is not a proof and it is not claimed here.
+The pattern is worth recording. Three of the four die, and only the third needed real machinery:
+the other two collapse on **sign**, because their right-hand sides go negative near `0` while a
+left-hand `exp` cannot. The `log(leaf₂) = 0` case is exactly the one whose right-hand side stays
+*positive*, so no sign clash exists and the pole must instead be chased through the growth bound —
+which is why `depth_le_two_log_decay_floor` had to be built. **A case needs machinery precisely when
+it is sign-consistent.**
 
-The shape of the remaining work is now explicit rather than open-ended, which is the point of the
-reduction. What is **not** available is a counting argument: 9 nodes genuinely permit depth 4, so any
-refutation must be semantic, one branch at a time.
+**What is NOT closed.** The `q > 1` cell above; the right-branching depth-3 paths
+(`R = eml (leaf₂) R₂`); `ℓ = var`; and the whole of split B (`t = eml L (leaf)`), where
+`exp(L x) = 1/x + κ` puts the pole inside an `exp` rather than a `log` and none of these arguments
+transfer.
+
+**No counting argument can finish this.** 9 nodes genuinely permit depth 4 — that is what
+`inv_x_size_nine_isPath` says — so every remaining refutation must be semantic, one branch at a time.
 -/
+/-! ## ▸ Two more branches, closed by sign alone
+
+Neither needs a hypothesis on the subtree's depth. Worth noticing: the `log(leaf₂) = 0` branch
+needed the full depth-2 machinery precisely because *its* right-hand side stays positive, so no sign
+clash is available and the pole has to be chased through the growth bound instead.
+-/
+
+/-- `y < 1 + exp y`, the step used to manufacture a point past any prescribed threshold. -/
+private theorem lt_one_add_exp (y : Real) : y < 1 + exp y := by
+  have h1 : y < exp y := exp_grows_strictly_thm y
+  have h2 : exp y < 1 + exp y := by
+    have u := add_lt_add_left zero_lt_one_ax (exp y)
+    have l : exp y + 0 = exp y := by mach_mpoly [exp y]
+    have r : exp y + 1 = 1 + exp y := by mach_mpoly [exp y]
+    rw [l, r] at u; exact u
+  exact lt_trans_ax h1 h2
+
+/-- A pole point: `1/x` exceeds any prescribed `C` somewhere on `(0,∞)`. -/
+private theorem pole_point (C : Real) : ∃ x : Real, 0 < x ∧ C < 1 / x := by
+  refine ⟨1 / exp (1 + exp C), one_div_pos_of_pos (exp_pos _), ?_⟩
+  rw [one_div_one_div_pos (exp_pos _)]
+  exact lt_trans_ax (lt_one_add_exp C) (exp_grows_strictly_thm _)
+
+/-- **Split A, `leaf₂ = var`: dead.** `exp(R₂ x) = exp(K − 1/x) + log x` equates a strictly positive
+quantity with one that goes negative — near `0` the first summand drops below `1` while `log x` is
+below `−1`. Holds for **any** `R₂`, at any depth. -/
+theorem split_a_leaf_var_absurd (K : Real) (R₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) - log x = exp (K - 1 / x)) : False := by
+  have hKe : K < exp (1 + exp K) :=
+    lt_trans_ax (lt_one_add_exp K) (exp_grows_strictly_thm _)
+  have hxpos : (0 : Real) < 1 / exp (1 + exp K) := one_div_pos_of_pos (exp_pos _)
+  have hinv : 1 / (1 / exp (1 + exp K)) = exp (1 + exp K) := one_div_one_div_pos (exp_pos _)
+  have hlog : log (1 / exp (1 + exp K)) = -(1 + exp K) := by rw [← exp_neg_inv, log_exp]
+  have key := h (1 / exp (1 + exp K)) hxpos
+  rw [hinv, hlog] at key
+  have hneg : K - exp (1 + exp K) < 0 := by
+    have u := add_lt_add_left hKe (-exp (1 + exp K))
+    have l : -exp (1 + exp K) + K = K - exp (1 + exp K) := by
+      mach_mpoly [K, exp (1 + exp K)]
+    have r : -exp (1 + exp K) + exp (1 + exp K) = 0 := by mach_mpoly [exp (1 + exp K)]
+    rw [l, r] at u; exact u
+  have hlt1 : exp (K - exp (1 + exp K)) < 1 := by
+    have hm := exp_lt hneg; rw [exp_zero] at hm; exact hm
+  have hone : (1 : Real) < 1 + exp K := by
+    have u := add_lt_add_left (exp_pos K) 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  have hgrow : (1 : Real) + exp K
+      < exp (R₂.eval (1 / exp (1 + exp K))) - -(1 + exp K) := by
+    have u := add_lt_add_left (exp_pos (R₂.eval (1 / exp (1 + exp K)))) (1 + exp K)
+    have l : (1 : Real) + exp K + 0 = 1 + exp K := by mach_mpoly [exp K]
+    have r : (1 : Real) + exp K + exp (R₂.eval (1 / exp (1 + exp K)))
+           = exp (R₂.eval (1 / exp (1 + exp K))) - -(1 + exp K) := by
+      mach_mpoly [exp K, exp (R₂.eval (1 / exp (1 + exp K)))]
+    rw [l, r] at u; exact u
+  rw [key] at hgrow
+  exact lt_irrefl_ax _ (lt_trans_ax (lt_trans_ax hone hgrow) hlt1)
+
+/-- **Split A, `leaf₂ = const q` with `log q < 0` (that is `0 < q < 1`): dead.** `exp(K − 1/x)` would
+have to stay above the fixed positive `μ = −log q`, and it does not: push `1/x` past `K − log μ`.
+Again no depth hypothesis. -/
+theorem split_a_leaf_const_neg_absurd (K μ : Real) (hμ : 0 < μ) (R₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) + μ = exp (K - 1 / x)) : False := by
+  obtain ⟨x, hx, hbig⟩ := pole_point (K - log μ)
+  have key := h x hx
+  have harg : K - 1 / x < log μ := by
+    have u := add_lt_add_left hbig (log μ - 1 / x)
+    have l : log μ - 1 / x + (K - log μ) = K - 1 / x := by
+      mach_mpoly [K, log μ, (1 / x : Real)]
+    have r : log μ - 1 / x + 1 / x = log μ := by mach_mpoly [log μ, (1 / x : Real)]
+    rw [l, r] at u; exact u
+  have hsmall : exp (K - 1 / x) < μ := by
+    have hm := exp_lt harg; rw [exp_log hμ] at hm; exact hm
+  have hbigger : μ < exp (R₂.eval x) + μ := by
+    have u := add_lt_add_left (exp_pos (R₂.eval x)) μ
+    have l : μ + 0 = μ := by mach_mpoly [μ]
+    have r : μ + exp (R₂.eval x) = exp (R₂.eval x) + μ := by
+      mach_mpoly [μ, exp (R₂.eval x)]
+    rw [l, r] at u; exact u
+  rw [key] at hbigger
+  exact lt_irrefl_ax _ (lt_trans_ax hbigger hsmall)
 
 end MachLib

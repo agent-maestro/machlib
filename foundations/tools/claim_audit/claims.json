@@ -1136,6 +1136,28 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Sign-only branch kill. hypotheses_count 1 is load-bearing: it pins that NO depth hypothesis is taken, which is the distinctive strength of this one.",
+      "id": "split-a-leaf-var-sign",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Neither takes a depth hypothesis**"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.split_a_leaf_var_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

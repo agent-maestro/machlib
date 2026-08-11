@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Two more 9-node branches, closed by sign alone — and why the third needed machinery
+
+`split_a_leaf_var_absurd` and `split_a_leaf_const_neg_absurd`. **Neither takes a depth hypothesis**:
+they hold for *any* subtree. With the earlier pole argument, the left-branching sub-family of split A
+now stands at three of four cells dead:
+
+| `leaf₂` | `log(leaf₂)` | status |
+|---|---|---|
+| `var` | `log x` | **dead** — sign, *any* depth |
+| `const q`, `0 < q < 1` | `< 0` | **dead** — sign, *any* depth |
+| `const q`, `q = 1` or `q ≤ 0` | `= 0` | **dead** — `shifted_inv_not_in_eml_depth_le_2`, needs depth 2 |
+| `const q`, `q > 1` | `> 0` | **open** |
+
+**The pattern is the finding.** Only one of the three needed machinery. The other two collapse
+because their right-hand sides go negative near `0` while a left-hand `exp` cannot. The
+`log(leaf₂) = 0` case is exactly the one whose right-hand side stays *positive* — no sign clash
+exists, so the pole must be chased through the growth bound, which is why
+`depth_le_two_log_decay_floor` had to be built at all. **A case needs machinery precisely when it is
+sign-consistent**, and that is a usable triage rule for the remaining branches: check the sign first,
+and only reach for a growth argument where the signs agree.
+
+Still open: the `q > 1` cell, the right-branching depth-3 paths, `ℓ = var`, and all of split B —
+where `exp(L x) = 1/x + κ` puts the pole inside an `exp` rather than a `log`, and none of these
+arguments transfer. `sorryAx` 0; ledger 242 unchanged.
+
 ### `s(1/x) = 9?` becomes a finite question about PATHS — and one branch closes
 
 `MachLib.EMLSizeNineShape`. The last open integer in the reciprocal arm is now known to be about the
