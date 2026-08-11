@@ -8681,4 +8681,80 @@ theorem exp_pole_contradiction {c CC T : Real} (hc : 0 < c) (hCC : 0 < CC)
   rw [l, r] at u
   exact lt_irrefl_ax _ (lt_of_lt_of_le one_pos u)
 
+/-- # ▸▸▸ **A LOG-SCALE pole in the left child is fatal, when its constant is positive.**
+
+`t1 x ≥ c₀ − log x` with `c₀ > 0` gives `exp (t1 x) ≥ exp(c₀)·(1/x)` with `exp c₀ > 1` **strictly**.
+The equation then leaves a positive residue after its own `1/x` is subtracted, so
+`log (t2 x) ≥ (exp c₀ − 1)/x` and `t2` would have to be a double exponential in `1/x` — which the
+depth-2 growth ceiling forbids.
+
+This is the **third** pole regime, and the one the other two missed:
+`depth3_bounded_left_absurd` wants `exp (t1 x)` bounded, and `depth3_left_pole_at_zero_absurd` wants
+`t1 ≍ 1/x` (already a double exponential). A left child growing only like `−log x` sits between them.
+
+Stated at an abstract evaluation point `x = exp(−T)` with its obligations as hypotheses, so the
+proof carries no threshold arithmetic — the same design as the rank-mismatch theorems, and the
+reason this one fits on a page.
+
+`1 ≤ C` rather than `0 < C` because `log_le_of_le_exp_mul'` needs it; a caller can always enlarge a
+growth ceiling, so this costs nothing. -/
+theorem depth3_log_pole_at_absurd {t1 t2 : EMLTree} {c₀ C T : Real}
+    (hc₀ : 0 < c₀) (hC1 : 1 ≤ C) (hT0 : 0 ≤ T)
+    (hT : (1 + 1 + 1 + 1 : Real) + exp (log C - log (exp c₀ - 1) + 1)
+        ≤ log (exp c₀ - 1) + T)
+    (hlow : c₀ + T ≤ t1.eval (exp (-T)))
+    (hceil : exp (-T) * t2.eval (exp (-T)) ≤ C)
+    (h : ∀ x : Real, 0 < x → (EMLTree.eml t1 t2).eval x = 1 / x) : False := by
+  have hx0 : (0 : Real) < exp (-T) := exp_pos _
+  have hcpos : (0 : Real) < exp c₀ - 1 := by
+    have h1 : (1 : Real) < exp c₀ := by
+      have t := exp_lt hc₀; rwa [exp_zero] at t
+    have u := add_lt_add_left h1 (-1 : Real)
+    have l : (-1 : Real) + 1 = 0 := by mach_ring
+    have r : (-1 : Real) + exp c₀ = exp c₀ - 1 := by mach_mpoly [exp c₀]
+    rw [l, r] at u; exact u
+  have hm : exp T * exp (-T) = 1 := by
+    rw [← exp_add]
+    have e : T + -T = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  -- `1/x = exp T`
+  have hinv : (1 : Real) / exp (-T) = exp T := by
+    have hmi := mul_inv (exp (-T)) (ne_of_gt hx0)
+    have s : exp T * (exp (-T) * (1 / exp (-T))) = exp T * 1 := by rw [hmi]
+    have l : exp T * (exp (-T) * (1 / exp (-T)))
+        = (exp T * exp (-T)) * (1 / exp (-T)) := by
+      mach_mpoly [exp T, exp (-T), (1 / exp (-T) : Real)]
+    rw [l, hm] at s
+    have e1 : (1 : Real) * (1 / exp (-T)) = 1 / exp (-T) := by
+      mach_mpoly [(1 / exp (-T) : Real)]
+    have e2 : exp T * (1 : Real) = exp T := by mach_mpoly [exp T]
+    rw [e1, e2] at s; exact s
+  -- the residue: `log (t2 x) ≥ (exp c₀ − 1)·exp T`
+  have heq := h _ hx0
+  rw [hinv] at heq
+  have hexp : exp c₀ * exp T ≤ exp (t1.eval (exp (-T))) := by
+    have s := exp_monotone hlow
+    rwa [exp_add] at s
+  have hlogt2 : (exp c₀ - 1) * exp T ≤ log (t2.eval (exp (-T))) := by
+    have s := add_le_add_wit hexp (le_refl (-exp T))
+    have l : exp c₀ * exp T + -exp T = (exp c₀ - 1) * exp T := by
+      mach_mpoly [exp c₀, exp T]
+    have r : exp (t1.eval (exp (-T))) + -exp T = log (t2.eval (exp (-T))) := by
+      have e : exp T = exp (t1.eval (exp (-T))) - log (t2.eval (exp (-T))) := heq.symm
+      rw [e]
+      mach_mpoly [exp (t1.eval (exp (-T))), log (t2.eval (exp (-T)))]
+    rw [l, r] at s; exact s
+  -- the ceiling: `log (t2 x) ≤ T + log C`
+  have ht2up : t2.eval (exp (-T)) ≤ exp T * C := by
+    have s2 := mul_le_mul_of_nonneg_left hceil (le_of_lt (exp_pos T))
+    have l : exp T * (exp (-T) * t2.eval (exp (-T)))
+        = (exp T * exp (-T)) * t2.eval (exp (-T)) := by
+      mach_mpoly [exp T, exp (-T), t2.eval (exp (-T))]
+    rw [l, hm] at s2
+    have e1 : (1 : Real) * t2.eval (exp (-T)) = t2.eval (exp (-T)) := by
+      mach_mpoly [t2.eval (exp (-T))]
+    rw [e1] at s2; exact s2
+  exact exp_pole_contradiction hcpos (lt_of_lt_of_le one_pos hC1) hT
+    (le_trans hlogt2 (log_le_of_le_exp_mul' hT0 hC1 ht2up))
+
 end MachLib
