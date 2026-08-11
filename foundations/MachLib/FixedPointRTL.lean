@@ -70,10 +70,12 @@ theorem fxaffine_correct (c x d : List Bool) :
 
 /-- **The bridge: the scaled multiply truncates by `< 1 ULP`.** The bit-level
 shift discards `(A·B) − fxmul(a,b)·2^FRAC < 2^FRAC` integer units — i.e. `< 1`
-ULP `= 2^−FRAC` in the real domain. This is exactly Leg A's
-`|fxmul a b − a·b| ≤ s = 2^−FRAC` (`FixedPoint`), derived here from the bit-level
-division: the discrete RTL and the analytic forward-error bound on the same
-quantity. -/
+ULP `= 2^−FRAC` in the real domain.
+
+⚠ **"is exactly Leg A's `|fxmul a b − a·b| ≤ s = 2^−FRAC`" is a READING, not a theorem.** The
+statement below is pure `Nat`: a count of discarded integer units. Nothing here divides by `2^FRAC`
+or crosses into `MachLib.Real`, so the identification with the analytic forward-error bound is
+carried by this comment alone. Corrected 2026-08-10; see `docs/what_is_proven.md` §2. -/
 theorem fxmul_trunc_lt_ulp (a b : List Bool) :
     toNat a * toNat b - toNat (fxmul a b) * 2 ^ FRAC < 2 ^ FRAC := by
   rw [fxmul_correct]

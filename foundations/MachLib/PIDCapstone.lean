@@ -10,8 +10,18 @@ verified gates, its **per-step round-off** is bounded by the bit-level truncatio
 and that per-step bound is lifted to the **whole trajectory** by the contraction
 certificate. Three verified layers, one chain:
 
-    bits (fxpid)  →  per-step error < 3 ULP (fxpid_trunc_lt_3ulp)
-                  →  whole-trajectory bound (pid_trajectory_from_bits)
+    bits (fxpid)  →  per-step truncation < 3·2^FRAC INTEGER UNITS (fxpid_trunc_lt_3ulp)
+                  ⋯  [JOIN NOT FORMALISED — see the warning below] ⋯
+                  →  whole-trajectory bound, for ANY ε (pid_trajectory_from_bits)
+
+⚠ **The chain above has a gap in the middle, and this file previously read as if it did not.**
+`pid_trajectory_from_bits` quantifies `ε` universally and takes the per-step bound as a
+*hypothesis*; it elaborates to `fun … => affine_trajectory_bound …` and mentions no bit-level
+object. Two joins are missing: (1) `Nat` → `Real`, turning "discards `< 3·2^FRAC` integer units"
+into "`< 3·2^−FRAC` in the real domain" — a scaling convention stated only in comments; and
+(2) controller → closed loop, since the datapath bounds the *multiply-add* while the trajectory
+theorem needs the *state-update* error, which needs a plant model this corpus does not have.
+Both halves below are genuinely proved. The bridge between them is prose.
 
 * `fxpid` / `fxpid_correct` — the PID multiply-add as a bit-vector netlist (three
   `fxmul`s and two `add`s); its integer value is the sum of the three truncated
