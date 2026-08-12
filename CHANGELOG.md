@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Split B opens, and the 9-node map is now complete
+
+`split_b_leaf_const_neg_absurd` — in split B (`t = eml L (leaf)`) the equation is
+`exp(L x) = 1/x + κ`, so **the pole sits under an `exp` rather than a `log` and none of the split-A
+arguments transfer**. The triage rule still finds the free cell instantly: `exp` is positive and
+`1/x + κ` is not, once `1/x` drops below `−κ`. Dead by sign, any depth.
+
+Full map written up: `monogate-research/exploration/inv_x_termination_route_2026_08_06/RESULT_NINE_NODE_MAP.md`.
+**5 cells closed.** Both left-branching split-A families 3-of-4; split B 1-of-4; the right-branching
+depth-3 paths untouched (and sign-consistent, so they will cost machinery).
+
+**The sharpest open cell is split B with `κ = 0`**, which asks exactly: *can a depth-3 tree compute
+`−log x`?* That is a clean membership question about a named function rather than a family with free
+parameters, which makes it the right one to hand to someone.
+
+Also recorded there: `1/x + log x > 0` for all `x > 0` (minimum `1` at `x = 1`), so split B's
+`leaf = var` cell has **no** sign kill available — worth knowing before someone spends an hour
+looking for one. `sorryAx` 0; ledger 242 unchanged.
+
 ### The triage rule predicts a family it wasn't derived from — `ℓ = var` closes 3 of 4 too
 
 Generalised the pole obstruction and swept the second family. **`no_pole_at_depth_le_2`**: no

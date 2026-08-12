@@ -410,9 +410,14 @@ it is sign-consistent.**
 `log(leaf₂) > 0` is open. That the triage rule *predicted* which cell would cost anything, in a
 family it was not derived from, is the reason to trust it for the rest.
 
-**What is NOT closed.** The `> 0` cell in both families; the right-branching depth-3 paths
-(`R = eml (leaf₂) R₂`); and the whole of split B (`t = eml L (leaf)`), where `exp(L x) = 1/x + κ`
-puts the pole inside an `exp` rather than a `log` and none of these arguments transfer.
+**Split B — `t = eml L (leaf)`** — is a different problem: `exp(L x) = 1/x + κ` puts the pole under
+an `exp` rather than a `log`, and none of the split-A arguments transfer. The triage rule still finds
+its free cell: `κ < 0` dies by sign (`split_b_leaf_const_neg_absurd`), because `exp` is positive and
+`1/x + κ` is not, once `1/x` drops below `−κ`.
+
+**What is NOT closed.** The `> 0` cell in both split-A families; the right-branching depth-3 paths
+(`R = eml (leaf₂) R₂`); and split B's `κ = 0` and `κ > 0` cells plus its `leaf = var` case. Split B's
+`κ = 0` cell is the sharpest of these: it asks whether a depth-3 tree can compute `−log x` exactly.
 
 **No counting argument can finish this.** 9 nodes genuinely permit depth 4 — that is what
 `inv_x_size_nine_isPath` says — so every remaining refutation must be semantic, one branch at a time.
@@ -630,5 +635,57 @@ theorem var_family_leaf_const_neg_absurd (μ : Real) (hμ : 0 < μ) (R₂ : EMLT
   have hlt := exp_lt (lt_of_le_of_lt hstep1 hstep2)
   rw [exp_log hμ] at hlt
   exact hlt
+
+/-! ## ▸ Split B: the pole moves inside the `exp`
+
+`t = eml L (leaf)` gives `exp(L x) − log(leaf) = 1/x`, so `exp(L x) = 1/x + κ` with
+`κ = log(leaf)`. None of the split-A arguments transfer — there the pole sat under a `log`, here it
+is under an `exp` — but the triage rule still applies, and it finds the free cell straight away:
+`exp` is positive, so `κ < 0` dies the moment `1/x` drops below `−κ`.
+-/
+
+/-- **Split B, `leaf = const q` with `log q < 0` (that is `0 < q < 1`): dead by sign, any depth.**
+`exp(L x) = 1/x − μ` needs the right-hand side positive everywhere, and it is not: take `x` past
+`1/μ`. -/
+theorem split_b_leaf_const_neg_absurd (μ : Real) (hμ : 0 < μ) (L : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (L.eval x) = 1 / x - μ) : False := by
+  have hiμ : (0 : Real) < 1 / μ := one_div_pos_of_pos hμ
+  have hx : (0 : Real) < 1 + 1 / μ := by
+    have u := add_lt_add_left hiμ 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+  -- `x·μ = μ + 1 > 1`
+  have hprod : (1 : Real) < (1 + 1 / μ) * μ := by
+    have hinv : (1 / μ) * μ = 1 := by
+      have hv := mul_inv μ (ne_of_gt hμ)
+      rw [mul_comm] at hv; exact hv
+    have hexp : (1 + 1 / μ) * μ = μ + (1 / μ) * μ := by mach_mpoly [μ, (1 / μ : Real)]
+    rw [hexp, hinv]
+    have u := add_lt_add_left hμ 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    have r : (1 : Real) + μ = μ + 1 := by mach_mpoly [μ]
+    rw [l, r] at u; exact u
+  -- multiply by `1/x > 0` to get `1/x < μ`
+  have hix : (0 : Real) < 1 / (1 + 1 / μ) := one_div_pos_of_pos hx
+  have hstep := mul_lt_mul_of_pos_right hprod hix
+  have hxinv : (1 + 1 / μ) * (1 / (1 + 1 / μ)) = 1 := mul_inv _ (ne_of_gt hx)
+  have hleft : (1 : Real) * (1 / (1 + 1 / μ)) = 1 / (1 + 1 / μ) := by
+    mach_mpoly [(1 / (1 + 1 / μ) : Real)]
+  have hright : (1 + 1 / μ) * μ * (1 / (1 + 1 / μ))
+      = μ * ((1 + 1 / μ) * (1 / (1 + 1 / μ))) := by
+    mach_mpoly [μ, (1 / μ : Real), (1 / (1 + 1 / μ) : Real)]
+  rw [hleft, hright, hxinv] at hstep
+  have hμ1 : μ * 1 = μ := by mach_mpoly [μ]
+  rw [hμ1] at hstep
+  -- so `1/x - μ < 0`, but it equals `exp (L x) > 0`
+  have hneg : 1 / (1 + 1 / μ) - μ < 0 := by
+    have u := add_lt_add_left hstep (-μ)
+    have l : -μ + 1 / (1 + 1 / μ) = 1 / (1 + 1 / μ) - μ := by
+      mach_mpoly [μ, (1 / (1 + 1 / μ) : Real)]
+    have r : -μ + μ = 0 := by mach_mpoly [μ]
+    rw [l, r] at u; exact u
+  have hp := exp_pos (L.eval (1 + 1 / μ))
+  rw [h (1 + 1 / μ) hx] at hp
+  exact lt_irrefl_ax _ (lt_trans_ax hp hneg)
 
 end MachLib
