@@ -1339,6 +1339,50 @@
         "∃"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The exact locus. The IFF is the content — the corpus already had the sufficient direction, which is not a locus.",
+      "id": "invx4gen-exact-locus",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "computes `1/x` **iff** `exp(exp c₀) − exp(exp c₁) = 1`"
+      ],
+      "module": "MachLib.EMLExceptionalLocus",
+      "theorem": "MachLib.invX4gen_iff",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "invX4gen",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "↔"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Why the grid failure was inevitable: the good set is a graph over one parameter.",
+      "id": "invx4gen-locus-graph",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "at most one `c₀` per `c₁`: the locus is a **graph**, not a region"
+      ],
+      "module": "MachLib.EMLExceptionalLocus",
+      "theorem": "MachLib.invX4gen_locus_is_a_graph",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "invX4gen",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∧"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

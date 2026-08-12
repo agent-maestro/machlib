@@ -7,6 +7,30 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### T3, first artifact: an exceptional locus solved for exactly
+
+`MachLib.EMLExceptionalLocus`. The arm keeps producing exceptional sets **by accident**, and it has
+cost something — a 12,208-sample grid reported non-existence and missed a witness living on one. The
+repair is to solve for them deliberately, and the template is: **prove the behaviour is equivalent to
+an equation, then solve the equation.**
+
+`EMLDepth2InvX` already had the *sufficient* direction (`invX4gen_eval`) and *existence*
+(`invX4gen_witness_for_any_c1`). Neither makes a locus — only a supply of witnesses. What was missing
+is **necessity**:
+
+- **`invX4gen_iff`** — the depth-4 family computes `1/x` **iff** `exp(exp c₀) − exp(exp c₁) = 1`.
+  The forward direction needs a **single point**, `x = 1`, where `log 1 = 0` collapses every branch.
+- **`invX4gen_locus_unique`** — at most one `c₀` per `c₁`: the locus is a **graph**, not a region.
+- **`invX4gen_locus_solved`** — and exactly one, `c₀ = log (log (1 + exp (exp c₁)))`. The locus is
+  that explicit transcendental curve, nothing more and nothing less.
+- **`invX4gen_off_locus`** — every other pair fails. This is what makes the grid failure
+  **inevitable rather than unlucky**: the good set is a graph over one parameter, so sweeping `c₀`
+  independently misses it unless a sample lands on the curve exactly.
+
+`invX4gen_locus_is_a_graph` packages existence + uniqueness + the explicit formula.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Constant generation is vacuous in EML — proved, not argued
 
 A research direction was proposed twice on the grammar `S → 1 | eml(S,S)`: *which irrational
