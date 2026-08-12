@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The splitter census: stop waiting for the next shape to bite
+
+Two statement shapes broke the claim auditor's arrow-splitter today, and the second landed *after*
+the "cover input shapes, not claim count" lesson was written down — because the first fix was patched
+per-connective instead of generalised. Rather than add a third canary and wait, the shape question is
+now **audited over the corpus on every run**.
+
+**`hypothesis_scope_violations`** — an extracted hypothesis containing a **depth-0 binder** is always
+a splitter bug and never a real hypothesis: the pretty-printer parenthesises higher-order
+hypotheses, and telescope binders are stripped before hypotheses are collected. So a `∀`/`∃` still at
+depth 0 inside a hypothesis means the antecedent chain was cut *inside* a binder body. Decidable from
+the printed form.
+
+It runs for **every registered claim**, not only those declaring `hypotheses_count` — `statement_of`
+is now memoised, so the census is free. **0 violations across all 75 claims.**
+
+**`canary 12`** proves the census would have caught both historic bugs rather than merely agreeing
+with today's code: it restores each prior behaviour in turn — no guard at all, then the `∃`-only
+patch that fixed the first bug and left the second — and requires violations to appear in each.
+Specimens drawn from **historical faults, not invented ones**.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green; 12 canaries; 75 claims.
+
 ### Depth-≤1 has exactly five closed forms — and `+log x` is not one of them
 
 `depth_le_one_classification`: a depth-≤1 tree is **constant**, `x`, `c − log x` (`c > 0`),

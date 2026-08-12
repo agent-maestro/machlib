@@ -66,6 +66,9 @@ def axiom_footprint(module: str, theorem: str) -> str:
     return print_axioms_output(f"import {module}\n#print axioms {theorem}\n")
 
 
+_stmt_cache: dict = {}
+
+
 def statement_of(module: str, theorem: str) -> str:
     """The theorem's TYPE, via `#check @thm`.
 
@@ -78,7 +81,10 @@ def statement_of(module: str, theorem: str) -> str:
     carrying the bit-level truncation into the trajectory bound, and its statement mentions no
     bit-level object at all (it quantifies `ε` universally). Every existing check passed.
     """
-    return print_axioms_output(f"import {module}\n#check @{theorem}\n")
+    key = (module, theorem)
+    if key not in _stmt_cache:
+        _stmt_cache[key] = print_axioms_output(f"import {module}\n#check @{theorem}\n")
+    return _stmt_cache[key]
 
 
 _IDENT = re.compile(r"MachLib\.[A-Za-z0-9_.']+")
@@ -433,6 +439,32 @@ def render_claim(c: dict) -> str:
     return tmpl.format(subject=c["subject"], object=c["object"], bound=c["bound"])
 
 
+def hypothesis_scope_violations(stmt: str) -> list:
+    """Hypotheses that contain a **depth-0 binder** — always a splitter bug, never real.
+
+    The pretty-printer parenthesises a higher-order hypothesis (`(∀ (x : …), …)`), and a telescope
+    binder is stripped before hypotheses are collected. So a `∀`/`∃` still sitting at depth 0 inside
+    an extracted hypothesis means the splitter walked into a binder's body and cut a subterm out of
+    it. Both shape bugs found on 2026-08-11 — existential conclusion, disjunctive conclusion —
+    violate this, and it is decidable from the printed form.
+
+    Checking it for every registered claim turns "wait for the next shape to bite" into a census
+    over the shapes the corpus actually contains.
+    """
+    bad = []
+    for h in hypotheses_of(stmt):
+        depth = 0
+        for ch in h:
+            if ch in _OPEN:
+                depth += 1
+            elif ch in _CLOSE:
+                depth -= 1
+            elif depth == 0 and ch in "∀∃":
+                bad.append(h)
+                break
+    return bad
+
+
 def check_relation(c: dict) -> list:
     """Relation integrity: vocabulary, mandatory obligations, epistemic type, rendered prose."""
     problems = []
@@ -461,6 +493,13 @@ def check_relation(c: dict) -> list:
 def check_claim(c: dict) -> list:
     """Return a list of problem strings (empty = the claim holds)."""
     problems = []
+
+    # (A) splitter-scope census: run on EVERY claim, whatever it declares. Cheap (the statement is
+    # cached) and it audits the auditor against the statement shapes actually in the corpus.
+    for bad in hypothesis_scope_violations(statement_of(c["module"], c["theorem"])):
+        problems.append(
+            f"SPLITTER BUG on {c['theorem']}: extracted hypothesis contains a depth-0 binder, so "
+            f"the antecedent chain was cut inside a binder body:\n" + DIM + "    " + bad[:160] + RST)
 
     # (B) claim-drift: the asserted text must still be present in its source doc.
     src = os.path.join(REPO, c["source_file"])
@@ -785,6 +824,37 @@ def self_test() -> int:
     print(f"{DIM}           Coverage is over the SHAPE of the parser's input, not the number of "
           f"claims. Two shapes\n           have now bitten: existential conclusion, disjunctive "
           f"conclusion. Both were one specimen away.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 12: the SPLITTER CENSUS must catch both historic bugs …{RST}")
+    # The census only earns its keep if it would have caught the two shape bugs found on
+    # 2026-08-11 rather than merely agreeing with today's fixed code. Restore each historic
+    # behaviour in turn and require violations to appear.
+    import sys as _sys
+    _mod = _sys.modules[__name__]
+    real_guard = _mod._binder_precedes_arrow
+    ex_stmt = statement_of("MachLib.EMLGrowthEnvelope", "MachLib.depth_le_two_neg_log_bound")
+    dj_stmt = statement_of("MachLib.EMLSizeNineShape", "MachLib.depth_le_one_classification")
+    try:
+        _mod._binder_precedes_arrow = lambda body: False           # before any guard existed
+        v1 = hypothesis_scope_violations(ex_stmt)
+        v2 = hypothesis_scope_violations(dj_stmt)
+        _mod._binder_precedes_arrow = lambda body: body.startswith("∃")   # the ∃-only patch
+        v3 = hypothesis_scope_violations(dj_stmt)
+    finally:
+        _mod._binder_precedes_arrow = real_guard
+    if not v1 or not v2 or not v3:
+        print(f"{RED}[self-test] FAILED: census blind to a historic bug — "
+              f"no-guard existential={len(v1)}, no-guard disjunctive={len(v2)}, "
+              f"∃-only-guard disjunctive={len(v3)}; all must be non-zero.{RST}")
+        return 1
+    if hypothesis_scope_violations(ex_stmt) or hypothesis_scope_violations(dj_stmt):
+        print(f"{RED}[self-test] FAILED: guard was not restored.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 12 fires: the census catches BOTH historic splitter bugs "
+          f"({len(v1)}, {len(v2)}, {len(v3)} violations) and is clean under the current guard. ✓{RST}")
+    print(f"{DIM}           Including the ∃-only patch, which fixed the first bug and left the "
+          f"second. Specimens drawn\n           from HISTORICAL faults, not invented ones — they "
+          f"prove the check catches what got past me.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
