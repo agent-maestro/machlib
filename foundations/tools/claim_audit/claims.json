@@ -1158,6 +1158,27 @@
         "False"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The generalised pole obstruction. Upper-bound form, which is what makes it reusable across branches.",
+      "id": "no-pole-at-depth-two",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no\ndepth-≤2 tree can be *capped* by `C − 1/x` near `0`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.no_pole_at_depth_le_2",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

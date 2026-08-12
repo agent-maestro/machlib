@@ -336,12 +336,13 @@ theorem depth_le_two_log_decay_floor (t : EMLTree) (ht : t.depth ≤ 2) :
       mach_mpoly [exp (A.eval x), log (B.eval x)]
     rw [l, r] at u; exact u
 
-/-- **`K − 1/x` is out of reach at depth 2, for every `K`.** The pole is the obstruction: a depth-≤2
-tree falls at most logarithmically at `0⁺`, and `−1/x` falls faster than any logarithm. -/
-theorem shifted_inv_not_in_eml_depth_le_2 (K : Real) (t : EMLTree) (ht : t.depth ≤ 2)
-    (h : ∀ x : Real, 0 < x → t.eval x = K - 1 / x) : False := by
+/-- **No depth-≤2 tree can be capped by `C − 1/x` near `0`.** The general pole obstruction: depth 2
+falls at most logarithmically at `0⁺`, and `−1/x` falls faster than any logarithm. Stated as an
+*upper bound* rather than an equation so it applies wherever a pole appears, however it is dressed. -/
+theorem no_pole_at_depth_le_2 (C : Real) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → x ≤ 1 → t.eval x ≤ C - 1 / x) : False := by
   obtain ⟨F, hF⟩ := depth_le_two_log_decay_floor t ht
-  obtain ⟨s, hs1, hs⟩ := exp_beats_linear (α := 1) (β := K - F) (le_of_lt one_pos)
+  obtain ⟨s, hs1, hs⟩ := exp_beats_linear (α := 1) (β := C - F) (le_of_lt one_pos)
   have hes : (0 : Real) < exp s := exp_pos s
   have hx : (0 : Real) < 1 / exp s := one_div_pos_of_pos hes
   have hx1 : 1 / exp s ≤ 1 := by
@@ -353,21 +354,27 @@ theorem shifted_inv_not_in_eml_depth_le_2 (K : Real) (t : EMLTree) (ht : t.depth
     rw [exp_zero, exp_neg_inv] at hm
     exact hm
   have hinv : 1 / (1 / exp s) = exp s := one_div_one_div_pos hes
-  have hlog : log (1 / exp s) = -s := by
-    rw [← exp_neg_inv, log_exp]
+  have hlog : log (1 / exp s) = -s := by rw [← exp_neg_inv, log_exp]
   have hfl := hF (1 / exp s) hx hx1
-  rw [h (1 / exp s) hx, hinv, hlog] at hfl
-  -- `F + -s ≤ K - exp s` against `s + (K - F) < exp s`
-  have l1 : (1 : Real) * s + (K - F) = s + (K - F) := by mach_mpoly [s, K, F]
+  have hup := h (1 / exp s) hx hx1
+  rw [hinv] at hup
+  rw [hlog] at hfl
+  have hchain : F + -s ≤ C - exp s := le_trans hfl hup
+  have l1 : (1 : Real) * s + (C - F) = s + (C - F) := by mach_mpoly [s, C, F]
   rw [l1] at hs
-  have hcontra : exp s ≤ K - F + s := by
-    have u := add_le_add_wit hfl (le_refl (exp s - F + s))
+  have hcontra : exp s ≤ C - F + s := by
+    have u := add_le_add_wit hchain (le_refl (exp s - F + s))
     have lhs : F + -s + (exp s - F + s) = exp s := by mach_mpoly [F, s, exp s]
-    have rhs : K - exp s + (exp s - F + s) = K - F + s := by mach_mpoly [K, F, s, exp s]
+    have rhs : C - exp s + (exp s - F + s) = C - F + s := by mach_mpoly [C, F, s, exp s]
     rw [lhs, rhs] at u; exact u
-  have hbad : s + (K - F) = K - F + s := by mach_mpoly [s, K, F]
+  have hbad : s + (C - F) = C - F + s := by mach_mpoly [s, C, F]
   rw [hbad] at hs
   exact lt_irrefl_ax _ (lt_of_lt_of_le hs hcontra)
+
+/-- **`K − 1/x` is out of reach at depth 2, for every `K`** — the equational instance. -/
+theorem shifted_inv_not_in_eml_depth_le_2 (K : Real) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = K - 1 / x) : False :=
+  no_pole_at_depth_le_2 K t ht (fun x hx _ => le_of_eq (h x hx))
 
 /-! ## ▸ What this closes in the 9-node question, and what it does not
 
@@ -396,10 +403,16 @@ left-hand `exp` cannot. The `log(leaf₂) = 0` case is exactly the one whose rig
 which is why `depth_le_two_log_decay_floor` had to be built. **A case needs machinery precisely when
 it is sign-consistent.**
 
-**What is NOT closed.** The `q > 1` cell above; the right-branching depth-3 paths
-(`R = eml (leaf₂) R₂`); `ℓ = var`; and the whole of split B (`t = eml L (leaf)`), where
-`exp(L x) = 1/x + κ` puts the pole inside an `exp` rather than a `log` and none of these arguments
-transfer.
+**The same table holds for `ℓ = var`.** There the top-level equation gives
+`R x = exp(exp x − 1/x)`, and branching the depth-3 path left reproduces the pattern exactly:
+`leaf₂ = var` dies by sign (`var_family_leaf_var_absurd`), `log(leaf₂) = 0` dies by the pole bound
+(`var_family_leaf_const_zero_absurd`), `log(leaf₂) < 0` dies by sign via `exp_add_absurd`, and
+`log(leaf₂) > 0` is open. That the triage rule *predicted* which cell would cost anything, in a
+family it was not derived from, is the reason to trust it for the rest.
+
+**What is NOT closed.** The `> 0` cell in both families; the right-branching depth-3 paths
+(`R = eml (leaf₂) R₂`); and the whole of split B (`t = eml L (leaf)`), where `exp(L x) = 1/x + κ`
+puts the pole inside an `exp` rather than a `log` and none of these arguments transfer.
 
 **No counting argument can finish this.** 9 nodes genuinely permit depth 4 — that is what
 `inv_x_size_nine_isPath` says — so every remaining refutation must be semantic, one branch at a time.
@@ -485,5 +498,137 @@ theorem split_a_leaf_const_neg_absurd (K μ : Real) (hμ : 0 < μ) (R₂ : EMLTr
     rw [l, r] at u; exact u
   rw [key] at hbigger
   exact lt_irrefl_ax _ (lt_trans_ax hbigger hsmall)
+
+/-! ## ▸ The `ℓ = var` family, same 3-of-4 pattern
+
+With `ℓ = var` the top-level equation is `exp x − log(R x) = 1/x`, so `R x = exp(exp x − 1/x)`.
+Branching the depth-3 path left as `R = eml R₂ (leaf₂)` gives the same four cells as before, and the
+triage rule earned in the `ℓ = const` family — *check the sign first, buy a growth argument only
+where the signs agree* — predicts which one costs anything. It does.
+
+The two reusable primitives below separate the trivial contradiction from the per-branch work of
+exhibiting a point. That split is what makes each branch a few lines.
+-/
+
+/-- If `exp(R₂ x) − log x` is pinned to `g`, one point where `g x + log x ≤ 0` finishes it. -/
+theorem exp_sub_log_absurd (R₂ : EMLTree) (g : Real → Real)
+    (hpt : ∃ x : Real, 0 < x ∧ g x + log x ≤ 0)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) - log x = g x) : False := by
+  obtain ⟨x, hx, hle⟩ := hpt
+  have key := h x hx
+  have hval : exp (R₂.eval x) = g x + log x := by
+    rw [← key]; mach_mpoly [exp (R₂.eval x), log x]
+  have hp := exp_pos (R₂.eval x)
+  rw [hval] at hp
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hp hle)
+
+/-- If `exp(R₂ x) + μ` is pinned to `g`, one point where `g x < μ` finishes it. The `0 < μ` one
+expects to need is **not** required — `exp > 0` alone does it. -/
+theorem exp_add_absurd (μ : Real) (R₂ : EMLTree) (g : Real → Real)
+    (hpt : ∃ x : Real, 0 < x ∧ g x < μ)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) + μ = g x) : False := by
+  obtain ⟨x, hx, hlt⟩ := hpt
+  have key := h x hx
+  have hbigger : μ < exp (R₂.eval x) + μ := by
+    have u := add_lt_add_left (exp_pos (R₂.eval x)) μ
+    have l : μ + 0 = μ := by mach_mpoly [μ]
+    have r : μ + exp (R₂.eval x) = exp (R₂.eval x) + μ := by
+      mach_mpoly [μ, exp (R₂.eval x)]
+    rw [l, r] at u; exact u
+  rw [key] at hbigger
+  exact lt_irrefl_ax _ (lt_trans_ax hbigger hlt)
+
+/-- The point that serves both `ℓ = var` sign branches: at `x = 1/e`, `exp x − 1/x < 0`. -/
+private theorem var_family_point : exp (1 / exp 1) - 1 / (1 / exp 1) < 0 := by
+  have he : (0 : Real) < exp 1 := exp_pos 1
+  have hx : (0 : Real) < 1 / exp 1 := one_div_pos_of_pos he
+  have hinv : 1 / (1 / exp 1) = exp 1 := one_div_one_div_pos he
+  rw [hinv]
+  have hlt : 1 / exp 1 < 1 := by
+    have h1e : (1 : Real) < exp 1 := by
+      have u := exp_lt zero_lt_one_ax
+      rw [exp_zero] at u; exact u
+    have hm := div_lt_one_of_pos_lt he h1e
+    exact hm
+  have hmono : exp (1 / exp 1) < exp 1 := exp_lt hlt
+  have u := add_lt_add_left hmono (-exp 1)
+  have l : -exp 1 + exp (1 / exp 1) = exp (1 / exp 1) - exp 1 := by
+    mach_mpoly [exp 1, exp (1 / exp 1)]
+  have r : -exp 1 + exp 1 = 0 := by mach_mpoly [exp 1]
+  rw [l, r] at u; exact u
+
+/-- **`ℓ = var`, `leaf₂ = var`: dead by sign, any depth.** -/
+theorem var_family_leaf_var_absurd (R₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) - log x = exp (exp x - 1 / x)) : False := by
+  refine exp_sub_log_absurd R₂ (fun x => exp (exp x - 1 / x)) ⟨1 / exp 1, ?_, ?_⟩ h
+  · exact one_div_pos_of_pos (exp_pos 1)
+  · have hlog : log (1 / exp 1) = -1 := by rw [← exp_neg_inv, log_exp]
+    have hle1 : exp (exp (1 / exp 1) - 1 / (1 / exp 1)) ≤ 1 := by
+      have hm := exp_lt var_family_point
+      rw [exp_zero] at hm
+      exact le_of_lt hm
+    rw [hlog]
+    have u := add_le_add_wit hle1 (le_refl (-1 : Real))
+    have r : (1 : Real) + -1 = 0 := by mach_ring
+    rw [r] at u; exact u
+
+/-- **`ℓ = var`, `leaf₂ = const q` with `log q = 0`: dead by the pole bound.** The remaining
+equation is `R₂ x = exp x − 1/x`, capped by `exp 1 − 1/x` on `(0,1]`. -/
+theorem var_family_leaf_const_zero_absurd (R₂ : EMLTree) (hd : R₂.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → R₂.eval x = exp x - 1 / x) : False := by
+  refine no_pole_at_depth_le_2 (exp 1) R₂ hd (fun x hx h1 => ?_)
+  rw [h x hx]
+  have hm : exp x ≤ exp 1 := exp_monotone h1
+  have u := add_le_add_wit hm (le_refl (-(1 / x) : Real))
+  have l : exp x + -(1 / x) = exp x - 1 / x := by mach_mpoly [exp x, (1 / x : Real)]
+  have r : exp 1 + -(1 / x) = exp 1 - 1 / x := by mach_mpoly [exp 1, (1 / x : Real)]
+  rw [l, r] at u; exact u
+
+/-- **`ℓ = var`, `leaf₂ = const q` with `log q < 0`: dead by sign.** `exp(exp x − 1/x)` would have to
+stay above the fixed positive `μ = −log q`; push `1/x` past `exp 1 − log μ` and it does not. -/
+theorem var_family_leaf_const_neg_absurd (μ : Real) (hμ : 0 < μ) (R₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) + μ = exp (exp x - 1 / x)) : False := by
+  have hC : exp 1 - log μ < exp (1 + exp (exp 1 - log μ)) :=
+    lt_trans_ax (lt_one_add_exp (exp 1 - log μ)) (exp_grows_strictly_thm _)
+  have htpos : (0 : Real) < 1 + exp (exp 1 - log μ) := by
+    have u := add_lt_add_left (exp_pos (exp 1 - log μ)) 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+  have het : (1 : Real) < exp (1 + exp (exp 1 - log μ)) := by
+    have hm := exp_lt htpos; rw [exp_zero] at hm; exact hm
+  have hepos : (0 : Real) < exp (1 + exp (exp 1 - log μ)) := exp_pos _
+  refine exp_add_absurd μ R₂ (fun x => exp (exp x - 1 / x))
+    ⟨1 / exp (1 + exp (exp 1 - log μ)), one_div_pos_of_pos hepos, ?_⟩ h
+  have hx1 : 1 / exp (1 + exp (exp 1 - log μ)) ≤ 1 :=
+    le_of_lt (div_lt_one_of_pos_lt hepos het)
+  have hinv : 1 / (1 / exp (1 + exp (exp 1 - log μ))) = exp (1 + exp (exp 1 - log μ)) :=
+    one_div_one_div_pos hepos
+  show exp (exp (1 / exp (1 + exp (exp 1 - log μ)))
+        - 1 / (1 / exp (1 + exp (exp 1 - log μ)))) < μ
+  rw [hinv]
+  have hmono : exp (1 / exp (1 + exp (exp 1 - log μ))) ≤ exp 1 := exp_monotone hx1
+  -- `exp x - exp t ≤ exp 1 - exp t < exp 1 - (exp 1 - log μ) = log μ`
+  have hstep1 : exp (1 / exp (1 + exp (exp 1 - log μ)))
+        - exp (1 + exp (exp 1 - log μ)) ≤ exp 1 - exp (1 + exp (exp 1 - log μ)) := by
+    have u := add_le_add_wit hmono (le_refl (-exp (1 + exp (exp 1 - log μ))))
+    have l : exp (1 / exp (1 + exp (exp 1 - log μ))) + -exp (1 + exp (exp 1 - log μ))
+           = exp (1 / exp (1 + exp (exp 1 - log μ))) - exp (1 + exp (exp 1 - log μ)) := by
+      mach_mpoly [exp (1 / exp (1 + exp (exp 1 - log μ))), exp (1 + exp (exp 1 - log μ))]
+    have r : exp 1 + -exp (1 + exp (exp 1 - log μ))
+           = exp 1 - exp (1 + exp (exp 1 - log μ)) := by
+      mach_mpoly [exp 1, exp (1 + exp (exp 1 - log μ))]
+    rw [l, r] at u; exact u
+  have hstep2 : exp 1 - exp (1 + exp (exp 1 - log μ)) < log μ := by
+    have u := add_lt_add_left hC (exp 1 - (exp 1 - log μ) - exp (1 + exp (exp 1 - log μ)))
+    have l : exp 1 - (exp 1 - log μ) - exp (1 + exp (exp 1 - log μ)) + (exp 1 - log μ)
+           = exp 1 - exp (1 + exp (exp 1 - log μ)) := by
+      mach_mpoly [exp 1, log μ, exp (1 + exp (exp 1 - log μ))]
+    have r : exp 1 - (exp 1 - log μ) - exp (1 + exp (exp 1 - log μ))
+             + exp (1 + exp (exp 1 - log μ)) = log μ := by
+      mach_mpoly [exp 1, log μ, exp (1 + exp (exp 1 - log μ))]
+    rw [l, r] at u; exact u
+  have hlt := exp_lt (lt_of_le_of_lt hstep1 hstep2)
+  rw [exp_log hμ] at hlt
+  exact hlt
 
 end MachLib

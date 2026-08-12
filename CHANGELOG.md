@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The triage rule predicts a family it wasn't derived from — `ℓ = var` closes 3 of 4 too
+
+Generalised the pole obstruction and swept the second family. **`no_pole_at_depth_le_2`**: no
+depth-≤2 tree can be *capped* by `C − 1/x` near `0` — stated as an upper bound rather than an
+equation, so it applies wherever a pole appears however it is dressed.
+`shifted_inv_not_in_eml_depth_le_2` is now a three-line corollary.
+
+Two reusable primitives separate the trivial contradiction from the per-branch work of exhibiting a
+point: **`exp_sub_log_absurd`** and **`exp_add_absurd`**. Worth noting the second does **not** need
+the `0 < μ` one expects — `exp > 0` alone does it. With those, each branch is a few lines.
+
+**`ℓ = var`, left-branching, reproduces the table exactly:**
+
+| `leaf₂` | `log(leaf₂)` | status |
+|---|---|---|
+| `var` | `log x` | **dead** — `var_family_leaf_var_absurd`, sign |
+| `const q`, `0 < q < 1` | `< 0` | **dead** — `var_family_leaf_const_neg_absurd`, sign |
+| `const q`, `q = 1` or `q ≤ 0` | `= 0` | **dead** — `var_family_leaf_const_zero_absurd`, pole bound |
+| `const q`, `q > 1` | `> 0` | **open** |
+
+**The triage rule predicted which cell would cost anything, in a family it was not derived from.**
+That is the reason to trust it for the rest: *check the sign first; buy a growth argument only where
+the signs agree.* Both left-branching families are now 3-of-4 closed, by the same three arguments in
+the same three positions.
+
+Still open: the `> 0` cell in both families, the right-branching depth-3 paths, and all of split B.
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Two more 9-node branches, closed by sign alone — and why the third needed machinery
 
 `split_a_leaf_var_absurd` and `split_a_leaf_const_neg_absurd`. **Neither takes a depth hypothesis**:
