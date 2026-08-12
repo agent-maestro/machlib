@@ -1515,6 +1515,29 @@
         "∃"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Exp-side structural version. Same two forms survive as on the log side — the ones capped above.",
+      "id": "exp-bounded-names-the-form",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "if `exp (A x) ≤ Kb` on `[1,∞)` then `A` is `const α` or\n`c − log x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_exp_bounded_forms",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "∃"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

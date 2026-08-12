@@ -7,6 +7,32 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The exp side had the same defect — fixed without the round trip
+
+`depth_le_one_exp_bounded_or_grows` has exactly the flaw the log dichotomy had: its bounded branch
+says *a bound exists*, not *which tree*. Last round that cost a round trip; this time I looked before
+trying to use it.
+
+**`depth_le_one_exp_bounded_forms`** — if `exp (A x) ≤ Kb` on `[1,∞)` then `A` is `const α` or
+`c − log x`. Mirror of `depth_le_one_log_bounded_forms`, and — worth noting — **the same two forms
+survive on both sides**, though for different reasons: they are the forms whose value is capped
+*above*, which caps `exp` directly and caps `log` through monotonicity.
+
+Domination steps extracted as `le_exp_sub_const` (`x ≤ exp x − d` past `1 + exp d`) and
+`le_exp_sub_log` (`x ≤ exp x − log x` on `[1,∞)`), both resting on `two_mul_le_exp`. The
+point-finder uses `exp_beats_linear_past` at **slope 0**, which is just "`exp x` eventually exceeds
+any constant, past any threshold" — a degenerate instantiation, but the right one.
+
+**The composable kit is complete.** Both sides now answer the structural question, not the
+existential one:
+
+| | existential | structural |
+|---|---|---|
+| exp | `depth_le_one_exp_bounded_or_grows` | **`depth_le_one_exp_bounded_forms`** |
+| log | `depth_le_one_log_bounded_or_unbounded` | **`depth_le_one_log_bounded_forms`** |
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### A bounded log names the shape — the dichotomy made composable
 
 `depth_le_one_log_bounded_or_unbounded` answers *whether* the log is bounded. The open cells need to

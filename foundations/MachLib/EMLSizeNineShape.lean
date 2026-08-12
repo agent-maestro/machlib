@@ -1757,4 +1757,81 @@ theorem depth_le_one_log_bounded_forms (B : EMLTree) (hB : B.depth ≤ 1) (Λ : 
     rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at this
     exact lt_irrefl_ax _ (lt_of_lt_of_le hgt this)
 
+/-! ## ▸ The exp side needs the same treatment
+
+`depth_le_one_exp_bounded_or_grows` has the identical defect the log dichotomy had: its bounded
+branch says *a bound exists*, not *which tree*. Same fix, applied without a second round trip this
+time — the two domination steps become private lemmas, and the structural version is stated
+alongside.
+-/
+
+/-- `x ≤ exp x − d` once `x ≥ 1 + exp d`. -/
+private theorem le_exp_sub_const (d : Real) {x : Real} (hx : 1 + exp d ≤ x) : x ≤ exp x - d := by
+  have hx1 : (1 : Real) ≤ x := by
+    refine le_trans ?_ hx
+    have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d))
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  have hxd : d ≤ x := by
+    refine le_trans (le_of_lt (exp_grows_strictly_thm d)) (le_trans ?_ hx)
+    have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp d))
+    have l : (0 : Real) + exp d = exp d := by mach_mpoly [exp d]
+    rw [l] at u; exact u
+  have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+  have v := add_le_add_wit hxx (le_refl (-d))
+  have r : exp x + -d = exp x - d := by mach_mpoly [exp x, d]
+  rw [r] at v
+  refine le_trans ?_ v
+  have w := add_le_add_wit (le_refl (x + x)) (neg_le_neg_wit hxd)
+  have l2 : x + x + -x = x := by mach_mpoly [x]
+  rw [l2] at w; exact w
+
+/-- `x ≤ exp x − log x` on `[1,∞)`. -/
+private theorem le_exp_sub_log {x : Real} (hx1 : 1 ≤ x) : x ≤ exp x - log x := by
+  have hlog : log x ≤ x - 1 := log_le_sub_one_of_one_le hx1
+  have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+  have u := add_le_add_wit hxx (neg_le_neg_wit hlog)
+  have l : x + x + -(x - 1) = x + 1 := by mach_mpoly [x]
+  have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+  rw [l, r] at u
+  refine le_trans ?_ u
+  have v := add_le_add_wit (le_refl x) (le_of_lt zero_lt_one_ax)
+  have l2 : x + (0 : Real) = x := by mach_mpoly [x]
+  rw [l2] at v; exact v
+
+/-- **The composable exp version: a bounded exponential names the shape.** Mirror of
+`depth_le_one_log_bounded_forms`, and the same two forms survive. -/
+theorem depth_le_one_exp_bounded_forms (A : EMLTree) (hA : A.depth ≤ 1) (Kb : Real)
+    (h : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb) :
+    (∃ α : Real, ∀ x : Real, 0 < x → A.eval x = α)
+    ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → A.eval x = c - log x) := by
+  -- a point past any threshold where `exp x` already exceeds `Kb`
+  have hbig : ∀ T : Real, ∃ x : Real, T ≤ x ∧ 1 ≤ x ∧ Kb < exp x := by
+    intro T
+    obtain ⟨x, hxT, hx1, hlt⟩ := exp_beats_linear_past (α := 0) (β := Kb) (le_refl 0) T
+    refine ⟨x, hxT, hx1, ?_⟩
+    have l : (0 : Real) * x + Kb = Kb := by mach_mpoly [x, Kb]
+    rw [l] at hlt; exact hlt
+  rcases depth_le_one_classification A hA with
+      ⟨α, ha⟩ | ha | ⟨c, hc0, ha⟩ | ⟨d, ha⟩ | ha
+  · exact Or.inl ⟨α, ha⟩
+  · exfalso
+    obtain ⟨x, _, hx1, hlt⟩ := hbig 1
+    have hb := h x hx1
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hb
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hb)
+  · exact Or.inr ⟨c, hc0, ha⟩
+  · exfalso
+    obtain ⟨x, hxT, hx1, hlt⟩ := hbig (1 + exp d)
+    have hb := h x hx1
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hb
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt
+      (le_trans (exp_monotone (le_exp_sub_const d hxT)) hb))
+  · exfalso
+    obtain ⟨x, _, hx1, hlt⟩ := hbig 1
+    have hb := h x hx1
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hb
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt
+      (le_trans (exp_monotone (le_exp_sub_log hx1)) hb))
+
 end MachLib
