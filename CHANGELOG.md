@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### `A = var` closes the cell — the limit argument, done without a limit
+
+**`var_family_qpos_A_var_absurd`.** Writing `W := exp(exp x)`, the equation is
+`W·(exp(−L) − exp(−1/x)) = λ` once `log (B x)` settles to a constant `L`. The natural reading is a
+limit — `exp(−1/x) → 1` forces `L = 0`, then `1 − exp(−1/x) ≈ 1/x` loses to `W`. **Neither step
+needs one:**
+
+- **`L > 0` dies at a single point.** `log (B x) < 1/x` holds throughout (add `λ > 0` to the
+  right-hand side and reflect through `exp`), so `L < 1/x`, false as soon as `x ≥ 1/L`.
+- **`L ≤ 0` dies by an explicit inequality.** **`one_sub_exp_neg_ge`**: `u·exp(−u) ≤ 1 − exp(−u)`,
+  straight from `1 + u ≤ exp u` multiplied by `exp(−u)`. At `u = 1/x` that gives
+  `1 − exp(−1/x) ≥ exp(−1)/x` on `[1,∞)`; with `exp(exp x) ≥ exp x` the product beats `λ`, and
+  `exp_beats_linear_past` at slope `λ·e` finishes.
+
+`log (B x) < 1/x ≤ 1` is also what bounds the log in the first place, so the same inequality that
+kills `L > 0` is what lets `depth_le_one_log_bounded_forms` name `B` at all.
+
+**The `ℓ = var`, `q > 1` cell is closed**, and with the earlier `ℓ = const` result **both split-A
+left-branching families are complete at 4-of-4**. Remaining in the 9-node map: split-A
+right-branching, and split B's `κ > 0` and `leaf = var`.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### `ℓ = var` at `q > 1`: the fast `A`-forms die, `A = var` survives
 
 Here `exp(R₂ x) = exp(exp x − 1/x) + λ` is **not bounded**, so the split-A argument does not port —

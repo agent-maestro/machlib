@@ -2189,4 +2189,204 @@ theorem var_family_qpos_A_fast_absurd (lam : Real) (hlam : 0 < lam) (A B : EMLTr
     rw [l, r] at u; exact u
   exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hfinal)
 
+/-! ## ▸ `A = var`: the limit argument, done with an explicit inequality
+
+Writing `W := exp(exp x)`, the equation is `W·(exp(−L) − exp(−1/x)) = λ` once `log (B x)` has settled
+to a constant `L`. The natural reading is a limit — `exp(−1/x) → 1` forces `L = 0`, then
+`1 − exp(−1/x) ≈ 1/x` loses to `W`. Neither step needs a limit:
+
+* `L > 0` dies at a **single point**: `log (B x) < 1/x` always, so `L < 1/x`, false once `x ≥ 1/L`.
+* `L ≤ 0` dies by **`one_sub_exp_neg_ge`**: `u·exp(−u) ≤ 1 − exp(−u)`, straight from
+  `1 + u ≤ exp u` multiplied by `exp(−u)`. With `u = 1/x` that gives
+  `1 − exp(−1/x) ≥ exp(−1)/x` on `[1,∞)`, and `W ≥ exp x` finishes against `exp_beats_linear_past`.
+-/
+
+/-- `u·exp(−u) ≤ 1 − exp(−u)`: multiply `1 + u ≤ exp u` by `exp(−u)`. -/
+private theorem one_sub_exp_neg_ge (u : Real) : u * exp (-u) ≤ 1 - exp (-u) := by
+  have h1 : (1 : Real) + u ≤ exp u := one_add_le_exp u
+  have hm := mul_le_mul_of_nonneg_right h1 (le_of_lt (exp_pos (-u)))
+  have hone : exp u * exp (-u) = 1 := by
+    rw [← exp_add]
+    have e : u + -u = 0 := by mach_mpoly [u]
+    rw [e, exp_zero]
+  rw [hone] at hm
+  have l : ((1 : Real) + u) * exp (-u) = exp (-u) + u * exp (-u) := by
+    mach_mpoly [u, exp (-u)]
+  rw [l] at hm
+  have v := add_le_add_wit hm (le_refl (-exp (-u)))
+  have l2 : exp (-u) + u * exp (-u) + -exp (-u) = u * exp (-u) := by
+    mach_mpoly [u, exp (-u)]
+  have r2 : (1 : Real) + -exp (-u) = 1 - exp (-u) := by mach_mpoly [exp (-u)]
+  rw [l2, r2] at v; exact v
+
+/-- The `L ≤ 0` half: `exp(−L) ≥ 1`, so the bracket is at least `1 − exp(−1/x) ≥ exp(−1)/x`, and
+`exp(exp x) ≥ exp x` makes the product outrun `λ`. -/
+private theorem var_family_qpos_L_nonpos (lam : Real) (hlam : 0 < lam) (B : EMLTree)
+    (T L : Real) (hT1 : 1 ≤ T) (hL : ∀ x : Real, T ≤ x → log (B.eval x) = L)
+    (h : ∀ x : Real, 1 ≤ x → exp (exp x - log (B.eval x)) = exp (exp x - 1 / x) + lam)
+    (hLle : L ≤ 0) : False := by
+  have hEL : (1 : Real) ≤ exp (-L) := by
+    have hnn : (0 : Real) ≤ -L := by
+      have u := neg_le_neg_wit hLle
+      have l : -(0 : Real) = 0 := by mach_ring
+      rw [l] at u; exact u
+    have hm := exp_monotone hnn; rw [exp_zero] at hm; exact hm
+  have hα : (0 : Real) ≤ lam * exp 1 := le_of_lt (mul_pos hlam (exp_pos 1))
+  obtain ⟨x, hxT, hx1, hlt⟩ := exp_beats_linear_past (α := lam * exp 1) (β := 0) hα T
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hix : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hmx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+  -- the equation with `log (B x)` replaced by `L`
+  have key := h x hx1
+  rw [hL x hxT] at key
+  have hsplit1 : exp (exp x - L) = exp (exp x) * exp (-L) := by
+    rw [← exp_add]; have e : exp x + -L = exp x - L := by mach_mpoly [exp x, L]
+    rw [e]
+  have hsplit2 : exp (exp x - 1 / x) = exp (exp x) * exp (-(1 / x)) := by
+    rw [← exp_add]
+    have e : exp x + -(1 / x) = exp x - 1 / x := by mach_mpoly [exp x, (1 / x : Real)]
+    rw [e]
+  rw [hsplit1, hsplit2] at key
+  -- `lam = exp(exp x) * (exp(-L) - exp(-1/x)) ≥ exp(exp x) * (1/x) * exp(-1)`
+  have hbr : (1 / x) * exp (-1 : Real) ≤ exp (-L) - exp (-(1 / x)) := by
+    have hstep1 : (1 / x) * exp (-(1 / x)) ≤ 1 - exp (-(1 / x)) := one_sub_exp_neg_ge (1 / x)
+    have hle1 : exp (-1 : Real) ≤ exp (-(1 / x)) := by
+      refine exp_monotone ?_
+      have hx1' : 1 / x ≤ 1 := by
+        have u := mul_le_mul_of_nonneg_right hx1 (le_of_lt hix)
+        have l : (1 : Real) * (1 / x) = 1 / x := by mach_mpoly [(1 / x : Real)]
+        rw [l, hmx] at u; exact u
+      have u := neg_le_neg_wit hx1'; exact u
+    have hstep0 : (1 / x) * exp (-1 : Real) ≤ (1 / x) * exp (-(1 / x)) :=
+      mul_le_mul_of_nonneg_left hle1 (le_of_lt hix)
+    have hstep2 : (1 : Real) - exp (-(1 / x)) ≤ exp (-L) - exp (-(1 / x)) := by
+      have u := add_le_add_wit hEL (le_refl (-exp (-(1 / x))))
+      have l : (1 : Real) + -exp (-(1 / x)) = 1 - exp (-(1 / x)) := by
+        mach_mpoly [exp (-(1 / x))]
+      have r : exp (-L) + -exp (-(1 / x)) = exp (-L) - exp (-(1 / x)) := by
+        mach_mpoly [exp (-L), exp (-(1 / x))]
+      rw [l, r] at u; exact u
+    exact le_trans (le_trans hstep0 hstep1) hstep2
+  have hlamval : lam = exp (exp x) * (exp (-L) - exp (-(1 / x))) := by
+    have u : exp (exp x) * exp (-L) + -(exp (exp x) * exp (-(1 / x)))
+        = exp (exp x) * exp (-(1 / x)) + lam + -(exp (exp x) * exp (-(1 / x))) := by rw [key]
+    have l : exp (exp x) * exp (-L) + -(exp (exp x) * exp (-(1 / x)))
+        = exp (exp x) * (exp (-L) - exp (-(1 / x))) := by
+      mach_mpoly [exp (exp x), exp (-L), exp (-(1 / x))]
+    have r : exp (exp x) * exp (-(1 / x)) + lam + -(exp (exp x) * exp (-(1 / x))) = lam := by
+      mach_mpoly [exp (exp x), exp (-(1 / x)), lam]
+    rw [l, r] at u; exact u.symm
+  have hEE : exp x ≤ exp (exp x) := exp_monotone (le_of_lt (exp_grows_strictly_thm x))
+  have hlow : exp x * ((1 / x) * exp (-1 : Real)) ≤ lam := by
+    have hblow : (0 : Real) ≤ (1 / x) * exp (-1 : Real) :=
+      le_of_lt (mul_pos hix (exp_pos (-1)))
+    have s1 : exp x * ((1 / x) * exp (-1 : Real))
+        ≤ exp (exp x) * ((1 / x) * exp (-1 : Real)) :=
+      mul_le_mul_of_nonneg_right hEE hblow
+    have s2 : exp (exp x) * ((1 / x) * exp (-1 : Real))
+        ≤ exp (exp x) * (exp (-L) - exp (-(1 / x))) :=
+      mul_le_mul_of_nonneg_left hbr (le_of_lt (exp_pos (exp x)))
+    rw [hlamval]; exact le_trans s1 s2
+  -- multiply by `x * exp 1`
+  have hpos : (0 : Real) ≤ x * exp 1 := le_of_lt (mul_pos hxpos (exp_pos 1))
+  have hmul := mul_le_mul_of_nonneg_right hlow hpos
+  have he1 : exp (-1 : Real) * exp 1 = 1 := by
+    rw [← exp_add]; have e : (-1 : Real) + 1 = 0 := by mach_ring
+    rw [e, exp_zero]
+  have hlhs : exp x * ((1 / x) * exp (-1 : Real)) * (x * exp 1)
+      = exp x * (x * (1 / x)) * (exp (-1 : Real) * exp 1) := by
+    mach_mpoly [exp x, x, (1 / x : Real), exp (-1 : Real), exp 1]
+  rw [hlhs, hmx, he1] at hmul
+  have hclean : exp x * 1 * 1 = exp x := by mach_mpoly [exp x]
+  rw [hclean] at hmul
+  have hrhs : lam * (x * exp 1) = lam * exp 1 * x + 0 := by mach_mpoly [lam, x, exp 1]
+  rw [hrhs] at hmul
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hmul)
+
+/-- **`A = var` dies too, so the `ℓ = var`, `q > 1` cell is closed.** -/
+theorem var_family_qpos_A_var_absurd (lam : Real) (hlam : 0 < lam) (B : EMLTree)
+    (hB : B.depth ≤ 1)
+    (h : ∀ x : Real, 1 ≤ x → exp (exp x - log (B.eval x)) = exp (exp x - 1 / x) + lam) :
+    False := by
+  -- `log (B x) < 1/x` on `[1,∞)`
+  have hlt : ∀ x : Real, 1 ≤ x → log (B.eval x) < 1 / x := by
+    intro x hx1
+    have hgt : exp (exp x - 1 / x) < exp (exp x - log (B.eval x)) := by
+      rw [h x hx1]
+      have u := add_lt_add_left hlam (exp (exp x - 1 / x))
+      have l : exp (exp x - 1 / x) + 0 = exp (exp x - 1 / x) := by
+        mach_mpoly [exp (exp x - 1 / x)]
+      rw [l] at u; exact u
+    have hgt2 := lt_of_exp_lt hgt
+    have u := add_lt_add_left hgt2 (-exp x + 1 / x + log (B.eval x))
+    have l : -exp x + 1 / x + log (B.eval x) + (exp x - 1 / x) = log (B.eval x) := by
+      mach_mpoly [exp x, (1 / x : Real), log (B.eval x)]
+    have r : -exp x + 1 / x + log (B.eval x) + (exp x - log (B.eval x)) = 1 / x := by
+      mach_mpoly [exp x, (1 / x : Real), log (B.eval x)]
+    rw [l, r] at u; exact u
+  -- so it is bounded above by 1, and the shape follows
+  have hbnd : ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ 1 := by
+    intro x hx1
+    refine le_trans (le_of_lt (hlt x hx1)) ?_
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hone : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+    have u := mul_le_mul_of_nonneg_right hx1 (le_of_lt (one_div_pos_of_pos hxpos))
+    have l : (1 : Real) * (1 / x) = 1 / x := by mach_mpoly [(1 / x : Real)]
+    rw [l, hone] at u; exact u
+  -- `log (B x)` settles to a constant `L` past some `T ≥ 1`
+  have hsettle : ∃ T L : Real, 1 ≤ T ∧ ∀ x : Real, T ≤ x → log (B.eval x) = L := by
+    rcases depth_le_one_log_bounded_forms B hB 1 hbnd with ⟨β, hb⟩ | ⟨c, hc0, hb⟩
+    · exact ⟨1, log β, le_refl 1, fun x hx => by
+        rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx)]⟩
+    · refine ⟨1 + exp c, 0, ?_, fun x hx => ?_⟩
+      · have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos c))
+        have l : (1 : Real) + 0 = 1 := by mach_ring
+        rw [l] at u; exact u
+      · have hx1 : (1 : Real) ≤ x := by
+          refine le_trans ?_ hx
+          have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos c))
+          have l : (1 : Real) + 0 = 1 := by mach_ring
+          rw [l] at u; exact u
+        rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+        have hec : exp c ≤ x := by
+          refine le_trans ?_ hx
+          have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp c))
+          have l : (0 : Real) + exp c = exp c := by mach_mpoly [exp c]
+          rw [l] at u; exact u
+        have hcl : c ≤ log x := by
+          have hm := log_le_log (exp_pos c) hec; rw [log_exp] at hm; exact hm
+        have hle : c - log x ≤ 0 := by
+          have u := add_le_add_wit hcl (neg_le_neg_wit (le_refl (log x)))
+          have l : c + -log x = c - log x := by mach_mpoly [c, log x]
+          have r : log x + -log x = 0 := by mach_mpoly [log x]
+          rw [l, r] at u; exact u
+        rw [log_nonpos hle]
+  obtain ⟨T, L, hT1, hL⟩ := hsettle
+  have hTpos : (0 : Real) < T := lt_of_lt_of_le zero_lt_one_ax hT1
+  rcases lt_total 0 L with hLpos | hLzero | hLneg
+  · -- `L > 0` fails at `x = T + 1/L`
+    have hiL : (0 : Real) < 1 / L := one_div_pos_of_pos hLpos
+    have hx1 : (1 : Real) ≤ T + 1 / L := by
+      refine le_trans hT1 ?_
+      have u := add_le_add_wit (le_refl T) (le_of_lt hiL)
+      have l : T + 0 = T := by mach_mpoly [T]
+      rw [l] at u; exact u
+    have hxT : T ≤ T + 1 / L := by
+      have u := add_le_add_wit (le_refl T) (le_of_lt hiL)
+      have l : T + 0 = T := by mach_mpoly [T]
+      rw [l] at u; exact u
+    have hge : 1 / L ≤ T + 1 / L := by
+      have u := add_le_add_wit (le_of_lt hTpos) (le_refl (1 / L))
+      have l : (0 : Real) + 1 / L = 1 / L := by mach_mpoly [(1 / L : Real)]
+      rw [l] at u; exact u
+    have hsmall : 1 / (T + 1 / L) ≤ L := by
+      have hm := one_div_antitone hiL hge
+      rw [one_div_one_div_pos hLpos] at hm; exact hm
+    have hbad := hlt (T + 1 / L) hx1
+    rw [hL (T + 1 / L) hxT] at hbad
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hbad hsmall)
+  · -- `L = 0`: the `L ≤ 0` argument, with `exp (−L) = 1`
+    exact var_family_qpos_L_nonpos lam hlam B T L hT1 hL h (le_of_eq hLzero.symm)
+  · exact var_family_qpos_L_nonpos lam hlam B T L hT1 hL h (le_of_lt hLneg)
+
 end MachLib

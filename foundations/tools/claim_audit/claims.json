@@ -1582,6 +1582,28 @@
         "False"
       ],
       "hypotheses_count": 4
+    },
+    {
+      "_comment": "A = var closes the var-family q>1 cell. The limit argument replaced by two explicit-point arguments.",
+      "id": "var-family-qpos-A-var",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Neither step\nneeds one:**"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.var_family_qpos_A_var_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
