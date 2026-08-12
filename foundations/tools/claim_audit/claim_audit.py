@@ -146,6 +146,27 @@ def proof_term_of(module: str, theorem: str) -> str:
     return out.split(":=", 1)[1] if ":=" in out else ""
 
 
+
+def _binder_precedes_arrow(body: str) -> bool:
+    """Does a depth-0 `∀`/`∃` appear before the first depth-0 `→`?
+
+    If so the arrow is inside that binder's body and the antecedent chain has ended. Decidable from
+    the printed form, and cheap: one left-to-right pass tracking bracket depth.
+    """
+    depth = 0
+    for i, ch in enumerate(body):
+        if ch in _OPEN:
+            depth += 1
+        elif ch in _CLOSE:
+            depth -= 1
+        elif depth == 0:
+            if ch in "∀∃":
+                return True
+            if body.startswith("→", i):
+                return False
+    return False
+
+
 def conclusion_of(stmt: str) -> str:
     """The CONCLUSION of a printed type: strip top-level `∀ …,` binders and `→` antecedents.
 
@@ -174,11 +195,14 @@ def conclusion_of(stmt: str) -> str:
                     break
             if changed:
                 continue
-        # An `∃` at depth 0 opens a body that runs to the end of the type: every `→` after it is
-        # INSIDE that body, not a top-level antecedent. Without this guard the splitter walks into
-        # the existential and reports a subterm as the conclusion — which is how a theorem that
-        # PRODUCES a neighbourhood was read as one that merely bounds a value pointwise.
-        if body.startswith("∃"):
+        # A depth-0 binder opens a body that runs to the end of the type, so every `→` after it is
+        # INSIDE that body rather than a top-level antecedent. The leading `∀ …,` telescope has
+        # already been stripped above, so any binder still reachable at depth 0 before the first
+        # depth-0 `→` is nested — inside an existential, or inside a disjunct of a classification.
+        # Without this the splitter reports a subterm as the conclusion: it read a theorem that
+        # PRODUCES a neighbourhood as one merely bounding a value pointwise, and a five-way
+        # classification as a two-hypothesis implication.
+        if _binder_precedes_arrow(body):
             break
         # drop the first top-level `→` antecedent
         depth = 0
@@ -220,11 +244,14 @@ def hypotheses_of(stmt: str) -> list:
                     break
             if changed:
                 continue
-        # An `∃` at depth 0 opens a body that runs to the end of the type: every `→` after it is
-        # INSIDE that body, not a top-level antecedent. Without this guard the splitter walks into
-        # the existential and reports a subterm as the conclusion — which is how a theorem that
-        # PRODUCES a neighbourhood was read as one that merely bounds a value pointwise.
-        if body.startswith("∃"):
+        # A depth-0 binder opens a body that runs to the end of the type, so every `→` after it is
+        # INSIDE that body rather than a top-level antecedent. The leading `∀ …,` telescope has
+        # already been stripped above, so any binder still reachable at depth 0 before the first
+        # depth-0 `→` is nested — inside an existential, or inside a disjunct of a classification.
+        # Without this the splitter reports a subterm as the conclusion: it read a theorem that
+        # PRODUCES a neighbourhood as one merely bounding a value pointwise, and a five-way
+        # classification as a two-hypothesis implication.
+        if _binder_precedes_arrow(body):
             break
         depth = 0
         for i, ch in enumerate(body):
@@ -741,6 +768,23 @@ def self_test() -> int:
     print(f"{DIM}           No implicit hierarchy. Otherwise a reader eventually infers an ordering "
           f"the machinery\n           never checked — and inference is exactly what this layer "
           f"exists to stop being free.{RST}")
+
+    print(f"{YELLOW}{BOLD}[self-test] canary 11: a DISJUNCTIVE conclusion must not be split …{RST}")
+    # Second instance of the binder-scope defect, found the same way as the first: by pointing the
+    # auditor at a statement SHAPE no existing specimen had. A five-way classification ends in an
+    # unparenthesised `∀` disjunct, and the splitter walked into it and reported 2 hypotheses.
+    cst = statement_of("MachLib.EMLSizeNineShape", "MachLib.depth_le_one_classification")
+    chyps = hypotheses_of(cst)
+    cconcl = conclusion_of(cst)
+    if len(chyps) != 1 or "∨" not in cconcl:
+        print(f"{RED}[self-test] FAILED: classification split into {len(chyps)} hypotheses with "
+              f"conclusion {cconcl[:80]!r}; expected 1 and a disjunction.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 11 fires: the five-way classification keeps its 1 hypothesis "
+          f"and its whole disjunction. ✓{RST}")
+    print(f"{DIM}           Coverage is over the SHAPE of the parser's input, not the number of "
+          f"claims. Two shapes\n           have now bitten: existential conclusion, disjunctive "
+          f"conclusion. Both were one specimen away.{RST}")
 
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"

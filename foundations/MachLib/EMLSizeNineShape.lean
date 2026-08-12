@@ -784,4 +784,157 @@ theorem neg_log_path_is_right_branching (L : EMLTree) (hp : L.isPath)
       | var => exact neg_log_left_leaf_var_absurd P (fun x hx => hev x hx)
       | eml _ _ => exact hQl
 
+/-! ## ▸ Depth-≤1 trees have exactly FIVE closed forms
+
+`depth_le_one_trichotomy` and `depth_le_one_right_tetrachotomy` give *inequalities*. For the
+remaining cells that is not enough: `M·x ∈ EML₂?` needs to know what a depth-≤1 subtree **is**, not
+what it is bounded by. There are only five forms, and enumerating them turns each remaining branch
+into a finite check.
+
+Note what is absent from the list: **`+log x` does not occur.** Only `c − log x` does. That single
+observation is what kills the `M·x` cell in the shapes where the `log` side is exactly linear.
+-/
+
+/-- **Complete classification of depth-≤1 trees.** Constant, `x`, `c − log x` with `c > 0`,
+`exp x − d`, or `exp x − log x`. Nothing else. -/
+theorem depth_le_one_classification (A : EMLTree) (hA : A.depth ≤ 1) :
+    (∃ α : Real, ∀ x : Real, 0 < x → A.eval x = α)
+    ∨ (∀ x : Real, 0 < x → A.eval x = x)
+    ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → A.eval x = c - log x)
+    ∨ (∃ d : Real, ∀ x : Real, 0 < x → A.eval x = exp x - d)
+    ∨ (∀ x : Real, 0 < x → A.eval x = exp x - log x) := by
+  cases A with
+  | const p => exact Or.inl ⟨p, fun _ _ => rfl⟩
+  | var => exact Or.inr (Or.inl (fun _ _ => rfl))
+  | eml a b =>
+    have ha0 : a.depth = 0 := by
+      have := Nat.le_max_left a.depth b.depth
+      simp only [EMLTree.depth] at hA; omega
+    have hb0 : b.depth = 0 := by
+      have := Nat.le_max_right a.depth b.depth
+      simp only [EMLTree.depth] at hA; omega
+    cases a with
+    | eml _ _ => exact absurd ha0 (by simp only [EMLTree.depth]; omega)
+    | const p =>
+      cases b with
+      | eml _ _ => exact absurd hb0 (by simp only [EMLTree.depth]; omega)
+      | const q => exact Or.inl ⟨exp p - log q, fun _ _ => rfl⟩
+      | var =>
+        refine Or.inr (Or.inr (Or.inl ⟨exp p, exp_pos p, fun x _ => rfl⟩))
+    | var =>
+      cases b with
+      | eml _ _ => exact absurd hb0 (by simp only [EMLTree.depth]; omega)
+      | const q => exact Or.inr (Or.inr (Or.inr (Or.inl ⟨log q, fun x _ => rfl⟩)))
+      | var => exact Or.inr (Or.inr (Or.inr (Or.inr (fun x _ => rfl))))
+
+/-! ### The `M·x` cell: what the classification buys immediately
+
+`log(L₂ x) = exp(ℓ x) + log x` with `ℓ = const p` means `L₂ x = M·x`, `M = exp(exp p) > 1`, and
+`L₂ = eml A B` with `A`, `B` of depth ≤ 1. The classification makes one shape fall out at once.
+
+The **`B = exp x − d` with `d = 0`** shape is the only one whose `log` is *exactly* linear:
+`log(exp x) = x`. There the equation becomes `exp(A x) = (M+1)·x`, so `A x = log(M+1) + log x` — a
+`+log x`, which the classification says depth ≤ 1 does not have. `mx_B_is_exp_absurd` below.
+
+The other shapes need growth arguments at `∞`, which this module does not yet carry: every bound
+here is at `0⁺`. That asymmetry is the honest statement of what remains.
+-/
+
+/-! `depth_le_one_lower_bound` — every depth-≤1 tree is bounded below on `(0,1]` — **already exists**
+in `EMLDepth2InvX`, with the same insight recorded in its docstring: the `−log x` that makes the
+upper bound grow only helps a lower bound. Reused rather than rebuilt. (It was rebuilt once here
+before grepping; the duplicate is gone.) -/
+
+/-- **`k + log x` is unreachable at depth ≤ 1, for every `k`.** The memorable form of the bound
+above: depth 1 offers `c − log x` and never `+log x`. -/
+theorem log_plus_const_not_depth_le_1 (k : Real) (A : EMLTree) (hA : A.depth ≤ 1)
+    (h : ∀ x : Real, 0 < x → A.eval x = k + log x) : False := by
+  obtain ⟨F, hF⟩ := depth_le_one_lower_bound A hA
+  have hpt : (0 : Real) < exp (-(1 + exp (k - F))) := exp_pos _
+  have hlog : log (exp (-(1 + exp (k - F)))) = -(1 + exp (k - F)) := log_exp _
+  have hle1 : exp (-(1 + exp (k - F))) ≤ 1 := by
+    have hneg : -(1 + exp (k - F)) ≤ 0 := by
+      have hp : (0 : Real) < 1 + exp (k - F) := by
+        have u := add_lt_add_left (exp_pos (k - F)) 1
+        have l : (1 : Real) + 0 = 1 := by mach_ring
+        rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+      have u := neg_le_neg_wit (le_of_lt hp)
+      have l : -(0 : Real) = 0 := by mach_ring
+      rw [l] at u; exact u
+    have hm := exp_monotone hneg; rw [exp_zero] at hm; exact hm
+  have hlow := hF _ hpt hle1
+  rw [h _ hpt, hlog] at hlow
+  -- `F ≤ k − 1 − exp(k−F)` contradicts `k − F < 1 + exp(k−F)`
+  have hkey : k - F < 1 + exp (k - F) := lt_one_add_exp (k - F)
+  have hbad : (1 : Real) + exp (k - F) ≤ k - F := by
+    have u := add_le_add_wit hlow (le_refl (1 + exp (k - F) - F))
+    have l : F + (1 + exp (k - F) - F) = 1 + exp (k - F) := by
+      mach_mpoly [F, exp (k - F)]
+    have r : k + -(1 + exp (k - F)) + (1 + exp (k - F) - F) = k - F := by
+      mach_mpoly [k, F, exp (k - F)]
+    rw [l, r] at u; exact u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hkey hbad)
+
+/-- **`M·x` is out of reach when the right child is `exp x`.** `log(exp x) = x` exactly, so the
+equation forces `exp(A x) = (M+1)·x`. But `exp(A x) ≥ exp F` on `(0,1]` by the lower bound, while
+`(M+1)·x` can be driven below `exp F`. -/
+theorem mx_B_is_exp_absurd (M : Real) (hM : 0 < M) (A : EMLTree) (hA : A.depth ≤ 1)
+    (h : ∀ x : Real, 0 < x → exp (A.eval x) - x = M * x) : False := by
+  have hN : (0 : Real) < M + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax M
+    have l : M + 0 = M := by mach_mpoly [M]
+    rw [l] at u; exact lt_trans_ax hM u
+  have hval : ∀ x : Real, 0 < x → exp (A.eval x) = (M + 1) * x := by
+    intro x hx
+    have e : exp (A.eval x) = (exp (A.eval x) - x) + x := by mach_mpoly [exp (A.eval x), x]
+    rw [e, h x hx]; mach_mpoly [M, x]
+  obtain ⟨F, hF⟩ := depth_le_one_lower_bound A hA
+  -- the point: `x = 1 / (1 + (M+1)·exp(−F))`
+  have hD : (0 : Real) < 1 + (M + 1) * exp (-F) := by
+    have hp : (0 : Real) < (M + 1) * exp (-F) := mul_pos hN (exp_pos _)
+    have u := add_lt_add_left hp 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+  have hx : (0 : Real) < 1 / (1 + (M + 1) * exp (-F)) := one_div_pos_of_pos hD
+  have hx1 : 1 / (1 + (M + 1) * exp (-F)) ≤ 1 := by
+    have hge : (1 : Real) ≤ 1 + (M + 1) * exp (-F) := by
+      have hp : (0 : Real) ≤ (M + 1) * exp (-F) := le_of_lt (mul_pos hN (exp_pos _))
+      have u := add_le_add_wit (le_refl (1 : Real)) hp
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    rcases (le_iff_lt_or_eq (1 : Real) (1 + (M + 1) * exp (-F))).mp hge with hlt | heq
+    · exact le_of_lt (div_lt_one_of_pos_lt hD hlt)
+    · have e : (1 : Real) / 1 = 1 := by
+        have hv := mul_inv (1 : Real) (ne_of_gt zero_lt_one_ax)
+        have l : (1 : Real) * (1 / 1) = 1 / 1 := by mach_mpoly [(1 / 1 : Real)]
+        rw [l] at hv; exact hv
+      rw [← heq, e]; exact le_refl _
+  -- `exp F ≤ exp (A x) = (M+1)·x`, yet `(M+1)·x < exp F`
+  have hlow : exp F ≤ (M + 1) * (1 / (1 + (M + 1) * exp (-F))) := by
+    rw [← hval _ hx]; exact exp_monotone (hF _ hx hx1)
+  have hinvD : (1 + (M + 1) * exp (-F)) * (1 / (1 + (M + 1) * exp (-F))) = 1 :=
+    mul_inv _ (ne_of_gt hD)
+  have hexpF : exp F * exp (-F) = 1 := by
+    rw [← exp_add]
+    have e : F + -F = 0 := by mach_mpoly [F]
+    rw [e, exp_zero]
+  have hstep : M + 1 < exp F * (1 + (M + 1) * exp (-F)) := by
+    have hrw : exp F * (1 + (M + 1) * exp (-F)) = exp F + (M + 1) * (exp F * exp (-F)) := by
+      mach_mpoly [exp F, M, exp (-F)]
+    rw [hrw, hexpF]
+    have u := add_lt_add_left (exp_pos F) (M + 1)
+    have l : M + 1 + 0 = M + 1 := by mach_mpoly [M]
+    have r : M + 1 + exp F = exp F + (M + 1) * 1 := by mach_mpoly [M, exp F]
+    rw [l, r] at u; exact u
+  have hmul := mul_lt_mul_of_pos_right hstep hx
+  have hL : (M + 1) * (1 / (1 + (M + 1) * exp (-F)))
+      = (M + 1) * (1 / (1 + (M + 1) * exp (-F))) := rfl
+  have hR : exp F * (1 + (M + 1) * exp (-F)) * (1 / (1 + (M + 1) * exp (-F)))
+      = exp F * ((1 + (M + 1) * exp (-F)) * (1 / (1 + (M + 1) * exp (-F)))) := by
+    mach_mpoly [exp F, M, exp (-F), (1 / (1 + (M + 1) * exp (-F)) : Real)]
+  rw [hR, hinvD] at hmul
+  have hone : exp F * 1 = exp F := by mach_mpoly [exp F]
+  rw [hone] at hmul
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hmul hlow)
+
 end MachLib

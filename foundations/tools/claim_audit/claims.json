@@ -1202,6 +1202,53 @@
         "isLeaf"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The exact classification. Its VALUE is what it omits (+log x), which no inequality-based statement can express.",
+      "id": "depth-one-five-forms",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a depth-≤1 tree is **constant**, `x`, `c − log x` (`c > 0`),\n`exp x − d`, or `exp x − log x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_classification",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The consequence that does the work: no +log x at depth 1. Holds for every k, hence 1 hypothesis besides the tree's depth.",
+      "id": "no-plus-log-at-depth-one",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`k + log x` is unreachable at depth ≤ 1, for every `k`**"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.log_plus_const_not_depth_le_1",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

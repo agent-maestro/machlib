@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Depth-≤1 has exactly five closed forms — and `+log x` is not one of them
+
+`depth_le_one_classification`: a depth-≤1 tree is **constant**, `x`, `c − log x` (`c > 0`),
+`exp x − d`, or `exp x − log x`. Nothing else. The existing `depth_le_one_trichotomy` and
+`depth_le_one_right_tetrachotomy` give *inequalities*; the remaining 9-node cells need to know what a
+subtree **is**, not what it is bounded by.
+
+**What the list does not contain is the useful part: `+log x`.** Only `c − log x` appears. Hence
+`log_plus_const_not_depth_le_1` — **`k + log x` is unreachable at depth ≤ 1, for every `k`** — which
+follows uniformly from `depth_le_one_lower_bound`: all five forms stay above a constant near `0⁺`,
+and `k + log x` does not.
+
+`mx_B_is_exp_absurd` applies it to the `M·x ∈ EML₂?` cell. When the right child is `exp x`,
+`log(exp x) = x` **exactly**, so the equation forces `exp(A x) = (M+1)·x` — and `exp(A x) ≥ exp F` on
+`(0,1]` while `(M+1)·x` can be driven below `exp F` (at `x = 1/(1 + (M+1)·exp(−F))`, where the
+inequality reduces to `0 < exp F`).
+
+**A duplicate caught and removed.** I rebuilt `depth_le_one_lower_bound` from scratch before
+discovering it already exists in `EMLDepth2InvX`, with the same insight in its docstring. Reused
+rather than kept. I had grepped before starting the `M·x` cell — for *results about linear
+functions*, which is what I expected to need — and not for the lemma the proof actually turned out
+to want. **Grep for the tool at the point you reach for it, not only when planning.**
+
+**And the claim auditor's arrow-splitter broke again, on a new shape.** A five-way classification
+ends in an unparenthesised `∀` disjunct; the splitter walked into it and reported 2 hypotheses
+instead of 1. Same defect class as the existential-conclusion bug fixed earlier today, so the guard
+is now general: **while scanning for a top-level `→`, abort on any depth-0 binder seen first** — the
+leading telescope has already been stripped, so a binder still reachable at depth 0 is nested.
+`canary 11` added.
+
+Two shapes have now bitten in one day — existential conclusion, disjunctive conclusion — and both
+were one specimen away. That is the "cover input SHAPES, not claim count" lesson arriving twice.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green; 11 canaries; 75 claims.
+
 ### The `−log x` cell halves — and becomes a gap question about `M·x`
 
 The sharpest open cell (split B, `κ = 0`) asks whether a depth-3 path computes `−log x`. Its
