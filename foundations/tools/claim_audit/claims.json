@@ -1123,7 +1123,7 @@
       "claim_text": [
         "**`K − 1/x` is out of reach at depth 2, for every `K`.**"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.shifted_inv_not_in_eml_depth_le_2",
       "forbid_axioms": [
         "sorryAx"
@@ -1166,7 +1166,7 @@
       "claim_text": [
         "no\ndepth-≤2 tree can be *capped* by `C − 1/x` near `0`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.no_pole_at_depth_le_2",
       "forbid_axioms": [
         "sorryAx"
@@ -1210,7 +1210,7 @@
       "claim_text": [
         "a depth-≤1 tree is **constant**, `x`, `c − log x` (`c > 0`),\n`exp x − d`, or `exp x − log x`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_classification",
       "forbid_axioms": [
         "sorryAx"
@@ -1235,7 +1235,7 @@
       "claim_text": [
         "**`k + log x` is unreachable at depth ≤ 1, for every `k`**"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.log_plus_const_not_depth_le_1",
       "forbid_axioms": [
         "sorryAx"
@@ -1257,7 +1257,7 @@
       "claim_text": [
         "for a depth-≤1 `B`, `log(B x) ≤ x + C` on `[1,∞)`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_log_le_linear",
       "forbid_axioms": [
         "sorryAx"
@@ -1280,7 +1280,7 @@
       "claim_text": [
         "a depth-≤1 tree's logarithm is bounded **below**\neventually"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_log_lower_at_infinity",
       "forbid_axioms": [
         "sorryAx"
@@ -1303,7 +1303,7 @@
       "claim_text": [
         "for every `M > 1`, no depth-≤2 tree computes `M·x`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.mx_not_in_eml_depth_le_2",
       "forbid_axioms": [
         "sorryAx"
@@ -1432,7 +1432,7 @@
       "claim_text": [
         "The target needs an `x`-growing multiple, and `x` outruns any constant."
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.x_mul_exp_exp_not_in_eml_depth_le_2",
       "forbid_axioms": [
         "sorryAx"
@@ -1454,7 +1454,7 @@
       "claim_text": [
         "either `exp (A x)` is bounded on\n`[1,∞)`, or it eventually dominates `exp x`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_exp_bounded_or_grows",
       "forbid_axioms": [
         "sorryAx"
@@ -1477,7 +1477,7 @@
       "claim_text": [
         "`log (B x)` is either bounded above\non `[1,∞)` or unbounded above"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_log_bounded_or_unbounded",
       "forbid_axioms": [
         "sorryAx"
@@ -1500,7 +1500,7 @@
       "claim_text": [
         "if `log (B x) ≤ Λ` on `[1,∞)` then `B` is `const β` or\n`c′ − log x`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_log_bounded_forms",
       "forbid_axioms": [
         "sorryAx"
@@ -1523,7 +1523,7 @@
       "claim_text": [
         "if `exp (A x) ≤ Kb` on `[1,∞)` then `A` is `const α` or\n`c − log x`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_exp_bounded_forms",
       "forbid_axioms": [
         "sorryAx"
@@ -1612,7 +1612,7 @@
       "claim_text": [
         "a depth-2 tree bounded above on `(0,∞)` has a\nconstant left child"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_two_bounded_left_is_const",
       "forbid_axioms": [
         "sorryAx"
@@ -1658,7 +1658,7 @@
       "claim_text": [
         "the forms lemma on an arbitrary ray `[S,∞)`"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.depth_le_one_log_bounded_forms_from",
       "forbid_axioms": [
         "sorryAx"
@@ -1749,7 +1749,7 @@
       "claim_text": [
         "`exp(exp x)/x` outruns any constant"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.log_le_neg_double_exp_absurd",
       "forbid_axioms": [
         "sorryAx"
@@ -1772,7 +1772,7 @@
       "claim_text": [
         "the argument stays linear"
       ],
-      "module": "MachLib.EMLSizeNineShape",
+      "module": "MachLib.EMLDepthTameness",
       "theorem": "MachLib.log_ge_double_exp_const_absurd",
       "forbid_axioms": [
         "sorryAx"

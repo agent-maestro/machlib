@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Step 2: `MachLib.EMLDepthTameness` — the dependency arrow inverts
+
+The generic theory that fell out of the reciprocal work now lives in its own module, and
+`EMLSizeNineShape` imports it as **one application**. Before, the dependency graph said *the generic
+theory exists because of the reciprocal problem*; it now says *the reciprocal problem is one
+consumer of the shallow-depth theory*.
+
+| | before | after |
+|---|---|---|
+| `EMLSizeNineShape` | 3,874 | **2,064** |
+| `EMLDepthTameness` | — | **1,865** |
+
+53 declarations moved, 36 stayed. Organisation: depth-≤1 classification · growth at `∞` · behaviour
+at `0⁺` · the exponential gap · the logarithmic dichotomy · pole obstruction · decay floors ·
+exclusions for named functions.
+
+**Two findings from doing it.**
+
+- **It needed a visibility change, not glue lemmas.** Nine helpers were `private`, which is
+  module-scoped in Lean 4, so they were invisible across the new boundary. Publishing them was
+  correct — each is a general analytic fact — and **no new lemma had to be invented** to keep the
+  9-node proofs typechecking. That was the test of whether the abstraction was real.
+- **The consumer shrank by 47%, not 90%.** The remainder is genuine reciprocal case analysis. The
+  generic layer was about 45% of the file; the case work was always the bulk.
+
+**The claim registry is load-bearing for refactors too.** 16 claims carried
+`module: MachLib.EMLSizeNineShape` for theorems that had moved; repointed. A module rename silently
+breaks provenance otherwise, and nothing else would have noticed.
+
+`rung2_positive_floor`, `depth_le_one_lower_bound`, `depth_le_one_trichotomy` and
+`depth_le_one_right_tetrachotomy` stay in `EMLDepth2InvX` and are **referenced, not restated** — the
+module header says so, since one of them was duplicated by accident earlier in this arc.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Split-A right-branching, `ℓ₂ = var`: **dead** — step 1 complete
 
 **`split_a_right_var_absurd`.** The leaf cases fall to the sandwich's lower bound (`exp(exp x − exp K)`
