@@ -1538,6 +1538,28 @@
         "∃"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Split-A q>1. Pure assembly over the kit — the 2x2 collapses because A's forms are all non-increasing and B's all eventually constant.",
+      "id": "split-a-qpos-dead",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Non-increasing minus strictly-increasing is **strictly decreasing**"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.split_a_qpos_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

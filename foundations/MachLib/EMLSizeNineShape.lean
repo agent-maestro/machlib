@@ -1834,4 +1834,277 @@ theorem depth_le_one_exp_bounded_forms (A : EMLTree) (hA : A.depth ≤ 1) (Kb : 
     exact lt_irrefl_ax _ (lt_of_lt_of_le hlt
       (le_trans (exp_monotone (le_exp_sub_log hx1)) hb))
 
+/-! ## ▸ Split-A `q > 1`: assembling the kit
+
+`exp(R₂ x) = exp(K − 1/x) + λ` with `λ > 0`. The argument is now pure assembly:
+
+* `R₂` is **strictly increasing** — `K − 1/x` is, and `exp` preserves and reflects order.
+* `R₂` is **bounded**: below by `log λ` (the `+λ` never leaves), above by `log(exp K + λ)`
+  (since `K − 1/x < K`).
+* Bounded above ⟹ `exp(A x)` is under a line ⟹ `A ∈ {const α, c − log x}`
+  (`depth_le_one_exp_bounded_forms`), and both are **non-increasing**.
+* Then `log(B x) = exp(A x) − R₂ x` is **strictly decreasing** — a non-increasing term minus a
+  strictly increasing one — and bounded, so `B ∈ {const β, c′ − log x}`
+  (`depth_le_one_log_bounded_forms`), where `log(B x)` is **eventually constant**.
+
+Strictly decreasing and eventually constant: two points finish it.
+-/
+
+private theorem one_div_antitone {x y : Real} (hx : 0 < x) (hxy : x ≤ y) : 1 / y ≤ 1 / x := by
+  have hy : (0 : Real) < y := lt_of_lt_of_le hx hxy
+  have hix : (0 : Real) < 1 / x := one_div_pos_of_pos hx
+  have hiy : (0 : Real) < 1 / y := one_div_pos_of_pos hy
+  have hmx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx)
+  have hmy : y * (1 / y) = 1 := mul_inv y (ne_of_gt hy)
+  have u := mul_le_mul_of_nonneg_right
+    (mul_le_mul_of_nonneg_right hxy (le_of_lt hix)) (le_of_lt hiy)
+  have l : x * (1 / x) * (1 / y) = 1 * (1 / y) := by rw [hmx]
+  have r : y * (1 / x) * (1 / y) = 1 / x * (y * (1 / y)) := by
+    mach_mpoly [x, y, (1 / x : Real), (1 / y : Real)]
+  rw [l, r, hmy] at u
+  have l2 : (1 : Real) * (1 / y) = 1 / y := by mach_mpoly [(1 / y : Real)]
+  have r2 : (1 : Real) / x * 1 = 1 / x := by mach_mpoly [(1 / x : Real)]
+  rw [l2, r2] at u; exact u
+
+private theorem exp_c_sub_log_eq (c : Real) {x : Real} (hx : 0 < x) :
+    exp (c - log x) = exp c * (1 / x) := by
+  have e : c - log x = c + -log x := by mach_mpoly [c, log x]
+  rw [e, exp_add, exp_neg_inv, exp_log hx]
+
+/-- `exp` reflects strict order. -/
+private theorem lt_of_exp_lt {a b : Real} (h : exp a < exp b) : a < b := by
+  rcases lt_total a b with hl | he | hg
+  · exact hl
+  · exfalso; rw [he] at h; exact lt_irrefl_ax _ h
+  · exfalso; exact lt_irrefl_ax _ (lt_trans_ax h (exp_lt hg))
+
+/-- **`R₂` is strictly increasing.** -/
+private theorem qpos_strict_mono {K lam : Real} {R₂ : EMLTree}
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) = exp (K - 1 / x) + lam)
+    {x y : Real} (hx : 0 < x) (hxy : x < y) : R₂.eval x < R₂.eval y := by
+  have hy : (0 : Real) < y := lt_trans_ax hx hxy
+  have hiy : 1 / y ≤ 1 / x := one_div_antitone hx (le_of_lt hxy)
+  have hne : 1 / y ≠ 1 / x := by
+    intro heq
+    have hmx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx)
+    have hmy : y * (1 / y) = 1 := mul_inv y (ne_of_gt hy)
+    rw [heq] at hmy
+    have hcancel : x = y := by
+      have hix : (0 : Real) < 1 / x := one_div_pos_of_pos hx
+      have hxy2 : x * (1 / x) = y * (1 / x) := hmx.trans hmy.symm
+      have hc : (1 / x) * x = (1 / x) * y := by
+        rw [mul_comm (1 / x) x, mul_comm (1 / x) y]; exact hxy2
+      exact mul_left_cancel (ne_of_gt hix) hc
+    rw [hcancel] at hxy; exact lt_irrefl_ax _ hxy
+  have hstrict : 1 / y < 1 / x := by
+    rcases (le_iff_lt_or_eq (1 / y) (1 / x)).mp hiy with hlt | heq
+    · exact hlt
+    · exact absurd heq hne
+  have harg : K - 1 / x < K - 1 / y := by
+    have u := add_lt_add_left hstrict (K - 1 / x - 1 / y)
+    have l : K - 1 / x - 1 / y + 1 / y = K - 1 / x := by
+      mach_mpoly [K, (1 / x : Real), (1 / y : Real)]
+    have r : K - 1 / x - 1 / y + 1 / x = K - 1 / y := by
+      mach_mpoly [K, (1 / x : Real), (1 / y : Real)]
+    rw [l, r] at u; exact u
+  have hexp := exp_lt harg
+  have hplus := add_lt_add_left hexp lam
+  have l : lam + exp (K - 1 / x) = exp (K - 1 / x) + lam := by
+    mach_mpoly [lam, exp (K - 1 / x)]
+  have r : lam + exp (K - 1 / y) = exp (K - 1 / y) + lam := by
+    mach_mpoly [lam, exp (K - 1 / y)]
+  rw [l, r, ← h x hx, ← h y hy] at hplus
+  exact lt_of_exp_lt hplus
+
+/-- **Split-A `q > 1` is dead.** `exp(R₂ x) = exp(K − 1/x) + λ` with `λ > 0` makes `R₂` strictly
+increasing and bounded; the kit forces `A` and `B` into the two capped forms; and there
+`log (B x) = exp (A x) − R₂ x` is strictly decreasing while also eventually constant. -/
+theorem split_a_qpos_absurd (K lam : Real) (hlam : 0 < lam) (R₂ : EMLTree) (hd : R₂.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → exp (R₂.eval x) = exp (K - 1 / x) + lam) : False := by
+  have hEK : (0 : Real) < exp K + lam := by
+    have u := add_lt_add_left hlam (exp K)
+    have l : exp K + 0 = exp K := by mach_mpoly [exp K]
+    rw [l] at u; exact lt_trans_ax (exp_pos K) u
+  -- bounds on `R₂`
+  have hlow : ∀ x : Real, 0 < x → log lam < R₂.eval x := by
+    intro x hx
+    refine lt_of_exp_lt ?_
+    rw [exp_log hlam, h x hx]
+    have u := add_lt_add_left (exp_pos (K - 1 / x)) lam
+    have l : lam + 0 = lam := by mach_mpoly [lam]
+    have r : lam + exp (K - 1 / x) = exp (K - 1 / x) + lam := by
+      mach_mpoly [lam, exp (K - 1 / x)]
+    rw [l, r] at u; exact u
+  have hupper : ∀ x : Real, 0 < x → R₂.eval x < log (exp K + lam) := by
+    intro x hx
+    refine lt_of_exp_lt ?_
+    rw [exp_log hEK, h x hx]
+    have hargs : K - 1 / x < K := by
+      have u := add_lt_add_left (one_div_pos_of_pos hx) (K - 1 / x)
+      have l : K - 1 / x + 0 = K - 1 / x := by mach_mpoly [K, (1 / x : Real)]
+      have r : K - 1 / x + 1 / x = K := by mach_mpoly [K, (1 / x : Real)]
+      rw [l, r] at u; exact u
+    have u := add_lt_add_left (exp_lt hargs) lam
+    have l : lam + exp (K - 1 / x) = exp (K - 1 / x) + lam := by
+      mach_mpoly [lam, exp (K - 1 / x)]
+    have r : lam + exp K = exp K + lam := by mach_mpoly [lam, exp K]
+    rw [l, r] at u; exact u
+  cases R₂ with
+  | const q =>
+    have h12 : (1 : Real) < 1 + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax 1
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    have h1 := qpos_strict_mono h zero_lt_one_ax h12
+    have e1 : (EMLTree.const q).eval 1 = q := rfl
+    have e2 : (EMLTree.const q).eval (1 + 1) = q := rfl
+    rw [e1, e2] at h1; exact lt_irrefl_ax _ h1
+  | var =>
+    have hM := hupper (exp (log (exp K + lam) + 1)) (exp_pos _)
+    have e : (EMLTree.var).eval (exp (log (exp K + lam) + 1))
+        = exp (log (exp K + lam) + 1) := rfl
+    rw [e] at hM
+    have hgt : log (exp K + lam) < exp (log (exp K + lam) + 1) := by
+      refine lt_trans_ax ?_ (exp_grows_strictly_thm _)
+      have u := add_lt_add_left zero_lt_one_ax (log (exp K + lam))
+      have l : log (exp K + lam) + 0 = log (exp K + lam) := by
+        mach_mpoly [log (exp K + lam)]
+      rw [l] at u; exact u
+    exact lt_irrefl_ax _ (lt_trans_ax hgt hM)
+  | eml A B =>
+    have hA1 : A.depth ≤ 1 := by
+      have := Nat.le_max_left A.depth B.depth
+      simp only [EMLTree.depth] at hd; omega
+    have hB1 : B.depth ≤ 1 := by
+      have := Nat.le_max_right A.depth B.depth
+      simp only [EMLTree.depth] at hd; omega
+    have hev : ∀ x : Real, (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) :=
+      fun _ => rfl
+    -- `exp (A x)` is bounded: otherwise it dominates `exp x` while sitting under a line
+    have hAbnd : ∃ Kb : Real, ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb := by
+      rcases depth_le_one_exp_bounded_or_grows A hA1 with hb | ⟨T, hT⟩
+      · exact hb
+      · exfalso
+        obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB1
+        have hα : (0 : Real) ≤ 1 := le_of_lt zero_lt_one_ax
+        obtain ⟨x, hxT, hx1, hlt⟩ :=
+          exp_beats_linear_past (α := 1) (β := log (exp K + lam) + C) hα T
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hval : exp (A.eval x) = (EMLTree.eml A B).eval x + log (B.eval x) := by
+          rw [hev]; mach_mpoly [exp (A.eval x), log (B.eval x)]
+        have hcap : exp (A.eval x) < log (exp K + lam) + (x + C) := by
+          rw [hval]
+          have u := add_lt_add_left (hupper x hxpos) (log (B.eval x))
+          have v := add_le_add_wit (le_refl (log (exp K + lam))) (hC x hx1)
+          have l : log (B.eval x) + (EMLTree.eml A B).eval x
+              = (EMLTree.eml A B).eval x + log (B.eval x) := by
+            mach_mpoly [log (B.eval x), (EMLTree.eml A B).eval x]
+          have r : log (B.eval x) + log (exp K + lam)
+              = log (exp K + lam) + log (B.eval x) := by
+            mach_mpoly [log (B.eval x), log (exp K + lam)]
+          rw [l, r] at u
+          exact lt_of_lt_of_le u v
+        have hlin : (1 : Real) * x + (log (exp K + lam) + C)
+            = log (exp K + lam) + (x + C) := by
+          mach_mpoly [x, log (exp K + lam), C]
+        rw [hlin] at hlt
+        exact lt_irrefl_ax _ (lt_trans_ax (lt_of_lt_of_le hlt (hT x hxT)) hcap)
+    obtain ⟨Kb, hKb⟩ := hAbnd
+    -- shapes
+    have hAform := depth_le_one_exp_bounded_forms A hA1 Kb hKb
+    have hlogB : ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ Kb - log lam := by
+      intro x hx1
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hval : log (B.eval x) = exp (A.eval x) - (EMLTree.eml A B).eval x := by
+        rw [hev]; mach_mpoly [exp (A.eval x), log (B.eval x)]
+      rw [hval]
+      have u := add_le_add_wit (hKb x hx1) (neg_le_neg_wit (le_of_lt (hlow x hxpos)))
+      have l : exp (A.eval x) + -(EMLTree.eml A B).eval x
+          = exp (A.eval x) - (EMLTree.eml A B).eval x := by
+        mach_mpoly [exp (A.eval x), (EMLTree.eml A B).eval x]
+      have r : Kb + -log lam = Kb - log lam := by mach_mpoly [Kb, log lam]
+      rw [l, r] at u; exact u
+    have hBform := depth_le_one_log_bounded_forms B hB1 (Kb - log lam) hlogB
+    -- `exp (A x)` non-increasing on `[1,∞)`
+    have hAmono : ∀ x y : Real, 1 ≤ x → x ≤ y → exp (A.eval y) ≤ exp (A.eval x) := by
+      intro x y hx1 hxy
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hypos : (0 : Real) < y := lt_of_lt_of_le hxpos hxy
+      rcases hAform with ⟨α, ha⟩ | ⟨c, hc0, ha⟩
+      · rw [ha x hxpos, ha y hypos]; exact le_refl _
+      · rw [ha x hxpos, ha y hypos, exp_c_sub_log_eq c hxpos, exp_c_sub_log_eq c hypos]
+        exact mul_le_mul_of_nonneg_left (one_div_antitone hxpos hxy) (le_of_lt (exp_pos c))
+    -- `log (B x)` eventually constant
+    have hBconst : ∃ T : Real, 1 ≤ T ∧ ∀ x y : Real, T ≤ x → T ≤ y →
+        log (B.eval x) = log (B.eval y) := by
+      rcases hBform with ⟨β, hb⟩ | ⟨c, hc0, hb⟩
+      · exact ⟨1, le_refl 1, fun x y hx hy => by
+          rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx), hb y (lt_of_lt_of_le zero_lt_one_ax hy)]⟩
+      · refine ⟨1 + exp c, ?_, fun x y hx hy => ?_⟩
+        · have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos c))
+          have l : (1 : Real) + 0 = 1 := by mach_ring
+          rw [l] at u; exact u
+        · have hz : ∀ z : Real, 1 + exp c ≤ z → log (B.eval z) = 0 := by
+            intro z hz1
+            have hzpos : (0 : Real) < z := by
+              refine lt_of_lt_of_le zero_lt_one_ax (le_trans ?_ hz1)
+              have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos c))
+              have l : (1 : Real) + 0 = 1 := by mach_ring
+              rw [l] at u; exact u
+            rw [hb z hzpos]
+            have hec : exp c ≤ z := by
+              refine le_trans ?_ hz1
+              have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp c))
+              have l : (0 : Real) + exp c = exp c := by mach_mpoly [exp c]
+              rw [l] at u; exact u
+            have hcl : c ≤ log z := by
+              have hm := log_le_log (exp_pos c) hec
+              rw [log_exp] at hm; exact hm
+            have hle : c - log z ≤ 0 := by
+              have u := add_le_add_wit hcl (neg_le_neg_wit (le_refl (log z)))
+              have l : c + -log z = c - log z := by mach_mpoly [c, log z]
+              have r : log z + -log z = 0 := by mach_mpoly [log z]
+              rw [l, r] at u; exact u
+            rw [log_nonpos hle]
+          rw [hz x hx, hz y hy]
+    -- the two points
+    obtain ⟨T, hT1, hTconst⟩ := hBconst
+    have hTpos : (0 : Real) < T := lt_of_lt_of_le zero_lt_one_ax hT1
+    have hTT : T < T + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax T
+      have l : T + 0 = T := by mach_mpoly [T]
+      rw [l] at u; exact u
+    have heq := hTconst T (T + 1) (le_refl T) (le_of_lt hTT)
+    have hval : ∀ z : Real, 0 < z →
+        log (B.eval z) = exp (A.eval z) - (EMLTree.eml A B).eval z := by
+      intro z _; rw [hev]; mach_mpoly [exp (A.eval z), log (B.eval z)]
+    rw [hval T hTpos, hval (T + 1) (lt_trans_ax hTpos hTT)] at heq
+    have hAle := hAmono T (T + 1) hT1 (le_of_lt hTT)
+    have hRlt := qpos_strict_mono h hTpos hTT
+    -- `exp (A (T+1)) − R₂ (T+1) < exp (A T) − R₂ T`, contradicting equality
+    have hstrict : exp (A.eval (T + 1)) - (EMLTree.eml A B).eval (T + 1)
+        < exp (A.eval T) - (EMLTree.eml A B).eval T := by
+      have u := add_lt_add_left hRlt (-(EMLTree.eml A B).eval (T + 1)
+        + -(EMLTree.eml A B).eval T)
+      have l : -(EMLTree.eml A B).eval (T + 1) + -(EMLTree.eml A B).eval T
+          + (EMLTree.eml A B).eval T = -(EMLTree.eml A B).eval (T + 1) := by
+        mach_mpoly [(EMLTree.eml A B).eval T, (EMLTree.eml A B).eval (T + 1)]
+      have r : -(EMLTree.eml A B).eval (T + 1) + -(EMLTree.eml A B).eval T
+          + (EMLTree.eml A B).eval (T + 1) = -(EMLTree.eml A B).eval T := by
+        mach_mpoly [(EMLTree.eml A B).eval T, (EMLTree.eml A B).eval (T + 1)]
+      rw [l, r] at u
+      have step1 := add_le_add_wit hAle (le_refl (-(EMLTree.eml A B).eval (T + 1)))
+      have step2 := add_lt_add_left u (exp (A.eval T))
+      have v := lt_of_le_of_lt step1 step2
+      have l2 : exp (A.eval (T + 1)) + -(EMLTree.eml A B).eval (T + 1)
+          = exp (A.eval (T + 1)) - (EMLTree.eml A B).eval (T + 1) := by
+        mach_mpoly [exp (A.eval (T + 1)), (EMLTree.eml A B).eval (T + 1)]
+      have r2 : exp (A.eval T) + -(EMLTree.eml A B).eval T
+          = exp (A.eval T) - (EMLTree.eml A B).eval T := by
+        mach_mpoly [exp (A.eval T), (EMLTree.eml A B).eval T]
+      rw [l2, r2] at v
+      exact v
+    rw [heq] at hstrict
+    exact lt_irrefl_ax _ hstrict
+
 end MachLib

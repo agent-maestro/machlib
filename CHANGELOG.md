@@ -7,6 +7,30 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Split-A `q > 1` falls — the kit was the whole job
+
+**`split_a_qpos_absurd`.** `exp(R₂ x) = exp(K − 1/x) + λ` with `λ > 0`, and the argument is pure
+assembly over what the last four commits built:
+
+1. `R₂` is **strictly increasing** (`K − 1/x` is; `exp` preserves and reflects order) and **bounded**
+   — below by `log λ`, above by `log(exp K + λ)` since `K − 1/x < K`.
+2. Bounded above puts `exp(A x)` under a **line**, so the **exp gap** forces the bounded branch, and
+   `depth_le_one_exp_bounded_forms` names it: `A ∈ {const α, c − log x}`. Both are **non-increasing**
+   — the second because `exp(c − log x) = exp c · (1/x)`.
+3. Then `log (B x) = exp(A x) − R₂ x` is bounded above, so `depth_le_one_log_bounded_forms` gives
+   `B ∈ {const β, c′ − log x}`, where `log (B x)` is **eventually constant**.
+4. Non-increasing minus strictly-increasing is **strictly decreasing**. Two points at `T` and `T+1`
+   contradict constancy.
+
+The `2×2` never had to be enumerated: `A`'s two forms collapse to *non-increasing* and `B`'s two to
+*eventually constant*, so the finish is one argument, not four. That the exp-bounded and log-bounded
+classes coincide — flagged two commits ago — is what makes that collapse available.
+
+**Both split-A left-branching families are now complete**, `ℓ = const` at 4-of-4. New helpers:
+`one_div_antitone`, `exp_c_sub_log_eq`, `lt_of_exp_lt`, `qpos_strict_mono`.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The exp side had the same defect — fixed without the round trip
 
 `depth_le_one_exp_bounded_or_grows` has exactly the flaw the log dichotomy had: its bounded branch
