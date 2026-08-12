@@ -1148,7 +1148,7 @@ statement — `const α` with `K = exp α`, `c − log x` with `K = exp c` — b
 argument uses is the bound: `M·x` is unbounded and `K − Cl` is not. -/
 theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.depth ≤ 1)
     (hA : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ K)
-    (h : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = M * x) : False := by
+    (h : ∀ x : Real, 1 ≤ x → exp (A.eval x) - log (B.eval x) = M * x) : False := by
   obtain ⟨Cl, X₀, hX₀, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
   have hiM : (0 : Real) < 1 / M := one_div_pos_of_pos hM
   have hE : (0 : Real) < 1 + exp (K - Cl) := by
@@ -1161,8 +1161,7 @@ theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.de
     have l : X₀ + 0 = X₀ := by mach_mpoly [X₀]
     rw [l] at u; exact u
   have hx1 : (1 : Real) ≤ X₀ + (1 + exp (K - Cl)) * (1 / M) := le_trans hX₀ hxX
-  have hxpos : (0 : Real) < X₀ + (1 + exp (K - Cl)) * (1 / M) :=
-    lt_of_lt_of_le zero_lt_one_ax hx1
+  
   -- `M·x = M·X₀ + (1 + exp (K−Cl))`, which exceeds `K − Cl`
   have hMinv : M * (1 / M) = 1 := mul_inv M (ne_of_gt hM)
   have hMx : K - Cl < M * (X₀ + (1 + exp (K - Cl)) * (1 / M)) := by
@@ -1183,7 +1182,7 @@ theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.de
     rw [l2] at v
     exact lt_trans_ax v u
   -- but the equation caps it at `K − Cl`
-  have key := h _ hxpos
+  have key := h _ hx1
   have hup : M * (X₀ + (1 + exp (K - Cl)) * (1 / M)) ≤ K - Cl := by
     rw [← key]
     have u := add_le_add_wit (hA _ hx1) (neg_le_neg_wit (hCl _ hxX))
@@ -1196,5 +1195,159 @@ theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.de
     have r : K + -Cl = K - Cl := by mach_mpoly [K, Cl]
     rw [l, r] at u; exact u
   exact lt_irrefl_ax _ (lt_of_lt_of_le hMx hup)
+
+/-- `x + x ≤ exp x` on `[0,∞)`: `exp x = exp 1 · exp(x−1) ≥ exp 1 · x ≥ 2x`. The one growth fact the
+two fast `A`-forms need, and it avoids any appeal to calculus. -/
+private theorem two_mul_le_exp {x : Real} (hx : 0 ≤ x) : x + x ≤ exp x := by
+  have he1 : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp 1
+  have hsplit : exp x = exp 1 * exp (x - 1) := by
+    rw [← exp_add]
+    have e : (1 : Real) + (x - 1) = x := by mach_mpoly [x]
+    rw [e]
+  have hstep : x ≤ exp (x - 1) := by
+    have hu := one_add_le_exp (x - 1)
+    have e : (1 : Real) + (x - 1) = x := by mach_mpoly [x]
+    rw [e] at hu; exact hu
+  have h1 : exp 1 * x ≤ exp 1 * exp (x - 1) :=
+    mul_le_mul_of_nonneg_left hstep (le_of_lt (exp_pos 1))
+  have h2 : x + x ≤ exp 1 * x := by
+    have u := mul_le_mul_of_nonneg_right he1 hx
+    have l : ((1 : Real) + 1) * x = x + x := by mach_mpoly [x]
+    rw [l] at u; exact u
+  rw [hsplit]
+  exact le_trans h2 h1
+
+/-- **`M·x` is out of reach when `A` eventually dominates `x`.** The `∞` upper bound caps
+`exp(A x)` by `(M+1)·x + C`, and `exp_beats_linear_past` produces a point past `T` where `exp x`
+already exceeds that cap — so `exp(A x) ≥ exp x` finishes it. Covers both fast `A`-forms. -/
+theorem mx_A_grows_absurd (M : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.depth ≤ 1)
+    (T : Real) (hA : ∀ x : Real, T ≤ x → x ≤ A.eval x)
+    (h : ∀ x : Real, 1 ≤ x → exp (A.eval x) - log (B.eval x) = M * x) : False := by
+  obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+  have hα : (0 : Real) ≤ M + 1 := by
+    have u := add_le_add_wit (le_of_lt hM) (le_of_lt zero_lt_one_ax)
+    have l : (0 : Real) + 0 = 0 := by mach_ring
+    rw [l] at u; exact u
+  obtain ⟨x, hxT, hx1, hlt⟩ := exp_beats_linear_past (α := M + 1) (β := C) hα T
+  have hub : exp (A.eval x) ≤ (M + 1) * x + C := by
+    have hval : exp (A.eval x) = M * x + log (B.eval x) := by
+      have e : exp (A.eval x) = (exp (A.eval x) - log (B.eval x)) + log (B.eval x) := by
+        mach_mpoly [exp (A.eval x), log (B.eval x)]
+      rw [e, h x hx1]
+    rw [hval]
+    have u := add_le_add_wit (le_refl (M * x)) (hC x hx1)
+    have r : M * x + (x + C) = (M + 1) * x + C := by mach_mpoly [M, x, C]
+    rw [r] at u; exact u
+  have hgrow : exp x ≤ exp (A.eval x) := exp_monotone (hA x hxT)
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt (le_trans hgrow hub))
+
+/-- **`M·x ∉ EML₂` for every `M > 1`.** All five `A`-forms fall: `var` and the two fast forms to
+`mx_A_grows_absurd`, `const` and `c − log x` to `mx_A_bounded_absurd`. `M = 1` is genuinely
+excluded — `var` computes `1·x` at depth 0. -/
+theorem mx_not_in_eml_depth_le_2 (M : Real) (hM1 : 1 < M) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 1 ≤ x → t.eval x = M * x) : False := by
+  have hM : (0 : Real) < M := lt_trans_ax zero_lt_one_ax hM1
+  cases t with
+  | const q =>
+    have h1 := h 1 (le_refl 1)
+    have h2 := h (1 + 1) (by
+      have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt zero_lt_one_ax)
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u)
+    have e1 : (EMLTree.const q).eval 1 = q := rfl
+    have e2 : (EMLTree.const q).eval (1 + 1) = q := rfl
+    rw [e1] at h1; rw [e2] at h2
+    have hbad : M = 0 := by
+      have hq : M * 1 = M * (1 + 1) := by rw [← h1, h2]
+      have l : M * (1 : Real) = M := by mach_mpoly [M]
+      have r : M * ((1 : Real) + 1) = M + M := by mach_mpoly [M]
+      rw [l, r] at hq
+      have u : M + -M = M + M + -M := by rw [← hq]
+      have l2 : M + -M = 0 := by mach_mpoly [M]
+      have r2 : M + M + -M = M := by mach_mpoly [M]
+      rw [l2, r2] at u; exact u.symm
+    exact lt_irrefl_ax 0 (hbad ▸ hM)
+  | var =>
+    have h1 := h 1 (le_refl 1)
+    have e1 : (EMLTree.var).eval 1 = 1 := rfl
+    rw [e1] at h1
+    have hM_eq : M = 1 := by
+      have l : M * (1 : Real) = M := by mach_mpoly [M]
+      rw [l] at h1; exact h1.symm
+    exact lt_irrefl_ax 1 (hM_eq ▸ hM1)
+  | eml A B =>
+    have hA1 : A.depth ≤ 1 := by
+      have := Nat.le_max_left A.depth B.depth
+      simp only [EMLTree.depth] at ht; omega
+    have hB1 : B.depth ≤ 1 := by
+      have := Nat.le_max_right A.depth B.depth
+      simp only [EMLTree.depth] at ht; omega
+    have heq : ∀ x : Real, 1 ≤ x → exp (A.eval x) - log (B.eval x) = M * x := fun x hx => h x hx
+    rcases depth_le_one_classification A hA1 with
+        ⟨α, ha⟩ | ha | ⟨c, hc0, ha⟩ | ⟨d, ha⟩ | ha
+    · refine mx_A_bounded_absurd M (exp α) hM A B hB1 (fun x hx1 => ?_) heq
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]; exact le_refl _
+    · refine mx_A_grows_absurd M hM A B hB1 1 (fun x hx1 => ?_) heq
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]; exact le_refl _
+    · refine mx_A_bounded_absurd M (exp c) hM A B hB1 (fun x hx1 => ?_) heq
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+      refine exp_monotone ?_
+      have hlx : (0 : Real) ≤ log x := by
+        have hm := log_le_log zero_lt_one_ax hx1
+        have hl1 : log (1 : Real) = 0 := by
+          have hz : exp (0 : Real) = 1 := exp_zero
+          rw [← hz, log_exp]
+        rw [hl1] at hm; exact hm
+      have u := add_le_add_wit (le_refl c) (neg_le_neg_wit hlx)
+      have l : c + -log x = c - log x := by mach_mpoly [c, log x]
+      have r : c + -(0 : Real) = c := by mach_mpoly [c]
+      rw [l, r] at u; exact u
+    · refine mx_A_grows_absurd M hM A B hB1 (1 + exp d) (fun x hxT => ?_) heq
+      have hx1 : (1 : Real) ≤ x := by
+        refine le_trans ?_ hxT
+        have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d))
+        have l : (1 : Real) + 0 = 1 := by mach_ring
+        rw [l] at u; exact u
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+      have hxd : d ≤ x := by
+        refine le_trans (le_of_lt (exp_grows_strictly_thm d)) (le_trans ?_ hxT)
+        have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp d))
+        have l : (0 : Real) + exp d = exp d := by mach_mpoly [exp d]
+        rw [l] at u; exact u
+      have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+      have u := add_le_add_wit hxx (neg_le_neg_wit hxd)
+      have l : x + x + -x = x := by mach_mpoly [x]
+      have r : exp x + -d = exp x - d := by mach_mpoly [exp x, d]
+      have hchain : x + x + -d ≤ exp x - d := by
+        have v := add_le_add_wit hxx (le_refl (-d))
+        rw [r] at v; exact v
+      refine le_trans ?_ hchain
+      have w := add_le_add_wit (le_refl (x + x)) (neg_le_neg_wit hxd)
+      have l2 : x + x + -x = x := by mach_mpoly [x]
+      rw [l2] at w; exact w
+    · refine mx_A_grows_absurd M hM A B hB1 1 (fun x hx1 => ?_) heq
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+      have hlog : log x ≤ x - 1 := log_le_sub_one_of_one_le hx1
+      have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+      have u := add_le_add_wit hxx (neg_le_neg_wit hlog)
+      have l : x + x + -(x - 1) = x + 1 := by mach_mpoly [x]
+      have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+      rw [l, r] at u
+      refine le_trans ?_ u
+      have v := add_le_add_wit (le_refl x) (le_of_lt zero_lt_one_ax)
+      have l2 : x + (0 : Real) = x := by mach_mpoly [x]
+      rw [l2] at v; exact v
+
+/-- **The `−log x` cell's `ℓ = const p` branch is dead.** Right-branching gives
+`log(L₂ x) = exp p + log x`, i.e. `L₂ x = M·x` with `M = exp(exp p) > 1`, and `M·x ∉ EML₂`.
+
+Stated on `[1,∞)` because that is all `mx_not_in_eml_depth_le_2` needs, and it dodges the wrinkle
+the totalised `log` creates: `log(L₂ x) = exp p + log x` only forces `L₂ x > 0` away from
+`x = exp(−exp p)`, which is `< 1`. -/
+theorem neg_log_right_const_absurd (p : Real) (L₂ : EMLTree) (hd : L₂.depth ≤ 2)
+    (h : ∀ x : Real, 1 ≤ x → L₂.eval x = exp (exp p) * x) : False := by
+  refine mx_not_in_eml_depth_le_2 (exp (exp p)) ?_ L₂ hd h
+  have hm := exp_lt (exp_pos p)
+  rw [exp_zero] at hm; exact hm
 
 end MachLib

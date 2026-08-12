@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### `M·x ∉ EML₂` — the gap question closes, and with it a 9-node branch
+
+**`mx_not_in_eml_depth_le_2`**: for every `M > 1`, no depth-≤2 tree computes `M·x`. All five
+`A`-forms fall — `var` and the two fast forms (`exp x − d`, `exp x − log x`) to
+`mx_A_grows_absurd`, `const` and `c − log x` to `mx_A_bounded_absurd`. **`M = 1` is genuinely
+excluded**: `var` computes `1·x` at depth 0, so the strict inequality is not slack.
+
+The two fast forms needed one growth fact, `two_mul_le_exp` (`x + x ≤ exp x` on `[0,∞)`, from
+`exp x = exp 1 · exp(x−1) ≥ exp 1 · x ≥ 2x`) — no calculus, and it gives both `exp x − d ≥ x` past
+`1 + exp d` and `exp x − log x ≥ x + 1` past `1`.
+
+**Stated on `[1,∞)`, not `(0,∞)`** — a strictly stronger theorem, and the reason is not cosmetic: it
+dodges the wrinkle the totalised `log` creates downstream, where `log(L₂ x) = exp p + log x` only
+forces `L₂ x > 0` away from `x = exp(−exp p)`, which is `< 1`.
+
+**`neg_log_right_const_absurd`** then kills the branch that motivated all of it: the `−log x` cell's
+right-branching `ℓ = const p` case needs `L₂ x = M·x` with `M = exp(exp p) > 1`, which is now
+impossible. `mx_mem_EML` builds `M·x` at depth 4 and this shows depth 2 does not suffice.
+
+**What survives of the `−log x` cell is one case**: right-branching with `ℓ = var`, where
+`log(L₂ x) = exp x + log x` forces `L₂ x = x·exp(exp x)` — not a linear function, so none of this
+transfers to it.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The mirror at `∞`, and the bounded-`A` half of `M·x`
 
 **`depth_le_one_log_lower_at_infinity`** — a depth-≤1 tree's logarithm is bounded **below**

@@ -1295,6 +1295,27 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "M*x not in EML2. hM1 : 1 < M is load-bearing, not slack — var computes 1*x at depth 0.",
+      "id": "mx-not-in-eml-two",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "for every `M > 1`, no depth-≤2 tree computes `M·x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.mx_not_in_eml_depth_le_2",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
