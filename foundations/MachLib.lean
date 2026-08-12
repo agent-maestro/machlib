@@ -331,6 +331,7 @@ import MachLib.EMLSizeCost
 import MachLib.EMLDepth2InvX
 import MachLib.EMLNetlistDepth
 import MachLib.EMLSizeNineShape
+import MachLib.EMLConstantFree
 import MachLib.EMLGrowthEnvelope
 import MachLib.KalmanFormatInstantiation
 import MachLib.NewtonReciprocalDivision

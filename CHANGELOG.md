@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Constant generation is vacuous in EML — proved, not argued
+
+A research direction was proposed twice on the grammar `S → 1 | eml(S,S)`: *which irrational
+constants are EML-representable, and how compactly?* MachLib's grammar has
+`const : Real → EMLTree`, so `π` is `EMLTree.const π` — **depth 0, size 1**.
+
+**`const_generation_is_vacuous`** states it as a theorem rather than a remark, because the refutation
+is one line of the definition and should be checkable rather than debated. Every real is
+representable, all at the same minimal cost, so the question orders nothing. `i` is out of scope
+entirely: `eval` is `Real`-valued.
+
+**Where the question does have content:** `EMLTree.unitOnly` restricts constants to `0` and `1`.
+Then `e` is depth 1 / size 3 (`e_mem_unitOnly`) and `e − 1` is depth 2 / size 5
+(`e_sub_one_mem_unitOnly`) — both leaning on the **totalised** `log`, which is what makes the depth-1
+leaves usable rather than undefined. A different language from the one the rest of the corpus
+studies; a side laboratory, not the main programme.
+
+Research slate reorganised and written up:
+`monogate-research/exploration/inv_x_termination_route_2026_08_06/RESEARCH_SLATE_T1_T4.md` — T1
+compilation invariants (producing), T2 quantitative tameness by depth, T3 exceptional-locus geometry,
+T4 certified synthesis with an untrusted searcher. Every claim in it names a theorem or is marked
+open. `sorryAx` 0; ledger 242 unchanged.
+
 ### `M·x ∉ EML₂` — the gap question closes, and with it a 9-node branch
 
 **`mx_not_in_eml_depth_le_2`**: for every `M > 1`, no depth-≤2 tree computes `M·x`. All five

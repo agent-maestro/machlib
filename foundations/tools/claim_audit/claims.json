@@ -1316,6 +1316,29 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The refutation of the constant-generation direction, as a theorem. Cheap to check, and it was proposed twice.",
+      "id": "const-generation-vacuous",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Every real is\nrepresentable, all at the same minimal cost"
+      ],
+      "module": "MachLib.EMLConstantFree",
+      "theorem": "MachLib.const_generation_is_vacuous",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".size",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "∀",
+        "∃"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
