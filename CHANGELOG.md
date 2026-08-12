@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Split-A right-branching, `ℓ₂ = const p`: **dead**
+
+**`split_a_right_const_absurd`.** `log (R₂ x) = exp p − exp(K − 1/x)` is strictly decreasing, so `R₂`
+is **injective**; and once `R₂` is bounded below on a ray, `log (B x) = exp α − R₂ x` is bounded
+above there, so `B`'s shape is pinned and `log (B x)` is eventually **constant** — making `R₂`
+eventually constant. Injective and eventually constant cannot both hold, and two points show it.
+
+**The lower bound was the only delicate part**, and `right_const_lower` isolates it. `R₂ x > 0` can
+fail only where `log (R₂ x) = 0`, i.e. at the single `x` with `1/x = K − p`. Three cases on
+`K − p`: positive puts the ray past `1/(K − p)`; zero and negative leave the log strictly *positive*
+everywhere, so `R₂ x > 1` on all of `(0,∞)`. In every case the totalised `log` cannot be `0`, so
+`R₂ x > 0` and `log (R₂ x) > exp p − exp K` gives the bound.
+
+That single exceptional point is exactly what the ray generalisation was built for last commit, and
+it is the first cell where the ray had to start anywhere other than `1`.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The ray generalisation lands whole (3 of 3)
 
 **`depth_le_one_log_bounded_forms_from`** — the forms lemma on an arbitrary ray `[S,∞)`. Split-A

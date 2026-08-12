@@ -2739,4 +2739,282 @@ theorem split_a_right_const_shape (K p : Real) (R₂ : EMLTree) (hd : R₂.depth
       show exp (A.eval x) - log (B.eval x) = exp α - log (B.eval x)
       rw [hα x hx]⟩
 
+/-! ## ▸ Split-A right-branching, `ℓ₂ = const p`: the finish
+
+`log (R₂ x) = exp p − exp(K − 1/x)` is **strictly decreasing**, so `R₂` is **injective**. And once
+`R₂` is bounded below on a ray, `log (B x) = exp α − R₂ x` is bounded above there, so `B`'s shape is
+pinned and `log (B x)` is eventually **constant** — making `R₂` eventually constant. Injective and
+eventually constant cannot both hold.
+
+The lower bound is the only delicate part: `R₂ x > 0` fails only where `log (R₂ x) = 0`, i.e. at the
+single `x` with `1/x = K − p`. Past it — or everywhere, when `K ≤ p` — the totalised `log` cannot be
+`0`, so `R₂ x > 0` and the bound follows from `log (R₂ x) > exp p − exp K`.
+-/
+
+/-- `R₂` is bounded below by a positive constant on a ray. -/
+private theorem right_const_lower (K p : Real) (R₂ : EMLTree)
+    (hlogR : ∀ x : Real, 0 < x → log (R₂.eval x) = exp p - exp (K - 1 / x)) :
+    ∃ S m : Real, 1 ≤ S ∧ ∀ x : Real, S ≤ x → m ≤ R₂.eval x := by
+  -- on the ray, `log (R₂ x) ≠ 0`, hence `R₂ x > 0`, hence the bound
+  have hbound : ∀ x : Real, 0 < x → log (R₂.eval x) ≠ 0 →
+      exp (exp p - exp K) ≤ R₂.eval x := by
+    intro x hx hne
+    have hpos : (0 : Real) < R₂.eval x := by
+      rcases lt_total (R₂.eval x) 0 with hneg | hzero | hp
+      · exact absurd (log_nonpos (le_of_lt hneg)) hne
+      · exact absurd (by rw [hzero]; exact log_zero_totalised) hne
+      · exact hp
+    have hgt : exp p - exp K < log (R₂.eval x) := by
+      rw [hlogR x hx]
+      have hargs : K - 1 / x < K := by
+        have u := add_lt_add_left (one_div_pos_of_pos hx) (K - 1 / x)
+        have l : K - 1 / x + 0 = K - 1 / x := by mach_mpoly [K, (1 / x : Real)]
+        have r : K - 1 / x + 1 / x = K := by mach_mpoly [K, (1 / x : Real)]
+        rw [l, r] at u; exact u
+      have hexp := exp_lt hargs
+      have u := add_lt_add_left hexp (exp p - exp K - exp (K - 1 / x))
+      have l : exp p - exp K - exp (K - 1 / x) + exp (K - 1 / x) = exp p - exp K := by
+        mach_mpoly [exp p, exp K, exp (K - 1 / x)]
+      have r : exp p - exp K - exp (K - 1 / x) + exp K = exp p - exp (K - 1 / x) := by
+        mach_mpoly [exp p, exp K, exp (K - 1 / x)]
+      rw [l, r] at u; exact u
+    have hm := exp_lt hgt
+    rw [exp_log hpos] at hm; exact le_of_lt hm
+  rcases lt_total 0 (K - p) with hkp | hkp | hkp
+  · -- past `1/(K−p)` the log is strictly negative
+    refine ⟨1 + 1 / (K - p), exp (exp p - exp K), ?_, fun x hxS => ?_⟩
+    · have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (one_div_pos_of_pos hkp))
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    · have hx1 : (1 : Real) ≤ x := by
+        refine le_trans ?_ hxS
+        have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (one_div_pos_of_pos hkp))
+        have l : (1 : Real) + 0 = 1 := by mach_ring
+        rw [l] at u; exact u
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      refine hbound x hxpos ?_
+      -- `1/x < K − p`, so `log (R₂ x) < 0`
+      have hxk : (1 : Real) < x * (K - p) := by
+        have hinv : (1 / (K - p)) * (K - p) = 1 := by
+          have hv := mul_inv (K - p) (ne_of_gt hkp)
+          rw [mul_comm] at hv; exact hv
+        have u := mul_le_mul_of_nonneg_right hxS (le_of_lt hkp)
+        have l : (1 + 1 / (K - p)) * (K - p) = (K - p) + (1 / (K - p)) * (K - p) := by
+          mach_mpoly [K, p, (1 / (K - p) : Real)]
+        rw [l, hinv] at u
+        refine lt_of_lt_of_le ?_ u
+        have v := add_lt_add_left hkp (1 : Real)
+        have l2 : (1 : Real) + 0 = 1 := by mach_ring
+        have r2 : (1 : Real) + (K - p) = K - p + 1 := by mach_mpoly [K, p]
+        rw [l2, r2] at v; exact v
+      have hlt : 1 / x < K - p := by
+        have hix : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+        have hmx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+        have u := mul_lt_mul_of_pos_right hxk hix
+        have l : (1 : Real) * (1 / x) = 1 / x := by mach_mpoly [(1 / x : Real)]
+        have r : x * (K - p) * (1 / x) = (K - p) * (x * (1 / x)) := by
+          mach_mpoly [x, K, p, (1 / x : Real)]
+        rw [l, r, hmx] at u
+        have r2 : (K - p) * (1 : Real) = K - p := by mach_mpoly [K, p]
+        rw [r2] at u; exact u
+      have hargs : p < K - 1 / x := by
+        have u := add_lt_add_left hlt (K - 1 / x - (K - p))
+        have l : K - 1 / x - (K - p) + 1 / x = p := by mach_mpoly [K, p, (1 / x : Real)]
+        have r : K - 1 / x - (K - p) + (K - p) = K - 1 / x := by
+          mach_mpoly [K, p, (1 / x : Real)]
+        rw [l, r] at u; exact u
+      rw [hlogR x hxpos]
+      intro hz
+      have hEq : exp p = exp (K - 1 / x) := by
+        have u : exp p - exp (K - 1 / x) + exp (K - 1 / x) = 0 + exp (K - 1 / x) := by rw [hz]
+        have l : exp p - exp (K - 1 / x) + exp (K - 1 / x) = exp p := by
+          mach_mpoly [exp p, exp (K - 1 / x)]
+        have r : (0 : Real) + exp (K - 1 / x) = exp (K - 1 / x) := by
+          mach_mpoly [exp (K - 1 / x)]
+        rw [l, r] at u; exact u
+      exact lt_irrefl_ax _ (hEq ▸ exp_lt hargs)
+  · -- `K = p`: the log is strictly positive everywhere
+    refine ⟨1, exp (exp p - exp K), le_refl 1, fun x hx1 => ?_⟩
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    refine hbound x hxpos ?_
+    rw [hlogR x hxpos]
+    have hargs : K - 1 / x < p := by
+      have hkp' : K = p := by
+        have u : K - p + p = 0 + p := by rw [← hkp]
+        have l : K - p + p = K := by mach_mpoly [K, p]
+        have r : (0 : Real) + p = p := by mach_mpoly [p]
+        rw [l, r] at u; exact u
+      rw [← hkp']
+      have u := add_lt_add_left (one_div_pos_of_pos hxpos) (K - 1 / x)
+      have l : K - 1 / x + 0 = K - 1 / x := by mach_mpoly [K, (1 / x : Real)]
+      have r : K - 1 / x + 1 / x = K := by mach_mpoly [K, (1 / x : Real)]
+      rw [l, r] at u; exact u
+    have hexp := exp_lt hargs
+    intro hz
+    have hEq : exp p = exp (K - 1 / x) := by
+      have u : exp p - exp (K - 1 / x) + exp (K - 1 / x) = 0 + exp (K - 1 / x) := by rw [hz]
+      have l : exp p - exp (K - 1 / x) + exp (K - 1 / x) = exp p := by
+        mach_mpoly [exp p, exp (K - 1 / x)]
+      have r : (0 : Real) + exp (K - 1 / x) = exp (K - 1 / x) := by
+        mach_mpoly [exp (K - 1 / x)]
+      rw [l, r] at u; exact u
+    exact lt_irrefl_ax _ (hEq ▸ hexp)
+  · -- `K < p`: same, the log stays strictly positive
+    refine ⟨1, exp (exp p - exp K), le_refl 1, fun x hx1 => ?_⟩
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    refine hbound x hxpos ?_
+    rw [hlogR x hxpos]
+    have hargs : K - 1 / x < p := by
+      have hKp : K < p := by
+        have u := add_lt_add_left hkp p
+        have l : p + (K - p) = K := by mach_mpoly [K, p]
+        have r : p + 0 = p := by mach_mpoly [p]
+        rw [l, r] at u; exact u
+      refine lt_trans_ax ?_ hKp
+      have u := add_lt_add_left (one_div_pos_of_pos hxpos) (K - 1 / x)
+      have l : K - 1 / x + 0 = K - 1 / x := by mach_mpoly [K, (1 / x : Real)]
+      have r : K - 1 / x + 1 / x = K := by mach_mpoly [K, (1 / x : Real)]
+      rw [l, r] at u; exact u
+    have hexp := exp_lt hargs
+    intro hz
+    have hEq : exp p = exp (K - 1 / x) := by
+      have u : exp p - exp (K - 1 / x) + exp (K - 1 / x) = 0 + exp (K - 1 / x) := by rw [hz]
+      have l : exp p - exp (K - 1 / x) + exp (K - 1 / x) = exp p := by
+        mach_mpoly [exp p, exp (K - 1 / x)]
+      have r : (0 : Real) + exp (K - 1 / x) = exp (K - 1 / x) := by
+        mach_mpoly [exp (K - 1 / x)]
+      rw [l, r] at u; exact u
+    exact lt_irrefl_ax _ (hEq ▸ hexp)
+
+/-- **Split-A right-branching with `ℓ₂ = const p` is dead.** -/
+theorem split_a_right_const_absurd (K p : Real) (R₂ : EMLTree) (hd : R₂.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → exp p - log (R₂.eval x) = exp (K - 1 / x)) : False := by
+  have hlogR : ∀ x : Real, 0 < x → log (R₂.eval x) = exp p - exp (K - 1 / x) := by
+    intro x hx
+    have hk := h x hx
+    have u : exp p - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) := by rw [hk]
+    have l : exp p - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp p - exp (K - 1 / x) := by
+      mach_mpoly [exp p, log (R₂.eval x), exp (K - 1 / x)]
+    have r : exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) = log (R₂.eval x) := by
+      mach_mpoly [log (R₂.eval x), exp (K - 1 / x)]
+    rw [l, r] at u; exact u.symm
+  obtain ⟨α, B, hB1, hR⟩ := split_a_right_const_shape K p R₂ hd h
+  obtain ⟨S, m, hS1, hm⟩ := right_const_lower K p R₂ hlogR
+  -- `log (B x) = exp α − R₂ x ≤ exp α − m` on the ray
+  have hlogB : ∀ x : Real, S ≤ x → 1 ≤ x → log (B.eval x) ≤ exp α - m := by
+    intro x hxS hx1
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hval : log (B.eval x) = exp α - R₂.eval x := by
+      rw [hR x hxpos]; mach_mpoly [exp α, log (B.eval x)]
+    rw [hval]
+    have u := add_le_add_wit (le_refl (exp α)) (neg_le_neg_wit (hm x hxS))
+    have l : exp α + -R₂.eval x = exp α - R₂.eval x := by
+      mach_mpoly [exp α, R₂.eval x]
+    have r : exp α + -m = exp α - m := by mach_mpoly [exp α, m]
+    rw [l, r] at u; exact u
+  -- `log (B x)` is eventually constant
+  have hconst : ∃ T : Real, S ≤ T ∧ 1 ≤ T ∧ ∀ y z : Real, T ≤ y → T ≤ z →
+      log (B.eval y) = log (B.eval z) := by
+    rcases depth_le_one_log_bounded_forms_from B hB1 S (exp α - m) hlogB with
+        ⟨β, hb⟩ | ⟨c, hc0, hb⟩
+    · exact ⟨S, le_refl S, hS1, fun y z hy hz => by
+        rw [hb y (lt_of_lt_of_le zero_lt_one_ax (le_trans hS1 hy)),
+            hb z (lt_of_lt_of_le zero_lt_one_ax (le_trans hS1 hz))]⟩
+    · refine ⟨S + (1 + exp c), ?_, ?_, fun y z hy hz => ?_⟩
+      · have u := add_le_add_wit (le_refl S) (le_of_lt (by
+          have v := add_lt_add_left (exp_pos c) 1
+          have l : (1 : Real) + 0 = 1 := by mach_ring
+          rw [l] at v; exact lt_trans_ax zero_lt_one_ax v))
+        have l : S + 0 = S := by mach_mpoly [S]
+        rw [l] at u; exact u
+      · refine le_trans hS1 ?_
+        have u := add_le_add_wit (le_refl S) (le_of_lt (by
+          have v := add_lt_add_left (exp_pos c) 1
+          have l : (1 : Real) + 0 = 1 := by mach_ring
+          rw [l] at v; exact lt_trans_ax zero_lt_one_ax v))
+        have l : S + 0 = S := by mach_mpoly [S]
+        rw [l] at u; exact u
+      · have hz0 : ∀ w : Real, S + (1 + exp c) ≤ w → log (B.eval w) = 0 := by
+          intro w hw
+          have hw1 : (1 : Real) ≤ w := by
+            refine le_trans hS1 (le_trans ?_ hw)
+            have u := add_le_add_wit (le_refl S) (le_of_lt (by
+              have v := add_lt_add_left (exp_pos c) 1
+              have l : (1 : Real) + 0 = 1 := by mach_ring
+              rw [l] at v; exact lt_trans_ax zero_lt_one_ax v))
+            have l : S + 0 = S := by mach_mpoly [S]
+            rw [l] at u; exact u
+          rw [hb w (lt_of_lt_of_le zero_lt_one_ax hw1)]
+          have hec : exp c ≤ w := by
+            refine le_trans ?_ hw
+            have u := add_le_add_wit (le_of_lt (lt_of_lt_of_le zero_lt_one_ax hS1))
+              (le_of_lt (by
+                have v := add_lt_add_left (exp_pos c) 1
+                have l : (1 : Real) + 0 = 1 := by mach_ring
+                rw [l] at v
+                have w2 := add_lt_add_left zero_lt_one_ax (exp c)
+                have l2 : exp c + 0 = exp c := by mach_mpoly [exp c]
+                have r2 : exp c + 1 = 1 + exp c := by mach_mpoly [exp c]
+                rw [l2, r2] at w2; exact w2))
+            have l : (0 : Real) + exp c = exp c := by mach_mpoly [exp c]
+            rw [l] at u; exact u
+          have hcl : c ≤ log w := by
+            have hmm := log_le_log (exp_pos c) hec; rw [log_exp] at hmm; exact hmm
+          have hle : c - log w ≤ 0 := by
+            have u := add_le_add_wit hcl (neg_le_neg_wit (le_refl (log w)))
+            have l : c + -log w = c - log w := by mach_mpoly [c, log w]
+            have r : log w + -log w = 0 := by mach_mpoly [log w]
+            rw [l, r] at u; exact u
+          rw [log_nonpos hle]
+        rw [hz0 y hy, hz0 z hz]
+  obtain ⟨T, hTS, hT1, hTc⟩ := hconst
+  have hTpos : (0 : Real) < T := lt_of_lt_of_le zero_lt_one_ax hT1
+  have hTT : T < T + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax T
+    have l : T + 0 = T := by mach_mpoly [T]
+    rw [l] at u; exact u
+  have hT1pos : (0 : Real) < T + 1 := lt_trans_ax hTpos hTT
+  -- `R₂` takes the same value at `T` and `T+1`
+  have hsame : R₂.eval T = R₂.eval (T + 1) := by
+    rw [hR T hTpos, hR (T + 1) hT1pos, hTc T (T + 1) (le_refl T) (le_of_lt hTT)]
+  -- but its log strictly decreases
+  have hstrict : 1 / (T + 1) < 1 / T := by
+    have hix : (0 : Real) < 1 / T := one_div_pos_of_pos hTpos
+    have hxk : (1 : Real) < (T + 1) * (1 / T) := by
+      have hmt : T * (1 / T) = 1 := mul_inv T (ne_of_gt hTpos)
+      have u := mul_lt_mul_of_pos_right hTT hix
+      rw [hmt] at u; exact u
+    have hiy : (0 : Real) < 1 / (T + 1) := one_div_pos_of_pos hT1pos
+    have u := mul_lt_mul_of_pos_right hxk hiy
+    have hmy : (T + 1) * (1 / (T + 1)) = 1 := mul_inv _ (ne_of_gt hT1pos)
+    have l : (1 : Real) * (1 / (T + 1)) = 1 / (T + 1) := by
+      mach_mpoly [(1 / (T + 1) : Real)]
+    have r : (T + 1) * (1 / T) * (1 / (T + 1)) = (1 / T) * ((T + 1) * (1 / (T + 1))) := by
+      mach_mpoly [T, (1 / T : Real), (1 / (T + 1) : Real)]
+    rw [l, r, hmy] at u
+    have r2 : (1 : Real) / T * 1 = 1 / T := by mach_mpoly [(1 / T : Real)]
+    rw [r2] at u; exact u
+  have hargs : K - 1 / T < K - 1 / (T + 1) := by
+    have u := add_lt_add_left hstrict (K - 1 / T - 1 / (T + 1))
+    have l : K - 1 / T - 1 / (T + 1) + 1 / (T + 1) = K - 1 / T := by
+      mach_mpoly [K, (1 / T : Real), (1 / (T + 1) : Real)]
+    have r : K - 1 / T - 1 / (T + 1) + 1 / T = K - 1 / (T + 1) := by
+      mach_mpoly [K, (1 / T : Real), (1 / (T + 1) : Real)]
+    rw [l, r] at u; exact u
+  have hlogdiff : log (R₂.eval (T + 1)) < log (R₂.eval T) := by
+    rw [hlogR T hTpos, hlogR (T + 1) hT1pos]
+    have hexp := exp_lt hargs
+    have u := add_lt_add_left hexp (exp p - exp (K - 1 / T) - exp (K - 1 / (T + 1)))
+    have l : exp p - exp (K - 1 / T) - exp (K - 1 / (T + 1)) + exp (K - 1 / T)
+        = exp p - exp (K - 1 / (T + 1)) := by
+      mach_mpoly [exp p, exp (K - 1 / T), exp (K - 1 / (T + 1))]
+    have r : exp p - exp (K - 1 / T) - exp (K - 1 / (T + 1)) + exp (K - 1 / (T + 1))
+        = exp p - exp (K - 1 / T) := by
+      mach_mpoly [exp p, exp (K - 1 / T), exp (K - 1 / (T + 1))]
+    rw [l, r] at u; exact u
+  rw [hsame] at hlogdiff
+  exact lt_irrefl_ax _ hlogdiff
+
 end MachLib

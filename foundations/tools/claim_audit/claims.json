@@ -1673,6 +1673,29 @@
         "∃"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "First right-branching sub-case closed. Injective vs eventually-constant, with the lower bound isolated in right_const_lower.",
+      "id": "split-a-right-const-dead",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Injective and eventually constant cannot both hold"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.split_a_right_const_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
