@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Split-A right-branching: the shape step
+
+**`split_a_right_const_shape`** — with `ℓ₂ = const p` the equation gives
+`log (R₂ x) = exp p − exp(K − 1/x)`: bounded above by `exp p` and strictly decreasing. Bounded above
+transfers to `R₂` itself — `R₂ x < exp(exp p)` where `R₂ x > 0`, and trivially where it isn't — which
+is exactly what `depth_le_two_bounded_left_is_const` consumes. Conclusion: **`R₂` must evaluate to
+`exp α − log (B x)` with `α` constant.**
+
+The two leaf cases fall first, and to **different** halves of the setup: `var` to the *bound*
+(`x ≤ exp(exp p)` fails at `x = exp(exp p) + 1`), `const q` to the *strict decrease* (a constant `log`
+forces `exp(K − 1) = exp(K − 1/2)`). Neither could have used the other's argument, which is a small
+reminder that "leaf case" is not one case.
+
+What remains for this sub-case: `R₂ x = exp α − log (B x)` is now **injective** (its log is strictly
+decreasing), while `log (B x)` is eventually constant once `B`'s shape is pinned — and eventually
+constant contradicts injective. Pinning `B` needs `R₂` bounded *below*, which holds off a single
+point where `exp(K − 1/x) = exp p`.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### A `0⁺` tool at last: bounded above ⟹ constant left child
 
 Every lemma in the kit so far works at `∞`. Split-A right-branching needs the other end, and

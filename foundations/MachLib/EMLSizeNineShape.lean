@@ -2550,4 +2550,127 @@ theorem depth_le_two_bounded_left_is_const (A B : EMLTree) (hA : A.depth ≤ 1) 
       have l2 : M + E + 0 = M + E := by mach_mpoly [M, E]
       rw [l2] at v; exact v
 
+/-! ## ▸ Split-A right-branching: the shape step
+
+With `ℓ₂ = const p` the equation is `exp p − log (R₂ x) = exp(K − 1/x)`, so
+`log (R₂ x) = exp p − exp(K − 1/x)`: **bounded above by `exp p` and strictly decreasing**. Bounded
+above transfers to `R₂` itself (`R₂ x < exp(exp p)`, and trivially so where `R₂ x ≤ 0`), which is
+exactly the hypothesis `depth_le_two_bounded_left_is_const` wants.
+
+The leaf cases fall first and differently: `var` to the bound, `const q` to the strict decrease.
+-/
+
+/-- **`R₂` must be `exp α − log (B x)` with `α` constant.** The structural step for split-A
+right-branching at `ℓ₂ = const p`. -/
+theorem split_a_right_const_shape (K p : Real) (R₂ : EMLTree) (hd : R₂.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → exp p - log (R₂.eval x) = exp (K - 1 / x)) :
+    ∃ (α : Real) (B : EMLTree), B.depth ≤ 1
+      ∧ ∀ x : Real, 0 < x → R₂.eval x = exp α - log (B.eval x) := by
+  have hlogR : ∀ x : Real, 0 < x → log (R₂.eval x) = exp p - exp (K - 1 / x) := by
+    intro x hx
+    have hk := h x hx
+    have u : exp p - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) := by rw [hk]
+    have l : exp p - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp p - exp (K - 1 / x) := by
+      mach_mpoly [exp p, log (R₂.eval x), exp (K - 1 / x)]
+    have r : exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) = log (R₂.eval x) := by
+      mach_mpoly [log (R₂.eval x), exp (K - 1 / x)]
+    rw [l, r] at u; exact u.symm
+  -- `R₂` is bounded above by `exp (exp p)`
+  have hbnd : ∀ x : Real, 0 < x → R₂.eval x ≤ exp (exp p) := by
+    intro x hx
+    rcases lt_total (R₂.eval x) 0 with hneg | hzero | hpos
+    · exact le_of_lt (lt_trans_ax hneg (exp_pos (exp p)))
+    · rw [hzero]; exact le_of_lt (exp_pos (exp p))
+    · have hlt : log (R₂.eval x) < exp p := by
+        rw [hlogR x hx]
+        have u := add_lt_add_left (exp_pos (K - 1 / x)) (exp p - exp (K - 1 / x))
+        have l : exp p - exp (K - 1 / x) + 0 = exp p - exp (K - 1 / x) := by
+          mach_mpoly [exp p, exp (K - 1 / x)]
+        have r : exp p - exp (K - 1 / x) + exp (K - 1 / x) = exp p := by
+          mach_mpoly [exp p, exp (K - 1 / x)]
+        rw [l, r] at u; exact u
+      have hm := exp_lt hlt
+      rw [exp_log hpos] at hm; exact le_of_lt hm
+  -- strict decrease of `log (R₂ x)`, used only by the `const` leaf case
+  have hhalf : (1 : Real) / (1 + 1) < 1 := by
+    have h12 : (1 : Real) < 1 + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax 1
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    exact div_lt_one_of_pos_lt (lt_trans_ax zero_lt_one_ax h12) h12
+  cases R₂ with
+  | const q =>
+    exfalso
+    have e1 : (EMLTree.const q).eval 1 = q := rfl
+    have e2 : (EMLTree.const q).eval (1 + 1) = q := rfl
+    have h1 := hlogR 1 zero_lt_one_ax
+    have h2 := hlogR (1 + 1) (by
+      have u := add_lt_add_left zero_lt_one_ax 1
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact lt_trans_ax zero_lt_one_ax u)
+    rw [e1] at h1; rw [e2] at h2
+    have hone : (1 : Real) / 1 = 1 := by
+      have hv := mul_inv (1 : Real) (ne_of_gt zero_lt_one_ax)
+      have l : (1 : Real) * (1 / 1) = 1 / 1 := by mach_mpoly [(1 / 1 : Real)]
+      rw [l] at hv; exact hv
+    rw [hone] at h1
+    have harg : K - 1 < K - 1 / (1 + 1) := by
+      have u := add_lt_add_left hhalf (K - 1 - 1 / (1 + 1))
+      have l : K - 1 - 1 / (1 + 1) + 1 / (1 + 1) = K - 1 := by
+        mach_mpoly [K, (1 / (1 + 1) : Real)]
+      have r : K - 1 - 1 / (1 + 1) + 1 = K - 1 / (1 + 1) := by
+        mach_mpoly [K, (1 / (1 + 1) : Real)]
+      rw [l, r] at u; exact u
+    have hne := exp_lt harg
+    have heq : exp (K - 1) = exp (K - 1 / (1 + 1)) := by
+      have u : exp p - exp (K - 1) = exp p - exp (K - 1 / (1 + 1)) := by rw [← h1, h2]
+      have v := add_le_add_wit (le_of_eq u) (le_refl (exp (K - 1) + exp (K - 1 / (1 + 1))))
+      have l : exp p - exp (K - 1) + (exp (K - 1) + exp (K - 1 / (1 + 1)))
+          = exp p + exp (K - 1 / (1 + 1)) := by
+        mach_mpoly [exp p, exp (K - 1), exp (K - 1 / (1 + 1))]
+      have r : exp p - exp (K - 1 / (1 + 1)) + (exp (K - 1) + exp (K - 1 / (1 + 1)))
+          = exp p + exp (K - 1) := by
+        mach_mpoly [exp p, exp (K - 1), exp (K - 1 / (1 + 1))]
+      rw [l, r] at v
+      have u2 : exp p - exp (K - 1 / (1 + 1)) = exp p - exp (K - 1) := u.symm
+      have v2 := add_le_add_wit (le_of_eq u2) (le_refl (exp (K - 1) + exp (K - 1 / (1 + 1))))
+      rw [r, l] at v2
+      have hcancel : exp (K - 1 / (1 + 1)) ≤ exp (K - 1) := by
+        have w := add_le_add_wit v (le_refl (-exp p))
+        have l3 : exp p + exp (K - 1 / (1 + 1)) + -exp p = exp (K - 1 / (1 + 1)) := by
+          mach_mpoly [exp p, exp (K - 1 / (1 + 1))]
+        have r3 : exp p + exp (K - 1) + -exp p = exp (K - 1) := by
+          mach_mpoly [exp p, exp (K - 1)]
+        rw [l3, r3] at w; exact w
+      exact absurd hcancel (fun hc => lt_irrefl_ax _ (lt_of_lt_of_le hne hc))
+    exact lt_irrefl_ax _ (heq ▸ hne)
+  | var =>
+    exfalso
+    have hbig : (0 : Real) < exp (exp p) + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax (exp (exp p))
+      have l : exp (exp p) + 0 = exp (exp p) := by mach_mpoly [exp (exp p)]
+      rw [l] at u; exact lt_trans_ax (exp_pos (exp p)) u
+    have hcap := hbnd (exp (exp p) + 1) hbig
+    have e : (EMLTree.var).eval (exp (exp p) + 1) = exp (exp p) + 1 := rfl
+    rw [e] at hcap
+    have hgt : exp (exp p) < exp (exp p) + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax (exp (exp p))
+      have l : exp (exp p) + 0 = exp (exp p) := by mach_mpoly [exp (exp p)]
+      rw [l] at u; exact u
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hcap)
+  | eml A B =>
+    have hA1 : A.depth ≤ 1 := by
+      have := Nat.le_max_left A.depth B.depth
+      simp only [EMLTree.depth] at hd; omega
+    have hB1 : B.depth ≤ 1 := by
+      have := Nat.le_max_right A.depth B.depth
+      simp only [EMLTree.depth] at hd; omega
+    obtain ⟨α, hα⟩ := depth_le_two_bounded_left_is_const A B hA1 hB1 (exp (exp p))
+      (fun x hx => hbnd x hx)
+    exact ⟨α, B, hB1, fun x hx => by
+      show exp (A.eval x) - log (B.eval x) = exp α - log (B.eval x)
+      rw [hα x hx]⟩
+
 end MachLib
