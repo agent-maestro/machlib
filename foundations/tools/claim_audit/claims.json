@@ -1383,6 +1383,27 @@
         "∧"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The Omega locus: exists, unique, caged. Existence is the load-bearing half — it says the trichotomy's degenerate clause is not vacuous.",
+      "id": "omega-point-single-caged",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "exactly one parameter value in the whole positive line"
+      ],
+      "module": "MachLib.EMLExceptionalLocus",
+      "theorem": "MachLib.omega_point_is_a_single_caged_value",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "∃",
+        "∀"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

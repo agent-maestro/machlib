@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The Ω point solved completely — the degeneracy is real and isolated
+
+Second T3 locus. `depth_le_one_trichotomy`'s third branch carries a clause conditional on
+`exp (−G) = G` — the **Ω point**, `G·exp G = 1` — and it is where the linear floor degenerates and
+the quadratic one is needed. It had only ever appeared as a hypothesis nobody had solved: it was not
+known whether the degenerate case **occurs**, nor whether it could occur more than once.
+
+- **`omega_point_bracket`** — every positive solution lies strictly inside `(e⁻¹, 1)`.
+- **`omega_point_unique`** — at most one, because `exp(−G)` decreases while `G` increases.
+- **`omega_point_exists`** — at least one, by IVT on `G ↦ G − exp(−G)`, negative at `e⁻¹` and
+  positive at `1`. Uses `intermediate_value_of_hasDerivAt`, which needs only *some* derivative to
+  exist — so the derivative never has to be computed.
+
+**So the degeneracy is real and isolated: exactly one parameter value in the whole positive line.**
+That is why the quadratic floor could not be avoided — it is not defending against an empty case —
+and why no perturbation argument reaches it.
+
+`omega_point_is_a_single_caged_value` packages all three. `sorryAx` 0; ledger 242 unchanged.
+
 ### T3, first artifact: an exceptional locus solved for exactly
 
 `MachLib.EMLExceptionalLocus`. The arm keeps producing exceptional sets **by accident**, and it has
