@@ -7,6 +7,52 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Split-A right-branching, `ℓ₂ = var`: **dead** — step 1 complete
+
+**`split_a_right_var_absurd`.** The leaf cases fall to the sandwich's lower bound (`exp(exp x − exp K)`
+outruns both `q` and `x`); `eml A B` splits by the five-form classification into the slow forms — one
+lemma, `right_var_A_slow_absurd` — and the two fast ones, whose brackets take four branches:
+
+| `A` | branch | bracket | finisher |
+|---|---|---|---|
+| `exp x − d` | `d > exp K` | negative constant | `log_le_neg_double_exp_absurd` |
+| `exp x − d` | `d = exp K` | negative, `~ρ/x` | `log_le_neg_double_exp_absurd` |
+| `exp x − d` | `d < exp K` | positive constant | `log_ge_double_exp_const_absurd` |
+| `exp x − log x` | — | → negative constant | `log_le_neg_double_exp_absurd` |
+
+The `d < exp K` ray start avoids splitting on the sign of `d`: `one_sub_exp_neg_le` gives
+`exp K − exp(K − 1/S) ≤ exp K·(1/S)`, so `S = 1 + exp K·(1/(exp K − d))` already forces
+`d < exp(K − 1/S)`.
+
+**Honest note on the estimate.** I described this sub-case as "literally instantiation into existing
+finishers". It took ~700 lines: each branch needed its own threshold construction, and the assembly
+needed the slow-form bound restated three times. The finishers *were* built and did their job — but
+"instantiation" undersold it, and the plan was agreed on that description.
+
+`sorryAx` 0; ledger 242 unchanged.
+
+### Instantiating the finishers: shared conversion + two branches
+
+`right_var_value` (`R₂` in closed form on the ray, from the sandwich's positivity) and
+`right_var_logB` (`log (B x) = exp (A x) − exp(exp x)·exp(−exp(K − 1/x))`) factor out what all four
+fast branches need, so each branch supplies only its bracket bound.
+
+- **`right_var_exp_sub_const_gt`** (`d > exp K`) — bracket is a negative constant
+  `exp(−d) − exp(−exp K)`; `ρ·(1/x) ≤ ρ` on `[1,∞)` bridges to the `ρ/x` finisher.
+- **`right_var_exp_sub_log`** (`A = exp x − log x`) — bracket `1/x − exp(−exp(K − 1/x))` settles
+  negative once `1/x` drops below `exp(−exp K)`; ray start `1 + exp K + 2·exp(exp K)`, and the
+  needed `(1/x) + (1/x) ≤ exp(−exp K)` comes from multiplying `x ≥ 2·exp(exp K)` by
+  `(1/x)·exp(−exp K)` — no product-inverse identity required.
+
+Also `one_sub_exp_neg_le` (`1 − exp(−u) ≤ u`), the companion to `one_sub_exp_neg_ge`, which will
+place the ray start for the `d < exp K` branch **without splitting on the sign of `d`**:
+`exp K − exp(K − 1/S) ≤ exp K·(1/S)`, so `S = 1 + exp K·(1/(exp K − d))` suffices.
+
+Two branches remain: `d < exp K` (positive constant bracket, mirror finisher) and `d = exp K`
+(boundary, `~ρ/x` via `one_sub_exp_neg_ge`).
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### The mirror: `log (B x)` cannot blow up positive either
 
 **`log_ge_double_exp_const_absurd`.** The `ρ/x` finisher handles the branches where the bracket is

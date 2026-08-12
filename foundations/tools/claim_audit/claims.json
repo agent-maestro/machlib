@@ -1787,6 +1787,52 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "First two fast branches instantiated. The shared conversion means each branch supplies only a bracket bound.",
+      "id": "right-var-const-gt-branch",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "bracket is a negative constant\n  `exp(−d) − exp(−exp K)`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.right_var_exp_sub_const_gt",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 4
+    },
+    {
+      "_comment": "The sub-case closed. Leaf cases by sandwich; eml A B by classification into slow (one lemma) + four fast bracket branches.",
+      "id": "split-a-right-var-dead",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The leaf cases fall to the sandwich's lower bound"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.split_a_right_var_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
