@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The `−log x` cell CLOSES — split B's `κ = 0` is dead
+
+The last surviving case was right-branching with `ℓ = var`, where `log(L₂ x) = exp x + log x` forces
+**`L₂ x = x·exp(exp x)`** — a double exponential *multiplied by `x`*, and that extra factor is the
+whole obstruction.
+
+- **`depth_le_one_le_exp_shift`** — a depth-≤1 tree is under `exp x + D` on `[1,∞)`. The
+  value-level companion to `depth_le_one_log_le_linear`, which bounds its *logarithm*.
+- **`x_mul_exp_exp_not_in_eml_depth_le_2`** — hence `exp(A x) ≤ exp D · exp(exp x)`: a **constant**
+  multiple of `exp(exp x)`. The target needs an `x`-growing multiple, and `x` outruns any constant.
+
+So **every branch of split B's `κ = 0` cell is now dead**, and with it the question *can a depth-3
+tree compute `−log x`?* — **no**. That was the sharpest open cell in the 9-node map.
+
+The three ∞-side lemmas turn out to be a complete kit for this family: `log(B x) ≤ x + C` caps a
+logarithm from above, `Cl ≤ log(B x)` caps it from below, and `A x ≤ exp x + D` caps the value. Every
+kill in the last two sessions used exactly one or two of them.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The κ-trichotomy is a comparison with Ω — and the locus taxonomy closes
 
 `κ = 0` **is** the Ω point. `EMLDepth2InvX` splits the depth-2 cancellation analysis three ways on

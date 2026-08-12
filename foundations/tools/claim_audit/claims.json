@@ -1424,6 +1424,28 @@
         "∧"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Closes the -log x cell. The obstruction is the x-factor: depth 2 gives only a CONSTANT multiple of exp(exp x).",
+      "id": "x-mul-exp-exp-not-depth-two",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The target needs an `x`-growing multiple, and `x` outruns any constant."
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.x_mul_exp_exp_not_in_eml_depth_le_2",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
