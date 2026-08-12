@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### A bounded log names the shape — the dichotomy made composable
+
+`depth_le_one_log_bounded_or_unbounded` answers *whether* the log is bounded. The open cells need to
+know *which tree that leaves*, and a disjunction over "∃ a bound" does not say. So:
+
+**`depth_le_one_log_bounded_forms`** — if `log (B x) ≤ Λ` on `[1,∞)` then `B` is `const β` or
+`c′ − log x`. Exactly two of the five forms, named.
+
+**Refactor rather than a second copy.** The three unbounded forms each need a point past a
+prescribed `Λ`, and both theorems need the same three. They are now private lemmas —
+`log_var_unbounded`, `log_exp_sub_const_unbounded`, `log_exp_sub_log_unbounded`, plus the shared
+`big_point` and the `c′ − log x` cap `log_c_sub_log_cap` — and the dichotomy is five short lines
+over them instead of ~90 inline. Net **+28 lines** for a theorem that would have cost ~120 duplicated.
+
+*A statement that answers "is it bounded?" and a statement that answers "then what is it?" are
+different theorems, and the second is the one that composes.* Worth noticing one increment after
+building only the first.
+
+**Everything the open cells need now exists:** exp gap, log dichotomy, log-bounded-forms, the three
+∞ bounds, and the five-form classification. Split-A `q > 1` is case analysis and two-point
+evaluation over them. `sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The log-side dichotomy — and it is *not* the mirror of the exp gap
 
 **`depth_le_one_log_bounded_or_unbounded`** — for a depth-≤1 `B`, `log (B x)` is either bounded above

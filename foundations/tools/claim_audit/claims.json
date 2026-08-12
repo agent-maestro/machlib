@@ -1492,6 +1492,29 @@
         "∃"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The composable form. A bounded log names the tree, which a bare existence-of-bound disjunct does not.",
+      "id": "log-bounded-names-the-form",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "if `log (B x) ≤ Λ` on `[1,∞)` then `B` is `const β` or\n`c′ − log x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_log_bounded_forms",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "∃"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
