@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### A gap theorem: depth-1 exponentials are bounded, or they dominate `exp x`
+
+**`depth_le_one_exp_bounded_or_grows`** — for a depth-≤1 `A`, either `exp (A x)` is bounded on
+`[1,∞)`, or it eventually dominates `exp x`. **Nothing sits in between.**
+
+This is the structural fact behind every `M·x` case: the split into `mx_A_bounded_absurd` and
+`mx_A_grows_absurd` *was* this dichotomy, discovered case by case and never stated. The two bounded
+forms are `const α` and `c − log x`; the three growing ones are `x`, `exp x − d`, `exp x − log x`.
+There is no depth-1 tree whose exponential grows, say, **linearly** — which is precisely why `M·x` is
+unreachable at depth 2, and the reason is now a theorem rather than five separate arguments.
+
+It belongs to **T2** as much as to the 9-node map: "how does behaviour vary with depth" is exactly
+this kind of statement, and a gap is a stronger answer than a bound.
+
+**What it unlocks, and what is still missing.** The next open cell (split-A left-branching, `q > 1`)
+reduces to: `exp(R₂ x) = exp(K − 1/x) + λ` with `λ > 0`, so `R₂` is **bounded and strictly
+increasing**. The gap theorem forces `A` into the bounded class; finishing needs the **log-side**
+companion — *for depth-≤1 `B`, `log (B x)` is either bounded above on `[1,∞)` or unbounded above* —
+which then forces `B` into `{const β, c′ − log x}`, and in all four surviving combinations `R₂` is
+eventually constant or decreasing, contradicting strict increase. That companion is not built yet.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### The `−log x` cell CLOSES — split B's `κ = 0` is dead
 
 The last surviving case was right-branching with `ℓ = var`, where `log(L₂ x) = exp x + log x` forces

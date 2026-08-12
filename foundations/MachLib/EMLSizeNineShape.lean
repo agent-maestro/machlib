@@ -1488,4 +1488,75 @@ theorem x_mul_exp_exp_not_in_eml_depth_le_2 (A B : EMLTree) (hA : A.depth ≤ 1)
     exact lt_trans_ax (lt_of_lt_of_le h1 h2) (lt_trans_ax h3 h4)
   exact lt_irrefl_ax _ (lt_of_lt_of_le hgt (le_trans hprod hcap))
 
+/-! ## ▸ A gap theorem: depth-1 exponentials are bounded, or they dominate `exp x`
+
+Nothing sits in between. This is the structural fact behind every `M·x` case above — the split into
+`mx_A_bounded_absurd` and `mx_A_grows_absurd` was that dichotomy, discovered case by case. Stating
+it once makes it available to the cells still open, where the same fork appears.
+
+The two bounded forms are `const α` and `c − log x`; the three growing ones are `x`, `exp x − d` and
+`exp x − log x`. There is no depth-1 tree whose exponential grows, say, linearly — which is precisely
+why `M·x` is unreachable.
+-/
+
+/-- **The gap.** For a depth-≤1 `A`, either `exp (A x)` is bounded on `[1,∞)`, or it eventually
+dominates `exp x`. -/
+theorem depth_le_one_exp_bounded_or_grows (A : EMLTree) (hA : A.depth ≤ 1) :
+    (∃ K : Real, ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ K)
+    ∨ (∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x)) := by
+  have hlogx : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x h1
+    have hm := log_le_log zero_lt_one_ax h1
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    rw [hl1] at hm; exact hm
+  rcases depth_le_one_classification A hA with
+      ⟨α, ha⟩ | ha | ⟨c, _, ha⟩ | ⟨d, ha⟩ | ha
+  · exact Or.inl ⟨exp α, fun x h1 => by
+      rw [ha x (lt_of_lt_of_le zero_lt_one_ax h1)]; exact le_refl _⟩
+  · refine Or.inr ⟨1, fun x h1 => ?_⟩
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax h1)]; exact le_refl _
+  · refine Or.inl ⟨exp c, fun x h1 => ?_⟩
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax h1)]
+    refine exp_monotone ?_
+    have u := add_le_add_wit (le_refl c) (neg_le_neg_wit (hlogx x h1))
+    have l : c + -log x = c - log x := by mach_mpoly [c, log x]
+    have r : c + -(0 : Real) = c := by mach_mpoly [c]
+    rw [l, r] at u; exact u
+  · refine Or.inr ⟨1 + exp d, fun x hxT => ?_⟩
+    have hx1 : (1 : Real) ≤ x := by
+      refine le_trans ?_ hxT
+      have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d))
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    refine exp_monotone ?_
+    have hxd : d ≤ x := by
+      refine le_trans (le_of_lt (exp_grows_strictly_thm d)) (le_trans ?_ hxT)
+      have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp d))
+      have l : (0 : Real) + exp d = exp d := by mach_mpoly [exp d]
+      rw [l] at u; exact u
+    have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+    have v := add_le_add_wit hxx (le_refl (-d))
+    have r : exp x + -d = exp x - d := by mach_mpoly [exp x, d]
+    rw [r] at v
+    refine le_trans ?_ v
+    have w := add_le_add_wit (le_refl (x + x)) (neg_le_neg_wit hxd)
+    have l2 : x + x + -x = x := by mach_mpoly [x]
+    rw [l2] at w; exact w
+  · refine Or.inr ⟨1, fun x hx1 => ?_⟩
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    refine exp_monotone ?_
+    have hlog : log x ≤ x - 1 := log_le_sub_one_of_one_le hx1
+    have hxx := two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx1)
+    have u := add_le_add_wit hxx (neg_le_neg_wit hlog)
+    have l : x + x + -(x - 1) = x + 1 := by mach_mpoly [x]
+    have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+    rw [l, r] at u
+    refine le_trans ?_ u
+    have v := add_le_add_wit (le_refl x) (le_of_lt zero_lt_one_ax)
+    have l2 : x + (0 : Real) = x := by mach_mpoly [x]
+    rw [l2] at v; exact v
+
 end MachLib

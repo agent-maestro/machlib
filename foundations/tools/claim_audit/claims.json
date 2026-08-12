@@ -1446,6 +1446,29 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The gap. A dichotomy, not a bound — which is the stronger statement and the one T2 wants.",
+      "id": "depth-one-exp-gap",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "either `exp (A x)` is bounded on\n`[1,∞)`, or it eventually dominates `exp x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_exp_bounded_or_grows",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "∃"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
