@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### Growth at `∞`: a shallow `log` cannot beat linear
+
+Every bound in `EMLSizeNineShape` lived on `(0,1]`; the remaining `M·x` shapes need the other end.
+
+**`depth_le_one_log_le_linear`** — for a depth-≤1 `B`, `log(B x) ≤ x + C` on `[1,∞)`. All five closed
+forms, including the totalised branches where `B x ≤ 0` and the log is `0`. The `exp x − d` case
+avoids needing `log_mul` via `exp_sub_le_exp_shift`: `exp x − d ≤ exp(x + exp(−d))` for `x ≥ 0`,
+because `exp(e) ≥ 1 + e` and `exp x ≥ 1`.
+
+That is what converts `exp(A x) − log(B x) = M·x` into `exp(A x) ≤ (M+1)·x + C`, where
+`exp_beats_linear_past` finishes any `A` that grows. First application:
+**`mx_A_is_var_absurd`** — `M·x` is out of reach when the left child is `var`, for **any** depth-≤1
+`B` with no case analysis on `B` at all. That the `B` side needs no cases is the point of having the
+`∞` bound rather than arguing shape by shape.
+
+The `M·x` cell now has its `A = var` and `B = exp x` shapes closed. What remains there are the
+`A`-forms that grow faster (`exp x − d`, `exp x − log x`) and the two that stay bounded
+(`const`, `c − log x`) — the latter needing a *lower* bound on `log(B x)` at `∞`, which is the
+mirror of what landed here and is not yet built.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### The splitter census: stop waiting for the next shape to bite
 
 Two statement shapes broke the claim auditor's arrow-splitter today, and the second landed *after*

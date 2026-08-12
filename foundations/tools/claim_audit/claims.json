@@ -1249,6 +1249,29 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The infinity-side bound. Fills the gap the module documented: everything else in it is at 0+.",
+      "id": "shallow-log-under-linear",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "for a depth-≤1 `B`, `log(B x) ≤ x + C` on `[1,∞)`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_log_le_linear",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∃",
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
