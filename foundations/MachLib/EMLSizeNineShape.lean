@@ -1590,19 +1590,35 @@ private theorem exp_sub_pred_ge (x : Real) : exp (x - 1) ≤ exp x - exp (x - 1)
 /-! The three unbounded forms each need a point past a prescribed `Λ`. Extracted so the dichotomy
 and its form-naming companion share them rather than each carrying a copy. -/
 
-private theorem log_var_unbounded (Λ : Real) : ∃ x : Real, 1 ≤ x ∧ Λ < log x := by
-  have hp : (0 : Real) < 1 + exp Λ := by
-    have u := add_lt_add_left (exp_pos Λ) 1
-    have l : (1 : Real) + 0 = 1 := by mach_ring
-    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
-  refine ⟨exp (1 + exp Λ), ?_, ?_⟩
-  · have hm := exp_monotone (le_of_lt hp); rw [exp_zero] at hm; exact hm
+private theorem log_var_unbounded_from (S Λ : Real) :
+    ∃ x : Real, S ≤ x ∧ 1 ≤ x ∧ Λ < log x := by
+  have hnn : (0 : Real) ≤ 1 + exp Λ := by
+    have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos Λ))
+    have l : (0 : Real) + 0 = 0 := by mach_ring
+    rw [l] at u; exact u
+  have hstep : exp S ≤ 1 + exp Λ + exp S := le_add_left_nonneg hnn
+  have hpos : (0 : Real) < 1 + exp Λ + exp S := lt_of_lt_of_le (exp_pos S) hstep
+  have hgrow : (1 : Real) + exp Λ + exp S < exp (1 + exp Λ + exp S) :=
+    exp_grows_strictly_thm _
+  refine ⟨exp (1 + exp Λ + exp S), ?_, ?_, ?_⟩
+  · exact le_of_lt (lt_trans_ax (lt_of_lt_of_le (exp_grows_strictly_thm S) hstep) hgrow)
+  · have hm := exp_monotone (le_of_lt hpos); rw [exp_zero] at hm; exact hm
   · rw [log_exp]
-    refine lt_trans_ax (exp_grows_strictly_thm Λ) ?_
-    have v := add_lt_add_left zero_lt_one_ax (exp Λ)
-    have l2 : exp Λ + 0 = exp Λ := by mach_mpoly [exp Λ]
-    have r2 : exp Λ + 1 = 1 + exp Λ := by mach_mpoly [exp Λ]
-    rw [l2, r2] at v; exact v
+    have h1 : Λ < exp Λ := exp_grows_strictly_thm Λ
+    have h2 : exp Λ < 1 + exp Λ := by
+      have v := add_lt_add_left zero_lt_one_ax (exp Λ)
+      have l2 : exp Λ + 0 = exp Λ := by mach_mpoly [exp Λ]
+      have r2 : exp Λ + 1 = 1 + exp Λ := by mach_mpoly [exp Λ]
+      rw [l2, r2] at v; exact v
+    have h3 : (1 : Real) + exp Λ ≤ 1 + exp Λ + exp S := by
+      have u := add_le_add_wit (le_refl (1 + exp Λ)) (le_of_lt (exp_pos S))
+      have l : (1 : Real) + exp Λ + 0 = 1 + exp Λ := by mach_mpoly [exp Λ]
+      rw [l] at u; exact u
+    exact lt_of_lt_of_le (lt_trans_ax h1 h2) h3
+
+private theorem log_var_unbounded (Λ : Real) : ∃ x : Real, 1 ≤ x ∧ Λ < log x := by
+  obtain ⟨x, _, hx1, hgt⟩ := log_var_unbounded_from 0 Λ
+  exact ⟨x, hx1, hgt⟩
 
 private theorem big_point (Λ : Real) : (1 : Real) ≤ 1 + exp (Λ + 1) ∧ Λ < exp (Λ + 1) := by
   refine ⟨?_, ?_⟩
