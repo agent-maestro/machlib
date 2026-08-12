@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### Split-A right-branching, `ℓ₂ = var`: `R₂` is double-exponential
+
+**`right_var_sandwich`.** Here `exp x − log (R₂ x) = exp(K − 1/x)`, so
+`log (R₂ x) = exp x − exp(K − 1/x)` — and since `exp(K − 1/x)` lives strictly inside `(0, exp K)`,
+the log is **sandwiched between `exp x − exp K` and `exp x`**. Exponentiating:
+`exp(exp x − exp K) < R₂ x < exp(exp x)`. A double exponential, up to a bounded factor.
+
+**The threshold `1 + exp K` is not cosmetic.** Past it the log is strictly positive, which is what
+rules out the totalised branch — below it, `R₂ x ≤ 0` is *not* excluded, because `log (R₂ x) = 0` is
+then consistent with the equation. Stating the sandwich at all requires the ray.
+
+This is the structural input for the rest of the sub-case: `exp (A x)` must then match `exp(exp x)`
+to within a bounded factor, which the five-form classification allows only for `exp x − d` and
+`exp x − log x`, and the surviving branch is pinned by comparing `log (B x)` — at most linear —
+against a double-exponentially growing bracket.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### Split-A right-branching, `ℓ₂ = const p`: **dead**
 
 **`split_a_right_const_absurd`.** `log (R₂ x) = exp p − exp(K − 1/x)` is strictly decreasing, so `R₂`

@@ -1696,6 +1696,29 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "R2 double-exponential on a ray. The ray start is load-bearing: below it the totalised log leaves R2 x <= 0 possible.",
+      "id": "right-var-sandwich",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "sandwiched between `exp x − exp K` and `exp x`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.right_var_sandwich",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∧",
+        "exp"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

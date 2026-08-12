@@ -3017,4 +3017,91 @@ theorem split_a_right_const_absurd (K p : Real) (R₂ : EMLTree) (hd : R₂.dept
   rw [hsame] at hlogdiff
   exact lt_irrefl_ax _ hlogdiff
 
+/-! ## ▸ Split-A right-branching, `ℓ₂ = var`: `R₂` is double-exponential
+
+Here `exp x − log (R₂ x) = exp(K − 1/x)`, so `log (R₂ x) = exp x − exp(K − 1/x)` — and since
+`exp(K − 1/x)` lives strictly inside `(0, exp K)`, the log is **sandwiched between `exp x − exp K`
+and `exp x`**. Exponentiating, `R₂` sits strictly between `exp(exp x − exp K)` and `exp(exp x)`: a
+double exponential up to a bounded factor.
+
+Past `1 + exp K` the log is strictly positive, which is what rules out the totalised branch and lets
+the sandwich be stated at all. That threshold is not cosmetic — below it `R₂ x ≤ 0` is not excluded,
+since `log (R₂ x) = 0` is then consistent with the equation.
+-/
+
+theorem right_var_sandwich (K : Real) (R₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp x - log (R₂.eval x) = exp (K - 1 / x)) :
+    ∀ x : Real, 1 + exp K ≤ x →
+      exp (exp x - exp K) < R₂.eval x ∧ R₂.eval x < exp (exp x) := by
+  have hlogR : ∀ x : Real, 0 < x → log (R₂.eval x) = exp x - exp (K - 1 / x) := by
+    intro x hx
+    have hk := h x hx
+    have u : exp x - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) := by rw [hk]
+    have l : exp x - log (R₂.eval x) + (log (R₂.eval x) - exp (K - 1 / x))
+        = exp x - exp (K - 1 / x) := by
+      mach_mpoly [exp x, log (R₂.eval x), exp (K - 1 / x)]
+    have r : exp (K - 1 / x) + (log (R₂.eval x) - exp (K - 1 / x)) = log (R₂.eval x) := by
+      mach_mpoly [log (R₂.eval x), exp (K - 1 / x)]
+    rw [l, r] at u; exact u.symm
+  intro x hxS
+  have hS1 : (1 : Real) ≤ 1 + exp K := by
+    have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos K))
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  have hx1 : (1 : Real) ≤ x := le_trans hS1 hxS
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  -- `exp K < exp x`, because `K < exp K < 1 + exp K ≤ x`
+  have hKx : K < x := by
+    refine lt_of_lt_of_le (lt_trans_ax (exp_grows_strictly_thm K) ?_) hxS
+    have u := add_lt_add_left (exp_pos K) (0 : Real)
+    have l : (0 : Real) + 0 = 0 := by mach_ring
+    rw [l] at u
+    have v := add_lt_add_left zero_lt_one_ax (exp K)
+    have l2 : exp K + 0 = exp K := by mach_mpoly [exp K]
+    have r2 : exp K + 1 = 1 + exp K := by mach_mpoly [exp K]
+    rw [l2, r2] at v; exact v
+  have hEK : exp K < exp x := exp_lt hKx
+  -- upper: `exp (K − 1/x) > 0`, so the log is below `exp x`
+  have hupper : log (R₂.eval x) < exp x := by
+    rw [hlogR x hxpos]
+    have u := add_lt_add_left (exp_pos (K - 1 / x)) (exp x - exp (K - 1 / x))
+    have l : exp x - exp (K - 1 / x) + 0 = exp x - exp (K - 1 / x) := by
+      mach_mpoly [exp x, exp (K - 1 / x)]
+    have r : exp x - exp (K - 1 / x) + exp (K - 1 / x) = exp x := by
+      mach_mpoly [exp x, exp (K - 1 / x)]
+    rw [l, r] at u; exact u
+  -- lower: `exp (K − 1/x) < exp K`
+  have hlower : exp x - exp K < log (R₂.eval x) := by
+    rw [hlogR x hxpos]
+    have hargs : K - 1 / x < K := by
+      have u := add_lt_add_left (one_div_pos_of_pos hxpos) (K - 1 / x)
+      have l : K - 1 / x + 0 = K - 1 / x := by mach_mpoly [K, (1 / x : Real)]
+      have r : K - 1 / x + 1 / x = K := by mach_mpoly [K, (1 / x : Real)]
+      rw [l, r] at u; exact u
+    have hexp := exp_lt hargs
+    have u := add_lt_add_left hexp (exp x - exp K - exp (K - 1 / x))
+    have l : exp x - exp K - exp (K - 1 / x) + exp (K - 1 / x) = exp x - exp K := by
+      mach_mpoly [exp x, exp K, exp (K - 1 / x)]
+    have r : exp x - exp K - exp (K - 1 / x) + exp K = exp x - exp (K - 1 / x) := by
+      mach_mpoly [exp x, exp K, exp (K - 1 / x)]
+    rw [l, r] at u; exact u
+  -- the log is strictly positive, so `R₂ x > 0` and the totalised branch is out
+  have hlogpos : (0 : Real) < log (R₂.eval x) := by
+    refine lt_trans_ax ?_ hlower
+    have u := add_lt_add_left hEK (-exp K)
+    have l : -exp K + exp K = 0 := by mach_mpoly [exp K]
+    have r : -exp K + exp x = exp x - exp K := by mach_mpoly [exp x, exp K]
+    rw [l, r] at u; exact u
+  have hRpos : (0 : Real) < R₂.eval x := by
+    rcases lt_total (R₂.eval x) 0 with hneg | hzero | hp
+    · exfalso; rw [log_nonpos (le_of_lt hneg)] at hlogpos
+      exact lt_irrefl_ax _ hlogpos
+    · exfalso; rw [hzero, log_zero_totalised] at hlogpos
+      exact lt_irrefl_ax _ hlogpos
+    · exact hp
+  refine ⟨?_, ?_⟩
+  · have hm := exp_lt hlower; rw [exp_log hRpos] at hm; exact hm
+  · have hm := exp_lt hupper; rw [exp_log hRpos] at hm; exact hm
+
 end MachLib
