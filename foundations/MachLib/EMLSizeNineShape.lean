@@ -3234,4 +3234,42 @@ theorem log_le_neg_double_exp_absurd (ρ S : Real) (hρ : 0 < ρ) (B : EMLTree) 
     rw [l, r] at u; exact u
   exact lt_irrefl_ax _ hbad
 
+/-! ## ▸ The mirror: `log (B x)` cannot blow up *positive* either
+
+The `ρ/x` finisher handles the branches where the bracket is negative. When `d < exp K` the bracket
+is a **positive constant** instead, so `log (B x)` runs to `+∞` double-exponentially and the
+contradiction is with `depth_le_one_log_le_linear`'s *upper* bound rather than the lower one.
+
+Because the bracket is constant here — no `1/x` — the argument stays linear: `exp(exp x) ≥ exp x`
+turns `exp(exp x)·ε ≤ x + C` into `exp x ≤ (1/ε)·x + C·(1/ε)`, which `exp_beats_linear_past`
+refuses. Reaching for the `ρ/x` shape here would have forced a quadratic comparison for nothing.
+-/
+
+theorem log_ge_double_exp_const_absurd (ε S : Real) (hε : 0 < ε) (B : EMLTree) (hB : B.depth ≤ 1)
+    (h : ∀ x : Real, S ≤ x → 1 ≤ x → exp (exp x) * ε ≤ log (B.eval x)) : False := by
+  obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+  have hiε : (0 : Real) < 1 / ε := one_div_pos_of_pos hε
+  have hmε : (1 / ε) * ε = 1 := by
+    have hv := mul_inv ε (ne_of_gt hε); rw [mul_comm] at hv; exact hv
+  obtain ⟨x, hxS, hx1, hlt⟩ := exp_beats_linear_past
+    (α := 1 / ε) (β := C * (1 / ε)) (le_of_lt hiε) S
+  -- `exp x · ε ≤ exp (exp x) · ε ≤ log (B x) ≤ x + C`
+  have hEE : exp x * ε ≤ exp (exp x) * ε :=
+    mul_le_mul_of_nonneg_right (exp_monotone (le_of_lt (exp_grows_strictly_thm x)))
+      (le_of_lt hε)
+  have hchain : exp x * ε ≤ x + C :=
+    le_trans (le_trans hEE (h x hxS hx1)) (hC x hx1)
+  -- scale by `1/ε`
+  have hscale := mul_le_mul_of_nonneg_right hchain (le_of_lt hiε)
+  have hL : exp x * ε * (1 / ε) = exp x * (ε * (1 / ε)) := by
+    mach_mpoly [exp x, ε, (1 / ε : Real)]
+  have hmε' : ε * (1 / ε) = 1 := mul_inv ε (ne_of_gt hε)
+  rw [hL, hmε'] at hscale
+  have hclean : exp x * (1 : Real) = exp x := by mach_mpoly [exp x]
+  rw [hclean] at hscale
+  have hR : (x + C) * (1 / ε) = 1 / ε * x + C * (1 / ε) := by
+    mach_mpoly [x, C, (1 / ε : Real)]
+  rw [hR] at hscale
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hscale)
+
 end MachLib

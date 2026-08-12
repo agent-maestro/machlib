@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The mirror: `log (B x)` cannot blow up positive either
+
+**`log_ge_double_exp_const_absurd`.** The `ρ/x` finisher handles the branches where the bracket is
+negative. When `d < exp K` the bracket is a **positive constant** instead, so `log (B x)` runs to
+`+∞` double-exponentially and the contradiction is with `depth_le_one_log_le_linear`'s *upper* bound
+rather than the lower one.
+
+**Because the bracket is constant here — no `1/x` — the argument stays linear**: `exp(exp x) ≥ exp x`
+turns `exp(exp x)·ε ≤ x + C` into `exp x ≤ (1/ε)·x + C·(1/ε)`, which `exp_beats_linear_past` refuses.
+Reaching for the `ρ/x` shape here would have forced a quadratic comparison for nothing — the
+weakest-hypothesis rule cuts both ways, and using a *stronger* shape than the branch needs is its own
+mistake.
+
+With this the fast `A`-forms have all three brackets covered: `d > exp K` negative constant and
+`d = exp K` negative `~ρ/x` both go to the first finisher, `d < exp K` positive constant to this one.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### The finisher for both fast `A`-forms
 
 **`log_le_neg_double_exp_absurd`.** With `A` fast, both `exp (A x)` and `R₂ x` are `exp(exp x)` times

@@ -1764,6 +1764,29 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "Positive-blowup mirror. Constant bracket keeps it linear; the rho/x shape would have forced a quadratic here.",
+      "id": "double-exp-positive-mirror",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the argument stays linear"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.log_ge_double_exp_const_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
