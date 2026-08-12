@@ -7,6 +7,23 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### …and the three slow `A`-forms cannot reach the sandwich
+
+**`right_var_A_slow_absurd`.** The sandwich says `R₂` is double-exponential. All three slow forms
+satisfy **one** bound — `exp (A x) ≤ exp x + K_A`: `const α` and `c − log x` because their
+exponentials are bounded, `var` because its exponential *is* `exp x`. A single exponential plus a
+constant cannot exceed `exp(exp x − exp K)`, and one lemma covers all three.
+
+The fast forms fail that hypothesis, which is exactly the separation wanted — the lemma's shape does
+the case split for free.
+
+The witness clears both requirements at once: `exp_beats_linear_past` at slope 1 with intercept
+`1 + exp K + exp(K_A − Cl)` gives `exp x − exp K ≥ x + 1` (so `exp(exp x − exp K) ≥ 2·exp x` by
+`exp_succ_ge_two_mul`) **and** `exp x > K_A − Cl`. Folding both thresholds into one intercept is
+what keeps it to a single point.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### Split-A right-branching, `ℓ₂ = var`: `R₂` is double-exponential
 
 **`right_var_sandwich`.** Here `exp x − log (R₂ x) = exp(K − 1/x)`, so

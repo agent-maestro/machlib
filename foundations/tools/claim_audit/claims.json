@@ -1719,6 +1719,28 @@
         "exp"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "All three slow A-forms at once, via the single bound exp(A x) <= exp x + KA. The fast forms fail the hypothesis, so the lemma's shape does the case split.",
+      "id": "right-var-slow-A-dead",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "All three slow forms\nsatisfy **one** bound"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.right_var_A_slow_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

@@ -3104,4 +3104,67 @@ theorem right_var_sandwich (K : Real) (R₂ : EMLTree)
   · have hm := exp_lt hlower; rw [exp_log hRpos] at hm; exact hm
   · have hm := exp_lt hupper; rw [exp_log hRpos] at hm; exact hm
 
+/-! ## ▸ …and the three slow `A`-forms cannot reach it
+
+The sandwich says `R₂` is double-exponential. The three slow forms all satisfy one bound —
+**`exp (A x) ≤ exp x + K_A`** (`const α` and `c − log x` because their exponentials are bounded,
+`var` because its exponential *is* `exp x`) — and a single exponential plus a constant cannot exceed
+`exp(exp x − exp K)`. One lemma covers all three; the fast forms fail the hypothesis, which is
+exactly the separation wanted.
+-/
+
+theorem right_var_A_slow_absurd (K Cl KA S : Real) (A B : EMLTree)
+    (hCl : ∀ x : Real, S ≤ x → Cl ≤ log (B.eval x))
+    (hA : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ exp x + KA)
+    (hsand : ∀ x : Real, S ≤ x → 1 ≤ x →
+      exp (exp x - exp K) < exp (A.eval x) - log (B.eval x)) : False := by
+  obtain ⟨x, hxS, hx1, hlt⟩ := exp_beats_linear_past
+    (α := 1) (β := 1 + exp K + exp (KA - Cl)) (le_of_lt zero_lt_one_ax) S
+  have hlin : (1 : Real) * x + (1 + exp K + exp (KA - Cl))
+      = x + 1 + exp K + exp (KA - Cl) := by mach_mpoly [x, exp K, exp (KA - Cl)]
+  rw [hlin] at hlt
+  -- `exp x − exp K ≥ x + 1`
+  have hstep : x + 1 ≤ exp x - exp K := by
+    have u := add_le_add_wit (le_of_lt hlt) (le_refl (-exp K - exp (KA - Cl)))
+    have l : x + 1 + exp K + exp (KA - Cl) + (-exp K - exp (KA - Cl)) = x + 1 := by
+      mach_mpoly [x, exp K, exp (KA - Cl)]
+    have r : exp x + (-exp K - exp (KA - Cl)) = exp x - exp K - exp (KA - Cl) := by
+      mach_mpoly [exp x, exp K, exp (KA - Cl)]
+    rw [l, r] at u
+    refine le_trans u ?_
+    have v := add_le_add_wit (le_refl (exp x - exp K)) (neg_le_neg_wit
+      (le_of_lt (exp_pos (KA - Cl))))
+    have l2 : exp x - exp K + -exp (KA - Cl) = exp x - exp K - exp (KA - Cl) := by
+      mach_mpoly [exp x, exp K, exp (KA - Cl)]
+    have r2 : exp x - exp K + -(0 : Real) = exp x - exp K := by
+      mach_mpoly [exp x, exp K]
+    rw [l2, r2] at v; exact v
+  -- so `exp (exp x − exp K) ≥ exp (x+1) ≥ 2·exp x`
+  have hbig : exp x + exp x ≤ exp (exp x - exp K) :=
+    le_trans (exp_succ_ge_two_mul x) (exp_monotone hstep)
+  -- but the sandwich caps it by `exp x + K_A − Cl`
+  have hcap : exp (exp x - exp K) < exp x + KA - Cl := by
+    refine lt_of_lt_of_le (hsand x hxS hx1) ?_
+    have u := add_le_add_wit (hA x hx1) (neg_le_neg_wit (hCl x hxS))
+    have l : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    have r : exp x + KA + -Cl = exp x + KA - Cl := by mach_mpoly [exp x, KA, Cl]
+    rw [l, r] at u; exact u
+  -- `exp x < KA − Cl`, yet `exp x > exp (KA − Cl) > KA − Cl`
+  have hsmall : exp x < KA - Cl := by
+    have u := add_lt_add_left (lt_of_le_of_lt hbig hcap) (-exp x)
+    have l : -exp x + (exp x + exp x) = exp x := by mach_mpoly [exp x]
+    have r : -exp x + (exp x + KA - Cl) = KA - Cl := by mach_mpoly [exp x, KA, Cl]
+    rw [l, r] at u; exact u
+  have hgt : KA - Cl < exp x := by
+    refine lt_trans_ax (exp_grows_strictly_thm (KA - Cl)) (lt_of_le_of_lt ?_ hlt)
+    have hnn : (0 : Real) ≤ x + 1 + exp K := by
+      have u := add_le_add_wit (add_le_add_wit
+        (le_of_lt (lt_of_lt_of_le zero_lt_one_ax hx1)) (le_of_lt zero_lt_one_ax))
+        (le_of_lt (exp_pos K))
+      have l : (0 : Real) + 0 + 0 = 0 := by mach_ring
+      rw [l] at u; exact u
+    exact le_add_left_nonneg hnn
+  exact lt_irrefl_ax _ (lt_trans_ax hsmall hgt)
+
 end MachLib
