@@ -1272,6 +1272,29 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The mirror bound at infinity. Its thresholds are per-form, which is why the statement carries an X0 rather than starting at 1.",
+      "id": "shallow-log-bounded-below",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a depth-≤1 tree's logarithm is bounded **below**\neventually"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_log_lower_at_infinity",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∃",
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

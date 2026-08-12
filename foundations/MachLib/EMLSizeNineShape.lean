@@ -1078,4 +1078,123 @@ theorem mx_A_is_var_absurd (M : Real) (hM : 0 < M) (B : EMLTree) (hB : B.depth �
     rw [r] at u; exact u
   exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hub)
 
+/-- **The mirror: a depth-≤1 tree's logarithm is bounded BELOW eventually.** Each form needs its own
+threshold — `c − log x` only crosses into the totalised branch past `exp c`, and `exp x − d` only
+clears `1` past `exp d` — but past it the bound is uniform, and in four of the five forms it is `0`. -/
+theorem depth_le_one_log_lower_at_infinity (B : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ Cl X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Cl ≤ log (B.eval x) := by
+  have hl1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  have hnonneg : ∀ y : Real, 1 ≤ y → (0 : Real) ≤ log y := by
+    intro y hy
+    have hm := log_le_log zero_lt_one_ax hy
+    rw [hl1] at hm; exact hm
+  have hone_le : ∀ y : Real, 0 < y → (1 : Real) ≤ 1 + y := by
+    intro y hy
+    have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt hy)
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact u
+  rcases depth_le_one_classification B hB with
+      ⟨β, hb⟩ | hb | ⟨c, hc0, hb⟩ | ⟨d, hb⟩ | hb
+  · refine ⟨log β, 1, le_refl 1, fun x hx => ?_⟩
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx)]; exact le_refl _
+  · refine ⟨0, 1, le_refl 1, fun x hx => ?_⟩
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx)]
+    exact hnonneg x hx
+  · refine ⟨0, 1 + exp c, hone_le _ (exp_pos c), fun x hx => ?_⟩
+    have hx1 : (1 : Real) ≤ x := le_trans (hone_le _ (exp_pos c)) hx
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    have hec : exp c ≤ x := by
+      refine le_trans ?_ hx
+      have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp c))
+      have l : (0 : Real) + exp c = exp c := by mach_mpoly [exp c]
+      rw [l] at u; exact u
+    have hcl : c ≤ log x := by
+      have hm := log_le_log (exp_pos c) hec
+      rw [log_exp] at hm; exact hm
+    have hle : c - log x ≤ 0 := by
+      have u := add_le_add_wit hcl (neg_le_neg_wit (le_refl (log x)))
+      have l : c + -log x = c - log x := by mach_mpoly [c, log x]
+      have r : log x + -log x = 0 := by mach_mpoly [log x]
+      rw [l, r] at u; exact u
+    rw [log_nonpos hle]; exact le_refl 0
+  · refine ⟨0, 1 + exp d, hone_le _ (exp_pos d), fun x hx => ?_⟩
+    have hx1 : (1 : Real) ≤ x := le_trans (hone_le _ (exp_pos d)) hx
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    have hxd : (1 : Real) + d < x :=
+      lt_of_lt_of_le (add_lt_add_left (exp_grows_strictly_thm d) 1) hx
+    have hone : (1 : Real) ≤ exp x - d := by
+      have hchain : (1 : Real) + d < exp x := lt_trans_ax hxd (exp_grows_strictly_thm x)
+      have u := add_lt_add_left hchain (-d)
+      have l : -d + (1 + d) = 1 := by mach_mpoly [d]
+      have r : -d + exp x = exp x - d := by mach_mpoly [d, exp x]
+      rw [l, r] at u; exact le_of_lt u
+    exact hnonneg _ hone
+  · refine ⟨0, 1, le_refl 1, fun x hx => ?_⟩
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx)]
+    have hlog : log x ≤ x - 1 := log_le_sub_one_of_one_le hx
+    have hexp : (1 : Real) + x ≤ exp x := one_add_le_exp x
+    have hone : (1 : Real) ≤ exp x - log x := by
+      have u := add_le_add_wit hexp (neg_le_neg_wit hlog)
+      have l : (1 : Real) + x + -(x - 1) = 1 + 1 := by mach_mpoly [x]
+      have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
+      rw [l, r] at u
+      exact le_trans (hone_le 1 zero_lt_one_ax) u
+    exact hnonneg _ hone
+
+/-- **`M·x` is out of reach when `exp(A x)` is bounded.** Covers both bounded `A`-forms in one
+statement — `const α` with `K = exp α`, `c − log x` with `K = exp c` — because the only thing the
+argument uses is the bound: `M·x` is unbounded and `K − Cl` is not. -/
+theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.depth ≤ 1)
+    (hA : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ K)
+    (h : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = M * x) : False := by
+  obtain ⟨Cl, X₀, hX₀, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+  have hiM : (0 : Real) < 1 / M := one_div_pos_of_pos hM
+  have hE : (0 : Real) < 1 + exp (K - Cl) := by
+    have u := add_lt_add_left (exp_pos (K - Cl)) 1
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+  have ht : (0 : Real) < (1 + exp (K - Cl)) * (1 / M) := mul_pos hE hiM
+  have hxX : X₀ ≤ X₀ + (1 + exp (K - Cl)) * (1 / M) := by
+    have u := add_le_add_wit (le_refl X₀) (le_of_lt ht)
+    have l : X₀ + 0 = X₀ := by mach_mpoly [X₀]
+    rw [l] at u; exact u
+  have hx1 : (1 : Real) ≤ X₀ + (1 + exp (K - Cl)) * (1 / M) := le_trans hX₀ hxX
+  have hxpos : (0 : Real) < X₀ + (1 + exp (K - Cl)) * (1 / M) :=
+    lt_of_lt_of_le zero_lt_one_ax hx1
+  -- `M·x = M·X₀ + (1 + exp (K−Cl))`, which exceeds `K − Cl`
+  have hMinv : M * (1 / M) = 1 := mul_inv M (ne_of_gt hM)
+  have hMx : K - Cl < M * (X₀ + (1 + exp (K - Cl)) * (1 / M)) := by
+    have hexpand : M * (X₀ + (1 + exp (K - Cl)) * (1 / M))
+        = M * X₀ + (1 + exp (K - Cl)) * (M * (1 / M)) := by
+      mach_mpoly [M, X₀, exp (K - Cl), (1 / M : Real)]
+    rw [hexpand, hMinv]
+    have hone : (1 + exp (K - Cl)) * (1 : Real) = 1 + exp (K - Cl) := by
+      mach_mpoly [exp (K - Cl)]
+    rw [hone]
+    have hlt : K - Cl < 1 + exp (K - Cl) := lt_one_add_exp (K - Cl)
+    have hpos : (0 : Real) < M * X₀ := mul_pos hM (lt_of_lt_of_le zero_lt_one_ax hX₀)
+    have u := add_lt_add_left hlt (M * X₀)
+    have l : M * X₀ + (K - Cl) = K - Cl + M * X₀ := by mach_mpoly [M, X₀, K, Cl]
+    rw [l] at u
+    have v := add_lt_add_left hpos (K - Cl)
+    have l2 : K - Cl + 0 = K - Cl := by mach_mpoly [K, Cl]
+    rw [l2] at v
+    exact lt_trans_ax v u
+  -- but the equation caps it at `K − Cl`
+  have key := h _ hxpos
+  have hup : M * (X₀ + (1 + exp (K - Cl)) * (1 / M)) ≤ K - Cl := by
+    rw [← key]
+    have u := add_le_add_wit (hA _ hx1) (neg_le_neg_wit (hCl _ hxX))
+    have l : exp (A.eval (X₀ + (1 + exp (K - Cl)) * (1 / M)))
+           + -log (B.eval (X₀ + (1 + exp (K - Cl)) * (1 / M)))
+           = exp (A.eval (X₀ + (1 + exp (K - Cl)) * (1 / M)))
+           - log (B.eval (X₀ + (1 + exp (K - Cl)) * (1 / M))) := by
+      mach_mpoly [exp (A.eval (X₀ + (1 + exp (K - Cl)) * (1 / M))),
+                  log (B.eval (X₀ + (1 + exp (K - Cl)) * (1 / M)))]
+    have r : K + -Cl = K - Cl := by mach_mpoly [K, Cl]
+    rw [l, r] at u; exact u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hMx hup)
+
 end MachLib

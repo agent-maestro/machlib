@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The mirror at `∞`, and the bounded-`A` half of `M·x`
+
+**`depth_le_one_log_lower_at_infinity`** — a depth-≤1 tree's logarithm is bounded **below**
+eventually. Each form carries its own threshold (`c − log x` only crosses into the totalised branch
+past `exp c`; `exp x − d` only clears `1` past `exp d`), but past it the bound is uniform, and in
+four of the five forms it is simply `0`.
+
+**`mx_A_bounded_absurd`** covers both bounded `A`-forms in **one** statement — `const α` with
+`K = exp α`, `c − log x` with `K = exp c` — because the only thing the argument uses is the bound:
+`M·x` is unbounded and `K − Cl` is not. The witness point is `X₀ + (1 + exp(K−Cl))·(1/M)`, chosen so
+that `M·x = M·X₀ + (1 + exp(K−Cl))` lands above `K − Cl` by `lt_one_add_exp`.
+
+**`M·x ∈ EML₂?` now has three of five `A`-forms closed** — `var` (via the `∞` upper bound),
+`const`, and `c − log x` (both via this) — plus the `B = exp x` shape. Remaining: the two
+fast-growing forms `exp x − d` and `exp x − log x`, where `exp(A x)` must be bounded *below* by
+`exp x` past a threshold and then run against the same linear cap.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Growth at `∞`: a shallow `log` cannot beat linear
 
 Every bound in `EMLSizeNineShape` lived on `(0,1]`; the remaining `M·x` shapes need the other end.
