@@ -1469,6 +1469,29 @@
         "∃"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The log dichotomy. Deliberately weaker than the exp gap — three growth classes on this side, so the mirror statement would be false.",
+      "id": "depth-one-log-dichotomy",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`log (B x)` is either bounded above\non `[1,∞)` or unbounded above"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_log_bounded_or_unbounded",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "∃"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

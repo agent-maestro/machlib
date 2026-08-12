@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The log-side dichotomy — and it is *not* the mirror of the exp gap
+
+**`depth_le_one_log_bounded_or_unbounded`** — for a depth-≤1 `B`, `log (B x)` is either bounded above
+on `[1,∞)` or unbounded above.
+
+**Deliberately weaker than the exp gap, because the log side has three growth classes, not two:**
+bounded (`const β`, `c′ − log x`), **logarithmic** (`var`), and **linear** (`exp x − d`,
+`exp x − log x`). So there is no "bounded or dominates" statement to make — `var` is unbounded yet
+dominates nothing. Writing the mirror would have been false, and the shape of the theorem is the
+finding as much as its content.
+
+Both unbounded branches share one step, **`exp_sub_pred_ge`**: `exp (x−1) ≤ exp x − exp (x−1)`,
+because `exp 1 ≥ 2`. That gives `exp (x−1) ≤ B x` once the subtracted term is under `exp (x−1)` —
+which holds for `d` past a threshold and for `log x` always, since `log x ≤ x − 1 < exp (x−1)`. Then
+`log_le_log` delivers `x − 1 ≤ log (B x)`.
+
+The `c′ − log x` bound needed care in the small-`c′` regime: `log c′ ≤ c′ + 1` holds for every
+`c′ > 0` but by two different arguments either side of `1`, and the totalised branch contributes `0`,
+so the cap must be non-negative as well as above `log c′`.
+
+**The kit for the remaining cells is now complete.** Split-A left-branching `q > 1` reduces to `R₂`
+bounded and strictly increasing; the exp gap forces `A` bounded, this forces
+`B ∈ {const β, c′ − log x}`, and the four surviving combinations are eventually constant or
+decreasing. `sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### A gap theorem: depth-1 exponentials are bounded, or they dominate `exp x`
 
 **`depth_le_one_exp_bounded_or_grows`** — for a depth-≤1 `A`, either `exp (A x)` is bounded on

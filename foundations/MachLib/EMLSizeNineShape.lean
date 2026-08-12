@@ -1559,4 +1559,174 @@ theorem depth_le_one_exp_bounded_or_grows (A : EMLTree) (hA : A.depth ≤ 1) :
     have l2 : x + (0 : Real) = x := by mach_mpoly [x]
     rw [l2] at v; exact v
 
+/-! ## ▸ The log side: bounded above, or unbounded above
+
+**Not the mirror of the exp gap.** The `log` side has *three* growth classes — bounded
+(`const β`, `c′ − log x`), **logarithmic** (`var`), and **linear** (`exp x − d`, `exp x − log x`) —
+so there is no "bounded or dominates" statement to make: `var` is unbounded yet dominates nothing.
+The dichotomy that *is* available, and the one the remaining cells need, is plain
+**bounded-above versus unbounded-above**.
+-/
+
+/-- `exp (x−1) ≤ exp x − exp (x−1)`, since `exp 1 ≥ 2`. The step both unbounded cases share. -/
+private theorem exp_sub_pred_ge (x : Real) : exp (x - 1) ≤ exp x - exp (x - 1) := by
+  have hsplit : exp x = exp (x - 1) * exp 1 := by
+    rw [← exp_add]
+    have e : x - 1 + 1 = x := by mach_mpoly [x]
+    rw [e]
+  have he2 : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp 1
+  have hge : (1 : Real) ≤ exp 1 - 1 := by
+    have u := add_le_add_wit he2 (le_refl (-1 : Real))
+    have l : (1 : Real) + 1 + -1 = 1 := by mach_ring
+    have r : exp 1 + -1 = exp 1 - 1 := by mach_mpoly [exp 1]
+    rw [l, r] at u; exact u
+  have hmul := mul_le_mul_of_nonneg_left hge (le_of_lt (exp_pos (x - 1)))
+  have l : exp (x - 1) * 1 = exp (x - 1) := by mach_mpoly [exp (x - 1)]
+  have r : exp (x - 1) * (exp 1 - 1) = exp (x - 1) * exp 1 - exp (x - 1) := by
+    mach_mpoly [exp (x - 1), exp 1]
+  rw [l, r] at hmul
+  rw [hsplit]; exact hmul
+
+/-- **The log dichotomy.** For a depth-≤1 `B`, `log (B x)` is either bounded above on `[1,∞)` or
+unbounded above. -/
+theorem depth_le_one_log_bounded_or_unbounded (B : EMLTree) (hB : B.depth ≤ 1) :
+    (∃ Λ : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ Λ)
+    ∨ (∀ Λ : Real, ∃ x : Real, 1 ≤ x ∧ Λ < log (B.eval x)) := by
+  have hl1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  have hlogx : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x h1
+    have hm := log_le_log zero_lt_one_ax h1
+    rw [hl1] at hm; exact hm
+  -- the point used by both unbounded branches
+  have hbig : ∀ Λ : Real, (1 : Real) ≤ 1 + exp (Λ + 1) ∧ Λ < exp (Λ + 1) := by
+    intro Λ
+    refine ⟨?_, ?_⟩
+    · have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos (Λ + 1)))
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    · refine lt_trans_ax ?_ (exp_grows_strictly_thm (Λ + 1))
+      have u := add_lt_add_left zero_lt_one_ax Λ
+      have l : Λ + 0 = Λ := by mach_mpoly [Λ]
+      rw [l] at u; exact u
+  rcases depth_le_one_classification B hB with
+      ⟨β, hb⟩ | hb | ⟨c, hc0, hb⟩ | ⟨d, hb⟩ | hb
+  · exact Or.inl ⟨log β, fun x h1 => by
+      rw [hb x (lt_of_lt_of_le zero_lt_one_ax h1)]; exact le_refl _⟩
+  · -- `var`: unbounded, but only logarithmically — evaluate at `exp (1 + exp Λ)`
+    refine Or.inr (fun Λ => ⟨exp (1 + exp Λ), ?_, ?_⟩)
+    · have hp : (0 : Real) < 1 + exp Λ := by
+        have u := add_lt_add_left (exp_pos Λ) 1
+        have l : (1 : Real) + 0 = 1 := by mach_ring
+        rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+      have hm := exp_monotone (le_of_lt hp)
+      rw [exp_zero] at hm; exact hm
+    · rw [hb _ (exp_pos _), log_exp]
+      refine lt_trans_ax (exp_grows_strictly_thm Λ) ?_
+      have u := add_lt_add_left (exp_pos Λ) 1
+      have l : (1 : Real) + 0 = 1 := by mach_ring
+      rw [l] at u
+      have v := add_lt_add_left zero_lt_one_ax (exp Λ)
+      have l2 : exp Λ + 0 = exp Λ := by mach_mpoly [exp Λ]
+      have r2 : exp Λ + 1 = 1 + exp Λ := by mach_mpoly [exp Λ]
+      rw [l2, r2] at v; exact v
+  · -- `c − log x`: capped by `c + 1`, including the totalised branch
+    refine Or.inl ⟨c + 1, fun x h1 => ?_⟩
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax h1)]
+    have hc1 : log c ≤ c + 1 := by
+      rcases lt_total c 1 with hlt | heq | hgt
+      · refine le_trans (log_nonpos_of_le_one' (le_of_lt hlt)) ?_
+        have u := add_le_add_wit (le_of_lt hc0) (le_of_lt zero_lt_one_ax)
+        have l : (0 : Real) + 0 = 0 := by mach_ring
+        rw [l] at u; exact u
+      · rw [heq, hl1]
+        have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax)
+        have l : (0 : Real) + 0 = 0 := by mach_ring
+        rw [l] at u; exact u
+      · refine le_trans (log_le_sub_one_of_one_le (le_of_lt hgt)) ?_
+        have u := add_le_add_wit (le_refl c) (le_of_lt (lt_trans_ax
+          (by have v := add_lt_add_left zero_lt_one_ax (-1 : Real)
+              have l : (-1 : Real) + 0 = -1 := by mach_ring
+              have r : (-1 : Real) + 1 = 0 := by mach_ring
+              rw [l, r] at v; exact v) zero_lt_one_ax))
+        have l : c + -1 = c - 1 := by mach_mpoly [c]
+        rw [l] at u; exact u
+    have hnn : (0 : Real) ≤ c + 1 := by
+      have u := add_le_add_wit (le_of_lt hc0) (le_of_lt zero_lt_one_ax)
+      have l : (0 : Real) + 0 = 0 := by mach_ring
+      rw [l] at u; exact u
+    rcases lt_total (c - log x) 0 with hneg | heq | hpos
+    · rw [log_nonpos (le_of_lt hneg)]; exact hnn
+    · rw [heq, log_zero_totalised]; exact hnn
+    · refine le_trans (log_le_log hpos ?_) hc1
+      have u := add_le_add_wit (le_refl c) (neg_le_neg_wit (hlogx x h1))
+      have l : c + -log x = c - log x := by mach_mpoly [c, log x]
+      have r : c + -(0 : Real) = c := by mach_mpoly [c]
+      rw [l, r] at u; exact u
+  · -- `exp x − d`: linear growth, via `exp (x−1) ≤ exp x − d`
+    refine Or.inr (fun Λ => ⟨1 + exp d + exp (Λ + 1), ?_, ?_⟩)
+    · have u := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d)))
+        (le_of_lt (exp_pos (Λ + 1)))
+      have l : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [l] at u; exact u
+    · have hx1 : (1 : Real) ≤ 1 + exp d + exp (Λ + 1) := by
+        have u := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d)))
+          (le_of_lt (exp_pos (Λ + 1)))
+        have l : (1 : Real) + 0 + 0 = 1 := by mach_ring
+        rw [l] at u; exact u
+      rw [hb _ (lt_of_lt_of_le zero_lt_one_ax hx1)]
+      have hpred : (1 : Real) + exp d + exp (Λ + 1) - 1 = exp d + exp (Λ + 1) := by
+        mach_mpoly [exp d, exp (Λ + 1)]
+      have hdle : d ≤ exp (1 + exp d + exp (Λ + 1) - 1) := by
+        rw [hpred]
+        refine le_trans (le_of_lt (exp_grows_strictly_thm d)) ?_
+        refine le_trans ?_ (le_of_lt (exp_grows_strictly_thm (exp d + exp (Λ + 1))))
+        have u := add_le_add_wit (le_refl (exp d)) (le_of_lt (exp_pos (Λ + 1)))
+        have l : exp d + 0 = exp d := by mach_mpoly [exp d]
+        rw [l] at u; exact u
+      have hge : exp (1 + exp d + exp (Λ + 1) - 1) ≤ exp (1 + exp d + exp (Λ + 1)) - d := by
+        refine le_trans (exp_sub_pred_ge _) ?_
+        have u := add_le_add_wit (le_refl (exp (1 + exp d + exp (Λ + 1))))
+          (neg_le_neg_wit hdle)
+        have l : exp (1 + exp d + exp (Λ + 1)) + -exp (1 + exp d + exp (Λ + 1) - 1)
+            = exp (1 + exp d + exp (Λ + 1)) - exp (1 + exp d + exp (Λ + 1) - 1) := by
+          mach_mpoly [exp (1 + exp d + exp (Λ + 1)), exp (1 + exp d + exp (Λ + 1) - 1)]
+        have r : exp (1 + exp d + exp (Λ + 1)) + -d
+            = exp (1 + exp d + exp (Λ + 1)) - d := by
+          mach_mpoly [exp (1 + exp d + exp (Λ + 1)), d]
+        rw [l, r] at u; exact u
+      have hm := log_le_log (exp_pos _) hge
+      rw [log_exp, hpred] at hm
+      refine lt_of_lt_of_le ?_ hm
+      refine lt_of_lt_of_le (hbig Λ).2 ?_
+      have u := add_le_add_wit (le_of_lt (exp_pos d)) (le_refl (exp (Λ + 1)))
+      have l : (0 : Real) + exp (Λ + 1) = exp (Λ + 1) := by mach_mpoly [exp (Λ + 1)]
+      rw [l] at u; exact u
+  · -- `exp x − log x`: same step, with `log x ≤ x − 1 < exp (x−1)`
+    refine Or.inr (fun Λ => ⟨1 + exp (Λ + 1), (hbig Λ).1, ?_⟩)
+    · have hx1 : (1 : Real) ≤ 1 + exp (Λ + 1) := (hbig Λ).1
+      rw [hb _ (lt_of_lt_of_le zero_lt_one_ax hx1)]
+      have hpred : (1 : Real) + exp (Λ + 1) - 1 = exp (Λ + 1) := by
+        mach_mpoly [exp (Λ + 1)]
+      have hlx : log (1 + exp (Λ + 1)) ≤ exp (1 + exp (Λ + 1) - 1) := by
+        rw [hpred]
+        refine le_trans (log_le_sub_one_of_one_le hx1) ?_
+        rw [hpred]
+        exact le_of_lt (exp_grows_strictly_thm _)
+      have hge : exp (1 + exp (Λ + 1) - 1)
+          ≤ exp (1 + exp (Λ + 1)) - log (1 + exp (Λ + 1)) := by
+        refine le_trans (exp_sub_pred_ge _) ?_
+        have u := add_le_add_wit (le_refl (exp (1 + exp (Λ + 1)))) (neg_le_neg_wit hlx)
+        have l : exp (1 + exp (Λ + 1)) + -exp (1 + exp (Λ + 1) - 1)
+            = exp (1 + exp (Λ + 1)) - exp (1 + exp (Λ + 1) - 1) := by
+          mach_mpoly [exp (1 + exp (Λ + 1)), exp (1 + exp (Λ + 1) - 1)]
+        have r : exp (1 + exp (Λ + 1)) + -log (1 + exp (Λ + 1))
+            = exp (1 + exp (Λ + 1)) - log (1 + exp (Λ + 1)) := by
+          mach_mpoly [exp (1 + exp (Λ + 1)), log (1 + exp (Λ + 1))]
+        rw [l, r] at u; exact u
+      have hm := log_le_log (exp_pos _) hge
+      rw [log_exp, hpred] at hm
+      exact lt_of_lt_of_le (hbig Λ).2 hm
+
 end MachLib
