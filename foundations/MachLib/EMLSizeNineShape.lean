@@ -3167,4 +3167,71 @@ theorem right_var_A_slow_absurd (K Cl KA S : Real) (A B : EMLTree)
     exact le_add_left_nonneg hnn
   exact lt_irrefl_ax _ (lt_trans_ax hsmall hgt)
 
+/-! ## ▸ The finisher for both fast `A`-forms
+
+With `A` fast, `exp (A x)` and `R₂ x` are both `exp(exp x)` times a factor, so
+`log (B x) = exp(exp x)·(γ(x) − δ(x))`. In every surviving branch that bracket is **negative and at
+least `ρ/x` in magnitude** — a constant when `d ≠ exp K`, and `~ρ/x` at the boundary `d = exp K`,
+where `one_sub_exp_neg_ge` supplies the rate. Either way `log (B x) ≤ −exp(exp x)·ρ/x`, and
+`depth_le_one_log_lower_at_infinity` says `log (B x)` is bounded **below**. `exp(exp x)/x` outruns
+any constant.
+
+Stating it with the `ρ/x` shape rather than a constant `ρ` is what lets the boundary case reuse it.
+-/
+
+theorem log_le_neg_double_exp_absurd (ρ S : Real) (hρ : 0 < ρ) (B : EMLTree) (hB : B.depth ≤ 1)
+    (h : ∀ x : Real, S ≤ x → 1 ≤ x →
+      log (B.eval x) ≤ -(exp (exp x) * (ρ * (1 / x)))) : False := by
+  obtain ⟨Cl, X₀, hX₀1, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+  have hiρ : (0 : Real) < 1 / ρ := one_div_pos_of_pos hρ
+  have hα : (0 : Real) ≤ exp (-Cl) * (1 / ρ) := le_of_lt (mul_pos (exp_pos _) hiρ)
+  obtain ⟨x, hxT, hx1, hlt⟩ := exp_beats_linear_past
+    (α := exp (-Cl) * (1 / ρ)) (β := 0) hα (exp S + exp X₀)
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hix : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hmx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+  have hmρ : (1 / ρ) * ρ = 1 := by
+    have hv := mul_inv ρ (ne_of_gt hρ); rw [mul_comm] at hv; exact hv
+  -- the point clears both thresholds
+  have hxS : S ≤ x := by
+    refine le_of_lt (lt_of_lt_of_le (exp_grows_strictly_thm S) (le_trans ?_ hxT))
+    have u := add_le_add_wit (le_refl (exp S)) (le_of_lt (exp_pos X₀))
+    have l : exp S + 0 = exp S := by mach_mpoly [exp S]
+    rw [l] at u; exact u
+  have hxX : X₀ ≤ x := by
+    refine le_of_lt (lt_of_lt_of_le (exp_grows_strictly_thm X₀) (le_trans ?_ hxT))
+    have u := add_le_add_wit (le_of_lt (exp_pos S)) (le_refl (exp X₀))
+    have l : (0 : Real) + exp X₀ = exp X₀ := by mach_mpoly [exp X₀]
+    rw [l] at u; exact u
+  -- `exp (−Cl) < exp x · (ρ · (1/x))`
+  have hlin : exp (-Cl) * (1 / ρ) * x + 0 = exp (-Cl) * (1 / ρ) * x := by
+    mach_mpoly [exp (-Cl), (1 / ρ : Real), x]
+  rw [hlin] at hlt
+  have hscale := mul_lt_mul_of_pos_right hlt (mul_pos hρ hix)
+  have hL : exp (-Cl) * (1 / ρ) * x * (ρ * (1 / x))
+      = exp (-Cl) * ((1 / ρ) * ρ) * (x * (1 / x)) := by
+    mach_mpoly [exp (-Cl), (1 / ρ : Real), x, ρ, (1 / x : Real)]
+  rw [hL, hmρ, hmx] at hscale
+  have hclean : exp (-Cl) * (1 : Real) * 1 = exp (-Cl) := by mach_mpoly [exp (-Cl)]
+  rw [hclean] at hscale
+  -- push `exp x` up to `exp (exp x)`
+  have hEE : exp x * (ρ * (1 / x)) ≤ exp (exp x) * (ρ * (1 / x)) :=
+    mul_le_mul_of_nonneg_right (exp_monotone (le_of_lt (exp_grows_strictly_thm x)))
+      (le_of_lt (mul_pos hρ hix))
+  have hkey : -Cl < exp (exp x) * (ρ * (1 / x)) :=
+    lt_of_lt_of_le (lt_trans_ax (exp_grows_strictly_thm (-Cl)) hscale) hEE
+  -- so the cap is strictly below `Cl`, contradicting the lower bound
+  have hup := h x hxS hx1
+  have hlow := hCl x hxX
+  have hbad : Cl < Cl := by
+    refine lt_of_le_of_lt (le_trans hlow hup) ?_
+    have u := add_lt_add_left hkey (Cl - exp (exp x) * (ρ * (1 / x)))
+    have l : Cl - exp (exp x) * (ρ * (1 / x)) + -Cl
+        = -(exp (exp x) * (ρ * (1 / x))) := by
+      mach_mpoly [Cl, exp (exp x), ρ, (1 / x : Real)]
+    have r : Cl - exp (exp x) * (ρ * (1 / x)) + exp (exp x) * (ρ * (1 / x)) = Cl := by
+      mach_mpoly [Cl, exp (exp x), ρ, (1 / x : Real)]
+    rw [l, r] at u; exact u
+  exact lt_irrefl_ax _ hbad
+
 end MachLib

@@ -7,6 +7,21 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The finisher for both fast `A`-forms
+
+**`log_le_neg_double_exp_absurd`.** With `A` fast, both `exp (A x)` and `R₂ x` are `exp(exp x)` times
+a factor, so `log (B x) = exp(exp x)·(γ(x) − δ(x))`. In every surviving branch that bracket is
+**negative and at least `ρ/x` in magnitude** — a constant when `d ≠ exp K`, and `~ρ/x` at the
+boundary `d = exp K`, where `one_sub_exp_neg_ge` supplies the rate. Either way
+`log (B x) ≤ −exp(exp x)·ρ/x`, while `depth_le_one_log_lower_at_infinity` bounds `log (B x)` from
+**below**. `exp(exp x)/x` outruns any constant.
+
+**Stating it with the `ρ/x` shape rather than a constant `ρ` is the whole point** — a constant would
+handle `d ≠ exp K` and leave the boundary needing its own theorem. The weaker hypothesis costs
+nothing in the proof (`exp x ≤ exp(exp x)` absorbs the extra `1/x`) and covers both.
+
+`sorryAx` 0; ledger 242 unchanged.
+
 ### …and the three slow `A`-forms cannot reach the sandwich
 
 **`right_var_A_slow_absurd`.** The sandwich says `R₂` is double-exponential. All three slow forms

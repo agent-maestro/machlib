@@ -1741,6 +1741,29 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "Shared finisher for the two fast A-forms. The rho/x shape (not constant rho) is what makes the d = exp K boundary reuse it.",
+      "id": "double-exp-over-x-finisher",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`exp(exp x)/x` outruns any constant"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.log_le_neg_double_exp_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }
