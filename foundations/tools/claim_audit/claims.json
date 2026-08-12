@@ -1650,6 +1650,29 @@
         "∃"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The forms lemma on an arbitrary ray. Needed because R2's lower bound holds off a single point.",
+      "id": "log-forms-on-a-ray",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the forms lemma on an arbitrary ray `[S,∞)`"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_one_log_bounded_forms_from",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∨",
+        "∃"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

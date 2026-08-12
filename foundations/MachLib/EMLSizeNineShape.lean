@@ -1630,63 +1630,105 @@ private theorem big_point (Λ : Real) : (1 : Real) ≤ 1 + exp (Λ + 1) ∧ Λ <
     have l : Λ + 0 = Λ := by mach_mpoly [Λ]
     rw [l] at u; exact u
 
+private theorem log_exp_sub_const_unbounded_from (S d Λ : Real) :
+    ∃ x : Real, S ≤ x ∧ 1 ≤ x ∧ Λ < log (exp x - d) := by
+  have hpos3 : (0 : Real) ≤ exp d + exp (Λ + 1) + exp S := by
+    have u := add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos d)) (le_of_lt (exp_pos (Λ + 1))))
+      (le_of_lt (exp_pos S))
+    have l : (0 : Real) + 0 + 0 = 0 := by mach_ring
+    rw [l] at u; exact u
+  have hx1 : (1 : Real) ≤ 1 + exp d + exp (Λ + 1) + exp S := by
+    have u := add_le_add_wit (le_refl (1 : Real)) hpos3
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    have r : (1 : Real) + (exp d + exp (Λ + 1) + exp S)
+        = 1 + exp d + exp (Λ + 1) + exp S := by
+      mach_mpoly [exp d, exp (Λ + 1), exp S]
+    rw [l, r] at u; exact u
+  have hpred : (1 : Real) + exp d + exp (Λ + 1) + exp S - 1
+      = exp d + exp (Λ + 1) + exp S := by mach_mpoly [exp d, exp (Λ + 1), exp S]
+  have hSle : exp S ≤ exp d + exp (Λ + 1) + exp S := by
+    have u := add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos d))
+      (le_of_lt (exp_pos (Λ + 1)))) (le_refl (exp S))
+    have l : (0 : Real) + 0 + exp S = exp S := by mach_mpoly [exp S]
+    rw [l] at u; exact u
+  refine ⟨1 + exp d + exp (Λ + 1) + exp S, ?_, hx1, ?_⟩
+  · refine le_of_lt (lt_of_lt_of_le (lt_of_lt_of_le (exp_grows_strictly_thm S) hSle) ?_)
+    have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp d + exp (Λ + 1) + exp S))
+    have l : (0 : Real) + (exp d + exp (Λ + 1) + exp S) = exp d + exp (Λ + 1) + exp S := by
+      mach_mpoly [exp d, exp (Λ + 1), exp S]
+    have r : (1 : Real) + (exp d + exp (Λ + 1) + exp S)
+        = 1 + exp d + exp (Λ + 1) + exp S := by
+      mach_mpoly [exp d, exp (Λ + 1), exp S]
+    rw [l, r] at u; exact u
+  · have hdle : d ≤ exp (1 + exp d + exp (Λ + 1) + exp S - 1) := by
+      rw [hpred]
+      refine le_trans (le_of_lt (exp_grows_strictly_thm d)) ?_
+      refine le_trans ?_ (le_of_lt (exp_grows_strictly_thm (exp d + exp (Λ + 1) + exp S)))
+      have u := add_le_add_wit (add_le_add_wit (le_refl (exp d))
+        (le_of_lt (exp_pos (Λ + 1)))) (le_of_lt (exp_pos S))
+      have l : exp d + 0 + 0 = exp d := by mach_mpoly [exp d]
+      rw [l] at u; exact u
+    have hge : exp (1 + exp d + exp (Λ + 1) + exp S - 1)
+        ≤ exp (1 + exp d + exp (Λ + 1) + exp S) - d := by
+      refine le_trans (exp_sub_pred_ge _) ?_
+      have u := add_le_add_wit (le_refl (exp (1 + exp d + exp (Λ + 1) + exp S)))
+        (neg_le_neg_wit hdle)
+      have l : exp (1 + exp d + exp (Λ + 1) + exp S)
+          + -exp (1 + exp d + exp (Λ + 1) + exp S - 1)
+          = exp (1 + exp d + exp (Λ + 1) + exp S)
+            - exp (1 + exp d + exp (Λ + 1) + exp S - 1) := by
+        mach_mpoly [exp (1 + exp d + exp (Λ + 1) + exp S),
+          exp (1 + exp d + exp (Λ + 1) + exp S - 1)]
+      have r : exp (1 + exp d + exp (Λ + 1) + exp S) + -d
+          = exp (1 + exp d + exp (Λ + 1) + exp S) - d := by
+        mach_mpoly [exp (1 + exp d + exp (Λ + 1) + exp S), d]
+      rw [l, r] at u; exact u
+    have hm := log_le_log (exp_pos _) hge
+    rw [log_exp, hpred] at hm
+    refine lt_of_lt_of_le ?_ hm
+    refine lt_of_lt_of_le (big_point Λ).2 ?_
+    have u := add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos d)) (le_refl (exp (Λ + 1))))
+      (le_of_lt (exp_pos S))
+    have l : (0 : Real) + exp (Λ + 1) + 0 = exp (Λ + 1) := by mach_mpoly [exp (Λ + 1)]
+    rw [l] at u; exact u
+
 private theorem log_exp_sub_const_unbounded (d Λ : Real) :
     ∃ x : Real, 1 ≤ x ∧ Λ < log (exp x - d) := by
-  have hx1 : (1 : Real) ≤ 1 + exp d + exp (Λ + 1) := by
-    have u := add_le_add_wit (add_le_add_wit (le_refl (1 : Real)) (le_of_lt (exp_pos d)))
-      (le_of_lt (exp_pos (Λ + 1)))
-    have l : (1 : Real) + 0 + 0 = 1 := by mach_ring
-    rw [l] at u; exact u
-  refine ⟨1 + exp d + exp (Λ + 1), hx1, ?_⟩
-  have hpred : (1 : Real) + exp d + exp (Λ + 1) - 1 = exp d + exp (Λ + 1) := by
-    mach_mpoly [exp d, exp (Λ + 1)]
-  have hdle : d ≤ exp (1 + exp d + exp (Λ + 1) - 1) := by
-    rw [hpred]
-    refine le_trans (le_of_lt (exp_grows_strictly_thm d)) ?_
-    refine le_trans ?_ (le_of_lt (exp_grows_strictly_thm (exp d + exp (Λ + 1))))
-    have u := add_le_add_wit (le_refl (exp d)) (le_of_lt (exp_pos (Λ + 1)))
-    have l : exp d + 0 = exp d := by mach_mpoly [exp d]
-    rw [l] at u; exact u
-  have hge : exp (1 + exp d + exp (Λ + 1) - 1) ≤ exp (1 + exp d + exp (Λ + 1)) - d := by
-    refine le_trans (exp_sub_pred_ge _) ?_
-    have u := add_le_add_wit (le_refl (exp (1 + exp d + exp (Λ + 1)))) (neg_le_neg_wit hdle)
-    have l : exp (1 + exp d + exp (Λ + 1)) + -exp (1 + exp d + exp (Λ + 1) - 1)
-        = exp (1 + exp d + exp (Λ + 1)) - exp (1 + exp d + exp (Λ + 1) - 1) := by
-      mach_mpoly [exp (1 + exp d + exp (Λ + 1)), exp (1 + exp d + exp (Λ + 1) - 1)]
-    have r : exp (1 + exp d + exp (Λ + 1)) + -d = exp (1 + exp d + exp (Λ + 1)) - d := by
-      mach_mpoly [exp (1 + exp d + exp (Λ + 1)), d]
+  obtain ⟨x, _, hx1, hgt⟩ := log_exp_sub_const_unbounded_from 0 d Λ
+  exact ⟨x, hx1, hgt⟩
+
+private theorem log_exp_sub_log_unbounded_from (S Λ : Real) :
+    ∃ x : Real, S ≤ x ∧ 1 ≤ x ∧ Λ < log (exp x - log x) := by
+  -- ask the `exp x − d` lemma for a point past `Λ + 1`, so `Λ < x − 1`
+  obtain ⟨x, hxS, hx1, hgt⟩ := log_exp_sub_const_unbounded_from S 0 (Λ + 1)
+  refine ⟨x, hxS, hx1, ?_⟩
+  have hlx : log x ≤ exp (x - 1) := by
+    refine le_trans (log_le_sub_one_of_one_le hx1) ?_
+    exact le_of_lt (exp_grows_strictly_thm _)
+  have hge : exp (x - 1) ≤ exp x - log x := by
+    refine le_trans (exp_sub_pred_ge x) ?_
+    have u := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hlx)
+    have l : exp x + -exp (x - 1) = exp x - exp (x - 1) := by
+      mach_mpoly [exp x, exp (x - 1)]
+    have r : exp x + -log x = exp x - log x := by mach_mpoly [exp x, log x]
     rw [l, r] at u; exact u
   have hm := log_le_log (exp_pos _) hge
-  rw [log_exp, hpred] at hm
+  rw [log_exp] at hm
   refine lt_of_lt_of_le ?_ hm
-  refine lt_of_lt_of_le (big_point Λ).2 ?_
-  have u := add_le_add_wit (le_of_lt (exp_pos d)) (le_refl (exp (Λ + 1)))
-  have l : (0 : Real) + exp (Λ + 1) = exp (Λ + 1) := by mach_mpoly [exp (Λ + 1)]
-  rw [l] at u; exact u
+  -- `Λ < x − 1` follows from the witness being past `exp (Λ+1)`
+  have hz : exp x - (0 : Real) = exp x := by mach_mpoly [exp x]
+  rw [hz] at hgt
+  have hxx : log (exp x) = x := log_exp x
+  rw [hxx] at hgt
+  have u := add_lt_add_left hgt (-1 : Real)
+  have l : (-1 : Real) + (Λ + 1) = Λ := by mach_mpoly [Λ]
+  have r : (-1 : Real) + x = x - 1 := by mach_mpoly [x]
+  rw [l, r] at u; exact u
 
 private theorem log_exp_sub_log_unbounded (Λ : Real) :
     ∃ x : Real, 1 ≤ x ∧ Λ < log (exp x - log x) := by
-  refine ⟨1 + exp (Λ + 1), (big_point Λ).1, ?_⟩
-  have hx1 : (1 : Real) ≤ 1 + exp (Λ + 1) := (big_point Λ).1
-  have hpred : (1 : Real) + exp (Λ + 1) - 1 = exp (Λ + 1) := by mach_mpoly [exp (Λ + 1)]
-  have hlx : log (1 + exp (Λ + 1)) ≤ exp (1 + exp (Λ + 1) - 1) := by
-    rw [hpred]
-    refine le_trans (log_le_sub_one_of_one_le hx1) ?_
-    rw [hpred]; exact le_of_lt (exp_grows_strictly_thm _)
-  have hge : exp (1 + exp (Λ + 1) - 1)
-      ≤ exp (1 + exp (Λ + 1)) - log (1 + exp (Λ + 1)) := by
-    refine le_trans (exp_sub_pred_ge _) ?_
-    have u := add_le_add_wit (le_refl (exp (1 + exp (Λ + 1)))) (neg_le_neg_wit hlx)
-    have l : exp (1 + exp (Λ + 1)) + -exp (1 + exp (Λ + 1) - 1)
-        = exp (1 + exp (Λ + 1)) - exp (1 + exp (Λ + 1) - 1) := by
-      mach_mpoly [exp (1 + exp (Λ + 1)), exp (1 + exp (Λ + 1) - 1)]
-    have r : exp (1 + exp (Λ + 1)) + -log (1 + exp (Λ + 1))
-        = exp (1 + exp (Λ + 1)) - log (1 + exp (Λ + 1)) := by
-      mach_mpoly [exp (1 + exp (Λ + 1)), log (1 + exp (Λ + 1))]
-    rw [l, r] at u; exact u
-  have hm := log_le_log (exp_pos _) hge
-  rw [log_exp, hpred] at hm
-  exact lt_of_lt_of_le (big_point Λ).2 hm
+  obtain ⟨x, _, hx1, hgt⟩ := log_exp_sub_log_unbounded_from 0 Λ
+  exact ⟨x, hx1, hgt⟩
 
 /-- Cap for the `c − log x` form on `[1,∞)`: `c + 1`, valid including the totalised branch. -/
 private theorem log_c_sub_log_cap {c : Real} (hc0 : 0 < c) :
@@ -1746,32 +1788,40 @@ theorem depth_le_one_log_bounded_or_unbounded (B : EMLTree) (hB : B.depth ≤ 1)
     obtain ⟨x, hx1, hgt⟩ := log_exp_sub_log_unbounded Λ
     exact ⟨x, hx1, by rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)]; exact hgt⟩
 
-/-- **The composable form: a bounded log names the shape.** The dichotomy above says *whether* the
-log is bounded; the open cells need to know *which tree* that leaves, and the answer is exactly two
-of the five forms. -/
-theorem depth_le_one_log_bounded_forms (B : EMLTree) (hB : B.depth ≤ 1) (Λ : Real)
-    (h : ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ Λ) :
+/-- **The forms lemma on an arbitrary ray.** Split-A right-branching needs it: `R₂`'s lower bound
+holds off a single point, so the ray must start past that point rather than at `1`. -/
+theorem depth_le_one_log_bounded_forms_from (B : EMLTree) (hB : B.depth ≤ 1) (S Λ : Real)
+    (h : ∀ x : Real, S ≤ x → 1 ≤ x → log (B.eval x) ≤ Λ) :
     (∃ β : Real, ∀ x : Real, 0 < x → B.eval x = β)
     ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → B.eval x = c - log x) := by
   rcases depth_le_one_classification B hB with
       ⟨β, hb⟩ | hb | ⟨c, hc0, hb⟩ | ⟨d, hb⟩ | hb
   · exact Or.inl ⟨β, hb⟩
   · exfalso
-    obtain ⟨x, hx1, hgt⟩ := log_var_unbounded Λ
-    have := h x hx1
-    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at this
-    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt this)
+    obtain ⟨x, hxS, hx1, hgt⟩ := log_var_unbounded_from S Λ
+    have hcap := h x hxS hx1
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hcap
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hcap)
   · exact Or.inr ⟨c, hc0, hb⟩
   · exfalso
-    obtain ⟨x, hx1, hgt⟩ := log_exp_sub_const_unbounded d Λ
-    have := h x hx1
-    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at this
-    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt this)
+    obtain ⟨x, hxS, hx1, hgt⟩ := log_exp_sub_const_unbounded_from S d Λ
+    have hcap := h x hxS hx1
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hcap
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hcap)
   · exfalso
-    obtain ⟨x, hx1, hgt⟩ := log_exp_sub_log_unbounded Λ
-    have := h x hx1
-    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at this
-    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt this)
+    obtain ⟨x, hxS, hx1, hgt⟩ := log_exp_sub_log_unbounded_from S Λ
+    have hcap := h x hxS hx1
+    rw [hb x (lt_of_lt_of_le zero_lt_one_ax hx1)] at hcap
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hcap)
+
+/-- **The composable form: a bounded log names the shape.** The dichotomy above says *whether* the
+log is bounded; the open cells need to know *which tree* that leaves, and the answer is exactly two
+of the five forms. -/
+theorem depth_le_one_log_bounded_forms (B : EMLTree) (hB : B.depth ≤ 1) (Λ : Real)
+    (h : ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ Λ) :
+    (∃ β : Real, ∀ x : Real, 0 < x → B.eval x = β)
+    ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → B.eval x = c - log x) :=
+  depth_le_one_log_bounded_forms_from B hB 0 Λ (fun x _ hx1 => h x hx1)
 
 /-! ## ▸ The exp side needs the same treatment
 

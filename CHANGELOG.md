@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The ray generalisation lands whole (3 of 3)
+
+**`depth_le_one_log_bounded_forms_from`** — the forms lemma on an arbitrary ray `[S,∞)`. Split-A
+right-branching needs it because `R₂`'s lower bound holds *off a single point*, so the ray has to
+start past that point rather than at `1`.
+
+All three unbounded-form witnesses now take an `S`: each adds `exp S` to its construction, which
+clears `S` because `S < exp S`. The `[1,∞)` version survives as the `S = 0` instance, so nothing
+downstream moved.
+
+**A simplification fell out.** `log_exp_sub_log_unbounded_from` no longer carries its own proof — it
+asks `log_exp_sub_const_unbounded_from` for a point past `Λ + 1` at `d = 0`, then uses
+`log x ≤ x − 1 < exp(x−1)` and the shared `exp_sub_pred_ge`. Two near-identical proofs became one
+plus four lines. Asking the neighbouring lemma for a *stronger* point is what made it work; asking
+for the same point does not.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Split-A right-branching: the shape step
 
 **`split_a_right_const_shape`** — with `ℓ₂ = const p` the equation gives
