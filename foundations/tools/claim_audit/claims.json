@@ -1179,6 +1179,29 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The -log x cell reduces to right-branching. Conclusion is existential, so this exercises the arrow-splitter's existential guard on a second module.",
+      "id": "neg-log-right-branching",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a depth-3 path computing `−log x` must carry\nits *leaf on the left*"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.neg_log_path_is_right_branching",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "isPath",
+        ".eval",
+        "isLeaf"
+      ],
+      "conclusion_mentions": [
+        "∃",
+        "isLeaf"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

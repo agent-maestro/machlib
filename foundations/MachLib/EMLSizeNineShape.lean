@@ -688,4 +688,100 @@ theorem split_b_leaf_const_neg_absurd (μ : Real) (hμ : 0 < μ) (L : EMLTree)
   rw [h (1 + 1 / μ) hx] at hp
   exact lt_irrefl_ax _ (lt_trans_ax hp hneg)
 
+/-! ## ▸ Split B, `κ = 0`: the `−log x` cell reduces to RIGHT-branching only
+
+The sharpest open cell asks whether a depth-3 path computes `−log x`. Its **left**-branching half
+turns out to be free, and one of the two cases is a one-liner — worth checking before assuming a
+sign-consistent-looking cell is expensive. Writing `L = eml L₂ (leaf)`:
+
+* `leaf = var` gives `exp(L₂ x) − log x = −log x`, i.e. `exp(L₂ x) = 0`. Immediate.
+* `leaf = const q` gives `exp(L₂ x) = λ − log x`, which goes negative once `log x > λ`.
+
+So the `−log x` question lives entirely in the **right**-branching paths `L = eml (leaf) L₂`, where
+`log(L₂ x) = exp(ℓ x) + log x`. For `ℓ = const p` that is exactly **`L₂ x = M·x` with
+`M = exp(exp p) > 1`** — and `mx_mem_EML` builds `M·x` at depth 4. The cell has become a *gap*
+question about a named function: **`M·x ∈ EML₄`; is it in `EML₂`?**
+-/
+
+/-- **`L = eml L₂ var` cannot give `−log x`:** it forces `exp(L₂ x) = 0`. -/
+theorem neg_log_left_leaf_var_absurd (L₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (L₂.eval x) - log x = -log x) : False := by
+  have key := h 1 zero_lt_one_ax
+  have hz : exp (L₂.eval 1) = 0 := by
+    have e : exp (L₂.eval 1) = (exp (L₂.eval 1) - log 1) + log 1 := by
+      mach_mpoly [exp (L₂.eval 1), log (1 : Real)]
+    rw [e, key]; mach_mpoly [log (1 : Real)]
+  exact lt_irrefl_ax 0 (hz ▸ exp_pos (L₂.eval 1))
+
+/-- **`L = eml L₂ (const q)` cannot give `−log x`:** `exp(L₂ x) = λ − log x` goes negative past
+`x = exp(λ+1)`. Holds for every `λ`, so the totalised `log q = 0` case is included. -/
+theorem neg_log_left_leaf_const_absurd (lam : Real) (L₂ : EMLTree)
+    (h : ∀ x : Real, 0 < x → exp (L₂.eval x) - lam = -log x) : False := by
+  have hxpos : (0 : Real) < exp (lam + 1) := exp_pos _
+  have key := h (exp (lam + 1)) hxpos
+  have hlog : log (exp (lam + 1)) = lam + 1 := log_exp _
+  have hval : exp (L₂.eval (exp (lam + 1))) = -(1 : Real) := by
+    have e : exp (L₂.eval (exp (lam + 1)))
+        = (exp (L₂.eval (exp (lam + 1))) - lam) + lam := by
+      mach_mpoly [exp (L₂.eval (exp (lam + 1))), lam]
+    rw [e, key, hlog]; mach_mpoly [lam]
+  have hp := exp_pos (L₂.eval (exp (lam + 1)))
+  rw [hval] at hp
+  have hneg : -(1 : Real) < 0 := by
+    have u := add_lt_add_left zero_lt_one_ax (-1 : Real)
+    have l : -(1 : Real) + 0 = -1 := by mach_ring
+    have r : -(1 : Real) + 1 = 0 := by mach_ring
+    rw [l, r] at u; exact u
+  exact lt_irrefl_ax _ (lt_trans_ax hp hneg)
+
+/-- **The `−log x` cell is right-branching or nothing.** A depth-3 path computing `−log x` must have
+its *leaf* on the left, so the whole cell reduces to `log(L₂ x) = exp(ℓ x) + log x`. -/
+theorem neg_log_path_is_right_branching (L : EMLTree) (hp : L.isPath)
+    (h : ∀ x : Real, 0 < x → L.eval x = -log x) :
+    ∃ P Q : EMLTree, L = EMLTree.eml P Q ∧ P.isLeaf := by
+  cases L with
+  | const c =>
+    exfalso
+    have h1 := h 1 zero_lt_one_ax
+    have he := h (exp 1) (exp_pos 1)
+    have e1 : (EMLTree.const c).eval 1 = c := rfl
+    have e2 : (EMLTree.const c).eval (exp 1) = c := rfl
+    rw [e1] at h1; rw [e2] at he
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hle : log (exp 1) = 1 := log_exp 1
+    rw [hl1] at h1; rw [hle] at he
+    have h1' : c = 0 := by rw [h1]; mach_ring
+    have hbad : (0 : Real) = -1 := by rw [← h1']; exact he
+    have hneg : -(1 : Real) < 0 := by
+      have u := add_lt_add_left zero_lt_one_ax (-1 : Real)
+      have l : -(1 : Real) + 0 = -1 := by mach_ring
+      have r : -(1 : Real) + 1 = 0 := by mach_ring
+      rw [l, r] at u; exact u
+    exact lt_irrefl_ax _ (hbad ▸ hneg)
+  | var =>
+    exfalso
+    have h1 := h 1 zero_lt_one_ax
+    have e1 : (EMLTree.var).eval 1 = 1 := rfl
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    rw [e1, hl1] at h1
+    have hbad : (1 : Real) = 0 := by rw [h1]; mach_ring
+    exact lt_irrefl_ax 0 (hbad ▸ zero_lt_one_ax)
+  | eml P Q =>
+    refine ⟨P, Q, rfl, ?_⟩
+    rcases hp with ⟨hPl, _⟩ | ⟨hQl, _⟩
+    · exact hPl
+    · exfalso
+      have hev : ∀ x : Real, 0 < x →
+          exp (P.eval x) - log (Q.eval x) = -log x := fun x hx => h x hx
+      cases Q with
+      | const q =>
+        exact neg_log_left_leaf_const_absurd (log q) P
+          (fun x hx => hev x hx)
+      | var => exact neg_log_left_leaf_var_absurd P (fun x hx => hev x hx)
+      | eml _ _ => exact hQl
+
 end MachLib

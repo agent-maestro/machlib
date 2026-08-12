@@ -7,6 +7,30 @@ per-release status.
 
 ## [Unreleased] — 2026-08-11
 
+### The `−log x` cell halves — and becomes a gap question about `M·x`
+
+The sharpest open cell (split B, `κ = 0`) asks whether a depth-3 path computes `−log x`. Its
+**left-branching half is free**, and one case is a one-liner. Writing `L = eml L₂ (leaf)`:
+
+- `leaf = var` → `exp(L₂ x) − log x = −log x`, i.e. **`exp(L₂ x) = 0`**. Immediate
+  (`neg_log_left_leaf_var_absurd`).
+- `leaf = const q` → `exp(L₂ x) = λ − log x`, negative past `x = exp(λ+1)`
+  (`neg_log_left_leaf_const_absurd`, every `λ`, so the totalised `log q = 0` case is included).
+
+**`neg_log_path_is_right_branching`** assembles these: a depth-3 path computing `−log x` must carry
+its *leaf on the left*. So the cell reduces to `log(L₂ x) = exp(ℓ x) + log x`, and for
+`ℓ = const p` that is exactly **`L₂ x = M·x` with `M = exp(exp p) > 1`**.
+
+**`mx_mem_EML` already builds `M·x` at depth 4.** So this cell is now a *gap* question about a named
+function with no free structure left: **`M·x ∈ EML₄` — is it in `EML₂`?** That is a sharper and more
+answerable question than the one it came from, and it connects the 9-node problem to `witT`, which
+the arm already understands.
+
+**Worth flagging as a correction of my own expectation.** I had classified this cell as
+sign-consistent and therefore expensive. Half of it was free, and I only found that by checking
+rather than trusting the triage rule's verdict. The rule predicts *where machinery is needed*; it
+does not license skipping the cheap check. `sorryAx` 0; ledger 242 unchanged.
+
 ### Split B opens, and the 9-node map is now complete
 
 `split_b_leaf_const_neg_absurd` — in split B (`t = eml L (leaf)`) the equation is
