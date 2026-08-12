@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### `ℓ = var` at `q > 1`: the fast `A`-forms die, `A = var` survives
+
+Here `exp(R₂ x) = exp(exp x − 1/x) + λ` is **not bounded**, so the split-A argument does not port —
+its whole engine was boundedness. What survives is an upper bound:
+**`R₂ x ≤ exp x + λ`**, because `exp(exp x) + λ ≤ exp(exp x + λ)` (from `exp λ ≥ 1 + λ` and
+`exp(exp x) ≥ 1`).
+
+**`var_family_qpos_A_fast_absurd`** turns that into a kill for both fast forms at once, via the
+hypothesis they share: `A x ≥ x + 1` past a threshold — true for `exp x − d` (as `exp x ≥ x + x`)
+and for `exp x − log x` (as `log x ≤ x − 1`). Then `exp (A x) ≥ 2·exp x` by
+`exp_succ_ge_two_mul`, while the cap gives `exp (A x) ≤ exp x + λ + x + C`. So `exp x ≤ λ + x + C`,
+which `exp_beats_linear_past` refuses.
+
+**`A = var` is the only survivor**, and it is genuinely different: there `exp (A x) = exp x` exactly,
+so the cap is met with nothing to spare and no growth argument applies. Writing
+`W := exp(exp x)`, the equation becomes `W·(exp(−log(B x)) − exp(−1/x)) = λ`, which forces
+`B x → 1`; each of the five `B`-forms then fails for its own reason, and the `β = 1` case needs
+`1 − exp(−1/x) ≳ 1/(2x)` against `W → ∞`. That is a limit argument, not a bound argument, and it is
+the piece still missing.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### Split-A `q > 1` falls — the kit was the whole job
 
 **`split_a_qpos_absurd`.** `exp(R₂ x) = exp(K − 1/x) + λ` with `λ > 0`, and the argument is pure

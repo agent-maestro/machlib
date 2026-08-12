@@ -2107,4 +2107,86 @@ theorem split_a_qpos_absurd (K lam : Real) (hlam : 0 < lam) (R₂ : EMLTree) (hd
     rw [heq] at hstrict
     exact lt_irrefl_ax _ hstrict
 
+/-! ## ▸ The `ℓ = var` family at `q > 1`: the fast `A`-forms
+
+Here `exp(R₂ x) = exp(exp x − 1/x) + λ`, which is **not** bounded — so the previous argument does not
+port. What survives is an upper bound: `R₂ x ≤ exp x + λ`, because `exp(exp x) + λ ≤ exp(exp x + λ)`.
+
+That caps `exp (A x)` by `exp x + λ + x + C`, which the two **fast** forms break at once: both give
+`A x ≥ x + 1` eventually, hence `exp (A x) ≥ 2·exp x`, and `exp x` outruns `λ + x + C`. Only
+`A = var` survives, where `exp (A x) = exp x` exactly and the cap is not violated.
+-/
+
+/-- `exp x + exp x ≤ exp (x+1)`, since `exp 1 ≥ 2`. -/
+private theorem exp_succ_ge_two_mul (x : Real) : exp x + exp x ≤ exp (x + 1) := by
+  have he2 : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp 1
+  have hm := mul_le_mul_of_nonneg_left he2 (le_of_lt (exp_pos x))
+  have l : exp x * (1 + 1) = exp x + exp x := by mach_mpoly [exp x]
+  rw [l] at hm
+  rw [exp_add]; exact hm
+
+/-- `exp` reflects `≤`. -/
+private theorem le_of_exp_le {a b : Real} (h : exp a ≤ exp b) : a ≤ b := by
+  rcases lt_total a b with hl | he | hg
+  · exact le_of_lt hl
+  · exact le_of_eq he
+  · exact absurd h (fun hc => lt_irrefl_ax _ (lt_of_lt_of_le (exp_lt hg) hc))
+
+/-- **The `ℓ = var`, `q > 1` cell dies for every fast `A`.** Covers `exp x − d` and `exp x − log x`
+in one statement, via the hypothesis they both satisfy: `A x ≥ x + 1` past a threshold. -/
+theorem var_family_qpos_A_fast_absurd (lam : Real) (hlam : 0 < lam) (A B : EMLTree)
+    (hB : B.depth ≤ 1) (T : Real) (hfast : ∀ x : Real, T ≤ x → x + 1 ≤ A.eval x)
+    (h : ∀ x : Real, 1 ≤ x →
+      exp (exp (A.eval x) - log (B.eval x)) = exp (exp x - 1 / x) + lam) : False := by
+  obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+  have hα : (0 : Real) ≤ 1 := le_of_lt zero_lt_one_ax
+  obtain ⟨x, hxT, hx1, hlt⟩ := exp_beats_linear_past (α := 1) (β := lam + C) hα T
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  -- upper bound on `R₂`
+  have hup : exp (A.eval x) - log (B.eval x) ≤ exp x + lam := by
+    refine le_of_exp_le ?_
+    rw [h x hx1, exp_add]
+    have hstep1 : exp (exp x - 1 / x) ≤ exp (exp x) := by
+      refine exp_monotone ?_
+      have u := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit (le_of_lt (one_div_pos_of_pos hxpos)))
+      have l : exp x + -(1 / x) = exp x - 1 / x := by mach_mpoly [exp x, (1 / x : Real)]
+      have r : exp x + -(0 : Real) = exp x := by mach_mpoly [exp x]
+      rw [l, r] at u; exact u
+    have hEE : (1 : Real) ≤ exp (exp x) := by
+      have hm := exp_monotone (le_of_lt (exp_pos x)); rw [exp_zero] at hm; exact hm
+    have hstep2 : exp (exp x) + lam ≤ exp (exp x) * exp lam := by
+      have hl1 : (1 : Real) + lam ≤ exp lam := one_add_le_exp lam
+      have hm := mul_le_mul_of_nonneg_left hl1 (le_of_lt (exp_pos (exp x)))
+      have l : exp (exp x) * (1 + lam) = exp (exp x) + lam * exp (exp x) := by
+        mach_mpoly [exp (exp x), lam]
+      rw [l] at hm
+      refine le_trans ?_ hm
+      have u := add_le_add_wit (le_refl (exp (exp x)))
+        (mul_le_mul_of_nonneg_left hEE (le_of_lt hlam))
+      have r : lam * 1 = lam := by mach_mpoly [lam]
+      rw [r] at u; exact u
+    have u := add_le_add_wit hstep1 (le_refl lam)
+    exact le_trans u hstep2
+  -- lower bound from the fast form
+  have hlow : exp x + exp x ≤ exp (A.eval x) :=
+    le_trans (exp_succ_ge_two_mul x) (exp_monotone (hfast x hxT))
+  -- and the cap `exp (A x) ≤ exp x + lam + (x + C)`
+  have hcap : exp (A.eval x) ≤ exp x + lam + (x + C) := by
+    have hval : exp (A.eval x)
+        = (exp (A.eval x) - log (B.eval x)) + log (B.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    rw [hval]
+    exact add_le_add_wit hup (hC x hx1)
+  have hchain : exp x + exp x ≤ exp x + lam + (x + C) := le_trans hlow hcap
+  have hlin : (1 : Real) * x + (lam + C) = lam + (x + C) := by mach_mpoly [x, lam, C]
+  rw [hlin] at hlt
+  -- `exp x ≤ lam + (x + C) < exp x`
+  have hfinal : exp x ≤ lam + (x + C) := by
+    have u := add_le_add_wit hchain (le_refl (-exp x))
+    have l : exp x + exp x + -exp x = exp x := by mach_mpoly [exp x]
+    have r : exp x + lam + (x + C) + -exp x = lam + (x + C) := by
+      mach_mpoly [exp x, lam, x, C]
+    rw [l, r] at u; exact u
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hfinal)
+
 end MachLib

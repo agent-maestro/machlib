@@ -1560,6 +1560,28 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "Both fast A-forms in the var family, via the shared hypothesis A x >= x + 1. The unbounded setting means only the upper bound survives from the split-A argument.",
+      "id": "var-family-qpos-fast-A",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a kill for both fast forms at once, via the\nhypothesis they share: `A x ≥ x + 1` past a threshold"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.var_family_qpos_A_fast_absurd",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 4
     }
   ]
 }
