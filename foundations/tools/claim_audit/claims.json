@@ -1604,6 +1604,29 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The first 0+ tool in the kit. Everything else works at infinity; split-A right-branching needs this end.",
+      "id": "bounded-above-left-is-const",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a depth-2 tree bounded above on `(0,∞)` has a\nconstant left child"
+      ],
+      "module": "MachLib.EMLSizeNineShape",
+      "theorem": "MachLib.depth_le_two_bounded_left_is_const",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "∃"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

@@ -7,6 +7,27 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### A `0⁺` tool at last: bounded above ⟹ constant left child
+
+Every lemma in the kit so far works at `∞`. Split-A right-branching needs the other end, and
+**`depth_le_two_bounded_left_is_const`** is it: *a depth-2 tree bounded above on `(0,∞)` has a
+constant left child.*
+
+Two steps. At `∞`, `exp (A x)` sits under a line, so the exp gap plus
+`depth_le_one_exp_bounded_forms` leaves `A ∈ {const α, c − log x}`. At `0⁺` the second dies:
+`exp (c − log x) = exp c · (1/x)` blows up while `log (B x)` can only reach `E − log x − 1`, and a
+**reciprocal beats a logarithm**. Substituting `x = 1/t`, the contradiction is
+`t·(exp c − 1) ≤ M + E − 2`, refuted at `t = 1 + (1 + exp(M+E))·(1/(exp c − 1))`.
+
+**`c_sub_log_blowup_at` separates the point construction from the evaluation** — the first draft
+interleaved them and became unreadable. With `t` as a parameter and its two properties as
+hypotheses, each half is checkable on its own.
+
+This is reusable across **all four** `(ℓ, ℓ₂)` combinations of split-A right-branching, because each
+supplies exactly the hypothesis it wants: `R₂` bounded above.
+
+`sorryAx` 0; ledger 242 unchanged; seven gates green.
+
 ### `A = var` closes the cell — the limit argument, done without a limit
 
 **`var_family_qpos_A_var_absurd`.** Writing `W := exp(exp x)`, the equation is
