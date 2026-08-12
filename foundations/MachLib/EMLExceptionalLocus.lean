@@ -283,4 +283,93 @@ theorem omega_point_is_a_single_caged_value :
   ⟨omega_point_exists, fun _ _ h h' => omega_point_unique h h',
    fun _ hG h => omega_point_bracket hG h⟩
 
+/-! ## ▸ What the Ω point buys: the κ-trichotomy becomes a comparison with one constant
+
+`EMLDepth2InvX` splits the depth-2 cancellation analysis three ways on `κ := G − exp(−G)`:
+`depth_le_two_cancel_kappa_pos_floor` (`exp(−G) < G`), `..._kappa_zero_floor` (`exp(−G) = G`), and
+`..._kappa_neg_absurd` (`G < exp(−G)`). As written, that is a case split on an **opaque inequality
+between transcendentals**, and nothing said which branch fires when.
+
+`κ` is **strictly increasing** in `G` (`kappa_strict_mono`: both terms move the right way), and it
+has a unique zero. So the trichotomy is a comparison with a single explicit constant
+(`kappa_sign_by_omega`): below Ω the negative branch, at Ω the degenerate one, above Ω the linear
+floor. Ω itself is caged in `(e⁻¹, 1)`, so — for instance — every `G ≥ 1` is in the `κ > 0` branch,
+which is exactly why `A = var` (where `G = 1`) never reaches the hard cases.
+
+## The taxonomy so far
+
+Three accidental loci, three different shapes — worth recording, because it says the answer is not
+always a curve:
+
+| locus | shape | solved by |
+|---|---|---|
+| `exp(exp c₀) − exp(exp c₁) = 1` | a **transcendental graph** over one parameter | `invX4gen_locus_is_a_graph` |
+| `exp(−G) = G` (κ = 0) | a **single transcendental constant** | `omega_point_is_a_single_caged_value` |
+| `exp c = log β` (γ = 0) | an **elementary graph** — `β = exp(exp c)` | `gamma_zero_locus` |
+-/
+
+/-- `κ = G − exp(−G)` is **strictly increasing**: `G` rises and `exp(−G)` falls. -/
+theorem kappa_strict_mono {G G' : Real} (h : G < G') :
+    G - exp (-G) < G' - exp (-G') := by
+  have hnn : -G' < -G := by
+    have u := add_lt_add_left h (-G + -G')
+    have l : -G + -G' + G = -G' := by mach_mpoly [G, G']
+    have r : -G + -G' + G' = -G := by mach_mpoly [G, G']
+    rw [l, r] at u; exact u
+  have hexp : exp (-G') < exp (-G) := exp_lt hnn
+  have u := add_lt_add_left h (-exp (-G))
+  have v := add_lt_add_left hexp (-exp (-G) + G')
+  -- `G − exp(−G) < G' − exp(−G) < G' − exp(−G')`
+  have l1 : -exp (-G) + G = G - exp (-G) := by mach_mpoly [G, exp (-G)]
+  have r1 : -exp (-G) + G' = G' - exp (-G) := by mach_mpoly [G', exp (-G)]
+  rw [l1, r1] at u
+  have l2 : -exp (-G) + G' + exp (-G') = G' - exp (-G) + exp (-G') := by
+    mach_mpoly [G', exp (-G), exp (-G')]
+  have r2 : -exp (-G) + G' + exp (-G) = G' := by mach_mpoly [G', exp (-G)]
+  rw [l2, r2] at v
+  have hstep : G' - exp (-G) < G' - exp (-G') := by
+    have w := add_lt_add_left v (-exp (-G'))
+    have l3 : -exp (-G') + (G' - exp (-G) + exp (-G')) = G' - exp (-G) := by
+      mach_mpoly [G', exp (-G), exp (-G')]
+    have r3 : -exp (-G') + G' = G' - exp (-G') := by mach_mpoly [G', exp (-G')]
+    rw [l3, r3] at w; exact w
+  exact lt_trans_ax u hstep
+
+/-- **The κ-trichotomy is a comparison with Ω.** Below it the negative branch, at it the degenerate
+one, above it the linear floor. -/
+theorem kappa_sign_by_omega {Om G : Real} (hOm : exp (-Om) = Om) :
+    (G < Om → G < exp (-G)) ∧ (G = Om → exp (-G) = G) ∧ (Om < G → exp (-G) < G) := by
+  have hzero : Om - exp (-Om) = 0 := by
+    rw [hOm]; mach_mpoly [Om]
+  refine ⟨fun hlt => ?_, fun heq => heq ▸ hOm, fun hgt => ?_⟩
+  · have hm := kappa_strict_mono hlt
+    rw [hzero] at hm
+    have u := add_lt_add_left hm (exp (-G))
+    have l : exp (-G) + (G - exp (-G)) = G := by mach_mpoly [G, exp (-G)]
+    have r : exp (-G) + 0 = exp (-G) := by mach_mpoly [exp (-G)]
+    rw [l, r] at u; exact u
+  · have hm := kappa_strict_mono hgt
+    rw [hzero] at hm
+    have u := add_lt_add_left hm (exp (-G))
+    have l : exp (-G) + 0 = exp (-G) := by mach_mpoly [exp (-G)]
+    have r : exp (-G) + (G - exp (-G)) = G := by mach_mpoly [G, exp (-G)]
+    rw [l, r] at u; exact u
+
+/-- **The `γ = 0` locus is elementary**, unlike the other two: `exp c = log β` iff
+`β = exp (exp c)`. Recorded so the taxonomy is complete — not every exceptional set is
+transcendental. -/
+theorem gamma_zero_locus {c β : Real} (hβ : 0 < β) :
+    exp c - log β = 0 ↔ β = exp (exp c) := by
+  constructor
+  · intro h
+    have hlog : log β = exp c := by
+      have e : exp c - log β + log β = 0 + log β := by rw [h]
+      have l : exp c - log β + log β = exp c := by mach_mpoly [exp c, log β]
+      have r : (0 : Real) + log β = log β := by mach_mpoly [log β]
+      rw [l, r] at e; exact e.symm
+    rw [← hlog, exp_log hβ]
+  · intro h
+    rw [h, log_exp]
+    mach_mpoly [exp c]
+
 end MachLib

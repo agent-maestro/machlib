@@ -1404,6 +1404,26 @@
         "∀"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The kappa trichotomy reduced to a comparison with Omega. Turns an opaque transcendental case split into one at an explicit constant.",
+      "id": "kappa-trichotomy-by-omega",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the trichotomy is a comparison with a **single explicit constant**"
+      ],
+      "module": "MachLib.EMLExceptionalLocus",
+      "theorem": "MachLib.kappa_sign_by_omega",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "∧"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

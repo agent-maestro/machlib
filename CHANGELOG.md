@@ -5,6 +5,33 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-12
+
+### The κ-trichotomy is a comparison with Ω — and the locus taxonomy closes
+
+`κ = 0` **is** the Ω point. `EMLDepth2InvX` splits the depth-2 cancellation analysis three ways on
+`κ := G − exp(−G)` — `kappa_pos_floor`, `kappa_zero_floor`, `kappa_neg_absurd` — and as written that
+is a case split on an **opaque inequality between transcendentals**, with nothing saying which branch
+fires when.
+
+- **`kappa_strict_mono`** — `κ` is strictly increasing in `G`: `G` rises while `exp(−G)` falls.
+- **`kappa_sign_by_omega`** — so the trichotomy is a comparison with a **single explicit constant**:
+  below Ω the negative branch, at Ω the degenerate one, above Ω the linear floor.
+
+Since Ω is caged in `(e⁻¹, 1)`, every `G ≥ 1` sits in the `κ > 0` branch — which is exactly why
+`A = var` (where `G = 1`) never reaches the hard cases. That was previously a remark in a docstring;
+it is now a consequence.
+
+**The taxonomy closes, and the answer is not always a curve:**
+
+| locus | shape | solved by |
+|---|---|---|
+| `exp(exp c₀) − exp(exp c₁) = 1` | **transcendental graph** over one parameter | `invX4gen_locus_is_a_graph` |
+| `exp(−G) = G` (κ = 0) | **single transcendental constant** | `omega_point_is_a_single_caged_value` |
+| `exp c = log β` (γ = 0) | **elementary graph**, `β = exp(exp c)` | `gamma_zero_locus` |
+
+All three accidental loci in the arm are now solved. `sorryAx` 0; ledger 242 unchanged.
+
 ## [Unreleased] — 2026-08-11
 
 ### The Ω point solved completely — the degeneracy is real and isolated
