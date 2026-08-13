@@ -2398,11 +2398,12 @@ theorem depth_le_two_decay_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
           exact le_trans h1 h2
 
 
-private theorem self_le_exp (a : Real) : a ≤ exp a :=
+/-- `a ≤ exp a`, everywhere. -/
+theorem self_le_exp (a : Real) : a ≤ exp a :=
   le_trans (le_one_add a) (one_add_le_exp a)
 
 /-- `exp a + exp a ≤ exp (a + 1)`: one unit of exponent is a factor of `e ≥ 2`. -/
-private theorem exp_add_one_doubles (a : Real) : exp a + exp a ≤ exp (a + 1) := by
+theorem exp_add_one_doubles (a : Real) : exp a + exp a ≤ exp (a + 1) := by
   have h1 : exp a * (1 + 1) ≤ exp a * exp 1 :=
     mul_le_mul_of_nonneg_left (one_add_le_exp 1) (le_of_lt (exp_pos a))
   have e1 : exp a * ((1 : Real) + 1) = exp a + exp a := by mach_ring

@@ -2305,6 +2305,48 @@
         "EvSign"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The instantiation test. Its VALUE is that its proof consumes depth_le_three_growth_envelope -- if U_3 had an unusable shape this theorem could not exist. hypotheses_count 2.",
+      "id": "tower4-instantiates-u3-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "It compiled without touching `U₃`"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower4_not_depth_le_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Meets",
+        "towerSpec",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "d(T_n) = n for n <= 4. Registered separately from the n <= 3 version so the two cannot be conflated, and separately from the UNBOUNDED TowerLowerBound which remains open.",
+      "id": "tower-upto-four-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "now holds for **n ≤ 4**"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower_lower_bound_upto_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "conclusion_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

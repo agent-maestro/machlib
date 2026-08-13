@@ -688,6 +688,127 @@ theorem tower_certified_upto_three (n : Nat) (hn : n ≤ 3) :
     DepthOptimal (towerSpec n) (towerTree n) n :=
   tower_depth_optimal_upto tower_lower_bound_upto_three n hn
 
+/-! ### 7c. `d(T₄) = 4` — instantiating `U₃`
+
+`depth_le_three_growth_envelope` was built but never used. A green build says an abstraction is
+*true*, not that it is the one anyone needs, so this section spends it. If `U₃`'s shape were subtly
+unusable — wrong constant placement, a ray that cannot be met — this is where it would show.
+
+The argument is the `d(T₃)` one with the tower shifted up a level, and it is now packaged: the tail
+that was inlined in `tower3_core` is extracted as `exp_gap_absurd`, since a quantity that doubles
+cannot also be capped by itself plus a constant. -/
+
+/-- **The generic gap step.** If the inner exponent clears the envelope's by a full unit, the node
+is at least double the envelope, which the additive slack cannot absorb. Extracted from
+`tower3_core`, which used it inline. -/
+private theorem exp_gap_absurd {inner bound N : Real}
+    (hgap : bound + 1 ≤ inner) (hN : N < exp bound) (hcap : exp inner ≤ exp bound + N) : False := by
+  have h1 : exp (bound + 1) ≤ exp inner := exp_monotone hgap
+  have h2 : exp bound + exp bound ≤ exp (bound + 1) := exp_add_one_doubles bound
+  have h3 : exp bound + exp bound ≤ exp bound + N := le_trans (le_trans h2 h1) hcap
+  have h4 : exp bound + N < exp bound + exp bound := add_lt_add_left hN (exp bound)
+  exact lt_irrefl_ax _ (lt_of_le_of_lt h3 h4)
+
+/-- Core of `d(T₄) = 4`, over a free evaluation point (this corpus has no `set`). -/
+private theorem tower4_core {K M N x : Real}
+    (hK : exp (K + 1) ≤ x) (hMK : exp (M - K) ≤ x) (hN : exp (N - K - M) ≤ x)
+    (hcap : exp (exp (exp (exp x))) ≤ exp (exp (exp x + K) + M) + N) : False := by
+  have hxe : x ≤ exp x := self_le_exp x
+  have hu0 : (0 : Real) ≤ exp x := le_of_lt (exp_pos x)
+  have huK : K + 1 ≤ exp x := le_trans (self_le_exp (K + 1)) (le_trans hK hxe)
+  have huMK : M - K ≤ exp x := le_trans (self_le_exp (M - K)) (le_trans hMK hxe)
+  have huN : N - K - M ≤ exp x := le_trans (self_le_exp (N - K - M)) (le_trans hN hxe)
+  -- (i) the inner exponent clears the envelope's by a unit
+  have hstepA : exp x + K + 1 ≤ exp (exp x) := by
+    have d1 : exp x + exp x ≤ exp (exp x) := two_mul_le_exp hu0
+    have d2 : exp x + (K + 1) ≤ exp x + exp x := add_le_add_left huK (exp x)
+    have e : exp x + (K + 1) = exp x + K + 1 := by mach_ring
+    rw [e] at d2; exact le_trans d2 d1
+  have hbig : exp (exp x + K) + exp (exp x + K) ≤ exp (exp (exp x)) :=
+    le_trans (exp_add_one_doubles _) (exp_monotone hstepA)
+  have hM1 : M + 1 ≤ exp (exp x + K) := by
+    have a1 : 1 + (exp x + K) ≤ exp (exp x + K) := one_add_le_exp _
+    have a2 : M + 1 ≤ 1 + (exp x + K) := by
+      have v := add_le_add_wit huMK (le_refl K)
+      have e1 : M - K + K = M := by mach_mpoly [M, K]
+      rw [e1] at v
+      have u := add_le_add_wit (le_refl (1 : Real)) v
+      have e2 : (1 : Real) + M = M + 1 := by mach_ring
+      rw [e2] at u; exact u
+    exact le_trans a2 a1
+  have hgap : exp (exp x + K) + M + 1 ≤ exp (exp (exp x)) := by
+    have v : exp (exp x + K) + (M + 1) ≤ exp (exp x + K) + exp (exp x + K) :=
+      add_le_add_left hM1 _
+    have e : exp (exp x + K) + (M + 1) = exp (exp x + K) + M + 1 := by mach_ring
+    rw [e] at v; exact le_trans v hbig
+  -- (ii) the additive slack is beaten
+  have hNlt : N < exp (exp (exp x + K) + M) := by
+    have a1 : 1 + (exp (exp x + K) + M) ≤ exp (exp (exp x + K) + M) := one_add_le_exp _
+    have a2 : 1 + (exp x + K) ≤ exp (exp x + K) := one_add_le_exp _
+    have a3 : N < 1 + (1 + (exp x + K) + M) := by
+      have v := add_le_add_wit (add_le_add_wit huN (le_refl K)) (le_refl M)
+      have e1 : N - K - M + K + M = N := by mach_mpoly [N, K, M]
+      rw [e1] at v
+      -- `N ≤ exp x + K + M < 1 + (1 + (exp x + K) + M)`
+      have hlt : exp x + K + M < 1 + (1 + (exp x + K) + M) := by
+        have t1 : exp x + K + M + 0 < exp x + K + M + (1 + 1) :=
+          add_lt_add_left (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax) _
+        have e2 : exp x + K + M + (0 : Real) = exp x + K + M := by mach_ring
+        have e3 : exp x + K + M + ((1 : Real) + 1) = 1 + (1 + (exp x + K) + M) := by mach_ring
+        rw [e2, e3] at t1; exact t1
+      exact lt_of_le_of_lt v hlt
+    have a4 : 1 + (1 + (exp x + K) + M) ≤ 1 + (exp (exp x + K) + M) :=
+      add_le_add_wit (le_refl (1 : Real)) (add_le_add_wit a2 (le_refl M))
+    exact lt_of_lt_of_le a3 (le_trans a4 a1)
+  exact exp_gap_absurd hgap hNlt hcap
+
+/-- **No depth-≤3 tree computes `T₄`.** The first consumer of `U₃`. -/
+theorem tower4_not_depth_le_three (u : EMLTree) (hu : u.depth < 4) (h : Meets (towerSpec 4) u) :
+    False := by
+  have h3 : u.depth ≤ 3 := by omega
+  obtain ⟨K, M, N, X₀, hX1, hEnv⟩ := depth_le_three_growth_envelope u h3
+  have p1 : (0 : Real) < exp (K + 1) := exp_pos _
+  have p2 : (0 : Real) < exp (M - K) := exp_pos _
+  have p3 : (0 : Real) < exp (N - K - M) := exp_pos _
+  have hX0 : (0 : Real) < X₀ := lt_of_lt_of_le zero_lt_one_ax hX1
+  have hxX : X₀ ≤ X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M)) :=
+    le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos
+      (le_of_lt (add_pos_of_nonneg_pos (le_of_lt p1) p2)) p3))
+  have hb := hEnv (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))) hxX
+  rw [h (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M)))] at hb
+  have hcap : exp (exp (exp (exp (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))))))
+      ≤ exp (exp (exp (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))) + K) + M) + N := hb
+  refine tower4_core ?_ ?_ ?_ hcap
+  · have e : X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))
+        = exp (K + 1) + (X₀ + exp (M - K) + exp (N - K - M)) := by mach_ring
+    rw [e]
+    exact le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos
+      (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hX0) p2)) p3))
+  · have e : X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))
+        = exp (M - K) + (X₀ + exp (K + 1) + exp (N - K - M)) := by mach_ring
+    rw [e]
+    exact le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos
+      (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hX0) p1)) p3))
+  · have e : X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))
+        = exp (N - K - M) + (X₀ + exp (K + 1) + exp (M - K)) := by mach_ring
+    rw [e]
+    exact le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos
+      (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hX0) p1)) p2))
+
+theorem tower_lower_bound_upto_four : TowerLowerBoundUpTo 4 := by
+  intro n hn u hu hm
+  match n, hn with
+  | 0, _ => exact absurd hu (Nat.not_lt_zero _)
+  | 1, _ => exact exp_not_depth_zero u hu hm
+  | 2, _ => exact expExp_not_depth_le_one u hu hm
+  | 3, _ => exact tower3_not_depth_le_two u hu hm
+  | 4, _ => exact tower4_not_depth_le_three u hu hm
+
+/-- **`d(Tₙ) = n` for `n ≤ 4`.** -/
+theorem tower_certified_upto_four (n : Nat) (hn : n ≤ 4) :
+    DepthOptimal (towerSpec n) (towerTree n) n :=
+  tower_depth_optimal_upto tower_lower_bound_upto_four n hn
+
 /-! ### 8. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.

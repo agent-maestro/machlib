@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `d(T₄) = 4` — `U₃` instantiated, and it needed no changes
+
+`depth_le_three_growth_envelope` was built and then never used. A green build says an abstraction is
+*true*, not that it is the one anyone needs, so this spends it: `tower4_not_depth_le_three` is its
+first consumer.
+
+**It compiled without touching `U₃`.** That is the result worth reporting — the envelope's shape
+(constants `K`, `M`, `N` in those positions, ray `XA + XB + exp (−(K+M))`) turned out to be usable
+as stated, including the ray, which had to be met by an explicit evaluation point built from
+`exp (K+1) + exp (M−K) + exp (N−K−M)`.
+
+`d(Tₙ) = n` now holds for **n ≤ 4** (`tower_certified_upto_four`), and the proof of the top level
+consumes only theorems — `U₂`, `V₂`, `U₃` — with no hand-built input anywhere in the chain.
+
+The tail of `tower3_core` is extracted as `exp_gap_absurd`: a quantity that doubles cannot also be
+capped by itself plus a constant. `self_le_exp` and `exp_add_one_doubles` are published from
+`private` (visibility only, no new proofs).
+
 ### The remaining obstruction is isolated to **one** proposition
 
 `V₂` consumed finiteness of sign changes, discharged at depth 2 by a hand check over five closed
