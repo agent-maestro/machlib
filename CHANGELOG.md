@@ -7,6 +7,27 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### The log ceiling one level up — and it measures why the band stops
+
+`depth_le_two_log_le_exp`: for `B` of depth ≤ 2, `log (B x) ≤ exp x + K` on a ray.
+
+`depth_le_one_log_le_linear` caps a depth-≤1 tree's log at `x + C`, **linear**. One level of nesting
+moves the ceiling to **exponential**. That single change is the reason the growth band does not lift
+to depth 3, and it is now a theorem rather than an observation:
+
+| | left child's exp floor | right child's log ceiling | can cancel? |
+| --- | --- | --- | --- |
+| band at depth 2 | `exp x` | `x + C` (linear) | **no — different scales** |
+| depth 3 | `exp x` | `exp x + K` (exponential) | **yes** |
+
+Both floors come from the exp-gap dichotomy (`depth_le_one_…` and `depth_le_two_exp_bounded_or_grows`
+respectively), so the *floor* lifts cleanly. It is the ceiling that moves, and it moves exactly onto
+the floor. The depth-2 band argument works because a node cannot cancel across scales; at depth 3
+that protection is gone.
+
+This does not say the band is false at depth 3 — only that this proof architecture cannot reach it,
+and precisely where it fails.
+
 ### The exp gap holds one level up
 
 `depth_le_two_exp_bounded_or_grows`: for `A` of depth ≤ **2**, `exp (A x)` is either bounded above

@@ -3171,4 +3171,60 @@ theorem depth_le_two_exp_bounded_or_grows (A : EMLTree) (hA : A.depth ≤ 2) :
           rw [e1, e2] at v; exact v
         exact le_trans s2 s1
 
+/-- **The log ceiling, one level up — and it is at the *exponential* scale.**
+
+`depth_le_one_log_le_linear` caps a depth-≤1 tree's log at `x + C`, **linear**. This is the depth-2
+mirror, and the answer is `exp x + K`: one level of nesting moves the log ceiling from linear to
+exponential.
+
+**That single change is why the growth band does not lift to depth 3.** At depth 2 the band argument
+works because the left child's exponential floor (`exp x`, from
+`depth_le_one_exp_bounded_or_grows`) and the right child's log ceiling (`x + C`) sit at *different
+scales*, so the node cannot cancel. One level up, `depth_le_two_exp_bounded_or_grows` still gives the
+floor `exp x` — but the ceiling here is also `exp x + K`. **The scales meet, and cancellation becomes
+possible.** The obstruction is a measured statement rather than a worry. -/
+theorem depth_le_two_log_le_exp (B : EMLTree) (hB : B.depth ≤ 2) :
+    ∃ K X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → log (B.eval x) ≤ exp x + K := by
+  obtain ⟨K', M, XB, hXB1, hU⟩ := depth_le_two_growth_envelope B hB
+  refine ⟨exp K' + 1, XB + exp (M - K'), ?_, ?_⟩
+  · have v : XB + 0 ≤ XB + exp (M - K') := add_le_add_wit (le_refl XB) (le_of_lt (exp_pos _))
+    have e : XB + (0 : Real) = XB := by mach_ring
+    rw [e] at v; exact le_trans hXB1 v
+  · intro x hx
+    have hXBx : XB ≤ x := by
+      have v : XB + 0 ≤ XB + exp (M - K') := add_le_add_wit (le_refl XB) (le_of_lt (exp_pos _))
+      have e : XB + (0 : Real) = XB := by mach_ring
+      rw [e] at v; exact le_trans v hx
+    have hMKx : exp (M - K') ≤ x := by
+      have v : (0 : Real) + exp (M - K') ≤ XB + exp (M - K') :=
+        add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hXB1) (le_refl _)
+      have e : (0 : Real) + exp (M - K') = exp (M - K') := by mach_ring
+      rw [e] at v; exact le_trans v hx
+    have hbound := hU x hXBx
+    have hMle : M ≤ exp (exp x + K') := by
+      have a2 : M - K' ≤ x := le_trans (self_le_exp _) hMKx
+      have a4 : M - K' ≤ exp x := le_trans a2 (self_le_exp x)
+      have a5 : M ≤ exp x + K' := by
+        have v := add_le_add_wit a4 (le_refl K')
+        have e1 : M - K' + K' = M := by mach_mpoly [M, K']
+        rw [e1] at v; exact v
+      exact le_trans a5 (self_le_exp _)
+    have hdbl : B.eval x ≤ exp (exp x + K' + 1) := by
+      have v : exp (exp x + K') + M ≤ exp (exp x + K') + exp (exp x + K') :=
+        add_le_add_left hMle _
+      exact le_trans hbound (le_trans v (exp_add_one_doubles _))
+    have htarget : exp x + K' + 1 ≤ exp x + (exp K' + 1) := by
+      have v := add_le_add_wit (add_le_add_wit (le_refl (exp x)) (self_le_exp K'))
+        (le_refl (1 : Real))
+      have e : exp x + exp K' + 1 = exp x + (exp K' + 1) := by mach_ring
+      rw [e] at v; exact v
+    have hpos : (0 : Real) < exp x + (exp K' + 1) :=
+      add_pos_of_nonneg_pos (le_of_lt (exp_pos x))
+        (add_pos_of_nonneg_pos (le_of_lt (exp_pos K')) zero_lt_one_ax)
+    rcases lt_total 0 (B.eval x) with hp | hp | hp
+    · exact le_trans (le_trans (log_le_log hp hdbl) (le_of_eq (log_exp _))) htarget
+    · rw [log_nonpos (le_of_eq hp.symm)]; exact le_of_lt hpos
+    · rw [log_nonpos (le_of_lt hp)]; exact le_of_lt hpos
+
+
 end MachLib

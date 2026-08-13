@@ -2497,6 +2497,28 @@
         "exp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The ceiling one level up. Its VALUE is the contrast with depth_le_one_log_le_linear's x + C: the ceiling moves from linear to exponential, which is the measured reason the band stops at depth 2. hypotheses_count 1 = the depth bound only.",
+      "id": "log-ceiling-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "moves the ceiling to **exponential**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_log_le_exp",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
