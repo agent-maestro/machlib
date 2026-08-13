@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### The exp gap holds one level up
+
+`depth_le_two_exp_bounded_or_grows`: for `A` of depth ≤ **2**, `exp (A x)` is either bounded above
+on a ray, or eventually dominates `exp x`. The same dichotomy `depth_le_one_exp_bounded_or_grows`
+gives at depth 1 — **nothing in between, one level higher**.
+
+It falls out of pieces already present, one per branch. If `exp (A' x)` is bounded by `K` then
+`A x ≤ K − Cl` via the log floor, so `exp (A x) ≤ exp (K − Cl)`. If `exp (A' x)` dominates `exp x`
+then `A x ≥ exp x − x − C` via the linear log ceiling, and that clears `x` — so `exp (A x) ≥ exp x`.
+
+The second branch needed a **ray**, not a point, so `exp_beats_linear_past` was the wrong tool.
+`two_mul_add_le_exp` supplies `x + x + C ≤ exp x` on a ray for any `C`, through
+`exp x = exp 1 · exp (x−1) ≥ 4(x−1)` — `exp 1 ≥ 2` and `two_mul_le_exp` on `x−1`, no division.
+
+**This is the left-child brick a depth-3 band argument needs.** It is not the whole argument: the
+depth-3 *growing* branch also needs the right child's log bounded, and at depth ≤ 2 that log can
+reach `≈ exp x` rather than staying linear, so the two can cancel. That is the genuine obstruction
+to lifting the band, and it is a cancellation problem — the first place in the growth front where
+the sign/cancellation front's difficulty appears.
+
 ### A hand-built `x²` witness at depth 8, against the library's 24
 
 The bottleneck was the constructor library, so this bypasses it. The identity:

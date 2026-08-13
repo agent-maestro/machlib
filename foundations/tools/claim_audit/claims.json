@@ -2475,6 +2475,28 @@
         "eval"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The exp gap at depth 2. hypotheses_count 1 (depth bound only) and a DISJUNCTIVE conclusion -- the auditor's arrow-scan guard for depth-0 binders is what makes conclusion_mentions meaningful here; see the historic 5-way disjunction bug.",
+      "id": "exp-gap-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**nothing in between, one level higher**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_exp_bounded_or_grows",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

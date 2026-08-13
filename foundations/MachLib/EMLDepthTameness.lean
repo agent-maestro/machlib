@@ -3030,4 +3030,145 @@ theorem x_sq_not_depth_le_two (t : EMLTree) (ht : t.depth ≤ 2)
   mach_ring
 
 
+/-- `x + x + C ≤ exp x` on a ray, for any `C`. Via `exp x = exp 1 · exp (x−1) ≥ 4(x−1)`, because
+the exp gap needs a **ray** and `exp_beats_linear_past` only supplies a point. -/
+theorem two_mul_add_le_exp (C : Real) : ∃ T : Real, ∀ x : Real, T ≤ x → x + x + C ≤ exp x := by
+  refine ⟨exp C + 1 + 1 + 1 + 1, ?_⟩
+  intro x hx
+  have hCp : (0 : Real) < exp C := exp_pos C
+  have hC : C ≤ exp C := self_le_exp C
+  have hstep : ∀ a b : Real, a ≤ b → a + 1 + 1 + 1 + 1 ≤ b + 1 + 1 + 1 + 1 := by
+    intro a b hab
+    exact add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit hab (le_refl 1))
+      (le_refl 1)) (le_refl 1)) (le_refl 1)
+  have hCx : C + 1 + 1 + 1 + 1 ≤ x := le_trans (hstep C (exp C) hC) hx
+  have h0x : (0 : Real) + 1 + 1 + 1 + 1 ≤ x := le_trans (hstep 0 (exp C) (le_of_lt hCp)) hx
+  have hx0 : (0 : Real) ≤ x := by
+    have hfour : (0 : Real) ≤ 0 + 1 + 1 + 1 + 1 := by
+      have e : (0 : Real) + 1 + 1 + 1 + 1 = 1 + 1 + 1 + 1 := by mach_ring
+      rw [e]
+      exact le_of_lt (add_pos_of_nonneg_pos (le_of_lt (add_pos_of_nonneg_pos
+        (le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax))
+        zero_lt_one_ax)) zero_lt_one_ax)
+    exact le_trans hfour h0x
+  have hx1 : (1 : Real) ≤ x := by
+    have hone : (1 : Real) ≤ 0 + 1 + 1 + 1 + 1 := by
+      have e : (0 : Real) + 1 + 1 + 1 + 1 = 1 + 1 + 1 + 1 := by mach_ring
+      rw [e]
+      exact le_trans (le_of_lt (lt_succ_self 1)) (le_trans (le_of_lt (lt_succ_self (1 + 1)))
+        (le_of_lt (lt_succ_self (1 + 1 + 1))))
+    exact le_trans hone h0x
+  have hxm1 : (0 : Real) ≤ x - 1 := by
+    have v := add_le_add_wit hx1 (le_refl (-1 : Real))
+    have e1 : (1 : Real) + -1 = 0 := by mach_ring
+    have e2 : x + -1 = x - 1 := by mach_ring
+    rw [e1, e2] at v; exact v
+  -- `exp x ≥ (1+1) · ((x−1)+(x−1))`
+  have hdb : (x - 1) + (x - 1) ≤ exp (x - 1) := two_mul_le_exp hxm1
+  have hsplit : exp x = exp 1 * exp (x - 1) := by
+    have e : x = 1 + (x - 1) := by mach_ring
+    rw [e, exp_add]
+    have e2 : (1 : Real) + (x - 1) - 1 = x - 1 := by mach_ring
+    rw [e2]
+  have htwo : (0 : Real) ≤ 1 + 1 :=
+    le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax)
+  have hprod : (1 + 1) * ((x - 1) + (x - 1)) ≤ exp x := by
+    rw [hsplit]
+    have p1 : ((1 : Real) + 1) * ((x - 1) + (x - 1)) ≤ (1 + 1) * exp (x - 1) :=
+      mul_le_mul_of_nonneg_left hdb htwo
+    have p2 : ((1 : Real) + 1) * exp (x - 1) ≤ exp 1 * exp (x - 1) := by
+      have q : exp (x - 1) * (1 + 1) ≤ exp (x - 1) * exp 1 :=
+        mul_le_mul_of_nonneg_left (one_add_le_exp 1) (le_of_lt (exp_pos _))
+      have e1 : exp (x - 1) * ((1 : Real) + 1) = (1 + 1) * exp (x - 1) := by mach_ring
+      have e2 : exp (x - 1) * exp 1 = exp 1 * exp (x - 1) := by mach_ring
+      rw [e1, e2] at q; exact q
+    exact le_trans p1 p2
+  -- `x + x + C ≤ (1+1)·((x−1)+(x−1))`, i.e. `x + x ≥ C + 4`
+  have hcore : C + 1 + 1 + 1 + 1 ≤ x + x := by
+    have v := add_le_add_wit hCx hx0
+    have e : C + 1 + 1 + 1 + 1 + (0 : Real) = C + 1 + 1 + 1 + 1 := by mach_ring
+    rw [e] at v; exact v
+  have hslack : (0 : Real) ≤ (x + x) - (C + 1 + 1 + 1 + 1) := by
+    have v := add_le_add_wit hcore (le_refl (-(C + 1 + 1 + 1 + 1)))
+    have e1 : C + 1 + 1 + 1 + 1 + -(C + 1 + 1 + 1 + 1) = (0 : Real) := by mach_mpoly [C]
+    have e2 : x + x + -(C + 1 + 1 + 1 + 1) = (x + x) - (C + 1 + 1 + 1 + 1) := by
+      mach_mpoly [x, C]
+    rw [e1, e2] at v; exact v
+  have hlin : x + x + C ≤ (1 + 1) * ((x - 1) + (x - 1)) := by
+    have edecomp : ((1 : Real) + 1) * ((x - 1) + (x - 1))
+        = x + x + C + ((x + x) - (C + 1 + 1 + 1 + 1)) := by mach_mpoly [x, C]
+    rw [edecomp]
+    exact le_add_nonneg_r' hslack
+  exact le_trans hlin hprod
+
+/-- **The exp gap, one level up.** For `A` of depth ≤ 2, `exp (A x)` is either bounded above on a
+ray or eventually dominates `exp x` — the same dichotomy `depth_le_one_exp_bounded_or_grows` gives at
+depth 1, and the brick a depth-3 band argument needs on its left child. -/
+theorem depth_le_two_exp_bounded_or_grows (A : EMLTree) (hA : A.depth ≤ 2) :
+    (∃ K X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → exp (A.eval x) ≤ K)
+    ∨ (∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x)) := by
+  cases A with
+  | const c => exact Or.inl ⟨exp c, 1, le_refl 1, fun x _ => le_refl _⟩
+  | var => exact Or.inr ⟨1, fun x _ => le_refl _⟩
+  | eml A' B' =>
+      have hA' : A'.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_left A'.depth B'.depth; omega
+      have hB' : B'.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_right A'.depth B'.depth; omega
+      rcases depth_le_one_exp_bounded_or_grows A' hA' with ⟨K, hK⟩ | ⟨T, hT⟩
+      · obtain ⟨Cl, X₀, hX1, hCl⟩ := depth_le_one_log_lower_at_infinity B' hB'
+        refine Or.inl ⟨exp (K - Cl), X₀, hX1, ?_⟩
+        intro x hx
+        have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+        refine exp_monotone ?_
+        show exp (A'.eval x) - log (B'.eval x) ≤ K - Cl
+        have v := add_le_add_wit (hK x hx1) (neg_le_neg_wit (hCl x hx))
+        have e1 : exp (A'.eval x) + -log (B'.eval x) = exp (A'.eval x) - log (B'.eval x) := by
+          mach_ring
+        have e2 : K + -Cl = K - Cl := by mach_ring
+        rw [e1, e2] at v; exact v
+      · obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B' hB'
+        obtain ⟨T2, hT2⟩ := two_mul_add_le_exp C
+        refine Or.inr ⟨exp T + exp T2 + 1, ?_⟩
+        intro x hx
+        have hTx : T ≤ x := by
+          have v : exp T + 0 + 0 ≤ exp T + exp T2 + 1 :=
+            add_le_add_wit (add_le_add_wit (le_refl (exp T)) (le_of_lt (exp_pos T2)))
+              (le_of_lt zero_lt_one_ax)
+          have e : exp T + (0 : Real) + 0 = exp T := by mach_ring
+          rw [e] at v
+          exact le_trans (self_le_exp T) (le_trans v hx)
+        have hT2x : T2 ≤ x := by
+          have v : (0 : Real) + exp T2 + 0 ≤ exp T + exp T2 + 1 :=
+            add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_refl (exp T2)))
+              (le_of_lt zero_lt_one_ax)
+          have e : (0 : Real) + exp T2 + 0 = exp T2 := by mach_ring
+          rw [e] at v
+          exact le_trans (self_le_exp T2) (le_trans v hx)
+        have hx1 : (1 : Real) ≤ x := by
+          have v : (0 : Real) + 0 + 1 ≤ exp T + exp T2 + 1 :=
+            add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_of_lt (exp_pos T2)))
+              (le_refl 1)
+          have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+          rw [e] at v; exact le_trans v hx
+        refine exp_monotone ?_
+        show x ≤ exp (A'.eval x) - log (B'.eval x)
+        have g1 : exp x ≤ exp (A'.eval x) := hT x hTx
+        have g2 : log (B'.eval x) ≤ x + C := hC x hx1
+        have g3 : x + x + C ≤ exp x := hT2 x hT2x
+        have s1 : exp x - (x + C) ≤ exp (A'.eval x) - log (B'.eval x) := by
+          have v := add_le_add_wit g1 (neg_le_neg_wit g2)
+          have e1 : exp x + -(x + C) = exp x - (x + C) := by mach_ring
+          have e2 : exp (A'.eval x) + -log (B'.eval x)
+              = exp (A'.eval x) - log (B'.eval x) := by mach_ring
+          rw [e1, e2] at v; exact v
+        have s2 : x ≤ exp x - (x + C) := by
+          have v := add_le_add_wit g3 (le_refl (-(x + C)))
+          have e1 : x + x + C + -(x + C) = x := by mach_mpoly [x, C]
+          have e2 : exp x + -(x + C) = exp x - (x + C) := by mach_ring
+          rw [e1, e2] at v; exact v
+        exact le_trans s2 s1
+
 end MachLib
