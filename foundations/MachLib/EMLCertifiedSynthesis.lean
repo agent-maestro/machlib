@@ -30,11 +30,14 @@ accepted with the obligation missing: it is a field of the structure.
 Note what this actually buys, which is **not** "axioms are trustworthy" — axiomatising the reals
 *enlarges* the trusted mathematical base. The useful property is narrower and structural:
 
-> Axiomatised reals prevent semantic evaluation from masquerading as proof. Syntactic costs
-> compute; semantic claims must pass through kernel-checked propositions.
+> **Within this formal layer**, semantic EML obligations cannot be discharged by executable
+> evaluation. Syntactic costs compute; semantic claims must pass through kernel-checked
+> propositions.
 
-There is no `#eval` path by which a numerical spot-check could be mistaken for `Meets`, because
-there is no `#eval` path at all.
+The scope matters. Numerical checks of an EML expression certainly can exist elsewhere in the
+project — in Python, in a simulator, on hardware — and they are useful. The virtue is narrower: such
+a computation **cannot inhabit `Meets`**. There is no `#eval` path by which a spot-check could be
+mistaken for a discharged obligation, because there is no `#eval` path at all.
 
 ## What is actually new here
 
@@ -90,7 +93,7 @@ path model stops being exact:
 | stage | status |
 | --- | --- |
 | tree → DAG | **proved** — depth exact, size destroyed exponentially |
-| DAG → schedule | **proved** — latency floor survives, area destroyed |
+| DAG → schedule | **proved** — latency floor survives; **area is not a path invariant** |
 | schedule → RTL → mapped gates | **measured** — synthesis optimises across block boundaries |
 
 The measurement that fixes the boundary: a 4-deep chain of pipelined EML blocks has combinational
@@ -465,7 +468,101 @@ theorem expExpSubTree_depth_optimal : DepthOptimal expExpSubSpec expExpSubTree 2
   { accepted := { meets := expExpSubTree_eval, cost := by rfl }
     minimal := expExpSub_not_depth_le_one }
 
-/-! ### 7. What this checker does **not** decide
+/-! ### 7. The iterated-exponential tower — an infinite family, and what it costs
+
+`T₀ x = x`, `T_{n+1} x = exp (T_n x)`. The two depth-2 certificates of §6 were not isolated
+examples: **they are `T₁` and `T₂`**, and seeing that is what makes the family the right object.
+
+The **upper** half is free and holds for every `n`: totalised `log 0 = 0` makes `eml t (const 0)`
+exactly `exp ⟦t⟧`, so one `eml` node buys one exponential and `towerTree n` has depth exactly `n`.
+
+The **lower** half is the open problem, and this section's job is to state precisely what it would
+buy. `tower_depth_optimal_of_lower_bound` shows the entire infinite certified family is a *function*
+of one lower-bound family — so T4's supply of targets is bounded below by T2's supply of theorems,
+not by any amount of engineering here. That is the "T4 consumes T2" reading, made formal rather
+than asserted. -/
+
+/-- `T₀ x = x`, `T_{n+1} x = exp (T_n x)`. -/
+noncomputable def towerFn : Nat → Real → Real
+  | 0, x => x
+  | n + 1, x => exp (towerFn n x)
+
+/-- One `eml` node per level; the right child is neutralised by totalised `log 0 = 0`. -/
+noncomputable def towerTree : Nat → EMLTree
+  | 0 => EMLTree.var
+  | n + 1 => EMLTree.eml (towerTree n) (EMLTree.const 0)
+
+/-- **One node buys exactly one exponential.** Depth is `n` on the nose, not `≤ n`. -/
+theorem towerTree_depth : ∀ n : Nat, (towerTree n).depth = n := by
+  intro n
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+      show 1 + max (towerTree k).depth 0 = k + 1
+      rw [ih]
+      simp
+      omega
+
+theorem towerTree_eval : ∀ (n : Nat) (x : Real), (towerTree n).eval x = towerFn n x := by
+  intro n
+  induction n with
+  | zero => intro x; rfl
+  | succ k ih =>
+      intro x
+      show exp ((towerTree k).eval x) - log ((EMLTree.const (0 : Real)).eval x) = _
+      rw [ih x]
+      show exp (towerFn k x) - log (0 : Real) = _
+      rw [log_nonpos (le_refl (0 : Real))]
+      show exp (towerFn k x) - 0 = exp (towerFn k x)
+      mach_ring
+
+/-- The specification of the `n`-th tower level. -/
+def towerSpec (n : Nat) : SemSpec := fun f => ∀ x : Real, f x = towerFn n x
+
+/-- The upper half, for **every** `n`: `d(Tₙ) ≤ n`, witnessed and accepted. -/
+theorem towerTree_accepted (n : Nat) : Accepted (towerSpec n) (towerTree n) n :=
+  { meets := towerTree_eval n, cost := towerTree_depth n }
+
+/-- **The missing ingredient, named.** No tree shallower than `n` computes `Tₙ`.
+
+This is a statement about *all* trees at *all* depths, so no search can establish it and no checker
+can decide it. It is the single input that would turn the tower into an unbounded supply of
+certified targets. -/
+def TowerLowerBound : Prop :=
+  ∀ n : Nat, ∀ u : EMLTree, u.depth < n → Meets (towerSpec n) u → False
+
+/-- The bounded form, which is what is actually proved so far. -/
+def TowerLowerBoundUpTo (N : Nat) : Prop :=
+  ∀ n : Nat, n ≤ N → ∀ u : EMLTree, u.depth < n → Meets (towerSpec n) u → False
+
+/-- **The reduction.** One lower-bound family ⟹ an infinite certified family. Everything else —
+witness, depth computation, acceptance, and the §3 hardware transfer — is already in place for every
+`n`, so this is the whole of what is missing. -/
+theorem tower_depth_optimal_of_lower_bound (h : TowerLowerBound) (n : Nat) :
+    DepthOptimal (towerSpec n) (towerTree n) n :=
+  { accepted := towerTree_accepted n, minimal := h n }
+
+/-- The same reduction in bounded form. -/
+theorem tower_depth_optimal_upto {N : Nat} (h : TowerLowerBoundUpTo N) (n : Nat) (hn : n ≤ N) :
+    DepthOptimal (towerSpec n) (towerTree n) n :=
+  { accepted := towerTree_accepted n, minimal := h n hn }
+
+/-- **`d(Tₙ) = n` for `n ≤ 2`**, assembled from §5 and §6 — `T₀ = x` is depth 0 vacuously, `T₁`
+is `exp`, and `T₂` is `exp (exp x)`. The tower's first three levels are exactly the certificates
+already proved, which is the evidence that the family is the natural object rather than a
+generalisation invented after the fact. -/
+theorem tower_lower_bound_upto_two : TowerLowerBoundUpTo 2 := by
+  intro n hn u hu hm
+  match n, hn with
+  | 0, _ => exact absurd hu (Nat.not_lt_zero _)
+  | 1, _ => exact exp_not_depth_zero u hu hm
+  | 2, _ => exact expExp_not_depth_le_one u hu hm
+
+theorem tower_certified_upto_two (n : Nat) (hn : n ≤ 2) :
+    DepthOptimal (towerSpec n) (towerTree n) n :=
+  tower_depth_optimal_upto tower_lower_bound_upto_two n hn
+
+/-! ### 8. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.
 

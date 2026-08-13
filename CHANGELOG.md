@@ -7,6 +7,40 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The iterated-exponential tower — the infinite family, and the exact price of it
+
+`T₀ x = x`, `T_{n+1} x = exp (T_n x)`. The two depth-2 certificates added earlier today were not
+isolated examples: **they are `T₁` and `T₂`.** Seeing that is what makes the family the right object
+rather than a generalisation invented afterwards.
+
+The **upper** half is now proved for every `n`. Totalised `log 0 = 0` makes `eml t (const 0)`
+exactly `exp ⟦t⟧`, so one `eml` node buys one exponential: `towerTree_depth` gives depth `n` **on the
+nose**, and `towerTree_accepted n : Accepted (towerSpec n) (towerTree n) n` holds for all `n`.
+
+The **lower** half is the open problem, and it is now named rather than gestured at.
+`TowerLowerBound` is the proposition that no tree shallower than `n` computes `Tₙ`, and
+`tower_depth_optimal_of_lower_bound` shows the entire infinite certified family is a **function of
+that one input** — witness, depth, acceptance and the hardware transfer are already in place for
+every `n`.
+
+**That makes "T4 consumes T2" a theorem rather than a reading.** T4's supply of certified targets is
+bounded below by T2's supply of lower bounds, and no amount of checker engineering moves it.
+
+`tower_lower_bound_upto_two : TowerLowerBoundUpTo 2` is discharged from work already done — `T₀`
+vacuously, `T₁` by `exp_not_depth_zero`, `T₂` by `expExp_not_depth_le_one`. So `d(Tₙ) = n` is proved
+for `n ≤ 2` and open for `n ≥ 3`.
+
+### Two more claims tightened
+
+* **"area destroyed" at the DAG→schedule row was conceptually wrong.** A schedule does not destroy
+  area. The precise statement is that **area is not a path invariant** — it accumulates over the
+  DAG rather than along the critical dependency chain, which is why the longest-path algebra was
+  the wrong tool for it from the start.
+* **The `#eval` claim is now scoped to this formal layer.** Numerical checks of EML expressions can
+  and do exist elsewhere in the project, in Python and in simulation, and they are useful. The
+  narrow virtue is that such a computation **cannot inhabit `Meets`**: within this layer, semantic
+  obligations cannot be discharged by executable evaluation.
+
 ### Two depth-2 certificates with T2-native lower bounds — the calibration ladder closes
 
 `exp (exp x)` and `exp (exp x) − x` are certified **minimum-depth at 2**. Both lower bounds are one

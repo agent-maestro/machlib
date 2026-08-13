@@ -2046,6 +2046,70 @@
         "DepthOptimal"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Upper half for ALL n. hypotheses_count 0 and a universally quantified conclusion is the whole content -- if this ever acquired a hypothesis the 'free for every n' claim would be false.",
+      "id": "tower-depth-exact-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "gives depth `n` **on the\nnose**"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.towerTree_depth",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "towerTree",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        ".depth"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "THE ARCHITECTURE CLAIM, made formal: the infinite certified family is a function of one lower-bound input. hypotheses_count 1 is exactly the point -- that one hypothesis IS the T2 dependency.",
+      "id": "tower-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the entire infinite certified family is a **function of\nthat one input**"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower_depth_optimal_of_lower_bound",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "TowerLowerBound",
+        "DepthOptimal",
+        "towerSpec",
+        "towerTree"
+      ],
+      "conclusion_mentions": [
+        "DepthOptimal"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "What is actually discharged. Registered so 'proved for n <= 2 and open for n >= 3' is pinned to the bounded proposition and cannot quietly be read as the unbounded one.",
+      "id": "tower-upto-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`d(Tₙ) = n` is proved\nfor `n ≤ 2` and open for `n ≥ 3`"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower_lower_bound_upto_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "conclusion_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
