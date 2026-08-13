@@ -2239,6 +2239,28 @@
         "log"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "V_2 itself. hypotheses_count 1 (the depth bound) is the content: no positivity or sign hypothesis on the tree is assumed -- positivity appears INSIDE the conclusion, which is what makes the vacuous cells legitimate rather than assumed away.",
+      "id": "v2-decay-on-ray-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the remaining\ntwenty-three are vacuous on a far enough ray"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_decay_on_ray",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `V₂` is proved — the decay half of the pair now exists at depth 2
+
+`depth_le_two_decay_on_ray`:
+
+> for `t.depth ≤ 2`, `∃ C X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀, 0 < t x → −log t(x) ≤ C + log x`.
+
+The twenty-five-cell table analysed in
+`monogate-research/exploration/eml_depth_induction_2026_08_13/` is now discharged in Lean, and it
+came out as the paper analysis predicted: **one cell decays** (`depth_le_two_V2_log_nonpos`, the
+`e^c/x` case), **one is a positive constant** (`A = const α`, `B = const β`), and **the remaining
+twenty-three are vacuous on a far enough ray**, each killed by one of the three eventual-largeness
+helpers.
+
+**The ray is load-bearing, not a convenience.** Near a point where `t` crosses zero from above,
+`t(x) → 0⁺` and `−log t(x) → +∞`, so no fixed `C` survives. The statement holds only because `X₀` is
+existentially quantified and can be pushed past the last sign change. That is a **finiteness of sign
+changes** requirement — at depth 2 discharged by hand, since each depth-≤1 form crosses zero at most
+once at an explicitly computable point. It is what this proof consumes, and it is *not* cancellation
+stratification. The module docstring says so at the theorem.
+
+Both halves of the growth/decay pair now exist at depth 2: `depth_le_two_growth_envelope` (`U₂`) and
+`depth_le_two_decay_on_ray` (`V₂`). That is the input the depth-3 envelope needs.
+
+Corpus notes: the `A = c − log x` against `log β > 0` cell is the one that needs real work — it dies
+because `exp (c − log x) < log β` past `exp (c − log (log β))`, obtained by feeding
+`eventually_log_gt (c − log (log β))` through `exp_lt` and `exp_log`. Two identities there
+(`c − (c − log (log β)) + …`) need `mach_mpoly`, not `mach_ring`.
+
 ### Eventual-largeness helpers — the analytic half of the remaining `V₂` cells
 
 Three lemmas supplying "past an explicit point" for the three unbounded shapes of `log (B x)`:
