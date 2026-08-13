@@ -7,6 +7,30 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### Eventual-largeness helpers — the analytic half of the remaining `V₂` cells
+
+Three lemmas supplying "past an explicit point" for the three unbounded shapes of `log (B x)`:
+`eventually_log_gt`, `eventually_log_exp_sub_gt`, `eventually_log_exp_sub_log_gt`. Each returns an
+`X₀ ≥ 1` past which `log (B x)` clears a given `K`.
+
+These are what the twenty-three vacuous cells of the decay table need. In each, the left child's
+exponential is bounded by some `K` while the right child's log grows without bound, so past `X₀` the
+node is negative and the positivity hypothesis cannot fire. They are stated for arbitrary `K` so the
+same three serve every cell.
+
+Two details worth keeping. `eventually_log_exp_sub_gt`'s threshold carries **`exp d`, not `d`** —
+with `d` in the threshold it fails for arbitrarily negative `d`, which is exactly the case the naive
+choice gets wrong. And `exp x − log x ≥ x` (needed for the third) comes from `two_mul_le_exp`
+together with `log x ≤ x`, not from any bound on `log` alone.
+
+**This is the analytic half of `V₂`, not `V₂`.** The case assembly — classification on `B`, then the
+constant-vs-constant cell — is still to come, so `V₂` as a single theorem still does not exist.
+
+Corpus notes: numerals beyond `0` and `1` have **no `OfNat`** here, so `3` must be written
+`1 + 1 + 1` or, better, restructured away — the thresholds above were rewritten to avoid it.
+`log_le_id_at_one` exists but sits in `MachLib.EMLTree` and is not in this module's import closure;
+`log x ≤ x` is re-derived locally in three lines from `one_add_le_exp` and `log_le_log`.
+
 ### `V₂` is not blocked — the decay half survives depth 2, and the worst cell is proved
 
 The question left by `d(T₃) = 3` was whether the **decay** half of the pair can be built at depth 2,

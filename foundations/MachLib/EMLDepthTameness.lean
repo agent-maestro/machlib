@@ -2041,4 +2041,118 @@ theorem depth_le_two_V2_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 1) :
   rw [e] at t; exact t
 
 
+/-! ### Eventual-largeness helpers for the `V₂` case analysis
+
+Every vacuous cell of the decay table is vacuous for the same reason: past an explicit point the
+right child's log outgrows the left child's bounded exponential, so the node goes negative and the
+positivity hypothesis cannot fire. These three lemmas supply "past an explicit point" for the three
+unbounded shapes of `log (B x)`. -/
+
+/-- `log x` clears any `K` past `exp (K+1) + 1`. -/
+theorem eventually_log_gt (K : Real) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → K < log x := by
+  have hp : (0 : Real) < exp (K + 1) := exp_pos _
+  refine ⟨exp (K + 1) + 1, ?_, ?_⟩
+  · have t : (0 : Real) + 1 ≤ exp (K + 1) + 1 := add_le_add_wit (le_of_lt hp) (le_refl 1)
+    have e : (0 : Real) + 1 = 1 := by mach_ring
+    rw [e] at t; exact t
+  · intro x hx
+    have hX0 : (0 : Real) < exp (K + 1) + 1 := by
+      have t : (0 : Real) + 0 < exp (K + 1) + 1 :=
+        lt_of_lt_of_le (add_lt_add_left zero_lt_one_ax 0)
+          (add_le_add_wit (le_of_lt hp) (le_refl 1))
+      have e : (0 : Real) + 0 = 0 := by mach_ring
+      rw [e] at t; exact t
+    have hlt : exp (K + 1) < exp (K + 1) + 1 := by
+      have t : exp (K + 1) + 0 < exp (K + 1) + 1 := add_lt_add_left zero_lt_one_ax _
+      have e : exp (K + 1) + (0 : Real) = exp (K + 1) := by mach_ring
+      rw [e] at t; exact t
+    have h1 : K + 1 < log (exp (K + 1) + 1) := by
+      have s := log_lt_log hp hlt
+      rw [log_exp] at s; exact s
+    have h2 : log (exp (K + 1) + 1) ≤ log x := log_le_log hX0 hx
+    have h3 : K < K + 1 := by
+      have t : K + 0 < K + 1 := add_lt_add_left zero_lt_one_ax K
+      have e : K + (0 : Real) = K := by mach_ring
+      rw [e] at t; exact t
+    exact lt_of_lt_of_le (lt_trans_ax h3 h1) h2
+
+/-- `a < a + 1`. Written out because this corpus has `OfNat` only for `0` and `1`. -/
+private theorem lt_succ_self (a : Real) : a < a + 1 := by
+  have t : a + 0 < a + 1 := add_lt_add_left zero_lt_one_ax a
+  have e : a + (0 : Real) = a := by mach_ring
+  rw [e] at t; exact t
+
+private theorem le_one_add (a : Real) : a ≤ 1 + a := by
+  have t := le_of_lt (lt_succ_self a)
+  have e : a + (1 : Real) = 1 + a := by mach_ring
+  rw [e] at t; exact t
+
+/-- `log x ≤ x` on `[1,∞)`. (`EMLTree.log_le_id_at_one` says this but sits in another namespace
+and is not in this module's import closure.) -/
+private theorem log_le_self_on_ray {x : Real} (hx : 1 ≤ x) : log x ≤ x := by
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have h1 : x ≤ exp x := le_trans (le_one_add x) (one_add_le_exp x)
+  have h2 : log x ≤ log (exp x) := log_le_log hx0 h1
+  rw [log_exp] at h2; exact h2
+
+/-- `log (exp x − d)` clears any `K` past an explicit point. The threshold carries `exp d` rather
+than `d` so that it survives arbitrarily negative `d`. -/
+theorem eventually_log_exp_sub_gt (K d : Real) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → K < log (exp x - d) := by
+  have hpK : (0 : Real) < exp (K + 1) := exp_pos _
+  have hpd : (0 : Real) < exp d := exp_pos _
+  refine ⟨exp (K + 1) + exp d + 1, ?_, ?_⟩
+  · have t : (0 : Real) + 0 + 1 ≤ exp (K + 1) + exp d + 1 :=
+      add_le_add_wit (add_le_add_wit (le_of_lt hpK) (le_of_lt hpd)) (le_refl 1)
+    have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+    rw [e] at t; exact t
+  · intro x hx
+    have hdd : d ≤ exp d := le_trans (le_one_add d) (one_add_le_exp d)
+    have s2 : exp (K + 1) + d + 1 ≤ exp (K + 1) + exp d + 1 :=
+      add_le_add_wit (add_le_add_wit (le_refl (exp (K + 1))) hdd) (le_refl 1)
+    have s4 : exp (K + 1) + d + 1 ≤ x := le_trans s2 hx
+    have s5 : x ≤ exp x := le_trans (le_one_add x) (one_add_le_exp x)
+    have s6 : exp (K + 1) + d + 1 ≤ exp x := le_trans s4 s5
+    have hgt : exp (K + 1) + d < exp x := lt_of_lt_of_le (lt_succ_self _) s6
+    have hsub : exp (K + 1) < exp x - d := by
+      have t := add_lt_add_left hgt (-d)
+      have e1 : -d + (exp (K + 1) + d) = exp (K + 1) := by mach_ring
+      have e2 : -d + exp x = exp x - d := by mach_ring
+      rw [e1, e2] at t; exact t
+    have hlog := log_lt_log hpK hsub
+    rw [log_exp] at hlog
+    exact lt_trans_ax (lt_succ_self K) hlog
+
+/-- `log (exp x − log x)` clears any `K` past `exp (K+1) + 1`, because `exp x − log x ≥ x`. -/
+theorem eventually_log_exp_sub_log_gt (K : Real) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → K < log (exp x - log x) := by
+  have hpK : (0 : Real) < exp (K + 1) := exp_pos _
+  have hX1 : (1 : Real) ≤ exp (K + 1) + 1 := by
+    have t : (0 : Real) + 1 ≤ exp (K + 1) + 1 := add_le_add_wit (le_of_lt hpK) (le_refl 1)
+    have e : (0 : Real) + 1 = 1 := by mach_ring
+    rw [e] at t; exact t
+  refine ⟨exp (K + 1) + 1, hX1, ?_⟩
+  intro x hx
+  have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+  have hlogx : log x ≤ x := log_le_self_on_ray hx1
+  have hdouble : x + x ≤ exp x := two_mul_le_exp hx0
+  have hge : x ≤ exp x - log x := by
+    have s1 : -x + (x + x) ≤ -x + exp x := add_le_add_left hdouble (-x)
+    have e1 : -x + (x + x) = x := by mach_ring
+    have e2 : -x + exp x = exp x - x := by mach_ring
+    rw [e1, e2] at s1
+    have s2 : exp x + -x ≤ exp x + -log x :=
+      add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hlogx)
+    have e3 : exp x + -x = exp x - x := by mach_ring
+    have e4 : exp x + -log x = exp x - log x := by mach_ring
+    rw [e3, e4] at s2
+    exact le_trans s1 s2
+  have hgt : exp (K + 1) < exp x - log x :=
+    lt_of_lt_of_le (lt_of_lt_of_le (lt_succ_self _) hx) hge
+  have hlog := log_lt_log hpK hgt
+  rw [log_exp] at hlog
+  exact lt_trans_ax (lt_succ_self K) hlog
+
 end MachLib

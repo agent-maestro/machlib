@@ -2218,6 +2218,27 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The threshold-carries-exp-d point is the substantive one: with d in the threshold the lemma is false for arbitrarily negative d. hypotheses_count 0 -- it holds for ALL K and d, which is what lets one lemma serve every cell.",
+      "id": "eventually-log-exp-sub-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "threshold carries **`exp d`, not `d`**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.eventually_log_exp_sub_gt",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
