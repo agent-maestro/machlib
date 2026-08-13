@@ -7,6 +7,37 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### A depth-2 barrier for a whole growth band, not one example
+
+`mx_not_in_eml_depth_le_2` excludes `M·x`. Reading its proof, **nothing in it is about
+multiplication** — it uses only that `M·x` is unbounded, grows faster than `x`, and grows slower
+than `exp x`. `superlinear_subexp_not_depth_le_two` states that argument for the band:
+
+> **No `f : ℝ → ℝ` that is unbounded above, eventually above `x`, and below `exp x − x − C` at
+> arbitrarily large points is computed by any EML tree of depth ≤ 2.**
+
+Nothing is assumed about continuity, monotonicity, or `f` being given by a formula. Each of the three
+hypotheses is consumed by exactly one branch and **each is necessary**:
+
+* unboundedness kills `const`, and the branch where the left child's exponential is bounded — there
+  the node is trapped between a constant ceiling and the right child's log floor
+  (`depth_le_one_log_lower_at_infinity`);
+* "eventually above `x`" kills `var` — without it `f = x` satisfies everything else and sits at
+  depth 0;
+* sub-exponentiality kills the branch where the left child dominates `exp x`, since the right
+  child's log is at most linear (`depth_le_one_log_le_linear`).
+
+`mx_not_depth_le_two_via_band` re-derives the `M·x` case from it with **no reasoning about
+multiplication**: the three hypotheses come from `exp t ≥ 1 + t`, `1 < M`, and
+`exp_beats_linear_past`. Same pattern as the netlist theorems — the bespoke proof was doing no work
+the general argument does not do.
+
+**`x²` does not follow yet, and the reason is a missing lemma rather than a missing idea.** Its
+sub-exponentiality hypothesis is `x² + x + C < exp x`, i.e. `exp` beating a *quadratic*, and the
+corpus has only `exp_beats_linear_past`. The route that avoids division: prove
+`exp (u+u) ≥ (u+u)·(u+u)` from `exp_add` and `two_mul_le_exp`, then choose the witness of the form
+`u+u+u+u` so no halving is ever needed.
+
 ### `d(T₄) = 4` — `U₃` instantiated, and it needed no changes
 
 `depth_le_three_growth_envelope` was built and then never used. A green build says an abstraction is

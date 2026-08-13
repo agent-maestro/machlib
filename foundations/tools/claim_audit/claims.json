@@ -2347,6 +2347,49 @@
         "TowerLowerBoundUpTo"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The band theorem. hypotheses_count 5 = three growth hypotheses + depth bound + the semantic equation; that count IS the claim that nothing else (continuity, monotonicity, a formula) is assumed.",
+      "id": "depth-two-growth-band-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Nothing is assumed about continuity, monotonicity, or `f` being given by a formula."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.superlinear_subexp_not_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "exp",
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 5
+    },
+    {
+      "_comment": "The re-derivation. Its EXISTENCE with the same conclusion as mx_not_in_eml_depth_le_2 is the evidence that the bespoke proof was doing no extra work.",
+      "id": "mx-via-band-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "re-derives the `M·x` case from it with **no reasoning about\nmultiplication**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.mx_not_depth_le_two_via_band",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

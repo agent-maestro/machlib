@@ -2618,4 +2618,148 @@ theorem evSign_of_hard (h : SignHardCase) : ∀ t : EMLTree, EvSign t.eval := by
         exact exp_pos _
 
 
+/-! ### A depth-2 barrier for a whole growth band
+
+`mx_not_in_eml_depth_le_2` excludes `M·x` at depth ≤ 2. Reading its proof, nothing in it is about
+multiplication: it only uses that `M·x` is unbounded, grows faster than `x`, and grows slower than
+`exp x`. The theorem below is that argument stated for the band rather than the example. -/
+
+/-- **No unbounded, superlinear, sub-exponential function is EML at depth ≤ 2.**
+
+The three hypotheses are each consumed by exactly one branch, and each is *necessary* — dropping any
+one admits a depth-≤2 member:
+
+* `H1` (unbounded above on every ray) kills `const` and, in the `eml` case, the branch where the
+  left child's exponential is bounded — there the node is trapped between a constant ceiling and the
+  right child's log floor.
+* `H3` (eventually above `x`) kills `var`. Without it `f = x` satisfies everything else and sits at
+  depth 0.
+* `H2` (below `exp x − x − C` at arbitrarily large points) kills the branch where the left child's
+  exponential dominates `exp x`, since the right child's log is at most linear.
+
+Note what is *not* assumed: nothing about continuity, monotonicity, or `f` being given by a formula. -/
+theorem superlinear_subexp_not_depth_le_two (f : Real → Real)
+    (H1 : ∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+    (H2 : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+    (H3 : ∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
+    (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = f x) : False := by
+  cases t with
+  | const c =>
+      obtain ⟨x, _, hx1, hlt⟩ := H1 c 1
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hv : c = f x := h x hx0
+      rw [← hv] at hlt; exact lt_irrefl_ax c hlt
+  | var =>
+      obtain ⟨x, _, hx1, hlt⟩ := H3 1
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hv : x = f x := h x hx0
+      rw [← hv] at hlt; exact lt_irrefl_ax x hlt
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      rcases depth_le_one_exp_bounded_or_grows A hA with ⟨K, hK⟩ | ⟨T, hT⟩
+      · -- left child's exponential bounded: the node is capped by `K − Cl`
+        obtain ⟨Cl, X₀, hX1, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+        obtain ⟨x, hxX, hx1, hlt⟩ := H1 (K - Cl) X₀
+        have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hv : exp (A.eval x) - log (B.eval x) = f x := h x hx0
+        have hcap : f x ≤ K - Cl := by
+          rw [← hv]
+          have v := add_le_add_wit (hK x hx1) (neg_le_neg_wit (hCl x hxX))
+          have e1 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+            mach_ring
+          have e2 : K + -Cl = K - Cl := by mach_ring
+          rw [e1, e2] at v; exact v
+        exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hcap)
+      · -- left child's exponential dominates `exp x`: the node is floored by `exp x − x − C`
+        obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+        obtain ⟨x, hxT, hx1, hlt⟩ := H2 C T
+        have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hv : exp (A.eval x) - log (B.eval x) = f x := h x hx0
+        have hfloor : exp x - x - C ≤ f x := by
+          rw [← hv]
+          have v := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hC x hx1))
+          have e1 : exp x + -(x + C) = exp x - x - C := by mach_mpoly [exp x, x, C]
+          have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+            mach_ring
+          rw [e1, e2] at v; exact v
+        exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hfloor)
+
+
+/-- **`M·x` re-derived from the band.** `mx_not_in_eml_depth_le_2` was proved directly; this obtains
+it from `superlinear_subexp_not_depth_le_two` with no reasoning about multiplication at all — the
+three hypotheses are discharged by `exp t ≥ 1 + t`, `1 < M`, and `exp_beats_linear_past`.
+
+The point is the same one the netlist theorems made: the bespoke proof was doing no work the band
+argument does not do. -/
+theorem mx_not_depth_le_two_via_band (M : Real) (hM1 : 1 < M) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = M * x) : False := by
+  have hMpos : (0 : Real) < M := lt_trans_ax zero_lt_one_ax hM1
+  refine superlinear_subexp_not_depth_le_two (fun x => M * x) ?_ ?_ ?_ t ht h
+  · -- unbounded: `M·x ≥ x` and `x` clears any `K`
+    intro K X
+    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    · have hX : X ≤ exp X := le_trans (le_one_add X) (one_add_le_exp X)
+      have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
+          (le_refl (exp X))
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans hX v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hxpos : (0 : Real) < 1 + exp K + exp X :=
+        add_pos_of_nonneg_pos
+          (le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) (exp_pos K))) (exp_pos X)
+      have hKx : K < 1 + exp K + exp X := by
+        have hK : K < exp K := by
+          have tK := one_add_le_exp K
+          have eK : (1 : Real) + K = K + 1 := by mach_ring
+          rw [eK] at tK
+          exact lt_of_lt_of_le (lt_succ_self K) tK
+        have v : (0 : Real) + exp K + 0 ≤ 1 + exp K + exp X :=
+          add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp K)))
+            (le_of_lt (exp_pos X))
+        have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
+        rw [e] at v
+        exact lt_of_lt_of_le (lt_of_lt_of_le hK (le_of_eq (by mach_ring : exp K = exp K))) v
+      have hgrow : 1 + exp K + exp X < M * (1 + exp K + exp X) := by
+        have v := mul_lt_mul_of_pos_right hM1 hxpos
+        have e : (1 : Real) * (1 + exp K + exp X) = 1 + exp K + exp X := by mach_ring
+        rw [e] at v; exact v
+      exact lt_trans_ax hKx hgrow
+  · -- sub-exponential: `M·x < exp x − x − C` is `(M+1)·x + C < exp x`
+    intro C X
+    have hMp : (0 : Real) ≤ M + 1 :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt hMpos) zero_lt_one_ax)
+    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_linear_past (α := M + 1) (β := C) hMp X
+    refine ⟨x, hxX, hx1, ?_⟩
+    have e : (M + 1) * x + C = M * x + x + C := by mach_ring
+    rw [e] at hlt
+    have v := add_lt_add_left hlt (-x - C)
+    have e1 : -x - C + (M * x + x + C) = M * x := by mach_mpoly [M, x, C]
+    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+    rw [e1, e2] at v; exact v
+  · -- superlinear: `x < M·x` since `M > 1`
+    intro X
+    refine ⟨1 + exp X, ?_, ?_, ?_⟩
+    · have hX : X ≤ exp X := le_trans (le_one_add X) (one_add_le_exp X)
+      exact le_trans hX (le_one_add (exp X))
+    · have v : (1 : Real) + 0 ≤ 1 + exp X := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hxpos : (0 : Real) < 1 + exp X :=
+        add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) (exp_pos X)
+      have v := mul_lt_mul_of_pos_right hM1 hxpos
+      have e : (1 : Real) * (1 + exp X) = 1 + exp X := by mach_ring
+      rw [e] at v; exact v
+
+
 end MachLib
