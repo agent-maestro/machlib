@@ -1835,11 +1835,11 @@
       "hypotheses_count": 2
     },
     {
-      "_comment": "The flagship. NOT 'a solution exists' but 'no shallower one does, and this attains it'. hypotheses_count 0 is load-bearing: the certificate is unconditional, so the two halves really are both discharged and nothing is deferred to a caller.",
+      "_comment": "The flagship. NOT 'a solution exists' but 'no shallower one does, and this attains it'. hypotheses_count 0 is load-bearing: the certificate is unconditional. NB the claim_text was rebound on 2026-08-12 when 'certified-optimal' was narrowed to 'certified minimum-depth' after outside review -- the auditor FAILED on the stale binding, which is the mechanism working: tightening prose must not silently orphan its claim.",
       "id": "invx4-certified-depth-optimal-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "first certified-optimal synthesis result\nin the corpus"
+        "first certified minimum-depth synthesis result\nin the corpus"
       ],
       "module": "MachLib.EMLCertifiedSynthesis",
       "theorem": "MachLib.EMLTree.invX4_depth_optimal",
@@ -1980,6 +1980,72 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "T2-native lower bound. The POINT is the proof consumes depth_le_one_le_exp_shift and nothing from the reciprocal arm, so proof_uses is the load-bearing check here, not the statement shape.",
+      "id": "expexp-depth-two-certificate-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "certified **minimum-depth at 2**"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.expExpTree_depth_optimal",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal",
+        "expExpSpec",
+        "expExpTree"
+      ],
+      "conclusion_mentions": [
+        "DepthOptimal"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The envelope lower bound itself, registered so 'one application of depth_le_one_le_exp_shift' is pinned to a theorem rather than left as prose.",
+      "id": "expexp-not-depth-le-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "one\napplication of `depth_le_one_le_exp_shift`"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.expExp_not_depth_le_one",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Meets",
+        "expExpSpec",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "Both-children variant. Distinct spec and distinct witness from expExpTree; registered so the 'loads both children' claim is checkable.",
+      "id": "expexpsub-depth-two-certificate-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "loads *both* children"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.expExpSubTree_depth_optimal",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal",
+        "expExpSubSpec",
+        "expExpSubTree"
+      ],
+      "conclusion_mentions": [
+        "DepthOptimal"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

@@ -798,7 +798,7 @@ theorem mx_A_bounded_absurd (M K : Real) (hM : 0 < M) (A B : EMLTree) (hB : B.de
 
 /-- `x + x ≤ exp x` on `[0,∞)`: `exp x = exp 1 · exp(x−1) ≥ exp 1 · x ≥ 2x`. The one growth fact the
 two fast `A`-forms need, and it avoids any appeal to calculus. -/
-private theorem two_mul_le_exp {x : Real} (hx : 0 ≤ x) : x + x ≤ exp x := by
+theorem two_mul_le_exp {x : Real} (hx : 0 ≤ x) : x + x ≤ exp x := by
   have he1 : (1 : Real) + 1 ≤ exp 1 := one_add_le_exp 1
   have hsplit : exp x = exp 1 * exp (x - 1) := by
     rw [← exp_add]

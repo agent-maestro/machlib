@@ -7,7 +7,53 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
-### T4 opens: certified EML synthesis, and `1/x` becomes the first certified-optimal target
+### Two depth-2 certificates with T2-native lower bounds — the calibration ladder closes
+
+`exp (exp x)` and `exp (exp x) − x` are certified **minimum-depth at 2**. Both lower bounds are one
+application of `depth_le_one_le_exp_shift` — the depth-≤1 growth envelope — so for the first time a
+certificate is fed by the shallow-tameness kit *as a kit*, with no reciprocal machinery anywhere.
+
+They also exercise the grammar in two ways. `exp (exp x)` uses **totalised log as a construction
+tool** rather than a hazard: `log 0 = 0`, so `eml t (const 0)` is exactly `exp ⟦t⟧` and iterated
+exponentials cost one level each. `exp (exp x) − x` instead loads *both* children, using
+`log (exp x) = x` so the right child does real work.
+
+The pipeline now consumes four different kinds of lower bound:
+
+| target | `d` | lower bound from |
+| --- | --- | --- |
+| `exp x` | 1 | two-point evaluation on depth-0 trees |
+| `exp (exp x)` | 2 | depth-≤1 growth envelope (T2-native) |
+| `exp (exp x) − x` | 2 | same envelope, both children loaded |
+| `1/x` | 4 | full structural case analysis |
+
+`two_mul_le_exp` was published from `private` in `EMLDepthTameness` (visibility change only, no new
+proof); `EMLCertifiedSynthesis` now imports that module directly, which is the dependency direction
+the T4-consumes-T2 reading predicts.
+
+**Tactic gotcha, and it is a sharp one: `mach_linarith` is not linarith.** It is a small
+`repeat (first | … | apply le_trans | assumption)` combinator. On a `≤` goal carrying an opaque atom
+the `apply le_trans` branch spawns a metavariable for the midpoint and diverges — a goal as trivial
+as `1 ≤ 1 + exp D` burned the full 200,000-heartbeat budget in `whnf`. It also cannot do linear
+arithmetic over hypotheses at all. Both depth-2 lower bounds therefore route their arithmetic
+through `private` helper lemmas stated over **plain variables** (`envelope_absurd`,
+`envelope_absurd_sub`), proved by explicit `add_le_add_left` / `lt_of_lt_of_le` chains.
+
+### Three claims tightened after outside review
+
+* **"Depth transfers to silicon" was too strong** — and the ×3.55 measurement is why. What is proved
+  is that *EML tree depth survives DAG sharing exactly and induces a serial EML-block dependency
+  floor on any valid schedule*; tree size does not survive. That is a statement about the
+  straight-line EML datapath. `EMLCertifiedSynthesis` now carries a stage table marking tree→DAG and
+  DAG→schedule **proved**, and schedule→RTL→mapped **measured**, with the ×1.00 / ×3.55 pair as the
+  evidence that the source-level path model stops being exact further down.
+* **"Certified-optimal" narrowed to "certified minimum-depth"** wherever it stood alone. Nothing here
+  claims a globally optimal FPGA implementation among arbitrary circuits.
+* **"Axiomatised reals buy trust" replaced.** Axiomatising the reals *enlarges* the trusted base. The
+  real property is structural: axiomatised reals prevent semantic evaluation from masquerading as
+  proof — syntactic costs compute, semantic claims must pass through kernel-checked propositions.
+
+### T4 opens: certified EML synthesis, and `1/x` becomes the first certified minimum-depth target
 
 New module `MachLib/EMLCertifiedSynthesis.lean`. The premise of T4 is that the **search is untrusted
 and the checker is not** — nothing about how a tree was found appears anywhere in the module, which
@@ -19,14 +65,17 @@ is why the programme needs no convergence theorem.
 axiomatised, so `#eval` fails on every tree. Both were probed, not assumed. Hence `Accepted` has
 exactly two fields: `cost` (kernel-decided) and `meets` (a proof obligation that cannot be omitted,
 because acceptance *is* the structure). Note the direction: `rfl` is checked by the trusted kernel,
-where `#eval` would run compiled code outside it — axiomatised reals cost performance and buy trust.
+where `#eval` would run compiled code outside it. The property this buys is *not* "axioms are
+trustworthy" — axiomatising the reals enlarges the trusted base. It is narrower and structural:
+**axiomatised reals prevent semantic evaluation from masquerading as proof.** Syntactic costs
+compute; semantic claims must pass through kernel-checked propositions.
 
 **The acceptance bookkeeping is trivial and is labelled as such.** The content is `DepthOptimal`,
 which pairs a witness with a *lower-bound theorem* and so certifies a **minimum-depth** solution
 rather than merely a working one. `depth_optimal_value_unique` makes "the minimum depth of `P`" well
 defined regardless of which witness a search returned.
 
-`invX4_depth_optimal : DepthOptimal invSpec invX4 4` is the first certified-optimal synthesis result
+`invX4_depth_optimal : DepthOptimal invSpec invX4 4` is the first certified minimum-depth synthesis result
 in the corpus. It assembles in three lines because the reciprocal arm already paid for both halves.
 
 **The bespoke hardware theorems turn out to be instances.** `depth_optimal_netDepth_floor` and

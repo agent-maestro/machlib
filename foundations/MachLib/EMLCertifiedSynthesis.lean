@@ -1,3 +1,4 @@
+import MachLib.EMLDepthTameness
 import MachLib.EMLNetlistDepth
 
 /-!
@@ -26,9 +27,14 @@ So `Accepted` below has exactly two fields, one from each side, and the semantic
 *obligation the proposer must discharge*, never something the checker computes. A proposal cannot be
 accepted with the obligation missing: it is a field of the structure.
 
-Note which direction this cuts. Deciding cost `by rfl` is checked by the **trusted kernel**;
-`#eval` would run compiled code *outside* it. Losing `#eval` to axiomatised reals costs performance
-and buys trust.
+Note what this actually buys, which is **not** "axioms are trustworthy" — axiomatising the reals
+*enlarges* the trusted mathematical base. The useful property is narrower and structural:
+
+> Axiomatised reals prevent semantic evaluation from masquerading as proof. Syntactic costs
+> compute; semantic claims must pass through kernel-checked propositions.
+
+There is no `#eval` path by which a numerical spot-check could be mistaken for `Meets`, because
+there is no `#eval` path at all.
 
 ## What is actually new here
 
@@ -43,7 +49,17 @@ with a certificate, and the previously bespoke theorems `inv_x_netlist_depth_ge_
 `inv_x_schedule_ge_four_L` are re-derived as consequences — they were the generic pipeline all
 along, specialised by hand.
 
-**Two targets are certified, deliberately.** Instantiating a pipeline only on the target it was
+**Four targets are certified, forming a calibration ladder.** The point of the ladder is that the
+*same* generic pipeline consumes lower bounds of four different kinds:
+
+| target | `d` | where its lower bound comes from |
+| --- | --- | --- |
+| `exp x` | 1 | two-point evaluation on depth-0 trees |
+| `exp (exp x)` | 2 | depth-≤1 growth envelope (**T2-native**) |
+| `exp (exp x) − x` | 2 | same envelope, both children loaded |
+| `1/x` | 4 | full structural case analysis (the reciprocal arm) |
+
+**Two of them are certified deliberately as controls.** Instantiating a pipeline only on the target it was
 abstracted from proves close to nothing: a green build says the abstraction is *true*, not that it
 is the one anyone needs. So `exp` (§5) is certified alongside `1/x` (§4), chosen to differ on the
 two axes where a design flaw would hide — its lower bound shares no lemma with the reciprocal arm,
@@ -60,6 +76,28 @@ the same §3 theorems unchanged.
 * The hardware floors are in **units of `L`**, the per-node latency. They are floors on schedule
   position, not on nanoseconds; converting needs a measured `L` and a lowering that actually spends
   `L` per node.
+
+## Where the proved chain ends and measurement begins
+
+The certified statement is: **EML tree depth survives DAG sharing exactly, and induces a serial
+EML-block dependency floor on any valid schedule.** Tree size does not survive sharing. That is the
+whole of what is proved, and it is a statement about the **straight-line EML datapath**, not about
+silicon.
+
+Everything past that boundary is measured, not derived, and the measurement says the source-level
+path model stops being exact:
+
+| stage | status |
+| --- | --- |
+| tree → DAG | **proved** — depth exact, size destroyed exponentially |
+| DAG → schedule | **proved** — latency floor survives, area destroyed |
+| schedule → RTL → mapped gates | **measured** — synthesis optimises across block boundaries |
+
+The measurement that fixes the boundary: a 4-deep chain of pipelined EML blocks has combinational
+path ratio ×1.00, and the same arithmetic with the registers removed has ratio ×3.55 — not ×4.00,
+because cross-boundary optimisation reclaims the difference. So a certificate here bounds
+**EML-block dependency depth**; it does not bound nanoseconds, gate levels after mapping, or the
+cost of any particular `exp`/`log` block's internals.
 -/
 
 namespace MachLib
@@ -139,7 +177,7 @@ theorem depth_optimal_value_unique {P : SemSpec} {t t' : EMLTree} {d d' : Nat}
     rw [h.accepted.cost] at this; exact this
   omega
 
-/-- A certified-optimal proposal cannot be beaten, only tied. Stated for the case a search cares
+/-- A certified minimum-depth proposal cannot be beaten on depth, only tied. Stated for the case a search cares
 about: any *strictly* shallower proposal is refuted outright, whatever produced it. -/
 theorem depth_optimal_refutes_shallower {P : SemSpec} {t : EMLTree} {d : Nat}
     (h : DepthOptimal P t d) (u : EMLTree) (hu : u.depth < d) : ¬ Meets P u :=
@@ -187,7 +225,7 @@ theorem depth_optimal_schedule_floor {P : SemSpec} {t : EMLTree} {d : Nat}
 
 This is the one specification for which both halves currently exist. The upper half is a witness
 (`invX4`, found by hand); the lower half is `inv_x_not_in_eml_depth_le_3`, the closing theorem of
-the reciprocal arm. Assembling them is the first certified-optimal EML synthesis result in the
+the reciprocal arm. Assembling them is the first certified minimum-depth EML synthesis result in the
 corpus, and the assembly is three lines because the arm did the work. -/
 
 /-- The reciprocal specification, on the positives. -/
@@ -293,7 +331,141 @@ theorem exp_netDepth_floor (p : Nat → EMLInstr) (i : Nat)
     1 ≤ netDepthAt p i :=
   depth_optimal_netDepth_floor expTree_depth_optimal p i hp
 
-/-! ### 6. What this checker does **not** decide
+/-! ### 6. Depth-2 certificates whose lower bounds are **T2-native**
+
+§4 and §5 draw their lower bounds from opposite extremes: the reciprocal arm's full case analysis,
+and a two-point evaluation. Neither uses the shallow-tameness kit as a *kit*. The two certificates
+here do — both lower bounds are one application of `depth_le_one_le_exp_shift`, the depth-≤1 growth
+envelope, and neither touches reciprocal machinery.
+
+They also exercise the grammar in two different ways. `exp (exp x)` uses **totalised log** as a
+construction tool rather than a hazard: `log 0 = 0`, so `eml t (const 0)` is exactly `exp ⟦t⟧` and
+iterated exponentials cost one level each. `exp (exp x) − x` instead loads *both* children, using
+`log (exp x) = x` to make the right child do real work.
+
+The resulting calibration ladder is the point — the same pipeline now accepts lower bounds of four
+different kinds, at depths 1, 2, 2 and 4. -/
+
+/-- The arithmetic core of both depth-2 lower bounds, over **plain variables**.
+
+Stated separately on purpose: with `E = exp D`, `F = exp (1 + exp D)` and `G = exp F` substituted
+in, `mach_linarith` spends its whole heartbeat budget in `whnf` on the nested exponentials. Over
+four opaque atoms it is immediate. Reading: the growth envelope gives `G ≤ F + D`, doubling gives
+`F + F ≤ G`, hence `F ≤ D` — contradicted by `F ≥ 2 + E ≥ 3 + D`. -/
+private theorem envelope_absurd {D E F G : Real}
+    (hDD : 1 + D ≤ E) (hgr : 1 + (1 + E) ≤ F) (hdd : F + F ≤ G) (hb : G ≤ F + D) : False := by
+  have s1 : 1 + (1 + D) ≤ 1 + E := add_le_add_left hDD 1
+  have s2 : 1 + (1 + (1 + D)) ≤ 1 + (1 + E) := add_le_add_left s1 1
+  have hFge : 1 + (1 + (1 + D)) ≤ F := le_trans s2 hgr
+  have hFD : F + F ≤ F + D := le_trans hdd hb
+  have s3 : F + (1 + (1 + (1 + D))) ≤ F + F := add_le_add_left hFge F
+  have chain : F + (1 + (1 + (1 + D))) ≤ F + D := le_trans s3 hFD
+  have e : F + (1 + (1 + (1 + D))) = (F + D) + (1 + (1 + 1)) := by mach_ring
+  rw [e] at chain
+  have hz : (0 : Real) < 1 + (1 + 1) := by mach_linarith
+  have s4 : (F + D) + 0 < (F + D) + (1 + (1 + 1)) := add_lt_add_left hz (F + D)
+  have e2 : (F + D) + 0 = F + D := by mach_ring
+  rw [e2] at s4
+  exact lt_irrefl_ax (F + D) (lt_of_lt_of_le s4 chain)
+
+/-- Same shape one subtraction along: the envelope now bounds `G − x` where `x = 1 + E`. -/
+private theorem envelope_absurd_sub {D E F G : Real}
+    (hDD : 1 + D ≤ E) (hxx : (1 + E) + (1 + E) ≤ F) (hdd : F + F ≤ G)
+    (hb : G - (1 + E) ≤ F + D) : False := by
+  have hb' : G ≤ (F + D) + (1 + E) := by
+    have t := add_le_add_left hb (1 + E)
+    have e1 : (1 + E) + (G - (1 + E)) = G := by mach_ring
+    have e2 : (1 + E) + (F + D) = (F + D) + (1 + E) := by mach_ring
+    rw [e1, e2] at t; exact t
+  have hFF : F + F ≤ (F + D) + (1 + E) := le_trans hdd hb'
+  have s1 : 1 + (1 + D) ≤ 1 + E := add_le_add_left hDD 1
+  have s2 : (1 + E) + (1 + (1 + D)) ≤ (1 + E) + (1 + E) := add_le_add_left s1 (1 + E)
+  have s3 : F + ((1 + E) + (1 + (1 + D))) ≤ F + ((1 + E) + (1 + E)) := add_le_add_left s2 F
+  have s4 : F + ((1 + E) + (1 + E)) ≤ F + F := add_le_add_left hxx F
+  have chain : F + ((1 + E) + (1 + (1 + D))) ≤ (F + D) + (1 + E) :=
+    le_trans s3 (le_trans s4 hFF)
+  have e : F + ((1 + E) + (1 + (1 + D))) = ((F + D) + (1 + E)) + (1 + 1) := by mach_ring
+  rw [e] at chain
+  have hz : (0 : Real) < 1 + 1 := by mach_linarith
+  have s5 : ((F + D) + (1 + E)) + 0 < ((F + D) + (1 + E)) + (1 + 1) :=
+    add_lt_add_left hz ((F + D) + (1 + E))
+  have e2 : ((F + D) + (1 + E)) + 0 = (F + D) + (1 + E) := by mach_ring
+  rw [e2] at s5
+  exact lt_irrefl_ax ((F + D) + (1 + E)) (lt_of_lt_of_le s5 chain)
+
+/-- Iterated exponential, specified on all of `Real`. -/
+def expExpSpec : SemSpec := fun f => ∀ x : Real, f x = exp (exp x)
+
+/-- Depth-2 witness. `log 0 = 0` by totalisation, so this is `exp (exp x)` exactly. -/
+noncomputable def expExpTree : EMLTree := EMLTree.eml expTree (EMLTree.const 0)
+
+theorem expExpTree_depth : expExpTree.depth = 2 := by rfl
+
+theorem expExpTree_eval : ∀ x : Real, expExpTree.eval x = exp (exp x) := by
+  intro x
+  show exp (expTree.eval x) - log ((EMLTree.const (0 : Real)).eval x) = exp (exp x)
+  rw [expTree_eval]
+  show exp (exp x) - log (0 : Real) = exp (exp x)
+  rw [log_nonpos (le_refl (0 : Real))]
+  mach_ring
+
+/-- **No depth-≤1 tree reaches the double-exponential scale.** One application of the depth-≤1
+growth envelope: `A x ≤ exp x + D` on `[1,∞)`, while `exp (exp x) ≥ exp x + exp x`, so the
+envelope forces `exp x ≤ D` — refuted at `x = 1 + exp D`. -/
+theorem expExp_not_depth_le_one (u : EMLTree) (hu : u.depth < 2) (h : Meets expExpSpec u) :
+    False := by
+  have h1 : u.depth ≤ 1 := by omega
+  obtain ⟨D, hD⟩ := depth_le_one_le_exp_shift u h1
+  -- NB: `mach_linarith` is not linarith — its `apply le_trans` branch diverges on a `≤` goal
+  -- carrying an opaque atom like `exp D`. Explicit steps instead.
+  have hx1 : (1 : Real) ≤ 1 + exp D := by
+    have t := add_le_add_left (le_of_lt (exp_pos D)) 1
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at t; exact t
+  have hb := hD (1 + exp D) hx1
+  rw [h (1 + exp D)] at hb
+  exact envelope_absurd (one_add_le_exp D) (one_add_le_exp (1 + exp D))
+    (two_mul_le_exp (le_of_lt (exp_pos (1 + exp D)))) hb
+
+theorem expExpTree_depth_optimal : DepthOptimal expExpSpec expExpTree 2 :=
+  { accepted := { meets := expExpTree_eval, cost := by rfl }
+    minimal := expExp_not_depth_le_one }
+
+/-- The second depth-2 target, loading **both** children: `log (exp x) = x`, so the right child
+contributes genuinely rather than being neutralised. -/
+def expExpSubSpec : SemSpec := fun f => ∀ x : Real, f x = exp (exp x) - x
+
+noncomputable def expExpSubTree : EMLTree := EMLTree.eml expTree expTree
+
+theorem expExpSubTree_depth : expExpSubTree.depth = 2 := by rfl
+
+theorem expExpSubTree_eval : ∀ x : Real, expExpSubTree.eval x = exp (exp x) - x := by
+  intro x
+  show exp (expTree.eval x) - log (expTree.eval x) = exp (exp x) - x
+  rw [expTree_eval, log_exp]
+
+/-- Same envelope, one subtraction further along: the envelope now forces `exp x − x ≤ D`, and
+`two_mul_le_exp` gives `exp x − x ≥ x`, refuted at `x = 1 + exp D`. -/
+theorem expExpSub_not_depth_le_one (u : EMLTree) (hu : u.depth < 2) (h : Meets expExpSubSpec u) :
+    False := by
+  have h1 : u.depth ≤ 1 := by omega
+  obtain ⟨D, hD⟩ := depth_le_one_le_exp_shift u h1
+  have hx1 : (1 : Real) ≤ 1 + exp D := by
+    have t := add_le_add_left (le_of_lt (exp_pos D)) 1
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at t; exact t
+  have hxnn : (0 : Real) ≤ 1 + exp D :=
+    add_nonneg (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos D))
+  have hb := hD (1 + exp D) hx1
+  rw [h (1 + exp D)] at hb
+  exact envelope_absurd_sub (one_add_le_exp D) (two_mul_le_exp hxnn)
+    (two_mul_le_exp (le_of_lt (exp_pos (1 + exp D)))) hb
+
+theorem expExpSubTree_depth_optimal : DepthOptimal expExpSubSpec expExpSubTree 2 :=
+  { accepted := { meets := expExpSubTree_eval, cost := by rfl }
+    minimal := expExpSub_not_depth_le_one }
+
+/-! ### 7. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.
 
