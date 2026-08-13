@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### The socket caveat gets its second side measured
+
+`EMLNetlistDepth`'s header lists three instantiations of the weighted-cost socket and says only
+`we` = cycles is correct. The middle entry — combinational logic levels — was justified by a
+**one-sided** measurement: a pipelined 4-chain has path ratio ×1.00, so `4 × 90 = 360` is not the
+physical critical path.
+
+forge `3643edf` measures the other side. The identical arithmetic with the pipeline registers
+removed gives path ratio **×3.55**. So combinational depth *is* path-additive when nothing breaks the
+path, and stops being so the moment a register is inserted.
+
+**That makes it the one contingent instantiation of the three, and the contingency is now measured
+rather than argued.** Latency is path-additive unconditionally; area never was; combinational depth
+is path-additive exactly when the lowering leaves the path unbroken. The header says this, with the
+`×3.55`-not-`×4` gap attributed to cross-boundary optimisation rather than smoothed away.
+
+Prose only — no theorem changed, and none needed to. `netWDepth_eq_wdepth` was always true for
+arbitrary weights; what was under-specified was the *side condition on the artifact* under which a
+particular weight means what you want.
+
 ### Step 2: `MachLib.EMLDepthTameness` — the dependency arrow inverts
 
 The generic theory that fell out of the reciprocal work now lives in its own module, and
