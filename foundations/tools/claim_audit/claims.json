@@ -2261,6 +2261,28 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "THE ITERATION RESULT. What makes it evidence for Q2 is that its proof consumes depth_le_two_growth_envelope AND depth_le_two_decay_on_ray -- both theorems -- rather than a hand-built bound. hypotheses_count 1 = the depth bound alone.",
+      "id": "u3-envelope-iterates-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`U₃` consumes only\ntheorems"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_three_growth_envelope",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

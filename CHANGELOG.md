@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `U₃` — the growth/decay pair **iterates**
+
+`depth_le_three_growth_envelope`:
+
+> for `t.depth ≤ 3`, `∃ K M N X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀, t x ≤ exp (exp (exp x + K) + M) + N`.
+
+**This is the result the whole Q2 question was about.** `d(T₃) = 3` did *not* show the construction
+iterates: its depth-≤2 envelope consumed a **hand-built** depth-≤1 decay bound. `U₃` consumes only
+theorems — `depth_le_two_growth_envelope` (`U₂`) for the left child and
+`depth_le_two_decay_on_ray` (`V₂`) for the right. One level of nesting still buys exactly one
+exponential, and the step is now mechanical rather than bespoke.
+
+The right child needs **both branches of the totalisation**: where `B x ≤ 0` the log is `0` and
+contributes nothing; where `B x > 0`, `V₂` caps `−log (B x)` at `C + log x`.
+
+**A trap worth recording, because the first draft got it wrong.** The `log x` term is absorbed into
+the exponent via `exp a + exp a ≤ exp (a+1)`, which needs `log x ≤ exp (exp (exp x + K) + M)`. That
+is **false** on `[1,∞)` for very negative `M` — the right-hand side can be arbitrarily small. It
+becomes true only once `x ≥ exp (−(K+M))`, so that term is carried in the ray and is not padding.
+The envelope's ray is now `XA + XB + exp (−(K+M))`.
+
+With `U₃` in hand, `d(T₄) = 4` is reachable by the same argument that gave `d(T₃) = 3`.
+
 ### `V₂` is proved — the decay half of the pair now exists at depth 2
 
 `depth_le_two_decay_on_ray`:

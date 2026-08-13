@@ -2155,7 +2155,7 @@ theorem eventually_log_exp_sub_log_gt (K : Real) :
   rw [log_exp] at hlog
   exact lt_trans_ax (lt_succ_self K) hlog
 
-private theorem le_add_nonneg_r {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
+private theorem le_add_nonneg_r' {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
   have t := add_le_add_left hb a
   have e : a + (0 : Real) = a := by mach_ring
   rw [e] at t; exact t
@@ -2192,7 +2192,7 @@ theorem depth_le_two_decay_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
       refine ⟨-log c, 1, le_refl 1, ?_⟩
       intro x hx _
       show -log c ≤ -log c + log x
-      exact le_add_nonneg_r (hlog0 x hx)
+      exact le_add_nonneg_r' (hlog0 x hx)
   | var =>
       refine ⟨0, 1, le_refl 1, ?_⟩
       intro x hx _
@@ -2235,7 +2235,7 @@ theorem depth_le_two_decay_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
               intro x hx _
               show -log (exp (A.eval x) - log (B.eval x)) ≤ -log (exp α - log β) + log x
               rw [ha x (hxpos x hx), hb x (hxpos x hx)]
-              exact le_add_nonneg_r (hlog0 x hx)
+              exact le_add_nonneg_r' (hlog0 x hx)
             · -- `A = c − log x`: `exp (A x) → 0` while `log β > 0`, so the node goes negative.
               obtain ⟨X₀, hX1, hX⟩ := eventually_log_gt (c - log (log β))
               refine ⟨0, X₀, hX1, ?_⟩
@@ -2345,7 +2345,7 @@ theorem depth_le_two_decay_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
           have hxT : T ≤ x := by
             have hTe : T ≤ exp T := le_trans (le_one_add T) (one_add_le_exp T)
             have t1 : exp T ≤ exp T + exp CB + 1 :=
-              le_trans (le_add_nonneg_r (le_of_lt hCp)) (le_add_nonneg_r (le_of_lt zero_lt_one_ax))
+              le_trans (le_add_nonneg_r' (le_of_lt hCp)) (le_add_nonneg_r' (le_of_lt zero_lt_one_ax))
             exact le_trans hTe (le_trans t1 hx)
           have hxC : CB + 1 ≤ x := by
             have hCe : CB + 1 ≤ exp CB + 1 :=
@@ -2397,5 +2397,164 @@ theorem depth_le_two_decay_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
             rw [e]; exact hlog0 x hx1
           exact le_trans h1 h2
 
+
+private theorem self_le_exp (a : Real) : a ≤ exp a :=
+  le_trans (le_one_add a) (one_add_le_exp a)
+
+/-- `exp a + exp a ≤ exp (a + 1)`: one unit of exponent is a factor of `e ≥ 2`. -/
+private theorem exp_add_one_doubles (a : Real) : exp a + exp a ≤ exp (a + 1) := by
+  have h1 : exp a * (1 + 1) ≤ exp a * exp 1 :=
+    mul_le_mul_of_nonneg_left (one_add_le_exp 1) (le_of_lt (exp_pos a))
+  have e1 : exp a * ((1 : Real) + 1) = exp a + exp a := by mach_ring
+  have e2 : exp (a + 1) = exp a * exp 1 := exp_add _ _
+  rw [e1] at h1; rw [e2]; exact h1
+
+/-- **The depth-≤3 growth envelope — the pair, iterated.**
+
+`U₃` is built from `U₂` (`depth_le_two_growth_envelope`) and `V₂` (`depth_le_two_decay_on_ray`),
+both of which are now theorems rather than hand-built inputs. That is the point of this statement:
+`d(T₃) = 3` was proved with a *hand-built* depth-≤1 decay bound, so it did not show the construction
+iterates. This one consumes only proved halves.
+
+The right child needs both branches of the totalisation: where `B x ≤ 0` the log is `0` and
+contributes nothing; where `B x > 0`, `V₂` caps `−log (B x)` at `C + log x`. The `log x` is then
+absorbed into the exponent by `exp_add_one_doubles`. -/
+theorem depth_le_three_growth_envelope (t : EMLTree) (ht : t.depth ≤ 3) :
+    ∃ K M N X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      t.eval x ≤ exp (exp (exp x + K) + M) + N := by
+  have hlog0 : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x hx
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hx
+    rw [hl1] at hm; exact hm
+  cases t with
+  | const c =>
+      refine ⟨0, 0, c, 1, le_refl 1, ?_⟩
+      intro x _
+      show c ≤ exp (exp (exp x + 0) + 0) + c
+      have t := le_add_nonneg_r' (a := c) (le_of_lt (exp_pos (exp (exp x + 0) + 0)))
+      have e : c + exp (exp (exp x + 0) + 0) = exp (exp (exp x + 0) + 0) + c := by mach_ring
+      rw [e] at t; exact t
+  | var =>
+      refine ⟨0, 0, 0, 1, le_refl 1, ?_⟩
+      intro x hx
+      show x ≤ exp (exp (exp x + 0) + 0) + 0
+      have e1 : exp x + (0 : Real) = exp x := by mach_ring
+      have e2 : exp (exp x) + (0 : Real) = exp (exp x) := by mach_ring
+      rw [e1, e2]
+      have c1 : x ≤ exp x := self_le_exp x
+      have c2 : exp x ≤ exp (exp x) := self_le_exp _
+      have c3 : exp (exp x) ≤ exp (exp (exp x)) := self_le_exp _
+      have e3 : exp (exp (exp x)) + (0 : Real) = exp (exp (exp x)) := by mach_ring
+      rw [e3]
+      exact le_trans c1 (le_trans c2 c3)
+  | eml A B =>
+      have hA : A.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      obtain ⟨K, M, XA, hXA1, hU⟩ := depth_le_two_growth_envelope A hA
+      obtain ⟨C, XB, hXB1, hV⟩ := depth_le_two_decay_on_ray B hB
+      -- The `exp (-(K+M))` term is not padding: without it the absorption step below is FALSE,
+      -- since `exp (exp (exp x + K) + M)` can be tiny for very negative `M`.
+      refine ⟨K, M + 1, exp C, XA + XB + exp (-(K + M)), ?_, ?_⟩
+      · have t1 : (1 : Real) + 0 + 0 ≤ XA + XB + exp (-(K + M)) :=
+          add_le_add_wit (add_le_add_wit hXA1 (le_trans (le_of_lt zero_lt_one_ax) hXB1))
+            (le_of_lt (exp_pos _))
+        have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+        rw [e] at t1; exact t1
+      · intro x hx
+        have hXBnn : (0 : Real) ≤ XB := le_trans (le_of_lt zero_lt_one_ax) hXB1
+        have hXAnn : (0 : Real) ≤ XA := le_trans (le_of_lt zero_lt_one_ax) hXA1
+        have hEnn : (0 : Real) ≤ exp (-(K + M)) := le_of_lt (exp_pos _)
+        have hXA : XA ≤ x := by
+          have v : XA + 0 + 0 ≤ XA + XB + exp (-(K + M)) :=
+            add_le_add_wit (add_le_add_wit (le_refl XA) hXBnn) hEnn
+          have e : XA + (0 : Real) + 0 = XA := by mach_ring
+          rw [e] at v; exact le_trans v hx
+        have hXB : XB ≤ x := by
+          have v : (0 : Real) + XB + 0 ≤ XA + XB + exp (-(K + M)) :=
+            add_le_add_wit (add_le_add_wit hXAnn (le_refl XB)) hEnn
+          have e : (0 : Real) + XB + 0 = XB := by mach_ring
+          rw [e] at v; exact le_trans v hx
+        have hXE : exp (-(K + M)) ≤ x := by
+          have v : (0 : Real) + 0 + exp (-(K + M)) ≤ XA + XB + exp (-(K + M)) :=
+            add_le_add_wit (add_le_add_wit hXAnn hXBnn) (le_refl _)
+          have e : (0 : Real) + 0 + exp (-(K + M)) = exp (-(K + M)) := by mach_ring
+          rw [e] at v; exact le_trans v hx
+        have hx1 : (1 : Real) ≤ x := le_trans hXA1 hXA
+        have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+        have hAx : A.eval x ≤ exp (exp x + K) + M := hU x hXA
+        have hexpA : exp (A.eval x) ≤ exp (exp (exp x + K) + M) := exp_monotone hAx
+        have hBx : -log (B.eval x) ≤ exp C + log x := by
+          rcases lt_total 0 (B.eval x) with hp | hp | hp
+          · exact le_trans (hV x hXB hp)
+              (add_le_add_wit (le_trans (le_one_add C) (one_add_le_exp C)) (le_refl (log x)))
+          · rw [log_nonpos (le_of_eq hp.symm)]
+            have e : -(0 : Real) = 0 := by mach_ring
+            rw [e]
+            exact le_trans (le_of_lt (exp_pos C)) (le_add_nonneg_r' (hlog0 x hx1))
+          · rw [log_nonpos (le_of_lt hp)]
+            have e : -(0 : Real) = 0 := by mach_ring
+            rw [e]
+            exact le_trans (le_of_lt (exp_pos C)) (le_add_nonneg_r' (hlog0 x hx1))
+        show exp (A.eval x) - log (B.eval x) ≤ exp (exp (exp x + (K)) + (M + 1)) + exp C
+        -- Absorption: `log x ≤ x ≤ exp (exp (exp x + K) + M)`, valid because `x ≥ exp (-(K+M))`.
+        have habs : log x ≤ exp (exp (exp x + K) + M) := by
+          have g1 : x + x ≤ exp x := two_mul_le_exp hx0
+          have g2 : 1 + (exp x + K) ≤ exp (exp x + K) := one_add_le_exp _
+          have g3 : 1 + (exp (exp x + K) + M) ≤ exp (exp (exp x + K) + M) := one_add_le_exp _
+          have gKM : -(K + M) ≤ x := le_trans (le_trans (le_one_add _) (one_add_le_exp _)) hXE
+          -- `x ≤ 1 + (exp (exp x + K) + M)`
+          have w : (0 : Real) ≤ x + (K + M) := by
+            have u := add_le_add_wit gKM (le_refl (K + M))
+            have eu : -(K + M) + (K + M) = (0 : Real) := by mach_mpoly [K, M]
+            rw [eu] at u; exact u
+          have htwo : (0 : Real) ≤ 1 + 1 :=
+            le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax)
+          have s1 : x ≤ x + x + (K + M) + 1 + 1 := by
+            have u1 : x + 0 + 0 ≤ x + (x + (K + M)) + (1 + 1) :=
+              add_le_add_wit (add_le_add_wit (le_refl x) w) htwo
+            have e1 : x + (0 : Real) + 0 = x := by mach_ring
+            have e2 : x + (x + (K + M)) + ((1 : Real) + 1) = x + x + (K + M) + 1 + 1 := by
+              mach_ring
+            rw [e1, e2] at u1; exact u1
+          have s2 : x + x + (K + M) + 1 + 1 ≤ exp x + (K + M) + 1 + 1 :=
+            add_le_add_wit (add_le_add_wit (add_le_add_wit g1 (le_refl (K + M))) (le_refl 1))
+              (le_refl 1)
+          have s3 : exp x + (K + M) + 1 + 1 ≤ 1 + (exp (exp x + K) + M) := by
+            have v := add_le_add_wit g2 (le_refl M)
+            have e1 : 1 + (exp x + K) + M = exp x + (K + M) + 1 := by mach_ring
+            rw [e1] at v
+            have u := add_le_add_wit v (le_refl (1 : Real))
+            have e2 : exp (exp x + K) + M + 1 = 1 + (exp (exp x + K) + M) := by mach_ring
+            rw [e2] at u; exact u
+          have hxle : x ≤ exp (exp (exp x + K) + M) :=
+            le_trans s1 (le_trans s2 (le_trans s3 g3))
+          exact le_trans (log_le_self_on_ray hx1) hxle
+        have hsum : exp (A.eval x) + (exp C + log x)
+            ≤ exp (exp (exp x + K) + (M + 1)) + exp C := by
+          have d1 : exp (A.eval x) + log x
+              ≤ exp (exp (exp x + K) + M) + exp (exp (exp x + K) + M) :=
+            add_le_add_wit hexpA habs
+          have d2 : exp (exp (exp x + K) + M) + exp (exp (exp x + K) + M)
+              ≤ exp (exp (exp x + K) + M + 1) := exp_add_one_doubles _
+          have d3 : exp (A.eval x) + log x ≤ exp (exp (exp x + K) + (M + 1)) := by
+            have e : exp (exp x + K) + M + 1 = exp (exp x + K) + (M + 1) := by mach_ring
+            rw [e] at d2; exact le_trans d1 d2
+          have d4 := add_le_add_wit d3 (le_refl (exp C))
+          have e1 : exp (A.eval x) + log x + exp C = exp (A.eval x) + (exp C + log x) := by
+            mach_ring
+          rw [e1] at d4; exact d4
+        have hfin : exp (A.eval x) - log (B.eval x) ≤ exp (A.eval x) + (exp C + log x) := by
+          have v := add_le_add_wit (le_refl (exp (A.eval x))) hBx
+          have e : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+            mach_ring
+          rw [e] at v; exact v
+        exact le_trans hfin hsum
 
 end MachLib
