@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### The remaining obstruction is isolated to **one** proposition
+
+`V₂` consumed finiteness of sign changes, discharged at depth 2 by a hand check over five closed
+forms. `evSign_of_hard` reduces the general case to a single named statement:
+
+> **`SignHardCase`** — for `A`, `B` and a ray on which `B` is *positive*,
+> `exp (A x) − log (B x)` is eventually of constant sign.
+
+> **`evSign_of_hard : SignHardCase → ∀ t : EMLTree, EvSign t.eval`**
+
+So the blocker is now a proposition rather than a vague requirement, and it is exactly the statement
+Hardy-field / o-minimality machinery addresses — a difference of log-exp functions is eventually of
+constant sign. **That is the question to put to an outside mathematician.**
+
+**Two things fell out of the proof that were not expected.**
+
+* **Totalisation helps rather than hurts.** Where the right child is eventually non-positive its log
+  is identically `0`, so the node is `exp (A x)` — *positive*, sign-definite for free. The convention
+  that has forced thresholds into statements all through this corpus is what makes this branch
+  trivial, and `SignHardCase` needs `B` positive precisely because that is the only branch where the
+  totalisation stops helping.
+* **The left child is never inspected.** The induction uses its hypothesis only on `B`. Whatever `A`
+  does, the node's sign is decided by whether the right child's log is real or totalised away.
+
+`EvSign` is stated as *positive* or *non-positive* rather than positive/negative, because the
+totalisation makes `0` an ordinary value: a subtree sitting at exactly `0` behaves like a negative
+one.
+
 ### `U₃` — the growth/decay pair **iterates**
 
 `depth_le_three_growth_envelope`:

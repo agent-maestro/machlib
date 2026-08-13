@@ -2557,4 +2557,64 @@ theorem depth_le_three_growth_envelope (t : EMLTree) (ht : t.depth ≤ 3) :
           rw [e] at v; exact v
         exact le_trans hfin hsum
 
+/-! ### The remaining obstruction, isolated
+
+`V₂`'s proof consumed *finiteness of sign changes*: it works only because `X₀` can be pushed past
+the last crossing, and at depth 2 that is a hand check over five closed forms. Making the induction
+general means proving it at every depth. This section reduces that to **one** statement, so the gap
+is a named proposition rather than a vague blocker. -/
+
+/-- **Eventually of constant sign** — positive on a ray, or non-positive on a ray.
+
+Non-positive rather than negative because the totalisation makes `0` a perfectly ordinary value:
+`log y = 0` for `y ≤ 0`, so a subtree sitting at exactly `0` behaves like a negative one. -/
+def EvSign (f : Real → Real) : Prop :=
+  (∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < f x)
+  ∨ (∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → f x ≤ 0)
+
+/-- **The one case the induction cannot discharge**: a genuine difference of log-exp functions,
+`exp (A x) − log (B x)` on a ray where the right child is *positive* so its log is the real one.
+
+This is the point where Hardy-field / o-minimality machinery would apply, and it is stated with the
+positivity of `B` as a hypothesis precisely because that is the branch where the totalisation stops
+helping. -/
+def SignHardCase : Prop :=
+  ∀ (A B : EMLTree) (X₀ : Real), 1 ≤ X₀ → (∀ x : Real, X₀ ≤ x → 0 < B.eval x) →
+    EvSign (fun x => exp (A.eval x) - log (B.eval x))
+
+/-- **The reduction.** One statement about differences of log-exp functions gives eventual
+sign-definiteness for *every* EML tree, at every depth.
+
+Two things are worth noticing in the proof.
+
+**Totalisation helps rather than hurts.** Where the right child is eventually non-positive, its log
+is identically `0` on that ray, so the node is `exp (A x)`, which is **positive** — sign-definite for
+free. The convention that looked like a wart is what makes this branch trivial.
+
+**The left child is never inspected.** The induction hypothesis is used only on `B`. Whatever `A`
+does, the node's sign is decided by whether the right child's log is real or totalised away. -/
+theorem evSign_of_hard (h : SignHardCase) : ∀ t : EMLTree, EvSign t.eval := by
+  intro t
+  induction t with
+  | const c =>
+      rcases lt_total 0 c with hc | hc | hc
+      · exact Or.inl ⟨1, le_refl 1, fun x _ => hc⟩
+      · exact Or.inr ⟨1, le_refl 1, fun x _ => le_of_eq hc.symm⟩
+      · exact Or.inr ⟨1, le_refl 1, fun x _ => le_of_lt hc⟩
+  | var =>
+      exact Or.inl ⟨1, le_refl 1, fun x hx => lt_of_lt_of_le zero_lt_one_ax hx⟩
+  | eml A B _ ihB =>
+      rcases ihB with ⟨XB, hXB1, hpos⟩ | ⟨XB, hXB1, hnp⟩
+      · -- right child eventually positive: the hard case, assumed
+        exact h A B XB hXB1 hpos
+      · -- right child eventually non-positive: its log is totalised to `0`, so the node is `exp (A x)`
+        refine Or.inl ⟨XB, hXB1, ?_⟩
+        intro x hx
+        show 0 < exp (A.eval x) - log (B.eval x)
+        rw [log_nonpos (hnp x hx)]
+        have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+        rw [e]
+        exact exp_pos _
+
+
 end MachLib

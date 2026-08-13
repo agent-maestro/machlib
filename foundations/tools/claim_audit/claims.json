@@ -2283,6 +2283,28 @@
         "exp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The reduction. hypotheses_count 1 IS the content: exactly one assumption, SignHardCase, stands between the corpus and eventual sign-definiteness at every depth. If this ever grew a second hypothesis the 'isolated to one proposition' claim would be false.",
+      "id": "sign-definite-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "reduces the general case to a single named statement"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.evSign_of_hard",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "SignHardCase",
+        "EvSign",
+        "EMLTree"
+      ],
+      "conclusion_mentions": [
+        "EvSign"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
