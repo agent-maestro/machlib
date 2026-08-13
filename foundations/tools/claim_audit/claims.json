@@ -2174,6 +2174,50 @@
         "TowerLowerBoundUpTo"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The ray end of the depth-<=1 lower bound. 'c - log x attains it with EQUALITY' is why -log x is the right comparison -- a weaker RHS would make the bound unusable for the 1/x decay cell.",
+      "id": "depth-one-lower-on-ray-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "this is the other end"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_lower_on_ray",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "eval"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The only decaying cell of the 25. hypotheses_count 1 (the depth bound on A only) is the content: no hypothesis on B beyond the sign of its log, which is checked inside the conclusion rather than assumed.",
+      "id": "v2-worst-cell-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**the only decaying cell of the\n25**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_V2_log_nonpos",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "log",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

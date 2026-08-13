@@ -5,7 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
-## [Unreleased] — 2026-08-12
+## [Unreleased] — 2026-08-13
+
+### `V₂` is not blocked — the decay half survives depth 2, and the worst cell is proved
+
+The question left by `d(T₃) = 3` was whether the **decay** half of the pair can be built at depth 2,
+or whether near-cancellation blocks it. Settled on paper first
+(`monogate-research/exploration/eml_depth_induction_2026_08_13/`):
+
+> **`V₂` exists and is logarithmic, `V₂(x) = C + log x`.** Cancellation needs two functions that
+> approach each other *asymptotically*, and at depth 2 the two sides are too sparse for that:
+> `exp (A x)` takes only `{const, eˣ, e^c/x, e^{eˣ−d}, e^{eˣ−log x}}` and `log (B x)` only
+> `{log β, log x, 0, ≈x, ≈x}`. The only pair that can agree asymptotically is constant against
+> constant, where the difference is itself a constant.
+
+Two theorems land the load-bearing part:
+
+* `depth_le_one_lower_on_ray` — a depth-≤1 tree satisfies `A x ≥ −C − log x` on `[1,∞)`. The
+  existing `depth_le_one_lower_bound` covers `(0,1]`; this is the other end, and `−log x` is the
+  right comparison because `c − log x` attains it with **equality**.
+* `depth_le_two_decay_log_nonpos` / `depth_le_two_V2_log_nonpos` — **the only decaying cell of the
+  25**, `log (B x) ≤ 0`, where the value is `≥ e^{−C}/x` and so `−log t(x) ≤ C + log x`. It needs no
+  hypothesis on `B` beyond that sign: the decay is entirely the left child's.
+
+**What is proved and what is not.** The worst cell is closed. The remaining cells (`log (B x) > 0`)
+are argued on paper — each either grows or is bounded below by a positive constant — but are **not
+yet formalised**, so `V₂` as a single theorem does not exist yet.
+
+**A different failure mode surfaced, and it is not the one we were hunting.** `C` is
+tree-dependent and **unbounded over trees**: constant-against-constant cancellation is exact on the
+locus `exp α = log β`, and near it `C` blows up. The *form* of the bound survives; its
+**uniformity** does not. If `C_j` degrades with `j` the envelope weakens even though every `V_j`
+exists. That, rather than cancellation per se, is now the thing to watch.
+
+Worth recording how that was found: the locus has measure zero and the numerical probe
+(`v2_shape_probe.py`, exhaustive over the 25 *shapes*, a grid over parameters) does not land on it.
+It came from reasoning about the table. The probe's own first run reported six "shrinking" cases,
+all of which were transients **before** the ray starts — `B = c′ − log x` with `c′ = 3` has not yet
+been totalised at `x = 10`.
 
 ### `d(T₃) = 3` — the growth/decay pair earns a theorem that was not reachable before
 

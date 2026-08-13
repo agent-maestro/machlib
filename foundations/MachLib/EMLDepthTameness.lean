@@ -1933,4 +1933,112 @@ theorem depth_le_two_growth_envelope (t : EMLTree) (ht : t.depth ≤ 2) :
       rw [e] at h3; exact h3
 
 
+/-- **Depth-≤1 lower bound on a ray**, in the shape the decay bound needs: `A x ≥ −C − log x`.
+
+The companion `depth_le_one_lower_bound` (in `EMLDepth2InvX`) bounds a depth-≤1 tree on `(0,1]`;
+this is the other end. `−log x` is the right comparison because it is exactly the worst form's
+shape — `c − log x` attains it with equality, and every other form clears it easily. -/
+theorem depth_le_one_lower_on_ray (A : EMLTree) (hA : A.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → -C - log x ≤ A.eval x := by
+  have hlog0 : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x hx
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hx
+    rw [hl1] at hm; exact hm
+  have hxpos : ∀ x : Real, 1 ≤ x → (0 : Real) < x := fun x hx =>
+    lt_of_lt_of_le zero_lt_one_ax hx
+  rcases depth_le_one_classification A hA with
+      ⟨α, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+  · refine ⟨-α, ?_⟩
+    intro x hx
+    rw [hb x (hxpos x hx)]
+    have t := neg_le_neg_wit (hlog0 x hx)
+    have e0 : -(0 : Real) = 0 := by mach_ring
+    rw [e0] at t
+    have h2 : α + -log x ≤ α + 0 := add_le_add_left t α
+    have e1 : α + -log x = - -α - log x := by mach_ring
+    have e2 : α + (0 : Real) = α := by mach_ring
+    rw [e1, e2] at h2; exact h2
+  · refine ⟨0, ?_⟩
+    intro x hx
+    rw [hb x (hxpos x hx)]
+    have t := neg_le_neg_wit (hlog0 x hx)
+    have e0 : -(0 : Real) = 0 := by mach_ring
+    rw [e0] at t
+    have e1 : -(0 : Real) - log x = -log x := by mach_ring
+    rw [e1]
+    exact le_trans t (le_trans (le_of_lt zero_lt_one_ax) hx)
+  · refine ⟨-c, ?_⟩
+    intro x hx
+    rw [hb x (hxpos x hx)]
+    have e : - -c - log x = c - log x := by mach_ring
+    rw [e]
+    exact le_refl _
+  · refine ⟨d, ?_⟩
+    intro x hx
+    rw [hb x (hxpos x hx)]
+    have t := neg_le_neg_wit (hlog0 x hx)
+    have e0 : -(0 : Real) = 0 := by mach_ring
+    rw [e0] at t
+    have h1 : -log x ≤ exp x := le_trans t (le_of_lt (exp_pos x))
+    have h2 : -d + -log x ≤ -d + exp x := add_le_add_left h1 (-d)
+    have e1 : -d + -log x = -d - log x := by mach_ring
+    have e2 : -d + exp x = exp x - d := by mach_ring
+    rw [e1, e2] at h2; exact h2
+  · refine ⟨0, ?_⟩
+    intro x hx
+    rw [hb x (hxpos x hx)]
+    have h1 : (0 : Real) ≤ exp x := le_of_lt (exp_pos x)
+    have h2 : -log x + 0 ≤ -log x + exp x := add_le_add_left h1 (-log x)
+    have e1 : -log x + (0 : Real) = -(0 : Real) - log x := by mach_ring
+    have e2 : -log x + exp x = exp x - log x := by mach_ring
+    rw [e1, e2] at h2; exact h2
+
+/-- **The worst cell of the `V₂` table, discharged.**
+
+The paper analysis (`monogate-research/.../V2_DECAY_BOUND_ANALYSIS.md`) tabulates the 25 shape
+combinations of `exp (A x)` against `log (B x)` and finds exactly one that decays: `e^c/x`, reached
+when the right child contributes nothing (`log (B x) ≤ 0`). Every other cell grows or is bounded
+below by a positive constant.
+
+This is that cell. Note it needs **no hypothesis on `B` at all** beyond the sign of its log — the
+decay is entirely the left child's, and `depth_le_one_lower_on_ray` is what caps it at `1/x`. -/
+theorem depth_le_two_decay_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ 0 →
+      exp (-C - log x) ≤ exp (A.eval x) - log (B.eval x) := by
+  obtain ⟨C, hC⟩ := depth_le_one_lower_on_ray A hA
+  refine ⟨C, ?_⟩
+  intro x hx hB
+  have h1 : exp (-C - log x) ≤ exp (A.eval x) := exp_monotone (hC x hx)
+  have h2 : (0 : Real) ≤ -log (B.eval x) := by
+    have t := neg_le_neg_wit hB
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at t; exact t
+  have h3 : exp (A.eval x) + 0 ≤ exp (A.eval x) + -log (B.eval x) :=
+    add_le_add_left h2 (exp (A.eval x))
+  have e1 : exp (A.eval x) + (0 : Real) = exp (A.eval x) := by mach_ring
+  have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+  rw [e1, e2] at h3
+  exact le_trans h1 h3
+
+/-- The same fact in the shape the induction consumes: a **logarithmic decay bound**,
+`−log t(x) ≤ C + log x`. This is `V₂` on the branch where it is not vacuous. -/
+theorem depth_le_two_V2_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ 0 →
+      -log (exp (A.eval x) - log (B.eval x)) ≤ C + log x := by
+  obtain ⟨C, hC⟩ := depth_le_two_decay_log_nonpos A B hA
+  refine ⟨C, ?_⟩
+  intro x hx hB
+  have hlow := hC x hx hB
+  have hpos : (0 : Real) < exp (-C - log x) := exp_pos _
+  have hmono : log (exp (-C - log x)) ≤ log (exp (A.eval x) - log (B.eval x)) :=
+    log_le_log hpos hlow
+  rw [log_exp] at hmono
+  have t := neg_le_neg_wit hmono
+  have e : -(-C - log x) = C + log x := by mach_ring
+  rw [e] at t; exact t
+
+
 end MachLib
