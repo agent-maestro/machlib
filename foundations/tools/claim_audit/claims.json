@@ -1833,6 +1833,109 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The flagship. NOT 'a solution exists' but 'no shallower one does, and this attains it'. hypotheses_count 0 is load-bearing: the certificate is unconditional, so the two halves really are both discharged and nothing is deferred to a caller.",
+      "id": "invx4-certified-depth-optimal-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "first certified-optimal synthesis result\nin the corpus"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.invX4_depth_optimal",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal",
+        "invSpec",
+        "invX4"
+      ],
+      "conclusion_mentions": [
+        "DepthOptimal"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The exported form of d(1/x)=4. Quantifies over ALL trees, so it is a lower bound and not a statement about invX4.",
+      "id": "invx-min-depth-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "certifies a **minimum-depth** solution"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.inv_x_min_depth",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        ".depth"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "Genericity check. If this ever acquired a mention of invSpec or invX4 the 'stated for an arbitrary certified spec' claim would be false, so statement_mentions deliberately pins the ABSENCE-adjacent generic names instead.",
+      "id": "depth-optimal-netdepth-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "stated for an arbitrary certified spec"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.depth_optimal_netDepth_floor",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal",
+        "progEvalAt",
+        "netDepthAt"
+      ],
+      "conclusion_mentions": [
+        "netDepthAt"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "Makes 'the minimum depth of P' well defined. Two certificates, one conclusion d = d'.",
+      "id": "depth-optimal-value-unique-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "makes \"the minimum depth of `P`\" well\ndefined"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.depth_optimal_value_unique",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal"
+      ],
+      "conclusion_mentions": [],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The re-derivation. Its EXISTENCE with the same conclusion as inv_x_schedule_ge_four_L is the evidence for 'the hand specialisation was doing no work'.",
+      "id": "invx-schedule-floor-via-certificate-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "re-derived from the certificate with\nno mention of reciprocals in either proof"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.inv_x_schedule_floor_via_certificate",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "ProgWf",
+        "SchedValid",
+        "progEvalAt"
+      ],
+      "conclusion_mentions": [],
+      "hypotheses_count": 3
     }
   ]
 }

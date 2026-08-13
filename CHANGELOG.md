@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### T4 opens: certified EML synthesis, and `1/x` becomes the first certified-optimal target
+
+New module `MachLib/EMLCertifiedSynthesis.lean`. The premise of T4 is that the **search is untrusted
+and the checker is not** — nothing about how a tree was found appears anywhere in the module, which
+is why the programme needs no convergence theorem.
+
+**The trust boundary was already drawn by Lean, not by me.** `EMLTree.depth` is a plain `def` and
+`invX4.depth = 4` closes `by rfl` even though `invX4` carries the opaque real `log (log (1 + exp 1))`
+— `depth` never inspects the constant. `EMLTree.eval` is `noncomputable` because `MachLib.Real` is
+axiomatised, so `#eval` fails on every tree. Both were probed, not assumed. Hence `Accepted` has
+exactly two fields: `cost` (kernel-decided) and `meets` (a proof obligation that cannot be omitted,
+because acceptance *is* the structure). Note the direction: `rfl` is checked by the trusted kernel,
+where `#eval` would run compiled code outside it — axiomatised reals cost performance and buy trust.
+
+**The acceptance bookkeeping is trivial and is labelled as such.** The content is `DepthOptimal`,
+which pairs a witness with a *lower-bound theorem* and so certifies a **minimum-depth** solution
+rather than merely a working one. `depth_optimal_value_unique` makes "the minimum depth of `P`" well
+defined regardless of which witness a search returned.
+
+`invX4_depth_optimal : DepthOptimal invSpec invX4 4` is the first certified-optimal synthesis result
+in the corpus. It assembles in three lines because the reciprocal arm already paid for both halves.
+
+**The bespoke hardware theorems turn out to be instances.** `depth_optimal_netDepth_floor` and
+`depth_optimal_schedule_floor` are stated for an arbitrary certified spec, and
+`inv_x_netlist_depth_ge_four` / `inv_x_schedule_ge_four_L` are re-derived from the certificate with
+no mention of reciprocals in either proof. The hand specialisation was doing no work the generic
+pipeline does not do.
+
+Scope is in the module header and deliberately narrow: certificates are relative to their exact
+spec (an ε-tolerant spec is a different `SemSpec` and inherits none of these bounds), optimality is
+in depth only, and the hardware floors are in units of `L` — schedule positions, not nanoseconds.
+
+Gotcha re-learned the hard way: **this corpus has no `by_contra` tactic.** `EMLReciprocalDepth2`
+records it; I used it anyway and the build caught it. Replaced with a `Nat.lt_or_ge` split.
+
 ### The socket caveat gets its second side measured
 
 `EMLNetlistDepth`'s header lists three instantiations of the weighted-cost socket and says only
