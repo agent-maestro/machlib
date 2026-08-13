@@ -2519,6 +2519,28 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "First depth-3 exclusion. The load-bearing fact is that its PROOF consumes depth_le_two_decay_on_ray -- V_2 used as a lower-bound tool rather than to build an envelope. hypotheses_count 5 pins that nothing about A's depth is assumed: only that its exponential is bounded.",
+      "id": "depth-three-bounded-left-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**This is the first use of `V₂` for a lower bound.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_bounded_left_not_superlog",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 5
     }
   ]
 }

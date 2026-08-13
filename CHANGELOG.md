@@ -7,6 +7,33 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### First depth-3 exclusion — and `V₂` turns out to be a lower-bound tool
+
+The scale table says the floor/ceiling argument cannot lift the band to depth 3. That is a statement
+about **one architecture**. `depth_three_bounded_left_not_superlog` goes around it on the branch
+where the floor does not apply at all:
+
+> **No depth-3 node whose left child has a bounded exponential computes a superlogarithmic `f`.**
+
+The idea is that a bounded left child forces the node's size to come entirely from the right child's
+log going to `−∞` — that is, from `B` **decaying**. And `V₂` caps how fast a positive depth-≤2 tree
+may decay: `−log (B x) ≤ C + log x`. So the node cannot outrun `K + C + log x`, and anything
+superlogarithmic is excluded.
+
+**This is the first use of `V₂` for a lower bound.** Every previous consumer used it to build an
+upper envelope — `U₃` in particular. That it also excludes was not anticipated when it was proved.
+
+Both branches of the totalisation are handled: where `B x ≤ 0` its log is `0` and the node is just
+`exp (A x) ≤ K`, which a superlogarithmic `f` also outruns. The `exp (−C)` term in the evaluation
+point is load-bearing there — it is what forces `C + log x ≥ 0` so the `≤ K` cap actually bites.
+
+**Scope: this is one branch of a depth-3 exclusion, not the whole thing.** For `x²` at depth ≤ 3 it
+settles the case where the left child's exponential is bounded. The other branch — left child
+dominating `exp x` — remains open, and the sketch there is a *squeeze*: the log ceiling forces
+`exp x ≤ exp (A x) ≤ exp x + x² + K`, which pins `A x → x` to within `o(1)`. Whether any depth-≤2
+tree can approximate the identity that closely is the next question, and it is a finite classification
+problem rather than a cancellation one.
+
 ### The log ceiling one level up — and it measures why the band stops
 
 `depth_le_two_log_le_exp`: for `B` of depth ≤ 2, `log (B x) ≤ exp x + K` on a ray.

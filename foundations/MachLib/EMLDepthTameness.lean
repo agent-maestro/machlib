@@ -3227,4 +3227,103 @@ theorem depth_le_two_log_le_exp (B : EMLTree) (hB : B.depth ≤ 2) :
     · rw [log_nonpos (le_of_lt hp)]; exact le_of_lt hpos
 
 
+/-! ### The first depth-3 exclusion — `V₂` used as a lower-bound tool
+
+The scale table (`depth_le_two_log_le_exp`) says the *floor/ceiling* argument cannot lift the band to
+depth 3, because the right child's log ceiling rises onto the left child's exponential floor. That is
+a statement about one architecture, and this section goes around it on the branch where the floor
+does not apply at all.
+
+If the left child's exponential is **bounded**, the node can only reach a large value by the right
+child's log going to `−∞` — that is, by `B` *decaying*. And `V₂` (`depth_le_two_decay_on_ray`) caps
+how fast a positive depth-≤2 tree may decay: `−log (B x) ≤ C + log x`. So the node cannot outrun
+`K + C + log x`. Anything that does is excluded.
+
+This is the first use of `V₂` for a **lower bound**; every previous consumer used it to build an
+upper envelope. -/
+
+/-- **No depth-3 node with a bounded-exponential left child computes a superlogarithmic function.**
+
+`Hlog` says `f` exceeds `C + log x` at arbitrarily large points, for every `C` — *infinitely often*,
+not eventually, matching the band theorem's style. Both branches of the totalisation are handled:
+where `B x ≤ 0` its log is `0` and the node is just `exp (A x) ≤ K`. -/
+theorem depth_three_bounded_left_not_superlog (f : Real → Real) (A B : EMLTree)
+    (hB : B.depth ≤ 2) (K XA : Real) (hXA : 1 ≤ XA)
+    (hK : ∀ x : Real, XA ≤ x → exp (A.eval x) ≤ K)
+    (Hlog : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+    (h : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = f x) : False := by
+  obtain ⟨C, XB, hXB1, hV⟩ := depth_le_two_decay_on_ray B hB
+  obtain ⟨x, hxX, hx1, hlt⟩ := Hlog (C + K) (XA + XB + exp (-C))
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hnnB : (0 : Real) ≤ XB := le_trans (le_of_lt zero_lt_one_ax) hXB1
+  have hnnA : (0 : Real) ≤ XA := le_trans (le_of_lt zero_lt_one_ax) hXA
+  have hE : (0 : Real) ≤ exp (-C) := le_of_lt (exp_pos _)
+  have hXAx : XA ≤ x := by
+    have v : XA + 0 + 0 ≤ XA + XB + exp (-C) :=
+      add_le_add_wit (add_le_add_wit (le_refl XA) hnnB) hE
+    have e : XA + (0 : Real) + 0 = XA := by mach_ring
+    rw [e] at v; exact le_trans v hxX
+  have hXBx : XB ≤ x := by
+    have v : (0 : Real) + XB + 0 ≤ XA + XB + exp (-C) :=
+      add_le_add_wit (add_le_add_wit hnnA (le_refl XB)) hE
+    have e : (0 : Real) + XB + 0 = XB := by mach_ring
+    rw [e] at v; exact le_trans v hxX
+  have hECx : exp (-C) ≤ x := by
+    have v : (0 : Real) + 0 + exp (-C) ≤ XA + XB + exp (-C) :=
+      add_le_add_wit (add_le_add_wit hnnA hnnB) (le_refl _)
+    have e : (0 : Real) + 0 + exp (-C) = exp (-C) := by mach_ring
+    rw [e] at v; exact le_trans v hxX
+  -- `x ≥ exp (−C)` forces `C + log x ≥ 0`
+  have hClog : (0 : Real) ≤ C + log x := by
+    -- `exp (-C) ≤ x` gives `-C ≤ log x` by pushing `log` through `exp`
+    have a4 : -C ≤ log x := by
+      have m := log_le_log (exp_pos (-C)) hECx
+      rw [log_exp] at m; exact m
+    have v := add_le_add_wit a4 (le_refl C)
+    have e1 : -C + C = (0 : Real) := by mach_ring
+    have e2 : log x + C = C + log x := by mach_ring
+    rw [e1, e2] at v; exact v
+  have hval : exp (A.eval x) - log (B.eval x) = f x := h x hx0
+  have hKx : exp (A.eval x) ≤ K := hK x hXAx
+  rcases lt_total 0 (B.eval x) with hp | hp | hp
+  · -- right child positive: `V₂` caps its decay, so the node is capped by `K + C + log x`
+    have hdec : -log (B.eval x) ≤ C + log x := hV x hXBx hp
+    have hcap : f x ≤ K + (C + log x) := by
+      rw [← hval]
+      have v := add_le_add_wit hKx hdec
+      have e : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+      rw [e] at v; exact v
+    have e2 : C + K + log x = K + (C + log x) := by mach_ring
+    rw [e2] at hlt
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hcap)
+  · -- right child zero: its log is totalised away, so the node is `exp (A x) ≤ K`
+    have hz : log (B.eval x) = 0 := log_nonpos (le_of_eq hp.symm)
+    have hcap : f x ≤ K := by
+      rw [← hval, hz]
+      have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+      rw [e]; exact hKx
+    have hKlt : K < f x := by
+      have v : K + 0 ≤ K + (C + log x) := add_le_add_left hClog K
+      have e : K + (0 : Real) = K := by mach_ring
+      rw [e] at v
+      have e2 : C + K + log x = K + (C + log x) := by mach_ring
+      rw [e2] at hlt
+      exact lt_of_lt_of_le (lt_of_lt_of_le (lt_of_le_of_lt v hlt) (le_refl (f x))) (le_refl (f x))
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hKlt hcap)
+  · -- right child negative: same, totalised away
+    have hz : log (B.eval x) = 0 := log_nonpos (le_of_lt hp)
+    have hcap : f x ≤ K := by
+      rw [← hval, hz]
+      have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+      rw [e]; exact hKx
+    have hKlt : K < f x := by
+      have v : K + 0 ≤ K + (C + log x) := add_le_add_left hClog K
+      have e : K + (0 : Real) = K := by mach_ring
+      rw [e] at v
+      have e2 : C + K + log x = K + (C + log x) := by mach_ring
+      rw [e2] at hlt
+      exact lt_of_le_of_lt v hlt
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hKlt hcap)
+
+
 end MachLib
