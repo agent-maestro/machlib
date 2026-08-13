@@ -809,6 +809,58 @@ theorem tower_certified_upto_four (n : Nat) (hn : n ≤ 4) :
     DepthOptimal (towerSpec n) (towerTree n) n :=
   tower_depth_optimal_upto tower_lower_bound_upto_four n hn
 
+/-! ### 7d. A cheaper `x²` — the bottleneck is the constructor library
+
+`x_sq_not_depth_le_two` gives `d(x²) ≥ 3`; the generic construction `mulPos var var` gives `≤ 24`.
+The gap is the library's: its combinators layer `logTree`/`expOf`/`negOffset` at `3 + depth` each and
+compose badly. Building the witness by hand instead of through `mulPos`:
+
+```
+x² = exp(2·log x),      2·log x = exp(log log x) − log(1/x)
+```
+
+because `log(1/x) = −log x`, so the subtraction in an `eml` node *doubles* rather than cancels. One
+node turns `log log x` and `1/x` into `2 log x`; one more exponentiates it.
+
+**Domain, stated up front:** this witness needs `x > 1`, not `x > 0`, because `exp (log (log x))`
+recovers `log x` only where `log x > 0`. That is a genuinely different specification from
+`x_sq_mem_EML`'s, and the two bounds must not be quoted as a single bracket without it. -/
+
+/-- `x²` on `(1,∞)` at depth 8 — a third of the generic construction's 24. -/
+noncomputable def sqTree : EMLTree :=
+  EMLTree.eml (EMLTree.eml (logTree (logTree EMLTree.var)) invX4) (EMLTree.const 0)
+
+theorem sqTree_depth : sqTree.depth = 8 := by rfl
+
+theorem sqTree_eval (x : Real) (hx : 1 < x) : sqTree.eval x = x * x := by
+  have hx0 : (0 : Real) < x := lt_trans_ax zero_lt_one_ax hx
+  have hl1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  have hlogpos : (0 : Real) < log x := by
+    have h1 := log_lt_log zero_lt_one_ax hx
+    rw [hl1] at h1; exact h1
+  -- the two children
+  have hll : (logTree (logTree EMLTree.var)).eval x = log (log x) := by
+    rw [logTree_eval, logTree_eval]; rfl
+  have hinv : invX4.eval x = 1 / x := invX4_eval x hx0
+  have hexpneg : exp (-log x) = 1 / x := by
+    rw [exp_neg_inv, exp_log hx0]
+  have hloginv : log (1 / x) = -log x := by
+    rw [← hexpneg, log_exp]
+  -- inner node doubles the logarithm
+  have hinner : (EMLTree.eml (logTree (logTree EMLTree.var)) invX4).eval x = log x + log x := by
+    show exp ((logTree (logTree EMLTree.var)).eval x) - log (invX4.eval x) = log x + log x
+    rw [hll, hinv, hloginv, exp_log hlogpos]
+    mach_ring
+  -- outer node exponentiates it
+  show exp ((EMLTree.eml (logTree (logTree EMLTree.var)) invX4).eval x)
+      - log ((EMLTree.const (0 : Real)).eval x) = x * x
+  rw [hinner]
+  show exp (log x + log x) - log (0 : Real) = x * x
+  rw [log_nonpos (le_refl (0 : Real)), exp_add, exp_log hx0]
+  mach_ring
+
 /-! ### 8. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.

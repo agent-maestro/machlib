@@ -7,6 +7,36 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### A hand-built `x²` witness at depth 8, against the library's 24
+
+The bottleneck was the constructor library, so this bypasses it. The identity:
+
+```
+x² = exp(2·log x),      2·log x = exp(log log x) − log(1/x)
+```
+
+works because `log(1/x) = −log x`, so an `eml` node's subtraction **doubles** the logarithm rather
+than cancelling it. One node turns `log log x` and `1/x` into `2 log x`; one more exponentiates.
+`sqTree_depth : sqTree.depth = 8`, closed `by rfl`.
+
+**Domain, stated up front and not folded into the bracket.** This witness needs `x > 1`, not
+`x > 0`, because `exp (log (log x))` recovers `log x` only where `log x > 0`. That is a genuinely
+different specification from `x_sq_mem_EML`'s, so the honest statement is:
+
+| specification | lower | upper |
+| --- | --- | --- |
+| `x²` on `(0,∞)` | 3 | 24 (`mulPos var var`) |
+| `x²` on `(1,∞)` | 3 | **8** (`sqTree`) |
+
+The lower bound transfers to the restricted domain — the band's hypotheses are all about arbitrarily
+large `x` — but the *witnesses* are not interchangeable, and quoting `3 ≤ d(x²) ≤ 8` without the
+domain would be wrong.
+
+**What this says about the library.** A three-fold improvement from one hand construction suggests
+the generic combinators are nowhere near depth-optimal, which the `1/x` case already hinted at
+(library 6, optimal 4). Whether 8 is optimal for `x²` on `(1,∞)` is open; the gap is now 3 to 8
+rather than 3 to 24.
+
 ### First depth bracket for an algebraic target — and the constructor library is the bottleneck
 
 `x_sq_not_depth_le_two` instantiates the band at `k = 0`: **no depth-≤2 tree computes `x²`.**

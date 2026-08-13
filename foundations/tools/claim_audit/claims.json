@@ -2454,6 +2454,27 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The improved witness. hypotheses_count 1 pins the DOMAIN RESTRICTION (1 < x) into the claim -- if it were ever relaxed to 0 < x the theorem would be false, and the auditor would catch a prose edit that dropped it.",
+      "id": "sq-witness-depth-eight-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "This witness needs `x > 1`, not\n`x > 0`"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.sqTree_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "sqTree",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "eval"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
