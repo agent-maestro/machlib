@@ -2390,6 +2390,49 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "Degree-uniform. hypotheses_count 0 with k universally quantified IS the claim -- a per-degree lemma would need k fixed by a hypothesis. This is what makes it one theorem rather than a ladder.",
+      "id": "exp-beats-powers-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "beating a **linear**\nfunction"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.exp_beats_powNat",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "powNat",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Every fixed power at once. The exponent k is never inspected in the proof -- registered so 'one theorem, not a ladder' is pinned to something checkable.",
+      "id": "powers-not-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "excludes `x^(k+2)` at depth ≤ 2 for **every** `k`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.powNat_not_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "powNat",
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

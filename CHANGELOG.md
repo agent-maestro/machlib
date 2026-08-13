@@ -7,6 +7,35 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `exp` beats every fixed power — **one** theorem, not a degree ladder
+
+The obvious route to `x²` at depth ≤ 2 is `exp_beats_quadratic_past`, then `_cubic_`, then
+`_quartic_` — the per-example pattern the band theorem exists to escape.
+
+It is avoidable, and the reason is the band theorem's *weak* third hypothesis. It asks only for the
+inequality **somewhere large**, so the witness can be **chosen**, and choosing `x = exp w` collapses
+the problem: `(exp w)ⁿ = exp (n·w)`, so `xⁿ < exp x` becomes `n·w < exp w` — beating a **linear**
+function, which `exp_beats_linear_past` already does for arbitrary real slope.
+
+> `exp_beats_powNat (k C X) : ∃ x ≥ X, 1 ≤ x ∧ x^(k+2) + x + C < exp x`
+
+`n·w` is built additively (`natMul`) instead of by a `Nat → Real` cast, and the witness is never
+halved, so **no division enters anywhere** — the corpus's division lemmas are thin and this route
+sidesteps them entirely.
+
+`powNat_not_depth_le_two` then excludes `x^(k+2)` at depth ≤ 2 for **every** `k`, as an instance of
+the band theorem. The exponent is never inspected in the proof. `x²`, `x³`, … are one theorem.
+
+### Wording corrected: the third hypothesis is *not* "sub-exponential"
+
+Flagged in review, and the correction matters because it makes the theorem **stronger**. The
+condition is: for every `C`, there are **arbitrarily large** `x` with `f x < exp x − x − C`. That is
+not `f = o(exp x)` — it demands nothing *eventually*, only *infinitely often*, and is strictly
+weaker than the usual asymptotic statement. Likewise "unbounded" means unbounded above on every ray,
+and "superlinear" means above the identity at arbitrarily large points, not eventually. The module
+header now says so, and the headline is stated as **depth-2 intermediate-growth exclusion**, with
+`M·x` and `xⁿ` as applications beneath it.
+
 ### A depth-2 barrier for a whole growth band, not one example
 
 `mx_not_in_eml_depth_le_2` excludes `M·x`. Reading its proof, **nothing in it is about

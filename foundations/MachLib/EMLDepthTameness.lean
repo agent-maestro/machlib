@@ -2618,13 +2618,25 @@ theorem evSign_of_hard (h : SignHardCase) : ∀ t : EMLTree, EvSign t.eval := by
         exact exp_pos _
 
 
-/-! ### A depth-2 barrier for a whole growth band
+/-! ### Headline: depth-2 intermediate-growth exclusion
 
 `mx_not_in_eml_depth_le_2` excludes `M·x` at depth ≤ 2. Reading its proof, nothing in it is about
-multiplication: it only uses that `M·x` is unbounded, grows faster than `x`, and grows slower than
-`exp x`. The theorem below is that argument stated for the band rather than the example. -/
+multiplication: it only uses where `M·x` sits in the growth order. The theorem below is that
+argument stated for the *band* rather than the example, and `M·x`, `x²`, `x³`, … become
+applications.
 
-/-- **No unbounded, superlinear, sub-exponential function is EML at depth ≤ 2.**
+**On the third hypothesis — do not paraphrase it as "sub-exponential".** The condition is
+`∃` arbitrarily large `x` with `f x < exp x − x − C`, for every `C`. That is **not** the asymptotic
+assertion `f = o(exp x)`: it demands nothing eventually, only *infinitely often*, and it is
+implied by — but strictly weaker than — the usual growth statement. The theorem is more interesting
+for it, because it requires no regularity of `f` whatsoever.
+
+Likewise "unbounded" means unbounded above *on every ray*, and "superlinear" means above the
+identity at arbitrarily large points, not eventually. -/
+
+/-- **Depth-2 intermediate-growth exclusion.** No function that is unbounded above, is above the
+identity at arbitrarily large points, and drops below `exp x − x − C` at arbitrarily large points
+for every `C`, is computed by any EML tree of depth ≤ 2.
 
 The three hypotheses are each consumed by exactly one branch, and each is *necessary* — dropping any
 one admits a depth-≤2 member:
@@ -2634,8 +2646,9 @@ one admits a depth-≤2 member:
   right child's log floor.
 * `H3` (eventually above `x`) kills `var`. Without it `f = x` satisfies everything else and sits at
   depth 0.
-* `H2` (below `exp x − x − C` at arbitrarily large points) kills the branch where the left child's
-  exponential dominates `exp x`, since the right child's log is at most linear.
+* `H2` (below `exp x − x − C` at arbitrarily large points, for every `C`) kills the branch where the
+  left child's exponential dominates `exp x`, since the right child's log is at most linear. Note
+  again that this is an *infinitely often* condition, not an eventual one.
 
 Note what is *not* assumed: nothing about continuity, monotonicity, or `f` being given by a formula. -/
 theorem superlinear_subexp_not_depth_le_two (f : Real → Real)
@@ -2761,5 +2774,245 @@ theorem mx_not_depth_le_two_via_band (M : Real) (hM1 : 1 < M) (t : EMLTree) (ht 
       have e : (1 : Real) * (1 + exp X) = 1 + exp X := by mach_ring
       rw [e] at v; exact v
 
+
+/-! ### `exp` beats every fixed power — once, not once per degree
+
+The band theorem's third hypothesis for `f = xⁿ` is `xⁿ + x + C < exp x` at arbitrarily large
+points. The naive route is a ladder of `exp_beats_quadratic`, `exp_beats_cubic`, … — exactly the
+per-example pattern the band theorem exists to escape.
+
+It is avoidable. Because the hypothesis only asks for the inequality *somewhere large*, the witness
+can be **chosen**, and choosing `x = exp w` collapses the problem: `(exp w)ⁿ = exp (n·w)`, so
+`xⁿ < exp x` becomes `n·w < exp w` — beating a **linear** function, which `exp_beats_linear_past`
+already does for arbitrary real slope. One lemma, every degree.
+
+`n·w` is built additively (`natMul`) rather than by a `Nat → Real` cast, and the witness is never
+halved, so no division enters. -/
+
+/-- `n` copies of `w` summed. Additive so that no `Nat → Real` cast is needed. -/
+noncomputable def natMul : Nat → Real → Real
+  | 0, _ => 0
+  | (n + 1), w => w + natMul n w
+
+/-- `xⁿ` by recursion. -/
+noncomputable def powNat (x : Real) : Nat → Real
+  | 0 => 1
+  | (n + 1) => x * powNat x n
+
+theorem natMul_nonneg : ∀ n : Nat, (0 : Real) ≤ natMul n 1 := by
+  intro n
+  induction n with
+  | zero => exact le_refl 0
+  | succ k ih =>
+      show (0 : Real) ≤ 1 + natMul k 1
+      have v : (0 : Real) + 0 ≤ 1 + natMul k 1 :=
+        add_le_add_wit (le_of_lt zero_lt_one_ax) ih
+      have e : (0 : Real) + 0 = 0 := by mach_ring
+      rw [e] at v; exact v
+
+/-- `natMul n w = (natMul n 1) · w` — the cast-free way to say `n·w`. -/
+theorem natMul_eq (w : Real) : ∀ n : Nat, natMul n w = natMul n 1 * w := by
+  intro n
+  induction n with
+  | zero => show (0 : Real) = 0 * w; mach_ring
+  | succ k ih =>
+      show w + natMul k w = (1 + natMul k 1) * w
+      rw [ih]; mach_ring
+
+/-- `exp (n·w) = (exp w)ⁿ`. -/
+theorem exp_natMul (w : Real) : ∀ n : Nat, exp (natMul n w) = powNat (exp w) n := by
+  intro n
+  induction n with
+  | zero => show exp (0 : Real) = 1; exact exp_zero
+  | succ k ih =>
+      show exp (w + natMul k w) = exp w * powNat (exp w) k
+      rw [exp_add, ih]
+
+theorem one_le_powNat {x : Real} (hx : 1 ≤ x) : ∀ n : Nat, 1 ≤ powNat x n := by
+  intro n
+  induction n with
+  | zero => exact le_refl 1
+  | succ k ih =>
+      show (1 : Real) ≤ x * powNat x k
+      have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+      have h1 : x * 1 ≤ x * powNat x k := mul_le_mul_of_nonneg_left ih hx0
+      have e : x * (1 : Real) = x := by mach_ring
+      rw [e] at h1
+      exact le_trans hx h1
+
+/-- **`exp` beats `x^(k+2) + x + C` at arbitrarily large points, for every `k`.**
+
+Degree-uniform: one theorem, not a ladder. The exponent is written `k + 2` because degree ≤ 1 is
+genuinely excluded — `x` itself is EML at depth 0. -/
+theorem exp_beats_powNat (k : Nat) (C X : Real) :
+    ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ powNat x (k + 2) + x + C < exp x := by
+  have hNn : (0 : Real) ≤ natMul (k + 2) 1 := natMul_nonneg _
+  obtain ⟨w, hwT, hw1, hw⟩ :=
+    exp_beats_linear_past (α := natMul (k + 2) 1) (β := 1) hNn (exp X + exp C + 1)
+  -- the witness
+  have hxpos : (0 : Real) < exp w := exp_pos w
+  have hwe : 1 + w ≤ exp w := one_add_le_exp w
+  have hbig : exp X + exp C + 1 + 1 ≤ exp w := by
+    have v := add_le_add_wit (le_refl (1 : Real)) hwT
+    have e : (1 : Real) + (exp X + exp C + 1) = exp X + exp C + 1 + 1 := by mach_ring
+    rw [e] at v; exact le_trans v hwe
+  have hx1 : (1 : Real) ≤ exp w := by
+    have hXp : (0 : Real) < exp X := exp_pos X
+    have hCp : (0 : Real) < exp C := exp_pos C
+    have v : (0 : Real) + 0 + 1 + 0 ≤ exp X + exp C + 1 + 1 :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt hXp) (le_of_lt hCp)) (le_refl 1))
+        (le_of_lt zero_lt_one_ax)
+    have e : (0 : Real) + 0 + 1 + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hbig
+  have hxX : X ≤ exp w := by
+    have hXe : X ≤ exp X := self_le_exp X
+    have v : exp X + 0 + 0 + 0 ≤ exp X + exp C + 1 + 1 :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl (exp X)) (le_of_lt (exp_pos C)))
+        (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax)
+    have e : exp X + (0 : Real) + 0 + 0 = exp X := by mach_ring
+    rw [e] at v; exact le_trans hXe (le_trans v hbig)
+  have hxC : C + 1 + 1 ≤ exp w := by
+    have hCe : C ≤ exp C := self_le_exp C
+    have v : (0 : Real) + C + 1 + 1 ≤ exp X + exp C + 1 + 1 :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos X)) hCe) (le_refl 1))
+        (le_refl 1)
+    have e : (0 : Real) + C + 1 + 1 = C + 1 + 1 := by mach_ring
+    rw [e] at v; exact le_trans v hbig
+  refine ⟨exp w, hxX, hx1, ?_⟩
+  -- `x^(k+2) = exp (Nn · w)`
+  have hpow : powNat (exp w) (k + 2) = exp (natMul (k + 2) 1 * w) := by
+    rw [← natMul_eq w (k + 2), exp_natMul]
+  -- `exp x ≥ x^(k+2) + x^(k+2)`
+  have hdouble : powNat (exp w) (k + 2) + powNat (exp w) (k + 2) ≤ exp (exp w) := by
+    rw [hpow]
+    have hstep : natMul (k + 2) 1 * w + 1 ≤ exp w := le_of_lt hw
+    exact le_trans (exp_add_one_doubles _) (exp_monotone hstep)
+  -- `x + C < x^(k+2)`, since the degree is at least two
+  have hsq : exp w * exp w ≤ powNat (exp w) (k + 2) := by
+    show exp w * exp w ≤ exp w * (exp w * powNat (exp w) k)
+    have h1 : exp w * 1 ≤ exp w * powNat (exp w) k :=
+      mul_le_mul_of_nonneg_left (one_le_powNat hx1 k) (le_of_lt hxpos)
+    have e : exp w * (1 : Real) = exp w := by mach_ring
+    rw [e] at h1
+    exact mul_le_mul_of_nonneg_left h1 (le_of_lt hxpos)
+  have hlin : exp w + C < exp w * exp w := by
+    have hEm1 : (0 : Real) ≤ exp w - 1 := by
+      have v := add_le_add_wit hx1 (le_refl (-1 : Real))
+      have e1 : (1 : Real) + -1 = 0 := by mach_ring
+      have e2 : exp w + -1 = exp w - 1 := by mach_ring
+      rw [e1, e2] at v; exact v
+    have h1 : (exp w - 1) * 1 ≤ (exp w - 1) * exp w := mul_le_mul_of_nonneg_left hx1 hEm1
+    have e1 : (exp w - 1) * (1 : Real) = exp w - 1 := by mach_ring
+    have e2 : (exp w - 1) * exp w = exp w * exp w - exp w := by mach_ring
+    rw [e1, e2] at h1
+    have h2 : C + 1 ≤ exp w - 1 := by
+      have v := add_le_add_wit hxC (le_refl (-1 : Real))
+      have e3 : C + 1 + 1 + -1 = C + 1 := by mach_ring
+      have e4 : exp w + -1 = exp w - 1 := by mach_ring
+      rw [e3, e4] at v; exact v
+    have h3 : C + 1 ≤ exp w * exp w - exp w := le_trans h2 h1
+    have h4 : exp w + C < exp w + (C + 1) := add_lt_add_left (lt_succ_self C) (exp w)
+    have h5 : exp w + (C + 1) ≤ exp w + (exp w * exp w - exp w) := add_le_add_left h3 (exp w)
+    have e5 : exp w + (exp w * exp w - exp w) = exp w * exp w := by mach_mpoly [exp w]
+    rw [e5] at h5
+    exact lt_of_lt_of_le h4 h5
+  have hfin : exp w + C < powNat (exp w) (k + 2) := lt_of_lt_of_le hlin hsq
+  have hv : powNat (exp w) (k + 2) + (exp w + C)
+      < powNat (exp w) (k + 2) + powNat (exp w) (k + 2) := add_lt_add_left hfin _
+  have e : powNat (exp w) (k + 2) + (exp w + C)
+      = powNat (exp w) (k + 2) + exp w + C := by mach_ring
+  rw [e] at hv
+  exact lt_of_lt_of_le hv hdouble
+
+
+theorem self_le_powNat_succ2 {x : Real} (hx : 1 ≤ x) (k : Nat) : x ≤ powNat x (k + 2) := by
+  show x ≤ x * (x * powNat x k)
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+  have e : x * (1 : Real) = x := by mach_ring
+  have u : x * 1 ≤ x * powNat x k := mul_le_mul_of_nonneg_left (one_le_powNat hx k) hx0
+  rw [e] at u
+  have v : x * 1 ≤ x * (x * powNat x k) :=
+    mul_le_mul_of_nonneg_left (le_trans hx u) hx0
+  rw [e] at v; exact v
+
+theorem self_lt_powNat_succ2 {x : Real} (hx : 1 < x) (k : Nat) : x < powNat x (k + 2) := by
+  show x < x * (x * powNat x k)
+  have hx0 : (0 : Real) < x := lt_trans_ax zero_lt_one_ax hx
+  have hx1 : (1 : Real) ≤ x := le_of_lt hx
+  have e : x * (1 : Real) = x := by mach_ring
+  have u : x * 1 ≤ x * powNat x k :=
+    mul_le_mul_of_nonneg_left (one_le_powNat hx1 k) (le_of_lt hx0)
+  rw [e] at u
+  have hxx : x < x * x := by
+    have v := mul_lt_mul_of_pos_right hx hx0
+    have e1 : (1 : Real) * x = x := by mach_ring
+    rw [e1] at v; exact v
+  exact lt_of_lt_of_le hxx (mul_le_mul_of_nonneg_left u (le_of_lt hx0))
+
+/-- **Every fixed power `x^(k+2)` is excluded at depth ≤ 2 — one proof for all degrees.**
+
+`exp_beats_powNat` supplies the band theorem's third hypothesis degree-uniformly, so `x²`, `x³`, …
+are all instances of `superlinear_subexp_not_depth_le_two`. No per-degree argument appears anywhere
+below, and the exponent `k` is never inspected. -/
+theorem powNat_not_depth_le_two (k : Nat) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = powNat x (k + 2)) : False := by
+  refine superlinear_subexp_not_depth_le_two (fun x => powNat x (k + 2)) ?_ ?_ ?_ t ht h
+  · -- unbounded: `K < x ≤ x^(k+2)`
+    intro K X
+    have hKe : K < exp K := by
+      have t1 := one_add_le_exp K
+      have e : (1 : Real) + K = K + 1 := by mach_ring
+      rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+    have hXe : X ≤ exp X := self_le_exp X
+    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
+          (le_refl (exp X))
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans hXe v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hx1 : (1 : Real) ≤ 1 + exp K + exp X := by
+        have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+          add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+            (le_of_lt (exp_pos X))
+        have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+        rw [e] at v; exact v
+      have hKx : K < 1 + exp K + exp X := by
+        have v : (0 : Real) + exp K + 0 ≤ 1 + exp K + exp X :=
+          add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp K)))
+            (le_of_lt (exp_pos X))
+        have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
+        rw [e] at v; exact lt_of_lt_of_le hKe v
+      exact lt_of_lt_of_le hKx (self_le_powNat_succ2 hx1 k)
+  · -- sub-exponential, degree-uniformly
+    intro C X
+    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_powNat k C X
+    refine ⟨x, hxX, hx1, ?_⟩
+    have v := add_lt_add_left hlt (-x - C)
+    have e1 : -x - C + (powNat x (k + 2) + x + C) = powNat x (k + 2) := by
+      mach_mpoly [powNat x (k + 2), x, C]
+    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+    rw [e1, e2] at v; exact v
+  · -- superlinear: `x < x^(k+2)` once `x > 1`
+    intro X
+    have hXe : X ≤ exp X := self_le_exp X
+    have hgt : (1 : Real) < 1 + 1 + exp X := by
+      have v : (1 : Real) + 0 + 0 < 1 + 1 + exp X :=
+        lt_of_lt_of_le (add_lt_add_left (exp_pos X) ((1 : Real) + 0))
+          (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt zero_lt_one_ax))
+            (le_refl (exp X)))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      have e2 : (1 : Real) + 0 + exp X = 1 + 0 + exp X := rfl
+      rw [e] at v; exact v
+    refine ⟨1 + 1 + exp X, ?_, le_of_lt hgt, self_lt_powNat_succ2 hgt k⟩
+    have v : (0 : Real) + 0 + exp X ≤ 1 + 1 + exp X :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax))
+        (le_refl (exp X))
+    have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+    rw [e] at v; exact le_trans hXe v
 
 end MachLib
