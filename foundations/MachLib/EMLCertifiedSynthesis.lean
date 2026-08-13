@@ -39,9 +39,16 @@ cannot be checked, only consumed; the checker's job is to insist it is present.
 
 The pipeline then transfers optimality to hardware without any further reasoning about the target:
 `depth_optimal_netDepth_floor` and `depth_optimal_schedule_floor` hold for **every** specification
-with a certificate. `1/x` is worked below as the instance that exists today, and the previously
-bespoke theorems `inv_x_netlist_depth_ge_four` / `inv_x_schedule_ge_four_L` are re-derived as
-consequences — they were the generic pipeline all along, specialised by hand.
+with a certificate, and the previously bespoke theorems `inv_x_netlist_depth_ge_four` /
+`inv_x_schedule_ge_four_L` are re-derived as consequences — they were the generic pipeline all
+along, specialised by hand.
+
+**Two targets are certified, deliberately.** Instantiating a pipeline only on the target it was
+abstracted from proves close to nothing: a green build says the abstraction is *true*, not that it
+is the one anyone needs. So `exp` (§5) is certified alongside `1/x` (§4), chosen to differ on the
+two axes where a design flaw would hide — its lower bound shares no lemma with the reciprocal arm,
+and its specification is **total** where `invSpec` is restricted to `0 < x`. Both certificates feed
+the same §3 theorems unchanged.
 
 ## Scope — read before quoting anything here
 
@@ -57,6 +64,8 @@ consequences — they were the generic pipeline all along, specialised by hand.
 
 namespace MachLib
 namespace EMLTree
+
+open Real
 
 /-! ### 1. Specifications, proposals, acceptance -/
 
@@ -219,7 +228,72 @@ theorem inv_x_schedule_floor_via_certificate (p : Nat → EMLInstr) (hwf : ProgW
   have h := depth_optimal_schedule_floor invX4_depth_optimal p hwf L s hs i hp
   omega
 
-/-! ### 5. What this checker does **not** decide
+/-! ### 5. A second target, to test whether §3 is generic or merely true
+
+§4 instantiates the pipeline on the target it was abstracted from, which proves very little: a green
+build says the abstraction is *true*, not that it is the one anyone needs. So here is a second
+certificate, chosen to differ from `1/x` on the two axes most likely to hide a design flaw.
+
+* **Its lower bound comes from a different mechanism.** `1/x`'s came from the reciprocal arm's
+  entire case analysis. This one is a two-point argument on depth-0 trees, proved from scratch
+  below, sharing no lemma with §4.
+* **Its specification is total.** `invSpec` is restricted to `0 < x`; `expSpec` is not. If the
+  transfer theorems had quietly depended on a domain restriction, this is where it would show.
+
+The certificate is *cheap*, and that is the point rather than a boast — `exp` is shallow, so the
+lower bound is two evaluations. What is being tested is the pipeline, not the target. -/
+
+/-- The exponential, specified on **all** of `Real`. -/
+def expSpec : SemSpec := fun f => ∀ x : Real, f x = exp x
+
+/-- The depth-1 witness: `exp x − log 1 = exp x`. Totalised `log` is not even needed here — the
+argument is the genuine `1`. -/
+noncomputable def expTree : EMLTree := EMLTree.eml EMLTree.var (EMLTree.const 1)
+
+theorem expTree_depth : expTree.depth = 1 := by rfl
+
+theorem expTree_eval : ∀ x : Real, expTree.eval x = exp x := by
+  intro x
+  show exp (EMLTree.var.eval x) - log ((EMLTree.const (1 : Real)).eval x) = exp x
+  show exp x - log (1 : Real) = exp x
+  rw [log_one]
+  mach_ring
+
+/-- **No depth-0 tree computes `exp`.** A depth-0 tree is a constant or the variable
+(`depth_zero_cases`), and two evaluations kill each: a constant cannot separate `exp 0` from
+`exp 1`, and `var` fails already at `0`, where `exp 0 = 1 ≠ 0`. -/
+theorem exp_not_depth_zero (u : EMLTree) (hu : u.depth < 1) (h : Meets expSpec u) : False := by
+  have h0 : u.depth = 0 := by omega
+  rcases depth_zero_cases h0 with ⟨c, hc⟩ | hv
+  · -- `u = const c`: then `c = exp 0` and `c = exp 1`, but `exp 0 < exp 1`.
+    subst hc
+    have e0 : c = exp 0 := h 0
+    have e1 : c = exp 1 := h 1
+    have hlt : exp 0 < exp 1 := exp_lt one_pos
+    rw [← e0, ← e1] at hlt
+    exact lt_irrefl_ax c hlt
+  · -- `u = var`: then `0 = exp 0 = 1`, contradicting `0 < 1`.
+    subst hv
+    have e0 : (0 : Real) = exp 0 := h 0
+    rw [exp_zero] at e0
+    have hp : (0 : Real) < 1 := one_pos
+    rw [← e0] at hp
+    exact lt_irrefl_ax 0 hp
+
+/-- **`exp` is certified depth-optimal at depth 1.** The second certificate, and the evidence that
+§3 is genuinely generic: it shares no lemma with §4 and carries no domain restriction. -/
+theorem expTree_depth_optimal : DepthOptimal expSpec expTree 1 :=
+  { accepted := { meets := expTree_eval, cost := by rfl }
+    minimal := exp_not_depth_zero }
+
+/-- The hardware floor for `exp`, obtained from §3 with no new reasoning — the same theorem that
+produced the `1/x` floor, applied to a certificate built from unrelated mathematics. -/
+theorem exp_netDepth_floor (p : Nat → EMLInstr) (i : Nat)
+    (hp : ∀ x : Real, progEvalAt p i x = exp x) :
+    1 ≤ netDepthAt p i :=
+  depth_optimal_netDepth_floor expTree_depth_optimal p i hp
+
+/-! ### 6. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.
 

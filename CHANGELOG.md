@@ -39,6 +39,14 @@ Scope is in the module header and deliberately narrow: certificates are relative
 spec (an ε-tolerant spec is a different `SemSpec` and inherits none of these bounds), optimality is
 in depth only, and the hardware floors are in units of `L` — schedule positions, not nanoseconds.
 
+**A second target, because one instantiation proves nothing.** `exp` is certified depth-optimal at
+depth 1 (`expTree_depth_optimal`), chosen to differ from `1/x` on the two axes where a design flaw
+in §3 would hide: its lower bound (`exp_not_depth_zero`, a two-point argument on depth-0 trees)
+shares no lemma with the reciprocal arm, and `expSpec` is **total** where `invSpec` is restricted to
+`0 < x`. `exp_netDepth_floor` then comes out of the generic transfer with no new reasoning. The
+certificate is cheap — `exp` is shallow — and that is the point rather than a boast: what was under
+test is the pipeline, not the target.
+
 Gotcha re-learned the hard way: **this corpus has no `by_contra` tactic.** `EMLReciprocalDepth2`
 records it; I used it anyway and the build caught it. Replaced with a `Nat.lt_or_ge` split.
 

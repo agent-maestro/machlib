@@ -1936,6 +1936,50 @@
       ],
       "conclusion_mentions": [],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The genericity test. Its VALUE is that it shares no lemma with the reciprocal arm and carries no domain restriction, so it is evidence that DepthOptimal is not secretly shaped around 1/x. hypotheses_count 0 = unconditional certificate.",
+      "id": "exp-certified-depth-optimal-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`exp` is certified depth-optimal at\ndepth 1"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.expTree_depth_optimal",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "DepthOptimal",
+        "expSpec",
+        "expTree"
+      ],
+      "conclusion_mentions": [
+        "DepthOptimal"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The independent lower bound. Registered separately from the certificate so that 'shares no lemma with the reciprocal arm' is pinned to a theorem that could be checked, not left as prose.",
+      "id": "exp-not-depth-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a two-point argument on depth-0 trees"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.exp_not_depth_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Meets",
+        "expSpec",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
