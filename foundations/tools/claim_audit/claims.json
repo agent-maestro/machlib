@@ -2433,6 +2433,27 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Lower half of the first algebraic bracket. An instance of the band with k=0 -- registered so the 3 <= d(x^2) claim is pinned to a theorem and cannot drift as the witness improves.",
+      "id": "x-sq-not-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**no depth-≤2 tree computes `x²`.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.x_sq_not_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

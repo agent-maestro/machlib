@@ -3015,4 +3015,19 @@ theorem powNat_not_depth_le_two (k : Nat) (t : EMLTree) (ht : t.depth ≤ 2)
     have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
     rw [e] at v; exact le_trans hXe v
 
+/-- **`x²` is not EML at depth ≤ 2.** An instance of the band at `k = 0`.
+
+Combined with `EMLDepthCost.mulPos_var_var_depth` (the constructed witness sits at depth **24**),
+this brackets `3 ≤ d(x²) ≤ 24`. The gap is not a defect of the lower bound: the same constructor
+library builds `1/x` at depth 6 where the optimal witness `invX4` is at depth 4, so the generic
+combinators are known to overshoot even where the answer is settled. -/
+theorem x_sq_not_depth_le_two (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = x * x) : False := by
+  refine powNat_not_depth_le_two 0 t ht ?_
+  intro x hx
+  rw [h x hx]
+  show x * x = x * (x * 1)
+  mach_ring
+
+
 end MachLib

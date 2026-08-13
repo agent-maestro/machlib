@@ -7,6 +7,39 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### First depth bracket for an algebraic target — and the constructor library is the bottleneck
+
+`x_sq_not_depth_le_two` instantiates the band at `k = 0`: **no depth-≤2 tree computes `x²`.**
+Against the existing witness `mulPos var var`, whose depth is machine-checked at **24**
+(`EMLDepthCost.mulPos_var_var_depth`), that gives
+
+```
+3  ≤  d(x²)  ≤  24
+```
+
+**The gap is the constructor library's, not the lower bound's.** The same combinators build `1/x` at
+depth 6 (`invXTree_depth`) where the optimal witness is `invX4` at depth **4** — so they are known to
+overshoot by 2 even on the one target whose answer is settled. The measured costs are:
+
+| construction | depth |
+| --- | --- |
+| `subTree var var` | 4 |
+| `addTree var var` | 8 |
+| `subGen var var` | 15 |
+| `invPos var` | 16 |
+| **`mulPos var var`** | **24** |
+| `addGen var var` | 34 |
+| `mulGen var var` | 54 |
+
+Each generic combinator is built from `logTree`/`expOf`/`negOffset` layers costing `3 + depth` apiece,
+and they compose multiplicatively in the worst way.
+
+**So T4 does not get a family of cheap certificates from the band yet, and the reason is precise.**
+The lower-bound side is now degree-uniform and free; the *witness* side is where the work moved.
+Closing `d(x²)` means finding a witness far below 24, not improving the exclusion. That is a
+different kind of problem — construction rather than obstruction — and it is the first time in this
+programme the binding constraint has been on the upper bound.
+
 ### `exp` beats every fixed power — **one** theorem, not a degree ladder
 
 The obvious route to `x²` at depth ≤ 2 is `exp_beats_quadratic_past`, then `_cubic_`, then
