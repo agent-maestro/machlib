@@ -7,6 +7,32 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### A depth-2 `eml` node cannot approximate the identity
+
+`depth_two_eml_not_near_identity`: no `eml A' B'` with `A'`, `B'` of depth ≤ 1 satisfies
+`x ≤ ⟦A⟧(x) ≤ x + c` on a ray.
+
+This is the second branch of a depth-3 exclusion, and it needed **no case analysis over shapes**. The
+squeeze that arises there — the depth-2 log ceiling forcing `exp x ≤ exp(A x) ≤ exp x + f x + K` —
+pins `A x` to within an additive constant of `x`. And that is self-defeating:
+
+* `A x ≤ x + c` plus the right child's log being at most linear forces
+  `exp (A' x) ≤ 2x + c + D`, which is **sub**-exponential;
+* so `depth_le_one_exp_bounded_or_grows` puts `exp (A' x)` in its **bounded** class;
+* so `A x ≤ K − Cl`, a *constant* — contradicting `A x ≥ x`.
+
+The 5×5 shape enumeration I had sketched is unnecessary. The exp gap does the work, because being
+near the identity is already too *small* for the growing class and too *large* for the bounded one.
+
+**`var` is the honest boundary.** It approximates the identity because it *is* the identity, which is
+why the statement is about `eml` nodes. So for `x²` at depth ≤ 3 the remaining hole is exactly
+`A = var`, i.e. ruling out `log (B x) = exp x − x²` for `B` of depth ≤ 2 — a single sub-case rather
+than a branch.
+
+Threshold note: the growing branch's ray must be built from `exp T`, not `T`. `T` comes from the exp
+gap and may be arbitrarily negative, and `0 ≤ T + exp T` is **false** there — the first draft assumed
+it and did not compile.
+
 ### First depth-3 exclusion — and `V₂` turns out to be a lower-bound tool
 
 The scale table says the floor/ceiling argument cannot lift the band to depth 3. That is a statement

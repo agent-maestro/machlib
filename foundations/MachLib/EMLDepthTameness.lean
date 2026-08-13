@@ -3326,4 +3326,95 @@ theorem depth_three_bounded_left_not_superlog (f : Real → Real) (A B : EMLTree
     exact lt_irrefl_ax _ (lt_of_lt_of_le hKlt hcap)
 
 
+/-! ### A depth-2 `eml` node cannot approximate the identity
+
+The other branch of a depth-3 exclusion is a **squeeze**: if the left child's exponential dominates
+`exp x` while the node computes something small, the depth-2 log ceiling forces
+`exp x ≤ exp (A x) ≤ exp x + f x + K`, which pins `A x` to within an additive constant of `x`.
+
+The pleasant surprise is that ruling that out needs no case analysis over shapes. If `A x ≤ x + c`
+then the right child's log, being at most linear, forces `exp (A' x) ≤ 2x + c + D` — *sub*-exponential
+— so the depth-1 exp gap puts `exp (A' x)` in its **bounded** class. But then `A x` is bounded by a
+constant, and it was supposed to be at least `x`.
+
+`var` does approximate the identity — it *is* the identity — which is why the statement is about
+`eml` nodes specifically. That is the honest boundary of this argument. -/
+
+/-- **No depth-2 `eml` node is squeezed between `x` and `x + c`.** -/
+theorem depth_two_eml_not_near_identity (A' B' : EMLTree) (hA' : A'.depth ≤ 1) (hB' : B'.depth ≤ 1)
+    (c X₀ : Real) (hX1 : 1 ≤ X₀)
+    (hlow : ∀ x : Real, X₀ ≤ x → x ≤ exp (A'.eval x) - log (B'.eval x))
+    (hhigh : ∀ x : Real, X₀ ≤ x → exp (A'.eval x) - log (B'.eval x) ≤ x + c) : False := by
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B' hB'
+  obtain ⟨Cl, XL, hXL1, hCl⟩ := depth_le_one_log_lower_at_infinity B' hB'
+  rcases depth_le_one_exp_bounded_or_grows A' hA' with ⟨K, hK⟩ | ⟨T, hT⟩
+  · -- left child's exponential bounded ⟹ the node is bounded, contradicting `≥ x`
+    have hpick : X₀ + XL + exp (K - Cl) ≤ X₀ + XL + exp (K - Cl) := le_refl _
+    have hE : (0 : Real) ≤ exp (K - Cl) := le_of_lt (exp_pos _)
+    have hX0n : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX1
+    have hXLn : (0 : Real) ≤ XL := le_trans (le_of_lt zero_lt_one_ax) hXL1
+    have hxX0 : X₀ ≤ X₀ + XL + exp (K - Cl) := by
+      have v : X₀ + 0 + 0 ≤ X₀ + XL + exp (K - Cl) :=
+        add_le_add_wit (add_le_add_wit (le_refl X₀) hXLn) hE
+      have e : X₀ + (0 : Real) + 0 = X₀ := by mach_ring
+      rw [e] at v; exact v
+    have hxXL : XL ≤ X₀ + XL + exp (K - Cl) := by
+      have v : (0 : Real) + XL + 0 ≤ X₀ + XL + exp (K - Cl) :=
+        add_le_add_wit (add_le_add_wit hX0n (le_refl XL)) hE
+      have e : (0 : Real) + XL + 0 = XL := by mach_ring
+      rw [e] at v; exact v
+    have hxE : exp (K - Cl) ≤ X₀ + XL + exp (K - Cl) := by
+      have v : (0 : Real) + 0 + exp (K - Cl) ≤ X₀ + XL + exp (K - Cl) :=
+        add_le_add_wit (add_le_add_wit hX0n hXLn) (le_refl _)
+      have e : (0 : Real) + 0 + exp (K - Cl) = exp (K - Cl) := by mach_ring
+      rw [e] at v; exact v
+    have hx1 : (1 : Real) ≤ X₀ + XL + exp (K - Cl) := le_trans hX1 hxX0
+    -- the node is at most `K − Cl`
+    have hcap : exp (A'.eval (X₀ + XL + exp (K - Cl)))
+        - log (B'.eval (X₀ + XL + exp (K - Cl))) ≤ K - Cl := by
+      have v := add_le_add_wit (hK _ hx1) (neg_le_neg_wit (hCl _ hxXL))
+      have e1 : exp (A'.eval (X₀ + XL + exp (K - Cl)))
+          + -log (B'.eval (X₀ + XL + exp (K - Cl)))
+          = exp (A'.eval (X₀ + XL + exp (K - Cl)))
+            - log (B'.eval (X₀ + XL + exp (K - Cl))) := by mach_ring
+      have e2 : K + -Cl = K - Cl := by mach_ring
+      rw [e1, e2] at v; exact v
+    -- but it is at least `x`, and `x` exceeds `K − Cl`
+    have hbig : K - Cl < X₀ + XL + exp (K - Cl) :=
+      lt_of_lt_of_le (lt_of_lt_of_le (lt_succ_self (K - Cl))
+        (le_trans (le_of_eq (by mach_ring : K - Cl + 1 = 1 + (K - Cl)))
+          (one_add_le_exp (K - Cl)))) hxE
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hbig (le_trans (hlow _ hxX0) hcap))
+  · -- left child's exponential dominates `exp x` ⟹ the node exceeds `x + c`
+    have hMp : (0 : Real) ≤ 1 + 1 :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax)
+    obtain ⟨x, hxT, hx1, hlt⟩ :=
+      exp_beats_linear_past (α := 1 + 1) (β := c + D) hMp (X₀ + exp T)
+    have hX0n : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX1
+    -- `exp T` rather than `T` in the threshold: `T` may be very negative.
+    have hxX0 : X₀ ≤ x :=
+      le_trans (le_add_nonneg_r' (le_of_lt (exp_pos T))) hxT
+    have hTx : T ≤ x := by
+      have w : exp T ≤ X₀ + exp T := by
+        have u : X₀ + exp T = exp T + X₀ := by mach_ring
+        rw [u]; exact le_add_nonneg_r' hX0n
+      exact le_trans (self_le_exp T) (le_trans w hxT)
+    have g1 : exp x ≤ exp (A'.eval x) := hT x hTx
+    have g2 : log (B'.eval x) ≤ x + D := hD x hx1
+    have hfloor : exp x - (x + D) ≤ exp (A'.eval x) - log (B'.eval x) := by
+      have v := add_le_add_wit g1 (neg_le_neg_wit g2)
+      have e1 : exp x + -(x + D) = exp x - (x + D) := by mach_ring
+      have e2 : exp (A'.eval x) + -log (B'.eval x)
+          = exp (A'.eval x) - log (B'.eval x) := by mach_ring
+      rw [e1, e2] at v; exact v
+    have hcap := hhigh x hxX0
+    have hchain : exp x - (x + D) ≤ x + c := le_trans hfloor hcap
+    have hbad : exp x ≤ (1 + 1) * x + (c + D) := by
+      have v := add_le_add_wit hchain (le_refl (x + D))
+      have e1 : exp x - (x + D) + (x + D) = exp x := by mach_mpoly [exp x, x, D]
+      have e2 : x + c + (x + D) = (1 + 1) * x + (c + D) := by mach_mpoly [x, c, D]
+      rw [e1, e2] at v; exact v
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hbad)
+
+
 end MachLib

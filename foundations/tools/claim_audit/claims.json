@@ -2541,6 +2541,28 @@
         "False"
       ],
       "hypotheses_count": 5
+    },
+    {
+      "_comment": "Second branch of the depth-3 exclusion, and it needs no shape enumeration -- the exp gap alone closes it. hypotheses_count 5: two depth bounds, the ray bound, and the two squeeze inequalities. Nothing about the SHAPE of A' or B' is assumed. (I first registered 6, counting the real binder c; the auditor rejected it.)",
+      "id": "depth-two-eml-not-near-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "it needed **no case analysis over shapes**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_two_eml_not_near_identity",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 5
     }
   ]
 }
