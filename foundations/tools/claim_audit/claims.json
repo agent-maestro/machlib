@@ -2110,6 +2110,70 @@
         "TowerLowerBoundUpTo"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "THE PAIR, used together for the first time. statement_mentions pins the shape (exp of exp) so a weakened envelope could not silently satisfy the claim. hypotheses_count 1 = the depth bound only.",
+      "id": "depth-two-growth-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "what had\nnever happened was **using them together**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_growth_envelope",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "d(T3)=3. The FIRST depth proved by the pair rather than a bespoke classification -- that is the claim, and it is checkable by the proof consuming depth_le_two_growth_envelope.",
+      "id": "tower3-not-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the first tower level beyond what the shallow\nclassifications already covered"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower3_not_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Meets",
+        "towerSpec",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The bounded proposition at 3. Registered separately from TowerLowerBound so 'proved for n <= 3, open for n >= 4' cannot be read as the unbounded statement.",
+      "id": "tower-upto-three-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "proved for **n ≤ 3**"
+      ],
+      "module": "MachLib.EMLCertifiedSynthesis",
+      "theorem": "MachLib.EMLTree.tower_lower_bound_upto_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "conclusion_mentions": [
+        "TowerLowerBoundUpTo"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

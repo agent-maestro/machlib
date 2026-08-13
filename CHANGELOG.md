@@ -7,6 +7,43 @@ per-release status.
 
 ## [Unreleased] — 2026-08-12
 
+### `d(T₃) = 3` — the growth/decay pair earns a theorem that was not reachable before
+
+**The V-bound was already proved.** The slate named "an eventual upper bound on `−log(B x)`" as the
+missing piece for depth 3. It is `depth_le_one_log_lower_at_infinity`, built during the reciprocal
+arm: `∃ Cl X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀, Cl ≤ log (B.eval x)`. Both halves of the pair existed; what had
+never happened was **using them together**.
+
+`depth_le_two_growth_envelope` (in `EMLDepthTameness`) does that:
+
+> for `t.depth ≤ 2`, `∃ K M X₀, 1 ≤ X₀ ∧ ∀ x ≥ X₀, t.eval x ≤ exp (exp x + K) + M`.
+
+At `eml A B` the two children consume *different* halves — the left bounded above by
+`depth_le_one_le_exp_shift`, the right bounded **below** by `depth_le_one_log_lower_at_infinity`.
+Neither alone suffices: a single upper envelope cannot control `−log (B x)`, which is exactly the
+obstruction `LogSafe` ran into. Both constants are earned (`K` is the left child's exponential
+shift, `M` the negated decay floor) and the ray is unavoidable, since `c − log x` crosses zero at
+`x = exp c`.
+
+`tower3_not_depth_le_two` then gives **`d(T₃) = 3`** — the first tower level beyond what the shallow
+classifications already covered, and the first depth in this corpus proved by the pair rather than
+by a bespoke case analysis. The argument is short once the envelope exists: a depth-≤2 tree is
+capped one exponential above `exp x`, `T₃` sits two above, and the gap closes because
+`exp (exp x) ≥ exp x + exp x` puts the tower's outer exponent a full unit clear — and one unit of
+exponent is a factor of `e ≥ 2`, which the additive slack `M` cannot absorb.
+
+`d(Tₙ) = n` is now proved for **n ≤ 3** (`tower_certified_upto_three`) and open for `n ≥ 4`.
+
+**This is the first evidence bearing on the all-depth question.** The pair did not merely restate
+depth-2 facts — it produced a depth-3 result unreachable from the classifications alone. What it does
+*not* yet show is that the construction iterates: the depth-3 case still consumed a hand-built
+depth-≤1 decay bound, and a genuine induction needs `V_j` for every `j`, which is where cancellation
+stratification (T3) is expected to be required.
+
+Lean notes: this corpus has **no `set` tactic** — the core is stated over a free evaluation point
+instead, which also keeps a large repeated term away from the elaborator. `mach_ring` failed on
+`M + 1 + 1 = 1 + (1 + (M − K)) + K`; `mach_mpoly [M, K]` closed it.
+
 ### The iterated-exponential tower — the infinite family, and the exact price of it
 
 `T₀ x = x`, `T_{n+1} x = exp (T_n x)`. The two depth-2 certificates added earlier today were not

@@ -562,6 +562,132 @@ theorem tower_certified_upto_two (n : Nat) (hn : n ≤ 2) :
     DepthOptimal (towerSpec n) (towerTree n) n :=
   tower_depth_optimal_upto tower_lower_bound_upto_two n hn
 
+/-! ### 7b. `d(T₃) = 3` — the growth/decay pair earns its first new theorem
+
+`T₃` is the first tower level beyond what the shallow classifications already gave. Its lower bound
+is the first consumer of `depth_le_two_growth_envelope`, which is in turn the first place the
+**growth** and **decay** halves are used together — the left child bounded above by
+`depth_le_one_le_exp_shift`, the right child bounded *below* by
+`depth_le_one_log_lower_at_infinity`.
+
+The argument is short once the envelope exists, and its shape is the reason the pair was needed:
+a depth-≤2 tree is capped at `exp (exp x + K) + M`, one exponential above `exp x`. `T₃` is
+`exp (exp (exp x))`, two exponentials above. The gap is closed by noting that
+`exp (exp x) ≥ exp x + exp x`, so once `exp x ≥ K + 1` the tower's outer exponent clears the
+envelope's by a full unit — and one unit of exponent is a factor of `e ≥ 2`, which the additive
+slack `M` cannot absorb. -/
+
+/-- The arithmetic core: a quantity that both doubles and is capped by itself plus a constant. -/
+private theorem tower3_absurd {P M : Real} (hPP : P + P ≤ P + M) (hMP : M < P) : False :=
+  lt_irrefl_ax (P + P) (lt_of_le_of_lt hPP (add_lt_add_left hMP P))
+
+private theorem le_add_nonneg {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
+  have t := add_le_add_left hb a
+  have e : a + (0 : Real) = a := by mach_ring
+  rw [e] at t; exact t
+
+/-- The core of the argument, over a **free** evaluation point — this corpus has no `set` tactic,
+and stating it this way keeps the elaborator away from a large repeated term. -/
+private theorem tower3_core {K M x : Real}
+    (hx_ge_expK : exp K ≤ x) (hx_ge_expMK : exp (M - K) ≤ x)
+    (hcap : exp (exp (exp x)) ≤ exp (exp x + K) + M) : False := by
+  have hex : 1 + x ≤ exp x := one_add_le_exp x
+  have hxle : x ≤ exp x := by
+    have t : x ≤ 1 + x := by
+      have u : x ≤ x + 1 := le_add_nonneg (le_of_lt zero_lt_one_ax)
+      have e : x + (1 : Real) = 1 + x := by mach_ring
+      rw [e] at u; exact u
+    exact le_trans t hex
+  have hP : (0 : Real) ≤ exp (exp x + K) := le_of_lt (exp_pos _)
+  -- (i) `exp x ≥ K + 1`, via `exp K ≥ 1 + K`.
+  have hi : K + 1 ≤ exp x := by
+    have s1 : 1 + exp K ≤ 1 + x := add_le_add_left hx_ge_expK 1
+    have s2 : 1 + (1 + K) ≤ 1 + exp K := add_le_add_left (one_add_le_exp K) 1
+    have e : (1 : Real) + (1 + K) = K + 1 + 1 := by mach_ring
+    rw [e] at s2
+    have s3 : K + 1 ≤ K + 1 + 1 := le_add_nonneg (le_of_lt zero_lt_one_ax)
+    exact le_trans s3 (le_trans s2 (le_trans s1 hex))
+  -- (ii) `M < exp (exp x + K)`, via `exp t ≥ 1 + t` twice.
+  have hMlt : M < exp (exp x + K) := by
+    have a1 : 1 + (exp x + K) ≤ exp (exp x + K) := one_add_le_exp (exp x + K)
+    have a5 : 1 + (1 + (M - K)) ≤ 1 + exp (M - K) := add_le_add_left (one_add_le_exp (M - K)) 1
+    have a4 : 1 + exp (M - K) ≤ 1 + x := add_le_add_left hx_ge_expMK 1
+    have a7 : 1 + (1 + (M - K)) + K ≤ 1 + x + K := add_le_add_wit (le_trans a5 a4) (le_refl K)
+    have a8 : 1 + x + K ≤ exp x + K := add_le_add_wit hex (le_refl K)
+    have a9 : 1 + x + K ≤ 1 + (exp x + K) := by
+      have e : (1 : Real) + (exp x + K) = 1 + exp x + K := by mach_ring
+      rw [e]
+      exact add_le_add_wit (add_le_add_left hxle 1) (le_refl K)
+    have a6 : M + 1 < 1 + (1 + (M - K)) + K := by
+      have t1 : M + 1 + 0 < M + 1 + 1 := add_lt_add_left zero_lt_one_ax (M + 1)
+      have e1 : M + 1 + (0 : Real) = M + 1 := by mach_ring
+      have e2 : M + 1 + (1 : Real) = 1 + (1 + (M - K)) + K := by mach_mpoly [M, K]
+      rw [e1, e2] at t1; exact t1
+    have a10 : M + 1 ≤ exp (exp x + K) :=
+      le_of_lt (lt_of_lt_of_le a6 (le_trans a7 (le_trans a9 a1)))
+    have a11 : M < M + 1 := by
+      have t1 : M + 0 < M + 1 := add_lt_add_left zero_lt_one_ax M
+      have e1 : M + (0 : Real) = M := by mach_ring
+      rw [e1] at t1; exact t1
+    exact lt_of_lt_of_le a11 a10
+  -- The tower's outer exponent clears the envelope's by a full unit.
+  have hgap : exp x + K + 1 ≤ exp (exp x) := by
+    have d1 : exp x + exp x ≤ exp (exp x) := two_mul_le_exp (le_of_lt (exp_pos x))
+    have d2 : exp x + (K + 1) ≤ exp x + exp x := add_le_add_left hi (exp x)
+    have e : exp x + (K + 1) = exp x + K + 1 := by mach_ring
+    rw [e] at d2
+    exact le_trans d2 d1
+  -- One unit of exponent is a factor of `e ≥ 2`, which the additive slack `M` cannot absorb.
+  have hbig : exp (exp x + K) + exp (exp x + K) ≤ exp (exp (exp x)) := by
+    have m1 : exp (exp x + K + 1) ≤ exp (exp (exp x)) := exp_monotone hgap
+    have m2 : exp (exp x + K + 1) = exp (exp x + K) * exp 1 := by
+      have e : exp x + K + 1 = (exp x + K) + 1 := by mach_ring
+      rw [e]; exact exp_add _ _
+    have m4 : exp (exp x + K) * (1 + 1) ≤ exp (exp x + K) * exp 1 :=
+      mul_le_mul_of_nonneg_left (one_add_le_exp 1) hP
+    have m5 : exp (exp x + K) * ((1 : Real) + 1) = exp (exp x + K) + exp (exp x + K) := by
+      mach_ring
+    rw [m5] at m4
+    rw [m2] at m1
+    exact le_trans m4 m1
+  exact tower3_absurd (le_trans hbig hcap) hMlt
+
+/-- **No depth-≤2 tree computes `exp (exp (exp x))`.** -/
+theorem tower3_not_depth_le_two (u : EMLTree) (hu : u.depth < 3) (h : Meets (towerSpec 3) u) :
+    False := by
+  have h2 : u.depth ≤ 2 := by omega
+  obtain ⟨K, M, X₀, hX1, hEnv⟩ := depth_le_two_growth_envelope u h2
+  have hKp : (0 : Real) < exp K := exp_pos K
+  have hMKp : (0 : Real) < exp (M - K) := exp_pos (M - K)
+  have hX0 : (0 : Real) < X₀ := lt_of_lt_of_le zero_lt_one_ax hX1
+  have hxX : X₀ ≤ X₀ + (exp (M - K) + exp K) :=
+    le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hMKp) hKp))
+  have hb := hEnv (X₀ + (exp (M - K) + exp K)) hxX
+  rw [h (X₀ + (exp (M - K) + exp K))] at hb
+  have hcap : exp (exp (exp (X₀ + (exp (M - K) + exp K))))
+      ≤ exp (exp (X₀ + (exp (M - K) + exp K)) + K) + M := hb
+  refine tower3_core ?_ ?_ hcap
+  · have e : X₀ + (exp (M - K) + exp K) = exp K + (X₀ + exp (M - K)) := by mach_ring
+    rw [e]
+    exact le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hX0) hMKp))
+  · have e : X₀ + (exp (M - K) + exp K) = exp (M - K) + (X₀ + exp K) := by mach_ring
+    rw [e]
+    exact le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hX0) hKp))
+
+theorem tower_lower_bound_upto_three : TowerLowerBoundUpTo 3 := by
+  intro n hn u hu hm
+  match n, hn with
+  | 0, _ => exact absurd hu (Nat.not_lt_zero _)
+  | 1, _ => exact exp_not_depth_zero u hu hm
+  | 2, _ => exact expExp_not_depth_le_one u hu hm
+  | 3, _ => exact tower3_not_depth_le_two u hu hm
+
+/-- **`d(Tₙ) = n` for `n ≤ 3`.** The first level proved by the growth/decay pair rather than by a
+bespoke classification. -/
+theorem tower_certified_upto_three (n : Nat) (hn : n ≤ 3) :
+    DepthOptimal (towerSpec n) (towerTree n) n :=
+  tower_depth_optimal_upto tower_lower_bound_upto_three n hn
+
 /-! ### 8. What this checker does **not** decide
 
 Recorded here rather than in a report, so it travels with the code.

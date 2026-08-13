@@ -1862,4 +1862,75 @@ private theorem one_sub_exp_neg_le {u : Real} : 1 - exp (-u) ≤ u := by
   have r : exp (-u) + (u - exp (-u)) = u := by mach_mpoly [u, exp (-u)]
   rw [l, r] at v; exact v
 
+/-! ### The growth/decay pair, at the first level where it is forced
+
+Everything above bounds depth-≤1 trees. Going one level up is where a *single* envelope provably
+fails: at `eml A B` the value is `exp (A x) − log (B x)`, and no upper bound on `B` controls
+`−log (B x)`, which blows up as `B x → 0⁺`. That is the obstruction the `LogSafe` work ran into.
+
+The fix is to carry **two** quantities and let the asymmetric children consume different ones:
+
+* the **growth** half bounds the left child — `depth_le_one_le_exp_shift : A x ≤ exp x + D`;
+* the **decay** half bounds the right child *from below* —
+  `depth_le_one_log_lower_at_infinity : Cl ≤ log (B x)` on a ray.
+
+Both halves already existed; this is the first place they are used together. The result is that one
+level of nesting buys exactly one exponential. -/
+
+/-- **The depth-≤2 growth envelope.** `t x ≤ exp (exp x + K) + M` on a ray.
+
+The constants are unavoidable and both are earned: `K` is the left child's exponential shift, `M` is
+the *negated* decay floor of the right child. The ray is unavoidable too — the decay bound is only
+eventual, since `c − log x` passes through `0` at `x = exp c`. -/
+theorem depth_le_two_growth_envelope (t : EMLTree) (ht : t.depth ≤ 2) :
+    ∃ K M X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → t.eval x ≤ exp (exp x + K) + M := by
+  cases t with
+  | const c =>
+      refine ⟨0, c, 1, le_refl 1, ?_⟩
+      intro x _
+      show c ≤ exp (exp x + 0) + c
+      have hp : (0 : Real) ≤ exp (exp x + 0) := le_of_lt (exp_pos _)
+      have t1 : c + 0 ≤ c + exp (exp x + 0) := add_le_add_left hp c
+      have e1 : c + (0 : Real) = c := by mach_ring
+      have e2 : c + exp (exp x + 0) = exp (exp x + 0) + c := by mach_ring
+      rw [e1, e2] at t1; exact t1
+  | var =>
+      refine ⟨0, 0, 1, le_refl 1, ?_⟩
+      intro x _
+      show x ≤ exp (exp x + 0) + 0
+      have e : exp x + (0 : Real) = exp x := by mach_ring
+      rw [e]
+      have h1 : 1 + exp x ≤ exp (exp x) := one_add_le_exp (exp x)
+      have h2 : 1 + x ≤ exp x := one_add_le_exp x
+      have h3 : 1 + (1 + x) ≤ 1 + exp x := add_le_add_left h2 1
+      have h4 : x ≤ 1 + (1 + x) := by
+        have hz : (0 : Real) ≤ 1 + 1 := le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax)
+          zero_lt_one_ax)
+        have t1 : x + 0 ≤ x + (1 + 1) := add_le_add_left hz x
+        have e1 : x + (0 : Real) = x := by mach_ring
+        have e2 : x + ((1 : Real) + 1) = 1 + (1 + x) := by mach_ring
+        rw [e1, e2] at t1; exact t1
+      have h5 : x ≤ exp (exp x) := le_trans h4 (le_trans h3 h1)
+      have e2 : exp (exp x) + (0 : Real) = exp (exp x) := by mach_ring
+      rw [e2]; exact h5
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      obtain ⟨D, hD⟩ := depth_le_one_le_exp_shift A hA
+      obtain ⟨Cl, X₀, hX1, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+      refine ⟨D, -Cl, X₀, hX1, ?_⟩
+      intro x hx
+      have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+      show exp (A.eval x) - log (B.eval x) ≤ exp (exp x + D) + -Cl
+      have h1 : exp (A.eval x) ≤ exp (exp x + D) := exp_monotone (hD x hx1)
+      have h2 : -log (B.eval x) ≤ -Cl := neg_le_neg_wit (hCl x hx)
+      have h3 : exp (A.eval x) + -log (B.eval x) ≤ exp (exp x + D) + -Cl := add_le_add_wit h1 h2
+      have e : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+      rw [e] at h3; exact h3
+
+
 end MachLib
