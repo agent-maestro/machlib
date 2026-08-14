@@ -7,6 +7,26 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### `d(x²) ≥ 4` is now actually a theorem
+
+`x_sq_not_depth_le_three`. I have been quoting `4 ≤ d(x²) ≤ 8` for several commits on the strength of
+the general depth-3 band, but the band had **never been instantiated at `x²`** — the only standalone
+fact was `x_sq_not_depth_le_two`, giving `≥ 3`. Instantiating requires discharging all four band
+hypotheses for that target, which is where the work is:
+
+* **unbounded** — `K < x ≤ x·x` once `x ≥ 1`;
+* **sub-exponential** — `exp_beats_powNat` at `k = 0`, with `powNat x 2 = x·x`;
+* **superlinear** — `x < x·x` once `x > 1`;
+* **superlogarithmic** — `C + log x < x + log x ≤ x + x ≤ x·x`, using `log x ≤ x` and `2 ≤ x`.
+
+The bracket `4 ≤ d(x²) ≤ 8` (upper bound on `(1,∞)`) is now backed by named theorems at both ends.
+
+**This is the failure mode the claim auditor exists for, and it slipped past** — the auditor binds
+prose to a *named theorem*, and every claim I registered pointed at a theorem that was true. The gap
+was that the number in my prose was a consequence I had derived in my head and never written down.
+Registered claims catch prose drifting from a theorem; they do not catch prose citing a theorem that
+does not yet exist.
+
 ### Depth of a semantic *class* — the first expressive phase transition, located exactly
 
 Suggested in review, and it turns out the pieces were already there. Instead of asking for `d(f)` of

@@ -4624,4 +4624,139 @@ theorem belowIdentityUnbounded_at_depth_three :
       rw [hxe] at hgt; exact lt_irrefl_ax x hgt
     · exact absurd (lt_of_lt_of_le hp h1) (lt_irrefl_ax x)
 
+/-- **`d(x²) ≥ 4`.** The depth-3 band applied to `x²`, which requires discharging all four of its
+hypotheses for that target.
+
+Recorded explicitly because the number has been quoted from the general theorem without ever being
+instantiated. `x_sq_not_depth_le_two` gave only `≥ 3`. -/
+theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = x * x) : False := by
+  refine superlinear_subexp_not_depth_le_three (fun x => x * x) ?_ ?_ ?_ ?_ t ht h
+  · -- unbounded: `K < x ≤ x·x`
+    intro K X
+    have hKe : K < exp K := by
+      have t1 := one_add_le_exp K
+      have e : (1 : Real) + K = K + 1 := by mach_ring
+      rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hx1 : (1 : Real) ≤ 1 + exp K + exp X := by
+        have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+          add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+            (le_of_lt (exp_pos X))
+        have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+        rw [e] at v; exact v
+      have hsq : (1 + exp K + exp X) ≤ (1 + exp K + exp X) * (1 + exp K + exp X) := by
+        have u := mul_le_mul_of_nonneg_left hx1
+          (le_trans (le_of_lt zero_lt_one_ax) hx1)
+        have e : (1 + exp K + exp X) * (1 : Real) = 1 + exp K + exp X := by mach_ring
+        rw [e] at u; exact u
+      have hKx : K < 1 + exp K + exp X := by
+        have v : (0 : Real) + exp K + 0 ≤ 1 + exp K + exp X :=
+          add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+            (le_of_lt (exp_pos X))
+        have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
+        rw [e] at v; exact lt_of_lt_of_le hKe v
+      exact lt_of_lt_of_le hKx hsq
+  · -- sub-exponential: `exp_beats_powNat` at `k = 0`
+    intro C X
+    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_powNat 0 C X
+    refine ⟨x, hxX, hx1, ?_⟩
+    have e : powNat x (0 + 2) = x * x := by
+      show x * (x * 1) = x * x
+      mach_ring
+    rw [e] at hlt
+    have v := add_lt_add_left hlt (-x - C)
+    have e1 : -x - C + (x * x + x + C) = x * x := by mach_mpoly [x, C]
+    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+    rw [e1, e2] at v; exact v
+  · -- superlinear: `x < x·x` once `x > 1`
+    intro X
+    have hgt : (1 : Real) < 1 + 1 + exp X := by
+      have v : (1 : Real) + 0 + 0 < 1 + 1 + exp X :=
+        lt_of_lt_of_le (add_lt_add_left (exp_pos X) ((1 : Real) + 0))
+          (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt zero_lt_one_ax))
+            (le_refl (exp X)))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    refine ⟨1 + 1 + exp X, ?_, le_of_lt hgt, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + 1 + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have u := mul_lt_mul_of_pos_right hgt (lt_trans_ax zero_lt_one_ax hgt)
+      have e : (1 : Real) * (1 + 1 + exp X) = 1 + 1 + exp X := by mach_ring
+      rw [e] at u; exact u
+  · -- superlogarithmic: `C + log x ≤ C + x < x·x` once `x − 1 ≥ 1` and `x > C`
+    intro C X
+    have hCp : (0 : Real) < exp C := exp_pos C
+    have hXp : (0 : Real) < exp X := exp_pos X
+    refine ⟨1 + 1 + exp C + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + 0 + exp X ≤ 1 + 1 + exp C + exp X :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+          (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_refl _)
+      have e : (0 : Real) + 0 + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+          (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_of_lt hXp)
+      have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hx1 : (1 : Real) ≤ 1 + 1 + exp C + exp X := by
+        have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
+          add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+            (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_of_lt hXp)
+        have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+        rw [e] at v; exact v
+      have hx0 : (0 : Real) < 1 + 1 + exp C + exp X := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hx2 : (1 : Real) + 1 ≤ 1 + 1 + exp C + exp X := by
+        have v : (1 : Real) + 1 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
+          add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_refl 1))
+            (le_of_lt hCp)) (le_of_lt hXp)
+        have e : (1 : Real) + 1 + 0 + 0 = 1 + 1 := by mach_ring
+        rw [e] at v; exact v
+      have hCx : C < 1 + 1 + exp C + exp X := by
+        have hCe : C < exp C := by
+          have t1 := one_add_le_exp C
+          have e : (1 : Real) + C = C + 1 := by mach_ring
+          rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self C) t1
+        have v : (0 : Real) + 0 + exp C + 0 ≤ 1 + 1 + exp C + exp X :=
+          add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+            (le_of_lt zero_lt_one_ax)) (le_refl _)) (le_of_lt hXp)
+        have e : (0 : Real) + 0 + exp C + 0 = exp C := by mach_ring
+        rw [e] at v; exact lt_of_lt_of_le hCe v
+      have hlogle : log (1 + 1 + exp C + exp X) ≤ 1 + 1 + exp C + exp X :=
+        log_le_self_pos hx0
+      -- `C + log x < x + log x ≤ x + x ≤ x·x`
+      have s1 : C + log (1 + 1 + exp C + exp X)
+          < (1 + 1 + exp C + exp X) + log (1 + 1 + exp C + exp X) := by
+        have t1 := add_lt_add_left hCx (log (1 + 1 + exp C + exp X))
+        have e1 : log (1 + 1 + exp C + exp X) + C = C + log (1 + 1 + exp C + exp X) := by
+          mach_ring
+        have e2 : log (1 + 1 + exp C + exp X) + (1 + 1 + exp C + exp X)
+            = (1 + 1 + exp C + exp X) + log (1 + 1 + exp C + exp X) := by mach_ring
+        rw [e1, e2] at t1; exact t1
+      have s2 : (1 + 1 + exp C + exp X) + log (1 + 1 + exp C + exp X)
+          ≤ (1 + 1 + exp C + exp X) + (1 + 1 + exp C + exp X) :=
+        add_le_add_left hlogle _
+      have s3 : (1 + 1 + exp C + exp X) + (1 + 1 + exp C + exp X)
+          ≤ (1 + 1 + exp C + exp X) * (1 + 1 + exp C + exp X) := by
+        have u := mul_le_mul_of_nonneg_left hx2 (le_of_lt hx0)
+        have e : (1 + 1 + exp C + exp X) * ((1 : Real) + 1)
+            = (1 + 1 + exp C + exp X) + (1 + 1 + exp C + exp X) := by mach_ring
+        rw [e] at u; exact u
+      exact lt_of_lt_of_le s1 (le_trans s2 s3)
+
+
+
 end MachLib

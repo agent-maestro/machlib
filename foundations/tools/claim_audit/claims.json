@@ -2843,6 +2843,27 @@
         "BelowIdentityUnbounded"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "d(x^2) >= 4, finally instantiated. hypotheses_count 2 = depth bound and semantic equation; the four band hypotheses are DISCHARGED inside, not assumed. That is the difference between this and quoting the general band.",
+      "id": "x-sq-depth-four-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the band had **never been instantiated at `x²`**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.x_sq_not_depth_le_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
