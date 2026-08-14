@@ -7,6 +7,21 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `log (exp a − s)` pinned within `1` of `a`
+
+`log_exp_sub_pinned`: if `s ≤ exp (a−1)` and `−exp a ≤ s`, then `a − 1 ≤ log (exp a − s) ≤ a + 1`.
+
+The workhorse for the one surviving depth-3 branch, where it is applied three times with `a` taken as
+`x`, `exp x − d` and `exp x − log x` — the three depth-1 shapes whose exponential is unbounded. Both
+side conditions are one application of `exp_add_one_doubles`: `exp (a−1) + exp (a−1) ≤ exp a` gives
+the floor, `exp a + exp a ≤ exp (a+1)` the ceiling.
+
+Stated over bare reals rather than about trees, so the three uses instantiate it rather than repeat
+it.
+
+Corpus note, recorded once already and hit again the very next commit: **`.trans` does not exist on
+this order.** There is no `MachLib.Real.leR.trans`; chain with `le_trans` or by hand.
+
 ### `VarLeftEmlRightHard`, bounded-left branch — closed
 
 `varLeftEmlRight_bounded_left` takes the named obligation's easier half. If the surviving shape's own

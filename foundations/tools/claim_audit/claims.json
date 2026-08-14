@@ -2627,6 +2627,27 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The pinning estimate for the surviving depth-3 branch. Stated over bare reals -- hypotheses_count 2, both side conditions, nothing about trees -- which is what lets the three shapes instantiate it rather than repeat the argument.",
+      "id": "log-exp-sub-pinned-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "applied three times with `a` taken as\n`x`, `exp x − d` and `exp x − log x`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.log_exp_sub_pinned",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

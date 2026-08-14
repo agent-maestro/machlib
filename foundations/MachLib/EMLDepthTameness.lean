@@ -3557,4 +3557,42 @@ theorem varLeftEmlRight_bounded_left (f : Real → Real) (A'' B'' : EMLTree)
   exact lt_irrefl_ax _ (lt_of_lt_of_le (lt_of_le_of_lt hxL hgt) hlogcap)
 
 
+/-- **`log (exp a − s)` is pinned within `1` of `a`** once `s` is small relative to `exp a`.
+
+The workhorse of the surviving depth-3 branch, used three times with `a` taken as `x`,
+`exp x − d` and `exp x − log x`. Both side conditions are one application of
+`exp_add_one_doubles`: `exp (a−1) + exp (a−1) ≤ exp a` gives the floor, `exp a + exp a ≤ exp (a+1)`
+the ceiling. -/
+theorem log_exp_sub_pinned {a s : Real} (hlo : s ≤ exp (a - 1)) (hhi : -exp a ≤ s) :
+    a - 1 ≤ log (exp a - s) ∧ log (exp a - s) ≤ a + 1 := by
+  have hdbl : exp (a - 1) + exp (a - 1) ≤ exp a := by
+    have v := exp_add_one_doubles (a - 1)
+    have e : a - 1 + 1 = a := by mach_ring
+    rw [e] at v; exact v
+  -- floor: `exp a − s ≥ exp (a−1)`
+  have hfloor : exp (a - 1) ≤ exp a - s := by
+    have v : exp (a - 1) + s ≤ exp (a - 1) + exp (a - 1) := add_le_add_left hlo _
+    have w : exp (a - 1) + s ≤ exp a := le_trans v hdbl
+    have u := add_le_add_wit w (le_refl (-s))
+    have e1 : exp (a - 1) + s + -s = exp (a - 1) := by mach_mpoly [exp (a - 1), s]
+    have e2 : exp a + -s = exp a - s := by mach_ring
+    rw [e1, e2] at u; exact u
+  have hpos : (0 : Real) < exp a - s := lt_of_lt_of_le (exp_pos _) hfloor
+  -- ceiling: `exp a − s ≤ exp (a+1)`
+  have hceil : exp a - s ≤ exp (a + 1) := by
+    have hns : -s ≤ exp a := by
+      have t := neg_le_neg_wit hhi
+      have e : -(-exp a) = exp a := by mach_ring
+      rw [e] at t; exact t
+    have v : exp a + -s ≤ exp a + exp a := add_le_add_left hns _
+    have e : exp a + -s = exp a - s := by mach_ring
+    rw [e] at v
+    exact le_trans v (exp_add_one_doubles a)
+  refine ⟨?_, ?_⟩
+  · have m := log_le_log (exp_pos (a - 1)) hfloor
+    rw [log_exp] at m; exact m
+  · have m := log_le_log hpos hceil
+    rw [log_exp] at m; exact m
+
+
 end MachLib
