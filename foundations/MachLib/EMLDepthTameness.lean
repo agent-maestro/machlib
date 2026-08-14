@@ -4891,4 +4891,67 @@ theorem depth_le_two_normal_form (t : EMLTree) (ht : t.depth ≤ 2) :
         fun x _ => rfl⟩)
 
 
+/-- **Depth-≤2 lower envelope: `t(x) ≥ −C − x` on a ray.**
+
+The depth-1 companion is `depth_le_one_lower_on_ray`, where the floor is `−C − log x`. One level of
+nesting degrades it from logarithmic to **linear**, and no more than that, because an `eml` node's
+value is bounded below by `−Log(B x)` alone — `exp` contributes nothing negative — and the depth-1
+log ceiling is linear.
+
+**This is what `V₃` needs, and it is why the 5 × 5 asymptotic type list is not needed for it.** The
+decay bound at depth `j` comes from the lower envelope at depth `j−1`: `V₂`'s `−log t ≤ C + log x`
+traces back to the depth-1 floor `−C − log x`, so the depth-2 floor `−C − x` should give
+`−log t ≤ C + x` at depth 3 — logarithmic, then linear, one level apart. -/
+theorem depth_le_two_lower_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → -C - x ≤ t.eval x := by
+  cases t with
+  | const c =>
+      refine ⟨exp (-c), ?_⟩
+      intro x hx
+      show -exp (-c) - x ≤ c
+      have h1 : -c ≤ exp (-c) := self_le_exp _
+      have h2 : -exp (-c) ≤ c := by
+        have v := neg_le_neg_wit h1
+        have e : -(-c) = c := by mach_ring
+        rw [e] at v; exact v
+      have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+      have hnx : -x ≤ 0 := by
+        have v := neg_le_neg_wit hx0
+        have e : -(0 : Real) = 0 := by mach_ring
+        rw [e] at v; exact v
+      have h3 : -exp (-c) - x ≤ -exp (-c) := by
+        have v := add_le_add_left hnx (-exp (-c))
+        have e1 : -exp (-c) + -x = -exp (-c) - x := by mach_ring
+        have e2 : -exp (-c) + (0 : Real) = -exp (-c) := by mach_ring
+        rw [e1, e2] at v; exact v
+      exact le_trans h3 h2
+  | var =>
+      refine ⟨1, ?_⟩
+      intro x hx
+      show -(1 : Real) - x ≤ x
+      have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+      have h1 : (0 : Real) ≤ 1 + x :=
+        le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax)
+          (lt_of_lt_of_le zero_lt_one_ax hx))
+      have hneg : -(1 : Real) - x ≤ 0 := by
+        have v := neg_le_neg_wit h1
+        have e1 : -((1 : Real) + x) = -1 - x := by mach_ring
+        have e2 : -(0 : Real) = 0 := by mach_ring
+        rw [e1, e2] at v; exact v
+      exact le_trans hneg hx0
+  | eml A B =>
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+      refine ⟨D, ?_⟩
+      intro x hx
+      show -D - x ≤ exp (A.eval x) - log (B.eval x)
+      -- `exp (A x) > 0` and `log (B x) ≤ x + D`
+      have v := add_le_add_wit (le_of_lt (exp_pos (A.eval x))) (neg_le_neg_wit (hD x hx))
+      have e1 : (0 : Real) + -(x + D) = -D - x := by mach_mpoly [x, D]
+      have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+      rw [e1, e2] at v; exact v
+
+
 end MachLib

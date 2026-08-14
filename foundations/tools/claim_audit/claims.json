@@ -2926,6 +2926,27 @@
         "Depth1Form"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Depth-2 lower envelope. hypotheses_count 1 (depth bound). The linear floor -C - x, against depth 1's logarithmic -C - log x, is the degradation that should govern V_3 -- which is why this and not a 25-cell type list is what the next level needs.",
+      "id": "depth-two-lower-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "from **logarithmic\nto linear**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_lower_on_ray",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "eval"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

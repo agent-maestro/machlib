@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### The depth-2 lower envelope — and the answer to whether the type list is needed
+
+`depth_le_two_lower_on_ray`: a depth-≤2 expression satisfies `t(x) ≥ −C − x` on a ray.
+
+The depth-1 companion floors at `−C − log x`. One level of nesting degrades that from **logarithmic
+to linear**, and no further, because an `eml` node is bounded below by `−Log(B x)` alone — `exp`
+contributes nothing negative — and the depth-1 log ceiling is linear.
+
+**This answers the question raised in the previous commit.** The 5 × 5 asymptotic type list is *not*
+what `V₃` needs; the lower envelope is. Tracing the dependency: `V₂`'s bound `−log t ≤ C + log x`
+comes from the depth-1 floor `−C − log x`, so the decay bound at depth `j` is governed by the lower
+envelope at depth `j−1`, and the pattern should be
+
+```
+V₁ ~ constant     V₂ ~ log x     V₃ ~ x
+```
+
+one level apart, each inherited from the floor below it. That is a single theorem per level rather
+than an enumeration, and it is why following the dependency was worth more than enumerating cells.
+
+The classification programme at depth 2 is therefore, for present purposes, **complete**: sign
+(`evSign_depth_le_two`), scale (`depth_two_eml_value_gap`), ceiling (`depth_le_two_log_le_exp`),
+floor (this), and a function-level normal form. Whether a finer type list has independent value is
+still open, but nothing currently blocked wants one.
+
 ### A function-level normal form at depth 2 — first step of the asymptotic classification
 
 `Depth1Form` names the five closed forms as a predicate on **functions**, and
