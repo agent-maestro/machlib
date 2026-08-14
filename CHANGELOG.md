@@ -7,6 +7,42 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### **Depth-3 intermediate-growth exclusion** — the band lifts a level
+
+`superlinear_subexp_not_depth_le_three`. Same three hypotheses as the depth-2 band, same arbitrary
+`f` — no continuity, monotonicity, definability or formula:
+
+> No `f` that is unbounded above, above the identity at arbitrarily large points, and below
+> `exp x − x − C` at arbitrarily large points for every `C`, is computed by any EML tree of
+> **depth ≤ 3**.
+
+The scale table said the *floor/ceiling* architecture could not lift the band, and that was true.
+This does not use it. Every branch is routed around it:
+
+| branch | tool |
+| --- | --- |
+| `exp(A x)` bounded | `V₂` caps `B`'s decay |
+| `A = const` | `exp x ≤ exp c` forces `x ≤ c` |
+| `A = var` | `varLeftEmlRightHard_of_band` — five depth-1 shapes, one hypothesis each |
+| `A = eml A' B'`, `A'` bounded-exp | node bounded by a constant, must exceed `x` |
+| `A = eml A' B'`, `A'` grows | squeeze **at a point chosen from `H2`** |
+
+The last row is where the correction landed. `depth_two_eml_not_near_identity` wants the squeeze on a
+**ray**, and sub-exponentiality only supplies it **infinitely often**, so it cannot be called. The
+argument is inlined at the chosen point instead — which is all it ever needed.
+
+**Consequence: `d(x²) ≥ 4`**, and more usefully the exclusion is generic, so it applies to `M·x` and
+every `xⁿ` at depth 3 exactly as at depth 2.
+
+**This settles the value-exclusion question (VE) for band targets without the expert.** (VE) was
+raised because the floor/ceiling stall looked like a cancellation problem; it was not one — going
+around it needed only the depth-1 classification and the exp gap. `SignHardCase` is untouched and
+still blocks the tower's uniformity in `n`.
+
+Two arithmetic traps in the assembly, both caught by the build: the final contradiction needs a
+**strict** gap, so `two_mul_add_le_exp` must be instantiated at `1 + D' + 1` rather than `1 + D'`;
+and `K' − Cl' < x` needs the threshold's `+1`, since `self_le_exp` only gives `≤`.
+
 ### `VarLeftEmlRightHard` is discharged — the named obligation becomes a theorem
 
 `varLeftEmlRightHard_of_band` proves it for every band target. `A''` ranges over the five depth-1

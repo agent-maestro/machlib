@@ -2670,6 +2670,28 @@
         "VarLeftEmlRightHard"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "THE CAPSTONE. hypotheses_count 6 = four band hypotheses (H1,H2,H3,Hlog), the depth bound, and the semantic equation. Nothing about continuity/monotonicity/definability, exactly as at depth 2 -- that absence is the claim.",
+      "id": "depth-three-band-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is computed by any EML tree of\n> **depth ≤ 3**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.superlinear_subexp_not_depth_le_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 6
     }
   ]
 }

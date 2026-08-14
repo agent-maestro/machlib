@@ -3853,4 +3853,200 @@ theorem varLeftEmlRightHard_of_band (f : Real → Real)
     exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hfle)
 
 
+/-- **Depth-3 intermediate-growth exclusion.** The band theorem, one level up.
+
+Same three hypotheses as `superlinear_subexp_not_depth_le_two`, same arbitrary `f`. Assembled from
+every branch proved above; the `A = eml` case inlines its squeeze **at a point chosen from `Hsub`**
+rather than calling `depth_two_eml_not_near_identity`, because that theorem wants the squeeze on a
+*ray* and sub-exponentiality only supplies it *infinitely often*. -/
+theorem superlinear_subexp_not_depth_le_three (f : Real → Real)
+    (H1 : ∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+    (H2 : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+    (H3 : ∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
+    (Hlog : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+    (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = f x) : False := by
+  cases t with
+  | const c =>
+      obtain ⟨x, _, hx1, hlt⟩ := H1 c 1
+      have hv : c = f x := h x (lt_of_lt_of_le zero_lt_one_ax hx1)
+      rw [← hv] at hlt; exact lt_irrefl_ax c hlt
+  | var =>
+      obtain ⟨x, _, hx1, hlt⟩ := H3 1
+      have hv : x = f x := h x (lt_of_lt_of_le zero_lt_one_ax hx1)
+      rw [← hv] at hlt; exact lt_irrefl_ax x hlt
+  | eml A B =>
+      have hA : A.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 2 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      rcases depth_le_two_exp_bounded_or_grows A hA with ⟨K, X₀, hX1, hK⟩ | ⟨T, hT⟩
+      · exact depth_three_bounded_left_not_superlog f A B hB K X₀ hX1 hK Hlog h
+      · -- the left child's exponential dominates `exp x`
+        have hTn : T ≤ exp T := self_le_exp T
+        cases A with
+        | const c =>
+            -- `exp x ≤ exp c` forces `x ≤ c`
+            obtain ⟨x, hxX, hx1, _⟩ := H1 0 (exp T + exp c + 1)
+            have hxT : T ≤ x := by
+              have v : exp T + 0 + 0 ≤ exp T + exp c + 1 :=
+                add_le_add_wit (add_le_add_wit (le_refl _) (le_of_lt (exp_pos c)))
+                  (le_of_lt zero_lt_one_ax)
+              have e : exp T + (0 : Real) + 0 = exp T := by mach_ring
+              rw [e] at v; exact le_trans hTn (le_trans v hxX)
+            have hxc : exp c < x := by
+              have v : (0 : Real) + exp c + 0 ≤ exp T + exp c + 1 :=
+                add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_refl _))
+                  (le_of_lt zero_lt_one_ax)
+              have e : (0 : Real) + exp c + 0 = exp c := by mach_ring
+              rw [e] at v
+              have w : exp c + 1 ≤ exp T + exp c + 1 := by
+                have u : (0 : Real) + exp c + 1 ≤ exp T + exp c + 1 :=
+                  add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_refl _)) (le_refl 1)
+                have e2 : (0 : Real) + exp c + 1 = exp c + 1 := by mach_ring
+                rw [e2] at u; exact u
+              exact lt_of_lt_of_le (lt_succ_self (exp c)) (le_trans w hxX)
+            have hge := hT x hxT
+            have hcc : exp x ≤ exp c := hge
+            have hlt2 : exp c < exp x := exp_lt (lt_of_le_of_lt (self_le_exp c) hxc)
+            exact lt_irrefl_ax _ (lt_of_lt_of_le hlt2 hcc)
+        | var =>
+            exact var_left_not_band f B hB H2 (varLeftEmlRightHard_of_band f H1 Hlog H2) h
+        | eml A' B' =>
+            have hA' : A'.depth ≤ 1 := by
+              simp only [EMLTree.depth] at hA
+              have := Nat.le_max_left A'.depth B'.depth; omega
+            have hB' : B'.depth ≤ 1 := by
+              simp only [EMLTree.depth] at hA
+              have := Nat.le_max_right A'.depth B'.depth; omega
+            obtain ⟨D', hD'⟩ := depth_le_one_log_le_linear B' hB'
+            obtain ⟨Cl', XL', hXL'1, hCl'⟩ := depth_le_one_log_lower_at_infinity B' hB'
+            have hXL'n : (0 : Real) ≤ XL' := le_trans (le_of_lt zero_lt_one_ax) hXL'1
+            -- `x ≤ ⟦A⟧(x)` on the ray, from the exp gap
+            have hxle : ∀ x : Real, T ≤ x → x ≤ exp (A'.eval x) - log (B'.eval x) := by
+              intro x hxT
+              rcases lt_total (exp (A'.eval x) - log (B'.eval x)) x with hp | hp | hp
+              · exact absurd (hT x hxT) (fun hh =>
+                  lt_irrefl_ax _ (lt_of_lt_of_le (exp_lt hp) hh))
+              · exact le_of_eq hp.symm
+              · exact le_of_lt hp
+            rcases depth_le_one_exp_bounded_or_grows A' hA' with ⟨K', hK'⟩ | ⟨T', hT'⟩
+            · -- `⟦A⟧` is bounded by a constant but must exceed `x`
+              obtain ⟨x, hxX, hx1, _⟩ := H1 0 (exp T + XL' + exp (K' - Cl') + 1)
+              have hxT : T ≤ x := by
+                have v : exp T + 0 + 0 + 0 ≤ exp T + XL' + exp (K' - Cl') + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl _) hXL'n)
+                    (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+                have e : exp T + (0 : Real) + 0 + 0 = exp T := by mach_ring
+                rw [e] at v; exact le_trans hTn (le_trans v hxX)
+              have hxL : XL' ≤ x := by
+                have v : (0 : Real) + XL' + 0 + 0 ≤ exp T + XL' + exp (K' - Cl') + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T))
+                    (le_refl _)) (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+                have e : (0 : Real) + XL' + 0 + 0 = XL' := by mach_ring
+                rw [e] at v; exact le_trans v hxX
+              have hxE1 : exp (K' - Cl') + 1 ≤ x := by
+                have v : (0 : Real) + 0 + exp (K' - Cl') + 1
+                    ≤ exp T + XL' + exp (K' - Cl') + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) hXL'n)
+                    (le_refl _)) (le_refl 1)
+                have e : (0 : Real) + 0 + exp (K' - Cl') + 1 = exp (K' - Cl') + 1 := by mach_ring
+                rw [e] at v; exact le_trans v hxX
+              have hcap : exp (A'.eval x) - log (B'.eval x) ≤ K' - Cl' := by
+                have v := add_le_add_wit (hK' x hx1) (neg_le_neg_wit (hCl' x hxL))
+                have e1 : exp (A'.eval x) + -log (B'.eval x)
+                    = exp (A'.eval x) - log (B'.eval x) := by mach_ring
+                have e2 : K' + -Cl' = K' - Cl' := by mach_ring
+                rw [e1, e2] at v; exact v
+              have hbig : K' - Cl' < x :=
+                lt_of_lt_of_le (lt_of_le_of_lt (self_le_exp (K' - Cl')) (lt_succ_self _)) hxE1
+              exact lt_irrefl_ax _ (lt_of_lt_of_le hbig (le_trans (hxle x hxT) hcap))
+            · -- `⟦A⟧ ≥ exp x − x − D'` but the squeeze caps it at `x + 1`
+              obtain ⟨K₂, XC, hXC1, hC2⟩ := depth_le_two_log_le_exp B hB
+              obtain ⟨T₂, hT₂⟩ := two_mul_add_le_exp (1 + D' + 1)
+              obtain ⟨x, hxX, hx1, hsub⟩ := H2 (K₂) (exp T + exp T' + XC + exp T₂ + 1)
+              have hxT : T ≤ x := by
+                have v : exp T + 0 + 0 + 0 + 0 ≤ exp T + exp T' + XC + exp T₂ + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl _)
+                    (le_of_lt (exp_pos T'))) (le_trans (le_of_lt zero_lt_one_ax) hXC1))
+                    (le_of_lt (exp_pos T₂))) (le_of_lt zero_lt_one_ax)
+                have e : exp T + (0 : Real) + 0 + 0 + 0 = exp T := by mach_ring
+                rw [e] at v; exact le_trans hTn (le_trans v hxX)
+              have hxT' : T' ≤ x := by
+                have v : (0 : Real) + exp T' + 0 + 0 + 0 ≤ exp T + exp T' + XC + exp T₂ + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit
+                    (le_of_lt (exp_pos T)) (le_refl _))
+                    (le_trans (le_of_lt zero_lt_one_ax) hXC1)) (le_of_lt (exp_pos T₂)))
+                    (le_of_lt zero_lt_one_ax)
+                have e : (0 : Real) + exp T' + 0 + 0 + 0 = exp T' := by mach_ring
+                rw [e] at v; exact le_trans (self_le_exp T') (le_trans v hxX)
+              have hxC : XC ≤ x := by
+                have v : (0 : Real) + 0 + XC + 0 + 0 ≤ exp T + exp T' + XC + exp T₂ + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit
+                    (le_of_lt (exp_pos T)) (le_of_lt (exp_pos T'))) (le_refl _))
+                    (le_of_lt (exp_pos T₂))) (le_of_lt zero_lt_one_ax)
+                have e : (0 : Real) + 0 + XC + 0 + 0 = XC := by mach_ring
+                rw [e] at v; exact le_trans v hxX
+              have hxT₂ : T₂ ≤ x := by
+                have v : (0 : Real) + 0 + 0 + exp T₂ + 0 ≤ exp T + exp T' + XC + exp T₂ + 1 :=
+                  add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit
+                    (le_of_lt (exp_pos T)) (le_of_lt (exp_pos T')))
+                    (le_trans (le_of_lt zero_lt_one_ax) hXC1)) (le_refl _))
+                    (le_of_lt zero_lt_one_ax)
+                have e : (0 : Real) + 0 + 0 + exp T₂ + 0 = exp T₂ := by mach_ring
+                rw [e] at v; exact le_trans (self_le_exp T₂) (le_trans v hxX)
+              have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+              -- lower: `⟦A⟧(x) ≥ exp x − x − D'`
+              have hlow : exp x - x - D' ≤ exp (A'.eval x) - log (B'.eval x) := by
+                have g1 : exp x ≤ exp (A'.eval x) := hT' x hxT'
+                have g2 : log (B'.eval x) ≤ x + D' := hD' x hx1
+                have v := add_le_add_wit g1 (neg_le_neg_wit g2)
+                have e1 : exp x + -(x + D') = exp x - x - D' := by mach_mpoly [exp x, x, D']
+                have e2 : exp (A'.eval x) + -log (B'.eval x)
+                    = exp (A'.eval x) - log (B'.eval x) := by mach_ring
+                rw [e1, e2] at v; exact v
+              -- upper: at this point the squeeze holds, capping `⟦A⟧(x)` at `x + 1`
+              have hval : exp (exp (A'.eval x) - log (B'.eval x)) - log (B.eval x) = f x :=
+                h x hx0
+              have hupper : exp (A'.eval x) - log (B'.eval x) ≤ x + 1 := by
+                have hce : log (B.eval x) ≤ exp x + K₂ := hC2 x hxC
+                have hsum : exp (exp (A'.eval x) - log (B'.eval x)) ≤ exp x + exp x := by
+                  have v : exp (exp (A'.eval x) - log (B'.eval x))
+                      = f x + log (B.eval x) := by
+                    rw [← hval]; mach_mpoly [exp (exp (A'.eval x) - log (B'.eval x)),
+                      log (B.eval x)]
+                  rw [v]
+                  have w := add_le_add_wit (le_of_lt hsub) hce
+                  have e : exp x - x - K₂ + (exp x + K₂) = exp x + exp x - x := by
+                    mach_mpoly [exp x, x, K₂]
+                  rw [e] at w
+                  have z : exp x + exp x - x ≤ exp x + exp x := by
+                    have u := add_le_add_wit (le_refl (exp x + exp x))
+                      (neg_le_neg_wit (le_of_lt hx0))
+                    have e1 : exp x + exp x + -x = exp x + exp x - x := by mach_ring
+                    have e2 : exp x + exp x + -(0 : Real) = exp x + exp x := by mach_ring
+                    rw [e1, e2] at u; exact u
+                  exact le_trans w z
+                have hmono : exp (exp (A'.eval x) - log (B'.eval x)) ≤ exp (x + 1) :=
+                  le_trans hsum (exp_add_one_doubles x)
+                rcases lt_total (exp (A'.eval x) - log (B'.eval x)) (x + 1) with hp | hp | hp
+                · exact le_of_lt hp
+                · exact le_of_eq hp
+                · exact absurd hmono (fun hh => lt_irrefl_ax _ (lt_of_lt_of_le (exp_lt hp) hh))
+              -- combine: `exp x ≤ 2x + 1 + D'`, refuted on the ray
+              have hchain : exp x - x - D' ≤ x + 1 := le_trans hlow hupper
+              have hbad : exp x ≤ x + x + (1 + D') := by
+                have v := add_le_add_wit hchain (le_refl (x + D'))
+                have e1 : exp x - x - D' + (x + D') = exp x := by mach_mpoly [exp x, x, D']
+                have e2 : x + 1 + (x + D') = x + x + (1 + D') := by mach_mpoly [x, D']
+                rw [e1, e2] at v; exact v
+              have hstrict : x + x + (1 + D') + 1 ≤ exp x := by
+                have v := hT₂ x hxT₂
+                have e : x + x + (1 + D' + 1) = x + x + (1 + D') + 1 := by mach_mpoly [x, D']
+                rw [e] at v; exact v
+              exact lt_irrefl_ax _
+                (lt_of_lt_of_le (lt_of_lt_of_le (lt_succ_self (x + x + (1 + D'))) hstrict) hbad)
+
 end MachLib
