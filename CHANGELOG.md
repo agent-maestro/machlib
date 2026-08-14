@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### The value gap is sharp at depth 2 — `log x` breaks it at depth 3, and that explains (H3)
+
+`value_gap_fails_at_depth_three`. `log x` is computed by `logTree var` at depth **exactly 3**, is
+**not** bounded above, and is **not** eventually `≥ exp x − x − C` for any `C`. So the dichotomy of
+`depth_two_eml_value_gap` holds at depth 2 and fails at depth 3.
+
+**This explains the band's third hypothesis, which had looked like an artifact.** If the value gap
+survived to depth 3, the depth-3 band exclusion would follow from it in one line. It does not, and
+the hole that opens is exactly `log x`-shaped: unbounded and sub-exponential, but never above the
+identity. **(H3) exists to exclude precisely that hole** — which is why the depth-3 exclusion needed
+its own apparatus rather than a dichotomy, and why (H3) was necessary rather than convenient.
+
+Three sharpness results now bracket the theory, each with an explicit witness:
+
+| statement | holds | fails | witness |
+| --- | --- | --- | --- |
+| value gap | depth ≤ 2 | depth 3 | `log x` |
+| band exclusion | depth ≤ 3 | depth 4 | `x + 1` |
+| exp gap | depth ≤ 2 | — | (no counterexample known) |
+
+The first two failures are the two shapes the band hypotheses have to legislate around, and they are
+different shapes: `log x` is below the identity, `x + 1` is barely above it.
+
 ### The value gap at depth 2 — the band exclusion, read positively
 
 `depth_two_eml_value_gap`: a depth-2 `eml` node is either **bounded above** on a ray, or eventually

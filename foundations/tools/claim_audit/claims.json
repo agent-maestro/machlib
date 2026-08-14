@@ -2757,6 +2757,28 @@
         "exp"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Sharpness of the value gap. hypotheses_count 0 -- a pure existence statement, hence a refutation. Registered so depth_two_eml_value_gap can never be quoted as if it extended.",
+      "id": "value-gap-sharp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "holds at depth 2 and fails at depth 3"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.value_gap_fails_at_depth_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        ".depth"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

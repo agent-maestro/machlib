@@ -4360,4 +4360,86 @@ theorem depth_two_eml_value_gap (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.dep
     rw [e1, e2] at v; exact v
 
 
+/-- **The value gap is a depth-2 phenomenon: it fails at depth 3, and `log x` is the witness.**
+
+`log x` is computed by `logTree var` at depth exactly 3. It is *not* bounded above, and it is *not*
+eventually `≥ exp x − x − C` for any `C`. So the dichotomy of `depth_two_eml_value_gap` is sharp.
+
+This explains the band's third hypothesis. If the value gap survived to depth 3, the depth-3 band
+exclusion would follow from it in one line; it does not, and the hole that opens is exactly
+`log x`-shaped — unbounded and sub-exponential but never above the identity. **(H3) exists to
+exclude precisely that hole**, which is why the depth-3 exclusion needed its own apparatus rather
+than a dichotomy. -/
+theorem value_gap_fails_at_depth_three :
+    ∃ t : EMLTree, t.depth = 3
+      ∧ (¬ ∃ K X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → t.eval x ≤ K)
+      ∧ (¬ ∃ C T : Real, ∀ x : Real, T ≤ x → exp x - x - C ≤ t.eval x) := by
+  refine ⟨logTree EMLTree.var, by rfl, ?_, ?_⟩
+  · -- `log x` is unbounded above
+    rintro ⟨K, X₀, hX1, hb⟩
+    obtain ⟨Y, hY1, hY⟩ := eventually_log_gt K
+    have hx : X₀ + Y ≤ X₀ + Y := le_refl _
+    have hxX : X₀ ≤ X₀ + Y :=
+      le_add_nonneg_r' (le_trans (le_of_lt zero_lt_one_ax) hY1)
+    have hxY : Y ≤ X₀ + Y := by
+      have v : (0 : Real) + Y ≤ X₀ + Y :=
+        add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hX1) (le_refl Y)
+      have e : (0 : Real) + Y = Y := by mach_ring
+      rw [e] at v; exact v
+    have hval : (logTree EMLTree.var).eval (X₀ + Y) = log (X₀ + Y) := by
+      rw [logTree_eval]; rfl
+    have hcap := hb (X₀ + Y) hxX
+    rw [hval] at hcap
+    exact lt_irrefl_ax _ (lt_of_lt_of_le (hY (X₀ + Y) hxY) hcap)
+  · -- `log x` never reaches `exp x − x − C`
+    rintro ⟨C, T, hb⟩
+    obtain ⟨T₂, hT₂⟩ := two_mul_add_le_exp (C + 1)
+    have hEp : (0 : Real) < exp T := exp_pos T
+    have hE2p : (0 : Real) < exp T₂ := exp_pos T₂
+    refine lt_irrefl_ax (log (exp T + exp T₂ + 1)) ?_
+    have hxT : T ≤ exp T + exp T₂ + 1 := by
+      have v : exp T + 0 + 0 ≤ exp T + exp T₂ + 1 :=
+        add_le_add_wit (add_le_add_wit (le_refl _) (le_of_lt hE2p)) (le_of_lt zero_lt_one_ax)
+      have e : exp T + (0 : Real) + 0 = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) v
+    have hxT₂ : T₂ ≤ exp T + exp T₂ + 1 := by
+      have v : (0 : Real) + exp T₂ + 0 ≤ exp T + exp T₂ + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hEp) (le_refl _)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + exp T₂ + 0 = exp T₂ := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T₂) v
+    have hx1 : (1 : Real) ≤ exp T + exp T₂ + 1 := by
+      have v : (0 : Real) + 0 + 1 ≤ exp T + exp T₂ + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hEp) (le_of_lt hE2p)) (le_refl 1)
+      have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+      rw [e] at v; exact v
+    have hval : (logTree EMLTree.var).eval (exp T + exp T₂ + 1)
+        = log (exp T + exp T₂ + 1) := by rw [logTree_eval]; rfl
+    have hlow := hb (exp T + exp T₂ + 1) hxT
+    rw [hval] at hlow
+    -- `log y ≤ y` and `exp y ≥ y + y + C + 1` give `log y < exp y − y − C`
+    have hly : log (exp T + exp T₂ + 1) ≤ exp T + exp T₂ + 1 := log_le_self_on_ray hx1
+    have hgy := hT₂ (exp T + exp T₂ + 1) hxT₂
+    have hstrict : log (exp T + exp T₂ + 1)
+        < exp (exp T + exp T₂ + 1) - (exp T + exp T₂ + 1) - C := by
+      have v : (exp T + exp T₂ + 1) + (exp T + exp T₂ + 1) + (C + 1)
+          ≤ exp (exp T + exp T₂ + 1) := hgy
+      have w : log (exp T + exp T₂ + 1) + (exp T + exp T₂ + 1) + C + 1
+          ≤ exp (exp T + exp T₂ + 1) := by
+        have u := add_le_add_wit (add_le_add_wit (add_le_add_wit hly
+          (le_refl (exp T + exp T₂ + 1))) (le_refl C)) (le_refl (1 : Real))
+        have e : (exp T + exp T₂ + 1) + (exp T + exp T₂ + 1) + C + 1
+            = (exp T + exp T₂ + 1) + (exp T + exp T₂ + 1) + (C + 1) := by
+          mach_mpoly [exp T, exp T₂, C]
+        rw [e] at u; exact le_trans u v
+      have z := add_le_add_wit w (le_refl (-(exp T + exp T₂ + 1) - C))
+      have e1 : log (exp T + exp T₂ + 1) + (exp T + exp T₂ + 1) + C + 1
+          + (-(exp T + exp T₂ + 1) - C) = log (exp T + exp T₂ + 1) + 1 := by
+        mach_mpoly [log (exp T + exp T₂ + 1), exp T, exp T₂, C]
+      have e2 : exp (exp T + exp T₂ + 1) + (-(exp T + exp T₂ + 1) - C)
+          = exp (exp T + exp T₂ + 1) - (exp T + exp T₂ + 1) - C := by
+        mach_mpoly [exp (exp T + exp T₂ + 1), exp T, exp T₂, C]
+      rw [e1, e2] at z
+      exact lt_of_lt_of_le (lt_succ_self _) z
+    exact lt_of_lt_of_le hstrict hlow
+  
 end MachLib
