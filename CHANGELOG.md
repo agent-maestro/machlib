@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### A function-level normal form at depth 2 — first step of the asymptotic classification
+
+`Depth1Form` names the five closed forms as a predicate on **functions**, and
+`depth_le_two_normal_form` says: a depth-≤2 expression is a constant, the identity, or
+`exp a − log b` with both `a` and `b` in that list. **No tree appears in the third disjunct.**
+
+Deliberately bookkeeping. The content is what it enables: `depth_le_one_classification` is stated
+about a *tree*, and every consumer in this file immediately discards the tree, works with the five
+forms, and re-derives the case split. After this, "depth ≤ 2" is a statement about functions, and a
+depth-2 argument can split on `Depth1Form` per child without mentioning `EMLTree`.
+
+**Where this is going.** The asymptotic classification wants the 5 × 5 cell list quotiented by
+growth — roughly `bounded`, `−log x`, `−x`, `eˣ`, `e^{eˣ}` — as a *finite set of asymptotic types*
+rather than 25 cases. Two axes of that quotient already exist as theorems (`evSign_depth_le_two` for
+sign, `depth_two_eml_value_gap` for scale); this supplies the syntax they would be indexed by.
+Whether the type list adds anything beyond those two axes is itself open — the axes were the reason
+to want it.
+
 ### A candidate invariant beyond growth — and it separates the two functions
 
 Every asymptotic axis in this corpus is blind to the difference between `x + 1` and `x²`: both

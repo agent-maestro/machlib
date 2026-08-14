@@ -4849,4 +4849,46 @@ theorem x_sq_unboundedExcess : UnboundedExcess (fun x => x * x) := by
     exact lt_of_lt_of_le hKx hprod
 
 
+/-! ### A function-level normal form at depth 2
+
+`depth_le_one_classification` is stated about a *tree*. Every consumer immediately discards the tree
+and works with the five closed forms of its value, and each such consumer re-derives the case split.
+Naming the disjunction as a predicate on **functions** makes it composable: a depth-2 argument can
+split on `Depth1Form` for each child without mentioning `EMLTree` at all.
+
+This is the first step of an asymptotic classification by depth. It is bookkeeping, deliberately —
+the content is that after it, "depth ≤ 2" is a statement about functions. -/
+
+/-- The five closed forms available at depth ≤ 1, as a predicate on functions. -/
+def Depth1Form (f : Real → Real) : Prop :=
+  (∃ α : Real, ∀ x : Real, 0 < x → f x = α)
+  ∨ (∀ x : Real, 0 < x → f x = x)
+  ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → f x = c - log x)
+  ∨ (∃ d : Real, ∀ x : Real, 0 < x → f x = exp x - d)
+  ∨ (∀ x : Real, 0 < x → f x = exp x - log x)
+
+theorem depth_le_one_form (A : EMLTree) (hA : A.depth ≤ 1) : Depth1Form A.eval :=
+  depth_le_one_classification A hA
+
+/-- **Normal form at depth ≤ 2.** Constant, the identity, or `exp a − log b` with both `a` and `b`
+in the depth-1 form list. No tree appears in the third disjunct. -/
+theorem depth_le_two_normal_form (t : EMLTree) (ht : t.depth ≤ 2) :
+    (∃ c : Real, ∀ x : Real, 0 < x → t.eval x = c)
+    ∨ (∀ x : Real, 0 < x → t.eval x = x)
+    ∨ (∃ a b : Real → Real, Depth1Form a ∧ Depth1Form b ∧
+        ∀ x : Real, 0 < x → t.eval x = exp (a x) - log (b x)) := by
+  cases t with
+  | const c => exact Or.inl ⟨c, fun x _ => rfl⟩
+  | var => exact Or.inr (Or.inl (fun x _ => rfl))
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      exact Or.inr (Or.inr ⟨A.eval, B.eval, depth_le_one_form A hA, depth_le_one_form B hB,
+        fun x _ => rfl⟩)
+
+
 end MachLib

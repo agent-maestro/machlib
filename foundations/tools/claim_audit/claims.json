@@ -2904,6 +2904,28 @@
         "UnboundedExcess"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Function-level normal form. hypotheses_count 1 (the depth bound). The point is the CONCLUSION mentions Depth1Form -- a predicate on functions -- so consumers no longer need EMLTree in the third disjunct.",
+      "id": "depth-two-normal-form-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**No tree appears in the third disjunct.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_normal_form",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Depth1Form",
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "Depth1Form"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
