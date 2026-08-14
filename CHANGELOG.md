@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### A candidate invariant beyond growth — and it separates the two functions
+
+Every asymptotic axis in this corpus is blind to the difference between `x + 1` and `x²`: both
+eventually positive, both unbounded, both sub-exponential, both above the identity, both outside the
+`log x` hole. **Excess over the identity is not blind to it.**
+
+`UnboundedExcess f` — `f x − x` unbounded above on every ray. Not a growth condition: it compares
+`f` to `x` rather than placing `f` on a scale.
+
+* `unboundedExcess_implies_above_identity` — it is **strictly stronger** than (H3).
+* `x_add_one_not_unboundedExcess` — **`x + 1` fails it**, its excess being the constant `1`.
+* `x_sq_unboundedExcess` — **`x²` satisfies it**, since `x·x − x = x·(x−1)`.
+
+**So the depth-4 question is reopened rather than closed.** `band_exclusion_fails_at_depth_four`
+refutes the depth-4 band *as stated*; it does **not** refute the band with (H3) strengthened to
+`UnboundedExcess`, because the counterexample does not satisfy the strengthened hypothesis. Whether
+that version holds at depth 4 is open, and `x²` and `M·x` are the targets it would settle.
+
+This is the first hypothesis in the programme that is **algebraic rather than asymptotic** in
+character, which is what the sharpness of the growth axes had been pointing at. It is a candidate,
+not a result: nothing yet says the strengthened band is true.
+
 ### `d(x²) ≥ 4` is now actually a theorem
 
 `x_sq_not_depth_le_three`. I have been quoting `4 ≤ d(x²) ≤ 8` for several commits on the strength of

@@ -4759,4 +4759,94 @@ theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
 
 
 
+/-! ### A candidate invariant beyond growth
+
+`band_exclusion_fails_at_depth_four` refutes the depth-4 band with `x + 1`, and every asymptotic axis
+in this file is blind to the difference between `x + 1` and `x²`: both are eventually positive, both
+unbounded, both sub-exponential, both above the identity, and both outside the `log x`-shaped hole
+that (H3) excludes.
+
+**Excess over the identity separates them.** It is not a growth condition — it compares `f` to `x`
+rather than placing `f` on a scale — and it is exactly the axis on which the two differ. -/
+
+/-- `f x − x` is unbounded above on every ray. Strictly stronger than (H3), which asks only
+`x < f x` infinitely often. -/
+def UnboundedExcess (f : Real → Real) : Prop :=
+  ∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x - x
+
+/-- Unbounded excess implies (H3). -/
+theorem unboundedExcess_implies_above_identity (f : Real → Real) (h : UnboundedExcess f) :
+    ∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x := by
+  intro X
+  obtain ⟨x, hxX, hx1, hlt⟩ := h 0 X
+  refine ⟨x, hxX, hx1, ?_⟩
+  have v := add_lt_add_left hlt x
+  have e1 : x + (0 : Real) = x := by mach_ring
+  have e2 : x + (f x - x) = f x := by mach_mpoly [x, f x]
+  rw [e1, e2] at v; exact v
+
+/-- **`x + 1` does *not* have unbounded excess** — its excess is the constant `1`. So the
+counterexample that refutes the depth-4 band does **not** refute the strengthened statement. -/
+theorem x_add_one_not_unboundedExcess : ¬ UnboundedExcess (fun x => x + 1) := by
+  intro h
+  obtain ⟨x, _, _, hlt⟩ := h 1 1
+  have e : x + 1 - x = (1 : Real) := by mach_mpoly [x]
+  rw [e] at hlt
+  exact lt_irrefl_ax 1 hlt
+
+/-- **`x²` does have unbounded excess** — `x·x − x = x·(x−1)` grows. -/
+theorem x_sq_unboundedExcess : UnboundedExcess (fun x => x * x) := by
+  intro K X
+  have hKp : (0 : Real) < exp K := exp_pos K
+  have hXp : (0 : Real) < exp X := exp_pos X
+  refine ⟨1 + 1 + exp K + exp X, ?_, ?_, ?_⟩
+  · have v : (0 : Real) + 0 + 0 + exp X ≤ 1 + 1 + exp K + exp X :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt zero_lt_one_ax)) (le_of_lt hKp)) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + exp X = exp X := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X) v
+  · have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp K + exp X :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+        (le_of_lt zero_lt_one_ax)) (le_of_lt hKp)) (le_of_lt hXp)
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  · -- `x·x − x = x·(x−1) ≥ x·1 = x > K`
+    have hx1 : (1 : Real) ≤ 1 + 1 + exp K + exp X := by
+      have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+          (le_of_lt zero_lt_one_ax)) (le_of_lt hKp)) (le_of_lt hXp)
+      have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    have hx0 : (0 : Real) < 1 + 1 + exp K + exp X := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hm1 : (1 : Real) ≤ 1 + 1 + exp K + exp X - 1 := by
+      have v : (1 : Real) + 1 + 0 + 0 ≤ 1 + 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_refl 1))
+          (le_of_lt hKp)) (le_of_lt hXp)
+      have u := add_le_add_wit v (le_refl (-1 : Real))
+      have e1 : (1 : Real) + 1 + 0 + 0 + -1 = 1 := by mach_ring
+      have e2 : (1 : Real) + 1 + exp K + exp X + -1 = 1 + 1 + exp K + exp X - 1 := by mach_ring
+      rw [e1, e2] at u; exact u
+    have hprod : (1 + 1 + exp K + exp X)
+        ≤ (1 + 1 + exp K + exp X) * (1 + 1 + exp K + exp X - 1) := by
+      have u := mul_le_mul_of_nonneg_left hm1 (le_of_lt hx0)
+      have e : (1 + 1 + exp K + exp X) * (1 : Real) = 1 + 1 + exp K + exp X := by mach_ring
+      rw [e] at u; exact u
+    have hKx : K < 1 + 1 + exp K + exp X := by
+      have hKe : K < exp K := by
+        have t1 := one_add_le_exp K
+        have e : (1 : Real) + K = K + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+      have v : (0 : Real) + 0 + exp K + 0 ≤ 1 + 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+          (le_of_lt zero_lt_one_ax)) (le_refl _)) (le_of_lt hXp)
+      have e : (0 : Real) + 0 + exp K + 0 = exp K := by mach_ring
+      rw [e] at v; exact lt_of_lt_of_le hKe v
+    have e : (1 + 1 + exp K + exp X) * (1 + 1 + exp K + exp X) - (1 + 1 + exp K + exp X)
+        = (1 + 1 + exp K + exp X) * (1 + 1 + exp K + exp X - 1) := by
+      mach_mpoly [exp K, exp X]
+    show K < (1 + 1 + exp K + exp X) * (1 + 1 + exp K + exp X) - (1 + 1 + exp K + exp X)
+    rw [e]
+    exact lt_of_lt_of_le hKx hprod
+
+
 end MachLib

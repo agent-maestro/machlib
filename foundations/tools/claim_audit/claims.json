@@ -2864,6 +2864,46 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The counterexample does NOT satisfy the strengthened hypothesis -- which is what reopens depth 4. hypotheses_count 0, a pure negation, so it cannot be weakened by adding assumptions later.",
+      "id": "x-add-one-no-excess-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`x + 1` fails it**, its excess being the constant `1`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.x_add_one_not_unboundedExcess",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "UnboundedExcess"
+      ],
+      "conclusion_mentions": [
+        "UnboundedExcess"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "And x^2 does satisfy it. The pair of these two is the separation; either alone says nothing.",
+      "id": "x-sq-excess-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`x²` satisfies it**, since `x·x − x = x·(x−1)`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.x_sq_unboundedExcess",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "UnboundedExcess"
+      ],
+      "conclusion_mentions": [
+        "UnboundedExcess"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
