@@ -7,6 +7,36 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### Depth of a semantic *class* — the first expressive phase transition, located exactly
+
+Suggested in review, and it turns out the pieces were already there. Instead of asking for `d(f)` of
+individual functions, ask for the least depth at which a previously unrealisable behaviour becomes
+available.
+
+`BelowIdentityUnbounded f` — unbounded above, yet eventually **strictly** below the identity.
+`log x` is the canonical member; `x` itself is excluded, and that exclusion is what makes the class
+non-trivial.
+
+* `belowIdentityUnbounded_not_depth_le_two` — **no expression of depth ≤ 2 lies in the class.**
+* `belowIdentityUnbounded_at_depth_three` — **`log x` does, at depth 3.**
+
+> **The least depth realising unbounded-yet-below-the-identity behaviour is exactly 3.**
+
+This is a better statement than the two sharpness results it packages, because it is about a class
+rather than a witness, and it is the form a hierarchy would be stated in. The `eml`-only caveat that
+made `depth_two_eml_value_gap` awkward disappears here: `var` is excluded by the class definition
+rather than by a side condition, since `x` is not *strictly* below the identity.
+
+Two transitions are now located:
+
+| depth | what becomes realisable | witness |
+| --- | --- | --- |
+| 3 | a new *growth scale* — unbounded but below the identity | `log x` |
+| 4 | new *algebraic* behaviour inside an existing band | `x + 1` vs `x²` |
+
+The second is not yet a theorem of this shape — that is exactly §6.3, and stating it would require
+the invariant that separates `x + 1` from `x²`, which no scale-based axis in the corpus can see.
+
 ### Depth 3 is exactly where an intermediate scale appears
 
 `exp_gap_fails_at_depth_three` completes the sharpness table. `exp(log x) = x` is neither bounded nor

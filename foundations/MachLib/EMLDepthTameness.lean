@@ -4499,4 +4499,129 @@ theorem exp_gap_fails_at_depth_three :
     exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hlow)
 
 
+/-! ### Depth of a semantic class, not of a function
+
+The sharpness results are more naturally read as statements about *classes*: the least depth at which
+a previously unrealisable asymptotic behaviour becomes available. The first such transition is
+located exactly. -/
+
+/-- Unbounded above, yet eventually **strictly below the identity**. `log x` is the canonical member;
+`x` itself is excluded, which is what makes the class non-trivial. -/
+def BelowIdentityUnbounded (f : Real → Real) : Prop :=
+  (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+  ∧ (∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → f x < x)
+
+/-- **No expression of depth ≤ 2 lies in the class.** -/
+theorem belowIdentityUnbounded_not_depth_le_two (f : Real → Real)
+    (hf : BelowIdentityUnbounded f) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = f x) : False := by
+  obtain ⟨hunb, X₁, hX11, hbelow⟩ := hf
+  cases t with
+  | const c =>
+      obtain ⟨x, _, hx1, hlt⟩ := hunb c 1
+      have hv : c = f x := h x (lt_of_lt_of_le zero_lt_one_ax hx1)
+      rw [← hv] at hlt; exact lt_irrefl_ax c hlt
+  | var =>
+      -- `f x = x` contradicts `f x < x`
+      have hx1 : (1 : Real) ≤ X₁ := hX11
+      have hv : X₁ = f X₁ := h X₁ (lt_of_lt_of_le zero_lt_one_ax hx1)
+      have hlt := hbelow X₁ (le_refl X₁)
+      rw [← hv] at hlt; exact lt_irrefl_ax X₁ hlt
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      rcases depth_two_eml_value_gap A B hA hB with ⟨K, X₀, hX1, hcap⟩ | ⟨C, T, hfloor⟩
+      · -- bounded above contradicts unboundedness
+        obtain ⟨x, hxX, hx1, hlt⟩ := hunb K X₀
+        have hv : exp (A.eval x) - log (B.eval x) = f x :=
+          h x (lt_of_lt_of_le zero_lt_one_ax hx1)
+        have hcapx := hcap x hxX
+        rw [hv] at hcapx
+        exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hcapx)
+      · -- an exponential floor contradicts sitting below the identity
+        obtain ⟨T₂, hT₂⟩ := two_mul_add_le_exp C
+        obtain ⟨x, hxX, hx1, _⟩ := hunb 0 (X₁ + exp T + exp T₂)
+        have hE : (0 : Real) ≤ exp T := le_of_lt (exp_pos T)
+        have hE2 : (0 : Real) ≤ exp T₂ := le_of_lt (exp_pos T₂)
+        have hX1n : (0 : Real) ≤ X₁ := le_trans (le_of_lt zero_lt_one_ax) hX11
+        have hxX1 : X₁ ≤ x := by
+          have v : X₁ + 0 + 0 ≤ X₁ + exp T + exp T₂ :=
+            add_le_add_wit (add_le_add_wit (le_refl X₁) hE) hE2
+          have e : X₁ + (0 : Real) + 0 = X₁ := by mach_ring
+          rw [e] at v; exact le_trans v hxX
+        have hxT : T ≤ x := by
+          have v : (0 : Real) + exp T + 0 ≤ X₁ + exp T + exp T₂ :=
+            add_le_add_wit (add_le_add_wit hX1n (le_refl _)) hE2
+          have e : (0 : Real) + exp T + 0 = exp T := by mach_ring
+          rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hxX)
+        have hxT₂ : T₂ ≤ x := by
+          have v : (0 : Real) + 0 + exp T₂ ≤ X₁ + exp T + exp T₂ :=
+            add_le_add_wit (add_le_add_wit hX1n hE) (le_refl _)
+          have e : (0 : Real) + 0 + exp T₂ = exp T₂ := by mach_ring
+          rw [e] at v; exact le_trans (self_le_exp T₂) (le_trans v hxX)
+        have hv : exp (A.eval x) - log (B.eval x) = f x :=
+          h x (lt_of_lt_of_le zero_lt_one_ax hx1)
+        have hlow : exp x - x - C ≤ f x := by rw [← hv]; exact hfloor x hxT
+        have hhigh : f x < x := hbelow x hxX1
+        -- so `exp x < x + x + C`, refuted on the ray
+        have hbad : exp x - x - C < x := lt_of_le_of_lt hlow hhigh
+        have hgood : x + x + C ≤ exp x := hT₂ x hxT₂
+        have hge : x ≤ exp x - x - C := by
+          have v := add_le_add_wit (add_le_add_wit hgood (le_refl (-x))) (le_refl (-C))
+          have e1 : x + x + C + -x + -C = x := by mach_mpoly [x, C]
+          have e2 : exp x + -x + -C = exp x - x - C := by mach_mpoly [exp x, x, C]
+          rw [e1, e2] at v; exact v
+        exact lt_irrefl_ax x (lt_of_le_of_lt hge hbad)
+
+/-- **`log x` is in the class, at depth 3.** With the previous theorem: the least depth at which
+unbounded-yet-below-the-identity behaviour is realisable is exactly **3**. -/
+theorem belowIdentityUnbounded_at_depth_three :
+    ∃ t : EMLTree, t.depth = 3 ∧ BelowIdentityUnbounded t.eval := by
+  refine ⟨logTree EMLTree.var, by rfl, ?_, ?_⟩
+  · -- unbounded above. The witness uses `exp X`, not `X`: the latter may be negative.
+    intro K X
+    obtain ⟨Y, hY1, hY⟩ := eventually_log_gt K
+    have hY0 : (0 : Real) ≤ Y := le_trans (le_of_lt zero_lt_one_ax) hY1
+    have hXp : (0 : Real) < exp X := exp_pos X
+    refine ⟨exp X + Y + 1, ?_, ?_, ?_⟩
+    · have v : exp X + 0 + 0 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_refl _) hY0) (le_of_lt zero_lt_one_ax)
+      have e : exp X + (0 : Real) + 0 = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (0 : Real) + 0 + 1 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hXp) hY0) (le_refl 1)
+      have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hval : (logTree EMLTree.var).eval (exp X + Y + 1) = log (exp X + Y + 1) := by
+        rw [logTree_eval]; rfl
+      rw [hval]
+      refine hY (exp X + Y + 1) ?_
+      have v : (0 : Real) + Y + 0 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hXp) (le_refl Y)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + Y + 0 = Y := by mach_ring
+      rw [e] at v; exact v
+  · -- and strictly below the identity past `1`
+    refine ⟨1 + 1, le_of_lt (lt_succ_self 1), ?_⟩
+    intro x hx
+    have hx1 : (1 : Real) < x := lt_of_lt_of_le (lt_succ_self 1) hx
+    have hxpos : (0 : Real) < x := lt_trans_ax zero_lt_one_ax hx1
+    have hval : (logTree EMLTree.var).eval x = log x := by rw [logTree_eval]; rfl
+    rw [hval]
+    have h1 : log x ≤ x := log_le_self_pos hxpos
+    rcases lt_total (log x) x with hp | hp | hp
+    · exact hp
+    · exfalso
+      have hxe : exp (log x) = x := exp_log hxpos
+      rw [hp] at hxe
+      have hgt : x < exp x := by
+        have t1 := one_add_le_exp x
+        have e : (1 : Real) + x = x + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self x) t1
+      rw [hxe] at hgt; exact lt_irrefl_ax x hgt
+    · exact absurd (lt_of_lt_of_le hp h1) (lt_irrefl_ax x)
+
 end MachLib

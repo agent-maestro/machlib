@@ -2801,6 +2801,48 @@
         ".depth"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Class-depth lower half. hypotheses_count 3 = class membership, depth bound, semantic equation. Nothing about the eml root, unlike depth_two_eml_value_gap -- the class definition excludes var by strictness rather than a side condition.",
+      "id": "class-depth-lower-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**no expression of depth ≤ 2 lies in the class.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.belowIdentityUnbounded_not_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "BelowIdentityUnbounded",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
+    },
+    {
+      "_comment": "Class-depth upper half. hypotheses_count 0 -- pure existence. Together with the lower half this pins the transition at exactly 3.",
+      "id": "class-depth-upper-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`log x` does, at depth 3.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.belowIdentityUnbounded_at_depth_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "BelowIdentityUnbounded",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "BelowIdentityUnbounded"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
