@@ -2779,6 +2779,28 @@
         ".depth"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Sharpness of the exponential gap. Same witness as the value gap, which is the point: depth 3 buys an intermediate scale and that single fact breaks both dichotomies. hypotheses_count 0 -- pure existence, hence a refutation.",
+      "id": "exp-gap-sharp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "it lies **between** the two classes the exponential gap declares exhaustive"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.exp_gap_fails_at_depth_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        ".depth"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

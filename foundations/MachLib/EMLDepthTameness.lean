@@ -4442,4 +4442,61 @@ theorem value_gap_fails_at_depth_three :
       exact lt_of_lt_of_le (lt_succ_self _) z
     exact lt_of_lt_of_le hstrict hlow
   
+/-- **The exponential gap is also sharp at depth 2, and `log x` is again the witness.**
+
+`exp (log x) = x`, which is neither bounded nor eventually `≥ exp x` — it is *between* the two
+classes the gap says are exhaustive. Since `log x` sits at depth 3, the gap fails there.
+
+Taken with `value_gap_fails_at_depth_three`, this says something cleaner than either alone:
+**depth 3 is exactly where the grammar acquires an intermediate scale.** Both depth-2 dichotomies
+assert "bounded, or exponential, nothing between", and both are broken by the *same* object for the
+*same* reason. -/
+theorem exp_gap_fails_at_depth_three :
+    ∃ A : EMLTree, A.depth = 3
+      ∧ (¬ ∃ K X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → exp (A.eval x) ≤ K)
+      ∧ (¬ ∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x)) := by
+  have hval : ∀ x : Real, 0 < x → exp ((logTree EMLTree.var).eval x) = x := by
+    intro x hx
+    rw [logTree_eval]
+    show exp (log x) = x
+    exact exp_log hx
+  refine ⟨logTree EMLTree.var, by rfl, ?_, ?_⟩
+  · -- `exp (log x) = x` is unbounded
+    rintro ⟨K, X₀, hX1, hb⟩
+    have hEp : (0 : Real) < exp K := exp_pos K
+    have hX0n : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX1
+    have hxX : X₀ ≤ X₀ + exp K := le_add_nonneg_r' (le_of_lt hEp)
+    have hx0 : (0 : Real) < X₀ + exp K :=
+      lt_of_lt_of_le (lt_of_lt_of_le zero_lt_one_ax hX1) hxX
+    have hcap := hb (X₀ + exp K) hxX
+    rw [hval (X₀ + exp K) hx0] at hcap
+    have hKx : K < X₀ + exp K := by
+      have hK : K < exp K := by
+        have t1 := one_add_le_exp K
+        have e : (1 : Real) + K = K + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+      have v : (0 : Real) + exp K ≤ X₀ + exp K := add_le_add_wit hX0n (le_refl _)
+      have e : (0 : Real) + exp K = exp K := by mach_ring
+      rw [e] at v
+      exact lt_of_lt_of_le hK v
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hKx hcap)
+  · -- and never reaches `exp x`, since `exp y > y`
+    rintro ⟨T, hb⟩
+    have hEp : (0 : Real) < exp T := exp_pos T
+    have hxT : T ≤ exp T + 1 := by
+      have v : exp T + 0 ≤ exp T + 1 := add_le_add_wit (le_refl _) (le_of_lt zero_lt_one_ax)
+      have e : exp T + (0 : Real) = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) v
+    have hx0 : (0 : Real) < exp T + 1 :=
+      add_pos_of_nonneg_pos (le_of_lt hEp) zero_lt_one_ax
+    have hlow := hb (exp T + 1) hxT
+    rw [hval (exp T + 1) hx0] at hlow
+    have hgt : exp T + 1 < exp (exp T + 1) := by
+      have t1 := one_add_le_exp (exp T + 1)
+      have e : (1 : Real) + (exp T + 1) = exp T + 1 + 1 := by mach_ring
+      rw [e] at t1
+      exact lt_of_lt_of_le (lt_succ_self _) t1
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hlow)
+
+
 end MachLib

@@ -7,6 +7,29 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### Depth 3 is exactly where an intermediate scale appears
+
+`exp_gap_fails_at_depth_three` completes the sharpness table. `exp(log x) = x` is neither bounded nor
+eventually `≥ exp x` — it lies **between** the two classes the exponential gap declares exhaustive —
+and `log x` sits at depth 3.
+
+So both depth-2 dichotomies are broken by the **same object for the same reason**:
+
+| statement | holds | fails | witness |
+| --- | --- | --- | --- |
+| exponential gap | depth ≤ 2 | depth 3 | `log x` |
+| value gap | depth ≤ 2 | depth 3 | `log x` |
+| band exclusion | depth ≤ 3 | depth 4 | `x + 1` |
+
+Each dichotomy says *bounded, or exponential, nothing between*. **Depth 3 is precisely where the
+grammar acquires an intermediate scale**, and that single fact accounts for both failures. It is a
+cleaner statement than either sharpness result alone, and it was not visible until both witnesses
+turned out to be the same function.
+
+The band exclusion then survives one level further because its hypotheses were built to legislate
+around exactly this: (H3) excludes the `log x` hole, and it is `x + 1` — a *different* shape, barely
+above the identity rather than below it — that finally defeats it.
+
 ### The value gap is sharp at depth 2 — `log x` breaks it at depth 3, and that explains (H3)
 
 `value_gap_fails_at_depth_three`. `log x` is computed by `logTree var` at depth **exactly 3**, is
