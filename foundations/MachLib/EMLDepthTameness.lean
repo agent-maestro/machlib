@@ -3595,4 +3595,262 @@ theorem log_exp_sub_pinned {a s : Real} (hlo : s ≤ exp (a - 1)) (hhi : -exp a 
     rw [log_exp] at m; exact m
 
 
+/-- Packaging of `log_exp_sub_pinned` at a point where the right child's log is known to be small. -/
+private theorem pin_at {A'' B'' : EMLTree} {D Cl a x : Real}
+    (hsu : log (B''.eval x) ≤ x + D) (hsl : Cl ≤ log (B''.eval x))
+    (hup : x + D ≤ exp (a - 1)) (hlo : -exp a ≤ Cl) (haa : A''.eval x = a) :
+    a - 1 ≤ log (exp (A''.eval x) - log (B''.eval x))
+    ∧ log (exp (A''.eval x) - log (B''.eval x)) ≤ a + 1 := by
+  rw [haa]
+  exact log_exp_sub_pinned (le_trans hsu hup) (le_trans hlo hsl)
+
+/-- `-exp a ≤ Cl` whenever `exp a` is at least `-Cl`; the form the three shapes need. -/
+private theorem neg_exp_le_of {a Cl : Real} (h : -Cl ≤ exp a) : -exp a ≤ Cl := by
+  have v := add_le_add_wit h (le_refl (Cl - exp a))
+  have e1 : -Cl + (Cl - exp a) = -exp a := by mach_mpoly [Cl, exp a]
+  have e2 : exp a + (Cl - exp a) = Cl := by mach_mpoly [Cl, exp a]
+  rw [e1, e2] at v; exact v
+
+/-- **`VarLeftEmlRightHard` holds for every band target.**
+
+The last branch of the depth-3 exclusion. `A''` ranges over the five depth-1 shapes: the two with a
+bounded exponential go to `varLeftEmlRight_bounded_left`, and the three unbounded ones are pinned by
+`log_exp_sub_pinned` and then refuted, **each by exactly one band hypothesis** — `var` by
+sub-exponentiality, `exp x − d` by unboundedness, `exp x − log x` by superlogarithmicity. -/
+theorem varLeftEmlRightHard_of_band (f : Real → Real)
+    (Hunb : ∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+    (Hlog : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+    (Hsub : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C) :
+    VarLeftEmlRightHard f := by
+  intro A'' B'' hA'' hB'' h
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B'' hB''
+  obtain ⟨Cl, XL, hXL1, hCl⟩ := depth_le_one_log_lower_at_infinity B'' hB''
+  have hXLn : (0 : Real) ≤ XL := le_trans (le_of_lt zero_lt_one_ax) hXL1
+  rcases depth_le_one_classification A'' hA'' with ⟨α, ha⟩ | ha | ⟨c, _, ha⟩ | ⟨d, ha⟩ | ha
+  · -- `A'' = const α` : bounded exponential
+    refine varLeftEmlRight_bounded_left f A'' B'' hB'' (exp α) ?_ Hsub h
+    intro x hx1
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    exact le_refl _
+  · -- `A'' = var` : pinned at `a = x`, refuted by sub-exponentiality
+    obtain ⟨T, hT⟩ := two_mul_add_le_exp (D + 1 + 1)
+    obtain ⟨x, hxX, hx1, hcon⟩ := Hsub (1 + 1) (XL + exp T + exp (-Cl) + 1 + 1)
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hpiece : ∀ u v w : Real, 0 ≤ u → 0 ≤ v → 0 ≤ w →
+        u ≤ XL + exp T + exp (-Cl) + 1 + 1 → True := fun _ _ _ _ _ _ _ => trivial
+    have hxXL : XL ≤ x := by
+      have v : XL + 0 + 0 + 0 + 0 ≤ XL + exp T + exp (-Cl) + 1 + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl XL)
+          (le_of_lt (exp_pos T))) (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax))
+          (le_of_lt zero_lt_one_ax)
+      have e : XL + (0 : Real) + 0 + 0 + 0 = XL := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    have hxT : T + 1 ≤ x := by
+      have v : (0 : Real) + exp T + 0 + 1 + 0 ≤ XL + exp T + exp (-Cl) + 1 + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn (le_refl (exp T)))
+          (le_of_lt (exp_pos _))) (le_refl 1)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + exp T + 0 + 1 + 0 = exp T + 1 := by mach_ring
+      rw [e] at v
+      exact le_trans (add_le_add_wit (self_le_exp T) (le_refl (1 : Real))) (le_trans v hxX)
+    have hxC : exp (-Cl) ≤ x := by
+      have v : (0 : Real) + 0 + exp (-Cl) + 0 + 0 ≤ XL + exp T + exp (-Cl) + 1 + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn
+          (le_of_lt (exp_pos T))) (le_refl _)) (le_of_lt zero_lt_one_ax))
+          (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + 0 + exp (-Cl) + 0 + 0 = exp (-Cl) := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    -- side conditions
+    have hup : x + D ≤ exp (x - 1) := by
+      have hxm1 : T ≤ x - 1 := by
+        have v := add_le_add_wit hxT (le_refl (-1 : Real))
+        have e1 : T + 1 + -1 = T := by mach_ring
+        have e2 : x + -1 = x - 1 := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hb := hT (x - 1) hxm1
+      have e : x - 1 + (x - 1) + (D + 1 + 1) = x + x + D := by mach_mpoly [x, D]
+      rw [e] at hb
+      have hxn : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+      have w : x + D ≤ x + x + D := by
+        have u : x + 0 + D ≤ x + x + D := add_le_add_wit (add_le_add_wit (le_refl x) hxn)
+          (le_refl D)
+        have e2 : x + (0 : Real) + D = x + D := by mach_ring
+        rw [e2] at u; exact u
+      exact le_trans w hb
+    have hlo : -exp x ≤ Cl := by
+      refine neg_exp_le_of ?_
+      exact le_trans (le_trans (self_le_exp (-Cl)) hxC) (self_le_exp x)
+    obtain ⟨_, hpu⟩ := pin_at (D := D) (Cl := Cl) (a := x)
+      (hD x hx1) (hCl x hxXL) hup hlo (ha x hx0)
+    -- combine with the equation
+    have hL : log (exp (A''.eval x) - log (B''.eval x)) = exp x - f x := by
+      have t := h x hx0
+      rw [← t]; mach_mpoly [exp x, log (exp (A''.eval x) - log (B''.eval x))]
+    rw [hL] at hpu
+    have hgt : x + 1 + 1 < exp x - f x := by
+      have v := add_lt_add_left hcon (-f x + x + 1 + 1)
+      have e1 : -f x + x + 1 + 1 + f x = x + 1 + 1 := by mach_mpoly [f x, x]
+      have e2 : -f x + x + 1 + 1 + (exp x - x - (1 + 1)) = exp x - f x := by
+        mach_mpoly [f x, x, exp x]
+      rw [e1, e2] at v; exact v
+    exact lt_irrefl_ax _ (lt_trans_ax (lt_of_lt_of_le hgt hpu) (lt_succ_self (x + 1)))
+  · -- `A'' = c − log x` : bounded exponential
+    refine varLeftEmlRight_bounded_left f A'' B'' hB'' (exp c) ?_ Hsub h
+    intro x hx1
+    rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx1)]
+    refine exp_monotone ?_
+    have hlogx : (0 : Real) ≤ log x := by
+      have hl1 : log (1 : Real) = 0 := by
+        have hz : exp (0 : Real) = 1 := exp_zero
+        rw [← hz, log_exp]
+      have hm := log_le_log zero_lt_one_ax hx1
+      rw [hl1] at hm; exact hm
+    have v := add_le_add_wit (le_refl c) (neg_le_neg_wit hlogx)
+    have e1 : c + -log x = c - log x := by mach_ring
+    have e2 : c + -(0 : Real) = c := by mach_ring
+    rw [e1, e2] at v; exact v
+  · -- `A'' = exp x − d` : pinned at `a = exp x − d`, refuted by unboundedness
+    obtain ⟨T, hT⟩ := two_mul_add_le_exp (D + d + 1)
+    obtain ⟨x, hxX, hx1, hcon⟩ := Hunb (d + 1) (XL + exp T + exp (-Cl + d) + 1)
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hxXL : XL ≤ x := by
+      have v : XL + 0 + 0 + 0 ≤ XL + exp T + exp (-Cl + d) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl XL) (le_of_lt (exp_pos T)))
+          (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+      have e : XL + (0 : Real) + 0 + 0 = XL := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    have hxT : T ≤ x := by
+      have v : (0 : Real) + exp T + 0 + 0 ≤ XL + exp T + exp (-Cl + d) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn (le_refl (exp T)))
+          (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + exp T + 0 + 0 = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hxX)
+    have hxC : exp (-Cl + d) ≤ x := by
+      have v : (0 : Real) + 0 + exp (-Cl + d) + 0 ≤ XL + exp T + exp (-Cl + d) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn (le_of_lt (exp_pos T)))
+          (le_refl _)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + 0 + exp (-Cl + d) + 0 = exp (-Cl + d) := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    -- `x + D ≤ exp x − d ≤ exp (exp x − d − 1)`
+    have hbig : x + D + d ≤ exp x := by
+      have hb := hT x hxT
+      have e : x + x + (D + d + 1) = x + x + D + d + 1 := by mach_mpoly [x, D, d]
+      rw [e] at hb
+      have hxn : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+      have w : x + D + d ≤ x + x + D + d + 1 := by
+        have u : x + 0 + D + d + 0 ≤ x + x + D + d + 1 :=
+          add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl x) hxn)
+            (le_refl D)) (le_refl d)) (le_of_lt zero_lt_one_ax)
+        have e2 : x + (0 : Real) + D + d + 0 = x + D + d := by mach_ring
+        rw [e2] at u; exact u
+      exact le_trans w hb
+    have hup : x + D ≤ exp (exp x - d - 1) := by
+      have g : 1 + (exp x - d - 1) ≤ exp (exp x - d - 1) := one_add_le_exp _
+      have e : (1 : Real) + (exp x - d - 1) = exp x - d := by mach_mpoly [exp x, d]
+      rw [e] at g
+      have w : x + D ≤ exp x - d := by
+        have u := add_le_add_wit hbig (le_refl (-d))
+        have e1 : x + D + d + -d = x + D := by mach_mpoly [x, D, d]
+        have e2 : exp x + -d = exp x - d := by mach_ring
+        rw [e1, e2] at u; exact u
+      exact le_trans w g
+    have hlo : -exp (exp x - d) ≤ Cl := by
+      refine neg_exp_le_of ?_
+      have g : 1 + (exp x - d) ≤ exp (exp x - d) := one_add_le_exp _
+      have w : -Cl ≤ 1 + (exp x - d) := by
+        have a1 : -Cl + d ≤ exp (-Cl + d) := self_le_exp _
+        have a2 : -Cl + d ≤ x := le_trans a1 hxC
+        have a3 : x ≤ exp x := self_le_exp x
+        have a4 : -Cl + d ≤ exp x := le_trans a2 a3
+        have u := add_le_add_wit a4 (le_refl (-d))
+        have e1 : -Cl + d + -d = -Cl := by mach_mpoly [Cl, d]
+        have e2 : exp x + -d = exp x - d := by mach_ring
+        rw [e1, e2] at u
+        exact le_trans u (le_one_add _)
+      exact le_trans w g
+    obtain ⟨hpl, _⟩ := pin_at (D := D) (Cl := Cl) (a := exp x - d)
+      (hD x hx1) (hCl x hxXL) hup hlo (ha x hx0)
+    have hL : log (exp (A''.eval x) - log (B''.eval x)) = exp x - f x := by
+      have t := h x hx0
+      rw [← t]; mach_mpoly [exp x, log (exp (A''.eval x) - log (B''.eval x))]
+    rw [hL] at hpl
+    -- `exp x − d − 1 ≤ exp x − f x` gives `f x ≤ d + 1`
+    have hfle : f x ≤ d + 1 := by
+      have v := add_le_add_wit hpl (le_refl (f x - exp x + d + 1))
+      have e1 : exp x - d - 1 + (f x - exp x + d + 1) = f x := by mach_mpoly [exp x, d, f x]
+      have e2 : exp x - f x + (f x - exp x + d + 1) = d + 1 := by mach_mpoly [exp x, d, f x]
+      rw [e1, e2] at v; exact v
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hcon hfle)
+  · -- `A'' = exp x − log x` : pinned there, refuted by superlogarithmicity
+    obtain ⟨T, hT⟩ := two_mul_add_le_exp (D + 1)
+    obtain ⟨x, hxX, hx1, hcon⟩ := Hlog (1 + 1) (XL + exp T + exp (-Cl) + 1)
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hxXL : XL ≤ x := by
+      have v : XL + 0 + 0 + 0 ≤ XL + exp T + exp (-Cl) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl XL) (le_of_lt (exp_pos T)))
+          (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+      have e : XL + (0 : Real) + 0 + 0 = XL := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    have hxT : T ≤ x := by
+      have v : (0 : Real) + exp T + 0 + 0 ≤ XL + exp T + exp (-Cl) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn (le_refl (exp T)))
+          (le_of_lt (exp_pos _))) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + exp T + 0 + 0 = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hxX)
+    have hxC : exp (-Cl) ≤ x := by
+      have v : (0 : Real) + 0 + exp (-Cl) + 0 ≤ XL + exp T + exp (-Cl) + 1 :=
+        add_le_add_wit (add_le_add_wit (add_le_add_wit hXLn (le_of_lt (exp_pos T)))
+          (le_refl _)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + 0 + exp (-Cl) + 0 = exp (-Cl) := by mach_ring
+      rw [e] at v; exact le_trans v hxX
+    have hlogx : log x ≤ x := log_le_self_pos hx0
+    have hbig : x + D + x ≤ exp x := by
+      have hb := hT x hxT
+      have e : x + x + (D + 1) = x + D + x + 1 := by mach_mpoly [x, D]
+      rw [e] at hb
+      have w : x + D + x ≤ x + D + x + 1 := le_add_nonneg_r' (le_of_lt zero_lt_one_ax)
+      exact le_trans w hb
+    have hxn : (0 : Real) ≤ x := le_of_lt hx0
+    have hdb : x + x ≤ exp x := two_mul_le_exp hxn
+    have hxle : x ≤ exp x - log x := by
+      have u := add_le_add_wit hdb (neg_le_neg_wit hlogx)
+      have e1 : x + x + -x = x := by mach_mpoly [x]
+      have e2 : exp x + -log x = exp x - log x := by mach_ring
+      rw [e1, e2] at u; exact u
+    have hup : x + D ≤ exp (exp x - log x - 1) := by
+      have g : 1 + (exp x - log x - 1) ≤ exp (exp x - log x - 1) := one_add_le_exp _
+      have e : (1 : Real) + (exp x - log x - 1) = exp x - log x := by
+        mach_mpoly [exp x, log x]
+      rw [e] at g
+      have w : x + D ≤ exp x - log x := by
+        have u := add_le_add_wit hbig (neg_le_neg_wit hlogx)
+        have e1 : x + D + x + -x = x + D := by mach_mpoly [x, D]
+        have e2 : exp x + -log x = exp x - log x := by mach_ring
+        rw [e1, e2] at u; exact u
+      exact le_trans w g
+    have hlo : -exp (exp x - log x) ≤ Cl := by
+      refine neg_exp_le_of ?_
+      have g : 1 + (exp x - log x) ≤ exp (exp x - log x) := one_add_le_exp _
+      have a2 : -Cl ≤ x := le_trans (self_le_exp (-Cl)) hxC
+      have a4 : -Cl ≤ exp x - log x := le_trans a2 hxle
+      exact le_trans a4 (le_trans (le_one_add _) g)
+    obtain ⟨hpl, _⟩ := pin_at (D := D) (Cl := Cl) (a := exp x - log x)
+      (hD x hx1) (hCl x hxXL) hup hlo (ha x hx0)
+    have hL : log (exp (A''.eval x) - log (B''.eval x)) = exp x - f x := by
+      have t := h x hx0
+      rw [← t]; mach_mpoly [exp x, log (exp (A''.eval x) - log (B''.eval x))]
+    rw [hL] at hpl
+    have hfle : f x ≤ log x + 1 := by
+      have v := add_le_add_wit hpl (le_refl (f x - exp x + log x + 1))
+      have e1 : exp x - log x - 1 + (f x - exp x + log x + 1) = f x := by
+        mach_mpoly [exp x, log x, f x]
+      have e2 : exp x - f x + (f x - exp x + log x + 1) = log x + 1 := by
+        mach_mpoly [exp x, log x, f x]
+      rw [e1, e2] at v; exact v
+    have hgt : log x + 1 < f x := by
+      have v : (1 : Real) + 1 + log x = log x + 1 + 1 := by mach_ring
+      rw [v] at hcon
+      exact lt_of_lt_of_le (lt_succ_self (log x + 1)) (le_of_lt hcon)
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt hfle)
+
+
 end MachLib

@@ -2648,6 +2648,28 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The named obligation, discharged. hypotheses_count 3 = the three band hypotheses, nothing else -- which is the claim that no extra condition crept in during formalisation. Conclusion is VarLeftEmlRightHard, so the proposition introduced in 2cfcb0cd is now a theorem for band targets.",
+      "id": "varlefthard-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The paper plan matched the formalisation exactly**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.varLeftEmlRightHard_of_band",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "VarLeftEmlRightHard",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "VarLeftEmlRightHard"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

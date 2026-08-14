@@ -7,6 +7,33 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `VarLeftEmlRightHard` is discharged — the named obligation becomes a theorem
+
+`varLeftEmlRightHard_of_band` proves it for every band target. `A''` ranges over the five depth-1
+shapes and each is handled by exactly the tool the plan predicted:
+
+| `A''` shape | route | refuted by |
+| --- | --- | --- |
+| `const α` | bounded exponential | (sub-exponentiality, via `varLeftEmlRight_bounded_left`) |
+| `c − log x` | bounded exponential | (same) |
+| `var` | pinned at `a = x` | **sub-exponentiality** |
+| `exp x − d` | pinned at `a = exp x − d` | **unboundedness** |
+| `exp x − log x` | pinned at `a = exp x − log x` | **superlogarithmicity** |
+
+**The paper plan matched the formalisation exactly** — five shapes, one hypothesis each, no surprises
+and no extra cases. That is the third time paper-before-Lean has paid on this arc, and the first time
+the prediction was this detailed.
+
+`log_exp_sub_pinned` is used three times, unchanged, with only the choice of `a` differing. The work
+per case is entirely threshold bookkeeping: showing `x + D ≤ exp (a − 1)` and `−exp a ≤ Cl` on a ray.
+
+**What this does and does not finish.** Every branch of the depth-3 exclusion is now proved:
+bounded-left, the `eml`-left squeeze, and all of `A = var`. What is *not* yet written is the
+**assembly** — a single `superlinear_subexp_not_depth_le_three`. Its one missing step is deriving the
+squeeze hypotheses of `depth_two_eml_not_near_identity` from `depth_le_two_log_le_exp`, which the
+theorem currently takes as inputs rather than deriving. So the pieces are all present and the capstone
+is glue, not mathematics.
+
 ### `log (exp a − s)` pinned within `1` of `a`
 
 `log_exp_sub_pinned`: if `s ≤ exp (a−1)` and `−exp a ≤ s`, then `a − 1 ≤ log (exp a − s) ≤ a + 1`.
