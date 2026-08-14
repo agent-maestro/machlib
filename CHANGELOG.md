@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### The depth-3 band exclusion is **sharp** — and the "two obstacles" were chasing a false statement
+
+`band_exclusion_fails_at_depth_four`. **`f x = x + 1` satisfies all three band hypotheses and is
+computed at depth exactly 4** (`x_plus_one_in_eml`, already in the corpus). So
+
+```
+band exclusion:   depth ≤ 2  ✓      depth ≤ 3  ✓      depth ≤ 4  ✗
+```
+
+**This retracts the framing of the previous analysis, not any theorem.** Two apparent blockers to a
+depth-4 version were identified — the bounded-left branch would need `V₃`, and the `A = var` branch
+would need a classification of depth-2 trees. Both readings were correct about the *proof*; both were
+irrelevant, because there is no true theorem to reach. I was measuring the difficulty of climbing a
+wall with nothing on the other side.
+
+`x + 1` slips through for a reason the hypotheses make plain in hindsight: they constrain **growth**,
+and `x + 1` sits at the very bottom of the band — unbounded and above the identity by the smallest
+possible margin. Nothing rules out a target that is barely superlinear.
+
+**Consequences.**
+
+* The growth front is **finished**, not stalled. Depth ≤ 3 is the whole theorem and it is optimal.
+* `SignHardCase` does **not** gate the growth front after all — that claim, made one commit ago, was
+  downstream of the false statement. It gates the tower's uniformity in `n` and nothing else here.
+* The depth-2 classification is **not** needed for this, so it drops off the near-term slate.
+* `d(x²) ≥ 4` stands, but sharpening it further cannot come from this route: any depth-4 exclusion
+  must use a hypothesis that separates `x²` from `x + 1`, and all three band hypotheses fail to.
+
 ### **Depth-3 intermediate-growth exclusion** — the band lifts a level
 
 `superlinear_subexp_not_depth_le_three`. Same three hypotheses as the depth-2 band, same arbitrary

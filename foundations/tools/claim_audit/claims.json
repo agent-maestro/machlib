@@ -2692,6 +2692,28 @@
         "False"
       ],
       "hypotheses_count": 6
+    },
+    {
+      "_comment": "Sharpness. hypotheses_count 0 -- it is a pure existence statement, which is what makes it a refutation rather than a conditional. Registered so the depth-3 result can never be quoted as if it extended.",
+      "id": "band-sharp-at-three-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is\ncomputed at depth exactly 4"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.band_exclusion_fails_at_depth_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        ".depth"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

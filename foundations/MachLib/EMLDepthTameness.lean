@@ -4049,4 +4049,69 @@ theorem superlinear_subexp_not_depth_le_three (f : Real → Real)
               exact lt_irrefl_ax _
                 (lt_of_lt_of_le (lt_of_lt_of_le (lt_succ_self (x + x + (1 + D'))) hstrict) hbad)
 
+/-! ### The depth-3 band exclusion is **sharp** -/
+
+/-- **`superlinear_subexp_not_depth_le_three` cannot be lifted to depth 4 — the statement is false
+there.** `f x = x + 1` satisfies all three band hypotheses and is computed at depth exactly 4 by
+`xPlusOneTree`.
+
+This settles what looked like an obstruction. Two apparent blockers to a depth-4 version were
+identified — the bounded-left branch would need `V₃`, and the `A = var` branch would need a
+classification of depth-2 trees — but neither is an obstacle to a true theorem, because there is no
+true theorem to reach. The band exclusion holds at depth ≤ 3 and fails at depth 4, full stop.
+
+`x + 1` is the natural witness: unbounded and above the identity by construction, and
+sub-exponential because `exp` outruns any linear function. It slips through precisely because the
+band's hypotheses constrain *growth* and `x + 1` sits at the very bottom of the band. -/
+theorem band_exclusion_fails_at_depth_four :
+    ∃ (f : Real → Real) (t : EMLTree),
+      (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+      ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+      ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
+      ∧ t.depth = 4
+      ∧ ∀ x : Real, 0 < x → t.eval x = f x := by
+  obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
+  refine ⟨fun x => x + 1, t, ?_, ?_, ?_, htdepth, fun x _ => hteval x⟩
+  · -- unbounded above on every ray
+    intro K X
+    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hK : K < exp K := by
+        have t1 := one_add_le_exp K
+        have e : (1 : Real) + K = K + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+      have v : (0 : Real) + exp K + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos X))
+      have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
+      rw [e] at v
+      exact lt_of_lt_of_le (lt_of_lt_of_le hK v) (le_of_lt (lt_succ_self _))
+  · -- below `exp x − x − C` at arbitrarily large points: `exp` outruns `2x + 1 + C`
+    intro C X
+    have hMp : (0 : Real) ≤ 1 + 1 :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax)
+    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_linear_past (α := 1 + 1) (β := 1 + C) hMp X
+    refine ⟨x, hxX, hx1, ?_⟩
+    have v := add_lt_add_left hlt (-x - C)
+    have e1 : -x - C + ((1 + 1) * x + (1 + C)) = x + 1 := by mach_mpoly [x, C]
+    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+    rw [e1, e2] at v; exact v
+  · -- above the identity, trivially
+    intro X
+    refine ⟨1 + exp X, ?_, ?_, lt_succ_self _⟩
+    · exact le_trans (self_le_exp X) (le_one_add _)
+    · have v : (1 : Real) + 0 ≤ 1 + exp X := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+
+
 end MachLib
