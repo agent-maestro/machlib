@@ -4318,4 +4318,46 @@ theorem evSign_depth_le_two (t : EMLTree) (ht : t.depth ≤ 2) : EvSign t.eval :
           exact lt_of_lt_of_le (lt_of_lt_of_le zero_lt_one_ax hx1) hlow
 
 
+/-- **The value gap at depth 2.** A depth-2 `eml` node is either bounded above on a ray, or
+eventually at least `exp x − x − C`. **Nothing in between** — in particular no such node is
+polynomially large.
+
+This is the value-level analogue of `depth_le_one_exp_bounded_or_grows`, which is a statement about
+`exp (A x)`. Stated for `eml` nodes specifically because `var` is a genuine exception: `x` is neither
+bounded above nor eventually `≥ exp x − x − C`, and it sits at depth 0.
+
+The band exclusion at depth ≤ 2 is this dichotomy read as a refutation; stated positively it is a
+structural fact about what values the grammar can take, and it composes. -/
+theorem depth_two_eml_value_gap (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1) :
+    (∃ K X₀ : Real, 1 ≤ X₀ ∧
+      ∀ x : Real, X₀ ≤ x → exp (A.eval x) - log (B.eval x) ≤ K)
+    ∨ (∃ C T : Real, ∀ x : Real, T ≤ x → exp x - x - C ≤ exp (A.eval x) - log (B.eval x)) := by
+  rcases depth_le_one_exp_bounded_or_grows A hA with ⟨K, hK⟩ | ⟨T, hT⟩
+  · -- bounded exponential: the log floor caps the node at `K − Cl`
+    obtain ⟨Cl, X₀, hX1, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+    refine Or.inl ⟨K - Cl, X₀, hX1, ?_⟩
+    intro x hx
+    have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+    have v := add_le_add_wit (hK x hx1) (neg_le_neg_wit (hCl x hx))
+    have e1 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+    have e2 : K + -Cl = K - Cl := by mach_ring
+    rw [e1, e2] at v; exact v
+  · -- growing exponential: the linear log ceiling leaves `exp x − x − D`
+    obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+    refine Or.inr ⟨D, exp T + 1, ?_⟩
+    intro x hx
+    have hxT : T ≤ x := by
+      have v : exp T + 0 ≤ exp T + 1 := add_le_add_wit (le_refl _) (le_of_lt zero_lt_one_ax)
+      have e : exp T + (0 : Real) = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hx)
+    have hx1 : (1 : Real) ≤ x := by
+      have v : (0 : Real) + 1 ≤ exp T + 1 := add_le_add_wit (le_of_lt (exp_pos T)) (le_refl 1)
+      have e : (0 : Real) + 1 = 1 := by mach_ring
+      rw [e] at v; exact le_trans v hx
+    have v := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+    have e1 : exp x + -(x + D) = exp x - x - D := by mach_mpoly [exp x, x, D]
+    have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+    rw [e1, e2] at v; exact v
+
+
 end MachLib

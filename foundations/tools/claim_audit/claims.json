@@ -2735,6 +2735,28 @@
         "EvSign"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Value-level gap at depth 2. hypotheses_count 2 = the two child depth bounds only. Stated for eml nodes because var is a real exception -- that exception is load-bearing and is why x+1 refutes the depth-4 band.",
+      "id": "depth-two-value-gap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Nothing in between; in particular no such node is\npolynomially large."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_two_eml_value_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

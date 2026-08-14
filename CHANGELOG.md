@@ -7,6 +7,24 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### The value gap at depth 2 — the band exclusion, read positively
+
+`depth_two_eml_value_gap`: a depth-2 `eml` node is either **bounded above** on a ray, or eventually
+**at least `exp x − x − C`**. Nothing in between; in particular no such node is polynomially large.
+
+This is the value-level analogue of `depth_le_one_exp_bounded_or_grows`, which speaks about
+`exp (A x)` rather than about the node. It is the same content as the depth-2 band exclusion, stated
+as a **structural fact about which values the grammar can take** rather than as a refutation — and in
+that form it composes, which the refutation does not.
+
+**`var` is a genuine exception**, which is why the statement is about `eml` nodes: `x` is neither
+bounded above nor eventually `≥ exp x − x − C`, and it sits at depth 0. That exception is exactly the
+one the band's third hypothesis exists to exclude, and exactly the reason `x + 1` refutes the depth-4
+version.
+
+Together with `evSign_depth_le_two` this is the second piece of a depth-2 classification: cells
+classified by **sign**, then by **scale**.
+
 ### Eventual sign-definiteness at depth 2 — unconditional
 
 `evSign_depth_le_two`: **every depth-≤2 expression is eventually of constant sign.** No hypotheses,
