@@ -2585,6 +2585,48 @@
         "False"
       ],
       "hypotheses_count": 4
+    },
+    {
+      "_comment": "Bounded-left branch of the named obligation. hypotheses_count 4 and NO unboundedness/superlogarithmicity hypothesis -- that absence is the claim, and the auditor's count is what pins it.",
+      "id": "varleft-bounded-left-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "It needs **only\nsub-exponentiality**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.varLeftEmlRight_bounded_left",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 4
+    },
+    {
+      "_comment": "log t <= t on all of (0, inf). The corpus had only the [1, inf) version; the totalised branch needs the rest. hypotheses_count 1 = positivity only.",
+      "id": "log-le-self-pos-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the corpus had `log t ≤ t` only on `[1,∞)`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.log_le_self_pos",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "log"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

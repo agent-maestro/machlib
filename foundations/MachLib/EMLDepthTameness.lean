@@ -3488,4 +3488,73 @@ theorem var_left_not_band (f : Real → Real) (B : EMLTree) (hB : B.depth ≤ 2)
       exact Hard A'' B'' hA'' hB'' h
 
 
+/-- `log t ≤ t` on **all** of `(0,∞)`, not just `[1,∞)`. Below `1` the log is negative and the
+bound is free; the ray version `log_le_self_on_ray` covers the rest. -/
+theorem log_le_self_pos {t : Real} (ht : 0 < t) : log t ≤ t := by
+  have hl1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  rcases lt_total t 1 with hlt | heq | hgt
+  · have v := log_lt_log ht hlt
+    rw [hl1] at v
+    exact le_trans (le_of_lt v) (le_of_lt ht)
+  · rw [heq, hl1]; exact le_of_lt zero_lt_one_ax
+  · exact log_le_self_on_ray (le_of_lt hgt)
+
+/-- **`VarLeftEmlRightHard`, bounded-left branch.**
+
+If the surviving shape's own left child has a bounded exponential, the node `eml A'' B''` is bounded
+above by `K − Cl`, so *its* logarithm is bounded by a constant. But that logarithm must equal
+`exp x − f x`, which sub-exponentiality forces above `x`. A constant cannot dominate `x`.
+
+This is the same move as `depth_three_bounded_left_not_superlog` one level down, and it needs only
+sub-exponentiality — neither unboundedness nor superlogarithmicity appears. -/
+theorem varLeftEmlRight_bounded_left (f : Real → Real) (A'' B'' : EMLTree)
+    (hB'' : B''.depth ≤ 1) (K : Real) (hK : ∀ x : Real, 1 ≤ x → exp (A''.eval x) ≤ K)
+    (Hsub : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+    (h : ∀ x : Real, 0 < x → exp x - log (exp (A''.eval x) - log (B''.eval x)) = f x) :
+    False := by
+  obtain ⟨Cl, XL, hXL1, hCl⟩ := depth_le_one_log_lower_at_infinity B'' hB''
+  obtain ⟨x, hxX, hx1, hlt⟩ := Hsub 0 (exp (exp (K - Cl)) + XL)
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hXLn : (0 : Real) ≤ XL := le_trans (le_of_lt zero_lt_one_ax) hXL1
+  have hEn : (0 : Real) ≤ exp (exp (K - Cl)) := le_of_lt (exp_pos _)
+  have hxXL : XL ≤ x := by
+    have v : (0 : Real) + XL ≤ exp (exp (K - Cl)) + XL := add_le_add_wit hEn (le_refl XL)
+    have e : (0 : Real) + XL = XL := by mach_ring
+    rw [e] at v; exact le_trans v hxX
+  have hxL : exp (K - Cl) ≤ x := by
+    have v : exp (exp (K - Cl)) + 0 ≤ exp (exp (K - Cl)) + XL :=
+      add_le_add_wit (le_refl _) hXLn
+    have e : exp (exp (K - Cl)) + (0 : Real) = exp (exp (K - Cl)) := by mach_ring
+    rw [e] at v
+    exact le_trans (self_le_exp _) (le_trans v hxX)
+  -- the node is bounded above by `K − Cl`
+  have hnode : exp (A''.eval x) - log (B''.eval x) ≤ K - Cl := by
+    have v := add_le_add_wit (hK x hx1) (neg_le_neg_wit (hCl x hxXL))
+    have e1 : exp (A''.eval x) + -log (B''.eval x)
+        = exp (A''.eval x) - log (B''.eval x) := by mach_ring
+    have e2 : K + -Cl = K - Cl := by mach_ring
+    rw [e1, e2] at v; exact v
+  -- hence so is its logarithm, by `log t ≤ t` and totalisation below zero
+  have hlogcap : log (exp (A''.eval x) - log (B''.eval x)) ≤ exp (K - Cl) := by
+    rcases lt_total 0 (exp (A''.eval x) - log (B''.eval x)) with hp | hp | hp
+    · exact le_trans (le_trans (log_le_self_pos hp) hnode) (self_le_exp _)
+    · rw [log_nonpos (le_of_eq hp.symm)]; exact le_of_lt (exp_pos _)
+    · rw [log_nonpos (le_of_lt hp)]; exact le_of_lt (exp_pos _)
+  -- but it must equal `exp x − f x`, which sub-exponentiality forces above `x`
+  have hval : exp x - log (exp (A''.eval x) - log (B''.eval x)) = f x := h x hx0
+  have hgt : x < log (exp (A''.eval x) - log (B''.eval x)) := by
+    rw [← hval] at hlt
+    have v := add_lt_add_left hlt (-exp x + log (exp (A''.eval x) - log (B''.eval x)) + x)
+    have e1 : -exp x + log (exp (A''.eval x) - log (B''.eval x)) + x
+        + (exp x - log (exp (A''.eval x) - log (B''.eval x))) = x := by
+      mach_mpoly [exp x, log (exp (A''.eval x) - log (B''.eval x)), x]
+    have e2 : -exp x + log (exp (A''.eval x) - log (B''.eval x)) + x + (exp x - x - 0)
+        = log (exp (A''.eval x) - log (B''.eval x)) := by
+      mach_mpoly [exp x, log (exp (A''.eval x) - log (B''.eval x)), x]
+    rw [e1, e2] at v; exact v
+  exact lt_irrefl_ax _ (lt_of_lt_of_le (lt_of_le_of_lt hxL hgt) hlogcap)
+
+
 end MachLib

@@ -7,6 +7,25 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### `VarLeftEmlRightHard`, bounded-left branch — closed
+
+`varLeftEmlRight_bounded_left` takes the named obligation's easier half. If the surviving shape's own
+left child has a bounded exponential, the node `eml A'' B''` is bounded above by `K − Cl`, so *its*
+logarithm is bounded by a constant. But that logarithm must equal `exp x − f x`, which
+sub-exponentiality forces above `x`, and a constant cannot dominate `x`.
+
+Same move as `depth_three_bounded_left_not_superlog`, one level down. It needs **only
+sub-exponentiality** — neither unboundedness nor superlogarithmicity appears, matching the pattern
+where those two are reserved for the `exp x − d` and `exp x − log x` shapes.
+
+`log_le_self_pos` fills a real gap: the corpus had `log t ≤ t` only on `[1,∞)`. Below `1` the log is
+negative so the bound is free, but that case had never been written down, and the totalised branch
+(`log t = 0` for `t ≤ 0`) needs it too.
+
+**What remains of the depth-3 exclusion is now one branch of one proposition**: the surviving shape
+where `A''`'s exponential *dominates* `exp x`. That is where the squeeze of the plan lives — pin
+`A''` within `1` of `exp x − f x`, then five depth-1 shapes against one band hypothesis each.
+
 ### The `A = var` sub-case — two shapes discharged, one named
 
 `var_left_not_band` handles the branch that survived the previous two theorems. With `A = var` the
