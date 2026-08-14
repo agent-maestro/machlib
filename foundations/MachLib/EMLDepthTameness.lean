@@ -3417,4 +3417,75 @@ theorem depth_two_eml_not_near_identity (A' B' : EMLTree) (hA' : A'.depth ≤ 1)
     exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hbad)
 
 
+/-! ### The `A = var` sub-case of the depth-3 exclusion
+
+`depth_three_bounded_left_not_superlog` and `depth_two_eml_not_near_identity` close every branch of
+`t = eml A B` except `A = var`, which survives because `var` *is* the identity and so sits exactly at
+the bottom of the squeeze. That sub-case reduces to `Log (⟦B⟧ x) = exp x − f x`, and `B`'s three
+shapes are handled here — two discharged, one named. -/
+
+/-- The one shape left in the whole depth-3 exclusion: right child an `eml` node.
+
+Named rather than assumed away. The plan for it is in
+`monogate-research/exploration/eml_depth3_exclusion_2026_08_13/`: squeeze `A''` to within `1` of
+`exp x − f x`, then kill the five depth-1 shapes, each against exactly one band hypothesis. -/
+def VarLeftEmlRightHard (f : Real → Real) : Prop :=
+  ∀ A'' B'' : EMLTree, A''.depth ≤ 1 → B''.depth ≤ 1 →
+    (∀ x : Real, 0 < x → exp x - log (exp (A''.eval x) - log (B''.eval x)) = f x) → False
+
+/-- **The `A = var` sub-case, modulo one named shape.** `B = const` and `B = var` are discharged
+outright; both die against sub-exponentiality alone. -/
+theorem var_left_not_band (f : Real → Real) (B : EMLTree) (hB : B.depth ≤ 2)
+    (Hsub : ∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+    (Hard : VarLeftEmlRightHard f)
+    (h : ∀ x : Real, 0 < x → exp x - log (B.eval x) = f x) : False := by
+  cases B with
+  | const c =>
+      -- `log c` is constant; sub-exponentiality forces `x < log c + log c`
+      obtain ⟨x, hxX, hx1, hlt⟩ := Hsub (-log c) (exp (log c + log c))
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hval : exp x - log c = f x := h x hx0
+      rw [← hval] at hlt
+      have v := add_lt_add_left hlt (-exp x + log c + x)
+      have e1 : -exp x + log c + x + (exp x - log c) = x := by mach_mpoly [exp x, log c, x]
+      have e2 : -exp x + log c + x + (exp x - x - -log c) = log c + log c := by
+        mach_mpoly [exp x, log c, x]
+      rw [e1, e2] at v
+      exact lt_irrefl_ax _ (lt_of_lt_of_le v (le_trans (self_le_exp _) hxX))
+  | var =>
+      -- `log x ≤ x` makes `x + 1 < log x` impossible
+      obtain ⟨x, _, hx1, hlt⟩ := Hsub 1 1
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hval : exp x - log x = f x := h x hx0
+      rw [← hval] at hlt
+      have v := add_lt_add_left hlt (-exp x + log x + x)
+      have e1 : -exp x + log x + x + (exp x - log x) = x := by mach_mpoly [exp x, log x, x]
+      have e2 : -exp x + log x + x + (exp x - x - 1) = log x - 1 := by
+        mach_mpoly [exp x, log x, x]
+      rw [e1, e2] at v
+      -- `x < log x − 1 ≤ x − 1` is absurd
+      have hle : log x - 1 ≤ x - 1 := by
+        have v := add_le_add_wit (log_le_self_on_ray hx1) (le_refl (-1 : Real))
+        have e3 : log x + -1 = log x - 1 := by mach_ring
+        have e4 : x + -1 = x - 1 := by mach_ring
+        rw [e3, e4] at v; exact v
+      have hxx : x < x - 1 := lt_of_lt_of_le v hle
+      have hbad : x < x := by
+        have w : x - 1 < x := by
+          have t := add_lt_add_left zero_lt_one_ax (x - 1)
+          have e3 : x - 1 + (0 : Real) = x - 1 := by mach_ring
+          have e4 : x - 1 + (1 : Real) = x := by mach_ring
+          rw [e3, e4] at t; exact t
+        exact lt_trans_ax hxx w
+      exact lt_irrefl_ax _ hbad
+  | eml A'' B'' =>
+      have hA'' : A''.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_left A''.depth B''.depth; omega
+      have hB'' : B''.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hB
+        have := Nat.le_max_right A''.depth B''.depth; omega
+      exact Hard A'' B'' hA'' hB'' h
+
+
 end MachLib

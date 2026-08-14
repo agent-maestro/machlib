@@ -2563,6 +2563,28 @@
         "False"
       ],
       "hypotheses_count": 5
+    },
+    {
+      "_comment": "A=var sub-case, modulo one named shape. hypotheses_count 4: depth bound, Hsub, Hard, and the semantic equation. The presence of Hard in the count is the point -- it is what makes the remaining obligation visible rather than assumed.",
+      "id": "var-left-not-band-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "named as `VarLeftEmlRightHard`, not assumed away"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.var_left_not_band",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "VarLeftEmlRightHard",
+        ".depth",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 4
     }
   ]
 }

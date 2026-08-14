@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-13
 
+### The `A = var` sub-case — two shapes discharged, one named
+
+`var_left_not_band` handles the branch that survived the previous two theorems. With `A = var` the
+equation collapses to `Log (⟦B⟧ x) = exp x − f x`, and `B`'s three shapes split cleanly:
+
+* **`B = const c`** — `log c` is constant, so sub-exponentiality forces `x < log c + log c`, refuted
+  by evaluating past `exp (log c + log c)`.
+* **`B = var`** — forces `x + 1 < log x`, refuted by `log x ≤ x`.
+* **`B = eml A'' B''`** — named as `VarLeftEmlRightHard`, not assumed away.
+
+Both discharged shapes die against **sub-exponentiality alone**; neither needs unboundedness or
+superlogarithmicity. That is a small piece of evidence about which hypothesis is doing what.
+
+**The whole depth-3 exclusion for band targets now rests on one named proposition.** Its plan is
+written (`monogate-research/exploration/eml_depth3_exclusion_2026_08_13/`): squeeze `A''` to within
+`1` of `exp x − f x` using the depth-1 log bounds, then kill the five depth-1 shapes — three against
+sub-exponentiality, `exp x − d` against unboundedness, `exp x − log x` against superlogarithmicity.
+
+Structural note: this is the third proposition in the corpus stated as *named remaining obligation*
+rather than proved (`TowerLowerBound`, `SignHardCase`, now this). All three are registered as claims
+so that prose cannot quietly assume them.
+
 ### A depth-2 `eml` node cannot approximate the identity
 
 `depth_two_eml_not_near_identity`: no `eml A' B'` with `A'`, `B'` of depth ≤ 1 satisfies
