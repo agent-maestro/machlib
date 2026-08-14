@@ -4114,4 +4114,208 @@ theorem band_exclusion_fails_at_depth_four :
       rw [e] at v; exact v
 
 
+/-! ### Eventual sign-definiteness at depth 2, unconditionally
+
+`evSign_of_hard` reduces sign-definiteness at every depth to one proposition. At depth ≤ 2 no
+import is needed: the exp gap plus the depth-1 classification settle it outright.
+
+Besides being the first unconditional instance, this is a check on the o-minimality reading — if
+every term of this grammar is `ℝ_exp`-definable then *all* of them are eventually sign-definite, so a
+counterexample here would have refuted that reading. There is none. -/
+
+/-- **Every depth-≤2 expression is eventually of constant sign.** No hypotheses. -/
+theorem evSign_depth_le_two (t : EMLTree) (ht : t.depth ≤ 2) : EvSign t.eval := by
+  have hlog0 : ∀ x : Real, 1 ≤ x → (0 : Real) ≤ log x := by
+    intro x hx
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hx
+    rw [hl1] at hm; exact hm
+  have hxpos : ∀ x : Real, 1 ≤ x → (0 : Real) < x := fun x hx =>
+    lt_of_lt_of_le zero_lt_one_ax hx
+  cases t with
+  | const c =>
+      rcases lt_total 0 c with hc | hc | hc
+      · exact Or.inl ⟨1, le_refl 1, fun x _ => hc⟩
+      · exact Or.inr ⟨1, le_refl 1, fun x _ => le_of_eq hc.symm⟩
+      · exact Or.inr ⟨1, le_refl 1, fun x _ => le_of_lt hc⟩
+  | var => exact Or.inl ⟨1, le_refl 1, fun x hx => lt_of_lt_of_le zero_lt_one_ax hx⟩
+  | eml A B =>
+      have hA : A.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_left A.depth B.depth; omega
+      have hB : B.depth ≤ 1 := by
+        simp only [EMLTree.depth] at ht
+        have := Nat.le_max_right A.depth B.depth; omega
+      obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+      rcases depth_le_one_exp_bounded_or_grows A hA with ⟨K, hK⟩ | ⟨T, hT⟩
+      · -- LEFT BOUNDED: the right child decides the sign
+        rcases depth_le_one_classification B hB with
+            ⟨β, hb⟩ | hb | ⟨c', hc'0, hb⟩ | ⟨d, hb⟩ | hb
+        · -- `B = const β`: split the bounded left child into its two forms
+          rcases depth_le_one_exp_bounded_forms A hA K hK with ⟨α, ha⟩ | ⟨c, _, ha⟩
+          · -- node is the constant `exp α − log β`
+            rcases lt_total 0 (exp α - log β) with hs | hs | hs
+            · refine Or.inl ⟨1, le_refl 1, ?_⟩
+              intro x hx
+              show 0 < exp (A.eval x) - log (B.eval x)
+              rw [ha x (hxpos x hx), hb x (hxpos x hx)]; exact hs
+            · refine Or.inr ⟨1, le_refl 1, ?_⟩
+              intro x hx
+              show exp (A.eval x) - log (B.eval x) ≤ 0
+              rw [ha x (hxpos x hx), hb x (hxpos x hx)]; exact le_of_eq hs.symm
+            · refine Or.inr ⟨1, le_refl 1, ?_⟩
+              intro x hx
+              show exp (A.eval x) - log (B.eval x) ≤ 0
+              rw [ha x (hxpos x hx), hb x (hxpos x hx)]; exact le_of_lt hs
+          · -- `A = c − log x`, so `exp (A x) → 0`; the sign follows that of `−log β`
+            rcases lt_total 0 (log β) with hs | hs | hs
+            · -- `log β > 0`: the node is eventually negative
+              obtain ⟨X₀, hX1, hX⟩ := eventually_log_gt (c - log (log β))
+              refine Or.inr ⟨X₀, hX1, ?_⟩
+              intro x hx
+              have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+              show exp (A.eval x) - log (B.eval x) ≤ 0
+              rw [ha x (hxpos x hx1), hb x (hxpos x hx1)]
+              have hlt : c - log x < log (log β) := by
+                have t1 := add_lt_add_left (hX x hx) (c - (c - log (log β)))
+                have e1 : c - (c - log (log β)) + (c - log (log β)) = c := by
+                  mach_mpoly [c, log (log β)]
+                have e2 : c - (c - log (log β)) + log x = log (log β) + log x := by
+                  mach_mpoly [c, log (log β), log x]
+                rw [e1, e2] at t1
+                have t2 := add_lt_add_left t1 (-log x)
+                have e3 : -log x + c = c - log x := by mach_ring
+                have e4 : -log x + (log (log β) + log x) = log (log β) := by mach_ring
+                rw [e3, e4] at t2; exact t2
+              have hexp : exp (c - log x) < log β := by
+                have t1 := exp_lt hlt
+                rw [exp_log hs] at t1; exact t1
+              have t1 := add_lt_add_left hexp (-log β)
+              have e1 : -log β + exp (c - log x) = exp (c - log x) - log β := by mach_ring
+              have e2 : -log β + log β = 0 := by mach_ring
+              rw [e1, e2] at t1; exact le_of_lt t1
+            · -- `log β = 0`: the node is `exp (A x) > 0`
+              refine Or.inl ⟨1, le_refl 1, ?_⟩
+              intro x hx
+              show 0 < exp (A.eval x) - log (B.eval x)
+              rw [hb x (hxpos x hx), ← hs]
+              have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+              rw [e]; exact exp_pos _
+            · -- `log β < 0`: the node exceeds `exp (A x) > 0`
+              refine Or.inl ⟨1, le_refl 1, ?_⟩
+              intro x hx
+              show 0 < exp (A.eval x) - log (B.eval x)
+              rw [hb x (hxpos x hx)]
+              have hn : (0 : Real) < -log β := by
+                have t1 := add_lt_add_left hs (-log β)
+                have e1 : -log β + 0 = -log β := by mach_ring
+                have e2 : -log β + log β = 0 := by mach_ring
+                rw [e1, e2] at t1; exact t1
+              have v : (0 : Real) + 0 < exp (A.eval x) + -log β :=
+                lt_of_lt_of_le (add_lt_add_left hn 0)
+                  (add_le_add_wit (le_of_lt (exp_pos _)) (le_refl _))
+              have e1 : (0 : Real) + 0 = 0 := by mach_ring
+              have e2 : exp (A.eval x) + -log β = exp (A.eval x) - log β := by mach_ring
+              rw [e1, e2] at v; exact v
+        · -- `B = var`: `log x` outgrows the bounded left child
+          obtain ⟨X₀, hX1, hX⟩ := eventually_log_gt K
+          refine Or.inr ⟨X₀, hX1, ?_⟩
+          intro x hx
+          have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+          show exp (A.eval x) - log (B.eval x) ≤ 0
+          rw [hb x (hxpos x hx1)]
+          have t1 : exp (A.eval x) < log x := lt_of_le_of_lt (hK x hx1) (hX x hx)
+          have t2 := add_lt_add_left t1 (-log x)
+          have e1 : -log x + exp (A.eval x) = exp (A.eval x) - log x := by mach_ring
+          have e2 : -log x + log x = 0 := by mach_ring
+          rw [e1, e2] at t2; exact le_of_lt t2
+        · -- `B = c' − log x`: totalised to `0`, so the node is `exp (A x) > 0`
+          obtain ⟨X₀, hX1, hX⟩ := eventually_log_gt c'
+          refine Or.inl ⟨X₀, hX1, ?_⟩
+          intro x hx
+          have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+          show 0 < exp (A.eval x) - log (B.eval x)
+          rw [hb x (hxpos x hx1)]
+          have hle : c' - log x ≤ 0 := by
+            have t1 := add_lt_add_left (hX x hx) (-log x)
+            have e1 : -log x + c' = c' - log x := by mach_ring
+            have e2 : -log x + log x = 0 := by mach_ring
+            rw [e1, e2] at t1; exact le_of_lt t1
+          rw [log_nonpos hle]
+          have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+          rw [e]; exact exp_pos _
+        · -- `B = exp x − d`
+          obtain ⟨X₀, hX1, hX⟩ := eventually_log_exp_sub_gt K d
+          refine Or.inr ⟨X₀, hX1, ?_⟩
+          intro x hx
+          have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+          show exp (A.eval x) - log (B.eval x) ≤ 0
+          rw [hb x (hxpos x hx1)]
+          have t1 : exp (A.eval x) < log (exp x - d) := lt_of_le_of_lt (hK x hx1) (hX x hx)
+          have t2 := add_lt_add_left t1 (-log (exp x - d))
+          have e1 : -log (exp x - d) + exp (A.eval x) = exp (A.eval x) - log (exp x - d) := by
+            mach_ring
+          have e2 : -log (exp x - d) + log (exp x - d) = 0 := by mach_ring
+          rw [e1, e2] at t2; exact le_of_lt t2
+        · -- `B = exp x − log x`
+          obtain ⟨X₀, hX1, hX⟩ := eventually_log_exp_sub_log_gt K
+          refine Or.inr ⟨X₀, hX1, ?_⟩
+          intro x hx
+          have hx1 : (1 : Real) ≤ x := le_trans hX1 hx
+          show exp (A.eval x) - log (B.eval x) ≤ 0
+          rw [hb x (hxpos x hx1)]
+          have t1 : exp (A.eval x) < log (exp x - log x) := lt_of_le_of_lt (hK x hx1) (hX x hx)
+          have t2 := add_lt_add_left t1 (-log (exp x - log x))
+          have e1 : -log (exp x - log x) + exp (A.eval x)
+              = exp (A.eval x) - log (exp x - log x) := by mach_ring
+          have e2 : -log (exp x - log x) + log (exp x - log x) = 0 := by mach_ring
+          rw [e1, e2] at t2; exact le_of_lt t2
+      · -- LEFT GROWS: the node clears `x` and is positive
+        obtain ⟨T₂, hT₂⟩ := two_mul_add_le_exp D
+        refine Or.inl ⟨exp T + exp T₂ + 1, ?_, ?_⟩
+        · have v : (0 : Real) + 0 + 1 ≤ exp T + exp T₂ + 1 :=
+            add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_of_lt (exp_pos T₂)))
+              (le_refl 1)
+          have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+          rw [e] at v; exact v
+        · intro x hx
+          have hxT : T ≤ x := by
+            have v : exp T + 0 + 0 ≤ exp T + exp T₂ + 1 :=
+              add_le_add_wit (add_le_add_wit (le_refl _) (le_of_lt (exp_pos T₂)))
+                (le_of_lt zero_lt_one_ax)
+            have e : exp T + (0 : Real) + 0 = exp T := by mach_ring
+            rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hx)
+          have hxT₂ : T₂ ≤ x := by
+            have v : (0 : Real) + exp T₂ + 0 ≤ exp T + exp T₂ + 1 :=
+              add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_refl _))
+                (le_of_lt zero_lt_one_ax)
+            have e : (0 : Real) + exp T₂ + 0 = exp T₂ := by mach_ring
+            rw [e] at v; exact le_trans (self_le_exp T₂) (le_trans v hx)
+          have hx1 : (1 : Real) ≤ x := by
+            have v : (0 : Real) + 0 + 1 ≤ exp T + exp T₂ + 1 :=
+              add_le_add_wit (add_le_add_wit (le_of_lt (exp_pos T)) (le_of_lt (exp_pos T₂)))
+                (le_refl 1)
+            have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+            rw [e] at v; exact le_trans v hx
+          show 0 < exp (A.eval x) - log (B.eval x)
+          have g1 : exp x ≤ exp (A.eval x) := hT x hxT
+          have g2 : log (B.eval x) ≤ x + D := hD x hx1
+          have g3 : x + x + D ≤ exp x := hT₂ x hxT₂
+          have hlow : x ≤ exp (A.eval x) - log (B.eval x) := by
+            have v := add_le_add_wit g1 (neg_le_neg_wit g2)
+            have e1 : exp x + -(x + D) = exp x - (x + D) := by mach_ring
+            have e2 : exp (A.eval x) + -log (B.eval x)
+                = exp (A.eval x) - log (B.eval x) := by mach_ring
+            rw [e1, e2] at v
+            have w : x ≤ exp x - (x + D) := by
+              have u := add_le_add_wit g3 (le_refl (-(x + D)))
+              have e3 : x + x + D + -(x + D) = x := by mach_mpoly [x, D]
+              have e4 : exp x + -(x + D) = exp x - (x + D) := by mach_ring
+              rw [e3, e4] at u; exact u
+            exact le_trans w v
+          exact lt_of_lt_of_le (lt_of_lt_of_le zero_lt_one_ax hx1) hlow
+
+
 end MachLib

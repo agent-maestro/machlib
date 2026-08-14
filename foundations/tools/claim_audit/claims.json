@@ -2714,6 +2714,27 @@
         ".depth"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Unconditional sign-definiteness at depth 2. hypotheses_count 1 -- the depth bound ONLY, no SignHardCase, no band hypotheses. That absence is the whole claim and is what makes it a check on the o-minimality reading.",
+      "id": "evsign-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**every depth-≤2 expression is eventually of constant sign.**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.evSign_depth_le_two",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "EvSign",
+        ".depth"
+      ],
+      "conclusion_mentions": [
+        "EvSign"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

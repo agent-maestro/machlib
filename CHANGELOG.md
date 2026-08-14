@@ -5,7 +5,27 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
-## [Unreleased] — 2026-08-13
+## [Unreleased] — 2026-08-14
+
+### Eventual sign-definiteness at depth 2 — unconditional
+
+`evSign_depth_le_two`: **every depth-≤2 expression is eventually of constant sign.** No hypotheses,
+no import.
+
+`evSign_of_hard` had reduced sign-definiteness at every depth to one proposition. At depth ≤ 2 that
+proposition is not needed: the exp gap splits the left child, and in the bounded branch the
+depth-1 classification of the right child decides the sign in five cases — `const β` (constant node,
+or `exp(A x) → 0` against `−log β`), `var` and the two exponential shapes (log outgrows the bounded
+left child, node eventually negative), and `c′ − log x` (totalised to `0`, node is `exp(A x) > 0`).
+In the growing branch the node clears `x` outright.
+
+**This is also a check on the o-minimality reading of §6.1 of the report.** If every term of this
+grammar is `ℝ_exp`-definable then *all* terms are eventually sign-definite, so a depth-2
+counterexample would have refuted that reading outright. There is none, and the shape of the proof —
+every case resolving to a definite scale — is what the definability argument predicts.
+
+It is one instance, not evidence of the general statement. The value is that it is *unconditional*:
+the first sign-definiteness result in the corpus that assumes nothing.
 
 ### The depth-3 band exclusion is **sharp** — and the "two obstacles" were chasing a false statement
 
