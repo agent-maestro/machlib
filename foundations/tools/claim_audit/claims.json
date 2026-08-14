@@ -2947,6 +2947,28 @@
         "eval"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "V_3's easy branch. hypotheses_count 1 -- only A's depth bound; NOTHING is assumed about B beyond the sign of its log, which appears inside the conclusion. That asymmetry is the point: the floor bounds A, and B is free precisely because its log contributes nothing on this branch.",
+      "id": "v3-easy-branch-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "gives a **linear** decay bound"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_three_decay_log_nonpos",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "log",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

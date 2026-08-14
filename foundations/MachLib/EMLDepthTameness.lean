@@ -4954,4 +4954,59 @@ theorem depth_le_two_lower_on_ray (t : EMLTree) (ht : t.depth ≤ 2) :
       rw [e1, e2] at v; exact v
 
 
+/-! ### `V₃`, easy branch — and why the pattern is a conjecture, not a consequence
+
+The previous section suggested `V₁ ~ constant`, `V₂ ~ log x`, `V₃ ~ x`, each inherited from the floor
+one level below. **That reasoning is valid only on the branch where the right child contributes
+nothing**, and it is worth being exact about where it stops.
+
+At depth 2, `V₂` closed because the right child ranges over *five closed forms*, and the branches
+where `log (B x) > 0` were each shown vacuous on a far enough ray. At depth 3 the right child ranges
+over depth-2 expressions, whose logarithm can reach `exp x + K` — so `exp (A x) − log (B x)` can in
+principle be made small by **near-cancellation**, and no floor on `A` alone bounds it.
+
+So the easy branch below is a theorem; the pattern as a whole is not. -/
+
+/-- **`V₃` on the branch where the right child's log is non-positive.** The node is then at least
+`exp (A x)`, and the depth-2 floor `A x ≥ −C − x` gives a **linear** decay bound — one level worse
+than `V₂`'s logarithmic one, exactly as the floors degrade. -/
+theorem depth_le_three_decay_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 2) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → log (B.eval x) ≤ 0 →
+      -log (exp (A.eval x) - log (B.eval x)) ≤ C + x := by
+  obtain ⟨C, hC⟩ := depth_le_two_lower_on_ray A hA
+  refine ⟨C, ?_⟩
+  intro x hx hB
+  -- the node dominates `exp (A x) ≥ exp (−C − x)`
+  have hexp : exp (-C - x) ≤ exp (A.eval x) := exp_monotone (hC x hx)
+  have hnn : (0 : Real) ≤ -log (B.eval x) := by
+    have t := neg_le_neg_wit hB
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at t; exact t
+  have hnode : exp (A.eval x) ≤ exp (A.eval x) - log (B.eval x) := by
+    have v := add_le_add_left hnn (exp (A.eval x))
+    have e1 : exp (A.eval x) + (0 : Real) = exp (A.eval x) := by mach_ring
+    have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+    rw [e1, e2] at v; exact v
+  have hlow : exp (-C - x) ≤ exp (A.eval x) - log (B.eval x) := le_trans hexp hnode
+  -- take logs
+  have hmono : log (exp (-C - x)) ≤ log (exp (A.eval x) - log (B.eval x)) :=
+    log_le_log (exp_pos _) hlow
+  rw [log_exp] at hmono
+  have t := neg_le_neg_wit hmono
+  have e : -(-C - x) = C + x := by mach_ring
+  rw [e] at t; exact t
+
+/-- **The branch that is open.** At depth 3 the right child's logarithm can reach the exponential
+scale, so `exp (A x) − log (B x)` may be small by cancellation rather than by `A` being small. This
+is the depth-3 analogue of what the five closed forms disposed of at depth 2, and there is no
+classification of depth-2 expressions to dispose of it here.
+
+Named rather than assumed, as `SignHardCase` and `VarLeftEmlRightHard` were. -/
+def Depth3DecayHard : Prop :=
+  ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 →
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (B.eval x) →
+      0 < exp (A.eval x) - log (B.eval x) →
+      -log (exp (A.eval x) - log (B.eval x)) ≤ C + x
+
+
 end MachLib

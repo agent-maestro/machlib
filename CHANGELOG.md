@@ -7,6 +7,28 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### `V₃` easy branch — and a correction: the decay pattern is a conjecture, not a consequence
+
+The previous commit suggested `V₁ ~ constant`, `V₂ ~ log x`, `V₃ ~ x`, each inherited from the floor
+one level below. **That reasoning is valid only on the branch where the right child contributes
+nothing**, and attempting the rest showed exactly where it stops.
+
+`depth_le_three_decay_log_nonpos` is the branch that works: with `log (B x) ≤ 0` the node dominates
+`exp (A x)`, and the new depth-2 floor `A x ≥ −C − x` gives a **linear** decay bound — one level
+worse than `V₂`'s logarithmic one, as predicted.
+
+**`Depth3DecayHard` is the branch that does not**, and it is named rather than assumed. At depth 2,
+`V₂` closed because the right child ranges over *five closed forms* and every `log (B x) > 0` branch
+was vacuous on a far enough ray. At depth 3 the right child ranges over depth-2 expressions, whose
+logarithm can reach `exp x + K` — so `exp (A x) − log (B x)` may be small by **near-cancellation**
+rather than by `A` being small, and no floor on `A` alone bounds it.
+
+Worth being blunt: last commit's "the pattern **should** be" was hedged, and the hedge was doing
+real work. The floor gives one branch; the other is the cancellation question again, arriving from a
+third direction. This is now the fourth proposition in the corpus stated as a named obligation
+(`TowerLowerBound`, `SignHardCase`, `VarLeftEmlRightHard`, this), and the second of those to be a
+cancellation statement.
+
 ### The depth-2 lower envelope — and the answer to whether the type list is needed
 
 `depth_le_two_lower_on_ray`: a depth-≤2 expression satisfies `t(x) ≥ −C − x` on a ray.
