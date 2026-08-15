@@ -543,8 +543,14 @@ the obligations ledger did exactly that. It is not established, and the gap is n
 What `SignHardCase` buys, via `evSign_of_hard`, is that every tree is eventually of constant sign —
 which is what lets the decay bound `V_j` fix a ray past the last sign change. But `V_j` is a
 *quantitative* statement (`-log t x ≤ C + log x`), and eventual sign-definiteness supplies only the
-ray, not the rate. At depth ≤ 2 the rate comes from the depth-≤1 classification, by hand. For a
-general `j` there is no such classification, and nothing here supplies one.
+ray, not the rate. At depth ≤ 2 the rate comes from the depth-≤1 classification, by hand.
+
+One level further is now costed rather than absent: `depth_le_two_normal_form` classifies depth-≤2
+values, and reading `Depth3DecayHard` through it settles the convergent regime — a converging
+depth-≤2 value approaches its limit exactly or at rate `Θ(1/x)`, both far weaker than `exp (−C − x)`.
+What that leaves at depth 3 is the divergent regime alone. **For general `j` there is still no
+classification**, and nothing here supplies one, so this Prop stays open; but the obstruction is
+narrower than "no route at any depth beyond 2", and should not be quoted as such.
 
 So this Prop names the implication rather than claiming it. Discharging it means proving the
 growth/decay pair iterates at every depth — `U_j` and `V_j` for all `j`, not the three levels done by
