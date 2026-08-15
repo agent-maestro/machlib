@@ -4998,10 +4998,29 @@ theorem depth_le_three_decay_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 2) :
 
 /-- **The branch that is open.** At depth 3 the right child's logarithm can reach the exponential
 scale, so `exp (A x) − log (B x)` may be small by cancellation rather than by `A` being small. This
-is the depth-3 analogue of what the five closed forms disposed of at depth 2, and there is no
-classification of depth-2 expressions to dispose of it here.
+is the depth-3 analogue of what the five closed forms disposed of at depth 2.
 
-Named rather than assumed, as `SignHardCase` and `VarLeftEmlRightHard` were. -/
+Named rather than assumed, as `SignHardCase` and `VarLeftEmlRightHard` were.
+
+**Re-scoped 2026-08-14, and the earlier text was wrong.** This docstring used to end "and there is no
+classification of depth-2 expressions to dispose of it here". There is: `depth_le_two_normal_form`,
+added after this obligation was named, and never re-read against it. What the classification buys:
+
+*The convergent regime is understood.* Where the node tends to a finite limit, convexity turns the
+decay bound into a question about **approach rates** — `exp u − exp v ≥ (u − v) exp v` reduces
+`−log(exp u − k) ≤ C + x` to "`u` does not approach `log k` from above faster than exponentially".
+Enumerating the five forms shows a depth-≤2 value approaches a finite limit **either exactly or at
+rate `Θ(1/x)`, never faster**: the only decaying shape available is `exp (c − log x) = e^c/x`, and
+the totalised `Log` contributes an exact `0` rather than something tending to `0`. Both bounds are
+comfortably weaker than `exp (−C − x)`. Constant-tuning moves the limit, not the rate.
+
+*What is genuinely left* is the divergent regime: `u → ∞` with `log (B x)` tracking `exp u` from
+below, both at the exponential scale by `U₂`. That is a cancellation between two exponential-scale
+quantities — the same phenomenon `SignHardCase` meets one derivative up (sign there, magnitude
+here); neither implies the other.
+
+So this is no longer "unrouted": it is a costed 5 × 5 enumeration plus one open regime. See
+`monogate-research/exploration/eml_depth_induction_2026_08_13/APPROACH_RATE_QUANTISATION.md`. -/
 def Depth3DecayHard : Prop :=
   ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 →
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (B.eval x) →
