@@ -6251,8 +6251,26 @@ not apply and this is a separate statement. The enumeration behind it is routine
 sharp: writing `Q = exp a − Log b`, only `a = exp x − d` with `d = 0` is delicate. `d > 0` scales `Q`
 down by `exp (−d)` and opens a gap of order `exp (exp x)`; `d < 0` pushes `Q` *above* `exp (exp x)`,
 making the hypothesis false; `a = exp x − log x` divides by `x` and again opens an enormous gap; and
-every other form of `a` leaves `Q` far below. At `d = 0` the gap is exactly `Log (b x)`, which is a
-positive constant, grows, or is zero — and zero makes the node vanish, so the hypothesis fails. -/
+every other form of `a` leaves `Q` far below. At `d = 0` the gap is exactly `Log (b x)`, and that cell is
+now closed by `depth_le_one_log_gap_pos`.
+
+**Assembly route, worked out but not written.** Three of the five `A`-forms (`α`, `x`, `c − log x`)
+give `exp (A x)` bounded by a constant or by `exp x`, and `exp (exp x) ≥ exp x ≥ x + x` leaves room to
+spare against the constant floor `Cl ≤ log (B x)` from `depth_le_one_log_lower_at_infinity`. The two
+`exp x − …` forms need `exp_sub_exp_lower` and a division-free trick:
+
+* `a = exp x − d`, `d > 0`: the gap is at least `d · exp (exp x − d) + Cl`, and **`d = exp (log d)`**
+  turns the product into `exp (log d + exp x − d)`, which `self_le_exp` then bounds below by
+  `log d + exp x − d`. Linear in the end, so the ray is explicit. Writing `d` as `exp (log d)` is what
+  removes the need to divide by `d`, which this base cannot do.
+* `a = exp x − d`, `d < 0`: **vacuous**, and the same trick shows it. `exp (exp x − d) − exp (exp x)`
+  is at least `(−d) · exp (exp x) = exp (log (−d) + exp x)`, which outruns the linear ceiling
+  `log (B x) ≤ x + D`, so the hypothesis `Q x < exp (exp x)` fails on a ray.
+* `a = exp x − log x`: the gap is at least `log x · exp (exp x − log x) + Cl`, and past `x ≥ e` the
+  factor `log x ≥ 1` makes it at least `exp (exp x − log x) + Cl ≥ x + Cl`.
+
+Estimated ~400 lines, mostly ray plumbing. The mathematics is in `depth_le_one_log_gap_pos` and the
+two convexity applications; everything else is arithmetic. -/
 def ExpExpGapBelow : Prop :=
   ∀ Q : EMLTree, Q.depth ≤ 2 → ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧
     ∀ x : Real, X₀ ≤ x → Q.eval x < exp (exp x) → ε ≤ exp (exp x) - Q.eval x
