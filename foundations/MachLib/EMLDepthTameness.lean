@@ -5027,9 +5027,21 @@ Two of the three open ones are **cancellation** statements — `SignHardCase` ab
 So the programme's open problems are not scattered: they are one phenomenon met from three
 directions.
 
-**An honest limit of this ledger.** "Discharged" is machine-checkable — there is a theorem whose
-conclusion is the proposition, and the claim auditor pins it. **"Open" is not.** Absence of a proof
-is not a theorem, so the middle column is maintained by hand and can rot. If an obligation is later
-discharged, the row must be updated by whoever proves it; nothing will fail if they forget. -/
+**How this table is kept honest.** "Discharged" is directly machine-checkable — there is a theorem
+whose conclusion is the proposition. "Open" is not, in the sense that matters mathematically: the
+absence of a proof is not itself a theorem, and no gate can certify that none exists. But the failure
+mode we actually feared was narrower and *is* checkable — an obligation gets discharged and its row
+is never updated, so the ledger reports open work that is finished.
+
+`tools/check_obligations.sh` closes exactly that gap, in both directions. It parses these rows and,
+for each, searches the corpus for theorems whose **conclusion** is the named proposition (binders of
+the form `(h : P)` are stripped first, so a *consumer* of an obligation does not read as a
+*discharger* — that distinction is not pedantic, it is the error a hand audit of this very table made
+first time round). A row marked open with such a theorem is STALE; a row marked discharged whose
+cited theorem does not conclude it is BROKEN. The gate carries two convict specimens and fails if
+either stops firing.
+
+So the residual hand-maintained content is only the claim that nobody has a proof *outside* this
+corpus. Everything inside it is now gated. -/
 
 end MachLib

@@ -116,6 +116,20 @@ jobs:
         working-directory: foundations
         run: python3 tools/claim_audit/claim_audit.py
 
+      # The claim auditor pins prose to a theorem's axiom footprint. It cannot see
+      # a claim about a theorem that does not exist — including the claim "this
+      # obligation is still open". EMLDepthTameness ends with a ledger of named
+      # obligations; "discharged" rows were checkable (the theorem is cited), but
+      # "open" rows were pure assertion, so discharging an obligation and forgetting
+      # its row failed nothing. This gate checks both directions against the corpus:
+      # an "open" row with a theorem concluding it is STALE, a "discharged" row whose
+      # cited theorem does not conclude it is BROKEN. Exit 2 = ledger unreadable
+      # (UNAVAILABLE, deliberately distinct from a pass). Canary self-test included:
+      # two convict specimens must fire and a correct row must stay silent.
+      - name: Obligations ledger (open/discharged rows ↔ the corpus)
+        working-directory: foundations
+        run: bash tools/check_obligations.sh
+
       - name: Write build-time badge JSON
         env:
           BUILD_SECONDS: ${{ steps.cold_build.outputs.seconds }}

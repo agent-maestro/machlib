@@ -49,23 +49,31 @@ authoritative claim inventory is **`foundations/docs/what_is_proven.md`**.
 
 ## How to run the gates
 
-**All six run from `foundations/`, not the repo root** (this is what CI does):
+**All seven run from `foundations/`, not the repo root** (this is what CI does):
 
 ```bash
 cd foundations
-lake build                                     # 619 jobs, ~3 s warm
+lake build                                     # 626 jobs, ~3 s warm
 bash scripts/check_aggregator.sh               # every module reachable
 bash scripts/check_consistency_model.sh        # flagship closure has an external ℤ-model
 bash scripts/check_discovered_compiles.sh 4    # the 294 Forge @verify files still compile (~1 min)
 lake env lean AxiomLedger.lean                 # "242 axioms pinned; 57 headline footprints ⊆ trusted"
-python3 tools/claim_audit/claim_audit.py       # "all 41 claims resolve against #print axioms"
+python3 tools/claim_audit/claim_audit.py       # "all 154 claims resolve against #print axioms"
+bash tools/check_obligations.sh                # EMLDepthTameness's open/discharged rows ↔ the corpus
 ```
 
 `lake env lean tools/sorry_audit.lean` is useful (`1 sorryAx`, allowlisted) but is **not** a CI gate,
 and note its scope: it walks the **environment** after `import MachLib`, so it cannot see
 `Discovered/`. Neither is `scripts/closerate.sh`, which is a *measurement* harness (close-rate,
-77.1% at the last sweep), not pass/fail. The CI gate set is exactly the six above
+77.1% at the last sweep), not pass/fail. The CI gate set is exactly the seven above
 (`.github/workflows/build-time.yml`).
+
+Note what the last two gate, because it is *not* the same thing. The claim auditor pins prose to the
+axiom footprint of a theorem that **exists**; it is structurally blind to a claim about a theorem
+that does not — including "this obligation is still open". `check_obligations.sh` covers that one
+case: it fails if a row says open and the corpus disagrees, or says discharged and the cited theorem
+does not conclude the proposition. Neither gate can tell you a claim with no registered theorem
+behind it is missing — registration is still a human act.
 
 ## Gotchas
 
