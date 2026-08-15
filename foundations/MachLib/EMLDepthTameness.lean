@@ -6053,6 +6053,169 @@ theorem depth_three_decay_const_left (c : Real) (Q : EMLTree) (hQ : Q.depth ≤ 
   have e : -(-C - x) = C + x := by mach_ring
   rw [e] at v; exact v
 
+
+
+/-- **`Depth3DecayHard` is false.**
+
+Witness `A = var`, `B = dep3CounterRight`. Writing `ε = exp (−(C+1) − x)`, the node is at most `ε` as
+soon as `exp (exp x − ε) ≤ exp (exp x) − log x`, and convexity supplies
+
+```
+exp (exp x) − exp (exp x − ε) ≥ ε · exp (exp x − ε) ≥ ε · exp (exp x − 1) = exp (exp x − 1 − (C+1) − x)
+```
+
+which clears `x ≥ log x` once `exp x ≥ x + x + (C + 2)` — that is, once `two_mul_add_le_exp` fires.
+So `−log node ≥ C + 1 + x`, contradicting the promised `≤ C + x`.
+
+**Why it fails.** `exp x` and `log (B x)` sit at the *same* scale, and the totalisation is what puts
+them there: `log 0 = 0` makes `eml var (const 0)` exactly `exp x`, so one further node reaches
+`exp (exp x)` and its logarithm lands back on `exp x`. The two then differ by `log x · exp (−exp x)`,
+and no bound of the form `C + x` can see a difference that small. The rung has to be `C + exp x`;
+`Depth3DecayExp` states that. -/
+theorem not_depth3DecayHard : ¬ Depth3DecayHard := by
+  intro h
+  obtain ⟨C, X₀, hX₀, hb⟩ :=
+    h EMLTree.var dep3CounterRight (Nat.zero_le 2) (Nat.le_of_eq dep3CounterRight_depth)
+  obtain ⟨T, hT⟩ := two_mul_add_le_exp (C + 1 + 1)
+  have hmain : ∀ x : Real, X₀ ≤ x → T ≤ x → (1 : Real) + 1 ≤ x → -C ≤ x → False := by
+    intro x hxX₀ hxT hx2 hxC
+    have hx1 : (1 : Real) ≤ x := le_trans hX₀ hxX₀
+    have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+    have hx0p : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    have hCx : (0 : Real) ≤ C + x := by
+      have v := add_le_add_wit (le_refl C) hxC
+      have e : C + -C = (0 : Real) := by mach_ring
+      rw [e] at v; exact v
+    have heps1 : exp (-(C + 1) - x) ≤ 1 := by
+      have hneg : -(C + 1) - x ≤ 0 := by
+        have v := add_le_add_wit (neg_le_neg_wit hCx) (neg_le_neg_wit (le_of_lt zero_lt_one_ax))
+        have e1 : -(C + x) + -1 = -(C + 1) - x := by mach_mpoly [C, x]
+        have e2 : -(0 : Real) + -0 = 0 := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hm := exp_monotone hneg
+      rw [exp_zero] at hm; exact hm
+    have h1x : (1 : Real) < exp x := by
+      have hlt : (1 : Real) < 1 + x := by
+        have v := add_lt_add_left hx0p 1
+        have e : (1 : Real) + 0 = 1 := by mach_ring
+        rw [e] at v; exact v
+      exact lt_of_lt_of_le hlt (one_add_le_exp x)
+    have hlow : (0 : Real) < exp x - exp (-(C + 1) - x) := by
+      have hone : exp (-(C + 1) - x) < exp x := lt_of_le_of_lt heps1 h1x
+      have w := add_lt_add_left hone (-exp (-(C + 1) - x))
+      have e1 : -exp (-(C + 1) - x) + exp (-(C + 1) - x) = (0 : Real) := by
+        mach_mpoly [exp (-(C + 1) - x)]
+      have e2 : -exp (-(C + 1) - x) + exp x = exp x - exp (-(C + 1) - x) := by mach_ring
+      rw [e1, e2] at w; exact w
+    have hBval : dep3CounterRight.eval x = exp (exp x) - log x := dep3CounterRight_eval x
+    have hlogx : (0 : Real) < log x := by
+      have hone1 : (1 : Real) < 1 + 1 := by
+        have v := add_lt_add_left zero_lt_one_ax 1
+        have e : (1 : Real) + 0 = 1 := by mach_ring
+        rw [e] at v; exact v
+      have h1 := log_lt_log zero_lt_one_ax (lt_of_lt_of_le hone1 hx2)
+      have hl1 : log (1 : Real) = 0 := by
+        have hz : exp (0 : Real) = 1 := exp_zero
+        rw [← hz, log_exp]
+      rw [hl1] at h1; exact h1
+    have hlogle : log x ≤ x := log_le_self_on_ray hx1
+    have hkey : exp (exp x - exp (-(C + 1) - x)) ≤ exp (exp x) - log x := by
+      have hconv : (exp x - (exp x - exp (-(C + 1) - x))) * exp (exp x - exp (-(C + 1) - x))
+          ≤ exp (exp x) - exp (exp x - exp (-(C + 1) - x)) :=
+        exp_sub_exp_lower (exp x) (exp x - exp (-(C + 1) - x))
+      have e0 : exp x - (exp x - exp (-(C + 1) - x)) = exp (-(C + 1) - x) := by
+        mach_mpoly [exp x, exp (-(C + 1) - x)]
+      rw [e0] at hconv
+      have hshift : exp (exp x - 1) ≤ exp (exp x - exp (-(C + 1) - x)) := by
+        refine exp_monotone ?_
+        have v := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit heps1)
+        have e1 : exp x + -1 = exp x - 1 := by mach_ring
+        have e2 : exp x + -exp (-(C + 1) - x) = exp x - exp (-(C + 1) - x) := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hprod : exp (exp x - 1 - (C + 1) - x)
+          ≤ exp (-(C + 1) - x) * exp (exp x - exp (-(C + 1) - x)) := by
+        have hm := mul_le_mul_of_nonneg_left hshift (le_of_lt (exp_pos (-(C + 1) - x)))
+        have e : exp (-(C + 1) - x) * exp (exp x - 1) = exp (exp x - 1 - (C + 1) - x) := by
+          rw [← exp_add]
+          have e' : -(C + 1) - x + (exp x - 1) = exp x - 1 - (C + 1) - x := by
+            mach_mpoly [C, x, exp x]
+          rw [e']
+        rw [e] at hm; exact hm
+      have hbig : x ≤ exp (exp x - 1 - (C + 1) - x) := by
+        refine le_trans ?_ (self_le_exp _)
+        have v := add_le_add_wit (hT x hxT) (le_refl (-1 - (C + 1) - x))
+        have e1 : x + x + (C + 1 + 1) + (-1 - (C + 1) - x) = x := by mach_mpoly [x, C]
+        have e2 : exp x + (-1 - (C + 1) - x) = exp x - 1 - (C + 1) - x := by mach_mpoly [exp x, C, x]
+        rw [e1, e2] at v; exact v
+      have hchain : log x ≤ exp (exp x) - exp (exp x - exp (-(C + 1) - x)) :=
+        le_trans hlogle (le_trans hbig (le_trans hprod hconv))
+      have v := add_le_add_wit hchain (le_refl (exp (exp x - exp (-(C + 1) - x)) - log x))
+      have e1 : log x + (exp (exp x - exp (-(C + 1) - x)) - log x)
+          = exp (exp x - exp (-(C + 1) - x)) := by
+        mach_mpoly [log x, exp (exp x - exp (-(C + 1) - x))]
+      have e2 : exp (exp x) - exp (exp x - exp (-(C + 1) - x))
+          + (exp (exp x - exp (-(C + 1) - x)) - log x) = exp (exp x) - log x := by
+        mach_mpoly [exp (exp x), exp (exp x - exp (-(C + 1) - x)), log x]
+      rw [e1, e2] at v; exact v
+    have hBpos : (0 : Real) < dep3CounterRight.eval x := by
+      rw [hBval]; exact lt_of_lt_of_le (exp_pos _) hkey
+    have hloglow : exp x - exp (-(C + 1) - x) ≤ log (dep3CounterRight.eval x) := by
+      rw [hBval]
+      have hm := log_le_log (exp_pos (exp x - exp (-(C + 1) - x))) hkey
+      rw [log_exp] at hm; exact hm
+    have hnodele : exp (EMLTree.var.eval x) - log (dep3CounterRight.eval x)
+        ≤ exp (-(C + 1) - x) := by
+      show exp x - log (dep3CounterRight.eval x) ≤ exp (-(C + 1) - x)
+      have v := add_le_add_wit (le_refl (exp x)) (neg_le_neg_wit hloglow)
+      have e1 : exp x + -log (dep3CounterRight.eval x)
+          = exp x - log (dep3CounterRight.eval x) := by mach_ring
+      have e2 : exp x + -(exp x - exp (-(C + 1) - x)) = exp (-(C + 1) - x) := by
+        mach_mpoly [exp x, exp (-(C + 1) - x)]
+      rw [e1, e2] at v; exact v
+    have hlogBpos : (0 : Real) < log (dep3CounterRight.eval x) := lt_of_lt_of_le hlow hloglow
+    have hnodepos : (0 : Real) < exp (EMLTree.var.eval x) - log (dep3CounterRight.eval x) := by
+      show (0 : Real) < exp x - log (dep3CounterRight.eval x)
+      have hBlt : dep3CounterRight.eval x < exp (exp x) := by
+        rw [hBval]
+        have v := add_lt_add_left hlogx (exp (exp x) - log x)
+        have e1 : exp (exp x) - log x + (0 : Real) = exp (exp x) - log x := by mach_ring
+        have e2 : exp (exp x) - log x + log x = exp (exp x) := by
+          mach_mpoly [exp (exp x), log x]
+        rw [e1, e2] at v; exact v
+      have hlt := log_lt_log hBpos hBlt
+      rw [log_exp] at hlt
+      have w := add_lt_add_left hlt (-log (dep3CounterRight.eval x))
+      have e1 : -log (dep3CounterRight.eval x) + log (dep3CounterRight.eval x) = (0 : Real) := by
+        mach_mpoly [log (dep3CounterRight.eval x)]
+      have e2 : -log (dep3CounterRight.eval x) + exp x
+          = exp x - log (dep3CounterRight.eval x) := by mach_ring
+      rw [e1, e2] at w; exact w
+    have hprom := hb x hxX₀ hlogBpos hnodepos
+    have hmono := log_le_log hnodepos hnodele
+    rw [log_exp] at hmono
+    have hneg := neg_le_neg_wit hmono
+    have e : -(-(C + 1) - x) = C + 1 + x := by mach_mpoly [C, x]
+    rw [e] at hneg
+    have hcontra : C + 1 + x ≤ C + x := le_trans hneg hprom
+    have v := add_lt_add_left zero_lt_one_ax (C + x)
+    have e1 : C + x + (0 : Real) = C + x := by mach_ring
+    have e2 : C + x + 1 = C + 1 + x := by mach_mpoly [C, x]
+    rw [e1, e2] at v
+    exact absurd (lt_of_lt_of_le v hcontra) (lt_irrefl_ax (C + x))
+  have hX₀0 : (0 : Real) ≤ X₀ := le_trans (le_of_lt zero_lt_one_ax) hX₀
+  have hp1 : (0 : Real) ≤ X₀ + exp T := le_trans hX₀0 (le_add_nonneg_r' (le_of_lt (exp_pos T)))
+  have hp2 : (0 : Real) ≤ X₀ + exp T + exp (1 + 1) :=
+    le_trans hp1 (le_add_nonneg_r' (le_of_lt (exp_pos (1 + 1))))
+  refine hmain (X₀ + exp T + exp (1 + 1) + exp (-C)) ?_ ?_ ?_ ?_
+  · exact le_trans (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos T)))
+      (le_add_nonneg_r' (le_of_lt (exp_pos (1 + 1))))) (le_add_nonneg_r' (le_of_lt (exp_pos (-C))))
+  · exact le_trans (self_le_exp T) (le_trans (le_add_nonneg_l' hX₀0)
+      (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos (1 + 1))))
+        (le_add_nonneg_r' (le_of_lt (exp_pos (-C))))))
+  · exact le_trans (self_le_exp (1 + 1)) (le_trans (le_add_nonneg_l' hp1)
+      (le_add_nonneg_r' (le_of_lt (exp_pos (-C)))))
+  · exact le_trans (self_le_exp (-C)) (le_add_nonneg_l' hp2)
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
@@ -6063,7 +6226,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
-| `Depth3DecayHard` | here | **refuted** | — (false; witness `dep3CounterRight`) |
+| `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 

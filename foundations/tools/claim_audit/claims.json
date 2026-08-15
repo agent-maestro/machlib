@@ -3141,6 +3141,26 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The refutation. hypotheses_count 0 -- it is a closed statement, which is the point: nothing is assumed, so the obligation is false outright rather than false under some reading. Pinned because a refutation that silently acquired an axiom would be worse than an unproven one: it would license deleting a research direction on bad evidence.",
+      "id": "depth3decayhard-refuted-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "No numerics enter the proof; the table above is corroboration, not evidence."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.not_depth3DecayHard",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Depth3DecayHard"
+      ],
+      "conclusion_mentions": [
+        "Depth3DecayHard"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

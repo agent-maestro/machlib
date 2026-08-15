@@ -18,7 +18,7 @@ in commit archaeology:
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
-| `Depth3DecayHard` | **refuted** | — (false; witness `dep3CounterRight`) |
+| `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `TowerReducesToSign` | **open** | — |
 
@@ -60,12 +60,17 @@ true. What the refutation kills is the *conjunction* over all four cells.
 
 The four-cell decomposition was built to locate the difficulty, and the cell it isolated as hardest —
 `P = var`, the sole occupant of the single-exponential rung — is exactly where the statement fails.
-Machine-checked here: the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`). The asymptotic
-estimate is paper and numerics; **the Lean refutation is not yet written**.
+**`not_depth3DecayHard` proves it.** The estimate is elementary: with `ε = exp(−(C+1) − x)`, the node
+is at most `ε` once `exp(exp x − ε) ≤ exp(exp x) − log x`, and convexity gives
+`exp(exp x) − exp(exp x − ε) ≥ ε·exp(exp x − 1) = exp(exp x − 1 − (C+1) − x)`, which clears
+`x ≥ log x` as soon as `two_mul_add_le_exp` fires. So `−log node ≥ C + 1 + x`, contradicting the
+promised `≤ C + x`. No numerics enter the proof; the table above is corroboration, not evidence.
 
-The obligations ledger grows a third status, `refuted`, checked like `open` (no theorem may conclude
-it) but reported as a contradiction rather than staleness — proving something recorded as false is a
-worse failure than proving something recorded as unproven.
+The obligations ledger grows a third status, `refuted`, with a **stronger** check than `open`: a
+theorem concluding the proposition is a contradiction (CONTRA), *and* the row must be backed by a
+theorem concluding its negation (UNBACKED otherwise). Without that second half, "refuted" would be
+an assertion with extra confidence — the exact failure the ledger exists to prevent. Two new convict
+specimens cover both halves; six fire, one stays silent.
 
 ### The `P = const` cell discharged — two of four
 
