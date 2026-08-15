@@ -6242,6 +6242,83 @@ theorem depth_three_decayExp_const_left (c : Real) (Q : EMLTree) (hQ : Q.depth �
   obtain ⟨C, X₀, hX₀, h⟩ := depth_three_decay_const_left c Q hQ
   exact ⟨C, X₀, hX₀, fun x hx h1 h2 => rung_weaken (h x hx h1 h2)⟩
 
+
+/-- **What the `P = var` cell reduces to.** A depth-≤2 value cannot approach `exp (exp x)` from below
+with a shrinking gap.
+
+Unlike `depth_le_two_gap_below`, the target here **moves with `x`**, which is why that theorem does
+not apply and this is a separate statement. The enumeration behind it is routine and the collapse is
+sharp: writing `Q = exp a − Log b`, only `a = exp x − d` with `d = 0` is delicate. `d > 0` scales `Q`
+down by `exp (−d)` and opens a gap of order `exp (exp x)`; `d < 0` pushes `Q` *above* `exp (exp x)`,
+making the hypothesis false; `a = exp x − log x` divides by `x` and again opens an enormous gap; and
+every other form of `a` leaves `Q` far below. At `d = 0` the gap is exactly `Log (b x)`, which is a
+positive constant, grows, or is zero — and zero makes the node vanish, so the hypothesis fails. -/
+def ExpExpGapBelow : Prop :=
+  ∀ Q : EMLTree, Q.depth ≤ 2 → ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧
+    ∀ x : Real, X₀ ≤ x → Q.eval x < exp (exp x) → ε ≤ exp (exp x) - Q.eval x
+
+/-- **The `P = var` cell follows from it.** The reduction is the content; the enumeration is grinding.
+
+`node = exp x − log (Q x)` is positive exactly when `Q x < exp (exp x)`, and reverse convexity turns a
+gap at the *value* level into a gap at the *exponent* level losing only the factor `exp (exp x)`:
+
+```
+exp (exp x) − Q x ≤ (exp x − log (Q x)) · exp (exp x)
+```
+
+so a constant floor `ε` on the value gap gives `node ≥ ε · exp (−exp x)`, which is exactly
+`exp (−C − exp x)` for `C = −log ε`. **The corrected rung is what makes this work**: the same argument
+against `C + x` would need `ε · exp (−exp x) ≥ exp (−C − x)`, which is false. The rung and the
+`exp (exp x)` target are the same phenomenon seen from two sides. -/
+theorem depth_three_decayExp_var_left_of_gap (h : ExpExpGapBelow) (Q : EMLTree) (hQ : Q.depth ≤ 2) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
+      0 < exp x - log (Q.eval x) → -log (exp x - log (Q.eval x)) ≤ C + exp x := by
+  obtain ⟨ε, X₁, hε, hX₁, hgap⟩ := h Q hQ
+  refine ⟨-log ε, X₁, hX₁, ?_⟩
+  intro x hx hlogpos hnodepos
+  have hQpos : (0 : Real) < Q.eval x := by
+    rcases lt_total 0 (Q.eval x) with hq | hq | hq
+    · exact hq
+    · have hle : Q.eval x ≤ 0 := by rw [← hq]; exact le_refl 0
+      rw [log_nonpos hle] at hlogpos
+      exact absurd hlogpos (lt_irrefl_ax 0)
+    · rw [log_nonpos (le_of_lt hq)] at hlogpos
+      exact absurd hlogpos (lt_irrefl_ax 0)
+  have hlt : log (Q.eval x) < exp x := by
+    have v := add_lt_add_left hnodepos (log (Q.eval x))
+    have e1 : log (Q.eval x) + (0 : Real) = log (Q.eval x) := by mach_ring
+    have e2 : log (Q.eval x) + (exp x - log (Q.eval x)) = exp x := by
+      mach_mpoly [log (Q.eval x), exp x]
+    rw [e1, e2] at v; exact v
+  have hQlt : Q.eval x < exp (exp x) := by
+    have hh := exp_lt hlt
+    rw [exp_log hQpos] at hh; exact hh
+  have hconv : exp (exp x) - exp (log (Q.eval x))
+      ≤ (exp x - log (Q.eval x)) * exp (exp x) := exp_sub_exp_upper (exp x) (log (Q.eval x))
+  rw [exp_log hQpos] at hconv
+  have hmul : ε ≤ (exp x - log (Q.eval x)) * exp (exp x) := le_trans (hgap x hx hQlt) hconv
+  have hinv : exp (exp x) * exp (-exp x) = 1 := by
+    rw [← exp_add]
+    have e : exp x + -exp x = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  have hstep := mul_le_mul_of_nonneg_right hmul (le_of_lt (exp_pos (-exp x)))
+  have e3 : (exp x - log (Q.eval x)) * exp (exp x) * exp (-exp x)
+      = (exp x - log (Q.eval x)) * (exp (exp x) * exp (-exp x)) := by
+    mach_mpoly [exp x, log (Q.eval x), exp (exp x), exp (-exp x)]
+  rw [e3, hinv] at hstep
+  have e4 : (exp x - log (Q.eval x)) * (1 : Real) = exp x - log (Q.eval x) := by mach_ring
+  rw [e4] at hstep
+  have hrew : exp (-(-log ε) - exp x) = ε * exp (-exp x) := by
+    have e : -(-log ε) - exp x = log ε + -exp x := by mach_mpoly [log ε, exp x]
+    rw [e, exp_add, exp_log hε]
+  have hfloor : exp (-(-log ε) - exp x) ≤ exp x - log (Q.eval x) := by
+    rw [hrew]; exact hstep
+  have hmono := log_le_log (exp_pos (-(-log ε) - exp x)) hfloor
+  rw [log_exp] at hmono
+  have v := neg_le_neg_wit hmono
+  have e : -(-(-log ε) - exp x) = -log ε + exp x := by mach_mpoly [log ε, exp x]
+  rw [e] at v; exact v
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
@@ -6254,6 +6331,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
+| `ExpExpGapBelow` | here | **open** | — (what the `P = var` cell reduces to) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,

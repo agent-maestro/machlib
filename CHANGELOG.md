@@ -20,6 +20,7 @@ in commit archaeology:
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
+| `ExpExpGapBelow` | **open** | — (what the `P = var` cell reduces to) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
@@ -34,6 +35,27 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 `SignHardCase`; no such theorem exists, and the gap is real — sign-definiteness supplies the *ray* on
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
+
+### The `P = var` cell reduces to one statement about approaching `exp(exp x)`
+
+`ExpExpGapBelow` — a depth-≤2 value cannot approach `exp(exp x)` from below with a shrinking gap —
+and `depth_three_decayExp_var_left_of_gap`, which derives the cell from it.
+
+The target **moves with `x`**, which is why `depth_le_two_gap_below` does not apply and this needed
+naming rather than reusing. Reverse convexity turns a value-level gap into an exponent-level one
+losing only the factor `exp(exp x)`, so a constant floor `ε` gives `node ≥ ε·exp(−exp x)`, which is
+`exp(−C − exp x)` for `C = −log ε`.
+
+**The corrected rung is what makes this work.** The same argument against `C + x` would require
+`ε·exp(−exp x) ≥ exp(−C − x)`, which is false. The rung and the `exp(exp x)` target are one
+phenomenon seen from two sides — which is the clearest statement yet of why the refuted version was
+refuted.
+
+The enumeration behind `ExpExpGapBelow` is routine and its collapse is sharp: writing `Q = exp a − Log b`,
+only `a = exp x − d` with `d = 0` is delicate. `d > 0` scales `Q` down by `exp(−d)` and opens a gap of
+order `exp(exp x)`; `d < 0` pushes `Q` above `exp(exp x)` so the hypothesis fails; `a = exp x − log x`
+divides by `x`, again an enormous gap; every other `a` leaves `Q` far below. At `d = 0` the gap is
+exactly `Log(b x)` — a positive constant, or growing, or zero, and zero makes the node vanish.
 
 ### Two cells carry over to the corrected rung, as theorems rather than a remark
 

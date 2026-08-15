@@ -3184,6 +3184,29 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The var-cell reduction. hypotheses_count 2 -- the ExpExpGapBelow hypothesis and Q's depth bound. Registered because the claim is that the CORRECTED RUNG is what makes the reduction go through; if the theorem were ever restated with C + x it would not compile, but a weaker restatement that still compiled would silently drop the point, and this entry pins the prose that explains it.",
+      "id": "var-cell-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The rung and the `exp(exp x)` target are one\nphenomenon seen from two sides"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_decayExp_var_left_of_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
