@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-14
 
+### An obligations ledger, and an honest limit on it
+
+Four propositions have been introduced as named obligations — stated so a partial result can be
+committed without overstating it. The ledger now lives at the end of `EMLDepthTameness` rather than
+in commit archaeology:
+
+| obligation | status | discharged by |
+| --- | --- | --- |
+| `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
+| `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
+| `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
+| `Depth3DecayHard` | **open** | — |
+
+Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
+the first attempt returned consumers rather than dischargers, which is exactly the error the ledger
+exists to prevent.
+
+**Two of the three open ones are cancellation statements**: `SignHardCase` about the sign of
+`exp a − log b`, `Depth3DecayHard` about how small it can be. `TowerLowerBound` reduces to the first.
+The open problems are one phenomenon met from three directions.
+
+**The limit worth stating.** "Discharged" is machine-checkable — a theorem concludes the proposition
+and the claim auditor pins it. **"Open" is not.** Absence of a proof is not a theorem, so that column
+is maintained by hand and can rot: if someone discharges an obligation and forgets the row, nothing
+fails. That is the third structural gap in the claim architecture found this week, after prose citing
+a theorem that did not exist and a missing attribution — all three being things the auditor cannot
+see because they are not statements about a theorem's content.
+
 ### `V₃` easy branch — and a correction: the decay pattern is a conjecture, not a consequence
 
 The previous commit suggested `V₁ ~ constant`, `V₂ ~ log x`, `V₃ ~ x`, each inherited from the floor

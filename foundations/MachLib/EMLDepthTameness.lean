@@ -5009,4 +5009,27 @@ def Depth3DecayHard : Prop :=
       -log (exp (A.eval x) - log (B.eval x)) ≤ C + x
 
 
+
+/-! ### Obligations ledger
+
+Four propositions in this corpus have been introduced as *named obligations* — stated so that a
+partial result can be committed without overstating it. Their status, as of the last edit:
+
+| obligation | where | status | discharged by |
+| --- | --- | --- | --- |
+| `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
+| `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
+| `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
+| `Depth3DecayHard` | here | **open** | — |
+
+Two of the three open ones are **cancellation** statements — `SignHardCase` about the sign of
+`exp a − log b`, `Depth3DecayHard` about how small it can be. `TowerLowerBound` reduces to the first.
+So the programme's open problems are not scattered: they are one phenomenon met from three
+directions.
+
+**An honest limit of this ledger.** "Discharged" is machine-checkable — there is a theorem whose
+conclusion is the proposition, and the claim auditor pins it. **"Open" is not.** Absence of a proof
+is not a theorem, so the middle column is maintained by hand and can rot. If an obligation is later
+discharged, the row must be updated by whoever proves it; nothing will fail if they forget. -/
+
 end MachLib
