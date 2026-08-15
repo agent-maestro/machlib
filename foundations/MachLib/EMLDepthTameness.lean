@@ -4870,6 +4870,148 @@ def Depth1Form (f : Real → Real) : Prop :=
 theorem depth_le_one_form (A : EMLTree) (hA : A.depth ≤ 1) : Depth1Form A.eval :=
   depth_le_one_classification A hA
 
+private theorem one_le_one_add_exp (a : Real) : (1 : Real) ≤ 1 + exp a := by
+  have h := le_of_lt (exp_pos a)
+  have v := add_le_add_left h 1
+  have e : (1 : Real) + 0 = 1 := by mach_ring
+  rw [e] at v; exact v
+
+/-- Every positive constant dominates `exp (−C − x)` on `x ≥ 0`, for `C = −log g`. -/
+private theorem small_exp_below {g : Real} (hg : 0 < g) :
+    ∃ C : Real, ∀ x : Real, (0 : Real) ≤ x → exp (-C - x) ≤ g := by
+  refine ⟨-log g, ?_⟩
+  intro x hx
+  have hnx : -x ≤ (0 : Real) := by
+    have v := neg_le_neg_wit hx
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at v; exact v
+  have hle : -(-log g) - x ≤ log g := by
+    have v := add_le_add_left hnx (log g)
+    have e1 : log g + -x = -(-log g) - x := by mach_ring
+    have e2 : log g + (0 : Real) = log g := by mach_ring
+    rw [e1, e2] at v; exact v
+  have h2 := exp_monotone hle
+  rw [exp_log hg] at h2
+  exact h2
+
+/-- **Approach-rate quantisation, base case: a depth-≤1 value cannot approach a constant from above
+faster than exponentially.**
+
+For every `k` there are `C` and a ray on which `k < A(x)` forces `A(x) − k ≥ exp(−C − x)`. So no
+depth-≤1 expression can hug a constant from above at a super-exponential rate — the grammar has no
+shape that decays that fast at this depth.
+
+**Why it is true, form by form**, which is the content and not the bookkeeping:
+
+* `α` — the gap `α − k` is an exact positive constant, or the hypothesis is false;
+* `x`, `exp x − d`, `exp x − log x` — these diverge, so the gap exceeds `1` on a far enough ray;
+* `c − log x` — this tends to `−∞`, so `k < A(x)` is **false** on a far enough ray.
+
+The list is what makes the statement sharp: the only decaying shape available at depth ≤ 1 is
+`c − log x`, and it decays *downwards* through every constant rather than approaching one from above.
+Building `exp(−x)`, which would decay to `0` fast enough to break this, needs `−x` as an exponent,
+and `−x` is not among the five forms.
+
+This is the formal core of the approach-rate analysis in
+`monogate-research/.../APPROACH_RATE_QUANTISATION.md`. Its use is via convexity: since
+`exp u − exp v ≥ (u − v) · exp v`, a bound of this shape on the exponent is what turns a decay
+obligation like `Depth3DecayHard` into a statement the classification can answer. -/
+theorem depth_le_one_approach_constant (A : EMLTree) (hA : A.depth ≤ 1) (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → k < A.eval x →
+      exp (-C - x) ≤ A.eval x - k := by
+  obtain ⟨C1, hC1⟩ := small_exp_below zero_lt_one_ax
+  rcases depth_le_one_classification A hA with
+      ⟨α, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+  · -- constant `α`: an exact gap, or a false hypothesis
+    rcases lt_total k α with hka | hka | hka
+    · obtain ⟨C, hC⟩ := small_exp_below (sub_pos_of_lt hka)
+      refine ⟨C, 1, le_refl 1, ?_⟩
+      intro x hx _
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos]
+      exact hC x (le_of_lt hxpos)
+    · refine ⟨C1, 1, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos, hka] at hlt
+      exact absurd hlt (lt_irrefl_ax α)
+    · refine ⟨C1, 1, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos] at hlt
+      exact absurd (lt_trans_ax hka hlt) (lt_irrefl_ax α)
+  · -- the identity: the gap passes `1`
+    refine ⟨C1, 1 + exp k, one_le_one_add_exp k, ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp k) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    have hstep : (1 : Real) + k ≤ 1 + exp k := add_le_add_left (self_le_exp k) 1
+    have hx2 : (1 : Real) + k ≤ x := le_trans hstep hx
+    have h1 : (1 : Real) ≤ x - k := by
+      have v := add_le_add_wit hx2 (le_refl (-k))
+      have e1 : 1 + k + -k = (1 : Real) := by mach_mpoly [k]
+      have e2 : x + -k = x - k := by mach_ring
+      rw [e1, e2] at v; exact v
+    exact le_trans (hC1 x (le_of_lt hxpos)) h1
+  · -- `c − log x` falls below every constant: the hypothesis is eventually false
+    refine ⟨C1, 1 + exp (c - k), one_le_one_add_exp (c - k), ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp (c - k)) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hge : exp (c - k) ≤ x := by
+      have h1 : exp (c - k) ≤ 1 + exp (c - k) := by
+        have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp (c - k)))
+        have e1 : (0 : Real) + exp (c - k) = exp (c - k) := by mach_ring
+        rw [e1] at v; exact v
+      exact le_trans h1 hx
+    have hlog : c - k ≤ log x := by
+      have h2 := log_le_log (exp_pos (c - k)) hge
+      rw [log_exp] at h2; exact h2
+    have hle : c - log x ≤ k := by
+      have v := add_le_add_wit (le_refl c) (neg_le_neg_wit hlog)
+      have e1 : c + -(c - k) = k := by mach_mpoly [c, k]
+      have e2 : c + -log x = c - log x := by mach_ring
+      rw [e1, e2] at v; exact v
+    exact absurd (lt_of_lt_of_le hlt hle) (lt_irrefl_ax k)
+  · -- `exp x − d` diverges
+    refine ⟨C1, 1 + exp (d + k), one_le_one_add_exp (d + k), ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp (d + k)) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    have hstep : (1 : Real) + (d + k) ≤ 1 + exp (d + k) :=
+      add_le_add_left (self_le_exp (d + k)) 1
+    have hx2 : (1 : Real) + (d + k) ≤ x := le_trans hstep hx
+    have h3 : (1 : Real) + (d + k) ≤ exp x := le_trans hx2 (self_le_exp x)
+    have h1 : (1 : Real) ≤ exp x - d - k := by
+      have v := add_le_add_wit h3 (le_refl (-(d + k)))
+      have e1 : 1 + (d + k) + -(d + k) = (1 : Real) := by mach_mpoly [d, k]
+      have e2 : exp x + -(d + k) = exp x - d - k := by mach_mpoly [exp x, d, k]
+      rw [e1, e2] at v; exact v
+    exact le_trans (hC1 x (le_of_lt hxpos)) h1
+  · -- `exp x − log x` diverges: `exp x ≥ x + x` beats the `log x` it subtracts
+    refine ⟨C1, 1 + exp k, one_le_one_add_exp k, ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp k) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    have hxx : x ≤ exp x - log x := by
+      have v := add_le_add_wit (two_mul_le_exp (le_of_lt hxpos))
+        (neg_le_neg_wit (log_le_self_on_ray hx1))
+      have e1 : x + x + -x = x := by mach_mpoly [x]
+      have e2 : exp x + -log x = exp x - log x := by mach_ring
+      rw [e1, e2] at v; exact v
+    have hstep : (1 : Real) + k ≤ 1 + exp k := add_le_add_left (self_le_exp k) 1
+    have hx3 : (1 : Real) + k ≤ exp x - log x := le_trans (le_trans hstep hx) hxx
+    have h1 : (1 : Real) ≤ exp x - log x - k := by
+      have v := add_le_add_wit hx3 (le_refl (-k))
+      have e1 : 1 + k + -k = (1 : Real) := by mach_mpoly [k]
+      have e2 : exp x - log x + -k = exp x - log x - k := by mach_mpoly [exp x, log x, k]
+      rw [e1, e2] at v; exact v
+    exact le_trans (hC1 x (le_of_lt hxpos)) h1
+
 /-- **Normal form at depth ≤ 2.** Constant, the identity, or `exp a − log b` with both `a` and `b`
 in the depth-1 form list. No tree appears in the third disjunct. -/
 theorem depth_le_two_normal_form (t : EMLTree) (ht : t.depth ≤ 2) :

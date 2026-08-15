@@ -2969,6 +2969,27 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Approach-rate quantisation, base case. hypotheses_count 1 -- only A's depth bound; `k` is a plain real binder, not a hypothesis. NOTE the statement mentions no `log` at all: the five-form classification is consumed inside the proof, and the conclusion is a pure exp-scale gap. That is what makes it composable with the convexity step in Depth3DecayHard.",
+      "id": "approach-rate-depth-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "cannot approach a\nconstant from above faster than exponentially"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_approach_constant",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

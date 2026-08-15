@@ -9,7 +9,7 @@ per-release status.
 
 ### An obligations ledger, and an honest limit on it
 
-Four propositions have been introduced as named obligations — stated so a partial result can be
+Five propositions have been introduced as named obligations — stated so a partial result can be
 committed without overstating it. The ledger now lives at the end of `EMLDepthTameness` rather than
 in commit archaeology:
 
@@ -19,10 +19,39 @@ in commit archaeology:
 | `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **open** | — |
+| `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger
-exists to prevent.
+exists to prevent. That check is now the CI gate `tools/check_obligations.sh`: a row marked open with
+a theorem concluding it is stale, a row marked discharged whose citation does not conclude it is
+broken, and an unparseable table exits 2 rather than passing. Two convict specimens must fire and a
+correct row must stay silent, so the gate cannot be satisfied by a checker that simply fails
+everything.
+
+The fifth row is a correction. This section previously said `TowerLowerBound` "reduces to"
+`SignHardCase`; no such theorem exists, and the gap is real — sign-definiteness supplies the *ray* on
+which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
+`TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
+
+### Approach-rate quantisation at depth ≤ 1
+
+`depth_le_one_approach_constant`: for every constant `k`, a depth-≤1 expression **cannot approach a
+constant from above faster than exponentially** — on a ray, `k < A(x)` forces
+`A(x) − k ≥ exp(−C − x)`.
+
+Sharp for a structural reason worth stating: the only decaying shape at this depth is `c − log x`,
+and it decays *downwards through* every constant rather than approaching one from above, so it makes
+the hypothesis false rather than the bound tight. Breaking the statement would need `exp(−x)`, whose
+exponent `−x` is not among the five depth-≤1 forms.
+
+This is the base case of the analysis that re-scopes `Depth3DecayHard`. Via convexity
+(`exp u − exp v ≥ (u − v) · exp v`) a bound of this shape on an exponent converts a decay obligation
+into a question the classification can answer, which settles that obligation's convergent regime on
+paper and leaves only its divergent one. The docstring on `Depth3DecayHard` previously said no
+classification of depth-2 expressions existed; `depth_le_two_normal_form` is one, added after the
+obligation was named — a stale *under*claim, the variety no gate looks for, since gates are built to
+catch prose that outran the corpus rather than prose the corpus overtook.
 
 **Two of the three open ones are cancellation statements**: `SignHardCase` about the sign of
 `exp a − log b`, `Depth3DecayHard` about how small it can be. `TowerLowerBound` reduces to the first.
