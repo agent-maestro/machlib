@@ -34,6 +34,22 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### The growing cell of the depth-3 decay obligation: an exponential of headroom
+
+`depth_three_growing_left_node_ge_one` / `depth_three_decay_growing_left`. If the depth-3 node's left
+child grows — `P x ≥ exp x − x − C`, which by `depth_two_eml_value_gap` is the only alternative to
+being bounded above — then `exp(P x)` is *doubly* exponential while `depth_le_two_log_le_exp` caps
+`log(Q x)` at `exp x + K`, only *singly* exponential. The node does not merely stay positive, it
+passes `1`, so `−log(node) ≤ 0 + x` outright.
+
+**No cancellation is available in this cell, and the right child is never inspected beyond its
+depth.** This branch had been counted with the hard ones on the grounds that both terms sit "at the
+exponential scale" — they do not, they are a whole exponential apart. What stays genuinely hard is
+the left child being `var` (`exp x` exactly: the single-exponential rung, which the value gap shows
+no `eml` node can occupy) or both children bounded.
+
+`Depth3DecayHard` remains **open** — this discharges one of four cells and does not assemble them.
+
 ### Approach-rate quantisation at depth ≤ 2
 
 `depth_le_two_approach_constant` lifts the depth-≤1 statement one level: **no depth-≤2 expression

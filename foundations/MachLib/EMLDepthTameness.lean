@@ -5463,6 +5463,103 @@ def Depth3DecayHard : Prop :=
 
 
 
+
+private theorem le_add_nonneg_l' {a b : Real} (ha : 0 ≤ a) : b ≤ a + b := by
+  have v := add_le_add_wit ha (le_refl b)
+  have e : (0 : Real) + b = b := by mach_ring
+  rw [e] at v; exact v
+
+/-- **The growing cell of the depth-3 decay decomposition: an exponential of headroom.**
+
+If the left child `P` is a depth-≤2 expression that grows — `P x ≥ exp x − x − C`, the only
+alternative to being bounded above by `depth_two_eml_value_gap` — then `exp (P x)` is *doubly*
+exponential, while `depth_le_two_log_le_exp` caps `log (Q x)` at `exp x + K`, which is only *singly*
+exponential. The node does not merely stay positive; it passes `1`.
+
+**No cancellation is available in this cell, and the right child is never inspected** beyond its
+depth. That is the point: this branch was being counted with the hard ones on the grounds that both
+terms sit "at the exponential scale", and they do not — they are a whole exponential apart. What
+remains genuinely hard is the left child being `var` (`exp x` exactly, the single-exponential rung,
+which `depth_two_eml_value_gap` shows no `eml` node can occupy) or both children bounded. -/
+theorem depth_three_growing_left_node_ge_one (P Q : EMLTree) (hQ : Q.depth ≤ 2) (C T : Real)
+    (hP : ∀ x : Real, T ≤ x → exp x - x - C ≤ P.eval x) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 ≤ exp (P.eval x) - log (Q.eval x) := by
+  obtain ⟨K, XQ, hXQ1, hQb⟩ := depth_le_two_log_le_exp Q hQ
+  obtain ⟨T1, hT1⟩ := two_mul_add_le_exp C
+  obtain ⟨T2, hT2⟩ := two_mul_add_le_exp (C + C + K + 1)
+  have hXQ0 : (0 : Real) ≤ XQ := le_trans (le_of_lt zero_lt_one_ax) hXQ1
+  have hp1 : (0 : Real) ≤ XQ + exp T := le_trans hXQ0 (le_add_nonneg_r' (le_of_lt (exp_pos T)))
+  have hp2 : (0 : Real) ≤ XQ + exp T + exp T1 :=
+    le_trans hp1 (le_add_nonneg_r' (le_of_lt (exp_pos T1)))
+  refine ⟨XQ + exp T + exp T1 + exp T2, ?_, ?_⟩
+  · exact le_trans hXQ1 (le_trans (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos T)))
+      (le_add_nonneg_r' (le_of_lt (exp_pos T1)))) (le_add_nonneg_r' (le_of_lt (exp_pos T2))))
+  · intro x hx
+    have hXQx : XQ ≤ x := le_trans (le_trans (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos T)))
+      (le_add_nonneg_r' (le_of_lt (exp_pos T1)))) (le_add_nonneg_r' (le_of_lt (exp_pos T2)))) hx
+    have hTx : T ≤ x := le_trans (self_le_exp T) (le_trans (le_trans (le_add_nonneg_l' hXQ0)
+      (le_add_nonneg_r' (le_of_lt (exp_pos T1)))) (le_trans (le_add_nonneg_r'
+        (le_of_lt (exp_pos T2))) hx))
+    have hT1x : T1 ≤ x := le_trans (self_le_exp T1) (le_trans (le_add_nonneg_l' hp1)
+      (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos T2))) hx))
+    have hT2x : T2 ≤ x := le_trans (self_le_exp T2) (le_trans (le_add_nonneg_l' hp2) hx)
+    have hx1 : (1 : Real) ≤ x := le_trans hXQ1 hXQx
+    have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+    -- the exponent is at least `x`, hence non-negative
+    have hux : x ≤ exp x - x - C := by
+      have v := add_le_add_wit (hT1 x hT1x) (le_refl (-x + -C))
+      have e1 : x + x + C + (-x + -C) = x := by mach_mpoly [x, C]
+      have e2 : exp x + (-x + -C) = exp x - x - C := by mach_mpoly [exp x, x, C]
+      rw [e1, e2] at v; exact v
+    have hu : exp x - x - C ≤ P.eval x := hP x hTx
+    have hu0 : (0 : Real) ≤ P.eval x := le_trans hx0 (le_trans hux hu)
+    -- double it: `exp u ≥ u + u`
+    have hdouble : P.eval x + P.eval x ≤ exp (P.eval x) := two_mul_le_exp hu0
+    have hsum : exp x - x - C + (exp x - x - C) ≤ P.eval x + P.eval x := add_le_add_wit hu hu
+    have hlow : exp x - x - C + (exp x - x - C) ≤ exp (P.eval x) := le_trans hsum hdouble
+    -- and the right child's log is only singly exponential
+    have hnode : exp x - x - C + (exp x - x - C) - (exp x + K)
+        ≤ exp (P.eval x) - log (Q.eval x) := by
+      have v := add_le_add_wit hlow (neg_le_neg_wit (hQb x hXQx))
+      have e1 : exp x - x - C + (exp x - x - C) + -(exp x + K)
+          = exp x - x - C + (exp x - x - C) - (exp x + K) := by mach_ring
+      have e2 : exp (P.eval x) + -log (Q.eval x) = exp (P.eval x) - log (Q.eval x) := by mach_ring
+      rw [e1, e2] at v; exact v
+    have hone : (1 : Real) ≤ exp x - x - C + (exp x - x - C) - (exp x + K) := by
+      have v := add_le_add_wit (hT2 x hT2x) (le_refl (-x - x - C - C - K))
+      have e1 : x + x + (C + C + K + 1) + (-x - x - C - C - K) = (1 : Real) := by
+        mach_mpoly [x, C, K]
+      have e2 : exp x + (-x - x - C - C - K)
+          = exp x - x - C + (exp x - x - C) - (exp x + K) := by mach_mpoly [exp x, x, C, K]
+      rw [e1, e2] at v; exact v
+    exact le_trans hone hnode
+
+/-- The same cell in the shape `Depth3DecayHard` wants: the node's `−log` is bounded by `C' + x`,
+with `C' = 0`, because the node has already passed `1`. -/
+theorem depth_three_decay_growing_left (P Q : EMLTree) (hQ : Q.depth ≤ 2) (C T : Real)
+    (hP : ∀ x : Real, T ≤ x → exp x - x - C ≤ P.eval x) :
+    ∃ C' X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      -log (exp (P.eval x) - log (Q.eval x)) ≤ C' + x := by
+  obtain ⟨X₀, hX₀, hnode⟩ := depth_three_growing_left_node_ge_one P Q hQ C T hP
+  refine ⟨0, X₀, hX₀, ?_⟩
+  intro x hx
+  have hlog1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  have hge : (0 : Real) ≤ log (exp (P.eval x) - log (Q.eval x)) := by
+    have h := log_le_log zero_lt_one_ax (hnode x hx)
+    rw [hlog1] at h; exact h
+  have hneg : -log (exp (P.eval x) - log (Q.eval x)) ≤ 0 := by
+    have v := neg_le_neg_wit hge
+    have e : -(0 : Real) = 0 := by mach_ring
+    rw [e] at v; exact v
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) (le_trans hX₀ hx)
+  have hz : (0 : Real) ≤ 0 + x := by
+    have v := add_le_add_left hx0 (0 : Real)
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  exact le_trans hneg hz
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

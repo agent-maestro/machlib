@@ -3032,6 +3032,29 @@
         "exp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The growing cell. hypotheses_count 2 -- Q's depth bound and the growth hypothesis on P; C and T are plain real binders. Note the ABSENCE of any depth hypothesis on P: the cell is characterised by P's growth, not its shape, which is why the right child never needs enumerating either.",
+      "id": "depth3-growing-cell-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "No cancellation is available in this cell, and the right child is never inspected beyond its\ndepth."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_growing_left_node_ge_one",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
