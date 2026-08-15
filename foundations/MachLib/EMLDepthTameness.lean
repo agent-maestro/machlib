@@ -6319,6 +6319,88 @@ theorem depth_three_decayExp_var_left_of_gap (h : ExpExpGapBelow) (Q : EMLTree) 
   have e : -(-(-log ε) - exp x) = -log ε + exp x := by mach_mpoly [log ε, exp x]
   rw [e] at v; exact v
 
+
+/-- **What the bounded cell reduces to.** A value-level approach statement, with the target
+`exp (exp (P x))` now determined by the *other* tree.
+
+**This does not unify with `ExpExpGapBelow`, and the reason is quantitative.** Both cells convert a
+value gap into an exponent gap by reverse convexity, and the conversion costs a factor
+`exp (−exp (P x))`. When `P` is bounded that factor is a **constant**, so a value gap as weak as
+`exp (−C − exp x)` suffices — which is what this Prop asks. When `P = var` the factor is
+`exp (−exp x)`, and the same weak gap would give `exp (−C − 2·exp x)`, missing the rung; that cell
+needs a **constant** value gap, which is why `ExpExpGapBelow` demands one. Same reduction, two
+strengths, because the conversion factor is not the same. -/
+def BoundedCellApproach : Prop :=
+  ∀ P Q : EMLTree, P.depth ≤ 2 → Q.depth ≤ 2 →
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Q.eval x < exp (exp (P.eval x)) →
+      exp (-C - exp x) ≤ exp (exp (P.eval x)) - Q.eval x
+
+/-- **The bounded cell follows from it**, completing the decomposition of `Depth3DecayExp`: two cells
+proved outright, two reduced to named value-level statements. -/
+theorem depth_three_decayExp_bounded_left_of_gap (h : BoundedCellApproach)
+    (P Q : EMLTree) (hP : P.depth ≤ 2) (hQ : Q.depth ≤ 2) (K XK : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp (P.eval x) ≤ K) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
+      0 < exp (P.eval x) - log (Q.eval x) →
+      -log (exp (P.eval x) - log (Q.eval x)) ≤ C + exp x := by
+  obtain ⟨C₁, X₁, hX₁, hgap⟩ := h P Q hP hQ
+  refine ⟨C₁ + K, X₁ + exp XK, le_trans hX₁ (le_add_nonneg_r' (le_of_lt (exp_pos XK))), ?_⟩
+  intro x hx hlogpos hnodepos
+  have hX₁x : X₁ ≤ x := le_trans (le_add_nonneg_r' (le_of_lt (exp_pos XK))) hx
+  have hXKx : XK ≤ x :=
+    le_trans (self_le_exp XK) (le_trans (le_add_nonneg_l' (le_trans (le_of_lt zero_lt_one_ax) hX₁)) hx)
+  have hQpos : (0 : Real) < Q.eval x := by
+    rcases lt_total 0 (Q.eval x) with hq | hq | hq
+    · exact hq
+    · have hle : Q.eval x ≤ 0 := by rw [← hq]; exact le_refl 0
+      rw [log_nonpos hle] at hlogpos
+      exact absurd hlogpos (lt_irrefl_ax 0)
+    · rw [log_nonpos (le_of_lt hq)] at hlogpos
+      exact absurd hlogpos (lt_irrefl_ax 0)
+  have hlt : log (Q.eval x) < exp (P.eval x) := by
+    have v := add_lt_add_left hnodepos (log (Q.eval x))
+    have e1 : log (Q.eval x) + (0 : Real) = log (Q.eval x) := by mach_ring
+    have e2 : log (Q.eval x) + (exp (P.eval x) - log (Q.eval x)) = exp (P.eval x) := by
+      mach_mpoly [log (Q.eval x), exp (P.eval x)]
+    rw [e1, e2] at v; exact v
+  have hQlt : Q.eval x < exp (exp (P.eval x)) := by
+    have hh := exp_lt hlt
+    rw [exp_log hQpos] at hh; exact hh
+  have hconv : exp (exp (P.eval x)) - exp (log (Q.eval x))
+      ≤ (exp (P.eval x) - log (Q.eval x)) * exp (exp (P.eval x)) :=
+    exp_sub_exp_upper (exp (P.eval x)) (log (Q.eval x))
+  rw [exp_log hQpos] at hconv
+  -- the cap on `exp (P x)` turns the conversion factor into a constant
+  have hcap : (exp (P.eval x) - log (Q.eval x)) * exp (exp (P.eval x))
+      ≤ (exp (P.eval x) - log (Q.eval x)) * exp K :=
+    mul_le_mul_of_nonneg_left (exp_monotone (hK x hXKx)) (le_of_lt hnodepos)
+  have hchain : exp (-C₁ - exp x)
+      ≤ (exp (P.eval x) - log (Q.eval x)) * exp K :=
+    le_trans (hgap x hX₁x hQlt) (le_trans hconv hcap)
+  have hinv : exp K * exp (-K) = 1 := by
+    rw [← exp_add]
+    have e : K + -K = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  have hstep := mul_le_mul_of_nonneg_right hchain (le_of_lt (exp_pos (-K)))
+  have e3 : (exp (P.eval x) - log (Q.eval x)) * exp K * exp (-K)
+      = (exp (P.eval x) - log (Q.eval x)) * (exp K * exp (-K)) := by
+    mach_mpoly [exp (P.eval x), log (Q.eval x), exp K, exp (-K)]
+  rw [e3, hinv] at hstep
+  have e4 : (exp (P.eval x) - log (Q.eval x)) * (1 : Real)
+      = exp (P.eval x) - log (Q.eval x) := by mach_ring
+  rw [e4] at hstep
+  have e5 : exp (-C₁ - exp x) * exp (-K) = exp (-(C₁ + K) - exp x) := by
+    rw [← exp_add]
+    have e : -C₁ - exp x + -K = -(C₁ + K) - exp x := by mach_mpoly [C₁, exp x, K]
+    rw [e]
+  rw [e5] at hstep
+  have hmono := log_le_log (exp_pos (-(C₁ + K) - exp x)) hstep
+  rw [log_exp] at hmono
+  have v := neg_le_neg_wit hmono
+  have e6 : -(-(C₁ + K) - exp x) = C₁ + K + exp x := by mach_mpoly [C₁, K, exp x]
+  rw [e6] at v
+  exact v
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
@@ -6332,6 +6414,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | here | **open** | — (what the `P = var` cell reduces to) |
+| `BoundedCellApproach` | here | **open** | — (what the bounded cell reduces to) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,

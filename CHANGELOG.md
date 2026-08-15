@@ -21,6 +21,7 @@ in commit archaeology:
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | **open** | — (what the `P = var` cell reduces to) |
+| `BoundedCellApproach` | **open** | — (what the bounded cell reduces to) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
@@ -35,6 +36,22 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 `SignHardCase`; no such theorem exists, and the gap is real — sign-definiteness supplies the *ray* on
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
+
+### The decomposition of `Depth3DecayExp` is complete: two proved, two reduced
+
+`BoundedCellApproach` and `depth_three_decayExp_bounded_left_of_gap` close the last cell, so the
+obligation now stands as: growing cell **proved**, `const` cell **proved**, `P = var` and
+bounded-`P` each **reduced to one named value-level statement**.
+
+**The two reductions do not unify, and the reason is quantitative rather than incidental.** Both
+convert a value gap into an exponent gap by reverse convexity, and the conversion costs a factor
+`exp(−exp(P x))`. When `P` is bounded that factor is bounded below by a constant, so a value gap as
+weak as `exp(−C − exp x)` suffices. When `P = var` the factor is `exp(−exp x)`, and that same weak gap
+would yield `exp(−C − 2·exp x)`, missing the rung — so that cell needs a **constant** value gap, which
+is exactly what `ExpExpGapBelow` demands and `BoundedCellApproach` does not.
+
+Same reduction, two strengths, because the conversion factor differs. Reading the two Props side by
+side is the cheapest way to see where the difficulty in this obligation actually lives.
 
 ### The `P = var` cell reduces to one statement about approaching `exp(exp x)`
 

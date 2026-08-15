@@ -3207,6 +3207,29 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The bounded-cell reduction. hypotheses_count 4 -- BoundedCellApproach, P's depth, Q's depth, and the boundedness hypothesis hK; K and XK are plain real binders. The asymmetry with the var cell is the point: this Prop asks only for an exp(-C-exp x) value gap where ExpExpGapBelow needs a constant one, and that difference is forced by the conversion factor, not chosen.",
+      "id": "bounded-cell-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Same reduction, two strengths, because the conversion factor differs."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_decayExp_bounded_left_of_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 4
     }
   ]
 }
