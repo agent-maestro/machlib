@@ -5430,6 +5430,31 @@ theorem depth_le_three_decay_log_nonpos (A B : EMLTree) (hA : A.depth ≤ 2) :
   have e : -(-C - x) = C + x := by mach_ring
   rw [e] at t; exact t
 
+/-- **The witness that refutes `Depth3DecayHard`.** `eml (eml var (const 0)) var`, of depth 2,
+evaluating to `exp (exp x) − log x`. The totalisation builds it: `log 0 = 0`, so `eml var (const 0)`
+is exactly `exp x`, and one more node raises it to `exp (exp x)`. -/
+noncomputable def dep3CounterRight : EMLTree := EMLTree.eml (EMLTree.eml EMLTree.var (EMLTree.const 0)) EMLTree.var
+
+theorem dep3CounterRight_depth : dep3CounterRight.depth = 2 := rfl
+
+theorem dep3CounterRight_eval (x : Real) :
+    dep3CounterRight.eval x = exp (exp x) - log x := by
+  show exp (exp x - log ((0 : Real))) - log x = exp (exp x) - log x
+  rw [log_nonpos (le_refl (0 : Real))]
+  have e : exp x - (0 : Real) = exp x := by mach_ring
+  rw [e]
+
+/-- **The corrected obligation.** `Depth3DecayHard` is false with the rung `C + x`; the counterexample
+of §`dep3CounterRight` forces `exp x`. This is the statement that might be true.
+
+The rung climbs one exponential per level: `V₂` is `C + log x`, and depth 3 needs `C + exp x`, not the
+`C + x` that reading the progression `log x → x` off two data points suggested. -/
+def Depth3DecayExp : Prop :=
+  ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 →
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (B.eval x) →
+      0 < exp (A.eval x) - log (B.eval x) →
+      -log (exp (A.eval x) - log (B.eval x)) ≤ C + exp x
+
 /-- **The branch that is open.** At depth 3 the right child's logarithm can reach the exponential
 scale, so `exp (A x) − log (B x)` may be small by cancellation rather than by `A` being small. This
 is the depth-3 analogue of what the five closed forms disposed of at depth 2.
@@ -5453,8 +5478,31 @@ below, both at the exponential scale by `U₂`. That is a cancellation between t
 quantities — the same phenomenon `SignHardCase` meets one derivative up (sign there, magnitude
 here); neither implies the other.
 
-So this is no longer "unrouted": it is a costed 5 × 5 enumeration plus one open regime. See
-`monogate-research/exploration/eml_depth_induction_2026_08_13/APPROACH_RATE_QUANTISATION.md`. -/
+**REFUTED 2026-08-15. This proposition is FALSE as stated, and the decomposition is what found it.**
+Take `A = var` and `B = dep3CounterRight`, i.e. `B x = exp (exp x) − log x`, both within the depth
+bounds. Then
+
+```
+node = exp x − log (exp (exp x) − log x) = −log (1 − log x / exp (exp x)) ≈ log x · exp (−exp x)
+```
+
+which is **positive** (so the hypotheses hold: `log (B x) > 0` and `node > 0`) and
+**super-exponentially small**, giving `−log node ≈ exp x − log log x`. No constant `C` satisfies
+`−log node ≤ C + x`: the excess `−log node − x` is `5.8, 17.0, 50.3, 142.9, 396.8, 1089.0, 2972.2`
+at `x = 2 … 8`, matching `exp x − log log x` to every digit computed.
+
+The rung is what was wrong. `V₂` reads `C + log x`; reading the progression `log x → x` off two
+levels gave `C + x`, but each level costs a whole exponential, so depth 3 needs `C + exp x`. The
+corrected statement is `Depth3DecayExp` above. `depth_three_decay_growing_left` and
+`depth_three_decay_const_left` are unaffected — they prove the *stronger* `C + x` bound on their own
+cells, and remain true.
+
+Worth stating plainly: the four-cell decomposition was built to locate the difficulty, and the cell
+it isolated as hardest — `P = var`, the sole occupant of the single-exponential rung — is exactly
+where the statement fails. The Lean refutation is **not yet written**; what is machine-checked here is
+the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`), not the asymptotics.
+
+See `monogate-research/exploration/eml_depth_induction_2026_08_13/APPROACH_RATE_QUANTISATION.md`. -/
 def Depth3DecayHard : Prop :=
   ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 →
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (B.eval x) →
@@ -6015,12 +6063,18 @@ partial result can be committed without overstating it. Their status, as of the 
 | `TowerLowerBound` | `EMLCertifiedSynthesis` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
-| `Depth3DecayHard` | here | **open** | — |
+| `Depth3DecayHard` | here | **refuted** | — (false; witness `dep3CounterRight`) |
+| `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,
-`Depth3DecayHard` about how small it can be. So the programme's open problems are not scattered:
+`Depth3DecayExp` about how small it can be. So the programme's open problems are not scattered:
 they are one phenomenon met from several directions.
+
+**A third status was needed on 2026-08-15.** `Depth3DecayHard` is not open, it is **false** — see its
+docstring for the witness. "Refuted" is checked the same way as "open" (no theorem may conclude it)
+but a hit is reported as a contradiction rather than staleness, because proving a statement we have
+recorded as false is a worse failure than proving one we recorded as unproven.
 
 The last row exists because of a correction. This paragraph previously ended "`TowerLowerBound`
 reduces to the first", which reads as a proved implication and is not one: `SignHardCase` yields

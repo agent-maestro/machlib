@@ -18,7 +18,8 @@ in commit archaeology:
 | `TowerLowerBound` | **open** | — (only `TowerLowerBoundUpTo 4`) |
 | `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
-| `Depth3DecayHard` | **open** | — |
+| `Depth3DecayHard` | **refuted** | — (false; witness `dep3CounterRight`) |
+| `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
@@ -33,6 +34,38 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 `SignHardCase`; no such theorem exists, and the gap is real — sign-definiteness supplies the *ray* on
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
+
+### `Depth3DecayHard` is FALSE — the decomposition found its own obligation's counterexample
+
+Take `A = var` and `B = dep3CounterRight = eml (eml var (const 0)) var`, both inside the depth
+bounds, with `B x = exp(exp x) − log x`. The totalisation builds `B`: `log 0 = 0`, so
+`eml var (const 0)` is exactly `exp x`, and one more node raises it to `exp(exp x)`. Then
+
+```
+node = exp x − log(exp(exp x) − log x) = −log(1 − log x / exp(exp x)) ≈ log x · exp(−exp x)
+```
+
+which is **positive** — so both hypotheses hold — and **super-exponentially small**, giving
+`−log node ≈ exp x − log log x`. The excess `−log node − x` runs
+`5.8, 17.0, 50.3, 142.9, 396.8, 1089.0, 2972.2` at `x = 2 … 8`, matching `exp x − log log x` to every
+digit computed. No constant `C` can satisfy `−log node ≤ C + x`.
+
+**The rung was wrong, not the idea.** `V₂` reads `C + log x`; reading the progression `log x → x` off
+two levels gave `C + x`, but each level costs a whole exponential, so depth 3 needs `C + exp x`. The
+corrected statement is `Depth3DecayExp`.
+
+Nothing already proved is affected: `depth_three_decay_growing_left` and
+`depth_three_decay_const_left` establish the *stronger* `C + x` bound on their own cells and remain
+true. What the refutation kills is the *conjunction* over all four cells.
+
+The four-cell decomposition was built to locate the difficulty, and the cell it isolated as hardest —
+`P = var`, the sole occupant of the single-exponential rung — is exactly where the statement fails.
+Machine-checked here: the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`). The asymptotic
+estimate is paper and numerics; **the Lean refutation is not yet written**.
+
+The obligations ledger grows a third status, `refuted`, checked like `open` (no theorem may conclude
+it) but reported as a contradiction rather than staleness — proving something recorded as false is a
+worse failure than proving something recorded as unproven.
 
 ### The `P = const` cell discharged — two of four
 

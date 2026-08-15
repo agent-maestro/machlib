@@ -45,7 +45,7 @@ def parse_rows(text):
         m = re.fullmatch(r"`([A-Za-z0-9_']+)`", cells[0])
         if not m:
             continue
-        stat = [c for c in cells if c in ("**open**", "**discharged**")]
+        stat = [c for c in cells if c in ("**open**", "**discharged**", "**refuted**")]
         if len(stat) != 1:
             continue
         i = cells.index(stat[0])
@@ -91,12 +91,15 @@ def check_rows(rows, decls):
     bad, out = 0, []
     for prop, status, discharger in rows:
         found = dischargers_of(prop, decls)
-        if status == "open":
+        if status in ("open", "refuted"):
+            # "refuted" means we believe P false; a theorem concluding P would be a contradiction,
+            # so the corpus check is the same one, and a hit is more serious rather than less.
             if found:
-                out.append(f"  STALE  {prop}: marked open but discharged by {', '.join(found)}")
+                out.append(f"  {'CONTRA' if status == 'refuted' else 'STALE '} {prop}: marked "
+                           f"{status} but concluded by {', '.join(found)}")
                 bad += 1
             else:
-                out.append(f"  ok     {prop}: open, no discharger")
+                out.append(f"  ok     {prop}: {status}, no theorem concludes it")
         else:
             named = re.findall(r"`([A-Za-z0-9_\']+)`", discharger)
             hit = [n for n in named if n in found]
@@ -150,11 +153,17 @@ def self_test(decls) -> int:
     print(f"  canary 3 (row missing from the CHANGELOG copy)  {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
-    # 4. A status that disagrees between the two copies.
+    # 4. A refuted row that something proves anyway -- the contradiction case.
+    bad, out = check_rows([("VarLeftEmlRightHard", "refuted", "")], decls)
+    fired = bad == 1 and "CONTRA" in out[0]
+    print(f"  canary 4 (refuted row proved anyway)           {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 5. A status that disagrees between the two copies.
     bad, out = check_mirror([("SignHardCase", "open", "")],
                             [("SignHardCase", "discharged", "")])
     fired = bad == 1 and "DRIFT" in out[0]
-    print(f"  canary 4 (status disagrees across copies)       {'FIRES' if fired else 'SILENT'}")
+    print(f"  canary 5 (status disagrees across copies)      {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
     # 5. And the true ledger must still pass, so the canaries are not just "everything fails".
@@ -162,14 +171,14 @@ def self_test(decls) -> int:
                         decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
-    print(f"  canary 5 (correct rows stay silent)             {'SILENT' if quiet else 'FIRES'}")
+    print(f"  canary 6 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")
     ok &= quiet
 
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
         return 1
-    print("LEDGER SELF-TEST PASS — all four convict specimens fire")
+    print("LEDGER SELF-TEST PASS — all five convict specimens fire")
     return 0
 
 
