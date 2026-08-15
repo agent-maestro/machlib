@@ -535,6 +535,23 @@ def TowerLowerBound : Prop :=
 def TowerLowerBoundUpTo (N : Nat) : Prop :=
   ∀ n : Nat, n ≤ N → ∀ u : EMLTree, u.depth < n → Meets (towerSpec n) u → False
 
+/-- **A reduction we assert nowhere else and have not proved.**
+
+It is tempting to write that `TowerLowerBound` "reduces to `SignHardCase`", and an earlier draft of
+the obligations ledger did exactly that. It is not established, and the gap is not a formality.
+
+What `SignHardCase` buys, via `evSign_of_hard`, is that every tree is eventually of constant sign —
+which is what lets the decay bound `V_j` fix a ray past the last sign change. But `V_j` is a
+*quantitative* statement (`-log t x ≤ C + log x`), and eventual sign-definiteness supplies only the
+ray, not the rate. At depth ≤ 2 the rate comes from the depth-≤1 classification, by hand. For a
+general `j` there is no such classification, and nothing here supplies one.
+
+So this Prop names the implication rather than claiming it. Discharging it means proving the
+growth/decay pair iterates at every depth — `U_j` and `V_j` for all `j`, not the three levels done by
+hand — which is the whole of the remaining lower-bound programme, not a corollary of the sign
+statement. Stated so that if it ever is proved, the ledger gate notices. -/
+def TowerReducesToSign : Prop := SignHardCase → TowerLowerBound
+
 /-- **The reduction.** One lower-bound family ⟹ an infinite certified family. Everything else —
 witness, depth computation, acceptance, and the §3 hardware transfer — is already in place for every
 `n`, so this is the whole of what is missing. -/

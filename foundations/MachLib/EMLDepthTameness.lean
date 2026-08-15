@@ -5021,11 +5021,19 @@ partial result can be committed without overstating it. Their status, as of the 
 | `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **open** | — |
+| `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
-Two of the three open ones are **cancellation** statements — `SignHardCase` about the sign of
-`exp a − log b`, `Depth3DecayHard` about how small it can be. `TowerLowerBound` reduces to the first.
-So the programme's open problems are not scattered: they are one phenomenon met from three
-directions.
+Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,
+`Depth3DecayHard` about how small it can be. So the programme's open problems are not scattered:
+they are one phenomenon met from several directions.
+
+The last row exists because of a correction. This paragraph previously ended "`TowerLowerBound`
+reduces to the first", which reads as a proved implication and is not one: `SignHardCase` yields
+eventual sign-definiteness, which fixes the *ray* for a decay bound but not its *rate*, and the rate
+at depth ≤ 2 comes from the depth-≤1 classification by hand. Rather than soften the sentence into
+something unfalsifiable, the implication is now the named Prop `TowerReducesToSign` and sits in this
+table under the same gate as everything else. That is the third time a claim of ours cited a theorem
+that did not exist, and the first time the claim was in the ledger written to catch them.
 
 **How this table is kept honest.** "Discharged" is directly machine-checkable — there is a theorem
 whose conclusion is the proposition. "Open" is not, in the sense that matters mathematically: the
