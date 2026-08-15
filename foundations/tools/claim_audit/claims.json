@@ -3055,6 +3055,27 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The from-below asymmetry. hypotheses_count 1 -- A's depth bound; k is a plain real binder. The conclusion is deliberately a CONSTANT epsilon rather than exp(-C-x): weakening it to match the from-above statement would silently lose the property that makes the const cell work, so the shape of this claim is load-bearing.",
+      "id": "gap-below-asymmetry-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "approaching a constant **from below** leaves a gap bounded by a **positive constant**"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_gap_below",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "eval"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

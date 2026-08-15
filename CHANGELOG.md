@@ -34,6 +34,21 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### Approach from below is strictly easier, and the asymmetry is structural
+
+`depth_le_one_gap_below`: where `depth_le_one_approach_constant` bounds the gap below by
+`exp(−C − x)`, approaching a constant **from below** leaves a gap bounded by a **positive constant**.
+Not a symmetric statement — a strictly stronger one.
+
+One cause. The only decaying shape at this depth is `exp(c − log x) = e^c/x`, and it is **positive**,
+so it can push a value *above* its limit but can never let one creep up on a constant from
+underneath. Of the five forms, `α` gives an exact constant gap, `c − log x` gives a gap that *grows*,
+and `x`, `exp x − d`, `exp x − log x` all eventually exceed `k` so the hypothesis is false.
+
+This is what makes the `P = const` cell of the depth-3 decomposition tractable: a constant gap
+survives multiplication by `exp(A x) ≥ exp(−C − x)` without the `x` in the exponent doubling, which
+is exactly what an `exp(−C − x)`-sized gap would not do.
+
 ### The growing cell of the depth-3 decay obligation: an exponential of headroom
 
 `depth_three_growing_left_node_ge_one` / `depth_three_decay_growing_left`. If the depth-3 node's left

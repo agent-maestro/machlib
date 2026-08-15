@@ -5560,6 +5560,92 @@ theorem depth_three_decay_growing_left (P Q : EMLTree) (hQ : Q.depth ≤ 2) (C T
     rw [e] at v; exact v
   exact le_trans hneg hz
 
+
+/-- **Approach from below is strictly easier — and the asymmetry is structural.**
+
+`depth_le_one_approach_constant` bounds the gap below by `exp (−C − x)`, and that is the best it can
+do: the form `c − log x` contributes `exp (c − log x) = e^c/x`, so a value can sit `Θ(1/x)` above a
+constant. From *below* there is no such shape, and the gap is bounded by a **positive constant**:
+
+* `α` — an exact constant gap, or the hypothesis is false;
+* `c − log x` — the gap is `k − c + log x`, which *grows*;
+* `x`, `exp x − d`, `exp x − log x` — all eventually exceed `k`, so the hypothesis is **false**.
+
+The asymmetry has one cause. The only decaying shape the grammar offers at this depth is `e^c/x`,
+and it is **positive**, so it can only push a value *above* its limit, never let one creep up on a
+constant from underneath. That is why this statement is stronger than its mirror rather than
+symmetric with it, and it is what makes the `P = const` cell of the depth-3 decomposition tractable:
+a constant gap survives multiplication by `exp (A x) ≥ exp (−C − x)` without the `x` in the exponent
+doubling. -/
+theorem depth_le_one_gap_below (A : EMLTree) (hA : A.depth ≤ 1) (k : Real) :
+    ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → A.eval x < k → ε ≤ k - A.eval x := by
+  rcases depth_le_one_classification A hA with ⟨α, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+  · rcases lt_total α k with hαk | hαk | hαk
+    · refine ⟨k - α, 1, sub_pos_of_lt hαk, le_refl 1, ?_⟩
+      intro x hx _
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos]
+      exact le_refl _
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos, hαk] at hlt
+      exact absurd hlt (lt_irrefl_ax k)
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos] at hlt
+      exact absurd (lt_trans_ax hlt hαk) (lt_irrefl_ax α)
+  · -- the identity outruns `k`
+    refine ⟨1, 1 + exp k, zero_lt_one_ax, one_le_one_add_exp k, ?_⟩
+    intro x hx hlt
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans (one_le_one_add_exp k) hx)
+    rw [hb x hxpos] at hlt
+    have hk : k < x := by
+      have h1 : k ≤ exp k := self_le_exp k
+      have h2 : exp k < 1 + exp k := by
+        have v := add_lt_add_left zero_lt_one_ax (exp k)
+        have e1 : exp k + (0 : Real) = exp k := by mach_ring
+        have e2 : exp k + 1 = 1 + exp k := by mach_ring
+        rw [e1, e2] at v; exact v
+      exact lt_of_lt_of_le (lt_of_le_of_lt h1 h2) hx
+    exact absurd (lt_trans_ax hlt hk) (lt_irrefl_ax x)
+  · -- `c − log x` falls away, so the gap grows
+    refine ⟨1, 1 + exp (1 - k + c), zero_lt_one_ax, one_le_one_add_exp _, ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    have hreach : exp (1 - k + c) ≤ x := le_trans (exp_le_one_add_exp _) hx
+    have hlog : 1 - k + c ≤ log x := log_ge_of_exp_le hreach
+    have v := add_le_add_wit hlog (le_refl (k - c))
+    have e1 : 1 - k + c + (k - c) = (1 : Real) := by mach_mpoly [k, c]
+    have e2 : log x + (k - c) = k - (c - log x) := by mach_mpoly [log x, k, c]
+    rw [e1, e2] at v; exact v
+  · -- `exp x − d` outruns `k`
+    refine ⟨1, 1 + exp (k + d), zero_lt_one_ax, one_le_one_add_exp _, ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hkd : k + d ≤ exp x := by
+      have h1 : k + d ≤ exp (k + d) := self_le_exp (k + d)
+      exact le_trans (le_trans h1 (le_trans (exp_le_one_add_exp _) hx)) (self_le_exp x)
+    have hge : k ≤ exp x - d := by
+      have v := add_le_add_wit hkd (le_refl (-d))
+      have e1 : k + d + -d = k := by mach_mpoly [k, d]
+      have e2 : exp x + -d = exp x - d := by mach_ring
+      rw [e1, e2] at v; exact v
+    exact absurd (lt_of_le_of_lt hge hlt) (lt_irrefl_ax k)
+  · -- `exp x − log x` outruns `k`, since it dominates `x`
+    refine ⟨1, 1 + exp k, zero_lt_one_ax, one_le_one_add_exp k, ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp k) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hk : k ≤ x := le_trans (self_le_exp k) (le_trans (exp_le_one_add_exp k) hx)
+    exact absurd (lt_of_le_of_lt (le_trans hk (self_le_exp_sub_log hx1)) hlt) (lt_irrefl_ax k)
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
