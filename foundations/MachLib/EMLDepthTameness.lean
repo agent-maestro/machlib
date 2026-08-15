@@ -6401,6 +6401,90 @@ theorem depth_three_decayExp_bounded_left_of_gap (h : BoundedCellApproach)
   rw [e6] at v
   exact v
 
+
+/-- **A positive depth-≤1 logarithm is bounded below by a positive constant.**
+
+The grammar cannot produce arbitrarily small *positive* logarithms at this depth. Of the five forms:
+`log β` is an exact constant, and if it is not positive the hypothesis is false; `log x` and the two
+`exp x − …` forms diverge; and `c − log x` goes non-positive, so `Log` totalises to `0` and the
+hypothesis fails again.
+
+**This is the delicate cell of `ExpExpGapBelow`.** There, the right child of a depth-2 tree whose left
+child is exactly `exp x` contributes a gap of precisely `Log (B x)`, so the whole question of whether
+`exp (exp x)` can be approached from below with a shrinking gap comes down to this lemma — a positive
+constant floor, not a decaying one. The same asymmetry as `depth_le_one_gap_below`, and the same
+cause: nothing in the grammar decays to `0` from above at this depth except by way of a shape that
+crosses into the totalised branch. -/
+theorem depth_le_one_log_gap_pos (B : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧
+      ∀ x : Real, X₀ ≤ x → 0 < log (B.eval x) → ε ≤ log (B.eval x) := by
+  rcases depth_le_one_classification B hB with ⟨β, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+  · rcases lt_total 0 (log β) with hβ | hβ | hβ
+    · refine ⟨log β, 1, hβ, le_refl 1, ?_⟩
+      intro x hx _
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos]
+      exact le_refl _
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hpos
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos, ← hβ] at hpos
+      exact absurd hpos (lt_irrefl_ax 0)
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hpos
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos] at hpos
+      exact absurd (lt_trans_ax hpos hβ) (lt_irrefl_ax 0)
+  · -- `log x` diverges
+    refine ⟨1, 1 + exp 1, zero_lt_one_ax, one_le_one_add_exp 1, ?_⟩
+    intro x hx _
+    have hxpos : (0 : Real) < x :=
+      lt_of_lt_of_le zero_lt_one_ax (le_trans (one_le_one_add_exp 1) hx)
+    rw [hb x hxpos]
+    exact log_ge_of_exp_le (le_trans (exp_le_one_add_exp 1) hx)
+  · -- `c − log x` totalises to `0`, so the hypothesis fails
+    refine ⟨1, 1 + exp c, zero_lt_one_ax, one_le_one_add_exp c, ?_⟩
+    intro x hx hpos
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp c) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hpos
+    have hge : c ≤ log x := log_ge_of_exp_le (le_trans (exp_le_one_add_exp c) hx)
+    have hle : c - log x ≤ 0 := by
+      have v := add_le_add_wit (le_refl c) (neg_le_neg_wit hge)
+      have e1 : c + -log x = c - log x := by mach_ring
+      have e2 : c + -c = (0 : Real) := by mach_mpoly [c]
+      rw [e1, e2] at v; exact v
+    rw [log_nonpos hle] at hpos
+    exact absurd hpos (lt_irrefl_ax 0)
+  · -- `exp x − d` diverges
+    refine ⟨1, 1 + exp 1 + exp d, zero_lt_one_ax, one_le_ray 1 d, ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_ray 1 d) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    refine log_ge_of_exp_le ?_
+    have hreach : exp 1 + d ≤ x := by
+      have v := add_le_add_wit (le_refl (exp 1)) (self_le_exp d)
+      have w : exp 1 + exp d ≤ 1 + exp 1 + exp d := by
+        have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+          (le_refl (exp 1))) (le_refl (exp d))
+        have e : (0 : Real) + exp 1 + exp d = exp 1 + exp d := by mach_ring
+        rw [e] at u; exact u
+      exact le_trans (le_trans v w) hx
+    have hxe : exp 1 + d ≤ exp x := le_trans hreach (self_le_exp x)
+    have v := add_le_add_wit hxe (le_refl (-d))
+    have e1 : exp 1 + d + -d = exp 1 := by mach_mpoly [exp 1, d]
+    have e2 : exp x + -d = exp x - d := by mach_ring
+    rw [e1, e2] at v; exact v
+  · -- `exp x − log x` diverges, since it dominates `x`
+    refine ⟨1, 1 + exp 1, zero_lt_one_ax, one_le_one_add_exp 1, ?_⟩
+    intro x hx _
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp 1) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos]
+    exact log_ge_of_exp_le (le_trans (le_trans (exp_le_one_add_exp 1) hx)
+      (self_le_exp_sub_log hx1))
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

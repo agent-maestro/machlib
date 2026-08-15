@@ -3230,6 +3230,27 @@
         "log"
       ],
       "hypotheses_count": 4
+    },
+    {
+      "_comment": "Crux of ExpExpGapBelow. hypotheses_count 1 -- B's depth bound. The conclusion must stay a CONSTANT epsilon for the same reason as the other from-below results: the var cell's conversion factor is exp(-exp x), so a decaying floor here would be multiplied into oblivion. Third entry in this corpus whose SHAPE rather than content is the thing being pinned.",
+      "id": "positive-log-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The grammar cannot produce arbitrarily small *positive* logarithms at\ndepth ≤ 1"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_log_gap_pos",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

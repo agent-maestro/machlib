@@ -37,6 +37,22 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### The crux of `ExpExpGapBelow`: a positive depth-≤1 logarithm has a constant floor
+
+`depth_le_one_log_gap_pos`. The grammar cannot produce arbitrarily small *positive* logarithms at
+depth ≤ 1: `log β` is an exact constant (and if it is not positive the hypothesis is false); `log x`
+and the two `exp x − …` forms diverge; and `c − log x` goes non-positive, so `Log` totalises to `0`
+and the hypothesis fails again.
+
+**This is the delicate cell of `ExpExpGapBelow`.** When a depth-2 tree's left child is exactly
+`exp x` — the `d = 0` case, and the one that produced the counterexample refuting the previous rung —
+the gap to `exp(exp x)` is *precisely* `Log(B x)`. So whether `exp(exp x)` can be approached from
+below with a shrinking gap comes down to this lemma, and the answer is a constant floor.
+
+Same asymmetry as `depth_le_one_gap_below`, same cause: nothing in this grammar decays to `0` from
+above at depth ≤ 1 except via a shape that crosses into the totalised branch, and crossing makes the
+hypothesis false rather than the bound tight.
+
 ### The decomposition of `Depth3DecayExp` is complete: two proved, two reduced
 
 `BoundedCellApproach` and `depth_three_decayExp_bounded_left_of_gap` close the last cell, so the
