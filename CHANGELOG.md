@@ -34,6 +34,28 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### Approach-rate quantisation at depth ≤ 2
+
+`depth_le_two_approach_constant` lifts the depth-≤1 statement one level: **no depth-≤2 expression
+approaches a constant from above faster than exponentially** either.
+
+The proof is not twenty-five cells, and how it collapses is the interesting part. The left child
+splits once, on `depth_le_one_exp_bounded_or_grows`, and the halves are answered by different
+machinery. When it grows, `exp x ≤ exp(A x)` while the right child's log is capped linearly, so the
+node clears `exp x − x − D ≥ x − D` — **the right child is never enumerated on that branch at all**.
+When it is bounded, the right child decides, and its five forms split three-and-two: for `x`,
+`exp x − d` and `exp x − log x` the log diverges past `K − k` and the hypothesis `k < node` becomes
+false, so those cells are *vacuous rather than hard*; the remaining two have an eventually-exact
+constant log, so the node is `exp(A x)` against a shifted target.
+
+The totalisation earns its keep in the `c − log x` cell: the log there is not merely small, it is
+identically `0` on a ray via `log_nonpos`, so the node is *exactly* `exp(A x)` rather than a
+perturbation of it. Third time the convention that is a hazard elsewhere has removed work.
+
+Supporting: `exp_sub_exp_lower` (`exp u − exp v ≥ (u−v)·exp v`, from `one_add_le_exp` and `exp_add`)
+is the bridge that carries an exponent gap through exponentiation, with the factor `μ` absorbed into
+the constant as `μ · exp(−C−x) = exp(−(C − log μ) − x)` rather than lost.
+
 ### Approach-rate quantisation at depth ≤ 1
 
 `depth_le_one_approach_constant`: for every constant `k`, a depth-≤1 expression **cannot approach a

@@ -5012,6 +5012,298 @@ theorem depth_le_one_approach_constant (A : EMLTree) (hA : A.depth ≤ 1) (k : R
       rw [e1, e2] at v; exact v
     exact le_trans (hC1 x (le_of_lt hxpos)) h1
 
+/-- **Convexity of `exp`, in the form the decay obligations consume**: `exp u − exp v ≥ (u−v)·exp v`.
+
+This is the bridge between a bound on an *exponent* and a bound on a *value*, and it is why the
+approach-rate analysis transfers to `Depth3DecayHard` at all: a gap of `exp(−C−x)` in the exponent
+survives exponentiation as a gap of `μ·exp(−C−x)` in the value, and the factor is absorbed into the
+constant. Proved from `one_add_le_exp` and `exp_add` alone. -/
+private theorem exp_sub_exp_lower (u v : Real) : (u - v) * exp v ≤ exp u - exp v := by
+  have h1 : (1 : Real) + (u - v) ≤ exp (u - v) := one_add_le_exp (u - v)
+  have h2 : exp v * (1 + (u - v)) ≤ exp v * exp (u - v) :=
+    mul_le_mul_of_nonneg_left h1 (le_of_lt (exp_pos v))
+  have h3 : exp v * exp (u - v) = exp u := by
+    rw [← exp_add]
+    have e : v + (u - v) = u := by mach_ring
+    rw [e]
+  rw [h3] at h2
+  have e2 : exp v * (1 + (u - v)) = exp v + (u - v) * exp v := by mach_mpoly [exp v, u, v]
+  rw [e2] at h2
+  have v2 := add_le_add_wit h2 (le_refl (-exp v))
+  have e3 : exp v + (u - v) * exp v + -exp v = (u - v) * exp v := by mach_mpoly [exp v, u, v]
+  have e4 : exp u + -exp v = exp u - exp v := by mach_ring
+  rw [e3, e4] at v2
+  exact v2
+
+/-- The non-positive-target half: `exp (A x)` is positive, so it clears any `μ ≤ 0` by its own
+floor, with no reference to the classification. -/
+private theorem exp_approach_nonpos (A : EMLTree) (hA : A.depth ≤ 1) {μ : Real} (hμ : μ ≤ 0) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → μ < exp (A.eval x) →
+      exp (-C - x) ≤ exp (A.eval x) - μ := by
+  obtain ⟨C, hC⟩ := depth_le_one_lower_on_ray A hA
+  refine ⟨C, 1, le_refl 1, ?_⟩
+  intro x hx _
+  have hlogx : log x ≤ x := log_le_self_on_ray hx
+  have h1 : -C - x ≤ -C - log x := by
+    have v := add_le_add_left (neg_le_neg_wit hlogx) (-C)
+    have e1 : -C + -x = -C - x := by mach_ring
+    have e2 : -C + -log x = -C - log x := by mach_ring
+    rw [e1, e2] at v; exact v
+  have h3 : exp (-C - x) ≤ exp (A.eval x) := exp_monotone (le_trans h1 (hC x hx))
+  have h4 : exp (A.eval x) ≤ exp (A.eval x) - μ := by
+    have hnn : (0 : Real) ≤ -μ := by
+      have v := neg_le_neg_wit hμ
+      have e : -(0 : Real) = 0 := by mach_ring
+      rw [e] at v; exact v
+    have v := add_le_add_left hnn (exp (A.eval x))
+    have e1 : exp (A.eval x) + (0 : Real) = exp (A.eval x) := by mach_ring
+    have e2 : exp (A.eval x) + -μ = exp (A.eval x) - μ := by mach_ring
+    rw [e1, e2] at v; exact v
+  exact le_trans h3 h4
+
+/-- **The same quantisation one exponential up**: `exp (A x)` cannot approach a constant `μ` from
+above faster than exponentially, for `A` of depth ≤ 1.
+
+The `μ > 0` case is where the convexity step earns its place. `μ < exp (A x)` is `log μ < A x`, so
+`depth_le_one_approach_constant` gives an exponent gap `A x − log μ ≥ exp(−C−x)`; convexity turns
+that into a value gap `exp (A x) − μ ≥ μ · exp(−C−x)`, and `μ · exp(−C−x) = exp(−(C − log μ) − x)`
+absorbs the factor into the constant rather than losing it. For `μ ≤ 0` the classification is not
+needed at all — positivity of `exp` does it.
+
+This is the form the depth-2 statement consumes, because an `eml` node's left child enters through
+`exp`, not directly. -/
+theorem depth_le_one_exp_approach_constant (A : EMLTree) (hA : A.depth ≤ 1) (μ : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → μ < exp (A.eval x) →
+      exp (-C - x) ≤ exp (A.eval x) - μ := by
+  rcases lt_total 0 μ with hμ | hμ | hμ
+  · obtain ⟨C, X₀, hX₀, hC⟩ := depth_le_one_approach_constant A hA (log μ)
+    refine ⟨C - log μ, X₀, hX₀, ?_⟩
+    intro x hx hlt
+    have hlogμ : log μ < A.eval x := by
+      have h := log_lt_log hμ hlt
+      rw [log_exp] at h
+      exact h
+    have hmul : exp (-C - x) * μ ≤ (A.eval x - log μ) * μ :=
+      mul_le_mul_of_nonneg_right (hC x hx hlogμ) (le_of_lt hμ)
+    have hconv : (A.eval x - log μ) * exp (log μ) ≤ exp (A.eval x) - exp (log μ) :=
+      exp_sub_exp_lower (A.eval x) (log μ)
+    rw [exp_log hμ] at hconv
+    have hrew : exp (-(C - log μ) - x) = exp (-C - x) * μ := by
+      have e : -(C - log μ) - x = -C - x + log μ := by mach_mpoly [C, x, log μ]
+      rw [e, exp_add, exp_log hμ]
+    rw [hrew]
+    exact le_trans hmul hconv
+  · exact exp_approach_nonpos A hA (by rw [← hμ]; exact le_refl 0)
+  · exact exp_approach_nonpos A hA (le_of_lt hμ)
+
+private theorem log_ge_of_exp_le {Λ y : Real} (h : exp Λ ≤ y) : Λ ≤ log y := by
+  have h2 := log_le_log (exp_pos Λ) h
+  rw [log_exp] at h2; exact h2
+
+/-- If the left child is capped at `K` and the right child's log has reached `K − k`, the node has
+fallen to `k`. This is the shape of every vacuous cell below. -/
+private theorem sub_le_of_bounds {a b K k : Real} (hK : a ≤ K) (hbig : K - k ≤ b) : a - b ≤ k := by
+  have v := add_le_add_wit hK (neg_le_neg_wit hbig)
+  have e1 : a + -b = a - b := by mach_ring
+  have e2 : K + -(K - k) = k := by mach_mpoly [K, k]
+  rw [e1, e2] at v; exact v
+
+private theorem self_le_exp_sub_log {x : Real} (hx : 1 ≤ x) : x ≤ exp x - log x := by
+  have v := add_le_add_wit (two_mul_le_exp (le_trans (le_of_lt zero_lt_one_ax) hx))
+    (neg_le_neg_wit (log_le_self_on_ray hx))
+  have e1 : x + x + -x = x := by mach_mpoly [x]
+  have e2 : exp x + -log x = exp x - log x := by mach_ring
+  rw [e1, e2] at v; exact v
+
+private theorem exp_le_one_add_exp (a : Real) : exp a ≤ 1 + exp a := by
+  have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (exp a))
+  have e : (0 : Real) + exp a = exp a := by mach_ring
+  rw [e] at v; exact v
+
+private theorem one_le_ray (a b : Real) : (1 : Real) ≤ 1 + exp a + exp b := by
+  have h2 : (1 : Real) + exp a ≤ 1 + exp a + exp b := by
+    have v := add_le_add_left (le_of_lt (exp_pos b)) (1 + exp a)
+    have e : 1 + exp a + (0 : Real) = 1 + exp a := by mach_ring
+    rw [e] at v; exact v
+  exact le_trans (one_le_one_add_exp a) h2
+
+private theorem fst_le_ray (a b : Real) : a ≤ 1 + exp a + exp b := by
+  have h3 : (1 : Real) + exp a ≤ 1 + exp a + exp b := by
+    have v := add_le_add_left (le_of_lt (exp_pos b)) (1 + exp a)
+    have e : 1 + exp a + (0 : Real) = 1 + exp a := by mach_ring
+    rw [e] at v; exact v
+  exact le_trans (self_le_exp a) (le_trans (exp_le_one_add_exp a) h3)
+
+private theorem one_add_snd_le_ray (a b : Real) : 1 + b ≤ 1 + exp a + exp b := by
+  have h2 : (1 : Real) + exp b ≤ 1 + exp a + exp b := by
+    have v := add_le_add_wit (add_le_add_left (le_of_lt (exp_pos a)) (1 : Real)) (le_refl (exp b))
+    have e : (1 : Real) + 0 + exp b = 1 + exp b := by mach_ring
+    rw [e] at v; exact v
+  exact le_trans (add_le_add_left (self_le_exp b) 1) h2
+
+/-- **Approach-rate quantisation at depth ≤ 2.**
+
+Same statement as `depth_le_one_approach_constant` one level up: no depth-≤2 expression approaches a
+constant from above faster than exponentially.
+
+**The proof is not twenty-five cells.** The left child splits once, on
+`depth_le_one_exp_bounded_or_grows`, and the two halves are answered by different machinery:
+
+* *growing left child* — `exp x ≤ exp (A x)` while the right child's log is capped linearly by
+  `depth_le_one_log_le_linear`, so the node exceeds `exp x − x − D ≥ x − D`, which passes `k + 1`.
+  **The right child is never enumerated on this branch**;
+* *bounded left child* — now the right child decides, and its five forms split three-and-two. For
+  `x`, `exp x − d` and `exp x − log x` the log diverges past `K − k` and the hypothesis `k < node`
+  becomes **false**: these cells are vacuous, not hard. For the two remaining forms the log is
+  eventually an exact constant — `log β`, or `0` via `log_nonpos` once `c − log x` turns negative —
+  so the node is `exp (A x)` against a shifted target and `depth_le_one_exp_approach_constant`
+  applies.
+
+The totalisation earns its keep in the `c − log x` cell: the log is not merely *small* there, it is
+identically `0` on a ray, so the node is exactly `exp (A x)` rather than a perturbation of it. -/
+theorem depth_le_two_approach_constant (t : EMLTree) (ht : t.depth ≤ 2) (k : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → k < t.eval x →
+      exp (-C - x) ≤ t.eval x - k := by
+  cases t with
+  | const c => exact depth_le_one_approach_constant (EMLTree.const c) (by simp [EMLTree.depth]) k
+  | var => exact depth_le_one_approach_constant EMLTree.var (by simp [EMLTree.depth]) k
+  | eml A B =>
+    have hA : A.depth ≤ 1 := by
+      simp only [EMLTree.depth] at ht
+      have := Nat.le_max_left A.depth B.depth; omega
+    have hB : B.depth ≤ 1 := by
+      simp only [EMLTree.depth] at ht
+      have := Nat.le_max_right A.depth B.depth; omega
+    obtain ⟨C1, hC1⟩ := small_exp_below zero_lt_one_ax
+    rcases depth_le_one_exp_bounded_or_grows A hA with ⟨K, hK⟩ | ⟨T, hT⟩
+    · rcases depth_le_one_form B hB with ⟨β, hb⟩ | hb | ⟨c', _, hb⟩ | ⟨d, hb⟩ | hb
+      · -- right child a constant: an exact shift of the target
+        obtain ⟨C, X₀, hX₀, hC⟩ := depth_le_one_exp_approach_constant A hA (k + log β)
+        refine ⟨C, X₀, hX₀, ?_⟩
+        intro x hx hlt
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₀ hx)
+        have hlt' : k < exp (A.eval x) - log (B.eval x) := hlt
+        rw [hb x hxpos] at hlt'
+        have hgt : k + log β < exp (A.eval x) := by
+          have v := add_lt_add_left hlt' (log β)
+          have e1 : log β + k = k + log β := by mach_ring
+          have e2 : log β + (exp (A.eval x) - log β) = exp (A.eval x) := by
+            mach_mpoly [log β, exp (A.eval x)]
+          rw [e1, e2] at v; exact v
+        show exp (-C - x) ≤ exp (A.eval x) - log (B.eval x) - k
+        rw [hb x hxpos]
+        have e3 : exp (A.eval x) - (k + log β) = exp (A.eval x) - log β - k := by
+          mach_mpoly [exp (A.eval x), k, log β]
+        rw [← e3]
+        exact hC x hx hgt
+      · -- right child the identity: `log x` diverges, the hypothesis dies
+        refine ⟨C1, 1 + exp (K - k), one_le_one_add_exp _, ?_⟩
+        intro x hx hlt
+        have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hlt' : k < exp (A.eval x) - log (B.eval x) := hlt
+        rw [hb x hxpos] at hlt'
+        have hbig : K - k ≤ log x :=
+          log_ge_of_exp_le (le_trans (exp_le_one_add_exp (K - k)) hx)
+        exact absurd (lt_of_lt_of_le hlt' (sub_le_of_bounds (hK x hx1) hbig)) (lt_irrefl_ax k)
+      · -- right child `c − log x`: the log is identically `0` on a ray, node is exactly `exp (A x)`
+        obtain ⟨C, X₁, hX₁, hC⟩ := depth_le_one_exp_approach_constant A hA k
+        refine ⟨C, X₁ + exp c', ?_, ?_⟩
+        · exact le_trans hX₁ (le_add_nonneg_r' (le_of_lt (exp_pos c')))
+        · intro x hx hlt
+          have hX₁x : X₁ ≤ x := le_trans (le_add_nonneg_r' (le_of_lt (exp_pos c'))) hx
+          have hx1 : (1 : Real) ≤ x := le_trans hX₁ hX₁x
+          have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+          have hcx : exp c' ≤ x := by
+            have v := add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hX₁) (le_refl (exp c'))
+            have e : (0 : Real) + exp c' = exp c' := by mach_ring
+            rw [e] at v; exact le_trans v hx
+          have hzero : log (B.eval x) = 0 := by
+            rw [hb x hxpos]
+            refine log_nonpos ?_
+            have hge : c' ≤ log x := log_ge_of_exp_le hcx
+            have v := add_le_add_wit (le_refl c') (neg_le_neg_wit hge)
+            have e1 : c' + -log x = c' - log x := by mach_ring
+            have e2 : c' + -c' = (0 : Real) := by mach_mpoly [c']
+            rw [e1, e2] at v; exact v
+          have hlt' : k < exp (A.eval x) - log (B.eval x) := hlt
+          rw [hzero] at hlt'
+          have hgt : k < exp (A.eval x) := by
+            have e : exp (A.eval x) - (0 : Real) = exp (A.eval x) := by mach_ring
+            rw [e] at hlt'; exact hlt'
+          show exp (-C - x) ≤ exp (A.eval x) - log (B.eval x) - k
+          rw [hzero]
+          have e : exp (A.eval x) - (0 : Real) - k = exp (A.eval x) - k := by mach_ring
+          rw [e]
+          exact hC x hX₁x hgt
+      · -- right child `exp x − d`: the log diverges
+        refine ⟨C1, 1 + exp (K - k) + exp d, one_le_ray _ _, ?_⟩
+        intro x hx hlt
+        have hx1 : (1 : Real) ≤ x := le_trans (one_le_ray _ _) hx
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hlt' : k < exp (A.eval x) - log (B.eval x) := hlt
+        rw [hb x hxpos] at hlt'
+        have hreach : exp (K - k) + d ≤ x := by
+          have v := add_le_add_wit (le_refl (exp (K - k))) (self_le_exp d)
+          have w : exp (K - k) + exp d ≤ 1 + exp (K - k) + exp d := by
+            have u := add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+              (le_refl (exp (K - k)))) (le_refl (exp d))
+            have e : (0 : Real) + exp (K - k) + exp d = exp (K - k) + exp d := by mach_ring
+            rw [e] at u; exact u
+          exact le_trans (le_trans v w) hx
+        have hbig : K - k ≤ log (exp x - d) := by
+          refine log_ge_of_exp_le ?_
+          have hxe : exp (K - k) + d ≤ exp x := le_trans hreach (self_le_exp x)
+          have v := add_le_add_wit hxe (le_refl (-d))
+          have e1 : exp (K - k) + d + -d = exp (K - k) := by mach_mpoly [exp (K - k), d]
+          have e2 : exp x + -d = exp x - d := by mach_ring
+          rw [e1, e2] at v; exact v
+        exact absurd (lt_of_lt_of_le hlt' (sub_le_of_bounds (hK x hx1) hbig)) (lt_irrefl_ax k)
+      · -- right child `exp x − log x`: the log diverges
+        refine ⟨C1, 1 + exp (K - k), one_le_one_add_exp _, ?_⟩
+        intro x hx hlt
+        have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        have hlt' : k < exp (A.eval x) - log (B.eval x) := hlt
+        rw [hb x hxpos] at hlt'
+        have hbig : K - k ≤ log (exp x - log x) :=
+          log_ge_of_exp_le (le_trans (le_trans (exp_le_one_add_exp (K - k)) hx)
+            (self_le_exp_sub_log hx1))
+        exact absurd (lt_of_lt_of_le hlt' (sub_le_of_bounds (hK x hx1) hbig)) (lt_irrefl_ax k)
+    · -- growing left child: the linear log ceiling cannot keep up, whatever the right child is
+      obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+      refine ⟨C1, 1 + exp T + exp (D + k), one_le_ray _ _, ?_⟩
+      intro x hx _
+      have hx1 : (1 : Real) ≤ x := le_trans (one_le_ray _ _) hx
+      have hxT : T ≤ x := le_trans (fst_le_ray _ _) hx
+      have hxDk : (1 : Real) + (D + k) ≤ x := le_trans (one_add_snd_le_ray _ _) hx
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hnode : exp x - (x + D) ≤ exp (A.eval x) - log (B.eval x) := by
+        have v := add_le_add_wit (hT x hxT) (neg_le_neg_wit (hD x hx1))
+        have e1 : exp x + -(x + D) = exp x - (x + D) := by mach_ring
+        have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hxD : x - D ≤ exp x - (x + D) := by
+        have v := add_le_add_wit (two_mul_le_exp (le_of_lt hxpos)) (le_refl (-(x + D)))
+        have e1 : x + x + -(x + D) = x - D := by mach_mpoly [x, D]
+        have e2 : exp x + -(x + D) = exp x - (x + D) := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hone : (1 : Real) + k ≤ x - D := by
+        have v := add_le_add_wit hxDk (le_refl (-D))
+        have e1 : 1 + (D + k) + -D = 1 + k := by mach_mpoly [D, k]
+        have e2 : x + -D = x - D := by mach_ring
+        rw [e1, e2] at v; exact v
+      have hfin : (1 : Real) + k ≤ exp (A.eval x) - log (B.eval x) :=
+        le_trans hone (le_trans hxD hnode)
+      show exp (-C1 - x) ≤ exp (A.eval x) - log (B.eval x) - k
+      have hgap : (1 : Real) ≤ exp (A.eval x) - log (B.eval x) - k := by
+        have v := add_le_add_wit hfin (le_refl (-k))
+        have e1 : 1 + k + -k = (1 : Real) := by mach_mpoly [k]
+        have e2 : exp (A.eval x) - log (B.eval x) + -k
+            = exp (A.eval x) - log (B.eval x) - k := by mach_ring
+        rw [e1, e2] at v; exact v
+      exact le_trans (hC1 x (le_of_lt hxpos)) hgap
+
 /-- **Normal form at depth ≤ 2.** Constant, the identity, or `exp a − log b` with both `a` and `b`
 in the depth-1 form list. No tree appears in the third disjunct. -/
 theorem depth_le_two_normal_form (t : EMLTree) (ht : t.depth ≤ 2) :

@@ -2990,6 +2990,48 @@
         "exp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Approach-rate quantisation lifted to depth 2. hypotheses_count 1 -- only t's depth bound; `k` is a plain real binder. Same shape as the depth-1 entry on purpose: if the depth-2 proof ever acquires an axiom the depth-1 one does not have (analyticity, a reciprocal, a zero-count), the PAIR of entries is what makes that visible rather than either alone.",
+      "id": "approach-rate-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no depth-≤2 expression\napproaches a constant from above faster than exponentially"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_approach_constant",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The convexity bridge. Registered separately because it is the step that carries a bound on an EXPONENT through to a bound on a VALUE, and it must stay derivable from one_add_le_exp + exp_add alone -- if it ever picks up an analyticity axiom, the whole approach-rate route stops being elementary.",
+      "id": "exp-approach-constant-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is the bridge that carries an exponent gap through exponentiation"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_exp_approach_constant",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
