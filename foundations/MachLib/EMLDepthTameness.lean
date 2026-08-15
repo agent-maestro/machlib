@@ -5646,6 +5646,143 @@ theorem depth_le_one_gap_below (A : EMLTree) (hA : A.depth ≤ 1) (k : Real) :
     have hk : k ≤ x := le_trans (self_le_exp k) (le_trans (exp_le_one_add_exp k) hx)
     exact absurd (lt_of_le_of_lt (le_trans hk (self_le_exp_sub_log hx1)) hlt) (lt_irrefl_ax k)
 
+
+/-- Convexity the other way: `exp u − exp v ≤ (u − v) · exp u`. Where `exp_sub_exp_lower` carries a
+lower bound on an exponent gap up to the value, this carries a lower bound on a **value** gap back
+down to the **exponent** — and it loses only a constant factor, which is what the `P = const` cell of
+the depth-3 decomposition needs (`μ − log(Q x) ≥ exp(−μ) · (exp μ − Q x)`). -/
+private theorem exp_sub_exp_upper (u v : Real) : exp u - exp v ≤ (u - v) * exp u := by
+  have h1 : (1 : Real) + (v - u) ≤ exp (v - u) := one_add_le_exp (v - u)
+  have h2 : exp u * (1 + (v - u)) ≤ exp u * exp (v - u) :=
+    mul_le_mul_of_nonneg_left h1 (le_of_lt (exp_pos u))
+  have h3 : exp u * exp (v - u) = exp v := by
+    rw [← exp_add]
+    have e : u + (v - u) = v := by mach_mpoly [u, v]
+    rw [e]
+  rw [h3] at h2
+  have e2 : exp u * (1 + (v - u)) = exp u - (u - v) * exp u := by mach_mpoly [exp u, u, v]
+  rw [e2] at h2
+  have v2 := add_le_add_wit h2 (le_refl ((u - v) * exp u - exp v))
+  have e3 : exp u - (u - v) * exp u + ((u - v) * exp u - exp v) = exp u - exp v := by
+    mach_mpoly [exp u, exp v, u, v]
+  have e4 : exp v + ((u - v) * exp u - exp v) = (u - v) * exp u := by
+    mach_mpoly [exp u, exp v, u, v]
+  rw [e3, e4] at v2
+  exact v2
+
+/-- **The `exp`-level from-below gap.** `exp (A x)` cannot approach a constant `ν` from below with a
+shrinking gap, for `A` of depth ≤ 1 — and as at the value level the gap is a **positive constant**.
+
+The five forms again, and again none is tight: `exp α` is an exact constant; `exp (c − log x)` tends
+to `0`, so the gap tends to `ν` (and `ν ≤ 0` makes the hypothesis false outright, since `exp` is
+positive); and `exp x`, `exp (exp x − d)`, `exp (exp x − log x)` all outrun `ν`.
+
+The `c − log x` cell is the only one needing care, and the care is choosing the target: the ray is
+set so that `exp (c − log x) ≤ exp (log ν − 1)`, which is *strictly* below `ν`, so
+`ν − exp (log ν − 1)` is a legitimate positive `ε`. Picking `ν/2` would have been the reflex and
+would have needed division, which this base does not have. -/
+theorem depth_le_one_exp_gap_below (A : EMLTree) (hA : A.depth ≤ 1) (ν : Real) :
+    ∃ ε X₀ : Real, 0 < ε ∧ 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → exp (A.eval x) < ν →
+      ε ≤ ν - exp (A.eval x) := by
+  rcases depth_le_one_classification A hA with ⟨α, hb⟩ | hb | ⟨c, _, hb⟩ | ⟨d, hb⟩ | hb
+  · rcases lt_total (exp α) ν with hαν | hαν | hαν
+    · refine ⟨ν - exp α, 1, sub_pos_of_lt hαν, le_refl 1, ?_⟩
+      intro x hx _
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos]
+      exact le_refl _
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos, hαν] at hlt
+      exact absurd hlt (lt_irrefl_ax ν)
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos] at hlt
+      exact absurd (lt_trans_ax hlt hαν) (lt_irrefl_ax (exp α))
+  · -- `exp x` outruns `ν`
+    refine ⟨1, 1 + exp ν, zero_lt_one_ax, one_le_one_add_exp ν, ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp ν) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hν : ν ≤ exp x :=
+      le_trans (le_trans (self_le_exp ν) (le_trans (exp_le_one_add_exp ν) hx)) (self_le_exp x)
+    exact absurd (lt_of_le_of_lt hν hlt) (lt_irrefl_ax ν)
+  · -- `exp (c − log x)` decays to `0`
+    rcases lt_total 0 ν with hν | hν | hν
+    · refine ⟨ν - exp (log ν - 1), 1 + exp (c - log ν + 1), ?_, one_le_one_add_exp _, ?_⟩
+      · refine sub_pos_of_lt ?_
+        have hstep : log ν - 1 < log ν := by
+          have v := add_lt_add_left zero_lt_one_ax (log ν - 1)
+          have e1 : log ν - 1 + (0 : Real) = log ν - 1 := by mach_ring
+          have e2 : log ν - 1 + 1 = log ν := by mach_ring
+          rw [e1, e2] at v; exact v
+        have h := exp_lt hstep
+        rw [exp_log hν] at h
+        exact h
+      · intro x hx _
+        have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+        rw [hb x hxpos]
+        have hreach : exp (c - log ν + 1) ≤ x := le_trans (exp_le_one_add_exp _) hx
+        have hlog : c - log ν + 1 ≤ log x := log_ge_of_exp_le hreach
+        have hexp : c - log x ≤ log ν - 1 := by
+          have v := add_le_add_wit (le_refl (c - log ν + 1 + (log ν - 1) - c))
+            (neg_le_neg_wit hlog)
+          have e1 : c - log ν + 1 + (log ν - 1) - c + -(c - log ν + 1) = log ν - 1 - c := by
+            mach_mpoly [c, log ν]
+          have e2 : c - log ν + 1 + (log ν - 1) - c + -log x = -log x := by mach_mpoly [c, log ν, log x]
+          rw [e1, e2] at v
+          have v2 := add_le_add_wit v (le_refl c)
+          have e3 : -log x + c = c - log x := by mach_ring
+          have e4 : log ν - 1 - c + c = log ν - 1 := by mach_mpoly [c, log ν]
+          rw [e3, e4] at v2; exact v2
+        have hmono : exp (c - log x) ≤ exp (log ν - 1) := exp_monotone hexp
+        have v := add_le_add_wit (le_refl ν) (neg_le_neg_wit hmono)
+        have e1 : ν + -exp (log ν - 1) = ν - exp (log ν - 1) := by mach_ring
+        have e2 : ν + -exp (c - log x) = ν - exp (c - log x) := by mach_ring
+        rw [e1, e2] at v; exact v
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos, ← hν] at hlt
+      exact absurd (lt_trans_ax (exp_pos _) hlt) (lt_irrefl_ax 0)
+    · refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+      intro x hx hlt
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hb x hxpos] at hlt
+      exact absurd (lt_trans_ax (lt_trans_ax (exp_pos _) hlt) hν) (lt_irrefl_ax 0)
+  · -- `exp (exp x − d)` outruns `ν`
+    refine ⟨1, 1 + exp d + exp ν, zero_lt_one_ax, one_le_ray d ν, ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_ray d ν) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hdx : d ≤ x := le_trans (fst_le_ray d ν) hx
+    have hνx : ν ≤ x :=
+      le_trans (le_add_nonneg_l' (le_of_lt zero_lt_one_ax))
+        (le_trans (one_add_snd_le_ray d ν) hx)
+    have hxd : x ≤ exp x - d := by
+      have v := add_le_add_wit (two_mul_le_exp (le_of_lt hxpos)) (neg_le_neg_wit hdx)
+      have e1 : x + x + -x = x := by mach_mpoly [x]
+      have e2 : exp x + -d = exp x - d := by mach_ring
+      rw [e1, e2] at v; exact v
+    have hν : ν ≤ exp (exp x - d) :=
+      le_trans hνx (le_trans hxd (self_le_exp (exp x - d)))
+    exact absurd (lt_of_le_of_lt hν hlt) (lt_irrefl_ax ν)
+  · -- `exp (exp x − log x)` outruns `ν`
+    refine ⟨1, 1 + exp ν, zero_lt_one_ax, one_le_one_add_exp ν, ?_⟩
+    intro x hx hlt
+    have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp ν) hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+    rw [hb x hxpos] at hlt
+    have hνx : ν ≤ x := le_trans (self_le_exp ν) (le_trans (exp_le_one_add_exp ν) hx)
+    have hν : ν ≤ exp (exp x - log x) :=
+      le_trans hνx (le_trans (self_le_exp_sub_log hx1) (self_le_exp (exp x - log x)))
+    exact absurd (lt_of_le_of_lt hν hlt) (lt_irrefl_ax ν)
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

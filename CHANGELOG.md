@@ -34,6 +34,24 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### The `exp`-level from-below gap, and the toolkit for the `P = const` cell
+
+`depth_le_one_exp_gap_below` carries the asymmetry up one exponential: `exp(A x)` cannot approach a
+constant `ν` from below with a shrinking gap either, and again the gap is a **positive constant**.
+`exp α` is exact; `exp(c − log x)` tends to `0` so the gap tends to `ν`; `exp x`, `exp(exp x − d)`
+and `exp(exp x − log x)` all outrun `ν`; and `ν ≤ 0` makes the hypothesis false outright since `exp`
+is positive.
+
+The `c − log x` cell is the only one needing care, and the care is in choosing the target. The ray is
+set so `exp(c − log x) ≤ exp(log ν − 1)`, which is *strictly* below `ν`, making `ν − exp(log ν − 1)` a
+legitimate positive `ε`. The reflex choice `ν/2` would have needed division, which this base does not
+have — the log-shift is the division-free substitute and is worth remembering as an idiom.
+
+`exp_sub_exp_upper` (`exp u − exp v ≤ (u − v)·exp u`) completes the pair with `exp_sub_exp_lower`.
+The lower form carries an **exponent** gap up to a value; this one carries a **value** gap back down
+to the exponent, losing only a constant factor. That is precisely what the `P = const` cell needs:
+`μ − log(Q x) ≥ exp(−μ) · (exp μ − Q x)`, so a constant value-gap gives a constant log-gap.
+
 ### Approach from below is strictly easier, and the asymmetry is structural
 
 `depth_le_one_gap_below`: where `depth_le_one_approach_constant` bounds the gap below by

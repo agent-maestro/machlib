@@ -3076,6 +3076,27 @@
         "eval"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "exp-level from-below gap. hypotheses_count 1 -- A's depth bound; nu is a plain real binder. Paired with gap-below-asymmetry-changelog: both must keep a CONSTANT epsilon in the conclusion, since the const cell's convexity step multiplies the gap by exp(A x) >= exp(-C-x) and an exp(-C-x)-sized gap would degrade to exp(-C''-2x).",
+      "id": "exp-gap-below-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "cannot approach a\nconstant `ν` from below with a shrinking gap either"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_one_exp_gap_below",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
