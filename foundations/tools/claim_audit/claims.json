@@ -3097,6 +3097,50 @@
         "exp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Depth-2 from-below gap. hypotheses_count 1 -- t's depth bound; k is a plain real binder. Keeps the CONSTANT epsilon of the depth-1 version, which is the property the const cell consumes.",
+      "id": "gap-below-depth-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "lifts the from-below gap to depth 2 with the same constant `ε`"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_le_two_gap_below",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "eval"
+      ],
+      "conclusion_mentions": [
+        "eval"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The const cell of Depth3DecayHard. hypotheses_count 1 -- Q's depth bound; c is a plain real binder, and the two positivity conditions are inside the conclusion's implication chain rather than being binders, which is what lets this compose with the obligation's own shape.",
+      "id": "depth3-const-cell-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The node is bounded below by `ε · exp(−exp c)` — a\npositive constant"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_decay_const_left",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

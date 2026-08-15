@@ -34,6 +34,28 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### The `P = const` cell discharged — two of four
+
+`depth_le_two_gap_below` lifts the from-below gap to depth 2 with the same constant `ε`, by the usual
+collapse: a growing left child puts the node above `k` with **no enumeration of the right child**,
+and when it is bounded the right child's five forms split three-and-two — three divergent logs drag
+the node to `−∞`, two with an eventually exact constant log reduce to `depth_le_one_exp_gap_below`.
+Every cell is vacuous, clears `1`, or inherits a constant. Nothing is tight.
+
+`depth_three_decay_const_left` then discharges the cell. With a constant left child the node is
+`exp c − log(Q x)`, so the question is whether `log(Q x)` can creep up on `exp c` from below faster
+than exponentially. It cannot, and the reason is that **nothing in sight is exponentially small**:
+`Q x` stays a *constant* below `exp(exp c)`, and `exp_sub_exp_upper` carries that value gap down to
+the logarithm losing only a constant factor. The node is bounded below by `ε · exp(−exp c)` — a
+positive constant, far stronger than the `exp(−C − x)` the obligation asks for.
+
+Had the gap been `exp(−C − x)` instead, the convexity step would have yielded `exp(−C′ − 2x)` and the
+bound would degrade by a factor of `x` per level. That is why `depth_le_one_gap_below`'s conclusion is
+a constant and was not weakened to match its from-above mirror.
+
+`Depth3DecayHard` is **not** discharged: two of four cells, unassembled. `P = var` and both-children-
+bounded remain, and they are the two that were always hard.
+
 ### The `exp`-level from-below gap, and the toolkit for the `P = const` cell
 
 `depth_le_one_exp_gap_below` carries the asymmetry up one exponential: `exp(A x)` cannot approach a
