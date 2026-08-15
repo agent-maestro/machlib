@@ -6216,6 +6216,32 @@ theorem not_depth3DecayHard : ¬ Depth3DecayHard := by
       (le_add_nonneg_r' (le_of_lt (exp_pos (-C)))))
   · exact le_trans (self_le_exp (-C)) (le_add_nonneg_l' hp2)
 
+
+/-- Weakening the rung. `x ≤ exp x`, so every `C + x` bound is a `C + exp x` bound. -/
+private theorem rung_weaken {y C x : Real} (h : y ≤ C + x) : y ≤ C + exp x :=
+  le_trans h (add_le_add_left (self_le_exp x) C)
+
+/-- **The growing cell, transported to the corrected rung.** -/
+theorem depth_three_decayExp_growing_left (P Q : EMLTree) (hQ : Q.depth ≤ 2) (C T : Real)
+    (hP : ∀ x : Real, T ≤ x → exp x - x - C ≤ P.eval x) :
+    ∃ C' X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      -log (exp (P.eval x) - log (Q.eval x)) ≤ C' + exp x := by
+  obtain ⟨C', X₀, hX₀, h⟩ := depth_three_decay_growing_left P Q hQ C T hP
+  exact ⟨C', X₀, hX₀, fun x hx => rung_weaken (h x hx)⟩
+
+/-- **The `const` cell, transported to the corrected rung.**
+
+Two of `Depth3DecayExp`'s four cells therefore hold already, and hold for a reason worth stating: the
+cells discharged against the *false* `Depth3DecayHard` were proved with the **stronger** `C + x`
+bound, so refuting the conjunction cost nothing on those cells. A refutation invalidates a
+conjecture, not the lemmas proved on the way to it — and turning that remark into these two
+corollaries is what keeps it from being a remark. -/
+theorem depth_three_decayExp_const_left (c : Real) (Q : EMLTree) (hQ : Q.depth ≤ 2) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
+      0 < exp c - log (Q.eval x) → -log (exp c - log (Q.eval x)) ≤ C + exp x := by
+  obtain ⟨C, X₀, hX₀, h⟩ := depth_three_decay_const_left c Q hQ
+  exact ⟨C, X₀, hX₀, fun x hx h1 h2 => rung_weaken (h x hx h1 h2)⟩
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

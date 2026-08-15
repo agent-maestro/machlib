@@ -35,6 +35,17 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### Two cells carry over to the corrected rung, as theorems rather than a remark
+
+`depth_three_decayExp_growing_left` and `depth_three_decayExp_const_left`. Since `x ≤ exp x`, every
+`C + x` bound is a `C + exp x` bound, so both cells discharged against the refuted `Depth3DecayHard`
+transport to `Depth3DecayExp` unchanged.
+
+Worth stating as theorems rather than as the remark it had been twice: **a refutation invalidates a
+conjecture, not the lemmas proved on the way to it.** Those cells were proved with the *stronger*
+`C + x` bound, so refuting the conjunction cost nothing on them. Two of `Depth3DecayExp`'s four cells
+therefore already hold, and only `P = var` and both-children-bounded remain.
+
 ### `Depth3DecayHard` is FALSE — the decomposition found its own obligation's counterexample
 
 Take `A = var` and `B = dep3CounterRight = eml (eml var (const 0)) var`, both inside the depth

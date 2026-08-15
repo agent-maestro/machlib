@@ -3161,6 +3161,29 @@
         "Depth3DecayHard"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Carry-over of the const cell to the corrected rung. hypotheses_count 1 -- Q's depth bound only. Registered because the claim it pins is a REUSE claim: that work done against a refuted conjecture survives. If the const cell ever acquired an axiom the exp-rung version lacks, or vice versa, the reuse would be unsound and this entry is what would show it.",
+      "id": "decay-cells-carry-over-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a refutation invalidates a\nconjecture, not the lemmas proved on the way to it"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth_three_decayExp_const_left",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
