@@ -124,8 +124,13 @@ jobs:
       # its row failed nothing. This gate checks both directions against the corpus:
       # an "open" row with a theorem concluding it is STALE, a "discharged" row whose
       # cited theorem does not conclude it is BROKEN. Exit 2 = ledger unreadable
-      # (UNAVAILABLE, deliberately distinct from a pass). Canary self-test included:
-      # two convict specimens must fire and a correct row must stay silent.
+      # (UNAVAILABLE, deliberately distinct from a pass). The same table is duplicated in
+      # CHANGELOG.md -- and that copy is the one that went stale first, saying "Four
+      # propositions" over four rows after a fifth was added -- so both are parsed and must
+      # agree. Canary self-test included: four convict specimens must fire (row mislabelled
+      # open, row mislabelled discharged, row missing from the changelog copy, status
+      # disagreeing across copies) and correct rows must stay silent, so the gate cannot be
+      # satisfied by a checker that simply fails everything.
       - name: Obligations ledger (open/discharged rows ↔ the corpus)
         working-directory: foundations
         run: bash tools/check_obligations.sh

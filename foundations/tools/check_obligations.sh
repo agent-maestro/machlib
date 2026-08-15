@@ -6,8 +6,11 @@
 #
 # This gate checks BOTH directions against the corpus: exit 0 = every row matches; 1 = a row
 # marked open is in fact discharged (stale), or a row marked discharged names a theorem that
-# does not conclude it; 2 = the ledger could not be read (UNAVAILABLE, not a pass).
-# Runs the canary self-test too. CI-ready.
+# does not conclude it; 2 = a ledger could not be read (UNAVAILABLE, not a pass).
+#
+# The table is duplicated in CHANGELOG.md and that copy is the one that actually went stale first,
+# so both are parsed and required to agree row for row -- a gate reading one copy of a duplicated
+# table certifies the copy nobody reads. Runs the canary self-test too. CI-ready.
 set -u
 HERE="$(cd "$(dirname "$0")/.." && pwd)"   # foundations/
 cd "$HERE" || exit 2
