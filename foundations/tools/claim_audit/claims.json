@@ -3320,6 +3320,26 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "ExpExpGapBelow discharged. hypotheses_count 0 -- a closed statement. Registered alongside the var-cell reduction: that theorem takes ExpExpGapBelow as a hypothesis and this one supplies it, so the pair is where a footprint leak would show up if the assembly ever pulled in an axiom none of its branches has.",
+      "id": "expexpgap-proved-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "pure assembly: every branch was already a lemma"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.expExpGapBelow_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "ExpExpGapBelow"
+      ],
+      "conclusion_mentions": [
+        "ExpExpGapBelow"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

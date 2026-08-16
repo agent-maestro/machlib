@@ -20,7 +20,7 @@ in commit archaeology:
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
-| `ExpExpGapBelow` | **open** | — (what the `P = var` cell reduces to) |
+| `ExpExpGapBelow` | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | **open** | — (what the bounded cell reduces to) |
 | `TowerReducesToSign` | **open** | — |
 
@@ -36,6 +36,22 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 `SignHardCase`; no such theorem exists, and the gap is real — sign-definiteness supplies the *ray* on
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
+
+### `ExpExpGapBelow` is proved — the `P = var` cell holds unconditionally
+
+`expExpGapBelow_holds`, pure assembly: every branch was already a lemma. `const` and `var` clear `1`
+via `exp(exp x) ≥ exp x ≥ x + x`; `A = α` and `A = c − log x` go through `expexp_gap_of_bounded`;
+`A = x` and `A = exp x − log x` are one convexity step each against the constant floor `Cl ≤ log(B x)`;
+and the three `A = exp x − d` sub-cases are `exp_shift_pos_gap`, `depth_le_one_log_gap_pos` and
+`exp_shift_neg_exceeds`.
+
+`depth_three_decayExp_var_left` follows immediately, so **three of `Depth3DecayExp`'s four cells now
+hold outright** and only bounded-`P` remains, itself reduced to `BoundedCellApproach`.
+
+**The obligations gate caught this.** Proving `ExpExpGapBelow` left its ledger row saying *open*, and
+the gate went red with `STALE ExpExpGapBelow: marked open but discharged by expExpGapBelow_holds` —
+the exact failure mode it was built for, on a row added four commits earlier. That is the first time
+it has fired on real drift rather than on a convict specimen.
 
 ### The bounded-left-child branches too, in one lemma
 

@@ -6661,6 +6661,182 @@ theorem expexp_gap_of_bounded (A B : EMLTree) (hB : B.depth ≤ 1) {M XM : Real}
   rw [e4] at hstep
   exact hstep
 
+
+/-- **`ExpExpGapBelow` holds.** The obligation the `P = var` cell of `Depth3DecayExp` reduces to.
+
+Assembly only: every branch is a lemma proved above. `const` and `var` clear `1` because
+`exp (exp x) ≥ exp x ≥ x + x`; `A = α` and `A = c − log x` go through `expexp_gap_of_bounded`;
+`A = x` and `A = exp x − log x` are one convexity step each against the constant floor
+`Cl ≤ log (B x)`; and the three `A = exp x − d` sub-cases are `exp_shift_pos_gap`,
+`depth_le_one_log_gap_pos` and `exp_shift_neg_exceeds` respectively.
+
+The `d = 0` sub-case is the one that matters: there the gap is *exactly* `Log (B x)`, and it is
+positive precisely because the hypothesis says the tree is below `exp (exp x)`. That is the same
+construction that refuted `Depth3DecayHard`, now bounded rather than unbounded, because the question
+changed from "how small can the node be" to "how small can this gap be". -/
+theorem expExpGapBelow_holds : ExpExpGapBelow := by
+  intro Q hQ
+  cases Q with
+  | const c =>
+    refine ⟨1, 1 + exp (c + 1), zero_lt_one_ax, one_le_one_add_exp _, ?_⟩
+    intro x hx _
+    have hreach : c + 1 ≤ x := le_trans (self_le_exp _) (le_trans (exp_le_one_add_exp _) hx)
+    have hee : x ≤ exp (exp x) := le_trans (self_le_exp x) (self_le_exp (exp x))
+    show (1 : Real) ≤ exp (exp x) - c
+    have v := add_le_add_wit (le_trans hreach hee) (le_refl (-c))
+    have e1 : c + 1 + -c = (1 : Real) := by mach_mpoly [c]
+    have e2 : exp (exp x) + -c = exp (exp x) - c := by mach_ring
+    rw [e1, e2] at v; exact v
+  | var =>
+    refine ⟨1, 1, zero_lt_one_ax, le_refl 1, ?_⟩
+    intro x hx _
+    have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+    show (1 : Real) ≤ exp (exp x) - x
+    have h3 : x + x ≤ exp (exp x) := le_trans (two_mul_le_exp hx0) (self_le_exp (exp x))
+    have v := add_le_add_wit h3 (le_refl (-x))
+    have e1 : x + x + -x = x := by mach_mpoly [x]
+    have e2 : exp (exp x) + -x = exp (exp x) - x := by mach_ring
+    rw [e1, e2] at v
+    exact le_trans hx v
+  | eml A B =>
+    have hA : A.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hQ
+      have := Nat.le_max_left A.depth B.depth; omega
+    have hB : B.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hQ
+      have := Nat.le_max_right A.depth B.depth; omega
+    rcases depth_le_one_classification A hA with ⟨α, ha⟩ | ha | ⟨c, _, ha⟩ | ⟨d, ha⟩ | ha
+    · obtain ⟨X₀, hX₀, hg⟩ := expexp_gap_of_bounded A B hB (M := exp α) (XM := 1)
+        (fun x hx => by rw [ha x (lt_of_lt_of_le zero_lt_one_ax hx)]; exact le_refl _)
+      exact ⟨1, X₀, zero_lt_one_ax, hX₀, fun x hx _ => hg x hx⟩
+    · obtain ⟨Cl, XC, hXC, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+      have hXC0 : (0 : Real) ≤ XC := le_trans (le_of_lt zero_lt_one_ax) hXC
+      refine ⟨1, XC + exp (1 - Cl), zero_lt_one_ax,
+        le_trans hXC (le_add_nonneg_r' (le_of_lt (exp_pos _))), ?_⟩
+      intro x hx _
+      have hXCx : XC ≤ x := le_trans (le_add_nonneg_r' (le_of_lt (exp_pos _))) hx
+      have hx1 : (1 : Real) ≤ x := le_trans hXC hXCx
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have hreach : 1 - Cl ≤ x := le_trans (self_le_exp _) (le_trans (le_add_nonneg_l' hXC0) hx)
+      show (1 : Real) ≤ exp (exp x) - (exp (A.eval x) - log (B.eval x))
+      rw [ha x hxpos]
+      have h1 : x ≤ exp (exp x) - exp x := by
+        have v := add_le_add_wit (two_mul_le_exp (le_of_lt (exp_pos x))) (le_refl (-exp x))
+        have e1 : exp x + exp x + -exp x = exp x := by mach_mpoly [exp x]
+        have e2 : exp (exp x) + -exp x = exp (exp x) - exp x := by mach_ring
+        rw [e1, e2] at v; exact le_trans (self_le_exp x) v
+      have h2 : x + Cl ≤ exp (exp x) - exp x + log (B.eval x) :=
+        add_le_add_wit h1 (hCl x hXCx)
+      have h3 : (1 : Real) ≤ x + Cl := by
+        have v := add_le_add_wit hreach (le_refl Cl)
+        have e1 : 1 - Cl + Cl = (1 : Real) := by mach_mpoly [Cl]
+        rw [e1] at v; exact v
+      have e4 : exp (exp x) - exp x + log (B.eval x)
+          = exp (exp x) - (exp x - log (B.eval x)) := by
+        mach_mpoly [exp (exp x), exp x, log (B.eval x)]
+      rw [e4] at h2
+      exact le_trans h3 h2
+    · obtain ⟨X₀, hX₀, hg⟩ := expexp_gap_of_bounded A B hB (M := exp c) (XM := 1)
+        (fun x hx => by
+          have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+          rw [ha x hxpos]
+          refine exp_monotone ?_
+          have hl1 : log (1 : Real) = 0 := by
+            have hz : exp (0 : Real) = 1 := exp_zero
+            rw [← hz, log_exp]
+          have hlx : (0 : Real) ≤ log x := by
+            have hm := log_le_log zero_lt_one_ax hx
+            rw [hl1] at hm; exact hm
+          have v := add_le_add_wit (le_refl c) (neg_le_neg_wit hlx)
+          have e1 : c + -log x = c - log x := by mach_ring
+          have e2 : c + -(0 : Real) = c := by mach_ring
+          rw [e1, e2] at v; exact v)
+      exact ⟨1, X₀, zero_lt_one_ax, hX₀, fun x hx _ => hg x hx⟩
+    · rcases lt_total 0 d with hd | hd | hd
+      · obtain ⟨X₀, hX₀, hg⟩ := exp_shift_pos_gap B hB hd
+        refine ⟨1, X₀, zero_lt_one_ax, hX₀, ?_⟩
+        intro x hx _
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₀ hx)
+        show (1 : Real) ≤ exp (exp x) - (exp (A.eval x) - log (B.eval x))
+        rw [ha x hxpos]
+        exact hg x hx
+      · obtain ⟨ε, X₁, hε, hX₁, hg⟩ := depth_le_one_log_gap_pos B hB
+        refine ⟨ε, X₁, hε, hX₁, ?_⟩
+        intro x hx hlt
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₁ hx)
+        have e0 : exp x - (0 : Real) = exp x := by mach_ring
+        have hlt' : exp (A.eval x) - log (B.eval x) < exp (exp x) := hlt
+        rw [ha x hxpos, ← hd, e0] at hlt'
+        have hpos : (0 : Real) < log (B.eval x) := by
+          have v := add_lt_add_left hlt' (log (B.eval x) - exp (exp x))
+          have e1 : log (B.eval x) - exp (exp x) + (exp (exp x) - log (B.eval x)) = (0 : Real) := by
+            mach_mpoly [log (B.eval x), exp (exp x)]
+          have e2 : log (B.eval x) - exp (exp x) + exp (exp x) = log (B.eval x) := by
+            mach_mpoly [log (B.eval x), exp (exp x)]
+          rw [e1, e2] at v; exact v
+        show ε ≤ exp (exp x) - (exp (A.eval x) - log (B.eval x))
+        rw [ha x hxpos, ← hd, e0]
+        have e1 : exp (exp x) - (exp (exp x) - log (B.eval x)) = log (B.eval x) := by
+          mach_mpoly [exp (exp x), log (B.eval x)]
+        rw [e1]
+        exact hg x hx hpos
+      · obtain ⟨X₀, hX₀, hge⟩ := exp_shift_neg_exceeds B hB hd
+        refine ⟨1, X₀, zero_lt_one_ax, hX₀, ?_⟩
+        intro x hx hlt
+        have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₀ hx)
+        have hlt' : exp (A.eval x) - log (B.eval x) < exp (exp x) := hlt
+        rw [ha x hxpos] at hlt'
+        exact absurd (lt_of_le_of_lt (hge x hx) hlt') (lt_irrefl_ax (exp (exp x)))
+    · obtain ⟨Cl, XC, hXC, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+      have hXC0 : (0 : Real) ≤ XC := le_trans (le_of_lt zero_lt_one_ax) hXC
+      have hp1 : (0 : Real) ≤ XC + exp 1 := le_trans hXC0 (le_add_nonneg_r' (le_of_lt (exp_pos 1)))
+      refine ⟨1, XC + exp 1 + exp (1 - Cl), zero_lt_one_ax,
+        le_trans hXC (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos 1)))
+          (le_add_nonneg_r' (le_of_lt (exp_pos _)))), ?_⟩
+      intro x hx _
+      have hXCx : XC ≤ x := le_trans (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos 1)))
+        (le_add_nonneg_r' (le_of_lt (exp_pos _)))) hx
+      have hx1 : (1 : Real) ≤ x := le_trans hXC hXCx
+      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+      have he1x : exp 1 ≤ x := le_trans (le_add_nonneg_l' hXC0)
+        (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos _))) hx)
+      have hreach : 1 - Cl ≤ x := le_trans (self_le_exp _) (le_trans (le_add_nonneg_l' hp1) hx)
+      show (1 : Real) ≤ exp (exp x) - (exp (A.eval x) - log (B.eval x))
+      rw [ha x hxpos]
+      have hconv : (exp x - (exp x - log x)) * exp (exp x - log x)
+          ≤ exp (exp x) - exp (exp x - log x) := exp_sub_exp_lower (exp x) (exp x - log x)
+      have e0 : exp x - (exp x - log x) = log x := by mach_mpoly [exp x, log x]
+      rw [e0] at hconv
+      have hlogx : (1 : Real) ≤ log x := log_ge_of_exp_le he1x
+      have hexp_ge : x ≤ exp (exp x - log x) :=
+        le_trans (self_le_exp_sub_log hx1) (self_le_exp _)
+      have hmul : exp (exp x - log x) ≤ log x * exp (exp x - log x) := by
+        have v := mul_le_mul_of_nonneg_right hlogx (le_of_lt (exp_pos (exp x - log x)))
+        have e : (1 : Real) * exp (exp x - log x) = exp (exp x - log x) := by mach_ring
+        rw [e] at v; exact v
+      have h1 : x ≤ exp (exp x) - exp (exp x - log x) :=
+        le_trans hexp_ge (le_trans hmul hconv)
+      have h2 : x + Cl ≤ exp (exp x) - exp (exp x - log x) + log (B.eval x) :=
+        add_le_add_wit h1 (hCl x hXCx)
+      have h3 : (1 : Real) ≤ x + Cl := by
+        have v := add_le_add_wit hreach (le_refl Cl)
+        have e1 : 1 - Cl + Cl = (1 : Real) := by mach_mpoly [Cl]
+        rw [e1] at v; exact v
+      have e4 : exp (exp x) - exp (exp x - log x) + log (B.eval x)
+          = exp (exp x) - (exp (exp x - log x) - log (B.eval x)) := by
+        mach_mpoly [exp (exp x), exp (exp x - log x), log (B.eval x)]
+      rw [e4] at h2
+      exact le_trans h3 h2
+
+
+/-- **The `P = var` cell of `Depth3DecayExp`, unconditionally.** `ExpExpGapBelow` is now a theorem, so
+the reduction discharges. Three of the four cells hold outright; only bounded-`P` remains, and it is
+reduced to `BoundedCellApproach`. -/
+theorem depth_three_decayExp_var_left (Q : EMLTree) (hQ : Q.depth ≤ 2) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
+      0 < exp x - log (Q.eval x) → -log (exp x - log (Q.eval x)) ≤ C + exp x :=
+  depth_three_decayExp_var_left_of_gap expExpGapBelow_holds Q hQ
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
@@ -6673,7 +6849,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
-| `ExpExpGapBelow` | here | **open** | — (what the `P = var` cell reduces to) |
+| `ExpExpGapBelow` | here | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | here | **open** | — (what the bounded cell reduces to) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
