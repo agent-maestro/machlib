@@ -266,7 +266,9 @@ def self_test(decls) -> int:
     bad, _ = check_rows([("VarLeftEmlRightHard", "discharged", "`varLeftEmlRightHard_of_band`"),
                          ("BoundedCellApproach", "reduced",
                           "`boundedCellApproach_of_eml` → `BoundedEmlCellApproach`"),
-                         ("BoundedEmlCellApproach", "open", "—")], decls)
+                         ("BoundedEmlCellApproach", "reduced",
+                          "`boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge`"),
+                         ("BoundedEmlCellApproachLarge", "open", "—")], decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
     print(f"  canary 9 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")

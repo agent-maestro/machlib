@@ -54,7 +54,8 @@ in commit archaeology:
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
-| `BoundedEmlCellApproach` | **open** | — (the `eml` shape of `P`; `const` and `var` discharged) |
+| `BoundedEmlCellApproach` | **reduced** | `boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge` |
+| `BoundedEmlCellApproachLarge` | **open** | — (`1 < Q x`; small-right branch discharged) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

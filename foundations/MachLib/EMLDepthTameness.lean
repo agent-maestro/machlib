@@ -6653,6 +6653,149 @@ theorem boundedCellApproach_of_eml (h : BoundedEmlCellApproach) : BoundedCellApp
       have := Nat.le_max_right A.depth B.depth; omega
     exact h A B Q hA hB hQ K XK hK
 
+/-- **The small-right branch of the bounded cell, unconditionally.** When the approaching tree sits
+at or below `1`, the gap to `exp (exp (P x))` is bounded below by `exp (−C − exp x)` outright.
+
+Three inequalities, no case analysis and **no cap** — this holds for every `A`:
+
+```
+exp (−K − exp x) ≤ exp (P x)          `log (B x) ≤ exp x + K`, and `exp (A x) > 0`
+exp (P x)        ≤ exp (exp (P x)) − 1 `one_add_le_exp` at `exp (P x)`
+exp (exp (P x)) − 1 ≤ exp (exp (P x)) − Q x   the hypothesis `Q x ≤ 1`
+```
+
+**Why the first step is the whole content.** `exp (A x)` is dropped to `0`, so the only thing keeping
+`exp (P x)` above the rung is the *ceiling on the right child's logarithm* — and
+`depth_le_two_log_le_exp` caps that at `exp x + K`, exactly the scale the rung is written in. This is
+the `C + exp x` rung being the right one again, seen from a third side: `V₂` sets how far
+`−log (B x)` can drag the node down, and the rung was corrected to `exp x` precisely to cover it. -/
+theorem expexp_gap_of_right_le_one (A B Q : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Q.eval x ≤ 1 →
+      exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨K', X₁, hX₁, hlog⟩ := depth_le_two_log_le_exp B (by omega)
+  refine ⟨K', X₁, hX₁, ?_⟩
+  intro x hx hQ1
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  -- 1. the node cannot be dragged below `−K' − exp x`: only `−log (B x)` pushes down, and `V₂` caps it
+  have hstep : -K' - exp x ≤ (EMLTree.eml A B).eval x := by
+    rw [hval]
+    have h1 : log (B.eval x) ≤ exp x + K' := hlog x hx
+    have hneg : -(exp x + K') ≤ -log (B.eval x) := neg_le_neg_wit h1
+    have hup : -log (B.eval x) ≤ exp (A.eval x) - log (B.eval x) := by
+      have v := add_le_add_wit (le_of_lt (exp_pos (A.eval x))) (le_refl (-log (B.eval x)))
+      have e1 : (0 : Real) + -log (B.eval x) = -log (B.eval x) := by mach_ring
+      have e2 : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+        mach_mpoly [exp (A.eval x), log (B.eval x)]
+      rw [e1, e2] at v; exact v
+    have e3 : -K' - exp x = -(exp x + K') := by mach_mpoly [exp x, K']
+    rw [e3]
+    exact le_trans hneg hup
+  have hu : exp (-K' - exp x) ≤ exp ((EMLTree.eml A B).eval x) := exp_monotone hstep
+  -- 2. `1 + u ≤ exp u`, i.e. the target clears `1` by at least the node itself
+  have hT : exp ((EMLTree.eml A B).eval x)
+      ≤ exp (exp ((EMLTree.eml A B).eval x)) - 1 := by
+    have h := one_add_le_exp (exp ((EMLTree.eml A B).eval x))
+    have v := add_le_add_wit h (le_refl (-1 : Real))
+    have e1 : (1 : Real) + exp ((EMLTree.eml A B).eval x) + -1
+        = exp ((EMLTree.eml A B).eval x) := by
+      mach_mpoly [exp ((EMLTree.eml A B).eval x)]
+    have e2 : exp (exp ((EMLTree.eml A B).eval x)) + (-1 : Real)
+        = exp (exp ((EMLTree.eml A B).eval x)) - 1 := by
+      mach_ring
+    rw [e1, e2] at v; exact v
+  -- 3. `Q x ≤ 1` turns the `−1` into `−Q x`
+  have hQ : exp (exp ((EMLTree.eml A B).eval x)) - 1
+      ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+    have hneg : -(1 : Real) ≤ -Q.eval x := neg_le_neg_wit hQ1
+    have v := add_le_add_left hneg (exp (exp ((EMLTree.eml A B).eval x)))
+    have e1 : exp (exp ((EMLTree.eml A B).eval x)) + -(1 : Real)
+        = exp (exp ((EMLTree.eml A B).eval x)) - 1 := by mach_ring
+    have e2 : exp (exp ((EMLTree.eml A B).eval x)) + -Q.eval x
+        = exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+      mach_mpoly [exp (exp ((EMLTree.eml A B).eval x)), Q.eval x]
+    rw [e1, e2] at v; exact v
+  exact le_trans hu (le_trans hT hQ)
+
+/-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
+`BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
+
+**Why the split is at `1` and not somewhere else.** Below `1` the target's own distance to `1` carries
+the whole bound (`expexp_gap_of_right_le_one`), with no reference to `Q`'s structure at all. Above
+`1`, `log (Q x)` becomes a genuine quantity and the natural route is reverse convexity —
+`T − Q ≥ (u − v)·exp v` with `u = exp (P x)`, `v = log (Q x)` — which is where the difficulty
+concentrates.
+
+**And that route is CIRCULAR, which is the useful thing to know about this obligation.** Since
+`exp v = Q x > 1`, it gives `T − Q ≥ u − v = exp (P x) − log (Q x)`: the value of the depth-3 node
+`eml P Q`, with the *same* bounded `P`. Bounding it below by `exp (−C − exp x)` is precisely
+`Depth3DecayExp`'s bounded cell — the statement this whole chain reduces *from*. So the remaining
+difficulty cannot be discharged by moving between the value level and the exponent level in either
+direction; `exponent_gap_of_value_gap` and reverse convexity are exact inverses here, and a new
+ingredient is needed rather than a further conversion.
+
+Recorded so the next session does not spend its first hour rediscovering that the obvious move closes
+a loop. -/
+def BoundedEmlCellApproachLarge : Prop :=
+  ∀ A B Q : EMLTree, A.depth ≤ 1 → B.depth ≤ 1 → Q.depth ≤ 2 →
+    ∀ K XK : Real, (∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) →
+      ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+        Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+          exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x
+
+/-- **The small-right branch is discharged, so only `1 < Q x` remains.**
+
+Merging two `(C, X₀)` pairs needs a constant dominating both and a ray past both. Neither `max` nor
+division exists in this base, so `exp C₁ + exp C₂` and `1 + exp X₁ + exp X₂` do the work —
+`self_le_exp` on each summand clears the corresponding bound, and the `1` supplies `1 ≤ X₀`. -/
+theorem boundedEmlCellApproach_of_large (h : BoundedEmlCellApproachLarge) :
+    BoundedEmlCellApproach := by
+  intro A B Q hA hB hQ K XK hK
+  obtain ⟨C₂, X₂, hX₂, hlarge⟩ := h A B Q hA hB hQ K XK hK
+  obtain ⟨C₁, X₁, hX₁, hsmall⟩ := expexp_gap_of_right_le_one A B Q hB
+  refine ⟨exp C₁ + exp C₂, 1 + exp X₁ + exp X₂, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X₁)))
+        (le_of_lt (exp_pos X₂))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx hlt
+  have hX₁x : X₁ ≤ x := by
+    have v : (0 : Real) + exp X₁ + 0 ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos X₂))
+    have e : (0 : Real) + exp X₁ + 0 = exp X₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
+  have hX₂x : X₂ ≤ x := by
+    have v : (0 : Real) + 0 + exp X₂ ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos X₁)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp X₂ = exp X₂ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₂) (le_trans v hx)
+  -- the merged constant dominates each branch's own
+  have hC₁ : C₁ ≤ exp C₁ + exp C₂ := by
+    have v : exp C₁ + 0 ≤ exp C₁ + exp C₂ :=
+      add_le_add_wit (le_refl _) (le_of_lt (exp_pos C₂))
+    have e : exp C₁ + (0 : Real) = exp C₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp C₁) v
+  have hC₂ : C₂ ≤ exp C₁ + exp C₂ := by
+    have v : (0 : Real) + exp C₂ ≤ exp C₁ + exp C₂ :=
+      add_le_add_wit (le_of_lt (exp_pos C₁)) (le_refl _)
+    have e : (0 : Real) + exp C₂ = exp C₂ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp C₂) v
+  have hmono : ∀ D : Real, D ≤ exp C₁ + exp C₂ →
+      exp (-(exp C₁ + exp C₂) - exp x) ≤ exp (-D - exp x) := by
+    intro D hD
+    refine exp_monotone ?_
+    have hneg : -(exp C₁ + exp C₂) ≤ -D := neg_le_neg_wit hD
+    have v := add_le_add_wit hneg (le_refl (-exp x))
+    have e1 : -(exp C₁ + exp C₂) + -exp x = -(exp C₁ + exp C₂) - exp x := by mach_ring
+    have e2 : -D + -exp x = -D - exp x := by mach_ring
+    rw [e1, e2] at v; exact v
+  rcases lt_total 1 (Q.eval x) with hq | hq | hq
+  · exact le_trans (hmono C₂ hC₂) (hlarge x hX₂x hq hlt)
+  · exact le_trans (hmono C₁ hC₁) (hsmall x hX₁x (by rw [← hq]; exact le_refl 1))
+  · exact le_trans (hmono C₁ hC₁) (hsmall x hX₁x (le_of_lt hq))
+
 /-- **A positive depth-≤1 logarithm is bounded below by a positive constant.**
 
 The grammar cannot produce arbitrarily small *positive* logarithms at this depth. Of the five forms:
@@ -7084,7 +7227,8 @@ partial result can be committed without overstating it. Their status, as of the 
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | here | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | here | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
-| `BoundedEmlCellApproach` | here | **open** | — (the `eml` shape of `P`; `const` and `var` discharged) |
+| `BoundedEmlCellApproach` | here | **reduced** | `boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge` |
+| `BoundedEmlCellApproachLarge` | here | **open** | — (`1 < Q x`; small-right branch discharged) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,
