@@ -5455,7 +5455,9 @@ def Depth3DecayExp : Prop :=
       0 < exp (A.eval x) - log (B.eval x) →
       -log (exp (A.eval x) - log (B.eval x)) ≤ C + exp x
 
-/-- **The branch that is open.** At depth 3 the right child's logarithm can reach the exponential
+/-- **REFUTED — this proposition is false; see below.** (It was named as the open depth-3 decay branch,
+and the framing that follows is preserved because the reasoning that led here is what found the
+counterexample.) At depth 3 the right child's logarithm can reach the exponential
 scale, so `exp (A x) − log (B x)` may be small by cancellation rather than by `A` being small. This
 is the depth-3 analogue of what the five closed forms disposed of at depth 2.
 
@@ -5499,8 +5501,9 @@ cells, and remain true.
 
 Worth stating plainly: the four-cell decomposition was built to locate the difficulty, and the cell
 it isolated as hardest — `P = var`, the sole occupant of the single-exponential rung — is exactly
-where the statement fails. The Lean refutation is **not yet written**; what is machine-checked here is
-the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`), not the asymptotics.
+where the statement fails. **The refutation is machine-checked**: `not_depth3DecayHard`, with no
+numerics in the proof — the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`) *and* the
+asymptotics. The corrected statement is `Depth3DecayExp`, three of whose four cells are proved.
 
 See `monogate-research/exploration/eml_depth_induction_2026_08_13/APPROACH_RATE_QUANTISATION.md`. -/
 def Depth3DecayHard : Prop :=
@@ -5996,7 +5999,9 @@ A constant floor is far stronger than the `exp (−C − x)` the obligation asks
 have degraded by a factor of `x` at every level — which is why `depth_le_one_gap_below`'s conclusion
 is stated as a constant and not weakened to match its from-above mirror.
 
-Second of the four cells; `Depth3DecayHard` is not thereby discharged. -/
+Second of the four cells. It bounds by `C + x`, which is *stronger* than the corrected rung needs, so
+it transports to `Depth3DecayExp` unchanged (`depth_three_decayExp_const_left`) despite
+`Depth3DecayHard` itself being false. Three of the four cells now hold; only bounded-`P` remains. -/
 theorem depth_three_decay_const_left (c : Real) (Q : EMLTree) (hQ : Q.depth ≤ 2) :
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
       0 < exp c - log (Q.eval x) → -log (exp c - log (Q.eval x)) ≤ C + x := by
