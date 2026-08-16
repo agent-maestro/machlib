@@ -3251,6 +3251,29 @@
         "log"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The d<0 vacuity branch. hypotheses_count 2 -- B's depth bound and d < 0. Registered because the claim is that a branch is VACUOUS rather than proved, which is the easiest kind of claim to get wrong by quantifier slip: the theorem states the tree EXCEEDS exp(exp x), which is what makes the hypothesis false, rather than asserting the hypothesis is false directly.",
+      "id": "d-negative-vacuous-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "A doubly exponential quantity handled without ever bounding it above"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.exp_shift_neg_exceeds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

@@ -6503,6 +6503,63 @@ theorem depth_le_one_log_gap_pos (B : EMLTree) (hB : B.depth ≤ 1) :
     exact log_ge_of_exp_le (le_trans (le_trans (exp_le_one_add_exp 1) hx)
       (self_le_exp_sub_log hx1))
 
+
+/-- **The `d < 0` branch of `ExpExpGapBelow` is vacuous, not hard.**
+
+If the left child is `exp x − d` with `d < 0` then the depth-2 tree's value already *exceeds*
+`exp (exp x)`, so it cannot approach it from below at all and the hypothesis of `ExpExpGapBelow` is
+false on a ray.
+
+The proof is where the division-free move earns its place. Convexity gives
+`exp (exp x − d) − exp (exp x) ≥ (−d) · exp (exp x)`, and this base cannot divide by `−d` to make that
+usable. Writing **`−d = exp (log (−d))`** turns the product into `exp (log (−d) + exp x)`, which
+`self_le_exp` bounds below by `log (−d) + exp x` — *linear*, so it can be compared directly against
+the linear ceiling `log (B x) ≤ x + D` and the ray comes out explicitly as `x ≥ D − log (−d)`.
+
+A doubly exponential quantity is thereby handled without ever bounding it above: the only fact used is
+that it dominates its own logarithm. -/
+theorem exp_shift_neg_exceeds (B : EMLTree) (hB : B.depth ≤ 1) {d : Real} (hd : d < 0) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      exp (exp x) ≤ exp (exp x - d) - log (B.eval x) := by
+  obtain ⟨D, hD⟩ := depth_le_one_log_le_linear B hB
+  have hdpos : (0 : Real) < -d := by
+    have v := add_lt_add_left hd (-d)
+    have e1 : -d + d = (0 : Real) := by mach_mpoly [d]
+    have e2 : -d + (0 : Real) = -d := by mach_ring
+    rw [e1, e2] at v; exact v
+  refine ⟨1 + exp (D - log (-d)), one_le_one_add_exp _, ?_⟩
+  intro x hx
+  have hx1 : (1 : Real) ≤ x := le_trans (one_le_one_add_exp _) hx
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+  have hreach : D - log (-d) ≤ x :=
+    le_trans (self_le_exp _) (le_trans (exp_le_one_add_exp _) hx)
+  have hconv : (exp x - d - exp x) * exp (exp x) ≤ exp (exp x - d) - exp (exp x) :=
+    exp_sub_exp_lower (exp x - d) (exp x)
+  have e0 : exp x - d - exp x = -d := by mach_mpoly [exp x, d]
+  rw [e0] at hconv
+  -- the division-free step: `−d = exp (log (−d))`, so the product is itself an exponential
+  have hprod : exp (log (-d) + exp x) = -d * exp (exp x) := by
+    rw [exp_add, exp_log hdpos]
+  have hlin : log (-d) + exp x ≤ -d * exp (exp x) := by
+    rw [← hprod]; exact self_le_exp _
+  have h1 : log (-d) + (x + x) ≤ log (-d) + exp x :=
+    add_le_add_left (two_mul_le_exp hx0) (log (-d))
+  have h2 : x + D ≤ log (-d) + (x + x) := by
+    have v := add_le_add_wit hreach (le_refl (x + log (-d)))
+    have e1 : D - log (-d) + (x + log (-d)) = x + D := by mach_mpoly [D, x, log (-d)]
+    have e2 : x + (x + log (-d)) = log (-d) + (x + x) := by mach_mpoly [x, log (-d)]
+    rw [e1, e2] at v; exact v
+  have hbig : x + D ≤ -d * exp (exp x) := le_trans h2 (le_trans h1 hlin)
+  have hfinal : log (B.eval x) ≤ exp (exp x - d) - exp (exp x) :=
+    le_trans (hD x hx1) (le_trans hbig hconv)
+  have v := add_le_add_wit hfinal (le_refl (exp (exp x) - log (B.eval x)))
+  have e1 : log (B.eval x) + (exp (exp x) - log (B.eval x)) = exp (exp x) := by
+    mach_mpoly [log (B.eval x), exp (exp x)]
+  have e2 : exp (exp x - d) - exp (exp x) + (exp (exp x) - log (B.eval x))
+      = exp (exp x - d) - log (B.eval x) := by
+    mach_mpoly [exp (exp x - d), exp (exp x), log (B.eval x)]
+  rw [e1, e2] at v; exact v
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

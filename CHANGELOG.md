@@ -37,6 +37,20 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### `ExpExpGapBelow`'s `d < 0` branch is vacuous, not hard
+
+`exp_shift_neg_exceeds`. If the left child is `exp x − d` with `d < 0`, the depth-2 tree's value
+already *exceeds* `exp(exp x)`, so it cannot approach from below and the hypothesis is false on a ray.
+
+The proof is where the division-free move earns its place. Convexity gives
+`exp(exp x − d) − exp(exp x) ≥ (−d)·exp(exp x)`, and this base cannot divide by `−d` to make that
+usable. Writing **`−d = exp(log(−d))`** turns the product into `exp(log(−d) + exp x)`, which
+`self_le_exp` bounds below by `log(−d) + exp x` — *linear*, so it compares directly against the linear
+ceiling `log(B x) ≤ x + D` and the ray comes out explicitly as `x ≥ D − log(−d)`.
+
+A doubly exponential quantity handled without ever bounding it above: the only fact used is that it
+dominates its own logarithm.
+
 ### The crux of `ExpExpGapBelow`: a positive depth-≤1 logarithm has a constant floor
 
 `depth_le_one_log_gap_pos`. The grammar cannot produce arbitrarily small *positive* logarithms at
