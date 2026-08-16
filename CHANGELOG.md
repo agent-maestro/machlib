@@ -37,6 +37,17 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### Both `exp x − d` branches of `ExpExpGapBelow` are done
+
+`exp_shift_pos_gap` handles `d > 0` by the same three moves as the `d < 0` case: convexity, then
+`d = exp(log d)` to flatten `d · exp(exp x − d)` into `exp(log d + (exp x − d))`, then `self_le_exp`
+to make it linear. With `exp x ≥ x + x` and the constant floor `Cl ≤ log(B x)`, the gap is linear in
+`x` from below and clears `1` on an explicit ray.
+
+The same three moves prove a **bound** here and a **vacuity** there. That is the useful shape: the
+awkward object in both branches is `d · exp(exp x − d)`, doubly exponential and un-dividable, and in
+neither case is it ever bounded above — only shown to dominate its own logarithm.
+
 ### `ExpExpGapBelow`'s `d < 0` branch is vacuous, not hard
 
 `exp_shift_neg_exceeds`. If the left child is `exp x − d` with `d < 0`, the depth-2 tree's value

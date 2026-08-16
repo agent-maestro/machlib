@@ -3274,6 +3274,29 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The d>0 branch. hypotheses_count 2 -- B's depth bound and 0 < d. Paired with d-negative-vacuous-changelog: the two branches share a proof shape but conclude differently (a bound vs a vacuity), so if one ever drifts in footprint the pair shows it.",
+      "id": "d-positive-gap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The same three moves prove a **bound** here and a **vacuity** there."
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.exp_shift_pos_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

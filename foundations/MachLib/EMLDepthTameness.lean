@@ -6560,6 +6560,63 @@ theorem exp_shift_neg_exceeds (B : EMLTree) (hB : B.depth ≤ 1) {d : Real} (hd 
     mach_mpoly [exp (exp x - d), exp (exp x), log (B.eval x)]
   rw [e1, e2] at v; exact v
 
+
+/-- **The `d > 0` branch of `ExpExpGapBelow`, by the same route.** Here the gap is genuinely large
+rather than the hypothesis being false, and it clears `1` unconditionally.
+
+`exp (exp x) − exp (exp x − d) ≥ d · exp (exp x − d)` by convexity, and `d = exp (log d)` turns that
+product into `exp (log d + (exp x − d))`, which `self_le_exp` flattens to `log d + exp x − d`. With
+`exp x ≥ x + x` and the constant floor `Cl ≤ log (B x)`, the whole gap is linear in `x` from below,
+so the ray is explicit. Same three moves as `exp_shift_neg_exceeds`, used to prove a bound rather
+than a vacuity. -/
+theorem exp_shift_pos_gap (B : EMLTree) (hB : B.depth ≤ 1) {d : Real} (hd : 0 < d) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      1 ≤ exp (exp x) - (exp (exp x - d) - log (B.eval x)) := by
+  obtain ⟨Cl, XC, hXC, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+  have hXC0 : (0 : Real) ≤ XC := le_trans (le_of_lt zero_lt_one_ax) hXC
+  refine ⟨XC + exp (1 + d - log d - Cl),
+    le_trans hXC (le_add_nonneg_r' (le_of_lt (exp_pos _))), ?_⟩
+  intro x hx
+  have hXCx : XC ≤ x := le_trans (le_add_nonneg_r' (le_of_lt (exp_pos _))) hx
+  have hx1 : (1 : Real) ≤ x := le_trans hXC hXCx
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+  have hreach : 1 + d - log d - Cl ≤ x :=
+    le_trans (self_le_exp _) (le_trans (le_add_nonneg_l' hXC0) hx)
+  -- convexity, then `d = exp (log d)` to flatten the product
+  have hconv : (exp x - (exp x - d)) * exp (exp x - d) ≤ exp (exp x) - exp (exp x - d) :=
+    exp_sub_exp_lower (exp x) (exp x - d)
+  have e0 : exp x - (exp x - d) = d := by mach_mpoly [exp x, d]
+  rw [e0] at hconv
+  have hprod : exp (log d + (exp x - d)) = d * exp (exp x - d) := by
+    rw [exp_add, exp_log hd]
+  have hlin : log d + (exp x - d) ≤ d * exp (exp x - d) := by
+    rw [← hprod]; exact self_le_exp _
+  have h1 : log d + (exp x - d) ≤ exp (exp x) - exp (exp x - d) := le_trans hlin hconv
+  -- `exp x ≥ x + x` makes the lower bound linear
+  have h2 : log d + (x + x - d) ≤ log d + (exp x - d) := by
+    refine add_le_add_left ?_ (log d)
+    have v := add_le_add_wit (two_mul_le_exp hx0) (le_refl (-d))
+    have e1 : x + x + -d = x + x - d := by mach_mpoly [x, d]
+    have e2 : exp x + -d = exp x - d := by mach_ring
+    rw [e1, e2] at v; exact v
+  have h3 : log d + (x + x - d) ≤ exp (exp x) - exp (exp x - d) := le_trans h2 h1
+  have h4 : log d + (x + x - d) + Cl
+      ≤ exp (exp x) - exp (exp x - d) + log (B.eval x) := add_le_add_wit h3 (hCl x hXCx)
+  have h5 : (1 : Real) ≤ log d + (x + x - d) + Cl := by
+    have hxx : x ≤ x + x := le_add_nonneg_l' hx0
+    have hstep : 1 + d - log d - Cl ≤ x + x := le_trans hreach hxx
+    have v := add_le_add_wit hstep (le_refl (log d - d + Cl))
+    have e1 : 1 + d - log d - Cl + (log d - d + Cl) = (1 : Real) := by mach_mpoly [d, log d, Cl]
+    have e2 : x + x + (log d - d + Cl) = log d + (x + x - d) + Cl := by
+      mach_mpoly [x, d, log d, Cl]
+    rw [e1, e2] at v; exact v
+  have h6 : (1 : Real) ≤ exp (exp x) - exp (exp x - d) + log (B.eval x) := le_trans h5 h4
+  have e3 : exp (exp x) - exp (exp x - d) + log (B.eval x)
+      = exp (exp x) - (exp (exp x - d) - log (B.eval x)) := by
+    mach_mpoly [exp (exp x), exp (exp x - d), log (B.eval x)]
+  rw [e3] at h6
+  exact h6
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
