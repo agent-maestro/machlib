@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-16
+
+### The conversion modulus, extracted
+
+`exponent_gap_of_value_gap` — `G ≤ exp u − exp v ∧ u ≤ M ⟹ G · exp (−M) ≤ u − v`. The three cells of
+the depth-3 decay decomposition each converted a value gap into an exponent gap by replaying the same
+block; that block is now one theorem, and the price of the conversion is a parameter of it.
+
+The modulus rides on the **upper** exponent `u`, not on `v`. That is forced rather than chosen: at all
+three sites `v = log (Q x)` is the unknown the cell is trying to bound, so a modulus stated on `v`
+would be circular exactly where it is used.
+
+Keeping `M` free rather than collapsing it to `u` is what preserves the cells' different strengths:
+`P = const` and `P = var` take `M = u` exactly, while the bounded cell takes `M = K`. **One conversion,
+three moduli, no cell weakened** — the bounded cell survives on a decaying `exp(−C−exp x)` value gap
+precisely because its modulus is constant, where the `var` cell's `exp(−exp x)` modulus demands a
+constant gap. A version that discharged the modulus would prove one and silently lose the other.
+
+Call sites 55 lines → 18. Footprints of all three consumers are unchanged from before the extraction.
+
+### `d(x²) ≥ 4` on the ray — the bracket was malformed
+
+`x_sq_ray_not_depth_le_three`. `4 ≤ d(x²) ≤ 8` had been quoted while its floor was proved for
+agreement on `(0,∞)` and its ceiling (`sqTree`) holds only on `(1,∞)`. **A floor proved for a stronger
+specification constrains nothing about a weaker one**, so nothing had ruled out a depth-5 tree on the
+ray. Both brackets are now internally consistent: `(0,∞): 4 ≤ d ≤ 24` and `(1,∞): 4 ≤ d ≤ 8`.
+
+The band theorem is reused unmodified by instantiating it at `f := t.eval`, which makes its agreement
+hypothesis `rfl` and moves the ray restriction into the four witness obligations. Those are factored
+into `x_sq_band_hyps` with strict witnesses, because the evidence for the floor never used a point
+`x ≤ 1` in the first place.
+
 ## [Unreleased] — 2026-08-14
 
 ### An obligations ledger, and an honest limit on it
@@ -21,7 +53,8 @@ in commit archaeology:
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | **discharged** | `expExpGapBelow_holds` |
-| `BoundedCellApproach` | **open** | — (what the bounded cell reduces to) |
+| `BoundedCellApproach` | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
+| `BoundedEmlCellApproach` | **open** | — (the `eml` shape of `P`; `const` and `var` discharged) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

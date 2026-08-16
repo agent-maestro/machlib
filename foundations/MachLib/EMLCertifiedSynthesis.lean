@@ -52,15 +52,25 @@ with a certificate, and the previously bespoke theorems `inv_x_netlist_depth_ge_
 `inv_x_schedule_ge_four_L` are re-derived as consequences — they were the generic pipeline all
 along, specialised by hand.
 
-**Four targets are certified, forming a calibration ladder.** The point of the ladder is that the
-*same* generic pipeline consumes lower bounds of four different kinds:
+**Six targets are certified, forming a calibration ladder** (seven counting the vacuous `T₀ = x`).
+The point of the ladder is that the *same* generic pipeline consumes lower bounds of several
+different kinds:
 
 | target | `d` | where its lower bound comes from |
 | --- | --- | --- |
-| `exp x` | 1 | two-point evaluation on depth-0 trees |
-| `exp (exp x)` | 2 | depth-≤1 growth envelope (**T2-native**) |
+| `exp x` = `T₁` | 1 | two-point evaluation on depth-0 trees |
+| `exp (exp x)` = `T₂` | 2 | depth-≤1 growth envelope (**T2-native**) |
 | `exp (exp x) − x` | 2 | same envelope, both children loaded |
+| `T₃` | 3 | `tower_lower_bound_upto_four`, via `tower3_not_depth_le_two` |
+| `T₄` | 4 | `tower_lower_bound_upto_four`, via `tower4_not_depth_le_three` |
 | `1/x` | 4 | full structural case analysis (the reciprocal arm) |
+
+**Count corrected 2026-08-16.** This paragraph read "Four targets are certified" and listed only the
+first three rows plus `1/x`; the tower family (`tower_certified_upto_four`, `DepthOptimal` for every
+`n ≤ 4`) was added afterwards and the count was never updated. `T₀`–`T₂` coincide with entries
+already in the table — `T₀ = x` is depth 0 vacuously — so the family contributed `T₃` and `T₄` as
+genuinely new certificates. Recorded rather than silently edited because a stale count *inside the
+module whose job is certification* is the same failure this corpus gates for elsewhere.
 
 **Two of them are certified deliberately as controls.** Instantiating a pipeline only on the target it was
 abstracted from proves close to nothing: a green build says the abstraction is *true*, not that it

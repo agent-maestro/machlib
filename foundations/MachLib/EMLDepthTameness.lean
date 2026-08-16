@@ -5818,8 +5818,12 @@ silently lose the `var` cell. Keeping `M` free is what lets one statement serve 
 weakening any.
 
 Positivity of `u − v` is needed, not incidental: it is what makes `u ≤ M` monotone through the
-product at the capping step. -/
-private theorem exponent_gap_of_value_gap (u v M G : Real) (hu : u ≤ M) (hnode : 0 < u - v)
+product at the capping step.
+
+**Public, unlike the `exp_sub_exp_*` pair it is built from.** Those are proof plumbing; this is the
+interface the depth-3 decomposition actually speaks through, and the statement it makes — one
+conversion, three moduli, no cell weakened — is a reuse claim, registered as such. -/
+theorem exponent_gap_of_value_gap (u v M G : Real) (hu : u ≤ M) (hnode : 0 < u - v)
     (hG : G ≤ exp u - exp v) : G * exp (-M) ≤ u - v := by
   have hconv : exp u - exp v ≤ (u - v) * exp u := exp_sub_exp_upper u v
   have hcap : (u - v) * exp u ≤ (u - v) * exp M :=
@@ -6512,6 +6516,111 @@ theorem depth_three_decayExp_bounded_left_of_gap (h : BoundedCellApproach)
   rw [e6] at v
   exact v
 
+/-- **What is left of `BoundedCellApproach` once `P`'s normal form is consumed.**
+
+`BoundedCellApproach` quantifies over every depth-≤2 `P` subject to a cap. `depth_le_two_normal_form`
+splits that into three shapes, and **two of the three are not hard**:
+
+| `P` | why | cost |
+| --- | --- | --- |
+| `const c` | the target `exp (exp c)` stops moving — it is a **constant**, so `depth_le_two_gap_below` applies verbatim | free |
+| `var` | `exp (P x) = exp x` is unbounded, so the cap is **contradicted**; the cell is vacuous | free |
+| `eml A B` | the target genuinely moves, bounded | **this obligation** |
+
+So the residue is narrower than the parent in the way that matters: the target is still a moving one,
+but `P` is now pinned to a *single* syntactic shape, `exp (a x) − log (b x)` with `a` and `b` among the
+five `Depth1Form`s, rather than ranging over all of depth ≤ 2.
+
+**Where the remaining difficulty is concentrated, and how far the cap prunes it.** The cap
+`exp (exp (a x) − log (b x)) ≤ K` forces `exp (a x)` to stay bounded, which excludes the three
+divergent `Depth1Form`s for `a` (`x`, `exp x − d`, `exp x − log x`) and leaves two (`α`, `c − log x`).
+That is ~2×5 live `(a, b)` cells against `Q`'s own normal form, **not** the 5×5×5×5 the shape suggests
+— the same collapse `depth_le_two_approach_constant` saw, where a classification describes values but
+a proof branches on behaviour, and behaviour is coarser.
+
+**Not machine-checked, and stated here so it is not mistaken for a result:** the *reason* to expect
+this to hold is that the obligation only has to beat `exp (−exp x)`, while every quantity at depth ≤ 2
+moves at most polynomially — the approach-rate quantisation says convergence here is exact or
+`Θ(1/x)`. `probe_bounded.py` found no counterexample across 50 754 live cells with margins of
+`−log(gap) − exp x` at −10.9, −139, −2972, −162746 for `x` = 3, 5, 8, 12. **A probe cannot prove
+absence** — and this one samples only bounded `P`, with a window-based boundedness filter. -/
+def BoundedEmlCellApproach : Prop :=
+  ∀ a b : Real → Real, Depth1Form a → Depth1Form b →
+    ∀ Q : EMLTree, Q.depth ≤ 2 →
+      ∀ K XK : Real, (∀ x : Real, XK ≤ x → exp (exp (a x) - log (b x)) ≤ K) →
+        ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+          Q.eval x < exp (exp (exp (a x) - log (b x))) →
+            exp (-C - exp x) ≤ exp (exp (exp (a x) - log (b x))) - Q.eval x
+
+/-- **`BoundedCellApproach` reduces to the `eml` shape alone.** The `const` and `var` shapes of `P`
+are discharged here — the first because its target stops moving, the second because the cap is false
+— so the last open cell of `Depth3DecayExp` is now `BoundedEmlCellApproach`.
+
+**The `const` branch is where the modulus argument pays off again.** With `P = const c` the target is
+the constant `exp (exp c)`, and `depth_le_two_gap_below` supplies a **constant** floor `ε` — vastly
+stronger than the `exp (−C − exp x)` the obligation asks for. `small_exp_below` converts, and the
+conversion is not tight at any point: `exp (−C − exp x) ≤ exp (−C − x) ≤ ε` uses only `x ≤ exp x`. -/
+theorem boundedCellApproach_of_eml (h : BoundedEmlCellApproach) : BoundedCellApproach := by
+  intro P Q hP hQ K XK hK
+  rcases depth_le_two_normal_form P hP with ⟨c, hc⟩ | hvar | ⟨a, b, ha, hb, hab⟩
+  · -- `P = const c`: the target is constant, so the parent's own depth-2 tool closes it
+    obtain ⟨ε, X₁, hε, hX₁, hgap⟩ := depth_le_two_gap_below Q hQ (exp (exp c))
+    obtain ⟨C, hC⟩ := small_exp_below hε
+    refine ⟨C, X₁, hX₁, ?_⟩
+    intro x hx hlt
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₁ hx)
+    have hPc : P.eval x = c := hc x hx0
+    rw [hPc] at hlt ⊢
+    have hvgap : ε ≤ exp (exp c) - Q.eval x := hgap x hx hlt
+    have hne : -(exp x) ≤ -x := neg_le_neg_wit (self_le_exp x)
+    have v := add_le_add_left hne (-C)
+    have e1 : -C + -(exp x) = -C - exp x := by mach_ring
+    have e2 : -C + -x = -C - x := by mach_ring
+    rw [e1, e2] at v
+    exact le_trans (le_trans (exp_monotone v) (hC x (le_of_lt hx0))) hvgap
+  · -- `P = var`: `exp x ≤ K` on a ray is false, so the cell is vacuous
+    exfalso
+    have hw0 : (0 : Real) < 1 + exp XK + exp K :=
+      lt_trans_ax zero_lt_one_ax
+        (lt_trans_ax (lt_add_of_pos_right (exp_pos XK)) (lt_add_of_pos_right (exp_pos K)))
+    have hwXK : XK ≤ 1 + exp XK + exp K := by
+      have v : (0 : Real) + exp XK + 0 ≤ 1 + exp XK + exp K :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos K))
+      have e : (0 : Real) + exp XK + 0 = exp XK := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp XK) v
+    have hwK : K < 1 + exp XK + exp K := by
+      have hKe : K < exp K := by
+        have t1 := one_add_le_exp K
+        have e : (1 : Real) + K = K + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+      have v : (0 : Real) + 0 + exp K ≤ 1 + exp XK + exp K :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XK)))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp K = exp K := by mach_ring
+      rw [e] at v; exact lt_of_lt_of_le hKe v
+    have hcap := hK _ hwXK
+    rw [hvar _ hw0] at hcap
+    exact lt_irrefl_ax K (lt_of_lt_of_le (lt_of_lt_of_le hwK (self_le_exp _)) hcap)
+  · -- `P = eml A B`: the residue, handed to the obligation
+    have hthr : (0 : Real) < 1 + exp XK :=
+      lt_trans_ax zero_lt_one_ax (lt_add_of_pos_right (exp_pos XK))
+    have hK' : ∀ x : Real, 1 + exp XK ≤ x → exp (exp (a x) - log (b x)) ≤ K := by
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le hthr hx
+      have hXKx : XK ≤ x :=
+        le_trans (self_le_exp XK) (le_trans (le_add_nonneg_l' (le_of_lt zero_lt_one_ax)) hx)
+      rw [← hab x hx0]
+      exact hK x hXKx
+    obtain ⟨C, X₀, hX₀, hres⟩ := h a b ha hb Q hQ K (1 + exp XK) hK'
+    refine ⟨C, X₀ + (1 + exp XK), le_trans hX₀ (le_add_nonneg_r' (le_of_lt hthr)), ?_⟩
+    intro x hx hlt
+    have hX₀x : X₀ ≤ x := le_trans (le_add_nonneg_r' (le_of_lt hthr)) hx
+    have hx0 : (0 : Real) < x :=
+      lt_of_lt_of_le hthr
+        (le_trans (le_add_nonneg_l' (le_trans (le_of_lt zero_lt_one_ax) hX₀)) hx)
+    rw [hab x hx0] at hlt ⊢
+    exact hres x hX₀x hlt
 
 /-- **A positive depth-≤1 logarithm is bounded below by a positive constant.**
 
@@ -6943,7 +7052,8 @@ partial result can be committed without overstating it. Their status, as of the 
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | here | **discharged** | `expExpGapBelow_holds` |
-| `BoundedCellApproach` | here | **open** | — (what the bounded cell reduces to) |
+| `BoundedCellApproach` | here | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
+| `BoundedEmlCellApproach` | here | **open** | — (the `eml` shape of `P`; `const` and `var` discharged) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,

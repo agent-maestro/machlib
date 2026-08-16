@@ -3340,6 +3340,47 @@
         "ExpExpGapBelow"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The conversion modulus, extracted from three duplicated call sites. hypotheses_count 3 -- hu (the cap), hnode (positivity of the exponent gap), hG (the value gap); u, v, M, G are plain Real binders and do not count. Registered as a REUSE claim, not a mathematical one: the three depth-3 decay cells now route through this single theorem at three different moduli, so if any of them ever acquires an axiom the others lack, the reuse is unsound and this entry paired with the three consumers' own entries is what shows it. The conclusion must keep exp -- the whole content is the exp(-M) factor.",
+      "id": "conversion-modulus-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "One conversion,\nthree moduli, no cell weakened"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.exponent_gap_of_value_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "exp"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 3
+    },
+    {
+      "_comment": "The ray floor for x-squared. hypotheses_count 2 -- ht (depth bound) and h (agreement on 1 < x). The point of registering it next to x_sq_not_depth_le_three is the DOMAIN: the two theorems differ only in their agreement clause, so the pair is where a future edit that quietly relaxes or strengthens a domain would show up. statement_mentions .eval because the agreement clause is what the claim is about.",
+      "id": "x-sq-ray-floor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "A floor proved for a stronger\nspecification constrains nothing about a weaker one"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.x_sq_ray_not_depth_le_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        ".eval"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

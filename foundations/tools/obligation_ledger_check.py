@@ -45,7 +45,8 @@ def parse_rows(text):
         m = re.fullmatch(r"`([A-Za-z0-9_']+)`", cells[0])
         if not m:
             continue
-        stat = [c for c in cells if c in ("**open**", "**discharged**", "**refuted**")]
+        stat = [c for c in cells
+                if c in ("**open**", "**discharged**", "**refuted**", "**reduced**")]
         if len(stat) != 1:
             continue
         i = cells.index(stat[0])
@@ -98,6 +99,23 @@ def dischargers_of(prop, decls):
     return out
 
 
+def assumes(name, residue, decls):
+    """Does theorem `name` take a hypothesis of type `residue`?
+
+    This is what separates a REDUCTION from a DISCHARGE. `dischargers_of` deliberately strips
+    binders of the obligation's own type, so a *consumer* of `P` cannot masquerade as a proof of
+    `P`. But a theorem `(h : Residue) : P` concludes `P` while depending on a different, still-open
+    proposition — it passes `dischargers_of` unchanged and would be recorded as an unconditional
+    proof. That is the exact shape of an illegitimate composition: two individually true facts
+    ("this theorem concludes P" and "P has a ledger row") combining into a false one ("P is proved").
+    """
+    for _kind, nm, sig in decls:
+        if nm != name:
+            continue
+        return re.search(r"\([^()]*:\s*" + re.escape(residue) + r"\s*\)", sig) is not None
+    return False
+
+
 def check_rows(rows, decls):
     """Returns (bad_count, report_lines). Shared by the gate and its self-test."""
     bad, out = 0, []
@@ -121,6 +139,35 @@ def check_rows(rows, decls):
                 bad += 1
             else:
                 out.append(f"  ok     {prop}: open, no theorem concludes it")
+        elif status == "reduced":
+            # A reduction is NOT a discharge. Three conditions, and dropping any one of them lets
+            # an open problem read as solved:
+            #   1. the cited theorem really concludes `prop`      (else nothing was shown at all)
+            #   2. it really assumes the cited residue            (else it IS a discharge, or the
+            #      row names a residue the proof never used)
+            #   3. the residue is itself a ledger row             (else the obligation was reduced
+            #      to something nobody tracks, which is how debt disappears)
+            named = re.findall(r"`([A-Za-z0-9_\']+)`", discharger)
+            known = {p for p, _, _ in rows}
+            thm = next((n for n in named if n in found), None)
+            residue = next((n for n in named if n != thm), None)
+            if thm is None:
+                out.append(f"  BROKEN {prop}: marked reduced; cited {named or '(none)'}, "
+                           f"actual dischargers {found or '(none)'}")
+                bad += 1
+            elif residue is None:
+                out.append(f"  MALFORMED {prop}: marked reduced but names no residue; the row must "
+                           f"cite both the reducing theorem and what it reduces to")
+                bad += 1
+            elif not assumes(thm, residue, decls):
+                out.append(f"  UNCONDITIONAL {prop}: {thm} concludes it without assuming {residue} "
+                           f"— that is a discharge, not a reduction")
+                bad += 1
+            elif residue not in known:
+                out.append(f"  UNTRACKED {prop}: reduced to {residue}, which has no ledger row")
+                bad += 1
+            else:
+                out.append(f"  ok     {prop}: reduced by {thm} to {residue}")
         else:
             named = re.findall(r"`([A-Za-z0-9_\']+)`", discharger)
             hit = [n for n in named if n in found]
@@ -193,19 +240,43 @@ def self_test(decls) -> int:
     print(f"  canary 6 (status disagrees across copies)      {'FIRES' if fired else 'SILENT'}")
     ok &= fired
 
-    # 5. And the true ledger must still pass, so the canaries are not just "everything fails".
-    bad, _ = check_rows([("VarLeftEmlRightHard", "discharged", "`varLeftEmlRightHard_of_band`")],
-                        decls)
+    # 6. A REDUCED row whose reducer does not actually assume the residue. This is the specimen
+    # that matters most for the new status: `expExpGapBelow_holds` concludes `ExpExpGapBelow`
+    # unconditionally, so calling it a "reduction to BoundedCellApproach" is a lie the previous
+    # gate could not see -- the theorem does conclude the prop, and the residue is a real row.
+    bad, out = check_rows([("ExpExpGapBelow", "reduced",
+                            "`expExpGapBelow_holds` → `BoundedCellApproach`")], decls)
+    fired = bad == 1 and any("UNCONDITIONAL" in l for l in out)
+    print(f"  canary 7 (reduced row that is really a discharge) {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 7. A REDUCED row whose residue is not tracked anywhere. Without this check an obligation can
+    # be "reduced" into a proposition nobody has a row for, and the debt silently leaves the ledger.
+    # The row is otherwise CORRECT -- the reducer does assume this residue -- so the specimen
+    # isolates the registration check rather than tripping the UNCONDITIONAL branch first.
+    bad, out = check_rows([("BoundedCellApproach", "reduced",
+                            "`boundedCellApproach_of_eml` → `BoundedEmlCellApproach`")], decls)
+    fired = bad == 1 and any("UNTRACKED" in l for l in out)
+    print(f"  canary 8 (reduced to an unregistered residue)  {'FIRES' if fired else 'SILENT'}")
+    ok &= fired
+
+    # 8. And the true ledger must still pass, so the canaries are not just "everything fails".
+    # A CORRECT reduced row is included: a new status that only ever fires is as useless as one
+    # that never does, and this is the row the two specimens above are perturbations of.
+    bad, _ = check_rows([("VarLeftEmlRightHard", "discharged", "`varLeftEmlRightHard_of_band`"),
+                         ("BoundedCellApproach", "reduced",
+                          "`boundedCellApproach_of_eml` → `BoundedEmlCellApproach`"),
+                         ("BoundedEmlCellApproach", "open", "—")], decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
-    print(f"  canary 7 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")
+    print(f"  canary 9 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")
     ok &= quiet
 
     print()
     if not ok:
         print("LEDGER SELF-TEST FAIL — a canary did not fire; the gate is unvalidated")
         return 1
-    print("LEDGER SELF-TEST PASS — all six convict specimens fire")
+    print("LEDGER SELF-TEST PASS — all eight convict specimens fire")
     return 0
 
 
