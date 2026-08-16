@@ -6341,6 +6341,14 @@ theorem depth_three_decayExp_var_left_of_gap (h : ExpExpGapBelow) (Q : EMLTree) 
 /-- **What the bounded cell reduces to.** A value-level approach statement, with the target
 `exp (exp (P x))` now determined by the *other* tree.
 
+**Carries the boundedness hypothesis, deliberately.** An earlier draft quantified over all `P`, which
+made the obligation strictly stronger than its only consumer needs — and a stronger obligation is
+harder to discharge for no benefit. `depth_three_decayExp_bounded_left_of_gap` already holds the cap,
+so passing it through costs nothing and narrows what has to be proved to the bounded regime, which is
+the only one where the statement is delicate. (For a growing `P` the target is *triply* exponential
+against a `Q` that `U₂` caps at *doubly* exponential; for `P = var` it is `ExpExpGapBelow`, already a
+theorem.)
+
 **This does not unify with `ExpExpGapBelow`, and the reason is quantitative.** Both cells convert a
 value gap into an exponent gap by reverse convexity, and the conversion costs a factor
 `exp (−exp (P x))`. When `P` is bounded that factor is a **constant**, so a value gap as weak as
@@ -6350,6 +6358,7 @@ needs a **constant** value gap, which is why `ExpExpGapBelow` demands one. Same 
 strengths, because the conversion factor is not the same. -/
 def BoundedCellApproach : Prop :=
   ∀ P Q : EMLTree, P.depth ≤ 2 → Q.depth ≤ 2 →
+    ∀ K XK : Real, (∀ x : Real, XK ≤ x → exp (P.eval x) ≤ K) →
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Q.eval x < exp (exp (P.eval x)) →
       exp (-C - exp x) ≤ exp (exp (P.eval x)) - Q.eval x
 
@@ -6361,7 +6370,7 @@ theorem depth_three_decayExp_bounded_left_of_gap (h : BoundedCellApproach)
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
       0 < exp (P.eval x) - log (Q.eval x) →
       -log (exp (P.eval x) - log (Q.eval x)) ≤ C + exp x := by
-  obtain ⟨C₁, X₁, hX₁, hgap⟩ := h P Q hP hQ
+  obtain ⟨C₁, X₁, hX₁, hgap⟩ := h P Q hP hQ K XK hK
   refine ⟨C₁ + K, X₁ + exp XK, le_trans hX₁ (le_add_nonneg_r' (le_of_lt (exp_pos XK))), ?_⟩
   intro x hx hlogpos hnodepos
   have hX₁x : X₁ ≤ x := le_trans (le_add_nonneg_r' (le_of_lt (exp_pos XK))) hx

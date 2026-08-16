@@ -37,6 +37,19 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### `BoundedCellApproach` narrowed to what its consumer actually needs
+
+The Prop quantified over all `P`, making it strictly stronger than
+`depth_three_decayExp_bounded_left_of_gap` requires — and a stronger obligation is harder to discharge
+for no benefit. It now carries the boundedness hypothesis the consumer already holds, so passing it
+through costs nothing and narrows what must be proved to the bounded regime, the only one where the
+statement is delicate.
+
+The two regimes it sheds are not hard: for a growing `P` the target `exp(exp(P x))` is *triply*
+exponential against a `Q` that `U₂` caps at *doubly* exponential; for `P = var` it is
+`ExpExpGapBelow`, now a theorem. Neither was ever the obstacle, and carrying them in the statement
+only obscured where the difficulty is.
+
 ### `ExpExpGapBelow` is proved — the `P = var` cell holds unconditionally
 
 `expExpGapBelow_holds`, pure assembly: every branch was already a lemma. `const` and `var` clear `1`
