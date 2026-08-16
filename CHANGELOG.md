@@ -37,6 +37,16 @@ The fifth row is a correction. This section previously said `TowerLowerBound` "r
 which a decay bound can be stated, not the *rate* it consumes. The implication is now the named Prop
 `TowerReducesToSign` rather than a sentence that could firm up into an assumption unnoticed.
 
+### The bounded-left-child branches too, in one lemma
+
+`expexp_gap_of_bounded`: if `exp(A x)` is capped by a constant then the gap to `exp(exp x)` clears
+`1`, because `exp(exp x) ≥ exp x ≥ x` grows past any constant while `log(B x)` has a constant floor.
+Covers `A = α` and `A = c − log x` at once — the two forms whose exponential is bounded — and never
+inspects `B` beyond its depth.
+
+`ExpExpGapBelow` is now down to `A = x`, `A = exp x − log x`, the two trivial top-level constructors,
+and the glue. Its crux and all three delicate branches are proved.
+
 ### Both `exp x − d` branches of `ExpExpGapBelow` are done
 
 `exp_shift_pos_gap` handles `d > 0` by the same three moves as the `d < 0` case: convexity, then

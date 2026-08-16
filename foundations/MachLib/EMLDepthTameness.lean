@@ -6617,6 +6617,50 @@ theorem exp_shift_pos_gap (B : EMLTree) (hB : B.depth ≤ 1) {d : Real} (hd : 0 
   rw [e3] at h6
   exact h6
 
+
+/-- **The bounded-left-child branches of `ExpExpGapBelow`, in one lemma.** If `exp (A x)` is capped by
+a constant then the gap to `exp (exp x)` clears `1`, because `exp (exp x) ≥ exp x ≥ x` grows past any
+constant while `log (B x)` has a constant floor.
+
+Covers the `A = α` and `A = c − log x` forms at once — the two whose exponential is bounded — and
+never inspects `B` beyond its depth. -/
+theorem expexp_gap_of_bounded (A B : EMLTree) (hB : B.depth ≤ 1) {M XM : Real}
+    (hM : ∀ x : Real, XM ≤ x → exp (A.eval x) ≤ M) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+      1 ≤ exp (exp x) - (exp (A.eval x) - log (B.eval x)) := by
+  obtain ⟨Cl, XC, hXC, hCl⟩ := depth_le_one_log_lower_at_infinity B hB
+  have hXC0 : (0 : Real) ≤ XC := le_trans (le_of_lt zero_lt_one_ax) hXC
+  have hp1 : (0 : Real) ≤ XC + exp XM := le_trans hXC0 (le_add_nonneg_r' (le_of_lt (exp_pos XM)))
+  refine ⟨XC + exp XM + exp (1 + M - Cl),
+    le_trans hXC (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos XM)))
+      (le_add_nonneg_r' (le_of_lt (exp_pos _)))), ?_⟩
+  intro x hx
+  have hXCx : XC ≤ x :=
+    le_trans (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos XM)))
+      (le_add_nonneg_r' (le_of_lt (exp_pos _)))) hx
+  have hXMx : XM ≤ x :=
+    le_trans (self_le_exp XM) (le_trans (le_add_nonneg_l' hXC0)
+      (le_trans (le_add_nonneg_r' (le_of_lt (exp_pos _))) hx))
+  have hreach : 1 + M - Cl ≤ x := le_trans (self_le_exp _) (le_trans (le_add_nonneg_l' hp1) hx)
+  have hx1 : (1 : Real) ≤ x := le_trans hXC hXCx
+  -- `exp (exp x) ≥ exp x ≥ x`
+  have hee : x ≤ exp (exp x) := le_trans (self_le_exp x) (self_le_exp (exp x))
+  have hbig : 1 + M - Cl ≤ exp (exp x) := le_trans hreach hee
+  -- assemble
+  have hstep : 1 + M - Cl - M + Cl ≤ exp (exp x) - exp (A.eval x) + log (B.eval x) := by
+    have v := add_le_add_wit (add_le_add_wit hbig (neg_le_neg_wit (hM x hXMx))) (hCl x hXCx)
+    have e1 : 1 + M - Cl + -M + Cl = 1 + M - Cl - M + Cl := by mach_mpoly [M, Cl]
+    have e2 : exp (exp x) + -exp (A.eval x) + log (B.eval x)
+        = exp (exp x) - exp (A.eval x) + log (B.eval x) := by mach_ring
+    rw [e1, e2] at v; exact v
+  have e3 : 1 + M - Cl - M + Cl = (1 : Real) := by mach_mpoly [M, Cl]
+  rw [e3] at hstep
+  have e4 : exp (exp x) - exp (A.eval x) + log (B.eval x)
+      = exp (exp x) - (exp (A.eval x) - log (B.eval x)) := by
+    mach_mpoly [exp (exp x), exp (A.eval x), log (B.eval x)]
+  rw [e4] at hstep
+  exact hstep
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a

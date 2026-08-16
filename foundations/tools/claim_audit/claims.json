@@ -3297,6 +3297,29 @@
         "log"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The bounded-left-child branches. hypotheses_count 2 -- B's depth bound and the cap hM; M and XM are plain real binders and A carries NO depth hypothesis at all, which is why one lemma covers two forms: the branch is characterised by the cap, not by A's shape.",
+      "id": "expexp-bounded-branches-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Covers `A = α` and `A = c − log x` at once"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.expexp_gap_of_bounded",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        ".depth",
+        "exp",
+        "log"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
