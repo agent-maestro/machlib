@@ -4624,38 +4624,44 @@ theorem belowIdentityUnbounded_at_depth_three :
       rw [hxe] at hgt; exact lt_irrefl_ax x hgt
     · exact absurd (lt_of_lt_of_le hp h1) (lt_irrefl_ax x)
 
-/-- **`d(x²) ≥ 4`.** The depth-3 band applied to `x²`, which requires discharging all four of its
-hypotheses for that target.
+/-- **The depth-3 band's four hypotheses for `x²`, with STRICT witnesses.**
 
-Recorded explicitly because the number has been quoted from the general theorem without ever being
-instantiated. `x_sq_not_depth_le_two` gave only `≥ 3`. -/
-theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
-    (h : ∀ x : Real, 0 < x → t.eval x = x * x) : False := by
-  refine superlinear_subexp_not_depth_le_three (fun x => x * x) ?_ ?_ ?_ ?_ t ht h
+Factored out because the band is now consumed twice — once for a tree agreeing with `x²` on `(0,∞)`
+and once on `(1,∞)` — and the arithmetic is identical for both. Every witness produced here is
+**strictly** greater than `1`, which is the whole point of the factoring.
+
+**The evidence for `d(x²) ≥ 4` never used a point `x ≤ 1`.** All four of the band's hypotheses are
+"infinitely often, arbitrarily far right" statements, so their witnesses can always be pushed past
+any threshold; the `∀ x, 0 < x` agreement clause in the original instantiation was therefore
+stronger than the proof ever needed. Recording the witnesses as strict is what makes that visible,
+and it is what lets `x_sq_ray_not_depth_le_three` exist at all.
+
+Only the sub-exponential row needed real work: `exp_beats_powNat` hands back `1 ≤ x`, so it is called
+at the threshold `1 + exp X` rather than `X`, which forces `1 < x` and still clears `X` (via
+`X ≤ exp X ≤ 1 + exp X`). The other three build their own witnesses and were already strict. -/
+private theorem x_sq_band_hyps :
+    (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 < x ∧ K < x * x)
+    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 < x ∧ x * x < exp x - x - C)
+    ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 < x ∧ x < x * x)
+    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 < x ∧ C + log x < x * x) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
   · -- unbounded: `K < x ≤ x·x`
     intro K X
     have hKe : K < exp K := by
       have t1 := one_add_le_exp K
       have e : (1 : Real) + K = K + 1 := by mach_ring
       rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
-    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    have hstep1 : (1 : Real) < 1 + exp K := lt_add_of_pos_right (exp_pos K)
+    have hstep2 : (1 : Real) + exp K < 1 + exp K + exp X := lt_add_of_pos_right (exp_pos X)
+    have hgt : (1 : Real) < 1 + exp K + exp X := lt_trans_ax hstep1 hstep2
+    have hx1 : (1 : Real) ≤ 1 + exp K + exp X := le_of_lt hgt
+    refine ⟨1 + exp K + exp X, ?_, hgt, ?_⟩
     · have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
         add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
           (le_refl _)
       have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
       rw [e] at v; exact le_trans (self_le_exp X) v
-    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
-        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
-          (le_of_lt (exp_pos X))
-      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
-      rw [e] at v; exact v
-    · have hx1 : (1 : Real) ≤ 1 + exp K + exp X := by
-        have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
-          add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
-            (le_of_lt (exp_pos X))
-        have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
-        rw [e] at v; exact v
-      have hsq : (1 + exp K + exp X) ≤ (1 + exp K + exp X) * (1 + exp K + exp X) := by
+    · have hsq : (1 + exp K + exp X) ≤ (1 + exp K + exp X) * (1 + exp K + exp X) := by
         have u := mul_le_mul_of_nonneg_left hx1
           (le_trans (le_of_lt zero_lt_one_ax) hx1)
         have e : (1 + exp K + exp X) * (1 : Real) = 1 + exp K + exp X := by mach_ring
@@ -4667,28 +4673,32 @@ theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
         have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
         rw [e] at v; exact lt_of_lt_of_le hKe v
       exact lt_of_lt_of_le hKx hsq
-  · -- sub-exponential: `exp_beats_powNat` at `k = 0`
+  · -- sub-exponential: `exp_beats_powNat` at `k = 0`, pushed past `1 + exp X` to force strictness
     intro C X
-    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_powNat 0 C X
-    refine ⟨x, hxX, hx1, ?_⟩
-    have e : powNat x (0 + 2) = x * x := by
-      show x * (x * 1) = x * x
-      mach_ring
-    rw [e] at hlt
-    have v := add_lt_add_left hlt (-x - C)
-    have e1 : -x - C + (x * x + x + C) = x * x := by mach_mpoly [x, C]
-    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
-    rw [e1, e2] at v; exact v
+    have hone : (1 : Real) < 1 + exp X := lt_add_of_pos_right (exp_pos X)
+    obtain ⟨x, hxT, _, hlt⟩ := exp_beats_powNat 0 C (1 + exp X)
+    have hgt : (1 : Real) < x := lt_of_lt_of_le hone hxT
+    refine ⟨x, ?_, hgt, ?_⟩
+    · -- `le_add_nonneg_l'` is not in scope this early in the file; four lines beat reordering it
+      have hle : exp X ≤ 1 + exp X := by
+        have v : (0 : Real) + exp X ≤ 1 + exp X :=
+          add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+        have e : (0 : Real) + exp X = exp X := by mach_ring
+        rw [e] at v; exact v
+      exact le_trans (le_trans (self_le_exp X) hle) hxT
+    · have e : powNat x (0 + 2) = x * x := by
+        show x * (x * 1) = x * x
+        mach_ring
+      rw [e] at hlt
+      have v := add_lt_add_left hlt (-x - C)
+      have e1 : -x - C + (x * x + x + C) = x * x := by mach_mpoly [x, C]
+      have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+      rw [e1, e2] at v; exact v
   · -- superlinear: `x < x·x` once `x > 1`
     intro X
-    have hgt : (1 : Real) < 1 + 1 + exp X := by
-      have v : (1 : Real) + 0 + 0 < 1 + 1 + exp X :=
-        lt_of_lt_of_le (add_lt_add_left (exp_pos X) ((1 : Real) + 0))
-          (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt zero_lt_one_ax))
-            (le_refl (exp X)))
-      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
-      rw [e] at v; exact v
-    refine ⟨1 + 1 + exp X, ?_, le_of_lt hgt, ?_⟩
+    have hgt : (1 : Real) < 1 + 1 + exp X :=
+      lt_trans_ax (lt_succ_self (1 : Real)) (lt_add_of_pos_right (exp_pos X))
+    refine ⟨1 + 1 + exp X, ?_, hgt, ?_⟩
     · have v : (0 : Real) + 0 + exp X ≤ 1 + 1 + exp X :=
         add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt zero_lt_one_ax))
           (le_refl _)
@@ -4701,24 +4711,17 @@ theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
     intro C X
     have hCp : (0 : Real) < exp C := exp_pos C
     have hXp : (0 : Real) < exp X := exp_pos X
-    refine ⟨1 + 1 + exp C + exp X, ?_, ?_, ?_⟩
+    have hgt : (1 : Real) < 1 + 1 + exp C + exp X :=
+      lt_trans_ax (lt_trans_ax (lt_succ_self (1 : Real)) (lt_add_of_pos_right hCp))
+        (lt_add_of_pos_right hXp)
+    have hx1 : (1 : Real) ≤ 1 + 1 + exp C + exp X := le_of_lt hgt
+    refine ⟨1 + 1 + exp C + exp X, ?_, hgt, ?_⟩
     · have v : (0 : Real) + 0 + 0 + exp X ≤ 1 + 1 + exp C + exp X :=
         add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
           (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_refl _)
       have e : (0 : Real) + 0 + 0 + exp X = exp X := by mach_ring
       rw [e] at v; exact le_trans (self_le_exp X) v
-    · have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
-        add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
-          (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_of_lt hXp)
-      have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
-      rw [e] at v; exact v
-    · have hx1 : (1 : Real) ≤ 1 + 1 + exp C + exp X := by
-        have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
-          add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
-            (le_of_lt zero_lt_one_ax)) (le_of_lt hCp)) (le_of_lt hXp)
-        have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
-        rw [e] at v; exact v
-      have hx0 : (0 : Real) < 1 + 1 + exp C + exp X := lt_of_lt_of_le zero_lt_one_ax hx1
+    · have hx0 : (0 : Real) < 1 + 1 + exp C + exp X := lt_of_lt_of_le zero_lt_one_ax hx1
       have hx2 : (1 : Real) + 1 ≤ 1 + 1 + exp C + exp X := by
         have v : (1 : Real) + 1 + 0 + 0 ≤ 1 + 1 + exp C + exp X :=
           add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_refl 1))
@@ -4756,6 +4759,68 @@ theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
             = (1 + 1 + exp C + exp X) + (1 + 1 + exp C + exp X) := by mach_ring
         rw [e] at u; exact u
       exact lt_of_lt_of_le s1 (le_trans s2 s3)
+
+/-- **`d(x²) ≥ 4` on `(0,∞)`.** The depth-3 band applied to `x²`, which requires discharging all four
+of its hypotheses for that target.
+
+Recorded explicitly because the number has been quoted from the general theorem without ever being
+instantiated. `x_sq_not_depth_le_two` gave only `≥ 3`.
+
+**Read the domain.** This is the bound for a tree agreeing with `x²` on all of `(0,∞)`. It is *not*
+the lower bound that pairs with `sqTree` (depth 8), which only agrees on `(1,∞)` — see
+`x_sq_ray_not_depth_le_three` for that one, and the warning on both. -/
+theorem x_sq_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = x * x) : False := by
+  obtain ⟨H1, H2, H3, Hlog⟩ := x_sq_band_hyps
+  refine superlinear_subexp_not_depth_le_three (fun x => x * x)
+    (fun K X => by obtain ⟨x, hX, hgt, hv⟩ := H1 K X; exact ⟨x, hX, le_of_lt hgt, hv⟩)
+    (fun C X => by obtain ⟨x, hX, hgt, hv⟩ := H2 C X; exact ⟨x, hX, le_of_lt hgt, hv⟩)
+    (fun X => by obtain ⟨x, hX, hgt, hv⟩ := H3 X; exact ⟨x, hX, le_of_lt hgt, hv⟩)
+    (fun C X => by obtain ⟨x, hX, hgt, hv⟩ := Hlog C X; exact ⟨x, hX, le_of_lt hgt, hv⟩)
+    t ht h
+
+/-- **`d(x²) ≥ 4` on the ray `(1,∞)`** — the lower bound that legitimately pairs with `sqTree`.
+
+**Why this theorem had to exist separately.** `sqTree` computes `x²` at depth 8 but only for `x > 1`
+(it routes through `exp (log (log x))`, which recovers `log x` only where `log x > 0`). Quoting
+`4 ≤ d(x²) ≤ 8` from `x_sq_not_depth_le_three` and `sqTree_depth` was therefore **not a bracket**: the
+floor was proved for a *strictly stronger* specification than the witness meets, and a weaker
+specification can only be cheaper. Nothing ruled out a depth-5 tree on `(1,∞)`.
+
+**Why it is nonetheless cheap.** The obstruction was in the statement, not the mathematics — the band
+needs only witnesses arbitrarily far to the right, and `x_sq_band_hyps` now certifies that every one
+of them can be taken `> 1`.
+
+**The trick that avoids touching the band theorem.** Instantiate it at `f := t.eval` rather than at
+`fun x => x * x`. Then the agreement hypothesis is `rfl` — vacuously true on any domain — and the
+entire ray restriction moves into the four witness obligations, where `h` can be applied pointwise at
+witnesses already known to exceed `1`. The 190-line band theorem is reused unmodified, and its single
+prior consumer is unaffected.
+
+**Honest bracket, both domains:**
+```
+(0,∞):  4 ≤ d(x²) ≤ 24     (x_sq_not_depth_le_three;  mulPos var var)
+(1,∞):  4 ≤ d(x²) ≤ 8      (this theorem;             sqTree)
+```
+The upper bounds still differ by construction quality, not by mathematics: the `(0,∞)` ceiling of 24
+is the generic combinator library's, and is not claimed tight. -/
+theorem x_sq_ray_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 1 < x → t.eval x = x * x) : False := by
+  obtain ⟨H1, H2, H3, Hlog⟩ := x_sq_band_hyps
+  refine superlinear_subexp_not_depth_le_three t.eval
+    (fun K X => by
+      obtain ⟨x, hX, hgt, hv⟩ := H1 K X
+      exact ⟨x, hX, le_of_lt hgt, by rw [h x hgt]; exact hv⟩)
+    (fun C X => by
+      obtain ⟨x, hX, hgt, hv⟩ := H2 C X
+      exact ⟨x, hX, le_of_lt hgt, by rw [h x hgt]; exact hv⟩)
+    (fun X => by
+      obtain ⟨x, hX, hgt, hv⟩ := H3 X
+      exact ⟨x, hX, le_of_lt hgt, by rw [h x hgt]; exact hv⟩)
+    (fun C X => by
+      obtain ⟨x, hX, hgt, hv⟩ := Hlog C X
+      exact ⟨x, hX, le_of_lt hgt, by rw [h x hgt]; exact hv⟩)
+    t ht (fun x _ => rfl)
 
 
 
@@ -5721,6 +5786,57 @@ private theorem exp_sub_exp_upper (u v : Real) : exp u - exp v ≤ (u - v) * exp
   rw [e3, e4] at v2
   exact v2
 
+/-- **Value gap → exponent gap, with the conversion modulus explicit.**
+
+`exp_sub_exp_upper` says a value gap can be carried down to the exponent; this states *at what price*.
+Given any ceiling `M` on the **upper** exponent `u`, a value gap `G` below `exp u − exp v` becomes an
+exponent gap of `G · exp (−M)`:
+
+```
+G ≤ exp u − exp v   ∧   u ≤ M   ⟹   G · exp (−M) ≤ u − v
+```
+
+**The modulus rides on `u`, not `v`, and that is forced.** `exp_sub_exp_upper` produces the factor
+`exp u`; bounding it needs a hypothesis about the *target's* exponent. Stating the modulus on `v`
+instead would require a bound on `log (Q x)` — which is the very quantity the depth-3 decay cells are
+trying to bound, so the statement would be circular where it is used.
+
+**Why `M` is a separate parameter rather than `u` itself.** The three call sites in the depth-3
+decomposition differ *only* in what they can say about `u = exp (P x)`, and that difference is the
+whole quantitative content of the decomposition:
+
+| cell | `u` | admissible `M` | modulus |
+| --- | --- | --- | --- |
+| `P = const c` | `exp c` | `exp c` (exact) | constant |
+| `P` bounded by `K` | `exp (P x)` | `K` | constant, `exp (−K)` |
+| `P = var` | `exp x` | `exp x` (exact) | `exp (−exp x)` — **not** constant |
+
+So the bounded cell survives on a weak `exp (−C − exp x)` value gap while the `var` cell needs a
+**constant** one: the same reduction at two strengths, because `M` differs. A version of this lemma
+that discharged the modulus — say, by fixing `M` to a constant — would prove the bounded cell and
+silently lose the `var` cell. Keeping `M` free is what lets one statement serve all three without
+weakening any.
+
+Positivity of `u − v` is needed, not incidental: it is what makes `u ≤ M` monotone through the
+product at the capping step. -/
+private theorem exponent_gap_of_value_gap (u v M G : Real) (hu : u ≤ M) (hnode : 0 < u - v)
+    (hG : G ≤ exp u - exp v) : G * exp (-M) ≤ u - v := by
+  have hconv : exp u - exp v ≤ (u - v) * exp u := exp_sub_exp_upper u v
+  have hcap : (u - v) * exp u ≤ (u - v) * exp M :=
+    mul_le_mul_of_nonneg_left (exp_monotone hu) (le_of_lt hnode)
+  have hchain : G ≤ (u - v) * exp M := le_trans hG (le_trans hconv hcap)
+  have hstep := mul_le_mul_of_nonneg_right hchain (le_of_lt (exp_pos (-M)))
+  have hinv : exp M * exp (-M) = 1 := by
+    rw [← exp_add]
+    have e : M + -M = (0 : Real) := by mach_ring
+    rw [e, exp_zero]
+  have e3 : (u - v) * exp M * exp (-M) = (u - v) * (exp M * exp (-M)) := by
+    mach_mpoly [u, v, exp M, exp (-M)]
+  rw [e3, hinv] at hstep
+  have e4 : (u - v) * (1 : Real) = u - v := by mach_ring
+  rw [e4] at hstep
+  exact hstep
+
 /-- **The `exp`-level from-below gap.** `exp (A x)` cannot approach a constant `ν` from below with a
 shrinking gap, for `A` of depth ≤ 1 — and as at the value level the gap is a **positive constant**.
 
@@ -6033,23 +6149,11 @@ theorem depth_three_decay_const_left (c : Real) (Q : EMLTree) (hQ : Q.depth ≤ 
     have h := exp_lt hlt
     rw [exp_log hQpos] at h; exact h
   -- a CONSTANT value gap, carried down to the logarithm by reverse convexity
-  have hvgap : ε ≤ exp (exp c) - Q.eval x := hgap x hx hQlt
-  have hconv : exp (exp c) - exp (log (Q.eval x))
-      ≤ (exp c - log (Q.eval x)) * exp (exp c) := exp_sub_exp_upper (exp c) (log (Q.eval x))
-  rw [exp_log hQpos] at hconv
-  have hmulgap : ε ≤ (exp c - log (Q.eval x)) * exp (exp c) := le_trans hvgap hconv
-  -- divide by `exp (exp c)` without dividing: multiply by `exp (−exp c)`
-  have hinv : exp (exp c) * exp (-exp c) = 1 := by
-    rw [← exp_add]
-    have e : exp c + -exp c = (0 : Real) := by mach_ring
-    rw [e, exp_zero]
-  have hstep := mul_le_mul_of_nonneg_right hmulgap (le_of_lt (exp_pos (-exp c)))
-  have e3 : (exp c - log (Q.eval x)) * exp (exp c) * exp (-exp c)
-      = (exp c - log (Q.eval x)) * (exp (exp c) * exp (-exp c)) := by
-    mach_mpoly [exp c, log (Q.eval x), exp (exp c), exp (-exp c)]
-  rw [e3, hinv] at hstep
-  have e4 : (exp c - log (Q.eval x)) * (1 : Real) = exp c - log (Q.eval x) := by mach_ring
-  rw [e4] at hstep
+  have hvgap : ε ≤ exp (exp c) - exp (log (Q.eval x)) := by
+    rw [exp_log hQpos]; exact hgap x hx hQlt
+  -- `M = u` exactly here, so the modulus `exp (−exp c)` is a constant and the conversion is tight
+  have hstep : ε * exp (-exp c) ≤ exp c - log (Q.eval x) :=
+    exponent_gap_of_value_gap (exp c) (log (Q.eval x)) (exp c) ε (le_refl _) hnodepos hvgap
   -- a constant floor beats `exp (−C − x)`
   have hfloor : exp (-C - x) ≤ exp c - log (Q.eval x) := le_trans (hC x hx0) hstep
   have hmono := log_le_log (exp_pos (-C - x)) hfloor
@@ -6316,21 +6420,12 @@ theorem depth_three_decayExp_var_left_of_gap (h : ExpExpGapBelow) (Q : EMLTree) 
   have hQlt : Q.eval x < exp (exp x) := by
     have hh := exp_lt hlt
     rw [exp_log hQpos] at hh; exact hh
-  have hconv : exp (exp x) - exp (log (Q.eval x))
-      ≤ (exp x - log (Q.eval x)) * exp (exp x) := exp_sub_exp_upper (exp x) (log (Q.eval x))
-  rw [exp_log hQpos] at hconv
-  have hmul : ε ≤ (exp x - log (Q.eval x)) * exp (exp x) := le_trans (hgap x hx hQlt) hconv
-  have hinv : exp (exp x) * exp (-exp x) = 1 := by
-    rw [← exp_add]
-    have e : exp x + -exp x = (0 : Real) := by mach_ring
-    rw [e, exp_zero]
-  have hstep := mul_le_mul_of_nonneg_right hmul (le_of_lt (exp_pos (-exp x)))
-  have e3 : (exp x - log (Q.eval x)) * exp (exp x) * exp (-exp x)
-      = (exp x - log (Q.eval x)) * (exp (exp x) * exp (-exp x)) := by
-    mach_mpoly [exp x, log (Q.eval x), exp (exp x), exp (-exp x)]
-  rw [e3, hinv] at hstep
-  have e4 : (exp x - log (Q.eval x)) * (1 : Real) = exp x - log (Q.eval x) := by mach_ring
-  rw [e4] at hstep
+  have hvgap : ε ≤ exp (exp x) - exp (log (Q.eval x)) := by
+    rw [exp_log hQpos]; exact hgap x hx hQlt
+  -- `M = u = exp x`: the modulus is `exp (−exp x)`, NOT a constant — which is why this cell needs a
+  -- constant `ε` where the bounded cell survives on a decaying gap
+  have hstep : ε * exp (-exp x) ≤ exp x - log (Q.eval x) :=
+    exponent_gap_of_value_gap (exp x) (log (Q.eval x)) (exp x) ε (le_refl _) hnodepos hvgap
   have hrew : exp (-(-log ε) - exp x) = ε * exp (-exp x) := by
     have e : -(-log ε) - exp x = log ε + -exp x := by mach_mpoly [log ε, exp x]
     rw [e, exp_add, exp_log hε]
@@ -6398,29 +6493,13 @@ theorem depth_three_decayExp_bounded_left_of_gap (h : BoundedCellApproach)
   have hQlt : Q.eval x < exp (exp (P.eval x)) := by
     have hh := exp_lt hlt
     rw [exp_log hQpos] at hh; exact hh
-  have hconv : exp (exp (P.eval x)) - exp (log (Q.eval x))
-      ≤ (exp (P.eval x) - log (Q.eval x)) * exp (exp (P.eval x)) :=
-    exp_sub_exp_upper (exp (P.eval x)) (log (Q.eval x))
-  rw [exp_log hQpos] at hconv
-  -- the cap on `exp (P x)` turns the conversion factor into a constant
-  have hcap : (exp (P.eval x) - log (Q.eval x)) * exp (exp (P.eval x))
-      ≤ (exp (P.eval x) - log (Q.eval x)) * exp K :=
-    mul_le_mul_of_nonneg_left (exp_monotone (hK x hXKx)) (le_of_lt hnodepos)
-  have hchain : exp (-C₁ - exp x)
-      ≤ (exp (P.eval x) - log (Q.eval x)) * exp K :=
-    le_trans (hgap x hX₁x hQlt) (le_trans hconv hcap)
-  have hinv : exp K * exp (-K) = 1 := by
-    rw [← exp_add]
-    have e : K + -K = (0 : Real) := by mach_ring
-    rw [e, exp_zero]
-  have hstep := mul_le_mul_of_nonneg_right hchain (le_of_lt (exp_pos (-K)))
-  have e3 : (exp (P.eval x) - log (Q.eval x)) * exp K * exp (-K)
-      = (exp (P.eval x) - log (Q.eval x)) * (exp K * exp (-K)) := by
-    mach_mpoly [exp (P.eval x), log (Q.eval x), exp K, exp (-K)]
-  rw [e3, hinv] at hstep
-  have e4 : (exp (P.eval x) - log (Q.eval x)) * (1 : Real)
-      = exp (P.eval x) - log (Q.eval x) := by mach_ring
-  rw [e4] at hstep
+  have hvgap : exp (-C₁ - exp x) ≤ exp (exp (P.eval x)) - exp (log (Q.eval x)) := by
+    rw [exp_log hQpos]; exact hgap x hX₁x hQlt
+  -- `M = K` is the whole point of this cell: the cap on `exp (P x)` makes the modulus the CONSTANT
+  -- `exp (−K)`, which is why a decaying `exp (−C₁ − exp x)` value gap suffices here and not at `var`
+  have hstep : exp (-C₁ - exp x) * exp (-K) ≤ exp (P.eval x) - log (Q.eval x) :=
+    exponent_gap_of_value_gap (exp (P.eval x)) (log (Q.eval x)) K (exp (-C₁ - exp x))
+      (hK x hXKx) hnodepos hvgap
   have e5 : exp (-C₁ - exp x) * exp (-K) = exp (-(C₁ + K) - exp x) := by
     rw [← exp_add]
     have e : -C₁ - exp x + -K = -(C₁ + K) - exp x := by mach_mpoly [C₁, exp x, K]

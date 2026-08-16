@@ -847,7 +847,23 @@ node turns `log log x` and `1/x` into `2 log x`; one more exponentiates it.
 
 **Domain, stated up front:** this witness needs `x > 1`, not `x > 0`, because `exp (log (log x))`
 recovers `log x` only where `log x > 0`. That is a genuinely different specification from
-`x_sq_mem_EML`'s, and the two bounds must not be quoted as a single bracket without it. -/
+`x_sq_mem_EML`'s, and the two bounds must not be quoted as a single bracket without it.
+
+**Resolved 2026-08-16 — the warning above had already been violated in prose.** `4 ≤ d(x²) ≤ 8` was
+being quoted as a bracket while its floor (`x_sq_not_depth_le_three`) was proved for agreement on
+`(0,∞)` and its ceiling (`sqTree`) holds only on `(1,∞)`. A floor for a *stronger* specification
+constrains nothing about a weaker one — a weaker spec can only be cheaper — so nothing then ruled out
+a depth-5 tree on the ray. `MachLib.x_sq_ray_not_depth_le_three` supplies the missing floor.
+**Both brackets, each internally consistent:**
+
+```
+(0,∞):  4 ≤ d(x²) ≤ 24     x_sq_not_depth_le_three      ·  mulPos var var
+(1,∞):  4 ≤ d(x²) ≤ 8      x_sq_ray_not_depth_le_three  ·  sqTree
+```
+
+Neither ceiling is claimed tight. **The `(1,∞)` row is the one to hand an untrusted searcher**, since
+its two ends now describe the same specification and a proposal can therefore be compared against the
+floor rather than silently changing the problem. -/
 
 /-- `x²` on `(1,∞)` at depth 8 — a third of the generic construction's 24. -/
 noncomputable def sqTree : EMLTree :=
