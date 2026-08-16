@@ -120,14 +120,112 @@ open Real
 
 /-! ### 1. Specifications, proposals, acceptance -/
 
-/-- A **semantic** specification: a predicate on the *function* a tree computes, never on its
-syntax. Taking specs at this type is what makes the transfer to netlists free — a program and its
-unfolding compute the same function, so they satisfy the same specs by construction, with no
-side condition asserting that the spec respects extensional equality. -/
-abbrev SemSpec := (Real → Real) → Prop
+/-- A **semantic** specification: a target function, together with the **domain** on which a
+proposal must reproduce it. Specifications constrain the *function* a tree computes, never its
+syntax — which is what makes the transfer to netlists free, since a program and its unfolding
+compute the same function and therefore satisfy the same specs by construction, with no side
+condition asserting that the spec respects extensional equality.
 
-/-- The tree-level reading of a specification. -/
-def Meets (P : SemSpec) (t : EMLTree) : Prop := P t.eval
+**Why the domain is a field and not a hypothesis buried in a predicate** (2026-08-16). This type was
+`abbrev SemSpec := (Real → Real) → Prop`, and every spec encoded its domain inside that predicate —
+`invSpec` carried `0 < x`, the rest were total. The domain was therefore *present but opaque*:
+`DepthOptimal P t d` and `DepthOptimal P' t' d'` had the same type no matter how `P` and `P'`
+differed, so nothing stopped a floor proved for one domain being quoted against a witness meeting
+another. That is not hypothetical — it happened, in this file, to `x²`: `4 ≤ d(x²) ≤ 8` composed a
+floor for agreement on `(0,∞)` with a `sqTree` valid only on `(1,∞)`, and a floor for a *stronger*
+specification constrains nothing about a weaker one.
+
+Splitting `dom` out makes that composition a type-level question instead of a prose-level one, and
+`Meets` is now *derived* from the two fields rather than supplied alongside them — so a spec cannot
+declare one domain and quietly constrain another. See `meets_of_dom_subset` for the law this buys. -/
+structure SemSpec where
+  /-- Where agreement is required. `fun _ => True` for a total specification. -/
+  dom : Real → Prop
+  /-- What the proposal must compute at each point of `dom`. -/
+  target : Real → Real
+
+/-- What it means for a **function** to satisfy a specification: agreement with the target, on the
+domain and nowhere else. Nothing is claimed off `dom`. -/
+def Sat (P : SemSpec) (f : Real → Real) : Prop := ∀ x : Real, P.dom x → f x = P.target x
+
+/-- The tree-level reading of a specification. Defined through `Sat` on the computed function, which
+is what keeps the netlist transfer free: a program and its unfolding compute the same function, so
+they satisfy the same specs with no side condition about extensionality. -/
+def Meets (P : SemSpec) (t : EMLTree) : Prop := Sat P t.eval
+
+/-- **Shrinking the domain can only make a specification easier.** If `P` and `Q` share a target and
+`P`'s domain is contained in `Q`'s, then anything meeting `Q` meets `P`.
+
+This is the law that the old opaque type could not state, and it is exactly the one whose absence let
+the `x²` bracket be written: a certificate is transportable **down** the domain ordering and never up.
+In cost terms, writing `d_D(f)` for the minimum depth over agreement on `D`,
+
+```
+D₁ ⊆ D₂   ⟹   d_{D₁}(f) ≤ d_{D₂}(f)
+```
+
+— so a floor proved on the larger domain is *not* a floor on the smaller one, which is the direction
+the mistake ran. `depth_optimal_dom_mono` below draws that consequence for certificates. -/
+theorem meets_of_dom_subset {P Q : SemSpec} (htgt : P.target = Q.target)
+    (hsub : ∀ x : Real, P.dom x → Q.dom x) {t : EMLTree} (h : Meets Q t) : Meets P t := by
+  intro x hx
+  rw [htgt]
+  exact h x (hsub x hx)
+
+/-- **A floor does not transport down the domain ordering.** Stated as what *is* true: a certificate
+on the smaller domain bounds every tree meeting the larger one, because such a tree also meets the
+smaller spec. The converse — using a floor proved on the larger domain against a witness meeting only
+the smaller — is unavailable, and that unavailability is the point. -/
+theorem depth_optimal_dom_mono {P Q : SemSpec} {t : EMLTree} {d : Nat}
+    (htgt : P.target = Q.target) (hsub : ∀ x : Real, P.dom x → Q.dom x)
+    (h : ∀ u : EMLTree, u.depth < d → Meets P u → False) :
+    ∀ u : EMLTree, u.depth < d → Meets Q u → False :=
+  fun u hu hm => h u hu (meets_of_dom_subset htgt hsub hm)
+
+/-! #### The `x²` specimen — the bug this type exists to block
+
+The two specifications the malformed bracket composed, written out. They differ in **one field**. -/
+
+/-- `x²` on `(0,∞)` — the domain `x_sq_not_depth_le_three` proves its floor for. -/
+noncomputable def sqSpecPos : SemSpec := { dom := fun x => 0 < x, target := fun x => x * x }
+
+/-- `x²` on `(1,∞)` — the domain `sqTree` actually meets. -/
+noncomputable def sqSpecRay : SemSpec := { dom := fun x => 1 < x, target := fun x => x * x }
+
+/-- **The legitimate direction compiles.** A tree agreeing on all of `(0,∞)` agrees on `(1,∞)`. -/
+theorem meets_sqRay_of_sqPos (t : EMLTree) (h : Meets sqSpecPos t) : Meets sqSpecRay t :=
+  meets_of_dom_subset (P := sqSpecRay) (Q := sqSpecPos) rfl
+    (fun _ hx => lt_trans_ax zero_lt_one_ax hx) h
+
+/-- **The illegitimate direction does not, and that is the whole point.**
+
+Under the old `abbrev SemSpec := (Real → Real) → Prop`, `DepthOptimal sqSpecPos t d` and
+`DepthOptimal sqSpecRay t' d'` had **the same type**, so composing a floor from one with a witness
+from the other was a well-typed sentence and the error could only ever be caught in prose. It was
+not caught: `4 ≤ d(x²) ≤ 8` stood with the floor proved on `(0,∞)` and the witness valid on `(1,∞)`.
+
+Writing the converse of `meets_sqRay_of_sqPos` now fails at elaboration:
+
+```
+example (t : EMLTree) (h : Meets sqSpecRay t) : Meets sqSpecPos t :=
+  meets_of_dom_subset rfl (fun x hx => hx) h
+--  Application type mismatch: h has type Meets sqSpecRay t
+--  but is expected to have type Meets sqSpecPos t
+```
+
+because it would need `∀ x, 0 < x → 1 < x`. **This theorem is the silent half of that specimen** —
+a guard that only ever rejects is as useless as one that never does, so the pair is recorded
+together: the transport that must work, beside the transport that must not.
+
+*Elaboration note:* `meets_of_dom_subset` needs `(P := ·) (Q := ·)` named explicitly when `htgt` is
+`rfl`, because `rfl` unifies `Q.target ≡ P.target` and the elaborator discharges it by setting
+`Q := P` before it ever looks at `h`. Without the annotations the *good* direction fails too, with a
+mismatch that reads exactly like the bad one. -/
+theorem sq_domains_differ : sqSpecPos.dom ≠ sqSpecRay.dom := by
+  intro hEq
+  have h1 : sqSpecPos.dom 1 := zero_lt_one_ax
+  rw [hEq] at h1
+  exact lt_irrefl_ax 1 h1
 
 /-- **An accepted proposal.** Two fields, one per side of the trust boundary.
 
@@ -141,7 +239,7 @@ structure Accepted (P : SemSpec) (t : EMLTree) (d : Nat) : Prop where
   cost : t.depth = d
 
 theorem accepted_meets {P : SemSpec} {t : EMLTree} {d : Nat} (h : Accepted P t d) :
-    P t.eval := h.meets
+    Sat P t.eval := h.meets
 
 theorem accepted_cost {P : SemSpec} {t : EMLTree} {d : Nat} (h : Accepted P t d) :
     t.depth = d := h.cost
@@ -206,7 +304,7 @@ steps are handled generically here: nothing below mentions any particular specif
 The tree→DAG step. Sharing collapses a tree into a DAG and destroys size exponentially, but depth
 survives exactly (`netDepthAt_eq_depth`), so the floor crosses the lowering intact. -/
 theorem depth_optimal_netDepth_floor {P : SemSpec} {t : EMLTree} {d : Nat}
-    (h : DepthOptimal P t d) (p : Nat → EMLInstr) (i : Nat) (hp : P (progEvalAt p i)) :
+    (h : DepthOptimal P t d) (p : Nat → EMLInstr) (i : Nat) (hp : Sat P (progEvalAt p i)) :
     d ≤ netDepthAt p i := by
   have hfun : progEvalAt p i = (unfoldAt p i).eval :=
     funext (fun x => progEvalAt_eq_unfoldAt_eval p i x)
@@ -224,7 +322,7 @@ latency floor is not.
 time — see the scope note in the module header. -/
 theorem depth_optimal_schedule_floor {P : SemSpec} {t : EMLTree} {d : Nat}
     (h : DepthOptimal P t d) (p : Nat → EMLInstr) (hwf : ProgWf p) (L : Nat) (s : Nat → Nat)
-    (hs : SchedValid p L s) (i : Nat) (hp : P (progEvalAt p i)) :
+    (hs : SchedValid p L s) (i : Nat) (hp : Sat P (progEvalAt p i)) :
     L * d ≤ s i := by
   have hw := schedule_ge_wdepth p hwf L s hs (i + 1) i (Nat.lt_succ_self i)
   rw [wdepth_scaled] at hw
@@ -242,7 +340,7 @@ the reciprocal arm. Assembling them is the first certified minimum-depth EML syn
 corpus, and the assembly is three lines because the arm did the work. -/
 
 /-- The reciprocal specification, on the positives. -/
-def invSpec : SemSpec := fun f => ∀ x : Real, 0 < x → f x = 1 / x
+noncomputable def invSpec : SemSpec := { dom := fun x => 0 < x, target := fun x => 1 / x }
 
 /-- **`invX4` is certified depth-optimal for `1/x`.**
 
@@ -295,7 +393,7 @@ The certificate is *cheap*, and that is the point rather than a boast — `exp` 
 lower bound is two evaluations. What is being tested is the pipeline, not the target. -/
 
 /-- The exponential, specified on **all** of `Real`. -/
-def expSpec : SemSpec := fun f => ∀ x : Real, f x = exp x
+noncomputable def expSpec : SemSpec := { dom := fun _ => True, target := fun x => exp x }
 
 /-- The depth-1 witness: `exp x − log 1 = exp x`. Totalised `log` is not even needed here — the
 argument is the genuine `1`. -/
@@ -318,14 +416,14 @@ theorem exp_not_depth_zero (u : EMLTree) (hu : u.depth < 1) (h : Meets expSpec u
   rcases depth_zero_cases h0 with ⟨c, hc⟩ | hv
   · -- `u = const c`: then `c = exp 0` and `c = exp 1`, but `exp 0 < exp 1`.
     subst hc
-    have e0 : c = exp 0 := h 0
-    have e1 : c = exp 1 := h 1
+    have e0 : c = exp 0 := h 0 trivial
+    have e1 : c = exp 1 := h 1 trivial
     have hlt : exp 0 < exp 1 := exp_lt one_pos
     rw [← e0, ← e1] at hlt
     exact lt_irrefl_ax c hlt
   · -- `u = var`: then `0 = exp 0 = 1`, contradicting `0 < 1`.
     subst hv
-    have e0 : (0 : Real) = exp 0 := h 0
+    have e0 : (0 : Real) = exp 0 := h 0 trivial
     rw [exp_zero] at e0
     have hp : (0 : Real) < 1 := one_pos
     rw [← e0] at hp
@@ -334,7 +432,7 @@ theorem exp_not_depth_zero (u : EMLTree) (hu : u.depth < 1) (h : Meets expSpec u
 /-- **`exp` is certified depth-optimal at depth 1.** The second certificate, and the evidence that
 §3 is genuinely generic: it shares no lemma with §4 and carries no domain restriction. -/
 theorem expTree_depth_optimal : DepthOptimal expSpec expTree 1 :=
-  { accepted := { meets := expTree_eval, cost := by rfl }
+  { accepted := { meets := fun x _ => expTree_eval x, cost := by rfl }
     minimal := exp_not_depth_zero }
 
 /-- The hardware floor for `exp`, obtained from §3 with no new reasoning — the same theorem that
@@ -342,7 +440,7 @@ produced the `1/x` floor, applied to a certificate built from unrelated mathemat
 theorem exp_netDepth_floor (p : Nat → EMLInstr) (i : Nat)
     (hp : ∀ x : Real, progEvalAt p i x = exp x) :
     1 ≤ netDepthAt p i :=
-  depth_optimal_netDepth_floor expTree_depth_optimal p i hp
+  depth_optimal_netDepth_floor expTree_depth_optimal p i (fun x _ => hp x)
 
 /-! ### 6. Depth-2 certificates whose lower bounds are **T2-native**
 
@@ -407,7 +505,7 @@ private theorem envelope_absurd_sub {D E F G : Real}
   exact lt_irrefl_ax ((F + D) + (1 + E)) (lt_of_lt_of_le s5 chain)
 
 /-- Iterated exponential, specified on all of `Real`. -/
-def expExpSpec : SemSpec := fun f => ∀ x : Real, f x = exp (exp x)
+noncomputable def expExpSpec : SemSpec := { dom := fun _ => True, target := fun x => exp (exp x) }
 
 /-- Depth-2 witness. `log 0 = 0` by totalisation, so this is `exp (exp x)` exactly. -/
 noncomputable def expExpTree : EMLTree := EMLTree.eml expTree (EMLTree.const 0)
@@ -436,17 +534,17 @@ theorem expExp_not_depth_le_one (u : EMLTree) (hu : u.depth < 2) (h : Meets expE
     have e : (1 : Real) + 0 = 1 := by mach_ring
     rw [e] at t; exact t
   have hb := hD (1 + exp D) hx1
-  rw [h (1 + exp D)] at hb
+  rw [h (1 + exp D) trivial] at hb
   exact envelope_absurd (one_add_le_exp D) (one_add_le_exp (1 + exp D))
     (two_mul_le_exp (le_of_lt (exp_pos (1 + exp D)))) hb
 
 theorem expExpTree_depth_optimal : DepthOptimal expExpSpec expExpTree 2 :=
-  { accepted := { meets := expExpTree_eval, cost := by rfl }
+  { accepted := { meets := fun x _ => expExpTree_eval x, cost := by rfl }
     minimal := expExp_not_depth_le_one }
 
 /-- The second depth-2 target, loading **both** children: `log (exp x) = x`, so the right child
 contributes genuinely rather than being neutralised. -/
-def expExpSubSpec : SemSpec := fun f => ∀ x : Real, f x = exp (exp x) - x
+noncomputable def expExpSubSpec : SemSpec := { dom := fun _ => True, target := fun x => exp (exp x) - x }
 
 noncomputable def expExpSubTree : EMLTree := EMLTree.eml expTree expTree
 
@@ -470,12 +568,12 @@ theorem expExpSub_not_depth_le_one (u : EMLTree) (hu : u.depth < 2) (h : Meets e
   have hxnn : (0 : Real) ≤ 1 + exp D :=
     add_nonneg (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos D))
   have hb := hD (1 + exp D) hx1
-  rw [h (1 + exp D)] at hb
+  rw [h (1 + exp D) trivial] at hb
   exact envelope_absurd_sub (one_add_le_exp D) (two_mul_le_exp hxnn)
     (two_mul_le_exp (le_of_lt (exp_pos (1 + exp D)))) hb
 
 theorem expExpSubTree_depth_optimal : DepthOptimal expExpSubSpec expExpSubTree 2 :=
-  { accepted := { meets := expExpSubTree_eval, cost := by rfl }
+  { accepted := { meets := fun x _ => expExpSubTree_eval x, cost := by rfl }
     minimal := expExpSub_not_depth_le_one }
 
 /-! ### 7. The iterated-exponential tower — an infinite family, and what it costs
@@ -527,11 +625,11 @@ theorem towerTree_eval : ∀ (n : Nat) (x : Real), (towerTree n).eval x = towerF
       mach_ring
 
 /-- The specification of the `n`-th tower level. -/
-def towerSpec (n : Nat) : SemSpec := fun f => ∀ x : Real, f x = towerFn n x
+noncomputable def towerSpec (n : Nat) : SemSpec := { dom := fun _ => True, target := fun x => towerFn n x }
 
 /-- The upper half, for **every** `n`: `d(Tₙ) ≤ n`, witnessed and accepted. -/
 theorem towerTree_accepted (n : Nat) : Accepted (towerSpec n) (towerTree n) n :=
-  { meets := towerTree_eval n, cost := towerTree_depth n }
+  { meets := fun x _ => towerTree_eval n x, cost := towerTree_depth n }
 
 /-- **The missing ingredient, named.** No tree shallower than `n` computes `Tₙ`.
 
@@ -696,7 +794,7 @@ theorem tower3_not_depth_le_two (u : EMLTree) (hu : u.depth < 3) (h : Meets (tow
   have hxX : X₀ ≤ X₀ + (exp (M - K) + exp K) :=
     le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos (le_of_lt hMKp) hKp))
   have hb := hEnv (X₀ + (exp (M - K) + exp K)) hxX
-  rw [h (X₀ + (exp (M - K) + exp K))] at hb
+  rw [h (X₀ + (exp (M - K) + exp K)) trivial] at hb
   have hcap : exp (exp (exp (X₀ + (exp (M - K) + exp K))))
       ≤ exp (exp (X₀ + (exp (M - K) + exp K)) + K) + M := hb
   refine tower3_core ?_ ?_ hcap
@@ -808,7 +906,7 @@ theorem tower4_not_depth_le_three (u : EMLTree) (hu : u.depth < 4) (h : Meets (t
     le_add_nonneg (le_of_lt (add_pos_of_nonneg_pos
       (le_of_lt (add_pos_of_nonneg_pos (le_of_lt p1) p2)) p3))
   have hb := hEnv (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))) hxX
-  rw [h (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M)))] at hb
+  rw [h (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))) trivial] at hb
   have hcap : exp (exp (exp (exp (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))))))
       ≤ exp (exp (exp (X₀ + (exp (K + 1) + exp (M - K) + exp (N - K - M))) + K) + M) + N := hb
   refine tower4_core ?_ ?_ ?_ hcap
