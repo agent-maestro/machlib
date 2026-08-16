@@ -1688,27 +1688,61 @@ private theorem c_sub_log_blowup_at (c M E t : Real) (hE1 : 1 ≤ E) (ht1 : 1 �
     rw [r3] at w; exact w
   exact lt_irrefl_ax _ (lt_of_lt_of_le hbig hfinal)
 
+/-- **A cap on a depth-2 node forces its left child into the bounded branch — on a RAY.**
+
+The dichotomy `depth_le_one_exp_bounded_or_grows` says `exp (A x)` is either bounded on `[1,∞)` or
+eventually **at least `exp x`**, with nothing in between. The growing branch cannot survive any
+finite ceiling on `exp (A x) − log (B x)`, because `depth_le_one_log_le_linear` caps the right child's
+logarithm at `x + C` — so a bound `M` would force `exp x ≤ M + x + C`, which `exp_beats_linear_past`
+refutes at one point.
+
+**Only a ray of the hypothesis is used**, and that is the whole reason this is stated separately from
+`depth_le_two_bounded_left_is_const`. That theorem needs agreement on all of `(0,∞)` to reach its
+*stronger* conclusion (`A` is **constant**), because the remaining bounded form `c − log x` blows up
+as `x → 0⁺` and is only excluded by looking near zero. On a ray `c − log x` is perfectly bounded, so
+the constancy conclusion is **false** there — but the boundedness conclusion still holds, and
+boundedness is what a cap-on-a-ray consumer actually needs.
+
+Witness threshold is `exp T + exp XM`, clearing both `T` (the dichotomy's) and `XM` (the caller's)
+via `self_le_exp` on each summand — the usual division-free way to take a maximum in this base. -/
+theorem depth_le_two_bounded_left_exp_bounded (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (M XM : Real) (hbnd : ∀ x : Real, XM ≤ x → 1 ≤ x → exp (A.eval x) - log (B.eval x) ≤ M) :
+    ∃ Kb : Real, ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb := by
+  rcases depth_le_one_exp_bounded_or_grows A hA with hb | ⟨T, hT⟩
+  · exact hb
+  · exfalso
+    obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+    obtain ⟨x, hxT, hx1, hlt⟩ :=
+      exp_beats_linear_past (α := 1) (β := M + C) (le_of_lt zero_lt_one_ax) (exp T + exp XM)
+    have hsplit1 : exp T ≤ exp T + exp XM := by
+      have v : exp T + 0 ≤ exp T + exp XM :=
+        add_le_add_wit (le_refl _) (le_of_lt (exp_pos XM))
+      have e : exp T + (0 : Real) = exp T := by mach_ring
+      rw [e] at v; exact v
+    have hsplit2 : exp XM ≤ exp T + exp XM := by
+      have v : (0 : Real) + exp XM ≤ exp T + exp XM :=
+        add_le_add_wit (le_of_lt (exp_pos T)) (le_refl _)
+      have e : (0 : Real) + exp XM = exp XM := by mach_ring
+      rw [e] at v; exact v
+    have hTx : T ≤ x :=
+      le_trans (le_trans (le_of_lt (exp_grows_strictly_thm T)) hsplit1) hxT
+    have hXMx : XM ≤ x :=
+      le_trans (le_trans (le_of_lt (exp_grows_strictly_thm XM)) hsplit2) hxT
+    have hcap : exp (A.eval x) ≤ M + (x + C) := by
+      have hval : exp (A.eval x)
+          = (exp (A.eval x) - log (B.eval x)) + log (B.eval x) := by
+        mach_mpoly [exp (A.eval x), log (B.eval x)]
+      rw [hval]; exact add_le_add_wit (hbnd x hXMx hx1) (hC x hx1)
+    have hlin : (1 : Real) * x + (M + C) = M + (x + C) := by mach_mpoly [x, M, C]
+    rw [hlin] at hlt
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hlt (le_trans (hT x hTx) hcap))
+
 /-- **A depth-2 tree bounded above on `(0,∞)` has a constant left child.** -/
 theorem depth_le_two_bounded_left_is_const (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
     (M : Real) (hbnd : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) ≤ M) :
     ∃ α : Real, ∀ x : Real, 0 < x → A.eval x = α := by
-  have hAbnd : ∃ Kb : Real, ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb := by
-    rcases depth_le_one_exp_bounded_or_grows A hA with hb | ⟨T, hT⟩
-    · exact hb
-    · exfalso
-      obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
-      obtain ⟨x, hxT, hx1, hlt⟩ :=
-        exp_beats_linear_past (α := 1) (β := M + C) (le_of_lt zero_lt_one_ax) T
-      have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
-      have hcap : exp (A.eval x) ≤ M + (x + C) := by
-        have hval : exp (A.eval x)
-            = (exp (A.eval x) - log (B.eval x)) + log (B.eval x) := by
-          mach_mpoly [exp (A.eval x), log (B.eval x)]
-        rw [hval]; exact add_le_add_wit (hbnd x hxpos) (hC x hx1)
-      have hlin : (1 : Real) * x + (M + C) = M + (x + C) := by mach_mpoly [x, M, C]
-      rw [hlin] at hlt
-      exact lt_irrefl_ax _ (lt_of_lt_of_le hlt (le_trans (hT x hxT) hcap))
-  obtain ⟨Kb, hKb⟩ := hAbnd
+  obtain ⟨Kb, hKb⟩ := depth_le_two_bounded_left_exp_bounded A B hA hB M 1
+    (fun x _ h1 => hbnd x (lt_of_lt_of_le zero_lt_one_ax h1))
   rcases depth_le_one_exp_bounded_forms A hA Kb hKb with hconst | ⟨c, hc0, ha⟩
   · exact hconst
   · exfalso
@@ -6531,12 +6565,23 @@ So the residue is narrower than the parent in the way that matters: the target i
 but `P` is now pinned to a *single* syntactic shape, `exp (a x) − log (b x)` with `a` and `b` among the
 five `Depth1Form`s, rather than ranging over all of depth ≤ 2.
 
-**Where the remaining difficulty is concentrated, and how far the cap prunes it.** The cap
-`exp (exp (a x) − log (b x)) ≤ K` forces `exp (a x)` to stay bounded, which excludes the three
-divergent `Depth1Form`s for `a` (`x`, `exp x − d`, `exp x − log x`) and leaves two (`α`, `c − log x`).
-That is ~2×5 live `(a, b)` cells against `Q`'s own normal form, **not** the 5×5×5×5 the shape suggests
-— the same collapse `depth_le_two_approach_constant` saw, where a classification describes values but
-a proof branches on behaviour, and behaviour is coarser.
+**Where the remaining difficulty is concentrated — and the pruning is a lemma, not an enumeration.**
+`depth_le_two_bounded_left_exp_bounded` shows the cap forces `exp (A x)` **bounded on `[1,∞)`**, with
+no case analysis on `A`'s shape at all: `depth_le_one_exp_bounded_or_grows` says `exp (A x)` is either
+bounded or eventually `≥ exp x` with **nothing between**, and the growing branch dies against
+`depth_le_one_log_le_linear`'s ceiling `log (B x) ≤ x + C`. So the three divergent `Depth1Form`s are
+excluded *wholesale* rather than one at a time — the same collapse `depth_le_two_approach_constant`
+saw, where a classification describes values but a proof branches on behaviour, and behaviour is
+coarser.
+
+**Stated over the children `A B` rather than over `Depth1Form` functions**, which is what lets it
+consume those tree-level lemmas directly. The earlier function-shaped draft could not: every depth-≤1
+tool in this file takes an `EMLTree`, so a normal-form statement would have needed each one
+re-proved at the function level for no gain. The reduction from `BoundedCellApproach` then becomes
+the restriction itself, with no threshold plumbing.
+
+**What remains after the pruning:** the target `exp (exp (A x) − log (B x))` is bounded in
+`(1, exp K]` but still *moves*, and `Q` must be shown unable to approach it super-exponentially fast.
 
 **Not machine-checked, and stated here so it is not mistaken for a result:** the *reason* to expect
 this to hold is that the obligation only has to beat `exp (−exp x)`, while every quantity at depth ≤ 2
@@ -6545,12 +6590,11 @@ moves at most polynomially — the approach-rate quantisation says convergence h
 `−log(gap) − exp x` at −10.9, −139, −2972, −162746 for `x` = 3, 5, 8, 12. **A probe cannot prove
 absence** — and this one samples only bounded `P`, with a window-based boundedness filter. -/
 def BoundedEmlCellApproach : Prop :=
-  ∀ a b : Real → Real, Depth1Form a → Depth1Form b →
-    ∀ Q : EMLTree, Q.depth ≤ 2 →
-      ∀ K XK : Real, (∀ x : Real, XK ≤ x → exp (exp (a x) - log (b x)) ≤ K) →
-        ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
-          Q.eval x < exp (exp (exp (a x) - log (b x))) →
-            exp (-C - exp x) ≤ exp (exp (exp (a x) - log (b x))) - Q.eval x
+  ∀ A B Q : EMLTree, A.depth ≤ 1 → B.depth ≤ 1 → Q.depth ≤ 2 →
+    ∀ K XK : Real, (∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) →
+      ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x →
+        Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+          exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x
 
 /-- **`BoundedCellApproach` reduces to the `eml` shape alone.** The `const` and `var` shapes of `P`
 are discharged here — the first because its target stops moving, the second because the cap is false
@@ -6562,15 +6606,14 @@ stronger than the `exp (−C − exp x)` the obligation asks for. `small_exp_bel
 conversion is not tight at any point: `exp (−C − exp x) ≤ exp (−C − x) ≤ ε` uses only `x ≤ exp x`. -/
 theorem boundedCellApproach_of_eml (h : BoundedEmlCellApproach) : BoundedCellApproach := by
   intro P Q hP hQ K XK hK
-  rcases depth_le_two_normal_form P hP with ⟨c, hc⟩ | hvar | ⟨a, b, ha, hb, hab⟩
-  · -- `P = const c`: the target is constant, so the parent's own depth-2 tool closes it
+  cases P with
+  | const c =>
+    -- the target is the CONSTANT `exp (exp c)`, so the parent's own depth-2 tool closes it
     obtain ⟨ε, X₁, hε, hX₁, hgap⟩ := depth_le_two_gap_below Q hQ (exp (exp c))
     obtain ⟨C, hC⟩ := small_exp_below hε
     refine ⟨C, X₁, hX₁, ?_⟩
     intro x hx hlt
     have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax (le_trans hX₁ hx)
-    have hPc : P.eval x = c := hc x hx0
-    rw [hPc] at hlt ⊢
     have hvgap : ε ≤ exp (exp c) - Q.eval x := hgap x hx hlt
     have hne : -(exp x) ≤ -x := neg_le_neg_wit (self_le_exp x)
     have v := add_le_add_left hne (-C)
@@ -6578,11 +6621,9 @@ theorem boundedCellApproach_of_eml (h : BoundedEmlCellApproach) : BoundedCellApp
     have e2 : -C + -x = -C - x := by mach_ring
     rw [e1, e2] at v
     exact le_trans (le_trans (exp_monotone v) (hC x (le_of_lt hx0))) hvgap
-  · -- `P = var`: `exp x ≤ K` on a ray is false, so the cell is vacuous
+  | var =>
+    -- `exp x ≤ K` on a ray is false, so the cell is vacuous
     exfalso
-    have hw0 : (0 : Real) < 1 + exp XK + exp K :=
-      lt_trans_ax zero_lt_one_ax
-        (lt_trans_ax (lt_add_of_pos_right (exp_pos XK)) (lt_add_of_pos_right (exp_pos K)))
     have hwXK : XK ≤ 1 + exp XK + exp K := by
       have v : (0 : Real) + exp XK + 0 ≤ 1 + exp XK + exp K :=
         add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
@@ -6599,28 +6640,18 @@ theorem boundedCellApproach_of_eml (h : BoundedEmlCellApproach) : BoundedCellApp
           (le_refl _)
       have e : (0 : Real) + 0 + exp K = exp K := by mach_ring
       rw [e] at v; exact lt_of_lt_of_le hKe v
-    have hcap := hK _ hwXK
-    rw [hvar _ hw0] at hcap
-    exact lt_irrefl_ax K (lt_of_lt_of_le (lt_of_lt_of_le hwK (self_le_exp _)) hcap)
-  · -- `P = eml A B`: the residue, handed to the obligation
-    have hthr : (0 : Real) < 1 + exp XK :=
-      lt_trans_ax zero_lt_one_ax (lt_add_of_pos_right (exp_pos XK))
-    have hK' : ∀ x : Real, 1 + exp XK ≤ x → exp (exp (a x) - log (b x)) ≤ K := by
-      intro x hx
-      have hx0 : (0 : Real) < x := lt_of_lt_of_le hthr hx
-      have hXKx : XK ≤ x :=
-        le_trans (self_le_exp XK) (le_trans (le_add_nonneg_l' (le_of_lt zero_lt_one_ax)) hx)
-      rw [← hab x hx0]
-      exact hK x hXKx
-    obtain ⟨C, X₀, hX₀, hres⟩ := h a b ha hb Q hQ K (1 + exp XK) hK'
-    refine ⟨C, X₀ + (1 + exp XK), le_trans hX₀ (le_add_nonneg_r' (le_of_lt hthr)), ?_⟩
-    intro x hx hlt
-    have hX₀x : X₀ ≤ x := le_trans (le_add_nonneg_r' (le_of_lt hthr)) hx
-    have hx0 : (0 : Real) < x :=
-      lt_of_lt_of_le hthr
-        (le_trans (le_add_nonneg_l' (le_trans (le_of_lt zero_lt_one_ax) hX₀)) hx)
-    rw [hab x hx0] at hlt ⊢
-    exact hres x hX₀x hlt
+    exact lt_irrefl_ax K
+      (lt_of_lt_of_le (lt_of_lt_of_le hwK (self_le_exp _)) (hK _ hwXK))
+  | eml A B =>
+    -- the residue. Stated over the CHILDREN rather than a normal form, so it can consume the
+    -- tree-level depth-1 lemmas directly; the reduction is then the restriction itself.
+    have hA : A.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hP
+      have := Nat.le_max_left A.depth B.depth; omega
+    have hB : B.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hP
+      have := Nat.le_max_right A.depth B.depth; omega
+    exact h A B Q hA hB hQ K XK hK
 
 /-- **A positive depth-≤1 logarithm is bounded below by a positive constant.**
 
