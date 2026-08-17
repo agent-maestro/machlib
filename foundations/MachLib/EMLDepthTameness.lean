@@ -7095,6 +7095,68 @@ example (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (V : Real)
   gap_below_constant_barrier Q hQ (fun x => exp (exp ((EMLTree.eml A B).eval x))) V 1
     (fun x hx => le_of_eq (hT x hx).symm)
 
+/-- **`exp` outruns a line of ANY slope, on a whole ray.**
+
+`exp_beats_linear` and `exp_beats_linear_past` produce a *point* where `exp` is ahead. A point
+suffices to contradict a universally quantified hypothesis, which is what they are used for
+throughout this file. It is **not** enough to show a region is eventually empty, and that is what a
+vacuity argument needs.
+
+The shift supplies the missing form. `two_mul_le_exp` gives slope `2` from `0`, and
+`exp x = exp (x − S) · exp S` promotes it to slope `exp S` past `2S`:
+
+    x ≤ 2(x − S) ≤ exp (x − S)   ⟹   x · exp S ≤ exp x     for x ≥ S + S
+
+Taking `S := exp m` makes `exp S ≥ m` by two applications of `self_le_exp`, so any slope is reached
+with no case split on the sign of `m` and no maximum. -/
+theorem exp_ge_mul_shift {S x : Real} (hS : 0 ≤ S) (hx : S + S ≤ x) : x * exp S ≤ exp x := by
+  have hSS : S ≤ S + S := by
+    have v := add_le_add_wit (le_refl S) hS
+    have e : S + (0 : Real) = S := by mach_ring
+    rw [e] at v; exact v
+  have hxS : (0 : Real) ≤ x - S := by
+    have v := add_le_add_wit (le_trans hSS hx) (le_refl (-S))
+    have l : S + -S = 0 := by mach_ring
+    have r : x + -S = x - S := by mach_mpoly [x, S]
+    rw [l, r] at v; exact v
+  have hlin : x ≤ (x - S) + (x - S) := by
+    have v := add_le_add_wit hx (le_refl (x - S - S))
+    have l : S + S + (x - S - S) = x := by mach_mpoly [x, S]
+    have r : x + (x - S - S) = (x - S) + (x - S) := by mach_mpoly [x, S]
+    rw [l, r] at v; exact v
+  have hmul := mul_le_mul_of_nonneg_right (le_trans hlin (two_mul_le_exp hxS))
+    (le_of_lt (exp_pos S))
+  have hsplit : exp (x - S) * exp S = exp x := by
+    rw [← exp_add]
+    have e : x - S + S = x := by mach_mpoly [x, S]
+    rw [e]
+  rw [hsplit] at hmul; exact hmul
+
+/-- The ∀-form this file did not have: past a threshold, `exp` dominates `m · x` for every slope. -/
+theorem exp_beats_linear_eventually (m : Real) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → m * x ≤ exp x := by
+  have hS : (0 : Real) ≤ exp m := le_of_lt (exp_pos m)
+  refine ⟨1 + exp m + exp m, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 ≤ 1 + exp m + exp m :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) hS) hS
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx
+  have hshift : exp m + exp m ≤ x := by
+    have v : (0 : Real) + exp m + exp m ≤ 1 + exp m + exp m :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)) (le_refl _)
+    have e : (0 : Real) + exp m + exp m = exp m + exp m := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hx0 : (0 : Real) ≤ x := by
+    have v := add_le_add_wit hS hS
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at v; exact le_trans v hshift
+  have hm : m ≤ exp (exp m) := le_trans (self_le_exp m) (self_le_exp (exp m))
+  have h1 := mul_le_mul_of_nonneg_right hm hx0
+  have hcomm : exp (exp m) * x = x * exp (exp m) := by mach_ring
+  rw [hcomm] at h1
+  exact le_trans h1 (exp_ge_mul_shift hS hshift)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
