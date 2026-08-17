@@ -7028,6 +7028,73 @@ target descends to its floor rather than rising to it. Recorded separately becau
 makes the comparison a *separation* rather than a collision. -/
 theorem moving_Q_coefficient_pos (c : Real) : 0 < exp c := exp_pos c
 
+/-- **A constant barrier between the two is enough; the target may move freely above it.**
+
+`boundedEmlCellApproachLarge_const_target` asked for a *constant* target. Its proof never used that:
+what it consumed was a fixed `k` with `Q x < k ≤ T x`. Stating the weaker hypothesis turns a corner
+case into the generic tool, and the target becomes an arbitrary function — no depth bound, no
+tree — because nothing about it is inspected beyond the barrier.
+
+**How the moving case reaches it.** When the target and `Q` converge to *different* limits, any `k`
+strictly between them is such a barrier eventually, so the whole different-limits regime collapses to
+this lemma and yields a **uniform** `ε`, far more than the obligation asks. Only equal limits need
+first- and second-order work, which is where the cancellation locus lives.
+
+`depth_le_two_gap_below` supplies the uniform `ε` below `k`; `exp_surj` converts it to the floor by
+naming `C` with `exp (−C) = ε`; `exp (−exp x) ≤ 1` does the rest. Thresholds merge as
+`1 + exp X₁ + exp X₂` — the division-free maximum. -/
+theorem gap_below_constant_barrier (Q : EMLTree) (hQ : Q.depth ≤ 2) (f : Real → Real)
+    (k X₁ : Real) (hbar : ∀ x : Real, X₁ ≤ x → k ≤ f x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Q.eval x < k →
+      exp (-C - exp x) ≤ f x - Q.eval x := by
+  obtain ⟨ε, X₂, hε, hX₂, hgap⟩ := depth_le_two_gap_below Q hQ k
+  obtain ⟨y, hy⟩ := exp_surj ε hε
+  refine ⟨-y, 1 + exp X₁ + exp X₂, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X₁)))
+        (le_of_lt (exp_pos X₂))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx hlt
+  have hX₁x : X₁ ≤ x := by
+    have v : (0 : Real) + exp X₁ + 0 ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos X₂))
+    have e : (0 : Real) + exp X₁ + 0 = exp X₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
+  have hX₂x : X₂ ≤ x := by
+    have v : (0 : Real) + 0 + exp X₂ ≤ 1 + exp X₁ + exp X₂ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos X₁)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp X₂ = exp X₂ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₂) (le_trans v hx)
+  -- ε below the barrier, and the barrier below the target
+  have hεk : ε ≤ k - Q.eval x := hgap x hX₂x hlt
+  have hkf : k - Q.eval x ≤ f x - Q.eval x := by
+    have v := add_le_add_wit (hbar x hX₁x) (le_refl (-(Q.eval x)))
+    have l : k + -(Q.eval x) = k - Q.eval x := by mach_mpoly [k, Q.eval x]
+    have r : f x + -(Q.eval x) = f x - Q.eval x := by mach_mpoly [f x, Q.eval x]
+    rw [l, r] at v; exact v
+  refine le_trans ?_ (le_trans hεk hkf)
+  have e : -(-y) - exp x = y + -(exp x) := by mach_ring
+  rw [e, exp_add, hy]
+  have hnp : -(exp x) ≤ 0 := by
+    have v := neg_le_neg_wit (le_of_lt (exp_pos x))
+    have z : -(0 : Real) = 0 := by mach_ring
+    rw [z] at v; exact v
+  have hle := mul_le_mul_of_nonneg_left (exp_le_one_of_nonpos hnp) (le_of_lt hε)
+  have one : ε * (1 : Real) = ε := by mach_ring
+  rw [one] at hle; exact hle
+
+/-- The constant-target cell is the barrier lemma at `k := V`. Recorded as a check that the
+generalisation is faithful rather than merely wider. -/
+example (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (V : Real)
+    (hT : ∀ x : Real, 1 ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = V) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → Q.eval x < V →
+      exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x :=
+  gap_below_constant_barrier Q hQ (fun x => exp (exp ((EMLTree.eml A B).eval x))) V 1
+    (fun x hx => le_of_eq (hT x hx).symm)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
