@@ -7404,6 +7404,41 @@ theorem exp_sub_exp_lower_quadratic (v : Real) {z : Real} (hz : 0 ≤ z) :
     mach_mpoly [exp (v + (z + z)), exp v]
   rw [l, r] at w; exact w
 
+/-- **The cancellation locus, in its purest form: when the linear term is exactly consumed, the
+quadratic term is what is left over.**
+
+    a ≤ exp v · (z+z)   ⟹   exp v · z²  ≤  exp (v + (z+z)) − exp v − a
+
+Read `exp (v + (z+z)) − exp v` as the target's rise above its limit, and `a` as the competitor's. The
+hypothesis says the target's *linear* term covers the competitor — including the boundary case where
+it covers it **exactly**, which is the locus the census found. On that boundary the first-order
+comparison returns `0` and says nothing; this returns `exp v · z²`, strictly positive.
+
+With `z = Θ(1/x)` that is a `Θ(1/x²)` separation, and `double_exp_floor_dominated` carries it the
+rest of the way to `exp (−C − exp x)`. **This is the branch the whole census was hunting, and it is
+an inequality between four explicit terms — no expansion, no `o(·)`, no Taylor theorem.**
+
+Division-free by keeping the half-increment `z` as the parameter rather than the increment `2z`; a
+caller holding `d` supplies `z := d·(1/2)` at the call site, where the reciprocal is harmless. -/
+theorem quadratic_separation_of_linear_dominance (v a : Real) {z : Real} (hz : 0 ≤ z)
+    (hdom : a ≤ exp v * (z + z)) :
+    exp v * (z * z) ≤ exp (v + (z + z)) - exp v - a := by
+  have hq := exp_sub_exp_lower_quadratic v hz
+  -- split the quadratic form's left side into linear + square
+  have hsplit : exp v * ((z + z) + z * z) = exp v * (z + z) + exp v * (z * z) := by
+    mach_mpoly [exp v, z]
+  rw [hsplit] at hq
+  -- the linear part alone already covers `a`
+  have hcover : a + exp v * (z * z) ≤ exp v * (z + z) + exp v * (z * z) :=
+    add_le_add_wit hdom (le_refl _)
+  have hchain := le_trans hcover hq
+  -- move `a` across
+  have w := add_le_add_wit hchain (le_refl (-a))
+  have l : a + exp v * (z * z) + -a = exp v * (z * z) := by mach_mpoly [exp v, z, a]
+  have r : exp (v + (z + z)) - exp v + -a = exp (v + (z + z)) - exp v - a := by
+    mach_mpoly [exp (v + (z + z)), exp v, a]
+  rw [l, r] at w; exact w
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
