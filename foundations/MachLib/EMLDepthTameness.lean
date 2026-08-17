@@ -6956,6 +6956,78 @@ theorem target_above_one_singly_exponential (A B : EMLTree) (hB : B.depth ≤ 1)
     mach_mpoly [exp (exp ((EMLTree.eml A B).eval x))]
   rw [l2, r2] at hsub; exact hsub
 
+/-- `x² ≤ exp (exp x)` on `[1,∞)`. Two applications of `self_le_exp` and one of `two_mul_le_exp`. -/
+theorem sq_le_exp_exp {x : Real} (hx : 1 ≤ x) : x * x ≤ exp (exp x) := by
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx
+  have h1 : x * x ≤ exp x * x := mul_le_mul_of_nonneg_right (self_le_exp x) hx0
+  have h2 : exp x * x ≤ exp x * exp x :=
+    mul_le_mul_of_nonneg_left (self_le_exp x) (le_of_lt (exp_pos x))
+  have h3 : exp x * exp x = exp (x + x) := (exp_add x x).symm
+  rw [h3] at h2
+  exact le_trans (le_trans h1 h2) (exp_monotone (two_mul_le_exp hx0))
+
+/-- **Any inverse-square floor beats the doubly exponential one, and `C` is free to choose.**
+
+The obligation's floor `exp (−C − exp x)` is existentially quantified in `C`, so a caller that has
+established *any* separation of order `1/x²` can pick `C` and be done. This is the step that makes
+the whole bounded-cell analysis collapse: the census showed the surviving gaps are `Θ(1/x)`
+generically and `Θ(1/x²)` on the cancellation locus, and both are astronomically larger than what is
+being asked for — at `x = 1000` the floor is around `10^(−4.3 × 10^433)`.
+
+Division-free by construction: stated as `floor · x² ≤ β` rather than `floor ≤ β/x²`, so it needs no
+reciprocal lemmas and composes by `mul_le_mul_of_nonneg_*` at the call site. `exp_surj` names the `C`
+with `exp (−C) = β`; the rest is `x² ≤ exp (exp x)` against `exp (−exp x)`. -/
+theorem double_exp_floor_dominated (β : Real) (hβ : 0 < β) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → exp (-C - exp x) * (x * x) ≤ β := by
+  obtain ⟨y, hy⟩ := exp_surj β hβ
+  refine ⟨-y, ?_⟩
+  intro x hx
+  have e : -(-y) - exp x = y + -(exp x) := by mach_ring
+  rw [e, exp_add, hy]
+  have hmul : exp (-(exp x)) * (x * x) ≤ exp (-(exp x)) * exp (exp x) :=
+    mul_le_mul_of_nonneg_left (sq_le_exp_exp hx) (le_of_lt (exp_pos (-(exp x))))
+  have hone : exp (-(exp x)) * exp (exp x) = 1 := by
+    rw [← exp_add]
+    have z : -(exp x) + exp x = 0 := by mach_ring
+    rw [z, exp_zero]
+  rw [hone] at hmul
+  have hassoc : β * exp (-(exp x)) * (x * x) = β * (exp (-(exp x)) * (x * x)) := by
+    mach_ring
+  rw [hassoc]
+  have hstep := mul_le_mul_of_nonneg_left hmul (le_of_lt hβ)
+  have hb : β * (1 : Real) = β := by mach_ring
+  rw [hb] at hstep; exact hstep
+
+/-- **The one surviving moving target, in closed form: `L + a·(1/x)` with `a > 0`.**
+
+After `bounded_ray_depth_two_both_forms` and `log_nonpos`, exactly one nonconstant `Q` shape reaches
+the bounded cell: left child `c − log x`, right child a positive constant. `exp_c_sub_log_eq` turns
+it into `exp c · (1/x) + (−log β)` — a positive multiple of `1/x` above a constant floor.
+
+**This is what replaces the asymptotic expansion.** The census measured `Θ(1/x)` separation
+generically and `Θ(1/x²)` on the cancellation locus; those were reconnaissance. With the closed form
+in hand the comparison against a target becomes an inequality between explicit terms, and
+`double_exp_floor_dominated` converts any inverse-square separation into the obligation's floor. No
+Taylor theorem and no `o(·)` notation enters the Lean argument at any point.
+
+The other three `P`/`R` combinations do not survive: `R = c − log x` totalizes to `log (R x) = 0` by
+`log_nonpos`, leaving `Q = exp (P x)`, which is either constant or `e^{c_P}/x → 0` and so violates
+`1 < Q x`. -/
+theorem moving_Q_eventual_form (P R : EMLTree) (c β : Real)
+    (hP : ∀ x : Real, 0 < x → P.eval x = c - log x)
+    (hR : ∀ x : Real, 0 < x → R.eval x = β) :
+    ∀ x : Real, 0 < x →
+      (EMLTree.eml P R).eval x = -(log β) + exp c * (1 / x) := by
+  intro x hx
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  rw [hval, hP x hx, hR x hx, exp_c_sub_log_eq c hx]
+  mach_mpoly [exp c, (1 / x : Real), log β]
+
+/-- The coefficient of `1/x` in `moving_Q_eventual_form` is strictly positive, so the surviving
+target descends to its floor rather than rising to it. Recorded separately because the sign is what
+makes the comparison a *separation* rather than a collision. -/
+theorem moving_Q_coefficient_pos (c : Real) : 0 < exp c := exp_pos c
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
