@@ -7157,6 +7157,81 @@ theorem exp_beats_linear_eventually (m : Real) :
   rw [hcomm] at h1
   exact le_trans h1 (exp_ge_mul_shift hS hshift)
 
+/-! ## ▸ The linear LOWER bound on a depth-≤1 logarithm
+
+`depth_le_one_log_le_linear` caps `log (B x)` at `x + C`. The `T → 1` regime needs the opposite
+direction for the two `exp`-shaped forms, and `depth_le_one_log_lower_at_infinity` supplies only a
+**constant** floor. These three close that gap.
+
+The whole argument rests on `exp 1 ≥ 2`, which is `one_add_le_exp 1`. -/
+
+/-- `exp (x−1) ≤ exp x − exp (x−1)`: one step back costs at least half, because `exp 1 ≥ 2`. -/
+theorem exp_pred_le_exp_sub_exp_pred (x : Real) : exp (x - 1) ≤ exp x - exp (x - 1) := by
+  have he : exp x = exp (x - 1) * exp 1 := by
+    rw [← exp_add]
+    have e : x - 1 + 1 = x := by mach_ring
+    rw [e]
+  have hge : (1 : Real) ≤ exp 1 - 1 := by
+    have v := add_le_add_wit (one_add_le_exp 1) (le_refl (-(1 : Real)))
+    have l : (1 : Real) + 1 + -1 = 1 := by mach_ring
+    have r : exp 1 + -(1 : Real) = exp 1 - 1 := by mach_mpoly [exp 1]
+    rw [l, r] at v; exact v
+  have hmul := mul_le_mul_of_nonneg_left hge (le_of_lt (exp_pos (x - 1)))
+  have l2 : exp (x - 1) * (1 : Real) = exp (x - 1) := by mach_ring
+  have r2 : exp (x - 1) * (exp 1 - 1) = exp (x - 1) * exp 1 - exp (x - 1) := by
+    mach_mpoly [exp (x - 1), exp 1]
+  rw [l2, r2, ← he] at hmul; exact hmul
+
+/-- Monotonicity of the totalized `log`, in the only direction needed here. -/
+theorem log_ge_sub_one_of_exp_pred_le {x z : Real} (h : exp (x - 1) ≤ z) : x - 1 ≤ log z := by
+  rcases (le_iff_lt_or_eq (exp (x - 1)) z).mp h with hlt | heq
+  · have hv := log_lt_log (exp_pos (x - 1)) hlt
+    rw [log_exp] at hv; exact le_of_lt hv
+  · rw [← heq, log_exp]; exact le_refl _
+
+/-- **`log (exp x − d) ≥ x − 1`, past `d + 1`.** The subtracted constant is absorbed by one step
+back: `exp x − exp (x−1) ≥ exp (x−1) ≥ x − 1 ≥ d`. -/
+theorem log_exp_sub_const_ge_linear (d : Real) {x : Real} (hx : d + 1 ≤ x) :
+    x - 1 ≤ log (exp x - d) := by
+  refine log_ge_sub_one_of_exp_pred_le ?_
+  have hd : d ≤ x - 1 := by
+    have v := add_le_add_wit hx (le_refl (-(1 : Real)))
+    have l : d + 1 + -1 = d := by mach_ring
+    have r : x + -(1 : Real) = x - 1 := by mach_mpoly [x]
+    rw [l, r] at v; exact v
+  have hchain : d ≤ exp x - exp (x - 1) :=
+    le_trans hd (le_trans (self_le_exp (x - 1)) (exp_pred_le_exp_sub_exp_pred x))
+  have v := add_le_add_wit hchain (le_refl (exp (x - 1) - exp x))
+  have l : d + (exp (x - 1) - exp x) = exp (x - 1) - (exp x - d) := by
+    mach_mpoly [d, exp x, exp (x - 1)]
+  have r : exp x - exp (x - 1) + (exp (x - 1) - exp x) = 0 := by
+    mach_mpoly [exp x, exp (x - 1)]
+  rw [l, r] at v
+  have w := add_le_add_wit v (le_refl (exp x - d))
+  have l2 : exp (x - 1) - (exp x - d) + (exp x - d) = exp (x - 1) := by
+    mach_mpoly [exp x, exp (x - 1), d]
+  have r2 : (0 : Real) + (exp x - d) = exp x - d := by mach_ring
+  rw [l2, r2] at w; exact w
+
+/-- **`log (exp x − log x) ≥ x − 1` on `[1,∞)`.** Same step, with `log x ≤ x − 1` doing the
+absorbing instead of a constant. -/
+theorem log_exp_sub_log_ge_linear {x : Real} (hx : 1 ≤ x) : x - 1 ≤ log (exp x - log x) := by
+  refine log_ge_sub_one_of_exp_pred_le ?_
+  have hchain : log x ≤ exp x - exp (x - 1) :=
+    le_trans (log_le_sub_one_of_one_le hx)
+      (le_trans (self_le_exp (x - 1)) (exp_pred_le_exp_sub_exp_pred x))
+  have v := add_le_add_wit hchain (le_refl (exp (x - 1) - exp x))
+  have l : log x + (exp (x - 1) - exp x) = exp (x - 1) - (exp x - log x) := by
+    mach_mpoly [log x, exp x, exp (x - 1)]
+  have r : exp x - exp (x - 1) + (exp (x - 1) - exp x) = 0 := by
+    mach_mpoly [exp x, exp (x - 1)]
+  rw [l, r] at v
+  have w := add_le_add_wit v (le_refl (exp x - log x))
+  have l2 : exp (x - 1) - (exp x - log x) + (exp x - log x) = exp (x - 1) := by
+    mach_mpoly [exp x, exp (x - 1), log x]
+  have r2 : (0 : Real) + (exp x - log x) = exp x - log x := by mach_ring
+  rw [l2, r2] at w; exact w
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
