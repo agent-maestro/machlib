@@ -7232,6 +7232,129 @@ theorem log_exp_sub_log_ge_linear {x : Real} (hx : 1 ≤ x) : x - 1 ≤ log (exp
   have r2 : (0 : Real) + (exp x - log x) = exp x - log x := by mach_ring
   rw [l2, r2] at w; exact w
 
+/-- **With the right child `exp`-shaped, the target falls to `1` at a singly exponential rate.**
+
+The mirror of `target_above_one_singly_exponential`, and the second half of the scale sandwich. That
+lemma used `depth_le_one_log_le_linear` to keep the target *above* `1 + e^{−x−C}`; this one uses the
+new linear *lower* bound on `log (B x)` to keep it *below* `1 + D·e^{−x}`.
+
+    log (B x) ≥ x − 1   ⟹   (eml A B) x ≤ (Kb + 1) − x
+                        ⟹   u = exp ((eml A B) x) ≤ e^{Kb+1}·e^{−x}
+                        ⟹   T − 1 = exp u − exp 0 ≤ u·exp u ≤ D·e^{−x}
+
+`exp_sub_exp_upper` at `v = 0` is what converts the exponent bound into a value bound, and it costs
+only the factor `exp u`, which is bounded because `u` is.
+
+**Why this matters.** The surviving moving `Q` sits at `L + a·(1/x)` with `a > 0`, so `Q − 1 ≥ a/x`
+whenever `L ≥ 1`. A target that is within `D·e^{−x}` of `1` cannot stay above it, since `e^{−x}`
+loses to `a/x`. That is the whole `T → 1` regime, and it is vacuous rather than hard. -/
+theorem target_below_one_singly_exponential (A B : EMLTree) (Kb : Real)
+    (hA : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb)
+    (hB : ∀ x : Real, 1 ≤ x → x - 1 ≤ log (B.eval x)) :
+    ∃ D : Real, 0 < D ∧ ∀ x : Real, 1 ≤ x →
+      exp (exp ((EMLTree.eml A B).eval x)) - 1 ≤ D * exp (-x) := by
+  refine ⟨exp (Kb + 1) * exp (exp (Kb + 1)), mul_pos (exp_pos _) (exp_pos _), ?_⟩
+  intro x hx1
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  -- 1. the node is below `(Kb + 1) − x`
+  have hnode : (EMLTree.eml A B).eval x ≤ Kb + 1 - x := by
+    rw [hval]
+    have v := add_le_add_wit (hA x hx1) (neg_le_neg_wit (hB x hx1))
+    have l : Kb + -(x - 1) = Kb + 1 - x := by mach_mpoly [Kb, x]
+    have r : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    rw [l, r] at v; exact v
+  -- 2. so `u` is below `e^{Kb+1}·e^{−x}`
+  have hsplit : exp (Kb + 1 - x) = exp (Kb + 1) * exp (-x) := by
+    rw [← exp_add]
+    have e : Kb + 1 + -x = Kb + 1 - x := by mach_mpoly [Kb, x]
+    rw [e]
+  have hu : exp ((EMLTree.eml A B).eval x) ≤ exp (Kb + 1) * exp (-x) := by
+    rw [← hsplit]; exact exp_monotone hnode
+  -- 3. and `u` is bounded, so `exp u` is
+  have hxpos : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
+  have hnegx : exp (-x) ≤ 1 := by
+    refine exp_le_one_of_nonpos ?_
+    have v := neg_le_neg_wit hxpos
+    have z : -(0 : Real) = 0 := by mach_ring
+    rw [z] at v; exact v
+  have hub : exp ((EMLTree.eml A B).eval x) ≤ exp (Kb + 1) := by
+    refine le_trans hu ?_
+    have v := mul_le_mul_of_nonneg_left hnegx (le_of_lt (exp_pos (Kb + 1)))
+    have e : exp (Kb + 1) * (1 : Real) = exp (Kb + 1) := by mach_ring
+    rw [e] at v; exact v
+  -- 4. `exp u − 1 ≤ u · exp u`
+  have hgap : exp (exp ((EMLTree.eml A B).eval x)) - 1
+      ≤ exp ((EMLTree.eml A B).eval x) * exp (exp ((EMLTree.eml A B).eval x)) := by
+    have h := exp_sub_exp_upper (exp ((EMLTree.eml A B).eval x)) 0
+    rw [exp_zero] at h
+    have e : exp ((EMLTree.eml A B).eval x) - 0 = exp ((EMLTree.eml A B).eval x) := by
+      mach_mpoly [exp ((EMLTree.eml A B).eval x)]
+    rw [e] at h; exact h
+  -- 5. bound each factor
+  have hfac : exp ((EMLTree.eml A B).eval x) * exp (exp ((EMLTree.eml A B).eval x))
+      ≤ (exp (Kb + 1) * exp (-x)) * exp (exp (Kb + 1)) := by
+    refine le_trans (mul_le_mul_of_nonneg_right hu (le_of_lt (exp_pos _))) ?_
+    exact mul_le_mul_of_nonneg_left (exp_monotone hub)
+      (le_of_lt (mul_pos (exp_pos (Kb + 1)) (exp_pos (-x))))
+  refine le_trans hgap (le_trans hfac (le_of_eq ?_))
+  mach_mpoly [exp (Kb + 1), exp (-x), exp (exp (Kb + 1))]
+
+/-- `x·e^{−x} ≤ η` past a threshold, for every `η > 0`. Immediate from
+`exp_beats_linear_eventually` at slope `1/η`: that gives `x ≤ η·e^x`, and multiplying by `e^{−x}`
+finishes. -/
+theorem x_mul_exp_neg_eventually_small (η : Real) (hη : 0 < η) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → x * exp (-x) ≤ η := by
+  obtain ⟨X₀, hX₀, h⟩ := exp_beats_linear_eventually (1 / η)
+  refine ⟨X₀, hX₀, ?_⟩
+  intro x hx
+  have h2 := mul_le_mul_of_nonneg_left (h x hx) (le_of_lt hη)
+  have hinv : η * (1 / η) = 1 := mul_inv η (ne_of_gt hη)
+  have l : η * (1 / η * x) = η * (1 / η) * x := by mach_ring
+  rw [l, hinv] at h2
+  have l2 : (1 : Real) * x = x := by mach_ring
+  rw [l2] at h2
+  have h3 := mul_le_mul_of_nonneg_right h2 (le_of_lt (exp_pos (-x)))
+  have hee : exp x * exp (-x) = 1 := by
+    rw [← exp_add]
+    have z : x + -x = 0 := by mach_ring
+    rw [z, exp_zero]
+  have r : η * exp x * exp (-x) = η * (exp x * exp (-x)) := by mach_ring
+  rw [r, hee] at h3
+  have r2 : η * (1 : Real) = η := by mach_ring
+  rw [r2] at h3; exact h3
+
+/-- **The falling target's headroom loses to the moving target's excess.**
+
+`D·e^{−x} ≤ a·(1/x)` eventually, for any `a, D > 0`. This is the arithmetic core of the `T → 1`
+regime: `target_below_one_singly_exponential` puts the target within `D·e^{−x}` of `1`, while
+`moving_Q_eventual_form` keeps `Q` at least `a·(1/x)` above `1` whenever its limit is `≥ 1`. Since
+`e^{−x}` loses to `1/x`, the cell's hypothesis `Q x < T x` cannot hold far out, and the whole regime
+is vacuous rather than difficult.
+
+Non-strict suffices: `Q < T` yields `a/x < D·e^{−x}`, and `D·e^{−x} ≤ a/x` closes it. -/
+theorem exp_neg_le_inv_of_pos (a D : Real) (ha : 0 < a) (hD : 0 < D) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → D * exp (-x) ≤ a * (1 / x) := by
+  obtain ⟨X₀, hX₀, h⟩ := x_mul_exp_neg_eventually_small (a * (1 / D)) (mul_pos ha (one_div_pos_of_pos hD))
+  refine ⟨X₀, hX₀, ?_⟩
+  intro x hx
+  have hx1 : (1 : Real) ≤ x := le_trans hX₀ hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  -- D·x·e^{−x} ≤ D·(a/D) = a
+  have h2 := mul_le_mul_of_nonneg_left (h x hx) (le_of_lt hD)
+  have hinvD : D * (1 / D) = 1 := mul_inv D (ne_of_gt hD)
+  have r : D * (a * (1 / D)) = a * (D * (1 / D)) := by mach_ring
+  rw [r, hinvD] at h2
+  have r2 : a * (1 : Real) = a := by mach_ring
+  rw [r2] at h2
+  -- multiply by 1/x
+  have h3 := mul_le_mul_of_nonneg_right h2 (le_of_lt (one_div_pos_of_pos hxpos))
+  have hinvx : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+  have l : D * (x * exp (-x)) * (1 / x) = D * exp (-x) * (x * (1 / x)) := by mach_ring
+  rw [l, hinvx] at h3
+  have l2 : D * exp (-x) * (1 : Real) = D * exp (-x) := by mach_ring
+  rw [l2] at h3; exact h3
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
