@@ -6718,6 +6718,54 @@ theorem expexp_gap_of_right_le_one (A B Q : EMLTree) (hB : B.depth ≤ 1) :
     rw [e1, e2] at v; exact v
   exact le_trans hu (le_trans hT hQ)
 
+/-- **The bounded cell, discharged wherever its target is constant.**
+
+Reached by trying to *falsify* `BoundedEmlCellApproachLarge` rather than prove it — the family has
+form, since `Depth3DecayHard` in this same file was a false conjecture. The cheapest corner to break
+is a constant target: take `A` and `B` constant, so `exp (exp (eml A B))` is a fixed `V > 1`, and ask
+whether some depth-≤2 `Q` can crawl up to `V` faster than `exp (−C − exp x)`.
+
+It cannot, and `depth_le_two_gap_below` already says so: below any **constant** `k`, a depth-≤2 tree
+sits below it by a *uniform* `ε`. A uniform constant beats `exp (−C − exp x)` for free, because
+`exp_surj` names a `C` with `exp (−C) = ε` and `exp (−exp x) ≤ 1` does the rest. So the corner is
+evidence *for* the conjecture, not against it.
+
+**What this localises.** The obligation's difficulty is not that the target is bounded — it is that
+the target MOVES. `1 < T ≤ exp K` follows from `u ≤ K` and `u > 0`, so `T` lives in a fixed band; but
+`depth_le_two_gap_below` needs a constant `k`, and no uniform `ε` survives `k` sliding toward `Q x`.
+Everything else in the bounded cell is already available.
+
+Stated on the target rather than on `A` and `B` because that is the honest hypothesis: constant
+children are merely the easiest way to satisfy it. -/
+theorem boundedEmlCellApproachLarge_const_target
+    (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (V : Real)
+    (hT : ∀ x : Real, 1 ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = V) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨ε, X₁, hε, hX₁, hgap⟩ := depth_le_two_gap_below Q hQ V
+  obtain ⟨y, hy⟩ := exp_surj ε hε
+  refine ⟨-y, X₁, hX₁, ?_⟩
+  intro x hx _ hlt
+  have hx1 : (1 : Real) ≤ x := le_trans hX₁ hx
+  rw [hT x hx1] at hlt ⊢
+  refine le_trans ?_ (hgap x hx hlt)
+  have e : -(-y) - exp x = y + -(exp x) := by mach_ring
+  rw [e, exp_add, hy]
+  have hnp : -(exp x) ≤ 0 := by
+    have v := neg_le_neg_wit (le_of_lt (exp_pos x))
+    have z : -(0 : Real) = 0 := by mach_ring
+    rw [z] at v; exact v
+  have hle := mul_le_mul_of_nonneg_left (exp_le_one_of_nonpos hnp) (le_of_lt hε)
+  have one : ε * (1 : Real) = ε := by mach_ring
+  rw [one] at hle; exact hle
+
+/-- The constant-target hypothesis is inhabited: constant children give one. Recorded so the lemma
+above is not a statement about the empty set. -/
+theorem const_target_of_const_children (α b : Real) (x : Real) :
+    exp (exp ((EMLTree.eml (EMLTree.const α) (EMLTree.const b)).eval x))
+      = exp (exp (exp α - log b)) := rfl
+
 /-- **The cap already names `A`'s shape, before any analysis of the gap.**
 
 `BoundedEmlCellApproachLarge`'s hypothesis is a cap on `exp (eml A B)`, and a cap on an exponential
