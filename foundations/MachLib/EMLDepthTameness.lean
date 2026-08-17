@@ -7355,6 +7355,55 @@ theorem exp_neg_le_inv_of_pos (a D : Real) (ha : 0 < a) (hD : 0 < D) :
   have l2 : D * exp (-x) * (1 : Real) = D * exp (-x) := by mach_ring
   rw [l2] at h3; exact h3
 
+/-! ## ▸ Second-order convexity, for the cancellation locus
+
+`exp_sub_exp_lower` is first order: `(u − v)·exp v ≤ exp u − exp v`. On the locus where the first
+order terms cancel exactly, that bound gives `0` and says nothing. The census measured `Θ(1/x²)`
+separation there, so a quadratic term is the missing analytic ingredient.
+
+MachLib's `exp` is axiomatised without a series — `one_add_le_exp` is all the convexity there is. The
+half-angle identity supplies the rest: `exp (z+z) = exp z · exp z ≥ (1+z)²`, which is a second-order
+bound with coefficient `1` on `z²` rather than the series' `1/2`, and that is fine for a *lower*
+bound. Parameterising by `z` with `y = z + z` keeps it division-free. -/
+
+/-- `exp (z+z) ≥ 1 + (z+z) + z²` for `z ≥ 0`. The half-angle square of `one_add_le_exp`. -/
+theorem exp_two_ge_quadratic {z : Real} (hz : 0 ≤ z) :
+    1 + (z + z) + z * z ≤ exp (z + z) := by
+  have h1 : (1 : Real) + z ≤ exp z := one_add_le_exp z
+  have hnn : (0 : Real) ≤ 1 + z := by
+    have v := add_le_add_wit (le_of_lt zero_lt_one_ax) hz
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  have h2 : (1 + z) * (1 + z) ≤ exp z * (1 + z) := mul_le_mul_of_nonneg_right h1 hnn
+  have h3 : exp z * (1 + z) ≤ exp z * exp z :=
+    mul_le_mul_of_nonneg_left h1 (le_of_lt (exp_pos z))
+  have h4 : exp z * exp z = exp (z + z) := (exp_add z z).symm
+  have h5 : (1 + z) * (1 + z) = 1 + (z + z) + z * z := by mach_ring
+  rw [h4] at h3; rw [h5] at h2
+  exact le_trans h2 h3
+
+/-- **The second-order companion to `exp_sub_exp_lower`.**
+
+    exp v · ((z+z) + z²)  ≤  exp (v + (z+z)) − exp v
+
+Where the first-order term is cancelled by a competitor, this leaves `exp v · z²` — a positive
+`Θ(1/x²)` separation when `z = Θ(1/x)`, which `double_exp_floor_dominated` then converts to the
+obligation's floor. That is the intended route through the cancellation locus. -/
+theorem exp_sub_exp_lower_quadratic (v : Real) {z : Real} (hz : 0 ≤ z) :
+    exp v * ((z + z) + z * z) ≤ exp (v + (z + z)) - exp v := by
+  have h2 := mul_le_mul_of_nonneg_left (exp_two_ge_quadratic hz) (le_of_lt (exp_pos v))
+  have hsplit : exp v * exp (z + z) = exp (v + (z + z)) := (exp_add v (z + z)).symm
+  rw [hsplit] at h2
+  have hexp : exp v * (1 + (z + z) + z * z) = exp v + exp v * ((z + z) + z * z) := by
+    mach_mpoly [exp v, z]
+  rw [hexp] at h2
+  have w := add_le_add_wit h2 (le_refl (-(exp v)))
+  have l : exp v + exp v * ((z + z) + z * z) + -(exp v) = exp v * ((z + z) + z * z) := by
+    mach_mpoly [exp v, z]
+  have r : exp (v + (z + z)) + -(exp v) = exp (v + (z + z)) - exp v := by
+    mach_mpoly [exp (v + (z + z)), exp v]
+  rw [l, r] at w; exact w
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
