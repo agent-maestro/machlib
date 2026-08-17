@@ -6795,6 +6795,123 @@ theorem boundedEmlCell_left_forms (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.d
   obtain ⟨Kb, hKb⟩ := depth_le_two_bounded_left_exp_bounded A B hA hB K XK hbnd
   exact depth_le_one_exp_bounded_forms A hA Kb hKb
 
+/-- **A cap on a ray already thins the admissible targets to two kinds.**
+
+The filter-before-enumeration step for `BoundedEmlCellApproachLarge`'s `1 < Q x` branch. `Q` there is
+squeezed into `(1, exp K]` — below the target and above `1` — and a compact window is a strong
+hypothesis, not a weak one. Applied *before* any classification it removes most of the grammar:
+
+* `var` cannot stay under a cap at all. Witness `1 + exp XM + exp M`, which clears `XM` and `1` and
+  strictly exceeds `M` by `self_le_exp` on each summand — the file's usual division-free maximum.
+* `eml P R` inherits `depth_le_two_bounded_left_exp_bounded` directly, because `(eml P R).eval` *is*
+  `exp (P x) − log (R x)`, so the cap is already that theorem's hypothesis. Its left child is then
+  constant or `c − log x`.
+* `const` is the remaining case and is already constant.
+
+So an admissible target is a constant tree, or an `eml` node whose left child is one of **two**
+shapes — the same pair `boundedEmlCell_left_forms` extracts for `A`, reached by the same route from
+the other side. The pair analysis the bounded cell needs is therefore finite in both coordinates.
+
+**Deliberately says nothing about `R`.** Bounding `log (R x)` needs the lower bound `1 < Q x` as well
+as the cap, and that is a separate step with a separate hypothesis; folding it in here would produce
+a lemma that cannot be reused by a caller holding only a cap. -/
+theorem bounded_ray_depth_two_left_forms (Q : EMLTree) (hQ : Q.depth ≤ 2) (M XM : Real)
+    (hcap : ∀ x : Real, XM ≤ x → 1 ≤ x → Q.eval x ≤ M) :
+    (∃ v : Real, ∀ x : Real, 0 < x → Q.eval x = v)
+    ∨ (∃ P R : EMLTree, Q = EMLTree.eml P R ∧ P.depth ≤ 1 ∧ R.depth ≤ 1 ∧
+        ((∃ α : Real, ∀ x : Real, 0 < x → P.eval x = α)
+          ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → P.eval x = c - log x))) := by
+  cases Q with
+  | const c => exact Or.inl ⟨c, fun _ _ => rfl⟩
+  | var =>
+    exfalso
+    -- `1 + exp XM + exp M` clears `XM` and `1`, and strictly beats `M`.
+    have hXM : XM ≤ 1 + exp XM + exp M := by
+      have v : (0 : Real) + exp XM + 0 ≤ 1 + exp XM + exp M :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos M))
+      have e : (0 : Real) + exp XM + 0 = exp XM := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp XM) v
+    have hone : (1 : Real) ≤ 1 + exp XM + exp M := by
+      have v : (1 : Real) + 0 + 0 ≤ 1 + exp XM + exp M :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XM)))
+          (le_of_lt (exp_pos M))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    have hgt : M < 1 + exp XM + exp M := by
+      have v : (0 : Real) + 0 + exp M < 1 + exp XM + exp M := by
+        have w := add_lt_add_left (add_lt_add_left (exp_pos XM) (1 : Real)) (exp M)
+        have l : exp M + (1 + 0) = 0 + 0 + exp M + 1 := by mach_ring
+        have r : exp M + (1 + exp XM) = 1 + exp XM + exp M := by mach_ring
+        rw [l, r] at w
+        have w2 := add_lt_add_left zero_lt_one_ax (0 + 0 + exp M)
+        have l2 : (0 : Real) + 0 + exp M + 0 = 0 + 0 + exp M := by mach_ring
+        rw [l2] at w2
+        exact lt_trans_ax w2 w
+      have e : (0 : Real) + 0 + exp M = exp M := by mach_ring
+      rw [e] at v; exact lt_of_le_of_lt (self_le_exp M) v
+    exact lt_irrefl_ax _ (lt_of_lt_of_le hgt (hcap _ hXM hone))
+  | eml P R =>
+    have hP : P.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hQ
+      have := Nat.le_max_left P.depth R.depth; omega
+    have hR : R.depth ≤ 1 := by
+      simp only [EMLTree.depth] at hQ
+      have := Nat.le_max_right P.depth R.depth; omega
+    obtain ⟨Kb, hKb⟩ := depth_le_two_bounded_left_exp_bounded P R hP hR M XM hcap
+    exact Or.inr ⟨P, R, rfl, hP, hR, depth_le_one_exp_bounded_forms P hP Kb hKb⟩
+
+/-- **Both children, from the two hypotheses the bounded cell already carries.**
+
+`bounded_ray_depth_two_left_forms` uses only the cap and so says nothing about `R`. The `1 < Q x`
+branch of `BoundedEmlCellApproachLarge` carries a *lower* bound too, and that is exactly what the
+right child needs: from `1 < exp (P x) − log (R x)` comes `log (R x) < exp (P x) − 1 ≤ Kb − 1`, an
+upper bound on a logarithm on a ray, which is `depth_le_one_log_bounded_forms_from`'s hypothesis.
+
+**Consequence — the remaining cell is a finite pair analysis.** An admissible `Q` is a constant tree,
+or `eml P R` with *each* child in the same two-element family `{const, c − log x}`. Together with
+`boundedEmlCell_left_forms` doing the same for `A`, the open branch ranges over
+
+    {2 shapes for A} × ({constant} ∪ {2 shapes for P} × {2 shapes for R})
+
+and nothing else. That is a search, not an asymptotic argument, and it is the reason to enumerate
+before conjecturing a general moving-target gap principle.
+
+**No counterexample is claimed or refuted here.** This bounds the space a counterexample could live
+in; it does not say the space is empty. The `c − log x` right child in particular is *not* discarded
+on the grounds that it goes negative far out on the ray — `log` of a nonpositive argument is whatever
+this base makes it, and an elimination that leaned on informal analysis there would be exactly the
+kind of step this corpus does not accept. -/
+theorem bounded_ray_depth_two_both_forms (Q : EMLTree) (hQ : Q.depth ≤ 2) (M XM : Real)
+    (hcap : ∀ x : Real, XM ≤ x → 1 ≤ x → Q.eval x ≤ M)
+    (hlo : ∀ x : Real, XM ≤ x → 1 ≤ x → 1 < Q.eval x) :
+    (∃ v : Real, ∀ x : Real, 0 < x → Q.eval x = v)
+    ∨ (∃ P R : EMLTree, Q = EMLTree.eml P R
+        ∧ ((∃ α : Real, ∀ x : Real, 0 < x → P.eval x = α)
+            ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → P.eval x = c - log x))
+        ∧ ((∃ β : Real, ∀ x : Real, 0 < x → R.eval x = β)
+            ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → R.eval x = c - log x))) := by
+  rcases bounded_ray_depth_two_left_forms Q hQ M XM hcap with hconst | ⟨P, R, rfl, hP, hR, hPform⟩
+  · exact Or.inl hconst
+  obtain ⟨Kb, hKb⟩ := depth_le_two_bounded_left_exp_bounded P R hP hR M XM hcap
+  refine Or.inr ⟨P, R, rfl, hPform, ?_⟩
+  refine depth_le_one_log_bounded_forms_from R hR XM (Kb - 1) ?_
+  intro x hxS hx1
+  -- `1 < exp (P x) − log (R x)` gives `log (R x) < exp (P x) − 1`
+  have hgt : (1 : Real) < exp (P.eval x) - log (R.eval x) := hlo x hxS hx1
+  have hstep := add_lt_add_left hgt (log (R.eval x))
+  have hl : log (R.eval x) + 1 = 1 + log (R.eval x) := by mach_ring
+  have hr : log (R.eval x) + (exp (P.eval x) - log (R.eval x)) = exp (P.eval x) := by
+    mach_mpoly [exp (P.eval x), log (R.eval x)]
+  rw [hl, hr] at hstep
+  -- and `exp (P x) ≤ Kb` caps it
+  have hcapx : (1 : Real) + log (R.eval x) ≤ Kb := le_of_lt (lt_of_lt_of_le hstep (hKb x hx1))
+  have hsub := add_le_add_wit hcapx (le_refl (-(1 : Real)))
+  have hl2 : (1 : Real) + log (R.eval x) + -1 = log (R.eval x) := by
+    mach_mpoly [log (R.eval x)]
+  have hr2 : Kb + -(1 : Real) = Kb - 1 := by mach_mpoly [Kb]
+  rw [hl2, hr2] at hsub; exact hsub
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
