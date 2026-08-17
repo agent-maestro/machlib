@@ -25,7 +25,9 @@ while it lived inside that case analysis; the dependency now runs the right way 
   a depth-2 tree bounded above has a **constant** left child, because a reciprocal beats a logarithm.
 * **The exponential gap.** `depth_le_one_exp_bounded_or_grows`: `exp (A x)` is bounded, or it
   eventually dominates `exp x`. **Nothing sits in between** — which is why no depth-≤1 exponential
-  grows linearly. `depth_le_one_exp_bounded_forms` names the two bounded forms.
+  grows linearly. `depth_le_one_exp_bounded_forms` names the two bounded forms, and
+  `boundedEmlCell_left_forms` feeds the open bounded cell's own cap into that chain — a cap on an
+  exponential caps its argument for free, so the obligation admits two shapes for `A`, not five.
 * **The logarithmic dichotomy.** `depth_le_one_log_bounded_or_unbounded` — deliberately weaker than
   the exp gap, because the log side has *three* growth classes (bounded, logarithmic, linear) and the
   mirror statement would be false. `depth_le_one_log_bounded_forms(_from)` names the bounded forms,
@@ -6715,6 +6717,35 @@ theorem expexp_gap_of_right_le_one (A B Q : EMLTree) (hB : B.depth ≤ 1) :
       mach_mpoly [exp (exp ((EMLTree.eml A B).eval x)), Q.eval x]
     rw [e1, e2] at v; exact v
   exact le_trans hu (le_trans hT hQ)
+
+/-- **The cap already names `A`'s shape, before any analysis of the gap.**
+
+`BoundedEmlCellApproachLarge`'s hypothesis is a cap on `exp (eml A B)`, and a cap on an exponential
+is a cap on its argument for free: `self_le_exp` gives `(eml A B) x ≤ exp ((eml A B) x) ≤ K`, with no
+`log` and no positivity side-condition. That is exactly the input
+`depth_le_two_bounded_left_exp_bounded` consumes, so the obligation's own hypothesis forces
+`exp (A x)` bounded, and `depth_le_one_exp_bounded_forms` then leaves **two** shapes for `A` where the
+statement admits five.
+
+**Why this is worth recording separately.** The obligation is stated for arbitrary depth-≤1 `A`, and
+the circularity noted below is a fact about the *conversion* route — reverse convexity against
+`exponent_gap_of_value_gap` — not about the obligation. Those two theorems are inverses, so no
+further conversion helps; but a conversion is not the only move available, and the hypothesis had
+never been mined for structure. `A` constant and `A = c − log x` are different enough functions that
+the surviving cases can be attacked separately rather than uniformly.
+
+Not itself progress on the bound. It is the narrowing that says which two problems the bound is. -/
+theorem boundedEmlCell_left_forms (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (K XK : Real) (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    (∃ α : Real, ∀ x : Real, 0 < x → A.eval x = α)
+    ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → A.eval x = c - log x) := by
+  have hbnd : ∀ x : Real, XK ≤ x → 1 ≤ x → exp (A.eval x) - log (B.eval x) ≤ K := by
+    intro x hx _
+    have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+    have h2 := le_trans (self_le_exp ((EMLTree.eml A B).eval x)) (hK x hx)
+    rw [hval] at h2; exact h2
+  obtain ⟨Kb, hKb⟩ := depth_le_two_bounded_left_exp_bounded A B hA hB K XK hbnd
+  exact depth_le_one_exp_bounded_forms A hA Kb hKb
 
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
