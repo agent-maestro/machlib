@@ -6912,6 +6912,50 @@ theorem bounded_ray_depth_two_both_forms (Q : EMLTree) (hQ : Q.depth ≤ 2) (M X
   have hr2 : Kb + -(1 : Real) = Kb - 1 := by mach_mpoly [Kb]
   rw [hl2, hr2] at hsub; exact hsub
 
+/-- **The target never gets doubly-exponentially close to `1`.** The scale fact behind the whole
+bounded cell, and the reason a counterexample search over the surviving shapes finds nothing.
+
+`depth_le_one_log_le_linear` caps a depth-≤1 logarithm at `x + C`. With `exp (A x) > 0` that gives
+`(eml A B) x ≥ −x − C`, so `u = exp ((eml A B) x) ≥ exp (−x − C)`, and `1 + u ≤ exp u` finishes:
+
+    exp (exp ((eml A B) x)) − 1  ≥  exp (−x − C)
+
+**Why this settles the falsification question rather than merely decorating it.** The obligation asks
+for a floor of `exp (−C − exp x)` — *doubly* exponentially small. Every scale this grammar can build
+is at worst *singly* exponential, and this lemma is where that ceiling comes from: `log (B x)` cannot
+grow faster than linearly, so the node cannot fall faster than `−x`, so the target cannot approach
+its limit faster than `e^{−x}`. A gap that decays like `e^{−kx}` for any `k` still clears
+`exp (−C − exp x)` with room to spare.
+
+**No `A` hypothesis.** Only positivity of `exp (A x)` is used, so this holds for every depth of `A` —
+the constraint that matters is entirely on the right child. Stated that way because the caller in the
+bounded cell has `A` restricted to two shapes and does not need to spend them here. -/
+theorem target_above_one_singly_exponential (A B : EMLTree) (hB : B.depth ≤ 1) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x →
+      exp (-x - C) ≤ exp (exp ((EMLTree.eml A B).eval x)) - 1 := by
+  obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B hB
+  refine ⟨C, ?_⟩
+  intro x hx1
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  have hE : -x - C ≤ (EMLTree.eml A B).eval x := by
+    rw [hval]
+    have v := add_le_add_wit (le_of_lt (exp_pos (A.eval x))) (neg_le_neg_wit (hC x hx1))
+    have l : (0 : Real) + -(x + C) = -x - C := by mach_mpoly [x, C]
+    have r : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+      mach_mpoly [exp (A.eval x), log (B.eval x)]
+    rw [l, r] at v; exact v
+  have hu : exp (-x - C) ≤ exp ((EMLTree.eml A B).eval x) := exp_monotone hE
+  have hT := one_add_le_exp (exp ((EMLTree.eml A B).eval x))
+  have hstep := add_le_add_wit hu (le_refl (0 : Real))
+  have hchain : 1 + exp (-x - C) ≤ exp (exp ((EMLTree.eml A B).eval x)) :=
+    le_trans (add_le_add_wit (le_refl (1 : Real)) hu) hT
+  have hsub := add_le_add_wit hchain (le_refl (-(1 : Real)))
+  have l2 : (1 : Real) + exp (-x - C) + -1 = exp (-x - C) := by mach_mpoly [exp (-x - C)]
+  have r2 : exp (exp ((EMLTree.eml A B).eval x)) + -(1 : Real)
+      = exp (exp ((EMLTree.eml A B).eval x)) - 1 := by
+    mach_mpoly [exp (exp ((EMLTree.eml A B).eval x))]
+  rw [l2, r2] at hsub; exact hsub
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
