@@ -7439,6 +7439,111 @@ theorem quadratic_separation_of_linear_dominance (v a : Real) {z : Real} (hz : 0
     mach_mpoly [exp (v + (z + z)), exp v, a]
   rw [l, r] at w; exact w
 
+/-- **The target's rise, through BOTH exponentials, with the quadratic term surviving.**
+
+The instantiation step. `moving_Q_eventual_form` puts the node at `E = E∞ + κ·w` with `w = 1/x`;
+the target is `exp (exp E)`, so the linear term has to be pushed through *two* exponentials, not one.
+Writing `v := exp E∞`:
+
+    T = exp (v · exp (κ·w))        L_T = exp v
+
+`one_add_le_exp` at `κw` gives `v·exp(κw) − v ≥ v·κ·w`, so the increment on the outer exponential is
+at least `v·κ·w`. Feeding half of that to `exp_sub_exp_lower_quadratic` and letting `exp_monotone`
+absorb the slack — the true increment is only ever *larger* — yields
+
+    exp v · z²  ≤  T − L_T − a       where  z = (v·κ·w)/2
+
+whenever `a ≤ exp v · (v·κ·w)`, which is the dominance condition and is **independent of `x`**: it
+reads `a_Q ≤ exp v · v · κ` once the common factor `w` is cancelled.
+
+**The equality case is included**, which is the whole point. `z² = Θ(w²) = Θ(1/x²)`, matching what
+the census measured on the locus, and `double_exp_floor_dominated` takes it from there.
+
+The increment need not equal `z+z`: `exp_sub_exp_lower_quadratic` is applied at the *smaller*
+increment and `exp_monotone` lifts it, so no exact halving of an opaque quantity is required and the
+only reciprocal is `1/(1+1)` on a constant. -/
+theorem target_rise_quadratic (v κ w a : Real) (hv : 0 < v) (hκ : 0 < κ) (hw : 0 < w)
+    (hdom : a ≤ exp v * (v * κ * w)) :
+    exp v * ((v * κ * w * (1 / (1 + 1))) * (v * κ * w * (1 / (1 + 1))))
+      ≤ exp (v * exp (κ * w)) - exp v - a := by
+  have h2pos : (0 : Real) < 1 + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax 1
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at u; exact lt_trans_ax zero_lt_one_ax u
+  have hhalf : (1 + 1 : Real) * (1 / (1 + 1)) = 1 := mul_inv _ (ne_of_gt h2pos)
+  have hkw : (0 : Real) ≤ v * κ * w :=
+    le_of_lt (mul_pos (mul_pos hv hκ) hw)
+  have hz0 : (0 : Real) ≤ v * κ * w * (1 / (1 + 1)) :=
+    le_of_lt (mul_pos (mul_pos (mul_pos hv hκ) hw) (one_div_pos_of_pos h2pos))
+  -- the two halves rebuild the whole
+  have hzz : v * κ * w * (1 / (1 + 1)) + v * κ * w * (1 / (1 + 1)) = v * κ * w := by
+    have e : v * κ * w * (1 / (1 + 1)) + v * κ * w * (1 / (1 + 1))
+        = v * κ * w * ((1 + 1) * (1 / (1 + 1))) := by mach_ring
+    rw [e, hhalf]
+    mach_ring
+  have hcond : a ≤ exp v * (v * κ * w * (1 / (1 + 1)) + v * κ * w * (1 / (1 + 1))) := by
+    rw [hzz]; exact hdom
+  have hq := quadratic_separation_of_linear_dominance v a hz0 hcond
+  rw [hzz] at hq
+  -- the true increment is at least `v·κ·w`, so `exp_monotone` lifts the bound
+  have hinc : v + v * κ * w ≤ v * exp (κ * w) := by
+    have h1 := mul_le_mul_of_nonneg_left (one_add_le_exp (κ * w)) (le_of_lt hv)
+    have e : v * (1 + κ * w) = v + v * κ * w := by mach_mpoly [v, κ, w]
+    rw [e] at h1; exact h1
+  have hmono : exp (v + v * κ * w) ≤ exp (v * exp (κ * w)) := exp_monotone hinc
+  refine le_trans hq ?_
+  have step := add_le_add_wit hmono (le_refl (-(exp v) + -a))
+  have l : exp (v + v * κ * w) + (-(exp v) + -a) = exp (v + v * κ * w) - exp v - a := by
+    mach_mpoly [exp (v + v * κ * w), exp v, a]
+  have r : exp (v * exp (κ * w)) + (-(exp v) + -a) = exp (v * exp (κ * w)) - exp v - a := by
+    mach_mpoly [exp (v * exp (κ * w)), exp v, a]
+  rw [l, r] at step; exact step
+
+/-- **The target's rise, bounded ABOVE, through both exponentials.**
+
+The mirror of `target_rise_quadratic`, and the input the sub-dominant sub-case needs. Two
+applications of `exp_sub_exp_upper`, one per exponential:
+
+    exp (κw) − 1                 ≤ κw · exp (κw)               (inner, at v = 0)
+    exp (v·exp (κw)) − exp v     ≤ (v·exp (κw) − v) · exp (v·exp (κw))   (outer)
+
+Composing them puts the rise below `v·κ·w · exp (κw) · exp (v·exp (κw))`, whose leading factor is
+`w` and whose remaining factors fall to `exp v` as `w → 0`. Against `Q`'s rise of exactly `a·w`, a
+coefficient `a` strictly above `v·κ·exp v` therefore forces `Q > T` — the cell's own hypothesis
+fails and that sub-case is empty.
+
+**Both bounds are now in hand and they bracket the same quantity**, which is what makes the
+equal-limits regime a decidable dichotomy rather than an open question:
+
+| | |
+| --- | --- |
+| `a ≤ exp v · v · κ` | `target_rise_quadratic` — `Θ(1/x²)` separation, equality included |
+| `a > exp v · v · κ` | this bound — `Q > T`, the sub-case is vacuous |
+
+What is *not* yet built is the second row's final step: choosing an explicit `w₀` at which the
+falling factors are close enough to `exp v` for `a` to win. That is a quantitative continuity
+argument — `exp (κw) ≤ 1 + κw·e` and its outer analogue — and it is arithmetic grinding rather than
+a missing idea. Named here rather than sketched in a comment somewhere else. -/
+theorem target_rise_upper (v κ w : Real) (hv : 0 < v) :
+    exp (v * exp (κ * w)) - exp v
+      ≤ v * (κ * w * exp (κ * w)) * exp (v * exp (κ * w)) := by
+  -- inner: `exp (κw) − 1 ≤ κw · exp (κw)`
+  have hin : exp (κ * w) - 1 ≤ κ * w * exp (κ * w) := by
+    have h := exp_sub_exp_upper (κ * w) 0
+    rw [exp_zero] at h
+    have e : κ * w - 0 = κ * w := by mach_mpoly [κ, w]
+    rw [e] at h; exact h
+  -- scale it by `v`
+  have hscaled : v * exp (κ * w) - v ≤ v * (κ * w * exp (κ * w)) := by
+    have h := mul_le_mul_of_nonneg_left hin (le_of_lt hv)
+    have e : v * (exp (κ * w) - 1) = v * exp (κ * w) - v := by
+      mach_mpoly [v, exp (κ * w)]
+    rw [e] at h; exact h
+  -- outer
+  have hout := exp_sub_exp_upper (v * exp (κ * w)) v
+  refine le_trans hout ?_
+  exact mul_le_mul_of_nonneg_right hscaled (le_of_lt (exp_pos (v * exp (κ * w))))
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
