@@ -7696,6 +7696,70 @@ theorem shrink_below_two_bounds (A S : Real) (hA : 0 < A) (hS : 0 < S) :
     have e3 : S * (1 : Real) = S := by mach_ring
     rw [e3] at hscaled; exact hscaled
 
+/-- **The sub-dominant sub-case, analytically: `Q` overtakes the target.**
+
+Takes the two smallness conditions as *hypotheses* rather than constructing a threshold, which keeps
+the analysis separate from the reciprocal arithmetic that supplies it (`shrink_below_two_bounds`).
+Writing `σ := κw·(1 + v·e)` and `P := v·κ·exp v`:
+
+    σ ≤ 1                    so `exp_le_one_add_scaled` applies to `σ`
+    (P·e)·σ < a − P          so the linear slack cannot close the gap
+
+`target_rise_upper_linearised` bounds the target's rise by `v·κ·exp (v+σ)·w`, and `exp (v+σ)` is
+`exp v · exp σ ≤ exp v·(1 + σ·e)`. The coefficient is then `P + (P·e)·σ`, which the second hypothesis
+puts strictly below `a`. Multiplying by `w > 0` gives `T − L_T < a·w = Q − L_T`, so **`Q` is above the
+target** and the cell's hypothesis `Q x < T x` is false.
+
+That is the complement of `target_rise_quadratic`'s dominance condition, so the equal-limits regime is
+now covered on both sides: dominance yields a `Θ(1/x²)` separation, sub-dominance yields an empty
+region. -/
+theorem subdominant_step (v κ a w : Real) (hv : 0 < v) (hκ : 0 < κ) (hw : 0 < w)
+    (hσ1 : κ * w * (1 + v * exp 1) ≤ 1)
+    (hσS : v * κ * exp v * exp 1 * (κ * w * (1 + v * exp 1)) < a - v * κ * exp v) :
+    v * (κ * w * exp (κ * w)) * exp (v * exp (κ * w)) < a * w := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have hkw : (0 : Real) < κ * w := mul_pos hκ hw
+  have hone_v : (1 : Real) ≤ 1 + v * exp 1 := by
+    have u := add_le_add_wit (le_refl (1 : Real)) (le_of_lt (mul_pos hv hE1))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at u; exact u
+  have hσ0 : (0 : Real) ≤ κ * w * (1 + v * exp 1) :=
+    le_of_lt (mul_pos hkw (lt_of_lt_of_le zero_lt_one_ax hone_v))
+  -- `κw ≤ σ ≤ 1`
+  have hkw1 : κ * w ≤ 1 := by
+    have u := mul_le_mul_of_nonneg_left hone_v (le_of_lt hkw)
+    have e : κ * w * (1 : Real) = κ * w := by mach_ring
+    rw [e] at u; exact le_trans u hσ1
+  -- the linearised upper bound
+  have hup := target_rise_upper_linearised v κ w hv hκ hw hkw1
+  -- `exp (v + σ) ≤ exp v * (1 + σ * e)`
+  have hexp : exp (v + κ * w * (1 + v * exp 1))
+      ≤ exp v * (1 + κ * w * (1 + v * exp 1) * exp 1) := by
+    have hsplit : exp (v + κ * w * (1 + v * exp 1)) = exp v * exp (κ * w * (1 + v * exp 1)) :=
+      exp_add _ _
+    rw [hsplit]
+    exact mul_le_mul_of_nonneg_left (exp_le_one_add_scaled hσ0 hσ1) (le_of_lt (exp_pos v))
+  -- coefficient bound
+  have hcoef : v * κ * exp (v + κ * w * (1 + v * exp 1))
+      ≤ v * κ * exp v + v * κ * exp v * exp 1 * (κ * w * (1 + v * exp 1)) := by
+    have h := mul_le_mul_of_nonneg_left hexp (le_of_lt (mul_pos hv hκ))
+    have e : v * κ * (exp v * (1 + κ * w * (1 + v * exp 1) * exp 1))
+        = v * κ * exp v + v * κ * exp v * exp 1 * (κ * w * (1 + v * exp 1)) := by
+      mach_mpoly [v, κ, w, exp v, exp 1]
+    have e2 : v * κ * exp (v + κ * w * (1 + v * exp 1))
+        = v * κ * exp (v + κ * w * (1 + v * exp 1)) := rfl
+    rw [e] at h; exact h
+  -- strictly below `a`
+  have hlt : v * κ * exp (v + κ * w * (1 + v * exp 1)) < a := by
+    refine lt_of_le_of_lt hcoef ?_
+    have u := add_lt_add_left hσS (v * κ * exp v)
+    have r : v * κ * exp v + (a - v * κ * exp v) = a := by
+      mach_mpoly [a, v, κ, exp v]
+    rw [r] at u; exact u
+  -- scale by `w`
+  have hscaled := mul_lt_mul_of_pos_right hlt hw
+  exact lt_of_le_of_lt hup hscaled
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
