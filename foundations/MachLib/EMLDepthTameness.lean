@@ -9659,6 +9659,29 @@ theorem node_form_classification (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.de
       rw [hβ x hx0]
       exact log_exp_sub_log_ge_linear hx
 
+/-- **The fifth shape's sandwich is too LOOSE, and this is the tight upper half.**
+
+    exp (κ·w)·w  ≤  (1 + κ·w·e)·w        for κ·w ≤ 1
+
+`node_logA_varB_bounds` brackets the fifth node shape between `w` and `exp κ · w`. That is enough to
+route its `LQ ≠ 1` branches, and **not** enough for `LQ = 1`.
+
+There the comparison is against `Q`'s coefficient `aQ`, and the two decaying lemmas want
+`aQ ≤ M` (dominant, `M := 1` from the lower bracket) or `M < aQ` (vacuity, `M := exp κ` from the
+upper). Between them sits `1 < aQ ≤ exp κ`, which **neither** covers — a real gap, not a routing
+choice.
+
+The bracket is the wrong shape for that question. `exp (κ·w) → 1` as `w → 0`, so the node's true
+coefficient is `1`, not something in `[1, exp κ]`; the constant upper bracket throws away exactly the
+convergence the comparison needs. `exp_le_one_add_scaled` keeps it: the coefficient is `1 + κ·w·e`,
+which tends to `1`, so any `aQ > 1` eventually wins and the gap closes.
+
+Recorded as its own lemma because the loose bracket was mine, was used twice before this was noticed,
+and reads as sufficient until the equal-limits case asks it a question it cannot answer. -/
+theorem node_logA_varB_tight (κ w : Real) (hw : 0 < w) (hκw : κ * w ≤ 1) (hκw0 : 0 ≤ κ * w) :
+    exp (κ * w) * w ≤ (1 + κ * w * exp 1) * w :=
+  mul_le_mul_of_nonneg_right (exp_le_one_add_scaled hκw0 hκw) (le_of_lt hw)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
