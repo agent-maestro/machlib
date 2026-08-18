@@ -9207,6 +9207,150 @@ theorem cell_of_rising_target_upper_Q (A B Q : EMLTree) (v κ LQ aQ XT XQ : Real
     rw [e] at u; exact u
   exact le_trans (le_of_lt hTlt) hQge
 
+/-- **`Q` below `1`: empty, and the target is irrelevant.**
+
+The cheapest branch in the whole assembly. `Q → LQ < 1` from above, so `Q x ≤ 1` past
+`1 + aQ·(1/(1 − LQ))` and the guard `1 < Q x` fails. **No hypothesis about the target appears** —
+whatever it does, this region is empty, so this one lemma serves the decaying trichotomy and any
+other. -/
+theorem cell_of_Q_below_one (A B Q : EMLTree) (LQ aQ XQ : Real)
+    (haQ : 0 < aQ) (hLQ : LQ < 1)
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hδ : (0 : Real) < 1 - LQ := by
+    have u := add_lt_add_left hLQ (-LQ)
+    have l : -LQ + LQ = 0 := by mach_ring
+    have r : -LQ + 1 = 1 - LQ := by mach_mpoly [LQ]
+    rw [l, r] at u; exact u
+  refine boundedEmlCell_vacuous_of_small_Q A B Q (1 + exp XQ + aQ * (1 / (1 - LQ))) ?_
+  intro x hx
+  have hone : (1 : Real) ≤ x := by
+    have v0 : (1 : Real) + 0 + 0 ≤ 1 + exp XQ + aQ * (1 / (1 - LQ)) :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XQ)))
+        (le_of_lt (mul_pos haQ (one_div_pos_of_pos hδ)))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact le_trans v0 hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hXQx : XQ ≤ x := by
+    have v0 : (0 : Real) + exp XQ + 0 ≤ 1 + exp XQ + aQ * (1 / (1 - LQ)) :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (mul_pos haQ (one_div_pos_of_pos hδ)))
+    have e : (0 : Real) + exp XQ + 0 = exp XQ := by mach_ring
+    rw [e] at v0; exact le_trans (self_le_exp XQ) (le_trans v0 hx)
+  have hthr : aQ * (1 / (1 - LQ)) ≤ x := by
+    have v0 : (0 : Real) + 0 + aQ * (1 / (1 - LQ)) ≤ 1 + exp XQ + aQ * (1 / (1 - LQ)) :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XQ)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + aQ * (1 / (1 - LQ)) = aQ * (1 / (1 - LQ)) := by mach_ring
+    rw [e] at v0; exact le_trans v0 hx
+  -- `aQ ≤ δ x`, hence `aQ (1/x) ≤ δ`
+  have hδx : aQ ≤ (1 - LQ) * x := by
+    have h := mul_le_mul_of_nonneg_right hthr (le_of_lt hδ)
+    have l : aQ * (1 / (1 - LQ)) * (1 - LQ) = aQ * ((1 - LQ) * (1 / (1 - LQ))) := by mach_ring
+    rw [l, mul_inv _ (ne_of_gt hδ)] at h
+    have e : aQ * (1 : Real) = aQ := by mach_ring
+    rw [e] at h
+    have r : x * (1 - LQ) = (1 - LQ) * x := by mach_ring
+    rw [r] at h; exact h
+  have hscaled := mul_le_mul_of_nonneg_right hδx (le_of_lt (one_div_pos_of_pos hxpos))
+  have l2 : (1 - LQ) * x * (1 / x) = (1 - LQ) * (x * (1 / x)) := by mach_ring
+  rw [l2, mul_inv x (ne_of_gt hxpos)] at hscaled
+  have e2 : (1 - LQ) * (1 : Real) = 1 - LQ := by mach_ring
+  rw [e2] at hscaled
+  rw [hQ x hXQx]
+  have u := add_le_add_wit (le_refl LQ) hscaled
+  have r : LQ + (1 - LQ) = 1 := by mach_mpoly [LQ]
+  rw [r] at u; exact u
+
+/-- **Decaying target, `Q` above `1`: the region is empty.**
+
+Mirror of `cell_of_rising_target_upper_Q`, one level simpler because the limit is the constant `1`
+rather than `exp v`. `exp_le_one_add_scaled` caps `T ≤ 1 + M·w·e` on `M·w ≤ 1`, and
+`shrink_below_two_bounds` at `A := M`, `S := (LQ − 1)·(1/e)` gives one `w` with `M·w ≤ 1` and
+`M·w·e < LQ − 1`, so `T < LQ ≤ Q`. Fourth use of that device. -/
+theorem cell_of_decaying_target_upper_Q (A B Q : EMLTree) (M LQ aQ XT XQ : Real)
+    (hM : 0 < M) (haQ : 0 < aQ) (hsep : 1 < LQ)
+    (hT : ∀ x : Real, XT ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = exp (M * (1 / x)))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have hδ : (0 : Real) < LQ - 1 := by
+    have u := add_lt_add_left hsep (-(1 : Real))
+    have l : -(1 : Real) + 1 = 0 := by mach_ring
+    have r : -(1 : Real) + LQ = LQ - 1 := by mach_mpoly [LQ]
+    rw [l, r] at u; exact u
+  have hS : (0 : Real) < (LQ - 1) * (1 / exp 1) := mul_pos hδ (one_div_pos_of_pos hE1)
+  obtain ⟨hD, hlt1, hltS⟩ := shrink_below_two_bounds M ((LQ - 1) * (1 / exp 1)) hM hS
+  refine cell_of_Q_above_target A B Q
+    (1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1)) ?_
+  intro x hx
+  have grab : ∀ Y : Real,
+      Y ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) → Y ≤ x :=
+    fun Y hY => le_trans hY hx
+  have hone : (1 : Real) ≤ x := by
+    refine grab 1 ?_
+    have v0 : (1 : Real) + 0 + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact v0
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hwpos : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hXTx : XT ≤ x := by
+    refine grab XT (le_trans (self_le_exp XT) ?_)
+    have v0 : (0 : Real) + exp XT + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (0 : Real) + exp XT + 0 + 0 = exp XT := by mach_ring
+    rw [e] at v0; exact v0
+  have hXQx : XQ ≤ x := by
+    refine grab XQ (le_trans (self_le_exp XQ) ?_)
+    have v0 : (0 : Real) + 0 + exp XQ + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_refl _)) (le_of_lt hD)
+    have e : (0 : Real) + 0 + exp XQ + 0 = exp XQ := by mach_ring
+    rw [e] at v0; exact v0
+  have hDx : M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1 ≤ x := by
+    refine grab _ ?_
+    have v0 : (0 : Real) + 0 + 0 + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1)
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_of_lt (exp_pos XQ))) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1)
+        = M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1 := by mach_ring
+    rw [e] at v0; exact v0
+  have hwle : 1 / x ≤ 1 / (M + M * (1 / ((LQ - 1) * (1 / exp 1))) + 1) := one_div_antitone hD hDx
+  have hMw1 : M * (1 / x) ≤ 1 :=
+    le_of_lt (lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hM)) hlt1)
+  have hMwS : M * (1 / x) < (LQ - 1) * (1 / exp 1) :=
+    lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hM)) hltS
+  have hMwe : M * (1 / x) * exp 1 < LQ - 1 := by
+    have h := mul_lt_mul_of_pos_right hMwS hE1
+    have r : (LQ - 1) * (1 / exp 1) * exp 1 = (LQ - 1) * (exp 1 * (1 / exp 1)) := by mach_ring
+    rw [r, mul_inv _ (ne_of_gt hE1)] at h
+    have e : (LQ - 1) * (1 : Real) = LQ - 1 := by mach_ring
+    rw [e] at h; exact h
+  rw [hT x hXTx, hQ x hXQx]
+  have hMw0 : (0 : Real) ≤ M * (1 / x) := le_of_lt (mul_pos hM hwpos)
+  have hTle : exp (M * (1 / x)) ≤ 1 + M * (1 / x) * exp 1 := exp_le_one_add_scaled hMw0 hMw1
+  have hlt : exp (M * (1 / x)) < LQ := by
+    refine lt_of_le_of_lt hTle ?_
+    have u := add_lt_add_left hMwe (1 : Real)
+    have r : (1 : Real) + (LQ - 1) = LQ := by mach_mpoly [LQ]
+    rw [r] at u; exact u
+  have hQge : LQ ≤ LQ + aQ * (1 / x) := by
+    have u := add_le_add_wit (le_refl LQ) (le_of_lt (mul_pos haQ hwpos))
+    have e : LQ + (0 : Real) = LQ := by mach_ring
+    rw [e] at u; exact u
+  exact le_trans (le_of_lt hlt) hQge
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
