@@ -7808,6 +7808,77 @@ theorem subdominant_coefficient_vacuous (v κ a : Real) (hv : 0 < v) (hκ : 0 < 
   rw [el, er] at h2
   exact h2
 
+/-! ## ▸ Wiring the pieces to the obligation
+
+The analysis is complete on every branch; what remains is case-splitting the actual trees and reading
+the constants off. Two facts do most of the bookkeeping.
+
+**The interface mismatch is real and worth naming.** `bounded_ray_depth_two_both_forms` filters `Q` to
+five shapes, but it wants `1 < Q x ≤ M` on a *ray*, and the obligation supplies those two facts only
+*guarded*, inside `∀ x, X₀ ≤ x → 1 < Q x → Q x < T x → …`. A hypothesis available at each point of a
+set is not a hypothesis available on a ray, and the filter cannot be applied to the obligation as
+stated. The split therefore has to be unconditional — `depth_le_two_normal_form` — with the guarded
+facts used pointwise inside each case. That is a larger case space than the filtered five, and it is
+exactly the kind of mismatch a finite assembly exposes. -/
+
+/-- **The cap bounds the target itself, on the whole ray.** `exp (eml A B) ≤ K` gives
+`exp (exp (eml A B)) ≤ exp K` by monotonicity — the only consequence of the cap that survives
+unguarded, and the one every vacuity argument below runs on. -/
+theorem target_le_exp_cap (A B : EMLTree) (K XK : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    ∀ x : Real, XK ≤ x → exp (exp ((EMLTree.eml A B).eval x)) ≤ exp K :=
+  fun x hx => exp_monotone (hK x hx)
+
+/-- **Every `Q` that outgrows the cap makes the cell vacuous.**
+
+`Q x < T x ≤ exp K` is impossible once `Q x ≥ exp K`, so the guarded hypotheses are contradictory and
+the conclusion holds for want of a case. This retires `Q = var` and every other shape whose value
+rises past a constant — which, on the depth-≤2 grammar, is most of them.
+
+Stated on `Q`'s eventual size rather than on its shape, so one application covers all of them. -/
+theorem boundedEmlCell_vacuous_of_large_Q (A B Q : EMLTree) (K XK X₁ : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K)
+    (hbig : ∀ x : Real, X₁ ≤ x → exp K ≤ Q.eval x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  refine ⟨0, 1 + exp XK + exp X₁, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 ≤ 1 + exp XK + exp X₁ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XK)))
+        (le_of_lt (exp_pos X₁))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx _ hlt
+  exfalso
+  have hXKx : XK ≤ x := by
+    have v : (0 : Real) + exp XK + 0 ≤ 1 + exp XK + exp X₁ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos X₁))
+    have e : (0 : Real) + exp XK + 0 = exp XK := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XK) (le_trans v hx)
+  have hX₁x : X₁ ≤ x := by
+    have v : (0 : Real) + 0 + exp X₁ ≤ 1 + exp XK + exp X₁ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XK)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp X₁ = exp X₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
+  -- `Q x < T x ≤ exp K ≤ Q x`
+  exact lt_irrefl_ax _
+    (lt_of_lt_of_le hlt (le_trans (target_le_exp_cap A B K XK hK x hXKx) (hbig x hX₁x)))
+
+/-- **First casualty of the unconditional split: `Q = var`.**
+
+`var.eval x = x`, which passes `exp K` at `x = exp K` and never returns, so
+`boundedEmlCell_vacuous_of_large_Q` applies with `X₁ := exp K` and the whole shape is retired in one
+line. The same argument disposes of `exp x − d` and `exp x − log x` in either child position; only
+shapes that stay bounded reach the analytic branches. -/
+theorem boundedEmlCell_var_Q (A B : EMLTree) (K XK : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < EMLTree.var.eval x →
+      EMLTree.var.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - EMLTree.var.eval x :=
+  boundedEmlCell_vacuous_of_large_Q A B EMLTree.var K XK (exp K) hK (fun _ hx => hx)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
