@@ -8841,6 +8841,87 @@ theorem cell_of_rising_target_subdominant (A B Q : EMLTree) (v κ aQ XT XQ : Rea
     rw [l] at u; exact u
   exact lt_irrefl_ax _ (lt_trans_ax hguard hcontra)
 
+/-- **The right-child dichotomy: either the cell is already proved, or `R` is one of two shapes.**
+
+Mirror of `boundedEmlCell_left_dichotomy`, and the step that finishes the `Q` side. Three of `R`'s
+five forms send `log (R x)` past `Kb − 1`, which drives `Q = exp (P x) − log (R x)` below the guard
+`1 < Q x` and empties the region:
+
+* `var` — `log x ≥ Kb − 1` past `exp (Kb − 1)`, by `log_ge_sub_one_of_exp_pred_le`.
+* `exp x − d` — `log (R x) ≥ x − 1` by `log_exp_sub_const_ge_linear`, past `d + 1`.
+* `exp x − log x` — likewise by `log_exp_sub_log_ge_linear`.
+
+The surviving two are `const` and `c − log x`, matching the left child. Note the mechanism differs
+from the left dichotomy's: there `Q` grew past the cap, here it falls below `1`. Same conclusion, two
+guards. -/
+theorem boundedEmlCell_right_dichotomy (A B P R : EMLTree) (hR : R.depth ≤ 1) (Kb XP : Real)
+    (hP : ∀ x : Real, XP ≤ x → exp (P.eval x) ≤ Kb) :
+    (∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+        (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+          exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x)
+    ∨ (∃ β : Real, ∀ x : Real, 0 < x → R.eval x = β)
+    ∨ (∃ cR : Real, 0 < cR ∧ ∀ x : Real, 0 < x → R.eval x = cR - log x) := by
+  rcases depth_le_one_classification R hR with
+      ⟨β, hb⟩ | hb | ⟨cR, hcR0, hb⟩ | ⟨d, hb⟩ | hb
+  · exact Or.inr (Or.inl ⟨β, hb⟩)
+  · -- `R = var`
+    refine Or.inl (boundedEmlCell_vacuous_of_large_log_right A B P R Kb XP (exp (Kb - 1)) hP ?_)
+    intro x hx
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le (exp_pos (Kb - 1)) hx
+    rw [hb x hx0]
+    have h := log_ge_sub_one_of_exp_pred_le (x := Kb) (z := x) hx
+    exact h
+  · exact Or.inr (Or.inr ⟨cR, hcR0, hb⟩)
+  · -- `R = exp x − d`
+    refine Or.inl (boundedEmlCell_vacuous_of_large_log_right A B P R Kb XP
+      (1 + exp (d + 1) + exp Kb) hP ?_)
+    intro x hx
+    have hd1 : d + 1 ≤ x := by
+      have v : (0 : Real) + exp (d + 1) + 0 ≤ 1 + exp (d + 1) + exp Kb :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos Kb))
+      have e : (0 : Real) + exp (d + 1) + 0 = exp (d + 1) := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp (d + 1)) (le_trans v hx)
+    have hKb : Kb ≤ x := by
+      have v : (0 : Real) + 0 + exp Kb ≤ 1 + exp (d + 1) + exp Kb :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos (d + 1))))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp Kb = exp Kb := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp Kb) (le_trans v hx)
+    have hone : (1 : Real) ≤ x := by
+      have v : (1 : Real) + 0 + 0 ≤ 1 + exp (d + 1) + exp Kb :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos (d + 1))))
+          (le_of_lt (exp_pos Kb))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact le_trans v hx
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+    rw [hb x hx0]
+    refine le_trans ?_ (log_exp_sub_const_ge_linear d hd1)
+    have v := add_le_add_wit hKb (le_refl (-(1 : Real)))
+    have l : Kb + -(1 : Real) = Kb - 1 := by mach_mpoly [Kb]
+    have r : x + -(1 : Real) = x - 1 := by mach_mpoly [x]
+    rw [l, r] at v; exact v
+  · -- `R = exp x − log x`
+    refine Or.inl (boundedEmlCell_vacuous_of_large_log_right A B P R Kb XP
+      (1 + exp Kb) hP ?_)
+    intro x hx
+    have hone : (1 : Real) ≤ x := by
+      have v : (1 : Real) + 0 ≤ 1 + exp Kb := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos Kb))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v; exact le_trans v hx
+    have hKb : Kb ≤ x := by
+      have v : (0 : Real) + exp Kb ≤ 1 + exp Kb :=
+        add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+      have e : (0 : Real) + exp Kb = exp Kb := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp Kb) (le_trans v hx)
+    have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+    rw [hb x hx0]
+    refine le_trans ?_ (log_exp_sub_log_ge_linear hone)
+    have v := add_le_add_wit hKb (le_refl (-(1 : Real)))
+    have l : Kb + -(1 : Real) = Kb - 1 := by mach_mpoly [Kb]
+    have r : x + -(1 : Real) = x - 1 := by mach_mpoly [x]
+    rw [l, r] at v; exact v
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
