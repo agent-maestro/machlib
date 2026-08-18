@@ -8699,6 +8699,148 @@ theorem cell_of_decaying_target_subdominant (A B Q : EMLTree) (M a XT XQ : Real)
     rw [l] at u; exact u
   exact lt_irrefl_ax _ (lt_trans_ax hguard hcontra)
 
+/-- **A rising target with the dominant coefficient: bounded, with a `Θ(1/x²)` margin.**
+
+The `v`-carrying counterpart of `cell_of_decaying_target_dominant`. `node_form_logA_constB` puts the
+node at `v·exp (κ·w)`, so the target rises to `exp v`; `Q` rises to the same limit at rate `aQ·w`.
+The dominance condition is **independent of `x`** — the common `w` cancels — leaving
+`aQ ≤ exp v · v · κ`, and `target_rise_quadratic` then yields `exp v · z²` with `z = v·κ·w/2`.
+
+Equality is inside the hypothesis, so the rising cancellation locus is discharged here. -/
+theorem cell_of_rising_target_dominant (A B Q : EMLTree) (v κ aQ XT XQ : Real)
+    (hv : 0 < v) (hκ : 0 < κ) (hdom : aQ ≤ exp v * (v * κ))
+    (hT : ∀ x : Real, XT ≤ x →
+      exp (exp ((EMLTree.eml A B).eval x)) = exp (v * exp (κ * (1 / x))))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = exp v + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have h2pos : (0 : Real) < 1 + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax 1
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at u; exact lt_trans_ax zero_lt_one_ax u
+  have hhpos : (0 : Real) < 1 / (1 + 1) := one_div_pos_of_pos h2pos
+  have hβ : (0 : Real) < exp v * ((v * κ * (1 / (1 + 1))) * (v * κ * (1 / (1 + 1)))) :=
+    mul_pos (exp_pos v)
+      (mul_pos (mul_pos (mul_pos hv hκ) hhpos) (mul_pos (mul_pos hv hκ) hhpos))
+  obtain ⟨C, hC⟩ := floor_le_inv_sq _ hβ
+  refine ⟨C, 1 + exp XT + exp XQ, ?_, ?_⟩
+  · have v0 : (1 : Real) + 0 + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact v0
+  intro x hx _ _
+  have hone : (1 : Real) ≤ x := by
+    have v0 : (1 : Real) + 0 + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact le_trans v0 hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hwpos : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hXTx : XT ≤ x := by
+    have v0 : (0 : Real) + exp XT + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))
+    have e : (0 : Real) + exp XT + 0 = exp XT := by mach_ring
+    rw [e] at v0; exact le_trans (self_le_exp XT) (le_trans v0 hx)
+  have hXQx : XQ ≤ x := by
+    have v0 : (0 : Real) + 0 + exp XQ ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XT)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp XQ = exp XQ := by mach_ring
+    rw [e] at v0; exact le_trans (self_le_exp XQ) (le_trans v0 hx)
+  -- the dominance condition, scaled by `w`
+  have hdomw : aQ * (1 / x) ≤ exp v * (v * κ * (1 / x)) := by
+    have h := mul_le_mul_of_nonneg_right hdom (le_of_lt hwpos)
+    have e : exp v * (v * κ) * (1 / x) = exp v * (v * κ * (1 / x)) := by mach_ring
+    rw [e] at h; exact h
+  have hsep := target_rise_quadratic v κ (1 / x) (aQ * (1 / x)) hv hκ hwpos hdomw
+  rw [hT x hXTx, hQ x hXQx]
+  have hgoal : exp (v * exp (κ * (1 / x))) - exp v - aQ * (1 / x)
+      = exp (v * exp (κ * (1 / x))) - (exp v + aQ * (1 / x)) := by
+    mach_mpoly [exp (v * exp (κ * (1 / x))), exp v, aQ, (1 / x : Real)]
+  rw [← hgoal]
+  refine le_trans (hC x hone) ?_
+  have heq : exp v * ((v * κ * (1 / (1 + 1))) * (v * κ * (1 / (1 + 1)))) * ((1 / x) * (1 / x))
+      = exp v * ((v * κ * (1 / x) * (1 / (1 + 1))) * (v * κ * (1 / x) * (1 / (1 + 1)))) := by
+    mach_ring
+  rw [heq]; exact hsep
+
+/-- **A rising target with the sub-dominant coefficient: the region is empty.**
+
+`subdominant_coefficient_vacuous` already carries its own threshold, so this only has to convert it
+from a bound on `w` to a bound on `x` — `one_div_antitone` and `one_div_one_div_pos`, both of which
+this file already had. `target_rise_upper` then puts the target's rise under that bound, `Q` overtakes
+it, and the guard fails.
+
+With the dominant case this closes the rising regime, as its decaying twin was closed one commit
+ago. -/
+theorem cell_of_rising_target_subdominant (A B Q : EMLTree) (v κ aQ XT XQ : Real)
+    (hv : 0 < v) (hκ : 0 < κ) (hsub : v * κ * exp v < aQ)
+    (hT : ∀ x : Real, XT ≤ x →
+      exp (exp ((EMLTree.eml A B).eval x)) = exp (v * exp (κ * (1 / x))))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = exp v + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨w₀, hw₀, hvac⟩ := subdominant_coefficient_vacuous v κ aQ hv hκ hsub
+  refine ⟨0, 1 + exp XT + exp XQ + 1 / w₀, ?_, ?_⟩
+  · have v0 : (1 : Real) + 0 + 0 + 0 ≤ 1 + exp XT + exp XQ + 1 / w₀ :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))) (le_of_lt (one_div_pos_of_pos hw₀))
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact v0
+  intro x hx _ hguard
+  exfalso
+  have grab : ∀ Y : Real, Y ≤ 1 + exp XT + exp XQ + 1 / w₀ → Y ≤ x := fun Y hY => le_trans hY hx
+  have hone : (1 : Real) ≤ x := by
+    refine grab 1 ?_
+    have v0 : (1 : Real) + 0 + 0 + 0 ≤ 1 + exp XT + exp XQ + 1 / w₀ :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))) (le_of_lt (one_div_pos_of_pos hw₀))
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact v0
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hwpos : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hXTx : XT ≤ x := by
+    refine grab XT (le_trans (self_le_exp XT) ?_)
+    have v0 : (0 : Real) + exp XT + 0 + 0 ≤ 1 + exp XT + exp XQ + 1 / w₀ :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))) (le_of_lt (one_div_pos_of_pos hw₀))
+    have e : (0 : Real) + exp XT + 0 + 0 = exp XT := by mach_ring
+    rw [e] at v0; exact v0
+  have hXQx : XQ ≤ x := by
+    refine grab XQ (le_trans (self_le_exp XQ) ?_)
+    have v0 : (0 : Real) + 0 + exp XQ + 0 ≤ 1 + exp XT + exp XQ + 1 / w₀ :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_refl _)) (le_of_lt (one_div_pos_of_pos hw₀))
+    have e : (0 : Real) + 0 + exp XQ + 0 = exp XQ := by mach_ring
+    rw [e] at v0; exact v0
+  -- `w = 1/x ≤ w₀`
+  have hinvx : 1 / w₀ ≤ x := by
+    refine grab _ ?_
+    have v0 : (0 : Real) + 0 + 0 + 1 / w₀ ≤ 1 + exp XT + exp XQ + 1 / w₀ :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_of_lt (exp_pos XQ))) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + 1 / w₀ = 1 / w₀ := by mach_ring
+    rw [e] at v0; exact v0
+  have hwle : 1 / x ≤ w₀ := by
+    have h := one_div_antitone (one_div_pos_of_pos hw₀) hinvx
+    rw [one_div_one_div_pos hw₀] at h; exact h
+  -- the target's rise is under `aQ·w`
+  have hupper := target_rise_upper v κ (1 / x) hv
+  have hstrict := hvac (1 / x) hwpos hwle
+  rw [hT x hXTx, hQ x hXQx] at hguard
+  have hcontra : exp (v * exp (κ * (1 / x))) < exp v + aQ * (1 / x) := by
+    have h := lt_of_le_of_lt hupper hstrict
+    have u := add_lt_add_left h (exp v)
+    have l : exp v + (exp (v * exp (κ * (1 / x))) - exp v) = exp (v * exp (κ * (1 / x))) := by
+      mach_mpoly [exp (v * exp (κ * (1 / x))), exp v]
+    rw [l] at u; exact u
+  exact lt_irrefl_ax _ (lt_trans_ax hguard hcontra)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
