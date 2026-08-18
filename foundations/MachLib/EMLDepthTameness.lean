@@ -9351,6 +9351,47 @@ theorem cell_of_decaying_target_upper_Q (A B Q : EMLTree) (M LQ aQ XT XQ : Real)
     rw [e] at u; exact u
   exact le_trans (le_of_lt hlt) hQge
 
+/-- **A FIFTH node shape, found while enumerating the router's cases.**
+
+    A = c − log x,  B = var   ⟹   exp ((eml A B) x) = exp (exp c · (1/x)) · (1/x)
+
+Neither `v·exp (κ·w)` (rising, `node_form_logA_constB`) nor `M·w` (decaying,
+`node_form_constA_varB`), but `exp (κ·w)·w` — a decaying shape with an exponential factor on it.
+
+**This was not in the four-case enumeration the previous commits worked from.** The left child
+contributes `exp c · (1/x)` and the right contributes `− log x`, and `exp_c_sub_log_eq` applies a
+*second* time with `c := exp c · (1/x)` — the same lemma used twice on one node, which is why the
+shape did not appear when the two children were considered separately.
+
+Not new mathematics: it is sandwiched between `w` and `exp κ · w` on `w ≤ 1`
+(`node_logA_varB_bounds`), so the decaying analysis covers it once those lemmas take an inequality
+where they currently take an equality. But it is a case, and it was missing. -/
+theorem node_form_logA_varB (A B : EMLTree) (cA : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = cA - log x)
+    (hB : ∀ x : Real, 0 < x → B.eval x = x) :
+    ∀ x : Real, 0 < x →
+      exp ((EMLTree.eml A B).eval x) = exp (exp cA * (1 / x)) * (1 / x) := by
+  intro x hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx, hB x hx, exp_c_sub_log_eq cA hx]
+  exact exp_c_sub_log_eq (exp cA * (1 / x)) hx
+
+/-- The fifth shape is sandwiched between the two known decaying ones on `w ≤ 1`. -/
+theorem node_logA_varB_bounds (κ w : Real) (hκ : 0 < κ) (hw : 0 < w) (hw1 : w ≤ 1) :
+    w ≤ exp (κ * w) * w ∧ exp (κ * w) * w ≤ exp κ * w := by
+  constructor
+  · have hge1 : (1 : Real) ≤ exp (κ * w) := by
+      have h := exp_monotone (le_of_lt (mul_pos hκ hw))
+      rw [exp_zero] at h; exact h
+    have h := mul_le_mul_of_nonneg_right hge1 (le_of_lt hw)
+    have e : (1 : Real) * w = w := by mach_ring
+    rw [e] at h; exact h
+  · have hle : κ * w ≤ κ := by
+      have h := mul_le_mul_of_nonneg_left hw1 (le_of_lt hκ)
+      have e : κ * (1 : Real) = κ := by mach_ring
+      rw [e] at h; exact h
+    exact mul_le_mul_of_nonneg_right (exp_monotone hle) (le_of_lt hw)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
