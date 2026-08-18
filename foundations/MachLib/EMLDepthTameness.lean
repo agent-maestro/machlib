@@ -8449,6 +8449,77 @@ theorem node_form_constA_varB (A B : EMLTree) (α : Real)
   rw [hval, hA x hx, hB x hx]
   exact exp_c_sub_log_eq (exp α) hx
 
+/-! ## ▸ The limit-`1` comparison, for a decaying node
+
+`node_form_constA_varB` gives a node linear in `w`, so the target is `exp (M·w)` falling to `1` rather
+than `exp (v·exp (κ·w))` rising to `exp v`. The dominance / sub-dominance split is the same, but with
+no `v` to carry — which makes both halves shorter than their rising counterparts. -/
+
+/-- **Limit-`1` dominance: the quadratic term survives when `M` covers `a`.**
+
+    a ≤ M   ⟹   (M·w/2)²  ≤  exp (M·w) − 1 − a·w
+
+`exp_two_ge_quadratic` at `z := M·w/2` gives `exp (M·w) ≥ 1 + M·w + z²`, and `a·w ≤ M·w` leaves `z²`.
+Equality `a = M` is included, which is the limit-`1` cancellation locus. -/
+theorem limit_one_quadratic_separation (M a w : Real) (hM : 0 < M) (hw : 0 < w) (hdom : a ≤ M) :
+    (M * w * (1 / (1 + 1))) * (M * w * (1 / (1 + 1))) ≤ exp (M * w) - 1 - a * w := by
+  have h2pos : (0 : Real) < 1 + 1 := by
+    have u := add_lt_add_left zero_lt_one_ax 1
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at u; exact lt_trans_ax zero_lt_one_ax u
+  have hhalf : (1 + 1 : Real) * (1 / (1 + 1)) = 1 := mul_inv _ (ne_of_gt h2pos)
+  have hz0 : (0 : Real) ≤ M * w * (1 / (1 + 1)) :=
+    le_of_lt (mul_pos (mul_pos hM hw) (one_div_pos_of_pos h2pos))
+  have hzz : M * w * (1 / (1 + 1)) + M * w * (1 / (1 + 1)) = M * w := by
+    have e : M * w * (1 / (1 + 1)) + M * w * (1 / (1 + 1))
+        = M * w * ((1 + 1) * (1 / (1 + 1))) := by mach_ring
+    rw [e, hhalf]; mach_ring
+  have hq := exp_two_ge_quadratic hz0
+  rw [hzz] at hq
+  -- `z² ≤ exp (M w) − 1 − M w`
+  have hstep := add_le_add_wit hq (le_refl (-(1 : Real) + -(M * w)))
+  have l : 1 + M * w + M * w * (1 / (1 + 1)) * (M * w * (1 / (1 + 1))) + (-(1 : Real) + -(M * w))
+      = M * w * (1 / (1 + 1)) * (M * w * (1 / (1 + 1))) := by
+    mach_mpoly [M, w, (1 / (1 + 1) : Real)]
+  have r : exp (M * w) + (-(1 : Real) + -(M * w)) = exp (M * w) - 1 - M * w := by
+    mach_mpoly [exp (M * w), M, w]
+  rw [l, r] at hstep
+  refine le_trans hstep ?_
+  -- `a w ≤ M w` weakens the subtraction
+  have haw : a * w ≤ M * w := mul_le_mul_of_nonneg_right hdom (le_of_lt hw)
+  have v := add_le_add_wit (le_refl (exp (M * w) - 1)) (neg_le_neg_wit haw)
+  have l2 : exp (M * w) - 1 + -(M * w) = exp (M * w) - 1 - M * w := by
+    mach_mpoly [exp (M * w), M, w]
+  have r2 : exp (M * w) - 1 + -(a * w) = exp (M * w) - 1 - a * w := by
+    mach_mpoly [exp (M * w), a, w]
+  rw [l2, r2] at v; exact v
+
+/-- **Limit-`1` sub-dominance: `Q` overtakes a target that falls too slowly.**
+
+    M·(1 + M·w·e) < a   ⟹   exp (M·w) − 1  <  a·w
+
+`exp_sub_exp_upper` at `(M·w, 0)` bounds the rise by `M·w·exp (M·w)`, and `exp_le_one_add_scaled`
+caps the trailing factor at `1 + M·w·e` on `M·w ≤ 1`. The hypothesis is then exactly what makes the
+coefficient lose to `a`, and it is satisfiable for any `a > M` by taking `w` small — the same
+explicit-rate continuity as the rising case. -/
+theorem limit_one_subdominant (M a w : Real) (hM : 0 < M) (hw : 0 < w)
+    (hMw : M * w ≤ 1) (hsub : M * (1 + M * w * exp 1) < a) :
+    exp (M * w) - 1 < a * w := by
+  have hMw0 : (0 : Real) ≤ M * w := le_of_lt (mul_pos hM hw)
+  -- `exp (Mw) − 1 ≤ Mw · exp (Mw)`
+  have hup : exp (M * w) - 1 ≤ M * w * exp (M * w) := by
+    have h := exp_sub_exp_upper (M * w) 0
+    rw [exp_zero] at h
+    have e : M * w - 0 = M * w := by mach_mpoly [M, w]
+    rw [e] at h; exact h
+  -- cap the trailing factor
+  have hcap : M * w * exp (M * w) ≤ M * w * (1 + M * w * exp 1) :=
+    mul_le_mul_of_nonneg_left (exp_le_one_add_scaled hMw0 hMw) hMw0
+  refine lt_of_le_of_lt (le_trans hup hcap) ?_
+  have hstrict := mul_lt_mul_of_pos_right hsub hw
+  have l : M * (1 + M * w * exp 1) * w = M * w * (1 + M * w * exp 1) := by mach_ring
+  rw [l] at hstrict; exact hstrict
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
