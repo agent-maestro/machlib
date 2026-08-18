@@ -7879,6 +7879,104 @@ theorem boundedEmlCell_var_Q (A B : EMLTree) (K XK : Real)
         exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - EMLTree.var.eval x :=
   boundedEmlCell_vacuous_of_large_Q A B EMLTree.var K XK (exp K) hK (fun _ hx => hx)
 
+/-- **A growing left child makes `Q` outrun the cap, so three of its five shapes die at once.**
+
+`depth_le_one_exp_bounded_or_grows` is a dichotomy with nothing in between: `exp (P x)` is bounded, or
+it eventually dominates `exp x`. In the growing branch `depth_le_one_log_le_linear` caps the right
+child at `x + C`, so
+
+    Q x = exp (P x) − log (R x)  ≥  exp x − x − C  ≥  x − C
+
+using `two_mul_le_exp`, and that passes `exp K` at `x = exp K + C`. `boundedEmlCell_vacuous_of_large_Q`
+then applies.
+
+**This is the unconditional replacement for the filter's left-child step.**
+`bounded_ray_depth_two_both_forms` reached the same two surviving shapes from a ray-wide cap on `Q`,
+which the obligation does not supply; this reaches them from the dichotomy instead, which needs no
+hypothesis about `Q` at all. Three of `P`'s five forms — `var`, `exp x − d`, `exp x − log x` — are
+retired here, leaving `const` and `c − log x`. -/
+theorem boundedEmlCell_vacuous_of_growing_left (A B P R : EMLTree) (hR : R.depth ≤ 1)
+    (K XK T : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K)
+    (hgrow : ∀ x : Real, T ≤ x → exp x ≤ exp (P.eval x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+      (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x := by
+  obtain ⟨CR, hCR⟩ := depth_le_one_log_le_linear R hR
+  refine boundedEmlCell_vacuous_of_large_Q A B (EMLTree.eml P R) K XK
+    (1 + exp T + exp (exp K + CR)) hK ?_
+  intro x hx
+  -- unpack the merged threshold
+  have hone : (1 : Real) ≤ x := by
+    have v : (1 : Real) + 0 + 0 ≤ 1 + exp T + exp (exp K + CR) :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos T)))
+        (le_of_lt (exp_pos (exp K + CR)))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hTx : T ≤ x := by
+    have v : (0 : Real) + exp T + 0 ≤ 1 + exp T + exp (exp K + CR) :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos (exp K + CR)))
+    have e : (0 : Real) + exp T + 0 = exp T := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp T) (le_trans v hx)
+  have hKC : exp K + CR ≤ x := by
+    have v : (0 : Real) + 0 + exp (exp K + CR) ≤ 1 + exp T + exp (exp K + CR) :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos T)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp (exp K + CR) = exp (exp K + CR) := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp (exp K + CR)) (le_trans v hx)
+  have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hone
+  -- `Q x ≥ exp x − (x + CR)`
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  have hlow : exp x - (x + CR) ≤ (EMLTree.eml P R).eval x := by
+    rw [hval]
+    have v := add_le_add_wit (hgrow x hTx) (neg_le_neg_wit (hCR x hone))
+    have l : exp x + -(x + CR) = exp x - (x + CR) := by mach_mpoly [x, CR]
+    have r : exp (P.eval x) + -log (R.eval x) = exp (P.eval x) - log (R.eval x) := by
+      mach_mpoly [exp (P.eval x), log (R.eval x)]
+    rw [l, r] at v; exact v
+  -- `exp x − (x + CR) ≥ x − CR ≥ exp K`
+  have hlin : exp K ≤ exp x - (x + CR) := by
+    have hxx := two_mul_le_exp hx0
+    have v := add_le_add_wit hxx (le_refl (-(x + CR)))
+    have l : x + x + -(x + CR) = x - CR := by mach_mpoly [x, CR]
+    have r : exp x + -(x + CR) = exp x - (x + CR) := by mach_mpoly [x, CR]
+    rw [l, r] at v
+    refine le_trans ?_ v
+    have w := add_le_add_wit hKC (le_refl (-CR))
+    have l2 : exp K + CR + -CR = exp K := by mach_mpoly [exp K, CR]
+    have r2 : x + -CR = x - CR := by mach_mpoly [x, CR]
+    rw [l2, r2] at w; exact w
+  exact le_trans hlin hlow
+
+/-- **The case-split entry point: either the cell is already proved, or `P` is one of two shapes.**
+
+Feeds `depth_le_one_exp_bounded_or_grows` straight into the two preceding lemmas. The growing branch
+discharges the obligation outright by vacuity; the bounded branch hands back exactly the hypothesis
+`depth_le_one_exp_bounded_forms` consumes, so a caller continues with `P` constant or `c − log x` and
+never sees the other three forms.
+
+**This is the unconditional analogue of `boundedEmlCell_left_forms`**, which did the same job for `A`
+using the cap. Here there is no hypothesis about `Q` to lean on, so the dichotomy does the work
+instead — and the outcome is the same two shapes, reached from the other side. -/
+theorem boundedEmlCell_left_dichotomy (A B P R : EMLTree) (hP : P.depth ≤ 1) (hR : R.depth ≤ 1)
+    (K XK : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    (∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+        (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+          exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x)
+    ∨ (∃ Kb : Real, ∀ x : Real, 1 ≤ x → exp (P.eval x) ≤ Kb) := by
+  rcases depth_le_one_exp_bounded_or_grows P hP with hb | ⟨T, hT⟩
+  · exact Or.inr hb
+  · exact Or.inl (boundedEmlCell_vacuous_of_growing_left A B P R hR K XK T hK hT)
+
+/-- Continuing the split: in the bounded branch `P` is constant or `c − log x`, and nothing else. -/
+theorem boundedEmlCell_left_two_shapes (P : EMLTree) (hP : P.depth ≤ 1) (Kb : Real)
+    (hb : ∀ x : Real, 1 ≤ x → exp (P.eval x) ≤ Kb) :
+    (∃ α : Real, ∀ x : Real, 0 < x → P.eval x = α)
+    ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → P.eval x = c - log x) :=
+  depth_le_one_exp_bounded_forms P hP Kb hb
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
