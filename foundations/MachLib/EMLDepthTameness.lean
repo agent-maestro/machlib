@@ -7760,6 +7760,54 @@ theorem subdominant_step (v κ a w : Real) (hv : 0 < v) (hκ : 0 < κ) (hw : 0 <
   have hscaled := mul_lt_mul_of_pos_right hlt hw
   exact lt_of_le_of_lt hup hscaled
 
+/-- **The sub-dominant sub-case, with its threshold supplied.**
+
+`subdominant_step` needs `σ ≤ 1` and `(P·e)·σ < a − P` with `σ = κw·(1 + v·e)`. Both are smallness
+conditions on the same quantity, so `shrink_below_two_bounds` supplies them together:
+`A·(1/D)` sits below `1` and below `S := (a − P)·(1/(P·e))` at once, and `σ = A·w` reaches exactly
+that value at `w = 1/D`.
+
+The cancellation `(P·e)·S = a − P` is the only place a reciprocal is undone, and it is undone against
+the constant it was built from.
+
+**With this the equal-limits regime is closed.** Dominance gives a `Θ(1/x²)` separation including the
+cancellation locus; sub-dominance gives an empty region. -/
+theorem subdominant_coefficient_vacuous (v κ a : Real) (hv : 0 < v) (hκ : 0 < κ)
+    (hsub : v * κ * exp v < a) :
+    ∃ w₀ : Real, 0 < w₀ ∧ ∀ w : Real, 0 < w → w ≤ w₀ →
+      v * (κ * w * exp (κ * w)) * exp (v * exp (κ * w)) < a * w := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have hP : (0 : Real) < v * κ * exp v := mul_pos (mul_pos hv hκ) (exp_pos v)
+  have hPE : (0 : Real) < v * κ * exp v * exp 1 := mul_pos hP hE1
+  have hd : (0 : Real) < a - v * κ * exp v := by
+    have u := add_lt_add_left hsub (-(v * κ * exp v))
+    have l : -(v * κ * exp v) + v * κ * exp v = 0 := by mach_ring
+    have r : -(v * κ * exp v) + a = a - v * κ * exp v := by mach_mpoly [a, v, κ, exp v]
+    rw [l, r] at u; exact u
+  have hS : (0 : Real) < (a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)) := mul_pos hd (one_div_pos_of_pos hPE)
+  have hA : (0 : Real) < κ * (1 + v * exp 1) := by
+    refine mul_pos hκ ?_
+    have u := add_lt_add_left (mul_pos hv hE1) (1 : Real)
+    have l : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l] at u; exact lt_trans_ax zero_lt_one_ax u
+  obtain ⟨hD, hlt1, hltS⟩ := shrink_below_two_bounds (κ * (1 + v * exp 1)) ((a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1))) hA hS
+  refine ⟨1 / (κ * (1 + v * exp 1) + κ * (1 + v * exp 1) * (1 / ((a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)))) + 1), one_div_pos_of_pos hD, ?_⟩
+  intro w hw hwle
+  have hsig : κ * w * (1 + v * exp 1) ≤ κ * (1 + v * exp 1) * (1 / (κ * (1 + v * exp 1) + κ * (1 + v * exp 1) * (1 / ((a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)))) + 1)) := by
+    have h := mul_le_mul_of_nonneg_left hwle (le_of_lt hA)
+    have e : κ * (1 + v * exp 1) * w = κ * w * (1 + v * exp 1) := by mach_ring
+    rw [e] at h; exact h
+  refine subdominant_step v κ a w hv hκ hw (le_of_lt (lt_of_le_of_lt hsig hlt1)) ?_
+  have hstrict : κ * w * (1 + v * exp 1) < (a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)) := lt_of_le_of_lt hsig hltS
+  have h2 := mul_lt_mul_of_pos_right hstrict hPE
+  have el : κ * w * (1 + v * exp 1) * (v * κ * exp v * exp 1) = v * κ * exp v * exp 1 * (κ * w * (1 + v * exp 1)) := by mach_ring
+  have er : (a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)) * (v * κ * exp v * exp 1) = a - v * κ * exp v := by
+    have e : (a - v * κ * exp v) * (1 / (v * κ * exp v * exp 1)) * (v * κ * exp v * exp 1) = (a - v * κ * exp v) * ((v * κ * exp v * exp 1) * (1 / (v * κ * exp v * exp 1))) := by mach_ring
+    rw [e, mul_inv _ (ne_of_gt hPE)]
+    mach_ring
+  rw [el, er] at h2
+  exact h2
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
