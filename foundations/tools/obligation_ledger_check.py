@@ -263,12 +263,19 @@ def self_test(decls) -> int:
     # 8. And the true ledger must still pass, so the canaries are not just "everything fails".
     # A CORRECT reduced row is included: a new status that only ever fires is as useless as one
     # that never does, and this is the row the two specimens above are perturbations of.
+    # NOTE: these are LITERAL specimens, not a copy of the ledger, and the open row has to be
+    # repointed whenever the obligation it names is discharged -- `BoundedEmlCellApproachLarge`
+    # stood here until the router proved it on 2026-08-18, at which point this canary fired and
+    # the whole self-test failed. That is the specimen doing its job, but the lesson is that the
+    # open row must name an obligation with no proof in sight, not merely one open today.
     bad, _ = check_rows([("VarLeftEmlRightHard", "discharged", "`varLeftEmlRightHard_of_band`"),
                          ("BoundedCellApproach", "reduced",
                           "`boundedCellApproach_of_eml` → `BoundedEmlCellApproach`"),
                          ("BoundedEmlCellApproach", "reduced",
                           "`boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge`"),
-                         ("BoundedEmlCellApproachLarge", "open", "—")], decls)
+                         ("BoundedEmlCellApproachLarge", "discharged",
+                          "`boundedEmlCellApproachLarge_holds`"),
+                         ("Depth3DecayExp", "open", "—")], decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
     print(f"  canary 9 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")

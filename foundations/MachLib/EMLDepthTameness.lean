@@ -7247,19 +7247,25 @@ only the factor `exp u`, which is bounded because `u` is.
 
 **Why this matters.** The surviving moving `Q` sits at `L + a·(1/x)` with `a > 0`, so `Q − 1 ≥ a/x`
 whenever `L ≥ 1`. A target that is within `D·e^{−x}` of `1` cannot stay above it, since `e^{−x}`
-loses to `a/x`. That is the whole `T → 1` regime, and it is vacuous rather than hard. -/
-theorem target_below_one_singly_exponential (A B : EMLTree) (Kb : Real)
-    (hA : ∀ x : Real, 1 ≤ x → exp (A.eval x) ≤ Kb)
-    (hB : ∀ x : Real, 1 ≤ x → x - 1 ≤ log (B.eval x)) :
-    ∃ D : Real, 0 < D ∧ ∀ x : Real, 1 ≤ x →
+loses to `a/x`. That is the whole `T → 1` regime, and it is vacuous rather than hard.
+
+**Stated on a ray `X ≥ 1`, not from `1`.** Both hypotheses arrive from tree classifications that
+only hold eventually — `log_exp_sub_const_ge_linear` needs `d + 1 ≤ x`, and the router's node
+enumeration hands back its log bound past an existential `XV`, never past `1`. Taking `X = 1`
+recovers the original statement, and `1 ≤ X` is all the proof ever wanted from `1 ≤ x`. -/
+theorem target_below_one_singly_exponential (A B : EMLTree) (Kb X : Real) (hX : 1 ≤ X)
+    (hA : ∀ x : Real, X ≤ x → exp (A.eval x) ≤ Kb)
+    (hB : ∀ x : Real, X ≤ x → x - 1 ≤ log (B.eval x)) :
+    ∃ D : Real, 0 < D ∧ ∀ x : Real, X ≤ x →
       exp (exp ((EMLTree.eml A B).eval x)) - 1 ≤ D * exp (-x) := by
   refine ⟨exp (Kb + 1) * exp (exp (Kb + 1)), mul_pos (exp_pos _) (exp_pos _), ?_⟩
-  intro x hx1
+  intro x hxX
+  have hx1 : (1 : Real) ≤ x := le_trans hX hxX
   have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
   -- 1. the node is below `(Kb + 1) − x`
   have hnode : (EMLTree.eml A B).eval x ≤ Kb + 1 - x := by
     rw [hval]
-    have v := add_le_add_wit (hA x hx1) (neg_le_neg_wit (hB x hx1))
+    have v := add_le_add_wit (hA x hxX) (neg_le_neg_wit (hB x hxX))
     have l : Kb + -(x - 1) = Kb + 1 - x := by mach_mpoly [Kb, x]
     have r : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
       mach_mpoly [exp (A.eval x), log (B.eval x)]
@@ -10061,6 +10067,265 @@ theorem boundedEmlCellApproach_of_large (h : BoundedEmlCellApproachLarge) :
   · exact le_trans (hmono C₁ hC₁) (hsmall x hX₁x (by rw [← hq]; exact le_refl 1))
   · exact le_trans (hmono C₁ hC₁) (hsmall x hX₁x (le_of_lt hq))
 
+/-- **The log-bound target: `T → 1` at `e^{−x}`, which any moving `Q` outruns.**
+
+The fifth outcome of `node_form_classification` is a *bound*, not a form — `log (B x) ≥ x − 1` —
+because both `exp`-shaped right children land here and their shapes differ. That is enough:
+`target_below_one_singly_exponential` turns it into `T − 1 ≤ D·e^{−x}`, and a `Q` sitting at
+`L + a·(1/x)` with `L ≥ 1` is at least `a/x` above `1`. A singly exponential approach loses to a
+polynomial one, so `Q` overtakes `T` and the region is empty.
+
+The cap is consumed twice over: `boundedEmlCell_left_forms` reads `A`'s two shapes off it, and both
+have a bounded exponential — `exp α` exactly, and `exp (cA − log x) ≤ exp cA` for `x ≥ 1` because
+`log x ≥ 0`. Neither needs the division form, which is why `log_nonneg` appears here and
+`exp_c_sub_log_eq` does not. -/
+theorem cell_of_log_bound_target (A B Q : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (K XK : Real) (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K)
+    (XV : Real) (hV : ∀ x : Real, XV ≤ x → x - 1 ≤ log (B.eval x))
+    (LQ aQ XQ : Real) (haQ : 0 < aQ)
+    (hQf : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x))
+    (hLQ : (1 : Real) ≤ LQ) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hX1 : (1 : Real) ≤ 1 + exp XV := by
+    have v : (1 : Real) + 0 ≤ 1 + exp XV := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XV))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  have hXV : ∀ x : Real, 1 + exp XV ≤ x → XV ≤ x := by
+    intro x hx
+    have v : (0 : Real) + exp XV ≤ 1 + exp XV :=
+      add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+    have e : (0 : Real) + exp XV = exp XV := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XV) (le_trans v hx)
+  -- the cap names `A`, and both surviving shapes have a bounded exponential
+  have hAb : ∃ Kb : Real, ∀ x : Real, (1 : Real) ≤ x → exp (A.eval x) ≤ Kb := by
+    rcases boundedEmlCell_left_forms A B hA hB K XK hK with ⟨α, hα⟩ | ⟨cA, _, hcA⟩
+    · refine ⟨exp α, ?_⟩
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hα x hx0]; exact le_refl _
+    · refine ⟨exp cA, ?_⟩
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hcA x hx0]
+      refine exp_monotone ?_
+      have hlog : (0 : Real) ≤ log x := log_nonneg hx
+      have v := add_le_add_wit (le_refl cA) (neg_le_neg_wit hlog)
+      have l : cA + -log x = cA - log x := by mach_mpoly [cA, log x]
+      have r : cA + -(0 : Real) = cA := by mach_ring
+      rw [l, r] at v; exact v
+  obtain ⟨Kb, hKb⟩ := hAb
+  obtain ⟨D, hDpos, hT⟩ :=
+    target_below_one_singly_exponential A B Kb (1 + exp XV) hX1
+      (fun x hx => hKb x (le_trans hX1 hx))
+      (fun x hx => hV x (hXV x hx))
+  refine boundedEmlCell_vacuous_of_fast_target A B Q D aQ (1 + exp XV) XQ hDpos haQ hT ?_
+  intro x hx
+  rw [hQf x hx]
+  exact add_le_add_wit hLQ (le_refl _)
+
+/-- **The inner dispatch: one moving `Q` against all five node shapes.**
+
+`Q` has been reduced to `L + a·(1/x)` with `a > 0` — the single surviving shape of the four `P`/`R`
+combinations — and the node to one of the five forms `node_form_classification` derives. This routes
+the pair to the comparison layer, and it is the step that decides which comparison is even the right
+one: a **limit** comparison where the limits separate, a **coefficient** comparison where they
+coincide.
+
+| node | branch on | discharged by |
+| --- | --- | --- |
+| constant | — | `boundedEmlCell_eventually_const_target` |
+| `v·exp (κw)` | `L` vs `exp v` | `cell_of_rising_target_{lower_Q, dominant, subdominant, upper_Q}` |
+| `M·w` | `L` vs `1`, then `a` vs `M` | `cell_of_{Q_below_one, decaying_target_*}` |
+| `exp (κw)·w` | `L` vs `1`, then `a` vs `1` | the bracketed decaying pair, plus `cell_of_fifth_shape_subdominant` |
+| `log (B x) ≥ x − 1` | `L` vs `1` | `cell_of_log_bound_target` |
+
+**Only the fifth shape needs both brackets.** `node_logA_varB_bounds` puts it between `w` and
+`exp κ · w`, so the lower bracket (`M = 1`) feeds the `_ge` form and the upper (`M = exp κ`) the
+`_le` form. Its `L = 1` row is the one a bracket cannot decide — a constant upper bracket discards
+the very convergence the equal-limits comparison rests on — and that row is why
+`cell_of_fifth_shape_subdominant` exists and takes the node's exact form instead.
+
+Two arrangements of one product are not one term: `cell_of_rising_target_dominant` asks for
+`aQ ≤ exp v * (v * κ)` and `cell_of_rising_target_subdominant` for `v * κ * exp v < aQ`, so the
+trichotomy needs a `mach_ring` step between its second and third branches. Cosmetic, but it is the
+sort of gap a hand-written dispatch papers over by choosing whichever lemma looks applicable. -/
+theorem cell_of_moving_Q (A B Q : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (hQ2 : Q.depth ≤ 2) (LQ aQ XQ K XK : Real) (haQ : 0 < aQ)
+    (hQf : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x))
+    (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  rcases node_form_classification A B hA hB K XK hK with
+      ⟨V, XV, hV⟩ | ⟨v, κ, XV, hv, hκ, hV⟩ | ⟨M, XV, hM, hV⟩ | ⟨κ, XV, hκ, hV⟩ | ⟨XV, hV⟩
+  · -- (1) eventually-constant target
+    exact boundedEmlCell_eventually_const_target A B Q hQ2 (exp V) XV
+      (fun x hx => by rw [hV x hx])
+  · -- (2) rising target `v·exp (κw)`
+    rcases lt_total LQ (exp v) with hs | hs | hs
+    · exact cell_of_rising_target_lower_Q A B Q hQ2 v κ LQ aQ XV XQ hv hκ haQ hs
+        (fun x hx => by rw [hV x hx]) hQf
+    · rcases lt_total aQ (exp v * (v * κ)) with hd | hd | hd
+      · exact cell_of_rising_target_dominant A B Q v κ aQ XV XQ hv hκ (le_of_lt hd)
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+      · exact cell_of_rising_target_dominant A B Q v κ aQ XV XQ hv hκ (le_of_eq hd)
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+      · refine cell_of_rising_target_subdominant A B Q v κ aQ XV XQ hv hκ ?_
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+        have e : exp v * (v * κ) = v * κ * exp v := by mach_ring
+        rw [← e]; exact hd
+    · exact cell_of_rising_target_upper_Q A B Q v κ LQ aQ XV XQ hv hκ haQ hs
+        (fun x hx => by rw [hV x hx]) hQf
+  · -- (3) decaying target `M·w`
+    rcases lt_total LQ 1 with hs | hs | hs
+    · exact cell_of_Q_below_one A B Q LQ aQ XQ haQ hs hQf
+    · rcases lt_total aQ M with hd | hd | hd
+      · exact cell_of_decaying_target_dominant A B Q M aQ XV XQ hM haQ (le_of_lt hd)
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+      · exact cell_of_decaying_target_dominant A B Q M aQ XV XQ hM haQ (le_of_eq hd)
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+      · exact cell_of_decaying_target_subdominant A B Q M aQ XV XQ hM hd
+          (fun x hx => by rw [hV x hx]) (fun x hx => by rw [hQf x hx, hs])
+    · exact cell_of_decaying_target_upper_Q A B Q M LQ aQ XV XQ hM haQ hs
+        (fun x hx => by rw [hV x hx]) hQf
+  · -- (4) the fifth shape `exp (κw)·w`
+    have clear : ∀ x : Real, 1 + exp XV ≤ x → (1 : Real) ≤ x ∧ XV ≤ x := by
+      intro x hx
+      constructor
+      · have v0 : (1 : Real) + 0 ≤ 1 + exp XV := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XV))
+        have e : (1 : Real) + 0 = 1 := by mach_ring
+        rw [e] at v0; exact le_trans v0 hx
+      · have v0 : (0 : Real) + exp XV ≤ 1 + exp XV :=
+          add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+        have e : (0 : Real) + exp XV = exp XV := by mach_ring
+        rw [e] at v0; exact le_trans (self_le_exp XV) (le_trans v0 hx)
+    have hwle : ∀ x : Real, (1 : Real) ≤ x → 1 / x ≤ 1 := by
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      have hinv : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx0)
+      have h := mul_le_mul_of_nonneg_right hx (le_of_lt (one_div_pos_of_pos hx0))
+      rw [hinv] at h
+      have e : (1 : Real) * (1 / x) = 1 / x := by mach_ring
+      rw [e] at h; exact h
+    rcases lt_total LQ 1 with hs | hs | hs
+    · exact cell_of_Q_below_one A B Q LQ aQ XQ haQ hs hQf
+    · rcases lt_total aQ 1 with hd | hd | hd
+      · refine cell_of_decaying_target_dominant_ge A B Q 1 aQ (1 + exp XV) XQ zero_lt_one_ax
+          (le_of_lt hd) ?_ (fun x hx => by rw [hQf x hx, hs])
+        intro x hx
+        obtain ⟨h1, hXVx⟩ := clear x hx
+        have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+        have hbnd := node_logA_varB_bounds κ (1 / x) hκ (one_div_pos_of_pos hx0) (hwle x h1)
+        rw [hV x hXVx]
+        refine exp_monotone ?_
+        have e : (1 : Real) * (1 / x) = 1 / x := by mach_ring
+        rw [e]; exact hbnd.1
+      · refine cell_of_decaying_target_dominant_ge A B Q 1 aQ (1 + exp XV) XQ zero_lt_one_ax
+          (le_of_eq hd) ?_ (fun x hx => by rw [hQf x hx, hs])
+        intro x hx
+        obtain ⟨h1, hXVx⟩ := clear x hx
+        have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+        have hbnd := node_logA_varB_bounds κ (1 / x) hκ (one_div_pos_of_pos hx0) (hwle x h1)
+        rw [hV x hXVx]
+        refine exp_monotone ?_
+        have e : (1 : Real) * (1 / x) = 1 / x := by mach_ring
+        rw [e]; exact hbnd.1
+      · exact cell_of_fifth_shape_subdominant A B Q κ aQ XV XQ hκ hd hV
+          (fun x hx => by rw [hQf x hx, hs])
+    · refine cell_of_decaying_target_upper_Q_le A B Q (exp κ) LQ aQ (1 + exp XV) XQ
+        (exp_pos κ) haQ hs ?_ hQf
+      intro x hx
+      obtain ⟨h1, hXVx⟩ := clear x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+      have hbnd := node_logA_varB_bounds κ (1 / x) hκ (one_div_pos_of_pos hx0) (hwle x h1)
+      rw [hV x hXVx]
+      exact exp_monotone hbnd.2
+  · -- (5) the log-bound target
+    rcases lt_total LQ 1 with hs | hs | hs
+    · exact cell_of_Q_below_one A B Q LQ aQ XQ haQ hs hQf
+    · exact cell_of_log_bound_target A B Q hA hB K XK hK XV hV LQ aQ XQ haQ hQf (le_of_eq hs.symm)
+    · exact cell_of_log_bound_target A B Q hA hB K XK hK XV hV LQ aQ XQ haQ hQf (le_of_lt hs)
+
+/-- **`BoundedEmlCellApproachLarge` holds — the router, and the obligation closes.**
+
+The outer dispatch. `Q` is split on its structure first, because three of its four surviving shapes
+close outright and only one reaches the node at all:
+
+* `const c` — `boundedEmlCell_eventually_const_Q`.
+* `var` — `Q x = x` outruns the cap: `exp (exp (node x)) ≤ exp K ≤ x` past `exp (exp K)`, so
+  `cell_of_Q_above_target` empties the region. The one branch where `Q` fails the *upper* guard
+  rather than the lower one.
+* `eml P R` — the left dichotomy bounds `exp (P x)`, the right dichotomy then leaves `P` and `R` each
+  `const` or `c − log x`. Three of those four pairings are already lemmas; the fourth,
+  `P = cP − log x` with `R` constant, is the moving `Q` that `cell_of_moving_Q` takes on.
+
+**What writing it actually bought.** Twice now the router has been the thing that found the defect
+rather than the thing that consumed the pieces: enumerating its cases exposed a missing fifth node
+shape, and writing its inner dispatch exposed a bracket too loose to decide that shape's `L = 1` row.
+Both were invisible from the comparison layer, which looked complete because nothing had yet queried
+the part that was not. An assembly that type-checks is a stronger statement about a case analysis
+than any prose claim that the analysis is exhaustive — Lean refuses the proof if a case is missing,
+and it refused twice. -/
+theorem boundedEmlCellApproachLarge_holds : BoundedEmlCellApproachLarge := by
+  intro A B Q hA hB hQ2 K XK hK
+  cases Q with
+  | const c =>
+      exact boundedEmlCell_eventually_const_Q A B (EMLTree.const c) hA hB c 1 (fun x _ => rfl)
+  | var =>
+      refine cell_of_Q_above_target A B EMLTree.var (1 + exp XK + exp (exp K)) ?_
+      intro x hx
+      have hXKx : XK ≤ x := by
+        have v : (0 : Real) + exp XK + 0 ≤ 1 + exp XK + exp (exp K) :=
+          add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+            (le_of_lt (exp_pos (exp K)))
+        have e : (0 : Real) + exp XK + 0 = exp XK := by mach_ring
+        rw [e] at v; exact le_trans (self_le_exp XK) (le_trans v hx)
+      have hEK : exp (exp K) ≤ x := by
+        have v : (0 : Real) + 0 + exp (exp K) ≤ 1 + exp XK + exp (exp K) :=
+          add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XK)))
+            (le_refl _)
+        have e : (0 : Real) + 0 + exp (exp K) = exp (exp K) := by mach_ring
+        rw [e] at v; exact le_trans v hx
+      show exp (exp ((EMLTree.eml A B).eval x)) ≤ x
+      exact le_trans (exp_monotone (hK x hXKx)) (le_trans (self_le_exp (exp K)) hEK)
+  | eml P R =>
+      have hP : P.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hQ2
+        have := Nat.le_max_left P.depth R.depth; omega
+      have hR : R.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hQ2
+        have := Nat.le_max_right P.depth R.depth; omega
+      rcases boundedEmlCell_left_dichotomy A B P R hP hR K XK hK with hdone | ⟨Kb, hb⟩
+      · exact hdone
+      rcases boundedEmlCell_right_dichotomy A B P R hR Kb 1 hb with
+          hdone | ⟨β, hβ⟩ | ⟨cR, _, hβ⟩
+      · exact hdone
+      · rcases boundedEmlCell_left_two_shapes P hP Kb hb with ⟨α, hα⟩ | ⟨cP, _, hα⟩
+        · exact boundedEmlCell_constP_constR A B P R hA hB α β hα hβ
+        · refine cell_of_moving_Q A B (EMLTree.eml P R) hA hB hQ2 (-(log β)) (exp cP) 1 K XK
+            (exp_pos cP) ?_ hK
+          intro x hx
+          exact moving_Q_eventual_form P R cP β hα hβ x (lt_of_lt_of_le zero_lt_one_ax hx)
+      · rcases boundedEmlCell_left_two_shapes P hP Kb hb with ⟨α, hα⟩ | ⟨cP, _, hα⟩
+        · exact boundedEmlCell_constP_logR A B P R hA hB α cR hα hβ
+        · exact boundedEmlCell_logP_logR A B P R cP cR hα hβ
+
+/-- **`BoundedEmlCellApproach` holds**, by the small-right merge. -/
+theorem boundedEmlCellApproach_holds : BoundedEmlCellApproach :=
+  boundedEmlCellApproach_of_large boundedEmlCellApproachLarge_holds
+
+/-- **`BoundedCellApproach` holds** — the reduction chain collapses to theorems.
+
+`boundedCellApproach_of_eml` moved a general depth-≤2 `P` to the `eml A B` case; that reduction was
+recorded as *reduced* rather than *discharged* precisely because its target was still open. It is not
+any more, and the ledger rows change with it: three obligations that were bookkeeping become
+theorems, and nothing in the chain still rests on an assumption. -/
+theorem boundedCellApproach_holds : BoundedCellApproach :=
+  boundedCellApproach_of_eml boundedEmlCellApproach_holds
+
+
 /-- **A positive depth-≤1 logarithm is bounded below by a positive constant.**
 
 The grammar cannot produce arbitrarily small *positive* logarithms at this depth. Of the five forms:
@@ -10478,6 +10743,20 @@ theorem depth_three_decayExp_var_left (Q : EMLTree) (hQ : Q.depth ≤ 2) :
       0 < exp x - log (Q.eval x) → -log (exp x - log (Q.eval x)) ≤ C + exp x :=
   depth_three_decayExp_var_left_of_gap expExpGapBelow_holds Q hQ
 
+/-- **The bounded-`P` cell of `Depth3DecayExp`, unconditionally.** The companion to the `var` cell
+above, and the same move: `BoundedCellApproach` is now a theorem, so the reduction discharges.
+
+That leaves `Depth3DecayExp` with all four of its cells proved — `growing`, `const`, `var`, `bounded`
+— and what remains between the cells and the proposition is the dispatch over `P`, not any further
+analysis. Stated here as the cell it is; the ledger row stays **open** until that dispatch exists,
+because a row is about the proposition, not about how close its parts are. -/
+theorem depth_three_decayExp_bounded_left (P Q : EMLTree) (hP : P.depth ≤ 2) (hQ : Q.depth ≤ 2)
+    (K XK : Real) (hK : ∀ x : Real, XK ≤ x → exp (P.eval x) ≤ K) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
+      0 < exp (P.eval x) - log (Q.eval x) →
+      -log (exp (P.eval x) - log (Q.eval x)) ≤ C + exp x :=
+  depth_three_decayExp_bounded_left_of_gap boundedCellApproach_holds P Q hP hQ K XK hK
+
 /-! ### Obligations ledger
 
 Four propositions in this corpus have been introduced as *named obligations* — stated so that a
@@ -10491,14 +10770,27 @@ partial result can be committed without overstating it. Their status, as of the 
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | here | **discharged** | `expExpGapBelow_holds` |
-| `BoundedCellApproach` | here | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
-| `BoundedEmlCellApproach` | here | **reduced** | `boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge` |
-| `BoundedEmlCellApproachLarge` | here | **open** | — (`1 < Q x`; small-right branch discharged) |
+| `BoundedCellApproach` | here | **discharged** | `boundedCellApproach_holds` |
+| `BoundedEmlCellApproach` | here | **discharged** | `boundedEmlCellApproach_holds` |
+| `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
 Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,
 `Depth3DecayExp` about how small it can be. So the programme's open problems are not scattered:
 they are one phenomenon met from several directions.
+
+**Three rows closed together on 2026-08-18**, and they closed as one because they were always one:
+`BoundedCellApproach` and `BoundedEmlCellApproach` were *reductions*, carrying no content of their
+own, so the router proving `BoundedEmlCellApproachLarge` discharged all three in a single step. Worth
+noting what that says about the **reduced** status — it is honest bookkeeping, not progress. Two rows
+sat green for weeks while the thing they reduced to was open, and the gate was right to keep them
+distinct from **discharged**.
+
+`Depth3DecayExp` does **not** close with them, and the row stays open on purpose. All four of its
+cells are now theorems — `depth_three_decayExp_{growing,const,var,bounded}_left` — but the
+proposition quantifies over every depth-≤2 `A`, and the dispatch from an arbitrary `A` onto those
+four cells is not written. Cells covering a case analysis is not the same as a proof that the case
+analysis is exhaustive; this file has twice been shown otherwise by writing the dispatch out.
 
 **A third status was needed on 2026-08-15.** `Depth3DecayHard` is not open, it is **false** — see its
 docstring for the witness. "Refuted" is checked the same way as "open" (no theorem may conclude it)

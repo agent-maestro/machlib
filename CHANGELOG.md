@@ -53,9 +53,9 @@ in commit archaeology:
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
 | `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | **discharged** | `expExpGapBelow_holds` |
-| `BoundedCellApproach` | **reduced** | `boundedCellApproach_of_eml` → `BoundedEmlCellApproach` |
-| `BoundedEmlCellApproach` | **reduced** | `boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge` |
-| `BoundedEmlCellApproachLarge` | **open** | — (`1 < Q x`; small-right branch discharged) |
+| `BoundedCellApproach` | **discharged** | `boundedCellApproach_holds` |
+| `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |
+| `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
