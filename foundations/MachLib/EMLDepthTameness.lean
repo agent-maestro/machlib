@@ -8386,6 +8386,69 @@ theorem boundedEmlCell_vacuous_of_fast_target (A B Q : EMLTree) (D a XD Xa : Rea
     rw [l, r] at v; exact v
   exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hchain)
 
+/-! ## ▸ Reading `v` and `κ` off the node
+
+`target_rise_quadratic` and `subdominant_coefficient_vacuous` speak about `exp (v · exp (κ·w))`.
+These put the surviving node forms into that shape, which is the last translation the assembly
+needs. -/
+
+/-- **`A = c − log x`, `B` constant: the node is exactly `v · exp (κ·w)`.**
+
+    exp ((eml A B) x)  =  exp (−log β) · exp (exp c · (1/x))
+
+so `v := exp (−log β)` and `κ := exp c`, both positive. This is the one node form that lands on
+`target_rise_quadratic`'s shape with no slack at all: `exp_c_sub_log_eq` turns the left child into
+`exp c · (1/x)`, and `exp_add` splits off the constant right child.
+
+`κ = exp c > 0` is what makes the target *rise* toward its limit rather than fall to it, which is the
+orientation both analytic lemmas assume. -/
+theorem node_form_logA_constB (A B : EMLTree) (cA β : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = cA - log x)
+    (hB : ∀ x : Real, 0 < x → B.eval x = β) :
+    ∀ x : Real, 0 < x →
+      exp ((EMLTree.eml A B).eval x) = exp (-(log β)) * exp (exp cA * (1 / x)) := by
+  intro x hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx, hB x hx, exp_c_sub_log_eq cA hx, ← exp_add]
+  have e : -(log β) + exp cA * (1 / x) = exp cA * (1 / x) - log β := by
+    mach_mpoly [exp cA, (1 / x : Real), log β]
+  rw [e]
+
+/-- **`A = c − log x`, `B = c' − log x`: the same shape with `v = 1`.**
+
+The totalized log zeroes the right child past `exp c'`, leaving
+`exp ((eml A B) x) = exp (exp c · (1/x))`, which is `v · exp (κ·w)` at `v = 1`. -/
+theorem node_form_logA_logB (A B : EMLTree) (cA cB : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = cA - log x)
+    (hB : ∀ x : Real, 0 < x → B.eval x = cB - log x) :
+    ∀ x : Real, exp cB ≤ x → 0 < x →
+      exp ((EMLTree.eml A B).eval x) = 1 * exp (exp cA * (1 / x)) := by
+  intro x hcB hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx, hB x hx, log_c_sub_log_eventually_zero cB x hcB,
+    exp_c_sub_log_eq cA hx]
+  have e : exp cA * (1 / x) - 0 = exp cA * (1 / x) := by
+    mach_mpoly [exp cA, (1 / x : Real)]
+  rw [e]
+  have e2 : (1 : Real) * exp (exp cA * (1 / x)) = exp (exp cA * (1 / x)) := by mach_ring
+  rw [e2]
+
+/-- **`A` constant, `B = var`: a different shape — the node DECAYS to `0`.**
+
+    exp ((eml A B) x)  =  exp (exp α) · (1/x)
+
+Linear in `w`, not `v·exp (κ·w)`, so `target_rise_quadratic` does not apply and the target falls to
+`1` rather than rising to a limit above it. Recorded explicitly because the two forms look alike and
+are not: here `v` would have to be `0`, which the analytic lemmas exclude by hypothesis. -/
+theorem node_form_constA_varB (A B : EMLTree) (α : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hB : ∀ x : Real, 0 < x → B.eval x = x) :
+    ∀ x : Real, 0 < x → exp ((EMLTree.eml A B).eval x) = exp (exp α) * (1 / x) := by
+  intro x hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx, hB x hx]
+  exact exp_c_sub_log_eq (exp α) hx
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
