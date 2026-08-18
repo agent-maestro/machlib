@@ -8922,6 +8922,66 @@ theorem boundedEmlCell_right_dichotomy (A B P R : EMLTree) (hR : R.depth ≤ 1) 
     have r : x + -(1 : Real) = x - 1 := by mach_mpoly [x]
     rw [l, r] at v; exact v
 
+/-- **Separated limits: a constant between them closes the cell, with a UNIFORM gap.**
+
+The generic branch, and much the cheapest. When the target and `Q` tend to different limits, any `k`
+strictly between them eventually satisfies both `k ≤ T x` and `Q x < k`, and
+`gap_below_constant_barrier` returns a **uniform** `ε` — far more than the obligation's
+`exp (−C − exp x)`.
+
+Neither limit appears in the statement. All that is needed is a constant the two are eventually on
+opposite sides of, which is a weaker and much easier thing to supply than a limit computation. Only
+when no such constant exists — the limits coincide — is the first/second-order comparison required,
+which is exactly where the census located the cancellation locus. -/
+theorem cell_of_separated_limits (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (k XT XQ : Real)
+    (hT : ∀ x : Real, XT ≤ x → k ≤ exp (exp ((EMLTree.eml A B).eval x)))
+    (hQlt : ∀ x : Real, XQ ≤ x → Q.eval x < k) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨C, X₀, hX₀, h⟩ :=
+    gap_below_constant_barrier Q hQ (fun x => exp (exp ((EMLTree.eml A B).eval x))) k XT hT
+  refine ⟨C, X₀ + exp XQ, ?_, ?_⟩
+  · have v : X₀ + 0 ≤ X₀ + exp XQ := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XQ))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans hX₀ v
+  intro x hx _ _
+  have hX₀x : X₀ ≤ x := by
+    have v : X₀ + 0 ≤ X₀ + exp XQ := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XQ))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hXQx : XQ ≤ x := by
+    have v : (0 : Real) + exp XQ ≤ X₀ + exp XQ :=
+      add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hX₀) (le_refl _)
+    have e : (0 : Real) + exp XQ = exp XQ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XQ) (le_trans v hx)
+  exact h x hX₀x (hQlt x hXQx)
+
+/-- **The other side of separation: `Q` above the target is empty.**
+
+If `Q` eventually sits at or above the target, the guard `Q x < T x` fails and there is nothing to
+prove. Stated as its own lemma because the two separated-limit orientations need different
+treatments — one produces a bound, the other a vacuity — and reading which is which off a limit
+comparison is where an assembly quietly goes wrong. -/
+theorem cell_of_Q_above_target (A B Q : EMLTree) (X₁ : Real)
+    (habove : ∀ x : Real, X₁ ≤ x → exp (exp ((EMLTree.eml A B).eval x)) ≤ Q.eval x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  refine ⟨0, 1 + exp X₁, ?_, ?_⟩
+  · have v : (1 : Real) + 0 ≤ 1 + exp X₁ :=
+      add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X₁))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx _ hguard
+  exfalso
+  have hX₁x : X₁ ≤ x := by
+    have v : (0 : Real) + exp X₁ ≤ 1 + exp X₁ :=
+      add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+    have e : (0 : Real) + exp X₁ = exp X₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hguard (habove x hX₁x))
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
