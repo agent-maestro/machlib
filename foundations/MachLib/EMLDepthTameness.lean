@@ -9080,6 +9080,133 @@ theorem cell_of_rising_target_lower_Q (A B Q : EMLTree) (hQd : Q.depth ≤ 2)
     have r : LQ + (exp v - LQ) = exp v := by mach_mpoly [exp v, LQ]
     rw [r] at u; exact u
 
+/-- **Rising target, `Q` above its limit: the region is empty.**
+
+The third orientation, and the only one that genuinely needs the target's approach RATE rather than
+just its monotonicity. `Q ≥ LQ > exp v` while the target descends to `exp v`, so the guard fails once
+the target is within `LQ − exp v` of its limit.
+
+`target_rise_upper_linearised` bounds the rise by `v·κ·exp (v + κw(1+v·e))·w`, and on `κw ≤ 1` the
+exponential factor is capped by the constant `E' := exp (v + (1 + v·e))`. What is left is
+`v·κ·E'·w < δ`, and `shrink_below_two_bounds` at `A := κ`, `S := δ·(1/(v·E'))` delivers a single `w`
+satisfying both that and `κw ≤ 1` — the same device as the sub-dominant thresholds, third use. -/
+theorem cell_of_rising_target_upper_Q (A B Q : EMLTree) (v κ LQ aQ XT XQ : Real)
+    (hv : 0 < v) (hκ : 0 < κ) (haQ : 0 < aQ) (hsep : exp v < LQ)
+    (hT : ∀ x : Real, XT ≤ x →
+      exp (exp ((EMLTree.eml A B).eval x)) = exp (v * exp (κ * (1 / x))))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have hδ : (0 : Real) < LQ - exp v := by
+    have u := add_lt_add_left hsep (-(exp v))
+    have l : -(exp v) + exp v = 0 := by mach_ring
+    have r : -(exp v) + LQ = LQ - exp v := by mach_mpoly [LQ, exp v]
+    rw [l, r] at u; exact u
+  have hEp : (0 : Real) < exp (v + (1 + v * exp 1)) := exp_pos _
+  have hS : (0 : Real) < (LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))) :=
+    mul_pos hδ (one_div_pos_of_pos (mul_pos hv hEp))
+  obtain ⟨hD, hlt1, hltS⟩ :=
+    shrink_below_two_bounds κ ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1))))) hκ hS
+  refine cell_of_Q_above_target A B Q
+    (1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1)) ?_
+  intro x hx
+  have grab : ∀ Y : Real,
+      Y ≤ 1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1)
+      → Y ≤ x := fun Y hY => le_trans hY hx
+  have hone : (1 : Real) ≤ x := by
+    refine grab 1 ?_
+    have v0 : (1 : Real) + 0 + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v0; exact v0
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hwpos : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  have hXTx : XT ≤ x := by
+    refine grab XT (le_trans (self_le_exp XT) ?_)
+    have v0 : (0 : Real) + exp XT + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (0 : Real) + exp XT + 0 + 0 = exp XT := by mach_ring
+    rw [e] at v0; exact v0
+  have hXQx : XQ ≤ x := by
+    refine grab XQ (le_trans (self_le_exp XQ) ?_)
+    have v0 : (0 : Real) + 0 + exp XQ + 0
+        ≤ 1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_refl _)) (le_of_lt hD)
+    have e : (0 : Real) + 0 + exp XQ + 0 = exp XQ := by mach_ring
+    rw [e] at v0; exact v0
+  have hDx : κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1 ≤ x := by
+    refine grab _ ?_
+    have v0 : (0 : Real) + 0 + 0 + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1)
+        ≤ 1 + exp XT + exp XQ + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_of_lt (exp_pos XQ))) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1)
+        = κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1 := by mach_ring
+    rw [e] at v0; exact v0
+  have hwle : 1 / x ≤ 1 / (κ + κ * (1 / ((LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))))) + 1) :=
+    one_div_antitone hD hDx
+  have hκw1 : κ * (1 / x) ≤ 1 :=
+    le_of_lt (lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hκ)) hlt1)
+  have hκwS : κ * (1 / x) < (LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))) :=
+    lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hκ)) hltS
+  -- the target's rise is under `δ`
+  have hrise : exp (v * exp (κ * (1 / x))) - exp v
+      ≤ v * κ * exp (v + κ * (1 / x) * (1 + v * exp 1)) * (1 / x) :=
+    le_trans (target_rise_upper v κ (1 / x) hv)
+      (target_rise_upper_linearised v κ (1 / x) hv hκ hwpos hκw1)
+  have hcap : exp (v + κ * (1 / x) * (1 + v * exp 1)) ≤ exp (v + (1 + v * exp 1)) := by
+    refine exp_monotone ?_
+    have hfac : (0 : Real) ≤ 1 + v * exp 1 := by
+      have u := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (mul_pos hv hE1))
+      have e : (0 : Real) + 0 = 0 := by mach_ring
+      rw [e] at u; exact u
+    have h := mul_le_mul_of_nonneg_right hκw1 hfac
+    have e : (1 : Real) * (1 + v * exp 1) = 1 + v * exp 1 := by mach_ring
+    rw [e] at h
+    exact add_le_add_wit (le_refl v) h
+  have hbound : exp (v * exp (κ * (1 / x))) - exp v
+      ≤ v * exp (v + (1 + v * exp 1)) * (κ * (1 / x)) := by
+    refine le_trans hrise ?_
+    have h := mul_le_mul_of_nonneg_right
+      (mul_le_mul_of_nonneg_left hcap (le_of_lt (mul_pos hv hκ))) (le_of_lt hwpos)
+    have l : v * κ * exp (v + κ * (1 / x) * (1 + v * exp 1)) * (1 / x)
+        = v * κ * exp (v + κ * (1 / x) * (1 + v * exp 1)) * (1 / x) := rfl
+    have r : v * κ * exp (v + (1 + v * exp 1)) * (1 / x)
+        = v * exp (v + (1 + v * exp 1)) * (κ * (1 / x)) := by mach_ring
+    rw [r] at h; exact h
+  -- `v·E'·(κw) < δ`
+  have hfinal : v * exp (v + (1 + v * exp 1)) * (κ * (1 / x)) < LQ - exp v := by
+    have h := mul_lt_mul_of_pos_right hκwS (mul_pos hv hEp)
+    have l : κ * (1 / x) * (v * exp (v + (1 + v * exp 1)))
+        = v * exp (v + (1 + v * exp 1)) * (κ * (1 / x)) := by mach_ring
+    have r : (LQ - exp v) * (1 / (v * exp (v + (1 + v * exp 1)))) * (v * exp (v + (1 + v * exp 1)))
+        = (LQ - exp v) * ((v * exp (v + (1 + v * exp 1))) * (1 / (v * exp (v + (1 + v * exp 1))))) := by
+      mach_ring
+    rw [l, r, mul_inv _ (ne_of_gt (mul_pos hv hEp))] at h
+    have e : (LQ - exp v) * (1 : Real) = LQ - exp v := by mach_ring
+    rw [e] at h; exact h
+  -- so `T < LQ ≤ Q`
+  rw [hT x hXTx, hQ x hXQx]
+  have hTlt : exp (v * exp (κ * (1 / x))) < LQ := by
+    have h := lt_of_le_of_lt hbound hfinal
+    have u := add_lt_add_left h (exp v)
+    have l : exp v + (exp (v * exp (κ * (1 / x))) - exp v) = exp (v * exp (κ * (1 / x))) := by
+      mach_mpoly [exp (v * exp (κ * (1 / x))), exp v]
+    have r : exp v + (LQ - exp v) = LQ := by mach_mpoly [LQ, exp v]
+    rw [l, r] at u; exact u
+  have hQge : LQ ≤ LQ + aQ * (1 / x) := by
+    have u := add_le_add_wit (le_refl LQ) (le_of_lt (mul_pos haQ hwpos))
+    have e : LQ + (0 : Real) = LQ := by mach_ring
+    rw [e] at u; exact u
+  exact le_trans (le_of_lt hTlt) hQge
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
