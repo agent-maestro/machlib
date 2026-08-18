@@ -8604,6 +8604,101 @@ theorem cell_of_decaying_target_dominant (A B Q : EMLTree) (M a XT XQ : Real)
   rw [heq]
   exact hsep
 
+/-- **A decaying target with the sub-dominant coefficient: the region is empty.**
+
+Companion to `cell_of_decaying_target_dominant`. With `M < a` the target's linear term cannot cover
+`Q`'s, `limit_one_subdominant` gives `T − 1 < a·w = Q − 1`, and the guard `Q x < T x` fails.
+
+The threshold comes from `shrink_below_two_bounds` at `A := M` and
+`S := (a − M)·(1/(M·e))`: it delivers one `w` below both `1/M` — so `M·w ≤ 1` for
+`exp_le_one_add_scaled` — and below `S`, which is exactly `M·(1 + M·w·e) < a`. `one_div_antitone`
+carries the bound from `x ≥ D` to `w ≤ 1/D`.
+
+Together with the dominant case this closes the decaying-target regime: `a ≤ M` bounded,
+`a > M` empty, and the two are complements. -/
+theorem cell_of_decaying_target_subdominant (A B Q : EMLTree) (M a XT XQ : Real)
+    (hM : 0 < M) (hlt : M < a)
+    (hT : ∀ x : Real, XT ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = exp (M * (1 / x)))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = 1 + a * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have hdiff : (0 : Real) < a - M := by
+    have u := add_lt_add_left hlt (-M)
+    have l : -M + M = 0 := by mach_ring
+    have r : -M + a = a - M := by mach_mpoly [a, M]
+    rw [l, r] at u; exact u
+  have hS : (0 : Real) < (a - M) * (1 / (M * exp 1)) :=
+    mul_pos hdiff (one_div_pos_of_pos (mul_pos hM hE1))
+  obtain ⟨hD, hlt1, hltS⟩ := shrink_below_two_bounds M ((a - M) * (1 / (M * exp 1))) hM hS
+  refine ⟨0, 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1), ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx _ hguard
+  exfalso
+  have grab : ∀ Y : Real, Y ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1)
+      → Y ≤ x := fun Y hY => le_trans hY hx
+  have hXTx : XT ≤ x := by
+    refine grab XT (le_trans (self_le_exp XT) ?_)
+    have v : (0 : Real) + exp XT + 0 + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))) (le_of_lt hD)
+    have e : (0 : Real) + exp XT + 0 + 0 = exp XT := by mach_ring
+    rw [e] at v; exact v
+  have hXQx : XQ ≤ x := by
+    refine grab XQ (le_trans (self_le_exp XQ) ?_)
+    have v : (0 : Real) + 0 + exp XQ + 0
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_refl _)) (le_of_lt hD)
+    have e : (0 : Real) + 0 + exp XQ + 0 = exp XQ := by mach_ring
+    rw [e] at v; exact v
+  have hDx : M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1 ≤ x := by
+    refine grab _ ?_
+    have v : (0 : Real) + 0 + 0 + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1)
+        ≤ 1 + exp XT + exp XQ + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1) :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XT))) (le_of_lt (exp_pos XQ))) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1)
+        = M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1 := by mach_ring
+    rw [e] at v; exact v
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le hD hDx
+  have hwle : 1 / x ≤ 1 / (M + M * (1 / ((a - M) * (1 / (M * exp 1)))) + 1) :=
+    one_div_antitone hD hDx
+  have hwpos : (0 : Real) < 1 / x := one_div_pos_of_pos hxpos
+  -- `M·w ≤ 1`
+  have hMw : M * (1 / x) ≤ 1 :=
+    le_of_lt (lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hM)) hlt1)
+  -- `M·(1 + M·w·e) < a`
+  have hMwS : M * (1 / x) < (a - M) * (1 / (M * exp 1)) :=
+    lt_of_le_of_lt (mul_le_mul_of_nonneg_left hwle (le_of_lt hM)) hltS
+  have hcancel := mul_lt_mul_of_pos_right hMwS (mul_pos hM hE1)
+  have lr : (a - M) * (1 / (M * exp 1)) * (M * exp 1) = a - M := by
+    have e : (a - M) * (1 / (M * exp 1)) * (M * exp 1)
+        = (a - M) * ((M * exp 1) * (1 / (M * exp 1))) := by mach_ring
+    rw [e, mul_inv _ (ne_of_gt (mul_pos hM hE1))]; mach_ring
+  rw [lr] at hcancel
+  have hsubh : M * (1 + M * (1 / x) * exp 1) < a := by
+    have u := add_lt_add_left hcancel M
+    have l : M + M * (1 / x) * (M * exp 1) = M * (1 + M * (1 / x) * exp 1) := by
+      mach_mpoly [M, (1 / x : Real), exp 1]
+    have r : M + (a - M) = a := by mach_mpoly [a, M]
+    rw [l, r] at u; exact u
+  have hfinal := limit_one_subdominant M a (1 / x) hM hwpos hMw hsubh
+  rw [hT x hXTx, hQ x hXQx] at hguard
+  have hcontra : exp (M * (1 / x)) < 1 + a * (1 / x) := by
+    have u := add_lt_add_left hfinal (1 : Real)
+    have l : (1 : Real) + (exp (M * (1 / x)) - 1) = exp (M * (1 / x)) := by
+      mach_mpoly [exp (M * (1 / x))]
+    rw [l] at u; exact u
+  exact lt_irrefl_ax _ (lt_trans_ax hguard hcontra)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
