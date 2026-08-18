@@ -8249,6 +8249,80 @@ theorem boundedEmlCell_logP_logR (A B P R : EMLTree) (cP cR : Real)
   have e : exp cP * (1 / x) - 0 = exp cP * (1 / x) := by mach_mpoly [exp cP, (1 / x : Real)]
   rw [e]; exact hstep
 
+/-! ## ▸ Splitting on the TARGET
+
+The `Q` side is exhausted: every shape is discharged or vacuous except `P = c − log x` with `R`
+constant. What decides that last one is the target, so the split moves to `A` and `B`. -/
+
+/-- **An eventually-constant target discharges the cell for EVERY `Q` at once.**
+
+`boundedEmlCellApproachLarge_const_target` wanted the target constant from `1` onward.
+`gap_below_constant_barrier` takes its barrier on a **ray**, which is the weaker hypothesis the tree
+cases actually produce — `log (c − log x)` only zeroes past `exp c`, so nothing is constant from `1`.
+
+Since the barrier is the target's own value, `Q x < T x` *is* `Q x < k`, and the lemma applies with
+no further work. -/
+theorem boundedEmlCell_eventually_const_target (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (V XV : Real)
+    (hT : ∀ x : Real, XV ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = V) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨C, X₀, hX₀, h⟩ :=
+    gap_below_constant_barrier Q hQ (fun x => exp (exp ((EMLTree.eml A B).eval x))) V XV
+      (fun x hx => le_of_eq (hT x hx).symm)
+  refine ⟨C, X₀ + exp XV, ?_, ?_⟩
+  · have v : X₀ + 0 ≤ X₀ + exp XV := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XV))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans hX₀ v
+  intro x hx _ hlt
+  have hX₀x : X₀ ≤ x := by
+    have v : X₀ + 0 ≤ X₀ + exp XV := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XV))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hXVx : XV ≤ x := by
+    have v : (0 : Real) + exp XV ≤ X₀ + exp XV :=
+      add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hX₀) (le_refl _)
+    have e : (0 : Real) + exp XV = exp XV := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XV) (le_trans v hx)
+  exact h x hX₀x (by rw [← hT x hXVx]; exact hlt)
+
+/-- `A` and `B` both constant: the target is constant, so every `Q` is covered. -/
+theorem boundedEmlCell_constA_constB (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (α β : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = α) (hB : ∀ x : Real, 0 < x → B.eval x = β) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  refine boundedEmlCell_eventually_const_target A B Q hQ (exp (exp (exp α - log β))) 1 ?_
+  intro x hx
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx0, hB x hx0]
+
+/-- `A` constant, `B = c − log x`: the totalized log zeroes `B`'s logarithm past `exp c`, so the
+target is eventually the constant `exp (exp (exp α))`. -/
+theorem boundedEmlCell_constA_logB (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (α cB : Real)
+    (hA : ∀ x : Real, 0 < x → A.eval x = α)
+    (hB : ∀ x : Real, 0 < x → B.eval x = cB - log x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  refine boundedEmlCell_eventually_const_target A B Q hQ (exp (exp (exp α))) (1 + exp cB) ?_
+  intro x hx
+  have hone : (1 : Real) ≤ x := by
+    have v : (1 : Real) + 0 ≤ 1 + exp cB := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos cB))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hcB : exp cB ≤ x := by
+    have v : (0 : Real) + exp cB ≤ 1 + exp cB :=
+      add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+    have e : (0 : Real) + exp cB = exp cB := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hval : (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) := rfl
+  rw [hval, hA x hx0, hB x hx0, log_c_sub_log_eventually_zero cB x hcB]
+  have e : exp α - (0 : Real) = exp α := by mach_mpoly [exp α]
+  rw [e]
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
