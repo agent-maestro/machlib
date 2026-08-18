@@ -7,10 +7,13 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **922 `.lean` files** (614 top-level + 308 in subdirectories) /
-**~187 k lines** / **5 851 theorems**, re-exported through the aggregator
-**`foundations/MachLib.lean`** (512 imports) — a module not reachable from there is **invisible to
+material). `foundations/MachLib/` holds **929 `.lean` files** (621 top-level + 308 in subdirectories) /
+**~186 k lines** / **6 927 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** (531 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
+(Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
+commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
+a number nobody can reproduce is worse than one that names how it was taken.)
 **`MachLib/Discovered/` (294 files) is deliberately outside the aggregator**: each file is
 self-contained and they cannot be imported together; it is the Forge `@verify(lean)` corpus and has
 its own harness, `scripts/closerate.sh`. The numeric
@@ -82,7 +85,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**616 of 922 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**623 of 929 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -102,6 +105,17 @@ behind it is missing — registration is still a human act.
 - **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
 - **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
   below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
+- **A theorem whose conclusion is a ledger obligation needs a BINDER, not an arrow.**
+  `tools/obligation_ledger_check.py` reads a conclusion as the tail after the last top-level `:`,
+  having first stripped binders of the obligation's own type. So `foo : A → B` has tail `A → B` and
+  is counted as a **discharger of `A`** — if `A` is a *refuted* row the gate reports a contradiction
+  that does not exist, and if `A` is *open* it reports the row as stale. Write `foo (h : A) : B`,
+  which strips correctly. (`depth3DecayExp_of_hard` is the worked case; both forms were run against
+  the parser before choosing.)
+- **A gate's own self-test can go stale when the corpus improves.** `obligation_ledger_check.py`'s
+  canary 9 is a literal specimen, and its `open` row must name something no theorem can conclude —
+  it named live obligations twice and both were discharged the same day, failing the gate because
+  work succeeded. `discharged`, `refuted` and `reduced` specimens are stable; `open` is not.
 
 ## Status
 
