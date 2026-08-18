@@ -7977,6 +7977,70 @@ theorem boundedEmlCell_left_two_shapes (P : EMLTree) (hP : P.depth ≤ 1) (Kb : 
     ∨ (∃ c : Real, 0 < c ∧ ∀ x : Real, 0 < x → P.eval x = c - log x) :=
   depth_le_one_exp_bounded_forms P hP Kb hb
 
+/-- **The other vacuity: `Q` falls below `1`.**
+
+The left child was retired by `Q` outrunning the cap. The right child cannot be: making `log (R x)`
+large drives `Q = exp (P x) − log (R x)` *down*, not up, so it fails the obligation's OTHER guard,
+`1 < Q x`. Two different mechanisms, and the expectation that the two sides would be symmetric was
+wrong — `depth_le_one_log_bounded_or_unbounded`'s second branch is **cofinal** (`∀ Λ, ∃ x`), not
+eventual, precisely because the log side has three growth classes rather than two. The file's own
+docstring says so; the dichotomy cannot drive a vacuity argument on a ray, and this lemma takes the
+eventual hypothesis directly instead. -/
+theorem boundedEmlCell_vacuous_of_small_Q (A B Q : EMLTree) (X₁ : Real)
+    (hsmall : ∀ x : Real, X₁ ≤ x → Q.eval x ≤ 1) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  refine ⟨0, 1 + exp X₁, ?_, ?_⟩
+  · have v : (1 : Real) + 0 ≤ 1 + exp X₁ :=
+      add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X₁))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx hgt _
+  exfalso
+  have hX₁x : X₁ ≤ x := by
+    have v : (0 : Real) + exp X₁ ≤ 1 + exp X₁ :=
+      add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+    have e : (0 : Real) + exp X₁ = exp X₁ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hgt (hsmall x hX₁x))
+
+/-- **A right child whose logarithm outgrows the left child's cap retires the shape.**
+
+`exp (P x) ≤ Kb` and `log (R x) ≥ Kb − 1` give `Q x ≤ 1` directly, so
+`boundedEmlCell_vacuous_of_small_Q` applies. Every `R` whose logarithm rises without bound is covered,
+and this development already proves the three cases that matter:
+`log_exp_sub_const_ge_linear` and `log_exp_sub_log_ge_linear` give `log (R x) ≥ x − 1` for the two
+`exp`-shaped forms, and `log_ge_sub_one_of_exp_pred_le` gives it for `var` at `x ≥ exp (Kb − 1)`.
+So `R` is left with `const` and `c − log x`, matching the left child. -/
+theorem boundedEmlCell_vacuous_of_large_log_right (A B P R : EMLTree) (Kb XP XR : Real)
+    (hP : ∀ x : Real, XP ≤ x → exp (P.eval x) ≤ Kb)
+    (hR : ∀ x : Real, XR ≤ x → Kb - 1 ≤ log (R.eval x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+      (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x := by
+  refine boundedEmlCell_vacuous_of_small_Q A B (EMLTree.eml P R) (1 + exp XP + exp XR) ?_
+  intro x hx
+  have hXPx : XP ≤ x := by
+    have v : (0 : Real) + exp XP + 0 ≤ 1 + exp XP + exp XR :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XR))
+    have e : (0 : Real) + exp XP + 0 = exp XP := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XP) (le_trans v hx)
+  have hXRx : XR ≤ x := by
+    have v : (0 : Real) + 0 + exp XR ≤ 1 + exp XP + exp XR :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XP)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp XR = exp XR := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XR) (le_trans v hx)
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  rw [hval]
+  have v := add_le_add_wit (hP x hXPx) (neg_le_neg_wit (hR x hXRx))
+  have l : exp (P.eval x) + -log (R.eval x) = exp (P.eval x) - log (R.eval x) := by
+    mach_mpoly [exp (P.eval x), log (R.eval x)]
+  have r : Kb + -(Kb - 1) = 1 := by mach_mpoly [Kb]
+  rw [l, r] at v; exact v
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
