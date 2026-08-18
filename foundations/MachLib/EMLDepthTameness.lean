@@ -7624,6 +7624,78 @@ theorem target_rise_upper_linearised (v κ w : Real) (hv : 0 < v) (hκ : 0 < κ)
   refine le_trans hstep (le_of_eq ?_)
   mach_ring
 
+/-- **One reciprocal that undercuts two positive bounds at once — the division-free `min`.**
+
+This file takes maxima with `exp C₁ + exp C₂`, because sums of positive terms dominate each summand
+and no `max` exists in the base. Minima are the harder direction, and they are needed as soon as a
+threshold must satisfy *several* smallness conditions — here `σ ≤ 1` for
+`exp_le_one_add_scaled` and `σ < S` for the coefficient comparison.
+
+    D := A + A·(1/S) + 1      ⟹      A·(1/D) < 1   and   A·(1/D) < S
+
+`A < D` gives the first because `D − A = A·(1/S) + 1 > 0`. The second is `A < S·D`, which expands to
+`S·A + A + S` once `S·(1/S) = 1` is used — so `S·D − A = S·A + S > 0`. Both then follow by
+multiplying through by `1/D`.
+
+Reusable well beyond this cell: any construction needing a positive quantity below finitely many
+positive bounds can extend the pattern one summand at a time. -/
+theorem shrink_below_two_bounds (A S : Real) (hA : 0 < A) (hS : 0 < S) :
+    0 < A + A * (1 / S) + 1
+    ∧ A * (1 / (A + A * (1 / S) + 1)) < 1
+    ∧ A * (1 / (A + A * (1 / S) + 1)) < S := by
+  have hinvS : (0 : Real) < 1 / S := one_div_pos_of_pos hS
+  have hAS : (0 : Real) < A * (1 / S) := mul_pos hA hinvS
+  have hD : (0 : Real) < A + A * (1 / S) + 1 := by
+    have v := add_lt_add_left (add_lt_add_left hAS A) (1 : Real)
+    have l : (1 : Real) + (A + 0) = A + 1 := by mach_ring
+    have r : (1 : Real) + (A + A * (1 / S)) = A + A * (1 / S) + 1 := by
+      mach_mpoly [A, (1 / S : Real)]
+    rw [l, r] at v
+    have w := add_lt_add_left hA (1 : Real)
+    have l2 : (1 : Real) + 0 = 1 := by mach_ring
+    have r2 : (1 : Real) + A = A + 1 := by mach_ring
+    rw [l2, r2] at w
+    exact lt_trans_ax (lt_trans_ax zero_lt_one_ax w) v
+  have hinvD : (0 : Real) < 1 / (A + A * (1 / S) + 1) := one_div_pos_of_pos hD
+  have hDinv : (A + A * (1 / S) + 1) * (1 / (A + A * (1 / S) + 1)) = 1 :=
+    mul_inv _ (ne_of_gt hD)
+  refine ⟨hD, ?_, ?_⟩
+  · -- A < D, then scale by 1/D
+    have hlt : A < A + A * (1 / S) + 1 := by
+      have v := add_lt_add_left (add_lt_add_left hAS A) (1 : Real)
+      have l : (1 : Real) + (A + 0) = A + 1 := by mach_ring
+      have r : (1 : Real) + (A + A * (1 / S)) = A + A * (1 / S) + 1 := by
+        mach_mpoly [A, (1 / S : Real)]
+      rw [l, r] at v
+      have w := add_lt_add_left zero_lt_one_ax A
+      have l2 : A + (0 : Real) = A := by mach_ring
+      rw [l2] at w
+      exact lt_trans_ax w v
+    have hscaled := mul_lt_mul_of_pos_right hlt hinvD
+    rw [hDinv] at hscaled; exact hscaled
+  · -- A < S·D, then scale by 1/D
+    have hSinv : S * (1 / S) = 1 := mul_inv S (ne_of_gt hS)
+    have hexp : S * (A + A * (1 / S) + 1) = S * A + A * (S * (1 / S)) + S := by
+      mach_mpoly [A, S, (1 / S : Real)]
+    have hlt : A < S * (A + A * (1 / S) + 1) := by
+      rw [hexp, hSinv]
+      have e : A * (1 : Real) = A := by mach_ring
+      rw [e]
+      have v := add_lt_add_left hS (S * A + A)
+      have l : S * A + A + (0 : Real) = S * A + A := by mach_ring
+      rw [l] at v
+      have w := add_lt_add_left (mul_pos hS hA) A
+      have l2 : A + (0 : Real) = A := by mach_ring
+      have r2 : A + S * A = S * A + A := by mach_ring
+      rw [l2, r2] at w
+      exact lt_trans_ax w v
+    have hscaled := mul_lt_mul_of_pos_right hlt hinvD
+    have e2 : S * (A + A * (1 / S) + 1) * (1 / (A + A * (1 / S) + 1))
+        = S * ((A + A * (1 / S) + 1) * (1 / (A + A * (1 / S) + 1))) := by mach_ring
+    rw [e2, hDinv] at hscaled
+    have e3 : S * (1 : Real) = S := by mach_ring
+    rw [e3] at hscaled; exact hscaled
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
