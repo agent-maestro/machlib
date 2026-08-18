@@ -9682,6 +9682,47 @@ theorem node_logA_varB_tight (κ w : Real) (hw : 0 < w) (hκw : κ * w ≤ 1) (h
     exp (κ * w) * w ≤ (1 + κ * w * exp 1) * w :=
   mul_le_mul_of_nonneg_right (exp_le_one_add_scaled hκw0 hκw) (le_of_lt hw)
 
+/-- **The rise bound, made MONOTONE in a surrogate.**
+
+    0 ≤ u ≤ U ≤ 1   ⟹   exp u − 1  ≤  U·(1 + U·e)
+
+`exp_sub_exp_upper` and `exp_le_one_add_scaled` bound `exp u − 1` by `u·(1 + u·e)`, which is exact but
+useless when `u` is only known through a bound. The fifth node shape is exactly that situation:
+`u = exp (κw)·w` has no closed form the comparison lemmas accept, and only
+`u ≤ (1 + κ·w·e)·w` is available.
+
+Since `u ↦ u·(1 + u·e)` is increasing on `u ≥ 0`, the surrogate can be substituted wholesale. That is
+what lets `node_logA_varB_tight`'s bound be used where the shape itself cannot.
+
+Stated separately rather than inlined because the substitution is the whole content: every previous
+decaying lemma took the target's form, and this is the first that takes only a bound on it. -/
+theorem exp_sub_one_le_of_le {u U : Real} (hu0 : 0 ≤ u) (huU : u ≤ U) (hU1 : U ≤ 1) :
+    exp u - 1 ≤ U * (1 + U * exp 1) := by
+  have hu1 : u ≤ 1 := le_trans huU hU1
+  have hU0 : (0 : Real) ≤ U := le_trans hu0 huU
+  -- `exp u − 1 ≤ u · exp u`
+  have h1 : exp u - 1 ≤ u * exp u := by
+    have h := exp_sub_exp_upper u 0
+    rw [exp_zero] at h
+    have e : u - 0 = u := by mach_mpoly [u]
+    rw [e] at h; exact h
+  -- `exp u ≤ 1 + u·e`
+  have h2 : u * exp u ≤ u * (1 + u * exp 1) :=
+    mul_le_mul_of_nonneg_left (exp_le_one_add_scaled hu0 hu1) hu0
+  -- monotone in the surrogate: both factors grow with `u`
+  have h3 : u * (1 + u * exp 1) ≤ U * (1 + U * exp 1) := by
+    have hfac : 1 + u * exp 1 ≤ 1 + U * exp 1 :=
+      add_le_add_wit (le_refl 1) (mul_le_mul_of_nonneg_right huU (le_of_lt (exp_pos 1)))
+    have hstep1 : u * (1 + u * exp 1) ≤ u * (1 + U * exp 1) :=
+      mul_le_mul_of_nonneg_left hfac hu0
+    have hnn : (0 : Real) ≤ 1 + U * exp 1 := by
+      have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (mul_le_mul_of_nonneg_right hU0
+        (le_of_lt (exp_pos 1)))
+      have l : (0 : Real) + 0 * exp 1 = 0 := by mach_ring
+      rw [l] at v; exact v
+    exact le_trans hstep1 (mul_le_mul_of_nonneg_right huU hnn)
+  exact le_trans h1 (le_trans h2 h3)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
