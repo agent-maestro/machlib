@@ -8041,6 +8041,91 @@ theorem boundedEmlCell_vacuous_of_large_log_right (A B P R : EMLTree) (Kb XP XR 
   have r : Kb + -(Kb - 1) = 1 := by mach_mpoly [Kb]
   rw [l, r] at v; exact v
 
+/-- **`Q = const c`, discharged through the node rather than the target.**
+
+A constant `Q` is not the easy case it looks like: the target may fall toward `c`, so no barrier
+separates them and `gap_below_constant_barrier` does not apply.
+
+The route goes one level down. `c = exp (exp k)` with `k := log (log c)`, so `c < T x` says exactly
+`k < (eml A B) x` — a depth-≤2 tree exceeding a constant, which is
+`depth_le_two_approach_constant`'s hypothesis. It answers with a **singly** exponential floor
+`exp (−C₁ − x)` on `(eml A B) x − k`, and two applications of `exp_sub_exp_lower` lift that through
+the two exponentials at a cost of the positive constant `exp k · exp (exp k) = log c · c`.
+
+The obligation asks only for `exp (−C − exp x)`, and `x ≤ exp x` makes that no larger than
+`exp (−C − x)`, so the singly exponential floor clears the doubly exponential ask with room to
+spare — the same scale gap `target_above_one_singly_exponential` identified, used here to close a
+branch rather than to explain one.
+
+`1 < c` has to be decided before `C` and `X₀` can be chosen, since `k` is undefined otherwise; the
+`lt_total` split handles that, and the branches where `c ≤ 1` are vacuous against the guard. -/
+theorem boundedEmlCell_const_Q (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1) (c : Real) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < c →
+      c < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - c := by
+  have hAB : (EMLTree.eml A B).depth ≤ 2 := by
+    simp only [EMLTree.depth]
+    have := Nat.max_le.mpr (And.intro hA hB); omega
+  rcases lt_total 1 c with hc | hc | hc
+  · -- the real case: `c > 1`, so `k := log (log c)` exists
+    have hcpos : (0 : Real) < c := lt_trans_ax zero_lt_one_ax hc
+    have hlogc : (0 : Real) < log c := by
+      have h := log_lt_log zero_lt_one_ax hc
+      rw [log_one] at h; exact h
+    have hek : exp (log (log c)) = log c := exp_log hlogc
+    have heek : exp (exp (log (log c))) = c := by rw [hek, exp_log hcpos]
+    obtain ⟨C₁, X₁, hX₁, happ⟩ := depth_le_two_approach_constant (EMLTree.eml A B) hAB (log (log c))
+    have hD : (0 : Real) < exp (-C₁) * (log c * c) :=
+      mul_pos (exp_pos _) (mul_pos hlogc hcpos)
+    obtain ⟨y, hy⟩ := exp_surj _ hD
+    refine ⟨-y, X₁, hX₁, ?_⟩
+    intro x hx _ hlt
+    -- `k < node x`, by trichotomy against the guard
+    have hkE : log (log c) < (EMLTree.eml A B).eval x := by
+      rcases lt_total (log (log c)) ((EMLTree.eml A B).eval x) with h | h | h
+      · exact h
+      · exfalso; rw [← h, heek] at hlt; exact lt_irrefl_ax _ hlt
+      · exfalso
+        have hstep := exp_monotone (le_of_lt (exp_lt h))
+        rw [heek] at hstep
+        exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hstep)
+    have hgap := happ x hx hkE
+    -- lift through both exponentials
+    have hlow1 : ((EMLTree.eml A B).eval x - log (log c)) * exp (log (log c))
+        ≤ exp ((EMLTree.eml A B).eval x) - exp (log (log c)) :=
+      exp_sub_exp_lower _ _
+    have hlow2 : (exp ((EMLTree.eml A B).eval x) - exp (log (log c))) * exp (exp (log (log c)))
+        ≤ exp (exp ((EMLTree.eml A B).eval x)) - exp (exp (log (log c))) :=
+      exp_sub_exp_lower _ _
+    rw [heek] at hlow2
+    -- chain the two lower bounds
+    have hchain : (exp (-C₁ - x) * log c) * c
+        ≤ exp (exp ((EMLTree.eml A B).eval x)) - c := by
+      refine le_trans ?_ hlow2
+      refine mul_le_mul_of_nonneg_right ?_ (le_of_lt hcpos)
+      refine le_trans ?_ hlow1
+      rw [hek]
+      exact mul_le_mul_of_nonneg_right hgap (le_of_lt hlogc)
+    refine le_trans ?_ hchain
+    -- `exp (-C - exp x) ≤ exp (-C₁ - x) * (log c * c)` by the choice of `C`
+    have hxe : -(exp x) ≤ -x := neg_le_neg_wit (self_le_exp x)
+    have hstep : exp (-(-y) - exp x) ≤ exp (-(-y) - x) := by
+      refine exp_monotone ?_
+      have v := add_le_add_wit (le_refl (-(-y))) hxe
+      have l : -(-y) + -(exp x) = -(-y) - exp x := by mach_mpoly [y, exp x]
+      have r : -(-y) + -x = -(-y) - x := by mach_mpoly [y, x]
+      rw [l, r] at v; exact v
+    refine le_trans hstep (le_of_eq ?_)
+    have esplit : -(-y) - x = y + -x := by mach_ring
+    rw [esplit, exp_add, hy]
+    have e1 : exp (-C₁) * (log c * c) * exp (-x) = exp (-C₁) * exp (-x) * log c * c := by
+      mach_ring
+    rw [e1, ← exp_add]
+    have e2 : -C₁ + -x = -C₁ - x := by mach_mpoly [C₁, x]
+    rw [e2]
+  · exact ⟨0, 1, le_refl _, fun _ _ h1 _ => absurd hc (ne_of_lt h1)⟩
+  · exact ⟨0, 1, le_refl _, fun _ _ h1 _ => absurd (lt_trans_ax h1 hc) (lt_irrefl_ax 1)⟩
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
