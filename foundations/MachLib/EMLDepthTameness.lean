@@ -8323,6 +8323,69 @@ theorem boundedEmlCell_constA_logB (A B Q : EMLTree) (hQ : Q.depth ≤ 2) (α cB
   have e : exp α - (0 : Real) = exp α := by mach_mpoly [exp α]
   rw [e]
 
+/-- **A target falling to `1` at `e^{−x}` cannot stay above a `Q` that sits `a/x` above `1`.**
+
+The `T → 1` regime, wired up. `target_below_one_singly_exponential` supplies the hypothesis `hT` for
+either `exp`-shaped `B`; `moving_Q_eventual_form` supplies `hQ` for the one surviving moving `Q` shape
+whenever its limit is at least `1`. `exp_neg_le_inv_of_pos` then closes it:
+
+    T x − 1  ≤  D·e^{−x}  ≤  a·(1/x)  ≤  Q x − 1
+
+so `T x ≤ Q x`, contradicting the guard `Q x < T x`. The region is empty.
+
+`e^{−x}` losing to `1/x` is the entire content — a singly exponential approach cannot outrun a
+polynomial one — and it retires every combination with an `exp`-shaped right child in the node. -/
+theorem boundedEmlCell_vacuous_of_fast_target (A B Q : EMLTree) (D a XD Xa : Real)
+    (hDpos : 0 < D) (hapos : 0 < a)
+    (hT : ∀ x : Real, XD ≤ x → exp (exp ((EMLTree.eml A B).eval x)) - 1 ≤ D * exp (-x))
+    (hQlow : ∀ x : Real, Xa ≤ x → 1 + a * (1 / x) ≤ Q.eval x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨XE, hXE, hE⟩ := exp_neg_le_inv_of_pos a D hapos hDpos
+  refine ⟨0, 1 + exp XD + exp Xa + exp XE, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 + 0 ≤ 1 + exp XD + exp Xa + exp XE :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XD)))
+        (le_of_lt (exp_pos Xa))) (le_of_lt (exp_pos XE))
+    have e : (1 : Real) + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx _ hlt
+  exfalso
+  have grab : ∀ Y : Real, exp Y ≤ 1 + exp XD + exp Xa + exp XE → Y ≤ x := by
+    intro Y hY; exact le_trans (self_le_exp Y) (le_trans hY hx)
+  have hXDx : XD ≤ x := by
+    refine grab XD ?_
+    have v : (0 : Real) + exp XD + 0 + 0 ≤ 1 + exp XD + exp Xa + exp XE :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos Xa))) (le_of_lt (exp_pos XE))
+    have e : (0 : Real) + exp XD + 0 + 0 = exp XD := by mach_ring
+    rw [e] at v; exact v
+  have hXax : Xa ≤ x := by
+    refine grab Xa ?_
+    have v : (0 : Real) + 0 + exp Xa + 0 ≤ 1 + exp XD + exp Xa + exp XE :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XD))) (le_refl _)) (le_of_lt (exp_pos XE))
+    have e : (0 : Real) + 0 + exp Xa + 0 = exp Xa := by mach_ring
+    rw [e] at v; exact v
+  have hXEx : XE ≤ x := by
+    refine grab XE ?_
+    have v : (0 : Real) + 0 + 0 + exp XE ≤ 1 + exp XD + exp Xa + exp XE :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax)
+        (le_of_lt (exp_pos XD))) (le_of_lt (exp_pos Xa))) (le_refl _)
+    have e : (0 : Real) + 0 + 0 + exp XE = exp XE := by mach_ring
+    rw [e] at v; exact v
+  -- `T ≤ 1 + D e^{-x} ≤ 1 + a/x ≤ Q`
+  have hchain : exp (exp ((EMLTree.eml A B).eval x)) ≤ Q.eval x := by
+    refine le_trans ?_ (hQlow x hXax)
+    have h1 := hT x hXDx
+    have v := add_le_add_wit (le_trans h1 (hE x hXEx)) (le_refl (1 : Real))
+    have l : exp (exp ((EMLTree.eml A B).eval x)) - 1 + 1
+        = exp (exp ((EMLTree.eml A B).eval x)) := by
+      mach_mpoly [exp (exp ((EMLTree.eml A B).eval x))]
+    have r : a * (1 / x) + 1 = 1 + a * (1 / x) := by mach_mpoly [a, (1 / x : Real)]
+    rw [l, r] at v; exact v
+  exact lt_irrefl_ax _ (lt_of_lt_of_le hlt hchain)
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
