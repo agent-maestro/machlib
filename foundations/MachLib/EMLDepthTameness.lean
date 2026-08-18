@@ -8982,6 +8982,104 @@ theorem cell_of_Q_above_target (A B Q : EMLTree) (X₁ : Real)
     rw [e] at v; exact le_trans (self_le_exp X₁) (le_trans v hx)
   exact lt_irrefl_ax _ (lt_of_lt_of_le hguard (habove x hX₁x))
 
+/-- **Rising target, `Q` below its limit: the barrier is the target's own limit.**
+
+The limit comparison the router needs, in the generic orientation. A rising target never falls below
+`exp v`, so `k := exp v` is a barrier for free — no `k` has to be found strictly between the two
+limits, which is the step that would otherwise need both of them computed.
+
+`Q` clears it because `LQ < exp v` and `Q` descends to `LQ`: the threshold is
+`1 + aQ·(1/(exp v − LQ))`, and `cell_of_separated_limits` then returns a **uniform** gap. -/
+theorem cell_of_rising_target_lower_Q (A B Q : EMLTree) (hQd : Q.depth ≤ 2)
+    (v κ LQ aQ XT XQ : Real) (hv : 0 < v) (hκ : 0 < κ) (haQ : 0 < aQ)
+    (hsep : LQ < exp v)
+    (hT : ∀ x : Real, XT ≤ x →
+      exp (exp ((EMLTree.eml A B).eval x)) = exp (v * exp (κ * (1 / x))))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = LQ + aQ * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hδ : (0 : Real) < exp v - LQ := by
+    have u := add_lt_add_left hsep (-LQ)
+    have l : -LQ + LQ = 0 := by mach_ring
+    have r : -LQ + exp v = exp v - LQ := by mach_mpoly [exp v, LQ]
+    rw [l, r] at u; exact u
+  refine cell_of_separated_limits A B Q hQd (exp v) (1 + exp XT) (1 + exp XQ + aQ * (1 / (exp v - LQ))) ?_ ?_
+  · -- the rising target never dips below `exp v`
+    intro x hx
+    have hone : (1 : Real) ≤ x := by
+      have v0 : (1 : Real) + 0 ≤ 1 + exp XT := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v0; exact le_trans v0 hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+    have hXTx : XT ≤ x := by
+      have v0 : (0 : Real) + exp XT ≤ 1 + exp XT :=
+        add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+      have e : (0 : Real) + exp XT = exp XT := by mach_ring
+      rw [e] at v0; exact le_trans (self_le_exp XT) (le_trans v0 hx)
+    rw [hT x hXTx]
+    refine exp_monotone ?_
+    -- `v ≤ v * exp (κ w)` since `exp (κ w) ≥ 1`
+    have hkw : (0 : Real) ≤ κ * (1 / x) := le_of_lt (mul_pos hκ (one_div_pos_of_pos hxpos))
+    have hge1 : (1 : Real) ≤ exp (κ * (1 / x)) := by
+      have h := exp_monotone hkw
+      rw [exp_zero] at h; exact h
+    have h := mul_le_mul_of_nonneg_left hge1 (le_of_lt hv)
+    have e : v * (1 : Real) = v := by mach_ring
+    rw [e] at h; exact h
+  · -- `Q` descends below `exp v`
+    intro x hx
+    have hone : (1 : Real) ≤ x := by
+      have v0 : (1 : Real) + 0 + 0 ≤ 1 + exp XQ + aQ * (1 / (exp v - LQ)) :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XQ)))
+          (le_of_lt (mul_pos haQ (one_div_pos_of_pos hδ)))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v0; exact le_trans v0 hx
+    have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+    have hXQx : XQ ≤ x := by
+      have v0 : (0 : Real) + exp XQ + 0 ≤ 1 + exp XQ + aQ * (1 / (exp v - LQ)) :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (mul_pos haQ (one_div_pos_of_pos hδ)))
+      have e : (0 : Real) + exp XQ + 0 = exp XQ := by mach_ring
+      rw [e] at v0; exact le_trans (self_le_exp XQ) (le_trans v0 hx)
+    have hthr : aQ * (1 / (exp v - LQ)) < x := by
+      have v0 : (0 : Real) + 0 + aQ * (1 / (exp v - LQ)) ≤ 1 + exp XQ + aQ * (1 / (exp v - LQ)) :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XQ)))
+          (le_refl _)
+      have e : (0 : Real) + 0 + aQ * (1 / (exp v - LQ)) = aQ * (1 / (exp v - LQ)) := by mach_ring
+      rw [e] at v0
+      have hstrict : aQ * (1 / (exp v - LQ)) < 1 + exp XQ + aQ * (1 / (exp v - LQ)) := by
+        have w := add_lt_add_left (add_lt_add_left (exp_pos XQ) (1 : Real)) (aQ * (1 / (exp v - LQ)))
+        have l : aQ * (1 / (exp v - LQ)) + (1 + 0) = aQ * (1 / (exp v - LQ)) + 1 := by mach_ring
+        have r : aQ * (1 / (exp v - LQ)) + (1 + exp XQ)
+            = 1 + exp XQ + aQ * (1 / (exp v - LQ)) := by
+          mach_mpoly [aQ, (1 / (exp v - LQ) : Real), exp XQ]
+        rw [l, r] at w
+        refine lt_trans_ax ?_ w
+        have u := add_lt_add_left zero_lt_one_ax (aQ * (1 / (exp v - LQ)))
+        have l2 : aQ * (1 / (exp v - LQ)) + (0 : Real) = aQ * (1 / (exp v - LQ)) := by mach_ring
+        rw [l2] at u; exact u
+      exact lt_of_lt_of_le hstrict hx
+    -- `aQ < δ x`, hence `aQ (1/x) < δ`
+    have hδx : aQ < (exp v - LQ) * x := by
+      have h := mul_lt_mul_of_pos_right hthr hδ
+      have l : aQ * (1 / (exp v - LQ)) * (exp v - LQ)
+          = aQ * ((exp v - LQ) * (1 / (exp v - LQ))) := by mach_ring
+      rw [l, mul_inv _ (ne_of_gt hδ)] at h
+      have e : aQ * (1 : Real) = aQ := by mach_ring
+      rw [e] at h
+      have r : x * (exp v - LQ) = (exp v - LQ) * x := by mach_ring
+      rw [r] at h; exact h
+    have hscaled := mul_lt_mul_of_pos_right hδx (one_div_pos_of_pos hxpos)
+    have l2 : (exp v - LQ) * x * (1 / x) = (exp v - LQ) * (x * (1 / x)) := by mach_ring
+    rw [l2, mul_inv x (ne_of_gt hxpos)] at hscaled
+    have e2 : (exp v - LQ) * (1 : Real) = exp v - LQ := by mach_ring
+    rw [e2] at hscaled
+    rw [hQ x hXQx]
+    have u := add_lt_add_left hscaled LQ
+    have r : LQ + (exp v - LQ) = exp v := by mach_mpoly [exp v, LQ]
+    rw [r] at u; exact u
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
