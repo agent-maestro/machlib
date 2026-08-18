@@ -7,6 +7,38 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### The bounded-cell chain closes, and `Depth3DecayExp` with it
+
+`boundedEmlCellApproachLarge_holds` is the router: it closes the last open cell of the bounded-cell
+chain by dispatching an arbitrary `Q` onto the comparison layer. `Q` splits first — `const` and `var`
+close outright, and only `eml P R` reaches the node, where the two child dichotomies leave `P` and `R`
+each `const` or `c − log x`. Three of those four pairings were already lemmas; the fourth is the
+moving `Q = L + a/x` that `cell_of_moving_Q` routes against all five node shapes.
+
+Two rows above it were reductions carrying no content of their own, so they close in the same step:
+`BoundedCellApproach` is a theorem, not a reduction, and the ledger has no **reduced** rows left.
+
+`Depth3DecayExp` follows, by all four cells, dispatched by a trichotomy on the left child. The four
+cells had been built one at a time against different hypotheses and never checked for coverage;
+`depth_le_one_exp_bounded_or_grows` splits the grandchild with nothing in between, and the two
+directions of the depth-≤1 log bound feed the two halves. No new analysis — the gap really was the
+dispatch.
+
+The refuted sibling `Depth3DecayHard` is the *stronger* statement (`C + x` against `C + exp x`), and
+`depth3DecayExp_of_hard` proves Hard ⟹ Exp. Implication one way, antecedent false, consequent true:
+the rung correction is sharp, one exponential, with the truth value flipping across that single step.
+
+Three things the assembly found that the pieces could not. Enumerating the router's cases exposed a
+missing fifth node shape; writing its inner dispatch exposed a bracket too loose to decide that
+shape's `L = 1` row; and this pass exposed a ray mismatch in
+`target_below_one_singly_exponential`, whose hypotheses were stated from `1` while every producer
+hands them back past an existential. Generalised in place to a ray.
+
+The obligations gate caught its own negative control twice in one day — its "correct rows stay
+silent" specimen named a live open obligation, and both obligations it named were then discharged.
+The open specimen is now a synthetic name no theorem can conclude, which is the only status that
+does not go stale when the corpus improves.
+
 ### The conversion modulus, extracted
 
 `exponent_gap_of_value_gap` — `G ≤ exp u − exp v ∧ u ≤ M ⟹ G · exp (−M) ≤ u − v`. The three cells of
@@ -51,7 +83,7 @@ in commit archaeology:
 | `SignHardCase` | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
-| `Depth3DecayExp` | **open** | — (the corrected rung, `C + exp x`) |
+| `Depth3DecayExp` | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | **discharged** | `boundedCellApproach_holds` |
 | `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |

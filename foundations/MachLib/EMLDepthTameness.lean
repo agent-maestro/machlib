@@ -10748,14 +10748,108 @@ above, and the same move: `BoundedCellApproach` is now a theorem, so the reducti
 
 That leaves `Depth3DecayExp` with all four of its cells proved — `growing`, `const`, `var`, `bounded`
 — and what remains between the cells and the proposition is the dispatch over `P`, not any further
-analysis. Stated here as the cell it is; the ledger row stays **open** until that dispatch exists,
-because a row is about the proposition, not about how close its parts are. -/
+analysis. `depth3DecayExp_holds` below is that dispatch. -/
 theorem depth_three_decayExp_bounded_left (P Q : EMLTree) (hP : P.depth ≤ 2) (hQ : Q.depth ≤ 2)
     (K XK : Real) (hK : ∀ x : Real, XK ≤ x → exp (P.eval x) ≤ K) :
     ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 0 < log (Q.eval x) →
       0 < exp (P.eval x) - log (Q.eval x) →
       -log (exp (P.eval x) - log (Q.eval x)) ≤ C + exp x :=
   depth_three_decayExp_bounded_left_of_gap boundedCellApproach_holds P Q hP hQ K XK hK
+
+/-- **`Depth3DecayExp` holds.** The dispatch onto the four cells, and the obligation closes.
+
+A trichotomy on `A`, and the point of interest is that it *is* a trichotomy — the four cells were
+built one at a time against different hypotheses, and whether they cover an arbitrary depth-≤2 `A`
+was never checked until this proof was written.
+
+| `A` | why | cell |
+| --- | --- | --- |
+| `const c` | `exp c` is already the cell's subject | `depth_three_decayExp_const_left` |
+| `var` | `exp x` against a doubly exponential target | `depth_three_decayExp_var_left` |
+| `eml A₁ B₁`, `exp (A₁ x)` bounded | the node is capped: `exp (A₁ x) − log (B₁ x) ≤ Kb − Cl` | `depth_three_decayExp_bounded_left` |
+| `eml A₁ B₁`, `exp (A₁ x)` growing | the node clears `exp x − x − C`, since `log (B₁ x) ≤ x + C` | `depth_three_decayExp_growing_left` |
+
+The last two rows are where the depth budget is spent, and they line up exactly:
+`depth_le_one_exp_bounded_or_grows` splits the *grandchild* `A₁` into bounded-or-growing with nothing
+in between, and each half hands the corresponding cell precisely the hypothesis it asks for. The
+bounded half needs `depth_le_one_log_lower_at_infinity` to floor `log (B₁ x)`, the growing half needs
+`depth_le_one_log_le_linear` to cap it — the two directions of the same depth-≤1 log bound, one per
+branch. No new analysis; the gap really was the dispatch.
+
+**`var` is the load-bearing row, and the only one that needs the corrected rung.** `growing` and
+`const` are `rung_weaken`ings of cells that prove the stronger `C + x`; `bounded` and `var` do not,
+and `var` is where `Depth3DecayHard`'s counterexample lives. So this proof cannot be adapted to the
+refuted sibling — see `depth3DecayExp_of_hard` for that separation, machine-checked. -/
+theorem depth3DecayExp_holds : Depth3DecayExp := by
+  intro A B hA hB
+  cases A with
+  | const c => exact depth_three_decayExp_const_left c B hB
+  | var => exact depth_three_decayExp_var_left B hB
+  | eml A₁ B₁ =>
+      have hA₁ : A₁.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_left A₁.depth B₁.depth; omega
+      have hB₁ : B₁.depth ≤ 1 := by
+        simp only [EMLTree.depth] at hA
+        have := Nat.le_max_right A₁.depth B₁.depth; omega
+      have hval : ∀ x : Real,
+          (EMLTree.eml A₁ B₁).eval x = exp (A₁.eval x) - log (B₁.eval x) := fun _ => rfl
+      rcases depth_le_one_exp_bounded_or_grows A₁ hA₁ with ⟨Kb, hKb⟩ | ⟨T, hT⟩
+      · -- bounded grandchild: the node itself is capped, so the bounded cell applies
+        obtain ⟨Cl, XC, hXC, hCl⟩ := depth_le_one_log_lower_at_infinity B₁ hB₁
+        refine depth_three_decayExp_bounded_left (EMLTree.eml A₁ B₁) B hA hB
+          (exp (Kb - Cl)) XC ?_
+        intro x hx
+        have hx1 : (1 : Real) ≤ x := le_trans hXC hx
+        rw [hval x]
+        refine exp_monotone ?_
+        have v := add_le_add_wit (hKb x hx1) (neg_le_neg_wit (hCl x hx))
+        have l : exp (A₁.eval x) + -log (B₁.eval x) = exp (A₁.eval x) - log (B₁.eval x) := by
+          mach_mpoly [exp (A₁.eval x), log (B₁.eval x)]
+        have r : Kb + -Cl = Kb - Cl := by mach_mpoly [Kb, Cl]
+        rw [l, r] at v; exact v
+      · -- growing grandchild: the node clears `exp x − x − C`
+        obtain ⟨C, hC⟩ := depth_le_one_log_le_linear B₁ hB₁
+        have hgrow : ∀ x : Real, 1 + exp T ≤ x →
+            exp x - x - C ≤ (EMLTree.eml A₁ B₁).eval x := by
+          intro x hx
+          have hx1 : (1 : Real) ≤ x := by
+            have v0 : (1 : Real) + 0 ≤ 1 + exp T := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos T))
+            have e : (1 : Real) + 0 = 1 := by mach_ring
+            rw [e] at v0; exact le_trans v0 hx
+          have hTx : T ≤ x := by
+            have v0 : (0 : Real) + exp T ≤ 1 + exp T :=
+              add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+            have e : (0 : Real) + exp T = exp T := by mach_ring
+            rw [e] at v0; exact le_trans (self_le_exp T) (le_trans v0 hx)
+          rw [hval x]
+          have v := add_le_add_wit (hT x hTx) (neg_le_neg_wit (hC x hx1))
+          have l : exp x + -(x + C) = exp x - x - C := by mach_mpoly [exp x, x, C]
+          have r : exp (A₁.eval x) + -log (B₁.eval x) = exp (A₁.eval x) - log (B₁.eval x) := by
+            mach_mpoly [exp (A₁.eval x), log (B₁.eval x)]
+          rw [l, r] at v; exact v
+        obtain ⟨C', X₀, hX₀, h⟩ :=
+          depth_three_decayExp_growing_left (EMLTree.eml A₁ B₁) B hB C (1 + exp T) hgrow
+        exact ⟨C', X₀, hX₀, fun x hx _ _ => h x hx⟩
+
+/-- **The refuted sibling implies this one — so the rung correction is sharp.**
+
+`Depth3DecayHard` is `Depth3DecayExp` with `C + x` where this has `C + exp x`, and `x ≤ exp x`, so
+Hard ⟹ Exp. Together with `not_depth3DecayHard` and `depth3DecayExp_holds` that pins the pair
+exactly: the implication runs one way, the antecedent is **false**, the consequent is **true**. The
+rung was not weakened further than the counterexample forced — one exponential is what it cost, and
+the statement flips truth value across that single step.
+
+Stated with an explicit binder rather than as `Depth3DecayHard → Depth3DecayExp`, and the difference
+is not cosmetic: `tools/obligation_ledger_check.py` reads a theorem's conclusion as the tail after
+its last top-level `:`, and strips binders of the obligation's own type before doing so. In arrow
+form the tail begins `Depth3DecayHard`, so this theorem would be counted as a **discharger of a
+refuted row** and the gate would report a contradiction that does not exist. The binder form is
+stripped and reads correctly. A gate's parser is part of its scope. -/
+theorem depth3DecayExp_of_hard (h : Depth3DecayHard) : Depth3DecayExp := by
+  intro A B hA hB
+  obtain ⟨C, X₀, hX₀, hb⟩ := h A B hA hB
+  exact ⟨C, X₀, hX₀, fun x hx h1 h2 => rung_weaken (hb x hx h1 h2)⟩
 
 /-! ### Obligations ledger
 
@@ -10768,16 +10862,16 @@ partial result can be committed without overstating it. Their status, as of the 
 | `SignHardCase` | here | **open** | — (only `evSign_depth_le_two`, unconditional at depth ≤ 2) |
 | `VarLeftEmlRightHard` | here | **discharged** | `varLeftEmlRightHard_of_band`, for band targets |
 | `Depth3DecayHard` | here | **refuted** | `not_depth3DecayHard` (witness `dep3CounterRight`) |
-| `Depth3DecayExp` | here | **open** | — (the corrected rung, `C + exp x`) |
+| `Depth3DecayExp` | here | **discharged** | `depth3DecayExp_holds` (the corrected rung, `C + exp x`) |
 | `ExpExpGapBelow` | here | **discharged** | `expExpGapBelow_holds` |
 | `BoundedCellApproach` | here | **discharged** | `boundedCellApproach_holds` |
 | `BoundedEmlCellApproach` | here | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 
-Two of these are **cancellation** statements — `SignHardCase` about the sign of `exp a − log b`,
-`Depth3DecayExp` about how small it can be. So the programme's open problems are not scattered:
-they are one phenomenon met from several directions.
+`SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
+`exp a − log b` and how small it can be. The second is now a theorem, so what is left of that pair is
+the sign question alone.
 
 **Three rows closed together on 2026-08-18**, and they closed as one because they were always one:
 `BoundedCellApproach` and `BoundedEmlCellApproach` were *reductions*, carrying no content of their
@@ -10786,11 +10880,15 @@ noting what that says about the **reduced** status — it is honest bookkeeping,
 sat green for weeks while the thing they reduced to was open, and the gate was right to keep them
 distinct from **discharged**.
 
-`Depth3DecayExp` does **not** close with them, and the row stays open on purpose. All four of its
-cells are now theorems — `depth_three_decayExp_{growing,const,var,bounded}_left` — but the
-proposition quantifies over every depth-≤2 `A`, and the dispatch from an arbitrary `A` onto those
-four cells is not written. Cells covering a case analysis is not the same as a proof that the case
-analysis is exhaustive; this file has twice been shown otherwise by writing the dispatch out.
+**`Depth3DecayExp` closed the same day**, once the dispatch onto its four cells was written
+(`depth3DecayExp_holds`). That the cells covered an arbitrary depth-≤2 `A` was an expectation until
+the dispatch type-checked; it needed no new analysis, only `depth_le_one_exp_bounded_or_grows` to
+split the grandchild and the two directions of the depth-≤1 log bound to feed the two halves.
+
+Its refuted sibling `Depth3DecayHard` is the *stronger* statement (`C + x`), and
+`depth3DecayExp_of_hard` proves Hard ⟹ Exp. So the pair is pinned: implication one way, antecedent
+false, consequent true. The rung correction is **sharp** — one exponential, and the statement flips
+truth value across that single step.
 
 **A third status was needed on 2026-08-15.** `Depth3DecayHard` is not open, it is **false** — see its
 docstring for the witness. "Refuted" is checked the same way as "open" (no theorem may conclude it)

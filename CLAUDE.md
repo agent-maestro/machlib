@@ -108,11 +108,14 @@ behind it is missing — registration is still a human act.
 Lean `v4.32.2`, `master`. All seven gates green (626 build jobs). `sorryAx`: 1, allowlisted.
 **242 axioms pinned — unchanged across the whole 2026-08 EML arc.**
 
-The bounded-cell chain **closed 2026-08-18**: `BoundedEmlCellApproachLarge`,
-`BoundedEmlCellApproach` and `BoundedCellApproach` are all theorems, so the obligations ledger at the
-end of `EMLDepthTameness` now has no **reduced** rows. `Depth3DecayExp` has all four of its cells
-proved but stays **open** — the dispatch from an arbitrary depth-≤2 `A` onto those cells is unwritten,
-and that is the next piece of work in this file.
+The depth-3 decay arc **closed 2026-08-18**. `BoundedEmlCellApproachLarge` (the router),
+`BoundedEmlCellApproach`, `BoundedCellApproach` and `Depth3DecayExp` are all theorems, so the
+obligations ledger at the end of `EMLDepthTameness` has no **reduced** rows and no open row in this
+file. `Depth3DecayExp`'s refuted sibling `Depth3DecayHard` is the stronger statement and
+`depth3DecayExp_of_hard` proves Hard ⟹ Exp, so the rung correction is sharp.
+
+**Still open, all elsewhere:** `SignHardCase` (here — the sign of `exp a − log b`, the last
+cancellation statement), `TowerLowerBound` and `TowerReducesToSign` (both `EMLCertifiedSynthesis`).
 
 Recent arc: **EML characterised** as exactly the `exp`/`log` closure of `ℝ`; then
 **`s(1/x) ∈ {7,9,11}` proved** (two `eml` gates can never compute a reciprocal), `d(1/x)` frozen at

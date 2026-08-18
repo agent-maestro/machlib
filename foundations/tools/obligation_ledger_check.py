@@ -263,11 +263,20 @@ def self_test(decls) -> int:
     # 8. And the true ledger must still pass, so the canaries are not just "everything fails".
     # A CORRECT reduced row is included: a new status that only ever fires is as useless as one
     # that never does, and this is the row the two specimens above are perturbations of.
-    # NOTE: these are LITERAL specimens, not a copy of the ledger, and the open row has to be
-    # repointed whenever the obligation it names is discharged -- `BoundedEmlCellApproachLarge`
-    # stood here until the router proved it on 2026-08-18, at which point this canary fired and
-    # the whole self-test failed. That is the specimen doing its job, but the lesson is that the
-    # open row must name an obligation with no proof in sight, not merely one open today.
+    # These are LITERAL specimens, not a copy of the ledger, and the open row is DELIBERATELY a
+    # name no theorem can ever conclude rather than a live obligation.
+    #
+    # It was a live one twice, and both broke on the same day: `BoundedEmlCellApproachLarge` stood
+    # here until the router proved it (2026-08-18), and `Depth3DecayExp` replaced it and was
+    # discharged hours later by the dispatch. Each time this canary fired and took the whole gate
+    # down with it -- a self-test that fails because the corpus got BETTER is a bad self-test.
+    #
+    # The other three statuses are structurally stable: discharged and refuted rows do not revert,
+    # and a reduced row stays well-formed as long as its residue is in the list (it is). Only
+    # "open" is unstable, because closing open rows is the entire point of the ledger. So the open
+    # specimen must not name one. A synthetic name exercises exactly the branch under control --
+    # dischargers_of returns [] and the row must stay silent -- while canary 1 covers the other
+    # branch with a real discharged proposition mislabelled open. Together they discriminate.
     bad, _ = check_rows([("VarLeftEmlRightHard", "discharged", "`varLeftEmlRightHard_of_band`"),
                          ("BoundedCellApproach", "reduced",
                           "`boundedCellApproach_of_eml` → `BoundedEmlCellApproach`"),
@@ -275,7 +284,7 @@ def self_test(decls) -> int:
                           "`boundedEmlCellApproach_of_large` → `BoundedEmlCellApproachLarge`"),
                          ("BoundedEmlCellApproachLarge", "discharged",
                           "`boundedEmlCellApproachLarge_holds`"),
-                         ("Depth3DecayExp", "open", "—")], decls)
+                         ("SpecimenNeverConcluded", "open", "—")], decls)
     b2, _ = check_mirror(a, a)
     quiet = bad == 0 and b2 == 0
     print(f"  canary 9 (correct rows stay silent)            {'SILENT' if quiet else 'FIRES'}")

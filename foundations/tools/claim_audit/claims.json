@@ -3381,6 +3381,93 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The router. hypotheses_count 0 -- a closed statement, so the discharge is not a reduction wearing a discharge's name. Registered because the three rows it closes were bookkeeping and the gate is blind to a claim with no registered theorem behind it.",
+      "id": "bounded-eml-cell-router-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "closes the last open cell of the bounded-cell chain"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.boundedEmlCellApproachLarge_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "BoundedEmlCellApproachLarge"
+      ],
+      "conclusion_mentions": [
+        "BoundedEmlCellApproachLarge"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The row that spent weeks as 'reduced'. hypotheses_count 0 is the whole point: a reduction has a hypothesis and this does not.",
+      "id": "bounded-cell-approach-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is a theorem, not a reduction"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.boundedCellApproach_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "BoundedCellApproach"
+      ],
+      "conclusion_mentions": [
+        "BoundedCellApproach"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "proof_uses pins the prose 'all four cells': the claim is about COVERAGE, so it is worth checking mechanically that the proof really goes through each cell rather than three of them plus a lucky generalisation.",
+      "id": "depth3-decay-exp-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "all four cells, dispatched by a trichotomy on the left child"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth3DecayExp_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Depth3DecayExp"
+      ],
+      "conclusion_mentions": [
+        "Depth3DecayExp"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "depth_three_decayExp_const_left",
+        "depth_three_decayExp_var_left",
+        "depth_three_decayExp_bounded_left",
+        "depth_three_decayExp_growing_left"
+      ]
+    },
+    {
+      "_comment": "Sharpness. hypotheses_count 1 is asserted rather than avoided: this one IS conditional, and registering it as closed would be the exact error the count exists to catch.",
+      "id": "depth3-decay-rung-sharp-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the rung correction is sharp, one exponential"
+      ],
+      "module": "MachLib.EMLDepthTameness",
+      "theorem": "MachLib.depth3DecayExp_of_hard",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "Depth3DecayHard",
+        "Depth3DecayExp"
+      ],
+      "conclusion_mentions": [
+        "Depth3DecayExp"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
