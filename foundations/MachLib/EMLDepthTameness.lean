@@ -8126,6 +8126,129 @@ theorem boundedEmlCell_const_Q (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.dept
   · exact ⟨0, 1, le_refl _, fun _ _ h1 _ => absurd hc (ne_of_lt h1)⟩
   · exact ⟨0, 1, le_refl _, fun _ _ h1 _ => absurd (lt_trans_ax h1 hc) (lt_irrefl_ax 1)⟩
 
+/-- **`log (c − log x) = 0` past `exp c`.** The totalized log collapsing the `c − log x` shape, as a
+theorem rather than the informal "the argument goes negative". `log_nonpos` is a CHOICE this base
+makes, so the collapse changes the function rather than merely simplifying it, and the threshold is
+explicit. -/
+theorem log_c_sub_log_eventually_zero (c : Real) :
+    ∀ x : Real, exp c ≤ x → log (c - log x) = 0 := by
+  intro x hx
+  refine log_nonpos ?_
+  have hcl : c ≤ log x := by
+    have h := log_ge_sub_one_of_exp_pred_le (x := c + 1) (z := x) ?_
+    · have e : c + 1 - 1 = c := by mach_ring
+      rw [e] at h; exact h
+    · have e : c + 1 - 1 = c := by mach_ring
+      rw [e]; exact hx
+  have v := add_le_add_wit hcl (le_refl (-(log x)))
+  have l : c + -(log x) = c - log x := by mach_mpoly [c, log x]
+  have r : log x + -(log x) = 0 := by mach_ring
+  rw [l, r] at v; exact v
+
+/-- **An eventually-constant `Q` inherits `boundedEmlCell_const_Q`.**
+
+Two of the four surviving `P`/`R` combinations land here: `P` constant makes `exp (P x)` constant, and
+either `R` constant or — by `log_c_sub_log_eventually_zero` — `R = c − log x` makes `log (R x)`
+constant too. The value is then fixed on a ray even though the tree is not a `const` node. -/
+theorem boundedEmlCell_eventually_const_Q (A B Q : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (c XC : Real) (hconst : ∀ x : Real, XC ≤ x → Q.eval x = c) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  obtain ⟨C, X₀, hX₀, h⟩ := boundedEmlCell_const_Q A B hA hB c
+  refine ⟨C, X₀ + exp XC, ?_, ?_⟩
+  · have v : X₀ + 0 ≤ X₀ + exp XC := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XC))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans hX₀ v
+  intro x hx hgt hlt
+  have hX₀x : X₀ ≤ x := by
+    have v : X₀ + 0 ≤ X₀ + exp XC := add_le_add_wit (le_refl _) (le_of_lt (exp_pos XC))
+    have e : X₀ + (0 : Real) = X₀ := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hXCx : XC ≤ x := by
+    have v : (0 : Real) + exp XC ≤ X₀ + exp XC :=
+      add_le_add_wit (le_trans (le_of_lt zero_lt_one_ax) hX₀) (le_refl _)
+    have e : (0 : Real) + exp XC = exp XC := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XC) (le_trans v hx)
+  rw [hconst x hXCx] at hgt hlt ⊢
+  exact h x hX₀x hgt hlt
+
+/-! ## ▸ The four surviving `P`/`R` combinations
+
+`P` and `R` each survive as `const` or `c − log x`. Three of the four pairings collapse; only
+`P = c − log x` with `R` constant leaves a genuinely moving target. -/
+
+/-- `P` and `R` both constant: `Q` is constant. -/
+theorem boundedEmlCell_constP_constR (A B P R : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (α β : Real) (hP : ∀ x : Real, 0 < x → P.eval x = α) (hR : ∀ x : Real, 0 < x → R.eval x = β) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+      (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x := by
+  refine boundedEmlCell_eventually_const_Q A B (EMLTree.eml P R) hA hB (exp α - log β) 1 ?_
+  intro x hx
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  rw [hval, hP x hx0, hR x hx0]
+
+/-- `P` constant, `R = c − log x`: the totalized log zeroes the right child, so `Q` is eventually the
+constant `exp α`. -/
+theorem boundedEmlCell_constP_logR (A B P R : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (α cR : Real) (hP : ∀ x : Real, 0 < x → P.eval x = α)
+    (hR : ∀ x : Real, 0 < x → R.eval x = cR - log x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+      (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x := by
+  refine boundedEmlCell_eventually_const_Q A B (EMLTree.eml P R) hA hB (exp α) (1 + exp cR) ?_
+  intro x hx
+  have hone : (1 : Real) ≤ x := by
+    have v : (1 : Real) + 0 ≤ 1 + exp cR := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos cR))
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hcR : exp cR ≤ x := by
+    have v : (0 : Real) + exp cR ≤ 1 + exp cR :=
+      add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+    have e : (0 : Real) + exp cR = exp cR := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  rw [hval, hP x hx0, hR x hx0, log_c_sub_log_eventually_zero cR x hcR]
+  mach_mpoly [exp α]
+
+/-- Both children `c − log x`: the right child zeroes and the left decays, so `Q → 0` and falls below
+the guard `1 < Q x`. Vacuous. -/
+theorem boundedEmlCell_logP_logR (A B P R : EMLTree) (cP cR : Real)
+    (hP : ∀ x : Real, 0 < x → P.eval x = cP - log x)
+    (hR : ∀ x : Real, 0 < x → R.eval x = cR - log x) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < (EMLTree.eml P R).eval x →
+      (EMLTree.eml P R).eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - (EMLTree.eml P R).eval x := by
+  refine boundedEmlCell_vacuous_of_small_Q A B (EMLTree.eml P R) (1 + exp cR + exp cP) ?_
+  intro x hx
+  have hone : (1 : Real) ≤ x := by
+    have v : (1 : Real) + 0 + 0 ≤ 1 + exp cR + exp cP :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos cR))) (le_of_lt (exp_pos cP))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hcR : exp cR ≤ x := by
+    have v : (0 : Real) + exp cR + 0 ≤ 1 + exp cR + exp cP :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)) (le_of_lt (exp_pos cP))
+    have e : (0 : Real) + exp cR + 0 = exp cR := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hcP : exp cP ≤ x := by
+    have v : (0 : Real) + 0 + exp cP ≤ 1 + exp cR + exp cP :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos cR))) (le_refl _)
+    have e : (0 : Real) + 0 + exp cP = exp cP := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hval : (EMLTree.eml P R).eval x = exp (P.eval x) - log (R.eval x) := rfl
+  rw [hval, hP x hx0, hR x hx0, log_c_sub_log_eventually_zero cR x hcR, exp_c_sub_log_eq cP hx0]
+  -- `exp cP * (1/x) − 0 ≤ 1`
+  have hinv : x * (1 / x) = 1 := mul_inv x (ne_of_gt hx0)
+  have hstep := mul_le_mul_of_nonneg_right hcP (le_of_lt (one_div_pos_of_pos hx0))
+  rw [hinv] at hstep
+  have e : exp cP * (1 / x) - 0 = exp cP * (1 / x) := by mach_mpoly [exp cP, (1 / x : Real)]
+  rw [e]; exact hstep
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
