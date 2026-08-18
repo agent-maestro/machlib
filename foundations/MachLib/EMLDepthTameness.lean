@@ -9543,6 +9543,122 @@ theorem cell_of_decaying_target_upper_Q_le (A B Q : EMLTree) (M LQ aQ XT XQ : Re
     rw [e] at u; exact u
   exact le_trans (le_of_lt hlt) hQge
 
+/-- **The node enumeration, DERIVED rather than asserted.**
+
+Every previous list of node shapes in this development was written by hand, and one of them was
+wrong — `exp (κ·w)·w` went missing for four commits because it only appears when
+`exp_c_sub_log_eq` fires twice on the same node, which considering the children separately never
+produces.
+
+This derives the list instead. `boundedEmlCell_left_forms` gives `A` two shapes from the cap,
+`depth_le_one_classification` gives `B` five, and the ten combinations are discharged one at a time.
+**A sixth shape cannot hide here**: it would have to surface as an unhandled case, and Lean would
+refuse the proof.
+
+The five outcomes:
+
+| | node |
+| --- | --- |
+| eventually constant | `A` const with `B` const or `c − log x` |
+| rising `v·exp (κw)` | `A = c − log x` with `B` const or `c − log x` |
+| decaying `M·w` | `A` const, `B = var` |
+| decaying `exp (κw)·w` | `A = c − log x`, `B = var` — the one that was missing |
+| `log (B x) ≥ x − 1` | `B` either `exp`-shaped, against either `A` |
+
+The last is a bound rather than a form, and deliberately so: those targets fall to `1` at `e^{−x}`
+and the vacuity argument needs the bound, not the shape. -/
+theorem node_form_classification (A B : EMLTree) (hA : A.depth ≤ 1) (hB : B.depth ≤ 1)
+    (K XK : Real) (hK : ∀ x : Real, XK ≤ x → exp ((EMLTree.eml A B).eval x) ≤ K) :
+    (∃ V XV : Real, ∀ x : Real, XV ≤ x → exp ((EMLTree.eml A B).eval x) = V)
+    ∨ (∃ v κ XV : Real, 0 < v ∧ 0 < κ ∧ ∀ x : Real, XV ≤ x →
+        exp ((EMLTree.eml A B).eval x) = v * exp (κ * (1 / x)))
+    ∨ (∃ M XV : Real, 0 < M ∧ ∀ x : Real, XV ≤ x →
+        exp ((EMLTree.eml A B).eval x) = M * (1 / x))
+    ∨ (∃ κ XV : Real, 0 < κ ∧ ∀ x : Real, XV ≤ x →
+        exp ((EMLTree.eml A B).eval x) = exp (κ * (1 / x)) * (1 / x))
+    ∨ (∃ XV : Real, ∀ x : Real, XV ≤ x → x - 1 ≤ log (B.eval x)) := by
+  have hval : ∀ x : Real, (EMLTree.eml A B).eval x = exp (A.eval x) - log (B.eval x) :=
+    fun _ => rfl
+  -- helper: past `1 + exp t` we clear both `1` and `t`
+  have clear1 : ∀ t x : Real, 1 + exp t ≤ x → (1 : Real) ≤ x ∧ exp t ≤ x := by
+    intro t x hx
+    constructor
+    · have v0 : (1 : Real) + 0 ≤ 1 + exp t := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos t))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v0; exact le_trans v0 hx
+    · have v0 : (0 : Real) + exp t ≤ 1 + exp t :=
+        add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _)
+      have e : (0 : Real) + exp t = exp t := by mach_ring
+      rw [e] at v0; exact le_trans v0 hx
+  rcases boundedEmlCell_left_forms A B hA hB K XK hK with ⟨α, hα⟩ | ⟨cA, _, hcA⟩
+  · -- `A` constant
+    rcases depth_le_one_classification B hB with
+        ⟨β, hβ⟩ | hβ | ⟨cB, _, hβ⟩ | ⟨d, hβ⟩ | hβ
+    · -- `B` constant: node constant
+      refine Or.inl ⟨exp (exp α - log β), 1, ?_⟩
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hval x, hα x hx0, hβ x hx0]
+    · -- `B = var`: node is `M·w`
+      refine Or.inr (Or.inr (Or.inl ⟨exp (exp α), 1, exp_pos _, ?_⟩))
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hval x, hα x hx0, hβ x hx0]
+      exact exp_c_sub_log_eq (exp α) hx0
+    · -- `B = c − log x`: totalized log zeroes it, node constant
+      refine Or.inl ⟨exp (exp α), 1 + exp cB, ?_⟩
+      intro x hx
+      obtain ⟨h1, hcBx⟩ := clear1 cB x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+      rw [hval x, hα x hx0, hβ x hx0, log_c_sub_log_eventually_zero cB x hcBx]
+      have e : exp α - (0 : Real) = exp α := by mach_mpoly [exp α]
+      rw [e]
+    · -- `B = exp x − d`: the log bound
+      refine Or.inr (Or.inr (Or.inr (Or.inr ⟨1 + exp (d + 1), ?_⟩)))
+      intro x hx
+      obtain ⟨h1, hdx⟩ := clear1 (d + 1) x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+      rw [hβ x hx0]
+      exact log_exp_sub_const_ge_linear d (le_trans (self_le_exp (d + 1)) hdx)
+    · -- `B = exp x − log x`: the log bound
+      refine Or.inr (Or.inr (Or.inr (Or.inr ⟨1, ?_⟩)))
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hβ x hx0]
+      exact log_exp_sub_log_ge_linear hx
+  · -- `A = c − log x`
+    rcases depth_le_one_classification B hB with
+        ⟨β, hβ⟩ | hβ | ⟨cB, _, hβ⟩ | ⟨d, hβ⟩ | hβ
+    · -- `B` constant: rising
+      refine Or.inr (Or.inl ⟨exp (-(log β)), exp cA, 1, exp_pos _, exp_pos _, ?_⟩)
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      exact node_form_logA_constB A B cA β hcA hβ x hx0
+    · -- `B = var`: the fifth shape
+      refine Or.inr (Or.inr (Or.inr (Or.inl ⟨exp cA, 1, exp_pos _, ?_⟩)))
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      exact node_form_logA_varB A B cA hcA hβ x hx0
+    · -- `B = c − log x`: rising with `v = 1`
+      refine Or.inr (Or.inl ⟨1, exp cA, 1 + exp cB, zero_lt_one_ax, exp_pos _, ?_⟩)
+      intro x hx
+      obtain ⟨h1, hcBx⟩ := clear1 cB x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+      exact node_form_logA_logB A B cA cB hcA hβ x hcBx hx0
+    · -- `B = exp x − d`: the log bound
+      refine Or.inr (Or.inr (Or.inr (Or.inr ⟨1 + exp (d + 1), ?_⟩)))
+      intro x hx
+      obtain ⟨h1, hdx⟩ := clear1 (d + 1) x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax h1
+      rw [hβ x hx0]
+      exact log_exp_sub_const_ge_linear d (le_trans (self_le_exp (d + 1)) hdx)
+    · -- `B = exp x − log x`: the log bound
+      refine Or.inr (Or.inr (Or.inr (Or.inr ⟨1, ?_⟩)))
+      intro x hx
+      have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+      rw [hβ x hx0]
+      exact log_exp_sub_log_ge_linear hx
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
