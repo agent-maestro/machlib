@@ -9779,6 +9779,102 @@ theorem fifth_shape_coefficient_bound {g h ε : Real} (hg0 : 0 ≤ g) (hh0 : 0 �
   refine le_trans hgoal (le_of_eq ?_)
   mach_ring
 
+/-! ## ▸ The two nested thresholds for the fifth shape
+
+`fifth_shape_coefficient_bound` reduces the fifth shape's vacuity condition to `1 + 5ε ≤ aQ` plus
+three smallness conditions on `w`. These pick `ε` and then `w`, each by one call to
+`shrink_below_two_bounds`. Kept as separate lemmas because the composite threshold term is large
+enough that inlining it makes the surrounding proof unreadable — and unreadable is where a wrong
+direction hides. -/
+
+/-- Pick `ε` under both `1` and `(aQ − 1)/5`, for `aQ > 1`. -/
+theorem small_eps_for (aQ : Real) (haQ : 1 < aQ) :
+    ∃ ε : Real, 0 < ε ∧ ε ≤ 1 ∧ (1 + 1 + 1 + 1 + 1) * ε < aQ - 1 := by
+  have h5 : (0 : Real) < (1 + 1 + 1 + 1 + 1 : Real) := by
+    have v : (1 : Real) + 0 + 0 + 0 + 0 ≤ 1 + 1 + 1 + 1 + 1 :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+        (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax))
+        (le_of_lt zero_lt_one_ax)
+    have e : (1 : Real) + 0 + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact lt_of_lt_of_le zero_lt_one_ax v
+  have hd : (0 : Real) < aQ - 1 := by
+    have u := add_lt_add_left haQ (-(1 : Real))
+    have l : -(1 : Real) + 1 = 0 := by mach_ring
+    have r : -(1 : Real) + aQ = aQ - 1 := by mach_mpoly [aQ]
+    rw [l, r] at u; exact u
+  obtain ⟨hD, hlt1, hltS⟩ := shrink_below_two_bounds (1 + 1 + 1 + 1 + 1 : Real) (aQ - 1) h5 hd
+  refine ⟨1 / ((1 + 1 + 1 + 1 + 1 : Real)
+      + (1 + 1 + 1 + 1 + 1 : Real) * (1 / (aQ - 1)) + 1), one_div_pos_of_pos hD, ?_, hltS⟩
+  -- `ε ≤ 5ε < 1`
+  have hεpos : (0 : Real) < 1 / ((1 + 1 + 1 + 1 + 1 : Real)
+      + (1 + 1 + 1 + 1 + 1 : Real) * (1 / (aQ - 1)) + 1) := one_div_pos_of_pos hD
+  have hle5 : (1 : Real) ≤ (1 + 1 + 1 + 1 + 1 : Real) := by
+    have v : (1 : Real) + 0 + 0 + 0 + 0 ≤ 1 + 1 + 1 + 1 + 1 :=
+      add_le_add_wit (add_le_add_wit (add_le_add_wit (add_le_add_wit (le_refl 1)
+        (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax)) (le_of_lt zero_lt_one_ax))
+        (le_of_lt zero_lt_one_ax)
+    have e : (1 : Real) + 0 + 0 + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  have hstep := mul_le_mul_of_nonneg_right hle5 (le_of_lt hεpos)
+  have e1 : (1 : Real) * (1 / ((1 + 1 + 1 + 1 + 1 : Real)
+      + (1 + 1 + 1 + 1 + 1 : Real) * (1 / (aQ - 1)) + 1))
+      = 1 / ((1 + 1 + 1 + 1 + 1 : Real)
+        + (1 + 1 + 1 + 1 + 1 : Real) * (1 / (aQ - 1)) + 1) := by mach_ring
+  rw [e1] at hstep
+  exact le_of_lt (lt_of_le_of_lt hstep hlt1)
+
+/-- Pick `w` under `ε` for both `κ·e` and `e`, and under `1/2`, in one shrink. -/
+theorem small_w_for (κ ε : Real) (hκ : 0 < κ) (hε : 0 < ε) :
+    ∃ w₀ : Real, 0 < w₀ ∧ ∀ w : Real, 0 < w → w ≤ w₀ →
+      κ * w * exp 1 ≤ ε ∧ w * exp 1 ≤ ε ∧ (1 + 1) * w ≤ 1 := by
+  have hE1 : (0 : Real) < exp 1 := exp_pos 1
+  have htwo : (0 : Real) < (1 : Real) + 1 := by
+    have v : (1 : Real) + 0 ≤ 1 + 1 := add_le_add_wit (le_refl 1) (le_of_lt zero_lt_one_ax)
+    have e : (1 : Real) + 0 = 1 := by mach_ring
+    rw [e] at v; exact lt_of_lt_of_le zero_lt_one_ax v
+  have hA : (0 : Real) < κ * exp 1 + exp 1 + (1 + 1) := by
+    have v : (0 : Real) + 0 + (1 + 1) ≤ κ * exp 1 + exp 1 + (1 + 1) :=
+      add_le_add_wit (add_le_add_wit (le_of_lt (mul_pos hκ hE1)) (le_of_lt hE1)) (le_refl _)
+    have e : (0 : Real) + 0 + (1 + 1) = 1 + 1 := by mach_ring
+    rw [e] at v; exact lt_of_lt_of_le htwo v
+  obtain ⟨hD, hlt1, hltS⟩ :=
+    shrink_below_two_bounds (κ * exp 1 + exp 1 + (1 + 1)) ε hA hε
+  refine ⟨1 / (κ * exp 1 + exp 1 + (1 + 1)
+      + (κ * exp 1 + exp 1 + (1 + 1)) * (1 / ε) + 1), one_div_pos_of_pos hD, ?_⟩
+  intro w hw hwle
+  have hAw : (κ * exp 1 + exp 1 + (1 + 1)) * w
+      ≤ (κ * exp 1 + exp 1 + (1 + 1)) * (1 / (κ * exp 1 + exp 1 + (1 + 1)
+        + (κ * exp 1 + exp 1 + (1 + 1)) * (1 / ε) + 1)) :=
+    mul_le_mul_of_nonneg_left hwle (le_of_lt hA)
+  have hlt1' : (κ * exp 1 + exp 1 + (1 + 1)) * w ≤ 1 := le_of_lt (lt_of_le_of_lt hAw hlt1)
+  have hltS' : (κ * exp 1 + exp 1 + (1 + 1)) * w ≤ ε := le_of_lt (lt_of_le_of_lt hAw hltS)
+  -- each summand is dominated by the whole
+  refine ⟨?_, ?_, ?_⟩
+  · refine le_trans ?_ hltS'
+    have v : κ * exp 1 * w + 0 + 0 ≤ κ * exp 1 * w + exp 1 * w + (1 + 1) * w :=
+      add_le_add_wit (add_le_add_wit (le_refl _) (le_of_lt (mul_pos hE1 hw)))
+        (le_of_lt (mul_pos htwo hw))
+    have l : κ * exp 1 * w + 0 + 0 = κ * w * exp 1 := by mach_ring
+    have r : κ * exp 1 * w + exp 1 * w + (1 + 1) * w
+        = (κ * exp 1 + exp 1 + (1 + 1)) * w := by mach_ring
+    rw [l, r] at v; exact v
+  · refine le_trans ?_ hltS'
+    have v : (0 : Real) + exp 1 * w + 0 ≤ κ * exp 1 * w + exp 1 * w + (1 + 1) * w :=
+      add_le_add_wit (add_le_add_wit (le_of_lt (mul_pos (mul_pos hκ hE1) hw)) (le_refl _))
+        (le_of_lt (mul_pos htwo hw))
+    have l : (0 : Real) + exp 1 * w + 0 = w * exp 1 := by mach_ring
+    have r : κ * exp 1 * w + exp 1 * w + (1 + 1) * w
+        = (κ * exp 1 + exp 1 + (1 + 1)) * w := by mach_ring
+    rw [l, r] at v; exact v
+  · refine le_trans ?_ hlt1'
+    have v : (0 : Real) + 0 + (1 + 1) * w ≤ κ * exp 1 * w + exp 1 * w + (1 + 1) * w :=
+      add_le_add_wit (add_le_add_wit (le_of_lt (mul_pos (mul_pos hκ hE1) hw))
+        (le_of_lt (mul_pos hE1 hw))) (le_refl _)
+    have l : (0 : Real) + 0 + (1 + 1) * w = (1 + 1) * w := by mach_ring
+    have r : κ * exp 1 * w + exp 1 * w + (1 + 1) * w
+        = (κ * exp 1 + exp 1 + (1 + 1)) * w := by mach_ring
+    rw [l, r] at v; exact v
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
