@@ -9723,6 +9723,62 @@ theorem exp_sub_one_le_of_le {u U : Real} (hu0 : 0 ≤ u) (huU : u ≤ U) (hU1 :
     exact le_trans hstep1 (mul_le_mul_of_nonneg_right huU hnn)
   exact le_trans h1 (le_trans h2 h3)
 
+/-- **The fifth shape's coefficient, linearised in one small parameter.**
+
+    0 ≤ g ≤ ε,  0 ≤ h ≤ ε,  ε ≤ 1   ⟹   (1+g)·(1 + (1+g)·h)  ≤  1 + 5ε
+
+The coefficient `cell_of_decaying_target_subdominant` needs to beat, for the fifth node shape, is
+`(1 + κwe)·(1 + (1 + κwe)·we)` — a product of two nested affine factors in `w`. Expanded it is
+`1 + 2ε + 2ε² + ε³`, and on `ε ≤ 1` every higher power collapses into `ε`, leaving a **linear**
+bound.
+
+That is the whole reason the threshold is reachable: `aQ > 1` gives `aQ − 1 > 0`, and a linear bound
+in `ε` can be pushed under it by shrinking `ε`, where a bound with `ε²` and `ε³` left in it would
+need a root. Two applications of `shrink_below_two_bounds` then suffice — one to choose `ε` under
+both `1` and `(aQ−1)/5`, one to choose `w` under `ε` for both `κe` and `e`. -/
+theorem fifth_shape_coefficient_bound {g h ε : Real} (hg0 : 0 ≤ g) (hh0 : 0 ≤ h)
+    (hg : g ≤ ε) (hh : h ≤ ε) (hε1 : ε ≤ 1) :
+    (1 + g) * (1 + (1 + g) * h) ≤ 1 + (1 + 1 + 1 + 1 + 1) * ε := by
+  have hε0 : (0 : Real) ≤ ε := le_trans hg0 hg
+  have h1g : (0 : Real) ≤ 1 + g := by
+    have v := add_le_add_wit (le_of_lt zero_lt_one_ax) hg0
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  have h1e : (0 : Real) ≤ 1 + ε := by
+    have v := add_le_add_wit (le_of_lt zero_lt_one_ax) hε0
+    have e : (0 : Real) + 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  -- widen `g` and `h` to `ε` in both factors
+  have hfac1 : 1 + g ≤ 1 + ε := add_le_add_wit (le_refl 1) hg
+  have hprod : (1 + g) * h ≤ (1 + ε) * ε :=
+    le_trans (mul_le_mul_of_nonneg_left hh h1g) (mul_le_mul_of_nonneg_right hfac1 hε0)
+  have hfac2 : 1 + (1 + g) * h ≤ 1 + (1 + ε) * ε := add_le_add_wit (le_refl 1) hprod
+  have hinner : (0 : Real) ≤ 1 + (1 + g) * h := by
+    have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (mul_le_mul_of_nonneg_left hh0 h1g)
+    have e : (0 : Real) + (1 + g) * 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  have hwide : (1 + g) * (1 + (1 + g) * h) ≤ (1 + ε) * (1 + (1 + ε) * ε) :=
+    le_trans (mul_le_mul_of_nonneg_left hfac2 h1g)
+      (mul_le_mul_of_nonneg_right hfac1 (le_trans hinner hfac2))
+  refine le_trans hwide ?_
+  -- `(1+ε)(1+(1+ε)ε) = 1 + 2ε + 2ε² + ε³`, and every higher power collapses on `ε ≤ 1`
+  have hsq : ε * ε ≤ ε := by
+    have v := mul_le_mul_of_nonneg_left hε1 hε0
+    have e : ε * (1 : Real) = ε := by mach_ring
+    rw [e] at v; exact v
+  have hcube : ε * ε * ε ≤ ε := by
+    have v := mul_le_mul_of_nonneg_right hsq hε0
+    refine le_trans v ?_
+    exact hsq
+  have hexpand : (1 + ε) * (1 + (1 + ε) * ε)
+      = 1 + ε + ε + (ε * ε + ε * ε) + ε * ε * ε := by mach_ring
+  rw [hexpand]
+  have hgoal : 1 + ε + ε + (ε * ε + ε * ε) + ε * ε * ε
+      ≤ 1 + ε + ε + (ε + ε) + ε :=
+    add_le_add_wit (add_le_add_wit (le_refl (1 + ε + ε)) (add_le_add_wit hsq hsq)) hcube
+  refine le_trans hgoal (le_of_eq ?_)
+  mach_ring
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
