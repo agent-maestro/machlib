@@ -8520,6 +8520,90 @@ theorem limit_one_subdominant (M a w : Real) (hM : 0 < M) (hw : 0 < w)
   have l : M * (1 + M * w * exp 1) * w = M * w * (1 + M * w * exp 1) := by mach_ring
   rw [l] at hstrict; exact hstrict
 
+/-- **The floor, in the shape the comparisons actually produce.**
+
+`double_exp_floor_dominated` is multiplicative — `floor · x² ≤ β` — because that form needed no
+reciprocals to prove. The separation lemmas deliver `β · (1/x)·(1/x)`, so this converts once, here,
+rather than at every call site. Multiplying by `(1/x)·(1/x)` and cancelling `x·(1/x) = 1` twice does
+it, and `1/(x·x)` never has to be mentioned. -/
+theorem floor_le_inv_sq (β : Real) (hβ : 0 < β) :
+    ∃ C : Real, ∀ x : Real, 1 ≤ x → exp (-C - exp x) ≤ β * ((1 / x) * (1 / x)) := by
+  obtain ⟨C, hC⟩ := double_exp_floor_dominated β hβ
+  refine ⟨C, ?_⟩
+  intro x hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx
+  have hinv : x * (1 / x) = 1 := mul_inv x (ne_of_gt hxpos)
+  have hinvpos : (0 : Real) < (1 / x) * (1 / x) :=
+    mul_pos (one_div_pos_of_pos hxpos) (one_div_pos_of_pos hxpos)
+  have h := mul_le_mul_of_nonneg_right (hC x hx) (le_of_lt hinvpos)
+  have l : exp (-C - exp x) * (x * x) * ((1 / x) * (1 / x))
+      = exp (-C - exp x) * ((x * (1 / x)) * (x * (1 / x))) := by mach_ring
+  rw [l, hinv] at h
+  have e : exp (-C - exp x) * ((1 : Real) * 1) = exp (-C - exp x) := by mach_ring
+  rw [e] at h; exact h
+
+/-- **A decaying target with the dominant coefficient: the cell holds with a `Θ(1/x²)` margin.**
+
+The first branch of this assembly to produce a *bound* rather than a vacuity. `T = exp (M·w)` falls to
+`1`; `Q = 1 + a·w` rises from it; `a ≤ M` means the target's linear term covers `Q`'s, so
+`limit_one_quadratic_separation` leaves `(M·w/2)²`, and `floor_le_inv_sq` converts that to the
+obligation's floor.
+
+**`a = M` is inside the hypothesis**, so the limit-`1` cancellation locus is discharged here rather
+than left as a boundary case. -/
+theorem cell_of_decaying_target_dominant (A B Q : EMLTree) (M a XT XQ : Real)
+    (hM : 0 < M) (ha : 0 < a) (hdom : a ≤ M)
+    (hT : ∀ x : Real, XT ≤ x → exp (exp ((EMLTree.eml A B).eval x)) = exp (M * (1 / x)))
+    (hQ : ∀ x : Real, XQ ≤ x → Q.eval x = 1 + a * (1 / x)) :
+    ∃ C X₀ : Real, 1 ≤ X₀ ∧ ∀ x : Real, X₀ ≤ x → 1 < Q.eval x →
+      Q.eval x < exp (exp ((EMLTree.eml A B).eval x)) →
+        exp (-C - exp x) ≤ exp (exp ((EMLTree.eml A B).eval x)) - Q.eval x := by
+  have hβ : (0 : Real) < (M * (1 / (1 + 1))) * (M * (1 / (1 + 1))) := by
+    have h2pos : (0 : Real) < 1 + 1 := by
+      have u := add_lt_add_left zero_lt_one_ax 1
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at u; exact lt_trans_ax zero_lt_one_ax u
+    exact mul_pos (mul_pos hM (one_div_pos_of_pos h2pos))
+      (mul_pos hM (one_div_pos_of_pos h2pos))
+  obtain ⟨C, hC⟩ := floor_le_inv_sq _ hβ
+  refine ⟨C, 1 + exp XT + exp XQ, ?_, ?_⟩
+  · have v : (1 : Real) + 0 + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact v
+  intro x hx _ _
+  have hone : (1 : Real) ≤ x := by
+    have v : (1 : Real) + 0 + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos XT)))
+        (le_of_lt (exp_pos XQ))
+    have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+    rw [e] at v; exact le_trans v hx
+  have hxpos : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hone
+  have hXTx : XT ≤ x := by
+    have v : (0 : Real) + exp XT + 0 ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+        (le_of_lt (exp_pos XQ))
+    have e : (0 : Real) + exp XT + 0 = exp XT := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XT) (le_trans v hx)
+  have hXQx : XQ ≤ x := by
+    have v : (0 : Real) + 0 + exp XQ ≤ 1 + exp XT + exp XQ :=
+      add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos XT)))
+        (le_refl _)
+    have e : (0 : Real) + 0 + exp XQ = exp XQ := by mach_ring
+    rw [e] at v; exact le_trans (self_le_exp XQ) (le_trans v hx)
+  rw [hT x hXTx, hQ x hXQx]
+  have hsep := limit_one_quadratic_separation M a (1 / x) hM (one_div_pos_of_pos hxpos) hdom
+  have heq : (M * (1 / (1 + 1))) * (M * (1 / (1 + 1))) * ((1 / x) * (1 / x))
+      = (M * (1 / x) * (1 / (1 + 1))) * (M * (1 / x) * (1 / (1 + 1))) := by mach_ring
+  have hgoal : exp (M * (1 / x)) - 1 - a * (1 / x)
+      = exp (M * (1 / x)) - (1 + a * (1 / x)) := by
+    mach_mpoly [exp (M * (1 / x)), a, (1 / x : Real)]
+  rw [← hgoal]
+  refine le_trans (hC x hone) ?_
+  rw [heq]
+  exact hsep
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
