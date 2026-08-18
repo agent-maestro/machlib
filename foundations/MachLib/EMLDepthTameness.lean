@@ -7544,6 +7544,86 @@ theorem target_rise_upper (v κ w : Real) (hv : 0 < v) :
   refine le_trans hout ?_
   exact mul_le_mul_of_nonneg_right hscaled (le_of_lt (exp_pos (v * exp (κ * w))))
 
+/-! ## ▸ Quantitative continuity at `0`, for the sub-dominant sub-case
+
+The remaining sub-case needs an explicit `w₀` at which the falling factors of `target_rise_upper` are
+close enough to their limits. In a base with no limit notion that is not a topological argument but
+an inequality with a rate, and `exp_sub_exp_upper` already supplies one. -/
+
+/-- **`exp y ≤ 1 + y·e` on `[0,1]`.** The linear-with-explicit-constant form of continuity at `0`.
+
+`exp_sub_exp_upper` at `(y, 0)` gives `exp y − 1 ≤ y·exp y`, and on `[0,1]` the trailing `exp y` is
+at most `exp 1`. That is the whole proof, and it is the only continuity this development needs — the
+constant `e` is explicit, so every downstream threshold is computable rather than merely existent. -/
+theorem exp_le_one_add_scaled {y : Real} (hy0 : 0 ≤ y) (hy1 : y ≤ 1) :
+    exp y ≤ 1 + y * exp 1 := by
+  have h := exp_sub_exp_upper y 0
+  rw [exp_zero] at h
+  have e : y - 0 = y := by mach_mpoly [y]
+  rw [e] at h
+  have hcap : y * exp y ≤ y * exp 1 := mul_le_mul_of_nonneg_left (exp_monotone hy1) hy0
+  have hchain := le_trans h hcap
+  have w := add_le_add_wit hchain (le_refl (1 : Real))
+  have l : exp y - 1 + 1 = exp y := by mach_mpoly [exp y]
+  have r : y * exp 1 + 1 = 1 + y * exp 1 := by mach_mpoly [y, exp 1]
+  rw [l, r] at w; exact w
+
+/-- **The outer exponent, bounded linearly in `w`.**
+
+`target_rise_upper`'s bound is `v·κ·w · exp (κw) · exp (v·exp (κw))`, whose two trailing factors are
+`exp` of `κw` and of `v·exp (κw)`. This bounds the second one's argument:
+
+    κw + v·exp (κw)  ≤  v + κw·(1 + v·e)        for 0 ≤ κw ≤ 1
+
+so the whole exponent sits within `κw·(1 + v·e)` of its limiting value `v`. Choosing `w` small enough
+to make that slack as small as required is then arithmetic on explicit constants — which is exactly
+what the sub-dominant sub-case needs, and what a limit-free base has to supply in place of a
+continuity appeal. -/
+theorem outer_exponent_linear_bound (v κ w : Real) (hv : 0 ≤ v)
+    (h0 : 0 ≤ κ * w) (h1 : κ * w ≤ 1) :
+    κ * w + v * exp (κ * w) ≤ v + κ * w * (1 + v * exp 1) := by
+  have hin := exp_le_one_add_scaled h0 h1
+  have hscaled : v * exp (κ * w) ≤ v * (1 + κ * w * exp 1) :=
+    mul_le_mul_of_nonneg_left hin hv
+  have hsum := add_le_add_wit (le_refl (κ * w)) hscaled
+  have r : κ * w + v * (1 + κ * w * exp 1) = v + κ * w * (1 + v * exp 1) := by
+    mach_mpoly [v, κ, w, exp 1]
+  rw [r] at hsum; exact hsum
+
+/-- **The target's rise, as an explicit multiple of `w`.**
+
+`target_rise_upper` bounds the rise by `v·κ·w · exp (κw) · exp (v·exp (κw))`, whose two trailing
+factors both depend on `w`. Merging them with `exp_add` and applying `outer_exponent_linear_bound`
+collapses the whole thing to a **coefficient times `w`**:
+
+    T − L_T  ≤  v·κ·exp (v + κw·(1 + v·e)) · w
+
+The coefficient falls to `v·κ·exp v` as `w → 0`, and `Q`'s rise is exactly `a·w`. So `a > v·κ·exp v`
+makes `Q` win once the slack `κw·(1 + v·e)` is small enough — and *how* small is now a question about
+explicit constants, with no limit or continuity appeal left in it.
+
+That is the last structural step of the sub-dominant sub-case. What remains after it is choosing the
+threshold: `exp_le_one_add_scaled` turns `exp (v + σ) ≤ exp v·(1 + σ·e)` into a linear condition on
+`σ = κw·(1 + v·e)`, and the required `w₀` is then a reciprocal of a compound of `a`, `v`, `κ` and `e`.
+Arithmetic, and not yet written. -/
+theorem target_rise_upper_linearised (v κ w : Real) (hv : 0 < v) (hκ : 0 < κ) (hw : 0 < w)
+    (h1 : κ * w ≤ 1) :
+    v * (κ * w * exp (κ * w)) * exp (v * exp (κ * w))
+      ≤ v * κ * exp (v + κ * w * (1 + v * exp 1)) * w := by
+  have h0 : (0 : Real) ≤ κ * w := le_of_lt (mul_pos hκ hw)
+  have hmerge : exp (κ * w) * exp (v * exp (κ * w)) = exp (κ * w + v * exp (κ * w)) :=
+    (exp_add _ _).symm
+  have hmono : exp (κ * w + v * exp (κ * w))
+      ≤ exp (v + κ * w * (1 + v * exp 1)) :=
+    exp_monotone (outer_exponent_linear_bound v κ w (le_of_lt hv) h0 h1)
+  have e1 : v * (κ * w * exp (κ * w)) * exp (v * exp (κ * w))
+      = v * κ * w * (exp (κ * w) * exp (v * exp (κ * w))) := by mach_ring
+  rw [e1, hmerge]
+  have hnn : (0 : Real) ≤ v * κ * w := le_of_lt (mul_pos (mul_pos hv hκ) hw)
+  have hstep := mul_le_mul_of_nonneg_left hmono hnn
+  refine le_trans hstep (le_of_eq ?_)
+  mach_ring
+
 /-- **What is left of the bounded cell after the small-right branch is discharged.** Identical to
 `BoundedEmlCellApproach` except for the added hypothesis `1 < Q x`.
 
