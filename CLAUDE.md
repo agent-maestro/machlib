@@ -7,9 +7,9 @@ machine-checked theorems rather than on prose.
 ## Architecture
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
-material). `foundations/MachLib/` holds **932 `.lean` files** (622 top-level + 310 in subdirectories) /
-**~186 k lines** / **6 950 theorems**, re-exported through the aggregator
-**`foundations/MachLib.lean`** (534 imports) — a module not reachable from there is **invisible to
+material). `foundations/MachLib/` holds **933 `.lean` files** (622 top-level + 311 in subdirectories) /
+**~186 k lines** / **7 000 theorems**, re-exported through the aggregator
+**`foundations/MachLib.lean`** (535 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
 commands, do not trust the figure. An earlier revision said 5 851 theorems by an unrecorded method —
@@ -85,7 +85,7 @@ behind it is missing — registration is still a human act.
   `lake build MachLib.Foo` first or `#print axioms` will report unknown constants.
 - **A new module must be REACHABLE from `MachLib.lean`** or it is never built and never gated.
   Being imported by a sibling is **not** enough — an island of mutually-importing modules is
-  unreachable. `check_aggregator.sh` does a real transitive closure (**626 of 932 reachable**).
+  unreachable. `check_aggregator.sh` does a real transitive closure (**627 of 933 reachable**).
 - **`open Real` shadows `max`** — write `Nat.max`, and feed `omega` the `Nat.le_max_*` lemmas.
 - **`set`, `linarith`, `ring` do not exist here.** Use `mach_ring` / `mach_mpoly`.
 - **Keep coefficients symbolic.** `mach_mpoly` times out on `16·P²` and proves `(c·c)·(a·a)` instantly.
@@ -105,6 +105,10 @@ behind it is missing — registration is still a human act.
 - **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
 - **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
   below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
+- **`OfNat Real` exists only for `0` and `1`.** `(2 : Real)` does not elaborate. Write constants as
+  `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
+  numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×
+  the default) without progress. This is the operational form of "keep coefficients symbolic".
 - **A theorem whose conclusion is a ledger obligation needs a BINDER, not an arrow.**
   `tools/obligation_ledger_check.py` reads a conclusion as the tail after the last top-level `:`,
   having first stripped binders of the obligation's own type. So `foo : A → B` has tail `A → B` and

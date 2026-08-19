@@ -29,8 +29,9 @@ namespace QuadraticRoots
 
 open Real
 
-/-- No zero divisors, derived from `mul_inv` alone. -/
-private theorem right_of_mul_eq_zero {u v : Real} (hu : u ≠ 0) (h : u * v = 0) : v = 0 := by
+/-- No zero divisors, derived from `mul_inv` alone. Public because the Apollonius elimination
+needs it to cancel the scale factors that clearing denominators introduces. -/
+theorem right_of_mul_eq_zero {u v : Real} (hu : u ≠ 0) (h : u * v = 0) : v = 0 := by
   have hone : u * (1 / u) = 1 := mul_inv u hu
   have e : (1 / u) * (u * v) = ((u * (1 / u)) * v) := by mach_ring
   rw [hone] at e
@@ -41,14 +42,23 @@ private theorem right_of_mul_eq_zero {u v : Real} (hu : u ≠ 0) (h : u * v = 0)
   rw [z] at e
   exact e.symm
 
-private theorem eq_of_sub_eq_zero {u v : Real} (h : u - v = 0) : u = v := by
+theorem eq_of_sub_eq_zero {u v : Real} (h : u - v = 0) : u = v := by
   have e : u = (u - v) + v := by mach_ring
   rw [h] at e
   have z : (0 : Real) + v = v := by mach_ring
   rw [z] at e; exact e
 
-private theorem sub_ne_zero_of_ne {u v : Real} (h : u ≠ v) : u - v ≠ 0 :=
+theorem sub_ne_zero_of_ne {u v : Real} (h : u ≠ v) : u - v ≠ 0 :=
   fun hz => h (eq_of_sub_eq_zero hz)
+
+/-- **Cancellation.** `a ≠ 0 → a·u = a·v → u = v`. Clearing a denominator by multiplying through
+is only reversible because of this, and every elimination step below leans on it. -/
+theorem mul_left_cancel {a u v : Real} (ha : a ≠ 0) (h : a * u = a * v) : u = v := by
+  refine eq_of_sub_eq_zero (right_of_mul_eq_zero ha ?_)
+  have e : a * (u - v) = a * u - a * v := by mach_mpoly [a, u, v]
+  rw [e, h]
+  have z : a * v - a * v = 0 := by mach_mpoly [a, v]
+  exact z
 
 /-- **Two roots of a genuine quadratic satisfy Vieta's linear relation.** -/
 theorem quadratic_two_roots_sum {a b c r s : Real} (hne : r ≠ s)

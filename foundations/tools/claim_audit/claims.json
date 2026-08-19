@@ -3553,6 +3553,52 @@
         "TangentExt"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The elimination. forbid_axioms_exact on sqrt is the content: the system-to-quadratic reduction is purely algebraic, so no radical enters the trust chain at this layer.",
+      "id": "apollonius-elimination-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the three-equation system is equivalent to a\nline together with one quadratic in the radius"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.solvesMode_iff",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt",
+        "MachLib.Real.sqrt_neg_zero"
+      ],
+      "statement_mentions": [
+        "SolvesMode",
+        "OnLocus"
+      ],
+      "conclusion_mentions": [
+        "SolvesMode"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The bridge into the geometric predicates. hypotheses_count 3 is asserted, not avoided: this one IS conditional (locus, quadratic, positive radius) and pretending otherwise would be the error the count exists to catch.",
+      "id": "apollonius-certified-tangencies-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is a genuine circle externally tangent to `A` and\ninternally tangent to `B` and `C`"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.certified_tangencies",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "conclusion_mentions": [
+        "TangentExt",
+        "TangentInt"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

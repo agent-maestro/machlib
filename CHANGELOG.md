@@ -7,6 +7,43 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice B: one mode class, end to end
+
+`MachLib/Geometry/Apollonius/SymmetricTriple.lean`.
+
+The vertical slice — linear elimination, one quadratic, candidate, positive radius, three checked
+tangencies — for a single antipodal class over the symmetric family `A=(0,0,ρ)`, `B=(d,0,ρ)`,
+`C=(0,d,ρ)`. `solvesMode_iff` is the elimination: **the three-equation system is equivalent to a
+line together with one quadratic in the radius.** Both directions are proved, because forward is
+what completeness will consume and backward is what makes a candidate checkable.
+
+The class is `(outer, inner, inner)` and the choice is deliberate. In `(outer, outer, outer)` the
+two difference equations lose their `r` terms and the centre is *constant*, so the slice would never
+exercise a centre that moves with the radius; here `2d·x = d² + 4rρ` genuinely couples them.
+
+`certified_tangencies` closes the chain into `Circle.lean`'s **geometric** predicates: a positive
+`r` on the locus satisfying the quadratic is a genuine circle externally tangent to `A` and
+internally tangent to `B` and `C`. `at_most_two_radii` instantiates the degree-2 bound, which is
+where it earns its place — without it the class could a priori contribute unboundedly many radii.
+
+**No radical is ever computed.** The candidate is identified by the certificate `Q d ρ r = 0`, never
+by a closed form, and `sqrt` is absent from the entire slice's axiom footprint. That is precisely
+the freedom the certification layer wants: a candidate carries a root certificate, not an
+expression. No division either — the elimination multiplies through by `4d²` and
+`QuadraticRoots.mul_left_cancel` undoes the scaling.
+
+The leading coefficient `16ρ² − 2d²` is displayed rather than hidden: it vanishes exactly when
+`d² = 8ρ²`, degenerating the class to a linear equation, and nothing above assumes it away.
+
+**A numeral obstruction, measured.** Instantiating the flagship numerically inside Lean is blocked,
+and not by an oversight of ours: `MachLib.Real` carries `OfNat` instances for `0` and `1` only, so
+`(2 : Real)` does not elaborate. Writing constants as `1+1+…` makes `mach_mpoly`'s AC matching
+diverge — the degree-2 identity for `d=8, ρ=2` (constants reaching ~1.4·10⁴ after expansion)
+exhausts **4 000 000 heartbeats**, twenty times the default, with no sign of progress. The corpus
+gotcha "keep coefficients symbolic — `mach_mpoly` times out on `16·P²`" is exactly this. The route
+for a numeric exhibit is `natCast` per `NatCastArith`, where the arithmetic reduces to `Nat`
+literal equality; that is the next step, and it is why this slice is symbolic rather than numeric.
+
 ### Verified Apollonius, first slice: the antipodal law
 
 `MachLib/Geometry/Circle.lean`, `MachLib/QuadraticRoots.lean`,

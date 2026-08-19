@@ -543,6 +543,7 @@ import MachLib.Applications.SpringCriticallyDamped
 import MachLib.QuadraticRoots
 import MachLib.Geometry.Circle
 import MachLib.Geometry.Apollonius.Mode
+import MachLib.Geometry.Apollonius.SymmetricTriple
 
 /-!
 # MachLib — top-level aggregator
