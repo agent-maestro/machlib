@@ -7,6 +7,40 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius: the last symbolic blocker falls — split the call, not the budget
+
+`QMdisc_oii_eq : QMdisc (o,i,i) = 32·d²·(d² − 4ρ²)²`, and with it
+
+`QMdisc_oii_pos` — **discriminant positivity from separation alone**. No band split, no appeal to
+the sign of the leading coefficient. `d > 2ρ` gives `d² − 4ρ² > 0`, its square is positive, `32d²`
+is positive. The class attains two distinct roots throughout `d > 2ρ`, *including* the band
+`4ρ² < d² < 8ρ²` where the cheap `lead < 0` argument does not apply.
+
+**How, after two failed assaults.** The degree-3 identity dies in `acLt` as one `mach_mpoly` call —
+69 s at 4 000 000 heartbeats. Split into four steps, each expanding **at most one** product, every
+step closes in about a second:
+
+    oii_core      (8Y−X)(X−2Y) = 2XY − (X−4Y)²        degree 2
+    oii_regroup   4·(4P)·(2XQ) = 32X(PQ)              monomial, P and Q atomic
+    oii_midsq     (8Zw)² = 64Z²w²                     monomial
+    oii_final     64X²Y − 32X(2XY − E) = 32XE         one distribution, E atomic
+
+The move is to keep each binomial product **atomic** (`P`, `Q`, `E`) until the last moment, so no
+call ever distributes two brackets at once. Neither raising budgets nor compressing variables was
+the answer; splitting the call was. `natCast` was not needed here after all — worth noting, since
+the diagnostic pointed at it and the diagnostic was correct about the *cause* while a different fix
+turned out to be available for this particular obstruction.
+
+**The structural payoff.** Discriminant positivity and leading-coefficient non-vanishing are now
+visibly **independent** properties with different exceptional loci:
+
+    d² = 4ρ²   kills the discriminant       — the separation boundary
+    d² = 8ρ²   kills the leading coefficient — discriminant still positive
+
+which is exactly why the seven-circle configuration is a **degree drop** and not a repeated root.
+Folding both into one general-position predicate would have hidden that; deriving them separately
+displays it.
+
 ### The acLt diagnosis, corrected and sharpened by four specimens
 
 The previous entry said the cause was the unary numeral encoding "whatever the degree". **That was

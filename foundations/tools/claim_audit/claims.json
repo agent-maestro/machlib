@@ -3809,6 +3809,26 @@
       "statement_mentions": [
         "s * s"
       ]
+    },
+    {
+      "_comment": "Discriminant positivity from separation alone. hypotheses_count 2 -- only rho>0 and the separation inequality; NO condition on the leading coefficient, which is the content: positivity and non-degeneracy are independent.",
+      "id": "apollonius-disc-pos-separation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "discriminant positivity from separation alone"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.QMdisc_oii_pos",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "QMdisc"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

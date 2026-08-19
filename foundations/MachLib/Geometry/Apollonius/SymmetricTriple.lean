@@ -755,6 +755,84 @@ theorem QMconst_factored :
     QMconst d ρ = (1 + 1) * ((d * d) * (d * d - (1 + 1) * (ρ * ρ))) := by
   unfold QMconst; mach_mpoly [d, ρ] <;> mach_ring
 
+/-! ### Assembling the discriminant in steps no single call can choke on
+
+The degree-3 identity dies in `acLt` as one `mach_mpoly` call. Split into four steps — each of which
+expands **at most one** product — every step closes in about a second. The trick is to keep the
+binomial product atomic (`P`, `Q`, `E` below) until the last moment, so no call ever distributes two
+brackets at once.
+
+This is the "compress before normalising" move done by hand. It is what a future algebraic layer
+should automate; until then it is cheap enough to do explicitly, and explicit is more auditable. -/
+
+/-- Step 1 — the core, degree 2: `(8Y−X)(X−2Y) = 2XY − (X−4Y)²`. -/
+theorem oii_core (X Y : Real) :
+    ((1 + 1) * ((1 + 1) * ((1 + 1) * Y)) - X) * (X - (1 + 1) * Y)
+      = (1 + 1) * (X * Y)
+        - (X - (1 + 1) * ((1 + 1) * Y)) * (X - (1 + 1) * ((1 + 1) * Y)) := by
+  mach_mpoly [X, Y] <;> mach_ring
+
+/-- Step 2 — monomial regrouping: `4·(4P)·(2XQ) = 32X(PQ)`. -/
+theorem oii_regroup (X P Q : Real) :
+    (1 + 1) * (1 + 1) * ((1 + 1) * ((1 + 1) * P)) * ((1 + 1) * (X * Q))
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (X * (P * Q)))))) := by
+  mach_mpoly [X, P, Q] <;> mach_ring
+
+/-- Step 3 — the middle coefficient squared: `(8Zρ)² = 64Z²ρ²`. -/
+theorem oii_midsq (Z w : Real) :
+    ((1 + 1) * ((1 + 1) * ((1 + 1) * (Z * w)))) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (Z * w))))
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (Z * Z * (w * w))))))) := by
+  mach_mpoly [Z, w] <;> mach_ring
+
+/-- Step 4 — the one distribution: `64X²Y − 32X(2XY − E) = 32XE`. -/
+theorem oii_final (X Y E : Real) :
+    (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (X * X * Y))))))
+      - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (X * ((1 + 1) * (X * Y) - E))))))
+    = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (X * E))))) := by
+  mach_mpoly [X, Y, E] <;> mach_ring
+
+/-- **`(o,i,i)`'s discriminant is `32d²(d² − 4ρ²)²`.** -/
+theorem QMdisc_oii_eq :
+    QMdisc d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1)
+          * ((d * d) * ((d * d - (1 + 1) * ((1 + 1) * (ρ * ρ)))
+                        * (d * d - (1 + 1) * ((1 + 1) * (ρ * ρ))))))))) := by
+  unfold QMdisc
+  rw [QMmid_oii_eq, QMlead_oii_factored, QMconst_factored,
+      oii_midsq (d * d) ρ,
+      oii_regroup (d * d) ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))) - d * d)
+        (d * d - (1 + 1) * (ρ * ρ)),
+      oii_core (d * d) (ρ * ρ)]
+  exact oii_final (d * d) (ρ * ρ)
+    ((d * d - (1 + 1) * ((1 + 1) * (ρ * ρ))) * (d * d - (1 + 1) * ((1 + 1) * (ρ * ρ))))
+
+/-- **`(o,i,i)`'s discriminant is positive from SEPARATION ALONE.**
+
+No band split, no appeal to the sign of the leading coefficient. `d > 2ρ` gives `d² − 4ρ² > 0`, its
+square is positive, and `32d²` is positive — so the class attains two distinct roots throughout
+`d > 2ρ`, including the band `4ρ² < d² < 8ρ²` where the cheap `lead < 0` argument does not apply.
+
+This is the better structural statement: discriminant positivity and leading-coefficient
+non-vanishing are **independent** properties with different exceptional loci — `d² = 4ρ²` for the
+first, `d² = 8ρ²` for the second — which is exactly why the seven-circle configuration is a
+degree-drop rather than a repeated root. -/
+theorem QMdisc_oii_pos (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) :
+    0 < QMdisc d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩ := by
+  have two_pos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have hd : (0 : Real) < d := lt_trans_ax (mul_pos two_pos hρ) hsep
+  have h4 := four_rho_sq_lt d ρ hρ hsep
+  have hgap : (0 : Real) < d * d - (1 + 1) * ((1 + 1) * (ρ * ρ)) := by
+    have e : ((1 + 1) * ρ) * ((1 + 1) * ρ) = (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+    rw [e] at h4
+    have v := add_lt_add_left h4 (-((1 + 1) * ((1 + 1) * (ρ * ρ))))
+    have l : -((1 + 1) * ((1 + 1) * (ρ * ρ))) + (1 + 1) * ((1 + 1) * (ρ * ρ)) = 0 := by mach_ring
+    have rr : -((1 + 1) * ((1 + 1) * (ρ * ρ))) + d * d
+        = d * d - (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+    rw [l, rr] at v; exact v
+  rw [QMdisc_oii_eq]
+  exact mul_pos two_pos (mul_pos two_pos (mul_pos two_pos (mul_pos two_pos
+    (mul_pos two_pos (mul_pos (mul_pos hd hd) (mul_pos hgap hgap))))))
+
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
 /-- `Q` written as `a·r² + b·r + c`. The leading coefficient `16ρ² − 2d²` is displayed rather than

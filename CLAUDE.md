@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **934 `.lean` files** (622 top-level + 312 in subdirectories) /
-**~186 k lines** / **7 054 theorems**, re-exported through the aggregator
+**~186 k lines** / **7 060 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** (536 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
@@ -111,7 +111,10 @@ behind it is missing — registration is still a human act.
   identical identity with `natCast` constants **completes in 1.9 s**; so does the flagship numeral
   obligation (2.3 s) that previously exhausted the same budget. So it is the encoding under
   distribution, not degree, not presentation, and not constants per se.
-  **Recipe:** write constants as `natCast N`; `mach_mpoly` then treats each as one atom and
+  **First try splitting the call**: keep each binomial product atomic (bind it to a variable) so no
+  single call distributes two brackets — a degree-3 identity that died at 4 000 000 heartbeats
+  closes as four ~1 s steps that way.
+  **Otherwise:** write constants as `natCast N`; `mach_mpoly` then treats each as one atom and
   normalises fine, but cannot do their arithmetic — supply products via
   `rw [← natCast_mul]` (instant, `Nat` literal equality) *before* calling it.
 - **`OfNat Real` exists only for `0` and `1`.** `(2 : Real)` does not elaborate. Write constants as
