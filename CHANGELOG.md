@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (c)
+
+### The Apollonius count, in list-cardinality form — and the disclaimer was wrong about why
+
+`MachLib/Geometry/Apollonius/Enumeration.lean` (new). The public exhibit carried:
+
+> **NOT PROVED — list-cardinality form.** MachLib is Mathlib-free and has no `Finset` layer; the
+> count is a derivation from per-mode theorems plus the antipodal pairing, not a
+> `List.length = 8` theorem.
+
+**The premise was true and the inference was wrong.** `List`, `List.length` and `List.Nodup` are
+Lean **core**, not Mathlib, and a finite enumeration needs no `Finset` at all. `Mode` is a structure
+of three two-element enumerations carrying `DecidableEq`, so the mode half of the count is not
+merely provable but *decidable*.
+
+| new | states | axioms |
+| --- | --- | --- |
+| `allModes_length` | `allModes.length = 8` | **none** |
+| `allModes_nodup` | no mode listed twice | **none** |
+| `allModes_complete` | no mode missing | `propext` only |
+| `canonical_plus_anti_length/_nodup/_complete` | `4 + 4 = 8`, disjointly | none / none / `propext` |
+| `two_solutions_per_class` | each class contributes two distinct positive-radius solutions | Real base |
+| `eight_solutions` | **a `List` of length 8, `Nodup`, every entry a genuine solution** | + `Classical.choice` |
+
+Three facts depending on **no axioms whatsoever** is worth recording: the eight-ness of the mode set
+is pure computation, and was being described in prose.
+
+**Also already true and overlooked:** `canonicalModes_length : = 4`, `canonicalModes_nodup` and
+`mem_canonicalModes_iff` have been in `Mode.lean` since the original arc. The *four*-class half of
+the count was already in list-cardinality form when the disclaimer said none of it was.
+
+**Why `eight_solutions` is an existential over lists rather than a `noncomputable def`.** The roots
+arrive from `QM_two_roots_of_gp` as an existential, so a definition would have to thread
+`Classical.choose` through its own signature. Producing the list inside the statement keeps choice
+out of every signature while still delivering an actual `List` whose `length` reduces to `8` by
+computation.
+
+**`Nodup` is the clause that makes the length mean anything** — eight entries are a count only once
+no entry repeats. Distinctness has two independent sources: within a class, the two roots of the
+class quadratic differ (same mode, different radii, or opposite modes via `anti_ne`); across
+classes, the four canonical modes and their four antipodes are eight distinct modes, which is
+`canonical_plus_anti_nodup` and decides.
+
+Still NOT proved, and still disclosed: the eight concrete coordinates for a specific configuration.
+MachLib proves the count and its structure, not those particular numbers.
+
 ## [Unreleased] — 2026-08-19 (b)
 
 ### Citable exact-depth declarations: `d(log x) = 3`, `d(x + 1) = 4`
