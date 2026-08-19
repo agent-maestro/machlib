@@ -3829,6 +3829,46 @@
         "QMdisc"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "Attainment for every class. forbid_axioms_exact on sqrt_neg_zero is the point: sqrt DOES enter here, and the claim is that the TOTALISATION branch still cannot. That guard is only meaningful at a site that genuinely uses sqrt.",
+      "id": "apollonius-attainment-all-classes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every class attains two distinct real roots"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.QM_two_roots_of_gp",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt_neg_zero"
+      ],
+      "statement_mentions": [
+        "QM"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "Discriminant positivity for all eight modes. hypotheses_count 1: general position only, no per-mode side condition.",
+      "id": "apollonius-disc-pos-all-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every one of the eight modes has a positive discriminant under general position"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.QMdisc_pos_all",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "QMdisc"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

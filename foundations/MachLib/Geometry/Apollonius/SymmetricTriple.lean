@@ -647,6 +647,33 @@ theorem QM_two_distinct_roots (gp : SymmetricGeneralPosition d ρ) (m : Mode)
       (QMlead_ne_zero d ρ gp m) hsne (by rw [hs]; unfold QMdisc; mach_ring)
   exact ⟨r₁, r₂, hne, by rw [QM_expand']; exact h₁, by rw [QM_expand']; exact h₂⟩
 
+
+/-! ### Every class attains, all eight modes -/
+
+/-- `QMlead` is antipode-invariant: it sees the signs only through `σ_Aσ_B` and `σ_Aσ_C`. -/
+theorem QMlead_anti (m : Mode) : QMlead d ρ m.anti = QMlead d ρ m := by
+  cases m with
+  | mk a b c =>
+    cases a <;> cases b <;> cases c <;>
+      (unfold QMlead Mode.anti Sign.flip Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+
+/-- `QMmid` **negates** under the antipode — and squares away in the discriminant. -/
+theorem QMmid_anti (m : Mode) : QMmid d ρ m.anti = -(QMmid d ρ m) := by
+  cases m with
+  | mk a b c =>
+    cases a <;> cases b <;> cases c <;>
+      (unfold QMmid Mode.anti Sign.flip Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+
+/-- **The discriminant is antipode-invariant**, so four classes carry four discriminants. Proved
+component-wise rather than by re-deriving: `QMlead` is invariant, `QMmid` negates and is squared,
+`QMconst` does not mention the mode at all. -/
+theorem QMdisc_anti (m : Mode) : QMdisc d ρ m.anti = QMdisc d ρ m := by
+  unfold QMdisc
+  rw [QMlead_anti, QMmid_anti]
+  have e : -(QMmid d ρ m) * -(QMmid d ρ m) = QMmid d ρ m * QMmid d ρ m := by
+    mach_mpoly [QMmid d ρ m] <;> mach_ring
+  rw [e]
+
 /-! ## Why "pairwise separated" is NOT general position
 
 A natural guess for this family's general-position condition is that the input circles are mutually
@@ -833,6 +860,82 @@ theorem QMdisc_oii_pos (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) :
   exact mul_pos two_pos (mul_pos two_pos (mul_pos two_pos (mul_pos two_pos
     (mul_pos two_pos (mul_pos (mul_pos hd hd) (mul_pos hgap hgap))))))
 
+/-- **Every mode's discriminant is positive under general position.**
+
+Six of the eight go through `disc_pos_of_lead_neg` (their leading coefficient is negative under
+separation); the `(o,i,i)` class goes through its factored discriminant, and its antipode `(i,o,o)`
+through `QMdisc_anti`. Note the two routes are genuinely different arguments, not two spellings of
+one — which is the honest shape, since the `(o,i,i)` class is the one whose leading coefficient can
+vanish while its discriminant does not. -/
+theorem QMdisc_pos_all (gp : SymmetricGeneralPosition d ρ) (m : Mode) : 0 < QMdisc d ρ m := by
+  have hρ := gp_rho_pos d ρ gp
+  have hsep := gp.2.1
+  have hd := gp_d_pos d ρ gp
+  have two_pos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have h4 := four_rho_sq_lt d ρ hρ hsep
+  -- the two negative leading-coefficient values
+  have negA : -((1 + 1) * (1 + 1) * (d * d)) < 0 := by
+    have hp : (0 : Real) < (1 + 1) * (1 + 1) * (d * d) :=
+      mul_pos (mul_pos two_pos two_pos) (mul_pos hd hd)
+    have v := add_lt_add_left hp (-((1 + 1) * (1 + 1) * (d * d)))
+    have l : -((1 + 1) * (1 + 1) * (d * d)) + 0 = -((1 + 1) * (1 + 1) * (d * d)) := by mach_ring
+    have rr : -((1 + 1) * (1 + 1) * (d * d)) + (1 + 1) * (1 + 1) * (d * d) = 0 := by mach_ring
+    rw [l, rr] at v; exact v
+  have negB : (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+      - (1 + 1) * (1 + 1) * (d * d) < 0 := by
+    have e : ((1 + 1) * ρ) * ((1 + 1) * ρ) = (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+    rw [e] at h4
+    have hp : (0 : Real) < (1 + 1) * (1 + 1) * (d * d)
+        - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))) := by
+      have e2 : (1 + 1) * (1 + 1) * (d * d)
+            - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+          = ((1 + 1) * (1 + 1)) * (d * d - (1 + 1) * ((1 + 1) * (ρ * ρ))) := by
+        mach_mpoly [d, ρ] <;> mach_ring
+      rw [e2]
+      refine mul_pos (mul_pos two_pos two_pos) ?_
+      have v := add_lt_add_left h4 (-((1 + 1) * ((1 + 1) * (ρ * ρ))))
+      have l : -((1 + 1) * ((1 + 1) * (ρ * ρ))) + (1 + 1) * ((1 + 1) * (ρ * ρ)) = 0 := by mach_ring
+      have rr : -((1 + 1) * ((1 + 1) * (ρ * ρ))) + d * d
+          = d * d - (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+      rw [l, rr] at v; exact v
+    have v := add_lt_add_left hp ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+      - (1 + 1) * (1 + 1) * (d * d))
+    have l : (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+          - (1 + 1) * (1 + 1) * (d * d) + 0
+        = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+          - (1 + 1) * (1 + 1) * (d * d) := by mach_ring
+    have rr : (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+          - (1 + 1) * (1 + 1) * (d * d)
+          + ((1 + 1) * (1 + 1) * (d * d)
+             - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))) = 0 := by
+      mach_mpoly [d, ρ] <;> mach_ring
+    rw [l, rr] at v; exact v
+  have keyneg : ∀ v : Real, v < 0 → ∀ w : Real, w = v → w < 0 := fun _ hv _ hw => by
+    rw [hw]; exact hv
+  -- explicit per-case dispatch: `first` cannot backtrack out of a failing nested `by`,
+  -- so each of the eight modes names its own route.
+  have viaA : ∀ m' : Mode, QMlead d ρ m' = -((1 + 1) * (1 + 1) * (d * d)) → 0 < QMdisc d ρ m' :=
+    fun m' h => QMdisc_pos_of_lead_neg d ρ hρ hsep m' (keyneg _ negA _ h)
+  have viaB : ∀ m' : Mode,
+      QMlead d ρ m' = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+                      - (1 + 1) * (1 + 1) * (d * d) → 0 < QMdisc d ρ m' :=
+    fun m' h => QMdisc_pos_of_lead_neg d ρ hρ hsep m' (keyneg _ negB _ h)
+  have anti : QMdisc d ρ ⟨Sign.inner, Sign.outer, Sign.outer⟩
+      = QMdisc d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩ :=
+    QMdisc_anti d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩
+  cases m with
+  | mk a b c =>
+    cases a <;> cases b <;> cases c
+    · exact viaA _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+    · exact viaB _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+    · exact viaB _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+    · exact QMdisc_oii_pos d ρ hρ hsep
+    · rw [anti]; exact QMdisc_oii_pos d ρ hρ hsep
+    · exact viaB _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+    · exact viaB _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+    · exact viaA _ (by unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring)
+
+
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
 /-- `Q` written as `a·r² + b·r + c`. The leading coefficient `16ρ² − 2d²` is displayed rather than
@@ -959,6 +1062,44 @@ theorem negative_root_is_antipodal (hd : 0 < d) (hρ : 0 < ρ) (x y r : Real)
     rw [l, rr] at v; exact v
   exact ⟨hpos, (solvesMode_antipodal _ _ _ _ _ _ _).mp
     ((solvesMode_iff d ρ hd hρ x y r).mpr ⟨hloc, hq⟩)⟩
+
+
+/-- **Attainment, for every mode.** Under general position each mode's quadratic has two distinct
+real roots — the discriminant is positive, so `√disc` is a nonzero square root of it, and
+`two_distinct_roots` constructs both branches.
+
+This is where `sqrt` finally enters the development, and it enters at the *candidate* boundary
+exactly as intended: the totalisation branch is unreachable because `QMdisc_pos_all` supplies strict
+positivity, so `sqrt_sq_nonneg` fires on a manifestly nonnegative argument.
+
+With the antipodal law this is the eight: four classes, two distinct roots each, each nonzero root
+(`root_ne_zero`) decoding to one circle in one of the class's two modes, and `mode_unique` making
+those circles distinct. -/
+theorem QM_two_roots_of_gp (gp : SymmetricGeneralPosition d ρ) (m : Mode) :
+    ∃ r₁ r₂ : Real, r₁ ≠ r₂ ∧ QM d ρ m r₁ = 0 ∧ QM d ρ m r₂ = 0 := by
+  have hpos := QMdisc_pos_all d ρ gp m
+  have hs : sqrt (QMdisc d ρ m) * sqrt (QMdisc d ρ m) = QMdisc d ρ m :=
+    sqrt_sq_nonneg _ (le_of_lt hpos)
+  have hsne : sqrt (QMdisc d ρ m) ≠ 0 := by
+    intro hz
+    rw [hz] at hs
+    have z : (0 : Real) * 0 = 0 := by mach_ring
+    rw [z] at hs
+    exact (ne_of_gt hpos) hs.symm
+  obtain ⟨r₁, r₂, hne, h₁, h₂⟩ :=
+    @QuadraticRoots.two_distinct_roots (QMlead d ρ m) (QMmid d ρ m) (QMconst d ρ)
+      (sqrt (QMdisc d ρ m)) (QMlead_ne_zero d ρ gp m) hsne
+      (by rw [hs]; unfold QMdisc; mach_ring)
+  exact ⟨r₁, r₂, hne, by rw [QM_expand']; exact h₁, by rw [QM_expand']; exact h₂⟩
+
+/-- **Both roots are nonzero and carry distinct modes.** The decode obligations, discharged. -/
+theorem QM_roots_decode (gp : SymmetricGeneralPosition d ρ) (m : Mode) :
+    ∃ r₁ r₂ : Real, r₁ ≠ r₂ ∧ r₁ ≠ 0 ∧ r₂ ≠ 0
+      ∧ QM d ρ m r₁ = 0 ∧ QM d ρ m r₂ = 0 := by
+  obtain ⟨r₁, r₂, hne, h₁, h₂⟩ := QM_two_roots_of_gp d ρ gp m
+  exact ⟨r₁, r₂, hne,
+    root_ne_zero d ρ (gp_rho_pos d ρ gp) gp.2.1 m h₁,
+    root_ne_zero d ρ (gp_rho_pos d ρ gp) gp.2.1 m h₂, h₁, h₂⟩
 
 end SymmetricTriple
 end Apollonius

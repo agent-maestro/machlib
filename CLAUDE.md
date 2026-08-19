@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **934 `.lean` files** (622 top-level + 312 in subdirectories) /
-**~186 k lines** / **7 060 theorems**, re-exported through the aggregator
+**~186 k lines** / **7 066 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** (536 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
@@ -117,6 +117,9 @@ behind it is missing — registration is still a human act.
   **Otherwise:** write constants as `natCast N`; `mach_mpoly` then treats each as one atom and
   normalises fine, but cannot do their arithmetic — supply products via
   `rw [← natCast_mul]` (instant, `Nat` literal equality) *before* calling it.
+- **`first | … | …` does not backtrack out of errors inside a nested `by` block** — only out of
+  tactic failure. A branch whose `mach_mpoly` makes partial progress and then errors is committed
+  to, not abandoned. Use explicit per-case bullets when the branches are genuinely different proofs.
 - **`OfNat Real` exists only for `0` and `1`.** `(2 : Real)` does not elaborate. Write constants as
   `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
   numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×

@@ -7,6 +7,37 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius: attainment for every class
+
+`QMdisc_pos_all` — every one of the eight modes has a positive discriminant under general position.
+Six go through `disc_pos_of_lead_neg`; `(o,i,i)` goes through its factored discriminant, and its
+antipode `(i,o,o)` through `QMdisc_anti`. The two routes are genuinely different arguments, which is
+the honest shape: `(o,i,i)` is precisely the class whose leading coefficient can vanish while its
+discriminant does not.
+
+`QMdisc_anti` proves the discriminant is antipode-invariant, component-wise rather than by
+re-deriving: `QMlead` is invariant, `QMmid` **negates** and is then squared, `QMconst` never mentions
+the mode. So four classes carry four discriminants — the same 8→4 collapse the antipodal law gave for
+solutions, now for the discriminant.
+
+`QM_two_roots_of_gp` — **every class attains two distinct real roots**, and `QM_roots_decode` adds
+that both are nonzero. With the antipodal law that is the eight: four classes, two distinct roots
+each, each nonzero root decoding to one circle in one of the class's two modes, and `mode_unique`
+making those circles distinct.
+
+**The sqrt firewall, tested where it counts.** This is where `sqrt` finally enters the development —
+at the *candidate* boundary, exactly as designed six commits ago. The footprint confirms the design
+held: `MachLib.Real.sqrt` and `MachLib.Real.sqrt_sq_nonneg` appear, and **`sqrt_neg_zero` does
+not**. The totalisation branch is unreachable because `QMdisc_pos_all` supplies strict positivity,
+so `sqrt_sq_nonneg` fires on a manifestly nonnegative argument. A predicate written with `sqrt` back
+at the start would have made that guarantee impossible to state.
+
+**A tactic note worth keeping.** The eight-way dispatch was first written with `first | … | … | …`
+and three routes. It failed: `first` cannot backtrack out of an error raised *inside a nested `by`
+block*, so a branch whose `mach_mpoly` made partial progress before failing was committed to rather
+than abandoned. Replaced with explicit per-case bullets. The general lesson is narrower than "avoid
+`first`": `first` backtracks over *tactic failure*, not over *elaboration errors in subterms*.
+
 ### Verified Apollonius: the last symbolic blocker falls — split the call, not the budget
 
 `QMdisc_oii_eq : QMdisc (o,i,i) = 32·d²·(d² − 4ρ²)²`, and with it
