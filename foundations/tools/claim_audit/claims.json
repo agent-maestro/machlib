@@ -3750,6 +3750,45 @@
         "QMlead",
         "QM"
       ]
+    },
+    {
+      "_comment": "Zero-root exclusion DERIVED. Registered because the interesting content is that this is a theorem and not a field of the predicate -- the failure mode is a hypothesis quietly disappearing because examples happen to satisfy it.",
+      "id": "apollonius-root-nonzero-derived-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "derives** the `r ≠ 0` that `mode_unique` needs"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.root_ne_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "QM"
+      ]
+    },
+    {
+      "_comment": "All eight modes nondegenerate. forbid_axioms_exact on sqrt pins that no radical is needed to rule out degeneration -- it is pure order plus field.",
+      "id": "apollonius-lead-nonzero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eight modes carry only **three** distinct leading coefficients"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.QMlead_ne_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "SymmetricGeneralPosition",
+        "QMlead"
+      ]
     }
   ]
 }

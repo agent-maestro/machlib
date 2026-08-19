@@ -7,6 +7,44 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice G: general position, minimised and derived
+
+`SymmetricGeneralPosition d ρ := 0 < ρ ∧ 2ρ < d ∧ d² ≠ 8ρ²`. Three conjuncts, and the point is how
+few that is.
+
+**Deliberately not named `ApolloniusGeneralPosition`.** The predicate mentions only `d` and `ρ`,
+which describe the equal-radius family and nothing else; for arbitrary triples the condition must
+involve the per-class linear determinant, leading coefficient, discriminant and zero-root exclusion
+separately. Naming a family condition globally is how a family theorem later reads as a universal
+one.
+
+**Minimised, not assembled.** The first draft had four conjuncts. Three turned out to be
+*consequences*:
+
+* **Discriminant positivity.** The three discriminants are `32d⁶`, `32d²(d²−4ρ²)(d²−2ρ²)` and
+  `32d²(d²−4ρ²)²`, all positive once `d > 2ρ`, since then `d² > 4ρ² > 2ρ²`. Not a hypothesis.
+* **Zero-root exclusion.** The constant term `2d²(d² − 2ρ²)` is mode-independent and nonzero for the
+  same reason, so `root_ne_zero` **derives** the `r ≠ 0` that `mode_unique` needs. It was checked
+  rather than allowed to disappear because every numerical example happened to have nonzero radii.
+* **Two of the three leading coefficients**, `−4d²` and `16ρ² − 4d²`.
+
+Only `32ρ² − 4d²` needs its own conjunct, and that is the non-geometric one, `d² ≠ 8ρ²`, whose
+necessity `oii_at_most_one_radius` already established.
+
+`QMlead_ne_zero` covers all eight modes at once. Worth noting *why* one theorem suffices: `QMlead` is
+**antipode-invariant** — it depends on the signs only through the products `σ_Aσ_B` and `σ_Aσ_C` — so
+eight modes carry only **three** distinct leading coefficients, one per antipodal class shape. Each
+is excluded by a different conjunct, so all three conjuncts are load-bearing and none is redundant.
+
+`at_most_two_of_gp` and `mode_unique_of_gp` then hold with **no side condition left over** — the
+`QMlead ≠ 0` and `r ≠ 0` obligations are discharged inside rather than carried by the caller. That
+`r ≠ 0` could be stated, tracked and finally retired is the payoff of the earlier decision to let the
+algebraic layer represent `r = 0` instead of ruling it out by typing.
+
+`quadratic_root_of_disc` and `quadratic_roots_distinct` add the attainment machinery to
+`QuadraticRoots`: a root from any `s` with `s² = b² − 4ac`, stated on the scaled root `2a·r = −b + s`
+so no quotient is formed, with the two branches `±√disc` being the *same* theorem applied twice.
+
 ### Verified Apollonius, slice F: "pairwise separated" is not general position
 
 The natural guess for this family's general-position condition — that the input circles are mutually

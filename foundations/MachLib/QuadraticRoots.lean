@@ -163,5 +163,49 @@ theorem cramer_2x2 {p₁ p₂ q₁ q₂ u v x y : Real} (hdet : p₁ * q₂ - p�
         mach_mpoly [p₁, p₂, q₁, q₂, x, y]
       rw [e, h1, h2]; mach_mpoly [u, v, p₁, p₂, q₁, q₂]
 
+
+/-- **A root from the discriminant, division-free.**
+
+Given `s` with `s² = b² − 4ac`, any `r` with `2a·r = −b + s` is a root. Stated on the scaled root
+rather than on `(−b+s)/(2a)` so no quotient is ever formed, and with `s` an arbitrary square root of
+the discriminant so that the two branches `±√disc` are the *same* theorem applied twice. -/
+theorem quadratic_root_of_disc {a b c s r : Real} (ha : a ≠ 0)
+    (hs : s * s = b * b - (1 + 1) * (1 + 1) * a * c)
+    (hr : (1 + 1) * a * r = -b + s) :
+    a * r * r + b * r + c = 0 := by
+  have h4a : (1 + 1) * (1 + 1) * a ≠ 0 := by
+    intro hz
+    exact ha (right_of_mul_eq_zero
+      (ne_of_gt (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                         (add_pos zero_lt_one_ax zero_lt_one_ax))) hz)
+  refine right_of_mul_eq_zero h4a ?_
+  have e : (1 + 1) * (1 + 1) * a * (a * r * r + b * r + c)
+      = ((1 + 1) * a * r) * ((1 + 1) * a * r)
+        + (1 + 1) * b * ((1 + 1) * a * r)
+        + (1 + 1) * (1 + 1) * a * c := by
+    mach_mpoly [a, b, c, r] <;> mach_ring
+  rw [e, hr]
+  have e2 : (-b + s) * (-b + s) + (1 + 1) * b * (-b + s) + (1 + 1) * (1 + 1) * a * c
+      = (s * s - (b * b - (1 + 1) * (1 + 1) * a * c)) := by
+    mach_mpoly [a, b, c, s] <;> mach_ring
+  rw [e2, hs]
+  mach_mpoly [b, a, c] <;> mach_ring
+
+/-- **The two branches are distinct when the discriminant is nonzero.** Both scalings share the
+left-hand side `2a·r`, so equal roots force `−b + s = −b − s`, hence `2s = 0`. -/
+theorem quadratic_roots_distinct {a s b r₁ r₂ : Real} (hsne : s ≠ 0)
+    (h₁ : (1 + 1) * a * r₁ = -b + s) (h₂ : (1 + 1) * a * r₂ = -b - s) :
+    r₁ ≠ r₂ := by
+  intro heq
+  subst heq
+  have hbs : -b + s = -b - s := by rw [← h₁, h₂]
+  have e2 : (1 + 1) * s = 0 := by
+    refine eq_of_sub_eq_zero ?_
+    have e : (1 + 1) * s - 0 = (-b + s) - (-b - s) := by mach_mpoly [b, s] <;> mach_ring
+    rw [e, hbs]
+    mach_mpoly [b, s] <;> mach_ring
+  exact hsne (right_of_mul_eq_zero
+    (ne_of_gt (add_pos zero_lt_one_ax zero_lt_one_ax)) e2)
+
 end QuadraticRoots
 end MachLib

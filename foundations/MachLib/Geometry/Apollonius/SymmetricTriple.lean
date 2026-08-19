@@ -389,6 +389,198 @@ theorem QMlead_ooo_ne (hd : 0 < d) :
   rw [e, hz]; mach_ring
 
 
+
+/-! ## General position for THIS family, minimised
+
+Deliberately **not** called `ApolloniusGeneralPosition`. The predicate below mentions only `d` and
+`ρ`, which describe the equal-radius right-isosceles family and nothing else; for arbitrary triples
+the condition must involve the per-class linear determinant, leading coefficient, discriminant and
+zero-root exclusion separately. Naming a family condition globally is how a family theorem later
+reads as a universal one.
+
+**Minimised, not assembled.** The first draft had four conjuncts. Three of them turned out to be
+consequences:
+
+* every discriminant is positive — `32d⁶`, `32d²(d²−4ρ²)(d²−2ρ²)`, `32d²(d²−4ρ²)²` are all `> 0`
+  once `d > 2ρ`, since then `d² > 4ρ² > 2ρ²`;
+* the constant term `2d²(d² − 2ρ²)` is nonzero for the same reason, so **`0` is never a root** and
+  the `r ≠ 0` that `mode_unique` needs is *derived* rather than hypothesised;
+* two of the three leading coefficients, `−4d²` and `16ρ² − 4d²`, are nonzero under `d > 2ρ`.
+
+Only the third leading coefficient, `32ρ² − 4d²`, needs its own conjunct — and that is the
+non-geometric one, `d² ≠ 8ρ²`, whose necessity `oii_at_most_one_radius` establishes. -/
+
+/-- General position for the symmetric equal-radius family. Three conjuncts, each load-bearing. -/
+def SymmetricGeneralPosition : Prop :=
+  0 < ρ ∧ (1 + 1) * ρ < d ∧ d * d ≠ (1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))
+
+/-- Separation gives `4ρ² < d²`. -/
+theorem four_rho_sq_lt (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) :
+    ((1 + 1) * ρ) * ((1 + 1) * ρ) < d * d := by
+  have h2ρ : (0 : Real) < (1 + 1) * ρ := mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) hρ
+  have hdpos : (0 : Real) < d := lt_trans_ax h2ρ hsep
+  have s1 : ((1 + 1) * ρ) * ((1 + 1) * ρ) < d * ((1 + 1) * ρ) :=
+    mul_lt_mul_of_pos_right hsep h2ρ
+  have s2 : ((1 + 1) * ρ) * d < d * d := mul_lt_mul_of_pos_right hsep hdpos
+  have e : d * ((1 + 1) * ρ) = ((1 + 1) * ρ) * d := by mach_ring
+  rw [e] at s1
+  exact lt_trans_ax s1 s2
+
+/-- **The constant term is nonzero**, hence `0` is not a root of any class. Derived from separation,
+not assumed. -/
+theorem const_ne_zero (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) :
+    ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ))) ≠ 0 := by
+  have h4 := four_rho_sq_lt d ρ hρ hsep
+  have hdpos : (0 : Real) < d :=
+    lt_trans_ax (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) hρ) hsep
+  -- `2d²(d² − 2ρ²) > 0`
+  have h2 : (1 + 1) * (ρ * ρ) < d * d := by
+    refine lt_trans_ax ?_ h4
+    have e : ((1 + 1) * ρ) * ((1 + 1) * ρ) = (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+    rw [e]
+    have hp : (0 : Real) < (1 + 1) * (ρ * ρ) :=
+      mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) (mul_pos hρ hρ)
+    have v := add_lt_add_left hp ((1 + 1) * (ρ * ρ))
+    have l : (1 + 1) * (ρ * ρ) + 0 = (1 + 1) * (ρ * ρ) := by mach_ring
+    have rr : (1 + 1) * (ρ * ρ) + (1 + 1) * (ρ * ρ) = (1 + 1) * ((1 + 1) * (ρ * ρ)) := by mach_ring
+    rw [l, rr] at v
+    exact v
+  have hpos : (0 : Real)
+      < (1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ)) := by
+    have hgap : (0 : Real) < d * d - (1 + 1) * (ρ * ρ) := by
+      have v := add_lt_add_left h2 (-((1 + 1) * (ρ * ρ)))
+      have l : -((1 + 1) * (ρ * ρ)) + (1 + 1) * (ρ * ρ) = 0 := by mach_ring
+      have rr : -((1 + 1) * (ρ * ρ)) + d * d = d * d - (1 + 1) * (ρ * ρ) := by mach_ring
+      rw [l, rr] at v; exact v
+    have hprod : (0 : Real) < ((1 + 1) * (d * d)) * (d * d - (1 + 1) * (ρ * ρ)) :=
+      mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) (mul_pos hdpos hdpos)) hgap
+    have e : ((1 + 1) * (d * d)) * (d * d - (1 + 1) * (ρ * ρ))
+        = (1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ)) := by
+      mach_mpoly [d, ρ] <;> mach_ring
+    rw [e] at hprod; exact hprod
+  exact ne_of_gt hpos
+
+/-- **No class has `0` as a root.** Exactly what `mode_unique` needs, and it comes free. -/
+theorem root_ne_zero (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) (m : Mode) {r : Real}
+    (hr : QM d ρ m r = 0) : r ≠ 0 := by
+  intro hz
+  subst hz
+  rw [QM_expand] at hr
+  refine const_ne_zero d ρ hρ hsep ?_
+  have e : ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ)))
+      = QMlead d ρ m * 0 * 0
+        + (-((1 + 1) * (1 + 1) * (d * d * ρ) * (m.sB.val + m.sC.val))) * 0
+        + ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ))) := by
+    mach_mpoly [d, ρ, QMlead d ρ m, m.sB.val, m.sC.val] <;> mach_ring
+  rw [e]; exact hr
+
+
+/-- **Under general position no class degenerates.**
+
+All eight modes at once. `QMlead` is *antipode-invariant* — it depends on the signs only through the
+products `σ_Aσ_B` and `σ_Aσ_C` — so the eight modes carry only **three** distinct leading
+coefficients, one per antipodal class shape. Each is excluded by a different conjunct of
+`SymmetricGeneralPosition`, so all three conjuncts are load-bearing and none is redundant. -/
+theorem QMlead_ne_zero (gp : SymmetricGeneralPosition d ρ) (m : Mode) : QMlead d ρ m ≠ 0 := by
+  obtain ⟨hρ, hsep, hne8⟩ := gp
+  have two_pos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have hdpos : (0 : Real) < d := lt_trans_ax (mul_pos two_pos hρ) hsep
+  have h4 := four_rho_sq_lt d ρ hρ hsep
+  have hgap : (0 : Real) < d * d - ((1 + 1) * ρ) * ((1 + 1) * ρ) := by
+    have v := add_lt_add_left h4 (-(((1 + 1) * ρ) * ((1 + 1) * ρ)))
+    have l : -(((1 + 1) * ρ) * ((1 + 1) * ρ)) + ((1 + 1) * ρ) * ((1 + 1) * ρ) = 0 := by mach_ring
+    have rr : -(((1 + 1) * ρ) * ((1 + 1) * ρ)) + d * d
+        = d * d - ((1 + 1) * ρ) * ((1 + 1) * ρ) := by mach_ring
+    rw [l, rr] at v; exact v
+  have key : ∀ v : Real, v ≠ 0 → ∀ w : Real, w = v → w ≠ 0 := fun _ hv _ hw => by rw [hw]; exact hv
+  -- (1) `−4d²` : nonzero because `d > 0`
+  have hA : -((1 + 1) * (1 + 1) * (d * d)) ≠ 0 := by
+    have hpos : (0 : Real) < (1 + 1) * (1 + 1) * (d * d) :=
+      mul_pos (mul_pos two_pos two_pos) (mul_pos hdpos hdpos)
+    intro hz
+    refine (ne_of_gt hpos) ?_
+    have e : (1 + 1) * (1 + 1) * (d * d) = -(-((1 + 1) * (1 + 1) * (d * d))) := by mach_ring
+    rw [e, hz]; mach_ring
+  -- (2) `16ρ² − 4d²` : nonzero because `4ρ² < d²`
+  have hB : (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+      - (1 + 1) * (1 + 1) * (d * d) ≠ 0 := by
+    have hpos : (0 : Real) < (1 + 1) * (1 + 1) * (d * d)
+        - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))) := by
+      have e : (1 + 1) * (1 + 1) * (d * d)
+            - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+          = ((1 + 1) * (1 + 1)) * (d * d - ((1 + 1) * ρ) * ((1 + 1) * ρ)) := by
+        mach_mpoly [d, ρ] <;> mach_ring
+      rw [e]; exact mul_pos (mul_pos two_pos two_pos) hgap
+    intro hz
+    refine (ne_of_gt hpos) ?_
+    have e2 : (1 + 1) * (1 + 1) * (d * d)
+          - (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+        = -((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+            - (1 + 1) * (1 + 1) * (d * d)) := by mach_mpoly [d, ρ] <;> mach_ring
+    rw [e2, hz]; mach_ring
+  -- (3) `32ρ² − 4d²` : nonzero only because `d² ≠ 8ρ²`, the non-geometric conjunct
+  have hC : (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))))
+      - (1 + 1) * (1 + 1) * (d * d) ≠ 0 := by
+    intro hz
+    refine hne8 ?_
+    have e : ((1 + 1) * (1 + 1))
+          * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))) - d * d)
+        = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))))
+          - (1 + 1) * (1 + 1) * (d * d) := by mach_mpoly [d, ρ] <;> mach_ring
+    rw [← e] at hz
+    exact (QuadraticRoots.eq_of_sub_eq_zero
+      (QuadraticRoots.right_of_mul_eq_zero (ne_of_gt (mul_pos two_pos two_pos)) hz)).symm
+  cases m with
+  | mk a b c =>
+    cases a <;> cases b <;> cases c <;>
+      first
+        | (refine key _ hA _ ?_; unfold QMlead Sign.val
+           (mach_mpoly [d, ρ] <;> mach_ring); done)
+        | (refine key _ hB _ ?_; unfold QMlead Sign.val
+           (mach_mpoly [d, ρ] <;> mach_ring); done)
+        | (refine key _ hC _ ?_; unfold QMlead Sign.val
+           (mach_mpoly [d, ρ] <;> mach_ring); done)
+
+
+theorem gp_rho_pos (gp : SymmetricGeneralPosition d ρ) : 0 < ρ := gp.1
+
+theorem gp_d_pos (gp : SymmetricGeneralPosition d ρ) : 0 < d :=
+  lt_trans_ax (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) gp.1) gp.2.1
+
+/-- **Under general position: at most two solutions per mode, with no side condition left over.**
+The `QMlead ≠ 0` hypothesis of `at_most_two_solutions_per_mode` is now discharged rather than
+carried. -/
+theorem at_most_two_of_gp (gp : SymmetricGeneralPosition d ρ) (m : Mode)
+    (x₁ y₁ r₁ x₂ y₂ r₂ x₃ y₃ r₃ : Real)
+    (h₁ : SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m x₁ y₁ r₁)
+    (h₂ : SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m x₂ y₂ r₂)
+    (h₃ : SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m x₃ y₃ r₃) :
+    (x₁ = x₂ ∧ y₁ = y₂ ∧ r₁ = r₂)
+    ∨ (x₁ = x₃ ∧ y₁ = y₃ ∧ r₁ = r₃)
+    ∨ (x₂ = x₃ ∧ y₂ = y₃ ∧ r₂ = r₃) :=
+  at_most_two_solutions_per_mode d ρ (gp_d_pos d ρ gp) (gp_rho_pos d ρ gp) m
+    (QMlead_ne_zero d ρ gp m) x₁ y₁ r₁ x₂ y₂ r₂ x₃ y₃ r₃ h₁ h₂ h₃
+
+/-- **Under general position a solution determines its mode**, unconditionally.
+
+`mode_unique` needs `r ≠ 0`, and that is exactly what `root_ne_zero` supplies from separation — so
+the obligation is discharged inside the theorem rather than pushed onto the caller. This is the
+place the earlier design decision pays: because the algebraic layer admits `r = 0` as a
+*representable* candidate, the hypothesis could be stated, tracked, and now retired. -/
+theorem mode_unique_of_gp (gp : SymmetricGeneralPosition d ρ) (m m' : Mode) (x y r : Real)
+    (h : SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+           (cC d ρ (gp_rho_pos d ρ gp)) m x y r)
+    (h' : SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m' x y r) :
+    m = m' := by
+  have hρ := gp_rho_pos d ρ gp
+  have hsep := gp.2.1
+  have hq := ((solvesModeM_iff d ρ (gp_d_pos d ρ gp) hρ m x y r).mp h).2
+  exact mode_unique _ _ _ m m' x y r (root_ne_zero d ρ hρ hsep m hq) h h'
+
 /-! ## Why "pairwise separated" is NOT general position
 
 A natural guess for this family's general-position condition is that the input circles are mutually
