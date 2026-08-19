@@ -3789,6 +3789,26 @@
         "SymmetricGeneralPosition",
         "QMlead"
       ]
+    },
+    {
+      "_comment": "Attainment. Registered with forbid_axioms_exact on sqrt because the square root is a HYPOTHESIS here, not a computation -- the theorem must not silently acquire a sqrt dependency if someone later 'simplifies' it by taking the root internally.",
+      "id": "apollonius-attainment-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the two roots exist and are distinct"
+      ],
+      "module": "MachLib.QuadraticRoots",
+      "theorem": "MachLib.QuadraticRoots.two_distinct_roots",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt",
+        "MachLib.Real.sqrt_sq_nonneg"
+      ],
+      "statement_mentions": [
+        "s * s"
+      ]
     }
   ]
 }

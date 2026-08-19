@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice H: attainment machinery, and a wall named
+
+`exists_scaled` and `two_distinct_roots` make attainment *constructive*: given any `s` with
+`s² = b² − 4ac` and `s ≠ 0`, the two roots exist and are distinct. The caller supplies the square
+root rather than the theorem computing one, and `(−s)² = s²` means the same statement covers both
+branches. `exists_scaled` is the single place in this development where a field inverse is formed —
+everything above it consumes the scaled equation `u·r = v`.
+
+`disc_pos_of_lead_neg` is the useful trick: `b² − 4ac = b² + 4(−a)c` is a nonnegative square plus a
+positive product, so **a negative leading coefficient makes the discriminant positive with no
+expansion at all**. Under separation that covers the `(o,o,o)` shape (`lead = −4d²`) and the
+`(o,o,i)`/`(o,i,o)` shape (`lead = 16ρ² − 4d² < 0` since `d² > 4ρ²`) — six of the eight modes, for
+free.
+
+**The `(o,i,i)` shape is a genuine exception and is recorded as one.** Its leading coefficient
+`32ρ² − 4d²` is negative only when `d² > 8ρ²`. In the band `4ρ² < d² < 8ρ²` the discriminant is
+still positive — it equals `32d²(d² − 4ρ²)²` — but establishing that requires expanding the
+degree-6 identity, and `mach_mpoly` hits the same `Lean.Meta.acLt` wall as the numeral
+instantiation: unchanged at **10× heartbeats and 500× recursion depth**. Two independent tasks have
+now hit the same limit from different directions, which suggests it is a property of the normaliser
+rather than of either problem.
+
+So attainment is proved for every class whose leading coefficient is negative, and the residue is a
+single band for a single class — stated, bounded, and not papered over.
+
 ### Verified Apollonius, slice G: general position, minimised and derived
 
 `SymmetricGeneralPosition d ρ := 0 < ρ ∧ 2ρ < d ∧ d² ≠ 8ρ²`. Three conjuncts, and the point is how

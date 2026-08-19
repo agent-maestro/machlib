@@ -207,5 +207,72 @@ theorem quadratic_roots_distinct {a s b r₁ r₂ : Real} (hsne : s ≠ 0)
   exact hsne (right_of_mul_eq_zero
     (ne_of_gt (add_pos zero_lt_one_ax zero_lt_one_ax)) e2)
 
+
+/-- **A scaled solution always exists** when the scale is nonzero. The one place a field inverse is
+formed in this development; everything above it consumes the scaled equation `u·r = v` instead. -/
+theorem exists_scaled (u v : Real) (hu : u ≠ 0) : ∃ r : Real, u * r = v := by
+  refine ⟨v * (1 / u), ?_⟩
+  have e : u * (v * (1 / u)) = v * (u * (1 / u)) := by mach_ring
+  rw [e, mul_inv u hu]
+  mach_ring
+
+/-- **Two distinct roots from a nonzero discriminant.**
+
+Existence, not just verification: `exists_scaled` produces the two scaled roots and
+`quadratic_root_of_disc` certifies each. The hypothesis is `s ≠ 0` with `s² = b² − 4ac` — so the
+caller supplies a square root rather than this theorem computing one, and the *same* statement
+covers both branches because `(−s)² = s²`. -/
+theorem two_distinct_roots {a b c s : Real} (ha : a ≠ 0) (hsne : s ≠ 0)
+    (hs : s * s = b * b - (1 + 1) * (1 + 1) * a * c) :
+    ∃ r₁ r₂ : Real, r₁ ≠ r₂ ∧ a * r₁ * r₁ + b * r₁ + c = 0 ∧ a * r₂ * r₂ + b * r₂ + c = 0 := by
+  have hu : (1 + 1) * a ≠ 0 := by
+    intro hz
+    exact ha (right_of_mul_eq_zero (ne_of_gt (add_pos zero_lt_one_ax zero_lt_one_ax)) hz)
+  obtain ⟨r₁, h₁⟩ := exists_scaled ((1 + 1) * a) (-b + s) hu
+  obtain ⟨r₂, h₂⟩ := exists_scaled ((1 + 1) * a) (-b - s) hu
+  have h₂' : (1 + 1) * a * r₂ = -b + -s := by rw [h₂]; mach_ring
+  have hsneg : (-s) * (-s) = b * b - (1 + 1) * (1 + 1) * a * c := by
+    have e : (-s) * (-s) = s * s := by mach_ring
+    rw [e]; exact hs
+  exact ⟨r₁, r₂, quadratic_roots_distinct hsne h₁ h₂,
+    quadratic_root_of_disc ha hs h₁, quadratic_root_of_disc ha hsneg h₂'⟩
+
+
+/-- **A negative leading coefficient makes the discriminant positive for free.**
+
+`b² − 4ac = b² + 4(−a)c`, a nonnegative square plus a positive product. No expansion of `a`, `b` or
+`c` is required — which matters when they are large polynomials whose product would be past what a
+ring normaliser can handle. -/
+theorem disc_pos_of_lead_neg {a b c : Real} (ha : a < 0) (hc : 0 < c) :
+    0 < b * b - (1 + 1) * (1 + 1) * a * c := by
+  have two_pos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have hna : (0 : Real) < -a := by
+    have v := add_lt_add_left ha (-a)
+    have l : -a + a = 0 := by mach_ring
+    have rr : -a + (0 : Real) = -a := by mach_ring
+    rw [l, rr] at v; exact v
+  have hpos : (0 : Real) < (1 + 1) * (1 + 1) * (-a) * c :=
+    mul_pos (mul_pos (mul_pos two_pos two_pos) hna) hc
+  have e : b * b - (1 + 1) * (1 + 1) * a * c = b * b + (1 + 1) * (1 + 1) * (-a) * c := by
+    mach_mpoly [a, b, c] <;> mach_ring
+  rw [e]
+  have v := add_lt_add_left hpos (b * b)
+  have l : b * b + (0 : Real) = b * b := by mach_ring
+  rw [l] at v
+  have hbb : (0 : Real) ≤ b * b := by
+    rcases lt_total 0 b with hb | hb | hb
+    · exact le_of_lt (mul_pos hb hb)
+    · rw [← hb]
+      have z : (0 : Real) * 0 = 0 := by mach_ring
+      rw [z]; exact le_refl 0
+    · have hnb : (0 : Real) < -b := by
+        have w := add_lt_add_left hb (-b)
+        have l2 : -b + b = 0 := by mach_ring
+        have r2 : -b + (0 : Real) = -b := by mach_ring
+        rw [l2, r2] at w; exact w
+      have e2 : b * b = (-b) * (-b) := by mach_ring
+      rw [e2]; exact le_of_lt (mul_pos hnb hnb)
+  exact lt_of_le_of_lt hbb v
+
 end QuadraticRoots
 end MachLib

@@ -581,6 +581,72 @@ theorem mode_unique_of_gp (gp : SymmetricGeneralPosition d ρ) (m m' : Mode) (x 
   have hq := ((solvesModeM_iff d ρ (gp_d_pos d ρ gp) hρ m x y r).mp h).2
   exact mode_unique _ _ _ m m' x y r (root_ne_zero d ρ hρ hsep m hq) h h'
 
+
+/-! ## Attainment: every class really has two distinct roots -/
+
+/-- The middle coefficient of `QM`. -/
+noncomputable def QMmid (m : Mode) : Real :=
+  -((1 + 1) * (1 + 1) * (d * d * ρ) * (m.sB.val + m.sC.val))
+
+/-- The constant coefficient of `QM` — the same for every mode. -/
+noncomputable def QMconst : Real :=
+  (1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ))
+
+/-- The class discriminant, in exactly the shape `quadratic_root_of_disc` consumes. -/
+noncomputable def QMdisc (m : Mode) : Real :=
+  QMmid d ρ m * QMmid d ρ m - (1 + 1) * (1 + 1) * QMlead d ρ m * QMconst d ρ
+
+theorem QM_expand' (m : Mode) (r : Real) :
+    QM d ρ m r = QMlead d ρ m * r * r + QMmid d ρ m * r + QMconst d ρ := by
+  unfold QMmid QMconst; exact QM_expand d ρ m r
+
+/-- The constant term is strictly positive under separation. -/
+theorem QMconst_pos (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) : 0 < QMconst d ρ := by
+  have two_pos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  have hd : (0 : Real) < d := lt_trans_ax (mul_pos two_pos hρ) hsep
+  have h4 := four_rho_sq_lt d ρ hρ hsep
+  have step : (1 + 1) * (ρ * ρ) < ((1 + 1) * ρ) * ((1 + 1) * ρ) := by
+    have hp : (0 : Real) < (1 + 1) * (ρ * ρ) := mul_pos two_pos (mul_pos hρ hρ)
+    have v := add_lt_add_left hp ((1 + 1) * (ρ * ρ))
+    have l : (1 + 1) * (ρ * ρ) + 0 = (1 + 1) * (ρ * ρ) := by mach_ring
+    have rr : (1 + 1) * (ρ * ρ) + (1 + 1) * (ρ * ρ) = ((1 + 1) * ρ) * ((1 + 1) * ρ) := by mach_ring
+    rw [l, rr] at v; exact v
+  have hgap : (0 : Real) < d * d - (1 + 1) * (ρ * ρ) := by
+    have h2 : (1 + 1) * (ρ * ρ) < d * d := lt_trans_ax step h4
+    have v := add_lt_add_left h2 (-((1 + 1) * (ρ * ρ)))
+    have l : -((1 + 1) * (ρ * ρ)) + (1 + 1) * (ρ * ρ) = 0 := by mach_ring
+    have rr : -((1 + 1) * (ρ * ρ)) + d * d = d * d - (1 + 1) * (ρ * ρ) := by mach_ring
+    rw [l, rr] at v; exact v
+  have hprod : (0 : Real) < ((1 + 1) * (d * d)) * (d * d - (1 + 1) * (ρ * ρ)) :=
+    mul_pos (mul_pos two_pos (mul_pos hd hd)) hgap
+  have e : ((1 + 1) * (d * d)) * (d * d - (1 + 1) * (ρ * ρ)) = QMconst d ρ := by
+    unfold QMconst; mach_mpoly [d, ρ] <;> mach_ring
+  rw [e] at hprod; exact hprod
+
+/-- **A class with a negative leading coefficient attains two roots.**
+
+`disc = mid² + 4(−lead)·const`, a square plus a positive product, so positivity costs no expansion
+at all. Under separation this covers the `(o,o,o)` shape (`lead = −4d²`) and the
+`(o,o,i)`/`(o,i,o)` shape (`lead = 16ρ² − 4d² < 0` since `d² > 4ρ²`) — six of the eight modes.
+
+The `(o,i,i)` shape is the exception and genuinely so: its leading coefficient `32ρ² − 4d²` is
+negative only when `d² > 8ρ²`. In the band `4ρ² < d² < 8ρ²` the discriminant is still positive —
+it equals `32d²(d² − 4ρ²)²` — but establishing that needs the degree-6 identity expanded, and
+`mach_mpoly` hits the same `Lean.Meta.acLt` wall as the numeral instantiation (unchanged at 10×
+heartbeats and 500× recursion depth). Recorded as the boundary it is, not hidden. -/
+theorem QMdisc_pos_of_lead_neg (hρ : 0 < ρ) (hsep : (1 + 1) * ρ < d) (m : Mode)
+    (hneg : QMlead d ρ m < 0) : 0 < QMdisc d ρ m :=
+  QuadraticRoots.disc_pos_of_lead_neg hneg (QMconst_pos d ρ hρ hsep)
+
+/-- **Attainment for such a class**: two distinct roots, given any square root of the discriminant. -/
+theorem QM_two_distinct_roots (gp : SymmetricGeneralPosition d ρ) (m : Mode)
+    (hneg : QMlead d ρ m < 0) (s : Real) (hs : s * s = QMdisc d ρ m) (hsne : s ≠ 0) :
+    ∃ r₁ r₂ : Real, r₁ ≠ r₂ ∧ QM d ρ m r₁ = 0 ∧ QM d ρ m r₂ = 0 := by
+  obtain ⟨r₁, r₂, hne, h₁, h₂⟩ :=
+    @QuadraticRoots.two_distinct_roots (QMlead d ρ m) (QMmid d ρ m) (QMconst d ρ) s
+      (QMlead_ne_zero d ρ gp m) hsne (by rw [hs]; unfold QMdisc; mach_ring)
+  exact ⟨r₁, r₂, hne, by rw [QM_expand']; exact h₁, by rw [QM_expand']; exact h₂⟩
+
 /-! ## Why "pairwise separated" is NOT general position
 
 A natural guess for this family's general-position condition is that the input circles are mutually
