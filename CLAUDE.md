@@ -105,11 +105,15 @@ behind it is missing — registration is still a human act.
 - **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
 - **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
   below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
-- **`mach_mpoly` stalls in `Lean.Meta.acLt` on nested `(1+1)` constants, and no budget fixes it.**
-  Diagnosed by varying degree and presentation independently: compressing a degree-6 identity to
-  degree 3 cleared `maxRecDepth` but left `acLt` unmoved at 5× heartbeats. The cause is the unary
-  encoding, not the polynomial. Write constants as `natCast N` when a proof needs more than ~4
-  doublings.
+- **`mach_mpoly` stalls in `Lean.Meta.acLt` when nested `(1+1)` constants must be DISTRIBUTED over
+  sums.** Four specimens pin it: nested `64` under pure commutativity is fine (1 s); the same
+  constant in a degree-3 identity with subtractions dies (69 s at 4 000 000 heartbeats); the
+  identical identity with `natCast` constants **completes in 1.9 s**; so does the flagship numeral
+  obligation (2.3 s) that previously exhausted the same budget. So it is the encoding under
+  distribution, not degree, not presentation, and not constants per se.
+  **Recipe:** write constants as `natCast N`; `mach_mpoly` then treats each as one atom and
+  normalises fine, but cannot do their arithmetic — supply products via
+  `rw [← natCast_mul]` (instant, `Nat` literal equality) *before* calling it.
 - **`OfNat Real` exists only for `0` and `1`.** `(2 : Real)` does not elaborate. Write constants as
   `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
   numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×

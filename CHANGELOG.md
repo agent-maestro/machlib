@@ -7,6 +7,33 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### The acLt diagnosis, corrected and sharpened by four specimens
+
+The previous entry said the cause was the unary numeral encoding "whatever the degree". **That was
+too strong**, and running the specimens showed why:
+
+| specimen | form | result |
+| --- | --- | --- |
+| A | nested `64`, pure commutativity, no distribution | **passes, 1 s** |
+| A2 | nested `64`, degree-3 identity with subtractions | **fails, 69 s at 4 000 000 heartbeats** |
+| B | *same identity*, constants as `natCast` | **completes, 1.9 s** |
+| C | flagship numeral obligation, constants as `natCast` | **completes, 2.3 s** |
+
+A is the one that corrects the earlier claim: nested constants are harmless on their own. The
+blowup needs them to be **distributed over sums** — every `(1+1)` factor multiplies out across every
+summand and the AC-permutation space explodes. A2 versus B isolates the encoding exactly: same
+identity, same degree, same term structure, only the constants written differently, and a 4 000 000
+heartbeat timeout becomes a 1.9 second completion.
+
+So `natCast` is a **real normal-form improvement**, not a workaround — which is the question worth
+having asked before committing to it. But it moves work rather than removing it: B and C both
+finish by reporting `1 = 0` / `-1 = 0`, because `mach_mpoly` treats each `natCast N` as an opaque
+atom and correctly declines to do arithmetic on them. The constant relations have to be supplied,
+via `rw [← natCast_mul]`, where they reduce to `Nat` literal equality and are instant.
+
+That is the documented `NatCastArith` recipe, now with measurements attached and with evidence that
+it addresses the actual bottleneck rather than a suspected one.
+
 ### Verified Apollonius: the acLt wall diagnosed — it is the numeral encoding
 
 A cheap experiment, and it answered the question the last two commits left open.
