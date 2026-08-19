@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (d)
+
+### All eight flagship Apollonius coordinates Lean-checked — and the wall was misdiagnosed twice
+
+`Geometry/Apollonius/Coordinates.lean`. Twenty-four tangencies (eight circles × three), against the
+geometric predicates, zero residual symbolically. `sorryAx` absent from all eight.
+
+**The technique, which is the transferable part.** Six of the eight have irrational centres with
+denominators. Written naively every identity dies in `Lean.Meta.acLt` — the AC term ordering `simp`
+uses — because distribution generates nested `(1+1)` constant trees. `maxHeartbeats 4000000` does
+not help: the growth is in the ordering, not the arithmetic.
+
+**Compress the constant into the variable.** Not `3 + 3h` with `h = √2/2`, but `3 + v` with `v = 3h`
+and the single fact `2v² = 9`. The `3` never enters the distribution, no constant above `4`
+survives, and the identity closes at once. Same for the `√21` quartet: `κ = √21/3`, `3κ² = 7`.
+All twelve of those identities share one residual, `7 − 3κ²`.
+
+### Three wrong diagnoses, corrected
+
+Recorded because each cost an attempt and each was stated confidently.
+
+1. **"The limit is coefficient magnitude."** No: solutions 1 and 8 close with `8`, and an attempt
+   failed with `18` written in five nodes.
+2. **"Constants are syntax trees, so large constants are unreachable."** Closer, still wrong.
+   Constants that are never *distributed* — the `4` of the centre separation — cost nothing. The
+   cost is `acLt` on nested constant trees under distribution.
+3. **"`mach_mpoly` cannot do this arithmetic."** Refuted by specimen: the same identity with a
+   universally quantified atom closes instantly. What actually failed first was `mach_mpoly [h]`
+   where `h` is a **def** — it unfolds to `rt2 / (1+1)` and the normaliser then faces a quotient.
+   *The normaliser's atoms are variables, not definitions.*
+
+A fourth, more embarrassing one: an early version discharged the residual with `rw [← z]`, turning
+the `0` of `u - v = 0` into the residual expression — which also rewrote the `0` inside every
+`(c - 0)` term. That timeout was read as a scale limit. It was a rewrite hitting more occurrences
+than intended.
+
+**The general lesson**, since this is the second time an apparent capability limit turned out to be
+a structuring mistake: a timeout is a hypothesis, not a measurement. Test it with a specimen that
+isolates the suspected cause before recording it as a limit.
+
+Gates: 198 claims PASS, 10 ledger rows OK, aggregator 631/937, `sorryAx` absent.
+
 ## [Unreleased] — 2026-08-19 (c)
 
 ### The Apollonius count, in list-cardinality form — and the disclaimer was wrong about why
