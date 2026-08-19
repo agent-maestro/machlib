@@ -5,6 +5,50 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19
+
+### `d(x + 1) = 4` exactly — a missing conjunct was blocking the lower bound
+
+`MachLib/EMLDepthTameness.lean`. Found while drafting §5 of the finite-depth-tameness manuscript,
+which is the intended function of writing the paper against the corpus rather than from memory.
+
+**The defect.** `superlinear_subexp_not_depth_le_two` takes three band hypotheses
+(`H1` unbounded, `H2` sub-exponential, `H3` superlinear). `superlinear_subexp_not_depth_le_three`
+takes **four** — the extra one being `Hlog : C + log x < f x` infinitely often. But
+`band_exclusion_fails_at_depth_four` certified `x + 1` against only the first three. So the depth-4
+refutation was aimed at the *depth-2-shaped* statement, not at the depth-3 theorem it was being
+paired with for sharpness. A refutation of a weaker claim does not refute the stronger one, and the
+sharpness argument did not close.
+
+**The repair.** `x + 1` does satisfy `Hlog`; it had never been proved. Substituting `x = exp w`
+turns the goal into `C + w < exp w + 1`, and `two_mul_add_le_exp` supplies `w + w + (C+2) ≤ exp w`.
+Choosing `w := exp T + exp X` dominates `T`, `X` and `0` at once, which is what the three side
+goals need. `band_exclusion_fails_at_depth_four` now carries all four conjuncts.
+
+**The consequence, which was not the point of the repair.** With four hypotheses certified, the
+depth-≤3 band theorem can finally be *instantiated* at `x + 1` — it could not be before, since the
+instantiation needs all four. New:
+
+```
+x_plus_one_not_depth_le_three : no tree of depth ≤ 3 agrees with x + 1 on (0,∞)
+```
+
+With `xPlusOneTree_depth = 4` this pins `d(x + 1) = 4` exactly. The addition-closure question is
+settled in both directions: EML *is* closed under `+1` (which already refuted the natural conjecture
+that it is not), and the cost is exactly four levels. The upper bound was known since the closure
+refutation; **the matching lower bound was open, and a missing conjunct was what kept it open.**
+
+**Discrimination checks, because a new exact-depth result is exactly where a vacuous theorem would
+hide.** The depth-4 analogue of `x_plus_one_not_depth_le_three` is *provably false* — `xPlusOneTree`
+witnesses it, and that specimen compiles — so the bound is not vacuous. The identical proof script
+is rejected at `depth ≤ 4` with a type mismatch, so the bound is not being silently coerced.
+`sorryAx` absent from all three new footprints; 198 claims and 10 ledger rows still green.
+
+**Refactor note.** The four hypothesis proofs moved into `x_plus_one_band_hyps` so that the
+refutation and the exclusion consume the same certified facts rather than two drifting copies. That
+is the structural reason the defect existed: the hypotheses were inlined in one theorem and
+therefore could not be reused by, or compared against, the other.
+
 ## [Unreleased] — 2026-08-16
 
 ### Verified Apollonius: the flagship instantiated — and natCast turned out not to be needed

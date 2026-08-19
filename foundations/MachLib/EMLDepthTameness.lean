@@ -4088,8 +4088,17 @@ theorem superlinear_subexp_not_depth_le_three (f : Real → Real)
 /-! ### The depth-3 band exclusion is **sharp** -/
 
 /-- **`superlinear_subexp_not_depth_le_three` cannot be lifted to depth 4 — the statement is false
-there.** `f x = x + 1` satisfies all three band hypotheses and is computed at depth exactly 4 by
+there.** `f x = x + 1` satisfies all **four** band hypotheses and is computed at depth exactly 4 by
 `xPlusOneTree`.
+
+**The fourth conjunct (`Hlog`) is not optional and was missing until 2026-08-19.**
+`superlinear_subexp_not_depth_le_two` takes three hypotheses; `superlinear_subexp_not_depth_le_three`
+takes four, the extra one being `Hlog : C + log x < f x` infinitely often. A refutation certified
+against only three therefore refutes the *depth-2-shaped* band statement at depth 4, not the depth-3
+one — a strictly weaker claim, whose falsity does not by itself make the four-hypothesis version
+false. Since the exclusion this is paired with is the depth-≤3 theorem, the witness has to clear all
+four bars or the sharpness claim does not close. `x + 1` does clear it; the proof substitutes
+`x = exp w` so that `log x` becomes `w`, and `two_mul_add_le_exp` then outruns `C + w`.
 
 This settles what looked like an obstruction. Two apparent blockers to a depth-4 version were
 identified — the bounded-left branch would need `V₃`, and the `A = var` branch would need a
@@ -4099,15 +4108,12 @@ true theorem to reach. The band exclusion holds at depth ≤ 3 and fails at dept
 `x + 1` is the natural witness: unbounded and above the identity by construction, and
 sub-exponential because `exp` outruns any linear function. It slips through precisely because the
 band's hypotheses constrain *growth* and `x + 1` sits at the very bottom of the band. -/
-theorem band_exclusion_fails_at_depth_four :
-    ∃ (f : Real → Real) (t : EMLTree),
-      (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
-      ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
-      ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
-      ∧ t.depth = 4
-      ∧ ∀ x : Real, 0 < x → t.eval x = f x := by
-  obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
-  refine ⟨fun x => x + 1, t, ?_, ?_, ?_, htdepth, fun x _ => hteval x⟩
+theorem x_plus_one_band_hyps :
+    (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < x + 1)
+    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x + 1 < exp x - x - C)
+    ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < x + 1)
+    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < x + 1) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
   · -- unbounded above on every ray
     intro K X
     refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
@@ -4148,6 +4154,64 @@ theorem band_exclusion_fails_at_depth_four :
     · have v : (1 : Real) + 0 ≤ 1 + exp X := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X))
       have e : (1 : Real) + 0 = 1 := by mach_ring
       rw [e] at v; exact v
+  · -- above `C + log x` at arbitrarily large points.
+    -- Substituting `x = exp w` turns the goal into `C + w < exp w + 1`, which `two_mul_add_le_exp`
+    -- settles. `w := exp T + exp X` dominates `T`, `X` and `0` at once, which is what the three
+    -- side goals need.
+    intro C X
+    obtain ⟨T, hT⟩ := two_mul_add_le_exp (C + 1 + 1)
+    have hexpT : (0 : Real) < exp T := exp_pos T
+    have hexpX : (0 : Real) < exp X := exp_pos X
+    have hw0 : (0 : Real) ≤ exp T + exp X :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt hexpT) hexpX)
+    have hwT : T ≤ exp T + exp X := by
+      have v : exp T + 0 ≤ exp T + exp X := add_le_add_wit (le_refl _) (le_of_lt hexpX)
+      have e : exp T + 0 = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) v
+    have hwX : X ≤ exp T + exp X := by
+      have v : (0 : Real) + exp X ≤ exp T + exp X := add_le_add_wit (le_of_lt hexpT) (le_refl _)
+      have e : (0 : Real) + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    refine ⟨exp (exp T + exp X), le_trans hwX (self_le_exp _), one_le_exp hw0, ?_⟩
+    show C + log (exp (exp T + exp X)) < exp (exp T + exp X) + 1
+    rw [log_exp]
+    have h2 : (0 : Real) < 1 + 1 :=
+      add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax
+    have hpos : (0 : Real) < exp T + exp X + (1 + 1) := add_pos_of_nonneg_pos hw0 h2
+    have v := add_lt_add_left hpos (C + (exp T + exp X))
+    have e1 : C + (exp T + exp X) + 0 = C + (exp T + exp X) := by mach_ring
+    have e2 : C + (exp T + exp X) + (exp T + exp X + (1 + 1))
+        = exp T + exp X + (exp T + exp X) + (C + 1 + 1) := by
+      mach_mpoly [C, exp T, exp X]
+    rw [e1, e2] at v
+    exact lt_of_lt_of_le (lt_of_lt_of_le v (hT (exp T + exp X) hwT))
+      (le_of_lt (lt_succ_self _))
+
+theorem band_exclusion_fails_at_depth_four :
+    ∃ (f : Real → Real) (t : EMLTree),
+      (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+      ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+      ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
+      ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+      ∧ t.depth = 4
+      ∧ ∀ x : Real, 0 < x → t.eval x = f x := by
+  obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
+  obtain ⟨h1, h2, h3, h4⟩ := x_plus_one_band_hyps
+  exact ⟨fun x => x + 1, t, h1, h2, h3, h4, htdepth, fun x _ => hteval x⟩
+
+/-- **`d(x + 1) = 4` exactly, on `(0, ∞)`.** The lower half.
+
+Available only because `x_plus_one_band_hyps` now certifies `Hlog` as well: the depth-≤3 band
+theorem takes four hypotheses, so before that conjunct existed this instantiation could not be
+formed and the exact depth of `x + 1` was open. Paired with `xPlusOneTree_depth` (depth 4) it pins
+the value.
+
+The addition-closure question is therefore settled in both directions: EML *is* closed under `+1`,
+and the cost is exactly four levels, not three. -/
+theorem x_plus_one_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = x + 1) : False := by
+  obtain ⟨h1, h2, h3, h4⟩ := x_plus_one_band_hyps
+  exact superlinear_subexp_not_depth_le_three (fun x => x + 1) h1 h2 h3 h4 t ht h
 
 
 /-! ### Eventual sign-definiteness at depth 2, unconditionally
@@ -5604,7 +5668,7 @@ Worth stating plainly: the four-cell decomposition was built to locate the diffi
 it isolated as hardest — `P = var`, the sole occupant of the single-exponential rung — is exactly
 where the statement fails. **The refutation is machine-checked**: `not_depth3DecayHard`, with no
 numerics in the proof — the witness (`dep3CounterRight_depth`, `dep3CounterRight_eval`) *and* the
-asymptotics. The corrected statement is `Depth3DecayExp`, three of whose four cells are proved.
+asymptotics. The corrected statement is `Depth3DecayExp`, and all four cells are now proved (`depth3DecayExp_holds`).
 
 See `monogate-research/exploration/eml_depth_induction_2026_08_13/APPROACH_RATE_QUANTISATION.md`. -/
 def Depth3DecayHard : Prop :=
