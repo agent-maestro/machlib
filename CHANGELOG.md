@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (b)
+
+### Citable exact-depth declarations: `d(log x) = 3`, `d(x + 1) = 4`
+
+Filed against `1op/reports/LEDGER-DEFECT-T30.md`. The 1op site refused to publish two exact-depth
+results because no single declaration stated them — the lower bound for `log x` existed only as an
+immediate consequence of the transition machinery, and a renderer must cite a declaration rather
+than reconstruct an argument. That refusal was correct. This is the repair.
+
+New in `EMLDepthTameness.lean`:
+
+| declaration | states |
+| --- | --- |
+| `log_belowIdentityUnbounded` | `log x` is unbounded above and eventually strictly below the identity |
+| `log_x_not_depth_le_two` | no tree of depth ≤ 2 agrees with `log x` on `(0,∞)` |
+| `log_x_depth_exact_three` | both halves, **with the domain in the statement** |
+| `x_plus_one_depth_exact_four` | both halves for `x + 1`, likewise |
+
+**Why `log_belowIdentityUnbounded` had to exist.** `belowIdentityUnbounded_at_depth_three` already
+proved the class non-empty at depth 3 — but it returns an *existential*, so nothing downstream can
+recover which tree it exhibited, and no consumer wanting "`log x` specifically" can get there from
+it. An existence proof is not a citable fact about a named object.
+
+**Domains are in the statements, deliberately.** An unlabelled `d(x+1) = 4` is a different and
+unsupported claim; the corpus already carries one live defect of exactly that shape
+(`x_sq_ray_not_depth_le_three`, where a `(0,∞)` floor was paired with a `(1,∞)` witness). The two
+new `*_depth_exact_*` theorems quantify the agreement clause explicitly so the pairing cannot drift.
+
+**Discrimination checks.** The depth-3 analogue of `log_x_not_depth_le_two` is *provably false*
+(`logTree var` witnesses it, specimen compiles), so the bound is not vacuous. `sorryAx` absent from
+both new exact-depth footprints. 198 claims PASS, 10 ledger rows OK.
+
 ## [Unreleased] — 2026-08-19
 
 ### `d(x + 1) = 4` exactly — a missing conjunct was blocking the lower bound

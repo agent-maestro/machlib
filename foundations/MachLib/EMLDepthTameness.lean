@@ -4750,6 +4750,71 @@ theorem belowIdentityUnbounded_at_depth_three :
       rw [hxe] at hgt; exact lt_irrefl_ax x hgt
     · exact absurd (lt_of_lt_of_le hp h1) (lt_irrefl_ax x)
 
+/-- **`log x` lies in the below-identity-unbounded class.**
+
+Stated for the *function* rather than for a particular tree. `belowIdentityUnbounded_at_depth_three`
+already proves the class non-empty at depth 3 by exhibiting `logTree var`, but it returns an
+existential, so nothing downstream can recover which tree it was — and a consumer that wants
+"`log x` specifically" cannot get there from it. This is that statement. -/
+theorem log_belowIdentityUnbounded : BelowIdentityUnbounded log := by
+  refine ⟨?_, ?_⟩
+  · intro K X
+    obtain ⟨Y, hY1, hY⟩ := eventually_log_gt K
+    have hY0 : (0 : Real) ≤ Y := le_trans (le_of_lt zero_lt_one_ax) hY1
+    have hXp : (0 : Real) < exp X := exp_pos X
+    refine ⟨exp X + Y + 1, ?_, ?_, ?_⟩
+    · have v : exp X + 0 + 0 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_refl _) hY0) (le_of_lt zero_lt_one_ax)
+      have e : exp X + 0 + 0 = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (0 : Real) + 0 + 1 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hXp) hY0) (le_refl 1)
+      have e : (0 : Real) + 0 + 1 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · refine hY (exp X + Y + 1) ?_
+      have v : (0 : Real) + Y + 0 ≤ exp X + Y + 1 :=
+        add_le_add_wit (add_le_add_wit (le_of_lt hXp) (le_refl Y)) (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + Y + 0 = Y := by mach_ring
+      rw [e] at v; exact v
+  · refine ⟨1, le_refl 1, ?_⟩
+    intro x hx
+    exact log_lt_self (lt_of_lt_of_le zero_lt_one_ax hx)
+
+/-- **`log x` is unreachable at depth ≤ 2** — the lower half of `d(log x) = 3`.
+
+Registered as a named declaration because the exact depth of `log x` was being quoted publicly while
+only the depth-3 *construction* had a citable name; the lower bound existed solely as an immediate
+consequence of the transition machinery. A consumer must be able to cite one declaration rather than
+reassemble an argument. -/
+theorem log_x_not_depth_le_two (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = log x) : False :=
+  belowIdentityUnbounded_not_depth_le_two log log_belowIdentityUnbounded t ht h
+
+/-- **`d_(0,∞)(log x) = 3`, exactly — both halves, in one declaration.**
+
+The domain is part of the claim and is carried in the statement: agreement is required on `(0, ∞)`.
+An unlabelled `d(log x) = 3` is a different and weaker-provenance assertion.
+
+Left conjunct: no tree of depth `≤ 2` agrees with `log` on `(0, ∞)`.
+Right conjunct: `logTree var` has depth exactly `3` and agrees with `log` everywhere. -/
+theorem log_x_depth_exact_three :
+    (∀ t : EMLTree, t.depth ≤ 2 → (∀ x : Real, 0 < x → t.eval x = log x) → False)
+    ∧ (∃ t : EMLTree, t.depth = 3 ∧ ∀ x : Real, 0 < x → t.eval x = log x) := by
+  refine ⟨fun t ht h => log_x_not_depth_le_two t ht h, ⟨logTree EMLTree.var, by rfl, ?_⟩⟩
+  intro x _
+  rw [logTree_eval]; rfl
+
+/-- **`d_(0,∞)(x + 1) = 4`, exactly — both halves, in one declaration.**
+
+Companion to `log_x_depth_exact_three`, and the counterexample that refuted the "no standard
+function lives at depth 4" claim. Domain carried in the statement for the same reason. -/
+theorem x_plus_one_depth_exact_four :
+    (∀ t : EMLTree, t.depth ≤ 3 → (∀ x : Real, 0 < x → t.eval x = x + 1) → False)
+    ∧ (∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = x + 1) := by
+  refine ⟨fun t ht h => x_plus_one_not_depth_le_three t ht h, ?_⟩
+  obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
+  exact ⟨t, htdepth, fun x _ => hteval x⟩
+
 /-- **The depth-3 band's four hypotheses for `x²`, with STRICT witnesses.**
 
 Factored out because the band is now consumed twice — once for a tree agreeing with `x²` on `(0,∞)`
