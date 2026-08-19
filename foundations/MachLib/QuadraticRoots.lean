@@ -93,5 +93,75 @@ theorem linear_root_unique {b c r s : Real} (hb : b ≠ 0)
   have e : b * (r - s) = (b * r + c) - (b * s + c) := by mach_mpoly [b, c, r, s]
   rw [e, hr, hs]; mach_ring
 
+
+/-- **A quadratic vanishing at three distinct points is the zero polynomial.** The strengthening
+`quadratic_no_three_distinct_roots` gives by contraposition, chained through the linear case: three
+distinct roots force `a = 0`, then `b = 0`, then `c = 0`.
+
+Needed where a reduced equation's coefficients are not known in advance — one cannot assume the
+leading coefficient is nonzero, so the honest statement is that three roots collapse the whole
+polynomial rather than contradicting a hypothesis. -/
+theorem quadratic_zero_of_three_roots {a b c r s t : Real}
+    (hrs : r ≠ s) (hrt : r ≠ t) (hst : s ≠ t)
+    (hr : a * r * r + b * r + c = 0)
+    (hs : a * s * s + b * s + c = 0)
+    (ht : a * t * t + b * t + c = 0) :
+    a = 0 ∧ b = 0 ∧ c = 0 := by
+  have ha : a = 0 := by
+    rcases Classical.em (a = 0) with h | h
+    · exact h
+    · rcases quadratic_no_three_distinct_roots h hr hs ht with e | e | e
+      · exact absurd e hrs
+      · exact absurd e hrt
+      · exact absurd e hst
+  subst ha
+  have hr' : b * r + c = 0 := by
+    have e : b * r + c = 0 * r * r + b * r + c := by mach_mpoly [b, c, r]
+    rw [e]; exact hr
+  have hs' : b * s + c = 0 := by
+    have e : b * s + c = 0 * s * s + b * s + c := by mach_mpoly [b, c, s]
+    rw [e]; exact hs
+  have hb : b = 0 := by
+    rcases Classical.em (b = 0) with h | h
+    · exact h
+    · exact absurd (linear_root_unique h hr' hs') hrs
+  subst hb
+  have hc : c = 0 := by
+    have e : c = 0 * r + c := by mach_mpoly [c, r]
+    rw [e]; exact hr'
+  exact ⟨rfl, rfl, hc⟩
+
+/-- **Cramer's rule for a 2×2 system, division-free.**
+
+Stated as an equivalence between the system and its determinant-scaled solution, so it can be used
+in both directions without ever forming a quotient. The nonsingularity hypothesis is exactly what
+the backward direction needs — and in the Apollonius elimination this is the *only* place a
+general-position assumption enters, which is how that assumption gets forced rather than chosen. -/
+theorem cramer_2x2 {p₁ p₂ q₁ q₂ u v x y : Real} (hdet : p₁ * q₂ - p₂ * q₁ ≠ 0) :
+    (p₁ * x + p₂ * y = u ∧ q₁ * x + q₂ * y = v)
+      ↔ ((p₁ * q₂ - p₂ * q₁) * x = u * q₂ - p₂ * v
+          ∧ (p₁ * q₂ - p₂ * q₁) * y = p₁ * v - u * q₁) := by
+  constructor
+  · rintro ⟨h1, h2⟩
+    constructor
+    · have e : (p₁ * q₂ - p₂ * q₁) * x = q₂ * (p₁ * x + p₂ * y) - p₂ * (q₁ * x + q₂ * y) := by
+        mach_mpoly [p₁, p₂, q₁, q₂, x, y]
+      rw [e, h1, h2]; mach_mpoly [u, v, p₂, q₂]
+    · have e : (p₁ * q₂ - p₂ * q₁) * y = p₁ * (q₁ * x + q₂ * y) - q₁ * (p₁ * x + p₂ * y) := by
+        mach_mpoly [p₁, p₂, q₁, q₂, x, y]
+      rw [e, h1, h2]; mach_mpoly [u, v, p₁, q₁]
+  · rintro ⟨h1, h2⟩
+    constructor
+    · refine mul_left_cancel hdet ?_
+      have e : (p₁ * q₂ - p₂ * q₁) * (p₁ * x + p₂ * y)
+          = p₁ * ((p₁ * q₂ - p₂ * q₁) * x) + p₂ * ((p₁ * q₂ - p₂ * q₁) * y) := by
+        mach_mpoly [p₁, p₂, q₁, q₂, x, y]
+      rw [e, h1, h2]; mach_mpoly [u, v, p₁, p₂, q₁, q₂]
+    · refine mul_left_cancel hdet ?_
+      have e : (p₁ * q₂ - p₂ * q₁) * (q₁ * x + q₂ * y)
+          = q₁ * ((p₁ * q₂ - p₂ * q₁) * x) + q₂ * ((p₁ * q₂ - p₂ * q₁) * y) := by
+        mach_mpoly [p₁, p₂, q₁, q₂, x, y]
+      rw [e, h1, h2]; mach_mpoly [u, v, p₁, p₂, q₁, q₂]
+
 end QuadraticRoots
 end MachLib

@@ -544,6 +544,7 @@ import MachLib.QuadraticRoots
 import MachLib.Geometry.Circle
 import MachLib.Geometry.Apollonius.Mode
 import MachLib.Geometry.Apollonius.SymmetricTriple
+import MachLib.Geometry.Apollonius.Elimination
 
 /-!
 # MachLib — top-level aggregator

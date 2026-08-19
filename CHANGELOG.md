@@ -7,6 +7,48 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice C: the linearisation, and general position derived
+
+`MachLib/Geometry/Apollonius/Elimination.lean`, plus `cramer_2x2` and
+`quadratic_zero_of_three_roots` in `MachLib/QuadraticRoots.lean`.
+
+`tangentEq_iff_linear`: **the difference of any two tangency equations is linear.** The quadratic
+part `x² + y² − r²` is common to every tangency equation and cancels, leaving coefficients built
+from the centres, the radii and the two signs. Stated once for arbitrary circles and signs, so
+`solvesMode_iff_linear` reduces the three-equation system to one quadratic equation plus a 2×2
+linear system — for any inputs and any mode, with no genericity hypothesis at all.
+
+**The general-position condition was computed, not chosen.** Cramer's rule needs its determinant
+nonzero; the determinant of this particular system works out to
+
+    4 · ((B.x − A.x)(C.y − A.y) − (B.y − A.y)(C.x − A.x))
+
+which is four times twice the signed area of the triangle of centres. So the hypothesis that appears
+is exactly **the three centres are not collinear** — a condition on the centres alone, independent
+of the radii and independent of the mode. `linear_det` is that identity. Had
+`ApolloniusGeneralPosition` been defined before the elimination it would have been a plausible
+guess; this is a derivation, and it is why the definition was deliberately withheld.
+
+`centre_unique` shows the hypothesis is load-bearing rather than decorative: with non-collinear
+centres, two solutions of the same mode with the same radius are the *same circle*. The proof is the
+homogeneous case of Cramer. This is also the first half of distinctness — after it, telling two
+solutions apart reduces to telling their radii apart.
+
+`quadratic_zero_of_three_roots` strengthens the degree-2 bound: three distinct roots collapse the
+whole polynomial to zero, rather than merely contradicting a nonzero leading coefficient. That is the
+form needed where a reduced equation's coefficients are not known in advance.
+
+**A sign convention that does not survive being ignored.** `mach_mpoly` treats `Sign.val` as an
+opaque atom, so it does not know `σ² = 1`, and the `σ²ρ²` term in an expanded tangency equation does
+not collapse to `ρ²`. Omitting that fact does not produce a suspicious goal — it produces `1 = 0`.
+`Sign.val_sq` and `tangentEq_expanded` supply it once; every elimination step goes through the
+expanded form.
+
+What is deliberately **not** here: substituting the Cramer centre back to name the quadratic's
+coefficients in full generality. Those are a twelve-variable expression and `mach_mpoly` is the wrong
+tool at that scale. The reduction to one equation in `r` alone is proved; naming its coefficients is
+a separate step, and `SymmetricTriple` shows what it looks like once the family is concrete.
+
 ### Verified Apollonius, slice B2: the roots, and why `√2` is the only irrationality
 
 The class discriminant factors as `8d²(d−2ρ)²(d+2ρ)²` — a perfect square times `8`. So its square

@@ -63,6 +63,14 @@ def flip : Sign → Sign
 
 @[simp] theorem flip_flip (s : Sign) : s.flip.flip = s := by cases s <;> rfl
 
+/-- **`σ² = 1`.** Obvious, and load-bearing: `mach_mpoly` treats `Sign.val` as an opaque atom, so
+every expansion of a tangency equation needs this supplied explicitly or the `σ²ρ²` term will not
+collapse to `ρ²`. Omitting it does not produce a wrong-looking goal — it produces `1 = 0`. -/
+@[simp] theorem val_sq (s : Sign) : s.val * s.val = 1 := by
+  cases s
+  · show (1 : Real) * 1 = 1; mach_ring
+  · show (-1 : Real) * -1 = 1; mach_ring
+
 theorem val_flip (s : Sign) : s.flip.val = -(s.val) := by
   cases s
   · rfl
@@ -113,6 +121,22 @@ theorem tangentEq_antipodal (a₁ a₂ ρ : Real) (s : Sign) (x y r : Real) :
   have e : (-r + -(s.val) * ρ) * (-r + -(s.val) * ρ) = (r + s.val * ρ) * (r + s.val * ρ) := by
     mach_mpoly [r, s.val, ρ]
   rw [e]
+
+/-- **The tangency equation with the sign squared out.** The right-hand side of `tangentEq` hides a
+`σ²ρ²`; once `σ² = 1` is applied the equation is a genuine polynomial in `σ` of degree one, which is
+the form every elimination step wants. -/
+theorem tangentEq_expanded (a₁ a₂ ρ : Real) (s : Sign) (x y r : Real) :
+    tangentEq a₁ a₂ ρ s x y r
+      ↔ (x - a₁) * (x - a₁) + (y - a₂) * (y - a₂)
+          = r * r + (1 + 1) * (s.val * ρ) * r + ρ * ρ := by
+  unfold tangentEq
+  have e : (r + s.val * ρ) * (r + s.val * ρ)
+      = r * r + (1 + 1) * (s.val * ρ) * r + (s.val * s.val) * (ρ * ρ) := by
+    mach_mpoly [r, s.val, ρ]
+  rw [e, Sign.val_sq]
+  have e2 : r * r + (1 + 1) * (s.val * ρ) * r + 1 * (ρ * ρ)
+      = r * r + (1 + 1) * (s.val * ρ) * r + ρ * ρ := by mach_mpoly [r, s.val, ρ]
+  rw [e2]
 
 /-- The three-equation system for one mode, at a signed radius. -/
 def SolvesMode (A B C : Circle) (m : Mode) (x y r : Real) : Prop :=

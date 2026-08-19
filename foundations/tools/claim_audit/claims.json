@@ -3625,6 +3625,47 @@
         "lead"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The linearisation, fully general. hypotheses_count 1 -- only the first tangency equation; NO general-position hypothesis, which is the point: the reduction to a linear system needs nothing.",
+      "id": "apollonius-linearisation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the difference of any two tangency equations is linear"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Elimination",
+      "theorem": "MachLib.Geometry.Apollonius.tangentEq_iff_linear",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt",
+        "MachLib.Real.lt_total"
+      ],
+      "statement_mentions": [
+        "tangentEq"
+      ],
+      "conclusion_mentions": [
+        "tangentEq"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "General position derived. The determinant identity is unconditional (hypotheses_count 0), so the collinearity reading is a computation and not an assumption.",
+      "id": "apollonius-general-position-derived-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the three centres are not collinear"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Elimination",
+      "theorem": "MachLib.Geometry.Apollonius.linear_det",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "centresDet"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
