@@ -540,6 +540,9 @@ import MachLib.Applications.ButlerVolmerKhovanskii
 import MachLib.Applications.DischargeVoltageSafety
 import MachLib.Applications.PlasmaConcentrationNonneg
 import MachLib.Applications.SpringCriticallyDamped
+import MachLib.QuadraticRoots
+import MachLib.Geometry.Circle
+import MachLib.Geometry.Apollonius.Mode
 
 /-!
 # MachLib — top-level aggregator

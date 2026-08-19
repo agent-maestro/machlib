@@ -3468,6 +3468,91 @@
         "Depth3DecayExp"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The antipodal law. hypotheses_count 0 -- an unconditional iff, which is what licenses the four-class reduction without side conditions. If a hypothesis is ever added here the reduction silently narrows and this fires.",
+      "id": "apollonius-antipodal-law-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "negating the radius and the mode together is the identity on the tangency equation"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Mode",
+      "theorem": "MachLib.Geometry.Apollonius.tangentEq_antipodal",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "tangentEq"
+      ],
+      "conclusion_mentions": [
+        "tangentEq"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The reduction the solver will rely on. hypotheses_count 0: enumerating four classes loses nothing UNCONDITIONALLY, no general-position assumption smuggled in.",
+      "id": "apollonius-four-classes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "enumerating four classes over a signed radius loses nothing"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Mode",
+      "theorem": "MachLib.Geometry.Apollonius.eightModes_reduce_to_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "statement_mentions": [
+        "SolvesMode",
+        "IsCanonical"
+      ],
+      "conclusion_mentions": [
+        "SolvesMode"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Degree-2 bound proved from field axioms. forbid_axioms_exact pins the CLAIM that no order/analytic axiom is used -- the whole reason for not going through PolynomialRootCount.",
+      "id": "quadratic-two-roots-field-only-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the field axioms only — no order, no `sqrt`, no `exp`/`log`"
+      ],
+      "module": "MachLib.QuadraticRoots",
+      "theorem": "MachLib.QuadraticRoots.quadratic_no_three_distinct_roots",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.lt_total",
+        "MachLib.Real.sqrt",
+        "MachLib.Real.exp",
+        "MachLib.Real.log",
+        "MachLib.Real.add_lt_add_left"
+      ],
+      "conclusion_mentions": [
+        "r = s"
+      ],
+      "hypotheses_count": 4
+    },
+    {
+      "_comment": "The sqrt-totalisation firewall. forbid_axioms_exact on sqrt_neg_zero is the actual content: the geometric reading may use sqrt, but never the totalisation branch.",
+      "id": "tangency-sqrt-free-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`sqrt_neg_zero` is absent from the footprint"
+      ],
+      "module": "MachLib.Geometry.Circle",
+      "theorem": "MachLib.Geometry.tangentExt_iff",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt_neg_zero"
+      ],
+      "conclusion_mentions": [
+        "TangentExt"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

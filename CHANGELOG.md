@@ -7,6 +7,54 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, first slice: the antipodal law
+
+`MachLib/Geometry/Circle.lean`, `MachLib/QuadraticRoots.lean`,
+`MachLib/Geometry/Apollonius/Mode.lean`.
+
+Apollonius' problem carries eight tangency sign triples, and each triple's algebra reduces to a
+quadratic in the radius — naively as many as sixteen algebraic candidates against a classical
+generic count of eight. The discrepancy is not resolved by discarding roots. It is a symmetry:
+negating the radius and the mode together is the identity on the tangency equation, because every
+sign-dependent term carries exactly one factor of `r` while `x² + y² − r²` is even in `r`. So
+**the eight modes are four antipodal classes**, each carrying one quadratic whose two roots split by
+sign between the class's two modes. Four classes times two roots is eight; there was never a
+sixteen.
+
+`tangentEq_antipodal` is that theorem and `eightModes_reduce_to_four` is the equivalence the solver
+will rely on — enumerating four classes over a signed radius loses nothing. The four classes are
+*derived* (`canonical_xor_anti`, `mem_canonicalModes_iff`), not encoded as a four-constructor
+datatype, which would have made the conclusion true by construction.
+
+The naive invariant this replaces is false, and a spike found the counterexample before any checker
+hardened around it: for `A = (0,0,1)`, `B = (4,0,2)`, `C = (1,4,3)` the mode `(−1,+1,+1)` carries
+two solutions and its antipode none. Two roots per class is invariant; one solution per mode is not.
+
+**Tangency is algebraic, never a `sqrt` equation.** `MachLib.Real.sqrt` is totalised
+(`sqrt_neg_zero : x < 0 → sqrt x = 0`) exactly as `log` is, so a predicate written with `sqrt` would
+be satisfiable wherever the totalisation fires. Defining tangency as `distSq = (r+s)²` removes that
+structurally: `sqrt_neg_zero` is absent from the footprint of `TangentExt`/`TangentInt` because
+`sqrt` never appears in them. The geometric reading is a theorem (`tangentExt_iff`) carrying its
+nonnegativity side conditions, not a definition.
+
+Degree-2 root bounds are proved directly from the field axioms rather than through
+`PolynomialRootCount`, which states in its own docstring that it "does not prove the general
+degree/root-count theorem" — it carries degree 1 and *names* the general case as an open target. The
+direct proof buys a strictly smaller trust base: the footprint of `quadratic_no_three_distinct_roots`
+is the field axioms only — no order, no `sqrt`, no `exp`/`log`.
+
+The axiom split is worth recording: `tangentEq_antipodal` needs **no order axioms at all** (it is a
+ring identity), and `canonical_xor_anti` needs **no axioms at all** (`decide` over a finite decidable
+type). Order enters only at `decode_of_canonical`, precisely where the sign of the radius is read.
+
+**Epistemic status, kept straight.** The antipodal law and the root bounds are PROVED. The four class
+quadratics for the flagship triple `A=(0,0,1)`, `B=(4,0,1)`, `C=(0,4,1)` — discriminants 32, 21, 21,
+18, all positive, eight distinct solutions, all residuals exactly zero — are COMPUTED by sympy as a
+discovery oracle and are *not* yet checked in Lean. "Exactly eight distinct tangent circles" is not
+proved and is not claimed: it needs candidate verification, completeness and distinctness, none of
+which exist yet. `ApolloniusGeneralPosition` is deliberately not defined — the proof should force
+its definition rather than the definition presupposing the conclusion.
+
 ### The bounded-cell chain closes, and `Depth3DecayExp` with it
 
 `boundedEmlCellApproachLarge_holds` is the router: it closes the last open cell of the bounded-cell
