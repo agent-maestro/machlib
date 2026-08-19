@@ -7,6 +7,37 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice B2: the roots, and why `√2` is the only irrationality
+
+The class discriminant factors as `8d²(d−2ρ)²(d+2ρ)²` — a perfect square times `8`. So its square
+root is `2√2·d·(d²−4ρ²)`, and **the only irrationality any solution of this family carries is `√2`,
+for every `d` and every `ρ`**. `ℚ(√2)` suffices; no general algebraic number field is needed, which
+is what makes an exact candidate representable at all.
+
+`lead_mul_Q` states it in the informative form. For `r` scaled by the leading coefficient to the
+quadratic-formula numerator,
+
+    lead · Q(r)  =  d²(d−2ρ)²(d+2ρ)² · (s² − 2)
+
+*unconditionally in `s`* — no hypothesis that `s` is a square root of anything. The identity says
+exactly that the sole obstruction to `r` being a root is `s² ≠ 2`. Stating it this way rather than
+as "`Q r = 0` given `s = √2`" keeps the informative object: the right-hand side exhibits the
+discriminant's square part, isolates the irrationality into one factor, and **displays the
+degenerate locus** `d = 2ρ`, which is precisely the configuration where the three input circles are
+mutually externally tangent, the discriminant vanishes, the roots collide, and the class contributes
+one circle rather than two.
+
+`Q_eq_zero_of_root` then discharges the scaling, and one theorem covers *both* roots: `s` ranges
+over both square roots of `2`, and negating `s` gives the other root.
+
+`sqrt_two_sq` is the only place `sqrt` appears, and it is used safely — `sqrt_sq_nonneg` fires on a
+manifestly nonnegative argument, so the totalisation branch is unreachable. The footprints confirm
+it: `lead_mul_Q` and `Q_eq_zero_of_root` contain **no `sqrt` axiom at all**, and `sqrt_two_sq`
+contains `sqrt` and `sqrt_sq_nonneg` but **not `sqrt_neg_zero`**.
+
+This supersedes the numeral obstruction recorded below rather than solving it: the symbolic route
+turned out to be the better theorem, since it holds for every symmetric triple instead of one.
+
 ### Verified Apollonius, slice B: one mode class, end to end
 
 `MachLib/Geometry/Apollonius/SymmetricTriple.lean`.

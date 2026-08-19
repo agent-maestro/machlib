@@ -3599,6 +3599,32 @@
         "TangentInt"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The root identity. hypotheses_count 1 -- only the scaled-root equation; NO hypothesis on s, which is the content: the identity is unconditional and isolates the irrationality. forbid_axioms_exact on every sqrt axiom pins that this layer is purely algebraic.",
+      "id": "apollonius-root-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the sole obstruction to `r` being a root is `s² ≠ 2`"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.lead_mul_Q",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt",
+        "MachLib.Real.sqrt_sq_nonneg",
+        "MachLib.Real.sqrt_neg_zero"
+      ],
+      "statement_mentions": [
+        "lead",
+        "Q"
+      ],
+      "conclusion_mentions": [
+        "lead"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

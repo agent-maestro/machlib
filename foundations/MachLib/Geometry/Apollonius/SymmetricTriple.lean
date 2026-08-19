@@ -195,6 +195,70 @@ theorem at_most_two_radii
   rw [Q_expand] at hr hs ht
   exact QuadraticRoots.quadratic_no_three_distinct_roots hlead hr hs ht
 
+
+/-! ## The roots, symbolically — and why `√2` is the only irrationality
+
+The class discriminant is `8d²(d−2ρ)²(d+2ρ)²`: a perfect square times `8`. So its square root is
+`2√2·d·(d²−4ρ²)` and **the only irrationality any solution of this family carries is `√2`** — for
+every `d` and every `ρ`, not just for convenient ones. That is what makes an exact candidate
+representable at all here: `ℚ(√2)` suffices, no general algebraic number field is needed.
+
+The factorisation also *displays* the degeneracy rather than hiding it. The obstruction below
+vanishes identically when `d = 2ρ`, which is exactly the configuration where the input circles are
+mutually externally tangent (`dist(A,B) = 2ρ = ρ + ρ`) — the discriminant is zero, the two roots
+collide, and the class contributes one circle instead of two. -/
+
+/-- The leading coefficient of the class quadratic, `16ρ² − 2d²`. -/
+noncomputable def lead : Real :=
+  (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))) - (1 + 1) * (d * d)
+
+/-- **The root identity, unconditional.**
+
+For `r` scaled by the leading coefficient to the quadratic-formula numerator, the class quadratic
+evaluates to `d²(d−2ρ)²(d+2ρ)²·(s² − 2)`. No hypothesis on `s` is needed: the statement holds for
+*any* `s`, and it says precisely that the sole obstruction to `r` being a root is `s² ≠ 2`.
+
+Stated this way rather than as "`Q r = 0` given `s = √2`" because the factored right-hand side is
+the informative object — it exhibits the discriminant's square part, names the degenerate locus
+`d = 2ρ`, and isolates the irrationality into a single factor. -/
+theorem lead_mul_Q (r s : Real)
+    (hr : lead d ρ * r
+        = d * (-((1 + 1) * (d * ρ)) + s * (d * d - (1 + 1 + 1 + 1) * (ρ * ρ)))) :
+    lead d ρ * Q d ρ r
+      = (d * d) * (((d - (1 + 1) * ρ) * (d - (1 + 1) * ρ))
+          * ((d + (1 + 1) * ρ) * (d + (1 + 1) * ρ))) * (s * s - (1 + 1)) := by
+  have key : lead d ρ * Q d ρ r
+      = (lead d ρ * r) * (lead d ρ * r)
+        + ((1 + 1) * ((1 + 1) * (d * d * ρ))) * (lead d ρ * r)
+        + lead d ρ * (d * d * (d * d) - (1 + 1) * (d * d * (ρ * ρ))) := by
+    rw [Q_expand]; unfold lead; mach_mpoly [d, ρ, r]
+  rw [key, hr]
+  unfold lead
+  -- `mach_mpoly` normalises to a residue of `0 = -0` sign goals; `mach_ring` closes those.
+  mach_mpoly [d, ρ, s] <;> mach_ring
+
+/-- **A certified root.** With `s·s = 2` the obstruction vanishes, so `r` really is a root of the
+class quadratic — and `mul_left_cancel` discharges the scaling. Both roots are covered by the one
+theorem: `s` ranges over *both* square roots of `2`, and negating `s` gives the other root. -/
+theorem Q_eq_zero_of_root (hlead : lead d ρ ≠ 0) (r s : Real) (hs : s * s = 1 + 1)
+    (hr : lead d ρ * r
+        = d * (-((1 + 1) * (d * ρ)) + s * (d * d - (1 + 1 + 1 + 1) * (ρ * ρ)))) :
+    Q d ρ r = 0 := by
+  refine QuadraticRoots.mul_left_cancel hlead ?_
+  rw [lead_mul_Q d ρ r s hr, hs]
+  have z : (d * d) * (((d - (1 + 1) * ρ) * (d - (1 + 1) * ρ))
+      * ((d + (1 + 1) * ρ) * (d + (1 + 1) * ρ))) * ((1 + 1) - (1 + 1)) = 0 := by
+    mach_mpoly [d, ρ]
+  rw [z]
+  have z2 : lead d ρ * (0 : Real) = 0 := by unfold lead; mach_mpoly [d, ρ]
+  rw [z2]
+
+/-- **`√2` really is available**, so the hypothesis of `Q_eq_zero_of_root` is inhabited rather than
+vacuous. This is the one place `sqrt` is used, and it is used *safely*: `sqrt_sq_nonneg` fires on a
+manifestly nonnegative argument, so the totalisation branch `sqrt_neg_zero` is unreachable. -/
+theorem sqrt_two_sq : sqrt (1 + 1) * sqrt (1 + 1) = 1 + 1 :=
+  sqrt_sq_nonneg _ (le_of_lt (add_pos zero_lt_one_ax zero_lt_one_ax))
+
 /-! ## The bridge: from an algebraic certificate to a geometric circle -/
 
 /-- **The vertical slice, closed.**
