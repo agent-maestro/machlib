@@ -717,6 +717,44 @@ theorem oii_at_most_one_radius (hd : 0 < d) (hρ : 0 < ρ)
   rw [hzr] at hr hs
   exact QuadraticRoots.linear_root_unique (ne_of_gt (QMmid_oii_pos d ρ hd hρ)) hr hs
 
+/-! ### What compressing the variables established
+
+Substituting `X = d²`, `Y = ρ²` turns the `(o,i,i)` discriminant identity from degree 6 in `d, ρ`
+into **degree 3 in two abstract variables**. That was worth trying, and it changed the failure: the
+`maxRecDepth` limit cleared, and only `Lean.Meta.acLt` remained — still unmoved at 5× heartbeats on
+the *degree-3* form.
+
+So the blocker is **not** polynomial degree and **not** expression presentation. It is the unary
+numeral encoding: `64` written as six nested `(1 + 1)` factors generates an AC-permutation space
+`acLt` cannot search, whatever the degree. `MachLib.Real` carries `OfNat` for `0` and `1` only, so
+there is no other way to write a constant at this layer — which makes `natCast` the next thing to
+try and makes this a *diagnosis* rather than a dead end.
+
+The three coefficient identities below are small enough to close, and are exactly what the assembled
+discriminant proof will consume once constants can be written atomically. The target is
+
+    QMdisc (o,i,i) = 32·d²·(d² − 4ρ²)²
+
+from which positivity follows from separation alone (`d² > 4ρ²`), with no band split and no appeal
+to the sign of the leading coefficient. -/
+
+/-- `(o,i,i)`'s middle coefficient, `8d²ρ`. -/
+theorem QMmid_oii_eq :
+    QMmid d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * (d * d * ρ))) := by
+  unfold QMmid Sign.val; mach_mpoly [d, ρ] <;> mach_ring
+
+/-- `(o,i,i)`'s leading coefficient, factored as `4(8ρ² − d²)`. -/
+theorem QMlead_oii_factored :
+    QMlead d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))) - d * d)) := by
+  rw [QMlead_oii_eq]; mach_mpoly [d, ρ] <;> mach_ring
+
+/-- The constant term, factored as `2d²(d² − 2ρ²)`. -/
+theorem QMconst_factored :
+    QMconst d ρ = (1 + 1) * ((d * d) * (d * d - (1 + 1) * (ρ * ρ))) := by
+  unfold QMconst; mach_mpoly [d, ρ] <;> mach_ring
+
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
 /-- `Q` written as `a·r² + b·r + c`. The leading coefficient `16ρ² − 2d²` is displayed rather than

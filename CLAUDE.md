@@ -8,7 +8,7 @@ machine-checked theorems rather than on prose.
 
 Everything of substance is under **`foundations/`** (the repo root is docs, evidence, and site
 material). `foundations/MachLib/` holds **934 `.lean` files** (622 top-level + 312 in subdirectories) /
-**~186 k lines** / **7 051 theorems**, re-exported through the aggregator
+**~186 k lines** / **7 054 theorems**, re-exported through the aggregator
 **`foundations/MachLib.lean`** (536 imports) — a module not reachable from there is **invisible to
 `lake build` and to every gate**, which is the single most common way to ship dead work.
 (Counts are `find`/`grep` over `MachLib/`, theorems excluding `Discovered/`; re-derive with the
@@ -105,6 +105,11 @@ behind it is missing — registration is still a human act.
 - **Forward references bite**: a theorem is only usable *below* its declaration in the same file.
 - **`min` and `abs` do not exist.** Use `two_bound_witness` (`a·b·exp(−a−b)` is positive and strictly
   below both `a` and `b`) rather than hand-rolling a fourth bespoke two-constraint expression.
+- **`mach_mpoly` stalls in `Lean.Meta.acLt` on nested `(1+1)` constants, and no budget fixes it.**
+  Diagnosed by varying degree and presentation independently: compressing a degree-6 identity to
+  degree 3 cleared `maxRecDepth` but left `acLt` unmoved at 5× heartbeats. The cause is the unary
+  encoding, not the polynomial. Write constants as `natCast N` when a proof needs more than ~4
+  doublings.
 - **`OfNat Real` exists only for `0` and `1`.** `(2 : Real)` does not elaborate. Write constants as
   `natCast N` (`NatCastArith`), **never** as `1+1+…`: `mach_mpoly`'s AC matching diverges on unary
   numerals — a degree-2 identity with constants near `1.4·10⁴` exhausted 4 000 000 heartbeats (20×

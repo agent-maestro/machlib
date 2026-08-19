@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius: the acLt wall diagnosed — it is the numeral encoding
+
+A cheap experiment, and it answered the question the last two commits left open.
+
+Substituting `X = d²`, `Y = ρ²` turns the `(o,i,i)` discriminant identity from degree 6 in `d, ρ`
+into **degree 3 in two abstract variables** — the normaliser never has to rediscover a factorisation
+inside the original nested expression. The failure *changed*: `maxRecDepth` cleared, and only
+`Lean.Meta.acLt` remained, still unmoved at 5× heartbeats on the degree-3 form.
+
+That isolates the cause. It is **not** polynomial degree, and **not** expression presentation — both
+were varied and the wall stayed. It is the **unary numeral encoding**: `64` written as six nested
+`(1 + 1)` factors generates an AC-permutation space `acLt` cannot search, whatever the degree.
+`MachLib.Real` carries `OfNat` for `0` and `1` only, so at this layer there is no other way to write
+a constant.
+
+Two independent tasks now agree — the numeral instantiation (constants ~10⁴) and this identity
+(constants ~64) — and the variable-compression experiment separates the two candidate explanations
+cleanly. `natCast`, where a constant is a single atom, is the thing to try next, and it is now a
+*diagnosis* rather than a guess.
+
+The three `(o,i,i)` coefficient identities close and are kept: they are exactly what the assembled
+discriminant proof will consume once constants can be written atomically. The target is
+`QMdisc (o,i,i) = 32·d²·(d² − 4ρ²)²`, from which positivity follows from **separation alone** —
+no band split, and no appeal to the sign of the leading coefficient. That is a better structural
+statement than the conditional one currently proved, and it is one identity away.
+
+Worth separating the two exceptional loci, because they do different jobs:
+
+    d² = 4ρ²   the separation boundary — kills discriminant positivity
+    d² = 8ρ²   kills the LEADING COEFFICIENT without killing the discriminant
+
+So the seven-circle configuration is not a repeated-root event. It is a **degree-drop** locus: the
+class equation stops being quadratic and becomes linear. That is why encoding both conditions into
+one general-position predicate would have obscured the phenomenon rather than explained it.
+
 ### Verified Apollonius, slice H: attainment machinery, and a wall named
 
 `exists_scaled` and `two_distinct_roots` make attainment *constructive*: given any `s` with
