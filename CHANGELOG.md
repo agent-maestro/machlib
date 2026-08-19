@@ -7,6 +7,34 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice D: all eight modes of the family at once
+
+`solvesModeM_iff` generalises the single hand-written class to **every mode simultaneously**, with
+the mode's signs carried symbolically. The remaining three classes needed no separate treatment:
+the locus and the quadratic depend on the mode only through `σ_A − σ_B` and `σ_A − σ_C`, each of
+which is `0` or `±2`, so one theorem covers all of them.
+
+    locus       2d·x = d² + 2ρ(σ_A − σ_B)r,   2d·y = d² + 2ρ(σ_A − σ_C)r
+    quadratic   (d² + 2ρ(σ_A−σ_B)r)² + (d² + 2ρ(σ_A−σ_C)r)² − 4d²(r² + 2σ_Aρ·r + ρ²)
+
+Evaluating the signs over the four canonical classes gives three distinct leading coefficients, and
+they name their own degeneracies: `−4d²` for `(o,o,o)`, which **never** vanishes; `16ρ² − 4d²` for
+`(o,o,i)` and `(o,i,o)`, vanishing exactly at `d = 2ρ` — the mutually externally tangent inputs; and
+`32ρ² − 4d²` for `(o,i,i)`, vanishing at `d² = 8ρ²`. The constant term `2d²(d² − 2ρ²)` is the same
+for every mode.
+
+This is the first place the general linearisation paid off downstream: `solvesModeM_iff` is proved
+*through* `solvesMode_iff_linear` rather than by repeating the elimination, so the symmetric family
+now inherits the general result instead of duplicating it.
+
+**Two failure modes that look identical from the build log.** `mach_mpoly` reports "unsolved goals"
+both when an identity is false and when it merely failed to normalise a sign. In this file the same
+message covered a `-0 = 0` residue (real, closed by `mach_ring`), an associativity mismatch between
+two ways of writing `4d²`, and a genuine copy-paste error — the constant for `C = (0, d, ρ)` written
+as `d·d + 0·0` instead of `0·0 + d·d`. Only the third was a mistake, and only reading the residual
+goal distinguished them. The forward direction had silently survived the same slip because
+`mach_mpoly` normalises what `rw` demands syntactically.
+
 ### Verified Apollonius, slice C: the linearisation, and general position derived
 
 `MachLib/Geometry/Apollonius/Elimination.lean`, plus `cramer_2x2` and

@@ -3666,6 +3666,31 @@
         "centresDet"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "All eight modes. hypotheses_count 1 -- only 0 < d is a top-level antecedent; 0 < rho is consumed inside the Circle constructors. NO mode-specific and no general-position hypothesis, which is the content: one theorem covers every mode.",
+      "id": "apollonius-all-modes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every mode simultaneously"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.solvesModeM_iff",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "SolvesMode",
+        "OnLocusM",
+        "QM"
+      ],
+      "conclusion_mentions": [
+        "SolvesMode"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

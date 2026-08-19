@@ -1,5 +1,6 @@
 import MachLib.Geometry.Apollonius.Mode
 import MachLib.QuadraticRoots
+import MachLib.Geometry.Apollonius.Elimination
 
 /-!
 # One mode class, all the way through
@@ -172,6 +173,120 @@ theorem solvesMode_iff (hd : 0 < d) (hρ : 0 < ρ) (x y r : Real) :
       rw [e, hq]
       mach_mpoly [d, r, ρ]
 
+
+
+/-! ## Every mode at once
+
+`solvesMode_iff` above did one class by hand. With the general linearisation available the same
+result holds for **all eight modes simultaneously**, with the mode's signs carried symbolically —
+so the remaining three classes need no separate treatment. The locus and the quadratic depend on the
+mode only through `σ_A − σ_B` and `σ_A − σ_C`, each of which is `0` or `±2`. -/
+
+@[simp] theorem cA_x : (cA ρ hρ).x = 0 := rfl
+@[simp] theorem cA_y : (cA ρ hρ).y = 0 := rfl
+@[simp] theorem cA_r : (cA ρ hρ).r = ρ := rfl
+@[simp] theorem cB_x : (cB d ρ hρ).x = d := rfl
+@[simp] theorem cB_y : (cB d ρ hρ).y = 0 := rfl
+@[simp] theorem cB_r : (cB d ρ hρ).r = ρ := rfl
+@[simp] theorem cC_x : (cC d ρ hρ).x = 0 := rfl
+@[simp] theorem cC_y : (cC d ρ hρ).y = d := rfl
+@[simp] theorem cC_r : (cC d ρ hρ).r = ρ := rfl
+
+/-- The locus, for an arbitrary mode. -/
+def OnLocusM (m : Mode) (x y r : Real) : Prop :=
+  (1 + 1) * d * x = d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r
+  ∧ (1 + 1) * d * y = d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r
+
+/-- The class quadratic, for an arbitrary mode.
+
+Its leading coefficient is `16ρ²·(…) − 4d²`, and evaluating the signs gives three distinct cases
+over the four canonical classes: `−4d²` for `(o,o,o)`, which never vanishes; `16ρ² − 4d²` for
+`(o,o,i)` and `(o,i,o)`, vanishing exactly at `d = 2ρ` — the mutually externally tangent inputs; and
+`32ρ² − 4d²` for `(o,i,i)`, vanishing at `d² = 8ρ²`. The constant term `2d²(d² − 2ρ²)` is the same
+for every mode. -/
+noncomputable def QM (m : Mode) (r : Real) : Real :=
+  (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+    * (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+  + (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+    * (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+  - (1 + 1) * (1 + 1) * (d * d) * (r * r + (1 + 1) * (m.sA.val * ρ) * r + ρ * ρ)
+
+/-- **The elimination, for every mode of the family.** -/
+theorem solvesModeM_iff (hd : 0 < d) (hρ : 0 < ρ) (m : Mode) (x y r : Real) :
+    SolvesMode (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) m x y r
+      ↔ (OnLocusM d ρ m x y r ∧ QM d ρ m r = 0) := by
+  have hd0 : d ≠ 0 := ne_of_gt hd
+  have h4 : (0 : Real) < ((1 + 1) * d) * ((1 + 1) * d) :=
+    mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) hd)
+            (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) hd)
+  rw [solvesMode_iff_linear]
+  simp only [cA_x, cA_y, cA_r, cB_x, cB_y, cB_r, cC_x, cC_y, cC_r]
+  rw [tangentEq_expanded]
+  constructor
+  · rintro ⟨hA, hB, hC⟩
+    have hx : (1 + 1) * d * x = d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r := by
+      refine QuadraticRoots.eq_of_sub_eq_zero ?_
+      have e : (1 + 1) * d * x - (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+          = ((1 + 1) * (d - 0) * x + (1 + 1) * ((0 : Real) - 0) * y
+              + (1 + 1) * (m.sB.val * ρ - m.sA.val * ρ) * r)
+            - ((d * d + (0 : Real) * 0 - ρ * ρ) - ((0 : Real) * 0 + (0 : Real) * 0 - ρ * ρ)) := by
+        mach_mpoly [d, ρ, x, y, r, m.sA.val, m.sB.val] <;> mach_ring
+      rw [e, hB]; mach_mpoly [d, ρ] <;> mach_ring
+    have hy : (1 + 1) * d * y = d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r := by
+      refine QuadraticRoots.eq_of_sub_eq_zero ?_
+      have e : (1 + 1) * d * y - (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+          = ((1 + 1) * ((0 : Real) - 0) * x + (1 + 1) * (d - 0) * y
+              + (1 + 1) * (m.sC.val * ρ - m.sA.val * ρ) * r)
+            - ((d * d + (0 : Real) * 0 - ρ * ρ) - ((0 : Real) * 0 + (0 : Real) * 0 - ρ * ρ)) := by
+        mach_mpoly [d, ρ, x, y, r, m.sA.val, m.sC.val] <;> mach_ring
+      rw [e, hC]; mach_mpoly [d, ρ] <;> mach_ring
+    refine ⟨⟨hx, hy⟩, ?_⟩
+    have hscale : ((1 + 1) * d * x) * ((1 + 1) * d * x) + ((1 + 1) * d * y) * ((1 + 1) * d * y)
+        = ((1 + 1) * d) * ((1 + 1) * d)
+            * (r * r + (1 + 1) * (m.sA.val * ρ) * r + ρ * ρ) := by
+      have e : ((1 + 1) * d * x) * ((1 + 1) * d * x) + ((1 + 1) * d * y) * ((1 + 1) * d * y)
+          = ((1 + 1) * d) * ((1 + 1) * d)
+              * ((x - 0) * (x - 0) + (y - 0) * (y - 0)) := by mach_mpoly [x, y, d]
+      rw [e, hA]
+    rw [hx, hy] at hscale
+    have hgoal : QM d ρ m r
+        = ((d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+             * (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+           + (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+             * (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r))
+          - ((1 + 1) * d) * ((1 + 1) * d) * (r * r + (1 + 1) * (m.sA.val * ρ) * r + ρ * ρ) := by
+      unfold QM; mach_mpoly [d, ρ, r, m.sA.val, m.sB.val, m.sC.val] <;> mach_ring
+    rw [hgoal, hscale]
+    mach_mpoly [d, ρ, r, m.sA.val] <;> mach_ring
+  · rintro ⟨⟨hx, hy⟩, hq⟩
+    refine ⟨?_, ?_, ?_⟩
+    · refine QuadraticRoots.mul_left_cancel (ne_of_gt h4) ?_
+      have lhs : ((1 + 1) * d) * ((1 + 1) * d) * ((x - 0) * (x - 0) + (y - 0) * (y - 0))
+          = ((1 + 1) * d * x) * ((1 + 1) * d * x) + ((1 + 1) * d * y) * ((1 + 1) * d * y) := by
+        mach_mpoly [x, y, d]
+      rw [lhs, hx, hy]
+      have e : (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+            * (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r)
+          + (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+            * (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r)
+          = ((1 + 1) * d) * ((1 + 1) * d) * (r * r + (1 + 1) * (m.sA.val * ρ) * r + ρ * ρ)
+            + QM d ρ m r := by
+        unfold QM; mach_mpoly [d, ρ, r, m.sA.val, m.sB.val, m.sC.val] <;> mach_ring
+      rw [e, hq]; mach_mpoly [d, ρ, r, m.sA.val] <;> mach_ring
+    · refine QuadraticRoots.eq_of_sub_eq_zero ?_
+      have e : ((1 + 1) * (d - 0) * x + (1 + 1) * ((0 : Real) - 0) * y
+              + (1 + 1) * (m.sB.val * ρ - m.sA.val * ρ) * r)
+            - ((d * d + (0 : Real) * 0 - ρ * ρ) - ((0 : Real) * 0 + (0 : Real) * 0 - ρ * ρ))
+          = ((1 + 1) * d * x) - (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r) := by
+        mach_mpoly [d, ρ, x, y, r, m.sA.val, m.sB.val] <;> mach_ring
+      rw [e, hx]; mach_mpoly [d, ρ, r, m.sA.val, m.sB.val] <;> mach_ring
+    · refine QuadraticRoots.eq_of_sub_eq_zero ?_
+      have e : ((1 + 1) * ((0 : Real) - 0) * x + (1 + 1) * (d - 0) * y
+              + (1 + 1) * (m.sC.val * ρ - m.sA.val * ρ) * r)
+            - (((0 : Real) * 0 + d * d - ρ * ρ) - ((0 : Real) * 0 + (0 : Real) * 0 - ρ * ρ))
+          = ((1 + 1) * d * y) - (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r) := by
+        mach_mpoly [d, ρ, x, y, r, m.sA.val, m.sC.val] <;> mach_ring
+      rw [e, hy]; mach_mpoly [d, ρ, r, m.sA.val, m.sC.val] <;> mach_ring
 
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
