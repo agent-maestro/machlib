@@ -7,6 +7,31 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice F: "pairwise separated" is not general position
+
+The natural guess for this family's general-position condition — that the input circles are mutually
+external, `d > 2ρ` — is **false**, and the counterexample is not exotic. At `d² = 8ρ²` (`d ≈ 2.83ρ`,
+comfortably separated) the `(outer,inner,inner)` class's leading coefficient vanishes, its equation
+drops to degree one, and the class contributes **one** solution instead of two. That configuration
+has seven tangent circles, not eight.
+
+`oii_at_most_one_radius` proves the structural cause: with the leading coefficient zero and the
+middle coefficient `8d²ρ` demonstrably positive, a linear equation with nonzero slope has a unique
+root. `QMlead_oii_eq` and `QMmid_oii_pos` supply the two coefficients.
+
+So the condition this family actually needs is `d > 2ρ` **and** `d² ≠ 8ρ²`, and the second conjunct
+has no evident geometric reading. That is exactly the kind of thing a derivation finds and a guess
+does not — and it is why `ApolloniusGeneralPosition` is *still* not defined. Had the obvious
+predicate been written down at the start, it would have carried a false theorem, and the failure
+would have surfaced only at the count.
+
+`mode_unique` closes distinctness: **a solution with nonzero radius determines its mode.**
+Subtracting the two tangency equations for one input leaves `2rρ(σ − σ') = 0`, and `r ≠ 0`, `ρ > 0`
+force the signs to agree. So the eight solutions are eight *distinct circles* rather than eight
+labelled ones — a circle cannot be tangent to the same input both externally and internally unless
+its radius is zero. Note where the hypothesis bites: `r ≠ 0` is the same degenerate candidate the
+algebraic layer deliberately keeps representable rather than ruling out by typing.
+
 ### Verified Apollonius, slice E: at most two solutions per mode
 
 `at_most_two_solutions_per_mode` — three solutions of one mode contain a repeat, **as circles, not

@@ -1,4 +1,5 @@
 import MachLib.Geometry.Circle
+import MachLib.QuadraticRoots
 
 /-!
 # Tangency modes, and the antipodal law
@@ -70,6 +71,22 @@ collapse to `ρ²`. Omitting it does not produce a wrong-looking goal — it pro
   cases s
   · show (1 : Real) * 1 = 1; mach_ring
   · show (-1 : Real) * -1 = 1; mach_ring
+
+/-- `Sign.val` is injective — `1 ≠ -1`. -/
+theorem val_inj {s t : Sign} (h : s.val = t.val) : s = t := by
+  have contra : ∀ _ : (1 : Real) = -1, False := by
+    intro h1
+    have e : (1 : Real) + 1 = -1 + 1 := congrArg (fun z => z + 1) h1
+    have z : (-1 : Real) + 1 = 0 := by mach_ring
+    rw [z] at e
+    have hpos : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+    rw [e] at hpos
+    exact lt_irrefl_ax 0 hpos
+  cases s <;> cases t
+  · rfl
+  · exact absurd (h : (1 : Real) = -1) (fun hh => contra hh)
+  · exact absurd ((h : (-1 : Real) = 1).symm) (fun hh => contra hh)
+  · rfl
 
 theorem val_flip (s : Sign) : s.flip.val = -(s.val) := by
   cases s
@@ -150,6 +167,48 @@ theorem solvesMode_antipodal (A B C : Circle) (m : Mode) (x y r : Real) :
   and_congr (tangentEq_antipodal _ _ _ _ _ _ _)
     (and_congr (tangentEq_antipodal _ _ _ _ _ _ _) (tangentEq_antipodal _ _ _ _ _ _ _))
 
+
+/-- **A solution with nonzero radius determines its mode.**
+
+If one `(x, y, r)` solves two modes then the modes agree, provided `r ≠ 0`. Subtracting the two
+tangency equations for the same input circle leaves `2rρ(σ − σ')= 0`, and both `r` and `ρ` are
+nonzero, so the signs coincide.
+
+This is the last ingredient of distinctness, and it is what makes the eight solutions eight *distinct
+circles* rather than eight labelled ones: a circle cannot be tangent to the same input both
+externally and internally unless it has zero radius. Note where the hypothesis `r ≠ 0` bites — it is
+the same degenerate candidate the algebraic layer deliberately keeps representable. -/
+theorem mode_unique (A B C : Circle) (m m' : Mode) (x y r : Real) (hr : r ≠ 0)
+    (h : SolvesMode A B C m x y r) (h' : SolvesMode A B C m' x y r) : m = m' := by
+  have key : ∀ (P : Circle) (s t : Sign),
+      tangentEq P.x P.y P.r s x y r → tangentEq P.x P.y P.r t x y r → s = t := by
+    intro P s t hs ht
+    rw [tangentEq_expanded] at hs ht
+    refine Sign.val_inj ?_
+    -- `2rρ(σ − σ') = 0`, with `r ≠ 0` and `ρ > 0`
+    have hd : (1 + 1) * ((r * P.r) * (s.val - t.val)) = 0 := by
+      have e : (1 + 1) * ((r * P.r) * (s.val - t.val))
+          = (r * r + (1 + 1) * (s.val * P.r) * r + P.r * P.r)
+            - (r * r + (1 + 1) * (t.val * P.r) * r + P.r * P.r) := by
+        mach_mpoly [r, P.r, s.val, t.val] <;> mach_ring
+      rw [e, ← hs, ← ht]
+      mach_mpoly [x, y, P.x, P.y] <;> mach_ring
+    have h2 : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+    have hrP : r * P.r ≠ 0 := by
+      intro hz
+      exact hr (QuadraticRoots.right_of_mul_eq_zero (ne_of_gt P.hr)
+        (by rw [← hz]; mach_ring : P.r * r = 0))
+    have := QuadraticRoots.right_of_mul_eq_zero (ne_of_gt h2) hd
+    exact QuadraticRoots.eq_of_sub_eq_zero (QuadraticRoots.right_of_mul_eq_zero hrP this)
+  obtain ⟨hA, hB, hC⟩ := h
+  obtain ⟨hA', hB', hC'⟩ := h'
+  cases m with
+  | mk a b c => cases m' with
+    | mk a' b' c' =>
+      have ea := key A a a' hA hA'
+      have eb := key B b b' hB hB'
+      have ec := key C c c' hC hC'
+      rw [ea, eb, ec]
 
 /-! ## The four classes, derived rather than declared -/
 

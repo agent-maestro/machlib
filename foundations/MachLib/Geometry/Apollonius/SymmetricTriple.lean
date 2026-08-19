@@ -388,6 +388,77 @@ theorem QMlead_ooo_ne (hd : 0 < d) :
   have e : (1 + 1) * (1 + 1) * (d * d) = -(-((1 + 1) * (1 + 1) * (d * d))) := by mach_ring
   rw [e, hz]; mach_ring
 
+
+/-! ## Why "pairwise separated" is NOT general position
+
+A natural guess for this family's general-position condition is that the input circles are mutually
+external, `d > 2ρ`. It is **false**, and the counterexample is not exotic: at `d² = 8ρ²`
+(`d ≈ 2.83ρ`, comfortably separated) the `(outer,inner,inner)` class's leading coefficient vanishes,
+its equation drops to degree one, and the class contributes **one** solution instead of two. The
+configuration has seven tangent circles, not eight.
+
+The theorems below are the structural cause. They are stated rather than the count, because the count
+for a specific configuration is a numeric claim this file cannot yet make (see the numeral note), but
+the degeneration is symbolic and provable. -/
+
+/-- The `(o,i,i)` leading coefficient is `32ρ² − 4d²`. -/
+theorem QMlead_oii_eq :
+    QMlead d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ)))))
+        - (1 + 1) * (1 + 1) * (d * d) := by
+  unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring
+
+/-- The `(o,i,i)` middle coefficient is `8d²ρ`, which is **positive** — so when the leading
+coefficient vanishes the equation is genuinely linear, not degenerate to a constant. -/
+theorem QMmid_oii_pos (hd : 0 < d) (hρ : 0 < ρ) :
+    (0 : Real) < -((1 + 1) * (1 + 1) * (d * d * ρ)
+      * ((⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sB.val
+         + (⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sC.val)) := by
+  have e : -((1 + 1) * (1 + 1) * (d * d * ρ)
+      * ((⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sB.val
+         + (⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sC.val))
+      = (1 + 1) * ((1 + 1) * ((1 + 1) * (d * (d * ρ)))) := by
+    show -((1 + 1) * (1 + 1) * (d * d * ρ) * ((-1 : Real) + -1))
+        = (1 + 1) * ((1 + 1) * ((1 + 1) * (d * (d * ρ))))
+    mach_mpoly [d, ρ] <;> mach_ring
+  rw [e]
+  exact mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+    (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+      (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) (mul_pos hd (mul_pos hd hρ))))
+
+/-- **At `d² = 8ρ²` the `(o,i,i)` class has at most ONE radius.**
+
+The leading coefficient vanishes, the middle coefficient does not, and a linear equation with
+nonzero slope has a unique root. So that class contributes at most one circle and the total for the
+configuration is at most seven — while the circles remain pairwise separated.
+
+This is why `ApolloniusGeneralPosition` is still not defined. The obvious geometric predicate
+("mutually external") is provably insufficient, and had it been written down early it would have
+carried a false theorem. The condition this family actually needs is `d > 2ρ` **and** `d² ≠ 8ρ²`,
+and the second conjunct has no evident geometric reading — which is precisely the kind of thing a
+derivation finds and a guess does not. -/
+theorem oii_at_most_one_radius (hd : 0 < d) (hρ : 0 < ρ)
+    (hdeg : QMlead d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩ = 0) (r s : Real)
+    (hr : QM d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩ r = 0)
+    (hs : QM d ρ ⟨Sign.outer, Sign.inner, Sign.inner⟩ s = 0) :
+    r = s := by
+  rw [QM_expand, hdeg] at hr hs
+  have hzr : ∀ z : Real,
+      (0 : Real) * z * z
+        + (-((1 + 1) * (1 + 1) * (d * d * ρ)
+            * ((⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sB.val
+               + (⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sC.val))) * z
+        + ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ)))
+      = (-((1 + 1) * (1 + 1) * (d * d * ρ)
+            * ((⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sB.val
+               + (⟨Sign.outer, Sign.inner, Sign.inner⟩ : Mode).sC.val))) * z
+        + ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ))) := by
+    intro z
+    show (0 : Real) * z * z + _ + _ = _
+    mach_mpoly [z, d, ρ] <;> mach_ring
+  rw [hzr] at hr hs
+  exact QuadraticRoots.linear_root_unique (ne_of_gt (QMmid_oii_pos d ρ hd hρ)) hr hs
+
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
 /-- `Q` written as `a·r² + b·r + c`. The leading coefficient `16ρ² − 2d²` is displayed rather than

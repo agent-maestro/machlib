@@ -3711,6 +3711,45 @@
         "SolvesMode",
         "QMlead"
       ]
+    },
+    {
+      "_comment": "Distinctness across modes. The r != 0 hypothesis is the content -- at r = 0 the statement is FALSE, and the degenerate candidate is representable precisely so this can be stated honestly.",
+      "id": "apollonius-mode-unique-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a solution with nonzero radius determines its mode"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Mode",
+      "theorem": "MachLib.Geometry.Apollonius.mode_unique",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "SolvesMode"
+      ]
+    },
+    {
+      "_comment": "The refutation of the natural general-position guess. Registered so the NEGATIVE result is gated too -- a corpus that only registers its successes cannot be trusted about its failures.",
+      "id": "apollonius-separated-insufficient-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the class contributes **one** solution instead of two"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.oii_at_most_one_radius",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "QMlead",
+        "QM"
+      ]
     }
   ]
 }
