@@ -49,6 +49,26 @@ refutation and the exclusion consume the same certified facts rather than two dr
 is the structural reason the defect existed: the hypotheses were inlined in one theorem and
 therefore could not be reused by, or compared against, the other.
 
+**`IntermediateBand` — the band is now an object.** The four conditions are a `def`, and
+`intermediateBand_not_depth_le_three` is the exclusion stated against it. Supplying three quarters
+of the premise is now a **type error** rather than a reading error — verified with a specimen that
+passes only `H1` and is rejected. `x_plus_one_band_hyps : IntermediateBand (fun x => x + 1)`.
+
+The raw four-argument `superlinear_subexp_not_depth_le_three` is deliberately **kept**, not
+replaced: its registered claim pins `statement_mentions` including `exp`, which folding the
+conditions into a definition would hide from the auditor. So the raw form stays the audited surface
+and the named form is the composable one. Both are proved; they are definitionally the same theorem.
+
+**A gate gap, recorded not built.** `tools/claim_audit/BACKLOG.md` (new) records what this defect
+shows: every registry obligation — `conclusion_mentions`, `statement_mentions`, `hypotheses_count`,
+`proof_uses` — ranges over a **single theorem**, so nothing can assert that a sharpness witness
+establishes the premise of the theorem it witnesses against. That relation is about a *pair*.
+Building it properly needs a new obligation kind and a `--bless-relations` ceremony, which one
+specimen does not justify. The backlog also records a cheap version available now that `IntermediateBand`
+exists: register `statement_mentions: ["IntermediateBand"]` on the exclusion and
+`conclusion_mentions: ["IntermediateBand"]` on the witness, and the two sides are forced to speak
+the same predicate at the cost of two registry rows and no ceremony.
+
 ## [Unreleased] — 2026-08-16
 
 ### Verified Apollonius: the flagship instantiated — and natCast turned out not to be needed

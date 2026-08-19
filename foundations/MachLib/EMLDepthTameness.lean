@@ -4087,32 +4087,38 @@ theorem superlinear_subexp_not_depth_le_three (f : Real → Real)
 
 /-! ### The depth-3 band exclusion is **sharp** -/
 
-/-- **`superlinear_subexp_not_depth_le_three` cannot be lifted to depth 4 — the statement is false
-there.** `f x = x + 1` satisfies all **four** band hypotheses and is computed at depth exactly 4 by
-`xPlusOneTree`.
+/-- **The intermediate-growth band, as one proposition rather than four arguments.**
 
-**The fourth conjunct (`Hlog`) is not optional and was missing until 2026-08-19.**
-`superlinear_subexp_not_depth_le_two` takes three hypotheses; `superlinear_subexp_not_depth_le_three`
-takes four, the extra one being `Hlog : C + log x < f x` infinitely often. A refutation certified
-against only three therefore refutes the *depth-2-shaped* band statement at depth 4, not the depth-3
-one — a strictly weaker claim, whose falsity does not by itself make the four-hypothesis version
-false. Since the exclusion this is paired with is the depth-≤3 theorem, the witness has to clear all
-four bars or the sharpness claim does not close. `x + 1` does clear it; the proof substitutes
-`x = exp w` so that `log x` becomes `w`, and `two_mul_add_le_exp` then outruns `C + w`.
+`superlinear_subexp_not_depth_le_three` takes its four conditions as separate hypotheses. That is
+why the sharpness defect of 2026-08-19 was possible: a refutation certified three of them, the
+exclusion consumed four, both theorems were individually valid, and **the composition was not**.
+Nothing could notice, because the band existed only as an argument list — there was no object for
+the two sides to disagree about.
 
-This settles what looked like an obstruction. Two apparent blockers to a depth-4 version were
-identified — the bounded-left branch would need `V₃`, and the `A = var` branch would need a
-classification of depth-2 trees — but neither is an obstacle to a true theorem, because there is no
-true theorem to reach. The band exclusion holds at depth ≤ 3 and fails at depth 4, full stop.
+Naming it makes the mismatch a type error instead of a reading error. A witness must now produce
+`IntermediateBand f`; it cannot produce three quarters of it.
 
-`x + 1` is the natural witness: unbounded and above the identity by construction, and
-sub-exponential because `exp` outruns any linear function. It slips through precisely because the
-band's hypotheses constrain *growth* and `x + 1` sits at the very bottom of the band. -/
-theorem x_plus_one_band_hyps :
-    (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < x + 1)
-    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x + 1 < exp x - x - C)
-    ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < x + 1)
-    ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < x + 1) := by
+The four conditions are each required only **infinitely often**, not on a ray, which is what makes
+the exclusion strong: a target need merely *visit* the band to be excluded. -/
+def IntermediateBand (f : Real → Real) : Prop :=
+  (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
+  ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ f x < exp x - x - C)
+  ∧ (∀ X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ x < f x)
+  ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+
+/-- **The depth-≤3 exclusion, stated against the named band.** Definitionally the same theorem as
+`superlinear_subexp_not_depth_le_three`; this is the form new results should consume.
+
+The raw four-argument form is deliberately kept rather than replaced. Its registered claim pins
+`statement_mentions` including `exp`, which folding the conditions into a definition would hide from
+the auditor — so the raw statement stays as the audited surface and this is the composable one. -/
+theorem intermediateBand_not_depth_le_three (f : Real → Real) (hf : IntermediateBand f)
+    (t : EMLTree) (ht : t.depth ≤ 3) (h : ∀ x : Real, 0 < x → t.eval x = f x) : False :=
+  superlinear_subexp_not_depth_le_three f hf.1 hf.2.1 hf.2.2.1 hf.2.2.2 t ht h
+
+/-- **`x + 1` is in the band** — all four conditions, which is the whole point. Certifying only the
+first three is what left `d(x + 1)` open. -/
+theorem x_plus_one_band_hyps : IntermediateBand (fun x => x + 1) := by
   refine ⟨?_, ?_, ?_, ?_⟩
   · -- unbounded above on every ray
     intro K X
@@ -4187,6 +4193,27 @@ theorem x_plus_one_band_hyps :
     exact lt_of_lt_of_le (lt_of_lt_of_le v (hT (exp T + exp X) hwT))
       (le_of_lt (lt_succ_self _))
 
+/-- **`superlinear_subexp_not_depth_le_three` cannot be lifted to depth 4 — the statement is false
+there.** `f x = x + 1` satisfies all **four** band hypotheses and is computed at depth exactly 4 by
+`xPlusOneTree`.
+
+**The fourth conjunct (`Hlog`) is not optional and was missing until 2026-08-19.**
+`superlinear_subexp_not_depth_le_two` takes three hypotheses; `superlinear_subexp_not_depth_le_three`
+takes four, the extra one being `Hlog : C + log x < f x` infinitely often. A refutation certified
+against only three therefore refutes the *depth-2-shaped* band statement at depth 4, not the depth-3
+one — a strictly weaker claim, whose falsity does not by itself make the four-hypothesis version
+false. Since the exclusion this is paired with is the depth-≤3 theorem, the witness has to clear all
+four bars or the sharpness claim does not close. `x + 1` does clear it; the proof substitutes
+`x = exp w` so that `log x` becomes `w`, and `two_mul_add_le_exp` then outruns `C + w`.
+
+This settles what looked like an obstruction. Two apparent blockers to a depth-4 version were
+identified — the bounded-left branch would need `V₃`, and the `A = var` branch would need a
+classification of depth-2 trees — but neither is an obstacle to a true theorem, because there is no
+true theorem to reach. The band exclusion holds at depth ≤ 3 and fails at depth 4, full stop.
+
+`x + 1` is the natural witness: unbounded and above the identity by construction, and
+sub-exponential because `exp` outruns any linear function. It slips through precisely because the
+band's hypotheses constrain *growth* and `x + 1` sits at the very bottom of the band. -/
 theorem band_exclusion_fails_at_depth_four :
     ∃ (f : Real → Real) (t : EMLTree),
       (∀ K X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ K < f x)
@@ -4210,8 +4237,7 @@ The addition-closure question is therefore settled in both directions: EML *is* 
 and the cost is exactly four levels, not three. -/
 theorem x_plus_one_not_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3)
     (h : ∀ x : Real, 0 < x → t.eval x = x + 1) : False := by
-  obtain ⟨h1, h2, h3, h4⟩ := x_plus_one_band_hyps
-  exact superlinear_subexp_not_depth_le_three (fun x => x + 1) h1 h2 h3 h4 t ht h
+  exact intermediateBand_not_depth_le_three (fun x => x + 1) x_plus_one_band_hyps t ht h
 
 
 /-! ### Eventual sign-definiteness at depth 2, unconditionally
