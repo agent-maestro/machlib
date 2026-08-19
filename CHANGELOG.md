@@ -7,6 +7,36 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius: the flagship instantiated — and natCast turned out not to be needed
+
+`MachLib/Geometry/Apollonius/Examples.lean`. Three unit circles at `(0,0)`, `(4,0)`, `(0,4)`.
+
+`flagship_gp` discharges `SymmetricGeneralPosition` for it, and both conjuncts are genuinely
+*checked*: `d² = 8ρ²` would need `d ≈ 2.83`, and `d = 4` clears it — but nothing about the picture
+makes that obvious, which is exactly the trap the earlier seven-circle counterexample set. An
+aesthetically convenient configuration is not automatically a generic one.
+
+`flagship_exactly_two_per_mode` is then the whole symbolic development instantiated at one
+configuration: every mode has exactly two signed solutions, attained and no more. With the antipodal
+law that is the eight — sixteen signed solutions in eight antipodal pairs, one member of each pair
+carrying a positive radius.
+
+**`natCast` was not needed.** The flagship's constants are `4`, `8` and `16`, small enough that the
+unary `(1+1)` encoding closes each obligation directly, and the module compiled first try. That is
+worth recording next to the earlier failures, because it corrects the scope of the numeral problem
+one more time: the wall was never about *input* size. It was about the constants the class
+**quadratic generates** — `1.4 × 10⁴` for the scaled `d = 8, ρ = 2` configuration — and inputs of
+this size cost nothing at all.
+
+So the diagnostic chain across this arc reads: the wall is real → it is not degree → it is not
+presentation → it is nested constants under distribution → and the constants that matter are the
+*derived* ones, not the ones you type. Each step narrowed the claim, and the last two narrowed it
+after it had already been committed.
+
+The layering the plan asked for holds: theorems live in `SymmetricTriple` over symbolic `d` and `ρ`;
+`Examples` supplies values and discharges hypotheses. Numeral plumbing stayed below the generic
+development and never leaked upward.
+
 ### Verified Apollonius: exactly two signed solutions per mode — the count assembled
 
 `exactly_two_signed_solutions_per_mode` puts both halves together: **attained**

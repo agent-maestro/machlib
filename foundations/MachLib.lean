@@ -545,6 +545,7 @@ import MachLib.Geometry.Circle
 import MachLib.Geometry.Apollonius.Mode
 import MachLib.Geometry.Apollonius.SymmetricTriple
 import MachLib.Geometry.Apollonius.Elimination
+import MachLib.Geometry.Apollonius.Examples
 
 /-!
 # MachLib — top-level aggregator

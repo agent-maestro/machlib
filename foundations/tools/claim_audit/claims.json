@@ -3893,6 +3893,27 @@
         "SolvesMode"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The flagship is in general position. Registered because the interesting content is that it was CHECKED -- the d^2 = 8rho^2 locus is invisible in the picture, and an unregistered claim that a configuration is generic is exactly the kind that rots.",
+      "id": "apollonius-flagship-generic-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "An\naesthetically convenient configuration is not automatically a generic one"
+      ],
+      "module": "MachLib.Geometry.Apollonius.Examples",
+      "theorem": "MachLib.Geometry.Apollonius.Examples.flagship_gp",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "SymmetricGeneralPosition"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
