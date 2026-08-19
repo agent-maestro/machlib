@@ -1101,6 +1101,67 @@ theorem QM_roots_decode (gp : SymmetricGeneralPosition d ρ) (m : Mode) :
     root_ne_zero d ρ (gp_rho_pos d ρ gp) gp.2.1 m h₁,
     root_ne_zero d ρ (gp_rho_pos d ρ gp) gp.2.1 m h₂, h₁, h₂⟩
 
+
+/-! ### From roots to solutions, and the count
+
+The remaining step is constructive: a root of the class quadratic determines a centre through the
+locus, and `exists_scaled` supplies it — the same single inversion point everything else routes
+through. -/
+
+/-- **Every root of a class quadratic is realised by an actual solution.** The locus determines the
+centre from the radius; `exists_scaled` inverts `2d·x = …` and nothing else in the geometry needs a
+quotient. -/
+theorem solution_of_root (gp : SymmetricGeneralPosition d ρ) (m : Mode) (r : Real)
+    (hr : QM d ρ m r = 0) :
+    ∃ x y : Real, SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+                    (cC d ρ (gp_rho_pos d ρ gp)) m x y r := by
+  have hd := gp_d_pos d ρ gp
+  have h2d : (1 + 1) * d ≠ 0 :=
+    ne_of_gt (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) hd)
+  obtain ⟨x, hx⟩ := QuadraticRoots.exists_scaled ((1 + 1) * d)
+    (d * d + (1 + 1) * ρ * (m.sA.val - m.sB.val) * r) h2d
+  obtain ⟨y, hy⟩ := QuadraticRoots.exists_scaled ((1 + 1) * d)
+    (d * d + (1 + 1) * ρ * (m.sA.val - m.sC.val) * r) h2d
+  exact ⟨x, y, (solvesModeM_iff d ρ hd (gp_rho_pos d ρ gp) m x y r).mpr ⟨⟨hx, hy⟩, hr⟩⟩
+
+/-- **Exactly two signed solutions per mode.**
+
+Attained — `QM_two_roots_of_gp` gives two distinct roots and `solution_of_root` realises each — and
+no more, by `at_most_two_of_gp`. Both halves at once, which is what "exactly" means.
+
+**And that is the eight.** Eight modes × two signed solutions is sixteen signed solutions; the
+antipodal law pairs them, `(x, y, r)` in mode `m` with `(x, y, −r)` in `m.anti`; every root is
+nonzero (`root_ne_zero`), so each pair has exactly one member with positive radius; and distinct
+pairs give distinct circles because `mode_unique` separates modes and `centre_unique` separates
+centres. Sixteen signed, eight geometric.
+
+The final count is left as that derivation rather than as a `List.length = 8` theorem, and
+deliberately: `MachLib` is Mathlib-free and has no `Finset` or cardinality layer, so a list
+formulation would have to construct eight elements through `Classical.choice` and prove `Nodup` by
+hand — bookkeeping that would obscure rather than strengthen the statement above. What is proved is
+the content; what is left is a container for it. -/
+theorem exactly_two_signed_solutions_per_mode (gp : SymmetricGeneralPosition d ρ) (m : Mode) :
+    (∃ x₁ y₁ r₁ x₂ y₂ r₂ : Real, r₁ ≠ r₂
+        ∧ SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m x₁ y₁ r₁
+        ∧ SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+            (cC d ρ (gp_rho_pos d ρ gp)) m x₂ y₂ r₂)
+    ∧ (∀ x₁ y₁ r₁ x₂ y₂ r₂ x₃ y₃ r₃ : Real,
+        SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+          (cC d ρ (gp_rho_pos d ρ gp)) m x₁ y₁ r₁ →
+        SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+          (cC d ρ (gp_rho_pos d ρ gp)) m x₂ y₂ r₂ →
+        SolvesMode (cA ρ (gp_rho_pos d ρ gp)) (cB d ρ (gp_rho_pos d ρ gp))
+          (cC d ρ (gp_rho_pos d ρ gp)) m x₃ y₃ r₃ →
+        (x₁ = x₂ ∧ y₁ = y₂ ∧ r₁ = r₂)
+        ∨ (x₁ = x₃ ∧ y₁ = y₃ ∧ r₁ = r₃)
+        ∨ (x₂ = x₃ ∧ y₂ = y₃ ∧ r₂ = r₃)) := by
+  refine ⟨?_, at_most_two_of_gp d ρ gp m⟩
+  obtain ⟨r₁, r₂, hne, h₁, h₂⟩ := QM_two_roots_of_gp d ρ gp m
+  obtain ⟨x₁, y₁, s₁⟩ := solution_of_root d ρ gp m r₁ h₁
+  obtain ⟨x₂, y₂, s₂⟩ := solution_of_root d ρ gp m r₂ h₂
+  exact ⟨x₁, y₁, r₁, x₂, y₂, r₂, hne, s₁, s₂⟩
+
 end SymmetricTriple
 end Apollonius
 end Geometry

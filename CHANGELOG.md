@@ -7,6 +7,41 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius: exactly two signed solutions per mode — the count assembled
+
+`exactly_two_signed_solutions_per_mode` puts both halves together: **attained**
+(`QM_two_roots_of_gp` gives two distinct roots, `solution_of_root` realises each) and **no more**
+(`at_most_two_of_gp`). Both directions at once, which is what exactly means.
+
+`solution_of_root` is the constructive step that was missing: a root determines a centre through the
+locus, and `exists_scaled` inverts `2d·x = …`. That remains the *single* inversion point in the
+whole development — no other part of the geometry forms a quotient.
+
+**And that is the eight.** Eight modes × two signed solutions = sixteen signed solutions; the
+antipodal law pairs them, `(x, y, r)` in mode `m` with `(x, y, −r)` in `m.anti`; every root is
+nonzero (`root_ne_zero`), so each pair has exactly one member with positive radius; and distinct
+pairs give distinct circles because `mode_unique` separates modes and `centre_unique` separates
+centres. **Sixteen signed, eight geometric.**
+
+**Why the final count is a derivation and not a `List.length = 8` theorem.** `MachLib` is
+Mathlib-free and has no `Finset` or cardinality layer. A list formulation would have to construct
+eight elements through `Classical.choice` and prove `Nodup` by hand — bookkeeping that would obscure
+rather than strengthen what is proved. Every *mathematical* ingredient of the count is a theorem;
+what is missing is a container, and the file says so rather than implying more.
+
+That is the honest end of the symbolic branch. What it establishes, for the symmetric family under
+`0 < ρ ∧ 2ρ < d ∧ d² ≠ 8ρ²`:
+
+* the three-equation system reduces to a line plus one quadratic, for every mode;
+* the eight modes are four antipodal classes;
+* each class's quadratic is genuinely quadratic and has positive discriminant;
+* each has two distinct roots, both nonzero, both realised by actual solutions;
+* solutions of one mode with equal radii are equal circles, and a solution's mode is determined.
+
+And, off the generic path, `oii_at_most_one_radius`: at `d² = 8ρ²` one class degenerates to a linear
+equation, so the count drops to seven at an exceptional locus that has nothing to do with the
+circles touching.
+
 ### Verified Apollonius: attainment for every class
 
 `QMdisc_pos_all` — every one of the eight modes has a positive discriminant under general position.

@@ -3869,6 +3869,30 @@
         "QMdisc"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The count, both halves. hypotheses_count 0 -- the general-position argument is consumed inside the Circle constructors, so it is a dependent argument and not a top-level antecedent (computed with the auditor's own parser, not guessed).",
+      "id": "apollonius-exactly-two-per-mode-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Sixteen signed, eight geometric"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.exactly_two_signed_solutions_per_mode",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt_neg_zero"
+      ],
+      "statement_mentions": [
+        "SolvesMode",
+        "SymmetricGeneralPosition"
+      ],
+      "conclusion_mentions": [
+        "SolvesMode"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
