@@ -3691,6 +3691,26 @@
         "SolvesMode"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The completeness upper bound. conclusion_mentions the centre coordinates because the claim is about CIRCLES, not radii -- a version concluding only r-equality would be strictly weaker and this pins the difference.",
+      "id": "apollonius-at-most-two-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "three solutions of one mode contain a repeat"
+      ],
+      "module": "MachLib.Geometry.Apollonius.SymmetricTriple",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.at_most_two_solutions_per_mode",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "statement_mentions": [
+        "SolvesMode",
+        "QMlead"
+      ]
     }
   ]
 }

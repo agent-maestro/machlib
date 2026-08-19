@@ -288,6 +288,106 @@ theorem solvesModeM_iff (hd : 0 < d) (hρ : 0 < ρ) (m : Mode) (x y r : Real) :
         mach_mpoly [d, ρ, x, y, r, m.sA.val, m.sC.val] <;> mach_ring
       rw [e, hy]; mach_mpoly [d, ρ, r, m.sA.val, m.sC.val] <;> mach_ring
 
+
+/-! ## The count bound: at most two solutions per mode -/
+
+/-- The leading coefficient of `QM`, as a function of the mode. -/
+noncomputable def QMlead (m : Mode) : Real :=
+  (1 + 1) * ((1 + 1) * ((1 + 1) * ((1 + 1) * (ρ * ρ))))
+    - (1 + 1) * (1 + 1) * ((1 + 1) * (ρ * ρ)) * (m.sA.val * m.sB.val + m.sA.val * m.sC.val)
+    - (1 + 1) * (1 + 1) * (d * d)
+
+/-- **`QM` in coefficient form.**
+
+Proved by exhausting the eight sign assignments rather than by carrying `σ² = 1` through a symbolic
+normalisation. `Sign` is a two-element type, so the case split is finite and each branch becomes a
+polynomial identity with literal `±1` coefficients — which `mach_mpoly` handles, whereas threading
+the square relation through an opaque atom does not. Deciding a finite thing by deciding it. -/
+theorem QM_expand (m : Mode) (r : Real) :
+    QM d ρ m r = QMlead d ρ m * r * r
+      + (-((1 + 1) * (1 + 1) * (d * d * ρ) * (m.sB.val + m.sC.val))) * r
+      + ((1 + 1) * (d * d * (d * d)) - (1 + 1) * (1 + 1) * (d * d * (ρ * ρ))) := by
+  cases m with
+  | mk a b c =>
+    cases a <;> cases b <;> cases c <;>
+      (unfold QM QMlead Sign.val; mach_mpoly [d, ρ, r] <;> mach_ring)
+
+/-- **At most two radii per mode**, whenever the leading coefficient survives. -/
+theorem at_most_two_radii_M (m : Mode) (hlead : QMlead d ρ m ≠ 0) (r s t : Real)
+    (hr : QM d ρ m r = 0) (hs : QM d ρ m s = 0) (ht : QM d ρ m t = 0) :
+    r = s ∨ r = t ∨ s = t := by
+  rw [QM_expand] at hr hs ht
+  exact QuadraticRoots.quadratic_no_three_distinct_roots hlead hr hs ht
+
+/-- **The family's centres are never collinear.** Their determinant is `d²`, and `d > 0`, so the
+general-position hypothesis that `Elimination` derived is automatic here — the family satisfies it by
+construction rather than by assumption. -/
+theorem centresDet_eq (hρ : 0 < ρ) :
+    centresDet (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) = d * d := by
+  unfold centresDet
+  simp only [cA_x, cA_y, cB_x, cB_y, cC_x, cC_y]
+  mach_mpoly [d] <;> mach_ring
+
+theorem not_collinear (hd : 0 < d) (hρ : 0 < ρ) :
+    ¬ CentresCollinear (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) := by
+  unfold CentresCollinear
+  rw [centresDet_eq d ρ hρ]
+  exact ne_of_gt (mul_pos hd hd)
+
+/-- **At most two solutions per mode.**
+
+Three solutions of one mode contain a repeat — as *circles*, not merely as radii. The two halves
+compose exactly as intended: `at_most_two_radii_M` collapses two of the radii, and `centre_unique`
+(which is where non-collinearity does its work) upgrades equal radii to equal centres.
+
+With the antipodal law this is the eight: four classes, at most two signed roots each, each nonzero
+root decoding to one circle. What is *not* proved here is that the bound is attained — that needs
+the discriminant to be positive and the roots nonzero, which is a separate question and the honest
+place for the remaining general-position conditions to be forced. -/
+theorem at_most_two_solutions_per_mode (hd : 0 < d) (hρ : 0 < ρ) (m : Mode)
+    (hlead : QMlead d ρ m ≠ 0)
+    (x₁ y₁ r₁ x₂ y₂ r₂ x₃ y₃ r₃ : Real)
+    (h₁ : SolvesMode (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) m x₁ y₁ r₁)
+    (h₂ : SolvesMode (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) m x₂ y₂ r₂)
+    (h₃ : SolvesMode (cA ρ hρ) (cB d ρ hρ) (cC d ρ hρ) m x₃ y₃ r₃) :
+    (x₁ = x₂ ∧ y₁ = y₂ ∧ r₁ = r₂)
+    ∨ (x₁ = x₃ ∧ y₁ = y₃ ∧ r₁ = r₃)
+    ∨ (x₂ = x₃ ∧ y₂ = y₃ ∧ r₂ = r₃) := by
+  have q₁ := ((solvesModeM_iff d ρ hd hρ m x₁ y₁ r₁).mp h₁).2
+  have q₂ := ((solvesModeM_iff d ρ hd hρ m x₂ y₂ r₂).mp h₂).2
+  have q₃ := ((solvesModeM_iff d ρ hd hρ m x₃ y₃ r₃).mp h₃).2
+  have hnc := not_collinear d ρ hd hρ
+  rcases at_most_two_radii_M d ρ m hlead r₁ r₂ r₃ q₁ q₂ q₃ with h | h | h
+  · subst h
+    obtain ⟨hx, hy⟩ := centre_unique _ _ _ m hnc x₁ y₁ x₂ y₂ r₁ h₁ h₂
+    exact Or.inl ⟨hx, hy, rfl⟩
+  · subst h
+    obtain ⟨hx, hy⟩ := centre_unique _ _ _ m hnc x₁ y₁ x₃ y₃ r₁ h₁ h₃
+    exact Or.inr (Or.inl ⟨hx, hy, rfl⟩)
+  · subst h
+    obtain ⟨hx, hy⟩ := centre_unique _ _ _ m hnc x₂ y₂ x₃ y₃ r₂ h₂ h₃
+    exact Or.inr (Or.inr ⟨hx, hy, rfl⟩)
+
+
+/-- The `(outer,outer,outer)` class's leading coefficient is exactly `−4d²`. -/
+theorem QMlead_ooo_eq :
+    QMlead d ρ ⟨Sign.outer, Sign.outer, Sign.outer⟩ = -((1 + 1) * (1 + 1) * (d * d)) := by
+  unfold QMlead Sign.val; mach_mpoly [d, ρ] <;> mach_ring
+
+/-- **The bound is not vacuous.** For `(outer,outer,outer)` the leading coefficient never vanishes,
+whatever the configuration — so `at_most_two_solutions_per_mode` applies to that class with no side
+condition at all. The other three classes are the ones carrying a genuine degeneracy. -/
+theorem QMlead_ooo_ne (hd : 0 < d) :
+    QMlead d ρ ⟨Sign.outer, Sign.outer, Sign.outer⟩ ≠ 0 := by
+  rw [QMlead_ooo_eq]
+  have hpos : (0 : Real) < (1 + 1) * (1 + 1) * (d * d) :=
+    mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                     (add_pos zero_lt_one_ax zero_lt_one_ax)) (mul_pos hd hd)
+  intro hz
+  refine (ne_of_gt hpos) ?_
+  have e : (1 + 1) * (1 + 1) * (d * d) = -(-((1 + 1) * (1 + 1) * (d * d))) := by mach_ring
+  rw [e, hz]; mach_ring
+
 /-! ## The quadratic in coefficient form, and the root bound instantiated -/
 
 /-- `Q` written as `a·r² + b·r + c`. The leading coefficient `16ρ² − 2d²` is displayed rather than

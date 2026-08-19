@@ -7,6 +7,36 @@ per-release status.
 
 ## [Unreleased] — 2026-08-16
 
+### Verified Apollonius, slice E: at most two solutions per mode
+
+`at_most_two_solutions_per_mode` — three solutions of one mode contain a repeat, **as circles, not
+merely as radii**. This is the completeness upper bound, and it is where the two halves built
+separately finally compose: `at_most_two_radii_M` collapses two of the radii via the degree-2 root
+bound, and `centre_unique` — the theorem non-collinearity was derived for — upgrades equal radii to
+equal centres.
+
+With the antipodal law that is the eight: four classes, at most two signed roots each, each nonzero
+root decoding to one circle.
+
+`QM_expand` puts the quadratic in coefficient form, proved by **exhausting the eight sign
+assignments** rather than by carrying `σ² = 1` through a symbolic normalisation. `Sign` is a
+two-element type, so the split is finite and each branch becomes a polynomial identity with literal
+`±1` coefficients — which `mach_mpoly` closes, whereas threading the square relation through an
+opaque atom does not. The earlier `1 = 0` failure was that same obstacle met the other way round.
+
+`centresDet_eq` shows the family's centres have determinant `d²`, so the general-position hypothesis
+`Elimination` derived is **automatic** here: the family satisfies it by construction rather than by
+assumption, and `not_collinear` discharges it from `d > 0` alone.
+
+`QMlead_ooo_ne` anchors non-vacuity: for `(outer,outer,outer)` the leading coefficient is `−4d²`,
+which never vanishes, so the bound applies to that class with no side condition whatever. The other
+three classes are the ones carrying a genuine degeneracy, and they carry it visibly.
+
+**What is deliberately not claimed.** That the bound is *attained*. That needs the discriminant
+positive and the roots nonzero — a separate question, and the honest place for the remaining
+general-position conditions to be forced rather than assembled. "At most eight" is proved for this
+family; "exactly eight" is not, and the ledger of this work says so.
+
 ### Verified Apollonius, slice D: all eight modes of the family at once
 
 `solvesModeM_iff` generalises the single hand-written class to **every mode simultaneously**, with
