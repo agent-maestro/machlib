@@ -5,6 +5,58 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (o)
+
+### `FQueryLowerBound` — **discharged**. No division-free hypothesis, no restriction at all.
+
+```
+fOcc T = 0  ⟹  T is an eventual rational germ  ⟹  polynomially bounded  ⟹  T ≠ exp
+```
+
+`fQueryLowerBound_holds`. Ledger row **open → discharged**, and `zero_query_lt_one_query_full`
+upgrades the strict separation `C₀ ⊊ C₁` to the whole language.
+
+### `C₀` = eventual rational germs
+
+`ratGerm_of_zero_query` — every `F`-free term, **division included**, agrees from some point on with
+`P(x)/Q(x)` for coefficient lists `P`, `Q` with `Q` nonvanishing there.
+
+The `÷` case is where `pev_dichotomy` earns its keep. Applied to the divisor's *numerator* it splits
+cleanly: eventually zero makes the whole quotient eventually `0` by `div_zero`; eventually nonzero
+puts ordinary fraction algebra back in force. And cancellation under `+` is no longer *predicted*
+from leading-order data — it simply happens inside `padd`/`pmul`, which is the entire reason for
+abandoning envelopes and passing to an exact representation.
+
+The germ is stated **eventually** and deliberately not globally: with totalised division a global
+`T = P/Q` identity is false at the denominator's zeros, and at `+∞` those are all behind us.
+
+### The missing infrastructure, built
+
+Named last commit as the blocker; now present. `abs_one_div`, `abs_div_eq`,
+`one_div_le_one_div_of_le`, `div_one_eq`, `zero_div_eq`, `div_add_div_eq`, `div_sub_div_eq`,
+`div_mul_div_eq`, `div_div_div_eq`, `div_eq_div_of_cross`, `eq_of_mul_eq_mul_right'` — all derived
+from `div_def`, `mul_inv` and `div_zero`, nothing new assumed. Plus `padd`/`pscale`/`pmul`/`psub` on
+coefficient lists with their `pev` homomorphisms.
+
+### `div_zero` is load-bearing, and the footprint proves it
+
+`MachLib.Real.div_zero` appears in the axiom footprint of `ratGerm_of_zero_query`,
+`polyEnvelope_of_ratGerm`, `fQueryLowerBound_holds` and `zero_query_lt_one_query_full` — checked, not
+asserted. Without it, `x ↦ a x / 0` is unconstrained, a model can set `divR y 0 = exp y`, and
+`div var (sub var var)` becomes a **zero-query term computing `exp`**: the statement would be
+*independent*, not merely unproved.
+
+*(A first pass at that check reported `div_zero=False` — the test used list membership against
+`'Real.div_zero'` where the entries read `MachLib.Real.div_zero`. The bug was in the check, not the
+theorem. A verification that can fail closed is worth more than one that reads clean.)*
+
+### Discrimination
+
+`divTower = (x / (x − x)) / (x·x + 1)` — nested division, and the inner denominator vanishes
+*identically*, so the totalised branch is genuinely exercised. Still a rational germ
+(`divTower_ratGerm`), still not `exp` (`divTower_ne_exp`). The previous commit's theorem could not
+state this term, let alone decide it.
+
 ## [Unreleased] — 2026-08-20 (n)
 
 ### The keystone: a polynomial is eventually zero, or eventually dominates `c·xᵏ`
@@ -1699,7 +1751,7 @@ in commit archaeology:
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — |
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
-| `FQueryLowerBound` | **open** | — (division-free case split off below and discharged) |
+| `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

@@ -4363,6 +4363,58 @@
         "Fbasis"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "C0 characterised. conclusion_mentions RatGerm; hypotheses_count 1 pins that the ONLY hypothesis is fOcc T = 0 -- if a divFree hypothesis ever creeps back the count changes and the gate fires.",
+      "id": "germ-c0-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every `F`-free term, **division included**, agrees from some point on with\n`P(x)/Q(x)`"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.ratGerm_of_zero_query",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "RatGerm"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The discharged obligation. hypotheses_count 0 IS the headline -- the previous version carried divFree.",
+      "id": "germ-fquery-discharged-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**discharged**. No division-free hypothesis, no restriction at all."
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.fQueryLowerBound_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FQueryLowerBound"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The strict separation in the full language. Registered separately from the divFree version so neither can be mistaken for the other.",
+      "id": "germ-separation-full-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "upgrades the strict separation `C₀ ⊊ C₁` to the whole language"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.zero_query_lt_one_query_full",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "Fbasis"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

@@ -11343,7 +11343,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 | `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
-| `FQueryLowerBound` | `EMLBasisOverhead` | **open** | — (division-free case split off below and discharged) |
+| `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
