@@ -1176,6 +1176,64 @@ private theorem doubled_ext (e u w k : Real) (he : e * e = (1 + 1))
   rw [sq_collapse] at d1
   exact eq_of_sub_eq d1
 
+/-! ### The bridge, with every numeral abstracted
+
+The previous three attempts wired these circles by rewriting concrete `9`, `28` and `784` into the
+goals, and each one died somewhere different: `mach_ring` evaluating `9` inside `(-9u)²`, `mach_mpoly`
+unfolding `k7` because it is a **definition** rather than a variable, `784` re-forming from `28·28`.
+
+Every one of those is the same failure. So the bridge below contains **no numeral except `1`**: the
+scale `n`, the divisor `dd`, the separation `sep` and the two external constants `S`, `B` are all
+parameters, related only by hypotheses. It is instantiated exactly once, afterwards, where the
+arithmetic is small and concrete. -/
+
+/-- `(-a)² = a²`. -/
+private theorem neg_sq (a : Real) : (-a) * (-a) = a * a := by mach_ring
+
+private theorem mul_ne_zero' {a b : Real} (ha : a ≠ 0) (hb : b ≠ 0) : a * b ≠ 0 := fun h =>
+  hb (QuadraticRoots.right_of_mul_eq_zero ha h)
+
+set_option maxHeartbeats 800000 in
+/-- **The three tangencies of a doubled-class circle, from the two scaled identities.**
+
+Reads: if `dd·x = −nu`, `dd·r = dd + nw`, `dd·sep = S` and `dd + dd = B`, then the internal identity
+`2(nu)² = (nw)²` and the external identity `(nu+S)² + (nu)² = (B+nw)²` are exactly the three
+tangencies. Nothing here knows what any of the letters are. -/
+theorem doubled_bridge (n dd sep S B x r u w : Real) (hdne : dd ≠ 0)
+    (hx : dd * x = -(n * u)) (hr : dd * r = dd + n * w)
+    (hsep : dd * sep = S) (hB : dd + dd = B)
+    (hint : (1 + 1) * ((n * u) * (n * u)) = (n * w) * (n * w))
+    (hext : (n * u + S) * (n * u + S) + (n * u) * (n * u) = (B + n * w) * (B + n * w)) :
+    ((x - 0) * (x - 0) + (x - 0) * (x - 0) = (r - 1) * (r - 1))
+    ∧ ((x - sep) * (x - sep) + (x - 0) * (x - 0) = (r + 1) * (r + 1))
+    ∧ ((x - 0) * (x - 0) + (x - sep) * (x - sep) = (r + 1) * (r + 1)) := by
+  have hne := mul_ne_zero' hdne hdne
+  have rr : dd * dd * ((r + 1) * (r + 1)) = (dd * r + dd) * (dd * r + dd) := by
+    mach_mpoly [dd, r]
+  have eB : (dd + n * w + dd) * (dd + n * w + dd)
+      = (dd + dd + n * w) * (dd + dd + n * w) := by mach_ring
+  have eS : (-(n * u) - S) * (-(n * u) - S) = (n * u + S) * (n * u + S) := by mach_ring
+  refine ⟨?_, ?_, ?_⟩
+  · refine QuadraticRoots.mul_left_cancel hne ?_
+    have l : dd * dd * ((x - 0) * (x - 0) + (x - 0) * (x - 0))
+        = (1 + 1) * ((dd * x) * (dd * x)) := by mach_mpoly [dd, x]
+    have r1 : dd * dd * ((r - 1) * (r - 1)) = (dd * r - dd) * (dd * r - dd) := by
+      mach_mpoly [dd, r]
+    rw [l, r1, hx, hr, neg_sq]
+    have e2 : (dd + n * w - dd) * (dd + n * w - dd) = (n * w) * (n * w) := by
+      mach_mpoly [dd, n, w]
+    rw [e2]; exact hint
+  · refine QuadraticRoots.mul_left_cancel hne ?_
+    have l : dd * dd * ((x - sep) * (x - sep) + (x - 0) * (x - 0))
+        = (dd * x - dd * sep) * (dd * x - dd * sep) + (dd * x) * (dd * x) := by
+      mach_mpoly [dd, x, sep]
+    rw [l, rr, hx, hr, hsep, eS, neg_sq, eB, hB]; exact hext
+  · refine QuadraticRoots.mul_left_cancel hne ?_
+    have l : dd * dd * ((x - 0) * (x - 0) + (x - sep) * (x - sep))
+        = (dd * x - dd * sep) * (dd * x - dd * sep) + (dd * x) * (dd * x) := by
+      mach_mpoly [dd, x, sep]
+    rw [l, rr, hx, hr, hsep, eS, neg_sq, eB, hB]; exact hext
+
 /-! ### The doubled `(inner,outer,outer)` class — the last two, and the full derivation
 
 `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked in Lean.** The mathematics below is
