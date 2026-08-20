@@ -856,6 +856,31 @@ def self_test() -> int:
           f"second. Specimens drawn\n           from HISTORICAL faults, not invented ones — they "
           f"prove the check catches what got past me.{RST}")
 
+    print(f"{YELLOW}{BOLD}[self-test] canary 13: footprint matching must DISCRIMINATE, not just detect …{RST}")
+    pos = axiom_footprint("MachLib.EMLRationalGerm", "MachLib.fQueryLowerBound_holds")
+    neg = axiom_footprint("MachLib.EMLRationalGerm", "MachLib.fDepth_toFTermFast")
+    if not resolved(pos) or not resolved(neg):
+        print(f"{RED}[self-test] BROKEN: a control footprint did not resolve.{RST}")
+        return 1
+    needle = "MachLib.Real.div_zero"
+    if needle not in pos:
+        print(f"{RED}[self-test] FAILED: POSITIVE control — fQueryLowerBound_holds must rest on "
+              f"{needle}; it is the totalised-division branch of the germ compilation.{RST}")
+        return 1
+    if needle in neg:
+        print(f"{RED}[self-test] FAILED: NEGATIVE control — fDepth_toFTermFast is purely "
+              f"combinatorial and must NOT rest on {needle}. The matcher is not discriminating: "
+              f"it would report every theorem as resting on everything.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 13 fires BOTH ways: {needle} PRESENT in "
+          f"fQueryLowerBound_holds and ABSENT from fDepth_toFTermFast. ✓{RST}")
+    print(f"{DIM}           Added 2026-08-20 after a hand-rolled footprint check reported "
+          f"`div_zero=False` for four\n           theorems that all rest on it — the test compared "
+          f"list ELEMENTS against a suffix. A checker\n           that can only fail OPEN reads "
+          f"clean when it is broken, and the same bug in sorryAx detection\n           would "
+          f"certify every theorem in the corpus. The canary below tests DETECTION; this one tests "
+          f"\n           NON-detection, which is the direction that fails silently.{RST}")
+
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
     text = print_axioms_output(canary_src)

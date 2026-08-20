@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (p)
+
+### The one-query normal form, in two layers
+
+**Layer 1 is exact and syntactic.** `one_query_decompose` — a term with exactly one `F` node is an
+`F`-free one-hole field context applied to `F` of an `F`-free argument:
+
+```
+T(x) = C(x, F(A(x)))      at EVERY real point
+```
+
+No asymptotics, no rational normalisation, no denominator condition. `FCtx` has **no `F`
+constructor**, so "the context is `F`-free" is a fact about the type rather than a predicate to carry
+around, and `holes C = 1` is proved rather than assumed.
+
+The relation is named (`CtxApplies`, `CtxAppliesEv`) rather than written inline: Lean prints
+`C.eval x y` in dot notation, so an inline conclusion leaves no token a claim can bind to. The claim
+auditor rejected the first attempt for exactly that — the same repair `FRepresentable` needed.
+
+**Layer 2 is eventual.** `one_query_normal_form` feeds `ratGerm_of_zero_query` into the argument:
+`T(x) = C(x, F(P(x)/Q(x)))` from some point on.
+
+### The outer context is deliberately *not* collapsed to a quotient
+
+At level 0 a denominator is a polynomial in `x` and `pev_dichotomy` decides it. At level 1 the
+denominators look like `Q(x, F(S(x)))`, and `pev_dichotomy` says nothing about those. Writing `C` as
+a single `P/Q` "eventually" would silently assume the very dichotomy that is the *next* theorem — so
+the context stays a context.
+
+`OneQueryDichotomy` is registered as **open** (ledger 13 rows → **14**): is a one-query context
+eventually zero, or eventually nonzero? Expanding `Σⱼ qⱼ(x)·F(S)ʲ` asks whether the surviving
+component dominates or whether exact cancellation persists — the same question `C₀` faced, one level
+up. Normal forms and lower bounds at query level `k` look to be governed by one cancellation theorem
+at level `k`.
+
+### Canary 13: the footprint matcher must fail *closed*
+
+The `sorryAx` canary has always tested **detection** — a `by sorry` theorem must be caught. It never
+tested **non-detection**, which is the direction that fails silently.
+
+Canary 13 tests both: `MachLib.Real.div_zero` must be **present** in `fQueryLowerBound_holds`'s
+footprint (the totalised-division branch) and **absent** from `fDepth_toFTermFast`'s (purely
+combinatorial). Both convicted, on a copy of the gate:
+
+| perturbation | control that fired |
+| --- | --- |
+| needle `MachLib.RealX.div_zero` (wrong namespace — the historic bug's shape) | **positive** |
+| needle `propext` (matches everything) | **negative** |
+
+Added after a hand-rolled check reported `div_zero=False` for four theorems that all rest on it — it
+compared list *elements* against a suffix. A checker that can only fail open reads clean when broken,
+and the same bug in `sorryAx` detection would certify the whole corpus.
+
+*Process note: the first convict run mutated the checked-in gate and was killed mid-run, leaving
+`needle = "propext"` in the working tree. Convict on a **copy**; never on the live gate.*
+
 ## [Unreleased] — 2026-08-20 (o)
 
 ### `FQueryLowerBound` — **discharged**. No division-free hypothesis, no restriction at all.
@@ -1752,6 +1808,7 @@ in commit archaeology:
 | `TowerReducesToSign` | **open** | — |
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
+| `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

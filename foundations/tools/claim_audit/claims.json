@@ -4415,6 +4415,41 @@
         "Fbasis"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Layer 1. hypotheses_count 1 pins that fOcc T = 1 is the ONLY hypothesis -- the decomposition is exact and pointwise, not eventual.",
+      "id": "onequery-decompose-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "at EVERY real point"
+      ],
+      "module": "MachLib.EMLOneQueryForm",
+      "theorem": "MachLib.one_query_decompose",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "CtxApplies"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "Layer 2. conclusion_mentions FCtx.eval rather than any quotient -- binds the claim to the context NOT being collapsed, which is the whole point of the two-layer split.",
+      "id": "onequery-normal-form-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`T(x) = C(x, F(P(x)/Q(x)))` from some point on"
+      ],
+      "module": "MachLib.EMLOneQueryForm",
+      "theorem": "MachLib.one_query_normal_form",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "CtxAppliesEv",
+        "pev"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
