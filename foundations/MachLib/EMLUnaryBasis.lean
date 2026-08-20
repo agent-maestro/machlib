@@ -119,4 +119,70 @@ theorem unary_decoder (x : Real) (hx : 0 < x) :
   have he := decoder_exp x hx
   exact ⟨he, by rw [he]; exact decoder_log x⟩
 
+
+/-! ## The shallow dilation calculus
+
+`Δₙ f(x) = f(n x) − f(x)`. Applied to the five closed forms of depth `≤ 1`
+(`depth_le_one_classification`) it produces a **rigid signature**:
+
+| form | `Δₙ` |
+| --- | --- |
+| `α` | `0` |
+| `x` | `(n − 1)·x` |
+| `c − log x` | `−log n` |
+| `exp x − d` | `exp(n x) − exp x` |
+| `exp x − log x` | `exp(n x) − exp x − log n` |
+
+Five syntactic classes, five distinct shapes — and the separation is *exact*, not asymptotic. Note
+that `α` and `c − log x` both give something constant in `x`, but the first gives `0` for every `n`
+while the second gives `−log n ≠ 0` as soon as `n > 1`. So a single non-trivial scale already tells
+them apart.
+
+**This is a different species of invariant from everything else in the corpus.** Every depth
+argument so far has the shape *syntax ⟹ growth envelope*, and concludes by comparing magnitudes.
+This one has the shape *syntax ⟹ exact annihilation identity*, and concludes by comparing algebraic
+form. Whether it yields exclusions is open; that it is a different mechanism is not.
+
+**And it has a proved blind spot** — see `dilation_blind_to_translation` below. -/
+
+/-- **The dilation calculus at depth ≤ 1.** Five forms in, five shapes out. -/
+theorem dilation_depth_le_one (t : EMLTree) (ht : t.depth ≤ 1) (n : Real) (hn : 0 < n) :
+    (∀ x : Real, 0 < x → t.eval (n * x) - t.eval x = 0)
+    ∨ (∀ x : Real, 0 < x → t.eval (n * x) - t.eval x = (n - 1) * x)
+    ∨ (∀ x : Real, 0 < x → t.eval (n * x) - t.eval x = -log n)
+    ∨ (∀ x : Real, 0 < x → t.eval (n * x) - t.eval x = exp (n * x) - exp x)
+    ∨ (∀ x : Real, 0 < x → t.eval (n * x) - t.eval x = exp (n * x) - exp x - log n) := by
+  rcases depth_le_one_classification t ht with ⟨α, hα⟩ | hv | ⟨c, _, hc⟩ | ⟨d, hd⟩ | hcl
+  · refine Or.inl ?_
+    intro x hx
+    rw [hα (n * x) (mul_pos hn hx), hα x hx]; mach_ring
+  · refine Or.inr (Or.inl ?_)
+    intro x hx
+    rw [hv (n * x) (mul_pos hn hx), hv x hx]; mach_mpoly [n, x]
+  · refine Or.inr (Or.inr (Or.inl ?_))
+    intro x hx
+    rw [hc (n * x) (mul_pos hn hx), hc x hx, log_mul hn hx]
+    mach_mpoly [c, log n, log x]
+  · refine Or.inr (Or.inr (Or.inr (Or.inl ?_)))
+    intro x hx
+    rw [hd (n * x) (mul_pos hn hx), hd x hx]
+    mach_mpoly [exp (n * x), exp x, d]
+  · refine Or.inr (Or.inr (Or.inr (Or.inr ?_)))
+    intro x hx
+    rw [hcl (n * x) (mul_pos hn hx), hcl x hx, log_mul hn hx]
+    mach_mpoly [exp (n * x), exp x, log n, log x]
+
+/-- **The dilation operator is blind to translation.**
+
+`Δₙ (x + c) = (n − 1)·x`, with **no dependence on `c` whatsoever**. So the new instrument cannot
+distinguish `x + c` from `x`, and in particular cannot settle the negative-translation obligation
+`NegativeTranslationGrowingLeft` — the very thing it might have been hoped to reach.
+
+Recorded as a theorem rather than a remark because a tool's blind spot should be proved, not
+suspected: dilation and the mirror band are different research threads and this says so formally. -/
+theorem dilation_blind_to_translation (c n x : Real) :
+    ((n * x) + c) - (x + c) = (n - 1) * x := by
+  mach_mpoly [n, x, c]
+
+
 end MachLib

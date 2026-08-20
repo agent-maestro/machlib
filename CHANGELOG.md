@@ -5,6 +5,32 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (c)
+
+### Dilation calculus at depth ≤ 1, and a proved blind spot
+
+`dilation_depth_le_one`: `Δₙ f(x) = f(nx) − f(x)` on the five closed forms gives five distinct
+shapes — `0`, `(n−1)x`, `−log n`, `exp(nx) − exp x`, `exp(nx) − exp x − log n`. The separation is
+**exact**, not asymptotic, and `α` versus `c − log x` is already resolved by one non-trivial scale
+(`0` for every `n`, versus `−log n ≠ 0`).
+
+Every depth argument in the corpus so far has the shape *syntax ⟹ growth envelope* and concludes by
+comparing magnitudes. This has the shape *syntax ⟹ exact annihilation identity* and concludes by
+comparing algebraic form. Whether it yields exclusions is open; that it is a different mechanism is
+not.
+
+`dilation_blind_to_translation`: **`Δₙ(x + c) = (n−1)x`, with no dependence on `c`.** The new
+instrument cannot distinguish `x + c` from `x`, so it cannot reach the negative-translation
+obligation. Recorded as a theorem because a tool's blind spot should be proved rather than suspected
+— it keeps two research threads from being conflated later.
+
+### Obligation registered: `NegativeTranslationGrowingLeft`
+
+Deliberately narrow. Not "negative translations" — one branch of one case: a depth-3 node for
+`x + c`, `c < 0`, where the left exponential already dominates `exp x` and the two sides cancel. The
+bounded-left branch is closed. Ledger now carries **11 rows**; the gate fired correctly on the
+first attempt, when the Lean table had been updated but the CHANGELOG mirror had not.
+
 ## [Unreleased] — 2026-08-20 (b)
 
 ### A unary decoder for `exp` and `log` — `MachLib/EMLUnaryBasis.lean` (new)
@@ -1065,6 +1091,7 @@ in commit archaeology:
 | `BoundedEmlCellApproach` | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — |
+| `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger

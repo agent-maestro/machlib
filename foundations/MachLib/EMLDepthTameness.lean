@@ -4930,6 +4930,24 @@ theorem x_plus_one_depth_exact_four :
   obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
   exact ⟨t, htdepth, fun x _ => hteval x⟩
 
+/-- **Obligation: the growing-left branch of the negative translation.**
+
+Narrow deliberately. What is open is *not* "negative translations" — it is one branch of one case:
+a depth-3 node representing `x + c` with `c < 0`, where the left child's exponential already
+dominates `exp x`, so `exp (A x)` and `log (B x)` are both near `exp x` and **cancel**.
+
+The bounded-left branch is closed (`mirrorBand_not_depth_three_bounded_left`). The split is
+structural rather than an artefact of the proof: `log x` is reachable at depth 3 through *both*
+branches — via `A = const 0`, and via `A = var` with `B` evaluating to `exp (exp x − log x)` — so the
+super-logarithmic condition has to cut both, and only the bounded one cuts cheaply.
+
+Stated as a Prop so the shorthand "negative translation is almost done" cannot form. It is the same
+species of difficulty as `ExpExpGapBelow` and `BoundedCellApproach`, which took an arc each. -/
+def NegativeTranslationGrowingLeft : Prop :=
+  ∀ c : Real, c < 0 → ∀ A B : EMLTree, A.depth ≤ 2 → B.depth ≤ 2 →
+    (∃ T : Real, ∀ x : Real, T ≤ x → exp x ≤ exp (A.eval x)) →
+    (∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = x + c) → False
+
 /-! ### The mirror band
 
 `IntermediateBand` excludes targets that are unbounded, sub-exponential, superlinear and
@@ -11324,6 +11342,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `BoundedEmlCellApproach` | here | **discharged** | `boundedEmlCellApproach_holds` |
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
+| `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
 `exp a − log b` and how small it can be. The second is now a theorem, so what is left of that pair is
