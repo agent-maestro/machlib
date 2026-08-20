@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (b)
+
+### A unary decoder for `exp` and `log` — `MachLib/EMLUnaryBasis.lean` (new)
+
+`F(x) = eml(x, 1/x) = exp x + log x` on `(0, ∞)`. The **multiplicative finite difference**
+
+```
+    Δₙ F(x) = F(n·x) − F(x) − log n  =  exp(n x) − exp x
+```
+
+annihilates the logarithm **exactly** — no error term, no ray, no hypothesis beyond positivity —
+because `log` turns dilation into translation and the `− log n` removes what is left.
+
+Two scales then recover everything (`dilation_diff`, `decoder_exp`, `decoder_log`,
+`unary_decoder`):
+
+```
+    Δ₃F / Δ₂F − 1 = exp x           F(x) − exp x = log x
+```
+
+**Why three scales.** With `Δ₂` alone, `y = exp x` satisfies the quadratic `y² − y = Δ₂` and is
+pinned only up to a root choice; no *rational* expression in `Δ₂` isolates it. The third scale makes
+recovery rational because `y³ − y = (y² − y)(y + 1)` factors through the second. Minimality — for
+which finite `S ⊆ ℕ` is `exp x` rationally recoverable from `{F(nx) : n ∈ S}` — is **open**, and is a
+clean algebra question about `yⁿ − y`.
+
+### What this is not
+
+- **Not a cheap tree.** `F`'s right child computes `1/x`, and `d(1/x) = 4`, so `F` is not a
+  low-depth object. The theorem is about the *functions*.
+- **Not yet a basis.** Recovering the two primitives is weaker than recovering every `eml` node from
+  unary `F` data. That is the next question and it is not addressed here.
+- **Not a new lower-bound instrument yet.** The dilation operator annihilating `log` exactly is
+  suggestive — every depth argument so far has compared growth envelopes, and this compares
+  *structure* — but no exclusion has been derived from it.
+
+The identity was supplied rather than discovered here; it was re-derived and checked numerically
+before formalising, since the original derivation was not available to this session.
+
 ## [Unreleased] — 2026-08-20
 
 ### The mirror band — half proved, and the other half is the cancellation problem

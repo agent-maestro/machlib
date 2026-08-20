@@ -332,6 +332,7 @@ import MachLib.EMLDepth2InvX
 import MachLib.EMLNetlistDepth
 import MachLib.EMLCertifiedSynthesis
 import MachLib.EMLDepthTameness
+import MachLib.EMLUnaryBasis
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree
 import MachLib.EMLExceptionalLocus
