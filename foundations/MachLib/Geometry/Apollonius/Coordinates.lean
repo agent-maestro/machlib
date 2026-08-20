@@ -516,6 +516,278 @@ theorem solIOI_tangent :
 theorem solIIO_tangent :
     TangentInt solIIO A ∧ TangentInt solIIO B ∧ TangentExt solIIO C := sq21_iio kap kap_sq
 
+/-! ## The exceptional locus, `d = 2√2`, `ρ = 1`
+
+The exhibit's **default** view: the configuration where one class degenerates from quadratic to
+linear and the count drops from eight to seven. Its coordinates involve `√2`, `√3` and `√6 = √2·√3`,
+so two irrationals appear — and `√6` is not a third atom, it is the product of the first two, which
+is what keeps the identities small.
+
+Same discipline as the flagship: irrationals are **variables** with a defining square, never
+definitions, so the normaliser sees atoms.
+-/
+
+/-- `√3`. -/
+noncomputable def rt3 : Real := sqrt (1 + 1 + 1)
+
+theorem rt3_sq : rt3 * rt3 = (1 + 1 + 1) :=
+  sqrt_sq_nonneg _ (le_of_lt (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax))
+
+theorem rt3_pos : 0 < rt3 := by
+  rcases lt_total 0 rt3 with h | h | h
+  · exact h
+  · exfalso
+    have hq := rt3_sq
+    rw [← h] at hq
+    have e : (0 : Real) * 0 = 0 := by mach_ring
+    rw [e] at hq
+    have pos : (0 : Real) < (1 + 1 + 1) :=
+      add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
+    rw [← hq] at pos; exact lt_irrefl_ax _ pos
+  · exact absurd h (fun hc => lt_irrefl_ax _ (lt_of_lt_of_le hc (sqrt_nonneg _)))
+
+/-- `A = (0,0,1)` of the locus triple. -/ noncomputable def Alo : Circle := ⟨0, 0, 1, h1pos⟩
+/-- `B = (2√2,0,1)`. -/ noncomputable def Blo : Circle := ⟨(1 + 1) * rt2, 0, 1, h1pos⟩
+/-- `C = (0,2√2,1)`. -/ noncomputable def Clo : Circle := ⟨0, (1 + 1) * rt2, 1, h1pos⟩
+
+/-- Residual `2s² − 4`, zero when `s² = 2`. Solutions 1 and 7. -/
+private theorem zero_of_s2 {s u : Real} (hs : s * s = (1 + 1))
+    (e : u = (1 + 1) * (s * s) - (1 + 1) * (1 + 1)) : u = 0 := by
+  rw [hs] at e; rw [e]; mach_ring
+
+/-- Residual `2s² + u² − s²u² − 1`, zero when `s² = 2` and `u² = 3`. All four `√6` solutions,
+all three tangencies each — twelve identities, one shape. -/
+private theorem zero_of_su {s u w : Real} (hs : s * s = (1 + 1)) (hu : u * u = (1 + 1 + 1))
+    (e : w = (1 + 1) * (s * s) + u * u - (s * s) * (u * u) - 1) : w = 0 := by
+  rw [hs, hu] at e; rw [e]; mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 1: `r = 1`, centre `(√2, √2)`, externally tangent to all three. -/
+private theorem locus_ooo (s : Real) (hs : s * s = (1 + 1)) :
+    ((s - 0) * (s - 0) + (s - 0) * (s - 0)
+      = (1 + 1) * (1 + 1))
+    ∧
+    ((s - (1 + 1) * s) * (s - (1 + 1) * s) + (s - 0) * (s - 0)
+      = (1 + 1) * (1 + 1))
+    ∧
+    ((s - 0) * (s - 0) + (s - (1 + 1) * s) * (s - (1 + 1) * s)
+      = (1 + 1) * (1 + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_s2 hs ?_) <;>
+    mach_mpoly [s]
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 7: `r = 3`, centre `(√2, √2)`, internally tangent to all three. -/
+private theorem locus_iii (s : Real) (hs : s * s = (1 + 1)) :
+    ((s - 0) * (s - 0) + (s - 0) * (s - 0)
+      = ((1 + 1 + 1) - 1) * ((1 + 1 + 1) - 1))
+    ∧
+    ((s - (1 + 1) * s) * (s - (1 + 1) * s) + (s - 0) * (s - 0)
+      = ((1 + 1 + 1) - 1) * ((1 + 1 + 1) - 1))
+    ∧
+    ((s - 0) * (s - 0) + (s - (1 + 1) * s) * (s - (1 + 1) * s)
+      = ((1 + 1 + 1) - 1) * ((1 + 1 + 1) - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_s2 hs ?_) <;>
+    mach_mpoly [s]
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 2: `r = √6`, centre `(√2, √2 + √3)`. -/
+private theorem locus_ooi (s u : Real) (hs : s * s = (1 + 1)) (hu : u * u = (1 + 1 + 1)) :
+    ((s - 0) * (s - 0) + (s + u - 0) * (s + u - 0)
+      = (s * u + 1) * (s * u + 1))
+    ∧
+    ((s - (1 + 1) * s) * (s - (1 + 1) * s) + (s + u - 0) * (s + u - 0)
+      = (s * u + 1) * (s * u + 1))
+    ∧
+    ((s - 0) * (s - 0) + (s + u - (1 + 1) * s) * (s + u - (1 + 1) * s)
+      = (s * u - 1) * (s * u - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_su hs hu ?_) <;>
+    mach_mpoly [s, u]
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 3: `r = √6`, centre `(√2 + √3, √2)`. -/
+private theorem locus_oio (s u : Real) (hs : s * s = (1 + 1)) (hu : u * u = (1 + 1 + 1)) :
+    ((s + u - 0) * (s + u - 0) + (s - 0) * (s - 0)
+      = (s * u + 1) * (s * u + 1))
+    ∧
+    ((s + u - (1 + 1) * s) * (s + u - (1 + 1) * s) + (s - 0) * (s - 0)
+      = (s * u - 1) * (s * u - 1))
+    ∧
+    ((s + u - 0) * (s + u - 0) + (s - (1 + 1) * s) * (s - (1 + 1) * s)
+      = (s * u + 1) * (s * u + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_su hs hu ?_) <;>
+    mach_mpoly [s, u]
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 5: `r = √6`, centre `(√2 − √3, √2)`. -/
+private theorem locus_ioi (s u : Real) (hs : s * s = (1 + 1)) (hu : u * u = (1 + 1 + 1)) :
+    ((s - u - 0) * (s - u - 0) + (s - 0) * (s - 0)
+      = (s * u - 1) * (s * u - 1))
+    ∧
+    ((s - u - (1 + 1) * s) * (s - u - (1 + 1) * s) + (s - 0) * (s - 0)
+      = (s * u + 1) * (s * u + 1))
+    ∧
+    ((s - u - 0) * (s - u - 0) + (s - (1 + 1) * s) * (s - (1 + 1) * s)
+      = (s * u - 1) * (s * u - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_su hs hu ?_) <;>
+    mach_mpoly [s, u]
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 6: `r = √6`, centre `(√2, √2 − √3)`. -/
+private theorem locus_iio (s u : Real) (hs : s * s = (1 + 1)) (hu : u * u = (1 + 1 + 1)) :
+    ((s - 0) * (s - 0) + (s - u - 0) * (s - u - 0)
+      = (s * u - 1) * (s * u - 1))
+    ∧
+    ((s - (1 + 1) * s) * (s - (1 + 1) * s) + (s - u - 0) * (s - u - 0)
+      = (s * u - 1) * (s * u - 1))
+    ∧
+    ((s - 0) * (s - 0) + (s - u - (1 + 1) * s) * (s - u - (1 + 1) * s)
+      = (s * u + 1) * (s * u + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_su hs hu ?_) <;>
+    mach_mpoly [s, u]
+
+private theorem four_ne : (((1 + 1) * (1 + 1)) : Real) ≠ 0 :=
+  ne_of_gt (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                    (add_pos zero_lt_one_ax zero_lt_one_ax))
+
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8000 in
+/-- Solution 4 of the locus: `r = 3/2`, centre `(√2/4, √2/4)` — the single circle of the class that
+degenerates to linear.
+
+Both a denominator **and** a rational radius, so both are compressed: `q = √2/4` with `8q² = 1`, and
+`g = 3/2` with `2g = 3`. The separation enters as its own variable `dd` with `dd = 8q`, because the
+consumer's circle carries it as `2√2` and those are equal without being syntactically equal.
+
+The identity is multiplied by `4` — the smallest factor clearing both denominators — and the
+squaring is split into two steps so no single `mach_mpoly` call has to distribute `(q − 8q)²` and
+reconcile `200` in one go. -/
+private theorem locus_ioo (q g dd : Real)
+    (hq : (1 + 1) * (1 + 1) * (1 + 1) * (q * q) = 1) (hg : (1 + 1) * g = (1 + 1 + 1))
+    (hd : dd = (1 + 1) * (1 + 1) * (1 + 1) * q) :
+    ((q - 0) * (q - 0) + (q - 0) * (q - 0) = (g - 1) * (g - 1))
+    ∧
+    ((q - dd) * (q - dd) + (q - 0) * (q - 0) = (g + 1) * (g + 1))
+    ∧
+    ((q - 0) * (q - 0) + (q - dd) * (q - dd) = (g + 1) * (g + 1)) := by
+  subst hd
+  have rg : ((1 + 1) * (1 + 1)) * ((g + 1) * (g + 1)) = ((1 + 1) * g + (1 + 1)) * ((1 + 1) * g + (1 + 1)) := by mach_mpoly [g]
+  refine ⟨?_, ?_, ?_⟩
+  · refine QuadraticRoots.mul_left_cancel four_ne ?_
+    have l : ((1 + 1) * (1 + 1)) * ((q - 0) * (q - 0) + (q - 0) * (q - 0))
+        = (1 + 1) * (1 + 1) * (1 + 1) * (q * q) := by mach_mpoly [q]
+    have r : ((1 + 1) * (1 + 1)) * ((g - 1) * (g - 1)) = ((1 + 1) * g - (1 + 1)) * ((1 + 1) * g - (1 + 1)) := by mach_mpoly [g]
+    rw [l, r, hq, hg]; mach_ring
+  · refine QuadraticRoots.mul_left_cancel four_ne ?_
+    have step : (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) + (q - 0) * (q - 0)
+        = (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) + (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) := by mach_mpoly [q]
+    have l : ((1 + 1) * (1 + 1)) * ((q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) + (q - 0) * (q - 0))
+        = ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (q * q)) := by
+      rw [step]; mach_mpoly [q]
+    rw [l, rg, hq, hg]; mach_ring
+  · refine QuadraticRoots.mul_left_cancel four_ne ?_
+    have step : (q - 0) * (q - 0) + (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q))
+        = (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) + (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) * (q * q) := by mach_mpoly [q]
+    have l : ((1 + 1) * (1 + 1)) * ((q - 0) * (q - 0) + (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)) * (q - ((1 + 1) * (1 + 1) * (1 + 1) * q)))
+        = ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (q * q)) := by
+      rw [step]; mach_mpoly [q]
+    rw [l, rg, hq, hg]; mach_ring
+
+/-! ### The locus solutions, as circles -/
+
+private theorem four_ne' : (((1 + 1) * (1 + 1)) : Real) ≠ 0 := four_ne
+
+/-- `4 · (a/4) = a`. -/
+private theorem four_mul_quarter (a : Real) : ((1 + 1) * (1 + 1)) * (a / ((1 + 1) * (1 + 1))) = a := by
+  rw [div_def a ((1 + 1) * (1 + 1)) four_ne']
+  have hm := mul_inv ((((1 + 1) * (1 + 1))) : Real) four_ne'
+  have e : ((1 + 1) * (1 + 1)) * (a * (1 / ((1 + 1) * (1 + 1)))) = a * (((1 + 1) * (1 + 1)) * (1 / ((1 + 1) * (1 + 1)))) := by
+    mach_mpoly [a, (1 : Real) / ((1 + 1) * (1 + 1))]
+  rw [e, hm]; mach_ring
+
+/-- `√2/4`. -/
+noncomputable def qQ : Real := rt2 / ((1 + 1) * (1 + 1))
+theorem four_mul_qQ : ((1 + 1) * (1 + 1)) * qQ = rt2 := four_mul_quarter rt2
+
+/-- **`8q² = 1`**. -/
+theorem qQ_sq : (1 + 1) * (1 + 1) * (1 + 1) * (qQ * qQ) = 1 := by
+  refine QuadraticRoots.mul_left_cancel (two_ne) ?_
+  have e : (1 + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (qQ * qQ)) = ((1 + 1) * (1 + 1) * qQ) * ((1 + 1) * (1 + 1) * qQ) := by mach_mpoly [qQ]
+  rw [e, four_mul_qQ, rt2_sq]; mach_ring
+
+/-- The locus separation `d = 2√2` is `8·(√2/4)`. -/
+theorem d_eq_eight_qQ : ((1 + 1) * rt2 : Real) = (1 + 1) * (1 + 1) * (1 + 1) * qQ := by
+  have e : ((1 + 1) * (1 + 1) * (1 + 1) : Real) * qQ = (1 + 1) * (((1 + 1) * (1 + 1)) * qQ) := by mach_ring
+  rw [e, four_mul_qQ]
+
+/-- `3/2`. -/
+noncomputable def gH : Real := (1 + 1 + 1) / (1 + 1)
+theorem two_mul_gH : (1 + 1) * gH = (1 + 1 + 1) := two_mul_half (1 + 1 + 1)
+
+theorem gH_pos : 0 < gH := by
+  rcases lt_total 0 gH with h | h | h
+  · exact h
+  · exfalso
+    have e : (1 + 1) * gH = 0 := by rw [← h]; mach_ring
+    rw [two_mul_gH] at e
+    have pos : (0 : Real) < (1 + 1 + 1) :=
+      add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
+    rw [e] at pos; exact lt_irrefl_ax _ pos
+  · exfalso
+    have hle : (1 + 1) * gH ≤ (1 + 1) * 0 :=
+      mul_le_mul_of_nonneg_left (le_of_lt h) (le_of_lt (add_pos zero_lt_one_ax zero_lt_one_ax))
+    rw [two_mul_gH] at hle
+    have e : ((1 + 1) : Real) * 0 = 0 := by mach_ring
+    rw [e] at hle
+    have pos : (0 : Real) < (1 + 1 + 1) :=
+      add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
+    exact lt_irrefl_ax _ (lt_of_lt_of_le pos hle)
+
+private theorem three_pos : (0 : Real) < (1 + 1 + 1) :=
+  add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
+private theorem rt6_pos : (0 : Real) < rt2 * rt3 :=
+  mul_pos (lt_trans_ax zero_lt_one_ax one_lt_rt2) rt3_pos
+
+/-- Solution 1 of the locus: `r = 1`, centre `(√2, √2)`. -/
+noncomputable def loOOO : Circle := ⟨rt2, rt2, 1, zero_lt_one_ax⟩
+theorem loOOO_tangent : TangentExt loOOO Alo ∧ TangentExt loOOO Blo ∧ TangentExt loOOO Clo :=
+  locus_ooo rt2 rt2_sq
+
+/-- Solution 7: `r = 3`, centre `(√2, √2)`. -/
+noncomputable def loIII : Circle := ⟨rt2, rt2, (1 + 1 + 1), three_pos⟩
+theorem loIII_tangent : TangentInt loIII Alo ∧ TangentInt loIII Blo ∧ TangentInt loIII Clo :=
+  locus_iii rt2 rt2_sq
+
+/-- Solution 2: `r = √6`, centre `(√2, √2 + √3)`. -/
+noncomputable def loOOI : Circle := ⟨rt2, rt2 + rt3, rt2 * rt3, rt6_pos⟩
+theorem loOOI_tangent : TangentExt loOOI Alo ∧ TangentExt loOOI Blo ∧ TangentInt loOOI Clo :=
+  locus_ooi rt2 rt3 rt2_sq rt3_sq
+
+/-- Solution 3: `r = √6`, centre `(√2 + √3, √2)`. -/
+noncomputable def loOIO : Circle := ⟨rt2 + rt3, rt2, rt2 * rt3, rt6_pos⟩
+theorem loOIO_tangent : TangentExt loOIO Alo ∧ TangentInt loOIO Blo ∧ TangentExt loOIO Clo :=
+  locus_oio rt2 rt3 rt2_sq rt3_sq
+
+/-- Solution 5: `r = √6`, centre `(√2 − √3, √2)`. -/
+noncomputable def loIOI : Circle := ⟨rt2 - rt3, rt2, rt2 * rt3, rt6_pos⟩
+theorem loIOI_tangent : TangentInt loIOI Alo ∧ TangentExt loIOI Blo ∧ TangentInt loIOI Clo :=
+  locus_ioi rt2 rt3 rt2_sq rt3_sq
+
+/-- Solution 6: `r = √6`, centre `(√2, √2 − √3)`. -/
+noncomputable def loIIO : Circle := ⟨rt2, rt2 - rt3, rt2 * rt3, rt6_pos⟩
+theorem loIIO_tangent : TangentInt loIIO Alo ∧ TangentInt loIIO Blo ∧ TangentExt loIIO Clo :=
+  locus_iio rt2 rt3 rt2_sq rt3_sq
+
+/-- Solution 4: `r = 3/2`, centre `(√2/4, √2/4)`. The degenerate class's single circle. -/
+noncomputable def loIOO : Circle := ⟨qQ, qQ, gH, gH_pos⟩
+theorem loIOO_tangent : TangentInt loIOO Alo ∧ TangentExt loIOO Blo ∧ TangentExt loIOO Clo :=
+  locus_ioo qQ gH ((1 + 1) * rt2) qQ_sq two_mul_gH d_eq_eight_qQ
+
 end Coordinates
 end Apollonius
 end Geometry

@@ -5,6 +5,37 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (e)
+
+### The exceptional locus is fully checked — 15 of 23 exhibit points
+
+`Geometry/Apollonius/Coordinates.lean`. All **seven** solutions of `d = 2√2, ρ = 1` — the
+configuration where one class degenerates from quadratic to linear and the count drops to seven —
+are now Lean-checked. Twenty-one more tangencies, `sorryAx` absent. This is the exhibit's *default*
+view, so the page a visitor lands on is now fully green.
+
+**Two irrationals, but three atoms would have been a mistake.** The coordinates involve `√2`, `√3`
+and `√6`. `√6` is *not* a third atom — it is `√2·√3`, and treating it as a product keeps every
+identity in two variables with `s² = 2` and `u² = 3` as the only facts. Four of the seven solutions
+(all the `√6` ones) then share a single residual, `2s² + u² − s²u² − 1`, across all twelve of their
+tangencies.
+
+**The degenerate class's circle needed three devices at once**, and is the template for anything
+similarly awkward: `q = √2/4` compressed with `8q² = 1`; the rational radius `3/2` compressed as `g`
+with `2g = 3`; and the separation passed as its own variable `dd` with `dd = 8q`, because the
+consumer's circle carries it as `2√2` and those are equal without being syntactically equal. Then
+×4 to clear both denominators, with the squaring split in two so no single `mach_mpoly` call has to
+distribute `(q − 8q)²` and reconcile `200` at once.
+
+**One more misread limit.** The first failure here was `maximum recursion depth`, not a timeout —
+raisable with `set_option maxRecDepth`. Reading the error rather than assuming the previous cause
+saved another wrong diagnosis. Three failure modes have now appeared in this module and they need
+different fixes: `acLt` blowup (compress the constant), `maxRecDepth` (raise it), and plain
+`maxHeartbeats` (split the step).
+
+Still computed-only: the eight points of `d = 5/2`. Their coordinates carry denominators of `7`,
+`12` and `28` over `√2` and `√34`; the technique is proved out, the constants are just larger.
+
 ## [Unreleased] — 2026-08-19 (d)
 
 ### All eight flagship Apollonius coordinates Lean-checked — and the wall was misdiagnosed twice
