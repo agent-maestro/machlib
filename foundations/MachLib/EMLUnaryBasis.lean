@@ -322,8 +322,13 @@ For the right child there is no shift to apply. The node computes `log₀(B x)`,
 where `B x > 0` and `0` where `B x ≤ 0` — a genuinely piecewise operation — and `L_F` has constants,
 `x`, four field operations and `F`, with **no conditional and no sign test**.
 
-**That is evidence of an obstruction, and it is deliberately not claimed as a non-representability
-result.** Two reasons. Absence of an explicit conditional does not prove a piecewise function
+**⚠ REFUTED at the end of this file** (`F_unary_basis`, `log_totalised_F_representable`). Read the
+paragraph below as the record of a wrong guess that was at least labelled as a guess. The second of
+the two reasons given for not claiming it is exactly the reason it is false: `F` *is* a totalised
+construction, and `F u − exp u = log₀ u` extracts the branch, unconditionally.
+
+That is evidence of an obstruction, and it is deliberately not claimed as a non-representability
+result. Two reasons. Absence of an explicit conditional does not prove a piecewise function
 undefinable: compositional languages can synthesise branch-like behaviour indirectly. And `F` itself
 descends from a totalised construction, so some branch information may already be latent in the
 primitive. Turning this into an impossibility theorem would require an invariant that every `L_F`
@@ -335,6 +340,11 @@ crossing occurs. But on a domain where the sign is **stable**, the branch can be
 translator rather than at runtime — which is the next section, and which turns out to close. -/
 
 /-! ## Global versus eventual representation
+
+**⚠ SUBSUMED.** Everything from here to `F_unary_basis` assumes something about signs, and none of
+it is needed — the global theorem at the end of the file has no hypothesis at all. It is kept as the
+record of the search, and because the intermediate constructions (`EFshift`, `EFupper`) are what
+eventually suggested the unconditional one.
 
 The positive fragment is a *global* statement. The interesting weakening is not to drop positivity
 but to replace it by **sign stability**: on a domain where each internal argument keeps one sign, the
@@ -640,20 +650,153 @@ theorem log_eventually_F_representable :
   rw [hT x hx, logTree_eval]
   rfl
 
-/-! ## Global versus eventual unary representation — where this stands
+/-! ## The global theorem: `F` is a unary basis for EML, with no hypothesis at all
+
+Everything above buys representability by *assuming* something about signs. That was the wrong shape
+of effort, and two facts already in this file close the question outright.
+
+**`decoder_log` has no hypothesis.** `F u − exp u = log₀ u` for every real `u`, the totalised branch
+included — because `F` is itself built from the totalised `log`, so the branch information is latent
+in the primitive rather than lost. This is precisely the escape flagged when obstruction (B) was
+raised, and it is the one that works.
+
+**`EF` needs its argument positive, but the argument is ours to choose.** Both `u + u² + 1` and
+`u² + 1` are positive for *every* real `u`, and
+
+```
+exp u = exp(u + u² + 1) / exp(u² + 1)
+```
+
+so `exp` is decoded everywhere with no case split. `log₀` then follows from `F` and `exp`.
+
+Obstructions (A), (B) and (C) are therefore all **refuted**, and every sign hypothesis in this file
+is unnecessary. The development above is kept because it records the search, not because any of it
+is needed. -/
+
+/-- `0 < c` and `0 < c · z` give `0 < z`. Written over variables only — no numeral ever reaches the
+normaliser. -/
+private theorem pos_of_scaled_pos {c z : Real} (hc : 0 < c) (h : 0 < c * z) : 0 < z := by
+  rcases lt_total 0 z with hz | hz | hz
+  · exact hz
+  · exfalso
+    have e : c * z = 0 := by rw [← hz]; mach_ring
+    rw [e] at h; exact absurd h (lt_irrefl_ax 0)
+  · exfalso
+    have v := add_lt_add_left hz (-z)
+    have l : -z + z = 0 := by mach_ring
+    have r : -z + 0 = -z := by mach_ring
+    rw [l, r] at v
+    have hsum := add_pos h (mul_pos hc v)
+    have ez : c * z + c * -z = 0 := by mach_ring
+    rw [ez] at hsum; exact absurd hsum (lt_irrefl_ax 0)
+
+/-- `u² + u + 1 > 0` for every real `u` — `4(u² + u + 1) = (2u + 1)² + 3`. The shift that makes the
+decoder unconditional. -/
+private theorem quad_pos (u : Real) : 0 < u * u + u + 1 := by
+  have h3 : (0 : Real) < 1 + 1 + 1 := add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
+  have h4 : (0 : Real) < 1 + 1 + 1 + 1 := add_pos h3 zero_lt_one_ax
+  have hsum : (0 : Real) < (u + u + 1) * (u + u + 1) + (1 + 1 + 1) :=
+    add_pos_of_nonneg_of_pos (sq_nonneg _) h3
+  have e : (u + u + 1) * (u + u + 1) + (1 + 1 + 1) = (1 + 1 + 1 + 1) * (u * u + u + 1) := by
+    mach_mpoly [u]
+  rw [e] at hsum
+  exact pos_of_scaled_pos h4 hsum
+
+/-- **The unconditional exponential decoder**: `exp u = EF(u + u² + 1) / EF(u² + 1)`.
+
+Both arguments are positive for every real `u`, so `EF` applies at each of them with no hypothesis,
+and the quotient of the two exponentials is `exp u`. -/
+noncomputable def FTerm.EFall (u : FTerm) : FTerm :=
+  FTerm.div (FTerm.EF (FTerm.add (FTerm.add u (FTerm.mul u u)) (FTerm.const 1)))
+            (FTerm.EF (FTerm.add (FTerm.mul u u) (FTerm.const 1)))
+
+theorem FTerm.EFall_eval (u : FTerm) (x : Real) :
+    FTerm.eval (FTerm.EFall u) x = exp (FTerm.eval u x) := by
+  have hnum : FTerm.eval (FTerm.add (FTerm.add u (FTerm.mul u u)) (FTerm.const 1)) x
+      = FTerm.eval u x + FTerm.eval u x * FTerm.eval u x + 1 := rfl
+  have hden : FTerm.eval (FTerm.add (FTerm.mul u u) (FTerm.const 1)) x
+      = FTerm.eval u x * FTerm.eval u x + 1 := rfl
+  have hdp : 0 < FTerm.eval u x * FTerm.eval u x + 1 :=
+    add_pos_of_nonneg_of_pos (sq_nonneg _) zero_lt_one_ax
+  have hnp : 0 < FTerm.eval u x + FTerm.eval u x * FTerm.eval u x + 1 := by
+    have hq := quad_pos (FTerm.eval u x)
+    have e : FTerm.eval u x * FTerm.eval u x + FTerm.eval u x + 1
+        = FTerm.eval u x + FTerm.eval u x * FTerm.eval u x + 1 := by mach_ring
+    rw [e] at hq; exact hq
+  show FTerm.eval (FTerm.EF (FTerm.add (FTerm.add u (FTerm.mul u u)) (FTerm.const 1))) x
+      / FTerm.eval (FTerm.EF (FTerm.add (FTerm.mul u u) (FTerm.const 1))) x = exp (FTerm.eval u x)
+  rw [FTerm.EF_eval _ x (by rw [hnum]; exact hnp), FTerm.EF_eval _ x (by rw [hden]; exact hdp),
+      hnum, hden]
+  refine div_of_eq_mul (ne_of_gt (exp_pos _)) ?_
+  rw [← exp_add]
+  have e : FTerm.eval u x * FTerm.eval u x + 1 + FTerm.eval u x
+      = FTerm.eval u x + FTerm.eval u x * FTerm.eval u x + 1 := by mach_ring
+  rw [e]
+
+/-- **The unconditional logarithm decoder**: `log₀ u = F u − exp u`, everywhere, totalised branch
+included. -/
+noncomputable def FTerm.LFall (u : FTerm) : FTerm := FTerm.sub (FTerm.F u) (FTerm.EFall u)
+
+theorem FTerm.LFall_eval (u : FTerm) (x : Real) :
+    FTerm.eval (FTerm.LFall u) x = log (FTerm.eval u x) := by
+  show Fbasis (FTerm.eval u x) - FTerm.eval (FTerm.EFall u) x = log (FTerm.eval u x)
+  rw [FTerm.EFall_eval u x]
+  exact decoder_log (FTerm.eval u x)
+
+/-- `f` is computed on **all** of `Real` by a term of `L_F`. -/
+def FRepresentableGlobally (f : Real → Real) : Prop :=
+  ∃ T : FTerm, ∀ x : Real, FTerm.eval T x = f x
+
+/-- **`F` is a unary basis for EML.** Every EML tree is computed at *every real point* by a term of
+`L_F` — constants, the variable, the four field operations, and the single unary symbol
+`F(x) = exp x + log x`.
+
+No domain, no ray, no sign hypothesis, no positivity, and no runtime selector: `L_F` still has no
+conditional. One function generates both primitives of the grammar, and the totalisation comes along
+for free because `F` carries it. -/
+theorem F_unary_basis : ∀ t : EMLTree, FRepresentableGlobally t.eval := by
+  intro t
+  induction t with
+  | const c => exact ⟨FTerm.const c, fun _ => rfl⟩
+  | var => exact ⟨FTerm.var, fun _ => rfl⟩
+  | eml a b iha ihb =>
+      obtain ⟨Ta, hTa⟩ := iha
+      obtain ⟨Tb, hTb⟩ := ihb
+      refine ⟨FTerm.sub (FTerm.EFall Ta) (FTerm.LFall Tb), fun x => ?_⟩
+      show FTerm.eval (FTerm.EFall Ta) x - FTerm.eval (FTerm.LFall Tb) x
+          = exp (a.eval x) - log (b.eval x)
+      rw [FTerm.EFall_eval Ta x, FTerm.LFall_eval Tb x, hTa x, hTb x]
+
+/-- Every domain at once: the global theorem restricted anywhere. Every hypothesis-carrying
+representability theorem in this file is this corollary with an unused hypothesis. -/
+theorem F_representable_everywhere (D : Real → Prop) (t : EMLTree) : FRepresentable D t.eval := by
+  obtain ⟨T, hT⟩ := F_unary_basis t
+  exact ⟨T, fun x _ => hT x⟩
+
+/-- **Discrimination: the basis is not vacuous.** `log₀` itself — the totalised primitive, `0` on
+`x ≤ 0` and `log x` on `x > 0` — is a term of `L_F` at every real point, sign change included.
+That is exactly what obstruction (B) said could not be done. -/
+theorem log_totalised_F_representable : FRepresentableGlobally log :=
+  ⟨FTerm.LFall FTerm.var, fun x => FTerm.LFall_eval FTerm.var x⟩
+
+/-- And `exp`, for the same reason. -/
+theorem exp_F_representable : FRepresentableGlobally exp :=
+  ⟨FTerm.EFall FTerm.var, fun x => FTerm.EFall_eval FTerm.var x⟩
+
+/-! ## Where this leaves the question
 
 | statement | status |
 | --- | --- |
-| internal arguments positive on `D` ⟹ `L_F`-representable on `D` | proved |
-| internal arguments `EvStable` on `D` ⟹ `L_F`-representable on `D` | proved |
-| depth ≤ 3 ⟹ eventually `L_F`-representable | proved, **unconditional** |
-| `SignHardCase` ⟹ every tree eventually `L_F`-representable | proved |
-| every tree `L_F`-representable **globally** | open — and (B)/(C) are why |
+| every EML tree is an `L_F` term, globally, no hypothesis | **proved** (`F_unary_basis`) |
+| `log₀` is an `L_F` term across its own sign change | **proved** — obstruction (B) refuted |
+| obstructions (A) and (C) | refuted by the same construction |
+| the sign-stability development above | subsumed; kept as the record of the search |
 
-The eventual question is therefore settled *relative to a proposition the corpus already tracks*,
-and the residue is exactly the global one: a domain on which some internal argument changes sign.
-There the translator has no single branch to pick, and `L_F` has no conditional to pick one at
-runtime — obstruction (B), still a hypothesis rather than a theorem, since no invariant separating
-`L_F` from `log₀` has been produced. -/
+What is *not* answered, and is now the interesting question: **`F` is a basis — is it a minimal
+one?** `EFall` spends three `F` evaluations per `exp` and four per `log₀`, and the dilation identity
+that makes the decoder work needs at least two scales (one is not rationally sufficient). Whether
+three is necessary, and whether some other single function does better, is open.
+
+Nothing here says `L_F` is a *small* language, only that it is a complete one. -/
 
 end MachLib

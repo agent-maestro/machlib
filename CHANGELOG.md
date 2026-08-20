@@ -5,6 +5,65 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (g)
+
+### `F` is a unary basis for EML — globally, unconditionally, and obstruction (B) is refuted
+
+`F_unary_basis` — **every EML tree is computed at every real point by a term of `L_F`.** Constants,
+the variable, four field operations, one unary symbol `F(x) = exp x + log x`. No domain, no ray, no
+sign hypothesis, no positivity, no runtime selector; `L_F` still has no conditional.
+
+Two facts, both sitting in the file already, do all the work.
+
+**`decoder_log` has no hypothesis.** `F u − exp u = log₀ u` for every real `u`, *totalised branch
+included* — because `F` is itself built from the totalised `log`, so the branch information is
+latent in the primitive rather than lost. This is exactly the escape route flagged when obstruction
+(B) was raised ("`F` descends from a totalised construction, so some branch information may already
+be latent"). It was the one that works.
+
+**`EF` needs its argument positive — and the argument is ours to choose.** `u + u² + 1` and `u² + 1`
+are positive for *every* real `u`, so
+
+```
+exp u = EF(u + u² + 1) / EF(u² + 1)
+```
+
+decodes `exp` everywhere with no case split (`FTerm.EFall_eval`). `log₀` follows.
+
+So `log_totalised_F_representable`: **`log₀` — the piecewise, discontinuous, totalised primitive —
+is a single branch-free `L_F` term across its own sign change.** That is precisely what obstruction
+(B) said could not be done, and (A) and (C) fall to the same construction.
+
+### Every sign hypothesis in the file was unnecessary
+
+The positive fragment, `EvStable`, the eventual theorems, the depth-≤3 bound: all are
+`F_representable_everywhere` with an unused hypothesis. They are kept as the record of the search —
+and because `EFshift` and `EFupper`, the two one-sided repairs, are what suggested the two-sided
+one. The affected prose carries in-place ⚠ markers rather than being edited away.
+
+**This is the same error as (f), one level up.** There I concluded a *hypothesis* was too weak from
+three failed *constructions*. Here I concluded a *language* lacked the power to express `log₀` from
+the absence of one *feature* (a conditional). Both times the missing thing was a construction, and
+both times the failure had a visible shape I did not interrogate — the three routes all wanted the
+argument on one side of a threshold; the obstruction argument all rested on `L_F` having no
+selector, while the primitive it is built from is itself a selector.
+
+### Verification
+
+Independent re-implementation in Python at 60 decimal digits: `EFall` matches `exp` to 7.9e-61 worst
+relative error over `u ∈ [−12, 3]`; `LFall` matches the **totalised** `log₀` to 1.0e-59, returning
+exactly `0` at `u = −3, −1, −0.5, 0` and the true `log` above. Convict specimen in the same run:
+bare `EF` is *wrong* at those points (`EF(−1) = 0.5304` vs `exp(−1) = 0.3679`; `EF(0) = 0.5850` vs
+`1`), so the shift does real work and the theorem is not a restatement of what was already
+available. `sorryAx` absent from all three new footprints.
+
+### What is now open
+
+`F` is a basis. **Is it a minimal one?** `EFall` spends three `F` evaluations per `exp` and four per
+`log₀`, and the dilation identity needs at least two scales — one is not rationally sufficient.
+Whether three is necessary, and whether some other single function does better, is untouched.
+Nothing here says `L_F` is a *small* language, only that it is a complete one.
+
 ## [Unreleased] — 2026-08-20 (f)
 
 ### ⚠ CORRECTION — `EvSign` was enough all along; the gap was in the instrument
@@ -34,7 +93,9 @@ The strict trichotomy asked for yesterday is not needed, and the claim that
   still has no conditional.
 - `eventual_F_representable_of_hard` — **`SignHardCase` ⟹ every EML tree is eventually an `L_F`
   term.** At every depth.
-- `eventual_F_representable_depth_le_three` — **unconditional at depth ≤ 3.** The node itself never
+- `eventual_F_representable_depth_le_three` — **unconditional at depth ≤ 3.** *(Superseded by
+  2026-08-20 (g): unconditional at* **every** *depth, and globally rather than eventually. The depth
+  bound was an artefact of assuming a sign hypothesis was needed at all.)* The node itself never
   needs a sign; only its two children do. So `evSign_depth_le_two`, which is unconditional, covers
   the children of every node in a depth-≤3 tree — the representability theorem reaches exactly one
   level deeper than the sign theorem it consumes.

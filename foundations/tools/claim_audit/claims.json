@@ -3988,6 +3988,63 @@
       "proof_uses": [
         "evSign_of_hard"
       ]
+    },
+    {
+      "_comment": "The headline. conclusion_mentions pins FRepresentableGlobally so the claim cannot survive a later weakening to some-domain representability.",
+      "id": "unary-basis-global-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**every EML tree is computed at every real point by a term of `L_F`.**"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.F_unary_basis",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FRepresentableGlobally"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "EFall_eval"
+      ]
+    },
+    {
+      "_comment": "Obstruction (B) refuted. Registered because the CHANGELOG previously argued at length that this was likely IMPOSSIBLE; a claim is what stops that argument coming back.",
+      "id": "unary-basis-log-totalised-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is a single branch-free `L_F` term across its own sign change"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.log_totalised_F_representable",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FRepresentableGlobally"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The unconditional decoder itself. hypotheses_count 0 is the whole content -- EF_eval, which it wraps, takes a positivity hypothesis.",
+      "id": "unary-basis-efall-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "decodes `exp` everywhere with no case split"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.FTerm.EFall_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "quad_pos"
+      ]
     }
   ]
 }
