@@ -5,6 +5,47 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (i)
+
+### The general Apollonius reduction closes — abandoned twice as "the coefficients explode"
+
+`Geometry/Apollonius/Elimination.lean`. `quadratic_of_linear` and `solves_iff_quadratic`:
+**for an arbitrary triple and an arbitrary mode**, a centre determined affinely by the radius
+reduces the remaining tangency to a single quadratic in `r`, with coefficients
+
+```
+    A = X₁² + Y₁² − D²
+    B = 2UX₁ + 2VY₁ − 2D²·svπ
+    C = U² + V² − D²π²
+```
+
+where `D` is the determinant, `(X₀,X₁)`, `(Y₀,Y₁)` the Cramer numerators, `U = X₀ − Dp`,
+`V = Y₀ − Dq`. No hypothesis about the configuration beyond `sv² = 1`; non-collinearity enters only
+where `D ≠ 0` is needed to produce the affine centre.
+
+**The previous diagnosis was wrong and is now falsified.** The explosion came from expanding the
+geometry into coordinates *before* normalising. Over the abstract Cramer data the reduction is a
+short identity in eight atoms with no constant above `1`, and it closed on the second try — the
+first failure was a syntactic regrouping (`X₀ + X₁r − Dp` does not contain `X₀ − Dp`), not a
+capability limit.
+
+### Numeral abstraction principle
+
+Recorded as doctrine, because it has now closed four separate blockers:
+
+> When proving a polynomial identity over `MachLib.Real`, expose only `0` and `1` to normalisation
+> where practical. Replace derived concrete numerals by parameters, discharge their arithmetic
+> relationships separately, and instantiate only after the symbolic identity has closed.
+
+Two corollaries, each of which cost a build:
+
+- **Definitions are not atoms.** `mach_mpoly` unfolds them and then faces whatever was inside.
+- **Proof cost is not mathematical sharpness.** `√2 < 2` beats `5√2 < 8` here not because it is a
+  better inequality but because it needs `2 < 4` rather than `50 < 64`, and constant-only
+  comparisons are what the normaliser cannot do at all.
+
+Full corpus builds, 634 jobs. 198 claims PASS, 10 ledger rows OK, aggregator 631/937.
+
 ## [Unreleased] — 2026-08-19 (h)
 
 ### All 23 exhibit coordinates Lean-checked — the doubled class closes

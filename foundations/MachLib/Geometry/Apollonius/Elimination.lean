@@ -164,6 +164,79 @@ theorem centre_unique (A B C : Circle) (m : Mode) (hcol : ¬ CentresCollinear A 
   · refine QuadraticRoots.eq_of_sub_eq_zero (QuadraticRoots.right_of_mul_eq_zero hdet ?_)
     rw [hy]; mach_mpoly [A.x, A.y, B.x, C.x]
 
+
+/-! ## The general reduction: arbitrary non-collinear triple → one quadratic
+
+`solvesMode_iff_linear` turns three tangency equations into one tangency equation plus two linear
+equations, and `centre_unique` solves those for the centre whenever the centres are not collinear.
+What remained was substituting that centre back and reading off the quadratic in `r` — and that step
+had been abandoned twice as "the coefficients explode".
+
+**They do not.** The explosion came from expanding the geometry into coordinates before normalising.
+Stated over the *abstract* Cramer data — the determinant `D`, the numerator pairs `(X₀, X₁)`,
+`(Y₀, Y₁)`, and the centre offsets `U`, `V` — the reduction is a short polynomial identity in eight
+atoms with no constant above `1`.
+
+This is the same principle that closed the concrete coordinates: **normalise the abstraction, not the
+expansion.** -/
+
+set_option maxHeartbeats 2000000 in
+set_option maxRecDepth 8000 in
+/-- **The Apollonius quadratic, for an arbitrary triple.**
+
+Given a centre determined affinely by the radius — `D·x = X₀ + X₁r`, `D·y = Y₀ + Y₁r`, which is what
+Cramer's rule supplies when `D ≠ 0` — the remaining tangency equation to circle `(p, q, π)` at mode
+sign `sv` is, after clearing `D²`, exactly
+
+```
+    (X₁² + Y₁² − D²)·r²  +  (2UX₁ + 2VY₁ − 2D²·svπ)·r  +  (U² + V² − D²π²)  =  0
+```
+
+with `U = X₀ − Dp`, `V = Y₀ − Dq`. No hypothesis about the configuration is used beyond `sv² = 1`,
+so this holds for **every** triple and **every** mode; non-collinearity enters only where `D ≠ 0` is
+needed to produce the affine centre in the first place. -/
+theorem quadratic_of_linear (D X₀ X₁ Y₀ Y₁ p q π sv x y r U V : Real)
+    (hx : D * x = X₀ + X₁ * r) (hy : D * y = Y₀ + Y₁ * r) (hs : sv * sv = 1)
+    (hU : U = X₀ - D * p) (hV : V = Y₀ - D * q) :
+    D * D * ((x - p) * (x - p) + (y - q) * (y - q) - (r + sv * π) * (r + sv * π))
+      = (X₁ * X₁ + Y₁ * Y₁ - D * D) * (r * r)
+        + ((1 + 1) * (U * X₁) + (1 + 1) * (V * Y₁) - (1 + 1) * (D * D) * (sv * π)) * r
+        + (U * U + V * V - D * D * (π * π)) := by
+  have ex : D * D * ((x - p) * (x - p)) = (D * x - D * p) * (D * x - D * p) := by mach_ring
+  have ey : D * D * ((y - q) * (y - q)) = (D * y - D * q) * (D * y - D * q) := by mach_ring
+  have er : D * D * ((r + sv * π) * (r + sv * π))
+      = D * D * (r * r) + (1 + 1) * (D * D) * (sv * π) * r + D * D * ((sv * sv) * (π * π)) := by
+    mach_ring
+  have split : D * D * ((x - p) * (x - p) + (y - q) * (y - q) - (r + sv * π) * (r + sv * π))
+      = D * D * ((x - p) * (x - p)) + D * D * ((y - q) * (y - q))
+        - D * D * ((r + sv * π) * (r + sv * π)) := by mach_ring
+  rw [split, ex, ey, er, hx, hy, hs]
+  have gx : X₀ + X₁ * r - D * p = U + X₁ * r := by rw [hU]; mach_ring
+  have gy : Y₀ + Y₁ * r - D * q = V + Y₁ * r := by rw [hV]; mach_ring
+  rw [gx, gy]
+  mach_mpoly [U, V, X₁, Y₁, D, r, sv, π]
+
+/-- **The tangency holds iff the quadratic vanishes**, given `D ≠ 0`. The `D²` scaling is invertible,
+so nothing is lost by clearing it. -/
+theorem solves_iff_quadratic (D X₀ X₁ Y₀ Y₁ p q π sv x y r U V : Real) (hD : D ≠ 0)
+    (hx : D * x = X₀ + X₁ * r) (hy : D * y = Y₀ + Y₁ * r) (hs : sv * sv = 1)
+    (hU : U = X₀ - D * p) (hV : V = Y₀ - D * q) :
+    ((x - p) * (x - p) + (y - q) * (y - q) = (r + sv * π) * (r + sv * π))
+    ↔ (X₁ * X₁ + Y₁ * Y₁ - D * D) * (r * r)
+        + ((1 + 1) * (U * X₁) + (1 + 1) * (V * Y₁) - (1 + 1) * (D * D) * (sv * π)) * r
+        + (U * U + V * V - D * D * (π * π)) = 0 := by
+  have key := quadratic_of_linear D X₀ X₁ Y₀ Y₁ p q π sv x y r U V hx hy hs hU hV
+  have hD2 : D * D ≠ 0 := fun h => hD (QuadraticRoots.right_of_mul_eq_zero hD h)
+  constructor
+  · intro h
+    have z : (x - p) * (x - p) + (y - q) * (y - q) - (r + sv * π) * (r + sv * π) = 0 := by
+      rw [h]; mach_ring
+    rw [← key, z]; mach_ring
+  · intro h
+    refine QuadraticRoots.eq_of_sub_eq_zero ?_
+    refine QuadraticRoots.mul_left_cancel hD2 ?_
+    rw [key, h]; mach_ring
+
 end Apollonius
 end Geometry
 end MachLib
