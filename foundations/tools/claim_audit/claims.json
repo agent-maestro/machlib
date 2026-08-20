@@ -4604,6 +4604,48 @@
         "bipevLead"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Growing branch. forbid_axioms_exact keeps the no-analytic-cost claim checkable across both substitution theorems, not just the S = x case.",
+      "id": "ftrans-ge-id-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Both cost **39 axioms and nothing analytic**, same as the `S = x` case."
+      ],
+      "module": "MachLib.EMLFTranscendence",
+      "theorem": "MachLib.FS_not_algebraic_of_ge_id",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
+    },
+    {
+      "_comment": "Decaying branch, the lowest-power dual. Registered separately so the prose claim that BOTH orientations close cannot be satisfied by one of them.",
+      "id": "ftrans-le-negid-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "where a large generator forces the leading coefficient to dominate, a tiny one forces the\nconstant coefficient to vanish"
+      ],
+      "module": "MachLib.EMLFTranscendence",
+      "theorem": "MachLib.FS_not_algebraic_of_le_negId",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

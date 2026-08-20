@@ -5,6 +5,43 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (t)
+
+### Both unbounded regimes of a substituted germ, closed — same instrument, two orientations
+
+| regime | mechanism | theorem |
+| --- | --- | --- |
+| `S(x) ≥ x` | `F(S) ≥ exp S ≥ exp x` — split off the **leading** coefficient | `FS_not_algebraic_of_ge_id` |
+| `S(x) ≤ −x` | `F(S) = exp S`, super-polynomially small — split off the **constant** coefficient | `FS_not_algebraic_of_le_negId` |
+
+The second is not a separate idea. It is the first argument read from the other end of the
+polynomial: where a large generator forces the leading coefficient to dominate, a tiny one forces the
+constant coefficient to vanish. `bipev_bounded_envelope` (degree stops mattering once `|y| ≤ 1`) is
+the dual of `bipev_degree_drop`.
+
+Both cost **39 axioms and nothing analytic**, same as the `S = x` case.
+
+### The generalisation was a removal, not an addition
+
+`Fbasis_not_algebraic` is now a corollary of `not_algebraic_of_dominates_exp`, which asks only that
+`g` eventually dominate `exp`. The original proof never used anything else about `F` — dropping the
+hypothesis to what the argument actually consumes is what made both substitution regimes fall out
+without new machinery.
+
+### What is left is exactly the bounded case
+
+If `S` converges to a finite limit then `F(S)` is bounded, and **growth cannot distinguish a bounded
+function from an algebraic one** — the engine driving both theorems above is gone, not merely weaker.
+That is the first place in this arc where function-field or differential-algebra infrastructure is
+the honest reading rather than an over-answer.
+
+One reduction recorded before anyone builds it. On the positive branch `F(u) = exp u + log u`, so
+`F′(u) = exp u + 1/u`. Algebraic functions stay algebraic under differentiation in characteristic
+zero, so `F` algebraic would give `F′` algebraic, hence `exp u = F′(u) − 1/u` algebraic. The whole
+route therefore needs **one** base transcendence theorem — `exp` transcendental over `ℝ(u)` — and no
+special theory for `exp + log`. Recorded as a reduction, **not proved**: it needs the
+differentiation-preserves-algebraicity step, which this corpus does not have.
+
 ## [Unreleased] — 2026-08-20 (s)
 
 ### `F` is not algebraic over the polynomial coefficients — and it costs **no new axioms**

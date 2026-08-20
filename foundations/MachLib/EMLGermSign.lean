@@ -45,13 +45,13 @@ def EvPos (f : Real → Real) : Prop :=
 def EvNeg (f : Real → Real) : Prop :=
   ∃ (c : Real) (k : Nat) (X : Real), 0 < c ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x → f x ≤ -(c * powNat x k)
 
-private theorem neg_pos' {a : Real} (h : a < 0) : 0 < -a := by
+theorem neg_pos' {a : Real} (h : a < 0) : 0 < -a := by
   have v := add_lt_add_left h (-a)
   have l : -a + a = 0 := by mach_ring
   have r : -a + 0 = -a := by mach_ring
   rw [l, r] at v; exact v
 
-private theorem neg_of_neg_pos' {a : Real} (h : 0 < -a) : a < 0 := by
+theorem neg_of_neg_pos' {a : Real} (h : 0 < -a) : a < 0 := by
   have v := add_lt_add_left h a
   have l : a + 0 = a := by mach_ring
   have r : a + -a = 0 := by mach_ring
