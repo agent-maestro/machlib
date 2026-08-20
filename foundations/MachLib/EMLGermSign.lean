@@ -1,4 +1,5 @@
 import MachLib.EMLOneQueryForm
+import MachLib.MonotoneRoot
 
 /-!
 # `C₀` is eventually sign-definite — unconditionally
@@ -481,14 +482,120 @@ theorem FS_evSignDef_or_window {S : Real → Real} (h : RatGerm S) :
         rw [Fbasis_of_nonpos (le_of_lt (hSn x hx))]
         exact exp_pos _
 
-/-! ### Where `OneQueryDichotomy` now lives
+/-! ## The window is removable: `F` is monotone, so only its root matters
 
-The residue is not "the interval `(0,1)`" but the bounded window `(e^(−e), e⁻¹]`, and a rational germ
-trapped there is a strong constraint: it converges, and its limit lies in that window. `F` has
-exactly one zero in it, so the delicate case is a germ approaching that zero — a coincidence, but one
-that has to be excluded rather than waved away.
+The window above was the right *step* and the wrong *endpoint*. What decides the sign of `F(y)` for
+`y > 0` is not which side of an interval `y` lies on but which side of `F`'s **root** — because `F`
+is strictly increasing on `(0, ∞)`, being a sum of two strictly increasing functions there.
 
-Which also says what the level-1 problem is *not*. It is not about `F` being transcendental; on every
-regime outside a bounded window the sign is settled by comparisons against `exp` of a constant. -/
+`F` has exactly one root in `(0, ∞)`: it is negative at `e^(−e)`, positive at `1`, and its derivative
+`exp y + 1/y` is positive throughout. So `S − r` is the only comparison that matters, `S − r` is a
+rational germ, and the trichotomy already decides it. **The exception disappears.** -/
+
+/-- **`F` is strictly increasing on `(0, ∞)`** — no derivatives needed, just monotonicity of `exp`
+and of `log` on the positives. -/
+theorem Fbasis_strictMono {a b : Real} (ha : 0 < a) (hab : a < b) : Fbasis a < Fbasis b := by
+  show exp a + log a < exp b + log b
+  have h1 : exp a + log a < exp b + log a := by
+    have v := add_lt_add_left (exp_lt hab) (log a)
+    have el : log a + exp a = exp a + log a := by mach_ring
+    have er : log a + exp b = exp b + log a := by mach_ring
+    rw [el, er] at v; exact v
+  exact lt_trans_ax h1 (add_lt_add_left (log_lt_log ha hab) (exp b))
+
+private theorem Fbasis_hasDeriv {y : Real} (hy : 0 < y) :
+    HasDerivAt Fbasis (exp y + 1 / y) y := by
+  have h := HasDerivAt_add exp log (exp y) (1 / y) y (HasDerivAt_exp y) (HasDerivAt_log_pos y hy)
+  exact h
+
+/-- **`F` has a unique root on `(0, ∞)`**, and it lies in the window the previous section isolated.
+The derivative `exp y + 1/y` is positive there, and `F` changes sign across `[e^(−e), 1]`. -/
+theorem Fbasis_root :
+    ∃ r : Real, exp (-(exp 1)) < r ∧ r < 1 ∧ Fbasis r = 0 := by
+  have ha0 : (0 : Real) < exp (-(exp 1)) := exp_pos _
+  have hab : exp (-(exp 1)) < 1 := by
+    have hne : -(exp 1) < (0 : Real) := neg_of_neg_pos' (by
+      have e : -(-(exp 1)) = exp 1 := by mach_ring
+      rw [e]; exact exp_pos 1)
+    have h := exp_lt hne
+    rw [exp_zero] at h; exact h
+  obtain ⟨r, hr1, hr2, hr3, _⟩ :=
+    exists_unique_root_of_deriv_pos Fbasis (exp (-(exp 1))) 1 hab
+      (fun c hc _ => ⟨exp c + 1 / c, Fbasis_hasDeriv (lt_of_lt_of_le ha0 hc)⟩)
+      (fun c f' hc _ hd => by
+        have hc0 : (0 : Real) < c := lt_of_lt_of_le ha0 hc
+        have heq := HasDerivAt_unique Fbasis f' (exp c + 1 / c) c hd (Fbasis_hasDeriv hc0)
+        rw [heq]
+        exact add_pos (exp_pos c) (one_div_pos_of_pos hc0))
+      Fbasis_sign_changes.1 Fbasis_sign_changes.2
+  exact ⟨r, hr1, hr2, hr3⟩
+
+/-- **`F ∘ S` is eventually sign-definite for every rational germ `S`. No exception.**
+
+Supersedes `FS_evSignDef_or_window`: the trapped case is settled by comparing against `F`'s root
+instead of against the window's endpoints, and `S − r` is a rational germ like any other.
+
+The sign question at level 1 is therefore closed. What remains of `OneQueryDichotomy` is the
+*context* — whether `C(x, F(S(x)))` can cancel — not the generator. -/
+theorem FS_evSignDef {S : Real → Real} (h : RatGerm S) :
+    EvSignDef (fun x => Fbasis (S x)) := by
+  obtain ⟨r, hr1, _, hr0⟩ := Fbasis_root
+  have hrpos : (0 : Real) < r := lt_trans_ax (exp_pos _) hr1
+  rcases ratGerm_evSignDef h with ⟨Z, hZ, hSz⟩ | ⟨Z, hZ, hSp⟩ | ⟨Z, hZ, hSn⟩
+  · -- `S ≡ 0`, so `F(S) = F(0) = 1`
+    exact Or.inr (Or.inl ⟨Z, hZ, fun x hx => by
+      show 0 < Fbasis (S x)
+      rw [hSz x hx, Fbasis_zero]; exact zero_lt_one_ax⟩)
+  · -- `S > 0`: compare against the root
+    rcases ratGerm_evSignDef (ratGerm_sub_const h r) with ⟨Y, hY, hz⟩ | ⟨Y, hY, hp⟩ | ⟨Y, hY, hn⟩
+    · obtain ⟨W, hW, hWZ, hWY⟩ := two_bounds' hZ hY
+      refine Or.inl ⟨W, hW, fun x hx => ?_⟩
+      show Fbasis (S x) = 0
+      have hz0 : S x - r = 0 := hz x (le_trans hWY hx)
+      have v : S x - r + r = 0 + r := by rw [hz0]
+      have el : S x - r + r = S x := by mach_mpoly [S x, r]
+      have er : (0 : Real) + r = r := by mach_mpoly [r]
+      rw [el, er] at v
+      rw [v, hr0]
+    · obtain ⟨W, hW, hWZ, hWY⟩ := two_bounds' hZ hY
+      refine Or.inr (Or.inl ⟨W, hW, fun x hx => ?_⟩)
+      show 0 < Fbasis (S x)
+      have hgt : r < S x := by
+        have v := add_lt_add_left (hp x (le_trans hWY hx)) r
+        have el : r + 0 = r := by mach_mpoly [r]
+        have er : r + (S x - r) = S x := by mach_mpoly [S x, r]
+        rw [el, er] at v; exact v
+      have := Fbasis_strictMono hrpos hgt
+      rw [hr0] at this; exact this
+    · obtain ⟨W, hW, hWZ, hWY⟩ := two_bounds' hZ hY
+      refine Or.inr (Or.inr ⟨W, hW, fun x hx => ?_⟩)
+      show Fbasis (S x) < 0
+      have hlt : S x < r := by
+        have v := add_lt_add_left (hn x (le_trans hWY hx)) r
+        have el : r + (S x - r) = S x := by mach_mpoly [S x, r]
+        have er : r + 0 = r := by mach_mpoly [r]
+        rw [el, er] at v; exact v
+      have := Fbasis_strictMono (hSp x (le_trans hWZ hx)) hlt
+      rw [hr0] at this; exact this
+  · -- `S < 0`: the totalised logarithm vanishes and `F(S) = exp S > 0`
+    exact Or.inr (Or.inl ⟨Z, hZ, fun x hx => by
+      show 0 < Fbasis (S x)
+      rw [Fbasis_of_nonpos (le_of_lt (hSn x hx))]; exact exp_pos _⟩)
+
+/-! ### What is left of `OneQueryDichotomy`
+
+The **generator** is no longer the difficulty. `F ∘ S` is eventually sign-definite for every rational
+germ, unconditionally, and the argument is monotonicity plus one root — no transcendence, no
+asymptotic expansion, and the window that looked like a residue was an artefact of comparing against
+the wrong constant.
+
+What remains is the **context**: whether `C(x, F(S(x)))` — built from `x` and `F(S)` by field
+operations — can vanish identically-often without vanishing eventually. That is a cancellation
+question between two functions whose *individual* behaviour is now fully classified, which is a much
+better position than the one this section started from.
+
+Four times in this arc a residue has evaporated once the right invariant was chosen rather than the
+first one that fit. Recorded because the pattern is now more reliable than any individual guess about
+which residues are real. -/
 
 end MachLib

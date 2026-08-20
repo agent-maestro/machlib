@@ -5,6 +5,43 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (r)
+
+### The window evaporates: `F ∘ S` is eventually sign-definite for **every** rational germ
+
+`FS_evSignDef`. No exception, no trapped case.
+
+`F` is a sum of two strictly increasing functions on `(0, ∞)`, so it is **strictly increasing**
+there (`Fbasis_strictMono`) — no derivatives, just `exp_lt` and `log_lt_log`. It is negative at
+`e^(−e)`, positive at `1`, and its derivative `exp y + 1/y` is positive throughout, so it has exactly
+one root `r ∈ (e^(−e), 1)` (`Fbasis_root`, via `exists_unique_root_of_deriv_pos`).
+
+Then the whole question collapses: `S − r` is a rational germ like any other, the trichotomy decides
+it, and monotonicity turns that into the sign of `F(S)`. The window's endpoints were simply the wrong
+constant to compare against.
+
+**So the generator is no longer the difficulty at level 1.** What is left of `OneQueryDichotomy` is
+the *context* — whether `C(x, F(S(x)))` can cancel — between two functions whose individual behaviour
+is now fully classified.
+
+### Disclosure: this is the first result in the arc that costs analytic axioms
+
+`Fbasis_strictMono` has a 16-axiom footprint and touches nothing analytic. `Fbasis_root` and
+`FS_evSignDef` have **50 and 52**, pulling in the derivative layer and the IVT bridge —
+`HasDerivAt_exp`, `HasDerivAt_log_pos`, `HasDerivAt_unique`, `HasDerivAt_add`, and
+`hasDerivAt_continuousAt`.
+
+That is the price of *existence* of the root; monotonicity alone is free. The window theorem is kept
+rather than deleted precisely because it gives usable bounds at no analytic cost, and a reader who
+wants the cheap version can still have it.
+
+### Four for four
+
+Four times in this arc a residue has evaporated once the right invariant was chosen rather than the
+first one that fit: `SignHardCase` for `C₀`, the division case of `FQueryLowerBound`, the `(0,1)`
+branch, and now the window. Recorded because the pattern is by now more reliable than any individual
+guess about which residues are real.
+
 ## [Unreleased] — 2026-08-20 (q)
 
 ### `C₀` is eventually sign-definite — **unconditionally**
@@ -35,6 +72,12 @@ A rational germ `S` feeding the single `F` of a one-query term:
 `Fbasis_of_neg`, `Fbasis_zero`, `Fbasis_ge_exp_of_one_le` are the first three.
 
 ### And the fourth branch is a bounded WINDOW, not an interval
+
+> **⚠ SUPERSEDED within the same day by `FS_evSignDef` (below).** The window was the right *step* and
+> the wrong *endpoint* — what decides the sign is which side of `F`'s **root** the germ lies on, not
+> which side of an interval. Kept because the endpoints are still the cheapest bounds available and
+> they cost no analytic axioms, where the root does.
+
 
 `FS_evSignDef_or_window` — **`F ∘ S` is eventually sign-definite for every rational germ `S`, unless
 `S` is eventually trapped in `(e^(−e), e⁻¹]`.**

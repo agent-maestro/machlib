@@ -4527,6 +4527,44 @@
         "Fbasis"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The unconditional version. hypotheses_count 1 (RatGerm S) is the content -- no window, no trapped case, no extra side condition.",
+      "id": "germsign-fs-unconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`F ∘ S` is eventually sign-definite for **every** rational germ"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.FS_evSignDef",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EvSignDef"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The cheap half, registered separately BECAUSE the prose distinguishes it on axiom cost: monotonicity touches nothing analytic while the root does. forbid_axioms_exact pins that it does not reach the derivative layer.",
+      "id": "germsign-mono-cheap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no derivatives, just `exp_lt` and `log_lt_log`"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.Fbasis_strictMono",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "Fbasis"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
