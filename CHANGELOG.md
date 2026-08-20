@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (m)
+
+### The Apollonius degree-drop locus is where a circle becomes a **line**
+
+`oii_lead_zero_iff_tangent_line` — for the `(o,i,i)` class,
+
+```
+QMlead d ρ classOII = 0   ↔   the class admits a common tangent LINE
+```
+
+The `8 → 7 → 8` anomaly across `d² = 8ρ²` was never a collision of two finite circles. Homogenising
+the radius as `r = R/S`, the class quadratic `A R² + B R S + C S² = 0` at `A = 0` becomes
+`S·(B R + C S) = 0`: two projective roots still, the finite one and `S = 0`, a solution of infinite
+radius. **A circle of infinite radius is a line**, and here it is a concrete one — for `ρ = 1` and
+`d² = 8`, the line `x + y = √2`, at distance exactly `1` from all three centres.
+
+In the compactified count the anomaly is `8 → 8 → 8` throughout.
+
+### Why the proof needs no division in the direction that matters
+
+An oriented line `{p : n·p = c}` with `|n| = 1` is tangent with signs `sᵢ` iff `n·cᵢ − c = sᵢρ`. The
+`(o,i,i)` signs and centres `(0,0)`, `(d,0)`, `(0,d)` give `c = −ρ` and `n_x d = n_y d = −2ρ`.
+Multiplying `|n|² = 1` through by `d²` turns the unit condition into
+
+```
+(n_x d)² + (n_y d)² = d²    ⟹    4ρ² + 4ρ² = d²
+```
+
+so the forward direction is division-free; only the *construction* of the line needs `d ≠ 0`.
+`sqrt` is absent from both footprints — the sqrt firewall holds.
+
+### Discrimination: the locus is class-specific, and the arithmetic says why
+
+`oio_tangent_line_iff` — flip one companion sign and the tangent line exists at `d² = **4**ρ²`
+instead. That is exactly what `[(s₁−s₀)² + (s₂−s₀)²] ρ² = d²` predicts: the bracket is `0`, `4` or
+`8`, and only `(o,i,i)` — *both* companions opposite to the first — gives `8`.
+
+Without that specimen the theorem could have been about lines in general rather than about this
+class, and a reader would have no way to tell.
+
+### Method note
+
+This is the first result in the corpus that argues *projectively*, and it arrived by asking where a
+vanishing quantity **went** rather than treating it as a degeneracy to be assumed away. The leading
+coefficient vanishing is not the phenomenon; it is the shadow of one.
+
 ## [Unreleased] — 2026-08-20 (l)
 
 ### The zero-query barrier: the first lower-bound instrument on the `L_F` side

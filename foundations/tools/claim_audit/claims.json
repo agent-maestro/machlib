@@ -4286,6 +4286,47 @@
         "fOcc"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The punchline, registered as the IFF. forbid_axioms_exact on sqrt because the whole Apollonius arc keeps a sqrt firewall and this theorem is stated without radicals on purpose.",
+      "id": "apollonius-tangent-line-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the class admits a common tangent LINE"
+      ],
+      "module": "MachLib.Geometry.Apollonius.TangentLine",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.oii_lead_zero_iff_tangent_line",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "conclusion_mentions": [
+        "QMlead",
+        "OIITangentLine"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The discriminating specimen. Registered because without it the headline could be read as a statement about lines in general.",
+      "id": "apollonius-locus-class-specific-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "flip one companion sign and the tangent line exists at `d² = **4**ρ²`"
+      ],
+      "module": "MachLib.Geometry.Apollonius.TangentLine",
+      "theorem": "MachLib.Geometry.Apollonius.SymmetricTriple.oio_tangent_line_iff",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "conclusion_mentions": [
+        "OIOTangentLine"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

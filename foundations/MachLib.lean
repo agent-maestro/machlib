@@ -554,6 +554,7 @@ import MachLib.Geometry.Apollonius.Elimination
 import MachLib.Geometry.Apollonius.Enumeration
 import MachLib.Geometry.Apollonius.Examples
 import MachLib.Geometry.Apollonius.Coordinates
+import MachLib.Geometry.Apollonius.TangentLine
 
 /-!
 # MachLib — top-level aggregator
