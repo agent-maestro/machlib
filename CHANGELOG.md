@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (d)
+
+### `L_F` has a type, and the positive fragment has a basis theorem
+
+"Basis" is now a claim about a defined object. `FTerm` is constants, `x`, the four field operations,
+and one unary symbol `F` — **no conditional, no sign test**, which is what makes the totalised branch
+a language-level obstruction rather than a bookkeeping detail.
+
+- `FTerm.EF`, `FTerm.LF` — the decoders **as terms of the language**, with `EF_eval` / `LF_eval`
+  discharging them wherever the argument is positive.
+- `PositiveInternal D t` — every `eml` node in `t` has *both children* strictly positive on `D`.
+  Structural, not "the function is positive", because that is what the decoder actually consumes.
+- `positive_fragment_F_representable` — **every tree in that fragment is computed on `D` by a term
+  of `L_F`.** One line of induction per node: `eml a b ↦ EF(â) − LF(b̂)`.
+
+### The two children are not symmetric, and the asymmetry is the totalisation
+
+`FTerm.EFshift_eval`: **the left child needs only a known lower bound, not positivity** —
+`exp u = exp(−C)·exp(u + C)`, so a shift removes the constraint. Obstruction (A) was a limitation of
+the *instrument* and is repaired.
+
+The right child has no such repair. `log₀` is genuinely piecewise, and `L_F` has no selector, so a
+single term cannot follow a value that switches definition on a sign. Obstruction (B) is a statement
+about the *language*, not the decoder.
+
+Obstruction (C) — a child that changes sign — is (B) made unavoidable unless the sign eventually
+stabilises, which is what `SignHardCase` would supply. That gives it a **second potential consumer**
+beyond all-depth tameness. **Deliberately not registered as an implication**: the remaining step,
+translating the totalised branch once its sign is known, has not been checked, and this arc has
+supplied enough warnings about obvious next compositions.
+
+### Wording corrected before it hardened
+
+"Two scales suffice, one never does" is replaced by: **one scale is not rationally sufficient; some
+two-scale pairs are; the criterion is open.** `(2,3)` and `(2,4)` both work, by *different*
+eliminations. And on `x > 0` the polynomial `Pₙ` is injective, so a single scale already *determines*
+`y` — determinacy and rational recoverability are different properties and only the second was ever
+at issue.
+
 ## [Unreleased] — 2026-08-20 (c)
 
 ### Dilation calculus at depth ≤ 1, and a proved blind spot

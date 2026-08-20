@@ -32,11 +32,17 @@ Two scales then recover everything. With `y = exp x`:
 and `log x = F(x) − exp x`. So `F`, dilation by `2` and `3`, and field operations suffice to
 reconstruct both `exp` and `log` on the positive reals.
 
-**Why three scales and not two.** With `Δ₂` alone, `y` satisfies `y² − y = Δ₂`, a quadratic — the
-value is pinned only up to a root choice, and no *rational* expression in `Δ₂` isolates it. Adding
-the third scale makes the recovery rational, because `y³ − y = (y² − y)(y + 1)` factors through the
-second. The minimality question — for which finite `S ⊆ ℕ` is `exp x` rationally recoverable from
-`{F(nx) : n ∈ S}` — is open and is a clean algebra problem about the polynomials `yⁿ − y`.
+**Why more than one scale.** On the domain that matters — `x > 0`, hence `y = exp x > 1` — the
+polynomial `Pₙ(y) = yⁿ − y` has `Pₙ′(y) = n·y^(n−1) − 1 > 0` and is **injective**, so a single scale
+already *determines* `y`. What it does not give is a *rational* formula: inverting `yⁿ − y = t` is
+algebraic of degree `n`. Determinacy and rational recoverability are different properties, and only
+the second is at issue here.
+
+**One scale is not rationally sufficient; some two-scale pairs are.** `(2,3)` works because
+`y³ − y = (y² − y)(y + 1)`. `(2,4)` also works, by a *different* elimination: `P₄/P₂ = 1 + y + y²`,
+and subtracting `P₂ = y² − y` leaves `2y + 1`. Whether *every* pair of distinct scales works is
+**open**; the criterion is a clean algebra question about when `ℝ(Pₘ, Pₙ) = ℝ(y)`, and it is
+independent of EML.
 
 **Scope.** Stated for the *functions*, on `(0, ∞)`. Nothing here claims `F` is cheap as a tree: its
 right child computes `1/x`, and `d(1/x) = 4` is recorded elsewhere, so `F` itself is not a low-depth
@@ -183,6 +189,142 @@ suspected: dilation and the mirror band are different research threads and this 
 theorem dilation_blind_to_translation (c n x : Real) :
     ((n * x) + c) - (x + c) = (n - 1) * x := by
   mach_mpoly [n, x, c]
+
+
+
+/-! ## `L_F` — an explicit language over the single function `F`
+
+"Basis" needs a type before it can be a theorem, so here is the object the claim is about.
+
+`L_F` is constants, the variable, the four field operations, and one unary symbol `F`. Nothing else
+— in particular **no conditional and no sign test**, which is what makes the totalised branch a real
+obstruction rather than a bookkeeping detail. -/
+
+/-- Terms over `F`: constants, `x`, field operations, and `u ↦ F(u)`. -/
+inductive FTerm where
+  | const : Real → FTerm
+  | var   : FTerm
+  | add   : FTerm → FTerm → FTerm
+  | sub   : FTerm → FTerm → FTerm
+  | mul   : FTerm → FTerm → FTerm
+  | div   : FTerm → FTerm → FTerm
+  | F     : FTerm → FTerm
+
+namespace FTerm
+
+/-- Evaluation. `F` is the one non-field symbol, and it means `Fbasis`. -/
+noncomputable def eval : FTerm → Real → Real
+  | const c, _ => c
+  | var,     x => x
+  | add a b, x => eval a x + eval b x
+  | sub a b, x => eval a x - eval b x
+  | mul a b, x => eval a x * eval b x
+  | div a b, x => eval a x / eval b x
+  | F a,     x => Fbasis (eval a x)
+
+/-- The exponential decoder, **as a term of the language**. -/
+noncomputable def EF (u : FTerm) : FTerm :=
+  sub (div (sub (sub (F (mul (const (1 + 1 + 1)) u)) (F u)) (const (log (1 + 1 + 1))))
+           (sub (sub (F (mul (const (1 + 1)) u)) (F u)) (const (log (1 + 1)))))
+      (const 1)
+
+/-- The logarithm decoder, as a term. -/
+noncomputable def LF (u : FTerm) : FTerm := sub (F u) (EF u)
+
+/-- `EF u` computes `exp` of whatever `u` computes, wherever that is positive. -/
+theorem EF_eval (u : FTerm) (x : Real) (h : 0 < eval u x) :
+    eval (EF u) x = exp (eval u x) := by
+  show (Fbasis ((1 + 1 + 1) * eval u x) - Fbasis (eval u x) - log (1 + 1 + 1))
+      / (Fbasis ((1 + 1) * eval u x) - Fbasis (eval u x) - log (1 + 1)) - 1
+      = exp (eval u x)
+  exact decoder_exp (eval u x) h
+
+/-- `LF u` computes `log` of whatever `u` computes, wherever that is positive. -/
+theorem LF_eval (u : FTerm) (x : Real) (h : 0 < eval u x) :
+    eval (LF u) x = log (eval u x) := by
+  show Fbasis (eval u x) - eval (EF u) x = log (eval u x)
+  rw [EF_eval u x h]
+  exact decoder_log (eval u x)
+
+end FTerm
+
+/-- **The positive-internal fragment.** Every `eml` node in `t` has *both children* strictly
+positive throughout `D`.
+
+Stated structurally rather than as "the function is positive", because that is what the decoder
+actually needs: `EF` requires the left child positive and `LF` the right, at each node. -/
+def PositiveInternal (D : Real → Prop) : EMLTree → Prop
+  | .const _ => True
+  | .var     => True
+  | .eml a b => PositiveInternal D a ∧ PositiveInternal D b
+                ∧ (∀ x : Real, D x → 0 < a.eval x) ∧ (∀ x : Real, D x → 0 < b.eval x)
+
+/-- **The positive-fragment unary basis theorem.**
+
+Every EML tree whose internal arguments stay positive on `D` is computed on `D` by a term of `L_F` —
+that is, by constants, `x`, field operations, and the single unary function `F`.
+
+The induction is one line at each node: `eml a b ↦ EF(â) − LF(b̂)`. -/
+theorem positive_fragment_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, PositiveInternal D t →
+      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+  intro t
+  induction t with
+  | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
+  | var => intro _; exact ⟨FTerm.var, fun _ _ => rfl⟩
+  | eml a b iha ihb =>
+      intro h
+      obtain ⟨hpa, hpb, hposa, hposb⟩ := h
+      obtain ⟨Ta, hTa⟩ := iha hpa
+      obtain ⟨Tb, hTb⟩ := ihb hpb
+      refine ⟨FTerm.sub (FTerm.EF Ta) (FTerm.LF Tb), ?_⟩
+      intro x hx
+      have hA : 0 < FTerm.eval Ta x := by rw [hTa x hx]; exact hposa x hx
+      have hB : 0 < FTerm.eval Tb x := by rw [hTb x hx]; exact hposb x hx
+      show FTerm.eval (FTerm.EF Ta) x - FTerm.eval (FTerm.LF Tb) x
+          = exp (a.eval x) - log (b.eval x)
+      rw [FTerm.EF_eval Ta x hA, FTerm.LF_eval Tb x hB, hTa x hx, hTb x hx]
+
+
+
+/-! ## Weakening positivity: the two children are not symmetric
+
+The fragment above requires *both* children of every node positive. Probing the two requirements
+separately shows they are not the same kind of constraint. -/
+
+/-- The exponential decoder after a shift: `exp u = exp(−C)·exp(u + C)`. -/
+noncomputable def FTerm.EFshift (C : Real) (u : FTerm) : FTerm :=
+  FTerm.mul (FTerm.const (exp (-C))) (FTerm.EF (FTerm.add u (FTerm.const C)))
+
+/-- **The left child needs only a known lower bound, not positivity.**
+
+`exp` is perfectly well defined for negative arguments; it was the *decoder* that wanted positivity,
+and a shift removes that. So obstruction (A) is a limitation of the instrument and is repairable. -/
+theorem FTerm.EFshift_eval (C : Real) (u : FTerm) (x : Real) (h : 0 < FTerm.eval u x + C) :
+    FTerm.eval (FTerm.EFshift C u) x = exp (FTerm.eval u x) := by
+  show exp (-C) * FTerm.eval (FTerm.EF (FTerm.add u (FTerm.const C))) x = exp (FTerm.eval u x)
+  have hval : FTerm.eval (FTerm.add u (FTerm.const C)) x = FTerm.eval u x + C := rfl
+  rw [FTerm.EF_eval _ x (by rw [hval]; exact h), hval, ← exp_add]
+  have e : -C + (FTerm.eval u x + C) = FTerm.eval u x := by mach_mpoly [C, FTerm.eval u x]
+  rw [e]
+
+/-! ### The right child is different, and the difference is the totalisation
+
+For the right child there is no shift to apply. The node computes `log₀(B x)`, which is `log (B x)`
+where `B x > 0` and **`0`** where `B x ≤ 0` — a genuinely piecewise operation. `L_F` has constants,
+`x`, four field operations and `F`, and **no conditional and no sign test**, so a single `L_F` term
+cannot reproduce a value that switches definition on a sign.
+
+That is why obstruction (B) is not a decoder limitation the way (A) was. It is a statement about the
+*language*, and it would be settled either by admitting a selector into `L_F` — changing what the
+basis claim means — or by restricting to domains on which the right child keeps a constant sign.
+
+Obstruction (C), a child that changes sign, is (B) made unavoidable: no restriction of the domain to
+a ray helps unless the sign eventually stabilises. That is exactly what `SignHardCase` would supply,
+which gives that obligation a **second potential consumer** beyond all-depth tameness — a
+*conditional* one, and deliberately not registered as an implication here, because the remaining
+step (translating the totalised branch once its sign is known) has not been checked. This arc has
+supplied enough warnings about obvious next compositions. -/
 
 
 end MachLib
