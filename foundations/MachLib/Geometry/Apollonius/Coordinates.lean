@@ -1079,6 +1079,103 @@ noncomputable def beIIO : Circle := ⟨cQ, cQ - tT, cQ * tT, below_quartet_pos�
 theorem beIIO_tangent : TangentInt beIIO Abe ∧ TangentInt beIIO Bbe ∧ TangentExt beIIO Cbe :=
   below_iio cQ tT cQ_tT_prod
 
+/-! ### The doubled `(inner,outer,outer)` class — closed
+
+`r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. Solution 5 is solution 4 under `e ↦ −e`, so one
+lemma in `e` with `e² = 2` gives both.
+
+Scaled by `28² = 784`: `28x = −9u`, `28(r−1) = 9w`, with `u = 5 + 4e`, `w = 8 + 5e = u·e`.
+
+**Both tangencies reduce to `w² = 2u²`.** The internal one is that directly. The external one factors
+as a difference of squares whose halves are `u + w` and `9(2k + u + w) = 9 · 9(w − u)`.
+
+**`7` is carried as a variable `k`, and that is what makes it close.** Written as numerals the step
+`56 + 70 = 9·14` is a *constant-only* identity that `acLt` cannot evaluate — five attempts died
+there, and raising `maxHeartbeats` to four million did not help. With `k` a variable the same step
+is `8k + 10k = 9·(2k)`: linear, with no constant above `10`. Every constant that blocked this class
+was a multiple of `7`, so one variable removes all of them at once.
+
+The lesson generalises the compression used for `v = 3h` and `κ = √34/3`: *the normaliser is cheap
+in variables and expensive in constants, so move the arithmetic into the variables.* Here the
+constant being moved is not irrational — it is `7`. -/
+
+private theorem diff_sq (a b : Real) : a * a - b * b = (a - b) * (a + b) := by mach_ring
+
+/-- Also generic: `2n²u² − n²u² = (nu)²`, with no constant but `2`. Stating it in `n` is what keeps
+`81` from ever being evaluated. -/
+private theorem sq_collapse (n u : Real) :
+    n * (n * ((1 + 1) * (u * u))) - n * (n * (u * u)) = (n * u) * (n * u) := by
+  mach_mpoly [n, u]
+
+/-- Generic, and free of constants: this is where the two nines live. -/
+private theorem prod_sq (n u w : Real) :
+    (u + w) * (n * (n * (w - u))) = n * (n * (w * w)) - n * (n * (u * u)) := by
+  mach_mpoly [n, u, w]
+
+/-- `a − b = c` rearranged. Used so the final step never expands `(8k + 9w)²`. -/
+private theorem eq_of_sub_eq {a b c : Real} (h : a - b = c) : b + c = a := by
+  have e : a = b + c := by rw [← h]; mach_ring
+  exact e.symm
+
+/-- **`w² = 2u²`** — the one algebraic fact the class needs. -/
+private theorem doubled_core (e u w : Real) (he : e * e = (1 + 1)) (hw : w = u * e) :
+    w * w = (1 + 1) * (u * u) := by
+  subst hw
+  refine QuadraticRoots.eq_of_sub_eq_zero ?_
+  have ex : (u * e) * (u * e) - (1 + 1) * (u * u) = (u * u) * (e * e - (1 + 1)) := by mach_mpoly [u, e]
+  rw [ex, he]
+  have z : ((1 + 1) : Real) - (1 + 1) = 0 := by mach_ring
+  rw [z]; mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- The internal tangency, scaled by `784`. -/
+private theorem doubled_int (e u w : Real) (he : e * e = (1 + 1)) (hw : w = u * e) :
+    (1 + 1) * ((((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)) = (((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1 + 1) * (1 + 1 + 1)) * w) := by
+  have hc := doubled_core e u w he hw
+  refine QuadraticRoots.eq_of_sub_eq_zero ?_
+  have ex : (1 + 1) * ((((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)) - (((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1 + 1) * (1 + 1 + 1)) * w)
+      = ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) - ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * (w * w)) := by mach_mpoly [u, w]
+  rw [ex, hc]
+  have z : ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) - ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (u * u))) = 0 := by mach_ring
+  rw [z]
+
+
+set_option maxHeartbeats 1000000 in
+/-- The external tangency, scaled by `784`. -/
+private theorem doubled_ext (e u w k : Real) (he : e * e = (1 + 1))
+    (hu : u = ((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) (hw : w = ((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) (hk : k = ((1 + 1) * (1 + 1) * (1 + 1)) - 1) :
+    (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) * (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) + (((1 + 1 + 1) * (1 + 1 + 1)) * u) * (((1 + 1 + 1) * (1 + 1 + 1)) * u)
+      = (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) := by
+  have h4 : ((1 + 1) * (1 + 1)) * w - ((1 + 1) * (1 + 1) + 1) * u = k := by subst hu; subst hw; subst hk; mach_mpoly [e]
+  have hue : w = u * e := by
+    subst hu; subst hw
+    have ex : (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) * e = ((1 + 1) * (1 + 1)) * (e * e) + ((1 + 1) * (1 + 1) + 1) * e := by mach_ring
+    rw [ex, he]; mach_ring
+  have hcore := doubled_core e u w he hue
+  have d1 : (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) * (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w)
+      - (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) * (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k)
+      = ((((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) - (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k))
+        * ((((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) + (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k)) := diff_sq _ _
+  have d2 : (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) - (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) = u + w := by
+    refine QuadraticRoots.eq_of_sub_eq_zero ?_
+    have ex : (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) - (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) - (u + w)
+        = (1 + 1) * ((((1 + 1) * (1 + 1)) * w - ((1 + 1) * (1 + 1) + 1) * u) - k) := by mach_mpoly [u, w, k]
+    rw [ex, h4]
+    have z : (k : Real) - k = 0 := by mach_ring
+    rw [z]; mach_ring
+  have d3 : (((1 + 1) * (1 + 1) * (1 + 1)) * k + ((1 + 1 + 1) * (1 + 1 + 1)) * w) + (((1 + 1 + 1) * (1 + 1 + 1)) * u + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k) = ((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * k + u + w) := by
+    mach_mpoly [u, w, k]
+  have hnine : (1 + 1) * k + u + w = ((1 + 1 + 1) * (1 + 1 + 1)) * (w - u) := by
+    refine QuadraticRoots.eq_of_sub_eq_zero ?_
+    have ex : (1 + 1) * k + u + w - ((1 + 1 + 1) * (1 + 1 + 1)) * (w - u)
+        = -((1 + 1) * ((((1 + 1) * (1 + 1)) * w - ((1 + 1) * (1 + 1) + 1) * u) - k)) := by mach_mpoly [u, w, k]
+    rw [ex, h4]
+    have z : (k : Real) - k = 0 := by mach_ring
+    rw [z]; mach_ring
+  rw [d2, d3, hnine, prod_sq, hcore] at d1
+  rw [sq_collapse] at d1
+  exact eq_of_sub_eq d1
+
 /-! ### The doubled `(inner,outer,outer)` class — the last two, and the full derivation
 
 `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked in Lean.** The mathematics below is
