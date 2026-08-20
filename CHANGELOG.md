@@ -5,6 +5,70 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (j)
+
+### `F` is not isolated: a two-parameter family of unary generators
+
+`Fmix_unary_basis` — for **every** `a ≠ 0` and **every** `b ≠ 0`, the affine mixture
+
+```
+F_{a,b,c}(x) = a·exp x + b·log₀ x + c
+```
+
+is a unary generator for the whole EML class, with the same query counts: two per exponential, three
+per logarithm, and `F`-depth equal to EML depth (`fDepth_toFTermMix`). `F = F_{1,1,0}`.
+
+**The generalisation is free, and the reason is instructive.** A *dilation*-based decoder would have
+needed three separate repairs — `c` removed by a difference, `b·log n` subtracted off, `a` cancelled
+in a ratio, one per parameter. The **negative-argument** decoder needs none: where `y ≤ 0` the
+totalised logarithm vanishes, so `F_{a,b,c}(y) = a·exp y + c`, and
+
+```
+exp u = (F_{a,b,c}(−q(u)) − c) / (F_{a,b,c}(−p(u)) − c)
+```
+
+cancels `a` and `c` *simultaneously*. `b` never appears — the exponential half of the basis does not
+see the logarithmic coefficient at all. It enters only in `log₀ u = (F(u) − a·exp u − c)/b`.
+
+The parameters were never obstacles to defeat one at a time. Which parameters a decoder must fight
+is a property of **where it evaluates the generator**, not of the generator.
+
+`Fmix_b_zero_is_affine_exp` records why `b ≠ 0` is asymmetric: at `b = 0` the generator is `exp` up
+to an affine change and carries no information about `log₀` at all, while the exponential decoder
+above still works verbatim.
+
+### The family is uniform mathematically and *not* numerically
+
+Measured, not asserted. With `c ≠ 0` the decoder recovers `a·exp(−q(u))` — of size `e^{−(u²+1)}` — by
+subtracting `c` from `a·exp(−q) + c`. Catastrophic cancellation, losing about `0.434·(u² + 1)`
+decimal digits, **quadratic in `u`**:
+
+| precision | range | worst rel err (exp) |
+| --- | --- | --- |
+| 50 dps | `u ∈ [−8, 8]` | 2.9e-16 — about 34 digits lost |
+| 200 dps | `u ∈ [−8, 8]` | 6.1e-166 |
+| 600 dps | `u ∈ [−30, 30]` | 7.4e-194 |
+| 50 dps, **`c = 0`** | `u ∈ [−30, 30]` | **3.3e-51** — nothing to cancel against |
+
+So the parameter the *algebra* cancels for free is exactly the one that costs precision, and the
+original `F` (`c = 0`) is distinguished after all — numerically, not algebraically. An earlier run at
+50 dps raised `ZeroDivisionError`: the denominator underflowed to exactly `0`. That is the failure
+mode, caught rather than reasoned about.
+
+### `x + 1`: what a change of basis does to one function
+
+`x_plus_one_basis_gap`, three facts in one statement:
+
+* the EML witness has depth `4`, and its compiled image has `F`-depth `4` — the translation adds
+  nothing;
+* **no** EML tree of depth `≤ 3` computes `x + 1` on `(0, ∞)`;
+* in `L_F` the function is the term `x + 1`: `F`-depth `0`, **zero** distinct `F`-queries, and on
+  *all* of `Real` rather than merely `(0, ∞)`.
+
+Basis change preserves *compiled* depth **exactly** and collapses *minimal* depth from 4 to 0. The
+finite-depth paper's "exact depth is a property of the presentation" now has both presentations of
+one function written side by side, with the minimum in each proved rather than estimated.
+
 ## [Unreleased] — 2026-08-20 (i)
 
 ### The measures, fixed first — and they diverge exponentially

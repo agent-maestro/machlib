@@ -287,6 +287,34 @@ theorem FQueriesLe_toFTermFast : ∀ t : EMLTree, FQueriesLe (toFTermFast t) (5 
       simp only [emlNodes]
       omega
 
+/-! ## What the change of basis does to a specific function
+
+The translation is depth-preserving, so a depth-4 EML tree compiles to an `L_F` term of `F`-depth 4.
+But the *minimum over representations* is a different quantity, and it is not preserved at all. -/
+
+/-- **`x + 1`: minimum depth 4 in one basis, zero transcendental calls in the other.**
+
+Three facts in one statement:
+
+* the EML witness has depth `4`, and its compiled image has `F`-depth `4` — the translation adds
+  nothing;
+* **no** EML tree of depth `≤ 3` computes `x + 1` on `(0, ∞)` (`x_plus_one_not_depth_le_three`);
+* in `L_F` the function is `x + 1`, with `F`-depth `0` and **zero** distinct `F`-queries — and on
+  *all* of `Real`, not merely `(0, ∞)`.
+
+So basis change preserves *compiled* depth exactly while collapsing *minimal* depth from 4 to 0.
+"Exact depth is a property of the presentation" with the two presentations written side by side. -/
+theorem x_plus_one_basis_gap :
+    (∃ t : EMLTree, t.depth = 4 ∧ fDepth (toFTermFast t) = 4
+        ∧ ∀ x : Real, 0 < x → t.eval x = x + 1)
+    ∧ (∀ t : EMLTree, t.depth ≤ 3 → (∀ x : Real, 0 < x → t.eval x = x + 1) → False)
+    ∧ (∃ T : FTerm, fDepth T = 0 ∧ FQueriesLe T 0 ∧ ∀ x : Real, FTerm.eval T x = x + 1) := by
+  refine ⟨?_, x_plus_one_depth_exact_four.1, ?_⟩
+  · obtain ⟨t, htd, hte⟩ := x_plus_one_depth_exact_four.2
+    exact ⟨t, htd, by rw [fDepth_toFTermFast, htd], hte⟩
+  · refine ⟨FTerm.add FTerm.var (FTerm.const 1), by simp [fDepth], ?_, fun _ => rfl⟩
+    exact ⟨[], Nat.le_refl 0, fun a ha => absurd ha (by simp [fArgs])⟩
+
 /-! ## Where minimality stands
 
 Two queries decode `exp` globally. **One is open**, and deliberately left open.

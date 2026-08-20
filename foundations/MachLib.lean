@@ -335,6 +335,7 @@ import MachLib.EMLDepthTameness
 import MachLib.EMLUnaryBasis
 import MachLib.EMLBasisEquivalence
 import MachLib.EMLQueryComplexity
+import MachLib.EMLGeneratorFamily
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree
 import MachLib.EMLExceptionalLocus

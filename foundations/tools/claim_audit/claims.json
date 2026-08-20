@@ -4166,6 +4166,58 @@
         "fOcc"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The family theorem. hypotheses_count 2 pins that ONLY a/=0 and b/=0 are assumed -- no positivity, no domain, no constraint on c.",
+      "id": "family-unary-basis-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is a unary generator for the whole EML class"
+      ],
+      "module": "MachLib.EMLGeneratorFamily",
+      "theorem": "MachLib.Fmix_unary_basis",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "evalM"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The exponential half needs only a/=0. hypotheses_count 1 is the content -- b does not appear.",
+      "id": "family-exp-half-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`b` never appears — the exponential half of the basis does not\nsee the logarithmic coefficient at all"
+      ],
+      "module": "MachLib.EMLGeneratorFamily",
+      "theorem": "MachLib.FTerm.EFmix_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The basis-change specimen. Registered because the prose claims BOTH a preserved quantity and a collapsed one; conclusion_mentions binds to the two measures.",
+      "id": "basis-gap-x-plus-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Basis change preserves *compiled* depth **exactly** and collapses *minimal* depth from 4 to 0."
+      ],
+      "module": "MachLib.EMLQueryComplexity",
+      "theorem": "MachLib.x_plus_one_basis_gap",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fDepth",
+        "FQueriesLe"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
