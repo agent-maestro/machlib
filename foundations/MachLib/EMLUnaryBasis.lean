@@ -692,7 +692,7 @@ private theorem pos_of_scaled_pos {c z : Real} (hc : 0 < c) (h : 0 < c * z) : 0 
 
 /-- `u² + u + 1 > 0` for every real `u` — `4(u² + u + 1) = (2u + 1)² + 3`. The shift that makes the
 decoder unconditional. -/
-private theorem quad_pos (u : Real) : 0 < u * u + u + 1 := by
+theorem quad_pos (u : Real) : 0 < u * u + u + 1 := by
   have h3 : (0 : Real) < 1 + 1 + 1 := add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax
   have h4 : (0 : Real) < 1 + 1 + 1 + 1 := add_pos h3 zero_lt_one_ax
   have hsum : (0 : Real) < (u + u + 1) * (u + u + 1) + (1 + 1 + 1) :=
@@ -743,6 +743,27 @@ theorem FTerm.LFall_eval (u : FTerm) (x : Real) :
   rw [FTerm.EFall_eval u x]
   exact decoder_log (FTerm.eval u x)
 
+/-- **The compiler**, `EML → L_F`, as an explicit function rather than an existence proof. One
+clause per constructor, and the `eml` node becomes `EFall â − LFall b̂`.
+
+Named because the equivalence-of-classes theorem needs to say things *about* the emitted term — in
+particular that its divisions never vanish — which an `∃` buried in an induction cannot support. -/
+noncomputable def toFTerm : EMLTree → FTerm
+  | .const c => FTerm.const c
+  | .var     => FTerm.var
+  | .eml a b => FTerm.sub (FTerm.EFall (toFTerm a)) (FTerm.LFall (toFTerm b))
+
+theorem toFTerm_eval : ∀ (t : EMLTree) (x : Real), FTerm.eval (toFTerm t) x = t.eval x := by
+  intro t
+  induction t with
+  | const c => intro _; rfl
+  | var => intro _; rfl
+  | eml a b iha ihb =>
+      intro x
+      show FTerm.eval (FTerm.EFall (toFTerm a)) x - FTerm.eval (FTerm.LFall (toFTerm b)) x
+          = exp (a.eval x) - log (b.eval x)
+      rw [FTerm.EFall_eval _ x, FTerm.LFall_eval _ x, iha x, ihb x]
+
 /-- `f` is computed on **all** of `Real` by a term of `L_F`. -/
 def FRepresentableGlobally (f : Real → Real) : Prop :=
   ∃ T : FTerm, ∀ x : Real, FTerm.eval T x = f x
@@ -754,18 +775,8 @@ def FRepresentableGlobally (f : Real → Real) : Prop :=
 No domain, no ray, no sign hypothesis, no positivity, and no runtime selector: `L_F` still has no
 conditional. One function generates both primitives of the grammar, and the totalisation comes along
 for free because `F` carries it. -/
-theorem F_unary_basis : ∀ t : EMLTree, FRepresentableGlobally t.eval := by
-  intro t
-  induction t with
-  | const c => exact ⟨FTerm.const c, fun _ => rfl⟩
-  | var => exact ⟨FTerm.var, fun _ => rfl⟩
-  | eml a b iha ihb =>
-      obtain ⟨Ta, hTa⟩ := iha
-      obtain ⟨Tb, hTb⟩ := ihb
-      refine ⟨FTerm.sub (FTerm.EFall Ta) (FTerm.LFall Tb), fun x => ?_⟩
-      show FTerm.eval (FTerm.EFall Ta) x - FTerm.eval (FTerm.LFall Tb) x
-          = exp (a.eval x) - log (b.eval x)
-      rw [FTerm.EFall_eval Ta x, FTerm.LFall_eval Tb x, hTa x, hTb x]
+theorem F_unary_basis : ∀ t : EMLTree, FRepresentableGlobally t.eval :=
+  fun t => ⟨toFTerm t, toFTerm_eval t⟩
 
 /-- Every domain at once: the global theorem restricted anywhere. Every hypothesis-carrying
 representability theorem in this file is this corollary with an unused hypothesis. -/

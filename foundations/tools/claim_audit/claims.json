@@ -4006,7 +4006,7 @@
       ],
       "hypotheses_count": 0,
       "proof_uses": [
-        "EFall_eval"
+        "toFTerm_eval"
       ]
     },
     {
@@ -4045,6 +4045,58 @@
       "proof_uses": [
         "quad_pos"
       ]
+    },
+    {
+      "_comment": "The reverse compiler. hypotheses_count pins that exactly ONE side condition survives -- DivSafe -- so a later weakening that quietly adds a positivity or domain hypothesis fails the gate.",
+      "id": "basis-equiv-reverse-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every `L_F` term is computed by an EML tree at every point\nwhere its divisions are defined"
+      ],
+      "module": "MachLib.EMLBasisEquivalence",
+      "theorem": "MachLib.toEML_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "toEML"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The headline: equality of the two generated function classes. Registered on the iff, not on either direction, because the prose claims equality.",
+      "id": "basis-equiv-class-eq-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "admits a single unary\ntranscendental generator over the field operations"
+      ],
+      "module": "MachLib.EMLBasisEquivalence",
+      "theorem": "MachLib.eml_class_eq_lf_class",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EMLClass",
+        "LFClass"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Keeps the change of basis INTERNAL. If F were not itself an EML function the equivalence would be an extension of the theory, not a re-presentation of it.",
+      "id": "basis-equiv-f-internal-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`F` is itself an EML function (`FTree`)"
+      ],
+      "module": "MachLib.EMLBasisEquivalence",
+      "theorem": "MachLib.F_mem_EMLClass",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EMLClass"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

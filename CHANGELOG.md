@@ -5,6 +5,68 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (h)
+
+### Change of basis: `EML` and `L_F` generate the *same* function class
+
+`eml_class_eq_lf_class` — **`EMLClass f ↔ LFClass f`.** The totalised exponential–logarithmic
+function class admits a single unary transcendental generator over the field operations. Neither
+direction assumes anything about signs, domains or rays.
+
+`toEML_eval` is the reverse direction: every `L_F` term is computed by an EML tree at every point
+where its divisions are defined, and the tree does not depend on the point.
+
+`F_mem_EMLClass` keeps this internal: `F` is itself an EML function (`FTree`), so this is a second
+presentation of one semantic class, not an extension of it by an outside oracle.
+
+### Most of the reverse direction already existed, and I nearly rebuilt it
+
+I started writing unconditional `+`, `−`, `×` for EML and hit *eleven* "already declared" errors.
+`EMLRingClosure.lean` has had all of it since an earlier arc, via a **better** shift than the one I
+was constructing: `domTree t = exp (1 − t)` is positive *and* dominates `−t`, so
+`domTree t + t > 1 > 0` — one gadget, where I was using two (`exp t` and `exp t − t`).
+`EMLDerivClosure.lean` adds `invPos`, the reciprocal of a positive tree.
+
+Exactly **one** operation was missing: division by a tree of unknown sign. One identity closes it —
+
+```
+a / b = a · b · (1 / b²),     b² > 0 wherever b ≠ 0
+```
+
+— the same move as everywhere else in this arc: route a sign-indefinite quantity through one that is
+positive for a *structural* reason. `divGen_eval` is the whole of the new mathematics in this
+commit; `toEML` and `toEML_eval` are then one clause per constructor.
+
+**Lesson, third time today:** before building, grep the corpus for the thing you are about to build.
+The first two instances were about concluding impossibility from a missing construction; this one is
+about not noticing the construction already exists. Same root — reasoning from what is in front of me
+rather than from what is in the repository.
+
+### The one side condition that does not lift
+
+`DivSafe T x` — no division in `T` divides by zero at `x`. It is a property of the `L_F` term, not of
+the encoding, and `divGen_at_zero` shows it is load-bearing: where the denominator vanishes the
+translated tree evaluates to `0` **for every numerator**, so matching `a / b` there would require
+`a / 0 = 0` for all `a`, which MachLib's field axioms do not provide (`mul_inv` is stated only for
+nonzero arguments).
+
+The forward direction has to *discharge* `DivSafe`, so `toFTerm_divSafe` proves the emitted terms are
+safe: `EFall` divides only by `EF(u² + 1)` whose value is `exp(u² + 1) > 0`, and `EF`'s own
+denominator is `exp(2w) − exp(w)` with `w > 0` (`EF_denom_ne_zero`).
+
+`F_unary_basis` is now `⟨toFTerm t, toFTerm_eval t⟩` — the compiler is an explicit function rather
+than an existence proof, because the equivalence theorem needs to state things *about* the emitted
+term. The claim registry caught the change: `proof_uses` still named `EFall_eval`, which the new
+proof term does not mention.
+
+### Why this matters beyond bookkeeping
+
+`x + 1` costs depth exactly 4 in the EML primitive basis. In `L_F` addition is primitive and `x + 1`
+needs no transcendental call at all. The class is identical; the syntactic complexity is not. That
+is the finite-depth paper's "exact depth is a property of the presentation" with a specimen sharp
+enough to be uncomfortable — and it makes the *simulation overhead* between the two presentations
+the next question worth measuring.
+
 ## [Unreleased] — 2026-08-20 (g)
 
 ### `F` is a unary basis for EML — globally, unconditionally, and obstruction (B) is refuted
