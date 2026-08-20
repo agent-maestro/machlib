@@ -4327,6 +4327,42 @@
         "OIOTangentLine"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The keystone. hypotheses_count 0 and conclusion_mentions both disjuncts, so a later weakening to only one side fails the gate.",
+      "id": "germ-dichotomy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a polynomial is eventually zero, or eventually dominates `c·xᵏ`"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.pev_dichotomy",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "EvDom"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The first strict query-hierarchy separation. conclusion_mentions fOcc AND Fbasis binds it to the query measure and to the witness, so neither can drift.",
+      "id": "germ-hierarchy-separation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The witness is **`F` itself**, not `exp`"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.zero_query_lt_one_query",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "Fbasis"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

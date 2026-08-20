@@ -5,6 +5,54 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (n)
+
+### The keystone: a polynomial is eventually zero, or eventually dominates `c·xᵏ`
+
+`pev_dichotomy`. Not a root-counting theorem — leading-term domination, by induction on the
+coefficient list: a nonzero constant term dominates when the tail dies, and otherwise
+`|c + x·P(x)| ≥ c₀xᵏ⁺¹ − |c| ≥ (c₀/2)xᵏ⁺¹` once `x ≥ 2|c|/c₀`.
+
+This is the one genuinely new supporting result the rational-germ programme needs. Envelopes break on
+cancellation; the escape is an **exact** representation `P/Q` where cancellation happens in the
+polynomial arithmetic and needs no asymptotic prediction. `pev_envelope` is the easy other half.
+
+### The first strict query separation: `C₀ ⊊ C₁`
+
+`zero_query_lt_one_query`, on the division-free fragment. The witness is **`F` itself**, not `exp`:
+`F` costs exactly one query *by definition*, whereas `exp` currently costs two, so the upper bound is
+free. And since `log x ≥ 0` for `x ≥ 1`,
+
+```
+F(x) = exp x + log x ≥ exp x        (x ≥ 1)
+```
+
+so `not_polyEnvelope_Fbasis` — `F` outgrows every polynomial envelope and cannot be zero-query.
+
+`not_polyEnvelope_of_ge_exp` generalises `polyEnvelope_ne_exp`: *anything* eventually dominating
+`exp` is excluded, not just `exp` itself. The instrument now has two customers.
+
+### Division is totalised, and `FQueryLowerBound` depends on that
+
+Checked before building on it: `div_zero : a / 0 = 0` is an **axiom** of `MachLib.Real`
+(`Basic.lean:149`, matching the Lean/Mathlib convention). This matters more than a convenience.
+
+Without it, `x ↦ a x / 0` would be an unconstrained function, and a model could set
+`divR y 0 = exp y` — making `div var (sub var var)` a **zero-query term computing `exp`**.
+`FQueryLowerBound` would then not merely be unproved, it would be *independent*. The axiom is what
+makes the statement true, and the `÷` case of the germ compilation is exactly where it gets used.
+
+### What remains, precisely
+
+`pev_dichotomy` is banked; the germ compilation is not built. The concrete inventory:
+
+* coefficient-list `padd`/`pmul` with `pev` homomorphism lemmas — the corpus has `listAddR` /
+  `listMulR` and `polyCoeffs_eval`, in another namespace and phrased for the `Poly` expression tree;
+* the fraction identities, valid where denominators are nonzero — which `pev_dichotomy` now supplies
+  eventually;
+* the division envelope `|P/Q| ≤ (C/c)·x^N`, needing `abs_div` and a reciprocal monotonicity lemma.
+  **Neither exists in the corpus.** That is the missing infrastructure, named rather than assumed.
+
 ## [Unreleased] — 2026-08-20 (m)
 
 ### The Apollonius degree-drop locus is where a circle becomes a **line**
