@@ -4450,6 +4450,42 @@
         "pev"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The headline. hypotheses_count 1 pins fOcc T = 0 as the ONLY hypothesis -- the whole point is that no sign assumption is imported, unlike SignHardCase.",
+      "id": "germsign-c0-signdef-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "every zero-query `L_F` term is eventually strictly positive, eventually\nstrictly negative, or eventually zero"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.zero_query_evSignDef",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EvSignDef"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The signed refinement that makes it work. conclusion_mentions all three disjuncts so a later weakening to two fails the gate.",
+      "id": "germsign-signed-dichotomy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the leading-term induction, refined to track\nsign rather than magnitude"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.pev_signed_dichotomy",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "EvPos",
+        "EvNeg"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

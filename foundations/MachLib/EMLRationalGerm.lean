@@ -59,12 +59,12 @@ theorem le_add_nonneg' {a b : Real} (hb : 0 ≤ b) : a ≤ a + b := by
   have e : a + 0 = a := by mach_ring
   rw [e] at v; exact v
 
-private theorem div_mul_self' {a c : Real} (hc : c ≠ 0) : a / c * c = a := by
+theorem div_mul_self' {a c : Real} (hc : c ≠ 0) : a / c * c = a := by
   rw [div_def a c hc]
   have e : a * (1 / c) * c = a * (c * (1 / c)) := by mach_mpoly [a, c, (1 : Real) / c]
   rw [e, mul_inv c hc]; mach_ring
 
-private theorem nonneg_of_scaled_nonneg {c z : Real} (hc : 0 < c) (h : 0 ≤ c * z) : 0 ≤ z := by
+theorem nonneg_of_scaled_nonneg {c z : Real} (hc : 0 < c) (h : 0 ≤ c * z) : 0 ≤ z := by
   rcases lt_total 0 z with hz | hz | hz
   · exact le_of_lt hz
   · exact le_of_eq hz
@@ -82,7 +82,7 @@ private theorem nonneg_of_scaled_nonneg {c z : Real} (hc : 0 < c) (h : 0 ≤ c *
     rw [el, er] at w
     exact absurd (lt_of_le_of_lt h w) (lt_irrefl_ax 0)
 
-private theorem le_of_mul_le_mul_left' {a b c : Real} (hc : 0 < c) (h : c * a ≤ c * b) : a ≤ b := by
+theorem le_of_mul_le_mul_left' {a b c : Real} (hc : 0 < c) (h : c * a ≤ c * b) : a ≤ b := by
   refine le_of_sub_nonneg (nonneg_of_scaled_nonneg hc ?_)
   have e : c * (b - a) = c * b - c * a := by mach_mpoly [c, a, b]
   rw [e]
@@ -91,7 +91,7 @@ private theorem le_of_mul_le_mul_left' {a b c : Real} (hc : 0 < c) (h : c * a �
   have er : c * b + -(c * a) = c * b - c * a := by mach_ring
   rw [el, er] at v; exact v
 
-private theorem div_pos' {a b : Real} (ha : 0 < a) (hb : 0 < b) : 0 < a / b := by
+theorem div_pos' {a b : Real} (ha : 0 < a) (hb : 0 < b) : 0 < a / b := by
   rw [div_def a b (ne_of_gt hb)]
   exact mul_pos ha (one_div_pos_of_pos hb)
 
@@ -122,6 +122,67 @@ private theorem abs_add_ge {a b : Real} : abs b - abs a ≤ abs (a + b) := by
   have el : abs b + -(abs a) = abs b - abs a := by mach_ring
   have er : abs (a + b) + abs a + -(abs a) = abs (a + b) := by mach_ring
   rw [el, er] at v; exact v
+
+/-- The threshold at which a leading term of size `c₀·x` swamps a constant `c`: some
+`X' ≥ max(X,1)` with `2|c| ≤ c₀·X'`. Extracted because both dichotomies need it. -/
+theorem big_threshold (c c₀ : Real) (hc₀ : 0 < c₀) (X : Real) (hX : 1 ≤ X) :
+    ∃ X' : Real, 1 ≤ X' ∧ X ≤ X' ∧ (1 + 1) * abs c ≤ c₀ * X' := by
+  have h2 : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
+  rcases lt_total X ((1 + 1) * abs c / c₀ + 1) with hcmp | hcmp | hcmp
+  · refine ⟨(1 + 1) * abs c / c₀ + 1, ?_, le_of_lt hcmp, ?_⟩
+    · have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
+        div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
+      have v := add_le_add_wit hq (le_refl (1 : Real))
+      have e : (0 : Real) + 1 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
+        rw [div_def _ _ (ne_of_gt hc₀)]
+        have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
+            = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
+          mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
+        rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
+      have hle : c₀ * ((1 + 1) * abs c / c₀)
+          ≤ c₀ * ((1 + 1) * abs c / c₀ + 1) := by
+        have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀))
+          (le_of_lt zero_lt_one_ax)
+        have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
+        rw [e] at v
+        exact mul_le_mul_of_nonneg_left v (le_of_lt hc₀)
+      rw [hkey] at hle; exact hle
+  · exact ⟨X, hX, le_refl X, by
+      rw [hcmp] at *
+      have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
+        div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
+      have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
+        rw [div_def _ _ (ne_of_gt hc₀)]
+        have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
+            = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
+          mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
+        rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
+      have hle : c₀ * ((1 + 1) * abs c / c₀)
+          ≤ c₀ * ((1 + 1) * abs c / c₀ + 1) := by
+        have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀))
+          (le_of_lt zero_lt_one_ax)
+        have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
+        rw [e] at v
+        exact mul_le_mul_of_nonneg_left v (le_of_lt hc₀)
+      rw [hkey] at hle; exact hle⟩
+  · refine ⟨X, hX, le_refl X, ?_⟩
+    have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
+      div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
+    have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
+      rw [div_def _ _ (ne_of_gt hc₀)]
+      have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
+          = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
+        mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
+      rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
+    have hstep : c₀ * ((1 + 1) * abs c / c₀) ≤ c₀ * X := by
+      refine mul_le_mul_of_nonneg_left ?_ (le_of_lt hc₀)
+      have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀)) (le_of_lt zero_lt_one_ax)
+      have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
+      rw [e] at v
+      exact le_trans v (le_of_lt hcmp)
+    rw [hkey] at hstep; exact hstep
 
 /-- **The polynomial dichotomy.** Every coefficient list is either eventually zero, or eventually
 dominates `c·xᵏ` for some `c > 0`.
@@ -156,63 +217,7 @@ theorem pev_dichotomy : ∀ L : List Real, EvZeroF (pev L) ∨ EvDom (pev L) := 
           rw [e2]; exact le_refl _
       · -- tail dominates: multiply by `x` and absorb the head
         have h2 : (0 : Real) < 1 + 1 := add_pos zero_lt_one_ax zero_lt_one_ax
-        obtain ⟨X', hX', hXX', hbig⟩ :
-            ∃ X' : Real, 1 ≤ X' ∧ X ≤ X' ∧ (1 + 1) * abs c ≤ c₀ * X' := by
-          rcases lt_total X ((1 + 1) * abs c / c₀ + 1) with hcmp | hcmp | hcmp
-          · refine ⟨(1 + 1) * abs c / c₀ + 1, ?_, le_of_lt hcmp, ?_⟩
-            · have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
-                div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
-              have v := add_le_add_wit hq (le_refl (1 : Real))
-              have e : (0 : Real) + 1 = 1 := by mach_ring
-              rw [e] at v; exact v
-            · have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
-                rw [div_def _ _ (ne_of_gt hc₀)]
-                have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
-                    = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
-                  mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
-                rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
-              have hle : c₀ * ((1 + 1) * abs c / c₀)
-                  ≤ c₀ * ((1 + 1) * abs c / c₀ + 1) := by
-                have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀))
-                  (le_of_lt zero_lt_one_ax)
-                have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
-                rw [e] at v
-                exact mul_le_mul_of_nonneg_left v (le_of_lt hc₀)
-              rw [hkey] at hle; exact hle
-          · exact ⟨X, hX, le_refl X, by
-              rw [hcmp] at *
-              have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
-                div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
-              have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
-                rw [div_def _ _ (ne_of_gt hc₀)]
-                have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
-                    = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
-                  mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
-                rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
-              have hle : c₀ * ((1 + 1) * abs c / c₀)
-                  ≤ c₀ * ((1 + 1) * abs c / c₀ + 1) := by
-                have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀))
-                  (le_of_lt zero_lt_one_ax)
-                have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
-                rw [e] at v
-                exact mul_le_mul_of_nonneg_left v (le_of_lt hc₀)
-              rw [hkey] at hle; exact hle⟩
-          · refine ⟨X, hX, le_refl X, ?_⟩
-            have hq : (0 : Real) ≤ (1 + 1) * abs c / c₀ :=
-              div_nonneg (mul_nonneg (le_of_lt h2) (abs_nonneg c)) (le_of_lt hc₀)
-            have hkey : c₀ * ((1 + 1) * abs c / c₀) = (1 + 1) * abs c := by
-              rw [div_def _ _ (ne_of_gt hc₀)]
-              have e : c₀ * ((1 + 1) * abs c * (1 / c₀))
-                  = (1 + 1) * abs c * (c₀ * (1 / c₀)) := by
-                mach_mpoly [c₀, (1 + 1) * abs c, (1 : Real) / c₀]
-              rw [e, mul_inv _ (ne_of_gt hc₀)]; mach_ring
-            have hstep : c₀ * ((1 + 1) * abs c / c₀) ≤ c₀ * X := by
-              refine mul_le_mul_of_nonneg_left ?_ (le_of_lt hc₀)
-              have v := add_le_add_wit (le_refl ((1 + 1) * abs c / c₀)) (le_of_lt zero_lt_one_ax)
-              have e : (1 + 1) * abs c / c₀ + 0 = (1 + 1) * abs c / c₀ := by mach_ring
-              rw [e] at v
-              exact le_trans v (le_of_lt hcmp)
-            rw [hkey] at hstep; exact hstep
+        obtain ⟨X', hX', hXX', hbig⟩ := big_threshold c c₀ hc₀ X hX
         refine Or.inr ⟨c₀ / (1 + 1), k + 1, X', div_pos' hc₀ h2, hX', fun x hx => ?_⟩
         have hx1 : (1 : Real) ≤ x := le_trans hX' hx
         have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
@@ -539,7 +544,7 @@ def RatGerm (f : Real → Real) : Prop :=
   ∃ (P Q : List Real) (X : Real), 1 ≤ X ∧ (∀ x : Real, X ≤ x → pev Q x ≠ 0)
     ∧ ∀ x : Real, X ≤ x → f x = pev P x / pev Q x
 
-private theorem two_bounds' {X₁ X₂ : Real} (h₁ : 1 ≤ X₁) (h₂ : 1 ≤ X₂) :
+theorem two_bounds' {X₁ X₂ : Real} (h₁ : 1 ≤ X₁) (h₂ : 1 ≤ X₂) :
     ∃ X : Real, 1 ≤ X ∧ X₁ ≤ X ∧ X₂ ≤ X := by
   rcases lt_total X₁ X₂ with h | h | h
   · exact ⟨X₂, h₂, le_of_lt h, le_refl X₂⟩

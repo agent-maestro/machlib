@@ -340,6 +340,7 @@ import MachLib.EMLBasisOverhead
 import MachLib.EMLZeroQueryBarrier
 import MachLib.EMLRationalGerm
 import MachLib.EMLOneQueryForm
+import MachLib.EMLGermSign
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree
 import MachLib.EMLExceptionalLocus

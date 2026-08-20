@@ -5,6 +5,41 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (q)
+
+### `C₀` is eventually sign-definite — **unconditionally**
+
+`zero_query_evSignDef`: every zero-query `L_F` term is eventually strictly positive, eventually
+strictly negative, or eventually zero. No hypothesis, no ray supplied from outside.
+
+**`SignHardCase` is this exact statement for EML, and it is open.** The contrast is the content: sign
+definiteness is not hard *in general* — it is hard when the representation offers no normal form to
+read it from. `C₀` has one, so the sign of a quotient comes off the signs of a numerator and a
+denominator, each settled by `pev_signed_dichotomy` (the leading-term induction, refined to track
+sign rather than magnitude).
+
+`pev_dichotomy` is now derived from the signed version rather than proved separately, and the
+threshold construction both share is factored out as `big_threshold`.
+
+### What the trichotomy buys at level 1 — three of four regimes collapse
+
+A rational germ `S` feeding the single `F` of a one-query term:
+
+| regime | `F(S)` | status |
+| --- | --- | --- |
+| `S < 0` | `= exp S`, and `0 < F(S) < 1` | logarithm **gone**, generator **bounded** |
+| `S = 0` | `= 1` | **constant** |
+| `S ≥ 1` | `≥ exp S > 0` | exponential dominates |
+| `0 < S < 1` | sign depends on scale | **the open branch** |
+
+`Fbasis_of_neg`, `Fbasis_zero`, `Fbasis_ge_exp_of_one_le` are the first three.
+
+**This says something about how *not* to attack `OneQueryDichotomy`.** On three of the four regimes
+the level-1 question never arises — the generator is bounded, constant, or dominated by its
+exponential part. The difficulty is not that `F` is transcendental. Reaching for a transcendence
+theorem would be answering a strictly harder question than the one that is open: what happens on
+`0 < S < 1`, where `log S < 0` outweighs `exp S ∈ (1, e)`.
+
 ## [Unreleased] — 2026-08-20 (p)
 
 ### The one-query normal form, in two layers
