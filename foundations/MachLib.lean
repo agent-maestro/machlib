@@ -337,6 +337,7 @@ import MachLib.EMLBasisEquivalence
 import MachLib.EMLQueryComplexity
 import MachLib.EMLGeneratorFamily
 import MachLib.EMLBasisOverhead
+import MachLib.EMLZeroQueryBarrier
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree
 import MachLib.EMLExceptionalLocus

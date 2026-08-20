@@ -4252,6 +4252,40 @@
         "D"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The reusable half of the instrument. conclusion_mentions PolyEnvelope binds the claim to the ENVELOPE, not to the exp corollary -- the prose says the envelope is the reusable theorem.",
+      "id": "zeroquery-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`polyEnvelope_of_zero_query` is the reusable half"
+      ],
+      "module": "MachLib.EMLZeroQueryBarrier",
+      "theorem": "MachLib.polyEnvelope_of_zero_query",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "PolyEnvelope"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The lower bound itself. hypotheses_count 2 records that divFree is a REAL hypothesis -- if someone later drops it without proving the division case the count changes and the gate fires.",
+      "id": "zeroquery-exp-costs-one-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "any target with proved super-polynomial growth now costs at least one `F`-query"
+      ],
+      "module": "MachLib.EMLZeroQueryBarrier",
+      "theorem": "MachLib.fOcc_pos_of_eq_exp",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

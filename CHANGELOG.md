@@ -5,6 +5,60 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (l)
+
+### The zero-query barrier: the first lower-bound instrument on the `L_F` side
+
+```
+fOcc T = 0  ⟹  T is eventually polynomially bounded  ⟹  T ≠ exp
+```
+
+`polyEnvelope_of_zero_query` is the reusable half, and it is deliberately *not* called
+`exp_not_rational`: any target with proved super-polynomial growth now costs at least one `F`-query,
+and `exp` is only the first customer.
+
+`exp_beats_powNat` — the one analytic input — was already in the corpus. Nothing new was needed
+there.
+
+### Scope: this closes the division-free case, and the reason is precise
+
+`divFree T` is a hypothesis and it is load-bearing. The envelope induction closes for constants, the
+variable, `+`, `−` and `×`. It does **not** close for `÷`, because bounding `a / b` needs `|b|`
+bounded *below*, so the invariant must be two-sided — upper envelope plus "eventually zero, or
+eventually `≥ c/xᴹ`".
+
+That strengthened invariant is closed under `×` and `÷` and **not under `+`**: two terms can cancel
+to strictly smaller order (`x` and `−x + 1/x` sum to `1/x`), and the leading-order data of the
+summands does not determine the order of the sum. Recovering it needs the full rational germ at
+`+∞` — a Laurent normal form with descent through cancelling leading terms.
+
+**So the obstruction is cancellation under addition** — the same shape that gates `SignHardCase` and
+the EML depth program. That is worth more than the theorem: it says the `L_F` lower-bound problem is
+not a new kind of difficulty, it is the corpus's existing one wearing different clothes.
+
+I did *not* attempt a global fraction normal form. With totalised division, combining fractions by
+multiplying denominators can disagree with the original function exactly at the denominators' zeros,
+so `T = P/Q` everywhere is not a safe promise. The eventual germ is the right object and it is not
+built here.
+
+### The obligation gate caught a real overclaim
+
+I first marked `FQueryLowerBound` as **reduced**, citing `fOcc_pos_of_eq_exp` as the discharger. The
+gate refused: *"marked reduced; cited [`fOcc_pos_of_eq_exp`], actual dischargers (none)"* — because
+that theorem carries an extra hypothesis and does not conclude the unrestricted statement.
+
+Correct fix: **split the obligation.** `FQueryLowerBoundDivFree` is a separate row, **discharged** by
+`fQueryLowerBoundDivFree_holds`; `FQueryLowerBound` stays **open**. Ledger 12 rows → **13**.
+
+A weaker theorem cited against a stronger row is exactly the drift the ledger exists to catch, and it
+caught it on the first attempt.
+
+### Specimen
+
+`nastyTerm = ((x·x − x)·(x·x) + x) − 7` — nested products and differences, nothing polynomial-looking
+about the *syntax* — falls under the envelope with no case analysis, hence `nastyTerm_ne_exp`. The
+theorem is about the language, not about terms that happen to look like polynomials.
+
 ## [Unreleased] — 2026-08-20 (k)
 
 ### Simulation overhead, the other direction — and it is not symmetric
@@ -1551,7 +1605,8 @@ in commit archaeology:
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — |
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
-| `FQueryLowerBound` | **open** | — (needs `exp` is not rational; no route in the corpus) |
+| `FQueryLowerBound` | **open** | — (division-free case split off below and discharged) |
+| `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger
