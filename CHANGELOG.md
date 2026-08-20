@@ -5,6 +5,79 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (i)
+
+### The measures, fixed first — and they diverge exponentially
+
+"Three `F` evaluations" was never well defined. A syntax tree counts `F(u)` twice inside `EF u`; an
+evaluator with common-subexpression sharing queries it once. Three measures are now defined:
+
+* `fOcc T` — occurrences of `F` in the **syntax tree**;
+* `fDepth T` — maximum **nesting** depth of `F`;
+* `FQueriesLe T n` — the arguments at which `T` applies `F` are covered by a list of length `≤ n`,
+  an upper bound on the **distinct** (evaluation-DAG) query count. Stated as a cover rather than
+  `dedup.length` so that no decidable equality on `Real` is needed.
+
+They are not interchangeable: `fOcc_EFall` gives `fOcc(EFall u) = 8 + 20·fOcc u`, so the tree count
+**multiplies by 20 at every EML level** — exponential in depth — while `FQueriesLe_toFTermFast`
+bounds the distinct count by `5` per `eml` node, linear in size.
+
+### A two-query global exponential decoder
+
+`EFall` needed six distinct queries because it routes through `EF`, which needs its argument
+**positive** and spends three queries on the dilation identity. Wrong instrument again.
+
+Query `F` at a **negative** argument and the totalised logarithm is `0`, so `F` reports the
+exponential alone: `F(y) = exp y` for every `y ≤ 0`. Both `p(u) = u + u² + 1` and `q(u) = u² + 1` are
+positive for every real `u`, so `−p` and `−q` are negative for every real `u`, and `p − q = u`:
+
+```
+exp u = F(−q(u)) / F(−p(u))
+```
+
+**Two queries. No dilation identity, no positivity hypothesis, no case split, and no scales at all.**
+`log₀ u = F(u) − exp u` costs one more, so three for the logarithm.
+
+The totalisation is not being worked around here — it is being *used*. `F` is a mixed signal, and
+evaluating it where one component vanishes is a cheaper demixing than the dilation calculus, which
+demixes by *transformation law* and needs two scales to do it.
+
+### Simulation overhead: zero in depth, linear in count
+
+`fDepth_toFTermFast` — **`fDepth (toFTermFast t) = t.depth`, exactly.** The decoders never nest `F`
+inside `F`, so the change of basis is depth-preserving with no constant factor and no additive
+slack. The entire cost of the translation lives in query *count*:
+
+```
+fDepth (compiled)      =  depth (source)          exactly, no overhead
+FQueriesLe (compiled)  ≤  5 · (eml nodes)         linear
+fOcc (compiled)           ×20 per level           exponential
+```
+
+Two presentations of one class, coarse complexity preserved in the two measures that respect
+sharing, and destroyed in the one that does not.
+
+### One query: open, and left open
+
+The reason to look: the argument of `F` is free, any rational function of `u` may be used. The
+reason to expect none: for `exp u` to be rational in `F(w)` and `u` the exponential parts must be
+rationally related, which pushes `w` toward affine `a·u + b` — and no affine `w` is non-positive for
+*every* `u`, so `F(w)` cannot report the exponential alone; where `w` is positive, `F(w)` carries
+both components and separating them is what needed three queries.
+
+**That is a reason to look, not a proof.** It assumes the decoder is rational in `F(w)` and `u`, and
+assumes rational relatedness forces affinity. Neither is established. This arc produced three
+impossibility guesses in one day and refuted all three, so "one query does not suffice" is recorded
+as a conjecture with no supporting theorem.
+
+### Verification
+
+Independent Python at 60 dps: `EFneg` matches `exp` to 2.1e-61 worst relative error over
+`u ∈ [−40, 40]` — a range four times wider than `EFall` could be tested on, because `EFall` overflows
+double range at `|u| > 12` (it evaluates `exp(3(u²+1))`). The cheap decoder is not only shorter, it
+is numerically far better conditioned; `EFneg` evaluates `F` only at *negative* arguments, where
+`exp` is bounded by `1`.
+
 ## [Unreleased] — 2026-08-20 (h)
 
 ### Change of basis: `EML` and `L_F` generate the *same* function class
@@ -123,6 +196,12 @@ available. `sorryAx` absent from all three new footprints.
 
 `F` is a basis. **Is it a minimal one?** `EFall` spends three `F` evaluations per `exp` and four per
 `log₀`, and the dilation identity needs at least two scales — one is not rationally sufficient.
+
+> **⚠ Both numbers are wrong, and were wrong in a specific way — see 2026-08-20 (i).** They float
+> between syntax-tree occurrences and distinct evaluation-DAG queries, which is exactly the
+> ambiguity that had to be removed before "minimal" could mean anything. In the DAG measure `EF`
+> costs 3 and `LF` costs 3 as well (they *share* `F(u)`), and the global `EFall` costs 6, not 3.
+> And the whole count is superseded: two queries suffice globally.
 Whether three is necessary, and whether some other single function does better, is untouched.
 Nothing here says `L_F` is a *small* language, only that it is a complete one.
 

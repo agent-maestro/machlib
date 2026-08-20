@@ -58,7 +58,7 @@ open Real
 noncomputable def Fbasis (x : Real) : Real := exp x + log x
 
 /-- `a / b = c` from `a = b · c`. -/
-private theorem div_of_eq_mul {a b c : Real} (hb : b ≠ 0) (h : a = b * c) : a / b = c := by
+theorem div_of_eq_mul {a b c : Real} (hb : b ≠ 0) (h : a = b * c) : a / b = c := by
   rw [div_def a b hb, h]
   have e : b * c * (1 / b) = c * (b * (1 / b)) := by mach_mpoly [b, c, (1 : Real) / b]
   rw [e, mul_inv b hb]; mach_ring

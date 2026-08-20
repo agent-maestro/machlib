@@ -4097,6 +4097,75 @@
         "EMLClass"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The two-query decoder. hypotheses_count 0 is the content: no positivity, no domain, no scales.",
+      "id": "query-two-query-decoder-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Two queries. No dilation identity, no positivity hypothesis, no case split, and no scales at all.**"
+      ],
+      "module": "MachLib.EMLQueryComplexity",
+      "theorem": "MachLib.FTerm.EFneg_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "Depth preservation is an EQUALITY, not a bound. Registered on the equality so a later weakening to <= fails the gate.",
+      "id": "query-depth-preserving-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`fDepth (toFTermFast t) = t.depth`, exactly.**"
+      ],
+      "module": "MachLib.EMLQueryComplexity",
+      "theorem": "MachLib.fDepth_toFTermFast",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fDepth"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The linear DAG bound. conclusion_mentions emlNodes so the claim binds to per-node linearity rather than to some unrelated bound.",
+      "id": "query-linear-dag-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "bounds the distinct count by `5` per `eml` node, linear in size"
+      ],
+      "module": "MachLib.EMLQueryComplexity",
+      "theorem": "MachLib.FQueriesLe_toFTermFast",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FQueriesLe",
+        "emlNodes"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The divergence of the two measures, which is why the definitions had to come first. An equality, so the factor 20 cannot drift.",
+      "id": "query-tree-blowup-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`fOcc(EFall u) = 8 + 20·fOcc u`"
+      ],
+      "module": "MachLib.EMLQueryComplexity",
+      "theorem": "MachLib.fOcc_EFall",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
