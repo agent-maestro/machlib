@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20
+
+### The mirror band — half proved, and the other half is the cancellation problem
+
+`MirrorBand f := BelowIdentityUnbounded f ∧ super-logarithmic`. The mirror of `IntermediateBand`:
+`f x < x` in place of `x < f x`, everything else kept.
+
+`mirrorBand_not_depth_three_bounded_left` — **no depth-3 node with bounded left exponential lies in
+the class.** Two branches, split by the totalisation:
+
+- right child positive: `depth_le_two_decay_on_ray` caps `−log (B x)` at `C + log x`, so the node is
+  at most `K + C + log x` — killing super-logarithmicity;
+- right child non-positive: its logarithm is `0`, the node **is** `exp (A x) ≤ K` — killing it more
+  cheaply, and needing no decay bound at all.
+
+**The growing-left case is not a mirror of anything and is left open.** There `exp (A x) ≥ exp x`
+and `log (B x)` are both near `exp x` and cancel; that is the difficulty `ExpExpGapBelow` and
+`BoundedCellApproach` exist for. I had claimed this half "needs no new instrument". That was wrong,
+and the analysis that shows why is in the module: `log x` is reachable at depth 3 through *both*
+branches, so `Hlog` has to cut both, and only one of the two cuts cheaply.
+
+### Two corrections made during the proof, both mine
+
+- **`set` is not a MachLib tactic.** My own note says grep before reaching for one; I reached first.
+- **A lemma I introduced to bridge the totalised branches was false.** `exp (−C) ≤ C + log x` fails
+  for very negative `C`. It was briefly `sorry`-ed to isolate the gap, and the gap turned out not to
+  exist — those branches never needed a decay bound, only `C + exp (−C) ≥ 1` and `log x ≥ 0`. The
+  false lemma is deleted; `sorry` count in the module is `0`.
+
+Recording the second because the failure mode is specific: a `sorry` placed to *locate* a gap is
+fine, but it must be removed by discovering the gap is not there — not left standing because the
+build went green.
+
 ## [Unreleased] — 2026-08-19 (j)
 
 ### The Positive Translation Theorem — `x + 1` was a stratum, not a specimen

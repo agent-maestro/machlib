@@ -4930,6 +4930,126 @@ theorem x_plus_one_depth_exact_four :
   obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
   exact ⟨t, htdepth, fun x _ => hteval x⟩
 
+/-! ### The mirror band
+
+`IntermediateBand` excludes targets that are unbounded, sub-exponential, superlinear and
+super-logarithmic. Its third condition `x < f x` is what the negative translation family fails
+structurally. The **mirror** replaces it by `f x < x` — below the identity rather than above — and
+keeps the rest.
+
+The class is not empty at depth 3 without the logarithmic condition: `log x` is unbounded and below
+the identity and *is* depth 3 (§4). So `Hlog` is what does the separating, exactly as it did in the
+positive case where its absence once broke a sharpness composition.
+
+**Status: half proved.** The bounded-left case closes below. The growing-left case is where
+`exp(A x)` and `log(B x)` are both near `exp x` and cancel, which is the same difficulty
+`ExpExpGapBelow` and `BoundedCellApproach` were introduced for. It is stated as an obligation rather
+than assumed. -/
+
+/-- Unbounded above, eventually below the identity, and super-logarithmic. -/
+def MirrorBand (f : Real → Real) : Prop :=
+  BelowIdentityUnbounded f
+  ∧ (∀ C X : Real, ∃ x : Real, X ≤ x ∧ 1 ≤ x ∧ C + log x < f x)
+
+/-- A constant at least `1` dominating a given one. `C + exp (−C) ≥ 1` because `1 − C ≤ exp (−C)`. -/
+private theorem shift_nonneg (C : Real) : 1 ≤ C + exp (-C) := by
+  have h := one_add_le_exp (-C)
+  have e : (1 : Real) + -C = 1 - C := by mach_ring
+  rw [e] at h
+  have v := add_le_add_wit (le_refl C) h
+  have l : C + (1 - C) = 1 := by mach_mpoly [C]
+  rw [l] at v; exact v
+
+private theorem shift_ge (C : Real) : C ≤ C + exp (-C) := by
+  have v := add_le_add_wit (le_refl C) (le_of_lt (exp_pos (-C)))
+  have e : C + 0 = C := by mach_ring
+  rw [e] at v; exact v
+
+/-- Where the right child is non-positive its logarithm is `0`, the node is `exp (A x) ≤ K`, and the
+super-logarithmic witness gives `K + (C + exp (−C)) + 1 + log x < K`. Since `C + exp (−C) ≥ 1` and
+`log x ≥ 0`, the left side exceeds `K` by at least `2`. No decay bound is needed on this branch. -/
+private theorem mirror_totalised_absurd (f : Real → Real) (K C x : Real)
+    (hgt : K + (C + exp (-C)) + 1 + log x < f x) (hlogx : (0 : Real) ≤ log x)
+    (hshift : (1 : Real) ≤ C + exp (-C)) (hfK : f x ≤ K) : False := by
+  have hlt : K + (C + exp (-C)) + 1 + log x < K := lt_of_lt_of_le hgt hfK
+  have v := add_lt_add_left hlt (-K)
+  have l : -K + (K + (C + exp (-C)) + 1 + log x) = C + exp (-C) + 1 + log x := by
+    mach_mpoly [K, C, log x, exp (-C)]
+  have r : -K + K = 0 := by mach_ring
+  rw [l, r] at v
+  have hpos : (0 : Real) < C + exp (-C) + 1 + log x := by
+    refine lt_of_lt_of_le zero_lt_one_ax ?_
+    have w := add_le_add_wit (add_le_add_wit hshift (le_refl (1 : Real))) hlogx
+    have e : (1 : Real) + 1 + 0 = 1 + 1 := by mach_ring
+    rw [e] at w
+    refine le_trans ?_ w
+    have u := add_lt_add_left zero_lt_one_ax (1 : Real)
+    have l2 : (1 : Real) + 0 = 1 := by mach_ring
+    rw [l2] at u; exact le_of_lt u
+  exact lt_irrefl_ax _ (lt_trans_ax hpos v)
+
+/-- **The mirror band excludes every depth-3 node whose left child has bounded exponential.**
+
+Two sub-cases, and the totalisation splits them. Where the right child is eventually non-positive its
+logarithm is identically `0`, so the node *is* `exp (A x)` and is bounded — killing unboundedness.
+Where it is positive, `depth_le_two_decay_on_ray` caps `−log (B x)` at `C + log x`, so the node is at
+most `K + C + log x` — killing super-logarithmicity. -/
+theorem mirrorBand_not_depth_three_bounded_left (f : Real → Real) (hf : MirrorBand f)
+    (A B : EMLTree) (hB : B.depth ≤ 2) (K XK : Real)
+    (hK : ∀ x : Real, XK ≤ x → exp (A.eval x) ≤ K)
+    (h : ∀ x : Real, 0 < x → exp (A.eval x) - log (B.eval x) = f x) : False := by
+  obtain ⟨_, hlog⟩ := hf
+  obtain ⟨C, X₀, hX₀, hdec⟩ := depth_le_two_decay_on_ray B hB
+  -- the threshold is a sum of exponentials, so it dominates `XK` and `X₀` whatever their sign
+  obtain ⟨x, hxb, hx1, hgt⟩ := hlog (K + (C + exp (-C)) + 1) (exp XK + exp X₀)
+  have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
+  have hxK : XK ≤ x := by
+    refine le_trans (self_le_exp XK) (le_trans ?_ hxb)
+    have v : exp XK + 0 ≤ exp XK + exp X₀ := add_le_add_wit (le_refl _) (le_of_lt (exp_pos X₀))
+    have e : exp XK + 0 = exp XK := by mach_ring
+    rw [e] at v; exact v
+  have hx0' : X₀ ≤ x := by
+    refine le_trans (self_le_exp X₀) (le_trans ?_ hxb)
+    have v : (0 : Real) + exp X₀ ≤ exp XK + exp X₀ :=
+      add_le_add_wit (le_of_lt (exp_pos XK)) (le_refl _)
+    have e : (0 : Real) + exp X₀ = exp X₀ := by mach_ring
+    rw [e] at v; exact v
+  have hval := h x hx0
+  have hKx := hK x hxK
+  have hlogx : (0 : Real) ≤ log x := by
+    have hl1 : log (1 : Real) = 0 := by
+      have hz : exp (0 : Real) = 1 := exp_zero
+      rw [← hz, log_exp]
+    have hm := log_le_log zero_lt_one_ax hx1
+    rw [hl1] at hm; exact hm
+  have hshift : (1 : Real) ≤ C + exp (-C) := shift_nonneg C
+  rcases lt_total 0 (B.eval x) with hBpos | hBz | hBneg
+  · -- right child positive: the decay bound caps the node at `K + C + log x`
+    have hd := hdec x hx0' hBpos
+    have cap : f x ≤ K + (C + log x) := by
+      rw [← hval]
+      have v := add_le_add_wit hKx hd
+      have e : exp (A.eval x) + -log (B.eval x) = exp (A.eval x) - log (B.eval x) := by
+        mach_mpoly [exp (A.eval x), log (B.eval x)]
+      rw [← e]; exact v
+    have hlt : K + (C + exp (-C)) + 1 + log x < K + (C + log x) := lt_of_lt_of_le hgt cap
+    have v := add_lt_add_left hlt (-(K + (C + log x)))
+    have l : -(K + (C + log x)) + (K + (C + exp (-C)) + 1 + log x) = exp (-C) + 1 := by
+      mach_mpoly [K, C, log x, exp (-C)]
+    have r : -(K + (C + log x)) + (K + (C + log x)) = 0 := by mach_mpoly [K, C, log x]
+    rw [l, r] at v
+    exact lt_irrefl_ax _ (lt_trans_ax (add_pos (exp_pos (-C)) zero_lt_one_ax) v)
+  · -- right child zero: totalisation gives `log 0 = 0`, so the node is `exp (A x) ≤ K`
+    exact mirror_totalised_absurd f K C x hgt hlogx hshift
+      (by rw [← hval, ← hBz, log_nonpos (le_refl 0)]
+          have e : exp (A.eval x) - 0 = exp (A.eval x) := by mach_ring
+          rw [e]; exact hKx)
+  · -- right child negative: identically
+    exact mirror_totalised_absurd f K C x hgt hlogx hshift
+      (by rw [← hval, log_nonpos (le_of_lt hBneg)]
+          have e : exp (A.eval x) - 0 = exp (A.eval x) := by mach_ring
+          rw [e]; exact hKx)
+
 /-! ### The negative side, and the asymmetry
 
 For `c < 0` the band's third condition `x < f x` fails *structurally* — `x + c < x` everywhere — so
