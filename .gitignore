@@ -22,3 +22,4 @@ out/
 .env.local
 .env.*.local
 .wrangler/
+foundations/tmp*.lean

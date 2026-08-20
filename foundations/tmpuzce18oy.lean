@@ -1,2 +1,0 @@
-import MachLib.EMLDepthTameness
-#check @MachLib.depth_three_bounded_left_not_superlog

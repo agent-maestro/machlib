@@ -908,26 +908,213 @@ noncomputable def beIII : Circle := ⟨cQ, cQ, 1 + cQ * rt2, below_iii_pos⟩
 theorem beIII_tangent : TangentInt beIII Abe ∧ TangentInt beIII Bbe ∧ TangentInt beIII Cbe :=
   below_soddy_inner cQ rt2 rt2_sq
 
-/-! ### The remaining six of `d = 5/2`: not checked, and the shape of what is left
+/-! ### The `√34` quartet, via the factored residual
 
-The `√34` quartet and the two circles of the doubled `(inner,outer,outer)` class are still
-computed-only. The obstruction is arithmetic scale, and it is now precisely located.
+The direct route — clear both denominators with `144 = 16·9` — puts constants like `288` inside
+every identity and the normaliser refuses. But the residual **factors**:
 
-**The quartet.** Residual `2c² + t² − c²t² − 1` with `c = 5/4`, `t = √34/3`. It factors:
-
+```
     2c² + t² − c²t² − 1  =  1 − (c² − 1)(t² − 2)
+```
 
-and `(c²−1)(t²−2) = (9/16)(16/9) = 1`, so the residual is `1 − 1`. Clearing both denominators needs
-`144 = 16·9`, and the resulting numeral check `18·25 + 16·34 − 25·34 − 144 = 0` exceeds the
-normaliser even though every step of it is elementary. The factored form above is the route to try
-next: it needs only `(16c² − 16)(9t² − 18) = 144`, whose constants are all at most `18`.
+so the twelve tangency identities need only the constants `1` and `2`, and the entire arithmetic
+burden collapses into a single side fact, `(c²−1)(t²−2) = 1`, proved once. With `c = 5/4` and
+`t = √34/3` that is `(9/16)(16/9)`, and even *that* is discharged without ever forming `144`
+explicitly: scale each factor separately, `16(c²−1) = 9` and `9(t²−2) = 16`, then cancel.
 
-**The doubled class.** `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. Scaling by `28` gives a
-residual of `567·(s² − 2)`, and `567 = 81 · 7` factors out of the whole identity: writing
-`45 + 36s = 9(5 + 4s)` and `72 + 45s = 9(8 + 5s)` reduces the inner computation to constants of at
-most `80`. That factoring is the route here, and it is untried.
+**This is the same lesson as the compression, one level up.** Do not hand the normaliser a big
+identity and hope; find the form in which the constants never meet. -/
 
-Both are bounded, mechanical, and blocked on arithmetic presentation rather than on geometry.
+/-- Residual `1 − (c²−1)(t²−2)`. -/
+private theorem zero_of_pq (c t : Real) {w : Real}
+    (h : (c * c - 1) * (t * t - (1 + 1)) = 1)
+    (e : w = 1 - (c * c - 1) * (t * t - (1 + 1))) : w = 0 := by
+  rw [h] at e; rw [e]; mach_ring
+
+/-- `X·Y = 1` from `16X = 9` and `9Y = 16`, without forming `144` in any goal the normaliser
+must expand. -/
+private theorem prod_one_of_scaled {X Y : Real} (hX : ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * X = ((1 + 1 + 1) * (1 + 1 + 1))) (hY : ((1 + 1 + 1) * (1 + 1 + 1)) * Y = ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1))) :
+    X * Y = 1 := by
+  refine QuadraticRoots.mul_left_cancel (a := (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * ((1 + 1 + 1) * (1 + 1 + 1)))) ?_ ?_
+  · refine ne_of_gt (mul_pos ?_ ?_)
+    · exact mul_pos (mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+        (add_pos zero_lt_one_ax zero_lt_one_ax)) (add_pos zero_lt_one_ax zero_lt_one_ax))
+        (add_pos zero_lt_one_ax zero_lt_one_ax)
+    · exact mul_pos (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
+        (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
+  · have e : ((((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * ((1 + 1 + 1) * (1 + 1 + 1))) : Real) * (X * Y) = (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * X) * (((1 + 1 + 1) * (1 + 1 + 1)) * Y) := by mach_mpoly [X, Y]
+    rw [e, hX, hY]; mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 2: `r = 5√34/12`, centre `(5/4, 5/4 + √34/3)`. -/
+private theorem below_ooi (c t : Real) (h : (c * c - 1) * (t * t - (1 + 1)) = 1) :
+    ((c - 0) * (c - 0) + (c + t - 0) * (c + t - 0)
+      = (c * t + 1) * (c * t + 1))
+    ∧
+    ((c - (1 + 1) * c) * (c - (1 + 1) * c) + (c + t - 0) * (c + t - 0)
+      = (c * t + 1) * (c * t + 1))
+    ∧
+    ((c - 0) * (c - 0) + (c + t - (1 + 1) * c) * (c + t - (1 + 1) * c)
+      = (c * t - 1) * (c * t - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_pq c t h ?_) <;>
+    mach_mpoly [c, t] <;> mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 3: `r = 5√34/12`, centre `(5/4 + √34/3, 5/4)`. -/
+private theorem below_oio (c t : Real) (h : (c * c - 1) * (t * t - (1 + 1)) = 1) :
+    ((c + t - 0) * (c + t - 0) + (c - 0) * (c - 0)
+      = (c * t + 1) * (c * t + 1))
+    ∧
+    ((c + t - (1 + 1) * c) * (c + t - (1 + 1) * c) + (c - 0) * (c - 0)
+      = (c * t - 1) * (c * t - 1))
+    ∧
+    ((c + t - 0) * (c + t - 0) + (c - (1 + 1) * c) * (c - (1 + 1) * c)
+      = (c * t + 1) * (c * t + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_pq c t h ?_) <;>
+    mach_mpoly [c, t] <;> mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 6: `r = 5√34/12`, centre `(5/4 − √34/3, 5/4)`. -/
+private theorem below_ioi (c t : Real) (h : (c * c - 1) * (t * t - (1 + 1)) = 1) :
+    ((c - t - 0) * (c - t - 0) + (c - 0) * (c - 0)
+      = (c * t - 1) * (c * t - 1))
+    ∧
+    ((c - t - (1 + 1) * c) * (c - t - (1 + 1) * c) + (c - 0) * (c - 0)
+      = (c * t + 1) * (c * t + 1))
+    ∧
+    ((c - t - 0) * (c - t - 0) + (c - (1 + 1) * c) * (c - (1 + 1) * c)
+      = (c * t - 1) * (c * t - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_pq c t h ?_) <;>
+    mach_mpoly [c, t] <;> mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Solution 7: `r = 5√34/12`, centre `(5/4, 5/4 − √34/3)`. -/
+private theorem below_iio (c t : Real) (h : (c * c - 1) * (t * t - (1 + 1)) = 1) :
+    ((c - 0) * (c - 0) + (c - t - 0) * (c - t - 0)
+      = (c * t - 1) * (c * t - 1))
+    ∧
+    ((c - (1 + 1) * c) * (c - (1 + 1) * c) + (c - t - 0) * (c - t - 0)
+      = (c * t - 1) * (c * t - 1))
+    ∧
+    ((c - 0) * (c - 0) + (c - t - (1 + 1) * c) * (c - t - (1 + 1) * c)
+      = (c * t + 1) * (c * t + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_pq c t h ?_) <;>
+    mach_mpoly [c, t] <;> mach_ring
+
+/-! ### The quartet, as circles -/
+
+/-- `√34`. -/
+noncomputable def rt34 : Real := sqrt ((1 + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1) + 1))
+
+private theorem n34_pos : (0 : Real) < ((1 + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1) + 1)) := by
+  refine mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) (add_pos ?_ zero_lt_one_ax)
+  exact mul_pos (mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+    (add_pos zero_lt_one_ax zero_lt_one_ax)) (add_pos zero_lt_one_ax zero_lt_one_ax))
+    (add_pos zero_lt_one_ax zero_lt_one_ax)
+
+theorem rt34_sq : rt34 * rt34 = ((1 + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1) + 1)) := sqrt_sq_nonneg _ (le_of_lt n34_pos)
+
+theorem rt34_pos : 0 < rt34 := by
+  rcases lt_total 0 rt34 with h | h | h
+  · exact h
+  · exfalso
+    have hq := rt34_sq
+    rw [← h] at hq
+    have e : (0 : Real) * 0 = 0 := by mach_ring
+    rw [e] at hq
+    have p := n34_pos; rw [← hq] at p; exact lt_irrefl_ax _ p
+  · exact absurd h (fun hc => lt_irrefl_ax _ (lt_of_lt_of_le hc (sqrt_nonneg _)))
+
+/-- `√34/3`. -/
+noncomputable def tT : Real := rt34 / (1 + 1 + 1)
+theorem three_mul_tT : (1 + 1 + 1) * tT = rt34 := three_mul_third rt34
+
+theorem tT_pos : 0 < tT := by
+  refine pos_of_mul_pos (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax) ?_
+  rw [three_mul_tT]; exact rt34_pos
+
+/-- `16(c² − 1) = 9` for `c = 5/4`. -/
+theorem cQ_scaled : ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * (cQ * cQ - 1) = ((1 + 1 + 1) * (1 + 1 + 1)) := by
+  have hsq : ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * (cQ * cQ) = (((1 + 1) * (1 + 1) + 1) * ((1 + 1) * (1 + 1) + 1)) := by
+    have e : (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) : Real) * (cQ * cQ) = (((1 + 1) * (1 + 1)) * cQ) * (((1 + 1) * (1 + 1)) * cQ) := by mach_mpoly [cQ]
+    rw [e, four_mul_cQ]
+  have e2 : (((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) : Real) * (cQ * cQ - 1) = ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) * (cQ * cQ) - ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) := by mach_ring
+  rw [e2, hsq]; mach_ring
+
+/-- `9(t² − 2) = 16` for `t = √34/3`. -/
+theorem tT_scaled : ((1 + 1 + 1) * (1 + 1 + 1)) * (tT * tT - (1 + 1)) = ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1)) := by
+  have hsq : ((1 + 1 + 1) * (1 + 1 + 1)) * (tT * tT) = ((1 + 1) * ((1 + 1) * (1 + 1) * (1 + 1) * (1 + 1) + 1)) := by
+    have e : (((1 + 1 + 1) * (1 + 1 + 1)) : Real) * (tT * tT) = ((1 + 1 + 1) * tT) * ((1 + 1 + 1) * tT) := by mach_mpoly [tT]
+    rw [e, three_mul_tT, rt34_sq]
+  have e2 : (((1 + 1 + 1) * (1 + 1 + 1)) : Real) * (tT * tT - (1 + 1)) = ((1 + 1 + 1) * (1 + 1 + 1)) * (tT * tT) - ((1 + 1 + 1) * (1 + 1 + 1)) * (1 + 1) := by mach_ring
+  rw [e2, hsq]; mach_ring
+
+/-- **`(c²−1)(t²−2) = 1`** — the single side fact the whole quartet consumes. -/
+theorem cQ_tT_prod : (cQ * cQ - 1) * (tT * tT - (1 + 1)) = 1 :=
+  prod_one_of_scaled cQ_scaled tT_scaled
+
+theorem below_quartet_pos : (0 : Real) < cQ * tT := mul_pos cQ_pos tT_pos
+
+/-- Solution 2: `r = 5√34/12`, centre `(5/4, 5/4 + √34/3)`. -/
+noncomputable def beOOI : Circle := ⟨cQ, cQ + tT, cQ * tT, below_quartet_pos⟩
+theorem beOOI_tangent : TangentExt beOOI Abe ∧ TangentExt beOOI Bbe ∧ TangentInt beOOI Cbe :=
+  below_ooi cQ tT cQ_tT_prod
+
+/-- Solution 3: `r = 5√34/12`, centre `(5/4 + √34/3, 5/4)`. -/
+noncomputable def beOIO : Circle := ⟨cQ + tT, cQ, cQ * tT, below_quartet_pos⟩
+theorem beOIO_tangent : TangentExt beOIO Abe ∧ TangentInt beOIO Bbe ∧ TangentExt beOIO Cbe :=
+  below_oio cQ tT cQ_tT_prod
+
+/-- Solution 6: `r = 5√34/12`, centre `(5/4 − √34/3, 5/4)`. -/
+noncomputable def beIOI : Circle := ⟨cQ - tT, cQ, cQ * tT, below_quartet_pos⟩
+theorem beIOI_tangent : TangentInt beIOI Abe ∧ TangentExt beIOI Bbe ∧ TangentInt beIOI Cbe :=
+  below_ioi cQ tT cQ_tT_prod
+
+/-- Solution 7: `r = 5√34/12`, centre `(5/4, 5/4 − √34/3)`. -/
+noncomputable def beIIO : Circle := ⟨cQ, cQ - tT, cQ * tT, below_quartet_pos⟩
+theorem beIIO_tangent : TangentInt beIIO Abe ∧ TangentInt beIIO Bbe ∧ TangentExt beIIO Cbe :=
+  below_iio cQ tT cQ_tT_prod
+
+/-! ### The doubled `(inner,outer,outer)` class — the last two, and what they need
+
+Two positive roots in one mode, which is why this configuration has no `(outer,inner,inner)` circle
+at all. `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked.**
+
+Three things are established about them, and they are what the next attempt should start from
+rather than rediscover.
+
+**1. One lemma covers both.** Solution 5 is solution 4 with `s ↦ −s`. A single statement in a
+parameter `e` with `e² = 2`, instantiated at `√2` and at `−√2`, gives the pair. No other circle in
+this file shares a lemma with another.
+
+**2. A factor of `9` runs through everything.** Scaled by `28² = 784`, the coordinates are
+`28x = −(45 + 36e)` and `28(r − 1) = 72 + 45e`. Both are `9 ·` something: `9(5 + 4e)` and
+`9(8 + 5e)`. Writing `u = 5 + 4e`, `v = 8 + 5e` keeps every constant under `80`; leaving the `9` in
+forms `2025`, `3240` and `5184`, and the normaliser refuses.
+
+**3. And then `v = u · e` exactly** — because `(5 + 4e)e = 5e + 4e² = 8 + 5e` when `e² = 2`. So the
+internal tangency is not an arithmetic identity at all:
+
+```
+    2u² − v²  =  2u² − u²e²  =  u²(2 − e²)  =  0
+```
+
+with no constant but `2`. That is the same collapse the `√34` quartet's residual made available,
+arrived at differently, and it is why this class is worth one more attempt rather than a numeral
+workaround.
+
+What is *not* solved: the two external tangencies still carry `115` and `128`. They factor —
+`(128 + 45e)² − (115 + 36e)² = 81(13 + 9e)(3 + e)` and `(13 + 9e)(3 + e) = u²` — so a
+difference-of-squares step keeps the constants under `57`. That derivation is written down here but
+not carried out in Lean; it is where the next hour should go.
+
+**Status: 21 of the 23 exhibit points are Lean-checked.** These two are the remainder, and they are
+blocked on presenting three identities in the factored forms above — not on anything geometric, and
+not on `natCast`.
 -/
 
 end Coordinates

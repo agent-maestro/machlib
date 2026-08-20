@@ -5,6 +5,47 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (g)
+
+### The `√34` quartet falls to a factorisation — 21 of 23
+
+`Geometry/Apollonius/Coordinates.lean`. Four more points, twelve more tangencies, `sorryAx` absent.
+
+**The residual factors, and that is the whole story.**
+
+```
+    2c² + t² − c²t² − 1  =  1 − (c² − 1)(t² − 2)
+```
+
+The direct route clears both denominators with `144 = 16·9` and puts constants like `288` inside
+every one of the twelve identities; the normaliser refuses. The factored form leaves the twelve
+identities with **no constant but `1` and `2`**, and collapses the entire arithmetic burden into one
+side fact proved once — `(c²−1)(t²−2) = 1`, which for `c = 5/4`, `t = √34/3` is `(9/16)(16/9)`.
+
+Even that is discharged without forming `144` in any goal the normaliser must expand: scale each
+factor separately (`16(c²−1) = 9`, `9(t²−2) = 16`) and cancel. `prod_one_of_scaled` is the reusable
+piece.
+
+**The lesson, stated once more because it keeps paying:** do not hand the normaliser a large
+identity and raise limits. Find the form in which the large constants never meet.
+
+### The last two: not done, and three facts recorded so the next attempt does not rediscover them
+
+The doubled `(inner,outer,outer)` class, `r = 25/7 ± 45√2/28`.
+
+1. **One lemma covers both** — solution 5 is solution 4 under `s ↦ −s`.
+2. **A factor of `9` runs through everything** — `28x = −9(5+4e)`, `28(r−1) = 9(8+5e)`. With
+   `u = 5+4e`, `v = 8+5e` every constant stays under `80`; leaving the `9` in forms `2025`, `3240`,
+   `5184` and fails.
+3. **`v = u·e` exactly**, since `(5+4e)e = 5e + 4e² = 8 + 5e` when `e² = 2`. So the internal
+   tangency is `2u² − u²e² = u²(2 − e²) = 0` — no constant but `2`.
+
+Still open: the two external tangencies carry `115` and `128`. They factor —
+`(128+45e)² − (115+36e)² = 81(13+9e)(3+e)` and `(13+9e)(3+e) = u²` — so a difference-of-squares step
+holds the constants under `57`. Derived here, not yet carried out in Lean.
+
+**Blocked on presenting three identities, not on geometry and not on `natCast`.**
+
 ## [Unreleased] — 2026-08-19 (f)
 
 ### Both Soddy circles of `d = 5/2` — 17 of 23, and the last six are located precisely
