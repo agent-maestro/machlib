@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (h)
+
+### All 23 exhibit coordinates Lean-checked — the doubled class closes
+
+`Geometry/Apollonius/Coordinates.lean`. `be4_tangent` and `be5_tangent`, six more tangencies,
+`sorryAx` absent. **Every concrete circle on `monogate.org/proofs/apollonius` is now checked in
+Lean**, across all three configurations.
+
+### What actually unblocked it, after six failed attempts
+
+One rule, applied consistently instead of incrementally:
+
+> **Abstract every numeral before handing an expression to the normaliser.**
+
+`doubled_bridge` contains no numeral except `1` — the scale `n`, the divisor `dd`, the separation
+`sep` and the external constants `S`, `B` are all parameters related only by hypotheses. It compiled
+on the first attempt after three wiring attempts had each died on a different concrete constant.
+
+The same rule closed every remaining piece: `neg_sq`, `prod_sq`, `sq_collapse`, `lt_of_sq_lt`,
+`mul_one_add`, `double_it`, `sep_helper` are all generic, and each replaced a call that had been
+evaluating `9`, `81`, `784` or `50` inline.
+
+### The three diagnoses that were wrong, and the one that was right
+
+- **"Coefficient magnitude."** No — solutions 1 and 8 close with `8`; an attempt failed with `18`.
+- **"Constants are trees, so large ones are unreachable."** No — constants never *distributed* are
+  free.
+- **"`mach_mpoly` can't do this arithmetic."** No — the same identity with a universally quantified
+  atom closes instantly. What failed was `mach_mpoly [h]` where `h` is a **def**: it unfolds.
+- **Right:** the normaliser is cheap in variables and expensive in constants, and *definitions are
+  not atoms*.
+
+Choosing the loose bound `√2 < 2` over the tight `5√2 < 8` matters for the same reason: the loose
+one needs `2 < 4`, the tight one `50 < 64`, and constant-only comparisons are what the normaliser
+cannot do at all.
+
+Full corpus builds, 634 jobs.
+
 ## [Unreleased] — 2026-08-19 (g)
 
 ### The `√34` quartet falls to a factorisation — 21 of 23

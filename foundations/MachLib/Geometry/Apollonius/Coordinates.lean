@@ -1298,99 +1298,96 @@ theorem doubled_solution (e : Real) (he : e * e = (1 + 1))
     (by rw [mul_one_add, d28_mul_div])
     d28_sep d28_double hint hext
 
-/-! ### The two circles — one step short
+/-! ### The two circles
 
-`doubled_solution` above delivers all three tangencies for **either** sign of `e`, given only
-`e² = 2` and a proof that the radius is positive. Instantiating it at `e = √2` and `e = −√2` closes
-the last two points.
+Only two positivity facts stand between `doubled_solution` and the last two points. Both are proved
+with the rule this module has had to learn four times: **abstract the numerals**. `lt_of_sq_lt` is
+generic, and the bound chosen is `√2 < 2` rather than the tight `5√2 < 8`, because the loose bound
+needs only `2 < 4` while the tight one needs `50 < 64` — and constant-only comparisons are exactly
+what the normaliser cannot do. -/
 
-What remains is exactly those two positivity proofs:
+/-- Generic: from `a² < b²` and both nonneg, `a < b`. -/
+private theorem lt_of_sq_lt {a b : Real} (ha : 0 ≤ a) (hb : 0 ≤ b) (h : a * a < b * b) : a < b := by
+  rcases lt_total a b with h1 | h1 | h1
+  · exact h1
+  · exfalso; rw [h1] at h; exact lt_irrefl_ax _ h
+  · exfalso
+    have s1 : b * b ≤ b * a := mul_le_mul_of_nonneg_left (le_of_lt h1) hb
+    have s2 : b * a ≤ a * a := mul_le_mul_of_nonneg_right (le_of_lt h1) ha
+    exact lt_irrefl_ax _ (lt_of_lt_of_le h (le_trans s1 s2))
 
-```
-    0 < 28 + 9(8 + 5√2)        every summand positive
-    0 < 28 + 9(8 − 5√2)        = 45(2 − √2) + 10,  needs √2 < 2
-```
+/-- `2 < 4`, structurally: `4 = 2 + 2` and `2 > 0`. -/
+private theorem two_lt_four : ((1 + 1) : Real) < ((1 + 1) * (1 + 1)) := by
+  have v := add_lt_add_left (add_pos zero_lt_one_ax zero_lt_one_ax) ((1 + 1) : Real)
+  have l : ((1 + 1) : Real) + 0 = (1 + 1) := by mach_ring
+  have r : ((1 + 1) : Real) + (1 + 1) = ((1 + 1) * (1 + 1)) := by mach_ring
+  rw [l, r] at v; exact v
 
-The first is a chain of `add_pos`/`mul_pos`. The second needs `√2 < 2` — immediate from `2 < 4` and
-`(√2)² = 2` — and the rearrangement `28 + 9(8 − 5√2) = 45(2 − √2) + 10`, whose constants (`45`, `10`,
-`28`) are the kind this module has repeatedly had to abstract.
+theorem rt2_lt_two : rt2 < (1 + 1) := by
+  refine lt_of_sq_lt rt2_nonneg (le_of_lt (add_pos zero_lt_one_ax zero_lt_one_ax)) ?_
+  rw [rt2_sq]; exact two_lt_four
 
-**Nothing else is missing.** The scaled identities, the numeral-free bridge and the instantiation all
-build; `doubled_solution` is a complete statement whose only unmet hypothesis is `0 < r`.
--/
+private theorem nine_pos : (0 : Real) < ((1 + 1 + 1) * (1 + 1 + 1)) :=
+  mul_pos (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
+          (add_pos (add_pos zero_lt_one_ax zero_lt_one_ax) zero_lt_one_ax)
+private theorem five_pos' : (0 : Real) < ((1 + 1) * (1 + 1) + 1) :=
+  add_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                   (add_pos zero_lt_one_ax zero_lt_one_ax)) zero_lt_one_ax
+private theorem eight_pos : (0 : Real) < ((1 + 1) * (1 + 1) * (1 + 1)) :=
+  mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                   (add_pos zero_lt_one_ax zero_lt_one_ax))
+          (add_pos zero_lt_one_ax zero_lt_one_ax)
 
-/-! ### The doubled `(inner,outer,outer)` class — the last two, and the full derivation
+/-- `e = √2`: every summand is positive, so no normaliser call at all. -/
+private theorem hpos_plus : (0 : Real) < d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * rt2) :=
+  add_pos d28_pos (mul_pos nine_pos
+    (add_pos eight_pos (mul_pos five_pos' (lt_trans_ax zero_lt_one_ax one_lt_rt2))))
 
-`r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked in Lean.** The mathematics below is
-complete and verified by hand; what is missing is a presentation the normaliser accepts. Written out
-in full so the next attempt starts from the end of five, not from the beginning.
+theorem k7_val : k7 = 1 + 1 + 1 + 1 + 1 + 1 + 1 := by unfold k7; mach_ring
 
-## Setup
+set_option maxHeartbeats 4000000 in
+set_option maxRecDepth 8000 in
+/-- `e = −√2`: `28 + 9(8 − 5√2) = 45(2 − √2) + 10`, and `√2 < 2`. -/
+private theorem hpos_minus : (0 : Real) < d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * (-rt2)) := by
+  have hgap : (0 : Real) < (1 + 1) - rt2 := by
+    have v := add_lt_add_left rt2_lt_two (-rt2)
+    have l : (-rt2 : Real) + rt2 = 0 := by mach_ring
+    have r : (-rt2 : Real) + (1 + 1) = (1 + 1) - rt2 := by mach_ring
+    rw [l, r] at v; exact v
+  have ha : (0 : Real) < (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (1 + 1) + 1)) * ((1 + 1) - rt2) := mul_pos (mul_pos nine_pos five_pos') hgap
+  have hb : (0 : Real) < ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) := mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax) five_pos'
+  have hd : d28 = ((1 + 1) * (1 + 1)) * k7 := rfl
+  have heq : d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * (-rt2)) = (((1 + 1 + 1) * (1 + 1 + 1)) * ((1 + 1) * (1 + 1) + 1)) * ((1 + 1) - rt2) + ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) := by
+    rw [hd, k7_val]; mach_mpoly [rt2]
+  rw [heq]; exact add_pos ha hb
 
-Solution 5 is solution 4 under `e ↦ −e`, so one lemma in a parameter `e` with `e² = 2` gives both.
-Scaled by `28² = 784` the coordinates are `28x = −9u`, `28(r − 1) = 9w`, with
+/-! ### The last two circles -/
 
-```
-    u = 5 + 4e        w = 8 + 5e
-```
+private theorem r_pos_of (e : Real) (h : (0 : Real) < d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) :
+    (0 : Real) < 1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28 := by
+  refine pos_of_mul_pos d28_pos ?_
+  have eq1 : d28 * (1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28) = d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) := by
+    rw [mul_one_add, d28_mul_div]
+  rw [eq1]; exact h
 
-and the separation `28d = 70`.
+theorem neg_rt2_sq : (-rt2) * (-rt2) = (1 + 1) := by rw [neg_sq]; exact rt2_sq
 
-## Everything reduces to one fact
+/-- Solution 4 of `d = 5/2`: `r = 25/7 + 45√2/28`, centre `−45/28 − 9√2/7`. -/
+noncomputable def be4 : Circle :=
+  ⟨-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * rt2)) / d28, -(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * rt2)) / d28, 1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * rt2)) / d28, r_pos_of rt2 hpos_plus⟩
 
-**`w = u · e`**, since `(5 + 4e)e = 5e + 4e² = 8 + 5e` when `e² = 2`. Hence
+/-- **All three tangencies.** -/
+theorem be4_tangent : TangentInt be4 Abe ∧ TangentExt be4 Bbe ∧ TangentExt be4 Cbe :=
+  doubled_solution rt2 rt2_sq hpos_plus (r_pos_of rt2 hpos_plus)
 
-```
-    w² = u²e² = 2u²
-```
+/-- Solution 5 of `d = 5/2`: `r = 25/7 − 45√2/28`, centre `−45/28 + 9√2/7`. The same theorem at
+`e = −√2` — the only place in this file where one lemma serves two distinct circles. -/
+noncomputable def be5 : Circle :=
+  ⟨-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * (-rt2))) / d28, -(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * (-rt2))) / d28, 1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * (-rt2))) / d28, r_pos_of (-rt2) hpos_minus⟩
 
-*The internal tangency is exactly this*: `2u² − w² = u²(2 − e²) = 0`, with no numeral beyond `2`.
-
-*The external tangency is also exactly this*, which is the part that took five attempts to see. As a
-difference of squares, `a² − b² = (a−b)(a+b)` with `a = 56 + 9w`, `b = 9u + 70`:
-
-```
-    a − b  =  u + w
-    a + b  =  9(14 + u + w)  =  9 · 9(w − u)
-```
-
-the second equality because **`14 + u + w = 9(w − u)`**, which follows from the single small fact
-
-```
-    4w − 5u = 7
-```
-
-So `a² − b² = (u + w) · 81(w − u) = 81(w² − u²) = 81(2u² − u²) = 81u² = (9u)²`, which is the external
-tangency. No second arithmetic fact is needed anywhere.
-
-## What blocks it, precisely
-
-Not the geometry, not `natCast`, and not the size of `115` or `128` — those never have to be
-written. What fails is numeral arithmetic on **tree-encoded constants near `126`**:
-
-| step | identity | status |
-| --- | --- | --- |
-| `w = u·e` | `(5+4e)e = 4e² + 5e` | closes |
-| `w² = 2u²` | `u²(2 − e²)` | closes |
-| `4w − 5u = 7` | substitute `u`, `w` | closes |
-| `14 + u + w = 9(w − u)` | `−2(4w − 5u − 7)` | closes |
-| `a − b = u + w` | `2(4w − 5u − 7)` | closes |
-| **`a + b = 9(14 + u + w)`** | needs `56 + 70 = 9 · 14` | **fails** |
-| **`(u+w)·9·9·(w−u) = 81(w²−u²)`** | distributes two nines | **fails** |
-
-Both failures are `Lean.Meta.acLt` on constants that are *products of small factors* — `56 = 8·7`,
-`70 = 10·7`, `126 = 18·7` — where the normaliser must still evaluate the products. Raising
-`maxHeartbeats` to four million does not move either.
-
-**The next thing to try** is giving `7` itself a variable: every constant in the two failing steps is
-a multiple of `7`, so a parameter `k` with `k = 7` supplied as a hypothesis would put `56 + 70 = 9·14`
-into the form `8k + 10k = 18k`, which is linear and free. That is untried.
-
-## Status
-
-**21 of the 23 exhibit points are Lean-checked.** These two are the remainder. Everything above is
-derived and none of it is in Lean.
--/
+/-- **All three tangencies.** -/
+theorem be5_tangent : TangentInt be5 Abe ∧ TangentExt be5 Bbe ∧ TangentExt be5 Cbe :=
+  doubled_solution (-rt2) neg_rt2_sq hpos_minus (r_pos_of (-rt2) hpos_minus)
 
 end Coordinates
 end Apollonius
