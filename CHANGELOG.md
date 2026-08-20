@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (s)
+
+### `F` is not algebraic over the polynomial coefficients — and it costs **no new axioms**
+
+`Fbasis_not_algebraic`: no nonzero polynomial in `F(x)` with polynomial coefficients vanishes on a
+tail. If `aₘ(x)·F(x)ᵐ = −Σ_{i<m} aᵢ(x)·F(x)ⁱ`, the right side has degree `< m` in `F`, so dividing
+bounds `F(x)` by a ratio of polynomials — hence by a polynomial. But `F(x) ≥ exp x` for `x ≥ 1`, and
+`not_polyEnvelope_Fbasis` forbids that.
+
+**The `C₀` lower-bound instrument pays for `C₁` directly.** Footprint: 39 axioms, and *no analytic
+ones* — no `HasDerivAt`, no `hasDerivAt_continuousAt`. Contrast `FS_evSignDef` at 52 with the whole
+derivative layer. A functional-transcendence statement turned out cheaper than the sign theorem that
+preceded it.
+
+`bipev_degree_drop` carries the degree drop as `y·|P(x,y)| ≤ B(x)·y^(deg+1)`, multiplied through by
+`y` so no `Nat` subtraction appears and the induction is one line per constructor.
+
+### A specimen that is not a linear relation
+
+`Fbasis_nasty_relation_impossible`: `(x² + 1)·F³ + (7 − x⁵)·F² + x·F − 3 ≠ 0` on any tail. Degree 3
+in `F`, coefficients of degree 0, 1 and 5 in `x`, one with a negative leading term.
+
+Its coefficients are spelled `1 + 1 + 1` rather than `3` because `MachLib.Real` carries `OfNat`
+instances for `0` and `1` only — the numeral discipline refusing a decimal literal into a statement,
+which is what it is for.
+
+### What this is, and three things it is not
+
+It is **functional** transcendence in the elementary sense — no polynomial relation with polynomial
+coefficients — not a number-theoretic statement about values.
+
+It is the `S = x` case. Transport along a nonconstant rational substitution is **not** assumed. The
+abstract reason to expect it (`ℝ(S(x)) ⊆ ℝ(x)` algebraic for nonconstant rational `S`) is a statement
+about function fields, and these objects are eventual real functions, not yet elements of one. Of the
+three regimes, `S → ±∞` look reachable with present machinery — one by the same envelope
+contradiction, one by its lowest-power dual — while `S → c` finite makes `F(S)` **bounded**, where
+growth cannot distinguish it from an algebraic function. That is the branch that would actually need
+function-field or differential-algebra infrastructure.
+
+And even the full composed statement would give the **normal form** for `C₁` — cancellation is
+algebraically forced — *not* the lower bound `exp ∉ C₁`. That asks about an algebraic relation over
+`ℝ(x, exp x)`, whose coefficient field already contains `exp`: a strictly stronger question. The two
+are kept apart deliberately, because conflating them would turn a normal-form theorem into a
+lower-bound claim it does not support.
+
 ## [Unreleased] — 2026-08-20 (r)
 
 ### The window evaporates: `F ∘ S` is eventually sign-definite for **every** rational germ

@@ -341,6 +341,7 @@ import MachLib.EMLZeroQueryBarrier
 import MachLib.EMLRationalGerm
 import MachLib.EMLOneQueryForm
 import MachLib.EMLGermSign
+import MachLib.EMLFTranscendence
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree
 import MachLib.EMLExceptionalLocus

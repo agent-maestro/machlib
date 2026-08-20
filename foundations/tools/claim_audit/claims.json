@@ -4565,6 +4565,45 @@
         "Fbasis"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The transcendence theorem. forbid_axioms_exact on the derivative layer is the CLAIM: the prose says it costs no analytic axioms, and this is what makes that checkable rather than asserted.",
+      "id": "ftrans-not-algebraic-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no analytic\nones* — no `HasDerivAt`, no `hasDerivAt_continuousAt`"
+      ],
+      "module": "MachLib.EMLFTranscendence",
+      "theorem": "MachLib.Fbasis_not_algebraic",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.HasDerivAt_unique"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The non-linear specimen. Registered so the theorem cannot quietly degrade to covering only linear relations, which is the failure mode a degree-drop argument invites.",
+      "id": "ftrans-nasty-specimen-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Degree 3\nin `F`, coefficients of degree 0, 1 and 5 in `x`, one with a negative leading term."
+      ],
+      "module": "MachLib.EMLFTranscendence",
+      "theorem": "MachLib.Fbasis_nasty_relation_impossible",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "bipevLead"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
