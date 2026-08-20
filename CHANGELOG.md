@@ -5,6 +5,37 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (f)
+
+### Both Soddy circles of `d = 5/2` — 17 of 23, and the last six are located precisely
+
+`Geometry/Apollonius/Coordinates.lean`. The outer and inner Soddy circles of the third
+configuration are Lean-checked. Their residual is `2c² − c²s²`, which is zero for **any** `c` once
+`s² = 2` — so these two points need no numeric value at all, and are cheaper than any point in
+either earlier configuration. The separation is `2c` exactly, which is why.
+
+### The remaining six are blocked on arithmetic presentation, and both routes are written down
+
+**The `√34` quartet.** Residual `2c² + t² − c²t² − 1` with `c = 5/4`, `t = √34/3`. It **factors**:
+
+```
+    2c² + t² − c²t² − 1  =  1 − (c² − 1)(t² − 2)
+```
+
+and `(c²−1)(t²−2) = (9/16)(16/9) = 1`. Clearing both denominators the direct way needs `144 = 16·9`
+and a numeral check `18·25 + 16·34 − 25·34 − 144 = 0` that exceeds the normaliser even though every
+step is elementary. The factored form needs only `(16c² − 16)(9t² − 18) = 144`, whose constants are
+all at most `18`. Untried, and the obvious next attempt.
+
+**The doubled `(inner,outer,outer)` class.** `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. Scaling
+by `28` leaves `567·(s² − 2)`, and `567 = 81·7` factors out of the whole identity: writing
+`45 + 36s = 9(5 + 4s)` and `72 + 45s = 9(8 + 5s)` drops the inner computation to constants of at
+most `80`. Also untried.
+
+Both are bounded and mechanical, and blocked on arithmetic presentation rather than on geometry —
+which is the same sentence as three attempts ago, except that this time the route is written out
+rather than guessed at.
+
 ## [Unreleased] — 2026-08-19 (e)
 
 ### The exceptional locus is fully checked — 15 of 23 exhibit points

@@ -788,6 +788,148 @@ noncomputable def loIOO : Circle := ⟨qQ, qQ, gH, gH_pos⟩
 theorem loIOO_tangent : TangentInt loIOO Alo ∧ TangentExt loIOO Blo ∧ TangentExt loIOO Clo :=
   locus_ioo qQ gH ((1 + 1) * rt2) qQ_sq two_mul_gH d_eq_eight_qQ
 
+/-! ## Below the locus, `d = 5/2`, `ρ = 1`
+
+The third configuration. Its centre is `5/4` and the separation is `2 · 5/4`, so the outer and inner
+Soddy circles need **no numeric value at all** — their identity is `2c² = c²s²`, true for every `c`
+once `s² = 2`. That is worth noticing: two of the eight points here are cheaper than any point in
+either earlier configuration.
+-/
+
+/-- Residual `2c² − c²s²`, zero when `s² = 2`, **for any `c`**. -/
+private theorem zero_of_cs (s c : Real) {w : Real} (hs : s * s = (1 + 1))
+    (e : w = (1 + 1) * (c * c) - (c * c) * (s * s)) : w = 0 := by
+  rw [hs] at e; rw [e]; mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- Soddy pair below the locus: centre `(c, c)`, separation `2c`, radii `cs ∓ 1`. -/
+private theorem below_soddy (c s : Real) (hs : s * s = (1 + 1)) :
+    ((c - 0) * (c - 0) + (c - 0) * (c - 0) = (c * s - 1 + 1) * (c * s - 1 + 1))
+    ∧
+    ((c - (1 + 1) * c) * (c - (1 + 1) * c) + (c - 0) * (c - 0)
+      = (c * s - 1 + 1) * (c * s - 1 + 1))
+    ∧
+    ((c - 0) * (c - 0) + (c - (1 + 1) * c) * (c - (1 + 1) * c)
+      = (c * s - 1 + 1) * (c * s - 1 + 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_cs s c hs ?_) <;>
+    mach_mpoly [c, s] <;> mach_ring
+
+set_option maxHeartbeats 1000000 in
+/-- The inner Soddy circle below the locus: radius `1 + cs`, internally tangent to all three. -/
+private theorem below_soddy_inner (c s : Real) (hs : s * s = (1 + 1)) :
+    ((c - 0) * (c - 0) + (c - 0) * (c - 0) = (1 + c * s - 1) * (1 + c * s - 1))
+    ∧
+    ((c - (1 + 1) * c) * (c - (1 + 1) * c) + (c - 0) * (c - 0)
+      = (1 + c * s - 1) * (1 + c * s - 1))
+    ∧
+    ((c - 0) * (c - 0) + (c - (1 + 1) * c) * (c - (1 + 1) * c)
+      = (1 + c * s - 1) * (1 + c * s - 1)) := by
+  refine ⟨?_, ?_, ?_⟩ <;>
+    refine QuadraticRoots.eq_of_sub_eq_zero (zero_of_cs s c hs ?_) <;>
+    mach_mpoly [c, s] <;> mach_ring
+
+/-! ### The two Soddy circles below the locus, as circles -/
+
+/-- `5/4`. -/
+noncomputable def cQ : Real := ((1 + 1) * (1 + 1) + 1) / ((1 + 1) * (1 + 1))
+theorem four_mul_cQ : ((1 + 1) * (1 + 1)) * cQ = ((1 + 1) * (1 + 1) + 1) := four_mul_quarter ((1 + 1) * (1 + 1) + 1)
+
+private theorem five_pos : (0 : Real) < ((1 + 1) * (1 + 1) + 1) :=
+  add_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                   (add_pos zero_lt_one_ax zero_lt_one_ax)) zero_lt_one_ax
+
+theorem cQ_pos : 0 < cQ := by
+  rcases lt_total 0 cQ with h | h | h
+  · exact h
+  · exfalso
+    have e : ((1 + 1) * (1 + 1)) * cQ = 0 := by rw [← h]; mach_ring
+    rw [four_mul_cQ] at e
+    have p := five_pos; rw [e] at p; exact lt_irrefl_ax _ p
+  · exfalso
+    have hle : ((1 + 1) * (1 + 1)) * cQ ≤ ((1 + 1) * (1 + 1)) * 0 :=
+      mul_le_mul_of_nonneg_left (le_of_lt h) (le_of_lt (mul_pos
+        (add_pos zero_lt_one_ax zero_lt_one_ax) (add_pos zero_lt_one_ax zero_lt_one_ax)))
+    rw [four_mul_cQ] at hle
+    have e : (((1 + 1) * (1 + 1)) : Real) * 0 = 0 := by mach_ring
+    rw [e] at hle
+    exact lt_irrefl_ax _ (lt_of_lt_of_le five_pos hle)
+
+/-- From `0 < a` and `0 < a·x`, conclude `0 < x`. -/
+private theorem pos_of_mul_pos {a x : Real} (ha : 0 < a) (h : 0 < a * x) : 0 < x := by
+  rcases lt_total 0 x with hx | hx | hx
+  · exact hx
+  · exfalso; rw [← hx] at h
+    have e : a * (0 : Real) = 0 := by mach_ring
+    rw [e] at h; exact lt_irrefl_ax _ h
+  · exfalso
+    have hle : a * x ≤ a * 0 := mul_le_mul_of_nonneg_left (le_of_lt hx) (le_of_lt ha)
+    have e : a * (0 : Real) = 0 := by mach_ring
+    rw [e] at hle
+    exact lt_irrefl_ax _ (lt_of_lt_of_le h hle)
+
+/-- `5√2/4 > 1`. From `4c = 5` and `1 < √2`: `4(c√2 − 1) = 5√2 − 4 = 5(√2 − 1) + 1 > 0`. -/
+theorem below_ooo_pos : (0 : Real) < cQ * rt2 - 1 := by
+  have hd : (0 : Real) < rt2 - 1 := by
+    have v := add_lt_add_left one_lt_rt2 (-1 : Real)
+    have l : (-1 : Real) + 1 = 0 := by mach_ring
+    have r : (-1 : Real) + rt2 = rt2 - 1 := by mach_ring
+    rw [l, r] at v; exact v
+  have hs : (0 : Real) < ((1 + 1) * (1 + 1) + 1) * (rt2 - 1) + 1 :=
+    add_pos (mul_pos five_pos hd) zero_lt_one_ax
+  have hbig : (0 : Real) < ((1 + 1) * (1 + 1)) * (cQ * rt2 - 1) := by
+    have e : (((1 + 1) * (1 + 1)) : Real) * (cQ * rt2 - 1) = (((1 + 1) * (1 + 1)) * cQ) * rt2 - ((1 + 1) * (1 + 1)) := by mach_ring
+    rw [e, four_mul_cQ]
+    have e2 : (((1 + 1) * (1 + 1) + 1) : Real) * rt2 - ((1 + 1) * (1 + 1)) = ((1 + 1) * (1 + 1) + 1) * (rt2 - 1) + 1 := by mach_ring
+    rw [e2]; exact hs
+  exact pos_of_mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+    (add_pos zero_lt_one_ax zero_lt_one_ax)) hbig
+
+theorem one_lt_cQ_rt2 : 1 < cQ * rt2 := by
+  have v := add_lt_add_left below_ooo_pos (1 : Real)
+  have l : (1 : Real) + 0 = 1 := by mach_ring
+  have r : (1 : Real) + (cQ * rt2 - 1) = cQ * rt2 := by mach_ring
+  rw [l, r] at v; exact v
+
+theorem below_iii_pos : (0 : Real) < 1 + cQ * rt2 :=
+  add_pos zero_lt_one_ax (mul_pos cQ_pos (lt_trans_ax zero_lt_one_ax one_lt_rt2))
+
+/-- `A = (0,0,1)` of the `d = 5/2` triple. -/ noncomputable def Abe : Circle := ⟨0, 0, 1, h1pos⟩
+/-- `B = (5/2,0,1)`. -/ noncomputable def Bbe : Circle := ⟨(1 + 1) * cQ, 0, 1, h1pos⟩
+/-- `C = (0,5/2,1)`. -/ noncomputable def Cbe : Circle := ⟨0, (1 + 1) * cQ, 1, h1pos⟩
+
+/-- Outer Soddy circle below the locus: `r = 5√2/4 − 1`, centre `(5/4, 5/4)`. -/
+noncomputable def beOOO : Circle := ⟨cQ, cQ, cQ * rt2 - 1, below_ooo_pos⟩
+theorem beOOO_tangent : TangentExt beOOO Abe ∧ TangentExt beOOO Bbe ∧ TangentExt beOOO Cbe :=
+  below_soddy cQ rt2 rt2_sq
+
+/-- Inner Soddy circle below the locus: `r = 1 + 5√2/4`, centre `(5/4, 5/4)`. -/
+noncomputable def beIII : Circle := ⟨cQ, cQ, 1 + cQ * rt2, below_iii_pos⟩
+theorem beIII_tangent : TangentInt beIII Abe ∧ TangentInt beIII Bbe ∧ TangentInt beIII Cbe :=
+  below_soddy_inner cQ rt2 rt2_sq
+
+/-! ### The remaining six of `d = 5/2`: not checked, and the shape of what is left
+
+The `√34` quartet and the two circles of the doubled `(inner,outer,outer)` class are still
+computed-only. The obstruction is arithmetic scale, and it is now precisely located.
+
+**The quartet.** Residual `2c² + t² − c²t² − 1` with `c = 5/4`, `t = √34/3`. It factors:
+
+    2c² + t² − c²t² − 1  =  1 − (c² − 1)(t² − 2)
+
+and `(c²−1)(t²−2) = (9/16)(16/9) = 1`, so the residual is `1 − 1`. Clearing both denominators needs
+`144 = 16·9`, and the resulting numeral check `18·25 + 16·34 − 25·34 − 144 = 0` exceeds the
+normaliser even though every step of it is elementary. The factored form above is the route to try
+next: it needs only `(16c² − 16)(9t² − 18) = 144`, whose constants are all at most `18`.
+
+**The doubled class.** `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. Scaling by `28` gives a
+residual of `567·(s² − 2)`, and `567 = 81 · 7` factors out of the whole identity: writing
+`45 + 36s = 9(5 + 4s)` and `72 + 45s = 9(8 + 5s)` reduces the inner computation to constants of at
+most `80`. That factoring is the route here, and it is untried.
+
+Both are bounded, mechanical, and blocked on arithmetic presentation rather than on geometry.
+-/
+
 end Coordinates
 end Apollonius
 end Geometry
