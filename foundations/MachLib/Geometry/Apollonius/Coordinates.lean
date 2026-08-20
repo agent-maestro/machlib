@@ -1079,42 +1079,77 @@ noncomputable def beIIO : Circle := ⟨cQ, cQ - tT, cQ * tT, below_quartet_pos�
 theorem beIIO_tangent : TangentInt beIIO Abe ∧ TangentInt beIIO Bbe ∧ TangentExt beIIO Cbe :=
   below_iio cQ tT cQ_tT_prod
 
-/-! ### The doubled `(inner,outer,outer)` class — the last two, and what they need
+/-! ### The doubled `(inner,outer,outer)` class — the last two, and the full derivation
 
-Two positive roots in one mode, which is why this configuration has no `(outer,inner,inner)` circle
-at all. `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked.**
+`r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked in Lean.** The mathematics below is
+complete and verified by hand; what is missing is a presentation the normaliser accepts. Written out
+in full so the next attempt starts from the end of five, not from the beginning.
 
-Three things are established about them, and they are what the next attempt should start from
-rather than rediscover.
+## Setup
 
-**1. One lemma covers both.** Solution 5 is solution 4 with `s ↦ −s`. A single statement in a
-parameter `e` with `e² = 2`, instantiated at `√2` and at `−√2`, gives the pair. No other circle in
-this file shares a lemma with another.
-
-**2. A factor of `9` runs through everything.** Scaled by `28² = 784`, the coordinates are
-`28x = −(45 + 36e)` and `28(r − 1) = 72 + 45e`. Both are `9 ·` something: `9(5 + 4e)` and
-`9(8 + 5e)`. Writing `u = 5 + 4e`, `v = 8 + 5e` keeps every constant under `80`; leaving the `9` in
-forms `2025`, `3240` and `5184`, and the normaliser refuses.
-
-**3. And then `v = u · e` exactly** — because `(5 + 4e)e = 5e + 4e² = 8 + 5e` when `e² = 2`. So the
-internal tangency is not an arithmetic identity at all:
+Solution 5 is solution 4 under `e ↦ −e`, so one lemma in a parameter `e` with `e² = 2` gives both.
+Scaled by `28² = 784` the coordinates are `28x = −9u`, `28(r − 1) = 9w`, with
 
 ```
-    2u² − v²  =  2u² − u²e²  =  u²(2 − e²)  =  0
+    u = 5 + 4e        w = 8 + 5e
 ```
 
-with no constant but `2`. That is the same collapse the `√34` quartet's residual made available,
-arrived at differently, and it is why this class is worth one more attempt rather than a numeral
-workaround.
+and the separation `28d = 70`.
 
-What is *not* solved: the two external tangencies still carry `115` and `128`. They factor —
-`(128 + 45e)² − (115 + 36e)² = 81(13 + 9e)(3 + e)` and `(13 + 9e)(3 + e) = u²` — so a
-difference-of-squares step keeps the constants under `57`. That derivation is written down here but
-not carried out in Lean; it is where the next hour should go.
+## Everything reduces to one fact
 
-**Status: 21 of the 23 exhibit points are Lean-checked.** These two are the remainder, and they are
-blocked on presenting three identities in the factored forms above — not on anything geometric, and
-not on `natCast`.
+**`w = u · e`**, since `(5 + 4e)e = 5e + 4e² = 8 + 5e` when `e² = 2`. Hence
+
+```
+    w² = u²e² = 2u²
+```
+
+*The internal tangency is exactly this*: `2u² − w² = u²(2 − e²) = 0`, with no numeral beyond `2`.
+
+*The external tangency is also exactly this*, which is the part that took five attempts to see. As a
+difference of squares, `a² − b² = (a−b)(a+b)` with `a = 56 + 9w`, `b = 9u + 70`:
+
+```
+    a − b  =  u + w
+    a + b  =  9(14 + u + w)  =  9 · 9(w − u)
+```
+
+the second equality because **`14 + u + w = 9(w − u)`**, which follows from the single small fact
+
+```
+    4w − 5u = 7
+```
+
+So `a² − b² = (u + w) · 81(w − u) = 81(w² − u²) = 81(2u² − u²) = 81u² = (9u)²`, which is the external
+tangency. No second arithmetic fact is needed anywhere.
+
+## What blocks it, precisely
+
+Not the geometry, not `natCast`, and not the size of `115` or `128` — those never have to be
+written. What fails is numeral arithmetic on **tree-encoded constants near `126`**:
+
+| step | identity | status |
+| --- | --- | --- |
+| `w = u·e` | `(5+4e)e = 4e² + 5e` | closes |
+| `w² = 2u²` | `u²(2 − e²)` | closes |
+| `4w − 5u = 7` | substitute `u`, `w` | closes |
+| `14 + u + w = 9(w − u)` | `−2(4w − 5u − 7)` | closes |
+| `a − b = u + w` | `2(4w − 5u − 7)` | closes |
+| **`a + b = 9(14 + u + w)`** | needs `56 + 70 = 9 · 14` | **fails** |
+| **`(u+w)·9·9·(w−u) = 81(w²−u²)`** | distributes two nines | **fails** |
+
+Both failures are `Lean.Meta.acLt` on constants that are *products of small factors* — `56 = 8·7`,
+`70 = 10·7`, `126 = 18·7` — where the normaliser must still evaluate the products. Raising
+`maxHeartbeats` to four million does not move either.
+
+**The next thing to try** is giving `7` itself a variable: every constant in the two failing steps is
+a multiple of `7`, so a parameter `k` with `k = 7` supplied as a hypothesis would put `56 + 70 = 9·14`
+into the form `8k + 10k = 18k`, which is linear and free. That is untried.
+
+## Status
+
+**21 of the 23 exhibit points are Lean-checked.** These two are the remainder. Everything above is
+derived and none of it is in Lean.
 -/
 
 end Coordinates
