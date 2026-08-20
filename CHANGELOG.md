@@ -5,6 +5,46 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (e)
+
+### Eventual representation closes; the gap to `SignHardCase` is located exactly
+
+`stable_signs_F_representable` — **every EML tree whose internal arguments keep one sign on `D` is
+computed there by a branch-free `L_F` term.** No runtime selector is needed: the *translator* picks
+the branch once. Six cases per node, and the totalisation collapses two of them, because `log₀` is
+`0` on both non-positive branches.
+
+The trichotomy is kept **strict** deliberately. "Eventually non-negative" is not "eventually
+positive or identically zero", and `EF`/`LF` consume strict positivity.
+
+### Comparing to `EvSign` child by child — and the two children differ
+
+`EvSign f = (eventually 0 < f) ∨ (eventually f ≤ 0)`.
+
+- **Right child: `EvSign` is enough, on the nose.** Both non-positive cases give `log₀ = 0`, so they
+  collapse and `f x ≤ 0` suffices. `stable_signs_refined_F_representable` weakens the hypothesis to
+  exactly this shape.
+- **Left child: `EvSign` is not enough.** `exp` needs `a > 0`, or `a < 0` **strictly** (at `a = 0`
+  the denominator `exp(2·0) − exp(0)` vanishes), or a lower bound for `EFshift`. `f x ≤ 0`
+  distinguishes none of these.
+
+**So the missing statement is precisely: a term eventually non-positive is eventually *strictly*
+negative, or eventually zero.** Strictly stronger than `EvSign`, not implied by it, and a sharper
+question than `SignHardCase` — it asks for a trichotomy where `SignHardCase` delivers a dichotomy.
+
+`SignHardCase ⟹ eventually F-representable` is therefore **still not registered**, and now for a
+stated reason rather than caution: it is false as it stands, because the left-child case is not
+supplied.
+
+### Obstruction (B) downgraded to a hypothesis
+
+"`log₀` is unrepresentable in `L_F` because there is no selector" was over-claimed. Absence of an
+explicit conditional does not prove a piecewise function undefinable, and `F` descends from a
+totalised construction so branch information may already be latent in the primitive. Turning it into
+an impossibility theorem needs an invariant every `L_F` term satisfies and `log₀` violates —
+continuity across the sign change being the obvious candidate. None is offered, so it stands as
+evidence.
+
 ## [Unreleased] — 2026-08-20 (d)
 
 ### `L_F` has a type, and the positive fragment has a basis theorem

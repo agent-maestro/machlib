@@ -308,23 +308,187 @@ theorem FTerm.EFshift_eval (C : Real) (u : FTerm) (x : Real) (h : 0 < FTerm.eval
   have e : -C + (FTerm.eval u x + C) = FTerm.eval u x := by mach_mpoly [C, FTerm.eval u x]
   rw [e]
 
-/-! ### The right child is different, and the difference is the totalisation
+/-! ### The right child is different — and the difference is *evidence*, not a theorem
 
 For the right child there is no shift to apply. The node computes `log₀(B x)`, which is `log (B x)`
-where `B x > 0` and **`0`** where `B x ≤ 0` — a genuinely piecewise operation. `L_F` has constants,
-`x`, four field operations and `F`, and **no conditional and no sign test**, so a single `L_F` term
-cannot reproduce a value that switches definition on a sign.
+where `B x > 0` and `0` where `B x ≤ 0` — a genuinely piecewise operation — and `L_F` has constants,
+`x`, four field operations and `F`, with **no conditional and no sign test**.
 
-That is why obstruction (B) is not a decoder limitation the way (A) was. It is a statement about the
-*language*, and it would be settled either by admitting a selector into `L_F` — changing what the
-basis claim means — or by restricting to domains on which the right child keeps a constant sign.
+**That is evidence of an obstruction, and it is deliberately not claimed as a non-representability
+result.** Two reasons. Absence of an explicit conditional does not prove a piecewise function
+undefinable: compositional languages can synthesise branch-like behaviour indirectly. And `F` itself
+descends from a totalised construction, so some branch information may already be latent in the
+primitive. Turning this into an impossibility theorem would require an invariant that every `L_F`
+term satisfies and `log₀` violates — continuity or analyticity across the sign change is the obvious
+candidate. None is offered here, so obstruction (B) stands as a hypothesis.
 
-Obstruction (C), a child that changes sign, is (B) made unavoidable: no restriction of the domain to
-a ray helps unless the sign eventually stabilises. That is exactly what `SignHardCase` would supply,
-which gives that obligation a **second potential consumer** beyond all-depth tameness — a
-*conditional* one, and deliberately not registered as an implication here, because the remaining
-step (translating the totalised branch once its sign is known) has not been checked. This arc has
-supplied enough warnings about obvious next compositions. -/
+Obstruction (C), a child that *changes* sign, is (B) made unavoidable on any domain where the
+crossing occurs. But on a domain where the sign is **stable**, the branch can be chosen once by the
+translator rather than at runtime — which is the next section, and which turns out to close. -/
+
+/-! ## Global versus eventual representation
+
+The positive fragment is a *global* statement. The interesting weakening is not to drop positivity
+but to replace it by **sign stability**: on a domain where each internal argument keeps one sign, the
+*translator* can pick the branch once, and the emitted term is ordinary and branch-free. No runtime
+selector is needed, so the obstruction above does not apply.
+
+The trichotomy is kept **strict** on purpose. "Eventually non-negative" is not the same as
+"eventually positive or identically zero", and `EF`/`LF` consume strict positivity — smoothing that
+distinction is exactly how a false lemma would enter. -/
+
+/-- On `D`, a function is strictly positive, strictly negative, or identically zero. -/
+def SignStable (D : Real → Prop) (f : Real → Real) : Prop :=
+  (∀ x : Real, D x → 0 < f x) ∨ (∀ x : Real, D x → f x < 0) ∨ (∀ x : Real, D x → f x = 0)
+
+/-- Every `eml` node's two children are sign-stable on `D`. -/
+def StableInternalSigns (D : Real → Prop) : EMLTree → Prop
+  | .const _ => True
+  | .var     => True
+  | .eml a b => StableInternalSigns D a ∧ StableInternalSigns D b
+                ∧ SignStable D a.eval ∧ SignStable D b.eval
+
+/-- `exp a = 1 / exp (−a)`. The route for a left child that is stably *negative*. -/
+private theorem exp_eq_inv_exp_neg (a : Real) : exp a = 1 / exp (-a) := by
+  refine (div_of_eq_mul (ne_of_gt (exp_pos (-a))) ?_).symm
+  rw [← exp_add]
+  have e : -a + a = 0 := by mach_ring
+  rw [e, exp_zero]
+
+/-- **Stable internal signs suffice.** Every EML tree whose internal arguments keep one sign on `D`
+is computed on `D` by a branch-free term of `L_F`.
+
+Six cases at each node, and the totalisation collapses two of them:
+
+| left child | term | right child | term |
+| --- | --- | --- | --- |
+| `> 0` | `EF â` | `> 0` | `LF b̂` |
+| `< 0` | `1 / EF(−â)` | `< 0` | `0` |
+| `= 0` | `1` | `= 0` | `0` |
+
+The right child's two non-positive cases give the same term because `log₀` is `0` on both — there is
+nothing to decode, which is the totalisation *helping* for once. -/
+theorem stable_signs_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, StableInternalSigns D t →
+      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+  intro t
+  induction t with
+  | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
+  | var => intro _; exact ⟨FTerm.var, fun _ _ => rfl⟩
+  | eml a b iha ihb =>
+      intro h
+      obtain ⟨hpa, hpb, hsa, hsb⟩ := h
+      obtain ⟨Ta, hTa⟩ := iha hpa
+      obtain ⟨Tb, hTb⟩ := ihb hpb
+      -- the left half: three sign cases, three terms
+      obtain ⟨LT, hLT⟩ : ∃ LT : FTerm, ∀ x : Real, D x → FTerm.eval LT x = exp (a.eval x) := by
+        rcases hsa with hp | hn | hz
+        · exact ⟨FTerm.EF Ta, fun x hx => by
+            rw [FTerm.EF_eval Ta x (by rw [hTa x hx]; exact hp x hx), hTa x hx]⟩
+        · refine ⟨FTerm.div (FTerm.const 1) (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)), ?_⟩
+          intro x hx
+          have hneg : FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x = -(a.eval x) := by
+            show (0 : Real) - FTerm.eval Ta x = -(a.eval x)
+            rw [hTa x hx]; mach_ring
+          have hpos : 0 < FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x := by
+            rw [hneg]
+            have v := add_lt_add_left (hn x hx) (-(a.eval x))
+            have l : -(a.eval x) + a.eval x = 0 := by mach_ring
+            have r : -(a.eval x) + 0 = -(a.eval x) := by mach_ring
+            rw [l, r] at v; exact v
+          show (1 : Real) / FTerm.eval (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)) x = exp (a.eval x)
+          rw [FTerm.EF_eval _ x hpos, hneg, ← exp_eq_inv_exp_neg]
+        · exact ⟨FTerm.const 1, fun x hx => by rw [hz x hx, exp_zero]; rfl⟩
+      -- the right half: positive decodes, both non-positive cases are `0`
+      obtain ⟨RT, hRT⟩ : ∃ RT : FTerm, ∀ x : Real, D x → FTerm.eval RT x = log (b.eval x) := by
+        rcases hsb with hp | hn | hz
+        · exact ⟨FTerm.LF Tb, fun x hx => by
+            rw [FTerm.LF_eval Tb x (by rw [hTb x hx]; exact hp x hx), hTb x hx]⟩
+        · exact ⟨FTerm.const 0, fun x hx => by
+            show (0 : Real) = log (b.eval x)
+            rw [log_nonpos (le_of_lt (hn x hx))]⟩
+        · exact ⟨FTerm.const 0, fun x hx => by
+            show (0 : Real) = log (b.eval x)
+            rw [hz x hx, log_nonpos (le_refl 0)]⟩
+      exact ⟨FTerm.sub LT RT, fun x hx => by
+        show FTerm.eval LT x - FTerm.eval RT x = exp (a.eval x) - log (b.eval x)
+        rw [hLT x hx, hRT x hx]⟩
+
+
+
+/-! ## What `EvSign` actually supplies, and what it does not
+
+`EvSign f` is `(eventually 0 < f) ∨ (eventually f ≤ 0)`. Comparing it to what the translation
+consumes, child by child, locates the gap exactly:
+
+- **Right child: `EvSign` is enough, on the nose.** `log₀` is `0` on *both* non-positive cases, so
+  the two collapse and `f x ≤ 0` suffices. No strictness is needed.
+- **Left child: `EvSign` is not enough.** `exp` needs `a > 0` for `EF`, or `a < 0` *strictly* for
+  `1/EF(−a)` — at a point where `a = 0` the denominator `exp(2·0) − exp(0)` vanishes — or a lower
+  bound for `EFshift`. `f x ≤ 0` distinguishes none of these.
+
+So the missing statement is precisely: **a term that is eventually non-positive is eventually
+*strictly* negative, or eventually zero.** That is strictly stronger than `EvSign` and is not
+implied by it. Whether it holds for EML terms is open, and it is a sharper question than
+`SignHardCase` because it asks for a trichotomy where `SignHardCase` delivers a dichotomy.
+
+The refinement below weakens the right-hand hypothesis accordingly, so the remaining gap is
+localised in one place instead of two. -/
+
+/-- The right child's requirement, in `EvSign`'s exact shape: positive, or non-positive. -/
+def SignStableRight (D : Real → Prop) (f : Real → Real) : Prop :=
+  (∀ x : Real, D x → 0 < f x) ∨ (∀ x : Real, D x → f x ≤ 0)
+
+/-- Left children sign-stable (strict trichotomy); right children merely `EvSign`-stable. -/
+def StableSignsRefined (D : Real → Prop) : EMLTree → Prop
+  | .const _ => True
+  | .var     => True
+  | .eml a b => StableSignsRefined D a ∧ StableSignsRefined D b
+                ∧ SignStable D a.eval ∧ SignStableRight D b.eval
+
+/-- **The refined stable-sign theorem.** The right-hand hypothesis is now exactly what `EvSign`
+delivers; only the left-hand one asks for more. -/
+theorem stable_signs_refined_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, StableSignsRefined D t →
+      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+  intro t
+  induction t with
+  | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
+  | var => intro _; exact ⟨FTerm.var, fun _ _ => rfl⟩
+  | eml a b iha ihb =>
+      intro h
+      obtain ⟨hpa, hpb, hsa, hsb⟩ := h
+      obtain ⟨Ta, hTa⟩ := iha hpa
+      obtain ⟨Tb, hTb⟩ := ihb hpb
+      obtain ⟨LT, hLT⟩ : ∃ LT : FTerm, ∀ x : Real, D x → FTerm.eval LT x = exp (a.eval x) := by
+        rcases hsa with hp | hn | hz
+        · exact ⟨FTerm.EF Ta, fun x hx => by
+            rw [FTerm.EF_eval Ta x (by rw [hTa x hx]; exact hp x hx), hTa x hx]⟩
+        · refine ⟨FTerm.div (FTerm.const 1) (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)), ?_⟩
+          intro x hx
+          have hneg : FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x = -(a.eval x) := by
+            show (0 : Real) - FTerm.eval Ta x = -(a.eval x)
+            rw [hTa x hx]; mach_ring
+          have hpos : 0 < FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x := by
+            rw [hneg]
+            have v := add_lt_add_left (hn x hx) (-(a.eval x))
+            have l : -(a.eval x) + a.eval x = 0 := by mach_ring
+            have r : -(a.eval x) + 0 = -(a.eval x) := by mach_ring
+            rw [l, r] at v; exact v
+          show (1 : Real) / FTerm.eval (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)) x = exp (a.eval x)
+          rw [FTerm.EF_eval _ x hpos, hneg, ← exp_eq_inv_exp_neg]
+        · exact ⟨FTerm.const 1, fun x hx => by rw [hz x hx, exp_zero]; rfl⟩
+      obtain ⟨RT, hRT⟩ : ∃ RT : FTerm, ∀ x : Real, D x → FTerm.eval RT x = log (b.eval x) := by
+        rcases hsb with hp | hnp
+        · exact ⟨FTerm.LF Tb, fun x hx => by
+            rw [FTerm.LF_eval Tb x (by rw [hTb x hx]; exact hp x hx), hTb x hx]⟩
+        · -- both non-positive cases at once: `log₀` is `0` on all of them
+          exact ⟨FTerm.const 0, fun x hx => by
+            show (0 : Real) = log (b.eval x)
+            rw [log_nonpos (hnp x hx)]⟩
+      exact ⟨FTerm.sub LT RT, fun x hx => by
+        show FTerm.eval LT x - FTerm.eval RT x = exp (a.eval x) - log (b.eval x)
+        rw [hLT x hx, hRT x hx]⟩
 
 
 end MachLib
