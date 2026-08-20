@@ -34,6 +34,38 @@ A rational germ `S` feeding the single `F` of a one-query term:
 
 `Fbasis_of_neg`, `Fbasis_zero`, `Fbasis_ge_exp_of_one_le` are the first three.
 
+### And the fourth branch is a bounded WINDOW, not an interval
+
+`FS_evSignDef_or_window` — **`F ∘ S` is eventually sign-definite for every rational germ `S`, unless
+`S` is eventually trapped in `(e^(−e), e⁻¹]`.**
+
+The contest on `0 < S < 1` is between `exp S ∈ (1, e)` and `log S < 0`, and it is decided everywhere
+outside that window:
+
+* `S > e⁻¹` gives `log S > −1` while `exp S > 1`, so `F(S) > 0` — and this needs **no upper bound on
+  `S` at all** (`Fbasis_pos_of_gt_expNegOne`);
+* `0 < S ≤ e^(−e)` gives `log S ≤ −e` while `exp S < e`, so `F(S) < 0` (`Fbasis_neg_of_le_tiny`).
+
+**Neither endpoint is numeric.** Both are comparisons against `exp` of something, so no decimal
+enters and the numeral discipline is untouched — `sqrt` is absent from the footprints.
+
+`ratGerm_sub_const` (germs are closed under subtracting a constant) is what lets the trichotomy be
+applied to `S − e⁻¹` and `S − e^(−e)`, turning two comparisons into two sign questions already
+answered.
+
+`Fbasis_sign_changes` records the source of the difficulty explicitly rather than leaving it implied:
+`F(e^(−e)) < 0` and `F(1) = exp 1 > 0`.
+
+### What this says about the level-1 problem
+
+The residue shrank from an interval to a bounded window, and a rational germ trapped in a bounded
+window is a strong constraint — it converges, and its limit lies there. `F` has exactly one zero in
+the window, so the delicate case is a germ approaching *that* zero.
+
+More usefully, it says what the problem is **not**. On every regime outside a bounded window the sign
+is settled by comparisons against `exp` of a constant. Transcendence of `F` is not what is at stake,
+and a transcendence theorem would be answering a strictly harder question.
+
 **This says something about how *not* to attack `OneQueryDichotomy`.** On three of the four regimes
 the level-1 question never arises — the generator is bounded, constant, or dominated by its
 exponential part. The difficulty is not that `F` is transcendental. Reaching for a transcendence

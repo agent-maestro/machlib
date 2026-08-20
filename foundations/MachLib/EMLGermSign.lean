@@ -325,15 +325,170 @@ theorem Fbasis_zero : Fbasis (0 : Real) = 1 := by
 theorem Fbasis_ge_exp_of_one_le {y : Real} (hy : 1 ≤ y) : exp y ≤ Fbasis y ∧ 0 < Fbasis y :=
   ⟨exp_le_Fbasis hy, lt_of_lt_of_le (exp_pos y) (exp_le_Fbasis hy)⟩
 
-/-! ### The one branch that is not collapsed
+/-! ### The remaining branch is a bounded WINDOW, not an interval
 
-`0 < S < 1`. There `log S < 0` and can outweigh `exp S ∈ (1, e)`, so `F(S)` is genuinely negative for
-small `S` and the sign depends on the scale rather than on the regime. That is the branch carrying
-the level-1 cancellation problem, and it is the one `OneQueryDichotomy` has to face.
+On `0 < S < 1` the sign of `F(S) = exp S + log S` is a contest between `exp S ∈ (1, e)` and
+`log S < 0`, and the contest is decided everywhere except on a bounded window with explicit
+transcendental endpoints.
 
-Worth noting what the other three show: the difficulty is **not** that `F` is transcendental. On
-three of the four regimes the generator is bounded, constant, or dominated by its exponential part,
-and the level-1 question never arises. Attacking `OneQueryDichotomy` with a transcendence theorem
-would be answering a harder question than the one that is actually open. -/
+* `S > e⁻¹` forces `log S > −1` while `exp S > 1`, so `F(S) > 0` — and this needs no upper bound on
+  `S` at all.
+* `0 < S ≤ e^(−e)` forces `log S ≤ −e` while `exp S < e`, so `F(S) < 0`.
+
+Neither bound is numeric: both are comparisons against `exp` of something, so no decimal enters and
+the `sqrt`/numeral discipline is untouched. What is left is `e^(−e) < S ≤ e⁻¹`. -/
+
+/-- `F(y) > 0` whenever `y > e⁻¹` — no upper bound on `y` needed. -/
+theorem Fbasis_pos_of_gt_expNegOne {y : Real} (hy : exp (-1) < y) : 0 < Fbasis y := by
+  have hy0 : (0 : Real) < y := lt_trans_ax (exp_pos (-1)) hy
+  have hlog : (-1 : Real) < log y := by
+    have h := log_lt_log (exp_pos (-1)) hy
+    rw [log_exp] at h; exact h
+  have hexp : (1 : Real) < exp y := one_lt_exp hy0
+  show (0 : Real) < exp y + log y
+  have s1 : (0 : Real) < exp y + -1 := by
+    have v := add_lt_add_left hexp (-1 : Real)
+    have el : (-1 : Real) + 1 = 0 := by mach_ring
+    have er : (-1 : Real) + exp y = exp y + -1 := by mach_ring
+    rw [el, er] at v; exact v
+  have s2 : exp y + -1 < exp y + log y := add_lt_add_left hlog (exp y)
+  exact lt_trans_ax s1 s2
+
+/-- `F(y) < 0` whenever `0 < y ≤ e^(−e)`. -/
+theorem Fbasis_neg_of_le_tiny {y : Real} (hy0 : 0 < y) (hy : y ≤ exp (-(exp 1))) :
+    Fbasis y < 0 := by
+  have hne : -(exp 1) < (0 : Real) := neg_of_neg_pos' (by
+    have e : -(-(exp 1)) = exp 1 := by mach_ring
+    rw [e]; exact exp_pos 1)
+  have htiny : exp (-(exp 1)) < 1 := by
+    have h := exp_lt hne
+    rw [exp_zero] at h; exact h
+  have hy1 : y < 1 := lt_of_le_of_lt hy htiny
+  have hlog : log y ≤ -(exp 1) := by
+    have h := log_le_log hy0 hy
+    rw [log_exp] at h; exact h
+  have hexp : exp y < exp 1 := exp_lt hy1
+  show exp y + log y < 0
+  have s1 : exp y + log y < exp 1 + log y := by
+    have v := add_lt_add_left hexp (log y)
+    have el : log y + exp y = exp y + log y := by mach_ring
+    have er : log y + exp 1 = exp 1 + log y := by mach_ring
+    rw [el, er] at v; exact v
+  have s2 : exp 1 + log y ≤ 0 := by
+    have v := add_le_add_wit (le_refl (exp 1)) hlog
+    have e : exp 1 + -(exp 1) = 0 := by mach_ring
+    rw [e] at v; exact v
+  exact lt_of_lt_of_le s1 s2
+
+/-- **`F` genuinely changes sign on `(0, ∞)`.** This is the source of the level-1 difficulty, stated
+rather than left implicit: at `e^(−e)` the generator is negative, at `1` it is `exp 1 > 0`. -/
+theorem Fbasis_sign_changes : Fbasis (exp (-(exp 1))) < 0 ∧ 0 < Fbasis 1 := by
+  refine ⟨Fbasis_neg_of_le_tiny (exp_pos _) (le_refl _), ?_⟩
+  show (0 : Real) < exp 1 + log 1
+  have hl1 : log (1 : Real) = 0 := by
+    have hz : exp (0 : Real) = 1 := exp_zero
+    rw [← hz, log_exp]
+  rw [hl1]
+  have e : exp 1 + 0 = exp 1 := by mach_ring
+  rw [e]; exact exp_pos 1
+
+/-- Rational germs are closed under subtracting a constant: `P/Q − c = (P − c·Q)/Q`. -/
+theorem ratGerm_sub_const {f : Real → Real} (h : RatGerm f) (c : Real) :
+    RatGerm (fun x => f x - c) := by
+  obtain ⟨P, Q, X, hX, hQ, he⟩ := h
+  refine ⟨psub P (pscale c Q), Q, X, hX, hQ, fun x hx => ?_⟩
+  show f x - c = pev (psub P (pscale c Q)) x / pev Q x
+  rw [he x hx, pev_psub, pev_pscale]
+  refine (div_of_eq_mul (hQ x hx) ?_).symm
+  rw [div_def (pev P x) (pev Q x) (hQ x hx)]
+  have e : pev Q x * (pev P x * (1 / pev Q x) - c)
+      = pev P x * (pev Q x * (1 / pev Q x)) - c * pev Q x := by
+    mach_mpoly [pev P x, pev Q x, c, (1 : Real) / pev Q x]
+  rw [e, mul_inv _ (hQ x hx)]; mach_ring
+
+/-- The residual case: the germ is eventually trapped in `(e^(−e), e⁻¹]`. -/
+def InWindow (S : Real → Real) : Prop :=
+  ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → exp (-(exp 1)) < S x ∧ S x ≤ exp (-1)
+
+/-- **`F ∘ S` is eventually sign-definite for every rational germ `S`, unless `S` is trapped in the
+window.**
+
+Every regime except one is decided, and the exception is a *bounded* window with explicit endpoints
+rather than the open interval `(0,1)`. That is a much smaller residue than the branch it replaces,
+and it is where `OneQueryDichotomy` now lives. -/
+theorem FS_evSignDef_or_window {S : Real → Real} (h : RatGerm S) :
+    EvSignDef (fun x => Fbasis (S x)) ∨ InWindow S := by
+  have hconst : ∀ (c : Real) (X : Real), 1 ≤ X → (∀ x : Real, X ≤ x → S x = c) →
+      EvSignDef (fun x => Fbasis (S x)) := by
+    intro c X hX hS
+    rcases lt_total 0 (Fbasis c) with hc | hc | hc
+    · exact Or.inr (Or.inl ⟨X, hX, fun x hx => by show 0 < Fbasis (S x); rw [hS x hx]; exact hc⟩)
+    · exact Or.inl ⟨X, hX, fun x hx => by show Fbasis (S x) = 0; rw [hS x hx, ← hc]⟩
+    · exact Or.inr (Or.inr ⟨X, hX, fun x hx => by show Fbasis (S x) < 0; rw [hS x hx]; exact hc⟩)
+  have hsub : ∀ (c : Real), EvSignDef (fun x => S x - c) :=
+    fun c => ratGerm_evSignDef (ratGerm_sub_const h c)
+  rcases hsub (exp (-1)) with ⟨X, hX, hz⟩ | ⟨X, hX, hp⟩ | ⟨X, hX, hn⟩
+  · -- `S ≡ e⁻¹`
+    exact Or.inl (hconst (exp (-1)) X hX (fun x hx => by
+      have hz0 : S x - exp (-1) = 0 := hz x hx
+      have v : S x - exp (-1) + exp (-1) = 0 + exp (-1) := by rw [hz0]
+      have el : S x - exp (-1) + exp (-1) = S x := by mach_ring
+      have er : (0 : Real) + exp (-1) = exp (-1) := by mach_ring
+      rw [el, er] at v; exact v))
+  · -- `S > e⁻¹`
+    refine Or.inl (Or.inr (Or.inl ⟨X, hX, fun x hx => ?_⟩))
+    show 0 < Fbasis (S x)
+    refine Fbasis_pos_of_gt_expNegOne ?_
+    have v := add_lt_add_left (hp x hx) (exp (-1))
+    have el : exp (-1) + 0 = exp (-1) := by mach_ring
+    have er : exp (-1) + (S x - exp (-1)) = S x := by mach_ring
+    rw [el, er] at v; exact v
+  · -- `S < e⁻¹`; now compare against `e^(−e)`
+    have hSle : ∀ x : Real, X ≤ x → S x ≤ exp (-1) := by
+      intro x hx
+      have v := add_lt_add_left (hn x hx) (exp (-1))
+      have el : exp (-1) + (S x - exp (-1)) = S x := by mach_ring
+      have er : exp (-1) + 0 = exp (-1) := by mach_ring
+      rw [el, er] at v; exact le_of_lt v
+    rcases hsub (exp (-(exp 1))) with ⟨Y, hY, hz2⟩ | ⟨Y, hY, hp2⟩ | ⟨Y, hY, hn2⟩
+    · exact Or.inl (hconst (exp (-(exp 1))) Y hY (fun x hx => by
+        have hz0 : S x - exp (-(exp 1)) = 0 := hz2 x hx
+        have v : S x - exp (-(exp 1)) + exp (-(exp 1)) = 0 + exp (-(exp 1)) := by rw [hz0]
+        have el : S x - exp (-(exp 1)) + exp (-(exp 1)) = S x := by mach_ring
+        have er : (0 : Real) + exp (-(exp 1)) = exp (-(exp 1)) := by mach_ring
+        rw [el, er] at v; exact v))
+    · -- trapped in the window
+      obtain ⟨W, hW, hWX, hWY⟩ := two_bounds' hX hY
+      refine Or.inr ⟨W, hW, fun x hx => ⟨?_, hSle x (le_trans hWX hx)⟩⟩
+      have v := add_lt_add_left (hp2 x (le_trans hWY hx)) (exp (-(exp 1)))
+      have el : exp (-(exp 1)) + 0 = exp (-(exp 1)) := by mach_ring
+      have er : exp (-(exp 1)) + (S x - exp (-(exp 1))) = S x := by mach_ring
+      rw [el, er] at v; exact v
+    · -- `S < e^(−e)`; the sign of `S` itself now finishes it
+      have hSlt : ∀ x : Real, Y ≤ x → S x ≤ exp (-(exp 1)) := by
+        intro x hx
+        have v := add_lt_add_left (hn2 x hx) (exp (-(exp 1)))
+        have el : exp (-(exp 1)) + (S x - exp (-(exp 1))) = S x := by mach_ring
+        have er : exp (-(exp 1)) + 0 = exp (-(exp 1)) := by mach_ring
+        rw [el, er] at v; exact le_of_lt v
+      rcases ratGerm_evSignDef h with ⟨Z, hZ, hSz⟩ | ⟨Z, hZ, hSp⟩ | ⟨Z, hZ, hSn⟩
+      · exact Or.inl (hconst 0 Z hZ hSz)
+      · obtain ⟨W, hW, hWY, hWZ⟩ := two_bounds' hY hZ
+        refine Or.inl (Or.inr (Or.inr ⟨W, hW, fun x hx => ?_⟩))
+        exact Fbasis_neg_of_le_tiny (hSp x (le_trans hWZ hx)) (hSlt x (le_trans hWY hx))
+      · refine Or.inl (Or.inr (Or.inl ⟨Z, hZ, fun x hx => ?_⟩))
+        show 0 < Fbasis (S x)
+        rw [Fbasis_of_nonpos (le_of_lt (hSn x hx))]
+        exact exp_pos _
+
+/-! ### Where `OneQueryDichotomy` now lives
+
+The residue is not "the interval `(0,1)`" but the bounded window `(e^(−e), e⁻¹]`, and a rational germ
+trapped there is a strong constraint: it converges, and its limit lies in that window. `F` has
+exactly one zero in it, so the delicate case is a germ approaching that zero — a coincidence, but one
+that has to be excluded rather than waved away.
+
+Which also says what the level-1 problem is *not*. It is not about `F` being transcendental; on every
+regime outside a bounded window the sign is settled by comparisons against `exp` of a constant. -/
 
 end MachLib

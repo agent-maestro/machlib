@@ -4486,6 +4486,47 @@
         "EvNeg"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The window classification. conclusion_mentions both disjuncts so the claim cannot drift into 'always sign-definite'. forbid sqrt because both endpoints are transcendental and stated without radicals or decimals.",
+      "id": "germsign-window-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "unless\n`S` is eventually trapped in `(e^(−e), e⁻¹]`"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.FS_evSignDef_or_window",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "conclusion_mentions": [
+        "EvSignDef",
+        "InWindow"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The upper endpoint, registered because the prose leans on it needing NO upper bound on S -- hypotheses_count 1 pins that.",
+      "id": "germsign-pos-endpoint-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "needs **no upper bound on\n  `S` at all**"
+      ],
+      "module": "MachLib.EMLGermSign",
+      "theorem": "MachLib.Fbasis_pos_of_gt_expNegOne",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.sqrt"
+      ],
+      "conclusion_mentions": [
+        "Fbasis"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
