@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-19 (j)
+
+### The Positive Translation Theorem — `x + 1` was a stratum, not a specimen
+
+`MachLib/EMLDepthTameness.lean`.
+
+```
+    c > 0   ⟹   d_(0,∞)(x + c) = 4        exactly
+    c = 0   ⟹   d(x)           = 0        it is `var`
+    c < 0   ⟹   d_(0,∞)(x + c) ∈ {3, 4}   open which
+```
+
+`x_plus_c_band`, `x_plus_c_not_depth_le_three`, `x_plus_c_depth_exact_four`.
+
+**The magnitude of the translation is irrelevant.** Every positive shift, however small, costs
+exactly four levels; the shift by zero costs none. The discontinuity is at the *presence* of the
+translation, not its size.
+
+**The upper bound needed nothing new.** `eml_const_offset_closure` was already unrestricted in `c` —
+the whole question was the lower bound, and that is where the sign enters.
+
+### The asymmetry is now formal, not suspected
+
+For `c < 0` the band's third condition `x < f x` fails **structurally**, not inconveniently:
+`x + c < x` everywhere. What survives is the weaker below-identity class, giving `d ≥ 3` —
+`x_plus_neg_c_belowIdentity`, `x_plus_neg_c_not_depth_le_two`.
+
+So the two sides are genuinely different at the present state of knowledge, and whether the negative
+gap `{3,4}` is real or an artefact of the missing instrument is **open**. That is the first question
+this family raises which the existing machinery cannot answer, and it is a better question than the
+one we started with.
+
+### `IntermediateBand` has paid for itself
+
+It was introduced to repair a broken sharpness composition. It has now proved an entire
+*parameterised family* of exact lower bounds, which is the test of whether an abstraction is a
+complexity invariant or a theorem-specific device. It is the former.
+
+Discrimination: the depth-4 analogue of the positive lower bound is **provably false** (so the bound
+is sharp), and `c = 0` is **provably not excludable** — `x + 0` is `var`, at depth `0`, so the
+hypothesis `c ≠ 0` is doing real work rather than being defensive. `sorryAx` absent.
+
 ## [Unreleased] — 2026-08-19 (i)
 
 ### The general Apollonius reduction closes — abandoned twice as "the coefficients explode"

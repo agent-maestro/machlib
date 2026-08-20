@@ -4226,6 +4226,121 @@ theorem band_exclusion_fails_at_depth_four :
   obtain ⟨h1, h2, h3, h4⟩ := x_plus_one_band_hyps
   exact ⟨fun x => x + 1, t, h1, h2, h3, h4, htdepth, fun x _ => hteval x⟩
 
+/-! ### The positive-translation family
+
+`x + 1` was a specimen. This asks whether it is a stratum: is `d(x + c) = 4` for *every* `c > 0`?
+
+The upper bound is already unrestricted — `eml_const_offset_closure` gives a depth-4 tree for every
+real `c`. So the whole question is the lower bound, and that is where the sign matters: the band's
+third condition is `x < f x`, which holds for `x + c` exactly when `c > 0`. The negative side is a
+different problem, not a harder version of this one. -/
+
+/-- **`x + c` lies in the intermediate band, for every `c > 0`.**
+
+Each condition generalises the `c = 1` proof by carrying `c` where the constant `1` stood; the only
+place positivity is used is `H3`, and it is used there essentially. -/
+theorem x_plus_c_band (c : Real) (hc : 0 < c) : IntermediateBand (fun x => x + c) := by
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · -- unbounded above
+    intro K X
+    refine ⟨1 + exp K + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos K)))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos K)))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have hK : K < exp K := by
+        have t1 := one_add_le_exp K
+        have e : (1 : Real) + K = K + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self K) t1
+      have v : (0 : Real) + exp K + 0 ≤ 1 + exp K + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos X))
+      have e : (0 : Real) + exp K + 0 = exp K := by mach_ring
+      rw [e] at v
+      have hlt : K < 1 + exp K + exp X := lt_of_lt_of_le hK v
+      have w := add_lt_add_left hc (1 + exp K + exp X)
+      have l : (1 + exp K + exp X : Real) + 0 = 1 + exp K + exp X := by mach_ring
+      rw [l] at w
+      exact lt_trans_ax hlt w
+  · -- sub-exponential: `exp` outruns `2x + c + C`
+    intro C X
+    have hMp : (0 : Real) ≤ 1 + 1 :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax)
+    obtain ⟨x, hxX, hx1, hlt⟩ := exp_beats_linear_past (α := 1 + 1) (β := c + C) hMp X
+    refine ⟨x, hxX, hx1, ?_⟩
+    have v := add_lt_add_left hlt (-x - C)
+    have e1 : -x - C + ((1 + 1) * x + (c + C)) = x + c := by mach_mpoly [x, C, c]
+    have e2 : -x - C + exp x = exp x - x - C := by mach_mpoly [exp x, x, C]
+    rw [e1, e2] at v; exact v
+  · -- above the identity: this is where `0 < c` is essential
+    intro X
+    refine ⟨1 + exp X, ?_, ?_, ?_⟩
+    · exact le_trans (self_le_exp X) (le_one_add _)
+    · have v : (1 : Real) + 0 ≤ 1 + exp X := add_le_add_wit (le_refl 1) (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · have w := add_lt_add_left hc (1 + exp X)
+      have l : (1 + exp X : Real) + 0 = 1 + exp X := by mach_ring
+      rw [l] at w; exact w
+  · -- super-logarithmic: substitute `x = exp w`
+    intro C X
+    obtain ⟨T, hT⟩ := two_mul_add_le_exp (C + 1 + 1)
+    have hexpT : (0 : Real) < exp T := exp_pos T
+    have hexpX : (0 : Real) < exp X := exp_pos X
+    have hw0 : (0 : Real) ≤ exp T + exp X :=
+      le_of_lt (add_pos_of_nonneg_pos (le_of_lt hexpT) hexpX)
+    have hwT : T ≤ exp T + exp X := by
+      have v : exp T + 0 ≤ exp T + exp X := add_le_add_wit (le_refl _) (le_of_lt hexpX)
+      have e : exp T + 0 = exp T := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp T) v
+    have hwX : X ≤ exp T + exp X := by
+      have v : (0 : Real) + exp X ≤ exp T + exp X := add_le_add_wit (le_of_lt hexpT) (le_refl _)
+      have e : (0 : Real) + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    refine ⟨exp (exp T + exp X), le_trans hwX (self_le_exp _), one_le_exp hw0, ?_⟩
+    show C + log (exp (exp T + exp X)) < exp (exp T + exp X) + c
+    rw [log_exp]
+    have h2 : (0 : Real) < 1 + 1 :=
+      add_pos_of_nonneg_pos (le_of_lt zero_lt_one_ax) zero_lt_one_ax
+    have hpos : (0 : Real) < exp T + exp X + (1 + 1) := add_pos_of_nonneg_pos hw0 h2
+    have v := add_lt_add_left hpos (C + (exp T + exp X))
+    have e1 : C + (exp T + exp X) + 0 = C + (exp T + exp X) := by mach_ring
+    have e2 : C + (exp T + exp X) + (exp T + exp X + (1 + 1))
+        = exp T + exp X + (exp T + exp X) + (C + 1 + 1) := by
+      mach_mpoly [C, exp T, exp X]
+    rw [e1, e2] at v
+    have hchain := lt_of_lt_of_le v (hT (exp T + exp X) hwT)
+    have w := add_lt_add_left hc (exp (exp T + exp X))
+    have l : (exp (exp T + exp X) : Real) + 0 = exp (exp T + exp X) := by mach_ring
+    rw [l] at w
+    exact lt_trans_ax hchain w
+
+/-- **No tree of depth ≤ 3 computes `x + c`, for any `c > 0`.** -/
+theorem x_plus_c_not_depth_le_three (c : Real) (hc : 0 < c) (t : EMLTree) (ht : t.depth ≤ 3)
+    (h : ∀ x : Real, 0 < x → t.eval x = x + c) : False :=
+  intermediateBand_not_depth_le_three (fun x => x + c) (x_plus_c_band c hc) t ht h
+
+/-- **The Positive Translation Theorem: `d_(0,∞)(x + c) = 4` for every `c > 0`.**
+
+`x + 1` was not a specimen — it is one point of a stratum. The magnitude of the translation is
+irrelevant; only its sign and its non-vanishing matter, since `x + 0 = x` has depth `0`.
+
+The upper half is `eml_const_offset_closure` at `K = 1`, which needs only `0 < 1 + c`. -/
+theorem x_plus_c_depth_exact_four (c : Real) (hc : 0 < c) :
+    (∀ t : EMLTree, t.depth ≤ 3 → (∀ x : Real, 0 < x → t.eval x = x + c) → False)
+    ∧ (∃ t : EMLTree, t.depth = 4 ∧ ∀ x : Real, 0 < x → t.eval x = x + c) := by
+  refine ⟨fun t ht h => x_plus_c_not_depth_le_three c hc t ht h, ?_⟩
+  refine ⟨negOffset (Real.log (1 + c)) (negOffset (Real.log 1) EMLTree.var), ?_, ?_⟩
+  · simp [negOffset_depth, EMLTree.depth]
+  · intro x _
+    exact eml_const_offset_closure EMLTree.var zero_lt_one_ax (add_pos zero_lt_one_ax hc) x
+
 /-- **`d(x + 1) = 4` exactly, on `(0, ∞)`.** The lower half.
 
 Available only because `x_plus_one_band_hyps` now certifies `Hlog` as well: the depth-≤3 band
@@ -4814,6 +4929,72 @@ theorem x_plus_one_depth_exact_four :
   refine ⟨fun t ht h => x_plus_one_not_depth_le_three t ht h, ?_⟩
   obtain ⟨t, hteval, htdepth⟩ := x_plus_one_in_eml
   exact ⟨t, htdepth, fun x _ => hteval x⟩
+
+/-! ### The negative side, and the asymmetry
+
+For `c < 0` the band's third condition `x < f x` fails *structurally* — `x + c < x` everywhere — so
+the exclusion above is unavailable, and not merely inconvenient. The grammar is not symmetric about
+translation: `log` is totalised at `0` and the whole envelope theory is stated on right-hand rays.
+
+What survives is the weaker class of §4: `x + c` is unbounded above and eventually below the
+identity, which excludes depth `≤ 2` but not depth `3`. So the two sides are genuinely different at
+the present state of knowledge:
+
+```
+    c > 0    d_(0,∞)(x + c)  =  4          exactly
+    c = 0    d(x)            =  0          it is `var`
+    c < 0    d_(0,∞)(x + c)  ∈  {3, 4}     lower bound 3, upper bound 4
+```
+
+Whether the negative gap is real or an artefact of the missing instrument is **open**, and it is the
+first question this family raises that the existing machinery cannot answer. -/
+
+/-- `x + c` is unbounded above yet eventually strictly below the identity, for `c < 0`. -/
+theorem x_plus_neg_c_belowIdentity (c : Real) (hc : c < 0) :
+    BelowIdentityUnbounded (fun x => x + c) := by
+  refine ⟨?_, ?_⟩
+  · -- unbounded above: take `x` past `K − c`, which exceeds `K` because `c < 0`
+    intro K X
+    refine ⟨1 + exp (K - c) + exp X, ?_, ?_, ?_⟩
+    · have v : (0 : Real) + 0 + exp X ≤ 1 + exp (K - c) + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_of_lt (exp_pos (K - c))))
+          (le_refl _)
+      have e : (0 : Real) + 0 + exp X = exp X := by mach_ring
+      rw [e] at v; exact le_trans (self_le_exp X) v
+    · have v : (1 : Real) + 0 + 0 ≤ 1 + exp (K - c) + exp X :=
+        add_le_add_wit (add_le_add_wit (le_refl 1) (le_of_lt (exp_pos (K - c))))
+          (le_of_lt (exp_pos X))
+      have e : (1 : Real) + 0 + 0 = 1 := by mach_ring
+      rw [e] at v; exact v
+    · show K < 1 + exp (K - c) + exp X + c
+      have hKc : K - c < exp (K - c) := by
+        have t1 := one_add_le_exp (K - c)
+        have e : (1 : Real) + (K - c) = (K - c) + 1 := by mach_ring
+        rw [e] at t1; exact lt_of_lt_of_le (lt_succ_self (K - c)) t1
+      have v : (0 : Real) + exp (K - c) + 0 ≤ 1 + exp (K - c) + exp X :=
+        add_le_add_wit (add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl _))
+          (le_of_lt (exp_pos X))
+      have e : (0 : Real) + exp (K - c) + 0 = exp (K - c) := by mach_ring
+      rw [e] at v
+      have hlt : K - c < 1 + exp (K - c) + exp X := lt_of_lt_of_le hKc v
+      have w := add_lt_add_left hlt c
+      have l : c + (K - c) = K := by mach_mpoly [c, K]
+      have r : c + (1 + exp (K - c) + exp X) = 1 + exp (K - c) + exp X + c := by
+        mach_mpoly [c, exp (K - c), exp X]
+      rw [l, r] at w; exact w
+  · -- eventually strictly below the identity: `x + c < x` for every `x`, since `c < 0`
+    refine ⟨1, le_refl 1, ?_⟩
+    intro x _
+    show x + c < x
+    have v := add_lt_add_left hc x
+    have l : x + (0 : Real) = x := by mach_ring
+    rw [l] at v; exact v
+
+/-- **`x + c` is unreachable at depth ≤ 2 for `c < 0`.** With the depth-4 construction this pins
+`d_(0,∞)(x + c) ∈ {3, 4}` — and which of the two is **open**. -/
+theorem x_plus_neg_c_not_depth_le_two (c : Real) (hc : c < 0) (t : EMLTree) (ht : t.depth ≤ 2)
+    (h : ∀ x : Real, 0 < x → t.eval x = x + c) : False :=
+  belowIdentityUnbounded_not_depth_le_two (fun x => x + c) (x_plus_neg_c_belowIdentity c hc) t ht h
 
 /-- **The depth-3 band's four hypotheses for `x²`, with STRICT witnesses.**
 
