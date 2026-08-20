@@ -5,6 +5,61 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (f)
+
+### ⚠ CORRECTION — `EvSign` was enough all along; the gap was in the instrument
+
+Yesterday's entry located a gap in the left child and called it a missing stabilization statement.
+**It was a missing construction.** The three decoder routes available then — `EF` (needs `a > 0`),
+`1/EF(−a)` (needs `a < 0` strictly), `EFshift` (needs a *lower* bound) — all fail at `a x ≤ 0`, and
+I read that as the hypothesis being too weak. There is a fourth route:
+
+```
+exp a = exp C / exp (C − a),   available whenever a < C
+```
+
+An **upper** bound decodes exactly as well as a lower one (`FTerm.EFupper_eval`). So the left child
+needs only that `a` be bounded on *one* side, and `EvSign`'s two branches supply precisely that:
+`0 < a` bounds it below by `0`; `a ≤ 0` bounds it above by `1`. Both children need the same
+hypothesis, and it is `EvSign`'s own shape.
+
+The strict trichotomy asked for yesterday is not needed, and the claim that
+`SignHardCase ⟹ eventually F-representable` is false as stated was itself wrong.
+
+### The eventual unary basis theorem, both halves
+
+- `evStable_F_representable` — every EML tree whose internal arguments are **eventually
+  sign-definite** on `D` (positive throughout, or non-positive throughout — nothing finer) is
+  computed on `D` by a **branch-free** `L_F` term. The translator picks each branch once; `L_F`
+  still has no conditional.
+- `eventual_F_representable_of_hard` — **`SignHardCase` ⟹ every EML tree is eventually an `L_F`
+  term.** At every depth.
+- `eventual_F_representable_depth_le_three` — **unconditional at depth ≤ 3.** The node itself never
+  needs a sign; only its two children do. So `evSign_depth_le_two`, which is unconditional, covers
+  the children of every node in a depth-≤3 tree — the representability theorem reaches exactly one
+  level deeper than the sign theorem it consumes.
+- `log_eventually_F_representable` — `log` itself, no hypothesis. `logTree var` has depth 3.
+
+`stable_signs_F_representable` and `stable_signs_refined_F_representable` are now corollaries rather
+than separate inductions; `node_step` is the single node argument both the global and the eventual
+theorems consume.
+
+**`FRepresentable D f` is now a named predicate**, and the theorems conclude it rather than an
+inline existential. Not cosmetic: the claim auditor demanded it. With the existential written out,
+Lean prints the conclusion as `T.eval x = t.eval x` with `T`'s type elided, so no token in the
+conclusion says the witness is a term of `L_F` — the gate could not tell this theorem from one that
+merely exhibits *some* agreeing function. Naming the predicate puts the language back in the
+conclusion where the claim can bind to it.
+
+Four claims registered (198 → 202). The gate fired on all three of the non-trivial ones before it
+passed: `FTerm.eval` absent from the conclusion, and a hypothesis count of 1 where the record said
+0.
+
+**Discrimination.** The identical script at depth ≤ 4 is *rejected*, and it fails at exactly one
+line — the `evSign_depth_le_two` supply, not the subtree closure — so the specimen names the reason
+the bound is 3. `xPlusOneTree.depth = 4` compiles, so depth 3 is a real frontier and not a bound
+that happens to cover everything interesting. `sorryAx` absent from all five footprints.
+
 ## [Unreleased] — 2026-08-20 (e)
 
 ### Eventual representation closes; the gap to `SignHardCase` is located exactly
@@ -31,6 +86,11 @@ positive or identically zero", and `EF`/`LF` consume strict positivity.
 **So the missing statement is precisely: a term eventually non-positive is eventually *strictly*
 negative, or eventually zero.** Strictly stronger than `EvSign`, not implied by it, and a sharper
 question than `SignHardCase` — it asks for a trichotomy where `SignHardCase` delivers a dichotomy.
+
+> **⚠ SUPERSEDED by 2026-08-20 (f).** No such statement is needed. The left child was short of
+> routes, not short of hypotheses: `exp a = exp C / exp (C − a)` decodes from an *upper* bound, and
+> `a ≤ 0` supplies one. The paragraph below headed "still not registered" is likewise void — the
+> implication is now proved.
 
 `SignHardCase ⟹ eventually F-representable` is therefore **still not registered**, and now for a
 stated reason rather than caution: it is false as it stands, because the left-child case is not

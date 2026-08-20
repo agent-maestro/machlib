@@ -248,6 +248,14 @@ theorem LF_eval (u : FTerm) (x : Real) (h : 0 < eval u x) :
 
 end FTerm
 
+/-- **`f` is computed on `D` by a term of `L_F`.** The property the basis theorems conclude.
+
+Named rather than written out at each theorem so that the *conclusion* mentions the language: a
+statement that merely exhibits some function agreeing with `f` says nothing, and the whole content
+is that the witness is an `FTerm`. -/
+def FRepresentable (D : Real → Prop) (f : Real → Real) : Prop :=
+  ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = f x
+
 /-- **The positive-internal fragment.** Every `eml` node in `t` has *both children* strictly
 positive throughout `D`.
 
@@ -267,7 +275,7 @@ that is, by constants, `x`, field operations, and the single unary function `F`.
 The induction is one line at each node: `eml a b ↦ EF(â) − LF(b̂)`. -/
 theorem positive_fragment_F_representable (D : Real → Prop) :
     ∀ t : EMLTree, PositiveInternal D t →
-      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+      FRepresentable D t.eval := by
   intro t
   induction t with
   | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
@@ -355,22 +363,106 @@ private theorem exp_eq_inv_exp_neg (a : Real) : exp a = 1 / exp (-a) := by
   have e : -a + a = 0 := by mach_ring
   rw [e, exp_zero]
 
-/-- **Stable internal signs suffice.** Every EML tree whose internal arguments keep one sign on `D`
-is computed on `D` by a branch-free term of `L_F`.
+/-! ## `EvSign` is enough after all — the gap was in the instrument
 
-Six cases at each node, and the totalisation collapses two of them:
+An earlier version of this file claimed the *left* child needed strictly more than `EvSign`, on the
+grounds that none of the three routes then available covers `a x ≤ 0`: `EF` wants `a > 0`,
+`1/EF(−a)` wants `a < 0` **strictly** (at `a = 0` the denominator `exp(2·0) − exp(0)` vanishes), and
+`EFshift` wants a lower bound.
+
+**That was a gap in the instrument, not in the hypothesis.** There is a fourth route:
+
+`exp a = exp C / exp (C − a)`, available whenever `a < C`
+
+so an *upper* bound decodes exactly as well as a lower one. The left child therefore needs only that
+`a` be bounded on **one** side — and `EvSign`'s two branches supply precisely that: `0 < a` bounds it
+below by `0`, and `a ≤ 0` bounds it above by `1`.
+
+So both children need the *same* hypothesis, and it is exactly `EvSign`'s shape. No extra
+stabilization statement is required, and in particular the strict trichotomy asked for earlier is
+not needed. -/
+
+/-- The exponential decoder from an *upper* bound: `exp u = exp C / exp (C − u)`. -/
+noncomputable def FTerm.EFupper (C : Real) (u : FTerm) : FTerm :=
+  FTerm.div (FTerm.const (exp C)) (FTerm.EF (FTerm.sub (FTerm.const C) u))
+
+/-- **An upper bound decodes `exp` as well as a lower one.**
+
+`EFshift` reflects the argument up past `0` by translation; this reflects it *down* past `0` by
+division. Between them, one-sided boundedness in either direction is enough, which is what makes
+`EvSign` sufficient. -/
+theorem FTerm.EFupper_eval (C : Real) (u : FTerm) (x : Real) (h : FTerm.eval u x < C) :
+    FTerm.eval (FTerm.EFupper C u) x = exp (FTerm.eval u x) := by
+  have hval : FTerm.eval (FTerm.sub (FTerm.const C) u) x = C - FTerm.eval u x := rfl
+  show exp C / FTerm.eval (FTerm.EF (FTerm.sub (FTerm.const C) u)) x = exp (FTerm.eval u x)
+  rw [FTerm.EF_eval _ x (by rw [hval]; exact sub_pos_of_lt h), hval]
+  refine div_of_eq_mul (ne_of_gt (exp_pos _)) ?_
+  rw [← exp_add]
+  have e : C - FTerm.eval u x + FTerm.eval u x = C := by mach_ring
+  rw [e]
+
+/-- Eventual sign stability on `D`: strictly positive throughout, or non-positive throughout.
+This is `EvSign`'s shape with the ray replaced by an arbitrary domain, and it is what **both**
+children need. -/
+def EvStable (D : Real → Prop) (f : Real → Real) : Prop :=
+  (∀ x : Real, D x → 0 < f x) ∨ (∀ x : Real, D x → f x ≤ 0)
+
+/-- Historical name. This was introduced as the *right* child's condition, before `EFupper` showed
+the left child needs the same thing; kept so the record of that step survives. -/
+abbrev SignStableRight (D : Real → Prop) (f : Real → Real) : Prop := EvStable D f
+
+/-- Every `eml` node's two children are `EvStable` on `D`. -/
+def EvStableInternal (D : Real → Prop) : EMLTree → Prop
+  | .const _ => True
+  | .var     => True
+  | .eml a b => EvStableInternal D a ∧ EvStableInternal D b
+                ∧ EvStable D a.eval ∧ EvStable D b.eval
+
+/-- **One node**, given both children already represented and both `EvStable`. Factored out because
+the global and the eventual theorems below differ only in how they obtain the sign hypotheses.
+
+Four cases, and each side collapses two of them:
 
 | left child | term | right child | term |
 | --- | --- | --- | --- |
 | `> 0` | `EF â` | `> 0` | `LF b̂` |
-| `< 0` | `1 / EF(−â)` | `< 0` | `0` |
-| `= 0` | `1` | `= 0` | `0` |
+| `≤ 0` | `exp 1 / EF(1 − â)` | `≤ 0` | `0` |
 
-The right child's two non-positive cases give the same term because `log₀` is `0` on both — there is
-nothing to decode, which is the totalisation *helping* for once. -/
-theorem stable_signs_F_representable (D : Real → Prop) :
-    ∀ t : EMLTree, StableInternalSigns D t →
-      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+On the right, `log₀` is `0` on the whole non-positive branch. On the left, `EFupper` needs only
+`a < 1`, which `a ≤ 0` gives. -/
+private theorem node_step {D : Real → Prop} {a b : EMLTree} {Ta Tb : FTerm}
+    (hTa : ∀ x : Real, D x → FTerm.eval Ta x = a.eval x)
+    (hTb : ∀ x : Real, D x → FTerm.eval Tb x = b.eval x)
+    (hsa : EvStable D a.eval) (hsb : EvStable D b.eval) :
+    FRepresentable D (EMLTree.eml a b).eval := by
+  obtain ⟨LT, hLT⟩ : ∃ LT : FTerm, ∀ x : Real, D x → FTerm.eval LT x = exp (a.eval x) := by
+    rcases hsa with hp | hnp
+    · exact ⟨FTerm.EF Ta, fun x hx => by
+        rw [FTerm.EF_eval Ta x (by rw [hTa x hx]; exact hp x hx), hTa x hx]⟩
+    · refine ⟨FTerm.EFupper 1 Ta, fun x hx => ?_⟩
+      have hlt : FTerm.eval Ta x < 1 := by
+        rw [hTa x hx]; exact lt_of_le_of_lt (hnp x hx) zero_lt_one_ax
+      rw [FTerm.EFupper_eval 1 Ta x hlt, hTa x hx]
+  obtain ⟨RT, hRT⟩ : ∃ RT : FTerm, ∀ x : Real, D x → FTerm.eval RT x = log (b.eval x) := by
+    rcases hsb with hp | hnp
+    · exact ⟨FTerm.LF Tb, fun x hx => by
+        rw [FTerm.LF_eval Tb x (by rw [hTb x hx]; exact hp x hx), hTb x hx]⟩
+    · exact ⟨FTerm.const 0, fun x hx => by
+        show (0 : Real) = log (b.eval x)
+        rw [log_nonpos (hnp x hx)]⟩
+  exact ⟨FTerm.sub LT RT, fun x hx => by
+    show FTerm.eval LT x - FTerm.eval RT x = exp (a.eval x) - log (b.eval x)
+    rw [hLT x hx, hRT x hx]⟩
+
+/-- **The unary basis theorem.** Every EML tree whose internal arguments are eventually
+sign-definite on `D` — positive throughout, or non-positive throughout, nothing finer — is computed
+on `D` by a **branch-free** term of `L_F`.
+
+No runtime selector is needed: the *translator* chooses the branch once, per node, from the
+hypothesis. `L_F` has no conditional and does not acquire one. -/
+theorem evStable_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, EvStableInternal D t →
+      FRepresentable D t.eval := by
   intro t
   induction t with
   | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
@@ -380,115 +472,188 @@ theorem stable_signs_F_representable (D : Real → Prop) :
       obtain ⟨hpa, hpb, hsa, hsb⟩ := h
       obtain ⟨Ta, hTa⟩ := iha hpa
       obtain ⟨Tb, hTb⟩ := ihb hpb
-      -- the left half: three sign cases, three terms
-      obtain ⟨LT, hLT⟩ : ∃ LT : FTerm, ∀ x : Real, D x → FTerm.eval LT x = exp (a.eval x) := by
-        rcases hsa with hp | hn | hz
-        · exact ⟨FTerm.EF Ta, fun x hx => by
-            rw [FTerm.EF_eval Ta x (by rw [hTa x hx]; exact hp x hx), hTa x hx]⟩
-        · refine ⟨FTerm.div (FTerm.const 1) (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)), ?_⟩
-          intro x hx
-          have hneg : FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x = -(a.eval x) := by
-            show (0 : Real) - FTerm.eval Ta x = -(a.eval x)
-            rw [hTa x hx]; mach_ring
-          have hpos : 0 < FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x := by
-            rw [hneg]
-            have v := add_lt_add_left (hn x hx) (-(a.eval x))
-            have l : -(a.eval x) + a.eval x = 0 := by mach_ring
-            have r : -(a.eval x) + 0 = -(a.eval x) := by mach_ring
-            rw [l, r] at v; exact v
-          show (1 : Real) / FTerm.eval (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)) x = exp (a.eval x)
-          rw [FTerm.EF_eval _ x hpos, hneg, ← exp_eq_inv_exp_neg]
-        · exact ⟨FTerm.const 1, fun x hx => by rw [hz x hx, exp_zero]; rfl⟩
-      -- the right half: positive decodes, both non-positive cases are `0`
-      obtain ⟨RT, hRT⟩ : ∃ RT : FTerm, ∀ x : Real, D x → FTerm.eval RT x = log (b.eval x) := by
-        rcases hsb with hp | hn | hz
-        · exact ⟨FTerm.LF Tb, fun x hx => by
-            rw [FTerm.LF_eval Tb x (by rw [hTb x hx]; exact hp x hx), hTb x hx]⟩
-        · exact ⟨FTerm.const 0, fun x hx => by
-            show (0 : Real) = log (b.eval x)
-            rw [log_nonpos (le_of_lt (hn x hx))]⟩
-        · exact ⟨FTerm.const 0, fun x hx => by
-            show (0 : Real) = log (b.eval x)
-            rw [hz x hx, log_nonpos (le_refl 0)]⟩
-      exact ⟨FTerm.sub LT RT, fun x hx => by
-        show FTerm.eval LT x - FTerm.eval RT x = exp (a.eval x) - log (b.eval x)
-        rw [hLT x hx, hRT x hx]⟩
+      exact node_step hTa hTb hsa hsb
 
+/-! ### The strict-trichotomy versions are corollaries
 
+`SignStable`'s three cases and `StableSignsRefined`'s mixed pair both imply `EvStable`, so the
+theorems stated earlier in this development now follow from the one above rather than repeating its
+induction. -/
 
-/-! ## What `EvSign` actually supplies, and what it does not
+/-- A strict trichotomy implies the two-way split. -/
+private theorem evStable_of_signStable {D : Real → Prop} {f : Real → Real}
+    (h : SignStable D f) : EvStable D f := by
+  rcases h with hp | hn | hz
+  · exact Or.inl hp
+  · exact Or.inr (fun x hx => le_of_lt (hn x hx))
+  · exact Or.inr (fun x hx => le_of_eq (hz x hx))
 
-`EvSign f` is `(eventually 0 < f) ∨ (eventually f ≤ 0)`. Comparing it to what the translation
-consumes, child by child, locates the gap exactly:
+private theorem evStableInternal_of_stableInternalSigns {D : Real → Prop} :
+    ∀ t : EMLTree, StableInternalSigns D t → EvStableInternal D t := by
+  intro t
+  induction t with
+  | const c => intro _; exact True.intro
+  | var => intro _; exact True.intro
+  | eml a b iha ihb =>
+      intro h
+      obtain ⟨hpa, hpb, hsa, hsb⟩ := h
+      exact ⟨iha hpa, ihb hpb, evStable_of_signStable hsa, evStable_of_signStable hsb⟩
 
-- **Right child: `EvSign` is enough, on the nose.** `log₀` is `0` on *both* non-positive cases, so
-  the two collapse and `f x ≤ 0` suffices. No strictness is needed.
-- **Left child: `EvSign` is not enough.** `exp` needs `a > 0` for `EF`, or `a < 0` *strictly* for
-  `1/EF(−a)` — at a point where `a = 0` the denominator `exp(2·0) − exp(0)` vanishes — or a lower
-  bound for `EFshift`. `f x ≤ 0` distinguishes none of these.
+/-- **Stable internal signs suffice** — now a corollary of `evStable_F_representable`. -/
+theorem stable_signs_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, StableInternalSigns D t →
+      FRepresentable D t.eval :=
+  fun t h => evStable_F_representable D t (evStableInternal_of_stableInternalSigns t h)
 
-So the missing statement is precisely: **a term that is eventually non-positive is eventually
-*strictly* negative, or eventually zero.** That is strictly stronger than `EvSign` and is not
-implied by it. Whether it holds for EML terms is open, and it is a sharper question than
-`SignHardCase` because it asks for a trichotomy where `SignHardCase` delivers a dichotomy.
-
-The refinement below weakens the right-hand hypothesis accordingly, so the remaining gap is
-localised in one place instead of two. -/
-
-/-- The right child's requirement, in `EvSign`'s exact shape: positive, or non-positive. -/
-def SignStableRight (D : Real → Prop) (f : Real → Real) : Prop :=
-  (∀ x : Real, D x → 0 < f x) ∨ (∀ x : Real, D x → f x ≤ 0)
-
-/-- Left children sign-stable (strict trichotomy); right children merely `EvSign`-stable. -/
+/-- Left children sign-stable (strict trichotomy); right children merely `EvStable`. The
+intermediate step from when the two children were believed to differ. -/
 def StableSignsRefined (D : Real → Prop) : EMLTree → Prop
   | .const _ => True
   | .var     => True
   | .eml a b => StableSignsRefined D a ∧ StableSignsRefined D b
-                ∧ SignStable D a.eval ∧ SignStableRight D b.eval
+                ∧ SignStable D a.eval ∧ EvStable D b.eval
 
-/-- **The refined stable-sign theorem.** The right-hand hypothesis is now exactly what `EvSign`
-delivers; only the left-hand one asks for more. -/
-theorem stable_signs_refined_F_representable (D : Real → Prop) :
-    ∀ t : EMLTree, StableSignsRefined D t →
-      ∃ T : FTerm, ∀ x : Real, D x → FTerm.eval T x = t.eval x := by
+private theorem evStableInternal_of_refined {D : Real → Prop} :
+    ∀ t : EMLTree, StableSignsRefined D t → EvStableInternal D t := by
   intro t
   induction t with
-  | const c => intro _; exact ⟨FTerm.const c, fun _ _ => rfl⟩
-  | var => intro _; exact ⟨FTerm.var, fun _ _ => rfl⟩
+  | const c => intro _; exact True.intro
+  | var => intro _; exact True.intro
   | eml a b iha ihb =>
       intro h
       obtain ⟨hpa, hpb, hsa, hsb⟩ := h
-      obtain ⟨Ta, hTa⟩ := iha hpa
-      obtain ⟨Tb, hTb⟩ := ihb hpb
-      obtain ⟨LT, hLT⟩ : ∃ LT : FTerm, ∀ x : Real, D x → FTerm.eval LT x = exp (a.eval x) := by
-        rcases hsa with hp | hn | hz
-        · exact ⟨FTerm.EF Ta, fun x hx => by
-            rw [FTerm.EF_eval Ta x (by rw [hTa x hx]; exact hp x hx), hTa x hx]⟩
-        · refine ⟨FTerm.div (FTerm.const 1) (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)), ?_⟩
-          intro x hx
-          have hneg : FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x = -(a.eval x) := by
-            show (0 : Real) - FTerm.eval Ta x = -(a.eval x)
-            rw [hTa x hx]; mach_ring
-          have hpos : 0 < FTerm.eval (FTerm.sub (FTerm.const 0) Ta) x := by
-            rw [hneg]
-            have v := add_lt_add_left (hn x hx) (-(a.eval x))
-            have l : -(a.eval x) + a.eval x = 0 := by mach_ring
-            have r : -(a.eval x) + 0 = -(a.eval x) := by mach_ring
-            rw [l, r] at v; exact v
-          show (1 : Real) / FTerm.eval (FTerm.EF (FTerm.sub (FTerm.const 0) Ta)) x = exp (a.eval x)
-          rw [FTerm.EF_eval _ x hpos, hneg, ← exp_eq_inv_exp_neg]
-        · exact ⟨FTerm.const 1, fun x hx => by rw [hz x hx, exp_zero]; rfl⟩
-      obtain ⟨RT, hRT⟩ : ∃ RT : FTerm, ∀ x : Real, D x → FTerm.eval RT x = log (b.eval x) := by
-        rcases hsb with hp | hnp
-        · exact ⟨FTerm.LF Tb, fun x hx => by
-            rw [FTerm.LF_eval Tb x (by rw [hTb x hx]; exact hp x hx), hTb x hx]⟩
-        · -- both non-positive cases at once: `log₀` is `0` on all of them
-          exact ⟨FTerm.const 0, fun x hx => by
-            show (0 : Real) = log (b.eval x)
-            rw [log_nonpos (hnp x hx)]⟩
-      exact ⟨FTerm.sub LT RT, fun x hx => by
-        show FTerm.eval LT x - FTerm.eval RT x = exp (a.eval x) - log (b.eval x)
-        rw [hLT x hx, hRT x hx]⟩
+      exact ⟨iha hpa, ihb hpb, evStable_of_signStable hsa, hsb⟩
 
+/-- **The refined stable-sign theorem** — also a corollary now. -/
+theorem stable_signs_refined_F_representable (D : Real → Prop) :
+    ∀ t : EMLTree, StableSignsRefined D t →
+      FRepresentable D t.eval :=
+  fun t h => evStable_F_representable D t (evStableInternal_of_refined t h)
+
+/-! ## Eventual representation: from `EvSign` to a single ray
+
+`EvSign` gives each node its *own* ray. Finitely many nodes, so the rays join, and the whole tree is
+represented on the common one. -/
+
+private theorem le_total' (a b : Real) : a ≤ b ∨ b ≤ a := by
+  rcases lt_total a b with h | h | h
+  · exact Or.inl (le_of_lt h)
+  · exact Or.inl (le_of_eq h)
+  · exact Or.inr (le_of_lt h)
+
+/-- Two rays with base `≥ 1` have a common refinement with base `≥ 1`. -/
+private theorem ray_join {X₁ X₂ : Real} (h₁ : 1 ≤ X₁) (h₂ : 1 ≤ X₂) :
+    ∃ X : Real, 1 ≤ X ∧ X₁ ≤ X ∧ X₂ ≤ X := by
+  rcases le_total' X₁ X₂ with h | h
+  · exact ⟨X₂, h₂, h, le_refl X₂⟩
+  · exact ⟨X₁, h₁, le_refl X₁, h⟩
+
+/-- `EvSign` is `EvStable` on a ray. -/
+private theorem evStable_of_evSign {f : Real → Real} (h : EvSign f) :
+    ∃ X : Real, 1 ≤ X ∧ EvStable (fun x => X ≤ x) f := by
+  rcases h with ⟨X, hX1, hp⟩ | ⟨X, hX1, hn⟩
+  · exact ⟨X, hX1, Or.inl (fun x hx => hp x hx)⟩
+  · exact ⟨X, hX1, Or.inr (fun x hx => hn x hx)⟩
+
+/-- Sign stability survives shrinking the ray. -/
+private theorem evStable_mono {X Y : Real} (hXY : X ≤ Y) {f : Real → Real}
+    (h : EvStable (fun x => X ≤ x) f) : EvStable (fun x => Y ≤ x) f := by
+  rcases h with hp | hn
+  · exact Or.inl (fun x hx => hp x (le_trans hXY hx))
+  · exact Or.inr (fun x hx => hn x (le_trans hXY hx))
+
+/-- **The induction skeleton, once.** Any subtree-closed predicate that supplies eventual
+sign-definiteness for the two children of every node yields eventual `L_F` representability on a
+single ray.
+
+Stated over a predicate rather than proved twice because the two instances below — one conditional
+on `SignHardCase`, one unconditional at depth ≤ 3 — differ only in where the sign hypotheses come
+from. -/
+theorem eventual_F_representable_of_pred (P : EMLTree → Prop)
+    (hsub : ∀ a b : EMLTree, P (EMLTree.eml a b) → P a ∧ P b)
+    (hsign : ∀ a b : EMLTree, P (EMLTree.eml a b) → EvSign a.eval ∧ EvSign b.eval) :
+    ∀ t : EMLTree, P t →
+      ∃ X₀ : Real, 1 ≤ X₀ ∧ FRepresentable (fun x : Real => X₀ ≤ x) t.eval := by
+  intro t
+  induction t with
+  | const c => intro _; exact ⟨1, le_refl 1, FTerm.const c, fun _ _ => rfl⟩
+  | var => intro _; exact ⟨1, le_refl 1, FTerm.var, fun _ _ => rfl⟩
+  | eml a b iha ihb =>
+      intro hP
+      obtain ⟨hPa, hPb⟩ := hsub a b hP
+      obtain ⟨hga, hgb⟩ := hsign a b hP
+      obtain ⟨Xa, hXa1, Ta, hTa⟩ := iha hPa
+      obtain ⟨Xb, hXb1, Tb, hTb⟩ := ihb hPb
+      obtain ⟨Ya, hYa1, hsa⟩ := evStable_of_evSign hga
+      obtain ⟨Yb, hYb1, hsb⟩ := evStable_of_evSign hgb
+      obtain ⟨R1, hR11, hR1a, hR1b⟩ := ray_join hXa1 hYa1
+      obtain ⟨R2, hR21, hR2a, hR2b⟩ := ray_join hXb1 hYb1
+      obtain ⟨X₀, hX01, hX0a, hX0b⟩ := ray_join hR11 hR21
+      refine ⟨X₀, hX01, ?_⟩
+      exact node_step
+        (fun x hx => hTa x (le_trans (le_trans hR1a hX0a) hx))
+        (fun x hx => hTb x (le_trans (le_trans hR2a hX0b) hx))
+        (evStable_mono (le_trans hR1b hX0a) hsa)
+        (evStable_mono (le_trans hR2b hX0b) hsb)
+
+/-- **Every EML tree of depth ≤ 3 is eventually computed by a term of `L_F`. Unconditionally.**
+
+The node itself never needs a sign; only its two children do. So `evSign_depth_le_two`, which is
+unconditional, covers the children of every node in a depth-≤3 tree — one level deeper than the
+sign theorem itself reaches. -/
+theorem eventual_F_representable_depth_le_three (t : EMLTree) (ht : t.depth ≤ 3) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ FRepresentable (fun x : Real => X₀ ≤ x) t.eval := by
+  refine eventual_F_representable_of_pred (fun s => s.depth ≤ 3) ?_ ?_ t ht
+  · intro a b h
+    simp only [EMLTree.depth] at h
+    have hl := Nat.le_max_left a.depth b.depth
+    have hr := Nat.le_max_right a.depth b.depth
+    exact ⟨by omega, by omega⟩
+  · intro a b h
+    simp only [EMLTree.depth] at h
+    have hl := Nat.le_max_left a.depth b.depth
+    have hr := Nat.le_max_right a.depth b.depth
+    exact ⟨evSign_depth_le_two a (by omega), evSign_depth_le_two b (by omega)⟩
+
+/-- **`SignHardCase` implies every EML tree is eventually computed by a term of `L_F`.**
+
+The conditional half of the same statement, at every depth. `evSign_of_hard` supplies the two
+sign hypotheses at each node; nothing else is required of the hypothesis, and in particular no
+strict trichotomy. -/
+theorem eventual_F_representable_of_hard (h : SignHardCase) (t : EMLTree) :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ FRepresentable (fun x : Real => X₀ ≤ x) t.eval :=
+  eventual_F_representable_of_pred (fun _ => True)
+    (fun _ _ _ => ⟨True.intro, True.intro⟩)
+    (fun a b _ => ⟨evSign_of_hard h a, evSign_of_hard h b⟩)
+    t True.intro
+
+/-- **Discrimination specimen: `log` itself is eventually a term of `L_F`, with no hypothesis.**
+
+`logTree var` has depth exactly 3, so the theorem above applies to it and nothing else is assumed.
+Recorded because a depth bound that covered only trivial trees would prove nothing — this is a
+tree whose value is not itself an `L_F` primitive. -/
+theorem log_eventually_F_representable :
+    ∃ X₀ : Real, 1 ≤ X₀ ∧ FRepresentable (fun x : Real => X₀ ≤ x) log := by
+  obtain ⟨X₀, hX1, T, hT⟩ :=
+    eventual_F_representable_depth_le_three (logTree EMLTree.var) (by decide)
+  refine ⟨X₀, hX1, T, fun x hx => ?_⟩
+  rw [hT x hx, logTree_eval]
+  rfl
+
+/-! ## Global versus eventual unary representation — where this stands
+
+| statement | status |
+| --- | --- |
+| internal arguments positive on `D` ⟹ `L_F`-representable on `D` | proved |
+| internal arguments `EvStable` on `D` ⟹ `L_F`-representable on `D` | proved |
+| depth ≤ 3 ⟹ eventually `L_F`-representable | proved, **unconditional** |
+| `SignHardCase` ⟹ every tree eventually `L_F`-representable | proved |
+| every tree `L_F`-representable **globally** | open — and (B)/(C) are why |
+
+The eventual question is therefore settled *relative to a proposition the corpus already tracks*,
+and the residue is exactly the global one: a domain on which some internal argument changes sign.
+There the translator has no single branch to pick, and `L_F` has no conditional to pick one at
+runtime — obstruction (B), still a hypothesis rather than a theorem, since no invariant separating
+`L_F` from `log₀` has been produced. -/
 
 end MachLib

@@ -3914,6 +3914,80 @@
         "SymmetricGeneralPosition"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The correction itself. Yesterday's entry said the left child needed a strictly stronger hypothesis than EvSign; it needed a fourth decoder route. Registered so the repair cannot silently rot back into the old claim.",
+      "id": "unary-basis-efupper-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "An **upper** bound decodes exactly as well as a lower one"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.FTerm.EFupper_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The core theorem. `conclusion_mentions` pins that the emitted object is an FTerm evaluation, i.e. a term of L_F -- not merely that some function agrees.",
+      "id": "unary-basis-evstable-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "is\ncomputed on `D` by a **branch-free** `L_F` term"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.evStable_F_representable",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FRepresentable"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "UNCONDITIONAL half. The discrimination that matters: the same script at depth <= 4 is rejected, and xPlusOneTree.depth = 4 is outside, so the bound is a frontier rather than a vacuous cover.",
+      "id": "unary-basis-depth3-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**unconditional at depth ≤ 3.**"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.eventual_F_representable_depth_le_three",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FRepresentable"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "evSign_depth_le_two"
+      ]
+    },
+    {
+      "_comment": "Conditional half, at every depth. Registered because the CHANGELOG previously asserted this implication was FALSE as stated; a claim is the only thing that stops that sentence coming back.",
+      "id": "unary-basis-hard-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`SignHardCase` ⟹ every EML tree is eventually an `L_F`\n  term.**"
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.eventual_F_representable_of_hard",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "FRepresentable"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "evSign_of_hard"
+      ]
     }
   ]
 }
