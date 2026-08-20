@@ -1234,6 +1234,91 @@ theorem doubled_bridge (n dd sep S B x r u w : Real) (hdne : dd ≠ 0)
       mach_mpoly [dd, x, sep]
     rw [l, rr, hx, hr, hsep, eS, neg_sq, eB, hB]; exact hext
 
+/-! ### Instantiating the bridge
+
+Small, concrete, and every step routed through a generic helper so no numeral is ever handed to the
+normaliser inside a large expression. -/
+
+private theorem mul_one_add (a b : Real) : a * (1 + b) = a + a * b := by mach_ring
+private theorem double_it (a : Real) : ((1 + 1) * (1 + 1)) * a + ((1 + 1) * (1 + 1)) * a = ((1 + 1) * (1 + 1) * (1 + 1)) * a := by mach_ring
+private theorem sep_helper (a c : Real) (h : ((1 + 1) * (1 + 1)) * c = ((1 + 1) * (1 + 1) + 1)) :
+    (((1 + 1) * (1 + 1)) * a) * ((1 + 1) * c) = ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * a := by
+  have e : (((1 + 1) * (1 + 1)) * a) * ((1 + 1) * c) = (1 + 1) * a * (((1 + 1) * (1 + 1)) * c) := by mach_ring
+  rw [e, h]; mach_ring
+
+/-- `7`. -/ noncomputable def k7 : Real := (((1 + 1) * (1 + 1) * (1 + 1)) - 1)
+/-- `28`, as `4·7`. -/ noncomputable def d28 : Real := ((1 + 1) * (1 + 1)) * k7
+
+theorem k7_pos : 0 < k7 := by
+  have e : (k7 : Real) = 1 + 1 + 1 + 1 + 1 + 1 + 1 := by unfold k7; mach_ring
+  rw [e]; repeat' refine add_pos ?_ zero_lt_one_ax
+  exact zero_lt_one_ax
+
+theorem d28_pos : 0 < d28 :=
+  mul_pos (mul_pos (add_pos zero_lt_one_ax zero_lt_one_ax)
+                   (add_pos zero_lt_one_ax zero_lt_one_ax)) k7_pos
+
+private theorem d28_ne : d28 ≠ 0 := ne_of_gt d28_pos
+
+private theorem d28_mul_div (a : Real) : d28 * (a / d28) = a := by
+  rw [div_def a d28 d28_ne]
+  have hm := mul_inv d28 d28_ne
+  have e : d28 * (a * (1 / d28)) = a * (d28 * (1 / d28)) := by mach_mpoly [a, (1 : Real) / d28]
+  rw [e, hm]; mach_ring
+
+private theorem d28_double : d28 + d28 = ((1 + 1) * (1 + 1) * (1 + 1)) * k7 := by
+  show ((1 + 1) * (1 + 1)) * k7 + ((1 + 1) * (1 + 1)) * k7 = ((1 + 1) * (1 + 1) * (1 + 1)) * k7
+  exact double_it k7
+
+private theorem d28_sep : d28 * ((1 + 1) * cQ) = ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k7 := by
+  show (((1 + 1) * (1 + 1)) * k7) * ((1 + 1) * cQ) = ((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k7
+  exact sep_helper k7 cQ four_mul_cQ
+
+/-- The two circles of the doubled class, packaged: given `e` with `e² = 2`, the centre and radius
+built from `u = 5 + 4e`, `w = 8 + 5e`. -/
+theorem doubled_solution (e : Real) (he : e * e = (1 + 1))
+    (hpos : 0 < d28 + ((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) :
+    ∀ hrp : 0 < 1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28,
+      TangentInt ⟨-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28, -(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28,
+                 1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28, hrp⟩ Abe
+      ∧ TangentExt ⟨-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28, -(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28,
+                    1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28, hrp⟩ Bbe
+      ∧ TangentExt ⟨-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28, -(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28,
+                    1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28, hrp⟩ Cbe := by
+  intro hrp
+  have hue : (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) = (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) * e := by
+    have ex : (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) * e = ((1 + 1) * (1 + 1)) * (e * e) + ((1 + 1) * (1 + 1) + 1) * e := by mach_ring
+    rw [ex, he]; mach_ring
+  have hint := doubled_int e (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) he hue
+  have hext := doubled_ext e (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) k7 he rfl rfl rfl
+  exact doubled_bridge ((1 + 1 + 1) * (1 + 1 + 1)) d28 ((1 + 1) * cQ) (((1 + 1) * ((1 + 1) * (1 + 1) + 1)) * k7) (((1 + 1) * (1 + 1) * (1 + 1)) * k7)
+    (-(((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e)) / d28) (1 + (((1 + 1 + 1) * (1 + 1 + 1)) * (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e)) / d28)
+    (((1 + 1) * (1 + 1) + 1) + ((1 + 1) * (1 + 1)) * e) (((1 + 1) * (1 + 1) * (1 + 1)) + ((1 + 1) * (1 + 1) + 1) * e) d28_ne
+    (d28_mul_div _)
+    (by rw [mul_one_add, d28_mul_div])
+    d28_sep d28_double hint hext
+
+/-! ### The two circles — one step short
+
+`doubled_solution` above delivers all three tangencies for **either** sign of `e`, given only
+`e² = 2` and a proof that the radius is positive. Instantiating it at `e = √2` and `e = −√2` closes
+the last two points.
+
+What remains is exactly those two positivity proofs:
+
+```
+    0 < 28 + 9(8 + 5√2)        every summand positive
+    0 < 28 + 9(8 − 5√2)        = 45(2 − √2) + 10,  needs √2 < 2
+```
+
+The first is a chain of `add_pos`/`mul_pos`. The second needs `√2 < 2` — immediate from `2 < 4` and
+`(√2)² = 2` — and the rearrangement `28 + 9(8 − 5√2) = 45(2 − √2) + 10`, whose constants (`45`, `10`,
+`28`) are the kind this module has repeatedly had to abstract.
+
+**Nothing else is missing.** The scaled identities, the numeral-free bridge and the instantiation all
+build; `doubled_solution` is a complete statement whose only unmet hypothesis is `0 < r`.
+-/
+
 /-! ### The doubled `(inner,outer,outer)` class — the last two, and the full derivation
 
 `r = 25/7 ± 45√2/28`, centre `−45/28 ∓ 9√2/7`. **Not checked in Lean.** The mathematics below is
