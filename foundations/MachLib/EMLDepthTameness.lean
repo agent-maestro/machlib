@@ -11343,6 +11343,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `BoundedEmlCellApproachLarge` | here | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | `EMLCertifiedSynthesis` | **open** | — |
 | `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
+| `FQueryLowerBound` | `EMLBasisOverhead` | **open** | — (needs `exp` is not rational; no route in the corpus) |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
 `exp a − log b` and how small it can be. The second is now a theorem, so what is left of that pair is

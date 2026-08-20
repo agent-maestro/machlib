@@ -5,6 +5,60 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (k)
+
+### Simulation overhead, the other direction — and it is not symmetric
+
+`toEML_depth_le` — **`EMLTree.depth (toEML T) ≤ 400 · fHeight T`.** A constant times the `L_F` term's
+*syntactic height*, and it cannot be improved to a function of `fDepth` alone, because EML has no
+primitive `+`, `−`, `×` or `÷`: every field operation is a gadget costing a fixed number of levels
+(`EMLDepthCost.lean` already recorded the numbers at `var` — `subGen` 15, `addGen` 34, `mulGen` 54).
+
+Side by side:
+
+```
+fDepth (toFTermFast t)   =  t.depth                 exact, no overhead, no constant
+EMLTree.depth (toEML T)  ≤  400 · fHeight T         constant × HEIGHT, not × fDepth
+```
+
+The general per-gadget bounds (`subTree` 12, `addTree` 12, `mulPos` 40, `subGen` 24, `addGen` 56,
+`mulL` 64, `mulGen` 112, `invPos` 28, `divGen` 384, `FTree` 64, each `+ max` of the children) are new;
+the corpus had only the exact depths at `var`. **The constants are envelopes, not optima** — the first
+attempt used `8` for `addTree` and `omega` rejected it, because `addTree` routes its right argument
+through `negOffset`, which costs 2 that `max a b` does not see.
+
+### The asymmetry is real, not an artefact of loose constants
+
+`inv_x_basis_gap` — `1/x` has minimum EML depth **exactly 4** (`inv_x_min_depth`, certified via
+`invX4_depth_optimal`) and in `L_F` is the term `1/x`: `F`-depth `0`, **zero** distinct `F`-queries.
+
+`additive_slack_at_least_four` — therefore any inequality `d_EML(f) ≤ C·d_F(f) + D`, valid for all
+`f` with `d_EML` the *minimum* over EML trees, forces **`4 ≤ D`**, whatever `C` is. Two specimens now
+show the gap (`x + 1` and `1/x`); the second is the better one, because its EML minimality is
+certified rather than assembled from an exclusion plus a witness.
+
+### `FQueryLowerBound`: the obligation this arc did not discharge
+
+Registered in the obligations ledger (11 rows → **12**), marked **open**:
+
+```
+FQueryLowerBound : ∀ T : FTerm, (∀ x, FTerm.eval T x = exp x) → 1 ≤ fOcc T
+```
+
+Computing `exp` requires at least one `F`. Equivalently — an `F`-free `L_F` term being a rational
+function of `x` — **`exp` is not a rational function**. Certainly true; **this development does not
+prove it**, which is the point of the row.
+
+That matters more than one missing lemma, because it is the shape of the whole arc: every complexity
+statement here is an upper bound or an exact count of a construction I wrote. `additive_slack_at_least_four`
+is the single lower bound, and it is *imported from the EML side*, where the corpus's exclusion
+machinery reaches. On the `L_F` side there is no lower-bound machinery at all — discharging
+`FQueryLowerBound` would need either a growth comparison (`exp` outgrows every rational function) or a
+rational normal form for `F`-free terms, and the corpus has neither.
+
+So: "is `F` a minimal basis" cannot be attacked yet. Not because the question is hard, but because
+there is no instrument that can answer *any* question of that shape here. That is the honest state.
+
 ## [Unreleased] — 2026-08-20 (j)
 
 ### `F` is not isolated: a two-parameter family of unary generators
@@ -1497,6 +1551,7 @@ in commit archaeology:
 | `BoundedEmlCellApproachLarge` | **discharged** | `boundedEmlCellApproachLarge_holds` (the router) |
 | `TowerReducesToSign` | **open** | — |
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
+| `FQueryLowerBound` | **open** | — (needs `exp` is not rational; no route in the corpus) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger

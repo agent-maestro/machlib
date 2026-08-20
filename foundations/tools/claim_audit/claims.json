@@ -4218,6 +4218,40 @@
         "FQueriesLe"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The reverse simulation bound. conclusion_mentions fHeight (not fDepth) is the whole point -- the bound is in the term's HEIGHT, and a later edit swapping the measure would silently change the claim.",
+      "id": "overhead-reverse-bound-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "A constant times the `L_F` term's\n*syntactic height*"
+      ],
+      "module": "MachLib.EMLBasisOverhead",
+      "theorem": "MachLib.toEML_depth_le",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fHeight"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The only lower bound in the development. Registered because the prose leans on it hard while also saying lower bounds are absent -- the claim keeps those two statements consistent.",
+      "id": "overhead-slack-four-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "forces **`4 ≤ D`**, whatever `C` is"
+      ],
+      "module": "MachLib.EMLBasisOverhead",
+      "theorem": "MachLib.additive_slack_at_least_four",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "D"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
