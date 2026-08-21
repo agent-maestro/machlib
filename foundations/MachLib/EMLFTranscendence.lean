@@ -127,14 +127,61 @@ theorem bipev_degree_drop : ∀ Ls : List (List Real),
       refine le_trans hmul (le_trans (le_of_eq ?_) hsum)
       mach_mpoly [y, abs (pev L x), abs (bipev Ls x y)]
 
+/-! ## Rescaling the envelope
+
+`exp(r·x)` outgrows every polynomial for **any** `r > 0`, not just `r ≥ 1`: substituting `x = t/r`
+turns a polynomial envelope for it into one for `exp` itself. This is what lets the theorems below
+take `c·x ≤ S x` rather than the artificially strong `x ≤ S x`. -/
+
+theorem powNat_mul (a b : Real) : ∀ n : Nat, powNat (a * b) n = powNat a n * powNat b n := by
+  intro n
+  induction n with
+  | zero => show (1 : Real) = 1 * 1; mach_ring
+  | succ k ih =>
+      show a * b * powNat (a * b) k = a * powNat a k * (b * powNat b k)
+      rw [ih]; mach_mpoly [a, b, powNat a k, powNat b k]
+
+theorem not_polyEnvelope_of_ge_exp_scaled {g : Real → Real} {r : Real} (hr : 0 < r)
+    (h : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → exp (r * x) ≤ g x) : ¬ PolyEnvelope g := by
+  rintro ⟨C, N, X₀, hC, hX₀, hb⟩
+  obtain ⟨X, hX, hge⟩ := h
+  obtain ⟨W, hW, hWX, hWX₀⟩ := two_bounds' hX hX₀
+  obtain ⟨T, hT, _, hTW⟩ := two_bounds' (le_refl (1 : Real))
+    (show (1 : Real) ≤ 1 + abs (r * W) from le_add_nonneg' (abs_nonneg _))
+  have hrne : r ≠ 0 := ne_of_gt hr
+  refine not_polyEnvelope_of_ge_exp ⟨1, le_refl 1, fun t _ => le_refl (exp t)⟩
+    ⟨C * powNat (1 / r) N, N, T, mul_nonneg hC
+      (le_of_lt (powNat_pos (one_div_pos_of_pos hr) N)), hT, fun t ht => ?_⟩
+  have hxt : r * (t / r) = t := by
+    have e : r * (t / r) = t / r * r := by mach_ring
+    rw [e]; exact div_mul_self' hrne
+  have hrW : r * W ≤ t := by
+    have h1 : r * W ≤ 1 + abs (r * W) := by
+      refine le_trans (le_abs_self _) ?_
+      have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (abs (r * W)))
+      have e : (0 : Real) + abs (r * W) = abs (r * W) := by mach_ring
+      rw [e] at v; exact v
+    exact le_trans (le_trans h1 hTW) ht
+  have hWle : W ≤ t / r := by
+    refine le_of_mul_le_mul_left' hr ?_
+    rw [hxt]; exact hrW
+  have hgle := hge (t / r) (le_trans hWX hWle)
+  have hble := hb (t / r) (le_trans hWX₀ hWle)
+  rw [hxt] at hgle
+  show abs (exp t) ≤ C * powNat (1 / r) N * powNat t N
+  rw [abs_of_nonneg (le_of_lt (exp_pos t))]
+  refine le_trans (le_trans hgle (le_abs_self _)) (le_trans hble (le_of_eq ?_))
+  rw [div_def t r hrne, powNat_mul]
+  mach_mpoly [C, powNat t N, powNat (1 / r) N]
+
 /-! ## `F` is not algebraic over the polynomial coefficients -/
 
 /-- **No nonzero polynomial in `F(x)` with polynomial coefficients vanishes on a tail.**
 
 The leading coefficient is required to be eventually dominating — which, by `pev_dichotomy`, is the
 same as not being eventually zero, i.e. the relation is genuinely of degree `Ls.length`. -/
-theorem not_algebraic_of_dominates_exp {g : Real → Real}
-    (hg : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → exp x ≤ g x)
+theorem not_algebraic_of_dominates_exp {g : Real → Real} {r : Real} (hr : 0 < r)
+    (hg : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → exp (r * x) ≤ g x)
     (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
     (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipevLead A Ls x (g x) = 0) : False := by
   obtain ⟨Xg, hXg, hge⟩ := hg
@@ -146,15 +193,14 @@ theorem not_algebraic_of_dominates_exp {g : Real → Real}
   obtain ⟨B, M, X₂, hB, hX₂, hdeg⟩ := bipev_degree_drop Ls
   obtain ⟨Y, hY, hY0, hY1⟩ := two_bounds' hX₀ hX₁
   obtain ⟨X, hX, hXY, hX2⟩ := two_bounds' hY hX₂
-  refine not_polyEnvelope_of_ge_exp ⟨X, hX, fun x hx =>
+  refine not_polyEnvelope_of_ge_exp_scaled hr ⟨X, hX, fun x hx =>
       hge x (le_trans (le_trans (le_trans hX₀a hY0) hXY) hx)⟩
     ⟨B * (1 / c), M, X, mul_nonneg hB (le_of_lt (one_div_pos_of_pos hc)), hX, fun x hx => ?_⟩
   have hx1 : (1 : Real) ≤ x := le_trans hX hx
   have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
   have hF1 : (1 : Real) ≤ g x := by
     refine le_trans ?_ (hge x (le_trans (le_trans (le_trans hX₀a hY0) hXY) hx))
-    have h := one_add_le_exp x
-    exact le_trans (le_add_nonneg' hx0) h
+    exact le_trans (le_add_nonneg' (mul_nonneg (le_of_lt hr) hx0)) (one_add_le_exp (r * x))
   have hF0 : (0 : Real) < g x := lt_of_lt_of_le zero_lt_one_ax hF1
   have hpow : (0 : Real) < powNat (g x) Ls.length := powNat_pos hF0 _
   -- the relation, in absolute value
@@ -208,7 +254,10 @@ theorem not_algebraic_of_dominates_exp {g : Real → Real}
 /-- **`F` itself is not algebraic** — the original statement, now a corollary of the general one. -/
 theorem Fbasis_not_algebraic (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
     (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipevLead A Ls x (Fbasis x) = 0) : False :=
-  not_algebraic_of_dominates_exp ⟨1, le_refl 1, fun _ hx => exp_le_Fbasis hx⟩ A Ls hA hrel
+  not_algebraic_of_dominates_exp zero_lt_one_ax
+    ⟨1, le_refl 1, fun x hx => by
+      have e : (1 : Real) * x = x := by mach_ring
+      rw [e]; exact exp_le_Fbasis hx⟩ A Ls hA hrel
 
 /-! ## A specimen that is not a linear relation
 
@@ -286,8 +335,8 @@ theorem bipev_bounded_envelope : ∀ Ls : List (List Real),
 
 /-- **A super-polynomially small generator is not algebraic either.** `A` is the *constant*
 coefficient here, split off by the `A :: Ls` shape. -/
-theorem not_algebraic_of_dominated_by_exp {g : Real → Real}
-    (hg : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs (g x) * exp x ≤ 1)
+theorem not_algebraic_of_dominated_by_exp {g : Real → Real} {r : Real} (hr : 0 < r)
+    (hg : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs (g x) * exp (r * x) ≤ 1)
     (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
     (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipev (A :: Ls) x (g x) = 0) : False := by
   obtain ⟨Xg, hXg, hsm⟩ := hg
@@ -297,11 +346,13 @@ theorem not_algebraic_of_dominated_by_exp {g : Real → Real}
   obtain ⟨Y, hY, hY0, hY1⟩ := two_bounds' hXg hX₀
   obtain ⟨Z, hZ, hZY, hZ1⟩ := two_bounds' hY hX₁
   obtain ⟨X, hX, hXZ, hX2⟩ := two_bounds' hZ hX₂
-  refine not_polyEnvelope_of_ge_exp ⟨1, le_refl 1, fun x _ => le_refl (exp x)⟩
+  refine not_polyEnvelope_of_ge_exp_scaled hr
+      ⟨1, le_refl 1, fun x _ => le_refl (exp (r * x))⟩
     ⟨B * (1 / c), M, X, mul_nonneg hB (le_of_lt (one_div_pos_of_pos hc)), hX, fun x hx => ?_⟩
   have hx1 : (1 : Real) ≤ x := le_trans hX hx
   have hx0 : (0 : Real) ≤ x := le_trans (le_of_lt zero_lt_one_ax) hx1
-  have hex : (1 : Real) ≤ exp x := le_trans (le_add_nonneg' hx0) (one_add_le_exp x)
+  have hex : (1 : Real) ≤ exp (r * x) :=
+    le_trans (le_add_nonneg' (mul_nonneg (le_of_lt hr) hx0)) (one_add_le_exp (r * x))
   have hgs := hsm x (le_trans (le_trans (le_trans hY0 hZY) hXZ) hx)
   have hg1 : abs (g x) ≤ 1 := by
     refine le_trans ?_ hgs
@@ -334,18 +385,18 @@ theorem not_algebraic_of_dominated_by_exp {g : Real → Real}
   -- multiply by `exp x` and use `|g|·exp x ≤ 1`
   have hBM : (0 : Real) ≤ B * powNat x M :=
     mul_nonneg hB (le_of_lt (powNat_pos (lt_of_lt_of_le zero_lt_one_ax hx1) M))
-  have hfin : c * exp x ≤ B * powNat x M := by
-    have v := mul_le_mul_of_nonneg_right hstep (le_of_lt (exp_pos x))
-    have e : abs (g x) * (B * powNat x M) * exp x
-        = abs (g x) * exp x * (B * powNat x M) := by
-      mach_mpoly [abs (g x), B * powNat x M, exp x]
+  have hfin : c * exp (r * x) ≤ B * powNat x M := by
+    have v := mul_le_mul_of_nonneg_right hstep (le_of_lt (exp_pos (r * x)))
+    have e : abs (g x) * (B * powNat x M) * exp (r * x)
+        = abs (g x) * exp (r * x) * (B * powNat x M) := by
+      mach_mpoly [abs (g x), B * powNat x M, exp (r * x)]
     rw [e] at v
     have w := mul_le_mul_of_nonneg_right hgs hBM
     have e2 : (1 : Real) * (B * powNat x M) = B * powNat x M := by mach_ring
     rw [e2] at w
     exact le_trans v w
-  show abs (exp x) ≤ B * (1 / c) * powNat x M
-  rw [abs_of_nonneg (le_of_lt (exp_pos x))]
+  show abs (exp (r * x)) ≤ B * (1 / c) * powNat x M
+  rw [abs_of_nonneg (le_of_lt (exp_pos (r * x)))]
   refine le_of_mul_le_mul_left' hc ?_
   have e : c * (B * (1 / c) * powNat x M) = B * powNat x M * (c * (1 / c)) := by
     mach_mpoly [c, B, powNat x M, (1 : Real) / c]
@@ -363,8 +414,10 @@ theorem FS_not_algebraic_of_ge_id {S : Real → Real}
     (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x →
       bipevLead A Ls x (Fbasis (S x)) = 0) : False := by
   obtain ⟨X, hX, hs⟩ := hS
-  refine not_algebraic_of_dominates_exp ⟨X, hX, fun x hx => ?_⟩ A Ls hA hrel
+  refine not_algebraic_of_dominates_exp zero_lt_one_ax ⟨X, hX, fun x hx => ?_⟩ A Ls hA hrel
   have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hone : (1 : Real) * x = x := by mach_ring
+  rw [hone]
   have h1 : (1 : Real) ≤ S x := le_trans hx1 (hs x hx)
   have h2 : exp x ≤ exp (S x) := by
     rcases lt_total x (S x) with h | h | h
@@ -381,8 +434,10 @@ theorem FS_not_algebraic_of_le_negId {S : Real → Real}
     (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x →
       bipev (A :: Ls) x (Fbasis (S x)) = 0) : False := by
   obtain ⟨X, hX, hs⟩ := hS
-  refine not_algebraic_of_dominated_by_exp ⟨X, hX, fun x hx => ?_⟩ A Ls hA hrel
+  refine not_algebraic_of_dominated_by_exp zero_lt_one_ax ⟨X, hX, fun x hx => ?_⟩ A Ls hA hrel
   have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hone : (1 : Real) * x = x := by mach_ring
+  rw [hone]
   have hx0 : (0 : Real) < x := lt_of_lt_of_le zero_lt_one_ax hx1
   have hnx : -x < 0 := neg_of_neg_pos' (by
     have e : -(-x) = x := by mach_ring
@@ -399,31 +454,85 @@ theorem FS_not_algebraic_of_le_negId {S : Real → Real}
   · rw [h, exp_zero]; exact le_refl _
   · exact absurd (lt_of_lt_of_le h hsum) (lt_irrefl_ax _)
 
-/-! ## Where the composed question now stands
+/-! ## Correction: `x ≤ S x` is a sufficient condition, not "unbounded"
 
-Both **unbounded** regimes are closed, and by the same instrument in two orientations:
+The two corollaries above take `x ≤ S x` and `S x ≤ −x`. **Those are not the unbounded regimes.**
+`S(x) = x/2` tends to `+∞` and satisfies neither. A rational germ tending to `±∞` behaves like
+`a·xᵏ` with `k ≥ 1`, so what it does satisfy is `c·x ≤ S x` for some `c > 0`, which is strictly
+weaker whenever `c < 1`.
 
-| regime | mechanism | theorem |
-| --- | --- | --- |
-| `S(x) ≥ x` | `F(S) ≥ exp S ≥ exp x` — leading coefficient | `FS_not_algebraic_of_ge_id` |
-| `S(x) ≤ −x` | `F(S) = exp S`, super-polynomially small — constant coefficient | `FS_not_algebraic_of_le_negId` |
+With the rescaled envelope that gap closes, at any positive rate. -/
 
-Neither costs an analytic axiom. The second is not a separate idea: it is the first read from the
-other end of the polynomial, splitting off the constant term rather than the leading one.
+/-- **`S` growing at least linearly, at any positive rate.** -/
+theorem FS_not_algebraic_of_ge_linear {S : Real → Real} {c : Real} (hc : 0 < c)
+    (hS : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → c * x ≤ S x)
+    (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
+    (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+      bipevLead A Ls x (Fbasis (S x)) = 0) : False := by
+  obtain ⟨X, hX, hs⟩ := hS
+  obtain ⟨W, hW, hWX, hWc⟩ := two_bounds' hX
+    (show (1 : Real) ≤ 1 + abs (1 / c) from le_add_nonneg' (abs_nonneg _))
+  refine not_algebraic_of_dominates_exp hc ⟨W, hW, fun x hx => ?_⟩ A Ls hA hrel
+  have hcx : c * x ≤ S x := hs x (le_trans hWX hx)
+  have hxc : 1 / c ≤ x := by
+    refine le_trans (le_trans (le_abs_self _) ?_) (le_trans hWc hx)
+    have v := add_le_add_wit (le_of_lt zero_lt_one_ax) (le_refl (abs (1 / c)))
+    have e : (0 : Real) + abs (1 / c) = abs (1 / c) := by mach_ring
+    rw [e] at v; exact v
+  have h1 : (1 : Real) ≤ S x := by
+    refine le_trans ?_ hcx
+    have v := mul_le_mul_of_nonneg_left hxc (le_of_lt hc)
+    rw [mul_inv c (ne_of_gt hc)] at v; exact v
+  have h2 : exp (c * x) ≤ exp (S x) := by
+    rcases lt_total (c * x) (S x) with h | h | h
+    · exact le_of_lt (exp_lt h)
+    · exact le_of_eq (congrArg exp h)
+    · exact absurd (lt_of_lt_of_le h hcx) (lt_irrefl_ax _)
+  exact le_trans h2 (exp_le_Fbasis h1)
 
-**What is left is exactly the bounded case.** If `S` converges to a finite limit, `F(S)` is bounded,
-and *growth cannot distinguish a bounded function from an algebraic one* — the engine driving both
-theorems above is gone, not merely weaker. That is the branch where function-field or
-differential-algebra infrastructure would earn its cost, and it is the first place in this arc where
-that is the honest reading rather than an over-answer.
+/-- **`S` decreasing at least linearly, at any positive rate.** -/
+theorem FS_not_algebraic_of_le_linear {S : Real → Real} {c : Real} (hc : 0 < c)
+    (hS : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → S x ≤ -(c * x))
+    (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
+    (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x →
+      bipev (A :: Ls) x (Fbasis (S x)) = 0) : False := by
+  obtain ⟨X, hX, hs⟩ := hS
+  refine not_algebraic_of_dominated_by_exp hc ⟨X, hX, fun x hx => ?_⟩ A Ls hA hrel
+  have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hcxpos : (0 : Real) < c * x := mul_pos hc (lt_of_lt_of_le zero_lt_one_ax hx1)
+  have hneg : S x < 0 := lt_of_le_of_lt (hs x hx) (neg_of_neg_pos' (by
+    have e : -(-(c * x)) = c * x := by mach_ring
+    rw [e]; exact hcxpos))
+  have hsum : S x + c * x ≤ 0 := by
+    have v := add_le_add_wit (hs x hx) (le_refl (c * x))
+    have e : -(c * x) + c * x = 0 := by mach_ring
+    rw [e] at v; exact v
+  rw [Fbasis_of_nonpos (le_of_lt hneg), abs_of_nonneg (le_of_lt (exp_pos _)), ← exp_add]
+  rcases lt_total (S x + c * x) 0 with h | h | h
+  · have hlt := exp_lt h
+    rw [exp_zero] at hlt; exact le_of_lt hlt
+  · rw [h, exp_zero]; exact le_refl _
+  · exact absurd (lt_of_lt_of_le h hsum) (lt_irrefl_ax _)
 
-One reduction worth recording before anyone builds that machinery. On the positive branch
-`F(u) = exp u + log u`, so `F′(u) = exp u + 1/u`. Algebraic functions stay algebraic under
-differentiation in characteristic zero, so if `F` were algebraic over the rational functions then so
-would be `F′`, hence so would `exp u = F′(u) − 1/u`. So the whole route needs only **one** base
-transcendence theorem — that `exp` is transcendental over `ℝ(u)` — and no special theory for
-`exp + log`. Recorded as a reduction, not proved: it needs the differentiation-preserves-algebraicity
-step, which this corpus does not have.
--/
+/-! ## The constant exception is real, not defensive
+
+Nonconstancy is not a hypothesis added out of caution. For constant `S` the statement is **false**,
+and one line exhibits it: `F(0) = 1`, so `Y − 1` vanishes on it with leading coefficient `1`. A
+constant germ collapses the one-query expression back into `C₀`, where a polynomial relation is
+exactly what one should expect. -/
+
+theorem constant_germ_is_algebraic :
+    ∃ (A : List Real) (Ls : List (List Real)),
+      EvDom (pev A) ∧ ∀ x : Real, bipevLead A Ls x (Fbasis 0) = 0 := by
+  refine ⟨[1], [[0 - 1]], ⟨1, 0, 1, zero_lt_one_ax, le_refl 1, fun x _ => ?_⟩, fun x => ?_⟩
+  · show (1 : Real) * powNat x 0 ≤ abs (pev [(1 : Real)] x)
+    have e1 : pev [(1 : Real)] x = 1 := by show (1 : Real) + x * 0 = 1; mach_ring
+    have e2 : (1 : Real) * powNat x 0 = 1 := by show (1 : Real) * 1 = 1; mach_ring
+    rw [e1, e2, abs_of_nonneg (le_of_lt zero_lt_one_ax)]
+    exact le_refl _
+  · show pev [(1 : Real)] x * powNat (Fbasis 0) 1 + bipev [[(0 : Real) - 1]] x (Fbasis 0) = 0
+    rw [Fbasis_zero]
+    show (1 + x * 0) * (1 * 1) + ((0 - 1) + x * 0 + 1 * 0) = 0
+    mach_mpoly [x]
 
 end MachLib

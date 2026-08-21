@@ -5,6 +5,41 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (u)
+
+### ⚠ Correction: `x ≤ S x` is a sufficient condition, not "the unbounded regime"
+
+Entry (t) said "both unbounded regimes of a substituted germ, closed". **That was an overclaim.**
+`S(x) = x/2` tends to `+∞` and satisfies neither `x ≤ S x` nor `S x ≤ −x`. What a rational germ
+tending to `±∞` actually satisfies is `c·x ≤ S x` for some `c > 0` — strictly weaker whenever
+`c < 1`.
+
+Closed at any positive rate: `not_polyEnvelope_of_ge_exp_scaled` shows `exp(r·x)` outgrows every
+polynomial for **any** `r > 0`, by substituting `x = t/r` to turn a polynomial envelope for it into
+one for `exp` itself (`powNat_mul` supplies `(t/r)ᴺ = tᴺ·(1/r)ᴺ`). `FS_not_algebraic_of_ge_linear`
+and `FS_not_algebraic_of_le_linear` are the widened statements; the `x ≤ S x` versions survive as
+the `c = 1` instances, so the registered claims on them are untouched.
+
+Both engines were generalised in place — `not_algebraic_of_dominates_exp` and
+`not_algebraic_of_dominated_by_exp` now carry a rate `r > 0` — rather than duplicated. A first
+attempt did duplicate the proof body inline and left a `sorry` in the working tree; reverted before
+building. **Widen the engine, never copy it.**
+
+### The constant exception is real, not defensive
+
+`constant_germ_is_algebraic`: for constant `S` the transcendence statement is **false**, and one line
+exhibits it — `F(0) = 1`, so `Y − 1` vanishes on it with leading coefficient `1`. A constant germ
+collapses the one-query expression back into `C₀`, where a polynomial relation is exactly what one
+should expect. The nonconstancy hypothesis is load-bearing.
+
+### `BoundedGermTranscendence`, ledgered open
+
+Ledger 14 rows → **15**. Nonconstant rational germ with a finite limit ⟹ `F ∘ S` not algebraic.
+Everything else is now a theorem: constant `S` is a counterexample, and both unbounded rates are
+closed at 39 axioms with nothing analytic. The residue is a single sharply-typed case, and it is the
+one where growth arguments have no purchase at all — `F(S)` bounded is indistinguishable from
+algebraic by any envelope.
+
 ## [Unreleased] — 2026-08-20 (t)
 
 ### Both unbounded regimes of a substituted germ, closed — same instrument, two orientations
@@ -2001,6 +2036,7 @@ in commit archaeology:
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
+| `BoundedGermTranscendence` | **open** | — (nonconstant rational germ with a finite limit; both unbounded rates are theorems) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
