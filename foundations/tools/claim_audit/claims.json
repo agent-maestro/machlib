@@ -4985,7 +4985,7 @@
       "hypotheses_count": 0
     },
     {
-      "_comment": "Both bounds on a branching operation. Registered because the UPPER bound is a computed number (fOcc = 24 by rfl) and the LOWER one routes through sign_not_zero_query; if either moves, the prose's sandwich is wrong.",
+      "_comment": "Both bounds on a branching operation. Registered because the UPPER bound is a computed number (fOcc = 24 by rfl) and the LOWER one routes through sign_not_zero_query; if either moves, the prose's sandwich is wrong. Superseded as the headline by sign-query-cost-tight-changelog (bound 24 -> 12); kept because the 24-term still exists and its claim still holds.",
       "id": "sign-query-cost-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -4993,6 +4993,24 @@
       ],
       "module": "MachLib.EMLSignQueryCost",
       "theorem": "MachLib.sign_query_cost_bounds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "sign"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The tightened sandwich. Registered separately from the 24 version so both numbers stay pinned to the terms that produce them -- a superseded bound that stops being checked is how a stale figure survives in prose.",
+      "id": "sign-query-cost-tight-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`q_F(sign) ≤ 12` — the self-division was paying twice for a value it already knew"
+      ],
+      "module": "MachLib.EMLSignQueryCost",
+      "theorem": "MachLib.sign_query_cost_bounds_tight",
       "forbid_axioms": [
         "sorryAx"
       ],

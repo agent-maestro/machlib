@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (f)
+
+### `q_F(sign) ≤ 12` — the self-division was paying twice for a value it already knew
+
+`sign_query_cost_bounds_tight`. Same sandwich, upper bound halved, and by a better construction
+rather than a new theorem.
+
+`posIndicator x = logGap x / logGap x` buys nonvanishing at the price of evaluating `logGap` twice —
+`fOcc` counts tree occurrences, and the subterm sits in both numerator and denominator. But on the
+positive ray `logGap` is not merely nonzero, **it is the constant `log 2`**. Divide by that constant
+instead and one copy suffices:
+
+```
+sign x = (logGap x − logGap (0 − x)) / log 2          fOcc = 12, by rfl
+```
+
+The self-division trick was solving a problem the construction did not have. That is worth naming as
+a pattern: `A/A` is the reflex for "indicator of `A ≠ 0`", and whenever `A`'s nonzero value is a
+*known constant*, `A/c` is the same indicator at half the tree.
+
+### What the remaining gap is made of
+
+`1 ≤ q_F(sign) ≤ 12`, and the two ends are not the same kind of uncertainty. The upper bound is a
+construction and might still come down. **The lower bound needs the level-1 cancellation theorem** —
+`OneQueryDichotomy`, an open ledger row — which is also exactly what leaves
+`q_F^global(exp) ∈ {1, 2}`.
+
+So one open obligation now stands under two sandwiches. That is a better reason to attack it than it
+had this morning, when it was a row in a table.
+
+Gates: build 653 jobs, aggregator 650/956, claims 257, AxiomLedger 242 pinned — unchanged across all
+six results today — obligations 16, sorry-audit 1 allowlisted. Figures read off the run.
+
 ## [Unreleased] — 2026-08-21 (e)
 
 ### `1 ≤ q_F(sign) ≤ 24` — a branching operation gets both bounds

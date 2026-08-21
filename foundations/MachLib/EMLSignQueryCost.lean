@@ -87,4 +87,73 @@ theorem sign_query_cost_bounds :
   · exact absurd ⟨T, h0, hT⟩ sign_not_zero_query
   · exact hp
 
+/-! ## Halving it: divide by the constant, not by itself
+
+`posIndicator x = logGap x / logGap x` pays for `logGap` **twice** — `fOcc` counts tree occurrences,
+and the subterm appears in both numerator and denominator. But on the positive ray `logGap` is not
+merely nonzero, it is the *constant* `log 2`. So dividing by that constant does the same job with one
+copy:
+
+```
+sign x = (logGap x − logGap (0 − x)) / log 2
+```
+
+One division, two `logGap`s, `fOcc = 12`. The self-division was buying nonvanishing at the price of a
+second evaluation, when the value was known all along.
+-/
+
+theorem sign_eq_logGap_quotient (x : Real) :
+    Real.sign x = (logGap x - logGap (0 - x)) / log (1 + 1) := by
+  have hlog2 : log (1 + 1 : Real) ≠ 0 := log_ne_zero_of_pos_of_ne_one two_pos two_ne_one
+  have hz : (0 : Real) - 0 = 0 := by mach_ring
+  rcases lt_total 0 x with h | h | h
+  · have hle : 0 - x ≤ 0 := by
+      have v := neg_le_neg' (le_of_lt h); rw [hz] at v; exact v
+    rw [sign_pos h, logGap_of_pos h, logGap_of_nonpos hle]
+    have e : log (1 + 1 : Real) - 0 = log (1 + 1) := by mach_ring
+    rw [e]
+    exact (self_div hlog2).symm
+  · rw [← h, hz, sign_zero, logGap_of_nonpos (le_refl 0)]
+    have e : (0 : Real) - 0 = 0 := by mach_ring
+    rw [e]
+    exact (zero_div_eq hlog2).symm
+  · have hpos : 0 < 0 - x := by
+      have v := add_lt_add_left h (0 - x)
+      have el : 0 - x + x = 0 := by mach_ring
+      have er : 0 - x + 0 = 0 - x := by mach_ring
+      rw [el, er] at v; exact v
+    rw [sign_neg h, logGap_of_nonpos (le_of_lt h), logGap_of_pos hpos]
+    refine (div_of_eq_mul hlog2 ?_).symm
+    mach_ring
+
+/-- `sign` as a term, at half the cost: `fOcc = 12`. -/
+noncomputable def FTerm.signT2 : FTerm :=
+  FTerm.div
+    (FTerm.sub (FTerm.logGapT FTerm.var)
+               (FTerm.logGapT (FTerm.sub (FTerm.const 0) FTerm.var)))
+    (FTerm.const (log (1 + 1)))
+
+theorem FTerm.signT2_eval (x : Real) : FTerm.eval FTerm.signT2 x = Real.sign x := by
+  show (FTerm.eval (FTerm.logGapT FTerm.var) x
+        - FTerm.eval (FTerm.logGapT (FTerm.sub (FTerm.const 0) FTerm.var)) x)
+      / log (1 + 1) = Real.sign x
+  rw [FTerm.logGapT_eval, FTerm.logGapT_eval]
+  show (logGap x - logGap (0 - x)) / log (1 + 1) = Real.sign x
+  exact (sign_eq_logGap_quotient x).symm
+
+theorem FTerm.fOcc_signT2 : fOcc FTerm.signT2 = 12 := rfl
+
+/-- **`1 ≤ q_F(sign) ≤ 12`.** The upper bound halved by construction, not by a new theorem.
+
+The remaining gap is not slack in the same way: closing it needs the level-1 cancellation theorem
+(`OneQueryDichotomy`, an open ledger row), which is also what leaves `q_F^global(exp) ∈ {1,2}`. One
+obstruction now stands under two sandwiches. -/
+theorem sign_query_cost_bounds_tight :
+    (fOcc FTerm.signT2 = 12 ∧ ∀ x : Real, FTerm.eval FTerm.signT2 x = Real.sign x)
+    ∧ (∀ T : FTerm, (∀ x : Real, FTerm.eval T x = Real.sign x) → 1 ≤ fOcc T) := by
+  refine ⟨⟨FTerm.fOcc_signT2, FTerm.signT2_eval⟩, fun T hT => ?_⟩
+  rcases Nat.eq_zero_or_pos (fOcc T) with h0 | hp
+  · exact absurd ⟨T, h0, hT⟩ sign_not_zero_query
+  · exact hp
+
 end MachLib
