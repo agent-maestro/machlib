@@ -4758,6 +4758,23 @@
         "fOcc"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The degree-zero case of LogQueryLowerBound. Registered so the ledger row's 'open' status cannot later be read as 'nothing proved' -- one case IS closed.",
+      "id": "log-not-evconst-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "an eventually-**constant** germ cannot be `log`"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.log_not_evConst",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "log"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

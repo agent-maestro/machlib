@@ -5,6 +5,56 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (aa)
+
+### The route to `log ∉ C₀` needs no new instrument — it needs a substitution
+
+Specced in `monogate-research/exploration/log_query_lower_bound_2026_08_20/SPEC.md`.
+
+Two routes fail. **Direct germ comparison** needs `log x / x → 0`, absent. **Inverting through `exp`**
+needs "unbounded rational germ ⟹ at least linear", which is exactly the missing fact — circular.
+
+The route that works substitutes `x = exp t`. Since `log (exp t) = t` unconditionally,
+`log x = P(x)/Q(x)` becomes
+
+```
+Σⱼ (t·bⱼ − aⱼ) · (exp t)ʲ = 0        for all large t
+```
+
+a polynomial in `exp t` with coefficients polynomial in `t` — **precisely the shape
+`exp_not_algebraic` forbids**. The growth question becomes an algebraic one, and the algebraic one is
+already a theorem.
+
+**That is the finding: `exp_not_algebraic` is a more general instrument than it looked.** Proved for a
+transcendence question about `F`, it also settles a *growth* question about `log` once a substitution
+moves that question into the algebraic frame. The next move for the lower-bound programme is probably
+not another envelope but asking, of each open growth question, whether a substitution puts it in
+reach of the algebraic theorem.
+
+### Proved here: the degree-zero case
+
+`log_not_evConst` — an eventually-**constant** germ cannot be `log`. That case needs none of the
+plumbing and is now closed.
+
+**And the full build caught a duplicate the per-module build did not.** I wrote a
+`log_unbounded_above`; one already existed in `EMLSmoothness`, and stronger (a whole ray, not one
+witness). `lake build MachLib.EMLRationalGerm` accepted it; `lake build` rejected it —
+*"environment already contains `MachLib.log_unbounded_above`"*. Reused rather than redefined. Fourth
+instance today of the same failure mode: **a check narrower than the claim it is asked to support.**
+
+### Not built, and why
+
+The remaining piece is coefficient-list bookkeeping: pad `P` and `Q`, extract the top index with
+`(aⱼ, bⱼ) ≠ (0,0)`, transport the tail through `x = exp t`. The clean version restates
+`exp_not_algebraic` to take "not every coefficient list is eventually zero" — matching what
+`pev_dichotomy` produces — paying the extraction once inside the theorem instead of at every call
+site.
+
+**That restatement changes a theorem four other results depend on**, and it is fiddly rather than
+deep. Today has already produced three defects of exactly that shape caught late — a `sorry` left in
+a working tree, a `assert` that silently did not fire, and a footprint check that failed open. That
+is the evidence for beginning this refactor at the start of a session rather than at the end of one.
+
 ## [Unreleased] — 2026-08-20 (z)
 
 ### ⚠ `fDepth` is **not** a reparametrisation of exponential number — corrected within the hour

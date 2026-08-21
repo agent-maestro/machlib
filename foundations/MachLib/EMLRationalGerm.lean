@@ -1,4 +1,5 @@
 import MachLib.EMLZeroQueryBarrier
+import MachLib.EMLSmoothness
 
 /-!
 # Toward the `C₀` normal form: the polynomial dichotomy, and the first strict query separation
@@ -791,5 +792,41 @@ theorem zero_query_iff_ratGerm (f : Real → Real) :
     exact ⟨P, Q, W, hW, fun x hx => hQ x (le_trans hWY hx), fun x hx => by
       rw [← he x (le_trans hWX hx)]; exact hg x (le_trans hWY hx)⟩
   · exact fun h => zero_query_of_ratGerm h
+
+/-! ## Toward `LogQueryLowerBound`: the degree-zero case
+
+`log ∉ C₀` is open, and the envelope instrument cannot reach it (`log x ≤ x`). The route that works
+substitutes `x = exp t`, turning `log x = P(x)/Q(x)` into a polynomial relation in `exp t` with
+coefficients polynomial in `t` — the shape `exp_not_algebraic` forbids. See
+`monogate-research/exploration/log_query_lower_bound_2026_08_20/SPEC.md`.
+
+What is proved here is the degree-zero case, which needs none of that plumbing: a germ that is
+eventually **constant** cannot be `log`, because `log` is unbounded above. -/
+
+-- `log_unbounded_above` already exists in `EMLSmoothness` — the full build caught the collision
+-- that a per-module build did not. Reused rather than redefined.
+
+/-- **`log` is not an eventually-constant germ** — the degree-zero case of `LogQueryLowerBound`.
+
+Uses the existing `log_unbounded_above` from `EMLSmoothness`, which is stronger than what this needs
+(it gives a whole ray, not one witness). Found by the **full** build: a per-module build accepted a
+duplicate definition of that name, and only the aggregate rejected it. -/
+theorem log_not_evConst : ¬ ∃ c X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → log x = c := by
+  rintro ⟨c, X, hX, hc⟩
+  obtain ⟨δ, hδ, hbig⟩ := log_unbounded_above c
+  refine absurd (hbig (δ + abs X + 1) ?_) ?_
+  · have v := add_lt_add_left (add_pos_of_nonneg_of_pos (abs_nonneg X) zero_lt_one_ax) δ
+    have el : δ + 0 = δ := by mach_ring
+    have er : δ + (abs X + 1) = δ + abs X + 1 := by mach_ring
+    rw [el, er] at v; exact v
+  · have hxX : X ≤ δ + abs X + 1 := by
+      have h1 : X ≤ abs X := le_abs_self X
+      have v := add_le_add_wit (add_le_add_wit (le_of_lt hδ) (le_refl (abs X)))
+        (le_of_lt zero_lt_one_ax)
+      have e : (0 : Real) + abs X + 0 = abs X := by mach_ring
+      rw [e] at v
+      exact le_trans h1 v
+    rw [hc (δ + abs X + 1) hxX]
+    exact lt_irrefl_ax c
 
 end MachLib
