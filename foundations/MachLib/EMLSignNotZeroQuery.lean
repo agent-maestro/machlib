@@ -194,7 +194,7 @@ positive ray, so it never vanishes there, and vanishes identically off it. -/
 /-- `log (2x) − log x`: the constant `log 2` on `x > 0`, and `0` on `x ≤ 0`. -/
 noncomputable def logGap (x : Real) : Real := log ((1 + 1) * x) - log x
 
-private theorem two_ne_one : (1 + 1 : Real) ≠ 1 := by
+theorem two_ne_one : (1 + 1 : Real) ≠ 1 := by
   intro h
   have e1 := congrArg (fun z : Real => z - 1) h
   have el : (1 + 1 : Real) - 1 = 1 := by mach_ring

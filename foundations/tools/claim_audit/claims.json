@@ -4965,6 +4965,24 @@
         "posIndicator"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "A NEGATIVE result, registered because negatives rot quietly: if EF is ever redefined, this refutation becomes false and nothing else would notice. conclusion_mentions pins both sides of the disequality.",
+      "id": "ef-fails-at-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the exponential decoder is wrong at `x = 0`"
+      ],
+      "module": "MachLib.EMLDecoderOffPositives",
+      "theorem": "MachLib.EF_ne_exp_at_zero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EF",
+        "exp"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

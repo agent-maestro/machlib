@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (d)
+
+### The open step is closed, with a "no": the decoders break at the boundary point
+
+`EF_ne_exp_at_zero` (`EMLDecoderOffPositives`): **the exponential decoder is wrong at `x = 0`.**
+
+The previous entry left one question and named it as the tempting next claim — does
+`sign_eq_posIndicator` upgrade to a `q_F(sign)` bound? It needs `log` as an `FTerm`, hence the
+decoders `EF`/`LF` off the positive ray. **They do not go there**, and the cheapest possible witness
+proves it: not a point far out on the negative ray, but `0` itself.
+
+`Fbasis 0 = exp 0 + log₀ 0 = 1 + 0 = 1` — totalisation deletes the log term, and that is the whole
+mechanism. Both `Fbasis` differences in the decoder collapse to `1 − 1`, leaving
+
+```
+eval (EF var) 0  =  (0 − log 3) / (0 − log 2) − 1  =  log 3 / log 2 − 1
+```
+
+which equals `exp 0 = 1` only if `log 3 = 2·log 2 = log 4`, i.e. only if **`3 = 4`**.
+
+No numerics — no bounds on `exp(−1)`, no interval arithmetic. The refutation is exact, algebraic,
+and lands on the boundary rather than deep in the negatives.
+
+### What it settles
+
+* **No `q_F(sign)` sandwich from these decoders.** `sign_eq_posIndicator` stands as a semantic
+  representation over `{field operations, totalised log}`, and does not become a query-complexity
+  bound. The gap is now a theorem, not an unexamined hope.
+* **`EF_eval`/`LF_eval`'s `0 < eval u x` is necessary, not incidental** — worth knowing for every
+  future caller, since a hypothesis that is merely convenient invites being routed around.
+* **Half of the problem is free after all.** `Fbasis_eq_exp_of_nonpos`: for `x ≤ 0`, `Fbasis x =
+  exp x`, because totalisation removes the log term. `exp` needs **no decoder** on the nonpositive
+  ray — it is `F` itself. And on the positive ray `exp x = 1 / Fbasis (0 − x)`.
+
+So `exp` is expressible on each ray separately, by two *different* finite expressions, and what is
+missing is a single one covering both. That is the same branch the construction was trying to build,
+which is a clean statement of where the difficulty actually sits — and a much better place to be
+stuck than "the decoders might extend".
+
+Gates: build 652 jobs, aggregator 649/955, claims 254, AxiomLedger **242 pinned — unchanged across
+all four results today**, obligations 16, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (c)
 
 ### The zero-query barrier is a **basis** boundary, not an expressibility barrier
