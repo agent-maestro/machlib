@@ -11346,6 +11346,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
+| `LogQueryLowerBound` | `EMLRationalGerm` | **open** | — (`log ∉ C₀`; the envelope instrument is blind to it, `log x ≤ x`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of

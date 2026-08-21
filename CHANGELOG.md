@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (z)
+
+### ⚠ `fDepth` is **not** a reparametrisation of exponential number — corrected within the hour
+
+The second literature pass reported `fDepth` as "very likely a reparametrisation" of the
+log-exp-analytic *exponential number*. That was read off matching **shapes** and does not survive
+checking the **base classes**.
+
+Exponential number's base case is **log-analytic**, which already contains `log`. Ours is **rational
+germs**, which does not.
+
+| | exponential number | `fDepth` |
+| --- | --- | --- |
+| `x` | 0 | 0 |
+| `log x` | **0** | **1** |
+| `exp x` | 1 | 1 |
+| `exp(exp x)` | 2 | 2 |
+| `exp(log x · log x)` | **1** | **2** |
+
+They agree on the pure exponential tower and diverge wherever a logarithm appears. **Exponential
+number counts nesting of `exp` with logarithms free; `fDepth` counts nesting of a generator
+containing both.** A different measure, not a rescaling.
+
+So all three of our measures remain unmatched by anything found. That is *weak* evidence of novelty
+and is recorded as such: two shallow passes finding no match is not a match not existing.
+
+### The correction exposed a gap in our own results
+
+That comparison table asserts `fDepth(log) = 1` — **`log` costs at least one query**. It is *not
+proved*, and the instrument that settled `exp` **cannot** prove it:
+
+> `FQueryLowerBound` works because `exp` escapes every polynomial envelope. `log x ≤ x` sits
+> comfortably *inside* one. The envelope argument is blind to `log`.
+
+Ruling `log` out of `C₀` needs the **asymptotic** form of a rational germ (`~ a·xᵏ`, integer `k`)
+rather than the envelope: a rational germ is bounded or grows at least linearly, and `log` is
+unbounded and sublinear, so it is neither. The ingredients (`log` unbounded; `log x / x → 0`, e.g.
+via `log x ≤ 2√x`) are elementary but absent.
+
+`LogQueryLowerBound` ledgered **open** (15 rows → **16**). It is the natural next lower-bound target
+precisely because it needs a different instrument — and the corpus currently has exactly one.
+
 ## [Unreleased] — 2026-08-20 (y)
 
 ### Hostile audit of the `L_F` arc — two attacks land, four fail
@@ -2235,6 +2277,7 @@ in commit archaeology:
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
+| `LogQueryLowerBound` | **open** | — (`log ∉ C₀`; the envelope instrument is blind to it, `log x ≤ x`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
