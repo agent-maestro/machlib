@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (n)
+
+### The bounded branch does not evaporate — and now there is a theorem saying why
+
+`Fbasis_bounded_of_floor` / `polyEnvelope_of_Fbasis_floor` (`BoundedGermEnvelope`). `NEXT.md` said:
+classify, feed the cases into `F`, and hope most of the bounded branch evaporates the way the last
+several hard residues did. **It does not**, and the obstruction is structural rather than a failed
+attempt.
+
+On the **nonzero-floor** branch, `ratGerm_eventual_sign` makes `S` one-signed and the floor keeps it
+away from `0`, so eventually `S` lives in a compact annulus `c ≤ |S| ≤ K` on one side of zero:
+
+* **negative side** — totalisation deletes the logarithm outright, `F(S) = exp(S)`, and `S < 0`
+  gives `exp(S) < 1`;
+* **positive side** — `F(S) = exp(S) + log(S)`, with `exp(S) ≤ exp K` and `log c ≤ log S ≤ log K`.
+
+Either way **`F ∘ S` is bounded** — and therefore has a polynomial envelope, a constant one.
+
+### Why that settles the method though it settles no theorem
+
+Every exclusion instrument in this corpus works by **escaping a polynomial envelope**:
+`not_polyEnvelope_of_ge_exp`, `..._scaled`, and through them `FS_not_algebraic_of_ge_linear`,
+`_of_le_linear`, `Fbasis_not_algebraic`. Each needs the generator to outgrow every polynomial.
+
+`polyEnvelope_of_Fbasis_floor` says their hypothesis is **false** here — not narrowly missed, false.
+So the silence of every existing instrument on this branch is now a theorem rather than an
+observation, and a future session cannot lose a day rediscovering it.
+
+**The suspicion in `NEXT.md` is confirmed and sharpened.** The nonzero-finite-limit case is the
+survivor, and it survives *for a reason that is now proved*. Anything that closes
+`BoundedGermTranscendence` there must come from somewhere other than growth — differential algebra,
+or transcendence of `exp` on a compact set. That is precisely the specimen `NEXT.md` said would earn
+bringing such machinery in, and it has now earned it.
+
+### The decaying branch is not claimed either way
+
+Untouched here. `S ∼ c·x^{−m}` with `S > 0` makes `log S` grow like `−m·log x`, so `F ∘ S` is
+unbounded there — but only *logarithmically*, which is still inside every polynomial envelope. The
+same obstruction is very likely, and is **not proved**. Saying so rather than asserting the
+symmetry.
+
+**34 axioms, `sorryAx` absent**, fourteenth result today, ledger still 242.
+
+Gates: build 659 jobs, aggregator 656/962, claims 264, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (m)
 
 ### The bounded classification, limit-free — decay or a nonzero floor

@@ -5146,6 +5146,24 @@
         "abs"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The structural obstruction on the bounded branch. Registered because it is a NEGATIVE result about the corpus's own instruments, and those rot silently: if PolyEnvelope or Fbasis is ever redefined this theorem could become vacuous without anything noticing.",
+      "id": "bounded-floor-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Either way **`F ∘ S` is bounded** — and therefore has a polynomial envelope"
+      ],
+      "module": "MachLib.BoundedGermEnvelope",
+      "theorem": "MachLib.polyEnvelope_of_Fbasis_floor",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "PolyEnvelope",
+        "Fbasis"
+      ],
+      "hypotheses_count": 5
     }
   ]
 }
