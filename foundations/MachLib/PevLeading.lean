@@ -151,12 +151,12 @@ private theorem cancel_inv (A q : Real) (hq : q ≠ 0) : A * q * (1 / q) = A := 
   have e : A * q * (1 / q) = A * (q * (1 / q)) := by mach_mpoly [A, q, (1 : Real) / q]
   rw [e, mul_inv q hq]; mach_ring
 
-private theorem div_ge_of_mul_le {p q A : Real} (hq : 0 < q) (h : A * q ≤ p) : A ≤ p / q := by
+theorem div_ge_of_mul_le {p q A : Real} (hq : 0 < q) (h : A * q ≤ p) : A ≤ p / q := by
   rw [div_def p q (ne_of_gt hq)]
   have v := mul_le_mul_of_nonneg_right h (le_of_lt (one_div_pos_of_pos hq))
   rw [cancel_inv A q (ne_of_gt hq)] at v; exact v
 
-private theorem div_le_of_le_mul {p q A : Real} (hq : 0 < q) (h : p ≤ A * q) : p / q ≤ A := by
+theorem div_le_of_le_mul {p q A : Real} (hq : 0 < q) (h : p ≤ A * q) : p / q ≤ A := by
   rw [div_def p q (ne_of_gt hq)]
   have v := mul_le_mul_of_nonneg_right h (le_of_lt (one_div_pos_of_pos hq))
   rw [cancel_inv A q (ne_of_gt hq)] at v; exact v

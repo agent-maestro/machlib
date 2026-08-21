@@ -5123,6 +5123,29 @@
         "RatGermSignedTrichotomy"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The bounded classification. Registered with the analytic axioms forbidden because the entry's claim is that the limit-free statement needs no analysis -- 'S -> 0' rendered as 'x*|S| bounded' is the same content in the corpus's idiom, not a weaker stand-in.",
+      "id": "bounded-ratgerm-shape-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The bounded classification, limit-free — decay or a nonzero floor"
+      ],
+      "module": "MachLib.RatGermShape",
+      "theorem": "MachLib.boundedRatGerm_shape",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "abs"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

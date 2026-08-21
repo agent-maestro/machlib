@@ -348,6 +348,7 @@ import MachLib.PevRoots
 import MachLib.PevLeading
 import MachLib.PevSign
 import MachLib.PevSignGerm
+import MachLib.RatGermShape
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

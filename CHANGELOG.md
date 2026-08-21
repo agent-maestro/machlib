@@ -5,6 +5,50 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (m)
+
+### The bounded classification, limit-free — decay or a nonzero floor
+
+`ratGerm_shape` / `boundedRatGerm_shape` (`RatGermShape`). The first move `NEXT.md` prescribes, and
+deliberately **not** a transcendence theorem.
+
+A bounded rational germ classically has a finite limit `a`, with `S − a ∼ c·x^{−m}`, and the split
+that matters for `F ∘ S` is `a = 0` versus `a ≠ 0` because totalisation treats them differently.
+**This corpus has no limits and does not need them** — the same split is visible in the degrees, and
+`pev_leading_form` already exposes those:
+
+| degrees | classically | stated here |
+| --- | --- | --- |
+| `d_P < d_Q` | `S → 0` | `x·|S x| ≤ K` — decays at least like `1/x` |
+| `d_P = d_Q` | `S → a ≠ 0` | `c ≤ |S x|` — a **nonzero floor** |
+| `d_P > d_Q` | unbounded | already handled — `c·x ≤ |S x|` |
+
+Saying "`S → 0`" as "`x·|S x|` is bounded" is not a workaround. It is the same content in the idiom
+the corpus can state, and it is **stronger** than convergence — it names the rate.
+
+### What the split buys, concretely
+
+With `ratGerm_eventual_sign`, a bounded germ with a **nonzero floor** is eventually of one sign *and*
+bounded away from `0`. So `F(S)` has **no branch ambiguity**: `exp(S)` when that sign is negative,
+`exp(S) + log(S)` when it is positive. In the **decaying** branch the sign still decides, and
+`log S` now carries an explicit logarithmic scale — `S ∼ c·x^{−m}` forces `log S` to grow like
+`−m·log x`, which is a scale the corpus can see rather than a bounded quantity it cannot.
+
+That is the whole point of classifying before proving: the bounded region has stopped being one
+opaque case and is now three concrete ones, each with a known shape for `F(S)`.
+
+**34 axioms, no derivative, continuity, Rolle or IVT axiom, `sorryAx` absent.** The thirteenth result
+today and the ledger still reads 242.
+
+### Explicitly not claimed
+
+No progress on `BoundedGermTranscendence` itself. Nothing here says any of the three branches is
+algebraically impossible — only that they are *distinguishable*, and by what. Whether one survives
+(the nonzero-floor case is the suspect) is the next question, and it is untouched.
+
+Gates: build 658 jobs, aggregator 655/961, claims 263 (verdict tree-bound), obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (l)
 
 ### The claim audit now names the tree it certified
