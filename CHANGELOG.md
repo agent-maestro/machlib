@@ -5,6 +5,83 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (ab)
+
+### `log ∉ C₀` — the obligation is discharged, and the instrument was already there
+
+`LogQueryLowerBound` flips **open → discharged** (`logQueryLowerBound_holds`, `EMLLogNotRational`).
+Computing `log` costs at least one `F`-query, with no restriction on the term — the `log` companion
+to `fQueryLowerBound_holds`, reached by a different instrument.
+
+**The whole content is a substitution.** The envelope argument that settled `exp` is structurally
+blind to `log`: it works because `exp` escapes every polynomial envelope, and `log x ≤ x` sits inside
+one. Substituting `x = exp t` — legitimate because `log (exp t) = t` *unconditionally*, no positivity
+side condition — turns `log x = P(x)/Q(x)` into
+
+```
+Σⱼ (aⱼ − t·bⱼ) · (exp t)ʲ = 0        for all large t
+```
+
+a polynomial in `exp t` with coefficients polynomial in `t`, which `exp_not_algebraic` forbids. No
+new analysis: **the growth question became an algebraic one, and the algebraic one was already a
+theorem.**
+
+The mathematical statement under the query bound is `log_not_ratGerm`: `log` agrees with no quotient
+of polynomials on any tail. Since `C₀` *is* the eventual rational germs (`zero_query_iff_ratGerm`,
+both inclusions), that is `log ∉ C₀` — and it is the stronger of the two, since it rules out
+agreement on a tail, not merely everywhere.
+
+### The nontriviality argument is where the denominator is spent
+
+`exp_not_algebraic` needs the relation to be nonzero, and the corpus hands you a germ, not a
+coefficient. The argument that closes the gap costs two lines and no coefficient inspection: the
+coefficients are **linear in `t`**, so the `t`-difference of the relation at fixed `y` is exactly
+`−Q(y)`. Evaluate a hypothetically-vanishing family at `t = Z` and `t = Z + 1` and subtract, and `Q`
+is identically zero — which the germ's nonvanishing denominator forbids. `logRel_not_all_evZero`.
+
+Worth naming because it is easy to miss: **the nonvanishing denominator is spent twice.** Once to
+clear the fraction, which is the obvious use, and once here. Nontriviality is not a property of the
+shape `logRel` produces — `logRel_zero_all_evZero` exhibits `P = Q = [0]`, whose one coefficient
+dies — so without `hQ` the hypothesis of `exp_not_algebraic_of_not_all_evZero` is unavailable and
+the argument does not start.
+
+### The refactor was done as an addition, not a restatement
+
+Yesterday's note said the clean version *restates* `exp_not_algebraic` to take "not every coefficient
+list is eventually zero", and flagged that as a refactor to start a session with because it changes a
+theorem other results depend on. Eight declarations in `EMLFTranscendence` state or consume the
+leading form. **Adding `exp_not_algebraic_of_not_all_evZero` beside the original disturbs none of
+them and pays the extraction in exactly the same place** — once, inside a theorem, rather than at
+each call site. The risk that motivated deferring the work was a cost of the *in-place* restatement,
+not of the generalisation, and separating those two made the fiddly part safe to do.
+
+The extraction itself (`bipev_trim`, `EMLBipevTrim`) is constructive: `pev_dichotomy` decides each
+coefficient, so a list induction finds the top nonvanishing index with no appeal to `not_forall`.
+
+### Measured, not asserted
+
+- `logQueryLowerBound_holds` and `fQueryLowerBound_holds` have **identical** axiom footprints — 42
+  axioms each, set-equal under `#print axioms`. Two different instruments, one trust base.
+- `exp_not_algebraic_of_not_all_evZero` carries **41** axioms against `exp_not_algebraic`'s **39**;
+  the two added are `Real.div_zero` and `Real.one_div_nonneg_of_pos`, both inherited from
+  `pev_dichotomy`'s `c₀/2`, both already ledgered.
+- `sorryAx` absent from all eight new theorems (`#print axioms` on each, not a build-green
+  inference — `mach_ring` is an all-`try` tactic and a swallowed goal compiles fine).
+
+### The ledger row existed for a proposition that did not
+
+`LogQueryLowerBound` has been a row in the obligations table since yesterday, and there was no
+`def LogQueryLowerBound` anywhere in the corpus. `check_obligations.sh` passed the whole time and was
+right to: it checks whether a theorem concludes the proposition, and nothing can conclude a
+proposition that does not exist. **A row naming a nonexistent proposition is invisible to the gate
+that reads the row** — the same blind spot `CLAUDE.md` already records for claims with no registered
+theorem. Stating the obligation (in `EMLRationalGerm`, where the row says it lives) is what made the
+row checkable; discharging it came after.
+
+Also corrected in that section: it opened *"Four propositions in this corpus have been introduced as
+named obligations"* over a table of **sixteen** rows. Prose that counts rows and is not the thing the
+gate reads.
+
 ## [Unreleased] — 2026-08-20 (aa)
 
 ### The route to `log ∉ C₀` needs no new instrument — it needs a substitution
@@ -2327,7 +2404,7 @@ in commit archaeology:
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
-| `LogQueryLowerBound` | **open** | — (`log ∉ C₀`; the envelope instrument is blind to it, `log x ≤ x`) |
+| `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

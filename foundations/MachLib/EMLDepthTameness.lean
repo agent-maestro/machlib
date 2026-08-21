@@ -11327,8 +11327,10 @@ theorem depth3DecayExp_of_hard (h : Depth3DecayHard) : Depth3DecayExp := by
 
 /-! ### Obligations ledger
 
-Four propositions in this corpus have been introduced as *named obligations* — stated so that a
-partial result can be committed without overstating it. Their status, as of the last edit:
+Sixteen propositions in this corpus have been introduced as *named obligations* — stated so that a
+partial result can be committed without overstating it. (It was four when the section was written;
+the count is `grep -c` over the table below, and the gate compares the table to the corpus, not to
+this sentence.) Their status, as of the last edit:
 
 | obligation | where | status | discharged by |
 | --- | --- | --- | --- |
@@ -11346,7 +11348,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
-| `LogQueryLowerBound` | `EMLRationalGerm` | **open** | — (`log ∉ C₀`; the envelope instrument is blind to it, `log x ≤ x`) |
+| `LogQueryLowerBound` | `EMLRationalGerm` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of

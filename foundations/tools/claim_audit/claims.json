@@ -4760,7 +4760,7 @@
       "hypotheses_count": 0
     },
     {
-      "_comment": "The degree-zero case of LogQueryLowerBound. Registered so the ledger row's 'open' status cannot later be read as 'nothing proved' -- one case IS closed.",
+      "_comment": "The degree-zero case of LogQueryLowerBound, now subsumed by log_not_ratGerm. Kept registered because the special case is still stated in the corpus and still claimed in prose; a subsumed claim that stops being checked is how a later edit breaks it unnoticed.",
       "id": "log-not-evconst-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
@@ -4775,6 +4775,85 @@
         "log"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The headline of the arc: the obligation itself. Registered because the ledger row now reads 'discharged', and a row is prose until the theorem behind it is pinned to a footprint. The exact-forbids pin the ROUTE: a derivative axiom in this footprint would mean the proof went analytic, which is precisely what the entry claims it did not.",
+      "id": "log-query-lower-bound-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Computing `log` costs at least one `F`-query, with no restriction on the term"
+      ],
+      "module": "MachLib.EMLLogNotRational",
+      "theorem": "MachLib.logQueryLowerBound_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "LogQueryLowerBound"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The mathematical content under the query bound, and the stronger statement: no agreement on ANY tail, not merely everywhere. conclusion_mentions pins both objects so an unused-hypothesis restatement cannot satisfy it.",
+      "id": "log-not-ratgerm-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`log` agrees with no quotient of polynomials on any tail"
+      ],
+      "module": "MachLib.EMLLogNotRational",
+      "theorem": "MachLib.log_not_ratGerm",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "RatGerm",
+        "log"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The restated instrument. Registered for sorryAx above all: its proof is a list induction closed by mach_mpoly and mach_ring, and mach_ring is the all-try tactic that leaves an out-of-fragment goal to a synthetic sorry while the build still reads green.",
+      "id": "exp-not-algebraic-restated-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`exp_not_algebraic_of_not_all_evZero` carries **41** axioms against `exp_not_algebraic`'s **39**"
+      ],
+      "module": "MachLib.EMLBipevTrim",
+      "theorem": "MachLib.exp_not_algebraic_of_not_all_evZero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The step the substitution route actually needed and the SPEC did not have: nontriviality of the relation. Registered separately from the theorem it feeds because it is the only place the germ's nonvanishing denominator is spent -- if this drifts, log_not_ratGerm becomes a proof about a possibly-trivial relation.",
+      "id": "log-rel-nontrivial-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the `t`-difference of the relation at fixed `y` is exactly",
+        "`logRel_not_all_evZero`"
+      ],
+      "module": "MachLib.EMLLogNotRational",
+      "theorem": "MachLib.logRel_not_all_evZero",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "logRel",
+        "EvZeroF"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

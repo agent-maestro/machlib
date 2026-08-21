@@ -342,6 +342,8 @@ import MachLib.EMLRationalGerm
 import MachLib.EMLOneQueryForm
 import MachLib.EMLGermSign
 import MachLib.EMLFTranscendence
+import MachLib.EMLBipevTrim
+import MachLib.EMLLogNotRational
 import MachLib.EMLExpQueryCost
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree

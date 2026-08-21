@@ -793,15 +793,28 @@ theorem zero_query_iff_ratGerm (f : Real → Real) :
       rw [← he x (le_trans hWX hx)]; exact hg x (le_trans hWY hx)⟩
   · exact fun h => zero_query_of_ratGerm h
 
-/-! ## Toward `LogQueryLowerBound`: the degree-zero case
+/-! ## `LogQueryLowerBound`: the statement, and the degree-zero case
 
-`log ∉ C₀` is open, and the envelope instrument cannot reach it (`log x ≤ x`). The route that works
-substitutes `x = exp t`, turning `log x = P(x)/Q(x)` into a polynomial relation in `exp t` with
-coefficients polynomial in `t` — the shape `exp_not_algebraic` forbids. See
-`monogate-research/exploration/log_query_lower_bound_2026_08_20/SPEC.md`.
+The envelope instrument that discharged `FQueryLowerBound` is structurally blind to `log`: it works
+because `exp` escapes every polynomial envelope, and `log x ≤ x` sits inside one. The route that does
+work substitutes `x = exp t`, turning `log x = P(x)/Q(x)` into a polynomial relation in `exp t` with
+coefficients polynomial in `t` — the shape `exp_not_algebraic` forbids. That substitution is carried
+out in `EMLLogNotRational`, which discharges the obligation stated here (`logQueryLowerBound_holds`).
 
-What is proved here is the degree-zero case, which needs none of that plumbing: a germ that is
-eventually **constant** cannot be `log`, because `log` is unbounded above. -/
+The obligation is stated in this module, upstream of its proof, because that is where it belongs:
+`C₀` is characterised here, and the ledger row has named this proposition since before anything
+could prove it. Proved here is the degree-zero case only, which needs none of the plumbing — a germ
+that is eventually **constant** cannot be `log`, because `log` is unbounded above. It is now
+subsumed by `log_not_ratGerm`, and kept because a one-line special case that needs no substitution
+is worth having next to the general argument. -/
+
+/-- **Named obligation: `log ∉ C₀`.** The `log` analogue of `FQueryLowerBound` — computing `log`
+costs at least one `F`-query, equivalently `log` is not an eventual rational function.
+
+Stated in the shape of `FQueryLowerBound` so the two lower bounds compose without translation.
+Discharged by `logQueryLowerBound_holds` in `EMLLogNotRational`. -/
+def LogQueryLowerBound : Prop :=
+  ∀ T : FTerm, (∀ x : Real, FTerm.eval T x = log x) → 1 ≤ fOcc T
 
 -- `log_unbounded_above` already exists in `EMLSmoothness` — the full build caught the collision
 -- that a per-module build did not. Reused rather than redefined.
