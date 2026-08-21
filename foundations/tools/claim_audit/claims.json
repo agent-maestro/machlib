@@ -4667,6 +4667,41 @@
         "False"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The exact eventual cost -- both bounds meeting. hypotheses_count 0 because neither bound is conditional.",
+      "id": "expcost-exact-eventual-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`q_F^eventual(exp) = 1`.**"
+      ],
+      "module": "MachLib.EMLExpQueryCost",
+      "theorem": "MachLib.exp_query_cost_eventual",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "exp"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The global failure. Without it the eventual result could be misread as settling the global question too.",
+      "id": "expcost-global-fails-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "genuinely wrong at `x = −e`, where `−x > 0` and the logarithm returns"
+      ],
+      "module": "MachLib.EMLExpQueryCost",
+      "theorem": "MachLib.EFone_fails_globally",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "EFone"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

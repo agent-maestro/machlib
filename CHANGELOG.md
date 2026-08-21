@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (w)
+
+### `q_F(exp) = 1` — the two-query decoder was not optimal, and a search found the one-query one
+
+```
+exp x = 1 / F(−x)        for every x > 0
+```
+
+`−x < 0` puts `F` on the branch where the totalised logarithm vanishes, so `F(−x) = exp(−x)` and one
+reciprocal finishes it. `exp_query_cost_eventual` gives both bounds and they meet:
+**`q_F^eventual(exp) = 1`.**
+
+`EFneg`'s two queries bought *globality*, not tail correctness — `EFone_fails_globally` shows
+`1/F(−x)` is genuinely wrong at `x = −e`, where `−x > 0` and the logarithm returns. So
+
+```
+q_F^eventual(exp) = 1        q_F^global(exp) ∈ {1, 2}
+```
+
+and the whole remaining gap is the totalisation branch.
+
+### Searching before proving impossibility is what produced it — and the first two searches failed open
+
+A validated numeric search flagged `S = −x`, `S = −x−1`, `S = −x/2` at out-of-sample relative error
+`1e-52`, `1e-52`, `1e-47`, against `1e-3`–`1` for every other candidate.
+
+**Two broken versions came first.** Version 1 reported all fifteen candidates as hits: monomial bases
+on a short interval are so ill-conditioned that `σ_min/σ_max` is tiny regardless of the target.
+Version 2 added controls, but the *negative* control was degenerate by construction — `y = x`
+duplicates columns, so the matrix is exactly rank-deficient for reasons having nothing to do with
+`exp`. The working version fits on one interval and **validates out of sample** on another, with a
+genuine rational target as positive control (`3e-55`) and `sin` as negative control (`1.14`).
+
+Same failure shape as the footprint checker earlier the same day, caught the same way: a test that
+cannot be seen rejecting something is not evidence.
+
+### Two corrections to earlier entries, marked in place
+
+**`C₀ ⊊ C₁` was oversold as "the first strict separation".** Rational germs are algebraic and `F` is
+not, so it is essentially free — a check that `q_F` is not vacuous. `C₁ ⊊ C₂` is the one with content.
+
+**The `C₀`-sign-definiteness contrast was read too strongly.** `C₀` is the rational germs — the base
+case, not a competing representation — and since `EMLClass ↔ LFClass` is proved, `SignHardCase` *is*
+eventual sign-definiteness for all `C_k`. The right claim is that `L_F` supplies an induction handle
+the EML presentation did not.
+
 ## [Unreleased] — 2026-08-20 (v)
 
 ### The base transcendence theorem, named — and it was already free
@@ -197,7 +243,16 @@ guess about which residues are real.
 `zero_query_evSignDef`: every zero-query `L_F` term is eventually strictly positive, eventually
 strictly negative, or eventually zero. No hypothesis, no ray supplied from outside.
 
-**`SignHardCase` is this exact statement for EML, and it is open.** The contrast is the content: sign
+**`SignHardCase` is this exact statement for EML, and it is open.**
+
+> **⚠ The contrast below was read too strongly — see 2026-08-20 (w).** `C₀` is the rational germs,
+> which are eventually sign-definite for elementary reasons: it is the *base case*, not a competing
+> representation. And since `EMLClass ↔ LFClass` is proved, `SignHardCase` **is** eventual
+> sign-definiteness for all `C_k`. The honest framing is that `L_F` supplies an *induction handle* on
+> a conjecture the EML depth presentation gave none for — more accurate, and a much larger claim if
+> the induction ever closes.
+
+The contrast is the content: sign
 definiteness is not hard *in general* — it is hard when the representation offers no normal form to
 read it from. `C₀` has one, so the sign of a quotient comes off the signs of a numerator and a
 denominator, each settled by `pev_signed_dichotomy` (the leading-term induction, refined to track
@@ -384,6 +439,10 @@ cancellation; the escape is an **exact** representation `P/Q` where cancellation
 polynomial arithmetic and needs no asymptotic prediction. `pev_envelope` is the easy other half.
 
 ### The first strict query separation: `C₀ ⊊ C₁`
+
+> **⚠ OVERSTATED as "the first strict separation" — see 2026-08-20 (w).** Rational germs are
+> algebraic and `F` is not, so this separation is essentially free. It shows `q_F` is not vacuous; it
+> is not a result. The separation that would carry content is `C₁ ⊊ C₂`.
 
 `zero_query_lt_one_query`, on the division-free fragment. The witness is **`F` itself**, not `exp`:
 `F` costs exactly one query *by definition*, whereas `exp` currently costs two, so the upper bound is
