@@ -5019,6 +5019,42 @@
         "sign"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The global level-1 normal form. Registered because the entry's claim is about WHERE it holds -- off a finite set rather than past a threshold -- and that is exactly the property a later 'simplification' back to CtxAppliesEv would silently destroy.",
+      "id": "one-query-global-normal-form-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Level 1 goes global, and the threshold comes off for free"
+      ],
+      "module": "MachLib.EMLOneQueryGlobal",
+      "theorem": "MachLib.one_query_finite_exception_normal_form",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "CtxAppliesOff",
+        "pev"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The reduction, as an IMPLICATION. Registered so the prose cannot drift into reporting q_F(sign) >= 2 as established: hypotheses_count 1 pins that it consumes an open obligation rather than concluding unconditionally.",
+      "id": "sign-not-one-query-reduction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`OneQueryLevelSet` is not `OneQueryDichotomy`"
+      ],
+      "module": "MachLib.EMLOneQueryGlobal",
+      "theorem": "MachLib.sign_not_one_query_of_levelSet",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "sign"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

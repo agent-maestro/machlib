@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (g)
+
+### Level 1 goes global, and the threshold comes off for free
+
+`one_query_finite_exception_normal_form` (`EMLOneQueryGlobal`):
+
+```
+fOcc T = 1  ⟹  ∃ finite E, C, P, Q,  ∀ x ∉ E,  pev Q x ≠ 0
+                ∧ T(x) = C(x, F(pev P x / pev Q x))
+```
+
+The eventual version (`one_query_normal_form`, `CtxAppliesEv … X`) is what made the whole level-1
+layer blind to the bounded region, and therefore useless to both query-cost sandwiches. Removing the
+threshold cost **five lines**, because both ingredients were already in place: `one_query_decompose`
+is *global* (`CtxApplies`, every real point, no asymptotics), and this morning's
+`zero_query_finite_exception_normal_form` handles the inner argument off a finite set. Compose.
+
+The context `C` is still **not** collapsed to a quotient — that needs `OneQueryDichotomy`, and this
+theorem does not assume it. What changed is only *where* the statement holds, which was the whole
+blocker.
+
+### The reduction, typed — and it is a different obligation than advertised
+
+Having the normal form does not give `q_F(sign) ≥ 2`. What does is the **level-1 analogue of
+`zero_query_level_set`**, now stated as its own named obligation:
+
+```
+OneQueryLevelSet :  every level set of a one-query function is finite,
+                    or is everything off a finite exceptional set
+```
+
+and `sign_not_one_query_of_levelSet : OneQueryLevelSet → ¬ ∃ T, fOcc T = 1 ∧ T = sign`, proved.
+
+**`OneQueryLevelSet` is not `OneQueryDichotomy`.** The dichotomy row asks whether a one-query
+*context* is eventually zero or eventually nonzero; `sign` is eventually constant, so it is
+compatible with the dichotomy and excluded by it never. Yesterday's narrative conflated the two —
+they now have separate names, separate ledger rows, and a reduction recorded as an **implication**,
+which cannot be mistaken for a discharge.
+
+Ledger: **16 rows → 17**. The section's own prose count moved with it — that sentence has been wrong
+before, and it is the kind of number this project has learned to update in the same commit that
+invalidates it.
+
+### What this does and does not unlock
+
+Does: the level-1 layer is now stated where the open questions actually live. `q_F^global(exp)`'s
+gap is the negative ray; `q_F(sign)`'s is a single bounded point. Neither is visible to an eventual
+statement, and both are visible to this one.
+
+Does not: any bound moves yet. Both sandwiches stay exactly where they were —
+`1 ≤ q_F(sign) ≤ 12`, `q_F^global(exp) ∈ {1,2}` — because the normal form is a *statement about
+shape*, not an obstruction. The obstruction is `OneQueryLevelSet`, and it is open.
+
+Gates: build 654 jobs, aggregator 651/957, claims 259, obligations **17 rows**, AxiomLedger 242
+pinned, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (f)
 
 ### `q_F(sign) ≤ 12` — the self-division was paying twice for a value it already knew
@@ -2723,6 +2779,7 @@ in commit archaeology:
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
+| `OneQueryLevelSet` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
 the first attempt returned consumers rather than dischargers, which is exactly the error the ledger

@@ -113,7 +113,7 @@ theorem sign_neg {x : Real} (h : x < 0) : Real.sign x = -1 := by
   show (if 0 < x then (1 : Real) else if x < 0 then -1 else 0) = -1
   rw [if_neg (not_lt_of_lt_zero h), if_pos h]
 
-private theorem one_ne_neg_one' : (1 : Real) ≠ -1 := by
+theorem one_ne_neg_one' : (1 : Real) ≠ -1 := by
   intro h
   -- `rw [h]` would rewrite BOTH ones; congrArg touches only the left summand
   have e1 := congrArg (fun z : Real => z + 1) h

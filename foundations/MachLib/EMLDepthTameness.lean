@@ -11327,7 +11327,7 @@ theorem depth3DecayExp_of_hard (h : Depth3DecayHard) : Depth3DecayExp := by
 
 /-! ### Obligations ledger
 
-Sixteen propositions in this corpus have been introduced as *named obligations* — stated so that a
+Seventeen propositions in this corpus have been introduced as *named obligations* — stated so that a
 partial result can be committed without overstating it. (It was four when the section was written;
 the count is `grep -c` over the table below, and the gate compares the table to the corpus, not to
 this sentence.) Their status, as of the last edit:
@@ -11350,6 +11350,7 @@ this sentence.) Their status, as of the last edit:
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | `EMLRationalGerm` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
+| `OneQueryLevelSet` | `EMLOneQueryGlobal` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of
 `exp a − log b` and how small it can be. The second is now a theorem, so what is left of that pair is
