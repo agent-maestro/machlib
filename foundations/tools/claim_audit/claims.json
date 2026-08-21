@@ -4854,6 +4854,69 @@
         "EvZeroF"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The global normal form. Registered with an EXACT forbid on the analytic axioms: the entry's whole point is that the finite exceptional set is reached algebraically, and AnalyticFiniteZeros was available and deliberately not used. If a later edit routes this through analysis, the claim must fail.",
+      "id": "zero-query-finite-exception-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`C₀` is globally rational outside a finite set — and it cost no analysis"
+      ],
+      "module": "MachLib.EMLZeroQueryNormalForm",
+      "theorem": "MachLib.zero_query_finite_exception_normal_form",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.analytic_finite_zeros"
+      ],
+      "conclusion_mentions": [
+        "pev"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The finite-roots theorem, the ingredient the corpus did not have. Same exact-forbids: synthetic division is the entire proof, and a regression to the analytic route would be invisible to a name-grep but not to the footprint.",
+      "id": "pev-finite-roots-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a coefficient list vanishes identically or its roots fit in an explicit finite list"
+      ],
+      "module": "MachLib.PevRoots",
+      "theorem": "MachLib.pev_zero_or_finite_roots",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.analytic_finite_zeros"
+      ],
+      "conclusion_mentions": [
+        "pev"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The exclusion shape. Registered because the prose says it is ready while the countertarget is not -- a claim about what is NOT yet closed still needs the theorem behind the first half to exist and be clean.",
+      "id": "two-infinite-levels-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a function with two\ndistinct levels, neither exhausted by any finite list, is not zero-query"
+      ],
+      "module": "MachLib.EMLZeroQueryNormalForm",
+      "theorem": "MachLib.not_zero_query_of_two_infinite_levels",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc"
+      ],
+      "hypotheses_count": 3
     }
   ]
 }

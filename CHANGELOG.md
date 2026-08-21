@@ -5,6 +5,76 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (a)
+
+### `C₀` is globally rational outside a finite set — and it cost no analysis
+
+`zero_query_finite_exception_normal_form` (`EMLZeroQueryNormalForm`):
+
+```
+fOcc T = 0  ⟹  ∃ finite E, ∃ P Q,  ∀ x ∉ E,  pev Q x ≠ 0  ∧  T(x) = pev P x / pev Q x
+```
+
+**Correcting yesterday's plan, which was wrong.** It said a `C₀` function is an eventual rational
+germ *and therefore* has finitely many discontinuities. That is a **global conclusion from an
+eventual theorem**: `RatGerm` controls a tail `x ≥ X` and says nothing below it, while `floor` and
+`mod` misbehave everywhere. `ratGerm_of_zero_query` cannot see the bounded part of the line, so it
+could never have supported the exclusion it was being recruited for.
+
+The threshold is gone. Totalisation's zeros do not have to be pushed past `X` — they have to be
+**named**, and there are only finitely many.
+
+### The missing ingredient was a finite-roots theorem, and the corpus had none
+
+`PevRoots`: **a coefficient list vanishes identically or its roots fit in an explicit finite list.**
+The global counterpart of `pev_dichotomy`, which is one-sided (`EvDom` bounds `|P|` only for
+`x ≥ X`).
+
+Proved by **synthetic division and nothing else** — `deflate r L`, Horner from the head, with
+
+```
+pev L x = (x − r) · pev (deflate r L) x + pev L r        for EVERY r, root or not
+```
+
+Stating the division algorithm without the root hypothesis is what keeps it a ring identity instead
+of a case analysis; `pev L r = 0` is used only at the call site. The head of `L` never enters the
+quotient, so the list gets exactly one shorter and the induction terminates on a length budget.
+
+**No analysis anywhere.** `AnalyticFiniteZeros` was available and was not used: measured footprints
+are 21 axioms for `pev_zero_or_finite_roots` and 28 for the normal form, with **no** derivative,
+continuity, Rolle or IVT axiom in either. `Classical.em` asks whether a root exists — genuinely
+undecidable — and adds nothing, since `Classical.choice` is already in every footprint here.
+
+### The exclusion, and why it is about level sets rather than continuity
+
+`zero_query_level_set`: **every level set of a zero-query function is finite, or is everything off
+the exceptional set.** `T(x) = c` off `E` says the polynomial `P − c·Q` vanishes; the dichotomy does
+the rest. No continuity is imported, and none is needed.
+
+`not_zero_query_of_two_infinite_levels` turns that into the countertarget shape: a function with two
+distinct levels, neither exhausted by any finite list, is not zero-query. `floor` is exactly that —
+`0` on `[0,1)`, `1` on `[1,2)`.
+
+Also: **"finite jump set" was the wrong invariant.** Under totalised division `1/x` is discontinuous
+at `0` with no finite one-sided limits, so it is not a jump. The right property is *continuous
+except at finitely many points*, and the level-set form is stronger and cheaper than either.
+
+### What this does NOT yet close, stated plainly
+
+**The corpus's `floor` is too weak to be the countertarget.** `Forge.lean` axiomatises it by
+bracketing only — `floor_le`, `lt_floor_add_one`, `floor_zero` — which does not pin `floor` to be
+constant on `[0,1)`; the axiom block's own docstring says the integer-valued facts are not derivable.
+So `floor` cannot presently be shown to have even one infinite level set. **The exclusion is ready
+and the countertarget is under-specified** — the remaining work is an axiom question about `floor`,
+not a theorem about `C₀`.
+
+This is the honest replacement for the atlas's *"modulo is outside because it is discrete; continuous
+primitives compose to continuous functions"*. That argument was never available here: `L_F` is
+totalised, and `x/x` is a finite term equal to `1` off zero and `0` at zero.
+
+Gates: build 650 jobs (was 648), aggregator 647/953, model, AxiomLedger 242 pinned, obligations 16,
+sorry-audit 1 allowlisted. `sorryAx` absent from all six new theorems, each `#print axioms`-checked.
+
 ## [Unreleased] — 2026-08-20 (ab)
 
 ### `log ∉ C₀` — the obligation is discharged, and the instrument was already there
