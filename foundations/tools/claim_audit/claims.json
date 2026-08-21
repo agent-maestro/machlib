@@ -4917,6 +4917,32 @@
         "fOcc"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The first C_0 exclusion actually instantiated. The exact-forbids pin the ROUTE twice: no floor axiom (the entry's claim is that the under-specified floor was NOT needed), and no analytic axiom (the argument is level sets, not continuity).",
+      "id": "sign-not-zero-query-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no `F`-free term of the language equals `Real.sign`,\nat any size"
+      ],
+      "module": "MachLib.EMLSignNotZeroQuery",
+      "theorem": "MachLib.sign_not_zero_query",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.floor",
+        "MachLib.Real.floor_le",
+        "MachLib.Real.lt_floor_add_one",
+        "MachLib.Real.floor_zero",
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "sign"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

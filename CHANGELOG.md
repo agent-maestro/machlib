@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (b)
+
+### The first exclusion at query level zero, and it is not `floor`
+
+`sign_not_zero_query` (`EMLSignNotZeroQuery`): **no `F`-free term of the language equals `Real.sign`,
+at any size.**
+
+The exclusion machinery landed this morning aimed at `floor`/`mod` and could not be *instantiated*
+there — this corpus axiomatises `floor` by bracketing only, so it cannot be shown to have even one
+infinite level set. Rather than add a `floor` axiom to make the target fit, the target was changed to
+one the corpus already pins completely.
+
+`Real.sign` is a **definition**, not an axiom:
+
+```
+sign x = if 0 < x then 1 else if x < 0 then −1 else 0
+```
+
+so its level sets are fixed by construction — `1` on the whole positive ray, `−1` on the whole
+negative ray. Two distinct levels, neither exhausted by any finite list, which is precisely what
+`not_zero_query_of_two_infinite_levels` consumes. **No new axiom**, and `#print axioms` confirms the
+result touches none of the `floor` axioms.
+
+The supporting lemma is the one that makes "infinitely many" usable in a corpus whose finiteness
+witness is a `List`: `list_two_sided_bound` — every finite list of reals has a bound it does not
+reach, on both sides.
+
+### What it says about the compiler
+
+`sign` is a Forge-emit primitive (the Perlin-noise gradient builtin), and `Forge.lean` records that
+it is "genuinely derived, not an opaque primitive" — a case split over a `Decidable` instance, adding
+no axiom. Both are true, and this theorem says what the case split costs:
+
+**`sign` cannot be compiled away into field operations.** Not with more nodes, not with a cleverer
+rational form. A backend targeting an `F`-free datapath must implement the comparison; it cannot
+arithmetise it. That is a statement about the emitted hardware, not only about the proof language.
+
+### No continuity anywhere
+
+The argument never mentions continuity, and could not: `L_F` is totalised, so its primitives are
+already discontinuous (`x/x` is a finite term equal to `1` off zero and `0` at zero). What does the
+work is that **a level set of a zero-query function is finite, or is everything off the exceptional
+set** — and a ray is neither.
+
+Gates: build 651 jobs, aggregator 648/954, claims 253, obligations 16, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted. `sorryAx` absent from all four new theorems.
+
 ## [Unreleased] — 2026-08-21 (a)
 
 ### `C₀` is globally rational outside a finite set — and it cost no analysis
