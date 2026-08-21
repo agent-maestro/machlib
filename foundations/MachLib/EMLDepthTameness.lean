@@ -11345,7 +11345,7 @@ partial result can be committed without overstating it. Their status, as of the 
 | `NegativeTranslationGrowingLeft` | `EMLDepthTameness` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | `EMLBasisOverhead` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | `EMLOneQueryForm` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
-| `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (nonconstant rational germ with a finite limit; both unbounded rates are theorems) |
+| `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of

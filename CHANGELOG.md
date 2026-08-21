@@ -5,6 +5,37 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (v)
+
+### The base transcendence theorem, named — and it was already free
+
+`exp_not_algebraic`: `exp` satisfies no polynomial relation with polynomial coefficients. One line
+from `not_algebraic_of_dominates_exp`.
+
+That matters for what it says about the *reduction*, not for its own sake. The bounded case runs
+`F` algebraic ⟹ `F′` algebraic ⟹ `exp = F′ − 1/u` algebraic — and its base case turns out to be a
+theorem already. **The missing step is differentiation-preserves-algebraicity, and nothing about
+`exp` or about `exp + log`.**
+
+### `BoundedGermTranscendence`, typed
+
+The ledger row now points at a Lean `def`, not prose. Boundedness stands in for "has a finite limit"
+— this corpus has no limits, and for a rational germ the two coincide. Nonconstancy is "not
+eventually equal to any constant", which `constant_germ_is_algebraic` shows cannot be dropped.
+
+### Specification instead of a sketch
+
+`monogate-research/exploration/bounded_germ_transcendence_2026_08_20/SPEC.md` costs the build:
+bivariate polynomial derivatives, the chain rule against `HasDerivAt`, **algebraic-over-a-field as a
+predicate with closure under the field operations**, and transitivity across `ℝ(S(x)) ⊆ ℝ(x)`. The
+third is the real cost and is reusable for every future transcendence question here.
+
+It also records why this residue is unlike the previous four. Each of those evaporated within an hour
+once the right invariant was chosen. This one cannot: every argument in the arc is an envelope
+argument, and **a bounded `F ∘ S` is indistinguishable from an algebraic function by any envelope** —
+the engine is absent, not weak. The note says so explicitly, so the next session does not spend its
+first hour hunting a fifth trick.
+
 ## [Unreleased] — 2026-08-20 (u)
 
 ### ⚠ Correction: `x ≤ S x` is a sufficient condition, not "the unbounded regime"
@@ -2036,7 +2067,7 @@ in commit archaeology:
 | `NegativeTranslationGrowingLeft` | **open** | — (bounded-left branch closed by `mirrorBand_not_depth_three_bounded_left`) |
 | `FQueryLowerBound` | **discharged** | `fQueryLowerBound_holds` (`EMLRationalGerm`) |
 | `OneQueryDichotomy` | **open** | — (the level-1 cancellation theorem; `pev_dichotomy` is its level-0 analogue) |
-| `BoundedGermTranscendence` | **open** | — (nonconstant rational germ with a finite limit; both unbounded rates are theorems) |
+| `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

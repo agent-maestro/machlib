@@ -4646,6 +4646,27 @@
         "False"
       ],
       "hypotheses_count": 3
+    },
+    {
+      "_comment": "The base case of the differential reduction. Registered because the prose's claim -- that the missing step is NOT about exp -- rests entirely on this being already proved.",
+      "id": "ftrans-exp-base-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`exp` satisfies no polynomial relation with polynomial coefficients"
+      ],
+      "module": "MachLib.EMLFTranscendence",
+      "theorem": "MachLib.exp_not_algebraic",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

@@ -535,4 +535,39 @@ theorem constant_germ_is_algebraic :
     show (1 + x * 0) * (1 * 1) + ((0 - 1) + x * 0 + 1 * 0) = 0
     mach_mpoly [x]
 
+/-! ## The base transcendence theorem, and the residue typed
+
+The reduction for the bounded case runs `F` algebraic ⟹ `F′` algebraic ⟹ `exp = F′ − 1/u` algebraic.
+Its base case is already here: `not_algebraic_of_dominates_exp` applies to `exp` itself, so **`exp`
+satisfies no polynomial relation with polynomial coefficients**. Naming it makes the dependency
+explicit — the missing step is differentiation-preserves-algebraicity, not anything about `exp`. -/
+
+/-- **`exp` is transcendental over the polynomial coefficients.** The base case the whole
+differential route reduces to, and it costs one line. -/
+theorem exp_not_algebraic (A : List Real) (Ls : List (List Real)) (hA : EvDom (pev A))
+    (hrel : ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipevLead A Ls x (exp x) = 0) : False :=
+  not_algebraic_of_dominates_exp zero_lt_one_ax
+    ⟨1, le_refl 1, fun x _ => by
+      have e : (1 : Real) * x = x := by mach_ring
+      rw [e]; exact le_refl _⟩ A Ls hA hrel
+
+/-- **The residue, typed.** A nonconstant rational germ that stays bounded — equivalently, one with
+a finite limit — should still make `F ∘ S` transcendental.
+
+Boundedness stands in for "has a finite limit": this corpus has no limits, and for a rational germ
+the two coincide. Nonconstancy is stated as *not eventually equal to any constant*, which is what
+`constant_germ_is_algebraic` shows cannot be dropped.
+
+**Open.** Both unbounded rates are theorems (`FS_not_algebraic_of_ge_linear`,
+`FS_not_algebraic_of_le_linear`) and the constant case is a counterexample, so this is the whole
+remaining gap. It is also the one case where growth has no purchase: a bounded `F ∘ S` is
+indistinguishable from an algebraic function by any envelope, which is why the route through
+differentiation is the one on offer. -/
+def BoundedGermTranscendence : Prop :=
+  ∀ S : Real → Real, RatGerm S →
+    (∃ K X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs (S x) ≤ K) →
+    (¬ ∃ c : Real, EvZeroF (fun x => S x - c)) →
+    ∀ (A : List Real) (Ls : List (List Real)), EvDom (pev A) →
+      ¬ ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → bipevLead A Ls x (Fbasis (S x)) = 0
+
 end MachLib
