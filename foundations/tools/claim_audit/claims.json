@@ -5101,6 +5101,28 @@
         "EvZeroF"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The signed trichotomy -- the shape the one-sided instruments consume. Registered with the analytic axioms forbidden because the entry's claim is that the WHOLE level-0 asymptotic classification (magnitude, degree, sign) is algebraic end to end.",
+      "id": "ratgerm-signed-trichotomy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The trichotomy now emits what the instruments take"
+      ],
+      "module": "MachLib.PevSignGerm",
+      "theorem": "MachLib.ratGermSignedTrichotomy_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct"
+      ],
+      "conclusion_mentions": [
+        "RatGermSignedTrichotomy"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

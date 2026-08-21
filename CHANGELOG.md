@@ -5,6 +5,50 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (k)
+
+### The trichotomy now emits what the instruments take
+
+`ratGermSignedTrichotomy_holds` (`PevSignGerm`). The lemma the previous entry said was missing, and
+said would be needed before any of this was usable:
+
+```
+RatGermSignedTrichotomy :  bounded  ∨  eventually c·x ≤ f x  ∨  eventually f x ≤ −(c·x)
+```
+
+Those two branches are exactly `FS_not_algebraic_of_ge_linear`'s and `FS_not_algebraic_of_le_linear`'s
+hypotheses. **The `F ∘ S` dispatch is now performable for every unbounded rational argument.**
+
+### Where the sign comes from
+
+Not from `f`. Nothing is known about `f` beyond the germ identity `f = P/Q`. It comes from `P` and
+`Q` **separately** — each decided by `pev_eventual_sign` — and is then combined through the quotient.
+The denominator cannot die (the germ hypothesis makes it eventually nonvanishing), so exactly four
+cases arise, and each fixes the sign of `f`.
+
+Three of the four are immediate. `p < 0, q < 0` is not: it goes through `p/q = (−p)/(−q)` by cross
+multiplication (`div_eq_div_of_cross`, since `p·(−q) = (−p)·q`), after which both arguments are
+positive.
+
+`ratGerm_eventual_sign` is the reusable half — **a rational germ eventually has a constant sign** —
+and it is worth having on its own, independent of the trichotomy.
+
+**34 axioms, no derivative, continuity, Rolle or IVT axiom, `sorryAx` absent.** The entire level-0
+asymptotic classification — magnitude, degree comparison, and now sign — is algebraic end to end.
+
+### What this does and does not change
+
+Does: `Q3`'s step 3 can be dispatched. An unbounded rational `S` now lands on a *proved* instrument
+instead of on an absolute value that fits neither.
+
+Does not: **`Q3`'s cost is still two open rows.** `BoundedGermTranscendence` still owns the bounded
+branch, and `OneQueryDichotomy` still owns the `N/D` collapse at step 1. Nothing about
+`q_F(sign) ≥ 2` has moved. What moved is that the *third* obstruction, added and then removed today,
+is genuinely gone rather than replaced by its own missing lemma.
+
+Gates: build 657 jobs, aggregator 654/960, claims 262, obligations 18 rows, AxiomLedger 242 pinned —
+unchanged across all twelve of today's results — sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (j)
 
 ### The trichotomy was not yet usable, and saying so is the point of this entry
