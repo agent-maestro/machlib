@@ -896,6 +896,30 @@ def self_test() -> int:
     return 1
 
 
+def tree_fingerprint() -> str:
+    """HEAD plus the dirty-worktree state, as one string.
+
+    A gate certifies a REPOSITORY STATE, not a work session. This audit takes ~12 minutes, and on
+    2026-08-21 it was twice launched before an edit and read afterwards as though it had covered
+    the edit — once reporting 261 claims for a tree that had 262. Both times the verdict was
+    green and both times it was about a tree that no longer existed.
+
+    So the fingerprint is taken at the start and re-taken at the end. If it moved, the result does
+    not bind and the exit code says so (2 = UNAVAILABLE, never a pass).
+    """
+    try:
+        head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True,
+                              text=True, timeout=30)
+        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True,
+                               text=True, timeout=60)
+        if head.returncode != 0 or dirty.returncode != 0:
+            return ""
+        return head.stdout.strip() + "\n" + hashlib.sha256(
+            dirty.stdout.encode("utf-8")).hexdigest()
+    except Exception:                                        # noqa: BLE001
+        return ""
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="MachLib prose-claim auditor.")
     ap.add_argument("--self-test", action="store_true",
@@ -917,7 +941,24 @@ def main() -> int:
     if args.self_test:
         rc |= self_test()
     claims = json.load(open(args.registry, encoding="utf-8"))["claims"]
+    before = tree_fingerprint()
     rc |= audit(claims)
+    after = tree_fingerprint()
+    # Bind the verdict to the tree it inspected. Unreadable fingerprints are reported, not ignored:
+    # a gate that cannot tell you WHAT it certified has not certified anything.
+    if not before or not after:
+        print(f"{YELLOW}[tree-binding] UNAVAILABLE: could not fingerprint the worktree; "
+              f"this verdict is not bound to a tree state.{RST}")
+        return 2
+    if before != after:
+        print(f"{RED}{BOLD}[tree-binding] STALE{RST}  {RED}the worktree changed while the audit "
+              f"ran — this verdict describes the tree as it was {len(claims)} claims ago, not the "
+              f"one on disk now. Re-run before trusting it.{RST}")
+        print(f"{DIM}    audited  {before.splitlines()[0]}\n    current  "
+              f"{after.splitlines()[0]}{RST}")
+        return 2
+    print(f"{DIM}[tree-binding] verdict bound to {before.splitlines()[0][:12]} "
+          f"(worktree unchanged during the run){RST}")
     return rc
 
 

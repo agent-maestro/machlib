@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (l)
+
+### The claim audit now names the tree it certified
+
+`tools/claim_audit/claim_audit.py` fingerprints the worktree (`HEAD` plus a hash of
+`git status --porcelain`) **before and after** the run. If it moved, the verdict does not bind and
+the gate exits **2** — UNAVAILABLE, never a pass — printing both fingerprints. An unreadable
+fingerprint is also exit 2: *a gate that cannot tell you what it certified has not certified
+anything.*
+
+**Earned, not speculative.** The audit takes ~12 minutes, and twice today it was launched in the
+background before an edit and read afterwards as though it had covered the edit. The second time it
+reported **261 claims for a tree that had 262** — green, and about a tree that no longer existed.
+Nothing was wrong with the gate; the mistake was attaching its verdict to work done after it started.
+
+> **A gate certifies a repository state, not a work session.**
+
+Validated deterministically rather than by a timed race: two consecutive fingerprints are equal
+(control, silent), touching one file makes them differ (specimen, fires), removing it restores
+equality. The passing path now prints
+`[tree-binding] verdict bound to 1067cc1c… (worktree unchanged during the run)`.
+
+### Level 0 is finished as infrastructure
+
+With today's twelve results the zero-query layer has the full complement one wants *before* attacking
+the next one:
+
+```
+normal form · finite roots · level sets · leading order · magnitude · eventual sign
+```
+
+**All of it algebraic.** `AnalyticFiniteZeros`, Rolle and the IVT were available throughout and used
+**zero** times; the axiom ledger reads 242 at the start of the day and 242 at the end. That is not a
+coincidence of easy problems — three separate results had an obvious analytic route that was
+available and declined.
+
+The next session's plan is written and committed
+(`monogate-research/exploration/level1_hostile_spec_2026_08_21/NEXT.md`): **classify bounded rational
+germs by finite limit and leading inverse-power term** — not a transcendence theorem. The signed
+trichotomy removed the entire unbounded regime, so the hard core, if there is one, is now cornered
+rather than merely named.
+
+Gates: build 657 jobs, aggregator 654/960, claims 262 (**verdict tree-bound**), obligations 18 rows,
+AxiomLedger 242 pinned, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (k)
 
 ### The trichotomy now emits what the instruments take
