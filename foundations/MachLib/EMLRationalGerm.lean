@@ -96,7 +96,7 @@ theorem div_pos' {a b : Real} (ha : 0 < a) (hb : 0 < b) : 0 < a / b := by
   rw [div_def a b (ne_of_gt hb)]
   exact mul_pos ha (one_div_pos_of_pos hb)
 
-private theorem abs_pos_of_ne {c : Real} (h : c ≠ 0) : 0 < abs c := by
+theorem abs_pos_of_ne {c : Real} (h : c ≠ 0) : 0 < abs c := by
   rcases lt_total 0 c with hc | hc | hc
   · rw [abs_of_nonneg (le_of_lt hc)]; exact hc
   · exact absurd hc.symm h
@@ -112,7 +112,7 @@ private theorem abs_pos_of_ne {c : Real} (h : c ≠ 0) : 0 < abs c := by
     rw [l, r] at v; exact v
 
 /-- `|b| − |a| ≤ |a + b|`, the reverse triangle inequality in the form the induction uses. -/
-private theorem abs_add_ge {a b : Real} : abs b - abs a ≤ abs (a + b) := by
+theorem abs_add_ge {a b : Real} : abs b - abs a ≤ abs (a + b) := by
   have h : abs b ≤ abs (a + b) + abs a := by
     have h2 := abs_add (a + b) (-a)
     rw [abs_neg] at h2

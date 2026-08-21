@@ -5055,6 +5055,28 @@
         "sign"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The residue that blocked three arcs. Exact-forbids pin the ROUTE: the entry's claim is that sharp leading behaviour is reachable by pure polynomial algebra, and an analytic axiom appearing here would falsify exactly that.",
+      "id": "ratgerm-trichotomy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "A rational germ is eventually bounded, or eventually grows at least linearly"
+      ],
+      "module": "MachLib.PevLeading",
+      "theorem": "MachLib.ratGermTrichotomy_holds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct"
+      ],
+      "conclusion_mentions": [
+        "RatGermTrichotomy"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

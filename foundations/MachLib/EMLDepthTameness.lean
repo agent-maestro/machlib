@@ -11350,7 +11350,7 @@ this sentence.) Their status, as of the last edit:
 | `BoundedGermTranscendence` | `EMLFTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | `EMLRationalGerm` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | `EMLZeroQueryBarrier` | **discharged** | `fQueryLowerBoundDivFree_holds` |
-| `RatGermTrichotomy` | `EMLRationalGerm` | **open** | — (bounded or at-least-linear; the missing ingredient in three separate arcs) |
+| `RatGermTrichotomy` | `EMLRationalGerm` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
 | `OneQueryLevelSet` | `EMLOneQueryGlobal` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
 
 `SignHardCase` and `Depth3DecayExp` were the two **cancellation** statements — the sign of

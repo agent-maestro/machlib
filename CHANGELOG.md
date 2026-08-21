@@ -5,6 +5,64 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (i)
+
+### `RatGermTrichotomy` discharged — the residue that blocked three arcs was one induction away
+
+`ratGermTrichotomy_holds` (`PevLeading`). Ledgered **open** an hour ago on its third sighting;
+**discharged** now. A rational germ is eventually bounded, or eventually grows at least linearly.
+
+**The fix was not a new idea. It was proving two old ones together.**
+
+`pev_dichotomy` gives *some* `k` with `c·xᵏ ≤ |P|`. `pev_envelope` gives *some* `N` with
+`|P| ≤ C·xᴺ`. Neither is the degree, and `k ≤ N` in general — so the quotient `|P|/|Q|` sits between
+`x^{k_P − N_Q}` and `x^{N_P − k_Q}`, and when those straddle zero the germ is shown neither bounded
+nor linear. That looseness is precisely what three separate arcs each routed around.
+
+`pev_leading_form` runs **one** induction and emits **one** exponent with both bounds:
+
+```
+pev L eventually zero,  or  ∃ c C d,  c·x^d ≤ |pev L x| ≤ C·x^d   eventually
+```
+
+The lower half is `pev_dichotomy`'s absorption argument unchanged. The upper half is *free on the
+same induction* — `|a + x·P| ≤ |a| + C·x^{d+1} ≤ (|a| + C)·x^{d+1}` for `x ≥ 1`. **The two halves were
+always provable together; they had simply been proved apart**, in two theorems written months apart
+for two different consumers, and nobody had needed them to share an exponent until now.
+
+No degree is ever defined. `d` is produced by the induction — incremented at each `cons` whose tail
+dominates, `0` where the tail dies and the head does not — which *is* the degree, with no
+`List.length` detour and no trailing-zero bookkeeping.
+
+### And then the trichotomy is a `Nat` comparison
+
+With one exponent on each of `P` and `Q`, `Nat.lt_or_ge dP (dQ + 1)` splits it:
+
+* `dP ≤ dQ` — `x^{dP} ≤ x^{dQ}` for `x ≥ 1`, quotient at most `C_P/c_Q`, **bounded**;
+* `dQ + 1 ≤ dP` — `x·x^{dQ} ≤ x^{dP}`, quotient at least `(c_P/C_Q)·x`, **at least linear**.
+
+No subtraction of exponents anywhere, which is what keeps it out of `Nat`-subtraction trouble.
+
+**34 axioms, no analytic content** — no derivative, continuity, Rolle or IVT axiom. `sorryAx` absent
+from both new theorems, each checked individually. The corpus keeps confirming that this flavour of
+polynomial algebra goes through without touching analysis.
+
+### What it unblocks
+
+The three arcs that named it:
+
+1. **`EMLLogNotRational`'s "inverting through `exp`" route** — its docstring calls this *"exactly the
+   missing fact"*. That route is now unblocked (the arc itself was already closed by the `x = exp t`
+   substitution, so this is an alternative proof, not a new result).
+2. **The first `LogQueryLowerBound` attempt**, which wanted the asymptotic form of a germ rather than
+   the envelope.
+3. **Q3 / `q_F(sign) ≥ 2`** — the dispatch onto the four `F ∘ S` instruments can now be performed.
+   **Q3's cost drops from three open rows to two**: `OneQueryDichotomy` and
+   `BoundedGermTranscendence`.
+
+Gates: build 655 jobs, aggregator 652/958, claims 260, obligations 18 rows (`RatGermTrichotomy`
+open → **discharged**), AxiomLedger 242 pinned, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (h)
 
 ### Q3 traced to the end: `q_F(sign) ≥ 2` costs three open rows, and one of them is new
@@ -2837,7 +2895,7 @@ in commit archaeology:
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
-| `RatGermTrichotomy` | **open** | — (bounded or at-least-linear; the missing ingredient in three separate arcs) |
+| `RatGermTrichotomy` | **discharged** | `ratGermTrichotomy_holds` (`PevLeading`) |
 | `OneQueryLevelSet` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —
