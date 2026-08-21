@@ -346,6 +346,7 @@ import MachLib.EMLBipevTrim
 import MachLib.EMLLogNotRational
 import MachLib.PevRoots
 import MachLib.PevLeading
+import MachLib.PevSign
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

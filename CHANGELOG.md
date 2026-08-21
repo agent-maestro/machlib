@@ -5,6 +5,54 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (j)
+
+### The trichotomy was not yet usable, and saying so is the point of this entry
+
+`RatGermTrichotomy` gives `c·x ≤ |f x|`. The instruments it was built to dispatch onto are
+**one-sided**:
+
+```
+FS_not_algebraic_of_ge_linear    needs   c·x ≤ S x
+FS_not_algebraic_of_le_linear    needs   S x ≤ −(c·x)
+```
+
+An absolute-value bound feeds **neither**. Discharging the row did not make the dispatch possible,
+and noticing that an hour later is better than discovering it inside a proof that was supposed to
+consume it.
+
+### The missing ingredient, proved without the IVT
+
+`pev_eventual_sign`: **eventually a coefficient list has a constant sign**, with a dominating bound
+on that side — three-way where `pev_dichotomy` is two-way.
+
+The tempting proof is analytic: `|pev L x| ≥ c·x^d > 0` on a tail, so `pev L` does not vanish there,
+and a nonvanishing continuous function has constant sign. That is the intermediate value theorem, and
+it would put an analytic axiom into the footprint of **every** consumer of the trichotomy — after a
+level-0 development that has stayed clear of one throughout.
+
+The algebraic proof is one induction, and it is `pev_dichotomy`'s absorption **with the absolute value
+simply not taken**: at `a :: as`, once `x` is past `2|a|/c₀`, the tail term `x·pev as x` exceeds `|a|`
+in magnitude and therefore **decides the sign** of `a + x·pev as x`. Sign propagates outward from the
+top coefficient — which is what "eventually the leading term wins" has always meant, and the absolute
+value in `pev_dichotomy` was hiding it rather than needing it.
+
+**34 axioms, no derivative, continuity, Rolle or IVT axiom, `sorryAx` absent.** Third theorem today
+whose obvious analytic route was available and not taken.
+
+### What is NOT claimed
+
+**The germ-level signed trichotomy is not built.** `pev_eventual_sign` is the polynomial-level fact;
+assembling it into *"a rational germ is eventually bounded, or eventually `≥ c·x`, or eventually
+`≤ −c·x`"* needs the four-way sign combination for `P/Q`, which is easy and is **not done**. Until it
+is, the dispatch still cannot be performed, and `Q3`'s cost is unchanged at two open rows.
+
+Stated because "the trichotomy is now usable" is the sentence that wants writing here, and it would
+be false by one lemma.
+
+Gates: build 656 jobs, aggregator 653/959, claims 261, obligations 18 rows, AxiomLedger 242 pinned — unchanged
+across all eleven of today's results — sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (i)
 
 ### `RatGermTrichotomy` discharged — the residue that blocked three arcs was one induction away

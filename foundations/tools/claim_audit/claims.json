@@ -5077,6 +5077,30 @@
         "RatGermTrichotomy"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The sign fact, proved WITHOUT the intermediate value theorem. The exact-forbids are the whole claim: the entry says the analytic route was available and not taken, and an IVT or continuity axiom appearing in this footprint would falsify exactly that.",
+      "id": "pev-eventual-sign-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "eventually a coefficient list has a constant sign"
+      ],
+      "module": "MachLib.PevSign",
+      "theorem": "MachLib.pev_eventual_sign",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.hasDerivAt_continuousAt",
+        "MachLib.Real.rolle_ct",
+        "MachLib.Real.intermediate_value"
+      ],
+      "conclusion_mentions": [
+        "pev",
+        "EvZeroF"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
