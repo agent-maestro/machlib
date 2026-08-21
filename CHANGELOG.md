@@ -5,6 +5,64 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (h)
+
+### Q3 traced to the end: `q_F(sign) ≥ 2` costs three open rows, and one of them is new
+
+Not a theorem — a **trace**. The rule the spec set was *trace the proof, do not guess the
+obligation*, and following `q_F(sign) ≥ 2` to the end of the argument found three stopping points
+where the prediction had one.
+
+`T` one-query and equal to `sign`; the global normal form gives `T(x) = C(x, F(S(x)))` off a finite
+set. If `T = 1` on the positive ray then `Σⱼ pⱼ(x)·F(S(x))ʲ = 0` there; kill the relation, descend to
+every `pⱼ ≡ 0`, conclude `T = 1` off a finite set, contradict at `x = −1`. **Step 4 is only available
+because the normal form went global this evening** — the eventual version cannot take it.
+
+**Where it stops:**
+
+* **`OneQueryDichotomy`, at step 1.** Writing `C` as `N/D` is exactly the collapse the corpus refuses
+  to assume — denominators are functions of `x` *and* `F(S(x))`. **This refines yesterday's
+  correction rather than reversing it**: the dichotomy does not *give* the bound (`sign` is eventually
+  constant, so it excludes nothing on its own), but it is an **ingredient**. Neither "the missing
+  theorem" nor "irrelevant" was right.
+* **`RatGermTrichotomy`, at step 3 — new, and the reason for this entry.** The `F ∘ S` instruments
+  come in four cases (grows, decays, bounded, constant), and dispatching an arbitrary rational `S`
+  onto them requires knowing *which case it is in*.
+* **`BoundedGermTranscendence`**, behind that dispatch — the one the prediction called.
+
+### `RatGermTrichotomy` — a residue on its third sighting
+
+> A rational germ is eventually bounded, or eventually grows at least linearly. Nothing between.
+
+Ledgered **open** (17 rows → 18). Named because it has been the missing ingredient **three separate
+times in three unrelated arcs**: the first `LogQueryLowerBound` attempt, the "inverting through `exp`"
+route in `EMLLogNotRational` (where it is *"exactly the missing fact"*), and now Q3. A residue that
+recurs across arcs is one that should have a name, and this corpus's own convention says so.
+
+Why it is not free: `pev_dichotomy` gives *some* `k` with `c·xᵏ ≤ |P|`, `pev_envelope` *some* `N` with
+`|P| ≤ C·xᴺ`, and `k ≤ N` with neither being the degree. Bounded-versus-linear needs actual leading
+behaviour — a degree/leading-coefficient development the corpus does not have. Three arcs each routed
+around it, which is the signature of a real gap rather than an oversight.
+
+### The prediction, scored honestly
+
+The spec predicted Q3 would run into `BoundedGermTranscendence` *"rather than needing something new"*.
+**Half right, and the wrong half is the informative one.** That row does appear — but *behind* a
+dispatch that cannot be performed, and the dispatcher is a fourth thing rather than a corollary of
+the three. `OneQueryDichotomy` also re-entered, having been written off.
+
+### The recommendation this produces
+
+**Do not attack Q3.** Three stacked open obligations is not a target, it is a reason to pick another.
+
+`RatGermTrichotomy` is the entry worth building: it is elementary, it lives at **level 0** where the
+machinery is strong, and it blocks three arcs at once. Sharpening `pev_dichotomy` from *"some `k`"* to
+*"the top nonzero coefficient"* would likely discharge it — ordinary polynomial algebra of exactly
+the kind `PevRoots` turned out to be, and that took one session with no analysis.
+
+Gates: build 654 jobs, aggregator 651/957, claims 259, obligations **18 rows**, AxiomLedger 242
+pinned, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (g)
 
 ### Level 1 goes global, and the threshold comes off for free
@@ -2779,6 +2837,7 @@ in commit archaeology:
 | `BoundedGermTranscendence` | **open** | — (typed; both unbounded rates are theorems, constant `S` is a counterexample) |
 | `LogQueryLowerBound` | **discharged** | `logQueryLowerBound_holds` (`EMLLogNotRational`) |
 | `FQueryLowerBoundDivFree` | **discharged** | `fQueryLowerBoundDivFree_holds` |
+| `RatGermTrichotomy` | **open** | — (bounded or at-least-linear; the missing ingredient in three separate arcs) |
 | `OneQueryLevelSet` | **open** | — (the level-1 analogue of `zero_query_level_set`; `q_F(sign) ≥ 2` reduces to it, NOT to `OneQueryDichotomy`) |
 
 Checked by grepping for theorems whose *conclusion* is each proposition, not merely mentions —

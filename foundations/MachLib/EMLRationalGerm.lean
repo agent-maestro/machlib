@@ -808,6 +808,33 @@ that is eventually **constant** cannot be `log`, because `log` is unbounded abov
 subsumed by `log_not_ratGerm`, and kept because a one-line special case that needs no substitution
 is worth having next to the general argument. -/
 
+/-- **Named obligation: the growth trichotomy for rational germs.** A rational germ is eventually
+bounded, or eventually grows at least linearly in absolute value. Nothing in between.
+
+Stated because it has now been the missing ingredient **three separate times**, in three unrelated
+arcs, and a residue that recurs is a residue that should have a name:
+
+1. the first `LogQueryLowerBound` attempt — *"ruling `log` out of `C₀` needs the asymptotic form of a
+   rational germ rather than the envelope: a rational germ is bounded or grows at least linearly, and
+   `log` is unbounded and sublinear"*. That route was later bypassed by the `x = exp t` substitution,
+   so the fact was never built;
+2. the "inverting through `exp`" route in `EMLLogNotRational`, where it is exactly the circularity —
+   *"unbounded rational germ ⟹ at least linear is exactly the missing fact"*;
+3. tracing `q_F(sign) ≥ 2`: the algebraic instruments for `F ∘ S` come in a growing branch
+   (`FS_not_algebraic_of_ge_linear`), a decaying branch (`..._of_le_linear`), a bounded branch
+   (`BoundedGermTranscendence`, open) and a constant counterexample
+   (`constant_germ_is_algebraic`). Dispatching an arbitrary one-query argument onto them needs
+   exactly this trichotomy to know which branch applies.
+
+Why it is not free: `pev_dichotomy` gives *some* `k` with `c·xᵏ ≤ |P|` and `pev_envelope` gives
+*some* `N` with `|P| ≤ C·xᴺ`, and `k ≤ N` without either being the degree. Deciding bounded-versus-
+linear needs the **actual leading behaviour**, which is a degree/leading-coefficient development the
+corpus does not have. That is why three arcs have each preferred to route around it. -/
+def RatGermTrichotomy : Prop :=
+  ∀ f : Real → Real, RatGerm f →
+    (∃ K X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → abs (f x) ≤ K)
+    ∨ (∃ c X : Real, 0 < c ∧ 1 ≤ X ∧ ∀ x : Real, X ≤ x → c * x ≤ abs (f x))
+
 /-- **Named obligation: `log ∉ C₀`.** The `log` analogue of `FQueryLowerBound` — computing `log`
 costs at least one `F`-query, equivalently `log` is not an eventual rational function.
 
