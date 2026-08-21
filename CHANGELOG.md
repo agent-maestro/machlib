@@ -28,12 +28,27 @@ a pattern: `A/A` is the reflex for "indicator of `A ≠ 0`", and whenever `A`'s 
 ### What the remaining gap is made of
 
 `1 ≤ q_F(sign) ≤ 12`, and the two ends are not the same kind of uncertainty. The upper bound is a
-construction and might still come down. **The lower bound needs the level-1 cancellation theorem** —
-`OneQueryDichotomy`, an open ledger row — which is also exactly what leaves
-`q_F^global(exp) ∈ {1, 2}`.
+construction and might still come down. The lower bound needs level-1 machinery.
 
-So one open obligation now stands under two sandwiches. That is a better reason to attack it than it
-had this morning, when it was a row in a table.
+**[CORRECTED, same day.] This paragraph originally named `OneQueryDichotomy` as the missing theorem
+for both this lower bound and `q_F^global(exp) ∈ {1,2}`, and called it "one obstruction under two
+sandwiches". That is wrong, and wrong in the exact way this morning's rung-1 plan was wrong.**
+
+`OneQueryDichotomy` asks whether a one-query context is **eventually** zero or **eventually**
+nonzero, and `one_query_normal_form` is itself eventual (`CtxAppliesEv … X`). `sign` is eventually
+*constant* on the positive ray — an eventual dichotomy is perfectly compatible with it and excludes
+nothing. Nor does it serve `exp`: `q_F^eventual(exp) = 1` is already settled by `EFone`, and what
+remains open is the *negative* ray, which an eventual statement cannot see either.
+
+So **the eventual level-1 obligation serves neither sandwich.** What both need is the **global**
+level-1 normal form — the analogue of `zero_query_finite_exception_normal_form` one level up, with a
+finite exceptional set rather than a threshold. That is a different theorem from the ledger row, and
+attaching an implied consumer to a row whose statement does not support it is how a residue quietly
+acquires jobs it cannot do.
+
+Second time today the same error: a global conclusion drawn from an eventual theorem, at level 0 this
+morning and at level 1 this evening. The rung-1 build is the template for the fix, not just a
+neighbour of it.
 
 Gates: build 653 jobs, aggregator 650/956, claims 257, AxiomLedger 242 pinned — unchanged across all
 six results today — obligations 16, sorry-audit 1 allowlisted. Figures read off the run.
