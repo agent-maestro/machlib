@@ -4740,6 +4740,24 @@
       "proof_uses": [
         "Fbasis_of_nonpos"
       ]
+    },
+    {
+      "_comment": "The repaired equality. Registered on the BICONDITIONAL, because the audit finding was precisely that only one inclusion existed while the prose said '='.",
+      "id": "c0-biconditional-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "giving `zero_query_of_ratGerm` and the\nbiconditional `zero_query_iff_ratGerm`"
+      ],
+      "module": "MachLib.EMLRationalGerm",
+      "theorem": "MachLib.zero_query_iff_ratGerm",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "RatGerm",
+        "fOcc"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

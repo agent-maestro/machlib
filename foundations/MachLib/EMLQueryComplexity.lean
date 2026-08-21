@@ -332,4 +332,19 @@ three impossibility guesses in one day and refuted all three, so the sharper sta
 does not suffice* — is recorded as a conjecture with no supporting theorem.
 -/
 
+/-! ## ⚠ `C_k` is measure-dependent from `k = 1` onward
+
+`fOcc` counts syntax-tree occurrences; `FQueriesLe` bounds distinct evaluation-DAG queries. They are
+**not** interchangeable, and the divergence starts immediately, not at some large `k`.
+
+`F(x)·F(x)` needs two `F` nodes in a tree — `FTerm` has no sharing — while an evaluator queries the
+oracle once. So the tree-`C₁` and DAG-`C₁` **function classes differ**, and every `C_k` statement
+must name its measure.
+
+Everything in this development uses `fOcc`, the tree measure. Where the two agree the results
+transfer: `fOcc T = 0 ↔ fArgs T = []` (`fOcc_zero_iff_fArgs_nil`), so `C₀` is the same class in both,
+and the witnesses used for `q_F(exp) = 1` and `C₀ ⊊ C₁` have one `F` node each, hence the same count
+either way. The general hierarchy does not transfer, and `fOcc_EFall` versus `FQueriesLe_toFTermFast`
+already shows the gap is exponential in depth. -/
+
 end MachLib

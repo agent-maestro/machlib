@@ -5,6 +5,55 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (y)
+
+### Hostile audit of the `L_F` arc — two attacks land, four fail
+
+Run against the brief "assume this is notation wrapped around elementary identities; try to collapse
+it."
+
+**FAILS — the lower bounds are semantic, not construction-specific.** `fQueryLowerBound_holds`,
+`fQueryLowerBound_eventual` and `zero_query_lt_one_query_full` all quantify `∀ T : FTerm` over every
+term computing the target. They are statements about the function, not about a representation I
+happened to pick.
+
+**FAILS — the generator family does not trivialise `F`.** `Fmix` is an affine mixture of the *same
+two primitives*, not an arbitrary function. `F` is shown non-canonical, not arbitrary.
+
+**FAILS — the eventual/global distinction is stated, not hidden.** It is exactly what separates
+`q_F^eventual(exp) = 1` from `q_F^global(exp) ∈ {1,2}`, and `EFone_fails_globally` is the witness.
+
+**FAILS — `sorryAx` and axiom-witness status hold**, checked in (x).
+
+**LANDS — `C₀` = eventual rational germs was an overclaim.** Only `ratGerm_of_zero_query` (⊆) existed;
+the converse was never proved. Repaired: `pevTerm` realises a coefficient list as an `F`-free term
+(Horner *is* field operations on constants and the variable), giving `zero_query_of_ratGerm` and the
+biconditional `zero_query_iff_ratGerm`. The `=` is now earned.
+
+**LANDS — `C_k` is measure-dependent from `k = 1`, not from some large `k`.** `F(x)·F(x)` needs two
+`F` nodes in a tree — `FTerm` has no sharing — and one oracle query in a DAG. So tree-`C₁` and
+DAG-`C₁` are **different function classes**, and every `C_k` statement must name its measure.
+
+Everything here uses `fOcc`, the tree measure. Where the measures agree the results transfer:
+`fOcc T = 0 ↔ fArgs T = []`, so `C₀` is the same class in both, and the witnesses for
+`q_F(exp) = 1` and `C₀ ⊊ C₁` have one `F` node each. The general hierarchy does **not** transfer, and
+`fOcc_EFall` versus `FQueriesLe_toFTermFast` already puts the gap at exponential in depth.
+
+### `C₁ ⊊ C₂` — the proposed witness is gone
+
+Both muses suggested proving `exp ∉ C₁` globally and `exp ∈ C₂` by the decoder. **`exp ∈ C₁`
+eventually** kills that: `1/F(−x)` is a one-query term. What survives is the *global* question, where
+`EFone` genuinely fails and `EFneg` genuinely works — but a global separation needs a global lower
+bound, and every lower bound here is eventual. **No candidate witness for `C₁ ⊊ C₂` currently
+exists**, in either measure. Recorded rather than left as an assumed next step.
+
+### Hold on Paper I
+
+No `L_F` claim is cited in the finite-depth manuscript, and none should be for a week — the arc is
+two days old with 77 commits and no cold review. The pairing the muses describe (Paper I: complexity
+in the EML basis; Paper II: what survives a change of basis) is the right shape, and Paper I needs at
+most one sentence pointing at it.
+
 ## [Unreleased] — 2026-08-20 (x)
 
 ### Literature placement, first pass — and the nearest prior art is ours
@@ -442,6 +491,9 @@ fOcc T = 0  ⟹  T is an eventual rational germ  ⟹  polynomially bounded  ⟹ 
 upgrades the strict separation `C₀ ⊊ C₁` to the whole language.
 
 ### `C₀` = eventual rational germs
+
+> **⚠ Only the ⊆ direction was proved when this was written — repaired 2026-08-20 (y).**
+> `zero_query_of_ratGerm` and `zero_query_iff_ratGerm` now supply the converse, so the `=` is earned.
 
 `ratGerm_of_zero_query` — every `F`-free term, **division included**, agrees from some point on with
 `P(x)/Q(x)` for coefficient lists `P`, `Q` with `Q` nonvanishing there.

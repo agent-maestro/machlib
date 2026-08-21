@@ -742,4 +742,54 @@ theorem divTower_ratGerm : RatGerm (FTerm.eval divTower) :=
 theorem divTower_ne_exp : ¬ (∀ x : Real, FTerm.eval divTower x = exp x) :=
   polyEnvelope_ne_exp (polyEnvelope_of_ratGerm divTower_ratGerm)
 
+/-! ## The converse inclusion — `C₀` really is the rational germs
+
+`ratGerm_of_zero_query` is one inclusion only. Written as "`C₀` **=** eventual rational germs" it was
+an overclaim until the other direction existed: every rational germ must itself be computed by a
+zero-query term. It is, and the witness is direct — `pev` is Horner, which is field operations on
+constants and the variable, so it *is* an `F`-free term. -/
+
+/-- A coefficient list as an `F`-free term, in Horner form. -/
+noncomputable def pevTerm : List Real → FTerm
+  | []      => FTerm.const 0
+  | c :: cs => FTerm.add (FTerm.const c) (FTerm.mul FTerm.var (pevTerm cs))
+
+theorem fOcc_pevTerm : ∀ L : List Real, fOcc (pevTerm L) = 0 := by
+  intro L
+  induction L with
+  | nil => rfl
+  | cons c cs ih => show 0 + (0 + fOcc (pevTerm cs)) = 0; rw [ih]
+
+theorem pevTerm_eval : ∀ (L : List Real) (x : Real), FTerm.eval (pevTerm L) x = pev L x := by
+  intro L
+  induction L with
+  | nil => intro _; rfl
+  | cons c cs ih =>
+      intro x
+      show c + x * FTerm.eval (pevTerm cs) x = c + x * pev cs x
+      rw [ih x]
+
+/-- **Every eventual rational germ is zero-query.** With `ratGerm_of_zero_query` this makes
+`C₀ = eventual rational germs` an equality rather than an inclusion. -/
+theorem zero_query_of_ratGerm {f : Real → Real} (h : RatGerm f) :
+    ∃ T : FTerm, fOcc T = 0 ∧ ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → FTerm.eval T x = f x := by
+  obtain ⟨P, Q, X, hX, hQ, he⟩ := h
+  refine ⟨FTerm.div (pevTerm P) (pevTerm Q), ?_, X, hX, fun x hx => ?_⟩
+  · show fOcc (pevTerm P) + fOcc (pevTerm Q) = 0
+    rw [fOcc_pevTerm, fOcc_pevTerm]
+  · show FTerm.eval (pevTerm P) x / FTerm.eval (pevTerm Q) x = f x
+    rw [pevTerm_eval, pevTerm_eval, he x hx]
+
+/-- **`C₀` = eventual rational germs**, both inclusions. -/
+theorem zero_query_iff_ratGerm (f : Real → Real) :
+    (∃ T : FTerm, fOcc T = 0 ∧ ∃ X : Real, 1 ≤ X ∧ ∀ x : Real, X ≤ x → FTerm.eval T x = f x)
+    ↔ RatGerm f := by
+  constructor
+  · rintro ⟨T, h0, X, hX, he⟩
+    obtain ⟨P, Q, Y, hY, hQ, hg⟩ := ratGerm_of_zero_query T h0
+    obtain ⟨W, hW, hWX, hWY⟩ := two_bounds' hX hY
+    exact ⟨P, Q, W, hW, fun x hx => hQ x (le_trans hWY hx), fun x hx => by
+      rw [← he x (le_trans hWX hx)]; exact hg x (le_trans hWY hx)⟩
+  · exact fun h => zero_query_of_ratGerm h
+
 end MachLib
