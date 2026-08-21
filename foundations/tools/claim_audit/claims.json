@@ -4983,6 +4983,24 @@
         "exp"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Both bounds on a branching operation. Registered because the UPPER bound is a computed number (fOcc = 24 by rfl) and the LOWER one routes through sign_not_zero_query; if either moves, the prose's sandwich is wrong.",
+      "id": "sign-query-cost-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`1 ≤ q_F(sign) ≤ 24` — a branching operation gets both bounds"
+      ],
+      "module": "MachLib.EMLSignQueryCost",
+      "theorem": "MachLib.sign_query_cost_bounds",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "fOcc",
+        "sign"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

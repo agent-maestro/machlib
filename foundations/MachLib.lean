@@ -348,6 +348,7 @@ import MachLib.PevRoots
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
+import MachLib.EMLSignQueryCost
 import MachLib.EMLExpQueryCost
 import MachLib.EMLSizeNineShape
 import MachLib.EMLConstantFree

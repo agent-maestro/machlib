@@ -5,6 +5,55 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (e)
+
+### `1 ≤ q_F(sign) ≤ 24` — a branching operation gets both bounds
+
+`sign_query_cost_bounds` (`EMLSignQueryCost`).
+
+**This corrects entry (d), written an hour earlier.** That entry showed `EF`/`LF` fail off the
+positive ray — which is true, and is a theorem — and I read it as closing the corridor. It does not.
+**`FTerm.LFneg` is a global logarithm decoder and was already in the corpus**: `LFneg u = F u −
+EFneg u`, with `EFneg` reaching `exp` through `F` at the always-negative arguments `−(u²+1)` and
+`−(u+u²+1)`, so the totalised log never contributes. `LFneg_eval` carries **no side condition** at
+all, and costs three queries where `LF` costs four and only works on the positives.
+
+I looked at `LF`, found the positivity hypothesis, and stopped. The right move was to grep for every
+decoder before concluding none of them reaches. Fourth instance of that pattern in this corpus, and
+the first where it cost a *published claim* rather than a rebuilt proof.
+
+### The bound
+
+`log` is an `FTerm` everywhere via `LFneg`, `sign` is a finite expression in `log`
+(`sign_eq_posIndicator`), so:
+
+```
+signT = posIndT var − posIndT (0 − var)        fOcc = 24, by rfl
+```
+
+Lower bound `1`: `sign_not_zero_query`, the level-set argument — no growth, no continuity.
+Upper bound `24`: an explicit term, evaluated by Lean rather than counted by hand.
+
+**The 24 is deliberately unoptimised.** `fOcc` counts *tree* occurrences and the indicator uses its
+`logGap` subterm twice on each side, so a DAG measure sees 12. The gap between 1 and 24 is honest:
+the construction was written to be correct, not small. Tightening it is a separate question from
+establishing that a sandwich exists at all.
+
+### Why it matters that it is a *branching* operation
+
+Alongside `q_F^eventual(exp) = 1`, this is the second function in the corpus with both bounds
+recorded — and the first whose **lower bound comes from a branching obstruction rather than a growth
+one**. Every previous lower bound here (`exp`, `F`, `log`) ran through envelopes or the algebraic
+frame. This one runs through level sets: the branch is not free and not impossible, it has a price,
+and pricing it is what the query hierarchy is for.
+
+Gates: build 653 jobs, aggregator 650/956, claims 256, AxiomLedger **242 pinned — unchanged across
+all five results today**, obligations 16, sorry-audit 1 allowlisted.
+
+(Those two figures were first written as 654 and 651/957 — predicted from the previous entry rather
+than read off the run, and wrong by one each. Caught before commit. The rule this corpus keeps
+relearning: a number in a claim is *computed*, never continued from a pattern.)
+
 ## [Unreleased] — 2026-08-21 (d)
 
 ### The open step is closed, with a "no": the decoders break at the boundary point
@@ -31,8 +80,12 @@ and lands on the boundary rather than deep in the negatives.
 ### What it settles
 
 * **No `q_F(sign)` sandwich from these decoders.** `sign_eq_posIndicator` stands as a semantic
-  representation over `{field operations, totalised log}`, and does not become a query-complexity
-  bound. The gap is now a theorem, not an unexamined hope.
+  representation over `{field operations, totalised log}`.
+  **[CORRECTED, same day — see entry (e).]** The sentence that followed here said it "does not
+  become a query-complexity bound". That was an overclaim: it does not become one *through these
+  decoders*, but `FTerm.LFneg` is a **global** log decoder already in the corpus, and through it the
+  sandwich `1 ≤ q_F(sign) ≤ 24` follows immediately. The scoped claim was right; the general one was
+  a failure to grep.
 * **`EF_eval`/`LF_eval`'s `0 < eval u x` is necessary, not incidental** — worth knowing for every
   future caller, since a hypothesis that is merely convenient invites being routed around.
 * **Half of the problem is free after all.** `Fbasis_eq_exp_of_nonpos`: for `x ≤ 0`, `Fbasis x =
