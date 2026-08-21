@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-20 (x)
+
+### Literature placement, first pass — and the nearest prior art is ours
+
+`monogate-research/exploration/lf_literature_2026_08_20/NOTE.md`.
+
+**`arXiv:2603.21852` — *All elementary functions from a single operator* — is this project's own EML
+paper.** It proposes `eml(x,y) = exp(x) − ln(y)` with the constant `1`: a **binary** operator with
+**no field operations**. `F(x) = exp x + log₀ x` is a **unary** function **with** them. Neither
+subsumes the other, and it proves no lower bounds — so `FQueryLowerBound`, `q_F(exp) = 1` and the
+`C_k` hierarchy are new relative to it.
+
+### ⚠ The conventions diverge, and every cheap global decoder rides on ours
+
+The arXiv paper works over **ℂ with the principal branch**, extended by `ln(0) = −∞`. MachLib
+totalises differently: `log₀(y) = 0` for **every** `y ≤ 0`. Consequences:
+
+| result | convention |
+| --- | --- |
+| `exp u = F(−q)/F(−p)` (2 queries, global) | **totalised only** |
+| `exp x = 1/F(−x)` (1 query, `x > 0`) | **totalised only** |
+| `log₀ u = F(u) − exp u` (unconditional) | **totalised only** |
+| `Δₙ F(x) = exp(nx) − exp x` → `unary_decoder` on `(0,∞)` | **convention-free** |
+
+The dilation decoder never evaluates `log` off the positives, so it is the exportable result. The
+generator claim needs three qualifiers, all load-bearing: **unary, over the field operations, of the
+totalised class.**
+
+**Gate limitation, stated rather than papered over.** `log_nonpos` is a *theorem*, not an axiom, so
+the totalisation convention is **invisible to axiom footprints** — "convention-free" cannot be
+machine-checked the way `sorryAx`-freedom can. What is checkable is structural: the dilation decoder
+carries `0 < x` as a hypothesis, and the cheap decoders' proofs invoke `Fbasis_of_nonpos`. Both are
+now pinned that way, which is weaker than a footprint check and is the best available.
+
+### Two more literatures, both live
+
+**Pfaffian chain order** (Khovanskii): the chain length `s` is precisely "how many nested
+transcendentals", and `F` is Pfaffian of order 2. Not obviously the same as `q_F` — `s` counts a
+differential chain, `q_F` counts occurrences of one generator under field operations — but it must be
+ruled out before `q_F` is called new.
+
+**Hardy fields**, and this one reframes a result. Germs at `+∞` of unary definable functions form a
+Hardy field iff the structure is o-minimal (van den Dries–Miller), and a Hardy field is an *ordered
+field of germs* — so eventual sign-definiteness holds **by construction**. So `zero_query_evSignDef`
+is "rational germs form a Hardy field" (textbook), `SignHardCase` is "EML germs form a Hardy field",
+and since `EMLClass ↔ LFClass` is proved those are one statement. Rosenlicht's rank (1983) and
+Marker–Miller's level (1997) are the second candidate reparametrisation of `q_F`.
+
+### The axiom-witness question, answered
+
+The 50-axiom footprint of `Fbasis_root` was reported without saying whether those axioms are
+discharged. They are. `AxiomLedger` records **2 unwitnessed axioms out of 220** (`erf`, absent from
+Mathlib; `eml_tree_analytic_on_pos`, pending a side-condition), and **neither appears** in
+`Fbasis_root` (50), `FS_evSignDef` (52) or `exp_query_cost_eventual` (42) — checked, not assumed.
+The count alone was the wrong thing to quote.
+
 ## [Unreleased] — 2026-08-20 (w)
 
 ### `q_F(exp) = 1` — the two-query decoder was not optimal, and a search found the one-query one

@@ -4702,6 +4702,44 @@
         "EFone"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The exportable decoder. hypotheses_count 1 pins the 0 < x that keeps it off the totalised branch -- the only machine-checkable proxy for convention-freeness, since log_nonpos is a theorem and invisible to footprints.",
+      "id": "convfree-dilation-decoder-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The dilation decoder never evaluates `log` off the positives, so it is the exportable result."
+      ],
+      "module": "MachLib.EMLUnaryBasis",
+      "theorem": "MachLib.unary_decoder",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp",
+        "log"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The other side: the one-query decoder DOES ride on the totalisation, pinned by proof_uses. Positive direction only -- the auditor has no proof_does_not_use.",
+      "id": "totalisation-dependent-onequery-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`exp x = 1/F(−x)` (1 query, `x > 0`) | **totalised only** |"
+      ],
+      "module": "MachLib.EMLExpQueryCost",
+      "theorem": "MachLib.FTerm.EFone_eval",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "exp"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "Fbasis_of_nonpos"
+      ]
     }
   ]
 }

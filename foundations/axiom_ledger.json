@@ -1,6 +1,6 @@
 {
   "generated_by": "tools/axiom_ledger/emit_ledger.py (Lean.collectAxioms, kernel-verbatim)",
-  "total_axioms": 251,
+  "total_axioms": 220,
   "headlines": [
     {
       "label": "47-barrier (pure exp tower)",
