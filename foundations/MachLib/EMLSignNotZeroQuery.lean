@@ -36,7 +36,7 @@ namespace MachLib
 
 open Real
 
-private theorem neg_le_neg' {a b : Real} (h : a ≤ b) : 0 - b ≤ 0 - a := by
+theorem neg_le_neg' {a b : Real} (h : a ≤ b) : 0 - b ≤ 0 - a := by
   have v := add_le_add_wit (le_refl (0 - a - b)) h
   have el : 0 - a - b + a = 0 - b := by mach_mpoly [a, b]
   have er : 0 - a - b + b = 0 - a := by mach_mpoly [a, b]
@@ -165,5 +165,98 @@ theorem sign_not_zero_query :
       have er : 0 - (B + 1) + (B + 1) = 0 := by mach_mpoly [B]
       rw [el, er] at v
       exact v
+
+/-! ## The other direction: one totalised `log` already contains the branch
+
+The exclusion above is a statement about the **field** fragment, and it is easy to over-read as
+"the language cannot branch". It cannot — with `log` totalised, `sign` is a finite field expression
+in two logarithms, and the whole trick is the totalisation this corpus already commits to.
+
+`logGap x = log (2x) − log x` is the entire construction:
+
+* `x > 0` — `log_mul` splits it and the `log x` cancels, leaving the **nonzero constant** `log 2`;
+* `x ≤ 0` — then `2x ≤ 0` too, both logs are `0` by `log_nonpos`, and the gap is `0`.
+
+Divide it by itself: `div_zero` sends the second case to `0`, `self_div` sends the first to `1`. That
+is a positivity indicator built from field operations and a transcendental primitive, with no
+comparison anywhere.
+
+**So the zero-query barrier is a basis boundary, not an expressibility barrier.** Field operations
+alone cannot implement a two-sided classifier (`sign_not_zero_query`); adding one totalised
+transcendental makes it a finite expression. What is being measured is not "arithmetic versus
+comparison" but **how much branch information is latent in the chosen basis** — and in a totalised
+basis, the answer is: some.
+
+The simplification worth recording: the natural construction takes `log x ² + log (2x) ²`, to dodge
+`log 1 = 0`. The difference `log (2x) − log x` needs no squares — it is *constantly* `log 2` on the
+positive ray, so it never vanishes there, and vanishes identically off it. -/
+
+/-- `log (2x) − log x`: the constant `log 2` on `x > 0`, and `0` on `x ≤ 0`. -/
+noncomputable def logGap (x : Real) : Real := log ((1 + 1) * x) - log x
+
+private theorem two_ne_one : (1 + 1 : Real) ≠ 1 := by
+  intro h
+  have e1 := congrArg (fun z : Real => z - 1) h
+  have el : (1 + 1 : Real) - 1 = 1 := by mach_ring
+  have er : (1 : Real) - 1 = 0 := by mach_ring
+  rw [el, er] at e1
+  exact lt_irrefl_ax 0 (e1 ▸ zero_lt_one_ax)
+
+theorem logGap_of_pos {x : Real} (h : 0 < x) : logGap x = log (1 + 1) := by
+  show log ((1 + 1) * x) - log x = log (1 + 1)
+  rw [log_mul two_pos h]
+  mach_ring
+
+theorem logGap_of_nonpos {x : Real} (h : x ≤ 0) : logGap x = 0 := by
+  have h2 : (1 + 1) * x ≤ 0 := by
+    have v := mul_le_mul_of_nonneg_left h (le_of_lt two_pos)
+    have e : (1 + 1 : Real) * 0 = 0 := by mach_ring
+    rw [e] at v; exact v
+  show log ((1 + 1) * x) - log x = 0
+  rw [log_nonpos h2, log_nonpos h]
+  mach_ring
+
+/-- **The positivity indicator, with no comparison in it.** -/
+noncomputable def posIndicator (x : Real) : Real := logGap x / logGap x
+
+theorem posIndicator_of_pos {x : Real} (h : 0 < x) : posIndicator x = 1 := by
+  show logGap x / logGap x = 1
+  refine self_div ?_
+  rw [logGap_of_pos h]
+  exact log_ne_zero_of_pos_of_ne_one two_pos two_ne_one
+
+theorem posIndicator_of_nonpos {x : Real} (h : x ≤ 0) : posIndicator x = 0 := by
+  show logGap x / logGap x = 0
+  rw [logGap_of_nonpos h]
+  exact div_zero 0
+
+theorem sign_zero : Real.sign 0 = 0 := by
+  show (if (0 : Real) < 0 then (1 : Real) else if (0 : Real) < 0 then -1 else 0) = 0
+  rw [if_neg (lt_irrefl_ax (0 : Real))]
+  rw [if_neg (lt_irrefl_ax (0 : Real))]
+
+/-- **`sign` IS expressible — over field operations plus one totalised `log`.**
+
+Together with `sign_not_zero_query` this locates the barrier exactly: `sign ∉ C₀`, yet `sign` is a
+finite expression once a totalised transcendental is in the basis. The obstruction was never
+"the language has no comparison". -/
+theorem sign_eq_posIndicator (x : Real) :
+    Real.sign x = posIndicator x - posIndicator (0 - x) := by
+  have hnegzero : (0 : Real) - 0 = 0 := by mach_ring
+  rcases lt_total 0 x with h | h | h
+  · have hle : 0 - x ≤ 0 := by
+      have v := neg_le_neg' (le_of_lt h)
+      rw [hnegzero] at v; exact v
+    rw [sign_pos h, posIndicator_of_pos h, posIndicator_of_nonpos hle]
+    mach_ring
+  · rw [← h, hnegzero, sign_zero, posIndicator_of_nonpos (le_refl 0)]
+    mach_ring
+  · have hpos : 0 < 0 - x := by
+      have v := add_lt_add_left h (0 - x)
+      have el : 0 - x + x = 0 := by mach_ring
+      have er : 0 - x + 0 = 0 - x := by mach_ring
+      rw [el, er] at v; exact v
+    rw [sign_neg h, posIndicator_of_nonpos (le_of_lt h), posIndicator_of_pos hpos]
+    mach_ring
 
 end MachLib

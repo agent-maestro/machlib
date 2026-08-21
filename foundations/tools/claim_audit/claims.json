@@ -4943,6 +4943,28 @@
         "sign"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The companion to sign-not-zero-query, and the pair is the point: sign is excluded from the field fragment yet expressible from a totalised log. Registered so the prose cannot drift into a q_F bound, which is NOT proved -- the LF decoder is documented correct only where its argument is positive.",
+      "id": "sign-representable-from-log-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`sign` cannot be arithmetised, and `sign` *is* a finite expression once one totalised transcendental\nis in the basis"
+      ],
+      "module": "MachLib.EMLSignNotZeroQuery",
+      "theorem": "MachLib.sign_eq_posIndicator",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "forbid_axioms_exact": [
+        "MachLib.Real.floor",
+        "MachLib.Real.floor_le"
+      ],
+      "conclusion_mentions": [
+        "sign",
+        "posIndicator"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

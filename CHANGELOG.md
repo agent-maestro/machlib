@@ -5,6 +5,63 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (c)
+
+### The zero-query barrier is a **basis** boundary, not an expressibility barrier
+
+Both halves now exist, in the same file, and they are not in tension:
+
+```
+sign_not_zero_query      no F-free term equals sign, at any size
+sign_eq_posIndicator     sign x = H x − H (0 − x),  H built from field ops and TWO LOGS
+```
+
+`sign` cannot be arithmetised, and `sign` *is* a finite expression once one totalised transcendental
+is in the basis. What separates the two is not "arithmetic versus comparison" — it is **how much
+branch information is latent in the chosen basis.** In a totalised one, the answer is: enough.
+
+### The construction, and a simplification worth keeping
+
+```
+logGap x = log (2x) − log x
+```
+
+* `x > 0` — `log_mul` splits it, `log x` cancels, and what is left is the **nonzero constant** `log 2`;
+* `x ≤ 0` — then `2x ≤ 0` too, both logs are `0` by `log_nonpos`, and the gap is `0`.
+
+Divide it by itself: `div_zero` sends the second case to `0`, `self_div` the first to `1`. A
+positivity indicator with **no comparison in it**, and `sign x = H x − H (0 − x)`.
+
+The natural form of this construction squares two logs — `log x ² + log (2x) ²` — to dodge
+`log 1 = 0`. **The difference needs no squares:** `log (2x) − log x` is *constantly* `log 2` on the
+positive ray, so it cannot vanish there, and it vanishes identically off it. One subtraction replaces
+a sum of squares and the whole positivity argument that came with it.
+
+### Why the two theorems do not collide
+
+Because `log ∉ C₀` — `logQueryLowerBound_holds`, proved this morning. The indicator is built from the
+one function already known not to be zero-query, so no contradiction is available. The three results
+of today lock together: `log ∉ C₀`, `sign ∉ C₀`, and `sign` expressible *from* `log`.
+
+### What is NOT claimed
+
+**No `q_F(sign)` bound.** Turning this into an `L_F` *term* needs `log` as an `FTerm`, and the
+decoder `LF u = F u − EF u` is documented correct only "wherever `u` is positive" — precisely the
+domain this construction leaves. What `EF`/`LF` compute at nonpositive arguments is open, and until
+it is settled there is no query-complexity sandwich, only a semantic representation over
+`{field operations, totalised log}`. Stated because the sandwich is the tempting claim here.
+
+### And the floor/mod boundary moves
+
+If finite branching is expressible, then `floor`/`mod` cannot be excluded for being "discrete" or for
+the language "having no comparison" — that intuition is now refuted by a theorem, not merely
+suspected. `H(x − c)` is a threshold, `H(x − a)·H(b − x)` an interval, and any finite piecewise
+selector follows. The dividing line has to be **finitely many branch boundaries versus infinitely
+many**, which is a zero-counting question and the right shape for the machinery here.
+
+Gates: build 651 jobs, aggregator 648/954, claims 254, AxiomLedger **242 pinned — still unchanged,
+no axiom added today**, obligations 16, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (b)
 
 ### The first exclusion at query level zero, and it is not `floor`
