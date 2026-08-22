@@ -5224,6 +5224,27 @@
       "proof_uses": [
         "hasDerivAt_exp_comp"
       ]
+    },
+    {
+      "_comment": "Brick three. proof_uses pins hasDerivAt_of_agrees_off_finite -- the composition this proof actually performs. It was first written as HasDerivAt_congr and the auditor rejected it: the congruence is invoked one level down, inside the wrapper, and the axiom footprint is where that shows up. Crediting a composition you do not perform is exactly what this field exists to catch.",
+      "id": "ratgerm-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a zero-query function is differentiable off a finite set"
+      ],
+      "module": "MachLib.RatGermDeriv",
+      "theorem": "MachLib.hasDerivAt_zero_query",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "pderiv"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "hasDerivAt_of_agrees_off_finite"
+      ]
     }
   ]
 }

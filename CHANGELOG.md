@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (q)
+
+### Brick three: the germ has a derivative, and it is the germ's — not a stand-in's
+
+`RatGermDeriv`. The previous entry named this gap instead of stepping over it: `RatGerm` gives
+`f = pev P / pev Q` **off a finite exceptional set**, `HasDerivAt` is pointwise, and
+`HasDerivAt_congr` transfers a derivative only across a **neighbourhood**. Getting from *"agrees off
+a finite set"* to *"agrees near `x`"* was the missing step.
+
+It is exactly as small as predicted. **A finite list of reals does not cover a neighbourhood of a
+point outside it** — the same shape as `list_two_sided_bound`, and the same construction principle:
+each `e ∈ E` sits a positive distance from `x`, `two_bound_witness'` shrinks two positive distances
+to one beating both, and the induction does the rest. `finite_list_avoidable`.
+
+With it, `hasDerivAt_zero_query`: **a zero-query function is differentiable off a finite set**, with
+its derivative given by `pderiv` on the normal form's numerator and denominator. And
+`hasDerivAt_exp_zero_query` composes that with `y' = S'·y`, so the identity the argument turns on now
+applies to a **genuine zero-query argument** rather than an explicit stand-in.
+
+The exceptional set needed no extending: `zero_query_finite_exception_normal_form` already
+guarantees the denominator is nonzero there, which is precisely the quotient rule's hypothesis. Two
+theorems built a month apart fitting without adjustment is usually a sign the earlier statement was
+the right one.
+
+### The route, restated
+
+* brick 1 — `pderiv`, polynomial differentiation in Horner form ✔
+* brick 2 — `y = exp(S) ⟹ y' = S'·y` ✔
+* brick 3 — the germ inherits its representative's derivative ✔
+* brick 4 — **differentiate the relation** and drop its degree against minimality — *not built*
+* and the caveat that has not moved: **the positive branch is not this argument**, since
+  `F(S) = exp(S) + log(S)` there is not `exp` of anything
+
+`sorryAx` absent from all five new theorems. `HasDerivAt_congr` appears in the footprint of the two
+transfer theorems and not in `finite_list_avoidable`, which is the expected split — the avoidance
+lemma is pure list arithmetic and the analytic axiom enters only at the transfer.
+
+**The claim auditor rejected this entry's first registration**, and correctly: it credited
+`hasDerivAt_zero_query` with invoking `HasDerivAt_congr`, which the proof does *not* do — the
+congruence is invoked one level down, inside `hasDerivAt_of_agrees_off_finite`. The axiom footprint
+is where that dependency legitimately shows up; `proof_uses` is about the composition the proof
+performs. Fixed to credit the wrapper. Third time today the gate fired on the author.
+
+Gates: build 662 jobs, aggregator 659/965, claims 268, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (p)
 
 ### Brick two: `y = exp(S)` satisfies `y' = S'·y`
