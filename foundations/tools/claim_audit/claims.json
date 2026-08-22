@@ -5813,6 +5813,49 @@
         "euclid_lemma",
         "peq_ppow_add"
       ]
+    },
+    {
+      "_comment": "Cancellation. hypotheses_count 3, read off #check. proof_uses pins pmul_eq_nil_cancel, which is where the degree argument lives -- the CHANGELOG credits exactly that reduction.",
+      "id": "poly-cancel-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`c·X ≈ c·Y → X ≈ Y` reduces to `c·Z ≈ 0 → Z ≈ 0`, and that is `pmul_normal` plus\n`pmul_length`: for canonical nonempty `c` and `Z` the product is canonical of length\n`|c| + |Z| − 1 ≥ 1`, hence not the zero polynomial."
+      ],
+      "module": "MachLib.PolyOrd",
+      "theorem": "MachLib.peq_pmul_cancel_left",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "pmul_eq_nil_cancel"
+      ]
+    },
+    {
+      "_comment": "Uniqueness of the q-adic exponent, which is what makes ord_q a function and lets exponents be compared across an equation. hypotheses_count 5, derived with the auditor's own hypotheses_of after reordering {j l} into the leading binder group -- the same ambiguity ord_pmul had last commit.",
+      "id": "poly-ord-unique-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "cancelling `qʲ` gives `M ≈ q^(l−j)·N`. Were `l > j` that exhibits `q ∣ M`,\ncontradicting the hypothesis."
+      ],
+      "module": "MachLib.PolyOrd",
+      "theorem": "MachLib.ord_unique",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "hypotheses_count": 5,
+      "proof_uses": [
+        "ord_unique_le"
+      ]
     }
   ]
 }

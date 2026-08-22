@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ae)
+
+### `PolyOrd` — cancellation, and the `q`-adic exponent is unique
+
+`PolyFactor` proved additivity of a *given* factorisation and said explicitly that uniqueness was
+not supplied. This supplies it, so `ord_q` is well defined and exponents can be **compared across an
+equation** — which is what a pole-order count actually does.
+
+### Cancellation is degree additivity used a second time
+
+`c·X ≈ c·Y → X ≈ Y` reduces to `c·Z ≈ 0 → Z ≈ 0`, and that is `pmul_normal` plus
+`pmul_length`: for canonical nonempty `c` and `Z` the product is canonical of length
+`|c| + |Z| − 1 ≥ 1`, hence not the zero polynomial. No integral-domain axiom is invoked: the absence of zero divisors was
+already spent once inside `pmul_normal`, and this is that same fact reused rather than a new
+assumption.
+
+### Uniqueness
+
+If `A ≈ qʲ·M ≈ qˡ·N` with `q` dividing neither cofactor and `j ≤ l`, cancelling `qʲ` gives `M ≈ q^(l−j)·N`. Were `l > j` that exhibits `q ∣ M`,
+contradicting the hypothesis. So
+`j = l`, and `Nat.le_total` removes the ordering assumption.
+
+### Sizing answered: the pole-order count can stay algebraic
+
+I flagged last commit that `ord_q(D) = r − 1` for `D = P'Q − PQ'` would be the first place this
+spine touches derivatives, and that whether it stays field-axiom-only was not answerable by
+inspection. Measured: `pev_pderiv_cons` carries **only** `propext`, `Quot.sound` and nine
+`MachLib.Real` field axioms — no `ltR`, no `leR`, no `HasDerivAt`. `pderiv` is a pure coefficient
+operation; only the *analytic bridge* `hasDerivAt_pev` is analytic, and the pole-order count does not
+need it. **So the count can be stated and proved inside `algebraFootprint`**, and invariant (7) will
+hold across it.
+
+### A repeated `rw` failure, now with a rule
+
+Two more instances this module: `rw [show l = j + (l − j) …]` also rewrote the `l` *inside* `l − j`,
+and `cases h : e` already substitutes `e` in the goal so a following `rw [h]` has nothing to match.
+Both are the shape recorded last commit — **`rw` acts on every occurrence, including ones inside the
+terms you are reasoning about.** The fixes are the same each time: rewrite the *hypothesis* rather
+than the goal, or compose at term level.
+
+`AxiomLedger` invariant (7) covers thirteen modules: **184 algebra-spine theorems, 0 leaking**.
+
+Gates: build 677 jobs, aggregator 674/980, consistency PASS, claims 295, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 184 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ad)
 
 ### `PolyFactor` — an irreducible factor exists, and `ord_q` is additive
