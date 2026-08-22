@@ -543,7 +543,8 @@ def algebraSpineModules : List Name := [
   `MachLib.PolyMulDegree,
   `MachLib.PolyRingLaws,
   `MachLib.PolyDivIdentity,
-  `MachLib.PolyDvd]
+  `MachLib.PolyDvd,
+  `MachLib.PolyDvdAlgebra]
 
 /-- **The only axioms an algebra-spine theorem may cite** — Lean's core, the `Real` carrier and the
 *field* axioms. Nothing ordered (`ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,

@@ -5571,6 +5571,57 @@
       "proof_uses": [
         "pnorm_padd_congr"
       ]
+    },
+    {
+      "_comment": "Transitivity, and the payoff for pnorm_pmul_right. proof_uses lists ONLY what the proof term directly invokes -- checked against the tactic script, not the transitive closure, after last commit's composition-integrity rejection taught that distinction. hypotheses_count 2, read off #check.",
+      "id": "poly-dvd-trans-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**every witness normalises on the way out**, and the `N = []` /\n`M = []` edge cases disappear entirely instead of each needing a branch."
+      ],
+      "module": "MachLib.PolyDvdAlgebra",
+      "theorem": "MachLib.Pdvd_trans",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "pnorm_pmul_right",
+        "pmul_assoc_pnorm",
+        "pnorm_pmul_congr"
+      ]
+    },
+    {
+      "_comment": "Associativity up to pnorm -- the honest strength, since exact associativity is FALSE for pmul (PolyDvd records the counterexample shape). proof_uses names the four lemmas the tactic script directly invokes.",
+      "id": "poly-mul-assoc-pnorm-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "it does not associate on the nose (`PolyDvd`: the bracketings differ by trailing zeros)"
+      ],
+      "module": "MachLib.PolyDvdAlgebra",
+      "theorem": "MachLib.pmul_assoc_pnorm",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pmul_padd_left",
+        "pmul_pscale_left",
+        "pnorm_padd_congr",
+        "pnorm_pmul_cons_zero"
+      ]
     }
   ]
 }

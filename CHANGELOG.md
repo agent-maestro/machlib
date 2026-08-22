@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (z)
+
+### `PolyDvdAlgebra` — associativity up to `pnorm`, and divisibility's closure
+
+`Pdvd` is transitive and closed under sums, but neither is available until `pmul` associates — and
+it does not associate on the nose (`PolyDvd`: the bracketings differ by trailing zeros). So what is
+proved is `pmul_assoc_pnorm`, and that is **not** a weakening: `Pdvd` is itself a statement up to
+`pnorm`, so this is exactly the strength its closure properties consume.
+
+### Why the second-argument congruence had to come first
+
+`PolyDvd` needed only `pnorm_pmul_left`. Transitivity needs the other side, and the reason is worth
+recording because it removed work rather than adding it. The witness `Pdvd r A` wants is `pmul N M`,
+which has no reason to be canonical, and `Pdvd` requires canonical witnesses. Taking
+`pnorm (pmul N M)` instead is legitimate only if `pmul` cannot tell the difference — which is
+`pnorm_pmul_right`. With it, **every witness normalises on the way out**, and the `N = []` /
+`M = []` edge cases disappear entirely instead of each needing a branch.
+
+Both congruences reduce to the same two facts as every previous one (`pnorm_padd_congr` and
+`pnorm_decomp`), and the `padd`-left form is one `padd_comm` from the `padd`-right form already
+proved. That is now the **third** time a lemma in this spine landed cheaply because an earlier
+module took the harder general form.
+
+### One lemma cost more than its mirror image, and it is the expected one
+
+`pmul_padd_left` was one induction because `pmul` recurses on its first argument. `pmul_padd_right`
+needs `pscale_padd` first and then the same four-term rearrangement — the extra cost is exactly the
+asymmetry the earlier "keep the quotient on the left" decision was avoiding. Paid here, once,
+because divisibility's closure under sums genuinely needs the right-hand form.
+
+`AxiomLedger` invariant (7) covers seven modules: **116 algebra-spine theorems, 0 leaking**.
+
+Gates: build 671 jobs, aggregator 668/974, consistency PASS, claims 285, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 116 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (y)
 
 ### `PolyDvd` — divisibility, with two choices that are not decoration

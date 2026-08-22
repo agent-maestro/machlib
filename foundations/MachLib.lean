@@ -361,6 +361,7 @@ import MachLib.PolyMulDegree
 import MachLib.PolyRingLaws
 import MachLib.PolyDivIdentity
 import MachLib.PolyDvd
+import MachLib.PolyDvdAlgebra
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
