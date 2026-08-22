@@ -5,6 +5,36 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (aj)
+
+### The count now holds for **arbitrary** `k` and `l` — the previous version was over-restricted
+
+Entry (ai) stated `ord_cross_lower` and `pole_order_contradiction` with the orders of `u` and `v`
+written as `k+1` and `l+1`. That was done to dodge `Nat` truncated subtraction, and it is **a real
+restriction, not a cosmetic one**: in the relation the count is aimed at,
+`u` and `v` are coefficient polynomials with no reason to be divisible by `q` at all. Requiring `q ∣ u` and `q ∣ v` would have
+made the count inapplicable to the very identity it was built for.
+
+Generalised: the left side carries `q^(k+l−1+2(m+1))` and the right side has **exact** order
+`m + k + l`, so equating them forces `m + 1 ≤ 0` — false for every `k` and `l`,
+truncated subtraction included.
+
+The generalisation cost three small lemmas — `Pdvd_one` (everything is divisible by `q⁰`),
+`Pdvd_ppow_mono` (divisibility weakens to smaller powers), and `ord_deriv_drop'` (the order-`0` case
+of the derivative bound, vacuous). None of them is deep; the point is that the restricted form would
+have looked finished and been useless.
+
+**Entry (ai)'s exponent `q^(k+l+1+2(m+1))` is therefore stale prose**, left in place as the record of
+what was true then. The registered claim has been repointed at this entry, so the gate pins live
+prose rather than history — a claim that keeps passing against a superseded sentence is exactly the
+drift the auditor exists to prevent.
+
+`AxiomLedger` invariant (7): **221 algebra-spine theorems, 0 leaking.**
+
+Gates: build 681 jobs, aggregator 678/984, consistency PASS, claims 304, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 221 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted. (Written first as 219 — an estimate, not a reading. The gate said 221.)
+
 ## [Unreleased] — 2026-08-22 (ai)
 
 ### `PolyPoleCount` — **`CRUX.md` §3 is formalised**, at arbitrary irreducible `q`

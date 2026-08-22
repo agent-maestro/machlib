@@ -6008,11 +6008,11 @@
       ]
     },
     {
-      "_comment": "CRUX.md section 3's count, formalised at arbitrary irreducible q. hypotheses_count 13, derived with the auditor's own hypotheses_of. proof_uses pins the three results the tactic script directly composes: the exact order of the cross term, the companion bound, and the exponent comparison that turns them into an inequality.",
+      "_comment": "CRUX.md section 3's count at arbitrary irreducible q AND arbitrary k, l. claim_text was REPOINTED from entry (ai) to entry (aj) when the theorem was generalised: (ai)'s exponent q^(k+l+1+2(m+1)) is now stale prose, and a claim that keeps passing against a superseded sentence is the drift this auditor exists to prevent. hypotheses_count 13, re-derived after the change.",
       "id": "poly-pole-contradiction-changelog",
       "source_file": "CHANGELOG.md",
       "claim_text": [
-        "the left side of the identity carries `q^(k+l+1+2(m+1))`; the right\nside has **exact** order `m + (k+1) + (l+1)`. Equating them forces\n`k+l+2m+3 ≤ k+l+m+2`, i.e. `m+1 ≤ 0`, which is false."
+        "the left side carries `q^(k+l−1+2(m+1))` and the right side has **exact** order\n`m + k + l`, so equating them forces `m + 1 ≤ 0` — false for every `k` and `l`,\ntruncated subtraction included."
       ],
       "module": "MachLib.PolyPoleCount",
       "theorem": "MachLib.pole_order_contradiction",
@@ -6054,6 +6054,33 @@
       "hypotheses_count": 1,
       "proof_uses": [
         "peq_pderiv_ppow_mul"
+      ]
+    },
+    {
+      "_comment": "The companion bound at arbitrary k, l. Registered to pin the generality itself: the earlier k+1/l+1 form would have passed every gate and been inapplicable to the identity the count is for.",
+      "id": "poly-ord-cross-lower-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "in the relation the count is aimed at,\n`u` and `v` are coefficient polynomials with no reason to be divisible by `q` at all."
+      ],
+      "module": "MachLib.PolyPoleCount",
+      "theorem": "MachLib.ord_cross_lower",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "ppow",
+        "pderiv"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "ord_deriv_drop'",
+        "Pdvd_ppow_mono"
       ]
     }
   ]

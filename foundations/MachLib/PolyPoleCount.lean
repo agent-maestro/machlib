@@ -54,6 +54,26 @@ theorem Pdvd_ppow_of_peq {q X Xt : List Real} {a : Nat}
   ⟨pnorm Xt, pnorm_normal _, by
     rw [← pnorm_pmul_right (ppow q a) Xt]; exact h⟩
 
+/-- Everything is divisible by `q⁰ = [1]`. -/
+theorem Pdvd_one (A : List Real) : Pdvd (ppow q 0) A := by
+  refine ⟨pnorm A, pnorm_normal _, ?_⟩
+  show pnorm A = pnorm (pmul [(1 : Real)] (pnorm A))
+  rw [peq_pmul_one_left (pnorm A), pnorm_idem]
+
+/-- Divisibility by a power weakens to any smaller power. -/
+theorem Pdvd_ppow_mono {q X : List Real} {a b : Nat} (hab : b ≤ a)
+    (h : Pdvd (ppow q a) X) : Pdvd (ppow q b) X := by
+  obtain ⟨M, _, hM⟩ := h
+  refine ⟨pnorm (pmul (ppow q (a - b)) M), pnorm_normal _, ?_⟩
+  show pnorm X = pnorm (pmul (ppow q b) (pnorm (pmul (ppow q (a - b)) M)))
+  rw [← pnorm_pmul_right (ppow q b) (pmul (ppow q (a - b)) M)]
+  refine PEq.trans hM ?_
+  have he : b + (a - b) = a := by omega
+  refine PEq.trans (peq_pmul ?_ (PEq.refl M)) (pmul_assoc_pnorm (ppow q b) (ppow q (a - b)) M)
+  have h2 := peq_ppow_add q b (a - b)
+  rw [he] at h2
+  exact h2
+
 /-! ## The derivative drops the order by at most one -/
 
 /-- **`ord_q(X) ≥ k+1 ⟹ ord_q(X') ≥ k`** — read straight off the power-rule factorisation. -/
@@ -61,23 +81,32 @@ theorem ord_deriv_drop {q X Xt : List Real} {k : Nat}
     (h : PEq X (pmul (ppow q (k + 1)) Xt)) : Pdvd (ppow q k) (pderiv X) :=
   Pdvd_ppow_of_peq (peq_pderiv_ppow_mul k h)
 
+/-- The order-`0` case too: `q⁰` divides every derivative, vacuously. -/
+theorem ord_deriv_drop' {q X Xt : List Real} {k : Nat}
+    (h : PEq X (pmul (ppow q k) Xt)) : Pdvd (ppow q (k - 1)) (pderiv X) := by
+  cases k with
+  | zero => exact Pdvd_one (pderiv X)
+  | succ j =>
+      have he : (j + 1) - 1 = j := by omega
+      rw [he]
+      exact ord_deriv_drop h
+
 /-! ## The companion bound -/
 
-/-- **`ord_q(u'v − uv') ≥ k + l − 1`**, stated at `k+1` and `l+1` so no truncated subtraction
-appears: the conclusion is `q^(k+l+1) ∣ u'v − uv'` where the inputs carry `q^(k+1)` and `q^(l+1)`.
-No coprimality is required — this direction is a bound, not an identity. -/
+/-- **`ord_q(u'v − uv') ≥ k + l − 1`** for **arbitrary** `k, l`, truncated subtraction included.
+
+Stated generally on purpose. An earlier draft required `k, l ≥ 1` to dodge `Nat` subtraction, which
+would have been a real restriction rather than a cosmetic one: in the relation the count is aimed at,
+`u` and `v` are coefficient polynomials with no reason to be divisible by `q` at all. No coprimality
+is required — this direction is a bound, not an identity. -/
 theorem ord_cross_lower {q u v ut vt : List Real} {k l : Nat}
-    (hu : PEq u (pmul (ppow q (k + 1)) ut)) (hv : PEq v (pmul (ppow q (l + 1)) vt)) :
-    Pdvd (ppow q (k + l + 1)) (psub (pmul (pderiv u) v) (pmul u (pderiv v))) := by
-  have h1 : Pdvd (ppow q (k + (l + 1))) (pmul (pderiv u) v) :=
-    Pdvd_ppow_pmul (ord_deriv_drop hu) (Pdvd_ppow_of_peq hv)
-  have h2 : Pdvd (ppow q ((k + 1) + l)) (pmul u (pderiv v)) :=
-    Pdvd_ppow_pmul (Pdvd_ppow_of_peq hu) (ord_deriv_drop hv)
-  have e1 : k + (l + 1) = k + l + 1 := by omega
-  have e2 : (k + 1) + l = k + l + 1 := by omega
-  rw [e1] at h1
-  rw [e2] at h2
-  exact Pdvd_psub h1 h2
+    (hu : PEq u (pmul (ppow q k) ut)) (hv : PEq v (pmul (ppow q l) vt)) :
+    Pdvd (ppow q (k + l - 1)) (psub (pmul (pderiv u) v) (pmul u (pderiv v))) := by
+  have h1 : Pdvd (ppow q ((k - 1) + l)) (pmul (pderiv u) v) :=
+    Pdvd_ppow_pmul (ord_deriv_drop' hu) (Pdvd_ppow_of_peq hv)
+  have h2 : Pdvd (ppow q (k + (l - 1))) (pmul u (pderiv v)) :=
+    Pdvd_ppow_pmul (Pdvd_ppow_of_peq hu) (ord_deriv_drop' hv)
+  refine Pdvd_psub (Pdvd_ppow_mono ?_ h1) (Pdvd_ppow_mono ?_ h2) <;> omega
 
 /-! ## Comparing exponents across an equation -/
 
@@ -147,8 +176,8 @@ side has **exact** order `m + (k+1) + (l+1)`. Equating them forces
 the only input beyond the field axioms is `DerivCoprime`. -/
 theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrred q)
     {k l m : Nat}
-    (hu : PEq u (pmul (ppow q (k + 1)) ut)) (hutd : ¬ Pdvd q ut)
-    (hv : PEq v (pmul (ppow q (l + 1)) vt)) (hvtd : ¬ Pdvd q vt)
+    (hu : PEq u (pmul (ppow q k) ut)) (hutd : ¬ Pdvd q ut)
+    (hv : PEq v (pmul (ppow q l) vt)) (hvtd : ¬ Pdvd q vt)
     (hQ : PEq Q (pmul (ppow q (m + 1)) Qt)) (hQtd : ¬ Pdvd q Qt)
     (hNd : ¬ Pdvd q Nc)
     (hPd : ¬ Pdvd q P) (hPn : PNormal P)
@@ -159,7 +188,7 @@ theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrre
   -- LEFT: q^(k+l+1) divides the cross term, q^(2(m+1)) divides Q²
   have hQQ : Pdvd (ppow q ((m + 1) + (m + 1))) (pmul Q Q) :=
     Pdvd_ppow_pmul (Pdvd_ppow_of_peq hQ) (Pdvd_ppow_of_peq hQ)
-  have hLeft : Pdvd (ppow q ((k + l + 1) + ((m + 1) + (m + 1))))
+  have hLeft : Pdvd (ppow q ((k + l - 1) + ((m + 1) + (m + 1))))
       (pmul (psub (pmul (pderiv u) v) (pmul u (pderiv v))) (pmul Q Q)) :=
     Pdvd_ppow_pmul (ord_cross_lower hu hv) hQQ
   -- RIGHT: exact order m + (k+1) + (l+1)
@@ -170,10 +199,10 @@ theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrre
   obtain ⟨W3, hW3d, _, hW3⟩ := ord_pmul_norm hq hW2d hW2 hvtd hv
   -- reassociate the right side into ((N·D)·u)·v
   have hRight : PEq (pmul (pmul Nc (psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))) (pmul u v))
-      (pmul (ppow q (((0 + m) + (k + 1)) + (l + 1))) W3) :=
+      (pmul (ppow q (((0 + m) + k) + l)) W3) :=
     PEq.trans (pmul_assoc_pnorm (pmul Nc _) u v).symm hW3
   -- compare
-  have hdvd : Pdvd (ppow q ((k + l + 1) + ((m + 1) + (m + 1))))
+  have hdvd : Pdvd (ppow q ((k + l - 1) + ((m + 1) + (m + 1))))
       (pmul (pmul Nc (psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))) (pmul u v)) :=
     Pdvd_of_peq hident.symm hLeft
   have hle := ord_le_of_dvd hq hdvd hRight hW3d
