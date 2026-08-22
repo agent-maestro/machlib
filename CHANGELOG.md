@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (x)
+
+### `PolyRingLaws` + `PolyDivIdentity` — the division identity, in coefficients
+
+`pdivmod_spec` states `A = B·Q + R` through `pev`. Divisibility, gcd, Bézout and `ord_q` all need it
+as a **coefficient** identity instead, and the transport back from `pev` is refutable in a model of
+the allowed axioms (the `𝔽₂` argument recorded last commit). So the transport was done the only way
+left: syntactically. `pdivmod_identity` is
+`pnorm A = pnorm (padd (pmul Q B) R)`.
+
+**Why the laws are cheap and where they are not.** Two coefficient lists of the same length with
+propositionally equal entries *are* equal, so most laws are one induction plus one `mach_ring` per
+coefficient. The exceptions are where lengths differ: `padd` pads to the longer argument, and
+`pmul [c] M` leaves a trailing `[0]`. Those are exactly the places a `pnorm` or an `M ≠ []`
+hypothesis appears, and nowhere else. The quotient is kept on the **left** of `pmul` throughout,
+because `pmul` recurses on its first argument and left-distributivity is therefore the cheap
+direction — `pmul_padd_left` is one induction, the right-hand version would need commutativity.
+
+**The one genuinely nontrivial ingredient** is that `pnorm` is insensitive to what a summand looks
+like below its normal form:
+
+```
+pnorm (padd M Y) = pnorm (padd M (pnorm Y))
+```
+
+That is *not* free. Shortening `Y` can shorten the sum, and at the boundary the entries differ
+syntactically (`m + 0` versus `m`) while being propositionally equal — so the two effects have to be
+separated. They are, by stripping one trailing zero at a time (`pnorm_padd_concat_zero`) and by
+`pnorm_decomp`: **every list is its normal form followed by zeros**. With that, `pnorm_padd_congr`
+follows and the recursion assembles, `pmul_pshift_singleton` supplying the fact that the quotient's
+monomial contribution is literally the list the step subtracted.
+
+`AxiomLedger` invariant (7) now covers five modules: **92 algebra-spine theorems, 0 leaking** — the
+whole spine from canonical form through the division identity is field-axiom-only.
+
+Gates: build 669 jobs, aggregator 666/972, consistency PASS, claims 281, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 92 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-21 (w)
 
 ### Polynomial extensionality is **unprovable** in the algebra spine — a model argument, not a gap

@@ -358,6 +358,8 @@ import MachLib.PevOrder
 import MachLib.PolyCanonical
 import MachLib.PolyDivision
 import MachLib.PolyMulDegree
+import MachLib.PolyRingLaws
+import MachLib.PolyDivIdentity
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

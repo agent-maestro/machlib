@@ -5474,6 +5474,56 @@
         "pmul"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The division identity in coefficient form -- the thing pev could not deliver, since the transport back from pev is refutable over F_2. hypotheses_count read off #check output (one hypothesis, B != []).",
+      "id": "poly-div-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So the transport was done the only way\nleft: syntactically."
+      ],
+      "module": "MachLib.PolyDivIdentity",
+      "theorem": "MachLib.pdivmod_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "pmul",
+        "pdivmod"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "pmul_pshift_singleton",
+        "pnorm_padd_congr"
+      ]
+    },
+    {
+      "_comment": "The nontrivial ingredient, pinned on its own because the CHANGELOG says explicitly that it is NOT free. Zero hypotheses, read off #check. proof_uses names pnorm_decomp -- 'every list is its normal form followed by zeros' -- which is what separates the two effects the prose describes.",
+      "id": "poly-pnorm-padd-right-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pnorm` is insensitive to what a summand looks\nlike below its normal form"
+      ],
+      "module": "MachLib.PolyDivIdentity",
+      "theorem": "MachLib.pnorm_padd_right",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "padd"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pnorm_decomp",
+        "pnorm_padd_replicate"
+      ]
     }
   ]
 }
