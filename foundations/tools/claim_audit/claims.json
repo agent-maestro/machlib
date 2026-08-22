@@ -6104,6 +6104,29 @@
         "exists_ord_factor",
         "pole_order_contradiction"
       ]
+    },
+    {
+      "_comment": "The bridge from eventual vanishing to the zero polynomial. forbid_axioms here does NOT forbid ltR/leR -- this module is outside algebraFootprint by design and forbidding order would make the claim unsatisfiable. What it DOES forbid is HasDerivAt and sorryAx, which pins the boundary precisely: order is spent, analysis is not. hypotheses_count 1, read off #check.",
+      "id": "poly-evzero-bridge-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "over `𝔽₂` the\nlist `[0, 1, 1]` is `X² + X`, which vanishes at every point and is not the zero polynomial."
+      ],
+      "module": "MachLib.PolyEvZero",
+      "theorem": "MachLib.pnorm_eq_nil_of_evZero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "exists_ge_notMem",
+        "pev_zero_or_finite_roots"
+      ]
     }
   ]
 }

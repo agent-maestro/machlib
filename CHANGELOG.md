@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (al)
+
+### `PolyEvZero` — the bridge, and the **first module deliberately outside the allow-list**
+
+`pnorm_eq_nil_of_evZero`: a coefficient list whose polynomial vanishes on a tail is the zero
+polynomial. This is the step the differential route needs to turn "the eliminated coefficient
+vanishes eventually" into the `PEq` hypothesis `cleared_relation_impossible` consumes.
+
+Everything from `PolyCanonical` through `cleared_relation_impossible` — nineteen modules, 222
+theorems — stays inside `algebraFootprint`. **This one does not, by design.** It is not registered in
+`algebraSpineModules`, so invariant (7) still reports 0 leaking; the exclusion is the statement, not
+a loophole.
+
+### Why it must leave, measured
+
+The conclusion is false over a finite field: over `𝔽₂` the
+list `[0, 1, 1]` is `X² + X`, which vanishes at every point and is not the zero polynomial. Measured footprint of
+`pnorm_eq_nil_of_evZero`: `ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,
+`add_lt_add_left`, `le_iff_lt_or_eq` — the ordered base and nothing more. No `HasDerivAt`, no
+`sorryAx`. The order is spent on exactly one thing, `exists_ge_notMem`: **beyond any bound there is a
+point outside any finite list**, which is "`ℝ` is infinite".
+
+That is the third and last face of the obstruction this arc kept meeting — extensionality
+(`PolyMulDegree`), characteristic zero (`PolyDeriv`), infinitude (here). All three are the same
+fact: `algebraFootprint` is the theory of fields, and fields can be finite.
+
+### A grep that could not fire, for the third time
+
+The footprint check for this module first reported *no* order axioms — because the aggregator had
+not been rebuilt and the constant did not exist, so `#print axioms` errored and the grep matched
+nothing. Caught by printing the raw output instead of trusting the count. That is the third vacuous
+check in this arc (the others were a wrong name prefix and a parser bug), all with the same
+signature: **an empty result from a check that never ran looks identical to a clean pass.**
+
+Gates: build 682 jobs, aggregator 679/985, consistency PASS, claims 306, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked (this module
+excluded), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ak)
 
 ### `cleared_relation_impossible` — the count in caller-facing form
