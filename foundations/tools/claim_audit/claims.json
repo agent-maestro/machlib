@@ -5431,6 +5431,49 @@
         "pdivmod"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The closure result the whole ord_q additivity rests on. hypotheses_count READ OFF the statement (4 explicit hypotheses: two PNormal, two non-nil) rather than copied -- the previous commit's entries were rejected for exactly that. proof_uses pins mul_ne_zero because that is the load-bearing step: it is where absence of zero divisors enters and what makes degree additive. Count derived by running the auditor's own hypotheses_of over #check output, after catching myself writing 0 a second time.",
+      "id": "poly-mul-normal-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "multiplying two canonical nonzero polynomials\n**cannot** produce a trailing zero"
+      ],
+      "module": "MachLib.PolyMulDegree",
+      "theorem": "MachLib.pmul_normal",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PNormal",
+        "pmul"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "mul_ne_zero"
+      ]
+    },
+    {
+      "_comment": "Degree additivity in list form. Registered separately from pmul_normal because the CHANGELOG credits BOTH -- canonicity AND that the lengths add -- and a claim on one does not gate the other. Count derived by running the auditor's own hypotheses_of over #check output, after catching myself writing 0 a second time.",
+      "id": "poly-mul-length-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "so nothing renormalises and the lengths add."
+      ],
+      "module": "MachLib.PolyMulDegree",
+      "theorem": "MachLib.pmul_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pmul"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

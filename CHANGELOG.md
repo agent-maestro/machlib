@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (w)
+
+### Polynomial extensionality is **unprovable** in the algebra spine — a model argument, not a gap
+
+Before building gcd it was worth asking how divisibility should be defined. The functional form
+`∃ M, ∀ x, pev A x = pev q x · pev M x` is the tempting one, and it is **closed off**, for a reason
+with teeth rather than a missing lemma.
+
+`algebraFootprint` is exactly the theory of fields, and **fields have finite models**. Over `𝔽₂` the
+polynomial `X² + X` vanishes at every point and is not the zero polynomial. So
+`(∀ x, pev L x = 0) → pnorm L = []` is *false in a model of the allowed axioms*, hence unprovable
+from them. There is no clever proof to look for.
+
+Measured, this is exactly where the missing strength sits: `pev_zero_or_finite_roots` is **field-only**
+(it is synthetic division), while `finite_list_avoidable` — "there is a point outside a finite list",
+i.e. `ℝ` is infinite — carries `ltR`, `leR`, `lt_total`, `lt_trans_ax`, `add_lt_add_left`,
+`le_iff_lt_or_eq`, `mul_pos`, `zero_lt_one_ax`.
+
+**Consequence.** Divisibility, gcd and multiplicity must be coefficient-level. A functional
+divisibility would force a degree comparison, a degree comparison would force extensionality, and
+extensionality would drag the ordered-real base into the layer whose whole point is being algebraic.
+Invariant (7) would catch it; the model argument says it could never have been fixed. The canonical
+representation chosen in `PolyCanonical` was not merely tidier — it was the only available option.
+
+### `PolyMulDegree` — the product of canonical polynomials is canonical
+
+`ord_q(ab) = ord_q(a) + ord_q(b)` runs on this: multiplying two canonical nonzero polynomials
+**cannot** produce a trailing zero, so nothing renormalises and the lengths add.
+
+`pmul` recurses on its first argument's *head* while canonicity is about the *last* entry, so the
+product is put in concat form — `pmul_concat_left` writes `pmul (A₀ ++ [α]) M` as
+`padd (pmul A₀ M) (pshift |A₀| (pscale α M))`, whose second summand is at least as long and carries
+the leading term. `pmul_concat_normal` then reads off a literal `α·μ` at the end, and
+`pmul_normal` concludes. **`mul_ne_zero` is the only place the field's absence of zero divisors is
+used, and it is precisely what makes degree additive.**
+
+No `Nat.max` appears: `omega` treats it as an opaque atom here, so `padd_length_le` / `padd_length_ge`
+are the two one-sided forms the induction actually needs. No `getLast?` reasoning either — the same
+concat shape that carried the division descent carries this.
+
+`AxiomLedger` invariant (7) now covers three modules: **74 algebra-spine theorems, 0 leaking**.
+
+Gates: build 667 jobs, aggregator 664/970, consistency PASS, claims 279, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 74 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-21 (v)
 
 ### `PolyDivision` — `A = B·Q + R`, the theorem the PRS never supplied
