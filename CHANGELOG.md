@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ad)
+
+### `PolyFactor` — an irreducible factor exists, and `ord_q` is additive
+
+The two remaining pieces of the Euclid spine.
+
+### No FTA, and `CRUX.md` §4's cost estimate was wrong
+
+"Every nonconstant polynomial has an irreducible factor" is often reached via factorisation into
+linear and quadratic pieces — which over `ℝ` is the fundamental theorem of algebra. It is neither
+available here nor needed: induct on a degree budget; either the
+polynomial is irreducible and divides itself, or it factors into two nonconstants, the left of which
+is strictly shorter and has an irreducible factor by induction.
+
+**The degree of the factor is never inspected.** So `CRUX.md` §4 — frozen in `e767940c`, which costed
+this step as needing real FTA *and* a division routine for quadratics — overstated it on both counts.
+The correction was predicted in `NEXT.md` on the same day; this is the machine-checked confirmation.
+
+### Where Euclid's lemma is spent
+
+`ord_pmul` is the whole reason `PolyIrred` exists. Given `A ≈ qʲ·M` and `B ≈ qˡ·N` with `q` dividing
+neither cofactor, the product is `q^(j+l)·(M·N)`, and the *only* difficulty is showing `q`
+still fails to divide `M·N`. That is exactly Euclid's lemma, applied once. The exponent arithmetic
+is `peq_ppow_add` and three associativity rewrites.
+
+### What is deliberately not proved
+
+That the exponent is **unique**. `ord_pmul` is additivity of a *given* factorisation, which is what
+a pole-order count over an equation between two products needs on each side. Making `ord_q` a
+function requires cancellation (`q·X ≈ q·Y → X ≈ Y`, which follows from degree additivity — nothing
+new), and that is a separate step. Nothing here should be read as supplying it.
+
+`AxiomLedger` invariant (7) covers twelve modules: **172 algebra-spine theorems, 0 leaking**.
+
+Gates: build 676 jobs, aggregator 673/979, consistency PASS, claims 293, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 172 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ac)
 
 ### `PolyIrred` — irreducibility, and **Euclid's lemma**

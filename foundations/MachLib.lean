@@ -366,6 +366,7 @@ import MachLib.PolyPEq
 import MachLib.PolyBezout
 import MachLib.PolyGcd
 import MachLib.PolyIrred
+import MachLib.PolyFactor
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

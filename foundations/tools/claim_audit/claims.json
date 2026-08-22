@@ -5766,6 +5766,53 @@
         "pmul_length",
         "pmul_normal"
       ]
+    },
+    {
+      "_comment": "Existence of an irreducible factor, WITHOUT FTA -- the correction to CRUX.md section 4, which is frozen uncorrected in e767940c. hypotheses_count 2, read off #check. No proof_uses: the content is the induction itself, and crediting a lemma it merely reaches transitively is the error the composition-integrity check rejected earlier in this arc.",
+      "id": "poly-irred-divisor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "induct on a degree budget; either the\npolynomial is irreducible and divides itself, or it factors into two nonconstants, the left of which\nis strictly shorter and has an irreducible factor by induction."
+      ],
+      "module": "MachLib.PolyFactor",
+      "theorem": "MachLib.exists_irred_divisor'",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PIrred",
+        "Pdvd"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "Additivity of ord_q on products -- the theorem the whole algebra spine was built to reach. hypotheses_count 6, derived by running the auditor's own hypotheses_of over #check output after reordering {j l} into the leading binder group so the telescope is unambiguous. proof_uses pins euclid_lemma, which is the entire content of the first conjunct, and peq_ppow_add for the exponent arithmetic.",
+      "id": "poly-ord-pmul-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the *only* difficulty is showing `q`\nstill fails to divide `M·N`. That is exactly Euclid's lemma, applied once."
+      ],
+      "module": "MachLib.PolyFactor",
+      "theorem": "MachLib.ord_pmul",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "PEq",
+        "ppow"
+      ],
+      "hypotheses_count": 6,
+      "proof_uses": [
+        "euclid_lemma",
+        "peq_ppow_add"
+      ]
     }
   ]
 }
