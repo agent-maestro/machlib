@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (y)
+
+### `PolyDvd` — divisibility, with two choices that are not decoration
+
+`Pdvd q A` says some `M` makes `q·M` share a normal form with `A`. On coefficients, because the
+transport back from `pev` is refutable over `𝔽₂` and there is no functional definition available to
+this layer.
+
+**The witness is required canonical.** `Pdvd` carries `PNormal M`, not merely `∃ M`. That is exactly
+what makes the degree bound free: with `q` and `M` both canonical and nonempty, `pmul_normal` says
+`pmul q M` is *already* canonical, so `pnorm` does nothing and `pmul_length` reads the degree off
+directly. Without it every degree argument would first have to normalise the witness.
+
+**`pmul` is not associative on the nose**, and it is worth knowing why before anyone tries to prove
+it. `pmul (pmul [x] Y) Z` and `pmul [x] (pmul Y Z)` differ by trailing zeros — concretely
+`padd (pscale 0 Z) [0]` versus `[0]`, equal only when `Z` has length one. So associativity, and with
+it transitivity of divisibility, is a statement **up to `pnorm`**, which is what forces the
+congruence below rather than any deficiency in how it was stated.
+
+### The `pmul` congruence was cheap because the `padd` one was paid for
+
+`pnorm (pmul L M) = pnorm (pmul (pnorm L) M)` looks like it should cost what its `padd` counterpart
+cost in `PolyDivIdentity`. It did not. `pmul` recurses on its first argument's head *into a `padd`*,
+so stripping a trailing zero from the left argument is one application of `pnorm_padd_congr` plus
+the induction hypothesis. The awkward work — separating "shortening changes the length" from
+"boundary entries differ syntactically but not propositionally" — was done once and is reused.
+
+That is the second time in this spine that a lemma landed cheaply because an earlier module chose
+the harder general form: `padd_concat` for the division descent, and now `pnorm_padd_congr` here.
+
+`AxiomLedger` invariant (7) covers six modules: **103 algebra-spine theorems, 0 leaking**.
+
+Gates: build 670 jobs, aggregator 667/973, consistency PASS, claims 283, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 103 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (x)
 
 ### `PolyRingLaws` + `PolyDivIdentity` — the division identity, in coefficients

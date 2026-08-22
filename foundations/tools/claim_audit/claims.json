@@ -5524,6 +5524,53 @@
         "pnorm_decomp",
         "pnorm_padd_replicate"
       ]
+    },
+    {
+      "_comment": "The degree bound, and the payoff for requiring a canonical witness in Pdvd. hypotheses_count 4, read off #check output (PNormal q, q != [], pnorm A != [], Pdvd q A). proof_uses pins pmul_normal and pmul_length because the CHANGELOG credits exactly that composition -- canonicity means pnorm does nothing, so the length reads off directly.",
+      "id": "poly-dvd-length-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "with `q` and `M` both canonical and nonempty, `pmul_normal` says\n`pmul q M` is *already* canonical"
+      ],
+      "module": "MachLib.PolyDvd",
+      "theorem": "MachLib.Pdvd_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "pmul_normal",
+        "pmul_length"
+      ]
+    },
+    {
+      "_comment": "The pmul congruence's ONE-ZERO step -- retargeted here from pnorm_pmul_left after the auditor's composition-integrity check rejected that pairing. pnorm_pmul_left reaches pnorm_padd_congr only TRANSITIVELY, through this lemma; the CHANGELOG sentence about 'stripping a trailing zero ... one application of pnorm_padd_congr' is about this theorem, and pinning it here makes the credit a real obligation rather than a story about the transitive closure.",
+      "id": "poly-pnorm-pmul-concat-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "stripping a trailing zero from the left argument is one application of `pnorm_padd_congr` plus\nthe induction hypothesis."
+      ],
+      "module": "MachLib.PolyDvd",
+      "theorem": "MachLib.pnorm_pmul_concat_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pnorm_padd_congr"
+      ]
     }
   ]
 }

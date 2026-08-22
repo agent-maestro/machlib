@@ -360,6 +360,7 @@ import MachLib.PolyDivision
 import MachLib.PolyMulDegree
 import MachLib.PolyRingLaws
 import MachLib.PolyDivIdentity
+import MachLib.PolyDvd
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
