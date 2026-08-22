@@ -208,4 +208,40 @@ theorem pole_order_contradiction {q P Q Qt u ut v vt Nc : List Real} (hq : PIrre
   have hle := ord_le_of_dvd hq hdvd hRight hW3d
   omega
 
+/-! ## The form a caller can actually use
+
+`pole_order_contradiction` asks for `Q`'s `q`-adic factorisation explicitly. A caller coming from the
+differential route does not have one — what it has is *"`q` is an irreducible factor of the reduced
+denominator"*, i.e. `q ∣ Q` and `q ∤ P`. `exists_ord_factor` closes that gap, and the exponent's
+positivity comes free: if the exponent were `0` then `Q ≈ Q̃` and `q` would not divide `Q` after all.
+
+The characteristic-zero input is quantified over `r` here rather than fixed, because the exponent is
+produced by the proof and not known to the caller. For irreducible `q` over a characteristic-zero
+field it holds for every `r ≥ 1`; over `𝔽₂` it fails, which is the same boundary as everywhere else
+in this arc. -/
+
+/-- **The count, in caller-facing form.** Needs only that `q` is an irreducible factor of `Q` that
+does not divide `P` — no explicit `q`-adic factorisation. -/
+theorem cleared_relation_impossible {q P Q u ut v vt Nc : List Real} (hq : PIrred q)
+    (hPd : ¬ Pdvd q P) (hPn : PNormal P)
+    (hQn : PNormal Q) (hQne : Q ≠ []) (hQd : Pdvd q Q)
+    (hchar : ∀ r : Nat, DerivCoprime q r)
+    (hcharN : ∀ r : Nat, PNormal (pnsum r (pderiv q)))
+    {k l : Nat}
+    (hu : PEq u (pmul (ppow q k) ut)) (hutd : ¬ Pdvd q ut)
+    (hv : PEq v (pmul (ppow q l) vt)) (hvtd : ¬ Pdvd q vt)
+    (hNd : ¬ Pdvd q Nc)
+    (hident : PEq (pmul (psub (pmul (pderiv u) v) (pmul u (pderiv v))) (pmul Q Q))
+                  (pmul (pmul Nc (psub (pmul (pderiv P) Q) (pmul P (pderiv Q)))) (pmul u v))) :
+    False := by
+  obtain ⟨s, Qt, hQtn, hQtne, hQtd, hQfac⟩ :=
+    exists_ord_factor Q.length q Q hq hQn hQne (Nat.le_refl _)
+  cases s with
+  | zero =>
+      -- exponent 0 would mean `q ∤ Q`, contradicting the hypothesis
+      exact hQtd (Pdvd_of_peq (PEq.trans hQfac (peq_pmul_one_left Qt)).symm hQd)
+  | succ m =>
+      exact pole_order_contradiction hq hu hutd hv hvtd hQfac hQtd hNd hPd hPn
+        (hchar (m + 1)) (hcharN (m + 1)) hident
+
 end MachLib

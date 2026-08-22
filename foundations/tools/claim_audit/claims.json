@@ -6082,6 +6082,28 @@
         "ord_deriv_drop'",
         "Pdvd_ppow_mono"
       ]
+    },
+    {
+      "_comment": "The count in the form a caller from the differential route can use. hypotheses_count 14, derived with the auditor's own hypotheses_of. proof_uses pins exists_ord_factor (which supplies the factorisation the caller does not have) and pole_order_contradiction (the count itself). Registered partly to mark the boundary: this is the last theorem in the arc inside algebraFootprint.",
+      "id": "poly-cleared-relation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Needs only that `q` is an irreducible factor of `Q` that\ndoes not divide `P` — no explicit `q`-adic factorisation."
+      ],
+      "module": "MachLib.PolyPoleCount",
+      "theorem": "MachLib.cleared_relation_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "hypotheses_count": 14,
+      "proof_uses": [
+        "exists_ord_factor",
+        "pole_order_contradiction"
+      ]
     }
   ]
 }

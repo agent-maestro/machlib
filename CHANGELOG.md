@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ak)
+
+### `cleared_relation_impossible` — the count in caller-facing form
+
+Needs only that `q` is an irreducible factor of `Q` that
+does not divide `P` — no explicit `q`-adic factorisation. `exists_ord_factor` closes the gap, and the exponent's
+positivity comes free: were it `0` then `Q ≈ Q̃` and `q` would not divide `Q` after all.
+
+The characteristic-zero input is quantified over `r` rather than fixed, because the exponent is
+produced by the proof and not known to the caller. Slightly uglier as a hypothesis, and honest: for
+irreducible `q` in characteristic zero it holds for every `r`.
+
+### Where the algebraic layer stops, stated deliberately
+
+This is the last theorem in the arc that stays inside `algebraFootprint`, and the boundary is worth
+drawing rather than discovering. What a caller from the differential route must still supply is the
+**cleared identity** as a `PEq` — i.e. as a statement about *coefficients*. Getting there from the
+analytic relation requires "vanishes on a tail ⟹ is the zero polynomial", which is
+`pev_zero_or_finite_roots` (field-only) **plus** `finite_list_avoidable` (`ℝ` is infinite, and
+carries the whole ordered base).
+
+So the next step leaves invariant (7) necessarily, for the third distinct reason in this arc — after
+extensionality (`PolyMulDegree`) and characteristic zero (`PolyDeriv`), now the infinitude of `ℝ`.
+All three are the same finite-model obstruction wearing different clothes: **`algebraFootprint` is
+the theory of fields, and every one of these facts is false in a finite field.** That is not a
+limitation to route around; it is the correct place for the algebra to end and the analysis to begin.
+
+`AxiomLedger` invariant (7): **222 algebra-spine theorems, 0 leaking.**
+
+Gates: build 681 jobs, aggregator 678/984, consistency PASS, claims 305, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (aj)
 
 ### The count now holds for **arbitrary** `k` and `l` — the previous version was over-restricted
