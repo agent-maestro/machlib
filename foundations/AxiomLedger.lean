@@ -517,17 +517,45 @@ def optionDSpineModules : List Name := [
   `MachLib.WitnessResidualRecurringTargetMetaLemma,
   `MachLib.WitnessResidualContinuousTargetMetaLemma]
 
-/-- Every theorem-shaped declaration belonging to `optionDSpineModules`, found via the kernel's
-own module index (`env.getModuleIdxFor?`) — not name-prefix guessing, not a maintained list. -/
-def spineTheorems (env : Environment) : List Name := Id.run do
+/-- Every theorem-shaped declaration belonging to `mods`, found via the kernel's own module index
+(`env.getModuleIdxFor?`) — not name-prefix guessing, not a maintained list. -/
+def theoremsInModules (mods : List Name) (env : Environment) : List Name := Id.run do
   let mut r := []
   for (nm, ci) in env.constants.toList do
     if ci matches .thmInfo _ then
       if let some idx := env.getModuleIdxFor? nm then
         if h : idx.toNat < env.header.moduleNames.size then
-          if optionDSpineModules.contains env.header.moduleNames[idx.toNat] then
+          if mods.contains env.header.moduleNames[idx.toNat] then
             r := nm :: r
   return r
+
+/-- Every theorem in the Option D spine. -/
+def spineTheorems (env : Environment) : List Name := theoremsInModules optionDSpineModules env
+
+/-- **The canonical-polynomial / Euclid spine.** These modules are the algebraic layer under the
+rational-exponential transcendence program: canonical polynomials, division with remainder, gcd and
+Bézout, `ord_q`. Their whole point is that the pole-order argument is *algebra* — so a theorem here
+that reached for the ordered-real base, or for `exp`/`log`/`HasDerivAt`, would silently undo the
+reason the layer exists. -/
+def algebraSpineModules : List Name := [
+  `MachLib.PolyCanonical]
+
+/-- **The only axioms an algebra-spine theorem may cite** — Lean's core, the `Real` carrier and the
+*field* axioms. Nothing ordered (`ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,
+`add_lt_add_left`, `le_iff_lt_or_eq`, `mul_pos`, `zero_lt_one_ax`), nothing analytic.
+
+Deliberately an **allow-list**, not a list of forbidden names. A deny-list passes anything nobody
+thought to forbid, and this repo's own gate post-mortem found that shape in three of five defective
+gates. Adding an entry here has to be a deliberate edit with a reason. -/
+def algebraFootprint : List Name := [
+  `propext, `Classical.choice, `Quot.sound,
+  `MachLib.Real,
+  `MachLib.Real.zeroR, `MachLib.Real.oneR, `MachLib.Real.addR, `MachLib.Real.subR,
+  `MachLib.Real.mulR, `MachLib.Real.divR, `MachLib.Real.negR,
+  `MachLib.Real.add_comm, `MachLib.Real.add_assoc, `MachLib.Real.add_zero, `MachLib.Real.add_neg,
+  `MachLib.Real.sub_def, `MachLib.Real.mul_comm, `MachLib.Real.mul_assoc,
+  `MachLib.Real.mul_one_ax, `MachLib.Real.mul_distrib, `MachLib.Real.zero_ne_one_ax,
+  `MachLib.Real.div_def, `MachLib.Real.mul_inv, `MachLib.Real.div_zero]
 
 /-- The two Option D discharge axioms (cont.65/67): both are now PROVABLE (vacuously, via
 `eml_pfaffian_validon_from_sin_equality_proved`/`_cos_equality_proved`), so no new proof should
@@ -585,6 +613,18 @@ run_cmd do
     unless leak.isEmpty do
       spineLeakCount := spineLeakCount + 1
       logError m!"AxiomLedger: spine theorem {nm} footprint LEAKS {leak.length} axiom(s) beyond trustedFootprint: {leak}"
+  -- (7) algebra-spine guard: EVERY theorem in the canonical-polynomial / Euclid spine must stay
+  -- inside the field+classical allow-list. This is what keeps the pole-order argument algebraic;
+  -- reading a degree off `pev_leading_form` would import the whole ordered-real base and this
+  -- fires. Whole-module, so a future declaration is covered without registering a claim for it.
+  let algebra := theoremsInModules algebraSpineModules env
+  let mut algebraLeakCount : Nat := 0
+  for nm in algebra do
+    let axs ← Lean.collectAxioms nm
+    let leak := axs.toList.filter (fun a => !(algebraFootprint.contains a))
+    unless leak.isEmpty do
+      algebraLeakCount := algebraLeakCount + 1
+      logError m!"AxiomLedger: algebra-spine theorem {nm} footprint LEAKS {leak.length} axiom(s) beyond algebraFootprint (field+classical only): {leak}"
   -- (6) legacy axiom call-site guard: no NEW theorem, anywhere in the built graph, may cite
   -- either discharged axiom directly beyond the fixed allowlist above (A4).
   let mut newLegacySites : List Name := []
@@ -596,6 +636,6 @@ run_cmd do
           newLegacySites := nm :: newLegacySites
   unless newLegacySites.isEmpty do
     logError m!"AxiomLedger: {newLegacySites.length} NEW call site(s) of a discharged legacy axiom (use the _proved corollary instead): {newLegacySites}"
-  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new)."
+  logInfo m!"AxiomLedger OK: {live.size} axioms pinned; {headlines.length} headline footprints ⊆ trusted ({trustedFootprint.length}); {disclosedUnwitnessed.length} disclosed inert; {disclosedTrusted.length} disclosed-trusted (certcom-A IEEE-754 floor); {spine.length} Option D spine theorems whole-module-checked ({spineLeakCount} leaking); legacy axiom call sites pinned to {legacyAxiomCallSiteAllowlist.length} (0 new); {algebra.length} algebra-spine theorems field-axiom-checked ({algebraLeakCount} leaking)."
 
 end AxiomLedger

@@ -5309,6 +5309,66 @@
         "pev_deflate",
         "deflate_length"
       ]
+    },
+    {
+      "_comment": "The interpretation theorem -- the ONLY bridge from canonical lists to pev. forbid_axioms discriminates on exactly the regression this layer exists to prevent: ltR/leR are what pev_leading_form carries, and reading a degree off it would be the natural shortcut. HasDerivAt is carried by the sibling brick hasDerivAt_pev.",
+      "id": "poly-canonical-interpretation-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`pev` is the interpretation theorem,\n  not the algebra's equality.**"
+      ],
+      "module": "MachLib.PolyCanonical",
+      "theorem": "MachLib.pev_pnorm",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "pev"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The invariant. Pinned separately from the specimens because pnorm_normal alone is a WEAK statement -- `fun _ => []` satisfies it -- which is exactly why the CHANGELOG says so and why the specimens exist.",
+      "id": "poly-canonical-normal-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pnorm` strips trailing (high-power)\nzeros"
+      ],
+      "module": "MachLib.PolyCanonical",
+      "theorem": "MachLib.pnorm_normal",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "PNormal",
+        "pnorm"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "The DISCRIMINATING specimen. Registered so the claim auditor holds the one specimen that separates pnorm from a strip-every-zero implementation; the other four are passed by pnormBad and would not catch it. conclusion_mentions pins the literal [0,1] shape so a later edit cannot weaken the specimen into a non-discriminating one while keeping the name.",
+      "id": "poly-canonical-interior-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a\nnormaliser stripping zero coefficients rather than *trailing* zero coefficients returns `[1]`, the\nconstant."
+      ],
+      "module": "MachLib.PolyCanonical",
+      "theorem": "MachLib.pnorm_specimen_interior_zero_survives",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pnorm"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

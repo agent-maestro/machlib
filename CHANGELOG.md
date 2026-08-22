@@ -5,6 +5,80 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (u)
+
+### `PolyCanonical` — the representation decision, made once and gated
+
+The Euclid spine needs degree, divisibility, gcd, irreducibility and multiplicity, and every one of
+those is a **coefficient-level** statement. `List Real` does not identify polynomials — `[1]` and
+`[1, 0]` are the same function and different lists — so that noncanonicity is deleted here rather
+than routed around at every use.
+
+**Chosen: normalise once, carry the invariant at type level.** `pnorm` strips trailing (high-power)
+zeros; `PolyNF` bundles a list with its normality proof, so canonical polynomials are equal exactly
+when their coefficient lists are. Two alternatives were rejected with reasons:
+
+* **`pev` as the equality relation.** Defining `P ≡ Q` as `∀ x, pev P x = pev Q x` is lighter until
+  Euclid runs it backwards and needs `(∀ x, pev P x = 0) → P` is the zero polynomial. That buys
+  polynomial extensionality and root machinery merely to *identify zero* — the wrong dependency
+  direction for a layer meant to sit underneath all of it. **`pev` is the interpretation theorem,
+  not the algebra's equality.**
+* **A quotient by trailing-zero equivalence.** Clean, mechanically unnecessary, and it makes
+  division opaque. One source of noncanonicity: delete it, do not quotient by it.
+
+### The order axioms stay out, and a gate now enforces it
+
+The tempting way to get a degree is `pev_leading_form`, which already extracts an exponent for any
+nonzero list. Measured, it carries `ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,
+`add_lt_add_left`, `le_iff_lt_or_eq` — the entire ordered-real base. Importing that into a purely
+algebraic layer would be a regression the ledger would show. So the coefficient zero-test is
+**classical equality**, never `instDecLT`/`instDecLE`, and for a canonical nonzero polynomial the
+degree is just `length − 1` — which is what lets division terminate on a list length with no
+analysis anywhere.
+
+`AxiomLedger` gains **invariant (7)**: every theorem in `algebraSpineModules` must stay inside
+`algebraFootprint` — Lean core, the `Real` carrier, and the *field* axioms. It is deliberately an
+**allow-list**, because this repo's own gate post-mortem found deny-list shape in three of five
+defective gates, and because whole-module coverage means a future declaration is checked without
+anyone registering a claim for it. 28 algebra-spine theorems, 0 leaking.
+
+### Cancellation lives inside normalisation
+
+Raw list addition does not preserve the invariant — `[1,1] + [-1,-1]` cancels its leading term — so
+the canonical operations are *defined* as `pnorm (raw …)`. Every cancellation is normalisation
+rather than a side condition. Same move that made the rational-germ work go through: choose the
+representation in which cancellation is canonical computation.
+
+`pnorm` is also split into a one-step `pconsN` and a fold. Written as a single `match` on
+`pnorm cs`, every unfolding needs the equation compiler's match shape spelled out at each use and
+two proofs died on exactly that; factored, `pnorm (c :: cs) = pconsN c (pnorm cs)` is `rfl`.
+
+### Specimens, and one that convicts
+
+`pnorm` is the representation decision, so it is specimened before anything is built on it: a wrong
+normaliser would make every downstream theorem *vacuously* fine, not false. The invariant lemmas are
+no substitute either — `pnorm_normal` is satisfied by `fun _ => []`.
+
+The discriminating one is **`pnorm_specimen_interior_zero_survives`**: `[0,1]` is `x`, and a
+normaliser stripping zero coefficients rather than *trailing* zero coefficients returns `[1]`, the
+constant. This was validated by construction, not by assertion: a deliberately wrong `pnormBad` was
+written and machine-checked to **pass** the other four specimens and to be convicted only by this
+one (`pnormBad [0,1] = [1] ≠ [0,1] = pnorm [0,1]`).
+
+### Two broken checkers before one worked
+
+Worth recording because the failure mode is the one this project keeps naming. The first footprint
+check grepped for `MachLib.Real.ltR` against output produced under `open MachLib`, which prints
+`Real.ltR` — it could not have matched anything and reported a clean pass. The second had a parser
+bug that split each `#print axioms` block at its closing quote and silently audited nothing, again
+reporting no violations. **Both failed open.** The third is validated by a positive control
+(`pev_leading_form`, which must trip and does) and the ledger invariant by a canary theorem inserted
+into the spine, confirmed to fail the gate with exit 1 naming `MachLib.Real.ltR`, then removed.
+
+Gates: build 665 jobs, aggregator 662/968, consistency PASS, claims 274, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 28 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-21 (t)
 
 ### The crux of the differential route was mis-typed — it is not a transcendence input
