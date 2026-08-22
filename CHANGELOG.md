@@ -39,16 +39,24 @@ survivor, and it survives *for a reason that is now proved*. Anything that close
 or transcendence of `exp` on a compact set. That is precisely the specimen `NEXT.md` said would earn
 bringing such machinery in, and it has now earned it.
 
-### The decaying branch is not claimed either way
+### The decaying branch, closed in the same session
 
-Untouched here. `S ∼ c·x^{−m}` with `S > 0` makes `log S` grow like `−m·log x`, so `F ∘ S` is
-unbounded there — but only *logarithmically*, which is still inside every polynomial envelope. The
-same obstruction is very likely, and is **not proved**. Saying so rather than asserting the
-symmetry.
+`polyEnvelope_of_Fbasis_decay`. The paragraph above originally left this open and said the symmetry
+was likely but unproved. It holds, and the positive side is the only one needing an argument: there
+`log S → −∞`, so `F ∘ S` is genuinely **unbounded** — but only *logarithmically*, and that is still
+inside a polynomial envelope.
 
-**34 axioms, `sorryAx` absent**, fourteenth result today, ledger still 242.
+The bound comes from the decay having a **floor of its own**: a rational germ cannot decay faster
+than some `c·x^{−m}`, so `log S ≥ log c − log(x^m)`, and `log(x^m) ≤ x^m − 1` converts the logarithm
+into a polynomial **without ever computing `log(x^m) = m·log x`** — which would have cost an
+induction and a `natMul` bound for nothing.
 
-Gates: build 659 jobs, aggregator 656/962, claims 264, obligations 18 rows, AxiomLedger 242 pinned,
+**So every bounded rational argument gives `F ∘ S` a polynomial envelope.** The structural
+obstruction covers the whole bounded region, not half of it.
+
+**34 axioms, `sorryAx` absent** across all three theorems here, ledger still 242.
+
+Gates: build 659 jobs, aggregator 656/962, claims 265 (verdict tree-bound), obligations 18 rows, AxiomLedger 242 pinned,
 sorry-audit 1 allowlisted.
 
 ## [Unreleased] — 2026-08-21 (m)

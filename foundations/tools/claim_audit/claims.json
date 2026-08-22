@@ -5164,6 +5164,24 @@
         "Fbasis"
       ],
       "hypotheses_count": 5
+    },
+    {
+      "_comment": "The decaying half of the same obstruction. Registered separately from the floored half because the two are proved by different arguments -- one is bounded outright, the other is only logarithmically unbounded -- and a later refactor could break one without touching the other.",
+      "id": "bounded-decay-envelope-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So every bounded rational argument gives `F ∘ S` a polynomial envelope"
+      ],
+      "module": "MachLib.BoundedGermEnvelope",
+      "theorem": "MachLib.polyEnvelope_of_Fbasis_decay",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "PolyEnvelope",
+        "Fbasis"
+      ],
+      "hypotheses_count": 5
     }
   ]
 }

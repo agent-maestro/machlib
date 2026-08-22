@@ -134,4 +134,135 @@ theorem polyEnvelope_of_Fbasis_floor {S : Real → Real} {c K X : Real}
   rw [e]
   exact le_trans (hM x hx) (le_abs_self M)
 
+/-! ## The decaying branch too — so the obstruction covers the whole bounded region
+
+The previous section deliberately did not claim the decaying case, because the two sides had already
+behaved differently once (totalisation deletes the logarithm on the negative side and not on the
+positive). It closes, and the positive side is the only one that needs an argument: there
+`log S → −∞`, so `F ∘ S` is genuinely **unbounded**.
+
+It is unbounded only *logarithmically*, and that is still inside a polynomial envelope. The bound
+comes from the decay having a **floor of its own** — a rational germ cannot decay faster than some
+`c·x^{−m}` — and then `log (x^m) ≤ x^m − 1` converts the logarithm into a polynomial without ever
+computing `log (x^m) = m·log x`.
+
+With this, **every** bounded rational argument gives `F ∘ S` a polynomial envelope, so the structural
+obstruction covers the whole bounded region rather than half of it. -/
+theorem polyEnvelope_of_Fbasis_decay {S : Real → Real} {c K X : Real} {m : Nat}
+    (hc : 0 < c) (hX : 1 ≤ X)
+    (hlo : ∀ x : Real, X ≤ x → c ≤ powNat x m * abs (S x))
+    (hhi : ∀ x : Real, X ≤ x → abs (S x) ≤ K)
+    (hpos : ∀ x : Real, X ≤ x → 0 < S x) :
+    PolyEnvelope (fun x => Fbasis (S x)) := by
+  have hK : (0 : Real) < K := lt_of_lt_of_le (hpos X (le_refl X))
+    (le_trans (le_abs_self (S X)) (hhi X (le_refl X)))
+  refine ⟨exp K + (abs (log K) + abs (log c)) + 1, m, X, ?_, hX, fun x hx => ?_⟩
+  · exact add_nonneg
+      (add_nonneg (le_of_lt (exp_pos K))
+        (add_nonneg (abs_nonneg (log K)) (abs_nonneg (log c))))
+      (le_of_lt zero_lt_one_ax)
+  have hx1 : (1 : Real) ≤ x := le_trans hX hx
+  have hxm : (1 : Real) ≤ powNat x m := one_le_powNat hx1 m
+  have hxmpos : (0 : Real) < powNat x m := lt_of_lt_of_le zero_lt_one_ax hxm
+  have hSpos := hpos x hx
+  have hSK : S x ≤ K := by
+    have h := hhi x hx; rw [abs_of_nonneg (le_of_lt hSpos)] at h; exact h
+  -- the decay floor, as a lower bound on `S`
+  have hfloor : c / powNat x m ≤ S x := by
+    refine div_le_of_le_mul hxmpos ?_
+    have h := hlo x hx
+    rw [abs_of_nonneg (le_of_lt hSpos)] at h
+    have e : S x * powNat x m = powNat x m * S x := by mach_mpoly [S x, powNat x m]
+    rw [e]; exact h
+  have hcq : (0 : Real) < c / powNat x m := div_pos' hc hxmpos
+  -- `log (c / x^m) = log c − log (x^m)`, and `log (x^m) ≤ x^m − 1`
+  have hsplit : log c = log (c / powNat x m) + log (powNat x m) := by
+    -- `rw ... at *` here rewrote `c` everywhere, including the goal's own subterms; rewrite the
+    -- product inside the multiplication lemma instead
+    have e := log_mul hcq hxmpos
+    rw [div_mul_self' (ne_of_gt hxmpos)] at e
+    exact e
+  have hlogxm : log (powNat x m) ≤ powNat x m - 1 :=
+    log_le_of_le_upper hxm (le_refl (powNat x m))
+  have hloglow : log c - (powNat x m - 1) ≤ log (S x) := by
+    refine le_trans ?_ (log_mono_le hcq hfloor)
+    have v := add_le_add_wit (le_refl (log (c / powNat x m))) hlogxm
+    rw [← hsplit] at v
+    have w := add_le_add_wit v (le_refl (0 - (powNat x m - 1)))
+    have el : log c + (0 - (powNat x m - 1)) = log c - (powNat x m - 1) := by mach_ring
+    have er : log (c / powNat x m) + (powNat x m - 1) + (0 - (powNat x m - 1))
+        = log (c / powNat x m) := by mach_ring
+    rw [el, er] at w; exact w
+  -- assemble
+  have hlogabs : abs (log (S x)) ≤ abs (log K) + abs (log c) + powNat x m := by
+    rcases lt_total (log (S x)) 0 with h | h | h
+    · rw [abs_of_nonpos (le_of_lt h)]
+      have v := add_le_add_wit hloglow (le_refl (0 - log (S x) - (log c - (powNat x m - 1))))
+      have el : log c - (powNat x m - 1) + (0 - log (S x) - (log c - (powNat x m - 1)))
+          = 0 - log (S x) := by mach_ring
+      have er : log (S x) + (0 - log (S x) - (log c - (powNat x m - 1)))
+          = 0 - (log c - (powNat x m - 1)) := by mach_ring
+      rw [el, er] at v
+      have e2 : (0 : Real) - log (S x) = -log (S x) := by mach_ring
+      rw [e2] at v
+      refine le_trans v ?_
+      have h1 : 0 - log c ≤ abs (log c) := by
+        rcases lt_total (log c) 0 with hh | hh | hh
+        · rw [abs_of_nonpos (le_of_lt hh)]
+          have e3 : (0 : Real) - log c = -log c := by mach_ring
+          rw [e3]; exact le_refl _
+        · rw [hh, abs_of_nonneg (le_refl (0 : Real))]
+          have e3 : (0 : Real) - 0 = 0 := by mach_ring
+          rw [e3]; exact le_refl 0
+        · rw [abs_of_nonneg (le_of_lt hh)]
+          have v2 := add_le_add_wit (le_of_lt hh) (le_of_lt hh)
+          have e3 : (0 : Real) + 0 = 0 := by mach_ring
+          rw [e3] at v2
+          have w2 := add_le_add_wit v2 (le_refl (0 - log c))
+          have el2 : (0 : Real) + (0 - log c) = 0 - log c := by mach_ring
+          have er2 : log c + log c + (0 - log c) = log c := by mach_ring
+          rw [el2, er2] at w2; exact w2
+      have v3 := add_le_add_wit h1 (le_refl (powNat x m))
+      have e4 : 0 - (log c - (powNat x m - 1)) ≤ 0 - log c + powNat x m := by
+        have u := add_le_add_wit (le_refl (0 - log c)) (le_add_nonneg' (le_of_lt zero_lt_one_ax) :
+          powNat x m - 1 ≤ powNat x m - 1 + 1)
+        have eu : powNat x m - 1 + 1 = powNat x m := by mach_ring
+        rw [eu] at u
+        have eu2 : 0 - log c + (powNat x m - 1) = 0 - (log c - (powNat x m - 1)) := by mach_ring
+        rw [eu2] at u; exact u
+      refine le_trans e4 (le_trans v3 ?_)
+      have u2 := add_le_add_wit (le_add_nonneg' (abs_nonneg (log K)) :
+        abs (log c) ≤ abs (log c) + abs (log K)) (le_refl (powNat x m))
+      have eu3 : abs (log c) + abs (log K) = abs (log K) + abs (log c) := by mach_ring
+      rw [eu3] at u2; exact u2
+    · rw [h, abs_of_nonneg (le_refl (0 : Real))]
+      exact add_nonneg (add_nonneg (abs_nonneg _) (abs_nonneg _)) (le_of_lt hxmpos)
+    · rw [abs_of_nonneg (le_of_lt h)]
+      refine le_trans (le_trans (log_mono_le hSpos hSK) (le_abs_self (log K))) ?_
+      refine le_trans (le_add_nonneg' (abs_nonneg (log c))) ?_
+      exact le_add_nonneg' (le_of_lt hxmpos)
+  show abs (exp (S x) + log (S x)) ≤ (exp K + (abs (log K) + abs (log c)) + 1) * powNat x m
+  refine le_trans (abs_add _ _) ?_
+  have hexpb : abs (exp (S x)) ≤ exp K := by
+    rw [abs_of_nonneg (le_of_lt (exp_pos _))]
+    exact exp_le_of_le hSK
+  refine le_trans (add_le_add_wit hexpb hlogabs) ?_
+  have e : (exp K + (abs (log K) + abs (log c)) + 1) * powNat x m
+      = exp K * powNat x m + (abs (log K) + abs (log c)) * powNat x m + powNat x m := by
+    mach_mpoly [exp K, abs (log K), abs (log c), powNat x m]
+  rw [e]
+  have b1 : exp K ≤ exp K * powNat x m := by
+    have v := mul_le_mul_of_nonneg_left hxm (le_of_lt (exp_pos K))
+    have e2 : exp K * 1 = exp K := by mach_ring
+    rw [e2] at v; exact v
+  have b2 : abs (log K) + abs (log c) ≤ (abs (log K) + abs (log c)) * powNat x m := by
+    have v := mul_le_mul_of_nonneg_left hxm (add_nonneg (abs_nonneg (log K)) (abs_nonneg (log c)))
+    have e2 : (abs (log K) + abs (log c)) * 1 = abs (log K) + abs (log c) := by mach_ring
+    rw [e2] at v; exact v
+  have hsum := add_le_add_wit (add_le_add_wit b1 b2) (le_refl (powNat x m))
+  have el : exp K + (abs (log K) + abs (log c)) + powNat x m
+      = exp K + (abs (log K) + abs (log c) + powNat x m) := by mach_ring
+  rw [← el]
+  exact hsum
+
 end MachLib
