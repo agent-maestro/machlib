@@ -5,6 +5,46 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (af)
+
+### Correcting the previous commit: the pole-order count does **not** fit inside `algebraFootprint`
+
+`PolyOrd` measured `pev_pderiv_cons` as field-only — nine `MachLib.Real` axioms, no `ltR`, no
+`HasDerivAt` — and concluded that the pole-order count "can be stated and proved inside
+`algebraFootprint`, and invariant (7) will hold across it". **That conclusion was wrong**, and wrong
+in a way the measurement could not have caught: it is true of the derivative *operation* and false of
+the *count*, which needs `q ∤ q'`, hence `q' ≠ 0`, hence **characteristic zero**.
+
+Characteristic zero is not available here, and not by omission. `algebraFootprint` is the theory of
+fields and `𝔽₂` is a model of it; over `𝔽₂`, `q = X² + 1 = (X+1)²` is a square with `q' = 2X = 0`, so `q ∣ q'`;
+so `q ∤ q'` is **false in a model of the allowed axioms**, hence unprovable from them.
+
+Measured confirmation of where the missing strength lives: `MachLib.Real.natCast_ne_zero` carries
+`ltR`, `leR`, `lt_irrefl_ax`, `lt_trans_ax`, `add_lt_add_left`, `le_iff_lt_or_eq` and
+`zero_lt_one_ax`. **In this corpus characteristic zero comes from the order axioms.**
+
+This is the second time the finite-model observation has decided a design question — the first was
+extensionality in `PolyMulDegree` — and the first time it has overturned something already written
+down. It does not damage the spine: the count will carry `q ∤ q'` as a **named hypothesis**,
+everything algebraic stays inside invariant (7), and discharging that hypothesis for `MachLib.Real`
+is a separate step that leaves the allow-list *visibly* rather than silently.
+
+### `PolyDeriv` — the derivative laws, all field-axiom-only
+
+`pderiv_padd` and `pderiv_pscale` are **exact** list identities. **`(A·B)' ≈ A'·B + A·B'`**, up to `pnorm` because `pmul (0 :: W) B` sheds a trailing zero.
+
+`pderiv_length` shows the derivative never changes a list's length, which is the degree half of
+`deg q' < deg q` and costs nothing. Only the **nonvanishing** half needs characteristic zero — a
+clean split worth recording, since it says exactly how much of `q ∤ q'` is free.
+
+Note the module imports `MachLib.PevDeriv`, which transitively carries the analytic axioms. **189
+algebra-spine theorems, 0 leaking** — bringing axioms into *scope* does not put them in a footprint,
+which is what per-theorem checking is for.
+
+Gates: build 678 jobs, aggregator 675/981, consistency PASS, claims 297, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 189 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ae)
 
 ### `PolyOrd` — cancellation, and the `q`-adic exponent is unique

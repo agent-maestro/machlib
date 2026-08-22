@@ -5856,6 +5856,53 @@
       "proof_uses": [
         "ord_unique_le"
       ]
+    },
+    {
+      "_comment": "The product rule, field-axiom-only. Zero hypotheses. forbid_axioms is doing real work here: this module imports PevDeriv, so MachLib.Real.HasDerivAt is genuinely IN SCOPE and a careless proof could have reached for the analytic route. The forbid is a live discriminator, not decoration.",
+      "id": "poly-deriv-product-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`(A·B)' ≈ A'·B + A·B'`**, up to `pnorm` because `pmul (0 :: W) B` sheds a trailing zero."
+      ],
+      "module": "MachLib.PolyDeriv",
+      "theorem": "MachLib.peq_pderiv_pmul",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pderiv",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pderiv_padd",
+        "pderiv_pscale",
+        "pnorm_pmul_cons_zero"
+      ]
+    },
+    {
+      "_comment": "The degree half of deg q' < deg q, pinned to make the CHANGELOG's split explicit and checkable: THIS is free (field axioms only), and the nonvanishing half is what needs characteristic zero. Zero hypotheses.",
+      "id": "poly-deriv-length-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pderiv_length` shows the derivative never changes a list's length"
+      ],
+      "module": "MachLib.PolyDeriv",
+      "theorem": "MachLib.pderiv_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pderiv"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }
