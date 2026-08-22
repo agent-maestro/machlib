@@ -371,6 +371,7 @@ import MachLib.PolyOrd
 import MachLib.PolyDeriv
 import MachLib.PolyPowDeriv
 import MachLib.PolyPoleOrder
+import MachLib.PolyPoleCount
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

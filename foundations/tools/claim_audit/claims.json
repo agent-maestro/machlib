@@ -6006,6 +6006,55 @@
         "peq_pderiv_ppow",
         "peq_pderiv_pmul"
       ]
+    },
+    {
+      "_comment": "CRUX.md section 3's count, formalised at arbitrary irreducible q. hypotheses_count 13, derived with the auditor's own hypotheses_of. proof_uses pins the three results the tactic script directly composes: the exact order of the cross term, the companion bound, and the exponent comparison that turns them into an inequality.",
+      "id": "poly-pole-contradiction-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the left side of the identity carries `q^(k+l+1+2(m+1))`; the right\nside has **exact** order `m + (k+1) + (l+1)`. Equating them forces\n`k+l+2m+3 ≤ k+l+m+2`, i.e. `m+1 ≤ 0`, which is false."
+      ],
+      "module": "MachLib.PolyPoleCount",
+      "theorem": "MachLib.pole_order_contradiction",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "hypotheses_count": 13,
+      "proof_uses": [
+        "ord_deriv_cross",
+        "ord_cross_lower",
+        "ord_le_of_dvd"
+      ]
+    },
+    {
+      "_comment": "The derivative drops the order by at most one -- registered because the CHANGELOG claims it is a ONE-LINER off peq_pderiv_ppow_mul, and proof_uses makes that credit checkable rather than a story about how easy it was.",
+      "id": "poly-ord-deriv-drop-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`ord_q(X) ≥ k+1 ⟹ ord_q(X') ≥ k`, and it is a **one-liner** from `peq_pderiv_ppow_mul`"
+      ],
+      "module": "MachLib.PolyPoleCount",
+      "theorem": "MachLib.ord_deriv_drop",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "ppow",
+        "pderiv"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "peq_pderiv_ppow_mul"
+      ]
     }
   ]
 }

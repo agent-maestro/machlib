@@ -5,6 +5,47 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ai)
+
+### `PolyPoleCount` — **`CRUX.md` §3 is formalised**, at arbitrary irreducible `q`
+
+`pole_order_contradiction`: the left side of the identity carries `q^(k+l+1+2(m+1))`; the right
+side has **exact** order `m + (k+1) + (l+1)`. Equating them forces
+`k+l+2m+3 ≤ k+l+m+2`, i.e. `m+1 ≤ 0`, which is false.
+
+**No real-pole hypothesis. No FTA. Arbitrary irreducible `q`.** The only input beyond the field
+axioms is `DerivCoprime`. This supersedes *both* restrictions the frozen specimen `e767940c`
+carries — its §3 was proved only for `S` with a genuine real pole, and its §4 costed the general
+case at real FTA plus a quadratic division routine.
+
+### The companion bound cost almost nothing
+
+`ord_q(X) ≥ k+1 ⟹ ord_q(X') ≥ k`, and it is a **one-liner** from `peq_pderiv_ppow_mul`: that lemma already exhibits `X'` as `qᵏ·(…)`, so the divisibility is read
+straight off the factorisation rather than re-derived. The companion `ord_q(u'v − uv') ≥ k+l−1` then
+needs no derivative reasoning at all — `q^(k−1) ∣ u'` with `qˡ ∣ v`, and symmetrically for `uv'`,
+closed under subtraction. It had looked like separate work when the count was planned; it was three
+lines.
+
+Note the asymmetry: this direction needs **no coprimality**, because it is a bound. `ord_deriv_cross`
+is an *identity* and therefore does. That is the whole reason the exactness of `qᵐ` had to be proved
+separately — a bound on both sides would have made the count vacuous.
+
+### Canonicity chained without carrying hypotheses
+
+`ord_pmul` needs its first cofactor canonical, for `euclid_lemma`. Chaining it three times would drag
+a `PNormal` along for every intermediate product. `ord_pmul_norm` normalises the cofactor at each
+step instead — legitimate because `Pdvd` depends only on `pnorm`, so normalising changes neither the
+divisibility nor the factorisation. Same move as `pnorm_pmul_right` made available in
+`PolyDvdAlgebra`, reused a second time to delete hypotheses rather than proof steps.
+
+`AxiomLedger` invariant (7) covers seventeen modules: **216 algebra-spine theorems, 0 leaking**.
+`pole_order_contradiction` itself carries no `ltR`, no `leR`, no `HasDerivAt`, no `natCast`, no
+`sorryAx`.
+
+Gates: build 681 jobs, aggregator 678/984, consistency PASS, claims 303, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 216 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ah)
 
 ### `PolyPoleOrder` — **the pole-order count**
