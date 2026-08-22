@@ -5,6 +5,51 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (r)
+
+### Brick four, mechanical half: the relation differentiates
+
+`BipevExpDeriv`. The earlier bricks differentiate the *pieces*; this differentiates the **relation**
+— `t ↦ bipev Ls t (exp (S t))`, the left side of `Σⱼ pⱼ(x)·exp(S x)ʲ = 0`. Each Horner step is a
+product `y · (rest)`, so it is one product rule per coefficient, and `y' = S'·y` is what keeps the
+result expressed in the **same** `y`. No new transcendental appears, which is the entire reason this
+route exists.
+
+`dbipevExp_eq_zero_of_relation_off_finite` then does what the argument actually needs: a relation
+vanishing off a finite set has a **vanishing derivative** there — `HasDerivAt_congr` against the
+constant `0`, with the neighbourhood supplied by `finite_list_avoidable` from brick three, and
+`HasDerivAt_unique` to identify the two derivatives.
+
+### One thing the textbooks write that is false here
+
+Classically the differentiated relation is `Σⱼ (pⱼ' + j·S'·pⱼ)·yʲ = 0`, described as "the same
+shape". **It is not the same shape**: those coefficients contain `S'`, which is *rational*, not
+polynomial. Recovering a genuinely polynomial relation needs the denominators cleared first.
+
+`dbipevExp` is therefore an explicit recursion rather than a `List (List Real)` coefficient family —
+writing it as a family would have hidden exactly that, and the corpus has spent the day learning
+that the wrong normal form is how cancellation problems become hard.
+
+### Everything mechanical is now built. What remains is mathematics
+
+1. **Minimal degree** — a well-founded induction on the degree of the relation, not on lists.
+2. **Elimination** — combine original and differentiated relation to kill the top term.
+3. **Nontriviality of the result**, and this is the crux rather than bookkeeping: the eliminated
+   relation is trivial exactly when `(pⱼ/p_m)' = (j−m)·S'·(pⱼ/p_m)` for every `j`, i.e. when each
+   ratio is a constant multiple of `exp((j−m)·S)`. **Ruling that out is a transcendence input**; it
+   does not follow from any of the mechanics above.
+
+Step 3 is the honest reason this entry claims a half. And the caveat that has not moved all day:
+**the positive branch is not this argument** — `F(S) = exp(S) + log(S)` is not `exp` of anything, so
+`y' = S'·y` does not hold there at all.
+
+`sorryAx` absent from both new theorems. `HasDerivAt_unique` appears in the second's footprint and
+not the first's, which is the expected split: differentiating needs no uniqueness, identifying two
+derivatives does.
+
+Gates: build 663 jobs, aggregator 660/966, claims 269, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (q)
 
 ### Brick three: the germ has a derivative, and it is the germ's — not a stand-in's

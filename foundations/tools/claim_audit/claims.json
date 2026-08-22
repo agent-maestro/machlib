@@ -5245,6 +5245,26 @@
       "proof_uses": [
         "hasDerivAt_of_agrees_off_finite"
       ]
+    },
+    {
+      "_comment": "Brick four's mechanical half. proof_uses pins HasDerivAt_unique, which is what turns 'the relation vanishes' into 'its derivative vanishes' -- the step the elimination will consume. Credited at the level the proof actually performs it, after the auditor rejected exactly that error one entry earlier.",
+      "id": "bipev-exp-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a relation\nvanishing off a finite set has a **vanishing derivative** there"
+      ],
+      "module": "MachLib.BipevExpDeriv",
+      "theorem": "MachLib.dbipevExp_eq_zero_of_relation_off_finite",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "dbipevExp"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "HasDerivAt_unique"
+      ]
     }
   ]
 }
