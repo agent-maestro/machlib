@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ah)
+
+### `PolyPoleOrder` — **the pole-order count**
+
+`ord_deriv_cross`: for `Q ≈ qʳ·Q̃` with `q ∤ P` and `q ∤ Q̃`, the cross term `P'Q − PQ'` factors as
+`q^(r−1)·E` with `q ∤ E`. This is the step `CRUX.md` §3 runs on, and the reason the Euclid spine
+exists.
+
+With `r = m+1`, the power rule gives `Q' ≈ qᵐ·(T·Q̃ + q·Q̃')` where `T = r·q'`, and
+`P'Q ≈ qᵐ·(P'·(q·Q̃))`, so `D ≈ qᵐ·E` with `E = P'·(q·Q̃) − P·(T·Q̃ + q·Q̃')`. Then
+`q ∤ E` because modulo `q` it is `−P·T·Q̃`, whose three factors `q` all fails to
+divide — `q ∤ P` by hypothesis, `q ∤ T` by `DerivCoprime`, `q ∤ Q̃` by hypothesis — so
+Euclid's lemma applied twice finishes.
+
+**The `qᵐ` is exact, not a bound.** That is what makes the count a strict inequality rather than a tautology:
+`ord_q(D)` is `r−1` and not merely `≥ r−1`, so equating it against the other side of
+`(u'v − uv')·Q² = n·(P'Q − PQ')·u·v` forces `r ≤ 0`.
+
+### Cost, finally settled
+
+**One named hypothesis** beyond the field axioms — `DerivCoprime q r`. The footprint of
+`ord_deriv_cross` is field axioms plus Lean core: no `ltR`, no `leR`, no `HasDerivAt`, no `natCast`,
+no `sorryAx`. **204 algebra-spine theorems, 0 leaking.**
+
+Three sizings of this step, for the record: two commits ago *free*, one commit ago *two inputs*,
+actually *one*. Both wrong estimates came from reasoning about the machinery instead of working the
+algebra; only the paper derivation got it right.
+
+### Two `psub` identities that had to be built
+
+`X − (X − Y) ≈ Y` and `(X + Y) − Y ≈ X`. Both were assumed present when the proof was drafted and
+neither was — the spine had `(U + R) − U ≈ R` only. Cheap to add, but worth noting as the last
+instance of a pattern that ran through this whole arc: **the lemma you reach for mid-proof is more
+often absent than the one you plan for.**
+
+Gates: build 680 jobs, aggregator 677/983, consistency PASS, claims 301, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 204 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ag)
 
 ### `PolyPowDeriv` — the power rule, and the characteristic-zero input named exactly once

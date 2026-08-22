@@ -5952,6 +5952,60 @@
         "pnsum"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "THE POLE-ORDER COUNT -- the theorem the entire Euclid spine was built to reach. hypotheses_count 7, derived with the auditor's own hypotheses_of after moving {m} into the leading binder group. proof_uses pins euclid_lemma (applied twice, the whole content of q not dividing E) and peq_pderiv_ppow_mul (the power-rule factorisation). forbid_axioms includes natCast and HasDerivAt, both genuinely reachable from this module's imports.",
+      "id": "poly-pole-order-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`q ∤ E` because modulo `q` it is `−P·T·Q̃`, whose three factors `q` all fails to\ndivide — `q ∤ P` by hypothesis, `q ∤ T` by `DerivCoprime`, `q ∤ Q̃` by hypothesis — so\nEuclid's lemma applied twice finishes."
+      ],
+      "module": "MachLib.PolyPoleOrder",
+      "theorem": "MachLib.ord_deriv_cross",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "PEq",
+        "ppow"
+      ],
+      "hypotheses_count": 7,
+      "proof_uses": [
+        "euclid_lemma",
+        "peq_pderiv_ppow_mul"
+      ]
+    },
+    {
+      "_comment": "The derivative respects PEq -- the last congruence, and the one that lets the count start from Q ~ q^r * Qt rather than a literal equality. Zero hypotheses beyond the implicit PEq argument; read off #check.",
+      "id": "poly-pderiv-congr-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the power rule gives `Q' ≈ qᵐ·(T·Q̃ + q·Q̃')`"
+      ],
+      "module": "MachLib.PolyPoleOrder",
+      "theorem": "MachLib.peq_pderiv_ppow_mul",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pderiv",
+        "ppow"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "peq_pderiv_ppow",
+        "peq_pderiv_pmul"
+      ]
     }
   ]
 }

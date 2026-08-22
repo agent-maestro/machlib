@@ -370,6 +370,7 @@ import MachLib.PolyFactor
 import MachLib.PolyOrd
 import MachLib.PolyDeriv
 import MachLib.PolyPowDeriv
+import MachLib.PolyPoleOrder
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
