@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (aa)
+
+### `PolyPEq` + `PolyBezout` — extended Euclid, and `g ≈ s·A + t·B`
+
+Every statement in this spine since `PolyCanonical` has had the form `pnorm X = pnorm Y`, threaded
+by hand through `pnorm_padd_congr`, `pnorm_pmul_left` and `pnorm_pmul_right`. The Euclid step is
+where that stops scaling — its invariant is a chain of substitutions into a Bézout identity — so
+`PEq X Y := pnorm X = pnorm Y` is named, shown to be an equivalence, and shown to be a **congruence
+for every operation**. It is `@[reducible]`, not a quotient: nothing is abstracted and any `PEq`
+unfolds back to the list equation. A readability decision, not a foundational one.
+
+### The step turned out to be mostly exact identities
+
+Worth recording because it is the opposite of what the `PEq` machinery suggests. Of the four
+substitutions the Euclid step performs, **three are exact list identities** — `pmul` distributing
+over `psub` on each side, and `X + (Y − Z) = Y + (X − Z)` — because `psub` is just `padd` composed
+with `pscale (0−1)`, so each inherits an exact form already proved. `pdivmod_identity` supplies `A ≈ Q·B + R`, `peq_remainder_of_identity` turns that
+round into `R ≈ A − Q·B`, and only associativity enters as a `PEq` step, since `pmul`
+genuinely does not associate on the nose. `PEq` is
+doing bookkeeping here, not carrying weight, and the module is short because of it.
+
+### A naming hazard, self-inflicted
+
+The congruences are `peq_padd`, `peq_pmul`, … and **not** `PEq.padd`, `PEq.pmul`. A theorem named
+`PEq.pscale` shadows `pscale` inside the `PEq` namespace, so the *statement* of the congruence stops
+elaborating — `pscale c Y` resolves to the theorem being declared. Same class as `open Real`
+shadowing `max`, but caused by my own naming rather than inherited. Only `refl`/`symm`/`trans` stay
+in the namespace.
+
+`AxiomLedger` invariant (7) covers nine modules: **144 algebra-spine theorems, 0 leaking** — the
+whole spine, canonical form through Bézout, is field-axiom-only.
+
+Gates: build 673 jobs, aggregator 670/976, consistency PASS, claims 287, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 144 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (z)
 
 ### `PolyDvdAlgebra` — associativity up to `pnorm`, and divisibility's closure

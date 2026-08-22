@@ -5622,6 +5622,52 @@
         "pnorm_padd_congr",
         "pnorm_pmul_cons_zero"
       ]
+    },
+    {
+      "_comment": "The Bezout identity. hypotheses_count 3, read off #check (PNormal A, PNormal B, B.length <= fuel). proof_uses lists what the tactic script DIRECTLY invokes: pdivmod_identity supplies A ~ Q*B + R, peq_remainder_of_identity turns it round, pmul_assoc_pnorm is the one substitution that is not an exact list identity.",
+      "id": "poly-bezout-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pdivmod_identity` supplies `A ≈ Q·B + R`, `peq_remainder_of_identity` turns that\nround into `R ≈ A − Q·B`, and only associativity enters as a `PEq` step, since `pmul`\ngenuinely does not associate on the nose."
+      ],
+      "module": "MachLib.PolyBezout",
+      "theorem": "MachLib.eea_bezout",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "eea"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "pdivmod_identity",
+        "peq_remainder_of_identity",
+        "pmul_assoc_pnorm"
+      ]
+    },
+    {
+      "_comment": "The turn-around step: the division identity gives A ~ Q*B + R and the Euclid step wants R ~ A - Q*B. One hypothesis, read off #check. Registered separately because the CHANGELOG credits it by name as the piece that makes the substitution chain possible.",
+      "id": "poly-peq-remainder-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`peq_remainder_of_identity` turns that\nround into `R ≈ A − Q·B`"
+      ],
+      "module": "MachLib.PolyPEq",
+      "theorem": "MachLib.peq_remainder_of_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "psub"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
