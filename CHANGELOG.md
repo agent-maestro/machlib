@@ -5,6 +5,69 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (t)
+
+### The crux of the differential route was mis-typed — it is not a transcendence input
+
+Brick four (`1f8fa3a3`, earlier today) closed with: *"the eliminated relation is trivial exactly when
+`(pⱼ/pₘ)' = (j−m)·S'·(pⱼ/pₘ)` … ruling that out is where a transcendence input is genuinely
+required."* `docs/what_is_proven.md` §7 (`cc301dae`) repeated it. **Both were wrong about the type of
+the step, and the first was also wrong about the sign.** Neither was load-bearing — nothing is
+proved from either sentence — but the first is the specification a future session would formalise
+from, and the second is the authoritative claim inventory, rewritten this afternoon precisely so it
+would stop drifting.
+
+**The sign is `(m−j)`, not `(j−m)`.** The smallest genuine relation settles it by eye:
+`p₀ + p₁·exp(S) = 0` gives `p₀/p₁ = −exp(S)`, a constant multiple of `exp(+1·S)` with `m−j = 1` —
+the reciprocal of what was written. Confirmed independently by symbolic elimination over abstract
+coefficients at `m = 3`, which also reproduces the `yᵐ` coefficient cancelling identically.
+
+**The type is algebra, not transcendence.** Put `W = pⱼ/pₘ`. The trivialising condition is
+`W' = n·S'·W` with `n = m−j ≥ 1` — an identity between **rational functions**, the `exp` having
+divided out. Cleared of denominators with `S = P/Q` and `W = u/v` it is the polynomial identity
+`(u'v − uv')·Q² = n·(P'Q − PQ')·u·v`, and **what refutes it is an order-of-vanishing count**. At a
+real `a` with `Q(a) = 0` and `P(a) ≠ 0`, writing `r = ord_a Q ≥ 1`, `k = ord_a u`, `l = ord_a v`:
+`ord_a(P'Q − PQ')` is exactly `r−1` (this is where `P(a) ≠ 0` and characteristic zero are spent),
+while `ord_a(u'v − uv') ≥ k+l−1`; equating the two sides forces `k+l−1+2r ≤ r−1+k+l`, i.e. `r ≤ 0`.
+
+So the bounded branch closes **on paper** for every `S` with a genuine real pole. Note *which*
+germs that is: the route runs on the branch where `F(S) = exp(S)`, which by `Fbasis_of_nonpos`
+needs `S ≤ 0` on the tail — so the canonical covered germ is **`−1/x`** (`P = [−1]`, `Q = [0,1]`,
+pole at `a = 0`), not `1/x`, which is positive on a tail and therefore sits in the `S > 0` branch
+this route does not touch at all. The residual within the covered branch is `S` bounded and
+nonconstant with **no** real pole (canonically `−1/(x²+1)`), where the identical count runs at an
+irreducible quadratic factor but needs division by a quadratic and real FTA. That is a bounded build, and notably it is
+**not** the "genuinely new theory" the 2026-08-20 SPEC costed: the reusable algebraic-over-a-field
+predicate that SPEC priced is not on this route at all.
+
+Derivation, and the sympy scripts that checked every step rather than asserting it:
+`monogate-research/exploration/bounded_germ_crux_retyped_2026_08_21/`.
+
+### `PevOrder` — `deflate` iterated to full multiplicity
+
+`pev_ord_factor` is the first brick of that count: **a coefficient list is identically zero, or it
+factors at a real point as `(x − a)ᵏ · M(x)` with `M(a) ≠ 0`.** `PevRoots` divides out *one* root;
+this divides out *all* of them at one point, by the same length-budget induction asking a different
+question at each step — where `pev_zero_or_root_list` asks "is there a root **anywhere**?", this asks
+"is `a` **still** a root?", so `Classical.em` enters on a quantifier-free question instead of an
+existential one.
+
+The exponent is produced **with its witness** (`pev M a ≠ 0`) rather than as a numeric `ord`
+function. That is deliberate: the non-vanishing *is* the content, and an `ord` that computed without
+carrying `M` would have to re-derive it at every use site.
+
+Footprint, read off `#print axioms` and not from a name-grep: **field axioms only** — 16
+`MachLib.Real` arithmetic axioms plus `propext`, `Classical.choice`, `Quot.sound`. No order axiom,
+no `HasDerivAt`, no `rolle`, no `sorryAx`. The ledger does not move, and would not have: the
+factorisation is synthetic division and nothing else.
+
+**What this is not.** One lemma of the count, not the count. `ord_a` of a product, the two displayed
+order facts, and the minimal-degree induction over relations are all unbuilt. The real-pole theorem
+is a paper result and should be read as one.
+
+Gates: build 664 jobs, aggregator 661/967, consistency PASS, claims 271, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)**, sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (s)
 
 ### The authoritative inventory was ten days stale — twenty-one results missing

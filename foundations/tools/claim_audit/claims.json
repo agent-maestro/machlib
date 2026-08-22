@@ -5265,6 +5265,50 @@
       "proof_uses": [
         "HasDerivAt_unique"
       ]
+    },
+    {
+      "_comment": "PevOrder, the reader-facing form. forbid_axioms is chosen to DISCRIMINATE, not to decorate: MachLib.Real.HasDerivAt is carried by the sibling brick hasDerivAt_pev and MachLib.Real.ltR by pev_eventual_sign, so both are live names in this corpus that this theorem genuinely does without. That is the content of the entry -- the factorisation is field arithmetic, with no analysis and no order.",
+      "id": "pev-ord-factor-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "a coefficient list is identically zero, or it\nfactors at a real point as `(x − a)ᵏ · M(x)` with `M(a) ≠ 0`"
+      ],
+      "module": "MachLib.PevOrder",
+      "theorem": "MachLib.pev_ord_factor",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.ltR"
+      ],
+      "conclusion_mentions": [
+        "powNat",
+        "pev"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pev_ord_factor_budget"
+      ]
+    },
+    {
+      "_comment": "The budgeted form, pinned separately because the CHANGELOG credits a SPECIFIC mechanism -- the same length-budget induction as pev_zero_or_root_list, running on synthetic division. proof_uses names pev_deflate and deflate_length so that credit is a positive obligation rather than prose.",
+      "id": "pev-ord-factor-budget-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "by the same length-budget induction asking a different\nquestion at each step"
+      ],
+      "module": "MachLib.PevOrder",
+      "theorem": "MachLib.pev_ord_factor_budget",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "powNat"
+      ],
+      "proof_uses": [
+        "pev_deflate",
+        "deflate_length"
+      ]
     }
   ]
 }

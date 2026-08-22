@@ -262,10 +262,31 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   and `polyEnvelope_of_Fbasis_decay` prove `F ∘ S` has a polynomial envelope for *every*
   bounded rational `S`, while every exclusion theorem here works by *escaping* one. The
   differential route's infrastructure is built (`pderiv`, `y' = S'·y`,
-  the germ-derivative transfer, and differentiation of the relation itself); what remains
-  is the transcendence input that rules out the eliminated relation being trivial, plus
-  the `S > 0` branch where `F(S) = eˣ + log S` is not `exp` of anything and the whole
-  argument does not apply. Neither is built, and neither should be read as nearly-built.
+  the germ-derivative transfer, and differentiation of the relation itself). What remains
+  was described here on 2026-08-21 as "the transcendence input that rules out the
+  eliminated relation being trivial". **That was the wrong type, corrected the same day.**
+  With `W = pⱼ/p_m` the trivialising condition is `W' = (m−j)·S'·W` — an identity between
+  *rational functions*, the `exp` having been divided out — and what refutes it is an
+  **order-of-vanishing count**, not transcendence. The count closes **on paper** for every
+  `S` with a genuine real pole — on the branch this route runs on, which is `S ≤ 0` where
+  `F(S) = exp(S)`, so the canonical covered germ is `−1/x` and *not* `1/x` (positive on a
+  tail, hence in the `S > 0` branch below) — using only the synthetic division already in
+  `PevRoots`; the residual is `S` bounded and nonconstant with **no** real pole,
+  canonically `−1/(x²+1)`, where the identical count runs at an irreducible quadratic factor
+  but needs division by a quadratic and real FTA. Derivation and symbolic checks:
+  `monogate-research/exploration/bounded_germ_crux_retyped_2026_08_21/`.
+
+  **One brick of that count is now in Lean and the rest is not.** `pev_ord_factor`
+  (`MachLib.PevOrder`) factors a coefficient list at a real point to full multiplicity —
+  `pev L x = (x−a)ᵏ · pev M x` with `pev M a ≠ 0` — by iterating the synthetic division
+  already in `PevRoots`. Its footprint is **field axioms only**: 16 `MachLib.Real`
+  arithmetic axioms plus `propext`, `Classical.choice`, `Quot.sound`. No order axiom, no
+  `HasDerivAt`, no `sorryAx`. What is *not* built is `ord_a` of a product, the two order
+  facts the count needs, and the minimal-degree induction over relations — so the real-pole
+  theorem itself remains a **paper** result and must not be read as nearly-built. The
+  `S > 0` branch is
+  separately untouched — `F(S) = eˣ + log S` is not `exp` of anything, so `y' = S'·y` does
+  not hold and the argument does not apply there at all.
 
 
 - **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib

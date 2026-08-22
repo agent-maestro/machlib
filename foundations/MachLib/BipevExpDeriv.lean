@@ -32,14 +32,41 @@ Everything mechanical in the differential route is now built. What is left is no
 1. **Minimal degree.** Choose a relation of least degree in `y`; this needs a well-founded induction
    on the degree, on relations rather than on lists.
 2. **Elimination.** Combine the original and the differentiated relation to kill the top term.
-3. **Nontriviality of the result** — and this is the crux, not bookkeeping. The eliminated relation
-   is trivial exactly when `(pⱼ/p_m)' = (j−m)·S'·(pⱼ/p_m)` for every `j`, i.e. when each ratio is a
-   constant multiple of `exp((j−m)·S)`. Ruling that out is where a transcendence input is genuinely
-   required; it does not follow from the mechanics above.
+3. **Nontriviality of the result** — the crux, not bookkeeping. The eliminated relation is trivial
+   exactly when `(pⱼ/p_m)' = (m−j)·S'·(pⱼ/p_m)` for every `j`, i.e. when each ratio is a constant
+   multiple of `exp((m−j)·S)`.
 
-Step 3 is the honest reason this file claims a half and not a theorem. And the caveat that has not
-moved all day: **the positive branch is not this argument** — `F(S) = exp(S) + log(S)` is not `exp`
-of anything, so `y' = S'·y` does not hold there at all.
+**On step 3, corrected the same day.** An earlier revision of this docstring wrote both exponents as
+`(j−m)` and called ruling this out *"a transcendence input"*. Both were wrong.
+
+The sign is `(m−j)`: the smallest genuine relation is `p₀ + p₁·exp(S) = 0`, which gives
+`p₀/p₁ = −exp(S)` — a constant multiple of `exp(+1·S)` with `m−j = 1`, not of `exp(−S)`.
+
+And the step is **not** a transcendence step. Put `W = pⱼ/p_m`; the condition is `W' = n·S'·W` with
+`n = m−j ≥ 1`, an identity between **rational functions** — the `exp` has been divided out. Cleared
+of denominators with `S = P/Q`, `W = u/v`, it is the polynomial identity
+
+```
+(u'v − uv')·Q² = n·(P'Q − PQ')·u·v
+```
+
+and it is refuted by an **order-of-vanishing count**, not by transcendence. At a real `a` with
+`Q(a) = 0` and `P(a) ≠ 0`, writing `r = ord_a Q ≥ 1`, `k = ord_a u`, `l = ord_a v`:
+`ord_a(P'Q − PQ')` is exactly `r−1`, while `ord_a(u'v − uv') ≥ k+l−1`; equating the two sides forces
+`r ≤ 0`. The whole count is synthetic division — `deflate` and `pev_deflate` in `PevRoots` — plus
+`natCast r ≠ 0`. That brick is now built — `pev_ord_factor` in `MachLib.PevOrder`, field axioms
+only — but it is one lemma of the count, not the count: `ord_a` of a product, the two displayed
+order facts, and the minimal-degree induction are all still unbuilt.
+
+Which germs this covers: the branch is `S ≤ 0` (that is where `Fbasis_of_nonpos` gives
+`F(S) = exp S`, and where `y' = S'·y` exists at all), so the canonical covered germ is `−1/x`, not
+`1/x`. Left over: `Q` with **no real root** (canonically `S = −1/(x²+1)`), where the identical count
+runs at an irreducible quadratic factor but needs division by a quadratic and real FTA. Derivation
+and symbolic checks:
+`monogate-research/exploration/bounded_germ_crux_retyped_2026_08_21/CRUX.md`.
+
+And the caveat that has not moved: **the positive branch is not this argument** — `F(S) = exp(S) +
+log(S)` is not `exp` of anything, so `y' = S'·y` does not hold there at all.
 -/
 
 namespace MachLib

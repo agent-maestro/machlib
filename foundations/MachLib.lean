@@ -354,6 +354,7 @@ import MachLib.PevDeriv
 import MachLib.ExpCompDeriv
 import MachLib.RatGermDeriv
 import MachLib.BipevExpDeriv
+import MachLib.PevOrder
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
