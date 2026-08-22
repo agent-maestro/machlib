@@ -5717,6 +5717,55 @@
       "proof_uses": [
         "peq_pmul_cons_right"
       ]
+    },
+    {
+      "_comment": "Euclid's lemma -- the number-theoretic payload the whole algebra spine was built for. hypotheses_count 4, read off #check. proof_uses names the four substantive compositions: both halves of the gcd, the irreducibility dichotomy, and the associate step that discharges the second branch.",
+      "id": "poly-euclid-lemma-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`q` irreducible, `q ∤ a` and `q ∣ ab` gives `q ∣ b`, and every step is a `PEq` rewrite\nover lemmas already proved — nothing new is needed about polynomials."
+      ],
+      "module": "MachLib.PolyIrred",
+      "theorem": "MachLib.euclid_lemma",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "eea_bezout",
+        "eea_divides",
+        "Pdvd_irred_dichotomy",
+        "Pdvd_of_associate"
+      ]
+    },
+    {
+      "_comment": "The dichotomy, DERIVED from degree additivity rather than assumed -- which is the whole reason PIrred is stated as non-factorisation. proof_uses pins pmul_length, the additivity, and pmul_normal, which is what makes pnorm inert so the length reads off.",
+      "id": "poly-irred-dichotomy-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the factorisation form **derives** it from `pmul_length`: degree is additive, so a\ndivisor of a degree-`n` polynomial is either constant or has a constant cofactor."
+      ],
+      "module": "MachLib.PolyIrred",
+      "theorem": "MachLib.Pdvd_irred_dichotomy",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "length"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "pmul_length",
+        "pmul_normal"
+      ]
     }
   ]
 }

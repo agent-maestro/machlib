@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ac)
+
+### `PolyIrred` — irreducibility, and **Euclid's lemma**
+
+`q` irreducible, `q ∤ a` and `q ∣ ab` gives `q ∣ b`, and every step is a `PEq` rewrite
+over lemmas already proved — nothing new is needed about polynomials.
+
+### Irreducibility stated as non-factorisation, not as a divisor condition
+
+`PIrred q` says `q` is canonical, nonconstant, and admits no factorisation into two nonconstant
+polynomials. The alternative — "every divisor is a unit or an associate" — would have to be
+*assumed*; the factorisation form **derives** it from `pmul_length`: degree is additive, so a
+divisor of a degree-`n` polynomial is either constant or has a constant cofactor. `Pdvd_irred_dichotomy` is that derivation.
+
+### Units need no side condition
+
+A unit is a canonical list of **length one**. Canonicity does the work: a length-one canonical list
+is `[u]` with `u ≠ 0`, which is exactly a nonzero constant, so no nonvanishing hypothesis travels
+anywhere. "Associate of `q`" is likewise just "same length as `q`". This is the representation
+decision from `PolyCanonical` paying off a fifth time.
+
+### A rewrite that reached too far
+
+`rw [← pnorm_eq_self q hqn]` inside `euclid_lemma` rewrote **every** `q`, including the one inside
+`eea a.length q a`, producing a goal about `eea a.length (pmul g M) a`. The fix is to compose at
+term level — `Eq.trans (Eq.trans (pnorm_eq_self q hqn).symm hM) hcanon` — and take lengths with
+`congrArg`. Worth recording as a shape: **when a variable appears inside an index of the term being
+rewritten, `rw` is the wrong tool** and term-level composition is the right one.
+
+`AxiomLedger` invariant (7) covers eleven modules: **160 algebra-spine theorems, 0 leaking**.
+`euclid_lemma` itself is field-axiom-only.
+
+Gates: build 675 jobs, aggregator 672/978, consistency PASS, claims 291, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 160 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ab)
 
 ### `PolyGcd` — `pmul` commutes, and extended Euclid returns a common divisor
