@@ -221,6 +221,53 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
 
 ## 7. The other lanes — named with their asterisks
 
+- **`L_F` query complexity — the zero-query layer, complete as of 2026-08-21.** A
+  separate lane from the numerics spine: how many calls to the one transcendental
+  generator `F(x) = eˣ + log₀ x` a function needs. `C_k` = computable with `k`
+  `F`-queries.
+
+  - **`C₀` is characterised, globally.** `zero_query_iff_ratGerm` makes
+    `C₀ = eventual rational germs` an equality, and
+    `zero_query_finite_exception_normal_form` upgrades that to a **global** normal
+    form: an `F`-free term is `P(x)/Q(x)` outside a **finite** exceptional set, with
+    `Q` nonvanishing there. The finite-exception form matters — the eventual form is
+    blind to bounded regions, which is where `floor`/`mod` misbehave.
+  - **Two exclusions, by two different instruments.** `logQueryLowerBound_holds`
+    (`log ∉ C₀`, by substituting `x = exp t` and landing in `exp_not_algebraic` — a
+    *growth* question moved into an *algebraic* frame) and `sign_not_zero_query`
+    (`sign ∉ C₀`, by **level sets**: `zero_query_level_set` says a level set is finite
+    or everything-off-the-exceptional-set, and a ray is neither). The second is the
+    first lower bound here whose obstruction is *branching* rather than growth.
+  - **And a matching upper bound.** `sign_query_cost_bounds_tight`: `1 ≤ q_F(sign) ≤ 12`.
+    `sign` is **not** zero-query yet **is** a finite expression once one totalised
+    transcendental is available — `sign x = (logGap x − logGap(0−x))/log 2` where
+    `logGap x = log(2x) − log x` is the constant `log 2` on `x > 0` and `0` on `x ≤ 0`.
+    **The zero-query barrier is a basis boundary, not an expressibility barrier.**
+  - **The level-0 asymptotic toolkit, all algebraic.** `pev_zero_or_finite_roots`
+    (synthetic division, no analysis), `pev_leading_form` (one exponent, both bounds),
+    `ratGermTrichotomy_holds` (bounded or at-least-linear), `pev_eventual_sign` and
+    `ratGermSignedTrichotomy_holds` (constant sign, **without** the intermediate value
+    theorem), `ratGerm_shape` (decay-like-`1/x` versus a nonzero floor). None of these
+    touches a derivative, continuity, Rolle or IVT axiom. Check any of them:
+    ```
+    #print axioms MachLib.ratGermSignedTrichotomy_holds
+    #   ⇒ no HasDerivAt, no rolle, no sorryAx
+    ```
+
+  **What is open, and precisely where.** `q_F(sign) ≥ 2` reduces to `OneQueryLevelSet`
+  (a *new* ledger row — **not** `OneQueryDichotomy`, which is an *eventual* statement
+  and `sign` is eventually constant, so it excludes nothing). `q_F^global(exp) ∈ {1,2}`
+  turns on the same bounded region. And `BoundedGermTranscendence` is now known to be
+  **out of reach of every instrument in this library**: `polyEnvelope_of_Fbasis_floor`
+  and `polyEnvelope_of_Fbasis_decay` prove `F ∘ S` has a polynomial envelope for *every*
+  bounded rational `S`, while every exclusion theorem here works by *escaping* one. The
+  differential route's infrastructure is built (`pderiv`, `y' = S'·y`,
+  the germ-derivative transfer, and differentiation of the relation itself); what remains
+  is the transcendence input that rules out the eliminated relation being trivial, plus
+  the `S > 0` branch where `F(S) = eˣ + log S` is not `exp` of anything and the whole
+  argument does not apply. Neither is built, and neither should be read as nearly-built.
+
+
 - **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib
   has no Khovanskii bound. Three things must be kept apart, because they are easy to
   conflate (an earlier version of this document conflated the first two):

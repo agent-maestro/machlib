@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (s)
+
+### The authoritative inventory was ten days stale — twenty-one results missing
+
+`docs/what_is_proven.md` is what `CLAUDE.md` calls *"the authoritative claim inventory"* and what its
+own header calls *"a reader's front door"*. It was last written **2026-08-11**. None of today's
+results appeared in it, and **nothing gates it** — the claim auditor pins CHANGELOG prose, not this
+file.
+
+That is the same defect class this session spent the day fixing elsewhere: the tower registry
+publishing one relation's answer under another's name, the obligations count reading "four" over
+sixteen rows, published pages naming Bessel a Pfaffian tower. **An artifact described as
+authoritative that quietly stopped being written.** Flagged three times today and deferred three
+times in favour of more theorems, which is precisely how the others got that way.
+
+### The `L_F` lane, added to §7
+
+Written as a lane with its asterisks named, matching the section's existing convention:
+
+* `C₀` characterised **globally** — `zero_query_iff_ratGerm` plus
+  `zero_query_finite_exception_normal_form`, with a note on *why* the finite-exception form matters
+  (the eventual form is blind to bounded regions, which is where `floor`/`mod` misbehave);
+* the two exclusions and the two **different** instruments behind them — substitution into the
+  algebraic frame for `log`, level sets for `sign`, the latter being the first lower bound here whose
+  obstruction is branching rather than growth;
+* `1 ≤ q_F(sign) ≤ 12`, and the finding it carries: **the zero-query barrier is a basis boundary,
+  not an expressibility barrier**;
+* the level-0 asymptotic toolkit, with the fact that none of it touches a derivative, continuity,
+  Rolle or IVT axiom;
+* **what is open and precisely where** — including that `q_F(sign) ≥ 2` reduces to `OneQueryLevelSet`
+  and *not* to `OneQueryDichotomy`, the distinction this session got wrong once and corrected.
+
+### Checked rather than written
+
+Every theorem name the new lane cites was `#check`ed against the built library (15 names, 0 errors),
+and the reproduction command the lane *prints for readers* was run: `#print axioms
+ratGermSignedTrichotomy_holds` really does show no `HasDerivAt`, no `rolle`, no `sorryAx`, at 34
+axioms. A front-door document that tells a reader to run a command owes them a command that works.
+
+Gates: build 663 jobs, aggregator 660/966, claims 269, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (r)
 
 ### Brick four, mechanical half: the relation differentiates
