@@ -538,7 +538,8 @@ Bézout, `ord_q`. Their whole point is that the pole-order argument is *algebra*
 that reached for the ordered-real base, or for `exp`/`log`/`HasDerivAt`, would silently undo the
 reason the layer exists. -/
 def algebraSpineModules : List Name := [
-  `MachLib.PolyCanonical]
+  `MachLib.PolyCanonical,
+  `MachLib.PolyDivision]
 
 /-- **The only axioms an algebra-spine theorem may cite** — Lean's core, the `Real` carrier and the
 *field* axioms. Nothing ordered (`ltR`, `leR`, `lt_total`, `lt_trans_ax`, `lt_irrefl_ax`,

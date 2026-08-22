@@ -5,6 +5,70 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (v)
+
+### `PolyDivision` — `A = B·Q + R`, the theorem the PRS never supplied
+
+`MultiVarPRS.prsLoop` is already the Euclidean loop in shape, but `reduceOnce` carries only
+`reduceOnce_vanish`: *common zeros are preserved*. That is enough for a resultant and **not** enough
+for gcd, Bézout or Euclid's lemma, every one of which consumes the identity. `pdivmod_spec` supplies
+it for an arbitrary nonzero divisor.
+
+### Where the canonical invariant turns out to be load-bearing
+
+The step subtracts `c·xᵏ·B` with `c = α/β`, `α` and `β` the leading coefficients. If `β` were
+allowed to be `0` — which an unnormalised list permits, `[1, 0]` having a trailing zero — then under
+this corpus's **totalised** division `c = α/0 = 0`, the step would silently fail to cancel, the
+recursion would not descend, and the fuel would run out returning a wrong quotient. `PNormal B` is
+precisely what forbids that. Module 1's invariant is not bookkeeping here; it is what makes the
+algorithm correct.
+
+### The cancellation is syntactic, not evaluative
+
+Little-endian lists put the leading coefficient last, so cancelling the top term would normally need
+`getLast?` reasoning about the difference. Written in concat form it needs none. With `A = A₀ ++ [α]`
+and `B = B₀ ++ [β]`:
+
+```
+c·xᵏ·B = P ++ [c·β]        A − c·xᵏ·B = padd A₀ (−P) ++ [α − c·β] = D ++ [0]
+```
+
+because `c·β = (α/β)·β = α`. **The zero is in the list, not merely a value the last coefficient
+evaluates to**, so `pnorm_concat_zero` applies and the length drops — that is the entire descent.
+`padd_concat` / `pscale_concat` / `pshift_concat` exist to keep it that way.
+
+### What canonicity buys in the statement
+
+The remainder condition is usually `R = 0 ∨ deg R < deg B`. Canonically it is just
+`r.length < B.length`: the zero polynomial is `[]`, of length `0`, and `B ≠ []`, so the disjunction
+collapses. One fewer case to carry through gcd and `ord_q`.
+
+### What is claimed, and what is not
+
+The **remainder** is canonical and length-bounded. The **quotient** is `padd (pdivMono …) …` and is
+correct only up to `pev` — `padd` can leave a trailing zero, and no claim is made that it does not.
+`PolyNF.divMod` normalises both and `pev_pnorm` carries the identity across; that pair
+(`divMod` / `divMod_spec`) is the intended public contract, not the list lemmas underneath it.
+
+### The specimen computes rather than instantiates
+
+The first draft of the specimen instantiated `pdivmod_spec` at concrete lists. That proves nothing
+the spec does not already prove — it cannot fail unless the spec fails, so it convicts nothing, and
+it was replaced. `pdivStep_specimen` and `pdivmod_specimen_remainder_is_zero` **compute**: `x²`
+divided by `x` is carried through the step and the whole recursion, and the remainder is shown to be
+`[]` — exactly the zero polynomial, not merely something short — with the quotient's value shown to
+be `x`. It breaks on an off-by-one in the shift exponent, on a leading term that fails to cancel, or
+on a recursion that stops a step early.
+
+`AxiomLedger` invariant (7) now covers `PolyDivision` too: **60 algebra-spine theorems,
+0 leaking**. Division uses `div_def` and `mul_inv`, both field axioms; `div_mul_cancel` was proved
+locally rather than imported from `DivisionError`, which carries the ordered-real base this layer is
+gated against.
+
+Gates: build 666 jobs, aggregator 663/969, consistency PASS, claims 277, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 60 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-21 (u)
 
 ### `PolyCanonical` — the representation decision, made once and gated

@@ -5369,6 +5369,68 @@
         "pnorm"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The division identity itself -- the statement MultiVarPRS never proves. forbid_axioms keeps the layer algebraic: ltR/leR are what pev_leading_form carries and what a degree read off the analytic leading form would import. hypotheses_count is 4, READ OFF the auditor's own report of the statement, not copied from a sibling entry -- it was first written as 0 by copying module 1's claims and the strength-integrity check rejected it.",
+      "id": "poly-division-spec-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "That is enough for a resultant and **not** enough\nfor gcd, Bézout or Euclid's lemma, every one of which consumes the identity."
+      ],
+      "module": "MachLib.PolyDivision",
+      "theorem": "MachLib.pdivmod_spec",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pdivmod",
+        "pev"
+      ],
+      "hypotheses_count": 4
+    },
+    {
+      "_comment": "The descent, pinned because it is where PNormal B is load-bearing: with a zero leading coefficient the totalised alpha/0 = 0 makes the step a no-op and the recursion never terminates correctly. proof_uses names div_mul_cancel_field so the credit for that step is a positive obligation. hypotheses_count is 3, READ OFF the auditor's own report of the statement, not copied from a sibling entry -- it was first written as 0 by copying module 1's claims and the strength-integrity check rejected it.",
+      "id": "poly-division-descent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`PNormal B` is\nprecisely what forbids that."
+      ],
+      "module": "MachLib.PolyDivision",
+      "theorem": "MachLib.pdivStep_length",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "pdivStep"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "div_mul_cancel_field",
+        "pnorm_concat_zero_length_lt"
+      ]
+    },
+    {
+      "_comment": "The COMPUTED specimen. Registered because the first draft was a spec instantiation that could not fail; this one traces the recursion and yields the literal empty list. conclusion_mentions pins pdivmod so the specimen cannot be weakened into a statement about something else while keeping the name.",
+      "id": "poly-division-specimen-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "the remainder is shown to be\n`[]` — exactly the zero polynomial, not merely something short"
+      ],
+      "module": "MachLib.PolyDivision",
+      "theorem": "MachLib.pdivmod_specimen_remainder_is_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "pdivmod"
+      ],
+      "hypotheses_count": 0
     }
   ]
 }

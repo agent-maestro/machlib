@@ -356,6 +356,7 @@ import MachLib.RatGermDeriv
 import MachLib.BipevExpDeriv
 import MachLib.PevOrder
 import MachLib.PolyCanonical
+import MachLib.PolyDivision
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
