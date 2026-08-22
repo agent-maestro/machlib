@@ -5203,6 +5203,27 @@
       "proof_uses": [
         "HasDerivAt_mul"
       ]
+    },
+    {
+      "_comment": "Brick two, assembled. proof_uses pins that the chain rule is actually invoked -- the entry's whole claim is that the composite comes from the chain rule plus the quotient rule, not from some other route.",
+      "id": "exp-ratfn-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Brick two: `y = exp(S)` satisfies `y' = S'·y`"
+      ],
+      "module": "MachLib.ExpCompDeriv",
+      "theorem": "MachLib.hasDerivAt_exp_ratFn",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "pderiv"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "hasDerivAt_exp_comp"
+      ]
     }
   ]
 }

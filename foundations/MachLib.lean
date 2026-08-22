@@ -351,6 +351,7 @@ import MachLib.PevSignGerm
 import MachLib.RatGermShape
 import MachLib.BoundedGermEnvelope
 import MachLib.PevDeriv
+import MachLib.ExpCompDeriv
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

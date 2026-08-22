@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (p)
+
+### Brick two: `y = exp(S)` satisfies `y' = S'·y`
+
+`ExpCompDeriv`. This is the identity the differential argument turns on — a polynomial relation in
+`y = exp(S(x))` differentiates back into a polynomial relation **in the same `y`**, no new
+transcendental appearing, which is what makes a degree drop against minimality possible.
+
+It costs two lines given the chain rule, and that is the point: the expensive part of this route is
+not the step everyone names, it is the bookkeeping around it. `hasDerivAt_exp_ratFn` assembles the
+composite — `exp` of a rational function with its derivative through `pderiv` — as a single term.
+
+**The chain rule was already in the corpus.** `hasDerivAt_exp_comp` has been in
+`EMLTChartKhovanskii` since the Khovanskii work; the build caught the duplicate on the first
+compile. Second time today that grepping before writing would have been cheaper — the first cost a
+published claim, this one cost a rebuild. What is added here is only the factor order that makes
+`y' = S'·y` readable, plus the composite.
+
+### The gap that is named rather than papered over
+
+`RatGerm` says `f = pev P / pev Q` **off a finite exceptional set**, and `HasDerivAt` is pointwise —
+`HasDerivAt_congr` transfers it only across a **neighbourhood**. Getting from "agrees off a finite
+set" to "agrees near `x`" needs a finite-set-avoidance step this corpus does not have.
+
+So every statement here is about an **explicit function**, not a germ, and the quotient rule is
+stated for `pev P · (1 / pev Q)` — the function literally differentiated — rather than for
+`pev P / pev Q`. The two agree wherever the denominator is nonzero. The difference is only about
+which function the theorem is *about*, and conflating them is exactly the quiet step this file
+declines to take. `PevRoots` makes the exceptional set finite, so the transfer is available in
+principle and is simply **not built**.
+
+That is now the next brick, and it is a smaller one than it looks: a finite list of reals does not
+cover a neighbourhood of a point outside it, which is the same "no finite list exhausts an interval"
+shape as `list_two_sided_bound`.
+
+Gates: build 661 jobs, aggregator 658/964, claims 267, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (o)
 
 ### Into the differential route: differentiating a coefficient list
