@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ab)
+
+### `PolyGcd` — `pmul` commutes, and extended Euclid returns a common divisor
+
+`eea_bezout` proves the identity `g ≈ s·A + t·B`. That is only half of what a gcd is, and
+Euclid's lemma needs the other half: `g` divides both inputs. With both halves in hand
+the gcd is complete.
+
+### A definition was deliberately *not* changed to dodge a missing lemma
+
+The divisor half turns on `q ∣ B → q ∣ Q·B`. With `B ≈ q·M` that is `Q·B ≈ Q·(q·M) ≈ (Q·q)·M`, and
+getting `q` back to the front needs `pmul` to **commute** — the one ring law this spine had not
+needed until now.
+
+There was a cheaper route: flip `Pdvd` to `∃ M, A ≈ M·q`, after which the divisor half needs only
+associativity and left-distributivity, both already proved and both the cheap direction. That is the
+smaller change today and it was rejected: commutativity is a fact the ring should have on record, `ord_q` will want it,
+and a definition chosen to dodge a missing lemma tends to be paid for twice.
+
+### Why `pmul` commuting is not a one-liner here
+
+`pmul` recurses on its **first** argument, so `pmul Y (x :: xs)` does not unfold and the naive
+induction stalls immediately. The fix is to prove the recursion from the right first —
+`pmul X (y :: ys) ≈ pscale y X + x·(pmul X ys)` — which is exact *except* for trailing zeros
+(`ys = []` makes the two sides differ by a single `[0]`), so it is a `PEq` statement rather than a
+list identity. With it, commutativity is one induction and `padd_left_comm`.
+
+`AxiomLedger` invariant (7) covers ten modules: **151 algebra-spine theorems, 0 leaking**.
+
+Gates: build 674 jobs, aggregator 671/977, consistency PASS, claims 289, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 151 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (aa)
 
 ### `PolyPEq` + `PolyBezout` — extended Euclid, and `g ≈ s·A + t·B`

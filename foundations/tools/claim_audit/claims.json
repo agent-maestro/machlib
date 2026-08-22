@@ -5668,6 +5668,55 @@
         "psub"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "The divisor half of the gcd -- eea_bezout alone is not a gcd. hypotheses_count 3, read off #check. proof_uses names the three compositions the tactic script directly performs: the division identity, divisibility of multiples (which is where commutativity is spent), and closure under sums.",
+      "id": "poly-gcd-divides-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`eea_bezout` proves the identity `g ≈ s·A + t·B`. That is only half of what a gcd is, and\nEuclid's lemma needs the other half: `g` divides both inputs."
+      ],
+      "module": "MachLib.PolyGcd",
+      "theorem": "MachLib.eea_divides",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "eea"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "pdivmod_identity",
+        "Pdvd_pmul",
+        "Pdvd_padd"
+      ]
+    },
+    {
+      "_comment": "Commutativity, built rather than dodged. Zero hypotheses, read off #check. proof_uses names peq_pmul_cons_right because that IS the content -- pmul recurses on its first argument, so the right-hand recursion is what unblocks the induction.",
+      "id": "poly-pmul-comm-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "commutativity is a fact the ring should have on record, `ord_q` will want it,\nand a definition chosen to dodge a missing lemma tends to be paid for twice."
+      ],
+      "module": "MachLib.PolyGcd",
+      "theorem": "MachLib.peq_pmul_comm",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "peq_pmul_cons_right"
+      ]
     }
   ]
 }
