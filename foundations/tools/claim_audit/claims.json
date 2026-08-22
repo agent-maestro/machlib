@@ -5182,6 +5182,27 @@
         "Fbasis"
       ],
       "hypotheses_count": 5
+    },
+    {
+      "_comment": "Brick one of the differential route. proof_uses pins that the PRODUCT RULE is actually invoked -- the entry credits the Horner-native definition with making the product rule the whole content, and a proof that did not use it would mean the definition was doing something else.",
+      "id": "pev-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Into the differential route: differentiating a coefficient list"
+      ],
+      "module": "MachLib.PevDeriv",
+      "theorem": "MachLib.hasDerivAt_pev",
+      "forbid_axioms": [
+        "sorryAx"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt",
+        "pderiv"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "HasDerivAt_mul"
+      ]
     }
   ]
 }

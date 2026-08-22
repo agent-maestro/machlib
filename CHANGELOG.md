@@ -5,6 +5,62 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-21 (o)
+
+### Into the differential route: differentiating a coefficient list
+
+`pderiv` / `hasDerivAt_pev` (`PevDeriv`). **One brick, and only one** — named as such because the
+temptation here is to describe an ingredient as a route.
+
+Today's two envelope theorems proved that no growth argument can reach the bounded branch:
+`F ∘ S` is polynomially enveloped there, so every instrument in this corpus has a **false**
+hypothesis. `BoundedGermTranscendence`'s own docstring anticipated exactly this — *"a bounded `F ∘ S`
+is indistinguishable from an algebraic function by any envelope, which is why the route through
+differentiation is the one on offer"* — and that prose is now backed rather than asserted. So:
+differentiation.
+
+### The Horner-native derivative
+
+The obvious definition scales each coefficient by its index, which needs an index-carrying recursion
+and a lemma relating it back to Horner form. The Horner-native one needs neither:
+
+```
+pderiv []        = []
+pderiv (_ :: cs) = padd cs (0 :: pderiv cs)
+```
+
+because `pev (padd cs (0 :: pderiv cs)) x = pev cs x + x·pev (pderiv cs) x` **is** the product rule
+applied to `c + x·P(x)` — and it follows from `pev_padd` alone. The dropped head is differentiation
+killing a constant; the `0 ::` is the shift multiplication by `x` induces.
+
+Checked against a concrete instance, not just proved in general: `pderiv [c, a₁, a₂]` evaluates to
+`a₁ + 2a₂·x`.
+
+### On the trust surface, precisely
+
+This is the first result in the arc whose **footprint** contains analytic axioms — `HasDerivAt`,
+`_add`, `_const`, `_id`, `_mul`. The **ledger is still 242**, and the distinction matters: those
+axioms already existed in the corpus and are used elsewhere, so the *corpus's* trust surface did not
+grow. What grew is *this arc's*. Fifteen results held the arc analytic-free and declined the analytic
+route three times where it was available; spending it here is deliberate, because the bounded branch
+was **proved** unreachable without it.
+
+### What is not claimed, and the plan that is
+
+`hasDerivAt_pev` does not prove `BoundedGermTranscendence` and is not progress on it beyond supplying
+an ingredient. The remaining bricks are named in the module so the next session starts from a plan:
+the quotient rule for a rational germ, the chain rule giving `y' = S'·y` for `y = exp(S)` (**the step
+the whole argument turns on**), differentiating the relation to drop its degree against minimality —
+and then the honest one:
+
+**the positive branch is not this argument.** On `S > 0`, `F(S) = exp(S) + log(S)`, which is not
+`exp` of anything, so the `y' = S'·y` step does not apply as stated. That branch needs its own
+treatment and must not be assumed to follow by symmetry — the two sides have now diverged twice in
+one day.
+
+Gates: build 660 jobs, aggregator 657/963, claims 266, obligations 18 rows, AxiomLedger 242 pinned,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-21 (n)
 
 ### The bounded branch does not evaporate — and now there is a theorem saying why

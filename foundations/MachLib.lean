@@ -350,6 +350,7 @@ import MachLib.PevSign
 import MachLib.PevSignGerm
 import MachLib.RatGermShape
 import MachLib.BoundedGermEnvelope
+import MachLib.PevDeriv
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives
