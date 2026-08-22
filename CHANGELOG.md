@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ag)
+
+### `PolyPowDeriv` — the power rule, and the characteristic-zero input named exactly once
+
+**`(q^(k+1))' ≈ q^k · (k+1)·q'`**, with the multiple as an iterated sum so the
+coefficient never leaves the field axioms.
+
+### Why the multiple is `pnsum` and not `natCast`
+
+Writing the `k` as `natCast k` would pull `MachLib.Real.natCast` and its arithmetic into the layer
+and — worse — would invite a reader to *discharge* `natCast k ≠ 0`, which is precisely the step this
+layer cannot take (last commit's `𝔽₂` correction). As an iterated sum `Z + Z + … + Z` the
+coefficient stays inside the field axioms and the characteristic-zero question is pushed to exactly
+one place.
+
+### Both characteristic-zero needs turned out to be one
+
+Last commit predicted the count would need *two* named inputs: `q ∤ q'` for the nonvanishing of the
+derivative, and `natCast r ≠ 0` for the power-rule coefficient. Working the algebra shows they
+collapse: the `qʳ` term contributes `r·q'`, and the requirement is `q ∤ r·q'`. That single condition
+covers both, because `q ∣ 0` holds trivially, so `q ∤ k·q'` already implies `k·q' ≠ 0`, hence both.
+
+So `DerivCoprime q r` is the whole extra-field-axiom cost of the pole-order count — one named
+hypothesis, false over `𝔽₂` with `q = X²+1, r = 2`, true for irreducible `q` over `MachLib.Real`,
+and dischargeable only by leaving the allow-list. `pnsum_deriv_ne_zero` records that it already
+implies nonvanishing, so nothing else needs stating.
+
+`AxiomLedger` invariant (7) covers fifteen modules: **192 algebra-spine theorems, 0 leaking**.
+
+Gates: build 679 jobs, aggregator 676/982, consistency PASS, claims 299, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 192 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (af)
 
 ### Correcting the previous commit: the pole-order count does **not** fit inside `algebraFootprint`

@@ -5903,6 +5903,55 @@
         "pderiv"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "The power rule. Zero hypotheses. forbid_axioms includes MachLib.Real.natCast, which is the point: the whole reason pnsum exists rather than natCast is to keep the coefficient inside the field axioms, and this makes that a checked property rather than an intention.",
+      "id": "poly-pow-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`(q^(k+1))' ≈ q^k · (k+1)·q'`**, with the multiple as an iterated sum so the\ncoefficient never leaves the field axioms."
+      ],
+      "module": "MachLib.PolyPowDeriv",
+      "theorem": "MachLib.peq_pderiv_ppow",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pderiv",
+        "ppow",
+        "pnsum"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "peq_pderiv_pmul",
+        "peq_pmul_comm"
+      ]
+    },
+    {
+      "_comment": "That the single named input already implies nonvanishing -- the reason the count needs ONE char-zero hypothesis rather than two. One hypothesis, read off #check.",
+      "id": "poly-deriv-coprime-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "because `q ∣ 0` holds trivially, so `q ∤ k·q'` already implies `k·q' ≠ 0`, hence both."
+      ],
+      "module": "MachLib.PolyPowDeriv",
+      "theorem": "MachLib.pnsum_deriv_ne_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pnsum"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
