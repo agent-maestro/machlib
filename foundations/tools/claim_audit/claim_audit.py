@@ -881,6 +881,50 @@ def self_test() -> int:
           f"certify every theorem in the corpus. The canary below tests DETECTION; this one tests "
           f"\n           NON-detection, which is the direction that fails silently.{RST}")
 
+    print(f"{YELLOW}{BOLD}[self-test] canary 14: the tree-binding must see CONTENT, not filenames …{RST}")
+    # The historic fault, restored: hash the porcelain TEXT only. All three trees below produce
+    # byte-identical porcelain, so that digest is constant across an edit the binding must catch.
+    porcelain = " M a.txt\0?? b/\0"
+    old_scheme = hashlib.sha256(porcelain.encode("utf-8")).hexdigest()
+    with tempfile.TemporaryDirectory() as td:
+        os.makedirs(os.path.join(td, "b"))
+        with open(os.path.join(td, "a.txt"), "w", encoding="utf-8") as fh:
+            fh.write("one")
+        with open(os.path.join(td, "b", "c.txt"), "w", encoding="utf-8") as fh:
+            fh.write("two")
+        paths = _dirty_paths(porcelain)
+        d1 = _content_digest(td, paths)
+        d1_again = _content_digest(td, paths)
+        with open(os.path.join(td, "a.txt"), "w", encoding="utf-8") as fh:
+            fh.write("ONE")                      # same name, same length, same status letter
+        d2 = _content_digest(td, paths)
+        with open(os.path.join(td, "b", "c.txt"), "w", encoding="utf-8") as fh:
+            fh.write("TWO")                      # inside an UNTRACKED DIRECTORY, reported as `b/`
+        d3 = _content_digest(td, paths)
+    if paths != ["a.txt", "b/"]:
+        print(f"{RED}[self-test] FAILED: `-z` parse returned {paths}; expected the two paths.{RST}")
+        return 1
+    if d1 != d1_again:
+        print(f"{RED}[self-test] FAILED: digest is not deterministic on an unchanged tree — it "
+              f"would report every run as STALE, which is a fail-CLOSED but useless gate.{RST}")
+        return 1
+    if d1 == d2:
+        print(f"{RED}[self-test] FAILED: digest is blind to an edit of an ALREADY-DIRTY file. "
+              f"That is the exact fault this canary exists for.{RST}")
+        return 1
+    if d2 == d3:
+        print(f"{RED}[self-test] FAILED: digest is blind to an edit inside an untracked "
+              f"DIRECTORY; git reports those as one `dir/` entry and they must be walked.{RST}")
+        return 1
+    print(f"{GREEN}[self-test] canary 14 fires: three trees with IDENTICAL porcelain "
+          f"({old_scheme[:12]} for all three) give three different content digests "
+          f"({d1[:8]}, {d2[:8]}, {d3[:8]}), and an unchanged tree repeats. ✓{RST}")
+    print(f"{DIM}           Added 2026-08-23. The binding had hashed `git status --porcelain` — "
+          f"a list of NAMES and\n           status letters. It caught a mid-run docs edit only "
+          f"because that file went clean → M; a\n           second edit to an already-M file was "
+          f"invisible. Found by reading the gate after it fired,\n           not by it failing "
+          f"— a check that fails open reads identical to one that passes.{RST}")
+
     print(f"{YELLOW}{BOLD}[self-test] injecting a canary: a `by sorry` theorem falsely claimed sorryAx-free …{RST}")
     canary_src = "theorem _claim_audit_canary_bad : True := by sorry\n#print axioms _claim_audit_canary_bad\n"
     text = print_axioms_output(canary_src)
@@ -896,8 +940,66 @@ def self_test() -> int:
     return 1
 
 
+def _dirty_paths(porcelain_z: str) -> list:
+    """Paths from `git status --porcelain -z`, NUL-separated and never quoted.
+
+    `-z` matters. Without it git C-escapes any path containing a space or a non-ASCII byte, and a
+    naive unquote then looks for a file that is not there — turning an unreadable path into a
+    CONSTANT marker, i.e. a fail-open in exactly the place this check must be strictest.
+    """
+    records = [r for r in porcelain_z.split("\0") if r]
+    paths, i = [], 0
+    while i < len(records):
+        rec = records[i]
+        if len(rec) < 4:
+            i += 1
+            continue
+        status, path = rec[:2], rec[3:]
+        paths.append(path)
+        if status[0] in "RC":            # rename/copy: the ORIGIN follows as its own record and is
+            i += 1                       # gone from disk; the destination just appended is on it
+        i += 1
+    return paths
+
+
+def _file_digest(path: str) -> bytes:
+    """A file's SHA-256, or a distinct marker for one that cannot be read — never a silent zero."""
+    try:
+        with open(path, "rb") as fh:
+            return hashlib.sha256(fh.read()).digest()
+    except OSError:
+        return b"<unreadable>"
+
+
+def _content_digest(root: str, paths: list) -> str:
+    """SHA-256 over the CONTENTS of every dirty path, not merely over their names.
+
+    `git status --porcelain` reports a path and a status letter. Editing a file that is ALREADY
+    modified leaves both unchanged, so a digest over the porcelain text alone cannot see the second
+    edit — which is precisely the case the tree-binding exists for. Found 2026-08-23 while verifying
+    a commit: the binding caught a docs edit only because that file happened to go clean → M.
+
+    Untracked *directories* are reported by git as a single `dir/` entry, so they are walked.
+    Nothing is capped or sampled: a truncated digest would read as full coverage.
+    """
+    h = hashlib.sha256()
+    for path in sorted(paths):
+        full = os.path.join(root, path)
+        h.update(path.encode("utf-8") + b"\0")
+        if os.path.isdir(full):
+            for dirpath, dirnames, filenames in os.walk(full):
+                dirnames.sort()
+                for fn in sorted(filenames):
+                    fp = os.path.join(dirpath, fn)
+                    h.update(os.path.relpath(fp, root).encode("utf-8") + b"\0")
+                    h.update(_file_digest(fp))
+        else:
+            h.update(_file_digest(full))
+    return h.hexdigest()
+
+
 def tree_fingerprint() -> str:
-    """HEAD plus the dirty-worktree state, as one string.
+    """HEAD, the dirty-file list, and the CONTENTS of every dirty file.
 
     A gate certifies a REPOSITORY STATE, not a work session. This audit takes ~12 minutes, and on
     2026-08-21 it was twice launched before an edit and read afterwards as though it had covered
@@ -906,16 +1008,23 @@ def tree_fingerprint() -> str:
 
     So the fingerprint is taken at the start and re-taken at the end. If it moved, the result does
     not bind and the exit code says so (2 = UNAVAILABLE, never a pass).
+
+    The content digest was added 2026-08-23. Until then this hashed the porcelain TEXT only — a
+    list of names and status letters — so a second edit to an already-dirty file left the
+    fingerprint byte-identical and the binding would report "worktree unchanged" for a tree that
+    had moved. Canary 14 is that exact case.
     """
     try:
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True,
                               text=True, timeout=30)
-        dirty = subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True,
-                               text=True, timeout=60)
+        dirty = subprocess.run(["git", "status", "--porcelain", "-z"], cwd=REPO,
+                               capture_output=True, text=True, timeout=60)
         if head.returncode != 0 or dirty.returncode != 0:
             return ""
-        return head.stdout.strip() + "\n" + hashlib.sha256(
-            dirty.stdout.encode("utf-8")).hexdigest()
+        porcelain = dirty.stdout
+        return (head.stdout.strip() + "\n"
+                + hashlib.sha256(porcelain.encode("utf-8")).hexdigest() + "\n"
+                + _content_digest(REPO, _dirty_paths(porcelain)))
     except Exception:                                        # noqa: BLE001
         return ""
 

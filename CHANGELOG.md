@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (be)
+
+### The tree-binding was content-blind — fixed, with a firing specimen
+
+`tree_fingerprint` hashed `git rev-parse HEAD` plus a SHA-256 of `git status --porcelain`. That
+porcelain text is a list of **names and status letters**. Editing a file that is already `M` leaves
+it byte-identical, so the binding would report *"worktree unchanged during the run"* for a tree that
+had moved.
+
+It was found by reading the gate **after it fired**, not by it failing: on 2026-08-23 it correctly
+went STALE on a mid-run docs edit, and it did so only because that file happened to go clean → `M`.
+A second edit to the same file would have been invisible. **A check that fails open reads identical
+to one that passes** — the third time that sentence has been written into this changelog, and the
+first time it was earned by a gate rather than by a script.
+
+The fingerprint now carries a third line: a SHA-256 over the **contents** of every dirty path,
+untracked directories walked rather than named. Nothing is capped or sampled — a truncated digest
+would read as full coverage.
+
+### `-z`, because the obvious fix has its own fail-open
+
+Parsing `git status --porcelain` for paths means unquoting: git C-escapes any path with a space or a
+non-ASCII byte. A naive unquote then opens a file that is not there, and an unreadable path hashes
+to a **constant** — a second fail-open, in the same function, introduced by the fix for the first.
+`--porcelain -z` emits NUL-separated, never-quoted paths and the question does not arise. Rename and
+copy records carry their origin as a following entry; that is consumed explicitly.
+
+### Canary 14, and the end-to-end check the canary cannot do
+
+Canary 14 builds three trees with **byte-identical porcelain** and requires three different content
+digests, plus a repeat on an unchanged tree so the digest is not merely noisy. Both directions, per
+this repo's rule that a convict specimen must discriminate.
+
+Separately, and not as a canary: `tree_fingerprint` itself was run against the live repo across a
+content-only edit to an already-dirty file. Porcelain identical, old scheme identical, **new
+fingerprint moved**. The canary tests the digest function; that test exercises the gate.
+
+Gates: build 700 jobs, aggregator 697 of 1003 modules reachable, consistency PASS, claims 341 (no
+new Lean theorem in this commit), obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 244
+algebra-spine field-axiom-checked, sorry-audit 1 allowlisted, **claim-auditor self-test 14 canaries
++ the sorryAx injection**.
+
 ## [Unreleased] — 2026-08-23 (bd)
 
 ### The last stated assumption, discharged
