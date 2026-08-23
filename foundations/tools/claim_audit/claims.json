@@ -6634,6 +6634,52 @@
         "psub"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "Elimination commutes with splitting off the last coefficient. hypotheses_count 1 (the length match). This is one of the two facts that closes the same-length slip; registered so the CHANGELOG's claim that the fix is TWO LENGTH FACTS is pinned to actual theorems.",
+      "id": "bipev-elim-concat-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`elimCoeffs` is pointwise, so `elimCoeffs top topD Ms Cs` has **the same length as `Ms`**. Its top\nentry is killed — it evaluates to zero everywhere — but it is still *there*."
+      ],
+      "module": "MachLib.BipevElimDrop",
+      "theorem": "MachLib.elimCoeffs_concat",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "elimCoeffs"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The descent applied to the truncation -- step 2 corrected. hypotheses_count 6, read off #check AFTER removing a vestigial hypothesis the first draft carried. proof_uses pins the three compositions: the concat split, the drop, and the descent.",
+      "id": "bipev-elim-drop-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "no lemma was wrong, no mathematics\nwas missing, and the fix is two length facts."
+      ],
+      "module": "MachLib.BipevElimDrop",
+      "theorem": "MachLib.elim_coeff_evZero_drop",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF"
+      ],
+      "hypotheses_count": 6,
+      "proof_uses": [
+        "elimCoeffs_concat",
+        "evRel_dropLast",
+        "all_coeffs_evZero_of_shorter'"
+      ]
     }
   ]
 }

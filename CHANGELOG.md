@@ -5,6 +5,39 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (ax)
+
+### `BipevElimDrop` — the predicted argument-matching slip, and it was exactly that
+
+`elimCoeffs` is pointwise, so `elimCoeffs top topD Ms Cs` has **the same length as `Ms`**. Its top
+entry is killed — it evaluates to zero everywhere — but it is still *there*. So `Es.length < Ms.length` is false as
+stated, and the descent does not apply to `Es` — it applies to `Es.dropLast`.
+
+Two facts close it: `elimCoeffs_concat` (elimination commutes with splitting off the last
+coefficient, so the truncation of the eliminated family *is* the eliminated family of the
+truncations) and `elimCoeffs_top_eval`, already proved, which makes `evRel_dropLast` apply.
+
+### The prediction was worth making
+
+The previous commit said what remained was bookkeeping and that any surprise would be an
+argument-matching slip. It was exactly that: no lemma was wrong, no mathematics
+was missing, and the fix is two length facts. Naming the expected failure mode
+in advance is what made it cheap to recognise rather than alarming to hit — the shape was known
+before the error message was read.
+
+### A junk hypothesis, caught by a warning
+
+The first draft carried `hmin : ∀ Ns, ProperRel S Ns → Ms.length ≤ Ms.length → True` — a vestigial
+argument that says nothing. It **compiled**, and only an unused-variable warning flagged it. Removed
+rather than shipped: a theorem with a meaningless hypothesis is worse than one with none, because a
+caller has to supply it and a reader has to work out that it means nothing. Worth noting that no gate
+here would have caught it — the claim auditor checks hypothesis *counts*, not whether a hypothesis
+carries content.
+
+Gates: build 694 jobs, aggregator 691/997, consistency PASS, claims 329, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-23 (aw)
 
 ### `BipevCoeffIdentity` — step 3, the last step that is not instantiation
