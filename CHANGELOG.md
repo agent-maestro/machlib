@@ -5,6 +5,48 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (at)
+
+### `PolyDerivShort` — `DerivCoprime` reduces to nonvanishing, without the leading coefficient
+
+The remaining asymmetry from (as). Folding `DerivCoprime q r` looked like it needed the **leading
+coefficient** of `pderiv` — index-tracking through the Horner recursion, the same shape that made
+`bipev_cleared_deriv`'s correction term non-obvious.
+
+It does not. The degree bound only needs that `pderiv` leaves a **trailing zero**:
+
+```
+pderiv (L₀ ++ [a])  =  … ++ [0]
+```
+
+one induction, no index arithmetic. `pnorm` strips it, so `pnorm (pderiv L)` is strictly shorter
+than `L`, and `not_Pdvd_of_length_lt` finishes. **The leading coefficient is never computed.**
+
+That is the second time in two commits that a step sized as "needs the leading coefficient" needed
+only a length fact instead. Both times the cheaper route was found by asking what the *consumer*
+needs — a degree bound — rather than what the natural statement about derivatives would be.
+
+### The composition's two inputs now have the same shape
+
+`DerivCoprime q r` reduces to `pnorm (pnsum r (pderiv q)) ≠ []`, and the constant input reduces to
+`natCast n ≠ 0`. Both are now nonvanishing statements
+about specific polynomials, both false over `𝔽₂`, and neither carries any divisibility content.
+
+`pnsum` commutes with `pderiv` (because `pderiv` is additive), which is what lets the length bound
+apply to `pnsum r (pderiv q)` without a second argument.
+
+### `cases h : e` substitutes, for the fourth time
+
+`rw [hp] at hlen ⊢` failed because `cases hp : e` had already rewritten the goal. Fourth occurrence
+in this arc, and the fix is always the same: rewrite only the hypotheses that still mention the term.
+Recorded again because it is now the single most repeated Lean-local cost here.
+
+`AxiomLedger` invariant (7): **236 algebra-spine theorems, 0 leaking.**
+
+Gates: build 690 jobs, aggregator 687/993, consistency PASS, claims 321, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 236 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (as)
 
 ### `PolyConstDvd` — separating the second input's field content from its polynomial content

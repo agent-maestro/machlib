@@ -6431,6 +6431,56 @@
         "not_Pdvd_const",
         "pnsum_one_length"
       ]
+    },
+    {
+      "_comment": "The trailing-zero length bound. Zero hypotheses. forbid_axioms includes natCast, which is the substantive pin: the CHANGELOG claims the LEADING COEFFICIENT is never computed, and computing it is exactly what would require natCast to show it nonzero. So a proof that quietly went that route would break this claim.",
+      "id": "poly-deriv-short-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The degree bound only needs that `pderiv` leaves a **trailing zero**"
+      ],
+      "module": "MachLib.PolyDerivShort",
+      "theorem": "MachLib.pnorm_pderiv_length_lt",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "pnorm",
+        "pderiv"
+      ],
+      "hypotheses_count": 0
+    },
+    {
+      "_comment": "DerivCoprime reduced to nonvanishing. hypotheses_count 2. forbid_axioms includes natCast for the same reason as the sibling claim: this theorem must TAKE the nonvanishing rather than prove it, which is the line between what this layer can and cannot do.",
+      "id": "poly-deriv-coprime-reduce-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Both are now nonvanishing statements\nabout specific polynomials, both false over `𝔽₂`, and neither carries any divisibility content."
+      ],
+      "module": "MachLib.PolyDerivShort",
+      "theorem": "MachLib.derivCoprime_of_ne_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "DerivCoprime"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "not_Pdvd_of_length_lt",
+        "pnsum_pderiv",
+        "pnorm_pderiv_length_lt"
+      ]
     }
   ]
 }

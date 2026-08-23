@@ -373,6 +373,7 @@ import MachLib.PolyPowDeriv
 import MachLib.PolyPoleOrder
 import MachLib.PolyPoleCount
 import MachLib.PolyConstDvd
+import MachLib.PolyDerivShort
 import MachLib.PolyEvZero
 import MachLib.BipevClearedDeriv
 import MachLib.BipevElim
