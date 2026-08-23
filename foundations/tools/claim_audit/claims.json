@@ -6267,6 +6267,52 @@
       "proof_uses": [
         "exists_minimal_length"
       ]
+    },
+    {
+      "_comment": "The tail-derivative transfer. hypotheses_count 3, read off #check. proof_uses pins HasDerivAt_congr and neg_le_abs -- the latter deliberately, because the point of the FPModel swap was that this lemma needs one inequality and not the Riemann integral, and proof_uses makes that a checked fact rather than a note.",
+      "id": "bipev-tail-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "For a tail the witness is explicit and better than the finite-set one: at any `x > X`, the radius\n`x − X` works, because `|y − x| < x − X` forces `y > X`."
+      ],
+      "module": "MachLib.BipevTail",
+      "theorem": "MachLib.hasDerivAt_of_agrees_on_tail",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.exp",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "HasDerivAt"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "HasDerivAt_congr",
+        "neg_le_abs"
+      ]
+    },
+    {
+      "_comment": "The composed form the elimination consumes: relation vanishes on a tail => the CLEARED differentiated relation vanishes there. hypotheses_count 4. This is the join between brick four's analytic half and BipevClearedDeriv's algebraic one.",
+      "id": "bipev-tail-cleared-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "This is the kind of gap that only appears when a piece is *applied*, which is why the assembly was worth\nstarting rather than deferring."
+      ],
+      "module": "MachLib.BipevTail",
+      "theorem": "MachLib.bipev_dcoeffs_eq_zero_on_tail",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "dcoeffs"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "bipev_cleared_deriv_zero",
+        "dbipevExp_eq_zero_of_relation_on_tail"
+      ]
     }
   ]
 }

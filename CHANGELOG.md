@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ap)
+
+### `BipevTail` — the assembly's first mismatch, found by applying
+
+Brick four's `dbipevExp_eq_zero_of_relation_off_finite` transfers the derivative when the relation
+holds **off a finite set** — the shape the `C₀` work needed, where exceptional sets are finite. The
+differential route's relations hold **on a tail**, and the complement of a tail is not finite, so
+that lemma does not apply.
+
+For a tail the witness is explicit and better than the finite-set one: at any `x > X`, the radius
+`x − X` works, because `|y − x| < x − X` forces `y > X`. No avoidance argument and no `Classical.em`.
+
+Brick four is not wrong; it answers a neighbouring question, having been written before the route
+was known and against the exceptional-set shape its surroundings used. This is the kind of gap that only appears when a piece is *applied*, which is why the assembly was worth
+starting rather than deferring.
+
+### An import that was heavier than the lemma
+
+`abs_lt_split` lives in `RiemannIntegralFTCPart1`, and importing it pulled this module's build from
+180 jobs to **337** — the Fundamental Theorem of Calculus, for one inequality. The footprint was
+unaffected (per-theorem checking saw no integration axioms), so no gate would have objected; but the
+dependency graph would have said this module needs the Riemann integral, and it does not.
+
+Replaced with `neg_le_abs` from `FPModel`, which imports only `Basic`, `Lemmas`, `Forge`, `Ring`.
+Back to **181 jobs**. Worth recording because the failure is invisible to every gate here: **a
+footprint measures what a proof uses, not what a module claims to depend on.**
+
+### The remaining gap, named rather than discovered later
+
+The eliminated relation has its top coefficient eventually zero, so it agrees with its truncation;
+minimality then forces the truncation's top coefficient to be eventually zero too, and so on down.
+That descent — which turns "the eliminated relation is not proper" into the single coefficient
+identity `cleared_relation_impossible` consumes — is **not built**. It is an induction on the list
+from the right.
+
+Gates: build 686 jobs, aggregator 683/989, consistency PASS, claims 314, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ao)
 
 ### `BipevMinimal` — step 1, and the well-founded recursion was not needed
