@@ -6358,6 +6358,29 @@
         "bipev_concat",
         "two_bounds'"
       ]
+    },
+    {
+      "_comment": "The S'*Q^2 = D link. hypotheses_count 1 -- and that count IS the claim: the CHANGELOG asserts no new hypothesis enters, so a second one appearing here would break the registration rather than pass silently. forbid_axioms pins that the conversion is field arithmetic: no order, no HasDerivAt despite the module sitting downstream of brick three.",
+      "id": "bipev-ratfn-cleared-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The conversion is one field computation, and the only thing it needs is `Q(x) ≠ 0` — which is\nalready carried, since brick three needs it to differentiate at all."
+      ],
+      "module": "MachLib.BipevRatFn",
+      "theorem": "MachLib.ratFn_deriv_cleared",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "pev",
+        "pderiv"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }

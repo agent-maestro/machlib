@@ -378,6 +378,7 @@ import MachLib.BipevElim
 import MachLib.BipevMinimal
 import MachLib.BipevTail
 import MachLib.BipevDescent
+import MachLib.BipevRatFn
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

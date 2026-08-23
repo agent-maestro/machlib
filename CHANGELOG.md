@@ -5,6 +5,46 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (ar)
+
+### `BipevRatFn` — the last ingredient, and it adds no hypothesis
+
+`hasDerivAt_ratFn` (brick three) gives `S' = P'·(1/Q) + P·(−Q'/(Q·Q))`. Everything downstream wants
+`S'·Q² = D` with `D = P'Q − PQ'` — the hypothesis `bipev_dcoeffs_eq_zero_on_tail` takes and the
+identity `cleared_relation_impossible` is stated against.
+
+The conversion is one field computation, and the only thing it needs is `Q(x) ≠ 0` — which is
+already carried, since brick three needs it to differentiate at all. **No new hypothesis enters**, which was worth checking rather than assuming:
+a composition step that quietly added a side condition is exactly the thing that surfaces only at the
+end, and the previous two commits both found mismatches of that kind by applying rather than
+inspecting.
+
+### Every piece of the differential route now exists
+
+```
+exists_minimal_rel  →  bipev_dcoeffs_eq_zero_on_tail  →  bipev_elim_eq_zero
+                    →  all_coeffs_evZero_of_shorter'  →  pnorm_eq_nil_of_evZero
+                    →  cleared_relation_impossible
+```
+
+with `ratFn_deriv_cleared` supplying the `S'·Q² = D` link. What is **not** done is the final
+composition itself — instantiating that chain end to end.
+
+### The one thing I know the composition still needs
+
+`cleared_relation_impossible` wants `q ∤ Nc` for the constant `Nc = n·1`, `n = m − j`. Since `q` is
+irreducible its degree is `≥ 2`, so `q ∣ c` for a constant `c` forces `c = 0` by degree — meaning
+`q ∤ Nc` reduces to `n ≠ 0` **in `ℝ`**, a second characteristic-zero input alongside `DerivCoprime`.
+
+Both are the same fact about `ℝ` and could be folded into a single named hypothesis, but deriving
+`DerivCoprime` from it needs the leading coefficient of `pderiv`, which is not built. Recording this
+now rather than discovering it mid-composition, since that is the pattern that has held for the last
+three commits.
+
+Gates: build 688 jobs, aggregator 685/991, consistency PASS, claims 317, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (aq)
 
 ### `BipevDescent` — the last structural piece
