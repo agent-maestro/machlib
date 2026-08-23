@@ -6725,6 +6725,55 @@
         "dcoeffs"
       ],
       "hypotheses_count": 0
+    },
+    {
+      "_comment": "Not-eventually-zero implies eventually-nonzero. hypotheses_count 1. forbid_axioms does NOT forbid order -- 'eventually' IS an order notion and this module is analytic by construction -- but does forbid HasDerivAt and exp, pinning that the step is dichotomy plus positivity and nothing analytic.",
+      "id": "bipev-tail-nonzero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The gap between the two is exactly\n`pev_dichotomy`, and this is the form the tail bookkeeping consumes."
+      ],
+      "module": "MachLib.BipevTailNonzero",
+      "theorem": "MachLib.pev_ne_zero_on_tail",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "pev"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "pev_dichotomy",
+        "powNat_pos"
+      ]
+    },
+    {
+      "_comment": "The composition's first real link. hypotheses_count 2. proof_uses pins all four inputs the CHANGELOG credits, which makes 'every input was already in place' a checked statement: if the proof had needed anything new, this entry would name it.",
+      "id": "bipev-evrel-dcoeffs-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Stated for `S` *literally* `fun y => pev P y · (1/pev Q y)` — the function brick three\ndifferentiates."
+      ],
+      "module": "MachLib.BipevTailNonzero",
+      "theorem": "MachLib.evRel_dcoeffs_ratFn",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvRel",
+        "dcoeffs"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "hasDerivAt_ratFn",
+        "ratFn_deriv_cleared",
+        "bipev_dcoeffs_eq_zero_on_tail",
+        "pev_ne_zero_on_tail"
+      ]
     }
   ]
 }

@@ -5,6 +5,40 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (az)
+
+### `BipevTailNonzero` — the shape lemma written *before* the theorem, and then the theorem
+
+Acting on last commit's pattern rather than just recording it. The composition needs `Q(x) ≠ 0` on
+the tail where it differentiates, because that is what brick three requires. `pev_ne_zero_on_tail`
+says a coefficient list that is not eventually zero is eventually nonzero. The gap between the two is exactly
+`pev_dichotomy`, and this is the form the tail bookkeeping consumes.
+
+Writing it first cost nothing and meant the link below assembled without a mismatch — the first
+composition step in five commits that did not surface one.
+
+### The first real link: the differentiated relation holds on a tail
+
+`evRel_dcoeffs_ratFn` takes the relation holding eventually to the **cleared differentiated
+relation** holding eventually. Every input was already in place: `hasDerivAt_ratFn` for `S'`,
+`ratFn_deriv_cleared` for `S'·Q² = D`, `bipev_dcoeffs_eq_zero_on_tail` for the transfer, and the
+nonvanishing above for the denominator. It built first try.
+
+Stated for `S` *literally* `fun y => pev P y · (1/pev Q y)` — the function brick three
+differentiates. A germ that merely *agrees* with it on a tail is handled by
+`hasDerivAt_of_agrees_on_tail`, and is deliberately left a separate step: folding it in here would
+have made one theorem carry two different tails and obscured which hypothesis governs which.
+
+### Where the composition actually stands
+
+Links built: relation ⟹ differentiated relation. Links remaining: differentiated relation ⟹
+elimination ⟹ descent ⟹ coefficient identity ⟹ `cleared_relation_impossible`, all of whose pieces
+and shape lemmas exist.
+
+Gates: build 696 jobs, aggregator 693/999, consistency PASS, claims 333, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-23 (ay)
 
 ### `BipevDcoeffsShape` — the same two facts, for the other family
