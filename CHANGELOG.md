@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (aw)
+
+### `BipevCoeffIdentity` — step 3, the last step that is not instantiation
+
+The eliminated coefficient at index `j`, with `v = pₘ` and `u = pⱼ`, is
+`(Q²·v' + m·D·v)·u − v·(Q²·u' + j·D·u)`, and `cleared_relation_impossible` wants
+`(u'v − uv')·Q² ≈ Nc·D·(u·v)` with `Nc = (m−j)·1`. Both sides split into the same four products, and the whole step is recognising that:
+
+```
+T₁ = (Q²·v')·u   T₂ = (m·D·v)·u   T₃ = v·(Q²·u')   T₄ = v·(j·D·u)
+C ≈ 0  ⟺  T₁ + T₂ ≈ T₃ + T₄  ⟺  T₃ − T₁ ≈ T₂ − T₄
+```
+
+with `T₃ − T₁ ≈ Q²·(u'v − uv')` and `T₂ − T₄ ≈ (m−j)·D·u·v`. **No new mathematics** — every step is
+`peq_pmul_comm`, `pmul_assoc_pnorm`, `pnsum_pmul` or `peq_pnsum_sub`, all already proved. The
+identity itself built first try.
+
+### Two pieces of subtraction algebra, finally named
+
+`peq_of_psub_nil` and `peq_sub_swap`: "a difference vanishing means the
+sides agree", and "`A + B ≈ C + D` gives `C − A ≈ B − D`". This arc has needed both repeatedly
+without naming them, unfolding `psub` inline each time. Naming them is what makes the identity's
+proof a chain of recognisable steps instead of a block of `pscale (0−1)` manipulation — and it is
+the difference between a proof a future session can read and one it would rewrite.
+
+### All four composition steps are now reduced
+
+1. instantiate the chain — every link exists;
+2. reach the `j`-th coefficient — `elim_coeff_evZero`;
+3. rearrange into the count's identity — **this commit**;
+4. apply `cleared_relation_impossible`.
+
+Nothing left in the composition introduces mathematics or hypotheses. What remains is threading the
+instantiation, which is bookkeeping over ~15 arguments.
+
+Gates: build 693 jobs, aggregator 690/996, consistency PASS, claims 327, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-23 (av)
 
 ### `BipevElimMem` — step 2, three lines instead of an indexing theory

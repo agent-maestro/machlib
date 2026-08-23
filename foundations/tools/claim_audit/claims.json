@@ -6581,6 +6581,59 @@
         "all_coeffs_evZero_of_shorter'",
         "elimCoeffs_mem"
       ]
+    },
+    {
+      "_comment": "The coefficient identity -- step 3 of the composition. hypotheses_count 2 (j <= m, and C ~ 0). proof_uses pins the four rearrangement lemmas the CHANGELOG credits, which makes 'no new mathematics' a checked statement rather than an assertion: if the proof had reached for anything else, this fails.",
+      "id": "bipev-coeff-identity-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Both sides split into the same four products, and the whole step is recognising that"
+      ],
+      "module": "MachLib.BipevCoeffIdentity",
+      "theorem": "MachLib.coeff_identity",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pnsum",
+        "pderiv"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "peq_sub_swap",
+        "peq_of_psub_nil",
+        "peq_pnsum_sub",
+        "peq_pnsum_const"
+      ]
+    },
+    {
+      "_comment": "Subtraction algebra, named. hypotheses_count 1. Registered because the CHANGELOG's claim is about READABILITY -- that naming these keeps the identity's proof legible -- and coeff_identity's proof_uses already pins that it actually consumes them, so the two claims together make the architectural point checkable.",
+      "id": "bipev-sub-swap-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "\"a difference vanishing means the\nsides agree\", and \"`A + B ≈ C + D` gives `C − A ≈ B − D`\"."
+      ],
+      "module": "MachLib.BipevCoeffIdentity",
+      "theorem": "MachLib.peq_sub_swap",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "psub"
+      ],
+      "hypotheses_count": 1
     }
   ]
 }
