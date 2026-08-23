@@ -6774,6 +6774,53 @@
         "bipev_dcoeffs_eq_zero_on_tail",
         "pev_ne_zero_on_tail"
       ]
+    },
+    {
+      "_comment": "What dcoeffs holds at an index, including the running-index offset i+j. hypotheses_count 1. Written before the theorem needing it; registered so the index arithmetic is pinned, since a wrong offset here would produce the wrong multiple of D and fail only at coeff_identity.",
+      "id": "bipev-dcoeffs-getelem-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Reaching the `j`-th eliminated coefficient needs to know *what* `dcoeffs` has at index `j`:\n`padd (Q²·L') ((i+j)·D·L)` when the family starts at index `i`."
+      ],
+      "module": "MachLib.BipevElimLink",
+      "theorem": "MachLib.dcoeffs_getElem",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "dcoeffs",
+        "pnsum"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "Links two and three joined -- eliminate, descend, read off index j. hypotheses_count 5. proof_uses pins the three compositions the CHANGELOG credits: the elimination link, the descent-with-drop, and the dcoeffs indexing.",
+      "id": "bipev-elim-coeff-vanishes-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "This is the composition's second and third links joined: eliminate, descend, and read\noff the coefficient at `j`."
+      ],
+      "module": "MachLib.BipevElimLink",
+      "theorem": "MachLib.elim_coeff_vanishes",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "pnsum"
+      ],
+      "hypotheses_count": 5,
+      "proof_uses": [
+        "evRel_elimCoeffs",
+        "elim_coeff_evZero_drop",
+        "dcoeffs_getElem"
+      ]
     }
   ]
 }

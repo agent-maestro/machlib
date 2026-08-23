@@ -5,6 +5,41 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (ba)
+
+### `BipevElimLink` — links two and three, joined
+
+`evRel_elimCoeffs` takes the relation and the cleared differentiated relation, both holding
+eventually, to the **eliminated** relation holding eventually. `bipev_elim_eq_zero` is pointwise, so
+it is one tail intersection; the lockstep length condition is `dcoeffs_length_eq` from two commits
+ago.
+
+`elim_coeff_vanishes` then joins the descent: for a minimal relation split at its leading
+coefficient, the `j`-th eliminated coefficient vanishes eventually. This is the composition's second and third links joined: eliminate, descend, and read
+off the coefficient at `j`.
+
+### The shape lemma written first, again
+
+Reaching the `j`-th eliminated coefficient needs to know *what* `dcoeffs` has at index `j`:
+`padd (Q²·L') ((i+j)·D·L)` when the family starts at index `i`. `dcoeffs_getElem` says so, and it was written before the theorem that needs it
+rather than after a failed application — the second time in three commits, and the rule from (ay)
+continues to hold.
+
+### One `rw` over-reach, and it was the predicted kind
+
+`rw [hMs, hsplit] at helim` failed: rewriting `hMs` replaced `Ms` **everywhere**, so `hsplit`'s
+pattern `dcoeffs QQ D 0 Ms` no longer matched. Fixed by stating `hsplit` at `Ls₀ ++ [v]` directly
+instead of at `Ms`.
+
+That is the fourth `rw` over-reach in this arc and the same fix each time — state the fact in the
+form it will be used, rather than in the form it was derived. Between this and the four
+`cases h : e` substitutions, eight build rounds in this arc have gone to a tactic touching more of
+the goal than intended.
+
+Gates: build 697 jobs, aggregator **694 of 1000** modules reachable, consistency PASS, claims 335,
+obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked,
+sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (az)
 
 ### `BipevTailNonzero` — the shape lemma written *before* the theorem, and then the theorem
