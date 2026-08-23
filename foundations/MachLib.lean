@@ -382,6 +382,7 @@ import MachLib.BipevDcoeffsShape
 import MachLib.BipevTailNonzero
 import MachLib.BipevElimLink
 import MachLib.BipevComposition
+import MachLib.BipevNonzeroCoeff
 import MachLib.PolyEvZero
 import MachLib.BipevClearedDeriv
 import MachLib.BipevElim

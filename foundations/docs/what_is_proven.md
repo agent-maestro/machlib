@@ -322,12 +322,25 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   minimal degree took a `Nat` budget rather than well-founded recursion, and nontriviality
   took the count rather than a transcendence input.
 
-  **What the composed theorem still assumes, exactly.** Two hypotheses are consumed and not
-  produced. (i) `¬EvZeroF (pev u)` — some coefficient below the top is not eventually zero.
-  (ii) The relation is about `S` *literally* `pev P · (1/pev Q)`; a germ that merely agrees
-  with it on a tail is carried by `hasDerivAt_of_agrees_on_tail`, kept deliberately separate
-  so that each hypothesis names its own tail. Neither is a transcendence input; both are
-  bookkeeping about which coefficient and which tail.
+  **And the top-level theorem, the same day.** `proper_relation_impossible`
+  (`MachLib.BipevNonzeroCoeff`): for `S = P/Q` with an irreducible `q` dividing `Q` but not
+  `P`, there is **no** eventually-holding polynomial relation `Σ pⱼ·exp(S x)ʲ = 0` whose
+  leading coefficient is not eventually zero. Ten hypotheses, all structural — `q`
+  irreducible, the two characteristic-zero conditions on `q`, `q ∤ P`, `q ∣ Q`, normality,
+  `Q` nonzero as a polynomial and as a germ. No transcendence input appears anywhere in the
+  chain. Check it:
+  ```
+  #print axioms MachLib.proper_relation_impossible
+  #   ⇒ no sorryAx, no natCast, no Khovanskii axiom
+  ```
+
+  **What it still assumes.** One thing: that the relation is about `S` *literally*
+  `pev P · (1/pev Q)`. A germ merely agreeing with it on a tail is carried by
+  `hasDerivAt_of_agrees_on_tail`, kept deliberately separate so each hypothesis names its own
+  tail. That is bookkeeping about which tail, not a mathematical gap. The other assumption the
+  composition needed — a nonzero coefficient below the top — is **discharged**:
+  `exists_nonzero_lower_coeff` gets it from properness alone, without minimality, because
+  `exp` is positive.
 
   **The second characteristic-zero input, and its price.** The count needs `q ∤ (m−j)·1`.
   Over `Real` that is a *theorem*, not a hypothesis: `not_Pdvd_pnsum_one'` derives it from

@@ -5,6 +5,45 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bc)
+
+### The top-level theorem
+
+`proper_relation_impossible` (`MachLib.BipevNonzeroCoeff`). **No proper relation exists.** For `S = P/Q` with an irreducible `q` dividing `Q` but not `P`,
+there is no eventually-holding polynomial relation `Σ pⱼ·exp(S x)ʲ = 0` whose leading
+coefficient is not eventually zero.
+
+Ten hypotheses, all structural: `q` irreducible, the two characteristic-zero conditions on `q`,
+`q ∤ P`, `q ∣ Q`, normality, `Q` nonzero as a polynomial and as a germ. No transcendence input
+appears anywhere in the chain.
+
+### The predicted proof was heavier than the needed one — third time
+
+The commit that closed the composition predicted this step would divide the relation by `e^S` and
+appeal to minimality for a shorter one. It does not need minimality at all.
+
+**Properness alone suffices** — the nonzero lower coefficient needs no minimality. If every
+lower coefficient were eventually zero then `bipev (Ls₀ ++ [v]) x t = t^m · pev v x` on the
+common tail, and `t = exp(S x)` is positive, so `pev v x = 0` there. That contradicts properness directly.
+`exists_nonzero_lower_coeff` never mentions `hmin`, and `proper_relation_impossible` uses
+`exists_minimal_rel` only to *reach* a split relation, not to argue about lengths.
+
+Three predictions in this arc, all naming a heavier tool than the proof used: well-founded recursion
+(took a `Nat` budget), a transcendence input (took an order count), minimality (took positivity of
+`exp`). The common shape is that the prediction is made while looking at the *statement*, and the
+lighter tool only becomes visible once the surrounding lemmas exist.
+
+### One import declined
+
+`mul_eq_zero_of_factor_ne_zero` exists twice in the corpus, in `KhovanskiiReduction` and
+`SingleExpKhovanskii`. Both would drag the Khovanskii development in for four lines, so it is
+re-proved `private` here — the same call made in (ax) after the `RiemannIntegralFTCPart1` import
+took a module from 180 to 337 jobs.
+
+Gates: build **699 jobs**, aggregator **696 of 1002** modules reachable, consistency PASS, claims
+339, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bb)
 
 ### The composition closes

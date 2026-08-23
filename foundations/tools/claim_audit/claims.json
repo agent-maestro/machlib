@@ -6869,6 +6869,49 @@
         "pnsum"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The arc's top-level theorem. conclusion is False, so as with (bb) the strength is pinned by hypotheses_count 10 plus proof_uses. natCast is forbidden because the characteristic-zero inputs are meant to arrive through DerivCoprime and not_Pdvd_pnsum_one', never through a cast.",
+      "id": "bipev-proper-relation-impossible-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**No proper relation exists.** For `S = P/Q` with an irreducible `q` dividing `Q` but not `P`,\nthere is no eventually-holding polynomial relation `Σ pⱼ·exp(S x)ʲ = 0` whose leading\ncoefficient is not eventually zero."
+      ],
+      "module": "MachLib.BipevNonzeroCoeff",
+      "theorem": "MachLib.proper_relation_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 10,
+      "proof_uses": [
+        "exists_minimal_rel",
+        "exists_nonzero_lower_coeff",
+        "minimal_relation_impossible"
+      ]
+    },
+    {
+      "_comment": "The claim is that minimality is NOT used. hypotheses_count 2 is what pins it: the theorem takes the relation and the nonzero leading coefficient, and nothing else. If a later edit reintroduced hmin the count would move to 3 and this fires.",
+      "id": "bipev-nonzero-lower-coeff-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**Properness alone suffices** — the nonzero lower coefficient needs no minimality. If every\nlower coefficient were eventually zero then `bipev (Ls₀ ++ [v]) x t = t^m · pev v x` on the\ncommon tail, and `t = exp(S x)` is positive, so `pev v x = 0` there."
+      ],
+      "module": "MachLib.BipevNonzeroCoeff",
+      "theorem": "MachLib.exists_nonzero_lower_coeff",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF",
+        "pev"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }
