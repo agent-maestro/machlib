@@ -6127,6 +6127,55 @@
         "exists_ge_notMem",
         "pev_zero_or_finite_roots"
       ]
+    },
+    {
+      "_comment": "The cleared differentiated relation. forbid_axioms does NOT forbid exp -- this module is analytic by construction and forbidding it would make the claim unsatisfiable. It DOES forbid sorryAx and ltR/leR, which pins something real: the clearing is pure coefficient algebra plus brick four, and needs no order.",
+      "id": "bipev-cleared-deriv-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Multiplying through by `Q²` turns the\ncoefficients polynomial"
+      ],
+      "module": "MachLib.BipevClearedDeriv",
+      "theorem": "MachLib.bipev_cleared_deriv_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "dbipevExp",
+        "bipev",
+        "dcoeffs"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "bipev_cleared_deriv"
+      ]
+    },
+    {
+      "_comment": "The general form with the index correction. Registered separately because the CHANGELOG's substantive claim is that the NAIVE statement is false -- so the theorem that carries the correction term is the one worth pinning, and a claim on the j=0 corollary alone would not gate it.",
+      "id": "bipev-cleared-deriv-index-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The obvious claim — `Q²·dbipevExp Ls = bipev (dcoeffs …) ` — is **false**, and instructively so."
+      ],
+      "module": "MachLib.BipevClearedDeriv",
+      "theorem": "MachLib.bipev_cleared_deriv",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR"
+      ],
+      "conclusion_mentions": [
+        "dbipevExp",
+        "bipev",
+        "natMul"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "pev_pnsum",
+        "natMul_eq"
+      ]
     }
   ]
 }

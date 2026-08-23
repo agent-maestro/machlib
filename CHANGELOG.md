@@ -5,6 +5,49 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (am)
+
+### `BipevClearedDeriv` — the differentiated relation, with **polynomial** coefficients
+
+`BipevExpDeriv` differentiates the relation and warns, correctly, that the result is *not the same
+shape*: the coefficients contain `S'`, which is rational. That is why `dbipevExp` is an explicit
+recursion rather than a coefficient family. Multiplying through by `Q²` turns the
+coefficients polynomial:
+
+```
+Q²·(pⱼ' + j·S'·pⱼ)  =  Q²·pⱼ' + j·D·pⱼ        D = P'Q − PQ',  S' = D/Q²
+```
+
+so the differentiated relation becomes an ordinary `bipev` over polynomial lists — the shape the
+elimination needs and the shape `cleared_relation_impossible` ultimately consumes. The distinction
+brick four kept visible is now *removed* rather than hidden, which is the right time to do it: it
+was worth seeing while the route was uncertain and is worth eliminating now that it is not.
+
+### The induction carries a correction term, and the naive form is false
+
+The obvious claim — `Q²·dbipevExp Ls = bipev (dcoeffs …) ` — is **false**, and instructively so. `dbipevExp` nests its `S'` contributions, so peeling one coefficient
+shifts every remaining index by one — the `j·` in `j·D·pⱼ` is exactly a count of how many peels a
+coefficient has survived. The statement that inducts is
+
+```
+Q²·dbipevExp Ls x + j·D·(bipev Ls x y)  =  bipev (dcoeffs Q² D j Ls) x y
+```
+
+with `j = 0` the instance a caller wants. Both are stated, not just the corollary, because the naive
+form is the natural first attempt and fails in a way that is easy to misdiagnose as a broken
+rewrite.
+
+### Outside the guard, by construction
+
+This module mentions `exp` and inherits `HasDerivAt` through brick four, so it is not registered in
+`algebraSpineModules` — **222 algebra-spine theorems, 0 leaking, unchanged.** It is the second module
+deliberately outside, after `PolyEvZero`, and together they are the analytic half the boundary in
+`PolyEvZero` was drawn to admit.
+
+Gates: build 683 jobs, aggregator 680/986, consistency PASS, claims 308, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (al)
 
 ### `PolyEvZero` — the bridge, and the **first module deliberately outside the allow-list**
