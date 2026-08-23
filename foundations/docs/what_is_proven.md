@@ -291,12 +291,12 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   (`eea_bezout`) and the common-divisor half (`eea_divides`), **Euclid's lemma**
   (`euclid_lemma`), the `q`-adic factorisation with additivity and uniqueness (`ord_pmul`,
   `ord_unique`), cancellation (`peq_pmul_cancel_left`), and the derivative laws
-  (`peq_pderiv_pmul`, `peq_pderiv_ppow`). **All of it is field-axiom-only** — 222 theorems
+  (`peq_pderiv_pmul`, `peq_pderiv_ppow`). **All of it is field-axiom-only** — 244 theorems
   under a whole-module `AxiomLedger` guard (invariant 7) that admits Lean core, the `Real`
   carrier and the field axioms and nothing else. Check it:
   ```
   lake env lean AxiomLedger.lean
-  #   ⇒ "222 algebra-spine theorems field-axiom-checked (0 leaking)"
+  #   ⇒ "244 algebra-spine theorems field-axiom-checked (0 leaking)"
   ```
 
   **What it costs beyond the field axioms, named exactly once.** `DerivCoprime q r` — `q`
@@ -312,13 +312,31 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   the infinitude of `ℝ` — are one obstruction wearing three faces: **the allow-list is the
   theory of fields, and fields can be finite.**
 
-  **Still not built**, and not to be read as nearly-built: the two steps
-  `BipevExpDeriv`'s docstring lists before the crux — **minimal degree** (well-founded
-  induction over relations) and **elimination** (combining the relation with its
-  derivative). Those are the analytic half, and they are what would connect the count above
-  to `BoundedGermTranscendence` itself. The `S > 0` branch is separately untouched:
-  `F(S) = eˣ + log S` is not `exp` of anything, so `y' = S'·y` does not hold and the whole
-  argument does not apply there.
+  **The composition is closed — as of 2026-08-23.** `minimal_relation_impossible`
+  (`MachLib.BipevComposition`) threads every link into `False`: the relation on a tail, the
+  cleared differentiated relation (`evRel_dcoeffs_ratFn`), elimination and descent
+  (`elim_coeff_vanishes`), eventually-zero-is-zero (`pnorm_eq_nil_of_evZero`), the count's
+  identity (`coeff_identity`), and `cleared_relation_impossible`. The three steps this
+  section called "still not built" on 2026-08-21 — minimal degree, elimination,
+  nontriviality — are built, and **none of them needed the tool its docstring predicted**:
+  minimal degree took a `Nat` budget rather than well-founded recursion, and nontriviality
+  took the count rather than a transcendence input.
+
+  **What the composed theorem still assumes, exactly.** Two hypotheses are consumed and not
+  produced. (i) `¬EvZeroF (pev u)` — some coefficient below the top is not eventually zero.
+  (ii) The relation is about `S` *literally* `pev P · (1/pev Q)`; a germ that merely agrees
+  with it on a tail is carried by `hasDerivAt_of_agrees_on_tail`, kept deliberately separate
+  so that each hypothesis names its own tail. Neither is a transcendence input; both are
+  bookkeeping about which coefficient and which tail.
+
+  **The second characteristic-zero input, and its price.** The count needs `q ∤ (m−j)·1`.
+  Over `Real` that is a *theorem*, not a hypothesis: `not_Pdvd_pnsum_one'` derives it from
+  `zero_lt_one_ax` and `add_lt_add_left` alone — no `natCast`, no analysis. Over `𝔽₂` with
+  `m−j = 2` it is false, the same boundary `DerivCoprime` sits on, reached by a different
+  route.
+
+  **The `S > 0` branch is separately untouched:** `F(S) = eˣ + log S` is not `exp` of
+  anything, so `y' = S'·y` does not hold and the whole argument does not apply there.
 
 - **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib
   has no Khovanskii bound. Three things must be kept apart, because they are easy to

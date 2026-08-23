@@ -6821,6 +6821,54 @@
         "elim_coeff_evZero_drop",
         "dcoeffs_getElem"
       ]
+    },
+    {
+      "_comment": "The composition. conclusion_mentions is near-vacuous here (the conclusion is False), so the strength is pinned by hypotheses_count 15 plus proof_uses naming all six links. If a future edit drops a link or adds a hypothesis, one of those two fires.",
+      "id": "bipev-minimal-relation-impossible-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`minimal_relation_impossible` threads every link into `False`: the relation on a tail, the\ncleared differentiated relation, elimination and descent, eventually-zero-is-zero, the count's\nidentity, and the pole-order contradiction."
+      ],
+      "module": "MachLib.BipevComposition",
+      "theorem": "MachLib.minimal_relation_impossible",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 15,
+      "proof_uses": [
+        "evRel_dcoeffs_ratFn",
+        "elim_coeff_vanishes",
+        "pnorm_eq_nil_of_evZero",
+        "coeff_identity",
+        "cleared_relation_impossible",
+        "not_Pdvd_pnsum_one'"
+      ]
+    },
+    {
+      "_comment": "The second characteristic-zero input, discharged rather than assumed. forbid_axioms is the whole point of the claim: natCast would be the lazy route and exp/HasDerivAt would mean it had leaked analysis, so both are forbidden and the theorem survives on the ordered-field axioms.",
+      "id": "poly-not-pdvd-pnsum-one-prime-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "Over `Real` the arc's second characteristic-zero input is a **theorem**, not a hypothesis:\n`not_Pdvd_pnsum_one'` derives `q ∤ n·1` from `zero_lt_one_ax` and `add_lt_add_left` alone — no\n`natCast`, no analysis."
+      ],
+      "module": "MachLib.BipevComposition",
+      "theorem": "MachLib.not_Pdvd_pnsum_one'",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.HasDerivAt_exp"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "pnsum"
+      ],
+      "hypotheses_count": 2
     }
   ]
 }

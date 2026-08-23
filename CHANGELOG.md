@@ -5,6 +5,52 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bb)
+
+### The composition closes
+
+`minimal_relation_impossible` threads every link into `False`: the relation on a tail, the
+cleared differentiated relation, elimination and descent, eventually-zero-is-zero, the count's
+identity, and the pole-order contradiction. It compiled on the first
+build — the only correction was a missing `Decidable` instance, because `pconsN`'s zero test is
+`Classical.propDecidable` declared **file-locally** in `PolyCanonical` and therefore not inherited.
+
+Three days ago this section of `what_is_proven.md` said the remaining step "needs a transcendence
+input". It did not. It needed a `Nat` budget, an elimination, and a count — and the docstring of
+every one of the three steps predicted the wrong tool.
+
+### The second characteristic-zero input, and its price
+
+The count needs `q ∤ (m−j)·1`. Over `Real` the arc's second characteristic-zero input is a **theorem**, not a hypothesis:
+`not_Pdvd_pnsum_one'` derives `q ∤ n·1` from `zero_lt_one_ax` and `add_lt_add_left` alone — no
+`natCast`, no analysis. Over `𝔽₂` with `m−j = 2` it is false — the same
+boundary `DerivCoprime` sits on, reached by a different route. `pnsum_one_pos` is nine lines and its
+footprint is nine axioms.
+
+That is why this module, like `PolyEvZero`, stays **outside** `algebraSpineModules`. The spine
+proper still never learns that `Real` is ordered: the ledger reports 244 field-axiom-checked
+theorems, 0 leaking, unchanged by this commit.
+
+### What the composed theorem assumes, said exactly
+
+Two hypotheses are consumed and not produced: `¬EvZeroF (pev u)` for some coefficient below the top,
+and that the relation is about `S` *literally* `pev P · (1/pev Q)` rather than a germ agreeing with
+it on a tail. Neither is a transcendence input; both are bookkeeping about which coefficient and
+which tail.
+
+### A weak check, named rather than papered over
+
+`conclusion_mentions` is near-vacuous for a theorem concluding `False` — every strength claim lives
+in the hypotheses. So this claim leans on `hypotheses_count` (15) and on `proof_uses` naming all six
+links. A reviewer should read the `#check` output, not the conclusion field.
+
+`docs/what_is_proven.md` §7's "Still not built" paragraph is deleted, and its stale spine count
+(222) corrected to 244.
+
+Gates: build **698 jobs**, aggregator **695 of 1001** modules reachable, consistency PASS, claims
+337, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (ba)
 
 ### `BipevElimLink` — links two and three, joined
