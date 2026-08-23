@@ -6962,6 +6962,35 @@
         "EvRel"
       ],
       "hypotheses_count": 2
+    },
+    {
+      "_comment": "The bottom of the S>0 branch. forbid_axioms carries the interesting part: this is pure polynomial algebra, so ltR/leR/exp/HasDerivAt must all be absent -- it is why the module could join algebraSpineModules. proof_uses pins both order instruments, the exact one and the lower bound, since dropping the exact one is the mistake that would make the count vacuous.",
+      "id": "poly-no-rational-logarithm-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**`S'/S` is not the derivative of a rational function**, for any `S` with a zero or a pole at an\nirreducible `q`. The whole content is one order count: `ord_q(S'/S) = −1` exactly, while\n`ord_q(a')` for rational `a` is `ord_q(a) − 1` when `ord_q(a) ≠ 0` and `≥ 0` otherwise — never\n`−1`."
+      ],
+      "module": "MachLib.PolyLogDeriv",
+      "theorem": "MachLib.no_rational_logarithm",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "False"
+      ],
+      "hypotheses_count": 11,
+      "proof_uses": [
+        "ord_deriv_cross",
+        "ord_cross_lower",
+        "ord_le_of_dvd",
+        "ord_pmul_norm",
+        "exists_ord_factor"
+      ]
     }
   ]
 }

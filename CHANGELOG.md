@@ -5,6 +5,53 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bf)
+
+### Opening the `S > 0` branch — the bottom step, and it needed nothing new
+
+**`S'/S` is not the derivative of a rational function**, for any `S` with a zero or a pole at an
+irreducible `q`. The whole content is one order count: `ord_q(S'/S) = −1` exactly, while
+`ord_q(a')` for rational `a` is `ord_q(a) − 1` when `ord_q(a) ≠ 0` and `≥ 0` otherwise — never
+`−1`.
+
+`no_rational_logarithm` (`MachLib.PolyLogDeriv`), cleared of denominators: no `N`, `D` satisfy
+`(N'D − ND')·(P·Q) ≈ (P'Q − PQ')·(D·D)`. Eleven hypotheses. **Field axioms only** — it joins
+`algebraSpineModules`, which goes 244 → 250 theorems, 0 leaking.
+
+### Only one side needs to be exact, again
+
+`q ∤ D`: the right side has order exactly `r`, and the left carries `q^(r+1)` from the `P·Q` factor
+alone. A **lower** bound suffices (`ord_cross_lower`), uniformly in `ord_q(N)` — including `0`, where
+`Nat` subtraction saturates and the bound comes from `P·Q` rather than from the cross term.
+
+`q ∣ D`: a lower bound gives `b + r ≤ r + 2b`, true for every `b`. The **exact** left order is
+required, and `ord_deriv_cross` supplies it. Same asymmetry as `pole_order_contradiction`: two bounds
+prove nothing.
+
+### The zero primitive, handled rather than assumed away
+
+`N ≈ 0` would make `S'/S ≈ 0`, i.e. `S` constant — excluded by the pole hypothesis, so it is
+tempting to add `N ≠ 0` as a hypothesis. It is not needed: everything divides the zero polynomial, so
+`q^1` divides the cross term and the left side outruns the right's exact order by `2`. One extra
+branch, one fewer hypothesis, and no wrangling with `pmul`'s definitional unfolding — the `Pdvd`
+lemmas already say it.
+
+### Where this sits
+
+The `S > 0` branch decomposes into three steps, all verified symbolically first (see
+`monogate-research`, `exploration/positive_branch_2026_08_23/`):
+
+1. `Y = F(S)` algebraic over `R(x)` ⟹ `log S ∈ R(x)(e^S)`;
+2. `log S ∈ R(x)(e^S)` + `e^S` transcendental ⟹ `log S ∈ R(x)`;
+3. `log S ∈ R(x)` ⟹ **contradiction** — this commit.
+
+Step 2 reduces to `proper_relation_impossible`, already closed. Step 1 is the one that needs a new
+representation, and it is sized rather than started.
+
+Gates: build **701 jobs**, aggregator **698 of 1004** modules reachable, consistency PASS, claims
+342, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + **250** algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (be)
 
 ### The tree-binding was content-blind — fixed, with a firing specimen
