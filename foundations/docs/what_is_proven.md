@@ -264,30 +264,61 @@ python tools/check_zero_mathlib_dependency.py         # the zero-Mathlib claim
   differential route's infrastructure is built (`pderiv`, `y' = S'·y`,
   the germ-derivative transfer, and differentiation of the relation itself). What remains
   was described here on 2026-08-21 as "the transcendence input that rules out the
-  eliminated relation being trivial". **That was the wrong type, corrected the same day.**
-  With `W = pⱼ/p_m` the trivialising condition is `W' = (m−j)·S'·W` — an identity between
-  *rational functions*, the `exp` having been divided out — and what refutes it is an
-  **order-of-vanishing count**, not transcendence. The count closes **on paper** for every
-  `S` with a genuine real pole — on the branch this route runs on, which is `S ≤ 0` where
-  `F(S) = exp(S)`, so the canonical covered germ is `−1/x` and *not* `1/x` (positive on a
-  tail, hence in the `S > 0` branch below) — using only the synthetic division already in
-  `PevRoots`; the residual is `S` bounded and nonconstant with **no** real pole,
-  canonically `−1/(x²+1)`, where the identical count runs at an irreducible quadratic factor
-  but needs division by a quadratic and real FTA. Derivation and symbolic checks:
-  `monogate-research/exploration/bounded_germ_crux_retyped_2026_08_21/`.
+  eliminated relation being trivial". **That was the wrong type**, and the correction is now
+  machine-checked rather than argued: with `W = pⱼ/p_m` the trivialising condition is
+  `W' = (m−j)·S'·W`, an identity between *rational functions*, and what refutes it is an
+  **order-of-vanishing count**. No transcendence input appears anywhere in it.
 
-  **One brick of that count is now in Lean and the rest is not.** `pev_ord_factor`
-  (`MachLib.PevOrder`) factors a coefficient list at a real point to full multiplicity —
-  `pev L x = (x−a)ᵏ · pev M x` with `pev M a ≠ 0` — by iterating the synthetic division
-  already in `PevRoots`. Its footprint is **field axioms only**: 16 `MachLib.Real`
-  arithmetic axioms plus `propext`, `Classical.choice`, `Quot.sound`. No order axiom, no
-  `HasDerivAt`, no `sorryAx`. What is *not* built is `ord_a` of a product, the two order
-  facts the count needs, and the minimal-degree induction over relations — so the real-pole
-  theorem itself remains a **paper** result and must not be read as nearly-built. The
-  `S > 0` branch is
-  separately untouched — `F(S) = eˣ + log S` is not `exp` of anything, so `y' = S'·y` does
-  not hold and the argument does not apply there at all.
+  **The count is proved, at arbitrary irreducible `q`.** `pole_order_contradiction` and its
+  caller-facing form `cleared_relation_impossible` (`MachLib.PolyPoleCount`) close the
+  count: for the cleared identity `(u'v − uv')·Q² = N·(P'Q − PQ')·u·v`, the left side carries
+  `q^(k+l−1+2r)` while the right has **exact** order `r−1+k+l`, forcing `r ≤ 0`. The
+  exactness is `ord_deriv_cross`, and it is what makes the count a strict inequality rather
+  than a tautology — the companion `ord_cross_lower` is only a bound, and two bounds would
+  prove nothing.
 
+  **Two earlier scopings here were wrong and are superseded.** This section previously said
+  the count closed only for `S` with a *genuine real pole*, and that the general case needed
+  *real FTA* plus a division routine for quadratics. Neither holds: the count never inspects
+  the degree of `q`, and `exists_irred_divisor'` produces an irreducible factor by minimal
+  degree with no FTA. The real-pole restriction was an artifact of the available machinery,
+  not of the mathematics.
+
+  **What it rests on.** A twenty-module algebraic spine, built for this and reusable beyond
+  it: canonical polynomials (`pnorm`, `PolyNF`), division with remainder (`pdivmod_spec`)
+  and its coefficient-level identity (`pdivmod_identity`), degree additivity (`pmul_length`,
+  `pmul_normal`), divisibility (`Pdvd`, `Pdvd_length`), extended Euclid with Bézout
+  (`eea_bezout`) and the common-divisor half (`eea_divides`), **Euclid's lemma**
+  (`euclid_lemma`), the `q`-adic factorisation with additivity and uniqueness (`ord_pmul`,
+  `ord_unique`), cancellation (`peq_pmul_cancel_left`), and the derivative laws
+  (`peq_pderiv_pmul`, `peq_pderiv_ppow`). **All of it is field-axiom-only** — 222 theorems
+  under a whole-module `AxiomLedger` guard (invariant 7) that admits Lean core, the `Real`
+  carrier and the field axioms and nothing else. Check it:
+  ```
+  lake env lean AxiomLedger.lean
+  #   ⇒ "222 algebra-spine theorems field-axiom-checked (0 leaking)"
+  ```
+
+  **What it costs beyond the field axioms, named exactly once.** `DerivCoprime q r` — `q`
+  does not divide `r·q'` — carried as a hypothesis, not discharged. It is *false* over `𝔽₂`
+  (`q = X²+1`, `r = 2`) and true for irreducible `q` in characteristic zero; discharging it
+  for `MachLib.Real` needs the order axioms and is deliberately left as a visible step.
+
+  **Where the algebra stops.** Exactly one module sits outside the guard by design:
+  `MachLib.PolyEvZero`, whose `pnorm_eq_nil_of_evZero` turns "vanishes on a tail" into "is
+  the zero polynomial". That is false over a finite field, and its footprint is the ordered
+  base and nothing more — no `HasDerivAt`, no `sorryAx`. Three facts this arc needed and
+  could not have from the field axioms — polynomial extensionality, characteristic zero, and
+  the infinitude of `ℝ` — are one obstruction wearing three faces: **the allow-list is the
+  theory of fields, and fields can be finite.**
+
+  **Still not built**, and not to be read as nearly-built: the two steps
+  `BipevExpDeriv`'s docstring lists before the crux — **minimal degree** (well-founded
+  induction over relations) and **elimination** (combining the relation with its
+  derivative). Those are the analytic half, and they are what would connect the count above
+  to `BoundedGermTranscendence` itself. The `S > 0` branch is separately untouched:
+  `F(S) = eˣ + log S` is not `exp` of anything, so `y' = S'·y` does not hold and the whole
+  argument does not apply there.
 
 - **The Khovanskii zero bound.** The project's most *distinctive* claim — Mathlib
   has no Khovanskii bound. Three things must be kept apart, because they are easy to
