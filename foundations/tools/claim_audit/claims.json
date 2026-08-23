@@ -6176,6 +6176,53 @@
         "pev_pnsum",
         "natMul_eq"
       ]
+    },
+    {
+      "_comment": "The elimination identity. forbid_axioms includes MachLib.Real.exp and HasDerivAt -- both are genuinely in scope through this module's imports, so forbidding them is a live discriminator and pins the CHANGELOG's actual claim: after clearing denominators the step needs no analysis at all. hypotheses_count 1, read off #check.",
+      "id": "bipev-elim-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`bipev_elim` is an identity, not an implication: it computes the combination's value as\n`c_m·(relation) − p_m·(differentiated)` for *any* lists of matching length."
+      ],
+      "module": "MachLib.BipevElim",
+      "theorem": "MachLib.bipev_elim",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "elimCoeffs"
+      ],
+      "hypotheses_count": 1
+    },
+    {
+      "_comment": "The vanishing corollary -- the form the route consumes. hypotheses_count 3 (length match plus the two vanishing relations), read off #check. Same forbid list: the corollary must not reintroduce analysis either.",
+      "id": "bipev-elim-zero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "At `j = m` it is `c_m·p_m − p_m·c_m`, which vanishes: **the top term is killed**,\nand that is the whole content of the step."
+      ],
+      "module": "MachLib.BipevElim",
+      "theorem": "MachLib.bipev_elim_eq_zero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "bipev",
+        "elimCoeffs"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "bipev_elim"
+      ]
     }
   ]
 }

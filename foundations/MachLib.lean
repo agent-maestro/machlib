@@ -374,6 +374,7 @@ import MachLib.PolyPoleOrder
 import MachLib.PolyPoleCount
 import MachLib.PolyEvZero
 import MachLib.BipevClearedDeriv
+import MachLib.BipevElim
 import MachLib.EMLZeroQueryNormalForm
 import MachLib.EMLSignNotZeroQuery
 import MachLib.EMLDecoderOffPositives

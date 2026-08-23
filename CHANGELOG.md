@@ -5,6 +5,44 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (an)
+
+### `BipevElim` — elimination, and it is **coefficient algebra now**
+
+Step 2 of the three `BipevExpDeriv` listed. With the previous module having made the differentiated
+relation's coefficients polynomial, this step is algebra rather than analysis — which was the whole
+purpose of clearing denominators there, and it paid immediately: the module built first try and
+needs no `exp` reasoning anywhere in its proofs.
+
+The combination `c_m·(relation) − p_m·(differentiated)` has coefficients
+
+```
+c_m·pⱼ − p_m·cⱼ  =  Q²·(p_m'·pⱼ − p_m·pⱼ') + (m−j)·D·p_m·pⱼ
+```
+
+— exactly `Q²` times the coefficient `CRUX.md` §1 derives, as it must be, since `cⱼ` already carries
+one factor of `Q²`. At `j = m` it is `c_m·p_m − p_m·c_m`, which vanishes: **the top term is killed**,
+and that is the whole content of the step.
+
+### Stated as an identity, not an implication
+
+`bipev_elim` is an identity, not an implication: it computes the combination's value as
+`c_m·(relation) − p_m·(differentiated)` for *any* lists of matching length. The vanishing corollary is one line from it. That ordering matters: an
+implication-shaped lemma would have been unusable for the degree-drop argument, which needs the
+*value* of the top coefficient and not merely that it is zero when the relation holds.
+
+`bipev_concat` then exhibits the drop — a relation whose final coefficient evaluates to zero
+everywhere agrees with its own truncation — and `elimCoeffs_top_eval` supplies that the final entry
+does evaluate to zero.
+
+**Two of the three steps are now built.** Minimal degree remains, and it is the only one needing
+genuine well-founded recursion rather than a fuel budget — every other induction in this arc,
+across twenty-two modules, ran on a list length or a `Nat` budget.
+
+Gates: build 684 jobs, aggregator 681/987, consistency PASS, claims 310, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (am)
 
 ### `BipevClearedDeriv` — the differentiated relation, with **polynomial** coefficients
