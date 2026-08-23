@@ -5,6 +5,37 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (au)
+
+### `PolyNsum` — the last algebraic gap before the coefficient identity
+
+The eliminated coefficient is `Q²·(v'u − vu') + (m−j)·D·v·u`, and
+`cleared_relation_impossible` consumes it as `(u'v − uv')·Q² ≈ Nc·D·(u·v)` with `Nc = (m−j)·1`.
+Getting between the two needs three facts about `pnsum`:
+
+* `pnsum n (A·B) = (pnsum n A)·B` — the multiple slides out of a product, by `pmul_padd_left`.
+* `pnsum (a+b) X = pnsum a X + pnsum b X` — additivity of the multiple.
+* `pnsum m X − pnsum j X ≈ pnsum (m−j) X` for `j ≤ m`. This is where the degree gap `m − j`
+enters the coefficient identity.
+
+The first two are **exact list identities**; only the third is a `PEq` statement, and only because
+subtraction of coefficient lists is well behaved solely up to normalisation — the same reason every
+subtraction in this arc has been.
+
+### `rw` over-reaching, again, and the fix is the same
+
+`rw [← he]` with `he : j + (m − j) = m` rewrites the `m` **inside** `m − j`. Rewrote the hypothesis
+instead. Same shape as `PolyOrd`'s `l = j + (l − j)` and `PolyIrred`'s `q` inside `eea a.length q a`;
+the general rule recorded at `PolyOrd` — `rw` acts on every occurrence, including ones inside the
+terms you are reasoning about — has now cost a build round three times, and rewriting the hypothesis
+has fixed it all three.
+
+`AxiomLedger` invariant (7): **244 algebra-spine theorems, 0 leaking.**
+
+Gates: build 691 jobs, aggregator 688/994, consistency PASS, claims 323, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (at)
 
 ### `PolyDerivShort` — `DerivCoprime` reduces to nonvanishing, without the leading coefficient

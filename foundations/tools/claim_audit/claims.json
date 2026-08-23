@@ -6481,6 +6481,60 @@
         "pnsum_pderiv",
         "pnorm_pderiv_length_lt"
       ]
+    },
+    {
+      "_comment": "The multiple sliding out of a product. Zero hypotheses, and it is an EXACT list identity -- registered partly to pin that: a PEq-shaped version would have been weaker and would have forced the coefficient identity to be assembled up to normalisation at every step rather than once at the end.",
+      "id": "poly-nsum-pmul-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "`pnsum n (A·B) = (pnsum n A)·B` — the multiple slides out of a product, by `pmul_padd_left`."
+      ],
+      "module": "MachLib.PolyNsum",
+      "theorem": "MachLib.pnsum_pmul",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "pnsum",
+        "pmul"
+      ],
+      "hypotheses_count": 0,
+      "proof_uses": [
+        "pmul_padd_left"
+      ]
+    },
+    {
+      "_comment": "Where the degree gap m - j enters. hypotheses_count 1 (j <= m). proof_uses pins pnsum_add and peq_psub_padd_cancel, the two steps the CHANGELOG credits.",
+      "id": "poly-nsum-sub-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "This is where the degree gap `m − j`\nenters the coefficient identity."
+      ],
+      "module": "MachLib.PolyNsum",
+      "theorem": "MachLib.peq_pnsum_sub",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp"
+      ],
+      "conclusion_mentions": [
+        "PEq",
+        "pnsum",
+        "psub"
+      ],
+      "hypotheses_count": 1,
+      "proof_uses": [
+        "pnsum_add",
+        "peq_psub_padd_cancel"
+      ]
     }
   ]
 }
