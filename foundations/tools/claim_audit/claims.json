@@ -6313,6 +6313,51 @@
         "bipev_cleared_deriv_zero",
         "dbipevExp_eq_zero_of_relation_on_tail"
       ]
+    },
+    {
+      "_comment": "The descent. hypotheses_count 4, read off #check (the minimality premise, the relation, the length bound, and the membership). proof_uses pins evRel_dropLast, which carries the bipev_concat step -- the CHANGELOG's claim that the truncation IS a relation.",
+      "id": "bipev-descent-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "minimality forbids it\nfrom being proper, forcing **its** top coefficient to be eventually zero as well, and the argument\nrepeats."
+      ],
+      "module": "MachLib.BipevDescent",
+      "theorem": "MachLib.all_coeffs_evZero_of_shorter'",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF"
+      ],
+      "hypotheses_count": 4,
+      "proof_uses": [
+        "all_coeffs_evZero_of_shorter"
+      ]
+    },
+    {
+      "_comment": "Truncation at a vanishing top coefficient. hypotheses_count 2. Registered because it is the step that makes the descent possible at all, and because its footprint pins something the prose claims: no HasDerivAt, so dropping a coefficient is not an analytic operation despite bipev mentioning exp.",
+      "id": "bipev-droplast-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "\"top coefficient\" is the *last* entry, and the descent\nis precisely peeling it."
+      ],
+      "module": "MachLib.BipevDescent",
+      "theorem": "MachLib.evRel_dropLast",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "EvRel"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "bipev_concat",
+        "two_bounds'"
+      ]
     }
   ]
 }

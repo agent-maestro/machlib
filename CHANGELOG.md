@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (aq)
+
+### `BipevDescent` — the last structural piece
+
+The gap named at the end of (ap). The eliminated relation has its top coefficient eventually zero,
+so by `bipev_concat` it agrees with its own truncation. That truncation is a relation too, and it is
+*shorter* — so minimality forbids it
+from being proper, forcing **its** top coefficient to be eventually zero as well, and the argument
+repeats. Every coefficient of the eliminated relation vanishes
+eventually, which is the single-coefficient identity `cleared_relation_impossible` consumes.
+
+### The one induction in the arc that runs from the right
+
+Every other list induction here runs from the head, because `pev`, `pnorm`, `pmul` and `bipev` all
+recurse there. This one cannot: "top coefficient" is the *last* entry, and the descent
+is precisely peeling it. So the list is decomposed as `Es₀ ++ [A]` and
+the recursion is on a length budget rather than on the constructor — the same `Nat`-budget shape as
+`exists_minimal_length`, for the same reason, and the fourth distinct place in this arc where a
+budget replaced the structural recursion that looked natural.
+
+### What it does not need
+
+No minimality of the *eliminated* relation, no properness of it, and nothing about `q`. The inputs
+are that the ambient minimal relation exists and that the shorter thing is a relation at all. Worth
+noting because the natural first statement — phrased in terms of the eliminated relation's own degree
+— would have needed the elimination's details, and this needs none of them. The elimination and the
+descent are independent, which is why they could be built in either order.
+
+Gates: build 687 jobs, aggregator 684/990, consistency PASS, claims 316, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 222 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ap)
 
 ### `BipevTail` — the assembly's first mismatch, found by applying
