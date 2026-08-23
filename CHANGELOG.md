@@ -5,6 +5,38 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-22 (as)
+
+### `PolyConstDvd` — separating the second input's field content from its polynomial content
+
+`cleared_relation_impossible` needs `q ∤ Nc` for the constant `Nc = n·1`. That *looks* like another
+divisibility fact, and it is not: `Pdvd_length` already says a divisor is no longer than what it
+divides, so an irreducible — degree `≥ 2` by definition — cannot divide anything
+of degree `0`. The only way `q ∣ Nc` can hold is `Nc ≈ 0`.
+
+So the input reduces to **`Nc ≉ 0`**, which is `natCast n ≠ 0` — a statement about `ℝ` with no
+polynomial content at all.
+
+Doing this **before** the composition rather than after is the point. The composition fixes what the
+final theorem's hypotheses look like, and a hypothesis phrased as "`q` does not divide this
+constant" would have hidden that its content is characteristic zero and nothing else — leaving the
+end statement carrying two inputs that appear to be about different things when they are the same
+fact about `ℝ` twice.
+
+### One induction replaced by an existing lemma
+
+`pnsum_one_length` first tried a nested induction with `cases h : e` inside it, which does not
+compose — the outer hypothesis still mentions the term the inner `cases` substituted away. Replaced
+by one application of `padd_length_ge`: `padd` against a length-one list never lengthens it. Third
+time in this arc that reaching for an induction where a length lemma already existed cost a build
+round.
+
+`AxiomLedger` invariant (7) now covers **228 algebra-spine theorems, 0 leaking**.
+
+Gates: build 689 jobs, aggregator 686/992, consistency PASS, claims 319, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 228 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (ar)
 
 ### `BipevRatFn` — the last ingredient, and it adds no hypothesis

@@ -6381,6 +6381,56 @@
         "pderiv"
       ],
       "hypotheses_count": 1
+    },
+    {
+      "_comment": "An irreducible does not divide a nonzero constant -- degree alone. hypotheses_count 3, read off #check. proof_uses pins not_Pdvd_of_length_lt, which is the contrapositive of Pdvd_length: the CHANGELOG's claim is that this needs no new idea, only the degree bound already proved.",
+      "id": "poly-const-dvd-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "an irreducible — degree `≥ 2` by definition — cannot divide anything\nof degree `0`. The only way `q ∣ Nc` can hold is `Nc ≈ 0`."
+      ],
+      "module": "MachLib.PolyConstDvd",
+      "theorem": "MachLib.not_Pdvd_const",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.exp",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "Pdvd"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "not_Pdvd_of_length_lt"
+      ]
+    },
+    {
+      "_comment": "The form the composition consumes. hypotheses_count 2. forbid_axioms includes natCast deliberately: the CHANGELOG says the remaining content IS natCast n != 0, and this theorem must not itself assume it -- it takes the nonvanishing as a hypothesis rather than proving it.",
+      "id": "poly-const-pnsum-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So the input reduces to **`Nc ≉ 0`**, which is `natCast n ≠ 0` — a statement about `ℝ` with no\npolynomial content at all."
+      ],
+      "module": "MachLib.PolyConstDvd",
+      "theorem": "MachLib.not_Pdvd_pnsum_one",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "Pdvd",
+        "pnsum"
+      ],
+      "hypotheses_count": 2,
+      "proof_uses": [
+        "not_Pdvd_const",
+        "pnsum_one_length"
+      ]
     }
   ]
 }
