@@ -6535,6 +6535,52 @@
         "pnsum_add",
         "peq_psub_padd_cancel"
       ]
+    },
+    {
+      "_comment": "Membership of the j-th eliminated combination. hypotheses_count 2, read off #check. forbid_axioms is broad because this is pure list manipulation -- no exp, no order, no field arithmetic beyond the carriers -- which is the CHANGELOG's point that an indexing theory was not needed.",
+      "id": "bipev-elim-mem-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "So extracting \"the coefficient at index `j`\" does not need\nan indexing theory at all: it needs only that the `j`-th combination *is a member* of\n`elimCoeffs top topD Ls Cs`"
+      ],
+      "module": "MachLib.BipevElimMem",
+      "theorem": "MachLib.elimCoeffs_mem",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.ltR",
+        "MachLib.Real.leR",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.natCast"
+      ],
+      "conclusion_mentions": [
+        "elimCoeffs",
+        "psub"
+      ],
+      "hypotheses_count": 2
+    },
+    {
+      "_comment": "The descent specialised to a named index -- step 2 of the composition. hypotheses_count 6, read off #check. proof_uses pins both halves: the descent supplies the membership-shaped conclusion and elimCoeffs_mem supplies the membership.",
+      "id": "bipev-elim-coeff-evzero-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**size a step by what its consumer\nactually delivers.**"
+      ],
+      "module": "MachLib.BipevElimMem",
+      "theorem": "MachLib.elim_coeff_evZero",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.HasDerivAt"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF"
+      ],
+      "hypotheses_count": 6,
+      "proof_uses": [
+        "all_coeffs_evZero_of_shorter'",
+        "elimCoeffs_mem"
+      ]
     }
   ]
 }

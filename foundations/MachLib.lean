@@ -375,6 +375,7 @@ import MachLib.PolyPoleCount
 import MachLib.PolyConstDvd
 import MachLib.PolyDerivShort
 import MachLib.PolyNsum
+import MachLib.BipevElimMem
 import MachLib.PolyEvZero
 import MachLib.BipevClearedDeriv
 import MachLib.BipevElim

@@ -5,6 +5,42 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (av)
+
+### `BipevElimMem` — step 2, three lines instead of an indexing theory
+
+The descent concludes `∀ A ∈ Es, EvZeroF (pev A)` — a statement about **membership**, not indices.
+So extracting "the coefficient at index `j`" does not need
+an indexing theory at all: it needs only that the `j`-th combination *is a member* of
+`elimCoeffs top topD Ls Cs`, which is one induction stepping `j` and the two lists together.
+
+Worth recording because "extract the coefficient at index `j`" suggests `List.get`, lengths and
+off-by-one bookkeeping, and none of that was needed. The descent's conclusion was already in the
+weaker and more convenient form; matching the shape the *consumer produces* rather than the shape
+the statement suggests made the step trivial.
+
+That is the same lesson as `PolyDerivShort` two commits ago, now twice in three commits:
+**size a step by what its consumer
+actually delivers.**
+
+### The composition's remaining work is now fully mapped
+
+1. instantiate the chain — every link exists;
+2. reach the `j`-th eliminated coefficient — **done here**;
+3. rearrange `C_j ≈ 0` into `(u'v − uv')·Q² ≈ Nc·D·(u·v)` — the `pnsum` lemmas from (au);
+4. apply `cleared_relation_impossible`.
+
+Step 3 is the only one not reduced to existing lemmas, and it is `PEq` rearrangement over
+`peq_pmul_comm`, `pmul_assoc_pnorm` and `peq_pnsum_sub` — no new mathematics, and no new
+hypotheses, since (as) and (at) reduced both external inputs to nonvanishing facts about `ℝ`.
+
+`AxiomLedger` invariant (7): **244 algebra-spine theorems, 0 leaking** (this module is analytic and
+correctly outside).
+
+Gates: build 692 jobs, aggregator 689/995, consistency PASS, claims 325, obligations 18 rows,
+AxiomLedger **242 pinned (unchanged)** + 244 algebra-spine field-axiom-checked, sorry-audit 1
+allowlisted.
+
 ## [Unreleased] — 2026-08-22 (au)
 
 ### `PolyNsum` — the last algebraic gap before the coefficient identity
