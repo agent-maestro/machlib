@@ -6991,6 +6991,59 @@
         "ord_pmul_norm",
         "exists_ord_factor"
       ]
+    },
+    {
+      "_comment": "The division-free degree drop. forbid_axioms carries the claim that nothing was divided: mul_inv and divR are what a division would cite, so both are forbidden alongside the usual set. If a later proof reached for the quotient the gate goes red.",
+      "id": "germ-gcancel-top-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "**The degree drops with no division.** `c_d·R' − c_d'·R` has `Y^d` coefficient\n`c_d·c_d' − c_d'·c_d = 0`, so germ coefficients need no nonvanishing witness and no monic\nnormalisation. The classical argument *divides* by the leading coefficient; this multiplies,\nwhich needs nothing."
+      ],
+      "module": "MachLib.GermRelation",
+      "theorem": "MachLib.gcancel_top",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp",
+        "MachLib.Real.mul_inv",
+        "MachLib.Real.divR",
+        "MachLib.Real.div_def",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.HasDerivAt_mul"
+      ],
+      "conclusion_mentions": [
+        "GEvRel",
+        "gscaleSub"
+      ],
+      "hypotheses_count": 3,
+      "proof_uses": [
+        "gEvRel_gscaleSub",
+        "gscaleSub_concat",
+        "gevRel_dropLast"
+      ]
+    },
+    {
+      "_comment": "The descent, generalised. The claim is that it never inspects pev and never learns the inner variable is exp -- so pev is absent by construction (it is not in the statement) and exp/HasDerivAt are forbidden here. hypotheses_count 4 pins that no extra hypothesis was needed to generalise.",
+      "id": "germ-descent-no-pev-changelog",
+      "source_file": "CHANGELOG.md",
+      "claim_text": [
+        "The four descent lemmas **never inspect `pev`** — they use a coefficient only through \"is / is\nnot eventually zero\" and through the Horner cons step. So the whole layer restates over an\narbitrary germ coefficient, with the polynomial version recovered by `gbipev_map_pev`."
+      ],
+      "module": "MachLib.GermRelation",
+      "theorem": "MachLib.all_gcoeffs_evZero_of_shorter'",
+      "forbid_axioms": [
+        "sorryAx",
+        "MachLib.Real.natCast",
+        "MachLib.Real.exp",
+        "MachLib.Real.HasDerivAt",
+        "MachLib.Real.HasDerivAt_exp",
+        "MachLib.Real.HasDerivAt_mul"
+      ],
+      "conclusion_mentions": [
+        "EvZeroF"
+      ],
+      "hypotheses_count": 4
     }
   ]
 }

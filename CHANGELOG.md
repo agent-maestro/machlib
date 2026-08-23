@@ -5,6 +5,47 @@ All notable changes to MachLib are recorded here. Format roughly follows
 release-snapshot identifiers; see the release manifests for the authoritative
 per-release status.
 
+## [Unreleased] — 2026-08-23 (bg)
+
+### `GermRelation` — the descent over arbitrary germ coefficients
+
+The four descent lemmas **never inspect `pev`** — they use a coefficient only through "is / is
+not eventually zero" and through the Horner cons step. So the whole layer restates over an
+arbitrary germ coefficient, with the polynomial version recovered by `gbipev_map_pev`. `gbipev`, `GEvRel`, `GProperRel`,
+`exists_minimal_grel`, `gevRel_dropLast`, `all_gcoeffs_evZero_of_shorter'`. One module, not the
+three-to-four the sizing predicted, and it compiled on the first build.
+
+### The design decision the sizing said to make first, and it dissolved
+
+The sizing pass (bf) flagged monic normalisation as the one non-mechanical part: the descent
+differentiates a relation and needs the top coefficient's derivative to vanish, which classically
+means dividing by the leading coefficient — legitimate in a field, unavailable here without carrying
+a nonvanishing witness with every germ.
+
+**The degree drops with no division.** `c_d·R' − c_d'·R` has `Y^d` coefficient
+`c_d·c_d' − c_d'·c_d = 0`, so germ coefficients need no nonvanishing witness and no monic
+normalisation. The classical argument *divides* by the leading coefficient; this multiplies,
+which needs nothing.
+
+`gcancel_top` is that step: two relations of equal length, combined against each other's top
+coefficients, give a relation one shorter. `gscaleSub` is the coefficientwise combination and
+`gbipev_gscaleSub` its evaluation law.
+
+**Fifth prediction in this arc that overshot** — and the first where the correction came from *this
+repo's own* sizing note rather than from building the heavy thing first. The sizing was right that
+it was the decision to make; it was wrong that the decision was expensive.
+
+### One tactic note
+
+`mach_ring` left a pure AC residual across the two `gbipev` atoms —
+`y * (a x * G) = a x * (y * G)`. `mach_mpoly` with the seven atoms listed closes it. Same boundary as
+recorded before: `mach_ring` normalises the ring structure it can see, and opaque applied terms need
+naming.
+
+Gates: build **702 jobs**, aggregator **699 of 1005** modules reachable, consistency PASS, claims
+344, obligations 18 rows, AxiomLedger **242 pinned (unchanged)** + 250 algebra-spine
+field-axiom-checked (0 leaking), sorry-audit 1 allowlisted.
+
 ## [Unreleased] — 2026-08-23 (bf)
 
 ### Opening the `S > 0` branch — the bottom step, and it needed nothing new
